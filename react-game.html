@@ -995,12 +995,12 @@
                 for (let i = 0; i < 3; i++) {
                     const availableColors = colors.filter(c => !choices.includes(c));
                     const colorOptions = availableColors.map(color => ({
-                        label: `${color.charAt(0).toUpperCase() + color.slice(1)} Cube`,
+                        label: `${color.charAt(0).toUpperCase() + color.slice(1)} Gem`,
                         value: color
                     }));
                     
                     const choice = await showChoice(dispatch, 
-                        `Choose color ${i + 1}/3 for different colored cubes`, 
+                        `Choose color ${i + 1}/3 for different colored gems`, 
                         colorOptions
                     );
                     
@@ -1055,12 +1055,12 @@
                 for (let i = 0; i < 2; i++) {
                     const availableColors = colors.filter(c => !choices.includes(c));
                     const colorOptions = availableColors.map(color => ({
-                        label: `${color.charAt(0).toUpperCase() + color.slice(1)} Cube`,
+                        label: `${color.charAt(0).toUpperCase() + color.slice(1)} Gem`,
                         value: color
                     }));
                     
                     const choice = await showChoice(dispatch, 
-                        `Choose color ${i + 1}/2 for different colored cubes`, 
+                        `Choose color ${i + 1}/2 for different colored gems`, 
                         colorOptions
                     );
                     
@@ -1396,9 +1396,9 @@
             
             // YELLOW LAYER ACTIONS
             
-            // Steal cube actions
-            if (actionId === 'stealCube' || actionId === 'steal2Cubes') {
-                const stealCount = actionId === 'stealCube' ? 1 : 2;
+            // Steal gem actions
+            if (actionId === 'stealGem' || actionId === 'steal2Gems') {
+                const stealCount = actionId === 'stealGem' ? 1 : 2;
                 const otherPlayers = currentState.players.filter(p => p.id !== player.id);
                 
                 if (otherPlayers.length === 0) {
@@ -1431,7 +1431,7 @@
                     const colorToSteal = await showChoice(dispatch, `Choose color to steal from Player ${targetId}`, availableColors);
                     if (!colorToSteal) break;
                     
-                    // Transfer the cube
+                    // Transfer the gem
                     dispatch({
                         type: 'UPDATE_RESOURCES',
                         playerId: targetId,
@@ -1445,7 +1445,7 @@
                     });
                 }
                 
-                const message = `Player ${player.id}: ${actionId} → Stole ${stealCount} cube(s)`;
+                const message = `Player ${player.id}: ${actionId} → Stole ${stealCount} gem(s)`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1458,15 +1458,15 @@
                     resources: { yellow: 1 }
                 });
                 
-                // Trade 2 cubes for 2 any colors
+                // Trade 2 gems for 2 any colors
                 const playerColors = Object.entries(player.resources).filter(([, amount]) => amount > 0);
                 if (playerColors.length < 2) {
-                    const message = `Player ${player.id}: yellowHybrid1 → +1 yellow (not enough cubes to trade)`;
+                    const message = `Player ${player.id}: yellowHybrid1 → +1 yellow (not enough gems to trade)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
                 
-                // Choose 2 cubes to trade away
+                // Choose 2 gems to trade away
                 const tradeCost = {};
                 for (let i = 0; i < 2; i++) {
                     const availableColors = Object.entries(player.resources)
@@ -1482,12 +1482,12 @@
                     }
                 }
                 
-                // Choose 2 cubes to gain
+                // Choose 2 gems to gain
                 const colors = ['red', 'yellow', 'blue', 'purple'];
                 const tradeGain = {};
                 for (let i = 0; i < 2; i++) {
                     const colorOptions = colors.map(color => ({
-                        label: `${color.charAt(0).toUpperCase() + color.slice(1)} Cube`,
+                        label: `${color.charAt(0).toUpperCase() + color.slice(1)} Gem`,
                         value: color
                     }));
                     
@@ -1504,7 +1504,7 @@
                     resources: { ...tradeCost, ...tradeGain }
                 });
                 
-                const message = `Player ${player.id}: yellowHybrid1 → +1 yellow + traded cubes`;
+                const message = `Player ${player.id}: yellowHybrid1 → +1 yellow + traded gems`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1587,7 +1587,7 @@
                 return;
             }
             
-            // Everyone return cubes
+            // Everyone return gems
             if (actionId === 'everyoneReturn1' || actionId === 'everyoneReturn2') {
                 dispatch({
                     type: 'UPDATE_RESOURCES',
@@ -1610,7 +1610,7 @@
                         if (availableColors.length === 0) break;
                         
                         const colorToReturn = await showChoice(dispatch, 
-                            `Player ${otherPlayer.id}: Choose cube to return (${i + 1}/${returnCount})`, 
+                            `Player ${otherPlayer.id}: Choose gem to return (${i + 1}/${returnCount})`, 
                             availableColors
                         );
                         
@@ -1624,7 +1624,7 @@
                     }
                 }
                 
-                const message = `Player ${player.id}: ${actionId} → +1 blue + others returned ${returnCount} cube(s)`;
+                const message = `Player ${player.id}: ${actionId} → +1 blue + others returned ${returnCount} gem(s)`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1823,18 +1823,18 @@
 
         // Execute yellow 2 shop effect
         async function executeYellow2Shop(player, dispatch, state) {
-            // Gain 4 cubes any colors
+            // Gain 4 gems any colors
             const colors = ['red', 'yellow', 'blue', 'purple'];
             const choices = [];
             
             for (let i = 0; i < 4; i++) {
                 const colorOptions = colors.map(color => ({
-                    label: `${color.charAt(0).toUpperCase() + color.slice(1)} Cube`,
+                    label: `${color.charAt(0).toUpperCase() + color.slice(1)} Gem`,
                     value: color
                 }));
                 
                 const choice = await showChoice(dispatch, 
-                    `Choose color ${i + 1}/4 for any colored cubes`, 
+                    `Choose color ${i + 1}/4 for any colored gems`, 
                     colorOptions
                 );
                 
@@ -1856,13 +1856,13 @@
                 resources
             });
             
-            // Everyone else gains 1 cube of their choice
+            // Everyone else gains 1 gem of their choice
             for (const otherPlayer of state.players) {
                 if (otherPlayer.id !== player.id) {
                     const colorChoice = await showChoice(dispatch, 
-                        `Player ${otherPlayer.id}: Choose a cube color to gain`, 
+                        `Player ${otherPlayer.id}: Choose a gem color to gain`, 
                         colors.map(color => ({
-                            label: `${color.charAt(0).toUpperCase() + color.slice(1)} Cube`,
+                            label: `${color.charAt(0).toUpperCase() + color.slice(1)} Gem`,
                             value: color
                         }))
                     );
@@ -1877,7 +1877,7 @@
                 }
             }
             
-            const message = `Player ${player.id}: Yellow R2 shop → Gained 4 cubes, everyone gained 1 cube`;
+            const message = `Player ${player.id}: Yellow R2 shop → Gained 4 gems, everyone gained 1 gem`;
             dispatch({ type: 'ADD_LOG', message });
         }
 
@@ -1952,9 +1952,58 @@
                 });
                 
             } else if (effect.includes('Can close any shop this round')) {
-                alert('Close shop effect not implemented yet');
+                // Choose which shop to close
+                const shopOptions = [
+                    { label: 'Red Shop', value: 'red' },
+                    { label: 'Yellow Shop', value: 'yellow' },
+                    { label: 'Blue Shop', value: 'blue' },
+                    { label: 'Purple Shop', value: 'purple' }
+                ];
+                
+                const shopToClose = await showChoice(dispatch, 'Choose shop to close this round', shopOptions);
+                if (shopToClose) {
+                    dispatch({
+                        type: 'ADD_EFFECT',
+                        playerId: playerId,
+                        effect: `${shopToClose.charAt(0).toUpperCase() + shopToClose.slice(1)} shop is closed this round`
+                    });
+                    
+                    dispatch({ type: 'ADD_LOG', message: `Player ${playerId}: Closed ${shopToClose} shop for this round` });
+                }
+                
+                // Remove the activatable effect
+                dispatch({
+                    type: 'UPDATE_PLAYER_EFFECTS',
+                    playerId: playerId,
+                    effects: (player.effects || []).filter((_, i) => i !== effectIndex)
+                });
+                
             } else if (effect.includes('Will take an extra turn after this one')) {
-                alert('Extra turn effect not implemented yet');
+                // Check if player is already at the end of snake (would get 2 turns naturally)
+                const currentIndex = state.turnOrder.indexOf(state.currentPlayer);
+                const isAtSnakeEnd = (state.turnDirection === 1 && currentIndex === state.turnOrder.length - 1) ||
+                                   (state.turnDirection === -1 && currentIndex === 0);
+                
+                if (isAtSnakeEnd) {
+                    alert('You are already at the end of the turn snake and will get another turn naturally. Extra turn effect not needed.');
+                } else {
+                    // Apply extra turn effect
+                    dispatch({
+                        type: 'ADD_EFFECT',
+                        playerId: state.currentPlayer,
+                        effect: 'Will take an extra turn after this one'
+                    });
+                    
+                    dispatch({ type: 'ADD_LOG', message: `Player ${state.currentPlayer}: Will take an extra turn after this one` });
+                }
+                
+                // Remove the activatable effect regardless
+                dispatch({
+                    type: 'UPDATE_PLAYER_EFFECTS',
+                    playerId: playerId,
+                    effects: (player.effects || []).filter((_, i) => i !== effectIndex)
+                });
+                
             } else if (effect.includes('Can place the next player\'s worker')) {
                 alert('Place next player\'s worker effect not implemented yet');
             } else if (effect.includes('Can undo the last player\'s turn')) {
@@ -2011,10 +2060,22 @@
                     purple: 'bg-purple-500',
                 };
                 
+                const gemIcons = {
+                    red: '🔴',
+                    yellow: '🟡', 
+                    blue: '🔵',
+                    purple: '🟣'
+                };
+                
+                const gemIcon = gemIcons[color] || '💎';
+                
                 return React.createElement('div', {
                     key: color,
-                    className: `w-10 h-10 rounded-lg ${colors[color]} flex items-center justify-center text-white font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-110 transition-all`
-                }, amount);
+                    className: `w-12 h-12 rounded-lg ${colors[color]} flex flex-col items-center justify-center text-white font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-110 transition-all`
+                }, [
+                    React.createElement('div', { key: 'icon', className: 'text-lg' }, gemIcon),
+                    React.createElement('div', { key: 'amount', className: 'text-xs' }, amount)
+                ]);
             };
             
             return React.createElement('div', { className: getPlayerStyle() }, [
@@ -2117,7 +2178,7 @@
                 },
                 yellow: {
                     1: { cost: { yellow: 1, any: 1 }, effect: 'Double next gain' },
-                    2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 4 cubes any colors + everyone gains cube' }
+                    2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 4 gems + others gain 1' }
                 },
                 blue: {
                     1: { cost: { blue: 1, any: 1 }, effect: 'Close any shop this round' },
@@ -2136,6 +2197,18 @@
                     return;
                 }
                 
+                // Check if this shop is closed
+                const isShopClosed = state.players.some(player => 
+                    (player.effects || []).some(effect => 
+                        effect.includes(`${color.charAt(0).toUpperCase() + color.slice(1)} shop is closed this round`)
+                    )
+                );
+                
+                if (isShopClosed) {
+                    alert(`${color.charAt(0).toUpperCase() + color.slice(1)} shop is closed this round!`);
+                    return;
+                }
+                
                 const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
                 const shop = shopData[color][shopRound];
                 
@@ -2144,16 +2217,16 @@
                 const anyRequired = shop.cost.any || 0;
                 
                 if (currentPlayer.resources[color] < colorRequired) {
-                    alert(`Need ${colorRequired} ${color} cubes. You have ${currentPlayer.resources[color]}.`);
+                    alert(`Need ${colorRequired} ${color} gems. You have ${currentPlayer.resources[color]}.`);
                     return;
                 }
                 
                 if (anyRequired > 0) {
-                    const totalAllCubes = Object.values(currentPlayer.resources).reduce((sum, amount) => sum + amount, 0);
-                    const totalAvailableForAny = totalAllCubes - colorRequired; // Subtract the specific color requirement
+                    const totalAllGems = Object.values(currentPlayer.resources).reduce((sum, amount) => sum + amount, 0);
+                    const totalAvailableForAny = totalAllGems - colorRequired; // Subtract the specific color requirement
                     
                     if (totalAvailableForAny < anyRequired) {
-                        alert(`Need ${anyRequired} additional cubes of any color. You have ${totalAvailableForAny} available.`);
+                        alert(`Need ${anyRequired} additional gems of any color. You have ${totalAvailableForAny} available.`);
                         return;
                     }
                 }
@@ -2227,7 +2300,7 @@
                         });
                         break;
                     case 'yellow2':
-                        // Gain 4 cubes any colors + everyone gains cube - execute immediately
+                        // Gain 4 gems any colors + everyone gains gem - execute immediately
                         await executeYellow2Shop(currentPlayer, dispatch, state);
                         break;
                     case 'blue1':
@@ -2318,13 +2391,13 @@
                 const shop = shopData[color];
                 
                 if (color === 'yellow') {
-                    const totalCubes = Object.values(currentPlayer.resources).reduce((sum, count) => sum + count, 0);
-                    if (totalCubes < 7) {
-                        alert(`Need 7 cubes of any color. You have ${totalCubes}.`);
+                    const totalGems = Object.values(currentPlayer.resources).reduce((sum, count) => sum + count, 0);
+                    if (totalGems < 7) {
+                        alert(`Need 7 gems of any color. You have ${totalGems}.`);
                         return;
                     }
                     
-                    // Deduct 7 cubes proportionally
+                    // Deduct 7 gems proportionally
                     const resourceCost = {};
                     let remaining = 7;
                     const colors = ['red', 'yellow', 'blue', 'purple'];
@@ -2342,7 +2415,7 @@
                 } else {
                     const requiredAmount = shop.cost[color];
                     if (currentPlayer.resources[color] < requiredAmount) {
-                        alert(`Need ${requiredAmount} ${color} cubes. You have ${currentPlayer.resources[color]}.`);
+                        alert(`Need ${requiredAmount} ${color} gems. You have ${currentPlayer.resources[color]}.`);
                         return;
                     }
                     
@@ -2390,11 +2463,11 @@
                 title: "Resource Manipulation", 
                 icon: "🟡",
                 actions: [
-                    { id: 'gain3yellow', title: 'Gain 3 Different Colored Cubes', description: 'Round 1', round: 1 },
-                    { id: 'gain2yellow', title: 'Gain 2 Different Colored Cubes', description: 'Round 1', round: 1 },
-                    { id: 'stealCube', title: 'Steal 1 Cube', description: 'Round 1', round: 1 },
-                    { id: 'yellowHybrid1', title: '+1 Yellow + Trade 2 Cubes', description: '(For 2 any colors)', round: 1 },
-                    { id: 'steal2Cubes', title: 'Steal 2 Cubes', description: '(From any player)', round: 2 },
+                    { id: 'gain3yellow', title: 'Gain 3 Different Gems', description: 'Round 1', round: 1 },
+                    { id: 'gain2yellow', title: 'Gain 2 Different Gems', description: 'Round 1', round: 1 },
+                    { id: 'stealGem', title: 'Steal 1 Gem', description: 'Round 1', round: 1 },
+                    { id: 'yellowHybrid1', title: '+1 Yellow + Trade 2 Gems for 2 Any', description: '(For 2 any colors)', round: 1 },
+                    { id: 'steal2Gems', title: 'Steal 2 Gems', description: '(From any player)', round: 2 },
                     { id: 'yellowHybrid2', title: '+1 Yellow + Double Next Gain', description: '(Doesn\'t stack with shop)', round: 2 }
                 ]
             },
@@ -2405,9 +2478,9 @@
                     { id: 'gain3blue', title: 'Gain 3 Blue', description: 'Round 1', round: 1 },
                     { id: 'gain2blue', title: 'Gain 2 Blue', description: 'Round 1', round: 1 },
                     { id: 'blueHybrid1', title: '+1 Blue + Move Worker', description: '(They don\'t get benefit)', round: 1 },
-                    { id: 'everyoneReturn1', title: 'Each Other Player Returns 1 Cube', description: 'Round 1', round: 1 },
+                    { id: 'everyoneReturn1', title: 'Others Return 1 Gem Each', description: 'Round 1', round: 1 },
                     { id: 'blueHybrid2', title: '+1 Blue + Move 2 Workers', description: '(They don\'t get benefit)', round: 2 },
-                    { id: 'everyoneReturn2', title: 'Each Other Player Returns 2 Cubes', description: 'Round 2', round: 2 }
+                    { id: 'everyoneReturn2', title: 'Others Return 2 Gems Each', description: 'Round 2', round: 2 }
                 ]
             },
             purple: {
