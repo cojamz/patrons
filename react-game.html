@@ -438,7 +438,7 @@
                         myPlayerName: state.myPlayerName,
                         connectedPlayers: state.connectedPlayers,
                         isHost: state.isHost,
-                        gameStarted: state.gameStarted,
+                        gameStarted: action.gameState.gameStarted !== undefined ? action.gameState.gameStarted : state.gameStarted,
                         connectionStatus: state.connectionStatus,
                         // Sync game layers if provided
                         gameLayers: action.gameState.gameLayers || state.gameLayers
