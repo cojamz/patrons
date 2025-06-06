@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Worker Placement Game - React Version</title>
+    <title>Patrons - React Version</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -165,10 +165,10 @@
             currentPlayer: 1,
             turnDirection: 1,
             players: [
-                { id: 1, name: "Player 1", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
-                { id: 2, name: "Player 2", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
-                { id: 3, name: "Player 3", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
-                { id: 4, name: "Player 4", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 }
+                { id: 1, name: "Player 1", resources: { red: 0, yellow: 0, blue: 0, purple: 0, green: 0, orange: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
+                { id: 2, name: "Player 2", resources: { red: 0, yellow: 0, blue: 0, purple: 0, green: 0, orange: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
+                { id: 3, name: "Player 3", resources: { red: 0, yellow: 0, blue: 0, purple: 0, green: 0, orange: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
+                { id: 4, name: "Player 4", resources: { red: 0, yellow: 0, blue: 0, purple: 0, green: 0, orange: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 }
             ],
             occupiedSpaces: {},
             round: 1,
@@ -219,7 +219,9 @@
                                         red: player.resources.red + (action.resources.red || 0),
                                         yellow: player.resources.yellow + (action.resources.yellow || 0),
                                         blue: player.resources.blue + (action.resources.blue || 0),
-                                        purple: player.resources.purple + (action.resources.purple || 0)
+                                        purple: player.resources.purple + (action.resources.purple || 0),
+                                        green: player.resources.green + (action.resources.green || 0),
+                                        orange: player.resources.orange + (action.resources.orange || 0)
                                     }
                                 }
                                 : player
@@ -650,7 +652,7 @@
                     React.createElement('h1', { 
                         key: 'title',
                         className: 'text-3xl font-bold text-gray-800 mb-2' 
-                    }, 'Worker Placement Game'),
+                    }, 'Patrons'),
                     React.createElement('p', { 
                         key: 'subtitle',
                         className: 'text-gray-600' 
@@ -752,11 +754,14 @@
             
             const handleStartGame = () => {
                 if (connectedCount >= 2) {
+                    console.log('Starting game with', connectedCount, 'players');
                     // Select layers based on actual connected player count
                     const selectedLayers = selectGameLayers(connectedCount);
+                    console.log('Selected layers:', Object.keys(selectedLayers));
                     dispatch({ type: 'SET_GAME_LAYERS', layers: selectedLayers });
                     startMultiplayerGame(state.roomCode);
                     dispatch({ type: 'START_GAME' });
+                    console.log('Game started successfully');
                 } else {
                     alert('Need at least 2 players to start');
                 }
@@ -886,8 +891,14 @@
                 'gain2red': { red: 2 },
                 'gain3blue': { blue: 3 },
                 'gain2blue': { blue: 2 },
+                'gain3yellow': { yellow: 3 },
+                'gain2yellow': { yellow: 2 },
                 'gain3purple': { purple: 3 },
-                'gain2purple': { purple: 2 }
+                'gain2purple': { purple: 2 },
+                'gain3green': { green: 3 },
+                'gain2green': { green: 2 },
+                'gain3orange': { orange: 3 },
+                'gain2orange': { orange: 2 }
             };
             
             if (basicGains[actionId]) {
@@ -925,7 +936,7 @@
             
             // Yellow layer actions with player choice
             if (actionId === 'gain3yellow') {
-                const colors = ['red', 'yellow', 'blue', 'purple'];
+                const colors = ['red', 'yellow', 'blue', 'purple', 'green', 'orange'];
                 const choices = [];
                 
                 for (let i = 0; i < 3; i++) {
@@ -985,7 +996,7 @@
             
             // Similar implementation for gain2yellow
             if (actionId === 'gain2yellow') {
-                const colors = ['red', 'yellow', 'blue', 'purple'];
+                const colors = ['red', 'yellow', 'blue', 'purple', 'green', 'orange'];
                 const choices = [];
                 
                 for (let i = 0; i < 2; i++) {
@@ -1419,7 +1430,7 @@
                 }
                 
                 // Choose 2 cubes to gain
-                const colors = ['red', 'yellow', 'blue', 'purple'];
+                const colors = ['red', 'yellow', 'blue', 'purple', 'green', 'orange'];
                 const tradeGain = {};
                 for (let i = 0; i < 2; i++) {
                     const colorOptions = colors.map(color => ({
@@ -1939,7 +1950,9 @@
                     red: 'bg-red-500',
                     yellow: 'bg-yellow-500', 
                     blue: 'bg-blue-500',
-                    purple: 'bg-purple-500'
+                    purple: 'bg-purple-500',
+                    green: 'bg-green-500',
+                    orange: 'bg-orange-500'
                 };
                 
                 return React.createElement('div', {
@@ -1960,7 +1973,9 @@
                     getResourceIcon('red', player.resources.red),
                     getResourceIcon('yellow', player.resources.yellow),
                     getResourceIcon('blue', player.resources.blue),
-                    getResourceIcon('purple', player.resources.purple)
+                    getResourceIcon('purple', player.resources.purple),
+                    getResourceIcon('green', player.resources.green),
+                    getResourceIcon('orange', player.resources.orange)
                 ]),
                 React.createElement('div', { key: 'workers', className: 'text-center text-gray-700 font-semibold mb-3' }, 
                     `Workers left: ${player.workersLeft}`),
@@ -1989,6 +2004,8 @@
                     case 'yellow': return `${baseStyle} border-l-yellow-500`;
                     case 'blue': return `${baseStyle} border-l-blue-500`;
                     case 'purple': return `${baseStyle} border-l-purple-500`;
+                    case 'green': return `${baseStyle} border-l-green-500`;
+                    case 'orange': return `${baseStyle} border-l-orange-500`;
                     default: return `${baseStyle} border-l-gray-500`;
                 }
             };
@@ -1999,6 +2016,8 @@
                     case 'yellow': return 'text-yellow-500';
                     case 'blue': return 'text-blue-500';
                     case 'purple': return 'text-purple-500';
+                    case 'green': return 'text-green-500';
+                    case 'orange': return 'text-orange-500';
                     default: return 'text-gray-500';
                 }
             };
@@ -2058,6 +2077,14 @@
                 purple: {
                     1: { cost: { purple: 1, any: 1 }, effect: 'Take an extra turn after this one' },
                     2: { cost: { purple: 2, any: 2 }, effect: 'Needs new effect (old one moved to R3)' }
+                },
+                green: {
+                    1: { cost: { green: 1, any: 1 }, effect: 'Trade any 2 for any 3' },
+                    2: { cost: { green: 2, any: 2 }, effect: 'Double shop benefits this round' }
+                },
+                orange: {
+                    1: { cost: { orange: 1, any: 1 }, effect: 'Force all to discard 1' },
+                    2: { cost: { orange: 2, any: 2 }, effect: 'Steal from all players' }
                 }
             };
             
@@ -2236,7 +2263,9 @@
                 red: { cost: { red: 5 }, vp: 3 },
                 yellow: { cost: { any: 7 }, vp: 3 },
                 blue: { cost: { blue: 5 }, vp: 3 },
-                purple: { cost: { purple: 5 }, vp: 3 }
+                purple: { cost: { purple: 5 }, vp: 3 },
+                green: { cost: { green: 5 }, vp: 3 },
+                orange: { cost: { orange: 5 }, vp: 3 }
             };
             
             const handlePurchase = () => {
@@ -2259,7 +2288,7 @@
                     // Deduct 7 cubes proportionally
                     const resourceCost = {};
                     let remaining = 7;
-                    const colors = ['red', 'yellow', 'blue', 'purple'];
+                    const colors = ['red', 'yellow', 'blue', 'purple', 'green', 'orange'];
                     
                     for (const color of colors) {
                         const take = Math.min(currentPlayer.resources[color], remaining);
@@ -2452,8 +2481,14 @@
             
             // If no layers selected yet, show loading or use default layers for local play
             if (!state.gameLayers) {
+                console.log('No game layers found. State:', {
+                    roomCode: state.roomCode,
+                    gameStarted: state.gameStarted,
+                    gameLayers: state.gameLayers
+                });
                 if (!state.roomCode) {
                     // Local play - use 4 layers
+                    console.log('Local play - selecting 4 layers');
                     const selectedLayers = selectGameLayers(4);
                     dispatch({ type: 'SET_GAME_LAYERS', layers: selectedLayers });
                 }
@@ -2463,9 +2498,13 @@
                     className: 'text-center glass rounded-xl p-8'
                 }, [
                     React.createElement('h2', { key: 'title', className: 'text-2xl font-bold mb-4' }, 'Setting up game layers...'),
-                    React.createElement('div', { key: 'spinner', className: 'animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto' })
+                    React.createElement('div', { key: 'spinner', className: 'animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto' }),
+                    React.createElement('div', { key: 'debug', className: 'text-sm text-gray-600 mt-4' }, 
+                        `Debug: roomCode=${state.roomCode}, gameStarted=${state.gameStarted}`)
                 ]));
             }
+            
+            console.log('GameBoard rendering with layers:', Object.keys(state.gameLayers));
 
             const totalWorkers = state.players.reduce((sum, p) => sum + p.workersLeft, 0);
             const totalSpaces = Object.values(state.gameLayers).reduce((sum, layer) => 
@@ -2479,7 +2518,7 @@
                         React.createElement('h1', { 
                             key: 'title', 
                             className: 'text-5xl font-bold text-gray-800 mb-6 text-shadow' 
-                        }, `Worker Placement Game - Round ${state.round}`),
+                        }, `Patrons - Round ${state.round}`),
                         React.createElement('div', { key: 'info', className: 'glass rounded-xl shadow-xl p-6 mb-6 max-w-2xl mx-auto' }, [
                             React.createElement('div', { 
                                 key: 'current', 
@@ -2604,6 +2643,8 @@
                 ]);
             } catch (error) {
                 console.error('Render error:', error);
+                console.error('Error stack:', error.stack);
+                console.error('Game state at error:', state);
                 return React.createElement('div', { 
                     className: 'min-h-screen flex items-center justify-center p-4' 
                 }, React.createElement('div', {
@@ -2617,6 +2658,10 @@
                         key: 'message',
                         className: 'text-gray-600 mb-4' 
                     }, 'Something went wrong. Check browser console for details.'),
+                    React.createElement('div', {
+                        key: 'error-details',
+                        className: 'text-sm text-gray-500 mb-4 p-2 bg-gray-100 rounded'
+                    }, `Error: ${error.message}`),
                     React.createElement('button', {
                         key: 'reload',
                         onClick: () => window.location.reload(),
