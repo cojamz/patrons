@@ -592,6 +592,23 @@
             roomRef.child('players').on('value', snapshot => {
                 const players = snapshot.val() || {};
                 dispatch({ type: 'UPDATE_CONNECTED_PLAYERS', connectedPlayers: players });
+                
+                // Check if host disconnected and transfer host status
+                const connectedPlayers = Object.values(players).filter(p => p.connected);
+                const currentHost = connectedPlayers.find(p => p.id === 1);
+                
+                if (!currentHost && connectedPlayers.length > 0) {
+                    // Original host (player 1) disconnected, make lowest ID the new host
+                    const newHost = connectedPlayers.reduce((lowest, player) => 
+                        player.id < lowest.id ? player : lowest
+                    );
+                    
+                    if (newHost.id === myPlayerId) {
+                        // I become the new host
+                        dispatch({ type: 'SET_ROOM_INFO', roomCode: roomCode, isHost: true });
+                        console.log(`Player ${myPlayerId} is now the host`);
+                    }
+                }
             });
             
             // Listen for game state changes
