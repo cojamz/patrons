@@ -165,10 +165,10 @@
             currentPlayer: 1,
             turnDirection: 1,
             players: [
-                { id: 1, name: "Player 1", resources: { red: 0, yellow: 0, blue: 0, purple: 0, green: 0, orange: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
-                { id: 2, name: "Player 2", resources: { red: 0, yellow: 0, blue: 0, purple: 0, green: 0, orange: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
-                { id: 3, name: "Player 3", resources: { red: 0, yellow: 0, blue: 0, purple: 0, green: 0, orange: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
-                { id: 4, name: "Player 4", resources: { red: 0, yellow: 0, blue: 0, purple: 0, green: 0, orange: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 }
+                { id: 1, name: "Player 1", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
+                { id: 2, name: "Player 2", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
+                { id: 3, name: "Player 3", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
+                { id: 4, name: "Player 4", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 }
             ],
             occupiedSpaces: {},
             round: 1,
@@ -219,9 +219,7 @@
                                         red: player.resources.red + (action.resources.red || 0),
                                         yellow: player.resources.yellow + (action.resources.yellow || 0),
                                         blue: player.resources.blue + (action.resources.blue || 0),
-                                        purple: player.resources.purple + (action.resources.purple || 0),
-                                        green: player.resources.green + (action.resources.green || 0),
-                                        orange: player.resources.orange + (action.resources.orange || 0)
+                                        purple: player.resources.purple + (action.resources.purple || 0)
                                     }
                                 }
                                 : player
@@ -429,7 +427,7 @@
                             ...player,
                             effects: player.effects || [],
                             resources: {
-                                red: 0, yellow: 0, blue: 0, purple: 0, green: 0, orange: 0,
+                                red: 0, yellow: 0, blue: 0, purple: 0,
                                 ...(player.resources || {})
                             }
                         })) : state.players,
@@ -642,7 +640,7 @@
                         players.push({
                             id: player.id,
                             name: player.name,
-                            resources: { red: 0, yellow: 0, blue: 0, purple: 0, green: 0, orange: 0 },
+                            resources: { red: 0, yellow: 0, blue: 0, purple: 0 },
                             workersLeft: 4,
                             effects: [],
                             victoryPoints: 0
@@ -953,11 +951,7 @@
                 'gain3yellow': { yellow: 3 },
                 'gain2yellow': { yellow: 2 },
                 'gain3purple': { purple: 3 },
-                'gain2purple': { purple: 2 },
-                'gain3green': { green: 3 },
-                'gain2green': { green: 2 },
-                'gain3orange': { orange: 3 },
-                'gain2orange': { orange: 2 }
+                'gain2purple': { purple: 2 }
             };
             
             if (basicGains[actionId]) {
@@ -995,7 +989,7 @@
             
             // Yellow layer actions with player choice
             if (actionId === 'gain3yellow') {
-                const colors = ['red', 'yellow', 'blue', 'purple', 'green', 'orange'];
+                const colors = ['red', 'yellow', 'blue', 'purple'];
                 const choices = [];
                 
                 for (let i = 0; i < 3; i++) {
@@ -1055,7 +1049,7 @@
             
             // Similar implementation for gain2yellow
             if (actionId === 'gain2yellow') {
-                const colors = ['red', 'yellow', 'blue', 'purple', 'green', 'orange'];
+                const colors = ['red', 'yellow', 'blue', 'purple'];
                 const choices = [];
                 
                 for (let i = 0; i < 2; i++) {
@@ -1489,7 +1483,7 @@
                 }
                 
                 // Choose 2 cubes to gain
-                const colors = ['red', 'yellow', 'blue', 'purple', 'green', 'orange'];
+                const colors = ['red', 'yellow', 'blue', 'purple'];
                 const tradeGain = {};
                 for (let i = 0; i < 2; i++) {
                     const colorOptions = colors.map(color => ({
@@ -2015,8 +2009,6 @@
                     yellow: 'bg-yellow-500', 
                     blue: 'bg-blue-500',
                     purple: 'bg-purple-500',
-                    green: 'bg-green-500',
-                    orange: 'bg-orange-500'
                 };
                 
                 return React.createElement('div', {
@@ -2065,8 +2057,6 @@
                     case 'yellow': return `${baseStyle} border-l-yellow-500`;
                     case 'blue': return `${baseStyle} border-l-blue-500`;
                     case 'purple': return `${baseStyle} border-l-purple-500`;
-                    case 'green': return `${baseStyle} border-l-green-500`;
-                    case 'orange': return `${baseStyle} border-l-orange-500`;
                     default: return `${baseStyle} border-l-gray-500`;
                 }
             };
@@ -2077,8 +2067,6 @@
                     case 'yellow': return 'text-yellow-500';
                     case 'blue': return 'text-blue-500';
                     case 'purple': return 'text-purple-500';
-                    case 'green': return 'text-green-500';
-                    case 'orange': return 'text-orange-500';
                     default: return 'text-gray-500';
                 }
             };
@@ -2138,14 +2126,6 @@
                 purple: {
                     1: { cost: { purple: 1, any: 1 }, effect: 'Take an extra turn after this one' },
                     2: { cost: { purple: 2, any: 2 }, effect: 'Needs new effect (old one moved to R3)' }
-                },
-                green: {
-                    1: { cost: { green: 1, any: 1 }, effect: 'Trade any 2 for any 3' },
-                    2: { cost: { green: 2, any: 2 }, effect: 'Double shop benefits this round' }
-                },
-                orange: {
-                    1: { cost: { orange: 1, any: 1 }, effect: 'Force all to discard 1' },
-                    2: { cost: { orange: 2, any: 2 }, effect: 'Steal from all players' }
                 }
             };
             
@@ -2324,9 +2304,7 @@
                 red: { cost: { red: 5 }, vp: 3 },
                 yellow: { cost: { any: 7 }, vp: 3 },
                 blue: { cost: { blue: 5 }, vp: 3 },
-                purple: { cost: { purple: 5 }, vp: 3 },
-                green: { cost: { green: 5 }, vp: 3 },
-                orange: { cost: { orange: 5 }, vp: 3 }
+                purple: { cost: { purple: 5 }, vp: 3 }
             };
             
             const handlePurchase = () => {
@@ -2349,7 +2327,7 @@
                     // Deduct 7 cubes proportionally
                     const resourceCost = {};
                     let remaining = 7;
-                    const colors = ['red', 'yellow', 'blue', 'purple', 'green', 'orange'];
+                    const colors = ['red', 'yellow', 'blue', 'purple'];
                     
                     for (const color of colors) {
                         const take = Math.min(currentPlayer.resources[color], remaining);
@@ -2444,30 +2422,6 @@
                     { id: 'purpleHybrid2', title: '+1 Purple + Choose Turn Order', description: '(For next round)', round: 2 }
                 ]
             },
-            green: {
-                title: "Economics",
-                icon: "🟢",
-                actions: [
-                    { id: 'gain3green', title: 'Gain 3 Green', description: 'Round 1', round: 1 },
-                    { id: 'gain2green', title: 'Gain 2 Green', description: 'Round 1', round: 1 },
-                    { id: 'greenTrade', title: 'Trade Any 2 for Any 3', description: 'Round 1', round: 1 },
-                    { id: 'greenMarket', title: 'All Players Trade', description: 'Round 1', round: 1 },
-                    { id: 'greenDouble', title: 'Double Shop Benefits', description: 'Round 2', round: 2 },
-                    { id: 'greenBonus', title: 'Bonus per Different Color', description: 'Round 2', round: 2 }
-                ]
-            },
-            orange: {
-                title: "Aggression",
-                icon: "🟠",
-                actions: [
-                    { id: 'gain3orange', title: 'Gain 3 Orange', description: 'Round 1', round: 1 },
-                    { id: 'gain2orange', title: 'Gain 2 Orange', description: 'Round 1', round: 1 },
-                    { id: 'orangeAttack', title: 'Force All to Discard 1', description: 'Round 1', round: 1 },
-                    { id: 'orangeBlock', title: 'Block Next Player Turn', description: 'Round 1', round: 1 },
-                    { id: 'orangeSteal', title: 'Steal from All Players', description: 'Round 2', round: 2 },
-                    { id: 'orangeDestroy', title: 'Remove Action Space', description: 'Round 2', round: 2 }
-                ]
-            }
         };
         
         // Function to select random layers based on player count
