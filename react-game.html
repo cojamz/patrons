@@ -631,7 +631,40 @@
         
         function startMultiplayerGame(roomCode) {
             if (database && roomCode) {
-                database.ref(`rooms/${roomCode}/gameState/gameStarted`).set(true);
+                // Get current connected players and initialize proper game state
+                database.ref(`rooms/${roomCode}/players`).once('value', (snapshot) => {
+                    const connectedPlayers = snapshot.val() || {};
+                    const playerCount = Object.keys(connectedPlayers).length;
+                    
+                    // Create proper player objects with all required fields
+                    const players = [];
+                    Object.values(connectedPlayers).forEach((player, index) => {
+                        players.push({
+                            id: player.id,
+                            name: player.name,
+                            resources: { red: 0, yellow: 0, blue: 0, purple: 0, green: 0, orange: 0 },
+                            workersLeft: 4,
+                            effects: [],
+                            victoryPoints: 0
+                        });
+                    });
+                    
+                    // Initialize complete game state
+                    const gameState = {
+                        currentPlayer: 1,
+                        turnDirection: 1,
+                        players: players,
+                        occupiedSpaces: {},
+                        round: 1,
+                        turnOrder: players.map(p => p.id),
+                        workerPlacedThisTurn: false,
+                        workersToPlace: 1,
+                        actionLog: [],
+                        gameStarted: true
+                    };
+                    
+                    database.ref(`rooms/${roomCode}/gameState`).set(gameState);
+                });
             }
         }
 
