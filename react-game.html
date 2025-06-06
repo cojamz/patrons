@@ -1996,6 +1996,11 @@
 
         // Player Card Component
         function PlayerCard({ player, isCurrentPlayer, onEndTurn }) {
+            const { state } = useGame();
+            
+            // Get active colors from current game layers
+            const activeColors = state.gameLayers ? Object.keys(state.gameLayers) : ['red', 'yellow', 'blue', 'purple'];
+            
             const getPlayerStyle = () => {
                 let baseStyle = "glass rounded-lg shadow-lg p-4 transition-all duration-300";
                 if (isCurrentPlayer) {
@@ -2028,14 +2033,11 @@
                     ]),
                     React.createElement('div', { key: 'vp', className: 'text-2xl font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-lg' }, `${player.victoryPoints} VP`)
                 ]),
-                React.createElement('div', { key: 'resources', className: 'flex gap-3 mb-4 justify-center' }, [
-                    getResourceIcon('red', player.resources.red),
-                    getResourceIcon('yellow', player.resources.yellow),
-                    getResourceIcon('blue', player.resources.blue),
-                    getResourceIcon('purple', player.resources.purple),
-                    getResourceIcon('green', player.resources.green),
-                    getResourceIcon('orange', player.resources.orange)
-                ]),
+                React.createElement('div', { key: 'resources', className: 'flex gap-3 mb-4 justify-center' }, 
+                    activeColors.map(color => 
+                        getResourceIcon(color, player.resources[color] || 0)
+                    )
+                ),
                 React.createElement('div', { key: 'workers', className: 'text-center text-gray-700 font-semibold mb-3' }, 
                     `Workers left: ${player.workersLeft}`),
                 (player.effects && player.effects.length > 0) && React.createElement('div', { key: 'effects', className: 'mb-3' }, [
