@@ -243,7 +243,7 @@
                         ...state,
                         players: state.players.map(player => 
                             player.id === action.playerId 
-                                ? { ...player, effects: [...player.effects, action.effect] }
+                                ? { ...player, effects: [...(player.effects || []), action.effect] }
                                 : player
                         )
                     };
@@ -279,7 +279,7 @@
                                 player.id === state.currentPlayer 
                                     ? { 
                                         ...player, 
-                                        effects: player.effects.filter(effect => 
+                                        effects: (player.effects || []).filter(effect => 
                                             !effect.includes('Will take an extra turn after this one')
                                         )
                                     }
@@ -326,7 +326,7 @@
                         round: state.round + 1,
                         players: state.players.map(player => {
                             const baseWorkers = 3 + (state.round + 1);
-                            const hasExtraWorkers = player.effects.some(effect => 
+                            const hasExtraWorkers = (player.effects || []).some(effect => 
                                 effect.includes('Will get 2 extra workers next round')
                             );
                             const extraWorkers = hasExtraWorkers ? 2 : 0;
@@ -334,7 +334,7 @@
                             return {
                                 ...player,
                                 workersLeft: baseWorkers + extraWorkers,
-                                effects: player.effects.filter(effect => 
+                                effects: (player.effects || []).filter(effect => 
                                     !effect.includes('Will get 2 extra workers next round')
                                 )
                             };
@@ -424,6 +424,15 @@
                     return {
                         ...state,
                         ...action.gameState,
+                        // Ensure all players have effects array
+                        players: action.gameState.players ? action.gameState.players.map(player => ({
+                            ...player,
+                            effects: player.effects || [],
+                            resources: {
+                                red: 0, yellow: 0, blue: 0, purple: 0, green: 0, orange: 0,
+                                ...(player.resources || {})
+                            }
+                        })) : state.players,
                         roomCode: state.roomCode,
                         myPlayerId: state.myPlayerId,
                         myPlayerName: state.myPlayerName,
@@ -905,7 +914,7 @@
                 let resources = { ...basicGains[actionId] };
                 
                 // Check for doubling effect
-                const hasDoubleEffect = player.effects.some(effect => effect.includes('Next gain will be doubled'));
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
                 if (hasDoubleEffect) {
                     // Double all gains
                     Object.keys(resources).forEach(color => {
@@ -916,7 +925,7 @@
                     dispatch({
                         type: 'UPDATE_PLAYER_EFFECTS',
                         playerId: player.id,
-                        effects: player.effects.filter(effect => !effect.includes('Next gain will be doubled'))
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
                     });
                     
                     const message = `Player ${player.id}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
@@ -965,7 +974,7 @@
                 });
                 
                 // Check for doubling effect
-                const hasDoubleEffect = player.effects.some(effect => effect.includes('Next gain will be doubled'));
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
                 if (hasDoubleEffect) {
                     // Double all gains
                     Object.keys(resources).forEach(color => {
@@ -976,7 +985,7 @@
                     dispatch({
                         type: 'UPDATE_PLAYER_EFFECTS',
                         playerId: player.id,
-                        effects: player.effects.filter(effect => !effect.includes('Next gain will be doubled'))
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
                     });
                     
                     const message = `Player ${player.id}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
@@ -1024,7 +1033,7 @@
                 });
                 
                 // Check for doubling effect
-                const hasDoubleEffect = player.effects.some(effect => effect.includes('Next gain will be doubled'));
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
                 if (hasDoubleEffect) {
                     // Double all gains
                     Object.keys(resources).forEach(color => {
@@ -1035,7 +1044,7 @@
                     dispatch({
                         type: 'UPDATE_PLAYER_EFFECTS',
                         playerId: player.id,
-                        effects: player.effects.filter(effect => !effect.includes('Next gain will be doubled'))
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
                     });
                     
                     const message = `Player ${player.id}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
@@ -1895,7 +1904,7 @@
                 dispatch({
                     type: 'UPDATE_PLAYER_EFFECTS',
                     playerId: playerId,
-                    effects: player.effects.filter((_, i) => i !== effectIndex)
+                    effects: (player.effects || []).filter((_, i) => i !== effectIndex)
                 });
                 
             } else if (effect.includes('Can close any shop this round')) {
@@ -1979,9 +1988,9 @@
                 ]),
                 React.createElement('div', { key: 'workers', className: 'text-center text-gray-700 font-semibold mb-3' }, 
                     `Workers left: ${player.workersLeft}`),
-                player.effects.length > 0 && React.createElement('div', { key: 'effects', className: 'mb-3' }, [
+                (player.effects && player.effects.length > 0) && React.createElement('div', { key: 'effects', className: 'mb-3' }, [
                     React.createElement('div', { key: 'label', className: 'text-xs font-semibold text-gray-600 mb-1' }, 'Effects:'),
-                    ...player.effects.map((effect, index) => 
+                    ...(player.effects || []).map((effect, index) => 
                         React.createElement('div', { 
                             key: `effect-${index}`, 
                             className: 'bg-yellow-100 border border-yellow-300 rounded px-2 py-1 mb-1 text-xs flex justify-between items-center' 
