@@ -3004,35 +3004,14 @@
                         `Round ${round}`)
                 ]),
                 
-                // Shops Section - Prominently displayed at top
-                React.createElement('div', { key: 'shops', className: 'mb-4 bg-white bg-opacity-20 rounded-lg p-3' }, [
-                    React.createElement('h3', { key: 'shop-title', className: 'text-lg font-semibold mb-3 text-gray-800' }, '🏪 Shops'),
-                    React.createElement('div', { key: 'shop-layout', className: 'space-y-2' }, [
-                        // VP shop centered on top
-                        React.createElement('div', { key: 'shop-vp-row', className: 'flex justify-center' }, [
-                            React.createElement('div', { key: 'shop-vp', className: 'bg-white rounded-lg shadow p-2 w-32' }, [
-                                React.createElement('div', { key: 'vp-label', className: 'text-xs font-bold text-gray-700 mb-1 text-center' }, 'VP'),
-                                React.createElement(VictoryShop, { key: 'victory-shop', color })
-                            ])
-                        ]),
-                        // R1 and R2 shops side by side
-                        React.createElement('div', { key: 'shop-round-row', className: 'grid grid-cols-2 gap-2' }, [
-                            React.createElement('div', { key: 'shop-r1', className: 'bg-white rounded-lg shadow p-2' }, [
-                                React.createElement('div', { key: 'r1-label', className: 'text-xs font-bold text-gray-700 mb-1 text-center' }, 'R1'),
-                                React.createElement(RegularShop, { key: 'regular-shop', color, round: 1 })
-                            ]),
-                            React.createElement('div', { key: 'shop-r2', className: 'bg-white rounded-lg shadow p-2' }, [
-                                React.createElement('div', { key: 'r2-label', className: 'text-xs font-bold text-gray-700 mb-1 text-center' }, 'R2'),
-                                React.createElement(RegularShop, { key: 'regular-shop-r2', color, round: 2 })
-                            ])
-                        ]),
-                        // R3 shop centered below (only show if round 3 or higher)
-                        round >= 3 && React.createElement('div', { key: 'shop-r3-row', className: 'flex justify-center' }, [
-                            React.createElement('div', { key: 'shop-r3', className: 'bg-white rounded-lg shadow p-2 w-32' }, [
-                                React.createElement('div', { key: 'r3-label', className: 'text-xs font-bold text-gray-700 mb-1 text-center' }, 'R3'),
-                                React.createElement(RegularShop, { key: 'regular-shop-r3', color, round: 3 })
-                            ])
-                        ])
+                // Shops Section - Compact horizontal layout
+                React.createElement('div', { key: 'shops', className: 'mb-3 bg-white bg-opacity-10 rounded-lg p-2' }, [
+                    React.createElement('div', { key: 'shop-header', className: 'text-sm font-semibold text-gray-700 mb-1' }, '🏪 Shops'),
+                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-1 text-xs' }, [
+                        React.createElement(CompactShop, { key: 'shop-r1', color, round: 1, label: 'R1' }),
+                        React.createElement(CompactShop, { key: 'shop-r2', color, round: 2, label: 'R2' }),
+                        round >= 3 ? React.createElement(CompactShop, { key: 'shop-r3', color, round: 3, label: 'R3' }) : React.createElement('div', { key: 'empty' }),
+                        React.createElement(CompactVictoryShop, { key: 'shop-vp', color })
                     ])
                 ]),
                 
@@ -3289,6 +3268,213 @@
             ]);
         }
 
+        // Compact Shop Component
+        function CompactShop({ color, round, label }) {
+            const { state, dispatch } = useGame();
+            
+            const shopData = {
+                red: {
+                    1: { cost: { red: 1, any: 1 }, effect: 'Repeat action' },
+                    2: { cost: { red: 2, any: 2 }, effect: 'Place next worker' },
+                    3: { cost: { red: 3, any: 3 }, effect: 'Repeat all actions' }
+                },
+                yellow: {
+                    1: { cost: { yellow: 1, any: 1 }, effect: 'Double gain' },
+                    2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 5+all 1' },
+                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 9+all 1' }
+                },
+                blue: {
+                    1: { cost: { blue: 1, any: 1 }, effect: 'Close shop' },
+                    2: { cost: { blue: 2, any: 2 }, effect: 'Flip all shops' },
+                    3: { cost: { blue: 3, any: 3 }, effect: 'Any shop benefit' }
+                },
+                purple: {
+                    1: { cost: { purple: 1, any: 1 }, effect: 'Extra turn' },
+                    2: { cost: { purple: 2, any: 2 }, effect: 'Play 2 more' },
+                    3: { cost: { purple: 3, any: 3 }, effect: 'Play all' }
+                }
+            };
+            
+            const shop = shopData[color][round];
+            const shopId = `${color}${round}`;
+            const isClosed = state.closedShops[shopId];
+            const colorCost = shop.cost[color] || 0;
+            const anyCost = Math.max(0, (shop.cost.any || 0) + state.shopCostModifier);
+            
+            const handlePurchase = async () => {
+                if (isClosed) {
+                    alert('This shop is closed!');
+                    return;
+                }
+                
+                if (state.roomCode && state.myPlayerId !== state.currentPlayer) {
+                    alert('It\'s not your turn!');
+                    return;
+                }
+                
+                const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
+                
+                // Check resources
+                if (currentPlayer.resources[color] < colorCost) {
+                    alert(`Need ${colorCost} ${color} gems.`);
+                    return;
+                }
+                
+                const totalGems = Object.values(currentPlayer.resources).reduce((sum, amt) => sum + amt, 0);
+                if (totalGems - colorCost < anyCost) {
+                    alert(`Need ${anyCost} additional gems.`);
+                    return;
+                }
+                
+                // Simple cost deduction (full implementation in RegularShop)
+                const resourceCost = {};
+                resourceCost[color] = -colorCost;
+                
+                // Deduct any cost
+                let remaining = anyCost;
+                ['red', 'yellow', 'blue', 'purple'].forEach(c => {
+                    if (remaining > 0 && c !== color) {
+                        const available = currentPlayer.resources[c];
+                        const take = Math.min(available, remaining);
+                        if (take > 0) {
+                            resourceCost[c] = (resourceCost[c] || 0) - take;
+                            remaining -= take;
+                        }
+                    }
+                });
+                
+                dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
+                
+                // Execute shop effect
+                await executeShopBenefit(color, round, currentPlayer, dispatch, state);
+                
+                // Blue automatic VP
+                state.players.forEach(p => {
+                    dispatch({ type: 'UPDATE_VP', playerId: p.id, vp: 1 });
+                });
+                dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop)' });
+            };
+            
+            const getColorEmoji = () => {
+                switch(color) {
+                    case 'red': return '🔴';
+                    case 'yellow': return '🟡';
+                    case 'blue': return '🔵';
+                    case 'purple': return '🟣';
+                    default: return '📎';
+                }
+            };
+            
+            return React.createElement('div', { 
+                className: `p-1 rounded ${isClosed ? 'bg-gray-200 opacity-50' : 'bg-white hover:bg-gray-50'} border transition-all` 
+            }, [
+                React.createElement('div', { key: 'header', className: 'flex items-center justify-between text-xs' }, [
+                    React.createElement('span', { key: 'label', className: 'font-bold' }, label),
+                    React.createElement('span', { key: 'cost' }, `${colorCost}${getColorEmoji()}+${anyCost}⚪`)
+                ]),
+                React.createElement('button', {
+                    key: 'btn',
+                    onClick: handlePurchase,
+                    className: `w-full text-xs py-1 px-1 rounded mt-1 ${isClosed ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white'}`,
+                    disabled: isClosed
+                }, isClosed ? 'Closed' : shop.effect)
+            ]);
+        }
+        
+        // Compact Victory Shop Component
+        function CompactVictoryShop({ color }) {
+            const { state, dispatch } = useGame();
+            
+            const shopData = {
+                red: { cost: 5, vp: 3 },
+                yellow: { cost: 5, vp: 3 },
+                blue: { cost: 5, vp: 3 },
+                purple: { cost: 6, vp: 3 }
+            };
+            
+            const shop = shopData[color];
+            const shopId = `${color}vp`;
+            const isClosed = state.closedShops[shopId];
+            const actualCost = color === 'yellow' ? Math.max(0, shop.cost + state.shopCostModifier) : shop.cost;
+            
+            const handlePurchase = () => {
+                if (isClosed) {
+                    alert('This shop is closed!');
+                    return;
+                }
+                
+                if (state.roomCode && state.myPlayerId !== state.currentPlayer) {
+                    alert('It\'s not your turn!');
+                    return;
+                }
+                
+                const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
+                
+                if (color === 'yellow') {
+                    const totalGems = Object.values(currentPlayer.resources).reduce((sum, amt) => sum + amt, 0);
+                    if (totalGems < actualCost) {
+                        alert(`Need ${actualCost} gems total.`);
+                        return;
+                    }
+                } else {
+                    if (currentPlayer.resources[color] < actualCost) {
+                        alert(`Need ${actualCost} ${color} gems.`);
+                        return;
+                    }
+                }
+                
+                // Deduct cost (simplified)
+                const resourceCost = {};
+                if (color === 'yellow') {
+                    let remaining = actualCost;
+                    ['red', 'yellow', 'blue', 'purple'].forEach(c => {
+                        const take = Math.min(currentPlayer.resources[c], remaining);
+                        if (take > 0) {
+                            resourceCost[c] = -take;
+                            remaining -= take;
+                        }
+                    });
+                } else {
+                    resourceCost[color] = -actualCost;
+                }
+                
+                dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
+                dispatch({ type: 'ADD_VICTORY_POINTS', playerId: currentPlayer.id, points: shop.vp });
+                
+                // Blue automatic VP
+                state.players.forEach(p => {
+                    dispatch({ type: 'UPDATE_VP', playerId: p.id, vp: 1 });
+                });
+                dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop)' });
+            };
+            
+            const getColorEmoji = () => {
+                switch(color) {
+                    case 'red': return '🔴';
+                    case 'yellow': return '🟡';
+                    case 'blue': return '🔵';
+                    case 'purple': return '🟣';
+                    default: return '📎';
+                }
+            };
+            
+            return React.createElement('div', { 
+                className: `p-1 rounded ${isClosed ? 'bg-gray-200 opacity-50' : 'bg-green-100 hover:bg-green-200'} border border-green-400 transition-all` 
+            }, [
+                React.createElement('div', { key: 'header', className: 'flex items-center justify-between text-xs' }, [
+                    React.createElement('span', { key: 'label', className: 'font-bold text-green-700' }, 'VP'),
+                    React.createElement('span', { key: 'cost' }, 
+                        color === 'yellow' ? `${actualCost}⚪` : `${actualCost}${getColorEmoji()}`)
+                ]),
+                React.createElement('button', {
+                    key: 'btn',
+                    onClick: handlePurchase,
+                    className: `w-full text-xs py-1 px-1 rounded mt-1 ${isClosed ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'}`,
+                    disabled: isClosed
+                }, isClosed ? 'Closed' : `${shop.vp} VP`)
+            ]);
+        }
+        
         // Victory Shop Component
         function VictoryShop({ color }) {
             const { state, dispatch } = useGame();
