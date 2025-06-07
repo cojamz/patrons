@@ -183,6 +183,7 @@
             skippedTurns: {}, // Track players who should skip turns { playerId: turnsToSkip }
             playersOutOfWorkers: [], // Track order players ran out of workers for purple VP
             waitingForOthers: {}, // Track players waiting for others to run out (purple R3)
+            roundActions: [], // Track all actions taken this round for Red R3 shop
             
             // Multiplayer state
             roomCode: null,
@@ -210,7 +211,8 @@
                                 : player
                         ),
                         workerPlacedThisTurn: true,
-                        workersToPlace: newWorkersToPlace
+                        workersToPlace: newWorkersToPlace,
+                        roundActions: [...state.roundActions, { playerId: state.currentPlayer, actionId: action.actionId }]
                     };
                 
                 case 'UPDATE_RESOURCES':
@@ -349,6 +351,31 @@
                         };
                     }
                     
+                    // Check if any waiting players should now play all workers
+                    let waitingPlayersUpdates = [];
+                    let newWaitingForOthers = { ...state.waitingForOthers };
+                    
+                    // If all non-waiting players are out of workers, activate waiting players
+                    const nonWaitingPlayersWithWorkers = state.players.filter(p => 
+                        !state.waitingForOthers[p.id] && p.workersLeft > 0
+                    );
+                    
+                    if (nonWaitingPlayersWithWorkers.length === 0) {
+                        // All non-waiting players are out, activate waiting players
+                        Object.keys(state.waitingForOthers).forEach(playerId => {
+                            if (state.waitingForOthers[playerId]) {
+                                const waitingPlayer = state.players.find(p => p.id === parseInt(playerId));
+                                if (waitingPlayer && waitingPlayer.workersLeft > 0) {
+                                    waitingPlayersUpdates.push({
+                                        playerId: parseInt(playerId),
+                                        workers: waitingPlayer.workersLeft
+                                    });
+                                    delete newWaitingForOthers[playerId];
+                                }
+                            }
+                        });
+                    }
+                    
                     // Find next player considering skips and waiting players
                     let nextPlayer;
                     let nextDirection = state.turnDirection;
@@ -380,11 +407,11 @@
                         // Check if player should skip
                         const shouldSkip = state.skippedTurns[nextPlayer] > 0;
                         // Check if player is waiting for others
-                        const isWaiting = state.waitingForOthers[nextPlayer];
+                        const isWaiting = newWaitingForOthers[nextPlayer];
                         // Check if player has workers
                         const hasWorkers = state.players.find(p => p.id === nextPlayer).workersLeft > 0;
                         
-                    } while ((state.skippedTurns[nextPlayer] > 0 || state.waitingForOthers[nextPlayer] || 
+                    } while ((state.skippedTurns[nextPlayer] > 0 || newWaitingForOthers[nextPlayer] || 
                              !state.players.find(p => p.id === nextPlayer).workersLeft > 0) && 
                              attempts < maxAttempts);
                     
@@ -394,13 +421,18 @@
                         newSkippedTurns[nextPlayer]--;
                     }
                     
+                    // Set workers to place for waiting players who are now active
+                    const waitingPlayerUpdate = waitingPlayersUpdates.find(u => u.playerId === nextPlayer);
+                    const workersToPlace = waitingPlayerUpdate ? waitingPlayerUpdate.workers : 1;
+                    
                     return {
                         ...state,
                         currentPlayer: nextPlayer,
                         turnDirection: nextDirection,
                         workerPlacedThisTurn: false,
-                        workersToPlace: 1,
+                        workersToPlace: workersToPlace,
                         skippedTurns: newSkippedTurns,
+                        waitingForOthers: newWaitingForOthers,
                         playersOutOfWorkers: newPlayersOutOfWorkers,
                         players: state.players.map(player => {
                             const vpUpdate = purpleVPUpdates.find(u => u.playerId === player.id);
@@ -411,7 +443,8 @@
                         }),
                         actionLog: [
                             ...state.actionLog.slice(-9),
-                            ...purpleVPUpdates.map(u => `Player ${u.playerId}: +${u.vp} VP (${u.reason})`)
+                            ...purpleVPUpdates.map(u => `Player ${u.playerId}: +${u.vp} VP (${u.reason})`),
+                            ...waitingPlayersUpdates.map(u => `Player ${u.playerId}: Can now play all ${u.workers} workers!`)
                         ].filter(Boolean)
                     };
                 
@@ -460,6 +493,7 @@
                         playersOutOfWorkers: [], // Reset for new round
                         skippedTurns: {}, // Reset skip turns
                         waitingForOthers: {}, // Reset waiting status
+                        roundActions: [], // Reset actions for new round
                         actionLog: [...state.actionLog.slice(-9), ...vpMessages, `Round ${state.round + 1} started! Extra workers applied.`]
                     };
                 
@@ -2572,6 +2606,66 @@
                 dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop)' });
             }
         }
+        
+        // Execute red 3 shop effect - Repeat all actions taken this round
+        async function executeRed3Shop(player, dispatch, state) {
+            if (state.roundActions.length === 0) {
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: No actions have been taken this round!` });
+                return;
+            }
+            
+            // Show list of all actions taken this round
+            const actionOptions = state.roundActions.map((roundAction, index) => {
+                // Find the action details
+                let actionTitle = roundAction.actionId;
+                let layerColor = '';
+                
+                Object.entries(state.gameLayers || {}).forEach(([color, layer]) => {
+                    const action = layer.actions.find(a => a.id === roundAction.actionId);
+                    if (action) {
+                        actionTitle = action.title;
+                        layerColor = color;
+                    }
+                });
+                
+                return {
+                    label: `Player ${roundAction.playerId}'s ${layerColor} action: ${actionTitle}`,
+                    value: roundAction.actionId
+                };
+            });
+            
+            // Let player choose which actions to repeat
+            const message = 'Choose actions to repeat (you can repeat all of them!)';
+            let continueChoosing = true;
+            const repeatedActions = [];
+            
+            while (continueChoosing && actionOptions.length > 0) {
+                const choice = await showChoice(dispatch, message, [
+                    ...actionOptions,
+                    { label: 'Done repeating actions', value: 'done' }
+                ]);
+                
+                if (!choice || choice === 'done') {
+                    continueChoosing = false;
+                } else {
+                    repeatedActions.push(choice);
+                    // Execute the action
+                    await executeAction(choice, player, dispatch, state.occupiedSpaces, state.gameLayers, state, state.gameLayers);
+                    
+                    // RED AUTOMATIC VP: Gain 1 VP for red action
+                    dispatch({
+                        type: 'UPDATE_VP',
+                        playerId: player.id,
+                        vp: 1
+                    });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action (repeat)` });
+                }
+            }
+            
+            if (repeatedActions.length > 0) {
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Repeated ${repeatedActions.length} actions from this round!` });
+            }
+        }
 
         // Effect activation function
         async function activateEffect(effect, playerId, effectIndex, dispatch, state) {
@@ -3030,12 +3124,8 @@
                         await executeYellow3Shop(currentPlayer, dispatch, state);
                         break;
                     case 'red3':
-                        // Repeat all actions taken this round by any player
-                        dispatch({
-                            type: 'ADD_EFFECT',
-                            playerId: currentPlayer.id,
-                            effect: 'Can repeat all actions taken this round by any player'
-                        });
+                        // Repeat all actions taken this round by any player - execute immediately
+                        await executeRed3Shop(currentPlayer, dispatch, state);
                         break;
                     case 'blue1':
                         // Close any shop this round - let player choose
