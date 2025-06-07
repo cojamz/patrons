@@ -180,6 +180,9 @@
             gameLayers: null, // Will be set when game starts
             closedShops: {}, // Track which shops are closed { 'red1': true, 'blue2': true, etc }
             shopCostModifier: 0, // Cost modifier for shops this round
+            skippedTurns: {}, // Track players who should skip turns { playerId: turnsToSkip }
+            playersOutOfWorkers: [], // Track order players ran out of workers for purple VP
+            waitingForOthers: {}, // Track players waiting for others to run out (purple R3)
             
             // Multiplayer state
             roomCode: null,
@@ -287,6 +290,31 @@
                 
                 case 'END_TURN':
                     const currentPlayerObj = state.players.find(p => p.id === state.currentPlayer);
+                    
+                    // Track if player just ran out of workers
+                    let newPlayersOutOfWorkers = [...state.playersOutOfWorkers];
+                    if (currentPlayerObj.workersLeft === 0 && !newPlayersOutOfWorkers.includes(state.currentPlayer)) {
+                        newPlayersOutOfWorkers.push(state.currentPlayer);
+                    }
+                    
+                    // Purple VP: Check if this is first or last player to run out
+                    const purpleVPUpdates = [];
+                    const playersWithWorkers = state.players.filter(p => p.workersLeft > 0);
+                    
+                    // First player to run out gets 3 VP
+                    if (newPlayersOutOfWorkers.length === 1 && newPlayersOutOfWorkers[0] === state.currentPlayer) {
+                        purpleVPUpdates.push({ playerId: state.currentPlayer, vp: 3, reason: 'first to run out of workers' });
+                    }
+                    // Last player to run out gets 3 VP (when only 1 player left with workers)
+                    if (playersWithWorkers.length === 1 && currentPlayerObj.workersLeft === 0) {
+                        const lastPlayer = playersWithWorkers[0];
+                        if (!newPlayersOutOfWorkers.includes(lastPlayer.id)) {
+                            newPlayersOutOfWorkers.push(lastPlayer.id);
+                            purpleVPUpdates.push({ playerId: lastPlayer.id, vp: 3, reason: 'last to run out of workers' });
+                        }
+                    }
+                    
+                    // Check for extra turn effect
                     const hasExtraTurn = currentPlayerObj.effects.some(effect => 
                         effect.includes('Will take an extra turn after this one')
                     );
@@ -295,41 +323,75 @@
                         // Remove the extra turn effect and stay on the same player
                         return {
                             ...state,
-                            players: state.players.map(player => 
-                                player.id === state.currentPlayer 
+                            players: state.players.map(player => {
+                                const vpUpdate = purpleVPUpdates.find(u => u.playerId === player.id);
+                                return player.id === state.currentPlayer 
                                     ? { 
                                         ...player, 
                                         effects: (player.effects || []).filter(effect => 
                                             !effect.includes('Will take an extra turn after this one')
-                                        )
+                                        ),
+                                        victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0)
                                     }
-                                    : player
-                            ),
+                                    : {
+                                        ...player,
+                                        victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0)
+                                    };
+                            }),
                             workerPlacedThisTurn: false,
                             workersToPlace: 1,
-                            actionLog: [...state.actionLog.slice(-9), `Player ${state.currentPlayer}: Taking extra turn!`]
+                            playersOutOfWorkers: newPlayersOutOfWorkers,
+                            actionLog: [
+                                ...state.actionLog.slice(-9), 
+                                `Player ${state.currentPlayer}: Taking extra turn!`,
+                                ...purpleVPUpdates.map(u => `Player ${u.playerId}: +${u.vp} VP (${u.reason})`)
+                            ].filter(Boolean)
                         };
                     }
                     
-                    // Normal turn progression
-                    const currentIndex = state.turnOrder.indexOf(state.currentPlayer);
+                    // Find next player considering skips and waiting players
                     let nextPlayer;
                     let nextDirection = state.turnDirection;
+                    let attempts = 0;
+                    const maxAttempts = state.players.length * 2;
                     
-                    if (state.turnDirection === 1) {
-                        if (currentIndex === state.turnOrder.length - 1) {
-                            nextDirection = -1;
-                            nextPlayer = state.currentPlayer;
+                    do {
+                        const currentIndex = state.turnOrder.indexOf(attempts === 0 ? state.currentPlayer : nextPlayer);
+                        
+                        if (state.turnDirection === 1) {
+                            if (currentIndex === state.turnOrder.length - 1) {
+                                nextDirection = -1;
+                                nextPlayer = state.turnOrder[currentIndex];
+                            } else {
+                                nextPlayer = state.turnOrder[currentIndex + 1];
+                            }
                         } else {
-                            nextPlayer = state.turnOrder[currentIndex + 1];
+                            if (currentIndex === 0) {
+                                nextDirection = 1;
+                                nextPlayer = state.turnOrder[currentIndex];
+                            } else {
+                                nextPlayer = state.turnOrder[currentIndex - 1];
+                            }
                         }
-                    } else {
-                        if (currentIndex === 0) {
-                            nextDirection = 1;
-                            nextPlayer = state.currentPlayer;
-                        } else {
-                            nextPlayer = state.turnOrder[currentIndex - 1];
-                        }
+                        
+                        attempts++;
+                        if (attempts > maxAttempts) break; // Prevent infinite loop
+                        
+                        // Check if player should skip
+                        const shouldSkip = state.skippedTurns[nextPlayer] > 0;
+                        // Check if player is waiting for others
+                        const isWaiting = state.waitingForOthers[nextPlayer];
+                        // Check if player has workers
+                        const hasWorkers = state.players.find(p => p.id === nextPlayer).workersLeft > 0;
+                        
+                    } while ((state.skippedTurns[nextPlayer] > 0 || state.waitingForOthers[nextPlayer] || 
+                             !state.players.find(p => p.id === nextPlayer).workersLeft > 0) && 
+                             attempts < maxAttempts);
+                    
+                    // Update skip counts
+                    const newSkippedTurns = { ...state.skippedTurns };
+                    if (newSkippedTurns[nextPlayer] > 0) {
+                        newSkippedTurns[nextPlayer]--;
                     }
                     
                     return {
@@ -337,7 +399,20 @@
                         currentPlayer: nextPlayer,
                         turnDirection: nextDirection,
                         workerPlacedThisTurn: false,
-                        workersToPlace: 1
+                        workersToPlace: 1,
+                        skippedTurns: newSkippedTurns,
+                        playersOutOfWorkers: newPlayersOutOfWorkers,
+                        players: state.players.map(player => {
+                            const vpUpdate = purpleVPUpdates.find(u => u.playerId === player.id);
+                            return vpUpdate ? {
+                                ...player,
+                                victoryPoints: player.victoryPoints + vpUpdate.vp
+                            } : player;
+                        }),
+                        actionLog: [
+                            ...state.actionLog.slice(-9),
+                            ...purpleVPUpdates.map(u => `Player ${u.playerId}: +${u.vp} VP (${u.reason})`)
+                        ].filter(Boolean)
                     };
                 
                 case 'ADVANCE_ROUND':
@@ -382,6 +457,9 @@
                         workerPlacedThisTurn: false,
                         workersToPlace: 1,
                         shopCostModifier: 0, // Reset cost modifier each round
+                        playersOutOfWorkers: [], // Reset for new round
+                        skippedTurns: {}, // Reset skip turns
+                        waitingForOthers: {}, // Reset waiting status
                         actionLog: [...state.actionLog.slice(-9), ...vpMessages, `Round ${state.round + 1} started! Extra workers applied.`]
                     };
                 
@@ -489,6 +567,31 @@
                     return {
                         ...state,
                         connectionStatus: action.status
+                    };
+                
+                case 'SET_SKIPPED_TURNS':
+                    return {
+                        ...state,
+                        skippedTurns: action.skippedTurns
+                    };
+                
+                case 'SET_WAITING_FOR_OTHERS':
+                    return {
+                        ...state,
+                        waitingForOthers: action.waitingForOthers
+                    };
+                
+                case 'REMOVE_WORKER':
+                    const newOccupiedSpaces = { ...state.occupiedSpaces };
+                    delete newOccupiedSpaces[action.actionId];
+                    return {
+                        ...state,
+                        occupiedSpaces: newOccupiedSpaces,
+                        players: state.players.map(player => 
+                            player.id === action.playerId
+                                ? { ...player, workersLeft: player.workersLeft + 1 }
+                                : player
+                        )
                     };
                 
                 case 'SYNC_GAME_STATE':
@@ -1216,6 +1319,145 @@
                     playerId: player.id,
                     resources
                 });
+                return;
+            }
+            
+            // NEW PURPLE LAYER ACTIONS
+            if (actionId === 'gain4purpleSkip') {
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: player.id,
+                    resources: { purple: 4 }
+                });
+                
+                // Set skip for next turn
+                const newSkippedTurns = { ...state.skippedTurns };
+                newSkippedTurns[player.id] = (newSkippedTurns[player.id] || 0) + 1;
+                dispatch({
+                    type: 'SET_SKIPPED_TURNS',
+                    skippedTurns: newSkippedTurns
+                });
+                
+                const message = `Player ${player.id}: gain4purpleSkip → +4 purple, will skip next turn`;
+                dispatch({ type: 'ADD_LOG', message });
+                return;
+            }
+            
+            if (actionId === 'gain2purpleTakeBack') {
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: player.id,
+                    resources: { purple: 2 }
+                });
+                
+                // Find workers on different quad
+                const occupiedByPlayer = Object.entries(state.occupiedSpaces || {})
+                    .filter(([actionId, playerId]) => playerId === player.id);
+                
+                if (occupiedByPlayer.length > 0) {
+                    // Group by layer
+                    const workersByLayer = {};
+                    occupiedByPlayer.forEach(([actionId, playerId]) => {
+                        const layer = Object.keys(gameLayers).find(color => 
+                            gameLayers[color].actions.some(a => a.id === actionId)
+                        );
+                        if (layer) {
+                            if (!workersByLayer[layer]) workersByLayer[layer] = [];
+                            workersByLayer[layer].push(actionId);
+                        }
+                    });
+                    
+                    // Show options from different layers
+                    const options = [];
+                    Object.entries(workersByLayer).forEach(([layer, actions]) => {
+                        actions.forEach(actionId => {
+                            const action = gameLayers[layer].actions.find(a => a.id === actionId);
+                            if (action) {
+                                options.push({
+                                    label: `${layer} - ${action.title}`,
+                                    value: actionId
+                                });
+                            }
+                        });
+                    });
+                    
+                    if (options.length > 0) {
+                        const choice = await showChoice(dispatch, 'Choose a worker to take back', options);
+                        if (choice) {
+                            // Remove worker and give it back
+                            dispatch({
+                                type: 'REMOVE_WORKER',
+                                actionId: choice,
+                                playerId: player.id
+                            });
+                            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Took back worker from ${choice}` });
+                        }
+                    }
+                }
+                
+                const message = `Player ${player.id}: gain2purpleTakeBack → +2 purple + take back worker`;
+                dispatch({ type: 'ADD_LOG', message });
+                return;
+            }
+            
+            if (actionId === 'gain5purpleSkip') {
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: player.id,
+                    resources: { purple: 5 }
+                });
+                
+                // Set skip for this turn (immediately)
+                const newSkippedTurns = { ...state.skippedTurns };
+                newSkippedTurns[player.id] = (newSkippedTurns[player.id] || 0) + 1;
+                dispatch({
+                    type: 'SET_SKIPPED_TURNS',
+                    skippedTurns: newSkippedTurns
+                });
+                
+                const message = `Player ${player.id}: gain5purpleSkip → +5 purple, skipping turn`;
+                dispatch({ type: 'ADD_LOG', message });
+                
+                // Force end turn
+                setTimeout(() => dispatch({ type: 'END_TURN' }), 100);
+                return;
+            }
+            
+            if (actionId === 'playThreeWorkers') {
+                // Set the player to be able to place 3 more workers this turn
+                dispatch({
+                    type: 'SET_WORKERS_TO_PLACE',
+                    count: 3
+                });
+                
+                dispatch({
+                    type: 'ADD_EFFECT',
+                    playerId: player.id,
+                    effect: 'Playing 3 workers this turn'
+                });
+                
+                const message = `Player ${player.id}: playThreeWorkers → Can place 3 more workers this turn`;
+                dispatch({ type: 'ADD_LOG', message });
+                return;
+            }
+            
+            if (actionId === 'gain4purpleWaitAll') {
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: player.id,
+                    resources: { purple: 4 }
+                });
+                
+                // Set waiting status
+                const newWaitingForOthers = { ...state.waitingForOthers };
+                newWaitingForOthers[player.id] = true;
+                dispatch({
+                    type: 'SET_WAITING_FOR_OTHERS',
+                    waitingForOthers: newWaitingForOthers
+                });
+                
+                const message = `Player ${player.id}: gain4purpleWaitAll → +4 purple, waiting for others to run out`;
+                dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
