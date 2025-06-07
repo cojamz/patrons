@@ -1515,7 +1515,8 @@
                 return;
             }
             
-            // Purple layer - Extra workers next round
+            // OLD PURPLE ACTIONS - NO LONGER IN SPEC
+            /* // Purple layer - Extra workers next round
             if (actionId === 'extraWorkers') {
                 dispatch({
                     type: 'UPDATE_RESOURCES',
@@ -1626,7 +1627,7 @@
                     dispatch({ type: 'ADD_LOG', message });
                 }
                 return;
-            }
+            } */
             
             // Red layer - Repeat an action
             if (actionId === 'redRepeatAction') {
@@ -1841,8 +1842,8 @@
             // YELLOW LAYER ACTIONS
             
             // Steal gem actions
-            if (actionId === 'stealGem' || actionId === 'steal2Gems' || actionId === 'steal3Gems') {
-                const stealCount = actionId === 'stealGem' ? 1 : (actionId === 'steal2Gems' ? 2 : 3);
+            if (actionId === 'steal2Gems' || actionId === 'steal3Gems') {
+                const stealCount = actionId === 'steal2Gems' ? 2 : 3;
                 const otherPlayers = currentState.players.filter(p => p.id !== player.id);
                 
                 if (otherPlayers.length === 0) {
