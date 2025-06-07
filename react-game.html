@@ -2459,6 +2459,119 @@
             const message = `Player ${player.id}: Yellow R2 shop → Gained 5 gems, everyone gained 1 ${colorForOthers || 'gem'}`;
             dispatch({ type: 'ADD_LOG', message });
         }
+        
+        // Execute blue 1 shop effect - Close any shop
+        async function executeBlue1Shop(player, dispatch, state) {
+            // List all shops
+            const shopOptions = [];
+            const colors = ['red', 'yellow', 'blue', 'purple'];
+            
+            colors.forEach(color => {
+                // R1 shops
+                if (!state.closedShops[`${color}1`]) {
+                    shopOptions.push({
+                        label: `${color} R1 shop`,
+                        value: `${color}1`
+                    });
+                }
+                // R2 shops
+                if (!state.closedShops[`${color}2`]) {
+                    shopOptions.push({
+                        label: `${color} R2 shop`,
+                        value: `${color}2`
+                    });
+                }
+                // R3 shops if round 3
+                if (state.round >= 3 && !state.closedShops[`${color}3`]) {
+                    shopOptions.push({
+                        label: `${color} R3 shop`,
+                        value: `${color}3`
+                    });
+                }
+                // Victory shops
+                if (!state.closedShops[`${color}vp`]) {
+                    shopOptions.push({
+                        label: `${color} Victory shop`,
+                        value: `${color}vp`
+                    });
+                }
+            });
+            
+            if (shopOptions.length === 0) {
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: All shops are already closed!` });
+                return;
+            }
+            
+            const choice = await showChoice(dispatch, 'Choose a shop to close', shopOptions);
+            
+            if (choice) {
+                dispatch({
+                    type: 'CLOSE_SHOP',
+                    shopId: choice
+                });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Closed ${choice} shop` });
+            }
+        }
+        
+        // Execute blue 3 shop effect - Any shop benefit
+        async function executeBlue3Shop(player, dispatch, state) {
+            // This is the same as blueAnyShopBenefit action
+            // List all available shops
+            const shopOptions = [];
+            const colors = ['red', 'yellow', 'blue', 'purple'];
+            
+            colors.forEach(color => {
+                // R1 shops
+                shopOptions.push({
+                    label: `${color} R1 shop`,
+                    value: { color, round: 1 }
+                });
+                // R2 shops
+                shopOptions.push({
+                    label: `${color} R2 shop`,
+                    value: { color, round: 2 }
+                });
+                // R3 shops
+                shopOptions.push({
+                    label: `${color} R3 shop`,
+                    value: { color, round: 3 }
+                });
+                // Victory shops
+                shopOptions.push({
+                    label: `${color} Victory shop (3 VP)`,
+                    value: { color, round: 'vp' }
+                });
+            });
+            
+            const choice = await showChoice(dispatch, 'Choose any shop benefit (ignores closed status)', shopOptions);
+            
+            if (choice) {
+                // Execute the shop benefit without paying cost
+                if (choice.round === 'vp') {
+                    // Grant 3 VP
+                    dispatch({
+                        type: 'UPDATE_VP',
+                        playerId: player.id,
+                        vp: 3
+                    });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained 3 VP from ${choice.color} victory shop` });
+                } else {
+                    // Execute regular shop effect
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained ${choice.color} R${choice.round} shop benefit (executing...)` });
+                    // TODO: Actually execute the shop benefit
+                }
+                
+                // BLUE AUTOMATIC VP: All players get 1 VP when anyone uses any shop
+                state.players.forEach(p => {
+                    dispatch({
+                        type: 'UPDATE_VP',
+                        playerId: p.id,
+                        vp: 1
+                    });
+                });
+                dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop)' });
+            }
+        }
 
         // Effect activation function
         async function activateEffect(effect, playerId, effectIndex, dispatch, state) {
@@ -2925,28 +3038,17 @@
                         });
                         break;
                     case 'blue1':
-                        dispatch({
-                            type: 'ADD_EFFECT',
-                            playerId: currentPlayer.id,
-                            effect: 'Can close ⚪ shop this round'
-                        });
+                        // Close any shop this round - let player choose
+                        await executeBlue1Shop(currentPlayer, dispatch, state);
                         break;
                     case 'blue2':
-                        // Gain a shop benefit then close that shop
-                        dispatch({
-                            type: 'ADD_EFFECT',
-                            playerId: currentPlayer.id,
-                            effect: 'Can gain a shop benefit then close that shop'
-                        });
+                        // Flip all shops immediately
+                        dispatch({ type: 'FLIP_ALL_SHOPS' });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: All shops flipped!` });
                         break;
                     case 'blue3':
-                        // Flip the status of all shops, including victory shops
-                        dispatch({
-                            type: 'ADD_EFFECT',
-                            playerId: currentPlayer.id,
-                            effect: 'All shops flipped (closed become open, open become closed)'
-                        });
-                        // TODO: Actually implement shop flipping
+                        // Gain any shop benefit (even if closed) - execute immediately
+                        await executeBlue3Shop(currentPlayer, dispatch, state);
                         break;
                     case 'purple1':
                         dispatch({
@@ -2956,11 +3058,23 @@
                         });
                         break;
                     case 'purple2':
+                        // Play 2 more workers this turn
                         dispatch({
-                            type: 'ADD_EFFECT',
-                            playerId: currentPlayer.id,
-                            effect: 'TBD effect'
+                            type: 'SET_WORKERS_TO_PLACE',
+                            count: 2
                         });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Can place 2 more workers this turn!` });
+                        break;
+                    case 'purple3':
+                        // Play the rest of your workers
+                        const workersRemaining = currentPlayer.workersLeft;
+                        if (workersRemaining > 0) {
+                            dispatch({
+                                type: 'SET_WORKERS_TO_PLACE',
+                                count: workersRemaining
+                            });
+                            dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Can place all ${workersRemaining} remaining workers!` });
+                        }
                         break;
                 }
                 
