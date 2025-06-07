@@ -2037,9 +2037,16 @@
                 const colors = ['red', 'yellow', 'blue', 'purple'];
                 
                 colors.forEach(color => {
-                    // Only R1 shops
+                    // Get shop data for description
+                    const shopInfo = {
+                        red: { 1: 'Repeat a worker\'s action' },
+                        yellow: { 1: 'Double your next gain action' },
+                        blue: { 1: 'Close any shop this round' },
+                        purple: { 1: 'Take an extra turn after this one' }
+                    };
+                    
                     shopOptions.push({
-                        label: `${color} R1 shop`,
+                        label: `${color} R1: ${shopInfo[color][1]}`,
                         value: { color, round: 1 }
                     });
                 });
@@ -2072,25 +2079,49 @@
                 const shopOptions = [];
                 const colors = ['red', 'yellow', 'blue', 'purple'];
                 
+                const shopInfo = {
+                    red: {
+                        1: 'Repeat a worker\'s action',
+                        2: 'Place the next player\'s worker',
+                        3: 'Repeat all actions taken this round'
+                    },
+                    yellow: {
+                        1: 'Double your next gain action',
+                        2: 'Gain 5 gems + everyone gains 1',
+                        3: 'Gain 9 gems + everyone gains 1'
+                    },
+                    blue: {
+                        1: 'Close any shop this round',
+                        2: 'Flip all shops status',
+                        3: 'Gain any shop benefit'
+                    },
+                    purple: {
+                        1: 'Take an extra turn',
+                        2: 'Play 2 more workers',
+                        3: 'Play all remaining workers'
+                    }
+                };
+                
                 colors.forEach(color => {
                     // R1 shops
                     shopOptions.push({
-                        label: `${color} R1 shop`,
+                        label: `${color} R1: ${shopInfo[color][1]}`,
                         value: { color, round: 1 }
                     });
                     // R2 shops
                     shopOptions.push({
-                        label: `${color} R2 shop`,
+                        label: `${color} R2: ${shopInfo[color][2]}`,
                         value: { color, round: 2 }
                     });
                     // R3 shops
                     shopOptions.push({
-                        label: `${color} R3 shop`,
+                        label: `${color} R3: ${shopInfo[color][3]}`,
                         value: { color, round: 3 }
                     });
                     // Victory shops
+                    const vpCost = color === 'purple' ? '6' : (color === 'yellow' ? '5 any' : '5');
                     shopOptions.push({
-                        label: `${color} Victory shop (3 VP)`,
+                        label: `${color} Victory: ${vpCost} ${color === 'yellow' ? '' : color} → 3 VP`,
                         value: { color, round: 'vp' }
                     });
                 });
@@ -2556,10 +2587,33 @@
             const shopOptions = [];
             const colors = ['red', 'yellow', 'blue', 'purple'];
             
+            const shopInfo = {
+                red: {
+                    1: 'Repeat a worker\'s action',
+                    2: 'Place the next player\'s worker',
+                    3: 'Repeat all actions taken this round'
+                },
+                yellow: {
+                    1: 'Double your next gain action',
+                    2: 'Gain 5 gems + everyone gains 1',
+                    3: 'Gain 9 gems + everyone gains 1'
+                },
+                blue: {
+                    1: 'Close any shop this round',
+                    2: 'Flip all shops status',
+                    3: 'Gain any shop benefit'
+                },
+                purple: {
+                    1: 'Take an extra turn',
+                    2: 'Play 2 more workers',
+                    3: 'Play all remaining workers'
+                }
+            };
+            
             colors.forEach(color => {
                 // R1 shops
                 shopOptions.push({
-                    label: `${color} R1 shop`,
+                    label: `${color} R1: ${shopInfo[color][1]}`,
                     value: { color, round: 1 }
                 });
                 // R2 shops
@@ -2997,20 +3051,25 @@
             
             return React.createElement('div', { className: getLayerStyle() }, [
                 // Card Header - Layer title and color
-                React.createElement('div', { key: 'header', className: 'flex justify-between items-center mb-4' }, [
+                React.createElement('div', { key: 'header', className: 'flex justify-between items-center mb-2' }, [
                     React.createElement('h2', { key: 'title', className: `text-xl font-bold ${getIconColor()}` }, 
                         `${icon} ${color.charAt(0).toUpperCase() + color.slice(1)}`),
                     React.createElement('span', { key: 'round', className: 'text-gray-600 text-sm bg-white px-2 py-1 rounded shadow' }, 
                         `Round ${round}`)
                 ]),
                 
+                // Automatic VP Display
+                React.createElement('div', { key: 'auto-vp', className: 'text-xs text-gray-700 bg-yellow-100 rounded p-1 mb-2' }, 
+                    getAutomaticVPText(color)
+                ),
+                
                 // Shops Section - Compact horizontal layout
                 React.createElement('div', { key: 'shops', className: 'mb-3 bg-white bg-opacity-10 rounded-lg p-2' }, [
                     React.createElement('div', { key: 'shop-header', className: 'text-sm font-semibold text-gray-700 mb-1' }, '🏪 Shops'),
                     React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-1 text-xs' }, [
-                        React.createElement(CompactShop, { key: 'shop-r1', color, round: 1, label: 'R1' }),
-                        React.createElement(CompactShop, { key: 'shop-r2', color, round: 2, label: 'R2' }),
-                        round >= 3 ? React.createElement(CompactShop, { key: 'shop-r3', color, round: 3, label: 'R3' }) : React.createElement('div', { key: 'empty' }),
+                        React.createElement(CompactShop, { key: 'shop-r1', color, round: 1, label: 'R1', currentRound: round }),
+                        round >= 2 ? React.createElement(CompactShop, { key: 'shop-r2', color, round: 2, label: 'R2', currentRound: round }) : React.createElement('div', { key: 'empty-r2' }),
+                        round >= 3 ? React.createElement(CompactShop, { key: 'shop-r3', color, round: 3, label: 'R3', currentRound: round }) : React.createElement('div', { key: 'empty-r3' }),
                         React.createElement(CompactVictoryShop, { key: 'shop-vp', color })
                     ])
                 ]),
@@ -3268,30 +3327,46 @@
             ]);
         }
 
+        // Get automatic VP text for each layer
+        function getAutomaticVPText(color) {
+            switch(color) {
+                case 'red':
+                    return '🏆 +1 VP each time you use or repeat a red layer action';
+                case 'yellow':
+                    return '🏆 +1 VP per different color gem at end of each round';
+                case 'blue':
+                    return '🏆 All players +1 VP when anyone uses any shop';
+                case 'purple':
+                    return '🏆 First & last to run out of workers each round get 3 VP';
+                default:
+                    return '';
+            }
+        }
+        
         // Compact Shop Component
-        function CompactShop({ color, round, label }) {
+        function CompactShop({ color, round, label, currentRound }) {
             const { state, dispatch } = useGame();
             
             const shopData = {
                 red: {
-                    1: { cost: { red: 1, any: 1 }, effect: 'Repeat action' },
-                    2: { cost: { red: 2, any: 2 }, effect: 'Place next worker' },
-                    3: { cost: { red: 3, any: 3 }, effect: 'Repeat all actions' }
+                    1: { cost: { red: 1, any: 1 }, effect: 'Repeat action', fullEffect: 'Repeat a worker\'s action' },
+                    2: { cost: { red: 2, any: 2 }, effect: 'Place next', fullEffect: 'Place the next player\'s worker' },
+                    3: { cost: { red: 3, any: 3 }, effect: 'Repeat all', fullEffect: 'Repeat all actions taken this round by any player' }
                 },
                 yellow: {
-                    1: { cost: { yellow: 1, any: 1 }, effect: 'Double gain' },
-                    2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 5+all 1' },
-                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 9+all 1' }
+                    1: { cost: { yellow: 1, any: 1 }, effect: 'Double gain', fullEffect: 'Double your next gain action' },
+                    2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 5+all 1', fullEffect: 'Gain 5 gems any color, everyone gains 1 gem of your choice' },
+                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 9+all 1', fullEffect: 'Gain 9 gems of any kind, each other player gains 1 color of your choice' }
                 },
                 blue: {
-                    1: { cost: { blue: 1, any: 1 }, effect: 'Close shop' },
-                    2: { cost: { blue: 2, any: 2 }, effect: 'Flip all shops' },
-                    3: { cost: { blue: 3, any: 3 }, effect: 'Any shop benefit' }
+                    1: { cost: { blue: 1, any: 1 }, effect: 'Close shop', fullEffect: 'Close any shop this round' },
+                    2: { cost: { blue: 2, any: 2 }, effect: 'Flip all', fullEffect: 'Flip the status of all shops, including victory shops' },
+                    3: { cost: { blue: 3, any: 3 }, effect: 'Any benefit', fullEffect: 'Gain any shop benefit (even if closed)' }
                 },
                 purple: {
-                    1: { cost: { purple: 1, any: 1 }, effect: 'Extra turn' },
-                    2: { cost: { purple: 2, any: 2 }, effect: 'Play 2 more' },
-                    3: { cost: { purple: 3, any: 3 }, effect: 'Play all' }
+                    1: { cost: { purple: 1, any: 1 }, effect: 'Extra turn', fullEffect: 'Take an extra turn after this one' },
+                    2: { cost: { purple: 2, any: 2 }, effect: 'Play 2 more', fullEffect: 'Play 2 more workers this turn' },
+                    3: { cost: { purple: 3, any: 3 }, effect: 'Play all', fullEffect: 'Play the rest of your workers' }
                 }
             };
             
@@ -3366,7 +3441,8 @@
             };
             
             return React.createElement('div', { 
-                className: `p-1 rounded ${isClosed ? 'bg-gray-200 opacity-50' : 'bg-white hover:bg-gray-50'} border transition-all` 
+                className: `p-1 rounded ${isClosed ? 'bg-gray-200 opacity-50' : 'bg-white hover:bg-gray-50'} border transition-all relative group`,
+                title: shop.fullEffect
             }, [
                 React.createElement('div', { key: 'header', className: 'flex items-center justify-between text-xs' }, [
                     React.createElement('span', { key: 'label', className: 'font-bold' }, label),
@@ -3377,7 +3453,12 @@
                     onClick: handlePurchase,
                     className: `w-full text-xs py-1 px-1 rounded mt-1 ${isClosed ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white'}`,
                     disabled: isClosed
-                }, isClosed ? 'Closed' : shop.effect)
+                }, isClosed ? 'Closed' : shop.effect),
+                // Tooltip on hover
+                React.createElement('div', {
+                    key: 'tooltip',
+                    className: 'absolute bottom-full left-0 mb-1 bg-gray-800 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10'
+                }, shop.fullEffect)
             ]);
         }
         
