@@ -175,6 +175,8 @@
             turnOrder: [1, 2, 3, 4],
             workerPlacedThisTurn: false,
             workersToPlace: 1,
+            turnPhase: 'shop1', // 'shop1', 'workers', 'shop2'
+            shopUsedInPhase: false, // Track if shop was used in current phase
             modal: null,
             actionLog: [],
             gameLayers: null, // Will be set when game starts
@@ -199,6 +201,19 @@
             switch (action.type) {
                 case 'PLACE_WORKER':
                     const newWorkersToPlace = Math.max(0, state.workersToPlace - 1);
+                    const currentPlayerWorkers = state.players.find(p => p.id === state.currentPlayer).workersLeft - 1;
+                    
+                    // Determine new phase
+                    let newPhase = state.turnPhase;
+                    if (state.turnPhase === 'shop1') {
+                        newPhase = 'workers';
+                    }
+                    // When all workers for this turn are placed, move to shop2 phase
+                    if (newWorkersToPlace === 0) {
+                        newPhase = 'shop2';
+                        // Reset shop usage for phase 2
+                    }
+                    
                     return {
                         ...state,
                         occupiedSpaces: {
@@ -207,11 +222,13 @@
                         },
                         players: state.players.map(player => 
                             player.id === state.currentPlayer 
-                                ? { ...player, workersLeft: player.workersLeft - 1 }
+                                ? { ...player, workersLeft: currentPlayerWorkers }
                                 : player
                         ),
                         workerPlacedThisTurn: true,
                         workersToPlace: newWorkersToPlace,
+                        turnPhase: newPhase,
+                        shopUsedInPhase: newPhase === 'shop2' ? false : state.shopUsedInPhase,
                         roundActions: [...state.roundActions, { playerId: state.currentPlayer, actionId: action.actionId }]
                     };
                 
@@ -305,6 +322,12 @@
                         workerPlacedThisTurn: false
                     };
                 
+                case 'ADD_WORKERS_TO_PLACE':
+                    return {
+                        ...state,
+                        workersToPlace: state.workersToPlace + action.count
+                    };
+                
                 case 'END_TURN':
                     const currentPlayerObj = state.players.find(p => p.id === state.currentPlayer);
                     
@@ -357,6 +380,8 @@
                             }),
                             workerPlacedThisTurn: false,
                             workersToPlace: 1,
+                            turnPhase: 'shop1',
+                            shopUsedInPhase: false,
                             playersOutOfWorkers: newPlayersOutOfWorkers,
                             actionLog: [
                                 ...state.actionLog.slice(-9), 
@@ -446,6 +471,8 @@
                         turnDirection: nextDirection,
                         workerPlacedThisTurn: false,
                         workersToPlace: workersToPlace,
+                        turnPhase: 'shop1',
+                        shopUsedInPhase: false,
                         skippedTurns: newSkippedTurns,
                         waitingForOthers: newWaitingForOthers,
                         playersOutOfWorkers: newPlayersOutOfWorkers,
@@ -573,7 +600,7 @@
                             flippedShops[shopId] = !state.closedShops[shopId];
                         });
                         // Also flip victory shops
-                        const vpShopId = `${color}VP`;
+                        const vpShopId = `${color}vp`;
                         flippedShops[vpShopId] = !state.closedShops[vpShopId];
                     });
                     return {
@@ -585,6 +612,27 @@
                     return {
                         ...state,
                         shopCostModifier: action.modifier
+                    };
+                
+                case 'ADD_SHOP_COST_MODIFIER':
+                    return {
+                        ...state,
+                        shopCostModifier: state.shopCostModifier + action.modifier
+                    };
+                
+                case 'USE_SHOP':
+                    // Mark that shop was used in current phase
+                    return {
+                        ...state,
+                        shopUsedInPhase: true
+                    };
+                
+                case 'SKIP_TO_SHOP_PHASE':
+                    return {
+                        ...state,
+                        turnPhase: 'shop2',
+                        shopUsedInPhase: false,
+                        workersToPlace: 0
                     };
                 
                 // Multiplayer actions
@@ -1205,7 +1253,13 @@
         }
 
         // Simplified action execution
-        async function executeAction(actionId, player, dispatch, currentState, gameLayers) {
+        async function executeAction(actionId, player, dispatch, currentState, gameLayers, recursionDepth = 0) {
+            // Prevent infinite loops
+            if (recursionDepth > 5) {
+                dispatch({ type: 'ADD_LOG', message: 'Max recursion depth reached - stopping to prevent infinite loop' });
+                return;
+            }
+            
             const basicGains = {
                 'gain3red': { red: 3 },
                 'gain2red': { red: 2 },
@@ -1380,6 +1434,27 @@
                 return;
             }
             
+            
+            // Purple layer - Play two workers (immediately)
+            if (actionId === 'playTwoWorkers') {
+                // Add 2 more workers that can be placed this turn
+                dispatch({
+                    type: 'ADD_WORKERS_TO_PLACE',
+                    count: 2
+                });
+                
+                dispatch({
+                    type: 'ADD_EFFECT',
+                    playerId: player.id,
+                    effect: 'Can place 2 more workers this turn'
+                });
+                
+                const message = `Player ${player.id}: playTwoWorkers → Can now place 2 MORE workers this turn`;
+                dispatch({ type: 'ADD_LOG', message });
+                console.log(message);
+                return;
+            }
+            
             // NEW PURPLE LAYER ACTIONS
             if (actionId === 'gain4purpleSkip') {
                 dispatch({
@@ -1389,7 +1464,7 @@
                 });
                 
                 // Set skip for next turn
-                const newSkippedTurns = { ...state.skippedTurns };
+                const newSkippedTurns = { ...currentState.skippedTurns };
                 newSkippedTurns[player.id] = (newSkippedTurns[player.id] || 0) + 1;
                 dispatch({
                     type: 'SET_SKIPPED_TURNS',
@@ -1409,7 +1484,7 @@
                 });
                 
                 // Find workers on different quad
-                const occupiedByPlayer = Object.entries(state.occupiedSpaces || {})
+                const occupiedByPlayer = Object.entries(currentState.occupiedSpaces || {})
                     .filter(([actionId, playerId]) => playerId === player.id);
                 
                 if (occupiedByPlayer.length > 0) {
@@ -1466,7 +1541,7 @@
                 });
                 
                 // Set skip for this turn (immediately)
-                const newSkippedTurns = { ...state.skippedTurns };
+                const newSkippedTurns = { ...currentState.skippedTurns };
                 newSkippedTurns[player.id] = (newSkippedTurns[player.id] || 0) + 1;
                 dispatch({
                     type: 'SET_SKIPPED_TURNS',
@@ -1482,19 +1557,19 @@
             }
             
             if (actionId === 'playThreeWorkers') {
-                // Set the player to be able to place 3 more workers this turn
+                // Add 3 more workers that can be placed this turn
                 dispatch({
-                    type: 'SET_WORKERS_TO_PLACE',
+                    type: 'ADD_WORKERS_TO_PLACE',
                     count: 3
                 });
                 
                 dispatch({
                     type: 'ADD_EFFECT',
                     playerId: player.id,
-                    effect: 'Playing 3 workers this turn'
+                    effect: 'Can place 3 more workers this turn'
                 });
                 
-                const message = `Player ${player.id}: playThreeWorkers → Can place 3 more workers this turn`;
+                const message = `Player ${player.id}: playThreeWorkers → Can now place 3 MORE workers this turn`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1507,7 +1582,7 @@
                 });
                 
                 // Set waiting status
-                const newWaitingForOthers = { ...state.waitingForOthers };
+                const newWaitingForOthers = { ...currentState.waitingForOthers };
                 newWaitingForOthers[player.id] = true;
                 dispatch({
                     type: 'SET_WAITING_FOR_OTHERS',
@@ -1519,28 +1594,7 @@
                 return;
             }
             
-            // Purple layer - Play two workers (immediately)
-            if (actionId === 'playTwoWorkers') {
-                // Set the player to be able to place 2 more workers this turn
-                dispatch({
-                    type: 'SET_WORKERS_TO_PLACE',
-                    count: 2
-                });
-                
-                dispatch({
-                    type: 'ADD_EFFECT',
-                    playerId: player.id,
-                    effect: 'Playing 2 workers this turn'
-                });
-                
-                const message = `Player ${player.id}: playTwoWorkers → Can place 2 more workers this turn`;
-                dispatch({ type: 'ADD_LOG', message });
-                console.log(message);
-                return;
-            }
-            
-            // OLD PURPLE ACTIONS - NO LONGER IN SPEC
-            /* // Purple layer - Extra workers next round
+            // Purple layer - Extra workers next round
             if (actionId === 'extraWorkers') {
                 dispatch({
                     type: 'UPDATE_RESOURCES',
@@ -1651,7 +1705,7 @@
                     dispatch({ type: 'ADD_LOG', message });
                 }
                 return;
-            } */
+            }
             
             // Red layer - Repeat an action
             if (actionId === 'redRepeatAction') {
@@ -1702,7 +1756,7 @@
                     dispatch({ type: 'ADD_LOG', message });
                     
                     // Execute the action again
-                    await executeAction(spaceId, player, dispatch, currentState, gameLayers);
+                    await executeAction(spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
                     return;
                 }
                 
@@ -1733,7 +1787,7 @@
                     dispatch({ type: 'ADD_LOG', message });
                     
                     // Execute the chosen action again
-                    await executeAction(choice, player, dispatch, currentState, gameLayers);
+                    await executeAction(choice, player, dispatch, currentState, gameLayers, recursionDepth + 1);
                 }
                 return;
             }
@@ -1792,12 +1846,12 @@
                 // Execute actions for the affected players
                 if (actionId === 'redHybrid1') {
                     // Both players get actions
-                    await executeAction(worker1.spaceId, currentState.players.find(p => p.id === worker2.playerId), dispatch, currentState, gameLayers);
-                    await executeAction(worker2.spaceId, currentState.players.find(p => p.id === worker1.playerId), dispatch, currentState, gameLayers);
+                    await executeAction(worker1.spaceId, currentState.players.find(p => p.id === worker2.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
+                    await executeAction(worker2.spaceId, currentState.players.find(p => p.id === worker1.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
                 } else {
                     // Only current player gets actions
-                    await executeAction(worker1.spaceId, player, dispatch, currentState, gameLayers);
-                    await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers);
+                    await executeAction(worker1.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
+                    await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
                 }
                 
                 const message = `Player ${player.id}: ${actionId} → +1 red + swapped workers`;
@@ -1857,7 +1911,7 @@
                 
                 // Execute each action (this will also award VP for red actions)
                 for (const spaceId of playerSpaces) {
-                    await executeAction(spaceId, player, dispatch, currentState, gameLayers);
+                    await executeAction(spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
                 }
                 
                 return;
@@ -2082,16 +2136,14 @@
                     await executeShopBenefit(choice.color, choice.round, player, dispatch, state);
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R1 shop benefit` });
                     
-                    // BLUE AUTOMATIC VP: All players get 1 VP when anyone uses any shop benefit
-                    const allPlayers = state.players;
-                    allPlayers.forEach(p => {
-                        dispatch({
-                            type: 'UPDATE_VP',
-                            playerId: p.id,
-                            vp: 1
-                        });
+                    // BLUE AUTOMATIC VP: Player gets 1 VP when using any shop benefit
+                    dispatch({
+                        type: 'UPDATE_VP',
+                        playerId: player.id,
+                        vp: 1,
+                        source: 'blueShopUsage'
                     });
-                    dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop benefit)' });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP (used a shop benefit)` });
                 }
                 
                 return;
@@ -2168,16 +2220,14 @@
                         dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R${choice.round} shop benefit` });
                     }
                     
-                    // BLUE AUTOMATIC VP: All players get 1 VP when anyone uses any shop benefit
-                    const allPlayers = state.players;
-                    allPlayers.forEach(p => {
-                        dispatch({
-                            type: 'UPDATE_VP',
-                            playerId: p.id,
-                            vp: 1
-                        });
+                    // BLUE AUTOMATIC VP: Player gets 1 VP when using any shop benefit
+                    dispatch({
+                        type: 'UPDATE_VP',
+                        playerId: player.id,
+                        vp: 1,
+                        source: 'blueShopUsage'
                     });
-                    dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop benefit)' });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP (used a shop benefit)` });
                 }
                 
                 return;
@@ -2191,9 +2241,9 @@
                     resources: { blue: 1 }
                 });
                 
-                // Set cost reduction for this round
+                // Add cost reduction for this round
                 dispatch({
-                    type: 'SET_SHOP_COST_MODIFIER',
+                    type: 'ADD_SHOP_COST_MODIFIER',
                     modifier: -1
                 });
                 
@@ -2210,9 +2260,9 @@
                     resources: { blue: 2 }
                 });
                 
-                // Set cost increase for this round
+                // Add cost increase for this round
                 dispatch({
-                    type: 'SET_SHOP_COST_MODIFIER',
+                    type: 'ADD_SHOP_COST_MODIFIER',
                     modifier: 1
                 });
                 
@@ -2364,11 +2414,30 @@
 
         // End Turn Button Component
         function EndTurnButton({ onEndTurn }) {
+            const { state, dispatch } = useGame();
+            const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
+            
+            // Phase should automatically change to shop2 when all workers for turn are placed
+            // This button is a fallback in case something goes wrong
+            
+            const getButtonText = () => {
+                if (state.turnPhase === 'shop1' && !state.shopUsedInPhase) {
+                    return 'Skip Shop & Place Workers';
+                }
+                if (state.turnPhase === 'workers' && state.workersToPlace > 0) {
+                    return 'End Turn (Workers Remaining!)';
+                }
+                if (state.turnPhase === 'shop2' && !state.shopUsedInPhase) {
+                    return 'End Turn (Shop Available)';
+                }
+                return 'End Turn';
+            };
+            
             return React.createElement('div', { className: 'mt-3 text-center' }, 
                 React.createElement('button', {
                     onClick: onEndTurn,
                     className: 'w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'
-                }, 'End Turn')
+                }, getButtonText())
             );
         }
 
@@ -2399,7 +2468,7 @@
                 const message = `Player ${player.id}: Red shop → Repeating ${actionTitle}`;
                 dispatch({ type: 'ADD_LOG', message });
                 
-                await executeAction(spaceId, player, dispatch, state, gameLayers);
+                await executeAction(spaceId, player, dispatch, state, gameLayers, 0);
             } else {
                 // Multiple options, let player choose
                 const repeatOptions = playerSpaces.map(spaceId => {
@@ -2426,7 +2495,7 @@
                     const message = `Player ${player.id}: Red shop → Repeating ${choice}`;
                     dispatch({ type: 'ADD_LOG', message });
                     
-                    await executeAction(choice, player, dispatch, state, gameLayers);
+                    await executeAction(choice, player, dispatch, state, gameLayers, 0);
                 }
             }
         }
@@ -2557,32 +2626,63 @@
             const shopOptions = [];
             const colors = ['red', 'yellow', 'blue', 'purple'];
             
+            const shopData = {
+                red: {
+                    1: 'Repeat a worker\'s action',
+                    2: 'Place the next player\'s worker',
+                    3: 'Repeat all actions taken this round'
+                },
+                yellow: {
+                    1: 'Double your next gain action',
+                    2: 'Gain 5 gems, everyone gains 1',
+                    3: 'Gain 9 gems, everyone gains 1'
+                },
+                blue: {
+                    1: 'Close any shop this round',
+                    2: 'Flip all shop statuses',
+                    3: 'Gain any shop benefit'
+                },
+                purple: {
+                    1: 'Take an extra turn',
+                    2: 'Play 2 more workers this turn',
+                    3: 'Play all remaining workers'
+                }
+            };
+            
+            const shopCosts = {
+                red: { 1: '1🔴+1⚪', 2: '2🔴+2⚪', 3: '3🔴+3⚪' },
+                yellow: { 1: '1🟡+1⚪', 2: '2🟡+2⚪', 3: '3🟡+3⚪' },
+                blue: { 1: '1🔵+1⚪', 2: '2🔵+2⚪', 3: '3🔵+3⚪' },
+                purple: { 1: '1🟣+1⚪', 2: '2🟣+2⚪', 3: '3🟣+3⚪' }
+            };
+            
             colors.forEach(color => {
                 // R1 shops
                 if (!state.closedShops[`${color}1`]) {
                     shopOptions.push({
-                        label: `${color} R1 shop`,
+                        label: `${shopCosts[color][1]} - ${shopData[color][1]}`,
                         value: `${color}1`
                     });
                 }
                 // R2 shops
                 if (!state.closedShops[`${color}2`]) {
                     shopOptions.push({
-                        label: `${color} R2 shop`,
+                        label: `${shopCosts[color][2]} - ${shopData[color][2]}`,
                         value: `${color}2`
                     });
                 }
                 // R3 shops if round 3
                 if (state.round >= 3 && !state.closedShops[`${color}3`]) {
                     shopOptions.push({
-                        label: `${color} R3 shop`,
+                        label: `${shopCosts[color][3]} - ${shopData[color][3]}`,
                         value: `${color}3`
                     });
                 }
                 // Victory shops
                 if (!state.closedShops[`${color}vp`]) {
+                    const vpCost = color === 'purple' ? '6🟣' : (color === 'yellow' ? '5⚪' : `5${color === 'red' ? '🔴' : '🔵'}`);
                     shopOptions.push({
-                        label: `${color} Victory shop`,
+                        label: `${vpCost} - 3 Victory Points`,
                         value: `${color}vp`
                     });
                 }
@@ -2740,7 +2840,7 @@
                     break;
                 case 'purple2':
                     dispatch({
-                        type: 'SET_WORKERS_TO_PLACE',
+                        type: 'ADD_WORKERS_TO_PLACE',
                         count: 2
                     });
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Can place 2 more workers this turn!` });
@@ -2749,7 +2849,7 @@
                     const workersRemaining = player.workersLeft;
                     if (workersRemaining > 0) {
                         dispatch({
-                            type: 'SET_WORKERS_TO_PLACE',
+                            type: 'ADD_WORKERS_TO_PLACE',
                             count: workersRemaining
                         });
                         dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Can place all ${workersRemaining} remaining workers!` });
@@ -2803,7 +2903,7 @@
                 } else {
                     repeatedActions.push(choice);
                     // Execute the action
-                    await executeAction(choice, player, dispatch, state.occupiedSpaces, state.gameLayers, state, state.gameLayers);
+                    await executeAction(choice, player, dispatch, state, state.gameLayers, 0);
                     
                     // RED AUTOMATIC VP: Gain 1 VP for red action
                     dispatch({
@@ -3019,9 +3119,16 @@
             
             return React.createElement('div', { className: getPlayerStyle() }, [
                 React.createElement('div', { key: 'header', className: 'flex items-center justify-between mb-4' }, [
-                    React.createElement('h3', { key: 'name', className: 'font-bold text-lg text-gray-800' }, [
-                        player.name,
-                        isCurrentPlayer && React.createElement('span', { key: 'indicator', className: 'text-blue-500 ml-2' }, '🎯')
+                    React.createElement('div', { key: 'name-section' }, [
+                        React.createElement('h3', { key: 'name', className: 'font-bold text-lg text-gray-800' }, [
+                            player.name,
+                            isCurrentPlayer && React.createElement('span', { key: 'indicator', className: 'text-blue-500 ml-2' }, '🎯')
+                        ]),
+                        isCurrentPlayer && React.createElement('div', { key: 'phase', className: 'text-xs text-gray-600 mt-1' }, 
+                            state.turnPhase === 'shop1' ? '🏪 Shop Phase 1' :
+                            state.turnPhase === 'workers' ? '👷 Worker Phase' :
+                            state.turnPhase === 'shop2' ? '🏪 Shop Phase 2' : ''
+                        )
                     ]),
                     React.createElement('div', { 
                         key: 'vp', 
@@ -3041,8 +3148,13 @@
                         getResourceIcon(color, player.resources[color] || 0)
                     )
                 ),
-                React.createElement('div', { key: 'workers', className: 'text-center text-gray-700 font-semibold mb-3' }, 
-                    `Workers left: ${player.workersLeft}`),
+                React.createElement('div', { key: 'workers', className: 'text-center text-gray-700 font-semibold mb-3' }, [
+                    React.createElement('div', { key: 'left' }, `Workers left: ${player.workersLeft}`),
+                    isCurrentPlayer && state.workersToPlace > 1 && React.createElement('div', { 
+                        key: 'toplace', 
+                        className: 'text-purple-600 font-bold animate-pulse' 
+                    }, `Can place ${state.workersToPlace} workers this turn!`)
+                ]),
                 (player.effects && player.effects.length > 0) && React.createElement('div', { key: 'effects', className: 'mb-3' }, [
                     React.createElement('div', { key: 'label', className: 'text-xs font-semibold text-gray-600 mb-1' }, 'Effects:'),
                     ...(player.effects || []).map((effect, index) => 
@@ -3061,6 +3173,8 @@
 
         // Game Layer Component - Card-focused layout with shops at top
         function GameLayer({ color, title, icon, actions, round }) {
+            const { state } = useGame();
+            
             const getLayerStyle = () => {
                 const baseStyle = "glass rounded-lg shadow-lg p-4 border-t-6 hover:shadow-xl transition-all duration-300 h-full flex flex-col";
                 switch (color) {
@@ -3100,7 +3214,13 @@
                 
                 // Shops Section - Compact horizontal layout
                 React.createElement('div', { key: 'shops', className: 'mb-3 bg-white bg-opacity-10 rounded-lg p-2' }, [
-                    React.createElement('div', { key: 'shop-header', className: 'text-sm font-semibold text-gray-700 mb-1' }, '🏪 Shops'),
+                    React.createElement('div', { key: 'shop-header', className: 'text-sm font-semibold text-gray-700 mb-1 flex items-center justify-between' }, [
+                        React.createElement('span', { key: 'label' }, '🏪 Shops'),
+                        state.shopCostModifier !== 0 && React.createElement('span', { 
+                            key: 'modifier', 
+                            className: `text-xs px-2 py-1 rounded ${state.shopCostModifier > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`
+                        }, `${state.shopCostModifier > 0 ? '+' : ''}${state.shopCostModifier} any cost`)
+                    ]),
                     React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-1 text-xs' }, [
                         React.createElement(CompactShop, { key: 'shop-r1', color, round: 1, label: 'R1', currentRound: round }),
                         round >= 2 ? React.createElement(CompactShop, { key: 'shop-r2', color, round: 2, label: 'R2', currentRound: round }) : React.createElement('div', { key: 'empty-r2' }),
@@ -3458,6 +3578,18 @@
                     return;
                 }
                 
+                // Check if in valid shop phase
+                if (state.turnPhase === 'workers') {
+                    alert('You cannot buy from shops during the worker placement phase!');
+                    return;
+                }
+                
+                // Check if already used shop in this phase
+                if (state.shopUsedInPhase) {
+                    alert(`You have already used a shop in this phase!`);
+                    return;
+                }
+                
                 const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
                 
                 // Check resources
@@ -3494,11 +3626,12 @@
                 // Execute shop effect
                 await executeShopBenefit(color, round, currentPlayer, dispatch, state);
                 
-                // Blue automatic VP
-                state.players.forEach(p => {
-                    dispatch({ type: 'UPDATE_VP', playerId: p.id, vp: 1 });
-                });
-                dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop)' });
+                // Track shop usage
+                dispatch({ type: 'USE_SHOP' });
+                
+                // Blue automatic VP - only for the player using the shop
+                dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: 1, source: 'blueShopUsage' });
+                dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +1 VP (used a shop)` });
             };
             
             const getColorEmoji = () => {
@@ -3512,24 +3645,20 @@
             };
             
             return React.createElement('div', { 
-                className: `p-1 rounded ${isClosed ? 'bg-gray-200 opacity-50' : 'bg-white hover:bg-gray-50'} border transition-all relative group`,
-                title: shop.fullEffect
+                className: `p-2 rounded ${isClosed ? 'bg-gray-200 opacity-50' : 'bg-white hover:bg-gray-50'} border transition-all relative`,
             }, [
-                React.createElement('div', { key: 'header', className: 'flex items-center justify-between text-xs' }, [
-                    React.createElement('span', { key: 'label', className: 'font-bold' }, label),
-                    React.createElement('span', { key: 'cost' }, `${colorCost}${getColorEmoji()}+${anyCost}⚪`)
-                ]),
+                React.createElement('div', { key: 'cost', className: 'text-center text-xs font-bold mb-1' }, 
+                    `${colorCost}${getColorEmoji()}+${anyCost}⚪`
+                ),
+                React.createElement('div', { key: 'effect', className: 'text-xs text-gray-700 text-center mb-1' }, 
+                    shop.fullEffect
+                ),
                 React.createElement('button', {
                     key: 'btn',
                     onClick: handlePurchase,
-                    className: `w-full text-xs py-1 px-1 rounded mt-1 ${isClosed ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white'}`,
+                    className: `w-full text-xs py-1 px-1 rounded ${isClosed ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white'}`,
                     disabled: isClosed
-                }, isClosed ? 'Closed' : shop.effect),
-                // Tooltip on hover
-                React.createElement('div', {
-                    key: 'tooltip',
-                    className: 'absolute bottom-full left-0 mb-1 bg-gray-800 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10'
-                }, shop.fullEffect)
+                }, isClosed ? 'Closed' : 'Buy')
             ]);
         }
         
@@ -3557,6 +3686,18 @@
                 
                 if (state.roomCode && state.myPlayerId !== state.currentPlayer) {
                     alert('It\'s not your turn!');
+                    return;
+                }
+                
+                // Check if in valid shop phase
+                if (state.turnPhase === 'workers') {
+                    alert('You cannot buy from shops during the worker placement phase!');
+                    return;
+                }
+                
+                // Check if already used shop in this phase
+                if (state.shopUsedInPhase) {
+                    alert(`You have already used a shop in this phase!`);
                     return;
                 }
                 
@@ -3593,11 +3734,12 @@
                 dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
                 dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: shop.vp, source: 'victoryShop' });
                 
-                // Blue automatic VP
-                state.players.forEach(p => {
-                    dispatch({ type: 'UPDATE_VP', playerId: p.id, vp: 1 });
-                });
-                dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop)' });
+                // Track shop usage
+                dispatch({ type: 'USE_SHOP' });
+                
+                // Blue automatic VP - only for the player using the shop
+                dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: 1, source: 'blueShopUsage' });
+                dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +1 VP (used a shop)` });
             };
             
             const getColorEmoji = () => {

@@ -69,10 +69,29 @@ This document tracks the complete specification for the Patrons game layers and 
 - R3: 3 blue + 3 any = Flip the status of all shops, including victory shops
 - Victory Points: 5 blue = 3 VP
 
-**Automatic VP:** Gain 1 VP each time any player uses any shop (*Using the "Gain a shop benefit" action counts as using a shop for VP purposes)
+**Automatic VP:** Gain 1 VP each time you use any shop (*Using the "Gain a shop benefit" action counts as using a shop for VP purposes)
 
-### Purple - Timing/Order (Original)
-(Keep existing implementation)
+### Purple - Timing/Order
+
+**Actions:**
+- Round 1:
+  - `gain4purpleSkip`: Gain 4 purple, skip your next turn
+  - `gain3purple`: Gain 3 purple
+  - `gain2purpleTakeBack`: Gain 2 purple, take back a worker on a different quad
+  - `playTwoWorkers`: Play 2 more workers this turn
+- Round 2:
+  - `gain5purpleSkip`: Gain 5 purple, skip your turn (immediately)
+  - `playThreeWorkers`: Play 3 more workers this turn
+- Round 3:
+  - `gain4purpleWaitAll`: Gain 4 purple. Skip turns until everyone else has run out of workers, then play all
+
+**Shops:**
+- R1: 1 purple + 1 any = Take an extra turn after this one
+- R2: 2 purple + 2 any = Play 2 more workers this turn
+- R3: 3 purple + 3 any = Play the rest of your workers
+- Victory Points: 6 purple = 3 VP
+
+**Automatic VP:** The first and last player to run out of workers each round each get 3 VP
 
 ## Implementation Progress
 
@@ -91,6 +110,10 @@ This document tracks the complete specification for the Patrons game layers and 
 12. **Blue flip shops action implemented** - Flips all shop statuses (as effect)
 13. **Blue automatic VP implemented** - All players get 1 VP when anyone uses any shop
 14. **SET_RESOURCES reducer added** - For resource swapping functionality
+15. **VP source tracking implemented** - All VP updates now include source parameter
+16. **VP hover tooltip added** - Shows breakdown of VP by category on hover
+17. **Shop UI made compact** - Efficient 4-column layout with hover tooltips
+18. **Round-based shop filtering** - Only shows shops available in current round
 
 ### ❌ TODO - Missing Functionality
 
@@ -113,15 +136,20 @@ This document tracks the complete specification for the Patrons game layers and 
 - [x] `blueReduceCosts` - Reduce all shop costs by 1 any ✅
 - [x] `blueIncreaseCosts` - Increase all shop costs by 1 any ✅
 - [x] `blueFlipShops` - Flip status of all shops ✅
+- [x] Blue shop benefit actions now properly execute shop effects ✅
 - [ ] Blue shop R2 effect: Gain shop benefit then close it
 - [ ] Blue shop R3 effect: Flip all shop statuses
 - [x] Blue automatic VP system (when any player uses shop) ✅
-- [ ] Shop closed/open status tracking
+- [x] Shop closed/open status tracking ✅
 
 #### General Systems
-- [ ] Shop open/closed state management
-- [ ] Cost modification system for shops
-- [ ] Proper VP tracking with source breakdown
+- [x] Shop open/closed state management ✅
+- [x] Cost modification system for shops ✅
+- [x] Proper VP tracking with source breakdown ✅
+
+#### Purple Layer
+- [ ] Remove old purple actions that don't exist in new spec
+- [ ] Verify all purple actions match the original spec
 
 ## Key Implementation Notes
 
@@ -151,22 +179,101 @@ This will give you the complete specification and current progress status.
 ## Summary of Remaining Work
 
 ### High Priority
-1. **Shop Effects Implementation**: Many shop effects are defined but not implemented
+1. **Shop Effects Implementation**: Several shop effects need implementation
    - Yellow R2/R3: Gain gems + everyone gains
    - Red R3: Repeat all actions taken this round
    - Blue R2: Gain benefit then close shop
-   - Blue R3: Flip all shop statuses
+   - Blue R3: Flip all shop statuses (shop effect)
 
-2. **Shop State Management**: 
-   - Track which shops are open/closed
-   - Apply cost modifications from blue actions
-   - Actually implement shop flipping functionality
+2. **Yellow trade any number**: The yellowHybrid1 action needs proper implementation
 
-3. **Yellow trade any number**: The yellowHybrid1 action needs proper implementation
+3. **Purple layer cleanup**: Remove outdated actions and verify against original spec
 
 ### Medium Priority
-- Purple layer verification (ensure it still works correctly)
 - Comprehensive testing of all systems
-- VP source tracking improvements
+- Edge case handling for complex interactions
 
-Last Updated: Context Compaction Imminent
+### Low Priority
+- Performance optimizations
+- Additional UI polish
+
+## Complex Interaction Considerations
+
+### Action Chaining
+1. **Red Repeat Actions + Other Layers**
+   - Red repeat can trigger blue shop benefits
+   - Red repeat can trigger yellow steals
+   - ✅ Infinite loop prevention added (max recursion depth of 5)
+   - Red repeat awards VP for each repeated red action
+
+2. **Blue Shop Control + Cost Modifications**
+   - Cost mods affect all players globally
+   - Closed shops can still be accessed via blue actions
+   - Shop flipping affects victory shops too
+   - Blue shop benefit actions properly execute shop effects
+
+3. **Yellow Resource Manipulation**
+   - Stealing allows targeted gem theft from specific players
+   - Swapping exchanges ALL resources between players
+   - Double gain effect consumed after first use
+   - Trade any number allows flexible gem conversion
+
+4. **Purple Timing**
+   - Extra workers apply in the following round (2 additional)
+   - Turn order changes take effect next round
+   - Multiple worker placement happens within same turn
+   - Shop benefit hybrid gives access to any R1 shop effect
+
+## Completed Improvements
+1. **Infinite Loop Protection**: Added recursion depth tracking to executeAction
+2. **Purple Actions**: Restored original simpler purple actions per spec
+3. **Shop Effect Execution**: Blue shop benefit actions now properly execute effects
+4. **VP Source Tracking**: All VP awards include source category
+5. **Edge Case Handling**: Proper validation for worker swaps, resource trades
+
+## Latest Updates (Post-Context)
+
+### Major Improvements:
+1. **Shop Phase System**: Implemented proper turn phases (shop1 → workers → shop2)
+2. **Shop Usage Limits**: Enforced 1 shop per phase maximum
+3. **Cost Modifier Fix**: Changed to cumulative system (ADD instead of SET)
+4. **Recursion Protection**: Max depth 5 for all repeat actions
+5. **UI Enhancements**: 
+   - Phase indicator on player cards
+   - Cost modifier display in shop header
+   - Smart button text based on phase
+   - "Skip to Shop Phase" option when out of workers
+6. **Purple Shop Fix**: Now properly adds workers instead of overriding
+7. **Complex Interaction Handling**: Proper validation for all edge cases
+
+### Remaining Work:
+- Implement remaining shop effects (Yellow R2/R3, Red R3, Blue R2)
+- Test all complex interactions thoroughly
+- Performance optimization for large action chains
+
+## Context for Next Session
+
+### Current Status:
+- Updated purple actions to match correct specification
+- Implemented all new purple actions:
+  - gain4purpleSkip: +4 purple, skip next turn
+  - gain2purpleTakeBack: +2 purple, take back worker from different quad
+  - gain5purpleSkip: +5 purple, skip this turn immediately
+  - playThreeWorkers: Place 3 more workers this turn
+  - gain4purpleWaitAll: +4 purple, wait for others to run out then play all
+- Fixed shop display to show full effects without hovering
+- Fixed shop phase system to transition after placing last worker for turn
+- Blue close shop dialog now shows costs and effects
+
+### Key Features Working:
+1. Shop phase system with proper transitions
+2. All action implementations with edge case handling
+3. Recursion protection (max depth 5)
+4. VP source tracking with hover tooltips
+5. Shop cost modifier stacking
+6. Worker placement limit enforcement per phase
+
+### Known Issues:
+- Some shop effects still need implementation (Yellow R2/R3, Red R3, Blue R2)
+
+Last Updated: Pre-Compact with Purple Actions Fixed
