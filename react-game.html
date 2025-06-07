@@ -1753,15 +1753,44 @@
             // BLUE LAYER ACTIONS
             
             // Blue shop benefit actions - gain any shop benefit even if closed
-            if (actionId === 'blueShopBenefit1' || actionId === 'blueShopBenefit2') {
-                // BLUE AUTOMATIC VP - for using a shop benefit action
-                dispatch({
-                    type: 'UPDATE_VP',
-                    playerId: player.id,
-                    vp: 1
-                });
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for using shop (shop benefit action)` });
+            // Blue R1 shop benefit action
+            if (actionId === 'blueR1ShopBenefit') {
+                // List all available R1 shops
+                const shopOptions = [];
+                const colors = ['red', 'yellow', 'blue', 'purple'];
                 
+                colors.forEach(color => {
+                    // Only R1 shops
+                    shopOptions.push({
+                        label: `${color} R1 shop`,
+                        value: { color, round: 1 }
+                    });
+                });
+                
+                const choice = await showChoice(dispatch, 'Choose any R1 shop benefit (ignores closed status)', shopOptions);
+                
+                if (choice) {
+                    // Execute the shop benefit without paying cost
+                    // TODO: implement shop effects
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained ${choice.color} R1 shop benefit (effect not yet implemented)` });
+                    
+                    // BLUE AUTOMATIC VP: All players get 1 VP when anyone uses any shop benefit
+                    const allPlayers = state.players;
+                    allPlayers.forEach(p => {
+                        dispatch({
+                            type: 'UPDATE_VP',
+                            playerId: p.id,
+                            vp: 1
+                        });
+                    });
+                    dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop benefit)' });
+                }
+                
+                return;
+            }
+            
+            // Blue any shop benefit action (R3)
+            if (actionId === 'blueAnyShopBenefit') {
                 // List all available shops
                 const shopOptions = [];
                 const colors = ['red', 'yellow', 'blue', 'purple'];
@@ -1777,13 +1806,11 @@
                         label: `${color} R2 shop`,
                         value: { color, round: 2 }
                     });
-                    // R3 shops if round 3
-                    if (currentState.round >= 3) {
-                        shopOptions.push({
-                            label: `${color} R3 shop`,
-                            value: { color, round: 3 }
-                        });
-                    }
+                    // R3 shops
+                    shopOptions.push({
+                        label: `${color} R3 shop`,
+                        value: { color, round: 3 }
+                    });
                     // Victory shops
                     shopOptions.push({
                         label: `${color} Victory shop (3 VP)`,
@@ -1807,6 +1834,17 @@
                         // Execute regular shop effect - TODO: implement shop effects
                         dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained ${choice.color} R${choice.round} shop benefit (effect not yet implemented)` });
                     }
+                    
+                    // BLUE AUTOMATIC VP: All players get 1 VP when anyone uses any shop benefit
+                    const allPlayers = state.players;
+                    allPlayers.forEach(p => {
+                        dispatch({
+                            type: 'UPDATE_VP',
+                            playerId: p.id,
+                            vp: 1
+                        });
+                    });
+                    dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop benefit)' });
                 }
                 
                 return;
@@ -1850,20 +1888,20 @@
                 return;
             }
             
-            // Blue flip shops action
-            if (actionId === 'blueFlipShops') {
+            // Blue toggle shops action
+            if (actionId === 'blueToggleShops') {
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
                     resources: { blue: 1 }
                 });
                 
-                // Flip all shops
+                // Toggle all shops (flip status)
                 dispatch({
                     type: 'FLIP_ALL_SHOPS'
                 });
                 
-                const message = `Player ${player.id}: blueFlipShops → +1 blue + all shops flipped`;
+                const message = `Player ${player.id}: blueToggleShops → +1 blue + all shops toggled`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -2516,8 +2554,8 @@
                 },
                 purple: {
                     1: { cost: { purple: 1, any: 1 }, effect: 'Take an extra turn after this one' },
-                    2: { cost: { purple: 2, any: 2 }, effect: 'Needs new effect (old one moved to R3)' },
-                    3: { cost: { purple: 3, any: 3 }, effect: 'Original purple effect now here' }
+                    2: { cost: { purple: 2, any: 2 }, effect: 'Play 2 more workers this turn' },
+                    3: { cost: { purple: 3, any: 3 }, effect: 'Play the rest of your workers' }
                 }
             };
             
@@ -2738,7 +2776,7 @@
                 red: { cost: { red: 5 }, vp: 3 },
                 yellow: { cost: { any: 5 }, vp: 3 },
                 blue: { cost: { blue: 5 }, vp: 3 },
-                purple: { cost: { purple: 5 }, vp: 3 }
+                purple: { cost: { purple: 6 }, vp: 3 }
             };
             
             const shopId = `${color}vp`;
@@ -2822,7 +2860,7 @@
                     isClosed ? '🔒 Victory (Closed)' : '🏆 Victory'),
                 React.createElement('div', { key: 'cost', className: 'text-center text-xs mb-2 text-green-800' }, 
                     React.createElement('strong', {}, 
-                        `${color === 'yellow' ? `${actualCost} ⚪` : `5 ${color.charAt(0).toUpperCase() + color.slice(1)}`}: ${shop.vp} VP`)),
+                        `${color === 'yellow' ? `${actualCost} ⚪` : `${shop.cost[color]} ${color.charAt(0).toUpperCase() + color.slice(1)}`}: ${shop.vp} VP`)),
                 React.createElement('div', { key: 'button', className: 'text-center' }, 
                     React.createElement('button', {
                         onClick: handlePurchase,
@@ -2865,23 +2903,24 @@
                 actions: [
                     { id: 'gain3blue', title: 'Gain 3 🔵', description: '', round: 1 },
                     { id: 'gain2blue', title: 'Gain 2 🔵', description: '', round: 1 },
-                    { id: 'blueShopBenefit1', title: 'Gain a Shop Benefit', description: '(Even if closed)', round: 1 },
-                    { id: 'blueShopBenefit2', title: 'Gain a Shop Benefit', description: '(Even if closed)', round: 1 },
-                    { id: 'blueReduceCosts', title: '+1 🔵 + Reduce All Shop Costs', description: '(By 1 ⚪ this round)', round: 2 },
+                    { id: 'blueR1ShopBenefit', title: 'Gain an R1 Shop Benefit', description: '(Even if closed)', round: 1 },
+                    { id: 'blueReduceCosts', title: '+1 🔵 + Reduce All Shop Costs', description: '(By 1 ⚪ this round)', round: 1 },
                     { id: 'blueIncreaseCosts', title: '+2 🔵 + Increase All Shop Costs', description: '(By 1 ⚪ this round)', round: 2 },
-                    { id: 'blueFlipShops', title: '+1 🔵 + Flip All Shops', description: '(Including victory shops)', round: 3 }
+                    { id: 'blueToggleShops', title: '+1 🔵 + Toggle All Shop Status', description: '(Including victory shops)', round: 2 },
+                    { id: 'blueAnyShopBenefit', title: 'Gain Any Shop Benefit', description: '(Even if closed)', round: 3 }
                 ]
             },
             purple: {
                 title: "Timing/Order",
                 icon: "🟣",
                 actions: [
+                    { id: 'gain4purpleSkip', title: 'Gain 4 🟣, Skip Next Turn', description: '', round: 1 },
                     { id: 'gain3purple', title: 'Gain 3 🟣', description: '', round: 1 },
-                    { id: 'gain2purple', title: 'Gain 2 🟣', description: '', round: 1 },
-                    { id: 'playTwoWorkers', title: 'Play Your Next Two Workers', description: '', round: 1 },
-                    { id: 'purpleShopHybrid', title: '+1 🟣 + ⚪ Shop Benefit', description: '', round: 1 },
-                    { id: 'extraWorkers', title: 'Gain 2 Extra Workers Next Round', description: '', round: 2 },
-                    { id: 'purpleHybrid2', title: '+1 🟣 + Choose Turn Order', description: '(For next round)', round: 2 }
+                    { id: 'gain2purpleTakeBack', title: 'Gain 2 🟣, Take Back Worker', description: '(From different quad)', round: 1 },
+                    { id: 'playTwoWorkers', title: 'Play 2 More Workers', description: '(This turn)', round: 1 },
+                    { id: 'gain5purpleSkip', title: 'Gain 5 🟣, Skip Turn', description: '', round: 2 },
+                    { id: 'playThreeWorkers', title: 'Play 3 More Workers', description: '(This turn)', round: 2 },
+                    { id: 'gain4purpleWaitAll', title: 'Gain 4 🟣, Wait Then Play All', description: '(Skip until others out, then play all)', round: 3 }
                 ]
             },
         };
