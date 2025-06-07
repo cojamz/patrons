@@ -165,10 +165,10 @@
             currentPlayer: 1,
             turnDirection: 1,
             players: [
-                { id: 1, name: "Player 1", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
-                { id: 2, name: "Player 2", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
-                { id: 3, name: "Player 3", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 },
-                { id: 4, name: "Player 4", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0 }
+                { id: 1, name: "Player 1", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {} },
+                { id: 2, name: "Player 2", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {} },
+                { id: 3, name: "Player 3", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {} },
+                { id: 4, name: "Player 4", resources: { red: 0, yellow: 0, blue: 0, purple: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {} }
             ],
             occupiedSpaces: {},
             round: 1,
@@ -243,12 +243,20 @@
                         )
                     };
                 
+                // ADD_VICTORY_POINTS is deprecated - use UPDATE_VP instead
                 case 'ADD_VICTORY_POINTS':
                     return {
                         ...state,
                         players: state.players.map(player => 
                             player.id === action.playerId 
-                                ? { ...player, victoryPoints: player.victoryPoints + action.points }
+                                ? { 
+                                    ...player, 
+                                    victoryPoints: player.victoryPoints + action.points,
+                                    vpSources: {
+                                        ...player.vpSources,
+                                        victoryShop: (player.vpSources?.victoryShop || 0) + action.points
+                                    }
+                                }
                                 : player
                         )
                     };
@@ -258,7 +266,14 @@
                         ...state,
                         players: state.players.map(player => 
                             player.id === action.playerId 
-                                ? { ...player, victoryPoints: player.victoryPoints + action.vp }
+                                ? { 
+                                    ...player, 
+                                    victoryPoints: player.victoryPoints + action.vp,
+                                    vpSources: {
+                                        ...player.vpSources,
+                                        [action.source || 'other']: (player.vpSources?.[action.source || 'other'] || 0) + action.vp
+                                    }
+                                }
                                 : player
                         )
                     };
@@ -438,7 +453,11 @@
                             const vpUpdate = purpleVPUpdates.find(u => u.playerId === player.id);
                             return vpUpdate ? {
                                 ...player,
-                                victoryPoints: player.victoryPoints + vpUpdate.vp
+                                victoryPoints: player.victoryPoints + vpUpdate.vp,
+                                vpSources: {
+                                    ...player.vpSources,
+                                    purpleWorkers: (player.vpSources?.purpleWorkers || 0) + vpUpdate.vp
+                                }
                             } : player;
                         }),
                         actionLog: [
@@ -460,7 +479,11 @@
                             vpMessages.push(`Player ${player.id}: +${differentColors} VP for ${differentColors} different color gems`);
                             return {
                                 ...player,
-                                victoryPoints: player.victoryPoints + differentColors
+                                victoryPoints: player.victoryPoints + differentColors,
+                                vpSources: {
+                                    ...player.vpSources,
+                                    yellowDiversity: (player.vpSources?.yellowDiversity || 0) + differentColors
+                                }
                             };
                         }
                         return player;
@@ -1229,7 +1252,8 @@
                     dispatch({
                         type: 'UPDATE_VP',
                         playerId: player.id,
-                        vp: 1
+                        vp: 1,
+                        source: 'redAction'
                     });
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
                 }
@@ -2999,7 +3023,18 @@
                         player.name,
                         isCurrentPlayer && React.createElement('span', { key: 'indicator', className: 'text-blue-500 ml-2' }, '🎯')
                     ]),
-                    React.createElement('div', { key: 'vp', className: 'text-2xl font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-lg' }, `${player.victoryPoints} VP`)
+                    React.createElement('div', { 
+                        key: 'vp', 
+                        className: 'text-2xl font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-lg relative group cursor-help',
+                        title: getVPBreakdown(player.vpSources)
+                    }, [
+                        `${player.victoryPoints} VP`,
+                        // VP breakdown tooltip
+                        React.createElement('div', {
+                            key: 'vp-tooltip',
+                            className: 'absolute bottom-full right-0 mb-2 bg-gray-800 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10'
+                        }, getVPBreakdownDisplay(player.vpSources))
+                    ])
                 ]),
                 React.createElement('div', { key: 'resources', className: 'flex gap-3 mb-4 justify-center' }, 
                     activeColors.map(color => 
@@ -3343,6 +3378,42 @@
             }
         }
         
+        // Get VP breakdown text for tooltip
+        function getVPBreakdown(vpSources) {
+            if (!vpSources || Object.keys(vpSources).length === 0) return 'No VP yet';
+            return Object.entries(vpSources)
+                .map(([source, amount]) => `${getVPSourceName(source)}: ${amount}`)
+                .join(', ');
+        }
+        
+        // Get VP breakdown display for hover tooltip
+        function getVPBreakdownDisplay(vpSources) {
+            if (!vpSources || Object.keys(vpSources).length === 0) {
+                return React.createElement('div', {}, 'No VP yet');
+            }
+            
+            return React.createElement('div', {}, 
+                Object.entries(vpSources).map(([source, amount]) => 
+                    React.createElement('div', { key: source }, 
+                        `${getVPSourceName(source)}: ${amount} VP`
+                    )
+                )
+            );
+        }
+        
+        // Get friendly name for VP source
+        function getVPSourceName(source) {
+            switch(source) {
+                case 'redAction': return '🔴 Red Actions';
+                case 'yellowDiversity': return '🟡 Gem Diversity';
+                case 'blueShopUsage': return '🔵 Shop Usage';
+                case 'purpleWorkers': return '🟣 Worker Timing';
+                case 'victoryShop': return '🏆 Victory Shops';
+                case 'shopPurchase': return '🏪 Shop Purchases';
+                default: return '❓ Other';
+            }
+        }
+        
         // Compact Shop Component
         function CompactShop({ color, round, label, currentRound }) {
             const { state, dispatch } = useGame();
@@ -3520,7 +3591,7 @@
                 }
                 
                 dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
-                dispatch({ type: 'ADD_VICTORY_POINTS', playerId: currentPlayer.id, points: shop.vp });
+                dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: shop.vp, source: 'victoryShop' });
                 
                 // Blue automatic VP
                 state.players.forEach(p => {
@@ -3624,7 +3695,7 @@
                     dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
                 }
                 
-                dispatch({ type: 'ADD_VICTORY_POINTS', playerId: currentPlayer.id, points: shop.vp });
+                dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: shop.vp, source: 'victoryShop' });
                 console.log(`Player ${currentPlayer.id} bought 3 victory points from ${color} shop`);
                 
                 // BLUE AUTOMATIC VP: All players get 1 VP when any shop is used
