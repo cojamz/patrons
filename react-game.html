@@ -178,6 +178,8 @@
             modal: null,
             actionLog: [],
             gameLayers: null, // Will be set when game starts
+            closedShops: {}, // Track which shops are closed { 'red1': true, 'blue2': true, etc }
+            shopCostModifier: 0, // Cost modifier for shops this round
             
             // Multiplayer state
             roomCode: null,
@@ -225,6 +227,16 @@
                                 : player
                         )
                     };
+                    
+                case 'SET_RESOURCES':
+                    return {
+                        ...state,
+                        players: state.players.map(player => 
+                            player.id === action.playerId 
+                                ? { ...player, resources: action.resources }
+                                : player
+                        )
+                    };
                 
                 case 'ADD_VICTORY_POINTS':
                     return {
@@ -232,6 +244,16 @@
                         players: state.players.map(player => 
                             player.id === action.playerId 
                                 ? { ...player, victoryPoints: player.victoryPoints + action.points }
+                                : player
+                        )
+                    };
+                    
+                case 'UPDATE_VP':
+                    return {
+                        ...state,
+                        players: state.players.map(player => 
+                            player.id === action.playerId 
+                                ? { ...player, victoryPoints: player.victoryPoints + action.vp }
                                 : player
                         )
                     };
@@ -319,10 +341,27 @@
                     };
                 
                 case 'ADVANCE_ROUND':
+                    // Calculate Yellow automatic VP before advancing round
+                    const vpMessages = [];
+                    const playersWithYellowVP = state.players.map(player => {
+                        const differentColors = Object.entries(player.resources)
+                            .filter(([color, amount]) => amount > 0)
+                            .length;
+                        
+                        if (differentColors > 0) {
+                            vpMessages.push(`Player ${player.id}: +${differentColors} VP for ${differentColors} different color gems`);
+                            return {
+                                ...player,
+                                victoryPoints: player.victoryPoints + differentColors
+                            };
+                        }
+                        return player;
+                    });
+                    
                     return {
                         ...state,
                         round: state.round + 1,
-                        players: state.players.map(player => {
+                        players: playersWithYellowVP.map(player => {
                             const baseWorkers = 3 + (state.round + 1);
                             const hasExtraWorkers = (player.effects || []).some(effect => 
                                 effect.includes('Will get 2 extra workers next round')
@@ -342,7 +381,8 @@
                         turnDirection: 1,
                         workerPlacedThisTurn: false,
                         workersToPlace: 1,
-                        actionLog: [...state.actionLog.slice(-9), `Round ${state.round + 1} started! Extra workers applied.`]
+                        shopCostModifier: 0, // Reset cost modifier each round
+                        actionLog: [...state.actionLog.slice(-9), ...vpMessages, `Round ${state.round + 1} started! Extra workers applied.`]
                     };
                 
                 case 'ADD_LOG':
@@ -376,6 +416,40 @@
                     return {
                         ...state,
                         turnOrder: action.turnOrder
+                    };
+                
+                case 'CLOSE_SHOP':
+                    return {
+                        ...state,
+                        closedShops: {
+                            ...state.closedShops,
+                            [action.shopId]: true
+                        }
+                    };
+                
+                case 'FLIP_ALL_SHOPS':
+                    const flippedShops = {};
+                    // Flip all regular shops
+                    const colors = ['red', 'yellow', 'blue', 'purple'];
+                    const rounds = [1, 2, 3];
+                    colors.forEach(color => {
+                        rounds.forEach(round => {
+                            const shopId = `${color}${round}`;
+                            flippedShops[shopId] = !state.closedShops[shopId];
+                        });
+                        // Also flip victory shops
+                        const vpShopId = `${color}VP`;
+                        flippedShops[vpShopId] = !state.closedShops[vpShopId];
+                    });
+                    return {
+                        ...state,
+                        closedShops: flippedShops
+                    };
+                
+                case 'SET_SHOP_COST_MODIFIER':
+                    return {
+                        ...state,
+                        shopCostModifier: action.modifier
                     };
                 
                 // Multiplayer actions
@@ -880,8 +954,8 @@
             ]);
         }
 
-        // Action Space Component
-        function ActionSpace({ actionId, title, description, round, available = true }) {
+        // Action Space Component - Enhanced with compact mode and round indicators
+        function ActionSpace({ actionId, title, description, round, available = true, compact = false }) {
             const { state, dispatch } = useGame();
             const isOccupied = state.occupiedSpaces[actionId];
             const occupyingPlayer = isOccupied ? state.players.find(p => p.id === isOccupied) : null;
@@ -927,17 +1001,46 @@
                 return 'hover:bg-blue-50 hover:border-blue-400 cursor-pointer transform hover:scale-105';
             };
             
+            const getRoundIndicator = () => {
+                const baseStyle = "absolute top-1 left-1 px-2 py-1 rounded-full text-xs font-bold text-white";
+                switch (round) {
+                    case 1: return `${baseStyle} bg-gray-500`;
+                    case 2: return `${baseStyle} bg-green-500`;
+                    case 3: return `${baseStyle} bg-yellow-600`;
+                    default: return `${baseStyle} bg-gray-500`;
+                }
+            };
+            
+            const getCardSize = () => {
+                return compact ? 'p-2 min-h-14' : 'p-3 min-h-20';
+            };
+            
+            const getTextSize = () => {
+                return compact ? {
+                    title: 'text-xs',
+                    desc: 'text-xs'
+                } : {
+                    title: 'text-sm',
+                    desc: 'text-xs'
+                };
+            };
+            
+            const textSizes = getTextSize();
+            
             return React.createElement('div', {
-                className: `relative p-2 border-2 rounded-lg min-h-16 flex flex-col justify-center text-center transition-all duration-200 ${getRoundStyle()} ${getAvailabilityStyle()}`,
+                className: `relative ${getCardSize()} border-2 rounded-lg flex flex-col justify-center text-center transition-all duration-200 ${getRoundStyle()} ${getAvailabilityStyle()}`,
                 onClick: handleClick
             }, [
-                React.createElement('div', { key: 'title', className: 'font-bold text-xs mb-1' }, title),
-                React.createElement('div', { key: 'desc', className: 'text-xs text-gray-500 leading-tight' }, description),
+                React.createElement('div', { key: 'title', className: `font-bold ${textSizes.title} mb-1` }, title),
+                React.createElement('div', { key: 'desc', className: `${textSizes.desc} text-gray-600 leading-tight` }, description),
                 occupyingPlayer && React.createElement('div', {
                     key: 'worker',
-                    className: `absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold player-${occupyingPlayer.id}`
+                    className: `absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold player-${occupyingPlayer.id}`
                 }, occupyingPlayer.id),
-                React.createElement('div', { key: 'round', className: 'absolute bottom-1 right-1 text-xs text-gray-500' }, `R${round}`)
+                React.createElement('div', { 
+                    key: 'round-indicator', 
+                    className: getRoundIndicator() 
+                }, `R${round}`)
             ]);
         }
 
@@ -983,6 +1086,17 @@
                     playerId: player.id,
                     resources: resources
                 });
+                
+                // RED AUTOMATIC VP: Award 1 VP for red layer actions
+                if (actionId.includes('red')) {
+                    dispatch({
+                        type: 'UPDATE_VP',
+                        playerId: player.id,
+                        vp: 1
+                    });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
+                }
+                
                 return;
             }
             
@@ -1152,14 +1266,14 @@
                 });
                 
                 const shopOptions = [
-                    { label: 'Red R1: Repeat a worker\'s action', value: 'red1' },
-                    { label: 'Yellow R1: Double next gain', value: 'yellow1' },
-                    { label: 'Blue R1: Close any shop this round', value: 'blue1' },
-                    { label: 'Purple R1: Take an extra turn after this one', value: 'purple1' }
+                    { label: '🔴 R1: Repeat a worker\'s action', value: 'red1' },
+                    { label: '🟡 R1: Double next gain', value: 'yellow1' },
+                    { label: '🔵 R1: Close ⚪ shop this round', value: 'blue1' },
+                    { label: '🟣 R1: Take an extra turn after this one', value: 'purple1' }
                 ];
                 
                 const choice = await showChoice(dispatch, 
-                    'Choose any Round 1 shop benefit', 
+                    'Choose ⚪ Round 1 shop benefit', 
                     shopOptions
                 );
                 
@@ -1180,7 +1294,7 @@
                             dispatch({
                                 type: 'ADD_EFFECT',
                                 playerId: player.id,
-                                effect: 'Can close any shop this round'
+                                effect: 'Can close ⚪ shop this round'
                             });
                             break;
                         case 'purple1':
@@ -1245,6 +1359,14 @@
                     playerId: player.id,
                     resources: { red: 1 }
                 });
+                
+                // RED AUTOMATIC VP
+                dispatch({
+                    type: 'UPDATE_VP',
+                    playerId: player.id,
+                    vp: 1
+                });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
                 
                 const logMessage = `DEBUG: Occupied spaces: ${JSON.stringify(currentState.occupiedSpaces)}`;
                 dispatch({ type: 'ADD_LOG', message: logMessage });
@@ -1325,6 +1447,14 @@
                     resources: { red: 1 }
                 });
                 
+                // RED AUTOMATIC VP
+                dispatch({
+                    type: 'UPDATE_VP',
+                    playerId: player.id,
+                    vp: 1
+                });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
+                
                 // Find workers that can be swapped
                 const allWorkers = Object.entries(currentState.occupiedSpaces);
                 if (allWorkers.length < 2) {
@@ -1382,6 +1512,14 @@
                     resources: { red: 1 }
                 });
                 
+                // RED AUTOMATIC VP
+                dispatch({
+                    type: 'UPDATE_VP',
+                    playerId: player.id,
+                    vp: 1
+                });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
+                
                 dispatch({
                     type: 'ADD_EFFECT',
                     playerId: player.id,
@@ -1393,11 +1531,42 @@
                 return;
             }
             
+            // Red R3 - Repeat all your worker actions
+            if (actionId === 'redRepeatAll') {
+                // RED AUTOMATIC VP for the action itself
+                dispatch({
+                    type: 'UPDATE_VP',
+                    playerId: player.id,
+                    vp: 1
+                });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
+                
+                // Find all spaces occupied by current player
+                const playerSpaces = Object.entries(currentState.occupiedSpaces)
+                    .filter(([spaceId, occupyingPlayerId]) => occupyingPlayerId === player.id && spaceId !== 'redRepeatAll')
+                    .map(([spaceId]) => spaceId);
+                
+                if (playerSpaces.length === 0) {
+                    const message = `Player ${player.id}: redRepeatAll → No other workers to repeat`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
+                
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: redRepeatAll → Repeating ${playerSpaces.length} actions` });
+                
+                // Execute each action (this will also award VP for red actions)
+                for (const spaceId of playerSpaces) {
+                    await executeAction(spaceId, player, dispatch, currentState, gameLayers);
+                }
+                
+                return;
+            }
+            
             // YELLOW LAYER ACTIONS
             
             // Steal gem actions
-            if (actionId === 'stealGem' || actionId === 'steal2Gems') {
-                const stealCount = actionId === 'stealGem' ? 1 : 2;
+            if (actionId === 'stealGem' || actionId === 'steal2Gems' || actionId === 'steal3Gems') {
+                const stealCount = actionId === 'stealGem' ? 1 : (actionId === 'steal2Gems' ? 2 : 3);
                 const otherPlayers = currentState.players.filter(p => p.id !== player.id);
                 
                 if (otherPlayers.length === 0) {
@@ -1457,17 +1626,30 @@
                     resources: { yellow: 1 }
                 });
                 
-                // Trade 2 gems for 2 any colors
-                const playerColors = Object.entries(player.resources).filter(([, amount]) => amount > 0);
-                if (playerColors.length < 2) {
-                    const message = `Player ${player.id}: yellowHybrid1 → +1 yellow (not enough gems to trade)`;
+                // Trade any number of gems
+                const totalGems = Object.values(player.resources).reduce((sum, amount) => sum + amount, 0);
+                if (totalGems === 0) {
+                    const message = `Player ${player.id}: yellowHybrid1 → +1 yellow (no gems to trade)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
                 
-                // Choose 2 gems to trade away
+                // Ask how many gems to trade
+                const numberOptions = [];
+                for (let i = 1; i <= Math.min(totalGems, 10); i++) {
+                    numberOptions.push({ label: `Trade ${i} gem${i > 1 ? 's' : ''}`, value: i });
+                }
+                
+                const numberToTrade = await showChoice(dispatch, 'How many gems do you want to trade?', numberOptions);
+                if (!numberToTrade) {
+                    const message = `Player ${player.id}: yellowHybrid1 → +1 yellow (no trade)`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
+                
+                // Choose gems to trade away
                 const tradeCost = {};
-                for (let i = 0; i < 2; i++) {
+                for (let i = 0; i < numberToTrade; i++) {
                     const availableColors = Object.entries(player.resources)
                         .filter(([color, amount]) => amount + (tradeCost[color] || 0) > 0)
                         .map(([color, amount]) => ({
@@ -1475,22 +1657,22 @@
                             value: color
                         }));
                     
-                    const colorToTrade = await showChoice(dispatch, `Choose color to trade away (${i + 1}/2)`, availableColors);
+                    const colorToTrade = await showChoice(dispatch, `Choose gem to trade away (${i + 1}/${numberToTrade})`, availableColors);
                     if (colorToTrade) {
                         tradeCost[colorToTrade] = (tradeCost[colorToTrade] || 0) - 1;
                     }
                 }
                 
-                // Choose 2 gems to gain
+                // Choose gems to gain (same number)
                 const colors = ['red', 'yellow', 'blue', 'purple'];
                 const tradeGain = {};
-                for (let i = 0; i < 2; i++) {
+                for (let i = 0; i < numberToTrade; i++) {
                     const colorOptions = colors.map(color => ({
                         label: `${color.charAt(0).toUpperCase() + color.slice(1)} Gem`,
                         value: color
                     }));
                     
-                    const colorToGain = await showChoice(dispatch, `Choose color to gain (${i + 1}/2)`, colorOptions);
+                    const colorToGain = await showChoice(dispatch, `Choose gem to gain (${i + 1}/${numberToTrade})`, colorOptions);
                     if (colorToGain) {
                         tradeGain[colorToGain] = (tradeGain[colorToGain] || 0) + 1;
                     }
@@ -1503,7 +1685,7 @@
                     resources: { ...tradeCost, ...tradeGain }
                 });
                 
-                const message = `Player ${player.id}: yellowHybrid1 → +1 yellow + traded gems`;
+                const message = `Player ${player.id}: yellowHybrid1 → +1 yellow + traded ${numberToTrade} gems`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1526,104 +1708,162 @@
                 return;
             }
             
+            // Yellow R3 - Swap all resources with another player
+            if (actionId === 'yellowSwapResources') {
+                const otherPlayers = currentState.players.filter(p => p.id !== player.id);
+                
+                if (otherPlayers.length === 0) {
+                    const message = `Player ${player.id}: yellowSwapResources → No other players to swap with`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
+                
+                const swapOptions = otherPlayers.map(p => ({
+                    label: `Player ${p.id} (${Object.entries(p.resources).filter(([,amt]) => amt > 0).map(([color, amt]) => `${amt} ${color}`).join(', ') || 'no gems'})`,
+                    value: p.id
+                }));
+                
+                const targetPlayerId = await showChoice(dispatch, 'Choose player to swap all resources with', swapOptions);
+                
+                if (targetPlayerId) {
+                    const targetPlayer = otherPlayers.find(p => p.id === targetPlayerId);
+                    const playerResources = { ...player.resources };
+                    const targetResources = { ...targetPlayer.resources };
+                    
+                    // Swap resources
+                    dispatch({
+                        type: 'SET_RESOURCES',
+                        playerId: player.id,
+                        resources: targetResources
+                    });
+                    
+                    dispatch({
+                        type: 'SET_RESOURCES',
+                        playerId: targetPlayerId,
+                        resources: playerResources
+                    });
+                    
+                    const message = `Player ${player.id}: yellowSwapResources → Swapped all resources with Player ${targetPlayerId}`;
+                    dispatch({ type: 'ADD_LOG', message });
+                }
+                
+                return;
+            }
+            
             // BLUE LAYER ACTIONS
             
-            // Blue hybrid actions - move workers
-            if (actionId === 'blueHybrid1' || actionId === 'blueHybrid2') {
+            // Blue shop benefit actions - gain any shop benefit even if closed
+            if (actionId === 'blueShopBenefit1' || actionId === 'blueShopBenefit2') {
+                // BLUE AUTOMATIC VP - for using a shop benefit action
+                dispatch({
+                    type: 'UPDATE_VP',
+                    playerId: player.id,
+                    vp: 1
+                });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for using shop (shop benefit action)` });
+                
+                // List all available shops
+                const shopOptions = [];
+                const colors = ['red', 'yellow', 'blue', 'purple'];
+                
+                colors.forEach(color => {
+                    // R1 shops
+                    shopOptions.push({
+                        label: `${color} R1 shop`,
+                        value: { color, round: 1 }
+                    });
+                    // R2 shops
+                    shopOptions.push({
+                        label: `${color} R2 shop`,
+                        value: { color, round: 2 }
+                    });
+                    // R3 shops if round 3
+                    if (currentState.round >= 3) {
+                        shopOptions.push({
+                            label: `${color} R3 shop`,
+                            value: { color, round: 3 }
+                        });
+                    }
+                    // Victory shops
+                    shopOptions.push({
+                        label: `${color} Victory shop (3 VP)`,
+                        value: { color, round: 'vp' }
+                    });
+                });
+                
+                const choice = await showChoice(dispatch, 'Choose any shop benefit (ignores closed status)', shopOptions);
+                
+                if (choice) {
+                    // Execute the shop benefit without paying cost
+                    if (choice.round === 'vp') {
+                        // Grant 3 VP
+                        dispatch({
+                            type: 'UPDATE_VP',
+                            playerId: player.id,
+                            vp: 3
+                        });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained 3 VP from ${choice.color} victory shop` });
+                    } else {
+                        // Execute regular shop effect - TODO: implement shop effects
+                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained ${choice.color} R${choice.round} shop benefit (effect not yet implemented)` });
+                    }
+                }
+                
+                return;
+            }
+            
+            // Blue reduce costs action
+            if (actionId === 'blueReduceCosts') {
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
                     resources: { blue: 1 }
                 });
                 
-                const moveCount = actionId === 'blueHybrid1' ? 1 : 2;
-                const allWorkers = Object.entries(currentState.occupiedSpaces);
+                // Set cost reduction for this round
+                dispatch({
+                    type: 'SET_SHOP_COST_MODIFIER',
+                    modifier: -1
+                });
                 
-                for (let i = 0; i < moveCount; i++) {
-                    if (allWorkers.length === 0) break;
-                    
-                    const workerOptions = allWorkers.map(([spaceId, playerId]) => ({
-                        label: `Player ${playerId}'s worker on ${spaceId}`,
-                        value: { spaceId, playerId }
-                    }));
-                    
-                    const workerToMove = await showChoice(dispatch, `Choose worker to move (${i + 1}/${moveCount})`, workerOptions);
-                    if (!workerToMove) break;
-                    
-                    // Get available spaces
-                    const occupiedSpaces = Object.keys(currentState.occupiedSpaces);
-                    const availableSpaces = [];
-                    
-                    for (const layerData of Object.values(gameLayers)) {
-                        for (const action of layerData.actions) {
-                            if (action.round <= currentState.round && !occupiedSpaces.includes(action.id)) {
-                                availableSpaces.push({
-                                    label: action.title,
-                                    value: action.id
-                                });
-                            }
-                        }
-                    }
-                    
-                    const newSpace = await showChoice(dispatch, 'Choose new space for worker', availableSpaces);
-                    if (!newSpace) break;
-                    
-                    // Move the worker
-                    const newOccupiedSpaces = { ...currentState.occupiedSpaces };
-                    delete newOccupiedSpaces[workerToMove.spaceId];
-                    newOccupiedSpaces[newSpace] = workerToMove.playerId;
-                    
-                    dispatch({
-                        type: 'UPDATE_OCCUPIED_SPACES',
-                        occupiedSpaces: newOccupiedSpaces
-                    });
-                    
-                    // Note: They don't get the benefit of the new space
-                }
-                
-                const message = `Player ${player.id}: ${actionId} → +1 blue + moved ${moveCount} worker(s)`;
+                const message = `Player ${player.id}: blueReduceCosts → +1 blue + shop costs reduced by 1 any`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
-            // Everyone return gems
-            if (actionId === 'everyoneReturn1' || actionId === 'everyoneReturn2') {
+            // Blue increase costs action
+            if (actionId === 'blueIncreaseCosts') {
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: player.id,
+                    resources: { blue: 2 }
+                });
+                
+                // Set cost increase for this round
+                dispatch({
+                    type: 'SET_SHOP_COST_MODIFIER',
+                    modifier: 1
+                });
+                
+                const message = `Player ${player.id}: blueIncreaseCosts → +2 blue + shop costs increased by 1 any`;
+                dispatch({ type: 'ADD_LOG', message });
+                return;
+            }
+            
+            // Blue flip shops action
+            if (actionId === 'blueFlipShops') {
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
                     resources: { blue: 1 }
                 });
                 
-                const returnCount = actionId === 'everyoneReturn1' ? 1 : 2;
-                const otherPlayers = currentState.players.filter(p => p.id !== player.id);
+                // Flip all shops
+                dispatch({
+                    type: 'FLIP_ALL_SHOPS'
+                });
                 
-                for (const otherPlayer of otherPlayers) {
-                    for (let i = 0; i < returnCount; i++) {
-                        const availableColors = Object.entries(otherPlayer.resources)
-                            .filter(([, amount]) => amount > 0)
-                            .map(([color, amount]) => ({
-                                label: `${color.charAt(0).toUpperCase() + color.slice(1)} (${amount} available)`,
-                                value: color
-                            }));
-                        
-                        if (availableColors.length === 0) break;
-                        
-                        const colorToReturn = await showChoice(dispatch, 
-                            `Player ${otherPlayer.id}: Choose gem to return (${i + 1}/${returnCount})`, 
-                            availableColors
-                        );
-                        
-                        if (colorToReturn) {
-                            dispatch({
-                                type: 'UPDATE_RESOURCES',
-                                playerId: otherPlayer.id,
-                                resources: { [colorToReturn]: -1 }
-                            });
-                        }
-                    }
-                }
-                
-                const message = `Player ${player.id}: ${actionId} → +1 blue + others returned ${returnCount} gem(s)`;
+                const message = `Player ${player.id}: blueFlipShops → +1 blue + all shops flipped`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1820,20 +2060,20 @@
             }
         }
 
-        // Execute yellow 2 shop effect
-        async function executeYellow2Shop(player, dispatch, state) {
-            // Gain 4 gems any colors
+        // Execute yellow 3 shop effect
+        async function executeYellow3Shop(player, dispatch, state) {
+            // Gain 9 gems ⚪ colors
             const colors = ['red', 'yellow', 'blue', 'purple'];
             const choices = [];
             
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 9; i++) {
                 const colorOptions = colors.map(color => ({
                     label: `${color.charAt(0).toUpperCase() + color.slice(1)} Gem`,
                     value: color
                 }));
                 
                 const choice = await showChoice(dispatch, 
-                    `Choose color ${i + 1}/4 for any colored gems`, 
+                    `Choose color ${i + 1}/9 for ⚪ colored gems`, 
                     colorOptions
                 );
                 
@@ -1855,28 +2095,88 @@
                 resources
             });
             
-            // Everyone else gains 1 gem of their choice
+            // Each other player gains 1 gem of buyer's choice
             for (const otherPlayer of state.players) {
                 if (otherPlayer.id !== player.id) {
-                    const colorChoice = await showChoice(dispatch, 
-                        `Player ${otherPlayer.id}: Choose a gem color to gain`, 
+                    const colorForOther = await showChoice(dispatch, 
+                        `Choose a gem color for Player ${otherPlayer.id} to gain`, 
                         colors.map(color => ({
                             label: `${color.charAt(0).toUpperCase() + color.slice(1)} Gem`,
                             value: color
                         }))
                     );
                     
-                    if (colorChoice) {
+                    if (colorForOther) {
                         dispatch({
                             type: 'UPDATE_RESOURCES',
                             playerId: otherPlayer.id,
-                            resources: { [colorChoice]: 1 }
+                            resources: { [colorForOther]: 1 }
                         });
                     }
                 }
             }
             
-            const message = `Player ${player.id}: Yellow R2 shop → Gained 4 gems, everyone gained 1 gem`;
+            const message = `Player ${player.id}: Yellow R3 shop → Gained 9 gems, each other player gained 1 gem`;
+            dispatch({ type: 'ADD_LOG', message });
+        }
+        
+        // Execute yellow 2 shop effect
+        async function executeYellow2Shop(player, dispatch, state) {
+            // Gain 5 gems ⚪ colors
+            const colors = ['red', 'yellow', 'blue', 'purple'];
+            const choices = [];
+            
+            for (let i = 0; i < 5; i++) {
+                const colorOptions = colors.map(color => ({
+                    label: `${color.charAt(0).toUpperCase() + color.slice(1)} Gem`,
+                    value: color
+                }));
+                
+                const choice = await showChoice(dispatch, 
+                    `Choose color ${i + 1}/5 for ⚪ colored gems`, 
+                    colorOptions
+                );
+                
+                if (choice) {
+                    choices.push(choice);
+                } else {
+                    choices.push(colors[0]); // Default to first color if cancelled
+                }
+            }
+            
+            const resources = {};
+            choices.forEach(color => {
+                resources[color] = (resources[color] || 0) + 1;
+            });
+            
+            dispatch({
+                type: 'UPDATE_RESOURCES',
+                playerId: player.id,
+                resources
+            });
+            
+            // Everyone gains 1 gem of buyer's choice
+            const colorForOthers = await showChoice(dispatch, 
+                `Choose a gem color for all other players to gain`, 
+                colors.map(color => ({
+                            label: `${color.charAt(0).toUpperCase() + color.slice(1)} Gem`,
+                            value: color
+                        }))
+                    );
+                    
+            if (colorForOthers) {
+                for (const otherPlayer of state.players) {
+                    if (otherPlayer.id !== player.id) {
+                        dispatch({
+                            type: 'UPDATE_RESOURCES',
+                            playerId: otherPlayer.id,
+                            resources: { [colorForOthers]: 1 }
+                        });
+                    }
+                }
+            }
+            
+            const message = `Player ${player.id}: Yellow R2 shop → Gained 5 gems, everyone gained 1 ${colorForOthers || 'gem'}`;
             dispatch({ type: 'ADD_LOG', message });
         }
 
@@ -1950,7 +2250,7 @@
                     effects: (player.effects || []).filter((_, i) => i !== effectIndex)
                 });
                 
-            } else if (effect.includes('Can close any shop this round')) {
+            } else if (effect.includes('Can close ⚪ shop this round')) {
                 // Choose which shop to close
                 const shopOptions = [
                     { label: 'Red Shop', value: 'red' },
@@ -2016,7 +2316,7 @@
             
             const activatableEffects = [
                 'Can repeat a worker\'s action',
-                'Can close any shop this round',
+                'Can close ⚪ shop this round',
                 'Will take an extra turn after this one',
                 'Can place the next player\'s worker',
                 'Can undo the last player\'s turn'
@@ -2108,16 +2408,16 @@
             ]);
         }
 
-        // Game Layer Component  
+        // Game Layer Component - Card-focused layout with shops at top
         function GameLayer({ color, title, icon, actions, round }) {
             const getLayerStyle = () => {
-                const baseStyle = "glass rounded-lg shadow-lg p-4 border-l-6 hover:shadow-xl transition-all duration-300";
+                const baseStyle = "glass rounded-lg shadow-lg p-4 border-t-6 hover:shadow-xl transition-all duration-300 h-full flex flex-col";
                 switch (color) {
-                    case 'red': return `${baseStyle} border-l-red-500`;
-                    case 'yellow': return `${baseStyle} border-l-yellow-500`;
-                    case 'blue': return `${baseStyle} border-l-blue-500`;
-                    case 'purple': return `${baseStyle} border-l-purple-500`;
-                    default: return `${baseStyle} border-l-gray-500`;
+                    case 'red': return `${baseStyle} border-t-red-500`;
+                    case 'yellow': return `${baseStyle} border-t-yellow-500`;
+                    case 'blue': return `${baseStyle} border-t-blue-500`;
+                    case 'purple': return `${baseStyle} border-t-purple-500`;
+                    default: return `${baseStyle} border-t-gray-500`;
                 }
             };
             
@@ -2134,14 +2434,50 @@
             const availableActions = actions.filter(action => action.round <= round);
             
             return React.createElement('div', { className: getLayerStyle() }, [
-                React.createElement('div', { key: 'header', className: 'flex justify-between items-center mb-3' }, [
+                // Card Header - Layer title and color
+                React.createElement('div', { key: 'header', className: 'flex justify-between items-center mb-4' }, [
                     React.createElement('h2', { key: 'title', className: `text-xl font-bold ${getIconColor()}` }, 
-                        `${icon} ${title}`),
+                        `${icon} ${color.charAt(0).toUpperCase() + color.slice(1)}`),
                     React.createElement('span', { key: 'round', className: 'text-gray-600 text-sm bg-white px-2 py-1 rounded shadow' }, 
-                        `R${round} (${availableActions.length})`)
+                        `Round ${round}`)
                 ]),
-                React.createElement('div', { key: 'content', className: 'flex gap-4' }, [
-                    React.createElement('div', { key: 'actions', className: 'flex-1 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2' }, 
+                
+                // Shops Section - Prominently displayed at top
+                React.createElement('div', { key: 'shops', className: 'mb-4 bg-white bg-opacity-20 rounded-lg p-3' }, [
+                    React.createElement('h3', { key: 'shop-title', className: 'text-lg font-semibold mb-3 text-gray-800' }, '🏪 Shops'),
+                    React.createElement('div', { key: 'shop-layout', className: 'space-y-2' }, [
+                        // VP shop centered on top
+                        React.createElement('div', { key: 'shop-vp-row', className: 'flex justify-center' }, [
+                            React.createElement('div', { key: 'shop-vp', className: 'bg-white rounded-lg shadow p-2 w-32' }, [
+                                React.createElement('div', { key: 'vp-label', className: 'text-xs font-bold text-gray-700 mb-1 text-center' }, 'VP'),
+                                React.createElement(VictoryShop, { key: 'victory-shop', color })
+                            ])
+                        ]),
+                        // R1 and R2 shops side by side
+                        React.createElement('div', { key: 'shop-round-row', className: 'grid grid-cols-2 gap-2' }, [
+                            React.createElement('div', { key: 'shop-r1', className: 'bg-white rounded-lg shadow p-2' }, [
+                                React.createElement('div', { key: 'r1-label', className: 'text-xs font-bold text-gray-700 mb-1 text-center' }, 'R1'),
+                                React.createElement(RegularShop, { key: 'regular-shop', color, round: 1 })
+                            ]),
+                            React.createElement('div', { key: 'shop-r2', className: 'bg-white rounded-lg shadow p-2' }, [
+                                React.createElement('div', { key: 'r2-label', className: 'text-xs font-bold text-gray-700 mb-1 text-center' }, 'R2'),
+                                React.createElement(RegularShop, { key: 'regular-shop-r2', color, round: 2 })
+                            ])
+                        ]),
+                        // R3 shop centered below (only show if round 3 or higher)
+                        round >= 3 && React.createElement('div', { key: 'shop-r3-row', className: 'flex justify-center' }, [
+                            React.createElement('div', { key: 'shop-r3', className: 'bg-white rounded-lg shadow p-2 w-32' }, [
+                                React.createElement('div', { key: 'r3-label', className: 'text-xs font-bold text-gray-700 mb-1 text-center' }, 'R3'),
+                                React.createElement(RegularShop, { key: 'regular-shop-r3', color, round: 3 })
+                            ])
+                        ])
+                    ])
+                ]),
+                
+                // Action Spaces Section - Below shops
+                React.createElement('div', { key: 'actions-section', className: 'flex-1' }, [
+                    React.createElement('h3', { key: 'actions-title', className: 'text-lg font-semibold mb-3 text-gray-800' }, '⚡ Actions'),
+                    React.createElement('div', { key: 'actions', className: 'grid grid-cols-2 gap-2' }, 
                         availableActions.map(action => 
                             React.createElement(ActionSpace, {
                                 key: action.id,
@@ -2149,19 +2485,11 @@
                                 title: action.title,
                                 description: action.description,
                                 round: action.round,
-                                available: action.round <= round
+                                available: action.round <= round,
+                                compact: true // New prop for smaller action spaces
                             })
                         )
-                    ),
-                    React.createElement('div', { key: 'shop-container', className: 'w-48 space-y-2' }, [
-                        React.createElement(RegularShop, { key: 'regular-shop', color, round }),
-                        React.createElement(VictoryShop, { key: 'victory-shop', color }),
-                        round < 3 && React.createElement('div', { 
-                            key: 'preview', 
-                            className: 'p-2 bg-gradient-to-r from-yellow-100 to-yellow-200 border border-yellow-300 rounded text-center text-xs' 
-                        }, React.createElement('strong', { className: 'text-yellow-800' }, 
-                            `R${round + 1}: +${round === 1 ? '2' : '1'} spaces`))
-                    ])
+                    )
                 ])
             ]);
         }
@@ -2173,19 +2501,23 @@
             const shopData = {
                 red: {
                     1: { cost: { red: 1, any: 1 }, effect: 'Repeat a worker\'s action' },
-                    2: { cost: { red: 2, any: 2 }, effect: 'Place the next player\'s worker' }
+                    2: { cost: { red: 2, any: 2 }, effect: 'Place the next player\'s worker' },
+                    3: { cost: { red: 3, any: 3 }, effect: 'Repeat all actions taken this round by ⚪ player' }
                 },
                 yellow: {
-                    1: { cost: { yellow: 1, any: 1 }, effect: 'Double next gain' },
-                    2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 4 gems + others gain 1' }
+                    1: { cost: { yellow: 1, any: 1 }, effect: 'Double your next gain action' },
+                    2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 5 gems ⚪ color, everyone gains 1 gem of your choice' },
+                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 9 gems of ⚪ kind, each other player gains 1 color of your choice' }
                 },
                 blue: {
-                    1: { cost: { blue: 1, any: 1 }, effect: 'Close any shop this round' },
-                    2: { cost: { blue: 2, any: 2 }, effect: 'Undo the last player\'s turn' }
+                    1: { cost: { blue: 1, any: 1 }, effect: 'Close ⚪ shop this round' },
+                    2: { cost: { blue: 2, any: 2 }, effect: 'Gain a shop benefit then close that shop' },
+                    3: { cost: { blue: 3, any: 3 }, effect: 'Flip the status of all shops, including victory shops' }
                 },
                 purple: {
                     1: { cost: { purple: 1, any: 1 }, effect: 'Take an extra turn after this one' },
-                    2: { cost: { purple: 2, any: 2 }, effect: 'Needs new effect (old one moved to R3)' }
+                    2: { cost: { purple: 2, any: 2 }, effect: 'Needs new effect (old one moved to R3)' },
+                    3: { cost: { purple: 3, any: 3 }, effect: 'Original purple effect now here' }
                 }
             };
             
@@ -2197,14 +2529,9 @@
                 }
                 
                 // Check if this shop is closed
-                const isShopClosed = state.players.some(player => 
-                    (player.effects || []).some(effect => 
-                        effect.includes(`${color.charAt(0).toUpperCase() + color.slice(1)} shop is closed this round`)
-                    )
-                );
-                
-                if (isShopClosed) {
-                    alert(`${color.charAt(0).toUpperCase() + color.slice(1)} shop is closed this round!`);
+                const shopId = `${color}${shopRound}`;
+                if (state.closedShops[shopId]) {
+                    alert(`${color.charAt(0).toUpperCase() + color.slice(1)} R${shopRound} shop is closed!`);
                     return;
                 }
                 
@@ -2213,7 +2540,10 @@
                 
                 // Check if player has enough resources
                 const colorRequired = shop.cost[color] || 0;
-                const anyRequired = shop.cost.any || 0;
+                let anyRequired = shop.cost.any || 0;
+                
+                // Apply cost modifier
+                anyRequired = Math.max(0, anyRequired + state.shopCostModifier);
                 
                 if (currentPlayer.resources[color] < colorRequired) {
                     alert(`Need ${colorRequired} ${color} gems. You have ${currentPlayer.resources[color]}.`);
@@ -2225,7 +2555,7 @@
                     const totalAvailableForAny = totalAllGems - colorRequired; // Subtract the specific color requirement
                     
                     if (totalAvailableForAny < anyRequired) {
-                        alert(`Need ${anyRequired} additional gems of any color. You have ${totalAvailableForAny} available.`);
+                        alert(`Need ${anyRequired} additional gems of ⚪ color. You have ${totalAvailableForAny} available.`);
                         return;
                     }
                 }
@@ -2299,22 +2629,44 @@
                         });
                         break;
                     case 'yellow2':
-                        // Gain 4 gems any colors + everyone gains gem - execute immediately
+                        // Gain 5 gems ⚪ colors + everyone gains gem - execute immediately
                         await executeYellow2Shop(currentPlayer, dispatch, state);
+                        break;
+                    case 'yellow3':
+                        // Gain 9 gems ⚪ colors + everyone gains 1 each - execute immediately
+                        await executeYellow3Shop(currentPlayer, dispatch, state);
+                        break;
+                    case 'red3':
+                        // Repeat all actions taken this round by any player
+                        dispatch({
+                            type: 'ADD_EFFECT',
+                            playerId: currentPlayer.id,
+                            effect: 'Can repeat all actions taken this round by any player'
+                        });
                         break;
                     case 'blue1':
                         dispatch({
                             type: 'ADD_EFFECT',
                             playerId: currentPlayer.id,
-                            effect: 'Can close any shop this round'
+                            effect: 'Can close ⚪ shop this round'
                         });
                         break;
                     case 'blue2':
+                        // Gain a shop benefit then close that shop
                         dispatch({
                             type: 'ADD_EFFECT',
                             playerId: currentPlayer.id,
-                            effect: 'Can undo the last player\'s turn'
+                            effect: 'Can gain a shop benefit then close that shop'
                         });
+                        break;
+                    case 'blue3':
+                        // Flip the status of all shops, including victory shops
+                        dispatch({
+                            type: 'ADD_EFFECT',
+                            playerId: currentPlayer.id,
+                            effect: 'All shops flipped (closed become open, open become closed)'
+                        });
+                        // TODO: Actually implement shop flipping
                         break;
                     case 'purple1':
                         dispatch({
@@ -2335,6 +2687,16 @@
                 const message = `Player ${currentPlayer.id}: Bought ${color} R${shopRound} shop`;
                 dispatch({ type: 'ADD_LOG', message });
                 console.log(message);
+                
+                // BLUE AUTOMATIC VP: All players get 1 VP when any shop is used
+                state.players.forEach(p => {
+                    dispatch({
+                        type: 'UPDATE_VP',
+                        playerId: p.id,
+                        vp: 1
+                    });
+                });
+                dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop)' });
             };
             
             const round1Shop = shopData[color][1];
@@ -2374,7 +2736,7 @@
             
             const shopData = {
                 red: { cost: { red: 5 }, vp: 3 },
-                yellow: { cost: { any: 7 }, vp: 3 },
+                yellow: { cost: { any: 5 }, vp: 3 },
                 blue: { cost: { blue: 5 }, vp: 3 },
                 purple: { cost: { purple: 5 }, vp: 3 }
             };
@@ -2392,7 +2754,7 @@
                 if (color === 'yellow') {
                     const totalGems = Object.values(currentPlayer.resources).reduce((sum, count) => sum + count, 0);
                     if (totalGems < 7) {
-                        alert(`Need 7 gems of any color. You have ${totalGems}.`);
+                        alert(`Need 7 gems of ⚪ color. You have ${totalGems}.`);
                         return;
                     }
                     
@@ -2425,6 +2787,16 @@
                 
                 dispatch({ type: 'ADD_VICTORY_POINTS', playerId: currentPlayer.id, points: shop.vp });
                 console.log(`Player ${currentPlayer.id} bought 3 victory points from ${color} shop`);
+                
+                // BLUE AUTOMATIC VP: All players get 1 VP when any shop is used
+                state.players.forEach(p => {
+                    dispatch({
+                        type: 'UPDATE_VP',
+                        playerId: p.id,
+                        vp: 1
+                    });
+                });
+                dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop)' });
             };
             
             const shop = shopData[color];
@@ -2435,7 +2807,7 @@
                 React.createElement('div', { key: 'title', className: 'text-center font-bold text-green-700 mb-2 text-sm' }, '🏆 Victory'),
                 React.createElement('div', { key: 'cost', className: 'text-center text-xs mb-2 text-green-800' }, 
                     React.createElement('strong', {}, 
-                        `${color === 'yellow' ? '7 Any' : `5 ${color.charAt(0).toUpperCase() + color.slice(1)}`}: ${shop.vp} VP`)),
+                        `${color === 'yellow' ? '7 ⚪' : `5 ${color.charAt(0).toUpperCase() + color.slice(1)}`}: ${shop.vp} VP`)),
                 React.createElement('div', { key: 'button', className: 'text-center' }, 
                     React.createElement('button', {
                         onClick: handlePurchase,
@@ -2450,48 +2822,51 @@
                 title: "Worker Manipulation",
                 icon: "🔴",
                 actions: [
-                    { id: 'gain3red', title: 'Gain 3 Red', description: 'Round 1', round: 1 },
-                    { id: 'gain2red', title: 'Gain 2 Red', description: 'Round 1', round: 1 },
-                    { id: 'redHybrid1', title: '+1 Red + Swap Workers', description: '(Both players get actions)', round: 1 },
+                    { id: 'gain3red', title: 'Gain 3 🔴', description: '', round: 1 },
+                    { id: 'gain2red', title: 'Gain 2 🔴', description: '', round: 1 },
+                    { id: 'redHybrid1', title: '+1 🔴 + Swap Workers', description: '(Both players get actions)', round: 1 },
                     { id: 'redRepeatAction', title: 'Repeat an Action', description: '(That one of your workers is on)', round: 1 },
                     { id: 'forceRedPlacement', title: 'Other Players Must Place on Red', description: '(Until red layer is full)', round: 2 },
-                    { id: 'redHybrid2', title: '+1 Red + Swap Workers', description: '(Only you get action)', round: 2 }
+                    { id: 'redHybrid2', title: '+1 🔴 + Swap Workers', description: '(Only you get action)', round: 2 },
+                    { id: 'redRepeatAll', title: 'Repeat All Your Worker Actions', description: '(In any order you choose)', round: 3 }
                 ]
             },
             yellow: {
                 title: "Resource Manipulation", 
                 icon: "🟡",
                 actions: [
-                    { id: 'gain3yellow', title: 'Gain 3 Different Gems', description: 'Round 1', round: 1 },
-                    { id: 'gain2yellow', title: 'Gain 2 Different Gems', description: 'Round 1', round: 1 },
-                    { id: 'stealGem', title: 'Steal 1 Gem', description: 'Round 1', round: 1 },
-                    { id: 'yellowHybrid1', title: '+1 Yellow + Trade 2 Gems for 2 Any', description: '(For 2 any colors)', round: 1 },
-                    { id: 'steal2Gems', title: 'Steal 2 Gems', description: '(From any player)', round: 2 },
-                    { id: 'yellowHybrid2', title: '+1 Yellow + Double Next Gain', description: '(Doesn\'t stack with shop)', round: 2 }
+                    { id: 'gain3yellow', title: 'Gain 3 Different Gems', description: '', round: 1 },
+                    { id: 'gain2yellow', title: 'Gain 2 Different Gems', description: '', round: 1 },
+                    { id: 'steal2Gems', title: 'Steal 2 Gems', description: '', round: 1 },
+                    { id: 'yellowHybrid1', title: '+1 🟡 + Trade ⚪ Number of Gems', description: '', round: 1 },
+                    { id: 'steal3Gems', title: 'Steal 3 Gems', description: '', round: 2 },
+                    { id: 'yellowHybrid2', title: '+1 🟡 + Double Next Gain', description: '(Doesn\'t stack with shop)', round: 2 },
+                    { id: 'yellowSwapResources', title: 'Swap All Resources', description: '(Choose ⚪ player)', round: 3 }
                 ]
             },
             blue: {
-                title: "Defense",
+                title: "Shop Control",
                 icon: "🔵", 
                 actions: [
-                    { id: 'gain3blue', title: 'Gain 3 Blue', description: 'Round 1', round: 1 },
-                    { id: 'gain2blue', title: 'Gain 2 Blue', description: 'Round 1', round: 1 },
-                    { id: 'blueHybrid1', title: '+1 Blue + Move Worker', description: '(They don\'t get benefit)', round: 1 },
-                    { id: 'everyoneReturn1', title: 'Others Return 1 Gem Each', description: 'Round 1', round: 1 },
-                    { id: 'blueHybrid2', title: '+1 Blue + Move 2 Workers', description: '(They don\'t get benefit)', round: 2 },
-                    { id: 'everyoneReturn2', title: 'Others Return 2 Gems Each', description: 'Round 2', round: 2 }
+                    { id: 'gain3blue', title: 'Gain 3 🔵', description: '', round: 1 },
+                    { id: 'gain2blue', title: 'Gain 2 🔵', description: '', round: 1 },
+                    { id: 'blueShopBenefit1', title: 'Gain a Shop Benefit', description: '(Even if closed)', round: 1 },
+                    { id: 'blueShopBenefit2', title: 'Gain a Shop Benefit', description: '(Even if closed)', round: 1 },
+                    { id: 'blueReduceCosts', title: '+1 🔵 + Reduce All Shop Costs', description: '(By 1 ⚪ this round)', round: 2 },
+                    { id: 'blueIncreaseCosts', title: '+2 🔵 + Increase All Shop Costs', description: '(By 1 ⚪ this round)', round: 2 },
+                    { id: 'blueFlipShops', title: '+1 🔵 + Flip All Shops', description: '(Including victory shops)', round: 3 }
                 ]
             },
             purple: {
                 title: "Timing/Order",
                 icon: "🟣",
                 actions: [
-                    { id: 'gain3purple', title: 'Gain 3 Purple', description: 'Round 1', round: 1 },
-                    { id: 'gain2purple', title: 'Gain 2 Purple', description: 'Round 1', round: 1 },
-                    { id: 'playTwoWorkers', title: 'Play Your Next Two Workers', description: 'Round 1', round: 1 },
-                    { id: 'purpleShopHybrid', title: '+1 Purple + Any Round 1 Shop Benefit', description: 'Round 1', round: 1 },
-                    { id: 'extraWorkers', title: 'Gain 2 Extra Workers Next Round', description: 'Round 2', round: 2 },
-                    { id: 'purpleHybrid2', title: '+1 Purple + Choose Turn Order', description: '(For next round)', round: 2 }
+                    { id: 'gain3purple', title: 'Gain 3 🟣', description: '', round: 1 },
+                    { id: 'gain2purple', title: 'Gain 2 🟣', description: '', round: 1 },
+                    { id: 'playTwoWorkers', title: 'Play Your Next Two Workers', description: '', round: 1 },
+                    { id: 'purpleShopHybrid', title: '+1 🟣 + ⚪ Shop Benefit', description: '', round: 1 },
+                    { id: 'extraWorkers', title: 'Gain 2 Extra Workers Next Round', description: '', round: 2 },
+                    { id: 'purpleHybrid2', title: '+1 🟣 + Choose Turn Order', description: '(For next round)', round: 2 }
                 ]
             },
         };
@@ -2600,27 +2975,6 @@
             
             return React.createElement('div', { className: 'min-h-screen p-4' }, [
                 React.createElement('div', { key: 'container', className: 'max-w-7xl mx-auto game-board' }, [
-                    // Header
-                    React.createElement('div', { key: 'header', className: 'text-center mb-8' }, [
-                        React.createElement('h1', { 
-                            key: 'title', 
-                            className: 'text-5xl font-bold text-gray-800 mb-6 text-shadow' 
-                        }, `Patrons - Round ${state.round}`),
-                        React.createElement('div', { key: 'info', className: 'glass rounded-xl shadow-xl p-6 mb-6 max-w-2xl mx-auto' }, [
-                            React.createElement('div', { 
-                                key: 'current', 
-                                className: 'text-2xl font-bold text-blue-600 mb-3' 
-                            }, `Current Player: Player ${state.currentPlayer}`),
-                            React.createElement('div', { 
-                                key: 'workers-to-place', 
-                                className: 'text-lg text-purple-600 font-semibold mb-2' 
-                            }, `Workers to place: ${state.workersToPlace}`),
-                            React.createElement('div', { key: 'stats', className: 'text-gray-700 text-lg' }, 
-                                `Round ${state.round}: ${totalWorkers} Workers | ${totalSpaces} Action Spaces`),
-                            React.createElement('div', { key: 'order', className: 'text-sm text-gray-600 mt-2' }, 
-                                `Snake Draft: ${state.turnOrder.join(' → ')} → ${state.turnOrder.slice().reverse().join(' → ')}`)
-                        ])
-                    ]),
                     
                     // Player Cards
                     React.createElement('div', { key: 'players', className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8' }, 
@@ -2634,19 +2988,43 @@
                         )
                     ),
                     
-                    // Game Layers
-                    React.createElement('div', { key: 'layers', className: 'space-y-4 mb-6' }, 
-                        Object.entries(state.gameLayers).map(([color, data]) => 
-                            React.createElement(GameLayer, {
-                                key: color,
-                                color,
-                                title: data.title,
-                                icon: data.icon,
-                                actions: data.actions,
-                                round: state.round
-                            })
-                        )
-                    ),
+                    // Game Layers - 2x2 Grid Layout
+                    React.createElement('div', { key: 'layers', className: 'grid grid-cols-2 gap-6 mb-6' }, [
+                        // Top row: Blue (left), Yellow (right)
+                        React.createElement(GameLayer, {
+                            key: 'blue',
+                            color: 'blue',
+                            title: state.gameLayers.blue.title,
+                            icon: state.gameLayers.blue.icon,
+                            actions: state.gameLayers.blue.actions,
+                            round: state.round
+                        }),
+                        React.createElement(GameLayer, {
+                            key: 'yellow',
+                            color: 'yellow',
+                            title: state.gameLayers.yellow.title,
+                            icon: state.gameLayers.yellow.icon,
+                            actions: state.gameLayers.yellow.actions,
+                            round: state.round
+                        }),
+                        // Bottom row: Red (left), Purple (right)
+                        React.createElement(GameLayer, {
+                            key: 'red',
+                            color: 'red',
+                            title: state.gameLayers.red.title,
+                            icon: state.gameLayers.red.icon,
+                            actions: state.gameLayers.red.actions,
+                            round: state.round
+                        }),
+                        React.createElement(GameLayer, {
+                            key: 'purple',
+                            color: 'purple',
+                            title: state.gameLayers.purple.title,
+                            icon: state.gameLayers.purple.icon,
+                            actions: state.gameLayers.purple.actions,
+                            round: state.round
+                        })
+                    ]),
                     
                     // Control Buttons
                     React.createElement('div', { key: 'controls', className: 'text-center glass rounded-lg p-4 shadow-lg' }, [
