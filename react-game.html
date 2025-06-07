@@ -2047,8 +2047,8 @@
                 
                 if (choice) {
                     // Execute the shop benefit without paying cost
-                    // TODO: implement shop effects
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained ${choice.color} R1 shop benefit (effect not yet implemented)` });
+                    await executeShopBenefit(choice.color, choice.round, player, dispatch, state);
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R1 shop benefit` });
                     
                     // BLUE AUTOMATIC VP: All players get 1 VP when anyone uses any shop benefit
                     const allPlayers = state.players;
@@ -2107,8 +2107,9 @@
                         });
                         dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained 3 VP from ${choice.color} victory shop` });
                     } else {
-                        // Execute regular shop effect - TODO: implement shop effects
-                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained ${choice.color} R${choice.round} shop benefit (effect not yet implemented)` });
+                        // Execute regular shop effect
+                        await executeShopBenefit(choice.color, choice.round, player, dispatch, state);
+                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R${choice.round} shop benefit` });
                     }
                     
                     // BLUE AUTOMATIC VP: All players get 1 VP when anyone uses any shop benefit
@@ -2591,8 +2592,8 @@
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained 3 VP from ${choice.color} victory shop` });
                 } else {
                     // Execute regular shop effect
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained ${choice.color} R${choice.round} shop benefit (executing...)` });
-                    // TODO: Actually execute the shop benefit
+                    await executeShopBenefit(choice.color, choice.round, player, dispatch, state);
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R${choice.round} shop benefit` });
                 }
                 
                 // BLUE AUTOMATIC VP: All players get 1 VP when anyone uses any shop
@@ -2604,6 +2605,79 @@
                     });
                 });
                 dispatch({ type: 'ADD_LOG', message: 'All players: +1 VP (someone used a shop)' });
+            }
+        }
+        
+        // Execute any shop benefit by shop ID
+        async function executeShopBenefit(shopColor, shopRound, player, dispatch, state) {
+            const shopId = `${shopColor}${shopRound}`;
+            
+            switch(shopId) {
+                case 'red1':
+                    // Repeat a worker's action
+                    await executeRepeatAction(player, dispatch, state, state.gameLayers);
+                    break;
+                case 'red2':
+                    dispatch({
+                        type: 'ADD_EFFECT',
+                        playerId: player.id,
+                        effect: 'Can place the next player\'s worker'
+                    });
+                    break;
+                case 'red3':
+                    // Repeat all actions taken this round
+                    await executeRed3Shop(player, dispatch, state);
+                    break;
+                case 'yellow1':
+                    dispatch({
+                        type: 'ADD_EFFECT',
+                        playerId: player.id,
+                        effect: 'Next gain will be doubled'
+                    });
+                    break;
+                case 'yellow2':
+                    await executeYellow2Shop(player, dispatch, state);
+                    break;
+                case 'yellow3':
+                    await executeYellow3Shop(player, dispatch, state);
+                    break;
+                case 'blue1':
+                    await executeBlue1Shop(player, dispatch, state);
+                    break;
+                case 'blue2':
+                    // Flip all shops
+                    dispatch({ type: 'FLIP_ALL_SHOPS' });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: All shops flipped!` });
+                    break;
+                case 'blue3':
+                    await executeBlue3Shop(player, dispatch, state);
+                    break;
+                case 'purple1':
+                    dispatch({
+                        type: 'ADD_EFFECT',
+                        playerId: player.id,
+                        effect: 'Will take an extra turn after this one'
+                    });
+                    break;
+                case 'purple2':
+                    dispatch({
+                        type: 'SET_WORKERS_TO_PLACE',
+                        count: 2
+                    });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Can place 2 more workers this turn!` });
+                    break;
+                case 'purple3':
+                    const workersRemaining = player.workersLeft;
+                    if (workersRemaining > 0) {
+                        dispatch({
+                            type: 'SET_WORKERS_TO_PLACE',
+                            count: workersRemaining
+                        });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Can place all ${workersRemaining} remaining workers!` });
+                    }
+                    break;
+                default:
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Shop benefit ${shopId} not implemented yet` });
             }
         }
         
