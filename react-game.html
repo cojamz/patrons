@@ -163,11 +163,37 @@
 
         // Fun emoji pool for players
         const PLAYER_EMOJIS = [
+            // Animals
             '🦊', '🐸', '🦁', '🐼', '🦄', '🐙', '🦜', '🦋',
             '🐢', '🦉', '🐵', '🦒', '🐯', '🐨', '🦝', '🦌',
             '🐲', '🦅', '🦓', '🦘', '🦩', '🦥', '🦦', '🦭',
+            '🐺', '🐻', '🐹', '🦔', '🦇', '🐴', '🦆', '🦢',
+            '🦚', '🦃', '🐧', '🦐', '🦑', '🦀', '🐡', '🐠',
+            '🐟', '🐬', '🦈', '🐳', '🦏', '🦛', '🐘', '🦣',
+            
+            // Objects & Symbols
             '🎮', '🎲', '🎯', '🎪', '🎨', '🎭', '🎺', '🎸',
-            '🚀', '🛸', '⚡', '🌟', '💎', '🔮', '🎃', '🌈'
+            '🚀', '🛸', '⚡', '🌟', '💎', '🔮', '🎃', '🌈',
+            '🎵', '🎶', '🎼', '🥁', '🎹', '🎻', '🎷', '🎤',
+            '🏆', '🥇', '🎖️', '🏅', '🎗️', '🎀', '🎁', '🎊',
+            '🔔', '🔕', '📯', '🎴', '🀄', '🃏', '🎰', '🎱',
+            
+            // Nature & Space
+            '🌺', '🌸', '🌼', '🌻', '🌷', '🌹', '🥀', '🌵',
+            '🌲', '🌳', '🌴', '🌱', '🍄', '🍁', '🍀', '🌾',
+            '🌙', '🌛', '🌜', '🌚', '🌝', '🌞', '⭐', '🌠',
+            '☄️', '🌌', '🌊', '🌋', '🏔️', '🗻', '🏖️', '🏝️',
+            
+            // Fantasy & Mystical
+            '👹', '👺', '🤡', '👻', '👽', '👾', '🤖', '🧙',
+            '🧚', '🧛', '🧜', '🧝', '🧞', '🧟', '🦸', '🦹',
+            '🐉', '🦖', '🦕', '🦴', '🔥', '💥', '✨', '💫',
+            
+            // Food & Objects
+            '🍕', '🍔', '🌮', '🌯', '🥙', '🍗', '🍖', '🥩',
+            '🍟', '🌭', '🥓', '🍳', '🥞', '🧇', '🥐', '🥖',
+            '🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐',
+            '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍆'
         ];
         
         // Function to get random emojis for players
@@ -535,6 +561,40 @@
                     const waitingPlayerUpdate = waitingPlayersUpdates.find(u => u.playerId === nextPlayer);
                     const workersToPlace = waitingPlayerUpdate ? waitingPlayerUpdate.workers : 1;
                     
+                    // Check if all players are out of workers (excluding waiting players)
+                    const totalWorkersRemaining = effectivePlayers.reduce((sum, p) => {
+                        if (newWaitingForOthers[p.id]) return sum; // Don't count waiting players
+                        return sum + p.workersLeft;
+                    }, 0);
+                    
+                    // If no workers remaining and round < 3, show round transition popup
+                    if (totalWorkersRemaining === 0 && state.round < 3) {
+                        return {
+                            ...state,
+                            currentPlayer: nextPlayer,
+                            turnDirection: nextDirection,
+                            workerPlacedThisTurn: false,
+                            workersToPlace: workersToPlace,
+                            shopUsedBeforeWorkers: false,
+                            shopUsedAfterWorkers: false,
+                            skippedTurns: newSkippedTurns,
+                            waitingForOthers: newWaitingForOthers,
+                            playersOutOfWorkers: newPlayersOutOfWorkers,
+                            players: effectivePlayers,
+                            modal: {
+                                type: 'roundTransition',
+                                round: state.round + 1,
+                                players: effectivePlayers
+                            },
+                            actionLog: [
+                                ...state.actionLog.slice(-9),
+                                ...extraTurnLogMessages,
+                                ...purpleVPUpdates.map(u => `Player ${u.playerId}: +${u.vp} VP (${u.reason})`),
+                                ...waitingPlayersUpdates.map(u => `Player ${u.playerId}: Can now play all ${u.workers} workers!`)
+                            ].filter(Boolean)
+                        };
+                    }
+                    
                     return {
                         ...state,
                         currentPlayer: nextPlayer,
@@ -874,10 +934,11 @@
                     return {
                         ...state,
                         ...action.gameState,
-                        // Ensure all players have effects array
+                        // Ensure all players have effects array and emoji
                         players: action.gameState.players ? action.gameState.players.map(player => ({
                             ...player,
                             effects: player.effects || [],
+                            emoji: player.emoji || initialPlayerEmojis[player.id - 1] || '🎮',
                             resources: {
                                 red: 0, yellow: 0, blue: 0, purple: 0,
                                 ...(player.resources || {})
@@ -2153,9 +2214,60 @@
             
             // YELLOW LAYER ACTIONS
             
-            // Steal resource actions
-            if (actionId === 'steal2Gems' || actionId === 'steal3Gems') {
-                const stealCount = actionId === 'steal2Gems' ? 2 : 3;
+            // Trade all resources action (formerly steal2Gems)
+            if (actionId === 'steal2Gems') {
+                // Count total resources the player has
+                const totalResources = Object.values(player.resources).reduce((sum, amount) => sum + amount, 0);
+                
+                if (totalResources === 0) {
+                    const message = `Player ${player.id}: Trade All ⭐ for ⭐ → No resources to trade`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
+                
+                // Let player choose new resources equal to their total
+                const newResources = await showGemSelection(
+                    dispatch,
+                    `Trade all ${totalResources} resources for new ones`,
+                    totalResources
+                );
+                
+                if (!newResources) {
+                    const message = `Player ${player.id}: Trade All ⭐ for ⭐ → Cancelled`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
+                
+                // Clear all current resources
+                const clearResources = {};
+                Object.keys(player.resources).forEach(color => {
+                    if (player.resources[color] > 0) {
+                        clearResources[color] = -player.resources[color];
+                    }
+                });
+                
+                // Apply the clear
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: player.id,
+                    resources: clearResources
+                });
+                
+                // Add new resources
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: player.id,
+                    resources: newResources
+                });
+                
+                const message = `Player ${player.id}: Trade All ⭐ for ⭐ → Traded ${totalResources} resources`;
+                dispatch({ type: 'ADD_LOG', message });
+                return;
+            }
+            
+            // Steal 3 resources action
+            if (actionId === 'steal3Gems') {
+                const stealCount = 3;
                 const otherPlayers = currentState.players.filter(p => p.id !== player.id);
                 
                 if (otherPlayers.length === 0) {
@@ -2229,73 +2341,47 @@
             
             // Yellow hybrid actions
             if (actionId === 'yellowHybrid1') {
-                dispatch({
-                    type: 'UPDATE_RESOURCES',
-                    playerId: player.id,
-                    resources: { yellow: 1 }
-                });
+                // Gain 1 resource of any color
+                const selectedGem = await showGemSelection(dispatch, 'Choose 1 Resource (⭐ Color)', 1);
                 
-                // Trade any number of resources
-                const totalGems = Object.values(player.resources).reduce((sum, amount) => sum + amount, 0);
-                if (totalGems === 0) {
-                    const message = `Player ${player.id}: yellowHybrid1 → +1 yellow (no resources to trade)`;
-                    dispatch({ type: 'ADD_LOG', message });
+                if (!selectedGem) {
+                    // If cancelled, give default resource
+                    const resources = { yellow: 1 };
+                    dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: yellowHybrid1 → +1 yellow (default)` });
                     return;
                 }
                 
-                // Ask how many resources to trade
-                const numberOptions = [];
-                for (let i = 1; i <= Math.min(totalGems, 10); i++) {
-                    numberOptions.push({ label: `Trade ${i} resource${i > 1 ? 's' : ''}`, value: i });
-                }
+                const resources = selectedGem;
                 
-                const numberToTrade = await showChoice(dispatch, 'How many resources do you want to trade?', numberOptions);
-                if (!numberToTrade) {
-                    const message = `Player ${player.id}: yellowHybrid1 → +1 yellow (no trade)`;
-                    dispatch({ type: 'ADD_LOG', message });
-                    return;
-                }
-                
-                // Choose resources to trade away
-                const tradeCost = {};
-                for (let i = 0; i < numberToTrade; i++) {
-                    const availableColors = Object.entries(player.resources)
-                        .filter(([color, amount]) => amount + (tradeCost[color] || 0) > 0)
-                        .map(([color, amount]) => ({
-                            label: `${color.charAt(0).toUpperCase() + color.slice(1)} (${amount + (tradeCost[color] || 0)} available)`,
-                            value: color
-                        }));
+                // Check for doubling effect
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                if (hasDoubleEffect) {
+                    // Double all gains
+                    Object.keys(resources).forEach(color => {
+                        resources[color] *= 2;
+                    });
                     
-                    const colorToTrade = await showChoice(dispatch, `Choose resource to trade away (${i + 1}/${numberToTrade})`, availableColors);
-                    if (colorToTrade) {
-                        tradeCost[colorToTrade] = (tradeCost[colorToTrade] || 0) - 1;
-                    }
-                }
-                
-                // Choose resources to gain (same number) using GemSelectionModal
-                const gemsToGain = await showGemSelection(
-                    dispatch,
-                    `Choose ${numberToTrade} resource${numberToTrade > 1 ? 's' : ''} to gain`,
-                    numberToTrade
-                );
-                
-                if (!gemsToGain) {
-                    const message = `Player ${player.id}: yellowHybrid1 → +1 yellow (trade cancelled)`;
+                    // Remove the doubling effect after use
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: player.id,
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                    });
+                    
+                    const message = `Player ${player.id}: yellowHybrid1 → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
                     dispatch({ type: 'ADD_LOG', message });
-                    return;
+                } else {
+                    const message = `Player ${player.id}: yellowHybrid1 → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')}`;
+                    dispatch({ type: 'ADD_LOG', message });
                 }
                 
-                const tradeGain = gemsToGain;
-                
-                // Apply the trade
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
-                    resources: { ...tradeCost, ...tradeGain }
+                    resources
                 });
                 
-                const message = `Player ${player.id}: yellowHybrid1 → +1 yellow + traded ${numberToTrade} resources`;
-                dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
@@ -3645,6 +3731,93 @@
             ]);
         }
 
+        // Round Transition Modal Component
+        function RoundTransitionModal({ round, players }) {
+            const { state, dispatch } = useGame();
+            
+            const handleClose = () => {
+                dispatch({ type: 'HIDE_MODAL' });
+                // After closing, advance the round
+                dispatch({ type: 'ADVANCE_ROUND' });
+            };
+            
+            // Calculate total resources for each player
+            const getPlayerResources = (player) => {
+                return Object.entries(player.resources)
+                    .filter(([_, amount]) => amount > 0)
+                    .map(([color, amount]) => {
+                        const colorEmojis = {
+                            red: '🔴', yellow: '🟡', blue: '🔵', purple: '🟣',
+                            gold: '🟨', white: '⚪', black: '⚫', silver: '🩶'
+                        };
+                        return `${amount}${colorEmojis[color]}`;
+                    })
+                    .join(' ');
+            };
+            
+            // Sort players by VP
+            const sortedPlayers = [...players].sort((a, b) => b.victoryPoints - a.victoryPoints);
+            
+            return React.createElement('div', { className: 'text-center max-w-2xl' }, [
+                React.createElement('h2', { 
+                    key: 'title', 
+                    className: 'text-3xl font-bold text-gray-800 mb-6' 
+                }, `Starting Round ${round}`),
+                
+                React.createElement('h3', { 
+                    key: 'subtitle', 
+                    className: 'text-xl font-semibold text-gray-700 mb-4' 
+                }, 'Current Standings'),
+                
+                React.createElement('div', { 
+                    key: 'players', 
+                    className: 'space-y-3 mb-6' 
+                }, sortedPlayers.map((player, index) => 
+                    React.createElement('div', {
+                        key: player.id,
+                        className: `p-4 rounded-lg ${index === 0 ? 'bg-yellow-100 border-2 border-yellow-400' : 'bg-gray-100'}`
+                    }, [
+                        React.createElement('div', { 
+                            key: 'header',
+                            className: 'flex items-center justify-between mb-2' 
+                        }, [
+                            React.createElement('div', { 
+                                key: 'name',
+                                className: 'flex items-center gap-2' 
+                            }, [
+                                React.createElement('span', { 
+                                    key: 'emoji',
+                                    className: 'text-2xl' 
+                                }, player.emoji || '🎮'),
+                                React.createElement('span', { 
+                                    key: 'text',
+                                    className: 'font-semibold text-lg' 
+                                }, player.name || `Player ${player.id}`),
+                                index === 0 && React.createElement('span', { 
+                                    key: 'crown',
+                                    className: 'text-xl' 
+                                }, '👑')
+                            ]),
+                            React.createElement('div', { 
+                                key: 'vp',
+                                className: 'text-xl font-bold text-green-600' 
+                            }, `${player.victoryPoints} VP`)
+                        ]),
+                        React.createElement('div', { 
+                            key: 'resources',
+                            className: 'text-sm text-gray-600' 
+                        }, getPlayerResources(player) || 'No resources')
+                    ])
+                )),
+                
+                React.createElement('button', {
+                    key: 'close',
+                    onClick: handleClose,
+                    className: 'w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'
+                }, 'Continue to Round ' + round)
+            ]);
+        }
+
         // Gem Selection Modal Component
         function GemSelectionModal({ title, maxGems, onSelect, onCancel }) {
             const { state, dispatch } = useGame();
@@ -4102,7 +4275,9 @@
                     const message = `Player ${player.id}: Red shop → Repeating ${actionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
                     
-                    await executeAction(choice, player, dispatch, state, gameLayers, 0);
+                    // Create an updated player object with the current resources after shop cost
+                    const updatedPlayer = state.players.find(p => p.id === player.id);
+                    await executeAction(choice, updatedPlayer, dispatch, state, gameLayers, 0);
                 }
             }
         }
@@ -5559,11 +5734,21 @@
                 
                 dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
                 
+                // Create updated state with cost deducted for shop effects
+                const updatedPlayerResources = { ...currentPlayer.resources };
+                Object.entries(resourceCost).forEach(([resColor, amount]) => {
+                    updatedPlayerResources[resColor] = Math.max(0, updatedPlayerResources[resColor] + amount);
+                });
+                
+                const updatedPlayer = { ...currentPlayer, resources: updatedPlayerResources };
+                const updatedPlayers = state.players.map(p => p.id === currentPlayer.id ? updatedPlayer : p);
+                const updatedState = { ...state, players: updatedPlayers };
+                
                 // Apply the shop effect immediately
                 switch(`${color}${shopRound}`) {
                     case 'red1':
                         // Repeat a worker's action - execute immediately
-                        await executeRepeatAction(currentPlayer, dispatch, state, state.gameLayers);
+                        await executeRepeatAction(updatedPlayer, dispatch, updatedState, state.gameLayers);
                         break;
                     case 'red2':
                         dispatch({
@@ -6014,7 +6199,7 @@
                 purple: { cost: 4, vp: 5 },
                 gold: { cost: 4, vp: 7 },
                 white: { cost: 4, vp: 4 },
-                black: { cost: 6, vp: 0, special: 'steal1FromEach' },
+                black: { cost: 6, vp: 0, special: 'steal2FromEach' },
                 silver: { cost: 4, vp: 4 }
             };
             
@@ -6084,7 +6269,50 @@
                 }
                 
                 dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
-                dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: shop.vp, source: 'victoryShop' });
+                
+                // Handle special BLACK victory shop
+                if (color === 'black' && shop.special === 'steal2FromEach') {
+                    // Steal 2 VP from each other player
+                    const otherPlayers = state.players.filter(p => p.id !== currentPlayer.id);
+                    let totalVPStolen = 0;
+                    
+                    otherPlayers.forEach(otherPlayer => {
+                        const vpToSteal = Math.min(2, otherPlayer.victoryPoints);
+                        if (vpToSteal > 0) {
+                            dispatch({
+                                type: 'UPDATE_VP',
+                                playerId: otherPlayer.id,
+                                vp: -vpToSteal,
+                                source: 'blackVictoryShop'
+                            });
+                            totalVPStolen += vpToSteal;
+                        }
+                    });
+                    
+                    if (totalVPStolen > 0) {
+                        dispatch({
+                            type: 'UPDATE_VP',
+                            playerId: currentPlayer.id,
+                            vp: totalVPStolen,
+                            source: 'blackVictoryShop'
+                        });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (2 from each player)` });
+                        
+                        // BLACK AUTOMATIC VP: Gain 1 VP when stealing
+                        dispatch({
+                            type: 'UPDATE_VP',
+                            playerId: currentPlayer.id,
+                            vp: 1,
+                            source: 'blackAutomatic'
+                        });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +1 VP (Black automatic: stealing bonus)` });
+                    } else {
+                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Black Victory Shop → No VP to steal` });
+                    }
+                } else {
+                    // Normal victory shop
+                    dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: shop.vp, source: 'victoryShop' });
+                }
                 
                 // Track shop usage
                 dispatch({ type: 'USE_SHOP' });
@@ -6121,7 +6349,7 @@
                     onClick: handlePurchase,
                     className: `text-xs py-0.5 px-2 rounded ${isClosed ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'}`,
                     disabled: isClosed
-                }, color === 'black' && shop.special === 'steal1FromEach' ? 'Steal 1 Each' : `${shop.vp} VP`)
+                }, color === 'black' && shop.special === 'steal2FromEach' ? 'Steal 2 Each' : `${shop.vp} VP`)
             ]);
         }
         
@@ -6136,7 +6364,7 @@
                 purple: { cost: { purple: 4 }, vp: 5 },
                 gold: { cost: { gold: 10 }, vp: 15 },
                 white: { cost: { white: 4 }, vp: 4 },
-                black: { cost: { black: 6 }, vp: 0, special: 'steal1FromEach' },
+                black: { cost: { black: 6 }, vp: 0, special: 'steal2FromEach' },
                 silver: { cost: { silver: 6 }, vp: 8 }
             };
             
@@ -6198,20 +6426,21 @@
                 }
                 
                 // Handle special BLACK victory shop
-                if (color === 'black' && shop.special === 'steal1FromEach') {
-                    // Steal 1 VP from each other player
+                if (color === 'black' && shop.special === 'steal2FromEach') {
+                    // Steal 2 VP from each other player
                     const otherPlayers = state.players.filter(p => p.id !== currentPlayer.id);
                     let totalVPStolen = 0;
                     
                     otherPlayers.forEach(otherPlayer => {
-                        if (otherPlayer.victoryPoints > 0) {
+                        const vpToSteal = Math.min(2, otherPlayer.victoryPoints);
+                        if (vpToSteal > 0) {
                             dispatch({
                                 type: 'UPDATE_VP',
                                 playerId: otherPlayer.id,
-                                vp: -1,
+                                vp: -vpToSteal,
                                 source: 'blackVictoryShop'
                             });
-                            totalVPStolen += 1;
+                            totalVPStolen += vpToSteal;
                         }
                     });
                     
@@ -6222,8 +6451,8 @@
                             vp: totalVPStolen,
                             source: 'blackVictoryShop'
                         });
-                        console.log(`Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (1 from each player)`);
-                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (1 from each player)` });
+                        console.log(`Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (2 from each player)`);
+                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (2 from each player)` });
                         
                         // BLACK AUTOMATIC VP: Gain 1 VP when stealing
                         dispatch({
@@ -6265,8 +6494,8 @@
                     isClosed ? 'Victory (Closed)' : '🏆 Victory'),
                 React.createElement('div', { key: 'cost', className: 'text-center text-xs mb-2 text-green-800' }, 
                     React.createElement('strong', {}, 
-                        color === 'black' && shop.special === 'steal1FromEach' 
-                            ? `6 Black: Steal 1 VP from Each Player`
+                        color === 'black' && shop.special === 'steal2FromEach' 
+                            ? `6 Black: Steal 2 VP from Each Player`
                             : `${color === 'yellow' ? `${actualCost} ⭐` : `${shop.cost[color]} ${color.charAt(0).toUpperCase() + color.slice(1)}`}: ${shop.vp} VP`)),
                 React.createElement('div', { key: 'button', className: 'text-center' }, 
                     React.createElement('button', {
@@ -6297,8 +6526,8 @@
                 actions: [
                     { id: 'gain3yellow', title: 'Gain 3 ⭐', description: '', round: 1 },
                     { id: 'gain2yellow', title: 'Gain 2 ⭐', description: '', round: 1 },
-                    { id: 'steal2Gems', title: 'Steal 2 Resources', description: '', round: 1 },
-                    { id: 'yellowHybrid1', title: '+1 🟡 + Trade ⭐', description: '', round: 1 },
+                    { id: 'steal2Gems', title: 'Trade All ⭐ for ⭐', description: '', round: 1 },
+                    { id: 'yellowHybrid1', title: 'Gain 1 ⭐', description: '', round: 1 },
                     { id: 'steal3Gems', title: 'Steal 3 Resources', description: '', round: 2 },
                     { id: 'yellowHybrid2', title: '+1 🟡 + Double Next Gain', description: '(Doesn\'t stack with shop)', round: 2 },
                     { id: 'yellowSwapResources', title: 'Swap All Resources', description: '(Choose ⭐ player)', round: 3 }
@@ -6590,6 +6819,8 @@
                     ? React.createElement(GemSelectionModal, state.modal)
                     : state.modal.type === 'stealGems'
                     ? React.createElement(StealGemsModal, state.modal)
+                    : state.modal.type === 'roundTransition'
+                    ? React.createElement(RoundTransitionModal, state.modal)
                     : React.createElement(ConfirmModal, state.modal)
                 )
             ]);

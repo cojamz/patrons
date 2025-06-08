@@ -233,47 +233,44 @@ This will give you the complete specification and current progress status.
 
 ## Latest Updates (Post-Context)
 
-### Major Improvements:
-1. **Shop Phase System**: Implemented proper turn phases (shop1 → workers → shop2)
-2. **Shop Usage Limits**: Enforced 1 shop per phase maximum
-3. **Cost Modifier Fix**: Changed to cumulative system (ADD instead of SET)
-4. **Recursion Protection**: Max depth 5 for all repeat actions
-5. **UI Enhancements**: 
-   - Phase indicator on player cards
-   - Cost modifier display in shop header
-   - Smart button text based on phase
-   - "Skip to Shop Phase" option when out of workers
-6. **Purple Shop Fix**: Now properly adds workers instead of overriding
-7. **Complex Interaction Handling**: Proper validation for all edge cases
+### Major Improvements Since Last Context:
+1. **4 New Quads Implemented**: Gold, White, Black, Silver - all working with unique mechanics
+2. **Advanced Game Mode**: Players can choose Basic (4 standard quads) or Advanced (4 random from 8)
+3. **Player Emoji System**: Each player gets unique emoji, shows on actions and in UI
+4. **Shop UI Overhaul**: 
+   - Removed explicit phase system - shops intuitively available based on state
+   - Shops organized by quad in 4-column layout
+   - All shops/actions visible but greyed when unavailable
+5. **Fixed Shop Costs**:
+   - Red R1: 1 Red + 2 ⭐ (was 1+1)
+   - Purple R1: 1 Purple + 2 ⭐ (was 1+1)
+   - White shops: Only cost VP, no resources
+   - Gold shops: Accept ANY resource including gold for ⭐ costs
+6. **Turn Skip Logic**: Extra turns consume skip counters properly
+7. **UI Polish**: Round indicator, skip status indicators, better shop descriptions
 
-### Remaining Work:
-- Implement remaining shop effects (Yellow R2/R3, Red R3, Blue R2)
-- Test all complex interactions thoroughly
-- Performance optimization for large action chains
-
-## Context for Next Session
-
-### Current Status:
-- Updated purple actions to match correct specification
-- Implemented all new purple actions:
-  - gain4purpleSkip: +4 purple, skip next turn
-  - gain2purpleTakeBack: +2 purple, take back worker from different quad
-  - gain5purpleSkip: +5 purple, skip this turn immediately
-  - playThreeWorkers: Place 3 more workers this turn
-  - gain4purpleWaitAll: +4 purple, wait for others to run out then play all
-- Fixed shop display to show full effects without hovering
-- Fixed shop phase system to transition after placing last worker for turn
-- Blue close shop dialog now shows costs and effects
+### All Shop Effects Implemented:
+- ✅ All Red, Yellow, Blue, Purple shops
+- ✅ All Gold shops (convert resources to gold)
+- ✅ All White shops (VP manipulation)
+- ✅ All Black shops (stealing/aggression)
+- ✅ All Silver shops (mutual benefit)
 
 ### Key Features Working:
-1. Shop phase system with proper transitions
-2. All action implementations with edge case handling
-3. Recursion protection (max depth 5)
-4. VP source tracking with hover tooltips
-5. Shop cost modifier stacking
-6. Worker placement limit enforcement per phase
+1. Complete 8-quad system with all unique mechanics
+2. Multiplayer with room codes
+3. VP source tracking with hover tooltips
+4. Shop cost modifiers and availability tracking
+5. Complex action chains with recursion protection
+6. Automatic VP systems for all quads
+7. Victory shops with special effects (Black steals from all)
+8. Worker stealing (Black R2 action)
 
-### Known Issues:
-- Some shop effects still need implementation (Yellow R2/R3, Red R3, Blue R2)
+### Recent Bug Fixes:
+- Gold shops now properly allow any resource as ⭐ payment
+- White shops correctly cost only VP
+- Turn skipping works with extra turns
+- Worker take back excludes same quad
+- Shop toggle can open/close any shop including future rounds
 
-Last Updated: Pre-Compact with Purple Actions Fixed
+Last Updated: 2025-01-06 (Ready for context compaction)

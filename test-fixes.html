@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Fixes</title>
+</head>
+<body>
+    <h1>Testing the Fixes</h1>
+    
+    <h2>Fix 1: Turn Skipping Logic</h2>
+    <p>When a player has skipped turns and buys an extra turn:</p>
+    <ul>
+        <li>The extra turn should be consumed by the skip</li>
+        <li>The skip count should be decremented</li>
+        <li>The player should NOT get an actual extra turn</li>
+        <li>A log message should show: "Extra turn consumed by skip (X skips remaining)"</li>
+    </ul>
+    
+    <h2>Fix 2: Worker Take Back from Different Quad</h2>
+    <p>The purple action "gain2purpleTakeBack" should:</p>
+    <ul>
+        <li>Only show workers that are NOT on purple actions</li>
+        <li>Filter out any workers placed on purple quad actions</li>
+        <li>Allow taking back workers from red, yellow, blue, gold, white, black, or silver quads only</li>
+    </ul>
+    
+    <script>
+        // Test logic explanation
+        console.log("Fix 1 - Extra Turn with Skip:");
+        console.log("Before: Player has 1 skip, gets extra turn effect -> Takes extra turn AND still has skip");
+        console.log("After: Player has 1 skip, gets extra turn effect -> Skip decremented to 0, no extra turn taken");
+        
+        console.log("\nFix 2 - Purple Take Back:");
+        console.log("Before: Shows all workers including those on purple actions");
+        console.log("After: Only shows workers on non-purple actions");
+    </script>
+</body>
+</html>
