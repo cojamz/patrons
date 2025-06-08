@@ -4065,23 +4065,8 @@
                 return;
             }
             
-            if (playerSpaces.length === 1) {
-                // Auto-select the only option
-                const spaceId = playerSpaces[0];
-                let actionTitle = spaceId;
-                for (const layerData of Object.values(gameLayers)) {
-                    const action = layerData.actions.find(a => a.id === spaceId);
-                    if (action) {
-                        actionTitle = action.title;
-                        break;
-                    }
-                }
-                
-                const message = `Player ${player.id}: Red shop → Repeating ${actionTitle}`;
-                dispatch({ type: 'ADD_LOG', message });
-                
-                await executeAction(spaceId, player, dispatch, state, gameLayers, 0);
-            } else {
+            // Always show choice UI, even if only one option
+            if (playerSpaces.length >= 1) {
                 // Multiple options, let player choose
                 const repeatOptions = playerSpaces.map(spaceId => {
                     let actionTitle = spaceId;
@@ -4104,7 +4089,17 @@
                 );
                 
                 if (choice) {
-                    const message = `Player ${player.id}: Red shop → Repeating ${choice}`;
+                    // Find the action title for the log message
+                    let actionTitle = choice;
+                    for (const layerData of Object.values(gameLayers)) {
+                        const action = layerData.actions.find(a => a.id === choice);
+                        if (action) {
+                            actionTitle = action.title;
+                            break;
+                        }
+                    }
+                    
+                    const message = `Player ${player.id}: Red shop → Repeating ${actionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
                     
                     await executeAction(choice, player, dispatch, state, gameLayers, 0);
@@ -4254,7 +4249,7 @@
             };
             
             const shopCosts = {
-                red: { 1: '1🔴+2⭐', 2: '2🔴+2⭐', 3: '3🔴+3⭐' },
+                red: { 1: '1🔴+1⭐', 2: '2🔴+2⭐', 3: '3🔴+3⭐' },
                 yellow: { 1: '1🟡+1⭐', 2: '2🟡+2⭐', 3: '3🟡+3⭐' },
                 blue: { 1: '1🔵+1⭐', 2: '2🔵+2⭐', 3: '3🔵+3⭐' },
                 purple: { 1: '1🟣+1⭐', 2: '2🟣+2⭐', 3: '3🟣+3⭐' },
@@ -5539,6 +5534,7 @@
                         
                         if (colorOptions.length === 0) break;
                         
+                        // Always show choice UI, even if only one option
                         const choice = await showChoice(dispatch, 
                             `Choose color to spend (${remaining} more needed)`, 
                             colorOptions
@@ -5824,7 +5820,7 @@
             
             const shopData = {
                 red: {
-                    1: { cost: { red: 1, any: 1 }, effect: 'Repeat action', fullEffect: 'Repeat a worker\'s action' },
+                    1: { cost: { red: 1, any: 2 }, effect: 'Repeat action', fullEffect: 'Repeat a worker\'s action' },
                     2: { cost: { red: 2, any: 2 }, effect: 'Place next', fullEffect: 'Place the next player\'s worker' },
                     3: { cost: { red: 3, any: 3 }, effect: 'Repeat all', fullEffect: 'Repeat all actions taken this round by any player' }
                 },
@@ -5844,9 +5840,9 @@
                     3: { cost: { purple: 3, any: 3 }, effect: 'Play all', fullEffect: 'Play the rest of your workers' },
                 },
                 gold: {
-                    1: { cost: { gold: 1, any: 1 }, effect: '3 gems→1 VP', fullEffect: 'Convert 3 gems to 1 VP' },
-                    2: { cost: { gold: 2, any: 2 }, effect: '5 gems→1 VP', fullEffect: 'Gain 1 VP for every 5 gems you have' },
-                    3: { cost: { gold: 3, any: 3 }, effect: 'Double VP', fullEffect: 'Double your current VP (max +5 VP)' }
+                    1: { cost: { gold: 1, any: 1 }, effect: '= 2 Gold', fullEffect: '1 Gold + 1 ⭐ = 2 Gold' },
+                    2: { cost: { gold: 2, any: 2 }, effect: '= 4 Gold', fullEffect: '2 Gold + 2 ⭐ = 4 Gold' },
+                    3: { cost: { gold: 3, any: 3 }, effect: 'Double Gold', fullEffect: '3 Gold + 3 ⭐ = Double Your Gold' }
                 },
                 white: {
                     1: { cost: { vp: 1, any: 1 }, effect: 'Lose 1 VP, Gain 1 ⭐', fullEffect: 'Lose 1 VP, Gain 1 ⭐ gem' },
