@@ -517,6 +517,8 @@
                     let nextDirection = state.turnDirection;
                     let attempts = 0;
                     const maxAttempts = state.players.length * 2;
+                    const tempSkippedTurns = { ...effectiveSkippedTurns };
+                    const skippedPlayers = [];
                     
                     do {
                         const currentIndex = state.turnOrder.indexOf(attempts === 0 ? state.currentPlayer : nextPlayer);
@@ -540,22 +542,28 @@
                         attempts++;
                         if (attempts > maxAttempts) break; // Prevent infinite loop
                         
-                        // Check if player should skip
-                        const shouldSkip = effectiveSkippedTurns[nextPlayer] > 0;
+                        // Check if player should skip and track it
+                        if (tempSkippedTurns[nextPlayer] > 0) {
+                            skippedPlayers.push(nextPlayer);
+                            tempSkippedTurns[nextPlayer]--;
+                        }
+                        
                         // Check if player is waiting for others
                         const isWaiting = newWaitingForOthers[nextPlayer];
                         // Check if player has workers
                         const hasWorkers = state.players.find(p => p.id === nextPlayer).workersLeft > 0;
                         
-                    } while ((effectiveSkippedTurns[nextPlayer] > 0 || newWaitingForOthers[nextPlayer] || 
-                             !state.players.find(p => p.id === nextPlayer).workersLeft > 0) && 
+                    } while ((tempSkippedTurns[nextPlayer] > 0 || newWaitingForOthers[nextPlayer] || 
+                             state.players.find(p => p.id === nextPlayer).workersLeft === 0) && 
                              attempts < maxAttempts);
                     
-                    // Update skip counts
+                    // Update skip counts to reflect the skipped players
                     const newSkippedTurns = { ...effectiveSkippedTurns };
-                    if (newSkippedTurns[nextPlayer] > 0) {
-                        newSkippedTurns[nextPlayer]--;
-                    }
+                    skippedPlayers.forEach(playerId => {
+                        if (newSkippedTurns[playerId] > 0) {
+                            newSkippedTurns[playerId]--;
+                        }
+                    });
                     
                     // Set workers to place for waiting players who are now active
                     const waitingPlayerUpdate = waitingPlayersUpdates.find(u => u.playerId === nextPlayer);
@@ -1496,6 +1504,30 @@
                     return;
                 }
                 
+                // Check if there's a "must place on red" effect active
+                const mustPlaceOnRed = state.players.some(p => 
+                    p.effects && p.effects.includes('Other players must place on red layer until full')
+                );
+                
+                if (mustPlaceOnRed && state.currentPlayer !== state.players.find(p => 
+                    p.effects && p.effects.includes('Other players must place on red layer until full')
+                )?.id) {
+                    // Check if this action is on the red layer
+                    const redLayer = state.gameLayers.find(layer => layer.id === 'red');
+                    const isRedAction = redLayer && redLayer.actions.some(a => a.id === actionId);
+                    
+                    if (!isRedAction) {
+                        // Check if red layer is full
+                        const redActions = redLayer ? redLayer.actions.map(a => a.id) : [];
+                        const redIsFull = redActions.every(id => state.occupiedSpaces[id]);
+                        
+                        if (!redIsFull) {
+                            alert('You must place workers on the red layer until it is full!');
+                            return;
+                        }
+                    }
+                }
+                
                 dispatch({ type: 'PLACE_WORKER', actionId });
                 
                 // Get fresh state after worker placement for repeat actions
@@ -1870,21 +1902,21 @@
             }
             
             if (actionId === 'gain4purpleWaitAll') {
+                // Give 3 purple resources
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
-                    resources: { purple: 4 }
+                    resources: { purple: 3 }
                 });
                 
-                // Set waiting status
-                const newWaitingForOthers = { ...currentState.waitingForOthers };
-                newWaitingForOthers[player.id] = true;
+                // Add extra turn
                 dispatch({
-                    type: 'SET_WAITING_FOR_OTHERS',
-                    waitingForOthers: newWaitingForOthers
+                    type: 'UPDATE_PLAYER',
+                    playerId: player.id,
+                    updates: { extraTurns: (player.extraTurns || 0) + 1 }
                 });
                 
-                const message = `Player ${player.id}: gain4purpleWaitAll → +4 purple, waiting for others to run out`;
+                const message = `Player ${player.id}: gain4purpleWaitAll → +3 purple, gained an extra turn`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -2101,7 +2133,8 @@
                 dispatch({
                     type: 'UPDATE_VP',
                     playerId: player.id,
-                    vp: 1
+                    vp: 1,
+                    source: 'redAutomatic'
                 });
                 dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
                 
@@ -2113,19 +2146,32 @@
                     return;
                 }
                 
-                const workerOptions = allWorkers.map(([spaceId, playerId]) => ({
+                // Current player chooses their own worker to swap
+                const myWorkers = allWorkers.filter(([spaceId, pid]) => pid === player.id);
+                const otherWorkers = allWorkers.filter(([spaceId, pid]) => pid !== player.id);
+                
+                if (myWorkers.length === 0 || otherWorkers.length === 0) {
+                    const message = `Player ${player.id}: ${actionId} → +1 red (need workers from both current player and others)`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
+                
+                const myWorkerOptions = myWorkers.map(([spaceId, playerId]) => ({
+                    label: `Your worker on ${spaceId}`,
+                    value: { spaceId, playerId }
+                }));
+                
+                const worker1 = await showChoice(dispatch, 'Choose your worker to swap', myWorkerOptions);
+                if (!worker1) return;
+                
+                // For simplicity in local play, current player also chooses the other worker
+                // In a real multiplayer implementation, the other player would choose
+                const otherWorkerOptions = otherWorkers.map(([spaceId, playerId]) => ({
                     label: `Player ${playerId}'s worker on ${spaceId}`,
                     value: { spaceId, playerId }
                 }));
                 
-                const worker1 = await showChoice(dispatch, 'Choose first worker to swap', workerOptions);
-                if (!worker1) return;
-                
-                const remainingWorkers = workerOptions.filter(w => 
-                    !(w.value.spaceId === worker1.spaceId && w.value.playerId === worker1.playerId)
-                );
-                
-                const worker2 = await showChoice(dispatch, 'Choose second worker to swap', remainingWorkers);
+                const worker2 = await showChoice(dispatch, `Choose another player's worker to swap with`, otherWorkerOptions);
                 if (!worker2) return;
                 
                 // Perform the swap
@@ -2136,6 +2182,13 @@
                 dispatch({
                     type: 'UPDATE_OCCUPIED_SPACES',
                     occupiedSpaces: newOccupiedSpaces
+                });
+                
+                // Add a note about the swap
+                const otherPlayerId = worker2.playerId;
+                dispatch({ 
+                    type: 'ADD_LOG', 
+                    message: `Note: In multiplayer, Player ${otherPlayerId} would choose which of their workers to swap` 
                 });
                 
                 // Execute actions for the affected players
@@ -3609,14 +3662,56 @@
                 return;
             }
             
-            // +8 VP, Each Other Player Gets +3 Silver
+            // +4 VP and 4 ⭐
             if (actionId === 'silver8VPOthers3S') {
-                // Give current player 8 VP
+                // Give current player 4 VP
+                let vpGain = 4;
+                
+                // Check for doubling effect on VP
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                if (hasDoubleEffect) {
+                    vpGain *= 2;
+                }
+                
                 dispatch({
                     type: 'UPDATE_VP',
                     playerId: player.id,
-                    vp: 8,
+                    vp: vpGain,
                     source: 'silverAction'
+                });
+                
+                // Choose 4 gems to gain
+                let gemsToGain = 4;
+                if (hasDoubleEffect) {
+                    gemsToGain *= 2;
+                    
+                    // Remove the doubling effect after use
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: player.id,
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                    });
+                }
+                
+                const selectedGems = await showGemSelection(dispatch, `Choose ${gemsToGain} gems to gain`, gemsToGain);
+                
+                if (!selectedGems) {
+                    // If cancelled, give default gems
+                    const defaultGems = {};
+                    const colors = currentState.gameLayers ? Object.keys(currentState.gameLayers) : ['red', 'yellow', 'blue', 'purple'];
+                    for (let i = 0; i < gemsToGain && i < colors.length; i++) {
+                        defaultGems[colors[i % colors.length]] = (defaultGems[colors[i % colors.length]] || 0) + 1;
+                    }
+                    dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources: defaultGems });
+                    const message = `Player ${player.id}: silver8VPOthers3S → +${vpGain} VP${hasDoubleEffect ? ' (DOUBLED!)' : ''}, +${gemsToGain} gems (default)`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
+                
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: player.id,
+                    resources: selectedGems
                 });
                 
                 // Give other players 3 silver each
@@ -3629,7 +3724,7 @@
                     });
                 });
                 
-                const message = `Player ${player.id}: silver8VPOthers3S → +8 VP, all other players +3 silver`;
+                const message = `Player ${player.id}: silver8VPOthers3S → +${vpGain} VP${hasDoubleEffect ? ' (DOUBLED!)' : ''}, +${gemsToGain} gems, all other players +3 silver`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -4356,11 +4451,11 @@
 
         // Execute yellow 3 shop effect
         async function executeYellow3Shop(player, dispatch, state) {
-            // Gain 9 resources ⭐ colors - using GemSelectionModal
+            // Gain 7 resources ⭐ colors - using GemSelectionModal
             const selectedGems = await showGemSelection(
                 dispatch,
-                'Choose 9 gems of any color',
-                9
+                'Choose 7 gems of any color',
+                7
             );
             
             if (!selectedGems) {
@@ -4396,7 +4491,7 @@
                 }
             }
             
-            const message = `Player ${player.id}: Yellow R3 shop → Gained 9 gems, each other player gained 1 gem`;
+            const message = `Player ${player.id}: Yellow R3 shop → Gained 7 gems, each other player gained 1 gem`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
@@ -4461,7 +4556,7 @@
                 yellow: {
                     1: 'Double your next gain action',
                     2: 'Gain 5⭐',
-                    3: 'Gain 9⭐'
+                    3: 'Gain 7⭐'
                 },
                 blue: {
                     1: 'Toggle any shop (open/closed)',
@@ -4496,7 +4591,7 @@
             };
             
             const shopCosts = {
-                red: { 1: '1🔴+1⭐', 2: '2🔴+2⭐', 3: '3🔴+3⭐' },
+                red: { 1: '1🔴+2⭐', 2: '2🔴+2⭐', 3: '4🔴+4⭐' },
                 yellow: { 1: '1🟡+1⭐', 2: '2🟡+2⭐', 3: '3🟡+3⭐' },
                 blue: { 1: '1🔵+1⭐', 2: '2🔵+2⭐', 3: '3🔵+3⭐' },
                 purple: { 1: '1🟣+2⭐', 2: '2🟣+2⭐', 3: '3🟣+3⭐' },
@@ -4607,7 +4702,7 @@
                 yellow: {
                     1: 'Double your next gain action',
                     2: 'Gain 5⭐',
-                    3: 'Gain 9⭐'
+                    3: 'Gain 7⭐'
                 },
                 blue: {
                     1: 'Close any shop this round',
@@ -5239,21 +5334,51 @@
             }
         }
         
-        // Execute red 3 shop effect - Repeat all actions taken this round
+        // Execute red 3 shop effect - Repeat all actions taken by ONE player
         async function executeRed3Shop(player, dispatch, state) {
-            if (state.roundActions.length === 0) {
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: No actions have been taken this round!` });
+            // Get all players who have placed workers this round
+            const playersWithWorkers = [];
+            const playerWorkerCounts = {};
+            
+            Object.entries(state.occupiedSpaces).forEach(([actionId, playerId]) => {
+                if (!playerWorkerCounts[playerId]) {
+                    playerWorkerCounts[playerId] = [];
+                    playersWithWorkers.push(playerId);
+                }
+                playerWorkerCounts[playerId].push(actionId);
+            });
+            
+            // Filter to only other players
+            const otherPlayersWithWorkers = playersWithWorkers.filter(pid => pid !== player.id);
+            
+            if (otherPlayersWithWorkers.length === 0) {
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → No other players have placed workers!` });
                 return;
             }
             
-            // Show list of all actions taken this round
-            const actionOptions = state.roundActions.map((roundAction, index) => {
-                // Find the action details
-                let actionTitle = roundAction.actionId;
+            // Let player choose which player's workers to copy
+            const playerOptions = otherPlayersWithWorkers.map(pid => ({
+                label: `Player ${pid} (${playerWorkerCounts[pid].length} worker${playerWorkerCounts[pid].length > 1 ? 's' : ''})`,
+                value: pid
+            }));
+            
+            const targetPlayerId = await showChoice(dispatch, 'Choose a player whose worker actions to repeat', playerOptions);
+            
+            if (!targetPlayerId) {
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Cancelled` });
+                return;
+            }
+            
+            // Get all actions for the selected player
+            const targetActions = playerWorkerCounts[targetPlayerId];
+            
+            // Build action options with details
+            const actionOptions = targetActions.map(actionId => {
+                let actionTitle = actionId;
                 let layerColor = '';
                 
                 Object.entries(state.gameLayers || {}).forEach(([color, layer]) => {
-                    const action = layer.actions.find(a => a.id === roundAction.actionId);
+                    const action = layer.actions.find(a => a.id === actionId);
                     if (action) {
                         actionTitle = action.title;
                         layerColor = color;
@@ -5261,19 +5386,20 @@
                 });
                 
                 return {
-                    label: `Player ${roundAction.playerId}'s ${layerColor} action: ${actionTitle}`,
-                    value: roundAction.actionId
+                    label: `${layerColor} - ${actionTitle}`,
+                    value: actionId
                 };
             });
             
-            // Let player choose which actions to repeat
-            const message = 'Choose actions to repeat (you can repeat all of them!)';
+            // Let player choose which actions to repeat and in which order
+            const message = `Choose actions to repeat from Player ${targetPlayerId} (you can repeat all of them!)`;
             let continueChoosing = true;
             const repeatedActions = [];
+            const availableActions = [...actionOptions];
             
-            while (continueChoosing && actionOptions.length > 0) {
+            while (continueChoosing && availableActions.length > 0) {
                 const choice = await showChoice(dispatch, message, [
-                    ...actionOptions,
+                    ...availableActions,
                     { label: 'Done repeating actions', value: 'done' }
                 ]);
                 
@@ -5281,6 +5407,12 @@
                     continueChoosing = false;
                 } else {
                     repeatedActions.push(choice);
+                    // Remove the action from available options (can only repeat each once)
+                    const index = availableActions.findIndex(opt => opt.value === choice);
+                    if (index > -1) {
+                        availableActions.splice(index, 1);
+                    }
+                    
                     // Execute the action
                     await executeAction(choice, player, dispatch, state, state.gameLayers, 0);
                     
@@ -5295,7 +5427,7 @@
             }
             
             if (repeatedActions.length > 0) {
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Repeated ${repeatedActions.length} actions from this round!` });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Repeated ${repeatedActions.length} actions from Player ${targetPlayerId}!` });
             }
         }
 
@@ -5674,12 +5806,12 @@
                 red: {
                     1: { cost: { red: 1, any: 2 }, effect: 'Repeat a worker\'s action' },
                     2: { cost: { red: 2, any: 2 }, effect: 'Place the next player\'s worker' },
-                    3: { cost: { red: 3, any: 3 }, effect: 'Repeat all actions taken this round by ⭐ player' }
+                    3: { cost: { red: 4, any: 4 }, effect: 'Repeat all actions taken this round by ⭐ player' }
                 },
                 yellow: {
                     1: { cost: { yellow: 1, any: 1 }, effect: 'Double your next gain action' },
                     2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 5⭐' },
-                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 9⭐' }
+                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 7⭐' }
                 },
                 blue: {
                     1: { cost: { blue: 1, any: 1 }, effect: 'Close ⭐ shop this round' },
@@ -6636,7 +6768,7 @@
                     { id: 'playTwoWorkers', title: 'Play 2 More Workers', description: '(This turn)', round: 1 },
                     { id: 'gain5purpleSkip', title: 'Gain 5 🟣, Skip Turn', description: '', round: 2 },
                     { id: 'playThreeWorkers', title: 'Play 3 More Workers', description: '(This turn)', round: 2 },
-                    { id: 'gain4purpleWaitAll', title: 'Gain 4 🟣, Wait Then Play All', description: '(Skip until others out, then play all)', round: 3 }
+                    { id: 'gain4purpleWaitAll', title: 'Gain 3 🟣, Take Another Turn', description: '', round: 3 }
                 ]
             },
             gold: {
@@ -6688,7 +6820,7 @@
                     { id: 'silver2VPBoth', title: '+2 VP, Pick Another +2 VP', description: '(Choose another player)', round: 1 },
                     { id: 'silverTakeBack2', title: '+2 Silver, Take Back 2', description: '(Others take back 1 worker)', round: 2 },
                     { id: 'silver3Plus2Others1', title: '+3 Silver + 2 ⭐', description: '(Others get 1 of that color)', round: 2 },
-                    { id: 'silver8VPOthers3S', title: '+8 VP, Others +3 Silver', description: '(Each other player gets +3 Silver)', round: 3 }
+                    { id: 'silver8VPOthers3S', title: '+4 VP and 4 ⭐', description: '(Each other player gets +3 Silver)', round: 3 }
                 ]
             }
         };
