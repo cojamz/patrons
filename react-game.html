@@ -2546,9 +2546,9 @@
                         3: '3 Gold + 3 ⭐ = Double Your Gold'
                     },
                     white: {
-                        1: 'Cost 1 VP + 1 ⭐ = Lose 1 VP, Gain 1 ⭐',
-                        2: 'Cost 3 VP + 2 ⭐ = Lose 3 VP, Skip Next Player\'s Turn',
-                        3: 'Cost 5 VP + 3 ⭐ = Lose 5 VP, Move Worker to Unclaimed Action'
+                        1: 'Cost 1 VP = Lose 1 VP, Gain 1 ⭐',
+                        2: 'Cost 2 VP = Lose 2 VP, Skip Next Player\'s Turn',
+                        3: 'Cost 3 VP = Lose 3 VP, Move Worker to Unclaimed Action'
                     },
                     black: {
                         1: 'Destroy 2 gems from any player',
@@ -2850,27 +2850,65 @@
             
             // Gain 3 VP
             if (actionId === 'gain3vp') {
+                let vpGain = 3;
+                
+                // Check for doubling effect
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                if (hasDoubleEffect) {
+                    vpGain *= 2;
+                    
+                    // Remove the doubling effect after use
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: player.id,
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                    });
+                    
+                    const message = `Player ${player.id}: gain3vp → +${vpGain} VP (DOUBLED!)`;
+                    dispatch({ type: 'ADD_LOG', message });
+                } else {
+                    const message = `Player ${player.id}: gain3vp → +${vpGain} VP`;
+                    dispatch({ type: 'ADD_LOG', message });
+                }
+                
                 dispatch({
                     type: 'UPDATE_VP',
                     playerId: player.id,
-                    vp: 3,
+                    vp: vpGain,
                     source: 'whiteAction'
                 });
-                const message = `Player ${player.id}: gain3vp → +3 VP`;
-                dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
             // Gain 2 VP
             if (actionId === 'gain2vp') {
+                let vpGain = 2;
+                
+                // Check for doubling effect
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                if (hasDoubleEffect) {
+                    vpGain *= 2;
+                    
+                    // Remove the doubling effect after use
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: player.id,
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                    });
+                    
+                    const message = `Player ${player.id}: gain2vp → +${vpGain} VP (DOUBLED!)`;
+                    dispatch({ type: 'ADD_LOG', message });
+                } else {
+                    const message = `Player ${player.id}: gain2vp → +${vpGain} VP`;
+                    dispatch({ type: 'ADD_LOG', message });
+                }
+                
                 dispatch({
                     type: 'UPDATE_VP',
                     playerId: player.id,
-                    vp: 2,
+                    vp: vpGain,
                     source: 'whiteAction'
                 });
-                const message = `Player ${player.id}: gain2vp → +2 VP`;
-                dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
@@ -2976,14 +3014,33 @@
                     source: 'whiteAction'
                 });
                 
-                // Choose 2 gems to gain
-                const selectedGems = await showGemSelection(dispatch, 'Choose 2 gems to gain', 2);
+                let gemsToGain = 2;
+                
+                // Check for doubling effect
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                if (hasDoubleEffect) {
+                    gemsToGain *= 2;
+                    
+                    // Remove the doubling effect after use
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: player.id,
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                    });
+                }
+                
+                // Choose gems to gain
+                const selectedGems = await showGemSelection(dispatch, `Choose ${gemsToGain} gems to gain`, gemsToGain);
                 
                 if (!selectedGems) {
                     // If cancelled, give default resources
-                    const resources = { red: 1, blue: 1 };
-                    dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources });
-                    const message = `Player ${player.id}: lose1VPGain2Any → -1 VP, +1 red +1 blue (default)`;
+                    const defaultGems = {};
+                    const colors = currentState.gameLayers ? Object.keys(currentState.gameLayers) : ['red', 'blue'];
+                    for (let i = 0; i < gemsToGain && i < colors.length; i++) {
+                        defaultGems[colors[i]] = (defaultGems[colors[i]] || 0) + 1;
+                    }
+                    dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources: defaultGems });
+                    const message = `Player ${player.id}: lose1VPGain2Any → -1 VP, +${gemsToGain} gems (default)${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -2994,7 +3051,7 @@
                     resources: selectedGems
                 });
                 
-                const message = `Player ${player.id}: lose1VPGain2Any → -1 VP, gained 2 gems`;
+                const message = `Player ${player.id}: lose1VPGain2Any → -1 VP, gained ${gemsToGain} gems${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -3819,7 +3876,7 @@
         }
 
         // Gem Selection Modal Component
-        function GemSelectionModal({ title, maxGems, onSelect, onCancel }) {
+        function GemSelectionModal({ title, maxGems, onSelect, onCancel, availableResources }) {
             const { state, dispatch } = useGame();
             const [selectedGems, setSelectedGems] = React.useState({});
             const [totalSelected, setTotalSelected] = React.useState(0);
@@ -3854,7 +3911,11 @@
             }));
             
             const handleGemClick = (color) => {
-                if (totalSelected < maxGems) {
+                // Check if we have resources available for this color
+                const alreadySelected = selectedGems[color] || 0;
+                const available = availableResources ? (availableResources[color] || 0) : Infinity;
+                
+                if (totalSelected < maxGems && alreadySelected < available) {
                     const newSelectedGems = { ...selectedGems, [color]: selectedGems[color] + 1 };
                     const newTotal = totalSelected + 1;
                     setSelectedGems(newSelectedGems);
@@ -3901,23 +3962,33 @@
                 React.createElement('div', {
                     key: 'gem-grid',
                     className: 'grid grid-cols-4 gap-4 mb-4'
-                }, gemColors.map(({ color, emoji, gradient }) => 
-                    React.createElement('div', {
+                }, gemColors.map(({ color, emoji, gradient }) => {
+                    const alreadySelected = selectedGems[color] || 0;
+                    const available = availableResources ? (availableResources[color] || 0) : Infinity;
+                    const canSelect = totalSelected < maxGems && alreadySelected < available;
+                    
+                    return React.createElement('div', {
                         key: color,
                         className: 'text-center'
                     }, [
                         React.createElement('button', {
                             key: `${color}-button`,
                             onClick: () => handleGemClick(color),
-                            disabled: totalSelected >= maxGems,
-                            className: `w-16 h-16 rounded-lg bg-gradient-to-r ${gradient} ${totalSelected >= maxGems ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'} transition-all duration-200 flex items-center justify-center text-2xl shadow-lg`
-                        }, emoji),
+                            disabled: !canSelect,
+                            className: `w-16 h-16 rounded-lg bg-gradient-to-r ${gradient} ${!canSelect ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'} transition-all duration-200 flex items-center justify-center text-2xl shadow-lg relative`
+                        }, [
+                            React.createElement('span', { key: 'emoji' }, emoji),
+                            availableResources && available > 0 && React.createElement('span', {
+                                key: 'count',
+                                className: 'absolute -bottom-2 right-0 bg-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md'
+                            }, available - alreadySelected)
+                        ]),
                         React.createElement('div', {
                             key: `${color}-count`,
                             className: 'mt-2 font-semibold text-gray-700'
                         }, selectedGems[color] > 0 ? `×${selectedGems[color]}` : '')
                     ])
-                )),
+                })),
                 
                 // Selected gems display
                 totalSelected > 0 && React.createElement('div', {
@@ -4166,7 +4237,7 @@
             });
         }
 
-        function showGemSelection(dispatch, title, maxGems) {
+        function showGemSelection(dispatch, title, maxGems, availableResources) {
             return new Promise((resolve) => {
                 dispatch({
                     type: 'SHOW_MODAL',
@@ -4174,6 +4245,7 @@
                         type: 'gemSelection',
                         title,
                         maxGems,
+                        availableResources,
                         onSelect: resolve,
                         onCancel: () => resolve(null)
                     }
@@ -4429,7 +4501,7 @@
                 blue: { 1: '1🔵+1⭐', 2: '2🔵+2⭐', 3: '3🔵+3⭐' },
                 purple: { 1: '1🟣+2⭐', 2: '2🟣+2⭐', 3: '3🟣+3⭐' },
                 gold: { 1: '1🟨+1⭐', 2: '2🟨+2⭐', 3: '3🟨+3⭐' },
-                white: { 1: '1VP+1⭐', 2: '3VP+2⭐', 3: '5VP+3⭐' },
+                white: { 1: '1VP', 2: '2VP', 3: '3VP' },
                 black: { 1: '1⚫+1⭐', 2: '2⚫+2⭐', 3: '3⚫+3⭐' },
                 silver: { 1: '1🩶+1⭐', 2: '2🩶+2⭐', 3: '3🩶+3⭐' }
             };
@@ -4766,13 +4838,28 @@
             });
             
             // Choose 1 gem to gain
-            const selectedGems = await showGemSelection(dispatch, 'Choose 1 gem to gain', 1);
+            let gemsToGain = 1;
+            
+            // Check for doubling effect
+            const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+            if (hasDoubleEffect) {
+                gemsToGain *= 2;
+                
+                // Remove the doubling effect after use
+                dispatch({
+                    type: 'UPDATE_PLAYER_EFFECTS',
+                    playerId: player.id,
+                    effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                });
+            }
+            
+            const selectedGems = await showGemSelection(dispatch, `Choose ${gemsToGain} gem${gemsToGain > 1 ? 's' : ''} to gain`, gemsToGain);
             
             if (!selectedGems) {
-                // If cancelled, give default gem
-                const resources = { red: 1 };
+                // If cancelled, give default gems
+                const resources = { red: gemsToGain };
                 dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources });
-                const message = `Player ${player.id}: White R1 shop → -1 VP, +1 red (default)`;
+                const message = `Player ${player.id}: White R1 shop → -1 VP, +${gemsToGain} red (default)${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -4783,23 +4870,23 @@
                 resources: selectedGems
             });
             
-            const message = `Player ${player.id}: White R1 shop → -1 VP, gained 1 gem`;
+            const message = `Player ${player.id}: White R1 shop → -1 VP, gained ${gemsToGain} gem${gemsToGain > 1 ? 's' : ''}${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
-        // Execute white 2 shop effect - Lose 3 VP, Skip next player's turn
+        // Execute white 2 shop effect - Lose 2 VP, Skip next player's turn
         async function executeWhite2Shop(player, dispatch, state) {
-            if (player.victoryPoints < 3) {
-                const message = `Player ${player.id}: White R2 shop → Need at least 3 VP`;
+            if (player.victoryPoints < 2) {
+                const message = `Player ${player.id}: White R2 shop → Need at least 2 VP`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
-            // Lose 3 VP
+            // Lose 2 VP
             dispatch({
                 type: 'UPDATE_VP',
                 playerId: player.id,
-                vp: -3,
+                vp: -2,
                 source: 'whiteShop'
             });
             
@@ -4816,14 +4903,14 @@
                 skippedTurns: newSkippedTurns
             });
             
-            const message = `Player ${player.id}: White R2 shop → -3 VP, Player ${nextPlayerId} will skip next turn`;
+            const message = `Player ${player.id}: White R2 shop → -2 VP, Player ${nextPlayerId} will skip next turn`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
-        // Execute white 3 shop effect - Lose 5 VP, Move worker to unclaimed action
+        // Execute white 3 shop effect - Lose 3 VP, Move worker to unclaimed action
         async function executeWhite3Shop(player, dispatch, state) {
-            if (player.victoryPoints < 5) {
-                const message = `Player ${player.id}: White R3 shop → Need at least 5 VP`;
+            if (player.victoryPoints < 3) {
+                const message = `Player ${player.id}: White R3 shop → Need at least 3 VP`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -4882,11 +4969,11 @@
             const newAction = await showChoice(dispatch, 'Choose an unclaimed action to move to', allActions);
             if (!newAction) return;
             
-            // Lose 5 VP
+            // Lose 3 VP
             dispatch({
                 type: 'UPDATE_VP',
                 playerId: player.id,
-                vp: -5,
+                vp: -3,
                 source: 'whiteShop'
             });
             
@@ -4903,7 +4990,7 @@
             // Execute the new action
             await executeAction(newAction, player, dispatch, state, state.gameLayers, 0);
             
-            const message = `Player ${player.id}: White R3 shop → -5 VP, moved worker to ${newAction}`;
+            const message = `Player ${player.id}: White R3 shop → -3 VP, moved worker to ${newAction}`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
@@ -5611,8 +5698,8 @@
                 },
                 white: {
                     1: { cost: { vp: 1 }, effect: 'Lose 1 VP, Gain 1 ⭐' },
-                    2: { cost: { vp: 3 }, effect: 'Lose 3 VP, Skip Next Player\'s Turn' },
-                    3: { cost: { vp: 5 }, effect: 'Lose 5 VP, Move Worker to Unclaimed Action' }
+                    2: { cost: { vp: 2 }, effect: 'Lose 2 VP, Skip Next Player\'s Turn' },
+                    3: { cost: { vp: 3 }, effect: 'Lose 3 VP, Move Worker to Unclaimed Action' }
                 },
                 black: {
                     1: { cost: { black: 1, any: 1 }, effect: 'Steal 1 VP from another player' },
@@ -5693,41 +5780,34 @@
                 
                 // Deduct "any" cost - let player choose colors
                 if (anyRequired > 0) {
-                    let remaining = anyRequired;
+                    // Use gem selection modal for better UX
+                    const selectedGems = await showGemSelection(
+                        dispatch,
+                        `Choose ${anyRequired} ${anyRequired === 1 ? 'gem' : 'gems'} to spend`,
+                        anyRequired,
+                        currentPlayer.resources  // Pass available resources to limit selection
+                    );
                     
-                    while (remaining > 0) {
-                        const colorOptions = ['red', 'yellow', 'blue', 'purple']
-                            .filter(c => {
-                                const currentAmount = currentPlayer.resources[c];
-                                const alreadySpent = resourceCost[c] ? -resourceCost[c] : 0;
-                                return (currentAmount - alreadySpent) > 0;
-                            })
-                            .map(c => {
-                                const currentAmount = currentPlayer.resources[c];
-                                const alreadySpent = resourceCost[c] ? -resourceCost[c] : 0;
-                                const available = currentAmount - alreadySpent;
-                                return {
-                                    label: `${c.charAt(0).toUpperCase() + c.slice(1)} (${available} available)`,
-                                    value: c
-                                };
-                            });
+                    if (selectedGems) {
+                        // Add selected gems to resource cost
+                        Object.entries(selectedGems).forEach(([gemColor, count]) => {
+                            resourceCost[gemColor] = (resourceCost[gemColor] || 0) - count;
+                        });
+                    } else {
+                        // If cancelled, auto-select resources
+                        let remaining = anyRequired;
+                        const activeColors = state.gameLayers ? Object.keys(state.gameLayers) : ['red', 'yellow', 'blue', 'purple'];
                         
-                        if (colorOptions.length === 0) break;
-                        
-                        // Always show choice UI, even if only one option
-                        const choice = await showChoice(dispatch, 
-                            `Choose color to spend (${remaining} more needed)`, 
-                            colorOptions
-                        );
-                        
-                        if (choice) {
-                            resourceCost[choice] = (resourceCost[choice] || 0) - 1;
-                            remaining -= 1;
-                        } else {
-                            // If cancelled, auto-select first available
-                            const autoChoice = colorOptions[0].value;
-                            resourceCost[autoChoice] = (resourceCost[autoChoice] || 0) - 1;
-                            remaining -= 1;
+                        for (const c of activeColors) {
+                            if (remaining <= 0) break;
+                            const currentAmount = currentPlayer.resources[c];
+                            const alreadySpent = resourceCost[c] ? -resourceCost[c] : 0;
+                            const available = currentAmount - alreadySpent;
+                            const take = Math.min(available, remaining);
+                            if (take > 0) {
+                                resourceCost[c] = (resourceCost[c] || 0) - take;
+                                remaining -= take;
+                            }
                         }
                     }
                 }
