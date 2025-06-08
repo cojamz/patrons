@@ -4252,7 +4252,7 @@
                 red: { 1: '1🔴+1⭐', 2: '2🔴+2⭐', 3: '3🔴+3⭐' },
                 yellow: { 1: '1🟡+1⭐', 2: '2🟡+2⭐', 3: '3🟡+3⭐' },
                 blue: { 1: '1🔵+1⭐', 2: '2🔵+2⭐', 3: '3🔵+3⭐' },
-                purple: { 1: '1🟣+1⭐', 2: '2🟣+2⭐', 3: '3🟣+3⭐' },
+                purple: { 1: '1🟣+2⭐', 2: '2🟣+2⭐', 3: '3🟣+3⭐' },
                 gold: { 1: '1🟨+1⭐', 2: '2🟨+2⭐', 3: '3🟨+3⭐' },
                 white: { 1: '1VP+1⭐', 2: '3VP+2⭐', 3: '5VP+3⭐' },
                 black: { 1: '1⚫+1⭐', 2: '2⚫+2⭐', 3: '3⚫+3⭐' },
@@ -4458,29 +4458,38 @@
         // Execute gold 1 shop effect - 1 Gold + 1 ⭐ = 2 Gold (gain 2 gold)
         async function executeGold1Shop(player, dispatch, state) {
             const goldAmount = player.resources.gold || 0;
-            const otherGems = Object.entries(player.resources)
+            const totalGems = Object.values(player.resources).reduce((sum, amt) => sum + amt, 0);
+            
+            if (goldAmount < 1 || totalGems < 2) {
+                const message = `Player ${player.id}: Gold R1 shop → Need 1 gold + 1 ⭐ resource`;
+                dispatch({ type: 'ADD_LOG', message });
+                return;
+            }
+            
+            // If player only has gold, auto-pay with gold
+            const nonGoldResources = Object.entries(player.resources)
                 .filter(([color, amount]) => color !== 'gold' && amount > 0)
                 .reduce((sum, [, amount]) => sum + amount, 0);
             
-            if (goldAmount < 1 || otherGems < 1) {
-                const message = `Player ${player.id}: Gold R1 shop → Need 1 gold + 1 other gem`;
-                dispatch({ type: 'ADD_LOG', message });
-                return;
+            let selectedGems;
+            if (nonGoldResources === 0 && goldAmount >= 2) {
+                // Only has gold, auto-select gold for the any cost
+                selectedGems = { gold: 1 };
+            } else {
+                // Choose 1 gem to pay (can be any color including gold)
+                selectedGems = await showGemSelection(dispatch, 'Choose 1 ⭐ resource to pay', 1);
+                
+                if (!selectedGems) {
+                    const message = `Player ${player.id}: Gold R1 shop → Cancelled`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
             }
             
-            // Choose 1 gem to convert
-            const selectedGems = await showStealGems(dispatch, 'Choose 1 gem (not gold) to pay', player, 1);
-            
-            if (!selectedGems || (selectedGems.gold || 0) > 0) {
-                const message = `Player ${player.id}: Gold R1 shop → Cancelled or invalid selection`;
-                dispatch({ type: 'ADD_LOG', message });
-                return;
-            }
-            
-            // Pay 1 gold and 1 other gem, gain 2 gold
+            // Pay 1 gold and 1 any resource, gain 2 gold
             const resources = { gold: -1 + 2 }; // -1 cost + 2 gain = +1 net
             Object.entries(selectedGems).forEach(([color, amount]) => {
-                resources[color] = -amount;
+                resources[color] = resources[color] ? resources[color] - amount : -amount;
             });
             
             dispatch({
@@ -4489,36 +4498,34 @@
                 resources: resources
             });
             
-            const message = `Player ${player.id}: Gold R1 shop → Paid 1 gold + 1 gem, gained 2 gold`;
+            const message = `Player ${player.id}: Gold R1 shop → Paid 1 gold + 1 resource, gained 2 gold`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
         // Execute gold 2 shop effect - 2 Gold + 2 ⭐ = 4 Gold (gain 4 gold)
         async function executeGold2Shop(player, dispatch, state) {
             const goldAmount = player.resources.gold || 0;
-            const otherGems = Object.entries(player.resources)
-                .filter(([color, amount]) => color !== 'gold' && amount > 0)
-                .reduce((sum, [, amount]) => sum + amount, 0);
+            const totalGems = Object.values(player.resources).reduce((sum, amt) => sum + amt, 0);
             
-            if (goldAmount < 2 || otherGems < 2) {
-                const message = `Player ${player.id}: Gold R2 shop → Need 2 gold + 2 other gems`;
+            if (goldAmount < 2 || totalGems < 4) {
+                const message = `Player ${player.id}: Gold R2 shop → Need 2 gold + 2 ⭐ resources`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
-            // Choose 2 gems to convert
-            const selectedGems = await showStealGems(dispatch, 'Choose 2 gems (not gold) to pay', player, 2);
+            // Choose 2 gems to pay (can be any color including gold)
+            const selectedGems = await showGemSelection(dispatch, 'Choose 2 ⭐ resources to pay', 2);
             
-            if (!selectedGems || (selectedGems.gold || 0) > 0) {
-                const message = `Player ${player.id}: Gold R2 shop → Cancelled or invalid selection`;
+            if (!selectedGems) {
+                const message = `Player ${player.id}: Gold R2 shop → Cancelled`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
-            // Pay 2 gold and 2 other gems, gain 4 gold
+            // Pay 2 gold and 2 any resources, gain 4 gold
             const resources = { gold: -2 + 4 }; // -2 cost + 4 gain = +2 net
             Object.entries(selectedGems).forEach(([color, amount]) => {
-                resources[color] = -amount;
+                resources[color] = resources[color] ? resources[color] - amount : -amount;
             });
             
             dispatch({
@@ -4527,36 +4534,34 @@
                 resources: resources
             });
             
-            const message = `Player ${player.id}: Gold R2 shop → Paid 2 gold + 2 gems, gained 4 gold`;
+            const message = `Player ${player.id}: Gold R2 shop → Paid 2 gold + 2 resources, gained 4 gold`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
         // Execute gold 3 shop effect - 3 Gold + 3 ⭐ = Double Your Gold (multiply current gold by 2)
         async function executeGold3Shop(player, dispatch, state) {
             const goldAmount = player.resources.gold || 0;
-            const otherGems = Object.entries(player.resources)
-                .filter(([color, amount]) => color !== 'gold' && amount > 0)
-                .reduce((sum, [, amount]) => sum + amount, 0);
+            const totalGems = Object.values(player.resources).reduce((sum, amt) => sum + amt, 0);
             
-            if (goldAmount < 3 || otherGems < 3) {
-                const message = `Player ${player.id}: Gold R3 shop → Need 3 gold + 3 other gems`;
+            if (goldAmount < 3 || totalGems < 6) {
+                const message = `Player ${player.id}: Gold R3 shop → Need 3 gold + 3 ⭐ resources`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
-            // Choose 3 gems to convert
-            const selectedGems = await showStealGems(dispatch, 'Choose 3 gems (not gold) to pay', player, 3);
+            // Choose 3 gems to pay (can be any color including gold)
+            const selectedGems = await showGemSelection(dispatch, 'Choose 3 ⭐ resources to pay', 3);
             
-            if (!selectedGems || (selectedGems.gold || 0) > 0) {
-                const message = `Player ${player.id}: Gold R3 shop → Cancelled or invalid selection`;
+            if (!selectedGems) {
+                const message = `Player ${player.id}: Gold R3 shop → Cancelled`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
-            // Pay 3 gold and 3 other gems, double gold
+            // Pay 3 gold and 3 any resources, double gold
             const resources = { gold: -3 + (goldAmount * 2) }; // -3 cost + double current gold
             Object.entries(selectedGems).forEach(([color, amount]) => {
-                resources[color] = -amount;
+                resources[color] = resources[color] ? resources[color] - amount : -amount;
             });
             
             dispatch({
@@ -4565,7 +4570,7 @@
                 resources: resources
             });
             
-            const message = `Player ${player.id}: Gold R3 shop → Paid 3 gold + 3 gems, doubled gold from ${goldAmount} to ${goldAmount * 2}`;
+            const message = `Player ${player.id}: Gold R3 shop → Paid 3 gold + 3 resources, doubled gold from ${goldAmount} to ${goldAmount * 2}`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
@@ -5420,7 +5425,7 @@
                     3: { cost: { blue: 3, any: 3 }, effect: 'Flip the status of all shops, including victory shops' }
                 },
                 purple: {
-                    1: { cost: { purple: 1, any: 1 }, effect: 'Take an extra turn after this one' },
+                    1: { cost: { purple: 1, any: 2 }, effect: 'Take an extra turn after this one' },
                     2: { cost: { purple: 2, any: 2 }, effect: 'Play 2 more workers this turn' },
                     3: { cost: { purple: 3, any: 3 }, effect: 'Play the rest of your workers' }
                 },
@@ -5835,7 +5840,7 @@
                     3: { cost: { blue: 3, any: 3 }, effect: '⭐ benefit', fullEffect: 'Gain any shop benefit (even if closed)' }
                 },
                 purple: {
-                    1: { cost: { purple: 1, any: 1 }, effect: 'Extra turn', fullEffect: 'Take an extra turn after this one' },
+                    1: { cost: { purple: 1, any: 2 }, effect: 'Extra turn', fullEffect: 'Take an extra turn after this one' },
                     2: { cost: { purple: 2, any: 2 }, effect: 'Play 2 more', fullEffect: 'Play 2 more workers this turn' },
                     3: { cost: { purple: 3, any: 3 }, effect: 'Play all', fullEffect: 'Play the rest of your workers' },
                 },
