@@ -272,5 +272,23 @@ This will give you the complete specification and current progress status.
 - Turn skipping works with extra turns
 - Worker take back excludes same quad
 - Shop toggle can open/close any shop including future rounds
+- Multiplayer emoji sync fixed - emojis now display correctly in multiplayer
+- Red shop repeat action fixed to use correct player state after cost deduction
+- Black VP shop now steals 2 VP from each player (was 1)
+- Round transition popup added with player standings
+- Yellow "steal 2" changed to "Trade All ⭐ for ⭐"
+- Yellow "trade" action simplified to "Gain 1 ⭐"
+- Player emoji pool expanded from 40 to 160+ options
 
-Last Updated: 2025-01-06 (Ready for context compaction)
+### Latest Session Changes (2025-01-06):
+1. **Multiplayer Sync Fix**: Fixed SYNC_GAME_STATE to preserve player emojis
+2. **Round Transition Popup**: Shows standings, VP, resources when advancing rounds
+3. **Automatic Round Advancement**: Detects when all players out of workers
+4. **Yellow Action Changes**:
+   - "yellowHybrid1" changed from trade to simple "Gain 1 ⭐"
+   - "steal2Gems" changed to "Trade All ⭐ for ⭐" (trade all resources for equal number)
+5. **Black VP Shop**: Now steals 2 VP from each player instead of 1
+6. **Red Shop Fix**: Repeat action now properly uses updated player state
+7. **Emoji Pool**: Expanded to 160+ emojis including animals, objects, nature, fantasy, food
+
+Last Updated: 2025-01-06 (Session 2 - Ready for context compaction)
