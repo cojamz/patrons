@@ -243,7 +243,8 @@
             gameStarted: false,
             connectionStatus: 'disconnected', // 'disconnected', 'connecting', 'connected'
             gameOver: false,
-            syncingFromFirebase: false
+            syncingFromFirebase: false,
+            stateVersion: 0
         };
 
         function gameReducer(state, action) {
@@ -1163,6 +1164,12 @@
                         console.log('SYNC_GAME_STATE - Player 1 resources from Firebase:', 
                             action.gameState.players.find(p => p.id === 1)?.resources);
                         console.log('SYNC_GAME_STATE - All players from Firebase:', action.gameState.players);
+                    }
+                    
+                    // Only accept updates from other players
+                    if (action.gameState.lastUpdatedBy && action.gameState.lastUpdatedBy === state.myPlayerId) {
+                        console.log('SYNC_GAME_STATE - Ignoring our own update echo');
+                        return state;
                     }
                     
                     // Merge remote game state while preserving local multiplayer state
@@ -7563,7 +7570,9 @@
                         waitingForOthers: currentState.waitingForOthers,
                         roundActions: currentState.roundActions,
                         gameOver: currentState.gameOver,
-                        automaticVPs: currentState.automaticVPs
+                        automaticVPs: currentState.automaticVPs,
+                        lastUpdatedBy: currentState.myPlayerId,
+                        timestamp: Date.now()
                     });
                     }, 200);
                 }
