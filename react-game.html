@@ -225,10 +225,10 @@
             turnDirection: 1,
             gameMode: null, // 'basic' or 'advanced' - set when game starts
             players: [
-                { id: 1, name: "Player 1", emoji: initialPlayerEmojis[0], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {} },
-                { id: 2, name: "Player 2", emoji: initialPlayerEmojis[1], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {} },
-                { id: 3, name: "Player 3", emoji: initialPlayerEmojis[2], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {} },
-                { id: 4, name: "Player 4", emoji: initialPlayerEmojis[3], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {} }
+                { id: 1, name: "Player 1", emoji: initialPlayerEmojis[0], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0 },
+                { id: 2, name: "Player 2", emoji: initialPlayerEmojis[1], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0 },
+                { id: 3, name: "Player 3", emoji: initialPlayerEmojis[2], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0 },
+                { id: 4, name: "Player 4", emoji: initialPlayerEmojis[3], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0 }
             ],
             occupiedSpaces: {},
             round: 1,
@@ -973,7 +973,8 @@
                                 workersLeft: baseWorkers + extraWorkers,
                                 effects: (player.effects || []).filter(effect => 
                                     !effect.includes('Will get 2 extra workers next round')
-                                )
+                                ),
+                                shopCostModifier: 0 // Reset each player's shop cost modifier
                             };
                         }),
                         occupiedSpaces: {},
@@ -984,7 +985,6 @@
                         workersToPlace: 1,
                         shopUsedBeforeWorkers: false, // Reset shop usage for new round
                         shopUsedAfterWorkers: false, // Reset shop usage for new round
-                        shopCostModifier: 0, // Reset cost modifier each round
                         playersOutOfWorkers: [], // Reset for new round
                         skippedTurns: {}, // Reset skip turns
                         waitingForOthers: {}, // Reset waiting status
@@ -1145,7 +1145,11 @@
                 case 'ADD_SHOP_COST_MODIFIER':
                     return {
                         ...state,
-                        shopCostModifier: state.shopCostModifier + action.modifier
+                        players: state.players.map(player =>
+                            player.id === action.playerId
+                                ? { ...player, shopCostModifier: player.shopCostModifier + action.modifier }
+                                : player
+                        )
                     };
                 
                 case 'USE_SHOP':
@@ -3309,9 +3313,10 @@
                     resources: { blue: 1 }
                 });
                 
-                // Add cost reduction for this round
+                // Add cost reduction for this player only
                 dispatch({
                     type: 'ADD_SHOP_COST_MODIFIER',
+                    playerId: player.id,
                     modifier: -1
                 });
                 
@@ -6756,8 +6761,8 @@
                 const colorRequired = shop.cost[color] || 0;
                 let anyRequired = shop.cost.any || 0;
                 
-                // Apply cost modifier
-                anyRequired = Math.max(0, anyRequired + state.shopCostModifier);
+                // Apply player's cost modifier
+                anyRequired = Math.max(0, anyRequired + (currentPlayer.shopCostModifier || 0));
                 
                 // For WHITE shops that cost VP
                 if (vpRequired > 0) {
@@ -7360,8 +7365,7 @@
             const shop = shopData[color];
             const shopId = `${color}vp`;
             const isClosed = state.closedShops[shopId];
-            // Apply cost modifier to all gem-based VP shops (not black which has special cost)
-            const actualCost = (color === 'black' || color === 'white') ? shop.cost : Math.max(0, shop.cost + state.shopCostModifier);
+            // actualCost will be calculated inside handlePurchase with currentPlayer's modifier
             
             const handlePurchase = () => {
                 if (isClosed) {
@@ -7394,6 +7398,8 @@
                 }
                 
                 const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
+                // Apply cost modifier to all gem-based VP shops (not black which has special cost)
+                const actualCost = (color === 'black' || color === 'white') ? shop.cost : Math.max(0, shop.cost + (currentPlayer.shopCostModifier || 0));
                 
                 if (color === 'yellow') {
                     const totalGems = Object.values(currentPlayer.resources).reduce((sum, amt) => sum + amt, 0);
@@ -7544,7 +7550,7 @@
                 if (color === 'yellow') {
                     // Yellow VP shop costs 4 ⭐ gems (modified by shopCostModifier)
                     const baseCost = 4;
-                    const actualCost = Math.max(0, baseCost + state.shopCostModifier);
+                    const actualCost = Math.max(0, baseCost + (currentPlayer.shopCostModifier || 0));
                     const totalGems = Object.values(currentPlayer.resources).reduce((sum, count) => sum + count, 0);
                     
                     if (totalGems < actualCost) {
@@ -7639,7 +7645,9 @@
             };
             
             const shop = shopData[color];
-            const actualCost = color === 'yellow' ? Math.max(0, 4 + state.shopCostModifier) : shop.cost[color];
+            // For display, we need to get the current player to show their specific cost
+            const displayPlayer = state.players.find(p => p.id === state.currentPlayer);
+            const actualCost = color === 'yellow' ? Math.max(0, 4 + (displayPlayer?.shopCostModifier || 0)) : shop.cost[color];
             
             return React.createElement('div', { 
                 className: `bg-gradient-to-br from-green-100 to-green-200 border-2 ${isClosed ? 'border-red-400 opacity-60' : 'border-green-400'} rounded-lg p-3 shadow-md hover:shadow-lg transition-all` 
