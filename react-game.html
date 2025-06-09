@@ -882,12 +882,13 @@
                     // Initialize future round shops as closed
                     const initialClosedShops = {};
                     const gameColors = state.gameLayers ? Object.keys(state.gameLayers) : ['red', 'yellow', 'blue', 'purple'];
-                    const currentRound = state.round || 1;
+                    // Always start at round 1 for new games
+                    const currentRound = 1;
                     
                     gameColors.forEach(color => {
                         // Close shops from future rounds
-                        if (currentRound < 2) initialClosedShops[`${color}2`] = true;
-                        if (currentRound < 3) initialClosedShops[`${color}3`] = true;
+                        initialClosedShops[`${color}2`] = true;
+                        initialClosedShops[`${color}3`] = true;
                     });
                     
                     // WHITE AUTOMATIC VP: If white is in play, all players start with 5 VP
@@ -2193,20 +2194,44 @@
                     return;
                 }
                 
-                const myWorkerOptions = myWorkers.map(([spaceId, playerId]) => ({
-                    label: `Your worker on ${spaceId}`,
-                    value: { spaceId, playerId }
-                }));
+                const myWorkerOptions = myWorkers.map(([spaceId, playerId]) => {
+                    // Find the action title
+                    let actionTitle = spaceId;
+                    for (const [color, layer] of Object.entries(gameLayers)) {
+                        const action = layer.actions.find(a => a.id === spaceId);
+                        if (action) {
+                            actionTitle = `${color} - ${action.title}`;
+                            break;
+                        }
+                    }
+                    return {
+                        label: `Your worker on: ${actionTitle}`,
+                        value: { spaceId, playerId }
+                    };
+                });
                 
                 const worker1 = await showChoice(dispatch, 'Choose your worker to swap', myWorkerOptions);
                 if (!worker1) return;
                 
                 // For simplicity in local play, current player also chooses the other worker
                 // In a real multiplayer implementation, the other player would choose
-                const otherWorkerOptions = otherWorkers.map(([spaceId, playerId]) => ({
-                    label: `Player ${playerId}'s worker on ${spaceId}`,
-                    value: { spaceId, playerId }
-                }));
+                const otherWorkerOptions = otherWorkers.map(([spaceId, playerId]) => {
+                    // Find the action title
+                    let actionTitle = spaceId;
+                    for (const [color, layer] of Object.entries(gameLayers)) {
+                        const action = layer.actions.find(a => a.id === spaceId);
+                        if (action) {
+                            actionTitle = `${color} - ${action.title}`;
+                            break;
+                        }
+                    }
+                    const otherPlayer = currentState.players.find(p => p.id === playerId);
+                    const playerName = otherPlayer ? `${otherPlayer.name} ${otherPlayer.emoji || ''}` : `Player ${playerId}`;
+                    return {
+                        label: `${playerName}'s worker on: ${actionTitle}`,
+                        value: { spaceId, playerId }
+                    };
+                });
                 
                 const worker2 = await showChoice(dispatch, `Choose another player's worker to swap with`, otherWorkerOptions);
                 if (!worker2) return;
@@ -4482,9 +4507,13 @@
                     const message = `Player ${player.id}: Red shop → Repeating ${actionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
                     
-                    // Create an updated player object with the current resources after shop cost
-                    const updatedPlayer = state.players.find(p => p.id === player.id);
-                    await executeAction(choice, updatedPlayer, dispatch, state, gameLayers, 0);
+                    // Create an updated state with the current player state
+                    const currentPlayerState = state.players.find(p => p.id === player.id);
+                    const updatedState = {
+                        ...state,
+                        players: state.players.map(p => p.id === player.id ? currentPlayerState : p)
+                    };
+                    await executeAction(choice, currentPlayerState, dispatch, updatedState, gameLayers, 0);
                 }
             }
         }
