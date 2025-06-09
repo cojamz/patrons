@@ -597,30 +597,132 @@
                         return sum + p.workersLeft;
                     }, 0);
                     
-                    // If no workers remaining and round < 3, show round transition popup
+                    // If no workers remaining and round < 3, automatically advance round
                     if (totalWorkersRemaining === 0 && state.round < 3) {
+                        // Calculate automatic VPs before advancing round
+                        const vpMessages = [];
+                        const playersWithAutomaticVP = effectivePlayers.map(player => {
+                            let vpGained = 0;
+                            const newVpSources = { ...player.vpSources };
+                            
+                            // Yellow automatic VP - 1 VP per different color resource (only if Yellow is in game)
+                            if (state.gameLayers && state.gameLayers.yellow) {
+                                const differentColors = Object.entries(player.resources)
+                                    .filter(([color, amount]) => amount > 0)
+                                    .length;
+                                
+                                if (differentColors > 0) {
+                                    vpGained += differentColors;
+                                    newVpSources.yellowDiversity = (player.vpSources?.yellowDiversity || 0) + differentColors;
+                                    vpMessages.push(`Player ${player.id}: +${differentColors} VP for ${differentColors} different color resources`);
+                                }
+                            }
+                            
+                            // Gold automatic VP - 1 VP per gold resource (only if Gold is in game)
+                            if (state.gameLayers && state.gameLayers.gold) {
+                                const goldAmount = player.resources.gold || 0;
+                                if (goldAmount > 0) {
+                                    vpGained += goldAmount;
+                                    newVpSources.goldAutomatic = (player.vpSources?.goldAutomatic || 0) + goldAmount;
+                                    vpMessages.push(`Player ${player.id}: +${goldAmount} VP for ${goldAmount} gold resources`);
+                                }
+                            }
+                            
+                            if (vpGained > 0) {
+                                return {
+                                    ...player,
+                                    victoryPoints: player.victoryPoints + vpGained,
+                                    vpSources: newVpSources
+                                };
+                            }
+                            return player;
+                        });
+                        
+                        // SILVER automatic VP - Player(s) with most VP get 3 Silver, others get 2 VP (only if Silver is in game)
+                        let playersAfterSilverAuto = playersWithAutomaticVP;
+                        if (state.gameLayers && state.gameLayers.silver) {
+                            let maxVP = Math.max(...playersWithAutomaticVP.map(p => p.victoryPoints));
+                            const playersWithMostVP = playersWithAutomaticVP.filter(p => p.victoryPoints === maxVP);
+                            const playersWithMostVPIds = playersWithMostVP.map(p => p.id);
+                            
+                            playersAfterSilverAuto = playersWithAutomaticVP.map(player => {
+                            if (playersWithMostVPIds.includes(player.id)) {
+                                // Players with most VP get 3 Silver
+                                vpMessages.push(`Player ${player.id}: +3 Silver (most VP)`);
+                                return {
+                                    ...player,
+                                    resources: {
+                                        ...player.resources,
+                                        silver: (player.resources.silver || 0) + 3
+                                    }
+                                };
+                            } else {
+                                // Other players get 2 VP
+                                vpMessages.push(`Player ${player.id}: +2 VP (Silver automatic)`);
+                                return {
+                                    ...player,
+                                    victoryPoints: player.victoryPoints + 2,
+                                    vpSources: {
+                                        ...player.vpSources,
+                                        silverAutomatic: (player.vpSources?.silverAutomatic || 0) + 2
+                                    }
+                                };
+                            }
+                            });
+                        }
+                        
+                        // Open shops for the new round
+                        const newRound = state.round + 1;
+                        const updatedClosedShops = { ...state.closedShops };
+                        const shopColors = ['red', 'yellow', 'blue', 'purple', 'gold', 'white', 'black', 'silver'];
+                        
+                        // Remove shops for the new round from closedShops (making them available)
+                        shopColors.forEach(color => {
+                            delete updatedClosedShops[`${color}${newRound}`];
+                        });
+                        
+                        // Randomize turn order
+                        const newTurnOrder = [...state.turnOrder].sort(() => Math.random() - 0.5);
+                        
                         return {
                             ...state,
-                            currentPlayer: nextPlayer,
-                            turnDirection: nextDirection,
+                            round: newRound,
+                            closedShops: updatedClosedShops,
+                            players: playersAfterSilverAuto.map(player => {
+                                const baseWorkers = 3 + (newRound);
+                                const hasExtraWorkers = (player.effects || []).some(effect => 
+                                    effect.includes('Will get 2 extra workers next round')
+                                );
+                                const extraWorkers = hasExtraWorkers ? 2 : 0;
+                                
+                                return {
+                                    ...player,
+                                    workersLeft: baseWorkers + extraWorkers,
+                                    effects: (player.effects || []).filter(effect => 
+                                        !effect.includes('Will get 2 extra workers next round')
+                                    )
+                                };
+                            }),
+                            occupiedSpaces: {},
+                            turnOrder: newTurnOrder,
+                            currentPlayer: newTurnOrder[0],
+                            turnDirection: 1,
                             workerPlacedThisTurn: false,
-                            workersToPlace: workersToPlace,
+                            workersToPlace: 1,
                             shopUsedBeforeWorkers: false,
                             shopUsedAfterWorkers: false,
-                            skippedTurns: newSkippedTurns,
-                            waitingForOthers: newWaitingForOthers,
-                            playersOutOfWorkers: newPlayersOutOfWorkers,
-                            players: effectivePlayers,
-                            modal: {
-                                type: 'roundTransition',
-                                round: state.round + 1,
-                                players: effectivePlayers
-                            },
+                            shopCostModifier: 0,
+                            playersOutOfWorkers: [],
+                            skippedTurns: {},
+                            waitingForOthers: {},
+                            roundActions: [],
                             actionLog: [
                                 ...state.actionLog.slice(-9),
                                 ...extraTurnLogMessages,
                                 ...purpleVPUpdates.map(u => `Player ${u.playerId}: +${u.vp} VP (${u.reason})`),
-                                ...waitingPlayersUpdates.map(u => `Player ${u.playerId}: Can now play all ${u.workers} workers!`)
+                                ...waitingPlayersUpdates.map(u => `Player ${u.playerId}: Can now play all ${u.workers} workers!`),
+                                ...vpMessages,
+                                `Round ${newRound} started automatically! Extra workers applied.`
                             ].filter(Boolean)
                         };
                     }
@@ -798,6 +900,23 @@
                     return {
                         ...state,
                         modal: null
+                    };
+                
+                case 'UNDO_LAST_WORKER':
+                    // Remove the last placed worker from the action space
+                    const undoOccupiedSpaces = { ...state.occupiedSpaces };
+                    delete undoOccupiedSpaces[action.actionId];
+                    
+                    return {
+                        ...state,
+                        occupiedSpaces: undoOccupiedSpaces,
+                        players: state.players.map(player => 
+                            player.id === action.playerId 
+                                ? { ...player, workersLeft: player.workersLeft + 1 }
+                                : player
+                        ),
+                        workerPlacedThisTurn: false,
+                        workersToPlace: Math.min(state.workersToPlace + 1, 1) // Max 1 worker to place
                     };
                 
                 case 'UPDATE_OCCUPIED_SPACES':
@@ -979,11 +1098,11 @@
                     };
                 
                 case 'REMOVE_WORKER':
-                    const newOccupiedSpaces = { ...state.occupiedSpaces };
-                    delete newOccupiedSpaces[action.actionId];
+                    const removedWorkerSpaces = { ...state.occupiedSpaces };
+                    delete removedWorkerSpaces[action.actionId];
                     return {
                         ...state,
-                        occupiedSpaces: newOccupiedSpaces,
+                        occupiedSpaces: removedWorkerSpaces,
                         players: state.players.map(player => 
                             player.id === action.playerId
                                 ? { ...player, workersLeft: player.workersLeft + 1 }
@@ -1582,6 +1701,9 @@
                     }
                 }
                 
+                // Store action info before placing worker, in case we need to undo
+                const workerInfo = { actionId, playerId: state.currentPlayer };
+                
                 dispatch({ type: 'PLACE_WORKER', actionId });
                 
                 // Get fresh state after worker placement for repeat actions
@@ -1597,7 +1719,9 @@
                     workersToPlace: Math.max(0, state.workersToPlace - 1)
                 };
                 const freshPlayer = freshState.players.find(p => p.id === state.currentPlayer);
-                await executeAction(actionId, freshPlayer, dispatch, freshState, state.gameLayers);
+                
+                // Pass worker info to executeAction so it can undo if needed
+                await executeAction(actionId, freshPlayer, dispatch, freshState, state.gameLayers, 0, workerInfo);
                 
                 const message = `Action completed: ${actionId} for Player ${currentPlayer.id}`;
                 dispatch({ type: 'ADD_LOG', message });
@@ -1661,7 +1785,7 @@
         }
 
         // Simplified action execution
-        async function executeAction(actionId, player, dispatch, currentState, gameLayers, recursionDepth = 0) {
+        async function executeAction(actionId, player, dispatch, currentState, gameLayers, recursionDepth = 0, workerInfo = null) {
             // Prevent infinite loops
             if (recursionDepth > 5) {
                 dispatch({ type: 'ADD_LOG', message: 'Max recursion depth reached - stopping to prevent infinite loop' });
@@ -1733,7 +1857,7 @@
             
             // Yellow layer actions with player choice
             if (actionId === 'gain3yellow') {
-                const selectedGems = await showGemSelection(dispatch, 'Select 3 Resources (⭐ Colors)', 3);
+                const selectedGems = await showGemSelection(dispatch, 'Select 3 Resources (⭐ Colors)', 3, null, workerInfo);
                 
                 if (!selectedGems) {
                     // If cancelled, give default resources
@@ -1778,7 +1902,7 @@
             
             // Similar implementation for gain2yellow
             if (actionId === 'gain2yellow') {
-                const selectedGems = await showGemSelection(dispatch, 'Select 2 Resources (⭐ Colors)', 2);
+                const selectedGems = await showGemSelection(dispatch, 'Select 2 Resources (⭐ Colors)', 2, null, workerInfo);
                 
                 if (!selectedGems) {
                     // If cancelled, give default resources
@@ -2180,7 +2304,7 @@
                     dispatch({ type: 'ADD_LOG', message });
                     
                     // Execute the chosen action again
-                    await executeAction(choice, player, dispatch, currentState, gameLayers, recursionDepth + 1);
+                    await executeAction(choice, player, dispatch, currentState, gameLayers, recursionDepth + 1, workerInfo);
                 }
                 return;
             }
@@ -2238,7 +2362,7 @@
                     };
                 });
                 
-                const worker1 = await showChoice(dispatch, 'Choose your worker to swap', myWorkerOptions);
+                const worker1 = await showChoice(dispatch, 'Choose your worker to swap', myWorkerOptions, false, workerInfo);
                 if (!worker1) return;
                 
                 // For simplicity in local play, current player also chooses the other worker
@@ -2261,7 +2385,7 @@
                     };
                 });
                 
-                const worker2 = await showChoice(dispatch, `Choose another player's worker to swap with`, otherWorkerOptions);
+                const worker2 = await showChoice(dispatch, `Choose another player's worker to swap with`, otherWorkerOptions, false, workerInfo);
                 if (!worker2) return;
                 
                 // Perform the swap
@@ -2372,7 +2496,9 @@
                 const newResources = await showGemSelection(
                     dispatch,
                     `Trade all ${totalResources} resources for new ones`,
-                    totalResources
+                    totalResources,
+                    null,
+                    workerInfo
                 );
                 
                 if (!newResources) {
@@ -2434,7 +2560,7 @@
                 }
                 
                 // Choose target player
-                const targetId = await showChoice(dispatch, 'Choose player to steal from', targetOptions);
+                const targetId = await showChoice(dispatch, 'Choose player to steal from', targetOptions, false, workerInfo);
                 if (!targetId) {
                     const message = `Player ${player.id}: ${actionId} → Cancelled`;
                     dispatch({ type: 'ADD_LOG', message });
@@ -2448,7 +2574,8 @@
                     dispatch, 
                     `Steal up to ${stealCount} resources from Player ${targetId}`,
                     targetPlayer,
-                    stealCount
+                    stealCount,
+                    workerInfo
                 );
                 
                 if (!selectedGems) {
@@ -2485,7 +2612,7 @@
             // Yellow hybrid actions
             if (actionId === 'yellowHybrid1') {
                 // Gain 2 resources of any color
-                const selectedGem = await showGemSelection(dispatch, 'Choose 2 Resources (⭐ Color)', 2);
+                const selectedGem = await showGemSelection(dispatch, 'Choose 2 Resources (⭐ Color)', 2, null, workerInfo);
                 
                 if (!selectedGem) {
                     // If cancelled, give default resource
@@ -2561,7 +2688,7 @@
                     value: p.id
                 }));
                 
-                const targetPlayerId = await showChoice(dispatch, 'Choose player to swap all resources with', swapOptions);
+                const targetPlayerId = await showChoice(dispatch, 'Choose player to swap all resources with', swapOptions, false, workerInfo);
                 
                 if (targetPlayerId) {
                     const targetPlayer = otherPlayers.find(p => p.id === targetPlayerId);
@@ -2636,7 +2763,7 @@
                     });
                 });
                 
-                const choice = await showChoice(dispatch, 'Choose any R1 shop benefit (ignores closed status)', shopOptions, true);
+                const choice = await showChoice(dispatch, 'Choose any R1 shop benefit (ignores closed status)', shopOptions, true, workerInfo);
                 
                 if (choice) {
                     // Execute the shop benefit without paying cost
@@ -2755,7 +2882,7 @@
                     });
                 });
                 
-                const choice = await showChoice(dispatch, 'Choose any shop benefit (ignores closed status)', shopOptions, true);
+                const choice = await showChoice(dispatch, 'Choose any shop benefit (ignores closed status)', shopOptions, true, workerInfo);
                 
                 if (choice) {
                     // Execute the shop benefit without paying cost
@@ -2860,7 +2987,7 @@
                 }
                 
                 // Choose 2 gems to convert  
-                const selectedGems = await showStealGems(dispatch, 'Choose 2 gems to convert to Gold', currentPlayer, 2);
+                const selectedGems = await showStealGems(dispatch, 'Choose 2 gems to convert to Gold', currentPlayer, 2, workerInfo);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: convert2AnyTo2Gold → Cancelled`;
@@ -2901,7 +3028,7 @@
                 }
                 
                 // Choose 1 gem to convert
-                const selectedGems = await showStealGems(dispatch, 'Choose 1 gem to convert to Gold', currentPlayer, 1);
+                const selectedGems = await showStealGems(dispatch, 'Choose 1 gem to convert to Gold', currentPlayer, 1, workerInfo);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: convert1AnyTo1Gold → Cancelled`;
@@ -2963,7 +3090,7 @@
                 }
                 
                 // Choose 3 gems to convert
-                const selectedGems = await showStealGems(dispatch, 'Choose 3 gems to convert to Gold', currentPlayer, 3);
+                const selectedGems = await showStealGems(dispatch, 'Choose 3 gems to convert to Gold', currentPlayer, 3, workerInfo);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: convert3AnyTo3Gold → Cancelled`;
@@ -3087,7 +3214,7 @@
                 }
                 
                 // Choose 1 gem to spend
-                const selectedGems = await showStealGems(dispatch, 'Choose 1 gem to spend for 2 VP', player, 1);
+                const selectedGems = await showStealGems(dispatch, 'Choose 1 gem to spend for 2 VP', player, 1, workerInfo);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: spend1AnyFor2VP → Cancelled`;
@@ -3132,7 +3259,7 @@
                 }
                 
                 // Choose 2 gems to spend
-                const selectedGems = await showStealGems(dispatch, 'Choose 2 gems to spend for 3 VP', player, 2);
+                const selectedGems = await showStealGems(dispatch, 'Choose 2 gems to spend for 3 VP', player, 2, workerInfo);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: spend2AnyFor3VP → Cancelled`;
@@ -3197,7 +3324,7 @@
                 }
                 
                 // Choose gems to gain
-                const selectedGems = await showGemSelection(dispatch, `Choose ${gemsToGain} gems to gain`, gemsToGain);
+                const selectedGems = await showGemSelection(dispatch, `Choose ${gemsToGain} gems to gain`, gemsToGain, null, workerInfo);
                 
                 if (!selectedGems) {
                     // If cancelled, give default resources
@@ -3240,7 +3367,7 @@
                 });
                 
                 // Choose 4 gems to gain
-                const selectedGems = await showGemSelection(dispatch, 'Choose 4 gems to gain', 4);
+                const selectedGems = await showGemSelection(dispatch, 'Choose 4 gems to gain', 4, null, workerInfo);
                 
                 if (!selectedGems) {
                     // If cancelled, give default resources
@@ -3395,7 +3522,7 @@
                     return;
                 }
                 
-                const stolenGems = await showStealGems(dispatch, `Choose ${stealCount} gems to steal from Player ${targetPlayer.id}`, targetPlayer, stealCount);
+                const stolenGems = await showStealGems(dispatch, `Choose ${stealCount} gems to steal from Player ${targetPlayer.id}`, targetPlayer, stealCount, workerInfo);
                 
                 if (!stolenGems) {
                     const message = `Player ${player.id}: blackSteal2Any → Cancelled`;
@@ -4394,7 +4521,7 @@
         }
 
         // Helper functions for custom prompts
-        function showChoice(dispatch, title, options, columnMode = false) {
+        function showChoice(dispatch, title, options, columnMode = false, workerInfo = null) {
             return new Promise((resolve) => {
                 dispatch({
                     type: 'SHOW_MODAL',
@@ -4404,13 +4531,19 @@
                         options,
                         columnMode,
                         onSelect: resolve,
-                        onCancel: () => resolve(null)
+                        onCancel: () => {
+                            // If this modal was triggered by placing a worker, undo the placement
+                            if (workerInfo) {
+                                dispatch({ type: 'UNDO_LAST_WORKER', ...workerInfo });
+                            }
+                            resolve(null);
+                        }
                     }
                 });
             });
         }
 
-        function showConfirm(dispatch, title, message) {
+        function showConfirm(dispatch, title, message, workerInfo = null) {
             return new Promise((resolve) => {
                 dispatch({
                     type: 'SHOW_MODAL',
@@ -4419,13 +4552,19 @@
                         title,
                         message,
                         onConfirm: () => resolve(true),
-                        onCancel: () => resolve(false)
+                        onCancel: () => {
+                            // If this modal was triggered by placing a worker, undo the placement
+                            if (workerInfo) {
+                                dispatch({ type: 'UNDO_LAST_WORKER', ...workerInfo });
+                            }
+                            resolve(false);
+                        }
                     }
                 });
             });
         }
 
-        function showGemSelection(dispatch, title, maxGems, availableResources) {
+        function showGemSelection(dispatch, title, maxGems, availableResources, workerInfo = null) {
             return new Promise((resolve) => {
                 dispatch({
                     type: 'SHOW_MODAL',
@@ -4435,13 +4574,19 @@
                         maxGems,
                         availableResources,
                         onSelect: resolve,
-                        onCancel: () => resolve(null)
+                        onCancel: () => {
+                            // If this modal was triggered by placing a worker, undo the placement
+                            if (workerInfo) {
+                                dispatch({ type: 'UNDO_LAST_WORKER', ...workerInfo });
+                            }
+                            resolve(null);
+                        }
                     }
                 });
             });
         }
 
-        function showStealGems(dispatch, title, targetPlayer, maxGems) {
+        function showStealGems(dispatch, title, targetPlayer, maxGems, workerInfo = null) {
             return new Promise((resolve) => {
                 dispatch({
                     type: 'SHOW_MODAL',
@@ -4451,7 +4596,13 @@
                         targetPlayer,
                         maxGems,
                         onSelect: resolve,
-                        onCancel: () => resolve(null)
+                        onCancel: () => {
+                            // If this modal was triggered by placing a worker, undo the placement
+                            if (workerInfo) {
+                                dispatch({ type: 'UNDO_LAST_WORKER', ...workerInfo });
+                            }
+                            resolve(null);
+                        }
                     }
                 });
             });
@@ -7221,7 +7372,15 @@
             
             const handleAdvanceRound = () => {
                 if (state.round < 3) {
-                    dispatch({ type: 'ADVANCE_ROUND' });
+                    // Show the round transition modal
+                    dispatch({ 
+                        type: 'SHOW_MODAL',
+                        modal: {
+                            type: 'roundTransition',
+                            round: state.round + 1,
+                            players: state.players
+                        }
+                    });
                 } else {
                     alert('Game is already at Round 3 (final round)');
                 }
