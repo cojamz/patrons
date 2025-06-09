@@ -398,10 +398,12 @@
                         }
                     }
                     
-                    // Check for extra turn effect
-                    const hasExtraTurn = currentPlayerObj.effects.some(effect => 
+                    // Check for extra turn effect or extraTurns property
+                    const hasExtraTurnEffect = currentPlayerObj.effects.some(effect => 
                         effect.includes('Will take an extra turn after this one')
                     );
+                    const hasExtraTurnProp = (currentPlayerObj.extraTurns || 0) > 0;
+                    const hasExtraTurn = hasExtraTurnEffect || hasExtraTurnProp;
                     
                     // Check if player has skipped turns
                     const hasSkippedTurns = state.skippedTurns[state.currentPlayer] > 0;
@@ -420,7 +422,7 @@
                             logMessage = `Player ${state.currentPlayer}: Taking extra turn!`;
                         }
                         
-                        // Remove the extra turn effect
+                        // Remove the extra turn effect and decrement extraTurns
                         const updatedPlayers = state.players.map(player => {
                             const vpUpdate = purpleVPUpdates.find(u => u.playerId === player.id);
                             return player.id === state.currentPlayer 
@@ -429,6 +431,7 @@
                                     effects: (player.effects || []).filter(effect => 
                                         !effect.includes('Will take an extra turn after this one')
                                     ),
+                                    extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                                     victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
                                     vpSources: vpUpdate ? {
                                         ...player.vpSources,
@@ -481,6 +484,7 @@
                                     effects: (player.effects || []).filter(effect => 
                                         !effect.includes('Will take an extra turn after this one')
                                     ),
+                                    extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                                     victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
                                     vpSources: vpUpdate ? {
                                         ...player.vpSources,
@@ -1678,15 +1682,14 @@
                 }
                 
                 // Check if there's a "must place on red" effect active
-                const mustPlaceOnRed = state.players.some(p => 
+                const forceRedPlayer = state.players.find(p => 
                     p.effects && p.effects.includes('Other players must place on red layer until full')
                 );
+                const mustPlaceOnRed = forceRedPlayer && forceRedPlayer.id !== state.currentPlayer;
                 
-                if (mustPlaceOnRed && state.currentPlayer !== state.players.find(p => 
-                    p.effects && p.effects.includes('Other players must place on red layer until full')
-                )?.id) {
+                if (mustPlaceOnRed) {
                     // Check if this action is on the red layer
-                    const redLayer = state.gameLayers.find(layer => layer.id === 'red');
+                    const redLayer = state.gameLayers && state.gameLayers.red;
                     const isRedAction = redLayer && redLayer.actions.some(a => a.id === actionId);
                     
                     if (!isRedAction) {
@@ -1857,21 +1860,25 @@
             
             // Yellow layer actions with player choice
             if (actionId === 'gain3yellow') {
+                // For extra workers, always give resources to the worker owner
+                const actualPlayerId = workerInfo?.playerId || player.id;
+                const actualPlayer = currentState.players.find(p => p.id === actualPlayerId);
+                
                 const selectedGems = await showGemSelection(dispatch, 'Select 3 Resources (⭐ Colors)', 3, null, workerInfo);
                 
                 if (!selectedGems) {
                     // If cancelled, give default resources
                     const resources = { red: 1, yellow: 1, blue: 1 };
-                    dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources });
-                    const message = `Player ${player.id}: gain3yellow → +1 red, +1 yellow, +1 blue (default)`;
+                    dispatch({ type: 'UPDATE_RESOURCES', playerId: actualPlayerId, resources });
+                    const message = `Player ${actualPlayerId}: gain3yellow → +1 red, +1 yellow, +1 blue (default)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
                 
                 const resources = selectedGems;
                 
-                // Check for doubling effect
-                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                // Check for doubling effect on the actual player
+                const hasDoubleEffect = (actualPlayer.effects || []).some(effect => effect.includes('Next gain will be doubled'));
                 if (hasDoubleEffect) {
                     // Double all gains
                     Object.keys(resources).forEach(color => {
@@ -1881,20 +1888,20 @@
                     // Remove the doubling effect after use
                     dispatch({
                         type: 'UPDATE_PLAYER_EFFECTS',
-                        playerId: player.id,
-                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                        playerId: actualPlayerId,
+                        effects: (actualPlayer.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
                     });
                     
-                    const message = `Player ${player.id}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
+                    const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
                     dispatch({ type: 'ADD_LOG', message });
                 } else {
-                    const message = `Player ${player.id}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')}`;
+                    const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')}`;
                     dispatch({ type: 'ADD_LOG', message });
                 }
                 
                 dispatch({
                     type: 'UPDATE_RESOURCES',
-                    playerId: player.id,
+                    playerId: actualPlayerId,
                     resources
                 });
                 return;
@@ -1902,21 +1909,25 @@
             
             // Similar implementation for gain2yellow
             if (actionId === 'gain2yellow') {
+                // For extra workers, always give resources to the worker owner
+                const actualPlayerId = workerInfo?.playerId || player.id;
+                const actualPlayer = currentState.players.find(p => p.id === actualPlayerId);
+                
                 const selectedGems = await showGemSelection(dispatch, 'Select 2 Resources (⭐ Colors)', 2, null, workerInfo);
                 
                 if (!selectedGems) {
                     // If cancelled, give default resources
                     const resources = { red: 1, yellow: 1 };
-                    dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources });
-                    const message = `Player ${player.id}: gain2yellow → +1 red, +1 yellow (default)`;
+                    dispatch({ type: 'UPDATE_RESOURCES', playerId: actualPlayerId, resources });
+                    const message = `Player ${actualPlayerId}: gain2yellow → +1 red, +1 yellow (default)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
                 
                 const resources = selectedGems;
                 
-                // Check for doubling effect
-                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                // Check for doubling effect on the actual player
+                const hasDoubleEffect = (actualPlayer.effects || []).some(effect => effect.includes('Next gain will be doubled'));
                 if (hasDoubleEffect) {
                     // Double all gains
                     Object.keys(resources).forEach(color => {
@@ -1926,20 +1937,20 @@
                     // Remove the doubling effect after use
                     dispatch({
                         type: 'UPDATE_PLAYER_EFFECTS',
-                        playerId: player.id,
-                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                        playerId: actualPlayerId,
+                        effects: (actualPlayer.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
                     });
                     
-                    const message = `Player ${player.id}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
+                    const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
                     dispatch({ type: 'ADD_LOG', message });
                 } else {
-                    const message = `Player ${player.id}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')}`;
+                    const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')}`;
                     dispatch({ type: 'ADD_LOG', message });
                 }
                 
                 dispatch({
                     type: 'UPDATE_RESOURCES',
-                    playerId: player.id,
+                    playerId: actualPlayerId,
                     resources
                 });
                 return;
@@ -2174,6 +2185,12 @@
                                 type: 'ADD_EFFECT',
                                 playerId: player.id,
                                 effect: 'Will take an extra turn after this one'
+                            });
+                            // Actually grant the extra turn
+                            dispatch({
+                                type: 'UPDATE_PLAYER',
+                                playerId: player.id,
+                                updates: { extraTurns: (player.extraTurns || 0) + 1 }
                             });
                             break;
                     }
@@ -2940,7 +2957,7 @@
                     resources: { blue: 2 }
                 });
                 
-                // Add cost increase for this round
+                // Add cost increase for this round - this should stack if repeated
                 dispatch({
                     type: 'ADD_SHOP_COST_MODIFIER',
                     modifier: 2
@@ -4686,6 +4703,15 @@
                     const message = `Player ${player.id}: Red shop → Repeating ${actionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
                     
+                    // RED AUTOMATIC VP for using red shop
+                    dispatch({
+                        type: 'UPDATE_VP',
+                        playerId: player.id,
+                        vp: 1,
+                        source: 'redAutomatic'
+                    });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
+                    
                     // Create an updated state with the current player state
                     const currentPlayerState = state.players.find(p => p.id === player.id);
                     const updatedState = {
@@ -5626,6 +5652,12 @@
                         playerId: player.id,
                         effect: 'Will take an extra turn after this one'
                     });
+                    // Actually grant the extra turn
+                    dispatch({
+                        type: 'UPDATE_PLAYER',
+                        playerId: player.id,
+                        updates: { extraTurns: (player.extraTurns || 0) + 1 }
+                    });
                     break;
                 case 'purple2':
                     dispatch({
@@ -6364,12 +6396,21 @@
                 
                 // Deduct "any" cost - let player choose colors
                 if (anyRequired > 0) {
+                    // Create a copy of resources to track what's available for "any" cost
+                    const availableForAny = {...currentPlayer.resources};
+                    
+                    // IMPORTANT: Only exclude the color gems if they're actually required
+                    // For purple R1 shop: colorRequired = 1, so we should only exclude 1 purple gem
+                    if (colorRequired > 0 && color in availableForAny) {
+                        availableForAny[color] = Math.max(0, availableForAny[color] - colorRequired);
+                    }
+                    
                     // Use gem selection modal for better UX
                     const selectedGems = await showGemSelection(
                         dispatch,
                         `Choose ${anyRequired} ${anyRequired === 1 ? 'gem' : 'gems'} to spend`,
                         anyRequired,
-                        currentPlayer.resources  // Pass available resources to limit selection
+                        availableForAny  // Pass available resources to limit selection
                     );
                     
                     if (selectedGems) {
@@ -6454,11 +6495,19 @@
                         await executeBlue3Shop(currentPlayer, dispatch, state);
                         break;
                     case 'purple1':
+                        // Add effect for visual feedback
                         dispatch({
                             type: 'ADD_EFFECT',
                             playerId: currentPlayer.id,
                             effect: 'Will take an extra turn after this one'
                         });
+                        // Actually grant the extra turn
+                        dispatch({
+                            type: 'UPDATE_PLAYER',
+                            playerId: currentPlayer.id,
+                            updates: { extraTurns: (updatedPlayer.extraTurns || 0) + 1 }
+                        });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Purple R1 shop → Will take an extra turn after this one` });
                         break;
                     case 'purple2':
                         // Play 2 more workers this turn
@@ -6794,12 +6843,21 @@
                 
                 // Deduct any cost - let player choose colors
                 if (anyCost > 0) {
+                    // Create a copy of resources to track what's available for "any" cost
+                    const availableForAny = {...currentPlayer.resources};
+                    
+                    // IMPORTANT: Only exclude the color gems if they're actually required
+                    // For purple R1 shop: colorCost = 1, so we should only exclude 1 purple gem
+                    if (colorCost > 0 && color in availableForAny) {
+                        availableForAny[color] = Math.max(0, availableForAny[color] - colorCost);
+                    }
+                    
                     // Use gem selection modal for better UX
                     const selectedGems = await showGemSelection(
                         dispatch,
                         `Choose ${anyCost} ${anyCost === 1 ? 'gem' : 'gems'} to spend`,
                         anyCost,
-                        currentPlayer.resources  // Pass available resources to limit selection
+                        availableForAny  // Pass available resources that exclude already-spent color gems
                     );
                     
                     if (selectedGems) {
