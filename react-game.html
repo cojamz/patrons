@@ -3238,7 +3238,37 @@
                     });
                 });
                 
-                const choice = await showChoice(dispatch, 'Choose any R1 shop benefit (ignores closed status)', shopOptions, true, workerInfo);
+                // Function to check if red shop can be executed
+                const canExecuteRedShop = () => {
+                    const excludedActions = [
+                        'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
+                        'blueAnyShopBenefit', 'blueR1ShopBenefit',
+                        'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
+                        'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
+                    ];
+                    
+                    const validSpaces = Object.entries(currentState.occupiedSpaces)
+                        .filter(([spaceId, pid]) => 
+                            pid === player.id && !excludedActions.includes(spaceId)
+                        );
+                    
+                    return validSpaces.length > 0;
+                };
+                
+                // Filter out red shop if it can't be executed
+                const filteredOptions = shopOptions.filter(option => {
+                    if (option.value.color === 'red' && option.value.round === 1) {
+                        return canExecuteRedShop();
+                    }
+                    return true;
+                });
+                
+                if (filteredOptions.length === 0) {
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: No valid R1 shop benefits available` });
+                    return;
+                }
+                
+                const choice = await showChoice(dispatch, 'Choose any R1 shop benefit (ignores closed status)', filteredOptions, true, workerInfo);
                 
                 if (choice) {
                     console.log('Player chose shop:', choice.color, 'R', choice.round);
@@ -5153,14 +5183,28 @@
 
         // Execute repeat action from red shop
         async function executeRepeatAction(player, dispatch, state, gameLayers, recursionDepth = 0) {
+            // Find all occupied spaces that belong to the current player
+            // Exclude: repeat actions and swap actions to prevent confusing chains
+            const excludedActions = [
+                // Red actions that could cause infinite loops
+                'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
+                // Blue actions that could cause recursion through shops
+                'blueAnyShopBenefit', 'blueR1ShopBenefit',
+                // Victory shops - already purchased, can't repeat
+                'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
+                'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
+            ];
+            
             const playerSpaces = Object.entries(state.occupiedSpaces)
-                .filter(([spaceId, pid]) => pid === player.id)
+                .filter(([spaceId, pid]) => 
+                    pid === player.id && !excludedActions.includes(spaceId)
+                )
                 .map(([spaceId]) => spaceId);
             
             if (playerSpaces.length === 0) {
-                const message = `Player ${player.id}: Red shop → No workers to repeat`;
+                const message = `Player ${player.id}: Red shop → No valid workers to repeat (swap/repeat actions excluded)`;
                 dispatch({ type: 'ADD_LOG', message });
-                return;
+                return false; // Return false to indicate failure
             }
             
             // Always show choice UI, even if only one option
@@ -5216,8 +5260,10 @@
                         players: state.players.map(p => p.id === player.id ? currentPlayerState : p)
                     };
                     await executeAction(choice, currentPlayerState, dispatch, updatedState, gameLayers, recursionDepth + 1);
+                    return true; // Return true to indicate success
                 }
             }
+            return false; // Return false if no choice made
         }
 
         // Execute yellow 3 shop effect
@@ -7489,6 +7535,26 @@
                 if (requiredForAny < anyCost) {
                     alert(`Need ${anyCost} additional gems.`);
                     return;
+                }
+                
+                // Special validation for red R1 shop - must have valid actions to repeat
+                if (color === 'red' && round === 1) {
+                    const excludedActions = [
+                        'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
+                        'blueAnyShopBenefit', 'blueR1ShopBenefit',
+                        'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
+                        'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
+                    ];
+                    
+                    const validSpaces = Object.entries(state.occupiedSpaces)
+                        .filter(([spaceId, pid]) => 
+                            pid === currentPlayer.id && !excludedActions.includes(spaceId)
+                        );
+                    
+                    if (validSpaces.length === 0) {
+                        alert('You have no valid workers to repeat! Swap and repeat actions cannot be repeated.');
+                        return;
+                    }
                 }
                 
                 // Deduct VP cost if applicable
