@@ -465,7 +465,8 @@
                                 ? { 
                                     ...player, 
                                     effects: (player.effects || []).filter(effect => 
-                                        !effect.includes('Will take an extra turn after this one')
+                                        !effect.includes('Will take an extra turn after this one') &&
+                                        !effect.includes('Can place 2 more workers this turn')
                                     ),
                                     extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                                     victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
@@ -518,7 +519,8 @@
                                 ? { 
                                     ...player, 
                                     effects: (player.effects || []).filter(effect => 
-                                        !effect.includes('Will take an extra turn after this one')
+                                        !effect.includes('Will take an extra turn after this one') &&
+                                        !effect.includes('Can place 2 more workers this turn')
                                     ),
                                     extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                                     victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
@@ -620,13 +622,34 @@
                     }
                     
                     // Check for skips, waiting, and workers
-                    // Even if it's a snake draft reversal, we need to check if the player should skip
+                    // Special handling for snake draft reversal with skips
+                    if (isSnakeDraftReversal && tempSkippedTurns[nextPlayer] > 0) {
+                        // At reversal point with skips - consume ONE skip and move to next player
+                        console.log(`Player ${nextPlayer} at reversal point with skip. Consuming 1 skip.`);
+                        skippedPlayers.push(nextPlayer);
+                        tempSkippedTurns[nextPlayer]--;
+                        
+                        // Move to next player based on the NEW direction after reversal
+                        const currentIdx = state.turnOrder.indexOf(nextPlayer);
+                        if (nextDirection === -1) {
+                            // Now going backward, so next player is before current
+                            if (currentIdx > 0) {
+                                nextPlayer = state.turnOrder[currentIdx - 1];
+                            }
+                        } else {
+                            // Now going forward, so next player is after current
+                            if (currentIdx < state.turnOrder.length - 1) {
+                                nextPlayer = state.turnOrder[currentIdx + 1];
+                            }
+                        }
+                    }
+                    
                     do {
                             attempts++;
                             if (attempts > maxAttempts) break; // Prevent infinite loop
                             
-                            // Check if player should skip and track it
-                            if (tempSkippedTurns[nextPlayer] > 0) {
+                            // Check if player should skip and track it (but not if we just handled reversal skip)
+                            if (tempSkippedTurns[nextPlayer] > 0 && !isSnakeDraftReversal) {
                                 console.log(`Player ${nextPlayer} should skip turn. Skips remaining: ${tempSkippedTurns[nextPlayer]}`);
                                 skippedPlayers.push(nextPlayer);
                                 tempSkippedTurns[nextPlayer]--;
@@ -997,7 +1020,8 @@
                                 ...player,
                                 workersLeft: baseWorkers + extraWorkers,
                                 effects: (player.effects || []).filter(effect => 
-                                    !effect.includes('Will get 2 extra workers next round')
+                                    !effect.includes('Will get 2 extra workers next round') &&
+                                    !effect.includes('Can place 2 more workers this turn')
                                 ),
                                 shopCostModifier: 0 // Reset each player's shop cost modifier
                             };
@@ -1976,7 +2000,10 @@
                 }
                 
                 const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
-                if (currentPlayer.workersLeft <= 0) return;
+                if (currentPlayer.workersLeft <= 0) {
+                    alert('You have no workers left to place!');
+                    return;
+                }
                 
                 if (state.workersToPlace <= 0) {
                     alert('You have already placed all your workers this turn. End your turn or buy from shops.');
@@ -6323,7 +6350,7 @@
                 // Check if this player can place workers
                 if (candidatePlayer && 
                     candidatePlayer.workersLeft > 0 && 
-                    candidatePlayer.turnsToSkip === 0) {
+                    (!state.skippedTurns || state.skippedTurns[nextPlayerId] === 0)) {
                     nextPlayer = candidatePlayer;
                     break;
                 }
