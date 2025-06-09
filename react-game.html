@@ -383,16 +383,16 @@
                     const purpleVPUpdates = [];
                     const playersWithWorkers = state.players.filter(p => p.workersLeft > 0);
                     
-                    // First player to run out gets 4 VP
+                    // First player to run out gets 3 VP
                     if (newPlayersOutOfWorkers.length === 1 && newPlayersOutOfWorkers[0] === state.currentPlayer) {
-                        purpleVPUpdates.push({ playerId: state.currentPlayer, vp: 4, reason: 'first to run out of workers' });
+                        purpleVPUpdates.push({ playerId: state.currentPlayer, vp: 3, reason: 'first to run out of workers' });
                     }
-                    // Last player to run out gets 4 VP (when only 1 player left with workers)
+                    // Last player to run out gets 3 VP (when only 1 player left with workers)
                     if (playersWithWorkers.length === 1 && currentPlayerObj.workersLeft === 0) {
                         const lastPlayer = playersWithWorkers[0];
                         if (!newPlayersOutOfWorkers.includes(lastPlayer.id)) {
                             newPlayersOutOfWorkers.push(lastPlayer.id);
-                            purpleVPUpdates.push({ playerId: lastPlayer.id, vp: 4, reason: 'last to run out of workers' });
+                            purpleVPUpdates.push({ playerId: lastPlayer.id, vp: 3, reason: 'last to run out of workers' });
                         }
                     }
                     
@@ -427,11 +427,19 @@
                                     effects: (player.effects || []).filter(effect => 
                                         !effect.includes('Will take an extra turn after this one')
                                     ),
-                                    victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0)
+                                    victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
+                                    vpSources: vpUpdate ? {
+                                        ...player.vpSources,
+                                        purpleWorkers: (player.vpSources?.purpleWorkers || 0) + vpUpdate.vp
+                                    } : player.vpSources
                                 }
                                 : {
                                     ...player,
-                                    victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0)
+                                    victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
+                                    vpSources: vpUpdate ? {
+                                        ...player.vpSources,
+                                        purpleWorkers: (player.vpSources?.purpleWorkers || 0) + vpUpdate.vp
+                                    } : player.vpSources
                                 };
                         });
                         
@@ -471,18 +479,30 @@
                                     effects: (player.effects || []).filter(effect => 
                                         !effect.includes('Will take an extra turn after this one')
                                     ),
-                                    victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0)
+                                    victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
+                                    vpSources: vpUpdate ? {
+                                        ...player.vpSources,
+                                        purpleWorkers: (player.vpSources?.purpleWorkers || 0) + vpUpdate.vp
+                                    } : player.vpSources
                                 }
                                 : {
                                     ...player,
-                                    victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0)
+                                    victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
+                                    vpSources: vpUpdate ? {
+                                        ...player.vpSources,
+                                        purpleWorkers: (player.vpSources?.purpleWorkers || 0) + vpUpdate.vp
+                                    } : player.vpSources
                                 };
                         })
                         : state.players.map(player => {
                             const vpUpdate = purpleVPUpdates.find(u => u.playerId === player.id);
                             return vpUpdate ? {
                                 ...player,
-                                victoryPoints: player.victoryPoints + vpUpdate.vp
+                                victoryPoints: player.victoryPoints + vpUpdate.vp,
+                                vpSources: {
+                                    ...player.vpSources,
+                                    purpleWorkers: (player.vpSources?.purpleWorkers || 0) + vpUpdate.vp
+                                }
                             } : player;
                         });
                     
