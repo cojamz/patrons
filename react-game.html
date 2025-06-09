@@ -7524,6 +7524,10 @@
             // Use a ref to track sync timeout
             const syncTimeoutRef = React.useRef(null);
             
+            // Use a ref to always have access to the latest state
+            const stateRef = React.useRef(state);
+            stateRef.current = state;
+            
             // Sync state to Firebase whenever state changes (debounced)
             useEffect(() => {
                 if (state.roomCode && state.gameStarted) {
@@ -7534,28 +7538,30 @@
                     
                     // Debounce the sync by 200ms
                     syncTimeoutRef.current = setTimeout(() => {
-                        syncGameState(state.roomCode, {
-                        currentPlayer: state.currentPlayer,
-                        turnDirection: state.turnDirection,
-                        players: state.players,
-                        occupiedSpaces: state.occupiedSpaces,
-                        round: state.round,
-                        turnOrder: state.turnOrder,
-                        workerPlacedThisTurn: state.workerPlacedThisTurn,
-                        workersToPlace: state.workersToPlace,
-                        actionLog: state.actionLog,
-                        gameStarted: state.gameStarted,
-                        gameLayers: state.gameLayers,
-                        closedShops: state.closedShops,
-                        shopCostModifier: state.shopCostModifier,
-                        shopUsedBeforeWorkers: state.shopUsedBeforeWorkers,
-                        shopUsedAfterWorkers: state.shopUsedAfterWorkers,
-                        playersOutOfWorkers: state.playersOutOfWorkers,
-                        skippedTurns: state.skippedTurns,
-                        waitingForOthers: state.waitingForOthers,
-                        roundActions: state.roundActions,
-                        gameOver: state.gameOver,
-                        automaticVPs: state.automaticVPs
+                        // Use the ref to get the latest state
+                        const currentState = stateRef.current;
+                        syncGameState(currentState.roomCode, {
+                        currentPlayer: currentState.currentPlayer,
+                        turnDirection: currentState.turnDirection,
+                        players: currentState.players,
+                        occupiedSpaces: currentState.occupiedSpaces,
+                        round: currentState.round,
+                        turnOrder: currentState.turnOrder,
+                        workerPlacedThisTurn: currentState.workerPlacedThisTurn,
+                        workersToPlace: currentState.workersToPlace,
+                        actionLog: currentState.actionLog,
+                        gameStarted: currentState.gameStarted,
+                        gameLayers: currentState.gameLayers,
+                        closedShops: currentState.closedShops,
+                        shopCostModifier: currentState.shopCostModifier,
+                        shopUsedBeforeWorkers: currentState.shopUsedBeforeWorkers,
+                        shopUsedAfterWorkers: currentState.shopUsedAfterWorkers,
+                        playersOutOfWorkers: currentState.playersOutOfWorkers,
+                        skippedTurns: currentState.skippedTurns,
+                        waitingForOthers: currentState.waitingForOthers,
+                        roundActions: currentState.roundActions,
+                        gameOver: currentState.gameOver,
+                        automaticVPs: currentState.automaticVPs
                     });
                     }, 200);
                 }
