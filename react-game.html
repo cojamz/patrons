@@ -2033,11 +2033,13 @@
                               'Is red action:', isRedAction);
                     
                     if (!isRedAction) {
-                        // Check if red layer is full
-                        const redActions = redLayer ? redLayer.actions.map(a => a.id) : [];
-                        const redIsFull = redActions.every(id => state.occupiedSpaces[id]);
+                        // Check if red layer is full (only considering actions available in current round)
+                        const availableRedActions = redLayer ? 
+                            redLayer.actions.filter(a => a.round <= state.round).map(a => a.id) : [];
+                        const redIsFull = availableRedActions.length === 0 || 
+                            availableRedActions.every(id => state.occupiedSpaces[id]);
                         
-                        console.log('FORCE_RED_DEBUG - Red actions:', redActions,
+                        console.log('FORCE_RED_DEBUG - Available red actions for round', state.round, ':', availableRedActions,
                                   'Red is full:', redIsFull);
                         
                         if (!redIsFull) {
@@ -2799,12 +2801,12 @@
                 }
                 
                 // Current player chooses their own worker to swap
-                // IMPORTANT: Exclude the current swap action to prevent infinite loops
+                // IMPORTANT: Exclude ALL swap actions to prevent chaining
                 const myWorkers = allWorkers.filter(([spaceId, pid]) => 
-                    pid === player.id && spaceId !== actionId
+                    pid === player.id && spaceId !== actionId && spaceId !== 'redHybrid1' && spaceId !== 'redHybrid2'
                 );
                 const otherWorkers = allWorkers.filter(([spaceId, pid]) => 
-                    pid !== player.id && spaceId !== actionId
+                    pid !== player.id && spaceId !== actionId && spaceId !== 'redHybrid1' && spaceId !== 'redHybrid2'
                 );
                 
                 if (myWorkers.length === 0 || otherWorkers.length === 0) {
@@ -2874,12 +2876,11 @@
                 
                 // Execute actions for the affected players
                 if (actionId === 'redHybrid1') {
-                    // Both players get actions
+                    // Both players get actions where their workers END UP
                     await executeAction(worker1.spaceId, currentState.players.find(p => p.id === worker2.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
                     await executeAction(worker2.spaceId, currentState.players.find(p => p.id === worker1.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
                 } else {
-                    // Only current player gets actions
-                    await executeAction(worker1.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
+                    // R2: Only current player gets action of where they MOVE TO (not where they were)
                     await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
                 }
                 
