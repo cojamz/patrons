@@ -587,6 +587,14 @@
                     const tempSkippedTurns = { ...effectiveSkippedTurns };
                     const skippedPlayers = [];
                     
+                    console.log('END_TURN: Skip turns state', {
+                        effectiveSkippedTurns,
+                        tempSkippedTurns,
+                        currentPlayer: state.currentPlayer,
+                        turnOrder: state.turnOrder,
+                        turnDirection: state.turnDirection
+                    });
+                    
                     // First, determine the next player based on snake draft rules
                     const currentIndex = state.turnOrder.indexOf(state.currentPlayer);
                     let isSnakeDraftReversal = false;
@@ -611,31 +619,47 @@
                         }
                     }
                     
-                    // If this is a snake draft reversal (same player), don't check skips yet
-                    if (!isSnakeDraftReversal) {
-                        // Now check for skips, waiting, and workers
-                        do {
+                    // Check for skips, waiting, and workers
+                    // Even if it's a snake draft reversal, we need to check if the player should skip
+                    do {
                             attempts++;
                             if (attempts > maxAttempts) break; // Prevent infinite loop
                             
                             // Check if player should skip and track it
                             if (tempSkippedTurns[nextPlayer] > 0) {
+                                console.log(`Player ${nextPlayer} should skip turn. Skips remaining: ${tempSkippedTurns[nextPlayer]}`);
                                 skippedPlayers.push(nextPlayer);
                                 tempSkippedTurns[nextPlayer]--;
                                 
-                                // Find the next player after this skipped one
+                                // Move to next player in turn order
                                 const skipIndex = state.turnOrder.indexOf(nextPlayer);
+                                
+                                // Calculate next player based on current direction
                                 if (nextDirection === 1) {
                                     if (skipIndex === state.turnOrder.length - 1) {
+                                        // At end going forward - reverse and go back
                                         nextDirection = -1;
-                                        nextPlayer = state.turnOrder[skipIndex - 1];
+                                        if (skipIndex > 0) {
+                                            nextPlayer = state.turnOrder[skipIndex - 1];
+                                        } else {
+                                            // Only one player left, they go again
+                                            nextPlayer = state.turnOrder[skipIndex];
+                                            break;
+                                        }
                                     } else {
                                         nextPlayer = state.turnOrder[skipIndex + 1];
                                     }
                                 } else {
                                     if (skipIndex === 0) {
+                                        // At start going backward - reverse and go forward
                                         nextDirection = 1;
-                                        nextPlayer = state.turnOrder[skipIndex + 1];
+                                        if (skipIndex < state.turnOrder.length - 1) {
+                                            nextPlayer = state.turnOrder[skipIndex + 1];
+                                        } else {
+                                            // Only one player left, they go again
+                                            nextPlayer = state.turnOrder[skipIndex];
+                                            break;
+                                        }
                                     } else {
                                         nextPlayer = state.turnOrder[skipIndex - 1];
                                     }
@@ -850,7 +874,8 @@
                             ...state.actionLog.slice(-9),
                             ...extraTurnLogMessages,
                             ...purpleVPUpdates.map(u => `Player ${u.playerId}: +${u.vp} VP (${u.reason})`),
-                            ...waitingPlayersUpdates.map(u => `Player ${u.playerId}: Can now play all ${u.workers} workers!`)
+                            ...waitingPlayersUpdates.map(u => `Player ${u.playerId}: Can now play all ${u.workers} workers!`),
+                            ...skippedPlayers.map(playerId => `Player ${playerId}: Turn skipped (${tempSkippedTurns[playerId]} skips remaining)`)
                         ].filter(Boolean)
                     };
                 
@@ -2327,7 +2352,7 @@
                     skippedTurns: newSkippedTurns
                 });
                 
-                const message = `Player ${player.id}: gain4purpleSkip → +4 purple, will skip next turn`;
+                const message = `Player ${player.id}: gain4purpleSkip → +4 purple, will skip next turn (total skips: ${newSkippedTurns[player.id]})`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -2410,7 +2435,7 @@
                     skippedTurns: newSkippedTurns
                 });
                 
-                const message = `Player ${player.id}: gain5purpleSkip → +5 purple, skipping turn`;
+                const message = `Player ${player.id}: gain5purpleSkip → +5 purple, will skip next turn (total skips: ${newSkippedTurns[player.id]})`;
                 dispatch({ type: 'ADD_LOG', message });
                 
                 // Force end turn
@@ -3462,7 +3487,7 @@
                     skippedTurns: newSkippedTurns
                 });
                 
-                const message = `Player ${player.id}: gain3goldSkip → +3 gold, will skip next turn`;
+                const message = `Player ${player.id}: gain3goldSkip → +3 gold, will skip next turn (total skips: ${newSkippedTurns[player.id]})`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -5118,13 +5143,32 @@
             
             console.log('executeYellow3Shop - Player', player.id, 'selected gems:', selectedGems);
             
+            // Check for doubling effect
+            const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+            let finalGems = { ...selectedGems };
+            
+            if (hasDoubleEffect) {
+                // Double all gems
+                Object.keys(finalGems).forEach(color => {
+                    finalGems[color] *= 2;
+                });
+                
+                // Remove the doubling effect after use
+                dispatch({
+                    type: 'UPDATE_PLAYER_EFFECTS',
+                    playerId: player.id,
+                    effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                });
+            }
+            
             dispatch({
                 type: 'UPDATE_RESOURCES',
                 playerId: player.id,
-                resources: selectedGems
+                resources: finalGems
             });
             
-            const message = `Player ${player.id}: Yellow R3 shop → Gained 7 gems`;
+            const totalGems = Object.values(finalGems).reduce((sum, amount) => sum + amount, 0);
+            const message = `Player ${player.id}: Yellow R3 shop → Gained ${totalGems} gems${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
@@ -5147,13 +5191,32 @@
             
             console.log('executeYellow2Shop - Player', player.id, 'selected gems:', selectedGems);
             
+            // Check for doubling effect
+            const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+            let finalGems = { ...selectedGems };
+            
+            if (hasDoubleEffect) {
+                // Double all gems
+                Object.keys(finalGems).forEach(color => {
+                    finalGems[color] *= 2;
+                });
+                
+                // Remove the doubling effect after use
+                dispatch({
+                    type: 'UPDATE_PLAYER_EFFECTS',
+                    playerId: player.id,
+                    effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                });
+            }
+            
             dispatch({
                 type: 'UPDATE_RESOURCES',
                 playerId: player.id,
-                resources: selectedGems
+                resources: finalGems
             });
             
-            const message = `Player ${player.id}: Yellow R2 shop → Gained 5 gems`;
+            const totalGems = Object.values(finalGems).reduce((sum, amount) => sum + amount, 0);
+            const message = `Player ${player.id}: Yellow R2 shop → Gained ${totalGems} gems${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
@@ -5444,19 +5507,40 @@
                 }
             }
             
-            // Pay 1 gold and 1 any resource, gain 2 gold
-            const resources = { gold: -1 + 2 }; // -1 cost + 2 gain = +1 net
+            // Pay the cost first
+            const costResources = { gold: -1 };
             Object.entries(selectedGems).forEach(([color, amount]) => {
-                resources[color] = resources[color] ? resources[color] - amount : -amount;
+                costResources[color] = costResources[color] ? costResources[color] - amount : -amount;
             });
             
             dispatch({
                 type: 'UPDATE_RESOURCES',
                 playerId: player.id,
-                resources: resources
+                resources: costResources
             });
             
-            const message = `Player ${player.id}: Gold R1 shop → Paid 1 gold + 1 resource, gained 2 gold`;
+            // Then apply the gain with doubling check
+            const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+            let goldGain = 2;
+            
+            if (hasDoubleEffect) {
+                goldGain *= 2;
+                
+                // Remove the doubling effect after use
+                dispatch({
+                    type: 'UPDATE_PLAYER_EFFECTS',
+                    playerId: player.id,
+                    effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                });
+            }
+            
+            dispatch({
+                type: 'UPDATE_RESOURCES',
+                playerId: player.id,
+                resources: { gold: goldGain }
+            });
+            
+            const message = `Player ${player.id}: Gold R1 shop → Paid 1 gold + 1 resource, gained ${goldGain} gold${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
@@ -5480,19 +5564,40 @@
                 return;
             }
             
-            // Pay 2 gold and 2 any resources, gain 4 gold
-            const resources = { gold: -2 + 4 }; // -2 cost + 4 gain = +2 net
+            // Pay the cost first
+            const costResources = { gold: -2 };
             Object.entries(selectedGems).forEach(([color, amount]) => {
-                resources[color] = resources[color] ? resources[color] - amount : -amount;
+                costResources[color] = costResources[color] ? costResources[color] - amount : -amount;
             });
             
             dispatch({
                 type: 'UPDATE_RESOURCES',
                 playerId: player.id,
-                resources: resources
+                resources: costResources
             });
             
-            const message = `Player ${player.id}: Gold R2 shop → Paid 2 gold + 2 resources, gained 4 gold`;
+            // Then apply the gain with doubling check
+            const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+            let goldGain = 4;
+            
+            if (hasDoubleEffect) {
+                goldGain *= 2;
+                
+                // Remove the doubling effect after use
+                dispatch({
+                    type: 'UPDATE_PLAYER_EFFECTS',
+                    playerId: player.id,
+                    effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                });
+            }
+            
+            dispatch({
+                type: 'UPDATE_RESOURCES',
+                playerId: player.id,
+                resources: { gold: goldGain }
+            });
+            
+            const message = `Player ${player.id}: Gold R2 shop → Paid 2 gold + 2 resources, gained ${goldGain} gold${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
@@ -5516,19 +5621,42 @@
                 return;
             }
             
-            // Pay 3 gold and 3 any resources, double gold
-            const resources = { gold: -3 + (goldAmount * 2) }; // -3 cost + double current gold
+            // Pay the cost first
+            const costResources = { gold: -3 };
             Object.entries(selectedGems).forEach(([color, amount]) => {
-                resources[color] = resources[color] ? resources[color] - amount : -amount;
+                costResources[color] = costResources[color] ? costResources[color] - amount : -amount;
             });
             
             dispatch({
                 type: 'UPDATE_RESOURCES',
                 playerId: player.id,
-                resources: resources
+                resources: costResources
             });
             
-            const message = `Player ${player.id}: Gold R3 shop → Paid 3 gold + 3 resources, doubled gold from ${goldAmount} to ${goldAmount * 2}`;
+            // Calculate the gain (double the original gold amount)
+            const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+            let goldGain = goldAmount * 2; // This doubles the original amount
+            
+            if (hasDoubleEffect) {
+                // If doubling effect is active, the gain is quadrupled (2x from shop, 2x from effect)
+                goldGain *= 2;
+                
+                // Remove the doubling effect after use
+                dispatch({
+                    type: 'UPDATE_PLAYER_EFFECTS',
+                    playerId: player.id,
+                    effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                });
+            }
+            
+            dispatch({
+                type: 'UPDATE_RESOURCES',
+                playerId: player.id,
+                resources: { gold: goldGain }
+            });
+            
+            const finalGold = goldAmount - 3 + goldGain;
+            const message = `Player ${player.id}: Gold R3 shop → Paid 3 gold + 3 resources, gold went from ${goldAmount} to ${finalGold}${hasDoubleEffect ? ' (DOUBLE DOUBLED!)' : ''}`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
@@ -5938,14 +6066,29 @@
         
         // Execute silver 3 shop effect - Gain 7 Silver, Each Other Player Gains 2 Silver
         async function executeSilver3Shop(player, dispatch, state) {
-            // Give current player 7 silver
+            // Check for doubling effect (only for current player)
+            const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+            let silverAmount = 7;
+            
+            if (hasDoubleEffect) {
+                silverAmount *= 2;
+                
+                // Remove the doubling effect after use
+                dispatch({
+                    type: 'UPDATE_PLAYER_EFFECTS',
+                    playerId: player.id,
+                    effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                });
+            }
+            
+            // Give current player silver
             dispatch({
                 type: 'UPDATE_RESOURCES',
                 playerId: player.id,
-                resources: { silver: 7 }
+                resources: { silver: silverAmount }
             });
             
-            // Give all other players 2 silver
+            // Give all other players 2 silver (not doubled)
             const otherPlayers = state.players.filter(p => p.id !== player.id);
             otherPlayers.forEach(otherPlayer => {
                 dispatch({
@@ -5955,7 +6098,7 @@
                 });
             });
             
-            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R3 shop → +7 silver, all other players +2 silver` });
+            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R3 shop → +${silverAmount} silver${hasDoubleEffect ? ' (DOUBLED!)' : ''}, all other players +2 silver` });
         }
         
         // Execute any shop benefit by shop ID
