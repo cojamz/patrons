@@ -2067,10 +2067,10 @@
                         });
                         
                         if (availableActions.length > 1) {
-                            alert('You have no other workers on the board to swap! Choose a different action.');
-                            return;
+                            const proceed = confirm('WARNING: You have no other workers on the board to swap! This action will only give you the resource bonus. Continue anyway?');
+                            if (!proceed) return;
                         }
-                        // If this is the only action available, allow placement but it won't trigger swap
+                        // If this is the only action available, allow placement
                     }
                 }
                 
@@ -2098,21 +2098,21 @@
                         });
                         
                         if (availableActions.length > 1) {
-                            alert('You have no workers on non-purple quads to take back! Choose a different action.');
-                            return;
+                            const proceed = confirm('WARNING: You have no workers on non-purple quads to take back! This action will only give you the purple resources. Continue anyway?');
+                            if (!proceed) return;
                         }
                     }
                 }
                 
-                // Validate play more workers actions - check if have enough workers
+                // Validate play more workers actions - warn if not enough workers
                 if (actionId === 'playTwoWorkers' && currentPlayer.workersLeft < 2) {
-                    alert(`You only have ${currentPlayer.workersLeft} worker(s) left. This action requires at least 2.`);
-                    return;
+                    const proceed = confirm(`WARNING: You only have ${currentPlayer.workersLeft} worker(s) left. You won't be able to place 2 workers. Continue anyway?`);
+                    if (!proceed) return;
                 }
                 
                 if (actionId === 'playThreeWorkers' && currentPlayer.workersLeft < 3) {
-                    alert(`You only have ${currentPlayer.workersLeft} worker(s) left. This action requires at least 3.`);
-                    return;
+                    const proceed = confirm(`WARNING: You only have ${currentPlayer.workersLeft} worker(s) left. You won't be able to place 3 workers. Continue anyway?`);
+                    if (!proceed) return;
                 }
                 
                 // Store action info before placing worker, in case we need to undo
@@ -7092,7 +7092,7 @@
                     }
                 }
                 
-                // Special validation for Purple R1 shop - prevent wasting if already have extra turn
+                // Special validation for Purple R1 shop - warn if already have extra turn
                 if (color === 'purple' && shopRound === 1) {
                     const hasExtraTurnEffect = (currentPlayer.effects || []).some(effect => 
                         effect.includes('Will take an extra turn after this one')
@@ -7100,39 +7100,39 @@
                     const hasExtraTurns = (currentPlayer.extraTurns || 0) > 0;
                     
                     if (hasExtraTurnEffect || hasExtraTurns) {
-                        alert('You already have an extra turn queued! Cannot purchase another one.');
-                        return;
+                        const proceed = confirm('WARNING: You already have an extra turn queued! This purchase will have no additional effect. Continue anyway?');
+                        if (!proceed) return;
                     }
                 }
                 
-                // Special validation for Yellow R1 shop - prevent wasting if already have double effect
+                // Special validation for Yellow R1 shop - warn if already have double effect
                 if (color === 'yellow' && shopRound === 1) {
                     const hasDoubleEffect = (currentPlayer.effects || []).some(effect => 
                         effect.includes('Next gain will be doubled')
                     );
                     
                     if (hasDoubleEffect) {
-                        alert('You already have the double gain effect active! Cannot purchase another one.');
-                        return;
+                        const proceed = confirm('WARNING: You already have the double gain effect active! This purchase will have no additional effect. Continue anyway?');
+                        if (!proceed) return;
                     }
                 }
                 
-                // Special validation for Purple R2/R3 shops - check worker availability
+                // Special validation for Purple R2/R3 shops - warn about worker availability
                 if (color === 'purple' && shopRound === 2) {
                     if (currentPlayer.workersLeft < 2) {
-                        alert(`You only have ${currentPlayer.workersLeft} worker(s) left. Need at least 2 to benefit from this shop.`);
-                        return;
+                        const proceed = confirm(`WARNING: You only have ${currentPlayer.workersLeft} worker(s) left. You need at least 2 to fully benefit from this shop. Continue anyway?`);
+                        if (!proceed) return;
                     }
                 }
                 
                 if (color === 'purple' && shopRound === 3) {
                     if (currentPlayer.workersLeft === 0) {
-                        alert('You have no workers left! This shop would have no effect.');
-                        return;
+                        const proceed = confirm('WARNING: You have no workers left! This shop will have no effect. Continue anyway?');
+                        if (!proceed) return;
                     }
                 }
                 
-                // Special validation for Blue R1 shop - check if any shops are open to close
+                // Special validation for Blue R1 shop - warn if all shops closed
                 if (color === 'blue' && shopRound === 1) {
                     const allShops = [];
                     const colors = state.gameLayers ? Object.keys(state.gameLayers) : [];
@@ -7144,30 +7144,30 @@
                     
                     const openShops = allShops.filter(shopId => !state.closedShops[shopId]);
                     if (openShops.length === 0) {
-                        alert('All shops are already closed! This shop would have no effect.');
-                        return;
+                        const proceed = confirm('WARNING: All shops are already closed! This shop will have no effect. Continue anyway?');
+                        if (!proceed) return;
                     }
                 }
                 
-                // Special validation for Red R1 shop - check if player has workers to repeat
+                // Special validation for Red R1 shop - warn if no good workers to repeat
                 if (color === 'red' && shopRound === 1) {
                     const playerWorkers = Object.entries(state.occupiedSpaces)
                         .filter(([actionId, playerId]) => playerId === currentPlayer.id);
                     
                     if (playerWorkers.length === 0) {
-                        alert('You have no workers on the board to repeat actions from!');
-                        return;
-                    }
-                    
-                    // Check if any of the worker actions are repeatable (exclude problematic ones)
-                    const excludedActions = ['redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2'];
-                    const repeatableWorkers = playerWorkers.filter(([actionId]) => 
-                        !excludedActions.includes(actionId)
-                    );
-                    
-                    if (repeatableWorkers.length === 0) {
-                        alert('All your workers are on non-repeatable actions (swap/repeat actions)!');
-                        return;
+                        const proceed = confirm('WARNING: You have no workers on the board to repeat actions from! Continue anyway?');
+                        if (!proceed) return;
+                    } else {
+                        // Check if any of the worker actions are repeatable (exclude problematic ones)
+                        const excludedActions = ['redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2'];
+                        const repeatableWorkers = playerWorkers.filter(([actionId]) => 
+                            !excludedActions.includes(actionId)
+                        );
+                        
+                        if (repeatableWorkers.length === 0) {
+                            const proceed = confirm('WARNING: All your workers are on non-repeatable actions (swap/repeat actions). You will have limited options. Continue anyway?');
+                            if (!proceed) return;
+                        }
                     }
                 }
                 
