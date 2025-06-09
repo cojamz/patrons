@@ -246,23 +246,28 @@
         function gameReducer(state, action) {
             switch (action.type) {
                 case 'PLACE_WORKER':
-                    const newWorkersToPlace = Math.max(0, state.workersToPlace - 1);
-                    const currentPlayerWorkers = state.players.find(p => p.id === state.currentPlayer).workersLeft - 1;
+                    // Allow specifying which player's worker to place (for Red R2 shop effect)
+                    const workerOwner = action.playerId || state.currentPlayer;
+                    const isCurrentPlayerWorker = workerOwner === state.currentPlayer;
+                    
+                    const newWorkersToPlace = isCurrentPlayerWorker ? Math.max(0, state.workersToPlace - 1) : state.workersToPlace;
+                    const workerOwnerPlayer = state.players.find(p => p.id === workerOwner);
+                    const workerOwnerWorkersLeft = workerOwnerPlayer.workersLeft - 1;
                     
                     return {
                         ...state,
                         occupiedSpaces: {
                             ...state.occupiedSpaces,
-                            [action.actionId]: state.currentPlayer
+                            [action.actionId]: workerOwner
                         },
                         players: state.players.map(player => 
-                            player.id === state.currentPlayer 
-                                ? { ...player, workersLeft: currentPlayerWorkers }
+                            player.id === workerOwner 
+                                ? { ...player, workersLeft: workerOwnerWorkersLeft }
                                 : player
                         ),
-                        workerPlacedThisTurn: true,
+                        workerPlacedThisTurn: isCurrentPlayerWorker ? true : state.workerPlacedThisTurn,
                         workersToPlace: newWorkersToPlace,
-                        roundActions: [...state.roundActions, { playerId: state.currentPlayer, actionId: action.actionId }]
+                        roundActions: [...state.roundActions, { playerId: workerOwner, actionId: action.actionId }]
                     };
                 
                 case 'UPDATE_RESOURCES':
@@ -1698,7 +1703,9 @@
                 if (!selectedGems) {
                     // If cancelled, give default resources
                     const resources = { red: 1, yellow: 1, blue: 1 };
-                    dispatch({ type: 'GAIN_RESOURCES', playerId: player.id, resources });
+                    dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources });
+                    const message = `Player ${player.id}: gain3yellow → +1 red, +1 yellow, +1 blue (default)`;
+                    dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
                 
@@ -1741,7 +1748,9 @@
                 if (!selectedGems) {
                     // If cancelled, give default resources
                     const resources = { red: 1, yellow: 1 };
-                    dispatch({ type: 'GAIN_RESOURCES', playerId: player.id, resources });
+                    dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources });
+                    const message = `Player ${player.id}: gain2yellow → +1 red, +1 yellow (default)`;
+                    dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
                 
@@ -2922,7 +2931,9 @@
             
             // Gain VP for Each Gold You Have
             if (actionId === 'goldVPPerGold') {
-                const goldAmount = player.resources.gold || 0;
+                // Get fresh player state
+                const currentPlayer = currentState.players.find(p => p.id === player.id);
+                const goldAmount = currentPlayer.resources.gold || 0;
                 if (goldAmount > 0) {
                     dispatch({
                         type: 'UPDATE_VP',
@@ -3007,7 +3018,9 @@
             
             // Spend 1 ⭐ for 2 VP
             if (actionId === 'spend1AnyFor2VP') {
-                const totalGems = Object.values(player.resources).reduce((sum, amount) => sum + amount, 0);
+                // Get fresh player state
+                const currentPlayer = currentState.players.find(p => p.id === player.id);
+                const totalGems = Object.values(currentPlayer.resources).reduce((sum, amount) => sum + amount, 0);
                 if (totalGems < 1) {
                     const message = `Player ${player.id}: spend1AnyFor2VP → Need at least 1 gem`;
                     dispatch({ type: 'ADD_LOG', message });
@@ -3050,7 +3063,9 @@
             
             // Spend 2 ⭐ for 3 VP
             if (actionId === 'spend2AnyFor3VP') {
-                const totalGems = Object.values(player.resources).reduce((sum, amount) => sum + amount, 0);
+                // Get fresh player state
+                const currentPlayer = currentState.players.find(p => p.id === player.id);
+                const totalGems = Object.values(currentPlayer.resources).reduce((sum, amount) => sum + amount, 0);
                 if (totalGems < 2) {
                     const message = `Player ${player.id}: spend2AnyFor3VP → Need at least 2 gems`;
                     dispatch({ type: 'ADD_LOG', message });
@@ -3290,7 +3305,6 @@
             
             // Steal 2 ⭐ from another player
             if (actionId === 'blackSteal2Any') {
-                console.log('Executing blackSteal2Any action');
                 // Choose a player to steal from
                 const otherPlayers = currentState.players.filter(p => {
                     if (p.id === player.id) return false;
@@ -5102,8 +5116,12 @@
                 occupiedSpaces: newOccupiedSpaces
             });
             
-            // Execute the new action
-            await executeAction(newAction, player, dispatch, state, state.gameLayers, 0);
+            // Execute the new action with updated state
+            const updatedState = {
+                ...state,
+                occupiedSpaces: newOccupiedSpaces
+            };
+            await executeAction(newAction, player, dispatch, updatedState, state.gameLayers, 0);
             
             const message = `Player ${player.id}: White R3 shop → -3 VP, moved worker to ${newAction}`;
             dispatch({ type: 'ADD_LOG', message });
@@ -5692,7 +5710,90 @@
                 });
                 
             } else if (effect.includes('Can place the next player\'s worker')) {
-                alert('Place next player\'s worker effect not implemented yet');
+                // Find the next player in turn order
+                const currentIndex = state.turnOrder.indexOf(state.currentPlayer);
+                let nextIndex = currentIndex + state.turnDirection;
+                
+                // Handle snake draft wrap-around
+                if (nextIndex >= state.turnOrder.length || nextIndex < 0) {
+                    alert('You are the last player in this direction - no next player\'s worker to place');
+                    // Remove the effect
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: playerId,
+                        effects: (player.effects || []).filter((_, i) => i !== effectIndex)
+                    });
+                    return;
+                }
+                
+                const nextPlayerId = state.turnOrder[nextIndex];
+                const nextPlayer = state.players.find(p => p.id === nextPlayerId);
+                
+                if (!nextPlayer || nextPlayer.workersLeft <= 0) {
+                    alert(`Player ${nextPlayerId} has no workers left to place`);
+                    // Remove the effect
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: playerId,
+                        effects: (player.effects || []).filter((_, i) => i !== effectIndex)
+                    });
+                    return;
+                }
+                
+                // Show available actions for the next player's worker
+                const availableActions = [];
+                Object.entries(state.gameLayers || {}).forEach(([color, layer]) => {
+                    layer.actions.forEach(action => {
+                        if (action.round <= state.round && !state.occupiedSpaces[action.id]) {
+                            availableActions.push({
+                                label: `${color} - ${action.title}`,
+                                value: action.id
+                            });
+                        }
+                    });
+                });
+                
+                if (availableActions.length === 0) {
+                    alert('No available actions to place a worker on');
+                    // Remove the effect
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: playerId,
+                        effects: (player.effects || []).filter((_, i) => i !== effectIndex)
+                    });
+                    return;
+                }
+                
+                // Let current player choose where to place next player's worker
+                const choice = await showChoice(
+                    dispatch, 
+                    `Choose where to place Player ${nextPlayerId}'s worker (${nextPlayer.workersLeft} workers left)`,
+                    availableActions
+                );
+                
+                if (choice) {
+                    // Place the worker
+                    dispatch({ type: 'PLACE_WORKER', actionId: choice, playerId: nextPlayerId });
+                    
+                    // Update next player's workers
+                    dispatch({
+                        type: 'UPDATE_PLAYER',
+                        playerId: nextPlayerId,
+                        updates: { workersLeft: nextPlayer.workersLeft - 1 }
+                    });
+                    
+                    // Execute the action for the next player
+                    await executeAction(choice, nextPlayer, dispatch, state, state.gameLayers);
+                    
+                    dispatch({ type: 'ADD_LOG', message: `Player ${playerId} placed Player ${nextPlayerId}'s worker on ${choice}` });
+                }
+                
+                // Remove the effect after use
+                dispatch({
+                    type: 'UPDATE_PLAYER_EFFECTS',
+                    playerId: playerId,
+                    effects: (player.effects || []).filter((_, i) => i !== effectIndex)
+                });
             } else if (effect.includes('Can undo the last player\'s turn')) {
                 alert('Undo turn effect not implemented yet');
             }
@@ -7020,10 +7121,19 @@
                         workersToPlace: state.workersToPlace,
                         actionLog: state.actionLog,
                         gameStarted: state.gameStarted,
-                        gameLayers: state.gameLayers
+                        gameLayers: state.gameLayers,
+                        closedShops: state.closedShops,
+                        shopCostModifier: state.shopCostModifier,
+                        shopUsedBeforeWorkers: state.shopUsedBeforeWorkers,
+                        shopUsedAfterWorkers: state.shopUsedAfterWorkers,
+                        playersOutOfWorkers: state.playersOutOfWorkers,
+                        skippedTurns: state.skippedTurns,
+                        waitingForOthers: state.waitingForOthers,
+                        roundActions: state.roundActions,
+                        gameOver: state.gameOver
                     });
                 }
-            }, [state.currentPlayer, state.players, state.occupiedSpaces, state.round, state.actionLog, state.workersToPlace, state.gameLayers]);
+            }, [state.currentPlayer, state.players, state.occupiedSpaces, state.round, state.actionLog, state.workersToPlace, state.gameLayers, state.closedShops, state.shopCostModifier, state.shopUsedBeforeWorkers, state.shopUsedAfterWorkers, state.playersOutOfWorkers, state.skippedTurns, state.waitingForOthers, state.roundActions, state.gameOver]);
             
             const handleEndTurn = async () => {
                 // Validate multiplayer turn
