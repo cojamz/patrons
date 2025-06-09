@@ -95,6 +95,20 @@
             }
         }
         
+        /* Pulse animation for current player */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+        
+        .pulse-current {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
         /* For users who prefer reduced motion */
         @media (prefers-reduced-motion: reduce) {
             html {
@@ -245,7 +259,10 @@
             connectionStatus: 'disconnected', // 'disconnected', 'connecting', 'connected'
             gameOver: false,
             syncingFromFirebase: false,
-            stateVersion: 0
+            stateVersion: 0,
+            
+            // Notification system for multiplayer
+            notifications: []
         };
 
         function gameReducer(state, action) {
@@ -991,6 +1008,26 @@
                         ...state,
                         actionLog: [...state.actionLog.slice(-9), action.message] // Keep last 10 messages
                     };
+                    
+                case 'ADD_NOTIFICATION':
+                    // Only add notifications in multiplayer for actions by other players
+                    if (!state.roomCode || !action.notification) {
+                        return state;
+                    }
+                    return {
+                        ...state,
+                        notifications: [...state.notifications, {
+                            id: Date.now(),
+                            ...action.notification,
+                            timestamp: Date.now()
+                        }].slice(-5) // Keep only last 5 notifications
+                    };
+                    
+                case 'CLEAR_NOTIFICATION':
+                    return {
+                        ...state,
+                        notifications: state.notifications.filter(n => n.id !== action.id)
+                    };
                 
                 case 'RESET_GAME':
                     // Preserve player emojis on reset
@@ -1076,6 +1113,24 @@
                         const vpShopId = `${color}vp`;
                         flippedShops[vpShopId] = !state.closedShops[vpShopId];
                     });
+                    
+                    // Add notification if in multiplayer
+                    if (state.roomCode && action.playerId && action.playerId !== state.myPlayerId) {
+                        const newState = {
+                            ...state,
+                            closedShops: flippedShops,
+                            notifications: [...state.notifications, {
+                                id: Date.now(),
+                                type: 'shop_toggle',
+                                icon: '🔵',
+                                title: 'All Shops Toggled!',
+                                message: `${action.playerName || `Player ${action.playerId}`} flipped all shop statuses`,
+                                timestamp: Date.now()
+                            }].slice(-5)
+                        };
+                        return newState;
+                    }
+                    
                     return {
                         ...state,
                         closedShops: flippedShops
@@ -1843,6 +1898,34 @@
         }
 
         // Action Space Component - Enhanced with compact mode and round indicators
+        // Notification Display Component
+        function NotificationDisplay({ notifications, myPlayerId }) {
+            const relevantNotifications = notifications.filter(n => 
+                !n.forPlayer || n.forPlayer === myPlayerId
+            );
+            
+            if (relevantNotifications.length === 0) return null;
+            
+            return React.createElement('div', {
+                className: 'fixed top-4 right-4 z-50 space-y-2'
+            }, relevantNotifications.slice(-3).map(notification => // Show last 3
+                React.createElement('div', {
+                    key: notification.id,
+                    className: 'bg-gray-800 text-white p-4 rounded-lg shadow-lg transform transition-all duration-300 hover:scale-105',
+                    style: { minWidth: '300px' }
+                }, [
+                    React.createElement('div', { key: 'header', className: 'flex items-center gap-2 mb-1' }, [
+                        React.createElement('span', { key: 'icon', className: 'text-2xl' }, notification.icon || '📢'),
+                        React.createElement('span', { key: 'title', className: 'font-bold' }, notification.title)
+                    ]),
+                    React.createElement('div', { key: 'message', className: 'text-sm opacity-90' }, notification.message),
+                    React.createElement('div', { key: 'time', className: 'text-xs opacity-60 mt-1' }, 
+                        `${Math.floor((Date.now() - notification.timestamp) / 1000)}s ago`
+                    )
+                ])
+            ));
+        }
+        
         function ActionSpace({ actionId, title, description, round, available = true, compact = false }) {
             const { state, dispatch } = useGame();
             const isOccupied = state.occupiedSpaces[actionId];
@@ -2505,7 +2588,15 @@
                 
                 // Find all occupied spaces that belong to the current player
                 // Exclude: repeat actions and swap actions to prevent confusing chains
-                const excludedActions = ['redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2'];
+                const excludedActions = [
+                    // Red actions that could cause infinite loops
+                    'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
+                    // Blue actions that could cause recursion through shops
+                    'blueAnyShopBenefit', // Blue R3 - could select Red R3 shop
+                    // Victory shops - already purchased, can't repeat
+                    'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
+                    'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
+                ];
                 const playerSpaces = Object.entries(currentState.occupiedSpaces)
                     .filter(([spaceId, playerId]) => 
                         playerId === player.id && !excludedActions.includes(spaceId)
@@ -2729,7 +2820,19 @@
                 
                 // Find all spaces occupied by current player
                 // Exclude: repeat actions and swap actions to prevent confusing chains
-                const excludedActions = ['redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2'];
+                const excludedActions = [
+                    // Red actions that could cause infinite loops
+                    'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
+                    // Blue actions that could cause recursion through shops
+                    'blueAnyShopBenefit', // Blue R3 - could select Red R3 shop
+                    // Purple actions that manipulate turn order/workers
+                    'playTwoWorkers', 'playThreeWorkers', 'gain4purpleWaitAll',
+                    'gain4purpleSkip', 'gain5purpleSkip', // Skip turns are personal
+                    'gain2purpleTakeBack', // Taking back workers is personal
+                    // Victory shops - these are one-time purchases, not repeatable actions
+                    'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
+                    'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
+                ];
                 const playerSpaces = Object.entries(currentState.occupiedSpaces)
                     .filter(([spaceId, occupyingPlayerId]) => 
                         occupyingPlayerId === player.id && !excludedActions.includes(spaceId)
@@ -5689,6 +5792,20 @@
             
             dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Black R2 shop → Stole ${vpToSteal} VP from Player ${targetPlayer.id}` });
             
+            // Send notification in multiplayer
+            if (state.roomCode) {
+                dispatch({
+                    type: 'ADD_NOTIFICATION',
+                    notification: {
+                        type: 'steal',
+                        icon: '⚫',
+                        title: 'VP Stolen!',
+                        message: `${player.name || `Player ${player.id}`} stole ${vpToSteal} VP from you`,
+                        forPlayer: targetPlayer.id
+                    }
+                });
+            }
+            
             // BLACK AUTOMATIC VP: Gain 1 VP when stealing
             dispatch({
                 type: 'UPDATE_VP',
@@ -5840,11 +5957,8 @@
                     await executeRepeatAction(player, dispatch, state, state.gameLayers, recursionDepth);
                     break;
                 case 'red2':
-                    dispatch({
-                        type: 'ADD_EFFECT',
-                        playerId: player.id,
-                        effect: 'Can place the next player\'s worker'
-                    });
+                    // Place the next player's worker immediately
+                    await executeRed2Shop(player, dispatch, state);
                     break;
                 case 'red3':
                     // Repeat all actions taken this round
@@ -5868,7 +5982,11 @@
                     break;
                 case 'blue2':
                     // Toggle all shop statuses (flip open/closed)
-                    dispatch({ type: 'FLIP_ALL_SHOPS' });
+                    dispatch({ 
+                        type: 'FLIP_ALL_SHOPS',
+                        playerId: player.id,
+                        playerName: player.name
+                    });
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Blue R2 shop → All shops toggled!` });
                     break;
                 case 'blue3':
@@ -5963,6 +6081,115 @@
             }
         }
         
+        // Execute red 2 shop effect - Place the next player's worker
+        async function executeRed2Shop(player, dispatch, state) {
+            // Find the next player in turn order who has workers
+            const currentIndex = state.turnOrder.indexOf(player.id);
+            let searchIndex = currentIndex;
+            let nextPlayer = null;
+            let nextPlayerId = null;
+            let attemptCount = 0;
+            
+            // Keep searching for a player with workers
+            while (!nextPlayer && attemptCount < state.players.length) {
+                searchIndex = searchIndex + state.turnDirection;
+                
+                // Handle snake draft wrap-around
+                if (state.turnDirection === 1 && searchIndex >= state.turnOrder.length) {
+                    // At the end going forward - no more players
+                    break;
+                } else if (state.turnDirection === -1 && searchIndex < 0) {
+                    // At the beginning going backward - no more players
+                    break;
+                }
+                
+                nextPlayerId = state.turnOrder[searchIndex];
+                const candidatePlayer = state.players.find(p => p.id === nextPlayerId);
+                
+                // Check if this player can place workers
+                if (candidatePlayer && 
+                    candidatePlayer.workersLeft > 0 && 
+                    candidatePlayer.turnsToSkip === 0) {
+                    nextPlayer = candidatePlayer;
+                    break;
+                }
+                
+                attemptCount++;
+            }
+            
+            if (!nextPlayer) {
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R2 shop → No players with workers remaining in turn order` });
+                return;
+            }
+            
+            // Show available actions for the next player's worker
+            const availableActions = [];
+            Object.entries(state.gameLayers || {}).forEach(([color, layer]) => {
+                layer.actions.forEach(action => {
+                    if (action.round <= state.round && !state.occupiedSpaces[action.id]) {
+                        availableActions.push({
+                            label: `${color} - ${action.title}`,
+                            value: action.id,
+                            color: color
+                        });
+                    }
+                });
+            });
+            
+            if (availableActions.length === 0) {
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R2 shop → No available actions` });
+                return;
+            }
+            
+            // Let current player choose where to place next player's worker
+            const choice = await showChoice(
+                dispatch, 
+                `Choose where to place Player ${nextPlayerId}'s worker (they have ${nextPlayer.workersLeft} workers left)`,
+                availableActions
+            );
+            
+            if (choice) {
+                // Place the worker
+                dispatch({ type: 'PLACE_WORKER', actionId: choice, playerId: nextPlayerId });
+                
+                // Update next player's workers
+                dispatch({
+                    type: 'UPDATE_PLAYER',
+                    playerId: nextPlayerId,
+                    updates: { workersLeft: nextPlayer.workersLeft - 1 }
+                });
+                
+                // Execute the action for the next player
+                await executeAction(choice, nextPlayer, dispatch, state, state.gameLayers, 0);
+                
+                // Find action details for clearer messaging
+                let actionDetails = choice;
+                for (const [color, layer] of Object.entries(state.gameLayers || {})) {
+                    const action = layer.actions.find(a => a.id === choice);
+                    if (action) {
+                        actionDetails = `${color} - ${action.title}`;
+                        break;
+                    }
+                }
+                
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R2 shop → Placed Player ${nextPlayerId}'s worker on ${actionDetails}` });
+                
+                // Send notification in multiplayer
+                if (state.roomCode) {
+                    dispatch({
+                        type: 'ADD_NOTIFICATION',
+                        notification: {
+                            type: 'worker_placed',
+                            icon: '🔴',
+                            title: 'Worker Placed For You!',
+                            message: `${player.name || `Player ${player.id}`} placed your worker on ${actionDetails}`,
+                            forPlayer: nextPlayerId
+                        }
+                    });
+                }
+            }
+        }
+        
         // Execute red 3 shop effect - Repeat all actions taken this round by any player
         async function executeRed3Shop(player, dispatch, state, recursionDepth = 0) {
             // Get all players who have placed workers this round
@@ -6004,7 +6231,19 @@
             const targetActions = playerWorkerCounts[targetPlayerId];
             
             // Build action options with details, excluding problematic actions
-            const excludedActions = ['redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2'];
+            const excludedActions = [
+                // Red actions that could cause infinite loops
+                'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
+                // Blue actions that could cause recursion through shops
+                'blueAnyShopBenefit', // Blue R3 - could select Red R3 shop
+                // Purple actions that manipulate turn order/workers
+                'playTwoWorkers', 'playThreeWorkers', 'gain4purpleWaitAll',
+                'gain4purpleSkip', 'gain5purpleSkip', // Skip turns are personal
+                'gain2purpleTakeBack', // Taking back workers is personal
+                // Victory shops - these are one-time purchases, not repeatable actions
+                'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
+                'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
+            ];
             const actionOptions = targetActions
                 .filter(actionId => !excludedActions.includes(actionId))
                 .map(actionId => {
@@ -6193,91 +6432,6 @@
                     effects: (player.effects || []).filter((_, i) => i !== effectIndex)
                 });
                 
-            } else if (effect.includes('Can place the next player\'s worker')) {
-                // Find the next player in turn order
-                const currentIndex = state.turnOrder.indexOf(state.currentPlayer);
-                let nextIndex = currentIndex + state.turnDirection;
-                
-                // Handle snake draft wrap-around
-                if (nextIndex >= state.turnOrder.length || nextIndex < 0) {
-                    alert('You are the last player in this direction - no next player\'s worker to place');
-                    // Remove the effect
-                    dispatch({
-                        type: 'UPDATE_PLAYER_EFFECTS',
-                        playerId: playerId,
-                        effects: (player.effects || []).filter((_, i) => i !== effectIndex)
-                    });
-                    return;
-                }
-                
-                const nextPlayerId = state.turnOrder[nextIndex];
-                const nextPlayer = state.players.find(p => p.id === nextPlayerId);
-                
-                if (!nextPlayer || nextPlayer.workersLeft <= 0) {
-                    alert(`Player ${nextPlayerId} has no workers left to place`);
-                    // Remove the effect
-                    dispatch({
-                        type: 'UPDATE_PLAYER_EFFECTS',
-                        playerId: playerId,
-                        effects: (player.effects || []).filter((_, i) => i !== effectIndex)
-                    });
-                    return;
-                }
-                
-                // Show available actions for the next player's worker
-                const availableActions = [];
-                Object.entries(state.gameLayers || {}).forEach(([color, layer]) => {
-                    layer.actions.forEach(action => {
-                        if (action.round <= state.round && !state.occupiedSpaces[action.id]) {
-                            availableActions.push({
-                                label: `${color} - ${action.title}`,
-                                value: action.id
-                            });
-                        }
-                    });
-                });
-                
-                if (availableActions.length === 0) {
-                    alert('No available actions to place a worker on');
-                    // Remove the effect
-                    dispatch({
-                        type: 'UPDATE_PLAYER_EFFECTS',
-                        playerId: playerId,
-                        effects: (player.effects || []).filter((_, i) => i !== effectIndex)
-                    });
-                    return;
-                }
-                
-                // Let current player choose where to place next player's worker
-                const choice = await showChoice(
-                    dispatch, 
-                    `Choose where to place Player ${nextPlayerId}'s worker (${nextPlayer.workersLeft} workers left)`,
-                    availableActions
-                );
-                
-                if (choice) {
-                    // Place the worker
-                    dispatch({ type: 'PLACE_WORKER', actionId: choice, playerId: nextPlayerId });
-                    
-                    // Update next player's workers
-                    dispatch({
-                        type: 'UPDATE_PLAYER',
-                        playerId: nextPlayerId,
-                        updates: { workersLeft: nextPlayer.workersLeft - 1 }
-                    });
-                    
-                    // Execute the action for the next player
-                    await executeAction(choice, nextPlayer, dispatch, state, state.gameLayers);
-                    
-                    dispatch({ type: 'ADD_LOG', message: `Player ${playerId} placed Player ${nextPlayerId}'s worker on ${choice}` });
-                }
-                
-                // Remove the effect after use
-                dispatch({
-                    type: 'UPDATE_PLAYER_EFFECTS',
-                    playerId: playerId,
-                    effects: (player.effects || []).filter((_, i) => i !== effectIndex)
-                });
             } else if (effect.includes('Can undo the last player\'s turn')) {
                 alert('Undo turn effect not implemented yet');
             }
@@ -6290,7 +6444,6 @@
                 'Can repeat a worker\'s action',
                 'Can close ⭐ shop this round',
                 'Will take an extra turn after this one',
-                'Can place the next player\'s worker',
                 'Can undo the last player\'s turn'
             ];
             
@@ -6357,7 +6510,16 @@
                 ]);
             };
             
-            return React.createElement('div', { className: getPlayerStyle() }, [
+            // Add turn animation
+            const isTakingTurn = isCurrentPlayer && state.workersToPlace > 0;
+            
+            return React.createElement('div', { 
+                className: getPlayerStyle(),
+                style: isTakingTurn ? {
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)'
+                } : {}
+            }, [
                 React.createElement('div', { key: 'header', className: 'flex items-center justify-between mb-4' }, [
                     React.createElement('div', { key: 'name-section' }, [
                         React.createElement('h3', { key: 'name', className: 'font-bold text-lg text-gray-800' }, [
@@ -7185,7 +7347,7 @@
                 purple: { cost: 4, vp: 5 },
                 white: { cost: 4, vp: 4 },
                 black: { cost: 6, vp: 0, special: 'steal2FromEach' },
-                silver: { cost: 4, vp: 4 }
+                silver: { cost: 6, vp: 8 }
             };
             
             // Gold doesn't have a VP shop
@@ -7764,6 +7926,13 @@
             );
             
             return React.createElement('div', { className: 'min-h-screen p-4' }, [
+                // Notification Display
+                React.createElement(NotificationDisplay, {
+                    key: 'notifications',
+                    notifications: state.notifications,
+                    myPlayerId: state.myPlayerId
+                }),
+                
                 React.createElement('div', { key: 'container', className: 'max-w-7xl mx-auto game-board' }, [
                     
                     // Game Header with Round Indicator and Room Code
@@ -7780,13 +7949,28 @@
                             React.createElement('span', { key: 'text', className: 'font-semibold' }, `Room: ${state.roomCode}`)
                         ]),
                         
-                        // Round indicator (centered)
+                        // Round and Turn indicator (centered)
                         React.createElement('div', { 
                             key: 'round-indicator', 
-                            className: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto'
+                            className: 'flex flex-col items-center gap-2 mx-auto'
                         }, [
-                            React.createElement('span', { key: 'icon', className: 'text-2xl' }, '🎲'),
-                            React.createElement('span', { key: 'text', className: 'text-xl font-bold' }, `Round ${state.round}`)
+                            // Round indicator
+                            React.createElement('div', { 
+                                key: 'round',
+                                className: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center justify-center gap-2'
+                            }, [
+                                React.createElement('span', { key: 'icon', className: 'text-2xl' }, '🎲'),
+                                React.createElement('span', { key: 'text', className: 'text-xl font-bold' }, `Round ${state.round}`)
+                            ]),
+                            // Current player indicator
+                            state.currentPlayer && React.createElement('div', {
+                                key: 'current-turn',
+                                className: 'bg-gray-700 text-white px-4 py-2 rounded-lg shadow-md flex items-center gap-2'
+                            }, [
+                                React.createElement('span', { key: 'icon', className: 'text-sm' }, '👉'),
+                                React.createElement('span', { key: 'text', className: 'text-sm' }, 
+                                    `${state.players.find(p => p.id === state.currentPlayer)?.name || `Player ${state.currentPlayer}`}'s Turn`)
+                            ])
                         ]),
                         
                         // Spacer for layout balance
