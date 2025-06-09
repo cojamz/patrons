@@ -3204,9 +3204,16 @@
             // Blue shop benefit actions - gain any shop benefit even if closed
             // Blue R1 shop benefit action
             if (actionId === 'blueR1ShopBenefit') {
+                console.log('Executing blueR1ShopBenefit for player', player.id);
+                
+                // First give the base benefit - no resource gain for this action
+                // The benefit is getting a free R1 shop effect
+                
                 // List all available R1 shops from active game layers only
                 const shopOptions = [];
                 const colors = currentState.gameLayers ? Object.keys(currentState.gameLayers) : ['red', 'yellow', 'blue', 'purple'];
+                
+                console.log('Available game layers:', colors);
                 
                 const colorEmojis = {
                     red: '🔴', yellow: '🟡', blue: '🔵', purple: '🟣',
@@ -3250,18 +3257,25 @@
                 const choice = await showChoice(dispatch, 'Choose any R1 shop benefit (ignores closed status)', shopOptions, true, workerInfo);
                 
                 if (choice) {
+                    console.log('Player chose shop:', choice.color, 'R', choice.round);
+                    
                     // Execute the shop benefit without paying cost
                     await executeShopBenefit(choice.color, choice.round, player, dispatch, state, recursionDepth + 1);
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R1 shop benefit` });
                     
-                    // BLUE AUTOMATIC VP: Player gets 1 VP when using any shop benefit
-                    dispatch({
-                        type: 'UPDATE_VP',
-                        playerId: player.id,
-                        vp: 1,
-                        source: 'blueShopUsage'
-                    });
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP (used a shop benefit)` });
+                    // BLUE AUTOMATIC VP: Check if blue layer is active
+                    if (state.automaticVPs && state.automaticVPs.blue) {
+                        dispatch({
+                            type: 'UPDATE_VP',
+                            playerId: player.id,
+                            vp: 1,
+                            source: 'blueShopUsage'
+                        });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP (blue automatic VP for shop use)` });
+                    }
+                } else {
+                    console.log('Player cancelled R1 shop selection');
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Cancelled R1 shop benefit selection` });
                 }
                 
                 return;
