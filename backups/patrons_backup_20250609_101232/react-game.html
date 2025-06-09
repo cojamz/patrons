@@ -347,7 +347,6 @@
                             player.id === action.playerId 
                                 ? { 
                                     ...player, 
-                                    // Allow negative VP for more strategic gameplay
                                     victoryPoints: player.victoryPoints + action.vp,
                                     vpSources: {
                                         ...player.vpSources,
@@ -1989,13 +1988,8 @@
         async function executeAction(actionId, player, dispatch, currentState, gameLayers, recursionDepth = 0, workerInfo = null) {
             // Prevent infinite loops
             if (recursionDepth > 5) {
-                dispatch({ type: 'ADD_LOG', message: '⚠️ Max recursion depth reached - stopping to prevent infinite loop' });
+                dispatch({ type: 'ADD_LOG', message: 'Max recursion depth reached - stopping to prevent infinite loop' });
                 return;
-            }
-            
-            // Show recursion depth for complex chains
-            if (recursionDepth > 0) {
-                dispatch({ type: 'ADD_LOG', message: `↳ Action chain depth: ${recursionDepth}` });
             }
             
             const basicGains = {
@@ -2351,16 +2345,14 @@
                     resources: { purple: 4 }
                 });
                 
-                // Set player to wait until all others are out of workers
+                // Add extra turn
                 dispatch({
-                    type: 'SET_WAITING_FOR_OTHERS',
-                    waitingForOthers: {
-                        ...currentState.waitingForOthers,
-                        [player.id]: true
-                    }
+                    type: 'UPDATE_PLAYER',
+                    playerId: player.id,
+                    updates: { extraTurns: (player.extraTurns || 0) + 1 }
                 });
                 
-                const message = `Player ${player.id}: gain4purpleWaitAll → +4 purple, waiting until all others run out of workers`;
+                const message = `Player ${player.id}: gain4purpleWaitAll → +4 purple, gained an extra turn`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -2503,20 +2495,16 @@
                 const logMessage = `DEBUG: Occupied spaces: ${JSON.stringify(currentState.occupiedSpaces)}`;
                 dispatch({ type: 'ADD_LOG', message: logMessage });
                 
-                // Find all occupied spaces that belong to the current player
-                // Exclude: repeat actions and swap actions to prevent confusing chains
-                const excludedActions = ['redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2'];
+                // Find all occupied spaces that belong to the current player (excluding this repeat action)
                 const playerSpaces = Object.entries(currentState.occupiedSpaces)
-                    .filter(([spaceId, playerId]) => 
-                        playerId === player.id && !excludedActions.includes(spaceId)
-                    )
+                    .filter(([spaceId, playerId]) => playerId === player.id && spaceId !== 'redRepeatAction')
                     .map(([spaceId]) => spaceId);
                 
                 const debugMessage = `DEBUG: Player spaces to repeat: ${playerSpaces.join(', ')}`;
                 dispatch({ type: 'ADD_LOG', message: debugMessage });
                 
                 if (playerSpaces.length === 0) {
-                    const message = `Player ${player.id}: redRepeatAction → +1 red (no valid workers to repeat - swap/repeat actions excluded)`;
+                    const message = `Player ${player.id}: redRepeatAction → +1 red (no other workers to repeat)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -2601,16 +2589,11 @@
                 }
                 
                 // Current player chooses their own worker to swap
-                // IMPORTANT: Exclude the current swap action to prevent infinite loops
-                const myWorkers = allWorkers.filter(([spaceId, pid]) => 
-                    pid === player.id && spaceId !== actionId
-                );
-                const otherWorkers = allWorkers.filter(([spaceId, pid]) => 
-                    pid !== player.id && spaceId !== actionId
-                );
+                const myWorkers = allWorkers.filter(([spaceId, pid]) => pid === player.id);
+                const otherWorkers = allWorkers.filter(([spaceId, pid]) => pid !== player.id);
                 
                 if (myWorkers.length === 0 || otherWorkers.length === 0) {
-                    const message = `Player ${player.id}: ${actionId} → +1 red (need valid workers from both players - swap actions excluded)`;
+                    const message = `Player ${player.id}: ${actionId} → +1 red (need workers from both current player and others)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -2728,12 +2711,8 @@
                 dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
                 
                 // Find all spaces occupied by current player
-                // Exclude: repeat actions and swap actions to prevent confusing chains
-                const excludedActions = ['redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2'];
                 const playerSpaces = Object.entries(currentState.occupiedSpaces)
-                    .filter(([spaceId, occupyingPlayerId]) => 
-                        occupyingPlayerId === player.id && !excludedActions.includes(spaceId)
-                    )
+                    .filter(([spaceId, occupyingPlayerId]) => occupyingPlayerId === player.id && spaceId !== 'redRepeatAll')
                     .map(([spaceId]) => spaceId);
                 
                 if (playerSpaces.length === 0) {
@@ -3040,7 +3019,7 @@
                 
                 if (choice) {
                     // Execute the shop benefit without paying cost
-                    await executeShopBenefit(choice.color, choice.round, player, dispatch, state, recursionDepth + 1);
+                    await executeShopBenefit(choice.color, choice.round, player, dispatch, state);
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R1 shop benefit` });
                     
                     // BLUE AUTOMATIC VP: Player gets 1 VP when using any shop benefit
@@ -3139,18 +3118,13 @@
                         group: group
                     });
                     // R3 shops
-                    // IMPORTANT: Exclude Blue R3 to prevent infinite recursion
-                    if (!(color === 'blue' && actionId === 'blueAnyShopBenefit')) {
-                        shopOptions.push({
-                            label: `${color} R3: ${shopInfo[color][3]}`,
-                            shortLabel: `R3: ${colorEmojis[color]} ${shopInfo[color][3].substring(0, 20)}...`,
-                            value: { color, round: 3 },
-                            group: group
-                        });
-                    }
-                    // Victory shops - EXCLUDED from Blue R3 to prevent too much VP gain
-                    // Victory shops would give direct VP which is too powerful for a free benefit
-                    /*
+                    shopOptions.push({
+                        label: `${color} R3: ${shopInfo[color][3]}`,
+                        shortLabel: `R3: ${colorEmojis[color]} ${shopInfo[color][3].substring(0, 20)}...`,
+                        value: { color, round: 3 },
+                        group: group
+                    });
+                    // Victory shops
                     const vpCost = color === 'purple' ? '6' : (color === 'yellow' ? '5 any' : '5');
                     shopOptions.push({
                         label: `${color} Victory: ${vpCost} ${color === 'yellow' ? '' : color} → 3 VP`,
@@ -3158,7 +3132,6 @@
                         value: { color, round: 'vp' },
                         group: group
                     });
-                    */
                 });
                 
                 const choice = await showChoice(dispatch, 'Choose any shop benefit (ignores closed status)', shopOptions, true, workerInfo);
@@ -3175,7 +3148,7 @@
                         dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained 3 VP from ${choice.color} victory shop` });
                     } else {
                         // Execute regular shop effect
-                        await executeShopBenefit(choice.color, choice.round, player, dispatch, state, recursionDepth + 1);
+                        await executeShopBenefit(choice.color, choice.round, player, dispatch, state);
                         dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R${choice.round} shop benefit` });
                     }
                     
@@ -4917,7 +4890,7 @@
         }
 
         // Execute repeat action from red shop
-        async function executeRepeatAction(player, dispatch, state, gameLayers, recursionDepth = 0) {
+        async function executeRepeatAction(player, dispatch, state, gameLayers) {
             const playerSpaces = Object.entries(state.occupiedSpaces)
                 .filter(([spaceId, pid]) => pid === player.id)
                 .map(([spaceId]) => spaceId);
@@ -4980,7 +4953,7 @@
                         ...state,
                         players: state.players.map(p => p.id === player.id ? currentPlayerState : p)
                     };
-                    await executeAction(choice, currentPlayerState, dispatch, updatedState, gameLayers, recursionDepth + 1);
+                    await executeAction(choice, currentPlayerState, dispatch, updatedState, gameLayers, 0);
                 }
             }
         }
@@ -5010,7 +4983,28 @@
                 resources: selectedGems
             });
             
-            const message = `Player ${player.id}: Yellow R3 shop → Gained 7 gems`;
+            // Each other player gains 1 gem of buyer's choice
+            for (const otherPlayer of state.players) {
+                if (otherPlayer.id !== player.id) {
+                    const colorForOther = await showChoice(dispatch, 
+                        `Choose a gem color for Player ${otherPlayer.id} to gain`, 
+                        colors.map(color => ({
+                            label: `${color.charAt(0).toUpperCase() + color.slice(1)} Gem`,
+                            value: color
+                        }))
+                    );
+                    
+                    if (colorForOther) {
+                        dispatch({
+                            type: 'UPDATE_RESOURCES',
+                            playerId: otherPlayer.id,
+                            resources: { [colorForOther]: 1 }
+                        });
+                    }
+                }
+            }
+            
+            const message = `Player ${player.id}: Yellow R3 shop → Gained 7 gems, each other player gained 1 gem`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
@@ -5039,7 +5033,28 @@
                 resources: selectedGems
             });
             
-            const message = `Player ${player.id}: Yellow R2 shop → Gained 5 gems`;
+            // Everyone gains 1 gem of buyer's choice
+            const colorForOthers = await showChoice(dispatch, 
+                `Choose a gem color for all other players to gain`, 
+                colors.map(color => ({
+                            label: `${color.charAt(0).toUpperCase() + color.slice(1)} Gem`,
+                            value: color
+                        }))
+                    );
+                    
+            if (colorForOthers) {
+                for (const otherPlayer of state.players) {
+                    if (otherPlayer.id !== player.id) {
+                        dispatch({
+                            type: 'UPDATE_RESOURCES',
+                            playerId: otherPlayer.id,
+                            resources: { [colorForOthers]: 1 }
+                        });
+                    }
+                }
+            }
+            
+            const message = `Player ${player.id}: Yellow R2 shop → Gained 5 gems, everyone gained 1 ${colorForOthers || 'gem'}`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
@@ -5062,7 +5077,7 @@
                 },
                 blue: {
                     1: 'Toggle any shop (open/closed)',
-                    2: 'Toggle all shop statuses',
+                    2: 'Flip all shop statuses',
                     3: 'Gain any shop benefit'
                 },
                 purple: {
@@ -5081,9 +5096,9 @@
                     3: 'Lose 5 VP, Move worker to action'
                 },
                 black: {
-                    1: 'Steal 1 VP from another player',
-                    2: 'Steal 3 VP from another player',
-                    3: 'Steal 5 VP from another player'
+                    1: 'Destroy 2 gems from any player',
+                    2: 'Curse a player: -1 to all gains',
+                    3: 'All players lose 3 gems'
                 },
                 silver: {
                     1: 'Gain 2 VP',
@@ -5207,8 +5222,8 @@
                     3: 'Gain 7⭐'
                 },
                 blue: {
-                    1: 'Toggle any shop (open/closed)',
-                    2: 'Toggle all shop statuses',
+                    1: 'Close any shop this round',
+                    2: 'Flip all shops status',
                     3: 'Gain any shop benefit'
                 },
                 purple: {
@@ -5282,7 +5297,7 @@
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained 3 VP from ${choice.color} victory shop` });
                 } else {
                     // Execute regular shop effect
-                    await executeShopBenefit(choice.color, choice.round, player, dispatch, state, recursionDepth + 1);
+                    await executeShopBenefit(choice.color, choice.round, player, dispatch, state);
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R${choice.round} shop benefit` });
                 }
                 
@@ -5831,13 +5846,13 @@
         }
         
         // Execute any shop benefit by shop ID
-        async function executeShopBenefit(shopColor, shopRound, player, dispatch, state, recursionDepth = 0) {
+        async function executeShopBenefit(shopColor, shopRound, player, dispatch, state) {
             const shopId = `${shopColor}${shopRound}`;
             
             switch(shopId) {
                 case 'red1':
                     // Repeat a worker's action
-                    await executeRepeatAction(player, dispatch, state, state.gameLayers, recursionDepth);
+                    await executeRepeatAction(player, dispatch, state, state.gameLayers);
                     break;
                 case 'red2':
                     dispatch({
@@ -5848,7 +5863,7 @@
                     break;
                 case 'red3':
                     // Repeat all actions taken this round
-                    await executeRed3Shop(player, dispatch, state, recursionDepth);
+                    await executeRed3Shop(player, dispatch, state);
                     break;
                 case 'yellow1':
                     dispatch({
@@ -5867,9 +5882,9 @@
                     await executeBlue1Shop(player, dispatch, state);
                     break;
                 case 'blue2':
-                    // Toggle all shop statuses (flip open/closed)
+                    // Flip all shops
                     dispatch({ type: 'FLIP_ALL_SHOPS' });
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Blue R2 shop → All shops toggled!` });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: All shops flipped!` });
                     break;
                 case 'blue3':
                     await executeBlue3Shop(player, dispatch, state);
@@ -5963,8 +5978,8 @@
             }
         }
         
-        // Execute red 3 shop effect - Repeat all actions taken this round by any player
-        async function executeRed3Shop(player, dispatch, state, recursionDepth = 0) {
+        // Execute red 3 shop effect - Repeat all actions taken by ONE player
+        async function executeRed3Shop(player, dispatch, state) {
             // Get all players who have placed workers this round
             const playersWithWorkers = [];
             const playerWorkerCounts = {};
@@ -5977,7 +5992,7 @@
                 playerWorkerCounts[playerId].push(actionId);
             });
             
-            // Filter to only other players (not including yourself)
+            // Filter to only other players
             const otherPlayersWithWorkers = playersWithWorkers.filter(pid => pid !== player.id);
             
             if (otherPlayersWithWorkers.length === 0) {
@@ -5985,13 +6000,11 @@
                 return;
             }
             
-            // Let player choose which other player's workers to copy
-            const playerOptions = otherPlayersWithWorkers.map(pid => {
-                return {
-                    label: `Player ${pid} (${playerWorkerCounts[pid].length} worker${playerWorkerCounts[pid].length > 1 ? 's' : ''})`,
-                    value: pid
-                };
-            });
+            // Let player choose which player's workers to copy
+            const playerOptions = otherPlayersWithWorkers.map(pid => ({
+                label: `Player ${pid} (${playerWorkerCounts[pid].length} worker${playerWorkerCounts[pid].length > 1 ? 's' : ''})`,
+                value: pid
+            }));
             
             const targetPlayerId = await showChoice(dispatch, 'Choose a player whose worker actions to repeat', playerOptions);
             
@@ -6003,32 +6016,24 @@
             // Get all actions for the selected player
             const targetActions = playerWorkerCounts[targetPlayerId];
             
-            // Build action options with details, excluding problematic actions
-            const excludedActions = ['redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2'];
-            const actionOptions = targetActions
-                .filter(actionId => !excludedActions.includes(actionId))
-                .map(actionId => {
-                    let actionTitle = actionId;
-                    let layerColor = '';
-                    
-                    Object.entries(state.gameLayers || {}).forEach(([color, layer]) => {
-                        const action = layer.actions.find(a => a.id === actionId);
-                        if (action) {
-                            actionTitle = action.title;
-                            layerColor = color;
-                        }
-                    });
-                    
-                    return {
-                        label: `${layerColor} - ${actionTitle}`,
-                        value: actionId
-                    };
+            // Build action options with details
+            const actionOptions = targetActions.map(actionId => {
+                let actionTitle = actionId;
+                let layerColor = '';
+                
+                Object.entries(state.gameLayers || {}).forEach(([color, layer]) => {
+                    const action = layer.actions.find(a => a.id === actionId);
+                    if (action) {
+                        actionTitle = action.title;
+                        layerColor = color;
+                    }
                 });
-            
-            if (actionOptions.length === 0) {
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → No valid actions to repeat (swap/repeat actions excluded)` });
-                return;
-            }
+                
+                return {
+                    label: `${layerColor} - ${actionTitle}`,
+                    value: actionId
+                };
+            });
             
             // Let player choose which actions to repeat and in which order
             const message = `Choose actions to repeat from Player ${targetPlayerId} (you can repeat all of them!)`;
@@ -6052,8 +6057,8 @@
                         availableActions.splice(index, 1);
                     }
                     
-                    // Execute the action with recursion depth tracking
-                    await executeAction(choice, player, dispatch, state, state.gameLayers, recursionDepth + 1);
+                    // Execute the action
+                    await executeAction(choice, player, dispatch, state, state.gameLayers, 0);
                     
                     // RED AUTOMATIC VP: Gain 1 VP for red action
                     dispatch({
@@ -6986,11 +6991,11 @@
                 yellow: {
                     1: { cost: { yellow: 1, any: 1 }, effect: 'Double gain', fullEffect: 'Double your next gain action' },
                     2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 5⭐', fullEffect: 'Gain 5⭐' },
-                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 7⭐', fullEffect: 'Gain 7⭐' }
+                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 9⭐', fullEffect: 'Gain 9⭐' }
                 },
                 blue: {
                     1: { cost: { blue: 1, any: 1 }, effect: 'Toggle shop', fullEffect: 'Toggle any shop (open/closed)' },
-                    2: { cost: { blue: 2, any: 2 }, effect: 'Toggle all', fullEffect: 'Toggle the status of all shops (open/closed)' },
+                    2: { cost: { blue: 2, any: 2 }, effect: 'Flip all', fullEffect: 'Flip the status of all shops, including victory shops' },
                     3: { cost: { blue: 3, any: 3 }, effect: '⭐ benefit', fullEffect: 'Gain any shop benefit (even if closed)' }
                 },
                 purple: {
@@ -7130,7 +7135,7 @@
                 dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
                 
                 // Execute shop effect
-                await executeShopBenefit(color, round, currentPlayer, dispatch, state, 0);
+                await executeShopBenefit(color, round, currentPlayer, dispatch, state);
                 
                 // Track shop usage
                 dispatch({ type: 'USE_SHOP' });

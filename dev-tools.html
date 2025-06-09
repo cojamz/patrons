@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patrons Dev Tools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <h1 class="text-3xl font-bold mb-6">Patrons Development Tools</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Game State Inspector -->
+        <div class="bg-gray-800 p-6 rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Game State Inspector</h2>
+            <button onclick="openGameWithDevTools()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                Open Game with DevTools
+            </button>
+            <div id="stateDisplay" class="mt-4 font-mono text-sm"></div>
+        </div>
+        
+        <!-- Action Logger -->
+        <div class="bg-gray-800 p-6 rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Action Logger</h2>
+            <button onclick="clearLogs()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded mb-4">
+                Clear Logs
+            </button>
+            <div id="actionLog" class="font-mono text-sm h-64 overflow-y-auto bg-gray-900 p-2 rounded"></div>
+        </div>
+        
+        <!-- Test Scenarios -->
+        <div class="bg-gray-800 p-6 rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Test Scenarios</h2>
+            <select id="scenario" class="bg-gray-700 p-2 rounded mb-2 w-full">
+                <option value="">Select a scenario...</option>
+                <option value="purpleR1Shop">Purple R1 Shop Cost Test</option>
+                <option value="forceRed">Force Red Placement Test</option>
+                <option value="blueAutoVP">Blue Automatic VP Test</option>
+                <option value="resourceSync">Resource Sync Test</option>
+            </select>
+            <button onclick="loadScenario()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+                Load Scenario
+            </button>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="bg-gray-800 p-6 rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
+            <button onclick="skipToRound(2)" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded m-1">
+                Skip to Round 2
+            </button>
+            <button onclick="giveResources()" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded m-1">
+                Give 10 of Each Resource
+            </button>
+            <button onclick="enableAllQuads()" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded m-1">
+                Enable All 8 Quads
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        let gameWindow = null;
+        
+        function openGameWithDevTools() {
+            // Open game in new window with dev tools enabled
+            gameWindow = window.open('react-game.html?devtools=true', 'PatronsGame', 'width=1400,height=900');
+            
+            // Inject dev tools after game loads
+            gameWindow.addEventListener('load', () => {
+                injectDevTools(gameWindow);
+            });
+        }
+        
+        function injectDevTools(win) {
+            // Add logging wrapper
+            const script = win.document.createElement('script');
+            script.textContent = `
+                // Development Tools Injection
+                window.PATRONS_DEV = true;
+                
+                // Wrap dispatch to log all actions
+                const originalDispatch = window.gameDispatch;
+                if (originalDispatch) {
+                    window.gameDispatch = function(action) {
+                        console.log('[ACTION]', action.type, action);
+                        window.opener.logAction(action);
+                        return originalDispatch(action);
+                    };
+                }
+                
+                // Add state inspector
+                window.getGameState = function() {
+                    return window.gameState || {};
+                };
+                
+                // Add helper functions
+                window.devTools = {
+                    skipToRound: (round) => {
+                        window.gameDispatch({ type: 'DEV_SET_ROUND', round });
+                    },
+                    giveResources: (playerId, resources) => {
+                        window.gameDispatch({ 
+                            type: 'UPDATE_RESOURCES', 
+                            playerId, 
+                            resources 
+                        });
+                    },
+                    triggerAction: (actionName, playerId) => {
+                        window.executeAction(window.gameState, actionName, playerId);
+                    }
+                };
+                
+                console.log('Dev tools injected!');
+            `;
+            win.document.head.appendChild(script);
+        }
+        
+        function logAction(action) {
+            const log = document.getElementById('actionLog');
+            const time = new Date().toLocaleTimeString();
+            log.innerHTML += `<div class="mb-1"><span class="text-gray-400">${time}</span> <span class="text-blue-400">${action.type}</span> ${JSON.stringify(action, null, 2)}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('actionLog').innerHTML = '';
+        }
+        
+        function loadScenario() {
+            const scenario = document.getElementById('scenario').value;
+            if (!gameWindow || !scenario) return;
+            
+            // Load predefined game states for testing
+            const scenarios = {
+                purpleR1Shop: {
+                    round: 1,
+                    gameLayers: ['red', 'yellow', 'blue', 'purple'],
+                    players: {
+                        0: { purple: 1, red: 2, yellow: 2, blue: 0 }
+                    }
+                },
+                forceRed: {
+                    round: 2,
+                    forceRedPlacement: true,
+                    gameLayers: ['red', 'yellow', 'blue', 'purple']
+                },
+                blueAutoVP: {
+                    round: 1,
+                    gameLayers: ['red', 'yellow', 'blue', 'purple'],
+                    automaticVPs: { blue: true }
+                },
+                resourceSync: {
+                    round: 1,
+                    players: {
+                        0: { red: 5, yellow: 5, blue: 5, purple: 5 }
+                    }
+                }
+            };
+            
+            console.log('Loading scenario:', scenario, scenarios[scenario]);
+        }
+        
+        function skipToRound(round) {
+            if (gameWindow && gameWindow.devTools) {
+                gameWindow.devTools.skipToRound(round);
+            }
+        }
+        
+        function giveResources() {
+            if (gameWindow && gameWindow.devTools) {
+                gameWindow.devTools.giveResources(0, {
+                    red: 10, yellow: 10, blue: 10, purple: 10,
+                    gold: 10, white: 10, black: 10, silver: 10
+                });
+            }
+        }
+        
+        function enableAllQuads() {
+            if (gameWindow) {
+                gameWindow.gameDispatch({ 
+                    type: 'DEV_SET_LAYERS', 
+                    layers: ['red', 'yellow', 'blue', 'purple', 'gold', 'white', 'black', 'silver'] 
+                });
+            }
+        }
+        
+        // Update state display periodically
+        setInterval(() => {
+            if (gameWindow && gameWindow.getGameState) {
+                const state = gameWindow.getGameState();
+                document.getElementById('stateDisplay').textContent = JSON.stringify(state, null, 2);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

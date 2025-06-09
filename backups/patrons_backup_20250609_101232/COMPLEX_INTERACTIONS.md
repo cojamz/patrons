@@ -1,33 +1,6 @@
 # Complex Action + Shop Interaction Analysis
 
-## Recent Fixes (January 2025)
-
-### Red Action Improvements
-1. **Swap Workers Cannot Target Itself**: Workers on redHybrid1/redHybrid2 are now excluded from swap options
-2. **Repeat Actions Exclude Problematic Targets**: 
-   - Cannot repeat: redRepeatAction, redRepeatAll, redHybrid1, redHybrid2
-   - Prevents confusing chains and potential loops
-3. **Recursion Depth Properly Tracked**: Blue shop → Red shop chains now respect recursion limits
-4. **Clear UI Feedback**: Shows action chain depth and explains exclusions
-
-## ✅ Fixed Issues (January 2025)
-
-### 1. Red Swap Workers Self-Target
-**Problem**: Could swap worker on the swap action itself, causing loops
-**Solution**: Exclude current action from swappable workers list
-**Implementation**: Filter `spaceId !== actionId` in worker selection
-
-### 2. Repeat Action Chains
-**Problem**: Could repeat other repeat actions, creating confusion
-**Solution**: Exclude all repeat and swap actions from repeat targets
-**Implementation**: `excludedActions = ['redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2']`
-
-### 3. Blue Shop → Red Shop Recursion
-**Problem**: executeShopBenefit wasn't tracking recursion depth
-**Solution**: Pass recursionDepth through all shop benefit calls
-**Implementation**: Added recursionDepth parameter to executeShopBenefit
-
-## Critical Issues Found (Historical)
+## Critical Issues Found
 
 ### 1. Purple Shop Worker Placement Override
 **Problem**: Purple shops use `SET_WORKERS_TO_PLACE` instead of `ADD_WORKERS_TO_PLACE`
@@ -134,35 +107,3 @@ Key Rules:
 2. Indicate when shops are closed but still accessible via blue
 3. Show total workers that can be placed this turn
 4. Clear VP source tracking for complex chains
-
-## Current Interaction Rules (January 2025)
-
-### Red Actions - Worker Manipulation
-1. **Swap Workers (redHybrid1/2)**:
-   - Cannot swap workers on swap actions
-   - Shows clear options for both players' workers
-   - redHybrid1: Both players execute swapped actions
-   - redHybrid2: Only current player executes both actions
-
-2. **Repeat Actions (redRepeatAction/All)**:
-   - Cannot repeat: other repeat actions, swap actions
-   - Shows all valid worker locations
-   - Tracks recursion depth in logs
-   - Maximum recursion depth: 5
-
-### Blue Actions - Shop Control
-1. **Shop Benefits (blueR1ShopBenefit)**:
-   - Can access any R1 shop benefit regardless of closed status
-   - Properly tracks recursion when chaining to red shops
-   - Awards blue automatic VP
-
-2. **Shop Interactions**:
-   - Cost modifiers stack (increase/decrease)
-   - Closed shops can be accessed via blue actions
-   - Shop phase restrictions apply except for blue benefits
-
-### Recursion Protection
-- All action chains show depth in logs: "↳ Action chain depth: X"
-- Maximum depth of 5 prevents infinite loops
-- Warning message when max depth reached
-- Recursion properly tracked through shop benefits

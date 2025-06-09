@@ -291,15 +291,4 @@ This will give you the complete specification and current progress status.
 6. **Red Shop Fix**: Repeat action now properly uses updated player state
 7. **Emoji Pool**: Expanded to 160+ emojis including animals, objects, nature, fantasy, food
 
-## Remaining High Priority Work
-
-### ✅ All Shops Now Implemented:
-1. **Red R3**: Repeat all actions taken this round by any player ✅
-2. **Yellow R2**: Gain 5 gems, everyone gains 1 of your choice ✅
-3. **Yellow R3**: Gain 9 gems, everyone gains 1 of your choice ✅
-4. **Blue R2**: Gain shop benefit then close that shop ✅
-5. **Note**: Black R2 actually steals 3 VP (spec was incorrect)
-
-### See `/Users/cory/Patrons/BACKLOG_2025_01_09.md` for complete list
-
-Last Updated: 2025-01-09 (All shops now implemented)
+Last Updated: 2025-01-06 (Session 2 - Ready for context compaction)
