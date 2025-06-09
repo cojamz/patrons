@@ -242,7 +242,8 @@
             isHost: false,
             gameStarted: false,
             connectionStatus: 'disconnected', // 'disconnected', 'connecting', 'connected'
-            gameOver: false
+            gameOver: false,
+            syncingFromFirebase: false
         };
 
         function gameReducer(state, action) {
@@ -1161,15 +1162,15 @@
                     const mergedState = {
                         ...state,
                         ...action.gameState,
+                        syncingFromFirebase: true,
                         // Ensure all players have effects array and emoji
                         players: action.gameState.players ? action.gameState.players.map(player => ({
                             ...player,
                             effects: player.effects || [],
                             emoji: player.emoji || initialPlayerEmojis[player.id - 1] || '🎮',
-                            resources: {
+                            resources: player.resources || {
                                 red: 0, yellow: 0, blue: 0, purple: 0, 
-                                gold: 0, white: 0, black: 0, silver: 0,
-                                ...(player.resources || {})
+                                gold: 0, white: 0, black: 0, silver: 0
                             },
                             vpSources: player.vpSources || {}
                         })) : state.players,
