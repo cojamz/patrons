@@ -42,9 +42,17 @@ const result = executeAction(state, actionName, playerId);
 executeShopBenefit(benefit, state, playerId, dispatch);
 ```
 
-## Current Session Status (January 8, 2025)
+## Current Session Status (January 9, 2025)
 
 ### ✅ Major Fixes Completed Today:
+1. **Shop cost reduction now player-specific** - Fixed global modifier applying to all players
+2. **Skip turns working in snake draft** - Removed bypass that prevented skips at draft reversals
+3. **Double next gain effect expanded** - Now works on Yellow R2/R3, Silver R3, Gold R1/R2/R3 shops
+4. **UI improvements** - Removed player numbers from cards, moved Round/Turn indicators to sidebar
+5. **Play 2 Workers edge case** - Fixed blocking turn end when no workers available
+6. **Multiple syntax errors fixed** - Resolved bracket mismatches causing game load failures
+
+### ✅ Previously Fixed (January 8, 2025):
 1. **Fixed React stale closure in Firebase sync** - Resources now update properly in multiplayer
 2. **Fixed modal display in multiplayer** - Only shows to current player
 3. **Fixed Firebase echo loop** - Added lastUpdatedBy to prevent own updates from overwriting
@@ -77,12 +85,15 @@ executeShopBenefit(benefit, state, playerId, dispatch);
 - **Location**: closedShops state management
 - **Fix needed**: Preserve closedShops except natural R2/R3 openings
 
-#### 5. Purple Skip Turn Not Working
-- **Bug**: Not skipping in snake draft
-- **Location**: END_TURN handler
-- **Fix needed**: Check skip logic in snake draft mode
+#### 5. Double Next Gain - Action Coverage
+- **Bug**: Many actions don't check for doubling effect
+- **Status**: Core actions/shops fixed, but many layer-specific actions still need updates
+- **Fix approach**: Consider infrastructure-level solution vs action-by-action
 
-### 📋 Current Status:\n- **Backlog**: See `/Users/cory/Patrons/BACKLOG_2025_01_09.md` for 40+ items\n- **Bug History**: See `/Users/cory/Patrons/PLAYTEST_BUGS_STATUS.md`\n- **Today's Fixes**: Turn order, red actions, R3 edge cases
+### 📋 Current Status:
+- **Backlog**: See `/Users/cory/Patrons/BACKLOG_2025_01_09.md` for 40+ items
+- **Bug History**: See `/Users/cory/Patrons/PLAYTEST_BUGS_STATUS.md`
+- **Today's Fixes**: Shop costs, skip turns, doubling effect, UI layout
 
 ### 🛠️ Technical Details:
 - **Main file**: `/Users/cory/Patrons/react-game.html`

@@ -1,15 +1,20 @@
 # Playtest Bug Status - January 9, 2025
 
 ## ✅ FIXED TODAY:
-1. **Purple skip turn in snake draft** - Now properly skips after reversal
-2. **Turn order display** - Cards now show in turn order with position numbers
-3. **Turn order by VP** - Lowest VP goes first each round
-4. **Red swap worker on itself** - Now excluded from swap options
-5. **Red repeat infinite loops** - Cannot repeat other repeat/swap actions
-6. **Blue R3 infinite recursion** - Cannot select itself
-7. **Purple R3 wait mechanic** - Now properly waits for others
-8. **Black R3 negative VP** - REVERTED: VP can go negative (design decision)
-9. **Round advance protection** - Added flag to prevent double-advance
+1. **Shop cost reduction applying globally** - Now player-specific (only affects activating player)
+2. **Purple skip turn in snake draft** - Now properly skips after reversal
+3. **Double next gain effect** - Expanded to Yellow R2/R3, Silver R3, Gold R1/R2/R3 shops
+4. **UI improvements** - Removed player number badges, moved Round/Turn indicators to sidebar
+5. **Play 2 Workers edge case** - Fixed blocking turn end when no workers available
+6. **Multiple syntax errors** - Fixed bracket mismatches preventing game load
+7. **Turn order display** - Cards now show in turn order with position numbers
+8. **Turn order by VP** - Lowest VP goes first each round
+9. **Red swap worker on itself** - Now excluded from swap options
+10. **Red repeat infinite loops** - Cannot repeat other repeat/swap actions
+11. **Blue R3 infinite recursion** - Cannot select itself
+12. **Purple R3 wait mechanic** - Now properly waits for others
+13. **Black R3 negative VP** - REVERTED: VP can go negative (design decision)
+14. **Round advance protection** - Added flag to prevent double-advance
 
 ## ☑️ Previously Fixed (January 8)
 

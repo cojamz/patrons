@@ -6,6 +6,14 @@
 - 🟢 Completed
 - ❌ Blocked/Issue
 
+## Latest Updates (January 9, 2025):
+- 🟢 Shop cost reduction now player-specific
+- 🟢 Skip turns working in snake draft
+- 🟢 Double next gain effect expanded to shops
+- 🟢 UI improvements (removed player badges, moved indicators)
+- 🟢 Play 2 Workers edge case fixed
+- 🟢 Multiple syntax errors resolved
+
 ## Changes Queue:
 
 ### 1. 🟢 Update Shop Toggling to Exclude Unrevealed Shops
@@ -116,8 +124,41 @@
 - **Status**: Completed
 - **Implementation**: All actions and shops match specification exactly
 
-### 15. 🔴 [Awaiting next change...]
+### 15. 🟢 Fix Shop Cost Reduction Bug
+- **Issue**: Shop cost reduction applying to all players instead of just the activating player
+- **Fix**: Changed shopCostModifier from global state to per-player property
+- **Status**: Completed (January 9, 2025)
+
+### 16. 🟢 Fix Skip Turn in Snake Draft
+- **Issue**: Skip turns not working when snake draft reverses
+- **Fix**: Removed bypass logic that prevented skips at reversal points
+- **Status**: Completed (January 9, 2025)
+
+### 17. 🟢 Expand Double Next Gain Effect
+- **Issue**: Double gain effect not applying to shop resource gains
+- **Fix**: Added doubling checks to Yellow R2/R3, Silver R3, Gold R1/R2/R3 shops
+- **Status**: Completed (January 9, 2025)
+
+### 18. 🔴 Complete Double Next Gain for Actions
+- **Issue**: Many actions still don't check for doubling effect
+- **Consider**: Infrastructure-level solution vs action-by-action implementation
+- **Status**: Not Started
+
+### 19. 🔴 Fix Purple R1 Shop Cost
+- **Issue**: Taking 2 purple instead of 1 purple + 2 any
+- **Location**: Shop purchase handler (lines 6510-6590)
+- **Status**: Not Started
+
+### 20. 🔴 Fix Force Red Placement
+- **Issue**: Players can't select red actions when forced
+- **Status**: Not Started
+
+### 21. 🔴 Fix Blue Automatic VP
+- **Issue**: Shops not giving VP despite automaticVPs.blue = true
+- **Status**: Not Started
+
+### 22. 🔴 [Awaiting next change...]
 
 ## Notes:
 - Created: 2025-01-06
-- Last Updated: 2025-01-06
+- Last Updated: 2025-01-09
