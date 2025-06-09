@@ -246,6 +246,8 @@
         };
 
         function gameReducer(state, action) {
+            console.log('Reducer called with action:', action.type, action);
+            const newState = (() => {
             switch (action.type) {
                 case 'PLACE_WORKER':
                     // Allow specifying which player's worker to place (for Red R2 shop effect)
@@ -273,26 +275,39 @@
                     };
                 
                 case 'UPDATE_RESOURCES':
-                    return {
+                    console.log('UPDATE_RESOURCES reducer called with:', {
+                        playerId: action.playerId,
+                        resources: action.resources,
+                        currentPlayers: state.players.map(p => ({ id: p.id, resources: p.resources }))
+                    });
+                    
+                    const updatedState = {
                         ...state,
-                        players: state.players.map(player => 
-                            player.id === action.playerId 
-                                ? { 
+                        players: state.players.map(player => {
+                            if (player.id === action.playerId) {
+                                const newResources = {
+                                    red: player.resources.red + (action.resources.red || 0),
+                                    yellow: player.resources.yellow + (action.resources.yellow || 0),
+                                    blue: player.resources.blue + (action.resources.blue || 0),
+                                    purple: player.resources.purple + (action.resources.purple || 0),
+                                    gold: player.resources.gold + (action.resources.gold || 0),
+                                    white: player.resources.white + (action.resources.white || 0),
+                                    black: player.resources.black + (action.resources.black || 0),
+                                    silver: player.resources.silver + (action.resources.silver || 0)
+                                };
+                                console.log('UPDATE_RESOURCES - Updating player', player.id, 'from', player.resources, 'to', newResources);
+                                return { 
                                     ...player, 
-                                    resources: {
-                                        red: player.resources.red + (action.resources.red || 0),
-                                        yellow: player.resources.yellow + (action.resources.yellow || 0),
-                                        blue: player.resources.blue + (action.resources.blue || 0),
-                                        purple: player.resources.purple + (action.resources.purple || 0),
-                                        gold: player.resources.gold + (action.resources.gold || 0),
-                                        white: player.resources.white + (action.resources.white || 0),
-                                        black: player.resources.black + (action.resources.black || 0),
-                                        silver: player.resources.silver + (action.resources.silver || 0)
-                                    }
-                                }
-                                : player
-                        )
+                                    resources: newResources
+                                };
+                            }
+                            return player;
+                        })
                     };
+                    
+                    console.log('UPDATE_RESOURCES - Updated state players:', updatedState.players.map(p => ({ id: p.id, resources: p.resources })));
+                    console.log('UPDATE_RESOURCES - Returning updated state');
+                    return updatedState;
                     
                 case 'SET_RESOURCES':
                     return {
@@ -1125,9 +1140,11 @@
                             effects: player.effects || [],
                             emoji: player.emoji || initialPlayerEmojis[player.id - 1] || '🎮',
                             resources: {
-                                red: 0, yellow: 0, blue: 0, purple: 0,
+                                red: 0, yellow: 0, blue: 0, purple: 0, 
+                                gold: 0, white: 0, black: 0, silver: 0,
                                 ...(player.resources || {})
-                            }
+                            },
+                            vpSources: player.vpSources || {}
                         })) : state.players,
                         roomCode: state.roomCode,
                         myPlayerId: state.myPlayerId,
@@ -1143,6 +1160,12 @@
                 default:
                     return state;
             }
+            })();
+            
+            if (newState !== state) {
+                console.log('Reducer returning new state for action:', action.type);
+            }
+            return newState;
         }
 
         function GameProvider({ children }) {
@@ -1877,13 +1900,25 @@
                 }
                 
                 const resources = selectedGems;
+                console.log('gain3yellow - resources object before processing:', resources);
+                console.log('gain3yellow - actualPlayerId:', actualPlayerId);
+                console.log('gain3yellow - actualPlayer:', actualPlayer);
+                
+                // Filter out zero values to ensure clean resource update
+                const filteredResources = {};
+                Object.entries(resources).forEach(([color, amount]) => {
+                    if (amount > 0) {
+                        filteredResources[color] = amount;
+                    }
+                });
+                console.log('gain3yellow - filteredResources (zeros removed):', filteredResources);
                 
                 // Check for doubling effect on the actual player
                 const hasDoubleEffect = (actualPlayer.effects || []).some(effect => effect.includes('Next gain will be doubled'));
                 if (hasDoubleEffect) {
                     // Double all gains
-                    Object.keys(resources).forEach(color => {
-                        resources[color] *= 2;
+                    Object.keys(filteredResources).forEach(color => {
+                        filteredResources[color] *= 2;
                     });
                     
                     // Remove the doubling effect after use
@@ -1893,18 +1928,30 @@
                         effects: (actualPlayer.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
                     });
                     
-                    const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
+                    const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(filteredResources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
                     dispatch({ type: 'ADD_LOG', message });
                 } else {
-                    const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')}`;
+                    const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(filteredResources).map(([color, amount]) => `${amount} ${color}`).join(', ')}`;
                     dispatch({ type: 'ADD_LOG', message });
                 }
                 
-                dispatch({
+                console.log('gain3yellow - About to dispatch UPDATE_RESOURCES with:', {
                     type: 'UPDATE_RESOURCES',
                     playerId: actualPlayerId,
-                    resources
+                    resources: filteredResources
                 });
+                
+                try {
+                    dispatch({
+                        type: 'UPDATE_RESOURCES',
+                        playerId: actualPlayerId,
+                        resources: filteredResources
+                    });
+                    console.log('gain3yellow - UPDATE_RESOURCES dispatched successfully');
+                } catch (error) {
+                    console.error('gain3yellow - Error dispatching UPDATE_RESOURCES:', error);
+                }
+                
                 return;
             }
             
@@ -7402,10 +7449,11 @@
                         skippedTurns: state.skippedTurns,
                         waitingForOthers: state.waitingForOthers,
                         roundActions: state.roundActions,
-                        gameOver: state.gameOver
+                        gameOver: state.gameOver,
+                        automaticVPs: state.automaticVPs
                     });
                 }
-            }, [state.currentPlayer, state.players, state.occupiedSpaces, state.round, state.actionLog, state.workersToPlace, state.gameLayers, state.closedShops, state.shopCostModifier, state.shopUsedBeforeWorkers, state.shopUsedAfterWorkers, state.playersOutOfWorkers, state.skippedTurns, state.waitingForOthers, state.roundActions, state.gameOver]);
+            }, [state.currentPlayer, state.players, state.occupiedSpaces, state.round, state.actionLog, state.workersToPlace, state.gameLayers, state.closedShops, state.shopCostModifier, state.shopUsedBeforeWorkers, state.shopUsedAfterWorkers, state.playersOutOfWorkers, state.skippedTurns, state.waitingForOthers, state.roundActions, state.gameOver, state.automaticVPs]);
             
             const handleEndTurn = async () => {
                 // Validate multiplayer turn
