@@ -2834,8 +2834,8 @@
                 const worker1 = await showChoice(dispatch, 'Choose your worker to swap', myWorkerOptions, false, workerInfo);
                 if (!worker1) return;
                 
-                // For simplicity in local play, current player also chooses the other worker
-                // In a real multiplayer implementation, the other player would choose
+                // Current player chooses which other worker to swap with
+                // (In multiplayer, this is still the current player's choice)
                 const otherWorkerOptions = otherWorkers.map(([spaceId, playerId]) => {
                     // Find the action title
                     let actionTitle = spaceId;
@@ -2867,11 +2867,11 @@
                     occupiedSpaces: newOccupiedSpaces
                 });
                 
-                // Add a note about the swap
+                // Log the swap
                 const otherPlayerId = worker2.playerId;
                 dispatch({ 
                     type: 'ADD_LOG', 
-                    message: `Note: In multiplayer, Player ${otherPlayerId} would choose which of their workers to swap` 
+                    message: `Workers swapped between actions` 
                 });
                 
                 // Execute actions for the affected players
