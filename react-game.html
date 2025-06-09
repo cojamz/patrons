@@ -233,6 +233,7 @@
             playersOutOfWorkers: [], // Track order players ran out of workers for purple VP
             waitingForOthers: {}, // Track players waiting for others to run out (purple R3)
             roundActions: [], // Track all actions taken this round for Red R3 shop
+            roundAdvancing: false, // Track if round is currently being advanced
             
             // Multiplayer state
             roomCode: null,
@@ -568,45 +569,107 @@
                     const tempSkippedTurns = { ...effectiveSkippedTurns };
                     const skippedPlayers = [];
                     
-                    do {
-                        const currentIndex = state.turnOrder.indexOf(attempts === 0 ? state.currentPlayer : nextPlayer);
-                        
-                        if (state.turnDirection === 1) {
-                            if (currentIndex === state.turnOrder.length - 1) {
-                                nextDirection = -1;
-                                nextPlayer = state.turnOrder[currentIndex];
-                            } else {
-                                nextPlayer = state.turnOrder[currentIndex + 1];
-                            }
+                    // First, determine the next player based on snake draft rules
+                    const currentIndex = state.turnOrder.indexOf(state.currentPlayer);
+                    let isSnakeDraftReversal = false;
+                    
+                    if (state.turnDirection === 1) {
+                        if (currentIndex === state.turnOrder.length - 1) {
+                            // At the end, reverse direction but stay on same player
+                            nextDirection = -1;
+                            nextPlayer = state.turnOrder[currentIndex];
+                            isSnakeDraftReversal = true;
                         } else {
-                            if (currentIndex === 0) {
-                                nextDirection = 1;
-                                nextPlayer = state.turnOrder[currentIndex];
-                            } else {
-                                nextPlayer = state.turnOrder[currentIndex - 1];
+                            nextPlayer = state.turnOrder[currentIndex + 1];
+                        }
+                    } else {
+                        if (currentIndex === 0) {
+                            // At the beginning, reverse direction but stay on same player
+                            nextDirection = 1;
+                            nextPlayer = state.turnOrder[currentIndex];
+                            isSnakeDraftReversal = true;
+                        } else {
+                            nextPlayer = state.turnOrder[currentIndex - 1];
+                        }
+                    }
+                    
+                    // If this is a snake draft reversal (same player), don't check skips yet
+                    if (!isSnakeDraftReversal) {
+                        // Now check for skips, waiting, and workers
+                        do {
+                            attempts++;
+                            if (attempts > maxAttempts) break; // Prevent infinite loop
+                            
+                            // Check if player should skip and track it
+                            if (tempSkippedTurns[nextPlayer] > 0) {
+                                skippedPlayers.push(nextPlayer);
+                                tempSkippedTurns[nextPlayer]--;
+                                
+                                // Find the next player after this skipped one
+                                const skipIndex = state.turnOrder.indexOf(nextPlayer);
+                                if (nextDirection === 1) {
+                                    if (skipIndex === state.turnOrder.length - 1) {
+                                        nextDirection = -1;
+                                        nextPlayer = state.turnOrder[skipIndex - 1];
+                                    } else {
+                                        nextPlayer = state.turnOrder[skipIndex + 1];
+                                    }
+                                } else {
+                                    if (skipIndex === 0) {
+                                        nextDirection = 1;
+                                        nextPlayer = state.turnOrder[skipIndex + 1];
+                                    } else {
+                                        nextPlayer = state.turnOrder[skipIndex - 1];
+                                    }
+                                }
+                                continue;
                             }
-                        }
-                        
-                        attempts++;
-                        if (attempts > maxAttempts) break; // Prevent infinite loop
-                        
-                        // Check if player should skip and track it
-                        if (tempSkippedTurns[nextPlayer] > 0) {
-                            skippedPlayers.push(nextPlayer);
-                            tempSkippedTurns[nextPlayer]--;
-                        }
-                        
-                        // Check if player is waiting for others
-                        const isWaiting = newWaitingForOthers[nextPlayer];
-                        // Check if player has workers
-                        const hasWorkers = state.players.find(p => p.id === nextPlayer).workersLeft > 0;
-                        
-                    } while ((tempSkippedTurns[nextPlayer] > 0 || newWaitingForOthers[nextPlayer] || 
-                             state.players.find(p => p.id === nextPlayer).workersLeft === 0) && 
-                             attempts < maxAttempts);
+                            
+                            // Check if player is waiting for others or has no workers
+                            const isWaiting = newWaitingForOthers[nextPlayer];
+                            const hasWorkers = state.players.find(p => p.id === nextPlayer).workersLeft > 0;
+                            
+                            if (isWaiting || !hasWorkers) {
+                                // Find next player
+                                const currentIdx = state.turnOrder.indexOf(nextPlayer);
+                                if (nextDirection === 1) {
+                                    if (currentIdx === state.turnOrder.length - 1) {
+                                        nextDirection = -1;
+                                        nextPlayer = state.turnOrder[currentIdx - 1];
+                                    } else {
+                                        nextPlayer = state.turnOrder[currentIdx + 1];
+                                    }
+                                } else {
+                                    if (currentIdx === 0) {
+                                        nextDirection = 1;
+                                        nextPlayer = state.turnOrder[currentIdx + 1];
+                                    } else {
+                                        nextPlayer = state.turnOrder[currentIdx - 1];
+                                    }
+                                }
+                                continue;
+                            }
+                            
+                            // Found a valid player
+                            break;
+                            
+                        } while (attempts < maxAttempts);
+                    }
                     
                     // Update skip counts to reflect the skipped players
                     const newSkippedTurns = { ...tempSkippedTurns };
+                    
+                    // Debug logging for skip turns
+                    if (skippedPlayers.length > 0) {
+                        console.log('Skip turn debug:', {
+                            skippedPlayers,
+                            currentPlayer: state.currentPlayer,
+                            nextPlayer,
+                            turnDirection: state.turnDirection,
+                            nextDirection,
+                            skippedTurns: newSkippedTurns
+                        });
+                    }
                     
                     // Set workers to place for waiting players who are now active
                     const waitingPlayerUpdate = waitingPlayersUpdates.find(u => u.playerId === nextPlayer);
@@ -619,7 +682,8 @@
                     }, 0);
                     
                     // If no workers remaining and round < 3, automatically advance round
-                    if (totalWorkersRemaining === 0 && state.round < 3) {
+                    // Check roundAdvancing flag to prevent multiple advances
+                    if (totalWorkersRemaining === 0 && state.round < 3 && !state.roundAdvancing) {
                         // Calculate automatic VPs before advancing round
                         const vpMessages = [];
                         const playersWithAutomaticVP = effectivePlayers.map(player => {
@@ -697,17 +761,21 @@
                         const updatedClosedShops = { ...state.closedShops };
                         const shopColors = ['red', 'yellow', 'blue', 'purple', 'gold', 'white', 'black', 'silver'];
                         
-                        // Remove shops for the new round from closedShops (making them available)
+                        // Only remove shops for the new round from closedShops (making them available)
+                        // This preserves the toggle state of shops from previous rounds
                         shopColors.forEach(color => {
                             delete updatedClosedShops[`${color}${newRound}`];
                         });
                         
-                        // Randomize turn order
-                        const newTurnOrder = [...state.turnOrder].sort(() => Math.random() - 0.5);
+                        // Sort turn order by ascending VP (lowest VP goes first)
+                        const playerVPs = playersAfterSilverAuto.map(p => ({ id: p.id, vp: p.victoryPoints }));
+                        playerVPs.sort((a, b) => a.vp - b.vp); // Sort by ascending VP
+                        const newTurnOrder = playerVPs.map(p => p.id);
                         
                         return {
                             ...state,
                             round: newRound,
+                            roundAdvancing: true, // Set flag to prevent double advance
                             closedShops: updatedClosedShops,
                             players: playersAfterSilverAuto.map(player => {
                                 const baseWorkers = 3 + (newRound);
@@ -769,6 +837,12 @@
                     };
                 
                 case 'ADVANCE_ROUND':
+                    // Prevent advancing beyond round 3
+                    if (state.round >= 3) {
+                        console.log('ADVANCE_ROUND: Already at round 3, ignoring');
+                        return state;
+                    }
+                    
                     console.log('ADVANCE_ROUND reducer called, current state:', {
                         round: state.round,
                         occupiedSpaces: state.occupiedSpaces,
@@ -897,6 +971,7 @@
                         skippedTurns: {}, // Reset skip turns
                         waitingForOthers: {}, // Reset waiting status
                         roundActions: [], // Reset actions for new round
+                        roundAdvancing: false, // Reset flag after round advance
                         actionLog: [...state.actionLog.slice(-9), ...vpMessages, `Round ${state.round + 1} started! Extra workers applied.`]
                     };
                     
@@ -1198,7 +1273,9 @@
                         gameStarted: action.gameState.gameStarted !== undefined ? action.gameState.gameStarted : state.gameStarted,
                         connectionStatus: state.connectionStatus,
                         // Sync game layers if provided
-                        gameLayers: action.gameState.gameLayers || state.gameLayers
+                        gameLayers: action.gameState.gameLayers || state.gameLayers,
+                        // Sync shop state
+                        closedShops: action.gameState.closedShops || state.closedShops
                     };
                     
                     console.log('SYNC_GAME_STATE - After merge, new state:', {
@@ -1793,15 +1870,29 @@
                 );
                 const mustPlaceOnRed = forceRedPlayer && forceRedPlayer.id !== state.currentPlayer;
                 
+                // Debug logging for force red issue
+                if (forceRedPlayer) {
+                    console.log('FORCE_RED_DEBUG - Force red player:', forceRedPlayer.id, 
+                              'Current player:', state.currentPlayer,
+                              'Must place on red:', mustPlaceOnRed);
+                }
+                
                 if (mustPlaceOnRed) {
                     // Check if this action is on the red layer
                     const redLayer = state.gameLayers && state.gameLayers.red;
                     const isRedAction = redLayer && redLayer.actions.some(a => a.id === actionId);
                     
+                    console.log('FORCE_RED_DEBUG - Checking action:', actionId,
+                              'Red layer exists:', !!redLayer,
+                              'Is red action:', isRedAction);
+                    
                     if (!isRedAction) {
                         // Check if red layer is full
                         const redActions = redLayer ? redLayer.actions.map(a => a.id) : [];
                         const redIsFull = redActions.every(id => state.occupiedSpaces[id]);
+                        
+                        console.log('FORCE_RED_DEBUG - Red actions:', redActions,
+                                  'Red is full:', redIsFull);
                         
                         if (!redIsFull) {
                             alert('You must place workers on the red layer until it is full!');
@@ -6223,7 +6314,7 @@
         }
 
         // Player Card Component
-        function PlayerCard({ player, isCurrentPlayer, onEndTurn }) {
+        function PlayerCard({ player, isCurrentPlayer, onEndTurn, turnPosition }) {
             const { state, dispatch } = useGame();
             
             // Get active colors from current game layers
@@ -6275,6 +6366,10 @@
                 React.createElement('div', { key: 'header', className: 'flex items-center justify-between mb-4' }, [
                     React.createElement('div', { key: 'name-section' }, [
                         React.createElement('h3', { key: 'name', className: 'font-bold text-lg text-gray-800' }, [
+                            turnPosition && React.createElement('span', { 
+                                key: 'turn-order', 
+                                className: 'inline-block bg-gray-600 text-white text-sm rounded-full w-6 h-6 text-center mr-2' 
+                            }, turnPosition),
                             player.name,
                             React.createElement('span', { key: 'emoji', className: 'ml-2 text-xl' }, player.emoji || '👤'),
                             isCurrentPlayer && React.createElement('span', { key: 'indicator', className: 'text-blue-500 ml-2' }, '🎯')
@@ -6574,7 +6669,15 @@
                         let remaining = anyRequired;
                         const activeColors = state.gameLayers ? Object.keys(state.gameLayers) : ['red', 'yellow', 'blue', 'purple'];
                         
-                        for (const c of activeColors) {
+                        // For better UX, prioritize non-shop colors first when auto-selecting
+                        const sortedColors = activeColors.sort((a, b) => {
+                            // Put the shop's color last to avoid taking more than required
+                            if (a === color) return 1;
+                            if (b === color) return -1;
+                            return 0;
+                        });
+                        
+                        for (const c of sortedColors) {
                             if (remaining <= 0) break;
                             const currentAmount = currentPlayer.resources[c];
                             const alreadySpent = resourceCost[c] ? -resourceCost[c] : 0;
@@ -6586,6 +6689,13 @@
                             }
                         }
                     }
+                }
+                
+                // Debug logging for Purple shop cost issue
+                if (color === 'purple' && shopRound === 1) {
+                    console.log('PURPLE_SHOP_DEBUG - Final resourceCost:', resourceCost, 
+                              'Player had:', currentPlayer.resources,
+                              'Shop cost was:', cost);
                 }
                 
                 dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
@@ -6753,7 +6863,7 @@
                 console.log(message);
                 
                 // BLUE AUTOMATIC VP: Player gets 1 VP when they activate a shop effect
-                if (state.automaticVPs.blue) {
+                if (state.automaticVPs?.blue) {
                     dispatch({
                         type: 'UPDATE_VP',
                         playerId: currentPlayer.id,
@@ -7358,7 +7468,7 @@
                 }
                 
                 // BLUE AUTOMATIC VP: Player gets 1 VP when they activate a shop effect
-                if (state.automaticVPs.blue) {
+                if (state.automaticVPs?.blue) {
                     dispatch({
                         type: 'UPDATE_VP',
                         playerId: currentPlayer.id,
@@ -7691,16 +7801,18 @@
                         })
                     ]),
                     
-                    // Player Cards
+                    // Player Cards - Display in turn order
                     React.createElement('div', { key: 'players', className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8' }, 
-                        state.players.map(player => 
-                            React.createElement(PlayerCard, {
+                        state.turnOrder.map((playerId, index) => {
+                            const player = state.players.find(p => p.id === playerId);
+                            return React.createElement(PlayerCard, {
                                 key: player.id,
                                 player,
                                 isCurrentPlayer: player.id === state.currentPlayer,
-                                onEndTurn: handleEndTurn
-                            })
-                        )
+                                onEndTurn: handleEndTurn,
+                                turnPosition: index + 1 // 1-based position
+                            });
+                        })
                     ),
                     
                     // Game Layers - 2x2 Grid Layout
