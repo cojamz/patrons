@@ -3459,7 +3459,9 @@
                         }
                     } else {
                         // Execute regular shop effect
-                        await executeShopBenefit(choice.color, choice.round, player, dispatch, state, recursionDepth + 1);
+                        console.log('Blue R3: About to execute shop benefit for', choice.color, 'R' + choice.round);
+                        // Use currentState instead of state to avoid stale closure
+                        await executeShopBenefit(choice.color, choice.round, player, dispatch, currentState, recursionDepth + 1);
                         dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R${choice.round} shop benefit` });
                     }
                     
