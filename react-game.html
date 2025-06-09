@@ -1865,6 +1865,7 @@
                 const actualPlayer = currentState.players.find(p => p.id === actualPlayerId);
                 
                 const selectedGems = await showGemSelection(dispatch, 'Select 3 Resources (⭐ Colors)', 3, null, workerInfo);
+                console.log('gain3yellow - selectedGems:', selectedGems);
                 
                 if (!selectedGems) {
                     // If cancelled, give default resources
@@ -6046,8 +6047,7 @@
         }
 
         // Get effect button for activatable effects
-        function getEffectButton(effect, playerId, effectIndex) {
-            const { state, dispatch } = useGame();
+        function getEffectButton(effect, playerId, effectIndex, state, dispatch) {
             
             const activatableEffects = [
                 'Can repeat a worker\'s action',
@@ -6073,7 +6073,7 @@
 
         // Player Card Component
         function PlayerCard({ player, isCurrentPlayer, onEndTurn }) {
-            const { state } = useGame();
+            const { state, dispatch } = useGame();
             
             // Get active colors from current game layers
             const activeColors = state.gameLayers ? Object.keys(state.gameLayers) : ['red', 'yellow', 'blue', 'purple'];
@@ -6187,7 +6187,7 @@
                             className: 'bg-yellow-100 border border-yellow-300 rounded px-2 py-1 mb-1 text-xs flex justify-between items-center' 
                         }, [
                             React.createElement('span', { key: 'text' }, effect),
-                            getEffectButton(effect, player.id, index)
+                            getEffectButton(effect, player.id, index, state, dispatch)
                         ])
                     )
                 ]),
