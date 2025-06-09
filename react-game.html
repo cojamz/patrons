@@ -767,6 +767,12 @@
                     };
                 
                 case 'ADVANCE_ROUND':
+                    console.log('ADVANCE_ROUND reducer called, current state:', {
+                        round: state.round,
+                        occupiedSpaces: state.occupiedSpaces,
+                        players: state.players.map(p => ({ id: p.id, workersLeft: p.workersLeft }))
+                    });
+                    
                     // Calculate automatic VPs before advancing round
                     const vpMessages = [];
                     const playersWithAutomaticVP = state.players.map(player => {
@@ -856,7 +862,7 @@
                     // Check if game is over after round 3
                     const gameOver = newRound > 3;
                     
-                    return {
+                    const newState = {
                         ...state,
                         round: newRound,
                         gameOver: gameOver,
@@ -891,6 +897,16 @@
                         roundActions: [], // Reset actions for new round
                         actionLog: [...state.actionLog.slice(-9), ...vpMessages, `Round ${state.round + 1} started! Extra workers applied.`]
                     };
+                    
+                    console.log('ADVANCE_ROUND - New state:', {
+                        round: newState.round,
+                        occupiedSpaces: newState.occupiedSpaces,
+                        players: newState.players.map(p => ({ id: p.id, workersLeft: p.workersLeft })),
+                        turnOrder: newState.turnOrder,
+                        currentPlayer: newState.currentPlayer
+                    });
+                    
+                    return newState;
                 
                 case 'ADD_LOG':
                     return {
@@ -1130,8 +1146,19 @@
                     };
                 
                 case 'SYNC_GAME_STATE':
+                    console.log('SYNC_GAME_STATE reducer called with:', {
+                        round: action.gameState.round,
+                        currentPlayer: action.gameState.currentPlayer,
+                        occupiedSpaces: action.gameState.occupiedSpaces,
+                        players: action.gameState.players?.map(p => ({ 
+                            id: p.id, 
+                            resources: p.resources, 
+                            workersLeft: p.workersLeft 
+                        }))
+                    });
+                    
                     // Merge remote game state while preserving local multiplayer state
-                    return {
+                    const mergedState = {
                         ...state,
                         ...action.gameState,
                         // Ensure all players have effects array and emoji
@@ -1156,6 +1183,18 @@
                         // Sync game layers if provided
                         gameLayers: action.gameState.gameLayers || state.gameLayers
                     };
+                    
+                    console.log('SYNC_GAME_STATE - After merge, new state:', {
+                        round: mergedState.round,
+                        occupiedSpaces: mergedState.occupiedSpaces,
+                        players: mergedState.players?.map(p => ({ 
+                            id: p.id, 
+                            resources: p.resources, 
+                            workersLeft: p.workersLeft 
+                        }))
+                    });
+                    
+                    return mergedState;
                 
                 default:
                     return state;
@@ -1334,6 +1373,16 @@
             roomRef.child('gameState').on('value', snapshot => {
                 const gameState = snapshot.val();
                 if (gameState) {
+                    console.log('Firebase gameState update received:', {
+                        round: gameState.round,
+                        currentPlayer: gameState.currentPlayer,
+                        occupiedSpaces: gameState.occupiedSpaces,
+                        players: gameState.players?.map(p => ({ 
+                            id: p.id, 
+                            resources: p.resources, 
+                            workersLeft: p.workersLeft 
+                        }))
+                    });
                     dispatch({ type: 'SYNC_GAME_STATE', gameState });
                 }
             });
@@ -1344,6 +1393,17 @@
         
         function syncGameState(roomCode, gameState) {
             if (database && roomCode) {
+                console.log('syncGameState - Syncing to Firebase:', {
+                    roomCode: roomCode,
+                    round: gameState.round,
+                    currentPlayer: gameState.currentPlayer,
+                    occupiedSpaces: gameState.occupiedSpaces,
+                    players: gameState.players?.map(p => ({ 
+                        id: p.id, 
+                        resources: p.resources, 
+                        workersLeft: p.workersLeft 
+                    }))
+                });
                 database.ref(`rooms/${roomCode}/gameState`).set(gameState);
             }
         }
@@ -1957,15 +2017,22 @@
             
             // Similar implementation for gain2yellow
             if (actionId === 'gain2yellow') {
+                console.log('gain2yellow - Starting for player', player.id, 'workerInfo:', workerInfo);
+                
                 // For extra workers, always give resources to the worker owner
                 const actualPlayerId = workerInfo?.playerId || player.id;
                 const actualPlayer = currentState.players.find(p => p.id === actualPlayerId);
                 
+                console.log('gain2yellow - actualPlayerId:', actualPlayerId, 'actualPlayer:', actualPlayer);
+                
                 const selectedGems = await showGemSelection(dispatch, 'Select 2 Resources (⭐ Colors)', 2, null, workerInfo);
+                
+                console.log('gain2yellow - selectedGems:', selectedGems);
                 
                 if (!selectedGems) {
                     // If cancelled, give default resources
                     const resources = { red: 1, yellow: 1 };
+                    console.log('gain2yellow - Using default resources:', resources);
                     dispatch({ type: 'UPDATE_RESOURCES', playerId: actualPlayerId, resources });
                     const message = `Player ${actualPlayerId}: gain2yellow → +1 red, +1 yellow (default)`;
                     dispatch({ type: 'ADD_LOG', message });
@@ -1973,6 +2040,7 @@
                 }
                 
                 const resources = selectedGems;
+                console.log('gain2yellow - resources object:', resources);
                 
                 // Check for doubling effect on the actual player
                 const hasDoubleEffect = (actualPlayer.effects || []).some(effect => effect.includes('Next gain will be doubled'));
@@ -1995,6 +2063,11 @@
                     const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')}`;
                     dispatch({ type: 'ADD_LOG', message });
                 }
+                
+                console.log('gain2yellow - About to dispatch UPDATE_RESOURCES with:', {
+                    playerId: actualPlayerId,
+                    resources: resources
+                });
                 
                 dispatch({
                     type: 'UPDATE_RESOURCES',
@@ -4773,6 +4846,8 @@
 
         // Execute yellow 3 shop effect
         async function executeYellow3Shop(player, dispatch, state) {
+            console.log('executeYellow3Shop - Starting for player', player.id);
+            
             // Gain 7 resources ⭐ colors - using GemSelectionModal
             const selectedGems = await showGemSelection(
                 dispatch,
@@ -4785,6 +4860,8 @@
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
+            
+            console.log('executeYellow3Shop - Player', player.id, 'selected gems:', selectedGems);
             
             dispatch({
                 type: 'UPDATE_RESOURCES',
@@ -4819,6 +4896,8 @@
         
         // Execute yellow 2 shop effect
         async function executeYellow2Shop(player, dispatch, state) {
+            console.log('executeYellow2Shop - Starting for player', player.id);
+            
             // Gain 5 resources ⭐ colors - using GemSelectionModal
             const selectedGems = await showGemSelection(
                 dispatch,
@@ -4831,6 +4910,8 @@
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
+            
+            console.log('executeYellow2Shop - Player', player.id, 'selected gems:', selectedGems);
             
             dispatch({
                 type: 'UPDATE_RESOURCES',
