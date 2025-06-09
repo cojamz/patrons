@@ -7568,7 +7568,10 @@
             const shop = shopData[color];
             const shopId = `${color}vp`;
             const isClosed = state.closedShops[shopId];
-            // actualCost will be calculated inside handlePurchase with currentPlayer's modifier
+            
+            // Calculate actualCost for display
+            const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
+            const actualCost = (color === 'black' || color === 'white') ? shop.cost : Math.max(0, shop.cost + (currentPlayer?.shopCostModifier || 0));
             
             const handlePurchase = () => {
                 if (isClosed) {
@@ -7861,7 +7864,7 @@
                     React.createElement('strong', {}, 
                         color === 'black' && shop.special === 'steal2FromEach' 
                             ? `6 Black: Steal 2 VP from Each Player`
-                            : `${color === 'yellow' ? `${actualCost} ⭐` : `${shop.cost[color]} ${color.charAt(0).toUpperCase() + color.slice(1)}`}: ${shop.vp} VP`)),
+                            : `${color === 'yellow' ? `${actualCost} ⭐` : `${actualCost} ${color.charAt(0).toUpperCase() + color.slice(1)}`}: ${shop.vp} VP`)),
                 React.createElement('div', { key: 'button', className: 'text-center' }, 
                     React.createElement('button', {
                         onClick: handlePurchase,
