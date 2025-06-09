@@ -563,12 +563,7 @@
                              attempts < maxAttempts);
                     
                     // Update skip counts to reflect the skipped players
-                    const newSkippedTurns = { ...effectiveSkippedTurns };
-                    skippedPlayers.forEach(playerId => {
-                        if (newSkippedTurns[playerId] > 0) {
-                            newSkippedTurns[playerId]--;
-                        }
-                    });
+                    const newSkippedTurns = { ...tempSkippedTurns };
                     
                     // Set workers to place for waiting players who are now active
                     const waitingPlayerUpdate = waitingPlayersUpdates.find(u => u.playerId === nextPlayer);
@@ -1561,8 +1556,19 @@
                 dispatch({ type: 'PLACE_WORKER', actionId });
                 
                 // Get fresh state after worker placement for repeat actions
-                const freshState = { ...state, occupiedSpaces: { ...state.occupiedSpaces, [actionId]: state.currentPlayer } };
-                await executeAction(actionId, currentPlayer, dispatch, freshState, state.gameLayers);
+                const freshState = { 
+                    ...state, 
+                    occupiedSpaces: { ...state.occupiedSpaces, [actionId]: state.currentPlayer },
+                    players: state.players.map(p => 
+                        p.id === state.currentPlayer 
+                            ? { ...p, workersLeft: p.workersLeft - 1 }
+                            : p
+                    ),
+                    workerPlacedThisTurn: true,
+                    workersToPlace: Math.max(0, state.workersToPlace - 1)
+                };
+                const freshPlayer = freshState.players.find(p => p.id === state.currentPlayer);
+                await executeAction(actionId, freshPlayer, dispatch, freshState, state.gameLayers);
                 
                 const message = `Action completed: ${actionId} for Player ${currentPlayer.id}`;
                 dispatch({ type: 'ADD_LOG', message });
