@@ -226,6 +226,7 @@
             modal: null,
             actionLog: [],
             gameLayers: null, // Will be set when game starts
+            automaticVPs: {}, // Track which automatic VPs are active { blue: true, etc }
             closedShops: {}, // Track which shops are closed { 'red1': true, 'blue2': true, etc }
             shopCostModifier: 0, // Cost modifier for shops this round
             skippedTurns: {}, // Track players who should skip turns { playerId: turnsToSkip }
@@ -240,7 +241,8 @@
             connectedPlayers: {},
             isHost: false,
             gameStarted: false,
-            connectionStatus: 'disconnected' // 'disconnected', 'connecting', 'connected'
+            connectionStatus: 'disconnected', // 'disconnected', 'connecting', 'connected'
+            gameOver: false
         };
 
         function gameReducer(state, action) {
@@ -941,9 +943,15 @@
                     };
                 
                 case 'SET_GAME_LAYERS':
+                    // Set automatic VPs based on which layers are active
+                    const automaticVPs = {};
+                    if (action.layers.blue) {
+                        automaticVPs.blue = true;
+                    }
                     return {
                         ...state,
-                        gameLayers: action.layers
+                        gameLayers: action.layers,
+                        automaticVPs: automaticVPs
                     };
                 
                 case 'SET_GAME_MODE':
