@@ -26,6 +26,11 @@
             scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
         }
         
+        /* Prevent layout shift when modal opens */
+        body.modal-open {
+            overflow: hidden;
+        }
+        
         html {
             scroll-behavior: smooth;
             -webkit-text-size-adjust: 100%;
@@ -4493,13 +4498,22 @@
 
         // Custom Modal Components
         function Modal({ isOpen, onClose, children }) {
+            React.useEffect(() => {
+                if (isOpen) {
+                    document.body.classList.add('modal-open');
+                    return () => {
+                        document.body.classList.remove('modal-open');
+                    };
+                }
+            }, [isOpen]);
+            
             if (!isOpen) return null;
             
             return React.createElement('div', {
-                className: 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50',
+                className: 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-hidden',
                 onClick: onClose
             }, React.createElement('div', {
-                className: 'glass rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl',
+                className: 'glass rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl max-h-[90vh] overflow-y-auto',
                 onClick: (e) => e.stopPropagation()
             }, children));
         }
@@ -8244,7 +8258,7 @@
                 sum + layer.actions.filter(action => action.round <= state.round).length, 0
             );
             
-            return React.createElement('div', { className: 'min-h-screen p-4' }, [
+            return React.createElement('div', { className: 'min-h-screen p-4 overflow-x-hidden' }, [
                 // Notification Display
                 React.createElement(NotificationDisplay, {
                     key: 'notifications',
@@ -8465,7 +8479,7 @@
                 if (!state.gameStarted) {
                     // If connected to a room but game hasn't started, show waiting room
                     if (state.roomCode) {
-                        return React.createElement('div', { className: 'min-h-screen p-4' }, [
+                        return React.createElement('div', { className: 'min-h-screen p-4 overflow-x-hidden' }, [
                             React.createElement(ConnectedPlayers, { key: 'players' }),
                             React.createElement('div', { 
                                 key: 'waiting',
