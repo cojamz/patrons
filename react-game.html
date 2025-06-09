@@ -2048,6 +2048,32 @@
                     }
                 }
                 
+                // Validate swap worker actions - prevent placing if no workers to swap
+                if (actionId === 'redHybrid1' || actionId === 'redHybrid2') {
+                    // Check if player has other workers on the board to swap
+                    const playerWorkersOnBoard = Object.entries(state.occupiedSpaces)
+                        .filter(([spaceId, playerId]) => playerId === state.currentPlayer && spaceId !== actionId)
+                        .length;
+                    
+                    if (playerWorkersOnBoard === 0) {
+                        // Check if this is the only available action
+                        const availableActions = [];
+                        Object.entries(state.gameLayers || {}).forEach(([color, layer]) => {
+                            layer.actions.forEach(action => {
+                                if (action.round <= state.round && !state.occupiedSpaces[action.id]) {
+                                    availableActions.push(action.id);
+                                }
+                            });
+                        });
+                        
+                        if (availableActions.length > 1) {
+                            alert('You have no other workers on the board to swap! Choose a different action.');
+                            return;
+                        }
+                        // If this is the only action available, allow placement but it won't trigger swap
+                    }
+                }
+                
                 // Store action info before placing worker, in case we need to undo
                 const workerInfo = { actionId, playerId: state.currentPlayer };
                 
@@ -7021,6 +7047,19 @@
                     
                     if (totalAvailableForAny < anyRequired) {
                         alert(`Need ${anyRequired} additional gems of ⭐ color. You have ${totalAvailableForAny} available.`);
+                        return;
+                    }
+                }
+                
+                // Special validation for Purple R1 shop - prevent wasting if already have extra turn
+                if (color === 'purple' && shopRound === 1) {
+                    const hasExtraTurnEffect = (currentPlayer.effects || []).some(effect => 
+                        effect.includes('Will take an extra turn after this one')
+                    );
+                    const hasExtraTurns = (currentPlayer.extraTurns || 0) > 0;
+                    
+                    if (hasExtraTurnEffect || hasExtraTurns) {
+                        alert('You already have an extra turn queued! Cannot purchase another one.');
                         return;
                     }
                 }
