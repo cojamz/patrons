@@ -3307,9 +3307,13 @@
             
             // Blue any shop benefit action (R3)
             if (actionId === 'blueAnyShopBenefit') {
+                console.log('Executing blueAnyShopBenefit for player', player.id);
+                
                 // List all available shops from active game layers only
                 const shopOptions = [];
                 const colors = currentState.gameLayers ? Object.keys(currentState.gameLayers) : ['red', 'yellow', 'blue', 'purple'];
+                
+                console.log('Available game layers:', colors);
                 
                 const shopInfo = {
                     red: {
@@ -3397,17 +3401,28 @@
                             group: group
                         });
                     }
-                    // Victory shops - EXCLUDED from Blue R3 to prevent too much VP gain
-                    // Victory shops would give direct VP which is too powerful for a free benefit
-                    /*
-                    const vpCost = color === 'purple' ? '6' : (color === 'yellow' ? '5 any' : '5');
-                    shopOptions.push({
-                        label: `${color} Victory: ${vpCost} ${color === 'yellow' ? '' : color} → 3 VP`,
-                        shortLabel: `VP: ${colorEmojis[color]} 3 Victory Points`,
-                        value: { color, round: 'vp' },
-                        group: group
-                    });
-                    */
+                    // Victory shops - include all VP shops
+                    // VP values vary by color
+                    const vpShopData = {
+                        red: { cost: '4 red', vp: 5 },
+                        yellow: { cost: '4 ⭐', vp: 3 },
+                        blue: { cost: '4 blue', vp: 5 },
+                        purple: { cost: '4 purple', vp: 5 },
+                        white: { cost: '4 white', vp: 4 },
+                        black: { cost: '6 black', vp: 'Steal 2 from each' },
+                        silver: { cost: '6 silver', vp: 8 },
+                        gold: null // Gold has no VP shop
+                    };
+                    
+                    if (vpShopData[color]) {
+                        const vpData = vpShopData[color];
+                        shopOptions.push({
+                            label: `${color} Victory: ${vpData.cost} → ${typeof vpData.vp === 'number' ? vpData.vp + ' VP' : vpData.vp}`,
+                            shortLabel: `VP: ${colorEmojis[color]} Victory Shop`,
+                            value: { color, round: 'vp' },
+                            group: group
+                        });
+                    }
                 });
                 
                 const choice = await showChoice(dispatch, 'Choose any shop benefit (ignores closed status)', shopOptions, true, workerInfo);
@@ -3415,13 +3430,43 @@
                 if (choice) {
                     // Execute the shop benefit without paying cost
                     if (choice.round === 'vp') {
-                        // Grant 3 VP
-                        dispatch({
-                            type: 'UPDATE_VP',
-                            playerId: player.id,
-                            vp: 3
-                        });
-                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gained 3 VP from ${choice.color} victory shop` });
+                        // Handle VP shops
+                        if (choice.color === 'black') {
+                            // Black VP shop: Steal 2 VP from each other player
+                            const otherPlayers = state.players.filter(p => p.id !== player.id);
+                            otherPlayers.forEach(otherPlayer => {
+                                const vpToSteal = Math.min(2, otherPlayer.victoryPoints);
+                                if (vpToSteal > 0) {
+                                    dispatch({
+                                        type: 'UPDATE_VP',
+                                        playerId: otherPlayer.id,
+                                        vp: -vpToSteal,
+                                        source: 'blackSteal'
+                                    });
+                                    dispatch({
+                                        type: 'UPDATE_VP',
+                                        playerId: player.id,
+                                        vp: vpToSteal,
+                                        source: 'blackSteal'
+                                    });
+                                }
+                            });
+                            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Black Victory shop → Stole 2 VP from each other player` });
+                        } else {
+                            // Regular VP shops
+                            const vpAmounts = {
+                                red: 5, yellow: 3, blue: 5, purple: 5,
+                                white: 4, silver: 8
+                            };
+                            const vpGain = vpAmounts[choice.color] || 3;
+                            dispatch({
+                                type: 'UPDATE_VP',
+                                playerId: player.id,
+                                vp: vpGain,
+                                source: 'victoryShop'
+                            });
+                            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: ${choice.color} Victory shop → +${vpGain} VP` });
+                        }
                     } else {
                         // Execute regular shop effect
                         await executeShopBenefit(choice.color, choice.round, player, dispatch, state, recursionDepth + 1);
