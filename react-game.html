@@ -1902,11 +1902,11 @@
             }
             
             if (actionId === 'gain4purpleWaitAll') {
-                // Give 3 purple resources
+                // Give 4 purple resources
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
-                    resources: { purple: 3 }
+                    resources: { purple: 4 }
                 });
                 
                 // Add extra turn
@@ -1916,7 +1916,7 @@
                     updates: { extraTurns: (player.extraTurns || 0) + 1 }
                 });
                 
-                const message = `Player ${player.id}: gain4purpleWaitAll → +3 purple, gained an extra turn`;
+                const message = `Player ${player.id}: gain4purpleWaitAll → +4 purple, gained an extra turn`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -2394,14 +2394,14 @@
             
             // Yellow hybrid actions
             if (actionId === 'yellowHybrid1') {
-                // Gain 1 resource of any color
-                const selectedGem = await showGemSelection(dispatch, 'Choose 1 Resource (⭐ Color)', 1);
+                // Gain 2 resources of any color
+                const selectedGem = await showGemSelection(dispatch, 'Choose 2 Resources (⭐ Color)', 2);
                 
                 if (!selectedGem) {
                     // If cancelled, give default resource
-                    const resources = { yellow: 1 };
+                    const resources = { yellow: 2 };
                     dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources });
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: yellowHybrid1 → +1 yellow (default)` });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: yellowHybrid1 → +2 yellow (default)` });
                     return;
                 }
                 
@@ -2726,10 +2726,10 @@
                 // Add cost increase for this round
                 dispatch({
                     type: 'ADD_SHOP_COST_MODIFIER',
-                    modifier: 1
+                    modifier: 2
                 });
                 
-                const message = `Player ${player.id}: blueIncreaseCosts → +2 blue + shop costs increased by 1 ⭐`;
+                const message = `Player ${player.id}: blueIncreaseCosts → +2 blue + shop costs increased by 2 ⭐`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -3193,15 +3193,25 @@
                 });
                 
                 // Choose a player to steal from
-                const otherPlayers = currentState.players.filter(p => p.id !== player.id && p.victoryPoints > 0);
+                const otherPlayers = currentState.players.filter(p => p.id !== player.id);
+                const playersWithVP = otherPlayers.filter(p => p.victoryPoints > 0);
                 
-                if (otherPlayers.length === 0) {
-                    const message = `Player ${player.id}: blackSteal1VP → +1 black (no valid targets to steal VP from)`;
+                if (playersWithVP.length === 0) {
+                    // No one has VP to steal
+                    const message = `Player ${player.id}: blackSteal1VP → +1 black (no one has VP to steal)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
                 
-                const targetPlayer = await showPlayerSelection(dispatch, 'Choose a player to steal 1 VP from', otherPlayers);
+                // Show UI even if only one player has VP
+                const targetPlayer = await showPlayerSelection(
+                    dispatch, 
+                    'Choose a player to steal 1 VP from', 
+                    playersWithVP.map(p => ({
+                        ...p,
+                        name: `${p.name} (${p.victoryPoints} VP)`
+                    }))
+                );
                 
                 if (!targetPlayer) {
                     const message = `Player ${player.id}: blackSteal1VP → +1 black (cancelled)`;
@@ -3389,11 +3399,11 @@
             
             // All other players lose 4 VP
             if (actionId === 'blackAllLose4VP') {
-                // Give 1 black resource
+                // Give 2 black resources
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
-                    resources: { black: 1 }
+                    resources: { black: 2 }
                 });
                 
                 const otherPlayers = currentState.players.filter(p => p.id !== player.id);
@@ -3407,7 +3417,7 @@
                     });
                 });
                 
-                const message = `Player ${player.id}: blackAllLose4VP → +1 black, all other players lose 4 VP`;
+                const message = `Player ${player.id}: blackAllLose4VP → +2 black, all other players lose 4 VP`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -3616,8 +3626,8 @@
                     resources: { silver: 3 }
                 });
                 
-                // Choose 2 gems of any color
-                const selectedGems = await showGemSelection(dispatch, 'Choose 2 gems (others will get 1 of that color)', 2);
+                // Choose 1 color to get 2 of (must be same color)
+                const selectedGems = await showGemSelection(dispatch, 'Choose 1 color to get 2 gems of (others will get 1 of that color)', 1);
                 
                 if (!selectedGems) {
                     // If cancelled, give default red
@@ -3639,15 +3649,13 @@
                     return;
                 }
                 
-                // Give current player the selected gems
+                // Give current player 2 of the selected color
+                const chosenColor = Object.keys(selectedGems)[0];
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
-                    resources: selectedGems
+                    resources: { [chosenColor]: 2 }
                 });
-                
-                // Give other players 1 of the chosen color (if multiple colors chosen, use the first)
-                const chosenColor = Object.keys(selectedGems)[0];
                 const otherPlayers = currentState.players.filter(p => p.id !== player.id);
                 otherPlayers.forEach(otherPlayer => {
                     dispatch({
@@ -3657,33 +3665,20 @@
                     });
                 });
                 
-                const message = `Player ${player.id}: silver3Plus2Others1 → +3 silver +2 gems, others +1 ${chosenColor}`;
+                const message = `Player ${player.id}: silver3Plus2Others1 → +3 silver +2 ${chosenColor}, others +1 ${chosenColor}`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
             // +4 VP and 4 ⭐
             if (actionId === 'silver8VPOthers3S') {
-                // Give current player 4 VP
-                let vpGain = 4;
+                // Give current player 8 VP
+                let vpGain = 8;
                 
                 // Check for doubling effect on VP
                 const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
                 if (hasDoubleEffect) {
                     vpGain *= 2;
-                }
-                
-                dispatch({
-                    type: 'UPDATE_VP',
-                    playerId: player.id,
-                    vp: vpGain,
-                    source: 'silverAction'
-                });
-                
-                // Choose 4 gems to gain
-                let gemsToGain = 4;
-                if (hasDoubleEffect) {
-                    gemsToGain *= 2;
                     
                     // Remove the doubling effect after use
                     dispatch({
@@ -3693,28 +3688,14 @@
                     });
                 }
                 
-                const selectedGems = await showGemSelection(dispatch, `Choose ${gemsToGain} gems to gain`, gemsToGain);
-                
-                if (!selectedGems) {
-                    // If cancelled, give default gems
-                    const defaultGems = {};
-                    const colors = currentState.gameLayers ? Object.keys(currentState.gameLayers) : ['red', 'yellow', 'blue', 'purple'];
-                    for (let i = 0; i < gemsToGain && i < colors.length; i++) {
-                        defaultGems[colors[i % colors.length]] = (defaultGems[colors[i % colors.length]] || 0) + 1;
-                    }
-                    dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources: defaultGems });
-                    const message = `Player ${player.id}: silver8VPOthers3S → +${vpGain} VP${hasDoubleEffect ? ' (DOUBLED!)' : ''}, +${gemsToGain} gems (default)`;
-                    dispatch({ type: 'ADD_LOG', message });
-                    return;
-                }
-                
                 dispatch({
-                    type: 'UPDATE_RESOURCES',
+                    type: 'UPDATE_VP',
                     playerId: player.id,
-                    resources: selectedGems
+                    vp: vpGain,
+                    source: 'silverAction'
                 });
                 
-                // Give other players 3 silver each
+                // Give 3 silver to each other player
                 const otherPlayers = currentState.players.filter(p => p.id !== player.id);
                 otherPlayers.forEach(otherPlayer => {
                     dispatch({
@@ -3724,7 +3705,7 @@
                     });
                 });
                 
-                const message = `Player ${player.id}: silver8VPOthers3S → +${vpGain} VP${hasDoubleEffect ? ' (DOUBLED!)' : ''}, +${gemsToGain} gems, all other players +3 silver`;
+                const message = `Player ${player.id}: silver8VPOthers3S → +${vpGain} VP${hasDoubleEffect ? ' (DOUBLED!)' : ''}, each other player +3 silver`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -6574,7 +6555,6 @@
                 yellow: { cost: { any: 4 }, vp: 3 },
                 blue: { cost: { blue: 4 }, vp: 5 },
                 purple: { cost: { purple: 4 }, vp: 5 },
-                gold: { cost: { gold: 10 }, vp: 15 },
                 white: { cost: { white: 4 }, vp: 4 },
                 black: { cost: { black: 6 }, vp: 0, special: 'steal2FromEach' },
                 silver: { cost: { silver: 6 }, vp: 8 }
@@ -6739,7 +6719,7 @@
                     { id: 'gain3yellow', title: 'Gain 3 ⭐', description: '', round: 1 },
                     { id: 'gain2yellow', title: 'Gain 2 ⭐', description: '', round: 1 },
                     { id: 'steal2Gems', title: 'Trade All ⭐ for ⭐', description: '', round: 1 },
-                    { id: 'yellowHybrid1', title: 'Gain 1 ⭐', description: '', round: 1 },
+                    { id: 'yellowHybrid1', title: 'Gain 2 ⭐', description: '', round: 1 },
                     { id: 'steal3Gems', title: 'Steal 3 Resources', description: '', round: 2 },
                     { id: 'yellowHybrid2', title: '+1 🟡 + Double Next Gain', description: '(Doesn\'t stack with shop)', round: 2 },
                     { id: 'yellowSwapResources', title: 'Swap All Resources', description: '(Choose ⭐ player)', round: 3 }
@@ -6753,7 +6733,7 @@
                     { id: 'gain2blue', title: 'Gain 2 🔵', description: '', round: 1 },
                     { id: 'blueR1ShopBenefit', title: 'Gain an R1 Shop Benefit', description: '(Even if closed)', round: 1 },
                     { id: 'blueReduceCosts', title: '+1 🔵 + Reduce All Shop Costs', description: '(By 1 ⭐ this round)', round: 1 },
-                    { id: 'blueIncreaseCosts', title: '+2 🔵 + Increase All Shop Costs', description: '(By 1 ⭐ this round)', round: 2 },
+                    { id: 'blueIncreaseCosts', title: '+2 🔵 + Increase All Shop Costs', description: '(By 2 ⭐ this round)', round: 2 },
                     { id: 'blueToggleShops', title: '+1 🔵 + Toggle All Shop Status', description: '(Including victory shops)', round: 2 },
                     { id: 'blueAnyShopBenefit', title: 'Gain ⭐ Shop Benefit', description: '(Even if closed)', round: 3 }
                 ]
@@ -6768,7 +6748,7 @@
                     { id: 'playTwoWorkers', title: 'Play 2 More Workers', description: '(This turn)', round: 1 },
                     { id: 'gain5purpleSkip', title: 'Gain 5 🟣, Skip Turn', description: '', round: 2 },
                     { id: 'playThreeWorkers', title: 'Play 3 More Workers', description: '(This turn)', round: 2 },
-                    { id: 'gain4purpleWaitAll', title: 'Gain 3 🟣, Take Another Turn', description: '', round: 3 }
+                    { id: 'gain4purpleWaitAll', title: 'Gain 4 🟣, Take Another Turn', description: '', round: 3 }
                 ]
             },
             gold: {
@@ -6807,7 +6787,7 @@
                     { id: 'blackSteal2Any', title: 'Steal 2 ⭐', description: '(From another player)', round: 1 },
                     { id: 'blackStealWorker', title: '+1 ⚫, Steal Worker', description: '(Gain one of their remaining workers)', round: 2 },
                     { id: 'blackAllLose2VP', title: 'All Others Lose 2 VP', description: '', round: 2 },
-                    { id: 'blackAllLose4VP', title: '+1 ⚫, All Others Lose 4 VP', description: '', round: 3 }
+                    { id: 'blackAllLose4VP', title: '+2 ⚫, All Others Lose 4 VP', description: '', round: 3 }
                 ]
             },
             silver: {
@@ -6820,7 +6800,7 @@
                     { id: 'silver2VPBoth', title: '+2 VP, Pick Another +2 VP', description: '(Choose another player)', round: 1 },
                     { id: 'silverTakeBack2', title: '+2 Silver, Take Back 2', description: '(Others take back 1 worker)', round: 2 },
                     { id: 'silver3Plus2Others1', title: '+3 Silver + 2 ⭐', description: '(Others get 1 of that color)', round: 2 },
-                    { id: 'silver8VPOthers3S', title: '+4 VP and 4 ⭐', description: '(Each other player gets +3 Silver)', round: 3 }
+                    { id: 'silver8VPOthers3S', title: '+8 VP, Others +3 Silver', description: '(Each other player gets +3 Silver)', round: 3 }
                 ]
             }
         };
