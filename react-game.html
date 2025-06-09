@@ -2338,10 +2338,25 @@
             
             // NEW PURPLE LAYER ACTIONS
             if (actionId === 'gain4purpleSkip') {
+                // Check for doubling effect
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                let purpleGain = 4;
+                
+                if (hasDoubleEffect) {
+                    purpleGain *= 2;
+                    
+                    // Remove the doubling effect after use
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: player.id,
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                    });
+                }
+                
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
-                    resources: { purple: 4 }
+                    resources: { purple: purpleGain }
                 });
                 
                 // Set skip for next turn
@@ -2352,16 +2367,31 @@
                     skippedTurns: newSkippedTurns
                 });
                 
-                const message = `Player ${player.id}: gain4purpleSkip → +4 purple, will skip next turn (total skips: ${newSkippedTurns[player.id]})`;
+                const message = `Player ${player.id}: gain4purpleSkip → +${purpleGain} purple${hasDoubleEffect ? ' (DOUBLED!)' : ''}, will skip next turn (total skips: ${newSkippedTurns[player.id]})`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
             if (actionId === 'gain2purpleTakeBack') {
+                // Check for doubling effect
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                let purpleGain = 2;
+                
+                if (hasDoubleEffect) {
+                    purpleGain *= 2;
+                    
+                    // Remove the doubling effect after use
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: player.id,
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                    });
+                }
+                
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
-                    resources: { purple: 2 }
+                    resources: { purple: purpleGain }
                 });
                 
                 // Find workers on different quad (non-purple)
@@ -2415,16 +2445,31 @@
                     }
                 }
                 
-                const message = `Player ${player.id}: gain2purpleTakeBack → +2 purple + take back worker`;
+                const message = `Player ${player.id}: gain2purpleTakeBack → +${purpleGain} purple${hasDoubleEffect ? ' (DOUBLED!)' : ''} + take back worker`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
             if (actionId === 'gain5purpleSkip') {
+                // Check for doubling effect
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                let purpleGain = 5;
+                
+                if (hasDoubleEffect) {
+                    purpleGain *= 2;
+                    
+                    // Remove the doubling effect after use
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: player.id,
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                    });
+                }
+                
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
-                    resources: { purple: 5 }
+                    resources: { purple: purpleGain }
                 });
                 
                 // Set skip for this turn (immediately)
@@ -2435,7 +2480,7 @@
                     skippedTurns: newSkippedTurns
                 });
                 
-                const message = `Player ${player.id}: gain5purpleSkip → +5 purple, will skip next turn (total skips: ${newSkippedTurns[player.id]})`;
+                const message = `Player ${player.id}: gain5purpleSkip → +${purpleGain} purple${hasDoubleEffect ? ' (DOUBLED!)' : ''}, will skip next turn (total skips: ${newSkippedTurns[player.id]})`;
                 dispatch({ type: 'ADD_LOG', message });
                 
                 // Force end turn
@@ -3473,10 +3518,25 @@
             
             // Gain 3 Gold, Skip Next Turn
             if (actionId === 'gain3goldSkip') {
+                // Check for doubling effect
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                let goldGain = 3;
+                
+                if (hasDoubleEffect) {
+                    goldGain *= 2;
+                    
+                    // Remove the doubling effect after use
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: player.id,
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                    });
+                }
+                
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
-                    resources: { gold: 3 }
+                    resources: { gold: goldGain }
                 });
                 
                 // Set skip for next turn
@@ -3487,7 +3547,7 @@
                     skippedTurns: newSkippedTurns
                 });
                 
-                const message = `Player ${player.id}: gain3goldSkip → +3 gold, will skip next turn (total skips: ${newSkippedTurns[player.id]})`;
+                const message = `Player ${player.id}: gain3goldSkip → +${goldGain} gold${hasDoubleEffect ? ' (DOUBLED!)' : ''}, will skip next turn (total skips: ${newSkippedTurns[player.id]})`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
