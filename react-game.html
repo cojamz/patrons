@@ -3323,13 +3323,13 @@
                     },
                     yellow: {
                         1: 'Double your next gain action',
-                        2: 'Gain 5 ⭐, others get 1',
-                        3: 'Gain 7 ⭐, others get 1'
+                        2: 'Gain 5 ⭐',
+                        3: 'Gain 7 ⭐'
                     },
                     blue: {
                         1: 'Close any shop this round',
                         2: 'Toggle the status of all shops',
-                        3: 'Flip all shop statuses'
+                        3: 'Gain any shop benefit'
                     },
                     purple: {
                         1: 'Take an extra turn',
@@ -5366,39 +5366,8 @@
             });
             
             const totalGems = Object.values(finalGems).reduce((sum, amount) => sum + amount, 0);
-            
-            // Yellow R3 also gives 1 gem to each other player
-            // Let player choose which color to give
-            const gemColors = Object.keys(state.players[0].resources).filter(color => 
-                state.gameLayers && state.gameLayers[color]
-            );
-            
-            const colorChoice = await showChoice(
-                dispatch, 
-                'Choose a gem color to give to all other players',
-                gemColors.map(color => ({
-                    label: color.charAt(0).toUpperCase() + color.slice(1),
-                    value: color
-                }))
-            );
-            
-            if (colorChoice) {
-                // Give 1 gem of chosen color to each other player
-                const otherPlayers = state.players.filter(p => p.id !== player.id);
-                otherPlayers.forEach(otherPlayer => {
-                    dispatch({
-                        type: 'UPDATE_RESOURCES',
-                        playerId: otherPlayer.id,
-                        resources: { [colorChoice]: 1 }
-                    });
-                });
-                
-                const message = `Player ${player.id}: Yellow R3 shop → Gained ${totalGems} gems${hasDoubleEffect ? ' (DOUBLED!)' : ''}, others get 1 ${colorChoice}`;
-                dispatch({ type: 'ADD_LOG', message });
-            } else {
-                const message = `Player ${player.id}: Yellow R3 shop → Gained ${totalGems} gems${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
-                dispatch({ type: 'ADD_LOG', message });
-            }
+            const message = `Player ${player.id}: Yellow R3 shop → Gained ${totalGems} gems${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
+            dispatch({ type: 'ADD_LOG', message });
         }
         
         // Execute yellow 2 shop effect
@@ -5445,39 +5414,8 @@
             });
             
             const totalGems = Object.values(finalGems).reduce((sum, amount) => sum + amount, 0);
-            
-            // Yellow R2 also gives 1 gem to each other player
-            // Let player choose which color to give
-            const gemColors = Object.keys(state.players[0].resources).filter(color => 
-                state.gameLayers && state.gameLayers[color]
-            );
-            
-            const colorChoice = await showChoice(
-                dispatch, 
-                'Choose a gem color to give to all other players',
-                gemColors.map(color => ({
-                    label: color.charAt(0).toUpperCase() + color.slice(1),
-                    value: color
-                }))
-            );
-            
-            if (colorChoice) {
-                // Give 1 gem of chosen color to each other player
-                const otherPlayers = state.players.filter(p => p.id !== player.id);
-                otherPlayers.forEach(otherPlayer => {
-                    dispatch({
-                        type: 'UPDATE_RESOURCES',
-                        playerId: otherPlayer.id,
-                        resources: { [colorChoice]: 1 }
-                    });
-                });
-                
-                const message = `Player ${player.id}: Yellow R2 shop → Gained ${totalGems} gems${hasDoubleEffect ? ' (DOUBLED!)' : ''}, others get 1 ${colorChoice}`;
-                dispatch({ type: 'ADD_LOG', message });
-            } else {
-                const message = `Player ${player.id}: Yellow R2 shop → Gained ${totalGems} gems${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
-                dispatch({ type: 'ADD_LOG', message });
-            }
+            const message = `Player ${player.id}: Yellow R2 shop → Gained ${totalGems} gems${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
+            dispatch({ type: 'ADD_LOG', message });
         }
         
         // Execute blue 1 shop effect - Toggle any shop (open/closed)
@@ -5625,39 +5563,10 @@
             }
         }
         
-        // Execute blue 3 shop effect - Flip all shop statuses
-        async function executeBlue3Shop(player, dispatch, state) {
-            // Flip the status of all shops (open becomes closed, closed becomes open)
-            const allShops = [];
-            const colors = state.gameLayers ? Object.keys(state.gameLayers) : [];
-            
-            colors.forEach(color => {
-                for (let round = 1; round <= 3; round++) {
-                    allShops.push(`${color}${round}`);
-                }
-                // Also include victory shops
-                allShops.push(`${color}Victory`);
-            });
-            
-            // Create new closed shops state by flipping all shops
-            const newClosedShops = {};
-            allShops.forEach(shopId => {
-                // If shop was closed, it's now open (not in newClosedShops)
-                // If shop was open, it's now closed (add to newClosedShops)
-                if (!state.closedShops[shopId]) {
-                    newClosedShops[shopId] = true;
-                }
-            });
-            
-            dispatch({
-                type: 'SET_CLOSED_SHOPS',
-                closedShops: newClosedShops
-            });
-            
-            const openCount = allShops.length - Object.keys(newClosedShops).length;
-            const closedCount = Object.keys(newClosedShops).length;
-            
-            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Blue R3 shop → Flipped all shop statuses (${openCount} open, ${closedCount} closed)` });
+        // Execute blue 3 shop effect - Gain any shop benefit (even if closed)
+        async function executeBlue3Shop(player, dispatch, state, recursionDepth = 0) {
+            // This is the same as blueAnyShopBenefit action
+            await executeAction('blueAnyShopBenefit', player, dispatch, state, state.gameLayers, recursionDepth);
         }
         
         // Execute gold 1 shop effect - 1 Gold + 1 ⭐ = 2 Gold (gain 2 gold)

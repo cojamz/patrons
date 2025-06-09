@@ -43,8 +43,8 @@ This document tracks the complete specification for the Patrons game layers and 
 
 **Shops:**
 - R1: 1 yellow + 1 any = Double your next gain action
-- R2: 2 yellow + 2 any = Gain 5 cubes any color, everyone gains 1 cube of your choice
-- R3: 3 yellow + 3 any = Gain 9 gems of any kind, each other player gains 1 color of your choice
+- R2: 2 yellow + 2 any = Gain 5 gems of any color
+- R3: 3 yellow + 3 any = Gain 7 gems of any color
 - Victory Points: 5 any = 3 VP
 
 **Automatic VP:** At end of each round: +1 VP for each different color gem you have
@@ -65,9 +65,9 @@ This document tracks the complete specification for the Patrons game layers and 
 
 **Shops:**
 - R1: 1 blue + 1 any = Close any shop this round
-- R2: 2 blue + 2 any = Gain a shop benefit then close that shop
-- R3: 3 blue + 3 any = Flip the status of all shops, including victory shops
-- Victory Points: 5 blue = 3 VP
+- R2: 2 blue + 2 any = Toggle the status of all shops
+- R3: 3 blue + 3 any = Gain any shop benefit (even if closed)
+- Victory Points: 5 blue = 5 VP
 
 **Automatic VP:** Gain 1 VP each time you use any shop (*Using the "Gain a shop benefit" action counts as using a shop for VP purposes)
 
@@ -127,8 +127,8 @@ This document tracks the complete specification for the Patrons game layers and 
 - [x] `steal2Gems` - Steal 2 gems from any player ✅
 - [x] `steal3Gems` - Steal 3 gems from any player ✅
 - [x] `yellowSwapResources` - Swap all resources with chosen player ✅
-- [ ] Yellow shop R2 effect: Gain 5 gems + everyone gains 1
-- [ ] Yellow shop R3 effect: Gain 9 gems + everyone gains 1 each
+- [x] Yellow shop R2 effect: Gain 5 gems ✅
+- [x] Yellow shop R3 effect: Gain 7 gems ✅
 - [x] Yellow automatic VP system (end of round) ✅
 
 #### Blue Layer
@@ -137,8 +137,8 @@ This document tracks the complete specification for the Patrons game layers and 
 - [x] `blueIncreaseCosts` - Increase all shop costs by 1 any ✅
 - [x] `blueFlipShops` - Flip status of all shops ✅
 - [x] Blue shop benefit actions now properly execute shop effects ✅
-- [ ] Blue shop R2 effect: Gain shop benefit then close it
-- [ ] Blue shop R3 effect: Flip all shop statuses
+- [x] Blue shop R2 effect: Toggle all shop statuses ✅
+- [x] Blue shop R3 effect: Gain any shop benefit ✅
 - [x] Blue automatic VP system (when any player uses shop) ✅
 - [x] Shop closed/open status tracking ✅
 
