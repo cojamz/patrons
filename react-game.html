@@ -710,9 +710,13 @@
                     const playersByVP = [...playersAfterSilverAuto].sort((a, b) => a.victoryPoints - b.victoryPoints);
                     const newTurnOrder = playersByVP.map(p => p.id);
                     
+                    // Check if game is over after round 3
+                    const gameOver = newRound > 3;
+                    
                     return {
                         ...state,
                         round: newRound,
+                        gameOver: gameOver,
                         closedShops: updatedClosedShops,
                         players: playersAfterSilverAuto.map(player => {
                             const baseWorkers = 3 + (state.round + 1);
@@ -1827,11 +1831,8 @@
                     .filter(([actionId, playerId]) => {
                         if (playerId !== player.id) return false;
                         // Check if this action is in the purple quad
-                        const actionData = Object.values(currentState.gameSetup.actions).flat()
-                            .find(action => action.id === actionId);
-                        const isPurpleAction = actionData && Object.keys(currentState.gameSetup.actions)
-                            .find(quadType => currentState.gameSetup.actions[quadType]
-                                .some(a => a.id === actionId)) === 'purple';
+                        const isPurpleAction = gameLayers['purple'] && 
+                            gameLayers['purple'].actions.some(a => a.id === actionId);
                         return !isPurpleAction;
                     });
                 
@@ -2777,9 +2778,12 @@
             
             // Convert 2 ⭐ to 2 Gold
             if (actionId === 'convert2AnyTo2Gold') {
+                // Get fresh player state
+                const currentPlayer = currentState.players.find(p => p.id === player.id);
+                
                 // Count non-gold gems for conversion
-                const nonGoldGems = Object.entries(player.resources)
-                    .filter(([color, amount]) => color !== 'gold')
+                const nonGoldGems = Object.entries(currentPlayer.resources)
+                    .filter(([color, amount]) => color !== 'gold' && amount > 0)
                     .reduce((sum, [color, amount]) => sum + amount, 0);
                 if (nonGoldGems < 2) {
                     const message = `Player ${player.id}: convert2AnyTo2Gold → Need at least 2 gems`;
@@ -2787,8 +2791,8 @@
                     return;
                 }
                 
-                // Choose 2 gems to convert
-                const selectedGems = await showStealGems(dispatch, 'Choose 2 gems to convert to Gold', player, 2);
+                // Choose 2 gems to convert  
+                const selectedGems = await showStealGems(dispatch, 'Choose 2 gems to convert to Gold', currentPlayer, 2);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: convert2AnyTo2Gold → Cancelled`;
@@ -2815,9 +2819,12 @@
             
             // Convert 1 ⭐ to 1 Gold
             if (actionId === 'convert1AnyTo1Gold') {
+                // Get fresh player state
+                const currentPlayer = currentState.players.find(p => p.id === player.id);
+                
                 // Count non-gold gems for conversion
-                const nonGoldGems = Object.entries(player.resources)
-                    .filter(([color, amount]) => color !== 'gold')
+                const nonGoldGems = Object.entries(currentPlayer.resources)
+                    .filter(([color, amount]) => color !== 'gold' && amount > 0)
                     .reduce((sum, [color, amount]) => sum + amount, 0);
                 if (nonGoldGems < 1) {
                     const message = `Player ${player.id}: convert1AnyTo1Gold → Need at least 1 gem`;
@@ -2826,7 +2833,7 @@
                 }
                 
                 // Choose 1 gem to convert
-                const selectedGems = await showStealGems(dispatch, 'Choose 1 gem to convert to Gold', player, 1);
+                const selectedGems = await showStealGems(dispatch, 'Choose 1 gem to convert to Gold', currentPlayer, 1);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: convert1AnyTo1Gold → Cancelled`;
@@ -2874,15 +2881,21 @@
             
             // Convert 3 ⭐ to 3 Gold
             if (actionId === 'convert3AnyTo3Gold') {
-                const totalGems = Object.values(player.resources).reduce((sum, amount) => sum + amount, 0);
-                if (totalGems < 3) {
+                // Get fresh player state
+                const currentPlayer = currentState.players.find(p => p.id === player.id);
+                
+                // Count non-gold gems for conversion
+                const nonGoldGems = Object.entries(currentPlayer.resources)
+                    .filter(([color, amount]) => color !== 'gold' && amount > 0)
+                    .reduce((sum, [color, amount]) => sum + amount, 0);
+                if (nonGoldGems < 3) {
                     const message = `Player ${player.id}: convert3AnyTo3Gold → Need at least 3 gems`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
                 
                 // Choose 3 gems to convert
-                const selectedGems = await showStealGems(dispatch, 'Choose 3 gems to convert to Gold', player, 3);
+                const selectedGems = await showStealGems(dispatch, 'Choose 3 gems to convert to Gold', currentPlayer, 3);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: convert3AnyTo3Gold → Cancelled`;
@@ -3277,6 +3290,7 @@
             
             // Steal 2 ⭐ from another player
             if (actionId === 'blackSteal2Any') {
+                console.log('Executing blackSteal2Any action');
                 // Choose a player to steal from
                 const otherPlayers = currentState.players.filter(p => {
                     if (p.id === player.id) return false;
@@ -6463,18 +6477,26 @@
                     resourceCost[color] = -colorCost;
                 }
                 
-                // Deduct any cost
-                let remaining = anyCost;
-                ['red', 'yellow', 'blue', 'purple'].forEach(c => {
-                    if (remaining > 0 && (vpCost > 0 || c !== color)) {
-                        const available = currentPlayer.resources[c];
-                        const take = Math.min(available, remaining);
-                        if (take > 0) {
-                            resourceCost[c] = (resourceCost[c] || 0) - take;
-                            remaining -= take;
-                        }
+                // Deduct any cost - let player choose colors
+                if (anyCost > 0) {
+                    // Use gem selection modal for better UX
+                    const selectedGems = await showGemSelection(
+                        dispatch,
+                        `Choose ${anyCost} ${anyCost === 1 ? 'gem' : 'gems'} to spend`,
+                        anyCost,
+                        currentPlayer.resources  // Pass available resources to limit selection
+                    );
+                    
+                    if (selectedGems) {
+                        // Add selected gems to resource cost
+                        Object.entries(selectedGems).forEach(([gemColor, count]) => {
+                            resourceCost[gemColor] = (resourceCost[gemColor] || 0) - count;
+                        });
+                    } else {
+                        // If cancelled, return without completing purchase
+                        return;
                     }
-                });
+                }
                 
                 dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
                 
@@ -6532,16 +6554,21 @@
                 yellow: { cost: 4, vp: 3 },
                 blue: { cost: 4, vp: 5 },
                 purple: { cost: 4, vp: 5 },
-                gold: { cost: 4, vp: 7 },
                 white: { cost: 4, vp: 4 },
                 black: { cost: 6, vp: 0, special: 'steal2FromEach' },
                 silver: { cost: 4, vp: 4 }
             };
             
+            // Gold doesn't have a VP shop
+            if (color === 'gold') {
+                return null;
+            }
+            
             const shop = shopData[color];
             const shopId = `${color}vp`;
             const isClosed = state.closedShops[shopId];
-            const actualCost = color === 'yellow' ? Math.max(0, shop.cost + state.shopCostModifier) : shop.cost;
+            // Apply cost modifier to all gem-based VP shops (not black which has special cost)
+            const actualCost = (color === 'black' || color === 'white') ? shop.cost : Math.max(0, shop.cost + state.shopCostModifier);
             
             const handlePurchase = () => {
                 if (isClosed) {
@@ -7165,6 +7192,95 @@
             ]);
         }
 
+        // Win Screen Component
+        function WinScreen() {
+            const { state, dispatch } = useGame();
+            
+            // Sort players by VP (highest to lowest)
+            const sortedPlayers = [...state.players].sort((a, b) => b.victoryPoints - a.victoryPoints);
+            const winner = sortedPlayers[0];
+            
+            const handlePlayAgain = () => {
+                if (state.roomCode) {
+                    // For multiplayer, just reset to lobby
+                    dispatch({ type: 'RESET_GAME' });
+                } else {
+                    // For local, reload the page
+                    window.location.reload();
+                }
+            };
+            
+            return React.createElement('div', { 
+                className: 'min-h-screen bg-gradient-to-br from-yellow-100 via-purple-100 to-blue-100 flex items-center justify-center p-4' 
+            }, React.createElement('div', {
+                className: 'glass rounded-xl p-8 max-w-2xl w-full text-center'
+            }, [
+                React.createElement('h1', { 
+                    key: 'title',
+                    className: 'text-4xl font-bold mb-2 bg-gradient-to-r from-yellow-600 to-purple-600 bg-clip-text text-transparent' 
+                }, 'Game Over!'),
+                
+                React.createElement('div', {
+                    key: 'winner',
+                    className: 'text-6xl mb-4'
+                }, '🎉'),
+                
+                React.createElement('h2', {
+                    key: 'winner-name',
+                    className: 'text-3xl font-bold mb-6'
+                }, `${winner.name} ${winner.emoji || '👤'} Wins!`),
+                
+                React.createElement('div', {
+                    key: 'winner-score',
+                    className: 'text-2xl mb-8 text-gray-700'
+                }, `Final Score: ${winner.victoryPoints} VP`),
+                
+                React.createElement('div', {
+                    key: 'standings',
+                    className: 'mb-8'
+                }, [
+                    React.createElement('h3', {
+                        key: 'standings-title',
+                        className: 'text-xl font-semibold mb-4'
+                    }, 'Final Standings'),
+                    
+                    React.createElement('div', {
+                        key: 'players-list',
+                        className: 'space-y-3'
+                    }, sortedPlayers.map((player, index) => 
+                        React.createElement('div', {
+                            key: player.id,
+                            className: `glass rounded-lg p-3 flex items-center justify-between ${index === 0 ? 'ring-2 ring-yellow-400' : ''}`
+                        }, [
+                            React.createElement('div', {
+                                key: 'left',
+                                className: 'flex items-center gap-3'
+                            }, [
+                                React.createElement('div', {
+                                    key: 'rank',
+                                    className: 'text-2xl font-bold'
+                                }, index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`),
+                                React.createElement('div', {
+                                    key: 'name',
+                                    className: 'text-lg'
+                                }, `${player.name} ${player.emoji || '👤'}`)
+                            ]),
+                            React.createElement('div', {
+                                key: 'score',
+                                className: 'text-xl font-semibold'
+                            }, `${player.victoryPoints} VP`)
+                        ])
+                    ))
+                ]),
+                
+                React.createElement('button', {
+                    key: 'play-again',
+                    onClick: handlePlayAgain,
+                    className: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3 rounded-lg font-semibold text-lg transform hover:scale-105 transition-all'
+                }, state.roomCode ? 'Back to Lobby' : 'Play Again')
+            ]));
+        }
+
         // Main App Component
         function App() {
             return React.createElement(GameProvider, {}, 
@@ -7201,6 +7317,11 @@
                     
                     // Show room lobby for initial connection
                     return React.createElement(RoomLobby, {});
+                }
+                
+                // Show win screen if game is over
+                if (state.gameOver) {
+                    return React.createElement(WinScreen, {});
                 }
                 
                 // Show game board with multiplayer info if in a room
