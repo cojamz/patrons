@@ -1360,6 +1360,12 @@
         function GameProvider({ children }) {
             const [state, dispatch] = useReducer(gameReducer, initialState);
             
+            // Store references for debugging
+            if (window.location.search.includes('test=true') || window.location.search.includes('debug=true')) {
+                window.lastKnownState = state;
+                window.lastKnownDispatch = dispatch;
+            }
+            
             return React.createElement(GameContext.Provider, { value: { state, dispatch } }, children);
         }
 
@@ -8200,6 +8206,52 @@
                     }, 'Reload Game')
                 ]));
             }
+        }
+
+        // Debug functions for testing
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('test') === 'true' || urlParams.get('debug') === 'true') {
+            // Expose debug functions to window for test suite
+            window.debugGetState = () => {
+                const appElement = document.getElementById('root')._reactRootContainer;
+                if (!appElement) return null;
+                
+                // Get the current state from React component
+                let currentState = null;
+                const traverse = (node) => {
+                    if (!node) return;
+                    if (node.memoizedState && node.memoizedState.element && 
+                        node.memoizedState.element.type && 
+                        node.memoizedState.element.type.name === 'App') {
+                        // Found App component, get its state
+                        if (node.memoizedState.memoizedState) {
+                            currentState = node.memoizedState.memoizedState[0];
+                        }
+                    }
+                    if (node.child) traverse(node.child);
+                    if (node.sibling) traverse(node.sibling);
+                };
+                
+                if (appElement._internalRoot) {
+                    traverse(appElement._internalRoot.current);
+                }
+                
+                return currentState || window.lastKnownState || null;
+            };
+            
+            window.debugDispatch = (action) => {
+                if (window.lastKnownDispatch) {
+                    window.lastKnownDispatch(action);
+                    return true;
+                }
+                return false;
+            };
+            
+            window.debugLog = (message) => {
+                console.log('[DEBUG]', message);
+            };
+            
+            console.log('Debug mode enabled. Available functions: debugGetState(), debugDispatch(action), debugLog(message)');
         }
 
         // Render the app

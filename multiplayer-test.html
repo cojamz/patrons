@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Patrons Multiplayer Test Suite</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .player-frame {
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 10px;
+            background: #2a2a2a;
+            height: 600px;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+        .controls {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .log {
+            background: #111;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 5px;
+        }
+        .log-error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+        .log-success {
+            color: #51cf66;
+            background: rgba(81, 207, 102, 0.1);
+        }
+        .log-info {
+            color: #74c0fc;
+            background: rgba(116, 192, 252, 0.1);
+        }
+        .state-diff {
+            background: #222;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-size: 11px;
+        }
+        .test-status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .test-pass {
+            background: rgba(81, 207, 102, 0.2);
+            color: #51cf66;
+        }
+        .test-fail {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Patrons Multiplayer Test Suite</h1>
+    
+    <div class="controls">
+        <h3>Test Controls</h3>
+        <button onclick="runAllTests()">🚀 Run All Tests</button>
+        <button onclick="createTestRoom()">🏠 Create Test Room</button>
+        <button onclick="joinTestRoom()">🔗 Join Test Room</button>
+        <button onclick="clearLog()">🗑️ Clear Log</button>
+        
+        <div style="margin-top: 15px;">
+            <label>Room Code: <input type="text" id="roomCode" placeholder="AUTO" style="padding: 5px;"></label>
+            <label style="margin-left: 20px;">Test Speed: 
+                <select id="testSpeed" style="padding: 5px;">
+                    <option value="fast">Fast (100ms)</option>
+                    <option value="normal" selected>Normal (500ms)</option>
+                    <option value="slow">Slow (1000ms)</option>
+                </select>
+            </label>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <div class="player-frame">
+            <h3>Player 1 (Host)</h3>
+            <iframe id="player1" src="react-game.html?test=true"></iframe>
+        </div>
+        <div class="player-frame">
+            <h3>Player 2</h3>
+            <iframe id="player2" src="react-game.html?test=true"></iframe>
+        </div>
+    </div>
+
+    <div class="test-status" id="testStatus"></div>
+    
+    <div class="log" id="log">
+        <div class="log-entry log-info">Test suite initialized. Ready to run tests.</div>
+    </div>
+
+    <script>
+        // Test configuration
+        const TEST_DELAYS = {
+            fast: 100,
+            normal: 500,
+            slow: 1000
+        };
+
+        // Logging functions
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            log('Log cleared', 'info');
+        }
+
+        function showTestStatus(message, passed) {
+            const statusDiv = document.getElementById('testStatus');
+            statusDiv.className = `test-status ${passed ? 'test-pass' : 'test-fail'}`;
+            statusDiv.textContent = message;
+        }
+
+        // Get test delay based on selected speed
+        function getDelay() {
+            const speed = document.getElementById('testSpeed').value;
+            return TEST_DELAYS[speed];
+        }
+
+        // Wait for async operations
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Access game state from iframe
+        function getGameState(playerId) {
+            const iframe = document.getElementById(playerId);
+            return iframe.contentWindow.window.debugGetState ? 
+                iframe.contentWindow.window.debugGetState() : null;
+        }
+
+        // Execute action in iframe
+        async function executeInFrame(playerId, code) {
+            const iframe = document.getElementById(playerId);
+            return iframe.contentWindow.eval(code);
+        }
+
+        // Compare two game states
+        function compareStates(state1, state2, fields = null) {
+            const compareFields = fields || [
+                'currentPlayer', 'round', 'turnOrder', 'turnDirection',
+                'players', 'occupiedSpaces', 'workerPlacedThisTurn',
+                'workersToPlace', 'shopUsedBeforeWorkers', 'shopUsedAfterWorkers',
+                'skippedTurns', 'waitingForOthers', 'shopCostModifier'
+            ];
+
+            const differences = {};
+            
+            for (const field of compareFields) {
+                const val1 = JSON.stringify(state1[field]);
+                const val2 = JSON.stringify(state2[field]);
+                if (val1 !== val2) {
+                    differences[field] = {
+                        player1: state1[field],
+                        player2: state2[field]
+                    };
+                }
+            }
+
+            return differences;
+        }
+
+        // Create test room
+        async function createTestRoom() {
+            log('Creating test room...', 'info');
+            
+            // Player 1 creates room
+            await executeInFrame('player1', `
+                window.testCreateRoom = true;
+                document.querySelector('button').click(); // Click "Create Room"
+            `);
+            
+            await wait(getDelay() * 2);
+            
+            // Get room code
+            const state1 = getGameState('player1');
+            if (state1 && state1.roomCode) {
+                document.getElementById('roomCode').value = state1.roomCode;
+                log(`Room created: ${state1.roomCode}`, 'success');
+                return state1.roomCode;
+            } else {
+                log('Failed to create room', 'error');
+                return null;
+            }
+        }
+
+        // Join test room
+        async function joinTestRoom() {
+            const roomCode = document.getElementById('roomCode').value;
+            if (!roomCode || roomCode === 'AUTO') {
+                log('No room code specified', 'error');
+                return;
+            }
+
+            log(`Player 2 joining room ${roomCode}...`, 'info');
+            
+            // Player 2 joins room
+            await executeInFrame('player2', `
+                document.querySelectorAll('button')[1].click(); // Click "Join Room"
+            `);
+            
+            await wait(500);
+            
+            await executeInFrame('player2', `
+                document.querySelector('input').value = '${roomCode}';
+                document.querySelector('input').dispatchEvent(new Event('input', { bubbles: true }));
+            `);
+            
+            await wait(500);
+            
+            await executeInFrame('player2', `
+                Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Join').click();
+            `);
+            
+            await wait(getDelay() * 2);
+            
+            const state2 = getGameState('player2');
+            if (state2 && state2.roomCode === roomCode) {
+                log('Successfully joined room', 'success');
+            } else {
+                log('Failed to join room', 'error');
+            }
+        }
+
+        // Test suite
+        async function runAllTests() {
+            log('Starting multiplayer test suite...', 'info');
+            
+            const tests = [
+                testRoomCreationAndJoin,
+                testGameStart,
+                testResourceSync,
+                testWorkerPlacement,
+                testShopPurchase,
+                testTurnOrder,
+                testSkipTurns,
+                testRoundAdvancement
+            ];
+
+            let passed = 0;
+            let failed = 0;
+
+            for (const test of tests) {
+                log(`Running ${test.name}...`, 'info');
+                try {
+                    await test();
+                    passed++;
+                    log(`✓ ${test.name} passed`, 'success');
+                } catch (error) {
+                    failed++;
+                    log(`✗ ${test.name} failed: ${error.message}`, 'error');
+                    console.error(error);
+                }
+                await wait(getDelay());
+            }
+
+            showTestStatus(`Tests complete: ${passed} passed, ${failed} failed`, failed === 0);
+        }
+
+        // Individual tests
+        async function testRoomCreationAndJoin() {
+            // Create room
+            const roomCode = await createTestRoom();
+            if (!roomCode) throw new Error('Room creation failed');
+            
+            // Join room
+            await joinTestRoom();
+            
+            // Verify both players are in same room
+            await wait(getDelay());
+            const state1 = getGameState('player1');
+            const state2 = getGameState('player2');
+            
+            if (state1.roomCode !== state2.roomCode) {
+                throw new Error('Players in different rooms');
+            }
+            
+            if (state1.players.length !== 2 || state2.players.length !== 2) {
+                throw new Error('Player count mismatch');
+            }
+        }
+
+        async function testGameStart() {
+            // Host starts game
+            await executeInFrame('player1', `
+                Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Start Game').click();
+            `);
+            
+            await wait(500);
+            
+            // Select game mode
+            await executeInFrame('player1', `
+                Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Basic').click();
+            `);
+            
+            await wait(getDelay() * 2);
+            
+            // Verify game started for both players
+            const state1 = getGameState('player1');
+            const state2 = getGameState('player2');
+            
+            if (!state1.gameStarted || !state2.gameStarted) {
+                throw new Error('Game not started for all players');
+            }
+            
+            // Check state sync
+            const diffs = compareStates(state1, state2);
+            if (Object.keys(diffs).length > 0) {
+                log('State differences detected:', 'error');
+                console.log(diffs);
+                throw new Error('Initial state not synced');
+            }
+        }
+
+        async function testResourceSync() {
+            // Player 1 gains resources via action
+            const state1Before = getGameState('player1');
+            
+            await executeInFrame('player1', `
+                // Click on gain3yellow action
+                Array.from(document.querySelectorAll('.action-space')).find(el => 
+                    el.textContent.includes('Gain 3')
+                ).click();
+            `);
+            
+            await wait(getDelay());
+            
+            // Select resources in modal
+            await executeInFrame('player1', `
+                // Select 3 yellow
+                const yellowButton = Array.from(document.querySelectorAll('button')).find(b => 
+                    b.style.backgroundColor.includes('yellow')
+                );
+                yellowButton.click();
+                yellowButton.click();
+                yellowButton.click();
+                
+                // Confirm selection
+                Array.from(document.querySelectorAll('button')).find(b => 
+                    b.textContent === 'Confirm'
+                ).click();
+            `);
+            
+            await wait(getDelay() * 2);
+            
+            // Verify resources synced
+            const state1After = getGameState('player1');
+            const state2After = getGameState('player2');
+            
+            const player1Resources = state1After.players[0].resources;
+            const player2ViewOfPlayer1 = state2After.players[0].resources;
+            
+            if (JSON.stringify(player1Resources) !== JSON.stringify(player2ViewOfPlayer1)) {
+                throw new Error('Resource sync failed');
+            }
+        }
+
+        async function testWorkerPlacement() {
+            // Test worker placement sync
+            log('Testing worker placement sync...', 'info');
+            
+            // Get initial occupied spaces
+            const stateBefore = getGameState('player2');
+            const occupiedBefore = Object.keys(stateBefore.occupiedSpaces).length;
+            
+            // Player places worker
+            await executeInFrame('player1', `
+                Array.from(document.querySelectorAll('.action-space')).find(el => 
+                    !el.classList.contains('occupied')
+                ).click();
+            `);
+            
+            await wait(getDelay() * 2);
+            
+            // Verify placement synced
+            const state1 = getGameState('player1');
+            const state2 = getGameState('player2');
+            
+            const occupiedAfter = Object.keys(state2.occupiedSpaces).length;
+            
+            if (occupiedAfter !== occupiedBefore + 1) {
+                throw new Error('Worker placement not synced');
+            }
+            
+            if (JSON.stringify(state1.occupiedSpaces) !== JSON.stringify(state2.occupiedSpaces)) {
+                throw new Error('Occupied spaces mismatch');
+            }
+        }
+
+        async function testShopPurchase() {
+            // Test shop purchase and cost reduction
+            log('Testing shop purchase sync...', 'info');
+            
+            // End turn to allow shop phase
+            await executeInFrame('player1', `
+                Array.from(document.querySelectorAll('button')).find(b => 
+                    b.textContent.includes('End Turn')
+                ).click();
+            `);
+            
+            await wait(getDelay() * 2);
+            
+            // Current player purchases from shop
+            const currentPlayer = getGameState('player1').currentPlayer;
+            const activePlayer = currentPlayer === 1 ? 'player1' : 'player2';
+            
+            await executeInFrame(activePlayer, `
+                // Click first available shop
+                const shop = document.querySelector('.shop-card button:not(:disabled)');
+                if (shop) shop.click();
+            `);
+            
+            await wait(getDelay() * 2);
+            
+            // Verify purchase synced
+            const state1 = getGameState('player1');
+            const state2 = getGameState('player2');
+            
+            // Check if shop states match
+            const shopDiffs = compareStates(state1, state2, ['purchasedShops', 'closedShops']);
+            if (Object.keys(shopDiffs).length > 0) {
+                throw new Error('Shop state not synced');
+            }
+        }
+
+        async function testTurnOrder() {
+            // Test snake draft turn order
+            log('Testing turn order mechanics...', 'info');
+            
+            // Play through several turns
+            for (let i = 0; i < 4; i++) {
+                const stateBefore = getGameState('player1');
+                const currentPlayer = stateBefore.currentPlayer;
+                const activeFrame = currentPlayer === 1 ? 'player1' : 'player2';
+                
+                // End current turn
+                await executeInFrame(activeFrame, `
+                    Array.from(document.querySelectorAll('button')).find(b => 
+                        b.textContent.includes('End Turn')
+                    ).click();
+                `);
+                
+                await wait(getDelay() * 2);
+                
+                const stateAfter = getGameState('player1');
+                
+                // Verify turn advanced correctly
+                if (stateAfter.currentPlayer === currentPlayer && !stateAfter.extraTurn) {
+                    throw new Error('Turn did not advance');
+                }
+                
+                // Verify both players see same current player
+                const state2 = getGameState('player2');
+                if (stateAfter.currentPlayer !== state2.currentPlayer) {
+                    throw new Error('Current player mismatch');
+                }
+            }
+        }
+
+        async function testSkipTurns() {
+            // Test skip turn mechanics
+            log('Testing skip turn mechanics...', 'info');
+            
+            // Find and activate skip turn action
+            const state = getGameState('player1');
+            const currentPlayer = state.currentPlayer;
+            const activeFrame = currentPlayer === 1 ? 'player1' : 'player2';
+            
+            await executeInFrame(activeFrame, `
+                // Find purple skip action
+                const skipAction = Array.from(document.querySelectorAll('.action-space')).find(el => 
+                    el.textContent.includes('Skip')
+                );
+                if (skipAction) skipAction.click();
+            `);
+            
+            await wait(getDelay() * 2);
+            
+            // Verify skip recorded
+            const stateAfter = getGameState('player1');
+            const state2 = getGameState('player2');
+            
+            if (stateAfter.skippedTurns[currentPlayer] !== 1) {
+                throw new Error('Skip turn not recorded');
+            }
+            
+            if (JSON.stringify(stateAfter.skippedTurns) !== JSON.stringify(state2.skippedTurns)) {
+                throw new Error('Skip turns not synced');
+            }
+        }
+
+        async function testRoundAdvancement() {
+            // Test round advancement
+            log('Testing round advancement...', 'info');
+            
+            // Advance round
+            await executeInFrame('player1', `
+                Array.from(document.querySelectorAll('button')).find(b => 
+                    b.textContent.includes('Advance to Round')
+                ).click();
+            `);
+            
+            await wait(getDelay() * 2);
+            
+            // Verify round advanced for both players
+            const state1 = getGameState('player1');
+            const state2 = getGameState('player2');
+            
+            if (state1.round !== 2 || state2.round !== 2) {
+                throw new Error('Round advancement failed');
+            }
+            
+            // Verify shop states reset properly
+            if (state1.shopCostModifier !== 0 || state2.shopCostModifier !== 0) {
+                throw new Error('Shop cost modifier not reset');
+            }
+        }
+
+        // Initialize
+        log('Multiplayer test suite ready', 'success');
+    </script>
+</body>
+</html>
