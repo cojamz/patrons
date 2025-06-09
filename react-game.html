@@ -2542,16 +2542,21 @@
                     resources: { purple: 4 }
                 });
                 
-                // Set player to wait until all others are out of workers
+                // Grant an extra turn
                 dispatch({
-                    type: 'SET_WAITING_FOR_OTHERS',
-                    waitingForOthers: {
-                        ...currentState.waitingForOthers,
-                        [player.id]: true
-                    }
+                    type: 'ADD_EFFECT',
+                    playerId: player.id,
+                    effect: 'Will take an extra turn after this one'
                 });
                 
-                const message = `Player ${player.id}: gain4purpleWaitAll → +4 purple, waiting until all others run out of workers`;
+                // Actually grant the extra turn
+                dispatch({
+                    type: 'UPDATE_PLAYER',
+                    playerId: player.id,
+                    updates: { extraTurns: (player.extraTurns || 0) + 1 }
+                });
+                
+                const message = `Player ${player.id}: gain4purpleWaitAll → +4 purple + extra turn after this one`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -8029,7 +8034,7 @@
                     { id: 'blueReduceCosts', title: '+1 🔵 + Reduce All Shop Costs', description: '(By 1 ⭐ this round)', round: 1 },
                     { id: 'blueIncreaseCosts', title: '+2 🔵 + Increase All Shop Costs', description: '(By 2 ⭐ this round)', round: 2 },
                     { id: 'blueToggleShops', title: '+1 🔵 + Toggle All Shop Status', description: '(Including victory shops)', round: 2 },
-                    { id: 'blueAnyShopBenefit', title: 'Gain ⭐ Shop Benefit', description: '(Even if closed)', round: 3 }
+                    { id: 'blueAnyShopBenefit', title: 'Gain Any Shop Benefit', description: '(Even if closed)', round: 3 }
                 ]
             },
             purple: {
