@@ -124,38 +124,45 @@
 - **Status**: Completed
 - **Implementation**: All actions and shops match specification exactly
 
-### 15. 🟢 Fix Shop Cost Reduction Bug
-- **Issue**: Shop cost reduction applying to all players instead of just the activating player
-- **Fix**: Changed shopCostModifier from global state to per-player property
-- **Status**: Completed (January 9, 2025)
+### 15-37. 🟢 January 9 Session Fixes (COMPLETED)
+- **Shop Cost Reduction** - Now player-specific
+- **Skip Turn in Snake Draft** - Fixed double skip at reversal
+- **Persistent Worker Effect** - "Can place 2 more workers" clears
+- **Swap Worker Restrictions** - Cannot swap onto/off swap actions
+- **Force Red Validation** - Only checks current round
+- **End Turn Button Visual** - Red/pulsing when complete
+- **Red Shop Selection UI** - Always shows interface
+- **UI Layout Shift** - Fixed with overflow controls
+- **Shop Cost Modifiers** - Fixed state reference bug
+- **Purple R3 Action** - Changed to extra turn
+- **Blue R3 Shop** - Includes VP shops correctly
+- **Shop Descriptions** - Fixed in UI
+- **R3 Shop Implementations** - All verified/corrected
+- **Blue R3 Stale State** - Fixed currentState usage
+- **Resource Waste Prevention** - Added warnings
+- **Strategic Warnings** - Confirmable dialogs
+- **Multiplayer Swap Note** - Removed incorrect note
+- **executeRepeatAction UI** - Always shows selection
+- **VP Shop Costs** - Corrected in spec
+- **Implementation Spec** - Updated to match game
+- **Double Gain Coverage** - Extended to more shops
+- **actualCost Error** - Fixed in CompactVictoryShop
+- **Snake Draft Logic** - Simplified and fixed
 
-### 16. 🟢 Fix Skip Turn in Snake Draft
-- **Issue**: Skip turns not working when snake draft reverses
-- **Fix**: Removed bypass logic that prevented skips at reversal points
-- **Status**: Completed (January 9, 2025)
+### 38. 🔴 Fix Purple R1 Shop Cost Bug
+- **Issue**: Takes 2 purple instead of 1 purple + 2 any
+- **Location**: Auto gem selection fallback (lines 7069-7092)
+- **Priority**: HIGH
 
-### 17. 🟢 Expand Double Next Gain Effect
-- **Issue**: Double gain effect not applying to shop resource gains
-- **Fix**: Added doubling checks to Yellow R2/R3, Silver R3, Gold R1/R2/R3 shops
-- **Status**: Completed (January 9, 2025)
+### 39. 🔴 Fix Blue Automatic VP
+- **Issue**: Not triggering despite automaticVPs.blue = true
+- **Debug**: Need logging to trace state
+- **Priority**: HIGH
 
-### 18. 🔴 Complete Double Next Gain for Actions
-- **Issue**: Many actions still don't check for doubling effect
-- **Consider**: Infrastructure-level solution vs action-by-action implementation
-- **Status**: Not Started
-
-### 19. 🔴 Fix Purple R1 Shop Cost
-- **Issue**: Taking 2 purple instead of 1 purple + 2 any
-- **Location**: Shop purchase handler (lines 6510-6590)
-- **Status**: Not Started
-
-### 20. 🔴 Fix Force Red Placement
-- **Issue**: Players can't select red actions when forced
-- **Status**: Not Started
-
-### 21. 🔴 Fix Blue Automatic VP
-- **Issue**: Shops not giving VP despite automaticVPs.blue = true
-- **Status**: Not Started
+### 40. 🔴 Fix Shop State Persistence
+- **Issue**: closedShops resets between rounds
+- **Fix**: Preserve except natural openings
+- **Priority**: MEDIUM
 
 ### 22. 🔴 [Awaiting next change...]
 

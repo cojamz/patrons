@@ -46,18 +46,29 @@ executeShopBenefit(benefit, state, playerId, dispatch);
 
 ### ✅ Major Fixes Completed Today:
 1. **Shop cost reduction now player-specific** - Fixed global modifier applying to all players
-2. **Skip turns working in snake draft** - Removed bypass that prevented skips at draft reversals
-3. **Double next gain effect expanded** - Now works on Yellow R2/R3, Silver R3, Gold R1/R2/R3 shops
-4. **UI improvements** - Removed player numbers from cards, moved Round/Turn indicators to sidebar
-5. **Play 2 Workers edge case** - Fixed blocking turn end when no workers available
-6. **Multiple syntax errors fixed** - Resolved bracket mismatches causing game load failures
+2. **Skip turns working in snake draft** - Fixed double skip at reversal points
+3. **Persistent worker effect clearing** - "Can place 2 more workers" now clears properly
+4. **Swap worker exclusions** - Cannot swap onto/off swap actions, R2 only gives destination benefit
+5. **Force red placement validation** - Only checks current round actions
+6. **End Turn button visual** - Red and pulsing when turn complete
+7. **Red shop selection UI** - Always shows options even with one choice
+8. **UI layout shift prevention** - Added overflow controls for modals
+9. **Shop cost modifiers** - Fixed state vs currentState reference
+10. **Purple R3 action** - Changed from wait to extra turn
+11. **Blue R3 shop benefit** - Now includes VP shops with correct values
+12. **Shop descriptions corrected** - Fixed Yellow/Blue shop descriptions in UI
+13. **R3 shop implementations** - Yellow R2/R3 corrected, Blue R3 = gain any benefit
+14. **Stale state in Blue R3** - Fixed currentState usage
+15. **Implementation spec updated** - Corrected to match actual game behavior
+16. **Resource waste prevention** - Added warnings for suboptimal plays
+17. **Strategic flexibility** - Changed hard blocks to confirmable warnings
 
-### ✅ Previously Fixed (January 8, 2025):
-1. **Fixed React stale closure in Firebase sync** - Resources now update properly in multiplayer
-2. **Fixed modal display in multiplayer** - Only shows to current player
-3. **Fixed Firebase echo loop** - Added lastUpdatedBy to prevent own updates from overwriting
-4. **Fixed missing sync fields** - Added automaticVPs, all 8 resources, vpSources
-5. **Fixed undefined occupiedSpaces** - Defaults to {} if undefined from Firebase
+### ✅ Additional Fixes (This Session):
+- Fixed actualCost undefined error in CompactVictoryShop
+- Removed incorrect multiplayer swap note
+- Fixed executeRepeatAction to always show selection UI
+- Fixed VP shop costs in spec (Blue = 5, Purple = 6)
+- All R3 shops verified and corrected
 
 ### 🔴 High Priority Bugs Still To Fix:
 
@@ -68,27 +79,23 @@ executeShopBenefit(benefit, state, playerId, dispatch);
 - **Fix needed**: Debug the automatic gem selection when modal cancelled
 - **Config correct**: Line 6892 shows { purple: 1, any: 2 }
 
-#### 2. Force Red Placement Breaking
-- **Bug**: Players can't select red actions when forced
-- **Location**: canPlaceWorker validation
-- **Fix needed**: Check force red effect validation
-
-#### 3. Blue Automatic VP Not Working
+#### 2. Blue Automatic VP Not Working
 - **Bug**: Shops not giving VP despite automaticVPs.blue = true
 - **Location**: Line 6756 (regular shops), 7256 (victory shops), 5109 (shop benefits)
 - **Setup**: Line 1104 sets automaticVPs.blue = true when blue layer active
 - **Issue**: Either automaticVPs not syncing or condition not met
 - **Fix needed**: Add debug logging to verify automaticVPs state
 
-#### 4. Shop State Not Persisting
+#### 3. Shop State Not Persisting
 - **Bug**: Toggle state not carrying between rounds
 - **Location**: closedShops state management
 - **Fix needed**: Preserve closedShops except natural R2/R3 openings
 
-#### 5. Double Next Gain - Action Coverage
-- **Bug**: Many actions don't check for doubling effect
-- **Status**: Core actions/shops fixed, but many layer-specific actions still need updates
-- **Fix approach**: Consider infrastructure-level solution vs action-by-action
+### 🟡 Medium Priority Items:
+- Double next gain effect coverage (many actions still don't check)
+- Red automatic VP not always triggering
+- Shop toggle UI sync in multiplayer
+- Purple VP tracking in hover tooltip
 
 ### 📋 Current Status:
 - **Backlog**: See `/Users/cory/Patrons/BACKLOG_2025_01_09.md` for 40+ items

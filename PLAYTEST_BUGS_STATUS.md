@@ -15,6 +15,20 @@
 12. **Purple R3 wait mechanic** - Now properly waits for others
 13. **Black R3 negative VP** - REVERTED: VP can go negative (design decision)
 14. **Round advance protection** - Added flag to prevent double-advance
+15. **Persistent worker effect** - "Can place 2 more workers" now clears between turns
+16. **Swap worker chaining** - Cannot swap onto/off swap actions, R2 only gives destination
+17. **Force red placement** - Fixed validation to only check current round actions
+18. **End Turn button visual** - Red and pulsing when turn complete (workersToPlace = 0)
+19. **Red shop selection UI** - Always shows UI even with one option
+20. **UI layout shift** - Added overflow controls to prevent shift when modals open
+21. **Shop cost increase** - Fixed state.players to currentState.players reference
+22. **Purple R3 action** - Changed from wait mechanic to extra turn
+23. **Blue R3 action** - Now includes VP shops with correct VP values
+24. **Shop descriptions** - Fixed Yellow and Blue shop descriptions in gain benefit UI
+25. **R3 shop implementations** - All R3 shops verified and corrected
+26. **Blue R3 stale state** - Fixed to use currentState when executing shop benefits
+27. **Resource waste prevention** - Added warnings for suboptimal plays (extra turns, swaps, etc)
+28. **Strategic flexibility** - Changed hard blocks to confirmable warnings
 
 ## ☑️ Previously Fixed (January 8)
 
