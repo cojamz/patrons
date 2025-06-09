@@ -8233,23 +8233,25 @@
                             )
                         ])
                     ])
-                ]),
-                // Modal System - Only show to the current player in multiplayer
-                state.modal && (!state.roomCode || state.myPlayerId === state.currentPlayer) && React.createElement(Modal, { 
-                    key: 'modal', 
-                    isOpen: true, 
-                    onClose: () => dispatch({ type: 'HIDE_MODAL' }) 
-                }, state.modal.type === 'choice' 
-                    ? React.createElement(ChoiceModal, state.modal)
-                    : state.modal.type === 'gemSelection'
-                    ? React.createElement(GemSelectionModal, state.modal)
-                    : state.modal.type === 'stealGems'
-                    ? React.createElement(StealGemsModal, state.modal)
-                    : state.modal.type === 'roundTransition'
-                    ? React.createElement(RoundTransitionModal, state.modal)
-                    : React.createElement(ConfirmModal, state.modal)
-                )
-            ]);
+                ])
+                    ]), // Close main-layout div array
+                    // Modal System - Only show to the current player in multiplayer
+                    state.modal && (!state.roomCode || state.myPlayerId === state.currentPlayer) && React.createElement(Modal, { 
+                        key: 'modal', 
+                        isOpen: true, 
+                        onClose: () => dispatch({ type: 'HIDE_MODAL' }) 
+                    }, state.modal.type === 'choice' 
+                        ? React.createElement(ChoiceModal, state.modal)
+                        : state.modal.type === 'gemSelection'
+                        ? React.createElement(GemSelectionModal, state.modal)
+                        : state.modal.type === 'stealGems'
+                        ? React.createElement(StealGemsModal, state.modal)
+                        : state.modal.type === 'roundTransition'
+                        ? React.createElement(RoundTransitionModal, state.modal)
+                        : React.createElement(ConfirmModal, state.modal)
+                    )
+                ]) // Close container div array
+            ]); // Close min-h-screen div array
         }
 
         // Win Screen Component
