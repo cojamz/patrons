@@ -218,7 +218,7 @@
             ],
             occupiedSpaces: {},
             round: 1,
-            turnOrder: [1, 2, 3, 4],
+            turnOrder: [1, 2, 3, 4], // Will be randomized when game starts
             workerPlacedThisTurn: false,
             workersToPlace: 1,
             shopUsedBeforeWorkers: false, // Track if shop was used before placing workers
@@ -699,6 +699,10 @@
                         delete updatedClosedShops[`${color}${newRound}`];
                     });
                     
+                    // Sort players by VP (lowest to highest) for turn order
+                    const playersByVP = [...playersAfterSilverAuto].sort((a, b) => a.victoryPoints - b.victoryPoints);
+                    const newTurnOrder = playersByVP.map(p => p.id);
+                    
                     return {
                         ...state,
                         round: newRound,
@@ -719,7 +723,8 @@
                             };
                         }),
                         occupiedSpaces: {},
-                        currentPlayer: 1,
+                        turnOrder: newTurnOrder,
+                        currentPlayer: newTurnOrder[0],
                         turnDirection: 1,
                         workerPlacedThisTurn: false,
                         workersToPlace: 1,
@@ -887,11 +892,20 @@
                         }));
                     }
                     
+                    // Randomize turn order at game start
+                    const shuffledTurnOrder = [...state.turnOrder];
+                    for (let i = shuffledTurnOrder.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [shuffledTurnOrder[i], shuffledTurnOrder[j]] = [shuffledTurnOrder[j], shuffledTurnOrder[i]];
+                    }
+                    
                     return {
                         ...state,
                         gameStarted: true,
                         closedShops: initialClosedShops,
-                        players: playersWithInitialVP
+                        players: playersWithInitialVP,
+                        turnOrder: shuffledTurnOrder,
+                        currentPlayer: shuffledTurnOrder[0]
                     };
                 
                 case 'SET_GAME_LAYERS':
@@ -6817,7 +6831,12 @@
                 availableLayers = Object.keys(allGameLayers);
             }
             
-            const shuffled = [...availableLayers].sort(() => Math.random() - 0.5);
+            // Use Fisher-Yates shuffle for true randomness
+            const shuffled = [...availableLayers];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
             const selectedLayerKeys = shuffled.slice(0, playerCount);
             
             const gameData = {};
