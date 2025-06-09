@@ -1170,6 +1170,8 @@
                         ...state,
                         ...action.gameState,
                         syncingFromFirebase: true,
+                        // Handle undefined occupiedSpaces from Firebase
+                        occupiedSpaces: action.gameState.occupiedSpaces || {},
                         // Ensure all players have effects array and emoji
                         players: action.gameState.players ? action.gameState.players.map(player => ({
                             ...player,
