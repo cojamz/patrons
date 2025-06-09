@@ -1158,6 +1158,13 @@
                         }))
                     });
                     
+                    // Log the actual resources being received
+                    if (action.gameState.players) {
+                        console.log('SYNC_GAME_STATE - Player 1 resources from Firebase:', 
+                            action.gameState.players.find(p => p.id === 1)?.resources);
+                        console.log('SYNC_GAME_STATE - All players from Firebase:', action.gameState.players);
+                    }
+                    
                     // Merge remote game state while preserving local multiplayer state
                     const mergedState = {
                         ...state,
@@ -1405,6 +1412,12 @@
                         workersLeft: p.workersLeft 
                     }))
                 });
+                
+                // Specifically log Player 1's resources being sent
+                const player1 = gameState.players?.find(p => p.id === 1);
+                if (player1) {
+                    console.log('syncGameState - Player 1 resources being sent:', player1.resources);
+                }
                 database.ref(`rooms/${roomCode}/gameState`).set(gameState);
             }
         }
@@ -7508,10 +7521,20 @@
         function GameBoard() {
             const { state, dispatch } = useGame();
             
-            // Sync state to Firebase whenever state changes
+            // Use a ref to track sync timeout
+            const syncTimeoutRef = React.useRef(null);
+            
+            // Sync state to Firebase whenever state changes (debounced)
             useEffect(() => {
                 if (state.roomCode && state.gameStarted) {
-                    syncGameState(state.roomCode, {
+                    // Clear any pending sync
+                    if (syncTimeoutRef.current) {
+                        clearTimeout(syncTimeoutRef.current);
+                    }
+                    
+                    // Debounce the sync by 200ms
+                    syncTimeoutRef.current = setTimeout(() => {
+                        syncGameState(state.roomCode, {
                         currentPlayer: state.currentPlayer,
                         turnDirection: state.turnDirection,
                         players: state.players,
@@ -7534,7 +7557,15 @@
                         gameOver: state.gameOver,
                         automaticVPs: state.automaticVPs
                     });
+                    }, 200);
                 }
+                
+                // Cleanup timeout on unmount
+                return () => {
+                    if (syncTimeoutRef.current) {
+                        clearTimeout(syncTimeoutRef.current);
+                    }
+                };
             }, [state.currentPlayer, state.players, state.occupiedSpaces, state.round, state.actionLog, state.workersToPlace, state.gameLayers, state.closedShops, state.shopCostModifier, state.shopUsedBeforeWorkers, state.shopUsedAfterWorkers, state.playersOutOfWorkers, state.skippedTurns, state.waitingForOthers, state.roundActions, state.gameOver, state.automaticVPs]);
             
             const handleEndTurn = async () => {
