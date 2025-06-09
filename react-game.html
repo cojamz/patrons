@@ -2721,27 +2721,7 @@
                     return;
                 }
                 
-                if (playerSpaces.length === 1) {
-                    // Only one option, auto-select it
-                    const spaceId = playerSpaces[0];
-                    let actionTitle = spaceId;
-                    for (const layerData of Object.values(gameLayers)) {
-                        const action = layerData.actions.find(a => a.id === spaceId);
-                        if (action) {
-                            actionTitle = action.title;
-                            break;
-                        }
-                    }
-                    
-                    const message = `Player ${player.id}: redRepeatAction → +1 red + repeating ${actionTitle}`;
-                    dispatch({ type: 'ADD_LOG', message });
-                    
-                    // Execute the action again
-                    await executeAction(spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
-                    return;
-                }
-                
-                // Multiple options, let player choose
+                // Always show selection UI for all workers
                 const repeatOptions = playerSpaces.map(spaceId => {
                     // Find the action details
                     let actionTitle = spaceId;
@@ -2764,7 +2744,17 @@
                 );
                 
                 if (choice) {
-                    const message = `Player ${player.id}: redRepeatAction → +1 red + repeating ${choice}`;
+                    // Find the action title for better logging
+                    let actionTitle = choice;
+                    for (const layerData of Object.values(gameLayers)) {
+                        const action = layerData.actions.find(a => a.id === choice);
+                        if (action) {
+                            actionTitle = action.title;
+                            break;
+                        }
+                    }
+                    
+                    const message = `Player ${player.id}: redRepeatAction → +1 red + repeating ${actionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
                     
                     // Execute the chosen action again
