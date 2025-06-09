@@ -630,23 +630,27 @@
                         let vpGained = 0;
                         const newVpSources = { ...player.vpSources };
                         
-                        // Yellow automatic VP - 1 VP per different color resource
-                        const differentColors = Object.entries(player.resources)
-                            .filter(([color, amount]) => amount > 0)
-                            .length;
-                        
-                        if (differentColors > 0) {
-                            vpGained += differentColors;
-                            newVpSources.yellowDiversity = (player.vpSources?.yellowDiversity || 0) + differentColors;
-                            vpMessages.push(`Player ${player.id}: +${differentColors} VP for ${differentColors} different color resources`);
+                        // Yellow automatic VP - 1 VP per different color resource (only if Yellow is in game)
+                        if (state.gameLayers && state.gameLayers.yellow) {
+                            const differentColors = Object.entries(player.resources)
+                                .filter(([color, amount]) => amount > 0)
+                                .length;
+                            
+                            if (differentColors > 0) {
+                                vpGained += differentColors;
+                                newVpSources.yellowDiversity = (player.vpSources?.yellowDiversity || 0) + differentColors;
+                                vpMessages.push(`Player ${player.id}: +${differentColors} VP for ${differentColors} different color resources`);
+                            }
                         }
                         
-                        // Gold automatic VP - 1 VP per gold resource
-                        const goldAmount = player.resources.gold || 0;
-                        if (goldAmount > 0) {
-                            vpGained += goldAmount;
-                            newVpSources.goldAutomatic = (player.vpSources?.goldAutomatic || 0) + goldAmount;
-                            vpMessages.push(`Player ${player.id}: +${goldAmount} VP for ${goldAmount} gold resources`);
+                        // Gold automatic VP - 1 VP per gold resource (only if Gold is in game)
+                        if (state.gameLayers && state.gameLayers.gold) {
+                            const goldAmount = player.resources.gold || 0;
+                            if (goldAmount > 0) {
+                                vpGained += goldAmount;
+                                newVpSources.goldAutomatic = (player.vpSources?.goldAutomatic || 0) + goldAmount;
+                                vpMessages.push(`Player ${player.id}: +${goldAmount} VP for ${goldAmount} gold resources`);
+                            }
                         }
                         
                         if (vpGained > 0) {
@@ -659,12 +663,14 @@
                         return player;
                     });
                     
-                    // SILVER automatic VP - Player(s) with most VP get 3 Silver, others get 2 VP
-                    let maxVP = Math.max(...playersWithAutomaticVP.map(p => p.victoryPoints));
-                    const playersWithMostVP = playersWithAutomaticVP.filter(p => p.victoryPoints === maxVP);
-                    const playersWithMostVPIds = playersWithMostVP.map(p => p.id);
-                    
-                    const playersAfterSilverAuto = playersWithAutomaticVP.map(player => {
+                    // SILVER automatic VP - Player(s) with most VP get 3 Silver, others get 2 VP (only if Silver is in game)
+                    let playersAfterSilverAuto = playersWithAutomaticVP;
+                    if (state.gameLayers && state.gameLayers.silver) {
+                        let maxVP = Math.max(...playersWithAutomaticVP.map(p => p.victoryPoints));
+                        const playersWithMostVP = playersWithAutomaticVP.filter(p => p.victoryPoints === maxVP);
+                        const playersWithMostVPIds = playersWithMostVP.map(p => p.id);
+                        
+                        playersAfterSilverAuto = playersWithAutomaticVP.map(player => {
                         if (playersWithMostVPIds.includes(player.id)) {
                             // Players with most VP get 3 Silver
                             vpMessages.push(`Player ${player.id}: +3 Silver (most VP)`);
@@ -687,7 +693,8 @@
                                 }
                             };
                         }
-                    });
+                        });
+                    }
                     
                     // Open shops for the new round
                     const newRound = state.round + 1;
@@ -2547,7 +2554,7 @@
                         gold: { 1: '1 Gold + 1 ⭐ = 2 Gold' },
                         white: { 1: 'Lose 1 VP, Gain 1 ⚪' },
                         black: { 1: 'Destroy 2 resources from any player' },
-                        silver: { 1: 'Look at and rearrange turn order' }
+                        silver: { 1: 'Gain 2 VP' }
                     };
                     
                     const group = quadGroups[color];
@@ -2770,8 +2777,11 @@
             
             // Convert 2 ⭐ to 2 Gold
             if (actionId === 'convert2AnyTo2Gold') {
-                const totalGems = Object.values(player.resources).reduce((sum, amount) => sum + amount, 0);
-                if (totalGems < 2) {
+                // Count non-gold gems for conversion
+                const nonGoldGems = Object.entries(player.resources)
+                    .filter(([color, amount]) => color !== 'gold')
+                    .reduce((sum, [color, amount]) => sum + amount, 0);
+                if (nonGoldGems < 2) {
                     const message = `Player ${player.id}: convert2AnyTo2Gold → Need at least 2 gems`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
@@ -2805,8 +2815,11 @@
             
             // Convert 1 ⭐ to 1 Gold
             if (actionId === 'convert1AnyTo1Gold') {
-                const totalGems = Object.values(player.resources).reduce((sum, amount) => sum + amount, 0);
-                if (totalGems < 1) {
+                // Count non-gold gems for conversion
+                const nonGoldGems = Object.entries(player.resources)
+                    .filter(([color, amount]) => color !== 'gold')
+                    .reduce((sum, [color, amount]) => sum + amount, 0);
+                if (nonGoldGems < 1) {
                     const message = `Player ${player.id}: convert1AnyTo1Gold → Need at least 1 gem`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
@@ -3206,22 +3219,20 @@
                     resources: { black: 1 }
                 });
                 
-                // Choose a player to steal from
+                // Choose a player to steal from (can steal from players with 0 or negative VP)
                 const otherPlayers = currentState.players.filter(p => p.id !== player.id);
-                const playersWithVP = otherPlayers.filter(p => p.victoryPoints > 0);
                 
-                if (playersWithVP.length === 0) {
-                    // No one has VP to steal
-                    const message = `Player ${player.id}: blackSteal1VP → +1 black (no one has VP to steal)`;
+                if (otherPlayers.length === 0) {
+                    const message = `Player ${player.id}: blackSteal1VP → +1 black (no other players)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
                 
-                // Show UI even if only one player has VP
+                // Show all players with their VP (including negative)
                 const targetPlayer = await showPlayerSelection(
                     dispatch, 
                     'Choose a player to steal 1 VP from', 
-                    playersWithVP.map(p => ({
+                    otherPlayers.map(p => ({
                         ...p,
                         name: `${p.name} (${p.victoryPoints} VP)`
                     }))
@@ -4579,9 +4590,9 @@
                     3: 'All players lose 3 gems'
                 },
                 silver: {
-                    1: 'Look at and rearrange turn order',
-                    2: 'See all hands and steal 1 gem',
-                    3: 'Control turn order'
+                    1: 'Gain 2 VP',
+                    2: 'Gain 4 VP, Pick Another Player to Gain 4 VP',
+                    3: 'Gain 7 Silver, Each Other Player Gains 2 Silver'
                 }
             };
             
@@ -5086,14 +5097,21 @@
         
         // Execute black 1 shop effect - Steal 1 VP from another player
         async function executeBlack1Shop(player, dispatch, state) {
-            const otherPlayers = state.players.filter(p => p.id !== player.id && p.victoryPoints > 0);
+            const otherPlayers = state.players.filter(p => p.id !== player.id);
             
             if (otherPlayers.length === 0) {
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Black R1 shop → No valid targets to steal VP from` });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Black R1 shop → No other players` });
                 return;
             }
             
-            const targetPlayer = await showPlayerSelection(dispatch, 'Choose a player to steal 1 VP from', otherPlayers);
+            const targetPlayer = await showPlayerSelection(
+                dispatch, 
+                'Choose a player to steal 1 VP from', 
+                otherPlayers.map(p => ({
+                    ...p,
+                    name: `${p.name} (${p.victoryPoints} VP)`
+                }))
+            );
             
             if (!targetPlayer) {
                 dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Black R1 shop → Cancelled` });
@@ -5130,14 +5148,21 @@
         
         // Execute black 2 shop effect - Steal 3 VP from another player
         async function executeBlack2Shop(player, dispatch, state) {
-            const otherPlayers = state.players.filter(p => p.id !== player.id && p.victoryPoints > 0);
+            const otherPlayers = state.players.filter(p => p.id !== player.id);
             
             if (otherPlayers.length === 0) {
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Black R2 shop → No valid targets to steal VP from` });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Black R2 shop → No other players` });
                 return;
             }
             
-            const targetPlayer = await showPlayerSelection(dispatch, 'Choose a player to steal 3 VP from', otherPlayers);
+            const targetPlayer = await showPlayerSelection(
+                dispatch, 
+                'Choose a player to steal 3 VP from', 
+                otherPlayers.map(p => ({
+                    ...p,
+                    name: `${p.name} (${p.victoryPoints} VP)`
+                }))
+            );
             
             if (!targetPlayer) {
                 dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Black R2 shop → Cancelled` });
@@ -5176,14 +5201,21 @@
         
         // Execute black 3 shop effect - Steal 5 VP from another player
         async function executeBlack3Shop(player, dispatch, state) {
-            const otherPlayers = state.players.filter(p => p.id !== player.id && p.victoryPoints > 0);
+            const otherPlayers = state.players.filter(p => p.id !== player.id);
             
             if (otherPlayers.length === 0) {
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Black R3 shop → No valid targets to steal VP from` });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Black R3 shop → No other players` });
                 return;
             }
             
-            const targetPlayer = await showPlayerSelection(dispatch, 'Choose a player to steal 5 VP from', otherPlayers);
+            const targetPlayer = await showPlayerSelection(
+                dispatch, 
+                'Choose a player to steal 5 VP from', 
+                otherPlayers.map(p => ({
+                    ...p,
+                    name: `${p.name} (${p.victoryPoints} VP)`
+                }))
+            );
             
             if (!targetPlayer) {
                 dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Black R3 shop → Cancelled` });
@@ -5218,6 +5250,84 @@
                 source: 'blackAutomatic'
             });
             dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP (Black automatic: stealing bonus)` });
+        }
+        
+        // Execute silver 2 shop effect - Gain 4 VP, Pick Another Player to Gain 4 VP
+        async function executeSilver2Shop(player, dispatch, state) {
+            // Give current player 4 VP
+            dispatch({
+                type: 'UPDATE_VP',
+                playerId: player.id,
+                vp: 4,
+                source: 'silverShop'
+            });
+            
+            const otherPlayers = state.players.filter(p => p.id !== player.id);
+            
+            if (otherPlayers.length === 0) {
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R2 shop → +4 VP (no other players)` });
+                return;
+            }
+            
+            // If only one other player, they automatically get it
+            if (otherPlayers.length === 1) {
+                const targetPlayer = otherPlayers[0];
+                dispatch({
+                    type: 'UPDATE_VP',
+                    playerId: targetPlayer.id,
+                    vp: 4,
+                    source: 'silverShop'
+                });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R2 shop → +4 VP, Player ${targetPlayer.id} +4 VP` });
+                return;
+            }
+            
+            // Choose a player to give 4 VP
+            const targetPlayer = await showPlayerSelection(dispatch, 'Choose a player to give 4 VP', otherPlayers);
+            
+            if (!targetPlayer) {
+                // If cancelled, give to first other player
+                const firstOther = otherPlayers[0];
+                dispatch({
+                    type: 'UPDATE_VP',
+                    playerId: firstOther.id,
+                    vp: 4,
+                    source: 'silverShop'
+                });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R2 shop → +4 VP, Player ${firstOther.id} +4 VP (auto-selected)` });
+                return;
+            }
+            
+            dispatch({
+                type: 'UPDATE_VP',
+                playerId: targetPlayer.id,
+                vp: 4,
+                source: 'silverShop'
+            });
+            
+            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R2 shop → +4 VP, Player ${targetPlayer.id} +4 VP` });
+        }
+        
+        // Execute silver 3 shop effect - Gain 7 Silver, Each Other Player Gains 2 Silver
+        async function executeSilver3Shop(player, dispatch, state) {
+            // Give current player 7 silver
+            dispatch({
+                type: 'UPDATE_RESOURCES',
+                playerId: player.id,
+                resources: { silver: 7 }
+            });
+            
+            // Give all other players 2 silver
+            const otherPlayers = state.players.filter(p => p.id !== player.id);
+            otherPlayers.forEach(otherPlayer => {
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: otherPlayer.id,
+                    resources: { silver: 2 }
+                });
+            });
+            
+            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R3 shop → +7 silver, all other players +2 silver` });
         }
         
         // Execute any shop benefit by shop ID
@@ -5323,6 +5433,24 @@
                 case 'black3':
                     // Steal 5 VP from another player
                     await executeBlack3Shop(player, dispatch, state);
+                    break;
+                case 'silver1':
+                    // Gain 2 VP
+                    dispatch({
+                        type: 'UPDATE_VP',
+                        playerId: player.id,
+                        vp: 2,
+                        source: 'silverShop'
+                    });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R1 shop benefit → +2 VP` });
+                    break;
+                case 'silver2':
+                    // Gain 4 VP, Pick Another Player to Gain 4 VP
+                    await executeSilver2Shop(player, dispatch, state);
+                    break;
+                case 'silver3':
+                    // Gain 7 Silver, Each Other Player Gains 2 Silver
+                    await executeSilver3Shop(player, dispatch, state);
                     break;
                 default:
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Shop benefit ${shopId} not implemented yet` });
@@ -5824,9 +5952,9 @@
                     3: { cost: { gold: 3, any: 3 }, effect: '3 Gold + 3 ⭐ = Double Your Gold' }
                 },
                 white: {
-                    1: { cost: { vp: 1 }, effect: 'Lose 1 VP, Gain 1 ⭐' },
-                    2: { cost: { vp: 2 }, effect: 'Lose 2 VP, Skip Next Player\'s Turn' },
-                    3: { cost: { vp: 3 }, effect: 'Lose 3 VP, Move Worker to Unclaimed Action' }
+                    1: { cost: { vp: 1 }, effect: 'Gain 1 ⭐' },
+                    2: { cost: { vp: 2 }, effect: 'Skip Next Player\'s Turn' },
+                    3: { cost: { vp: 3 }, effect: 'Move Worker to Unclaimed Action' }
                 },
                 black: {
                     1: { cost: { black: 1, any: 1 }, effect: 'Steal 1 VP from another player' },
@@ -6242,9 +6370,9 @@
                     3: { cost: { gold: 3, any: 3 }, effect: 'Double Gold', fullEffect: '3 Gold + 3 ⭐ = Double Your Gold' }
                 },
                 white: {
-                    1: { cost: { vp: 1 }, effect: 'Lose 1 VP, Gain 1 ⭐', fullEffect: 'Lose 1 VP, Gain 1 ⭐ resource' },
-                    2: { cost: { vp: 3 }, effect: 'Lose 3 VP, Skip Next', fullEffect: 'Lose 3 VP, Skip next player\'s turn' },
-                    3: { cost: { vp: 5 }, effect: 'Lose 5 VP, Move Worker', fullEffect: 'Lose 5 VP, Move worker to unclaimed action' }
+                    1: { cost: { vp: 1 }, effect: 'Gain 1 ⭐', fullEffect: 'Gain 1 ⭐ resource' },
+                    2: { cost: { vp: 2 }, effect: 'Skip Next', fullEffect: 'Skip next player\'s turn' },
+                    3: { cost: { vp: 3 }, effect: 'Move Worker', fullEffect: 'Move worker to unclaimed action' }
                 },
                 black: {
                     1: { cost: { black: 1, any: 1 }, effect: 'Steal 1 VP', fullEffect: 'Steal 1 VP from another player' },
@@ -6252,9 +6380,9 @@
                     3: { cost: { black: 3, any: 3 }, effect: 'Steal 5 VP', fullEffect: 'Steal 5 VP from another player' }
                 },
                 silver: {
-                    1: { cost: { silver: 1, any: 1 }, effect: 'See order', fullEffect: 'Look at and rearrange turn order for next round' },
-                    2: { cost: { silver: 2, any: 2 }, effect: 'See & steal', fullEffect: 'See all player hands and steal 1 gem' },
-                    3: { cost: { silver: 3, any: 3 }, effect: 'Control order', fullEffect: 'Control the turn order for the rest of this round' }
+                    1: { cost: { silver: 1, any: 1 }, effect: '2 VP', fullEffect: 'Gain 2 VP' },
+                    2: { cost: { silver: 2, any: 2 }, effect: 'Gain 4 VP, Pick Another +4 VP', fullEffect: 'Gain 4 VP, Pick Another Player to Gain 4 VP' },
+                    3: { cost: { silver: 3, any: 3 }, effect: 'Gain 7 Silver, Others +2', fullEffect: 'Gain 7 Silver, Each Other Player Gains 2 Silver' }
                 }
             };
             
@@ -6770,11 +6898,11 @@
                 icon: "🟨",
                 actions: [
                     { id: 'gain2gold', title: 'Gain 2 Gold', description: '', round: 1 },
-                    { id: 'convert2AnyTo2Gold', title: 'Turn 2 Any to 2 Gold', description: '', round: 1 },
+                    { id: 'convert2AnyTo2Gold', title: 'Turn 2 ⭐ to 2 Gold', description: '', round: 1 },
                     { id: 'gain1gold', title: 'Gain 1 Gold', description: '', round: 1 },
-                    { id: 'convert1AnyTo1Gold', title: 'Turn 1 Any to 1 Gold', description: '', round: 1 },
+                    { id: 'convert1AnyTo1Gold', title: 'Turn 1 ⭐ to 1 Gold', description: '', round: 1 },
                     { id: 'gain3goldSkip', title: 'Gain 3 Gold, Skip Next Turn', description: '', round: 2 },
-                    { id: 'convert3AnyTo3Gold', title: 'Turn 3 Any to 3 Gold', description: '', round: 2 },
+                    { id: 'convert3AnyTo3Gold', title: 'Turn 3 ⭐ to 3 Gold', description: '', round: 2 },
                     { id: 'goldVPPerGold', title: 'Gain VP for Each Gold You Have', description: '', round: 3 }
                 ]
             },
