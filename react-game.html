@@ -7564,8 +7564,8 @@
                         ])
                     ])
                 ]),
-                // Modal System
-                state.modal && React.createElement(Modal, { 
+                // Modal System - Only show to the current player in multiplayer
+                state.modal && (!state.roomCode || state.myPlayerId === state.currentPlayer) && React.createElement(Modal, { 
                     key: 'modal', 
                     isOpen: true, 
                     onClose: () => dispatch({ type: 'HIDE_MODAL' }) 
