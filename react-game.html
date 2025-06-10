@@ -471,7 +471,7 @@
                                     ...player, 
                                     effects: (player.effects || []).filter(effect => 
                                         !effect.includes('Will take an extra turn after this one') &&
-                                        !effect.includes('Can place 2 more workers this turn')
+                                        !effect.includes('more workers this turn')
                                     ),
                                     extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                                     victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
@@ -525,7 +525,7 @@
                                     ...player, 
                                     effects: (player.effects || []).filter(effect => 
                                         !effect.includes('Will take an extra turn after this one') &&
-                                        !effect.includes('Can place 2 more workers this turn')
+                                        !effect.includes('more workers this turn')
                                     ),
                                     extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                                     victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
@@ -627,25 +627,18 @@
                     }
                     
                     // Check for skips, waiting, and workers
-                    // Special handling for snake draft reversal with skips
-                    if (isSnakeDraftReversal && tempSkippedTurns[nextPlayer] > 0) {
-                        // At reversal point with skips - consume ONE skip but stay on same player
-                        console.log(`Player ${nextPlayer} at reversal point with skip. Consuming 1 skip and giving them their turn.`);
-                        skippedPlayers.push(nextPlayer);
-                        tempSkippedTurns[nextPlayer]--;
-                        // Important: Do NOT move to next player - they still get their reversal turn
-                        // The skip just consumed one of their two consecutive turns
-                    }
+                    // At reversal points, do NOT consume skips - they should only apply to regular turns
+                    // This prevents the issue where Player 4 adds a skip on turn 1 and it immediately gets consumed
                     
-                    // Track if we just handled a reversal skip
-                    let handledReversalSkip = isSnakeDraftReversal && skippedPlayers.includes(nextPlayer);
+                    // Track if we're at a reversal
+                    let atReversal = isSnakeDraftReversal;
                     
                     do {
                             attempts++;
                             if (attempts > maxAttempts) break; // Prevent infinite loop
                             
-                            // Check if player should skip and track it (but not if we just handled reversal skip)
-                            if (tempSkippedTurns[nextPlayer] > 0 && !handledReversalSkip) {
+                            // Check if player should skip and track it (but not if at reversal)
+                            if (tempSkippedTurns[nextPlayer] > 0 && !atReversal) {
                                 console.log(`Player ${nextPlayer} should skip turn. Skips remaining: ${tempSkippedTurns[nextPlayer]}`);
                                 skippedPlayers.push(nextPlayer);
                                 tempSkippedTurns[nextPlayer]--;
@@ -710,6 +703,9 @@
                                 }
                                 continue;
                             }
+                            
+                            // Clear the reversal flag after first iteration
+                            atReversal = false;
                             
                             // Found a valid player
                             break;
@@ -1076,7 +1072,7 @@
                                 workersLeft: baseWorkers + extraWorkers,
                                 effects: (player.effects || []).filter(effect => 
                                     !effect.includes('Will get 2 extra workers next round') &&
-                                    !effect.includes('Can place 2 more workers this turn')
+                                    !effect.includes('more workers this turn')
                                 ),
                                 shopCostModifier: 0 // Reset each player's shop cost modifier
                             };
@@ -1186,6 +1182,7 @@
                     };
                 
                 case 'CLOSE_SHOP':
+                    console.log('CLOSE_SHOP action:', action.shopId);
                     return {
                         ...state,
                         closedShops: {
@@ -1196,6 +1193,7 @@
                 
                 case 'OPEN_SHOP':
                     // Remove the shop from closedShops (or set to false)
+                    console.log('OPEN_SHOP action:', action.shopId);
                     const newClosedShops = { ...state.closedShops };
                     delete newClosedShops[action.shopId];
                     return {
@@ -1385,6 +1383,7 @@
                         round: action.gameState.round,
                         currentPlayer: action.gameState.currentPlayer,
                         occupiedSpaces: action.gameState.occupiedSpaces,
+                        closedShops: action.gameState.closedShops,
                         players: action.gameState.players?.map(p => ({ 
                             id: p.id, 
                             resources: p.resources, 
@@ -3417,11 +3416,11 @@
                     console.log('Player chose shop:', choice.color, 'R', choice.round);
                     
                     // Execute the shop benefit without paying cost
-                    await executeShopBenefit(choice.color, choice.round, player, dispatch, state, recursionDepth + 1);
+                    await executeShopBenefit(choice.color, choice.round, player, dispatch, currentState, recursionDepth + 1);
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R1 shop benefit` });
                     
                     // BLUE AUTOMATIC VP: Check if blue layer is active
-                    if (state.automaticVPs && state.automaticVPs.blue) {
+                    if (currentState.automaticVPs && currentState.automaticVPs.blue) {
                         dispatch({
                             type: 'UPDATE_VP',
                             playerId: player.id,
@@ -5636,7 +5635,7 @@
                 const isClosedR1 = state.closedShops[`${color}1`];
                 const availableR1 = state.round >= 1;
                 shopOptions.push({
-                    label: `${isClosedR1 ? 'Closed' : 'Open'} ${shopCosts[color][1]} - ${shopData[color][1]}${!availableR1 ? ' (Round 1)' : ''}`,
+                    label: `${colorEmojis[color]} R1 ${isClosedR1 ? '(Closed)' : '(Open)'}: ${shopData[color][1]} - Cost: ${shopCosts[color][1]}`,
                     shortLabel: `${isClosedR1 ? '🚫' : '✅'} R1: ${shopCosts[color][1]}`,
                     value: `${color}1`,
                     group: quadName
@@ -5646,7 +5645,7 @@
                 const isClosedR2 = state.closedShops[`${color}2`];
                 const availableR2 = state.round >= 2;
                 shopOptions.push({
-                    label: `${isClosedR2 ? 'Closed' : 'Open'} ${shopCosts[color][2]} - ${shopData[color][2]}${!availableR2 ? ' (Round 2)' : ''}`,
+                    label: `${colorEmojis[color]} R2 ${isClosedR2 ? '(Closed)' : '(Open)'}: ${shopData[color][2]} - Cost: ${shopCosts[color][2]}${!availableR2 ? ' (Available Round 2)' : ''}`,
                     shortLabel: `${isClosedR2 ? '🚫' : '✅'} R2: ${shopCosts[color][2]}`,
                     value: `${color}2`,
                     group: quadName
@@ -5656,7 +5655,7 @@
                 const isClosedR3 = state.closedShops[`${color}3`];
                 const availableR3 = state.round >= 3;
                 shopOptions.push({
-                    label: `${isClosedR3 ? 'Closed' : 'Open'} ${shopCosts[color][3]} - ${shopData[color][3]}${!availableR3 ? ' (Round 3)' : ''}`,
+                    label: `${colorEmojis[color]} R3 ${isClosedR3 ? '(Closed)' : '(Open)'}: ${shopData[color][3]} - Cost: ${shopCosts[color][3]}${!availableR3 ? ' (Available Round 3)' : ''}`,
                     shortLabel: `${isClosedR3 ? '🚫' : '✅'} R3: ${shopCosts[color][3]}`,
                     value: `${color}3`,
                     group: quadName
@@ -6393,6 +6392,11 @@
                         type: 'ADD_WORKERS_TO_PLACE',
                         count: 2
                     });
+                    dispatch({
+                        type: 'ADD_EFFECT',
+                        playerId: player.id,
+                        effect: 'Can place 2 more workers this turn'
+                    });
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Can place 2 more workers this turn!` });
                     break;
                 case 'purple3':
@@ -6401,6 +6405,11 @@
                         dispatch({
                             type: 'ADD_WORKERS_TO_PLACE',
                             count: workersRemaining
+                        });
+                        dispatch({
+                            type: 'ADD_EFFECT',
+                            playerId: player.id,
+                            effect: `Can place ${workersRemaining} more workers this turn`
                         });
                         dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Can place all ${workersRemaining} remaining workers!` });
                     }
@@ -7839,9 +7848,10 @@
             const shopId = `${color}vp`;
             const isClosed = state.closedShops[shopId];
             
-            // Calculate actualCost for display
+            // Get current player first
             const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
-            const actualCost = (color === 'black' || color === 'white') ? shop.cost : Math.max(0, shop.cost + (currentPlayer?.shopCostModifier || 0));
+            // Calculate actualCost for display
+            const displayCost = (color === 'black' || color === 'white') ? shop.cost : Math.max(0, shop.cost + (currentPlayer?.shopCostModifier || 0));
             
             const handlePurchase = () => {
                 if (isClosed) {
@@ -7978,7 +7988,7 @@
             }, [
                 React.createElement('div', { key: 'info', className: 'flex items-center gap-1' }, [
                     React.createElement('span', { key: 'cost', className: 'text-xs font-bold' }, 
-                        color === 'yellow' ? `${actualCost}⭐` : `${actualCost}${getColorEmoji()}`),
+                        color === 'yellow' ? `${displayCost}⭐` : `${displayCost}${getColorEmoji()}`),
                     React.createElement('span', { key: 'label', className: 'text-xs text-green-700' }, '→')
                 ]),
                 React.createElement('button', {
