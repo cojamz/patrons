@@ -4190,13 +4190,12 @@
                 }
                 
                 // Show all players with their VP (including negative)
-                const targetPlayer = await showPlayerSelection(
-                    dispatch, 
-                    'Choose a player to steal 1 VP from', 
-                    otherPlayers.map(p => ({
-                        ...p,
-                        name: `${p.name} (${p.victoryPoints} VP)`
-                    }))
+                const targetPlayer = await selectTargetPlayer(
+                    dispatch,
+                    'Choose a player to steal 1 VP from',
+                    currentState.players,
+                    player.id,
+                    workerInfo
                 );
                 
                 if (!targetPlayer) {
@@ -4251,7 +4250,7 @@
                     return;
                 }
                 
-                const targetPlayer = await showPlayerSelection(dispatch, 'Choose a player to steal 2 gems from', otherPlayers);
+                const targetPlayer = await selectTargetPlayer(dispatch, 'Choose a player to steal 2 gems from', currentState.players, player.id, workerInfo);
                 
                 if (!targetPlayer) {
                     const message = `Player ${player.id}: blackSteal2Any → Cancelled`;
@@ -4328,7 +4327,7 @@
                     return;
                 }
                 
-                const targetPlayer = await showPlayerSelection(dispatch, 'Choose a player to steal a worker from', otherPlayers);
+                const targetPlayer = await selectTargetPlayer(dispatch, 'Choose a player to steal a worker from', currentState.players, player.id, workerInfo);
                 
                 if (!targetPlayer) {
                     const message = `Player ${player.id}: blackStealWorker → +1 black (cancelled)`;
@@ -4525,7 +4524,7 @@
                 
                 // Choose another player to give 2 VP
                 const otherPlayers = currentState.players.filter(p => p.id !== player.id);
-                const targetPlayer = await showPlayerSelection(dispatch, 'Choose a player to also gain 2 VP', otherPlayers);
+                const targetPlayer = await selectTargetPlayer(dispatch, 'Choose a player to also gain 2 VP', currentState.players, player.id, workerInfo);
                 
                 if (!targetPlayer) {
                     // If cancelled, pick first other player
@@ -5364,6 +5363,31 @@
             });
         }
 
+        // Helper function to select target player (replaces undefined showPlayerSelection)
+        async function selectTargetPlayer(dispatch, title, players, currentPlayerId, workerInfo = null) {
+            const otherPlayers = players.filter(p => p.id !== currentPlayerId);
+            
+            if (otherPlayers.length === 0) {
+                return null;
+            }
+            
+            const playerOptions = otherPlayers.map(p => {
+                // Format player info with resources
+                const resourceInfo = Object.entries(p.resources)
+                    .filter(([, amount]) => amount > 0)
+                    .map(([color, amount]) => `${amount} ${color}`)
+                    .join(', ') || 'no resources';
+                
+                return {
+                    label: `${p.name || `Player ${p.id}`} ${p.emoji || ''} (${resourceInfo}, ${p.victoryPoints || 0} VP)`,
+                    value: p.id
+                };
+            });
+            
+            const targetId = await showChoice(dispatch, title, playerOptions, false, workerInfo);
+            return targetId ? players.find(p => p.id === targetId) : null;
+        }
+
         // End Turn Button Component
         function EndTurnButton({ onEndTurn }) {
             const { state, dispatch } = useGame();
@@ -6100,13 +6124,11 @@
                 return;
             }
             
-            const targetPlayer = await showPlayerSelection(
-                dispatch, 
-                'Choose a player to steal 1 VP from', 
-                otherPlayers.map(p => ({
-                    ...p,
-                    name: `${p.name} (${p.victoryPoints} VP)`
-                }))
+            const targetPlayer = await selectTargetPlayer(
+                dispatch,
+                'Choose a player to steal 1 VP from',
+                state.players,
+                player.id
             );
             
             if (!targetPlayer) {
@@ -6151,13 +6173,11 @@
                 return;
             }
             
-            const targetPlayer = await showPlayerSelection(
-                dispatch, 
-                'Choose a player to steal 3 VP from', 
-                otherPlayers.map(p => ({
-                    ...p,
-                    name: `${p.name} (${p.victoryPoints} VP)`
-                }))
+            const targetPlayer = await selectTargetPlayer(
+                dispatch,
+                'Choose a player to steal 3 VP from',
+                state.players,
+                player.id
             );
             
             if (!targetPlayer) {
@@ -6218,13 +6238,11 @@
                 return;
             }
             
-            const targetPlayer = await showPlayerSelection(
-                dispatch, 
-                'Choose a player to steal 5 VP from', 
-                otherPlayers.map(p => ({
-                    ...p,
-                    name: `${p.name} (${p.victoryPoints} VP)`
-                }))
+            const targetPlayer = await selectTargetPlayer(
+                dispatch,
+                'Choose a player to steal 5 VP from',
+                state.players,
+                player.id
             );
             
             if (!targetPlayer) {
@@ -6293,7 +6311,7 @@
             }
             
             // Choose a player to give 4 VP
-            const targetPlayer = await showPlayerSelection(dispatch, 'Choose a player to give 4 VP', otherPlayers);
+            const targetPlayer = await selectTargetPlayer(dispatch, 'Choose a player to give 4 VP', state.players, player.id);
             
             if (!targetPlayer) {
                 // If cancelled, give to first other player
@@ -7463,8 +7481,7 @@
                         });
                         
                         // Choose another player to give 4 VP
-                        const otherPlayers = state.players.filter(p => p.id !== currentPlayer.id);
-                        const targetPlayer = await showPlayerSelection(dispatch, 'Choose a player to also gain 4 VP', otherPlayers);
+                        const targetPlayer = await selectTargetPlayer(dispatch, 'Choose a player to also gain 4 VP', state.players, currentPlayer.id);
                         
                         if (targetPlayer) {
                             dispatch({
