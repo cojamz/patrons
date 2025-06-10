@@ -629,24 +629,13 @@
                     }
                     
                     // Check for skips, waiting, and workers
-                    // At reversal points, do NOT consume skips - they should only apply to regular turns
-                    // This prevents the issue where Player 4 adds a skip on turn 1 and it immediately gets consumed
-                    
-                    // Track if we're at a reversal
-                    let atReversal = isSnakeDraftReversal;
-                    let lastReversalPlayer = isSnakeDraftReversal ? nextPlayer : null;
                     
                     do {
                             attempts++;
                             if (attempts > maxAttempts) break; // Prevent infinite loop
                             
-                            // Reset atReversal once we've moved past the reversal player
-                            if (atReversal && lastReversalPlayer && nextPlayer !== lastReversalPlayer) {
-                                atReversal = false;
-                            }
-                            
-                            // Check if player should skip and track it (but not if at reversal)
-                            if (tempSkippedTurns[nextPlayer] > 0 && !atReversal) {
+                            // Check if player should skip and track it
+                            if (tempSkippedTurns[nextPlayer] > 0) {
                                 console.log(`Player ${nextPlayer} should skip turn. Skips remaining: ${tempSkippedTurns[nextPlayer]}`);
                                 skippedPlayers.push(nextPlayer);
                                 tempSkippedTurns[nextPlayer]--;
