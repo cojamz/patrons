@@ -471,8 +471,7 @@
                                     ...player, 
                                     effects: (player.effects || []).filter(effect => 
                                         !effect.includes('Will take an extra turn after this one') &&
-                                        !effect.includes('more workers this turn') &&
-                                        !effect.includes('Can place')
+                                        !effect.includes('more workers this turn')
                                     ),
                                     extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                                     victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
@@ -526,8 +525,7 @@
                                     ...player, 
                                     effects: (player.effects || []).filter(effect => 
                                         !effect.includes('Will take an extra turn after this one') &&
-                                        !effect.includes('more workers this turn') &&
-                                        !effect.includes('Can place')
+                                        !effect.includes('more workers this turn')
                                     ),
                                     extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                                     victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
@@ -1245,7 +1243,7 @@
                         ...state,
                         players: state.players.map(player =>
                             player.id === action.playerId
-                                ? { ...player, shopCostModifier: (player.shopCostModifier || 0) + action.modifier }
+                                ? { ...player, shopCostModifier: player.shopCostModifier + action.modifier }
                                 : player
                         )
                     };
@@ -1422,8 +1420,7 @@
                                 red: 0, yellow: 0, blue: 0, purple: 0, 
                                 gold: 0, white: 0, black: 0, silver: 0
                             },
-                            vpSources: player.vpSources || {},
-                            shopCostModifier: player.shopCostModifier !== undefined ? player.shopCostModifier : 0
+                            vpSources: player.vpSources || {}
                         })) : state.players,
                         roomCode: state.roomCode,
                         myPlayerId: state.myPlayerId,
@@ -1670,19 +1667,7 @@
                 if (player1) {
                     console.log('syncGameState - Player 1 resources being sent:', player1.resources);
                 }
-                
-                // Add timestamp and sender info to help with sync conflicts
-                const syncData = {
-                    ...gameState,
-                    lastUpdatedBy: gameState.myPlayerId,
-                    timestamp: Date.now()
-                };
-                
-                database.ref(`rooms/${roomCode}/gameState`).set(syncData).catch(error => {
-                    console.error('Failed to sync game state:', error);
-                    // If sync fails due to NaN or other issues, log the problematic data
-                    console.error('Problematic game state:', gameState);
-                });
+                database.ref(`rooms/${roomCode}/gameState`).set(gameState);
             }
         }
         
@@ -3016,16 +3001,8 @@
                 // Execute actions for the affected players
                 if (actionId === 'redHybrid1') {
                     // Both players get actions where their workers END UP
-                    // Note: In multiplayer, only execute actions for the current player to avoid UI conflicts
-                    if (currentState.roomCode) {
-                        // In multiplayer, only current player gets their new action
-                        dispatch({ type: 'ADD_LOG', message: `In multiplayer, only current player gets the swap benefit` });
-                        await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
-                    } else {
-                        // In single player, both get actions
-                        await executeAction(worker1.spaceId, currentState.players.find(p => p.id === worker2.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
-                        await executeAction(worker2.spaceId, currentState.players.find(p => p.id === worker1.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
-                    }
+                    await executeAction(worker1.spaceId, currentState.players.find(p => p.id === worker2.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
+                    await executeAction(worker2.spaceId, currentState.players.find(p => p.id === worker1.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
                 } else {
                     // R2: Only current player gets action of where they MOVE TO (not where they were)
                     await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
@@ -3667,12 +3644,12 @@
                         dispatch({
                             type: 'ADD_SHOP_COST_MODIFIER',
                             playerId: p.id,
-                            modifier: 1
+                            modifier: 2
                         });
                     }
                 });
                 
-                const message = `Player ${player.id}: blueIncreaseCosts → +2 blue + all other players' shop costs increased by 1 ⭐`;
+                const message = `Player ${player.id}: blueIncreaseCosts → +2 blue + all other players' shop costs increased by 2 ⭐`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
