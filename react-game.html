@@ -281,7 +281,11 @@
                     
                     const newWorkersToPlace = isCurrentPlayerWorker ? Math.max(0, state.workersToPlace - 1) : state.workersToPlace;
                     const workerOwnerPlayer = state.players.find(p => p.id === workerOwner);
-                    const workerOwnerWorkersLeft = workerOwnerPlayer.workersLeft - 1;
+                    // Don't reduce below 0 - when using "play more workers" effects
+                    const workerOwnerWorkersLeft = Math.max(0, workerOwnerPlayer.workersLeft - 1);
+                    
+                    // Clear "Can place X workers" effect if we've placed all bonus workers
+                    const shouldClearPlaceEffect = newWorkersToPlace === 0 && state.workersToPlace > 0;
                     
                     return {
                         ...state,
@@ -289,11 +293,19 @@
                             ...state.occupiedSpaces,
                             [action.actionId]: workerOwner
                         },
-                        players: state.players.map(player => 
-                            player.id === workerOwner 
-                                ? { ...player, workersLeft: workerOwnerWorkersLeft }
-                                : player
-                        ),
+                        players: state.players.map(player => {
+                            if (player.id === workerOwner) {
+                                const updatedPlayer = { ...player, workersLeft: workerOwnerWorkersLeft };
+                                // Clear the "Can place X workers" effect if done placing
+                                if (shouldClearPlaceEffect && isCurrentPlayerWorker) {
+                                    updatedPlayer.effects = (updatedPlayer.effects || []).filter(effect => 
+                                        !effect.includes('Can place') && !effect.includes('more workers this turn')
+                                    );
+                                }
+                                return updatedPlayer;
+                            }
+                            return player;
+                        }),
                         workerPlacedThisTurn: isCurrentPlayerWorker ? true : state.workerPlacedThisTurn,
                         workersToPlace: newWorkersToPlace,
                         roundActions: [...state.roundActions, { playerId: workerOwner, actionId: action.actionId }]
@@ -1449,6 +1461,10 @@
                         gameLayers: action.gameState.gameLayers || state.gameLayers,
                         // Sync shop state
                         closedShops: action.gameState.closedShops || state.closedShops,
+                        // Recalculate automatic VPs based on synced game layers
+                        automaticVPs: action.gameState.gameLayers ? 
+                            (action.gameState.gameLayers.blue ? { blue: true } : {}) : 
+                            (action.gameState.automaticVPs || state.automaticVPs),
                         // Track sync timestamp to handle race conditions
                         lastSyncTimestamp: action.gameState.timestamp || Date.now(),
                         // Mark that we just synced to prevent immediate re-sync
@@ -2103,13 +2119,16 @@
                 }
                 
                 const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
-                if (currentPlayer.workersLeft <= 0) {
-                    alert('You have no workers left to place!');
+                
+                // Check if player can place workers
+                if (state.workersToPlace <= 0) {
+                    alert('You have already placed all your workers this turn. End your turn or buy from shops.');
                     return;
                 }
                 
-                if (state.workersToPlace <= 0) {
-                    alert('You have already placed all your workers this turn. End your turn or buy from shops.');
+                // Only check physical workers if we don't have bonus placement workers
+                if (currentPlayer.workersLeft <= 0 && state.workersToPlace <= 1) {
+                    alert('You have no workers left to place!');
                     return;
                 }
                 
@@ -2710,7 +2729,7 @@
                     resources: { purple: purpleGain }
                 });
                 
-                // Set skip for this turn (immediately)
+                // Set skip for NEXT turn, not this turn
                 const newSkippedTurns = { ...currentState.skippedTurns };
                 newSkippedTurns[player.id] = (newSkippedTurns[player.id] || 0) + 1;
                 dispatch({
@@ -2721,8 +2740,7 @@
                 const message = `Player ${player.id}: gain5purpleSkip → +${purpleGain} purple${hasDoubleEffect ? ' (DOUBLED!)' : ''}, will skip next turn (total skips: ${newSkippedTurns[player.id]})`;
                 dispatch({ type: 'ADD_LOG', message });
                 
-                // Force end turn
-                setTimeout(() => dispatch({ type: 'END_TURN' }), 100);
+                // Don't force end turn - let player continue placing workers if they have more to place
                 return;
             }
             
@@ -3080,21 +3098,36 @@
                 });
                 
                 // Execute actions for the affected players
+                // IMPORTANT: Skip actions that would interfere with the swap itself or create paradoxes
+                const skipActions = ['gain2purpleTakeBack', 'blackStealWorker', 'playTwoWorkers', 'playThreeWorkers'];
+                
                 if (actionId === 'redHybrid1') {
                     // Both players get actions where their workers END UP
                     // Note: In multiplayer, only execute actions for the current player to avoid UI conflicts
                     if (currentState.roomCode) {
                         // In multiplayer, only current player gets their new action
                         dispatch({ type: 'ADD_LOG', message: `In multiplayer, only current player gets the swap benefit` });
-                        await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
+                        if (!skipActions.includes(worker2.spaceId)) {
+                            await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
+                        } else {
+                            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Cannot execute ${worker2.spaceId} from swap (would interfere with swap)` });
+                        }
                     } else {
                         // In single player, both get actions
-                        await executeAction(worker1.spaceId, currentState.players.find(p => p.id === worker2.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
-                        await executeAction(worker2.spaceId, currentState.players.find(p => p.id === worker1.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
+                        if (!skipActions.includes(worker1.spaceId)) {
+                            await executeAction(worker1.spaceId, currentState.players.find(p => p.id === worker2.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
+                        }
+                        if (!skipActions.includes(worker2.spaceId)) {
+                            await executeAction(worker2.spaceId, currentState.players.find(p => p.id === worker1.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
+                        }
                     }
                 } else {
                     // R2: Only current player gets action of where they MOVE TO (not where they were)
-                    await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
+                    if (!skipActions.includes(worker2.spaceId)) {
+                        await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
+                    } else {
+                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Cannot execute ${worker2.spaceId} from swap (would interfere with swap)` });
+                    }
                 }
                 
                 const message = `Player ${player.id}: ${actionId} → +1 red + swapped workers`;
