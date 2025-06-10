@@ -1379,6 +1379,12 @@
                         )
                     };
                 
+                case 'CLEAR_SYNC_FLAG':
+                    return {
+                        ...state,
+                        justSyncedFromFirebase: false
+                    };
+                
                 case 'SYNC_GAME_STATE':
                     console.log('SYNC_GAME_STATE reducer called with:', {
                         round: action.gameState.round,
@@ -1399,14 +1405,18 @@
                         console.log('SYNC_GAME_STATE - All players from Firebase:', action.gameState.players);
                     }
                     
-                    // Only accept updates from other players OR if timestamp is newer
-                    if (action.gameState.lastUpdatedBy && action.gameState.lastUpdatedBy === state.myPlayerId) {
-                        // Check if this is a newer update (handles race conditions)
-                        if (action.gameState.timestamp && state.lastSyncTimestamp && 
-                            action.gameState.timestamp <= state.lastSyncTimestamp) {
-                            console.log('SYNC_GAME_STATE - Ignoring our own update echo');
-                            return state;
-                        }
+                    // Only accept updates from other players
+                    console.log('SYNC_GAME_STATE - Echo detection:', {
+                        lastUpdatedBy: action.gameState.lastUpdatedBy,
+                        myPlayerId: state.myPlayerId,
+                        isOurUpdate: action.gameState.lastUpdatedBy === state.myPlayerId
+                    });
+                    
+                    if (action.gameState.lastUpdatedBy && 
+                        state.myPlayerId && 
+                        action.gameState.lastUpdatedBy === state.myPlayerId) {
+                        console.log('SYNC_GAME_STATE - Ignoring our own update echo');
+                        return state;
                     }
                     
                     // Merge remote game state while preserving local multiplayer state
@@ -1440,7 +1450,9 @@
                         // Sync shop state
                         closedShops: action.gameState.closedShops || state.closedShops,
                         // Track sync timestamp to handle race conditions
-                        lastSyncTimestamp: action.gameState.timestamp || Date.now()
+                        lastSyncTimestamp: action.gameState.timestamp || Date.now(),
+                        // Mark that we just synced to prevent immediate re-sync
+                        justSyncedFromFirebase: true
                     };
                     
                     console.log('SYNC_GAME_STATE - After merge, new state:', {
@@ -1635,12 +1647,21 @@
             });
             
             // Listen for game state changes
+            let lastProcessedTimestamp = 0;
             roomRef.child('gameState').on('value', snapshot => {
                 const gameState = snapshot.val();
                 if (gameState) {
+                    // Skip if this is an older update we've already processed
+                    if (gameState.timestamp && gameState.timestamp <= lastProcessedTimestamp) {
+                        console.log('Skipping older gameState update:', gameState.timestamp, '<=', lastProcessedTimestamp);
+                        return;
+                    }
+                    
                     console.log('Firebase gameState update received:', {
                         round: gameState.round,
                         currentPlayer: gameState.currentPlayer,
+                        lastUpdatedBy: gameState.lastUpdatedBy,
+                        timestamp: gameState.timestamp,
                         occupiedSpaces: gameState.occupiedSpaces,
                         players: gameState.players?.map(p => ({ 
                             id: p.id, 
@@ -1648,6 +1669,8 @@
                             workersLeft: p.workersLeft 
                         }))
                     });
+                    
+                    lastProcessedTimestamp = gameState.timestamp || Date.now();
                     dispatch({ type: 'SYNC_GAME_STATE', gameState });
                 }
             });
@@ -1656,12 +1679,18 @@
             roomRef.child(`players/${myPlayerId}/connected`).onDisconnect().set(false);
         }
         
+        // Track if we're currently syncing to prevent loops
+        let isSyncing = false;
+        
         function syncGameState(roomCode, gameState) {
-            if (database && roomCode) {
+            if (database && roomCode && !isSyncing) {
+                isSyncing = true;
+                
                 console.log('syncGameState - Syncing to Firebase:', {
                     roomCode: roomCode,
                     round: gameState.round,
                     currentPlayer: gameState.currentPlayer,
+                    lastUpdatedBy: gameState.lastUpdatedBy,
                     occupiedSpaces: gameState.occupiedSpaces,
                     players: gameState.players?.map(p => ({ 
                         id: p.id, 
@@ -1676,19 +1705,24 @@
                     console.log('syncGameState - Player 1 resources being sent:', player1.resources);
                 }
                 
-                // Add timestamp and sender info to help with sync conflicts
+                // Add timestamp if not already present
                 const syncData = {
                     ...gameState,
-                    lastUpdatedBy: gameState.myPlayerId || null,
-                    timestamp: Date.now(),
+                    lastUpdatedBy: gameState.lastUpdatedBy || null,
+                    timestamp: gameState.timestamp || Date.now(),
                     gameLayers: gameState.gameLayers || null
                 };
                 
-                database.ref(`rooms/${roomCode}/gameState`).set(syncData).catch(error => {
-                    console.error('Failed to sync game state:', error);
-                    // If sync fails due to NaN or other issues, log the problematic data
-                    console.error('Problematic game state:', gameState);
-                });
+                database.ref(`rooms/${roomCode}/gameState`).set(syncData)
+                    .then(() => {
+                        isSyncing = false;
+                    })
+                    .catch(error => {
+                        console.error('Failed to sync game state:', error);
+                        // If sync fails due to NaN or other issues, log the problematic data
+                        console.error('Problematic game state:', gameState);
+                        isSyncing = false;
+                    });
             }
         }
         
@@ -8396,9 +8430,19 @@
             const stateRef = React.useRef(state);
             stateRef.current = state;
             
+            // Clear justSyncedFromFirebase flag after a short delay
+            useEffect(() => {
+                if (state.justSyncedFromFirebase) {
+                    const clearTimer = setTimeout(() => {
+                        dispatch({ type: 'CLEAR_SYNC_FLAG' });
+                    }, 100);
+                    return () => clearTimeout(clearTimer);
+                }
+            }, [state.justSyncedFromFirebase]);
+            
             // Sync state to Firebase whenever state changes (debounced)
             useEffect(() => {
-                if (state.roomCode && state.gameStarted) {
+                if (state.roomCode && state.gameStarted && !state.justSyncedFromFirebase) {
                     // Clear any pending sync
                     if (syncTimeoutRef.current) {
                         clearTimeout(syncTimeoutRef.current);
@@ -8408,30 +8452,33 @@
                     syncTimeoutRef.current = setTimeout(() => {
                         // Use the ref to get the latest state
                         const currentState = stateRef.current;
-                        syncGameState(currentState.roomCode, {
-                        currentPlayer: currentState.currentPlayer,
-                        turnDirection: currentState.turnDirection,
-                        players: currentState.players,
-                        occupiedSpaces: currentState.occupiedSpaces,
-                        round: currentState.round,
-                        turnOrder: currentState.turnOrder,
-                        workerPlacedThisTurn: currentState.workerPlacedThisTurn,
-                        workersToPlace: currentState.workersToPlace,
-                        actionLog: currentState.actionLog,
-                        gameStarted: currentState.gameStarted,
-                        gameLayers: currentState.gameLayers,
-                        closedShops: currentState.closedShops,
-                        shopUsedBeforeWorkers: currentState.shopUsedBeforeWorkers,
-                        shopUsedAfterWorkers: currentState.shopUsedAfterWorkers,
-                        playersOutOfWorkers: currentState.playersOutOfWorkers,
-                        skippedTurns: currentState.skippedTurns,
-                        waitingForOthers: currentState.waitingForOthers,
-                        roundActions: currentState.roundActions,
-                        gameOver: currentState.gameOver,
-                        automaticVPs: currentState.automaticVPs,
-                        lastUpdatedBy: currentState.myPlayerId,
-                        timestamp: Date.now()
-                    });
+                        const syncData = {
+                            currentPlayer: currentState.currentPlayer,
+                            turnDirection: currentState.turnDirection,
+                            players: currentState.players,
+                            occupiedSpaces: currentState.occupiedSpaces,
+                            round: currentState.round,
+                            turnOrder: currentState.turnOrder,
+                            workerPlacedThisTurn: currentState.workerPlacedThisTurn,
+                            workersToPlace: currentState.workersToPlace,
+                            actionLog: currentState.actionLog,
+                            gameStarted: currentState.gameStarted,
+                            gameLayers: currentState.gameLayers,
+                            closedShops: currentState.closedShops,
+                            shopUsedBeforeWorkers: currentState.shopUsedBeforeWorkers,
+                            shopUsedAfterWorkers: currentState.shopUsedAfterWorkers,
+                            playersOutOfWorkers: currentState.playersOutOfWorkers,
+                            skippedTurns: currentState.skippedTurns,
+                            waitingForOthers: currentState.waitingForOthers,
+                            roundActions: currentState.roundActions,
+                            gameOver: currentState.gameOver,
+                            automaticVPs: currentState.automaticVPs,
+                            // Don't include myPlayerId in sync data - it's local to each client
+                            lastUpdatedBy: currentState.myPlayerId,
+                            timestamp: Date.now()
+                        };
+                        console.log('Syncing with myPlayerId:', currentState.myPlayerId);
+                        syncGameState(currentState.roomCode, syncData);
                     }, 200);
                 }
                 
