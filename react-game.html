@@ -1069,6 +1069,10 @@
                     // Check if game is over after round 3
                     const gameOver = newRound > 3;
                     
+                    if (gameOver) {
+                        console.log('ADVANCE_ROUND: Game is over! Setting gameOver to true');
+                    }
+                    
                     const newState = {
                         ...state,
                         round: newRound,
@@ -1482,6 +1486,7 @@
                     
                     console.log('SYNC_GAME_STATE - After merge, new state:', {
                         round: mergedState.round,
+                        gameOver: mergedState.gameOver,
                         occupiedSpaces: mergedState.occupiedSpaces,
                         players: mergedState.players?.map(p => ({ 
                             id: p.id, 
@@ -1685,6 +1690,7 @@
                     console.log('Firebase gameState update received:', {
                         round: gameState.round,
                         currentPlayer: gameState.currentPlayer,
+                        gameOver: gameState.gameOver,
                         lastUpdatedBy: gameState.lastUpdatedBy,
                         timestamp: gameState.timestamp,
                         occupiedSpaces: gameState.occupiedSpaces,
@@ -1715,6 +1721,7 @@
                     roomCode: roomCode,
                     round: gameState.round,
                     currentPlayer: gameState.currentPlayer,
+                    gameOver: gameState.gameOver,
                     lastUpdatedBy: gameState.lastUpdatedBy,
                     occupiedSpaces: gameState.occupiedSpaces,
                     players: gameState.players?.map(p => ({ 
