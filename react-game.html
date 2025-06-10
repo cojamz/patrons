@@ -634,10 +634,16 @@
                     
                     // Track if we're at a reversal
                     let atReversal = isSnakeDraftReversal;
+                    let lastReversalPlayer = isSnakeDraftReversal ? nextPlayer : null;
                     
                     do {
                             attempts++;
                             if (attempts > maxAttempts) break; // Prevent infinite loop
+                            
+                            // Reset atReversal once we've moved past the reversal player
+                            if (atReversal && lastReversalPlayer && nextPlayer !== lastReversalPlayer) {
+                                atReversal = false;
+                            }
                             
                             // Check if player should skip and track it (but not if at reversal)
                             if (tempSkippedTurns[nextPlayer] > 0 && !atReversal) {
@@ -6584,18 +6590,21 @@
             let nextPlayer = null;
             let nextPlayerId = null;
             let attemptCount = 0;
+            let searchDirection = state.turnDirection;
             
             // Keep searching for a player with workers
             while (!nextPlayer && attemptCount < state.players.length) {
-                searchIndex = searchIndex + state.turnDirection;
+                searchIndex = searchIndex + searchDirection;
                 
-                // Handle snake draft wrap-around
-                if (state.turnDirection === 1 && searchIndex >= state.turnOrder.length) {
-                    // At the end going forward - no more players
-                    break;
-                } else if (state.turnDirection === -1 && searchIndex < 0) {
-                    // At the beginning going backward - no more players
-                    break;
+                // Handle snake draft reversal
+                if (searchDirection === 1 && searchIndex >= state.turnOrder.length) {
+                    // At the end going forward - reverse direction
+                    searchDirection = -1;
+                    searchIndex = state.turnOrder.length - 1;
+                } else if (searchDirection === -1 && searchIndex < 0) {
+                    // At the beginning going backward - reverse direction
+                    searchDirection = 1;
+                    searchIndex = 0;
                 }
                 
                 nextPlayerId = state.turnOrder[searchIndex];
@@ -6769,40 +6778,28 @@
                 return;
             }
             
-            // Let player choose which actions to repeat and in which order
-            const message = `Choose actions to repeat from Player ${targetPlayerId} (you can repeat all of them!)`;
-            let continueChoosing = true;
-            const repeatedActions = [];
-            const availableActions = [...actionOptions];
+            // According to the spec, this should repeat ALL actions from the chosen player
+            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Repeating ALL ${actionOptions.length} actions from Player ${targetPlayerId}...` });
             
-            while (continueChoosing && availableActions.length > 0) {
-                const choice = await showChoice(dispatch, message, [
-                    ...availableActions,
-                    { label: 'Done repeating actions', value: 'done' }
-                ]);
+            // Execute ALL actions in sequence (no choosing)
+            for (const actionOption of actionOptions) {
+                const actionId = actionOption.value;
+                console.log(`Red R3 shop - Executing action ${actionId} for player ${player.id}`);
                 
-                if (!choice || choice === 'done') {
-                    continueChoosing = false;
-                } else {
-                    repeatedActions.push(choice);
-                    // Remove the action from available options (can only repeat each once)
-                    const index = availableActions.findIndex(opt => opt.value === choice);
-                    if (index > -1) {
-                        availableActions.splice(index, 1);
-                    }
-                    
-                    // Execute the action with recursion depth tracking
-                    await executeAction(choice, player, dispatch, state, state.gameLayers, recursionDepth + 1);
-                    
-                    // RED AUTOMATIC VP: Gain 1 VP for red action
-                    dispatch({
-                        type: 'UPDATE_VP',
-                        playerId: player.id,
-                        vp: 1
-                    });
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action (repeat)` });
-                }
+                // Execute the action with recursion depth tracking
+                await executeAction(actionId, player, dispatch, state, state.gameLayers, recursionDepth + 1);
+                
+                // RED AUTOMATIC VP: Gain 1 VP for red action
+                dispatch({
+                    type: 'UPDATE_VP',
+                    playerId: player.id,
+                    vp: 1,
+                    source: 'redAutomatic'
+                });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action (repeat)` });
             }
+            
+            const repeatedActions = actionOptions;
             
             if (repeatedActions.length > 0) {
                 dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Repeated ${repeatedActions.length} actions from Player ${targetPlayerId}!` });
