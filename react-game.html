@@ -1143,15 +1143,22 @@
                     };
                 
                 case 'SHOW_MODAL':
+                    // If showing a modal to another player, set waiting state
+                    const isWaitingForOther = action.modal?.targetPlayerId && 
+                        action.modal.targetPlayerId !== state.myPlayerId &&
+                        state.myPlayerId === state.currentPlayer;
+                    
                     return {
                         ...state,
-                        modal: action.modal
+                        modal: action.modal,
+                        waitingForPlayer: isWaitingForOther ? action.modal.targetPlayerId : null
                     };
                 
                 case 'HIDE_MODAL':
                     return {
                         ...state,
-                        modal: null
+                        modal: null,
+                        waitingForPlayer: null
                     };
                 
                 case 'UNDO_LAST_WORKER':
@@ -3208,14 +3215,29 @@
                 
                 const targetPlayer = otherPlayers.find(p => p.id === targetId);
                 
-                // Use the StealGemsModal to select resources
-                const selectedGems = await showStealGems(
-                    dispatch, 
-                    `Steal up to ${stealCount} resources from Player ${targetId}`,
-                    targetPlayer,
-                    stealCount,
-                    workerInfo
-                );
+                // In multiplayer, let the target player choose which gems to give up
+                let selectedGems;
+                if (currentState.roomCode && targetId !== player.id) {
+                    // Multiplayer: target player chooses
+                    const attackerInfo = `${player.name || `Player ${player.id}`} ${player.emoji || ''}`;
+                    selectedGems = await showStealGems(
+                        dispatch,
+                        `${attackerInfo} is stealing 3 gems from you! Choose which to give up:`,
+                        targetPlayer,
+                        stealCount,
+                        workerInfo,
+                        targetId // Target player sees this modal
+                    );
+                } else {
+                    // Single player: current player chooses
+                    selectedGems = await showStealGems(
+                        dispatch, 
+                        `Steal up to ${stealCount} resources from Player ${targetId}`,
+                        targetPlayer,
+                        stealCount,
+                        workerInfo
+                    );
+                }
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: ${actionId} → Cancelled`;
@@ -5276,7 +5298,7 @@
         }
 
         // Helper functions for custom prompts
-        function showChoice(dispatch, title, options, columnMode = false, workerInfo = null) {
+        function showChoice(dispatch, title, options, columnMode = false, workerInfo = null, targetPlayerId = null) {
             return new Promise((resolve) => {
                 dispatch({
                     type: 'SHOW_MODAL',
@@ -5285,6 +5307,7 @@
                         title,
                         options,
                         columnMode,
+                        targetPlayerId, // Who should see this modal (null = current player)
                         onSelect: resolve,
                         onCancel: () => {
                             // If this modal was triggered by placing a worker, undo the placement
@@ -5341,7 +5364,7 @@
             });
         }
 
-        function showStealGems(dispatch, title, targetPlayer, maxGems, workerInfo = null) {
+        function showStealGems(dispatch, title, targetPlayer, maxGems, workerInfo = null, targetPlayerId = null) {
             return new Promise((resolve) => {
                 dispatch({
                     type: 'SHOW_MODAL',
@@ -5350,6 +5373,7 @@
                         title,
                         targetPlayer,
                         maxGems,
+                        targetPlayerId, // Who should see this modal
                         onSelect: resolve,
                         onCancel: () => {
                             // If this modal was triggered by placing a worker, undo the placement
@@ -6314,26 +6338,46 @@
             const targetPlayer = await selectTargetPlayer(dispatch, 'Choose a player to give 4 VP', state.players, player.id);
             
             if (!targetPlayer) {
-                // If cancelled, give to first other player
-                const firstOther = otherPlayers[0];
-                dispatch({
-                    type: 'UPDATE_VP',
-                    playerId: firstOther.id,
-                    vp: 4,
-                    source: 'silverShop'
-                });
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R2 shop → +4 VP, Player ${firstOther.id} +4 VP (auto-selected)` });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R2 shop → +4 VP (gift cancelled)` });
                 return;
             }
             
-            dispatch({
-                type: 'UPDATE_VP',
-                playerId: targetPlayer.id,
-                vp: 4,
-                source: 'silverShop'
-            });
-            
-            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R2 shop → +4 VP, Player ${targetPlayer.id} +4 VP` });
+            // In multiplayer, let the recipient acknowledge the gift
+            if (state.roomCode && targetPlayer.id !== player.id) {
+                const giftGiverInfo = `${player.name || `Player ${player.id}`} ${player.emoji || ''}`;
+                const accepted = await showChoice(
+                    dispatch,
+                    `${giftGiverInfo} wants to give you 4 VP! 🎁`,
+                    [
+                        { label: 'Graciously Accept (+4 VP)', value: true },
+                        { label: 'Politely Decline', value: false }
+                    ],
+                    false,
+                    null,
+                    targetPlayer.id // Target player sees this
+                );
+                
+                if (accepted) {
+                    dispatch({
+                        type: 'UPDATE_VP',
+                        playerId: targetPlayer.id,
+                        vp: 4,
+                        source: 'silverShop'
+                    });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R2 shop → +4 VP, Player ${targetPlayer.id} accepted +4 VP gift! 🎉` });
+                } else {
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R2 shop → +4 VP, Player ${targetPlayer.id} declined the gift` });
+                }
+            } else {
+                // Single player: auto-accept
+                dispatch({
+                    type: 'UPDATE_VP',
+                    playerId: targetPlayer.id,
+                    vp: 4,
+                    source: 'silverShop'
+                });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R2 shop → +4 VP, gave Player ${targetPlayer.id} +4 VP` });
+            }
         }
         
         // Execute silver 3 shop effect - Gain 7 Silver, Each Other Player Gains 2 Silver
@@ -8568,8 +8612,22 @@
                     ])
                 ])
                     ]), // Close main-layout div array
-                    // Modal System - Only show to the current player in multiplayer
-                    state.modal && (!state.roomCode || state.myPlayerId === state.currentPlayer) && React.createElement(Modal, { 
+                    // Waiting indicator when waiting for another player's decision
+                    state.waitingForPlayer && state.myPlayerId === state.currentPlayer && 
+                        React.createElement('div', { 
+                            key: 'waiting-indicator',
+                            className: 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 shadow-lg z-50' 
+                        }, [
+                            React.createElement('div', { className: 'flex items-center space-x-3' }, [
+                                React.createElement('div', { className: 'animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600' }),
+                                React.createElement('div', { className: 'text-yellow-800 font-semibold' }, 
+                                    `Waiting for Player ${state.waitingForPlayer} to make a choice...`)
+                            ])
+                        ]),
+                    // Modal System - Show to current player OR targeted player
+                    state.modal && (!state.roomCode || 
+                        state.myPlayerId === state.currentPlayer || 
+                        state.modal.targetPlayerId === state.myPlayerId) && React.createElement(Modal, { 
                         key: 'modal', 
                         isOpen: true, 
                         onClose: () => dispatch({ type: 'HIDE_MODAL' }) 
