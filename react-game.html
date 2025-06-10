@@ -701,9 +701,6 @@
                                 continue;
                             }
                             
-                            // Clear the reversal flag after first iteration
-                            atReversal = false;
-                            
                             // Found a valid player
                             break;
                             
@@ -1682,8 +1679,9 @@
                 // Add timestamp and sender info to help with sync conflicts
                 const syncData = {
                     ...gameState,
-                    lastUpdatedBy: gameState.myPlayerId,
-                    timestamp: Date.now()
+                    lastUpdatedBy: gameState.myPlayerId || null,
+                    timestamp: Date.now(),
+                    gameLayers: gameState.gameLayers || null
                 };
                 
                 database.ref(`rooms/${roomCode}/gameState`).set(syncData).catch(error => {
