@@ -2370,7 +2370,20 @@
                 const actualPlayerId = workerInfo?.playerId || player.id;
                 const actualPlayer = currentState.players.find(p => p.id === actualPlayerId);
                 
-                const selectedGems = await showGemSelection(dispatch, 'Select 3 Resources (⭐ Colors)', 3, null, workerInfo);
+                // If this is from Red R2 shop placement, show modal to the placed worker's owner
+                const isPlacedByOther = workerInfo && workerInfo.placedBy && workerInfo.placedBy !== actualPlayerId;
+                const modalTitle = isPlacedByOther 
+                    ? `Your worker was placed! Select 3 Resources (⭐ Colors):`
+                    : 'Select 3 Resources (⭐ Colors)';
+                
+                const selectedGems = await showGemSelection(
+                    dispatch, 
+                    modalTitle, 
+                    3, 
+                    null, 
+                    workerInfo,
+                    isPlacedByOther ? actualPlayerId : null
+                );
                 console.log('gain3yellow - selectedGems:', selectedGems);
                 
                 if (!selectedGems) {
@@ -2448,7 +2461,20 @@
                 
                 console.log('gain2yellow - actualPlayerId:', actualPlayerId, 'actualPlayer:', actualPlayer);
                 
-                const selectedGems = await showGemSelection(dispatch, 'Select 2 Resources (⭐ Colors)', 2, null, workerInfo);
+                // If this is from Red R2 shop placement, show modal to the placed worker's owner
+                const isPlacedByOther = workerInfo && workerInfo.placedBy && workerInfo.placedBy !== actualPlayerId;
+                const modalTitle = isPlacedByOther 
+                    ? `Your worker was placed! Select 2 Resources (⭐ Colors):`
+                    : 'Select 2 Resources (⭐ Colors)';
+                
+                const selectedGems = await showGemSelection(
+                    dispatch, 
+                    modalTitle, 
+                    2, 
+                    null, 
+                    workerInfo,
+                    isPlacedByOther ? actualPlayerId : null
+                );
                 
                 console.log('gain2yellow - selectedGems:', selectedGems);
                 
@@ -5327,7 +5353,7 @@
             });
         }
 
-        function showGemSelection(dispatch, title, maxGems, availableResources, workerInfo = null) {
+        function showGemSelection(dispatch, title, maxGems, availableResources, workerInfo = null, targetPlayerId = null) {
             return new Promise((resolve) => {
                 dispatch({
                     type: 'SHOW_MODAL',
@@ -5336,6 +5362,7 @@
                         title,
                         maxGems,
                         availableResources,
+                        targetPlayerId, // Who should see this modal
                         onSelect: resolve,
                         onCancel: () => {
                             // If this modal was triggered by placing a worker, undo the placement
@@ -6609,27 +6636,12 @@
                 return;
             }
             
-            // Let the target player choose where to place their own worker
-            let choice;
-            if (state.roomCode && nextPlayerId !== player.id) {
-                // Multiplayer: target player chooses
-                const initiatorInfo = `${player.name || `Player ${player.id}`} ${player.emoji || ''}`;
-                choice = await showChoice(
-                    dispatch, 
-                    `${initiatorInfo} is placing one of your workers! Choose where to place it:`,
-                    availableActions,
-                    false,
-                    null,
-                    nextPlayerId // Target player sees this
-                );
-            } else {
-                // Single player: current player chooses
-                choice = await showChoice(
-                    dispatch, 
-                    `Choose where to place Player ${nextPlayerId}'s worker (they have ${nextPlayer.workersLeft} workers left)`,
-                    availableActions
-                );
-            }
+            // Current player chooses where to place opponent's worker
+            const choice = await showChoice(
+                dispatch, 
+                `Choose where to place Player ${nextPlayerId}'s worker (they have ${nextPlayer.workersLeft} workers left)`,
+                availableActions
+            );
             
             if (choice) {
                 // Place the worker
@@ -6642,8 +6654,13 @@
                     updates: { workersLeft: nextPlayer.workersLeft - 1 }
                 });
                 
-                // Execute the action for the next player
-                await executeAction(choice, nextPlayer, dispatch, state, state.gameLayers, 0);
+                // Execute the action for the next player, with info about who placed them
+                const placementInfo = {
+                    actionId: choice,
+                    playerId: nextPlayerId,
+                    placedBy: player.id
+                };
+                await executeAction(choice, nextPlayer, dispatch, state, state.gameLayers, 0, placementInfo);
                 
                 // Find action details for clearer messaging
                 let actionDetails = choice;
