@@ -484,7 +484,9 @@
                                     effects: (player.effects || []).filter(effect => 
                                         !effect.includes('Will take an extra turn after this one') &&
                                         !effect.includes('more workers this turn') &&
-                                        !effect.includes('Can place')
+                                        !effect.includes('Can place') &&
+                                        !effect.includes('Next gain will be doubled') && // Clear doubling effect
+                                        !effect.includes('Can place the next player\'s worker') // Clear R2 red shop effect
                                     ),
                                     extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                                     victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
@@ -539,7 +541,9 @@
                                     effects: (player.effects || []).filter(effect => 
                                         !effect.includes('Will take an extra turn after this one') &&
                                         !effect.includes('more workers this turn') &&
-                                        !effect.includes('Can place')
+                                        !effect.includes('Can place') &&
+                                        !effect.includes('Next gain will be doubled') && // Clear doubling effect
+                                        !effect.includes('Can place the next player\'s worker') // Clear R2 red shop effect
                                     ),
                                     extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                                     victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
@@ -1047,11 +1051,15 @@
                     // Open shops for the new round
                     const newRound = state.round + 1;
                     const updatedClosedShops = { ...state.closedShops };
-                    const shopColors = ['red', 'yellow', 'blue', 'purple', 'gold', 'white', 'black', 'silver'];
+                    
+                    // Only open shops for colors that are in the game
+                    const activeColors = state.gameLayers ? Object.keys(state.gameLayers) : [];
                     
                     // Remove shops for the new round from closedShops (making them available)
-                    shopColors.forEach(color => {
-                        delete updatedClosedShops[`${color}${newRound}`];
+                    activeColors.forEach(color => {
+                        const shopKey = `${color}${newRound}`;
+                        console.log(`Opening shop ${shopKey} for round ${newRound}`);
+                        delete updatedClosedShops[shopKey];
                     });
                     
                     // Sort players by VP (lowest to highest) for turn order
@@ -1078,7 +1086,8 @@
                                 workersLeft: baseWorkers + extraWorkers,
                                 effects: (player.effects || []).filter(effect => 
                                     !effect.includes('Will get 2 extra workers next round') &&
-                                    !effect.includes('more workers this turn')
+                                    !effect.includes('more workers this turn') &&
+                                    !effect.includes('Must place on red layer')
                                 ),
                                 shopCostModifier: 0 // Reset each player's shop cost modifier
                             };
@@ -2132,17 +2141,13 @@
                     return;
                 }
                 
-                // Check if there's a "must place on red" effect active
-                const forceRedPlayer = state.players.find(p => 
-                    p.effects && p.effects.includes('Other players must place on red layer until full')
-                );
-                const mustPlaceOnRed = forceRedPlayer && forceRedPlayer.id !== state.currentPlayer;
+                // Check if current player has a "must place on red" effect
+                const mustPlaceOnRed = currentPlayer.effects && 
+                    currentPlayer.effects.some(effect => effect.includes('Must place on red layer'));
                 
                 // Debug logging for force red issue
-                if (forceRedPlayer) {
-                    console.log('FORCE_RED_DEBUG - Force red player:', forceRedPlayer.id, 
-                              'Current player:', state.currentPlayer,
-                              'Must place on red:', mustPlaceOnRed);
+                if (mustPlaceOnRed) {
+                    console.log('FORCE_RED_DEBUG - Current player must place on red:', currentPlayer.id, currentPlayer.effects);
                 }
                 
                 if (mustPlaceOnRed) {
@@ -2167,6 +2172,18 @@
                         if (!redIsFull) {
                             alert('You must place workers on the red layer until it is full!');
                             return;
+                        } else {
+                            // Red is full, clear the force red effect from all players
+                            console.log('Red layer is full, clearing force red effects');
+                            currentState.players.forEach(p => {
+                                if (p.effects && p.effects.some(e => e.includes('Must place on red layer'))) {
+                                    dispatch({
+                                        type: 'UPDATE_PLAYER_EFFECTS',
+                                        playerId: p.id,
+                                        effects: p.effects.filter(e => !e.includes('Must place on red layer'))
+                                    });
+                                }
+                            });
                         }
                     }
                 }
@@ -3152,13 +3169,18 @@
                 });
                 dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
                 
-                dispatch({
-                    type: 'ADD_EFFECT',
-                    playerId: player.id,
-                    effect: 'Other players must place on red layer until full'
+                // Add effect to ALL OTHER players
+                currentState.players.forEach(p => {
+                    if (p.id !== player.id) {
+                        dispatch({
+                            type: 'ADD_EFFECT',
+                            playerId: p.id,
+                            effect: `Must place on red layer (forced by Player ${player.id})`
+                        });
+                    }
                 });
                 
-                const message = `Player ${player.id}: forceRedPlacement → +1 red + forcing red placement`;
+                const message = `Player ${player.id}: forceRedPlacement → +1 red + forcing red placement on others`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -3183,16 +3205,24 @@
                     'blueAnyShopBenefit', // Blue R3 - could select Red R3 shop
                     // Purple actions that manipulate turn order/workers
                     'playTwoWorkers', 'playThreeWorkers', 'gain4purpleWaitAll',
-                    'gain4purpleSkip', 'gain5purpleSkip', // Skip turns are personal
+                    // Note: Skip turn actions CAN be repeated - they just add more skips
                     'gain2purpleTakeBack', // Taking back workers is personal
                     // Victory shops - these are one-time purchases, not repeatable actions
                     'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
                     'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
                 ];
+                // Debug logging
+                console.log('redRepeatAll - All occupied spaces:', currentState.occupiedSpaces);
+                console.log('redRepeatAll - Current player:', player.id);
+                
                 const playerSpaces = Object.entries(currentState.occupiedSpaces)
-                    .filter(([spaceId, occupyingPlayerId]) => 
-                        occupyingPlayerId === player.id && !excludedActions.includes(spaceId)
-                    )
+                    .filter(([spaceId, occupyingPlayerId]) => {
+                        const isPlayerSpace = occupyingPlayerId === player.id;
+                        const isExcluded = excludedActions.includes(spaceId);
+                        const isCurrentAction = spaceId === actionId;
+                        console.log(`Checking ${spaceId}: player=${occupyingPlayerId}, isPlayerSpace=${isPlayerSpace}, isExcluded=${isExcluded}, isCurrentAction=${isCurrentAction}`);
+                        return isPlayerSpace && !isExcluded && !isCurrentAction;
+                    })
                     .map(([spaceId]) => spaceId);
                 
                 if (playerSpaces.length === 0) {
@@ -6801,7 +6831,7 @@
                 'blueAnyShopBenefit', // Blue R3 - could select Red R3 shop
                 // Purple actions that manipulate turn order/workers
                 'playTwoWorkers', 'playThreeWorkers', 'gain4purpleWaitAll',
-                'gain4purpleSkip', 'gain5purpleSkip', // Skip turns are personal
+                // Note: Skip turn actions CAN be repeated - they just add more skips
                 'gain2purpleTakeBack', // Taking back workers is personal
                 // Victory shops - these are one-time purchases, not repeatable actions
                 'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
