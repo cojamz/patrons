@@ -1400,10 +1400,14 @@
                         console.log('SYNC_GAME_STATE - All players from Firebase:', action.gameState.players);
                     }
                     
-                    // Only accept updates from other players
+                    // Only accept updates from other players OR if timestamp is newer
                     if (action.gameState.lastUpdatedBy && action.gameState.lastUpdatedBy === state.myPlayerId) {
-                        console.log('SYNC_GAME_STATE - Ignoring our own update echo');
-                        return state;
+                        // Check if this is a newer update (handles race conditions)
+                        if (action.gameState.timestamp && state.lastSyncTimestamp && 
+                            action.gameState.timestamp <= state.lastSyncTimestamp) {
+                            console.log('SYNC_GAME_STATE - Ignoring our own update echo');
+                            return state;
+                        }
                     }
                     
                     // Merge remote game state while preserving local multiplayer state
@@ -1435,7 +1439,9 @@
                         // Sync game layers if provided
                         gameLayers: action.gameState.gameLayers || state.gameLayers,
                         // Sync shop state
-                        closedShops: action.gameState.closedShops || state.closedShops
+                        closedShops: action.gameState.closedShops || state.closedShops,
+                        // Track sync timestamp to handle race conditions
+                        lastSyncTimestamp: action.gameState.timestamp || Date.now()
                     };
                     
                     console.log('SYNC_GAME_STATE - After merge, new state:', {
@@ -7064,10 +7070,10 @@
                 React.createElement('div', { key: 'shops', className: 'mb-3 bg-white bg-opacity-10 rounded-lg p-3' }, [
                     React.createElement('div', { key: 'shop-header', className: 'text-sm font-semibold text-gray-700 mb-1 flex items-center justify-between' }, [
                         React.createElement('span', { key: 'label' }, '🏪 Shops'),
-                        currentPlayer && currentPlayer.shopCostModifier !== 0 && React.createElement('span', { 
+                        currentPlayer && (currentPlayer.shopCostModifier || 0) !== 0 && React.createElement('span', { 
                             key: 'modifier', 
-                            className: `text-xs px-2 py-1 rounded ${currentPlayer.shopCostModifier > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`
-                        }, `${currentPlayer.shopCostModifier > 0 ? '+' : ''}${currentPlayer.shopCostModifier} ⭐ cost`)
+                            className: `text-xs px-2 py-1 rounded ${(currentPlayer.shopCostModifier || 0) > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`
+                        }, `${(currentPlayer.shopCostModifier || 0) > 0 ? '+' : ''}${currentPlayer.shopCostModifier || 0} ⭐ cost`)
                     ]),
                     React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-3' }, [
                         React.createElement(CompactShop, { key: 'shop-r1', color, round: 1, label: 'R1', currentRound: round }),
@@ -8156,7 +8162,10 @@
             const shop = shopData[color];
             // For display, we need to get the current player to show their specific cost
             const displayPlayer = state.players.find(p => p.id === state.currentPlayer);
-            const actualCost = color === 'yellow' ? Math.max(0, 4 + (displayPlayer?.shopCostModifier || 0)) : shop.cost[color];
+            const baseYellowCost = 4;
+            const actualCost = color === 'yellow' 
+                ? Math.max(0, baseYellowCost + (displayPlayer?.shopCostModifier || 0)) 
+                : (shop.cost[color] || shop.cost);
             
             return React.createElement('div', { 
                 className: `bg-gradient-to-br from-green-100 to-green-200 border-2 ${isClosed ? 'border-red-400 opacity-60' : 'border-green-400'} rounded-lg p-3 shadow-md hover:shadow-lg transition-all` 
@@ -8167,7 +8176,9 @@
                     React.createElement('strong', {}, 
                         color === 'black' && shop.special === 'steal2FromEach' 
                             ? `6 Black: Steal 2 VP from Each Player`
-                            : `${color === 'yellow' ? `${actualCost} ⭐` : `${actualCost} ${color.charAt(0).toUpperCase() + color.slice(1)}`}: ${shop.vp} VP`)),
+                            : displayPlayer 
+                                ? `${color === 'yellow' ? `${actualCost} ⭐` : `${actualCost} ${color.charAt(0).toUpperCase() + color.slice(1)}`}: ${shop.vp} VP`
+                                : `${color === 'yellow' ? `${baseYellowCost} ⭐` : `${shop.cost[color] || shop.cost} ${color.charAt(0).toUpperCase() + color.slice(1)}`}: ${shop.vp} VP`)),
                 React.createElement('div', { key: 'button', className: 'text-center' }, 
                     React.createElement('button', {
                         onClick: handlePurchase,
