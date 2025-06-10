@@ -3215,29 +3215,14 @@
                 
                 const targetPlayer = otherPlayers.find(p => p.id === targetId);
                 
-                // In multiplayer, let the target player choose which gems to give up
-                let selectedGems;
-                if (currentState.roomCode && targetId !== player.id) {
-                    // Multiplayer: target player chooses
-                    const attackerInfo = `${player.name || `Player ${player.id}`} ${player.emoji || ''}`;
-                    selectedGems = await showStealGems(
-                        dispatch,
-                        `${attackerInfo} is stealing 3 gems from you! Choose which to give up:`,
-                        targetPlayer,
-                        stealCount,
-                        workerInfo,
-                        targetId // Target player sees this modal
-                    );
-                } else {
-                    // Single player: current player chooses
-                    selectedGems = await showStealGems(
-                        dispatch, 
-                        `Steal up to ${stealCount} resources from Player ${targetId}`,
-                        targetPlayer,
-                        stealCount,
-                        workerInfo
-                    );
-                }
+                // Attacker chooses which resources to steal
+                const selectedGems = await showStealGems(
+                    dispatch, 
+                    `Steal up to ${stealCount} resources from Player ${targetId}`,
+                    targetPlayer,
+                    stealCount,
+                    workerInfo
+                );
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: ${actionId} → Cancelled`;
@@ -6624,12 +6609,27 @@
                 return;
             }
             
-            // Let current player choose where to place next player's worker
-            const choice = await showChoice(
-                dispatch, 
-                `Choose where to place Player ${nextPlayerId}'s worker (they have ${nextPlayer.workersLeft} workers left)`,
-                availableActions
-            );
+            // Let the target player choose where to place their own worker
+            let choice;
+            if (state.roomCode && nextPlayerId !== player.id) {
+                // Multiplayer: target player chooses
+                const initiatorInfo = `${player.name || `Player ${player.id}`} ${player.emoji || ''}`;
+                choice = await showChoice(
+                    dispatch, 
+                    `${initiatorInfo} is placing one of your workers! Choose where to place it:`,
+                    availableActions,
+                    false,
+                    null,
+                    nextPlayerId // Target player sees this
+                );
+            } else {
+                // Single player: current player chooses
+                choice = await showChoice(
+                    dispatch, 
+                    `Choose where to place Player ${nextPlayerId}'s worker (they have ${nextPlayer.workersLeft} workers left)`,
+                    availableActions
+                );
+            }
             
             if (choice) {
                 // Place the worker
