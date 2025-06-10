@@ -629,32 +629,23 @@
                     // Check for skips, waiting, and workers
                     // Special handling for snake draft reversal with skips
                     if (isSnakeDraftReversal && tempSkippedTurns[nextPlayer] > 0) {
-                        // At reversal point with skips - consume ONE skip and move to next player
-                        console.log(`Player ${nextPlayer} at reversal point with skip. Consuming 1 skip.`);
+                        // At reversal point with skips - consume ONE skip but stay on same player
+                        console.log(`Player ${nextPlayer} at reversal point with skip. Consuming 1 skip and giving them their turn.`);
                         skippedPlayers.push(nextPlayer);
                         tempSkippedTurns[nextPlayer]--;
-                        
-                        // Move to next player based on the NEW direction after reversal
-                        const currentIdx = state.turnOrder.indexOf(nextPlayer);
-                        if (nextDirection === -1) {
-                            // Now going backward, so next player is before current
-                            if (currentIdx > 0) {
-                                nextPlayer = state.turnOrder[currentIdx - 1];
-                            }
-                        } else {
-                            // Now going forward, so next player is after current
-                            if (currentIdx < state.turnOrder.length - 1) {
-                                nextPlayer = state.turnOrder[currentIdx + 1];
-                            }
-                        }
+                        // Important: Do NOT move to next player - they still get their reversal turn
+                        // The skip just consumed one of their two consecutive turns
                     }
+                    
+                    // Track if we just handled a reversal skip
+                    let handledReversalSkip = isSnakeDraftReversal && skippedPlayers.includes(nextPlayer);
                     
                     do {
                             attempts++;
                             if (attempts > maxAttempts) break; // Prevent infinite loop
                             
                             // Check if player should skip and track it (but not if we just handled reversal skip)
-                            if (tempSkippedTurns[nextPlayer] > 0 && !isSnakeDraftReversal) {
+                            if (tempSkippedTurns[nextPlayer] > 0 && !handledReversalSkip) {
                                 console.log(`Player ${nextPlayer} should skip turn. Skips remaining: ${tempSkippedTurns[nextPlayer]}`);
                                 skippedPlayers.push(nextPlayer);
                                 tempSkippedTurns[nextPlayer]--;
@@ -749,6 +740,65 @@
                         if (newWaitingForOthers[p.id]) return sum; // Don't count waiting players
                         return sum + p.workersLeft;
                     }, 0);
+                    
+                    // Check if game should end (Round 3, no workers left, no extra turns)
+                    if (totalWorkersRemaining === 0 && state.round === 3) {
+                        // Check if any player has extra turns
+                        const anyExtraTurns = effectivePlayers.some(p => 
+                            (p.extraTurns || 0) > 0 || 
+                            (p.effects || []).some(effect => effect.includes('Will take an extra turn after this one'))
+                        );
+                        
+                        if (!anyExtraTurns) {
+                            // Calculate final automatic VPs before ending game
+                            const vpMessages = [];
+                            const finalPlayers = effectivePlayers.map(player => {
+                                let vpGained = 0;
+                                const newVpSources = { ...player.vpSources };
+                                
+                                // Yellow automatic VP - 1 VP per different color resource (only if Yellow is in game)
+                                if (state.gameLayers && state.gameLayers.yellow) {
+                                    const differentColors = Object.entries(player.resources)
+                                        .filter(([color, amount]) => amount > 0)
+                                        .length;
+                                    
+                                    if (differentColors > 0) {
+                                        vpGained += differentColors;
+                                        newVpSources.yellowDiversity = (player.vpSources?.yellowDiversity || 0) + differentColors;
+                                        vpMessages.push(`Player ${player.id}: +${differentColors} VP for ${differentColors} different color resources`);
+                                    }
+                                }
+                                
+                                // Gold automatic VP - 1 VP per gold resource (only if Gold is in game)
+                                if (state.gameLayers && state.gameLayers.gold) {
+                                    const goldAmount = player.resources.gold || 0;
+                                    if (goldAmount > 0) {
+                                        vpGained += goldAmount;
+                                        newVpSources.goldAutomatic = (player.vpSources?.goldAutomatic || 0) + goldAmount;
+                                        vpMessages.push(`Player ${player.id}: +${goldAmount} VP for ${goldAmount} gold resources`);
+                                    }
+                                }
+                                
+                                if (vpGained > 0) {
+                                    return {
+                                        ...player,
+                                        victoryPoints: player.victoryPoints + vpGained,
+                                        vpSources: newVpSources
+                                    };
+                                }
+                                return player;
+                            });
+                            
+                            // End the game
+                            return {
+                                ...state,
+                                players: finalPlayers,
+                                gameOver: true,
+                                actionLog: [...state.actionLog.slice(-9), ...vpMessages, 'Game Over! All players are out of workers.']
+                            };
+                        }
+                        // If someone has extra turns, continue playing
+                    }
                     
                     // If no workers remaining and round < 3, automatically advance round
                     // Check roundAdvancing flag to prevent multiple advances
@@ -2115,6 +2165,19 @@
                     if (!proceed) return;
                 }
                 
+                // Validate extra turn action - warn if already have extra turn
+                if (actionId === 'gain4purpleWaitAll') {
+                    const hasExtraTurnEffect = (currentPlayer.effects || []).some(effect => 
+                        effect.includes('Will take an extra turn after this one')
+                    );
+                    const hasExtraTurns = (currentPlayer.extraTurns || 0) > 0;
+                    
+                    if (hasExtraTurnEffect || hasExtraTurns) {
+                        const proceed = confirm('WARNING: You already have an extra turn queued! This action will have no additional effect. Continue anyway?');
+                        if (!proceed) return;
+                    }
+                }
+                
                 // Store action info before placing worker, in case we need to undo
                 const workerInfo = { actionId, playerId: state.currentPlayer };
                 
@@ -3300,11 +3363,11 @@
                     const shopInfo = {
                         red: { 1: 'Repeat a worker\'s action' },
                         yellow: { 1: 'Double your next gain action' },
-                        blue: { 1: 'Close any shop this round' },
+                        blue: { 1: 'Toggle any shop (open/closed)' },
                         purple: { 1: 'Take an extra turn after this one' },
                         gold: { 1: '1 Gold + 1 ⭐ = 2 Gold' },
-                        white: { 1: 'Lose 1 VP, Gain 1 ⚪' },
-                        black: { 1: 'Destroy 2 resources from any player' },
+                        white: { 1: 'Lose 1 VP, Gain 1 ⭐' },
+                        black: { 1: 'Steal 1 VP from another player' },
                         silver: { 1: 'Gain 2 VP' }
                     };
                     
@@ -6287,6 +6350,7 @@
                         playerId: player.id,
                         effect: 'Next gain will be doubled'
                     });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Yellow R1 shop → Next gain will be doubled` });
                     break;
                 case 'yellow2':
                     await executeYellow2Shop(player, dispatch, state);
@@ -6296,6 +6360,7 @@
                     break;
                 case 'blue1':
                     await executeBlue1Shop(player, dispatch, state);
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Blue R1 shop → Toggle any shop (open/closed)` });
                     break;
                 case 'blue2':
                     // Toggle all shop statuses (flip open/closed)
@@ -6321,6 +6386,7 @@
                         playerId: player.id,
                         updates: { extraTurns: (player.extraTurns || 0) + 1 }
                     });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Purple R1 shop → Will take an extra turn after this one` });
                     break;
                 case 'purple2':
                     dispatch({
