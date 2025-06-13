@@ -38,10 +38,33 @@
 - **GemSelectionModal**: Line 4280-4420
 - **ActionSpace**: Line 1665-1700
 
+### Player Targeting & Effects
+- **selectTargetPlayer function**: Line 5500
+  - Called for red steal gems: Line 4323, 4383
+  - Called for red steal worker: Line 4460
+  - Called for yellow share VP: Line 4657
+  - Called for purple give VP: Line 6447
+  - Called for victory point rewards: Line 6260, 6309, 6374
+  
+- **Force Red Placement**:
+  - Action execution: Line 3162-3190
+  - Effect application: Line 3163
+  - Effect removal: Line 2190
+  - Action definition: Line 8366
+  
+- **Effect Clearing**:
+  - END_TURN clear effects: Line 484, 541
+  - ADVANCE_ROUND clear effects: Line 915, 1091
+  - Double gain effect removal: Lines 2407, 2494, 2576, 2633, 2668, 2746
+  - Red placement effect removal: Line 2190
+
 ### Multiplayer
-- **syncGameState**: Line 1402-1422
+- **syncGameState**: Line 1716-1760
+  - Firebase sync logic: Line 1720-1740
+  - Player resource sync: Line 1737
 - **Firebase listener**: Line 1235-1250
 - **Room creation**: Line 1300-1350
+- **updateGameInFirebase call**: Line 8551
 
 ### Key Patterns
 ```javascript
@@ -69,7 +92,9 @@ showGemSelection(dispatch, title, count) -> Promise<gems>
 ### Turn/Round Logic
 - Skip turns: Line 430-450
 - Snake draft: Line 460-480
-- Force red: Line 1684-1706
+- Force red validation: Line 1684-1706
+- Turn end effect clearing: Line 484, 541
+- Round advance effect clearing: Line 915, 1091
 
 ## Quick Fixes Cheatsheet
 
@@ -84,6 +109,34 @@ showGemSelection(dispatch, title, count) -> Promise<gems>
 3. Check VP source tracking (line 422)
 
 ### To fix sync issues:
-1. Check syncGameState (line 1402)
+1. Check syncGameState (line 1716)
 2. Check SYNC_GAME_STATE (line 1149)
 3. Check Firebase echo (line 1170)
+
+### To fix targeting issues:
+1. Check selectTargetPlayer (line 5500)
+2. Check modal state management
+3. Check async/await usage in action execution
+
+### To fix effect issues:
+1. Check effect application in executeAction
+2. Check END_TURN clearing (line 484, 541)
+3. Check ADVANCE_ROUND clearing (line 915, 1091)
+4. Check specific effect removal (e.g., line 2190 for red placement)
+
+## Recent Updates (January 2025)
+
+### Player Targeting System
+- Added **selectTargetPlayer** function for interactive player selection
+- Implemented for red actions (steal gems/workers) and various VP sharing mechanics
+- Modal-based UI with proper async/await handling
+
+### Effect Management
+- Consolidated effect clearing in END_TURN and ADVANCE_ROUND
+- Added specific handling for "Must place on red layer" effects
+- Improved double gain effect tracking and removal
+
+### Multiplayer Improvements
+- Updated syncGameState function with better error handling
+- Fixed Firebase sync timing issues
+- Added proper resource synchronization logging

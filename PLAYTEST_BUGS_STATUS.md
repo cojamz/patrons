@@ -1,6 +1,20 @@
-# Playtest Bug Status - January 9, 2025
+# Playtest Bug Status - January 12, 2025
 
-## ✅ FIXED TODAY:
+## 📊 Summary
+- **Total Fixed**: 38 bugs (35 on Jan 9 + 3 on Jan 12)
+- **Still Active**: ~17 bugs (mostly multiplayer and edge cases)
+- **Recent Fixes**: Shop cost display, worker effect persistence, modal layout shift
+- **Major Improvements**: Multiplayer sync, worker placement validation, effect cleanup, UI stability
+
+## ✅ RECENTLY FIXED (January 12, 2025):
+
+1. **Shop cost modifier display** - Fixed showing on all game layers, now shows only on affected player's card
+2. **"Play 2 more workers" effect persistence** - Fixed effect clearing when regular workers run out but bonus workers remain
+3. **Modal screen shift** - Fixed layout shift when modals open by dynamically calculating scrollbar width
+
+## ✅ FIXED PREVIOUSLY (January 9, 2025):
+
+### Morning Fixes:
 1. **Shop cost reduction applying globally** - Now player-specific (only affects activating player)
 2. **Purple skip turn in snake draft** - Now properly skips after reversal
 3. **Double next gain effect** - Expanded to Yellow R2/R3, Silver R3, Gold R1/R2/R3 shops
@@ -30,6 +44,15 @@
 27. **Resource waste prevention** - Added warnings for suboptimal plays (extra turns, swaps, etc)
 28. **Strategic flexibility** - Changed hard blocks to confirmable warnings
 
+### Afternoon/Evening Fixes:
+29. **Worker placement/swap bugs** - Fixed all worker swap validation and execution issues
+30. **Force red placement validation** - Now properly validates red actions exist before forcing
+31. **Skip turn interaction bugs** - Fixed purple skip turn mechanics with other effects
+32. **Effects lingering between turns** - Cleared all temporary effects (workersToPlace, forceRedPlacement, etc)
+33. **Round 3 shops not opening** - Fixed shop availability logic for R3
+34. **Multiplayer sync instability** - Major sync improvements with currentState usage
+35. **GameOver state not sticking** - Fixed game completion detection and state persistence
+
 ## ☑️ Previously Fixed (January 8)
 
 ## ✅ LIKELY FIXED by sync improvements:
@@ -38,6 +61,29 @@
 3. **Gain * not updating resources** - Should be fixed
 4. **Actions not clearing between rounds** - occupiedSpaces undefined fix should help
 5. **Resources from red shop repeat** - Should be fixed
+
+## 🆕 NEW BUGS DISCOVERED TODAY (January 9):
+
+### Critical Issues:
+1. **Multiplayer state desync** - Players sometimes see different game states after complex actions
+2. **Worker swap onto occupied spaces** - Validation sometimes allows invalid swaps
+3. **Purple skip turn not clearing effects** - Some effects persist after skipped turns
+4. **Force red placement UI** - Modal sometimes doesn't appear when required
+5. **Round advancement race condition** - Multiple players clicking can cause issues
+6. **Shop benefit execution order** - Some shops execute in wrong order with multiple effects
+7. **Game completion detection** - GameOver sometimes triggers prematurely or not at all
+
+### UI/UX Issues:
+8. **Worker placement preview** - No visual feedback before confirming placement
+9. **Shop cost display** - Modified costs don't always update in UI
+10. **Turn order indicator** - Sometimes shows wrong player as active
+11. **Resource animation lag** - Resource updates sometimes don't animate smoothly
+
+### Edge Cases:
+12. **Swap worker with skip turn** - Interaction not properly handled
+13. **Multiple force red effects** - Stacking behavior unclear
+14. **Shop closure during benefit** - Can cause incomplete execution
+15. **Undo with complex actions** - Some actions can't be properly undone
 
 ## 🔴 STILL BROKEN - Need fixes:
 
@@ -79,16 +125,18 @@
 - If round advancement properly clears actions now
 - If automatic VPs work correctly in multiplayer
 
-## Priority Order:
-1. Fix Gold VP shop (users explicitly said it should be removed)
-2. Fix Purple R1 shop cost calculation
-3. Fix force red placement
+## Priority Order (Updated):
+1. Fix multiplayer state desync issues
+2. Fix game completion detection
+3. Fix remaining shop implementations (Red R3, Yellow R2/R3, etc)
 4. Fix automatic VP systems (Blue/Red)
-5. Fix shop persistence and UI sync
+5. Fix worker swap validation edge cases
+6. Fix UI update lag and resource animations
 
-## Root Causes:
-- **Sync issues** - Many fixed with our improvements
-- **UI not updating** - Components not re-rendering with state changes
-- **Validation missing** - Need checks before actions
-- **Text/display bugs** - Simple fixes needed
-- **Game logic errors** - Cost calculations, VP triggers
+## Root Causes (Updated):
+- **State management** - Complex state updates causing race conditions
+- **Multiplayer sync** - WebRTC connection issues and state reconciliation
+- **Effect timing** - Order of operations for complex interactions
+- **Validation gaps** - Edge cases in worker placement and shop interactions
+- **UI reactivity** - Components not always re-rendering with state changes
+- **Game flow logic** - Turn/round advancement and completion detection

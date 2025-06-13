@@ -681,29 +681,19 @@
                                 // Calculate next player based on current direction
                                 if (nextDirection === 1) {
                                     if (skipIndex === state.turnOrder.length - 1) {
-                                        // At end going forward - reverse and go back
+                                        // At end going forward - player would normally get double turn
+                                        // Skip one turn but keep them as next player for their second turn
                                         nextDirection = -1;
-                                        if (skipIndex > 0) {
-                                            nextPlayer = state.turnOrder[skipIndex - 1];
-                                        } else {
-                                            // Only one player left, they go again
-                                            nextPlayer = state.turnOrder[skipIndex];
-                                            break;
-                                        }
+                                        nextPlayer = state.turnOrder[skipIndex]; // Same player goes again
                                     } else {
                                         nextPlayer = state.turnOrder[skipIndex + 1];
                                     }
                                 } else {
                                     if (skipIndex === 0) {
-                                        // At start going backward - reverse and go forward
+                                        // At start going backward - player would normally get double turn
+                                        // Skip one turn but keep them as next player for their second turn
                                         nextDirection = 1;
-                                        if (skipIndex < state.turnOrder.length - 1) {
-                                            nextPlayer = state.turnOrder[skipIndex + 1];
-                                        } else {
-                                            // Only one player left, they go again
-                                            nextPlayer = state.turnOrder[skipIndex];
-                                            break;
-                                        }
+                                        nextPlayer = state.turnOrder[skipIndex]; // Same player goes again
                                     } else {
                                         nextPlayer = state.turnOrder[skipIndex - 1];
                                     }
@@ -1499,10 +1489,8 @@
                         gameLayers: action.gameState.gameLayers || state.gameLayers,
                         // Sync shop state
                         closedShops: action.gameState.closedShops || state.closedShops,
-                        // Recalculate automatic VPs based on synced game layers
-                        automaticVPs: action.gameState.gameLayers ? 
-                            (action.gameState.gameLayers.blue ? { blue: true } : {}) : 
-                            (action.gameState.automaticVPs || state.automaticVPs),
+                        // Preserve automatic VPs from synced state or current state
+                        automaticVPs: action.gameState.automaticVPs || state.automaticVPs,
                         // Track sync timestamp to handle race conditions
                         lastSyncTimestamp: action.gameState.timestamp || Date.now(),
                         // Mark that we just synced to prevent immediate re-sync
@@ -2300,6 +2288,23 @@
                     }
                 }
                 
+                // Validate white spend resources actions
+                if (actionId === 'spend2AnyFor3VP') {
+                    const totalGems = Object.values(currentPlayer.resources).reduce((sum, amount) => sum + amount, 0);
+                    if (totalGems < 2) {
+                        const proceed = confirm('WARNING: You need at least 2 resources to use this action. You only have ' + totalGems + '. Continue anyway?');
+                        if (!proceed) return;
+                    }
+                }
+                
+                if (actionId === 'spend1AnyFor2VP') {
+                    const totalGems = Object.values(currentPlayer.resources).reduce((sum, amount) => sum + amount, 0);
+                    if (totalGems < 1) {
+                        const proceed = confirm('WARNING: You need at least 1 resource to use this action. You have none. Continue anyway?');
+                        if (!proceed) return;
+                    }
+                }
+                
                 // Store action info before placing worker, in case we need to undo
                 const workerInfo = { actionId, playerId: state.currentPlayer };
                 
@@ -2624,19 +2629,29 @@
             
             // Purple layer - Play two workers (immediately)
             if (actionId === 'playTwoWorkers') {
-                // Add 2 more workers that can be placed this turn
+                // Calculate how many workers we can actually add
+                const workersAvailable = player.workersLeft;
+                const workersToAdd = Math.min(2, workersAvailable);
+                
+                if (workersToAdd === 0) {
+                    const message = `Player ${player.id}: playTwoWorkers → No workers left to place`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
+                
+                // Add workers that can be placed this turn (limited by available workers)
                 dispatch({
                     type: 'ADD_WORKERS_TO_PLACE',
-                    count: 2
+                    count: workersToAdd
                 });
                 
                 dispatch({
                     type: 'ADD_EFFECT',
                     playerId: player.id,
-                    effect: 'Can place 2 more workers this turn'
+                    effect: `Can place ${workersToAdd} more worker${workersToAdd > 1 ? 's' : ''} this turn`
                 });
                 
-                const message = `Player ${player.id}: playTwoWorkers → Can now place 2 MORE workers this turn`;
+                const message = `Player ${player.id}: playTwoWorkers → Can now place ${workersToAdd} MORE worker${workersToAdd > 1 ? 's' : ''} this turn`;
                 dispatch({ type: 'ADD_LOG', message });
                 console.log(message);
                 return;
@@ -2794,19 +2809,29 @@
             }
             
             if (actionId === 'playThreeWorkers') {
-                // Add 3 more workers that can be placed this turn
+                // Calculate how many workers we can actually add
+                const workersAvailable = player.workersLeft;
+                const workersToAdd = Math.min(3, workersAvailable);
+                
+                if (workersToAdd === 0) {
+                    const message = `Player ${player.id}: playThreeWorkers → No workers left to place`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
+                
+                // Add workers that can be placed this turn (limited by available workers)
                 dispatch({
                     type: 'ADD_WORKERS_TO_PLACE',
-                    count: 3
+                    count: workersToAdd
                 });
                 
                 dispatch({
                     type: 'ADD_EFFECT',
                     playerId: player.id,
-                    effect: 'Can place 3 more workers this turn'
+                    effect: `Can place ${workersToAdd} more worker${workersToAdd > 1 ? 's' : ''} this turn`
                 });
                 
-                const message = `Player ${player.id}: playThreeWorkers → Can now place 3 MORE workers this turn`;
+                const message = `Player ${player.id}: playThreeWorkers → Can now place ${workersToAdd} MORE worker${workersToAdd > 1 ? 's' : ''} this turn`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -3148,7 +3173,7 @@
                 
                 // Execute actions for the affected players
                 // IMPORTANT: Skip actions that would interfere with the swap itself or create paradoxes
-                const skipActions = ['gain2purpleTakeBack', 'blackStealWorker', 'playTwoWorkers', 'playThreeWorkers'];
+                const skipActions = ['gain2purpleTakeBack', 'playTwoWorkers', 'playThreeWorkers'];
                 
                 if (actionId === 'redHybrid1') {
                     // Both players get actions where their workers END UP
@@ -3874,7 +3899,7 @@
                 }
                 
                 // Choose 2 gems to convert  
-                const selectedGems = await showStealGems(dispatch, 'Choose 2 gems to convert to Gold', currentPlayer, 2, workerInfo);
+                const selectedGems = await showGemSelection(dispatch, 'Choose 2 gems to convert to Gold', 2, currentPlayer, workerInfo);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: convert2AnyTo2Gold → Cancelled`;
@@ -3915,7 +3940,7 @@
                 }
                 
                 // Choose 1 gem to convert
-                const selectedGems = await showStealGems(dispatch, 'Choose 1 gem to convert to Gold', currentPlayer, 1, workerInfo);
+                const selectedGems = await showGemSelection(dispatch, 'Choose 1 gem to convert to Gold', 1, currentPlayer, workerInfo);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: convert1AnyTo1Gold → Cancelled`;
@@ -3992,7 +4017,7 @@
                 }
                 
                 // Choose 3 gems to convert
-                const selectedGems = await showStealGems(dispatch, 'Choose 3 gems to convert to Gold', currentPlayer, 3, workerInfo);
+                const selectedGems = await showGemSelection(dispatch, 'Choose 3 gems to convert to Gold', 3, currentPlayer, workerInfo);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: convert3AnyTo3Gold → Cancelled`;
@@ -4161,7 +4186,7 @@
                 }
                 
                 // Choose 2 gems to spend
-                const selectedGems = await showStealGems(dispatch, 'Choose 2 gems to spend for 3 VP', player, 2, workerInfo);
+                const selectedGems = await showGemSelection(dispatch, 'Choose 2 gems to spend for 3 VP', 2, player, workerInfo);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: spend2AnyFor3VP → Cancelled`;
@@ -4473,38 +4498,79 @@
                     resources: { black: 1 }
                 });
                 
-                // Choose a player to steal from
-                const otherPlayers = currentState.players.filter(p => p.id !== player.id && p.workersLeft > 0);
+                const stealCount = 4;
+                const otherPlayers = currentState.players.filter(p => p.id !== player.id);
                 
                 if (otherPlayers.length === 0) {
-                    const message = `Player ${player.id}: blackStealWorker → +1 black (no players with workers to steal)`;
+                    const message = `Player ${player.id}: blackStealWorker → +1 black (no other players to steal from)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
                 
-                const targetPlayer = await selectTargetPlayer(dispatch, 'Choose a player to steal a worker from', currentState.players, player.id, workerInfo);
+                // Filter players who have resources
+                const targetOptions = otherPlayers
+                    .filter(p => Object.values(p.resources).some(amount => amount > 0))
+                    .map(p => ({
+                        label: `Player ${p.id} (${Object.entries(p.resources).filter(([,amt]) => amt > 0).map(([color, amt]) => `${amt} ${color}`).join(', ')})`,
+                        value: p.id
+                    }));
                 
-                if (!targetPlayer) {
+                if (targetOptions.length === 0) {
+                    const message = `Player ${player.id}: blackStealWorker → +1 black (no players have resources to steal)`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
+                
+                // Choose target player
+                const targetId = await showChoice(dispatch, 'Choose player to steal 4 resources from', targetOptions, false, workerInfo);
+                if (!targetId) {
                     const message = `Player ${player.id}: blackStealWorker → +1 black (cancelled)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
                 
-                // Remove 1 worker from target
-                dispatch({
-                    type: 'UPDATE_PLAYER',
-                    playerId: targetPlayer.id,
-                    updates: { workersLeft: targetPlayer.workersLeft - 1 }
+                const targetPlayer = otherPlayers.find(p => p.id === targetId);
+                
+                // Calculate max stealable resources
+                const targetTotalGems = Object.values(targetPlayer.resources).reduce((sum, amount) => sum + amount, 0);
+                const actualStealCount = Math.min(stealCount, targetTotalGems);
+                
+                // Attacker chooses which resources to steal
+                const selectedGems = await showStealGems(
+                    dispatch, 
+                    `Steal up to ${actualStealCount} resources from Player ${targetId}`,
+                    targetPlayer,
+                    actualStealCount,
+                    workerInfo
+                );
+                
+                if (!selectedGems) {
+                    const message = `Player ${player.id}: blackStealWorker → +1 black (cancelled)`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
+                
+                // Transfer the resources
+                const stolenResources = [];
+                Object.entries(selectedGems).forEach(([color, count]) => {
+                    if (count > 0) {
+                        dispatch({
+                            type: 'UPDATE_RESOURCES',
+                            playerId: targetId,
+                            resources: { [color]: -count }
+                        });
+                        
+                        dispatch({
+                            type: 'UPDATE_RESOURCES',
+                            playerId: player.id,
+                            resources: { [color]: count }
+                        });
+                        
+                        stolenResources.push(`${count} ${color}`);
+                    }
                 });
                 
-                // Add 1 worker to current player
-                dispatch({
-                    type: 'UPDATE_PLAYER',
-                    playerId: player.id,
-                    updates: { workersLeft: player.workersLeft + 1 }
-                });
-                
-                const message = `Player ${player.id}: blackStealWorker → +1 black, stole 1 worker from Player ${targetPlayer.id}`;
+                const message = `Player ${player.id}: blackStealWorker → +1 black, stole ${stolenResources.join(', ')} from Player ${targetId}`;
                 dispatch({ type: 'ADD_LOG', message });
                 
                 // BLACK AUTOMATIC VP: Gain 1 VP when stealing
@@ -5938,7 +6004,7 @@
                 selectedGems = { gold: 1 };
             } else {
                 // Choose 1 gem to pay (can be any color including gold)
-                selectedGems = await showGemSelection(dispatch, 'Choose 1 ⭐ resource to pay', 1);
+                selectedGems = await showGemSelection(dispatch, 'Choose 1 ⭐ resource to pay', 1, player);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: Gold R1 shop → Cancelled`;
@@ -5996,7 +6062,7 @@
             }
             
             // Choose 2 gems to pay (can be any color including gold)
-            const selectedGems = await showGemSelection(dispatch, 'Choose 2 ⭐ resources to pay', 2);
+            const selectedGems = await showGemSelection(dispatch, 'Choose 2 ⭐ resources to pay', 2, player);
             
             if (!selectedGems) {
                 const message = `Player ${player.id}: Gold R2 shop → Cancelled`;
@@ -6053,7 +6119,7 @@
             }
             
             // Choose 3 gems to pay (can be any color including gold)
-            const selectedGems = await showGemSelection(dispatch, 'Choose 3 ⭐ resources to pay', 3);
+            const selectedGems = await showGemSelection(dispatch, 'Choose 3 ⭐ resources to pay', 3, player);
             
             if (!selectedGems) {
                 const message = `Player ${player.id}: Gold R3 shop → Cancelled`;
@@ -6617,16 +6683,25 @@
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Purple R1 shop → Will take an extra turn after this one` });
                     break;
                 case 'purple2':
+                    // Calculate how many workers we can actually add
+                    const workersAvailable = player.workersLeft;
+                    const workersToAdd = Math.min(2, workersAvailable);
+                    
+                    if (workersToAdd === 0) {
+                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Purple R2 shop → No workers left to place` });
+                        break;
+                    }
+                    
                     dispatch({
                         type: 'ADD_WORKERS_TO_PLACE',
-                        count: 2
+                        count: workersToAdd
                     });
                     dispatch({
                         type: 'ADD_EFFECT',
                         playerId: player.id,
-                        effect: 'Can place 2 more workers this turn'
+                        effect: `Can place ${workersToAdd} more worker${workersToAdd > 1 ? 's' : ''} this turn`
                     });
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Can place 2 more workers this turn!` });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Can place ${workersToAdd} more worker${workersToAdd > 1 ? 's' : ''}${workersToAdd < 2 ? ' (limited by available workers)' : ''} this turn!` });
                     break;
                 case 'purple3':
                     const workersRemaining = player.workersLeft;
@@ -7175,10 +7250,10 @@
                             Array(player.workersLeft).fill(player.emoji || '👤').join('')
                         )
                     ]),
-                    isCurrentPlayer && state.workersToPlace > 1 && React.createElement('div', { 
+                    (isCurrentPlayer && state.workersToPlace > 1) ? React.createElement('div', { 
                         key: 'toplace', 
                         className: 'text-purple-600 font-bold animate-pulse' 
-                    }, `Can place ${state.workersToPlace} workers this turn!`)
+                    }, `Can place ${state.workersToPlace} workers this turn!`) : null
                 ]),
                 // Shop cost modifier indicator
                 (player.shopCostModifier && player.shopCostModifier !== 0) && React.createElement('div', { 
@@ -8222,7 +8297,7 @@
                     onClick: handlePurchase,
                     className: `text-xs py-0.5 px-2 rounded ${isClosed ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'}`,
                     disabled: isClosed
-                }, color === 'black' && shop.special === 'steal2FromEach' ? 'Steal 2 Each' : `${shop.vp} VP`)
+                }, color === 'black' && shop.special === 'steal2FromEach' ? 'Steal 3 Each' : `${shop.vp} VP`)
             ]);
         }
         
@@ -8235,7 +8310,7 @@
                 yellow: { cost: { any: 4 }, vp: 3 },
                 blue: { cost: { blue: 4 }, vp: 5 },
                 purple: { cost: { purple: 4 }, vp: 5 },
-                white: { cost: { white: 4 }, vp: 4 },
+                white: { cost: { white: 4 }, vp: 5 },
                 black: { cost: { black: 6 }, vp: 0, special: 'steal2FromEach' },
                 silver: { cost: { silver: 6 }, vp: 8 }
             };
@@ -8299,12 +8374,13 @@
                 
                 // Handle special BLACK victory shop
                 if (color === 'black' && shop.special === 'steal2FromEach') {
-                    // Steal 2 VP from each other player
+                    // Steal 3 VP from each other player
                     const otherPlayers = state.players.filter(p => p.id !== currentPlayer.id);
                     let totalVPStolen = 0;
+                    let playersStolen = 0;
                     
                     otherPlayers.forEach(otherPlayer => {
-                        const vpToSteal = Math.min(2, otherPlayer.victoryPoints);
+                        const vpToSteal = Math.min(3, otherPlayer.victoryPoints);
                         if (vpToSteal > 0) {
                             dispatch({
                                 type: 'UPDATE_VP',
@@ -8313,6 +8389,7 @@
                                 source: 'blackVictoryShop'
                             });
                             totalVPStolen += vpToSteal;
+                            playersStolen++;
                         }
                     });
                     
@@ -8323,17 +8400,17 @@
                             vp: totalVPStolen,
                             source: 'blackVictoryShop'
                         });
-                        console.log(`Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (2 from each player)`);
-                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (2 from each player)` });
+                        console.log(`Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (3 from each player)`);
+                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (3 from each player)` });
                         
-                        // BLACK AUTOMATIC VP: Gain 1 VP when stealing
+                        // BLACK AUTOMATIC VP: Gain 1 VP per player stolen from
                         dispatch({
                             type: 'UPDATE_VP',
                             playerId: currentPlayer.id,
-                            vp: 1,
+                            vp: playersStolen,
                             source: 'blackAutomatic'
                         });
-                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +1 VP (Black automatic: stealing bonus)` });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +${playersStolen} VP (Black automatic: stealing bonus, 1 per player)` });
                     } else {
                         console.log(`Player ${currentPlayer.id}: Black Victory Shop → No VP to steal`);
                         dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Black Victory Shop → No VP to steal` });
@@ -8435,7 +8512,7 @@
                     { id: 'playTwoWorkers', title: 'Play 2 More Workers', description: '(This turn)', round: 1 },
                     { id: 'gain5purpleSkip', title: 'Gain 5 🟣, Skip Turn', description: '', round: 2 },
                     { id: 'playThreeWorkers', title: 'Play 3 More Workers', description: '(This turn)', round: 2 },
-                    { id: 'gain4purpleWaitAll', title: 'Gain 4 🟣, Take Another Turn', description: '', round: 3 }
+                    { id: 'gain4purpleWaitAll', title: 'Gain 4 🟣, Take Another Turn', description: '(After this one)', round: 3 }
                 ]
             },
             gold: {
@@ -8472,7 +8549,7 @@
                     { id: 'gain2black', title: 'Gain 2 ⚫', description: '', round: 1 },
                     { id: 'blackSteal1VP', title: '+1 ⚫, Steal 1 VP', description: '(From another player)', round: 1 },
                     { id: 'blackSteal2Any', title: 'Steal 2 ⭐', description: '(From another player)', round: 1 },
-                    { id: 'blackStealWorker', title: '+1 ⚫, Steal Worker', description: '(Gain one of their remaining workers)', round: 2 },
+                    { id: 'blackStealWorker', title: '+1 ⚫, Steal 4 ⭐', description: '(Steal 4 resources from another player)', round: 2 },
                     { id: 'blackAllLose2VP', title: 'All Others Lose 2 VP', description: '', round: 2 },
                     { id: 'blackAllLose4VP', title: '+2 ⚫, All Others Lose 4 VP', description: '', round: 3 }
                 ]

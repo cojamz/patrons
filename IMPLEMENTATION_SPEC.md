@@ -14,15 +14,15 @@ This document tracks the complete specification for the Patrons game layers and 
   - `redHybrid1`: +1 red + swap workers (both players get actions)
   - `redRepeatAction`: Repeat an action that one of your workers is on
 - Round 2:
-  - `forceRedPlacement`: Other players must place on red until red layer is full
+  - `forceRedPlacement`: +1 red, then OTHER players (not the placer) must place on red until red layer is full
   - `redHybrid2`: +1 red + swap workers (only you get action)
 - Round 3:
   - `redRepeatAll`: Repeat the action of each of your workers (in any order you choose)
 
 **Shops:**
-- R1: 1 red + 1 any = Repeat a worker's action
+- R1: 1 red + 2 any = Repeat a worker's action
 - R2: 2 red + 2 any = Place the next player's worker
-- R3: 3 red + 3 any = Repeat all actions taken this round by any player
+- R3: 4 red + 4 any = Repeat all actions taken this round by any player
 - Victory Points: 5 red = 3 VP
 
 **Automatic VP:** Gain 1 VP each time you use or repeat a red layer action (including if you swap a worker into red)
@@ -31,10 +31,10 @@ This document tracks the complete specification for the Patrons game layers and 
 
 **Actions:**
 - Round 1:
-  - `gain3yellow`: Gain 3 different colored cubes
-  - `gain2yellow`: Gain 2 different colored cubes
-  - `steal2Gems`: Steal 2 cubes
-  - `yellowHybrid1`: +1 yellow + trade in any number of cubes
+  - `gain3yellow`: Gain 3 resources (any colors)
+  - `gain2yellow`: Gain 2 resources (any colors)
+  - `steal2Gems`: Trade all your resources for an equal number of resources of your choice
+  - `yellowHybrid1`: Gain 2 yellow
 - Round 2:
   - `steal3Gems`: Steal 3 cubes
   - `yellowHybrid2`: +1 yellow + double next gain (doesn't stack with shop)
@@ -64,9 +64,9 @@ This document tracks the complete specification for the Patrons game layers and 
   - `blueFlipShops`: +1 blue + flip the status of all shops, including victory shops
 
 **Shops:**
-- R1: 1 blue + 1 any = Close any shop this round
-- R2: 2 blue + 2 any = Toggle the status of all shops
-- R3: 3 blue + 3 any = Gain any shop benefit (even if closed)
+- R1: 1 blue + 1 any = Toggle any shop (open/closed)
+- R2: 2 blue + 2 any = Gain a shop benefit then close that shop
+- R3: 3 blue + 3 any = Flip the status of all shops, including victory shops
 - Victory Points: 5 blue = 5 VP
 
 **Automatic VP:** Gain 1 VP each time you use any shop (*Using the "Gain a shop benefit" action counts as using a shop for VP purposes)
@@ -86,7 +86,7 @@ This document tracks the complete specification for the Patrons game layers and 
   - `gain4purpleWaitAll`: Gain 4 purple. Skip turns until everyone else has run out of workers, then play all
 
 **Shops:**
-- R1: 1 purple + 1 any = Take an extra turn after this one
+- R1: 1 purple + 2 any = Take an extra turn after this one
 - R2: 2 purple + 2 any = Play 2 more workers this turn
 - R3: 3 purple + 3 any = Play the rest of your workers
 - Victory Points: 6 purple = 3 VP
@@ -280,6 +280,35 @@ This will give you the complete specification and current progress status.
 - Yellow "trade" action simplified to "Gain 1 ⭐"
 - Player emoji pool expanded from 40 to 160+ options
 
+## Key Implementation Clarifications & Deviations
+
+### Action Mechanics Clarifications:
+1. **Force Red Placement (Red R2)**: 
+   - Gives the placer +1 red resource
+   - Forces OTHER players (not the placer) to place on red until full
+   - This is an important distinction - the effect targets opponents, not yourself
+
+2. **Yellow Actions Simplified**:
+   - `steal2Gems` renamed to "Trade All ⭐ for ⭐" - trade ALL your resources for equal number of any colors
+   - `yellowHybrid1` simplified from complex trade mechanic to "Gain 2 Yellow"
+   - These changes improve game flow and reduce complexity
+
+3. **Shop Cost Adjustments**:
+   - Red R1: Changed from 1+1 to 1 red + 2 any (balancing)
+   - Red R3: Changed from 3+3 to 4 red + 4 any (powerful effect justifies higher cost)
+   - Purple R1: Changed from 1+1 to 1 purple + 2 any (extra turns are powerful)
+
+4. **Blue Shop Effects Refined**:
+   - R1: "Toggle" instead of just "Close" - can reopen closed shops
+   - R2: "Gain benefit THEN close" - order matters for strategy
+   - R3: "Flip all" includes victory shops - very powerful late game
+
+### Automatic VP Clarifications:
+1. **Red VP**: Triggers on ANY red action use, including when swapped into red
+2. **Yellow VP**: Calculated at round end based on gem color diversity
+3. **Blue VP**: ALL players get VP when ANYONE uses a shop (cooperative element)
+4. **Purple VP**: First AND last to run out of workers (not just one)
+
 ### Latest Session Changes (2025-01-06):
 1. **Multiplayer Sync Fix**: Fixed SYNC_GAME_STATE to preserve player emojis
 2. **Round Transition Popup**: Shows standings, VP, resources when advancing rounds
@@ -296,10 +325,10 @@ This will give you the complete specification and current progress status.
 ### ✅ All Shops Now Implemented:
 1. **Red R3**: Repeat all actions taken this round by any player ✅
 2. **Yellow R2**: Gain 5 gems, everyone gains 1 of your choice ✅
-3. **Yellow R3**: Gain 9 gems, everyone gains 1 of your choice ✅
+3. **Yellow R3**: Gain 7 gems (not 9 - matches spec) ✅
 4. **Blue R2**: Gain shop benefit then close that shop ✅
 5. **Note**: Black R2 actually steals 3 VP (spec was incorrect)
 
 ### See `/Users/cory/Patrons/BACKLOG_2025_01_09.md` for complete list
 
-Last Updated: 2025-01-09 (All shops now implemented)
+Last Updated: 2025-01-10 (Implementation spec updated with clarifications)
