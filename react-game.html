@@ -284,8 +284,13 @@
                     // Don't reduce below 0 - when using "play more workers" effects
                     const workerOwnerWorkersLeft = Math.max(0, workerOwnerPlayer.workersLeft - 1);
                     
-                    // Clear "Can place X workers" effect if we've placed all bonus workers
-                    const shouldClearPlaceEffect = newWorkersToPlace === 0 && state.workersToPlace > 0;
+                    // Check if player has "play more workers" effect active
+                    const hasPlayMoreWorkersEffect = (workerOwnerPlayer.effects || []).some(effect => 
+                        effect.includes('Can place') && effect.includes('more workers this turn')
+                    );
+                    
+                    // Only clear effect if we've placed ALL workers (including bonus workers)
+                    const shouldClearPlaceEffect = newWorkersToPlace === 0 && hasPlayMoreWorkersEffect;
                     
                     return {
                         ...state,
@@ -481,13 +486,17 @@
                             return player.id === state.currentPlayer 
                                 ? { 
                                     ...player, 
-                                    effects: (player.effects || []).filter(effect => 
-                                        !effect.includes('Will take an extra turn after this one') &&
-                                        !effect.includes('more workers this turn') &&
-                                        !effect.includes('Can place') &&
-                                        !effect.includes('Next gain will be doubled') && // Clear doubling effect
-                                        !effect.includes('Can place the next player\'s worker') // Clear R2 red shop effect
-                                    ),
+                                    effects: (player.effects || []).filter(effect => {
+                                        // Don't clear "play more workers" effect if we still have workers to place
+                                        if ((effect.includes('Can place') && effect.includes('more workers this turn')) && state.workersToPlace > 0) {
+                                            return true;
+                                        }
+                                        return !effect.includes('Will take an extra turn after this one') &&
+                                               !effect.includes('more workers this turn') &&
+                                               !effect.includes('Can place') &&
+                                               !effect.includes('Next gain will be doubled') && // Clear doubling effect
+                                               !effect.includes('Can place the next player\'s worker'); // Clear R2 red shop effect
+                                    }),
                                     extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                                     victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
                                     vpSources: vpUpdate ? {
@@ -510,11 +519,17 @@
                             // Continue to normal turn progression below
                         } else {
                             // Stay on same player for extra turn
+                            // Check if player has "play more workers" effect still active
+                            const currentPlayerData = updatedPlayers.find(p => p.id === state.currentPlayer);
+                            const hasActiveWorkerEffect = (currentPlayerData.effects || []).some(effect => 
+                                effect.includes('Can place') && effect.includes('more workers this turn')
+                            );
+                            
                             return {
                                 ...state,
                                 players: updatedPlayers,
                                 workerPlacedThisTurn: false,
-                                workersToPlace: 1,
+                                workersToPlace: hasActiveWorkerEffect ? state.workersToPlace : 1,
                                 shopUsedBeforeWorkers: false,
                                 shopUsedAfterWorkers: false,
                                 playersOutOfWorkers: newPlayersOutOfWorkers,
@@ -538,13 +553,17 @@
                             return player.id === state.currentPlayer 
                                 ? { 
                                     ...player, 
-                                    effects: (player.effects || []).filter(effect => 
-                                        !effect.includes('Will take an extra turn after this one') &&
-                                        !effect.includes('more workers this turn') &&
-                                        !effect.includes('Can place') &&
-                                        !effect.includes('Next gain will be doubled') && // Clear doubling effect
-                                        !effect.includes('Can place the next player\'s worker') // Clear R2 red shop effect
-                                    ),
+                                    effects: (player.effects || []).filter(effect => {
+                                        // Don't clear "play more workers" effect if we still have workers to place
+                                        if ((effect.includes('Can place') && effect.includes('more workers this turn')) && state.workersToPlace > 0) {
+                                            return true;
+                                        }
+                                        return !effect.includes('Will take an extra turn after this one') &&
+                                               !effect.includes('more workers this turn') &&
+                                               !effect.includes('Can place') &&
+                                               !effect.includes('Next gain will be doubled') && // Clear doubling effect
+                                               !effect.includes('Can place the next player\'s worker'); // Clear R2 red shop effect
+                                    }),
                                     extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                                     victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
                                     vpSources: vpUpdate ? {
@@ -739,7 +758,13 @@
                     
                     // Set workers to place for waiting players who are now active
                     const waitingPlayerUpdate = waitingPlayersUpdates.find(u => u.playerId === nextPlayer);
-                    const workersToPlace = waitingPlayerUpdate ? waitingPlayerUpdate.workers : 1;
+                    const nextPlayerData = effectivePlayers.find(p => p.id === nextPlayer);
+                    const hasActiveWorkerEffect = (nextPlayerData?.effects || []).some(effect => 
+                        effect.includes('Can place') && effect.includes('more workers this turn')
+                    );
+                    // If player has active "play more workers" effect, preserve current workersToPlace
+                    const workersToPlace = waitingPlayerUpdate ? waitingPlayerUpdate.workers : 
+                                         (hasActiveWorkerEffect ? state.workersToPlace : 1);
                     
                     // Check if all players are out of workers (excluding waiting players)
                     const totalWorkersRemaining = effectivePlayers.reduce((sum, p) => {
@@ -4832,9 +4857,13 @@
         function Modal({ isOpen, onClose, children }) {
             React.useEffect(() => {
                 if (isOpen) {
+                    // Calculate scrollbar width to prevent layout shift
+                    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                    document.body.style.paddingRight = `${scrollbarWidth}px`;
                     document.body.classList.add('modal-open');
                     return () => {
                         document.body.classList.remove('modal-open');
+                        document.body.style.paddingRight = '';
                     };
                 }
             }, [isOpen]);
@@ -7151,6 +7180,14 @@
                         className: 'text-purple-600 font-bold animate-pulse' 
                     }, `Can place ${state.workersToPlace} workers this turn!`)
                 ]),
+                // Shop cost modifier indicator
+                (player.shopCostModifier && player.shopCostModifier !== 0) && React.createElement('div', { 
+                    key: 'shop-modifier', 
+                    className: `text-center mb-3 text-sm font-medium ${player.shopCostModifier > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'} rounded px-3 py-2 border ${player.shopCostModifier > 0 ? 'border-red-300' : 'border-green-300'}` 
+                }, [
+                    React.createElement('span', { key: 'icon' }, '🏪'),
+                    React.createElement('span', { key: 'text' }, ` Shop costs ${player.shopCostModifier > 0 ? '+' : ''}${player.shopCostModifier} ⭐`)
+                ]),
                 // Status indicators
                 (state.skippedTurns && state.skippedTurns[player.id] > 0) && React.createElement('div', { 
                     key: 'skip-status', 
@@ -7235,13 +7272,7 @@
                 
                 // Shops Section - Compact horizontal layout
                 React.createElement('div', { key: 'shops', className: 'mb-3 bg-white bg-opacity-10 rounded-lg p-3' }, [
-                    React.createElement('div', { key: 'shop-header', className: 'text-sm font-semibold text-gray-700 mb-1 flex items-center justify-between' }, [
-                        React.createElement('span', { key: 'label' }, '🏪 Shops'),
-                        currentPlayer && (currentPlayer.shopCostModifier || 0) !== 0 && React.createElement('span', { 
-                            key: 'modifier', 
-                            className: `text-xs px-2 py-1 rounded ${(currentPlayer.shopCostModifier || 0) > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`
-                        }, `${(currentPlayer.shopCostModifier || 0) > 0 ? '+' : ''}${currentPlayer.shopCostModifier || 0} ⭐ cost`)
-                    ]),
+                    React.createElement('div', { key: 'shop-header', className: 'text-sm font-semibold text-gray-700 mb-1' }, '🏪 Shops'),
                     React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-3' }, [
                         React.createElement(CompactShop, { key: 'shop-r1', color, round: 1, label: 'R1', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r2', color, round: 2, label: 'R2', currentRound: round }),
@@ -8633,7 +8664,7 @@
                 sum + layer.actions.filter(action => action.round <= state.round).length, 0
             );
             
-            return React.createElement('div', { className: 'min-h-screen p-4 overflow-x-hidden' }, [
+            return React.createElement('div', { className: 'min-h-screen p-4 overflow-x-hidden w-full max-w-full' }, [
                 // Notification Display
                 React.createElement(NotificationDisplay, {
                     key: 'notifications',
@@ -8868,7 +8899,7 @@
                 if (!state.gameStarted) {
                     // If connected to a room but game hasn't started, show waiting room
                     if (state.roomCode) {
-                        return React.createElement('div', { className: 'min-h-screen p-4 overflow-x-hidden' }, [
+                        return React.createElement('div', { className: 'min-h-screen p-4 overflow-x-hidden w-full max-w-full' }, [
                             React.createElement(ConnectedPlayers, { key: 'players' }),
                             React.createElement('div', { 
                                 key: 'waiting',
