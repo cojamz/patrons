@@ -8297,7 +8297,7 @@
                     onClick: handlePurchase,
                     className: `text-xs py-0.5 px-2 rounded ${isClosed ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'}`,
                     disabled: isClosed
-                }, color === 'black' && shop.special === 'steal2FromEach' ? 'Steal 3 Each' : `${shop.vp} VP`)
+                }, color === 'black' && shop.special === 'steal2FromEach' ? 'Steal 2 Each' : `${shop.vp} VP`)
             ]);
         }
         
@@ -8374,13 +8374,13 @@
                 
                 // Handle special BLACK victory shop
                 if (color === 'black' && shop.special === 'steal2FromEach') {
-                    // Steal 3 VP from each other player
+                    // Steal 2 VP from each other player
                     const otherPlayers = state.players.filter(p => p.id !== currentPlayer.id);
                     let totalVPStolen = 0;
                     let playersStolen = 0;
                     
                     otherPlayers.forEach(otherPlayer => {
-                        const vpToSteal = Math.min(3, otherPlayer.victoryPoints);
+                        const vpToSteal = Math.min(2, otherPlayer.victoryPoints);
                         if (vpToSteal > 0) {
                             dispatch({
                                 type: 'UPDATE_VP',
@@ -8400,8 +8400,8 @@
                             vp: totalVPStolen,
                             source: 'blackVictoryShop'
                         });
-                        console.log(`Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (3 from each player)`);
-                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (3 from each player)` });
+                        console.log(`Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (2 from each player)`);
+                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (2 from each player)` });
                         
                         // BLACK AUTOMATIC VP: Gain 1 VP per player stolen from
                         dispatch({
