@@ -7348,7 +7348,7 @@
                 // Shops Section - Compact horizontal layout
                 React.createElement('div', { key: 'shops', className: 'mb-3 bg-white bg-opacity-10 rounded-lg p-3' }, [
                     React.createElement('div', { key: 'shop-header', className: 'text-sm font-semibold text-gray-700 mb-1' }, '🏪 Shops'),
-                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-3' }, [
+                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-2' }, [
                         React.createElement(CompactShop, { key: 'shop-r1', color, round: 1, label: 'R1', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r2', color, round: 2, label: 'R2', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r3', color, round: 3, label: 'R3', currentRound: round }),
@@ -7916,8 +7916,8 @@
                 },
                 yellow: {
                     1: { cost: { yellow: 1, any: 1 }, effect: 'Double gain', fullEffect: 'Double your next gain action' },
-                    2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 5⭐', fullEffect: 'Gain 5⭐' },
-                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 7⭐', fullEffect: 'Gain 7⭐' }
+                    2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 5⭐', fullEffect: 'Gain 5 resources (any colors)' },
+                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 7⭐', fullEffect: 'Gain 7 resources (any colors)' }
                 },
                 blue: {
                     1: { cost: { blue: 1, any: 1 }, effect: 'Toggle shop', fullEffect: 'Toggle any shop (open/closed)' },
@@ -7935,9 +7935,9 @@
                     3: { cost: { gold: 3, any: 3 }, effect: 'Double Gold', fullEffect: '3 Gold + 3 ⭐ = Double Your Gold' }
                 },
                 white: {
-                    1: { cost: { vp: 1 }, effect: 'Gain 1 ⭐', fullEffect: 'Gain 1 ⭐ resource' },
-                    2: { cost: { vp: 2 }, effect: 'Skip Next', fullEffect: 'Skip next player\'s turn' },
-                    3: { cost: { vp: 3 }, effect: 'Move Worker', fullEffect: 'Move worker to unclaimed action' }
+                    1: { cost: { vp: 1 }, effect: 'Lose 1VP → 1⭐', fullEffect: 'Lose 1 VP, Gain 1 resource (any color)' },
+                    2: { cost: { vp: 2 }, effect: 'Lose 2VP → Skip', fullEffect: 'Lose 2 VP, Skip next player\'s turn' },
+                    3: { cost: { vp: 3 }, effect: 'Lose 3VP → Move', fullEffect: 'Lose 3 VP, Move worker to unclaimed action' }
                 },
                 black: {
                     1: { cost: { black: 1, any: 1 }, effect: 'Steal 1 VP', fullEffect: 'Steal 1 VP from another player' },
@@ -7945,9 +7945,9 @@
                     3: { cost: { black: 3, any: 3 }, effect: 'Steal 5 VP', fullEffect: 'Steal 5 VP from another player' }
                 },
                 silver: {
-                    1: { cost: { silver: 1, any: 1 }, effect: '2 VP', fullEffect: 'Gain 2 VP' },
-                    2: { cost: { silver: 2, any: 2 }, effect: 'Gain 4 VP, Pick Another +4 VP', fullEffect: 'Gain 4 VP, Pick Another Player to Gain 4 VP' },
-                    3: { cost: { silver: 3, any: 3 }, effect: 'Gain 7 Silver, Others +2', fullEffect: 'Gain 7 Silver, Each Other Player Gains 2 Silver' }
+                    1: { cost: { silver: 1, any: 1 }, effect: '+2 VP', fullEffect: 'Gain 2 VP' },
+                    2: { cost: { silver: 2, any: 2 }, effect: '+4 VP each', fullEffect: 'You and one other player each gain 4 VP' },
+                    3: { cost: { silver: 3, any: 3 }, effect: '+7 Silver', fullEffect: 'Gain 7 Silver, all others gain 2 Silver' }
                 }
             };
             
@@ -8106,23 +8106,64 @@
                 }
             };
             
+            const getBgGradient = () => {
+                if (!isAvailable) return 'bg-gray-100';
+                switch(color) {
+                    case 'red': return 'bg-gradient-to-br from-red-50 to-red-100';
+                    case 'yellow': return 'bg-gradient-to-br from-yellow-50 to-yellow-100';
+                    case 'blue': return 'bg-gradient-to-br from-blue-50 to-blue-100';
+                    case 'purple': return 'bg-gradient-to-br from-purple-50 to-purple-100';
+                    case 'gold': return 'bg-gradient-to-br from-yellow-100 to-amber-100';
+                    case 'white': return 'bg-gradient-to-br from-gray-50 to-gray-100';
+                    case 'black': return 'bg-gradient-to-br from-gray-700 to-gray-800';
+                    case 'silver': return 'bg-gradient-to-br from-gray-200 to-gray-300';
+                    default: return 'bg-white';
+                }
+            };
+            
+            const getBorderColor = () => {
+                if (!isAvailable) return 'border-gray-300';
+                switch(color) {
+                    case 'red': return 'border-red-300';
+                    case 'yellow': return 'border-yellow-300';
+                    case 'blue': return 'border-blue-300';
+                    case 'purple': return 'border-purple-300';
+                    case 'gold': return 'border-amber-400';
+                    case 'white': return 'border-gray-400';
+                    case 'black': return 'border-gray-600';
+                    case 'silver': return 'border-gray-400';
+                    default: return 'border-gray-300';
+                }
+            };
+            
             return React.createElement('div', { 
-                className: `p-2 rounded ${!isAvailable ? 'bg-gray-100 opacity-40' : 'bg-white hover:bg-gray-50'} border transition-all flex flex-col`,
+                className: `p-2 rounded-lg ${getBgGradient()} ${getBorderColor()} border-2 transition-all flex flex-col shadow-sm hover:shadow-md ${!isAvailable ? 'opacity-50' : ''}`,
             }, [
-                React.createElement('div', { key: 'top-row', className: 'flex items-center justify-between mb-2' }, [
-                    React.createElement('div', { key: 'cost', className: 'text-sm font-bold' }, 
-                        vpCost > 0 ? `${vpCost}VP+${anyCost}⭐` : `${colorCost}${getColorEmoji()}+${anyCost}⭐`
+                React.createElement('div', { key: 'header', className: 'flex items-center justify-between mb-1' }, [
+                    React.createElement('div', { key: 'round-label', className: 'text-xs font-bold text-gray-600' }, 
+                        `R${round}`
                     ),
-                    React.createElement('button', {
-                        key: 'btn',
-                        onClick: handlePurchase,
-                        className: `text-sm py-1 px-3 rounded ${!isAvailable ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-blue-500 hover:bg-blue-600 text-white'}`,
-                        disabled: !isAvailable
-                    }, !isAvailable ? `R${round}` : 'Buy')
+                    React.createElement('div', { key: 'cost', className: 'text-xs font-bold flex items-center gap-1' }, 
+                        vpCost > 0 ? [
+                            React.createElement('span', { key: 'vp', className: 'text-purple-600' }, `${vpCost}VP`),
+                            React.createElement('span', { key: 'plus' }, '+'),
+                            React.createElement('span', { key: 'any' }, `${anyCost}⭐`)
+                        ] : [
+                            React.createElement('span', { key: 'color' }, `${colorCost}${getColorEmoji()}`),
+                            React.createElement('span', { key: 'plus' }, '+'),
+                            React.createElement('span', { key: 'any' }, `${anyCost}⭐`)
+                        ]
+                    )
                 ]),
-                React.createElement('div', { key: 'effect', className: 'text-sm text-gray-700 font-medium leading-tight' }, 
+                React.createElement('div', { key: 'effect', className: `text-xs ${color === 'black' ? 'text-gray-200' : 'text-gray-700'} font-medium leading-tight mb-2 min-h-[2rem]` }, 
                     shop.fullEffect
-                )
+                ),
+                React.createElement('button', {
+                    key: 'btn',
+                    onClick: handlePurchase,
+                    className: `text-xs py-1 px-2 rounded font-semibold transition-all ${!isAvailable ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-white hover:bg-opacity-90 text-gray-800 shadow-sm hover:shadow'}`,
+                    disabled: !isAvailable
+                }, 'Buy')
             ]);
         }
         
@@ -8284,20 +8325,38 @@
                 }
             };
             
+            const getBgGradient = () => {
+                if (isClosed) return 'bg-gray-100';
+                return 'bg-gradient-to-br from-emerald-50 to-emerald-100';
+            };
+            
+            const getVPText = () => {
+                if (color === 'black' && shop.special === 'steal2FromEach') {
+                    return 'Steal 2 VP from each player';
+                }
+                return `Gain ${shop.vp} Victory Points`;
+            };
+            
             return React.createElement('div', { 
-                className: `p-1 rounded ${isClosed ? 'bg-gray-200 opacity-50' : 'bg-green-100 hover:bg-green-200'} border border-green-400 transition-all flex items-center justify-between` 
+                className: `p-2 rounded-lg ${getBgGradient()} border-2 border-emerald-400 transition-all flex flex-col shadow-sm hover:shadow-md ${isClosed ? 'opacity-50' : ''}` 
             }, [
-                React.createElement('div', { key: 'info', className: 'flex items-center gap-1' }, [
-                    React.createElement('span', { key: 'cost', className: 'text-xs font-bold' }, 
-                        color === 'yellow' ? `${displayCost}⭐` : `${displayCost}${getColorEmoji()}`),
-                    React.createElement('span', { key: 'label', className: 'text-xs text-green-700' }, '→')
+                React.createElement('div', { key: 'header', className: 'flex items-center justify-between mb-1' }, [
+                    React.createElement('div', { key: 'vp-label', className: 'text-xs font-bold text-emerald-700' }, 
+                        '🏆 VP'
+                    ),
+                    React.createElement('div', { key: 'cost', className: 'text-xs font-bold' }, 
+                        color === 'yellow' ? `${displayCost}⭐` : `${displayCost}${getColorEmoji()}`
+                    )
                 ]),
+                React.createElement('div', { key: 'effect', className: 'text-xs text-gray-700 font-medium leading-tight mb-2 min-h-[2rem]' }, 
+                    getVPText()
+                ),
                 React.createElement('button', {
                     key: 'btn',
                     onClick: handlePurchase,
-                    className: `text-xs py-0.5 px-2 rounded ${isClosed ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'}`,
+                    className: `text-xs py-1 px-2 rounded font-semibold transition-all ${isClosed ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow'}`,
                     disabled: isClosed
-                }, color === 'black' && shop.special === 'steal2FromEach' ? 'Steal 2 Each' : `${shop.vp} VP`)
+                }, 'Buy')
             ]);
         }
         
