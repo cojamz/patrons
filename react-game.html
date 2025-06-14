@@ -3841,24 +3841,18 @@
             
             // Blue increase costs action
             if (actionId === 'blueIncreaseCosts') {
-                dispatch({
-                    type: 'UPDATE_RESOURCES',
-                    playerId: player.id,
-                    resources: { blue: 2 }
-                });
-                
                 // Add cost increase for ALL OTHER players this round - this should stack if repeated
                 currentState.players.forEach(p => {
                     if (p.id !== player.id) {
                         dispatch({
                             type: 'ADD_SHOP_COST_MODIFIER',
                             playerId: p.id,
-                            modifier: 1
+                            modifier: 2
                         });
                     }
                 });
                 
-                const message = `Player ${player.id}: blueIncreaseCosts → +2 blue + all other players' shop costs increased by 1 ⭐`;
+                const message = `Player ${player.id}: blueIncreaseCosts → All other players' shop costs increased by 2 ⭐`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -8556,7 +8550,7 @@
                     { id: 'gain2blue', title: 'Gain 2 🔵', description: '', round: 1 },
                     { id: 'blueR1ShopBenefit', title: 'Gain an R1 Shop Benefit', description: '(Even if closed)', round: 1 },
                     { id: 'blueReduceCosts', title: '+1 🔵 + Reduce All Shop Costs', description: '(By 1 ⭐ this round)', round: 1 },
-                    { id: 'blueIncreaseCosts', title: '+2 🔵 + Increase All Shop Costs', description: '(By 2 ⭐ this round)', round: 2 },
+                    { id: 'blueIncreaseCosts', title: 'Increase All Shop Costs', description: '(By 2 ⭐ for other players)', round: 2 },
                     { id: 'blueToggleShops', title: '+1 🔵 + Toggle All Shop Status', description: '(Including victory shops)', round: 2 },
                     { id: 'blueAnyShopBenefit', title: 'Gain Any Shop Benefit', description: '(Even if closed)', round: 3 }
                 ]
