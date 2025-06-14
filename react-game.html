@@ -4917,13 +4917,33 @@
         function Modal({ isOpen, onClose, children }) {
             React.useEffect(() => {
                 if (isOpen) {
-                    // Calculate scrollbar width to prevent layout shift
-                    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-                    document.body.style.paddingRight = `${scrollbarWidth}px`;
-                    document.body.classList.add('modal-open');
+                    // Use requestAnimationFrame to ensure DOM is ready
+                    requestAnimationFrame(() => {
+                        // Calculate scrollbar width to prevent layout shift
+                        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                        
+                        // Apply padding to body and html to prevent shift
+                        document.body.style.paddingRight = `${scrollbarWidth}px`;
+                        document.documentElement.style.paddingRight = `${scrollbarWidth}px`;
+                        document.body.classList.add('modal-open');
+                        
+                        // Also apply to any fixed positioned elements
+                        const fixedElements = document.querySelectorAll('[style*="position: fixed"]');
+                        fixedElements.forEach(el => {
+                            el.dataset.originalPadding = el.style.paddingRight || '';
+                            el.style.paddingRight = `${scrollbarWidth}px`;
+                        });
+                    });
+                    
                     return () => {
                         document.body.classList.remove('modal-open');
                         document.body.style.paddingRight = '';
+                        document.documentElement.style.paddingRight = '';
+                        const fixedElements = document.querySelectorAll('[style*="position: fixed"]');
+                        fixedElements.forEach(el => {
+                            el.style.paddingRight = el.dataset.originalPadding || '';
+                            delete el.dataset.originalPadding;
+                        });
                     };
                 }
             }, [isOpen]);
