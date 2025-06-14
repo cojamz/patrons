@@ -4135,7 +4135,7 @@
                 }
                 
                 // Choose 1 gem to spend
-                const selectedGems = await showStealGems(dispatch, 'Choose 1 gem to spend for 2 VP', player, 1, workerInfo);
+                const selectedGems = await showGemSelection(dispatch, 'Choose 1 gem to spend for 2 VP', 1, currentPlayer, workerInfo);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: spend1AnyFor2VP → Cancelled`;
@@ -4180,7 +4180,7 @@
                 }
                 
                 // Choose 2 gems to spend
-                const selectedGems = await showGemSelection(dispatch, 'Choose 2 gems to spend for 3 VP', 2, player, workerInfo);
+                const selectedGems = await showGemSelection(dispatch, 'Choose 2 gems to spend for 3 VP', 2, currentPlayer, workerInfo);
                 
                 if (!selectedGems) {
                     const message = `Player ${player.id}: spend2AnyFor3VP → Cancelled`;
