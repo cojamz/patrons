@@ -459,6 +459,25 @@
                         }
                     }
                     
+                    // First, determine if this is a snake draft reversal
+                    const currentIndex = state.turnOrder.indexOf(state.currentPlayer);
+                    let isSnakeDraftReversal = false;
+                    let nextPlayerPreview = null;
+                    
+                    if (state.turnDirection === 1) {
+                        if (currentIndex === state.turnOrder.length - 1) {
+                            // At the end, reverse direction but stay on same player
+                            isSnakeDraftReversal = true;
+                            nextPlayerPreview = state.turnOrder[currentIndex];
+                        }
+                    } else {
+                        if (currentIndex === 0) {
+                            // At the beginning, reverse direction but stay on same player
+                            isSnakeDraftReversal = true;
+                            nextPlayerPreview = state.turnOrder[currentIndex];
+                        }
+                    }
+                    
                     // Check for extra turn effect or extraTurns property
                     const hasExtraTurnEffect = currentPlayerObj.effects.some(effect => 
                         effect.includes('Will take an extra turn after this one')
@@ -469,7 +488,8 @@
                     // Check if player has skipped turns
                     const hasSkippedTurns = state.skippedTurns[state.currentPlayer] > 0;
                     
-                    if (hasExtraTurn) {
+                    // If it's a snake draft reversal, don't consume the extra turn
+                    if (hasExtraTurn && !isSnakeDraftReversal) {
                         // Update skippedTurns - if player has skips, consume one instead of taking extra turn
                         const newSkippedTurns = { ...state.skippedTurns };
                         let logMessage = '';
@@ -544,13 +564,19 @@
                                 ].filter(Boolean)
                             };
                         }
+                    } else if (hasExtraTurn && isSnakeDraftReversal) {
+                        // Snake draft reversal - player naturally gets another turn, so don't consume the extra turn
+                        console.log(`Player ${state.currentPlayer}: Snake draft reversal - extra turn preserved`);
+                        // Add a log message for clarity
+                        const logMessage = `Player ${state.currentPlayer}: At end of snake draft - gets another turn naturally (extra turn preserved)`;
+                        state.actionLog.push(logMessage);
                     }
                     
                     // If we processed an extra turn with skips above, use updated values
-                    const effectiveSkippedTurns = hasExtraTurn && hasSkippedTurns 
+                    const effectiveSkippedTurns = hasExtraTurn && hasSkippedTurns && !isSnakeDraftReversal 
                         ? { ...state.skippedTurns, [state.currentPlayer]: state.skippedTurns[state.currentPlayer] - 1 }
                         : state.skippedTurns;
-                    const effectivePlayers = hasExtraTurn 
+                    const effectivePlayers = hasExtraTurn && !isSnakeDraftReversal
                         ? state.players.map(player => {
                             const vpUpdate = purpleVPUpdates.find(u => u.playerId === player.id);
                             return player.id === state.currentPlayer 
@@ -642,16 +668,12 @@
                         turnDirection: state.turnDirection
                     });
                     
-                    // First, determine the next player based on snake draft rules
-                    const currentIndex = state.turnOrder.indexOf(state.currentPlayer);
-                    let isSnakeDraftReversal = false;
-                    
+                    // Calculate the next player based on snake draft rules
                     if (state.turnDirection === 1) {
                         if (currentIndex === state.turnOrder.length - 1) {
                             // At the end, reverse direction but stay on same player
                             nextDirection = -1;
                             nextPlayer = state.turnOrder[currentIndex];
-                            isSnakeDraftReversal = true;
                         } else {
                             nextPlayer = state.turnOrder[currentIndex + 1];
                         }
@@ -660,7 +682,6 @@
                             // At the beginning, reverse direction but stay on same player
                             nextDirection = 1;
                             nextPlayer = state.turnOrder[currentIndex];
-                            isSnakeDraftReversal = true;
                         } else {
                             nextPlayer = state.turnOrder[currentIndex - 1];
                         }
@@ -2330,7 +2351,7 @@
                         } else {
                             // Red is full, clear the force red effect from all players
                             console.log('Red layer is full, clearing force red effects');
-                            currentState.players.forEach(p => {
+                            state.players.forEach(p => {
                                 if (p.effects && p.effects.some(e => e.includes('Must place on red layer'))) {
                                     dispatch({
                                         type: 'UPDATE_PLAYER_EFFECTS',
@@ -3432,11 +3453,50 @@
                     return;
                 }
                 
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: redRepeatAll → Repeating ${playerSpaces.length} actions` });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: redRepeatAll → Will repeat ${playerSpaces.length} actions` });
                 
-                // Execute each action (this will also award VP for red actions)
-                for (const spaceId of playerSpaces) {
-                    await executeAction(spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
+                // Let player choose order of execution
+                const remainingActions = [...playerSpaces];
+                while (remainingActions.length > 0) {
+                    // Build options for remaining actions
+                    const actionOptions = remainingActions.map(spaceId => {
+                        let actionTitle = spaceId;
+                        for (const [color, layer] of Object.entries(gameLayers)) {
+                            const action = layer.actions.find(a => a.id === spaceId);
+                            if (action) {
+                                actionTitle = `${color} - ${action.title}`;
+                                break;
+                            }
+                        }
+                        return {
+                            label: actionTitle,
+                            value: spaceId
+                        };
+                    });
+                    
+                    // Show choice modal
+                    const choice = await showChoice(
+                        dispatch, 
+                        `Choose next action to repeat (${remainingActions.length} remaining)`,
+                        actionOptions,
+                        false,
+                        workerInfo
+                    );
+                    
+                    if (!choice) {
+                        // Player cancelled - stop repeating
+                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Stopped repeating actions` });
+                        break;
+                    }
+                    
+                    // Execute the chosen action
+                    await executeAction(choice, player, dispatch, currentState, gameLayers, recursionDepth + 1);
+                    
+                    // Remove from remaining actions
+                    const index = remainingActions.indexOf(choice);
+                    if (index > -1) {
+                        remainingActions.splice(index, 1);
+                    }
                 }
                 
                 return;
@@ -7143,16 +7203,28 @@
                 return;
             }
             
-            // According to the spec, this should repeat ALL actions from the chosen player
-            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Repeating ALL ${actionOptions.length} actions from Player ${targetPlayerId}...` });
+            // Let player choose order of execution
+            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Will repeat ${actionOptions.length} actions from Player ${targetPlayerId}` });
             
-            // Execute ALL actions in sequence (no choosing)
-            for (const actionOption of actionOptions) {
-                const actionId = actionOption.value;
-                console.log(`Red R3 shop - Executing action ${actionId} for player ${player.id}`);
+            const remainingActions = [...actionOptions];
+            while (remainingActions.length > 0) {
+                // Show choice modal for next action
+                const choice = await showChoice(
+                    dispatch,
+                    `Choose next action to repeat from Player ${targetPlayerId} (${remainingActions.length} remaining)`,
+                    remainingActions,
+                    false
+                );
                 
-                // Execute the action with recursion depth tracking
-                await executeAction(actionId, player, dispatch, state, state.gameLayers, recursionDepth + 1);
+                if (!choice) {
+                    // Player cancelled - stop repeating
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Stopped repeating actions` });
+                    break;
+                }
+                
+                // Execute the chosen action
+                console.log(`Red R3 shop - Executing action ${choice} for player ${player.id}`);
+                await executeAction(choice, player, dispatch, state, state.gameLayers, recursionDepth + 1);
                 
                 // RED AUTOMATIC VP: Gain 1 VP for red action
                 dispatch({
@@ -7162,6 +7234,12 @@
                     source: 'redAutomatic'
                 });
                 dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action (repeat)` });
+                
+                // Remove from remaining actions
+                const index = remainingActions.findIndex(opt => opt.value === choice);
+                if (index > -1) {
+                    remainingActions.splice(index, 1);
+                }
             }
             
             const repeatedActions = actionOptions;
@@ -7447,6 +7525,14 @@
                 }, [
                     React.createElement('span', { key: 'icon' }, '⏳'),
                     React.createElement('span', { key: 'text' }, 'Waiting for others')
+                ]),
+                // Extra turns indicator
+                (player.extraTurns && player.extraTurns > 0) && React.createElement('div', { 
+                    key: 'extra-turns', 
+                    className: 'bg-purple-100 border border-purple-300 rounded px-3 py-2 mb-3 text-sm font-medium text-purple-700 flex items-center justify-center gap-2' 
+                }, [
+                    React.createElement('span', { key: 'icon' }, '🎲'),
+                    React.createElement('span', { key: 'text' }, `${player.extraTurns} extra turn${player.extraTurns > 1 ? 's' : ''} queued`)
                 ]),
                 (player.effects && player.effects.length > 0) && React.createElement('div', { key: 'effects', className: 'mb-3' }, [
                     React.createElement('div', { key: 'label', className: 'text-xs font-semibold text-gray-600 mb-1' }, 'Effects:'),
