@@ -4682,7 +4682,7 @@
                 });
                 
                 // Choose 1 gem of any color
-                const selectedGems = await showGemSelection(dispatch, 'Choose 1 gem (others will get the same)', 1);
+                const selectedGems = await showGemSelection(dispatch, 'Choose 1 gem (others will get the same)', 1, null, workerInfo, player.id);
                 
                 if (!selectedGems) {
                     // If cancelled, give default red
@@ -4827,7 +4827,7 @@
                 });
                 
                 // Choose 1 color to get 2 of (must be same color)
-                const selectedGems = await showGemSelection(dispatch, 'Choose 1 color to get 2 gems of (others will get 1 of that color)', 1);
+                const selectedGems = await showGemSelection(dispatch, 'Choose 1 color to get 2 gems of (others will get 1 of that color)', 1, null, workerInfo, player.id);
                 
                 if (!selectedGems) {
                     // If cancelled, give default red
