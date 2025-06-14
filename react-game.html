@@ -267,7 +267,10 @@
             stateVersion: 0,
             
             // Notification system for multiplayer
-            notifications: []
+            notifications: [],
+            
+            // Optimistic locking for placement
+            pendingPlacements: {}
         };
 
         function gameReducer(state, action) {
@@ -1429,6 +1432,9 @@
                     console.log('SYNC_GAME_STATE reducer called with:', {
                         round: action.gameState.round,
                         currentPlayer: action.gameState.currentPlayer,
+                        myPlayerId: state.myPlayerId,
+                        gameStarted: action.gameState.gameStarted,
+                        gameLayers: action.gameState.gameLayers ? Object.keys(action.gameState.gameLayers) : null,
                         occupiedSpaces: action.gameState.occupiedSpaces,
                         closedShops: action.gameState.closedShops,
                         players: action.gameState.players?.map(p => ({ 
@@ -1491,6 +1497,8 @@
                         closedShops: action.gameState.closedShops || state.closedShops,
                         // Preserve automatic VPs from synced state or current state
                         automaticVPs: action.gameState.automaticVPs || state.automaticVPs,
+                        // Sync pending placements
+                        pendingPlacements: action.gameState.pendingPlacements || {},
                         // Track sync timestamp to handle race conditions
                         lastSyncTimestamp: action.gameState.timestamp || Date.now(),
                         // Mark that we just synced to prevent immediate re-sync
@@ -1509,6 +1517,23 @@
                     });
                     
                     return mergedState;
+                
+                case 'SET_PENDING_PLACEMENT':
+                    return {
+                        ...state,
+                        pendingPlacements: {
+                            ...state.pendingPlacements,
+                            [action.actionId]: action.playerId
+                        }
+                    };
+                
+                case 'CLEAR_PENDING_PLACEMENT':
+                    const newPendingPlacements = { ...state.pendingPlacements };
+                    delete newPendingPlacements[action.actionId];
+                    return {
+                        ...state,
+                        pendingPlacements: newPendingPlacements
+                    };
                 
                 default:
                     return state;
@@ -1661,6 +1686,39 @@
             }
         }
         
+        // Reconnection state
+        let reconnectTimeout = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 5;
+        const INITIAL_RECONNECT_DELAY = 1000; // 1 second
+        
+        function attemptReconnect(roomCode, dispatch, myPlayerId) {
+            if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+                console.error('Max reconnection attempts reached');
+                dispatch({ type: 'UPDATE_CONNECTION_STATUS', status: 'disconnected' });
+                alert('Connection lost. Please refresh the page to rejoin.');
+                return;
+            }
+            
+            reconnectAttempts++;
+            const delay = INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1); // Exponential backoff
+            
+            console.log(`Attempting to reconnect (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) in ${delay}ms...`);
+            
+            reconnectTimeout = setTimeout(() => {
+                database.ref(`rooms/${roomCode}/players/${myPlayerId}/connected`).set(true)
+                    .then(() => {
+                        console.log('Reconnection successful');
+                        reconnectAttempts = 0;
+                        dispatch({ type: 'UPDATE_CONNECTION_STATUS', status: 'connected' });
+                    })
+                    .catch(error => {
+                        console.error('Reconnection failed:', error);
+                        attemptReconnect(roomCode, dispatch, myPlayerId);
+                    });
+            }, delay);
+        }
+        
         function setupRoomListeners(roomCode, dispatch, myPlayerId) {
             if (!database) return;
             
@@ -1721,6 +1779,24 @@
             
             // Handle disconnection
             roomRef.child(`players/${myPlayerId}/connected`).onDisconnect().set(false);
+            
+            // Monitor connection state
+            const connectedRef = database.ref('.info/connected');
+            connectedRef.on('value', snapshot => {
+                if (snapshot.val() === true) {
+                    console.log('Firebase connection established');
+                    if (reconnectTimeout) {
+                        clearTimeout(reconnectTimeout);
+                        reconnectTimeout = null;
+                    }
+                    reconnectAttempts = 0;
+                    dispatch({ type: 'UPDATE_CONNECTION_STATUS', status: 'connected' });
+                } else {
+                    console.log('Firebase connection lost');
+                    dispatch({ type: 'UPDATE_CONNECTION_STATUS', status: 'reconnecting' });
+                    attemptReconnect(roomCode, dispatch, myPlayerId);
+                }
+            });
         }
         
         // Track if we're currently syncing to prevent loops
@@ -1820,7 +1896,17 @@
                         gameStarted: true,
                         gameLayers: gameLayers,
                         gameMode: gameMode,
-                        automaticVPs: automaticVPs
+                        automaticVPs: automaticVPs,
+                        closedShops: {},
+                        shopUsedBeforeWorkers: false,
+                        shopUsedAfterWorkers: false,
+                        playersOutOfWorkers: [],
+                        skippedTurns: {},
+                        waitingForOthers: {},
+                        roundActions: [],
+                        gameOver: false,
+                        timestamp: Date.now(),
+                        lastUpdatedBy: 'host-start'
                     };
                     
                     console.log('Starting multiplayer game with state:', {
@@ -1833,6 +1919,8 @@
                     database.ref(`rooms/${roomCode}/gameState`).set(gameState)
                         .then(() => {
                             console.log('Game state successfully written to Firebase');
+                            // Force an immediate sync for all clients
+                            database.ref(`rooms/${roomCode}/lastUpdate`).set(Date.now());
                         })
                         .catch(error => {
                             console.error('Failed to write game state to Firebase:', error);
@@ -2072,7 +2160,11 @@
                             React.createElement('div', { 
                                 key: 'status',
                                 className: `text-xs ${player.connected ? 'text-green-600' : 'text-gray-500'}` 
-                            }, player.connected ? '🟢 Connected' : '🔴 Disconnected'),
+                            }, player.connected ? '🟢 Connected' : (
+                                player.id === state.myPlayerId && state.connectionStatus === 'reconnecting' 
+                                    ? '🟡 Reconnecting...' 
+                                    : '🔴 Disconnected'
+                            )),
                             player.id === state.myPlayerId && React.createElement('div', { 
                                 key: 'you',
                                 className: 'text-xs text-blue-600 font-bold' 
@@ -2168,6 +2260,7 @@
             const { state, dispatch } = useGame();
             const isOccupied = state.occupiedSpaces[actionId];
             const occupyingPlayer = isOccupied ? state.players.find(p => p.id === isOccupied) : null;
+            const isPending = state.pendingPlacements && state.pendingPlacements[actionId];
             
             const handleClick = async () => {
                 if (isOccupied || !available) return;
@@ -2176,6 +2269,17 @@
                 if (state.roomCode && state.myPlayerId !== state.currentPlayer) {
                     alert('It\'s not your turn!');
                     return;
+                }
+                
+                // Optimistic locking - immediately mark space as pending
+                if (state.roomCode) {
+                    // Check if another player is already trying to place here
+                    if (state.pendingPlacements && state.pendingPlacements[actionId]) {
+                        alert('Another player is placing a worker here!');
+                        return;
+                    }
+                    // Mark this space as pending
+                    dispatch({ type: 'SET_PENDING_PLACEMENT', actionId, playerId: state.myPlayerId });
                 }
                 
                 const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
@@ -2339,28 +2443,35 @@
                 // Store action info before placing worker, in case we need to undo
                 const workerInfo = { actionId, playerId: state.currentPlayer };
                 
-                dispatch({ type: 'PLACE_WORKER', actionId });
-                
-                // Get fresh state after worker placement for repeat actions
-                const freshState = { 
-                    ...state, 
-                    occupiedSpaces: { ...state.occupiedSpaces, [actionId]: state.currentPlayer },
-                    players: state.players.map(p => 
-                        p.id === state.currentPlayer 
-                            ? { ...p, workersLeft: p.workersLeft - 1 }
-                            : p
-                    ),
-                    workerPlacedThisTurn: true,
-                    workersToPlace: Math.max(0, state.workersToPlace - 1)
-                };
-                const freshPlayer = freshState.players.find(p => p.id === state.currentPlayer);
-                
-                // Pass worker info to executeAction so it can undo if needed
-                await executeAction(actionId, freshPlayer, dispatch, freshState, state.gameLayers, 0, workerInfo);
-                
-                const message = `Action completed: ${actionId} for Player ${currentPlayer.id}`;
-                dispatch({ type: 'ADD_LOG', message });
-                console.log(message);
+                try {
+                    dispatch({ type: 'PLACE_WORKER', actionId });
+                    
+                    // Get fresh state after worker placement for repeat actions
+                    const freshState = { 
+                        ...state, 
+                        occupiedSpaces: { ...state.occupiedSpaces, [actionId]: state.currentPlayer },
+                        players: state.players.map(p => 
+                            p.id === state.currentPlayer 
+                                ? { ...p, workersLeft: p.workersLeft - 1 }
+                                : p
+                        ),
+                        workerPlacedThisTurn: true,
+                        workersToPlace: Math.max(0, state.workersToPlace - 1)
+                    };
+                    const freshPlayer = freshState.players.find(p => p.id === state.currentPlayer);
+                    
+                    // Pass worker info to executeAction so it can undo if needed
+                    await executeAction(actionId, freshPlayer, dispatch, freshState, state.gameLayers, 0, workerInfo);
+                    
+                    const message = `Action completed: ${actionId} for Player ${currentPlayer.id}`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    console.log(message);
+                } finally {
+                    // Always clear pending placement
+                    if (state.roomCode) {
+                        dispatch({ type: 'CLEAR_PENDING_PLACEMENT', actionId });
+                    }
+                }
             };
             
             const getRoundStyle = () => {
@@ -2373,6 +2484,7 @@
             const getAvailabilityStyle = () => {
                 if (!available) return 'opacity-40 cursor-not-allowed';
                 if (isOccupied) return 'bg-red-100 border-red-400 cursor-not-allowed';
+                if (isPending) return 'bg-yellow-100 border-yellow-400 cursor-wait animate-pulse';
                 return 'hover:bg-blue-50 hover:border-blue-400 cursor-pointer transform hover:scale-105';
             };
             
@@ -3204,7 +3316,8 @@
                 
                 // Execute actions for the affected players
                 // IMPORTANT: Skip actions that would interfere with the swap itself or create paradoxes
-                const skipActions = ['gain2purpleTakeBack', 'playTwoWorkers', 'playThreeWorkers'];
+                // Only skip actions that place additional workers (which could create loops)
+                const skipActions = ['playTwoWorkers', 'playThreeWorkers'];
                 
                 if (actionId === 'redHybrid1') {
                     // Both players get actions where their workers END UP
@@ -3872,6 +3985,13 @@
             
             // Blue increase costs action
             if (actionId === 'blueIncreaseCosts') {
+                // Give player 2 blue resources
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: player.id,
+                    resources: { blue: 2 }
+                });
+                
                 // Add cost increase for ALL OTHER players this round - this should stack if repeated
                 currentState.players.forEach(p => {
                     if (p.id !== player.id) {
@@ -3883,7 +4003,7 @@
                     }
                 });
                 
-                const message = `Player ${player.id}: blueIncreaseCosts → All other players' shop costs increased by 2 ⭐`;
+                const message = `Player ${player.id}: blueIncreaseCosts → +2 blue, all other players' shop costs increased by 2 ⭐`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -3893,7 +4013,7 @@
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
-                    resources: { blue: 1 }
+                    resources: { blue: 2 }
                 });
                 
                 // Toggle all shops (flip status)
@@ -3901,7 +4021,7 @@
                     type: 'FLIP_ALL_SHOPS'
                 });
                 
-                const message = `Player ${player.id}: blueToggleShops → +1 blue + all shops toggled`;
+                const message = `Player ${player.id}: blueToggleShops → +2 blue + all shops toggled`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -6264,19 +6384,19 @@
             dispatch({ type: 'ADD_LOG', message });
         }
         
-        // Execute white 2 shop effect - Lose 2 VP, Skip next player's turn
+        // Execute white 2 shop effect - Lose 3 VP, Skip next player's turn
         async function executeWhite2Shop(player, dispatch, state) {
-            if (player.victoryPoints < 2) {
-                const message = `Player ${player.id}: White R2 shop → Need at least 2 VP`;
+            if (player.victoryPoints < 3) {
+                const message = `Player ${player.id}: White R2 shop → Need at least 3 VP`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
-            // Lose 2 VP
+            // Lose 3 VP
             dispatch({
                 type: 'UPDATE_VP',
                 playerId: player.id,
-                vp: -2,
+                vp: -3,
                 source: 'whiteShop'
             });
             
@@ -6673,7 +6793,11 @@
             switch(shopId) {
                 case 'red1':
                     // Repeat a worker's action
-                    await executeRepeatAction(player, dispatch, state, state.gameLayers, recursionDepth);
+                    const repeatSuccess = await executeRepeatAction(player, dispatch, state, state.gameLayers, recursionDepth);
+                    if (!repeatSuccess) {
+                        // Action was cancelled or failed
+                        return false;
+                    }
                     break;
                 case 'red2':
                     // Place the next player's worker immediately
@@ -6820,6 +6944,7 @@
                 default:
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Shop benefit ${shopId} not implemented yet` });
             }
+            return true; // Return true by default for successful execution
         }
         
         // Execute red 2 shop effect - Place the next player's worker
@@ -8078,16 +8203,6 @@
                     }
                 }
                 
-                // Deduct VP cost if applicable
-                if (vpCost > 0) {
-                    dispatch({ 
-                        type: 'UPDATE_VP', 
-                        playerId: currentPlayer.id, 
-                        vp: -vpCost,
-                        source: 'shopCost'
-                    });
-                }
-                
                 // Simple cost deduction (full implementation in RegularShop)
                 const resourceCost = {};
                 if (colorCost > 0) {
@@ -8124,10 +8239,44 @@
                     }
                 }
                 
+                // Now deduct VP cost after all selections are confirmed
+                if (vpCost > 0) {
+                    dispatch({ 
+                        type: 'UPDATE_VP', 
+                        playerId: currentPlayer.id, 
+                        vp: -vpCost,
+                        source: 'shopCost'
+                    });
+                }
+                
+                // Deduct resource costs
                 dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
                 
                 // Execute shop effect
-                await executeShopBenefit(color, round, currentPlayer, dispatch, state, 0);
+                const shopSuccess = await executeShopBenefit(color, round, currentPlayer, dispatch, state, 0);
+                
+                // If shop benefit was cancelled, refund the costs
+                if (!shopSuccess) {
+                    // Refund VP cost
+                    if (vpCost > 0) {
+                        dispatch({ 
+                            type: 'UPDATE_VP', 
+                            playerId: currentPlayer.id, 
+                            vp: vpCost,
+                            source: 'shopRefund'
+                        });
+                    }
+                    
+                    // Refund resource costs (negate the negative values)
+                    const refundResources = {};
+                    Object.entries(resourceCost).forEach(([resColor, cost]) => {
+                        refundResources[resColor] = -cost; // Negate negative to make positive
+                    });
+                    dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: refundResources });
+                    
+                    dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Shop purchase cancelled - costs refunded` });
+                    return;
+                }
                 
                 // Track shop usage
                 dispatch({ type: 'USE_SHOP' });
@@ -8755,11 +8904,17 @@
                             roundActions: currentState.roundActions,
                             gameOver: currentState.gameOver,
                             automaticVPs: currentState.automaticVPs,
+                            pendingPlacements: currentState.pendingPlacements || {},
                             // Don't include myPlayerId in sync data - it's local to each client
                             lastUpdatedBy: currentState.myPlayerId,
                             timestamp: Date.now()
                         };
-                        console.log('Syncing with myPlayerId:', currentState.myPlayerId);
+                        console.log('Syncing game state to Firebase:', {
+                            myPlayerId: currentState.myPlayerId,
+                            currentPlayer: syncData.currentPlayer,
+                            gameLayers: syncData.gameLayers ? Object.keys(syncData.gameLayers) : null,
+                            gameStarted: syncData.gameStarted
+                        });
                         syncGameState(currentState.roomCode, syncData);
                     }, 200);
                 }
@@ -8770,7 +8925,7 @@
                         clearTimeout(syncTimeoutRef.current);
                     }
                 };
-            }, [state.currentPlayer, state.players, state.occupiedSpaces, state.round, state.actionLog, state.workersToPlace, state.gameLayers, state.closedShops, state.shopUsedBeforeWorkers, state.shopUsedAfterWorkers, state.playersOutOfWorkers, state.skippedTurns, state.waitingForOthers, state.roundActions, state.gameOver, state.automaticVPs]);
+            }, [state.currentPlayer, state.players, state.occupiedSpaces, state.round, state.actionLog, state.workersToPlace, state.gameLayers, state.closedShops, state.shopUsedBeforeWorkers, state.shopUsedAfterWorkers, state.playersOutOfWorkers, state.skippedTurns, state.waitingForOthers, state.roundActions, state.gameOver, state.automaticVPs, state.pendingPlacements]);
             
             const handleEndTurn = async () => {
                 // Validate multiplayer turn
@@ -8818,7 +8973,9 @@
                 console.log('No game layers found. State:', {
                     roomCode: state.roomCode,
                     gameStarted: state.gameStarted,
-                    gameLayers: state.gameLayers
+                    gameLayers: state.gameLayers,
+                    myPlayerId: state.myPlayerId,
+                    currentPlayer: state.currentPlayer
                 });
                 if (!state.roomCode) {
                     // Local play - use 4 layers
@@ -8833,8 +8990,12 @@
                 }, [
                     React.createElement('h2', { key: 'title', className: 'text-2xl font-bold mb-4' }, 'Setting up game layers...'),
                     React.createElement('div', { key: 'spinner', className: 'animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto' }),
-                    React.createElement('div', { key: 'debug', className: 'text-sm text-gray-600 mt-4' }, 
-                        `Debug: roomCode=${state.roomCode}, gameStarted=${state.gameStarted}`)
+                    React.createElement('div', { key: 'debug', className: 'text-sm text-gray-600 mt-4' }, [
+                        React.createElement('div', { key: 'line1' }, 
+                            `Room: ${state.roomCode || 'None'}, Started: ${state.gameStarted}`),
+                        React.createElement('div', { key: 'line2' }, 
+                            `You are Player ${state.myPlayerId}, Current Turn: Player ${state.currentPlayer}`)
+                    ])
                 ]));
             }
             
@@ -8873,7 +9034,12 @@
                             }, [
                                 React.createElement('span', { key: 'icon', className: 'text-sm' }, '👉'),
                                 React.createElement('span', { key: 'text', className: 'text-sm text-center' }, 
-                                    `${state.players.find(p => p.id === state.currentPlayer)?.name || `Player ${state.currentPlayer}`}'s Turn`)
+                                    `${state.players.find(p => p.id === state.currentPlayer)?.name || `Player ${state.currentPlayer}`}'s Turn`),
+                                // Debug info for multiplayer
+                                state.roomCode && React.createElement('div', { 
+                                    key: 'debug', 
+                                    className: 'text-xs mt-1 text-gray-300' 
+                                }, `(You are P${state.myPlayerId}, Current: P${state.currentPlayer})`)
                             ]),
                             // Room code badge (if in multiplayer)
                             state.roomCode && React.createElement('div', {
@@ -8952,6 +9118,19 @@
                                 React.createElement('div', { className: 'animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600' }),
                                 React.createElement('div', { className: 'text-yellow-800 font-semibold' }, 
                                     `Waiting for Player ${state.waitingForPlayer} to make a choice...`)
+                            ])
+                        ]),
+                    // Show when another player has a modal open in multiplayer
+                    state.modal && state.roomCode && state.modal.targetPlayerId && 
+                        state.modal.targetPlayerId !== state.myPlayerId &&
+                        React.createElement('div', { 
+                            key: 'modal-waiting-indicator',
+                            className: 'fixed bottom-4 right-4 bg-blue-100 border-2 border-blue-400 rounded-lg p-3 shadow-lg z-40' 
+                        }, [
+                            React.createElement('div', { className: 'flex items-center space-x-2' }, [
+                                React.createElement('div', { className: 'animate-pulse rounded-full h-3 w-3 bg-blue-600' }),
+                                React.createElement('div', { className: 'text-blue-800 text-sm font-medium' }, 
+                                    `Player ${state.modal.targetPlayerId} is making a decision...`)
                             ])
                         ]),
                     // Modal System - Show to current player OR targeted player
