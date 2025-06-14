@@ -1771,7 +1771,7 @@
             }
         }
         
-        function startMultiplayerGame(roomCode) {
+        function startMultiplayerGame(roomCode, gameLayers = null, gameMode = 'basic') {
             if (database && roomCode) {
                 // Get current connected players and initialize proper game state
                 database.ref(`rooms/${roomCode}/players`).once('value', (snapshot) => {
@@ -1791,21 +1791,52 @@
                         });
                     });
                     
+                    // Initialize automatic VPs based on active layers
+                    let automaticVPs = {};
+                    if (gameLayers && gameLayers.blue) {
+                        automaticVPs.blue = true;
+                    }
+                    
+                    // WHITE AUTOMATIC VP: If white is in play, all players start with 5 VP
+                    let initialPlayers = players;
+                    if (gameLayers && gameLayers.white) {
+                        initialPlayers = players.map(player => ({
+                            ...player,
+                            victoryPoints: player.victoryPoints + 5
+                        }));
+                    }
+                    
                     // Initialize complete game state
                     const gameState = {
                         currentPlayer: 1,
                         turnDirection: 1,
-                        players: players,
+                        players: initialPlayers,
                         occupiedSpaces: {},
                         round: 1,
                         turnOrder: players.map(p => p.id),
                         workerPlacedThisTurn: false,
                         workersToPlace: 1,
                         actionLog: [],
-                        gameStarted: true
+                        gameStarted: true,
+                        gameLayers: gameLayers,
+                        gameMode: gameMode,
+                        automaticVPs: automaticVPs
                     };
                     
-                    database.ref(`rooms/${roomCode}/gameState`).set(gameState);
+                    console.log('Starting multiplayer game with state:', {
+                        players: gameState.players.length,
+                        gameLayers: gameLayers ? Object.keys(gameLayers) : 'null',
+                        gameMode: gameMode,
+                        automaticVPs: automaticVPs
+                    });
+                    
+                    database.ref(`rooms/${roomCode}/gameState`).set(gameState)
+                        .then(() => {
+                            console.log('Game state successfully written to Firebase');
+                        })
+                        .catch(error => {
+                            console.error('Failed to write game state to Firebase:', error);
+                        });
                 });
             }
         }
@@ -2070,7 +2101,7 @@
                                 console.log('Selected layers:', Object.keys(selectedLayers));
                                 dispatch({ type: 'SET_GAME_MODE', mode: 'basic' });
                                 dispatch({ type: 'SET_GAME_LAYERS', layers: selectedLayers });
-                                startMultiplayerGame(state.roomCode);
+                                startMultiplayerGame(state.roomCode, selectedLayers, 'basic');
                                 dispatch({ type: 'START_GAME' });
                                 console.log('Game started successfully');
                             },
@@ -2084,7 +2115,7 @@
                                 console.log('Selected layers:', Object.keys(selectedLayers));
                                 dispatch({ type: 'SET_GAME_MODE', mode: 'advanced' });
                                 dispatch({ type: 'SET_GAME_LAYERS', layers: selectedLayers });
-                                startMultiplayerGame(state.roomCode);
+                                startMultiplayerGame(state.roomCode, selectedLayers, 'advanced');
                                 dispatch({ type: 'START_GAME' });
                                 console.log('Game started successfully');
                             },
