@@ -1049,30 +1049,30 @@ function useGame() {
             };
             
             const getCardSize = () => {
-                return compact ? 'p-2 min-h-14' : 'p-4 min-h-24';
+                return compact ? 'p-3 min-h-16' : 'p-4 min-h-28';
             };
-            
+
             const getTextSize = () => {
                 return compact ? {
-                    title: 'text-xs',
+                    title: 'text-sm',
                     desc: 'text-xs'
                 } : {
-                    title: 'text-lg',
-                    desc: 'text-base'
+                    title: 'text-base',
+                    desc: 'text-sm'
                 };
             };
             
             const textSizes = getTextSize();
             
             return React.createElement('div', {
-                className: `relative ${getCardSize()} border-2 rounded-lg flex flex-col justify-center text-center transition-all duration-200 ${getRoundStyle()} ${getAvailabilityStyle()}`,
+                className: `relative ${getCardSize()} border-2 rounded-xl flex flex-col justify-center text-center transition-all duration-200 shadow-sm ${getRoundStyle()} ${getAvailabilityStyle()}`,
                 onClick: handleClick
             }, [
-                React.createElement('div', { key: 'title', className: `font-bold ${textSizes.title} mb-1 ${!available ? 'text-gray-500' : ''}` }, title),
-                React.createElement('div', { key: 'desc', className: `${textSizes.desc} ${!available ? 'text-gray-400' : 'text-gray-600'} leading-relaxed` }, description),
+                React.createElement('div', { key: 'title', className: `font-bold ${textSizes.title} mb-2 ${!available ? 'text-gray-500' : 'text-gray-900'}` }, title),
+                React.createElement('div', { key: 'desc', className: `${textSizes.desc} ${!available ? 'text-gray-400' : 'text-gray-600'} leading-snug` }, description),
                 occupyingPlayer && React.createElement('div', {
                     key: 'worker',
-                    className: `absolute top-1 right-1 flex items-center justify-center text-3xl`
+                    className: `absolute top-2 right-2 flex items-center justify-center text-2xl drop-shadow-md`
                 }, occupyingPlayer.emoji || occupyingPlayer.id),
                 React.createElement('div', {
                     key: 'round-indicator',
@@ -6935,31 +6935,37 @@ function useGame() {
             };
             
             return React.createElement('div', {
-                className: `p-3 rounded-lg ${getBgGradient()} ${getBorderColor()} border-2 transition-all flex flex-col shadow-sm hover:shadow-md ${!isAvailable ? 'opacity-50' : ''}`,
+                className: `p-4 rounded-xl ${getBgGradient()} ${getBorderColor()} border-2 transition-all flex flex-col shadow-md hover:shadow-lg min-h-[180px] ${!isAvailable ? 'opacity-60' : ''}`,
             }, [
-                React.createElement('div', { key: 'header', className: 'flex items-center justify-between mb-2 bg-white bg-opacity-40 p-2 rounded' }, [
-                    React.createElement('div', { key: 'round-label', className: 'text-sm font-extrabold text-gray-700 bg-white px-2 py-1 rounded shadow-sm' },
+                // Top section: Round + Cost in a compact row
+                React.createElement('div', { key: 'header', className: 'flex items-center justify-between mb-3' }, [
+                    React.createElement('span', { key: 'round-label', className: 'text-xs font-bold text-gray-600 bg-white bg-opacity-70 px-2 py-1 rounded-full' },
                         `R${round}`
                     ),
-                    React.createElement('div', { key: 'cost', className: 'text-lg font-extrabold flex items-center gap-1' },
+                    React.createElement('div', { key: 'cost', className: 'text-sm font-bold flex items-center gap-1' },
                         vpCost > 0 ? [
-                            React.createElement('span', { key: 'vp', className: 'text-purple-700' }, `${vpCost}VP`),
-                            React.createElement('span', { key: 'plus', className: 'text-gray-500 text-sm' }, '+'),
-                            React.createElement('span', { key: 'any', className: 'text-gray-700' }, `${anyCost}⭐`)
+                            React.createElement('span', { key: 'vp', className: 'text-purple-600' }, `${vpCost}VP`),
+                            anyCost > 0 && React.createElement('span', { key: 'plus', className: 'text-gray-400' }, '+'),
+                            anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-700' }, `${anyCost}⭐`)
                         ] : [
-                            React.createElement('span', { key: 'color', className: 'text-gray-800' }, `${colorCost}${getColorEmoji()}`),
-                            React.createElement('span', { key: 'plus', className: 'text-gray-500 text-sm' }, '+'),
-                            React.createElement('span', { key: 'any', className: 'text-gray-700' }, `${anyCost}⭐`)
+                            React.createElement('span', { key: 'color', className: 'text-gray-700' }, `${colorCost}${getColorEmoji()}`),
+                            anyCost > 0 && React.createElement('span', { key: 'plus', className: 'text-gray-400' }, '+'),
+                            anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-700' }, `${anyCost}⭐`)
                         ]
                     )
                 ]),
-                React.createElement('div', { key: 'effect', className: `text-base ${color === 'black' ? 'text-gray-100' : 'text-gray-800'} font-normal leading-relaxed mb-3 min-h-[3rem]` },
+                // Effect description - larger and more readable
+                React.createElement('div', {
+                    key: 'effect',
+                    className: `text-sm ${color === 'black' ? 'text-gray-100' : 'text-gray-800'} leading-snug mb-4 flex-grow flex items-center justify-center text-center px-2`
+                },
                     shop.fullEffect
                 ),
+                // Buy button at bottom
                 React.createElement('button', {
                     key: 'btn',
                     onClick: handlePurchase,
-                    className: `text-base py-2 px-4 rounded-lg font-bold transition-all ${!isAvailable ? 'bg-gray-400 cursor-not-allowed text-gray-600 border-2 border-gray-500' : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md hover:shadow-lg transform hover:scale-105'}`,
+                    className: `w-full text-sm py-2 px-3 rounded-lg font-bold transition-all ${!isAvailable ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md'}`,
                     disabled: !isAvailable
                 }, !isAvailable ? '🔒 Closed' : 'Buy')
             ]);
