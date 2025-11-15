@@ -1049,16 +1049,16 @@ function useGame() {
             };
             
             const getCardSize = () => {
-                return compact ? 'p-3 min-h-16' : 'p-4 min-h-28';
+                return compact ? 'p-3 min-h-20' : 'p-4 min-h-32';
             };
 
             const getTextSize = () => {
                 return compact ? {
-                    title: 'text-sm',
+                    title: 'text-xs',
                     desc: 'text-xs'
                 } : {
-                    title: 'text-base',
-                    desc: 'text-sm'
+                    title: 'text-sm',
+                    desc: 'text-xs'
                 };
             };
             
@@ -1068,11 +1068,11 @@ function useGame() {
                 className: `relative ${getCardSize()} border-2 rounded-xl flex flex-col justify-center text-center transition-all duration-200 shadow-sm ${getRoundStyle()} ${getAvailabilityStyle()}`,
                 onClick: handleClick
             }, [
-                React.createElement('div', { key: 'title', className: `font-bold ${textSizes.title} mb-2 ${!available ? 'text-gray-500' : 'text-gray-900'}` }, title),
-                React.createElement('div', { key: 'desc', className: `${textSizes.desc} ${!available ? 'text-gray-400' : 'text-gray-600'} leading-snug` }, description),
+                React.createElement('div', { key: 'title', className: `font-bold ${textSizes.title} mb-1 px-1 ${!available ? 'text-gray-500' : 'text-gray-900'}` }, title),
+                React.createElement('div', { key: 'desc', className: `${textSizes.desc} ${!available ? 'text-gray-400' : 'text-gray-600'} leading-tight px-1` }, description),
                 occupyingPlayer && React.createElement('div', {
                     key: 'worker',
-                    className: `absolute top-2 right-2 flex items-center justify-center text-2xl drop-shadow-md`
+                    className: `absolute top-2 right-2 flex items-center justify-center text-xl drop-shadow-md`
                 }, occupyingPlayer.emoji || occupyingPlayer.id),
                 React.createElement('div', {
                     key: 'round-indicator',
