@@ -1,11 +1,16 @@
 # Quick Deploy Guide
 
-## Option 1: Manual Netlify Update
-1. Make changes to `react-game.html`
-2. Test locally: `open react-game.html`
-3. Go to your Netlify site dashboard
-4. Drag `react-game.html` and `index.html` to redeploy
-5. Share the same URL with friends
+## Production Site
+**Live URL**: https://cornycolonies.netlify.app/
+**Legacy URL**: https://cornycolonies.netlify.app/react-game.html (redirects to root)
+
+## Option 1: Manual Netlify Deploy (Recommended)
+1. Make changes to the code
+2. Test locally: `npm run dev` (opens at http://localhost:5173)
+3. Build: `npm run build`
+4. Go to https://app.netlify.com/sites/cornycolonies/deploys
+5. Drag the entire `dist/` folder to deploy
+6. Share the URL with friends
 
 ## Option 2: GitHub Auto-Deploy
 ```bash

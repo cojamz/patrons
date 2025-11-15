@@ -1,0 +1,2 @@
+# Redirect old react-game.html URL to root
+/react-game.html /  200
