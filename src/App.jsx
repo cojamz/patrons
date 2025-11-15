@@ -69,54 +69,54 @@ import { gameReducer, initialState } from './state/gameReducer.js';
  */
 
 // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyB0c0iUOG3llUzLd9FhQ6Qc1qCB0DoajVw",
-            authDomain: "cornycolonies.firebaseapp.com",
-            databaseURL: "https://cornycolonies-default-rtdb.firebaseio.com",
-            projectId: "cornycolonies",
-            storageBucket: "cornycolonies.firebasestorage.app",
-            messagingSenderId: "566795956627",
-            appId: "1:566795956627:web:585b66a3277696f3b0b866"
-        };
-        
-        // Initialize Firebase (will use demo mode for now)
-        let database = null;
-        try {
-            if (typeof firebase !== 'undefined') {
-                firebase.initializeApp(firebaseConfig);
-                database = firebase.database();
-            }
-        } catch (error) {
-            console.log('Firebase not available, using local mode');
-        }
+const firebaseConfig = {
+    apiKey: "AIzaSyB0c0iUOG3llUzLd9FhQ6Qc1qCB0DoajVw",
+    authDomain: "cornycolonies.firebaseapp.com",
+    databaseURL: "https://cornycolonies-default-rtdb.firebaseio.com",
+    projectId: "cornycolonies",
+    storageBucket: "cornycolonies.firebasestorage.app",
+    messagingSenderId: "566795956627",
+    appId: "1:566795956627:web:585b66a3277696f3b0b866"
+};
 
-        // Game Context
-        const GameContext = createContext();
+// Initialize Firebase (will use demo mode for now)
+let database = null;
+try {
+    if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+    }
+} catch (error) {
+    console.log('Firebase not available, using local mode');
+}
 
-        // PLAYER_EMOJIS now imported from ./data/constants.js
-        
-        // getRandomPlayerEmojis, initialState, and gameReducer now imported from ./state/gameReducer.js
+// Game Context
+const GameContext = createContext();
 
-        function GameProvider({ children }) {
-            const [state, dispatch] = useReducer(gameReducer, initialState);
-            
-            // Store references for debugging
-            if (window.location.search.includes('test=true') || window.location.search.includes('debug=true')) {
-                window.lastKnownState = state;
-                window.lastKnownDispatch = dispatch;
-            }
-            
-            return React.createElement(GameContext.Provider, { value: { state, dispatch } }, children);
-        }
+// PLAYER_EMOJIS now imported from ./data/constants.js
 
-        function useGame() {
-            const context = useContext(GameContext);
-            if (!context) {
-                throw new Error('useGame must be used within a GameProvider');
-            }
-            return context;
-        }
-        
+// getRandomPlayerEmojis, initialState, and gameReducer now imported from ./state/gameReducer.js
+
+function GameProvider({ children }) {
+    const [state, dispatch] = useReducer(gameReducer, initialState);
+
+    // Store references for debugging
+    if (window.location.search.includes('test=true') || window.location.search.includes('debug=true')) {
+        window.lastKnownState = state;
+        window.lastKnownDispatch = dispatch;
+    }
+
+    return React.createElement(GameContext.Provider, { value: { state, dispatch } }, children);
+}
+
+function useGame() {
+    const context = useContext(GameContext);
+    if (!context) {
+        throw new Error('useGame must be used within a GameProvider');
+    }
+    return context;
+}
+
         // Multiplayer Functions
         function generateRoomCode() {
             return Math.random().toString(36).substring(2, 8).toUpperCase();
