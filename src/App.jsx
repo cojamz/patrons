@@ -1065,19 +1065,29 @@ function useGame() {
             const textSizes = getTextSize();
             
             return React.createElement('div', {
-                className: `relative ${getCardSize()} border-2 rounded-xl flex flex-col justify-center text-center transition-all duration-200 shadow-sm ${getRoundStyle()} ${getAvailabilityStyle()}`,
+                className: `relative border-2 rounded-lg flex flex-col p-3 min-h-[120px] transition-all duration-200 shadow-md ${getRoundStyle()} ${getAvailabilityStyle()}`,
                 onClick: handleClick
             }, [
-                React.createElement('div', { key: 'title', className: `font-bold ${textSizes.title} mb-1 px-1 ${!available ? 'text-gray-500' : 'text-gray-900'}` }, title),
-                React.createElement('div', { key: 'desc', className: `${textSizes.desc} ${!available ? 'text-gray-400' : 'text-gray-600'} leading-tight px-1` }, description),
-                occupyingPlayer && React.createElement('div', {
-                    key: 'worker',
-                    className: `absolute top-2 right-2 flex items-center justify-center text-xl drop-shadow-md`
-                }, occupyingPlayer.emoji || occupyingPlayer.id),
+                // Round indicator badge
                 React.createElement('div', {
                     key: 'round-indicator',
                     className: getRoundIndicator()
-                }, `R${round}`)
+                }, `R${round}`),
+                // Worker if occupied
+                occupyingPlayer && React.createElement('div', {
+                    key: 'worker',
+                    className: `absolute top-2 right-2 text-3xl drop-shadow-lg`
+                }, occupyingPlayer.emoji || occupyingPlayer.id),
+                // Title
+                React.createElement('div', {
+                    key: 'title',
+                    className: `font-bold text-sm mb-2 px-6 text-center ${!available ? 'text-gray-500' : 'text-gray-900'}`
+                }, title),
+                // Description
+                React.createElement('div', {
+                    key: 'desc',
+                    className: `text-xs text-center px-2 ${!available ? 'text-gray-400' : 'text-gray-600'} leading-tight`
+                }, description)
             ]);
         }
 
@@ -6935,39 +6945,40 @@ function useGame() {
             };
             
             return React.createElement('div', {
-                className: `p-4 rounded-xl ${getBgGradient()} ${getBorderColor()} border-2 transition-all flex flex-col shadow-md hover:shadow-lg min-h-[180px] ${!isAvailable ? 'opacity-60' : ''}`,
+                className: `relative rounded-lg ${getBgGradient()} ${getBorderColor()} border-2 transition-all flex flex-col shadow-md hover:shadow-lg overflow-hidden ${!isAvailable ? 'opacity-60' : ''}`,
             }, [
-                // Top section: Round + Cost in a compact row
-                React.createElement('div', { key: 'header', className: 'flex items-center justify-between mb-3' }, [
-                    React.createElement('span', { key: 'round-label', className: 'text-xs font-bold text-gray-600 bg-white bg-opacity-70 px-2 py-1 rounded-full' },
-                        `R${round}`
+                // Header bar with round and cost
+                React.createElement('div', {
+                    key: 'header',
+                    className: 'bg-white bg-opacity-50 px-3 py-2 flex items-center justify-between border-b-2 ' + getBorderColor()
+                }, [
+                    React.createElement('span', { key: 'round-label', className: 'text-xs font-bold text-gray-700' },
+                        `Round ${round}`
                     ),
-                    React.createElement('div', { key: 'cost', className: 'text-sm font-bold flex items-center gap-1' },
+                    React.createElement('div', { key: 'cost', className: 'text-base font-extrabold flex items-center gap-1' },
                         vpCost > 0 ? [
-                            React.createElement('span', { key: 'vp', className: 'text-purple-600' }, `${vpCost}VP`),
-                            anyCost > 0 && React.createElement('span', { key: 'plus', className: 'text-gray-400' }, '+'),
-                            anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-700' }, `${anyCost}⭐`)
+                            React.createElement('span', { key: 'vp', className: 'text-purple-700' }, `${vpCost}VP`),
+                            anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-600' }, ` + ${anyCost}⭐`)
                         ] : [
-                            React.createElement('span', { key: 'color', className: 'text-gray-700' }, `${colorCost}${getColorEmoji()}`),
-                            anyCost > 0 && React.createElement('span', { key: 'plus', className: 'text-gray-400' }, '+'),
-                            anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-700' }, `${anyCost}⭐`)
+                            React.createElement('span', { key: 'color' }, `${colorCost}${getColorEmoji()}`),
+                            anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-600' }, ` + ${anyCost}⭐`)
                         ]
                     )
                 ]),
-                // Effect description - larger and more readable
+                // Effect description
                 React.createElement('div', {
                     key: 'effect',
-                    className: `text-sm ${color === 'black' ? 'text-gray-100' : 'text-gray-800'} leading-snug mb-4 flex-grow flex items-center justify-center text-center px-2`
+                    className: `p-4 text-base font-medium ${color === 'black' ? 'text-white' : 'text-gray-900'} leading-relaxed text-center min-h-[100px] flex items-center justify-center`
                 },
                     shop.fullEffect
                 ),
-                // Buy button at bottom
+                // Buy button
                 React.createElement('button', {
                     key: 'btn',
                     onClick: handlePurchase,
-                    className: `w-full text-sm py-2 px-3 rounded-lg font-bold transition-all ${!isAvailable ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow-md'}`,
+                    className: `py-3 text-base font-bold transition-all ${!isAvailable ? 'bg-gray-400 cursor-not-allowed text-gray-600' : 'bg-gradient-to-b from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'}`,
                     disabled: !isAvailable
-                }, !isAvailable ? '🔒 Closed' : 'Buy')
+                }, !isAvailable ? '🔒 CLOSED' : 'BUY')
             ]);
         }
         
