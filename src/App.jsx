@@ -6692,51 +6692,40 @@ function useGame() {
         // Compact Shop Component
         function CompactShop({ color, round, label, currentRound }) {
             const { state, dispatch } = useGame();
-            
-            const shopData = {
-                red: {
-                    1: { cost: { red: 1, any: 2 }, effect: 'Repeat action', fullEffect: 'Repeat a worker\'s action' },
-                    2: { cost: { red: 2, any: 2 }, effect: 'Place next', fullEffect: 'Place the next player\'s worker' },
-                    3: { cost: { red: 3, any: 3 }, effect: 'Repeat all', fullEffect: 'Repeat all actions taken this round by any player' }
-                },
-                yellow: {
-                    1: { cost: { yellow: 1, any: 1 }, effect: 'Double gain', fullEffect: 'Double your next gain (action or shop)' },
-                    2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 5⭐', fullEffect: 'Gain 5 resources (any colors)' },
-                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 7⭐', fullEffect: 'Gain 7 resources (any colors)' }
-                },
-                blue: {
-                    1: { cost: { blue: 1, any: 1 }, effect: 'Toggle shop', fullEffect: 'Toggle any shop (open/closed)' },
-                    2: { cost: { blue: 2, any: 2 }, effect: 'Toggle all', fullEffect: 'Toggle the status of all shops (open/closed)' },
-                    3: { cost: { blue: 3, any: 3 }, effect: '⭐ benefit', fullEffect: 'Gain any shop benefit (even if closed)' }
-                },
-                purple: {
-                    1: { cost: { purple: 1, any: 2 }, effect: 'Extra turn', fullEffect: 'Take an extra turn after this one' },
-                    2: { cost: { purple: 2, any: 2 }, effect: 'Play 2 more', fullEffect: 'Play 2 more workers this turn' },
-                    3: { cost: { purple: 3, any: 3 }, effect: 'Play all', fullEffect: 'Play the rest of your workers' },
-                },
-                gold: {
-                    1: { cost: { gold: 1, any: 1 }, effect: '= 2 Gold', fullEffect: '1 Gold + 1 ⭐ = 2 Gold' },
-                    2: { cost: { gold: 2, any: 2 }, effect: '= 4 Gold', fullEffect: '2 Gold + 2 ⭐ = 4 Gold' },
-                    3: { cost: { gold: 3, any: 3 }, effect: 'Double Gold', fullEffect: '3 Gold + 3 ⭐ = Double Your Gold' }
-                },
-                white: {
-                    1: { cost: { vp: 1 }, effect: 'Lose 1VP → 1⭐', fullEffect: 'Lose 1 VP, Gain 1 resource (any color)' },
-                    2: { cost: { vp: 3 }, effect: 'Lose 3VP → Skip', fullEffect: 'Lose 3 VP, Skip next player\'s turn' },
-                    3: { cost: { vp: 4 }, effect: 'Lose 4VP → Move', fullEffect: 'Lose 4 VP, Move worker to unclaimed action' }
-                },
-                black: {
-                    1: { cost: { black: 1, any: 1 }, effect: 'Steal 1 VP', fullEffect: 'Steal 1 VP from another player' },
-                    2: { cost: { black: 2, any: 2 }, effect: 'Steal 3 VP', fullEffect: 'Steal 3 VP from another player' },
-                    3: { cost: { black: 3, any: 3 }, effect: 'Steal 5 VP', fullEffect: 'Steal 5 VP from another player' }
-                },
-                silver: {
-                    1: { cost: { silver: 1, any: 1 }, effect: '+2 VP', fullEffect: 'Gain 2 VP' },
-                    2: { cost: { silver: 2, any: 2 }, effect: '+4 VP each', fullEffect: 'You and one other player each gain 4 VP' },
-                    3: { cost: { silver: 3, any: 3 }, effect: '+7 Silver', fullEffect: 'Gain 7 Silver, all others gain 2 Silver' }
+
+            // Use imported shopData and shopCosts
+            const shopDescription = shopData[color][round];
+            const costString = shopCosts[color][round];
+
+            // Parse cost string to get cost object
+            const parseCost = (costStr) => {
+                const cost = {};
+                if (costStr.includes('VP')) {
+                    const vpMatch = costStr.match(/(\d+)VP/);
+                    if (vpMatch) cost.vp = parseInt(vpMatch[1]);
+                } else {
+                    const parts = costStr.split('+');
+                    parts.forEach(part => {
+                        const match = part.match(/(\d+)([🔴🟡🔵🟣🟨⚪⚫🩶⭐])/);
+                        if (match) {
+                            const num = parseInt(match[1]);
+                            const emoji = match[2];
+                            if (emoji === '⭐') cost.any = num;
+                            else if (emoji === '🔴') cost.red = num;
+                            else if (emoji === '🟡') cost.yellow = num;
+                            else if (emoji === '🔵') cost.blue = num;
+                            else if (emoji === '🟣') cost.purple = num;
+                            else if (emoji === '🟨') cost.gold = num;
+                            else if (emoji === '⚪') cost.white = num;
+                            else if (emoji === '⚫') cost.black = num;
+                            else if (emoji === '🩶') cost.silver = num;
+                        }
+                    });
                 }
+                return cost;
             };
-            
-            const shop = shopData[color][round];
+
+            const shop = { cost: parseCost(costString), fullEffect: shopDescription };
             const shopId = `${color}${round}`;
             const isClosed = state.closedShops[shopId];
             
