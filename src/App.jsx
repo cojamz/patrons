@@ -1032,14 +1032,14 @@ function useGame() {
             };
             
             const getAvailabilityStyle = () => {
-                if (!available) return 'opacity-40 cursor-not-allowed';
+                if (!available) return 'opacity-50 cursor-not-allowed bg-gray-300 border-gray-400';
                 if (isOccupied) return 'bg-red-100 border-red-400 cursor-not-allowed';
                 if (isPending) return 'bg-yellow-100 border-yellow-400 cursor-wait animate-pulse';
-                return 'hover:bg-blue-50 hover:border-blue-400 cursor-pointer transform hover:scale-105';
+                return 'hover:bg-blue-50 hover:border-blue-500 hover:shadow-lg cursor-pointer transform hover:scale-102 border-blue-300';
             };
             
             const getRoundIndicator = () => {
-                const baseStyle = "absolute top-1 left-1 px-2 py-1 rounded-full text-xs font-bold text-white";
+                const baseStyle = "absolute top-1 left-1 px-3 py-1 rounded-full text-sm font-bold text-white shadow-md";
                 switch (round) {
                     case 1: return `${baseStyle} bg-gray-500`;
                     case 2: return `${baseStyle} bg-green-500`;
@@ -1049,7 +1049,7 @@ function useGame() {
             };
             
             const getCardSize = () => {
-                return compact ? 'p-2 min-h-14' : 'p-3 min-h-20';
+                return compact ? 'p-2 min-h-14' : 'p-4 min-h-24';
             };
             
             const getTextSize = () => {
@@ -1057,8 +1057,8 @@ function useGame() {
                     title: 'text-xs',
                     desc: 'text-xs'
                 } : {
-                    title: 'text-sm',
-                    desc: 'text-xs'
+                    title: 'text-lg',
+                    desc: 'text-base'
                 };
             };
             
@@ -1069,14 +1069,14 @@ function useGame() {
                 onClick: handleClick
             }, [
                 React.createElement('div', { key: 'title', className: `font-bold ${textSizes.title} mb-1 ${!available ? 'text-gray-500' : ''}` }, title),
-                React.createElement('div', { key: 'desc', className: `${textSizes.desc} ${!available ? 'text-gray-400' : 'text-gray-600'} leading-tight` }, description),
+                React.createElement('div', { key: 'desc', className: `${textSizes.desc} ${!available ? 'text-gray-400' : 'text-gray-600'} leading-relaxed` }, description),
                 occupyingPlayer && React.createElement('div', {
                     key: 'worker',
-                    className: `absolute top-1 right-1 flex items-center justify-center text-2xl`
+                    className: `absolute top-1 right-1 flex items-center justify-center text-3xl`
                 }, occupyingPlayer.emoji || occupyingPlayer.id),
-                React.createElement('div', { 
-                    key: 'round-indicator', 
-                    className: getRoundIndicator() 
+                React.createElement('div', {
+                    key: 'round-indicator',
+                    className: getRoundIndicator()
                 }, `R${round}`)
             ]);
         }
