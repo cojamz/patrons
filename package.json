@@ -1,0 +1,43 @@
+{
+  "name": "patrons",
+  "version": "1.0.0",
+  "description": "Patrons is a fully functional, single HTML file worker placement board game that runs entirely in your browser. Yes, you read that right - the entire game, including React, game logic, multiplayer support, and UI, is contained in one impressive 8000-line HTML file!",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "firebase": "^12.6.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@babel/standalone": "^7.28.5",
+    "@tailwindcss/postcss": "^4.1.17",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.22",
+    "jsdom": "^27.2.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.17",
+    "vite": "^5.0.8",
+    "vitest": "^4.0.9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://cojamz@github.com/cojamz/patrons.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cojamz/patrons/issues"
+  },
+  "homepage": "https://github.com/cojamz/patrons#readme"
+}
