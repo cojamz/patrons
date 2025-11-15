@@ -6948,31 +6948,31 @@ function useGame() {
             return React.createElement('div', {
                 className: `p-3 rounded-lg ${getBgGradient()} ${getBorderColor()} border-2 transition-all flex flex-col shadow-sm hover:shadow-md ${!isAvailable ? 'opacity-50' : ''}`,
             }, [
-                React.createElement('div', { key: 'header', className: 'flex items-center justify-between mb-2' }, [
-                    React.createElement('div', { key: 'round-label', className: 'text-sm font-bold text-gray-600' },
+                React.createElement('div', { key: 'header', className: 'flex items-center justify-between mb-2 bg-white bg-opacity-40 p-2 rounded' }, [
+                    React.createElement('div', { key: 'round-label', className: 'text-sm font-extrabold text-gray-700 bg-white px-2 py-1 rounded shadow-sm' },
                         `R${round}`
                     ),
-                    React.createElement('div', { key: 'cost', className: 'text-sm font-bold flex items-center gap-1' },
+                    React.createElement('div', { key: 'cost', className: 'text-lg font-extrabold flex items-center gap-1' },
                         vpCost > 0 ? [
-                            React.createElement('span', { key: 'vp', className: 'text-purple-600' }, `${vpCost}VP`),
-                            React.createElement('span', { key: 'plus' }, '+'),
-                            React.createElement('span', { key: 'any' }, `${anyCost}⭐`)
+                            React.createElement('span', { key: 'vp', className: 'text-purple-700' }, `${vpCost}VP`),
+                            React.createElement('span', { key: 'plus', className: 'text-gray-500 text-sm' }, '+'),
+                            React.createElement('span', { key: 'any', className: 'text-gray-700' }, `${anyCost}⭐`)
                         ] : [
-                            React.createElement('span', { key: 'color' }, `${colorCost}${getColorEmoji()}`),
-                            React.createElement('span', { key: 'plus' }, '+'),
-                            React.createElement('span', { key: 'any' }, `${anyCost}⭐`)
+                            React.createElement('span', { key: 'color', className: 'text-gray-800' }, `${colorCost}${getColorEmoji()}`),
+                            React.createElement('span', { key: 'plus', className: 'text-gray-500 text-sm' }, '+'),
+                            React.createElement('span', { key: 'any', className: 'text-gray-700' }, `${anyCost}⭐`)
                         ]
                     )
                 ]),
-                React.createElement('div', { key: 'effect', className: `text-base ${color === 'black' ? 'text-gray-200' : 'text-gray-700'} font-medium leading-relaxed mb-3 min-h-[3rem]` },
+                React.createElement('div', { key: 'effect', className: `text-base ${color === 'black' ? 'text-gray-100' : 'text-gray-800'} font-normal leading-relaxed mb-3 min-h-[3rem]` },
                     shop.fullEffect
                 ),
                 React.createElement('button', {
                     key: 'btn',
                     onClick: handlePurchase,
-                    className: `text-sm py-2 px-3 rounded font-semibold transition-all ${!isAvailable ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-white hover:bg-opacity-90 text-gray-800 shadow-sm hover:shadow'}`,
+                    className: `text-base py-2 px-4 rounded-lg font-bold transition-all ${!isAvailable ? 'bg-gray-400 cursor-not-allowed text-gray-600 border-2 border-gray-500' : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md hover:shadow-lg transform hover:scale-105'}`,
                     disabled: !isAvailable
-                }, 'Buy')
+                }, !isAvailable ? '🔒 Closed' : 'Buy')
             ]);
         }
         

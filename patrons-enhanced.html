@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patrons - Enhanced Edition</title>
+    
+    <!-- External Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <!-- Animate.css for easy animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        /* ===== CSS VARIABLES FOR THEMING ===== */
+        :root {
+            /* Resource Colors */
+            --color-red: #DC2626;
+            --color-red-light: #FEF2F2;
+            --color-red-dark: #991B1B;
+            
+            --color-yellow: #F59E0B;
+            --color-yellow-light: #FFFBEB;
+            --color-yellow-dark: #B45309;
+            
+            --color-blue: #3B82F6;
+            --color-blue-light: #EFF6FF;
+            --color-blue-dark: #1E40AF;
+            
+            --color-purple: #8B5CF6;
+            --color-purple-light: #F5F3FF;
+            --color-purple-dark: #6D28D9;
+            
+            --color-gold: #EAB308;
+            --color-white: #F3F4F6;
+            --color-black: #1F2937;
+            --color-silver: #9CA3AF;
+            
+            /* UI Colors */
+            --bg-primary: #0F172A;
+            --bg-secondary: #1E293B;
+            --bg-card: #334155;
+            --text-primary: #F8FAFC;
+            --text-secondary: #CBD5E1;
+            
+            /* Animations */
+            --transition-fast: 150ms;
+            --transition-normal: 300ms;
+            --transition-slow: 500ms;
+        }
+        
+        /* ===== GLOBAL STYLES ===== */
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        /* ===== GLASS MORPHISM EFFECT ===== */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* ===== RESOURCE GEMS ===== */
+        .resource-gem {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all var(--transition-fast) ease;
+            cursor: pointer;
+        }
+        
+        .resource-gem::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+        
+        .resource-gem:hover::before {
+            opacity: 1;
+        }
+        
+        .resource-gem:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        
+        /* Resource-specific styles */
+        .resource-red { background: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 100%); }
+        .resource-yellow { background: linear-gradient(135deg, var(--color-yellow) 0%, var(--color-yellow-dark) 100%); }
+        .resource-blue { background: linear-gradient(135deg, var(--color-blue) 0%, var(--color-blue-dark) 100%); }
+        .resource-purple { background: linear-gradient(135deg, var(--color-purple) 0%, var(--color-purple-dark) 100%); }
+        .resource-gold { 
+            background: linear-gradient(135deg, var(--color-gold) 0%, #A16207 100%);
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.5);
+        }
+        .resource-white { 
+            background: linear-gradient(135deg, #FFFFFF 0%, var(--color-white) 100%);
+            color: var(--color-black);
+        }
+        .resource-black { 
+            background: linear-gradient(135deg, var(--color-black) 0%, #000000 100%);
+            box-shadow: inset 0 0 20px rgba(138,43,226,0.3);
+        }
+        .resource-silver { 
+            background: linear-gradient(135deg, var(--color-silver) 0%, #6B7280 100%);
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.3);
+        }
+        
+        /* ===== ACTION SPACES ===== */
+        .action-space {
+            position: relative;
+            min-height: 120px;
+            transition: all var(--transition-normal) ease;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        .action-space::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.1) 100%);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+        
+        .action-space:not(.occupied):hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .action-space:not(.occupied):hover::before {
+            opacity: 1;
+        }
+        
+        .action-space.occupied {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        /* ===== PLAYER CARDS ===== */
+        .player-card {
+            transition: all var(--transition-normal) ease;
+        }
+        
+        .player-card.current-player {
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        /* ===== SHOPS ===== */
+        .shop-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            transition: all var(--transition-normal) ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .shop-card::before {
+            content: '🏪';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-size: 60px;
+            opacity: 0.1;
+            transform: rotate(-15deg);
+        }
+        
+        .shop-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        /* ===== ANIMATIONS ===== */
+        .place-worker-animation {
+            animation: placeWorker 0.5s ease-out;
+        }
+        
+        @keyframes placeWorker {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+            }
+            100% {
+                transform: scale(1) rotate(360deg);
+                opacity: 1;
+            }
+        }
+        
+        .gain-resource-animation {
+            animation: gainResource 0.6s ease-out;
+        }
+        
+        @keyframes gainResource {
+            0% {
+                transform: translateY(20px) scale(0.8);
+                opacity: 0;
+            }
+            50% {
+                transform: translateY(-10px) scale(1.1);
+            }
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+        
+        /* ===== MODAL STYLES ===== */
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .modal-content {
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        /* ===== CUSTOM SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 6px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-card);
+            border-radius: 6px;
+            border: 2px solid var(--bg-secondary);
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 768px) {
+            .action-space {
+                min-height: 80px;
+            }
+            
+            .resource-gem {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script>
+        'use strict';
+        
+        // ===== FIREBASE CONFIG =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyDKOZRqHh6ziqfL6jkQBX-qJcSaqUWL_fY",
+            authDomain: "patrons-cce86.firebaseapp.com",
+            databaseURL: "https://patrons-cce86-default-rtdb.firebaseio.com",
+            projectId: "patrons-cce86",
+            storageBucket: "patrons-cce86.appspot.com",
+            messagingSenderId: "762027664905",
+            appId: "1:762027664905:web:5fde7268b8fba953b32450"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // ===== REACT SETUP =====
+        const { useState, useEffect, useReducer, useContext, createContext, useRef, useCallback, useMemo } = React;
+        
+        // ===== GAME CONSTANTS =====
+        const GAME_CONFIG = {
+            ROUNDS: 3,
+            STARTING_WORKERS: [4, 5, 6], // Workers per round
+            RESOURCE_TYPES: ['red', 'yellow', 'blue', 'purple', 'gold', 'white', 'black', 'silver'],
+            MAX_PLAYERS: 4,
+            RECURSION_DEPTH_LIMIT: 5
+        };
+        
+        // ===== ENHANCED UI COMPONENTS =====
+        
+        // Beautiful Resource Gem Component
+        function ResourceGem({ color, amount, size = 'normal', onClick, animate = false }) {
+            const sizeClasses = {
+                small: 'w-10 h-10 text-xs',
+                normal: 'w-12 h-12 text-sm',
+                large: 'w-16 h-16 text-base'
+            };
+            
+            const gemEmojis = {
+                red: '🔴',
+                yellow: '🟡',
+                blue: '🔵',
+                purple: '🟣',
+                gold: '🟨',
+                white: '⚪',
+                black: '⚫',
+                silver: '🩶'
+            };
+            
+            return React.createElement('div', {
+                className: `resource-gem resource-${color} ${sizeClasses[size]} flex flex-col items-center justify-center text-white font-bold shadow-lg ${animate ? 'gain-resource-animation' : ''}`,
+                onClick: onClick
+            }, [
+                React.createElement('div', { key: 'emoji', className: 'text-lg' }, gemEmojis[color]),
+                React.createElement('div', { key: 'amount', className: 'text-xs' }, amount)
+            ]);
+        }
+        
+        // TO BE CONTINUED...
+        // This is just the beginning of the enhanced version
+        // We'll build on the existing game logic but with:
+        // 1. Better component structure
+        // 2. Smooth animations
+        // 3. Beautiful glass morphism UI
+        // 4. Improved state management
+        // 5. Better error handling
+    </script>
+</body>
+</html>
