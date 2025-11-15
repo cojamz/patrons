@@ -1065,7 +1065,7 @@ function useGame() {
             const textSizes = getTextSize();
             
             return React.createElement('div', {
-                className: `relative border-2 rounded-lg flex flex-col p-3 min-h-[120px] transition-all duration-200 shadow-md ${getRoundStyle()} ${getAvailabilityStyle()}`,
+                className: `relative border-2 rounded-lg flex flex-col p-4 min-h-[130px] transition-all duration-200 shadow-md ${getRoundStyle()} ${getAvailabilityStyle()}`,
                 onClick: handleClick
             }, [
                 // Round indicator badge
@@ -1081,12 +1081,12 @@ function useGame() {
                 // Title
                 React.createElement('div', {
                     key: 'title',
-                    className: `font-bold text-sm mb-2 px-6 text-center ${!available ? 'text-gray-500' : 'text-gray-900'}`
+                    className: `font-bold text-base mb-2 px-8 text-center ${!available ? 'text-gray-500' : 'text-gray-900'}`
                 }, title),
                 // Description
                 React.createElement('div', {
                     key: 'desc',
-                    className: `text-xs text-center px-2 ${!available ? 'text-gray-400' : 'text-gray-600'} leading-tight`
+                    className: `text-sm text-center px-3 ${!available ? 'text-gray-400' : 'text-gray-600'} leading-snug`
                 }, description)
             ]);
         }
@@ -6143,7 +6143,7 @@ function useGame() {
                 // Shops Section - Compact horizontal layout
                 React.createElement('div', { key: 'shops', className: 'mb-4 bg-white bg-opacity-10 rounded-lg p-4' }, [
                     React.createElement('div', { key: 'shop-header', className: 'text-base font-semibold text-gray-700 mb-2' }, '🏪 Shops'),
-                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-3' }, [
+                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-2 gap-4' }, [
                         React.createElement(CompactShop, { key: 'shop-r1', color, round: 1, label: 'R1', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r2', color, round: 2, label: 'R2', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r3', color, round: 3, label: 'R3', currentRound: round }),
@@ -6950,12 +6950,12 @@ function useGame() {
                 // Header bar with round and cost
                 React.createElement('div', {
                     key: 'header',
-                    className: 'bg-white bg-opacity-50 px-3 py-2 flex items-center justify-between border-b-2 ' + getBorderColor()
+                    className: 'bg-white bg-opacity-50 px-4 py-2 flex items-center justify-between border-b-2 ' + getBorderColor()
                 }, [
-                    React.createElement('span', { key: 'round-label', className: 'text-xs font-bold text-gray-700' },
+                    React.createElement('span', { key: 'round-label', className: 'text-sm font-bold text-gray-700' },
                         `Round ${round}`
                     ),
-                    React.createElement('div', { key: 'cost', className: 'text-base font-extrabold flex items-center gap-1' },
+                    React.createElement('div', { key: 'cost', className: 'text-lg font-extrabold flex items-center gap-1' },
                         vpCost > 0 ? [
                             React.createElement('span', { key: 'vp', className: 'text-purple-700' }, `${vpCost}VP`),
                             anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-600' }, ` + ${anyCost}⭐`)
@@ -6968,7 +6968,7 @@ function useGame() {
                 // Effect description
                 React.createElement('div', {
                     key: 'effect',
-                    className: `p-4 text-base font-medium ${color === 'black' ? 'text-white' : 'text-gray-900'} leading-relaxed text-center min-h-[100px] flex items-center justify-center`
+                    className: `p-5 text-lg font-medium ${color === 'black' ? 'text-white' : 'text-gray-900'} leading-relaxed text-center min-h-[110px] flex items-center justify-center`
                 },
                     shop.fullEffect
                 ),
@@ -6976,7 +6976,7 @@ function useGame() {
                 React.createElement('button', {
                     key: 'btn',
                     onClick: handlePurchase,
-                    className: `py-3 text-base font-bold transition-all ${!isAvailable ? 'bg-gray-400 cursor-not-allowed text-gray-600' : 'bg-gradient-to-b from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'}`,
+                    className: `py-3 text-lg font-bold transition-all ${!isAvailable ? 'bg-gray-400 cursor-not-allowed text-gray-600' : 'bg-gradient-to-b from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'}`,
                     disabled: !isAvailable
                 }, !isAvailable ? '🔒 CLOSED' : 'BUY')
             ]);
