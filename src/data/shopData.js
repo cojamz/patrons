@@ -2,44 +2,44 @@
 
 export const shopData = {
     red: {
-        1: 'Repeat a worker\'s action',
-        2: 'Place the next player\'s worker',
-        3: 'Repeat all actions taken this round'
+        1: 'Repeat one of your worker\'s actions',
+        2: 'Place the next player\'s worker for them',
+        3: 'Repeat all actions you took this round'
     },
     yellow: {
-        1: 'Double your next gain action',
-        2: 'Gain 5⭐',
-        3: 'Gain 7⭐'
+        1: 'Double your next resource gain',
+        2: 'Gain 5 resources (any colors)',
+        3: 'Gain 7 resources (any colors)'
     },
     blue: {
-        1: 'Toggle any shop (open/closed)',
-        2: 'Toggle all shop statuses',
-        3: 'Gain any shop benefit'
+        1: 'Open or close any one shop',
+        2: 'Flip all shops (open ↔ closed)',
+        3: 'Use any shop benefit for free'
     },
     purple: {
-        1: 'Take an extra turn',
-        2: 'Play 2 more workers this turn',
-        3: 'Play all remaining workers'
+        1: 'Take an extra turn after this one',
+        2: 'Place 2 more workers this turn',
+        3: 'Place all your remaining workers now'
     },
     gold: {
-        1: '1 Gold + 1 Any = 2 Gold',
-        2: '2 Gold + 2 Any = 4 Gold',
-        3: '3 Gold + 3 Any = Double Your Gold'
+        1: 'Trade: 1 Gold + 1 Any → 2 Gold',
+        2: 'Trade: 2 Gold + 2 Any → 4 Gold',
+        3: 'Trade: 3 Gold + 3 Any → Double your Gold'
     },
     white: {
-        1: 'Lose 1 VP, Gain 1 ⭐',
-        2: 'Lose 3 VP, Skip next player\'s turn',
-        3: 'Lose 5 VP, Move worker to action'
+        1: 'Lose 1 VP, gain 1 resource (any color)',
+        2: 'Lose 3 VP, next player skips their turn',
+        3: 'Lose 5 VP, move one worker to any action'
     },
     black: {
-        1: 'Steal 1 VP from another player',
-        2: 'Steal 3 VP from another player',
-        3: 'Steal 5 VP from another player'
+        1: 'Steal 1 VP from any player',
+        2: 'Steal 3 VP from any player',
+        3: 'Steal 5 VP from any player'
     },
     silver: {
         1: 'Gain 2 VP',
-        2: 'Gain 4 VP, Pick Another Player to Gain 4 VP',
-        3: 'Gain 7 Silver, Each Other Player Gains 2 Silver'
+        2: 'You and another player each gain 4 VP',
+        3: 'Gain 7 Silver, all others gain 2 Silver'
     }
 };
 

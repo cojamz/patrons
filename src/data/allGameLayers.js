@@ -18,13 +18,13 @@ export const allGameLayers = {
         title: "Resource Manipulation",
         icon: "🟡",
         actions: [
-            { id: 'gain3yellow', title: 'Gain 3 ⭐', description: '', round: 1 },
-            { id: 'gain2yellow', title: 'Gain 2 ⭐', description: '', round: 1 },
-            { id: 'steal2Gems', title: 'Trade All ⭐ for ⭐', description: '', round: 1 },
-            { id: 'yellowHybrid1', title: 'Gain 2 ⭐', description: '', round: 1 },
-            { id: 'steal3Gems', title: 'Steal 3 Resources', description: '', round: 2 },
-            { id: 'yellowHybrid2', title: '+1 🟡 + Double Next Gain', description: '(Doesn\'t stack with shop)', round: 2 },
-            { id: 'yellowSwapResources', title: 'Swap All Resources', description: '(Choose ⭐ player)', round: 3 }
+            { id: 'gain3yellow', title: 'Gain 3 resources', description: '(any colors)', round: 1 },
+            { id: 'gain2yellow', title: 'Gain 2 resources', description: '(any colors)', round: 1 },
+            { id: 'steal2Gems', title: 'Trade all resources for new ones', description: '(keep same total count)', round: 1 },
+            { id: 'yellowHybrid1', title: 'Gain 2 resources', description: '(any colors)', round: 1 },
+            { id: 'steal3Gems', title: 'Steal 3 resources from a player', description: '(any colors)', round: 2 },
+            { id: 'yellowHybrid2', title: '+1 🟡 + Double your next gain', description: '(doesn\'t stack with shop)', round: 2 },
+            { id: 'yellowSwapResources', title: 'Swap all your resources with another player', description: '', round: 3 }
         ]
     },
     blue: {
@@ -58,12 +58,12 @@ export const allGameLayers = {
         icon: "🟨",
         actions: [
             { id: 'gain2gold', title: 'Gain 2 Gold', description: '', round: 1 },
-            { id: 'convert2AnyTo2Gold', title: 'Turn 2 ⭐ to 2 Gold', description: '', round: 1 },
+            { id: 'convert2AnyTo2Gold', title: 'Trade: 2 resources → 2 Gold', description: '(any colors)', round: 1 },
             { id: 'gain1gold', title: 'Gain 1 Gold', description: '', round: 1 },
-            { id: 'convert1AnyTo1Gold', title: 'Turn 1 ⭐ to 1 Gold', description: '', round: 1 },
-            { id: 'gain3goldSkip', title: 'Gain 3 Gold, Skip Next Turn', description: '', round: 2 },
-            { id: 'convert3AnyTo3Gold', title: 'Turn 3 ⭐ to 3 Gold', description: '', round: 2 },
-            { id: 'goldVPPerGold', title: 'Gain VP for Each Gold You Have', description: '', round: 3 }
+            { id: 'convert1AnyTo1Gold', title: 'Trade: 1 resource → 1 Gold', description: '(any color)', round: 1 },
+            { id: 'gain3goldSkip', title: 'Gain 3 Gold, skip your next turn', description: '', round: 2 },
+            { id: 'convert3AnyTo3Gold', title: 'Trade: 3 resources → 3 Gold', description: '(any colors)', round: 2 },
+            { id: 'goldVPPerGold', title: 'Gain 1 VP for each Gold you have', description: '', round: 3 }
         ]
     },
     white: {
@@ -72,11 +72,11 @@ export const allGameLayers = {
         actions: [
             { id: 'gain3vp', title: 'Gain 3 VP', description: '', round: 1 },
             { id: 'gain2vp', title: 'Gain 2 VP', description: '', round: 1 },
-            { id: 'spend1AnyFor2VP', title: 'Spend 1 ⭐ for 2 VP', description: '', round: 1 },
-            { id: 'spend2AnyFor3VP', title: 'Spend 2 ⭐ for 3 VP', description: '', round: 1 },
-            { id: 'lose1VPGain2Any', title: 'Lose 1 VP, Gain 2 ⭐', description: '', round: 2 },
-            { id: 'lose2VPGain4Any', title: 'Lose 2 VP, Gain 4 ⭐', description: '', round: 2 },
-            { id: 'gain5VPAnd5Any', title: 'Gain 5 VP and 5 ⭐', description: '', round: 3 }
+            { id: 'spend1AnyFor2VP', title: 'Trade: 1 resource → 2 VP', description: '(any color)', round: 1 },
+            { id: 'spend2AnyFor3VP', title: 'Trade: 2 resources → 3 VP', description: '(any colors)', round: 1 },
+            { id: 'lose1VPGain2Any', title: 'Lose 1 VP, gain 2 resources', description: '(any colors)', round: 2 },
+            { id: 'lose2VPGain4Any', title: 'Lose 2 VP, gain 4 resources', description: '(any colors)', round: 2 },
+            { id: 'gain5VPAnd5Any', title: 'Gain 5 VP and 5 resources', description: '(any colors)', round: 3 }
         ]
     },
     black: {
@@ -85,24 +85,24 @@ export const allGameLayers = {
         actions: [
             { id: 'gain3black', title: 'Gain 3 ⚫', description: '', round: 1 },
             { id: 'gain2black', title: 'Gain 2 ⚫', description: '', round: 1 },
-            { id: 'blackSteal1VP', title: '+1 ⚫, Steal 1 VP', description: '(From another player)', round: 1 },
-            { id: 'blackSteal2Any', title: 'Steal 2 ⭐', description: '(From another player)', round: 1 },
-            { id: 'blackStealWorker', title: '+1 ⚫, Steal 4 ⭐', description: '(Steal 4 resources from another player)', round: 2 },
-            { id: 'blackAllLose2VP', title: 'All Others Lose 2 VP', description: '', round: 2 },
-            { id: 'blackAllLose4VP', title: '+2 ⚫, All Others Lose 4 VP', description: '', round: 3 }
+            { id: 'blackSteal1VP', title: '+1 ⚫, steal 1 VP from a player', description: '', round: 1 },
+            { id: 'blackSteal2Any', title: 'Steal 2 resources from a player', description: '(any colors)', round: 1 },
+            { id: 'blackStealWorker', title: '+1 ⚫, steal 4 resources from a player', description: '(any colors)', round: 2 },
+            { id: 'blackAllLose2VP', title: 'All other players lose 2 VP', description: '', round: 2 },
+            { id: 'blackAllLose4VP', title: '+2 ⚫, all other players lose 4 VP', description: '', round: 3 }
         ]
     },
     silver: {
         title: "Information/Planning",
         icon: "🩶",
         actions: [
-            { id: 'silver4Others1', title: '+4 Silver, Others +1', description: '(Other players get +1 Silver)', round: 1 },
-            { id: 'silver3Others1', title: '+3 Silver, Others +1', description: '(Other players get +1 Silver)', round: 1 },
-            { id: 'silver2Plus1Others', title: '+2 Silver + 1 ⭐', description: '(Others get 1 of same color)', round: 1 },
-            { id: 'silver2VPBoth', title: '+2 VP, Pick Another +2 VP', description: '(Choose another player)', round: 1 },
-            { id: 'silverTakeBack2', title: '+2 Silver, Take Back 2', description: '(Others take back 1 worker)', round: 2 },
-            { id: 'silver3Plus2Others1', title: '+3 Silver + 2 ⭐', description: '(Others get 1 of that color)', round: 2 },
-            { id: 'silver8VPOthers3S', title: '+8 VP, Others +3 Silver', description: '(Each other player gets +3 Silver)', round: 3 }
+            { id: 'silver4Others1', title: '+4 Silver for you, +1 for all others', description: '', round: 1 },
+            { id: 'silver3Others1', title: '+3 Silver for you, +1 for all others', description: '', round: 1 },
+            { id: 'silver2Plus1Others', title: '+2 Silver + 1 resource for you', description: '(others get 1 of same color)', round: 1 },
+            { id: 'silver2VPBoth', title: '+2 VP for you, pick a player for +2 VP', description: '', round: 1 },
+            { id: 'silverTakeBack2', title: '+2 Silver, take back 2 workers', description: '(others take back 1)', round: 2 },
+            { id: 'silver3Plus2Others1', title: '+3 Silver + 2 resources for you', description: '(others get 1 of that color)', round: 2 },
+            { id: 'silver8VPOthers3S', title: '+8 VP for you, +3 Silver for all others', description: '', round: 3 }
         ]
     }
 };
