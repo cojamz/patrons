@@ -6642,7 +6642,7 @@ function useGame() {
             const shop = { cost: parseCost(costString), fullEffect: shopDescription };
             const shopId = `${color}${round}`;
             const isClosed = state.closedShops[shopId];
-            
+
             // A shop is available if it's not closed
             // Since we now initialize future shops as closed, opening them makes them available
             const isAvailable = !isClosed;
@@ -6650,6 +6650,9 @@ function useGame() {
             const colorCost = shop.cost[color] || 0;
             const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
             const anyCost = Math.max(0, (shop.cost.any || 0) + (currentPlayer?.shopCostModifier || 0));
+
+            // Debug logging
+            console.log(`Shop ${color} R${round}: costString="${costString}", parsed=`, shop.cost, `colorCost=${colorCost}, anyCost=${anyCost}`);
             
             const handlePurchase = async () => {
                 if (isClosed) {
