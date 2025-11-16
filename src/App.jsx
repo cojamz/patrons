@@ -6864,8 +6864,9 @@ function useGame() {
                             React.createElement('span', { key: 'vp', className: 'text-purple-700' }, `${vpCost}VP`),
                             anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-600' }, `+${anyCost}⭐`)
                         ] : [
-                            React.createElement('span', { key: 'color' }, `${colorCost}${getColorEmoji()}`),
-                            anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-600' }, `+${anyCost}⭐`)
+                            colorCost > 0 && React.createElement('span', { key: 'color' }, `${colorCost}${getColorEmoji()}`),
+                            colorCost > 0 && anyCost > 0 && React.createElement('span', { key: 'plus', className: 'text-gray-600' }, '+'),
+                            anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-600' }, `${anyCost}⭐`)
                         ]
                     )
                 ]),
