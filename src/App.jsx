@@ -7406,8 +7406,8 @@ function useGame() {
                 }),
                 
                 React.createElement('div', { key: 'container', className: 'w-full px-6' }, [
-                    // Top indicators row: Round + Player Turn + Room Code
-                    React.createElement('div', { key: 'top-bar', className: 'flex items-center gap-3 mb-3' }, [
+                    // Single row: Round + Player Turn + Room Code + All Player Cards
+                    React.createElement('div', { key: 'top-bar', className: 'flex items-center gap-3 mb-4' }, [
                         // Round indicator
                         React.createElement('div', {
                             key: 'round',
@@ -7433,12 +7433,9 @@ function useGame() {
                         }, [
                             React.createElement('span', { key: 'icon', className: 'text-base' }, '🏠'),
                             React.createElement('span', { key: 'text', className: 'text-base font-bold' }, `Room: ${state.roomCode}`)
-                        ])
-                    ]),
-
-                    // Player Cards row
-                    React.createElement('div', { key: 'players', className: 'flex gap-3 mb-4' },
-                        state.turnOrder.map((playerId, index) => {
+                        ]),
+                        // Player Cards - in the same row
+                        ...state.turnOrder.map((playerId, index) => {
                             const player = state.players.find(p => p.id === playerId);
                             return React.createElement(PlayerCard, {
                                 key: player.id,
@@ -7448,7 +7445,7 @@ function useGame() {
                                 turnPosition: index + 1
                             });
                         })
-                    ),
+                    ]),
 
                     // Main game area
                     React.createElement('div', { key: 'game-area', className: 'w-full' }, [
