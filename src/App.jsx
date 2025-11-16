@@ -6650,9 +6650,6 @@ function useGame() {
             const colorCost = shop.cost[color] || 0;
             const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
             const anyCost = Math.max(0, (shop.cost.any || 0) + (currentPlayer?.shopCostModifier || 0));
-
-            // Debug logging
-            console.log(`Shop ${color} R${round}: costString="${costString}", parsed=`, shop.cost, `colorCost=${colorCost}, anyCost=${anyCost}`);
             
             const handlePurchase = async () => {
                 if (isClosed) {
