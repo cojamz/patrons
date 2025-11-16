@@ -5953,7 +5953,7 @@ function useGame() {
             };
             
             return React.createElement('div', {
-                className: `flex items-center gap-3 px-4 py-3 rounded-lg glass shadow ${isCurrentPlayer ? 'ring-2 ring-blue-400' : ''}`,
+                className: `flex items-center gap-3 px-4 py-4 rounded-lg glass shadow ${isCurrentPlayer ? 'ring-2 ring-blue-400' : ''}`,
             }, [
                 // Name + Emoji
                 React.createElement('div', { key: 'name', className: 'font-bold text-base whitespace-nowrap' }, [
@@ -7432,7 +7432,7 @@ function useGame() {
                     ]),
 
                     // Player Cards row
-                    React.createElement('div', { key: 'players', className: 'flex flex-wrap gap-3 mb-4' },
+                    React.createElement('div', { key: 'players', className: 'flex gap-3 mb-4' },
                         state.turnOrder.map((playerId, index) => {
                             const player = state.players.find(p => p.id === playerId);
                             return React.createElement(PlayerCard, {
