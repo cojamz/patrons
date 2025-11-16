@@ -6616,6 +6616,8 @@ function useGame() {
             // Log to check what we're getting
             if (!costString) {
                 console.error(`Missing cost for ${color} R${roundNum}`, shopCosts[color]);
+            } else {
+                console.log(`${color} R${roundNum}: costString="${costString}"`);
             }
 
             // Parse cost string to get cost object
