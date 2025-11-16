@@ -6634,7 +6634,7 @@ function useGame() {
         function getAutomaticVPText(color) {
             switch(color) {
                 case 'red':
-                    return '🏆 +1 VP each time you use or repeat a red layer action';
+                    return '🏆 +1 VP each time you use or repeat a RED action';
                 case 'yellow':
                     return '🏆 +1 VP per different color gem at end of each round';
                 case 'blue':

@@ -9,7 +9,7 @@ export const allGameLayers = {
             { id: 'gain2red', title: 'Gain 2 🔴', description: '', round: 1 },
             { id: 'redHybrid1', title: '+1 🔴 + Swap: Both Benefit', description: '(Both players get actions)', round: 1 },
             { id: 'redRepeatAction', title: 'Repeat an Action', description: '(That one of your workers is on)', round: 1 },
-            { id: 'redVPFocus', title: 'Gain 1🔴, +1 VP Per Red Worker', description: '(Where you have workers)', round: 2 },
+            { id: 'redVPFocus', title: 'Gain 1🔴, +1 VP Per Red Worker', description: '(for each red action where you have a worker)', round: 2 },
             { id: 'redHybrid2', title: '+1 🔴 + Swap: You Benefit', description: '(Only you get action)', round: 2 },
             { id: 'redRepeatAll', title: 'Repeat All Your Worker Actions', description: '(In any order you choose)', round: 3 }
         ]
