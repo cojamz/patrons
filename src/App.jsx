@@ -5953,38 +5953,41 @@ function useGame() {
             };
             
             return React.createElement('div', {
-                className: `flex items-center gap-3 px-4 py-6 rounded-lg glass shadow ${isCurrentPlayer ? 'ring-2 ring-blue-400' : ''}`,
+                className: `flex flex-col gap-2 px-4 py-3 rounded-lg glass shadow ${isCurrentPlayer ? 'ring-2 ring-blue-400' : ''}`,
             }, [
-                // Name + Emoji
-                React.createElement('div', { key: 'name', className: 'font-bold text-base whitespace-nowrap' }, [
-                    React.createElement('span', { key: 'emoji', className: 'text-xl mr-1' }, player.emoji || '👤'),
-                    player.name,
-                    isCurrentPlayer && React.createElement('span', { key: 'indicator', className: 'ml-1' }, '🎯')
+                // Row 1: Name + Emoji + VP
+                React.createElement('div', { key: 'row1', className: 'flex items-center gap-3' }, [
+                    // Name + Emoji
+                    React.createElement('div', { key: 'name', className: 'font-bold text-base whitespace-nowrap' }, [
+                        React.createElement('span', { key: 'emoji', className: 'text-xl mr-1' }, player.emoji || '👤'),
+                        player.name,
+                        isCurrentPlayer && React.createElement('span', { key: 'indicator', className: 'ml-1' }, '🎯')
+                    ]),
+                    // VP
+                    React.createElement('div', { key: 'vp', className: 'text-lg font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded whitespace-nowrap' },
+                        `${player.victoryPoints}VP`
+                    )
                 ]),
 
-                // VP
-                React.createElement('div', { key: 'vp', className: 'text-lg font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded whitespace-nowrap' },
-                    `${player.victoryPoints}VP`
-                ),
-
-                // Resources - compact horizontal
-                React.createElement('div', { key: 'resources', className: 'flex gap-1' },
-                    activeColors.map(color =>
-                        React.createElement('div', {
-                            key: color,
-                            className: 'text-sm font-medium'
-                        }, `${gemIcons[color]}${player.resources[color] || 0}`)
-                    )
-                ),
-
-                // Workers
-                React.createElement('div', { key: 'workers', className: 'text-base whitespace-nowrap' },
-                    Array(player.workersLeft).fill(player.emoji || '👤').join('')
-                ),
-
-                // End Turn Button (only for current player)
-                isCurrentPlayer && state.workersToPlace === 0 && !state.shopUsedAfterWorkers &&
-                React.createElement(EndTurnButton, { key: 'end-turn', onEndTurn })
+                // Row 2: Resources + Workers + End Turn
+                React.createElement('div', { key: 'row2', className: 'flex items-center gap-3' }, [
+                    // Resources - compact horizontal
+                    React.createElement('div', { key: 'resources', className: 'flex gap-1' },
+                        activeColors.map(color =>
+                            React.createElement('div', {
+                                key: color,
+                                className: 'text-sm font-medium'
+                            }, `${gemIcons[color]}${player.resources[color] || 0}`)
+                        )
+                    ),
+                    // Workers (emoji x count format)
+                    React.createElement('div', { key: 'workers', className: 'text-base whitespace-nowrap font-medium' },
+                        player.workersLeft > 0 ? `${player.emoji || '👤'} × ${player.workersLeft}` : ''
+                    ),
+                    // End Turn Button (only for current player)
+                    isCurrentPlayer && state.workersToPlace === 0 && !state.shopUsedAfterWorkers &&
+                    React.createElement(EndTurnButton, { key: 'end-turn', onEndTurn })
+                ])
             ]);
         }
 
