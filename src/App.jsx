@@ -4384,11 +4384,13 @@ function useGame() {
             // This button is a fallback in case something goes wrong
 
             const getButtonText = () => {
-                // Check if in shopping phase (workers done, shop not used)
-                const inShoppingPhase = state.workersToPlace === 0 && !state.shopUsedAfterWorkers;
+                // Check if in shopping phase (workers done)
+                const workersPlaced = state.workersToPlace === 0;
+                const regularShopAvailable = !state.shopUsedAfterWorkers;
 
-                if (inShoppingPhase) {
-                    return '✓ Skip Shopping & End Turn';
+                if (workersPlaced) {
+                    // Players can always buy VP shops, and maybe regular shops too
+                    return regularShopAvailable ? '✓ Skip Shops & End Turn' : '✓ End Turn';
                 }
                 return 'End Turn';
             };
@@ -6055,14 +6057,18 @@ function useGame() {
                     let phaseColor = '';
 
                     if (state.workersToPlace > 0) {
-                        phaseText = `Workers to Place: ${state.workersToPlace}`;
+                        phaseText = `Patrons to Place: ${state.workersToPlace}`;
                         phaseColor = 'bg-blue-100 text-blue-800';
-                    } else if (!state.shopUsedAfterWorkers) {
-                        phaseText = 'Shopping Phase (Optional)';
-                        phaseColor = 'bg-purple-100 text-purple-800';
                     } else {
-                        phaseText = 'Ready to End Turn';
-                        phaseColor = 'bg-green-100 text-green-800';
+                        // After placing workers, show available shop options
+                        const regularShopAvailable = !state.shopUsedAfterWorkers;
+                        if (regularShopAvailable) {
+                            phaseText = 'Shop Phase (R1/R2/R3 + VP)';
+                            phaseColor = 'bg-purple-100 text-purple-800';
+                        } else {
+                            phaseText = 'Shop Phase (VP Available)';
+                            phaseColor = 'bg-green-100 text-green-800';
+                        }
                     }
 
                     return React.createElement('div', {
@@ -7022,25 +7028,21 @@ function useGame() {
                     alert('This shop is closed!');
                     return;
                 }
-                
+
                 if (state.roomCode && state.myPlayerId !== state.currentPlayer) {
                     alert('It\'s not your turn!');
                     return;
                 }
-                
-                // Check shop availability - shops can only be used AFTER all workers are placed
+
+                // Check shop availability - VP shops can only be used AFTER all workers are placed
                 if (state.workersToPlace > 0) {
-                    // Still have workers to place - cannot use shop
-                    alert('You must finish placing all your patrons before using a shop!');
+                    // Still have workers to place - cannot use VP shop
+                    alert('You must finish placing all your patrons before using a VP shop!');
                     return;
                 }
 
-                if (state.shopUsedAfterWorkers) {
-                    // Already used shop this turn
-                    alert('You have already used a shop this turn!');
-                    return;
-                }
-                
+                // VP shops do NOT consume regular shop usage - can buy both in same turn
+
                 const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
                 // Apply cost modifier to all gem-based VP shops (not black which has special cost)
                 const actualCost = (color === 'black' || color === 'white') ? shop.cost : Math.max(0, shop.cost + (currentPlayer.shopCostModifier || 0));
@@ -7118,10 +7120,9 @@ function useGame() {
                     // Normal victory shop
                     dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: shop.vp, source: 'victoryShop' });
                 }
-                
-                // Track shop usage
-                dispatch({ type: 'USE_SHOP' });
-                
+
+                // VP shops do NOT track shop usage - can buy both regular shop and VP shop in same turn
+
                 // Blue automatic VP - player gets VP when they activate a shop effect
                 dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: 1, source: 'blueShopUsage' });
                 dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +1 VP (activated a shop effect)` });
