@@ -4384,34 +4384,32 @@ function useGame() {
         function EndTurnButton({ onEndTurn }) {
             const { state, dispatch } = useGame();
             const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
-            
+
             // Phase should automatically change to shop2 when all workers for turn are placed
             // This button is a fallback in case something goes wrong
-            
+
             const getButtonText = () => {
                 return 'End Turn';
             };
-            
+
             // Button should be disabled if no worker placed (unless special conditions)
             const canEndWithoutWorker = currentPlayer && currentPlayer.workersLeft === 0;
             const isButtonDisabled = !state.workerPlacedThisTurn && !canEndWithoutWorker;
-            
+
             // Check if player is in "turn complete" phase (all workers placed, haven't ended turn)
             const isTurnComplete = state.workersToPlace === 0 && state.workerPlacedThisTurn;
-            
-            return React.createElement('div', { className: 'mt-3 text-center' }, 
-                React.createElement('button', {
-                    onClick: onEndTurn,
-                    disabled: isButtonDisabled,
-                    className: `w-full font-bold py-2 px-4 rounded-lg shadow-lg transition-all duration-200 ${
-                        isButtonDisabled 
-                            ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
-                            : isTurnComplete
-                            ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white hover:shadow-xl transform hover:scale-105 animate-pulse'
-                            : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white hover:shadow-xl transform hover:scale-105'
-                    }`
-                }, getButtonText())
-            );
+
+            return React.createElement('button', {
+                onClick: onEndTurn,
+                disabled: isButtonDisabled,
+                className: `font-bold py-1.5 px-3 rounded-lg shadow-lg transition-all duration-200 whitespace-nowrap text-sm ${
+                    isButtonDisabled
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : isTurnComplete
+                        ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white hover:shadow-xl'
+                        : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white hover:shadow-xl'
+                }`
+            }, getButtonText());
         }
 
         // Execute repeat action from red shop
@@ -6607,49 +6605,51 @@ function useGame() {
         function CompactShop({ color, round, label, currentRound }) {
             const { state, dispatch } = useGame();
 
-            // Use imported shopData and shopCosts
-            // Ensure round is a number for proper lookup
-            const roundNum = Number(round);
-            const shopDescription = shopData[color][roundNum];
-            const costString = shopCosts[color]?.[roundNum];
-
-            // Log to check what we're getting
-            if (!costString) {
-                console.error(`Missing cost for ${color} R${roundNum}`, shopCosts[color]);
-            } else {
-                console.log(`${color} R${roundNum}: costString="${costString}"`);
-            }
-
-            // Parse cost string to get cost object
-            const parseCost = (costStr) => {
-                if (!costStr) return {};
-                const cost = {};
-                if (costStr.includes('VP')) {
-                    const vpMatch = costStr.match(/(\d+)VP/);
-                    if (vpMatch) cost.vp = parseInt(vpMatch[1]);
-                } else {
-                    const parts = costStr.split('+');
-                    parts.forEach(part => {
-                        const match = part.match(/(\d+)([🔴🟡🔵🟣🟨⚪⚫🩶⭐])/);
-                        if (match) {
-                            const num = parseInt(match[1]);
-                            const emoji = match[2];
-                            if (emoji === '⭐') cost.any = num;
-                            else if (emoji === '🔴') cost.red = num;
-                            else if (emoji === '🟡') cost.yellow = num;
-                            else if (emoji === '🔵') cost.blue = num;
-                            else if (emoji === '🟣') cost.purple = num;
-                            else if (emoji === '🟨') cost.gold = num;
-                            else if (emoji === '⚪') cost.white = num;
-                            else if (emoji === '⚫') cost.black = num;
-                            else if (emoji === '🩶') cost.silver = num;
-                        }
-                    });
+            // Define shop data inline to ensure it's being used
+            const inlineShopData = {
+                red: {
+                    1: { cost: { red: 1, any: 2 }, effect: 'Repeat one of your worker\'s actions' },
+                    2: { cost: { red: 2, any: 2 }, effect: 'Place the next player\'s worker for them' },
+                    3: { cost: { red: 4, any: 4 }, effect: 'Repeat all actions you took this round' }
+                },
+                yellow: {
+                    1: { cost: { yellow: 1, any: 1 }, effect: 'Double your next resource gain' },
+                    2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 5 resources (any colors)' },
+                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 7 resources (any colors)' }
+                },
+                blue: {
+                    1: { cost: { blue: 1, any: 1 }, effect: 'Open or close any one shop' },
+                    2: { cost: { blue: 2, any: 2 }, effect: 'Flip all shops (open ↔ closed)' },
+                    3: { cost: { blue: 3, any: 3 }, effect: 'Use any shop benefit for free' }
+                },
+                purple: {
+                    1: { cost: { purple: 1, any: 2 }, effect: 'Take an extra turn after this one' },
+                    2: { cost: { purple: 2, any: 2 }, effect: 'Place 2 more workers this turn' },
+                    3: { cost: { purple: 3, any: 3 }, effect: 'Place all your remaining workers now' }
+                },
+                gold: {
+                    1: { cost: { gold: 1, any: 1 }, effect: 'Trade: 1 Gold + 1 Any → 2 Gold' },
+                    2: { cost: { gold: 2, any: 2 }, effect: 'Trade: 2 Gold + 2 Any → 4 Gold' },
+                    3: { cost: { gold: 3, any: 3 }, effect: 'Trade: 3 Gold + 3 Any → Double your Gold' }
+                },
+                white: {
+                    1: { cost: { vp: 1 }, effect: 'Lose 1 VP, gain 1 resource (any color)' },
+                    2: { cost: { vp: 2 }, effect: 'Lose 3 VP, next player skips their turn' },
+                    3: { cost: { vp: 3 }, effect: 'Lose 5 VP, move one worker to any action' }
+                },
+                black: {
+                    1: { cost: { black: 1, any: 1 }, effect: 'Steal 1 VP from any player' },
+                    2: { cost: { black: 2, any: 2 }, effect: 'Steal 3 VP from any player' },
+                    3: { cost: { black: 3, any: 3 }, effect: 'Steal 5 VP from any player' }
+                },
+                silver: {
+                    1: { cost: { silver: 1, any: 1 }, effect: 'Gain 2 VP' },
+                    2: { cost: { silver: 2, any: 2 }, effect: 'You and another player each gain 4 VP' },
+                    3: { cost: { silver: 3, any: 3 }, effect: 'Gain 7 Silver, all others gain 2 Silver' }
                 }
-                return cost;
             };
 
-            const shop = { cost: parseCost(costString), fullEffect: shopDescription };
+            const shop = inlineShopData[color][round];
             const shopId = `${color}${round}`;
             const isClosed = state.closedShops[shopId];
 
@@ -6658,6 +6658,7 @@ function useGame() {
             const isAvailable = !isClosed;
             const vpCost = shop.cost.vp || 0;
             const colorCost = shop.cost[color] || 0;
+
             const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
             const anyCost = Math.max(0, (shop.cost.any || 0) + (currentPlayer?.shopCostModifier || 0));
             
@@ -6885,7 +6886,7 @@ function useGame() {
                     key: 'effect',
                     className: `p-1.5 text-xs font-medium ${color === 'black' ? 'text-white' : 'text-gray-900'} leading-tight text-center min-h-[45px] flex items-center justify-center`
                 },
-                    shop.fullEffect
+                    shop.effect
                 ),
                 // Buy button
                 React.createElement('button', {
