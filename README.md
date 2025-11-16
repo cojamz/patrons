@@ -2,13 +2,27 @@
 
 ## 🎯 Overview
 
-Patrons is a fully functional, single HTML file worker placement board game that runs entirely in your browser. Yes, you read that right - the entire game, including React, game logic, multiplayer support, and UI, is contained in one impressive 8000-line HTML file!
+Patrons is a fully functional worker placement board game built with modern React and Vite. Play solo or with friends in real-time multiplayer, featuring 8 unique resource types, strategic worker placement, and a dynamic shop system across 3 rounds of gameplay.
+
+*Originally built as a single 9,459-line HTML file (now archived), Patrons has evolved into a modern React application with proper tooling and modular architecture.*
 
 ## 🎮 Play Now
 
-1. **Local Play**: Simply open `react-game.html` in your browser
-2. **Debug Mode**: Add `?debug=true` to the URL for developer tools and logging
-3. **Multiplayer**: Enter a room code to play with friends (improved stability as of Jan 2025!)
+### Development Mode
+```bash
+npm install
+npm run dev
+```
+Then open `http://localhost:5173` in your browser.
+
+### Production Build
+```bash
+npm run build
+npm run preview
+```
+
+### Multiplayer
+Enter a room code to play with friends in real-time. Multiplayer support via Firebase Realtime Database.
 
 ## 🌟 Features
 
@@ -47,16 +61,17 @@ The game is **fully playable** and feature-complete for local play. We've moved 
 
 **Note**: Multiplayer is significantly more stable after recent fixes but still has some known issues. For the best experience, we recommend local play or small multiplayer groups (2-3 players).
 
-For detailed status and technical information, see [MASTER_CONTEXT.md](MASTER_CONTEXT.md).
+For detailed development information, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).
 
-## 🛠️ Technical Marvel
+## 🛠️ Technical Stack
 
-This project demonstrates what's possible with modern web technologies:
-- **Single HTML file** containing the entire game (no build process!)
-- **React without JSX** - pure JavaScript component creation
-- **Firebase integration** for real-time multiplayer
-- **Complex game state management** in a single reducer
-- **~8000 lines of code** in one maintainable file
+Built with modern web technologies:
+- **React 18** with JSX for component creation
+- **Vite** for fast development and optimized builds
+- **Tailwind CSS** for styling
+- **Firebase Realtime Database** for multiplayer
+- **Vitest** for testing
+- **Complex game state management** with useReducer
 
 ## 🎲 How to Play
 
@@ -68,38 +83,48 @@ This project demonstrates what's possible with modern web technologies:
 
 ## 🔧 Development
 
-### Quick Start
-```bash
-# Always backup before making changes
-./backup-game.sh
-
-# Open in debug mode for development
-open "react-game.html?debug=true"
-
-# Use dev tools for testing
-open dev-tools.html
+### Project Structure
+```
+src/
+├── App.jsx              # Main game component (~7,778 lines)
+├── main.jsx             # Application entry point
+├── state/
+│   └── gameReducer.js   # Game state management
+├── data/
+│   ├── allGameLayers.js # Action definitions
+│   ├── shopData.js      # Shop definitions
+│   └── constants.js     # Game constants
+├── firebase-compat.js   # Firebase configuration
+└── test/                # Test files
 ```
 
-### Debug Mode Features
-When running with `?debug=true`:
-- Full game state logging
-- Action testing tools
-- VP breakdown display
-- Console commands for debugging
+### Development Commands
+```bash
+npm run dev          # Start dev server (http://localhost:5173)
+npm run build        # Production build
+npm run preview      # Preview production build
+npm run test         # Run tests
+npm run test:ui      # Run tests with UI
+```
 
 ### Key Files
-- `react-game.html` - The entire game (handle with care!)
-- `DEVELOPER_README.md` - Detailed development guide
-- `CODE_INDEX.md` - Quick navigation for the 8000-line file
+- `DEVELOPER_GUIDE.md` - Comprehensive development guide
+- `CODE_NAVIGATION.md` - File structure and navigation
 - `IMPLEMENTATION_SPEC.md` - Complete game specification
+- `CLAUDE.md` - AI-assisted development guide
 
 ## 🤝 Contributing
 
 This is a working game! Any changes should preserve existing functionality. Please:
-1. Always backup before editing
-2. Test thoroughly in debug mode
-3. Check multiplayer compatibility
-4. Document any changes
+1. Create a feature branch for changes
+2. Test thoroughly with `npm run dev`
+3. Run tests with `npm run test`
+4. Check multiplayer compatibility
+5. Document any changes
+
+## 📚 Historical Note
+
+Patrons began as an experimental single-file HTML application (9,459 lines!) demonstrating what's possible without a build process. The original v0 implementation is preserved in `archive/v0-monolith/` for historical reference. The project successfully migrated to a modern architecture in November 2025 while preserving all game functionality.
 
 ## 📝 License
 

@@ -1,7 +1,17 @@
 # Patrons Game Implementation Specification & Progress
 
+**Version**: v0.5 (Vite/React Architecture)
+**Last Updated**: November 15, 2025
+
 ## Overview
-This document tracks the complete specification for the Patrons game layers and the implementation progress. Use this to maintain continuity when context is compacted.
+This document is the authoritative specification for Patrons game mechanics and rules. Implementation is in `src/` directory.
+
+**Implementation Files**:
+- Actions: `src/data/allGameLayers.js` and `src/App.jsx`
+- Shops: `src/data/shopData.js` and `src/App.jsx`
+- State: `src/state/gameReducer.js`
+
+For code navigation, see `CODE_NAVIGATION.md`. For development guide, see `DEVELOPER_GUIDE.md`.
 
 ## Complete Layer Specifications
 
