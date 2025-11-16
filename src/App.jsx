@@ -823,7 +823,7 @@ function useGame() {
                 if (state.roomCode) {
                     // Check if another player is already trying to place here
                     if (state.pendingPlacements && state.pendingPlacements[actionId]) {
-                        alert('Another player is placing a worker here!');
+                        alert('Another player is placing a patron here!');
                         return;
                     }
                     // Mark this space as pending
@@ -834,13 +834,13 @@ function useGame() {
                 
                 // Check if player can place workers
                 if (state.workersToPlace <= 0) {
-                    alert('You have already placed all your workers this turn. End your turn or buy from shops.');
+                    alert('You have already placed all your patrons this turn. End your turn or buy from shops.');
                     return;
                 }
                 
                 // Only check physical workers if we don't have bonus placement workers
                 if (currentPlayer.workersLeft <= 0 && state.workersToPlace <= 1) {
-                    alert('You have no workers left to place!');
+                    alert('You have no patrons left to place!');
                     return;
                 }
 
@@ -863,14 +863,14 @@ function useGame() {
                         });
                         
                         if (availableActions.length > 1) {
-                            const proceed = confirm('WARNING: You have no other workers on the board to swap! This action will only give you the resource bonus. Continue anyway?');
+                            const proceed = confirm('WARNING: You have no other patrons on the board to swap! This action will only give you the resource bonus. Continue anyway?');
                             if (!proceed) return;
                         }
                         // If this is the only action available, allow placement
                     }
                 }
                 
-                // Validate take back worker action - prevent if no workers on non-purple quads
+                // Validate take back patron action - prevent if no patrons on non-purple quads
                 if (actionId === 'gain2purpleTakeBack') {
                     // Check if player has workers on non-purple quads
                     const nonPurpleWorkers = Object.entries(state.occupiedSpaces)
@@ -894,7 +894,7 @@ function useGame() {
                         });
                         
                         if (availableActions.length > 1) {
-                            const proceed = confirm('WARNING: You have no workers on non-purple quads to take back! This action will only give you the purple resources. Continue anyway?');
+                            const proceed = confirm('WARNING: You have no patrons on non-purple quads to take back! This action will only give you the purple resources. Continue anyway?');
                             if (!proceed) return;
                         }
                     }
@@ -902,12 +902,12 @@ function useGame() {
                 
                 // Validate play more workers actions - warn if not enough workers
                 if (actionId === 'playTwoWorkers' && currentPlayer.workersLeft < 2) {
-                    const proceed = confirm(`WARNING: You only have ${currentPlayer.workersLeft} worker(s) left. You won't be able to place 2 workers. Continue anyway?`);
+                    const proceed = confirm(`WARNING: You only have ${currentPlayer.workersLeft} patron(s) left. You won't be able to place 2 patrons. Continue anyway?`);
                     if (!proceed) return;
                 }
                 
                 if (actionId === 'playThreeWorkers' && currentPlayer.workersLeft < 3) {
-                    const proceed = confirm(`WARNING: You only have ${currentPlayer.workersLeft} worker(s) left. You won't be able to place 3 workers. Continue anyway?`);
+                    const proceed = confirm(`WARNING: You only have ${currentPlayer.workersLeft} patron(s) left. You won't be able to place 3 patrons. Continue anyway?`);
                     if (!proceed) return;
                 }
                 
@@ -1295,7 +1295,7 @@ function useGame() {
                 const workersToAdd = Math.min(2, workersAvailable);
                 
                 if (workersToAdd === 0) {
-                    const message = `Player ${player.id}: playTwoWorkers → No workers left to place`;
+                    const message = `Player ${player.id}: playTwoWorkers → No patrons left to place`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -1312,7 +1312,7 @@ function useGame() {
                     effect: `Can place ${workersToAdd} more worker${workersToAdd > 1 ? 's' : ''} this turn`
                 });
                 
-                const message = `Player ${player.id}: playTwoWorkers → Can now place ${workersToAdd} MORE worker${workersToAdd > 1 ? 's' : ''} this turn`;
+                const message = `Player ${player.id}: playTwoWorkers → Can now place ${workersToAdd} MORE patron${workersToAdd > 1 ? 's' : ''} this turn`;
                 dispatch({ type: 'ADD_LOG', message });
                 console.log(message);
                 return;
@@ -1414,7 +1414,7 @@ function useGame() {
                     });
                     
                     if (options.length > 0) {
-                        const choice = await showChoice(dispatch, 'Choose a worker to take back', options);
+                        const choice = await showChoice(dispatch, 'Choose a patron to take back', options);
                         if (choice) {
                             // Remove worker and give it back
                             dispatch({
@@ -1422,12 +1422,12 @@ function useGame() {
                                 actionId: choice,
                                 playerId: player.id
                             });
-                            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Took back worker from ${choice}` });
+                            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Took back patron from ${choice}` });
                         }
                     }
                 }
                 
-                const message = `Player ${player.id}: gain2purpleTakeBack → +${purpleGain} purple${hasDoubleEffect ? ' (DOUBLED!)' : ''} + take back worker`;
+                const message = `Player ${player.id}: gain2purpleTakeBack → +${purpleGain} purple${hasDoubleEffect ? ' (DOUBLED!)' : ''} + take back patron`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1475,7 +1475,7 @@ function useGame() {
                 const workersToAdd = Math.min(3, workersAvailable);
                 
                 if (workersToAdd === 0) {
-                    const message = `Player ${player.id}: playThreeWorkers → No workers left to place`;
+                    const message = `Player ${player.id}: playThreeWorkers → No patrons left to place`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -1492,7 +1492,7 @@ function useGame() {
                     effect: `Can place ${workersToAdd} more worker${workersToAdd > 1 ? 's' : ''} this turn`
                 });
                 
-                const message = `Player ${player.id}: playThreeWorkers → Can now place ${workersToAdd} MORE worker${workersToAdd > 1 ? 's' : ''} this turn`;
+                const message = `Player ${player.id}: playThreeWorkers → Can now place ${workersToAdd} MORE patron${workersToAdd > 1 ? 's' : ''} this turn`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1535,7 +1535,7 @@ function useGame() {
                 dispatch({
                     type: 'ADD_EFFECT',
                     playerId: player.id,
-                    effect: 'Will get 2 extra workers next round'
+                    effect: 'Will get 2 extra patrons next round'
                 });
                 
                 console.log(`Player ${player.id} will get 2 extra workers next round`);
@@ -1551,7 +1551,7 @@ function useGame() {
                 });
                 
                 const shopOptions = [
-                    { label: '🔴 R1: Repeat worker action', value: 'red1' },
+                    { label: '🔴 R1: Repeat patron action', value: 'red1' },
                     { label: '🟡 R1: Double next gain', value: 'yellow1' },
                     { label: '🔵 R1: Close ⭐ shop this round', value: 'blue1' },
                     { label: '🟣 R1: Take an extra turn after this one', value: 'purple1' }
@@ -1598,7 +1598,7 @@ function useGame() {
                     }
                     
                     const effectNames = {
-                        'red1': 'Repeat worker action',
+                        'red1': 'Repeat patron action',
                         'yellow1': 'Double next gain',
                         'blue1': 'Close shop ability',
                         'purple1': 'Extra turn'
@@ -1684,7 +1684,7 @@ function useGame() {
                 dispatch({ type: 'ADD_LOG', message: debugMessage });
                 
                 if (playerSpaces.length === 0) {
-                    const message = `Player ${player.id}: redRepeatAction → +1 red (no valid workers to repeat - swap/repeat actions excluded)`;
+                    const message = `Player ${player.id}: redRepeatAction → +1 red (no valid patrons to repeat - swap/repeat actions excluded)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -1764,7 +1764,7 @@ function useGame() {
                 // Find workers that can be swapped
                 const allWorkers = Object.entries(currentState.occupiedSpaces);
                 if (allWorkers.length < 2) {
-                    const message = `Player ${player.id}: ${actionId} → +1 red (not enough workers to swap)`;
+                    const message = `Player ${player.id}: ${actionId} → +1 red (not enough patrons to swap)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -1779,7 +1779,7 @@ function useGame() {
                 );
                 
                 if (myWorkers.length === 0 || otherWorkers.length === 0) {
-                    const message = `Player ${player.id}: ${actionId} → +1 red (need valid workers from both players - swap actions excluded)`;
+                    const message = `Player ${player.id}: ${actionId} → +1 red (need valid patrons from both players - swap actions excluded)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -1795,12 +1795,12 @@ function useGame() {
                         }
                     }
                     return {
-                        label: `Your worker on: ${actionTitle}`,
+                        label: `Your patron on: ${actionTitle}`,
                         value: { spaceId, playerId }
                     };
                 });
                 
-                const worker1 = await showChoice(dispatch, 'Choose your worker to swap', myWorkerOptions, false, workerInfo);
+                const worker1 = await showChoice(dispatch, 'Choose your patron to swap', myWorkerOptions, false, workerInfo);
                 if (!worker1) return;
                 
                 // Current player chooses which other worker to swap with
@@ -1818,7 +1818,7 @@ function useGame() {
                     const otherPlayer = currentState.players.find(p => p.id === playerId);
                     const playerName = otherPlayer ? `${otherPlayer.name} ${otherPlayer.emoji || ''}` : `Player ${playerId}`;
                     return {
-                        label: `${playerName}'s worker on: ${actionTitle}`,
+                        label: `${playerName}'s patron on: ${actionTitle}`,
                         value: { spaceId, playerId }
                     };
                 });
@@ -1877,7 +1877,7 @@ function useGame() {
                     }
                 }
                 
-                const message = `Player ${player.id}: ${actionId} → +1 red + swapped workers`;
+                const message = `Player ${player.id}: ${actionId} → +1 red + swapped patrons`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1908,7 +1908,7 @@ function useGame() {
                     source: 'redAction'
                 });
 
-                const message = `Player ${player.id}: redVPFocus → +1🔴, +${totalVP} VP (${redWorkerCount} red workers)`;
+                const message = `Player ${player.id}: redVPFocus → +1🔴, +${totalVP} VP (${redWorkerCount} red patrons)`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1954,7 +1954,7 @@ function useGame() {
                     .map(([spaceId]) => spaceId);
                 
                 if (playerSpaces.length === 0) {
-                    const message = `Player ${player.id}: redRepeatAll → No other workers to repeat`;
+                    const message = `Player ${player.id}: redRepeatAll → No other patrons to repeat`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -3540,7 +3540,7 @@ function useGame() {
                     }
                 });
                 
-                const message = `Player ${player.id}: silverTakeBack2 → +2 silver, took back ${workersReturned} workers, others took back 1`;
+                const message = `Player ${player.id}: silverTakeBack2 → +2 silver, took back ${workersReturned} patrons, others took back 1`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -5445,7 +5445,7 @@ function useGame() {
                     const workersToAdd = Math.min(2, workersAvailable);
                     
                     if (workersToAdd === 0) {
-                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Purple R2 shop → No workers left to place` });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Purple R2 shop → No patrons left to place` });
                         break;
                     }
                     
@@ -5634,7 +5634,7 @@ function useGame() {
                     }
                 }
                 
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R2 shop → Placed Player ${nextPlayerId}'s worker on ${actionDetails}` });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R2 shop → Placed Player ${nextPlayerId}'s patron on ${actionDetails}` });
                 
                 // Send notification in multiplayer
                 if (state.roomCode) {
@@ -5796,7 +5796,7 @@ function useGame() {
                     .map(([spaceId]) => spaceId);
                 
                 if (playerSpaces.length === 0) {
-                    alert('No workers to repeat!');
+                    alert('No patrons to repeat!');
                     return;
                 }
                 
@@ -6306,14 +6306,14 @@ function useGame() {
                 // Special validation for Purple R2/R3 shops - warn about worker availability
                 if (color === 'purple' && shopRound === 2) {
                     if (currentPlayer.workersLeft < 2) {
-                        const proceed = confirm(`WARNING: You only have ${currentPlayer.workersLeft} worker(s) left. You need at least 2 to fully benefit from this shop. Continue anyway?`);
+                        const proceed = confirm(`WARNING: You only have ${currentPlayer.workersLeft} patron(s) left. You need at least 2 to fully benefit from this shop. Continue anyway?`);
                         if (!proceed) return;
                     }
                 }
                 
                 if (color === 'purple' && shopRound === 3) {
                     if (currentPlayer.workersLeft === 0) {
-                        const proceed = confirm('WARNING: You have no workers left! This shop will have no effect. Continue anyway?');
+                        const proceed = confirm('WARNING: You have no patrons left! This shop will have no effect. Continue anyway?');
                         if (!proceed) return;
                     }
                 }
@@ -6341,7 +6341,7 @@ function useGame() {
                         .filter(([actionId, playerId]) => playerId === currentPlayer.id);
                     
                     if (playerWorkers.length === 0) {
-                        const proceed = confirm('WARNING: You have no workers on the board to repeat actions from! Continue anyway?');
+                        const proceed = confirm('WARNING: You have no patrons on the board to repeat actions from! Continue anyway?');
                         if (!proceed) return;
                     } else {
                         // Check if any of the worker actions are repeatable (exclude problematic ones)
@@ -6351,7 +6351,7 @@ function useGame() {
                         );
                         
                         if (repeatableWorkers.length === 0) {
-                            const proceed = confirm('WARNING: All your workers are on non-repeatable actions (swap/repeat actions). You will have limited options. Continue anyway?');
+                            const proceed = confirm('WARNING: All your patrons are on non-repeatable actions (swap/repeat actions). You will have limited options. Continue anyway?');
                             if (!proceed) return;
                         }
                     }
@@ -6778,7 +6778,7 @@ function useGame() {
                 // Check shop availability - shops can only be used AFTER all workers are placed
                 if (state.workersToPlace > 0) {
                     // Still have workers to place - cannot use shop
-                    alert('You must finish placing all your workers before using a shop!');
+                    alert('You must finish placing all your patrons before using a shop!');
                     return;
                 }
 
@@ -6823,7 +6823,7 @@ function useGame() {
                         );
                     
                     if (validSpaces.length === 0) {
-                        alert('You have no valid workers to repeat! Swap and repeat actions cannot be repeated.');
+                        alert('You have no valid patrons to repeat! Swap and repeat actions cannot be repeated.');
                         return;
                     }
                 }
@@ -7036,7 +7036,7 @@ function useGame() {
                 // Check shop availability - shops can only be used AFTER all workers are placed
                 if (state.workersToPlace > 0) {
                     // Still have workers to place - cannot use shop
-                    alert('You must finish placing all your workers before using a shop!');
+                    alert('You must finish placing all your patrons before using a shop!');
                     return;
                 }
 
