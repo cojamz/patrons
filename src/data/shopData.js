@@ -4,7 +4,7 @@ export const shopData = {
     red: {
         1: 'Repeat one of your worker\'s actions',
         2: 'Place the next player\'s worker for them',
-        3: 'Repeat all actions you took this round'
+        3: 'Repeat all actions from another player'
     },
     yellow: {
         1: 'Double your next resource gain',

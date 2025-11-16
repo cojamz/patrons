@@ -903,8 +903,7 @@ export function gameReducer(state, action) {
                         workersLeft: baseWorkers + extraWorkers,
                         effects: (player.effects || []).filter(effect =>
                             !effect.includes('Will get 2 extra workers next round') &&
-                            !effect.includes('more workers this turn') &&
-                            !effect.includes('Must place on red layer')
+                            !effect.includes('more workers this turn')
                         ),
                         shopCostModifier: 0 // Reset each player's shop cost modifier
                     };

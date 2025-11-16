@@ -843,54 +843,7 @@ function useGame() {
                     alert('You have no workers left to place!');
                     return;
                 }
-                
-                // Check if current player has a "must place on red" effect
-                const mustPlaceOnRed = currentPlayer.effects && 
-                    currentPlayer.effects.some(effect => effect.includes('Must place on red layer'));
-                
-                // Debug logging for force red issue
-                if (mustPlaceOnRed) {
-                    console.log('FORCE_RED_DEBUG - Current player must place on red:', currentPlayer.id, currentPlayer.effects);
-                }
-                
-                if (mustPlaceOnRed) {
-                    // Check if this action is on the red layer
-                    const redLayer = state.gameLayers && state.gameLayers.red;
-                    const isRedAction = redLayer && redLayer.actions.some(a => a.id === actionId);
-                    
-                    console.log('FORCE_RED_DEBUG - Checking action:', actionId,
-                              'Red layer exists:', !!redLayer,
-                              'Is red action:', isRedAction);
-                    
-                    if (!isRedAction) {
-                        // Check if red layer is full (only considering actions available in current round)
-                        const availableRedActions = redLayer ? 
-                            redLayer.actions.filter(a => a.round <= state.round).map(a => a.id) : [];
-                        const redIsFull = availableRedActions.length === 0 || 
-                            availableRedActions.every(id => state.occupiedSpaces[id]);
-                        
-                        console.log('FORCE_RED_DEBUG - Available red actions for round', state.round, ':', availableRedActions,
-                                  'Red is full:', redIsFull);
-                        
-                        if (!redIsFull) {
-                            alert('You must place workers on the red layer until it is full!');
-                            return;
-                        } else {
-                            // Red is full, clear the force red effect from all players
-                            console.log('Red layer is full, clearing force red effects');
-                            state.players.forEach(p => {
-                                if (p.effects && p.effects.some(e => e.includes('Must place on red layer'))) {
-                                    dispatch({
-                                        type: 'UPDATE_PLAYER_EFFECTS',
-                                        playerId: p.id,
-                                        effects: p.effects.filter(e => !e.includes('Must place on red layer'))
-                                    });
-                                }
-                            });
-                        }
-                    }
-                }
-                
+
                 // Validate swap worker actions - prevent placing if no workers to swap
                 if (actionId === 'redHybrid1' || actionId === 'redHybrid2') {
                     // Check if player has other workers on the board to swap
@@ -1087,6 +1040,13 @@ function useGame() {
                     className: `text-xs text-center px-1 ${!available ? 'text-gray-400' : 'text-gray-600'} leading-tight`
                 }, description)
             ]);
+        }
+
+        // Helper function to check if an action is a red layer action
+        function isRedAction(actionId, gameLayers) {
+            const redLayer = gameLayers?.red;
+            if (!redLayer) return false;
+            return redLayer.actions.some(a => a.id === actionId);
         }
 
         // Simplified action execution
@@ -1764,9 +1724,20 @@ function useGame() {
                     
                     const message = `Player ${player.id}: redRepeatAction → +1 red + repeating ${actionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
-                    
+
                     // Execute the chosen action again
                     await executeAction(choice, player, dispatch, currentState, gameLayers, recursionDepth + 1, workerInfo);
+
+                    // RED AUTOMATIC VP: Only award VP if repeated action was red
+                    if (isRedAction(choice, gameLayers)) {
+                        dispatch({
+                            type: 'UPDATE_VP',
+                            playerId: player.id,
+                            vp: 1,
+                            source: 'redAutomatic'
+                        });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for repeating red action` });
+                    }
                 }
                 return;
             }
@@ -1911,35 +1882,33 @@ function useGame() {
                 return;
             }
             
-            // Force red placement
-            if (actionId === 'forceRedPlacement') {
+            // Red R2 - VP Focus (Gain 1 red + VP per red worker)
+            if (actionId === 'redVPFocus') {
+                // Give +1 red (FLAT, not scaled)
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
                     resources: { red: 1 }
                 });
-                
-                // RED AUTOMATIC VP
+
+                // Count red workers (INCLUDING this one)
+                const redLayer = currentState.gameLayers?.red;
+                const redActionIds = redLayer ? redLayer.actions.map(a => a.id) : [];
+                const redWorkerCount = Object.entries(currentState.occupiedSpaces)
+                    .filter(([actionId, playerId]) =>
+                        playerId === player.id && redActionIds.includes(actionId)
+                    ).length;
+
+                // Give VP: +1 for using red action + 1 per red worker
+                const totalVP = 1 + redWorkerCount;
                 dispatch({
                     type: 'UPDATE_VP',
                     playerId: player.id,
-                    vp: 1,
+                    vp: totalVP,
                     source: 'redAction'
                 });
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
-                
-                // Add effect to ALL OTHER players
-                currentState.players.forEach(p => {
-                    if (p.id !== player.id) {
-                        dispatch({
-                            type: 'ADD_EFFECT',
-                            playerId: p.id,
-                            effect: `Must place on red layer (forced by Player ${player.id})`
-                        });
-                    }
-                });
-                
-                const message = `Player ${player.id}: forceRedPlacement → +1 red + forcing red placement on others`;
+
+                const message = `Player ${player.id}: redVPFocus → +1🔴, +${totalVP} VP (${redWorkerCount} red workers)`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -2028,7 +1997,18 @@ function useGame() {
                     
                     // Execute the chosen action
                     await executeAction(choice, player, dispatch, currentState, gameLayers, recursionDepth + 1);
-                    
+
+                    // RED AUTOMATIC VP: Only award VP if repeated action was red
+                    if (isRedAction(choice, gameLayers)) {
+                        dispatch({
+                            type: 'UPDATE_VP',
+                            playerId: player.id,
+                            vp: 1,
+                            source: 'redAutomatic'
+                        });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for repeating red action` });
+                    }
+
                     // Remove from remaining actions
                     const index = remainingActions.indexOf(choice);
                     if (index > -1) {
@@ -5674,23 +5654,49 @@ function useGame() {
         
         // Execute red 3 shop effect - Repeat all actions you took this round
         async function executeRed3Shop(player, dispatch, state, recursionDepth = 0) {
-            // Get all actions the current player has placed workers on this round
-            const currentPlayerActions = [];
+            // Get all players who have placed workers
+            const playersWithWorkers = [];
+            const playerWorkerCounts = {};
 
             Object.entries(state.occupiedSpaces).forEach(([actionId, playerId]) => {
-                if (playerId === player.id) {
-                    currentPlayerActions.push(actionId);
+                if (!playerWorkerCounts[playerId]) {
+                    playerWorkerCounts[playerId] = [];
+                    playersWithWorkers.push(playerId);
                 }
+                playerWorkerCounts[playerId].push(actionId);
             });
 
-            if (currentPlayerActions.length === 0) {
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → You haven't placed any workers yet!` });
+            // Filter to OTHER players (not yourself) - KEY CHANGE
+            const otherPlayers = playersWithWorkers.filter(pid => pid !== player.id);
+
+            if (otherPlayers.length === 0) {
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → No other players have workers!` });
                 return;
             }
 
-            // Get all actions for the current player
-            const targetActions = currentPlayerActions;
-            
+            // Choose which player to copy
+            const playerOptions = otherPlayers.map(pid => {
+                const workerCount = playerWorkerCounts[pid].length;
+                return {
+                    label: `Player ${pid} (${workerCount} worker${workerCount > 1 ? 's' : ''})`,
+                    value: pid
+                };
+            });
+
+            const targetPlayerId = await showChoice(
+                dispatch,
+                'Choose which player\'s actions to repeat',
+                playerOptions
+            );
+
+            if (!targetPlayerId) {
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Cancelled` });
+                return;
+            }
+
+            // Get target player's actions
+            const targetActions = playerWorkerCounts[targetPlayerId];
+
             // Build action options with details, excluding problematic actions
             const excludedActions = [
                 // Red actions that could cause infinite loops
@@ -5705,12 +5711,13 @@ function useGame() {
                 'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
                 'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
             ];
+
             const actionOptions = targetActions
                 .filter(actionId => !excludedActions.includes(actionId))
                 .map(actionId => {
                     let actionTitle = actionId;
                     let layerColor = '';
-                    
+
                     Object.entries(state.gameLayers || {}).forEach(([color, layer]) => {
                         const action = layer.actions.find(a => a.id === actionId);
                         if (action) {
@@ -5718,20 +5725,20 @@ function useGame() {
                             layerColor = color;
                         }
                     });
-                    
+
                     return {
                         label: `${layerColor} - ${actionTitle}`,
                         value: actionId
                     };
                 });
-            
+
             if (actionOptions.length === 0) {
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → No valid actions to repeat (swap/repeat actions excluded)` });
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → No valid actions to repeat from Player ${targetPlayerId}` });
                 return;
             }
-            
+
             // Let player choose order of execution
-            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Will repeat ${actionOptions.length} of your actions` });
+            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Will repeat ${actionOptions.length} actions from Player ${targetPlayerId}` });
 
             const remainingActions = [...actionOptions];
             while (remainingActions.length > 0) {
@@ -5742,38 +5749,40 @@ function useGame() {
                     remainingActions,
                     false
                 );
-                
+
                 if (!choice) {
                     // Player cancelled - stop repeating
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Stopped repeating actions` });
                     break;
                 }
-                
+
                 // Execute the chosen action
-                console.log(`Red R3 shop - Executing action ${choice} for player ${player.id}`);
+                console.log(`Red R3 shop - Player ${player.id} repeating ${choice} from Player ${targetPlayerId}`);
                 await executeAction(choice, player, dispatch, state, state.gameLayers, recursionDepth + 1);
-                
-                // RED AUTOMATIC VP: Gain 1 VP for red action
-                dispatch({
-                    type: 'UPDATE_VP',
-                    playerId: player.id,
-                    vp: 1,
-                    source: 'redAutomatic'
-                });
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action (repeat)` });
-                
+
+                // RED AUTOMATIC VP: Only for RED actions
+                // Check if the action is a red action
+                const redLayer = state.gameLayers?.red;
+                const isRedAction = redLayer && redLayer.actions.some(a => a.id === choice);
+
+                if (isRedAction) {
+                    dispatch({
+                        type: 'UPDATE_VP',
+                        playerId: player.id,
+                        vp: 1,
+                        source: 'redAutomatic'
+                    });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for repeating red action` });
+                }
+
                 // Remove from remaining actions
                 const index = remainingActions.findIndex(opt => opt.value === choice);
                 if (index > -1) {
                     remainingActions.splice(index, 1);
                 }
             }
-            
-            const repeatedActions = actionOptions;
-            
-            if (repeatedActions.length > 0) {
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Repeated ${repeatedActions.length} actions from Player ${targetPlayerId}!` });
-            }
+
+            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Completed copying Player ${targetPlayerId}'s actions!` });
         }
 
         // Effect activation function
