@@ -7401,44 +7401,38 @@ function useGame() {
                 }),
                 
                 React.createElement('div', { key: 'container', className: 'w-full px-6' }, [
-                    React.createElement('div', { key: 'main-layout', className: 'flex gap-6' }, [
-                    
-                        // Left sidebar with indicators
-                        React.createElement('div', { key: 'sidebar', className: 'flex-shrink-0 w-48' }, [
-                            // Round indicator
-                            React.createElement('div', { 
-                                key: 'round',
-                                className: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-lg shadow-lg flex flex-col items-center gap-2 mb-4'
-                            }, [
-                                React.createElement('span', { key: 'icon', className: 'text-2xl' }, '🎲'),
-                                React.createElement('span', { key: 'text', className: 'text-lg font-bold' }, `Round ${state.round}`)
-                            ]),
-                            // Current player indicator
-                            state.currentPlayer && React.createElement('div', {
-                                key: 'current-turn',
-                                className: 'bg-gray-700 text-white px-4 py-3 rounded-lg shadow-md flex flex-col items-center gap-2 mb-4'
-                            }, [
-                                React.createElement('span', { key: 'icon', className: 'text-sm' }, '👉'),
-                                React.createElement('span', { key: 'text', className: 'text-sm text-center' }, 
-                                    `${state.players.find(p => p.id === state.currentPlayer)?.name || `Player ${state.currentPlayer}`}'s Turn`),
-                                // Debug info for multiplayer
-                                state.roomCode && React.createElement('div', { 
-                                    key: 'debug', 
-                                    className: 'text-xs mt-1 text-gray-300' 
-                                }, `(You are P${state.myPlayerId}, Current: P${state.currentPlayer})`)
-                            ]),
-                            // Room code badge (if in multiplayer)
-                            state.roomCode && React.createElement('div', {
-                                key: 'room-badge',
-                                className: 'bg-gray-700 text-white px-4 py-3 rounded-lg shadow-md flex flex-col items-center gap-2'
-                            }, [
-                                React.createElement('span', { key: 'icon', className: 'text-sm' }, '🏠'),
-                                React.createElement('span', { key: 'text', className: 'font-semibold text-sm' }, `Room: ${state.roomCode}`)
-                            ])
+                    // Top bar with round, current player, and room code
+                    React.createElement('div', { key: 'top-bar', className: 'flex items-center gap-3 mb-4' }, [
+                        // Round indicator
+                        React.createElement('div', {
+                            key: 'round',
+                            className: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1.5 rounded-lg shadow flex items-center gap-2'
+                        }, [
+                            React.createElement('span', { key: 'icon', className: 'text-lg' }, '🎲'),
+                            React.createElement('span', { key: 'text', className: 'text-sm font-bold' }, `Round ${state.round}`)
                         ]),
-                        
-                        // Main game area
-                        React.createElement('div', { key: 'game-area', className: 'flex-1 game-board' }, [
+                        // Current player indicator
+                        state.currentPlayer && React.createElement('div', {
+                            key: 'current-turn',
+                            className: 'bg-gray-700 text-white px-3 py-1.5 rounded-lg shadow flex items-center gap-2'
+                        }, [
+                            React.createElement('span', { key: 'icon', className: 'text-sm' }, '👉'),
+                            React.createElement('span', { key: 'text', className: 'text-sm font-bold' },
+                                `${state.players.find(p => p.id === state.currentPlayer)?.name}'s Turn`
+                            )
+                        ]),
+                        // Room code badge (if in multiplayer)
+                        state.roomCode && React.createElement('div', {
+                            key: 'room-badge',
+                            className: 'bg-gray-700 text-white px-3 py-1.5 rounded-lg shadow flex items-center gap-2'
+                        }, [
+                            React.createElement('span', { key: 'icon', className: 'text-sm' }, '🏠'),
+                            React.createElement('span', { key: 'text', className: 'text-sm font-bold' }, `Room: ${state.roomCode}`)
+                        ])
+                    ]),
+
+                    // Main game area
+                    React.createElement('div', { key: 'game-area', className: 'w-full' }, [
                     
                     // Player Cards - Display in turn order (compact horizontal bar)
                     React.createElement('div', { key: 'players', className: 'flex flex-wrap gap-3 mb-6' }, 
@@ -7492,8 +7486,7 @@ function useGame() {
                             )
                         ])
                     ])
-                ])
-                    ]), // Close main-layout div array
+                ]), // Close game-area div array
                     // Waiting indicator when waiting for another player's decision
                     state.waitingForPlayer && state.myPlayerId === state.currentPlayer && 
                         React.createElement('div', { 
