@@ -7407,11 +7407,11 @@ function useGame() {
                 
                 React.createElement('div', { key: 'container', className: 'w-full px-6' }, [
                     // Single row: Round + Player Turn + Room Code + All Player Cards
-                    React.createElement('div', { key: 'top-bar', className: 'flex items-center gap-3 mb-4' }, [
+                    React.createElement('div', { key: 'top-bar', className: 'flex items-stretch gap-3 mb-4' }, [
                         // Round indicator
                         React.createElement('div', {
                             key: 'round',
-                            className: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2'
+                            className: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-lg shadow flex items-center gap-2'
                         }, [
                             React.createElement('span', { key: 'icon', className: 'text-lg' }, '🎲'),
                             React.createElement('span', { key: 'text', className: 'text-base font-bold' }, `Round ${state.round}`)
@@ -7419,7 +7419,7 @@ function useGame() {
                         // Current player indicator
                         state.currentPlayer && React.createElement('div', {
                             key: 'current-turn',
-                            className: 'bg-gray-700 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2'
+                            className: 'bg-gray-700 text-white px-4 py-3 rounded-lg shadow flex items-center gap-2'
                         }, [
                             React.createElement('span', { key: 'icon', className: 'text-base' }, '👉'),
                             React.createElement('span', { key: 'text', className: 'text-base font-bold' },
@@ -7429,7 +7429,7 @@ function useGame() {
                         // Room code badge (if in multiplayer)
                         state.roomCode && React.createElement('div', {
                             key: 'room-badge',
-                            className: 'bg-gray-700 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2'
+                            className: 'bg-gray-700 text-white px-4 py-3 rounded-lg shadow flex items-center gap-2'
                         }, [
                             React.createElement('span', { key: 'icon', className: 'text-base' }, '🏠'),
                             React.createElement('span', { key: 'text', className: 'text-base font-bold' }, `Room: ${state.roomCode}`)
