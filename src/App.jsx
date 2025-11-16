@@ -6608,11 +6608,19 @@ function useGame() {
             const { state, dispatch } = useGame();
 
             // Use imported shopData and shopCosts
-            const shopDescription = shopData[color][round];
-            const costString = shopCosts[color][round];
+            // Ensure round is a number for proper lookup
+            const roundNum = Number(round);
+            const shopDescription = shopData[color][roundNum];
+            const costString = shopCosts[color]?.[roundNum];
+
+            // Log to check what we're getting
+            if (!costString) {
+                console.error(`Missing cost for ${color} R${roundNum}`, shopCosts[color]);
+            }
 
             // Parse cost string to get cost object
             const parseCost = (costStr) => {
+                if (!costStr) return {};
                 const cost = {};
                 if (costStr.includes('VP')) {
                     const vpMatch = costStr.match(/(\d+)VP/);
