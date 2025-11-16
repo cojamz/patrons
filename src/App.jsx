@@ -1032,10 +1032,10 @@ function useGame() {
             };
             
             const getAvailabilityStyle = () => {
-                if (!available) return 'opacity-50 cursor-not-allowed bg-gray-300 border-gray-400';
-                if (isOccupied) return 'bg-red-100 border-red-400 cursor-not-allowed';
-                if (isPending) return 'bg-yellow-100 border-yellow-400 cursor-wait animate-pulse';
-                return 'hover:bg-blue-50 hover:border-blue-500 hover:shadow-lg cursor-pointer transform hover:scale-102 border-blue-300';
+                if (!available) return 'opacity-60 cursor-not-allowed bg-gray-200 border-gray-400';
+                if (isOccupied) return 'bg-red-50 border-red-500 cursor-not-allowed';
+                if (isPending) return 'bg-yellow-50 border-yellow-500 cursor-wait animate-pulse';
+                return 'hover:bg-blue-50 hover:border-blue-500 hover:shadow-md cursor-pointer transition-all duration-150 border-blue-300';
             };
             
             const getRoundIndicator = () => {
@@ -1065,7 +1065,7 @@ function useGame() {
             const textSizes = getTextSize();
             
             return React.createElement('div', {
-                className: `relative border-2 rounded-lg flex flex-col p-1.5 min-h-[60px] transition-all duration-200 shadow ${getRoundStyle()} ${getAvailabilityStyle()}`,
+                className: `relative border-2 rounded-lg flex flex-col p-1.5 min-h-[60px] transition-all duration-150 shadow-sm ${getRoundStyle()} ${getAvailabilityStyle()}`,
                 onClick: handleClick
             }, [
                 // Round indicator badge
@@ -5994,16 +5994,16 @@ function useGame() {
             const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
             
             const getLayerStyle = () => {
-                const baseStyle = "glass rounded-lg shadow-lg p-5 border-t-6 hover:shadow-xl transition-all duration-300 h-full flex flex-col";
+                const baseStyle = "glass rounded-lg shadow-md p-3 border-t-8 hover:shadow-lg transition-all duration-200 h-full flex flex-col";
                 switch (color) {
-                    case 'red': return `${baseStyle} border-t-red-500`;
-                    case 'yellow': return `${baseStyle} border-t-yellow-500`;
-                    case 'blue': return `${baseStyle} border-t-blue-500`;
-                    case 'purple': return `${baseStyle} border-t-purple-500`;
-                    case 'gold': return `${baseStyle} border-t-yellow-600`;
-                    case 'white': return `${baseStyle} border-t-gray-300`;
-                    case 'black': return `${baseStyle} border-t-gray-800`;
-                    case 'silver': return `${baseStyle} border-t-gray-400`;
+                    case 'red': return `${baseStyle} border-t-red-500 bg-red-50 bg-opacity-30`;
+                    case 'yellow': return `${baseStyle} border-t-yellow-500 bg-yellow-50 bg-opacity-30`;
+                    case 'blue': return `${baseStyle} border-t-blue-500 bg-blue-50 bg-opacity-30`;
+                    case 'purple': return `${baseStyle} border-t-purple-500 bg-purple-50 bg-opacity-30`;
+                    case 'gold': return `${baseStyle} border-t-yellow-600 bg-yellow-50 bg-opacity-30`;
+                    case 'white': return `${baseStyle} border-t-gray-300 bg-gray-50 bg-opacity-30`;
+                    case 'black': return `${baseStyle} border-t-gray-800 bg-gray-100 bg-opacity-30`;
+                    case 'silver': return `${baseStyle} border-t-gray-400 bg-gray-50 bg-opacity-30`;
                     default: return `${baseStyle} border-t-gray-500`;
                 }
             };
@@ -6027,22 +6027,22 @@ function useGame() {
             
             return React.createElement('div', { className: getLayerStyle() }, [
                 // Card Header - Layer title and color
-                React.createElement('div', { key: 'header', className: 'flex justify-between items-center mb-3' }, [
-                    React.createElement('h2', { key: 'title', className: `text-2xl font-bold ${getIconColor()}` },
+                React.createElement('div', { key: 'header', className: 'flex justify-between items-center mb-2' }, [
+                    React.createElement('h2', { key: 'title', className: `text-lg font-bold ${getIconColor()}` },
                         `${icon} ${color.charAt(0).toUpperCase() + color.slice(1)}`),
-                    React.createElement('span', { key: 'round', className: 'text-gray-600 text-base bg-white px-3 py-1 rounded shadow' },
-                        `Round ${round}`)
+                    React.createElement('span', { key: 'round', className: 'text-gray-700 text-xs bg-white px-2 py-0.5 rounded shadow-sm font-semibold' },
+                        `R${round}`)
                 ]),
 
                 // Automatic VP Display
-                React.createElement('div', { key: 'auto-vp', className: 'text-sm text-gray-700 bg-yellow-100 rounded p-2 mb-3 leading-relaxed' },
+                React.createElement('div', { key: 'auto-vp', className: 'text-xs text-gray-800 bg-yellow-100 rounded px-2 py-1 mb-2 leading-tight font-medium' },
                     getAutomaticVPText(color)
                 ),
 
                 // Shops Section - Compact horizontal layout
-                React.createElement('div', { key: 'shops', className: 'mb-2 bg-white bg-opacity-10 rounded-lg p-2' }, [
-                    React.createElement('div', { key: 'shop-header', className: 'text-xs font-semibold text-gray-700 mb-1' }, '🏪 Shops'),
-                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-1.5' }, [
+                React.createElement('div', { key: 'shops', className: 'mb-1.5 bg-white bg-opacity-20 rounded-lg p-1.5' }, [
+                    React.createElement('div', { key: 'shop-header', className: 'text-xs font-semibold text-gray-800 mb-1 px-0.5' }, '🏪 Shops'),
+                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-1' }, [
                         React.createElement(CompactShop, { key: 'shop-r1', color, round: 1, label: 'R1', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r2', color, round: 2, label: 'R2', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r3', color, round: 3, label: 'R3', currentRound: round }),
@@ -6052,8 +6052,8 @@ function useGame() {
                 
                 // Action Spaces Section - Below shops
                 React.createElement('div', { key: 'actions-section', className: 'flex-1' }, [
-                    React.createElement('h3', { key: 'actions-title', className: 'text-sm font-semibold mb-1 text-gray-800' }, '⚡ Actions'),
-                    React.createElement('div', { key: 'actions', className: 'grid grid-cols-2 gap-1.5' }, 
+                    React.createElement('h3', { key: 'actions-title', className: 'text-xs font-semibold mb-1 text-gray-800 px-0.5' }, '⚡ Actions'),
+                    React.createElement('div', { key: 'actions', className: 'grid grid-cols-2 gap-1' }, 
                         availableActions.map(action => 
                             React.createElement(ActionSpace, {
                                 key: action.id,
@@ -6849,9 +6849,9 @@ function useGame() {
                 // Header bar with round and cost
                 React.createElement('div', {
                     key: 'header',
-                    className: 'bg-white bg-opacity-50 px-2 py-1 flex items-center justify-between border-b ' + getBorderColor()
+                    className: 'bg-white bg-opacity-80 px-2 py-1 flex items-center justify-between border-b ' + getBorderColor()
                 }, [
-                    React.createElement('span', { key: 'round-label', className: 'text-xs font-bold text-gray-700' },
+                    React.createElement('span', { key: 'round-label', className: 'text-xs font-bold text-gray-900' },
                         `R${round}`
                     ),
                     React.createElement('div', { key: 'cost', className: 'text-sm font-bold flex items-center gap-0.5' },
