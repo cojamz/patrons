@@ -1065,7 +1065,7 @@ function useGame() {
             const textSizes = getTextSize();
             
             return React.createElement('div', {
-                className: `relative border-2 rounded-lg flex flex-col p-4 min-h-[130px] transition-all duration-200 shadow-md ${getRoundStyle()} ${getAvailabilityStyle()}`,
+                className: `relative border-2 rounded-lg flex flex-col p-2 min-h-[80px] transition-all duration-200 shadow ${getRoundStyle()} ${getAvailabilityStyle()}`,
                 onClick: handleClick
             }, [
                 // Round indicator badge
@@ -1076,17 +1076,17 @@ function useGame() {
                 // Worker if occupied
                 occupyingPlayer && React.createElement('div', {
                     key: 'worker',
-                    className: `absolute top-2 right-2 text-3xl drop-shadow-lg`
+                    className: `absolute top-1 right-1 text-2xl drop-shadow-lg`
                 }, occupyingPlayer.emoji || occupyingPlayer.id),
                 // Title
                 React.createElement('div', {
                     key: 'title',
-                    className: `font-bold text-base mb-2 px-8 text-center ${!available ? 'text-gray-500' : 'text-gray-900'}`
+                    className: `font-bold text-xs mb-1 px-6 text-center ${!available ? 'text-gray-500' : 'text-gray-900'}`
                 }, title),
                 // Description
                 React.createElement('div', {
                     key: 'desc',
-                    className: `text-sm text-center px-3 ${!available ? 'text-gray-400' : 'text-gray-600'} leading-snug`
+                    className: `text-xs text-center px-2 ${!available ? 'text-gray-400' : 'text-gray-600'} leading-tight`
                 }, description)
             ]);
         }
@@ -5940,152 +5940,51 @@ function useGame() {
             return null;
         }
 
-        // Player Card Component
+        // Player Card Component - Compact Horizontal Bar
         function PlayerCard({ player, isCurrentPlayer, onEndTurn, turnPosition }) {
             const { state, dispatch } = useGame();
-            
+
             // Get active colors from current game layers
             const activeColors = state.gameLayers ? Object.keys(state.gameLayers) : ['red', 'yellow', 'blue', 'purple'];
-            
-            const getPlayerStyle = () => {
-                let baseStyle = "glass rounded-lg shadow-lg p-5 transition-all duration-300";
-                if (isCurrentPlayer) {
-                    baseStyle += " ring-4 ring-blue-400 ring-opacity-60 shadow-xl transform scale-105 pulse-current";
-                }
-                return baseStyle;
+
+            const gemIcons = {
+                red: '🔴', yellow: '🟡', blue: '🔵', purple: '🟣',
+                gold: '🟨', white: '⚪', black: '⚫', silver: '🩶'
             };
             
-            const getResourceIcon = (color, amount) => {
-                const colors = {
-                    red: 'bg-red-500',
-                    yellow: 'bg-yellow-500', 
-                    blue: 'bg-blue-500',
-                    purple: 'bg-purple-500',
-                    gold: 'bg-yellow-600',
-                    white: 'bg-gray-100',
-                    black: 'bg-gray-800',
-                    silver: 'bg-gray-400'
-                };
-                
-                const gemIcons = {
-                    red: '🔴',
-                    yellow: '🟡', 
-                    blue: '🔵',
-                    purple: '🟣',
-                    gold: '🟨',
-                    white: '⚪',
-                    black: '⚫',
-                    silver: '🩶'
-                };
-                
-                const gemIcon = gemIcons[color] || '💎';
-                
-                return React.createElement('div', {
-                    key: color,
-                    className: `w-14 h-14 rounded-lg ${colors[color]} flex flex-col items-center justify-center text-white font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-110 transition-all`
-                }, [
-                    React.createElement('div', { key: 'icon', className: 'text-xl' }, gemIcon),
-                    React.createElement('div', { key: 'amount', className: 'text-sm' }, amount)
-                ]);
-            };
-            
-            // Add turn animation
-            const isTakingTurn = isCurrentPlayer && state.workersToPlace > 0;
-            
-            return React.createElement('div', { 
-                className: getPlayerStyle(),
-                style: isTakingTurn ? {
-                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)'
-                } : {}
+            return React.createElement('div', {
+                className: `flex items-center gap-3 px-4 py-2 rounded-lg glass shadow ${isCurrentPlayer ? 'ring-2 ring-blue-400' : ''}`,
             }, [
-                React.createElement('div', { key: 'header', className: 'flex items-center justify-between mb-5' }, [
-                    React.createElement('div', { key: 'name-section' }, [
-                        React.createElement('h3', { key: 'name', className: 'font-bold text-xl text-gray-800' }, [
-                            player.name,
-                            React.createElement('span', { key: 'emoji', className: 'ml-2 text-2xl' }, player.emoji || '👤'),
-                            isCurrentPlayer && React.createElement('span', { key: 'indicator', className: 'text-blue-500 ml-2' }, '🎯')
-                        ]),
-                        isCurrentPlayer && React.createElement('div', { key: 'phase', className: 'text-sm text-gray-600 mt-1' },
-                            !state.workerPlacedThisTurn ? '🏪 Shop Available' :
-                            state.workersToPlace > 0 ? '👷 Placing Workers' :
-                            !state.shopUsedAfterWorkers ? '🏪 Shop Available' : '✅ Turn Complete'
-                        )
-                    ]),
-                    React.createElement('div', {
-                        key: 'vp',
-                        className: 'text-3xl font-bold text-blue-600 bg-blue-100 px-4 py-2 rounded-lg relative group cursor-help',
-                        title: getVPBreakdown(player.vpSources)
-                    }, [
-                        `${player.victoryPoints} VP`,
-                        // VP breakdown tooltip
-                        React.createElement('div', {
-                            key: 'vp-tooltip',
-                            className: 'absolute bottom-full right-0 mb-2 bg-gray-800 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10'
-                        }, getVPBreakdownDisplay(player.vpSources))
-                    ])
+                // Name + Emoji
+                React.createElement('div', { key: 'name', className: 'font-bold text-base whitespace-nowrap' }, [
+                    React.createElement('span', { key: 'emoji', className: 'text-xl mr-1' }, player.emoji || '👤'),
+                    player.name,
+                    isCurrentPlayer && React.createElement('span', { key: 'indicator', className: 'ml-1' }, '🎯')
                 ]),
-                React.createElement('div', { key: 'resources', className: 'flex gap-2 mb-5 justify-center' },
+
+                // VP
+                React.createElement('div', { key: 'vp', className: 'text-lg font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded whitespace-nowrap' },
+                    `${player.victoryPoints}VP`
+                ),
+
+                // Resources - compact horizontal
+                React.createElement('div', { key: 'resources', className: 'flex gap-1' },
                     activeColors.map(color =>
-                        getResourceIcon(color, player.resources[color] || 0)
+                        React.createElement('div', {
+                            key: color,
+                            className: 'text-sm font-medium'
+                        }, `${gemIcons[color]}${player.resources[color] || 0}`)
                     )
                 ),
-                React.createElement('div', { key: 'workers', className: 'text-center text-gray-700 font-semibold mb-4' }, [
-                    React.createElement('div', { key: 'left', className: 'flex items-center justify-center gap-1' }, [
-                        React.createElement('span', { key: 'label', className: 'text-base' }, 'Workers: '),
-                        React.createElement('span', { key: 'emojis', className: 'text-2xl' },
-                            Array(player.workersLeft).fill(player.emoji || '👤').join('')
-                        )
-                    ]),
-                    (isCurrentPlayer && state.workersToPlace > 1) ? React.createElement('div', { 
-                        key: 'toplace', 
-                        className: 'text-purple-600 font-bold animate-pulse' 
-                    }, `Can place ${state.workersToPlace} workers this turn!`) : null
-                ]),
-                // Shop cost modifier indicator
-                (player.shopCostModifier && player.shopCostModifier !== 0) ? React.createElement('div', { 
-                    key: 'shop-modifier', 
-                    className: `text-center mb-3 text-sm font-medium ${player.shopCostModifier > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'} rounded px-3 py-2 border ${player.shopCostModifier > 0 ? 'border-red-300' : 'border-green-300'}` 
-                }, [
-                    React.createElement('span', { key: 'icon' }, '🏪'),
-                    React.createElement('span', { key: 'text' }, ` Shop costs ${player.shopCostModifier > 0 ? '+' : ''}${player.shopCostModifier} ⭐`)
-                ]) : null,
-                // Status indicators
-                (state.skippedTurns && state.skippedTurns[player.id] > 0) && React.createElement('div', { 
-                    key: 'skip-status', 
-                    className: 'bg-orange-100 border border-orange-300 rounded px-3 py-2 mb-3 text-sm font-medium text-orange-700 flex items-center justify-center gap-2' 
-                }, [
-                    React.createElement('span', { key: 'icon' }, '⏭️'),
-                    React.createElement('span', { key: 'text' }, 'Skipping next turn')
-                ]),
-                (state.waitingForOthers && state.waitingForOthers[player.id]) && React.createElement('div', { 
-                    key: 'waiting-status', 
-                    className: 'bg-blue-100 border border-blue-300 rounded px-3 py-2 mb-3 text-sm font-medium text-blue-700 flex items-center justify-center gap-2' 
-                }, [
-                    React.createElement('span', { key: 'icon' }, '⏳'),
-                    React.createElement('span', { key: 'text' }, 'Waiting for others')
-                ]),
-                // Extra turns indicator
-                (player.extraTurns && player.extraTurns > 0) && React.createElement('div', { 
-                    key: 'extra-turns', 
-                    className: 'bg-purple-100 border border-purple-300 rounded px-3 py-2 mb-3 text-sm font-medium text-purple-700 flex items-center justify-center gap-2' 
-                }, [
-                    React.createElement('span', { key: 'icon' }, '🎲'),
-                    React.createElement('span', { key: 'text' }, `${player.extraTurns} extra turn${player.extraTurns > 1 ? 's' : ''} queued`)
-                ]),
-                (player.effects && player.effects.length > 0) && React.createElement('div', { key: 'effects', className: 'mb-3' }, [
-                    React.createElement('div', { key: 'label', className: 'text-xs font-semibold text-gray-600 mb-1' }, 'Effects:'),
-                    ...(player.effects || []).map((effect, index) => 
-                        React.createElement('div', { 
-                            key: `effect-${index}`, 
-                            className: 'bg-yellow-100 border border-yellow-300 rounded px-2 py-1 mb-1 text-xs flex justify-between items-center' 
-                        }, [
-                            React.createElement('span', { key: 'text' }, effect),
-                            getEffectButton(effect, player.id, index, state, dispatch)
-                        ])
-                    )
-                ]),
-                isCurrentPlayer && React.createElement(EndTurnButton, { key: 'end-turn', onEndTurn })
+
+                // Workers
+                React.createElement('div', { key: 'workers', className: 'text-base whitespace-nowrap' },
+                    Array(player.workersLeft).fill(player.emoji || '👤').join('')
+                ),
+
+                // End Turn Button (only for current player)
+                isCurrentPlayer && state.workersToPlace === 0 && !state.shopUsedAfterWorkers &&
+                React.createElement(EndTurnButton, { key: 'end-turn', onEndTurn })
             ]);
         }
 
@@ -6141,9 +6040,9 @@ function useGame() {
                 ),
 
                 // Shops Section - Compact horizontal layout
-                React.createElement('div', { key: 'shops', className: 'mb-4 bg-white bg-opacity-10 rounded-lg p-4' }, [
-                    React.createElement('div', { key: 'shop-header', className: 'text-base font-semibold text-gray-700 mb-3' }, '🏪 Shops'),
-                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-2 gap-3' }, [
+                React.createElement('div', { key: 'shops', className: 'mb-3 bg-white bg-opacity-10 rounded-lg p-3' }, [
+                    React.createElement('div', { key: 'shop-header', className: 'text-sm font-semibold text-gray-700 mb-2' }, '🏪 Shops'),
+                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-2' }, [
                         React.createElement(CompactShop, { key: 'shop-r1', color, round: 1, label: 'R1', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r2', color, round: 2, label: 'R2', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r3', color, round: 3, label: 'R3', currentRound: round }),
@@ -6945,30 +6844,30 @@ function useGame() {
             };
             
             return React.createElement('div', {
-                className: `relative rounded-lg ${getBgGradient()} ${getBorderColor()} border-2 transition-all flex flex-col shadow-md hover:shadow-lg overflow-hidden ${!isAvailable ? 'opacity-60' : ''}`,
+                className: `relative rounded-lg ${getBgGradient()} ${getBorderColor()} border-2 transition-all flex flex-col shadow hover:shadow-md overflow-hidden ${!isAvailable ? 'opacity-60' : ''}`,
             }, [
                 // Header bar with round and cost
                 React.createElement('div', {
                     key: 'header',
-                    className: 'bg-white bg-opacity-50 px-4 py-2 flex items-center justify-between border-b-2 ' + getBorderColor()
+                    className: 'bg-white bg-opacity-50 px-2 py-1 flex items-center justify-between border-b ' + getBorderColor()
                 }, [
-                    React.createElement('span', { key: 'round-label', className: 'text-sm font-bold text-gray-700' },
-                        `Round ${round}`
+                    React.createElement('span', { key: 'round-label', className: 'text-xs font-bold text-gray-700' },
+                        `R${round}`
                     ),
-                    React.createElement('div', { key: 'cost', className: 'text-lg font-extrabold flex items-center gap-1' },
+                    React.createElement('div', { key: 'cost', className: 'text-sm font-bold flex items-center gap-0.5' },
                         vpCost > 0 ? [
                             React.createElement('span', { key: 'vp', className: 'text-purple-700' }, `${vpCost}VP`),
-                            anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-600' }, ` + ${anyCost}⭐`)
+                            anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-600' }, `+${anyCost}⭐`)
                         ] : [
                             React.createElement('span', { key: 'color' }, `${colorCost}${getColorEmoji()}`),
-                            anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-600' }, ` + ${anyCost}⭐`)
+                            anyCost > 0 && React.createElement('span', { key: 'any', className: 'text-gray-600' }, `+${anyCost}⭐`)
                         ]
                     )
                 ]),
                 // Effect description
                 React.createElement('div', {
                     key: 'effect',
-                    className: `p-5 text-lg font-medium ${color === 'black' ? 'text-white' : 'text-gray-900'} leading-relaxed text-center min-h-[110px] flex items-center justify-center`
+                    className: `p-2 text-xs font-medium ${color === 'black' ? 'text-white' : 'text-gray-900'} leading-tight text-center min-h-[60px] flex items-center justify-center`
                 },
                     shop.fullEffect
                 ),
@@ -6976,9 +6875,9 @@ function useGame() {
                 React.createElement('button', {
                     key: 'btn',
                     onClick: handlePurchase,
-                    className: `py-3 text-lg font-bold transition-all ${!isAvailable ? 'bg-gray-400 cursor-not-allowed text-gray-600' : 'bg-gradient-to-b from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'}`,
+                    className: `py-1.5 text-sm font-bold transition-all ${!isAvailable ? 'bg-gray-400 cursor-not-allowed text-gray-600' : 'bg-green-500 hover:bg-green-600 text-white'}`,
                     disabled: !isAvailable
-                }, !isAvailable ? '🔒 CLOSED' : 'BUY')
+                }, !isAvailable ? '🔒' : 'BUY')
             ]);
         }
         
@@ -7541,8 +7440,8 @@ function useGame() {
                         // Main game area
                         React.createElement('div', { key: 'game-area', className: 'flex-1 game-board' }, [
                     
-                    // Player Cards - Display in turn order
-                    React.createElement('div', { key: 'players', className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8' }, 
+                    // Player Cards - Display in turn order (compact horizontal bar)
+                    React.createElement('div', { key: 'players', className: 'flex flex-wrap gap-3 mb-6' }, 
                         state.turnOrder.map((playerId, index) => {
                             const player = state.players.find(p => p.id === playerId);
                             return React.createElement(PlayerCard, {
