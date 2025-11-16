@@ -296,8 +296,7 @@ export function gameReducer(state, action) {
                                 return !effect.includes('Will take an extra turn after this one') &&
                                        !effect.includes('more workers this turn') &&
                                        !effect.includes('Can place') &&
-                                       !effect.includes('Next gain will be doubled') && // Clear doubling effect
-                                       !effect.includes('Can place the next player\'s worker'); // Clear R2 red shop effect
+                                       !effect.includes('Next gain will be doubled'); // Clear doubling effect
                             }),
                             extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                             victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),
@@ -368,8 +367,7 @@ export function gameReducer(state, action) {
                                 return !effect.includes('Will take an extra turn after this one') &&
                                        !effect.includes('more workers this turn') &&
                                        !effect.includes('Can place') &&
-                                       !effect.includes('Next gain will be doubled') && // Clear doubling effect
-                                       !effect.includes('Can place the next player\'s worker'); // Clear R2 red shop effect
+                                       !effect.includes('Next gain will be doubled'); // Clear doubling effect
                             }),
                             extraTurns: Math.max(0, (player.extraTurns || 0) - 1),
                             victoryPoints: player.victoryPoints + (vpUpdate ? vpUpdate.vp : 0),

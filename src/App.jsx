@@ -3912,10 +3912,19 @@ function useGame() {
                                     className: 'text-xl' 
                                 }, '👑')
                             ]),
-                            React.createElement('div', { 
-                                key: 'vp',
-                                className: 'text-xl font-bold text-green-600' 
-                            }, `${player.victoryPoints} VP`)
+                            React.createElement('div', {
+                                key: 'vp-section',
+                                className: 'space-y-1'
+                            }, [
+                                React.createElement('div', {
+                                    key: 'total',
+                                    className: 'text-xl font-bold text-green-600'
+                                }, `${player.victoryPoints} VP`),
+                                React.createElement('div', {
+                                    key: 'breakdown',
+                                    className: 'text-xs text-gray-600'
+                                }, getVPBreakdownDisplay(player.vpSources))
+                            ])
                         ]),
                         React.createElement('div', { 
                             key: 'resources',
@@ -4682,7 +4691,7 @@ function useGame() {
                 const isClosedR1 = state.closedShops[`${color}1`];
                 const availableR1 = state.round >= 1;
                 shopOptions.push({
-                    label: `${colorEmojis[color]} R1 ${isClosedR1 ? '(Closed)' : '(Open)'}: ${shopData[color][1]} - Cost: ${shopCosts[color][1]}`,
+                    label: `${colorEmojis[color]} R1 ${isClosedR1 ? '🔒 Closed' : '✓ Open'}`,
                     shortLabel: `${isClosedR1 ? '🚫' : '✅'} R1: ${shopCosts[color][1]}`,
                     value: `${color}1`,
                     group: quadName
@@ -4692,7 +4701,7 @@ function useGame() {
                 const isClosedR2 = state.closedShops[`${color}2`];
                 const availableR2 = state.round >= 2;
                 shopOptions.push({
-                    label: `${colorEmojis[color]} R2 ${isClosedR2 ? '(Closed)' : '(Open)'}: ${shopData[color][2]} - Cost: ${shopCosts[color][2]}${!availableR2 ? ' (Available Round 2)' : ''}`,
+                    label: `${colorEmojis[color]} R2 ${isClosedR2 ? '🔒 Closed' : '✓ Open'}${!availableR2 ? ' (Round 2+)' : ''}`,
                     shortLabel: `${isClosedR2 ? '🚫' : '✅'} R2: ${shopCosts[color][2]}`,
                     value: `${color}2`,
                     group: quadName
@@ -4702,7 +4711,7 @@ function useGame() {
                 const isClosedR3 = state.closedShops[`${color}3`];
                 const availableR3 = state.round >= 3;
                 shopOptions.push({
-                    label: `${colorEmojis[color]} R3 ${isClosedR3 ? '(Closed)' : '(Open)'}: ${shopData[color][3]} - Cost: ${shopCosts[color][3]}${!availableR3 ? ' (Available Round 3)' : ''}`,
+                    label: `${colorEmojis[color]} R3 ${isClosedR3 ? '🔒 Closed' : '✓ Open'}${!availableR3 ? ' (Round 3)' : ''}`,
                     shortLabel: `${isClosedR3 ? '🚫' : '✅'} R3: ${shopCosts[color][3]}`,
                     value: `${color}3`,
                     group: quadName
@@ -4710,11 +4719,9 @@ function useGame() {
                 
                 // Victory shops (always available)
                 const isClosedVP = state.closedShops[`${color}vp`];
-                const vpCost = color === 'purple' ? '4🟣' : (color === 'yellow' ? '4⭐' : `4${color === 'red' ? '🔴' : '🔵'}`);
-                const vpPoints = color === 'yellow' ? '3' : '5';
                 shopOptions.push({
-                    label: `${isClosedVP ? 'Closed' : 'Open'} ${vpCost} - ${vpPoints} Victory Points`,
-                    shortLabel: `${isClosedVP ? '🚫' : '✅'} VP: ${vpCost}`,
+                    label: `${colorEmojis[color]} VP ${isClosedVP ? '🔒 Closed' : '✓ Open'}`,
+                    shortLabel: `${isClosedVP ? '🚫' : '✅'} VP`,
                     value: `${color}vp`,
                     group: quadName
                 });
@@ -5665,45 +5672,24 @@ function useGame() {
             }
         }
         
-        // Execute red 3 shop effect - Repeat all actions taken this round by any player
+        // Execute red 3 shop effect - Repeat all actions you took this round
         async function executeRed3Shop(player, dispatch, state, recursionDepth = 0) {
-            // Get all players who have placed workers this round
-            const playersWithWorkers = [];
-            const playerWorkerCounts = {};
-            
+            // Get all actions the current player has placed workers on this round
+            const currentPlayerActions = [];
+
             Object.entries(state.occupiedSpaces).forEach(([actionId, playerId]) => {
-                if (!playerWorkerCounts[playerId]) {
-                    playerWorkerCounts[playerId] = [];
-                    playersWithWorkers.push(playerId);
+                if (playerId === player.id) {
+                    currentPlayerActions.push(actionId);
                 }
-                playerWorkerCounts[playerId].push(actionId);
             });
-            
-            // Filter to only other players (not including yourself)
-            const otherPlayersWithWorkers = playersWithWorkers.filter(pid => pid !== player.id);
-            
-            if (otherPlayersWithWorkers.length === 0) {
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → No other players have placed workers!` });
+
+            if (currentPlayerActions.length === 0) {
+                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → You haven't placed any workers yet!` });
                 return;
             }
-            
-            // Let player choose which other player's workers to copy
-            const playerOptions = otherPlayersWithWorkers.map(pid => {
-                return {
-                    label: `Player ${pid} (${playerWorkerCounts[pid].length} worker${playerWorkerCounts[pid].length > 1 ? 's' : ''})`,
-                    value: pid
-                };
-            });
-            
-            const targetPlayerId = await showChoice(dispatch, 'Choose a player whose worker actions to repeat', playerOptions);
-            
-            if (!targetPlayerId) {
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Cancelled` });
-                return;
-            }
-            
-            // Get all actions for the selected player
-            const targetActions = playerWorkerCounts[targetPlayerId];
+
+            // Get all actions for the current player
+            const targetActions = currentPlayerActions;
             
             // Build action options with details, excluding problematic actions
             const excludedActions = [
@@ -5745,14 +5731,14 @@ function useGame() {
             }
             
             // Let player choose order of execution
-            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Will repeat ${actionOptions.length} actions from Player ${targetPlayerId}` });
-            
+            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Red R3 shop → Will repeat ${actionOptions.length} of your actions` });
+
             const remainingActions = [...actionOptions];
             while (remainingActions.length > 0) {
                 // Show choice modal for next action
                 const choice = await showChoice(
                     dispatch,
-                    `Choose next action to repeat from Player ${targetPlayerId} (${remainingActions.length} remaining)`,
+                    `Choose next action to repeat (${remainingActions.length} remaining)`,
                     remainingActions,
                     false
                 );
@@ -6065,7 +6051,7 @@ function useGame() {
                     let phaseColor = '';
 
                     if (state.workersToPlace > 0) {
-                        phaseText = `Place Worker (${state.workersToPlace} remaining)`;
+                        phaseText = `Workers to Place: ${state.workersToPlace}`;
                         phaseColor = 'bg-blue-100 text-blue-800';
                     } else if (!state.shopUsedAfterWorkers) {
                         phaseText = 'Shopping Phase (Optional)';
@@ -6453,13 +6439,6 @@ function useGame() {
                     case 'red1':
                         // Repeat a worker's action - execute immediately
                         await executeRepeatAction(updatedPlayer, dispatch, updatedState, state.gameLayers);
-                        break;
-                    case 'red2':
-                        dispatch({
-                            type: 'ADD_EFFECT',
-                            playerId: currentPlayer.id,
-                            effect: 'Can place the next player\'s worker'
-                        });
                         break;
                     case 'yellow1':
                         dispatch({
