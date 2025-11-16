@@ -5953,7 +5953,7 @@ function useGame() {
             };
             
             return React.createElement('div', {
-                className: `flex items-center gap-3 px-4 py-4 rounded-lg glass shadow ${isCurrentPlayer ? 'ring-2 ring-blue-400' : ''}`,
+                className: `flex items-center gap-3 px-4 py-6 rounded-lg glass shadow ${isCurrentPlayer ? 'ring-2 ring-blue-400' : ''}`,
             }, [
                 // Name + Emoji
                 React.createElement('div', { key: 'name', className: 'font-bold text-base whitespace-nowrap' }, [
