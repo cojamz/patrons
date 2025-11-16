@@ -330,6 +330,20 @@ This will give you the complete specification and current progress status.
 6. **Red Shop Fix**: Repeat action now properly uses updated player state
 7. **Emoji Pool**: Expanded to 160+ emojis including animals, objects, nature, fantasy, food
 
+### Shop Timing Rule Changes (2025-11-16):
+1. **Shop Usage Timing**: Shops can ONLY be used AFTER all workers are placed (removed "before workers" option)
+2. **Phase Indicators**: Added clear UI indicators showing current phase:
+   - "Place Worker (X remaining)" - blue badge
+   - "Shopping Phase (Optional)" - purple badge
+   - "Ready to End Turn" - green badge
+3. **Active Effects Display System**: New UI component displays pending duration effects:
+   - Shows effects like "2× Next Gain", "Skip Next Turn", "Extra Turn"
+   - Clear trigger timing ("Next Turn", "After This Turn", etc.)
+   - Color-coded badges with icons for easy scanning
+   - Implemented in parseEffects() and ActiveEffects component in App.jsx
+4. **End Turn Button Fix**: Button now always visible after workers placed (was disappearing after shop use)
+5. **Skip Shopping Clarity**: Button text changes to "✓ Skip Shopping & End Turn" during shopping phase
+
 ## Remaining High Priority Work
 
 ### ✅ All Shops Now Implemented:
