@@ -6142,8 +6142,8 @@ function useGame() {
 
                 // Shops Section - Compact horizontal layout
                 React.createElement('div', { key: 'shops', className: 'mb-4 bg-white bg-opacity-10 rounded-lg p-4' }, [
-                    React.createElement('div', { key: 'shop-header', className: 'text-base font-semibold text-gray-700 mb-2' }, '🏪 Shops'),
-                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-2 gap-4' }, [
+                    React.createElement('div', { key: 'shop-header', className: 'text-base font-semibold text-gray-700 mb-3' }, '🏪 Shops'),
+                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-1 gap-3' }, [
                         React.createElement(CompactShop, { key: 'shop-r1', color, round: 1, label: 'R1', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r2', color, round: 2, label: 'R2', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r3', color, round: 3, label: 'R3', currentRound: round }),
@@ -6154,7 +6154,7 @@ function useGame() {
                 // Action Spaces Section - Below shops
                 React.createElement('div', { key: 'actions-section', className: 'flex-1' }, [
                     React.createElement('h3', { key: 'actions-title', className: 'text-xl font-semibold mb-3 text-gray-800' }, '⚡ Actions'),
-                    React.createElement('div', { key: 'actions', className: 'grid grid-cols-2 gap-3' }, 
+                    React.createElement('div', { key: 'actions', className: 'grid grid-cols-1 gap-3' }, 
                         availableActions.map(action => 
                             React.createElement(ActionSpace, {
                                 key: action.id,
