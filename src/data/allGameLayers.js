@@ -2,16 +2,16 @@
 
 export const allGameLayers = {
     red: {
-        title: "Worker Manipulation",
+        title: "Patron Manipulation",
         icon: "🔴",
         actions: [
             { id: 'gain3red', title: 'Gain 3 🔴', description: '', round: 1 },
             { id: 'gain2red', title: 'Gain 2 🔴', description: '', round: 1 },
             { id: 'redHybrid1', title: '+1 🔴 + Swap: Both Benefit', description: '(Both players get actions)', round: 1 },
-            { id: 'redRepeatAction', title: 'Repeat an Action', description: '(That one of your workers is on)', round: 1 },
-            { id: 'redVPFocus', title: 'Gain 1🔴, +1 VP Per Red Worker', description: '(for each red action where you have a worker)', round: 2 },
+            { id: 'redRepeatAction', title: 'Repeat an Action', description: '(That one of your patrons is on)', round: 1 },
+            { id: 'redVPFocus', title: 'Gain 1🔴, +1 VP Per Red Patron', description: '(for each red action where you have a patron)', round: 2 },
             { id: 'redHybrid2', title: '+1 🔴 + Swap: You Benefit', description: '(Only you get action)', round: 2 },
-            { id: 'redRepeatAll', title: 'Repeat All Your Worker Actions', description: '(In any order you choose)', round: 3 }
+            { id: 'redRepeatAll', title: 'Repeat all actions where you have a patron', description: '(In any order you choose)', round: 3 }
         ]
     },
     yellow: {
@@ -46,10 +46,10 @@ export const allGameLayers = {
         actions: [
             { id: 'gain4purpleSkip', title: 'Gain 4 🟣, Skip Next Turn', description: '', round: 1 },
             { id: 'gain3purple', title: 'Gain 3 🟣', description: '', round: 1 },
-            { id: 'gain2purpleTakeBack', title: 'Gain 2 🟣, Take Back Worker', description: '(From different quad)', round: 1 },
-            { id: 'playTwoWorkers', title: 'Play 2 More Workers', description: '(This turn)', round: 1 },
+            { id: 'gain2purpleTakeBack', title: 'Gain 2 🟣, Take Back Patron', description: '(From different quad)', round: 1 },
+            { id: 'playTwoWorkers', title: 'Place 2 More Patrons', description: '(This turn)', round: 1 },
             { id: 'gain5purpleSkip', title: 'Gain 5 🟣, Skip Turn', description: '', round: 2 },
-            { id: 'playThreeWorkers', title: 'Play 3 More Workers', description: '(This turn)', round: 2 },
+            { id: 'playThreeWorkers', title: 'Place 3 More Patrons', description: '(This turn)', round: 2 },
             { id: 'gain4purpleWaitAll', title: 'Gain 4 🟣, Take Another Turn', description: '(After this one)', round: 3 }
         ]
     },
@@ -100,7 +100,7 @@ export const allGameLayers = {
             { id: 'silver3Others1', title: '+3 Silver for you, +1 for all others', description: '', round: 1 },
             { id: 'silver2Plus1Others', title: '+2 Silver + 1 resource for you', description: '(others get 1 of same color)', round: 1 },
             { id: 'silver2VPBoth', title: '+2 VP for you, pick a player for +2 VP', description: '', round: 1 },
-            { id: 'silverTakeBack2', title: '+2 Silver, take back 2 workers', description: '(others take back 1)', round: 2 },
+            { id: 'silverTakeBack2', title: '+2 Silver, take back 2 patrons', description: '(others take back 1)', round: 2 },
             { id: 'silver3Plus2Others1', title: '+3 Silver + 2 resources for you', description: '(others get 1 of that color)', round: 2 },
             { id: 'silver8VPOthers3S', title: '+8 VP for you, +3 Silver for all others', description: '', round: 3 }
         ]

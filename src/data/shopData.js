@@ -2,9 +2,9 @@
 
 export const shopData = {
     red: {
-        1: 'Repeat one of your worker\'s actions',
-        2: 'Place the next player\'s worker for them',
-        3: 'Repeat all actions from another player'
+        1: 'Repeat one of your patron\'s actions',
+        2: 'Place the next player\'s patron for them',
+        3: 'Pick a player. Repeat all actions where they have a patron'
     },
     yellow: {
         1: 'Double your next resource gain',
@@ -18,8 +18,8 @@ export const shopData = {
     },
     purple: {
         1: 'Take an extra turn after this one',
-        2: 'Place 2 more workers this turn',
-        3: 'Place all your remaining workers now'
+        2: 'Place 2 more patrons this turn',
+        3: 'Place all your remaining patrons now'
     },
     gold: {
         1: 'Trade: 1 Gold + 1 Any → 2 Gold',
@@ -29,7 +29,7 @@ export const shopData = {
     white: {
         1: 'Lose 1 VP, gain 1 resource (any color)',
         2: 'Lose 3 VP, next player skips their turn',
-        3: 'Lose 5 VP, move one worker to any action'
+        3: 'Lose 5 VP, move one patron to any action'
     },
     black: {
         1: 'Steal 1 VP from any player',
