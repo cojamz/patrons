@@ -5953,32 +5953,32 @@ function useGame() {
             };
             
             return React.createElement('div', {
-                className: `flex items-center gap-4 px-5 py-2.5 rounded-lg glass shadow ${isCurrentPlayer ? 'ring-2 ring-blue-400' : ''}`,
+                className: `flex items-center gap-3 px-4 py-3 rounded-lg glass shadow ${isCurrentPlayer ? 'ring-2 ring-blue-400' : ''}`,
             }, [
                 // Name + Emoji
-                React.createElement('div', { key: 'name', className: 'font-bold text-base whitespace-nowrap min-w-[100px]' }, [
-                    React.createElement('span', { key: 'emoji', className: 'text-xl mr-2' }, player.emoji || '👤'),
+                React.createElement('div', { key: 'name', className: 'font-bold text-base whitespace-nowrap' }, [
+                    React.createElement('span', { key: 'emoji', className: 'text-xl mr-1' }, player.emoji || '👤'),
                     player.name,
-                    isCurrentPlayer && React.createElement('span', { key: 'indicator', className: 'ml-2' }, '🎯')
+                    isCurrentPlayer && React.createElement('span', { key: 'indicator', className: 'ml-1' }, '🎯')
                 ]),
 
                 // VP
-                React.createElement('div', { key: 'vp', className: 'text-lg font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded whitespace-nowrap' },
+                React.createElement('div', { key: 'vp', className: 'text-lg font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded whitespace-nowrap' },
                     `${player.victoryPoints}VP`
                 ),
 
                 // Resources - compact horizontal
-                React.createElement('div', { key: 'resources', className: 'flex gap-2' },
+                React.createElement('div', { key: 'resources', className: 'flex gap-1' },
                     activeColors.map(color =>
                         React.createElement('div', {
                             key: color,
-                            className: 'text-base font-medium'
+                            className: 'text-sm font-medium'
                         }, `${gemIcons[color]}${player.resources[color] || 0}`)
                     )
                 ),
 
                 // Workers
-                React.createElement('div', { key: 'workers', className: 'text-lg whitespace-nowrap' },
+                React.createElement('div', { key: 'workers', className: 'text-base whitespace-nowrap' },
                     Array(player.workersLeft).fill(player.emoji || '👤').join('')
                 ),
 
