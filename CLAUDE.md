@@ -1,4 +1,4 @@
-# Patrons - Worker Placement Game
+# Patrons - Worker Placement Game (v0.5)
 
 ## Critical Game Rules (Never Forget)
 1. **Force Red Placement**: Affects OTHER players, not the placer (+1 red to placer)
@@ -9,18 +9,30 @@
 6. **Blue Auto VP**: ALL players get +1 VP when ANYONE uses a shop
 
 ## Project Info
-- Single HTML file game (react-game.html, 9,459 lines)
-- React 18 using createElement (no JSX)
+- Modern Vite/React project (v0.5)
+- Main component: src/App.jsx (~7,778 lines)
+- React 18 with JSX
 - Firebase for multiplayer
 - 8 resource types, 3 rounds, 2-4 players
+- Tailwind CSS for styling
 
 ## File Navigation
-- Game state: Lines 210-248
-- Reducer: Lines 250-1200
-- Actions: Lines 1700-3500
-- Shops: Lines 6500-6950
-- Components: Lines 6240-7400
-- See CODE_INDEX.md for detailed line numbers
+- Game state & reducer: src/state/gameReducer.js
+- Action definitions: src/data/allGameLayers.js
+- Shop definitions: src/data/shopData.js
+- Main component: src/App.jsx
+- Firebase config: src/firebase-compat.js
+- Tests: src/test/
+- See CODE_NAVIGATION.md for detailed navigation
+- See DEVELOPER_GUIDE.md for comprehensive guide
+
+## Development Commands
+```bash
+npm run dev          # Start dev server
+npm run build        # Production build
+npm run test         # Run tests
+npm run preview      # Preview build
+```
 
 ## Current Work
 Working on: [UPDATE THIS EACH SESSION]
@@ -79,18 +91,23 @@ User: "Run tests. If they pass, commit."
 
 **After using /clear:**
 ```
-User: "Read CLAUDE.md and tell me where we are"
-Claude: [Reads this file, understands context]
+User: "Run /start to reload context"
+Claude: [Reads context files, understands state]
 User: "Good. Now read [specific file] - we're working on [X]"
 ```
 
 ## Common Patterns
 
 ### Adding a New Action
-1. Define in src/data/allGameLayers.js (or line 8804 in current v0)
-2. Implement in executeAction (lines 1700-3500 in v0)
-3. Handle in reducer if needed
+1. Define in src/data/allGameLayers.js
+2. Implement in src/App.jsx executeAction()
+3. Handle in reducer if needed (src/state/gameReducer.js)
 4. Test edge cases
+
+### Adding a New Shop
+1. Define in src/data/shopData.js
+2. Implement benefit in src/App.jsx executeShopBenefit()
+3. Test purchase flow
 
 ### Debugging Multiplayer
 - Check syncGameState debouncing (200ms)
@@ -122,13 +139,34 @@ Priority test cases:
 ## Quick Commands Reference
 ```bash
 /clear              # Clear context between major features
-/permissions        # Configure allowed tools
-/help               # Show all commands
+/start              # Reload context from files
+/plan               # Create implementation plan
+/step <N>           # Execute specific plan step
 ```
 
 ## For Detailed Info
-See DEVELOPMENT_META_FRAMEWORK.md for:
-- Full v0 → v0.5 migration plan
-- Detailed examples and transcripts
-- Project structure recommendations
-- Advanced techniques
+See:
+- **DEVELOPER_GUIDE.md** - Comprehensive development guide
+- **CODE_NAVIGATION.md** - File structure and code locations
+- **IMPLEMENTATION_SPEC.md** - Complete game rules
+- **DEVELOPMENT_META_FRAMEWORK.md** - Advanced workflow patterns
+- **archive/v0-docs/** - Historical v0 documentation
+
+## v0.5 Structure Overview
+
+```
+src/
+├── App.jsx              # Main game component
+├── main.jsx             # Entry point
+├── state/
+│   └── gameReducer.js   # State management
+├── data/
+│   ├── allGameLayers.js # Actions
+│   ├── shopData.js      # Shops
+│   └── constants.js     # Constants
+├── firebase-compat.js   # Firebase config
+└── test/                # Tests
+```
+
+## Migration Note
+Originally built as a 9,459-line single HTML file (v0), successfully migrated to modern Vite/React architecture (v0.5) in November 2025. All v0 files preserved in `archive/v0-monolith/` for reference.
