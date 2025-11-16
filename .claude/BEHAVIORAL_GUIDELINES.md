@@ -153,6 +153,38 @@ Which would you like to try?"
 
 ---
 
+## State Checkpointing
+
+### When to Suggest /checkpoint
+
+Proactively suggest running `/checkpoint` when:
+- Completing a major feature or phase
+- User says "that's it for now", "let's stop here", "good stopping point"
+- About to run `/clear` (checkpoint first to save progress)
+- After fixing a significant bug
+- When user asks "where are we?" or "what have we done?"
+
+### How to Suggest
+
+Be brief and natural:
+```
+"Should we `/checkpoint` to record this progress?"
+```
+
+or before `/clear`:
+```
+"Let's `/checkpoint` before clearing context."
+```
+
+### Don't Overdo It
+
+- DON'T suggest after every tiny change
+- DO wait for meaningful milestones (completing a feature, ending a session)
+- DON'T interrupt active work flow
+- DO respect user's rhythm
+
+---
+
 ## Meta-Level Awareness
 
 ### This Document's Purpose
