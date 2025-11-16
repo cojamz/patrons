@@ -5953,32 +5953,32 @@ function useGame() {
             };
             
             return React.createElement('div', {
-                className: `flex items-center gap-2 px-3 py-2 rounded-lg glass shadow ${isCurrentPlayer ? 'ring-2 ring-blue-400' : ''}`,
+                className: `flex items-center gap-3 px-4 py-2 rounded-lg glass shadow ${isCurrentPlayer ? 'ring-2 ring-blue-400' : ''}`,
             }, [
                 // Name + Emoji
-                React.createElement('div', { key: 'name', className: 'font-bold text-sm whitespace-nowrap' }, [
-                    React.createElement('span', { key: 'emoji', className: 'text-base mr-1' }, player.emoji || '👤'),
+                React.createElement('div', { key: 'name', className: 'font-bold text-base whitespace-nowrap' }, [
+                    React.createElement('span', { key: 'emoji', className: 'text-lg mr-1' }, player.emoji || '👤'),
                     player.name,
                     isCurrentPlayer && React.createElement('span', { key: 'indicator', className: 'ml-1' }, '🎯')
                 ]),
 
                 // VP
-                React.createElement('div', { key: 'vp', className: 'text-base font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded whitespace-nowrap' },
+                React.createElement('div', { key: 'vp', className: 'text-base font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded whitespace-nowrap' },
                     `${player.victoryPoints}VP`
                 ),
 
                 // Resources - compact horizontal
-                React.createElement('div', { key: 'resources', className: 'flex gap-0.5' },
+                React.createElement('div', { key: 'resources', className: 'flex gap-1' },
                     activeColors.map(color =>
                         React.createElement('div', {
                             key: color,
-                            className: 'text-xs font-medium'
+                            className: 'text-sm font-medium'
                         }, `${gemIcons[color]}${player.resources[color] || 0}`)
                     )
                 ),
 
                 // Workers
-                React.createElement('div', { key: 'workers', className: 'text-sm whitespace-nowrap' },
+                React.createElement('div', { key: 'workers', className: 'text-base whitespace-nowrap' },
                     Array(player.workersLeft).fill(player.emoji || '👤').join('')
                 ),
 
@@ -7401,51 +7401,54 @@ function useGame() {
                 }),
                 
                 React.createElement('div', { key: 'container', className: 'w-full px-6' }, [
-                    // Combined top bar: Round + Player Turn + All Player Cards in one row
-                    React.createElement('div', { key: 'top-bar', className: 'flex items-center gap-2 mb-4' }, [
+                    // Top indicators row: Round + Player Turn + Room Code
+                    React.createElement('div', { key: 'top-bar', className: 'flex items-center gap-3 mb-3' }, [
                         // Round indicator
                         React.createElement('div', {
                             key: 'round',
-                            className: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-2 rounded-lg shadow flex items-center gap-2'
+                            className: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2'
                         }, [
-                            React.createElement('span', { key: 'icon', className: 'text-base' }, '🎲'),
-                            React.createElement('span', { key: 'text', className: 'text-sm font-bold' }, `Round ${state.round}`)
+                            React.createElement('span', { key: 'icon', className: 'text-lg' }, '🎲'),
+                            React.createElement('span', { key: 'text', className: 'text-base font-bold' }, `Round ${state.round}`)
                         ]),
                         // Current player indicator
                         state.currentPlayer && React.createElement('div', {
                             key: 'current-turn',
-                            className: 'bg-gray-700 text-white px-3 py-2 rounded-lg shadow flex items-center gap-2'
+                            className: 'bg-gray-700 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2'
                         }, [
-                            React.createElement('span', { key: 'icon', className: 'text-sm' }, '👉'),
-                            React.createElement('span', { key: 'text', className: 'text-sm font-bold' },
+                            React.createElement('span', { key: 'icon', className: 'text-base' }, '👉'),
+                            React.createElement('span', { key: 'text', className: 'text-base font-bold' },
                                 `${state.players.find(p => p.id === state.currentPlayer)?.name}'s Turn`
                             )
                         ]),
                         // Room code badge (if in multiplayer)
                         state.roomCode && React.createElement('div', {
                             key: 'room-badge',
-                            className: 'bg-gray-700 text-white px-3 py-2 rounded-lg shadow flex items-center gap-2'
+                            className: 'bg-gray-700 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2'
                         }, [
-                            React.createElement('span', { key: 'icon', className: 'text-sm' }, '🏠'),
-                            React.createElement('span', { key: 'text', className: 'text-sm font-bold' }, `Room: ${state.roomCode}`)
-                        ]),
-                        // Player Cards - Now in the same row
-                        ...state.turnOrder.map((playerId, index) => {
+                            React.createElement('span', { key: 'icon', className: 'text-base' }, '🏠'),
+                            React.createElement('span', { key: 'text', className: 'text-base font-bold' }, `Room: ${state.roomCode}`)
+                        ])
+                    ]),
+
+                    // Player Cards row
+                    React.createElement('div', { key: 'players', className: 'flex flex-wrap gap-3 mb-4' },
+                        state.turnOrder.map((playerId, index) => {
                             const player = state.players.find(p => p.id === playerId);
                             return React.createElement(PlayerCard, {
                                 key: player.id,
                                 player,
                                 isCurrentPlayer: player.id === state.currentPlayer,
                                 onEndTurn: handleEndTurn,
-                                turnPosition: index + 1 // 1-based position
+                                turnPosition: index + 1
                             });
                         })
-                    ]),
+                    ),
 
                     // Main game area
                     React.createElement('div', { key: 'game-area', className: 'w-full' }, [
 
-                    // Game Layers - 2x2 Grid Layout (player cards removed from here)
+                    // Game Layers - 2x2 Grid Layout
                     React.createElement('div', { key: 'players-placeholder', className: 'hidden' }, 
                         state.turnOrder.map((playerId, index) => {
                             const player = state.players.find(p => p.id === playerId);
