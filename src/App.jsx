@@ -1039,7 +1039,7 @@ function useGame() {
             };
             
             const getRoundIndicator = () => {
-                const baseStyle = "absolute top-1 left-1 px-3 py-1 rounded-full text-sm font-bold text-white shadow-md";
+                const baseStyle = "absolute top-0.5 left-0.5 px-1.5 py-0.5 rounded-full text-xs font-bold text-white shadow";
                 switch (round) {
                     case 1: return `${baseStyle} bg-gray-500`;
                     case 2: return `${baseStyle} bg-green-500`;
@@ -1065,7 +1065,7 @@ function useGame() {
             const textSizes = getTextSize();
             
             return React.createElement('div', {
-                className: `relative border-2 rounded-lg flex flex-col p-2 min-h-[80px] transition-all duration-200 shadow ${getRoundStyle()} ${getAvailabilityStyle()}`,
+                className: `relative border-2 rounded-lg flex flex-col p-1.5 min-h-[60px] transition-all duration-200 shadow ${getRoundStyle()} ${getAvailabilityStyle()}`,
                 onClick: handleClick
             }, [
                 // Round indicator badge
@@ -1076,17 +1076,17 @@ function useGame() {
                 // Worker if occupied
                 occupyingPlayer && React.createElement('div', {
                     key: 'worker',
-                    className: `absolute top-1 right-1 text-2xl drop-shadow-lg`
+                    className: `absolute top-0.5 right-0.5 text-xl drop-shadow-lg`
                 }, occupyingPlayer.emoji || occupyingPlayer.id),
                 // Title
                 React.createElement('div', {
                     key: 'title',
-                    className: `font-bold text-xs mb-1 px-6 text-center ${!available ? 'text-gray-500' : 'text-gray-900'}`
+                    className: `font-bold text-xs mb-0.5 px-5 text-center ${!available ? 'text-gray-500' : 'text-gray-900'}`
                 }, title),
                 // Description
                 React.createElement('div', {
                     key: 'desc',
-                    className: `text-xs text-center px-2 ${!available ? 'text-gray-400' : 'text-gray-600'} leading-tight`
+                    className: `text-xs text-center px-1 ${!available ? 'text-gray-400' : 'text-gray-600'} leading-tight`
                 }, description)
             ]);
         }
@@ -6040,9 +6040,9 @@ function useGame() {
                 ),
 
                 // Shops Section - Compact horizontal layout
-                React.createElement('div', { key: 'shops', className: 'mb-3 bg-white bg-opacity-10 rounded-lg p-3' }, [
-                    React.createElement('div', { key: 'shop-header', className: 'text-sm font-semibold text-gray-700 mb-2' }, '🏪 Shops'),
-                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-2' }, [
+                React.createElement('div', { key: 'shops', className: 'mb-2 bg-white bg-opacity-10 rounded-lg p-2' }, [
+                    React.createElement('div', { key: 'shop-header', className: 'text-xs font-semibold text-gray-700 mb-1' }, '🏪 Shops'),
+                    React.createElement('div', { key: 'shop-grid', className: 'grid grid-cols-4 gap-1.5' }, [
                         React.createElement(CompactShop, { key: 'shop-r1', color, round: 1, label: 'R1', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r2', color, round: 2, label: 'R2', currentRound: round }),
                         React.createElement(CompactShop, { key: 'shop-r3', color, round: 3, label: 'R3', currentRound: round }),
@@ -6052,8 +6052,8 @@ function useGame() {
                 
                 // Action Spaces Section - Below shops
                 React.createElement('div', { key: 'actions-section', className: 'flex-1' }, [
-                    React.createElement('h3', { key: 'actions-title', className: 'text-xl font-semibold mb-3 text-gray-800' }, '⚡ Actions'),
-                    React.createElement('div', { key: 'actions', className: 'grid grid-cols-2 gap-3' }, 
+                    React.createElement('h3', { key: 'actions-title', className: 'text-sm font-semibold mb-1 text-gray-800' }, '⚡ Actions'),
+                    React.createElement('div', { key: 'actions', className: 'grid grid-cols-2 gap-1.5' }, 
                         availableActions.map(action => 
                             React.createElement(ActionSpace, {
                                 key: action.id,
@@ -6867,7 +6867,7 @@ function useGame() {
                 // Effect description
                 React.createElement('div', {
                     key: 'effect',
-                    className: `p-2 text-xs font-medium ${color === 'black' ? 'text-white' : 'text-gray-900'} leading-tight text-center min-h-[60px] flex items-center justify-center`
+                    className: `p-1.5 text-xs font-medium ${color === 'black' ? 'text-white' : 'text-gray-900'} leading-tight text-center min-h-[45px] flex items-center justify-center`
                 },
                     shop.fullEffect
                 ),
@@ -6875,7 +6875,7 @@ function useGame() {
                 React.createElement('button', {
                     key: 'btn',
                     onClick: handlePurchase,
-                    className: `py-1.5 text-sm font-bold transition-all ${!isAvailable ? 'bg-gray-400 cursor-not-allowed text-gray-600' : 'bg-green-500 hover:bg-green-600 text-white'}`,
+                    className: `py-1 text-xs font-bold transition-all ${!isAvailable ? 'bg-gray-400 cursor-not-allowed text-gray-600' : 'bg-green-500 hover:bg-green-600 text-white'}`,
                     disabled: !isAvailable
                 }, !isAvailable ? '🔒' : 'BUY')
             ]);
