@@ -20,7 +20,6 @@ export const initialState = {
     turnOrder: [1, 2, 3, 4], // Will be randomized when game starts
     workerPlacedThisTurn: false,
     workersToPlace: 1,
-    shopUsedBeforeWorkers: false, // Track if shop was used before placing workers
     shopUsedAfterWorkers: false, // Track if shop was used after placing all workers
     modal: null,
     actionLog: [],
@@ -333,7 +332,6 @@ export function gameReducer(state, action) {
                         players: updatedPlayers,
                         workerPlacedThisTurn: false,
                         workersToPlace: hasActiveWorkerEffect ? state.workersToPlace : 1,
-                        shopUsedBeforeWorkers: false,
                         shopUsedAfterWorkers: false,
                         playersOutOfWorkers: newPlayersOutOfWorkers,
                         skippedTurns: newSkippedTurns,
@@ -742,7 +740,6 @@ export function gameReducer(state, action) {
                     turnDirection: 1,
                     workerPlacedThisTurn: false,
                     workersToPlace: 1,
-                    shopUsedBeforeWorkers: false,
                     shopUsedAfterWorkers: false,
                     shopCostModifier: 0,
                     playersOutOfWorkers: [],
@@ -767,7 +764,6 @@ export function gameReducer(state, action) {
                 turnDirection: nextDirection,
                 workerPlacedThisTurn: false,
                 workersToPlace: workersToPlace,
-                shopUsedBeforeWorkers: false,
                 shopUsedAfterWorkers: false,
                 skippedTurns: newSkippedTurns,
                 waitingForOthers: newWaitingForOthers,
@@ -921,7 +917,6 @@ export function gameReducer(state, action) {
                 turnDirection: 1,
                 workerPlacedThisTurn: false,
                 workersToPlace: 1,
-                shopUsedBeforeWorkers: false, // Reset shop usage for new round
                 shopUsedAfterWorkers: false, // Reset shop usage for new round
                 playersOutOfWorkers: [], // Reset for new round
                 skippedTurns: {}, // Reset skip turns
@@ -1094,21 +1089,11 @@ export function gameReducer(state, action) {
             };
 
         case 'USE_SHOP':
-            // Mark that shop was used appropriately
-            if (!state.workerPlacedThisTurn) {
-                // Used shop before placing any workers
-                return {
-                    ...state,
-                    shopUsedBeforeWorkers: true
-                };
-            } else if (state.workersToPlace === 0) {
-                // Used shop after placing all workers for turn
-                return {
-                    ...state,
-                    shopUsedAfterWorkers: true
-                };
-            }
-            return state;
+            // Mark that shop was used after placing all workers
+            return {
+                ...state,
+                shopUsedAfterWorkers: true
+            };
 
 
         // Multiplayer actions

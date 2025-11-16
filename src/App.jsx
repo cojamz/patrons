@@ -42,7 +42,6 @@ import { gameReducer, initialState } from './state/gameReducer.js';
  * @property {number[]} turnOrder
  * @property {boolean} workerPlacedThisTurn
  * @property {number} workersToPlace
- * @property {boolean} shopUsedBeforeWorkers
  * @property {boolean} shopUsedAfterWorkers
  * @property {any} modal
  * @property {any[]} actionLog
@@ -448,7 +447,6 @@ function useGame() {
                         gameMode: gameMode,
                         automaticVPs: automaticVPs,
                         closedShops: {},
-                        shopUsedBeforeWorkers: false,
                         shopUsedAfterWorkers: false,
                         playersOutOfWorkers: [],
                         skippedTurns: {},
@@ -4389,6 +4387,12 @@ function useGame() {
             // This button is a fallback in case something goes wrong
 
             const getButtonText = () => {
+                // Check if in shopping phase (workers done, shop not used)
+                const inShoppingPhase = state.workersToPlace === 0 && !state.shopUsedAfterWorkers;
+
+                if (inShoppingPhase) {
+                    return '✓ Skip Shopping & End Turn';
+                }
                 return 'End Turn';
             };
 
@@ -5938,6 +5942,90 @@ function useGame() {
             return null;
         }
 
+        // Parse player effects into display format
+        function parseEffects(effects = []) {
+            return effects.map(effect => {
+                if (effect.includes('Next gain will be doubled')) {
+                    return {
+                        type: 'double_gain',
+                        label: '2× Next Gain',
+                        trigger: 'Next Turn',
+                        icon: '⚡',
+                        color: 'bg-yellow-100 text-yellow-800'
+                    };
+                }
+                if (effect.includes('Skip next turn') || effect.includes('skip turn')) {
+                    return {
+                        type: 'skip_turn',
+                        label: 'Skip Next Turn',
+                        trigger: 'Next Turn',
+                        icon: '⏭️',
+                        color: 'bg-purple-100 text-purple-800'
+                    };
+                }
+                if (effect.includes('extra turn') || effect.includes('Take another turn')) {
+                    return {
+                        type: 'extra_turn',
+                        label: 'Extra Turn',
+                        trigger: 'After This Turn',
+                        icon: '🔄',
+                        color: 'bg-green-100 text-green-800'
+                    };
+                }
+                if (effect.includes('play') && effect.includes('more workers')) {
+                    return {
+                        type: 'extra_workers',
+                        label: 'Extra Workers',
+                        trigger: 'This Turn',
+                        icon: '👥',
+                        color: 'bg-blue-100 text-blue-800'
+                    };
+                }
+                // Generic fallback
+                return {
+                    type: 'other',
+                    label: effect.substring(0, 20),
+                    trigger: 'Pending',
+                    icon: '📋',
+                    color: 'bg-gray-100 text-gray-800'
+                };
+            }).filter(Boolean);
+        }
+
+        // Active Effects Component
+        function ActiveEffects({ effects }) {
+            const parsedEffects = parseEffects(effects);
+
+            if (parsedEffects.length === 0) return null;
+
+            return React.createElement('div', {
+                key: 'active-effects',
+                className: 'space-y-1'
+            }, [
+                React.createElement('div', {
+                    key: 'header',
+                    className: 'text-xs font-semibold text-gray-700 mb-1'
+                }, '⚡ Active Effects'),
+
+                ...parsedEffects.map((effect, idx) =>
+                    React.createElement('div', {
+                        key: idx,
+                        className: `text-xs px-2 py-1 rounded ${effect.color} flex justify-between items-center`
+                    }, [
+                        React.createElement('span', {
+                            key: 'label',
+                            className: 'font-semibold'
+                        }, `${effect.icon} ${effect.label}`),
+
+                        React.createElement('span', {
+                            key: 'trigger',
+                            className: 'text-xs opacity-75'
+                        }, effect.trigger)
+                    ])
+                )
+            ]);
+        }
+
         // Player Card Component - Compact Horizontal Bar
         function PlayerCard({ player, isCurrentPlayer, onEndTurn, turnPosition }) {
             const { state, dispatch } = useGame();
@@ -5967,6 +6055,32 @@ function useGame() {
                     )
                 ]),
 
+                // Active Effects Display
+                player.effects && player.effects.length > 0 &&
+                React.createElement(ActiveEffects, { key: 'effects', effects: player.effects }),
+
+                // Phase Indicator (only for current player)
+                isCurrentPlayer && (() => {
+                    let phaseText = '';
+                    let phaseColor = '';
+
+                    if (state.workersToPlace > 0) {
+                        phaseText = `Place Worker (${state.workersToPlace} remaining)`;
+                        phaseColor = 'bg-blue-100 text-blue-800';
+                    } else if (!state.shopUsedAfterWorkers) {
+                        phaseText = 'Shopping Phase (Optional)';
+                        phaseColor = 'bg-purple-100 text-purple-800';
+                    } else {
+                        phaseText = 'Ready to End Turn';
+                        phaseColor = 'bg-green-100 text-green-800';
+                    }
+
+                    return React.createElement('div', {
+                        key: 'phase',
+                        className: `text-sm font-semibold px-3 py-1.5 rounded-lg ${phaseColor} text-center`
+                    }, phaseText);
+                })(),
+
                 // Row 2: Resources + Workers + End Turn
                 React.createElement('div', { key: 'row2', className: 'flex items-center gap-3' }, [
                     // Resources - compact horizontal
@@ -5982,8 +6096,8 @@ function useGame() {
                     React.createElement('div', { key: 'workers', className: 'text-base whitespace-nowrap font-medium' },
                         player.workersLeft > 0 ? `${player.emoji || '👤'} × ${player.workersLeft}` : ''
                     ),
-                    // End Turn Button (only for current player)
-                    isCurrentPlayer && state.workersToPlace === 0 && !state.shopUsedAfterWorkers &&
+                    // End Turn Button (only for current player, always show after workers placed)
+                    isCurrentPlayer && state.workersToPlace === 0 &&
                     React.createElement(EndTurnButton, { key: 'end-turn', onEndTurn })
                 ])
             ]);
@@ -6673,22 +6787,16 @@ function useGame() {
                     return;
                 }
                 
-                // Check shop availability based on intuitive rules
-                if (!state.workerPlacedThisTurn) {
-                    // Before placing any workers - can use shop if haven't already
-                    if (state.shopUsedBeforeWorkers) {
-                        alert('You have already used a shop before placing workers!');
-                        return;
-                    }
-                } else if (state.workersToPlace === 0) {
-                    // After placing all workers - can use shop if haven't already
-                    if (state.shopUsedAfterWorkers) {
-                        alert('You have already used a shop after placing workers!');
-                        return;
-                    }
-                } else {
+                // Check shop availability - shops can only be used AFTER all workers are placed
+                if (state.workersToPlace > 0) {
                     // Still have workers to place - cannot use shop
                     alert('You must finish placing all your workers before using a shop!');
+                    return;
+                }
+
+                if (state.shopUsedAfterWorkers) {
+                    // Already used shop this turn
+                    alert('You have already used a shop this turn!');
                     return;
                 }
                 
@@ -6937,22 +7045,16 @@ function useGame() {
                     return;
                 }
                 
-                // Check shop availability based on intuitive rules
-                if (!state.workerPlacedThisTurn) {
-                    // Before placing any workers - can use shop if haven't already
-                    if (state.shopUsedBeforeWorkers) {
-                        alert('You have already used a shop before placing workers!');
-                        return;
-                    }
-                } else if (state.workersToPlace === 0) {
-                    // After placing all workers - can use shop if haven't already
-                    if (state.shopUsedAfterWorkers) {
-                        alert('You have already used a shop after placing workers!');
-                        return;
-                    }
-                } else {
+                // Check shop availability - shops can only be used AFTER all workers are placed
+                if (state.workersToPlace > 0) {
                     // Still have workers to place - cannot use shop
                     alert('You must finish placing all your workers before using a shop!');
+                    return;
+                }
+
+                if (state.shopUsedAfterWorkers) {
+                    // Already used shop this turn
+                    alert('You have already used a shop this turn!');
                     return;
                 }
                 
@@ -7299,7 +7401,6 @@ function useGame() {
                             gameStarted: currentState.gameStarted,
                             gameLayers: currentState.gameLayers,
                             closedShops: currentState.closedShops,
-                            shopUsedBeforeWorkers: currentState.shopUsedBeforeWorkers,
                             shopUsedAfterWorkers: currentState.shopUsedAfterWorkers,
                             playersOutOfWorkers: currentState.playersOutOfWorkers,
                             skippedTurns: currentState.skippedTurns,
@@ -7328,7 +7429,7 @@ function useGame() {
                         clearTimeout(syncTimeoutRef.current);
                     }
                 };
-            }, [state.currentPlayer, state.players, state.occupiedSpaces, state.round, state.actionLog, state.workersToPlace, state.gameLayers, state.closedShops, state.shopUsedBeforeWorkers, state.shopUsedAfterWorkers, state.playersOutOfWorkers, state.skippedTurns, state.waitingForOthers, state.roundActions, state.gameOver, state.automaticVPs, state.pendingPlacements]);
+            }, [state.currentPlayer, state.players, state.occupiedSpaces, state.round, state.actionLog, state.workersToPlace, state.gameLayers, state.closedShops, state.shopUsedAfterWorkers, state.playersOutOfWorkers, state.skippedTurns, state.waitingForOthers, state.roundActions, state.gameOver, state.automaticVPs, state.pendingPlacements]);
             
             const handleEndTurn = async () => {
                 // Validate multiplayer turn
