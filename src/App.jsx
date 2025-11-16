@@ -6053,7 +6053,7 @@ function useGame() {
                 // Action Spaces Section - Below shops
                 React.createElement('div', { key: 'actions-section', className: 'flex-1' }, [
                     React.createElement('h3', { key: 'actions-title', className: 'text-xs font-semibold mb-1 text-gray-800 px-0.5' }, '⚡ Actions'),
-                    React.createElement('div', { key: 'actions', className: 'grid grid-cols-2 gap-1' }, 
+                    React.createElement('div', { key: 'actions', className: 'grid grid-cols-3 gap-1' }, 
                         availableActions.map(action => 
                             React.createElement(ActionSpace, {
                                 key: action.id,
