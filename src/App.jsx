@@ -2023,8 +2023,15 @@ function useGame() {
             
             // Trade all resources action (formerly steal2Gems)
             if (actionId === 'steal2Gems') {
-                // Count total resources the player has
-                const totalResources = Object.values(player.resources).reduce((sum, amount) => sum + amount, 0);
+                // Add +1 yellow first
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: player.id,
+                    resources: { yellow: 1 }
+                });
+
+                // Count total resources the player has (including the +1 yellow just added)
+                const totalResources = Object.values(currentState.players.find(p => p.id === player.id).resources).reduce((sum, amount) => sum + amount, 0);
                 
                 if (totalResources === 0) {
                     const message = `Player ${player.id}: Trade All ⭐ for ⭐ → No resources to trade`;
@@ -2069,101 +2076,32 @@ function useGame() {
                     resources: newResources
                 });
                 
-                const message = `Player ${player.id}: Trade All ⭐ for ⭐ → Traded ${totalResources} resources`;
+                const message = `Player ${player.id}: +1🟡 + Trade All ⭐ for ⭐ → Traded ${totalResources} resources`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
-            // Steal 3 resources action
+            // Gain 4 resources action (repurposed from steal3Gems)
             if (actionId === 'steal3Gems') {
-                const stealCount = 3;
-                const otherPlayers = currentState.players.filter(p => p.id !== player.id);
-                
-                if (otherPlayers.length === 0) {
-                    const message = `Player ${player.id}: ${actionId} → No other players to steal from`;
-                    dispatch({ type: 'ADD_LOG', message });
-                    return;
-                }
-                
-                // Filter players who have resources
-                const targetOptions = otherPlayers
-                    .filter(p => Object.values(p.resources).some(amount => amount > 0))
-                    .map(p => ({
-                        label: `Player ${p.id} (${Object.entries(p.resources).filter(([,amt]) => amt > 0).map(([color, amt]) => `${amt} ${color}`).join(', ')})`,
-                        value: p.id
-                    }));
-                
-                if (targetOptions.length === 0) {
-                    const message = `Player ${player.id}: ${actionId} → No players have resources to steal`;
-                    dispatch({ type: 'ADD_LOG', message });
-                    return;
-                }
-                
-                // Choose target player
-                const targetId = await showChoice(dispatch, 'Choose player to steal from', targetOptions, false, workerInfo);
-                if (!targetId) {
-                    const message = `Player ${player.id}: ${actionId} → Cancelled`;
-                    dispatch({ type: 'ADD_LOG', message });
-                    return;
-                }
-                
-                const targetPlayer = otherPlayers.find(p => p.id === targetId);
-                
-                // Attacker chooses which resources to steal
-                const selectedGems = await showStealGems(
-                    dispatch, 
-                    `Steal up to ${stealCount} resources from Player ${targetId}`,
-                    targetPlayer,
-                    stealCount,
+                // Show gem selection modal for 4 resources
+                const selectedGems = await showGemSelection(
+                    dispatch,
+                    'Select 4 Resources (⭐ Colors)',
+                    4,
+                    null,
                     workerInfo
                 );
-                
+
                 if (!selectedGems) {
-                    const message = `Player ${player.id}: ${actionId} → Cancelled`;
-                    dispatch({ type: 'ADD_LOG', message });
+                    // If cancelled, give default resources
+                    const defaultResources = { red: 1, yellow: 1, blue: 1, purple: 1 };
+                    dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources: defaultResources });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gain 4⭐ → +1 red, +1 yellow, +1 blue, +1 purple (default)` });
                     return;
                 }
-                
-                // Transfer the resources
-                const stolenResources = [];
-                Object.entries(selectedGems).forEach(([color, count]) => {
-                    if (count > 0) {
-                        dispatch({
-                            type: 'UPDATE_RESOURCES',
-                            playerId: targetId,
-                            resources: { [color]: -count }
-                        });
-                        
-                        dispatch({
-                            type: 'UPDATE_RESOURCES',
-                            playerId: player.id,
-                            resources: { [color]: count }
-                        });
-                        
-                        stolenResources.push(`${count} ${color}`);
-                    }
-                });
-                
-                const message = `Player ${player.id}: ${actionId} → Stole ${stolenResources.join(', ')} from Player ${targetId}`;
-                dispatch({ type: 'ADD_LOG', message });
-                return;
-            }
-            
-            // Yellow hybrid actions
-            if (actionId === 'yellowHybrid1') {
-                // Gain 2 resources of any color
-                const selectedGem = await showGemSelection(dispatch, 'Choose 2 Resources (⭐ Color)', 2, null, workerInfo);
-                
-                if (!selectedGem) {
-                    // If cancelled, give default resource
-                    const resources = { yellow: 2 };
-                    dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources });
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: yellowHybrid1 → +2 yellow (default)` });
-                    return;
-                }
-                
-                const resources = selectedGem;
-                
+
+                const resources = selectedGems;
+
                 // Check for doubling effect
                 const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
                 if (hasDoubleEffect) {
@@ -2171,87 +2109,157 @@ function useGame() {
                     Object.keys(resources).forEach(color => {
                         resources[color] *= 2;
                     });
-                    
+
                     // Remove the doubling effect after use
                     dispatch({
                         type: 'UPDATE_PLAYER_EFFECTS',
                         playerId: player.id,
                         effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
                     });
-                    
-                    const message = `Player ${player.id}: yellowHybrid1 → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
-                    dispatch({ type: 'ADD_LOG', message });
+
+                    const gemsText = Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ');
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gain 4⭐ → +${gemsText} (DOUBLED!)` });
                 } else {
-                    const message = `Player ${player.id}: yellowHybrid1 → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')}`;
-                    dispatch({ type: 'ADD_LOG', message });
+                    const gemsText = Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ');
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gain 4⭐ → +${gemsText}` });
                 }
-                
+
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
                     resources
                 });
-                
+
+                return;
+            }
+            
+            // Yellow hybrid actions
+            if (actionId === 'yellowHybrid1') {
+                // Simple +2 yellow action
+                let yellowAmount = 2;
+
+                // Check for doubling effect
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                if (hasDoubleEffect) {
+                    yellowAmount *= 2;
+
+                    // Remove the doubling effect after use
+                    dispatch({
+                        type: 'UPDATE_PLAYER_EFFECTS',
+                        playerId: player.id,
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
+                    });
+
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +2🟡 → +${yellowAmount} yellow (DOUBLED!)` });
+                } else {
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +2🟡 → +${yellowAmount} yellow` });
+                }
+
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: player.id,
+                    resources: { yellow: yellowAmount }
+                });
+
                 return;
             }
             
             if (actionId === 'yellowHybrid2') {
+                // +1 yellow first
                 dispatch({
                     type: 'UPDATE_RESOURCES',
                     playerId: player.id,
                     resources: { yellow: 1 }
                 });
-                
+
+                // Find previous player (wrap around)
+                const currentIndex = currentState.players.findIndex(p => p.id === player.id);
+                const previousIndex = (currentIndex - 1 + currentState.players.length) % currentState.players.length;
+                const previousPlayer = currentState.players[previousIndex];
+
+                // Get previous player's last gain
+                const lastGain = previousPlayer.lastGain || {};
+                const totalGained = Object.values(lastGain).reduce((sum, amt) => sum + amt, 0);
+
+                if (totalGained === 0) {
+                    // No recorded gain - show warning and default to +1 yellow
+                    alert(`⚠️ Warning: Player ${previousPlayer.id} has no recorded resource gain to copy. Defaulting to +1 yellow.`);
+
+                    dispatch({
+                        type: 'UPDATE_RESOURCES',
+                        playerId: player.id,
+                        resources: { yellow: 1 }
+                    });
+
+                    const message = `Player ${player.id}: +1🟡 + Copy Previous → +1🟡 (no gain to copy, default)`;
+                    dispatch({ type: 'ADD_LOG', message });
+                    return;
+                }
+
+                // Copy the gain
                 dispatch({
-                    type: 'ADD_EFFECT',
+                    type: 'UPDATE_RESOURCES',
                     playerId: player.id,
-                    effect: 'Next gain will be doubled'
+                    resources: lastGain
                 });
-                
-                const message = `Player ${player.id}: yellowHybrid2 → +1 yellow + next gain doubled`;
+
+                const copiedText = Object.entries(lastGain)
+                    .filter(([, amt]) => amt > 0)
+                    .map(([color, amt]) => `${amt} ${color}`)
+                    .join(', ');
+
+                const message = `Player ${player.id}: +1🟡 + Copy Previous → +1 yellow, copied ${copiedText} from Player ${previousPlayer.id}`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
             
-            // Yellow R3 - Swap all resources with another player
+            // Yellow R3 - Gain 3 of each color in the game
             if (actionId === 'yellowSwapResources') {
-                const otherPlayers = currentState.players.filter(p => p.id !== player.id);
-                
-                if (otherPlayers.length === 0) {
-                    const message = `Player ${player.id}: yellowSwapResources → No other players to swap with`;
+                // Get active colors from game layers
+                const activeColors = Object.keys(currentState.gameLayers || {});
+
+                if (activeColors.length === 0) {
+                    const message = `Player ${player.id}: Gain 3 per color → No active colors in game`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
-                
-                const swapOptions = otherPlayers.map(p => ({
-                    label: `Player ${p.id} (${Object.entries(p.resources).filter(([,amt]) => amt > 0).map(([color, amt]) => `${amt} ${color}`).join(', ') || 'no resources'})`,
-                    value: p.id
-                }));
-                
-                const targetPlayerId = await showChoice(dispatch, 'Choose player to swap all resources with', swapOptions, false, workerInfo);
-                
-                if (targetPlayerId) {
-                    const targetPlayer = otherPlayers.find(p => p.id === targetPlayerId);
-                    const playerResources = { ...player.resources };
-                    const targetResources = { ...targetPlayer.resources };
-                    
-                    // Swap resources
+
+                // Build resources object: 3 of each active color
+                const resources = {};
+                activeColors.forEach(color => {
+                    resources[color] = 3;
+                });
+
+                // Check for doubling effect
+                const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
+                if (hasDoubleEffect) {
+                    // Double all gains (6 of each color!)
+                    activeColors.forEach(color => {
+                        resources[color] = 6;
+                    });
+
+                    // Remove the doubling effect after use
                     dispatch({
-                        type: 'SET_RESOURCES',
+                        type: 'UPDATE_PLAYER_EFFECTS',
                         playerId: player.id,
-                        resources: targetResources
+                        effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
                     });
-                    
-                    dispatch({
-                        type: 'SET_RESOURCES',
-                        playerId: targetPlayerId,
-                        resources: playerResources
-                    });
-                    
-                    const message = `Player ${player.id}: yellowSwapResources → Swapped all resources with Player ${targetPlayerId}`;
-                    dispatch({ type: 'ADD_LOG', message });
+
+                    const total = activeColors.length * 6;
+                    const colorList = activeColors.map(c => `6 ${c}`).join(', ');
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gain 3 per color → +${colorList} (${total} total, DOUBLED!)` });
+                } else {
+                    const total = activeColors.length * 3;
+                    const colorList = activeColors.map(c => `3 ${c}`).join(', ');
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gain 3 per color → +${colorList} (${total} total)` });
                 }
-                
+
+                dispatch({
+                    type: 'UPDATE_RESOURCES',
+                    playerId: player.id,
+                    resources
+                });
+
                 return;
             }
             
@@ -4493,12 +4501,12 @@ function useGame() {
         // Execute yellow 3 shop effect
         async function executeYellow3Shop(player, dispatch, state) {
             console.log('executeYellow3Shop - Starting for player', player.id);
-            
-            // Gain 7 resources ⭐ colors - using GemSelectionModal
+
+            // Gain 10 resources ⭐ colors - using GemSelectionModal
             const selectedGems = await showGemSelection(
                 dispatch,
-                'Choose 7 gems of any color',
-                7
+                'Choose 10 gems of any color',
+                10
             );
             
             if (!selectedGems) {
@@ -4540,49 +4548,36 @@ function useGame() {
         
         // Execute yellow 2 shop effect
         async function executeYellow2Shop(player, dispatch, state) {
-            console.log('executeYellow2Shop - Starting for player', player.id);
-            
-            // Gain 5 resources ⭐ colors - using GemSelectionModal
-            const selectedGems = await showGemSelection(
-                dispatch,
-                'Choose 5 gems of any color',
-                5
-            );
-            
-            if (!selectedGems) {
-                const message = `Player ${player.id}: Yellow R2 shop → Cancelled`;
+            console.log('executeYellow2Shop - Trigger Yellow auto VP for player', player.id);
+
+            // Get active colors from game layers
+            const activeColors = Object.keys(state.gameLayers || {});
+
+            if (activeColors.length === 0) {
+                const message = `Player ${player.id}: Yellow R2 shop → No active colors (no VP gained)`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
-            
-            console.log('executeYellow2Shop - Player', player.id, 'selected gems:', selectedGems);
-            
-            // Check for doubling effect
-            const hasDoubleEffect = (player.effects || []).some(effect => effect.includes('Next gain will be doubled'));
-            let finalGems = { ...selectedGems };
-            
-            if (hasDoubleEffect) {
-                // Double all gems
-                Object.keys(finalGems).forEach(color => {
-                    finalGems[color] *= 2;
-                });
-                
-                // Remove the doubling effect after use
-                dispatch({
-                    type: 'UPDATE_PLAYER_EFFECTS',
-                    playerId: player.id,
-                    effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
-                });
+
+            // Calculate complete sets: min of all active color resources
+            const resourceCounts = activeColors.map(color => player.resources[color] || 0);
+            const completeSets = Math.min(...resourceCounts);
+
+            if (completeSets === 0) {
+                const message = `Player ${player.id}: Yellow R2 shop → +0 VP (no complete sets of ${activeColors.length} colors)`;
+                dispatch({ type: 'ADD_LOG', message });
+                return;
             }
-            
+
+            // Grant VP
             dispatch({
-                type: 'UPDATE_RESOURCES',
+                type: 'UPDATE_VP',
                 playerId: player.id,
-                resources: finalGems
+                vp: completeSets,
+                source: 'yellowAutoVP'
             });
-            
-            const totalGems = Object.values(finalGems).reduce((sum, amount) => sum + amount, 0);
-            const message = `Player ${player.id}: Yellow R2 shop → Gained ${totalGems} gems${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
+
+            const message = `Player ${player.id}: Yellow R2 shop → +${completeSets} VP (${completeSets} complete sets of ${activeColors.length} colors)`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
@@ -7442,8 +7437,40 @@ function useGame() {
             
             const handleAdvanceRound = () => {
                 if (state.round < 3) {
+                    // Calculate Yellow auto VP for all players if Yellow is active
+                    if (state.gameLayers && state.gameLayers.yellow) {
+                        const activeColors = Object.keys(state.gameLayers);
+
+                        dispatch({ type: 'ADD_LOG', message: `=== End of Round ${state.round}: Yellow Auto VP ===` });
+
+                        state.players.forEach(player => {
+                            // Calculate complete sets: min of all active color resources
+                            const resourceCounts = activeColors.map(color => player.resources[color] || 0);
+                            const completeSets = Math.min(...resourceCounts);
+
+                            if (completeSets > 0) {
+                                dispatch({
+                                    type: 'UPDATE_VP',
+                                    playerId: player.id,
+                                    vp: completeSets,
+                                    source: 'yellowAutoVP'
+                                });
+
+                                dispatch({
+                                    type: 'ADD_LOG',
+                                    message: `Player ${player.id}: Yellow auto VP → +${completeSets} VP (${completeSets} complete sets of ${activeColors.length} colors)`
+                                });
+                            } else {
+                                dispatch({
+                                    type: 'ADD_LOG',
+                                    message: `Player ${player.id}: Yellow auto VP → +0 VP (no complete sets)`
+                                });
+                            }
+                        });
+                    }
+
                     // Show the round transition modal
-                    dispatch({ 
+                    dispatch({
                         type: 'SHOW_MODAL',
                         modal: {
                             type: 'roundTransition',

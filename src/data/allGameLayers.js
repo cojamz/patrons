@@ -20,11 +20,11 @@ export const allGameLayers = {
         actions: [
             { id: 'gain3yellow', title: 'Gain 3 resources', description: '(any colors)', round: 1 },
             { id: 'gain2yellow', title: 'Gain 2 resources', description: '(any colors)', round: 1 },
-            { id: 'steal2Gems', title: 'Trade all resources for new ones', description: '(keep same total count)', round: 1 },
-            { id: 'yellowHybrid1', title: 'Gain 2 resources', description: '(any colors)', round: 1 },
-            { id: 'steal3Gems', title: 'Steal 3 resources from a player', description: '(any colors)', round: 2 },
-            { id: 'yellowHybrid2', title: '+1 🟡 + Double your next gain', description: '(doesn\'t stack with shop)', round: 2 },
-            { id: 'yellowSwapResources', title: 'Swap all your resources with another player', description: '', round: 3 }
+            { id: 'steal2Gems', title: '+1🟡 + Trade all resources for new ones', description: '(keep same total count)', round: 1 },
+            { id: 'yellowHybrid1', title: '+2🟡', description: '', round: 1 },
+            { id: 'steal3Gems', title: 'Gain 4 resources', description: '(any colors)', round: 2 },
+            { id: 'yellowHybrid2', title: '+1🟡 + Copy previous player\'s last gain', description: '', round: 2 },
+            { id: 'yellowSwapResources', title: 'Gain 3 of each color in the game', description: '', round: 3 }
         ]
     },
     blue: {

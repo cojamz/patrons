@@ -8,8 +8,8 @@ export const shopData = {
     },
     yellow: {
         1: 'Double your next resource gain',
-        2: 'Gain 5 resources (any colors)',
-        3: 'Gain 7 resources (any colors)'
+        2: 'Trigger Yellow auto VP now',
+        3: 'Gain 10 resources (any colors)'
     },
     blue: {
         1: 'Open or close any one shop',
