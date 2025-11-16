@@ -1133,8 +1133,8 @@ function useGame() {
                 
                 // If this is from Red R2 shop placement, show modal to the placed worker's owner
                 const isPlacedByOther = workerInfo && workerInfo.placedBy && workerInfo.placedBy !== actualPlayerId;
-                const modalTitle = isPlacedByOther 
-                    ? `Your worker was placed! Select 3 Resources (⭐ Colors):`
+                const modalTitle = isPlacedByOther
+                    ? `Your patron was placed! Select 3 Resources (⭐ Colors):`
                     : 'Select 3 Resources (⭐ Colors)';
                 
                 const selectedGems = await showGemSelection(
@@ -1224,8 +1224,8 @@ function useGame() {
                 
                 // If this is from Red R2 shop placement, show modal to the placed worker's owner
                 const isPlacedByOther = workerInfo && workerInfo.placedBy && workerInfo.placedBy !== actualPlayerId;
-                const modalTitle = isPlacedByOther 
-                    ? `Your worker was placed! Select 2 Resources (⭐ Colors):`
+                const modalTitle = isPlacedByOther
+                    ? `Your patron was placed! Select 2 Resources (⭐ Colors):`
                     : 'Select 2 Resources (⭐ Colors)';
                 
                 const selectedGems = await showGemSelection(
@@ -1309,7 +1309,7 @@ function useGame() {
                 dispatch({
                     type: 'ADD_EFFECT',
                     playerId: player.id,
-                    effect: `Can place ${workersToAdd} more worker${workersToAdd > 1 ? 's' : ''} this turn`
+                    effect: `Can place ${workersToAdd} more patron${workersToAdd > 1 ? 's' : ''} this turn`
                 });
                 
                 const message = `Player ${player.id}: playTwoWorkers → Can now place ${workersToAdd} MORE patron${workersToAdd > 1 ? 's' : ''} this turn`;
@@ -1489,7 +1489,7 @@ function useGame() {
                 dispatch({
                     type: 'ADD_EFFECT',
                     playerId: player.id,
-                    effect: `Can place ${workersToAdd} more worker${workersToAdd > 1 ? 's' : ''} this turn`
+                    effect: `Can place ${workersToAdd} more patron${workersToAdd > 1 ? 's' : ''} this turn`
                 });
                 
                 const message = `Player ${player.id}: playThreeWorkers → Can now place ${workersToAdd} MORE patron${workersToAdd > 1 ? 's' : ''} this turn`;
@@ -2290,7 +2290,7 @@ function useGame() {
                 colors.forEach(color => {
                     // Get shop data for description
                     const shopInfo = {
-                        red: { 1: 'Repeat a worker\'s action' },
+                        red: { 1: 'Repeat one of your patron\'s actions' },
                         yellow: { 1: 'Double your next gain action' },
                         blue: { 1: 'Toggle any shop (open/closed)' },
                         purple: { 1: 'Take an extra turn after this one' },
@@ -2379,9 +2379,9 @@ function useGame() {
                 
                 const shopInfo = {
                     red: {
-                        1: 'Repeat a worker\'s action',
-                        2: 'Place the next player\'s worker',
-                        3: 'Repeat all actions taken this round'
+                        1: 'Repeat one of your patron\'s actions',
+                        2: 'Place the next player\'s patron for them',
+                        3: 'Pick a player. Repeat all actions where they have a patron'
                     },
                     yellow: {
                         1: 'Double your next gain action',
@@ -2395,8 +2395,8 @@ function useGame() {
                     },
                     purple: {
                         1: 'Take an extra turn',
-                        2: 'Play 2 more workers',
-                        3: 'Play all remaining workers'
+                        2: 'Place 2 more patrons this turn',
+                        3: 'Place all your remaining patrons now'
                     },
                     gold: {
                         1: '1 gold + 1 any → 2 gold',
@@ -2406,7 +2406,7 @@ function useGame() {
                     white: {
                         1: 'Pay 1 VP → Gain 1 any gem',
                         2: 'Pay 3 VP → Skip next player',
-                        3: 'Pay 5 VP → Move a worker'
+                        3: 'Move one patron to any action'
                     },
                     black: {
                         1: 'Steal 1 VP from a player',
@@ -4594,9 +4594,9 @@ function useGame() {
             
             const shopData = {
                 red: {
-                    1: 'Repeat a worker\'s action',
-                    2: 'Place the next player\'s worker',
-                    3: 'Repeat all actions taken this round'
+                    1: 'Repeat one of your patron\'s actions',
+                    2: 'Place the next player\'s patron for them',
+                    3: 'Pick a player. Repeat all actions where they have a patron'
                 },
                 yellow: {
                     1: 'Double your next gain action',
@@ -4610,8 +4610,8 @@ function useGame() {
                 },
                 purple: {
                     1: 'Take an extra turn',
-                    2: 'Play 2 more workers this turn',
-                    3: 'Play all remaining workers'
+                    2: 'Place 2 more patrons this turn',
+                    3: 'Place all your remaining patrons now'
                 },
                 gold: {
                     1: '1 Gold + 1 Any = 2 Gold',
@@ -4621,7 +4621,7 @@ function useGame() {
                 white: {
                     1: 'Lose 1 VP, Gain 1 ⭐',
                     2: 'Lose 3 VP, Skip next player\'s turn',
-                    3: 'Lose 5 VP, Move worker to action'
+                    3: 'Move one patron to any action'
                 },
                 black: {
                     1: 'Steal 1 VP from another player',
@@ -5456,9 +5456,9 @@ function useGame() {
                     dispatch({
                         type: 'ADD_EFFECT',
                         playerId: player.id,
-                        effect: `Can place ${workersToAdd} more worker${workersToAdd > 1 ? 's' : ''} this turn`
+                        effect: `Can place ${workersToAdd} more patron${workersToAdd > 1 ? 's' : ''} this turn`
                     });
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Can place ${workersToAdd} more worker${workersToAdd > 1 ? 's' : ''}${workersToAdd < 2 ? ' (limited by available workers)' : ''} this turn!` });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Can place ${workersToAdd} more patron${workersToAdd > 1 ? 's' : ''}${workersToAdd < 2 ? ' (limited by available patrons)' : ''} this turn!` });
                     break;
                 case 'purple3':
                     const workersRemaining = player.workersLeft;
@@ -5470,9 +5470,9 @@ function useGame() {
                         dispatch({
                             type: 'ADD_EFFECT',
                             playerId: player.id,
-                            effect: `Can place ${workersRemaining} more workers this turn`
+                            effect: `Can place ${workersRemaining} more patrons this turn`
                         });
-                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Can place all ${workersRemaining} remaining workers!` });
+                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Can place all ${workersRemaining} remaining patrons!` });
                     }
                     break;
                 case 'gold1':
@@ -6710,9 +6710,9 @@ function useGame() {
             // Define shop data inline to ensure it's being used
             const inlineShopData = {
                 red: {
-                    1: { cost: { red: 1, any: 2 }, effect: 'Repeat one of your worker\'s actions' },
-                    2: { cost: { red: 2, any: 2 }, effect: 'Place the next player\'s worker for them' },
-                    3: { cost: { red: 4, any: 4 }, effect: 'Repeat all actions you took this round' }
+                    1: { cost: { red: 1, any: 2 }, effect: 'Repeat one of your patron\'s actions' },
+                    2: { cost: { red: 2, any: 2 }, effect: 'Place the next player\'s patron for them' },
+                    3: { cost: { red: 4, any: 4 }, effect: 'Pick a player. Repeat all actions where they have a patron' }
                 },
                 yellow: {
                     1: { cost: { yellow: 1, any: 1 }, effect: 'Double your next resource gain' },
@@ -6726,8 +6726,8 @@ function useGame() {
                 },
                 purple: {
                     1: { cost: { purple: 1, any: 2 }, effect: 'Take an extra turn after this one' },
-                    2: { cost: { purple: 2, any: 2 }, effect: 'Place 2 more workers this turn' },
-                    3: { cost: { purple: 3, any: 3 }, effect: 'Place all your remaining workers now' }
+                    2: { cost: { purple: 2, any: 2 }, effect: 'Place 2 more patrons this turn' },
+                    3: { cost: { purple: 3, any: 3 }, effect: 'Place all your remaining patrons now' }
                 },
                 gold: {
                     1: { cost: { gold: 1, any: 1 }, effect: 'Trade: 1 Gold + 1 Any → 2 Gold' },
@@ -6737,7 +6737,7 @@ function useGame() {
                 white: {
                     1: { cost: { vp: 1 }, effect: 'Lose 1 VP, gain 1 resource (any color)' },
                     2: { cost: { vp: 2 }, effect: 'Lose 3 VP, next player skips their turn' },
-                    3: { cost: { vp: 3 }, effect: 'Lose 5 VP, move one worker to any action' }
+                    3: { cost: { vp: 3 }, effect: 'Lose 5 VP, move one patron to any action' }
                 },
                 black: {
                     1: { cost: { black: 1, any: 1 }, effect: 'Steal 1 VP from any player' },
