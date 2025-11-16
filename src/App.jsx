@@ -6029,18 +6029,20 @@ function useGame() {
             const availableActions = actions; // Remove filtering to show all actions
             
             return React.createElement('div', { className: getLayerStyle() }, [
-                // Card Header - Layer title and color
+                // Card Header - Layer title, automatic VP (centered), and round indicator
                 React.createElement('div', { key: 'header', className: 'flex justify-between items-center mb-2' }, [
+                    // Color name
                     React.createElement('h2', { key: 'title', className: `text-lg font-bold ${getIconColor()}` },
                         `${icon} ${color.charAt(0).toUpperCase() + color.slice(1)}`),
+                    // Automatic VP (centered)
+                    React.createElement('div', { key: 'auto-vp', className: 'text-sm font-bold text-gray-900 flex items-center gap-1' }, [
+                        React.createElement('span', { key: 'trophy' }, '🏆'),
+                        React.createElement('span', { key: 'text' }, getAutomaticVPText(color))
+                    ]),
+                    // Round indicator
                     React.createElement('span', { key: 'round', className: 'text-gray-700 text-xs bg-white px-2 py-0.5 rounded shadow-sm font-semibold' },
                         `R${round}`)
                 ]),
-
-                // Automatic VP Display
-                React.createElement('div', { key: 'auto-vp', className: 'text-xs text-gray-800 bg-yellow-100 rounded px-2 py-1 mb-2 leading-tight font-medium' },
-                    getAutomaticVPText(color)
-                ),
 
                 // Shops Section - Compact horizontal layout
                 React.createElement('div', { key: 'shops', className: 'mb-1.5 bg-white bg-opacity-20 rounded-lg p-1.5' }, [
