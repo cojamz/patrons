@@ -6,10 +6,15 @@
 
 ## Active Tasks
 
+### Critical Priority
+- [ ] **[URGENT] Fix multiplayer desync** - Players seeing different game states (myPlayerId:1 currentPlayer:2 vs myPlayerId:2 currentPlayer:1)
+
 ### High Priority
-- [ ] **[1] Shop phase text clarity** - Make it clear players can buy 1 regular shop + 1 VP shop (two separate phases, not "any shop")
-- [ ] **[2] Shop phase text visibility** - All players can see shop phase text on other player cards (looks like button). Should only show for current player. Maybe add phase indicator to player turn card instead.
+- [x] **[1] Shop phase text clarity** - DONE
+- [x] **[2] Shop phase text visibility** - DONE (added to turn card)
 - [ ] **[3] Round summary card missing on auto-advance** - When last patron played, round advances automatically but doesn't show Round summary card. Only shows when using "Advance Round" button.
+- [ ] **[3a] VP breakdown in round summaries** - Round summaries should show clear accounting of where players got their VPs from
+- [ ] **[3b] End-of-game summary** - Create final game summary with complete VP breakdown
 
 ### Medium Priority
 - [ ] **[4] Purple broken - temporary replacement** - Replace purple with different color in basic games until we fix it properly

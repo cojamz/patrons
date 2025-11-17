@@ -95,7 +95,8 @@ export function gameReducer(state, action) {
                 }),
                 workerPlacedThisTurn: isCurrentPlayerWorker ? true : state.workerPlacedThisTurn,
                 workersToPlace: newWorkersToPlace,
-                roundActions: [...state.roundActions, { playerId: workerOwner, actionId: action.actionId }]
+                roundActions: [...state.roundActions, { playerId: workerOwner, actionId: action.actionId }],
+                lastUpdatedBy: state.myPlayerId
             };
 
         case 'UPDATE_RESOURCES':
@@ -334,6 +335,7 @@ export function gameReducer(state, action) {
                         shopUsedAfterWorkers: false,
                         playersOutOfWorkers: newPlayersOutOfWorkers,
                         skippedTurns: newSkippedTurns,
+                        lastUpdatedBy: state.myPlayerId,
                         actionLog: [
                             ...state.actionLog.slice(-9),
                             logMessage,
@@ -744,6 +746,7 @@ export function gameReducer(state, action) {
                     skippedTurns: {},
                     waitingForOthers: {},
                     roundActions: [],
+                    lastUpdatedBy: state.myPlayerId,
                     actionLog: [
                         ...state.actionLog.slice(-9),
                         ...extraTurnLogMessages,
@@ -767,6 +770,7 @@ export function gameReducer(state, action) {
                 waitingForOthers: newWaitingForOthers,
                 playersOutOfWorkers: newPlayersOutOfWorkers,
                 players: effectivePlayers,
+                lastUpdatedBy: state.myPlayerId,
                 actionLog: [
                     ...state.actionLog.slice(-9),
                     ...extraTurnLogMessages,
@@ -920,6 +924,7 @@ export function gameReducer(state, action) {
                 waitingForOthers: {}, // Reset waiting status
                 roundActions: [], // Reset actions for new round
                 roundAdvancing: false, // Reset flag after round advance
+                lastUpdatedBy: state.myPlayerId,
                 actionLog: [...state.actionLog.slice(-9), ...vpMessages, `Round ${state.round + 1} started! Extra workers applied.`]
             };
 
@@ -1025,7 +1030,8 @@ export function gameReducer(state, action) {
                 closedShops: {
                     ...state.closedShops,
                     [action.shopId]: true
-                }
+                },
+                lastUpdatedBy: state.myPlayerId
             };
 
         case 'OPEN_SHOP':
@@ -1035,7 +1041,8 @@ export function gameReducer(state, action) {
             delete newClosedShops[action.shopId];
             return {
                 ...state,
-                closedShops: newClosedShops
+                closedShops: newClosedShops,
+                lastUpdatedBy: state.myPlayerId
             };
 
         case 'FLIP_ALL_SHOPS':
@@ -1065,14 +1072,16 @@ export function gameReducer(state, action) {
                         title: 'All Shops Toggled!',
                         message: `${action.playerName || `Player ${action.playerId}`} flipped all shop statuses`,
                         timestamp: Date.now()
-                    }].slice(-5)
+                    }].slice(-5),
+                    lastUpdatedBy: state.myPlayerId
                 };
                 return newState;
             }
 
             return {
                 ...state,
-                closedShops: flippedShops
+                closedShops: flippedShops,
+                lastUpdatedBy: state.myPlayerId
             };
 
         case 'ADD_SHOP_COST_MODIFIER':
@@ -1089,7 +1098,8 @@ export function gameReducer(state, action) {
             // Mark that shop was used after placing all workers
             return {
                 ...state,
-                shopUsedAfterWorkers: true
+                shopUsedAfterWorkers: true,
+                lastUpdatedBy: state.myPlayerId
             };
 
 

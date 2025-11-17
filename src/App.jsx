@@ -427,17 +427,23 @@ function useGame() {
                 database.ref(`rooms/${roomCode}/players`).once('value', (snapshot) => {
                     const connectedPlayers = snapshot.val() || {};
                     const playerCount = Object.keys(connectedPlayers).length;
-                    
+
+                    // Generate emojis ONCE on the host so all clients get the same emojis
+                    const gameEmojis = getRandomPlayerEmojis(playerCount);
+
                     // Create proper player objects with all required fields
                     const players = [];
                     Object.values(connectedPlayers).forEach((player, index) => {
                         players.push({
                             id: player.id,
                             name: player.name,
+                            emoji: gameEmojis[index], // Include emoji in initial state
                             resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 },
                             workersLeft: 4,
                             effects: [],
-                            victoryPoints: 0
+                            victoryPoints: 0,
+                            vpSources: {},
+                            shopCostModifier: 0
                         });
                     });
                     
@@ -452,7 +458,11 @@ function useGame() {
                     if (gameLayers && gameLayers.white) {
                         initialPlayers = players.map(player => ({
                             ...player,
-                            victoryPoints: player.victoryPoints + 5
+                            victoryPoints: player.victoryPoints + 5,
+                            vpSources: {
+                                ...player.vpSources,
+                                whiteStart: 5
+                            }
                         }));
                     }
                     
