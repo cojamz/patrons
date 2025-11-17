@@ -3958,15 +3958,15 @@ function useGame() {
                             ]),
                             React.createElement('div', {
                                 key: 'vp-section',
-                                className: 'space-y-1'
+                                className: 'text-right'
                             }, [
                                 React.createElement('div', {
                                     key: 'total',
-                                    className: 'text-xl font-bold text-green-600'
+                                    className: 'text-xl font-bold text-green-600 mb-2'
                                 }, `${player.victoryPoints} VP`),
                                 React.createElement('div', {
                                     key: 'breakdown',
-                                    className: 'text-xs text-gray-600'
+                                    className: 'text-sm text-gray-700 space-y-1'
                                 }, getVPBreakdownDisplay(player.vpSources))
                             ])
                         ]),
@@ -7831,28 +7831,37 @@ function useGame() {
                     React.createElement('div', {
                         key: 'players-list',
                         className: 'space-y-3'
-                    }, sortedPlayers.map((player, index) => 
+                    }, sortedPlayers.map((player, index) =>
                         React.createElement('div', {
                             key: player.id,
-                            className: `glass rounded-lg p-3 flex items-center justify-between ${index === 0 ? 'ring-2 ring-yellow-400' : ''}`
+                            className: `glass rounded-lg p-4 ${index === 0 ? 'ring-2 ring-yellow-400' : ''}`
                         }, [
                             React.createElement('div', {
-                                key: 'left',
-                                className: 'flex items-center gap-3'
+                                key: 'header',
+                                className: 'flex items-center justify-between mb-2'
                             }, [
                                 React.createElement('div', {
-                                    key: 'rank',
-                                    className: 'text-2xl font-bold'
-                                }, index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`),
+                                    key: 'left',
+                                    className: 'flex items-center gap-3'
+                                }, [
+                                    React.createElement('div', {
+                                        key: 'rank',
+                                        className: 'text-2xl font-bold'
+                                    }, index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`),
+                                    React.createElement('div', {
+                                        key: 'name',
+                                        className: 'text-lg font-semibold'
+                                    }, `${player.name} ${player.emoji || '👤'}`)
+                                ]),
                                 React.createElement('div', {
-                                    key: 'name',
-                                    className: 'text-lg'
-                                }, `${player.name} ${player.emoji || '👤'}`)
+                                    key: 'score',
+                                    className: 'text-xl font-bold text-green-600'
+                                }, `${player.victoryPoints} VP`)
                             ]),
                             React.createElement('div', {
-                                key: 'score',
-                                className: 'text-xl font-semibold'
-                            }, `${player.victoryPoints} VP`)
+                                key: 'breakdown',
+                                className: 'text-sm text-gray-700 pl-12'
+                            }, getVPBreakdownDisplay(player.vpSources))
                         ])
                     ))
                 ]),
