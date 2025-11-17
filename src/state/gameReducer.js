@@ -1298,12 +1298,17 @@ export function gameReducer(state, action) {
                 justSyncedFromFirebase: true
             };
 
-            console.log('SYNC_GAME_STATE - After merge, new state:', {
+            console.log('🔄 SYNC_GAME_STATE - After merge, new state:', {
+                myPlayerId: mergedState.myPlayerId,
+                currentPlayer: mergedState.currentPlayer,
+                turnMatch: mergedState.myPlayerId === mergedState.currentPlayer,
                 round: mergedState.round,
                 gameOver: mergedState.gameOver,
                 occupiedSpaces: mergedState.occupiedSpaces,
                 players: mergedState.players?.map(p => ({
                     id: p.id,
+                    name: p.name,
+                    emoji: p.emoji,
                     resources: p.resources,
                     workersLeft: p.workersLeft
                 }))

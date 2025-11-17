@@ -492,11 +492,14 @@ function useGame() {
                         lastUpdatedBy: 'host-start'
                     };
                     
-                    console.log('Starting multiplayer game with state:', {
-                        players: gameState.players.length,
+                    console.log('🎮 Starting multiplayer game with state:', {
+                        currentPlayer: gameState.currentPlayer,
+                        players: gameState.players.map(p => ({ id: p.id, name: p.name, emoji: p.emoji })),
+                        playerCount: gameState.players.length,
                         gameLayers: gameLayers ? Object.keys(gameLayers) : 'null',
                         gameMode: gameMode,
-                        automaticVPs: automaticVPs
+                        automaticVPs: automaticVPs,
+                        lastUpdatedBy: gameState.lastUpdatedBy
                     });
                     
                     database.ref(`rooms/${roomCode}/gameState`).set(gameState)
@@ -861,7 +864,12 @@ function useGame() {
                 if (state.roomCode && state.myPlayerId !== state.currentPlayer) {
                     console.error('❌ Turn validation failed!', {
                         myPlayerId: state.myPlayerId,
-                        currentPlayer: state.currentPlayer
+                        myPlayerType: typeof state.myPlayerId,
+                        currentPlayer: state.currentPlayer,
+                        currentPlayerType: typeof state.currentPlayer,
+                        playersInState: state.players.map(p => ({ id: p.id, name: p.name, emoji: p.emoji })),
+                        roomCode: state.roomCode,
+                        isHost: state.isHost
                     });
                     alert('It\'s not your turn!');
                     return;
