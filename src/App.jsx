@@ -7692,14 +7692,19 @@ function useGame() {
                         }, 'Reset Game'),
                         React.createElement('div', { key: 'instructions', className: 'text-gray-600 mt-3 text-sm' }, 
                             'Place worker → Buy from shops → End turn (button under current player)'),
-                        state.actionLog.length > 0 && React.createElement('div', { key: 'action-log', className: 'mt-4 p-3 bg-gray-100 rounded-lg max-h-32 overflow-y-auto' }, [
-                            React.createElement('div', { key: 'log-title', className: 'font-bold text-gray-700 mb-2 text-sm' }, 'Action Log (Last 10):'),
-                            ...state.actionLog.map((log, index) => 
-                                React.createElement('div', { 
-                                    key: index, 
-                                    className: 'text-xs text-gray-600 mb-1 font-mono' 
-                                }, log)
-                            )
+                        state.actionLog.length > 0 && React.createElement('div', { key: 'action-log', className: 'mt-4 p-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg max-h-40 overflow-y-auto border border-gray-200 shadow-sm' }, [
+                            React.createElement('div', { key: 'log-title', className: 'font-bold text-gray-800 mb-2 text-sm flex items-center gap-2' }, [
+                                React.createElement('span', { key: 'icon' }, '📋'),
+                                React.createElement('span', { key: 'text' }, 'Recent Activity')
+                            ]),
+                            ...state.actionLog.map((log, index) => {
+                                // Parse and format the log message
+                                const formatted = formatLogMessage(log, state.players);
+                                return React.createElement('div', {
+                                    key: index,
+                                    className: 'text-sm text-gray-700 mb-1.5 pl-2 border-l-2 border-gray-300 leading-relaxed'
+                                }, formatted);
+                            })
                         ])
                     ])
                 ]), // Close game-area div array
@@ -7925,6 +7930,24 @@ function useGame() {
                     }, 'Reload Game')
                 ]));
             }
+        }
+
+        // Format log message for better readability
+        function formatLogMessage(message, players) {
+            if (!message) return message;
+
+            // Replace "Player X" with player names if available
+            let formatted = message;
+            players.forEach(player => {
+                const name = player.name || `Player ${player.id}`;
+                formatted = formatted.replace(new RegExp(`Player ${player.id}`, 'g'), name);
+            });
+
+            // Filter out zero-value resources from logs
+            formatted = formatted.replace(/,?\s*0\s+\w+/g, '');
+            formatted = formatted.replace(/\s+,/g, ',');
+
+            return formatted;
         }
 
         // Debug functions for testing

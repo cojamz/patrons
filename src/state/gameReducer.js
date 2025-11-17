@@ -130,11 +130,12 @@ export function gameReducer(state, action) {
                         };
 
                         console.log('UPDATE_RESOURCES - Updating player', player.id, 'from', player.resources, 'to', newResources);
-                        console.log('UPDATE_RESOURCES - Other players will track gainedResources:', gainedResources);
-                        // Current player's lastGain stays the same (doesn't track their own gains)
+                        console.log('UPDATE_RESOURCES - All players will track gainedResources:', gainedResources);
+                        // Update current player's lastGain too (so others can copy it)
                         return {
                             ...player,
-                            resources: newResources
+                            resources: newResources,
+                            lastGain: Object.keys(gainedResources).length > 0 ? gainedResources : player.lastGain
                         };
                     } else {
                         // Other players track what the current player gained
