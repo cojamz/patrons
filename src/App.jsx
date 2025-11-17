@@ -4570,7 +4570,7 @@ function useGame() {
             if (!selectedGems) {
                 const message = `Player ${player.id}: Yellow R3 shop → Cancelled`;
                 dispatch({ type: 'ADD_LOG', message });
-                return;
+                return false; // Return false to indicate cancellation
             }
             
             console.log('executeYellow3Shop - Player', player.id, 'selected gems:', selectedGems);
@@ -4602,6 +4602,7 @@ function useGame() {
             const totalGems = Object.values(finalGems).reduce((sum, amount) => sum + amount, 0);
             const message = `Player ${player.id}: Yellow R3 shop → Gained ${totalGems} gems${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
             dispatch({ type: 'ADD_LOG', message });
+            return true; // Return true to indicate success
         }
         
         // Execute yellow 2 shop effect
@@ -4637,6 +4638,7 @@ function useGame() {
 
             const message = `Player ${player.id}: Yellow R2 shop → +${completeSets} VP (${completeSets} complete sets of ${activeColors.length} colors)`;
             dispatch({ type: 'ADD_LOG', message });
+            return true; // Return true to indicate success
         }
         
         // Execute blue 1 shop effect - Toggle any shop (open/closed)
@@ -5457,10 +5459,12 @@ function useGame() {
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Yellow R1 shop → Next gain will be doubled` });
                     break;
                 case 'yellow2':
-                    await executeYellow2Shop(player, dispatch, state);
+                    const yellow2Success = await executeYellow2Shop(player, dispatch, state);
+                    if (!yellow2Success) return false;
                     break;
                 case 'yellow3':
-                    await executeYellow3Shop(player, dispatch, state);
+                    const yellow3Success = await executeYellow3Shop(player, dispatch, state);
+                    if (!yellow3Success) return false;
                     break;
                 case 'blue1':
                     await executeBlue1Shop(player, dispatch, state);
