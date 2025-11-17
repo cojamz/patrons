@@ -1919,23 +1919,12 @@ function useGame() {
                 
                 if (actionId === 'redHybrid1') {
                     // Both players get actions where their workers END UP
-                    // Note: In multiplayer, only execute actions for the current player to avoid UI conflicts
-                    if (currentState.roomCode) {
-                        // In multiplayer, only current player gets their new action
-                        dispatch({ type: 'ADD_LOG', message: `In multiplayer, only current player gets the swap benefit` });
-                        if (!skipActions.includes(worker2.spaceId)) {
-                            await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
-                        } else {
-                            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Cannot execute ${worker2.spaceId} from swap (would interfere with swap)` });
-                        }
-                    } else {
-                        // In single player, both get actions
-                        if (!skipActions.includes(worker1.spaceId)) {
-                            await executeAction(worker1.spaceId, currentState.players.find(p => p.id === worker2.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
-                        }
-                        if (!skipActions.includes(worker2.spaceId)) {
-                            await executeAction(worker2.spaceId, currentState.players.find(p => p.id === worker1.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
-                        }
+                    // Execute for both players (single-player AND multiplayer)
+                    if (!skipActions.includes(worker1.spaceId)) {
+                        await executeAction(worker1.spaceId, currentState.players.find(p => p.id === worker2.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
+                    }
+                    if (!skipActions.includes(worker2.spaceId)) {
+                        await executeAction(worker2.spaceId, currentState.players.find(p => p.id === worker1.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
                     }
                 } else {
                     // R2: Only current player gets action of where they MOVE TO (not where they were)
