@@ -1730,18 +1730,9 @@ function useGame() {
                 dispatch({ type: 'ADD_LOG', message: logMessage });
                 
                 // Find all occupied spaces that belong to the current player
-                // Exclude: repeat actions and swap actions to prevent confusing chains
+                // Only exclude repeating the repeat action itself to prevent infinite loops
                 const excludedActions = [
-                    // Red actions that could cause infinite loops
-                    'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
-                    // Blue actions that could cause recursion through shops
-                    'blueAnyShopBenefit', // Blue R3 - could select Red R3 shop
-                    // Purple actions that manipulate turn order/workers
-                    'playTwoWorkers', 'playThreeWorkers', 'gain4purpleWaitAll',
-                    'gain2purpleTakeBack', // Taking back workers is personal
-                    // Victory shops - already purchased, can't repeat
-                    'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
-                    'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
+                    'redRepeatAction' // Can't repeat the repeat action itself
                 ];
                 const playerSpaces = Object.entries(currentState.occupiedSpaces)
                     .filter(([spaceId, playerId]) => 
@@ -2379,10 +2370,7 @@ function useGame() {
                 // Function to check if red shop can be executed
                 const canExecuteRedShop = () => {
                     const excludedActions = [
-                        'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
-                        'blueAnyShopBenefit', 'blueR1ShopBenefit',
-                        'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
-                        'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
+                        'redRepeatAction' // Can't repeat the repeat action itself
                     ];
                     
                     const validSpaces = Object.entries(currentState.occupiedSpaces)
@@ -4478,18 +4466,9 @@ function useGame() {
         // Execute repeat action from red shop
         async function executeRepeatAction(player, dispatch, state, gameLayers, recursionDepth = 0) {
             // Find all occupied spaces that belong to the current player
-            // Exclude: repeat actions and swap actions to prevent confusing chains
+            // Only exclude repeating the repeat action itself to prevent infinite loops
             const excludedActions = [
-                // Red actions that could cause infinite loops
-                'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
-                // Blue actions that could cause recursion through shops
-                'blueAnyShopBenefit', 'blueR1ShopBenefit',
-                // Purple actions that manipulate turn order/workers
-                'playTwoWorkers', 'playThreeWorkers', 'gain4purpleWaitAll',
-                'gain2purpleTakeBack', // Taking back workers is personal
-                // Victory shops - already purchased, can't repeat
-                'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
-                'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
+                'redRepeatAction' // Can't repeat the repeat action itself
             ];
             
             const playerSpaces = Object.entries(state.occupiedSpaces)
@@ -5754,19 +5733,10 @@ function useGame() {
             // Get target player's actions
             const targetActions = playerWorkerCounts[targetPlayerId];
 
-            // Build action options with details, excluding problematic actions
+            // Build action options with details
+            // Only exclude repeating the repeat action itself to prevent infinite loops
             const excludedActions = [
-                // Red actions that could cause infinite loops
-                'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
-                // Blue actions that could cause recursion through shops
-                'blueAnyShopBenefit', // Blue R3 - could select Red R3 shop
-                // Purple actions that manipulate turn order/workers
-                'playTwoWorkers', 'playThreeWorkers', 'gain4purpleWaitAll',
-                // Note: Skip turn actions CAN be repeated - they just add more skips
-                'gain2purpleTakeBack', // Taking back workers is personal
-                // Victory shops - these are one-time purchases, not repeatable actions
-                'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
-                'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
+                'redRepeatAction' // Can't repeat the repeat action itself
             ];
 
             const actionOptions = targetActions
@@ -6407,14 +6377,14 @@ function useGame() {
                         const proceed = confirm('WARNING: You have no patrons on the board to repeat actions from! Continue anyway?');
                         if (!proceed) return;
                     } else {
-                        // Check if any of the worker actions are repeatable (exclude problematic ones)
-                        const excludedActions = ['redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2'];
-                        const repeatableWorkers = playerWorkers.filter(([actionId]) => 
+                        // Check if any of the worker actions are repeatable (only exclude repeat action itself)
+                        const excludedActions = ['redRepeatAction'];
+                        const repeatableWorkers = playerWorkers.filter(([actionId]) =>
                             !excludedActions.includes(actionId)
                         );
-                        
+
                         if (repeatableWorkers.length === 0) {
-                            const proceed = confirm('WARNING: All your patrons are on non-repeatable actions (swap/repeat actions). You will have limited options. Continue anyway?');
+                            const proceed = confirm('WARNING: Your only patron is on the repeat action itself. You will have limited options. Continue anyway?');
                             if (!proceed) return;
                         }
                     }
@@ -6874,19 +6844,16 @@ function useGame() {
                 // Special validation for red R1 shop - must have valid actions to repeat
                 if (color === 'red' && round === 1) {
                     const excludedActions = [
-                        'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
-                        'blueAnyShopBenefit', 'blueR1ShopBenefit',
-                        'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
-                        'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
+                        'redRepeatAction' // Can't repeat the repeat action itself
                     ];
-                    
+
                     const validSpaces = Object.entries(state.occupiedSpaces)
-                        .filter(([spaceId, pid]) => 
+                        .filter(([spaceId, pid]) =>
                             pid === currentPlayer.id && !excludedActions.includes(spaceId)
                         );
-                    
+
                     if (validSpaces.length === 0) {
-                        alert('You have no valid patrons to repeat! Swap and repeat actions cannot be repeated.');
+                        alert('You have no valid patrons to repeat! The repeat action cannot repeat itself.');
                         return;
                     }
                 }
