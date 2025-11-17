@@ -421,7 +421,7 @@ function useGame() {
             }
         }
         
-        function startMultiplayerGame(roomCode, gameLayers = null, gameMode = 'basic') {
+        function startMultiplayerGame(dispatch, roomCode, gameLayers = null, gameMode = 'basic') {
             if (database && roomCode) {
                 // Get current connected players and initialize proper game state
                 database.ref(`rooms/${roomCode}/players`).once('value', (snapshot) => {
@@ -501,7 +501,11 @@ function useGame() {
                         automaticVPs: automaticVPs,
                         lastUpdatedBy: gameState.lastUpdatedBy
                     });
-                    
+
+                    // Apply game state locally on host immediately (before Firebase echo)
+                    // This prevents the host from rejecting their own update via echo detection
+                    dispatch({ type: 'SYNC_GAME_STATE', gameState });
+
                     database.ref(`rooms/${roomCode}/gameState`).set(gameState)
                         .then(() => {
                             console.log('Game state successfully written to Firebase');
@@ -779,7 +783,7 @@ function useGame() {
                                 console.log('Selected layers:', Object.keys(selectedLayers));
                                 dispatch({ type: 'SET_GAME_MODE', mode: 'basic' });
                                 dispatch({ type: 'SET_GAME_LAYERS', layers: selectedLayers });
-                                startMultiplayerGame(state.roomCode, selectedLayers, 'basic');
+                                startMultiplayerGame(dispatch, state.roomCode, selectedLayers, 'basic');
                                 // Don't dispatch START_GAME for multiplayer - startMultiplayerGame handles it
                                 console.log('Game started successfully');
                             },
@@ -793,7 +797,7 @@ function useGame() {
                                 console.log('Selected layers:', Object.keys(selectedLayers));
                                 dispatch({ type: 'SET_GAME_MODE', mode: 'advanced' });
                                 dispatch({ type: 'SET_GAME_LAYERS', layers: selectedLayers });
-                                startMultiplayerGame(state.roomCode, selectedLayers, 'advanced');
+                                startMultiplayerGame(dispatch, state.roomCode, selectedLayers, 'advanced');
                                 // Don't dispatch START_GAME for multiplayer - startMultiplayerGame handles it
                                 console.log('Game started successfully');
                             },
