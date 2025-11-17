@@ -124,19 +124,43 @@ function useGame() {
         function createRoom(dispatch, playerName) {
             const roomCode = generateRoomCode();
             const playerId = 1; // Host is always player 1
-            
+
             if (database) {
                 dispatch({ type: 'UPDATE_CONNECTION_STATUS', status: 'connecting' });
-                
+
+                // Clean up old rooms before creating new one
+                const now = Date.now();
+                const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+                database.ref('rooms').once('value').then(snapshot => {
+                    const rooms = snapshot.val() || {};
+                    const deletePromises = [];
+
+                    Object.keys(rooms).forEach(roomId => {
+                        const room = rooms[roomId];
+                        if (room.createdAt && (now - room.createdAt) > maxAge) {
+                            console.log(`Deleting old room: ${roomId} (${Math.floor((now - room.createdAt) / 1000 / 60 / 60)} hours old)`);
+                            deletePromises.push(database.ref(`rooms/${roomId}`).remove());
+                        }
+                    });
+
+                    return Promise.all(deletePromises);
+                }).then(() => {
+                    console.log('Old rooms cleaned up, creating new room');
+                }).catch(error => {
+                    console.warn('Failed to clean up old rooms:', error);
+                    // Continue anyway - cleanup failure shouldn't block room creation
+                });
+
                 const roomRef = database.ref(`rooms/${roomCode}`);
-                
+
                 // Add timeout to prevent infinite loading
                 const timeout = setTimeout(() => {
                     console.error('Room creation timeout');
                     alert('Failed to create room - connection timeout. Please try local mode or set up Firebase.');
                     dispatch({ type: 'UPDATE_CONNECTION_STATUS', status: 'disconnected' });
                 }, 5000); // 5 second timeout
-                
+
                 roomRef.set({
                     createdAt: Date.now(),
                     host: playerId,
