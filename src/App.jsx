@@ -837,9 +837,22 @@ function useGame() {
             
             const handleClick = async () => {
                 if (isOccupied || !available) return;
-                
+
+                // DEBUG: Log turn validation
+                console.log('🎯 Turn Validation:', {
+                    roomCode: state.roomCode,
+                    myPlayerId: state.myPlayerId,
+                    currentPlayer: state.currentPlayer,
+                    match: state.myPlayerId === state.currentPlayer,
+                    canPlay: !state.roomCode || state.myPlayerId === state.currentPlayer
+                });
+
                 // Validate multiplayer turn
                 if (state.roomCode && state.myPlayerId !== state.currentPlayer) {
+                    console.error('❌ Turn validation failed!', {
+                        myPlayerId: state.myPlayerId,
+                        currentPlayer: state.currentPlayer
+                    });
                     alert('It\'s not your turn!');
                     return;
                 }
