@@ -2347,7 +2347,7 @@ function useGame() {
                 colors.forEach(color => {
                     // Get shop data for description
                     const shopInfo = {
-                        red: { 1: 'Repeat one of your patron\'s actions' },
+                        red: { 1: 'Repeat one of your patron\'s R1 actions' },
                         yellow: { 1: 'Double your next gain action' },
                         blue: { 1: 'Toggle any shop (open/closed)' },
                         purple: { 1: 'Take an extra turn after this one' },
@@ -2433,9 +2433,9 @@ function useGame() {
                 
                 const shopInfo = {
                     red: {
-                        1: 'Repeat one of your patron\'s actions',
+                        1: 'Repeat one of your patron\'s R1 actions',
                         2: 'Place the next player\'s patron for them',
-                        3: 'Pick a player. Repeat all actions where they have a patron'
+                        3: 'Pick another player. Repeat all actions where they have a patron'
                     },
                     yellow: {
                         1: 'Double your next gain action',
@@ -4467,21 +4467,35 @@ function useGame() {
         }
 
         // Execute repeat action from red shop
-        async function executeRepeatAction(player, dispatch, state, gameLayers, recursionDepth = 0) {
+        async function executeRepeatAction(player, dispatch, state, gameLayers, recursionDepth = 0, allowedRounds = null) {
             // Find all occupied spaces that belong to the current player
             // Only exclude repeating the repeat action itself to prevent infinite loops
             const excludedActions = [
                 'redRepeatAction' // Can't repeat the repeat action itself
             ];
-            
+
             const playerSpaces = Object.entries(state.occupiedSpaces)
-                .filter(([spaceId, pid]) => 
-                    pid === player.id && !excludedActions.includes(spaceId)
-                )
+                .filter(([spaceId, pid]) => {
+                    if (pid !== player.id || excludedActions.includes(spaceId)) return false;
+
+                    // If allowedRounds is specified, check if action is from an allowed round
+                    if (allowedRounds !== null) {
+                        for (const layerData of Object.values(gameLayers)) {
+                            const action = layerData.actions.find(a => a.id === spaceId);
+                            if (action) {
+                                return allowedRounds.includes(action.round);
+                            }
+                        }
+                        return false; // Action not found, exclude it
+                    }
+
+                    return true;
+                })
                 .map(([spaceId]) => spaceId);
             
             if (playerSpaces.length === 0) {
-                const message = `Player ${player.id}: Red shop → No valid workers to repeat (swap/repeat actions excluded)`;
+                const roundText = allowedRounds ? ' R1' : '';
+                const message = `Player ${player.id}: Red shop → No valid${roundText} workers to repeat`;
                 dispatch({ type: 'ADD_LOG', message });
                 return false; // Return false to indicate failure
             }
@@ -4631,9 +4645,9 @@ function useGame() {
             
             const shopData = {
                 red: {
-                    1: 'Repeat one of your patron\'s actions',
+                    1: 'Repeat one of your patron\'s R1 actions',
                     2: 'Place the next player\'s patron for them',
-                    3: 'Pick a player. Repeat all actions where they have a patron'
+                    3: 'Pick another player. Repeat all actions where they have a patron'
                 },
                 yellow: {
                     1: 'Double your next gain action',
@@ -5417,8 +5431,8 @@ function useGame() {
             
             switch(shopId) {
                 case 'red1':
-                    // Repeat a worker's action
-                    const repeatSuccess = await executeRepeatAction(player, dispatch, state, state.gameLayers, recursionDepth);
+                    // Repeat a worker's R1 action only
+                    const repeatSuccess = await executeRepeatAction(player, dispatch, state, state.gameLayers, recursionDepth, [1]);
                     if (!repeatSuccess) {
                         // Action was cancelled or failed
                         return false;
@@ -6750,9 +6764,9 @@ function useGame() {
             // Define shop data inline to ensure it's being used
             const inlineShopData = {
                 red: {
-                    1: { cost: { red: 1, any: 2 }, effect: 'Repeat one of your patron\'s actions' },
+                    1: { cost: { red: 1, any: 2 }, effect: 'Repeat one of your patron\'s R1 actions' },
                     2: { cost: { red: 2, any: 2 }, effect: 'Place the next player\'s patron for them' },
-                    3: { cost: { red: 4, any: 4 }, effect: 'Pick a player. Repeat all actions where they have a patron' }
+                    3: { cost: { red: 4, any: 4 }, effect: 'Pick another player. Repeat all actions where they have a patron' }
                 },
                 yellow: {
                     1: { cost: { yellow: 1, any: 1 }, effect: 'Double your next resource gain' },

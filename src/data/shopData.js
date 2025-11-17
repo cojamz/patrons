@@ -2,7 +2,7 @@
 
 export const shopData = {
     red: {
-        1: 'Repeat one of your patron\'s actions',
+        1: 'Repeat one of your patron\'s R1 actions',
         2: 'Place the next player\'s patron for them',
         3: 'Pick another player. Repeat all actions where they have a patron'
     },
