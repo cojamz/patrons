@@ -1032,10 +1032,10 @@ export function gameReducer(state, action) {
             const currentRound = 1;
 
             gameColors.forEach(color => {
-                // Close shops from future rounds (R2, R3, and VP shops)
+                // Close shops from future rounds (R2, R3 only - VP shops start open!)
                 initialClosedShops[`${color}2`] = true;
                 initialClosedShops[`${color}3`] = true;
-                initialClosedShops[`${color}vp`] = true; // Victory shops closed until round 3
+                // VP shops start OPEN, not closed!
             });
 
             // WHITE AUTOMATIC VP: If white is in play, all players start with 5 VP

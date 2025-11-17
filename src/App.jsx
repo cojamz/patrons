@@ -467,13 +467,13 @@ function useGame() {
                         }));
                     }
 
-                    // Initialize closed shops (R2, R3, VP start closed)
+                    // Initialize closed shops (R2, R3 start closed, VP shops start OPEN)
                     const initialClosedShops = {};
                     const gameColors = gameLayers ? Object.keys(gameLayers) : ['red', 'yellow', 'blue', 'black'];
                     gameColors.forEach(color => {
                         initialClosedShops[`${color}2`] = true;
                         initialClosedShops[`${color}3`] = true;
-                        initialClosedShops[`${color}vp`] = true;
+                        // VP shops start OPEN, not closed!
                     });
 
                     // Initialize complete game state
