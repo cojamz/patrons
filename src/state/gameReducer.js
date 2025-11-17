@@ -623,137 +623,19 @@ export function gameReducer(state, action) {
                 // If someone has extra turns, continue playing
             }
 
-            // If no workers remaining and round < 3, automatically advance round
-            // Check roundAdvancing flag to prevent multiple advances
-            if (totalWorkersRemaining === 0 && state.round < 3 && !state.roundAdvancing) {
-                // Calculate automatic VPs before advancing round
-                const vpMessages = [];
-                const playersWithAutomaticVP = effectivePlayers.map(player => {
-                    let vpGained = 0;
-                    const newVpSources = { ...player.vpSources };
-
-                    // Yellow automatic VP - 1 VP per different color resource (only if Yellow is in game)
-                    if (state.gameLayers && state.gameLayers.yellow) {
-                        const differentColors = Object.entries(player.resources)
-                            .filter(([color, amount]) => amount > 0)
-                            .length;
-
-                        if (differentColors > 0) {
-                            vpGained += differentColors;
-                            newVpSources.yellowDiversity = (player.vpSources?.yellowDiversity || 0) + differentColors;
-                            vpMessages.push(`Player ${player.id}: +${differentColors} VP for ${differentColors} different color resources`);
-                        }
-                    }
-
-                    // Gold automatic VP - 1 VP per gold resource (only if Gold is in game)
-                    if (state.gameLayers && state.gameLayers.gold) {
-                        const goldAmount = player.resources.gold || 0;
-                        if (goldAmount > 0) {
-                            vpGained += goldAmount;
-                            newVpSources.goldAutomatic = (player.vpSources?.goldAutomatic || 0) + goldAmount;
-                            vpMessages.push(`Player ${player.id}: +${goldAmount} VP for ${goldAmount} gold resources`);
-                        }
-                    }
-
-                    if (vpGained > 0) {
-                        return {
-                            ...player,
-                            victoryPoints: player.victoryPoints + vpGained,
-                            vpSources: newVpSources
-                        };
-                    }
-                    return player;
-                });
-
-                // SILVER automatic VP - Player(s) with most VP get 3 Silver, others get 2 VP (only if Silver is in game)
-                let playersAfterSilverAuto = playersWithAutomaticVP;
-                if (state.gameLayers && state.gameLayers.silver) {
-                    let maxVP = Math.max(...playersWithAutomaticVP.map(p => p.victoryPoints));
-                    const playersWithMostVP = playersWithAutomaticVP.filter(p => p.victoryPoints === maxVP);
-                    const playersWithMostVPIds = playersWithMostVP.map(p => p.id);
-
-                    playersAfterSilverAuto = playersWithAutomaticVP.map(player => {
-                    if (playersWithMostVPIds.includes(player.id)) {
-                        // Players with most VP get 3 Silver
-                        vpMessages.push(`Player ${player.id}: +3 Silver (most VP)`);
-                        return {
-                            ...player,
-                            resources: {
-                                ...player.resources,
-                                silver: (player.resources.silver || 0) + 3
-                            }
-                        };
-                    } else {
-                        // Other players get 2 VP
-                        vpMessages.push(`Player ${player.id}: +2 VP (Silver automatic)`);
-                        return {
-                            ...player,
-                            victoryPoints: player.victoryPoints + 2,
-                            vpSources: {
-                                ...player.vpSources,
-                                silverAutomatic: (player.vpSources?.silverAutomatic || 0) + 2
-                            }
-                        };
-                    }
-                    });
-                }
-
-                // Open shops for the new round
-                const newRound = state.round + 1;
-                const updatedClosedShops = { ...state.closedShops };
-                const shopColors = ['red', 'yellow', 'blue', 'purple', 'gold', 'white', 'black', 'silver'];
-
-                // Only remove shops for the new round from closedShops (making them available)
-                // This preserves the toggle state of shops from previous rounds
-                shopColors.forEach(color => {
-                    delete updatedClosedShops[`${color}${newRound}`];
-                });
-
-                // Sort turn order by ascending VP (lowest VP goes first)
-                const playerVPs = playersAfterSilverAuto.map(p => ({ id: p.id, vp: p.victoryPoints }));
-                playerVPs.sort((a, b) => a.vp - b.vp); // Sort by ascending VP
-                const newTurnOrder = playerVPs.map(p => p.id);
-
+            // If no workers remaining and round < 3, flag for automatic round advance
+            // This will trigger the round transition modal in the UI
+            if (totalWorkersRemaining === 0 && state.round < 3 && !state.pendingRoundAdvance) {
                 return {
                     ...state,
-                    round: newRound,
-                    roundAdvancing: true, // Set flag to prevent double advance
-                    closedShops: updatedClosedShops,
-                    players: playersAfterSilverAuto.map(player => {
-                        const baseWorkers = 3 + (newRound);
-                        const hasExtraWorkers = (player.effects || []).some(effect =>
-                            effect.includes('Will get 2 extra workers next round')
-                        );
-                        const extraWorkers = hasExtraWorkers ? 2 : 0;
-
-                        return {
-                            ...player,
-                            workersLeft: baseWorkers + extraWorkers,
-                            effects: (player.effects || []).filter(effect =>
-                                !effect.includes('Will get 2 extra workers next round')
-                            )
-                        };
-                    }),
-                    occupiedSpaces: {},
-                    turnOrder: newTurnOrder,
-                    currentPlayer: newTurnOrder[0],
-                    turnDirection: 1,
-                    workerPlacedThisTurn: false,
-                    workersToPlace: 1,
-                    shopUsedAfterWorkers: false,
-                    shopCostModifier: 0,
-                    playersOutOfWorkers: [],
-                    skippedTurns: {},
-                    waitingForOthers: {},
-                    roundActions: [],
+                    pendingRoundAdvance: true, // Flag to show round transition modal
                     lastUpdatedBy: state.myPlayerId,
                     actionLog: [
                         ...state.actionLog.slice(-9),
                         ...extraTurnLogMessages,
                         ...purpleVPUpdates.map(u => `Player ${u.playerId}: +${u.vp} VP (${u.reason})`),
                         ...waitingPlayersUpdates.map(u => `Player ${u.playerId}: Can now play all ${u.workers} workers!`),
-                        ...vpMessages,
-                        `Round ${newRound} started automatically! Extra workers applied.`
+                        `Round complete! All players are out of patrons.`
                     ].filter(Boolean)
                 };
             }
@@ -924,6 +806,7 @@ export function gameReducer(state, action) {
                 waitingForOthers: {}, // Reset waiting status
                 roundActions: [], // Reset actions for new round
                 roundAdvancing: false, // Reset flag after round advance
+                pendingRoundAdvance: false, // Clear auto-advance flag
                 lastUpdatedBy: state.myPlayerId,
                 actionLog: [...state.actionLog.slice(-9), ...vpMessages, `Round ${state.round + 1} started! Extra workers applied.`]
             };

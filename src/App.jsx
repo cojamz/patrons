@@ -7415,7 +7415,21 @@ function useGame() {
                     return () => clearTimeout(clearTimer);
                 }
             }, [state.justSyncedFromFirebase]);
-            
+
+            // Auto-advance round: Show modal when all patrons are placed
+            useEffect(() => {
+                if (state.pendingRoundAdvance && !state.modal) {
+                    dispatch({
+                        type: 'SHOW_MODAL',
+                        modal: {
+                            type: 'roundTransition',
+                            round: state.round + 1,
+                            players: state.players
+                        }
+                    });
+                }
+            }, [state.pendingRoundAdvance, state.modal]);
+
             // Sync state to Firebase whenever state changes (debounced)
             useEffect(() => {
                 if (state.roomCode && state.gameStarted && !state.justSyncedFromFirebase) {
@@ -7449,6 +7463,7 @@ function useGame() {
                             gameOver: currentState.gameOver,
                             automaticVPs: currentState.automaticVPs,
                             pendingPlacements: currentState.pendingPlacements || {},
+                            pendingRoundAdvance: currentState.pendingRoundAdvance || false,
                             // Don't include myPlayerId in sync data - it's local to each client
                             lastUpdatedBy: currentState.myPlayerId,
                             timestamp: Date.now()
