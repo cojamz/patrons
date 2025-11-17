@@ -489,7 +489,7 @@ function useGame() {
                         roundActions: [],
                         gameOver: false,
                         timestamp: Date.now(),
-                        lastUpdatedBy: 'host-start'
+                        lastUpdatedBy: 1  // Host is always player 1
                     };
                     
                     console.log('🎮 Starting multiplayer game with state:', {
