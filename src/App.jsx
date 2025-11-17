@@ -874,20 +874,15 @@ function useGame() {
                     alert('It\'s not your turn!');
                     return;
                 }
-                
-                // Optimistic locking - immediately mark space as pending
-                if (state.roomCode) {
-                    // Check if another player is already trying to place here
-                    if (state.pendingPlacements && state.pendingPlacements[actionId]) {
-                        alert('Another player is placing a patron here!');
-                        return;
-                    }
-                    // Mark this space as pending
-                    dispatch({ type: 'SET_PENDING_PLACEMENT', actionId, playerId: state.myPlayerId });
+
+                // Check if another player is already trying to place here (optimistic locking check)
+                if (state.roomCode && state.pendingPlacements && state.pendingPlacements[actionId]) {
+                    alert('Another player is placing a patron here!');
+                    return;
                 }
-                
+
                 const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
-                
+
                 // Check if player can place workers
                 if (state.workersToPlace <= 0) {
                     alert('You have already placed all your patrons this turn. End your turn or buy from shops.');
@@ -999,7 +994,12 @@ function useGame() {
                 
                 // Store action info before placing worker, in case we need to undo
                 const workerInfo = { actionId, playerId: state.currentPlayer };
-                
+
+                // Mark this space as pending now that validations passed (optimistic locking)
+                if (state.roomCode) {
+                    dispatch({ type: 'SET_PENDING_PLACEMENT', actionId, playerId: state.myPlayerId });
+                }
+
                 try {
                     dispatch({ type: 'PLACE_WORKER', actionId });
                     
