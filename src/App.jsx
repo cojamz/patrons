@@ -1176,9 +1176,9 @@ function useGame() {
                     playerId: player.id,
                     resources: resources
                 });
-                
-                // RED AUTOMATIC VP: Award 1 VP for red layer actions
-                if (actionId.includes('red')) {
+
+                // RED AUTOMATIC VP: Award 1 VP for red layer actions (only at top level, not when repeated)
+                if (actionId.includes('red') && recursionDepth === 0) {
                     dispatch({
                         type: 'UPDATE_VP',
                         playerId: player.id,
@@ -4549,16 +4549,9 @@ function useGame() {
                     
                     const message = `Player ${player.id}: Red shop → Repeating ${actionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
-                    
-                    // RED AUTOMATIC VP for using red shop
-                    dispatch({
-                        type: 'UPDATE_VP',
-                        playerId: player.id,
-                        vp: 1,
-                        source: 'redAutomatic'
-                    });
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
-                    
+
+                    // Red auto VP will be awarded by the repeat logic (line ~1800) if repeated action is red
+
                     // Create an updated state with the current player state
                     const currentPlayerState = state.players.find(p => p.id === player.id);
                     const updatedState = {
