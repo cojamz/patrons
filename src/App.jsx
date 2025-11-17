@@ -4434,10 +4434,13 @@ function useGame() {
             const getButtonText = () => {
                 // Check if in shopping phase (workers done)
                 const workersPlaced = state.workersToPlace === 0;
-                const regularShopAvailable = !state.shopUsedAfterWorkers;
+                const regularShopAvailable = !state.shopUsedAfterWorkers && !state.vpShopUsed;
+                const vpShopAvailable = !state.vpShopUsed;
 
                 if (workersPlaced) {
-                    // Players can always buy VP shops, and maybe regular shops too
+                    // After VP shop, turn is over
+                    if (state.vpShopUsed) return '✓ End Turn';
+                    // Can still use regular shop if available
                     return regularShopAvailable ? '✓ Skip Shops & End Turn' : '✓ End Turn';
                 }
                 return 'End Turn';
@@ -6091,8 +6094,12 @@ function useGame() {
                         phaseColor = 'bg-blue-100 text-blue-800';
                     } else {
                         // After placing workers, show shop phase sequence
-                        const regularShopAvailable = !state.shopUsedAfterWorkers;
-                        if (regularShopAvailable) {
+                        const regularShopAvailable = !state.shopUsedAfterWorkers && !state.vpShopUsed;
+
+                        if (state.vpShopUsed) {
+                            phaseText = 'Turn Complete - End Turn';
+                            phaseColor = 'bg-green-100 text-green-800';
+                        } else if (regularShopAvailable) {
                             phaseText = 'Shop Phase: R1/R2/R3 → VP → End Turn';
                             phaseColor = 'bg-purple-100 text-purple-800';
                         } else {
@@ -6818,6 +6825,12 @@ function useGame() {
                 if (state.shopUsedAfterWorkers) {
                     // Already used shop this turn
                     alert('You have already used a shop this turn!');
+                    return;
+                }
+
+                if (state.vpShopUsed) {
+                    // VP shop was used - turn is over
+                    alert('You already used a VP shop - your turn is over!');
                     return;
                 }
                 
@@ -7619,8 +7632,10 @@ function useGame() {
                             if (state.workersToPlace > 0) {
                                 phaseInfo = ` • Place Patrons: ${state.workersToPlace}`;
                             } else {
-                                const regularShopAvailable = !state.shopUsedAfterWorkers;
-                                if (regularShopAvailable) {
+                                const regularShopAvailable = !state.shopUsedAfterWorkers && !state.vpShopUsed;
+                                if (state.vpShopUsed) {
+                                    phaseInfo = ' • Turn Complete';
+                                } else if (regularShopAvailable) {
                                     phaseInfo = ' • Shop: R1/R2/R3 → VP → End';
                                 } else {
                                     phaseInfo = ' • Shop: VP → End Turn';
