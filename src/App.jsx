@@ -7054,7 +7054,7 @@ function useGame() {
             // Calculate actualCost for display
             const displayCost = (color === 'black' || color === 'white') ? shop.cost : Math.max(0, shop.cost + (currentPlayer?.shopCostModifier || 0));
             
-            const handlePurchase = () => {
+            const handlePurchase = async () => {
                 if (isClosed) {
                     alert('This shop is closed!');
                     return;
@@ -7072,12 +7072,17 @@ function useGame() {
                     return;
                 }
 
-                // VP shops do NOT consume regular shop usage - can buy both in same turn
+                // Check if VP shop already used this turn
+                if (state.vpShopUsed) {
+                    alert('You can only use one VP shop per turn!');
+                    return;
+                }
 
                 const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
                 // Apply cost modifier to all gem-based VP shops (not black which has special cost)
                 const actualCost = (color === 'black' || color === 'white') ? shop.cost : Math.max(0, shop.cost + (currentPlayer.shopCostModifier || 0));
-                
+
+                // Check if player can afford the cost
                 if (color === 'yellow') {
                     const totalGems = Object.values(currentPlayer.resources).reduce((sum, amt) => sum + amt, 0);
                     if (totalGems < actualCost) {
@@ -7090,30 +7095,34 @@ function useGame() {
                         return;
                     }
                 }
-                
-                // Deduct cost (simplified)
+
+                // Deduct cost
                 const resourceCost = {};
                 if (color === 'yellow') {
-                    let remaining = actualCost;
-                    ['red', 'yellow', 'blue', 'purple'].forEach(c => {
-                        const take = Math.min(currentPlayer.resources[c], remaining);
-                        if (take > 0) {
-                            resourceCost[c] = -take;
-                            remaining -= take;
-                        }
+                    // Yellow VP shop - let player choose which gems to spend
+                    const selectedGems = await showGemSelection(dispatch, `Choose ${actualCost} gems to pay`, actualCost, currentPlayer);
+
+                    if (!selectedGems) {
+                        // User cancelled
+                        return;
+                    }
+
+                    // Deduct selected gems
+                    Object.entries(selectedGems).forEach(([gemColor, amount]) => {
+                        resourceCost[gemColor] = resourceCost[gemColor] ? resourceCost[gemColor] - amount : -amount;
                     });
                 } else {
                     resourceCost[color] = -actualCost;
                 }
-                
+
                 dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
-                
+
                 // Handle special BLACK victory shop
                 if (color === 'black' && shop.special === 'steal2FromEach') {
                     // Steal 2 VP from each other player
                     const otherPlayers = state.players.filter(p => p.id !== currentPlayer.id);
                     let totalVPStolen = 0;
-                    
+
                     otherPlayers.forEach(otherPlayer => {
                         const vpToSteal = Math.min(2, otherPlayer.victoryPoints);
                         if (vpToSteal > 0) {
@@ -7126,7 +7135,7 @@ function useGame() {
                             totalVPStolen += vpToSteal;
                         }
                     });
-                    
+
                     if (totalVPStolen > 0) {
                         dispatch({
                             type: 'UPDATE_VP',
@@ -7135,7 +7144,7 @@ function useGame() {
                             source: 'blackVictoryShop'
                         });
                         dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Black Victory Shop → Stole ${totalVPStolen} VP (2 from each player)` });
-                        
+
                         // BLACK AUTOMATIC VP: Gain 1 VP when stealing
                         dispatch({
                             type: 'UPDATE_VP',
@@ -7152,7 +7161,8 @@ function useGame() {
                     dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: shop.vp, source: 'victoryShop' });
                 }
 
-                // VP shops do NOT track shop usage - can buy both regular shop and VP shop in same turn
+                // Mark VP shop as used
+                dispatch({ type: 'USE_VP_SHOP' });
 
                 // Blue automatic VP - player gets VP when they activate a shop effect (only if blue is active)
                 if (state.automaticVPs?.blue) {
@@ -7440,6 +7450,7 @@ function useGame() {
                             gameLayers: currentState.gameLayers,
                             closedShops: currentState.closedShops,
                             shopUsedAfterWorkers: currentState.shopUsedAfterWorkers,
+                            vpShopUsed: currentState.vpShopUsed,
                             playersOutOfWorkers: currentState.playersOutOfWorkers,
                             skippedTurns: currentState.skippedTurns,
                             waitingForOthers: currentState.waitingForOthers,
@@ -7468,7 +7479,7 @@ function useGame() {
                         clearTimeout(syncTimeoutRef.current);
                     }
                 };
-            }, [state.currentPlayer, state.players, state.occupiedSpaces, state.round, state.actionLog, state.workersToPlace, state.gameLayers, state.closedShops, state.shopUsedAfterWorkers, state.playersOutOfWorkers, state.skippedTurns, state.waitingForOthers, state.roundActions, state.gameOver, state.automaticVPs, state.pendingPlacements]);
+            }, [state.currentPlayer, state.players, state.occupiedSpaces, state.round, state.actionLog, state.workersToPlace, state.gameLayers, state.closedShops, state.shopUsedAfterWorkers, state.vpShopUsed, state.playersOutOfWorkers, state.skippedTurns, state.waitingForOthers, state.roundActions, state.gameOver, state.automaticVPs, state.pendingPlacements]);
             
             const handleEndTurn = async () => {
                 // Validate multiplayer turn

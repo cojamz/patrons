@@ -21,6 +21,7 @@ export const initialState = {
     workerPlacedThisTurn: false,
     workersToPlace: 1,
     shopUsedAfterWorkers: false, // Track if shop was used after placing all workers
+    vpShopUsed: false, // Track if VP shop was used this turn
     modal: null,
     actionLog: [],
     gameLayers: null, // Will be set when game starts
@@ -352,6 +353,7 @@ export function gameReducer(state, action) {
                         workerPlacedThisTurn: false,
                         workersToPlace: hasActiveWorkerEffect ? state.workersToPlace : 1,
                         shopUsedAfterWorkers: false,
+                        vpShopUsed: false,
                         playersOutOfWorkers: newPlayersOutOfWorkers,
                         skippedTurns: newSkippedTurns,
                         lastUpdatedBy: state.myPlayerId,
@@ -667,6 +669,7 @@ export function gameReducer(state, action) {
                 workerPlacedThisTurn: false,
                 workersToPlace: workersToPlace,
                 shopUsedAfterWorkers: false,
+                vpShopUsed: false,
                 skippedTurns: newSkippedTurns,
                 waitingForOthers: newWaitingForOthers,
                 playersOutOfWorkers: newPlayersOutOfWorkers,
@@ -820,6 +823,7 @@ export function gameReducer(state, action) {
                 workerPlacedThisTurn: false,
                 workersToPlace: 1,
                 shopUsedAfterWorkers: false, // Reset shop usage for new round
+                vpShopUsed: false, // Reset VP shop usage for new round
                 playersOutOfWorkers: [], // Reset for new round
                 skippedTurns: {}, // Reset skip turns
                 waitingForOthers: {}, // Reset waiting status
@@ -1002,6 +1006,14 @@ export function gameReducer(state, action) {
             return {
                 ...state,
                 shopUsedAfterWorkers: true,
+                lastUpdatedBy: state.myPlayerId
+            };
+
+        case 'USE_VP_SHOP':
+            // Mark that VP shop was used this turn
+            return {
+                ...state,
+                vpShopUsed: true,
                 lastUpdatedBy: state.myPlayerId
             };
 
