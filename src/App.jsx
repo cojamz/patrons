@@ -4494,7 +4494,7 @@ function useGame() {
                 .map(([spaceId]) => spaceId);
             
             if (playerSpaces.length === 0) {
-                const roundText = allowedRounds ? ' R1' : '';
+                const roundText = allowedRounds ? ' Round 1' : '';
                 const message = `Player ${player.id}: Red shop → No valid${roundText} workers to repeat`;
                 dispatch({ type: 'ADD_LOG', message });
                 return false; // Return false to indicate failure
@@ -5431,7 +5431,7 @@ function useGame() {
             
             switch(shopId) {
                 case 'red1':
-                    // Repeat a worker's R1 action only
+                    // Repeat a worker's Round 1 action only
                     const repeatSuccess = await executeRepeatAction(player, dispatch, state, state.gameLayers, recursionDepth, [1]);
                     if (!repeatSuccess) {
                         // Action was cancelled or failed
