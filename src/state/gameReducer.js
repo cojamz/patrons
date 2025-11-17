@@ -897,7 +897,8 @@ export function gameReducer(state, action) {
         case 'UPDATE_OCCUPIED_SPACES':
             return {
                 ...state,
-                occupiedSpaces: action.occupiedSpaces
+                occupiedSpaces: action.occupiedSpaces,
+                lastUpdatedBy: state.myPlayerId
             };
 
         case 'SET_TURN_ORDER':

@@ -4,6 +4,30 @@ All notable changes to Patrons v0.5 are documented here.
 
 ---
 
+## [2025-11-16] - Multiplayer & UI Bug Fixes Session
+
+### Fixed
+- Round summary modal now shows on automatic round advance (not just manual)
+- End Turn button only shows to current player in multiplayer
+- Actions no longer get stuck in limbo when validations fail (pendingPlacements bug)
+- Yellow shops now show correct updated definitions (synced inlineShopData with shopData.js)
+- Verified shop cost modifiers properly reset each round
+
+### Added
+- VP breakdown to round summary modal (more prominent display)
+- VP breakdown to end-game screen with detailed sources
+- Round transition modal now shows to all players in multiplayer
+- Any player can close the round modal, syncs to all clients
+
+### Changed
+- Round modal visibility in multiplayer - all players see it
+- Pending placement marker set only after validations pass
+- VP breakdown styling improved (text-sm, darker color)
+
+**Commits**: c6664d6, 8c4b86f, d010714, e59cd87, 64e0645
+
+---
+
 ## [2025-01-16] - Meta-Framework Enhancements
 
 ### Added

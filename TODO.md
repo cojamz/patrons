@@ -1,29 +1,17 @@
 # TODO
 
-**Last Updated**: 2025-01-16 20:15
+**Last Updated**: 2025-11-16
 
 ---
 
 ## Active Tasks
 
-### Critical Priority
-- [ ] **[URGENT] Fix multiplayer desync** - Players seeing different game states (myPlayerId:1 currentPlayer:2 vs myPlayerId:2 currentPlayer:1)
-
 ### High Priority
-- [x] **[1] Shop phase text clarity** - DONE
-- [x] **[2] Shop phase text visibility** - DONE (added to turn card)
-- [ ] **[3] Round summary card missing on auto-advance** - When last patron played, round advances automatically but doesn't show Round summary card. Only shows when using "Advance Round" button.
-- [ ] **[3a] VP breakdown in round summaries** - Round summaries should show clear accounting of where players got their VPs from
-- [ ] **[3b] End-of-game summary** - Create final game summary with complete VP breakdown
-
-### Medium Priority
-- [ ] **[4] Purple broken - temporary replacement** - Replace purple with different color in basic games until we fix it properly
 - [ ] **[5] Implement lastGain tracking** for Yellow copy action
   - Add `lastGain: {}` property to player state initialization
   - Create `RECORD_LAST_GAIN` reducer action
   - Dispatch after every resource gain action
 - [ ] **[6] Fix purple layer properly** - Address root issues with purple layer
-- [ ] **[7] Verify shop cost modifiers are per-round** - Double check that cost increases/decreases only apply for that round
 
 ### Low Priority
 - [ ] Remove turn validation debug logging (cleanup from Firebase debugging) - Lines 841-858 in App.jsx
@@ -37,4 +25,14 @@
 ---
 
 ## Completed
-(Tasks move here after /checkpoint marks them done)
+
+### 2025-11-16 - Multiplayer & UI Bug Fixes Session
+- [x] **[URGENT] Fix multiplayer desync** - Fixed game state synchronization issues
+- [x] **[1] Shop phase text clarity** - Updated shop phase indicator text
+- [x] **[2] Shop phase text visibility** - Added phase info to turn card for all players
+- [x] **[3] Round summary card on auto-advance** - Modal now shows on automatic round advance
+- [x] **[3a] VP breakdown in round summaries** - Added detailed VP source breakdown to round summaries
+- [x] **[3b] End-of-game summary** - Added VP breakdown to final game over screen
+- [x] **Fix yellow shops showing old definitions** - Synced inlineShopData with shopData.js
+- [x] **[7] Verify shop cost modifiers are per-round** - Confirmed they reset properly in ADVANCE_ROUND
+- [x] **Fix actions stuck in limbo** - Fixed pendingPlacements not clearing when validations fail
