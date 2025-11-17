@@ -138,6 +138,7 @@ function useGame() {
                 }, 5000); // 5 second timeout
                 
                 roomRef.set({
+                    createdAt: Date.now(),
                     host: playerId,
                     gameState: {
                         ...initialState,
