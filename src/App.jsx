@@ -489,9 +489,9 @@ function useGame() {
                         roundActions: [],
                         gameOver: false,
                         timestamp: Date.now(),
-                        lastUpdatedBy: 1  // Host is always player 1
+                        lastUpdatedBy: 0  // Use 0 for game start - no player has ID 0, so echo detection won't reject it
                     };
-                    
+
                     console.log('🎮 Starting multiplayer game with state:', {
                         currentPlayer: gameState.currentPlayer,
                         players: gameState.players.map(p => ({ id: p.id, name: p.name, emoji: p.emoji })),
@@ -501,10 +501,6 @@ function useGame() {
                         automaticVPs: automaticVPs,
                         lastUpdatedBy: gameState.lastUpdatedBy
                     });
-
-                    // Apply game state locally on host immediately (before Firebase echo)
-                    // This prevents the host from rejecting their own update via echo detection
-                    dispatch({ type: 'SYNC_GAME_STATE', gameState });
 
                     database.ref(`rooms/${roomCode}/gameState`).set(gameState)
                         .then(() => {
