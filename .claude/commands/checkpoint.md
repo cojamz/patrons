@@ -1,6 +1,6 @@
 # Checkpoint - Update Implementation State
 
-Update `.claude/implementation_state.md` with current progress.
+Update `.claude/implementation_state.md`, `TODO.md`, and `CHANGELOG.md` with current progress.
 
 ## Instructions for Claude
 
@@ -9,9 +9,12 @@ When this command runs:
 1. **Review recent work**:
    - Check git log for last 3-5 commits: `git log --oneline -5`
    - Check what files were recently modified
-   - Review any active todos
+   - Review current TODO.md
 
-2. **Read current implementation_state.md**
+2. **Read current files**:
+   - implementation_state.md
+   - TODO.md
+   - CHANGELOG.md (last section only)
 
 3. **Ask the user what to record**:
 
@@ -24,14 +27,26 @@ When this command runs:
    - 🚫 Encountered a blocker (what's the issue?)
    - 📝 Other (explain)
 
-4. **Update implementation_state.md**:
+4. **Update THREE files**:
+
+   **A) implementation_state.md**:
    - Update "Last Updated" timestamp (current date/time)
    - Add entry to "State Log" section at the TOP (most recent first)
    - Update "Current Task" if changed
    - Update "Active Issues" if relevant
    - Update "Next Steps" if applicable
 
-5. **Show the user** the new state log entry you added
+   **B) TODO.md**:
+   - Move completed tasks from "Active" to "Completed" section
+   - Add any new tasks discovered during session
+   - Update "Last Updated" timestamp
+
+   **C) CHANGELOG.md**:
+   - Add session summary to TOP (most recent first)
+   - Include date, what was added/changed/fixed
+   - Reference commit hashes if applicable
+
+5. **Show the user** what was updated in all three files
 
 ## State Log Entry Format
 
