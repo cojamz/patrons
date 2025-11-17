@@ -1,6 +1,6 @@
 # TODO
 
-**Last Updated**: 2025-11-16 23:45
+**Last Updated**: 2025-11-17 00:15
 
 ---
 
@@ -40,6 +40,16 @@
 ---
 
 ## Completed
+
+### 2025-11-17 - VP Shop Fixes & UI Improvements
+- [x] **Fix Yellow VP shop gem selection** - Now prompts for gem choice instead of auto-deducting
+- [x] **Add VP shop usage tracking** - Limited to 1 VP shop per turn
+- [x] **VP shop ends turn** - Regular shops blocked after VP shop purchase
+- [x] **Fix copy last gain bug** - yellowHybrid2 now correctly copies other players' gains
+- [x] **Improve action log** - Player names, filtered zero values, better formatting
+- [x] **Simplify repeat action exclusions** - Now only excludes redRepeatAction
+- [x] **Fix Red R2 shop multiplayer** - Properly finds next player with optional chaining
+- [x] **Update shop text** - "a player" → "another player" for clarity
 
 ### 2025-11-16 - Playtesting Bug Fix Session
 - [x] **Fix VP shops starting closed** - VP shops now start OPEN (not closed)

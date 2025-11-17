@@ -1,7 +1,7 @@
 # Implementation State
 
-**Status**: Ready for new work (playtesting bugs fixed)
-**Last Updated**: 2025-11-16 23:45
+**Status**: Ready for new work (VP shop fixes complete)
+**Last Updated**: 2025-11-17 00:15
 
 ---
 
@@ -38,7 +38,7 @@
 ---
 
 ## Current Task
-Working on: None (awaiting next task)
+Working on: None (VP shop fixes complete, awaiting next task)
 
 ---
 
@@ -59,6 +59,12 @@ Purple layer has 12 documented bugs (see TODO.md):
 ---
 
 ## State Log
+
+**[2025-11-17 00:15]** - VP shop fixes & UI improvements (5 commits)
+- Status: Completed
+- Files Modified: src/App.jsx, src/state/gameReducer.js, src/data/shopData.js
+- Notes: Fixed Yellow VP shop gem selection bug, added VP shop usage tracking (1/turn), VP shop now ends turn, improved action log readability, simplified repeat action exclusions. All tested and committed.
+- Next: Ready for playtesting or new features
 
 **[2025-11-16 23:45]** - Playtesting bug fix session (7 critical bugs fixed)
 - Status: Completed

@@ -4,6 +4,36 @@ All notable changes to Patrons v0.5 are documented here.
 
 ---
 
+## [2025-11-17] - VP Shop Fixes & UI Improvements
+
+### Fixed
+- Yellow VP shop now prompts for gem selection instead of auto-deducting gems
+- VP shops limited to 1 per turn (separate tracking from regular shops)
+- VP shop purchase now ends turn - regular shops blocked after VP shop
+- Copy last gain bug: yellowHybrid2 now correctly copies other players' gains
+- Red R2 shop multiplayer: Fixed next player detection with optional chaining
+
+### Changed
+- Action log now shows player names instead of "Player X"
+- Action log filters out zero-value resources for cleaner display
+- Action log visual improvements: gradient, icons, better spacing
+- Repeat action exclusions simplified: only excludes redRepeatAction itself
+- Shop text clarity: "a player" → "another player" (Red R3, Black R1/R2/R3)
+- Phase indicators updated to show "Turn Complete" after VP shop
+- Turn flow: Place workers → Regular shop (optional) → VP shop (optional) → End
+
+### Technical Details
+- Added `vpShopUsed` state tracking (resets on turn end and round advance)
+- Added `USE_VP_SHOP` reducer action
+- VP shop `handlePurchase` now async to support gem selection modal
+- VP shop state synced to Firebase for multiplayer
+- Added `formatLogMessage()` helper for better log readability
+- Updated exclusion lists in 5 locations to allow more action repeats
+
+**Commits**: 8815305, 96556a8, b90d751, ce1aaa5, df49c34, 5970f91
+
+---
+
 ## [2025-11-16] - Playtesting Bug Fix Session (7 bugs)
 
 ### Fixed
