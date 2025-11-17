@@ -4,6 +4,30 @@ All notable changes to Patrons v0.5 are documented here.
 
 ---
 
+## [2025-11-16] - Purple/Red Analysis & Layer Swap
+
+### Added
+- Black layer now default in basic mode (replacing Purple)
+- Comprehensive documentation of 12 purple/red layer bugs
+
+### Changed
+- Basic mode now uses: Red, Yellow, Blue, **Black** (was Purple)
+- Purple still available in advanced mode random selection
+- Updated game mode description text
+
+### Analysis Findings
+**Purple Layer Bugs (12 total)**:
+- 3 game-breaking: Exclusion list inconsistencies, infinite turns, TAKE_BACK_WORKER bug
+- 4 critical: Auto VP amount wrong, last-to-run-out logic, extra turn stacking, double-decrement
+- 4 moderate: Partial workers, extra turn with 0 workers, force placement bonus, repeat take back
+- 1 unclear: Skip turn stacking (strategy or exploit?)
+
+**Decision**: Purple too complex with multiple edge cases. Swapped Black (simpler stealing mechanics) into basic mode.
+
+**Commit**: aedd4d0
+
+---
+
 ## [2025-11-16] - Yellow Layer Implementation
 
 ### Added

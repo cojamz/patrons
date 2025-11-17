@@ -38,22 +38,33 @@
 ---
 
 ## Current Task
-Remaining: Fix purple layer properly
+Working on: Fixing purple/red layer bugs (documented, not committed yet)
 
 ---
 
 ## Active Issues
-None
+Purple layer has 12 documented bugs (see TODO.md for full list):
+- Game-breaking: Exclusion list inconsistencies allow infinite workers/turns
+- Critical: Auto VP wrong amount, effect double-decrement
+- Moderate: Various edge cases with Red interactions
+Decision: Swapped Black into basic mode instead of fixing
 
 ---
 
 ## Next Steps
-1. Fix purple layer issues
-2. Continue with additional features/fixes as needed
+1. Continue fixing purple/red bugs (in progress, not committed)
+2. Test fixes thoroughly
+3. Consider if purple should be fixed or removed entirely from advanced mode
 
 ---
 
 ## State Log
+
+**[2025-11-16 17:00]** - Purple/Red layer ultrathink analysis & Black layer swap
+- Status: Completed (analysis + swap), In Progress (bug fixes not committed)
+- Files Modified: src/data/allGameLayers.js, src/App.jsx
+- Notes: Found 12 critical purple bugs through deep analysis. Too complex to fix quickly, so swapped Black into basic mode. Purple still available in advanced. Now fixing bugs but not committing yet.
+- Next: Continue fixing purple/red bugs, test thoroughly
 
 **[2025-11-16 15:30]** - Implemented lastGain tracking & fixed Yellow auto VP description
 - Status: Completed

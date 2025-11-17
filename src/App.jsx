@@ -1727,6 +1727,9 @@ function useGame() {
                     'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
                     // Blue actions that could cause recursion through shops
                     'blueAnyShopBenefit', // Blue R3 - could select Red R3 shop
+                    // Purple actions that manipulate turn order/workers
+                    'playTwoWorkers', 'playThreeWorkers', 'gain4purpleWaitAll',
+                    'gain2purpleTakeBack', // Taking back workers is personal
                     // Victory shops - already purchased, can't repeat
                     'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
                     'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
@@ -4481,6 +4484,9 @@ function useGame() {
                 'redRepeatAction', 'redRepeatAll', 'redHybrid1', 'redHybrid2',
                 // Blue actions that could cause recursion through shops
                 'blueAnyShopBenefit', 'blueR1ShopBenefit',
+                // Purple actions that manipulate turn order/workers
+                'playTwoWorkers', 'playThreeWorkers', 'gain4purpleWaitAll',
+                'gain2purpleTakeBack', // Taking back workers is personal
                 // Victory shops - already purchased, can't repeat
                 'redVictoryShop', 'yellowVictoryShop', 'blueVictoryShop', 'purpleVictoryShop',
                 'goldVictoryShop', 'whiteVictoryShop', 'blackVictoryShop', 'silverVictoryShop'
@@ -6338,16 +6344,16 @@ function useGame() {
                     }
                 }
                 
-                // Special validation for Purple R1 shop - warn if already have extra turn
+                // Special validation for Purple R1 shop - block if already have extra turn
                 if (color === 'purple' && shopRound === 1) {
-                    const hasExtraTurnEffect = (currentPlayer.effects || []).some(effect => 
+                    const hasExtraTurnEffect = (currentPlayer.effects || []).some(effect =>
                         effect.includes('Will take an extra turn after this one')
                     );
                     const hasExtraTurns = (currentPlayer.extraTurns || 0) > 0;
-                    
+
                     if (hasExtraTurnEffect || hasExtraTurns) {
-                        const proceed = confirm('WARNING: You already have an extra turn queued! This purchase will have no additional effect. Continue anyway?');
-                        if (!proceed) return;
+                        alert('❌ Cannot stack extra turns! You already have an extra turn queued.');
+                        return;
                     }
                 }
                 

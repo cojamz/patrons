@@ -245,17 +245,14 @@ export function gameReducer(state, action) {
             const purpleVPUpdates = [];
             const playersWithWorkers = state.players.filter(p => p.workersLeft > 0);
 
-            // First player to run out gets 3 VP
+            // First player to run out gets 4 VP
             if (newPlayersOutOfWorkers.length === 1 && newPlayersOutOfWorkers[0] === state.currentPlayer) {
-                purpleVPUpdates.push({ playerId: state.currentPlayer, vp: 3, reason: 'first to run out of workers' });
+                purpleVPUpdates.push({ playerId: state.currentPlayer, vp: 4, reason: 'first to run out of workers' });
             }
-            // Last player to run out gets 3 VP (when only 1 player left with workers)
-            if (playersWithWorkers.length === 1 && currentPlayerObj.workersLeft === 0) {
-                const lastPlayer = playersWithWorkers[0];
-                if (!newPlayersOutOfWorkers.includes(lastPlayer.id)) {
-                    newPlayersOutOfWorkers.push(lastPlayer.id);
-                    purpleVPUpdates.push({ playerId: lastPlayer.id, vp: 3, reason: 'last to run out of workers' });
-                }
+            // Last player to run out gets 4 VP (when this player runs out and all others already have 0)
+            if (currentPlayerObj.workersLeft === 0 && playersWithWorkers.length === 0) {
+                // Current player just ran out and no one else has workers = last to run out
+                purpleVPUpdates.push({ playerId: state.currentPlayer, vp: 4, reason: 'last to run out of workers' });
             }
 
             // First, determine if this is a snake draft reversal
@@ -910,7 +907,7 @@ export function gameReducer(state, action) {
                         : player
                 ),
                 workerPlacedThisTurn: false,
-                workersToPlace: Math.min(state.workersToPlace + 1, 1) // Max 1 worker to place
+                workersToPlace: state.workersToPlace + 1 // Removed cap - preserve "play more workers" effect
             };
 
         case 'UPDATE_OCCUPIED_SPACES':
@@ -1030,14 +1027,15 @@ export function gameReducer(state, action) {
         case 'START_GAME':
             // Initialize future round shops as closed
             const initialClosedShops = {};
-            const gameColors = state.gameLayers ? Object.keys(state.gameLayers) : ['red', 'yellow', 'blue', 'purple'];
+            const gameColors = state.gameLayers ? Object.keys(state.gameLayers) : ['red', 'yellow', 'blue', 'black'];
             // Always start at round 1 for new games
             const currentRound = 1;
 
             gameColors.forEach(color => {
-                // Close shops from future rounds
+                // Close shops from future rounds (R2, R3, and VP shops)
                 initialClosedShops[`${color}2`] = true;
                 initialClosedShops[`${color}3`] = true;
+                initialClosedShops[`${color}vp`] = true; // Victory shops closed until round 3
             });
 
             // WHITE AUTOMATIC VP: If white is in play, all players start with 5 VP

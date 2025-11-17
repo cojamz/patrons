@@ -6,8 +6,27 @@
 
 ## Active Tasks
 
-### High Priority
-- [ ] **[6] Fix purple layer properly** - Address root issues with purple layer
+### High Priority - Purple/Red Layer Bugs (12 total, documented 2025-11-16)
+
+**Game-Breaking (Fix First)**:
+- [ ] **Bug #8**: Inconsistent exclusion lists - single repeat CAN repeat purple worker manipulation (infinite workers exploit!)
+- [ ] **Bug #13**: Can repeat extra turn action → infinite turns (related to #8)
+- [ ] **Bug #3**: TAKE_BACK_WORKER caps workersToPlace at 1, destroying "play more workers" effect
+
+**Critical**:
+- [ ] **Bug #1**: Purple auto VP gives 3 VP instead of 4 VP (description says 4)
+- [ ] **Bug #2**: "Last to run out" VP awarded before player actually runs out
+- [ ] **Bug #4**: Extra turn stacking inconsistent (actions block, shops allow)
+- [ ] **Bug #7**: Extra turn effect + property both decremented (double-consume)
+
+**Moderate**:
+- [ ] **Bug #5**: Partial workers inconsistent (actions block partial, shops allow partial)
+- [ ] **Bug #6**: Extra turn with 0 workers can cause stuck state
+- [ ] **Bug #9**: Red force placement + purple effects give bonus placements
+- [ ] **Bug #11**: Repeat "take back" can exceed placed workers
+
+**Unclear** (Need Decision):
+- [ ] **Bug #12**: Skip turn actions can be stacked - intentional strategy or exploit?
 
 ### Low Priority
 - [ ] Remove turn validation debug logging (cleanup from Firebase debugging) - Lines 841-858 in App.jsx
@@ -21,6 +40,11 @@
 ---
 
 ## Completed
+
+### 2025-11-16 - Purple/Red Analysis & Layer Swap
+- [x] **Deep ultrathink analysis of purple layer** - Found 7 critical bugs
+- [x] **Deep ultrathink analysis of Red+Purple interactions** - Found 5 more bugs (12 total)
+- [x] **Swap Black into basic mode** - Replaced Purple in basic mode (Purple still in advanced)
 
 ### 2025-11-16 - Yellow Layer Implementation Session
 - [x] **[5] Implement lastGain tracking** - Added lastGain: {} to player state, tracks OTHER players' gains (not own)
