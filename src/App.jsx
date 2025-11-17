@@ -5621,9 +5621,9 @@ function useGame() {
                 const candidatePlayer = state.players.find(p => p.id === nextPlayerId);
                 
                 // Check if this player can place workers
-                if (candidatePlayer && 
-                    candidatePlayer.workersLeft > 0 && 
-                    (!state.skippedTurns || state.skippedTurns[nextPlayerId] === 0)) {
+                if (candidatePlayer &&
+                    candidatePlayer.workersLeft > 0 &&
+                    !(state.skippedTurns?.[nextPlayerId] > 0)) {
                     nextPlayer = candidatePlayer;
                     break;
                 }
