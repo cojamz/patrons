@@ -7,10 +7,6 @@
 ## Active Tasks
 
 ### High Priority
-- [ ] **[5] Implement lastGain tracking** for Yellow copy action
-  - Add `lastGain: {}` property to player state initialization
-  - Create `RECORD_LAST_GAIN` reducer action
-  - Dispatch after every resource gain action
 - [ ] **[6] Fix purple layer properly** - Address root issues with purple layer
 
 ### Low Priority
@@ -25,6 +21,10 @@
 ---
 
 ## Completed
+
+### 2025-11-16 - Yellow Layer Implementation Session
+- [x] **[5] Implement lastGain tracking** - Added lastGain: {} to player state, tracks OTHER players' gains (not own)
+- [x] **Fix Yellow auto VP description** - Changed from "per different color" to "per complete set of all colors"
 
 ### 2025-11-16 - Multiplayer & UI Bug Fixes Session
 - [x] **[URGENT] Fix multiplayer desync** - Fixed game state synchronization issues

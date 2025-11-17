@@ -667,8 +667,8 @@ function useGame() {
                         key: 'description',
                         className: 'text-sm text-gray-600 text-center mb-6 space-y-2' 
                     }, [
-                        React.createElement('p', { key: 'basic' }, 
-                            'Basic: Play with the classic 4 colors (Red, Yellow, Blue, Purple)'),
+                        React.createElement('p', { key: 'basic' },
+                            'Basic: Play with the classic 4 colors (Red, Yellow, Blue, Black)'),
                         React.createElement('p', { key: 'advanced' }, 
                             'Advanced: Play with 4 randomly selected colors from all 8 available')
                     ]),

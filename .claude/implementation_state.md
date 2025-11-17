@@ -38,7 +38,7 @@
 ---
 
 ## Current Task
-Remaining: Implement lastGain tracking for Yellow, Fix purple layer properly
+Remaining: Fix purple layer properly
 
 ---
 
@@ -48,13 +48,18 @@ None
 ---
 
 ## Next Steps
-1. Implement lastGain tracking for Yellow layer
-2. Fix purple layer issues
-3. Continue with additional features/fixes as needed
+1. Fix purple layer issues
+2. Continue with additional features/fixes as needed
 
 ---
 
 ## State Log
+
+**[2025-11-16 15:30]** - Implemented lastGain tracking & fixed Yellow auto VP description
+- Status: Completed
+- Files Modified: src/App.jsx, src/state/gameReducer.js
+- Notes: lastGain now tracks OTHER players' gains (not own). Fixed Yellow auto VP text from "per different color" to "per complete set of all colors". yellowHybrid2 action working correctly.
+- Next: Deep analysis of purple layer implementation
 
 **[2025-11-16]** - Multiplayer & UI bug fixes session (8 tasks completed)
 - Status: Completed

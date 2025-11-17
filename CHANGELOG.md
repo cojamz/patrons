@@ -4,6 +4,23 @@ All notable changes to Patrons v0.5 are documented here.
 
 ---
 
+## [2025-11-16] - Yellow Layer Implementation
+
+### Added
+- `lastGain: {}` property to player state initialization
+- lastGain tracking in UPDATE_RESOURCES reducer (tracks OTHER players' gains, not own)
+
+### Fixed
+- Yellow auto VP description now correctly states "per complete set of all colors" instead of "per different color gem"
+- lastGain tracking prevents players from copying their own gains (only tracks other players)
+
+### Changed
+- yellowHybrid2 action now works correctly with proper lastGain tracking
+
+**Commit**: aeb0900
+
+---
+
 ## [2025-11-16] - Multiplayer & UI Bug Fixes Session
 
 ### Fixed

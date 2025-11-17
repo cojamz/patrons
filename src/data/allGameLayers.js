@@ -118,7 +118,7 @@ export function selectGameLayers(playerCount, gameMode = 'advanced') {
 
     if (gameMode === 'basic') {
         // Basic mode always uses the original 4 colors
-        availableLayers = ['red', 'yellow', 'blue', 'purple'];
+        availableLayers = ['red', 'yellow', 'blue', 'black'];
     } else {
         // Advanced mode uses all 8 colors
         availableLayers = Object.keys(allGameLayers);
