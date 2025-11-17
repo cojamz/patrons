@@ -1,6 +1,6 @@
 # TODO
 
-**Last Updated**: 2025-11-16
+**Last Updated**: 2025-11-16 23:45
 
 ---
 
@@ -40,6 +40,15 @@
 ---
 
 ## Completed
+
+### 2025-11-16 - Playtesting Bug Fix Session
+- [x] **Fix VP shops starting closed** - VP shops now start OPEN (not closed)
+- [x] **Fix red auto VP double-counting** - Changed from 4 VP to 2 VP (action + repeat)
+- [x] **Fix patron swap multiplayer** - Both players now benefit from swapped actions
+- [x] **Fix blue auto VP when not in game** - Added automaticVPs?.blue check
+- [x] **Fix double next gain persistence** - Effect now carries over across rounds
+- [x] **Fix yellow shop cancellation** - Costs properly refunded when cancelled
+- [x] **Fix purple auto VP when not in game** - Added automaticVPs?.purple check
 
 ### 2025-11-16 - Purple/Red Analysis & Layer Swap
 - [x] **Deep ultrathink analysis of purple layer** - Found 7 critical bugs

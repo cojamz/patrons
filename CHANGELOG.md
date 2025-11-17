@@ -4,6 +4,29 @@ All notable changes to Patrons v0.5 are documented here.
 
 ---
 
+## [2025-11-16] - Playtesting Bug Fix Session (7 bugs)
+
+### Fixed
+- VP shops now start OPEN instead of closed
+- Red auto VP double-counting: 4 VP → 2 VP (action once, repeat once)
+- Patron swap (redHybrid1) now benefits both players in multiplayer
+- Blue auto VP only applies when Blue layer is in the game
+- Purple auto VP only applies when Purple layer is in the game
+- Yellow R2/R3 shops now properly refund costs when cancelled
+- Double next gain effect now persists across turns and rounds
+
+### Changed
+- Yellow shop functions now return true/false to indicate success/cancellation
+- executeShopBenefit now checks return values and propagates failures
+- Auto VP checks added: automaticVPs?.blue and automaticVPs?.purple
+
+### Technical Details
+All bugs discovered through user playtesting. Fixes tested and verified before committing.
+
+**Commits**: a6cf1b7, 41e1bd2, 1f7b4f9, e282e6a, 185a2b5, a5ab8e9, 06ae507
+
+---
+
 ## [2025-11-16] - Purple/Red Analysis & Layer Swap
 
 ### Added

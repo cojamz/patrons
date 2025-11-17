@@ -1,7 +1,7 @@
 # Implementation State
 
-**Status**: Ready for new work (v0.5 complete)
-**Last Updated**: 2025-11-16 (continued session)
+**Status**: Ready for new work (playtesting bugs fixed)
+**Last Updated**: 2025-11-16 23:45
 
 ---
 
@@ -38,27 +38,33 @@
 ---
 
 ## Current Task
-Working on: Fixing purple/red layer bugs (documented, not committed yet)
+Working on: None (awaiting next task)
 
 ---
 
 ## Active Issues
-Purple layer has 12 documented bugs (see TODO.md for full list):
-- Game-breaking: Exclusion list inconsistencies allow infinite workers/turns
-- Critical: Auto VP wrong amount, effect double-decrement
+Purple layer has 12 documented bugs (see TODO.md):
+- Game-breaking: Exclusion list inconsistencies, infinite turns exploit
+- Critical: Auto VP amount, effect double-decrement, stacking issues
 - Moderate: Various edge cases with Red interactions
-Decision: Swapped Black into basic mode instead of fixing
+- Status: Documented but not actively being fixed (user requested pause)
+- Decision: Black layer swapped into basic mode as workaround
 
 ---
 
 ## Next Steps
-1. Continue fixing purple/red bugs (in progress, not committed)
-2. Test fixes thoroughly
-3. Consider if purple should be fixed or removed entirely from advanced mode
+1. Awaiting user direction on purple/red bugs (currently on hold)
+2. Ready for new feature work or additional playtesting feedback
 
 ---
 
 ## State Log
+
+**[2025-11-16 23:45]** - Playtesting bug fix session (7 critical bugs fixed)
+- Status: Completed
+- Files Modified: src/App.jsx, src/state/gameReducer.js
+- Notes: Fixed VP shops initialization, red/blue/purple auto VP checks, patron swap multiplayer, double gain persistence, yellow shop cancellation refunds. All discovered via user playtesting, all tested and pushed.
+- Next: Ready for more playtesting or new features
 
 **[2025-11-16 17:00]** - Purple/Red layer ultrathink analysis & Black layer swap
 - Status: Completed (analysis + swap), In Progress (bug fixes not committed)
