@@ -4,7 +4,7 @@ export const shopData = {
     red: {
         1: 'Repeat one of your patron\'s actions',
         2: 'Place the next player\'s patron for them',
-        3: 'Pick a player. Repeat all actions where they have a patron'
+        3: 'Pick another player. Repeat all actions where they have a patron'
     },
     yellow: {
         1: 'Double your next resource gain',
@@ -32,9 +32,9 @@ export const shopData = {
         3: 'Lose 5 VP, move one patron to any action'
     },
     black: {
-        1: 'Steal 1 VP from any player',
-        2: 'Steal 3 VP from any player',
-        3: 'Steal 5 VP from any player'
+        1: 'Steal 1 VP from another player',
+        2: 'Steal 3 VP from another player',
+        3: 'Steal 5 VP from another player'
     },
     silver: {
         1: 'Gain 2 VP',
