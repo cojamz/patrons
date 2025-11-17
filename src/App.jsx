@@ -780,7 +780,7 @@ function useGame() {
                                 dispatch({ type: 'SET_GAME_MODE', mode: 'basic' });
                                 dispatch({ type: 'SET_GAME_LAYERS', layers: selectedLayers });
                                 startMultiplayerGame(state.roomCode, selectedLayers, 'basic');
-                                dispatch({ type: 'START_GAME' });
+                                // Don't dispatch START_GAME for multiplayer - startMultiplayerGame handles it
                                 console.log('Game started successfully');
                             },
                             className: 'flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-3 rounded-lg text-sm'
@@ -794,7 +794,7 @@ function useGame() {
                                 dispatch({ type: 'SET_GAME_MODE', mode: 'advanced' });
                                 dispatch({ type: 'SET_GAME_LAYERS', layers: selectedLayers });
                                 startMultiplayerGame(state.roomCode, selectedLayers, 'advanced');
-                                dispatch({ type: 'START_GAME' });
+                                // Don't dispatch START_GAME for multiplayer - startMultiplayerGame handles it
                                 console.log('Game started successfully');
                             },
                             className: 'flex-1 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-3 rounded-lg text-sm'
