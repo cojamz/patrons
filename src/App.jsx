@@ -6101,10 +6101,10 @@ function useGame() {
                         // After placing workers, show available shop options
                         const regularShopAvailable = !state.shopUsedAfterWorkers;
                         if (regularShopAvailable) {
-                            phaseText = 'Shop Phase (R1/R2/R3 + VP)';
+                            phaseText = 'Shop: Buy 1 Regular + 1 VP';
                             phaseColor = 'bg-purple-100 text-purple-800';
                         } else {
-                            phaseText = 'Shop Phase (VP Available)';
+                            phaseText = 'Shop: VP Only';
                             phaseColor = 'bg-green-100 text-green-800';
                         }
                     }
@@ -7583,16 +7583,32 @@ function useGame() {
                             React.createElement('span', { key: 'icon', className: 'text-lg' }, '🎲'),
                             React.createElement('span', { key: 'text', className: 'text-base font-bold' }, `Round ${state.round}`)
                         ]),
-                        // Current player indicator
-                        state.currentPlayer && React.createElement('div', {
-                            key: 'current-turn',
-                            className: 'bg-gray-700 text-white px-4 py-3 rounded-lg shadow flex items-center gap-2'
-                        }, [
-                            React.createElement('span', { key: 'icon', className: 'text-base' }, '👉'),
-                            React.createElement('span', { key: 'text', className: 'text-base font-bold' },
-                                `${state.players.find(p => p.id === state.currentPlayer)?.name}'s Turn`
-                            )
-                        ]),
+                        // Current player indicator with phase info
+                        state.currentPlayer && (() => {
+                            const currentPlayerName = state.players.find(p => p.id === state.currentPlayer)?.name;
+                            let phaseInfo = '';
+
+                            if (state.workersToPlace > 0) {
+                                phaseInfo = ` • Patrons: ${state.workersToPlace}`;
+                            } else {
+                                const regularShopAvailable = !state.shopUsedAfterWorkers;
+                                if (regularShopAvailable) {
+                                    phaseInfo = ' • Shop: 1 Regular + 1 VP';
+                                } else {
+                                    phaseInfo = ' • Shop: VP Only';
+                                }
+                            }
+
+                            return React.createElement('div', {
+                                key: 'current-turn',
+                                className: 'bg-gray-700 text-white px-4 py-3 rounded-lg shadow flex items-center gap-2'
+                            }, [
+                                React.createElement('span', { key: 'icon', className: 'text-base' }, '👉'),
+                                React.createElement('span', { key: 'text', className: 'text-base font-bold' },
+                                    `${currentPlayerName}'s Turn${phaseInfo}`
+                                )
+                            ]);
+                        })(),
                         // Room code badge (if in multiplayer)
                         state.roomCode && React.createElement('div', {
                             key: 'room-badge',

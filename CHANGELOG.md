@@ -4,6 +4,22 @@ All notable changes to Patrons v0.5 are documented here.
 
 ---
 
+## [2025-01-16] - Meta-Framework Enhancements
+
+### Added
+- TODO.md for persistent task tracking across sessions
+- CHANGELOG.md with auto-generated history from git commits
+- Enhanced `/checkpoint` command to update all 3 state files (implementation_state.md, TODO.md, CHANGELOG.md)
+- Enhanced `/start` command to read TODO.md and CHANGELOG.md for better context restoration
+
+### Changed
+- Improved context preservation workflow: /checkpoint updates everything, /start reads everything
+- Better session continuity with persistent task tracking
+
+**Commit**: e787245
+
+---
+
 ## [2025-11-16] - Multiplayer & Turn Flow Fixes
 
 ### Added
