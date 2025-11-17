@@ -2592,14 +2592,16 @@ function useGame() {
                         await executeShopBenefit(choice.color, choice.round, player, dispatch, currentState, recursionDepth + 1);
                         dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R${choice.round} shop benefit` });
                     }
-                    
-                    // BLUE AUTOMATIC VP: Player gets 1 VP when using any shop benefit
-                    dispatch({
-                        type: 'UPDATE_VP',
-                        playerId: player.id,
-                        vp: 1,
-                        source: 'blueShopUsage'
-                    });
+
+                    // BLUE AUTOMATIC VP: Player gets 1 VP when using any shop benefit (only if blue is active)
+                    if (currentState.automaticVPs?.blue) {
+                        dispatch({
+                            type: 'UPDATE_VP',
+                            playerId: player.id,
+                            vp: 1,
+                            source: 'blueShopUsage'
+                        });
+                    }
                     dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP (used a shop benefit)` });
                 }
                 
@@ -6962,10 +6964,12 @@ function useGame() {
                 
                 // Track shop usage
                 dispatch({ type: 'USE_SHOP' });
-                
-                // Blue automatic VP - player gets VP when they activate a shop effect
-                dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: 1, source: 'blueShopUsage' });
-                dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +1 VP (activated a shop effect)` });
+
+                // Blue automatic VP - player gets VP when they activate a shop effect (only if blue is active)
+                if (state.automaticVPs?.blue) {
+                    dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: 1, source: 'blueShopUsage' });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +1 VP (activated a shop effect)` });
+                }
             };
             
             const getColorEmoji = () => {
@@ -7179,9 +7183,11 @@ function useGame() {
 
                 // VP shops do NOT track shop usage - can buy both regular shop and VP shop in same turn
 
-                // Blue automatic VP - player gets VP when they activate a shop effect
-                dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: 1, source: 'blueShopUsage' });
-                dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +1 VP (activated a shop effect)` });
+                // Blue automatic VP - player gets VP when they activate a shop effect (only if blue is active)
+                if (state.automaticVPs?.blue) {
+                    dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: 1, source: 'blueShopUsage' });
+                    dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +1 VP (activated a shop effect)` });
+                }
             };
             
             const getColorEmoji = () => {
