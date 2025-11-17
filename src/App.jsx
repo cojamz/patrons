@@ -443,7 +443,8 @@ function useGame() {
                             effects: [],
                             victoryPoints: 0,
                             vpSources: {},
-                            shopCostModifier: 0
+                            shopCostModifier: 0,
+                            lastGain: {}
                         });
                     });
                     
@@ -6695,7 +6696,7 @@ function useGame() {
                 case 'red':
                     return '🏆 +1 VP each time you use or repeat a RED action';
                 case 'yellow':
-                    return '🏆 +1 VP per different color gem at end of each round';
+                    return '🏆 +1 VP per complete set of all colors at end of each round';
                 case 'blue':
                     return '🏆 Get 1 VP when you activate a shop effect';
                 case 'purple':

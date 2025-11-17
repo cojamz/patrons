@@ -10,10 +10,10 @@ export const initialState = {
     turnDirection: 1,
     gameMode: null, // 'basic' or 'advanced' - set when game starts
     players: [
-        { id: 1, name: "Player 1", emoji: initialPlayerEmojis[0], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0 },
-        { id: 2, name: "Player 2", emoji: initialPlayerEmojis[1], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0 },
-        { id: 3, name: "Player 3", emoji: initialPlayerEmojis[2], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0 },
-        { id: 4, name: "Player 4", emoji: initialPlayerEmojis[3], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0 }
+        { id: 1, name: "Player 1", emoji: initialPlayerEmojis[0], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0, lastGain: {} },
+        { id: 2, name: "Player 2", emoji: initialPlayerEmojis[1], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0, lastGain: {} },
+        { id: 3, name: "Player 3", emoji: initialPlayerEmojis[2], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0, lastGain: {} },
+        { id: 4, name: "Player 4", emoji: initialPlayerEmojis[3], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0, lastGain: {} }
     ],
     occupiedSpaces: {},
     round: 1,
@@ -106,6 +106,14 @@ export function gameReducer(state, action) {
                 currentPlayers: state.players.map(p => ({ id: p.id, resources: p.resources }))
             });
 
+            // Calculate what the current player gained (for other players to track)
+            const gainedResources = {};
+            Object.keys(action.resources).forEach(color => {
+                if (action.resources[color] > 0) {
+                    gainedResources[color] = action.resources[color];
+                }
+            });
+
             const updatedState = {
                 ...state,
                 players: state.players.map(player => {
@@ -120,11 +128,22 @@ export function gameReducer(state, action) {
                             black: player.resources.black + (action.resources.black || 0),
                             silver: player.resources.silver + (action.resources.silver || 0)
                         };
+
                         console.log('UPDATE_RESOURCES - Updating player', player.id, 'from', player.resources, 'to', newResources);
+                        console.log('UPDATE_RESOURCES - Other players will track gainedResources:', gainedResources);
+                        // Current player's lastGain stays the same (doesn't track their own gains)
                         return {
                             ...player,
                             resources: newResources
                         };
+                    } else {
+                        // Other players track what the current player gained
+                        if (Object.keys(gainedResources).length > 0) {
+                            return {
+                                ...player,
+                                lastGain: gainedResources
+                            };
+                        }
                     }
                     return player;
                 })
