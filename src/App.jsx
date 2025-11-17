@@ -6113,16 +6113,16 @@ function useGame() {
                     let phaseColor = '';
 
                     if (state.workersToPlace > 0) {
-                        phaseText = `Patrons to Place: ${state.workersToPlace}`;
+                        phaseText = `Place Patrons: ${state.workersToPlace} remaining`;
                         phaseColor = 'bg-blue-100 text-blue-800';
                     } else {
-                        // After placing workers, show available shop options
+                        // After placing workers, show shop phase sequence
                         const regularShopAvailable = !state.shopUsedAfterWorkers;
                         if (regularShopAvailable) {
-                            phaseText = 'Shop: Buy 1 Regular + 1 VP';
+                            phaseText = 'Shop Phase: R1/R2/R3 → VP → End Turn';
                             phaseColor = 'bg-purple-100 text-purple-800';
                         } else {
-                            phaseText = 'Shop: VP Only';
+                            phaseText = 'Shop Phase: VP → End Turn';
                             phaseColor = 'bg-green-100 text-green-800';
                         }
                     }
@@ -7631,13 +7631,13 @@ function useGame() {
                             let phaseInfo = '';
 
                             if (state.workersToPlace > 0) {
-                                phaseInfo = ` • Patrons: ${state.workersToPlace}`;
+                                phaseInfo = ` • Place Patrons: ${state.workersToPlace}`;
                             } else {
                                 const regularShopAvailable = !state.shopUsedAfterWorkers;
                                 if (regularShopAvailable) {
-                                    phaseInfo = ' • Shop: 1 Regular + 1 VP';
+                                    phaseInfo = ' • Shop: R1/R2/R3 → VP → End';
                                 } else {
-                                    phaseInfo = ' • Shop: VP Only';
+                                    phaseInfo = ' • Shop: VP → End Turn';
                                 }
                             }
 
