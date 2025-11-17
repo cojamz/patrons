@@ -6149,7 +6149,9 @@ function useGame() {
                         player.workersLeft > 0 ? `${player.emoji || '👤'} × ${player.workersLeft}` : ''
                     ),
                     // End Turn Button (only for current player, always show after workers placed)
+                    // In multiplayer, only show if it's MY turn (not just on any current player's card)
                     isCurrentPlayer && state.workersToPlace === 0 &&
+                    (!state.roomCode || state.myPlayerId === state.currentPlayer) &&
                     React.createElement(EndTurnButton, { key: 'end-turn', onEndTurn })
                 ])
             ]);
@@ -7430,6 +7432,13 @@ function useGame() {
                 }
             }, [state.pendingRoundAdvance, state.modal]);
 
+            // Auto-close round transition modal when round advances (for non-closing players in multiplayer)
+            useEffect(() => {
+                if (!state.pendingRoundAdvance && state.modal?.type === 'roundTransition') {
+                    dispatch({ type: 'HIDE_MODAL' });
+                }
+            }, [state.pendingRoundAdvance, state.modal?.type]);
+
             // Sync state to Firebase whenever state changes (debounced)
             useEffect(() => {
                 if (state.roomCode && state.gameStarted && !state.justSyncedFromFirebase) {
@@ -7745,8 +7754,10 @@ function useGame() {
                             ])
                         ]),
                     // Modal System - Show to current player OR targeted player
-                    state.modal && (!state.roomCode || 
-                        state.myPlayerId === state.currentPlayer || 
+                    // Round transition modals show to ALL players in multiplayer
+                    state.modal && (!state.roomCode ||
+                        state.modal.type === 'roundTransition' ||
+                        state.myPlayerId === state.currentPlayer ||
                         state.modal.targetPlayerId === state.myPlayerId) && React.createElement(Modal, { 
                         key: 'modal', 
                         isOpen: true, 
