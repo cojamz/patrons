@@ -2347,7 +2347,7 @@ function useGame() {
                 colors.forEach(color => {
                     // Get shop data for description
                     const shopInfo = {
-                        red: { 1: 'Repeat one of your patron\'s R1 actions' },
+                        red: { 1: 'Repeat one of your patron\'s Round 1 actions' },
                         yellow: { 1: 'Double your next gain action' },
                         blue: { 1: 'Toggle any shop (open/closed)' },
                         purple: { 1: 'Take an extra turn after this one' },
@@ -2433,7 +2433,7 @@ function useGame() {
                 
                 const shopInfo = {
                     red: {
-                        1: 'Repeat one of your patron\'s R1 actions',
+                        1: 'Repeat one of your patron\'s Round 1 actions',
                         2: 'Place the next player\'s patron for them',
                         3: 'Pick another player. Repeat all actions where they have a patron'
                     },
@@ -4645,7 +4645,7 @@ function useGame() {
             
             const shopData = {
                 red: {
-                    1: 'Repeat one of your patron\'s R1 actions',
+                    1: 'Repeat one of your patron\'s Round 1 actions',
                     2: 'Place the next player\'s patron for them',
                     3: 'Pick another player. Repeat all actions where they have a patron'
                 },
@@ -6764,7 +6764,7 @@ function useGame() {
             // Define shop data inline to ensure it's being used
             const inlineShopData = {
                 red: {
-                    1: { cost: { red: 1, any: 2 }, effect: 'Repeat one of your patron\'s R1 actions' },
+                    1: { cost: { red: 1, any: 2 }, effect: 'Repeat one of your patron\'s Round 1 actions' },
                     2: { cost: { red: 2, any: 2 }, effect: 'Place the next player\'s patron for them' },
                     3: { cost: { red: 4, any: 4 }, effect: 'Pick another player. Repeat all actions where they have a patron' }
                 },
