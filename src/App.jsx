@@ -453,7 +453,7 @@ function useGame() {
                     if (gameLayers && gameLayers.blue) {
                         automaticVPs.blue = true;
                     }
-                    
+
                     // WHITE AUTOMATIC VP: If white is in play, all players start with 5 VP
                     let initialPlayers = players;
                     if (gameLayers && gameLayers.white) {
@@ -466,7 +466,16 @@ function useGame() {
                             }
                         }));
                     }
-                    
+
+                    // Initialize closed shops (R2, R3, VP start closed)
+                    const initialClosedShops = {};
+                    const gameColors = gameLayers ? Object.keys(gameLayers) : ['red', 'yellow', 'blue', 'black'];
+                    gameColors.forEach(color => {
+                        initialClosedShops[`${color}2`] = true;
+                        initialClosedShops[`${color}3`] = true;
+                        initialClosedShops[`${color}vp`] = true;
+                    });
+
                     // Initialize complete game state
                     const gameState = {
                         currentPlayer: 1,
@@ -482,7 +491,7 @@ function useGame() {
                         gameLayers: gameLayers,
                         gameMode: gameMode,
                         automaticVPs: automaticVPs,
-                        closedShops: {},
+                        closedShops: initialClosedShops,
                         shopUsedAfterWorkers: false,
                         playersOutOfWorkers: [],
                         skippedTurns: {},
