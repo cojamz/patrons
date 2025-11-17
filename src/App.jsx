@@ -6775,8 +6775,8 @@ function useGame() {
                 },
                 yellow: {
                     1: { cost: { yellow: 1, any: 1 }, effect: 'Double your next resource gain' },
-                    2: { cost: { yellow: 2, any: 2 }, effect: 'Gain 5 resources (any colors)' },
-                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 7 resources (any colors)' }
+                    2: { cost: { yellow: 2, any: 2 }, effect: 'Trigger Yellow auto VP now' },
+                    3: { cost: { yellow: 3, any: 3 }, effect: 'Gain 10 resources (any colors)' }
                 },
                 blue: {
                     1: { cost: { blue: 1, any: 1 }, effect: 'Open or close any one shop' },
