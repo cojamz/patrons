@@ -4469,9 +4469,12 @@ function useGame() {
         // Execute repeat action from red shop
         async function executeRepeatAction(player, dispatch, state, gameLayers, recursionDepth = 0, allowedRounds = null) {
             // Find all occupied spaces that belong to the current player
-            // Only exclude repeating the repeat action itself to prevent infinite loops
+            // Exclude actions that could create infinite loops
             const excludedActions = [
-                'redRepeatAction' // Can't repeat the repeat action itself
+                'redRepeatAction', // Can't repeat the repeat action itself
+                'blueR1ShopBenefit', // Blue R1: Gain R1 shop benefit (would create infinite loop)
+                'blueAnyShopBenefit', // Blue R3 shop: Use any shop for free (would create infinite loop)
+                'purpleShopHybrid' // Purple: Gain R1 shop benefit (would create infinite loop)
             ];
 
             const playerSpaces = Object.entries(state.occupiedSpaces)
