@@ -1206,12 +1206,12 @@ function useGame() {
                     : 'Select 3 Resources (⭐ Colors)';
                 
                 const selectedGems = await showGemSelection(
-                    dispatch, 
-                    modalTitle, 
-                    3, 
-                    null, 
+                    dispatch,
+                    modalTitle,
+                    3,
+                    null,
                     workerInfo,
-                    isPlacedByOther ? actualPlayerId : null
+                    effectiveTargetPlayerId
                 );
                 console.log('gain3yellow - selectedGems:', selectedGems);
                 
@@ -1297,12 +1297,12 @@ function useGame() {
                     : 'Select 2 Resources (⭐ Colors)';
                 
                 const selectedGems = await showGemSelection(
-                    dispatch, 
-                    modalTitle, 
-                    2, 
-                    null, 
+                    dispatch,
+                    modalTitle,
+                    2,
+                    null,
                     workerInfo,
-                    isPlacedByOther ? actualPlayerId : null
+                    effectiveTargetPlayerId
                 );
                 
                 console.log('gain2yellow - selectedGems:', selectedGems);
