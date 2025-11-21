@@ -4,6 +4,30 @@ All notable changes to Patrons v0.5 are documented here.
 
 ---
 
+## [2025-11-21] - Red R1 Shop Balance & Multiplayer Modal Targeting
+
+### Fixed
+- Red R1 shop infinite loop: Excluded blueR1ShopBenefit, blueAnyShopBenefit, and purpleShopHybrid from repeat to prevent recursion
+- Red R1 shop balance: Now only repeats Round 1 actions (not R2/R3) - too powerful when repeating later rounds
+- Multiplayer patron swap modals: Added targetPlayerId routing so each patron owner sees their own modals and makes their own decisions (uncommitted)
+
+### Changed
+- Shop text clarity: "R1" → "Round 1" for better readability
+- Red R1 shop functionality: Limited to Round 1 actions only via allowedRounds parameter
+
+### Technical Details
+- Added `targetPlayerId` parameter to executeAction function (line 1119)
+- Created `effectiveTargetPlayerId` variable defaulting to player.id
+- Updated selectTargetPlayer to accept and pass through targetPlayerId
+- Updated ~30 modal calls (showChoice, showGemSelection, showStealGems, selectTargetPlayer) to use effectiveTargetPlayerId
+- Added round filtering to executeRepeatAction with allowedRounds parameter
+- Multiplayer modal targeting builds successfully, ready for testing
+
+**Commits**: c9d069b, c84b3d1, 6f19a69, 551c089
+**Uncommitted**: Multiplayer modal targeting implementation (src/App.jsx)
+
+---
+
 ## [2025-11-17] - VP Shop Fixes & UI Improvements
 
 ### Fixed

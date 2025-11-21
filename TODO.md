@@ -1,6 +1,6 @@
 # TODO
 
-**Last Updated**: 2025-11-17 00:15
+**Last Updated**: 2025-11-21 15:30
 
 ---
 
@@ -40,6 +40,11 @@
 ---
 
 ## Completed
+
+### 2025-11-21 - Red R1 Shop Balance & Multiplayer Modal Targeting
+- [x] **Nerf Red R1 shop** - Now only repeats Round 1 actions (not R2/R3)
+- [x] **Fix infinite loop exploit** - Excluded shop benefit actions from Red R1 repeat
+- [x] **Implement multiplayer modal targeting** - Added targetPlayerId parameter to executeAction, updated ~30 modal calls for correct player routing during patron swaps (uncommitted, builds successfully)
 
 ### 2025-11-17 - VP Shop Fixes & UI Improvements
 - [x] **Fix Yellow VP shop gem selection** - Now prompts for gem choice instead of auto-deducting

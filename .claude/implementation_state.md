@@ -1,7 +1,7 @@
 # Implementation State
 
-**Status**: Ready for new work (VP shop fixes complete)
-**Last Updated**: 2025-11-17 00:15
+**Status**: In Progress (multiplayer modal targeting uncommitted)
+**Last Updated**: 2025-11-21 15:30
 
 ---
 
@@ -38,7 +38,7 @@
 ---
 
 ## Current Task
-Working on: None (VP shop fixes complete, awaiting next task)
+Working on: Multiplayer modal targeting (uncommitted - ready to test and commit)
 
 ---
 
@@ -59,6 +59,12 @@ Purple layer has 12 documented bugs (see TODO.md):
 ---
 
 ## State Log
+
+**[2025-11-21 15:30]** - Red R1 shop balance + multiplayer modal targeting
+- Status: In Progress (uncommitted)
+- Files Modified: src/App.jsx, src/data/shopData.js
+- Notes: Committed: Red R1 shop nerfed to only repeat R1 actions, fixed infinite loop with shop benefits. Uncommitted: Implemented targetPlayerId for multiplayer modal routing (~30 modal calls updated), builds successfully.
+- Next: Test patron swap in multiplayer, then commit if working
 
 **[2025-11-17 00:15]** - VP shop fixes & UI improvements (5 commits)
 - Status: Completed

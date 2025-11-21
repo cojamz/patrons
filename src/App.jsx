@@ -1116,7 +1116,9 @@ function useGame() {
         }
 
         // Simplified action execution
-        async function executeAction(actionId, player, dispatch, currentState, gameLayers, recursionDepth = 0, workerInfo = null) {
+        async function executeAction(actionId, player, dispatch, currentState, gameLayers, recursionDepth = 0, workerInfo = null, targetPlayerId = null) {
+            // Default targetPlayerId to player.id if not specified (for multiplayer modal targeting)
+            const effectiveTargetPlayerId = targetPlayerId || player.id;
             // Prevent infinite loops
             if (recursionDepth > 5) {
                 dispatch({ type: 'ADD_LOG', message: '⚠️ Max recursion depth reached - stopping to prevent infinite loop' });
@@ -1480,7 +1482,7 @@ function useGame() {
                     });
                     
                     if (options.length > 0) {
-                        const choice = await showChoice(dispatch, 'Choose a patron to take back', options);
+                        const choice = await showChoice(dispatch, 'Choose a patron to take back', options, false, workerInfo, effectiveTargetPlayerId);
                         if (choice) {
                             // Remove worker and give it back
                             dispatch({
@@ -1623,9 +1625,12 @@ function useGame() {
                     { label: '🟣 R1: Take an extra turn after this one', value: 'purple1' }
                 ];
                 
-                const choice = await showChoice(dispatch, 
-                    'Choose ⭐ Round 1 shop benefit', 
-                    shopOptions
+                const choice = await showChoice(dispatch,
+                    'Choose ⭐ Round 1 shop benefit',
+                    shopOptions,
+                    false,
+                    workerInfo,
+                    effectiveTargetPlayerId
                 );
                 
                 if (choice) {
@@ -1691,9 +1696,12 @@ function useGame() {
                     { label: '3 → 4 → 1 → 2', value: [3, 4, 1, 2] }
                 ];
                 
-                const newOrder = await showChoice(dispatch, 
-                    'Choose new turn order for next round', 
-                    orderOptions
+                const newOrder = await showChoice(dispatch,
+                    'Choose new turn order for next round',
+                    orderOptions,
+                    false,
+                    workerInfo,
+                    effectiveTargetPlayerId
                 );
                 
                 if (newOrder) {
@@ -1765,10 +1773,13 @@ function useGame() {
                         value: spaceId
                     };
                 });
-                
-                const choice = await showChoice(dispatch, 
-                    'Choose an action to repeat', 
-                    repeatOptions
+
+                const choice = await showChoice(dispatch,
+                    'Choose an action to repeat',
+                    repeatOptions,
+                    false,
+                    workerInfo,
+                    effectiveTargetPlayerId
                 );
                 
                 if (choice) {
@@ -1860,7 +1871,7 @@ function useGame() {
                     };
                 });
                 
-                const worker1 = await showChoice(dispatch, 'Choose your patron to swap', myWorkerOptions, false, workerInfo);
+                const worker1 = await showChoice(dispatch, 'Choose your patron to swap', myWorkerOptions, false, workerInfo, effectiveTargetPlayerId);
                 if (!worker1) return;
                 
                 // Current player chooses which other worker to swap with
@@ -1883,7 +1894,7 @@ function useGame() {
                     };
                 });
                 
-                const worker2 = await showChoice(dispatch, `Choose another player's worker to swap with`, otherWorkerOptions, false, workerInfo);
+                const worker2 = await showChoice(dispatch, `Choose another player's worker to swap with`, otherWorkerOptions, false, workerInfo, effectiveTargetPlayerId);
                 if (!worker2) return;
                 
                 // Perform the swap
@@ -1911,16 +1922,19 @@ function useGame() {
                 if (actionId === 'redHybrid1') {
                     // Both players get actions where their workers END UP
                     // Execute for both players (single-player AND multiplayer)
+                    // Pass targetPlayerId so modals show to the correct player
                     if (!skipActions.includes(worker1.spaceId)) {
-                        await executeAction(worker1.spaceId, currentState.players.find(p => p.id === worker2.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
+                        const worker2Player = currentState.players.find(p => p.id === worker2.playerId);
+                        await executeAction(worker1.spaceId, worker2Player, dispatch, currentState, gameLayers, recursionDepth + 1, null, worker2.playerId);
                     }
                     if (!skipActions.includes(worker2.spaceId)) {
-                        await executeAction(worker2.spaceId, currentState.players.find(p => p.id === worker1.playerId), dispatch, currentState, gameLayers, recursionDepth + 1);
+                        const worker1Player = currentState.players.find(p => p.id === worker1.playerId);
+                        await executeAction(worker2.spaceId, worker1Player, dispatch, currentState, gameLayers, recursionDepth + 1, null, worker1.playerId);
                     }
                 } else {
                     // R2: Only current player gets action of where they MOVE TO (not where they were)
                     if (!skipActions.includes(worker2.spaceId)) {
-                        await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1);
+                        await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1, null, player.id);
                     } else {
                         dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Cannot execute ${worker2.spaceId} from swap (would interfere with swap)` });
                     }
@@ -2031,11 +2045,12 @@ function useGame() {
                     
                     // Show choice modal
                     const choice = await showChoice(
-                        dispatch, 
+                        dispatch,
                         `Choose next action to repeat (${remainingActions.length} remaining)`,
                         actionOptions,
                         false,
-                        workerInfo
+                        workerInfo,
+                        effectiveTargetPlayerId
                     );
                     
                     if (!choice) {
@@ -2094,7 +2109,8 @@ function useGame() {
                     `Trade all ${totalResources} resources for new ones`,
                     totalResources,
                     null,
-                    workerInfo
+                    workerInfo,
+                    effectiveTargetPlayerId
                 );
                 
                 if (!newResources) {
@@ -2138,7 +2154,8 @@ function useGame() {
                     'Select 4 Resources (⭐ Colors)',
                     4,
                     null,
-                    workerInfo
+                    workerInfo,
+                    effectiveTargetPlayerId
                 );
 
                 if (!selectedGems) {
@@ -2394,8 +2411,8 @@ function useGame() {
                     return;
                 }
                 
-                const choice = await showChoice(dispatch, 'Choose any R1 shop benefit (ignores closed status)', filteredOptions, true, workerInfo);
-                
+                const choice = await showChoice(dispatch, 'Choose any R1 shop benefit (ignores closed status)', filteredOptions, true, workerInfo, effectiveTargetPlayerId);
+
                 if (choice) {
                     console.log('Player chose shop:', choice.color, 'R', choice.round);
                     
@@ -2531,8 +2548,8 @@ function useGame() {
                     }
                 });
                 
-                const choice = await showChoice(dispatch, 'Choose any shop benefit (ignores closed status)', shopOptions, true, workerInfo);
-                
+                const choice = await showChoice(dispatch, 'Choose any shop benefit (ignores closed status)', shopOptions, true, workerInfo, effectiveTargetPlayerId);
+
                 if (choice) {
                     // Execute the shop benefit without paying cost
                     if (choice.round === 'vp') {
@@ -2676,9 +2693,9 @@ function useGame() {
                     return;
                 }
                 
-                // Choose 2 gems to convert  
-                const selectedGems = await showGemSelection(dispatch, 'Choose 2 gems to convert to Gold', 2, currentPlayer, workerInfo);
-                
+                // Choose 2 gems to convert
+                const selectedGems = await showGemSelection(dispatch, 'Choose 2 gems to convert to Gold', 2, currentPlayer, workerInfo, effectiveTargetPlayerId);
+
                 if (!selectedGems) {
                     const message = `Player ${player.id}: convert2AnyTo2Gold → Cancelled`;
                     dispatch({ type: 'ADD_LOG', message });
@@ -2718,8 +2735,8 @@ function useGame() {
                 }
                 
                 // Choose 1 gem to convert
-                const selectedGems = await showGemSelection(dispatch, 'Choose 1 gem to convert to Gold', 1, currentPlayer, workerInfo);
-                
+                const selectedGems = await showGemSelection(dispatch, 'Choose 1 gem to convert to Gold', 1, currentPlayer, workerInfo, effectiveTargetPlayerId);
+
                 if (!selectedGems) {
                     const message = `Player ${player.id}: convert1AnyTo1Gold → Cancelled`;
                     dispatch({ type: 'ADD_LOG', message });
@@ -2795,8 +2812,8 @@ function useGame() {
                 }
                 
                 // Choose 3 gems to convert
-                const selectedGems = await showGemSelection(dispatch, 'Choose 3 gems to convert to Gold', 3, currentPlayer, workerInfo);
-                
+                const selectedGems = await showGemSelection(dispatch, 'Choose 3 gems to convert to Gold', 3, currentPlayer, workerInfo, effectiveTargetPlayerId);
+
                 if (!selectedGems) {
                     const message = `Player ${player.id}: convert3AnyTo3Gold → Cancelled`;
                     dispatch({ type: 'ADD_LOG', message });
@@ -2919,8 +2936,8 @@ function useGame() {
                 }
                 
                 // Choose 1 gem to spend
-                const selectedGems = await showGemSelection(dispatch, 'Choose 1 gem to spend for 2 VP', 1, currentPlayer, workerInfo);
-                
+                const selectedGems = await showGemSelection(dispatch, 'Choose 1 gem to spend for 2 VP', 1, currentPlayer, workerInfo, effectiveTargetPlayerId);
+
                 if (!selectedGems) {
                     const message = `Player ${player.id}: spend1AnyFor2VP → Cancelled`;
                     dispatch({ type: 'ADD_LOG', message });
@@ -2964,8 +2981,8 @@ function useGame() {
                 }
                 
                 // Choose 2 gems to spend
-                const selectedGems = await showGemSelection(dispatch, 'Choose 2 gems to spend for 3 VP', 2, currentPlayer, workerInfo);
-                
+                const selectedGems = await showGemSelection(dispatch, 'Choose 2 gems to spend for 3 VP', 2, currentPlayer, workerInfo, effectiveTargetPlayerId);
+
                 if (!selectedGems) {
                     const message = `Player ${player.id}: spend2AnyFor3VP → Cancelled`;
                     dispatch({ type: 'ADD_LOG', message });
@@ -3029,8 +3046,8 @@ function useGame() {
                 }
                 
                 // Choose gems to gain
-                const selectedGems = await showGemSelection(dispatch, `Choose ${gemsToGain} gems to gain`, gemsToGain, null, workerInfo);
-                
+                const selectedGems = await showGemSelection(dispatch, `Choose ${gemsToGain} gems to gain`, gemsToGain, null, workerInfo, effectiveTargetPlayerId);
+
                 if (!selectedGems) {
                     // If cancelled, give default resources
                     const defaultGems = {};
@@ -3072,8 +3089,8 @@ function useGame() {
                 });
                 
                 // Choose 4 gems to gain
-                const selectedGems = await showGemSelection(dispatch, 'Choose 4 gems to gain', 4, null, workerInfo);
-                
+                const selectedGems = await showGemSelection(dispatch, 'Choose 4 gems to gain', 4, null, workerInfo, effectiveTargetPlayerId);
+
                 if (!selectedGems) {
                     // If cancelled, give default resources
                     const resources = { red: 1, yellow: 1, blue: 1, purple: 1 };
@@ -3105,8 +3122,8 @@ function useGame() {
                 });
                 
                 // Choose 5 gems to gain
-                const selectedGems = await showGemSelection(dispatch, 'Choose 5 gems to gain', 5);
-                
+                const selectedGems = await showGemSelection(dispatch, 'Choose 5 gems to gain', 5, null, workerInfo, effectiveTargetPlayerId);
+
                 if (!selectedGems) {
                     // If cancelled, give default resources
                     const resources = { red: 1, yellow: 1, blue: 1, purple: 1, gold: 1 };
@@ -3153,7 +3170,8 @@ function useGame() {
                     'Choose a player to steal 1 VP from',
                     currentState.players,
                     player.id,
-                    workerInfo
+                    workerInfo,
+                    effectiveTargetPlayerId
                 );
                 
                 if (!targetPlayer) {
@@ -3208,8 +3226,8 @@ function useGame() {
                     return;
                 }
                 
-                const targetPlayer = await selectTargetPlayer(dispatch, 'Choose a player to steal 2 gems from', currentState.players, player.id, workerInfo);
-                
+                const targetPlayer = await selectTargetPlayer(dispatch, 'Choose a player to steal 2 gems from', currentState.players, player.id, workerInfo, effectiveTargetPlayerId);
+
                 if (!targetPlayer) {
                     const message = `Player ${player.id}: blackSteal2Any → Cancelled`;
                     dispatch({ type: 'ADD_LOG', message });
@@ -3226,8 +3244,8 @@ function useGame() {
                     return;
                 }
                 
-                const stolenGems = await showStealGems(dispatch, `Choose ${stealCount} gems to steal from Player ${targetPlayer.id}`, targetPlayer, stealCount, workerInfo);
-                
+                const stolenGems = await showStealGems(dispatch, `Choose ${stealCount} gems to steal from Player ${targetPlayer.id}`, targetPlayer, stealCount, workerInfo, effectiveTargetPlayerId);
+
                 if (!stolenGems) {
                     const message = `Player ${player.id}: blackSteal2Any → Cancelled`;
                     dispatch({ type: 'ADD_LOG', message });
@@ -3300,7 +3318,7 @@ function useGame() {
                 }
                 
                 // Choose target player
-                const targetId = await showChoice(dispatch, 'Choose player to steal 4 resources from', targetOptions, false, workerInfo);
+                const targetId = await showChoice(dispatch, 'Choose player to steal 4 resources from', targetOptions, false, workerInfo, effectiveTargetPlayerId);
                 if (!targetId) {
                     const message = `Player ${player.id}: blackStealWorker → +1 black (cancelled)`;
                     dispatch({ type: 'ADD_LOG', message });
@@ -3315,11 +3333,12 @@ function useGame() {
                 
                 // Attacker chooses which resources to steal
                 const selectedGems = await showStealGems(
-                    dispatch, 
+                    dispatch,
                     `Steal up to ${actualStealCount} resources from Player ${targetId}`,
                     targetPlayer,
                     actualStealCount,
-                    workerInfo
+                    workerInfo,
+                    effectiveTargetPlayerId
                 );
                 
                 if (!selectedGems) {
@@ -3466,8 +3485,8 @@ function useGame() {
                 });
                 
                 // Choose 1 gem of any color
-                const selectedGems = await showGemSelection(dispatch, 'Choose 1 gem (others will get the same)', 1, null, workerInfo, player.id);
-                
+                const selectedGems = await showGemSelection(dispatch, 'Choose 1 gem (others will get the same)', 1, null, workerInfo, effectiveTargetPlayerId);
+
                 if (!selectedGems) {
                     // If cancelled, give default red
                     const resources = { red: 1 };
@@ -3523,8 +3542,8 @@ function useGame() {
                 
                 // Choose another player to give 2 VP
                 const otherPlayers = currentState.players.filter(p => p.id !== player.id);
-                const targetPlayer = await selectTargetPlayer(dispatch, 'Choose a player to also gain 2 VP', currentState.players, player.id, workerInfo);
-                
+                const targetPlayer = await selectTargetPlayer(dispatch, 'Choose a player to also gain 2 VP', currentState.players, player.id, workerInfo, effectiveTargetPlayerId);
+
                 if (!targetPlayer) {
                     // If cancelled, pick first other player
                     const firstOther = otherPlayers[0];
@@ -3611,8 +3630,8 @@ function useGame() {
                 });
                 
                 // Choose 1 color to get 2 of (must be same color)
-                const selectedGems = await showGemSelection(dispatch, 'Choose 1 color to get 2 gems of (others will get 1 of that color)', 1, null, workerInfo, player.id);
-                
+                const selectedGems = await showGemSelection(dispatch, 'Choose 1 color to get 2 gems of (others will get 1 of that color)', 1, null, workerInfo, effectiveTargetPlayerId);
+
                 if (!selectedGems) {
                     // If cancelled, give default red
                     const resources = { red: 2 };
@@ -4399,27 +4418,27 @@ function useGame() {
         }
 
         // Helper function to select target player (replaces undefined showPlayerSelection)
-        async function selectTargetPlayer(dispatch, title, players, currentPlayerId, workerInfo = null) {
+        async function selectTargetPlayer(dispatch, title, players, currentPlayerId, workerInfo = null, targetPlayerId = null) {
             const otherPlayers = players.filter(p => p.id !== currentPlayerId);
-            
+
             if (otherPlayers.length === 0) {
                 return null;
             }
-            
+
             const playerOptions = otherPlayers.map(p => {
                 // Format player info with resources
                 const resourceInfo = Object.entries(p.resources)
                     .filter(([, amount]) => amount > 0)
                     .map(([color, amount]) => `${amount} ${color}`)
                     .join(', ') || 'no resources';
-                
+
                 return {
                     label: `${p.name || `Player ${p.id}`} ${p.emoji || ''} (${resourceInfo}, ${p.victoryPoints || 0} VP)`,
                     value: p.id
                 };
             });
-            
-            const targetId = await showChoice(dispatch, title, playerOptions, false, workerInfo);
+
+            const targetId = await showChoice(dispatch, title, playerOptions, false, workerInfo, targetPlayerId);
             return targetId ? players.find(p => p.id === targetId) : null;
         }
 
