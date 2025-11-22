@@ -1080,7 +1080,35 @@ function useGame() {
             };
             
             const textSizes = getTextSize();
-            
+
+            // For yellowHybrid2, show previous player's lastGain
+            let lastGainInfo = null;
+            if (actionId === 'yellowHybrid2') {
+                const currentPlayerIndex = state.players.findIndex(p => p.id === state.currentPlayer);
+                if (currentPlayerIndex !== -1) {
+                    const previousPlayerIndex = (currentPlayerIndex - 1 + state.players.length) % state.players.length;
+                    const previousPlayer = state.players[previousPlayerIndex];
+                    if (previousPlayer && previousPlayer.lastGain && Object.keys(previousPlayer.lastGain).length > 0) {
+                        const gainParts = Object.entries(previousPlayer.lastGain).map(([resource, amount]) => {
+                            const resourceEmojis = {
+                                red: '🔴',
+                                yellow: '🟡',
+                                blue: '🔵',
+                                black: '⚫',
+                                purple: '🟣',
+                                gold: '🟨',
+                                white: '⚪',
+                                silver: '🩶'
+                            };
+                            return `${amount}${resourceEmojis[resource] || resource}`;
+                        }).join(', ');
+                        lastGainInfo = `Will copy: ${gainParts} (from ${previousPlayer.name || previousPlayer.emoji || `P${previousPlayer.id}`})`;
+                    } else {
+                        lastGainInfo = `Will copy: (no recent gain from ${previousPlayer.name || previousPlayer.emoji || `P${previousPlayer.id}`})`;
+                    }
+                }
+            }
+
             return React.createElement('div', {
                 className: `relative border-2 rounded-lg flex flex-col p-1.5 min-h-[60px] transition-all duration-150 shadow-sm ${getRoundStyle()} ${getAvailabilityStyle()}`,
                 onClick: handleClick
@@ -1104,7 +1132,12 @@ function useGame() {
                 React.createElement('div', {
                     key: 'desc',
                     className: `text-xs text-center px-1 ${!available ? 'text-gray-400' : 'text-gray-600'} leading-tight`
-                }, description)
+                }, description),
+                // lastGain info for yellowHybrid2
+                lastGainInfo && React.createElement('div', {
+                    key: 'lastgain',
+                    className: 'text-xs text-center px-1 mt-1 text-blue-600 font-semibold italic'
+                }, lastGainInfo)
             ]);
         }
 
