@@ -898,9 +898,9 @@ function useGame() {
                     alert('You have already placed all your patrons this turn. End your turn or buy from shops.');
                     return;
                 }
-                
-                // Only check physical workers if we don't have bonus placement workers
-                if (currentPlayer.workersLeft <= 0 && state.workersToPlace <= 1) {
+
+                // Check physical workers - prevent phantom patron placement
+                if (currentPlayer.workersLeft <= 0) {
                     alert('You have no patrons left to place!');
                     return;
                 }
