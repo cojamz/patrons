@@ -6,7 +6,7 @@
 3. **Repeat Actions**: Cannot repeat other repeat/swap actions (prevents infinite loops)
 4. **Play More Workers Effect**: Only clears when `workersToPlace === 0`
 5. **Gold Shops**: Accept ANY resource as ⭐ payment
-6. **Blue Auto VP**: ALL players get +1 VP when ANYONE uses a shop
+6. **Blue Auto VP**: Shop user gets +1 VP when using a shop (solo benefit, NOT cooperative)
 
 ## Project Info
 - Modern Vite/React project (v0.5)

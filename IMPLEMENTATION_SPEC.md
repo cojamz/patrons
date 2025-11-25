@@ -118,7 +118,7 @@ For code navigation, see `CODE_NAVIGATION.md`. For development guide, see `DEVEL
 10. **Blue shop benefit actions implemented** - Can gain any shop benefit even if closed
 11. **Blue cost modification actions implemented** - Reduce/increase shop costs by 1 any
 12. **Blue flip shops action implemented** - Flips all shop statuses (as effect)
-13. **Blue automatic VP implemented** - All players get 1 VP when anyone uses any shop
+13. **Blue automatic VP implemented** - Shop user gets 1 VP when using a shop (solo benefit)
 14. **SET_RESOURCES reducer added** - For resource swapping functionality
 15. **VP source tracking implemented** - All VP updates now include source parameter
 16. **VP hover tooltip added** - Shows breakdown of VP by category on hover
@@ -316,7 +316,7 @@ This will give you the complete specification and current progress status.
 ### Automatic VP Clarifications:
 1. **Red VP**: Triggers on ANY red action use, including when swapped into red
 2. **Yellow VP**: Calculated at round end based on gem color diversity
-3. **Blue VP**: ALL players get VP when ANYONE uses a shop (cooperative element)
+3. **Blue VP**: Shop user gets VP when using a shop (solo benefit, NOT cooperative)
 4. **Purple VP**: First AND last to run out of workers (not just one)
 
 ### Latest Session Changes (2025-01-06):
