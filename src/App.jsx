@@ -5638,7 +5638,7 @@ function useGame() {
                 });
             });
             
-            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Silver R3 shop → +${silverAmount} silver${hasDoubleEffect ? ' (DOUBLED!)' : ''}, all other players +2 silver` });
+            dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} used Silver R3 shop and gained ${silverAmount} silver${hasDoubleEffect ? ' (DOUBLED!)' : ''}, all other players gained 2 silver` });
         }
         
         // Execute any shop benefit by shop ID
