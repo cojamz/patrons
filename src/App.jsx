@@ -5,6 +5,7 @@ import { PLAYER_EMOJIS, COLOR_EMOJIS, RESOURCE_TYPES, QUAD_NAMES, MAX_RECONNECT_
 import { allGameLayers, selectGameLayers } from './data/allGameLayers.js';
 import { shopData, shopCosts, vpShopData } from './data/shopData.js';
 import { gameReducer, initialState } from './state/gameReducer.js';
+import { takeTurn as aiTakeTurn, isAIPlayer } from './ai/AIController.js';
 
 /**
  * @typedef {Object} Resources
@@ -532,6 +533,12 @@ function useGame() {
             const [roomCodeInput, setRoomCodeInput] = useState('');
             const [mode, setMode] = useState('menu'); // 'menu', 'create', 'join', 'gameMode'
             const [selectedGameMode, setSelectedGameMode] = useState(null); // 'basic' or 'advanced'
+            const [playerAISettings, setPlayerAISettings] = useState([
+                { playerId: 1, isAI: false, difficulty: 'medium' },
+                { playerId: 2, isAI: false, difficulty: 'medium' },
+                { playerId: 3, isAI: false, difficulty: 'medium' },
+                { playerId: 4, isAI: false, difficulty: 'medium' }
+            ]);
             
             const handleCreateRoom = () => {
                 if (!playerName.trim()) {
@@ -562,7 +569,45 @@ function useGame() {
                 const selectedLayers = selectGameLayers(4, gameMode);
                 dispatch({ type: 'SET_GAME_MODE', mode: gameMode });
                 dispatch({ type: 'SET_GAME_LAYERS', layers: selectedLayers });
+
+                // Set Player 1's name if provided
+                if (playerName.trim()) {
+                    dispatch({
+                        type: 'SET_PLAYER_NAME',
+                        playerId: 1,
+                        name: playerName.trim()
+                    });
+                }
+
+                // Apply AI settings to players
+                playerAISettings.forEach(setting => {
+                    if (setting.isAI) {
+                        dispatch({
+                            type: 'SET_PLAYER_AI',
+                            playerId: setting.playerId,
+                            isAI: true,
+                            aiDifficulty: setting.difficulty
+                        });
+                    }
+                });
+
                 dispatch({ type: 'START_GAME' });
+            };
+
+            const togglePlayerAI = (playerId) => {
+                setPlayerAISettings(prev => prev.map(setting =>
+                    setting.playerId === playerId
+                        ? { ...setting, isAI: !setting.isAI }
+                        : setting
+                ));
+            };
+
+            const setPlayerDifficulty = (playerId, difficulty) => {
+                setPlayerAISettings(prev => prev.map(setting =>
+                    setting.playerId === playerId
+                        ? { ...setting, difficulty }
+                        : setting
+                ));
             };
             
             return React.createElement('div', { 
@@ -668,17 +713,62 @@ function useGame() {
                 ]),
                 
                 mode === 'gameMode' && React.createElement('div', { key: 'gameMode', className: 'space-y-4' }, [
-                    React.createElement('h3', { 
+                    React.createElement('h3', {
                         key: 'title',
-                        className: 'text-xl font-bold text-center mb-4' 
-                    }, 'Select Game Mode'),
-                    React.createElement('div', { 
+                        className: 'text-xl font-bold text-center mb-4'
+                    }, 'Setup Game'),
+
+                    // AI Player Configuration
+                    React.createElement('div', {
+                        key: 'aiConfig',
+                        className: 'bg-gray-50 p-4 rounded-lg space-y-3'
+                    }, [
+                        React.createElement('h4', {
+                            key: 'aiTitle',
+                            className: 'text-sm font-semibold text-gray-700 mb-2'
+                        }, '🤖 AI Players'),
+                        ...playerAISettings.map(setting =>
+                            React.createElement('div', {
+                                key: `player-${setting.playerId}`,
+                                className: 'flex items-center gap-3'
+                            }, [
+                                React.createElement('label', {
+                                    key: 'checkbox',
+                                    className: 'flex items-center gap-2 flex-1 cursor-pointer'
+                                }, [
+                                    React.createElement('input', {
+                                        key: 'input',
+                                        type: 'checkbox',
+                                        checked: setting.isAI,
+                                        onChange: () => togglePlayerAI(setting.playerId),
+                                        className: 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500'
+                                    }),
+                                    React.createElement('span', {
+                                        key: 'label',
+                                        className: 'text-sm font-medium'
+                                    }, `Player ${setting.playerId}`)
+                                ]),
+                                setting.isAI && React.createElement('select', {
+                                    key: 'difficulty',
+                                    value: setting.difficulty,
+                                    onChange: (e) => setPlayerDifficulty(setting.playerId, e.target.value),
+                                    className: 'px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+                                }, [
+                                    React.createElement('option', { key: 'easy', value: 'easy' }, 'Easy'),
+                                    React.createElement('option', { key: 'medium', value: 'medium' }, 'Medium'),
+                                    React.createElement('option', { key: 'hard', value: 'hard' }, 'Hard')
+                                ])
+                            ])
+                        )
+                    ]),
+
+                    React.createElement('div', {
                         key: 'description',
-                        className: 'text-sm text-gray-600 text-center mb-6 space-y-2' 
+                        className: 'text-sm text-gray-600 text-center mb-6 space-y-2'
                     }, [
                         React.createElement('p', { key: 'basic' },
                             'Basic: Play with the classic 4 colors (Red, Yellow, Blue, Black)'),
-                        React.createElement('p', { key: 'advanced' }, 
+                        React.createElement('p', { key: 'advanced' },
                             'Advanced: Play with 4 randomly selected colors from all 8 available')
                     ]),
                     React.createElement('button', {
@@ -1148,6 +1238,22 @@ function useGame() {
             return redLayer.actions.some(a => a.id === actionId);
         }
 
+        // Helper: Format player name for logs
+        function formatPlayerName(player) {
+            return `${player.emoji || '👤'} ${player.name}`;
+        }
+
+        // Helper: Get action title from action ID
+        function getActionTitle(actionId, gameLayers) {
+            for (const [color, layer] of Object.entries(gameLayers || {})) {
+                const action = layer.actions?.find(a => a.id === actionId);
+                if (action) {
+                    return action.title;
+                }
+            }
+            return actionId; // Fallback to ID if not found
+        }
+
         // Simplified action execution
         async function executeAction(actionId, player, dispatch, currentState, gameLayers, recursionDepth = 0, workerInfo = null, targetPlayerId = null) {
             // Default targetPlayerId to player.id if not specified (for multiplayer modal targeting)
@@ -1157,11 +1263,11 @@ function useGame() {
                 dispatch({ type: 'ADD_LOG', message: '⚠️ Max recursion depth reached - stopping to prevent infinite loop' });
                 return;
             }
-            
-            // Show recursion depth for complex chains
-            if (recursionDepth > 0) {
-                dispatch({ type: 'ADD_LOG', message: `↳ Action chain depth: ${recursionDepth}` });
-            }
+
+            // Don't show recursion depth in user-facing logs (too technical)
+            // if (recursionDepth > 0) {
+            //     dispatch({ type: 'ADD_LOG', message: `↳ Action chain depth: ${recursionDepth}` });
+            // }
             
             const basicGains = {
                 'gain3red': { red: 3 },
@@ -1199,10 +1305,14 @@ function useGame() {
                         effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
                     });
                     
-                    const message = `Player ${player.id}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const resourceList = Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ');
+                    const message = `${formatPlayerName(player)} used ${actionTitle} and gained ${resourceList} (DOUBLED!)`;
                     dispatch({ type: 'ADD_LOG', message });
                 } else {
-                    const message = `Player ${player.id}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')}`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const resourceList = Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ');
+                    const message = `${formatPlayerName(player)} used ${actionTitle} and gained ${resourceList}`;
                     dispatch({ type: 'ADD_LOG', message });
                 }
                 
@@ -1220,7 +1330,7 @@ function useGame() {
                         vp: 1,
                         source: 'redAction'
                     });
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
+                    dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} gained +1 VP (red action bonus)` });
                 }
                 
                 return;
@@ -1252,7 +1362,8 @@ function useGame() {
                     // If cancelled, give default resources
                     const resources = { red: 1, yellow: 1, blue: 1 };
                     dispatch({ type: 'UPDATE_RESOURCES', playerId: actualPlayerId, resources });
-                    const message = `Player ${actualPlayerId}: gain3yellow → +1 red, +1 yellow, +1 blue (default)`;
+                    const actionTitle = getActionTitle('gain3yellow', gameLayers);
+                    const message = `${formatPlayerName(actualPlayer)} used ${actionTitle} and gained 1 red, 1 yellow, 1 blue (default)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -1286,10 +1397,14 @@ function useGame() {
                         effects: (actualPlayer.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
                     });
                     
-                    const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(filteredResources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const resourceList = Object.entries(filteredResources).map(([color, amount]) => `${amount} ${color}`).join(', ');
+                    const message = `${formatPlayerName(actualPlayer)} used ${actionTitle} and gained ${resourceList} (DOUBLED!)`;
                     dispatch({ type: 'ADD_LOG', message });
                 } else {
-                    const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(filteredResources).map(([color, amount]) => `${amount} ${color}`).join(', ')}`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const resourceList = Object.entries(filteredResources).map(([color, amount]) => `${amount} ${color}`).join(', ');
+                    const message = `${formatPlayerName(actualPlayer)} used ${actionTitle} and gained ${resourceList}`;
                     dispatch({ type: 'ADD_LOG', message });
                 }
                 
@@ -1345,7 +1460,8 @@ function useGame() {
                     const resources = { red: 1, yellow: 1 };
                     console.log('gain2yellow - Using default resources:', resources);
                     dispatch({ type: 'UPDATE_RESOURCES', playerId: actualPlayerId, resources });
-                    const message = `Player ${actualPlayerId}: gain2yellow → +1 red, +1 yellow (default)`;
+                    const actionTitle = getActionTitle('gain2yellow', gameLayers);
+                    const message = `${formatPlayerName(actualPlayer)} used ${actionTitle} and gained 1 red, 1 yellow (default)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -1368,10 +1484,14 @@ function useGame() {
                         effects: (actualPlayer.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
                     });
                     
-                    const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')} (DOUBLED!)`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const resourceList = Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ');
+                    const message = `${formatPlayerName(actualPlayer)} used ${actionTitle} and gained ${resourceList} (DOUBLED!)`;
                     dispatch({ type: 'ADD_LOG', message });
                 } else {
-                    const message = `Player ${actualPlayerId}: ${actionId} → +${Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ')}`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const resourceList = Object.entries(resources).map(([color, amount]) => `${amount} ${color}`).join(', ');
+                    const message = `${formatPlayerName(actualPlayer)} used ${actionTitle} and gained ${resourceList}`;
                     dispatch({ type: 'ADD_LOG', message });
                 }
                 
@@ -1394,26 +1514,28 @@ function useGame() {
                 // Calculate how many workers we can actually add
                 const workersAvailable = player.workersLeft;
                 const workersToAdd = Math.min(2, workersAvailable);
-                
+
                 if (workersToAdd === 0) {
-                    const message = `Player ${player.id}: playTwoWorkers → No patrons left to place`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} used ${actionTitle} but has no patrons left to place`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
-                
+
                 // Add workers that can be placed this turn (limited by available workers)
                 dispatch({
                     type: 'ADD_WORKERS_TO_PLACE',
                     count: workersToAdd
                 });
-                
+
                 dispatch({
                     type: 'ADD_EFFECT',
                     playerId: player.id,
                     effect: `Can place ${workersToAdd} more patron${workersToAdd > 1 ? 's' : ''} this turn`
                 });
-                
-                const message = `Player ${player.id}: playTwoWorkers → Can now place ${workersToAdd} MORE patron${workersToAdd > 1 ? 's' : ''} this turn`;
+
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const message = `${formatPlayerName(player)} used ${actionTitle} and can now place ${workersToAdd} more patron${workersToAdd > 1 ? 's' : ''} this turn`;
                 dispatch({ type: 'ADD_LOG', message });
                 console.log(message);
                 return;
@@ -1450,7 +1572,8 @@ function useGame() {
                     skippedTurns: newSkippedTurns
                 });
                 
-                const message = `Player ${player.id}: gain4purpleSkip → +${purpleGain} purple${hasDoubleEffect ? ' (DOUBLED!)' : ''}, will skip next turn (total skips: ${newSkippedTurns[player.id]})`;
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const message = `${formatPlayerName(player)} used ${actionTitle} and gained ${purpleGain} purple${hasDoubleEffect ? ' (DOUBLED!)' : ''}, will skip next turn`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1523,12 +1646,14 @@ function useGame() {
                                 actionId: choice,
                                 playerId: player.id
                             });
-                            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Took back patron from ${choice}` });
+                            const takenAction = getActionTitle(choice, gameLayers);
+                            dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} took back their patron from ${takenAction}` });
                         }
                     }
                 }
-                
-                const message = `Player ${player.id}: gain2purpleTakeBack → +${purpleGain} purple${hasDoubleEffect ? ' (DOUBLED!)' : ''} + take back patron`;
+
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const message = `${formatPlayerName(player)} used ${actionTitle} and gained ${purpleGain} purple${hasDoubleEffect ? ' (DOUBLED!)' : ''}`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1563,20 +1688,22 @@ function useGame() {
                     skippedTurns: newSkippedTurns
                 });
                 
-                const message = `Player ${player.id}: gain5purpleSkip → +${purpleGain} purple${hasDoubleEffect ? ' (DOUBLED!)' : ''}, will skip next turn (total skips: ${newSkippedTurns[player.id]})`;
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const message = `${formatPlayerName(player)} used ${actionTitle} and gained ${purpleGain} purple${hasDoubleEffect ? ' (DOUBLED!)' : ''}, will skip next turn`;
                 dispatch({ type: 'ADD_LOG', message });
-                
+
                 // Don't force end turn - let player continue placing workers if they have more to place
                 return;
             }
-            
+
             if (actionId === 'playThreeWorkers') {
                 // Calculate how many workers we can actually add
                 const workersAvailable = player.workersLeft;
                 const workersToAdd = Math.min(3, workersAvailable);
-                
+
                 if (workersToAdd === 0) {
-                    const message = `Player ${player.id}: playThreeWorkers → No patrons left to place`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} used ${actionTitle} but has no patrons left to place`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -1593,11 +1720,12 @@ function useGame() {
                     effect: `Can place ${workersToAdd} more patron${workersToAdd > 1 ? 's' : ''} this turn`
                 });
                 
-                const message = `Player ${player.id}: playThreeWorkers → Can now place ${workersToAdd} MORE patron${workersToAdd > 1 ? 's' : ''} this turn`;
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const message = `${formatPlayerName(player)} used ${actionTitle} and can now place ${workersToAdd} more patron${workersToAdd > 1 ? 's' : ''} this turn`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
-            
+
             if (actionId === 'gain4purpleWaitAll') {
                 // Give 4 purple resources
                 dispatch({
@@ -1605,22 +1733,23 @@ function useGame() {
                     playerId: player.id,
                     resources: { purple: 4 }
                 });
-                
+
                 // Grant an extra turn
                 dispatch({
                     type: 'ADD_EFFECT',
                     playerId: player.id,
                     effect: 'Will take an extra turn after this one'
                 });
-                
+
                 // Actually grant the extra turn
                 dispatch({
                     type: 'UPDATE_PLAYER',
                     playerId: player.id,
                     updates: { extraTurns: (player.extraTurns || 0) + 1 }
                 });
-                
-                const message = `Player ${player.id}: gain4purpleWaitAll → +4 purple + extra turn after this one`;
+
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const message = `${formatPlayerName(player)} used ${actionTitle} and gained 4 purple, will take extra turn`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -1708,12 +1837,12 @@ function useGame() {
                         'purple1': 'Extra turn'
                     };
                     
-                    const message = `Player ${player.id}: purpleShopHybrid → +1 purple + ${effectNames[choice]}`;
+                    const message = `${formatPlayerName(player)} gained 1 purple and chose: ${effectNames[choice]}`;
                     dispatch({ type: 'ADD_LOG', message });
                 }
                 return;
             }
-            
+
             // Purple layer - Choose turn order
             if (actionId === 'purpleHybrid2') {
                 dispatch({
@@ -1721,14 +1850,14 @@ function useGame() {
                     playerId: player.id,
                     resources: { purple: 1 }
                 });
-                
+
                 const orderOptions = [
                     { label: '1 → 2 → 3 → 4', value: [1, 2, 3, 4] },
                     { label: '4 → 3 → 2 → 1', value: [4, 3, 2, 1] },
                     { label: '2 → 1 → 4 → 3', value: [2, 1, 4, 3] },
                     { label: '3 → 4 → 1 → 2', value: [3, 4, 1, 2] }
                 ];
-                
+
                 const newOrder = await showChoice(dispatch,
                     'Choose new turn order for next round',
                     orderOptions,
@@ -1736,15 +1865,16 @@ function useGame() {
                     workerInfo,
                     effectiveTargetPlayerId
                 );
-                
+
                 if (newOrder) {
                     // Apply the turn order change immediately for next round
                     dispatch({
                         type: 'SET_TURN_ORDER',
                         turnOrder: newOrder
                     });
-                    
-                    const message = `Player ${player.id}: purpleHybrid2 → +1 purple + set turn order to ${newOrder.join(' → ')}`;
+
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} used ${actionTitle}, gained 1 purple, and set turn order to ${newOrder.join(' → ')}`;
                     dispatch({ type: 'ADD_LOG', message });
                 }
                 return;
@@ -1765,27 +1895,25 @@ function useGame() {
                     vp: 1,
                     source: 'redAction'
                 });
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
-                
-                const logMessage = `DEBUG: Occupied spaces: ${JSON.stringify(currentState.occupiedSpaces)}`;
-                dispatch({ type: 'ADD_LOG', message: logMessage });
-                
+                dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} gained +1 VP (red action bonus)` });
+
                 // Find all occupied spaces that belong to the current player
-                // Only exclude repeating the repeat action itself to prevent infinite loops
+                // Exclude actions that would create infinite loops
                 const excludedActions = [
-                    'redRepeatAction' // Can't repeat the repeat action itself
+                    'redRepeatAction', // Can't repeat the repeat action itself
+                    'redRepeatAll',    // Can't repeat the repeat-all action
+                    'redHybrid1',      // Can't repeat swap actions (causes loop)
+                    'redHybrid2'       // Can't repeat swap actions (causes loop)
                 ];
                 const playerSpaces = Object.entries(currentState.occupiedSpaces)
-                    .filter(([spaceId, playerId]) => 
+                    .filter(([spaceId, playerId]) =>
                         playerId === player.id && !excludedActions.includes(spaceId)
                     )
                     .map(([spaceId]) => spaceId);
-                
-                const debugMessage = `DEBUG: Player spaces to repeat: ${playerSpaces.join(', ')}`;
-                dispatch({ type: 'ADD_LOG', message: debugMessage });
-                
+
                 if (playerSpaces.length === 0) {
-                    const message = `Player ${player.id}: redRepeatAction → +1 red (no valid patrons to repeat - swap/repeat actions excluded)`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} used ${actionTitle} and gained 1 red (no valid patrons to repeat)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -1817,16 +1945,9 @@ function useGame() {
                 
                 if (choice) {
                     // Find the action title for better logging
-                    let actionTitle = choice;
-                    for (const layerData of Object.values(gameLayers)) {
-                        const action = layerData.actions.find(a => a.id === choice);
-                        if (action) {
-                            actionTitle = action.title;
-                            break;
-                        }
-                    }
-                    
-                    const message = `Player ${player.id}: redRepeatAction → +1 red + repeating ${actionTitle}`;
+                    const repeatedActionTitle = getActionTitle(choice, gameLayers);
+
+                    const message = `${formatPlayerName(player)} gained 1 red and is repeating: ${repeatedActionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
 
                     // Execute the chosen action again
@@ -1840,7 +1961,7 @@ function useGame() {
                             vp: 1,
                             source: 'redAutomatic'
                         });
-                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for repeating red action` });
+                        dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} gained +1 VP (repeated red action bonus)` });
                     }
                 }
                 return;
@@ -1863,12 +1984,13 @@ function useGame() {
                     vp: 1,
                     source: 'redAutomatic'
                 });
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP for red action` });
-                
+                dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} gained +1 VP (red action bonus)` });
+
                 // Find workers that can be swapped
                 const allWorkers = Object.entries(currentState.occupiedSpaces);
                 if (allWorkers.length < 2) {
-                    const message = `Player ${player.id}: ${actionId} → +1 red (not enough patrons to swap)`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} used ${actionTitle} and gained 1 red (not enough patrons to swap)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -1883,7 +2005,8 @@ function useGame() {
                 );
                 
                 if (myWorkers.length === 0 || otherWorkers.length === 0) {
-                    const message = `Player ${player.id}: ${actionId} → +1 red (need valid patrons from both players - swap actions excluded)`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} used ${actionTitle} and gained 1 red (not enough valid patrons to swap)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -1942,16 +2065,19 @@ function useGame() {
                 
                 // Log the swap
                 const otherPlayerId = worker2.playerId;
-                dispatch({ 
-                    type: 'ADD_LOG', 
-                    message: `Workers swapped between actions` 
+                const otherPlayer = currentState.players.find(p => p.id === otherPlayerId);
+                const action1Title = getActionTitle(worker1.spaceId, gameLayers);
+                const action2Title = getActionTitle(worker2.spaceId, gameLayers);
+                dispatch({
+                    type: 'ADD_LOG',
+                    message: `${formatPlayerName(player)} swapped patrons with ${formatPlayerName(otherPlayer)} (${action1Title} ↔ ${action2Title})`
                 });
-                
+
                 // Execute actions for the affected players
                 // IMPORTANT: Skip actions that would interfere with the swap itself or create paradoxes
                 // Only skip actions that place additional workers (which could create loops)
                 const skipActions = ['playTwoWorkers', 'playThreeWorkers'];
-                
+
                 if (actionId === 'redHybrid1') {
                     // Both players get actions where their workers END UP
                     // Execute for both players (single-player AND multiplayer)
@@ -1968,12 +2094,11 @@ function useGame() {
                     // R2: Only current player gets action of where they MOVE TO (not where they were)
                     if (!skipActions.includes(worker2.spaceId)) {
                         await executeAction(worker2.spaceId, player, dispatch, currentState, gameLayers, recursionDepth + 1, null, player.id);
-                    } else {
-                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Cannot execute ${worker2.spaceId} from swap (would interfere with swap)` });
                     }
                 }
-                
-                const message = `Player ${player.id}: ${actionId} → +1 red + swapped patrons`;
+
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const message = `${formatPlayerName(player)} used ${actionTitle} and gained 1 red`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -2607,7 +2732,11 @@ function useGame() {
                                     });
                                 }
                             });
-                            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Black Victory shop → Stole 2 VP from each other player` });
+                            const stolen = otherPlayers.map(op => {
+                                const amt = Math.min(2, op.victoryPoints);
+                                return `${amt} VP from ${formatPlayerName(op)}`;
+                            }).join(', ');
+                            dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} used Black Victory shop and stole ${stolen}` });
                         } else {
                             // Regular VP shops
                             const vpAmounts = {
@@ -2621,14 +2750,14 @@ function useGame() {
                                 vp: vpGain,
                                 source: 'victoryShop'
                             });
-                            dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: ${choice.color} Victory shop → +${vpGain} VP` });
+                            dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} used ${choice.color} Victory shop and gained ${vpGain} VP` });
                         }
                     } else {
                         // Execute regular shop effect
                         console.log('Blue R3: About to execute shop benefit for', choice.color, 'R' + choice.round);
                         // Use currentState instead of state to avoid stale closure
                         await executeShopBenefit(choice.color, choice.round, player, dispatch, currentState, recursionDepth + 1);
-                        dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Executed ${choice.color} R${choice.round} shop benefit` });
+                        dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} executed ${choice.color} R${choice.round} shop benefit` });
                     }
 
                     // BLUE AUTOMATIC VP: Player gets 1 VP when using any shop benefit (only if blue is active)
@@ -2640,7 +2769,7 @@ function useGame() {
                             source: 'blueShopUsage'
                         });
                     }
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP (used a shop benefit)` });
+                    dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} gained +1 VP (shop usage bonus)` });
                 }
                 
                 return;
@@ -2660,8 +2789,9 @@ function useGame() {
                     playerId: player.id,
                     modifier: -1
                 });
-                
-                const message = `Player ${player.id}: blueReduceCosts → +1 blue + your shop costs reduced by 1 ⭐`;
+
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const message = `${formatPlayerName(player)} used ${actionTitle}, gained 1 blue, and reduced their shop costs by 1`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -3851,13 +3981,13 @@ function useGame() {
                                 key: 'header',
                                 className: `text-sm font-bold text-gray-700 mb-2 p-1 rounded bg-gradient-to-r ${quadColors[groupName] || 'from-gray-200 to-gray-300'}`
                             }, groupName),
-                            ...groupOptions.map((option, index) => 
+                            ...groupOptions.map((option, index) =>
                                 React.createElement('button', {
                                     key: `${groupName}-${index}`,
                                     onClick: () => handleSelect(option.value || option),
-                                    className: 'w-full text-xs bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 font-semibold py-1 px-2 rounded-md shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-200 text-left',
+                                    className: 'w-full text-sm bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2 px-3 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 text-left border-2 border-blue-700',
                                     title: option.label || option
-                                }, option.label || option.shortLabel || option)
+                                }, option.shortLabel || option.label || option)
                             )
                         ])
                     )),
@@ -6692,10 +6822,10 @@ function useGame() {
                         break;
                 }
                 
-                const message = `Player ${currentPlayer.id}: Bought ${color} R${shopRound} shop`;
+                const message = `${formatPlayerName(currentPlayer)} purchased ${color} R${shopRound} shop`;
                 dispatch({ type: 'ADD_LOG', message });
                 console.log(message);
-                
+
                 // BLUE AUTOMATIC VP: Player gets 1 VP when they activate a shop effect
                 if (state.automaticVPs?.blue) {
                     dispatch({
@@ -6704,7 +6834,7 @@ function useGame() {
                         vp: 1,
                         source: 'blueAutomatic'
                     });
-                    dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +1 VP (activated a shop effect)` });
+                    dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(currentPlayer)} gained +1 VP (shop activation bonus)` });
                 }
             };
             
@@ -7414,14 +7544,15 @@ function useGame() {
                         dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +${playersStolen} VP (Black automatic: stealing bonus, 1 per player)` });
                     } else {
                         console.log(`Player ${currentPlayer.id}: Black Victory Shop → No VP to steal`);
-                        dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: Black Victory Shop → No VP to steal` });
+                        dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(currentPlayer)} used Black Victory Shop but found no VP to steal` });
                     }
                 } else {
                     // Normal victory shop
                     dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: shop.vp, source: 'victoryShop' });
+                    dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(currentPlayer)} purchased ${color} Victory Shop and gained ${shop.vp} VP` });
                     console.log(`Player ${currentPlayer.id} bought ${shop.vp} victory points from ${color} shop`);
                 }
-                
+
                 // BLUE AUTOMATIC VP: Player gets 1 VP when they activate a shop effect
                 if (state.automaticVPs?.blue) {
                     dispatch({
@@ -7430,7 +7561,7 @@ function useGame() {
                         vp: 1,
                         source: 'blueAutomatic'
                     });
-                    dispatch({ type: 'ADD_LOG', message: `Player ${currentPlayer.id}: +1 VP (activated a shop effect)` });
+                    dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(currentPlayer)} gained +1 VP (shop activation bonus)` });
                 }
             };
             
@@ -7505,6 +7636,604 @@ function useGame() {
                     dispatch({ type: 'HIDE_MODAL' });
                 }
             }, [state.pendingRoundAdvance, state.modal?.type]);
+
+            // AI Modal Handler: Respond to modals automatically for AI players
+            useEffect(() => {
+                if (!state.modal || !state.gameStarted || state.gameOver) {
+                    return;
+                }
+
+                const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
+
+                // Only handle modals for AI players
+                if (!currentPlayer || currentPlayer.isAI !== true) {
+                    return;
+                }
+
+                console.log('[AI Modal Handler] Modal detected for AI player:', {
+                    playerId: currentPlayer.id,
+                    modalType: state.modal?.type,
+                    modal: state.modal
+                });
+
+                // Add delay so human can see modal briefly
+                const handleModalTimeout = setTimeout(() => {
+                    const modal = state.modal;
+
+                    if (!modal) return;
+
+                    // Handle different modal types
+                    console.log('[AI Modal Handler] Handling modal type:', modal.type, modal);
+
+                    if (modal.type === 'chooseResources') {
+                        // Choose random resources
+                        const count = modal.count || 1;
+                        const choices = [];
+                        const colors = ['red', 'yellow', 'blue', 'purple', 'gold', 'white', 'black', 'silver'];
+                        for (let i = 0; i < count; i++) {
+                            choices.push(colors[Math.floor(Math.random() * colors.length)]);
+                        }
+                        console.log('[AI Modal Handler] Choosing resources:', choices);
+                        if (modal.onConfirm) {
+                            modal.onConfirm(choices);
+                        }
+                        dispatch({ type: 'HIDE_MODAL' });
+                    }
+                    else if (modal.type === 'choice') {
+                        // Generic choice modal - pick random option
+                        const options = modal.options || [];
+                        if (options.length > 0) {
+                            const randomOption = options[Math.floor(Math.random() * options.length)];
+                            console.log('[AI Modal Handler] Choosing from options:', randomOption);
+                            if (modal.onSelect) {
+                                // Extract value from option if it's an object, otherwise use directly
+                                const value = randomOption.value !== undefined ? randomOption.value : randomOption;
+                                modal.onSelect(value);
+                            }
+                        }
+                        dispatch({ type: 'HIDE_MODAL' });
+                    }
+                    else if (modal.type === 'gemSelection') {
+                        // Gem selection modal - choose random gems
+                        const count = modal.maxGems || 1;
+                        const available = modal.availableResources || {};
+                        const choices = {};
+
+                        // If no specific resources provided, use all colors
+                        const allColors = ['red', 'yellow', 'blue', 'purple', 'gold', 'white', 'black', 'silver'];
+                        const availableColors = Object.keys(available).length > 0
+                            ? Object.keys(available).filter(c => available[c] > 0)
+                            : allColors;
+
+                        // Pick random gems from available
+                        let remaining = count;
+                        while (remaining > 0 && availableColors.length > 0) {
+                            const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+                            const maxCanTake = available[randomColor] || 1; // If no limit, can take 1
+                            const toTake = Math.min(remaining, maxCanTake, 1); // Take 1 at a time
+                            choices[randomColor] = (choices[randomColor] || 0) + toTake;
+                            if (available[randomColor]) {
+                                available[randomColor] -= toTake;
+                                if (available[randomColor] === 0) {
+                                    availableColors.splice(availableColors.indexOf(randomColor), 1);
+                                }
+                            }
+                            remaining -= toTake;
+                        }
+
+                        console.log('[AI Modal Handler] Choosing gems:', choices);
+                        if (modal.onSelect) {
+                            modal.onSelect(choices);
+                        }
+                        dispatch({ type: 'HIDE_MODAL' });
+                    }
+                    else if (modal.type === 'stealGems') {
+                        // Steal gems modal - pick random gems to steal
+                        const targetPlayer = modal.targetPlayer;
+                        const maxGems = modal.maxGems || 1;
+                        const available = targetPlayer?.resources || {};
+                        const choices = {};
+
+                        // Pick random gems to steal
+                        let remaining = maxGems;
+                        const colors = Object.keys(available).filter(c => available[c] > 0);
+                        while (remaining > 0 && colors.length > 0) {
+                            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                            const toSteal = Math.min(remaining, available[randomColor], 1); // Steal 1 at a time
+                            choices[randomColor] = (choices[randomColor] || 0) + toSteal;
+                            available[randomColor] -= toSteal;
+                            remaining -= toSteal;
+                            if (available[randomColor] === 0) {
+                                colors.splice(colors.indexOf(randomColor), 1);
+                            }
+                        }
+
+                        console.log('[AI Modal Handler] Stealing gems:', choices);
+                        if (modal.onSelect) {
+                            modal.onSelect(choices);
+                        }
+                        dispatch({ type: 'HIDE_MODAL' });
+                    }
+                    else {
+                        // Unknown modal type - just close it
+                        console.log('[AI Modal Handler] Unknown modal type, closing');
+                        if (modal.onCancel) {
+                            modal.onCancel();
+                        } else {
+                            dispatch({ type: 'HIDE_MODAL' });
+                        }
+                    }
+                }, 500); // 500ms delay so humans can see what's happening
+
+                return () => clearTimeout(handleModalTimeout);
+            }, [state.modal, state.currentPlayer, state.gameStarted, state.gameOver]);
+
+            // Track if AI is currently acting to prevent re-entry
+            const aiActingRef = React.useRef(false);
+
+            // Helper: Get affordable shops for AI
+            function getAffordableShops(gameState, player) {
+                const affordable = [];
+                const allShops = [...Object.values(shopData), ...Object.values(vpShopData)];
+
+                allShops.forEach(shop => {
+                    // Check if shop is open
+                    if (gameState.closedShops[shop.id]) {
+                        return;
+                    }
+
+                    // Check if shop is available this round
+                    if (shop.round && shop.round > gameState.round) {
+                        return;
+                    }
+
+                    // Check affordability with cost modifiers
+                    const cost = shopCosts[shop.id];
+                    if (!cost) return;
+
+                    const costModifier = player.shopCostModifier || 0;
+                    let canAfford = true;
+                    let totalAnyNeeded = 0;
+                    const specificCosts = {};
+
+                    // Parse costs
+                    Object.entries(cost).forEach(([resource, amount]) => {
+                        if (resource === 'vp') {
+                            // Check VP
+                            if ((player.victoryPoints || 0) < amount) {
+                                canAfford = false;
+                            }
+                        } else if (resource === 'any') {
+                            // Track "any" cost (with modifier applied)
+                            totalAnyNeeded = Math.max(0, amount + costModifier);
+                        } else {
+                            // Track specific color costs
+                            specificCosts[resource] = amount;
+                        }
+                    });
+
+                    // Check specific color requirements
+                    Object.entries(specificCosts).forEach(([color, required]) => {
+                        const has = player.resources[color] || 0;
+                        if (has < required) {
+                            canAfford = false;
+                        }
+                    });
+
+                    // Check "any" cost - can we pay it with remaining resources?
+                    if (canAfford && totalAnyNeeded > 0) {
+                        const available = { ...player.resources };
+                        // Subtract already-spent specific costs
+                        Object.entries(specificCosts).forEach(([color, spent]) => {
+                            available[color] = Math.max(0, (available[color] || 0) - spent);
+                        });
+
+                        // Check if we have enough remaining for "any" cost
+                        const totalAvailable = Object.values(available).reduce((sum, amt) => sum + amt, 0);
+                        if (totalAvailable < totalAnyNeeded) {
+                            canAfford = false;
+                        }
+                    }
+
+                    if (canAfford) {
+                        affordable.push(shop);
+                    }
+                });
+
+                console.log('[AI] Found affordable shops:', affordable.map(s => s.id));
+                return affordable;
+            }
+
+            // AI Turn Watcher: Detect when it's an AI player's turn
+            useEffect(() => {
+                console.log('[AI Turn Watcher] Effect triggered:', {
+                    gameStarted: state.gameStarted,
+                    modal: state.modal,
+                    gameOver: state.gameOver,
+                    currentPlayer: state.currentPlayer,
+                    turnDirection: state.turnDirection,
+                    workersToPlace: state.workersToPlace,
+                    aiActing: aiActingRef.current
+                });
+
+                // Only run if game is started and not showing modals
+                if (!state.gameStarted || state.modal || state.gameOver) {
+                    console.log('[AI Turn Watcher] Skipping - game not ready');
+                    return;
+                }
+
+                // Prevent re-entry while AI is acting
+                if (aiActingRef.current) {
+                    console.log('[AI Turn Watcher] Skipping - AI is already acting');
+                    return;
+                }
+
+                const currentPlayer = state.players.find(p => p.id === state.currentPlayer);
+                console.log('[AI Turn Watcher] Current player:', {
+                    id: currentPlayer?.id,
+                    name: currentPlayer?.name,
+                    isAI: currentPlayer?.isAI,
+                    aiDifficulty: currentPlayer?.aiDifficulty,
+                    allPlayers: state.players.map(p => ({ id: p.id, name: p.name, isAI: p.isAI, difficulty: p.aiDifficulty }))
+                });
+
+                // Check if current player is AI (must explicitly be true, not just truthy)
+                if (currentPlayer && currentPlayer.isAI === true) {
+                    console.log('[AI Turn Watcher] AI player detected, starting turn...');
+
+                    // Set flag FIRST to prevent duplicate execution from Strict Mode
+                    if (aiActingRef.current) {
+                        console.log('[AI Turn Watcher] AI already started for this turn, skipping duplicate');
+                        return;
+                    }
+                    aiActingRef.current = true;
+
+                    // Add log entry that AI is thinking
+                    dispatch({
+                        type: 'ADD_LOG',
+                        message: `🤖 ${currentPlayer.name} (AI) is thinking...`
+                    });
+
+                    // Execute full AI turn (workers + shops + end turn)
+                    executeAITurn();
+
+                    async function executeAITurn() {
+                        try {
+                            console.log('[AI Turn] executeAITurn called', {
+                                workersToPlace: state.workersToPlace,
+                                workersLeft: currentPlayer.workersLeft,
+                                phase: state.workersToPlace > 0 ? 'PLACING_WORKERS' : 'SHOPPING'
+                            });
+
+                            // Phase 1: Place worker if needed
+                            if (state.workersToPlace > 0 && currentPlayer.workersLeft > 0) {
+                                console.log('[AI Turn] PHASE 1: Placing worker...');
+
+                                const decision = await aiTakeTurn(state, currentPlayer);
+                                console.log('[AI Turn] Decision received:', decision);
+
+                                if (!decision || decision.type !== 'placeWorker') {
+                                    console.log('[AI Turn] No valid worker placement decision, ending turn immediately');
+                                    await new Promise(resolve => setTimeout(resolve, 300));
+                                    dispatch({ type: 'END_TURN' });
+                                    return;
+                                }
+
+                                // Place the worker
+                                console.log('[AI Turn] Placing worker on:', decision.actionId);
+                                await placeWorkerForAI(decision.actionId);
+
+                                // Calculate expected new workersToPlace after this placement
+                                const expectedWorkersToPlace = Math.max(0, state.workersToPlace - 1);
+                                console.log('[AI Turn] After placement, expected workersToPlace:', expectedWorkersToPlace);
+
+                                // Wait for modals and state updates
+                                console.log('[AI Turn] Waiting 1500ms for action to complete...');
+                                await new Promise(resolve => setTimeout(resolve, 1500));
+                                console.log('[AI Turn] Wait complete, continuing...');
+
+                                // If more workers needed, reset flag and let effect re-trigger
+                                if (expectedWorkersToPlace > 0 && currentPlayer.workersLeft > 1) {
+                                    console.log('[AI Turn] More workers needed, resetting flag for re-trigger');
+                                    aiActingRef.current = false;
+                                    return;
+                                }
+
+                                console.log('[AI Turn] All workers placed, proceeding to shops...');
+                            }
+
+                            // Phase 2: All workers placed, consider using shops
+                            console.log('[AI Turn] PHASE 2: All workers placed, checking shops...');
+                            console.log('[AI Turn] Current resources:', currentPlayer.resources);
+
+                            // Try to use multiple shops if possible
+                            const maxShopAttempts = 3; // Try up to 3 shops per turn
+                            let shopsUsed = 0;
+
+                            for (let attempt = 0; attempt < maxShopAttempts; attempt++) {
+                                const affordableShops = getAffordableShops(state, currentPlayer);
+                                console.log(`[AI Turn] Shop attempt ${attempt + 1}: ${affordableShops.length} affordable shops`);
+
+                                if (affordableShops.length === 0) {
+                                    console.log('[AI Turn] No more affordable shops');
+                                    break;
+                                }
+
+                                // 75% chance to use a shop (higher than before)
+                                const shopRoll = Math.random();
+                                console.log('[AI Turn] Shop roll:', shopRoll);
+
+                                if (shopRoll < 0.75) {
+                                    console.log('[AI Turn] AI decided to use shop');
+                                    await tryUseShop();
+                                    shopsUsed++;
+                                    // Short delay between shops
+                                    await new Promise(resolve => setTimeout(resolve, 500));
+                                } else {
+                                    console.log('[AI Turn] AI decided to stop shopping');
+                                    break;
+                                }
+                            }
+
+                            console.log(`[AI Turn] Used ${shopsUsed} shops this turn`);
+
+                            // Phase 3: End turn
+                            console.log('[AI Turn] PHASE 3: Ending turn');
+                            await new Promise(resolve => setTimeout(resolve, 500));
+
+                            console.log('[AI Turn] Dispatching END_TURN');
+                            dispatch({ type: 'END_TURN' });
+                            console.log('[AI Turn] END_TURN dispatched successfully');
+
+                        } catch (error) {
+                            console.error('[AI Turn] ERROR during turn:', error);
+                            console.error('[AI Turn] Error stack:', error.stack);
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            dispatch({ type: 'END_TURN' });
+                        } finally {
+                            console.log('[AI Turn] Finally block - resetting flag');
+                            aiActingRef.current = false;
+                        }
+                    }
+
+                    async function placeWorkerForAI(actionId) {
+                        console.log(`[AI Turn] Placing worker on ${actionId}`);
+                        const workerInfo = { actionId, playerId: currentPlayer.id };
+
+                        dispatch({ type: 'PLACE_WORKER', actionId });
+
+                        const freshState = {
+                            ...state,
+                            occupiedSpaces: { ...state.occupiedSpaces, [actionId]: currentPlayer.id },
+                            players: state.players.map(p =>
+                                p.id === currentPlayer.id
+                                    ? { ...p, workersLeft: p.workersLeft - 1 }
+                                    : p
+                            ),
+                            workerPlacedThisTurn: true,
+                            workersToPlace: Math.max(0, state.workersToPlace - 1)
+                        };
+                        const freshPlayer = freshState.players.find(p => p.id === currentPlayer.id);
+
+                        // Execute action async (don't await - let modals be handled separately)
+                        executeAction(actionId, freshPlayer, dispatch, freshState, state.gameLayers, 0, workerInfo)
+                            .catch(error => {
+                                console.error('[AI Turn] Error in executeAction:', error);
+                            });
+
+                        dispatch({
+                            type: 'ADD_LOG',
+                            message: `🤖 ${currentPlayer.name} placed worker on ${actionId}`
+                        });
+
+                        console.log('[AI Turn] Worker placement dispatched, action executing async');
+                    }
+
+                    async function tryUseShop() {
+                        // Get affordable shops
+                        const affordableShops = getAffordableShops(state, currentPlayer);
+
+                        if (affordableShops.length === 0) {
+                            console.log('[AI Turn] No affordable shops');
+                            return;
+                        }
+
+                        // Pick random shop
+                        const shop = affordableShops[Math.floor(Math.random() * affordableShops.length)];
+                        console.log('[AI Turn] Using shop:', shop.id);
+
+                        // Parse shop ID to get color and round
+                        const shopId = shop.id;
+                        let color, round;
+
+                        // Match pattern like "red1", "yellow2", "redVP", etc.
+                        const match = shopId.match(/^([a-z]+)(\d+|VP)$/i);
+                        if (match) {
+                            color = match[1];
+                            round = match[2] === 'VP' ? 'VP' : parseInt(match[2]);
+                        } else {
+                            console.error('[AI Turn] Could not parse shop ID:', shopId);
+                            return;
+                        }
+
+                        // Get cost (already checked affordability, but need to deduct)
+                        const cost = shopCosts[shopId];
+                        if (!cost) {
+                            console.error('[AI Turn] No cost found for shop:', shopId);
+                            return;
+                        }
+
+                        // Apply cost modifiers
+                        const costModifier = currentPlayer.shopCostModifier || 0;
+                        const adjustedCost = {};
+                        let anyCost = 0;
+                        let vpCost = 0;
+
+                        Object.entries(cost).forEach(([resource, amount]) => {
+                            if (resource === 'vp') {
+                                vpCost = amount;
+                            } else if (resource === 'any') {
+                                anyCost = Math.max(0, amount + costModifier);
+                            } else {
+                                adjustedCost[resource] = amount;
+                            }
+                        });
+
+                        // Build resource cost object (negative values for deduction)
+                        const resourceCost = {};
+                        Object.entries(adjustedCost).forEach(([res, amt]) => {
+                            resourceCost[res] = -amt;
+                        });
+
+                        // For "any" cost, AI picks random available resources
+                        if (anyCost > 0) {
+                            const available = { ...currentPlayer.resources };
+                            // Remove already-spent color-specific gems from available pool
+                            Object.keys(adjustedCost).forEach(col => {
+                                available[col] = Math.max(0, (available[col] || 0) - adjustedCost[col]);
+                            });
+
+                            // Pick random resources for "any" cost
+                            let remaining = anyCost;
+                            const colors = Object.keys(available).filter(c => available[c] > 0);
+                            while (remaining > 0 && colors.length > 0) {
+                                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                                const toSpend = Math.min(remaining, available[randomColor]);
+                                resourceCost[randomColor] = (resourceCost[randomColor] || 0) - toSpend;
+                                available[randomColor] -= toSpend;
+                                remaining -= toSpend;
+                                if (available[randomColor] === 0) {
+                                    colors.splice(colors.indexOf(randomColor), 1);
+                                }
+                            }
+                        }
+
+                        // Deduct VP cost
+                        if (vpCost > 0) {
+                            dispatch({
+                                type: 'UPDATE_VP',
+                                playerId: currentPlayer.id,
+                                vp: -vpCost,
+                                source: 'shopCost'
+                            });
+                        }
+
+                        // Deduct resource costs
+                        if (Object.keys(resourceCost).length > 0) {
+                            dispatch({ type: 'UPDATE_RESOURCES', playerId: currentPlayer.id, resources: resourceCost });
+                        }
+
+                        dispatch({
+                            type: 'ADD_LOG',
+                            message: `🤖 ${currentPlayer.name} used shop: ${shopId}`
+                        });
+
+                        // Execute shop benefit
+                        await executeShopBenefit(color, round, currentPlayer, dispatch, state, 0);
+
+                        // Track shop usage
+                        dispatch({ type: 'USE_SHOP' });
+
+                        // Blue automatic VP
+                        if (state.automaticVPs?.blue) {
+                            dispatch({ type: 'UPDATE_VP', playerId: currentPlayer.id, vp: 1, source: 'blueShopUsage' });
+                            dispatch({ type: 'ADD_LOG', message: `🤖 ${currentPlayer.name}: +1 VP (activated a shop effect)` });
+                        }
+
+                        console.log('[AI Turn] Shop purchase complete');
+                    }
+
+                    return; // Exit early, executeAITurn will handle everything
+                }
+
+                // OLD LOGIC BELOW - KEEPING FOR REFERENCE BUT WON'T EXECUTE
+                if (false && currentPlayer && currentPlayer.isAI === true) {
+                    console.log('[AI Turn Watcher] AI player detected, taking turn...');
+
+                    // Add log entry that AI is thinking
+                    dispatch({
+                        type: 'ADD_LOG',
+                        message: `🤖 ${currentPlayer.name} (AI) is thinking...`
+                    });
+
+                    // Call AI controller asynchronously
+                    aiTakeTurn(state, currentPlayer).then(async decision => {
+                        console.log('[AI Turn Watcher] AI decision:', decision);
+
+                        if (!decision) {
+                            // No decision - end turn
+                            dispatch({ type: 'END_TURN' });
+                            return;
+                        }
+
+                        if (decision.type === 'placeWorker') {
+                            // AI wants to place a worker
+                            const actionId = decision.actionId;
+                            console.log(`[AI Turn Watcher] AI placing worker on ${actionId}`);
+
+                            // Place worker (same logic as human player)
+                            const workerInfo = { actionId, playerId: currentPlayer.id };
+
+                            try {
+                                dispatch({ type: 'PLACE_WORKER', actionId });
+
+                                // Get fresh state after worker placement
+                                const freshState = {
+                                    ...state,
+                                    occupiedSpaces: { ...state.occupiedSpaces, [actionId]: currentPlayer.id },
+                                    players: state.players.map(p =>
+                                        p.id === currentPlayer.id
+                                            ? { ...p, workersLeft: p.workersLeft - 1 }
+                                            : p
+                                    ),
+                                    workerPlacedThisTurn: true,
+                                    workersToPlace: Math.max(0, state.workersToPlace - 1)
+                                };
+                                const freshPlayer = freshState.players.find(p => p.id === currentPlayer.id);
+
+                                // Execute action effects
+                                await executeAction(actionId, freshPlayer, dispatch, freshState, state.gameLayers, 0, workerInfo);
+
+                                dispatch({
+                                    type: 'ADD_LOG',
+                                    message: `🤖 ${currentPlayer.name} placed worker on ${actionId}`
+                                });
+
+                                // Check if AI needs to keep placing workers
+                                if (freshState.workersToPlace > 0 && freshPlayer.workersLeft > 0) {
+                                    console.log('[AI Turn Watcher] AI has more workers to place, will continue on next cycle');
+                                    // The effect will trigger again due to state change
+                                } else {
+                                    // All workers placed, end turn
+                                    console.log('[AI Turn Watcher] AI finished placing all workers, ending turn');
+                                    setTimeout(() => {
+                                        dispatch({ type: 'END_TURN' });
+                                    }, 500);
+                                }
+                            } catch (error) {
+                                console.error('[AI Turn Watcher] Error executing AI action:', error);
+                                dispatch({
+                                    type: 'ADD_LOG',
+                                    message: `🤖 ${currentPlayer.name} encountered error`
+                                });
+                            }
+                        } else if (decision.type === 'endTurn') {
+                            // AI wants to end turn
+                            console.log('[AI Turn Watcher] AI ending turn');
+                            dispatch({ type: 'END_TURN' });
+                        }
+                    }).catch(error => {
+                        console.error('[AI Turn Watcher] Error during AI turn:', error);
+                        dispatch({
+                            type: 'ADD_LOG',
+                            message: `🤖 ${currentPlayer.name} encountered error`
+                        });
+                        dispatch({ type: 'END_TURN' });
+                    });
+                } else {
+                    console.log('[AI Turn Watcher] Current player is not AI');
+                }
+            }, [state.currentPlayer, state.turnDirection, state.gameStarted, state.modal, state.gameOver, state.workersToPlace]);
 
             // Sync state to Firebase whenever state changes (debounced)
             useEffect(() => {

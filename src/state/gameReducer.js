@@ -10,10 +10,10 @@ export const initialState = {
     turnDirection: 1,
     gameMode: null, // 'basic' or 'advanced' - set when game starts
     players: [
-        { id: 1, name: "Player 1", emoji: initialPlayerEmojis[0], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0, lastGain: {} },
-        { id: 2, name: "Player 2", emoji: initialPlayerEmojis[1], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0, lastGain: {} },
-        { id: 3, name: "Player 3", emoji: initialPlayerEmojis[2], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0, lastGain: {} },
-        { id: 4, name: "Player 4", emoji: initialPlayerEmojis[3], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0, lastGain: {} }
+        { id: 1, name: "Player 1", emoji: initialPlayerEmojis[0], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0, lastGain: {}, isAI: false, aiDifficulty: null },
+        { id: 2, name: "Player 2", emoji: initialPlayerEmojis[1], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0, lastGain: {}, isAI: false, aiDifficulty: null },
+        { id: 3, name: "Player 3", emoji: initialPlayerEmojis[2], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0, lastGain: {}, isAI: false, aiDifficulty: null },
+        { id: 4, name: "Player 4", emoji: initialPlayerEmojis[3], resources: { red: 0, yellow: 0, blue: 0, purple: 0, gold: 0, white: 0, black: 0, silver: 0 }, workersLeft: 4, effects: [], victoryPoints: 0, vpSources: {}, shopCostModifier: 0, lastGain: {}, isAI: false, aiDifficulty: null }
     ],
     occupiedSpaces: {},
     round: 1,
@@ -120,15 +120,23 @@ export function gameReducer(state, action) {
                 players: state.players.map(player => {
                     if (player.id === action.playerId) {
                         const newResources = {
-                            red: player.resources.red + (action.resources.red || 0),
-                            yellow: player.resources.yellow + (action.resources.yellow || 0),
-                            blue: player.resources.blue + (action.resources.blue || 0),
-                            purple: player.resources.purple + (action.resources.purple || 0),
-                            gold: player.resources.gold + (action.resources.gold || 0),
-                            white: player.resources.white + (action.resources.white || 0),
-                            black: player.resources.black + (action.resources.black || 0),
-                            silver: player.resources.silver + (action.resources.silver || 0)
+                            red: Math.max(0, player.resources.red + (action.resources.red || 0)),
+                            yellow: Math.max(0, player.resources.yellow + (action.resources.yellow || 0)),
+                            blue: Math.max(0, player.resources.blue + (action.resources.blue || 0)),
+                            purple: Math.max(0, player.resources.purple + (action.resources.purple || 0)),
+                            gold: Math.max(0, player.resources.gold + (action.resources.gold || 0)),
+                            white: Math.max(0, player.resources.white + (action.resources.white || 0)),
+                            black: Math.max(0, player.resources.black + (action.resources.black || 0)),
+                            silver: Math.max(0, player.resources.silver + (action.resources.silver || 0))
                         };
+
+                        // Warn if resources would go negative
+                        Object.keys(action.resources).forEach(color => {
+                            const newValue = player.resources[color] + (action.resources[color] || 0);
+                            if (newValue < 0) {
+                                console.warn(`[UPDATE_RESOURCES] Player ${player.id} would have negative ${color}: ${player.resources[color]} + ${action.resources[color]} = ${newValue}. Clamping to 0.`);
+                            }
+                        });
 
                         console.log('UPDATE_RESOURCES - Updating player', player.id, 'from', player.resources, 'to', newResources);
                         console.log('UPDATE_RESOURCES - Other players will track gainedResources:', gainedResources);
@@ -1191,7 +1199,9 @@ export function gameReducer(state, action) {
                         gold: 0, white: 0, black: 0, silver: 0
                     },
                     vpSources: player.vpSources || {},
-                    shopCostModifier: player.shopCostModifier !== undefined ? player.shopCostModifier : 0
+                    shopCostModifier: player.shopCostModifier !== undefined ? player.shopCostModifier : 0,
+                    isAI: player.isAI !== undefined ? player.isAI : false,
+                    aiDifficulty: player.aiDifficulty !== undefined ? player.aiDifficulty : null
                 })) : state.players,
                 roomCode: state.roomCode,
                 myPlayerId: state.myPlayerId,
@@ -1247,6 +1257,33 @@ export function gameReducer(state, action) {
             return {
                 ...state,
                 pendingPlacements: newPendingPlacements
+            };
+
+        case 'SET_PLAYER_AI':
+            console.log('[SET_PLAYER_AI] Setting player', action.playerId, 'as AI:', action.isAI, 'difficulty:', action.aiDifficulty);
+            const updatedPlayers = state.players.map(player =>
+                player.id === action.playerId
+                    ? {
+                        ...player,
+                        isAI: action.isAI,
+                        aiDifficulty: action.aiDifficulty
+                    }
+                    : player
+            );
+            console.log('[SET_PLAYER_AI] Updated players:', updatedPlayers.map(p => ({ id: p.id, isAI: p.isAI, difficulty: p.aiDifficulty })));
+            return {
+                ...state,
+                players: updatedPlayers
+            };
+
+        case 'SET_PLAYER_NAME':
+            return {
+                ...state,
+                players: state.players.map(player =>
+                    player.id === action.playerId
+                        ? { ...player, name: action.name }
+                        : player
+                )
             };
 
         default:
