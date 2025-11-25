@@ -5107,7 +5107,7 @@ function useGame() {
                 skippedTurns: newSkippedTurns
             });
             
-            const message = `Player ${player.id}: White R2 shop → -2 VP, Player ${nextPlayerId} will skip next turn`;
+            const message = `Player ${player.id}: White R2 shop → -3 VP, Player ${nextPlayerId} will skip next turn`;
             dispatch({ type: 'ADD_LOG', message });
         }
         
