@@ -6951,11 +6951,16 @@ function useGame() {
         function getVPSourceName(source) {
             switch(source) {
                 case 'redAction': return '🔴 Red Actions';
+                case 'redAutomatic': return '🔴 Red Actions';
                 case 'yellowDiversity': return '🟡 Resource Diversity';
+                case 'yellowAutoVP': return '🟡 Yellow Auto VP';
                 case 'blueShopUsage': return '🔵 Shop Usage';
+                case 'blueAutomatic': return '🔵 Shop Usage';
                 case 'purpleWorkers': return '🟣 Worker Timing';
                 case 'victoryShop': return '🏆 Victory Shops';
                 case 'shopPurchase': return '🏪 Shop Purchases';
+                case 'shopCost': return '🏪 Shop Cost';
+                case 'shopRefund': return '🏪 Shop Refund';
                 case 'whiteStarting': return '⚪ Starting VP';
                 case 'whiteAction': return '⚪ White Actions';
                 case 'whiteShop': return '⚪ White Shops';
