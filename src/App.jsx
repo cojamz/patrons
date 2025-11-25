@@ -2382,9 +2382,11 @@ function useGame() {
                         effects: (player.effects || []).filter(effect => !effect.includes('Next gain will be doubled'))
                     });
 
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +2🟡 → +${yellowAmount} yellow (DOUBLED!)` });
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} used ${actionTitle} and gained ${yellowAmount} yellow (DOUBLED!)` });
                 } else {
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +2🟡 → +${yellowAmount} yellow` });
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} used ${actionTitle} and gained ${yellowAmount} yellow` });
                 }
 
                 dispatch({
@@ -3330,11 +3332,12 @@ function useGame() {
                 const otherPlayers = currentState.players.filter(p => p.id !== player.id);
                 
                 if (otherPlayers.length === 0) {
-                    const message = `Player ${player.id}: blackSteal1VP → +1 black (no other players)`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} used ${actionTitle} and gained 1 black (no other players)`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
-                
+
                 // Show all players with their VP (including negative)
                 const targetPlayer = await selectTargetPlayer(
                     dispatch,
@@ -3344,9 +3347,10 @@ function useGame() {
                     workerInfo,
                     effectiveTargetPlayerId
                 );
-                
+
                 if (!targetPlayer) {
-                    const message = `Player ${player.id}: blackSteal1VP → +1 black (cancelled)`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} cancelled ${actionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -3367,9 +3371,10 @@ function useGame() {
                     source: 'blackSteal'
                 });
                 
-                const message = `Player ${player.id}: blackSteal1VP → +1 black, stole 1 VP from Player ${targetPlayer.id}`;
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const message = `${formatPlayerName(player)} used ${actionTitle}, gained 1 black, and stole 1 VP from ${formatPlayerName(targetPlayer)}`;
                 dispatch({ type: 'ADD_LOG', message });
-                
+
                 // BLACK AUTOMATIC VP: Gain 1 VP when stealing
                 dispatch({
                     type: 'UPDATE_VP',
@@ -3377,7 +3382,7 @@ function useGame() {
                     vp: 1,
                     source: 'blackAutomatic'
                 });
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP (Black automatic: stealing bonus)` });
+                dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} gained +1 VP (stealing bonus)` });
                 
                 return;
             }
