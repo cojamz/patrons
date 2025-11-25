@@ -2129,7 +2129,8 @@ function useGame() {
                     source: 'redAction'
                 });
 
-                const message = `Player ${player.id}: redVPFocus → +1🔴, +${totalVP} VP (${redWorkerCount} red patrons)`;
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const message = `${formatPlayerName(player)} used ${actionTitle}, gained 1 red and ${totalVP} VP (${redWorkerCount} red patron${redWorkerCount > 1 ? 's' : ''})`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -2175,12 +2176,14 @@ function useGame() {
                     .map(([spaceId]) => spaceId);
                 
                 if (playerSpaces.length === 0) {
-                    const message = `Player ${player.id}: redRepeatAll → No other patrons to repeat`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} used ${actionTitle} but has no valid patrons to repeat`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
-                
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: redRepeatAll → Will repeat ${playerSpaces.length} actions` });
+
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} used ${actionTitle} and is repeating ${playerSpaces.length} action${playerSpaces.length > 1 ? 's' : ''}` });
                 
                 // Let player choose order of execution
                 const remainingActions = [...playerSpaces];
@@ -2256,7 +2259,8 @@ function useGame() {
                 const totalResources = Object.values(currentState.players.find(p => p.id === player.id).resources).reduce((sum, amount) => sum + amount, 0);
                 
                 if (totalResources === 0) {
-                    const message = `Player ${player.id}: Trade All ⭐ for ⭐ → No resources to trade`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} used ${actionTitle} but has no resources to trade`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -2272,7 +2276,8 @@ function useGame() {
                 );
                 
                 if (!newResources) {
-                    const message = `Player ${player.id}: Trade All ⭐ for ⭐ → Cancelled`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} cancelled ${actionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -2299,7 +2304,9 @@ function useGame() {
                     resources: newResources
                 });
                 
-                const message = `Player ${player.id}: +1🟡 + Trade All ⭐ for ⭐ → Traded ${totalResources} resources`;
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const resourceList = Object.entries(newResources).filter(([_, amt]) => amt > 0).map(([color, amt]) => `${amt} ${color}`).join(', ');
+                const message = `${formatPlayerName(player)} used ${actionTitle}, gained 1 yellow, and traded all resources for ${resourceList}`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -2320,7 +2327,8 @@ function useGame() {
                     // If cancelled, give default resources
                     const defaultResources = { red: 1, yellow: 1, blue: 1, purple: 1 };
                     dispatch({ type: 'UPDATE_RESOURCES', playerId: player.id, resources: defaultResources });
-                    dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: Gain 4⭐ → +1 red, +1 yellow, +1 blue, +1 purple (default)` });
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} used ${actionTitle} and gained 1 red, 1 yellow, 1 blue, 1 purple (default)` });
                     return;
                 }
 
@@ -3425,7 +3433,13 @@ function useGame() {
                     playerId: targetPlayer.id,
                     resources: negativeResources
                 });
-                
+
+                // NOTE: Update our local targetPlayer copy to match what reducer did
+                // This prevents stale data issues
+                Object.entries(stolenGems).forEach(([color, amount]) => {
+                    targetPlayer.resources[color] = Math.max(0, (targetPlayer.resources[color] || 0) - amount);
+                });
+
                 // Add gems to current player
                 dispatch({
                     type: 'UPDATE_RESOURCES',
