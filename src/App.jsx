@@ -2826,7 +2826,8 @@ function useGame() {
                     }
                 });
                 
-                const message = `Player ${player.id}: blueIncreaseCosts → +2 blue, all other players' shop costs increased by 2 ⭐`;
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const message = `${formatPlayerName(player)} used ${actionTitle}, gained 2 blue, and increased all other players' shop costs by 2`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -2844,7 +2845,8 @@ function useGame() {
                     type: 'FLIP_ALL_SHOPS'
                 });
                 
-                const message = `Player ${player.id}: blueToggleShops → +2 blue + all shops toggled`;
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const message = `${formatPlayerName(player)} used ${actionTitle}, gained 2 blue, and toggled all shops`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -2861,16 +2863,18 @@ function useGame() {
                     .filter(([color, amount]) => color !== 'gold' && amount > 0)
                     .reduce((sum, [color, amount]) => sum + amount, 0);
                 if (nonGoldGems < 2) {
-                    const message = `Player ${player.id}: convert2AnyTo2Gold → Need at least 2 gems`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} used ${actionTitle} but needs at least 2 gems`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
-                
+
                 // Choose 2 gems to convert
                 const selectedGems = await showGemSelection(dispatch, 'Choose 2 gems to convert to Gold', 2, currentPlayer, workerInfo, effectiveTargetPlayerId);
 
                 if (!selectedGems) {
-                    const message = `Player ${player.id}: convert2AnyTo2Gold → Cancelled`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} cancelled ${actionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -2887,7 +2891,9 @@ function useGame() {
                     resources: resources
                 });
                 
-                const message = `Player ${player.id}: convert2AnyTo2Gold → Converted 2 gems to 2 gold`;
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const gemsConverted = Object.entries(selectedGems).filter(([_, amt]) => amt > 0).map(([color, amt]) => `${amt} ${color}`).join(', ');
+                const message = `${formatPlayerName(player)} used ${actionTitle} and converted ${gemsConverted} to 2 gold`;
                 dispatch({ type: 'ADD_LOG', message });
                 return;
             }
@@ -3397,15 +3403,17 @@ function useGame() {
                 });
                 
                 if (otherPlayers.length === 0) {
-                    const message = `Player ${player.id}: blackSteal2Any → No players with gems to steal from`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} used ${actionTitle} but no players have gems to steal`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
-                
+
                 const targetPlayer = await selectTargetPlayer(dispatch, 'Choose a player to steal 2 gems from', currentState.players, player.id, workerInfo, effectiveTargetPlayerId);
 
                 if (!targetPlayer) {
-                    const message = `Player ${player.id}: blackSteal2Any → Cancelled`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} cancelled ${actionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -3415,15 +3423,17 @@ function useGame() {
                 const stealCount = Math.min(2, targetTotalGems);
                 
                 if (stealCount === 0) {
-                    const message = `Player ${player.id}: blackSteal2Any → Player ${targetPlayer.id} has no gems`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} used ${actionTitle} but ${formatPlayerName(targetPlayer)} has no gems`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
-                
+
                 const stolenGems = await showStealGems(dispatch, `Choose ${stealCount} gems to steal from Player ${targetPlayer.id}`, targetPlayer, stealCount, workerInfo, effectiveTargetPlayerId);
 
                 if (!stolenGems) {
-                    const message = `Player ${player.id}: blackSteal2Any → Cancelled`;
+                    const actionTitle = getActionTitle(actionId, gameLayers);
+                    const message = `${formatPlayerName(player)} cancelled ${actionTitle}`;
                     dispatch({ type: 'ADD_LOG', message });
                     return;
                 }
@@ -3452,9 +3462,11 @@ function useGame() {
                     resources: stolenGems
                 });
                 
-                const message = `Player ${player.id}: blackSteal2Any → Stole ${Object.entries(stolenGems).map(([color, amount]) => `${amount} ${color}`).join(', ')} from Player ${targetPlayer.id}`;
+                const actionTitle = getActionTitle(actionId, gameLayers);
+                const stolenList = Object.entries(stolenGems).map(([color, amount]) => `${amount} ${color}`).join(', ');
+                const message = `${formatPlayerName(player)} used ${actionTitle} and stole ${stolenList} from ${formatPlayerName(targetPlayer)}`;
                 dispatch({ type: 'ADD_LOG', message });
-                
+
                 // BLACK AUTOMATIC VP: Gain 1 VP when stealing
                 dispatch({
                     type: 'UPDATE_VP',
@@ -3462,7 +3474,7 @@ function useGame() {
                     vp: 1,
                     source: 'blackAutomatic'
                 });
-                dispatch({ type: 'ADD_LOG', message: `Player ${player.id}: +1 VP (Black automatic: stealing bonus)` });
+                dispatch({ type: 'ADD_LOG', message: `${formatPlayerName(player)} gained +1 VP (stealing bonus)` });
                 
                 return;
             }
