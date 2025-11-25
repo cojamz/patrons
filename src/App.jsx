@@ -7982,9 +7982,14 @@ function useGame() {
                             console.log('[AI Turn] PHASE 2: All workers placed, checking shops...');
                             console.log('[AI Turn] Current resources:', currentPlayer.resources);
 
-                            // Try to use multiple shops if possible
-                            const maxShopAttempts = 3; // Try up to 3 shops per turn
+                            // AI should use shops aggressively, especially in later rounds
+                            const maxShopAttempts = 10; // Try up to 10 shops per turn
                             let shopsUsed = 0;
+
+                            // Round-based shop usage probability (more aggressive in later rounds)
+                            const currentRound = state.round || 1;
+                            const shopProbability = currentRound === 1 ? 0.90 : currentRound === 2 ? 0.95 : 1.0;
+                            console.log(`[AI Turn] Round ${currentRound} - Shop probability: ${shopProbability * 100}%`);
 
                             for (let attempt = 0; attempt < maxShopAttempts; attempt++) {
                                 const affordableShops = getAffordableShops(state, currentPlayer);
@@ -7995,11 +8000,11 @@ function useGame() {
                                     break;
                                 }
 
-                                // 75% chance to use a shop (higher than before)
+                                // Use round-based probability
                                 const shopRoll = Math.random();
-                                console.log('[AI Turn] Shop roll:', shopRoll);
+                                console.log('[AI Turn] Shop roll:', shopRoll, 'vs threshold:', shopProbability);
 
-                                if (shopRoll < 0.75) {
+                                if (shopRoll < shopProbability) {
                                     console.log('[AI Turn] AI decided to use shop');
                                     await tryUseShop();
                                     shopsUsed++;
