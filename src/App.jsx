@@ -6,6 +6,33 @@ import { allGameLayers, selectGameLayers } from './data/allGameLayers.js';
 import { shopData, shopCosts, vpShopData } from './data/shopData.js';
 import { gameReducer, initialState } from './state/gameReducer.js';
 import { takeTurn as aiTakeTurn, isAIPlayer } from './ai/AIController.js';
+import { executeAction as engineExecuteAction } from './engine/GameEngine.js';
+
+/**
+ * Bridge: call the pure game engine, then apply results via dispatch.
+ * This is the migration seam — actions can be routed through the engine
+ * one at a time while the old code continues working for unmigrated actions.
+ *
+ * @param {string} actionId - The action to execute
+ * @param {Object} currentState - Current game state from reducer
+ * @param {number} playerId - Player executing the action
+ * @param {Function} dispatch - React dispatch function
+ * @param {Object} [decisions] - Pre-supplied decisions (gem selection, target player, etc.)
+ * @returns {Object|null} pendingDecision if one is needed, null if action completed
+ */
+export function executeActionViaEngine(actionId, currentState, playerId, dispatch, decisions) {
+    const result = engineExecuteAction(currentState, playerId, actionId, decisions);
+
+    if (result.pendingDecision) {
+        return result.pendingDecision;
+    }
+
+    // Apply the engine's state changes via dispatch
+    dispatch({ type: 'SYNC_GAME_STATE', gameState: result.state });
+    result.log.forEach(msg => dispatch({ type: 'ADD_LOG', message: msg }));
+
+    return null;
+}
 
 /**
  * @typedef {Object} Resources
