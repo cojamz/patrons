@@ -1,172 +1,97 @@
-# Patrons - Worker Placement Game (v0.5)
+# Patrons — v3 Worker Placement Game
 
-## Critical Game Rules (Never Forget)
+## Vision
+Patrons v3 is a significant rework of a digital worker placement board game. The soul of the game is **worker placement tension** — blocking, reading opponents, the anxiety of "will my spot still be open?" The v3 goal: strip back complexity so that tension breathes, while adding engine-building depth, meaningful confrontation, and satisfying strategic arcs.
+
+**Design pillars:** Engine-building + confrontational interaction + strategic complexity
+**Aesthetic:** Playful & bold (Balatro/Slay the Spire energy)
+**Audience:** Friends at a table, 2-4 players, digitized board game
+**Known problems to solve:** Chaos/randomness drowning out agency, snowball without comeback, missing feedback loops
+
+## Critical Game Rules (Never Violate)
 1. **Force Red Placement**: Affects OTHER players, not the placer (+1 red to placer)
 2. **Shop Cost Modifiers**: PER-PLAYER (`player.shopCostModifier`), NOT global
 3. **Repeat Actions**: Cannot repeat other repeat/swap actions (prevents infinite loops)
-4. **Play More Workers Effect**: Only clears when `workersToPlace === 0`
-5. **Gold Shops**: Accept ANY resource as ⭐ payment
-6. **Blue Auto VP**: Shop user gets +1 VP when using a shop (solo benefit, NOT cooperative)
+4. **Play More Workers**: Only clears when `workersToPlace === 0`
+5. **Gold Shops**: Accept ANY resource as star payment
+6. **Blue Auto VP**: Shop user gets +1 VP when using a shop (solo benefit)
 
-## Project Info
-- Modern Vite/React project (v0.5)
-- Main component: src/App.jsx (~7,778 lines)
-- React 18 with JSX
-- Firebase for multiplayer
-- 8 resource types, 3 rounds, 2-4 players
-- Tailwind CSS for styling
+See `.claude/rules/game-rules.md` for complete mechanics reference.
 
-## File Navigation
-- Game state & reducer: src/state/gameReducer.js
-- Action definitions: src/data/allGameLayers.js
-- Shop definitions: src/data/shopData.js
-- Main component: src/App.jsx
-- Firebase config: src/firebase-compat.js
-- Tests: src/test/
-- See CODE_NAVIGATION.md for detailed navigation
-- See DEVELOPER_GUIDE.md for comprehensive guide
+## Project Structure
+```
+src/
+├── App.jsx              # Main component (~8,865 lines — monolith, Phase 1 target for extraction)
+├── main.jsx             # Entry point
+├── index.css            # Global styles + Tailwind
+├── state/
+│   └── gameReducer.js   # State management (1,298 lines, 45 action types)
+├── data/
+│   ├── allGameLayers.js # 49 action definitions across 8 colors (142 lines)
+│   ├── shopData.js      # 24 shops + 7 VP shops (67 lines)
+│   └── constants.js     # Emojis, resource types (73 lines)
+├── ai/
+│   ├── AIEngine.js      # Decision logic (Phase 1 — random picks)
+│   └── AIController.js  # Turn orchestration
+├── firebase-compat.js   # Firebase Realtime DB config
+└── test/
+    ├── setup.js         # Vitest + Testing Library
+    └── game.test.js     # 2 tests (minimal coverage)
+```
 
-## Development Commands
+## Dev Commands
 ```bash
-npm run dev          # Start dev server
+npm run dev          # Vite dev server (HMR)
 npm run build        # Production build
-npm run test         # Run tests
-npm run preview      # Preview build
+npm run test         # Vitest test suite
+npm run preview      # Preview production build
 ```
 
-## Current Work
-Working on: [UPDATE THIS EACH SESSION]
-Files in play: [LIST FILES]
-Status: [WHAT'S DONE, WHAT'S NEXT]
-
-## The 4-Phase Workflow (ALWAYS Follow This)
-
-### 1. EXPLORE (I learn the code)
-User: "I want to add X. Don't code yet - explore the relevant code first."
-- I read files, understand patterns
-- I identify dependencies and edge cases
-
-### 2. PLAN (I think deeply)
-User: "Create a plan. Think harder."
-- I create step-by-step implementation plan
-- I flag potential issues
-- You review and approve (or adjust)
-
-### 3. CODE (Small incremental changes)
-User: "Approved. Do step 1 only."
-- I implement ONE step at a time
-- You verify each step before continuing
-- Never batch multiple steps
-
-### 4. TEST (Verify it works)
-User: "Run tests. If they pass, commit."
-- Tests confirm behavior
-- Manual testing for UI/UX
-- Commit with clear message
-
-## Key Phrases That Control Me
-
-**Make me think deeper:**
-- `"Think harder"` → 30-60 seconds of deep reasoning
-- `"Think hard"` → 15-30 seconds
-- `"ultrathink"` → Maximum depth for complex problems
-
-**Keep me focused:**
-- `"Don't code yet"` → Prevents premature implementation
-- `"Do step 1 ONLY"` → Stops me from doing too much
-- `"Explore [X] first"` → Makes me read before changing
-
-**Use specialized help:**
-- `"Use a subagent to explore [X]"` → Deep dive without cluttering context
-- `"Use the Explore agent"` → Fast codebase exploration
-
-## Context Management
-
-**When to use /clear:**
-- ✅ After completing a major feature
-- ✅ Before starting unrelated work
-- ✅ When I start "forgetting" core rules
-- ❌ In the middle of a feature
-- ❌ Right after explaining complex requirements
-
-**After using /clear:**
+## Prototyping Workflow
 ```
-User: "Run /start to reload context"
-Claude: [Reads context files, understands state]
-User: "Good. Now read [specific file] - we're working on [X]"
+/experiment <name>   →  Create isolated branch for a game mechanic idea
+  [make changes]     →  Code the experiment
+/ship                →  Tests pass? Merge to main, clean up branch
+/discard             →  Didn't work? Clean rollback, back to main
 ```
 
-## Common Patterns
+Every experiment is isolated. Nothing touches main until you say so.
 
-### Adding a New Action
-1. Define in src/data/allGameLayers.js
-2. Implement in src/App.jsx executeAction()
-3. Handle in reducer if needed (src/state/gameReducer.js)
-4. Test edge cases
+## Working Style
+- **4-Phase Cycle**: Explore → Plan → Code → Test (never skip phases)
+- **One step at a time**: Implement, verify, then continue
+- **Ask when uncertain**: "I don't know" is always valid
+- **No scope creep**: Fix what's asked, nothing more
 
-### Adding a New Shop
-1. Define in src/data/shopData.js
-2. Implement benefit in src/App.jsx executeShopBenefit()
-3. Test purchase flow
+## Key Phrases
+- `"Think harder"` → Deep reasoning (30-60s)
+- `"Don't code yet"` → Explore and plan only
+- `"Do step 1 ONLY"` → Single step execution
+- `"Use an Explore agent"` → Deep codebase dive without cluttering context
 
-### Debugging Multiplayer
-- Check syncGameState debouncing (200ms)
-- Verify timestamp deduplication
-- Check justSyncedFromFirebase flag
-- Ensure lastUpdatedBy !== myPlayerId
+## Anti-Patterns
+- "Fix all the bugs" → Fix ONE specific bug
+- "Make it better" → Specify exactly what and how
+- "Add the feature" → Explore first, then plan
+- Accepting code without tests → Show test results first
 
-### Testing Complex Interactions
-Priority test cases:
-- Red repeat → Blue shop → Red shop
-- Purple "play more workers" → Runs out → Effect persistence
-- Yellow swap resources → During steal
-- Shop cost modifiers → Different players see different costs
+## Tech Stack
+- React 18 (JSX) + Vite 5
+- Firebase Realtime Database (multiplayer)
+- Tailwind CSS 4.1
+- Vitest + React Testing Library
+- 8 resource types, 3 rounds, 2-4 players
 
-## Anti-Patterns (DON'T Do These)
-
-❌ "Fix all the bugs" → ✅ "Fix only the shop cost bug"
-❌ "Make multiplayer better" → ✅ "Fix emoji persistence in SYNC_GAME_STATE"
-❌ "Add the feature" → ✅ "Explore the system first, then plan"
-❌ Accepting code without tests → ✅ "Show me test results first"
-
-## Known Pitfalls from v0
-- Don't modify state directly in reducers
-- Don't add global shop cost modifier (per-player only!)
-- Don't forget recursion depth tracking (max 5)
+## Known Pitfalls
+- Don't modify state directly in reducers (always spread)
+- Don't add global shop cost modifier (per-player only)
+- Don't forget recursion depth tracking (max 5) for repeat chains
 - Don't sync modal state to Firebase (local only)
 - Don't clear ALL effects on turn end (some persist)
 
-## Quick Commands Reference
-```bash
-/clear              # Clear context between major features
-/start              # Reload context from files
-/plan               # Create implementation plan
-/step <N>           # Execute specific plan step
-```
-
-## For Detailed Info
-See:
-- **DEVELOPER_GUIDE.md** - Comprehensive development guide
-- **CODE_NAVIGATION.md** - File structure and code locations
-- **IMPLEMENTATION_SPEC.md** - Complete game rules
-- **DEVELOPMENT_META_FRAMEWORK.md** - Advanced workflow patterns
-- **archive/v0-docs/** - Historical v0 documentation
-
-## v0.5 Structure Overview
-
-```
-src/
-├── App.jsx              # Main game component
-├── main.jsx             # Entry point
-├── state/
-│   └── gameReducer.js   # State management
-├── data/
-│   ├── allGameLayers.js # Actions
-│   ├── shopData.js      # Shops
-│   └── constants.js     # Constants
-├── firebase-compat.js   # Firebase config
-└── test/                # Tests
-```
-
-## Migration Note
-Originally built as a 9,459-line single HTML file (v0), successfully migrated to modern Vite/React architecture (v0.5) in November 2025. All v0 files preserved in `archive/v0-monolith/` for reference.
+## Key Documentation
+- `.claude/rules/game-rules.md` — Authoritative game mechanics
+- `IMPLEMENTATION_SPEC.md` — Full spec + progress tracking
+- `CODE_NAVIGATION.md` — Detailed code locations
+- `DEVELOPER_GUIDE.md` — Architecture + patterns
+- `COMPLEX_INTERACTIONS.md` — Edge cases
