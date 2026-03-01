@@ -1,6 +1,31 @@
 # Changelog
 
-All notable changes to Patrons v0.5 are documented here.
+All notable changes to Patrons are documented here.
+
+---
+
+## [2026-03-01] - Playtesting Bug Fixes, UX Improvements, Tooltip Portal Fix
+
+### Fixed
+- **Bug A**: TargetPlayer modal showed empty for black steal actions — added `options` field to all 3 targetPlayer decisions in `blackActions.js`
+- **Bug B**: AI placed all workers without alternating turns — rewrote `useAITurns.js` with atomic place→endTurn using `processingRef` guard, removed `occupiedSpaces` from deps
+- **Bug C**: Power card market never refilled between rounds — added `powerCardDecks` to game state in `createGame`, added refill logic to `executeRoundStart` in `phases.js`
+- **stealGems decision type completely unhandled** — added DecisionModal routing (App.jsx), GemSelection steal mode, GameProvider submitDecision handling, AI handler in useAITurns
+- Player tabs overlapping god panel content — gradient background on tabs strip, increased board padding (pb-28→pb-36), adjusted board height calc
+- Excessive empty space in collapsed god panels — removed `flex-1` from collapsed actions container in GodArea
+- Tooltip stacking context — FloatingTooltip rendered via React portal to `document.body` to escape z-10 grid, now visible above z-50 player panel
+
+### Added
+- Round transition favor breakdown — shows "+X this round" / "-X this round" deltas per player in `RoundTransition.jsx`
+- Tooltip coverage: power card icons (name + description), resource gems (god name + title), worker icons (X of Y remaining), favor counter, disabled end turn button (who we're waiting for)
+- UX contract test suite (`uxContract.test.js`) — 8 tests validating engine↔UI field contracts, turn alternation, market refill, and stress simulations (10 random 2P games, 5 random 4P games)
+- Playwright MCP installed for future visual playtesting (`claude mcp add playwright`)
+
+### Technical Details
+- 391 tests passing (383 original + 8 new UX contract tests)
+- GemSelection.jsx supports steal mode: increment limited by `targetResources[type]`, "They have: X" label
+- GameProvider snapshots glory before `advanceRound()` to compute deltas, attaches `lastRoundGloryDeltas` and `lastRoundPreGlory` to game state
+- `powerCards` imported as `powerCardsData` alias in PlayerPanel to avoid naming conflict with champion's cards array
 
 ---
 

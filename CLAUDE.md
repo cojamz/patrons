@@ -35,40 +35,75 @@ Patrons v3 is a significant rework of a digital worker placement board game. The
 See `.claude/rules/game-rules.md` for complete mechanics reference.
 
 ## Project Structure
+
+**v3 is the active codebase.** Old v0 code (`src/App.jsx`, `src/state/`, `src/data/`, `src/ai/`) still exists but is legacy — don't modify it.
+
 ```
 src/
-├── App.jsx              # Main component (~8,865 lines — monolith, has bridge to engine)
-├── main.jsx             # Entry point
-├── index.css            # Global styles + Tailwind
-├── engine/              # Pure game engine (zero React, zero Firebase)
-│   ├── GameEngine.js    # Top-level API: createGame, executeAction, endTurn, advanceRound
-│   ├── runner.js        # Headless game simulator + randomDecisionFn
-│   ├── stateHelpers.js  # Pure immutable state mutations
-│   ├── rules.js         # Validation, available actions, repeat exclusions
-│   ├── scoring.js       # Auto VP calculations (yellow, gold, silver, purple)
-│   ├── actions/         # 49 action handlers by color (index.js routes)
-│   └── shops/
-│       └── shopResolver.js  # All 24 shop benefit handlers
-├── state/
-│   └── gameReducer.js   # State management (1,298 lines, 45 action types)
-├── data/
-│   ├── allGameLayers.js # 49 action definitions across 8 colors
-│   ├── shopData.js      # 24 shops + 7 VP shops with costs
-│   └── constants.js     # Emojis, resource types
-├── ai/
-│   ├── AIEngine.js      # Decision logic (Phase 1 — random picks)
-│   └── AIController.js  # Turn orchestration
-├── firebase-compat.js   # Firebase Realtime DB config
-└── test/
-    ├── setup.js         # Vitest + Testing Library
-    ├── game.test.js     # Original 2 tests
-    └── engine/          # Engine test suite (123 tests)
-        ├── basicActions.test.js
-        ├── complexActions.test.js
-        ├── turns.test.js
-        ├── rounds.test.js
-        ├── scoring.test.js
-        └── runner.test.js
+├── main.jsx                    # Entry point (routes to v3/App.jsx)
+├── index.css                   # Global styles + Tailwind
+│
+├── engine/v3/                  # Pure game engine (zero React, zero Firebase)
+│   ├── GameEngine.js           # Top-level API: createGame, executeAction, endTurn, advanceRound, buyPowerCard
+│   ├── phases.js               # Phase system: champion draft, round start/end, scoring
+│   ├── events.js               # Event dispatch system (round_start, action_placed, etc.)
+│   ├── rules.js                # Validation, available actions
+│   ├── runner.js               # Headless game simulator + randomDecisionFn
+│   ├── stateHelpers.js         # Pure immutable state mutations
+│   ├── balanceAI.js            # Balance analysis tooling
+│   ├── actions/                # Action handlers by god color (index.js routes)
+│   │   ├── goldActions.js
+│   │   ├── blackActions.js
+│   │   ├── greenActions.js
+│   │   └── yellowActions.js
+│   ├── handlers/               # Event handlers by god color
+│   │   ├── championHandlers.js
+│   │   ├── goldHandlers.js
+│   │   ├── blackHandlers.js
+│   │   ├── greenHandlers.js
+│   │   └── yellowHandlers.js
+│   ├── shops/
+│   │   └── shopResolver.js     # Shop benefit handlers
+│   └── data/
+│       ├── gods.js             # God definitions (actions, shops per god)
+│       ├── powerCards.js       # Power card definitions
+│       ├── champions.js        # Champion definitions
+│       └── constants.js        # Game constants
+│
+├── v3/                         # React UI layer
+│   ├── App.jsx                 # Main app — layout, DecisionModal router, phase overlays
+│   ├── GameProvider.jsx        # React context wrapping engine (state + actions)
+│   ├── hooks/
+│   │   ├── useGame.js          # Context consumer hook
+│   │   ├── useAITurns.js       # AI auto-play (atomic place→endTurn)
+│   │   └── useAnimatedValue.js # Number animation hook
+│   ├── styles/
+│   │   ├── theme.js            # God colors, godMeta, base palette, tier/shop/resource styles
+│   │   └── animations.js       # Framer Motion variants
+│   ├── components/
+│   │   ├── board/              # GameBoard, GodArea (focused/collapsed), ActionSpace, WorkerToken
+│   │   ├── player/             # PlayerPanel (tabs, resources, workers, favor)
+│   │   ├── modals/             # DecisionModals: TargetPlayer, GemSelection, ActionChoice, RoundTransition
+│   │   ├── hud/                # ActionLog, TurnIndicator, RoundTracker, Notifications
+│   │   ├── icons/              # GodIcon, ResourceIcon, CardPixelIcon, ChampionIcon, WorkerIcon
+│   │   ├── cards/              # CardMarket, PowerCard
+│   │   └── shop/               # ShopCard, ShopRow
+│
+├── test/engine/v3/             # Test suite (391 tests)
+│   ├── GameEngine.test.js      # Core engine tests
+│   ├── actions.test.js         # Action handler tests
+│   ├── phases.test.js          # Phase transition tests
+│   ├── events.test.js          # Event system tests
+│   ├── shops.test.js           # Shop tests
+│   ├── runner.test.js          # Full simulation tests
+│   ├── stateHelpers.test.js    # State mutation tests
+│   └── uxContract.test.js      # Engine↔UI contract validation
+│
+├── App.jsx                     # [LEGACY v0 — do not modify]
+├── state/                      # [LEGACY v0 — do not modify]
+├── data/                       # [LEGACY v0 — do not modify]
+├── ai/                         # [LEGACY v0 — do not modify]
+└── firebase-compat.js          # Firebase config (shared)
 ```
 
 ## Dev Commands
@@ -93,7 +128,7 @@ Every experiment is isolated. Nothing touches main until you say so.
 - **Plan first, then go**: Share approach, get alignment, then execute without micro-approval
 - **Flag and suggest**: Proactively raise problems with recommendations
 - **Ask when uncertain**: "I don't know" is always valid
-- **Test what you build**: Engine has 123 tests. Don't regress.
+- **Test what you build**: Engine has 391 tests. Don't regress.
 
 ## Key Phrases
 - `"Think harder"` → Deep reasoning (30-60s)
@@ -122,8 +157,9 @@ Every experiment is isolated. Nothing touches main until you say so.
 - Don't clear ALL effects on turn end (some persist)
 
 ## Key Documentation
-- `.claude/rules/game-rules.md` — Authoritative game mechanics
-- `IMPLEMENTATION_SPEC.md` — Full spec + progress tracking
-- `CODE_NAVIGATION.md` — Detailed code locations
-- `DEVELOPER_GUIDE.md` — Architecture + patterns
-- `COMPLEX_INTERACTIONS.md` — Edge cases
+- `.claude/rules/game-rules.md` — Authoritative game mechanics (v3 accurate)
+- `.claude/implementation_state.md` — Current implementation state + session log
+- `TODO.md` — Active task list + completed work history
+- `CHANGELOG.md` — Detailed change log
+
+**Legacy docs (v0, mostly outdated):** `IMPLEMENTATION_SPEC.md`, `CODE_NAVIGATION.md`, `DEVELOPER_GUIDE.md`, `COMPLEX_INTERACTIONS.md` — these describe the old v0 architecture. Don't rely on them for v3.

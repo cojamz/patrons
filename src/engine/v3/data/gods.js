@@ -5,7 +5,7 @@
  *   - Identity (id, name, title, color)
  *   - 7 action spaces (4 tier-1, 2 tier-2, 1 tier-3)
  *   - 3 shops (weak, strong, VP)
- *   - Glory condition (unique scoring trigger)
+ *   - Favor condition (unique scoring trigger)
  *   - 6 power cards (deal 2-3 face-up per game)
  *
  * All mechanical effect types and event triggers are strings from constants.js,
@@ -86,7 +86,7 @@ const gods = {
         id: 'gold_cashIn',
         name: 'Cash In',
         tier: 3,
-        effect: '+1 Glory per gold you own',
+        effect: '+1 Favor per gold you own',
         effectType: EFFECT_TYPES.GAIN_GLORY,
         gloryFormula: 'perResourceOwned:gold',
       },
@@ -110,14 +110,14 @@ const gods = {
       {
         type: 'vp',
         cost: { gold: 3 },
-        effect: '+4 Glory',
+        effect: '+4 Favor',
         effectType: EFFECT_TYPES.GAIN_GLORY,
         glory: 4,
       },
     ],
 
     gloryCondition: {
-      description: '+1 Glory per gold owned at end of each round',
+      description: '+1 Favor per gold owned at end of each round',
       trigger: GLORY_TRIGGERS.ROUND_END,
       formula: 'perResourceOwned:gold',
     },
@@ -167,10 +167,10 @@ const gods = {
         id: 'gold_goldCrown',
         name: 'Gold Crown',
         cost: { gold: 4, any: 2 },
-        effect: 'Game end: +1 Glory per 2 gold you own',
+        effect: 'Game end: +1 Favor per 2 gold you own',
         trigger: EVENT_TYPES.GAME_END,
         effectType: EFFECT_TYPES.GAIN_GLORY,
-        mechanicalDetail: 'End-game scoring bonus: floor(gold / 2) Glory',
+        mechanicalDetail: 'End-game scoring bonus: floor(gold / 2) Favor',
         gloryFormula: 'perResourceOwned:gold:divisor2',
       },
       {
@@ -216,7 +216,7 @@ const gods = {
         id: 'black_pickpocket',
         name: 'Pickpocket',
         tier: 1,
-        effect: '+1 black, steal 1 Glory from a player',
+        effect: '+1 black, steal 1 Favor from a player',
         effectType: [EFFECT_TYPES.GAIN_RESOURCE, EFFECT_TYPES.STEAL_GLORY],
         resources: { black: 1 },
         stealGlory: 1,
@@ -247,7 +247,7 @@ const gods = {
         id: 'black_hex',
         name: 'Hex',
         tier: 2,
-        effect: 'All other players lose 2 Glory',
+        effect: 'All other players lose 2 Favor',
         effectType: EFFECT_TYPES.PENALIZE_ALL,
         gloryPenalty: 2,
         targetType: 'allOthers',
@@ -258,7 +258,7 @@ const gods = {
         id: 'black_ruin',
         name: 'Ruin',
         tier: 3,
-        effect: '+2 black, all other players lose 4 Glory',
+        effect: '+2 black, all other players lose 4 Favor',
         effectType: [EFFECT_TYPES.GAIN_RESOURCE, EFFECT_TYPES.PENALIZE_ALL],
         resources: { black: 2 },
         gloryPenalty: 4,
@@ -270,7 +270,7 @@ const gods = {
       {
         type: 'weak',
         cost: { black: 1, any: 1 },
-        effect: 'Steal 1 Glory from a player',
+        effect: 'Steal 1 Favor from a player',
         effectType: EFFECT_TYPES.STEAL_GLORY,
         stealGlory: 1,
         targetType: 'choosePlayer',
@@ -278,7 +278,7 @@ const gods = {
       {
         type: 'strong',
         cost: { black: 3, any: 3 },
-        effect: 'Steal 3 Glory from a player',
+        effect: 'Steal 3 Favor from a player',
         effectType: EFFECT_TYPES.STEAL_GLORY,
         stealGlory: 3,
         targetType: 'choosePlayer',
@@ -286,7 +286,7 @@ const gods = {
       {
         type: 'vp',
         cost: { black: 5 },
-        effect: 'Steal 2 Glory from each other player',
+        effect: 'Steal 2 Favor from each other player',
         effectType: EFFECT_TYPES.STEAL_GLORY,
         stealGlory: 2,
         targetType: 'allOthers',
@@ -294,7 +294,7 @@ const gods = {
     ],
 
     gloryCondition: {
-      description: '+1 Glory each time you steal from or penalize another player',
+      description: '+1 Favor each time you steal from or penalize another player',
       trigger: GLORY_TRIGGERS.ON_STEAL_OR_PENALIZE,
       formula: 'perStealOrPenalize',
     },
@@ -315,7 +315,7 @@ const gods = {
         id: 'black_voodooDoll',
         name: 'Voodoo Doll',
         cost: { black: 3, any: 1 },
-        effect: 'At end of each round, choose a player — they lose 2 Glory',
+        effect: 'At end of each round, choose a player — they lose 2 Favor',
         trigger: EVENT_TYPES.ROUND_END,
         effectType: EFFECT_TYPES.PENALIZE_ALL,
         mechanicalDetail: 'Round-end trigger, requires target player selection',
@@ -336,7 +336,7 @@ const gods = {
         id: 'black_tomeOfDeeds',
         name: 'Tome of Deeds',
         cost: { black: 2, any: 1 },
-        effect: 'Your Glory cannot be stolen',
+        effect: 'Your Favor cannot be stolen',
         trigger: EVENT_TYPES.ON_STEAL_GLORY,
         effectType: EFFECT_TYPES.PROTECT_GLORY,
         mechanicalDetail: 'Blocks all steal-glory effects targeting this player',
@@ -355,10 +355,10 @@ const gods = {
         id: 'black_cursedBlade',
         name: 'Cursed Blade',
         cost: { black: 2, any: 2 },
-        effect: 'Your steal actions and shops steal an extra 1 Glory',
+        effect: 'Your steal actions and shops steal an extra 1 Favor',
         trigger: EVENT_TYPES.ON_STEAL_GLORY,
         effectType: EFFECT_TYPES.POWER_CARD_PASSIVE,
-        mechanicalDetail: 'Whenever this player steals Glory (action or shop), add +1 to the steal amount',
+        mechanicalDetail: 'Whenever this player steals Favor (action or shop), add +1 to the steal amount',
         bonusStealGlory: 1,
       },
     ],
@@ -464,14 +464,14 @@ const gods = {
       {
         type: 'vp',
         cost: { green: 4 },
-        effect: '+4 Glory, take another turn',
+        effect: '+4 Favor, take another turn',
         effectType: [EFFECT_TYPES.GAIN_GLORY, EFFECT_TYPES.EXTRA_TURN],
         glory: 4,
       },
     ],
 
     gloryCondition: {
-      description: '+1 Glory every time you repeat or copy an action',
+      description: '+1 Favor every time you repeat or copy an action',
       trigger: GLORY_TRIGGERS.ON_REPEAT_OR_COPY,
       formula: 'perRepeatOrCopy',
     },
@@ -512,7 +512,7 @@ const gods = {
         id: 'green_diademOfExpertise',
         name: 'Diadem of Expertise',
         cost: { green: 3, any: 1 },
-        effect: 'Your repeat actions trigger Glory condition twice',
+        effect: 'Your repeat actions trigger Favor condition twice',
         trigger: EVENT_TYPES.ACTION_REPEAT,
         effectType: EFFECT_TYPES.DOUBLE_GLORY_TRIGGER,
         mechanicalDetail: 'When a repeat/copy triggers the Green glory condition, it fires twice instead of once',
@@ -628,21 +628,21 @@ const gods = {
       {
         type: 'strong',
         cost: { yellow: 3, any: 3 },
-        effect: 'Trigger your Glory condition right now',
+        effect: 'Trigger your Favor condition right now',
         effectType: EFFECT_TYPES.TRIGGER_GLORY_CONDITION,
-        mechanicalDetail: 'Immediately evaluates the Yellow glory condition (count distinct resource colors owned, gain that much Glory)',
+        mechanicalDetail: 'Immediately evaluates the Yellow Favor condition (count distinct resource colors owned, gain that much Favor)',
       },
       {
         type: 'vp',
         cost: { yellow: 4 },
-        effect: '+1 Glory per complete set of all active colors you own',
+        effect: '+1 Favor per complete set of all active colors you own',
         effectType: EFFECT_TYPES.GAIN_GLORY,
         gloryFormula: 'perCompleteColorSet',
       },
     ],
 
     gloryCondition: {
-      description: '+1 Glory per different resource color you own at end of each round',
+      description: '+1 Favor per different resource color you own at end of each round',
       trigger: GLORY_TRIGGERS.ROUND_END,
       formula: 'perDistinctColorOwned',
     },
@@ -703,10 +703,10 @@ const gods = {
         id: 'yellow_travelersJournal',
         name: "Traveler's Journal",
         cost: { yellow: 2, any: 1 },
-        effect: 'When you gain 2+ different resource colors on your turn, +1 Glory',
+        effect: 'When you gain 2+ different resource colors on your turn, +1 Favor',
         trigger: EVENT_TYPES.TURN_END,
         effectType: EFFECT_TYPES.GAIN_GLORY,
-        mechanicalDetail: 'At turn end, checks if player gained 2+ distinct colors this turn. If so, +1 Glory.',
+        mechanicalDetail: 'At turn end, checks if player gained 2+ distinct colors this turn. If so, +1 Favor.',
         gloryFormula: 'conditionalMultiColorGain',
         glory: 1,
       },

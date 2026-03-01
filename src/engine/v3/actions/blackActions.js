@@ -88,6 +88,7 @@ export function pickpocket(state, playerId, gods, decisions = {}) {
         type: 'targetPlayer',
         title: 'Choose a player to steal 1 Glory from',
         excludePlayer: playerId,
+        options: state.players.filter(p => p.id !== playerId).map(p => p.id),
       },
     };
   }
@@ -126,6 +127,7 @@ export function ransack(state, playerId, gods, decisions = {}) {
         type: 'targetPlayer',
         title: 'Choose a player to steal 2 resources from',
         excludePlayer: playerId,
+        options: state.players.filter(p => p.id !== playerId).map(p => p.id),
       },
     };
   }
@@ -192,6 +194,7 @@ export function extort(state, playerId, gods, decisions = {}) {
         type: 'targetPlayer',
         title: 'Choose a player to steal 3 resources from',
         excludePlayer: playerId,
+        options: state.players.filter(p => p.id !== playerId).map(p => p.id),
       },
     };
   }

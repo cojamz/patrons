@@ -10,9 +10,28 @@
  *                                              -> game_end (after round 3)
  */
 
-import { ACTIONS_PER_ROUND, ROUNDS } from './data/constants.js';
+import { ACTIONS_PER_ROUND, ROUNDS, CARDS_DEALT_PER_GOD } from './data/constants.js';
 import champions from './data/champions.js';
 import { createResult, createDecisionRequest } from './stateHelpers.js';
+import { registerHandler, EventType } from './events.js';
+
+// Map champion id to event handler registration info
+const CHAMPION_HANDLER_MAP = {
+  prescient: {
+    sourceId: 'prescient_passive',
+    eventType: EventType.ROUND_START,
+    frequency: 'once_per_round',
+  },
+  favored: {
+    sourceId: 'favored_passive',
+    eventType: EventType.SHOP_USED,
+  },
+  deft: {
+    sourceId: 'deft_passive',
+    eventType: EventType.TURN_START,
+    frequency: 'once_per_round',
+  },
+};
 
 // --- Phase Constants ---
 
@@ -81,7 +100,7 @@ export function executeChampionDraft(state, decision) {
     return createResult(state, ['Invalid champion choice.']);
   }
 
-  const newState = {
+  let newState = {
     ...state,
     champions: {
       ...state.champions,
@@ -96,6 +115,20 @@ export function executeChampionDraft(state, decision) {
   };
 
   const log = [`Player ${currentDrafter} drafted ${chosenChampion.name}.`];
+
+  // Register champion passive handler if applicable
+  const handlerInfo = CHAMPION_HANDLER_MAP[chosenChampion.id];
+  if (handlerInfo) {
+    newState = registerHandler(newState, {
+      id: `${handlerInfo.sourceId}_p${currentDrafter}`,
+      eventType: handlerInfo.eventType,
+      source: 'champion_passive',
+      sourceId: handlerInfo.sourceId,
+      ownerId: currentDrafter,
+      config: {},
+      frequency: handlerInfo.frequency,
+    });
+  }
 
   // Check if draft is now complete
   if (newState.draftIndex >= draftOrder.length) {
@@ -119,6 +152,26 @@ export function executeChampionDraft(state, decision) {
 export function executeRoundStart(state) {
   const workersThisRound = ACTIONS_PER_ROUND[state.round - 1] || ACTIONS_PER_ROUND[ACTIONS_PER_ROUND.length - 1];
 
+  // Refill power card markets from remaining decks
+  let powerCardMarkets = { ...(state.powerCardMarkets || {}) };
+  let powerCardDecks = { ...(state.powerCardDecks || {}) };
+  const refillLog = [];
+
+  for (const godColor of (state.gods || [])) {
+    const market = powerCardMarkets[godColor] || [];
+    const deck = [...(powerCardDecks[godColor] || [])];
+    const slotsToFill = CARDS_DEALT_PER_GOD - market.length;
+
+    if (slotsToFill > 0 && deck.length > 0) {
+      const drawn = deck.splice(0, slotsToFill);
+      powerCardMarkets = { ...powerCardMarkets, [godColor]: [...market, ...drawn] };
+      powerCardDecks = { ...powerCardDecks, [godColor]: deck };
+      if (drawn.length > 0) {
+        refillLog.push(`${godColor} market refilled with ${drawn.length} card${drawn.length > 1 ? 's' : ''}`);
+      }
+    }
+  }
+
   const newState = {
     ...state,
     phase: Phase.ACTION_PHASE,
@@ -132,6 +185,8 @@ export function executeRoundStart(state) {
     turnResourceGains: {},
     turnActionsThisTurn: [],
     godsAccessedThisTurn: [],
+    powerCardMarkets,
+    powerCardDecks,
     players: state.players.map(player => ({
       ...player,
       workersLeft: workersThisRound,
@@ -139,7 +194,7 @@ export function executeRoundStart(state) {
     })),
   };
 
-  return createResult(newState, [`Round ${state.round} begins. Each player has ${workersThisRound} workers.`]);
+  return createResult(newState, [`Round ${state.round} begins. Each player has ${workersThisRound} workers.`, ...refillLog]);
 }
 
 /**

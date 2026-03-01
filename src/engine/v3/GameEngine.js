@@ -63,12 +63,14 @@ export function createGame({ playerCount, playerNames, godSet = ['gold', 'black'
   // Build power card markets — deal CARDS_DEALT_PER_GOD face-up per god
   // Use powerCards.js IDs (e.g. 'golden_scepter') not gods.js IDs (e.g. 'gold_goldenScepter')
   const powerCardMarkets = {};
+  const powerCardDecks = {};
   for (const godColor of godSet) {
     const godCardIds = Object.keys(powerCards).filter(id => powerCards[id].god === godColor);
     const deck = shuffle(godCardIds);
     powerCardMarkets[godColor] = deck.slice(0, CARDS_DEALT_PER_GOD);
+    powerCardDecks[godColor] = deck.slice(CARDS_DEALT_PER_GOD);
   }
-  state = { ...state, powerCardMarkets };
+  state = { ...state, powerCardMarkets, powerCardDecks };
 
   // Register glory condition handlers for each player × each god
   const playerIds = state.players.map(p => p.id);

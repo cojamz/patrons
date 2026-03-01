@@ -52,7 +52,7 @@ export const powerCards = {
     name: 'Gold Crown',
     god: 'gold',
     cost: { gold: 4, any: 2 },
-    description: 'Game end: +1 Glory per 2 gold you own',
+    description: 'Game end: +1 Favor per 2 gold you own',
     handlers: [{ eventType: 'phase.game_end', config: {} }],
   },
   gold_vault: {
@@ -78,7 +78,7 @@ export const powerCards = {
     name: 'Voodoo Doll',
     god: 'black',
     cost: { black: 3, any: 1 },
-    description: 'At end of each round, choose a player — they lose 2 Glory',
+    description: 'At end of each round, choose a player — they lose 2 Favor',
     handlers: [{ eventType: 'phase.round_end', config: { requiresDecision: true } }],
   },
   thieves_gloves: {
@@ -94,7 +94,7 @@ export const powerCards = {
     name: 'Tome of Deeds',
     god: 'black',
     cost: { black: 2, any: 1 },
-    description: 'Your Glory cannot be stolen',
+    description: 'Your Favor cannot be stolen',
     modifiers: [{ type: 'glory_steal_immunity' }],
   },
   obsidian_coin: {
@@ -110,7 +110,7 @@ export const powerCards = {
     name: 'Cursed Blade',
     god: 'black',
     cost: { black: 2, any: 2 },
-    description: 'Your steal actions and shops steal an extra 1 Glory',
+    description: 'Your steal actions and shops steal an extra 1 Favor',
     handlers: [{ eventType: 'glory.stolen', config: { triggerOn: 'self' } }],
   },
 
@@ -145,7 +145,7 @@ export const powerCards = {
     name: 'Diadem of Expertise',
     god: 'green',
     cost: { green: 3, any: 1 },
-    description: 'Your repeat actions trigger Glory condition twice',
+    description: 'Your repeat actions trigger Favor condition twice',
     handlers: [{ eventType: 'action.repeated', config: { triggerOn: 'self', doubleGlory: true } }],
   },
   crystal_ball: {
@@ -213,7 +213,7 @@ export const powerCards = {
     name: "Traveler's Journal",
     god: 'yellow',
     cost: { yellow: 2, any: 1 },
-    description: 'When you gain 2+ different resource colors on your turn, +1 Glory',
+    description: 'When you gain 2+ different resource colors on your turn, +1 Favor',
     handlers: [{ eventType: 'phase.turn_end', config: { triggerOn: 'self' } }],
   },
 };
