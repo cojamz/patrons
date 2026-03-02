@@ -392,7 +392,7 @@ function ChampionDraftScreen() {
                       className="text-[10px] uppercase tracking-wider font-medium"
                       style={{ color: base.textMuted }}
                     >
-                      {champData.powerCardSlots} Power Card Slots
+                      {champData.powerCardSlots} Artifact Slots
                     </span>
                   </div>
                 </div>

@@ -211,7 +211,7 @@ export default function PowerCardSlot({ cardId, slotIndex, isEmpty, isTriggered 
                       fontSize: '9px', color: colors.primary, opacity: 0.7,
                       textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '2px',
                     }}>
-                      {meta?.name || card.god} Power Card
+                      {meta?.name || card.god} Artifact
                     </div>
                   </div>
                 </div>

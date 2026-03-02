@@ -623,11 +623,11 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
             })}
           </div>
 
-          {/* Powers label */}
+          {/* Artifacts label */}
           <div className="flex items-center gap-1 flex-shrink-0" style={{ padding: '0 2px' }}>
             <div style={{ flex: 1, height: '1px', background: colors.border, opacity: 0.3 }} />
             <span style={{ fontSize: '7px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: colors.text, opacity: 0.35 }}>
-              Powers
+              Artifacts
             </span>
             <div style={{ flex: 1, height: '1px', background: colors.border, opacity: 0.3 }} />
           </div>
@@ -947,8 +947,8 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
               : { duration: 0.3 }}
           >
             <SectionHint
-              label="Powers"
-              hint="Permanent cards with lasting abilities. New cards are dealt each round. Place a patron here first. One purchase per turn (shop or power card)."
+              label="Artifacts"
+              hint="Permanent artifacts with lasting abilities. New artifacts appear each round. Place a patron here first. One purchase per turn (shop or artifact)."
               color={colors.text}
             />
             <motion.div
@@ -1007,38 +1007,45 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                     whileTap={buyable ? { scale: 0.97 } : undefined}
                     transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   >
-                    {/* Card frame */}
+                    {/* Card frame — gem-like premium surface */}
                     <div
                       className="absolute inset-0"
                       style={{
                         background: buyable
-                          ? `linear-gradient(170deg, ${colors.primary}20 0%, rgba(12,10,9,0.95) 60%)`
+                          ? `linear-gradient(170deg, ${colors.light}15 0%, ${colors.primary}12 20%, rgba(12,10,9,0.95) 60%)`
                           : 'rgba(28, 25, 23, 0.9)',
-                        border: `1.5px solid ${buyable ? colors.primary + '55' : colors.border}`,
+                        border: `1.5px solid ${buyable ? colors.primary + '66' : colors.border}`,
                         borderRadius: '8px',
                         boxShadow: buyable
-                          ? `0 3px 12px rgba(0,0,0,0.5), 0 0 10px ${colors.glow}`
+                          ? `0 3px 12px rgba(0,0,0,0.5), 0 0 14px ${colors.glow}, inset 0 1px 0 rgba(255,255,255,0.1)`
                           : '0 2px 8px rgba(0,0,0,0.3)',
                       }}
                     />
+                    {/* Specular highlight — top edge catch */}
+                    {buyable && (
+                      <div className="absolute inset-x-0 top-0 pointer-events-none" style={{
+                        height: '40%', borderRadius: '8px 8px 0 0',
+                        background: `linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%)`,
+                      }} />
+                    )}
                     {/* Content — icon-dominant layout */}
                     <div className="relative z-10 flex flex-col items-center" style={{ padding: '10px 6px 6px' }}>
-                      {/* Large icon — the card's visual identity */}
+                      {/* Large icon — the artifact's visual identity */}
                       <div style={{
-                        width: '40px', height: '40px', borderRadius: '50%',
+                        width: '44px', height: '44px', borderRadius: '50%',
                         background: buyable
-                          ? `radial-gradient(circle at 40% 35%, ${colors.light}30 0%, ${colors.surface} 50%, rgba(0,0,0,0.5) 100%)`
+                          ? `radial-gradient(circle at 38% 32%, ${colors.light}40 0%, ${colors.surface} 45%, rgba(0,0,0,0.6) 100%)`
                           : 'rgba(255,255,255,0.03)',
-                        border: `1.5px solid ${buyable ? colors.primary + '44' : colors.border}`,
+                        border: `1.5px solid ${buyable ? colors.primary + '55' : colors.border}`,
                         boxShadow: buyable
-                          ? `0 0 12px ${colors.glow}, inset 0 0 8px ${colors.glow}`
+                          ? `0 0 16px ${colors.glow}, 0 0 6px ${colors.glowStrong}, inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.15)`
                           : 'none',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         marginBottom: '6px',
                       }}>
                         <CardPixelIcon
                           cardId={cardId}
-                          size={26}
+                          size={28}
                           color={buyable ? colors.light : base.textMuted}
                           glowColor={buyable ? colors.primary : undefined}
                         />
@@ -1110,7 +1117,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
             }}
           >
             <span style={{ fontSize: '10px', fontWeight: 600, color: base.textMuted, letterSpacing: '0.04em' }}>
-              All power cards sold
+              All artifacts claimed
             </span>
           </div>
         )}

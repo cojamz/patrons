@@ -681,7 +681,7 @@ export default function PlayerPanel() {
               className="text-[11px] uppercase tracking-widest font-medium"
               style={{ color: base.textMuted }}
             >
-              Power Cards
+              Artifacts
             </span>
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
               {Array.from({ length: totalSlots }, (_, i) => {
