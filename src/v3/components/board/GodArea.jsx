@@ -177,6 +177,25 @@ function FloatingTooltip({ tooltip, godColor }) {
     );
   }
 
+  if (type === 'vpCondition') {
+    return (
+      <motion.div
+        style={{ ...tooltipStyle, border: `2px solid ${favorConditionStyle.border}` }}
+        variants={tooltipVariants} initial="initial" animate="animate" exit="exit"
+      >
+        <div style={{ fontSize: '13px', fontWeight: 700, color: favorConditionStyle.text, marginBottom: '6px' }}>
+          Favor Condition
+        </div>
+        <div style={{ fontSize: '12px', lineHeight: 1.5, color: base.textSecondary, marginBottom: '6px' }}>
+          {data.description}
+        </div>
+        <div style={{ fontSize: '11px', lineHeight: 1.5, color: base.textMuted }}>
+          Each god rewards Favor for a different style of play. Earn Favor by meeting this condition during the game. Favor counts as victory points at end of game.
+        </div>
+      </motion.div>
+    );
+  }
+
   return null;
 }
 
@@ -496,19 +515,23 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
               {meta.title}
             </div>
             {godData.gloryCondition && (
-              <div style={{
-                fontSize: '8px', lineHeight: 1.3, textAlign: 'center',
-                fontWeight: 700,
-                color: favorConditionStyle.text,
-                textShadow: favorConditionStyle.textShadow,
-                padding: '3px 6px',
-                marginTop: '2px',
-                borderRadius: '4px',
-                background: favorConditionStyle.background,
-                border: `1px solid ${favorConditionStyle.border}`,
-                boxShadow: `0 0 8px rgba(220, 220, 240, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.06)`,
-              }}>
-                <span style={{ fontSize: '10px', marginRight: '3px', color: favorConditionStyle.icon }}>★</span>
+              <div
+                onMouseEnter={(e) => showTooltip('vpCondition', godData.gloryCondition, e)}
+                onMouseLeave={hideTooltip}
+                style={{
+                  fontSize: '8px', lineHeight: 1.3, textAlign: 'center',
+                  fontWeight: 700,
+                  color: favorConditionStyle.text,
+                  textShadow: favorConditionStyle.textShadow,
+                  padding: '3px 6px',
+                  marginTop: '2px',
+                  borderRadius: '4px',
+                  background: favorConditionStyle.background,
+                  border: `1px solid ${favorConditionStyle.border}`,
+                  boxShadow: `0 0 8px rgba(220, 220, 240, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.06)`,
+                  cursor: 'help',
+                }}
+              >
                 {godData.gloryCondition.description}
               </div>
             )}
@@ -570,7 +593,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                     padding: '3px 5px', borderRadius: '4px',
                     background: affordable ? 'rgba(250, 235, 215, 0.09)' : 'rgba(250, 235, 215, 0.06)',
                     border: `1px solid rgba(250, 235, 215, 0.1)`,
-                    borderTop: `${style.borderWidth || '2px'} solid ${style.color}`,
+                    borderLeft: `${style.borderWidth || '2px'} solid ${style.color}`,
                     opacity: isShopLocked ? 0.3 : 0.85,
                     cursor: isShopLocked ? 'default' : 'pointer',
                     outline: 'none', flexShrink: 0,
@@ -615,7 +638,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
               if (!card) return null;
               const buyable = canBuyCard(cardId);
               return (
-                <motion.button
+                <button
                   key={cardId}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -630,20 +653,12 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                     background: buyable
                       ? `radial-gradient(ellipse at 20% 30%, ${colors.surface} 0%, rgba(28, 25, 23, 0.85) 80%)`
                       : `radial-gradient(ellipse at 20% 30%, ${colors.surface}40 0%, rgba(28, 25, 23, 0.6) 80%)`,
-                    borderTop: `1.5px solid ${buyable ? colors.primary + '66' : colors.border}`,
-                    borderLeft: `1.5px solid ${buyable ? colors.primary + '66' : colors.border}`,
-                    borderRight: `2px solid ${buyable ? colors.primary + '55' : colors.border}`,
-                    borderBottom: `3px solid ${buyable ? colors.primary + '44' : 'rgba(0,0,0,0.3)'}`,
-                    boxShadow: buyable
-                      ? `2px 3px 8px rgba(0,0,0,0.4), 0 0 8px ${colors.glow}, inset 0 1px 0 rgba(255,255,255,0.08)`
-                      : `1px 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)`,
+                    border: `1.5px solid ${buyable ? colors.primary + '66' : colors.border}`,
+                    boxShadow: buyable ? `0 0 8px ${colors.glow}, inset 0 0 6px ${colors.glow}` : `inset 0 0 4px ${colors.glow}`,
                     opacity: buyable ? 1 : 0.5,
                     cursor: buyable ? 'pointer' : 'default',
                     outline: 'none', flexShrink: 0,
                   }}
-                  whileHover={buyable ? { y: -2, scale: 1.01 } : undefined}
-                  whileTap={buyable ? { scale: 0.98 } : undefined}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 >
                   <div style={{
                     width: '18px', height: '18px', borderRadius: '50%',
@@ -662,7 +677,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                   }}>
                     {card.name}
                   </span>
-                </motion.button>
+                </button>
               );
             })}
           </div>
@@ -739,7 +754,9 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
             </div>
             {godData.gloryCondition && (
               <div
-                className="flex items-center gap-2"
+                className="flex items-center"
+                onMouseEnter={(e) => showTooltip('vpCondition', godData.gloryCondition, e)}
+                onMouseLeave={hideTooltip}
                 style={{
                   marginTop: '4px',
                   padding: '4px 10px',
@@ -747,9 +764,9 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                   background: favorConditionStyle.background,
                   border: `1px solid ${favorConditionStyle.border}`,
                   boxShadow: `0 0 12px rgba(220, 220, 240, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.06)`,
+                  cursor: 'help',
                 }}
               >
-                <span style={{ fontSize: '14px', lineHeight: 1, flexShrink: 0, color: favorConditionStyle.icon }}>★</span>
                 <span style={{
                   fontSize: '11px', lineHeight: 1.3, fontWeight: 700,
                   color: favorConditionStyle.text,
@@ -832,15 +849,14 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
             hint="Spend blessings for powerful effects. Place a patron here first. One purchase per turn (shop or power card)."
             color="rgba(250, 235, 215, 0.45)"
           />
-          {/* Shops as marketplace cards — 3 across */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+          {/* Shops — compact placards, effect text is the hero */}
+          <div style={{ display: 'flex', gap: '4px' }}>
             {godData.shops.map(shop => {
               const style = shopStyles[shop.type];
               const modifiedCost = (currentPlayer && game) ? getShopCost(game, currentPlayer.id, `${godColor}_${shop.type}`) : null;
               const costEntries = parseCost(modifiedCost || shop.cost);
               const isShopLocked = shop.type === 'strong' && currentRound < 2;
               const affordable = !isShopLocked && canAffordShop(shop);
-              const ctaLabel = shop.type === 'weak' ? 'Buy' : shop.type === 'strong' ? 'Trade' : 'Offer';
 
               return (
                 <motion.button
@@ -850,80 +866,60 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                   onMouseLeave={hideTooltip}
                   disabled={false}
                   style={{
+                    flex: 1, minWidth: 0,
                     display: 'flex', flexDirection: 'column',
-                    borderRadius: '5px',
-                    background: affordable ? 'rgba(250, 235, 215, 0.06)' : 'rgba(250, 235, 215, 0.02)',
-                    border: `1px solid ${affordable ? 'rgba(250, 235, 215, 0.12)' : 'rgba(250, 235, 215, 0.05)'}`,
-                    borderTop: `2.5px solid ${style.color}`,
-                    opacity: isShopLocked ? 0.35 : affordable ? 1 : 0.5,
+                    borderRadius: '6px',
+                    background: affordable
+                      ? `linear-gradient(180deg, ${style.color}12 0%, rgba(250, 235, 215, 0.04) 100%)`
+                      : 'rgba(250, 235, 215, 0.02)',
+                    border: `1px solid ${affordable ? `${style.color}30` : 'rgba(250, 235, 215, 0.06)'}`,
+                    opacity: isShopLocked ? 0.3 : affordable ? 1 : 0.55,
                     cursor: isShopLocked ? 'default' : 'pointer',
                     outline: 'none',
                     overflow: 'hidden',
-                    transition: 'transform 150ms ease, box-shadow 150ms ease',
                   }}
-                  whileHover={!isShopLocked ? { y: -2 } : undefined}
+                  whileHover={!isShopLocked ? { y: -2, boxShadow: `0 4px 12px rgba(0,0,0,0.3)` } : undefined}
                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 >
-                  {/* Tier badge */}
+                  {/* Tier banner — colored strip at top */}
                   <div style={{
-                    padding: '4px 6px 2px',
-                    display: 'flex', alignItems: 'center', gap: '4px',
+                    padding: '3px 8px',
+                    background: `${style.color}18`,
+                    borderBottom: `1px solid ${style.color}20`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   }}>
                     <span style={{
-                      fontSize: '8px', fontWeight: 700, letterSpacing: '0.06em',
+                      fontSize: '9px', fontWeight: 700, letterSpacing: '0.05em',
                       textTransform: 'uppercase', color: style.color,
                     }}>
                       {style.label}
                     </span>
-                    {isShopLocked && <span style={{ fontSize: '7px', color: base.textMuted }}>(R2)</span>}
+                    {isShopLocked && <span style={{ fontSize: '7px', color: base.textMuted }}>R2</span>}
+                    {/* Cost inline in banner */}
+                    <div className="flex items-center" style={{ gap: '3px' }}>
+                      {costEntries.map(({ color, amount }) => (
+                        <div key={color} className="flex items-center" style={{ gap: '1px' }}>
+                          <span style={{ fontSize: '9px', fontWeight: 700, color: base.textMuted }}>
+                            {amount}
+                          </span>
+                          {color === 'any' ? (
+                            <WildcardIcon size={10} />
+                          ) : (
+                            <ResourceIcon type={color} size={10} />
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  {/* Effect text */}
+                  {/* Effect text — the hero content */}
                   <div style={{
-                    flex: 1, padding: '2px 6px 4px',
-                    fontSize: '10px', lineHeight: 1.3, textAlign: 'left',
-                    color: affordable ? base.textSecondary : base.textMuted,
-                    overflow: 'hidden', display: '-webkit-box',
-                    WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                    flex: 1, padding: '6px 8px',
+                    fontSize: '11px', lineHeight: 1.35, textAlign: 'center',
+                    color: affordable ? base.textPrimary : base.textMuted,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     {shop.effect}
                   </div>
-                  {/* Price tag area — separated with subtle top border */}
-                  <div style={{
-                    padding: '3px 6px',
-                    borderTop: '1px solid rgba(250, 235, 215, 0.06)',
-                    background: 'rgba(0, 0, 0, 0.15)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                  }}>
-                    {costEntries.map(({ color, amount }) => (
-                      <div key={color} className="flex items-center" style={{ gap: '1px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: base.textSecondary }}>
-                          {amount}
-                        </span>
-                        {color === 'any' ? (
-                          <WildcardIcon size={12} />
-                        ) : (
-                          <ResourceIcon type={color} size={12} />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  {/* CTA button — only when affordable */}
-                  {affordable && (
-                    <div style={{
-                      padding: '3px 6px',
-                      background: `${style.color}22`,
-                      borderTop: `1px solid ${style.color}33`,
-                      textAlign: 'center',
-                    }}>
-                      <span style={{
-                        fontSize: '8px', fontWeight: 700, textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
-                        color: style.color,
-                      }}>
-                        {ctaLabel}
-                      </span>
-                    </div>
-                  )}
                 </motion.button>
               );
             })}
@@ -1007,101 +1003,91 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                       cursor: buyable ? 'pointer' : 'default',
                       opacity: buyable ? 1 : 0.5,
                     }}
-                    whileHover={buyable ? { y: -3, scale: 1.02 } : undefined}
-                    whileTap={buyable ? { scale: 0.98 } : undefined}
+                    whileHover={buyable ? { y: -3 } : undefined}
+                    whileTap={buyable ? { scale: 0.97 } : undefined}
                     transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   >
-                    {/* Card frame — asymmetric borders for physical card thickness */}
+                    {/* Card frame */}
                     <div
                       className="absolute inset-0"
                       style={{
                         background: buyable
-                          ? `linear-gradient(160deg, ${colors.primary}30 0%, ${colors.primary}10 30%, rgba(12,10,9,0.95) 100%)`
+                          ? `linear-gradient(170deg, ${colors.primary}20 0%, rgba(12,10,9,0.95) 60%)`
                           : 'rgba(28, 25, 23, 0.9)',
-                        borderTop: `1.5px solid ${buyable ? colors.primary + '55' : colors.border}`,
-                        borderLeft: `1.5px solid ${buyable ? colors.primary + '55' : colors.border}`,
-                        borderRight: `2px solid ${buyable ? colors.primary + '44' : colors.border}`,
-                        borderBottom: `3px solid ${buyable ? colors.primary + '33' : 'rgba(0,0,0,0.4)'}`,
+                        border: `1.5px solid ${buyable ? colors.primary + '55' : colors.border}`,
                         borderRadius: '8px',
                         boxShadow: buyable
-                          ? `4px 5px 16px rgba(0,0,0,0.5), 0 0 12px ${colors.glow}, inset 0 1px 0 rgba(255,255,255,0.08)`
-                          : '2px 3px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)',
+                          ? `0 3px 12px rgba(0,0,0,0.5), 0 0 10px ${colors.glow}`
+                          : '0 2px 8px rgba(0,0,0,0.3)',
                       }}
                     />
-                    {/* God glow */}
-                    {buyable && (
-                      <div
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                          background: `radial-gradient(circle at 50% 15%, ${colors.glow} 0%, transparent 50%)`,
-                          opacity: 0.4,
-                        }}
-                      />
-                    )}
-                    {/* Content */}
-                    <div className="relative z-10 flex flex-col" style={{ padding: '8px 8px 6px' }}>
-                      <div className="flex items-center justify-center" style={{ gap: '6px', marginBottom: '4px' }}>
-                        <div style={{
-                          width: '28px', height: '28px', borderRadius: '50%',
-                          background: buyable
-                            ? `radial-gradient(circle at 40% 35%, ${colors.light}40 0%, ${colors.surface} 40%, rgba(0,0,0,0.4) 100%)`
-                            : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${buyable ? colors.primary + '44' : colors.border}`,
-                          borderBottom: `2px solid ${buyable ? colors.primary + '33' : colors.border}`,
-                          boxShadow: buyable ? `0 2px 6px rgba(0,0,0,0.4), 0 0 8px ${colors.glow}` : 'none',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          flexShrink: 0,
-                        }}>
-                          <CardPixelIcon
-                            cardId={cardId}
-                            size={18}
-                            color={buyable ? colors.light : base.textMuted}
-                            glowColor={buyable ? colors.primary : undefined}
-                          />
-                        </div>
-                        <span style={{
-                          fontSize: '10px', fontWeight: 700, lineHeight: 1.1,
-                          color: buyable ? colors.text : base.textMuted,
-                          flex: 1, minWidth: 0,
-                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                        }}>
-                          {card.name}
-                        </span>
-                      </div>
+                    {/* Content — icon-dominant layout */}
+                    <div className="relative z-10 flex flex-col items-center" style={{ padding: '10px 6px 6px' }}>
+                      {/* Large icon — the card's visual identity */}
                       <div style={{
-                        fontSize: '9px', lineHeight: 1.35,
+                        width: '40px', height: '40px', borderRadius: '50%',
+                        background: buyable
+                          ? `radial-gradient(circle at 40% 35%, ${colors.light}30 0%, ${colors.surface} 50%, rgba(0,0,0,0.5) 100%)`
+                          : 'rgba(255,255,255,0.03)',
+                        border: `1.5px solid ${buyable ? colors.primary + '44' : colors.border}`,
+                        boxShadow: buyable
+                          ? `0 0 12px ${colors.glow}, inset 0 0 8px ${colors.glow}`
+                          : 'none',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        marginBottom: '6px',
+                      }}>
+                        <CardPixelIcon
+                          cardId={cardId}
+                          size={26}
+                          color={buyable ? colors.light : base.textMuted}
+                          glowColor={buyable ? colors.primary : undefined}
+                        />
+                      </div>
+                      {/* Card name */}
+                      <span style={{
+                        fontSize: '10px', fontWeight: 700, lineHeight: 1.2,
+                        color: buyable ? colors.text : base.textMuted,
+                        marginBottom: '3px',
+                        maxWidth: '100%',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>
+                        {card.name}
+                      </span>
+                      {/* Description */}
+                      <div style={{
+                        fontSize: '9px', lineHeight: 1.3,
                         color: buyable ? base.textSecondary : 'rgba(168, 162, 158, 0.5)',
                         overflow: 'hidden', display: '-webkit-box',
                         WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                        marginBottom: '5px',
+                        marginBottom: '6px',
                       }}>
                         {card.description}
                       </div>
-                      <div className="flex items-center justify-center" style={{ gap: '5px' }}>
-                        <div className="flex items-center" style={{ gap: '5px' }}>
-                          {cardCostEntries.map(([resource, amount]) => (
-                            <div key={resource} className="flex items-center" style={{ gap: '2px' }}>
-                              <span style={{
-                                fontSize: '12px', fontWeight: 700,
-                                color: buyable ? (resourceStyles[resource]?.highlight || base.textSecondary) : base.textMuted,
-                              }}>
-                                {amount}
-                              </span>
-                              {resource === 'any' ? (
-                                <WildcardIcon size={14} />
-                              ) : (
-                                <ResourceIcon type={resource} size={14} />
-                              )}
-                            </div>
-                          ))}
-                        </div>
+                      {/* Cost row */}
+                      <div className="flex items-center justify-center" style={{ gap: '4px' }}>
+                        {cardCostEntries.map(([resource, amount]) => (
+                          <div key={resource} className="flex items-center" style={{ gap: '2px' }}>
+                            <span style={{
+                              fontSize: '11px', fontWeight: 700,
+                              color: buyable ? (resourceStyles[resource]?.highlight || base.textSecondary) : base.textMuted,
+                            }}>
+                              {amount}
+                            </span>
+                            {resource === 'any' ? (
+                              <WildcardIcon size={12} />
+                            ) : (
+                              <ResourceIcon type={resource} size={12} />
+                            )}
+                          </div>
+                        ))}
                         {buyable && (
                           <span style={{
-                            fontSize: '9px', fontWeight: 700, textTransform: 'uppercase',
+                            fontSize: '8px', fontWeight: 700, textTransform: 'uppercase',
                             letterSpacing: '0.06em',
                             color: '#0a0908',
                             background: colors.primary,
-                            padding: '2px 7px', borderRadius: '3px',
+                            padding: '2px 6px', borderRadius: '3px',
+                            marginLeft: '2px',
                           }}>
                             Buy
                           </span>
