@@ -30,10 +30,15 @@ function addGlory(state, playerId, amount, source) {
   return { ...state, players };
 }
 
-function removeGlory(state, playerId, amount) {
+function removeGlory(state, playerId, amount, source) {
+  if (hasModifier(state, playerId, 'glory_reduction_immunity')) return state;
   const players = state.players.map(p => {
     if (p.id !== playerId) return p;
-    return { ...p, glory: Math.max(0, (p.glory || 0) - amount) };
+    const newGlory = Math.max(0, (p.glory || 0) - amount);
+    const glorySources = source
+      ? { ...(p.glorySources || {}), [source]: ((p.glorySources || {})[source] || 0) - amount }
+      : p.glorySources;
+    return { ...p, glory: newGlory, glorySources };
   });
   return { ...state, players };
 }
@@ -100,7 +105,7 @@ function blackWeak(state, playerId, decisions = {}) {
 
   const targetId = decisions.targetPlayer;
 
-  if (hasModifier(state, targetId, 'glory_steal_immunity')) {
+  if (hasModifier(state, targetId, 'glory_reduction_immunity')) {
     return { state, log: ['Black shop: steal blocked (target has Glory immunity)'] };
   }
 
@@ -108,7 +113,7 @@ function blackWeak(state, playerId, decisions = {}) {
   const stolen = Math.min(1, target.glory || 0);
   let newState = state;
   if (stolen > 0) {
-    newState = removeGlory(newState, targetId, stolen);
+    newState = removeGlory(newState, targetId, stolen, 'black_weak_shop_victim');
     newState = addGlory(newState, playerId, stolen, 'black_weak_shop');
   }
 
@@ -131,7 +136,7 @@ function blackStrong(state, playerId, decisions = {}) {
 
   const targetId = decisions.targetPlayer;
 
-  if (hasModifier(state, targetId, 'glory_steal_immunity')) {
+  if (hasModifier(state, targetId, 'glory_reduction_immunity')) {
     return { state, log: ['Black shop: steal blocked (target has Glory immunity)'] };
   }
 
@@ -139,7 +144,7 @@ function blackStrong(state, playerId, decisions = {}) {
   const stolen = Math.min(3, target.glory || 0);
   let newState = state;
   if (stolen > 0) {
-    newState = removeGlory(newState, targetId, stolen);
+    newState = removeGlory(newState, targetId, stolen, 'black_strong_shop_victim');
     newState = addGlory(newState, playerId, stolen, 'black_strong_shop');
   }
 
@@ -155,14 +160,14 @@ function blackVp(state, playerId) {
   for (const player of state.players) {
     if (player.id === playerId) continue;
 
-    if (hasModifier(newState, player.id, 'glory_steal_immunity')) {
+    if (hasModifier(newState, player.id, 'glory_reduction_immunity')) {
       log.push(`${player.id}: steal blocked (Glory immunity)`);
       continue;
     }
 
     const stolen = Math.min(2, player.glory || 0);
     if (stolen > 0) {
-      newState = removeGlory(newState, player.id, stolen);
+      newState = removeGlory(newState, player.id, stolen, 'black_vp_shop_victim');
       totalStolen += stolen;
       log.push(`Stole ${stolen} Glory from ${player.id}`);
     }

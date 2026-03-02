@@ -15,9 +15,9 @@ const champions = [
   {
     id: 'prescient',
     name: 'The Prescient',
-    passive: 'Place 1-2 action nullifiers before each round starts. Nullified spaces cannot be used that round.',
+    passive: 'Place 1 action nullifier before each round starts. Nullified spaces cannot be used that round.',
     passiveTrigger: EVENT_TYPES.ROUND_START,
-    mechanicalNotes: 'Requires UI for nullifier placement. Nullifiers are placed face-down, revealed when a player attempts that action. Count TBD (1 or 2 — see open questions).',
+    mechanicalNotes: 'Requires UI for nullifier placement. Nullifiers are placed face-down, revealed when a player attempts that action.',
     powerCardSlots: POWER_CARD_SLOTS,
   },
   {
@@ -31,9 +31,9 @@ const champions = [
   {
     id: 'fortunate',
     name: 'The Fortunate',
-    passive: 'Start the game with 2-3 resources of any color (player chooses).',
+    passive: 'Start the game with 2 resources of any color (player chooses).',
     passiveTrigger: EVENT_TYPES.GAME_START,
-    mechanicalNotes: 'One-time resource grant at game start. Requires UI for color selection. Count TBD (2 or 3 — see open questions).',
+    mechanicalNotes: 'One-time resource grant at game start. Requires UI for color selection.',
     powerCardSlots: POWER_CARD_SLOTS,
   },
   {

@@ -162,7 +162,7 @@ describe('Black Shops', () => {
           { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 5, glorySources: {}, effects: [], lastGain: {} },
         ],
         champions: {
-          p2: { id: 'test', powerCards: ['black_tomeOfDeeds'], powerCardSlots: 4 },
+          p2: { id: 'test', powerCards: ['tome_of_deeds'], powerCardSlots: 4 },
         },
       });
       const result = resolveShop(state, 'p1', 'black_weak', { targetPlayer: 'p2' });

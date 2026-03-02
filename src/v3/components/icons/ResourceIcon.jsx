@@ -127,6 +127,51 @@ export default function ResourceIcon({ type, size = 24, className = '', glow = f
 }
 
 /**
+ * WildcardIcon — Trivial Pursuit-style color wheel representing "any" resource type.
+ * Four pie wedges (one per god color) with dark crosshair dividers.
+ * Flat solid colors = clearly "pick any ONE."
+ */
+export function WildcardIcon({ size = 14 }) {
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = size * 0.42;
+  const divW = size * 0.06; // crosshair line width
+
+  // Wedge colors: top-right=Gold, bottom-right=Black, bottom-left=Green, top-left=Yellow
+  // Each wedge is a quarter circle arc
+  const wedge = (startAngle, endAngle, fill) => {
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const x1 = cx + r * Math.cos(toRad(startAngle));
+    const y1 = cy + r * Math.sin(toRad(startAngle));
+    const x2 = cx + r * Math.cos(toRad(endAngle));
+    const y2 = cy + r * Math.sin(toRad(endAngle));
+    return (
+      <path
+        d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z`}
+        fill={fill}
+      />
+    );
+  };
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      {/* Four wedges: angles measured clockwise from 3 o'clock */}
+      {wedge(270, 360, '#D4A843')}  {/* top-right: Gold */}
+      {wedge(0, 90, '#6B5B95')}     {/* bottom-right: Black */}
+      {wedge(90, 180, '#2D6B4F')}   {/* bottom-left: Green */}
+      {wedge(180, 270, '#C7962C')}  {/* top-left: Yellow */}
+      {/* Dark crosshair dividers */}
+      <line x1={cx} y1={cy - r} x2={cx} y2={cy + r} stroke="#0a0908" strokeWidth={divW} />
+      <line x1={cx - r} y1={cy} x2={cx + r} y2={cy} stroke="#0a0908" strokeWidth={divW} />
+      {/* Thin outer ring */}
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={size * 0.04} />
+      {/* Center dot */}
+      <circle cx={cx} cy={cy} r={size * 0.08} fill="#0a0908" />
+    </svg>
+  );
+}
+
+/**
  * Shared SVG defs for resource gradients — include once in the app.
  * Allows using fill="url(#goldGem)" etc. anywhere.
  */

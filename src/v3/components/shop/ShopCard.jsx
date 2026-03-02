@@ -8,7 +8,7 @@
  */
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import ResourceIcon from '../icons/ResourceIcon';
+import ResourceIcon, { WildcardIcon } from '../icons/ResourceIcon';
 import { godColors, shopStyles, base, resourceStyles } from '../../styles/theme';
 
 /**
@@ -31,12 +31,7 @@ function ShopCostDisplay({ cost }) {
               >
                 {amount}
               </span>
-              <span
-                className="text-[9px] font-medium uppercase tracking-wide"
-                style={{ color: base.textMuted }}
-              >
-                *
-              </span>
+              <WildcardIcon size={13} />
             </div>
           );
         }

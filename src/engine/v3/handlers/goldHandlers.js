@@ -93,7 +93,7 @@ function goldIdolResolver(state, handler, _eventData, _options) {
 
 /**
  * Golden Chalice: When you gain gold from an action, gain 1 of any other active resource.
- * For now, picks the first non-gold active color.
+ * Returns a gemSelection decision so the player (or AI) picks which color.
  */
 function goldenChaliceResolver(state, handler, eventData, _options) {
   const resources = eventData.resources || {};
@@ -106,15 +106,22 @@ function goldenChaliceResolver(state, handler, eventData, _options) {
     return { state, log: [], pendingDecisions: [] };
   }
 
-  const activeColors = state.activeColors || ['gold', 'black', 'green', 'yellow'];
-  const nonGold = activeColors.filter(c => c !== 'gold');
-  const chosenColor = nonGold[0] || 'black';
+  const activeGods = state.gods || ['gold', 'black', 'green', 'yellow'];
+  const nonGold = activeGods.filter(c => c !== 'gold');
 
-  const newState = addResourceToPlayer(state, handler.ownerId, chosenColor, 1);
+  // Return a pending decision for the player to choose
   return {
-    state: newState,
-    log: [`Golden Chalice: +1 ${chosenColor}`],
-    pendingDecisions: [],
+    state,
+    log: [],
+    pendingDecisions: [{
+      type: 'gemSelection',
+      sourceId: 'golden_chalice',
+      count: 1,
+      colors: nonGold,
+      title: 'Golden Chalice — choose 1 resource to gain',
+      playerId: handler.ownerId,
+      ownerId: handler.ownerId,
+    }],
   };
 }
 

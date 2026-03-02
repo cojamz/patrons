@@ -11,9 +11,9 @@ import { useGame } from '../../hooks/useGame';
 import { godColors, base } from '../../styles/theme';
 
 const SEGMENTS = [
-  { round: 1, numeral: 'I' },
-  { round: 2, numeral: 'II' },
-  { round: 3, numeral: 'III' },
+  { round: 1, numeral: 'I', workers: 3, label: 'Round 1 — 3 patrons, Tier 1 actions' },
+  { round: 2, numeral: 'II', workers: 4, label: 'Round 2 — 4 patrons, Tier 2 unlocked' },
+  { round: 3, numeral: 'III', workers: 5, label: 'Round 3 — 5 patrons, Tier 3 unlocked' },
 ];
 
 export default function RoundTracker() {
@@ -40,7 +40,7 @@ export default function RoundTracker() {
         Round
       </span>
 
-      {SEGMENTS.map(({ round, numeral }) => {
+      {SEGMENTS.map(({ round, numeral, label }) => {
         const isCompleted = round < currentRound;
         const isCurrent = round === currentRound;
         const isFuture = round > currentRound;
@@ -48,7 +48,8 @@ export default function RoundTracker() {
         return (
           <motion.div
             key={round}
-            className="relative flex items-center justify-center rounded-md"
+            className="relative flex items-center justify-center rounded-md cursor-default"
+            title={`${label}${isCurrent ? ' (current)' : isCompleted ? ' (complete)' : ''}`}
             style={{
               width: '36px',
               height: '24px',

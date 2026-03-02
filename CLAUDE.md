@@ -76,7 +76,8 @@ src/
 │   ├── hooks/
 │   │   ├── useGame.js          # Context consumer hook
 │   │   ├── useAITurns.js       # AI auto-play (atomic place→endTurn)
-│   │   └── useAnimatedValue.js # Number animation hook
+│   │   ├── useAnimatedValue.js # Number animation hook
+│   │   └── useGameEvents.js    # State diff → UI events (deltas, turns, triggers)
 │   ├── styles/
 │   │   ├── theme.js            # God colors, godMeta, base palette, tier/shop/resource styles
 │   │   └── animations.js       # Framer Motion variants
@@ -84,12 +85,12 @@ src/
 │   │   ├── board/              # GameBoard, GodArea (focused/collapsed), ActionSpace, WorkerToken
 │   │   ├── player/             # PlayerPanel (tabs, resources, workers, favor)
 │   │   ├── modals/             # DecisionModals: TargetPlayer, GemSelection, ActionChoice, RoundTransition
-│   │   ├── hud/                # ActionLog, TurnIndicator, RoundTracker, Notifications
+│   │   ├── hud/                # TurnIndicator, RoundTracker, FloatingDeltas, TurnAnnouncement, ActionToast
 │   │   ├── icons/              # GodIcon, ResourceIcon, CardPixelIcon, ChampionIcon, WorkerIcon
 │   │   ├── cards/              # CardMarket, PowerCard
 │   │   └── shop/               # ShopCard, ShopRow
 │
-├── test/engine/v3/             # Test suite (391 tests)
+├── test/engine/v3/             # Test suite (416 tests)
 │   ├── GameEngine.test.js      # Core engine tests
 │   ├── actions.test.js         # Action handler tests
 │   ├── phases.test.js          # Phase transition tests

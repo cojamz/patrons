@@ -6,6 +6,7 @@
  */
 
 import gods from './data/gods.js';
+import { powerCards } from './data/powerCards.js';
 
 // --- Action IDs that cannot be repeated (repeat/copy actions) ---
 const REPEAT_EXCLUDED = new Set([
@@ -19,20 +20,16 @@ const REPEAT_EXCLUDED = new Set([
 
 /**
  * Check if a player has a specific modifier from their champion power cards.
- * modifierType: 'steal_immunity' | 'glory_steal_immunity' | 'repeat_unoccupied' | 'ignore_occupied'
+ * Uses powerCards.js definitions (card.modifiers[].type).
  */
 export function hasModifier(state, playerId, modifierType) {
   const champion = (state.champions || {})[playerId];
   if (!champion || !champion.powerCards) return false;
 
   for (const cardId of champion.powerCards) {
-    const card = findPowerCard(cardId);
-    if (!card) continue;
-    // Map modifier names to power card effect types
-    if (modifierType === 'steal_immunity' && card.effectType === 'protectResources') return true;
-    if (modifierType === 'glory_steal_immunity' && card.effectType === 'protectGlory') return true;
-    if (modifierType === 'repeat_unoccupied' && card.effectType === 'repeatFromUnoccupied') return true;
-    if (modifierType === 'ignore_occupied' && card.effectType === 'ignoreBlocking') return true;
+    const card = powerCards[cardId];
+    if (!card || !card.modifiers) continue;
+    if (card.modifiers.some(mod => mod.type === modifierType)) return true;
   }
   return false;
 }
@@ -68,6 +65,24 @@ export function getAllActions(state) {
  * Filters by tier unlock, occupied spaces, and nullified spaces.
  */
 export function getAvailableActions(state, playerId = null) {
+  // No more actions if worker already placed this turn
+  // (unless The Deft's extra action is available)
+  if (state.workerPlacedThisTurn) {
+    if (playerId) {
+      const deftPlayer = state.players?.find(p => p.id === playerId);
+      const hasDeftExtra = deftPlayer?.effects?.includes('extraActionThisTurn');
+      if (!hasDeftExtra) return [];
+    } else {
+      return [];
+    }
+  }
+
+  // No actions if player has no workers left
+  if (playerId) {
+    const player = state.players?.find(p => p.id === playerId);
+    if (player && player.workersLeft <= 0) return [];
+  }
+
   const round = state.round || 1;
   const allActions = getAllActions(state);
   const occupied = state.occupiedSpaces || {};
@@ -75,12 +90,24 @@ export function getAvailableActions(state, playerId = null) {
 
   const canIgnoreOccupied = playerId && hasModifier(state, playerId, 'ignore_occupied');
 
+  // Get player's total resources for cost checks
+  const player = playerId ? state.players?.find(p => p.id === playerId) : null;
+  const totalResources = player
+    ? Object.values(player.resources || {}).reduce((sum, v) => sum + Math.max(0, v), 0)
+    : Infinity;
+
   return allActions
     .filter(action => action.tier <= round)
     .filter(action => !nullified[action.id])
     .filter(action => {
       if (canIgnoreOccupied) return true;
       return !occupied[action.id];
+    })
+    .filter(action => {
+      // Filter out trade actions the player can't afford
+      if (!action.cost) return true;
+      const anyCost = action.cost.any || 0;
+      return totalResources >= anyCost;
     })
     .map(action => action.id);
 }

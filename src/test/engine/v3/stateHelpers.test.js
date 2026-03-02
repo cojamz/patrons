@@ -290,7 +290,7 @@ describe('placeWorker', () => {
     const state = makeState();
     const result = placeWorker(state, 'gold_collectTribute', 1);
     expect(result.occupiedSpaces.gold_collectTribute).toBe(1);
-    expect(getPlayer(result, 1).workersLeft).toBe(3); // was 4, now 3
+    expect(getPlayer(result, 1).workersLeft).toBe(2); // was 3, now 2
   });
 
   it('sets workerPlacedThisTurn flag', () => {
@@ -308,7 +308,7 @@ describe('placeWorker', () => {
   it('does not affect other players', () => {
     const state = makeState();
     const result = placeWorker(state, 'gold_collectTribute', 1);
-    expect(getPlayer(result, 2).workersLeft).toBe(4);
+    expect(getPlayer(result, 2).workersLeft).toBe(3);
   });
 });
 
@@ -322,7 +322,7 @@ describe('createV3Player', () => {
     expect(player.emoji).toBe('🦊');
     expect(player.isAI).toBe(false);
     expect(player.glory).toBe(0);
-    expect(player.workersLeft).toBe(4);
+    expect(player.workersLeft).toBe(3);
     expect(player.resources).toEqual({ gold: 0, black: 0, green: 0, yellow: 0 });
     expect(player.effects).toEqual([]);
     expect(player.glorySources).toEqual({});

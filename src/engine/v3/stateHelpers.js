@@ -30,6 +30,10 @@ export function addGlory(state, playerId, amount, source) {
 }
 
 export function removeGlory(state, playerId, amount, source) {
+  // Tome of Deeds: glory reduction immunity
+  if (hasModifier(state, playerId, 'glory_reduction_immunity')) {
+    return state;
+  }
   return {
     ...state,
     players: state.players.map(player => {
@@ -50,8 +54,17 @@ export function removeGlory(state, playerId, amount, source) {
 // --- Resource Management ---
 
 export function addResources(state, playerId, resources) {
+  // Check for doubleNextGain effect
+  const player = state.players.find(p => p.id === playerId);
+  const hasDouble = player?.effects?.includes('doubleNextGain');
+
+  // Apply doubling if active
+  const effectiveResources = hasDouble
+    ? Object.fromEntries(Object.entries(resources).map(([c, a]) => [c, a * 2]))
+    : resources;
+
   const gainedResources = {};
-  Object.entries(resources).forEach(([color, amount]) => {
+  Object.entries(effectiveResources).forEach(([color, amount]) => {
     if (amount > 0) gainedResources[color] = amount;
   });
 
@@ -69,21 +82,29 @@ export function addResources(state, playerId, resources) {
       ...prevTurnGains,
       [playerId]: newPlayerGains,
     },
-    players: state.players.map(player => {
-      if (player.id === playerId) {
-        const newResources = { ...player.resources };
-        Object.entries(resources).forEach(([color, amount]) => {
+    players: state.players.map(p => {
+      if (p.id === playerId) {
+        const newResources = { ...p.resources };
+        Object.entries(effectiveResources).forEach(([color, amount]) => {
           newResources[color] = Math.max(0, (newResources[color] || 0) + amount);
         });
+        // Consume the doubleNextGain effect (remove first occurrence)
+        let newEffects = p.effects;
+        if (hasDouble) {
+          newEffects = [...(p.effects || [])];
+          const idx = newEffects.indexOf('doubleNextGain');
+          if (idx >= 0) newEffects.splice(idx, 1);
+        }
         return {
-          ...player,
+          ...p,
           resources: newResources,
-          lastGain: Object.keys(gainedResources).length > 0 ? gainedResources : player.lastGain,
+          lastGain: Object.keys(gainedResources).length > 0 ? gainedResources : p.lastGain,
+          ...(hasDouble ? { effects: newEffects } : {}),
         };
       } else if (Object.keys(gainedResources).length > 0) {
-        return { ...player, lastGain: gainedResources };
+        return { ...p, lastGain: gainedResources };
       }
-      return player;
+      return p;
     }),
   };
 }
@@ -245,6 +266,7 @@ export function createV3GameState({ playerCount, playerNames, godSet, gameMode }
     round: 1,
     turnOrder,
     workerPlacedThisTurn: false,
+    purchaseMadeThisTurn: false,
     workersToPlace: 1,
     actionLog: [],
     gameStarted: true,

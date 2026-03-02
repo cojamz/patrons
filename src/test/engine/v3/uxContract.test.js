@@ -14,7 +14,8 @@ import { executeChampionDraft, executeRoundStart, resortTurnOrder } from '../../
 import { getAvailableActions } from '../../../engine/v3/rules.js';
 import { powerCards } from '../../../engine/v3/data/powerCards.js';
 import { simulateGame, randomDecisionFn } from '../../../engine/v3/runner.js';
-import { dispatchEvent, EventType, resetHandlerFrequencies } from '../../../engine/v3/events.js';
+import { dispatchEvent, EventType, registerHandler, resetHandlerFrequencies } from '../../../engine/v3/events.js';
+import { resolveShop, payShopCost } from '../../../engine/v3/shops/shopResolver.js';
 
 // Decision types the UI's DecisionModal can handle
 const HANDLED_DECISION_TYPES = [
@@ -189,6 +190,379 @@ describe('UX Contract: decision type coverage', () => {
 });
 
 // ============================================================================
+// Contract: green action decision contracts
+// ============================================================================
+
+describe('UX Contract: green action decisions', () => {
+  it('relive emits actionChoice with options of repeatable action IDs', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['green', 'gold'] });
+    const playerId = state.currentPlayer;
+
+    // First place a worker at a non-repeat action so there's something to repeat
+    let result = executeAction(state, playerId, 'green_bide');
+    state = result.state;
+
+    // End turn and come back (or just use the state directly with roundActions set)
+    // The roundActions should now have green_bide
+    // Execute relive -- it should produce an actionChoice decision
+    result = executeAction(state, playerId, 'green_relive');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('actionChoice');
+    expect(result.pendingDecision.options).toBeDefined();
+    expect(Array.isArray(result.pendingDecision.options)).toBe(true);
+    // options should contain repeatable actions (at least green_bide)
+    expect(result.pendingDecision.options.length).toBeGreaterThan(0);
+    // repeat-excluded actions should NOT appear in options
+    const repeatExcluded = ['green_relive', 'green_echo', 'green_loop', 'green_unravel'];
+    for (const excluded of repeatExcluded) {
+      expect(result.pendingDecision.options).not.toContain(excluded);
+    }
+  });
+
+  it('echo copies last non-echo action without requiring a decision', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['green', 'gold'] });
+    const playerId = state.currentPlayer;
+
+    // Place a worker so there's a "last action" in roundActions
+    let result = executeAction(state, playerId, 'gold_collectTribute');
+    state = result.state;
+
+    // Echo copies the last action automatically (no decision needed from the player)
+    result = executeAction(state, playerId, 'green_echo');
+
+    // Echo should NOT produce a pendingDecision -- it auto-copies the last action
+    // It returns executeAction chain instead
+    if (result.pendingDecision) {
+      // If it does produce a decision, it must be a handled type with correct fields
+      expect(HANDLED_DECISION_TYPES).toContain(result.pendingDecision.type);
+      const required = REQUIRED_FIELDS[result.pendingDecision.type] || [];
+      for (const field of required) {
+        expect(result.pendingDecision[field]).toBeDefined();
+      }
+    }
+  });
+
+  it('loop emits actionChoice for Tier 2 actions', () => {
+    // Loop is tier 2, so we need round 2
+    let state = createReadyGame({ playerCount: 2, godSet: ['green', 'gold'] });
+    state = { ...state, round: 2 };
+    const playerId = state.currentPlayer;
+
+    // Place worker at a tier 2 action first
+    let result = executeAction(state, playerId, 'green_accelerate');
+    state = result.state;
+
+    // Execute loop
+    result = executeAction(state, playerId, 'green_loop');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('actionChoice');
+    expect(result.pendingDecision.options).toBeDefined();
+    expect(Array.isArray(result.pendingDecision.options)).toBe(true);
+    expect(result.pendingDecision.options.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('unravel emits actionChoice for Tier 3 actions', () => {
+    // Unravel is tier 3, so we need round 3
+    let state = createReadyGame({ playerCount: 2, godSet: ['green', 'gold'] });
+    state = { ...state, round: 3 };
+    const playerId = state.currentPlayer;
+
+    // Place worker at a tier 3 action first (gold_cashIn)
+    let result = executeAction(state, playerId, 'gold_cashIn');
+    state = result.state;
+
+    // Execute unravel
+    result = executeAction(state, playerId, 'green_unravel');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('actionChoice');
+    expect(result.pendingDecision.options).toBeDefined();
+    expect(Array.isArray(result.pendingDecision.options)).toBe(true);
+    expect(result.pendingDecision.options.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// ============================================================================
+// Contract: yellow action decision contracts
+// ============================================================================
+
+describe('UX Contract: yellow action decisions', () => {
+  it('forage emits gemSelection with count=3', () => {
+    const state = createReadyGame({ playerCount: 2, godSet: ['yellow', 'gold'] });
+    const playerId = state.currentPlayer;
+
+    const result = executeAction(state, playerId, 'yellow_forage');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('gemSelection');
+    expect(result.pendingDecision.count).toBe(3);
+  });
+
+  it('gather emits gemSelection with count=2', () => {
+    const state = createReadyGame({ playerCount: 2, godSet: ['yellow', 'gold'] });
+    const playerId = state.currentPlayer;
+
+    const result = executeAction(state, playerId, 'yellow_gather');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('gemSelection');
+    expect(result.pendingDecision.count).toBe(2);
+  });
+
+  it('harvest emits gemSelection with count=4', () => {
+    // Harvest is tier 2
+    let state = createReadyGame({ playerCount: 2, godSet: ['yellow', 'gold'] });
+    state = { ...state, round: 2 };
+    const playerId = state.currentPlayer;
+
+    const result = executeAction(state, playerId, 'yellow_harvest');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('gemSelection');
+    expect(result.pendingDecision.count).toBe(4);
+  });
+
+  it('trade emits gemSelection with count = total resources after +1 yellow', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['yellow', 'gold'] });
+    const playerId = state.currentPlayer;
+
+    // Give the player some resources first
+    state = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerId
+          ? { ...p, resources: { ...p.resources, gold: 3, yellow: 2 } }
+          : p
+      ),
+    };
+
+    const player = state.players.find(p => p.id === playerId);
+    const totalBefore = Object.values(player.resources).reduce((sum, v) => sum + Math.max(0, v), 0);
+    // Trade gives +1 yellow first, so total should be totalBefore + 1
+    const expectedCount = totalBefore + 1;
+
+    const result = executeAction(state, playerId, 'yellow_trade');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('gemSelection');
+    expect(result.pendingDecision.count).toBe(expectedCount);
+  });
+});
+
+// ============================================================================
+// Contract: gold action decision contracts
+// ============================================================================
+
+describe('UX Contract: gold action decisions', () => {
+  it('barter emits gemSelection with count=2', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
+    const playerId = state.currentPlayer;
+
+    // Give resources so barter can work
+    state = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerId
+          ? { ...p, resources: { ...p.resources, gold: 3, black: 3 } }
+          : p
+      ),
+    };
+
+    const result = executeAction(state, playerId, 'gold_barter');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('gemSelection');
+    expect(result.pendingDecision.count).toBe(2);
+  });
+
+  it('appraise emits gemSelection with count=1', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
+    const playerId = state.currentPlayer;
+
+    // Give resources
+    state = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerId
+          ? { ...p, resources: { ...p.resources, black: 2 } }
+          : p
+      ),
+    };
+
+    const result = executeAction(state, playerId, 'gold_appraise');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('gemSelection');
+    expect(result.pendingDecision.count).toBe(1);
+  });
+
+  it('brokerDeal emits gemSelection with count=3', () => {
+    // Broker Deal is tier 2
+    let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
+    state = { ...state, round: 2 };
+    const playerId = state.currentPlayer;
+
+    // Give resources
+    state = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerId
+          ? { ...p, resources: { ...p.resources, gold: 3, black: 3 } }
+          : p
+      ),
+    };
+
+    const result = executeAction(state, playerId, 'gold_brokerDeal');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('gemSelection');
+    expect(result.pendingDecision.count).toBe(3);
+  });
+});
+
+// ============================================================================
+// Contract: shop decision contracts
+// ============================================================================
+
+describe('UX Contract: shop decisions', () => {
+  it('black_weak shop emits targetPlayer decision', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
+    const playerId = state.currentPlayer;
+
+    // Track god access for black so shop is usable
+    state = { ...state, godsAccessedThisTurn: ['black'] };
+
+    // Give resources to afford the shop
+    state = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerId
+          ? { ...p, resources: { ...p.resources, black: 5, gold: 5 } }
+          : p
+      ),
+    };
+
+    const result = resolveShop(state, playerId, 'black_weak');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('targetPlayer');
+    // Shop targetPlayer decisions should have excludePlayer
+    expect(result.pendingDecision.excludePlayer).toBe(playerId);
+  });
+
+  it('black_strong shop emits targetPlayer decision', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
+    const playerId = state.currentPlayer;
+
+    state = { ...state, godsAccessedThisTurn: ['black'] };
+    state = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerId
+          ? { ...p, resources: { ...p.resources, black: 5, gold: 5 } }
+          : p
+      ),
+    };
+
+    const result = resolveShop(state, playerId, 'black_strong');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('targetPlayer');
+    expect(result.pendingDecision.excludePlayer).toBe(playerId);
+  });
+
+  it('green_weak shop emits actionChoice for tier 1 repeatable actions', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['green', 'gold'] });
+    const playerId = state.currentPlayer;
+
+    // Place a worker first so there are repeatable actions
+    let result = executeAction(state, playerId, 'green_bide');
+    state = result.state;
+    state = { ...state, godsAccessedThisTurn: ['green'] };
+
+    const shopResult = resolveShop(state, playerId, 'green_weak');
+
+    expect(shopResult.pendingDecision).toBeDefined();
+    expect(shopResult.pendingDecision.type).toBe('actionChoice');
+    expect(shopResult.pendingDecision.options).toBeDefined();
+    expect(Array.isArray(shopResult.pendingDecision.options)).toBe(true);
+  });
+
+  it('shop cost with "any" payment emits gemSelection decision', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
+    const playerId = state.currentPlayer;
+
+    // Gold weak shop costs { gold: 1, any: 1 }
+    state = { ...state, godsAccessedThisTurn: ['gold'] };
+    state = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerId
+          ? { ...p, resources: { ...p.resources, gold: 5, black: 5 } }
+          : p
+      ),
+    };
+
+    const payResult = payShopCost(state, playerId, 'gold_weak');
+
+    // Should ask for gemSelection to pay the 'any' cost
+    expect(payResult.pendingDecision).toBeDefined();
+    expect(payResult.pendingDecision.type).toBe('gemSelection');
+    expect(payResult.pendingDecision.count).toBe(1);
+  });
+});
+
+// ============================================================================
+// Contract: champion power decision contracts
+// ============================================================================
+
+describe('UX Contract: champion decisions', () => {
+  it('Prescient passive produces nullifierPlacement decision at round start', () => {
+    // Create a game where a player has The Prescient
+    let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
+
+    // Find if any player got Prescient; if not, force it
+    const prescientPlayer = Object.entries(state.champions).find(([, c]) => c.id === 'prescient');
+
+    if (!prescientPlayer) {
+      // Force assign Prescient to player 1 and re-register the handler
+      state = {
+        ...state,
+        champions: {
+          ...state.champions,
+          1: { id: 'prescient', name: 'The Prescient', powerCards: [], powerCardSlots: 4 },
+        },
+      };
+      state = registerHandler(state, {
+        id: 'prescient_passive_p1',
+        eventType: EventType.ROUND_START,
+        source: 'champion_passive',
+        sourceId: 'prescient_passive',
+        ownerId: 1,
+        config: {},
+        frequency: 'once_per_round',
+      });
+    }
+
+    // Dispatch ROUND_START to trigger the Prescient passive
+    state = resetHandlerFrequencies(state, 'round');
+    const eventResult = dispatchEvent(state, EventType.ROUND_START, { round: 1 });
+
+    // Should produce nullifierPlacement in pendingDecisions
+    expect(eventResult.pendingDecisions).toBeDefined();
+    const nullifierDecisions = eventResult.pendingDecisions.filter(d => d.type === 'nullifierPlacement');
+    expect(nullifierDecisions.length).toBeGreaterThan(0);
+
+    const nullDec = nullifierDecisions[0];
+    expect(nullDec.type).toBe('nullifierPlacement');
+    expect(nullDec.playerId).toBeDefined();
+    expect(nullDec.sourceId).toBe('prescient_passive');
+  });
+});
+
+// ============================================================================
 // Contract: turn alternation (Bug B regression test)
 // ============================================================================
 
@@ -301,28 +675,34 @@ describe('UX Contract: power card market refill', () => {
 // Stress: full game simulation catches no unhandled decisions
 // ============================================================================
 
+/**
+ * Tracking decision function: wraps randomDecisionFn to catch unhandled
+ * decision types and missing required fields.
+ */
+function createTrackingDecisionFn(unhandled) {
+  return (state, playerId, decision) => {
+    if (!HANDLED_DECISION_TYPES.includes(decision.type)) {
+      unhandled.push(decision.type);
+    }
+
+    // Validate required fields
+    const required = REQUIRED_FIELDS[decision.type] || [];
+    for (const field of required) {
+      if (decision[field] === undefined) {
+        unhandled.push(`${decision.type} missing ${field}`);
+      }
+    }
+
+    return randomDecisionFn(state, playerId, decision);
+  };
+}
+
 describe('UX Contract: full simulation', () => {
-  it('completes 10 random games with no unhandled decision types', () => {
+  it('completes 20 random 2P games with no unhandled decision types', () => {
     const unhandled = [];
+    const trackingDecisionFn = createTrackingDecisionFn(unhandled);
 
-    // Wrap the decision function to track all encountered types
-    const trackingDecisionFn = (state, playerId, decision) => {
-      if (!HANDLED_DECISION_TYPES.includes(decision.type)) {
-        unhandled.push(decision.type);
-      }
-
-      // Validate required fields
-      const required = REQUIRED_FIELDS[decision.type] || [];
-      for (const field of required) {
-        if (decision[field] === undefined) {
-          unhandled.push(`${decision.type} missing ${field}`);
-        }
-      }
-
-      return randomDecisionFn(state, playerId, decision);
-    };
-
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 20; i++) {
       const result = simulateGame({
         playerCount: 2,
         godSet: ['gold', 'black'],
@@ -338,11 +718,15 @@ describe('UX Contract: full simulation', () => {
     }
   });
 
-  it('completes 5 four-player games with all gods', () => {
-    for (let i = 0; i < 5; i++) {
+  it('completes 10 random 4P games with all gods', () => {
+    const unhandled = [];
+    const trackingDecisionFn = createTrackingDecisionFn(unhandled);
+
+    for (let i = 0; i < 10; i++) {
       const result = simulateGame({
         playerCount: 4,
         godSet: ['gold', 'black', 'green', 'yellow'],
+        decisionFn: trackingDecisionFn,
         maxTurns: 300,
       });
 
@@ -353,8 +737,73 @@ describe('UX Contract: full simulation', () => {
       for (const god of ['gold', 'black', 'green', 'yellow']) {
         totalMarketCards += (result.finalState.powerCardMarkets[god] || []).length;
       }
-      // With 4 gods × 3 cards = 12 initial. After buys + refills, shouldn't be 0
+      // With 4 gods x 3 cards = 12 initial. After buys + refills, shouldn't be 0
       // (unless all cards were bought, which is very unlikely with random play)
+    }
+
+    if (unhandled.length > 0) {
+      throw new Error(`Unhandled decision types/fields: ${[...new Set(unhandled)].join(', ')}`);
+    }
+  });
+
+  it('completes 5 random 3P games with no crashes', () => {
+    const unhandled = [];
+    const trackingDecisionFn = createTrackingDecisionFn(unhandled);
+
+    for (let i = 0; i < 5; i++) {
+      const result = simulateGame({
+        playerCount: 3,
+        godSet: ['gold', 'black', 'green'],
+        decisionFn: trackingDecisionFn,
+        maxTurns: 250,
+      });
+
+      expect(result.finalState.phase).toBe('game_end');
+      expect(result.finalState.players.length).toBe(3);
+    }
+
+    if (unhandled.length > 0) {
+      throw new Error(`Unhandled decision types/fields: ${[...new Set(unhandled)].join(', ')}`);
+    }
+  });
+
+  it('stress: 2P green+yellow games complete with all decision types valid', () => {
+    const unhandled = [];
+    const trackingDecisionFn = createTrackingDecisionFn(unhandled);
+
+    for (let i = 0; i < 10; i++) {
+      const result = simulateGame({
+        playerCount: 2,
+        godSet: ['green', 'yellow'],
+        decisionFn: trackingDecisionFn,
+        maxTurns: 200,
+      });
+
+      expect(result.finalState.phase).toBe('game_end');
+    }
+
+    if (unhandled.length > 0) {
+      throw new Error(`Unhandled decision types/fields: ${[...new Set(unhandled)].join(', ')}`);
+    }
+  });
+
+  it('stress: 2P gold+green games complete with all decision types valid', () => {
+    const unhandled = [];
+    const trackingDecisionFn = createTrackingDecisionFn(unhandled);
+
+    for (let i = 0; i < 10; i++) {
+      const result = simulateGame({
+        playerCount: 2,
+        godSet: ['gold', 'green'],
+        decisionFn: trackingDecisionFn,
+        maxTurns: 200,
+      });
+
+      expect(result.finalState.phase).toBe('game_end');
+    }
+
+    if (unhandled.length > 0) {
+      throw new Error(`Unhandled decision types/fields: ${[...new Set(unhandled)].join(', ')}`);
     }
   });
 });

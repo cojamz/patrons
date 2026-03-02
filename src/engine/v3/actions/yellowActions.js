@@ -8,13 +8,24 @@
 // --- Helpers (inline for now) ---
 
 function addResources(state, playerId, resources) {
+  const player = state.players.find(p => p.id === playerId);
+  const hasDouble = player?.effects?.includes('doubleNextGain');
+  const effective = hasDouble
+    ? Object.fromEntries(Object.entries(resources).map(([c, a]) => [c, a * 2]))
+    : resources;
   const players = state.players.map(p => {
     if (p.id !== playerId) return p;
     const newResources = { ...p.resources };
-    Object.entries(resources).forEach(([color, amount]) => {
+    Object.entries(effective).forEach(([color, amount]) => {
       newResources[color] = (newResources[color] || 0) + amount;
     });
-    return { ...p, resources: newResources, lastGain: { ...resources } };
+    let newEffects = p.effects;
+    if (hasDouble) {
+      newEffects = [...(p.effects || [])];
+      const idx = newEffects.indexOf('doubleNextGain');
+      if (idx >= 0) newEffects.splice(idx, 1);
+    }
+    return { ...p, resources: newResources, lastGain: { ...effective }, ...(hasDouble ? { effects: newEffects } : {}) };
   });
   return { ...state, players };
 }
@@ -100,8 +111,9 @@ export function bless(state, playerId) {
 
 /** trade: +1 yellow, trade ALL your resources for new ones (same total count) */
 export function trade(state, playerId, gods, decisions = {}) {
-  // Always gain +1 yellow first
-  let newState = addResources(state, playerId, { yellow: 1 });
+  // Skip resource gain on re-entry (_continued means state already has the gain)
+  let newState = decisions._continued ? state : addResources(state, playerId, { yellow: 1 });
+  const logPrefix = decisions._continued ? [] : [`+1 yellow`];
   const player = getPlayer(newState, playerId);
 
   // Count total resources (after gaining +1 yellow)
@@ -126,7 +138,7 @@ export function trade(state, playerId, gods, decisions = {}) {
   const selection = decisions.gemSelection;
   const total = Object.values(selection).reduce((sum, v) => sum + v, 0);
   if (total !== totalResources) {
-    return { state: newState, log: [`+1 yellow`, `Invalid selection: must distribute exactly ${totalResources} resources`] };
+    return { state: newState, log: [...logPrefix, `Invalid selection: must distribute exactly ${totalResources} resources`] };
   }
 
   // Remove all current resources
@@ -135,7 +147,7 @@ export function trade(state, playerId, gods, decisions = {}) {
   // Add the new distribution
   newState = addResources(newState, playerId, selection);
 
-  return { state: newState, log: [`+1 yellow`, `Traded all resources for ${formatResources(selection)}`] };
+  return { state: newState, log: [...logPrefix, `Traded all resources for ${formatResources(selection)}`] };
 }
 
 /** harvest: Gain 4 resources of any colors */

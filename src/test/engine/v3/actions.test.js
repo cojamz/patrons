@@ -97,12 +97,12 @@ describe('Gold Actions', () => {
   });
 
   describe('meditate_on_wealth', () => {
-    it('gives +3 gold and adds skipNextAction effect', () => {
+    it('gives +3 gold and adds skip to skippedTurns', () => {
       const state = makeState();
       const result = routeAction(state, 'p1', 'gold_meditateOnWealth', GODS);
       const p1 = getPlayer(result.state, 'p1');
       expect(p1.resources.gold).toBe(3);
-      expect(p1.effects).toContain('skipNextAction');
+      expect(result.state.skippedTurns['p1']).toBe(1);
     });
   });
 
@@ -201,7 +201,7 @@ describe('Black Actions', () => {
           { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 5, glorySources: {}, effects: [], lastGain: {} },
         ],
         champions: {
-          p2: { id: 'test', powerCards: ['black_tomeOfDeeds'], powerCardSlots: 4 },
+          p2: { id: 'test', powerCards: ['tome_of_deeds'], powerCardSlots: 4 },
         },
       });
       const result = routeAction(state, 'p1', 'black_pickpocket', GODS, { targetPlayer: 'p2' });
@@ -260,7 +260,7 @@ describe('Black Actions', () => {
           { id: 'p2', resources: { gold: 3, black: 2, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
         ],
         champions: {
-          p2: { id: 'test', powerCards: ['gold_goldVault'], powerCardSlots: 4 },
+          p2: { id: 'test', powerCards: ['gold_vault'], powerCardSlots: 4 },
         },
       });
       const result = routeAction(state, 'p1', 'black_ransack', GODS, {
@@ -401,33 +401,32 @@ describe('Green Actions', () => {
   });
 
   describe('loop', () => {
-    it('returns pendingDecision for 2 action choices', () => {
+    it('returns pendingDecision for 1 Tier 2 action choice', () => {
       const state = makeState({
+        round: 2,
         roundActions: [
-          { playerId: 'p1', actionId: 'gold_collectTribute' },
-          { playerId: 'p1', actionId: 'black_skulk' },
+          { playerId: 'p1', actionId: 'green_accelerate' },
         ],
       });
       const result = routeAction(state, 'p1', 'green_loop', GODS);
       expect(result.pendingDecision).toBeDefined();
-      expect(result.pendingDecision.count).toBe(2);
+      expect(result.pendingDecision.type).toBe('actionChoice');
       expect(getPlayer(result.state, 'p1').resources.green).toBe(1);
     });
 
-    it('returns executeAction with chained actions', () => {
+    it('returns executeAction for chosen Tier 2 action', () => {
       const state = makeState({
+        round: 2,
         roundActions: [
-          { playerId: 'p1', actionId: 'gold_collectTribute' },
-          { playerId: 'p1', actionId: 'black_skulk' },
+          { playerId: 'p1', actionId: 'green_accelerate' },
         ],
       });
       const result = routeAction(state, 'p1', 'green_loop', GODS, {
-        actionChoices: ['gold_collectTribute', 'black_skulk'],
+        actionChoice: 'green_accelerate',
       });
       expect(result.executeAction).toBeDefined();
-      expect(result.executeAction.actionId).toBe('gold_collectTribute');
-      expect(result.executeAction.chainedActions).toHaveLength(1);
-      expect(result.executeAction.chainedActions[0].actionId).toBe('black_skulk');
+      expect(result.executeAction.actionId).toBe('green_accelerate');
+      expect(result.executeAction.chainedActions).toBeUndefined();
     });
   });
 
@@ -442,17 +441,16 @@ describe('Green Actions', () => {
   });
 
   describe('unravel', () => {
-    it('returns pendingDecision for 3 action choices', () => {
+    it('returns pendingDecision for 1 Tier 3 action choice', () => {
       const state = makeState({
+        round: 3,
         roundActions: [
-          { playerId: 'p1', actionId: 'gold_collectTribute' },
-          { playerId: 'p1', actionId: 'black_skulk' },
-          { playerId: 'p1', actionId: 'yellow_bless' },
+          { playerId: 'p1', actionId: 'gold_cashIn' },
         ],
       });
       const result = routeAction(state, 'p1', 'green_unravel', GODS);
       expect(result.pendingDecision).toBeDefined();
-      expect(result.pendingDecision.count).toBe(3);
+      expect(result.pendingDecision.type).toBe('actionChoice');
     });
   });
 });
@@ -619,5 +617,56 @@ describe('routeAction', () => {
     expect(result.log[0]).toContain('Max recursion depth');
     // State unchanged at max depth
     expect(getPlayer(result.state, 'p1').resources.gold).toBe(0);
+  });
+});
+
+// =========================================================================
+// DOUBLE NEXT GAIN (yellow_weak shop integration)
+// =========================================================================
+
+describe('doubleNextGain effect', () => {
+  it('doubles gold action gain and is consumed', () => {
+    const state = makeState({
+      players: [
+        { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: ['doubleNextGain'], workersLeft: 4, lastGain: {}, extraTurns: 0 },
+        { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], workersLeft: 4, lastGain: {}, extraTurns: 0 },
+      ],
+    });
+    // gold_collectTribute normally gives +2 gold, should give +4
+    const result = routeAction(state, 'p1', 'gold_collectTribute', GODS);
+    expect(getPlayer(result.state, 'p1').resources.gold).toBe(4);
+    expect(getPlayer(result.state, 'p1').effects).not.toContain('doubleNextGain');
+  });
+
+  it('doubles green action gain and is consumed', () => {
+    const state = makeState({
+      players: [
+        { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: ['doubleNextGain'], workersLeft: 4, lastGain: {}, extraTurns: 0 },
+        { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], workersLeft: 4, lastGain: {}, extraTurns: 0 },
+      ],
+    });
+    // green_bide normally gives +3 green, should give +6
+    const result = routeAction(state, 'p1', 'green_bide', GODS);
+    expect(getPlayer(result.state, 'p1').resources.green).toBe(6);
+    expect(getPlayer(result.state, 'p1').effects).not.toContain('doubleNextGain');
+  });
+
+  it('doubles black action gain and is consumed', () => {
+    const state = makeState({
+      players: [
+        { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: ['doubleNextGain'], workersLeft: 4, lastGain: {}, extraTurns: 0 },
+        { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], workersLeft: 4, lastGain: {}, extraTurns: 0 },
+      ],
+    });
+    // black_skulk normally gives +3 black, should give +6
+    const result = routeAction(state, 'p1', 'black_skulk', GODS);
+    expect(getPlayer(result.state, 'p1').resources.black).toBe(6);
+    expect(getPlayer(result.state, 'p1').effects).not.toContain('doubleNextGain');
+  });
+
+  it('does not double when effect is not present', () => {
+    const state = makeState();
+    const result = routeAction(state, 'p1', 'gold_collectTribute', GODS);
+    expect(getPlayer(result.state, 'p1').resources.gold).toBe(2);
   });
 });

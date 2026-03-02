@@ -54,7 +54,7 @@ describe('Phase constants', () => {
 
 describe('ACTIONS_PER_ROUND', () => {
   it('defines correct worker counts', () => {
-    expect(ACTIONS_PER_ROUND).toEqual([4, 5, 6]);
+    expect(ACTIONS_PER_ROUND).toEqual([3, 5, 6]);
   });
 });
 
@@ -66,33 +66,35 @@ describe('executeChampionDraft', () => {
     const result = executeChampionDraft(state);
     expect(result.pendingDecision).toBeDefined();
     expect(result.pendingDecision.type).toBe('championChoice');
-    expect(result.pendingDecision.playerId).toBe(1); // first drafter
+    // Last place drafts first (reverse order): player 3 picks first in a 3-player game
+    expect(result.pendingDecision.playerId).toBe(3);
     expect(result.pendingDecision.options.length).toBeGreaterThan(0);
   });
 
   it('assigns champion when choice provided', () => {
     const state = makeState();
+    // Player 3 drafts first (last place)
     const result = executeChampionDraft(state, { championId: 'prescient' });
-    expect(result.state.champions[1]).toBeDefined();
-    expect(result.state.champions[1].id).toBe('prescient');
-    expect(result.state.champions[1].powerCards).toEqual([]);
+    expect(result.state.champions[3]).toBeDefined();
+    expect(result.state.champions[3].id).toBe('prescient');
+    expect(result.state.champions[3].powerCards).toEqual([]);
     expect(result.state.draftIndex).toBe(1);
   });
 
-  it('follows draft order (1 champion per player)', () => {
+  it('follows draft order — last place drafts first', () => {
     let state = makeState({ playerCount: 2 });
 
-    // Draft order for 2 players: [1, 2] — each player picks exactly 1 champion
-    // Player 1 picks first
+    // Draft order for 2 players: [2, 1] — last place picks first
+    // Player 2 picks first
     let result = executeChampionDraft(state);
-    expect(result.pendingDecision.playerId).toBe(1);
+    expect(result.pendingDecision.playerId).toBe(2);
 
     result = executeChampionDraft(state, { championId: 'prescient' });
     state = result.state;
 
-    // Player 2 picks second
+    // Player 1 picks second
     result = executeChampionDraft(state);
-    expect(result.pendingDecision.playerId).toBe(2);
+    expect(result.pendingDecision.playerId).toBe(1);
 
     result = executeChampionDraft(state, { championId: 'ambitious' });
     state = result.state;
@@ -103,6 +105,7 @@ describe('executeChampionDraft', () => {
 
   it('excludes already-taken champions from options', () => {
     let state = makeState({ playerCount: 2 });
+    // Player 2 drafts first (last place)
     let result = executeChampionDraft(state, { championId: 'prescient' });
     state = result.state;
 
@@ -142,8 +145,8 @@ describe('executeRoundStart', () => {
     state = { ...state, phase: Phase.ROUND_START, round: 1 };
     const result = executeRoundStart(state);
     expect(result.state.occupiedSpaces).toEqual({});
-    expect(result.state.players[0].workersLeft).toBe(4); // Round 1: 4 workers
-    expect(result.state.players[1].workersLeft).toBe(4);
+    expect(result.state.players[0].workersLeft).toBe(3); // Round 1: 3 workers
+    expect(result.state.players[1].workersLeft).toBe(3);
   });
 
   it('transitions to ACTION_PHASE', () => {

@@ -22,17 +22,25 @@ function ResourceGem({ type, count }) {
   const meta = godMeta[type];
   const tooltipText = meta ? `${meta.name}, ${meta.title}` : type;
 
+  // Flash background on change
+  const flashColor = direction === 'up'
+    ? `rgba(${hexToRgb(style.color)}, 0.25)`
+    : direction === 'down'
+      ? 'rgba(225, 29, 72, 0.2)'
+      : null;
+
   return (
-    <div
-      className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-opacity duration-200"
+    <motion.div
+      className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg"
       title={tooltipText}
-      style={{
+      animate={{
         opacity: hasAny ? 1 : 0.35,
-        background: hasAny ? `rgba(${hexToRgb(style.color)}, 0.08)` : 'transparent',
+        background: flashColor || (hasAny ? `rgba(${hexToRgb(style.color)}, 0.08)` : 'rgba(0,0,0,0)'),
       }}
+      transition={{ duration: direction ? 0.15 : 0.4 }}
     >
       <div className="relative">
-        <ResourceIcon type={type} size={22} glow={hasAny} />
+        <ResourceIcon type={type} size={26} glow={hasAny} />
         {/* Ambient glow behind gem when count > 0 */}
         {hasAny && (
           <div
@@ -46,7 +54,7 @@ function ResourceGem({ type, count }) {
         )}
       </div>
       <motion.span
-        className="text-sm font-semibold tabular-nums min-w-[1.25rem] text-center"
+        className="text-base font-semibold tabular-nums min-w-[1.25rem] text-center"
         animate={
           direction === 'up'
             ? counterPop.positive
@@ -60,7 +68,7 @@ function ResourceGem({ type, count }) {
       >
         {displayCount}
       </motion.span>
-    </div>
+    </motion.div>
   );
 }
 
@@ -87,7 +95,7 @@ export default function ResourceDisplay({ resources, activeGods }) {
     : RESOURCE_ORDER;
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1.5">
       {visibleResources.map(type => (
         <ResourceGem
           key={type}

@@ -10,14 +10,102 @@
  *   players     — array of player objects from game state
  *   onContinue  — called when player clicks to advance
  */
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import ResourceIcon from '../icons/ResourceIcon';
 import WorkerIcon from '../icons/WorkerIcon';
 import { godColors, playerColors, base, godMeta } from '../../styles/theme';
 import { roundTransition, cardReveal, staggerContainer } from '../../styles/animations';
+import { FAVOR_SOURCE_LABELS } from '../player/PlayerPanel';
 
 const ROUNDS_TOTAL = 3;
+
+function FavorCell({ player, isLeader, gloryDelta }) {
+  const [expanded, setExpanded] = useState(false);
+  const sourceEntries = player.glorySources
+    ? Object.entries(player.glorySources)
+        .filter(([, v]) => v !== 0)
+        .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+    : [];
+
+  return (
+    <div className="w-20 text-right flex flex-col items-end">
+      <span
+        className="text-base font-bold tabular-nums"
+        style={{
+          color: isLeader ? godColors.gold.text : base.textPrimary,
+          cursor: sourceEntries.length > 0 ? 'pointer' : 'default',
+        }}
+        onClick={() => sourceEntries.length > 0 && setExpanded(!expanded)}
+      >
+        {player.glory ?? 0}
+        {sourceEntries.length > 0 && (
+          <span style={{ fontSize: '9px', marginLeft: '3px', opacity: 0.4 }}>
+            {expanded ? '▴' : '▾'}
+          </span>
+        )}
+      </span>
+      {gloryDelta !== undefined && gloryDelta !== 0 && (
+        <span
+          className="text-[10px] font-semibold tabular-nums"
+          style={{
+            color: gloryDelta > 0 ? godColors.gold.light : 'rgba(225, 29, 72, 0.8)',
+          }}
+        >
+          {gloryDelta > 0 ? '+' : ''}{gloryDelta} this round
+        </span>
+      )}
+
+      {/* Inline accounting breakdown */}
+      <AnimatePresence>
+        {expanded && sourceEntries.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              overflow: 'hidden',
+              marginTop: '4px',
+              width: '180px',
+              textAlign: 'left',
+            }}
+          >
+            <div style={{
+              padding: '6px 8px',
+              borderRadius: '6px',
+              background: 'rgba(0, 0, 0, 0.5)',
+              border: `1px solid ${godColors.gold.primary}30`,
+            }}>
+              {sourceEntries.map(([source, amount]) => (
+                <div
+                  key={source}
+                  style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    fontSize: '10px', lineHeight: 1.6,
+                  }}
+                >
+                  <span style={{ color: base.textMuted }}>
+                    {FAVOR_SOURCE_LABELS[source] || source.replace(/_/g, ' ')}
+                  </span>
+                  <span
+                    style={{
+                      fontWeight: 700, fontVariantNumeric: 'tabular-nums',
+                      color: amount > 0 ? '#4ade80' : '#fb7185',
+                      marginLeft: '8px', flexShrink: 0,
+                    }}
+                  >
+                    {amount > 0 ? `+${amount}` : amount}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function RoundTransition({ round, players, onContinue, activeGods, gloryDeltas, preRoundGlory }) {
   const isGameEnd = round >= ROUNDS_TOTAL;
@@ -114,7 +202,7 @@ export default function RoundTransition({ round, players, onContinue, activeGods
               <span className="w-8">#</span>
               <span className="flex-1">Player</span>
               <span className="w-20 text-right">Favor</span>
-              <span className="w-32 text-right">Resources</span>
+              <span className="w-32 text-right">Blessings</span>
             </div>
 
             {/* Player rows */}
@@ -165,29 +253,12 @@ export default function RoundTransition({ round, players, onContinue, activeGods
                     )}
                   </div>
 
-                  {/* Favor + delta */}
-                  <div className="w-20 text-right flex flex-col items-end">
-                    <span
-                      className="text-base font-bold tabular-nums"
-                      style={{
-                        color: isLeader ? godColors.gold.text : base.textPrimary,
-                      }}
-                    >
-                      {player.glory ?? 0}
-                    </span>
-                    {gloryDeltas && gloryDeltas[player.id] !== undefined && gloryDeltas[player.id] !== 0 && (
-                      <span
-                        className="text-[10px] font-semibold tabular-nums"
-                        style={{
-                          color: gloryDeltas[player.id] > 0
-                            ? godColors.gold.light
-                            : 'rgba(225, 29, 72, 0.8)',
-                        }}
-                      >
-                        {gloryDeltas[player.id] > 0 ? '+' : ''}{gloryDeltas[player.id]} this round
-                      </span>
-                    )}
-                  </div>
+                  {/* Favor + delta + hover accounting */}
+                  <FavorCell
+                    player={player}
+                    isLeader={isLeader}
+                    gloryDelta={gloryDeltas?.[player.id]}
+                  />
 
                   {/* Resource breakdown */}
                   <div className="w-32 flex items-center justify-end gap-1.5">

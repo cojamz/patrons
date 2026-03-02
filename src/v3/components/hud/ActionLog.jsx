@@ -23,13 +23,11 @@ function getBorderColor(entry) {
   return 'rgba(255, 255, 255, 0.1)';
 }
 
-/** Replace "worker(s)" with "envoy(s)" for display */
+/** Normalize legacy terminology for display */
 function formatEntry(entry) {
   return entry
-    .replace(/\bworkers\b/gi, 'patrons')
-    .replace(/\bworker\b/gi, 'patron')
-    .replace(/\benvoys\b/gi, 'patrons')
-    .replace(/\benvoy\b/gi, 'patron');
+    .replace(/\benvoys\b/gi, 'workers')
+    .replace(/\benvoy\b/gi, 'worker');
 }
 
 export default function ActionLog({ log }) {

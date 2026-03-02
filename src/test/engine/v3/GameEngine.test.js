@@ -644,7 +644,28 @@ describe('resolveDecision', () => {
 // =========================================================================
 
 describe('integration', () => {
-  it('full turn: place worker, action, shop, buy card, end turn', () => {
+  it('full turn: place worker, action, shop, end turn', () => {
+    let state = createActionPhaseState();
+    // Give player some extra gold for affordability
+    state = addResources(state, 1, { gold: 10 });
+
+    // Step 1: Execute action at gold
+    let result = executeAction(state, 1, 'gold_collectTribute');
+    state = result.state;
+    expect(getPlayer(state, 1).resources.gold).toBe(12);
+
+    // Step 2: Use gold shop (one purchase per turn)
+    result = executeShop(state, 1, 'gold_weak', { gemSelection: { gold: 1 } });
+    state = result.state;
+    expect(state.purchaseMadeThisTurn).toBe(true);
+
+    // Step 3: End turn
+    result = endTurn(state);
+    state = result.state;
+    expect(state.currentPlayer).toBe(2);
+  });
+
+  it('full turn: place worker, action, buy power card, end turn', () => {
     let state = createActionPhaseState();
     // Ensure gold market has cards
     state = {
@@ -660,21 +681,39 @@ describe('integration', () => {
     // Step 1: Execute action at gold
     let result = executeAction(state, 1, 'gold_collectTribute');
     state = result.state;
-    expect(getPlayer(state, 1).resources.gold).toBe(12);
 
-    // Step 2: Use gold shop
-    result = executeShop(state, 1, 'gold_weak', { gemSelection: { gold: 1 } });
-    state = result.state;
-
-    // Step 3: Buy power card
+    // Step 2: Buy power card (one purchase per turn)
     result = buyPowerCard(state, 1, 'golden_scepter', { gemSelection: { gold: 1 } });
     state = result.state;
     expect(state.champions[1].powerCards).toContain('golden_scepter');
+    expect(state.purchaseMadeThisTurn).toBe(true);
 
-    // Step 4: End turn
+    // Step 3: End turn
     result = endTurn(state);
     state = result.state;
     expect(state.currentPlayer).toBe(2);
+  });
+
+  it('one purchase per turn: shop blocks power card buy', () => {
+    let state = createActionPhaseState();
+    state = {
+      ...state,
+      powerCardMarkets: {
+        ...state.powerCardMarkets,
+        gold: ['golden_scepter', 'gold_idol', 'golden_chalice'],
+      },
+    };
+    state = addResources(state, 1, { gold: 10 });
+
+    // Execute action then use shop
+    let result = executeAction(state, 1, 'gold_collectTribute');
+    state = result.state;
+    result = executeShop(state, 1, 'gold_weak', { gemSelection: { gold: 1 } });
+    state = result.state;
+
+    // Now try to buy power card — should be blocked
+    result = buyPowerCard(state, 1, 'golden_scepter', { gemSelection: { gold: 1 } });
+    expect(result.state.champions[1].powerCards).not.toContain('golden_scepter');
   });
 
   it('Golden Scepter triggers when owner gains gold from action', () => {
@@ -756,6 +795,8 @@ describe('integration', () => {
 
   it('getAvailableActions filters by tier and occupied spaces', () => {
     let state = createActionPhaseState();
+    // Give player resources so trade actions are available
+    state = { ...state, players: state.players.map(p => p.id === 1 ? { ...p, resources: { gold: 5, black: 5, green: 5, yellow: 5 } } : p) };
     const actions = getAvailableActions(state, 1);
 
     // Round 1 — only tier 1 actions (4 per god x 4 gods = 16)

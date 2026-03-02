@@ -57,7 +57,7 @@ function favoredPassiveResolver(state, handler, eventData, _options) {
     return { state, log: [], pendingDecisions: [] };
   }
 
-  const shopColor = eventData.shopColor || 'gold';
+  const shopColor = eventData.godColor || 'gold';
   const newState = addResourceToPlayer(state, handler.ownerId, shopColor, 1);
   return {
     state: newState,

@@ -80,8 +80,8 @@ export default function ActionChoice({ decision, onSubmit, onCancel }) {
   };
 
   const title = isMulti
-    ? (decision.title || `Choose ${maxCount} action${maxCount !== 1 ? 's' : ''} to repeat`)
-    : (decision.title || 'Choose an action');
+    ? (decision.title || `Choose ${maxCount} action${maxCount !== 1 ? 's' : ''} to repeat`).replace(/\bGlory\b/g, 'Favor')
+    : (decision.title || 'Choose an action').replace(/\bGlory\b/g, 'Favor');
 
   return (
     <Modal

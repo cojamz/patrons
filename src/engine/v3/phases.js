@@ -14,6 +14,7 @@ import { ACTIONS_PER_ROUND, ROUNDS, CARDS_DEALT_PER_GOD } from './data/constants
 import champions from './data/champions.js';
 import { createResult, createDecisionRequest } from './stateHelpers.js';
 import { registerHandler, EventType } from './events.js';
+import { getAvailableActions } from './rules.js';
 
 // Map champion id to event handler registration info
 const CHAMPION_HANDLER_MAP = {
@@ -177,7 +178,9 @@ export function executeRoundStart(state) {
     phase: Phase.ACTION_PHASE,
     occupiedSpaces: {},
     nullifiedSpaces: {},
+    decisionQueue: [],  // Clear stale decisions from previous round
     workerPlacedThisTurn: false,
+    purchaseMadeThisTurn: false,
     workersToPlace: 1,
     playersOutOfWorkers: [],
     skippedTurns: {},
@@ -285,8 +288,12 @@ export function advanceTurn(state) {
     // Check if this player should be skipped
     const skipCount = (state.skippedTurns[candidateId] || 0);
     const outOfWorkers = candidate && candidate.workersLeft <= 0;
+    // Also skip if player has workers but all action spaces are full.
+    // Check with workerPlacedThisTurn=false since the candidate's turn starts fresh.
+    const noActions = !outOfWorkers && candidate && candidate.workersLeft > 0
+      && getAvailableActions({ ...state, workerPlacedThisTurn: false }, candidateId).length === 0;
 
-    if (!outOfWorkers && skipCount <= 0) {
+    if (!outOfWorkers && !noActions && skipCount <= 0) {
       // Found eligible player
       return resetTurnState({
         ...state,
@@ -296,15 +303,15 @@ export function advanceTurn(state) {
     }
 
     // Consume a skip if they have one
-    if (skipCount > 0 && !outOfWorkers) {
+    if (skipCount > 0 && !outOfWorkers && !noActions) {
       const newSkipped = { ...state.skippedTurns };
       newSkipped[candidateId] = skipCount - 1;
       if (newSkipped[candidateId] <= 0) delete newSkipped[candidateId];
       state = { ...state, skippedTurns: newSkipped };
     }
 
-    // Track out-of-workers players
-    if (outOfWorkers && !(state.playersOutOfWorkers || []).includes(candidateId)) {
+    // Track players who can't act (out of workers or no available actions)
+    if ((outOfWorkers || noActions) && !(state.playersOutOfWorkers || []).includes(candidateId)) {
       state = {
         ...state,
         playersOutOfWorkers: [...(state.playersOutOfWorkers || []), candidateId],
@@ -364,6 +371,7 @@ function resetTurnState(state) {
   return {
     ...state,
     workerPlacedThisTurn: false,
+    purchaseMadeThisTurn: false,
     turnResourceGains: {},
     godsAccessedThisTurn: [],
     turnActionsThisTurn: [],
@@ -372,13 +380,13 @@ function resetTurnState(state) {
 
 /**
  * Build champion draft order for N players.
- * Each player gets exactly 1 champion pick.
- * e.g., 3 players: [1, 2, 3]
+ * Last place drafts first (reverse of turn order) — catch-up mechanic.
+ * e.g., 3 players: [3, 2, 1]
  */
 function buildSnakeDraftOrder(playerCount) {
-  const forward = [];
-  for (let i = 1; i <= playerCount; i++) {
-    forward.push(i);
+  const reverse = [];
+  for (let i = playerCount; i >= 1; i--) {
+    reverse.push(i);
   }
-  return forward;
+  return reverse;
 }

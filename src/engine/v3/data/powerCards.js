@@ -94,8 +94,8 @@ export const powerCards = {
     name: 'Tome of Deeds',
     god: 'black',
     cost: { black: 2, any: 1 },
-    description: 'Your Favor cannot be stolen',
-    modifiers: [{ type: 'glory_steal_immunity' }],
+    description: 'Your Favor cannot be reduced',
+    modifiers: [{ type: 'glory_reduction_immunity' }],
   },
   obsidian_coin: {
     id: 'obsidian_coin',

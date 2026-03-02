@@ -27,10 +27,8 @@ function getAccentColor(entry) {
 
 function formatEntry(entry) {
   return entry
-    .replace(/\bworkers\b/gi, 'patrons')
-    .replace(/\bworker\b/gi, 'patron')
-    .replace(/\benvoys\b/gi, 'patrons')
-    .replace(/\benvoy\b/gi, 'patron');
+    .replace(/\benvoys\b/gi, 'workers')
+    .replace(/\benvoy\b/gi, 'worker');
 }
 
 export default function Notifications({ log }) {

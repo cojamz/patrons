@@ -4,6 +4,71 @@ All notable changes to Patrons are documented here.
 
 ---
 
+## [2026-03-02] - UX Polish Sprint — Visual Feedback & Player Clarity
+
+### Added
+- **`useGameEvents` hook** (`src/v3/hooks/useGameEvents.js`): State diff engine that detects resource changes, turn changes, worker placements, favor deltas, power card triggers, and new log entries. Powers all visual feedback components. Events auto-expire after 2.5s.
+- **Floating resource deltas** (`FloatingDeltas.jsx`): God-colored "+2" / "-1" labels float upward from the resource counter when values change. Positioned above the Blessings section in PlayerPanel.
+- **Turn change announcement** (`TurnAnnouncement.jsx`): Cinematic center-screen banner showing "Your Turn" or "Player's Turn" on turn boundaries. Portaled to body, auto-dismisses (1.6s human, 0.9s AI). Worker icon with breathing glow.
+- **Action result toast** (`ActionToast.jsx`): Brief banners below the top HUD showing latest game log entries. Stacks up to 3, god-colored accent pips, auto-dismisses with slide animation.
+- **Last-placed worker glow**: Most recently placed worker token gets a breathing god-colored glow (2.5s cycle). Tracked via `game.roundActions` last entry. Passes `isLastPlaced` through GodArea → ActionSpace → WorkerToken.
+- **Power card trigger flash**: When a power card activates (detected via log entry matching), the PowerCardSlot plays a scale pulse (1→1.08→1) with expanding god-colored box-shadow.
+- **Resource pulse on change**: ResourceDisplay gems now flash with a colored background when values change — gold for gains, red for losses. Builds on existing `useAnimatedValue` direction detection.
+
+### Changed
+- **TurnIndicator → Phase Breadcrumb**: Restructured from flat labels to flowing breadcrumb: `Round 1 › Action Phase › Player's Turn (3) › Choose Target`. Active segment highlighted, decision crumb pulses amber. Chevron separators replace pipe dividers. Contextual hint preserved below breadcrumb.
+
+### Technical Details
+- 416 tests still passing (no engine changes)
+- New files: `useGameEvents.js`, `FloatingDeltas.jsx`, `TurnAnnouncement.jsx`, `ActionToast.jsx`
+- Modified: `TurnIndicator.jsx`, `WorkerToken.jsx`, `ActionSpace.jsx`, `GodArea.jsx`, `PowerCardSlot.jsx`, `ResourceDisplay.jsx`, `PlayerPanel.jsx`, `App.jsx`
+- Z-index tiers: deltas=z-30, toast=z-45, announcement=z-55 (below modals at z-50+)
+- `useGameEvents` uses shallow ref comparison — no GameProvider changes needed
+- Card trigger detection: scans new log entries for known power card names
+
+---
+
+## [2026-03-02] - Ship Single-Player Sprint
+
+### Fixed
+- **Handler frequency reset**: `resetHandlerFrequencies` called before `dispatchEvent` in GameProvider (was after, making `once_per_round` handlers fire every time)
+- **AI turns fully functional**: handles all decision types (gem selection, target player, steal gems, action choice, nullifier placement, resource redistribution), never cancels (always submits best-effort answer)
+- **Cancel during chained decisions**: `preDecisionSnapshot` preserved from original state instead of being overwritten at each chained decision step
+- **Abort mechanism**: action handlers return `{ abort: true }` when no valid targets; engine saves pre-placement state and reverts worker placement
+- **Relive tier filter**: only allows repeating Tier 1 actions (was allowing all tiers)
+- **Double next gain shop**: all 4 action handler files (gold, black, green, yellow) now check for `doubleNextGain` effect, apply doubling, and consume it
+- **Tome of Deeds**: changed from "cannot be stolen" to "cannot be reduced" — blocks ALL glory loss via `glory_reduction_immunity` modifier in every `removeGlory` function
+- **Golden Scepter**: partially investigated (fires twice during echo — two RESOURCE_GAINED events), not yet resolved
+
+### Added
+- **AI shop + power card purchasing**: evaluates both shops and power cards after placing worker, picks best by priority (cards=7, strong/vp shops=5, weak shops=3)
+- **Purchase limit enforcement**: one shop OR power card per turn, from accessed god only (`purchaseMadeThisTurn` flag)
+- **Champion draft order**: last place drafts first (reversed from `[1,2,3]` to `[3,2,1]`)
+- **Rules interstitial**: 4-slide tutorial overlay before game setup (place workers, build engine, earn favor, 3 rounds)
+- **Favor accounting tooltip**: click-to-expand breakdown in RoundTransition, hover tooltip in PlayerPanel with source labels
+- **Dynamic echo text**: echo/copy actions show actual last action + player name instead of static description
+- **VP condition banner**: prominent gold gradient pill with glow on both focused and collapsed god views
+- **Section hint tooltips**: `?` icon on Shops/Powers sections with portal tooltip explaining purchase rules
+- **Turn order display**: shows upcoming 4 turns computed via snake draft algorithm
+- 6 new tests (doubleNextGain integration, purchase limit, draft order) — 416 total
+
+### Changed
+- **Shops visual redesign**: row/list layout with colored left border (was card-style, too similar to powers)
+- **Powers visual redesign (collapsed)**: god-glow cards with circular icon badges, distinct from shops
+- **Occupied action spaces**: use god colors instead of player colors to preserve god identity
+- **Worker tokens**: smaller (20px) with subtle drop-shadow on occupied spaces
+- **AI timing**: slowed across the board (2s place, 1.8s market, 1.5s decisions, 2.5s round advance)
+- **Balance AI**: Tome of Deeds value increased (6→8 with black, 3→5 without)
+
+### Technical Details
+- 416 tests passing (was 410)
+- `preDecisionSnapshot` logic: `state.preDecisionSnapshot || { game: state.game, log: state.log }`
+- `abort` flow: `executeAction` saves `preplacementState` before worker placement, checks `actionResult.abort`, reverts if set
+- `getDynamicEffect()` in GodArea.jsx computes real-time effect text for `copySource` actions
+- `tryAIPurchase()` replaces `tryAIBuyCard()` — evaluates all affordable shops + cards, sorts by priority
+
+---
+
 ## [2026-03-01] - Playtesting Bug Fixes, UX Improvements, Tooltip Portal Fix
 
 ### Fixed

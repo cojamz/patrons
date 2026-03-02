@@ -8,13 +8,24 @@
 // --- Helpers (inline for now) ---
 
 function addResources(state, playerId, resources) {
+  const player = state.players.find(p => p.id === playerId);
+  const hasDouble = player?.effects?.includes('doubleNextGain');
+  const effective = hasDouble
+    ? Object.fromEntries(Object.entries(resources).map(([c, a]) => [c, a * 2]))
+    : resources;
   const players = state.players.map(p => {
     if (p.id !== playerId) return p;
     const newResources = { ...p.resources };
-    Object.entries(resources).forEach(([color, amount]) => {
+    Object.entries(effective).forEach(([color, amount]) => {
       newResources[color] = (newResources[color] || 0) + amount;
     });
-    return { ...p, resources: newResources, lastGain: { ...resources } };
+    let newEffects = p.effects;
+    if (hasDouble) {
+      newEffects = [...(p.effects || [])];
+      const idx = newEffects.indexOf('doubleNextGain');
+      if (idx >= 0) newEffects.splice(idx, 1);
+    }
+    return { ...p, resources: newResources, lastGain: { ...effective }, ...(hasDouble ? { effects: newEffects } : {}) };
   });
   return { ...state, players };
 }
@@ -134,12 +145,12 @@ export function appraise(state, playerId, gods, decisions = {}) {
 /** meditate_on_wealth: +3 gold, skip next action */
 export function meditateOnWealth(state, playerId) {
   let newState = addResources(state, playerId, { gold: 3 });
-  // Add skipNextAction effect
-  const players = newState.players.map(p => {
-    if (p.id !== playerId) return p;
-    return { ...p, effects: [...(p.effects || []), 'skipNextAction'] };
-  });
-  newState = { ...newState, players };
+  // Add skip to skippedTurns (consumed by advanceTurn)
+  const currentSkips = newState.skippedTurns?.[playerId] || 0;
+  newState = {
+    ...newState,
+    skippedTurns: { ...(newState.skippedTurns || {}), [playerId]: currentSkips + 1 },
+  };
   return { state: newState, log: [`+3 gold, skip next action`] };
 }
 

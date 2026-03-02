@@ -69,7 +69,7 @@ export default function GameBoard() {
     // 3-4 gods: vertical columns, accordion style — focused gets more width
     return {
       gridTemplateColumns: activeGods.map(g =>
-        g === focusedGod ? '2.5fr' : '1fr'
+        g === focusedGod ? '2.5fr' : '1.2fr'
       ).join(' '),
       gridTemplateRows: '1fr',
     };
@@ -77,8 +77,8 @@ export default function GameBoard() {
 
   return (
     <div
-      className="relative w-full"
-      style={{ background: base.board, height: 'calc(100vh - 208px)' }}
+      className="relative w-full mx-auto"
+      style={{ background: base.board, height: 'calc(100vh - 230px)', maxWidth: '1440px' }}
     >
       {/* Stone texture noise overlay */}
       <div

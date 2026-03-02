@@ -280,8 +280,8 @@ function estimateCardValue(state, playerId, cardId, card) {
       // +1 any on steal actions — good for aggressive play
       return 5;
     case 'tome_of_deeds':
-      // Glory steal immunity — strong defensive
-      return state.gods.includes('black') ? 6 : 3;
+      // Glory reduction immunity — very strong defensive
+      return state.gods.includes('black') ? 8 : 5;
     case 'obsidian_coin':
       // Wildcard black — helps afford black cards/shops
       return 4;

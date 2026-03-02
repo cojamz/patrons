@@ -101,7 +101,8 @@ export function createGame({ playerCount, playerNames, godSet = ['gold', 'black'
  * Execute a player action with full event pipeline.
  */
 export function executeAction(state, playerId, actionId, decisions = {}, options = {}) {
-  const { recursionDepth = 0, isRepeat = false } = options;
+  const { recursionDepth = 0, isRepeat = false, isContinuation = false } = options;
+  const skipPlacement = isRepeat || isContinuation;
   const log = [];
 
   // 1. Validate recursion depth
@@ -120,16 +121,34 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
     return { state, log: [`Action ${actionId} is nullified this round`] };
   }
 
-  // 4. Check occupied spaces (unless modifier or repeat)
-  if (!isRepeat && recursionDepth === 0) {
+  // 4. Check occupied spaces (unless repeat, continuation, or modifier)
+  if (!skipPlacement && recursionDepth === 0) {
     const occupied = state.occupiedSpaces || {};
     if (occupied[actionId] && !hasModifier(state, playerId, 'ignore_occupied')) {
       return { state, log: [`Action ${actionId} is occupied`] };
     }
   }
 
-  // 5. If not a repeat and at root depth: place worker, track god access, record round action
-  if (!isRepeat && recursionDepth === 0) {
+  // 5. If fresh placement (not repeat/continuation) at root depth: place worker, track god access
+  const preplacementState = (!skipPlacement && recursionDepth === 0) ? state : null;
+  if (!skipPlacement && recursionDepth === 0) {
+    // The Deft: if placing a second worker via extraActionThisTurn, consume the effect
+    if (state.workerPlacedThisTurn) {
+      const deftPlayer = getPlayer(state, playerId);
+      if (deftPlayer?.effects?.includes('extraActionThisTurn')) {
+        state = {
+          ...state,
+          players: state.players.map(p => {
+            if (p.id !== playerId) return p;
+            const effects = [...(p.effects || [])];
+            const idx = effects.indexOf('extraActionThisTurn');
+            if (idx !== -1) effects.splice(idx, 1);
+            return { ...p, effects };
+          }),
+        };
+        log.push('The Deft: using extra action');
+      }
+    }
     state = placeWorker(state, actionId, playerId);
     state = trackGodAccess(state, playerId, godColor);
     state = {
@@ -147,6 +166,11 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
   const actionResult = routeAction(state, playerId, actionId, state.gods, decisions, recursionDepth);
   state = actionResult.state;
   if (actionResult.log) log.push(...actionResult.log);
+
+  // 7b. If handler signals abort (e.g. no valid targets), revert worker placement
+  if (actionResult.abort && preplacementState) {
+    return { state: preplacementState, log: actionResult.log || ['Action cancelled — no valid targets'] };
+  }
 
   // 8. If pendingDecision, return immediately
   if (actionResult.pendingDecision) {
@@ -166,7 +190,12 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
     state = subResult.state;
     if (subResult.log) log.push(...subResult.log);
     if (subResult.pendingDecision) {
-      return { state, log, pendingDecision: subResult.pendingDecision };
+      // Annotate with the nested action's ID so the UI resolves
+      // the decision against the correct (inner) action handler
+      return {
+        state, log,
+        pendingDecision: { ...subResult.pendingDecision, _resolveActionId: chain.actionId },
+      };
     }
 
     // Handle chained actions (from loop/unravel)
@@ -182,7 +211,10 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
         state = chainedResult.state;
         if (chainedResult.log) log.push(...chainedResult.log);
         if (chainedResult.pendingDecision) {
-          return { state, log, pendingDecision: chainedResult.pendingDecision };
+          return {
+            state, log,
+            pendingDecision: { ...chainedResult.pendingDecision, _resolveActionId: chained.actionId },
+          };
         }
       }
     }
@@ -213,11 +245,33 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
     if (diff > 0) gainedResources[color] = diff;
   }
   if (Object.keys(gainedResources).length > 0) {
+    // Track turn resource gains (for Traveler's Journal, etc.)
+    const prevTurnGains = state.turnResourceGains || {};
+    const prevPlayerGains = prevTurnGains[playerId] || {};
+    const newPlayerGains = { ...prevPlayerGains };
+    Object.entries(gainedResources).forEach(([color, amount]) => {
+      newPlayerGains[color] = (newPlayerGains[color] || 0) + amount;
+    });
+    state = {
+      ...state,
+      turnResourceGains: { ...prevTurnGains, [playerId]: newPlayerGains },
+    };
+
+    // Determine if this is a basic gain action (simple +N resource, no side effects)
+    const actionDef = godColor && gods[godColor]
+      ? gods[godColor].actions.find(a => a.id === actionId)
+      : null;
+    const isBasicGain = actionDef && (
+      actionDef.effectType === 'gainResource' ||
+      (Array.isArray(actionDef.effectType) && actionDef.effectType.length === 1 && actionDef.effectType[0] === 'gainResource')
+    );
+
     const gainResult = dispatchEvent(state, EventType.RESOURCE_GAINED, {
       playerId,
       resources: gainedResources,
       source: 'action',
       actionId,
+      isBasicGain: !!isBasicGain,
     });
     state = gainResult.state;
     if (gainResult.log) log.push(...gainResult.log);
@@ -271,16 +325,23 @@ export function executeShop(state, playerId, shopId, decisions = {}) {
     return { state, log: [`Cannot use ${shopId}: you haven't acted at the ${godColor} god this turn`] };
   }
 
-  // 3. Pay shop cost
-  const payResult = payShopCost(state, playerId, shopId, decisions);
-  if (!payResult.canAfford) {
-    return { state, log: [`Cannot afford ${shopId}`] };
+  // 2b. One purchase per turn (shop or power card)
+  if (state.purchaseMadeThisTurn && !decisions._costPaid) {
+    return { state, log: [`You can only make one purchase (shop or power card) per turn`] };
   }
-  if (payResult.pendingDecision) {
-    return { state: payResult.state, log: [], pendingDecision: payResult.pendingDecision };
+
+  // 3. Pay shop cost (skip if already paid in a prior decision step)
+  if (!decisions._costPaid) {
+    const payResult = payShopCost(state, playerId, shopId, decisions);
+    if (!payResult.canAfford) {
+      return { state, log: [`Cannot afford ${shopId}`] };
+    }
+    if (payResult.pendingDecision) {
+      return { state: payResult.state, log: [], pendingDecision: payResult.pendingDecision };
+    }
+    state = payResult.state;
+    log.push(`Paid for ${shopId}`);
   }
-  state = payResult.state;
-  log.push(`Paid for ${shopId}`);
 
   // 4. Resolve shop benefit
   const shopResult = resolveShop(state, playerId, shopId, decisions);
@@ -288,7 +349,8 @@ export function executeShop(state, playerId, shopId, decisions = {}) {
   if (shopResult.log) log.push(...shopResult.log);
 
   if (shopResult.pendingDecision) {
-    return { state, log, pendingDecision: shopResult.pendingDecision };
+    // Cost is already paid — mark so future re-calls skip payment
+    return { state, log, pendingDecision: { ...shopResult.pendingDecision, _costPaid: true } };
   }
 
   // 5. Handle recursive executeAction from shop (green repeat/copy shops)
@@ -304,11 +366,15 @@ export function executeShop(state, playerId, shopId, decisions = {}) {
     state = subResult.state;
     if (subResult.log) log.push(...subResult.log);
     if (subResult.pendingDecision) {
-      return { state, log, pendingDecision: subResult.pendingDecision };
+      // Cost is already paid — mark so future re-calls skip payment
+      return { state, log, pendingDecision: { ...subResult.pendingDecision, _costPaid: true } };
     }
   }
 
-  // 6. Dispatch SHOP_USED event
+  // 6. Mark purchase made this turn
+  state = { ...state, purchaseMadeThisTurn: true };
+
+  // 7. Dispatch SHOP_USED event
   const shopTier = shopId.split('_')[1]; // 'weak', 'strong', 'vp'
   const shopEvent = dispatchEvent(state, EventType.SHOP_USED, {
     playerId,
@@ -339,7 +405,12 @@ export function buyPowerCard(state, playerId, cardId, decisions = {}) {
 
   const godColor = card.god;
 
-  // 2. Check god access
+  // 2. Check one-per-turn limit
+  if (state.purchaseMadeThisTurn) {
+    return { state, log: [`You can only make one purchase (shop or power card) per turn`] };
+  }
+
+  // 3. Check god access
   if (!canAccessGod(state, playerId, godColor)) {
     return { state, log: [`Cannot buy ${card.name}: you haven't acted at the ${godColor} god this turn`] };
   }
@@ -399,8 +470,9 @@ export function buyPowerCard(state, playerId, cardId, decisions = {}) {
   }
   state = payResult.state;
 
-  // 7. Slot the card
+  // 7. Slot the card + mark power card bought this turn
   state = slotPowerCard(state, playerId, cardId);
+  state = { ...state, purchaseMadeThisTurn: true };
   log.push(`Bought ${card.name}`);
 
   // 8. Remove from market (cards don't refill)
@@ -608,6 +680,28 @@ export function resolveDecision(state, decisionId, answer) {
       nullifiedSpaces: { ...state.nullifiedSpaces, [answer.actionId]: true },
     };
     log.push(`The Prescient: nullified ${answer.actionId}`);
+  } else if (decision.sourceId === 'fortunate_starting' && answer.gemSelection) {
+    // The Fortunate: grant 2 starting resources of chosen colors
+    let newState = state;
+    for (const [color, amount] of Object.entries(answer.gemSelection)) {
+      if (amount > 0) {
+        newState = addResources(newState, decision.playerId, { [color]: amount });
+      }
+    }
+    state = newState;
+    const totalGained = Object.values(answer.gemSelection).reduce((s, v) => s + v, 0);
+    log.push(`The Fortunate: gained ${totalGained} starting resources`);
+  } else if (decision.sourceId === 'golden_chalice') {
+    // Golden Chalice: gain 1 of chosen non-gold resource
+    // Answer may arrive as { gemSelection: { black: 1 } } (wrapped) or { black: 1 } (raw)
+    const selection = answer?.gemSelection || answer;
+    if (selection && typeof selection === 'object') {
+      const chosenColor = Object.keys(selection)[0];
+      if (chosenColor) {
+        state = addResources(state, decision.ownerId || decision.playerId, { [chosenColor]: 1 });
+        log.push(`Golden Chalice: +1 ${chosenColor}`);
+      }
+    }
   } else if (decision.sourceId === 'alchemists_trunk' && answer.redistribution) {
     const player = getPlayer(state, decision.ownerId);
     const totalResources = Object.values(player.resources).reduce((sum, v) => sum + v, 0);

@@ -26,6 +26,7 @@ export default function ActionSpace({
   occupiedBy,
   isNullified,
   isLocked,
+  isLastPlaced,
   onPlace,
   onHover,
   onLeave,
@@ -35,10 +36,10 @@ export default function ActionSpace({
   const colors = godColors[godColor];
   const tier = tierStyles[action.tier];
 
-  // Determine visual state
-  const isInteractive = isAvailable && !isOccupied && !isNullified && !isLocked;
+  // Determine visual state — isAvailable already accounts for hourglass modifier
+  const isInteractive = isAvailable && !isNullified && !isLocked;
 
-  // Border color varies by state
+  // Border color varies by state — always god-colored, never player-colored
   const borderColor = isNullified
     ? 'rgba(225, 29, 72, 0.5)'
     : isLocked
@@ -49,47 +50,50 @@ export default function ActionSpace({
           ? colors.border
           : colors.border;
 
-  // Background varies by state
+  // Background varies by state — occupied stays god-themed, just slightly dimmed
   const bgColor = isNullified
     ? 'rgba(225, 29, 72, 0.06)'
     : isLocked
       ? 'rgba(255, 255, 255, 0.02)'
       : isAvailable
         ? colors.surface
-        : 'rgba(0, 0, 0, 0.2)';
+        : isOccupied
+          ? 'rgba(0, 0, 0, 0.15)'
+          : 'rgba(0, 0, 0, 0.2)';
 
   // Opacity varies by state
-  const opacity = isLocked ? 0.35 : isNullified ? 0.5 : isOccupied ? 0.7 : 1;
+  const opacity = isLocked ? 0.35 : isNullified ? 0.5 : isOccupied && !isAvailable ? 0.6 : 1;
 
   return (
     <motion.button
       ref={rowRef}
       onClick={isInteractive ? () => onPlace(action.id) : undefined}
-      disabled={!isInteractive}
+      disabled={false}
       style={{
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
         width: '100%',
-        height: '28px',
+        height: '36px',
         padding: '0 8px',
         borderRadius: '5px',
         border: `1px solid ${borderColor}`,
         background: bgColor,
         opacity,
         cursor: isInteractive ? 'pointer' : 'default',
-        textAlign: 'left',
         outline: 'none',
         flexShrink: 0,
+        transition: 'background 150ms ease, border-color 150ms ease, filter 150ms ease',
+        filter: 'brightness(1)',
       }}
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
-      whileHover={isInteractive ? actionSpaceHover : undefined}
+      whileHover={isInteractive ? { ...actionSpaceHover, filter: 'brightness(1.3)' } : { filter: 'brightness(1.15)' }}
       whileTap={isInteractive ? actionSpaceTap : undefined}
     >
       {/* Available pulse glow */}
-      {isAvailable && !isOccupied && !isNullified && !isLocked && (
+      {isInteractive && (
         <motion.div
           style={{
             position: 'absolute',
@@ -163,10 +167,10 @@ export default function ActionSpace({
           minWidth: 0,
           position: 'relative',
           zIndex: 10,
-          fontSize: '11px',
+          fontSize: '12px',
           fontWeight: 600,
           lineHeight: 1,
-          color: isLocked ? base.textMuted : base.textPrimary,
+          color: isLocked ? base.textMuted : isOccupied ? base.textSecondary : base.textPrimary,
           textDecoration: isNullified ? 'line-through' : 'none',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
@@ -175,20 +179,22 @@ export default function ActionSpace({
       >
         {action.name}
         {action.effect && !isLocked && (
-          <span style={{ fontWeight: 400, color: base.textMuted, marginLeft: '6px', fontSize: '10px' }}>
+          <span style={{ fontWeight: 400, color: base.textMuted, marginLeft: '6px', fontSize: '11px' }}>
             {action.effect}
           </span>
         )}
       </span>
 
-      {/* Occupied: show small worker meeple */}
+      {/* Occupied: small outline worker meeple */}
       <AnimatePresence>
         {isOccupied && occupiedBy != null && (
           <div style={{ flexShrink: 0, position: 'relative', zIndex: 10 }}>
             <WorkerToken
               playerId={occupiedBy}
-              size={18}
+              size={20}
               layoutId={`worker-${action.id}`}
+              subtle={!isLastPlaced}
+              isLastPlaced={isLastPlaced}
             />
           </div>
         )}

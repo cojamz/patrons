@@ -39,7 +39,7 @@ export default function Modal({ isOpen, onClose, title, children, godColor, wide
         >
           {/* Content panel */}
           <motion.div
-            className={`relative flex flex-col rounded-xl ${wide ? 'w-full max-w-2xl' : 'w-full max-w-md'} max-h-[85vh] mx-4`}
+            className={`relative flex flex-col rounded-xl ${wide ? 'w-full max-w-2xl' : 'w-full max-w-md'} max-h-[85vh] mx-4 overflow-hidden`}
             variants={modalContent}
             initial="initial"
             animate="animate"
@@ -109,7 +109,7 @@ export default function Modal({ isOpen, onClose, title, children, godColor, wide
             )}
 
             {/* Body — scrollable if content overflows */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
               {children}
             </div>
           </motion.div>

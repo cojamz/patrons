@@ -11,9 +11,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useGame } from '../../hooks/useGame';
 import { useAnimatedValue } from '../../hooks/useAnimatedValue';
+import { useGameEvents, filterByType, filterByPlayer } from '../../hooks/useGameEvents';
 import { godColors, playerColors, base } from '../../styles/theme';
 import { favorChange } from '../../styles/animations';
 import ResourceDisplay from './ResourceDisplay';
+import FloatingDeltas from '../hud/FloatingDeltas';
 import PowerCardSlot from './PowerCardSlot';
 import WorkerIcon from '../icons/WorkerIcon';
 import ChampionIcon from '../icons/ChampionIcon';
@@ -22,7 +24,172 @@ import champions from '../../../engine/v3/data/champions';
 import { powerCards as powerCardsData } from '../../../engine/v3/data/powerCards';
 import { ACTIONS_PER_ROUND } from '../../../engine/v3/data/constants';
 
+// --- Collapsible Log ---
+
+function CollapsibleLog({ log }) {
+  const [expanded, setExpanded] = useState(false);
+  const entries = (log || []).slice(-20);
+
+  return (
+    <div className="relative">
+      {/* Toggle button */}
+      <button
+        onClick={() => setExpanded(prev => !prev)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all duration-150"
+        style={{
+          background: expanded ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+          border: `1px solid ${expanded ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.06)'}`,
+          color: base.textMuted,
+          cursor: 'pointer',
+        }}
+        title={expanded ? 'Hide game log' : 'Show game log'}
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ opacity: 0.6 }}>
+          <rect x="1" y="2" width="10" height="1.2" rx="0.6" fill="currentColor" />
+          <rect x="1" y="5.4" width="7" height="1.2" rx="0.6" fill="currentColor" />
+          <rect x="1" y="8.8" width="8.5" height="1.2" rx="0.6" fill="currentColor" />
+        </svg>
+        <span className="text-[10px] font-medium uppercase tracking-wider">Log</span>
+        {entries.length > 0 && (
+          <span
+            className="text-[9px] font-semibold px-1 rounded"
+            style={{ background: 'rgba(255,255,255,0.08)', color: base.textMuted }}
+          >
+            {entries.length}
+          </span>
+        )}
+      </button>
+
+      {/* Expanded log panel */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            className="absolute bottom-full right-0 mb-2 rounded-xl overflow-hidden"
+            style={{
+              width: '340px',
+              maxHeight: '280px',
+              background: 'rgba(12, 10, 9, 0.95)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(16px)',
+              boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
+              zIndex: 60,
+            }}
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ duration: 0.15 }}
+          >
+            {/* Header */}
+            <div
+              className="flex items-center justify-between px-3 py-2 border-b"
+              style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+            >
+              <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: base.textMuted }}>
+                Game Log
+              </span>
+              <button
+                onClick={() => setExpanded(false)}
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                style={{ color: base.textMuted, background: 'rgba(255,255,255,0.04)' }}
+              >
+                Close
+              </button>
+            </div>
+
+            {/* Entries */}
+            <div className="flex flex-col gap-0.5 p-2 overflow-y-auto scrollbar-hide" style={{ maxHeight: '240px' }}>
+              {entries.map((entry, i) => {
+                const isLatest = i === entries.length - 1;
+                return (
+                  <div
+                    key={i}
+                    className="flex items-start gap-1.5 px-1.5 py-0.5 rounded"
+                    style={{
+                      fontSize: '11px',
+                      lineHeight: 1.4,
+                      color: isLatest ? base.textPrimary : base.textSecondary,
+                      opacity: isLatest ? 1 : 0.5 + (i / entries.length) * 0.4,
+                      background: isLatest ? 'rgba(255,255,255,0.03)' : 'transparent',
+                    }}
+                  >
+                    <div
+                      className="w-0.5 rounded-full flex-shrink-0 mt-0.5"
+                      style={{
+                        background: isLatest ? godColors.gold.primary : 'rgba(255, 255, 255, 0.12)',
+                        minHeight: '10px',
+                        alignSelf: 'stretch',
+                      }}
+                    />
+                    <span>
+                      {entry
+                        .replace(/\benvoys\b/gi, 'workers')
+                        .replace(/\benvoy\b/gi, 'worker')
+                        .replace(/\bGlory\b/g, 'Favor')
+                        .replace(/\bglory\b/g, 'favor')}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // --- Player Tab (top strip, non-current players) ---
+
+function PowerCardTooltipIcon({ cardId, isCurrent }) {
+  const [hovered, setHovered] = useState(false);
+  const cardData = powerCardsData[cardId];
+
+  return (
+    <span
+      className="relative"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <CardPixelIcon
+        cardId={cardId}
+        size={12}
+        color={isCurrent ? godColors.gold.light : base.textMuted}
+      />
+      <AnimatePresence>
+        {hovered && cardData && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            style={{
+              position: 'absolute',
+              bottom: '100%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              marginBottom: '8px',
+              zIndex: 9999,
+              width: '220px',
+              padding: '8px 10px',
+              borderRadius: '8px',
+              background: '#0a0908',
+              border: `1px solid ${godColors.gold.border}`,
+              boxShadow: '0 12px 36px rgba(0, 0, 0, 0.9)',
+              pointerEvents: 'none',
+            }}
+          >
+            <div style={{ fontSize: '11px', fontWeight: 700, color: godColors.gold.text, marginBottom: '3px' }}>
+              {cardData.name}
+            </div>
+            <div style={{ fontSize: '10px', lineHeight: 1.4, color: base.textSecondary }}>
+              {cardData.description}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </span>
+  );
+}
 
 function PlayerTab({ player, champion, isCurrent, onClick }) {
   const colors = playerColors[player.id] || playerColors[0];
@@ -66,31 +233,49 @@ function PlayerTab({ player, champion, isCurrent, onClick }) {
       {/* Power card icons */}
       {powerCards.length > 0 && (
         <div className="flex items-center gap-0.5 flex-shrink-0">
-          {powerCards.map(cardId => {
-            const cardData = powerCardsData[cardId];
-            return (
-              <span
-                key={cardId}
-                title={cardData ? `${cardData.name}: ${cardData.description}` : cardId}
-              >
-                <CardPixelIcon
-                  cardId={cardId}
-                  size={12}
-                  color={isCurrent ? godColors.gold.light : base.textMuted}
-                />
-              </span>
-            );
-          })}
+          {powerCards.map(cardId => (
+            <PowerCardTooltipIcon key={cardId} cardId={cardId} isCurrent={isCurrent} />
+          ))}
         </div>
       )}
     </button>
   );
 }
 
+// --- Favor Source Labels ---
+
+export const FAVOR_SOURCE_LABELS = {
+  gold_glory_condition: 'Gold God — per gold owned (round end)',
+  yellow_glory_condition: 'Yellow God — per unique color (round end)',
+  green_glory_condition: 'Green God — per action repeated',
+  black_glory_condition: 'Black God — per steal/penalty',
+  cash_in: 'Cash In action — gold converted',
+  pickpocket: 'Pickpocket action — stolen favor',
+  pickpocket_victim: 'Pickpocket — favor stolen from you',
+  hex_action: 'Hex — mass penalty',
+  ruin_action: 'Ruin — mass penalty',
+  voodoo_doll: 'Voodoo Doll — curse damage',
+  gold_crown: 'Gold Crown — endgame gold bonus',
+  travelers_journal: "Traveler's Journal — gods visited",
+  cursed_blade: 'Cursed Blade — attack bonus',
+  cursed_blade_victim: 'Cursed Blade — damage taken',
+  gold_vp_shop: 'Gold Shop — favor purchase',
+  black_weak_shop: 'Black Shop — stolen favor',
+  black_weak_shop_victim: 'Black Shop — favor stolen from you',
+  black_strong_shop: 'Black Shop — stolen favor',
+  black_strong_shop_victim: 'Black Shop — favor stolen from you',
+  black_vp_shop: 'Black Shop — mass steal',
+  black_vp_shop_victim: 'Black Shop — favor stolen from you',
+  green_vp_shop: 'Green Shop — favor purchase',
+  yellow_strong_shop: 'Yellow Shop — trigger scoring',
+  yellow_vp_shop: 'Yellow Shop — set collection',
+};
+
 // --- Favor Counter ---
 
-function FavorCounter({ glory }) {
+function FavorCounter({ glory, glorySources }) {
   const { value: displayFavor, direction } = useAnimatedValue(glory);
+  const [hovered, setHovered] = useState(false);
 
   const glowColor = direction === 'up'
     ? godColors.gold.glowStrong
@@ -104,16 +289,27 @@ function FavorCounter({ glory }) {
       ? base.negativeLight
       : godColors.gold.primary;
 
+  // Build sorted source entries (non-zero only, sorted by |value| descending)
+  const sourceEntries = glorySources
+    ? Object.entries(glorySources)
+        .filter(([, v]) => v !== 0)
+        .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+    : [];
+
   return (
-    <div className="flex flex-col items-center gap-0.5" title="Favor — victory points. Highest favor wins!">
+    <div
+      className="flex flex-col items-center gap-0.5 relative"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <span
-        className="text-[10px] uppercase tracking-widest font-medium"
+        className="text-[10px] uppercase tracking-widest font-medium cursor-help"
         style={{ color: base.textMuted }}
       >
         Favor
       </span>
       <motion.div
-        className="relative"
+        className="relative cursor-help"
         animate={direction ? favorChange.animate : {}}
       >
         <span
@@ -127,6 +323,76 @@ function FavorCounter({ glory }) {
           {displayFavor}
         </span>
       </motion.div>
+
+      {/* Favor accounting tooltip */}
+      <AnimatePresence>
+        {hovered && sourceEntries.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            style={{
+              position: 'absolute',
+              bottom: '100%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              marginBottom: '10px',
+              zIndex: 9999,
+              minWidth: '200px',
+              maxWidth: '280px',
+              padding: '10px 12px',
+              borderRadius: '10px',
+              background: '#0a0908',
+              border: `2px solid ${godColors.gold.primary}`,
+              boxShadow: `0 16px 48px rgba(0, 0, 0, 1), 0 0 0 4px rgba(0, 0, 0, 0.9), 0 0 16px ${godColors.gold.glow}`,
+              pointerEvents: 'none',
+            }}
+          >
+            <div style={{
+              fontSize: '10px', fontWeight: 700, color: godColors.gold.text,
+              textTransform: 'uppercase', letterSpacing: '0.08em',
+              marginBottom: '8px', textAlign: 'center',
+            }}>
+              Favor Breakdown
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              {sourceEntries.map(([source, amount]) => (
+                <div
+                  key={source}
+                  style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    fontSize: '11px', lineHeight: 1.4,
+                  }}
+                >
+                  <span style={{ color: base.textSecondary }}>
+                    {FAVOR_SOURCE_LABELS[source] || source.replace(/_/g, ' ')}
+                  </span>
+                  <span
+                    style={{
+                      fontWeight: 700,
+                      fontVariantNumeric: 'tabular-nums',
+                      color: amount > 0 ? base.positiveLight : base.negativeLight,
+                      marginLeft: '12px',
+                    }}
+                  >
+                    {amount > 0 ? `+${amount}` : amount}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div style={{
+              marginTop: '6px', paddingTop: '5px',
+              borderTop: `1px solid rgba(255,255,255,0.08)`,
+              display: 'flex', justifyContent: 'space-between',
+              fontSize: '11px', fontWeight: 700,
+            }}>
+              <span style={{ color: base.textSecondary }}>Total</span>
+              <span style={{ color: godColors.gold.light }}>{glory}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -139,20 +405,20 @@ function WorkersDisplay({ playerId, workersLeft, totalWorkers }) {
   return (
     <div
       className="flex flex-col items-center gap-1"
-      title={`${workersLeft} of ${total} patrons remaining this round`}
+      title={`${workersLeft} of ${total} workers remaining this round`}
     >
       <span
-        className="text-[10px] uppercase tracking-widest font-medium"
+        className="text-[11px] uppercase tracking-widest font-medium"
         style={{ color: base.textMuted }}
       >
-        Patrons
+        Workers
       </span>
       <div className="flex items-center gap-0.5">
         {Array.from({ length: total }, (_, i) => (
           <WorkerIcon
             key={i}
             playerId={playerId}
-            size={18}
+            size={22}
             ghost={i >= workersLeft}
           />
         ))}
@@ -225,7 +491,8 @@ function ChampionTooltipWrapper({ championData, colors, children }) {
 // --- Main Panel ---
 
 export default function PlayerPanel() {
-  const { game, currentPlayer, phase, log, actions } = useGame();
+  const { game, currentPlayer, phase, log, actions, pendingDecision } = useGame();
+  const events = useGameEvents();
 
   const [viewingId, setViewingId] = useState(null);
 
@@ -233,6 +500,11 @@ export default function PlayerPanel() {
   useEffect(() => {
     setViewingId(null);
   }, [currentPlayer?.id]);
+
+  // Auto-reset to own panel when a decision modal appears
+  useEffect(() => {
+    if (pendingDecision) setViewingId(null);
+  }, [pendingDecision]);
 
   if (!game || !currentPlayer) return null;
 
@@ -316,7 +588,7 @@ export default function PlayerPanel() {
           }}
         />
 
-        <div className="flex items-center gap-6 px-5 py-3">
+        <div className="flex items-center gap-6 px-5 py-4">
           {/* -- Player identity + Favor -- */}
           <div className="flex items-center gap-4 flex-shrink-0">
             {/* Champion icon */}
@@ -356,12 +628,12 @@ export default function PlayerPanel() {
 
             {/* Vertical divider */}
             <div
-              className="w-px h-10 flex-shrink-0"
+              className="w-px h-12 flex-shrink-0"
               style={{ background: base.divider }}
             />
 
             {/* Favor counter */}
-            <FavorCounter glory={viewingPlayer.glory} />
+            <FavorCounter glory={viewingPlayer.glory} glorySources={viewingPlayer.glorySources} />
           </div>
 
           {/* Vertical divider */}
@@ -370,15 +642,18 @@ export default function PlayerPanel() {
             style={{ background: base.divider }}
           />
 
-          {/* -- Resources -- */}
-          <div className="flex flex-col gap-1">
+          {/* -- Blessings (with floating deltas) -- */}
+          <div className="flex flex-col gap-1 relative">
             <span
-              className="text-[10px] uppercase tracking-widest font-medium"
+              className="text-[11px] uppercase tracking-widest font-medium"
               style={{ color: base.textMuted }}
             >
-              Resources
+              Blessings
             </span>
             <ResourceDisplay resources={viewingPlayer.resources} activeGods={game.gods} />
+            <FloatingDeltas
+              deltas={filterByPlayer(filterByType(events, 'resourceDelta'), viewingPlayer.id)}
+            />
           </div>
 
           {/* Vertical divider */}
@@ -403,7 +678,7 @@ export default function PlayerPanel() {
           {/* -- Power Card Slots -- */}
           <div className="flex flex-col gap-1 min-w-0 flex-1">
             <span
-              className="text-[10px] uppercase tracking-widest font-medium"
+              className="text-[11px] uppercase tracking-widest font-medium"
               style={{ color: base.textMuted }}
             >
               Power Cards
@@ -411,64 +686,29 @@ export default function PlayerPanel() {
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
               {Array.from({ length: totalSlots }, (_, i) => {
                 const cardId = powerCardIds[i] || null;
+                const isTriggered = cardId
+                  ? filterByType(events, 'cardTriggered').some(e => e.cardId === cardId)
+                  : false;
                 return (
                   <PowerCardSlot
                     key={i}
                     cardId={cardId}
                     slotIndex={i}
                     isEmpty={!cardId}
+                    isTriggered={isTriggered}
                   />
                 );
               })}
             </div>
           </div>
 
-          {/* -- Recent Log + End Turn -- */}
+          {/* -- Log Toggle + End Turn -- */}
           <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
-            {/* Mini log — scrollable */}
-            <div
-              className="flex flex-col gap-0.5 overflow-y-auto scrollbar-hide"
-              style={{ maxWidth: '240px', maxHeight: '52px' }}
-            >
-              {(log || []).slice(-8).map((entry, i, arr) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-1.5 flex-shrink-0"
-                  style={{
-                    fontSize: '9px',
-                    lineHeight: 1.3,
-                    color: base.textMuted,
-                    opacity: i < arr.length - 1 ? 0.4 + (i / arr.length) * 0.4 : 0.9,
-                  }}
-                >
-                  <div
-                    className="w-0.5 rounded-full flex-shrink-0"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.15)',
-                      minHeight: '10px',
-                      alignSelf: 'stretch',
-                    }}
-                  />
-                  <span style={{
-                    overflow: 'hidden',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 1,
-                    WebkitBoxOrient: 'vertical',
-                  }}>
-                    {entry
-                      .replace(/\bworkers\b/gi, 'patrons')
-                      .replace(/\bworker\b/gi, 'patron')
-                      .replace(/\benvoys\b/gi, 'patrons')
-                      .replace(/\benvoy\b/gi, 'patron')
-                      .replace(/\bGlory\b/g, 'Favor')
-                      .replace(/\bglory\b/g, 'favor')}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {/* Collapsible log */}
+            <CollapsibleLog log={log} />
 
             <motion.button
-              className="flex-shrink-0 px-5 py-2.5 rounded-lg font-semibold text-sm uppercase tracking-wider transition-colors duration-200"
+              className="flex-shrink-0 px-5 py-2.5 rounded-lg font-semibold text-sm uppercase tracking-wider"
               title={!isMyTurn ? `Waiting for ${currentPlayer?.name || 'another player'}` : 'End your turn'}
               style={{
                 background: isMyTurn
@@ -479,11 +719,22 @@ export default function PlayerPanel() {
                   ? `1px solid ${godColors.gold.light}`
                   : '1px solid rgba(120, 113, 108, 0.15)',
                 cursor: isMyTurn ? 'pointer' : 'not-allowed',
-                boxShadow: isMyTurn
-                  ? `0 0 20px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.15)`
-                  : 'none',
                 opacity: isMyTurn ? 1 : 0.4,
               }}
+              animate={isMyTurn && game.workerPlacedThisTurn ? {
+                boxShadow: [
+                  `0 0 20px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.15)`,
+                  `0 0 35px ${godColors.gold.glowStrong}, 0 0 15px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.15)`,
+                  `0 0 20px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.15)`,
+                ],
+              } : {
+                boxShadow: isMyTurn
+                  ? `0 0 20px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.15)`
+                  : '0 0 0px transparent',
+              }}
+              transition={isMyTurn && game.workerPlacedThisTurn
+                ? { duration: 1.8, repeat: Infinity, ease: 'easeInOut' }
+                : { duration: 0.3 }}
               whileHover={isMyTurn ? { scale: 1.04, boxShadow: `0 0 30px ${godColors.gold.glowStrong}` } : {}}
               whileTap={isMyTurn ? { scale: 0.97 } : {}}
               onClick={() => isMyTurn && actions.endTurn()}

@@ -8,7 +8,7 @@
  *   decision  — { type: 'targetPlayer', playerId, options: [playerIds] }
  *   onSubmit  — called with the selected player id
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 import Modal from './Modal';
 import ResourceIcon from '../icons/ResourceIcon';
@@ -32,6 +32,13 @@ export default function TargetPlayer({ decision, onSubmit, onCancel }) {
       }));
   }, [game, decision]);
 
+  // Pre-select when only one target, but still show the modal
+  useEffect(() => {
+    if (targetPlayers.length === 1) {
+      setSelected(targetPlayers[0].id);
+    }
+  }, [targetPlayers]);
+
   const activeResources = useMemo(() => {
     if (!game) return ['gold', 'black', 'green', 'yellow'];
     return game.activeGods || ['gold', 'black', 'green', 'yellow'];
@@ -46,7 +53,7 @@ export default function TargetPlayer({ decision, onSubmit, onCancel }) {
     <Modal
       isOpen={true}
       onClose={onCancel}
-      title={decision.title || 'Choose a target'}
+      title={(decision.title || 'Choose a target').replace(/\bGlory\b/g, 'Favor')}
       godColor={decision._godColor}
     >
       <div className="space-y-3">

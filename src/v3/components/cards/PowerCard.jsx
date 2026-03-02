@@ -8,7 +8,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { powerCards } from '../../../engine/v3/data/powerCards';
-import ResourceIcon from '../icons/ResourceIcon';
+import ResourceIcon, { WildcardIcon } from '../icons/ResourceIcon';
 import { godColors, base, resourceStyles } from '../../styles/theme';
 import { cardReveal } from '../../styles/animations';
 
@@ -32,12 +32,7 @@ function CostDisplay({ cost }) {
               >
                 {amount}
               </span>
-              <span
-                className="text-[8px] font-medium uppercase tracking-wide"
-                style={{ color: base.textMuted }}
-              >
-                *
-              </span>
+              <WildcardIcon size={12} />
             </div>
           );
         }
@@ -72,8 +67,8 @@ export default function PowerCard({ cardId, godColor, onBuy, canBuy = false, ind
       initial="initial"
       animate="animate"
       onClick={canBuy ? () => onBuy(cardId) : undefined}
-      disabled={!canBuy}
-      className="relative text-left rounded-lg overflow-hidden"
+      disabled={false}
+      className="relative text-left rounded-lg overflow-visible"
       style={{
         background: canBuy ? base.card : base.cardDark,
         opacity: canBuy ? 1 : 0.55,
@@ -89,7 +84,11 @@ export default function PowerCard({ cardId, godColor, onBuy, canBuy = false, ind
         y: -3,
         boxShadow: `0 8px 24px rgba(0,0,0,0.4), 0 0 12px ${colors.glow}`,
         transition: { type: 'spring', stiffness: 400, damping: 20 },
-      } : {}}
+      } : {
+        y: -1,
+        boxShadow: `0 4px 12px rgba(0,0,0,0.2)`,
+        transition: { type: 'spring', stiffness: 400, damping: 20 },
+      }}
       whileTap={canBuy ? { scale: 0.97 } : {}}
     >
       {/* Compact header — always visible */}

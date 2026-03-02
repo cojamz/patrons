@@ -1,15 +1,23 @@
 # TODO
 
-**Last Updated**: 2026-03-01 13:55
+**Last Updated**: 2026-03-02
 
 ---
 
 ## Active Tasks
 
-### P3 Polish (from playtesting plan)
-- [ ] **F: Game state banner** — "Waiting for Player 2 to place a patron" / "Round 1 — Action Phase"
-- [ ] **G: Shop & action visual polish** — warm parchment for shops, stone for actions (continue)
-- [ ] **H: Champion power delay** — queue decisions until player has seen the board
+### Design & UX Polish
+- [ ] **"Since your last turn" recap** — show what opponents did while you waited
+- [ ] **Hover preview** — show what an action will do before committing
+- [ ] **Scoring preview** — show projected end-of-round scoring
+
+### Known Bugs
+- [ ] **Golden Scepter double-firing** — fires twice during echo copy chain (two RESOURCE_GAINED events)
+- [ ] **Game state banner** — "Waiting for Player 2..." / "Round 1 — Action Phase" context
+
+### Low Priority
+- [ ] Power card pixel icons need improvement (user flagged "really bad")
+- [ ] Champion power delay — queue decisions until player has seen the board
 
 ### Purple/Red Layer Bugs (12 total, documented 2025-11-16, ON HOLD)
 
@@ -33,72 +41,59 @@
 **Unclear**:
 - [ ] Bug #12: Skip turn stacking — strategy or exploit?
 
-### Low Priority
-- [ ] Power card pixel icons need improvement (user flagged "really bad")
-
----
-
-## Backlog
-- [ ] Playwright visual playtesting (MCP installed, needs session restart)
-- [ ] Remove turn validation debug logging (cleanup from Firebase debugging)
-
 ---
 
 ## Completed
 
+### 2026-03-02 - UX Polish Sprint
+- [x] **Floating resource deltas** — "+2 gold" floats up from resource counter on gain/loss
+- [x] **Turn change announcement** — cinematic banner "Your Turn" / "Player's Turn"
+- [x] **Phase breadcrumb** — always-visible `Round › Phase › Player › Decision` indicator
+- [x] **Power card trigger flash** — pulse/glow when a card activates
+- [x] **Action result toast** — brief banner showing latest game events
+- [x] **Last-placed worker glow** — breathing highlight on most recently placed worker
+- [x] **Pulse on changed values** — gem backgrounds flash when resource counts change
+- [x] **Game events infrastructure** — `useGameEvents` hook detects state diffs, powers all feedback
+
+### 2026-03-02 - Ship Single-Player Sprint
+- [x] **Handler frequency reset** — moved `resetHandlerFrequencies` before `dispatchEvent` in GameProvider (was after, broke once_per_round)
+- [x] **AI turns fully working** — decisions (gem, target, steal, action choice, nullifier, redistribution), shops, power cards, round advance
+- [x] **AI purchase logic** — evaluates shops AND power cards by priority, picks best affordable option
+- [x] **AI timing** — slowed to 2s place, 1.8s market, 1.5s decisions for clear visual beats
+- [x] **Purchase limit** — one shop OR power card per turn, same god only (`purchaseMadeThisTurn` flag)
+- [x] **Cancel during chained decisions** — preserve original `preDecisionSnapshot` instead of overwriting
+- [x] **Abort mechanism** — handlers return `{ abort: true }`, engine reverts worker placement
+- [x] **Relive tier filter** — only allows Tier 1 actions (was allowing all tiers)
+- [x] **Double next gain shop** — added `doubleNextGain` check to all 4 action handler `addResources`
+- [x] **Tome of Deeds** — "Favor cannot be reduced" (was steal-only), `glory_reduction_immunity` modifier
+- [x] **Champion draft order** — last place drafts first (reversed order)
+- [x] **Rules interstitial** — 4-slide overlay before game setup
+- [x] **Favor accounting** — click-to-expand breakdown in RoundTransition + hover tooltip in PlayerPanel
+- [x] **Dynamic echo text** — shows actual last action + player name instead of static description
+- [x] **VP condition banner** — gold gradient pill, prominent on both focused/collapsed views
+- [x] **Shops vs powers visual distinction** — shops=row list with left border, powers=god-glow cards with icon badges
+- [x] **Occupied action spaces** — use god colors (not player colors) to preserve god identity
+- [x] **Turn order display** — shows upcoming 4 turns via snake draft computation
+- [x] **Section hint tooltips** — `?` icon with portal tooltip on Shops/Powers sections
+- [x] 416 tests passing (was 410)
+
 ### 2026-03-01 - Playtesting Bug Fixes + UX Improvements
-- [x] **Bug A: TargetPlayer modal empty** — Added `options` field to all targetPlayer decisions in blackActions.js
-- [x] **Bug B: AI places all workers** — Rewrote useAITurns.js with atomic place→endTurn and processingRef guard
-- [x] **Bug C: Card market never refills** — Added powerCardDecks tracking + round-start refill in phases.js
+- [x] **Bug A: TargetPlayer modal empty** — Added `options` field to all targetPlayer decisions
+- [x] **Bug B: AI places all workers** — Rewrote useAITurns.js with atomic place→endTurn
+- [x] **Bug C: Card market never refills** — Added powerCardDecks tracking + round-start refill
 - [x] **stealGems decision type** — Full UI flow: DecisionModal routing, GemSelection steal mode, GameProvider handling, AI handling
-- [x] **D: Round transition favor breakdown** — Shows "+X this round" deltas per player
-- [x] **E: Tooltip coverage** — Power cards, resources, workers, favor counter, end turn button
+- [x] **Round transition favor breakdown** — Shows "+X this round" deltas per player
+- [x] **Tooltip coverage** — Power cards, resources, workers, favor counter, end turn button
 - [x] **Tab overlap fix** — Gradient background on tabs strip, increased board padding
-- [x] **Collapsed empty space fix** — Removed flex-1 from collapsed actions div in GodArea
-- [x] **Tooltip stacking context fix** — FloatingTooltip renders via React portal to document.body
-- [x] **UX contract tests** — 8 new tests validating engine↔UI field contracts + stress simulations
-- [x] **Playwright MCP installed** — `claude mcp add playwright` for visual playtesting
+- [x] **Collapsed empty space fix** — Removed flex-1 from collapsed actions div
+- [x] **Tooltip stacking context fix** — FloatingTooltip renders via React portal
+- [x] **UX contract tests** — 8 new tests validating engine↔UI field contracts
 
 ### 2025-11-21 - Red R1 Shop Balance & Multiplayer Modal Targeting
-- [x] **Nerf Red R1 shop** - Now only repeats Round 1 actions (not R2/R3)
-- [x] **Fix infinite loop exploit** - Excluded shop benefit actions from Red R1 repeat
-- [x] **Implement multiplayer modal targeting** - Added targetPlayerId parameter to executeAction, updated ~30 modal calls for correct player routing during patron swaps (uncommitted, builds successfully)
+- [x] Nerf Red R1 shop, fix infinite loop exploit, implement multiplayer modal targeting
 
 ### 2025-11-17 - VP Shop Fixes & UI Improvements
-- [x] **Fix Yellow VP shop gem selection** - Now prompts for gem choice instead of auto-deducting
-- [x] **Add VP shop usage tracking** - Limited to 1 VP shop per turn
-- [x] **VP shop ends turn** - Regular shops blocked after VP shop purchase
-- [x] **Fix copy last gain bug** - yellowHybrid2 now correctly copies other players' gains
-- [x] **Improve action log** - Player names, filtered zero values, better formatting
-- [x] **Simplify repeat action exclusions** - Now only excludes redRepeatAction
-- [x] **Fix Red R2 shop multiplayer** - Properly finds next player with optional chaining
-- [x] **Update shop text** - "a player" → "another player" for clarity
+- [x] Yellow VP shop gem selection, VP shop usage tracking, VP shop ends turn, copy last gain bug, action log improvements
 
-### 2025-11-16 - Playtesting Bug Fix Session
-- [x] **Fix VP shops starting closed** - VP shops now start OPEN (not closed)
-- [x] **Fix red auto VP double-counting** - Changed from 4 VP to 2 VP (action + repeat)
-- [x] **Fix patron swap multiplayer** - Both players now benefit from swapped actions
-- [x] **Fix blue auto VP when not in game** - Added automaticVPs?.blue check
-- [x] **Fix double next gain persistence** - Effect now carries over across rounds
-- [x] **Fix yellow shop cancellation** - Costs properly refunded when cancelled
-- [x] **Fix purple auto VP when not in game** - Added automaticVPs?.purple check
-
-### 2025-11-16 - Purple/Red Analysis & Layer Swap
-- [x] **Deep ultrathink analysis of purple layer** - Found 7 critical bugs
-- [x] **Deep ultrathink analysis of Red+Purple interactions** - Found 5 more bugs (12 total)
-- [x] **Swap Black into basic mode** - Replaced Purple in basic mode (Purple still in advanced)
-
-### 2025-11-16 - Yellow Layer Implementation Session
-- [x] **[5] Implement lastGain tracking** - Added lastGain: {} to player state, tracks OTHER players' gains (not own)
-- [x] **Fix Yellow auto VP description** - Changed from "per different color" to "per complete set of all colors"
-
-### 2025-11-16 - Multiplayer & UI Bug Fixes Session
-- [x] **[URGENT] Fix multiplayer desync** - Fixed game state synchronization issues
-- [x] **[1] Shop phase text clarity** - Updated shop phase indicator text
-- [x] **[2] Shop phase text visibility** - Added phase info to turn card for all players
-- [x] **[3] Round summary card on auto-advance** - Modal now shows on automatic round advance
-- [x] **[3a] VP breakdown in round summaries** - Added detailed VP source breakdown to round summaries
-- [x] **[3b] End-of-game summary** - Added VP breakdown to final game over screen
-- [x] **Fix yellow shops showing old definitions** - Synced inlineShopData with shopData.js
-- [x] **[7] Verify shop cost modifiers are per-round** - Confirmed they reset properly in ADVANCE_ROUND
-- [x] **Fix actions stuck in limbo** - Fixed pendingPlacements not clearing when validations fail
+### 2025-11-16 - Playtesting Bug Fix Session + Purple/Red Analysis
+- [x] VP shops starting closed, red auto VP double-counting, patron swap multiplayer, blue/purple auto VP checks, double next gain persistence, yellow shop cancellation, deep purple/red analysis, swap black into basic mode, lastGain tracking, multiplayer & UI bug fixes

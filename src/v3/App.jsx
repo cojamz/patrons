@@ -10,7 +10,7 @@
  *
  * Modal system routes pending decisions to the appropriate modal.
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import GameProvider from './GameProvider';
 import { useGame } from './hooks/useGame';
@@ -32,6 +32,9 @@ import { base, godColors, playerColors, getThemeCSSVars } from './styles/theme';
 import { modalBackdrop, modalContent, cardReveal } from './styles/animations';
 import champions from '../engine/v3/data/champions';
 import godsData from '../engine/v3/data/gods';
+import RulesOverlay from './components/RulesOverlay';
+import TurnAnnouncement from './components/hud/TurnAnnouncement';
+import { useGameEvents, filterByType } from './hooks/useGameEvents';
 
 // ============================================================================
 // Setup Screen
@@ -66,7 +69,7 @@ function SetupScreen({ onStart }) {
   const handleStart = () => {
     const aiPlayers = [];
     for (let i = 0; i < playerCount; i++) {
-      if (isAI[i]) aiPlayers.push(i);
+      if (isAI[i]) aiPlayers.push(i + 1);
     }
     onStart({
       playerCount,
@@ -282,6 +285,18 @@ function ChampionDraftScreen() {
   const pColors = playerColors[draftPlayerId] || playerColors[0];
   const availableChampions = pendingDecision.options || [];
 
+  // Don't show the full draft UI for AI players — just show a waiting state
+  if (aiPlayers && aiPlayers.has(draftPlayerId)) {
+    return (
+      <div
+        className="fixed inset-0 flex items-center justify-center"
+        style={{ background: base.board }}
+      >
+        <span style={{ color: base.textMuted }}>{player?.name || 'AI'} is choosing...</span>
+      </div>
+    );
+  }
+
   return (
     <div
       className="fixed inset-0 flex items-center justify-center overflow-auto"
@@ -327,6 +342,8 @@ function ChampionDraftScreen() {
             const champData = typeof champ === 'object' ? champ : champions.find(c => c.id === champ);
             if (!champData) return null;
 
+            const isLastOdd = i === availableChampions.length - 1 && availableChampions.length % 2 !== 0;
+
             return (
               <motion.button
                 key={champId}
@@ -340,6 +357,7 @@ function ChampionDraftScreen() {
                   background: 'rgba(28, 25, 23, 0.9)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   cursor: 'pointer',
+                  ...(isLastOdd ? { gridColumn: '1 / -1', justifySelf: 'center', maxWidth: 'calc(50% - 6px)' } : {}),
                 }}
                 whileHover={{
                   borderColor: godColors.gold.border,
@@ -420,7 +438,7 @@ function NullifierPlacementModal({ decision, onSubmit, onCancel }) {
       <p style={{ color: base.textSecondary, fontSize: '13px', marginBottom: '12px' }}>
         The Prescient: Choose an action space to nullify this round.
       </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '300px', overflowY: 'auto' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         {allActions.map(action => {
           const colors = godColors[action.godColor];
           return (
@@ -546,10 +564,38 @@ function DecisionModal() {
 // ============================================================================
 
 function GameScreen() {
-  const { game, phase, actions } = useGame();
+  const { game, phase, actions, roundStartDecisionQueue, pendingDecision, aiPlayers } = useGame();
+  const surfaceTimerRef = useRef(null);
+  const [showRulesOverlay, setShowRulesOverlay] = useState(false);
+
+  // Game event detection for UI feedback — pass all events to narrator
+  const events = useGameEvents();
 
   // AI auto-plays for non-human players
   useAITurns();
+
+  // Surface buffered round-start decisions after a brief delay
+  // so the player can see the board before the modal appears.
+  // Wait until any active decision is resolved before surfacing the next.
+  useEffect(() => {
+    if (surfaceTimerRef.current) {
+      clearTimeout(surfaceTimerRef.current);
+      surfaceTimerRef.current = null;
+    }
+
+    if (roundStartDecisionQueue && roundStartDecisionQueue.length > 0 && !pendingDecision) {
+      surfaceTimerRef.current = setTimeout(() => {
+        actions.surfaceQueuedDecision();
+        surfaceTimerRef.current = null;
+      }, 600);
+    }
+
+    return () => {
+      if (surfaceTimerRef.current) {
+        clearTimeout(surfaceTimerRef.current);
+      }
+    };
+  }, [roundStartDecisionQueue, pendingDecision, actions]);
 
   if (!game) return null;
 
@@ -560,14 +606,45 @@ function GameScreen() {
       className="relative w-full min-h-screen"
       style={{ background: base.board }}
     >
-      {/* Top HUD bar */}
-      <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-center gap-3 p-3">
-        <TurnIndicator />
-        <RoundTracker />
+      {/* Top HUD bar — left: turn info, center: inline toast, right: round tracker */}
+      <div className="sticky top-0 left-0 right-0 z-40 flex items-center px-4 py-2 gap-2"
+        style={{ background: 'linear-gradient(to bottom, rgba(12,10,9,0.95) 60%, rgba(12,10,9,0))' }}
+      >
+        <div className="flex-shrink-0">
+          <TurnIndicator />
+        </div>
+
+        {/* Inline narrative toast — fills remaining space */}
+        <TurnAnnouncement
+          narrativeEvents={events}
+          players={game.players}
+          aiPlayers={aiPlayers}
+          currentPlayer={game.currentPlayer}
+        />
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <RoundTracker />
+          <button
+            onClick={() => setShowRulesOverlay(true)}
+            className="flex items-center justify-center rounded-full transition-all duration-200"
+            style={{
+              width: '28px', height: '28px',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: base.textMuted,
+              fontSize: '13px', fontWeight: 700,
+            }}
+            title="How to Play"
+            onMouseEnter={e => { e.currentTarget.style.borderColor = godColors.gold.border; e.currentTarget.style.color = godColors.gold.light; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = base.textMuted; }}
+          >
+            ?
+          </button>
+        </div>
       </div>
 
-      {/* Main board area — padded for HUD + player panel + tabs */}
-      <div className="pt-16 pb-36">
+      {/* Main board area */}
+      <div className="pb-44">
         <GameBoard />
       </div>
 
@@ -603,6 +680,11 @@ function GameScreen() {
           }}
         />
       )}
+
+      {/* In-game rules overlay */}
+      {showRulesOverlay && (
+        <RulesOverlay onDismiss={() => setShowRulesOverlay(false)} />
+      )}
     </div>
   );
 }
@@ -614,11 +696,17 @@ function GameScreen() {
 function AppInner() {
   const { initialized, phase, actions } = useGame();
   const [hasStarted, setHasStarted] = useState(false);
+  const [showRules, setShowRules] = useState(true);
 
   const handleSetupComplete = useCallback((config) => {
     actions.initGame(config);
     setHasStarted(true);
   }, [actions]);
+
+  // Rules interstitial (always shows first)
+  if (showRules) {
+    return <RulesOverlay onDismiss={() => setShowRules(false)} />;
+  }
 
   // Setup screen (before game initialized)
   if (!hasStarted || !initialized) {

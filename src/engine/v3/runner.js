@@ -189,7 +189,7 @@ function resolveWithDecisions(state, playerId, pendingDecision, decisionFn, exec
 
   while (result.pendingDecision && attempts < maxAttempts) {
     const answer = decisionFn(result.state, playerId, result.pendingDecision);
-    decisions = { ...decisions, ...answer };
+    decisions = { ...decisions, ...answer, _continued: true };
     result = executor(result.state, decisions);
     attempts++;
   }

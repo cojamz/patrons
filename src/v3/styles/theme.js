@@ -140,9 +140,20 @@ export const tierStyles = {
 // --- Shop Type Styling ---
 
 export const shopStyles = {
-  weak:   { label: 'Basic',    icon: 'circle', color: '#A8A29E' },
-  strong: { label: 'Advanced', icon: 'diamond', color: '#E8C547' },
-  vp:     { label: 'Favor',    icon: 'star', color: '#FB7185' },
+  weak:   { label: 'Basic',    icon: 'circle',  color: '#A8A29E', fontSize: '8px',  borderWidth: '2px' },
+  strong: { label: 'Advanced', icon: 'diamond', color: '#E8C547', fontSize: '9px',  borderWidth: '3px' },
+  vp:     { label: 'Favor',    icon: 'star',    color: '#FB7185', fontSize: '10px', borderWidth: '4px', glow: 'rgba(251, 113, 133, 0.15)' },
+};
+
+// --- Favor Condition Styling ---
+// Cool silver-lavender that sits outside all 4 god palettes.
+
+export const favorConditionStyle = {
+  background: 'linear-gradient(135deg, rgba(220, 220, 240, 0.12) 0%, rgba(180, 180, 210, 0.06) 100%)',
+  border: 'rgba(220, 220, 240, 0.3)',
+  text: '#E0E0F0',
+  textShadow: '0 0 8px rgba(220, 220, 240, 0.3)',
+  icon: '#C8C8E0',
 };
 
 // --- CSS Custom Properties for injection ---

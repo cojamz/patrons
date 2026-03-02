@@ -9,12 +9,12 @@
  *   decision  — { type: 'gemSelection', count: N, title: string }
  *   onSubmit  — called with { gold: N, black: N, green: N, yellow: N }
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 import Modal from './Modal';
 import ResourceIcon from '../icons/ResourceIcon';
 import { useGame } from '../../hooks/useGame';
-import { godColors, base, resourceStyles, godMeta } from '../../styles/theme';
+import { godColors, base } from '../../styles/theme';
 import { cardReveal } from '../../styles/animations';
 
 const RESOURCE_ORDER = ['gold', 'black', 'green', 'yellow'];
@@ -51,6 +51,23 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
   // For steal selections, use target's resources as limits
   const targetResources = decision.targetResources || null;
 
+  // Total resources the player actually owns (for pay selections)
+  const totalOwned = useMemo(() => {
+    if (!player) return 0;
+    return Object.values(player.resources || {}).reduce((sum, v) => sum + v, 0);
+  }, [player]);
+
+  const cannotAfford = isPaySelection && totalOwned < required;
+
+  // Auto-skip: if this is a pay/trade selection and the player has 0 resources, auto-submit empty
+  useEffect(() => {
+    if (!isPaySelection || required === 0) return;
+    if (!player) return;
+    if (totalOwned === 0) {
+      onSubmit({});
+    }
+  }, [isPaySelection, required, player, totalOwned, onSubmit]);
+
   const increment = (type) => {
     if (total >= required) return;
     // Limit by owned resources when paying, or target resources when stealing
@@ -70,8 +87,10 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
     setSelection(prev => ({ ...prev, [type]: prev[type] - 1 }));
   };
 
+  const canSubmit = total === required || (cannotAfford && total === totalOwned && total > 0);
+
   const handleSubmit = () => {
-    if (total !== required) return;
+    if (!canSubmit) return;
     // Only send non-zero entries
     const answer = {};
     for (const [key, val] of Object.entries(selection)) {
@@ -80,13 +99,11 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
     onSubmit(answer);
   };
 
-  const canSubmit = total === required;
-
   return (
     <Modal
       isOpen={true}
       onClose={onCancel}
-      title={decision.title || `Choose ${required} resource${required !== 1 ? 's' : ''}`}
+      title={(decision.title || `Choose ${required} blessing${required !== 1 ? 's' : ''}`).replace(/\bGlory\b/g, 'Favor').replace(/\bresources\b/gi, 'blessings').replace(/\bresource\b/gi, 'blessing')}
       godColor={decision._godColor}
     >
       {/* Selection counter */}
@@ -104,6 +121,25 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
         <span className="text-sm ml-2" style={{ color: base.textMuted }}>selected</span>
       </div>
 
+      {/* Insufficient resources warning */}
+      {cannotAfford && (
+        <div
+          className="flex items-center justify-center gap-2 mb-4 px-4 py-2 rounded-lg text-xs font-medium"
+          style={{
+            backgroundColor: 'rgba(225, 29, 72, 0.1)',
+            border: '1px solid rgba(225, 29, 72, 0.2)',
+            color: base.negativeLight,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0">
+            <path d="M7 1L13 12H1L7 1Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+            <path d="M7 5.5V8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <circle cx="7" cy="10" r="0.5" fill="currentColor" />
+          </svg>
+          Not enough blessings — need {required} but you only have {totalOwned}
+        </div>
+      )}
+
       {/* Resource grid */}
       <div className="grid grid-cols-2 gap-3">
         {activeResources.map((type, i) => {
@@ -112,6 +148,7 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
           const targetOwned = targetResources?.[type] || 0;
           const selected = selection[type];
           const atMax = total >= required || (isPaySelection && selected >= owned) || (isStealSelection && selected >= targetOwned);
+          const isEmpty = isPaySelection && owned === 0;
 
           return (
             <motion.div
@@ -124,14 +161,15 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
               style={{
                 backgroundColor: selected > 0 ? colors.surface : 'rgba(255, 255, 255, 0.02)',
                 border: `1px solid ${selected > 0 ? colors.border : 'rgba(255, 255, 255, 0.05)'}`,
+                opacity: isEmpty ? 0.3 : 1,
               }}
             >
-              {/* God name + resource type */}
+              {/* Resource color name */}
               <span
                 className="text-xs font-medium mb-2 uppercase tracking-wider"
                 style={{ color: colors.text, opacity: 0.7 }}
               >
-                {godMeta[type].name}
+                {type.charAt(0).toUpperCase() + type.slice(1)}
               </span>
 
               {/* Large gem icon */}
@@ -190,7 +228,23 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
       </div>
 
       {/* Submit */}
-      <div className="mt-5 flex justify-center">
+      <div className="mt-5 flex justify-center gap-3">
+        {cannotAfford && (
+          <motion.button
+            onClick={() => onSubmit({})}
+            className="px-6 py-2.5 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200"
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.06)',
+              color: base.negativeLight,
+              border: '1px solid rgba(225, 29, 72, 0.25)',
+              cursor: 'pointer',
+            }}
+            whileHover={{ scale: 1.03, backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+            whileTap={{ scale: 0.97 }}
+          >
+            Skip
+          </motion.button>
+        )}
         <motion.button
           onClick={handleSubmit}
           disabled={!canSubmit}
@@ -206,7 +260,7 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
           whileHover={canSubmit ? { scale: 1.03 } : {}}
           whileTap={canSubmit ? { scale: 0.97 } : {}}
         >
-          Confirm Selection
+          {cannotAfford && total > 0 ? `Pay ${total} of ${required}` : 'Confirm Selection'}
         </motion.button>
       </div>
     </Modal>
