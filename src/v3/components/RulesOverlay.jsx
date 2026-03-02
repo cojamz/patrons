@@ -1,72 +1,101 @@
 /**
- * RulesOverlay — Thematic intro + rules slides shown before game setup.
+ * RulesOverlay — Cinematic tutorial intro shown before game setup.
  *
- * Opens with a cinematic hook, then 4 slides explaining core mechanics.
- * "Next" advances slides, final slide has "Play" to dismiss.
+ * Flow: thematic hook → what you do → how turns work → how rounds work → begin.
+ * Visually polished with animated transitions and god iconography.
  */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { base, godColors } from '../styles/theme';
 import GodIcon from './icons/GodIcon';
+import ResourceIcon from './icons/ResourceIcon';
 import WorkerIcon from './icons/WorkerIcon';
 
 const SLIDES = [
   {
-    heading: null, // Intro slide — no heading, uses custom layout
-    description: null,
-    icon: 'intro',
+    type: 'intro',
   },
   {
-    heading: 'Send Your Patrons',
-    description: 'Send your patrons to action spaces at each god\'s temple. Gather blessings — resources in the god\'s color. But each space holds only one patron, so choose wisely before your rivals claim the best spots.',
-    icon: 'patrons',
+    heading: 'Choose Your People',
+    body: 'At the start of each game, you\'ll draft a Champion — a leader whose unique power shapes your strategy. Then you\'ll send your patrons into the temples of the gods to do your bidding.',
+    icon: 'champions',
   },
   {
-    heading: 'Please the Gods',
-    description: 'Spend your blessings at god shops for powerful effects, and acquire power cards that grant lasting abilities. Build combinations that multiply your strength each round.',
-    icon: 'gods',
+    heading: 'Honor the Gods',
+    body: 'Place your patrons on action spaces to gather blessings — sacred resources in each god\'s color. But beware: each space holds only one patron. If a rival claims your spot, you\'ll need a new plan.',
+    icon: 'actions',
   },
   {
-    heading: 'Garner Favor',
-    description: 'Each god rewards devotion differently — hoard gold for Aurum, collect variety for Solara, amass shadows for Noctis. At the end of each round, the gods grant Favor to those who meet their conditions.',
+    heading: 'Acquire Artifacts & Shops',
+    body: 'Spend your blessings at god shops for powerful one-time effects, or acquire artifacts — permanent relics that grow stronger each round. Build an engine of divine power.',
+    icon: 'artifacts',
+  },
+  {
+    heading: 'Earn Divine Favor',
+    body: 'Each god has a unique Favor condition. Hoard gold for Aurum. Collect variety for Solara. The gods judge you at the end of every round — meet their conditions to earn Favor.',
     icon: 'favor',
   },
   {
     heading: '3 Rounds. Most Favor Wins.',
-    description: 'The game unfolds over 3 rounds of increasing power — 3 patrons in round 1, 4 in round 2, 5 in round 3. New action spaces and shops unlock each round. The player with the most Favor at the end becomes The Favored.',
+    body: 'The game builds across 3 rounds — more patrons, more action spaces, more powerful shops each round. Turn order favors the underdog: lowest Favor goes first. After 3 rounds, the player with the most Favor becomes The Favored.',
     icon: 'rounds',
   },
 ];
 
 function SlideIcon({ type }) {
   switch (type) {
-    case 'intro':
-      return null; // Intro slide handles its own visuals
-    case 'patrons':
-      return (
-        <div className="flex items-center gap-1.5">
-          <WorkerIcon playerId={0} size={36} />
-          <WorkerIcon playerId={1} size={36} />
-          <WorkerIcon playerId={2} size={36} />
-          <WorkerIcon playerId={3} size={36} />
-        </div>
-      );
-    case 'gods':
+    case 'champions':
       return (
         <div className="flex items-center gap-3">
-          <GodIcon god="gold" size={36} />
-          <GodIcon god="black" size={36} />
-          <GodIcon god="green" size={36} />
-          <GodIcon god="yellow" size={36} />
+          <WorkerIcon playerId={1} size={32} />
+          <div style={{
+            fontSize: '20px',
+            fontWeight: 800,
+            color: base.textSecondary,
+            letterSpacing: '0.05em',
+          }}>
+            →
+          </div>
+          <div style={{
+            width: 40, height: 40, borderRadius: '50%',
+            background: 'linear-gradient(135deg, rgba(212, 168, 67, 0.3), rgba(212, 168, 67, 0.1))',
+            border: '2px solid rgba(212, 168, 67, 0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '18px',
+          }}>
+            ⚔
+          </div>
+        </div>
+      );
+    case 'actions':
+      return (
+        <div className="flex items-center gap-2">
+          <WorkerIcon playerId={0} size={28} />
+          <span style={{ color: base.textMuted, fontSize: '16px' }}>→</span>
+          <div className="flex items-center gap-1">
+            <ResourceIcon type="gold" size={20} />
+            <ResourceIcon type="black" size={20} />
+            <ResourceIcon type="green" size={20} />
+            <ResourceIcon type="yellow" size={20} />
+          </div>
+        </div>
+      );
+    case 'artifacts':
+      return (
+        <div className="flex items-center gap-3">
+          <GodIcon god="gold" size={30} />
+          <GodIcon god="black" size={30} />
+          <GodIcon god="green" size={30} />
+          <GodIcon god="yellow" size={30} />
         </div>
       );
     case 'favor':
       return (
         <div style={{
-          fontSize: '40px',
+          fontSize: '36px',
           fontWeight: 800,
-          color: godColors.gold.light,
-          textShadow: `0 0 24px ${godColors.gold.glowStrong}`,
+          color: '#E0E0F0',
+          textShadow: '0 0 24px rgba(220, 220, 240, 0.5)',
           lineHeight: 1,
         }}>
           +3
@@ -74,23 +103,23 @@ function SlideIcon({ type }) {
       );
     case 'rounds':
       return (
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           {[1, 2, 3].map(r => (
             <div
               key={r}
-              className="flex flex-col items-center gap-1"
+              className="flex flex-col items-center gap-1.5"
             >
               <span style={{
-                fontSize: '22px',
+                fontSize: '20px',
                 fontWeight: 800,
-                color: r === 3 ? godColors.gold.light : base.textSecondary,
-                textShadow: r === 3 ? `0 0 16px ${godColors.gold.glowStrong}` : 'none',
+                color: r === 3 ? '#E0E0F0' : base.textSecondary,
+                textShadow: r === 3 ? '0 0 16px rgba(220, 220, 240, 0.5)' : 'none',
               }}>
                 {['I', 'II', 'III'][r - 1]}
               </span>
               <div className="flex items-center gap-0.5">
-                {Array.from({ length: [3, 5, 6][r - 1] }, (_, i) => (
-                  <WorkerIcon key={i} playerId={0} size={10} />
+                {Array.from({ length: [3, 4, 5][r - 1] }, (_, i) => (
+                  <WorkerIcon key={i} playerId={0} size={9} />
                 ))}
               </div>
             </div>
@@ -128,11 +157,18 @@ function IntroSlide() {
         className="text-sm leading-relaxed"
         style={{ color: base.textMuted }}
       >
-        Send your patrons to the temples of rival gods.
+        The gods watch from above, granting their Favor
         <br />
-        Gather their blessings. Spend them wisely.
+        to those bold enough to seek it.
         <br />
-        Earn divine Favor — and claim victory.
+        <br />
+        <span style={{ color: base.textSecondary }}>
+          Draft a champion. Send your patrons.
+          <br />
+          Gather blessings. Acquire artifacts.
+          <br />
+          Earn the most divine Favor — and win.
+        </span>
       </p>
     </div>
   );
@@ -218,12 +254,12 @@ export default function RulesOverlay({ onDismiss }) {
                   {slide.heading}
                 </h2>
 
-                {/* Description */}
+                {/* Body */}
                 <p
                   className="text-sm leading-relaxed"
                   style={{ color: base.textSecondary }}
                 >
-                  {slide.description}
+                  {slide.body}
                 </p>
               </>
             )}

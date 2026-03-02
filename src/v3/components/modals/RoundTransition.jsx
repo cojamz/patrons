@@ -17,6 +17,7 @@ import WorkerIcon from '../icons/WorkerIcon';
 import { godColors, playerColors, base, godMeta, favorConditionStyle } from '../../styles/theme';
 import { roundTransition, cardReveal, staggerContainer } from '../../styles/animations';
 import { FAVOR_SOURCE_LABELS } from '../player/PlayerPanel';
+import GameLog from './GameLog';
 
 const ROUNDS_TOTAL = 3;
 
@@ -108,7 +109,7 @@ function FavorCell({ player, isLeader, gloryDelta }) {
   );
 }
 
-export default function RoundTransition({ round, players, onContinue, activeGods, gloryDeltas, preRoundGlory }) {
+export default function RoundTransition({ round, players, onContinue, activeGods, gloryDeltas, preRoundGlory, log }) {
   const isGameEnd = round >= ROUNDS_TOTAL;
 
   const resourceTypes = activeGods || ['gold', 'black', 'green', 'yellow'];
@@ -333,6 +334,16 @@ export default function RoundTransition({ round, players, onContinue, activeGods
               {isGameEnd ? 'View Final Standings' : `Begin Round ${round + 1}`}
             </motion.button>
           </motion.div>
+
+          {/* Game log (game end only) */}
+          {isGameEnd && log && log.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: { delay: 1 } }}
+            >
+              <GameLog log={log} players={standings} />
+            </motion.div>
+          )}
         </div>
       </motion.div>
     </AnimatePresence>

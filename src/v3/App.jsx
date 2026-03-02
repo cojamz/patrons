@@ -564,7 +564,7 @@ function DecisionModal() {
 // ============================================================================
 
 function GameScreen() {
-  const { game, phase, actions, roundStartDecisionQueue, pendingDecision, aiPlayers } = useGame();
+  const { game, phase, actions, roundStartDecisionQueue, pendingDecision, aiPlayers, log } = useGame();
   const surfaceTimerRef = useRef(null);
   const [showRulesOverlay, setShowRulesOverlay] = useState(false);
 
@@ -674,6 +674,7 @@ function GameScreen() {
           gloryDeltas={game.lastRoundGloryDeltas}
           preRoundGlory={game.lastRoundPreGlory}
           activeGods={activeGods}
+          log={log}
           onContinue={() => {
             // Reload the page to start a new game
             window.location.reload();

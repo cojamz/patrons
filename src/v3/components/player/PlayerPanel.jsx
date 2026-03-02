@@ -191,54 +191,112 @@ function PowerCardTooltipIcon({ cardId, isCurrent }) {
   );
 }
 
-function PlayerTab({ player, champion, isCurrent, onClick }) {
+function PlayerTab({ player, champion, isCurrent, onClick, favorDeltas, resourceDeltas }) {
   const colors = playerColors[player.id] || playerColors[0];
   const { value: favorDisplay } = useAnimatedValue(player.glory);
   const powerCards = champion?.powerCards || [];
 
+  // Collect recent resource deltas for mini indicators
+  const recentResources = {};
+  for (const event of (resourceDeltas || [])) {
+    for (const [resource, amount] of Object.entries(event.deltas || {})) {
+      if (amount !== 0) recentResources[resource] = (recentResources[resource] || 0) + amount;
+    }
+  }
+
   return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-2 px-3 py-1.5 rounded-t-lg transition-all duration-200"
-      style={{
-        background: isCurrent
-          ? 'rgba(28, 25, 23, 0.92)'
-          : 'rgba(28, 25, 23, 0.5)',
-        borderBottom: isCurrent
-          ? `2px solid ${colors.primary}`
-          : '2px solid transparent',
-        opacity: isCurrent ? 1 : 0.7,
-      }}
-    >
-      {/* Player color pip */}
-      <div
-        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+    <div className="relative">
+      {/* Floating mini deltas above the tab */}
+      <AnimatePresence>
+        {!isCurrent && (favorDeltas || []).map(event => (
+          <motion.div
+            key={event.id}
+            className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+            style={{ bottom: '100%', marginBottom: '2px', zIndex: 40 }}
+            initial={{ opacity: 0, y: 6, scale: 0.7 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            transition={{ exit: { duration: 0.8 } }}
+          >
+            <span
+              className="text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-full whitespace-nowrap"
+              style={{
+                color: event.delta > 0 ? '#E0E0F0' : base.negativeLight,
+                background: event.delta > 0 ? 'rgba(220, 220, 240, 0.15)' : 'rgba(225, 29, 72, 0.15)',
+                border: `1px solid ${event.delta > 0 ? 'rgba(220, 220, 240, 0.3)' : 'rgba(225, 29, 72, 0.3)'}`,
+              }}
+            >
+              {event.delta > 0 ? '+' : ''}{event.delta}
+            </span>
+          </motion.div>
+        ))}
+        {!isCurrent && Object.entries(recentResources).map(([resource, amount]) => (
+          <motion.div
+            key={`res-${resource}`}
+            className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+            style={{ bottom: '100%', marginBottom: '18px', zIndex: 39 }}
+            initial={{ opacity: 0, y: 6, scale: 0.7 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.9 }}
+            transition={{ exit: { duration: 0.8 } }}
+          >
+            <span
+              className="text-[9px] font-bold tabular-nums px-1 py-0.5 rounded-full whitespace-nowrap"
+              style={{
+                color: (godColors[resource] || godColors.gold).light,
+                background: `rgba(${hexToRgb((godColors[resource] || godColors.gold).primary)}, 0.2)`,
+                border: `1px solid ${(godColors[resource] || godColors.gold).primary}44`,
+              }}
+            >
+              {amount > 0 ? '+' : ''}{amount}
+            </span>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      <button
+        onClick={onClick}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-t-lg transition-all duration-200"
         style={{
-          background: colors.primary,
-          boxShadow: isCurrent ? `0 0 6px ${colors.primary}` : 'none',
+          background: isCurrent
+            ? 'rgba(28, 25, 23, 0.92)'
+            : 'rgba(28, 25, 23, 0.5)',
+          borderBottom: isCurrent
+            ? `2px solid ${colors.primary}`
+            : '2px solid transparent',
+          opacity: isCurrent ? 1 : 0.7,
         }}
-      />
-      <span
-        className="text-xs font-semibold truncate max-w-[80px]"
-        style={{ color: isCurrent ? colors.light : base.textSecondary }}
       >
-        {player.name}
-      </span>
-      <span
-        className="text-xs tabular-nums font-medium"
-        style={{ color: '#E0E0F0', opacity: 0.9 }}
-      >
-        {favorDisplay}
-      </span>
-      {/* Power card icons */}
-      {powerCards.length > 0 && (
-        <div className="flex items-center gap-0.5 flex-shrink-0">
-          {powerCards.map(cardId => (
-            <PowerCardTooltipIcon key={cardId} cardId={cardId} isCurrent={isCurrent} />
-          ))}
-        </div>
-      )}
-    </button>
+        {/* Player color pip */}
+        <div
+          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+          style={{
+            background: colors.primary,
+            boxShadow: isCurrent ? `0 0 6px ${colors.primary}` : 'none',
+          }}
+        />
+        <span
+          className="text-xs font-semibold truncate max-w-[80px]"
+          style={{ color: isCurrent ? colors.light : base.textSecondary }}
+        >
+          {player.name}
+        </span>
+        <span
+          className="text-xs tabular-nums font-medium"
+          style={{ color: '#E0E0F0', opacity: 0.9 }}
+        >
+          {favorDisplay}
+        </span>
+        {/* Power card icons */}
+        {powerCards.length > 0 && (
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            {powerCards.map(cardId => (
+              <PowerCardTooltipIcon key={cardId} cardId={cardId} isCurrent={isCurrent} />
+            ))}
+          </div>
+        )}
+      </button>
+    </div>
   );
 }
 
@@ -397,6 +455,50 @@ function FavorCounter({ glory, glorySources }) {
   );
 }
 
+// --- Floating Favor Delta ---
+
+function FloatingFavorDelta({ deltas }) {
+  if (!deltas || deltas.length === 0) return null;
+
+  return (
+    <div
+      className="absolute left-0 right-0 flex justify-center pointer-events-none"
+      style={{ bottom: '100%', marginBottom: '4px', zIndex: 30 }}
+    >
+      <AnimatePresence>
+        {deltas.map((event) => {
+          const isPositive = event.delta > 0;
+          const text = isPositive ? `+${event.delta}` : `${event.delta}`;
+
+          return (
+            <motion.span
+              key={event.id}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold tabular-nums"
+              initial={{ opacity: 0, y: 8, scale: 0.7 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -30, scale: 0.9 }}
+              transition={{
+                enter: { type: 'spring', stiffness: 400, damping: 20 },
+                exit: { duration: 0.8, ease: [0.4, 0, 0.2, 1] },
+              }}
+              style={{
+                color: isPositive ? '#E0E0F0' : base.negativeLight,
+                background: isPositive
+                  ? 'rgba(220, 220, 240, 0.15)'
+                  : 'rgba(225, 29, 72, 0.15)',
+                border: `1px solid ${isPositive ? 'rgba(220, 220, 240, 0.3)' : 'rgba(225, 29, 72, 0.3)'}`,
+                textShadow: `0 0 8px ${isPositive ? 'rgba(220, 220, 240, 0.4)' : 'rgba(225, 29, 72, 0.4)'}`,
+              }}
+            >
+              {text} Favor
+            </motion.span>
+          );
+        })}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // --- Workers Remaining ---
 
 function WorkersDisplay({ playerId, workersLeft, totalWorkers }) {
@@ -425,6 +527,17 @@ function WorkersDisplay({ playerId, workersLeft, totalWorkers }) {
       </div>
     </div>
   );
+}
+
+function hexToRgb(hex) {
+  const cleaned = hex.replace('#', '');
+  const full = cleaned.length === 3
+    ? cleaned.split('').map(c => c + c).join('')
+    : cleaned;
+  const r = parseInt(full.substring(0, 2), 16);
+  const g = parseInt(full.substring(2, 4), 16);
+  const b = parseInt(full.substring(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
 }
 
 // --- Champion Tooltip Wrapper ---
@@ -496,12 +609,7 @@ export default function PlayerPanel() {
 
   const [viewingId, setViewingId] = useState(null);
 
-  // Reset to own panel when the active player changes (turn change)
-  useEffect(() => {
-    setViewingId(null);
-  }, [currentPlayer?.id]);
-
-  // Auto-reset to own panel when a decision modal appears
+  // Auto-reset to own panel when a decision modal appears for the human player
   useEffect(() => {
     if (pendingDecision) setViewingId(null);
   }, [pendingDecision]);
@@ -551,6 +659,8 @@ export default function PlayerPanel() {
             champion={game.champions?.[player.id]}
             isCurrent={player.id === viewingPlayer.id}
             onClick={() => setViewingId(player.id === currentPlayer.id ? null : player.id)}
+            favorDeltas={filterByPlayer(filterByType(events, 'favorDelta'), player.id)}
+            resourceDeltas={filterByPlayer(filterByType(events, 'resourceDelta'), player.id)}
           />
         ))}
       </div>
@@ -632,8 +742,13 @@ export default function PlayerPanel() {
               style={{ background: base.divider }}
             />
 
-            {/* Favor counter */}
-            <FavorCounter glory={viewingPlayer.glory} glorySources={viewingPlayer.glorySources} />
+            {/* Favor counter + floating deltas */}
+            <div className="relative">
+              <FavorCounter glory={viewingPlayer.glory} glorySources={viewingPlayer.glorySources} />
+              <FloatingFavorDelta
+                deltas={filterByPlayer(filterByType(events, 'favorDelta'), viewingPlayer.id)}
+              />
+            </div>
           </div>
 
           {/* Vertical divider */}

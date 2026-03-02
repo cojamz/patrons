@@ -27,9 +27,11 @@ export function useAITurns() {
     pendingDecision, roundStartDecisionQueue, aiPlayers, actions,
   } = useGame();
 
-  // Keep a ref to the latest actions so setTimeout callbacks never use stale closures.
+  // Keep refs to the latest state so setTimeout callbacks never use stale closures.
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
+  const gameRef = useRef(game);
+  gameRef.current = game;
 
   const timerRef = useRef(null);
   const endTurnTimerRef = useRef(null);
@@ -125,7 +127,8 @@ export function useAITurns() {
           endTurnTimerRef.current = setTimeout(() => {
             endTurnTimerRef.current = null;
             // Try to buy a shop or power card from the god we just accessed
-            tryAIPurchase(game, currentId, actionsRef);
+            // Use gameRef.current for FRESH state (game closure is stale by now)
+            tryAIPurchase(gameRef.current, currentId, actionsRef);
             // End turn after card purchase settles
             setTimeout(() => {
               actionsRef.current.endTurn();
