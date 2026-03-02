@@ -15,6 +15,7 @@ import ActionSpace from './ActionSpace';
 import GodIcon from '../icons/GodIcon';
 import ResourceIcon, { WildcardIcon } from '../icons/ResourceIcon';
 import CardPixelIcon from '../icons/CardPixelIcon';
+import ArtifactImage from '../icons/ArtifactImage';
 import WorkerToken from './WorkerToken';
 import { useGame } from '../../hooks/useGame';
 import { godColors, godMeta, base, tierStyles, shopStyles, resourceStyles, favorConditionStyle } from '../../styles/theme';
@@ -146,7 +147,7 @@ function FloatingTooltip({ tooltip, godColor }) {
     return (
       <motion.div style={tooltipStyle} variants={tooltipVariants} initial="initial" animate="animate" exit="exit">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-          <CardPixelIcon cardId={cardId} size={24} color={colors.light} />
+          <ArtifactImage cardId={cardId} size={32} color={colors.light} />
           <div>
             <div style={{ fontSize: '13px', fontWeight: 700, color: colors.text }}>
               {card.name}
@@ -1043,9 +1044,9 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         marginBottom: '6px',
                       }}>
-                        <CardPixelIcon
+                        <ArtifactImage
                           cardId={cardId}
-                          size={28}
+                          size={36}
                           color={buyable ? colors.light : base.textMuted}
                           glowColor={buyable ? colors.primary : undefined}
                         />
