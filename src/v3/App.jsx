@@ -1,18 +1,19 @@
 /**
  * App.jsx — Main entry point for The Favored v3.
  *
- * Wraps the game in GameProvider and orchestrates the full UI:
- *   1. Setup screen: choose player count + names
- *   2. Champion draft phase
- *   3. Action phase: full board + HUD + panels
- *   4. Round end transitions
- *   5. Game over screen
+ * Wraps the game in GameProvider (local) or MultiplayerGameProvider (online)
+ * and orchestrates the full UI:
+ *   1. Rules interstitial
+ *   2. Mode selection: local vs multiplayer (lobby)
+ *   3. Setup / draft / action / round end / game over screens
  *
  * Modal system routes pending decisions to the appropriate modal.
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import GameProvider from './GameProvider';
+import HostSync from './multiplayer/HostSync';
+import GuestProvider from './multiplayer/GuestProvider';
 import { useGame } from './hooks/useGame';
 import { useAITurns } from './hooks/useAITurns';
 import { ResourceGradientDefs } from './components/icons/ResourceIcon';
@@ -34,6 +35,10 @@ import { modalBackdrop, modalContent, cardReveal } from './styles/animations';
 import champions from '../engine/v3/data/champions';
 import godsData from '../engine/v3/data/gods';
 import RulesOverlay from './components/RulesOverlay';
+import LobbyScreen from './components/lobby/LobbyScreen';
+import WaitingOverlay from './components/lobby/WaitingOverlay';
+import { rejoinRoom } from './firebase/rooms';
+import { db, ref, get } from './firebase/config';
 import TurnAnnouncement from './components/hud/TurnAnnouncement';
 import { useGameEvents, filterByType } from './hooks/useGameEvents';
 
@@ -478,12 +483,21 @@ function NullifierPlacementModal({ decision, onSubmit, onCancel }) {
 // ============================================================================
 
 function DecisionModal() {
-  const { pendingDecision, actions, phase } = useGame();
+  const { pendingDecision, actions, phase, isMultiplayer, mySlot } = useGame();
 
   if (!pendingDecision) return null;
 
   // Don't render decision modals during champion draft (handled by ChampionDraftScreen)
   if (phase === 'champion_draft' && pendingDecision.type === 'championChoice') return null;
+
+  // In multiplayer, only show decision modals for the correct player
+  // Decisions use `playerId` or `_playerId` to identify the responsible player
+  if (isMultiplayer) {
+    const decisionOwner = pendingDecision.playerId ?? pendingDecision._playerId;
+    if (decisionOwner !== undefined && decisionOwner !== mySlot) {
+      return null; // WaitingOverlay handles "waiting for X to decide" in GameInner
+    }
+  }
 
   const handleCancel = () => actions.cancelDecision();
 
@@ -574,14 +588,14 @@ function DecisionModal() {
 // ============================================================================
 
 function GameScreen() {
-  const { game, phase, actions, roundStartDecisionQueue, pendingDecision, aiPlayers, log } = useGame();
+  const { game, phase, actions, roundStartDecisionQueue, pendingDecision, aiPlayers, log, isMultiplayer, mySlot } = useGame();
   const surfaceTimerRef = useRef(null);
   const [showRulesOverlay, setShowRulesOverlay] = useState(false);
 
   // Game event detection for UI feedback — pass all events to narrator
   const events = useGameEvents();
 
-  // AI auto-plays for non-human players
+  // AI auto-plays for non-human players (local mode only — host handles AI in multiplayer)
   useAITurns();
 
   // Surface buffered round-start decisions after a brief delay
@@ -661,8 +675,18 @@ function GameScreen() {
       {/* Player panel (bottom) */}
       <PlayerPanel />
 
-      {/* Decision modals */}
+      {/* Decision modals (only for this player in multiplayer) */}
       <DecisionModal />
+
+      {/* Waiting overlay when another player is deciding (multiplayer) */}
+      {isMultiplayer && pendingDecision && (() => {
+        const decisionOwner = pendingDecision.playerId ?? pendingDecision._playerId;
+        if (decisionOwner !== undefined && decisionOwner !== mySlot) {
+          const waitPlayer = game.players.find(p => p.id === decisionOwner);
+          return <WaitingOverlay waitingFor={waitPlayer ? { name: waitPlayer.name, slot: waitPlayer.id } : null} type="decision" />;
+        }
+        return null;
+      })()}
 
       {/* Round transition overlay */}
       {phase === 'round_end' && (
@@ -686,7 +710,7 @@ function GameScreen() {
           activeGods={activeGods}
           log={log}
           onContinue={() => {
-            // Reload the page to start a new game
+            clearSession();
             window.location.reload();
           }}
         />
@@ -701,49 +725,221 @@ function GameScreen() {
 }
 
 // ============================================================================
-// App Root (with GameProvider)
+// App Inner (shared between local and multiplayer)
 // ============================================================================
 
-function AppInner() {
-  const { initialized, phase, actions } = useGame();
-  const [hasStarted, setHasStarted] = useState(false);
-  const [showRules, setShowRules] = useState(true);
+function GameInner({ isMultiplayer, multiplayerConfig }) {
+  const { initialized, phase, actions, game, pendingDecision, mySlot, isHost } = useGame();
+  const [hasStarted, setHasStarted] = useState(isMultiplayer); // Multiplayer skips local setup
+  const initRef = useRef(false);
 
   const handleSetupComplete = useCallback((config) => {
     actions.initGame(config);
     setHasStarted(true);
   }, [actions]);
 
-  // Rules interstitial (always shows first)
-  if (showRules) {
-    return <RulesOverlay onDismiss={() => setShowRules(false)} />;
+  // Multiplayer host: auto-init the game on mount
+  useEffect(() => {
+    if (isMultiplayer && isHost && !initialized && !initRef.current && multiplayerConfig) {
+      initRef.current = true;
+      actions.initGame({
+        playerCount: multiplayerConfig.playerCount,
+        playerNames: multiplayerConfig.playerNames,
+        aiPlayers: [], // No AI in multiplayer (for now)
+      });
+    }
+  }, [isMultiplayer, isHost, initialized, multiplayerConfig, actions]);
+
+  // Setup screen (local mode only, before game initialized)
+  if (!isMultiplayer && (!hasStarted || !initialized)) {
+    return <SetupScreen onStart={handleSetupComplete} />;
   }
 
-  // Setup screen (before game initialized)
-  if (!hasStarted || !initialized) {
-    return <SetupScreen onStart={handleSetupComplete} />;
+  // Multiplayer: waiting for host to init the game
+  if (isMultiplayer && !initialized) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center" style={{ background: base.board }}>
+        <span style={{ color: base.textMuted }}>Waiting for host to start...</span>
+      </div>
+    );
   }
 
   // Champion draft phase
   if (phase === 'champion_draft') {
+    // In multiplayer, only show draft UI if it's this player's pick
+    if (isMultiplayer && pendingDecision?.playerId !== mySlot) {
+      const draftPlayer = game?.players.find(p => p.id === pendingDecision?.playerId);
+      return (
+        <div className="fixed inset-0 flex items-center justify-center" style={{ background: base.board }}>
+          <WaitingOverlay waitingFor={draftPlayer ? { name: draftPlayer.name, slot: draftPlayer.id } : null} type="decision" />
+        </div>
+      );
+    }
     return <ChampionDraftScreen />;
   }
 
   // All other phases: full game screen
-  return <GameScreen />;
+  // In multiplayer, show waiting overlay when it's not your turn
+  return (
+    <>
+      <GameScreen />
+      {isMultiplayer && game && game.currentPlayer !== mySlot && !pendingDecision && phase === 'action_phase' && (
+        <WaitingOverlay
+          waitingFor={{
+            name: game.players.find(p => p.id === game.currentPlayer)?.name || 'Player',
+            slot: game.currentPlayer,
+          }}
+          type="turn"
+        />
+      )}
+    </>
+  );
+}
+
+// ============================================================================
+// App Root (mode selection + provider switching)
+// ============================================================================
+
+const SESSION_KEY = 'favored_mp_session';
+
+function saveSession(roomCode, playerId) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode, playerId }));
+}
+
+function clearSession() {
+  sessionStorage.removeItem(SESSION_KEY);
+}
+
+function loadSession() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
 }
 
 export default function App() {
   const themeVars = getThemeCSSVars();
+  const [appPhase, setAppPhase] = useState('rules'); // rules | lobby | local | multiplayer
+  const [multiplayerConfig, setMultiplayerConfig] = useState(null);
 
-  return (
-    <GameProvider>
+  // On mount: check sessionStorage for an active multiplayer session to rejoin
+  useEffect(() => {
+    const saved = loadSession();
+    if (!saved) return;
+
+    const { roomCode, playerId } = saved;
+
+    (async () => {
+      try {
+        // Verify room still exists and isn't finished
+        const snapshot = await get(ref(db, `v3rooms/${roomCode}`));
+        if (!snapshot.exists()) {
+          clearSession();
+          return;
+        }
+
+        const room = snapshot.val();
+        if (room.status === 'finished' || room.status === 'lobby') {
+          clearSession();
+          return;
+        }
+
+        // Verify this player is still in the room
+        if (!room.players?.[playerId]) {
+          clearSession();
+          return;
+        }
+
+        // Restore presence
+        await rejoinRoom(roomCode, playerId);
+
+        // Rebuild multiplayer config from room data
+        const playerEntries = Object.entries(room.players)
+          .sort((a, b) => (a[1].slot ?? 0) - (b[1].slot ?? 0));
+
+        const config = {
+          roomCode,
+          playerId,
+          isHost: room.host === playerId,
+          playerCount: playerEntries.length,
+          playerNames: playerEntries.map(([, p]) => p.name),
+          playerIds: playerEntries.map(([id]) => id),
+          slotMap: Object.fromEntries(playerEntries.map(([id, p]) => [id, p.slot])),
+        };
+
+        setMultiplayerConfig(config);
+        setAppPhase('multiplayer');
+      } catch {
+        clearSession();
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Rules → Lobby (mode selection)
+  if (appPhase === 'rules') {
+    return (
       <div style={themeVars}>
-        {/* Global SVG gradient defs */}
         <ResourceGradientDefs />
-
-        <AppInner />
+        <RulesOverlay onDismiss={() => setAppPhase('lobby')} />
       </div>
-    </GameProvider>
-  );
+    );
+  }
+
+  // Lobby: choose local vs multiplayer
+  if (appPhase === 'lobby') {
+    return (
+      <div style={themeVars}>
+        <ResourceGradientDefs />
+        <LobbyScreen
+          onStartLocal={() => setAppPhase('local')}
+          onStartMultiplayer={(config) => {
+            saveSession(config.roomCode, config.playerId);
+            setMultiplayerConfig(config);
+            setAppPhase('multiplayer');
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Local mode: existing GameProvider flow
+  if (appPhase === 'local') {
+    return (
+      <GameProvider>
+        <div style={themeVars}>
+          <ResourceGradientDefs />
+          <GameInner isMultiplayer={false} />
+        </div>
+      </GameProvider>
+    );
+  }
+
+  // Multiplayer mode: Host uses GameProvider + HostSync, Guest uses GuestProvider
+  if (appPhase === 'multiplayer' && multiplayerConfig) {
+    const { roomCode, playerId, isHost, slotMap } = multiplayerConfig;
+
+    if (isHost) {
+      return (
+        <GameProvider>
+          <HostSync roomCode={roomCode} playerId={playerId} slotMap={slotMap}>
+            <div style={themeVars}>
+              <ResourceGradientDefs />
+              <GameInner isMultiplayer={true} multiplayerConfig={multiplayerConfig} />
+            </div>
+          </HostSync>
+        </GameProvider>
+      );
+    }
+
+    return (
+      <GuestProvider roomCode={roomCode} playerId={playerId} slotMap={slotMap}>
+        <div style={themeVars}>
+          <ResourceGradientDefs />
+          <GameInner isMultiplayer={true} multiplayerConfig={multiplayerConfig} />
+        </div>
+      </GuestProvider>
+    );
+  }
+
+  return null;
 }
