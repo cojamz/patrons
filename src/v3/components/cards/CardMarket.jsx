@@ -39,11 +39,9 @@ export default function CardMarket({ godColor }) {
     const godAccess = game.godsAccessedThisTurn || [];
     if (!godAccess.includes(godColor)) return false;
 
-    // Check card slot availability
+    // Check champion exists
     const champion = game.champions?.[playerId];
     if (!champion) return false;
-    const currentCards = champion.powerCards || [];
-    if (currentCards.length >= champion.powerCardSlots) return false;
 
     // Check affordability
     const card = powerCards[cardId];

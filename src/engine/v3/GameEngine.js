@@ -7,14 +7,14 @@
  * Every function is pure: state in, { state, log, pendingDecision? } out.
  */
 
-import { dispatchEvent, EventType, registerHandler, resetHandlerFrequencies } from './events.js';
+import { dispatchEvent, EventType, registerHandler, removeHandler, resetHandlerFrequencies } from './events.js';
 import {
   Phase, executeChampionDraft, executeRoundStart, executeRoundEnd,
   advanceTurn, isGameOver, resortTurnOrder, ACTIONS_PER_ROUND,
 } from './phases.js';
 import {
   addResources, removeResources, addGlory, removeGlory,
-  getPlayer, getOtherPlayers, hasModifier, slotPowerCard,
+  getPlayer, getOtherPlayers, hasModifier, slotPowerCard, removePowerCard,
   trackGodAccess, canAccessGod, placeWorker,
   createV3GameState, createResult, createDecisionRequest, formatResources,
 } from './stateHelpers.js';
@@ -421,14 +421,45 @@ export function buyPowerCard(state, playerId, cardId, decisions = {}) {
     return { state, log: [`${card.name} is not available in the market`] };
   }
 
-  // 4. Check player has empty card slot
+  // 4. Check player has card slot (or handle discard-to-replace)
   const champion = state.champions[playerId];
   if (!champion) {
     return { state, log: [`Player ${playerId} has no champion`] };
   }
   const currentCards = champion.powerCards || [];
   if (currentCards.length >= champion.powerCardSlots) {
-    return { state, log: [`No empty power card slots available`] };
+    if (decisions.discardCardId) {
+      // Remove the old card and unregister its handlers
+      const oldCard = powerCards[decisions.discardCardId];
+      state = removePowerCard(state, playerId, decisions.discardCardId);
+      state = removeHandler(state, `${decisions.discardCardId}_p${playerId}`);
+      log.push(`Discarded ${oldCard?.name || decisions.discardCardId} to make room`);
+    } else {
+      // Ask which card to discard
+      return {
+        state,
+        log,
+        pendingDecision: {
+          type: 'discardArtifact',
+          playerId,
+          title: `Replace an artifact with ${card.name}`,
+          description: card.description,
+          newCardId: cardId,
+          _source: 'card',
+          _playerId: playerId,
+          _cardId: cardId,
+          options: currentCards.map(id => {
+            const c = powerCards[id];
+            return {
+              id,
+              name: c?.name || id,
+              description: c?.description || '',
+              god: c?.god || '',
+            };
+          }),
+        },
+      };
+    }
   }
 
   // 5. Calculate cost (with The Blessed discount)

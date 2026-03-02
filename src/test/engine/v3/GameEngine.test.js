@@ -407,7 +407,7 @@ describe('buyPowerCard', () => {
     expect(player.resources.black).toBe(1);
   });
 
-  it('fails when no card slots available', () => {
+  it('prompts discard when card slots are full', () => {
     let state = createActionPhaseState();
     // Fill all 4 slots for player 1
     state = {
@@ -422,8 +422,30 @@ describe('buyPowerCard', () => {
     state = trackGodAccess(state, 1, 'gold');
 
     const result = buyPowerCard(state, 1, 'golden_scepter', { gemSelection: { gold: 1 } });
-    expect(result.log.some(l => l.includes('No empty power card slots'))).toBe(true);
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('discardArtifact');
+    expect(result.pendingDecision.options).toHaveLength(4);
     expect(result.state.champions[1].powerCards).not.toContain('golden_scepter');
+  });
+
+  it('replaces artifact when discardCardId provided', () => {
+    let state = createActionPhaseState();
+    state = {
+      ...state,
+      champions: {
+        ...state.champions,
+        1: { ...state.champions[1], powerCards: ['gold_idol', 'golden_chalice', 'golden_ring', 'gold_crown'], powerCardSlots: 4 },
+      },
+      powerCardMarkets: { ...state.powerCardMarkets, gold: ['golden_scepter'] },
+    };
+    state = addResources(state, 1, { gold: 5 });
+    state = trackGodAccess(state, 1, 'gold');
+
+    const result = buyPowerCard(state, 1, 'golden_scepter', { discardCardId: 'gold_idol', gemSelection: { gold: 1 } });
+    expect(result.state.champions[1].powerCards).toContain('golden_scepter');
+    expect(result.state.champions[1].powerCards).not.toContain('gold_idol');
+    expect(result.log.some(l => l.includes('Discarded'))).toBe(true);
+    expect(result.log.some(l => l.includes('Bought'))).toBe(true);
   });
 
   it('fails when god not accessed this turn', () => {

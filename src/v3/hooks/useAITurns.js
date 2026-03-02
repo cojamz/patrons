@@ -285,6 +285,16 @@ function handleAIDecision(decision, game, actions) {
       break;
     }
 
+    case 'discardArtifact': {
+      // AI picks the weakest artifact to discard (first one, or random)
+      const options = decision.options || [];
+      if (options.length > 0) {
+        // Discard the first (oldest) artifact
+        actions.submitDecision(options[0].id);
+      }
+      break;
+    }
+
     case 'redistributeResources': {
       // Alchemist's Trunk: randomly redistribute total resources across active colors
       const player = game.players.find(p => p.id === (decision.ownerId || currentPlayerId));
@@ -376,20 +386,17 @@ function tryAIPurchase(gameSnapshot, playerId, actionsRef) {
     // Check power cards
     const champion = game.champions?.[playerId];
     if (champion) {
-      const currentCards = champion.powerCards || [];
-      if (currentCards.length < champion.powerCardSlots) {
-        const market = (game.powerCardMarkets || {})[godColor] || [];
-        for (const cardId of market) {
-          if (!cardId) continue;
-          const card = powerCards[cardId];
-          if (!card || !card.cost) continue;
+      const market = (game.powerCardMarkets || {})[godColor] || [];
+      for (const cardId of market) {
+        if (!cardId) continue;
+        const card = powerCards[cardId];
+        if (!card || !card.cost) continue;
 
-          const { affordable } = checkAffordable(playerResources, card.cost);
-          if (!affordable) continue;
+        const { affordable } = checkAffordable(playerResources, card.cost);
+        if (!affordable) continue;
 
-          // Power cards are generally high priority (permanent benefits)
-          options.push({ type: 'card', id: cardId, priority: 7 });
-        }
+        // Power cards are generally high priority (permanent benefits)
+        options.push({ type: 'card', id: cardId, priority: 7 });
       }
     }
   }

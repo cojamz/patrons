@@ -384,8 +384,6 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
     const playerId = currentPlayer.id;
     const champion = game.champions?.[playerId];
     if (!champion) return false;
-    const currentCards = champion.powerCards || [];
-    if (currentCards.length >= champion.powerCardSlots) return false;
     const card = powerCards[cardId];
     if (!card) return false;
     const playerResources = currentPlayer.resources || {};

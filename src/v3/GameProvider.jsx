@@ -576,6 +576,13 @@ export default function GameProvider({ children }) {
       }
     }
 
+    if (decision.type === 'discardArtifact') {
+      // Player chose which artifact to discard — re-call buyPowerCard with discardCardId
+      const result = buyPowerCard(state.game, decision._playerId, decision._cardId, { discardCardId: answer });
+      dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log, pendingDecision: nextDecisionFromResult(result) });
+      return;
+    }
+
     if (decision.type === 'actionChoice' || decision.type === 'actionChoices') {
       if (decision._source === 'action') {
         const decisions = decision.type === 'actionChoice' ? { actionChoice: answer, _continued: true } : { actionChoices: answer, _continued: true };

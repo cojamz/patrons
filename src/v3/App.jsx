@@ -25,6 +25,7 @@ import GemSelection from './components/modals/GemSelection';
 import TargetPlayer from './components/modals/TargetPlayer';
 import ActionChoice from './components/modals/ActionChoice';
 import RoundTransition from './components/modals/RoundTransition';
+import DiscardArtifact from './components/modals/DiscardArtifact';
 import WorkerIcon from './components/icons/WorkerIcon';
 import ChampionIcon from './components/icons/ChampionIcon';
 import { CHAMPION_NAMES } from './components/icons/ChampionIcon';
@@ -531,6 +532,15 @@ function DecisionModal() {
     case 'nullifierPlacement':
       return (
         <NullifierPlacementModal
+          decision={pendingDecision}
+          onSubmit={(answer) => actions.submitDecision(answer)}
+          onCancel={handleCancel}
+        />
+      );
+
+    case 'discardArtifact':
+      return (
+        <DiscardArtifact
           decision={pendingDecision}
           onSubmit={(answer) => actions.submitDecision(answer)}
           onCancel={handleCancel}
