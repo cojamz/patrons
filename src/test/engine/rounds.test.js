@@ -85,21 +85,21 @@ describe('advanceRound — round progression', () => {
 });
 
 describe('advanceRound — worker reset', () => {
-    it('gives 5 workers in round 2', () => {
+    it('gives 4 workers in round 2', () => {
         const state = createTestState({ round: 1 });
         const result = advanceRound(state);
 
         result.state.players.forEach(player => {
-            expect(player.workersLeft).toBe(5);
+            expect(player.workersLeft).toBe(4);
         });
     });
 
-    it('gives 6 workers in round 3', () => {
+    it('gives 5 workers in round 3', () => {
         const state = createTestState({ round: 2 });
         const result = advanceRound(state);
 
         result.state.players.forEach(player => {
-            expect(player.workersLeft).toBe(6);
+            expect(player.workersLeft).toBe(5);
         });
     });
 });

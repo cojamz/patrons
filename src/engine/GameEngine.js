@@ -318,8 +318,8 @@ export function advanceRound(state) {
     const sortedPlayers = [...newState.players].sort((a, b) => a.victoryPoints - b.victoryPoints);
     const newTurnOrder = sortedPlayers.map(p => p.id);
 
-    // Workers per round: 4 (R1) → 5 (R2) → 6 (R3)
-    const baseWorkers = 3 + newRound;
+    // Workers per round: 3 (R1) → 4 (R2) → 5 (R3)
+    const baseWorkers = 2 + newRound;
 
     newState = {
         ...newState,

@@ -226,7 +226,7 @@ function PlayerTab({ player, champion, isCurrent, onClick }) {
       </span>
       <span
         className="text-xs tabular-nums font-medium"
-        style={{ color: godColors.gold.light, opacity: 0.8 }}
+        style={{ color: '#E0E0F0', opacity: 0.9 }}
       >
         {favorDisplay}
       </span>
@@ -278,16 +278,16 @@ function FavorCounter({ glory, glorySources }) {
   const [hovered, setHovered] = useState(false);
 
   const glowColor = direction === 'up'
-    ? godColors.gold.glowStrong
+    ? 'rgba(220, 220, 240, 0.5)'
     : direction === 'down'
       ? 'rgba(225, 29, 72, 0.5)'
-      : godColors.gold.glow;
+      : 'rgba(220, 220, 240, 0.3)';
 
   const textColor = direction === 'up'
-    ? godColors.gold.light
+    ? '#F0F0FF'
     : direction === 'down'
       ? base.negativeLight
-      : godColors.gold.primary;
+      : '#E0E0F0';
 
   // Build sorted source entries (non-zero only, sorted by |value| descending)
   const sourceEntries = glorySources
@@ -344,13 +344,13 @@ function FavorCounter({ glory, glorySources }) {
               padding: '10px 12px',
               borderRadius: '10px',
               background: '#0a0908',
-              border: `2px solid ${godColors.gold.primary}`,
-              boxShadow: `0 16px 48px rgba(0, 0, 0, 1), 0 0 0 4px rgba(0, 0, 0, 0.9), 0 0 16px ${godColors.gold.glow}`,
+              border: `2px solid rgba(220, 220, 240, 0.4)`,
+              boxShadow: `0 16px 48px rgba(0, 0, 0, 1), 0 0 0 4px rgba(0, 0, 0, 0.9), 0 0 16px rgba(220, 220, 240, 0.15)`,
               pointerEvents: 'none',
             }}
           >
             <div style={{
-              fontSize: '10px', fontWeight: 700, color: godColors.gold.text,
+              fontSize: '10px', fontWeight: 700, color: '#E0E0F0',
               textTransform: 'uppercase', letterSpacing: '0.08em',
               marginBottom: '8px', textAlign: 'center',
             }}>
@@ -388,7 +388,7 @@ function FavorCounter({ glory, glorySources }) {
               fontSize: '11px', fontWeight: 700,
             }}>
               <span style={{ color: base.textSecondary }}>Total</span>
-              <span style={{ color: godColors.gold.light }}>{glory}</span>
+              <span style={{ color: '#E0E0F0' }}>{glory}</span>
             </div>
           </motion.div>
         )}
@@ -458,8 +458,8 @@ function ChampionTooltipWrapper({ championData, colors, children }) {
               padding: '12px 14px',
               borderRadius: '10px',
               background: '#0a0908',
-              border: `2px solid ${godColors.gold.primary}`,
-              boxShadow: `0 16px 48px rgba(0, 0, 0, 1), 0 0 0 4px rgba(0, 0, 0, 0.9), 0 0 16px ${godColors.gold.glow}`,
+              border: `2px solid rgba(220, 220, 240, 0.4)`,
+              boxShadow: `0 16px 48px rgba(0, 0, 0, 1), 0 0 0 4px rgba(0, 0, 0, 0.9), 0 0 16px rgba(220, 220, 240, 0.15)`,
               pointerEvents: 'none',
             }}
           >

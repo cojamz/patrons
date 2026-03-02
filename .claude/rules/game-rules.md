@@ -2,7 +2,7 @@
 
 ## Core Loop
 3 rounds. Each round: place workers on action spaces → use shops → score automatic VP → advance.
-Workers per round: 4 (Round 1) → 5 (Round 2) → 6 (Round 3).
+Workers per round: 3 (Round 1) → 4 (Round 2) → 5 (Round 3).
 Turn order re-sorted by VP each round (lowest VP goes first).
 
 ## 8 Color Layers

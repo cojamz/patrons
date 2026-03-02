@@ -14,14 +14,14 @@ import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import ResourceIcon from '../icons/ResourceIcon';
 import WorkerIcon from '../icons/WorkerIcon';
-import { godColors, playerColors, base, godMeta } from '../../styles/theme';
+import { godColors, playerColors, base, godMeta, favorConditionStyle } from '../../styles/theme';
 import { roundTransition, cardReveal, staggerContainer } from '../../styles/animations';
 import { FAVOR_SOURCE_LABELS } from '../player/PlayerPanel';
 
 const ROUNDS_TOTAL = 3;
 
 function FavorCell({ player, isLeader, gloryDelta }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const sourceEntries = player.glorySources
     ? Object.entries(player.glorySources)
         .filter(([, v]) => v !== 0)
@@ -33,7 +33,8 @@ function FavorCell({ player, isLeader, gloryDelta }) {
       <span
         className="text-base font-bold tabular-nums"
         style={{
-          color: isLeader ? godColors.gold.text : base.textPrimary,
+          color: favorConditionStyle.text,
+          textShadow: favorConditionStyle.textShadow,
           cursor: sourceEntries.length > 0 ? 'pointer' : 'default',
         }}
         onClick={() => sourceEntries.length > 0 && setExpanded(!expanded)}
@@ -49,7 +50,7 @@ function FavorCell({ player, isLeader, gloryDelta }) {
         <span
           className="text-[10px] font-semibold tabular-nums"
           style={{
-            color: gloryDelta > 0 ? godColors.gold.light : 'rgba(225, 29, 72, 0.8)',
+            color: gloryDelta > 0 ? '#E0E0F0' : 'rgba(225, 29, 72, 0.8)',
           }}
         >
           {gloryDelta > 0 ? '+' : ''}{gloryDelta} this round
@@ -75,7 +76,7 @@ function FavorCell({ player, isLeader, gloryDelta }) {
               padding: '6px 8px',
               borderRadius: '6px',
               background: 'rgba(0, 0, 0, 0.5)',
-              border: `1px solid ${godColors.gold.primary}30`,
+              border: `1px solid ${favorConditionStyle.border}`,
             }}>
               {sourceEntries.map(([source, amount]) => (
                 <div
@@ -227,7 +228,7 @@ export default function RoundTransition({ round, players, onContinue, activeGods
                   <span
                     className="w-8 text-sm font-bold tabular-nums"
                     style={{
-                      color: isLeader ? godColors.gold.text : base.textMuted,
+                      color: isLeader ? '#E0E0F0' : base.textMuted,
                     }}
                   >
                     {i + 1}

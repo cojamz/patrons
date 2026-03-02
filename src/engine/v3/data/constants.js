@@ -8,7 +8,7 @@
 
 export const ROUNDS = 3;
 
-export const ACTIONS_PER_ROUND = [3, 5, 6]; // indexed by round (0-based internally)
+export const ACTIONS_PER_ROUND = [3, 4, 5]; // indexed by round (0-based internally)
 
 export const POWER_CARD_SLOTS = 4; // default per champion (The Ambitious gets +1)
 

@@ -54,7 +54,7 @@ describe('Phase constants', () => {
 
 describe('ACTIONS_PER_ROUND', () => {
   it('defines correct worker counts', () => {
-    expect(ACTIONS_PER_ROUND).toEqual([3, 5, 6]);
+    expect(ACTIONS_PER_ROUND).toEqual([3, 4, 5]);
   });
 });
 
@@ -160,14 +160,14 @@ describe('executeRoundStart', () => {
     let state = makeState();
     state = { ...state, phase: Phase.ROUND_START, round: 2 };
     const result = executeRoundStart(state);
-    expect(result.state.players[0].workersLeft).toBe(5);
+    expect(result.state.players[0].workersLeft).toBe(4);
   });
 
   it('sets correct workers for round 3', () => {
     let state = makeState();
     state = { ...state, phase: Phase.ROUND_START, round: 3 };
     const result = executeRoundStart(state);
-    expect(result.state.players[0].workersLeft).toBe(6);
+    expect(result.state.players[0].workersLeft).toBe(5);
   });
 
   it('resets per-round state', () => {

@@ -33,7 +33,7 @@ const SLIDES = [
   },
   {
     heading: '3 Rounds. Most Favor Wins.',
-    description: 'The game unfolds over 3 rounds of increasing power — 3 patrons in round 1, 5 in round 2, 6 in round 3. New action spaces and shops unlock each round. The player with the most Favor at the end becomes The Favored.',
+    description: 'The game unfolds over 3 rounds of increasing power — 3 patrons in round 1, 4 in round 2, 5 in round 3. New action spaces and shops unlock each round. The player with the most Favor at the end becomes The Favored.',
     icon: 'rounds',
   },
 ];
