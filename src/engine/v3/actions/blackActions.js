@@ -96,11 +96,16 @@ export function skulk(state, playerId) {
 /** ransack: Steal 2 resources from a player */
 export function ransack(state, playerId, gods, decisions = {}) {
   if (!decisions.targetPlayer) {
-    const validTargets = state.players.filter(p =>
-      p.id !== playerId && canStealFrom(state, p.id)
-    ).map(p => p.id);
+    // Filter: must be stealable AND have resources to take
+    const validTargets = state.players.filter(p => {
+      if (p.id === playerId) return false;
+      if (!canStealFrom(state, p.id)) return false;
+      const total = Object.values(p.resources).reduce((sum, v) => sum + v, 0);
+      return total > 0;
+    }).map(p => p.id);
     if (validTargets.length === 0) {
-      return { state, log: ['No valid targets (all immune to steal)'], abort: true };
+      // No valid targets — worker is still consumed (no abort)
+      return { state, log: ['Ransack: no opponents have resources to steal'] };
     }
     return {
       state,
@@ -123,7 +128,7 @@ export function ransack(state, playerId, gods, decisions = {}) {
     const target = getPlayer(state, targetId);
     const totalAvailable = Object.values(target.resources).reduce((sum, v) => sum + v, 0);
     if (totalAvailable === 0) {
-      return { state, log: [`Target ${targetId} has no resources to steal`] };
+      return { state, log: [`Ransack: target has no resources to steal`] };
     }
     const stealCount = Math.min(2, totalAvailable);
     return {
@@ -253,11 +258,16 @@ export function tribute(state, playerId) {
 /** plunder: Steal half a player's resources of one color (rounded down) */
 export function plunder(state, playerId, gods, decisions = {}) {
   if (!decisions.targetPlayer) {
-    const validTargets = state.players.filter(p =>
-      p.id !== playerId && canStealFrom(state, p.id)
-    ).map(p => p.id);
+    // Filter: must be stealable AND have resources to take
+    const validTargets = state.players.filter(p => {
+      if (p.id === playerId) return false;
+      if (!canStealFrom(state, p.id)) return false;
+      const total = Object.values(p.resources).reduce((sum, v) => sum + v, 0);
+      return total > 0;
+    }).map(p => p.id);
     if (validTargets.length === 0) {
-      return { state, log: ['No valid targets (all immune to steal)'], abort: true };
+      // No valid targets — worker is still consumed (no abort)
+      return { state, log: ['Plunder: no opponents have resources to steal'] };
     }
     return {
       state,

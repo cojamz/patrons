@@ -344,11 +344,15 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
   // Check if the current player can afford a shop's cost (respects shopCostModifier)
   function canAffordShop(shop) {
     if (!currentPlayer || !game) return false;
+    // Only during action phase
+    if (game.phase !== 'action_phase') return false;
     // Must have placed a patron at this god's temple this turn
     const godAccess = game.godsAccessedThisTurn || [];
     if (!godAccess.includes(godColor)) return false;
     // One purchase per turn (shop or power card)
     if (game.purchaseMadeThisTurn) return false;
+    // Hoard blocks shopping this turn
+    if (currentPlayer.effects?.includes('noShopThisTurn')) return false;
     const playerResources = currentPlayer.resources || {};
     const shopId = `${godColor}_${shop.type}`;
     const cost = getShopCost(game, currentPlayer.id, shopId) || shop.cost || {};
@@ -377,10 +381,14 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
 
   function canBuyCard(cardId) {
     if (!currentPlayer || !cardId) return false;
+    // Only during action phase
+    if (game.phase !== 'action_phase') return false;
     const godAccess = game.godsAccessedThisTurn || [];
     if (!godAccess.includes(godColor)) return false;
     // One purchase per turn (shop or power card)
     if (game.purchaseMadeThisTurn) return false;
+    // Hoard blocks shopping this turn
+    if (currentPlayer.effects?.includes('noShopThisTurn')) return false;
     const playerId = currentPlayer.id;
     const champion = game.champions?.[playerId];
     if (!champion) return false;

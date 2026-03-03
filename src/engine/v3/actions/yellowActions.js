@@ -160,11 +160,16 @@ export function transmute(state, playerId, gods, decisions = {}) {
 /** siphon: Steal 2 any from a player, they get +1 yellow */
 export function siphon(state, playerId, gods, decisions = {}) {
   if (!decisions.targetPlayer) {
-    const validTargets = state.players.filter(p =>
-      p.id !== playerId && canStealFrom(state, p.id)
-    ).map(p => p.id);
+    // Filter: must be stealable AND have resources to take
+    const validTargets = state.players.filter(p => {
+      if (p.id === playerId) return false;
+      if (!canStealFrom(state, p.id)) return false;
+      const total = Object.values(p.resources).reduce((sum, v) => sum + v, 0);
+      return total > 0;
+    }).map(p => p.id);
     if (validTargets.length === 0) {
-      return { state, log: ['No valid targets (all immune to steal)'], abort: true };
+      // No valid targets — worker is still consumed (no abort)
+      return { state, log: ['Siphon: no opponents have resources to steal'] };
     }
     return {
       state,
@@ -187,9 +192,7 @@ export function siphon(state, playerId, gods, decisions = {}) {
     const target = getPlayer(state, targetId);
     const totalAvailable = Object.values(target.resources).reduce((sum, v) => sum + v, 0);
     if (totalAvailable === 0) {
-      // Still give compensation
-      let newState = addResources(state, targetId, { yellow: 1 });
-      return { state: newState, log: [`Target has no resources to steal. ${targetId} gained 1 yellow as compensation.`] };
+      return { state, log: ['Siphon: target has no resources to steal'] };
     }
     const stealCount = Math.min(2, totalAvailable);
     return {
@@ -278,7 +281,7 @@ export function distill(state, playerId, gods, decisions = {}) {
   const gainColor = decisions.chooseColorGain;
   const player = getPlayer(state, playerId);
   const spendAmount = player.resources[spendColor] || 0;
-  const gainAmount = spendAmount * 2;
+  const gainAmount = spendAmount + 3;
 
   let newState = removeResources(state, playerId, { [spendColor]: spendAmount });
   newState = addResources(newState, playerId, { [gainColor]: gainAmount });

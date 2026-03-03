@@ -286,7 +286,14 @@ describe('Black Actions', () => {
 
   describe('ransack', () => {
     it('returns pendingDecision for targetPlayer first', () => {
-      const state = makeState();
+      // Targets must have resources to be valid steal targets
+      const state = makeState({
+        players: [
+          { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+          { id: 'p2', resources: { gold: 3, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+          { id: 'p3', resources: { gold: 0, black: 2, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+        ],
+      });
       const result = routeAction(state, 'p1', 'black_ransack', GODS);
       expect(result.pendingDecision).toBeDefined();
       expect(result.pendingDecision.type).toBe('targetPlayer');
@@ -327,7 +334,7 @@ describe('Black Actions', () => {
       expect(result.resourcesStolen).toHaveLength(1);
     });
 
-    it('aborts when all targets are immune', () => {
+    it('consumes action when no valid targets (immune or empty)', () => {
       const state = makeState({
         players: [
           { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
@@ -336,7 +343,9 @@ describe('Black Actions', () => {
         aegisHolder: 'p2',
       });
       const result = routeAction(state, 'p1', 'black_ransack', GODS);
-      expect(result.abort).toBe(true);
+      // No abort — worker is consumed even when no valid targets
+      expect(result.abort).toBeUndefined();
+      expect(result.log.length).toBeGreaterThan(0);
     });
 
     it('handles target with 0 resources', () => {
@@ -514,7 +523,14 @@ describe('Black Actions', () => {
 
   describe('plunder', () => {
     it('returns pendingDecision for targetPlayer first', () => {
-      const state = makeState();
+      // Targets must have resources to be valid steal targets
+      const state = makeState({
+        players: [
+          { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+          { id: 'p2', resources: { gold: 5, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+          { id: 'p3', resources: { gold: 0, black: 3, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+        ],
+      });
       const result = routeAction(state, 'p1', 'black_plunder', GODS);
       expect(result.pendingDecision).toBeDefined();
       expect(result.pendingDecision.type).toBe('targetPlayer');
@@ -554,7 +570,7 @@ describe('Black Actions', () => {
       expect(result.penalizedPlayers).toContain('p2');
     });
 
-    it('aborts when all targets are immune', () => {
+    it('consumes action when no valid targets (immune or empty)', () => {
       const state = makeState({
         players: [
           { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
@@ -563,7 +579,9 @@ describe('Black Actions', () => {
         aegisHolder: 'p2',
       });
       const result = routeAction(state, 'p1', 'black_plunder', GODS);
-      expect(result.abort).toBe(true);
+      // No abort — worker is consumed even when no valid targets
+      expect(result.abort).toBeUndefined();
+      expect(result.log.length).toBeGreaterThan(0);
     });
 
     it('handles target with no color having 2+ resources', () => {
@@ -1148,7 +1166,14 @@ describe('Yellow Actions', () => {
 
   describe('siphon', () => {
     it('returns pendingDecision for targetPlayer first', () => {
-      const state = makeState();
+      // Targets must have resources to be valid steal targets
+      const state = makeState({
+        players: [
+          { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+          { id: 'p2', resources: { gold: 3, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+          { id: 'p3', resources: { gold: 0, black: 2, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+        ],
+      });
       const result = routeAction(state, 'p1', 'yellow_siphon', GODS);
       expect(result.pendingDecision).toBeDefined();
       expect(result.pendingDecision.type).toBe('targetPlayer');
@@ -1190,19 +1215,21 @@ describe('Yellow Actions', () => {
       expect(result.penalizedPlayers).toContain('p2');
     });
 
-    it('gives compensation even when target has 0 resources', () => {
+    it('filters out targets with 0 resources', () => {
       const state = makeState({
         players: [
           { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
           { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
         ],
       });
-      const result = routeAction(state, 'p1', 'yellow_siphon', GODS, { targetPlayer: 'p2' });
-      // Target still gets +1 yellow even with nothing stolen
-      expect(getPlayer(result.state, 'p2').resources.yellow).toBe(1);
+      const result = routeAction(state, 'p1', 'yellow_siphon', GODS);
+      // No valid targets (P2 has 0 resources) — action consumed, no abort
+      expect(result.pendingDecision).toBeUndefined();
+      expect(result.abort).toBeUndefined();
+      expect(result.log.length).toBeGreaterThan(0);
     });
 
-    it('aborts when all targets are immune', () => {
+    it('consumes action when no valid targets (immune or empty)', () => {
       const state = makeState({
         players: [
           { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
@@ -1211,7 +1238,9 @@ describe('Yellow Actions', () => {
         aegisHolder: 'p2',
       });
       const result = routeAction(state, 'p1', 'yellow_siphon', GODS);
-      expect(result.abort).toBe(true);
+      // No abort — worker is consumed even when no valid targets
+      expect(result.abort).toBeUndefined();
+      expect(result.log.length).toBeGreaterThan(0);
     });
   });
 
@@ -1244,7 +1273,7 @@ describe('Yellow Actions', () => {
       expect(result.pendingDecision.options).not.toContain('gold'); // can't gain same color
     });
 
-    it('spends all of one color and gains 2x of another', () => {
+    it('spends all of one color and gains amount + 3 of another', () => {
       const state = makeState({
         players: [
           { id: 'p1', resources: { gold: 3, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
@@ -1257,7 +1286,23 @@ describe('Yellow Actions', () => {
       });
       const p1 = getPlayer(result.state, 'p1');
       expect(p1.resources.gold).toBe(0);
-      expect(p1.resources.black).toBe(6); // 3 * 2
+      expect(p1.resources.black).toBe(6); // 3 + 3
+    });
+
+    it('applies +3 bonus (not x2) correctly', () => {
+      const state = makeState({
+        players: [
+          { id: 'p1', resources: { gold: 5, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+          { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+        ],
+      });
+      const result = routeAction(state, 'p1', 'yellow_distill', GODS, {
+        chooseColor: 'gold',
+        chooseColorGain: 'green',
+      });
+      const p1 = getPlayer(result.state, 'p1');
+      expect(p1.resources.gold).toBe(0);
+      expect(p1.resources.green).toBe(8); // 5 + 3, not 5 * 2 = 10
     });
 
     it('handles no resources to spend', () => {

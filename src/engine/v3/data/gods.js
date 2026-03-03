@@ -415,9 +415,9 @@ const gods = {
         id: 'yellow_distill',
         name: 'Distill',
         tier: 2,
-        effect: 'Spend all of one color → gain that many ×2 of another',
+        effect: 'Spend all of one color → gain that many +3 of another',
         effectType: EFFECT_TYPES.SPEND_ALL_CONVERT,
-        multiplier: 2,
+        bonus: 3,
       },
       {
         id: 'yellow_attune',

@@ -287,6 +287,25 @@ describe('advanceTurn', () => {
     expect(next.godsAccessedThisTurn).toEqual([]);
     expect(next.turnActionsThisTurn).toEqual([]);
   });
+
+  it('clears per-turn player effects (noShopThisTurn, shopDiscount)', () => {
+    let state = stateInActionPhase(2);
+    state = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === state.currentPlayer
+          ? { ...p, effects: ['noShopThisTurn', 'shopDiscount', 'doubleNextGain'] }
+          : p
+      ),
+    };
+    const next = advanceTurn(state);
+    // noShopThisTurn and shopDiscount should be cleared
+    // doubleNextGain should persist (it's not a turn-scoped effect)
+    const prevPlayer = next.players.find(p => p.id === state.currentPlayer);
+    expect(prevPlayer.effects).not.toContain('noShopThisTurn');
+    expect(prevPlayer.effects).not.toContain('shopDiscount');
+    expect(prevPlayer.effects).toContain('doubleNextGain');
+  });
 });
 
 // --- Round End ---

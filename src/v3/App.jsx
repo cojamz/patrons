@@ -27,6 +27,7 @@ import TargetPlayer from './components/modals/TargetPlayer';
 import ActionChoice from './components/modals/ActionChoice';
 import RoundTransition from './components/modals/RoundTransition';
 import DiscardArtifact from './components/modals/DiscardArtifact';
+import ChooseColor from './components/modals/ChooseColor';
 import WorkerIcon from './components/icons/WorkerIcon';
 import ChampionIcon from './components/icons/ChampionIcon';
 import { CHAMPION_NAMES } from './components/icons/ChampionIcon';
@@ -735,6 +736,15 @@ function DecisionModal() {
     case 'discardArtifact':
       return (
         <DiscardArtifact
+          decision={pendingDecision}
+          onSubmit={(answer) => actions.submitDecision(answer)}
+          onCancel={handleCancel}
+        />
+      );
+
+    case 'chooseColor':
+      return (
+        <ChooseColor
           decision={pendingDecision}
           onSubmit={(answer) => actions.submitDecision(answer)}
           onCancel={handleCancel}

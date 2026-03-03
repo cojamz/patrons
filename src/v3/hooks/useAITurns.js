@@ -320,6 +320,16 @@ function handleAIDecision(decision, game, actions) {
       break;
     }
 
+    case 'chooseColor': {
+      const options = decision.options || [];
+      if (options.length > 0) {
+        actions.submitDecision(pick(options));
+      } else {
+        actions.submitDecision(null);
+      }
+      break;
+    }
+
     case 'redistributeResources': {
       const player = game.players.find(p => p.id === (decision.ownerId || currentPlayerId));
       if (!player) { actions.submitDecision({ redistribution: {} }); break; }

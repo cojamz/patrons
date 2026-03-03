@@ -390,8 +390,18 @@ function getPlayer(state, playerId) {
 }
 
 function resetTurnState(state) {
+  // Clear per-turn player effects (noShopThisTurn from Hoard, shopDiscount from Haggle)
+  const TURN_EFFECTS = ['noShopThisTurn', 'shopDiscount'];
+  const players = state.players.map(p => {
+    if (!p.effects || p.effects.length === 0) return p;
+    const cleaned = p.effects.filter(e => !TURN_EFFECTS.includes(e));
+    if (cleaned.length === p.effects.length) return p;
+    return { ...p, effects: cleaned };
+  });
+
   return {
     ...state,
+    players,
     workerPlacedThisTurn: false,
     purchaseMadeThisTurn: false,
     turnResourceGains: {},
