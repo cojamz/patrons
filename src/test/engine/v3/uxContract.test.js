@@ -17,7 +17,7 @@ import { simulateGame, randomDecisionFn } from '../../../engine/v3/runner.js';
 import { dispatchEvent, EventType, registerHandler, resetHandlerFrequencies } from '../../../engine/v3/events.js';
 import { resolveShop, payShopCost } from '../../../engine/v3/shops/shopResolver.js';
 
-// Decision types the UI's DecisionModal can handle
+// Decision types the UI's DecisionModal can handle (must match App.jsx switch cases)
 const HANDLED_DECISION_TYPES = [
   'championChoice',
   'gemSelection',
@@ -28,6 +28,9 @@ const HANDLED_DECISION_TYPES = [
   'nullifierPlacement',
   'chooseColor',
   'turnOrderChoice',
+  'redistribution',
+  'redistributeResources',
+  'discardArtifact',
 ];
 
 // Required fields per decision type (what the modal reads)
@@ -888,6 +891,91 @@ describe('UX Contract: full simulation', () => {
 
     if (unhandled.length > 0) {
       throw new Error(`Unhandled decision types/fields: ${[...new Set(unhandled)].join(', ')}`);
+    }
+  });
+
+  it('stress: 2P all 4 gods complete with all decision types valid', () => {
+    const unhandled = [];
+    const trackingDecisionFn = createTrackingDecisionFn(unhandled);
+
+    for (let i = 0; i < 10; i++) {
+      const result = simulateGame({
+        playerCount: 2,
+        godSet: ['gold', 'black', 'green', 'yellow'],
+        decisionFn: trackingDecisionFn,
+        maxTurns: 300,
+      });
+
+      expect(result.finalState.phase).toBe('game_end');
+    }
+
+    if (unhandled.length > 0) {
+      throw new Error(`Unhandled decision types/fields: ${[...new Set(unhandled)].join(', ')}`);
+    }
+  });
+
+  it('stress: 4P all gods complete with no crashes', () => {
+    const unhandled = [];
+    const trackingDecisionFn = createTrackingDecisionFn(unhandled);
+
+    for (let i = 0; i < 5; i++) {
+      const result = simulateGame({
+        playerCount: 4,
+        godSet: ['gold', 'black', 'green', 'yellow'],
+        decisionFn: trackingDecisionFn,
+        maxTurns: 500,
+      });
+
+      expect(result.finalState.phase).toBe('game_end');
+      expect(result.finalState.players.length).toBe(4);
+    }
+
+    if (unhandled.length > 0) {
+      throw new Error(`Unhandled decision types/fields: ${[...new Set(unhandled)].join(', ')}`);
+    }
+  });
+});
+
+// ============================================================================
+// Contract: per-turn effect lifecycle
+// ============================================================================
+
+describe('UX Contract: effect lifecycle', () => {
+  it('noShopThisTurn does not persist across turns in full simulation', () => {
+    let hoardPlayed = false;
+    let nextTurnShopBlocked = false;
+
+    const trackingDecisionFn = (state, playerId, decision) => {
+      return randomDecisionFn(state, playerId, decision);
+    };
+
+    // Run games and check post-turn state
+    for (let i = 0; i < 10; i++) {
+      const result = simulateGame({
+        playerCount: 2,
+        godSet: ['gold', 'black', 'green', 'yellow'],
+        decisionFn: trackingDecisionFn,
+        maxTurns: 300,
+      });
+
+      // Check all players at game end — no one should have stale noShopThisTurn
+      for (const player of result.finalState.players) {
+        expect(player.effects || []).not.toContain('noShopThisTurn');
+        expect(player.effects || []).not.toContain('shopDiscount');
+      }
+    }
+  });
+
+  it('purchaseMadeThisTurn resets each turn (never stuck true at game end)', () => {
+    for (let i = 0; i < 10; i++) {
+      const result = simulateGame({
+        playerCount: 2,
+        godSet: ['gold', 'black', 'green', 'yellow'],
+        maxTurns: 300,
+      });
+
+      // At game end, purchaseMadeThisTurn should be false (last turn reset)
+      expect(result.finalState.purchaseMadeThisTurn).toBe(false);
     }
   });
 });

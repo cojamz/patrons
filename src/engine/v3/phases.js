@@ -354,11 +354,12 @@ export function advanceTurn(state) {
   }
 
   // All players exhausted — transition to round end
-  return {
+  // Clean up per-turn player effects before scoring
+  return resetTurnState({
     ...state,
     phase: Phase.ROUND_END,
     turnDirection: direction,
-  };
+  });
 }
 
 // --- Game Over Check ---
