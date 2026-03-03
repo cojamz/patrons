@@ -16,16 +16,8 @@ const GOD_LAYOUT = ['gold', 'black', 'green', 'yellow'];
 
 export default function GameBoard() {
   const { game } = useGame();
-  const [focusedGod, setFocusedGod] = useState(null);
-
   const activeGods = game?.gods || GOD_LAYOUT;
-
-  // Default focus to first god on mount
-  useEffect(() => {
-    if (activeGods.length > 0 && focusedGod === null) {
-      setFocusedGod(activeGods[0]);
-    }
-  }, [activeGods, focusedGod]);
+  const [focusedGod, setFocusedGod] = useState(activeGods[0] || null);
 
   // Auto-focus when a god is interacted with (track via godsAccessedThisTurn)
   useEffect(() => {

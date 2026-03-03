@@ -1013,8 +1013,11 @@ function loadSession() {
   } catch { return null; }
 }
 
+// Memoize once at module level — these are static values, no need to recreate per render
+const THEME_VARS = getThemeCSSVars();
+
 export default function App() {
-  const themeVars = getThemeCSSVars();
+  const themeVars = THEME_VARS;
   const [appPhase, setAppPhase] = useState('setup'); // setup | lobby | lobby_join | local | multiplayer
   const [multiplayerConfig, setMultiplayerConfig] = useState(null);
   const [localConfig, setLocalConfig] = useState(null);
