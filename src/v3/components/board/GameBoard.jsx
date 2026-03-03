@@ -7,7 +7,7 @@
  *
  * Layout adapts: focused god gets more space, collapsed gods compress.
  */
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import GodArea from './GodArea';
 import { useGame } from '../../hooks/useGame';
 import { base } from '../../styles/theme';
@@ -46,26 +46,18 @@ export default function GameBoard() {
     );
   }
 
-  // Compute grid layout based on god count and focus
+  // Compute grid layout based on god count and focus — memoized to avoid layout thrashing
   const godCount = activeGods.length;
-  const getGridStyle = () => {
-    if (godCount <= 2) {
-      // Side by side: focused gets 3fr, collapsed gets 2fr
-      return {
-        gridTemplateColumns: activeGods.map(g =>
-          g === focusedGod ? '3fr' : '2fr'
-        ).join(' '),
-        gridTemplateRows: '1fr',
-      };
-    }
-    // 3-4 gods: vertical columns, accordion style — focused gets more width
+  const gridStyle = useMemo(() => {
+    const cols = godCount <= 2
+      ? activeGods.map(g => g === focusedGod ? '3fr' : '2fr').join(' ')
+      : activeGods.map(g => g === focusedGod ? '2.5fr' : '1.2fr').join(' ');
     return {
-      gridTemplateColumns: activeGods.map(g =>
-        g === focusedGod ? '2.5fr' : '1.2fr'
-      ).join(' '),
+      gridTemplateColumns: cols,
       gridTemplateRows: '1fr',
+      transition: 'grid-template-columns 0.3s ease, grid-template-rows 0.3s ease',
     };
-  };
+  }, [focusedGod, godCount, activeGods]);
 
   return (
     <div
@@ -95,10 +87,7 @@ export default function GameBoard() {
       {/* God grid with focus-aware sizing */}
       <div
         className="relative z-10 grid gap-3 p-3 w-full h-full"
-        style={{
-          ...getGridStyle(),
-          transition: 'grid-template-columns 0.3s ease, grid-template-rows 0.3s ease',
-        }}
+        style={gridStyle}
       >
         {activeGods.map(godColor => (
           <GodArea

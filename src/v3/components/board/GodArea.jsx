@@ -594,7 +594,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                   onMouseEnter={(e) => showTooltip('shop', shop, e)}
                   onMouseLeave={hideTooltip}
                   disabled={false}
-                  className="w-full"
+                  className={`w-full ${affordable ? 'buyable-glow' : ''}`}
                   style={{
                     position: 'relative',
                     display: 'flex', alignItems: 'center', gap: '3px',
@@ -605,15 +605,9 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                     opacity: isShopLocked ? 0.3 : 0.85,
                     cursor: isShopLocked ? 'default' : 'pointer',
                     outline: 'none', flexShrink: 0,
+                    '--glow-min': `inset 0 0 3px rgba(250, 235, 215, 0.1), 0 0 2px rgba(250, 235, 215, 0.05)`,
+                    '--glow-max': `inset 0 0 6px rgba(250, 235, 215, 0.2), 0 0 4px rgba(250, 235, 215, 0.1)`,
                   }}
-                  animate={affordable ? {
-                    boxShadow: [
-                      `inset 0 0 3px rgba(250, 235, 215, 0.1), 0 0 2px rgba(250, 235, 215, 0.05)`,
-                      `inset 0 0 6px rgba(250, 235, 215, 0.2), 0 0 4px rgba(250, 235, 215, 0.1)`,
-                      `inset 0 0 3px rgba(250, 235, 215, 0.1), 0 0 2px rgba(250, 235, 215, 0.05)`,
-                    ],
-                  } : { boxShadow: 'none' }}
-                  transition={affordable ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } : {}}
                 >
                   <span style={{
                     fontSize: style.fontSize || '9px', fontWeight: 700,
@@ -662,7 +656,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                   }}
                   onMouseEnter={(e) => showTooltip('card', cardId, e)}
                   onMouseLeave={hideTooltip}
-                  className="w-full"
+                  className={`w-full ${buyable ? 'buyable-glow' : ''}`}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '5px',
                     padding: '4px 6px', borderRadius: '6px',
@@ -673,15 +667,10 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                     opacity: buyable ? 1 : 0.5,
                     cursor: buyable ? 'pointer' : 'default',
                     outline: 'none', flexShrink: 0,
+                    '--glow-min': `0 0 6px ${colors.glow}, inset 0 0 4px ${colors.glow}`,
+                    '--glow-max': `0 0 12px ${colors.glowStrong}, inset 0 0 8px ${colors.glow}`,
+                    boxShadow: buyable ? undefined : `inset 0 0 4px ${colors.glow}`,
                   }}
-                  animate={buyable ? {
-                    boxShadow: [
-                      `0 0 6px ${colors.glow}, inset 0 0 4px ${colors.glow}`,
-                      `0 0 12px ${colors.glowStrong}, inset 0 0 8px ${colors.glow}`,
-                      `0 0 6px ${colors.glow}, inset 0 0 4px ${colors.glow}`,
-                    ],
-                  } : { boxShadow: `inset 0 0 4px ${colors.glow}` }}
-                  transition={buyable ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } : {}}
                 >
                   <div style={{
                     width: '18px', height: '18px', borderRadius: '50%',
@@ -848,24 +837,17 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
         </div>
 
         {/* ── MARKET SECTION ── warm parchment/trade feel */}
-        <motion.div
-          className="rounded-lg flex-shrink-0"
+        <div
+          className={`rounded-lg flex-shrink-0 ${shouldHighlightMarket ? 'buyable-glow' : ''}`}
           style={{
             background: 'rgba(250, 235, 215, 0.05)',
             border: shouldHighlightMarket ? '1px solid rgba(250, 235, 215, 0.3)' : '1px solid rgba(250, 235, 215, 0.12)',
             borderTop: shouldHighlightMarket ? '2px solid rgba(250, 235, 215, 0.4)' : '2px solid rgba(250, 235, 215, 0.15)',
             padding: '4px',
+            '--glow-min': 'inset 0 1px 6px rgba(250, 235, 215, 0.04)',
+            '--glow-max': 'inset 0 1px 6px rgba(250, 235, 215, 0.04), 0 0 14px rgba(250, 235, 215, 0.15)',
+            boxShadow: shouldHighlightMarket ? undefined : 'inset 0 1px 6px rgba(250, 235, 215, 0.04)',
           }}
-          animate={shouldHighlightMarket ? {
-            boxShadow: [
-              'inset 0 1px 6px rgba(250, 235, 215, 0.04)',
-              'inset 0 1px 6px rgba(250, 235, 215, 0.04), 0 0 14px rgba(250, 235, 215, 0.15)',
-              'inset 0 1px 6px rgba(250, 235, 215, 0.04)',
-            ],
-          } : { boxShadow: 'inset 0 1px 6px rgba(250, 235, 215, 0.04)' }}
-          transition={shouldHighlightMarket
-            ? { duration: 2, repeat: Infinity, ease: 'easeInOut' }
-            : { duration: 0.3 }}
         >
           <SectionHint
             label="Shops"
@@ -896,6 +878,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                   onMouseEnter={(e) => showTooltip('shop', shop, e)}
                   onMouseLeave={hideTooltip}
                   disabled={false}
+                  className={affordable ? 'buyable-glow' : ''}
                   style={{
                     flex: 1, minWidth: 0,
                     display: 'flex', flexDirection: 'column',
@@ -908,23 +891,9 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                     cursor: isShopLocked ? 'default' : 'pointer',
                     outline: 'none',
                     overflow: 'hidden',
+                    '--glow-min': affordable ? `0 0 4px ${style.color}15, inset 0 0 4px ${style.color}08` : undefined,
+                    '--glow-max': affordable ? `0 0 12px ${style.color}30, inset 0 0 8px ${style.color}15` : undefined,
                   }}
-                  animate={affordable ? {
-                    boxShadow: [
-                      `0 0 4px ${style.color}15, inset 0 0 4px ${style.color}08`,
-                      `0 0 12px ${style.color}30, inset 0 0 8px ${style.color}15`,
-                      `0 0 4px ${style.color}15, inset 0 0 4px ${style.color}08`,
-                    ],
-                    borderColor: [
-                      `${style.color}40`,
-                      `${style.color}70`,
-                      `${style.color}40`,
-                    ],
-                  } : { boxShadow: 'none' }}
-                  transition={affordable
-                    ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
-                    : { type: 'spring', stiffness: 400, damping: 25 }
-                  }
                   whileHover={!isShopLocked ? {
                     y: -2,
                     boxShadow: affordable
@@ -986,27 +955,20 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
               );
             })}
           </div>
-        </motion.div>
+        </div>
 
         {/* ── POWER CARDS SECTION ── divine/premium feel with god-colored glow */}
         {slots.some(s => s != null) ? (
-          <motion.div
-            className="rounded-lg flex-shrink-0"
+          <div
+            className={`rounded-lg flex-shrink-0 ${shouldHighlightMarket ? 'buyable-glow' : ''}`}
             style={{
               background: `radial-gradient(ellipse at 50% 0%, ${colors.surface} 0%, rgba(28, 25, 23, 0.4) 80%)`,
               border: shouldHighlightMarket ? `1px solid ${colors.primary}55` : `1px solid ${colors.border}`,
               padding: '4px',
+              '--glow-min': `inset 0 1px 8px ${colors.glow}`,
+              '--glow-max': `inset 0 1px 8px ${colors.glow}, 0 0 14px ${colors.glow}`,
+              boxShadow: shouldHighlightMarket ? undefined : `inset 0 1px 8px ${colors.glow}`,
             }}
-            animate={shouldHighlightMarket ? {
-              boxShadow: [
-                `inset 0 1px 8px ${colors.glow}`,
-                `inset 0 1px 8px ${colors.glow}, 0 0 14px ${colors.glow}`,
-                `inset 0 1px 8px ${colors.glow}`,
-              ],
-            } : { boxShadow: `inset 0 1px 8px ${colors.glow}` }}
-            transition={shouldHighlightMarket
-              ? { duration: 2, repeat: Infinity, ease: 'easeInOut' }
-              : { duration: 0.3 }}
           >
             <SectionHint
               label="Artifacts"
@@ -1167,7 +1129,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                 );
               })}
             </motion.div>
-          </motion.div>
+          </div>
         ) : (
           <div
             className="rounded-lg flex-shrink-0 flex items-center justify-center"

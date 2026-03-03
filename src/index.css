@@ -130,3 +130,12 @@ button, .action-space, .player-card {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
+
+/* Buyable item glow pulse — runs on compositor thread, no JS re-renders */
+@keyframes buyable-glow {
+    0%, 100% { box-shadow: var(--glow-min); }
+    50% { box-shadow: var(--glow-max); }
+}
+.buyable-glow {
+    animation: buyable-glow 2.5s ease-in-out infinite;
+}
