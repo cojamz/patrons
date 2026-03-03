@@ -284,6 +284,7 @@ export function createV3GameState({ playerCount, playerNames, godSet, gameMode }
     godsAccessedThisTurn: [],
     nullifiedSpaces: {},
     glory: {},
+    aegisHolder: null,
   };
 }
 

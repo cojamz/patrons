@@ -1,109 +1,340 @@
 /**
- * Patrons v3 — Balance AI (Heuristic)
+ * Patrons v3 — MCTS AI
  *
- * Smarter-than-random AI for balance testing. Uses position evaluation
- * and lookahead to make reasonable game decisions.
+ * Monte Carlo Tree Search evaluator for balance testing.
+ * Zero hardcoded values. Every decision is evaluated by simulating
+ * future game outcomes and picking the option with the highest
+ * average final glory.
  *
- * Not meant to be optimal -- just good enough to expose balance issues
- * that random play would miss (e.g., dominant strategies, dead cards).
+ * Architecture:
+ *   rollout()            — fast random game completion from any state
+ *   mctsActionPicker()   — evaluate each action via rollouts
+ *   mctsShopDecision()   — evaluate each affordable shop via rollouts
+ *   mctsCardDecision()   — evaluate each affordable card via rollouts
+ *   mctsDecisionFn()     — evaluate each option for pending decisions
+ *   createMCTSPlayer()   — factory with configurable rollout counts
  */
 
-import { getPlayer, getOtherPlayers, canAccessGod } from './stateHelpers.js';
-import { getAvailableActions, getActionGod, canAfford, getShopDef, getShopCost } from './rules.js';
+import { getPlayer } from './stateHelpers.js';
+import { getAvailableActions, canAfford } from './rules.js';
 import { routeAction } from './actions/index.js';
+import {
+  executeAction, executeShop, endTurn, buyPowerCard, resolveDecision,
+} from './GameEngine.js';
+import {
+  Phase, executeChampionDraft, executeRoundStart, executeRoundEnd,
+  advanceTurn, isGameOver, resortTurnOrder,
+} from './phases.js';
+import { dispatchEvent, EventType, resetHandlerFrequencies } from './events.js';
 import { canAffordShop } from './shops/shopResolver.js';
-import gods from './data/gods.js';
-import champions from './data/champions.js';
 import { powerCards } from './data/powerCards.js';
+import { randomDecisionFn } from './runner.js';
 
 // ---------------------------------------------------------------------------
-// Position Evaluation
+// Configuration
+// ---------------------------------------------------------------------------
+
+export const MCTS_PRESETS = {
+  fast:     { actionRollouts: 5,  purchaseRollouts: 3,  decisionRollouts: 3  },
+  standard: { actionRollouts: 20, purchaseRollouts: 15, decisionRollouts: 10 },
+  strong:   { actionRollouts: 50, purchaseRollouts: 30, decisionRollouts: 20 },
+};
+
+/** Rollout count for backward-compatible exports (fast enough for tests). */
+const COMPAT_ROLLOUTS = 2;
+
+// ---------------------------------------------------------------------------
+// Core: Fast Rollout
 // ---------------------------------------------------------------------------
 
 /**
- * Evaluate game position from a player's perspective.
- * Returns a numeric score -- higher is better.
+ * Run game from current state to completion with random play.
+ * Returns final glory for the specified player.
+ * Optimized for speed — no logging, minimal allocation.
  */
-export function evaluatePosition(state, playerId) {
-  const player = getPlayer(state, playerId);
-  if (!player) return 0;
+function rollout(inputState, targetPlayerId) {
+  let state = fastDrainDecisions(inputState);
+  let safety = 0;
 
-  let score = 0;
+  while (!isGameOver(state) && safety < 300) {
+    safety++;
 
-  // 1. Current glory (weight: 10)
-  score += (player.glory || 0) * 10;
+    // Phase transitions
+    if (state.phase === Phase.CHAMPION_DRAFT) {
+      state = finishDraftRandomly(state);
+      if (state.phase === Phase.ROUND_START) state = fastRoundStart(state);
+      continue;
+    }
+    if (state.phase === Phase.ROUND_START) {
+      state = fastRoundStart(state);
+      continue;
+    }
+    if (state.phase === Phase.ROUND_END) {
+      state = fastRoundEnd(state);
+      continue;
+    }
+    if (state.phase === Phase.GAME_END) break;
+    if (state.phase !== Phase.ACTION_PHASE) break;
 
-  // 2. Total resources (weight: 1 per resource)
-  const resources = player.resources || {};
-  const totalResources = Object.values(resources).reduce((sum, v) => sum + Math.max(0, v), 0);
-  score += totalResources;
+    // --- Action turn ---
+    const pid = state.currentPlayer;
+    const player = getPlayer(state, pid);
+    if (!player || player.workersLeft <= 0) {
+      state = advanceTurn(state);
+      continue;
+    }
 
-  // 3. Gold count (extra weight due to Gold glory condition)
-  const activeGods = state.gods || ['gold', 'black', 'green', 'yellow'];
-  if (activeGods.includes('gold')) {
-    score += (resources.gold || 0) * 2;
+    const available = getAvailableActions(state, pid);
+    if (available.length === 0) {
+      state = advanceTurn(state);
+      continue;
+    }
+
+    // Random action pick
+    let actionId = available[Math.floor(Math.random() * available.length)];
+    let result = executeAction(state, pid, actionId);
+
+    // Handle abort — try another random action
+    if (result.abort) {
+      state = result.state;
+      let found = false;
+      for (const alt of available) {
+        if (alt === actionId) continue;
+        result = executeAction(state, pid, alt);
+        if (!result.abort) { actionId = alt; found = true; break; }
+        state = result.state;
+      }
+      if (!found) { state = advanceTurn(state); continue; }
+    }
+
+    state = result.state;
+    if (result.pendingDecision) {
+      state = fastResolveAction(state, pid, actionId, result.pendingDecision);
+    }
+    state = fastDrainDecisions(state);
+
+    // Note: The Deft's consecutive turns are handled by advanceTurn via player.extraTurns
+
+    // Random shop purchase (~40% when affordable)
+    if (!state.purchaseMadeThisTurn && Math.random() < 0.4) {
+      state = randomShopPurchase(state, pid);
+    }
+
+    // Random card purchase (~25% when affordable and has slots)
+    if (!state.purchaseMadeThisTurn && Math.random() < 0.25) {
+      state = randomCardPurchase(state, pid);
+    }
+
+    // End turn
+    state = endTurn(state).state;
+    state = fastDrainDecisions(state);
   }
 
-  // 4. Resource diversity (weight: 2 per color with >0)
-  const colorsOwned = Object.entries(resources).filter(([, amt]) => amt > 0).length;
-  score += colorsOwned * 2;
-
-  // 5. Power cards owned (weight: 5 per card)
-  const champion = state.champions?.[playerId];
-  const cardCount = champion?.powerCards?.length || 0;
-  score += cardCount * 5;
-
-  // 6. Workers remaining (more valuable early)
-  const round = state.round || 1;
-  const workerWeight = round <= 2 ? 2 : 1;
-  score += (player.workersLeft || 0) * workerWeight;
-
-  // 7. Relative position vs opponents (weight: 1 per glory ahead of average)
-  const others = getOtherPlayers(state, playerId);
-  if (others.length > 0) {
-    const avgGlory = others.reduce((sum, p) => sum + (p.glory || 0), 0) / others.length;
-    score += ((player.glory || 0) - avgGlory);
+  // Game end scoring
+  if (state.phase === Phase.GAME_END || isGameOver(state)) {
+    state = dispatchEvent(state, EventType.GAME_END, {}).state;
   }
 
-  return score;
+  return getPlayer(state, targetPlayerId)?.glory || 0;
 }
 
 // ---------------------------------------------------------------------------
-// Action Picking
+// Rollout Helpers
+// ---------------------------------------------------------------------------
+
+function fastRoundStart(state) {
+  state = resortTurnOrder(state);
+  state = executeRoundStart(state).state;
+  state = resetHandlerFrequencies(state, 'round');
+  state = dispatchEvent(state, EventType.ROUND_START, { round: state.round }).state;
+  state = fastDrainDecisions(state);
+  state = { ...state, currentPlayer: state.turnOrder[0] };
+  state = dispatchEvent(state, EventType.TURN_START, { playerId: state.turnOrder[0] }).state;
+  return fastDrainDecisions(state);
+}
+
+function fastRoundEnd(state) {
+  state = dispatchEvent(state, EventType.ROUND_END, { round: state.round }).state;
+  state = fastDrainDecisions(state);
+  return executeRoundEnd(state).state;
+}
+
+function fastDrainDecisions(state) {
+  let i = 0;
+  while (state.decisionQueue?.length > 0 && i < 50) {
+    const dec = state.decisionQueue[0];
+    state = { ...state, decisionQueue: state.decisionQueue.slice(1) };
+    const pid = dec.playerId || dec.ownerId;
+    const answer = randomDecisionFn(state, pid, dec);
+    if (dec.type === 'championChoice' && answer.championId) {
+      const r = executeChampionDraft(state, { championId: answer.championId });
+      state = r.state;
+      if (r.pendingDecision) {
+        state = { ...state, decisionQueue: [r.pendingDecision, ...(state.decisionQueue || [])] };
+      }
+    } else if (dec.sourceId) {
+      state = resolveDecision(state, dec.sourceId, answer).state;
+    }
+    i++;
+  }
+  return state;
+}
+
+function fastResolveAction(state, playerId, actionId, pendingDecision) {
+  let decisions = {};
+  let result = { state, pendingDecision };
+  let attempts = 0;
+  while (result.pendingDecision && attempts < 10) {
+    const answer = randomDecisionFn(result.state, playerId, result.pendingDecision);
+    if (result.pendingDecision._costPaid) decisions._costPaid = true;
+    decisions = { ...decisions, ...answer, _continued: true };
+    result = executeAction(result.state, playerId, actionId, decisions, { isContinuation: true });
+    attempts++;
+  }
+  return result.state;
+}
+
+function fastResolveShop(state, playerId, shopId, pendingDecision) {
+  let decisions = {};
+  let result = { state, pendingDecision };
+  let attempts = 0;
+  while (result.pendingDecision && attempts < 10) {
+    const answer = randomDecisionFn(result.state, playerId, result.pendingDecision);
+    if (result.pendingDecision._costPaid) decisions._costPaid = true;
+    decisions = { ...decisions, ...answer, _continued: true };
+    result = executeShop(result.state, playerId, shopId, decisions);
+    attempts++;
+  }
+  return result.state;
+}
+
+function fastResolveCard(state, playerId, cardId, pendingDecision) {
+  let decisions = {};
+  let result = { state, pendingDecision };
+  let attempts = 0;
+  while (result.pendingDecision && attempts < 10) {
+    const answer = randomDecisionFn(result.state, playerId, result.pendingDecision);
+    decisions = { ...decisions, ...answer, _continued: true };
+    result = buyPowerCard(result.state, playerId, cardId, decisions);
+    attempts++;
+  }
+  return result.state;
+}
+
+function randomShopPurchase(state, playerId) {
+  const accessed = state.godsAccessedThisTurn || [];
+  if (accessed.length === 0) return state;
+  const shops = [];
+  for (const god of accessed) {
+    for (const type of ['weak', 'strong', 'vp']) {
+      const sid = `${god}_${type}`;
+      if (canAffordShop(state, playerId, sid)) shops.push(sid);
+    }
+  }
+  if (shops.length === 0) return state;
+  const shopId = shops[Math.floor(Math.random() * shops.length)];
+  const result = executeShop(state, playerId, shopId);
+  state = result.state;
+  if (result.pendingDecision) {
+    state = fastResolveShop(state, playerId, shopId, result.pendingDecision);
+  }
+  return fastDrainDecisions(state);
+}
+
+function randomCardPurchase(state, playerId) {
+  const accessed = state.godsAccessedThisTurn || [];
+  const champ = state.champions?.[playerId];
+  if (!champ || (champ.powerCards?.length || 0) >= (champ.powerCardSlots || 4)) return state;
+  if (accessed.length === 0) return state;
+  const cards = [];
+  for (const god of accessed) {
+    for (const cardId of ((state.powerCardMarkets || {})[god] || [])) {
+      const card = powerCards[cardId];
+      if (card && canAfford(state, playerId, card.cost)) cards.push(cardId);
+    }
+  }
+  if (cards.length === 0) return state;
+  const cardId = cards[Math.floor(Math.random() * cards.length)];
+  const result = buyPowerCard(state, playerId, cardId);
+  state = result.state;
+  if (result.pendingDecision) {
+    state = fastResolveCard(state, playerId, cardId, result.pendingDecision);
+  }
+  return fastDrainDecisions(state);
+}
+
+function finishDraftRandomly(state) {
+  let maxSteps = 20;
+  while (state.phase === Phase.CHAMPION_DRAFT && maxSteps > 0) {
+    maxSteps--;
+    const r = executeChampionDraft(state);
+    state = r.state;
+    if (r.pendingDecision) {
+      const opts = r.pendingDecision.options || [];
+      if (opts.length === 0) break;
+      const pick = opts[Math.floor(Math.random() * opts.length)];
+      state = executeChampionDraft(state, { championId: pick.id }).state;
+    }
+  }
+  return state;
+}
+
+// ---------------------------------------------------------------------------
+// MCTS Evaluation Core
+// ---------------------------------------------------------------------------
+
+/** Average glory from N rollouts. */
+function avgRolloutGlory(state, playerId, n) {
+  let total = 0;
+  for (let i = 0; i < n; i++) {
+    total += rollout(state, playerId);
+  }
+  return total / n;
+}
+
+/**
+ * Complete the current turn (endTurn) and get a clean next-player state.
+ * Used before rollouts so the rollout starts at the beginning of a turn.
+ */
+function completeTurnAndAdvance(state) {
+  state = endTurn(state).state;
+  return fastDrainDecisions(state);
+}
+
+// ---------------------------------------------------------------------------
+// MCTS Action Picker
 // ---------------------------------------------------------------------------
 
 /**
- * Pick the best action using position evaluation.
- * Simulates each action and picks the one with the highest evaluated score.
+ * For each available action, execute it, complete the turn, and run
+ * N rollouts from the resulting state. Pick the action with the
+ * highest average final glory.
  */
-export function heuristicActionPicker(state, playerId, availableActions) {
+function mctsActionPicker(state, playerId, availableActions, rollouts) {
   if (!availableActions || availableActions.length === 0) return null;
   if (availableActions.length === 1) return availableActions[0];
 
   let bestAction = availableActions[0];
-  let bestScore = -Infinity;
+  let bestGlory = -Infinity;
 
   for (const actionId of availableActions) {
     try {
-      // Simulate executing the action
-      const result = routeAction(state, playerId, actionId, state.gods);
+      const result = executeAction(state, playerId, actionId);
+      if (result.abort) continue;
+
       let simState = result.state;
-
-      // If there's a pending decision, use a quick random resolution
-      // (we don't want to recurse deeply for evaluation)
       if (result.pendingDecision) {
-        // Use the pre-action state for scoring instead of trying to resolve
-        simState = state;
+        simState = fastResolveAction(simState, playerId, actionId, result.pendingDecision);
       }
+      simState = fastDrainDecisions(simState);
+      simState = completeTurnAndAdvance(simState);
 
-      const score = evaluatePosition(simState, playerId) + (Math.random() * 0.5);
-
-      if (score > bestScore) {
-        bestScore = score;
+      const avg = avgRolloutGlory(simState, playerId, rollouts);
+      if (avg > bestGlory) {
+        bestGlory = avg;
         bestAction = actionId;
       }
     } catch {
-      // If simulation fails, just give it a low score
       continue;
     }
   }
@@ -112,470 +343,531 @@ export function heuristicActionPicker(state, playerId, availableActions) {
 }
 
 // ---------------------------------------------------------------------------
-// Shop Decisions
+// MCTS Shop Decision
 // ---------------------------------------------------------------------------
 
 /**
- * Decide whether to use a shop and which one.
- * Returns shopId or null.
+ * Evaluate each affordable shop at accessed gods vs a "no shop" baseline.
+ * Only buy if a shop improves expected glory over the baseline.
  */
-export function heuristicShopDecision(state, playerId) {
+function mctsShopDecision(state, playerId, rollouts) {
   const accessed = state.godsAccessedThisTurn || [];
   if (accessed.length === 0) return null;
 
-  const player = getPlayer(state, playerId);
-  if (!player) return null;
+  const shops = [];
+  for (const god of accessed) {
+    for (const type of ['weak', 'strong', 'vp']) {
+      const sid = `${god}_${type}`;
+      if (canAffordShop(state, playerId, sid)) shops.push(sid);
+    }
+  }
+  if (shops.length === 0) return null;
+
+  // Baseline: skip purchasing and end turn
+  const baseState = completeTurnAndAdvance(state);
+  const baseline = avgRolloutGlory(baseState, playerId, rollouts);
 
   let bestShop = null;
-  let bestValue = 0;
+  let bestGlory = baseline;
 
-  for (const godColor of accessed) {
-    const shopTypes = ['weak', 'strong', 'vp'];
-    for (const shopType of shopTypes) {
-      const shopId = `${godColor}_${shopType}`;
+  for (const shopId of shops) {
+    try {
+      const result = executeShop(state, playerId, shopId);
+      let simState = result.state;
+      if (result.pendingDecision) {
+        simState = fastResolveShop(simState, playerId, shopId, result.pendingDecision);
+      }
+      simState = fastDrainDecisions(simState);
+      simState = completeTurnAndAdvance(simState);
 
-      if (!canAffordShop(state, playerId, shopId)) continue;
-
-      // Estimate benefit value
-      const value = estimateShopValue(state, playerId, shopId);
-      if (value > bestValue) {
-        bestValue = value;
+      const avg = avgRolloutGlory(simState, playerId, rollouts);
+      if (avg > bestGlory) {
+        bestGlory = avg;
         bestShop = shopId;
       }
+    } catch {
+      continue;
     }
   }
 
-  // Only use shop if the estimated value is worth it
-  return bestValue > 2 ? bestShop : null;
-}
-
-/**
- * Estimate the value of a shop benefit for heuristic evaluation.
- */
-function estimateShopValue(state, playerId, shopId) {
-  const [color, type] = shopId.split('_');
-  const round = state.round || 1;
-  const player = getPlayer(state, playerId);
-
-  switch (shopId) {
-    // Gold shops
-    case 'gold_weak': return 3; // +2 gold is decent
-    case 'gold_strong': return (player.resources?.gold || 0) > 3 ? 8 : 2; // doubling is great with lots of gold
-    case 'gold_vp': return 8; // +4 glory is always good
-
-    // Black shops
-    case 'black_weak': return 3; // steal 1 glory
-    case 'black_strong': return 6; // steal 3 glory
-    case 'black_vp': return 7; // steal 2 from each, scales with players
-
-    // Green shops
-    case 'green_weak': return 4; // repeat action
-    case 'green_strong': return 5; // copy action
-    case 'green_vp': return 9; // +4 glory + extra turn
-
-    // Yellow shops
-    case 'yellow_weak': return 3; // double next gain
-    case 'yellow_strong': {
-      // Trigger glory condition: value depends on diversity
-      const colorsOwned = Object.entries(player.resources || {})
-        .filter(([, amt]) => amt > 0).length;
-      return colorsOwned * 2;
-    }
-    case 'yellow_vp': {
-      // Complete sets
-      const activeGods = state.gods || ['gold', 'black', 'green', 'yellow'];
-      const completeSets = Math.min(
-        ...activeGods.map(c => (player.resources?.[c] || 0))
-      );
-      return completeSets > 0 ? completeSets * 3 : 0;
-    }
-
-    default: return 1;
-  }
+  return bestShop;
 }
 
 // ---------------------------------------------------------------------------
-// Card Decisions
+// MCTS Card Decision
 // ---------------------------------------------------------------------------
 
 /**
- * Decide whether to buy a power card.
- * Returns cardId or null.
+ * Evaluate each affordable card vs "no card" baseline.
+ * Only buy if a card improves expected glory.
  */
-export function heuristicCardDecision(state, playerId) {
+function mctsCardDecision(state, playerId, rollouts) {
   const accessed = state.godsAccessedThisTurn || [];
   if (accessed.length === 0) return null;
 
-  const player = getPlayer(state, playerId);
-  if (!player) return null;
-
-  // Check if player has an empty card slot
-  const champion = (state.champions || {})[playerId];
+  const champion = state.champions?.[playerId];
   if (!champion) return null;
-  const currentCards = champion.powerCards || [];
-  if (currentCards.length >= (champion.powerCardSlots || 4)) return null;
+  if ((champion.powerCards?.length || 0) >= (champion.powerCardSlots || 4)) return null;
+
+  const cards = [];
+  for (const god of accessed) {
+    for (const cardId of ((state.powerCardMarkets || {})[god] || [])) {
+      const card = powerCards[cardId];
+      if (card && canAfford(state, playerId, card.cost)) cards.push(cardId);
+    }
+  }
+  if (cards.length === 0) return null;
+
+  const baseState = completeTurnAndAdvance(state);
+  const baseline = avgRolloutGlory(baseState, playerId, rollouts);
 
   let bestCard = null;
-  let bestValue = 3; // minimum threshold — only buy if value > 3
+  let bestGlory = baseline;
 
-  for (const godColor of accessed) {
-    const market = (state.powerCardMarkets || {})[godColor] || [];
+  for (const cardId of cards) {
+    try {
+      const result = buyPowerCard(state, playerId, cardId);
+      let simState = result.state;
+      if (result.pendingDecision) {
+        simState = fastResolveCard(simState, playerId, cardId, result.pendingDecision);
+      }
+      simState = fastDrainDecisions(simState);
+      simState = completeTurnAndAdvance(simState);
 
-    for (const cardId of market) {
-      const card = powerCards[cardId];
-      if (!card) continue;
-
-      // Check affordability
-      if (!canAfford(state, playerId, card.cost)) continue;
-
-      const value = estimateCardValue(state, playerId, cardId, card);
-      if (value > bestValue) {
-        bestValue = value;
+      const avg = avgRolloutGlory(simState, playerId, rollouts);
+      if (avg > bestGlory) {
+        bestGlory = avg;
         bestCard = cardId;
       }
+    } catch {
+      continue;
     }
   }
 
   return bestCard;
 }
 
-/**
- * Estimate the value of a power card for heuristic AI.
- */
-function estimateCardValue(state, playerId, cardId, card) {
-  const round = state.round || 1;
-  const remainingRounds = 3 - round + 1;
-  const player = getPlayer(state, playerId);
-  const resources = player?.resources || {};
-
-  switch (cardId) {
-    // --- Gold cards ---
-    case 'golden_scepter':
-      // +1 on every gold gain — value scales with gold-focused play
-      return (resources.gold || 0) > 2 ? 7 : 4;
-    case 'gold_idol':
-      // +2 gold per round — more valuable early
-      return 3 + remainingRounds * 2;
-    case 'golden_chalice':
-      // +1 any on gold gain from actions — moderate
-      return 5;
-    case 'golden_ring':
-      // +1 gold when others gain gold — depends on opponents
-      return 4;
-    case 'gold_crown':
-      // End-game: +1 Glory per 2 gold — valuable if hoarding gold
-      return Math.floor((resources.gold || 0) / 2) + 3;
-    case 'gold_vault':
-      // Steal immunity — valuable against black-heavy opponents
-      return state.gods.includes('black') ? 5 : 2;
-
-    // --- Black cards ---
-    case 'onyx_spyglass':
-      // +1 black when others buy cards — situational
-      return 3;
-    case 'voodoo_doll':
-      // -2 Glory to chosen player each round — strong disruption
-      return 4 + remainingRounds * 2;
-    case 'thieves_gloves':
-      // +1 any on steal actions — good for aggressive play
-      return 5;
-    case 'tome_of_deeds':
-      // Glory reduction immunity — very strong defensive
-      return state.gods.includes('black') ? 8 : 5;
-    case 'obsidian_coin':
-      // Wildcard black — helps afford black cards/shops
-      return 4;
-    case 'cursed_blade':
-      // +1 extra on glory steals — snowball potential
-      return 5;
-
-    // --- Green cards ---
-    case 'hourglass':
-      // Ignore occupied — extremely powerful, but expensive
-      return 8;
-    case 'capacitor':
-      // +1 green on repeat — good if using green actions
-      return 4;
-    case 'crystal_watch':
-      // +3 green per round — great economy
-      return 3 + remainingRounds * 2;
-    case 'diadem_of_expertise':
-      // Double glory on repeats — strong for green strategies
-      return 6;
-    case 'crystal_ball':
-      // Repeat from unoccupied — solid flexibility
-      return 5;
-    case 'emerald_coin':
-      // Wildcard green
-      return 4;
-
-    // --- Yellow cards ---
-    case 'horn_of_plenty':
-      // +1 of each color per round — premium economy card
-      return 4 + remainingRounds * state.gods.length;
-    case 'prismatic_gem':
-      // Wildcard yellow
-      return 4;
-    case 'rainbow_crest':
-      // +1 on multi-color gains — synergizes with yellow play
-      return 4;
-    case 'alchemists_trunk':
-      // Redistribute resources — good for flexibility
-      return 4;
-    case 'abundance_charm':
-      // +1 on basic gains — solid passive income
-      return 5;
-    case 'travelers_journal':
-      // +1 Glory on multi-color turn — consistent Glory source
-      return 3 + remainingRounds;
-
-    default:
-      return 3;
-  }
-}
-
 // ---------------------------------------------------------------------------
-// Heuristic Decision Function
+// MCTS Decision Function
 // ---------------------------------------------------------------------------
 
 /**
- * Heuristic decision function for game decisions.
- * Makes smarter-than-random choices for targets, gem selection, etc.
+ * For pending decisions, enumerate options, approximate each option's
+ * effect on the game state, and pick the option that leads to the
+ * highest average glory via rollouts.
  */
-export function heuristicDecisionFn(state, playerId, pendingDecision) {
+function mctsDecisionFn(state, playerId, pendingDecision, rollouts) {
   const activeColors = state.gods || ['gold', 'black', 'green', 'yellow'];
 
   switch (pendingDecision.type) {
-    case 'championChoice': {
-      return pickChampion(state, playerId, pendingDecision);
-    }
-
-    case 'gemSelection': {
-      return pickGems(state, playerId, pendingDecision, activeColors);
-    }
-
-    case 'targetPlayer': {
-      return pickTarget(state, playerId, pendingDecision);
-    }
-
-    case 'actionChoice': {
-      return pickActionChoice(state, playerId, pendingDecision);
-    }
-
-    case 'actionChoices': {
-      const options = pendingDecision.options || [];
-      const count = pendingDecision.count || 1;
-      // Pick highest-value actions
-      const scored = options.map(actionId => ({
-        actionId,
-        score: scoreRepeatAction(state, playerId, actionId) + Math.random() * 0.3,
-      }));
-      scored.sort((a, b) => b.score - a.score);
-      return { actionChoices: scored.slice(0, count).map(s => s.actionId) };
-    }
-
-    case 'stealGems': {
-      return pickStealGems(state, playerId, pendingDecision);
-    }
-
-    case 'nullifierPlacement': {
-      const options = pendingDecision.options || [];
-      if (options.length === 0) return { nullifierPlacement: null };
-      // Nullify high-value actions (tier 2-3 preferred)
-      const pick = options[Math.floor(Math.random() * options.length)];
-      return { nullifierPlacement: typeof pick === 'string' ? pick : pick.id };
-    }
-
-    case 'redistribute': {
-      return pickRedistribution(state, playerId, pendingDecision, activeColors);
-    }
-
+    case 'championChoice':
+      return mctsChampionChoice(state, playerId, pendingDecision, rollouts);
+    case 'gemSelection':
+      return mctsGemSelection(state, playerId, pendingDecision, activeColors, rollouts);
+    case 'targetPlayer':
+      return mctsTargetPlayer(state, playerId, pendingDecision, rollouts);
+    case 'actionChoice':
+      return mctsActionChoice(state, playerId, pendingDecision, rollouts);
+    case 'actionChoices':
+      return mctsActionChoices(state, playerId, pendingDecision, rollouts);
+    case 'stealGems':
+      return mctsStealGems(state, playerId, pendingDecision, rollouts);
+    case 'nullifierPlacement':
+      return mctsNullifierPlacement(state, playerId, pendingDecision, rollouts);
+    case 'redistribute':
+    case 'redistributeResources':
+      return mctsRedistribute(state, playerId, pendingDecision, activeColors, rollouts);
     default:
-      return {};
+      return randomDecisionFn(state, playerId, pendingDecision);
   }
 }
 
 // ---------------------------------------------------------------------------
-// Decision Helpers
+// Decision Evaluators
 // ---------------------------------------------------------------------------
 
-function pickChampion(state, playerId, decision) {
+function mctsChampionChoice(state, playerId, decision, rollouts) {
   const options = decision.options || [];
   if (options.length === 0) return { championId: null };
+  if (options.length === 1) return { championId: options[0].id };
 
-  const activeGods = state.gods || ['gold', 'black', 'green', 'yellow'];
+  let bestId = options[0].id;
+  let bestGlory = -Infinity;
 
-  // Score each champion based on synergy with active gods
-  const scored = options.map(champ => {
-    let score = 5; // baseline
-
-    switch (champ.id) {
-      case 'deft':
-        // Extra action per round is always solid
-        score += 3;
-        break;
-      case 'ambitious':
-        // Extra power card slot: better when cards are affordable
-        score += 2;
-        break;
-      case 'fortunate':
-        // Starting resources: good for early tempo
-        score += 2;
-        break;
-      case 'favored':
-        // Shop bonus: better with expensive shops
-        score += activeGods.includes('gold') ? 2 : 1;
-        break;
-      case 'blessed':
-        // First card discount: solid early-game value
-        score += 2;
-        break;
-      case 'prescient':
-        // Nullifiers: good for denial
-        score += 1;
-        break;
+  for (const champ of options) {
+    try {
+      let simState = executeChampionDraft(state, { championId: champ.id }).state;
+      simState = finishDraftRandomly(simState);
+      if (simState.phase === Phase.ROUND_START) {
+        simState = fastRoundStart(simState);
+      }
+      const avg = avgRolloutGlory(simState, playerId, rollouts);
+      if (avg > bestGlory) {
+        bestGlory = avg;
+        bestId = champ.id;
+      }
+    } catch {
+      continue;
     }
+  }
 
-    return { id: champ.id, score: score + Math.random() * 1.5 };
-  });
-
-  scored.sort((a, b) => b.score - a.score);
-  return { championId: scored[0].id };
+  return { championId: bestId };
 }
 
-function pickGems(state, playerId, decision, activeColors) {
+function mctsGemSelection(state, playerId, decision, activeColors, rollouts) {
   const count = decision.count || 1;
-  const player = getPlayer(state, playerId);
-  const resources = player?.resources || {};
+  let options = enumerateGemOptions(count, activeColors);
 
-  // Strategy: maximize diversity (good for Yellow glory condition)
-  // Fill colors we have the least of first
-  const colorCounts = activeColors.map(c => ({
-    color: c,
-    count: resources[c] || 0,
-  }));
-  colorCounts.sort((a, b) => a.count - b.count);
+  if (options.length === 0) {
+    const sel = {};
+    sel[activeColors[0]] = count;
+    return { gemSelection: sel };
+  }
+  if (options.length === 1) return { gemSelection: options[0] };
 
-  const selection = {};
-  let remaining = count;
-
-  // Distribute to lowest-count colors first
-  for (const { color } of colorCounts) {
-    if (remaining <= 0) break;
-    selection[color] = (selection[color] || 0) + 1;
-    remaining--;
+  // Cap combinatorial explosion for large counts
+  if (options.length > 25) {
+    options = options.sort(() => Math.random() - 0.5).slice(0, 25);
   }
 
-  // If we still need more, cycle through
-  while (remaining > 0) {
-    const color = colorCounts[remaining % colorCounts.length].color;
-    selection[color] = (selection[color] || 0) + 1;
-    remaining--;
-  }
-
-  return { gemSelection: selection };
-}
-
-function pickTarget(state, playerId, decision) {
-  const others = state.players.filter(
-    p => p.id !== (decision.excludePlayer || playerId)
-  );
-  if (others.length === 0) return { targetPlayer: null };
-
-  // Target the player with the most glory (competitive targeting)
-  const sorted = [...others].sort((a, b) => (b.glory || 0) - (a.glory || 0));
-  return { targetPlayer: sorted[0].id };
-}
-
-function pickActionChoice(state, playerId, decision) {
-  const options = decision.options || [];
-  if (options.length === 0) return { actionChoice: null };
-
-  // Pick the highest-value repeatable action
   let bestOption = options[0];
-  let bestScore = -Infinity;
+  let bestGlory = -Infinity;
+  const subRollouts = Math.max(2, Math.floor(rollouts / 2));
 
   for (const option of options) {
-    const actionId = typeof option === 'string' ? option : (option.value || option.id || option);
-    const score = scoreRepeatAction(state, playerId, actionId) + Math.random() * 0.3;
-    if (score > bestScore) {
-      bestScore = score;
+    // Approximate effect: add these resources to the player
+    const simState = applyGemGain(state, playerId, option);
+    const avg = avgRolloutGlory(simState, playerId, subRollouts);
+    if (avg > bestGlory) {
+      bestGlory = avg;
       bestOption = option;
     }
   }
 
-  return { actionChoice: typeof bestOption === 'string' ? bestOption : (bestOption.value || bestOption.id || bestOption) };
+  return { gemSelection: bestOption };
 }
 
-function pickStealGems(state, playerId, decision) {
+function mctsTargetPlayer(state, playerId, decision, rollouts) {
+  const others = state.players.filter(
+    p => p.id !== (decision.excludePlayer || playerId)
+  );
+  if (others.length === 0) return { targetPlayer: null };
+  if (others.length === 1) return { targetPlayer: others[0].id };
+
+  let bestTarget = others[0].id;
+  let bestGlory = -Infinity;
+
+  for (const target of others) {
+    // Approximate the effect of targeting this player:
+    // generic penalty (-2 glory to them, +1 to us)
+    const simState = {
+      ...state,
+      players: state.players.map(p => {
+        if (p.id === target.id) return { ...p, glory: Math.max(0, (p.glory || 0) - 2) };
+        if (p.id === playerId) return { ...p, glory: (p.glory || 0) + 1 };
+        return p;
+      }),
+    };
+    const avg = avgRolloutGlory(simState, playerId, rollouts);
+    if (avg > bestGlory) {
+      bestGlory = avg;
+      bestTarget = target.id;
+    }
+  }
+
+  return { targetPlayer: bestTarget };
+}
+
+function mctsActionChoice(state, playerId, decision, rollouts) {
+  const options = decision.options || [];
+  if (options.length === 0) return { actionChoice: null };
+  if (options.length === 1) {
+    const pick = options[0];
+    return { actionChoice: typeof pick === 'string' ? pick : (pick.value || pick.id || pick) };
+  }
+
+  let bestOption = options[0];
+  let bestGlory = -Infinity;
+
+  for (const option of options) {
+    const actionId = typeof option === 'string' ? option : (option.value || option.id || option);
+    try {
+      const result = routeAction(state, playerId, actionId, state.gods, {}, 1);
+      if (result.abort) continue;
+
+      // If pending decision, use current state as approximation
+      const simState = result.pendingDecision ? state : result.state;
+      const avg = avgRolloutGlory(simState, playerId, rollouts);
+      if (avg > bestGlory) {
+        bestGlory = avg;
+        bestOption = option;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  const pick = bestOption;
+  return { actionChoice: typeof pick === 'string' ? pick : (pick.value || pick.id || pick) };
+}
+
+function mctsActionChoices(state, playerId, decision, rollouts) {
+  const options = decision.options || [];
+  const count = decision.count || 1;
+  if (options.length <= count) return { actionChoices: options };
+
+  // Score each option individually, take top N
+  const subRollouts = Math.max(2, Math.floor(rollouts / 3));
+  const scored = [];
+
+  for (const actionId of options) {
+    try {
+      const result = routeAction(state, playerId, actionId, state.gods, {}, 1);
+      if (result.abort) { scored.push({ actionId, score: -Infinity }); continue; }
+      const simState = result.pendingDecision ? state : result.state;
+      const avg = avgRolloutGlory(simState, playerId, subRollouts);
+      scored.push({ actionId, score: avg });
+    } catch {
+      scored.push({ actionId, score: -Infinity });
+    }
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+  return { actionChoices: scored.slice(0, count).map(s => s.actionId) };
+}
+
+function mctsStealGems(state, playerId, decision, rollouts) {
   const targetResources = decision.targetResources || {};
   const count = decision.count || 1;
-  const selection = {};
-  let remaining = count;
+  const available = Object.entries(targetResources).filter(([, amt]) => amt > 0);
 
-  // Steal the most valuable resources (prioritize what we need for diversity)
-  const player = getPlayer(state, playerId);
-  const myResources = player?.resources || {};
-  const activeColors = state.gods || ['gold', 'black', 'green', 'yellow'];
+  if (available.length === 0) return { stealGems: {} };
 
-  // Prefer stealing colors we don't have
-  const sorted = Object.entries(targetResources)
-    .filter(([, amount]) => amount > 0)
-    .map(([color, amount]) => ({
-      color,
-      amount,
-      myCount: myResources[color] || 0,
-    }))
-    .sort((a, b) => a.myCount - b.myCount); // steal what we have least of
+  let options = enumerateStealOptions(count, available);
+  if (options.length <= 1) return { stealGems: options[0] || {} };
 
-  for (const { color, amount } of sorted) {
-    if (remaining <= 0) break;
-    const take = Math.min(amount, remaining);
-    selection[color] = take;
-    remaining -= take;
+  // Cap options
+  if (options.length > 20) {
+    options = options.sort(() => Math.random() - 0.5).slice(0, 20);
   }
 
-  return { stealGems: selection };
+  let bestOption = options[0];
+  let bestGlory = -Infinity;
+  const subRollouts = Math.max(2, Math.floor(rollouts / 2));
+
+  for (const option of options) {
+    // Approximate: we gain these resources (handler handles actual transfer)
+    const simState = applyGemGain(state, playerId, option);
+    const avg = avgRolloutGlory(simState, playerId, subRollouts);
+    if (avg > bestGlory) {
+      bestGlory = avg;
+      bestOption = option;
+    }
+  }
+
+  return { stealGems: bestOption };
 }
 
-function pickRedistribution(state, playerId, decision, activeColors) {
-  const totalResources = decision.totalResources || 0;
-  // Redistribute evenly for maximum diversity
-  const selection = {};
-  let remaining = totalResources;
-  let idx = 0;
-
-  while (remaining > 0) {
-    const color = activeColors[idx % activeColors.length];
-    selection[color] = (selection[color] || 0) + 1;
-    remaining--;
-    idx++;
+function mctsNullifierPlacement(state, playerId, decision, rollouts) {
+  const options = decision.options || [];
+  if (options.length === 0) return { nullifierPlacement: null };
+  if (options.length === 1) {
+    const pick = options[0];
+    return { nullifierPlacement: typeof pick === 'string' ? pick : pick.id };
   }
 
-  return { gemSelection: selection };
+  let bestOption = options[0];
+  let bestGlory = -Infinity;
+
+  for (const option of options) {
+    const spaceId = typeof option === 'string' ? option : option.id;
+    // Approximate: mark this space as nullified
+    const simState = {
+      ...state,
+      nullifiedSpaces: { ...(state.nullifiedSpaces || {}), [spaceId]: true },
+    };
+    const avg = avgRolloutGlory(simState, playerId, rollouts);
+    if (avg > bestGlory) {
+      bestGlory = avg;
+      bestOption = option;
+    }
+  }
+
+  const pick = bestOption;
+  return { nullifierPlacement: typeof pick === 'string' ? pick : pick.id };
+}
+
+function mctsRedistribute(state, playerId, decision, activeColors, rollouts) {
+  const total = decision.totalResources || 0;
+  if (total === 0) return { gemSelection: {} };
+
+  let options = enumerateGemOptions(total, activeColors);
+  if (options.length === 0) return { gemSelection: {} };
+  if (options.length === 1) return { gemSelection: options[0] };
+
+  // Cap combinatorial explosion
+  if (options.length > 25) {
+    options = options.sort(() => Math.random() - 0.5).slice(0, 25);
+  }
+
+  let bestOption = options[0];
+  let bestGlory = -Infinity;
+  const subRollouts = Math.max(2, Math.floor(rollouts / 2));
+
+  for (const option of options) {
+    // Redistribute: SET resources to this distribution (not add)
+    const simState = applyRedistribution(state, playerId, option);
+    const avg = avgRolloutGlory(simState, playerId, subRollouts);
+    if (avg > bestGlory) {
+      bestGlory = avg;
+      bestOption = option;
+    }
+  }
+
+  return { gemSelection: bestOption };
+}
+
+// ---------------------------------------------------------------------------
+// Combinatorial Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Enumerate all multiset combinations of `count` items from `colors`.
+ * e.g., count=2, colors=['a','b'] → [{a:2}, {a:1,b:1}, {b:2}]
+ */
+function enumerateGemOptions(count, colors) {
+  const results = [];
+  function helper(remaining, startIdx, current) {
+    if (remaining === 0) { results.push({ ...current }); return; }
+    for (let i = startIdx; i < colors.length; i++) {
+      current[colors[i]] = (current[colors[i]] || 0) + 1;
+      helper(remaining - 1, i, current);
+      current[colors[i]]--;
+      if (current[colors[i]] === 0) delete current[colors[i]];
+    }
+  }
+  helper(count, 0, {});
+  return results;
 }
 
 /**
- * Score a repeatable action for heuristic decision-making.
+ * Enumerate steal options: pick `count` resources from available pool,
+ * respecting max amounts per color.
+ * @param {number} count - resources to steal
+ * @param {Array} available - [[color, maxAmount], ...]
  */
-function scoreRepeatAction(state, playerId, actionId) {
-  // Simple heuristic: resource gain actions are best, glory actions even better
-  const actionPrefix = actionId.split('_')[0];
+function enumerateStealOptions(count, available) {
+  const results = [];
+  function helper(remaining, startIdx, current) {
+    if (remaining === 0) { results.push({ ...current }); return; }
+    for (let i = startIdx; i < available.length; i++) {
+      const [color, maxAmt] = available[i];
+      const taken = current[color] || 0;
+      if (taken < maxAmt) {
+        current[color] = taken + 1;
+        helper(remaining - 1, i, current);
+        current[color] = taken;
+        if (current[color] === 0) delete current[color];
+      }
+    }
+  }
+  helper(count, 0, {});
+  return results;
+}
+
+/** Approximate a gem gain by adding resources to a player. */
+function applyGemGain(state, playerId, gems) {
+  return {
+    ...state,
+    players: state.players.map(p => {
+      if (p.id !== playerId) return p;
+      const newRes = { ...p.resources };
+      for (const [color, amount] of Object.entries(gems)) {
+        newRes[color] = (newRes[color] || 0) + amount;
+      }
+      return { ...p, resources: newRes };
+    }),
+  };
+}
+
+/** Approximate redistribution by setting a player's resources to the distribution. */
+function applyRedistribution(state, playerId, distribution) {
+  return {
+    ...state,
+    players: state.players.map(p => {
+      if (p.id !== playerId) return p;
+      const newRes = {};
+      for (const color of (state.gods || [])) {
+        newRes[color] = distribution[color] || 0;
+      }
+      return { ...p, resources: newRes };
+    }),
+  };
+}
+
+function totalResources(resources) {
+  return Object.values(resources || {}).reduce((s, v) => s + Math.max(0, v), 0);
+}
+
+// ---------------------------------------------------------------------------
+// Factory
+// ---------------------------------------------------------------------------
+
+/**
+ * Create an MCTS player with configurable rollout counts.
+ *
+ * Usage:
+ *   const player = createMCTSPlayer(MCTS_PRESETS.standard);
+ *   simulateGame({
+ *     actionPickerFn: player.actionPicker,
+ *     shopDecisionFn: player.shopDecision,
+ *     cardDecisionFn: player.cardDecision,
+ *     decisionFn: player.decisionFn,
+ *   });
+ */
+export function createMCTSPlayer(options = {}) {
+  const {
+    actionRollouts = 20,
+    purchaseRollouts = 15,
+    decisionRollouts = 10,
+  } = options;
+
+  return {
+    actionPicker: (s, p, a) => mctsActionPicker(s, p, a, actionRollouts),
+    shopDecision: (s, p) => mctsShopDecision(s, p, purchaseRollouts),
+    cardDecision: (s, p) => mctsCardDecision(s, p, purchaseRollouts),
+    decisionFn: (s, p, pd) => mctsDecisionFn(s, p, pd, decisionRollouts),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Backward-Compatible Exports
+// ---------------------------------------------------------------------------
+
+/**
+ * Simple position score — glory-weighted with resources and cards as tiebreaker.
+ * No per-color or per-card biases. Used by tests, not by MCTS.
+ */
+export function evaluatePosition(state, playerId) {
   const player = getPlayer(state, playerId);
+  if (!player) return 0;
+  const total = totalResources(player.resources);
+  const cardCount = (state.champions?.[playerId]?.powerCards || []).length;
+  return (player.glory || 0) * 10 + total + cardCount * 5;
+}
 
-  // Prefer actions that give resources we need
-  if (actionId.includes('collectTribute') || actionId.includes('skulk') || actionId.includes('bide') || actionId.includes('bless')) {
-    return 4; // simple resource gains
-  }
-  if (actionId.includes('forage') || actionId.includes('harvest') || actionId.includes('gather')) {
-    return 5; // flexible resource gains
-  }
-  if (actionId.includes('cashIn') || actionId.includes('flourish')) {
-    return 7; // glory/big resource actions
-  }
-  if (actionId.includes('hex') || actionId.includes('ruin')) {
-    return 6; // penalize opponents
-  }
+export function heuristicActionPicker(state, playerId, availableActions) {
+  return mctsActionPicker(state, playerId, availableActions, COMPAT_ROLLOUTS);
+}
 
-  return 3; // default
+export function heuristicShopDecision(state, playerId) {
+  return mctsShopDecision(state, playerId, COMPAT_ROLLOUTS);
+}
+
+export function heuristicCardDecision(state, playerId) {
+  return mctsCardDecision(state, playerId, COMPAT_ROLLOUTS);
+}
+
+export function heuristicDecisionFn(state, playerId, pendingDecision) {
+  return mctsDecisionFn(state, playerId, pendingDecision, COMPAT_ROLLOUTS);
 }

@@ -4,35 +4,19 @@
  * Simulates complete v3 games without UI. Used for balance testing,
  * AI development, and smoke testing the engine.
  *
- * Imports directly from sub-modules since GameEngine.js may not exist yet.
+ * Uses GameEngine APIs (executeAction, executeShop, endTurn) for correct
+ * event dispatching. All power card triggers work in simulations.
  */
 
-import { getPlayer, placeWorker } from './stateHelpers.js';
+import { getPlayer } from './stateHelpers.js';
 import {
-  Phase, ACTIONS_PER_ROUND,
+  Phase,
   executeChampionDraft, executeRoundStart, executeRoundEnd,
   advanceTurn, isGameOver, resortTurnOrder,
 } from './phases.js';
-import { routeAction } from './actions/index.js';
-import { getAvailableActions, getActionGod, canAfford } from './rules.js';
-import { resolveShop, canAffordShop } from './shops/shopResolver.js';
-import { createGame, buyPowerCard } from './GameEngine.js';
-import { dispatchEvent, EventType, registerHandler, resetHandlerFrequencies } from './events.js';
-import champions from './data/champions.js';
-import gods from './data/gods.js';
-import { powerCards } from './data/powerCards.js';
-
-// --- Glory condition event mapping (mirrors GameEngine.js) ---
-
-function getGloryEventType(godColor) {
-  switch (godColor) {
-    case 'gold': return EventType.ROUND_END;
-    case 'yellow': return EventType.ROUND_END;
-    case 'black': return EventType.PLAYER_PENALIZED;
-    case 'green': return EventType.ACTION_REPEATED;
-    default: return EventType.ROUND_END;
-  }
-}
+import { getAvailableActions } from './rules.js';
+import { createGame, executeAction, executeShop, endTurn, buyPowerCard, resolveDecision } from './GameEngine.js';
+import { dispatchEvent, EventType, resetHandlerFrequencies } from './events.js';
 
 // ---------------------------------------------------------------------------
 // Random Decision Helpers
@@ -57,10 +41,26 @@ export function randomDecisionFn(state, playerId, pendingDecision) {
       const count = pendingDecision.count || 1;
       const selection = {};
       let remaining = count;
-      while (remaining > 0) {
-        const color = activeColors[Math.floor(Math.random() * activeColors.length)];
-        selection[color] = (selection[color] || 0) + 1;
-        remaining--;
+
+      // In 'spend' mode, pick from the player's own resources
+      if (pendingDecision.mode === 'spend') {
+        const player = state.players?.find(p => p.id === playerId);
+        const resources = player?.resources || {};
+        const available = Object.entries(resources)
+          .filter(([, v]) => v > 0)
+          .sort(() => Math.random() - 0.5);
+        for (const [color, amount] of available) {
+          if (remaining <= 0) break;
+          const take = Math.min(amount, remaining);
+          selection[color] = take;
+          remaining -= take;
+        }
+      } else {
+        while (remaining > 0) {
+          const color = activeColors[Math.floor(Math.random() * activeColors.length)];
+          selection[color] = (selection[color] || 0) + 1;
+          remaining--;
+        }
       }
       return { gemSelection: selection };
     }
@@ -109,6 +109,19 @@ export function randomDecisionFn(state, playerId, pendingDecision) {
       return { stealGems: selection };
     }
 
+    case 'chooseColor': {
+      const options = pendingDecision.options || activeColors;
+      if (options.length === 0) return { chooseColor: null };
+      const pick = options[Math.floor(Math.random() * options.length)];
+      return { chooseColor: pick };
+    }
+
+    case 'turnOrderChoice': {
+      const options = pendingDecision.options || [1];
+      const pick = options[Math.floor(Math.random() * options.length)];
+      return { position: pick };
+    }
+
     case 'nullifierPlacement': {
       const options = pendingDecision.options || [];
       if (options.length === 0) return { nullifierPlacement: null };
@@ -116,8 +129,12 @@ export function randomDecisionFn(state, playerId, pendingDecision) {
       return { nullifierPlacement: typeof pick === 'string' ? pick : pick.id };
     }
 
-    case 'redistribute': {
-      const totalResources = pendingDecision.totalResources || 0;
+    case 'redistribute':
+    case 'redistributeResources': {
+      const player = state.players?.find(p => p.id === playerId);
+      const currentResources = player?.resources || {};
+      const totalResources = pendingDecision.totalResources
+        || Object.values(currentResources).reduce((s, v) => s + Math.max(0, v), 0);
       const selection = {};
       let remaining = totalResources;
       while (remaining > 0) {
@@ -125,7 +142,7 @@ export function randomDecisionFn(state, playerId, pendingDecision) {
         selection[color] = (selection[color] || 0) + 1;
         remaining--;
       }
-      return { gemSelection: selection };
+      return { redistribution: selection };
     }
 
     default:
@@ -156,11 +173,11 @@ function drainDecisionQueue(state, decisionFn, gameLog, maxIterations = 50) {
     const remaining = state.decisionQueue.slice(1);
     state = { ...state, decisionQueue: remaining };
 
-    const answer = decisionFn(state, decision.playerId, decision);
+    const playerId = decision.playerId || decision.ownerId;
+    const answer = decisionFn(state, playerId, decision);
 
-    // The decision answer gets folded back into wherever it's needed.
-    // For champion draft decisions, loop back through executeChampionDraft.
     if (decision.type === 'championChoice' && answer.championId) {
+      // Champion draft decisions loop back through executeChampionDraft
       const result = executeChampionDraft(state, { championId: answer.championId });
       state = result.state;
       if (result.log) gameLog.push(...result.log);
@@ -170,6 +187,11 @@ function drainDecisionQueue(state, decisionFn, gameLog, maxIterations = 50) {
           decisionQueue: [result.pendingDecision, ...(state.decisionQueue || [])],
         };
       }
+    } else if (decision.sourceId) {
+      // Event-triggered decisions (Voodoo Doll, Prescient, Fortunate, etc.)
+      const result = resolveDecision(state, decision.sourceId, answer);
+      state = result.state;
+      if (result.log) gameLog.push(...result.log);
     }
 
     iterations++;
@@ -188,8 +210,20 @@ function resolveWithDecisions(state, playerId, pendingDecision, decisionFn, exec
   let attempts = 0;
 
   while (result.pendingDecision && attempts < maxAttempts) {
-    const answer = decisionFn(result.state, playerId, result.pendingDecision);
-    decisions = { ...decisions, ...answer, _continued: true };
+    const pd = result.pendingDecision;
+    const answer = decisionFn(result.state, playerId, pd);
+    // Fold in pendingDecision annotations (_costPaid for shops, etc.)
+    if (pd._costPaid) decisions._costPaid = true;
+
+    // Handle _resolveField: remap the answer key to the target field
+    // e.g. { gemSelection: {...} } → { gemSelectionGain: {...} } when _resolveField is 'gemSelectionGain'
+    if (pd._resolveField && answer[pd.type]) {
+      decisions[pd._resolveField] = answer[pd.type];
+    } else {
+      decisions = { ...decisions, ...answer };
+    }
+    decisions._continued = true;
+
     result = executor(result.state, decisions);
     attempts++;
   }
@@ -269,7 +303,6 @@ export function simulateGame(options = {}) {
     }
 
     // --- ACTION PHASE ---
-    turns++;
     const currentPlayerId = state.currentPlayer;
     const player = getPlayer(state, currentPlayerId);
 
@@ -297,105 +330,95 @@ export function simulateGame(options = {}) {
       continue;
     }
 
+    // Only count turns where a worker is actually placed
+    turns++;
+
     if (verbose) {
       gameLog.push(`[Turn ${turns}] Player ${currentPlayerId} plays ${actionId}`);
     }
 
-    // Place worker
-    state = placeWorker(state, actionId, currentPlayerId);
+    // 1. Execute action via GameEngine (handles placement, routing, all events:
+    //    PLAYER_PENALIZED, GLORY_STOLEN, RESOURCE_STOLEN, RESOURCE_GAINED, ACTION_EXECUTED)
+    let chosenActionId = actionId;
+    let actionResult = executeAction(state, currentPlayerId, chosenActionId);
 
-    // Track action in roundActions
-    state = {
-      ...state,
-      roundActions: [...(state.roundActions || []), { playerId: currentPlayerId, actionId }],
-    };
-
-    // Track god access
-    const godColor = getActionGod(actionId, state.gods);
-    if (godColor) {
-      const accessed = state.godsAccessedThisTurn || [];
-      if (!accessed.includes(godColor)) {
-        state = { ...state, godsAccessedThisTurn: [...accessed, godColor] };
+    // If action aborted (e.g. repeat with no valid targets), try other actions
+    if (actionResult.abort) {
+      state = actionResult.state; // reverted state
+      if (actionResult.log) gameLog.push(...actionResult.log);
+      const retryActions = available.filter(a => a !== chosenActionId);
+      let retried = false;
+      for (const retryId of retryActions) {
+        actionResult = executeAction(state, currentPlayerId, retryId);
+        if (!actionResult.abort) {
+          chosenActionId = retryId;
+          retried = true;
+          break;
+        }
+        state = actionResult.state; // reverted
+        if (actionResult.log) gameLog.push(...actionResult.log);
+      }
+      if (!retried) {
+        // All available actions abort — advance without placing
+        state = advanceTurn(state);
+        continue;
       }
     }
 
-    // Execute action
-    let actionResult = routeAction(state, currentPlayerId, actionId, state.gods);
     state = actionResult.state;
     if (actionResult.log) gameLog.push(...actionResult.log);
 
-    // Handle pending decisions from action
+    // Resolve pending decisions from the action
     if (actionResult.pendingDecision) {
       const resolved = resolveWithDecisions(
         state, currentPlayerId, actionResult.pendingDecision, decisionFn,
-        (s, d) => routeAction(s, currentPlayerId, actionId, state.gods, d)
+        (s, d) => executeAction(s, currentPlayerId, chosenActionId, d, { isContinuation: true })
       );
       state = resolved.state;
       if (resolved.log) gameLog.push(...resolved.log);
-      // Carry over penalizedPlayers from resolved result
-      if (resolved.penalizedPlayers) {
-        actionResult = { ...actionResult, penalizedPlayers: resolved.penalizedPlayers };
-      }
     }
 
-    // Handle executeAction chains (repeat/copy)
-    if (actionResult.executeAction) {
-      state = executeChainedActions(state, actionResult.executeAction, decisionFn, gameLog);
-    }
+    // Drain any queued decisions from events triggered by the action
+    state = drainDecisionQueue(state, decisionFn, gameLog);
 
-    // Dispatch PLAYER_PENALIZED events for black actions that penalize
-    if (actionResult.penalizedPlayers && actionResult.penalizedPlayers.length > 0) {
-      for (const penalizedId of actionResult.penalizedPlayers) {
-        const penalizeResult = dispatchEvent(state, EventType.PLAYER_PENALIZED, {
-          playerId: currentPlayerId,
-          targetPlayerId: penalizedId,
-          actionId,
-        });
-        state = penalizeResult.state;
-        if (penalizeResult.log) gameLog.push(...penalizeResult.log);
-      }
-    }
+    // Note: The Deft's consecutive turns are handled by advanceTurn via player.extraTurns
 
-    // Dispatch ACTION_EXECUTED event
-    const actionEventResult = dispatchEvent(state, EventType.ACTION_EXECUTED, {
-      playerId: currentPlayerId,
-      actionId,
-      godColor,
-    });
-    state = actionEventResult.state;
-    if (actionEventResult.log) gameLog.push(...actionEventResult.log);
-
-    // Optionally use shop
-    if (shopDecisionFn) {
+    // 2. Optionally use shop (via GameEngine — handles cost, benefit, events)
+    if (shopDecisionFn && !state.purchaseMadeThisTurn) {
       const shopId = shopDecisionFn(state, currentPlayerId);
-      if (shopId && canAffordShop(state, currentPlayerId, shopId)) {
-        state = executeShopForRunner(state, currentPlayerId, shopId, decisionFn, gameLog);
+      if (shopId) {
+        let shopResult = executeShop(state, currentPlayerId, shopId);
+        state = shopResult.state;
+        if (shopResult.log) gameLog.push(...shopResult.log);
+
+        if (shopResult.pendingDecision) {
+          const resolved = resolveWithDecisions(
+            state, currentPlayerId, shopResult.pendingDecision, decisionFn,
+            (s, d) => executeShop(s, currentPlayerId, shopId, d)
+          );
+          state = resolved.state;
+          if (resolved.log) gameLog.push(...resolved.log);
+        }
+
+        state = drainDecisionQueue(state, decisionFn, gameLog);
       }
     }
 
-    // Optionally buy a power card
-    if (cardDecisionFn) {
+    // 3. Optionally buy a power card
+    if (cardDecisionFn && !state.purchaseMadeThisTurn) {
       const cardId = cardDecisionFn(state, currentPlayerId);
       if (cardId) {
         state = buyCardForRunner(state, currentPlayerId, cardId, decisionFn, gameLog);
       }
     }
 
-    // Reset per-turn handler frequencies
-    state = resetHandlerFrequencies(state, 'turn');
+    // 4. End turn (handles TURN_END event, handler resets, turn advance, TURN_START)
+    const turnResult = endTurn(state);
+    state = turnResult.state;
+    if (turnResult.log) gameLog.push(...turnResult.log);
 
-    // Dispatch TURN_END event
-    const turnEndResult = dispatchEvent(state, EventType.TURN_END, {
-      playerId: currentPlayerId,
-    });
-    state = turnEndResult.state;
-    if (turnEndResult.log) gameLog.push(...turnEndResult.log);
-
-    // Advance turn
-    state = advanceTurn(state);
-
-    // Check if we've transitioned to round end (all players out of workers)
-    if (state.phase === Phase.ROUND_END) continue;
+    // Drain any decisions from turn-end/turn-start events
+    state = drainDecisionQueue(state, decisionFn, gameLog);
   }
 
   // 5. Dispatch GAME_END event
@@ -464,6 +487,16 @@ function runRoundStart(state, decisionFn, gameLog) {
   // Set current player to first in turn order
   state = { ...state, currentPlayer: state.turnOrder[0] };
 
+  // Dispatch TURN_START for the first player (endTurn handles this for later players,
+  // but the first player of each round has no preceding endTurn)
+  const firstPlayerId = state.turnOrder[0];
+  const turnStartResult = dispatchEvent(state, EventType.TURN_START, {
+    playerId: firstPlayerId,
+  });
+  state = turnStartResult.state;
+  if (turnStartResult.log) gameLog.push(...turnStartResult.log);
+  state = drainDecisionQueue(state, decisionFn, gameLog);
+
   return state;
 }
 
@@ -482,73 +515,6 @@ function runRoundEnd(state, decisionFn, gameLog) {
   const endResult = executeRoundEnd(state);
   state = endResult.state;
   if (endResult.log) gameLog.push(...endResult.log);
-
-  return state;
-}
-
-function executeChainedActions(state, execAction, decisionFn, gameLog) {
-  const { playerId, actionId, decisions, recursionDepth, chainedActions } = execAction;
-
-  // Execute the action
-  let result = routeAction(state, playerId, actionId, state.gods, decisions || {}, recursionDepth || 0);
-  state = result.state;
-  if (result.log) gameLog.push(...result.log);
-
-  // Resolve any pending decisions
-  if (result.pendingDecision) {
-    const resolved = resolveWithDecisions(
-      state, playerId, result.pendingDecision, decisionFn,
-      (s, d) => routeAction(s, playerId, actionId, state.gods, d, recursionDepth || 0)
-    );
-    state = resolved.state;
-    if (resolved.log) gameLog.push(...resolved.log);
-    result = resolved;
-  }
-
-  // Recurse into further chained actions
-  if (result.executeAction) {
-    state = executeChainedActions(state, result.executeAction, decisionFn, gameLog);
-  }
-
-  // Handle additional chained actions (from loop/unravel)
-  if (chainedActions && chainedActions.length > 0) {
-    for (const chained of chainedActions) {
-      state = executeChainedActions(state, chained, decisionFn, gameLog);
-    }
-  }
-
-  return state;
-}
-
-function executeShopForRunner(state, playerId, shopId, decisionFn, gameLog) {
-  let result = resolveShop(state, playerId, shopId);
-  state = result.state;
-  if (result.log) gameLog.push(...result.log);
-
-  // Resolve shop decisions
-  if (result.pendingDecision) {
-    const resolved = resolveWithDecisions(
-      state, playerId, result.pendingDecision, decisionFn,
-      (s, d) => resolveShop(s, playerId, shopId, d)
-    );
-    state = resolved.state;
-    if (resolved.log) gameLog.push(...resolved.log);
-  }
-
-  // Handle executeAction from shop (green shops can trigger repeats)
-  if (result.executeAction) {
-    state = executeChainedActions(state, result.executeAction, decisionFn, gameLog);
-  }
-
-  // Dispatch SHOP_USED event
-  const shopColor = shopId.split('_')[0];
-  const shopEventResult = dispatchEvent(state, EventType.SHOP_USED, {
-    playerId,
-    shopId,
-    godColor: shopColor,
-  });
-  state = shopEventResult.state;
-  if (shopEventResult.log) gameLog.push(...shopEventResult.log);
 
   return state;
 }

@@ -33,8 +33,8 @@ const MAX_RECURSION_DEPTH = 5;
 function getGloryEventType(godColor) {
   switch (godColor) {
     case 'gold': return EventType.ROUND_END;
-    case 'yellow': return EventType.ROUND_END;
-    case 'black': return EventType.PLAYER_PENALIZED;
+    case 'yellow': return EventType.NEW_COLOR_GAINED;
+    case 'black': return EventType.STEAL_ACTION;
     case 'green': return EventType.ACTION_REPEATED;
     default: return EventType.ROUND_END;
   }
@@ -132,23 +132,6 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
   // 5. If fresh placement (not repeat/continuation) at root depth: place worker, track god access
   const preplacementState = (!skipPlacement && recursionDepth === 0) ? state : null;
   if (!skipPlacement && recursionDepth === 0) {
-    // The Deft: if placing a second worker via extraActionThisTurn, consume the effect
-    if (state.workerPlacedThisTurn) {
-      const deftPlayer = getPlayer(state, playerId);
-      if (deftPlayer?.effects?.includes('extraActionThisTurn')) {
-        state = {
-          ...state,
-          players: state.players.map(p => {
-            if (p.id !== playerId) return p;
-            const effects = [...(p.effects || [])];
-            const idx = effects.indexOf('extraActionThisTurn');
-            if (idx !== -1) effects.splice(idx, 1);
-            return { ...p, effects };
-          }),
-        };
-        log.push('The Deft: using extra action');
-      }
-    }
     state = placeWorker(state, actionId, playerId);
     state = trackGodAccess(state, playerId, godColor);
     state = {
@@ -160,7 +143,7 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
 
   // 6. Snapshot player resources before action for RESOURCE_GAINED detection
   const playerBefore = getPlayer(state, playerId);
-  const resourcesBefore = { ...playerBefore.resources };
+  let resourcesBefore = { ...playerBefore.resources };
 
   // 7. Route to action handler
   const actionResult = routeAction(state, playerId, actionId, state.gods, decisions, recursionDepth);
@@ -169,7 +152,7 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
 
   // 7b. If handler signals abort (e.g. no valid targets), revert worker placement
   if (actionResult.abort && preplacementState) {
-    return { state: preplacementState, log: actionResult.log || ['Action cancelled — no valid targets'] };
+    return { state: preplacementState, log: actionResult.log || ['Action cancelled — no valid targets'], abort: true };
   }
 
   // 8. If pendingDecision, return immediately
@@ -218,6 +201,11 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
         }
       }
     }
+
+    // Re-snapshot resources after recursive execution so the outer RESOURCE_GAINED
+    // diff only captures this action's own gains, not the child action's gains
+    // (which already dispatched their own RESOURCE_GAINED event).
+    resourcesBefore = { ...getPlayer(state, playerId).resources };
   }
 
   // 9b. Dispatch PLAYER_PENALIZED events for black actions that penalize
@@ -233,6 +221,53 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
       if (penalizeResult.pendingDecisions && penalizeResult.pendingDecisions.length > 0) {
         state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...penalizeResult.pendingDecisions] };
       }
+    }
+  }
+
+  // 9c. Dispatch GLORY_STOLEN events for actions that steal glory (e.g. pickpocket)
+  if (actionResult.gloryStolen && actionResult.gloryStolen.length > 0) {
+    for (const steal of actionResult.gloryStolen) {
+      const gloryEvent = dispatchEvent(state, EventType.GLORY_STOLEN, {
+        playerId: steal.playerId,
+        targetPlayerId: steal.targetPlayerId,
+        amount: steal.amount,
+        source: actionId,
+      });
+      state = gloryEvent.state;
+      if (gloryEvent.log) log.push(...gloryEvent.log);
+      if (gloryEvent.pendingDecisions && gloryEvent.pendingDecisions.length > 0) {
+        state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...gloryEvent.pendingDecisions] };
+      }
+    }
+  }
+
+  // 9d. Dispatch RESOURCE_STOLEN events for actions that steal resources (e.g. ransack, extort)
+  if (actionResult.resourcesStolen && actionResult.resourcesStolen.length > 0) {
+    for (const steal of actionResult.resourcesStolen) {
+      const stealEvent = dispatchEvent(state, EventType.RESOURCE_STOLEN, {
+        playerId: steal.playerId,
+        targetPlayerId: steal.targetPlayerId,
+        resources: steal.resources,
+        source: actionId,
+      });
+      state = stealEvent.state;
+      if (stealEvent.log) log.push(...stealEvent.log);
+      if (stealEvent.pendingDecisions && stealEvent.pendingDecisions.length > 0) {
+        state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...stealEvent.pendingDecisions] };
+      }
+    }
+  }
+
+  // 9e. Dispatch single STEAL_ACTION event if this was a steal (for Black Favor condition)
+  if (actionResult.isStealing) {
+    const stealActionResult = dispatchEvent(state, EventType.STEAL_ACTION, {
+      playerId,
+      actionId,
+    });
+    state = stealActionResult.state;
+    if (stealActionResult.log) log.push(...stealActionResult.log);
+    if (stealActionResult.pendingDecisions && stealActionResult.pendingDecisions.length > 0) {
+      state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...stealActionResult.pendingDecisions] };
     }
   }
 
@@ -271,12 +306,30 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
       resources: gainedResources,
       source: 'action',
       actionId,
+      godColor,
       isBasicGain: !!isBasicGain,
     });
     state = gainResult.state;
     if (gainResult.log) log.push(...gainResult.log);
     if (gainResult.pendingDecisions && gainResult.pendingDecisions.length > 0) {
       state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...gainResult.pendingDecisions] };
+    }
+
+    // 10b. Detect 0→N color transitions for Yellow Favor condition
+    const newColorsGained = Object.keys(gainedResources).filter(color =>
+      (resourcesBefore[color] || 0) === 0 && gainedResources[color] > 0
+    );
+    if (newColorsGained.length > 0) {
+      const newColorResult = dispatchEvent(state, EventType.NEW_COLOR_GAINED, {
+        playerId,
+        newColors: newColorsGained,
+        newColorsCount: newColorsGained.length,
+      });
+      state = newColorResult.state;
+      if (newColorResult.log) log.push(...newColorResult.log);
+      if (newColorResult.pendingDecisions && newColorResult.pendingDecisions.length > 0) {
+        state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...newColorResult.pendingDecisions] };
+      }
     }
   }
 
@@ -325,7 +378,13 @@ export function executeShop(state, playerId, shopId, decisions = {}) {
     return { state, log: [`Cannot use ${shopId}: you haven't acted at the ${godColor} god this turn`] };
   }
 
-  // 2b. One purchase per turn (shop or power card)
+  // 2b. Check noShopThisTurn effect (from Hoard)
+  const shopPlayer = getPlayer(state, playerId);
+  if (shopPlayer?.effects?.includes('noShopThisTurn') && !decisions._costPaid) {
+    return { state, log: ['Cannot use shops this turn (Hoard effect)'] };
+  }
+
+  // 2c. One purchase per turn (shop or power card)
   if (state.purchaseMadeThisTurn && !decisions._costPaid) {
     return { state, log: [`You can only make one purchase (shop or power card) per turn`] };
   }
@@ -371,10 +430,82 @@ export function executeShop(state, playerId, shopId, decisions = {}) {
     }
   }
 
-  // 6. Mark purchase made this turn
-  state = { ...state, purchaseMadeThisTurn: true };
+  // 6. Dispatch GLORY_STOLEN events (triggers Cursed Blade, etc.)
+  if (shopResult.gloryStolen && shopResult.gloryStolen.length > 0) {
+    for (const steal of shopResult.gloryStolen) {
+      const gloryEvent = dispatchEvent(state, EventType.GLORY_STOLEN, {
+        playerId: steal.playerId,
+        targetPlayerId: steal.targetPlayerId,
+        amount: steal.amount,
+        source: shopId,
+      });
+      state = gloryEvent.state;
+      if (gloryEvent.log) log.push(...gloryEvent.log);
+      if (gloryEvent.pendingDecisions && gloryEvent.pendingDecisions.length > 0) {
+        state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...gloryEvent.pendingDecisions] };
+      }
 
-  // 7. Dispatch SHOP_USED event
+      // Also dispatch PLAYER_PENALIZED so black glory condition fires
+      const penalizeEvent = dispatchEvent(state, EventType.PLAYER_PENALIZED, {
+        playerId: steal.playerId,
+        targetPlayerId: steal.targetPlayerId,
+        actionId: shopId,
+      });
+      state = penalizeEvent.state;
+      if (penalizeEvent.log) log.push(...penalizeEvent.log);
+      if (penalizeEvent.pendingDecisions && penalizeEvent.pendingDecisions.length > 0) {
+        state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...penalizeEvent.pendingDecisions] };
+      }
+    }
+  }
+
+  // 6b. Dispatch STEAL_ACTION for shops that steal (triggers Black Favor condition)
+  if (shopResult.isStealing) {
+    const stealActionResult = dispatchEvent(state, EventType.STEAL_ACTION, {
+      playerId,
+      actionId: shopId,
+    });
+    state = stealActionResult.state;
+    if (stealActionResult.log) log.push(...stealActionResult.log);
+    if (stealActionResult.pendingDecisions && stealActionResult.pendingDecisions.length > 0) {
+      state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...stealActionResult.pendingDecisions] };
+    }
+  }
+
+  // 6c. Dispatch RESOURCE_STOLEN for shops that steal resources
+  if (shopResult.resourcesStolen && shopResult.resourcesStolen.length > 0) {
+    for (const steal of shopResult.resourcesStolen) {
+      const stealEvent = dispatchEvent(state, EventType.RESOURCE_STOLEN, {
+        playerId: steal.playerId,
+        targetPlayerId: steal.targetPlayerId,
+        resources: steal.resources,
+        source: shopId,
+      });
+      state = stealEvent.state;
+      if (stealEvent.log) log.push(...stealEvent.log);
+      if (stealEvent.pendingDecisions && stealEvent.pendingDecisions.length > 0) {
+        state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...stealEvent.pendingDecisions] };
+      }
+    }
+  }
+
+  // 7. Mark purchase made this turn + consume shopDiscount effect if active
+  state = { ...state, purchaseMadeThisTurn: true };
+  const afterShopPlayer = getPlayer(state, playerId);
+  if (afterShopPlayer?.effects?.includes('shopDiscount')) {
+    state = {
+      ...state,
+      players: state.players.map(p => {
+        if (p.id !== playerId) return p;
+        const newEffects = [...(p.effects || [])];
+        const idx = newEffects.indexOf('shopDiscount');
+        if (idx >= 0) newEffects.splice(idx, 1);
+        return { ...p, effects: newEffects };
+      }),
+    };
+  }
+
+  // 8. Dispatch SHOP_USED event
   const shopTier = shopId.split('_')[1]; // 'weak', 'strong', 'vp'
   const shopEvent = dispatchEvent(state, EventType.SHOP_USED, {
     playerId,
@@ -408,6 +539,12 @@ export function buyPowerCard(state, playerId, cardId, decisions = {}) {
   // 2. Check one-per-turn limit
   if (state.purchaseMadeThisTurn) {
     return { state, log: [`You can only make one purchase (shop or power card) per turn`] };
+  }
+
+  // 2b. Check noShopThisTurn effect (from Hoard — blocks shops AND power cards)
+  const cardBuyPlayer = getPlayer(state, playerId);
+  if (cardBuyPlayer?.effects?.includes('noShopThisTurn')) {
+    return { state, log: ['Cannot make purchases this turn (Hoard effect)'] };
   }
 
   // 3. Check god access
@@ -462,8 +599,43 @@ export function buyPowerCard(state, playerId, cardId, decisions = {}) {
     }
   }
 
-  // 5. Calculate cost (with The Blessed discount)
+  // 5. Calculate cost (with The Blessed discount and Haggle discount)
   let cost = { ...card.cost };
+
+  // Apply Haggle shopDiscount effect (also applies to power cards)
+  const buyPlayer = getPlayer(state, playerId);
+  if (buyPlayer?.effects?.includes('shopDiscount')) {
+    let discount = 2;
+    if (cost.any && cost.any > 0) {
+      const reduction = Math.min(discount, cost.any);
+      cost.any -= reduction;
+      discount -= reduction;
+      if (cost.any === 0) delete cost.any;
+    }
+    if (discount > 0) {
+      for (const color of Object.keys(cost)) {
+        if (color === 'any') continue;
+        const reduction = Math.min(discount, cost[color]);
+        cost[color] -= reduction;
+        discount -= reduction;
+        if (cost[color] === 0) delete cost[color];
+        if (discount <= 0) break;
+      }
+    }
+    // Consume shopDiscount effect
+    state = {
+      ...state,
+      players: state.players.map(p => {
+        if (p.id !== playerId) return p;
+        const newEffects = [...(p.effects || [])];
+        const idx = newEffects.indexOf('shopDiscount');
+        if (idx >= 0) newEffects.splice(idx, 1);
+        return { ...p, effects: newEffects };
+      }),
+    };
+    log.push('Haggle discount applied (-2 cost)');
+  }
+
   if (champion.id === 'blessed' && !(state.blessedUsed || {})[playerId]) {
     // Reduce total cost by 2 — remove from 'any' first, then from specific colors
     let discount = 2;
@@ -506,13 +678,21 @@ export function buyPowerCard(state, playerId, cardId, decisions = {}) {
   state = { ...state, purchaseMadeThisTurn: true };
   log.push(`Bought ${card.name}`);
 
-  // 8. Remove from market (cards don't refill)
+  // 8. Remove from market and immediately replace from deck
   const newMarket = market.filter(id => id !== cardId);
+  let newDeck = [...(state.powerCardDecks[godColor] || [])];
+  if (newDeck.length > 0) {
+    newMarket.push(newDeck.shift());
+  }
   state = {
     ...state,
     powerCardMarkets: {
       ...state.powerCardMarkets,
       [godColor]: newMarket,
+    },
+    powerCardDecks: {
+      ...state.powerCardDecks,
+      [godColor]: newDeck,
     },
   };
 
@@ -544,6 +724,25 @@ export function buyPowerCard(state, playerId, cardId, decisions = {}) {
       }
       state = addResources(state, playerId, gains);
       log.push(`${card.name} on-purchase: +1 of each active color`);
+    }
+    if (card.onPurchase.type === 'redistribute') {
+      const player = getPlayer(state, playerId);
+      const totalResources = Object.values(player.resources || {}).reduce((sum, v) => sum + Math.max(0, v), 0);
+      if (totalResources > 0) {
+        return {
+          state,
+          log,
+          pendingDecision: {
+            type: 'redistributeResources',
+            title: "Alchemist's Trunk: Redistribute your resources",
+            sourceId: 'alchemists_trunk',
+            ownerId: playerId,
+            playerId,
+            totalResources,
+            colors: state.gods || ['gold', 'black', 'green', 'yellow'],
+          },
+        };
+      }
     }
   }
 
@@ -703,8 +902,33 @@ export function resolveDecision(state, decisionId, answer) {
   // Route based on decision type
   if (decision.sourceId === 'voodoo_doll' && answer.targetPlayer) {
     const targetId = answer.targetPlayer;
-    state = removeGlory(state, targetId, decision.effect.gloryLoss, 'voodoo_doll');
-    log.push(`Voodoo Doll: Player ${targetId} loses ${decision.effect.gloryLoss} Glory`);
+    const stealAmount = decision.effect?.glorySteal || decision.effect?.gloryLoss || 2;
+    const target = getPlayer(state, targetId);
+    const actualStolen = Math.min(stealAmount, Math.max(0, target?.glory || 0));
+    if (actualStolen > 0) {
+      state = removeGlory(state, targetId, actualStolen, 'voodoo_doll_victim');
+      state = addGlory(state, decision.ownerId, actualStolen, 'voodoo_doll');
+    }
+    log.push(`Voodoo Doll: stole ${actualStolen} Favor from ${targetId}`);
+    // Dispatch STEAL_ACTION for black glory condition
+    if (decision.isStealing) {
+      const stealResult = dispatchEvent(state, EventType.STEAL_ACTION, {
+        playerId: decision.ownerId,
+        actionId: 'voodoo_doll',
+      });
+      state = stealResult.state;
+      if (stealResult.log) log.push(...stealResult.log);
+    }
+  } else if (decision.sourceId === 'chrono_compass' && answer.position) {
+    const desiredPosition = answer.position - 1; // Convert 1-indexed to 0-indexed
+    const turnOrder = [...(state.turnOrder || [])];
+    const currentIdx = turnOrder.indexOf(decision.ownerId);
+    if (currentIdx >= 0 && desiredPosition >= 0 && desiredPosition < turnOrder.length) {
+      turnOrder.splice(currentIdx, 1);
+      turnOrder.splice(desiredPosition, 0, decision.ownerId);
+      state = { ...state, turnOrder };
+      log.push(`Chrono Compass: moved to position ${answer.position} in turn order`);
+    }
   } else if (decision.sourceId === 'prescient_passive' && answer.actionId) {
     state = {
       ...state,

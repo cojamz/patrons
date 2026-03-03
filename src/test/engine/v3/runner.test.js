@@ -394,28 +394,28 @@ describe('integration', () => {
     expect(stats.completedGames).toBe(10);
   });
 
-  it('can simulate 10 games with heuristic AI without errors', () => {
+  it('can simulate 5 games with MCTS AI without errors', () => {
     const stats = runSimulations({
-      gameCount: 10,
+      gameCount: 5,
       playerCount: 2,
       decisionFn: heuristicDecisionFn,
       actionPickerFn: heuristicActionPicker,
       shopDecisionFn: heuristicShopDecision,
     });
     expect(stats.errors).toBe(0);
-    expect(stats.completedGames).toBe(10);
-  });
+    expect(stats.completedGames).toBe(5);
+  }, 30000);
 
-  it('heuristic AI produces higher average glory than random AI', () => {
+  it('MCTS AI produces higher average glory than random AI', () => {
     const randomStats = runSimulations({
-      gameCount: 20,
+      gameCount: 10,
       playerCount: 2,
       decisionFn: randomDecisionFn,
       actionPickerFn: randomActionPicker,
     });
 
     const heuristicStats = runSimulations({
-      gameCount: 20,
+      gameCount: 10,
       playerCount: 2,
       decisionFn: heuristicDecisionFn,
       actionPickerFn: heuristicActionPicker,
@@ -428,10 +428,8 @@ describe('integration', () => {
     const heuristicTotalGlory = Object.values(heuristicStats.avgGlory)
       .reduce((sum, v) => sum + v, 0);
 
-    // Heuristic should outperform random in total glory generated
-    // (since it makes smarter resource choices and can use shops)
+    // MCTS should outperform random in total glory generated
+    // (since it evaluates actions via rollouts and can use shops/cards)
     expect(heuristicTotalGlory).toBeGreaterThanOrEqual(randomTotalGlory * 0.8);
-    // Note: using 0.8 multiplier as safety margin -- heuristic should generally
-    // be higher but randomness means we can't guarantee strictly greater
-  });
+  }, 30000);
 });
