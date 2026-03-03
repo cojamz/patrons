@@ -187,36 +187,36 @@ describe('hasModifier', () => {
   it('returns true when player has a card with matching modifier', () => {
     let state = makeState();
     state = stateWithChampions(state);
-    state = slotPowerCard(state, 1, 'gold_vault'); // has steal_immunity modifier
-    expect(hasModifier(state, 1, 'steal_immunity')).toBe(true);
+    state = slotPowerCard(state, 1, 'tome_of_deeds'); // has glory_reduction_immunity modifier
+    expect(hasModifier(state, 1, 'glory_reduction_immunity')).toBe(true);
   });
 
   it('returns false when player has no matching modifier', () => {
     let state = makeState();
     state = stateWithChampions(state);
-    state = slotPowerCard(state, 1, 'gold_vault');
+    state = slotPowerCard(state, 1, 'tome_of_deeds');
     expect(hasModifier(state, 1, 'ignore_occupied')).toBe(false);
   });
 
   it('returns false when player has no power cards', () => {
     let state = makeState();
     state = stateWithChampions(state);
-    expect(hasModifier(state, 1, 'steal_immunity')).toBe(false);
+    expect(hasModifier(state, 1, 'glory_reduction_immunity')).toBe(false);
   });
 
   it('returns false when champion is not set', () => {
     const state = makeState();
-    expect(hasModifier(state, 1, 'steal_immunity')).toBe(false);
+    expect(hasModifier(state, 1, 'glory_reduction_immunity')).toBe(false);
   });
 
   it('works for all modifier types', () => {
     let state = makeState();
     state = stateWithChampions(state);
-    state = slotPowerCard(state, 1, 'hourglass');
+    state = slotPowerCard(state, 1, 'timeline_splitter');
     expect(hasModifier(state, 1, 'ignore_occupied')).toBe(true);
 
-    state = slotPowerCard(state, 1, 'obsidian_coin');
-    expect(hasModifier(state, 1, 'wildcard_black')).toBe(true);
+    state = slotPowerCard(state, 1, 'philosophers_stone');
+    expect(hasModifier(state, 1, 'wildcard_all')).toBe(true);
   });
 });
 
@@ -234,8 +234,8 @@ describe('slotPowerCard', () => {
     let state = makeState();
     state = stateWithChampions(state);
     state = slotPowerCard(state, 1, 'golden_scepter');
-    state = slotPowerCard(state, 1, 'gold_vault');
-    expect(state.champions[1].powerCards).toEqual(['golden_scepter', 'gold_vault']);
+    state = slotPowerCard(state, 1, 'golden_ring');
+    expect(state.champions[1].powerCards).toEqual(['golden_scepter', 'golden_ring']);
   });
 
   it('returns state unchanged if champion does not exist', () => {
@@ -250,9 +250,9 @@ describe('removePowerCard', () => {
     let state = makeState();
     state = stateWithChampions(state);
     state = slotPowerCard(state, 1, 'golden_scepter');
-    state = slotPowerCard(state, 1, 'gold_vault');
+    state = slotPowerCard(state, 1, 'golden_ring');
     state = removePowerCard(state, 1, 'golden_scepter');
-    expect(state.champions[1].powerCards).toEqual(['gold_vault']);
+    expect(state.champions[1].powerCards).toEqual(['golden_ring']);
   });
 });
 

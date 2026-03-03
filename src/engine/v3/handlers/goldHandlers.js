@@ -1,11 +1,12 @@
 /**
- * Patrons v3 — Gold God Handler Resolvers
+ * Patrons v3 — Gold God Handler Resolvers (Balance Rework)
  *
  * Each resolver: (state, handler, eventData, options) => { state, log, pendingDecisions }
  * All pure functions. No mutation.
  */
 
 import { dispatchEvent, EventType } from '../events.js';
+import { hasModifier } from '../rules.js';
 
 // --- Helpers ---
 
@@ -38,6 +39,11 @@ function addGloryToPlayer(state, playerId, amount, source) {
   return { ...state, players: updatedPlayers };
 }
 
+function removeGloryFromPlayer(state, playerId, amount, source) {
+  if (hasModifier(state, playerId, 'glory_reduction_immunity')) return state;
+  return addGloryToPlayer(state, playerId, -amount, source);
+}
+
 function getPlayer(state, playerId) {
   return state.players.find(p => p.id === playerId);
 }
@@ -45,7 +51,7 @@ function getPlayer(state, playerId) {
 // --- Resolvers ---
 
 /**
- * Golden Scepter: When you gain gold, gain +1 extra gold.
+ * Golden Scepter: +1 extra gold when gaining gold from actions (actions only).
  * CRITICAL: dispatches sub-event with skipHandlerIds to prevent infinite loop.
  */
 function goldenScepterResolver(state, handler, eventData, options) {
@@ -58,8 +64,13 @@ function goldenScepterResolver(state, handler, eventData, options) {
     return { state, log, pendingDecisions };
   }
 
+  // Only from action source
+  if (eventData.source !== 'action') {
+    return { state, log, pendingDecisions };
+  }
+
   let newState = addResourceToPlayer(state, handler.ownerId, 'gold', 1);
-  log.push(`Golden Scepter: +1 gold`);
+  log.push('Golden Scepter: +1 gold');
 
   // Dispatch sub-event for the bonus gold, but skip this handler to prevent infinite loop
   const subResult = dispatchEvent(
@@ -80,22 +91,10 @@ function goldenScepterResolver(state, handler, eventData, options) {
 }
 
 /**
- * Gold Idol: At round start, +2 gold.
+ * Rainbow Scepter: +1 any other color when gaining gold from actions.
+ * Auto-picks the player's lowest non-gold active resource.
  */
-function goldIdolResolver(state, handler, _eventData, _options) {
-  const newState = addResourceToPlayer(state, handler.ownerId, 'gold', 2);
-  return {
-    state: newState,
-    log: ['Gold Idol: +2 gold at round start'],
-    pendingDecisions: [],
-  };
-}
-
-/**
- * Golden Chalice: When you gain gold from an action, gain 1 of any other active resource.
- * Returns a gemSelection decision so the player (or AI) picks which color.
- */
-function goldenChaliceResolver(state, handler, eventData, _options) {
+function rainbowScepterResolver(state, handler, eventData, _options) {
   const resources = eventData.resources || {};
   if (!resources.gold || resources.gold <= 0) {
     return { state, log: [], pendingDecisions: [] };
@@ -109,46 +108,40 @@ function goldenChaliceResolver(state, handler, eventData, _options) {
   const activeGods = state.gods || ['gold', 'black', 'green', 'yellow'];
   const nonGold = activeGods.filter(c => c !== 'gold');
 
-  // Return a pending decision for the player to choose
+  // Auto-pick lowest non-gold resource for simplicity (AI-friendly)
+  const player = getPlayer(state, handler.ownerId);
+  const sortedColors = nonGold.sort((a, b) =>
+    (player.resources[a] || 0) - (player.resources[b] || 0)
+  );
+  const chosenColor = sortedColors[0] || nonGold[0];
+
+  const newState = addResourceToPlayer(state, handler.ownerId, chosenColor, 1);
   return {
-    state,
-    log: [],
-    pendingDecisions: [{
-      type: 'gemSelection',
-      sourceId: 'golden_chalice',
-      count: 1,
-      colors: nonGold,
-      title: 'Golden Chalice — choose 1 resource to gain',
-      playerId: handler.ownerId,
-      ownerId: handler.ownerId,
-    }],
+    state: newState,
+    log: [`Rainbow Scepter: +1 ${chosenColor} (gained gold from action)`],
+    pendingDecisions: [],
   };
 }
 
 /**
- * Golden Ring: When another player gains gold, you gain 1 gold.
+ * Golden Ring: At the start of your turn, gain 1 gold (once per turn).
  */
 function goldenRingResolver(state, handler, eventData, _options) {
-  const resources = eventData.resources || {};
-  if (!resources.gold || resources.gold <= 0) {
-    return { state, log: [], pendingDecisions: [] };
-  }
-
-  // Only fires when a DIFFERENT player gains gold
-  if (eventData.playerId === handler.ownerId) {
+  // Only trigger for the card owner's turn
+  if (eventData.playerId !== handler.ownerId) {
     return { state, log: [], pendingDecisions: [] };
   }
 
   const newState = addResourceToPlayer(state, handler.ownerId, 'gold', 1);
   return {
     state: newState,
-    log: ['Golden Ring: +1 gold (another player gained gold)'],
+    log: ['Golden Ring: +1 gold (start of turn)'],
     pendingDecisions: [],
   };
 }
 
 /**
- * Gold Crown: At game end, +Glory equal to floor(owner's gold / 2).
+ * Gold Crown: At game end, +1 Favor per 2 gold owned.
  */
 function goldCrownResolver(state, handler, _eventData, _options) {
   const player = getPlayer(state, handler.ownerId);
@@ -162,35 +155,81 @@ function goldCrownResolver(state, handler, _eventData, _options) {
   const newState = addGloryToPlayer(state, handler.ownerId, gloryGain, 'gold_crown');
   return {
     state: newState,
-    log: [`Gold Crown: +${gloryGain} Glory (${goldCount} gold / 2)`],
+    log: [`Gold Crown: +${gloryGain} Favor (${goldCount} gold, 1 per 2)`],
     pendingDecisions: [],
   };
 }
 
 /**
- * Gold Glory Condition: At round end, +Glory equal to gold count.
+ * Golden Scope: When a player steals from you, they lose 1 Favor.
+ * Fires on resource.stolen where target is owner.
+ */
+function goldenScopeResolver(state, handler, eventData, _options) {
+  // Only when someone steals FROM the owner
+  if (eventData.targetPlayerId !== handler.ownerId) {
+    return { state, log: [], pendingDecisions: [] };
+  }
+
+  // The stealer loses 1 Favor
+  const stealerId = eventData.playerId;
+  const newState = removeGloryFromPlayer(state, stealerId, 1, 'golden_scope_penalty');
+
+  return {
+    state: newState,
+    log: [`Golden Scope: ${stealerId} lost 1 Favor for stealing`],
+    pendingDecisions: [],
+  };
+}
+
+/**
+ * Golden Idol: Whenever you gain Favor from a gold source, +1 extra Favor.
+ * Fires on glory.gained where source contains 'gold'.
+ */
+function goldenIdolResolver(state, handler, eventData, options) {
+  if (eventData.playerId !== handler.ownerId) {
+    return { state, log: [], pendingDecisions: [] };
+  }
+
+  // Check if the glory source is gold-related
+  const source = eventData.source || '';
+  if (!source.includes('gold')) {
+    return { state, log: [], pendingDecisions: [] };
+  }
+
+  const newState = addGloryToPlayer(state, handler.ownerId, 1, 'golden_idol');
+  return {
+    state: newState,
+    log: ['Golden Idol: +1 extra Favor (from gold source)'],
+    pendingDecisions: [],
+  };
+}
+
+/**
+ * Gold Favor Condition: At round end, +1 Favor per 2 gold owned.
  */
 function goldGloryConditionResolver(state, handler, _eventData, _options) {
   const player = getPlayer(state, handler.ownerId);
   const goldCount = (player.resources || {}).gold || 0;
+  const gloryGain = Math.floor(goldCount / 2);
 
-  if (goldCount <= 0) {
+  if (gloryGain <= 0) {
     return { state, log: [], pendingDecisions: [] };
   }
 
-  const newState = addGloryToPlayer(state, handler.ownerId, goldCount, 'gold_glory_condition');
+  const newState = addGloryToPlayer(state, handler.ownerId, gloryGain, 'gold_glory_condition');
   return {
     state: newState,
-    log: [`Gold Glory: +${goldCount} Glory (${goldCount} gold owned)`],
+    log: [`Gold Favor: +${gloryGain} Favor (${goldCount} gold, 1 per 2)`],
     pendingDecisions: [],
   };
 }
 
 export const goldHandlers = {
   golden_scepter: goldenScepterResolver,
-  gold_idol: goldIdolResolver,
-  golden_chalice: goldenChaliceResolver,
+  rainbow_scepter: rainbowScepterResolver,
   golden_ring: goldenRingResolver,
   gold_crown: goldCrownResolver,
+  golden_scope: goldenScopeResolver,
+  golden_idol: goldenIdolResolver,
   gold_glory_condition: goldGloryConditionResolver,
 };

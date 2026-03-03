@@ -15,9 +15,9 @@ const champions = [
   {
     id: 'prescient',
     name: 'The Prescient',
-    passive: 'Place 1 action nullifier before each round starts. Nullified spaces cannot be used that round.',
+    passive: 'Place 2 action nullifiers before each round starts. Nullified spaces cannot be used that round.',
     passiveTrigger: EVENT_TYPES.ROUND_START,
-    mechanicalNotes: 'Requires UI for nullifier placement. Nullifiers are placed face-down, revealed when a player attempts that action.',
+    mechanicalNotes: 'Requires UI for nullifier placement. Nullifiers are placed face-down, revealed when a player attempts that action. Places 2 nullifiers per round.',
     powerCardSlots: POWER_CARD_SLOTS,
   },
   {
@@ -55,9 +55,9 @@ const champions = [
   {
     id: 'deft',
     name: 'The Deft',
-    passive: 'Once per round, take a second action on the same turn (two actions in one turn).',
-    passiveTrigger: EVENT_TYPES.ON_ACTION,
-    mechanicalNotes: 'Grants one extra action per round. Resets at round start. The player chooses when to activate it during their turn. Tracked via a per-round "used" flag.',
+    passive: 'In Round 1, take two consecutive turns (go again immediately after your first turn).',
+    passiveTrigger: EVENT_TYPES.ROUND_START,
+    mechanicalNotes: 'At round 1 start only, grants 1 extra turn via player.extraTurns. The player finishes their normal turn, then immediately takes another before opponents go. Same worker count as everyone else.',
     powerCardSlots: POWER_CARD_SLOTS,
   },
 ];

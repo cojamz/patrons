@@ -98,11 +98,11 @@ describe('createGame', () => {
     expect(gloryHandlers.find(h => h.id === 'green_glory_condition_p2')).toBeTruthy();
   });
 
-  it('creates power card markets with 3 cards per god', () => {
+  it('creates power card markets with 2 cards per god', () => {
     const { state } = createGame({ playerCount: 2, playerNames: ['Alice', 'Bob'] });
     expect(state.powerCardMarkets).toBeDefined();
     for (const godColor of ['gold', 'black', 'green', 'yellow']) {
-      expect(state.powerCardMarkets[godColor]).toHaveLength(3);
+      expect(state.powerCardMarkets[godColor]).toHaveLength(2);
     }
   });
 
@@ -113,8 +113,8 @@ describe('createGame', () => {
       godSet: ['gold', 'green'],
     });
     expect(state.gods).toEqual(['gold', 'green']);
-    expect(state.powerCardMarkets['gold']).toHaveLength(3);
-    expect(state.powerCardMarkets['green']).toHaveLength(3);
+    expect(state.powerCardMarkets['gold']).toHaveLength(2);
+    expect(state.powerCardMarkets['green']).toHaveLength(2);
     expect(state.powerCardMarkets['black']).toBeUndefined();
   });
 
@@ -133,15 +133,15 @@ describe('createGame', () => {
 describe('executeAction', () => {
   it('places worker and tracks god access for a basic action', () => {
     const state = createActionPhaseState();
-    const result = executeAction(state, 1, 'gold_collectTribute');
+    const result = executeAction(state, 1, 'gold_hoard');
 
-    expect(result.state.occupiedSpaces['gold_collectTribute']).toBe(1);
+    expect(result.state.occupiedSpaces['gold_hoard']).toBe(1);
     expect(result.state.godsAccessedThisTurn).toContain('gold');
-    expect(result.state.roundActions).toContainEqual({ playerId: 1, actionId: 'gold_collectTribute' });
+    expect(result.state.roundActions).toContainEqual({ playerId: 1, actionId: 'gold_hoard' });
 
-    // Player should have gained 2 gold
+    // Player should have gained 3 gold (Hoard: +3 gold)
     const player = getPlayer(result.state, 1);
-    expect(player.resources.gold).toBe(2);
+    expect(player.resources.gold).toBe(3);
 
     // Worker count should have decreased
     expect(player.workersLeft).toBe(3);
@@ -160,48 +160,48 @@ describe('executeAction', () => {
       config: { triggerOn: 'self' },
     });
 
-    const result = executeAction(state, 1, 'gold_collectTribute');
+    const result = executeAction(state, 1, 'gold_hoard');
     // The capacitor handler checks for ACTION_REPEATED not ACTION_EXECUTED,
     // so we just verify the event was dispatched by checking log/state changes
-    expect(result.log.some(l => l.includes('gold_collectTribute') || l.includes('placed worker'))).toBe(true);
+    expect(result.log.some(l => l.includes('gold_hoard') || l.includes('placed worker'))).toBe(true);
   });
 
   it('respects nullified spaces', () => {
     let state = createActionPhaseState();
-    state = { ...state, nullifiedSpaces: { gold_collectTribute: true } };
+    state = { ...state, nullifiedSpaces: { gold_hoard: true } };
 
-    const result = executeAction(state, 1, 'gold_collectTribute');
+    const result = executeAction(state, 1, 'gold_hoard');
     expect(result.log.some(l => l.includes('nullified'))).toBe(true);
 
     // Worker should NOT have been placed
-    expect(result.state.occupiedSpaces['gold_collectTribute']).toBeUndefined();
+    expect(result.state.occupiedSpaces['gold_hoard']).toBeUndefined();
   });
 
   it('respects occupied spaces', () => {
     let state = createActionPhaseState();
-    state = { ...state, occupiedSpaces: { gold_collectTribute: 2 } };
+    state = { ...state, occupiedSpaces: { gold_hoard: 2 } };
 
-    const result = executeAction(state, 1, 'gold_collectTribute');
+    const result = executeAction(state, 1, 'gold_hoard');
     expect(result.log.some(l => l.includes('occupied'))).toBe(true);
   });
 
-  it('allows occupied spaces with Hourglass modifier', () => {
+  it('allows occupied spaces with Timeline Splitter modifier', () => {
     let state = createActionPhaseState();
-    state = { ...state, occupiedSpaces: { gold_collectTribute: 2 } };
-    // Give player 1 the hourglass card (ignore_occupied)
-    state = slotPowerCard(state, 1, 'hourglass');
+    state = { ...state, occupiedSpaces: { gold_hoard: 2 } };
+    // Give player 1 the timeline_splitter card (ignore_occupied)
+    state = slotPowerCard(state, 1, 'timeline_splitter');
 
-    const result = executeAction(state, 1, 'gold_collectTribute');
+    const result = executeAction(state, 1, 'gold_hoard');
     // Should succeed — worker placed
-    expect(result.state.occupiedSpaces['gold_collectTribute']).toBe(1);
+    expect(result.state.occupiedSpaces['gold_hoard']).toBe(1);
     const player = getPlayer(result.state, 1);
-    expect(player.resources.gold).toBe(2);
+    expect(player.resources.gold).toBe(3);
   });
 
   it('returns pendingDecision for actions that need decisions', () => {
     const state = createActionPhaseState();
-    // Barter needs gemSelection decision
-    const result = executeAction(state, 1, 'gold_barter');
+    // Forage needs gemSelection decision (choose 2 any colors)
+    const result = executeAction(state, 1, 'yellow_forage');
     expect(result.pendingDecision).toBeDefined();
     expect(result.pendingDecision.type).toBe('gemSelection');
   });
@@ -209,8 +209,8 @@ describe('executeAction', () => {
   it('handles recursion for green repeat actions', () => {
     let state = createActionPhaseState();
 
-    // First place at gold_collectTribute so it's in roundActions
-    const firstResult = executeAction(state, 1, 'gold_collectTribute');
+    // First place at gold_hoard so it's in roundActions
+    const firstResult = executeAction(state, 1, 'gold_hoard');
     state = firstResult.state;
 
     // Reset turn state to allow another action
@@ -220,14 +220,14 @@ describe('executeAction', () => {
       godsAccessedThisTurn: [],
     };
 
-    // Now use green relive to repeat gold_collectTribute
+    // Now use green relive to repeat gold_hoard
     const result = executeAction(state, 1, 'green_relive', {
-      actionChoice: 'gold_collectTribute',
+      actionChoice: 'gold_hoard',
     });
 
-    // Player should have gained: 2 gold (first) + 1 green + 2 gold (repeat) = 4 gold, 1 green
+    // Player should have gained: 3 gold (first hoard) + 1 green (relive base) + 3 gold (repeat hoard) = 6 gold, 1 green
     const player = getPlayer(result.state, 1);
-    expect(player.resources.gold).toBe(4);
+    expect(player.resources.gold).toBe(6);
     expect(player.resources.green).toBe(1);
   });
 
@@ -239,7 +239,7 @@ describe('executeAction', () => {
 
   it('enforces max recursion depth', () => {
     const state = createActionPhaseState();
-    const result = executeAction(state, 1, 'gold_collectTribute', {}, { recursionDepth: 5 });
+    const result = executeAction(state, 1, 'gold_hoard', {}, { recursionDepth: 5 });
     expect(result.log.some(l => l.includes('Max recursion depth'))).toBe(true);
   });
 });
@@ -320,11 +320,12 @@ describe('buyPowerCard', () => {
     expect(result.log.some(l => l.includes('Bought Golden Scepter'))).toBe(true);
   });
 
-  it('removes card from market (does not refill)', () => {
+  it('removes card from market and replaces from deck', () => {
     let state = createActionPhaseState();
     state = {
       ...state,
-      powerCardMarkets: { ...state.powerCardMarkets, gold: ['golden_scepter', 'gold_idol', 'golden_chalice'] },
+      powerCardMarkets: { ...state.powerCardMarkets, gold: ['golden_scepter', 'gold_idol'] },
+      powerCardDecks: { ...state.powerCardDecks, gold: ['golden_chalice', 'gold_crown'] },
     };
     state = addResources(state, 1, { gold: 5 });
     state = trackGodAccess(state, 1, 'gold');
@@ -332,6 +333,8 @@ describe('buyPowerCard', () => {
     const result = buyPowerCard(state, 1, 'golden_scepter', { gemSelection: { gold: 1 } });
     expect(result.state.powerCardMarkets.gold).not.toContain('golden_scepter');
     expect(result.state.powerCardMarkets.gold).toHaveLength(2);
+    expect(result.state.powerCardMarkets.gold).toContain('golden_chalice');
+    expect(result.state.powerCardDecks.gold).toEqual(['gold_crown']);
   });
 
   it('registers event handlers from the card', () => {
@@ -375,19 +378,23 @@ describe('buyPowerCard', () => {
     expect(result.log.some(l => l.includes('Onyx Spyglass'))).toBe(true);
   });
 
-  it('applies onPurchase effects (Gold Idol: +2 gold)', () => {
+  it('applies onPurchase effects (Horn of Plenty: +1 each color)', () => {
     let state = createActionPhaseState();
     state = {
       ...state,
-      powerCardMarkets: { ...state.powerCardMarkets, gold: ['gold_idol', 'golden_scepter', 'golden_chalice'] },
+      powerCardMarkets: { ...state.powerCardMarkets, yellow: ['horn_of_plenty', 'rainbow_crest', 'extraction_vial'] },
     };
-    state = addResources(state, 1, { gold: 5 });
-    state = trackGodAccess(state, 1, 'gold');
+    state = addResources(state, 1, { yellow: 5, gold: 2 });
+    state = trackGodAccess(state, 1, 'yellow');
 
-    const result = buyPowerCard(state, 1, 'gold_idol');
+    const result = buyPowerCard(state, 1, 'horn_of_plenty', { gemSelection: { gold: 2 } });
     const player = getPlayer(result.state, 1);
-    // Started with 5, paid 3 for gold_idol, got +2 on purchase = 4 gold
-    expect(player.resources.gold).toBe(4);
+    // Horn of Plenty costs {yellow: 3, any: 2}, paid 3 yellow + 2 gold
+    // onPurchase: +1 of each active color (gold, black, green, yellow)
+    expect(player.resources.gold).toBe(1); // 2 - 2 (paid) + 1 (onPurchase) = 1
+    expect(player.resources.black).toBe(1);
+    expect(player.resources.green).toBe(1);
+    expect(player.resources.yellow).toBe(3); // 5 - 3 (paid) + 1 (onPurchase) = 3
     expect(result.log.some(l => l.includes('on-purchase'))).toBe(true);
   });
 
@@ -395,12 +402,13 @@ describe('buyPowerCard', () => {
     let state = createActionPhaseState();
     state = {
       ...state,
-      powerCardMarkets: { ...state.powerCardMarkets, yellow: ['horn_of_plenty', 'prismatic_gem', 'rainbow_crest'] },
+      powerCardMarkets: { ...state.powerCardMarkets, yellow: ['horn_of_plenty', 'rainbow_crest', 'extraction_vial'] },
     };
+    // Horn of Plenty costs {yellow: 3, any: 2}
     state = addResources(state, 1, { yellow: 5, gold: 2 });
     state = trackGodAccess(state, 1, 'yellow');
 
-    const result = buyPowerCard(state, 1, 'horn_of_plenty', { gemSelection: { gold: 1 } });
+    const result = buyPowerCard(state, 1, 'horn_of_plenty', { gemSelection: { gold: 2 } });
     const player = getPlayer(result.state, 1);
     // Should have +1 of each active color from onPurchase
     expect(player.resources.green).toBe(1);
@@ -470,10 +478,10 @@ describe('buyPowerCard', () => {
         1: { id: 'blessed', name: 'The Blessed', powerCards: [], powerCardSlots: 4 },
       },
       blessedUsed: { 1: false, 2: false },
-      powerCardMarkets: { ...state.powerCardMarkets, gold: ['golden_scepter', 'gold_idol', 'golden_chalice'] },
+      powerCardMarkets: { ...state.powerCardMarkets, gold: ['golden_scepter', 'golden_ring', 'gold_crown'] },
     };
-    // Golden Scepter costs {gold: 2, any: 1} = 3 total. With -2 discount = 1 total (gold: 1)
-    state = addResources(state, 1, { gold: 1 });
+    // Golden Scepter costs {gold: 3, any: 1} = 4 total. With -2 discount: any:1→0 (1 off), gold:3→2 (1 off) = gold:2
+    state = addResources(state, 1, { gold: 2 });
     state = trackGodAccess(state, 1, 'gold');
 
     const result = buyPowerCard(state, 1, 'golden_scepter');
@@ -491,7 +499,7 @@ describe('endTurn', () => {
   it('advances to next player', () => {
     let state = createActionPhaseState();
     // Execute an action first so player 1 has acted
-    const actionResult = executeAction(state, 1, 'gold_collectTribute');
+    const actionResult = executeAction(state, 1, 'gold_hoard');
     state = actionResult.state;
 
     const result = endTurn(state);
@@ -501,27 +509,27 @@ describe('endTurn', () => {
 
   it('dispatches TURN_END event', () => {
     let state = createActionPhaseState();
-    // Give player 1 some resource gains and register Traveler's Journal handler.
-    // turnResourceGains tracks { playerId: { color: amount } } — the handler uses
-    // Object.keys() to count distinct colors gained this turn.
-    state = addResources(state, 1, { gold: 2, green: 1 });
+    // Give player 1 some spending tracked and register Slag Catcher handler.
+    // Slag Catcher fires at turn end: if 3+ resources spent this turn, +1 yellow.
+    state = addResources(state, 1, { gold: 5 });
     state = {
       ...state,
-      turnResourceGains: { 1: { gold: 2, green: 1 } },
+      turnResourceSpending: { 1: 3 },
     };
     state = registerHandler(state, {
-      id: 'tj_test',
+      id: 'sc_test',
       eventType: EventType.TURN_END,
       source: 'power_card',
-      sourceId: 'travelers_journal',
+      sourceId: 'slag_catcher',
       ownerId: 1,
       config: { triggerOn: 'self' },
+      frequency: 'once_per_turn',
     });
 
     const result = endTurn(state);
-    // Traveler's Journal should fire: gained 2+ different colors = +1 Glory
+    // Slag Catcher should fire: spent 3+ resources = +1 yellow
     const player = getPlayer(result.state, 1);
-    expect(player.glory).toBe(1);
+    expect(player.resources.yellow).toBe(1);
   });
 
   it('resets turn-level handler frequencies', () => {
@@ -546,15 +554,15 @@ describe('endTurn', () => {
 describe('advanceRound', () => {
   it('dispatches ROUND_END then ROUND_START events', () => {
     let state = createActionPhaseState();
-    state = addResources(state, 1, { gold: 3 });
+    state = addResources(state, 1, { gold: 9 });
     // Put state into ROUND_END phase
     state = { ...state, phase: Phase.ROUND_END };
 
     const result = advanceRound(state);
 
-    // Gold glory condition should have fired at ROUND_END: +3 glory for 3 gold
+    // Gold glory condition should have fired at ROUND_END: +4 glory for 9 gold (1 per 2)
     const p1 = getPlayer(result.state, 1);
-    expect(p1.glory).toBeGreaterThanOrEqual(3);
+    expect(p1.glory).toBeGreaterThanOrEqual(4);
 
     // Should be in ACTION_PHASE after round start
     expect(result.state.phase).toBe(Phase.ACTION_PHASE);
@@ -671,13 +679,13 @@ describe('integration', () => {
     // Give player some extra gold for affordability
     state = addResources(state, 1, { gold: 10 });
 
-    // Step 1: Execute action at gold
-    let result = executeAction(state, 1, 'gold_collectTribute');
+    // Step 1: Execute action at gold (Haggle: +1 gold, shop discount)
+    let result = executeAction(state, 1, 'gold_haggle');
     state = result.state;
-    expect(getPlayer(state, 1).resources.gold).toBe(12);
+    expect(getPlayer(state, 1).resources.gold).toBe(11);
 
-    // Step 2: Use gold shop (one purchase per turn)
-    result = executeShop(state, 1, 'gold_weak', { gemSelection: { gold: 1 } });
+    // Step 2: Use gold shop (one purchase per turn) — gold_weak costs 1 gold, gives +2 Favor
+    result = executeShop(state, 1, 'gold_weak');
     state = result.state;
     expect(state.purchaseMadeThisTurn).toBe(true);
 
@@ -694,18 +702,19 @@ describe('integration', () => {
       ...state,
       powerCardMarkets: {
         ...state.powerCardMarkets,
-        gold: ['golden_scepter', 'gold_idol', 'golden_chalice'],
+        gold: ['golden_scepter', 'golden_ring', 'gold_crown'],
       },
     };
     // Give player some extra gold for affordability
     state = addResources(state, 1, { gold: 10 });
 
-    // Step 1: Execute action at gold
-    let result = executeAction(state, 1, 'gold_collectTribute');
+    // Step 1: Execute action at gold (Haggle: +1 gold)
+    let result = executeAction(state, 1, 'gold_haggle');
     state = result.state;
 
     // Step 2: Buy power card (one purchase per turn)
-    result = buyPowerCard(state, 1, 'golden_scepter', { gemSelection: { gold: 1 } });
+    // Golden Scepter costs {gold: 3, any: 1}; haggle discount -2 makes it {gold: 2}
+    result = buyPowerCard(state, 1, 'golden_scepter');
     state = result.state;
     expect(state.champions[1].powerCards).toContain('golden_scepter');
     expect(state.purchaseMadeThisTurn).toBe(true);
@@ -722,15 +731,15 @@ describe('integration', () => {
       ...state,
       powerCardMarkets: {
         ...state.powerCardMarkets,
-        gold: ['golden_scepter', 'gold_idol', 'golden_chalice'],
+        gold: ['golden_scepter', 'golden_ring', 'gold_crown'],
       },
     };
     state = addResources(state, 1, { gold: 10 });
 
     // Execute action then use shop
-    let result = executeAction(state, 1, 'gold_collectTribute');
+    let result = executeAction(state, 1, 'gold_haggle');
     state = result.state;
-    result = executeShop(state, 1, 'gold_weak', { gemSelection: { gold: 1 } });
+    result = executeShop(state, 1, 'gold_weak');
     state = result.state;
 
     // Now try to buy power card — should be blocked
@@ -750,11 +759,44 @@ describe('integration', () => {
       config: { triggerOn: 'self', resourceFilter: 'gold' },
     });
 
-    const result = executeAction(state, 1, 'gold_collectTribute');
+    const result = executeAction(state, 1, 'gold_hoard');
     const player = getPlayer(result.state, 1);
-    // Base: +2 gold, Scepter: +1 gold = 3 total
-    expect(player.resources.gold).toBe(3);
+    // Base: +3 gold (Hoard), Scepter: +1 gold = 4 total
+    expect(player.resources.gold).toBe(4);
     expect(result.log.some(l => l.includes('Golden Scepter'))).toBe(true);
+  });
+
+  it('Golden Scepter does not double-fire when echo copies a gold-gaining action', () => {
+    let state = createActionPhaseState();
+    // Register golden scepter handler for player 1
+    state = registerHandler(state, {
+      id: 'golden_scepter_p1',
+      eventType: EventType.RESOURCE_GAINED,
+      source: 'power_card',
+      sourceId: 'golden_scepter',
+      ownerId: 1,
+      config: { triggerOn: 'self', resourceFilter: 'gold' },
+    });
+
+    // First place at gold_hoard so it's in roundActions
+    const firstResult = executeAction(state, 1, 'gold_hoard');
+    state = firstResult.state;
+    // Base: +3 gold (Hoard), Scepter: +1 gold = 4 total
+    expect(getPlayer(state, 1).resources.gold).toBe(4);
+
+    // Reset turn state for second action
+    state = { ...state, workerPlacedThisTurn: false, godsAccessedThisTurn: [] };
+
+    // Use green relive to repeat gold_hoard
+    const echoResult = executeAction(state, 1, 'green_relive', {
+      actionChoice: 'gold_hoard',
+    });
+    const player = getPlayer(echoResult.state, 1);
+
+    // Relive: +1 green (relive base) + +3 gold (repeated Hoard) + +1 gold (Scepter on inner) = 8 gold, 1 green
+    // The outer action should NOT re-fire Scepter for the inner action's gold gains
+    expect(player.resources.gold).toBe(8);
+    expect(player.resources.green).toBe(1);
   });
 
   it('Voodoo Doll creates decision at round end', () => {
@@ -777,35 +819,35 @@ describe('integration', () => {
     expect(voodoDecision).toBeTruthy();
   });
 
-  it('glory conditions fire at round end for gold and yellow', () => {
+  it('glory conditions fire at round end for gold', () => {
     let state = createActionPhaseState();
-    state = addResources(state, 1, { gold: 4, green: 2, yellow: 1, black: 1 });
-    state = addResources(state, 2, { gold: 1 });
+    state = addResources(state, 1, { gold: 6 });
+    state = addResources(state, 2, { gold: 4 });
     state = { ...state, phase: Phase.ROUND_END };
 
     const result = advanceRound(state);
 
-    // Gold glory: p1 gets +4 (4 gold), p2 gets +1 (1 gold)
-    // Yellow glory: p1 gets +4 (4 different colors), p2 gets +1 (1 color)
+    // Gold glory at round end: +1 per 2 gold owned
+    // p1: floor(6/2) = 3, p2: floor(4/2) = 2
     const p1 = getPlayer(result.state, 1);
     const p2 = getPlayer(result.state, 2);
 
-    expect(p1.glory).toBeGreaterThanOrEqual(4); // at least gold glory
-    expect(p2.glory).toBeGreaterThanOrEqual(1);
+    expect(p1.glory).toBeGreaterThanOrEqual(3);
+    expect(p2.glory).toBeGreaterThanOrEqual(2);
   });
 
   it('green glory condition fires when action is repeated', () => {
     let state = createActionPhaseState();
 
-    // First place at gold_collectTribute
-    let result = executeAction(state, 1, 'gold_collectTribute');
+    // First place at gold_hoard
+    let result = executeAction(state, 1, 'gold_hoard');
     state = result.state;
 
     // Reset for next action
     state = { ...state, workerPlacedThisTurn: false, godsAccessedThisTurn: [] };
 
     // Repeat via green relive
-    result = executeAction(state, 1, 'green_relive', { actionChoice: 'gold_collectTribute' });
+    result = executeAction(state, 1, 'green_relive', { actionChoice: 'gold_hoard' });
     state = result.state;
 
     // Green glory should have triggered for the repeat
@@ -825,10 +867,10 @@ describe('integration', () => {
     expect(actions.length).toBe(16);
 
     // Occupy one space
-    state = { ...state, occupiedSpaces: { gold_collectTribute: 2 } };
+    state = { ...state, occupiedSpaces: { gold_patronage: 2 } };
     const actionsAfter = getAvailableActions(state, 1);
     expect(actionsAfter.length).toBe(15);
-    expect(actionsAfter).not.toContain('gold_collectTribute');
+    expect(actionsAfter).not.toContain('gold_patronage');
   });
 
   it('isGameOver detects game end', () => {

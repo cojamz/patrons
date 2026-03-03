@@ -14,7 +14,7 @@ export const POWER_CARD_SLOTS = 4; // default per champion (The Ambitious gets +
 
 export const CARDS_IN_DECK = 6; // power cards per god's deck
 
-export const CARDS_DEALT_PER_GOD = 3; // face-up in the market each game
+export const CARDS_DEALT_PER_GOD = 2; // face-up in the market, replaced on purchase
 
 export const ACTIONS_PER_GOD = 7; // action spaces per god layer
 
@@ -124,6 +124,23 @@ export const EFFECT_TYPES = {
   STEAL_RESOURCE: 'stealResource',
   STEAL_GLORY: 'stealGlory',
   PENALIZE_ALL: 'penalizeAll',
+  TRIBUTE: 'tribute',
+  STEAL_HALF: 'stealHalf',
+  SCALE_PENALIZE: 'scalePenalize',
+  SPEND_ALL_PENALIZE: 'spendAllPenalize',
+
+  // Conversion
+  SPEND_ALL_CONVERT: 'spendAllConvert',
+  GAIN_PER_ZERO: 'gainPerZero',
+  GAIN_PER_ACTIVE: 'gainPerActive',
+
+  // Restrictions & buffs
+  NO_SHOP: 'noShop',
+  SHOP_DISCOUNT: 'shopDiscount',
+  SCALE_GAIN: 'scaleGain',
+  AEGIS: 'aegis',
+  PERMANENT_UPGRADE: 'permanentUpgrade',
+  DOUBLE_NEXT_THEFT: 'doubleNextTheft',
 
   // Action manipulation
   REPEAT_ACTION: 'repeatAction',
@@ -146,6 +163,7 @@ export const EFFECT_TYPES = {
 
   // Wildcard / flexibility
   WILDCARD_RESOURCE: 'wildcardResource',
+  WILDCARD_ALL: 'wildcardAll',
   IGNORE_BLOCKING: 'ignoreBlocking',
   REPEAT_FROM_UNOCCUPIED: 'repeatFromUnoccupied',
   DOUBLE_GLORY_TRIGGER: 'doubleGloryTrigger',
@@ -155,7 +173,8 @@ export const EFFECT_TYPES = {
 // When the engine should check each god's Glory condition.
 
 export const GLORY_TRIGGERS = {
-  ROUND_END: 'roundEnd',           // check at end of each round (Gold, Yellow)
-  ON_STEAL_OR_PENALIZE: 'onStealOrPenalize', // check on each steal/penalize (Black)
-  ON_REPEAT_OR_COPY: 'onRepeatOrCopy',       // check on each repeat/copy (Green)
+  ROUND_END: 'roundEnd',               // check at end of each round (Gold)
+  ON_STEAL_ACTION: 'onStealAction',     // check on each steal action/shop (Black)
+  ON_REPEAT_OR_COPY: 'onRepeatOrCopy',  // check on each repeat/copy (Green)
+  ON_GAIN_NEW_COLOR: 'onGainNewColor',  // check when gaining a color you had 0 of (Yellow)
 };

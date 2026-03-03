@@ -25,7 +25,7 @@ const actionHandlers = {
  *
  * @param {object} state - Current game state
  * @param {string} playerId - Player taking the action
- * @param {string} actionId - Action identifier (e.g. 'gold_collectTribute')
+ * @param {string} actionId - Action identifier (e.g. 'gold_patronage')
  * @param {string[]} gods - Active god colors
  * @param {object} decisions - Player decisions for this action
  * @param {number} recursionDepth - Current recursion depth (for repeat chains)

@@ -26,6 +26,8 @@ const HANDLED_DECISION_TYPES = [
   'actionChoice',
   'actionChoices',
   'nullifierPlacement',
+  'chooseColor',
+  'turnOrderChoice',
 ];
 
 // Required fields per decision type (what the modal reads)
@@ -36,6 +38,8 @@ const REQUIRED_FIELDS = {
   actionChoice: ['options'],
   actionChoices: ['options', 'count'],
   championChoice: ['options'],
+  chooseColor: ['options'],
+  turnOrderChoice: ['options'],
 };
 
 /**
@@ -199,11 +203,10 @@ describe('UX Contract: green action decisions', () => {
     const playerId = state.currentPlayer;
 
     // First place a worker at a non-repeat action so there's something to repeat
-    let result = executeAction(state, playerId, 'green_bide');
+    let result = executeAction(state, playerId, 'green_gather');
     state = result.state;
 
-    // End turn and come back (or just use the state directly with roundActions set)
-    // The roundActions should now have green_bide
+    // The roundActions should now have green_gather
     // Execute relive -- it should produce an actionChoice decision
     result = executeAction(state, playerId, 'green_relive');
 
@@ -211,30 +214,47 @@ describe('UX Contract: green action decisions', () => {
     expect(result.pendingDecision.type).toBe('actionChoice');
     expect(result.pendingDecision.options).toBeDefined();
     expect(Array.isArray(result.pendingDecision.options)).toBe(true);
-    // options should contain repeatable actions (at least green_bide)
+    // options should contain repeatable actions (at least green_gather)
     expect(result.pendingDecision.options.length).toBeGreaterThan(0);
     // repeat-excluded actions should NOT appear in options
-    const repeatExcluded = ['green_relive', 'green_echo', 'green_loop', 'green_unravel'];
+    const repeatExcluded = ['green_relive', 'green_echo', 'green_recall', 'green_eternity'];
     for (const excluded of repeatExcluded) {
       expect(result.pendingDecision.options).not.toContain(excluded);
     }
   });
 
-  it('echo copies last non-echo action without requiring a decision', () => {
+  it('echo emits actionChoice for other player T1 actions or has no decision if none', () => {
     let state = createReadyGame({ playerCount: 2, godSet: ['green', 'gold'] });
     const playerId = state.currentPlayer;
 
-    // Place a worker so there's a "last action" in roundActions
-    let result = executeAction(state, playerId, 'gold_collectTribute');
+    // Place a worker at a gold action (so there's a "last action" by current player)
+    let result = executeAction(state, playerId, 'gold_patronage');
+    state = result.state;
+    // Resolve any pending decisions from patronage
+    if (result.pendingDecision) {
+      const answer = randomDecisionFn(state, playerId, result.pendingDecision);
+      const resolved = executeAction(state, playerId, 'gold_patronage', answer);
+      state = resolved.state;
+    }
+
+    // End turn so the other player places a worker
+    const turnResult = endTurn(state);
+    state = turnResult.state;
+
+    // Other player places a gold action (T1)
+    const otherPlayerId = state.currentPlayer;
+    result = executeAction(state, otherPlayerId, 'gold_hoard');
     state = result.state;
 
-    // Echo copies the last action automatically (no decision needed from the player)
-    result = executeAction(state, playerId, 'green_echo');
+    // End turn back to first player
+    const turn2 = endTurn(state);
+    state = turn2.state;
 
-    // Echo should NOT produce a pendingDecision -- it auto-copies the last action
-    // It returns executeAction chain instead
+    // Now echo should have another player's T1 actions to copy
+    result = executeAction(state, state.currentPlayer, 'green_echo');
+
+    // Echo now emits an actionChoice decision for another player's T1 actions
     if (result.pendingDecision) {
-      // If it does produce a decision, it must be a handled type with correct fields
       expect(HANDLED_DECISION_TYPES).toContain(result.pendingDecision.type);
       const required = REQUIRED_FIELDS[result.pendingDecision.type] || [];
       for (const field of required) {
@@ -243,18 +263,24 @@ describe('UX Contract: green action decisions', () => {
     }
   });
 
-  it('loop emits actionChoice for Tier 2 actions', () => {
-    // Loop is tier 2, so we need round 2
+  it('rewind emits actionChoice for other player T2 actions', () => {
+    // Rewind is tier 2, so we need round 2
     let state = createReadyGame({ playerCount: 2, godSet: ['green', 'gold'] });
     state = { ...state, round: 2 };
     const playerId = state.currentPlayer;
 
-    // Place worker at a tier 2 action first
-    let result = executeAction(state, playerId, 'green_accelerate');
-    state = result.state;
+    // Simulate another player having placed a T2 action in roundActions
+    const otherPlayerId = state.players.find(p => p.id !== playerId).id;
+    state = {
+      ...state,
+      roundActions: [
+        ...(state.roundActions || []),
+        { playerId: otherPlayerId, actionId: 'gold_tariff' },
+      ],
+    };
 
-    // Execute loop
-    result = executeAction(state, playerId, 'green_loop');
+    // Execute rewind — should produce an actionChoice for T2 actions from other players
+    const result = executeAction(state, playerId, 'green_rewind');
 
     expect(result.pendingDecision).toBeDefined();
     expect(result.pendingDecision.type).toBe('actionChoice');
@@ -263,24 +289,28 @@ describe('UX Contract: green action decisions', () => {
     expect(result.pendingDecision.options.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('unravel emits actionChoice for Tier 3 actions', () => {
-    // Unravel is tier 3, so we need round 3
+  it('eternity replays all own actions without requiring a decision', () => {
+    // Eternity is tier 3, so we need round 3
     let state = createReadyGame({ playerCount: 2, godSet: ['green', 'gold'] });
     state = { ...state, round: 3 };
     const playerId = state.currentPlayer;
 
-    // Place worker at a tier 3 action first (gold_cashIn)
+    // Place worker at gold_cashIn first (T3 action that eternity can replay)
     let result = executeAction(state, playerId, 'gold_cashIn');
     state = result.state;
 
-    // Execute unravel
-    result = executeAction(state, playerId, 'green_unravel');
+    // Execute eternity — it replays all own actions, no decision needed
+    result = executeAction(state, playerId, 'green_eternity');
 
-    expect(result.pendingDecision).toBeDefined();
-    expect(result.pendingDecision.type).toBe('actionChoice');
-    expect(result.pendingDecision.options).toBeDefined();
-    expect(Array.isArray(result.pendingDecision.options)).toBe(true);
-    expect(result.pendingDecision.options.length).toBeGreaterThanOrEqual(1);
+    // Eternity auto-replays (uses executeAction chain), may or may not produce decisions
+    // from the replayed actions. If it does, they must be valid.
+    if (result.pendingDecision) {
+      expect(HANDLED_DECISION_TYPES).toContain(result.pendingDecision.type);
+      const required = REQUIRED_FIELDS[result.pendingDecision.type] || [];
+      for (const field of required) {
+        expect(result.pendingDecision[field]).toBeDefined();
+      }
+    }
   });
 });
 
@@ -289,7 +319,7 @@ describe('UX Contract: green action decisions', () => {
 // ============================================================================
 
 describe('UX Contract: yellow action decisions', () => {
-  it('forage emits gemSelection with count=3', () => {
+  it('forage emits gemSelection with count=2', () => {
     const state = createReadyGame({ playerCount: 2, godSet: ['yellow', 'gold'] });
     const playerId = state.currentPlayer;
 
@@ -297,38 +327,28 @@ describe('UX Contract: yellow action decisions', () => {
 
     expect(result.pendingDecision).toBeDefined();
     expect(result.pendingDecision.type).toBe('gemSelection');
-    expect(result.pendingDecision.count).toBe(3);
-  });
-
-  it('gather emits gemSelection with count=2', () => {
-    const state = createReadyGame({ playerCount: 2, godSet: ['yellow', 'gold'] });
-    const playerId = state.currentPlayer;
-
-    const result = executeAction(state, playerId, 'yellow_gather');
-
-    expect(result.pendingDecision).toBeDefined();
-    expect(result.pendingDecision.type).toBe('gemSelection');
     expect(result.pendingDecision.count).toBe(2);
   });
 
-  it('harvest emits gemSelection with count=4', () => {
-    // Harvest is tier 2
-    let state = createReadyGame({ playerCount: 2, godSet: ['yellow', 'gold'] });
-    state = { ...state, round: 2 };
+  it('harvest grants +2 yellow without requiring a decision', () => {
+    const state = createReadyGame({ playerCount: 2, godSet: ['yellow', 'gold'] });
     const playerId = state.currentPlayer;
 
     const result = executeAction(state, playerId, 'yellow_harvest');
 
-    expect(result.pendingDecision).toBeDefined();
-    expect(result.pendingDecision.type).toBe('gemSelection');
-    expect(result.pendingDecision.count).toBe(4);
+    // Harvest is now a simple +2 yellow with no decision
+    expect(result.pendingDecision).toBeUndefined();
+    // Verify yellow was actually gained
+    const player = result.state.players.find(p => p.id === playerId);
+    const originalPlayer = state.players.find(p => p.id === playerId);
+    expect(player.resources.yellow).toBeGreaterThan(originalPlayer.resources.yellow || 0);
   });
 
-  it('trade emits gemSelection with count = total resources after +1 yellow', () => {
+  it('transmute emits gemSelection for resources to give up', () => {
     let state = createReadyGame({ playerCount: 2, godSet: ['yellow', 'gold'] });
     const playerId = state.currentPlayer;
 
-    // Give the player some resources first
+    // Give the player some resources to transmute
     state = {
       ...state,
       players: state.players.map(p =>
@@ -338,16 +358,60 @@ describe('UX Contract: yellow action decisions', () => {
       ),
     };
 
-    const player = state.players.find(p => p.id === playerId);
-    const totalBefore = Object.values(player.resources).reduce((sum, v) => sum + Math.max(0, v), 0);
-    // Trade gives +1 yellow first, so total should be totalBefore + 1
-    const expectedCount = totalBefore + 1;
+    const result = executeAction(state, playerId, 'yellow_transmute');
 
-    const result = executeAction(state, playerId, 'yellow_trade');
-
+    // Transmute gives +1 yellow first, then asks for 2 resources to spend
     expect(result.pendingDecision).toBeDefined();
     expect(result.pendingDecision.type).toBe('gemSelection');
-    expect(result.pendingDecision.count).toBe(expectedCount);
+    expect(result.pendingDecision.count).toBe(2);
+    expect(result.pendingDecision.mode).toBe('spend');
+  });
+
+  it('distill emits chooseColor to pick which color to spend all of', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['yellow', 'gold'] });
+    state = { ...state, round: 2 };
+    const playerId = state.currentPlayer;
+
+    // Give the player some resources to distill
+    state = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerId
+          ? { ...p, resources: { ...p.resources, gold: 4, yellow: 2 } }
+          : p
+      ),
+    };
+
+    const result = executeAction(state, playerId, 'yellow_distill');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('chooseColor');
+    expect(result.pendingDecision.options).toBeDefined();
+    expect(Array.isArray(result.pendingDecision.options)).toBe(true);
+    expect(result.pendingDecision.options.length).toBeGreaterThan(0);
+  });
+
+  it('siphon emits targetPlayer decision', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['yellow', 'gold'] });
+    const playerId = state.currentPlayer;
+
+    // Give the target player some resources to steal
+    state = {
+      ...state,
+      players: state.players.map(p =>
+        p.id !== playerId
+          ? { ...p, resources: { ...p.resources, gold: 3, yellow: 3 } }
+          : p
+      ),
+    };
+
+    const result = executeAction(state, playerId, 'yellow_siphon');
+
+    expect(result.pendingDecision).toBeDefined();
+    expect(result.pendingDecision.type).toBe('targetPlayer');
+    expect(result.pendingDecision.options).toBeDefined();
+    expect(result.pendingDecision.options.length).toBeGreaterThan(0);
+    expect(result.pendingDecision.options).not.toContain(playerId);
   });
 });
 
@@ -356,69 +420,69 @@ describe('UX Contract: yellow action decisions', () => {
 // ============================================================================
 
 describe('UX Contract: gold action decisions', () => {
-  it('barter emits gemSelection with count=2', () => {
+  it('patronage emits targetPlayer decision to gift 1 gold', () => {
     let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
     const playerId = state.currentPlayer;
 
-    // Give resources so barter can work
-    state = {
-      ...state,
-      players: state.players.map(p =>
-        p.id === playerId
-          ? { ...p, resources: { ...p.resources, gold: 3, black: 3 } }
-          : p
-      ),
-    };
-
-    const result = executeAction(state, playerId, 'gold_barter');
+    const result = executeAction(state, playerId, 'gold_patronage');
 
     expect(result.pendingDecision).toBeDefined();
-    expect(result.pendingDecision.type).toBe('gemSelection');
-    expect(result.pendingDecision.count).toBe(2);
+    expect(result.pendingDecision.type).toBe('targetPlayer');
+    expect(result.pendingDecision.options).toBeDefined();
+    expect(result.pendingDecision.options.length).toBeGreaterThan(0);
+    expect(result.pendingDecision.options).not.toContain(playerId);
   });
 
-  it('appraise emits gemSelection with count=1', () => {
+  it('hoard grants +3 gold and sets noShopThisTurn without a decision', () => {
     let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
     const playerId = state.currentPlayer;
 
-    // Give resources
-    state = {
-      ...state,
-      players: state.players.map(p =>
-        p.id === playerId
-          ? { ...p, resources: { ...p.resources, black: 2 } }
-          : p
-      ),
-    };
+    const result = executeAction(state, playerId, 'gold_hoard');
 
-    const result = executeAction(state, playerId, 'gold_appraise');
-
-    expect(result.pendingDecision).toBeDefined();
-    expect(result.pendingDecision.type).toBe('gemSelection');
-    expect(result.pendingDecision.count).toBe(1);
+    expect(result.pendingDecision).toBeUndefined();
+    // Verify gold was gained
+    const player = result.state.players.find(p => p.id === playerId);
+    const originalPlayer = state.players.find(p => p.id === playerId);
+    expect(player.resources.gold).toBeGreaterThan(originalPlayer.resources.gold || 0);
   });
 
-  it('brokerDeal emits gemSelection with count=3', () => {
-    // Broker Deal is tier 2
+  it('tariff grants gold based on gods with workers without a decision', () => {
     let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
     state = { ...state, round: 2 };
     const playerId = state.currentPlayer;
 
-    // Give resources
+    const result = executeAction(state, playerId, 'gold_tariff');
+
+    // Tariff gives +1 gold base +1 per god with workers, no decision needed
+    expect(result.pendingDecision).toBeUndefined();
+    const player = result.state.players.find(p => p.id === playerId);
+    const originalPlayer = state.players.find(p => p.id === playerId);
+    expect(player.resources.gold).toBeGreaterThan(originalPlayer.resources.gold || 0);
+  });
+
+  it('cashIn converts all gold to Favor without a decision', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
+    state = { ...state, round: 3 };
+    const playerId = state.currentPlayer;
+
+    // Give gold to convert
     state = {
       ...state,
       players: state.players.map(p =>
         p.id === playerId
-          ? { ...p, resources: { ...p.resources, gold: 3, black: 3 } }
+          ? { ...p, resources: { ...p.resources, gold: 5 } }
           : p
       ),
     };
 
-    const result = executeAction(state, playerId, 'gold_brokerDeal');
+    const result = executeAction(state, playerId, 'gold_cashIn');
 
-    expect(result.pendingDecision).toBeDefined();
-    expect(result.pendingDecision.type).toBe('gemSelection');
-    expect(result.pendingDecision.count).toBe(3);
+    expect(result.pendingDecision).toBeUndefined();
+    const player = result.state.players.find(p => p.id === playerId);
+    // Gold should be spent
+    expect(player.resources.gold).toBe(0);
+    // Favor should be gained
+    expect(player.glory).toBeGreaterThan(0);
   });
 });
 
@@ -452,7 +516,7 @@ describe('UX Contract: shop decisions', () => {
     expect(result.pendingDecision.excludePlayer).toBe(playerId);
   });
 
-  it('black_strong shop emits targetPlayer decision', () => {
+  it('black_strong shop sets doubleNextTheft effect without a decision', () => {
     let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
     const playerId = state.currentPlayer;
 
@@ -468,33 +532,53 @@ describe('UX Contract: shop decisions', () => {
 
     const result = resolveShop(state, playerId, 'black_strong');
 
-    expect(result.pendingDecision).toBeDefined();
-    expect(result.pendingDecision.type).toBe('targetPlayer');
-    expect(result.pendingDecision.excludePlayer).toBe(playerId);
+    // black_strong now sets doubleNextTheft effect, no decision needed
+    expect(result.pendingDecision).toBeUndefined();
+    const player = result.state.players.find(p => p.id === playerId);
+    expect(player.effects).toContain('doubleNextTheft');
   });
 
-  it('green_weak shop emits actionChoice for tier 1 repeatable actions', () => {
+  it('green_weak shop sets tempoPlay effect without a decision', () => {
     let state = createReadyGame({ playerCount: 2, godSet: ['green', 'gold'] });
     const playerId = state.currentPlayer;
 
-    // Place a worker first so there are repeatable actions
-    let result = executeAction(state, playerId, 'green_bide');
-    state = result.state;
     state = { ...state, godsAccessedThisTurn: ['green'] };
 
     const shopResult = resolveShop(state, playerId, 'green_weak');
 
-    expect(shopResult.pendingDecision).toBeDefined();
-    expect(shopResult.pendingDecision.type).toBe('actionChoice');
-    expect(shopResult.pendingDecision.options).toBeDefined();
-    expect(Array.isArray(shopResult.pendingDecision.options)).toBe(true);
+    // green_weak now sets tempoPlay effect, no decision needed
+    expect(shopResult.pendingDecision).toBeUndefined();
+    const player = shopResult.state.players.find(p => p.id === playerId);
+    expect(player.effects).toContain('tempoPlay');
   });
 
-  it('shop cost with "any" payment emits gemSelection decision', () => {
+  it('yellow_weak shop emits gemSelection with count=2', () => {
+    let state = createReadyGame({ playerCount: 2, godSet: ['yellow', 'gold'] });
+    const playerId = state.currentPlayer;
+
+    state = { ...state, godsAccessedThisTurn: ['yellow'] };
+    state = {
+      ...state,
+      players: state.players.map(p =>
+        p.id === playerId
+          ? { ...p, resources: { ...p.resources, yellow: 5, gold: 5 } }
+          : p
+      ),
+    };
+
+    const shopResult = resolveShop(state, playerId, 'yellow_weak');
+
+    // yellow_weak costs { yellow: 1 } and grants "gain 2 any colors" via gemSelection
+    expect(shopResult.pendingDecision).toBeDefined();
+    expect(shopResult.pendingDecision.type).toBe('gemSelection');
+    expect(shopResult.pendingDecision.count).toBe(2);
+  });
+
+  it('gold_weak shop cost has no "any" component (pure gold cost)', () => {
     let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
     const playerId = state.currentPlayer;
 
-    // Gold weak shop costs { gold: 1, any: 1 }
+    // Gold weak shop costs { gold: 1 } — no 'any' component
     state = { ...state, godsAccessedThisTurn: ['gold'] };
     state = {
       ...state,
@@ -507,10 +591,10 @@ describe('UX Contract: shop decisions', () => {
 
     const payResult = payShopCost(state, playerId, 'gold_weak');
 
-    // Should ask for gemSelection to pay the 'any' cost
-    expect(payResult.pendingDecision).toBeDefined();
-    expect(payResult.pendingDecision.type).toBe('gemSelection');
-    expect(payResult.pendingDecision.count).toBe(1);
+    // No 'any' cost means no gemSelection decision for payment
+    expect(payResult.pendingDecision).toBeUndefined();
+    // Cost was paid successfully
+    expect(payResult.canAfford).toBe(true);
   });
 });
 
@@ -619,18 +703,18 @@ describe('UX Contract: power card market refill', () => {
   it('markets refill from deck between rounds', () => {
     let state = createReadyGame({ playerCount: 2, godSet: ['gold', 'black'] });
 
-    // Verify initial state: markets have 3 cards, decks have remainder
+    // Verify initial state: markets have 2 cards, decks have remainder
     for (const godColor of state.gods) {
       const market = state.powerCardMarkets[godColor];
-      expect(market.length).toBe(3);
+      expect(market.length).toBe(2);
       expect(state.powerCardDecks[godColor]).toBeDefined();
     }
 
-    // Simulate buying a card from gold market
+    // Simulate buying a card from gold market (manually remove without replacement)
     const goldMarket = state.powerCardMarkets.gold;
     const cardToBuy = goldMarket[0];
 
-    // Manually remove it (simulate buy without cost check)
+    // Manually remove it (simulate buy without cost check, no replacement)
     state = {
       ...state,
       powerCardMarkets: {
@@ -638,20 +722,20 @@ describe('UX Contract: power card market refill', () => {
         gold: goldMarket.filter(id => id !== cardToBuy),
       },
     };
-    expect(state.powerCardMarkets.gold.length).toBe(2);
+    expect(state.powerCardMarkets.gold.length).toBe(1);
 
     // Advance to round end and start
     state = { ...state, phase: 'round_end' };
     const roundResult = advanceRound(state);
     state = roundResult.state;
 
-    // After round advance, market should refill back to 3 if deck has cards
+    // After round advance, market should refill back to 2 if deck has cards
     if (state.phase === 'action_phase' || state.phase === 'round_start') {
       const refilled = state.powerCardMarkets.gold;
       const deckRemaining = state.powerCardDecks.gold;
 
       // Should have refilled (if deck wasn't empty)
-      expect(refilled.length).toBe(3);
+      expect(refilled.length).toBe(2);
       // The bought card shouldn't be in the refilled market
       // (it was removed, refill draws from deck not re-adds bought cards)
     }

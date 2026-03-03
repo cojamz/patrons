@@ -29,7 +29,7 @@ const CHAMPION_HANDLER_MAP = {
   },
   deft: {
     sourceId: 'deft_passive',
-    eventType: EventType.TURN_START,
+    eventType: EventType.ROUND_START,
     frequency: 'once_per_round',
   },
 };
@@ -126,15 +126,37 @@ export function executeChampionDraft(state, decision) {
       source: 'champion_passive',
       sourceId: handlerInfo.sourceId,
       ownerId: currentDrafter,
-      config: {},
+      config: handlerInfo.config || {},
       frequency: handlerInfo.frequency,
     });
   }
 
   // Check if draft is now complete
   if (newState.draftIndex >= draftOrder.length) {
+    // Queue fortunate_starting decisions for any player who drafted The Fortunate
+    const fortunateDecisions = [];
+    for (const [pid, champ] of Object.entries(newState.champions)) {
+      if (champ.id === 'fortunate') {
+        fortunateDecisions.push({
+          type: 'gemSelection',
+          sourceId: 'fortunate_starting',
+          count: 2,
+          colors: newState.gods || ['gold', 'black', 'green', 'yellow'],
+          title: 'The Fortunate — choose 2 starting resources',
+          playerId: Number(pid) || pid,
+          ownerId: Number(pid) || pid,
+        });
+      }
+    }
+
+    const finalState = {
+      ...newState,
+      phase: Phase.ROUND_START,
+      decisionQueue: [...(newState.decisionQueue || []), ...fortunateDecisions],
+    };
+
     return createResult(
-      { ...newState, phase: Phase.ROUND_START },
+      finalState,
       [...log, 'Champion draft complete.']
     );
   }

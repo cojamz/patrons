@@ -1,5 +1,5 @@
 /**
- * Patrons v3 — Yellow God Handler Resolvers
+ * Patrons v3 — Yellow God Handler Resolvers (Balance Rework)
  *
  * Each resolver: (state, handler, eventData, options) => { state, log, pendingDecisions }
  * All pure functions. No mutation.
@@ -43,10 +43,115 @@ function getPlayer(state, playerId) {
 // --- Resolvers ---
 
 /**
+ * Rainbow Crest: +1 any when gaining 2+ colors (action or shop).
+ * Auto-picks the player's lowest active resource.
+ */
+function rainbowCrestResolver(state, handler, eventData, _options) {
+  if (eventData.playerId !== handler.ownerId) {
+    return { state, log: [], pendingDecisions: [] };
+  }
+
+  const resources = eventData.resources || {};
+  const colorsGained = Object.keys(resources).filter(c => resources[c] > 0);
+
+  if (colorsGained.length < 2) {
+    return { state, log: [], pendingDecisions: [] };
+  }
+
+  const activeColors = state.gods || ['gold', 'black', 'green', 'yellow'];
+  const player = getPlayer(state, handler.ownerId);
+  const sortedColors = [...activeColors].sort((a, b) =>
+    (player.resources[a] || 0) - (player.resources[b] || 0)
+  );
+  const chosenColor = sortedColors[0] || activeColors[0];
+
+  const newState = addResourceToPlayer(state, handler.ownerId, chosenColor, 1);
+  return {
+    state: newState,
+    log: [`Rainbow Crest: +1 ${chosenColor} (gained 2+ colors)`],
+    pendingDecisions: [],
+  };
+}
+
+/**
+ * Extraction Vial: When you gain resources from a non-yellow god's action, +1 yellow.
+ */
+function extractionVialResolver(state, handler, eventData, _options) {
+  if (eventData.playerId !== handler.ownerId) {
+    return { state, log: [], pendingDecisions: [] };
+  }
+
+  if (eventData.source !== 'action') {
+    return { state, log: [], pendingDecisions: [] };
+  }
+
+  const godColor = eventData.godColor || '';
+  if (godColor === 'yellow' || !godColor) {
+    return { state, log: [], pendingDecisions: [] };
+  }
+
+  const newState = addResourceToPlayer(state, handler.ownerId, 'yellow', 1);
+  return {
+    state: newState,
+    log: [`Extraction Vial: +1 yellow (${godColor} god action)`],
+    pendingDecisions: [],
+  };
+}
+
+/**
+ * Slag Catcher: Spent 3+ resources in a turn → gain 1 yellow (once/turn).
+ * Fires at turn end. Checks turn spending tracking.
+ */
+function slagCatcherResolver(state, handler, eventData, _options) {
+  if (eventData.playerId !== handler.ownerId) {
+    return { state, log: [], pendingDecisions: [] };
+  }
+
+  // Check turn spending (tracked in turnResourceSpending or calculated from state)
+  const turnSpending = (state.turnResourceSpending || {})[handler.ownerId] || 0;
+  if (turnSpending < 3) {
+    return { state, log: [], pendingDecisions: [] };
+  }
+
+  const newState = addResourceToPlayer(state, handler.ownerId, 'yellow', 1);
+  return {
+    state: newState,
+    log: ['Slag Catcher: +1 yellow (spent 3+ resources this turn)'],
+    pendingDecisions: [],
+  };
+}
+
+/**
+ * Alchemist's Trunk: At round start, return pending decision for resource redistribution.
+ */
+function alchemistsTrunkResolver(state, handler, _eventData, _options) {
+  const player = getPlayer(state, handler.ownerId);
+  const totalResources = Object.values(player?.resources || {}).reduce((s, v) => s + Math.max(0, v), 0);
+
+  if (totalResources === 0) {
+    return { state, log: ["Alchemist's Trunk: no resources to redistribute"], pendingDecisions: [] };
+  }
+
+  return {
+    state,
+    log: ["Alchemist's Trunk: redistribute resources"],
+    pendingDecisions: [{
+      type: 'redistributeResources',
+      title: "Alchemist's Trunk: Redistribute your resources",
+      playerId: handler.ownerId,
+      ownerId: handler.ownerId,
+      sourceId: 'alchemists_trunk',
+      totalResources,
+      colors: state.gods || ['gold', 'black', 'green', 'yellow'],
+    }],
+  };
+}
+
+/**
  * Horn of Plenty: At round start, +1 of each active color.
  */
 function hornOfPlentyResolver(state, handler, _eventData, _options) {
-  const activeColors = state.activeColors || ['gold', 'black', 'green', 'yellow'];
+  const activeColors = state.gods || ['gold', 'black', 'green', 'yellow'];
   let newState = state;
 
   for (const color of activeColors) {
@@ -61,128 +166,30 @@ function hornOfPlentyResolver(state, handler, _eventData, _options) {
 }
 
 /**
- * Rainbow Crest: When you gain resources of 2+ different colors in one event, +1 of any color.
- * For now, picks the first active color.
+ * Yellow Favor Condition: +1 Favor each time you gain a resource color you had 0 of.
+ * Fires inline during gameplay on ON_GAIN_NEW_COLOR events.
  */
-function rainbowCrestResolver(state, handler, eventData, _options) {
+function yellowGloryConditionResolver(state, handler, eventData, _options) {
   if (eventData.playerId !== handler.ownerId) {
     return { state, log: [], pendingDecisions: [] };
   }
 
-  const resources = eventData.resources || {};
-  const colorsGained = Object.keys(resources).filter(c => resources[c] > 0);
+  // eventData should include how many new colors were gained (0→N transitions)
+  const newColorsCount = eventData.newColorsCount || 1;
 
-  if (colorsGained.length < 2) {
-    return { state, log: [], pendingDecisions: [] };
-  }
-
-  const activeColors = state.activeColors || ['gold', 'black', 'green', 'yellow'];
-  const chosenColor = activeColors[0] || 'gold';
-
-  const newState = addResourceToPlayer(state, handler.ownerId, chosenColor, 1);
+  const newState = addGloryToPlayer(state, handler.ownerId, newColorsCount, 'yellow_glory_condition');
   return {
     state: newState,
-    log: [`Rainbow Crest: +1 ${chosenColor} (gained 2+ colors)`],
-    pendingDecisions: [],
-  };
-}
-
-/**
- * Alchemist's Trunk: At round start, return pending decision for resource redistribution.
- */
-function alchemistsTrunkResolver(state, handler, _eventData, _options) {
-  return {
-    state,
-    log: ["Alchemist's Trunk: redistribute resources"],
-    pendingDecisions: [{
-      type: 'redistributeResources',
-      title: "Alchemist's Trunk: Redistribute your resources",
-      ownerId: handler.ownerId,
-      sourceId: 'alchemists_trunk',
-    }],
-  };
-}
-
-/**
- * Abundance Charm: When you gain resources from a basic gain action, +1 extra of the gained resource.
- */
-function abundanceCharmResolver(state, handler, eventData, _options) {
-  if (eventData.playerId !== handler.ownerId) {
-    return { state, log: [], pendingDecisions: [] };
-  }
-
-  if (eventData.source !== 'action') {
-    return { state, log: [], pendingDecisions: [] };
-  }
-
-  if (!eventData.isBasicGain) {
-    return { state, log: [], pendingDecisions: [] };
-  }
-
-  // Add +1 of the primary resource gained
-  const resources = eventData.resources || {};
-  const primaryColor = Object.keys(resources).find(c => resources[c] > 0);
-  if (!primaryColor) {
-    return { state, log: [], pendingDecisions: [] };
-  }
-
-  const newState = addResourceToPlayer(state, handler.ownerId, primaryColor, 1);
-  return {
-    state: newState,
-    log: [`Abundance Charm: +1 extra ${primaryColor}`],
-    pendingDecisions: [],
-  };
-}
-
-/**
- * Traveler's Journal: At turn end, if you gained 2+ different colors this turn, +1 Glory.
- */
-function travelersJournalResolver(state, handler, eventData, _options) {
-  if (eventData.playerId !== handler.ownerId) {
-    return { state, log: [], pendingDecisions: [] };
-  }
-
-  const turnGains = (state.turnResourceGains || {})[handler.ownerId] || {};
-  const distinctColors = Object.keys(turnGains).filter(color => turnGains[color] > 0);
-
-  if (distinctColors.length < 2) {
-    return { state, log: [], pendingDecisions: [] };
-  }
-
-  const newState = addGloryToPlayer(state, handler.ownerId, 1, 'travelers_journal');
-  return {
-    state: newState,
-    log: [`Traveler's Journal: +1 Glory (gained ${distinctColors.length} different colors this turn)`],
-    pendingDecisions: [],
-  };
-}
-
-/**
- * Yellow Glory Condition: At round end, +1 Glory per different resource color owned.
- */
-function yellowGloryConditionResolver(state, handler, _eventData, _options) {
-  const player = getPlayer(state, handler.ownerId);
-  const resources = player.resources || {};
-  const colorsOwned = Object.keys(resources).filter(c => (resources[c] || 0) > 0);
-  const count = colorsOwned.length;
-
-  if (count <= 0) {
-    return { state, log: [], pendingDecisions: [] };
-  }
-
-  const newState = addGloryToPlayer(state, handler.ownerId, count, 'yellow_glory_condition');
-  return {
-    state: newState,
-    log: [`Yellow Glory: +${count} Glory (${count} different resource colors owned)`],
+    log: [`Yellow Favor: +${newColorsCount} Favor (gained ${newColorsCount} new color${newColorsCount > 1 ? 's' : ''})`],
     pendingDecisions: [],
   };
 }
 
 export const yellowHandlers = {
-  horn_of_plenty: hornOfPlentyResolver,
   rainbow_crest: rainbowCrestResolver,
+  extraction_vial: extractionVialResolver,
+  slag_catcher: slagCatcherResolver,
   alchemists_trunk: alchemistsTrunkResolver,
-  abundance_charm: abundanceCharmResolver,
-  travelers_journal: travelersJournalResolver,
+  horn_of_plenty: hornOfPlentyResolver,
   yellow_glory_condition: yellowGloryConditionResolver,
 };

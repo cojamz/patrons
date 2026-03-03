@@ -20,6 +20,8 @@ export const EventType = {
   ACTION_EXECUTED: 'action.executed',
   ACTION_REPEATED: 'action.repeated',
   ACTION_COPIED: 'action.copied',
+  STEAL_ACTION: 'action.steal',         // Fires once per steal action (for Black Favor condition)
+  NEW_COLOR_GAINED: 'resource.new_color', // Fires when gaining a color at 0 (for Yellow Favor condition)
   POWER_CARD_BOUGHT: 'card.bought',
   SHOP_USED: 'shop.used',
   PLAYER_PENALIZED: 'player.penalized',

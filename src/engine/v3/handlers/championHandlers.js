@@ -21,31 +21,27 @@ function addResourceToPlayer(state, playerId, color, amount) {
   return { ...state, players: updatedPlayers };
 }
 
-function addEffectToPlayer(state, playerId, effect) {
-  const updatedPlayers = state.players.map(p => {
-    if (p.id !== playerId) return p;
-    return {
-      ...p,
-      effects: [...(p.effects || []), effect],
-    };
-  });
-  return { ...state, players: updatedPlayers };
-}
-
 // --- Resolvers ---
 
 /**
- * Prescient Passive: At round start, place a nullifier.
+ * Prescient Passive: At round start, place 2 nullifiers.
  */
 function prescientPassiveResolver(state, handler, _eventData, _options) {
   return {
     state,
-    log: ['The Prescient: place a nullifier'],
-    pendingDecisions: [{
-      type: 'nullifierPlacement',
-      playerId: handler.ownerId,
-      sourceId: 'prescient_passive',
-    }],
+    log: ['The Prescient: place 2 nullifiers'],
+    pendingDecisions: [
+      {
+        type: 'nullifierPlacement',
+        playerId: handler.ownerId,
+        sourceId: 'prescient_passive',
+      },
+      {
+        type: 'nullifierPlacement',
+        playerId: handler.ownerId,
+        sourceId: 'prescient_passive',
+      },
+    ],
   };
 }
 
@@ -67,17 +63,24 @@ function favoredPassiveResolver(state, handler, eventData, _options) {
 }
 
 /**
- * Deft Passive: At turn start (once per round), offer a second action.
+ * Deft Passive: At round 1 start, grant one consecutive turn (go twice in a row).
  */
-function deftPassiveResolver(state, handler, eventData, _options) {
-  if (eventData.playerId !== handler.ownerId) {
+function deftPassiveResolver(state, handler, _eventData, _options) {
+  // Only activates in Round 1
+  if (state.round !== 1) {
     return { state, log: [], pendingDecisions: [] };
   }
 
-  const newState = addEffectToPlayer(state, handler.ownerId, 'extraActionThisTurn');
+  const newState = {
+    ...state,
+    players: state.players.map(p => {
+      if (p.id !== handler.ownerId) return p;
+      return { ...p, extraTurns: (p.extraTurns || 0) + 1 };
+    }),
+  };
   return {
     state: newState,
-    log: ['The Deft: extra action available this turn'],
+    log: ['The Deft: consecutive turns granted (Round 1)'],
     pendingDecisions: [],
   };
 }

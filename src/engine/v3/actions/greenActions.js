@@ -1,13 +1,13 @@
 /**
- * Patrons v3 — Green God Action Handlers
+ * Patrons v3 — Green God Action Handlers (Balance Rework)
  *
  * Each handler: (state, playerId, gods, decisions?, recursionDepth?) => { state, log, pendingDecision?, executeAction? }
  * All pure functions. No mutation.
  */
 
-import { getRepeatableActions, isRepeatExcluded, getActionTier } from '../rules.js';
+import { isRepeatExcluded, getActionTier, getAllActions, getRepeatableActions } from '../rules.js';
 
-// --- Helpers (inline for now) ---
+// --- Helpers ---
 
 function addResources(state, playerId, resources) {
   const player = state.players.find(p => p.id === playerId);
@@ -32,35 +32,57 @@ function addResources(state, playerId, resources) {
   return { ...state, players };
 }
 
+/**
+ * Get actions placed by other players at a specific tier (from roundActions).
+ * Excludes repeat-excluded actions.
+ */
+function getOtherPlayerActions(state, playerId, tier, gods) {
+  const roundActions = state.roundActions || [];
+  const actions = roundActions
+    .filter(ra => ra.playerId !== playerId)
+    .map(ra => ra.actionId)
+    .filter(id => !isRepeatExcluded(id))
+    .filter(id => getActionTier(id, gods) === tier);
+  return [...new Set(actions)];
+}
+
+/**
+ * Get unoccupied actions at a specific tier.
+ * Excludes repeat-excluded actions.
+ */
+function getUnoccupiedActions(state, tier, gods) {
+  const round = state.round || 1;
+  const occupied = state.occupiedSpaces || {};
+  const allActions = getAllActions(state);
+  return allActions
+    .filter(a => a.tier === tier && a.tier <= round)
+    .filter(a => !occupied[a.id])
+    .filter(a => !isRepeatExcluded(a.id))
+    .map(a => a.id);
+}
+
 // --- Green Actions ---
 
-/** bide: +3 green */
-export function bide(state, playerId) {
+/** gather: +3 green */
+export function gather(state, playerId) {
   const newState = addResources(state, playerId, { green: 3 });
-  return { state: newState, log: [`+3 green`] };
+  return { state: newState, log: ['+3 green'] };
 }
 
-/** meditate: +2 green */
-export function meditate(state, playerId) {
-  const newState = addResources(state, playerId, { green: 2 });
-  return { state: newState, log: [`+2 green`] };
-}
-
-/** relive: +1 green, repeat 1 of your other actions */
+/** relive: +1 green, repeat one of your T1 actions */
 export function relive(state, playerId, gods, decisions = {}, recursionDepth = 0) {
-  // Skip resource gain on re-entry (_continued means state already has the gain)
   let newState = decisions._continued ? state : addResources(state, playerId, { green: 1 });
-  const logPrefix = decisions._continued ? [] : [`+1 green`];
+  const logPrefix = decisions._continued ? [] : ['+1 green'];
 
   if (!decisions.actionChoice) {
     const repeatable = getRepeatableActions(newState, playerId)
       .filter(id => getActionTier(id, gods) === 1);
     if (repeatable.length === 0) {
-      return { state: newState, log: [`No Tier 1 actions to repeat — place a worker elsewhere first`], abort: true };
+      return { state: newState, log: ['No Tier 1 actions to repeat — place a worker elsewhere first'], abort: true };
     }
     return {
       state: newState,
-      log: [`+1 green`],
+      log: ['+1 green'],
       pendingDecision: {
         type: 'actionChoice',
         title: 'Choose a Tier 1 action to repeat',
@@ -70,8 +92,6 @@ export function relive(state, playerId, gods, decisions = {}, recursionDepth = 0
   }
 
   const chosenAction = decisions.actionChoice;
-
-  // Validate the choice is repeatable
   if (isRepeatExcluded(chosenAction)) {
     return { state: newState, log: [...logPrefix, `Cannot repeat ${chosenAction} (repeat-excluded)`] };
   }
@@ -88,148 +108,203 @@ export function relive(state, playerId, gods, decisions = {}, recursionDepth = 0
   };
 }
 
-/** echo: +1 green, copy the last action any player took */
+/** echo: +1 green, repeat another player's T1 action */
 export function echo(state, playerId, gods, decisions = {}, recursionDepth = 0) {
-  let newState = addResources(state, playerId, { green: 1 });
+  let newState = decisions._continued ? state : addResources(state, playerId, { green: 1 });
+  const logPrefix = decisions._continued ? [] : ['+1 green'];
 
+  if (!decisions.actionChoice) {
+    const otherActions = getOtherPlayerActions(newState, playerId, 1, gods);
+    if (otherActions.length === 0) {
+      return { state: newState, log: ['No other players\' T1 actions to copy'], abort: true };
+    }
+    return {
+      state: newState,
+      log: ['+1 green'],
+      pendingDecision: {
+        type: 'actionChoice',
+        title: 'Choose another player\'s Tier 1 action to copy',
+        options: otherActions,
+      },
+    };
+  }
+
+  const chosenAction = decisions.actionChoice;
+  if (isRepeatExcluded(chosenAction)) {
+    return { state: newState, log: [...logPrefix, `Cannot copy ${chosenAction} (repeat-excluded)`] };
+  }
+
+  return {
+    state: newState,
+    log: [...logPrefix, `Copying ${chosenAction}`],
+    executeAction: {
+      playerId,
+      actionId: chosenAction,
+      decisions: {},
+      recursionDepth: recursionDepth + 1,
+    },
+  };
+}
+
+/** recall: +1 green, repeat an unoccupied T1 action */
+export function recall(state, playerId, gods, decisions = {}, recursionDepth = 0) {
+  let newState = decisions._continued ? state : addResources(state, playerId, { green: 1 });
+  const logPrefix = decisions._continued ? [] : ['+1 green'];
+
+  if (!decisions.actionChoice) {
+    const unoccupied = getUnoccupiedActions(newState, 1, gods);
+    if (unoccupied.length === 0) {
+      return { state: newState, log: ['No unoccupied Tier 1 actions available'], abort: true };
+    }
+    return {
+      state: newState,
+      log: ['+1 green'],
+      pendingDecision: {
+        type: 'actionChoice',
+        title: 'Choose an unoccupied Tier 1 action to repeat',
+        options: unoccupied,
+      },
+    };
+  }
+
+  const chosenAction = decisions.actionChoice;
+  if (isRepeatExcluded(chosenAction)) {
+    return { state: newState, log: [...logPrefix, `Cannot repeat ${chosenAction} (repeat-excluded)`] };
+  }
+
+  return {
+    state: newState,
+    log: [...logPrefix, `Repeating unoccupied ${chosenAction}`],
+    executeAction: {
+      playerId,
+      actionId: chosenAction,
+      decisions: {},
+      recursionDepth: recursionDepth + 1,
+    },
+  };
+}
+
+/** rewind: +1 green, repeat another player's T2 action */
+export function rewind(state, playerId, gods, decisions = {}, recursionDepth = 0) {
+  let newState = decisions._continued ? state : addResources(state, playerId, { green: 1 });
+  const logPrefix = decisions._continued ? [] : ['+1 green'];
+
+  if (!decisions.actionChoice) {
+    const otherActions = getOtherPlayerActions(newState, playerId, 2, gods);
+    if (otherActions.length === 0) {
+      return { state: newState, log: ['No other players\' T2 actions to copy'], abort: true };
+    }
+    return {
+      state: newState,
+      log: ['+1 green'],
+      pendingDecision: {
+        type: 'actionChoice',
+        title: 'Choose another player\'s Tier 2 action to copy',
+        options: otherActions,
+      },
+    };
+  }
+
+  const chosenAction = decisions.actionChoice;
+  if (isRepeatExcluded(chosenAction)) {
+    return { state: newState, log: [...logPrefix, `Cannot copy ${chosenAction} (repeat-excluded)`] };
+  }
+
+  return {
+    state: newState,
+    log: [...logPrefix, `Copying T2 ${chosenAction}`],
+    executeAction: {
+      playerId,
+      actionId: chosenAction,
+      decisions: {},
+      recursionDepth: recursionDepth + 1,
+    },
+  };
+}
+
+/** foresight: +1 green, repeat an unoccupied T2 action */
+export function foresight(state, playerId, gods, decisions = {}, recursionDepth = 0) {
+  let newState = decisions._continued ? state : addResources(state, playerId, { green: 1 });
+  const logPrefix = decisions._continued ? [] : ['+1 green'];
+
+  if (!decisions.actionChoice) {
+    const unoccupied = getUnoccupiedActions(newState, 2, gods);
+    if (unoccupied.length === 0) {
+      return { state: newState, log: ['No unoccupied Tier 2 actions available'], abort: true };
+    }
+    return {
+      state: newState,
+      log: ['+1 green'],
+      pendingDecision: {
+        type: 'actionChoice',
+        title: 'Choose an unoccupied Tier 2 action to repeat',
+        options: unoccupied,
+      },
+    };
+  }
+
+  const chosenAction = decisions.actionChoice;
+  if (isRepeatExcluded(chosenAction)) {
+    return { state: newState, log: [...logPrefix, `Cannot repeat ${chosenAction} (repeat-excluded)`] };
+  }
+
+  return {
+    state: newState,
+    log: [...logPrefix, `Repeating unoccupied T2 ${chosenAction}`],
+    executeAction: {
+      playerId,
+      actionId: chosenAction,
+      decisions: {},
+      recursionDepth: recursionDepth + 1,
+    },
+  };
+}
+
+/** eternity: Repeat all actions where you have workers placed this round */
+export function eternity(state, playerId, gods, decisions = {}, recursionDepth = 0) {
   const roundActions = state.roundActions || [];
 
-  // Find the last action that is NOT the current echo action.
-  // roundActions may include the current echo (added before handler runs),
-  // so we search backwards for the first non-echo entry.
-  let lastAction = null;
-  for (let i = roundActions.length - 1; i >= 0; i--) {
-    if (roundActions[i].actionId !== 'green_echo') {
-      lastAction = roundActions[i];
-      break;
-    }
+  // Get this player's placed actions this round, excluding eternity itself and repeat-excluded
+  const ownActions = roundActions
+    .filter(ra => ra.playerId === playerId)
+    .filter(ra => ra.actionId !== 'green_eternity')
+    .filter(ra => !isRepeatExcluded(ra.actionId))
+    .map(ra => ra.actionId);
+
+  // Deduplicate (if placed on same action twice via Timeline Splitter, only replay once)
+  const uniqueActions = [...new Set(ownActions)];
+
+  if (uniqueActions.length === 0) {
+    return { state, log: ['Eternity: no actions to replay'] };
   }
 
-  if (!lastAction) {
-    return { state: newState, log: [`No previous action to copy`], abort: true };
-  }
-
-  // Don't copy repeat/copy actions
-  if (isRepeatExcluded(lastAction.actionId)) {
-    return { state: newState, log: [`Last action (${lastAction.actionId}) cannot be copied`], abort: true };
-  }
+  // Chain all actions: execute first, chain the rest
+  const [firstAction, ...restActions] = uniqueActions;
 
   return {
-    state: newState,
-    log: [`+1 green`, `Copying ${lastAction.actionId} (last action by ${lastAction.playerId})`],
+    state,
+    log: [`Eternity: replaying ${uniqueActions.length} action${uniqueActions.length > 1 ? 's' : ''}`],
     executeAction: {
       playerId,
-      actionId: lastAction.actionId,
+      actionId: firstAction,
       decisions: {},
       recursionDepth: recursionDepth + 1,
-    },
-  };
-}
-
-/** loop: +1 green, repeat 1 of your Tier 2 actions */
-export function loop(state, playerId, gods, decisions = {}, recursionDepth = 0) {
-  // Skip resource gain on re-entry (_continued means state already has the gain)
-  let newState = decisions._continued ? state : addResources(state, playerId, { green: 1 });
-  const logPrefix = decisions._continued ? [] : [`+1 green`];
-
-  if (!decisions.actionChoice) {
-    const repeatable = getRepeatableActions(newState, playerId)
-      .filter(id => getActionTier(id, gods) === 2);
-    if (repeatable.length === 0) {
-      return { state: newState, log: [`No Tier 2 actions to repeat — place a worker elsewhere first`], abort: true };
-    }
-    return {
-      state: newState,
-      log: [`+1 green`],
-      pendingDecision: {
-        type: 'actionChoice',
-        title: 'Choose a Tier 2 action to repeat',
-        options: repeatable,
-      },
-    };
-  }
-
-  const chosenAction = decisions.actionChoice;
-
-  // Validate the choice is repeatable
-  if (isRepeatExcluded(chosenAction)) {
-    return { state: newState, log: [...logPrefix, `Cannot repeat ${chosenAction} (repeat-excluded)`] };
-  }
-
-  return {
-    state: newState,
-    log: [...logPrefix, `Repeating ${chosenAction}`],
-    executeAction: {
-      playerId,
-      actionId: chosenAction,
-      decisions: {},
-      recursionDepth: recursionDepth + 1,
-    },
-  };
-}
-
-/** accelerate: +2 green, grant extra turn */
-export function accelerate(state, playerId) {
-  let newState = addResources(state, playerId, { green: 2 });
-
-  // Grant extra turn
-  const players = newState.players.map(p => {
-    if (p.id !== playerId) return p;
-    return { ...p, extraTurns: (p.extraTurns || 0) + 1 };
-  });
-  newState = { ...newState, players };
-
-  return { state: newState, log: [`+2 green, extra turn granted`] };
-}
-
-/** unravel: +1 green, repeat 1 of your Tier 3 actions */
-export function unravel(state, playerId, gods, decisions = {}, recursionDepth = 0) {
-  // Skip resource gain on re-entry (_continued means state already has the gain)
-  let newState = decisions._continued ? state : addResources(state, playerId, { green: 1 });
-  const logPrefix = decisions._continued ? [] : [`+1 green`];
-
-  if (!decisions.actionChoice) {
-    const repeatable = getRepeatableActions(newState, playerId)
-      .filter(id => getActionTier(id, gods) === 3);
-    if (repeatable.length === 0) {
-      return { state: newState, log: [`No Tier 3 actions to repeat — place a worker elsewhere first`], abort: true };
-    }
-    return {
-      state: newState,
-      log: [`+1 green`],
-      pendingDecision: {
-        type: 'actionChoice',
-        title: 'Choose a Tier 3 action to repeat',
-        options: repeatable,
-      },
-    };
-  }
-
-  const chosenAction = decisions.actionChoice;
-
-  // Validate the choice is repeatable
-  if (isRepeatExcluded(chosenAction)) {
-    return { state: newState, log: [...logPrefix, `Cannot repeat ${chosenAction} (repeat-excluded)`] };
-  }
-
-  return {
-    state: newState,
-    log: [...logPrefix, `Repeating ${chosenAction}`],
-    executeAction: {
-      playerId,
-      actionId: chosenAction,
-      decisions: {},
-      recursionDepth: recursionDepth + 1,
+      chainedActions: restActions.map(actionId => ({
+        playerId,
+        actionId,
+        decisions: {},
+        recursionDepth: recursionDepth + 1,
+      })),
     },
   };
 }
 
 export const greenActions = {
-  green_bide: bide,
-  green_meditate: meditate,
+  green_gather: gather,
   green_relive: relive,
   green_echo: echo,
-  green_loop: loop,
-  green_accelerate: accelerate,
-  green_unravel: unravel,
+  green_recall: recall,
+  green_rewind: rewind,
+  green_foresight: foresight,
+  green_eternity: eternity,
 };
