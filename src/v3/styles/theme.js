@@ -42,15 +42,15 @@ export const godColors = {
     text: '#7DD3A8',
   },
   yellow: {
-    primary: '#C7962C',
-    light: '#E8C547',
-    dark: '#8B6C1A',
-    glow: 'rgba(199, 150, 44, 0.35)',
-    glowStrong: 'rgba(199, 150, 44, 0.6)',
-    gradient: 'radial-gradient(ellipse at center, rgba(199, 150, 44, 0.15) 0%, transparent 70%)',
-    surface: 'rgba(199, 150, 44, 0.08)',
-    border: 'rgba(199, 150, 44, 0.25)',
-    text: '#F0D78C',
+    primary: '#D4B82A',
+    light: '#F0E050',
+    dark: '#8B7A14',
+    glow: 'rgba(212, 184, 42, 0.35)',
+    glowStrong: 'rgba(212, 184, 42, 0.6)',
+    gradient: 'radial-gradient(ellipse at center, rgba(212, 184, 42, 0.15) 0%, transparent 70%)',
+    surface: 'rgba(212, 184, 42, 0.08)',
+    border: 'rgba(212, 184, 42, 0.25)',
+    text: '#F5E87C',
   },
 };
 
@@ -114,9 +114,9 @@ export const resourceStyles = {
   yellow: {
     shape: 'star',       // Six-pointed star
     fill: 'url(#yellowGem)',
-    color: '#C7962C',
-    highlight: '#E8C547',
-    shadow: '#8B6C1A',
+    color: '#D4B82A',
+    highlight: '#F0E050',
+    shadow: '#8B7A14',
   },
 };
 

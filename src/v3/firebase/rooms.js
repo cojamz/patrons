@@ -15,7 +15,7 @@
  *     pendingDecision: { ...decision object | null }
  *     actions/{playerId}: { type, payload, timestamp }
  */
-import { db, ref, set, get, onValue, off, remove, update, onDisconnect, serverTimestamp } from './config.js';
+import { db, ref, set, get, onValue, off, remove, update, onDisconnect, serverTimestamp, authReady } from './config.js';
 
 // --- Room code generation ---
 
@@ -40,6 +40,7 @@ function generatePlayerId() {
  * @returns {{ roomCode: string, playerId: string }}
  */
 export async function createRoom(hostName) {
+  await authReady;
   // Try up to 5 times to find an unused code
   let roomCode;
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -85,6 +86,7 @@ export async function createRoom(hostName) {
  * @returns {{ playerId: string, room: object }}
  */
 export async function joinRoom(roomCode, playerName) {
+  await authReady;
   const roomRef = ref(db, `v3rooms/${roomCode}`);
   const snapshot = await get(roomRef);
 

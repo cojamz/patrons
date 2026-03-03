@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "balance": "node src/engine/v3/balance-test.mjs"
   },
   "dependencies": {
     "firebase": "^12.6.0",

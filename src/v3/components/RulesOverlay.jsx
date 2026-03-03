@@ -11,13 +11,13 @@ import GodIcon from './icons/GodIcon';
 import ResourceIcon from './icons/ResourceIcon';
 import WorkerIcon from './icons/WorkerIcon';
 
-const SLIDES = [
+export const SLIDES = [
   {
     type: 'intro',
   },
   {
     heading: 'Choose Your People',
-    body: 'At the start of each game, you\'ll draft a Champion — a leader whose unique power shapes your strategy. Then you\'ll send your patrons into the temples of the gods to do your bidding.',
+    body: 'At the start of each game, you\'ll choose your people — a faction whose unique power shapes your strategy. Then you\'ll send your patrons to take actions the gods favor.',
     icon: 'champions',
   },
   {
@@ -42,7 +42,7 @@ const SLIDES = [
   },
 ];
 
-function SlideIcon({ type }) {
+export function SlideIcon({ type }) {
   switch (type) {
     case 'champions':
       return (
@@ -163,7 +163,7 @@ function IntroSlide() {
         <br />
         <br />
         <span style={{ color: base.textSecondary }}>
-          Draft a champion. Send your patrons.
+          Choose your people. Send your patrons.
           <br />
           Gather blessings. Acquire artifacts.
           <br />

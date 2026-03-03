@@ -7,6 +7,7 @@
  */
 import { initializeApp, getApps } from 'firebase/app';
 import { getDatabase, ref, set, get, onValue, off, push, remove, update, onDisconnect, serverTimestamp } from 'firebase/database';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB0c0iUOG3llUzLd9FhQ6Qc1qCB0DoajVw",
@@ -18,6 +19,13 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const db = getDatabase(app);
+const auth = getAuth(app);
 
-export { db, ref, set, get, onValue, off, push, remove, update, onDisconnect, serverTimestamp };
+// Sign in anonymously so Firebase rules (auth != null) are satisfied.
+// Returns a promise that resolves when auth is ready.
+const authReady = signInAnonymously(auth).catch(err => {
+  console.warn('Firebase anonymous auth failed:', err.message);
+});
+
+export { db, ref, set, get, onValue, off, push, remove, update, onDisconnect, serverTimestamp, auth, authReady };
 export default db;

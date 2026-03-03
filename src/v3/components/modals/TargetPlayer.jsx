@@ -24,12 +24,15 @@ export default function TargetPlayer({ decision, onSubmit, onCancel }) {
   const targetPlayers = useMemo(() => {
     if (!game) return [];
     const options = decision.options || [];
-    return game.players
-      .filter(p => options.includes(p.id))
-      .map(p => ({
-        ...p,
-        totalResources: Object.values(p.resources || {}).reduce((s, v) => s + v, 0),
-      }));
+    const excludeId = decision.excludePlayer ?? decision._playerId;
+    // If explicit options provided, use those; otherwise show all players except the excluded one
+    const filtered = options.length > 0
+      ? game.players.filter(p => options.includes(p.id))
+      : game.players.filter(p => p.id !== excludeId);
+    return filtered.map(p => ({
+      ...p,
+      totalResources: Object.values(p.resources || {}).reduce((s, v) => s + v, 0),
+    }));
   }, [game, decision]);
 
   // Pre-select when only one target, but still show the modal

@@ -143,7 +143,7 @@ export default function RoundTransition({ round, players, onContinue, activeGods
           WebkitBackdropFilter: 'blur(12px)',
         }}
       >
-        <div className="w-full max-w-lg mx-4">
+        <div className="w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.15) transparent' }}>
 
           {/* Round number — cinematic large text */}
           <motion.div

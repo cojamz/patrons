@@ -10,7 +10,7 @@
  * Modal system routes pending decisions to the appropriate modal.
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import GameProvider from './GameProvider';
 import HostSync from './multiplayer/HostSync';
 import GuestProvider from './multiplayer/GuestProvider';
@@ -34,7 +34,7 @@ import { base, godColors, playerColors, getThemeCSSVars } from './styles/theme';
 import { modalBackdrop, modalContent, cardReveal } from './styles/animations';
 import champions from '../engine/v3/data/champions';
 import godsData from '../engine/v3/data/gods';
-import RulesOverlay from './components/RulesOverlay';
+import RulesOverlay, { SLIDES, SlideIcon } from './components/RulesOverlay';
 import LobbyScreen from './components/lobby/LobbyScreen';
 import WaitingOverlay from './components/lobby/WaitingOverlay';
 import { rejoinRoom } from './firebase/rooms';
@@ -46,7 +46,116 @@ import { useGameEvents, filterByType } from './hooks/useGameEvents';
 // Setup Screen
 // ============================================================================
 
-function SetupScreen({ onStart }) {
+// Rules carousel panel — reusable for setup screen and multiplayer lobby
+function RulesPanel() {
+  const [slideIndex, setSlideIndex] = useState(0);
+  // Skip the intro slide (index 0) — start from the informational slides
+  const infoSlides = SLIDES.slice(1);
+  const slide = infoSlides[slideIndex];
+
+  return (
+    <div
+      className="rounded-xl p-6 flex flex-col"
+      style={{
+        background: 'rgba(28, 25, 23, 0.9)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        boxShadow: '0 25px 60px rgba(0, 0, 0, 0.4)',
+      }}
+    >
+      <div className="flex items-center gap-2 mb-5">
+        <span
+          className="text-xs uppercase tracking-[0.2em] font-semibold"
+          style={{ color: godColors.gold.primary }}
+        >
+          How to Play
+        </span>
+        <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${godColors.gold.primary}40, transparent)` }} />
+      </div>
+
+      {/* Slide content — click anywhere to advance */}
+      <div
+        className="flex-1 flex flex-col justify-center cursor-pointer"
+        onClick={() => setSlideIndex(i => (i + 1) % infoSlides.length)}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={slideIndex}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1 flex flex-col"
+          >
+            {/* Icon area */}
+            <div className="flex items-center justify-center mb-5" style={{ minHeight: '48px' }}>
+              <SlideIcon type={slide.icon} />
+            </div>
+
+            {/* Heading */}
+            <h3
+              className="text-xl font-bold mb-3 text-center"
+              style={{ color: godColors.gold.light }}
+            >
+              {slide.heading}
+            </h3>
+
+            {/* Body */}
+            <p
+              className="text-sm leading-relaxed text-center flex-1"
+              style={{ color: base.textSecondary }}
+            >
+              {slide.body}
+            </p>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Navigation dots + arrows */}
+      <div className="flex items-center justify-center gap-4 mt-5">
+        <button
+          onClick={(e) => { e.stopPropagation(); setSlideIndex(i => Math.max(0, i - 1)); }}
+          disabled={slideIndex === 0}
+          className="flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold transition-all"
+          style={{
+            color: slideIndex === 0 ? 'rgba(255,255,255,0.1)' : base.textSecondary,
+            background: slideIndex === 0 ? 'transparent' : 'rgba(255,255,255,0.05)',
+            cursor: slideIndex === 0 ? 'default' : 'pointer',
+          }}
+        >
+          ‹
+        </button>
+        <div className="flex items-center gap-1.5">
+          {infoSlides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setSlideIndex(i)}
+              className="rounded-full transition-all duration-200"
+              style={{
+                width: i === slideIndex ? '16px' : '6px',
+                height: '6px',
+                background: i === slideIndex ? godColors.gold.primary : 'rgba(255, 255, 255, 0.15)',
+              }}
+            />
+          ))}
+        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); setSlideIndex(i => Math.min(infoSlides.length - 1, i + 1)); }}
+          disabled={slideIndex === infoSlides.length - 1}
+          className="flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold transition-all"
+          style={{
+            color: slideIndex === infoSlides.length - 1 ? 'rgba(255,255,255,0.1)' : base.textSecondary,
+            background: slideIndex === infoSlides.length - 1 ? 'transparent' : 'rgba(255,255,255,0.05)',
+            cursor: slideIndex === infoSlides.length - 1 ? 'default' : 'pointer',
+          }}
+        >
+          ›
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SetupScreen({ onStart, onMultiplayer, onJoinMultiplayer }) {
   const [playerCount, setPlayerCount] = useState(2);
   const [playerNames, setPlayerNames] = useState(['Player 1', 'Player 2', 'Player 3', 'Player 4']);
   const [isAI, setIsAI] = useState([false, true, true, true]); // Player 1 human by default
@@ -86,7 +195,7 @@ function SetupScreen({ onStart }) {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center"
+      className="fixed inset-0 flex items-center justify-center overflow-auto"
       style={{ background: base.board }}
     >
       {/* Background radial glow */}
@@ -98,7 +207,7 @@ function SetupScreen({ onStart }) {
       />
 
       <motion.div
-        className="relative w-full max-w-md mx-4"
+        className="relative w-full max-w-3xl mx-4 py-8"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 25 }}
@@ -130,118 +239,175 @@ function SetupScreen({ onStart }) {
           </p>
         </div>
 
-        {/* Setup panel */}
-        <div
-          className="rounded-xl p-6 space-y-6"
-          style={{
-            background: 'rgba(28, 25, 23, 0.9)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.4)',
-          }}
-        >
-          {/* Player count */}
-          <div>
-            <label
-              className="block text-xs uppercase tracking-wider font-medium mb-3"
-              style={{ color: base.textMuted }}
-            >
-              Number of Players
-            </label>
-            <div className="flex gap-2">
-              {[2, 3, 4].map(count => (
-                <button
-                  key={count}
-                  onClick={() => handleCountChange(count)}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
-                  style={{
-                    background: playerCount === count
-                      ? godColors.gold.primary
-                      : 'rgba(255, 255, 255, 0.04)',
-                    color: playerCount === count
-                      ? base.textDark
-                      : base.textSecondary,
-                    border: `1px solid ${
-                      playerCount === count
-                        ? godColors.gold.primary
-                        : 'rgba(255, 255, 255, 0.08)'
-                    }`,
-                  }}
-                >
-                  {count} Players
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Player names */}
-          <div>
-            <label
-              className="block text-xs uppercase tracking-wider font-medium mb-3"
-              style={{ color: base.textMuted }}
-            >
-              Player Names
-            </label>
-            <div className="space-y-2">
-              {Array.from({ length: playerCount }, (_, i) => {
-                const colors = playerColors[i];
-                const ai = isAI[i];
-                return (
-                  <div key={i} className="flex items-center gap-3">
-                    <WorkerIcon playerId={i} size={22} />
-                    <input
-                      type="text"
-                      value={playerNames[i]}
-                      onChange={(e) => handleNameChange(i, e.target.value)}
-                      className="flex-1 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors duration-150"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.04)',
-                        border: `1px solid rgba(255, 255, 255, 0.08)`,
-                        color: colors.light,
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = colors.primary;
-                        e.target.style.boxShadow = `0 0 12px ${colors.primary}20`;
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                      placeholder={`Player ${i + 1}`}
-                    />
-                    <button
-                      onClick={() => toggleAI(i)}
-                      className="rounded-md px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-150"
-                      style={{
-                        background: ai ? 'rgba(212, 168, 67, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-                        border: `1px solid ${ai ? godColors.gold.border : 'rgba(255, 255, 255, 0.08)'}`,
-                        color: ai ? godColors.gold.light : base.textMuted,
-                        cursor: i === 0 ? 'not-allowed' : 'pointer',
-                        opacity: i === 0 ? 0.3 : 1,
-                        minWidth: '40px',
-                      }}
-                    >
-                      {ai ? 'AI' : 'You'}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Start button */}
-          <motion.button
-            onClick={handleStart}
-            className="w-full py-3 rounded-lg text-sm font-bold uppercase tracking-wider"
+        {/* Two-column layout: Setup left, Rules right */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Left: Setup panel */}
+          <div
+            className="rounded-xl p-6 space-y-6"
             style={{
-              background: `linear-gradient(135deg, ${godColors.gold.primary}, ${godColors.gold.dark})`,
-              color: base.textDark,
-              boxShadow: `0 4px 20px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.2)`,
+              background: 'rgba(28, 25, 23, 0.9)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.4)',
             }}
-            whileHover={{ scale: 1.02, boxShadow: `0 6px 30px ${godColors.gold.glowStrong}` }}
-            whileTap={{ scale: 0.97 }}
           >
-            Begin Game
-          </motion.button>
+            {/* Player count */}
+            <div>
+              <label
+                className="block text-xs uppercase tracking-wider font-medium mb-3"
+                style={{ color: base.textMuted }}
+              >
+                Number of Players
+              </label>
+              <div className="flex gap-2">
+                {[2, 3, 4].map(count => (
+                  <button
+                    key={count}
+                    onClick={() => handleCountChange(count)}
+                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
+                    style={{
+                      background: playerCount === count
+                        ? godColors.gold.primary
+                        : 'rgba(255, 255, 255, 0.04)',
+                      color: playerCount === count
+                        ? base.textDark
+                        : base.textSecondary,
+                      border: `1px solid ${
+                        playerCount === count
+                          ? godColors.gold.primary
+                          : 'rgba(255, 255, 255, 0.08)'
+                      }`,
+                    }}
+                  >
+                    {count} Players
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Player names */}
+            <div>
+              <label
+                className="block text-xs uppercase tracking-wider font-medium mb-3"
+                style={{ color: base.textMuted }}
+              >
+                Player Names
+              </label>
+              <div className="space-y-2">
+                {Array.from({ length: playerCount }, (_, i) => {
+                  const colors = playerColors[i];
+                  const ai = isAI[i];
+                  return (
+                    <div key={i} className="flex items-center gap-3">
+                      <WorkerIcon playerId={i} size={22} />
+                      <input
+                        type="text"
+                        value={playerNames[i]}
+                        onChange={(e) => handleNameChange(i, e.target.value)}
+                        className="flex-1 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors duration-150"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.04)',
+                          border: `1px solid rgba(255, 255, 255, 0.08)`,
+                          color: colors.light,
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = colors.primary;
+                          e.target.style.boxShadow = `0 0 12px ${colors.primary}20`;
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                        placeholder={`Player ${i + 1}`}
+                      />
+                      <button
+                        onClick={() => toggleAI(i)}
+                        className="rounded-md px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-150"
+                        style={{
+                          background: ai ? 'rgba(212, 168, 67, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                          border: `1px solid ${ai ? godColors.gold.border : 'rgba(255, 255, 255, 0.08)'}`,
+                          color: ai ? godColors.gold.light : base.textMuted,
+                          cursor: i === 0 ? 'not-allowed' : 'pointer',
+                          opacity: i === 0 ? 0.3 : 1,
+                          minWidth: '40px',
+                        }}
+                      >
+                        {ai ? 'AI' : 'You'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Start button */}
+            <motion.button
+              onClick={handleStart}
+              className="w-full py-3 rounded-lg text-sm font-bold uppercase tracking-wider"
+              style={{
+                background: `linear-gradient(135deg, ${godColors.gold.primary}, ${godColors.gold.dark})`,
+                color: base.textDark,
+                boxShadow: `0 4px 20px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.2)`,
+              }}
+              whileHover={{ scale: 1.02, boxShadow: `0 6px 30px ${godColors.gold.glowStrong}` }}
+              whileTap={{ scale: 0.97 }}
+            >
+              Begin Game
+            </motion.button>
+
+            {/* Multiplayer divider */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+              <span className="text-[10px] uppercase tracking-widest font-medium" style={{ color: base.textMuted }}>
+                or play online
+              </span>
+              <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+            </div>
+
+            {/* Multiplayer buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={onMultiplayer}
+                className="flex-1 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-150"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: `1px solid ${godColors.gold.border}`,
+                  color: godColors.gold.light,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = godColors.gold.surface;
+                  e.currentTarget.style.boxShadow = `0 0 16px ${godColors.gold.glow}`;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                Create Room
+              </button>
+              <button
+                onClick={onJoinMultiplayer}
+                className="flex-1 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-150"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: base.textSecondary,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                }}
+              >
+                Join Room
+              </button>
+            </div>
+          </div>
+
+          {/* Right: Rules panel */}
+          <RulesPanel />
         </div>
       </motion.div>
     </div>
@@ -543,6 +709,20 @@ function DecisionModal() {
         />
       );
 
+    case 'redistribution':
+    case 'redistributeResources':
+      return (
+        <GemSelection
+          decision={{
+            ...pendingDecision,
+            type: 'gemSelection',
+            count: pendingDecision.totalResources || 0,
+          }}
+          onSubmit={(answer) => actions.submitDecision(answer)}
+          onCancel={handleCancel}
+        />
+      );
+
     case 'nullifierPlacement':
       return (
         <NullifierPlacementModal
@@ -688,8 +868,8 @@ function GameScreen() {
         return null;
       })()}
 
-      {/* Round transition overlay */}
-      {phase === 'round_end' && (
+      {/* Round transition overlay (deferred until pending decisions like Voodoo Doll resolve) */}
+      {phase === 'round_end' && !pendingDecision && (
         <RoundTransition
           round={game.round}
           players={game.players}
@@ -701,7 +881,7 @@ function GameScreen() {
       )}
 
       {/* Game end overlay */}
-      {phase === 'game_end' && (
+      {phase === 'game_end' && !pendingDecision && (
         <RoundTransition
           round={3}
           players={game.players}
@@ -728,15 +908,17 @@ function GameScreen() {
 // App Inner (shared between local and multiplayer)
 // ============================================================================
 
-function GameInner({ isMultiplayer, multiplayerConfig }) {
+function GameInner({ isMultiplayer, multiplayerConfig, localConfig }) {
   const { initialized, phase, actions, game, pendingDecision, mySlot, isHost } = useGame();
-  const [hasStarted, setHasStarted] = useState(isMultiplayer); // Multiplayer skips local setup
   const initRef = useRef(false);
 
-  const handleSetupComplete = useCallback((config) => {
-    actions.initGame(config);
-    setHasStarted(true);
-  }, [actions]);
+  // Local mode: auto-init from localConfig on mount
+  useEffect(() => {
+    if (!isMultiplayer && localConfig && !initialized && !initRef.current) {
+      initRef.current = true;
+      actions.initGame(localConfig);
+    }
+  }, [isMultiplayer, localConfig, initialized, actions]);
 
   // Multiplayer host: auto-init the game on mount
   useEffect(() => {
@@ -750,9 +932,13 @@ function GameInner({ isMultiplayer, multiplayerConfig }) {
     }
   }, [isMultiplayer, isHost, initialized, multiplayerConfig, actions]);
 
-  // Setup screen (local mode only, before game initialized)
-  if (!isMultiplayer && (!hasStarted || !initialized)) {
-    return <SetupScreen onStart={handleSetupComplete} />;
+  // Waiting for game to initialize
+  if (!initialized) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center" style={{ background: base.board }}>
+        <span style={{ color: base.textMuted }}>Setting up game...</span>
+      </div>
+    );
   }
 
   // Multiplayer: waiting for host to init the game
@@ -819,8 +1005,9 @@ function loadSession() {
 
 export default function App() {
   const themeVars = getThemeCSSVars();
-  const [appPhase, setAppPhase] = useState('rules'); // rules | lobby | local | multiplayer
+  const [appPhase, setAppPhase] = useState('setup'); // setup | lobby | lobby_join | local | multiplayer
   const [multiplayerConfig, setMultiplayerConfig] = useState(null);
+  const [localConfig, setLocalConfig] = useState(null);
 
   // On mount: check sessionStorage for an active multiplayer session to rejoin
   useEffect(() => {
@@ -875,40 +1062,49 @@ export default function App() {
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Rules → Lobby (mode selection)
-  if (appPhase === 'rules') {
+  // Setup: unified screen with game setup + rules alongside
+  if (appPhase === 'setup') {
     return (
       <div style={themeVars}>
         <ResourceGradientDefs />
-        <RulesOverlay onDismiss={() => setAppPhase('lobby')} />
+        <SetupScreen
+          onStart={(config) => {
+            setLocalConfig(config);
+            setAppPhase('local');
+          }}
+          onMultiplayer={() => setAppPhase('lobby')}
+          onJoinMultiplayer={() => setAppPhase('lobby_join')}
+        />
       </div>
     );
   }
 
-  // Lobby: choose local vs multiplayer
-  if (appPhase === 'lobby') {
+  // Lobby: multiplayer create/join (with back button to setup)
+  if (appPhase === 'lobby' || appPhase === 'lobby_join') {
     return (
       <div style={themeVars}>
         <ResourceGradientDefs />
         <LobbyScreen
-          onStartLocal={() => setAppPhase('local')}
+          initialView={appPhase === 'lobby_join' ? 'joining' : 'landing'}
+          onStartLocal={() => setAppPhase('setup')}
           onStartMultiplayer={(config) => {
             saveSession(config.roomCode, config.playerId);
             setMultiplayerConfig(config);
             setAppPhase('multiplayer');
           }}
+          onBack={() => setAppPhase('setup')}
         />
       </div>
     );
   }
 
   // Local mode: existing GameProvider flow
-  if (appPhase === 'local') {
+  if (appPhase === 'local' && localConfig) {
     return (
       <GameProvider>
         <div style={themeVars}>
           <ResourceGradientDefs />
-          <GameInner isMultiplayer={false} />
+          <GameInner isMultiplayer={false} localConfig={localConfig} />
         </div>
       </GameProvider>
     );

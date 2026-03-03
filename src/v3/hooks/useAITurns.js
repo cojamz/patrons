@@ -18,6 +18,7 @@ import { useGame } from './useGame';
 import godsData from '../../engine/v3/data/gods';
 import { powerCards } from '../../engine/v3/data/powerCards';
 import { getShopCost } from '../../engine/v3/rules';
+import { heuristicActionPicker, heuristicShopDecision, heuristicCardDecision, heuristicDecisionFn } from '../../engine/v3/balanceAI';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -115,25 +116,28 @@ export function useAITurns() {
       if (workersLeft > 0 && availableActions.length > 0) {
         processingRef.current = true;
         clearTimers();
-        const actionId = pick(availableActions);
+        const actionId = heuristicActionPicker(game, currentId, availableActions) || pick(availableActions);
         timerRef.current = setTimeout(() => {
           timerRef.current = null;
           actionsRef.current.placeWorker(actionId);
 
-          // After placing, try to buy a power card before ending turn.
-          // Schedule endTurn after a delay to allow decision handling.
+          // After placing, try to buy a shop/power card before ending turn.
           // If placeWorker creates a pendingDecision, the decision handler
-          // will cancel this timer and handle the decision first.
+          // will cancel this endTurnTimer and handle the decision first.
           endTurnTimerRef.current = setTimeout(() => {
             endTurnTimerRef.current = null;
-            // Try to buy a shop or power card from the god we just accessed
             // Use gameRef.current for FRESH state (game closure is stale by now)
-            tryAIPurchase(gameRef.current, currentId, actionsRef);
-            // End turn after card purchase settles
-            setTimeout(() => {
+            const purchased = tryAIPurchase(gameRef.current, currentId, actionsRef);
+            if (!purchased) {
+              // No purchase attempted — end turn immediately
               actionsRef.current.endTurn();
               processingRef.current = false;
-            }, 1000);
+            }
+            // If purchased, the purchase may trigger a pendingDecision
+            // (e.g. gemSelection for 'any' costs, targetPlayer for black shops).
+            // The decision handler at line ~73 will handle it, and the
+            // "unstick" logic at line ~99 will schedule endTurn after all
+            // decisions resolve.
           }, 1800);
         }, 2000);
       } else {
@@ -153,6 +157,38 @@ export function useAITurns() {
 function handleAIDecision(decision, game, actions) {
   const currentPlayerId = decision.playerId || decision.ownerId || game.currentPlayer;
 
+  // Try MCTS heuristic first for supported decision types
+  const mctsAnswer = tryHeuristicDecision(decision, game, currentPlayerId);
+  if (mctsAnswer !== null) {
+    // Unwrap MCTS return format → UI action format
+    switch (decision.type) {
+      case 'championChoice':
+        actions.draftChampion(mctsAnswer);
+        return;
+      case 'gemSelection':
+        actions.submitDecision(mctsAnswer.gemSelection);
+        return;
+      case 'targetPlayer':
+        actions.submitDecision(mctsAnswer.targetPlayer);
+        return;
+      case 'stealGems':
+        actions.submitDecision(mctsAnswer.stealGems);
+        return;
+      case 'actionChoice':
+        actions.submitDecision(mctsAnswer.actionChoice);
+        return;
+      case 'actionChoices':
+        actions.submitDecision(mctsAnswer.actionChoices);
+        return;
+      case 'nullifierPlacement':
+        actions.submitDecision({ actionId: mctsAnswer.nullifierPlacement });
+        return;
+      default:
+        break;
+    }
+  }
+
+  // Fall back to random logic for unsupported types or when MCTS returns null
   switch (decision.type) {
     case 'gemSelection': {
       const count = decision.count || 1;
@@ -160,20 +196,18 @@ function handleAIDecision(decision, game, actions) {
       const title = (decision.title || '').toLowerCase();
       const isPayment = /trade|pay|spend|cost|convert/.test(title);
 
-      // For payment decisions, only pick from colors the player actually has
       let pickableColors = allowedColors;
       if (isPayment) {
         const player = game.players.find(p => p.id === currentPlayerId);
         if (player) {
           pickableColors = allowedColors.filter(c => (player.resources[c] || 0) > 0);
-          if (pickableColors.length === 0) pickableColors = allowedColors; // fallback
+          if (pickableColors.length === 0) pickableColors = allowedColors;
         }
       }
 
       const result = {};
       for (let i = 0; i < count; i++) {
         if (isPayment) {
-          // For payments, respect actual resource amounts
           const player = game.players.find(p => p.id === currentPlayerId);
           const available = pickableColors.filter(c => {
             const owned = (player?.resources[c] || 0);
@@ -184,7 +218,6 @@ function handleAIDecision(decision, game, actions) {
             const color = pick(available);
             result[color] = (result[color] || 0) + 1;
           } else {
-            // Can't pay full amount — submit what we have
             break;
           }
         } else {
@@ -197,17 +230,14 @@ function handleAIDecision(decision, game, actions) {
     }
 
     case 'targetPlayer': {
-      // Use decision.options (valid target IDs) when available
       const options = decision.options || [];
       if (options.length > 0) {
         actions.submitDecision(pick(options));
       } else {
-        // Fallback: pick from all other players
         const candidates = (game.players || []).filter(p => p.id !== game.currentPlayer);
         if (candidates.length > 0) {
           actions.submitDecision(pick(candidates).id);
         } else {
-          // No valid targets — submit self as fallback (never cancel)
           actions.submitDecision(game.currentPlayer);
         }
       }
@@ -227,7 +257,6 @@ function handleAIDecision(decision, game, actions) {
         result[color] = take;
         remaining -= take;
       }
-      // Always submit what's available, even if partial (never cancel)
       actions.submitDecision(result);
       break;
     }
@@ -238,7 +267,6 @@ function handleAIDecision(decision, game, actions) {
         const choice = pick(choices);
         actions.submitDecision(typeof choice === 'object' ? choice.id : choice);
       } else {
-        // No options — submit null (never cancel)
         actions.submitDecision(null);
       }
       break;
@@ -263,7 +291,6 @@ function handleAIDecision(decision, game, actions) {
     }
 
     case 'nullifierPlacement': {
-      // AI picks a random action to nullify
       const activeGods = game.gods || ['gold', 'black', 'green', 'yellow'];
       const round = game.round || 1;
       const nullified = game.nullifiedSpaces || {};
@@ -286,17 +313,14 @@ function handleAIDecision(decision, game, actions) {
     }
 
     case 'discardArtifact': {
-      // AI picks the weakest artifact to discard (first one, or random)
       const options = decision.options || [];
       if (options.length > 0) {
-        // Discard the first (oldest) artifact
         actions.submitDecision(options[0].id);
       }
       break;
     }
 
     case 'redistributeResources': {
-      // Alchemist's Trunk: randomly redistribute total resources across active colors
       const player = game.players.find(p => p.id === (decision.ownerId || currentPlayerId));
       if (!player) { actions.submitDecision({ redistribution: {} }); break; }
 
@@ -305,7 +329,6 @@ function handleAIDecision(decision, game, actions) {
       const redistribution = {};
       for (const color of activeColors) redistribution[color] = 0;
 
-      // Randomly distribute total across active colors
       for (let i = 0; i < totalResources; i++) {
         const color = pick(activeColors);
         redistribution[color] = (redistribution[color] || 0) + 1;
@@ -315,101 +338,51 @@ function handleAIDecision(decision, game, actions) {
     }
 
     default:
-      // Never cancel — submit empty/null as best effort
       actions.submitDecision(null);
       break;
   }
 }
 
 /**
- * Check if AI can afford a cost object given their resources.
- * Returns { affordable: bool, totalCost: number } for comparison.
+ * Try heuristic (MCTS) decision. Returns the MCTS answer object or null if
+ * the decision type isn't handled or MCTS fails.
  */
-function checkAffordable(playerResources, cost) {
-  let specificCost = 0;
-  let anyCost = 0;
-  for (const [resource, amount] of Object.entries(cost)) {
-    if (resource === 'any') {
-      anyCost += amount;
-    } else {
-      if ((playerResources[resource] || 0) < amount) return { affordable: false, totalCost: 0 };
-      specificCost += amount;
+function tryHeuristicDecision(decision, game, playerId) {
+  try {
+    // Types not handled by MCTS — skip immediately
+    if (decision.type === 'redistributeResources' || decision.type === 'discardArtifact') {
+      return null;
     }
+    const answer = heuristicDecisionFn(game, playerId, decision);
+    if (!answer) return null;
+    return answer;
+  } catch {
+    return null;
   }
-  const totalHave = Object.values(playerResources).reduce((s, v) => s + Math.max(0, v), 0);
-  if (totalHave - specificCost < anyCost) return { affordable: false, totalCost: 0 };
-  return { affordable: true, totalCost: specificCost + anyCost };
 }
 
 /**
  * Try to buy a shop OR power card for AI player.
- * Evaluates all affordable options from gods accessed this turn,
- * then picks the best one (favor shops > power cards > resource shops).
+ * Uses heuristic evaluation from balanceAI for contextual decisions.
+ * Returns true if a purchase was attempted, false otherwise.
  */
 function tryAIPurchase(gameSnapshot, playerId, actionsRef) {
   const game = gameSnapshot;
-  if (!game || game.purchaseMadeThisTurn) return;
+  if (!game || game.purchaseMadeThisTurn) return false;
 
-  const player = game.players?.find(p => p.id === playerId);
-  if (!player) return;
-
-  const godsAccessed = game.godsAccessedThisTurn || [];
-  if (godsAccessed.length === 0) return;
-  const playerResources = player.resources || {};
-
-  // Collect all affordable options: { type: 'shop'|'card', id, priority }
-  const options = [];
-
-  for (const godColor of godsAccessed) {
-    const godDef = godsData[godColor];
-    if (!godDef) continue;
-
-    // Check shops
-    for (const shop of godDef.shops) {
-      const shopId = `${godColor}_${shop.type}`;
-      const isLocked = shop.type === 'strong' && (game.round || 1) < 2;
-      if (isLocked) continue;
-
-      const modifiedCost = getShopCost(game, playerId, shopId);
-      const cost = modifiedCost || shop.cost;
-      const { affordable } = checkAffordable(playerResources, cost);
-      if (!affordable) continue;
-
-      let priority = 1;
-      if (shop.type === 'vp') priority = 5;
-      else if (shop.type === 'strong') priority = 5;
-      else priority = 3;
-
-      options.push({ type: 'shop', id: shopId, priority });
-    }
-
-    // Check power cards
-    const champion = game.champions?.[playerId];
-    if (champion) {
-      const market = (game.powerCardMarkets || {})[godColor] || [];
-      for (const cardId of market) {
-        if (!cardId) continue;
-        const card = powerCards[cardId];
-        if (!card || !card.cost) continue;
-
-        const { affordable } = checkAffordable(playerResources, card.cost);
-        if (!affordable) continue;
-
-        // Power cards are generally high priority (permanent benefits)
-        options.push({ type: 'card', id: cardId, priority: 7 });
-      }
-    }
+  // Try power card first (permanent benefits, higher value)
+  const cardId = heuristicCardDecision(game, playerId);
+  if (cardId) {
+    actionsRef.current.buyCard(cardId);
+    return true;
   }
 
-  if (options.length === 0) return;
-
-  // Sort by priority descending, pick the best
-  options.sort((a, b) => b.priority - a.priority);
-  const best = options[0];
-
-  if (best.type === 'card') {
-    actionsRef.current.buyCard(best.id);
-  } else {
-    actionsRef.current.useShop(best.id);
+  // Fall back to shop
+  const shopId = heuristicShopDecision(game, playerId);
+  if (shopId) {
+    actionsRef.current.useShop(shopId);
+    return true;
   }
+
+  return false;
 }

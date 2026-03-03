@@ -620,7 +620,7 @@ export default function GameProvider({ children }) {
       wrappedAnswer = { gemSelection: answer };
     } else if (decision.type === 'nullifierPlacement') {
       wrappedAnswer = (typeof answer === 'object' && answer.actionId) ? answer : { actionId: answer };
-    } else if (decision.type === 'redistribution') {
+    } else if (decision.type === 'redistribution' || decision.type === 'redistributeResources') {
       wrappedAnswer = { redistribution: answer };
     }
 

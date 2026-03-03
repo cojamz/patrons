@@ -288,8 +288,8 @@ function RoomView({ roomCode, playerId, room, onLeave, onStart, onStartMultiplay
 
 // --- Landing Screen ---
 
-export default function LobbyScreen({ onStartLocal, onStartMultiplayer }) {
-  const [view, setView] = useState('landing'); // landing | creating | joining | inRoom
+export default function LobbyScreen({ onStartLocal, onStartMultiplayer, onBack, initialView }) {
+  const [view, setView] = useState(initialView || 'landing'); // landing | creating | joining | inRoom
   const [roomCode, setRoomCode] = useState(null);
   const [playerId, setPlayerId] = useState(null);
   const [room, setRoom] = useState(null);
@@ -394,7 +394,7 @@ export default function LobbyScreen({ onStartLocal, onStartMultiplayer }) {
     );
   }
 
-  // --- Landing ---
+  // --- Landing (multiplayer options) ---
   return (
     <div
       className="fixed inset-0 flex items-center justify-center"
@@ -414,33 +414,20 @@ export default function LobbyScreen({ onStartLocal, onStartMultiplayer }) {
         transition={{ type: 'spring', stiffness: 200, damping: 25 }}
       >
         {/* Title */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-4">
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-4 mb-3">
             <div className="h-px w-12" style={{ background: `linear-gradient(90deg, transparent, ${godColors.gold.primary})` }} />
             <span
               className="text-xs uppercase tracking-[0.3em] font-medium"
               style={{ color: godColors.gold.primary }}
             >
-              A Game of Divine Favor
+              Multiplayer
             </span>
             <div className="h-px w-12" style={{ background: `linear-gradient(90deg, ${godColors.gold.primary}, transparent)` }} />
           </div>
-
-          <h1
-            className="text-5xl font-bold tracking-tight"
-            style={{
-              color: base.textPrimary,
-              textShadow: `0 0 40px ${godColors.gold.glow}`,
-            }}
-          >
-            The Favored
-          </h1>
-          <p className="text-sm mt-2" style={{ color: base.textMuted }}>
-            Worker Placement / Engine Building
-          </p>
         </div>
 
-        {/* Mode selection */}
+        {/* Multiplayer panel */}
         <div
           className="rounded-xl p-6 space-y-5"
           style={{
@@ -476,11 +463,11 @@ export default function LobbyScreen({ onStartLocal, onStartMultiplayer }) {
             />
           </div>
 
-          {/* Buttons */}
-          <div className="space-y-3">
+          {/* Create / Join buttons */}
+          <div className="flex gap-3">
             <motion.button
-              onClick={onStartLocal}
-              className="w-full py-3 rounded-lg text-sm font-bold uppercase tracking-wider"
+              onClick={handleCreateRoom}
+              className="flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider"
               style={{
                 background: `linear-gradient(135deg, ${godColors.gold.primary}, ${godColors.gold.dark})`,
                 color: base.textDark,
@@ -489,50 +476,44 @@ export default function LobbyScreen({ onStartLocal, onStartMultiplayer }) {
               whileHover={{ scale: 1.02, boxShadow: `0 6px 30px ${godColors.gold.glowStrong}` }}
               whileTap={{ scale: 0.97 }}
             >
-              Local Game
+              Create Room
             </motion.button>
 
-            <div className="flex gap-3">
-              <motion.button
-                onClick={handleCreateRoom}
-                className="flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: `1px solid ${godColors.gold.border}`,
-                  color: godColors.gold.light,
-                }}
-                whileHover={{
-                  background: godColors.gold.surface,
-                  boxShadow: `0 0 20px ${godColors.gold.glow}`,
-                }}
-                whileTap={{ scale: 0.97 }}
-              >
-                Create Room
-              </motion.button>
-
-              <motion.button
-                onClick={() => { setView('joining'); setError(null); }}
-                className="flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  color: base.textSecondary,
-                }}
-                whileHover={{
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  borderColor: 'rgba(255, 255, 255, 0.2)',
-                }}
-                whileTap={{ scale: 0.97 }}
-              >
-                Join Room
-              </motion.button>
-            </div>
+            <motion.button
+              onClick={() => { setView('joining'); setError(null); }}
+              className="flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider"
+              style={{
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                color: base.textSecondary,
+              }}
+              whileHover={{
+                background: 'rgba(255, 255, 255, 0.06)',
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+              }}
+              whileTap={{ scale: 0.97 }}
+            >
+              Join Room
+            </motion.button>
           </div>
 
           {error && (
             <p className="text-xs text-center" style={{ color: '#ef4444' }}>
               {error}
             </p>
+          )}
+
+          {/* Back to setup */}
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="w-full text-center text-xs font-medium transition-colors duration-150 py-1"
+              style={{ color: base.textMuted }}
+              onMouseEnter={e => e.target.style.color = godColors.gold.light}
+              onMouseLeave={e => e.target.style.color = base.textMuted}
+            >
+              ‹ Back to Setup
+            </button>
           )}
         </div>
       </motion.div>

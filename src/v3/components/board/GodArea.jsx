@@ -577,7 +577,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
               const isShopLocked = shop.type === 'strong' && currentRound < 2;
               const affordable = !isShopLocked && canAffordShop(shop);
               return (
-                <button
+                <motion.button
                   key={shop.type}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -588,6 +588,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                   disabled={false}
                   className="w-full"
                   style={{
+                    position: 'relative',
                     display: 'flex', alignItems: 'center', gap: '3px',
                     padding: '3px 5px', borderRadius: '4px',
                     background: affordable ? 'rgba(250, 235, 215, 0.09)' : 'rgba(250, 235, 215, 0.06)',
@@ -597,6 +598,14 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                     cursor: isShopLocked ? 'default' : 'pointer',
                     outline: 'none', flexShrink: 0,
                   }}
+                  animate={affordable ? {
+                    boxShadow: [
+                      `inset 0 0 3px rgba(250, 235, 215, 0.1), 0 0 2px rgba(250, 235, 215, 0.05)`,
+                      `inset 0 0 6px rgba(250, 235, 215, 0.2), 0 0 4px rgba(250, 235, 215, 0.1)`,
+                      `inset 0 0 3px rgba(250, 235, 215, 0.1), 0 0 2px rgba(250, 235, 215, 0.05)`,
+                    ],
+                  } : { boxShadow: 'none' }}
+                  transition={affordable ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } : {}}
                 >
                   <span style={{
                     fontSize: style.fontSize || '9px', fontWeight: 700,
@@ -617,7 +626,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                       </div>
                     ))}
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -637,7 +646,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
               if (!card) return null;
               const buyable = canBuyCard(cardId);
               return (
-                <button
+                <motion.button
                   key={cardId}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -653,11 +662,18 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                       ? `radial-gradient(ellipse at 20% 30%, ${colors.surface} 0%, rgba(28, 25, 23, 0.85) 80%)`
                       : `radial-gradient(ellipse at 20% 30%, ${colors.surface}40 0%, rgba(28, 25, 23, 0.6) 80%)`,
                     border: `1.5px solid ${buyable ? colors.primary + '66' : colors.border}`,
-                    boxShadow: buyable ? `0 0 8px ${colors.glow}, inset 0 0 6px ${colors.glow}` : `inset 0 0 4px ${colors.glow}`,
                     opacity: buyable ? 1 : 0.5,
                     cursor: buyable ? 'pointer' : 'default',
                     outline: 'none', flexShrink: 0,
                   }}
+                  animate={buyable ? {
+                    boxShadow: [
+                      `0 0 6px ${colors.glow}, inset 0 0 4px ${colors.glow}`,
+                      `0 0 12px ${colors.glowStrong}, inset 0 0 8px ${colors.glow}`,
+                      `0 0 6px ${colors.glow}, inset 0 0 4px ${colors.glow}`,
+                    ],
+                  } : { boxShadow: `inset 0 0 4px ${colors.glow}` }}
+                  transition={buyable ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } : {}}
                 >
                   <div style={{
                     width: '18px', height: '18px', borderRadius: '50%',
@@ -676,7 +692,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                   }}>
                     {card.name}
                   </span>
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -857,6 +873,14 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
               const isShopLocked = shop.type === 'strong' && currentRound < 2;
               const affordable = !isShopLocked && canAffordShop(shop);
 
+              const godAccessed = (game?.godsAccessedThisTurn || []).includes(godColor);
+              const alreadyPurchased = !!game?.purchaseMadeThisTurn;
+              const hintText = isShopLocked ? null
+                : affordable ? null
+                : godAccessed && alreadyPurchased ? 'Purchased this turn'
+                : godAccessed ? 'Need more blessings'
+                : null;
+
               return (
                 <motion.button
                   key={shop.type}
@@ -869,16 +893,36 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                     display: 'flex', flexDirection: 'column',
                     borderRadius: '6px',
                     background: affordable
-                      ? `linear-gradient(180deg, ${style.color}12 0%, rgba(250, 235, 215, 0.04) 100%)`
+                      ? `linear-gradient(180deg, ${style.color}18 0%, rgba(250, 235, 215, 0.06) 100%)`
                       : 'rgba(250, 235, 215, 0.02)',
-                    border: `1px solid ${affordable ? `${style.color}30` : 'rgba(250, 235, 215, 0.06)'}`,
+                    border: `1px solid ${affordable ? `${style.color}50` : 'rgba(250, 235, 215, 0.06)'}`,
                     opacity: isShopLocked ? 0.3 : affordable ? 1 : 0.55,
                     cursor: isShopLocked ? 'default' : 'pointer',
                     outline: 'none',
                     overflow: 'hidden',
                   }}
-                  whileHover={!isShopLocked ? { y: -2, boxShadow: `0 4px 12px rgba(0,0,0,0.3)` } : undefined}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  animate={affordable ? {
+                    boxShadow: [
+                      `0 0 4px ${style.color}15, inset 0 0 4px ${style.color}08`,
+                      `0 0 12px ${style.color}30, inset 0 0 8px ${style.color}15`,
+                      `0 0 4px ${style.color}15, inset 0 0 4px ${style.color}08`,
+                    ],
+                    borderColor: [
+                      `${style.color}40`,
+                      `${style.color}70`,
+                      `${style.color}40`,
+                    ],
+                  } : { boxShadow: 'none' }}
+                  transition={affordable
+                    ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+                    : { type: 'spring', stiffness: 400, damping: 25 }
+                  }
+                  whileHover={!isShopLocked ? {
+                    y: -2,
+                    boxShadow: affordable
+                      ? `0 4px 20px ${style.color}40, inset 0 0 10px ${style.color}15`
+                      : `0 4px 12px rgba(0,0,0,0.3)`,
+                  } : undefined}
                 >
                   {/* Tier banner — colored strip at top */}
                   <div style={{
@@ -919,6 +963,17 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                   }}>
                     {shop.effect}
                   </div>
+                  {/* Hint text for inaccessible shops */}
+                  {hintText && (
+                    <div style={{
+                      padding: '2px 8px 4px',
+                      fontSize: '8px', textAlign: 'center',
+                      color: base.textMuted, opacity: 0.7,
+                      fontStyle: 'italic',
+                    }}>
+                      {hintText}
+                    </div>
+                  )}
                 </motion.button>
               );
             })}
@@ -1161,11 +1216,22 @@ function CollapsedActionRow({ action, godColor, state, onHover, onLeave }) {
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
     >
-      {/* Available glow */}
+      {/* Available pulse glow */}
       {state.isAvailable && (
-        <div
+        <motion.div
           className="absolute inset-0 rounded pointer-events-none"
-          style={{ boxShadow: `inset 0 0 6px ${colors.glow}` }}
+          animate={{
+            boxShadow: [
+              `inset 0 0 4px ${colors.glow}, 0 0 3px ${colors.glow}`,
+              `inset 0 0 8px ${colors.glowStrong}, 0 0 6px ${colors.glow}`,
+              `inset 0 0 4px ${colors.glow}, 0 0 3px ${colors.glow}`,
+            ],
+          }}
+          transition={{
+            duration: 2.5,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
         />
       )}
 

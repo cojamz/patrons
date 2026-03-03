@@ -30,6 +30,13 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
   }, [game, decision]);
 
   const [selection, setSelection] = useState({ gold: 0, black: 0, green: 0, yellow: 0 });
+
+  // Reset selection when a new decision arrives (prevents stale state between back-to-back modals)
+  const decisionKey = `${decision.type}_${decision.sourceId || ''}_${decision.count || 0}_${decision._isSteal ? 'steal' : 'gain'}`;
+  useEffect(() => {
+    setSelection({ gold: 0, black: 0, green: 0, yellow: 0 });
+  }, [decisionKey]);
+
   const total = Object.values(selection).reduce((sum, v) => sum + v, 0);
   const required = decision.count || 0;
 
@@ -106,6 +113,20 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
       title={(decision.title || `Choose ${required} blessing${required !== 1 ? 's' : ''}`).replace(/\bGlory\b/g, 'Favor').replace(/\bresources\b/gi, 'blessings').replace(/\bresource\b/gi, 'blessing')}
       godColor={decision._godColor}
     >
+      {/* Fortunate starting hint */}
+      {decision.sourceId === 'fortunate_starting' && (
+        <p
+          className="text-center text-xs mb-4 px-3 py-2 rounded-lg"
+          style={{
+            color: godColors.gold.light,
+            background: godColors.gold.surface,
+            border: `1px solid ${godColors.gold.border}`,
+          }}
+        >
+          Review the board below to plan your strategy
+        </p>
+      )}
+
       {/* Selection counter */}
       <div className="flex items-center justify-center mb-5">
         <span
