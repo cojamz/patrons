@@ -49,6 +49,9 @@ html {
     background: rgba(156, 163, 175, 0.8);
 }
 
+/* Hide scrollbar on event ticker ribbon */
+.ticker-ribbon::-webkit-scrollbar { display: none; }
+
 /* Improve rendering performance */
 .game-board {
     -webkit-transform: translateZ(0);

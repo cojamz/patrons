@@ -38,7 +38,7 @@ export function removeGlory(state, playerId, amount, source) {
     ...state,
     players: state.players.map(player => {
       if (player.id !== playerId) return player;
-      const newGlory = Math.max(0, player.glory - amount);
+      const newGlory = player.glory - amount;
       return {
         ...player,
         glory: newGlory,

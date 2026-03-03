@@ -44,15 +44,15 @@ export const powerCards = {
     name: 'Golden Ring',
     god: 'gold',
     cost: { gold: 2, any: 1 },
-    description: 'When another player gains gold, you gain 1 gold',
-    handlers: [{ eventType: 'resource.gained', config: { triggerOn: 'others', resourceFilter: 'gold' } }],
+    description: 'At the start of your turn, gain 1 gold',
+    handlers: [{ eventType: 'turn.start', config: { triggerOn: 'self' }, frequency: 'once_per_turn' }],
   },
   gold_crown: {
     id: 'gold_crown',
     name: 'Gold Crown',
     god: 'gold',
     cost: { gold: 4, any: 2 },
-    description: 'Game end: +1 Favor per 2 gold you own',
+    description: 'Game end: +1 Favor per 3 gold you own (stacks with gold condition)',
     handlers: [{ eventType: 'phase.game_end', config: {} }],
   },
   gold_vault: {
@@ -107,7 +107,7 @@ export const powerCards = {
   },
   cursed_blade: {
     id: 'cursed_blade',
-    name: 'Cursed Blade',
+    name: 'Poisoned Blade',
     god: 'black',
     cost: { black: 2, any: 2 },
     description: 'Your steal actions and shops steal an extra 1 Favor',

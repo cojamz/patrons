@@ -86,9 +86,9 @@ const gods = {
         id: 'gold_cashIn',
         name: 'Cash In',
         tier: 3,
-        effect: '+1 Favor per gold you own',
+        effect: 'Convert all gold to Favor (1:1)',
         effectType: EFFECT_TYPES.GAIN_GLORY,
-        gloryFormula: 'perResourceOwned:gold',
+        gloryFormula: 'convertAllGold',
       },
     ],
 
@@ -117,9 +117,9 @@ const gods = {
     ],
 
     gloryCondition: {
-      description: '+1 Favor per gold owned at end of each round',
+      description: '+1 Favor per 3 gold owned at end of each round',
       trigger: GLORY_TRIGGERS.ROUND_END,
-      formula: 'perResourceOwned:gold',
+      formula: 'perThreeResourceOwned:gold',
     },
 
     powerCards: [
@@ -157,17 +157,16 @@ const gods = {
         id: 'gold_goldenRing',
         name: 'Golden Ring',
         cost: { gold: 2, any: 1 },
-        effect: 'When another player gains gold, you gain 1 gold',
-        trigger: EVENT_TYPES.ON_GAIN_GOLD,
+        effect: 'At the start of your turn, gain 1 gold',
+        trigger: EVENT_TYPES.TURN_START,
         effectType: EFFECT_TYPES.POWER_CARD_PASSIVE,
-        mechanicalDetail: 'Listens for gold gain events from OTHER players, grants 1 gold to card owner',
-        filterSource: 'otherPlayer',
+        mechanicalDetail: 'Fires at turn start for card owner only, once per turn. Steady gold income.',
       },
       {
         id: 'gold_goldCrown',
         name: 'Gold Crown',
         cost: { gold: 4, any: 2 },
-        effect: 'Game end: +1 Favor per 2 gold you own',
+        effect: 'Game end: +1 Favor per 3 gold you own (stacks with gold condition)',
         trigger: EVENT_TYPES.GAME_END,
         effectType: EFFECT_TYPES.GAIN_GLORY,
         mechanicalDetail: 'End-game scoring bonus: floor(gold / 2) Favor',
@@ -353,7 +352,7 @@ const gods = {
       },
       {
         id: 'black_cursedBlade',
-        name: 'Cursed Blade',
+        name: 'Poisoned Blade',
         cost: { black: 2, any: 2 },
         effect: 'Your steal actions and shops steal an extra 1 Favor',
         trigger: EVENT_TYPES.ON_STEAL_GLORY,

@@ -1,21 +1,20 @@
 /**
- * TurnAnnouncement — Inline HUD toast between turn info and round tracker.
+ * TurnAnnouncement — Horizontal event ribbon in the HUD bar.
  *
- * Shows rich narrative messages with resource impacts:
- *   "Player 2 → Skulk · +3 black"
- *   "You → Collect Tribute · +2 gold"
- *   "Player 1: -2 Favor (Hex)"
- *   "Bought Golden Scepter"
- *   "The Fortunate: gained 2 starting resources"
+ * Two-line persistent pills stack left-to-right. Newest on the right,
+ * old ones push left. Scrollable to review history. Max ~10 retained.
  *
- * Batches concurrent events into combined messages.
+ * Each pill: Line 1 = title (who/source), Line 2 = body (what happened)
+ * with optional resource delta icons.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { playerColors, base, godColors, resourceStyles } from '../../styles/theme';
+import { playerColors, base, godColors } from '../../styles/theme';
 import WorkerIcon from '../icons/WorkerIcon';
 import ResourceIcon from '../icons/ResourceIcon';
 import godsData from '../../../engine/v3/data/gods';
+
+const MAX_MESSAGES = 10;
 
 // Build lookup: actionId → { name, godColor, effect }
 const ACTION_LOOKUP = {};
@@ -33,29 +32,123 @@ function formatLogText(text) {
     .replace(/\benvoy\b/gi, 'worker');
 }
 
-function formatDeltas(deltas) {
-  return Object.entries(deltas)
-    .filter(([, v]) => v !== 0)
-    .map(([color, amt]) => `${amt > 0 ? '+' : ''}${amt} ${color}`)
-    .join(', ');
-}
-
 function getPlayerName(playerId, players) {
   const p = players?.find(pp => pp.id === playerId);
   return p?.name || `Player ${(playerId ?? 0) + 1}`;
 }
 
 /**
- * Inline HUD toast.
+ * Split "Source: details" or "Source — details" into [title, body].
+ * Falls back to [text, null] if no separator found.
+ */
+function splitText(text) {
+  // Try ": " split first
+  const colonIdx = text.indexOf(': ');
+  if (colonIdx > 0 && colonIdx < 30) {
+    return [text.slice(0, colonIdx), text.slice(colonIdx + 2)];
+  }
+  // Try " — " split
+  const dashIdx = text.indexOf(' — ');
+  if (dashIdx > 0) {
+    return [text.slice(0, dashIdx), text.slice(dashIdx + 3)];
+  }
+  return [text, null];
+}
+
+/**
+ * Two-line message pill.
+ * Line 1: [pip] [worker icon] title
+ * Line 2: resource deltas or body text
+ */
+function MessagePill({ msg, isNewest }) {
+  const hasDeltas = msg.deltas && Object.keys(msg.deltas).some(k => msg.deltas[k] !== 0);
+
+  return (
+    <motion.div
+      layout
+      className="flex gap-1.5 px-2.5 py-1 rounded-md flex-shrink-0"
+      style={{
+        background: isNewest ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.03)',
+        border: `1px solid ${msg.color}${isNewest ? '33' : '18'}`,
+        opacity: isNewest ? 1 : 0.7,
+      }}
+      initial={{ opacity: 0, scale: 0.92, x: 16 }}
+      animate={{ opacity: isNewest ? 1 : 0.7, scale: 1, x: 0 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
+    >
+      {/* Accent pip — spans both lines */}
+      <div
+        className="w-1 rounded-full flex-shrink-0 self-stretch"
+        style={{ background: msg.color, minHeight: '14px' }}
+      />
+
+      <div className="flex flex-col gap-0 min-w-0">
+        {/* Line 1: title */}
+        <div className="flex items-center gap-1">
+          {msg.playerId != null && (
+            <WorkerIcon playerId={msg.playerId} size={11} />
+          )}
+          <span
+            className="font-semibold whitespace-nowrap"
+            style={{
+              color: msg.textColor || base.textSecondary,
+              fontSize: '10.5px',
+              lineHeight: '14px',
+            }}
+          >
+            {msg.title}
+          </span>
+        </div>
+
+        {/* Line 2: resource deltas (preferred) or body text */}
+        {hasDeltas ? (
+          <div className="flex items-center gap-1">
+            {Object.entries(msg.deltas).filter(([,v]) => v !== 0).map(([color, amt]) => (
+              <span key={color} className="flex items-center gap-0.5">
+                <span
+                  className="font-semibold"
+                  style={{
+                    fontSize: '10px',
+                    color: amt > 0 ? 'rgba(167, 243, 208, 0.9)' : 'rgba(225, 29, 72, 0.85)',
+                  }}
+                >
+                  {amt > 0 ? '+' : ''}{amt}
+                </span>
+                <ResourceIcon type={color} size={10} />
+              </span>
+            ))}
+          </div>
+        ) : msg.body ? (
+          <span
+            className="whitespace-nowrap"
+            style={{ color: base.textMuted, fontSize: '10px', lineHeight: '13px' }}
+          >
+            {msg.body}
+          </span>
+        ) : null}
+      </div>
+    </motion.div>
+  );
+}
+
+/**
+ * Horizontal event ribbon — persistent pills, newest on right.
  */
 export default function TurnAnnouncement({ narrativeEvents, players, aiPlayers, currentPlayer }) {
-  const [current, setCurrent] = useState(null);
-  const [queueVersion, setQueueVersion] = useState(0);
-  const queueRef = useRef([]);
-  const timerRef = useRef(null);
+  const [messages, setMessages] = useState([]);
   const seenRef = useRef(new Set());
   const batchRef = useRef([]);
   const batchTimerRef = useRef(null);
+  const scrollRef = useRef(null);
+
+  // Auto-scroll to the right (newest) when messages change
+  const scrollToEnd = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    requestAnimationFrame(() => {
+      el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' });
+    });
+  }, []);
 
   // Collect events, batch those arriving in the same frame
   useEffect(() => {
@@ -71,134 +164,84 @@ export default function TurnAnnouncement({ narrativeEvents, players, aiPlayers, 
 
     if (!hasNew) return;
 
-    // Debounce: wait one frame for concurrent events to arrive
     if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
     batchTimerRef.current = setTimeout(() => {
       const batch = batchRef.current;
       batchRef.current = [];
-      const messages = buildBatchMessages(batch, players, aiPlayers, currentPlayer);
-      if (messages.length > 0) {
-        queueRef.current.push(...messages);
-        setQueueVersion(v => v + 1);
+      const newMsgs = buildBatchMessages(batch, players, aiPlayers, currentPlayer);
+      if (newMsgs.length > 0) {
+        setMessages(prev => [...prev, ...newMsgs].slice(-MAX_MESSAGES));
       }
     }, 60);
   }, [narrativeEvents, players, aiPlayers, currentPlayer]);
 
-  function showNext() {
-    if (timerRef.current) clearTimeout(timerRef.current);
-
-    if (queueRef.current.length === 0) {
-      // No more messages — keep the current one visible as persistent context
-      return;
-    }
-
-    const next = queueRef.current.shift();
-    setCurrent(next);
-
-    // If more messages are queued, cycle after duration. Otherwise, persist.
-    if (queueRef.current.length > 0) {
-      timerRef.current = setTimeout(() => showNext(), next.duration);
-    }
-  }
-
-  // When new messages arrive while one is persisting, kick the cycle
   useEffect(() => {
-    if (current && queueRef.current.length > 0 && !timerRef.current) {
-      // Current message is persisting — give it a moment then advance
-      timerRef.current = setTimeout(() => {
-        timerRef.current = null;
-        showNext();
-      }, 600);
-      return () => {
-        if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
-      };
-    }
-    if (!current && queueRef.current.length > 0) {
-      const t = setTimeout(() => showNext(), 100);
-      return () => clearTimeout(t);
-    }
-  }, [current, queueVersion]);
+    if (messages.length > 0) scrollToEnd();
+  }, [messages, scrollToEnd]);
 
   useEffect(() => {
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
       if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
     };
   }, []);
 
+  if (messages.length === 0) {
+    return <div className="flex-1 min-w-0" />;
+  }
+
   return (
-    <div className="flex-1 flex items-center justify-center min-w-0 px-2 overflow-hidden">
-      <AnimatePresence mode="wait">
-        {current && (
-          <motion.div
-            key={current.id}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg max-w-full"
-            style={{
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: `1px solid ${current.color}22`,
-            }}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 6 }}
-            transition={{ duration: 0.12 }}
-          >
-            {/* Accent pip */}
-            <div
-              className="w-1 h-4 rounded-full flex-shrink-0"
-              style={{ background: current.color }}
+    <div
+      className="flex-1 min-w-0 relative"
+      style={{ overflow: 'hidden' }}
+    >
+      {/* Left fade mask */}
+      <div
+        className="absolute left-0 top-0 bottom-0 z-10 pointer-events-none"
+        style={{
+          width: '24px',
+          background: 'linear-gradient(to right, rgba(12, 10, 9, 0.95), transparent)',
+        }}
+      />
+      {/* Right fade mask */}
+      <div
+        className="absolute right-0 top-0 bottom-0 z-10 pointer-events-none"
+        style={{
+          width: '24px',
+          background: 'linear-gradient(to left, rgba(12, 10, 9, 0.95), transparent)',
+        }}
+      />
+
+      {/* Scrollable ribbon */}
+      <div
+        ref={scrollRef}
+        className="ticker-ribbon flex items-center gap-2 px-6"
+        style={{
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+        }}
+      >
+        <AnimatePresence initial={false}>
+          {messages.map((msg, i) => (
+            <MessagePill
+              key={msg.id}
+              msg={msg}
+              isNewest={i === messages.length - 1}
             />
-
-            {/* Player icon */}
-            {current.playerId != null && (
-              <WorkerIcon playerId={current.playerId} size={14} />
-            )}
-
-            {/* Main text */}
-            <span
-              className="text-xs font-medium whitespace-nowrap"
-              style={{ color: current.textColor || base.textSecondary }}
-            >
-              {current.text}
-            </span>
-
-            {/* Resource deltas with icons */}
-            {current.deltas && Object.keys(current.deltas).length > 0 && (
-              <div className="flex items-center gap-1.5 ml-0.5">
-                <span style={{ color: base.textMuted, fontSize: '10px' }}>·</span>
-                {Object.entries(current.deltas).filter(([,v]) => v !== 0).map(([color, amt]) => (
-                  <span key={color} className="flex items-center gap-0.5">
-                    <span className="text-xs font-medium" style={{ color: amt > 0 ? base.textSecondary : 'rgba(225, 29, 72, 0.9)' }}>
-                      {amt > 0 ? '+' : ''}{amt}
-                    </span>
-                    <ResourceIcon type={color} size={12} />
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Plain text detail (fallback) */}
-            {current.detail && !current.deltas && (
-              <span
-                className="text-xs whitespace-nowrap"
-                style={{ color: base.textMuted }}
-              >
-                · {current.detail}
-              </span>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
 
 // --- Batch message builder ---
+// All messages now have: { id, title, body, deltas, playerId, color, textColor }
 
 function buildBatchMessages(batch, players, aiPlayers, currentPlayerId) {
   const isHuman = (pid) => !aiPlayers || !aiPlayers.has(pid);
+  const pName = (pid) => isHuman(pid) ? 'You' : getPlayerName(pid, players);
   const messages = [];
 
-  // Separate events by type
   const turnChanges = batch.filter(e => e.type === 'turnChange');
   const workerPlaced = batch.filter(e => e.type === 'workerPlaced');
   const resourceDeltas = batch.filter(e => e.type === 'resourceDelta');
@@ -211,173 +254,147 @@ function buildBatchMessages(batch, players, aiPlayers, currentPlayerId) {
     const colors = playerColors[evt.toPlayer] || playerColors[0];
     messages.push({
       id: evt.id,
-      text: isHuman(evt.toPlayer) ? 'Your Turn' : `${name}'s Turn`,
-      detail: null,
+      title: isHuman(evt.toPlayer) ? 'Your Turn' : `${name}'s Turn`,
+      body: 'Place a worker on an action',
+      deltas: null,
       playerId: evt.toPlayer,
       color: colors.primary,
       textColor: colors.light,
-      duration: 1500,
     });
   }
 
   // 2. Worker placements — combine with concurrent resource deltas
   for (const evt of workerPlaced) {
-    const name = getPlayerName(evt.playerId, players);
     const action = ACTION_LOOKUP[evt.actionId];
     const actionName = action?.name || evt.actionId;
     const godColor = action?.godColor;
     const colors = playerColors[evt.playerId] || playerColors[0];
-
-    // Find concurrent resource delta for this player
     const playerDelta = resourceDeltas.find(d => d.playerId === evt.playerId);
 
     messages.push({
       id: evt.id,
-      text: isHuman(evt.playerId) ? `You → ${actionName}` : `${name} → ${actionName}`,
-      detail: !playerDelta ? (action?.effect ? formatLogText(action.effect) : null) : null,
+      title: `${pName(evt.playerId)} → ${actionName}`,
+      body: !playerDelta && action?.effect ? formatLogText(action.effect) : null,
       deltas: playerDelta?.deltas || null,
       playerId: evt.playerId,
       color: godColor ? godColors[godColor].primary : colors.primary,
       textColor: colors.light,
-      duration: 1800,
     });
 
-    // Show impacts on other players
+    // Impacts on other players
     for (const rd of resourceDeltas) {
       if (rd.playerId === evt.playerId) continue;
-      const hasAny = Object.values(rd.deltas).some(v => v !== 0);
-      if (hasAny) {
-        const victimName = getPlayerName(rd.playerId, players);
-        messages.push({
-          id: rd.id,
-          text: victimName,
-          detail: null,
-          deltas: rd.deltas,
-          playerId: rd.playerId,
-          color: godColors.black?.primary || 'rgba(168,162,158,0.5)',
-          textColor: base.textSecondary,
-          duration: 1500,
-        });
-      }
+      if (!Object.values(rd.deltas).some(v => v !== 0)) continue;
+      messages.push({
+        id: rd.id,
+        title: pName(rd.playerId),
+        body: 'affected',
+        deltas: rd.deltas,
+        playerId: rd.playerId,
+        color: godColors.black?.primary || 'rgba(168,162,158,0.5)',
+        textColor: base.textSecondary,
+      });
     }
 
     for (const fd of favorDeltas) {
       if (fd.playerId === evt.playerId) continue;
-      if (fd.delta >= 0) continue; // Only show losses
-      const victimName = getPlayerName(fd.playerId, players);
+      if (fd.delta >= 0) continue;
       messages.push({
         id: fd.id,
-        text: `${victimName}: ${fd.delta} Favor`,
-        detail: null,
+        title: pName(fd.playerId),
+        body: `${fd.delta} Favor`,
+        deltas: null,
         playerId: fd.playerId,
         color: godColors.black?.primary || 'rgba(168,162,158,0.5)',
         textColor: base.textSecondary,
-        duration: 1200,
       });
     }
   }
 
-  // 3. Log entries — catch shop purchases, power card buys, champion effects, round events
-  //    Skip entries that duplicate what workerPlaced already shows
+  // 3. Log entries
   const hasWorkerPlacement = workerPlaced.length > 0;
   for (const evt of logEntries) {
     const t = evt.text;
     if (!t) continue;
-
-    // Skip plain resource gains (covered by workerPlaced detail or floating deltas)
     if (/^\+\d+ (gold|black|green|yellow)$/.test(t)) continue;
-
-    // Skip "Paid for X" (redundant with shop benefit)
     if (/^Paid for /.test(t)) continue;
-
-    // If we just showed a workerPlaced, skip generic action logs
     if (hasWorkerPlacement && /^\+\d+ /.test(t)) continue;
 
-    // Power card purchase
+    const formatted = formatLogText(t);
+
+    // Power card purchase: "Bought Golden Scepter"
     if (/^Bought /.test(t)) {
+      const cardName = formatted.replace('Bought ', '');
       messages.push({
         id: evt.id,
-        text: formatLogText(t),
-        detail: null,
+        title: 'Purchased',
+        body: cardName,
+        deltas: null,
         playerId: null,
         color: godColors.gold.primary,
         textColor: godColors.gold.light,
-        duration: 1500,
       });
       continue;
     }
 
-    // Shop results
-    if (/shop:/i.test(t)) {
+    // Shop / on-purchase results
+    if (/shop:|on-purchase:/i.test(t)) {
+      const [title, body] = splitText(formatted);
       messages.push({
         id: evt.id,
-        text: formatLogText(t),
-        detail: null,
+        title,
+        body: body || 'shop effect',
+        deltas: null,
         playerId: null,
         color: godColors.gold.primary,
         textColor: base.textSecondary,
-        duration: 1200,
-      });
-      continue;
-    }
-
-    // On-purchase effects
-    if (/on-purchase:/i.test(t)) {
-      messages.push({
-        id: evt.id,
-        text: formatLogText(t),
-        detail: null,
-        playerId: null,
-        color: godColors.gold.primary,
-        textColor: base.textSecondary,
-        duration: 1200,
       });
       continue;
     }
 
     // Champion/round/steal/favor effects
     if (/Prescient|Fortunate|Blessed|Strategist|stole|steal|lost|favor|glory|hex|ruin|blocked|repeat|copy|nullif|draft|champion|begins|Round \d|discount/i.test(t)) {
+      const [title, body] = splitText(formatted);
       messages.push({
         id: evt.id,
-        text: formatLogText(t),
-        detail: null,
+        title,
+        body: body || formatted,
+        deltas: null,
         playerId: null,
         color: godColors.gold.primary,
         textColor: base.textSecondary,
-        duration: 1200,
       });
       continue;
     }
 
-    // Catch "Cannot" / error messages
+    // Error messages
     if (/^Cannot |^You can only|^No empty|^Invalid/.test(t)) {
       messages.push({
         id: evt.id,
-        text: formatLogText(t),
-        detail: null,
+        title: 'Error',
+        body: formatted,
+        deltas: null,
         playerId: null,
         color: 'rgba(225, 29, 72, 0.6)',
         textColor: 'rgba(225, 29, 72, 0.9)',
-        duration: 1500,
       });
       continue;
     }
   }
 
-  // 4. Standalone favor deltas (when no worker placement in this batch — e.g., shop effects)
+  // 4. Standalone favor deltas
   if (workerPlaced.length === 0) {
     for (const fd of favorDeltas) {
       if (fd.delta === 0) continue;
-      const name = getPlayerName(fd.playerId, players);
       const sign = fd.delta > 0 ? '+' : '';
       messages.push({
         id: fd.id,
-        text: `${name}: ${sign}${fd.delta} Favor`,
-        detail: null,
+        title: pName(fd.playerId),
+        body: `${sign}${fd.delta} Favor`,
+        deltas: null,
         playerId: fd.playerId,
         color: fd.delta > 0 ? godColors.gold.primary : godColors.black.primary,
         textColor: base.textSecondary,
-        duration: 1200,
       });
     }
   }

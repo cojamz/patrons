@@ -34,7 +34,7 @@ function removeGlory(state, playerId, amount, source) {
   if (hasModifier(state, playerId, 'glory_reduction_immunity')) return state;
   const players = state.players.map(p => {
     if (p.id !== playerId) return p;
-    const newGlory = Math.max(0, (p.glory || 0) - amount);
+    const newGlory = (p.glory || 0) - amount;
     const glorySources = source
       ? { ...(p.glorySources || {}), [source]: ((p.glorySources || {})[source] || 0) - amount }
       : p.glorySources;
@@ -112,12 +112,14 @@ function blackWeak(state, playerId, decisions = {}) {
   const target = getPlayer(state, targetId);
   const stolen = Math.min(1, target.glory || 0);
   let newState = state;
+  const gloryStolen = [];
   if (stolen > 0) {
     newState = removeGlory(newState, targetId, stolen, 'black_weak_shop_victim');
     newState = addGlory(newState, playerId, stolen, 'black_weak_shop');
+    gloryStolen.push({ playerId, targetPlayerId: targetId, amount: stolen });
   }
 
-  return { state: newState, log: [`Black shop: stole ${stolen} Glory from ${targetId}`] };
+  return { state: newState, log: [`Black shop: stole ${stolen} Glory from ${targetId}`], gloryStolen };
 }
 
 /** black_strong: Steal 3 Glory from target */
@@ -143,12 +145,14 @@ function blackStrong(state, playerId, decisions = {}) {
   const target = getPlayer(state, targetId);
   const stolen = Math.min(3, target.glory || 0);
   let newState = state;
+  const gloryStolen = [];
   if (stolen > 0) {
     newState = removeGlory(newState, targetId, stolen, 'black_strong_shop_victim');
     newState = addGlory(newState, playerId, stolen, 'black_strong_shop');
+    gloryStolen.push({ playerId, targetPlayerId: targetId, amount: stolen });
   }
 
-  return { state: newState, log: [`Black shop: stole ${stolen} Glory from ${targetId}`] };
+  return { state: newState, log: [`Black shop: stole ${stolen} Glory from ${targetId}`], gloryStolen };
 }
 
 /** black_vp: Steal 2 Glory from each other player */
@@ -156,6 +160,7 @@ function blackVp(state, playerId) {
   let newState = state;
   let totalStolen = 0;
   const log = [];
+  const gloryStolen = [];
 
   for (const player of state.players) {
     if (player.id === playerId) continue;
@@ -169,6 +174,7 @@ function blackVp(state, playerId) {
     if (stolen > 0) {
       newState = removeGlory(newState, player.id, stolen, 'black_vp_shop_victim');
       totalStolen += stolen;
+      gloryStolen.push({ playerId, targetPlayerId: player.id, amount: stolen });
       log.push(`Stole ${stolen} Glory from ${player.id}`);
     }
   }
@@ -177,7 +183,7 @@ function blackVp(state, playerId) {
     newState = addGlory(newState, playerId, totalStolen, 'black_vp_shop');
   }
 
-  return { state: newState, log: [`Black VP shop: stole Glory from other players`, ...log] };
+  return { state: newState, log: [`Black VP shop: stole Glory from other players`, ...log], gloryStolen };
 }
 
 /** green_weak: Repeat one Tier 1 action */

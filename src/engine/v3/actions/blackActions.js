@@ -57,7 +57,7 @@ function removeGlory(state, playerId, amount, source) {
   if (hasModifier(state, playerId, 'glory_reduction_immunity')) return state;
   const players = state.players.map(p => {
     if (p.id !== playerId) return p;
-    const newGlory = Math.max(0, (p.glory || 0) - amount);
+    const newGlory = (p.glory || 0) - amount;
     const glorySources = source
       ? { ...(p.glorySources || {}), [source]: ((p.glorySources || {})[source] || 0) - amount }
       : p.glorySources;
@@ -97,25 +97,32 @@ export function pickpocket(state, playerId, gods, decisions = {}) {
   let newState = decisions._continued ? state : addResources(state, playerId, { black: 1 });
 
   if (!decisions.targetPlayer) {
+    // Filter out immune targets so the player never wastes a pick
+    const validTargets = state.players.filter(p =>
+      p.id !== playerId && !hasModifier(state, p.id, 'glory_reduction_immunity')
+    ).map(p => p.id);
+    if (validTargets.length === 0) {
+      return { state: newState, log: [`+1 black`, `No valid targets (all immune)`], abort: false };
+    }
     return {
       state: newState,
       log: [`+1 black`],
       pendingDecision: {
         type: 'targetPlayer',
-        title: 'Choose a player to steal 1 Glory from',
+        title: 'Choose a player to steal 1 Favor from',
         excludePlayer: playerId,
-        options: state.players.filter(p => p.id !== playerId).map(p => p.id),
+        options: validTargets,
       },
     };
   }
 
   const targetId = decisions.targetPlayer;
 
-  // Check glory steal immunity
+  // Safety check — glory steal immunity (shouldn't reach here with filtered options)
   if (hasModifier(newState, targetId, 'glory_reduction_immunity')) {
     return {
       state: newState,
-      log: decisions._continued ? [`Steal blocked: target has Glory steal immunity`] : [`+1 black`, `Steal blocked: target has Glory steal immunity`],
+      log: decisions._continued ? [`Steal blocked: target has Favor steal immunity`] : [`+1 black`, `Steal blocked: target has Favor steal immunity`],
     };
   }
 
@@ -131,27 +138,35 @@ export function pickpocket(state, playerId, gods, decisions = {}) {
     state: newState,
     log: [...logPrefix, stolen > 0 ? `Stole ${stolen} Glory from ${targetId}` : `Target has no Glory to steal`],
     penalizedPlayers: stolen > 0 ? [targetId] : [],
+    gloryStolen: stolen > 0 ? [{ playerId, targetPlayerId: targetId, amount: stolen }] : [],
   };
 }
 
 /** ransack: Steal 2 resources from target */
 export function ransack(state, playerId, gods, decisions = {}) {
   if (!decisions.targetPlayer) {
+    // Filter out immune targets so the player sees only valid options
+    const validTargets = state.players.filter(p =>
+      p.id !== playerId && !hasModifier(state, p.id, 'steal_immunity')
+    ).map(p => p.id);
+    if (validTargets.length === 0) {
+      return { state, log: [`No valid targets (all immune to steal)`], abort: true };
+    }
     return {
       state,
       log: [],
       pendingDecision: {
         type: 'targetPlayer',
-        title: 'Choose a player to steal 2 resources from',
+        title: 'Choose a player to steal 2 blessings from',
         excludePlayer: playerId,
-        options: state.players.filter(p => p.id !== playerId).map(p => p.id),
+        options: validTargets,
       },
     };
   }
 
   const targetId = decisions.targetPlayer;
 
-  // Check steal immunity
+  // Safety check — steal immunity (shouldn't reach here with filtered options)
   if (hasModifier(state, targetId, 'steal_immunity')) {
     return {
       state,
@@ -202,6 +217,7 @@ export function ransack(state, playerId, gods, decisions = {}) {
     state: newState,
     log: [`Stole ${formatResources(stealGems)} from ${targetId}`],
     penalizedPlayers: [targetId],
+    resourcesStolen: [{ playerId, targetPlayerId: targetId, resources: stealGems }],
   };
 }
 
@@ -212,21 +228,28 @@ export function extort(state, playerId, gods, decisions = {}) {
   const logPrefix = decisions._continued ? [] : [`+1 black`];
 
   if (!decisions.targetPlayer) {
+    // Filter out immune targets
+    const validTargets = state.players.filter(p =>
+      p.id !== playerId && !hasModifier(state, p.id, 'steal_immunity')
+    ).map(p => p.id);
+    if (validTargets.length === 0) {
+      return { state: newState, log: [...logPrefix, `No valid targets (all immune to steal)`], abort: false };
+    }
     return {
       state: newState,
       log: [`+1 black`],
       pendingDecision: {
         type: 'targetPlayer',
-        title: 'Choose a player to steal 3 resources from',
+        title: 'Choose a player to steal 3 blessings from',
         excludePlayer: playerId,
-        options: state.players.filter(p => p.id !== playerId).map(p => p.id),
+        options: validTargets,
       },
     };
   }
 
   const targetId = decisions.targetPlayer;
 
-  // Check steal immunity
+  // Safety check — steal immunity (shouldn't reach here with filtered options)
   if (hasModifier(newState, targetId, 'steal_immunity')) {
     return {
       state: newState,
@@ -276,6 +299,7 @@ export function extort(state, playerId, gods, decisions = {}) {
     state: newState,
     log: [...logPrefix, `Stole ${formatResources(stealGems)} from ${targetId}`],
     penalizedPlayers: [targetId],
+    resourcesStolen: [{ playerId, targetPlayerId: targetId, resources: stealGems }],
   };
 }
 

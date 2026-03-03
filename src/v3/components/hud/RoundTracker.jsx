@@ -1,20 +1,13 @@
 /**
- * RoundTracker — Horizontal 3-segment round progress bar.
+ * RoundTracker — Compact round badge.
  *
- * Filled segments for completed rounds, the current round glows
- * with a gold accent, and future rounds stay dim. Roman numerals
- * label each segment.
+ * Shows "R1" / "R2" / "R3" with a subtle gold glow on the current round.
+ * Small dots indicate progress (filled = completed, ring = current, dim = future).
  */
 import React from 'react';
 import { motion } from 'motion/react';
 import { useGame } from '../../hooks/useGame';
 import { godColors, base } from '../../styles/theme';
-
-const SEGMENTS = [
-  { round: 1, numeral: 'I', workers: 3, label: 'Round 1 — 3 patrons, Tier 1 actions' },
-  { round: 2, numeral: 'II', workers: 4, label: 'Round 2 — 4 patrons, Tier 2 unlocked' },
-  { round: 3, numeral: 'III', workers: 5, label: 'Round 3 — 5 patrons, Tier 3 unlocked' },
-];
 
 export default function RoundTracker() {
   const { game } = useGame();
@@ -25,80 +18,47 @@ export default function RoundTracker() {
   const gold = godColors.gold;
 
   return (
-    <div
-      className="flex items-center gap-1 px-3 py-2 rounded-lg"
+    <motion.div
+      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md cursor-default"
+      title={`Round ${currentRound} of 3`}
       style={{
-        background: base.glass,
-        border: `1px solid ${base.glassBorder}`,
-        backdropFilter: 'blur(12px)',
+        background: gold.surface,
+        border: `1px solid ${gold.border}`,
       }}
+      animate={{
+        boxShadow: [
+          `0 0 4px ${gold.glow}`,
+          `0 0 10px ${gold.glowStrong}`,
+          `0 0 4px ${gold.glow}`,
+        ],
+      }}
+      transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
     >
       <span
-        className="text-[10px] font-semibold tracking-wider uppercase mr-2"
-        style={{ color: base.textMuted }}
+        className="text-xs font-bold tracking-wide"
+        style={{ color: gold.light }}
       >
-        Round
+        R{currentRound}
       </span>
 
-      {SEGMENTS.map(({ round, numeral, label }) => {
-        const isCompleted = round < currentRound;
-        const isCurrent = round === currentRound;
-        const isFuture = round > currentRound;
-
-        return (
-          <motion.div
-            key={round}
-            className="relative flex items-center justify-center rounded-md cursor-default"
-            title={`${label}${isCurrent ? ' (current)' : isCompleted ? ' (complete)' : ''}`}
+      {/* Progress dots */}
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3].map(r => (
+          <div
+            key={r}
+            className="rounded-full"
             style={{
-              width: '36px',
-              height: '24px',
-              background: isCompleted
+              width: '4px',
+              height: '4px',
+              background: r < currentRound
                 ? gold.primary
-                : isCurrent
-                  ? gold.surface
-                  : 'rgba(255, 255, 255, 0.03)',
-              border: `1px solid ${
-                isCompleted
-                  ? gold.primary
-                  : isCurrent
-                    ? gold.border
-                    : 'rgba(255, 255, 255, 0.06)'
-              }`,
-              opacity: isFuture ? 0.4 : 1,
+                : r === currentRound
+                  ? gold.light
+                  : 'rgba(255, 255, 255, 0.15)',
             }}
-            animate={
-              isCurrent
-                ? {
-                    boxShadow: [
-                      `0 0 6px ${gold.glow}`,
-                      `0 0 14px ${gold.glowStrong}`,
-                      `0 0 6px ${gold.glow}`,
-                    ],
-                  }
-                : {}
-            }
-            transition={
-              isCurrent
-                ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
-                : {}
-            }
-          >
-            <span
-              className="text-[11px] font-bold tracking-wider"
-              style={{
-                color: isCompleted
-                  ? base.textDark
-                  : isCurrent
-                    ? gold.light
-                    : base.textMuted,
-              }}
-            >
-              {numeral}
-            </span>
-          </motion.div>
-        );
-      })}
-    </div>
+          />
+        ))}
+      </div>
+    </motion.div>
   );
 }

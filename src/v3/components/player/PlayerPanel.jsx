@@ -315,8 +315,8 @@ export const FAVOR_SOURCE_LABELS = {
   voodoo_doll: 'Voodoo Doll — curse damage',
   gold_crown: 'Gold Crown — endgame gold bonus',
   travelers_journal: "Traveler's Journal — gods visited",
-  cursed_blade: 'Cursed Blade — attack bonus',
-  cursed_blade_victim: 'Cursed Blade — damage taken',
+  cursed_blade: 'Poisoned Blade — attack bonus',
+  cursed_blade_victim: 'Poisoned Blade — damage taken',
   gold_vp_shop: 'Gold Shop — favor purchase',
   black_weak_shop: 'Black Shop — stolen favor',
   black_weak_shop_victim: 'Black Shop — favor stolen from you',
@@ -507,13 +507,13 @@ function WorkersDisplay({ playerId, workersLeft, totalWorkers }) {
   return (
     <div
       className="flex flex-col items-center gap-1"
-      title={`${workersLeft} of ${total} workers remaining this round`}
+      title={`${workersLeft} of ${total} patrons remaining this round`}
     >
       <span
         className="text-[11px] uppercase tracking-widest font-medium"
         style={{ color: base.textMuted }}
       >
-        Workers
+        Patrons
       </span>
       <div className="flex items-center gap-0.5">
         {Array.from({ length: total }, (_, i) => (

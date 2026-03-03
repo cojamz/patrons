@@ -288,7 +288,7 @@ describe('Black Actions', () => {
       expect(getPlayer(result.state, 'p3').glory).toBe(1);
     });
 
-    it('does not go below 0 Glory', () => {
+    it('allows Glory to go negative', () => {
       const state = makeState({
         players: [
           { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
@@ -296,7 +296,7 @@ describe('Black Actions', () => {
         ],
       });
       const result = routeAction(state, 'p1', 'black_hex', GODS);
-      expect(getPlayer(result.state, 'p2').glory).toBe(0);
+      expect(getPlayer(result.state, 'p2').glory).toBe(-1);
     });
   });
 

@@ -78,11 +78,11 @@ describe('removeGlory', () => {
     expect(getPlayer(state, 1).glory).toBe(3);
   });
 
-  it('clamps glory at 0 (never negative)', () => {
+  it('allows glory to go negative', () => {
     let state = makeState();
     state = addGlory(state, 1, 2, 'test');
     state = removeGlory(state, 1, 10, 'penalty');
-    expect(getPlayer(state, 1).glory).toBe(0);
+    expect(getPlayer(state, 1).glory).toBe(-8);
   });
 });
 

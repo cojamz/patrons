@@ -81,7 +81,7 @@ function thievesGlovesResolver(state, handler, eventData, _options) {
     return { state, log: [], pendingDecisions: [] };
   }
 
-  const activeColors = state.activeColors || ['gold', 'black', 'green', 'yellow'];
+  const activeColors = state.gods || ['gold', 'black', 'green', 'yellow'];
   const chosenColor = activeColors[0] || 'gold';
 
   const newState = addResourceToPlayer(state, handler.ownerId, chosenColor, 1);
@@ -93,7 +93,7 @@ function thievesGlovesResolver(state, handler, eventData, _options) {
 }
 
 /**
- * Cursed Blade: When you steal Glory, steal 1 extra Glory.
+ * Poisoned Blade: When you steal Glory, steal 1 extra Glory.
  */
 function cursedBladeResolver(state, handler, eventData, _options) {
   if (eventData.playerId !== handler.ownerId) {
@@ -109,7 +109,7 @@ function cursedBladeResolver(state, handler, eventData, _options) {
 
   return {
     state: newState,
-    log: ['Cursed Blade: steal 1 extra Glory'],
+    log: ['Poisoned Blade: steal 1 extra Glory'],
     pendingDecisions: [],
   };
 }

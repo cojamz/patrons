@@ -1,9 +1,7 @@
 /**
- * TurnIndicator — Single-line turn status, left-aligned.
+ * TurnIndicator — Compact turn status badge, left-aligned.
  *
- * Shows: [WorkerIcon] Player 1's Turn · Place Patron (3 remaining)
- * Sub-phase updates: Place Patron → Buy Phase → Choose Target etc.
- * Turn order preview trails after.
+ * Shows: [WorkerIcon] P1 · Place (5)
  */
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -35,6 +33,7 @@ function getSubPhase(phase, pendingDecision, game) {
       case 'nullifierPlacement':
         return { label: 'Place Nullifier', isDecision: true };
       case 'redistribution':
+      case 'redistributeResources':
         return { label: 'Redistribute', isDecision: true };
       default:
         return { label: pendingDecision.title || 'Decide', isDecision: true };
@@ -44,10 +43,13 @@ function getSubPhase(phase, pendingDecision, game) {
   if (phase === 'action_phase') {
     const wLeft = game?.players?.find(p => p.id === game.currentPlayer)?.workersLeft ?? 0;
     if (game?.workerPlacedThisTurn) {
-      return { label: 'Buy Phase', isDecision: false };
+      if (game?.purchaseMadeThisTurn) {
+        return { label: 'End Turn', isDecision: false };
+      }
+      return { label: 'Buy or End Turn', isDecision: false };
     }
     if (wLeft > 0) {
-      return { label: 'Place Patron', detail: `${wLeft} remaining`, isDecision: false };
+      return { label: `${wLeft} worker${wLeft > 1 ? 's' : ''} left`, isDecision: false };
     }
     return { label: 'End Turn', isDecision: false };
   }
@@ -66,7 +68,7 @@ export default function TurnIndicator() {
   const nonActionLabel = PHASE_LABELS[phase];
 
   return (
-    <div className="flex items-center gap-2 min-w-0">
+    <div className="flex items-center gap-1.5 min-w-0">
       {isActionPhase ? (
         <>
           {/* Player worker icon */}
@@ -81,114 +83,44 @@ export default function TurnIndicator() {
             }}
             transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <WorkerIcon playerId={player?.id ?? 0} size={20} />
+            <WorkerIcon playerId={player?.id ?? 0} size={18} />
           </motion.div>
 
           {/* Player name */}
           <span
-            className="text-sm font-bold tracking-wide uppercase whitespace-nowrap"
+            className="text-xs font-bold tracking-wide uppercase whitespace-nowrap"
             style={{ color: colors.light }}
           >
-            {player?.name || 'Player'}'s Turn
+            {player?.name || 'Player'}
           </span>
-
-          <span style={{ color: base.textMuted, opacity: 0.3 }}>·</span>
 
           {/* Sub-phase label */}
           {subPhase && (
             <AnimatePresence mode="wait">
-              <motion.div
+              <motion.span
                 key={subPhase.label}
-                className="flex items-center gap-1.5 whitespace-nowrap"
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 6 }}
-                transition={{ duration: 0.15 }}
+                className="text-xs whitespace-nowrap"
+                style={{
+                  color: subPhase.isDecision ? '#FBBF24' : base.textMuted,
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12 }}
               >
-                <span
-                  className="text-sm font-semibold"
-                  style={{
-                    color: subPhase.isDecision ? '#FBBF24' : base.textPrimary,
-                  }}
-                >
-                  {subPhase.label}
-                </span>
-                {subPhase.detail && (
-                  <span
-                    className="text-xs"
-                    style={{ color: base.textMuted }}
-                  >
-                    ({subPhase.detail})
-                  </span>
-                )}
-              </motion.div>
+                · {subPhase.label}{subPhase.detail ? ` (${subPhase.detail})` : ''}
+              </motion.span>
             </AnimatePresence>
-          )}
-
-          {/* Turn order preview */}
-          {game.turnOrder && game.turnOrder.length > 1 && (
-            <TurnOrderPreview game={game} />
           )}
         </>
       ) : (
         <span
-          className="text-sm font-semibold tracking-wide uppercase"
+          className="text-xs font-semibold tracking-wide uppercase"
           style={{ color: base.textSecondary }}
         >
           {nonActionLabel || phase}
         </span>
       )}
     </div>
-  );
-}
-
-function TurnOrderPreview({ game }) {
-  const order = game.turnOrder;
-  const currentIdx = order.indexOf(game.currentPlayer);
-  let dir = game.turnDirection || 1;
-  const upcoming = [];
-
-  let idx = currentIdx;
-  for (let i = 0; i < 10 && upcoming.length < 3; i++) {
-    let nextIdx = idx + dir;
-    if (nextIdx >= order.length) { dir = -1; nextIdx = order.length - 2; }
-    else if (nextIdx < 0) { dir = 1; nextIdx = 1; }
-    if (nextIdx >= 0 && nextIdx < order.length && order[nextIdx] !== (upcoming.length > 0 ? upcoming[upcoming.length - 1] : game.currentPlayer)) {
-      upcoming.push(order[nextIdx]);
-    }
-    idx = nextIdx < 0 ? 0 : nextIdx >= order.length ? order.length - 1 : nextIdx;
-  }
-
-  if (upcoming.length === 0) return null;
-
-  return (
-    <>
-      <div className="w-px h-3.5 mx-1.5 flex-shrink-0" style={{ background: base.divider }} />
-      <div className="flex items-center gap-0.5 flex-shrink-0">
-        <span
-          className="text-[9px] uppercase tracking-wider font-medium mr-0.5"
-          style={{ color: base.textMuted }}
-        >
-          Next
-        </span>
-        {upcoming.map((pid, i) => {
-          const p = game.players.find(pp => pp.id === pid);
-          const outOfWorkers = p && p.workersLeft <= 0;
-          return (
-            <div
-              key={`${pid}-${i}`}
-              className="flex items-center"
-              style={{ opacity: outOfWorkers ? 0.2 : 0.6 - (i * 0.12) }}
-              title={`${p?.name || `Player ${pid}`}${outOfWorkers ? ' (done)' : ''}`}
-            >
-              <WorkerIcon playerId={pid} size={14} />
-              {i < upcoming.length - 1 && (
-                <span style={{ fontSize: '7px', color: base.textMuted, opacity: 0.3, margin: '0 1px' }}>›</span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </>
   );
 }
