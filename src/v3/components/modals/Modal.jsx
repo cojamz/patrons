@@ -18,22 +18,21 @@ import { motion, AnimatePresence } from 'motion/react';
 import { godColors, base } from '../../styles/theme';
 import { modalBackdrop, modalContent } from '../../styles/animations';
 
-export default function Modal({ isOpen, onClose, title, children, godColor, wide = false }) {
+export default function Modal({ isOpen, onClose, title, children, godColor, wide = false, decisionKey }) {
   const accent = godColor ? godColors[godColor] : null;
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          key={decisionKey || 'modal'}
           className="fixed inset-0 z-50 flex items-center justify-center"
           variants={modalBackdrop}
           initial="initial"
           animate="animate"
           exit="exit"
           style={{
-            backgroundColor: 'rgba(12, 10, 9, 0.8)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(12, 10, 9, 0.92)',
           }}
           onClick={onClose || undefined}
         >
@@ -48,7 +47,7 @@ export default function Modal({ isOpen, onClose, title, children, godColor, wide
             style={{
               backgroundColor: 'rgba(28, 25, 23, 0.95)',
               border: '1px solid rgba(255, 255, 255, 0.08)',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 16px 40px rgba(0, 0, 0, 0.5)',
             }}
           >
             {/* God-colored accent line at top */}
@@ -78,19 +77,7 @@ export default function Modal({ isOpen, onClose, title, children, godColor, wide
                 {onClose && (
                   <button
                     onClick={onClose}
-                    className="flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150"
-                    style={{
-                      color: base.textMuted,
-                      backgroundColor: 'transparent',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
-                      e.currentTarget.style.color = base.textPrimary;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = base.textMuted;
-                    }}
+                    className="flex items-center justify-center w-7 h-7 rounded-full modal-close-btn"
                   >
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -109,7 +96,7 @@ export default function Modal({ isOpen, onClose, title, children, godColor, wide
             )}
 
             {/* Body — scrollable if content overflows */}
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4" style={{ willChange: 'scroll-position' }}>
               {children}
             </div>
           </motion.div>

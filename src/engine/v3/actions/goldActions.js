@@ -15,6 +15,10 @@ function addResources(state, playerId, resources) {
   const effective = hasDouble
     ? Object.fromEntries(Object.entries(resources).map(([c, a]) => [c, a * 2]))
     : resources;
+  // Track 0→N transitions for Yellow Favor condition
+  const newColors = Object.entries(effective)
+    .filter(([color, amount]) => amount > 0 && (player.resources[color] || 0) === 0)
+    .map(([color]) => color);
   const players = state.players.map(p => {
     if (p.id !== playerId) return p;
     const newResources = { ...p.resources };
@@ -29,7 +33,12 @@ function addResources(state, playerId, resources) {
     }
     return { ...p, resources: newResources, lastGain: { ...effective }, ...(hasDouble ? { effects: newEffects } : {}) };
   });
-  return { ...state, players };
+  let newState = { ...state, players };
+  if (newColors.length > 0) {
+    const prev = newState._pendingNewColors || [];
+    newState._pendingNewColors = [...prev, { playerId, newColors }];
+  }
+  return newState;
 }
 
 function removeResources(state, playerId, resources) {
@@ -169,22 +178,20 @@ export function haggle(state, playerId) {
   return { state: newState, log: ['+1 gold, next purchase costs 2 less'] };
 }
 
-/** austerity: +1 gold per empty power card slot */
+/** royalties: +1 gold per power card owned */
 export function austerity(state, playerId) {
   const champion = state.champions[playerId];
   if (!champion) {
-    return { state, log: ['No champion — no empty slots'] };
+    return { state, log: ['No champion — no power cards'] };
   }
-  const totalSlots = champion.powerCardSlots || 4;
-  const usedSlots = (champion.powerCards || []).length;
-  const emptySlots = Math.max(0, totalSlots - usedSlots);
+  const ownedCards = (champion.powerCards || []).length;
 
-  if (emptySlots === 0) {
-    return { state, log: ['Austerity: no empty power card slots'] };
+  if (ownedCards === 0) {
+    return { state, log: ['Royalties: no power cards owned'] };
   }
 
-  const newState = addResources(state, playerId, { gold: emptySlots });
-  return { state: newState, log: [`Austerity: +${emptySlots} gold (${emptySlots} empty slot${emptySlots > 1 ? 's' : ''})`] };
+  const newState = addResources(state, playerId, { gold: ownedCards });
+  return { state: newState, log: [`Royalties: +${ownedCards} gold (${ownedCards} power card${ownedCards > 1 ? 's' : ''})`] };
 }
 
 /** tariff: +1 gold, +1 gold per god you have a worker on */
@@ -209,15 +216,16 @@ export function tariff(state, playerId) {
 /** cashIn: Convert all gold to Favor 1:1 */
 export function cashIn(state, playerId) {
   const player = getPlayer(state, playerId);
-  const goldOwned = player.resources.gold || 0;
+  const goldCount = (player.resources || {}).gold || 0;
 
-  if (goldOwned <= 0) {
+  if (goldCount === 0) {
     return { state, log: ['Cash In: no gold to convert'] };
   }
 
-  let newState = removeResources(state, playerId, { gold: goldOwned });
-  newState = addGlory(newState, playerId, goldOwned, 'cash_in');
-  return { state: newState, log: [`Cash In: spent ${goldOwned} gold → +${goldOwned} Favor`] };
+  let newState = removeResources(state, playerId, { gold: goldCount });
+  newState = addGlory(newState, playerId, goldCount, 'cash_in');
+
+  return { state: newState, log: [`Cash In: converted ${goldCount} gold → ${goldCount} Favor`] };
 }
 
 export const goldActions = {

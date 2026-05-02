@@ -15,7 +15,7 @@
  *     pendingDecision: { ...decision object | null }
  *     actions/{playerId}: { type, payload, timestamp }
  */
-import { db, ref, set, get, onValue, off, remove, update, onDisconnect, serverTimestamp, authReady } from './config.js';
+import { db, ref, set, get, onValue, onChildAdded, off, remove, update, onDisconnect, serverTimestamp, authReady } from './config.js';
 
 // --- Room code generation ---
 
@@ -202,14 +202,19 @@ export function onRoomUpdate(roomCode, callback) {
 }
 
 /**
- * Subscribe to ALL player action submissions (host listens to all).
+ * Subscribe to individual player action submissions (host listens).
+ * Uses onChildAdded so each action fires exactly once — no re-processing
+ * when other actions are cleared or added.
+ * @param {function} callback - Called with (fbPlayerId, actionData) per action
  * @returns {function} unsubscribe function
  */
-export function onAnyPlayerAction(roomCode, callback) {
+export function onPlayerAction(roomCode, callback) {
   const actionsRef = ref(db, `v3rooms/${roomCode}/actions`);
-  return onValue(actionsRef, (snapshot) => {
-    const val = snapshot.val();
-    if (val) callback(val);
+  // onChildAdded returns the unsubscribe function directly in Firebase v9+
+  return onChildAdded(actionsRef, (snapshot) => {
+    const fbPlayerId = snapshot.key;
+    const action = snapshot.val();
+    if (fbPlayerId && action) callback(fbPlayerId, action);
   });
 }
 

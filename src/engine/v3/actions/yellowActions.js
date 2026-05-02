@@ -15,6 +15,9 @@ function addResources(state, playerId, resources) {
   const effective = hasDouble
     ? Object.fromEntries(Object.entries(resources).map(([c, a]) => [c, a * 2]))
     : resources;
+  const newColors = Object.entries(effective)
+    .filter(([color, amount]) => amount > 0 && (player.resources[color] || 0) === 0)
+    .map(([color]) => color);
   const players = state.players.map(p => {
     if (p.id !== playerId) return p;
     const newResources = { ...p.resources };
@@ -29,7 +32,12 @@ function addResources(state, playerId, resources) {
     }
     return { ...p, resources: newResources, lastGain: { ...effective }, ...(hasDouble ? { effects: newEffects } : {}) };
   });
-  return { ...state, players };
+  let newState = { ...state, players };
+  if (newColors.length > 0) {
+    const prev = newState._pendingNewColors || [];
+    newState._pendingNewColors = [...prev, { playerId, newColors }];
+  }
+  return newState;
 }
 
 function removeResources(state, playerId, resources) {
@@ -139,6 +147,7 @@ export function transmute(state, playerId, gods, decisions = {}) {
         count: 2,
         title: 'Choose 2 resources to gain',
         _resolveField: 'gemSelectionGain',
+        _carryForward: { gemSelection: decisions.gemSelection },
       },
     };
   }
@@ -168,7 +177,6 @@ export function siphon(state, playerId, gods, decisions = {}) {
       return total > 0;
     }).map(p => p.id);
     if (validTargets.length === 0) {
-      // No valid targets — worker is still consumed (no abort)
       return { state, log: ['Siphon: no opponents have resources to steal'] };
     }
     return {
@@ -230,7 +238,7 @@ export function siphon(state, playerId, gods, decisions = {}) {
   };
 }
 
-/** distill: Spend all of one color → gain that many ×2 of another */
+/** distill: Spend all of one color → gain that many +3 of another */
 export function distill(state, playerId, gods, decisions = {}) {
   // Step 1: Choose color to spend all of
   if (!decisions.chooseColor) {
@@ -268,9 +276,10 @@ export function distill(state, playerId, gods, decisions = {}) {
       log: [],
       pendingDecision: {
         type: 'chooseColor',
-        title: `Spending ${spendAmount} ${spendColor} — choose color to gain ${spendAmount * 2} of`,
+        title: `Spending ${spendAmount} ${spendColor} — choose color to gain ${spendAmount + 3} of`,
         options: gainOptions,
         _resolveField: 'chooseColorGain',
+        _carryForward: { chooseColor: spendColor },
         spendColor,
         spendAmount,
       },
@@ -292,26 +301,31 @@ export function distill(state, playerId, gods, decisions = {}) {
   };
 }
 
-/** attune: +1 yellow, gain 1 of each color you have 0 of */
+/** attune: gain 1 of each color you have 0 of, then +1 yellow */
 export function attune(state, playerId) {
-  let newState = addResources(state, playerId, { yellow: 1 });
-  const player = getPlayer(newState, playerId);
+  const player = getPlayer(state, playerId);
   const activeColors = state.gods || ['gold', 'black', 'green', 'yellow'];
   const zeroColors = activeColors.filter(c => (player.resources[c] || 0) === 0);
 
+  let newState = state;
   if (zeroColors.length === 0) {
-    return { state: newState, log: ['+1 yellow', 'All colors already owned — no zero-color gain'] };
+    newState = addResources(newState, playerId, { yellow: 1 });
+    return { state: newState, log: ['All colors already owned — no zero-color gain', '+1 yellow'] };
   }
 
+  // First: gain 1 of each color you have 0 of
   const gain = {};
   for (const color of zeroColors) {
     gain[color] = 1;
   }
   newState = addResources(newState, playerId, gain);
 
+  // Then: +1 yellow
+  newState = addResources(newState, playerId, { yellow: 1 });
+
   return {
     state: newState,
-    log: [`+1 yellow, gained 1 of each zero color: ${formatResources(gain)}`],
+    log: [`Gained 1 of each zero color: ${formatResources(gain)}, then +1 yellow`],
   };
 }
 

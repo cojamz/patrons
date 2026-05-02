@@ -10,7 +10,6 @@
  * Modal system routes pending decisions to the appropriate modal.
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import GameProvider from './GameProvider';
 import HostSync from './multiplayer/HostSync';
 import GuestProvider from './multiplayer/GuestProvider';
@@ -29,16 +28,18 @@ import RoundTransition from './components/modals/RoundTransition';
 import DiscardArtifact from './components/modals/DiscardArtifact';
 import ChooseColor from './components/modals/ChooseColor';
 import WorkerIcon from './components/icons/WorkerIcon';
+import GodIcon from './components/icons/GodIcon';
 import ChampionIcon from './components/icons/ChampionIcon';
 import { CHAMPION_NAMES } from './components/icons/ChampionIcon';
 import { base, godColors, playerColors, getThemeCSSVars } from './styles/theme';
-import { modalBackdrop, modalContent, cardReveal } from './styles/animations';
 import champions from '../engine/v3/data/champions';
 import godsData from '../engine/v3/data/gods';
 import RulesOverlay, { SLIDES, SlideIcon } from './components/RulesOverlay';
+import RulesReference from './components/RulesReference';
 import LobbyScreen from './components/lobby/LobbyScreen';
 import WaitingOverlay from './components/lobby/WaitingOverlay';
-import { rejoinRoom } from './firebase/rooms';
+import { ReconnectingOverlay, DisconnectedPlayerBanner } from './components/lobby/ConnectionStatus';
+import { rejoinRoom, leaveRoom } from './firebase/rooms';
 import { db, ref, get } from './firebase/config';
 import TurnAnnouncement from './components/hud/TurnAnnouncement';
 import { useGameEvents, filterByType } from './hooks/useGameEvents';
@@ -78,14 +79,9 @@ function RulesPanel() {
         className="flex-1 flex flex-col justify-center cursor-pointer"
         onClick={() => setSlideIndex(i => (i + 1) % infoSlides.length)}
       >
-        <AnimatePresence mode="wait">
-          <motion.div
+          <div
             key={slideIndex}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-            className="flex-1 flex flex-col"
+            className="slide-fade-in flex-1 flex flex-col"
           >
             {/* Icon area */}
             <div className="flex items-center justify-center mb-5" style={{ minHeight: '48px' }}>
@@ -107,8 +103,7 @@ function RulesPanel() {
             >
               {slide.body}
             </p>
-          </motion.div>
-        </AnimatePresence>
+          </div>
       </div>
 
       {/* Navigation dots + arrows */}
@@ -116,7 +111,7 @@ function RulesPanel() {
         <button
           onClick={(e) => { e.stopPropagation(); setSlideIndex(i => Math.max(0, i - 1)); }}
           disabled={slideIndex === 0}
-          className="flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold transition-all"
+          className="flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold transition-colors duration-100"
           style={{
             color: slideIndex === 0 ? 'rgba(255,255,255,0.1)' : base.textSecondary,
             background: slideIndex === 0 ? 'transparent' : 'rgba(255,255,255,0.05)',
@@ -130,7 +125,7 @@ function RulesPanel() {
             <button
               key={i}
               onClick={() => setSlideIndex(i)}
-              className="rounded-full transition-all duration-200"
+              className="rounded-full transition-colors duration-100"
               style={{
                 width: i === slideIndex ? '16px' : '6px',
                 height: '6px',
@@ -142,7 +137,7 @@ function RulesPanel() {
         <button
           onClick={(e) => { e.stopPropagation(); setSlideIndex(i => Math.min(infoSlides.length - 1, i + 1)); }}
           disabled={slideIndex === infoSlides.length - 1}
-          className="flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold transition-all"
+          className="flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold transition-colors duration-100"
           style={{
             color: slideIndex === infoSlides.length - 1 ? 'rgba(255,255,255,0.1)' : base.textSecondary,
             background: slideIndex === infoSlides.length - 1 ? 'transparent' : 'rgba(255,255,255,0.05)',
@@ -160,6 +155,7 @@ function SetupScreen({ onStart, onMultiplayer, onJoinMultiplayer }) {
   const [playerCount, setPlayerCount] = useState(2);
   const [playerNames, setPlayerNames] = useState(['Player 1', 'Player 2', 'Player 3', 'Player 4']);
   const [isAI, setIsAI] = useState([false, true, true, true]); // Player 1 human by default
+  const [showRulesRef, setShowRulesRef] = useState(false);
 
   const handleCountChange = (count) => {
     setPlayerCount(count);
@@ -207,12 +203,7 @@ function SetupScreen({ onStart, onMultiplayer, onJoinMultiplayer }) {
         }}
       />
 
-      <motion.div
-        className="relative w-full max-w-3xl mx-4 py-8"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-      >
+      <div className="setup-screen-enter relative w-full max-w-3xl mx-4 py-8">
         {/* Title */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-4">
@@ -264,7 +255,7 @@ function SetupScreen({ onStart, onMultiplayer, onJoinMultiplayer }) {
                   <button
                     key={count}
                     onClick={() => handleCountChange(count)}
-                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
+                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-100"
                     style={{
                       background: playerCount === count
                         ? godColors.gold.primary
@@ -322,7 +313,7 @@ function SetupScreen({ onStart, onMultiplayer, onJoinMultiplayer }) {
                       />
                       <button
                         onClick={() => toggleAI(i)}
-                        className="rounded-md px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-150"
+                        className="rounded-md px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors duration-100"
                         style={{
                           background: ai ? 'rgba(212, 168, 67, 0.15)' : 'rgba(255, 255, 255, 0.04)',
                           border: `1px solid ${ai ? godColors.gold.border : 'rgba(255, 255, 255, 0.08)'}`,
@@ -341,19 +332,17 @@ function SetupScreen({ onStart, onMultiplayer, onJoinMultiplayer }) {
             </div>
 
             {/* Start button */}
-            <motion.button
+            <button
               onClick={handleStart}
-              className="w-full py-3 rounded-lg text-sm font-bold uppercase tracking-wider"
+              className="begin-game-btn w-full py-3 rounded-lg text-sm font-bold uppercase tracking-wider"
               style={{
                 background: `linear-gradient(135deg, ${godColors.gold.primary}, ${godColors.gold.dark})`,
                 color: base.textDark,
                 boxShadow: `0 4px 20px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.2)`,
               }}
-              whileHover={{ scale: 1.02, boxShadow: `0 6px 30px ${godColors.gold.glowStrong}` }}
-              whileTap={{ scale: 0.97 }}
             >
               Begin Game
-            </motion.button>
+            </button>
 
             {/* Multiplayer divider */}
             <div className="flex items-center gap-2">
@@ -368,7 +357,7 @@ function SetupScreen({ onStart, onMultiplayer, onJoinMultiplayer }) {
             <div className="flex gap-2">
               <button
                 onClick={onMultiplayer}
-                className="flex-1 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-150"
+                className="flex-1 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors duration-100"
                 style={{
                   background: 'rgba(255, 255, 255, 0.04)',
                   border: `1px solid ${godColors.gold.border}`,
@@ -387,7 +376,7 @@ function SetupScreen({ onStart, onMultiplayer, onJoinMultiplayer }) {
               </button>
               <button
                 onClick={onJoinMultiplayer}
-                className="flex-1 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-150"
+                className="flex-1 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors duration-100"
                 style={{
                   background: 'rgba(255, 255, 255, 0.04)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -407,10 +396,24 @@ function SetupScreen({ onStart, onMultiplayer, onJoinMultiplayer }) {
             </div>
           </div>
 
-          {/* Right: Rules panel */}
-          <RulesPanel />
+          {/* Right: Tutorial carousel + Full Rules link */}
+          <div className="flex flex-col gap-3">
+            <RulesPanel />
+            <button
+              onClick={() => setShowRulesRef(true)}
+              className="text-xs font-medium transition-colors duration-150 text-center py-2"
+              style={{ color: godColors.gold.primary }}
+              onMouseEnter={e => e.currentTarget.style.color = godColors.gold.light}
+              onMouseLeave={e => e.currentTarget.style.color = godColors.gold.primary}
+            >
+              Full Game Reference →
+            </button>
+          </div>
         </div>
-      </motion.div>
+
+        {/* Rules Reference modal */}
+        {showRulesRef && <RulesReference onClose={() => setShowRulesRef(false)} />}
+      </div>
     </div>
   );
 }
@@ -420,7 +423,7 @@ function SetupScreen({ onStart, onMultiplayer, onJoinMultiplayer }) {
 // ============================================================================
 
 function ChampionDraftScreen() {
-  const { game, pendingDecision, actions, aiPlayers } = useGame();
+  const { game, pendingDecision, actions, aiPlayers, isMultiplayer, mySlot } = useGame();
 
   // Auto-draft for AI players
   React.useEffect(() => {
@@ -457,6 +460,9 @@ function ChampionDraftScreen() {
   const player = game?.players.find(p => p.id === draftPlayerId);
   const pColors = playerColors[draftPlayerId] || playerColors[0];
   const availableChampions = pendingDecision.options || [];
+
+  // In multiplayer, don't show interactive draft to the wrong player
+  const isMyDraftPick = !isMultiplayer || draftPlayerId === mySlot;
 
   // Don't show the full draft UI for AI players — just show a waiting state
   if (aiPlayers && aiPlayers.has(draftPlayerId)) {
@@ -518,27 +524,18 @@ function ChampionDraftScreen() {
             const isLastOdd = i === availableChampions.length - 1 && availableChampions.length % 2 !== 0;
 
             return (
-              <motion.button
+              <button
                 key={champId}
-                custom={i}
-                variants={cardReveal}
-                initial="initial"
-                animate="animate"
-                onClick={() => actions.draftChampion({ championId: champId })}
-                className="text-left rounded-xl p-5 transition-all duration-200"
+                onClick={() => isMyDraftPick && actions.draftChampion({ championId: champId })}
+                className="champion-card text-left rounded-xl p-5"
                 style={{
                   background: 'rgba(28, 25, 23, 0.9)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                  cursor: 'pointer',
+                  cursor: isMyDraftPick ? 'pointer' : 'default',
+                  opacity: isMyDraftPick ? 1 : 0.5,
+                  animationDelay: `${i * 0.08}s`,
                   ...(isLastOdd ? { gridColumn: '1 / -1', justifySelf: 'center', maxWidth: 'calc(50% - 6px)' } : {}),
                 }}
-                whileHover={{
-                  borderColor: godColors.gold.border,
-                  boxShadow: `0 0 20px ${godColors.gold.glow}`,
-                  y: -2,
-                  transition: { type: 'spring', stiffness: 400, damping: 20 },
-                }}
-                whileTap={{ scale: 0.98 }}
               >
                 {/* Champion icon + name header */}
                 <div className="flex items-center gap-3 mb-2">
@@ -575,7 +572,7 @@ function ChampionDraftScreen() {
                 >
                   {champData.passive}
                 </p>
-              </motion.button>
+              </button>
             );
           })}
         </div>
@@ -618,7 +615,7 @@ function NullifierPlacementModal({ decision, onSubmit, onCancel }) {
             <button
               key={action.id}
               onClick={() => onSubmit({ actionId: action.id })}
-              className="text-left rounded-lg transition-all"
+              className="text-left rounded-lg transition-colors duration-100"
               style={{
                 padding: '8px 12px',
                 background: colors.surface,
@@ -650,17 +647,34 @@ function NullifierPlacementModal({ decision, onSubmit, onCancel }) {
 // ============================================================================
 
 function DecisionModal() {
-  const { pendingDecision, actions, phase, isMultiplayer, mySlot } = useGame();
+  const { pendingDecision, actions, phase, isMultiplayer, mySlot, aiPlayers, game } = useGame();
+
+  // Track a stable key that only changes when the decision TYPE changes,
+  // not when chained decisions of the same type replace each other.
+  // This prevents AnimatePresence from replaying entry animations on every
+  // decision step in a chain (e.g. gemSelection → gemSelection).
+  const decisionKey = pendingDecision
+    ? pendingDecision.type
+    : null;
 
   if (!pendingDecision) return null;
 
   // Don't render decision modals during champion draft (handled by ChampionDraftScreen)
   if (phase === 'champion_draft' && pendingDecision.type === 'championChoice') return null;
 
+  // Determine who this decision is for
+  const decisionOwner = pendingDecision.playerId ?? pendingDecision._playerId ?? pendingDecision.ownerId;
+
+  // Don't show decision modals for AI players — useAITurns handles them
+  if (aiPlayers?.size > 0) {
+    const resolvedOwner = decisionOwner ?? game?.currentPlayer;
+    if (resolvedOwner !== undefined && aiPlayers.has(resolvedOwner)) {
+      return null;
+    }
+  }
+
   // In multiplayer, only show decision modals for the correct player
-  // Decisions use `playerId` or `_playerId` to identify the responsible player
   if (isMultiplayer) {
-    const decisionOwner = pendingDecision.playerId ?? pendingDecision._playerId;
     if (decisionOwner !== undefined && decisionOwner !== mySlot) {
       return null; // WaitingOverlay handles "waiting for X to decide" in GameInner
     }
@@ -751,6 +765,50 @@ function DecisionModal() {
         />
       );
 
+    case 'turnOrderChoice':
+      return (
+        <Modal isOpen={true} title={pendingDecision.title || 'Choose Turn Order Position'}>
+          <p className="text-sm mb-4" style={{ color: base.textSecondary }}>
+            Pick where you want to go in the turn order this round.
+          </p>
+          <div className="flex flex-col gap-2">
+            {(pendingDecision.options || []).map((pos) => {
+              const playerAtPos = game?.turnOrder?.[pos - 1];
+              const isMe = playerAtPos === decisionOwner;
+              const pColors = playerColors[playerAtPos] || playerColors[0];
+              return (
+                <button
+                  key={pos}
+                  onClick={() => actions.submitDecision({ position: pos })}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-100"
+                  style={{
+                    background: isMe ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${isMe ? pColors.primary + '55' : 'rgba(255, 255, 255, 0.06)'}`,
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = isMe ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)'; }}
+                >
+                  <span
+                    className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm"
+                    style={{ background: pColors.primary + '33', color: pColors.light }}
+                  >
+                    {pos}
+                  </span>
+                  <span style={{ color: base.textPrimary, fontSize: '14px' }}>
+                    {pos === 1 ? '1st' : pos === 2 ? '2nd' : pos === 3 ? '3rd' : `${pos}th`}
+                    {isMe ? ' (current)' : ''}
+                  </span>
+                  {playerAtPos != null && (
+                    <WorkerIcon playerId={playerAtPos} size={16} style={{ marginLeft: 'auto' }} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </Modal>
+      );
+
     default:
       // Generic decision fallback
       return (
@@ -778,9 +836,10 @@ function DecisionModal() {
 // ============================================================================
 
 function GameScreen() {
-  const { game, phase, actions, roundStartDecisionQueue, pendingDecision, aiPlayers, log, isMultiplayer, mySlot } = useGame();
+  const { game, phase, actions, roundStartDecisionQueue, pendingDecision, aiPlayers, log, isMultiplayer, mySlot, roomCode } = useGame();
   const surfaceTimerRef = useRef(null);
   const [showRulesOverlay, setShowRulesOverlay] = useState(false);
+  const [showRulesRef, setShowRulesRef] = useState(false);
 
   // Game event detection for UI feedback — pass all events to narrator
   const events = useGameEvents();
@@ -837,10 +896,9 @@ function GameScreen() {
         />
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <RoundTracker />
           <button
-            onClick={() => setShowRulesOverlay(true)}
-            className="flex items-center justify-center rounded-full transition-all duration-200"
+            onClick={() => setShowRulesRef(true)}
+            className="flex items-center justify-center rounded-full transition-colors duration-100"
             style={{
               width: '28px', height: '28px',
               background: 'rgba(255,255,255,0.06)',
@@ -854,6 +912,24 @@ function GameScreen() {
           >
             ?
           </button>
+          {isMultiplayer && (
+            <button
+              onClick={() => { leaveGame(); }}
+              className="flex items-center justify-center rounded-full transition-colors duration-100"
+              style={{
+                width: '28px', height: '28px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: base.textMuted,
+                fontSize: '13px', fontWeight: 600,
+              }}
+              title="Leave Game"
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#fca5a5'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = base.textMuted; }}
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
@@ -870,10 +946,10 @@ function GameScreen() {
 
       {/* Waiting overlay when another player is deciding (multiplayer) */}
       {isMultiplayer && pendingDecision && (() => {
-        const decisionOwner = pendingDecision.playerId ?? pendingDecision._playerId;
+        const decisionOwner = pendingDecision.playerId ?? pendingDecision._playerId ?? pendingDecision.ownerId;
         if (decisionOwner !== undefined && decisionOwner !== mySlot) {
           const waitPlayer = game.players.find(p => p.id === decisionOwner);
-          return <WaitingOverlay waitingFor={waitPlayer ? { name: waitPlayer.name, slot: waitPlayer.id } : null} type="decision" />;
+          return <WaitingOverlay waitingFor={waitPlayer ? { name: waitPlayer.name, slot: waitPlayer.id } : null} type="decision" onLeave={() => { leaveGame(); }} />;
         }
         return null;
       })()}
@@ -899,16 +975,21 @@ function GameScreen() {
           preRoundGlory={game.lastRoundPreGlory}
           activeGods={activeGods}
           log={log}
-          onContinue={() => {
-            clearSession();
-            window.location.reload();
-          }}
+          onContinue={() => leaveGame()}
         />
       )}
 
-      {/* In-game rules overlay */}
+      {/* In-game rules overlay (tutorial) */}
       {showRulesOverlay && (
-        <RulesOverlay onDismiss={() => setShowRulesOverlay(false)} />
+        <RulesOverlay
+          onDismiss={() => setShowRulesOverlay(false)}
+          onOpenRules={() => { setShowRulesOverlay(false); setShowRulesRef(true); }}
+        />
+      )}
+
+      {/* Full rules reference */}
+      {showRulesRef && (
+        <RulesReference onClose={() => setShowRulesRef(false)} />
       )}
     </div>
   );
@@ -919,7 +1000,7 @@ function GameScreen() {
 // ============================================================================
 
 function GameInner({ isMultiplayer, multiplayerConfig, localConfig }) {
-  const { initialized, phase, actions, game, pendingDecision, mySlot, isHost } = useGame();
+  const { initialized, phase, actions, game, pendingDecision, mySlot, isHost, connectionState } = useGame();
   const initRef = useRef(false);
 
   // Local mode: auto-init from localConfig on mount
@@ -962,13 +1043,26 @@ function GameInner({ isMultiplayer, multiplayerConfig, localConfig }) {
 
   // Champion draft phase
   if (phase === 'champion_draft') {
-    // In multiplayer, only show draft UI if it's this player's pick
+    // In multiplayer, only show interactive draft UI if it's this player's pick
     if (isMultiplayer && pendingDecision?.playerId !== mySlot) {
-      const draftPlayer = game?.players.find(p => p.id === pendingDecision?.playerId);
+      // Show ChampionDraftScreen (non-interactive cards visible at 0.5 opacity)
+      // with WaitingOverlay on top. When pendingDecision is null (between picks),
+      // still show overlay with a generic "Draft in progress" message.
+      const draftPlayer = pendingDecision
+        ? game?.players.find(p => p.id === pendingDecision.playerId)
+        : null;
+      const waitingFor = draftPlayer
+        ? { name: draftPlayer.name, slot: draftPlayer.id }
+        : { name: 'Draft', slot: 0 }; // Fallback for null pendingDecision between picks
       return (
-        <div className="fixed inset-0 flex items-center justify-center" style={{ background: base.board }}>
-          <WaitingOverlay waitingFor={draftPlayer ? { name: draftPlayer.name, slot: draftPlayer.id } : null} type="decision" />
-        </div>
+        <>
+          <ChampionDraftScreen />
+          <WaitingOverlay
+            waitingFor={waitingFor}
+            type="draft"
+            onLeave={() => { leaveGame(); }}
+          />
+        </>
       );
     }
     return <ChampionDraftScreen />;
@@ -976,16 +1070,33 @@ function GameInner({ isMultiplayer, multiplayerConfig, localConfig }) {
 
   // All other phases: full game screen
   // In multiplayer, show waiting overlay when it's not your turn
+  // Only hide overlay if the GUEST has a decision to make (e.g., steal target selection)
+  const guestHasDecision = isMultiplayer && pendingDecision && (
+    pendingDecision.playerId === mySlot ||
+    pendingDecision._playerId === mySlot ||
+    pendingDecision.ownerId === mySlot
+  );
   return (
     <>
       <GameScreen />
-      {isMultiplayer && game && game.currentPlayer !== mySlot && !pendingDecision && phase === 'action_phase' && (
+      {isMultiplayer && game && game.currentPlayer !== mySlot && !guestHasDecision && phase === 'action_phase' && (
         <WaitingOverlay
           waitingFor={{
             name: game.players.find(p => p.id === game.currentPlayer)?.name || 'Player',
             slot: game.currentPlayer,
           }}
-          type="turn"
+          type={pendingDecision ? 'decision' : 'turn'}
+          onLeave={() => { leaveGame(); }}
+        />
+      )}
+      {isMultiplayer && !isHost && connectionState && (
+        <ReconnectingOverlay connectionState={connectionState} />
+      )}
+      {isMultiplayer && game && multiplayerConfig && (
+        <DisconnectedPlayerBanner
+          roomCode={multiplayerConfig.roomCode}
+          slotMap={multiplayerConfig.slotMap}
+          game={game}
         />
       )}
     </>
@@ -1006,6 +1117,17 @@ function clearSession() {
   sessionStorage.removeItem(SESSION_KEY);
 }
 
+/** Leave a multiplayer game: notify Firebase, clear local session, reload. */
+function leaveGame() {
+  const saved = loadSession();
+  if (saved) {
+    // Fire and forget — don't block reload on network
+    leaveRoom(saved.roomCode, saved.playerId).catch(() => {});
+  }
+  clearSession();
+  window.location.reload();
+}
+
 function loadSession() {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
@@ -1018,11 +1140,12 @@ const THEME_VARS = getThemeCSSVars();
 
 export default function App() {
   const themeVars = THEME_VARS;
-  const [appPhase, setAppPhase] = useState('setup'); // setup | lobby | lobby_join | local | multiplayer
+  const [appPhase, setAppPhase] = useState('setup'); // setup | rejoin_prompt | lobby | lobby_join | local | multiplayer
   const [multiplayerConfig, setMultiplayerConfig] = useState(null);
   const [localConfig, setLocalConfig] = useState(null);
+  const [rejoinInfo, setRejoinInfo] = useState(null); // { roomCode, playerId, room }
 
-  // On mount: check sessionStorage for an active multiplayer session to rejoin
+  // On mount: check sessionStorage for a saved multiplayer session
   useEffect(() => {
     const saved = loadSession();
     if (!saved) return;
@@ -1031,32 +1154,43 @@ export default function App() {
 
     (async () => {
       try {
-        // Verify room still exists and isn't finished
         const snapshot = await get(ref(db, `v3rooms/${roomCode}`));
-        if (!snapshot.exists()) {
-          clearSession();
-          return;
-        }
+        if (!snapshot.exists()) { clearSession(); return; }
 
         const room = snapshot.val();
-        if (room.status === 'finished' || room.status === 'lobby') {
-          clearSession();
-          return;
+        if (room.status === 'finished' || room.status === 'lobby') { clearSession(); return; }
+        if (!room.players?.[playerId]) { clearSession(); return; }
+
+        // If all players disconnected for >5 min, treat as dead
+        const allPlayers = Object.values(room.players);
+        const allDisconnected = allPlayers.every(p => !p.connected);
+        if (allDisconnected) {
+          const lastSeen = Math.max(...allPlayers.map(p => p.lastSeen || 0));
+          if (lastSeen > 0 && Date.now() - lastSeen > 5 * 60 * 1000) { clearSession(); return; }
         }
 
-        // Verify this player is still in the room
-        if (!room.players?.[playerId]) {
-          clearSession();
-          return;
-        }
+        // Show the rejoin prompt instead of auto-rejoining
+        setRejoinInfo({ roomCode, playerId, room });
+        setAppPhase('rejoin_prompt');
+      } catch {
+        clearSession();
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-        // Restore presence
+  // Rejoin prompt: show interstitial instead of auto-rejoining
+  if (appPhase === 'rejoin_prompt' && rejoinInfo) {
+    const { roomCode, playerId, room } = rejoinInfo;
+    const playerEntries = Object.entries(room.players)
+      .sort((a, b) => (a[1].slot ?? 0) - (b[1].slot ?? 0));
+    const otherPlayers = playerEntries
+      .filter(([id]) => id !== playerId)
+      .map(([, p]) => p.name);
+    const myName = room.players[playerId]?.name || 'You';
+
+    const handleRejoin = async () => {
+      try {
         await rejoinRoom(roomCode, playerId);
-
-        // Rebuild multiplayer config from room data
-        const playerEntries = Object.entries(room.players)
-          .sort((a, b) => (a[1].slot ?? 0) - (b[1].slot ?? 0));
-
         const config = {
           roomCode,
           playerId,
@@ -1066,14 +1200,88 @@ export default function App() {
           playerIds: playerEntries.map(([id]) => id),
           slotMap: Object.fromEntries(playerEntries.map(([id, p]) => [id, p.slot])),
         };
-
         setMultiplayerConfig(config);
         setAppPhase('multiplayer');
       } catch {
         clearSession();
+        setRejoinInfo(null);
+        setAppPhase('setup');
       }
-    })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    };
+
+    const handleLeave = () => {
+      leaveRoom(roomCode, playerId).catch(() => {});
+      clearSession();
+      setRejoinInfo(null);
+      setAppPhase('setup');
+    };
+
+    return (
+      <div style={themeVars}>
+        <ResourceGradientDefs />
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{ background: base.board }}
+        >
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse at 50% 30%, rgba(212, 168, 67, 0.06) 0%, transparent 60%)' }}
+          />
+          <div
+            className="relative rounded-xl p-8 max-w-md w-full mx-4 text-center"
+            style={{
+              background: 'rgba(28, 25, 23, 0.95)',
+              border: '1px solid rgba(212, 168, 67, 0.2)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5)',
+            }}
+          >
+            <div
+              className="text-xs uppercase tracking-[0.2em] font-semibold mb-6"
+              style={{ color: godColors.gold.primary }}
+            >
+              Game In Progress
+            </div>
+
+            <p className="text-sm mb-2" style={{ color: base.textPrimary }}>
+              You ({myName}) were in a game with:
+            </p>
+            <p className="text-sm font-semibold mb-1" style={{ color: godColors.gold.light }}>
+              {otherPlayers.join(', ') || 'other players'}
+            </p>
+            <p className="text-xs mb-8" style={{ color: base.textMuted }}>
+              Room {roomCode} · {room.status === 'drafting' ? 'Drafting' : 'In Progress'}
+            </p>
+
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={handleLeave}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold uppercase tracking-wider btn-pop"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  color: base.textSecondary,
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                }}
+              >
+                Leave Game
+              </button>
+              <button
+                onClick={handleRejoin}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold uppercase tracking-wider btn-pop"
+                style={{
+                  background: `linear-gradient(135deg, ${godColors.gold.primary}, ${godColors.gold.dark})`,
+                  color: base.textDark,
+                  border: `1px solid ${godColors.gold.light}`,
+                  boxShadow: `0 0 20px ${godColors.gold.glow}`,
+                }}
+              >
+                Rejoin
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Setup: unified screen with game setup + rules alongside
   if (appPhase === 'setup') {

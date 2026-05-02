@@ -5,14 +5,15 @@
  * affordability to determine clickability.
  */
 import React from 'react';
-import { useGame } from '../../hooks/useGame';
+import { useGameState, useGameActions } from '../../hooks/useGame';
 import ShopCard from './ShopCard';
 import GodIcon from '../icons/GodIcon';
 import { godColors, godMeta, base } from '../../styles/theme';
 import gods from '../../../engine/v3/data/gods.js';
 
 export default function ShopRow({ godColor }) {
-  const { game, actions, currentPlayer } = useGame();
+  const { game, currentPlayer } = useGameState();
+  const actions = useGameActions();
 
   if (!game) return null;
 

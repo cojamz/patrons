@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { powerCards } from '../../../engine/v3/data/powerCards';
 import ResourceIcon, { WildcardIcon } from '../icons/ResourceIcon';
+import RichEffect from '../shared/RichEffect';
 import { godColors, base, resourceStyles } from '../../styles/theme';
 import { cardReveal } from '../../styles/animations';
 
@@ -68,7 +69,7 @@ export default function PowerCard({ cardId, godColor, onBuy, canBuy = false, ind
       animate="animate"
       onClick={canBuy ? () => onBuy(cardId) : undefined}
       disabled={false}
-      className="relative text-left rounded-lg overflow-visible"
+      className={`relative text-left rounded-lg overflow-visible ${canBuy ? 'card-lift' : ''}`}
       style={{
         background: canBuy ? base.card : base.cardDark,
         opacity: canBuy ? 1 : 0.55,
@@ -80,16 +81,6 @@ export default function PowerCard({ cardId, godColor, onBuy, canBuy = false, ind
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      whileHover={canBuy ? {
-        y: -3,
-        boxShadow: `0 8px 24px rgba(0,0,0,0.4), 0 0 12px ${colors.glow}`,
-        transition: { type: 'spring', stiffness: 400, damping: 20 },
-      } : {
-        y: -1,
-        boxShadow: `0 4px 12px rgba(0,0,0,0.2)`,
-        transition: { type: 'spring', stiffness: 400, damping: 20 },
-      }}
-      whileTap={canBuy ? { scale: 0.97 } : {}}
     >
       {/* Compact header — always visible */}
       <div className="px-2.5 py-2 flex items-center justify-between gap-2">
@@ -119,7 +110,7 @@ export default function PowerCard({ cardId, godColor, onBuy, canBuy = false, ind
             className="text-[10px] leading-snug mb-1.5"
             style={{ color: base.textMuted }}
           >
-            {card.description}
+            <RichEffect text={card.description} size={10} />
           </div>
 
           {/* Buy indicator */}

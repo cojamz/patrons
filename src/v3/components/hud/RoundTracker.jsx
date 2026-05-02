@@ -5,12 +5,11 @@
  * Small dots indicate progress (filled = completed, ring = current, dim = future).
  */
 import React from 'react';
-import { motion } from 'motion/react';
-import { useGame } from '../../hooks/useGame';
-import { godColors, base } from '../../styles/theme';
+import { useGameState } from '../../hooks/useGame';
+import { godColors } from '../../styles/theme';
 
 export default function RoundTracker() {
-  const { game } = useGame();
+  const { game } = useGameState();
 
   if (!game) return null;
 
@@ -18,21 +17,15 @@ export default function RoundTracker() {
   const gold = godColors.gold;
 
   return (
-    <motion.div
-      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md cursor-default"
+    <div
+      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md cursor-default round-tracker-glow"
       title={`Round ${currentRound} of 3`}
       style={{
         background: gold.surface,
         border: `1px solid ${gold.border}`,
+        '--glow-color': gold.glow,
+        '--glow-strong': gold.glowStrong,
       }}
-      animate={{
-        boxShadow: [
-          `0 0 4px ${gold.glow}`,
-          `0 0 10px ${gold.glowStrong}`,
-          `0 0 4px ${gold.glow}`,
-        ],
-      }}
-      transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
     >
       <span
         className="text-xs font-bold tracking-wide"
@@ -59,6 +52,6 @@ export default function RoundTracker() {
           />
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 }

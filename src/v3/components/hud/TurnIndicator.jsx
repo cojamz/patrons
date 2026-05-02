@@ -1,11 +1,13 @@
 /**
- * TurnIndicator — Compact turn status badge, left-aligned.
+ * TurnIndicator — Pure status badge, left-aligned.
  *
- * Shows: [WorkerIcon] P1 · Place (5)
+ * Shows: Round 1/3 · [WorkerIcon] P1 · Place (5)
+ * Action narration is handled by PlacementToast in GodArea.
+ * Watching status is handled by the Event Line.
  */
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useGame } from '../../hooks/useGame';
+import { useGameState } from '../../hooks/useGame';
 import WorkerIcon from '../icons/WorkerIcon';
 import { playerColors, base } from '../../styles/theme';
 
@@ -17,7 +19,7 @@ const PHASE_LABELS = {
   game_end: 'Game Over',
 };
 
-/** Returns { label, detail?, isDecision } */
+/** Returns { phase, label, isDecision } */
 function getSubPhase(phase, pendingDecision, game) {
   if (pendingDecision) {
     switch (pendingDecision.type) {
@@ -44,47 +46,52 @@ function getSubPhase(phase, pendingDecision, game) {
     const wLeft = game?.players?.find(p => p.id === game.currentPlayer)?.workersLeft ?? 0;
     if (game?.workerPlacedThisTurn) {
       if (game?.purchaseMadeThisTurn) {
-        return { label: 'End Turn', isDecision: false };
+        return { phase: 'End Turn', label: null, isDecision: false };
       }
-      return { label: 'Buy or End Turn', isDecision: false };
+      return { phase: 'Buy Phase', label: null, isDecision: false };
     }
     if (wLeft > 0) {
-      return { label: `${wLeft} worker${wLeft > 1 ? 's' : ''} left`, isDecision: false };
+      return { phase: 'Place a worker', label: `${wLeft} left`, isDecision: false };
     }
-    return { label: 'End Turn', isDecision: false };
+    return { phase: 'End Turn', label: null, isDecision: false };
   }
   return null;
 }
 
 export default function TurnIndicator() {
-  const { game, phase, currentPlayer, pendingDecision } = useGame();
+  const { game, phase, currentPlayer, pendingDecision } = useGameState();
 
   if (!game) return null;
 
   const player = currentPlayer;
   const colors = playerColors[player?.id] || playerColors[0];
-  const isActionPhase = phase === 'action_phase';
   const subPhase = getSubPhase(phase, pendingDecision, game);
   const nonActionLabel = PHASE_LABELS[phase];
+  const isActionPhase = phase === 'action_phase';
 
   return (
     <div className="flex items-center gap-1.5 min-w-0">
       {isActionPhase ? (
         <>
-          {/* Player worker icon */}
-          <motion.div
-            className="flex-shrink-0 flex items-center justify-center"
-            animate={{
-              filter: [
-                `drop-shadow(0 0 2px ${colors.primary})`,
-                `drop-shadow(0 0 6px ${colors.primary})`,
-                `drop-shadow(0 0 2px ${colors.primary})`,
-              ],
+          {/* Round badge */}
+          <span
+            className="text-xs font-bold tracking-wider uppercase"
+            style={{
+              color: 'rgba(212, 168, 67, 0.8)',
+              fontSize: '10px',
             }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            Round {game.round || 1}/3
+          </span>
+          <span style={{ color: base.textMuted, fontSize: '10px' }}>·</span>
+
+          {/* Player worker icon */}
+          <div
+            className="flex-shrink-0 flex items-center justify-center worker-icon-glow"
+            style={{ '--glow-color': colors.primary }}
           >
             <WorkerIcon playerId={player?.id ?? 0} size={18} />
-          </motion.div>
+          </div>
 
           {/* Player name */}
           <span
@@ -94,21 +101,21 @@ export default function TurnIndicator() {
             {player?.name || 'Player'}
           </span>
 
-          {/* Sub-phase label */}
+          {/* Turn phase + detail */}
           {subPhase && (
             <AnimatePresence mode="wait">
               <motion.span
-                key={subPhase.label}
+                key={subPhase.phase || subPhase.label}
                 className="text-xs whitespace-nowrap"
                 style={{
                   color: subPhase.isDecision ? '#FBBF24' : base.textMuted,
                 }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.12 }}
+                initial={{ opacity: 0, x: -4 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 4 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               >
-                · {subPhase.label}{subPhase.detail ? ` (${subPhase.detail})` : ''}
+                · {subPhase.isDecision ? subPhase.label : subPhase.phase}{subPhase.label && !subPhase.isDecision ? ` · ${subPhase.label}` : ''}
               </motion.span>
             </AnimatePresence>
           )}

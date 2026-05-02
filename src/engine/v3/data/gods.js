@@ -68,11 +68,11 @@ const gods = {
       // --- Tier 2 (Round 2) — 2 actions ---
       {
         id: 'gold_austerity',
-        name: 'Austerity',
+        name: 'Royalties',
         tier: 2,
-        effect: '+1 gold per empty power card slot',
+        effect: '+1 gold per power card owned',
         effectType: EFFECT_TYPES.SCALE_GAIN,
-        scaleSource: 'emptyPowerCardSlots',
+        scaleSource: 'ownedPowerCards',
         scaleResource: 'gold',
       },
       {
@@ -93,7 +93,6 @@ const gods = {
         tier: 3,
         effect: 'Convert all gold to Favor 1:1',
         effectType: EFFECT_TYPES.GAIN_GLORY,
-        gloryFormula: 'convertAllGold',
       },
     ],
 
@@ -121,9 +120,9 @@ const gods = {
     ],
 
     gloryCondition: {
-      description: '+1 Favor per 2 gold owned at end of each round',
+      description: '+1 Favor per gold above your richest opponent when using a gold action',
       trigger: GLORY_TRIGGERS.ROUND_END,
-      formula: 'perTwoResourceOwned:gold',
+      formula: 'goldAboveRichestOpponent',
     },
   },
 
@@ -267,7 +266,7 @@ const gods = {
         id: 'green_relive',
         name: 'Relive',
         tier: 1,
-        effect: '+1 green, repeat one of your T1 actions',
+        effect: '+1 green, repeat one of your Ⅰ actions',
         effectType: [EFFECT_TYPES.GAIN_RESOURCE, EFFECT_TYPES.REPEAT_ACTION],
         resources: { green: 1 },
         repeatSource: 'self',
@@ -277,7 +276,7 @@ const gods = {
         id: 'green_echo',
         name: 'Echo',
         tier: 1,
-        effect: '+1 green, repeat another player\'s T1 action',
+        effect: '+1 green, repeat another player\'s Ⅰ action',
         effectType: [EFFECT_TYPES.GAIN_RESOURCE, EFFECT_TYPES.COPY_ACTION],
         resources: { green: 1 },
         repeatSource: 'otherPlayer',
@@ -287,7 +286,7 @@ const gods = {
         id: 'green_recall',
         name: 'Recall',
         tier: 1,
-        effect: '+1 green, repeat an unoccupied T1 action',
+        effect: '+1 green, repeat an unoccupied Ⅰ action',
         effectType: [EFFECT_TYPES.GAIN_RESOURCE, EFFECT_TYPES.REPEAT_ACTION],
         resources: { green: 1 },
         repeatSource: 'unoccupied',
@@ -299,7 +298,7 @@ const gods = {
         id: 'green_rewind',
         name: 'Rewind',
         tier: 2,
-        effect: '+1 green, repeat another player\'s T2 action',
+        effect: '+1 green, repeat another player\'s Ⅱ action',
         effectType: [EFFECT_TYPES.GAIN_RESOURCE, EFFECT_TYPES.COPY_ACTION],
         resources: { green: 1 },
         repeatSource: 'otherPlayer',
@@ -309,7 +308,7 @@ const gods = {
         id: 'green_foresight',
         name: 'Foresight',
         tier: 2,
-        effect: '+1 green, repeat an unoccupied T2 action',
+        effect: '+1 green, repeat an unoccupied Ⅱ action',
         effectType: [EFFECT_TYPES.GAIN_RESOURCE, EFFECT_TYPES.REPEAT_ACTION],
         resources: { green: 1 },
         repeatSource: 'unoccupied',
@@ -353,7 +352,7 @@ const gods = {
     ],
 
     gloryCondition: {
-      description: '+1 Favor every time you repeat or copy an action',
+      description: '+1 Favor every time you repeat an action',
       trigger: GLORY_TRIGGERS.ON_REPEAT_OR_COPY,
       formula: 'perRepeatOrCopy',
     },
@@ -423,7 +422,7 @@ const gods = {
         id: 'yellow_attune',
         name: 'Attune',
         tier: 2,
-        effect: '+1 yellow, gain 1 of each color you have 0 of',
+        effect: 'Gain 1 of each color you have 0 of, then +1 yellow',
         effectType: [EFFECT_TYPES.GAIN_RESOURCE, EFFECT_TYPES.GAIN_PER_ZERO],
         resources: { yellow: 1 },
       },
@@ -464,7 +463,7 @@ const gods = {
     ],
 
     gloryCondition: {
-      description: '+1 Favor each time you gain a resource color you had 0 of',
+      description: '+1 Favor each time you gain a resource you had 0 of',
       trigger: GLORY_TRIGGERS.ON_GAIN_NEW_COLOR,
       formula: 'onGainNewColor',
     },

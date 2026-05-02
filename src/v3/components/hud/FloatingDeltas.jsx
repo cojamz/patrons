@@ -51,8 +51,8 @@ export default function FloatingDeltas({ deltas }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -30, scale: 0.9 }}
               transition={{
-                enter: { type: 'spring', stiffness: 400, damping: 20 },
-                exit: { duration: 0.8, ease: [0.4, 0, 0.2, 1] },
+                enter: { type: 'spring', stiffness: 600, damping: 25 },
+                exit: { duration: 0.6, ease: [0.4, 0, 0.2, 1] },
               }}
               style={{
                 color: isPositive ? colors.light : base.negativeLight,

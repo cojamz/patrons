@@ -11,6 +11,8 @@ import { hasModifier } from '../rules.js';
 // --- Helpers ---
 
 function addResourceToPlayer(state, playerId, color, amount) {
+  const player = state.players.find(p => p.id === playerId);
+  const hadZero = (player.resources[color] || 0) === 0;
   const updatedPlayers = state.players.map(p => {
     if (p.id !== playerId) return p;
     return {
@@ -21,7 +23,13 @@ function addResourceToPlayer(state, playerId, color, amount) {
       },
     };
   });
-  return { ...state, players: updatedPlayers };
+  let newState = { ...state, players: updatedPlayers };
+  // Track 0→N transitions for Yellow Favor condition
+  if (hadZero && amount > 0) {
+    const prev = newState._pendingNewColors || [];
+    newState._pendingNewColors = [...prev, { playerId, newColors: [color] }];
+  }
+  return newState;
 }
 
 function addGloryToPlayer(state, playerId, amount, source) {
@@ -92,7 +100,7 @@ function goldenScepterResolver(state, handler, eventData, options) {
 
 /**
  * Rainbow Scepter: +1 any other color when gaining gold from actions.
- * Auto-picks the player's lowest non-gold active resource.
+ * Prompts the player to choose which non-gold color to gain.
  */
 function rainbowScepterResolver(state, handler, eventData, _options) {
   const resources = eventData.resources || {};
@@ -108,18 +116,18 @@ function rainbowScepterResolver(state, handler, eventData, _options) {
   const activeGods = state.gods || ['gold', 'black', 'green', 'yellow'];
   const nonGold = activeGods.filter(c => c !== 'gold');
 
-  // Auto-pick lowest non-gold resource for simplicity (AI-friendly)
-  const player = getPlayer(state, handler.ownerId);
-  const sortedColors = nonGold.sort((a, b) =>
-    (player.resources[a] || 0) - (player.resources[b] || 0)
-  );
-  const chosenColor = sortedColors[0] || nonGold[0];
-
-  const newState = addResourceToPlayer(state, handler.ownerId, chosenColor, 1);
   return {
-    state: newState,
-    log: [`Rainbow Scepter: +1 ${chosenColor} (gained gold from action)`],
-    pendingDecisions: [],
+    state,
+    log: ['Rainbow Scepter: choose a non-gold color to gain'],
+    pendingDecisions: [{
+      type: 'gemSelection',
+      count: 1,
+      colors: nonGold,
+      title: 'Rainbow Scepter: Choose 1 non-gold resource to gain',
+      ownerId: handler.ownerId,
+      playerId: handler.ownerId,
+      sourceId: 'rainbow_scepter',
+    }],
   };
 }
 
@@ -205,12 +213,19 @@ function goldenIdolResolver(state, handler, eventData, options) {
 }
 
 /**
- * Gold Favor Condition: At round end, +1 Favor per 2 gold owned.
+ * Gold Favor Condition: At round end, +1 Favor per gold you have
+ * above your richest opponent.
  */
 function goldGloryConditionResolver(state, handler, _eventData, _options) {
   const player = getPlayer(state, handler.ownerId);
-  const goldCount = (player.resources || {}).gold || 0;
-  const gloryGain = Math.floor(goldCount / 2);
+  const myGold = (player.resources || {}).gold || 0;
+
+  // Find the richest opponent's gold
+  const richestOpponentGold = state.players
+    .filter(p => p.id !== handler.ownerId)
+    .reduce((max, p) => Math.max(max, (p.resources || {}).gold || 0), 0);
+
+  const gloryGain = Math.max(0, myGold - richestOpponentGold);
 
   if (gloryGain <= 0) {
     return { state, log: [], pendingDecisions: [] };
@@ -219,7 +234,7 @@ function goldGloryConditionResolver(state, handler, _eventData, _options) {
   const newState = addGloryToPlayer(state, handler.ownerId, gloryGain, 'gold_glory_condition');
   return {
     state: newState,
-    log: [`Gold Favor: +${gloryGain} Favor (${goldCount} gold, 1 per 2)`],
+    log: [`Gold Favor: +${gloryGain} Favor (${myGold} gold, richest opponent has ${richestOpponentGold})`],
     pendingDecisions: [],
   };
 }

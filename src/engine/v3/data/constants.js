@@ -130,6 +130,7 @@ export const EFFECT_TYPES = {
   SPEND_ALL_PENALIZE: 'spendAllPenalize',
 
   // Conversion
+  CONVERT_ALL_TO_GOLD: 'convertAllToGold',
   SPEND_ALL_CONVERT: 'spendAllConvert',
   GAIN_PER_ZERO: 'gainPerZero',
   GAIN_PER_ACTIVE: 'gainPerActive',
@@ -173,7 +174,7 @@ export const EFFECT_TYPES = {
 // When the engine should check each god's Glory condition.
 
 export const GLORY_TRIGGERS = {
-  ROUND_END: 'roundEnd',               // check at end of each round (Gold)
+  ROUND_END: 'roundEnd',                 // check at end of each round (Gold)
   ON_STEAL_ACTION: 'onStealAction',     // check on each steal action/shop (Black)
   ON_REPEAT_OR_COPY: 'onRepeatOrCopy',  // check on each repeat/copy (Green)
   ON_GAIN_NEW_COLOR: 'onGainNewColor',  // check when gaining a color you had 0 of (Yellow)

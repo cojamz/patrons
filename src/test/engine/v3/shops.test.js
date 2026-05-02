@@ -224,51 +224,62 @@ describe('Gold Shops', () => {
     });
   });
 
-  describe('gold_vp: 4 gold -> +1 Favor per 2 gold owned', () => {
-    it('gives Favor based on gold owned (6 gold -> +3 Favor)', () => {
+  describe('gold_vp: 4 gold -> +1 Favor per gold above richest opponent', () => {
+    it('gives Favor based on gold advantage (8 gold vs opponent 3 -> +5 Favor)', () => {
       const state = makeState({
-        players: [makePlayer('p1', { resources: { gold: 6, black: 0, green: 0, yellow: 0 } })],
+        players: [
+          makePlayer('p1', { resources: { gold: 8, black: 0, green: 0, yellow: 0 } }),
+          makePlayer('p2', { resources: { gold: 3, black: 0, green: 0, yellow: 0 } }),
+        ],
       });
       const result = resolveShop(state, 'p1', 'gold_vp');
-      expect(getPlayer(result.state, 'p1').glory).toBe(3);
+      expect(getPlayer(result.state, 'p1').glory).toBe(5);
     });
 
-    it('rounds down (5 gold -> +2 Favor)', () => {
+    it('gives 0 Favor when opponent has equal gold', () => {
       const state = makeState({
-        players: [makePlayer('p1', { resources: { gold: 5, black: 0, green: 0, yellow: 0 } })],
+        players: [
+          makePlayer('p1', { resources: { gold: 5, black: 0, green: 0, yellow: 0 } }),
+          makePlayer('p2', { resources: { gold: 5, black: 0, green: 0, yellow: 0 } }),
+        ],
       });
       const result = resolveShop(state, 'p1', 'gold_vp');
-      expect(getPlayer(result.state, 'p1').glory).toBe(2);
+      expect(getPlayer(result.state, 'p1').glory).toBe(0);
     });
 
-    it('gives +1 Favor for 2 gold', () => {
+    it('gives 0 Favor when opponent has more gold', () => {
       const state = makeState({
-        players: [makePlayer('p1', { resources: { gold: 2, black: 0, green: 0, yellow: 0 } })],
+        players: [
+          makePlayer('p1', { resources: { gold: 3, black: 0, green: 0, yellow: 0 } }),
+          makePlayer('p2', { resources: { gold: 7, black: 0, green: 0, yellow: 0 } }),
+        ],
       });
-      const result = resolveShop(state, 'p1', 'gold_vp');
-      expect(getPlayer(result.state, 'p1').glory).toBe(1);
-    });
-
-    it('gives 0 Favor when player has 0 gold', () => {
-      const state = makeState();
       const result = resolveShop(state, 'p1', 'gold_vp');
       expect(getPlayer(result.state, 'p1').glory).toBe(0);
     });
 
-    it('gives 0 Favor when player has 1 gold (rounds down)', () => {
+    it('compares against the richest opponent in multiplayer', () => {
       const state = makeState({
-        players: [makePlayer('p1', { resources: { gold: 1, black: 0, green: 0, yellow: 0 } })],
+        players: [
+          makePlayer('p1', { resources: { gold: 10, black: 0, green: 0, yellow: 0 } }),
+          makePlayer('p2', { resources: { gold: 2, black: 0, green: 0, yellow: 0 } }),
+          makePlayer('p3', { resources: { gold: 6, black: 0, green: 0, yellow: 0 } }),
+        ],
       });
       const result = resolveShop(state, 'p1', 'gold_vp');
-      expect(getPlayer(result.state, 'p1').glory).toBe(0);
+      // 10 - 6 (richest opponent) = 4
+      expect(getPlayer(result.state, 'p1').glory).toBe(4);
     });
 
     it('tracks glory source as gold_vp_shop', () => {
       const state = makeState({
-        players: [makePlayer('p1', { resources: { gold: 4, black: 0, green: 0, yellow: 0 } })],
+        players: [
+          makePlayer('p1', { resources: { gold: 7, black: 0, green: 0, yellow: 0 } }),
+          makePlayer('p2', { resources: { gold: 2, black: 0, green: 0, yellow: 0 } }),
+        ],
       });
       const result = resolveShop(state, 'p1', 'gold_vp');
-      expect(getPlayer(result.state, 'p1').glorySources.gold_vp_shop).toBe(2);
+      expect(getPlayer(result.state, 'p1').glorySources.gold_vp_shop).toBe(5);
     });
   });
 });
@@ -335,7 +346,7 @@ describe('Black Shops', () => {
       });
     });
 
-    it('steals 0 from target with 0 Favor (min clamp)', () => {
+    it('steals 1 from target with 0 Favor (target goes negative)', () => {
       const state = makeState({
         players: [
           makePlayer('p1'),
@@ -343,8 +354,8 @@ describe('Black Shops', () => {
         ],
       });
       const result = resolveShop(state, 'p1', 'black_weak', { targetPlayer: 'p2' });
-      expect(getPlayer(result.state, 'p1').glory).toBe(0);
-      expect(getPlayer(result.state, 'p2').glory).toBe(0);
+      expect(getPlayer(result.state, 'p1').glory).toBe(1);
+      expect(getPlayer(result.state, 'p2').glory).toBe(-1);
     });
 
     it('respects glory_reduction_immunity on target (blocks steal)', () => {
@@ -470,17 +481,19 @@ describe('Black Shops', () => {
 // =========================================================================
 
 describe('Green Shops', () => {
-  describe('green_weak: 1 green -> tempoPlay effect', () => {
-    it('adds tempoPlay effect to player', () => {
+  describe('green_weak: 1 green -> extra turn with no shopping', () => {
+    it('grants extra turn and noShopNextTurn effect to player', () => {
       const state = makeState();
       const result = resolveShop(state, 'p1', 'green_weak');
-      expect(getPlayer(result.state, 'p1').effects).toContain('tempoPlay');
+      expect(getPlayer(result.state, 'p1').effects).toContain('noShopNextTurn');
+      expect(getPlayer(result.state, 'p1').extraTurns).toBe(1);
     });
 
     it('does not affect other players', () => {
       const state = makeState();
       const result = resolveShop(state, 'p1', 'green_weak');
-      expect(getPlayer(result.state, 'p2').effects).not.toContain('tempoPlay');
+      expect(getPlayer(result.state, 'p2').effects).not.toContain('noShopNextTurn');
+      expect(getPlayer(result.state, 'p2').extraTurns || 0).toBe(0);
     });
 
     it('produces a log message about placing next worker', () => {
@@ -748,5 +761,43 @@ describe('glory_reduction_immunity interaction', () => {
     const result = resolveShop(state, 'p1', 'black_weak', { targetPlayer: 'p2' });
     expect(getPlayer(result.state, 'p2').glory).toBe(10);
     expect(result.log[0]).toContain('blocked');
+  });
+});
+
+describe('doubleNextTheft — black strong shop effect', () => {
+  it('black_weak shop steals 2 Favor instead of 1 when doubleNextTheft active', () => {
+    const state = makeState({
+      players: [
+        makePlayer('p1', { effects: ['doubleNextTheft'] }),
+        makePlayer('p2', { glory: 10 }),
+      ],
+    });
+    const result = resolveShop(state, 'p1', 'black_weak', { targetPlayer: 'p2' });
+    expect(getPlayer(result.state, 'p1').glory).toBe(2); // stole 2
+    expect(getPlayer(result.state, 'p2').glory).toBe(8); // lost 2
+    expect(result.log.join(' ')).toContain('doubled');
+  });
+
+  it('doubleNextTheft is consumed after use in black_weak shop', () => {
+    const state = makeState({
+      players: [
+        makePlayer('p1', { effects: ['doubleNextTheft'] }),
+        makePlayer('p2', { glory: 10 }),
+      ],
+    });
+    const result = resolveShop(state, 'p1', 'black_weak', { targetPlayer: 'p2' });
+    expect(getPlayer(result.state, 'p1').effects).not.toContain('doubleNextTheft');
+  });
+
+  it('black_weak shop steals 1 Favor normally without doubleNextTheft', () => {
+    const state = makeState({
+      players: [
+        makePlayer('p1'),
+        makePlayer('p2', { glory: 10 }),
+      ],
+    });
+    const result = resolveShop(state, 'p1', 'black_weak', { targetPlayer: 'p2' });
+    expect(getPlayer(result.state, 'p1').glory).toBe(1);
+    expect(getPlayer(result.state, 'p2').glory).toBe(9);
   });
 });

@@ -62,10 +62,10 @@ function FavorCell({ player, isLeader, gloryDelta }) {
       <AnimatePresence>
         {expanded && sourceEntries.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             style={{
               overflow: 'hidden',
               marginTop: '4px',
@@ -132,24 +132,25 @@ export default function RoundTransition({ round, players, onContinue, activeGods
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center"
+        className="fixed inset-0 z-50 overflow-y-auto"
         variants={roundTransition}
         initial="initial"
         animate="animate"
         exit="exit"
         style={{
-          backgroundColor: 'rgba(12, 10, 9, 0.92)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
+          backgroundColor: 'rgba(12, 10, 9, 0.96)',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(255,255,255,0.15) transparent',
         }}
       >
-        <div className="w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.15) transparent' }}>
+        <div className="w-full max-w-lg mx-auto px-4 py-8 min-h-full flex flex-col justify-center">
 
           {/* Round number — cinematic large text */}
           <motion.div
             className="text-center mb-8"
             initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0, transition: { delay: 0.2, duration: 0.5 } }}
+            animate={{ opacity: 1, y: 0, transition: { delay: 0.1, duration: 0.35 } }}
           >
             {/* Decorative line */}
             <div className="flex items-center justify-center gap-4 mb-4">
@@ -219,7 +220,7 @@ export default function RoundTransition({ round, players, onContinue, activeGods
                   variants={cardReveal}
                   initial="initial"
                   animate="animate"
-                  className="flex items-center px-4 py-3 transition-colors duration-150"
+                  className="flex items-center px-4 py-3"
                   style={{
                     backgroundColor: isLeader ? 'rgba(212, 168, 67, 0.04)' : 'transparent',
                     borderBottom: i < standings.length - 1 ? '1px solid rgba(255, 255, 255, 0.03)' : 'none',
@@ -286,7 +287,7 @@ export default function RoundTransition({ round, players, onContinue, activeGods
             <motion.div
               className="text-center mb-6"
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { delay: 0.6 } }}
+              animate={{ opacity: 1, transition: { delay: 0.3 } }}
             >
               <span className="text-xs uppercase tracking-wider" style={{ color: base.textMuted }}>
                 Next round turn order
@@ -315,11 +316,11 @@ export default function RoundTransition({ round, players, onContinue, activeGods
           <motion.div
             className="flex justify-center"
             initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0, transition: { delay: 0.8 } }}
+            animate={{ opacity: 1, y: 0, transition: { delay: 0.4 } }}
           >
-            <motion.button
+            <button
               onClick={onContinue}
-              className="px-10 py-3 rounded-lg text-sm font-semibold tracking-wide"
+              className="px-10 py-3 rounded-lg text-sm font-semibold tracking-wide btn-pop"
               style={{
                 backgroundColor: isGameEnd ? godColors.gold.primary : 'rgba(255, 255, 255, 0.08)',
                 color: isGameEnd ? base.textDark : base.textPrimary,
@@ -328,18 +329,16 @@ export default function RoundTransition({ round, players, onContinue, activeGods
                   ? `0 4px 20px ${godColors.gold.glow}, 0 0 60px ${godColors.gold.glow}`
                   : '0 4px 16px rgba(0, 0, 0, 0.3)',
               }}
-              whileHover={{ scale: 1.04, transition: { type: 'spring', stiffness: 400, damping: 20 } }}
-              whileTap={{ scale: 0.97 }}
             >
               {isGameEnd ? 'View Final Standings' : `Begin Round ${round + 1}`}
-            </motion.button>
+            </button>
           </motion.div>
 
           {/* Game log (game end only) */}
           {isGameEnd && log && log.length > 0 && (
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { delay: 1 } }}
+              animate={{ opacity: 1, transition: { delay: 0.5 } }}
             >
               <GameLog log={log} players={standings} />
             </motion.div>

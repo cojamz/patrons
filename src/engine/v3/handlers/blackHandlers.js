@@ -10,6 +10,8 @@ import { hasModifier } from '../rules.js';
 // --- Helpers ---
 
 function addResourceToPlayer(state, playerId, color, amount) {
+  const player = state.players.find(p => p.id === playerId);
+  const hadZero = (player.resources[color] || 0) === 0;
   const updatedPlayers = state.players.map(p => {
     if (p.id !== playerId) return p;
     return {
@@ -20,7 +22,12 @@ function addResourceToPlayer(state, playerId, color, amount) {
       },
     };
   });
-  return { ...state, players: updatedPlayers };
+  let newState = { ...state, players: updatedPlayers };
+  if (hadZero && amount > 0) {
+    const prev = newState._pendingNewColors || [];
+    newState._pendingNewColors = [...prev, { playerId, newColors: [color] }];
+  }
+  return newState;
 }
 
 function addGloryToPlayer(state, playerId, amount, source) {
@@ -135,7 +142,7 @@ function voodooDollResolver(state, handler, _eventData, _options) {
 /**
  * Skeleton Key: Non-black god actions → steal 1 resource from a player on that god.
  * Fires on action.executed when the action is not a black action.
- * Auto-steals from the first player with resources on that god's spaces.
+ * Prompts the player to choose who to steal from among players on that god.
  */
 function skeletonKeyResolver(state, handler, eventData, _options) {
   if (eventData.playerId !== handler.ownerId) {
@@ -163,43 +170,56 @@ function skeletonKeyResolver(state, handler, eventData, _options) {
     return { state, log: [], pendingDecisions: [] };
   }
 
-  // Auto-steal from first available target (pick player with most resources)
-  let bestTarget = null;
-  let bestTotal = 0;
-  for (const pid of otherPlayersOnGod) {
-    // Check Aegis and steal immunity
-    if (state.aegisHolder === pid || hasModifier(state, pid, 'steal_immunity')) continue;
+  // Filter to valid targets (not protected by Aegis, have resources)
+  const validTargets = otherPlayersOnGod.filter(pid => {
+    if (state.aegisHolder === pid || hasModifier(state, pid, 'steal_immunity')) return false;
     const p = getPlayer(state, pid);
     const total = Object.values(p.resources || {}).reduce((s, v) => s + Math.max(0, v), 0);
-    if (total > bestTotal) {
-      bestTotal = total;
-      bestTarget = pid;
+    return total > 0;
+  });
+
+  if (validTargets.length === 0) {
+    return { state, log: [], pendingDecisions: [] };
+  }
+
+  // If only 1 valid target, auto-steal from them
+  if (validTargets.length === 1) {
+    const targetId = validTargets[0];
+    const target = getPlayer(state, targetId);
+    const mostAbundant = Object.entries(target.resources || {})
+      .filter(([, v]) => v > 0)
+      .sort(([, a], [, b]) => b - a)[0];
+
+    if (!mostAbundant) {
+      return { state, log: [], pendingDecisions: [] };
     }
+
+    const [color] = mostAbundant;
+    let newState = removeResourceFromPlayer(state, targetId, color, 1);
+    newState = addResourceToPlayer(newState, handler.ownerId, color, 1);
+
+    return {
+      state: newState,
+      log: [`Skeleton Key: stole 1 ${color} from player ${targetId} (${godColor} god action)`],
+      pendingDecisions: [],
+      isStealing: true,
+    };
   }
 
-  if (!bestTarget || bestTotal === 0) {
-    return { state, log: [], pendingDecisions: [] };
-  }
-
-  // Steal 1 of their most abundant resource
-  const target = getPlayer(state, bestTarget);
-  const mostAbundant = Object.entries(target.resources || {})
-    .filter(([, v]) => v > 0)
-    .sort(([, a], [, b]) => b - a)[0];
-
-  if (!mostAbundant) {
-    return { state, log: [], pendingDecisions: [] };
-  }
-
-  const [color] = mostAbundant;
-  let newState = removeResourceFromPlayer(state, bestTarget, color, 1);
-  newState = addResourceToPlayer(newState, handler.ownerId, color, 1);
-
+  // Multiple valid targets — prompt the player to choose
   return {
-    state: newState,
-    log: [`Skeleton Key: stole 1 ${color} from ${bestTarget} (${godColor} god action)`],
-    pendingDecisions: [],
-    isStealing: true,
+    state,
+    log: ['Skeleton Key: choose a player to steal from'],
+    pendingDecisions: [{
+      type: 'targetPlayer',
+      title: 'Skeleton Key: Choose a player to steal 1 resource from',
+      ownerId: handler.ownerId,
+      excludePlayer: handler.ownerId,
+      options: validTargets,
+      effect: { stealCount: 1 },
+      sourceId: 'skeleton_key',
+      isStealing: true,
+    }],
   };
 }
 

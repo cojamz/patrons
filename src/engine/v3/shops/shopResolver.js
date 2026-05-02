@@ -17,6 +17,9 @@ function addResources(state, playerId, resources) {
   const effective = hasDouble
     ? Object.fromEntries(Object.entries(resources).map(([c, a]) => [c, a * 2]))
     : resources;
+  const newColors = Object.entries(effective)
+    .filter(([color, amount]) => amount > 0 && (player.resources[color] || 0) === 0)
+    .map(([color]) => color);
   const players = state.players.map(p => {
     if (p.id !== playerId) return p;
     const newResources = { ...p.resources };
@@ -31,7 +34,12 @@ function addResources(state, playerId, resources) {
     }
     return { ...p, resources: newResources, lastGain: { ...effective }, ...(hasDouble ? { effects: newEffects } : {}) };
   });
-  return { ...state, players };
+  let newState = { ...state, players };
+  if (newColors.length > 0) {
+    const prev = newState._pendingNewColors || [];
+    newState._pendingNewColors = [...prev, { playerId, newColors }];
+  }
+  return newState;
 }
 
 function removeResources(state, playerId, resources) {
@@ -134,18 +142,23 @@ function goldStrong(state, playerId) {
   return { state: newState, log };
 }
 
-/** gold_vp: 4 gold → trigger Gold Favor condition now (+1 per 2 gold owned) */
+/** gold_vp: 4 gold → trigger Gold Favor condition (+1 per gold above richest opponent) */
 function goldVp(state, playerId) {
   const player = getPlayer(state, playerId);
-  const goldOwned = player.resources.gold || 0;
-  const favorGained = Math.floor(goldOwned / 2);
+  const myGold = player.resources.gold || 0;
+
+  const richestOpponentGold = state.players
+    .filter(p => p.id !== playerId)
+    .reduce((max, p) => Math.max(max, (p.resources || {}).gold || 0), 0);
+
+  const favorGained = Math.max(0, myGold - richestOpponentGold);
 
   if (favorGained <= 0) {
-    return { state, log: ['Gold VP shop: no gold to score (0 Favor)'] };
+    return { state, log: [`Gold VP shop: no gold advantage (you: ${myGold}, richest opponent: ${richestOpponentGold})`] };
   }
 
   const newState = addGlory(state, playerId, favorGained, 'gold_vp_shop');
-  return { state: newState, log: [`Gold VP shop: +${favorGained} Favor (${goldOwned} gold / 2)`] };
+  return { state: newState, log: [`Gold VP shop: +${favorGained} Favor (${myGold} gold, richest opponent has ${richestOpponentGold})`] };
 }
 
 // ============================================================
@@ -178,20 +191,34 @@ function blackWeak(state, playerId, decisions = {}) {
     return { state, log: ['Black shop: steal blocked (target has Favor immunity)'] };
   }
 
-  const target = getPlayer(state, targetId);
-  const stolen = Math.min(1, Math.max(0, target.glory || 0));
+  // Check doubleNextTheft effect
+  const player = getPlayer(state, playerId);
+  const hasDoubleTheft = player?.effects?.includes('doubleNextTheft');
+  const stolen = hasDoubleTheft ? 2 : 1;
   let newState = state;
-  const gloryStolen = [];
-  if (stolen > 0) {
-    newState = removeGlory(newState, targetId, stolen, 'black_weak_shop_victim');
-    newState = addGlory(newState, playerId, stolen, 'black_weak_shop');
-    gloryStolen.push({ playerId, targetPlayerId: targetId, amount: stolen });
+
+  // Consume doubleNextTheft effect
+  if (hasDoubleTheft) {
+    newState = {
+      ...newState,
+      players: newState.players.map(p => {
+        if (p.id !== playerId) return p;
+        const newEffects = [...(p.effects || [])];
+        const idx = newEffects.indexOf('doubleNextTheft');
+        if (idx >= 0) newEffects.splice(idx, 1);
+        return { ...p, effects: newEffects };
+      }),
+    };
   }
 
+  newState = removeGlory(newState, targetId, stolen, 'black_weak_shop_victim');
+  newState = addGlory(newState, playerId, stolen, 'black_weak_shop');
+
+  const doubleLog = hasDoubleTheft ? ' (doubled!)' : '';
   return {
     state: newState,
-    log: [`Black shop: stole ${stolen} Favor from ${targetId}`],
-    gloryStolen,
+    log: [`Black shop: stole ${stolen} Favor from ${targetId}${doubleLog}`],
+    gloryStolen: [{ playerId, targetPlayerId: targetId, amount: stolen }],
     isStealing: true,
   };
 }
@@ -225,7 +252,11 @@ function blackVp(state, playerId) {
 function greenWeak(state, playerId) {
   const players = state.players.map(p => {
     if (p.id !== playerId) return p;
-    return { ...p, effects: [...(p.effects || []), 'tempoPlay'] };
+    return {
+      ...p,
+      extraTurns: (p.extraTurns || 0) + 1,
+      effects: [...(p.effects || []), 'noShopNextTurn'],
+    };
   });
   const newState = { ...state, players };
   return { state: newState, log: ['Green shop: place your next worker immediately (no buy phase)'] };

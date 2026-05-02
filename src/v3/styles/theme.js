@@ -123,10 +123,10 @@ export const resourceStyles = {
 // --- God Metadata ---
 
 export const godMeta = {
-  gold:   { name: 'Aurum',   title: 'God of Riches',    icon: 'coin' },
-  black:  { name: 'Noctis',  title: 'God of Shadows',   icon: 'dagger' },
-  green:  { name: 'Chronis', title: 'God of Time',      icon: 'hourglass' },
-  yellow: { name: 'Solara',  title: 'God of Abundance',  icon: 'sun' },
+  gold:   { name: 'Aurum',   title: 'Patron of Riches',    icon: 'coin' },
+  black:  { name: 'Noctis',  title: 'Patron of Shadows',   icon: 'dagger' },
+  green:  { name: 'Chronis', title: 'Patron of Time',      icon: 'hourglass' },
+  yellow: { name: 'Solara',  title: 'Patron of Abundance',  icon: 'sun' },
 };
 
 // --- Tier Styling ---

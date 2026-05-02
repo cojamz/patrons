@@ -1,64 +1,68 @@
 /**
- * WorkerToken — Animated worker meeple on the board.
+ * WorkerToken — Worker meeple on the board.
  *
- * Wraps WorkerIcon in a motion.div with layoutId for smooth
- * animated transitions when workers move between spaces.
- * Shows player name tooltip on hover.
+ * Shows player-colored meeple icon with optional glow for last-placed worker.
+ * Player name tooltip on hover.
+ *
+ * Zero Framer Motion — CSS glow animation, plain hover tooltip.
  */
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import WorkerIcon from '../icons/WorkerIcon';
 import { playerColors } from '../../styles/theme';
-import { tooltip as tooltipVariants } from '../../styles/animations';
 
-export default function WorkerToken({ playerId, size = 32, layoutId, subtle = false, isLastPlaced = false }) {
-  const [showTooltip, setShowTooltip] = useState(false);
+// CSS for worker entrance + tooltip (no infinite glow animation — was repainting via filter)
+const workerCSS = document.createElement('style');
+workerCSS.textContent = `
+@keyframes workerEntrance {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.worker-entrance { animation: workerEntrance 350ms ease-out both; }
+.worker-tooltip {
+  opacity: 0;
+  transform: translateX(-50%) translateY(2px);
+  transition: opacity 120ms ease, transform 120ms ease;
+  pointer-events: none;
+}
+.worker-token:hover .worker-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+`;
+if (!document.querySelector('[data-worker-css]')) {
+  workerCSS.setAttribute('data-worker-css', '');
+  document.head.appendChild(workerCSS);
+}
+
+export default React.memo(function WorkerToken({ playerId, size = 32, subtle = false, isLastPlaced = false }) {
   const colors = playerColors[playerId] || playerColors[0];
 
-  // Last-placed worker gets a breathing glow. All others render static.
   return (
-    <motion.div
-      layoutId={layoutId}
-      className="relative inline-flex items-center justify-center"
-      initial={false}
-      animate={isLastPlaced ? {
-        filter: [
-          `drop-shadow(0 0 4px ${colors.primary}) drop-shadow(0 0 8px ${colors.glow || colors.dark})`,
-          `drop-shadow(0 0 8px ${colors.primary}) drop-shadow(0 0 14px ${colors.glow || colors.dark})`,
-          `drop-shadow(0 0 4px ${colors.primary}) drop-shadow(0 0 8px ${colors.glow || colors.dark})`,
-        ],
-      } : {}}
-      transition={isLastPlaced ? { duration: 2.5, repeat: Infinity, ease: 'easeInOut' } : undefined}
-      onHoverStart={() => setShowTooltip(true)}
-      onHoverEnd={() => setShowTooltip(false)}
+    <div
+      className={`worker-token relative inline-flex items-center justify-center worker-entrance`}
       style={{
         filter: subtle && !isLastPlaced
-          ? `drop-shadow(0 1px 1px rgba(0,0,0,0.4))`
-          : `drop-shadow(0 1px 2px rgba(0,0,0,0.6)) drop-shadow(0 0 4px ${colors.primary}) drop-shadow(0 0 8px ${colors.dark})`,
+          ? 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))'
+          : isLastPlaced
+            ? `drop-shadow(0 0 6px ${colors.primary}) drop-shadow(0 0 12px ${colors.glow || colors.dark})`
+            : `drop-shadow(0 1px 2px rgba(0,0,0,0.6)) drop-shadow(0 0 4px ${colors.primary}) drop-shadow(0 0 8px ${colors.dark})`,
       }}
     >
       <WorkerIcon playerId={playerId} size={size} />
 
-      {/* Player name tooltip */}
-      <AnimatePresence>
-        {showTooltip && (
-          <motion.div
-            className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium pointer-events-none z-50"
-            variants={tooltipVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            style={{
-              backgroundColor: colors.dark,
-              color: colors.light,
-              border: `1px solid ${colors.primary}`,
-              boxShadow: `0 2px 8px rgba(0,0,0,0.5)`,
-            }}
-          >
-            {colors.name}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+      {/* Player name tooltip — CSS only */}
+      <div
+        className="worker-tooltip absolute -top-8 left-1/2 whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium z-50"
+        style={{
+          backgroundColor: colors.dark,
+          color: colors.light,
+          border: `1px solid ${colors.primary}`,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+        }}
+      >
+        {colors.name}
+      </div>
+    </div>
   );
-}
+});

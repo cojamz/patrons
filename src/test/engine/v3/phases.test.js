@@ -373,10 +373,10 @@ describe('resortTurnOrder', () => {
     expect(sorted.turnOrder).toEqual([2, 3, 1]);
   });
 
-  it('preserves order for equal glory', () => {
+  it('reverses order on tie (later player goes first next round)', () => {
     let state = makeState({ playerCount: 3 });
-    // All players start at 0 glory — original order preserved
+    // All players at 0 glory — previous order [1,2,3] reverses on tie
     const sorted = resortTurnOrder(state);
-    expect(sorted.turnOrder).toEqual([1, 2, 3]);
+    expect(sorted.turnOrder).toEqual([3, 2, 1]);
   });
 });

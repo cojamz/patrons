@@ -472,11 +472,13 @@ describe('Rainbow Scepter', () => {
       source: 'action',
     });
 
-    const p1 = getPlayer(result.state, 'p1');
-    // Lowest non-gold is yellow (1), so +1 yellow
-    expect(p1.resources.yellow).toBe(2);
+    // Now returns a pending decision for color choice
+    expect(result.pendingDecisions.length).toBe(1);
+    expect(result.pendingDecisions[0].type).toBe('gemSelection');
+    expect(result.pendingDecisions[0].sourceId).toBe('rainbow_scepter');
+    expect(result.pendingDecisions[0].count).toBe(1);
+    expect(result.pendingDecisions[0].colors).not.toContain('gold');
     expect(result.log[0]).toContain('Rainbow Scepter');
-    expect(result.log[0]).toContain('yellow');
   });
 
   it('does not fire when no gold is gained', () => {
@@ -701,11 +703,11 @@ describe('Golden Idol', () => {
 });
 
 describe('Gold Glory Condition', () => {
-  it('gives +1 Favor per 2 gold at round end', () => {
+  it('gives Favor equal to gold above richest opponent at round end', () => {
     let state = makeState({
       players: [
-        { id: 'p1', resources: { gold: 5, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: [] },
-        { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: [] },
+        { id: 'p1', resources: { gold: 8, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: [] },
+        { id: 'p2', resources: { gold: 3, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: [] },
       ],
     });
     state = registerHandler(state, makeHandler({
@@ -719,16 +721,16 @@ describe('Gold Glory Condition', () => {
     const result = dispatchEvent(state, EventType.ROUND_END, {});
 
     const p1 = getPlayer(result.state, 'p1');
-    expect(p1.glory).toBe(2); // floor(5/2) = 2
-    expect(p1.glorySources.gold_glory_condition).toBe(2);
+    expect(p1.glory).toBe(5); // 8 - 3 = 5
+    expect(p1.glorySources.gold_glory_condition).toBe(5);
     expect(result.log[0]).toContain('Gold Favor');
   });
 
-  it('gives 0 Favor when player has less than 2 gold', () => {
+  it('gives 0 Favor when opponent has equal or more gold', () => {
     let state = makeState({
       players: [
-        { id: 'p1', resources: { gold: 1, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: [] },
-        { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: [] },
+        { id: 'p1', resources: { gold: 3, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: [] },
+        { id: 'p2', resources: { gold: 5, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: [] },
       ],
     });
     state = registerHandler(state, makeHandler({
@@ -1410,7 +1412,7 @@ describe('Green Glory Condition', () => {
     const p1 = getPlayer(result.state, 'p1');
     expect(p1.glory).toBe(2);
     expect(result.log[0]).toContain('+2 Favor');
-    expect(result.log[0]).toContain('permanent buff');
+    expect(result.log[0]).toContain('VP shop');
   });
 
   it('does not fire for other players', () => {
@@ -1427,6 +1429,59 @@ describe('Green Glory Condition', () => {
 
     expect(getPlayer(result.state, 'p1').glory).toBe(0);
   });
+
+  it('fires independently for each ACTION_REPEATED dispatch (no frequency limit)', () => {
+    let state = makeState({
+      players: [
+        { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: [] },
+        { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: [] },
+      ],
+    });
+    state = registerHandler(state, makeHandler({
+      id: 'green_glory_h',
+      eventType: EventType.ACTION_REPEATED,
+      sourceId: 'green_glory_condition',
+      ownerId: 'p1',
+      source: 'glory_condition',
+    }));
+
+    // First repeat
+    let result = dispatchEvent(state, EventType.ACTION_REPEATED, { playerId: 'p1' });
+    state = result.state;
+    expect(getPlayer(state, 'p1').glory).toBe(1);
+
+    // Second repeat — should fire again, no frequency limit
+    result = dispatchEvent(state, EventType.ACTION_REPEATED, { playerId: 'p1' });
+    state = result.state;
+    expect(getPlayer(state, 'p1').glory).toBe(2);
+
+    // Third repeat
+    result = dispatchEvent(state, EventType.ACTION_REPEATED, { playerId: 'p1' });
+    state = result.state;
+    expect(getPlayer(state, 'p1').glory).toBe(3);
+  });
+
+  it('stacks VP shop buff — multiple purchases scale favor per repeat', () => {
+    let state = makeState({
+      players: [
+        { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: ['extra_repeat_favor', 'extra_repeat_favor'] },
+        { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: [] },
+      ],
+    });
+    state = registerHandler(state, makeHandler({
+      id: 'green_glory_h',
+      eventType: EventType.ACTION_REPEATED,
+      sourceId: 'green_glory_condition',
+      ownerId: 'p1',
+      source: 'glory_condition',
+    }));
+
+    const result = dispatchEvent(state, EventType.ACTION_REPEATED, { playerId: 'p1' });
+    // Base 1 + 2 buffs = +3 per repeat
+    expect(getPlayer(result.state, 'p1').glory).toBe(3);
+    expect(result.log[0]).toContain('+3 Favor');
+    expect(result.log[0]).toContain('+2 from VP shop');
+  });
 });
 
 // =========================================================================
@@ -1434,7 +1489,7 @@ describe('Green Glory Condition', () => {
 // =========================================================================
 
 describe('Rainbow Crest', () => {
-  it('gives +1 of lowest resource when gaining 2+ colors', () => {
+  it('returns pendingDecision for player to choose resource when gaining 2+ colors', () => {
     let state = makeState({
       players: [
         { id: 'p1', resources: { gold: 3, black: 5, green: 2, yellow: 0 }, glory: 0, glorySources: {}, effects: [], permanentBuffs: [] },
@@ -1454,11 +1509,12 @@ describe('Rainbow Crest', () => {
       source: 'action',
     });
 
-    const p1 = getPlayer(result.state, 'p1');
-    // Lowest is yellow (0), so +1 yellow
-    expect(p1.resources.yellow).toBe(1);
+    // Rainbow Crest now returns a pending decision instead of auto-picking
+    expect(result.pendingDecisions.length).toBe(1);
+    expect(result.pendingDecisions[0].type).toBe('gemSelection');
+    expect(result.pendingDecisions[0].sourceId).toBe('rainbow_crest');
+    expect(result.pendingDecisions[0].count).toBe(1);
     expect(result.log[0]).toContain('Rainbow Crest');
-    expect(result.log[0]).toContain('yellow');
   });
 
   it('does not fire when gaining only 1 color', () => {

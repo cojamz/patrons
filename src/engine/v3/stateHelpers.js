@@ -68,6 +68,11 @@ export function addResources(state, playerId, resources) {
     if (amount > 0) gainedResources[color] = amount;
   });
 
+  // Detect 0→N color transitions (for Yellow Favor condition)
+  const newColorsGained = Object.keys(gainedResources).filter(color =>
+    (player.resources[color] || 0) === 0 && gainedResources[color] > 0
+  );
+
   // Track turn resource gains
   const prevTurnGains = state.turnResourceGains || {};
   const prevPlayerGains = prevTurnGains[playerId] || {};
@@ -76,12 +81,19 @@ export function addResources(state, playerId, resources) {
     newPlayerGains[color] = (newPlayerGains[color] || 0) + amount;
   });
 
+  // Accumulate new-color transitions so the caller can dispatch NEW_COLOR_GAINED events
+  const prevNewColors = state._pendingNewColors || [];
+  const pendingEntry = newColorsGained.length > 0
+    ? [...prevNewColors, { playerId, newColors: newColorsGained }]
+    : prevNewColors;
+
   return {
     ...state,
     turnResourceGains: {
       ...prevTurnGains,
       [playerId]: newPlayerGains,
     },
+    _pendingNewColors: pendingEntry,
     players: state.players.map(p => {
       if (p.id === playerId) {
         const newResources = { ...p.resources };

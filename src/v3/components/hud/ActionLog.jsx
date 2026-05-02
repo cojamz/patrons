@@ -48,9 +48,8 @@ export default function ActionLog({ log }) {
     <div
       className="rounded-lg cursor-pointer select-none"
       style={{
-        background: 'rgba(20, 18, 16, 0.88)',
+        background: 'rgba(20, 18, 16, 0.95)',
         border: `1px solid ${base.glassBorder}`,
-        backdropFilter: 'blur(8px)',
         maxWidth: '240px',
       }}
       onClick={() => setExpanded(e => !e)}

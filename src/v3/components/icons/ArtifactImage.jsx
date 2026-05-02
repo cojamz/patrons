@@ -10,12 +10,14 @@ import CardPixelIcon from './CardPixelIcon';
 // Eagerly import all artifact images via Vite's glob import
 const imageModules = import.meta.glob('../../assets/artifacts/*.png', { eager: true, query: '?url', import: 'default' });
 
-// Build lookup: cardId → image URL
+// Build lookup: filename → image URL
 const artifactImages = {};
 for (const [path, url] of Object.entries(imageModules)) {
   const match = path.match(/\/([^/]+)\.png$/);
   if (match) artifactImages[match[1]] = url;
 }
+
+// Legacy aliases removed — all cards now have their own generated images
 
 export default function ArtifactImage({ cardId, size = 28, color = '#A8A29E', glowColor, className = '' }) {
   const [imgError, setImgError] = useState(false);

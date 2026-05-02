@@ -13,14 +13,14 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 import Modal from './Modal';
 import ResourceIcon from '../icons/ResourceIcon';
-import { useGame } from '../../hooks/useGame';
+import { useGameState } from '../../hooks/useGame';
 import { godColors, base } from '../../styles/theme';
 import { cardReveal } from '../../styles/animations';
 
 const RESOURCE_ORDER = ['gold', 'black', 'green', 'yellow'];
 
 export default function GemSelection({ decision, onSubmit, onCancel }) {
-  const { game } = useGame();
+  const { game } = useGameState();
 
   // Find the player who must decide
   const player = useMemo(() => {
@@ -58,11 +58,17 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
   // For steal selections, use target's resources as limits
   const targetResources = decision.targetResources || null;
 
+  // Use remainingResources (post-fixed-cost deduction) when available for pay selections
+  const effectiveResources = useMemo(() => {
+    if (decision.remainingResources) return decision.remainingResources;
+    return player?.resources || {};
+  }, [decision.remainingResources, player]);
+
   // Total resources the player actually owns (for pay selections)
   const totalOwned = useMemo(() => {
     if (!player) return 0;
-    return Object.values(player.resources || {}).reduce((sum, v) => sum + v, 0);
-  }, [player]);
+    return Object.values(isPaySelection ? effectiveResources : (player.resources || {})).reduce((sum, v) => sum + v, 0);
+  }, [player, isPaySelection, effectiveResources]);
 
   const cannotAfford = isPaySelection && totalOwned < required;
 
@@ -79,7 +85,7 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
     if (total >= required) return;
     // Limit by owned resources when paying, or target resources when stealing
     if (isPaySelection) {
-      const owned = player?.resources?.[type] || 0;
+      const owned = effectiveResources[type] || 0;
       if (selection[type] >= owned) return;
     }
     if (isStealSelection && targetResources) {
@@ -123,7 +129,7 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
             border: `1px solid ${godColors.gold.border}`,
           }}
         >
-          Review the board below to plan your strategy
+          Choose blessings to start with — pick colors that match your strategy
         </p>
       )}
 
@@ -165,7 +171,7 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
       <div className="grid grid-cols-2 gap-3">
         {activeResources.map((type, i) => {
           const colors = godColors[type];
-          const owned = player?.resources?.[type] || 0;
+          const owned = isPaySelection ? (effectiveResources[type] || 0) : (player?.resources?.[type] || 0);
           const targetOwned = targetResources?.[type] || 0;
           const selected = selection[type];
           const atMax = total >= required || (isPaySelection && selected >= owned) || (isStealSelection && selected >= targetOwned);
@@ -178,7 +184,7 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
               variants={cardReveal}
               initial="initial"
               animate="animate"
-              className="flex flex-col items-center rounded-lg p-4 transition-colors duration-150"
+              className="flex flex-col items-center rounded-lg p-4"
               style={{
                 backgroundColor: selected > 0 ? colors.surface : 'rgba(255, 255, 255, 0.02)',
                 border: `1px solid ${selected > 0 ? colors.border : 'rgba(255, 255, 255, 0.05)'}`,
@@ -209,7 +215,7 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
                 <button
                   onClick={() => decrement(type)}
                   disabled={selected <= 0}
-                  className="flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold transition-all duration-150"
+                  className="flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold"
                   style={{
                     backgroundColor: selected > 0 ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
                     color: selected > 0 ? base.textPrimary : base.textMuted,
@@ -231,7 +237,7 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
                 <button
                   onClick={() => increment(type)}
                   disabled={atMax}
-                  className="flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold transition-all duration-150"
+                  className="flex items-center justify-center w-8 h-8 rounded-full text-lg font-bold"
                   style={{
                     backgroundColor: !atMax ? colors.surface : 'rgba(255, 255, 255, 0.03)',
                     color: !atMax ? colors.text : base.textMuted,
@@ -251,25 +257,23 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
       {/* Submit */}
       <div className="mt-5 flex justify-center gap-3">
         {cannotAfford && (
-          <motion.button
+          <button
             onClick={() => onSubmit({})}
-            className="px-6 py-2.5 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200"
+            className="px-6 py-2.5 rounded-lg text-sm font-semibold tracking-wide btn-pop"
             style={{
               backgroundColor: 'rgba(255, 255, 255, 0.06)',
               color: base.negativeLight,
               border: '1px solid rgba(225, 29, 72, 0.25)',
               cursor: 'pointer',
             }}
-            whileHover={{ scale: 1.03, backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-            whileTap={{ scale: 0.97 }}
           >
             Skip
-          </motion.button>
+          </button>
         )}
-        <motion.button
+        <button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className="px-8 py-2.5 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200"
+          className={`px-8 py-2.5 rounded-lg text-sm font-semibold tracking-wide ${canSubmit ? 'btn-pop' : ''}`}
           style={{
             backgroundColor: canSubmit
               ? (decision._godColor ? godColors[decision._godColor].primary : 'rgba(212, 168, 67, 0.9)')
@@ -278,11 +282,9 @@ export default function GemSelection({ decision, onSubmit, onCancel }) {
             cursor: canSubmit ? 'pointer' : 'default',
             boxShadow: canSubmit ? '0 4px 16px rgba(0, 0, 0, 0.3)' : 'none',
           }}
-          whileHover={canSubmit ? { scale: 1.03 } : {}}
-          whileTap={canSubmit ? { scale: 0.97 } : {}}
         >
           {cannotAfford && total > 0 ? `Pay ${total} of ${required}` : 'Confirm Selection'}
-        </motion.button>
+        </button>
       </div>
     </Modal>
   );

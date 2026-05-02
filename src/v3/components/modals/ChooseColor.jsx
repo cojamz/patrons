@@ -12,12 +12,12 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import Modal from './Modal';
 import ResourceIcon from '../icons/ResourceIcon';
-import { useGame } from '../../hooks/useGame';
+import { useGameState } from '../../hooks/useGame';
 import { godColors, base } from '../../styles/theme';
 import { cardReveal } from '../../styles/animations';
 
 export default function ChooseColor({ decision, onSubmit, onCancel }) {
-  const { game } = useGame();
+  const { game } = useGameState();
   const [selected, setSelected] = useState(null);
   const options = decision.options || [];
   const targetResources = decision.targetResources || {};
@@ -49,20 +49,15 @@ export default function ChooseColor({ decision, onSubmit, onCancel }) {
               initial="initial"
               animate="animate"
               onClick={() => setSelected(color)}
-              className="flex flex-col items-center gap-2 rounded-lg p-4 transition-all duration-150"
+              className="flex flex-col items-center gap-2 rounded-lg p-4 opt-row"
               style={{
                 backgroundColor: isSelected ? `${colors.surface}` : 'rgba(255, 255, 255, 0.02)',
                 border: `1.5px solid ${isSelected ? colors.primary : 'rgba(255, 255, 255, 0.06)'}`,
                 boxShadow: isSelected
-                  ? `0 0 20px ${colors.glow}, inset 0 0 12px ${colors.glow}`
+                  ? `0 0 14px ${colors.glow}`
                   : 'none',
                 cursor: 'pointer',
               }}
-              whileHover={{
-                backgroundColor: `${colors.surface}`,
-                transition: { duration: 0.15 },
-              }}
-              whileTap={{ scale: 0.95 }}
             >
               <ResourceIcon type={color} size={28} />
               <span
@@ -86,10 +81,10 @@ export default function ChooseColor({ decision, onSubmit, onCancel }) {
 
       {/* Confirm */}
       <div className="mt-5 flex justify-center">
-        <motion.button
+        <button
           onClick={handleSubmit}
           disabled={selected === null}
-          className="px-8 py-2.5 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200"
+          className={`px-8 py-2.5 rounded-lg text-sm font-semibold tracking-wide ${selected !== null ? 'btn-pop' : ''}`}
           style={{
             backgroundColor: selected !== null
               ? (godColors[selected]?.primary || 'rgba(212, 168, 67, 0.9)')
@@ -100,14 +95,12 @@ export default function ChooseColor({ decision, onSubmit, onCancel }) {
               ? `0 4px 16px rgba(0, 0, 0, 0.3), 0 0 12px ${godColors[selected]?.glow || 'transparent'}`
               : 'none',
           }}
-          whileHover={selected !== null ? { scale: 1.03 } : {}}
-          whileTap={selected !== null ? { scale: 0.97 } : {}}
         >
           {selected !== null
             ? `Choose ${selected.charAt(0).toUpperCase() + selected.slice(1)}`
             : 'Select a Color'
           }
-        </motion.button>
+        </button>
       </div>
     </Modal>
   );

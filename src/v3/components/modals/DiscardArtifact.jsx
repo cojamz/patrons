@@ -5,9 +5,9 @@
  * Shows current artifacts as cards, highlights the new one being acquired.
  */
 import React from 'react';
-import { motion } from 'motion/react';
 import Modal from './Modal';
 import ArtifactImage from '../icons/ArtifactImage';
+import RichEffect from '../shared/RichEffect';
 import { godColors, base } from '../../styles/theme';
 
 export default function DiscardArtifact({ decision, onSubmit, onCancel }) {
@@ -39,7 +39,7 @@ export default function DiscardArtifact({ decision, onSubmit, onCancel }) {
           </span>
           {decision.description && (
             <span className="text-xs ml-auto" style={{ color: base.textMuted }}>
-              {decision.description}
+              <RichEffect text={decision.description} size={12} />
             </span>
           )}
         </div>
@@ -51,19 +51,14 @@ export default function DiscardArtifact({ decision, onSubmit, onCancel }) {
           const colors = godColors[option.god] || godColors.gold;
 
           return (
-            <motion.button
+            <button
               key={option.id}
               onClick={() => onSubmit(option.id)}
-              className="flex items-center gap-3 p-3 rounded-lg text-left transition-colors duration-150"
+              className="flex items-center gap-3 p-3 rounded-lg text-left opt-row"
               style={{
                 background: 'rgba(255, 255, 255, 0.03)',
                 border: `1px solid ${colors.primary}33`,
               }}
-              whileHover={{
-                backgroundColor: 'rgba(225, 29, 72, 0.08)',
-                borderColor: 'rgba(225, 29, 72, 0.3)',
-              }}
-              whileTap={{ scale: 0.98 }}
             >
               <ArtifactImage cardId={option.id} size={32} color={colors.light} />
               <div className="flex-1 min-w-0">
@@ -74,7 +69,7 @@ export default function DiscardArtifact({ decision, onSubmit, onCancel }) {
                   className="text-xs truncate"
                   style={{ color: base.textMuted }}
                 >
-                  {option.description}
+                  <RichEffect text={option.description} size={12} />
                 </div>
               </div>
               <span
@@ -86,7 +81,7 @@ export default function DiscardArtifact({ decision, onSubmit, onCancel }) {
               >
                 Discard
               </span>
-            </motion.button>
+            </button>
           );
         })}
       </div>

@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { godColors, base, godMeta } from '../../styles/theme';
 import { powerCards } from '../../../engine/v3/data/powerCards';
 import CardPixelIcon from '../icons/CardPixelIcon';
+import RichEffect from '../shared/RichEffect';
 
 export default function PowerCardSlot({ cardId, slotIndex, isEmpty, isTriggered = false }) {
   const [hovered, setHovered] = useState(false);
@@ -181,7 +182,7 @@ export default function PowerCardSlot({ cardId, slotIndex, isEmpty, isTriggered 
                 borderRadius: '12px',
                 background: '#0a0908',
                 border: `2px solid ${colors.primary}`,
-                boxShadow: `0 20px 60px rgba(0, 0, 0, 1), 0 0 0 4px rgba(0, 0, 0, 0.9), 0 0 24px ${colors.glow}`,
+                boxShadow: `0 8px 24px rgba(0, 0, 0, 0.8)`,
                 pointerEvents: 'none',
                 overflow: 'hidden',
               }}
@@ -220,7 +221,7 @@ export default function PowerCardSlot({ cardId, slotIndex, isEmpty, isTriggered 
               {/* Description */}
               <div style={{ padding: '10px 16px 14px' }}>
                 <div style={{ fontSize: '12px', lineHeight: 1.6, color: base.textSecondary }}>
-                  {card.description}
+                  <RichEffect text={card.description} size={12} />
                 </div>
               </div>
             </motion.div>

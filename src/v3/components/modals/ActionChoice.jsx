@@ -13,7 +13,8 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import Modal from './Modal';
 import GodIcon from '../icons/GodIcon';
-import { useGame } from '../../hooks/useGame';
+import RichEffect from '../shared/RichEffect';
+import { useGameState } from '../../hooks/useGame';
 import { godColors, base, godMeta } from '../../styles/theme';
 import { cardReveal } from '../../styles/animations';
 import gods from '../../../engine/v3/data/gods.js';
@@ -27,7 +28,7 @@ for (const god of Object.values(gods)) {
 }
 
 export default function ActionChoice({ decision, onSubmit, onCancel }) {
-  const { game } = useGame();
+  const { game } = useGameState();
   const isMulti = decision.type === 'actionChoices';
   const maxCount = isMulti ? (decision.count || 1) : 1;
 
@@ -123,7 +124,7 @@ export default function ActionChoice({ decision, onSubmit, onCancel }) {
               initial="initial"
               animate="animate"
               onClick={() => !isDisabled && handleSelect(action.id)}
-              className="w-full text-left rounded-lg p-3.5 transition-all duration-150"
+              className={`w-full text-left rounded-lg p-3.5 ${!isDisabled ? 'opt-row' : ''}`}
               style={{
                 backgroundColor: isChosen
                   ? (colors ? colors.surface : 'rgba(255, 255, 255, 0.06)')
@@ -132,16 +133,11 @@ export default function ActionChoice({ decision, onSubmit, onCancel }) {
                   ? (colors ? colors.border : 'rgba(255, 255, 255, 0.15)')
                   : 'rgba(255, 255, 255, 0.05)'}`,
                 boxShadow: isChosen && colors
-                  ? `0 0 16px ${colors.glow}, inset 0 0 16px ${colors.surface}`
+                  ? `0 0 12px ${colors.glow}`
                   : 'none',
                 opacity: isDisabled ? 0.4 : 1,
                 cursor: isDisabled ? 'default' : 'pointer',
               }}
-              whileHover={!isDisabled ? {
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                transition: { duration: 0.15 },
-              } : {}}
-              whileTap={!isDisabled ? { scale: 0.98 } : {}}
             >
               <div className="flex items-start gap-3">
                 {/* God icon */}
@@ -199,7 +195,7 @@ export default function ActionChoice({ decision, onSubmit, onCancel }) {
                   {/* Effect description */}
                   {action.effect && (
                     <p className="text-xs mt-1 leading-relaxed" style={{ color: base.textSecondary }}>
-                      {action.effect}
+                      <RichEffect text={action.effect} size={12} />
                     </p>
                   )}
 
@@ -221,10 +217,10 @@ export default function ActionChoice({ decision, onSubmit, onCancel }) {
 
       {/* Submit */}
       <div className="mt-5 flex justify-center">
-        <motion.button
+        <button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className="px-8 py-2.5 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200"
+          className={`px-8 py-2.5 rounded-lg text-sm font-semibold tracking-wide ${canSubmit ? 'btn-pop' : ''}`}
           style={{
             backgroundColor: canSubmit
               ? (decision._godColor ? godColors[decision._godColor].primary : 'rgba(212, 168, 67, 0.9)')
@@ -233,14 +229,12 @@ export default function ActionChoice({ decision, onSubmit, onCancel }) {
             cursor: canSubmit ? 'pointer' : 'default',
             boxShadow: canSubmit ? '0 4px 16px rgba(0, 0, 0, 0.3)' : 'none',
           }}
-          whileHover={canSubmit ? { scale: 1.03 } : {}}
-          whileTap={canSubmit ? { scale: 0.97 } : {}}
         >
           {isMulti
             ? `Confirm ${selected.size} Action${selected.size !== 1 ? 's' : ''}`
             : 'Confirm Action'
           }
-        </motion.button>
+        </button>
       </div>
     </Modal>
   );

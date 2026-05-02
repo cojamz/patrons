@@ -7,8 +7,9 @@
  * Hover tooltip shows full shop info even when disabled.
  */
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+
 import ResourceIcon, { WildcardIcon } from '../icons/ResourceIcon';
+import RichEffect from '../shared/RichEffect';
 import { godColors, shopStyles, base, resourceStyles } from '../../styles/theme';
 
 /**
@@ -58,26 +59,20 @@ export default function ShopCard({ godColor, shopType, cost, effect, canUse = fa
   const typeStyle = shopStyles[shopType] || shopStyles.weak;
 
   return (
-    <motion.button
+    <button
       onClick={canUse ? onUse : undefined}
       disabled={false}
-      className="relative text-left rounded-lg overflow-visible flex-1 min-w-0"
+      className={`relative text-left rounded-lg overflow-visible flex-1 min-w-0 ${canUse ? 'card-lift' : ''}`}
       style={{
         background: canUse ? base.card : base.cardDark,
         opacity: canUse ? 1 : hovered ? 0.7 : 0.5,
         cursor: canUse ? 'pointer' : 'default',
         border: `1px solid ${base.cardBorder}`,
         borderTop: `3px solid ${colors.primary}`,
-        transition: 'opacity 0.2s ease',
+        transition: 'opacity 150ms ease',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      whileHover={canUse ? {
-        y: -2,
-        boxShadow: `0 6px 16px rgba(0,0,0,0.3), 0 0 8px ${colors.glow}`,
-        transition: { type: 'spring', stiffness: 400, damping: 20 },
-      } : {}}
-      whileTap={canUse ? { scale: 0.97 } : {}}
     >
       <div className="p-2.5 flex flex-col gap-1.5">
         {/* Type label */}
@@ -102,7 +97,7 @@ export default function ShopCard({ godColor, shopType, cost, effect, canUse = fa
           className="text-[10px] leading-snug"
           style={{ color: base.textMuted }}
         >
-          {effect}
+          <RichEffect text={effect} size={10} />
         </div>
       </div>
 
@@ -117,8 +112,7 @@ export default function ShopCard({ godColor, shopType, cost, effect, canUse = fa
             width: '220px',
             background: 'rgba(20, 18, 16, 0.96)',
             border: `1px solid ${colors.border}`,
-            boxShadow: `0 8px 24px rgba(0,0,0,0.5), 0 0 12px ${colors.glow}`,
-            backdropFilter: 'blur(12px)',
+            boxShadow: `0 8px 24px rgba(0,0,0,0.5)`,
           }}
         >
           {/* Tooltip arrow */}
@@ -155,7 +149,7 @@ export default function ShopCard({ godColor, shopType, cost, effect, canUse = fa
             className="text-[11px] leading-relaxed mb-2"
             style={{ color: base.textPrimary, opacity: canUse ? 1 : 0.7 }}
           >
-            {effect}
+            <RichEffect text={effect} size={11} />
           </div>
 
           {/* Cost breakdown */}
@@ -185,6 +179,6 @@ export default function ShopCard({ godColor, shopType, cost, effect, canUse = fa
           </div>
         </div>
       )}
-    </motion.button>
+    </button>
   );
 }

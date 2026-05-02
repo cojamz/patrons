@@ -9,7 +9,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useGame } from '../../hooks/useGame';
+import { useGameState, useGameActions } from '../../hooks/useGame';
 import { useAnimatedValue } from '../../hooks/useAnimatedValue';
 import { useGameEvents, filterByType, filterByPlayer } from '../../hooks/useGameEvents';
 import { godColors, playerColors, base } from '../../styles/theme';
@@ -35,7 +35,7 @@ function CollapsibleLog({ log }) {
       {/* Toggle button */}
       <button
         onClick={() => setExpanded(prev => !prev)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all duration-150"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-colors duration-100"
         style={{
           background: expanded ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
           border: `1px solid ${expanded ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.06)'}`,
@@ -70,7 +70,7 @@ function CollapsibleLog({ log }) {
               maxHeight: '280px',
               background: 'rgba(12, 10, 9, 0.95)',
               border: '1px solid rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(16px)',
+              /* backdrop blur removed for perf — opaque bg instead */
               boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
               zIndex: 60,
             }}
@@ -138,63 +138,54 @@ function CollapsibleLog({ log }) {
   );
 }
 
-// --- Player Tab (top strip, non-current players) ---
+// --- Player Tab (bottom strip) ---
 
-function PowerCardTooltipIcon({ cardId, isCurrent }) {
-  const [hovered, setHovered] = useState(false);
-  const cardData = powerCardsData[cardId];
+/** Turn sub-phase label for the active player */
+function getTabPhaseLabel(phase, pendingDecision, game, playerId) {
+  if (game?.currentPlayer !== playerId) return null;
+  if (phase !== 'action_phase') return null;
 
-  return (
-    <span
-      className="relative"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <CardPixelIcon
-        cardId={cardId}
-        size={12}
-        color={isCurrent ? godColors.gold.light : base.textMuted}
-      />
-      <AnimatePresence>
-        {hovered && cardData && (
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.98 }}
-            transition={{ duration: 0.15 }}
-            style={{
-              position: 'absolute',
-              bottom: '100%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              marginBottom: '8px',
-              zIndex: 9999,
-              width: '220px',
-              padding: '8px 10px',
-              borderRadius: '8px',
-              background: '#0a0908',
-              border: `1px solid ${godColors.gold.border}`,
-              boxShadow: '0 12px 36px rgba(0, 0, 0, 0.9)',
-              pointerEvents: 'none',
-            }}
-          >
-            <div style={{ fontSize: '11px', fontWeight: 700, color: godColors.gold.text, marginBottom: '3px' }}>
-              {cardData.name}
-            </div>
-            <div style={{ fontSize: '10px', lineHeight: 1.4, color: base.textSecondary }}>
-              {cardData.description}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </span>
-  );
+  if (pendingDecision) {
+    const owner = pendingDecision.playerId ?? pendingDecision._playerId ?? pendingDecision.ownerId;
+    if (owner !== playerId) return null;
+    switch (pendingDecision.type) {
+      case 'targetPlayer': return 'Choose Target';
+      case 'gemSelection': return 'Select Blessings';
+      case 'stealGems': return 'Choose Steal';
+      case 'actionChoice':
+      case 'actionChoices': return 'Choose Action';
+      default: return 'Decide';
+    }
+  }
+
+  if (game?.workerPlacedThisTurn) {
+    return game?.purchaseMadeThisTurn ? 'End Turn' : 'Buy or End';
+  }
+  const wLeft = game?.players?.find(p => p.id === playerId)?.workersLeft ?? 0;
+  return wLeft > 0 ? 'Place a worker' : 'End Turn';
 }
 
-function PlayerTab({ player, champion, isCurrent, onClick, favorDeltas, resourceDeltas }) {
+function PlayerTab({ player, isViewing, isActiveTurn, phase, pendingDecision, game, onClick, favorDeltas, resourceDeltas }) {
   const colors = playerColors[player.id] || playerColors[0];
   const { value: favorDisplay } = useAnimatedValue(player.glory);
-  const powerCards = champion?.powerCards || [];
+
+  const workersLeft = player.workersLeft ?? 0;
+  const phaseLabel = isActiveTurn ? getTabPhaseLabel(phase, pendingDecision, game, player.id) : null;
+
+  // Victim flash — detect negative deltas for non-active-turn players
+  const [isHit, setIsHit] = useState(false);
+  useEffect(() => {
+    if (isActiveTurn) return; // Don't flash the active player
+    const hasNegativeFavor = (favorDeltas || []).some(e => e.delta < 0);
+    const hasNegativeResource = (resourceDeltas || []).some(e => {
+      return Object.values(e.deltas || {}).some(v => v < 0);
+    });
+    if (hasNegativeFavor || hasNegativeResource) {
+      setIsHit(true);
+      const timer = setTimeout(() => setIsHit(false), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [favorDeltas, resourceDeltas, isActiveTurn]);
 
   // Collect recent resource deltas for mini indicators
   const recentResources = {};
@@ -206,9 +197,9 @@ function PlayerTab({ player, champion, isCurrent, onClick, favorDeltas, resource
 
   return (
     <div className="relative">
-      {/* Floating mini deltas above the tab */}
+      {/* Floating drips above the tab — resource + favor deltas */}
       <AnimatePresence>
-        {!isCurrent && (favorDeltas || []).map(event => (
+        {(favorDeltas || []).map(event => (
           <motion.div
             key={event.id}
             className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
@@ -216,7 +207,7 @@ function PlayerTab({ player, champion, isCurrent, onClick, favorDeltas, resource
             initial={{ opacity: 0, y: 6, scale: 0.7 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            transition={{ exit: { duration: 0.8 } }}
+            transition={{ exit: { duration: 1.2 } }}
           >
             <span
               className="text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-full whitespace-nowrap"
@@ -226,19 +217,19 @@ function PlayerTab({ player, champion, isCurrent, onClick, favorDeltas, resource
                 border: `1px solid ${event.delta > 0 ? 'rgba(220, 220, 240, 0.3)' : 'rgba(225, 29, 72, 0.3)'}`,
               }}
             >
-              {event.delta > 0 ? '+' : ''}{event.delta}
+              {event.delta > 0 ? '+' : ''}{event.delta} F
             </span>
           </motion.div>
         ))}
-        {!isCurrent && Object.entries(recentResources).map(([resource, amount]) => (
+        {Object.entries(recentResources).map(([resource, amount]) => (
           <motion.div
             key={`res-${resource}`}
             className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-            style={{ bottom: '100%', marginBottom: '18px', zIndex: 39 }}
+            style={{ bottom: '100%', marginBottom: '20px', zIndex: 39 }}
             initial={{ opacity: 0, y: 6, scale: 0.7 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.9 }}
-            transition={{ exit: { duration: 0.8 } }}
+            transition={{ exit: { duration: 1.2 } }}
           >
             <span
               className="text-[9px] font-bold tabular-nums px-1 py-0.5 rounded-full whitespace-nowrap"
@@ -256,44 +247,70 @@ function PlayerTab({ player, champion, isCurrent, onClick, favorDeltas, resource
 
       <button
         onClick={onClick}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-t-lg transition-all duration-200"
+        className={`flex flex-col gap-0 px-3 py-1.5 rounded-t-lg transition-colors duration-100 relative${isActiveTurn ? ' active-turn-tab' : ''}${isHit ? ' tab-hit' : ''}`}
         style={{
-          background: isCurrent
-            ? 'rgba(28, 25, 23, 0.92)'
+          background: isViewing
+            ? 'rgba(28, 25, 23, 0.95)'
             : 'rgba(28, 25, 23, 0.5)',
-          borderBottom: isCurrent
+          borderBottom: isViewing
             ? `2px solid ${colors.primary}`
             : '2px solid transparent',
-          opacity: isCurrent ? 1 : 0.7,
+          opacity: isViewing ? 1 : 0.75,
+          '--turn-glow': `${colors.primary}88`,
+          // Static glow for active turn (CSS animation handles the pulse)
+          boxShadow: isActiveTurn
+            ? `0 -4px 16px ${colors.primary}44, inset 0 1px 0 ${colors.primary}55`
+            : 'none',
         }}
       >
-        {/* Player color pip */}
-        <div
-          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-          style={{
-            background: colors.primary,
-            boxShadow: isCurrent ? `0 0 6px ${colors.primary}` : 'none',
-          }}
-        />
-        <span
-          className="text-xs font-semibold truncate max-w-[80px]"
-          style={{ color: isCurrent ? colors.light : base.textSecondary }}
-        >
-          {player.name}
-        </span>
-        <span
-          className="text-xs tabular-nums font-medium"
-          style={{ color: '#E0E0F0', opacity: 0.9 }}
-        >
-          {favorDisplay}
-        </span>
-        {/* Power card icons */}
-        {powerCards.length > 0 && (
-          <div className="flex items-center gap-0.5 flex-shrink-0">
-            {powerCards.map(cardId => (
-              <PowerCardTooltipIcon key={cardId} cardId={cardId} isCurrent={isCurrent} />
-            ))}
+        {/* Top row: worker icon + name + favor + patron count */}
+        <div className="flex items-center gap-2">
+          <WorkerIcon playerId={player.id} size={14} />
+          <span
+            className="text-xs font-semibold truncate max-w-[70px]"
+            style={{ color: isViewing ? colors.light : base.textSecondary }}
+          >
+            {player.name}
+          </span>
+
+          {/* Favor — prominent bright white */}
+          <span
+            className="tabular-nums font-bold ml-auto"
+            style={{
+              color: '#FFFFFF',
+              fontSize: '14px',
+              lineHeight: '16px',
+              textShadow: '0 0 8px rgba(255,255,255,0.2)',
+            }}
+          >
+            {favorDisplay}
+          </span>
+
+          {/* Workers remaining — small patron icons */}
+          <div className="flex items-center gap-px ml-1.5">
+            {workersLeft > 0 ? (
+              Array.from({ length: Math.min(workersLeft, 6) }, (_, i) => (
+                <WorkerIcon key={i} playerId={player.id} size={10} />
+              ))
+            ) : (
+              <span style={{ fontSize: '8px', color: base.textMuted }}>—</span>
+            )}
           </div>
+        </div>
+
+        {/* Bottom row: phase label (active turn only) */}
+        {phaseLabel && (
+          <span
+            className="text-[9px] whitespace-nowrap"
+            style={{
+              color: phaseLabel === 'Decide' || phaseLabel.startsWith('Choose') || phaseLabel.startsWith('Select')
+                ? '#FBBF24'
+                : base.textMuted,
+              marginTop: '-1px',
+            }}
+          >
+            · {phaseLabel}
+          </span>
         )}
       </button>
     </div>
@@ -303,11 +320,11 @@ function PlayerTab({ player, champion, isCurrent, onClick, favorDeltas, resource
 // --- Favor Source Labels ---
 
 export const FAVOR_SOURCE_LABELS = {
-  gold_glory_condition: 'Gold God — per gold owned (round end)',
-  yellow_glory_condition: 'Yellow God — per unique color (round end)',
-  green_glory_condition: 'Green God — per action repeated',
-  black_glory_condition: 'Black God — per steal/penalty',
-  cash_in: 'Cash In action — gold converted',
+  gold_glory_condition: 'Gold Patron — gold above richest opponent (round end)',
+  yellow_glory_condition: 'Yellow Patron — per new color gained',
+  green_glory_condition: 'Green Patron — per action repeated',
+  black_glory_condition: 'Black Patron — per steal action',
+  cash_in: 'Cash In — gold converted to Favor',
   pickpocket: 'Pickpocket action — stolen favor',
   pickpocket_victim: 'Pickpocket — favor stolen from you',
   hex_action: 'Hex — mass penalty',
@@ -601,26 +618,89 @@ function ChampionTooltipWrapper({ championData, colors, children }) {
   );
 }
 
+// --- Active Effects Banner ---
+
+const EFFECT_CONFIG = {
+  doubleNextGain: { label: '2x Next Gain', color: '#D4A843', bg: 'rgba(212, 168, 67, 0.12)', border: 'rgba(212, 168, 67, 0.3)' },
+  shopDiscount: { label: 'Shop -2 Cost', color: '#60A5FA', bg: 'rgba(96, 165, 250, 0.12)', border: 'rgba(96, 165, 250, 0.3)' },
+  noShopThisTurn: { label: 'No Shopping', color: '#F87171', bg: 'rgba(248, 113, 113, 0.12)', border: 'rgba(248, 113, 113, 0.3)' },
+  noShopNextTurn: { label: 'No Shop Next', color: '#F87171', bg: 'rgba(248, 113, 113, 0.12)', border: 'rgba(248, 113, 113, 0.3)' },
+};
+
+function ActiveEffectsBanner({ player, shopCostModifier }) {
+  const effects = player?.effects || [];
+  const activeEffects = effects.filter(e => EFFECT_CONFIG[e]);
+
+  // Also show shop cost modifier as an effect
+  if (shopCostModifier && shopCostModifier !== 0) {
+    if (shopCostModifier < 0 && !activeEffects.includes('shopDiscount')) {
+      activeEffects.push('shopDiscount');
+    }
+  }
+
+  if (activeEffects.length === 0) return null;
+
+  return (
+    <div
+      className="flex items-center gap-1.5 px-4 py-1"
+      style={{
+        background: 'rgba(28, 25, 23, 0.85)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.04)',
+      }}
+    >
+      <AnimatePresence>
+        {activeEffects.map(effectKey => {
+          const config = EFFECT_CONFIG[effectKey];
+          if (!config) return null;
+          return (
+            <motion.span
+              key={effectKey}
+              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+              style={{
+                color: config.color,
+                background: config.bg,
+                border: `1px solid ${config.border}`,
+              }}
+              initial={{ opacity: 0, x: -8, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+            >
+              {config.label}
+            </motion.span>
+          );
+        })}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // --- Main Panel ---
 
 export default function PlayerPanel() {
-  const { game, currentPlayer, phase, log, actions, pendingDecision } = useGame();
+  const { game, currentPlayer, phase, log, pendingDecision, aiPlayers, isMultiplayer, mySlot } = useGameState();
+  const actions = useGameActions();
   const events = useGameEvents();
 
+  // Default to this player's slot (in multiplayer use mySlot, in local use first non-AI)
+  const humanPlayerId = isMultiplayer ? mySlot : (game?.players?.find(p => !aiPlayers?.has(p.id))?.id ?? 0);
   const [viewingId, setViewingId] = useState(null);
 
-  // Auto-reset to own panel when a decision modal appears for the human player
+  // Only auto-reset when a decision needs the human player's attention
   useEffect(() => {
-    if (pendingDecision) setViewingId(null);
-  }, [pendingDecision]);
+    if (!pendingDecision) return;
+    const owner = pendingDecision.playerId ?? pendingDecision._playerId ?? pendingDecision.ownerId;
+    if (owner === humanPlayerId) setViewingId(null);
+  }, [pendingDecision, humanPlayerId]);
 
   if (!game || !currentPlayer) return null;
 
-  // viewingPlayer: defaults to currentPlayer, or the selected tab
+  // viewingPlayer: defaults to human player, or the selected tab
+  const humanPlayer = game.players.find(p => p.id === humanPlayerId) || currentPlayer;
   const viewingPlayer = viewingId !== null
-    ? game.players.find(p => p.id === viewingId) || currentPlayer
-    : currentPlayer;
-  const isViewingSelf = viewingPlayer.id === currentPlayer.id;
+    ? game.players.find(p => p.id === viewingId) || humanPlayer
+    : humanPlayer;
+  const isViewingSelf = viewingPlayer.id === humanPlayerId;
 
   const playerIndex = viewingPlayer.id;
   const colors = playerColors[playerIndex] || playerColors[0];
@@ -639,8 +719,9 @@ export default function PlayerPanel() {
   const workersLeft = viewingPlayer.workersLeft ?? 0;
   const totalWorkers = ACTIONS_PER_ROUND[(game.round || 1) - 1] || 4;
 
-  // End turn only available when viewing yourself and it's action phase
-  const isMyTurn = phase === 'action_phase' && isViewingSelf;
+  // End turn only when it's the human's turn and they're viewing their own panel
+  const isHumanTurn = phase === 'action_phase' && game.currentPlayer === humanPlayerId;
+  const isMyTurn = isHumanTurn && isViewingSelf;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
@@ -652,20 +733,29 @@ export default function PlayerPanel() {
           paddingTop: '6px',
         }}
       >
-        {game.players.map(player => (
-          <PlayerTab
-            key={player.id}
-            player={player}
-            champion={game.champions?.[player.id]}
-            isCurrent={player.id === viewingPlayer.id}
-            onClick={() => setViewingId(player.id === currentPlayer.id ? null : player.id)}
-            favorDeltas={filterByPlayer(filterByType(events, 'favorDelta'), player.id)}
-            resourceDeltas={filterByPlayer(filterByType(events, 'resourceDelta'), player.id)}
-          />
-        ))}
+        {(game.turnOrder || game.players.map(p => p.id)).map(pid => game.players.find(p => p.id === pid)).filter(Boolean).map(player => {
+          // Filter once per type, then by player — avoids re-filtering full array per tab
+          const pid = player.id;
+          const favorDeltas = events.filter(e => e.type === 'favorDelta' && e.playerId === pid);
+          const resourceDeltas = events.filter(e => e.type === 'resourceDelta' && e.playerId === pid);
+          return (
+            <PlayerTab
+              key={player.id}
+              player={player}
+              isViewing={player.id === viewingPlayer.id}
+              isActiveTurn={player.id === game.currentPlayer && phase === 'action_phase'}
+              phase={phase}
+              pendingDecision={pendingDecision}
+              game={game}
+              onClick={() => setViewingId(player.id === humanPlayerId ? null : player.id)}
+              favorDeltas={favorDeltas}
+              resourceDeltas={resourceDeltas}
+            />
+          );
+        })}
       </div>
 
-      {/* Viewing indicator */}
+      {/* Viewing indicator (when looking at another player) */}
       {!isViewingSelf && (
         <div
           className="text-center text-xs py-1 font-semibold tracking-wide cursor-pointer"
@@ -676,17 +766,18 @@ export default function PlayerPanel() {
           }}
           onClick={() => setViewingId(null)}
         >
-          Viewing {viewingPlayer.name}'s panel — click to return
+          Viewing {viewingPlayer.name} — click to return
         </div>
       )}
+
+      {/* Active Effects Banner */}
+      <ActiveEffectsBanner player={viewingPlayer} shopCostModifier={viewingPlayer.shopCostModifier} />
 
       {/* Main panel */}
       <div
         className="relative"
         style={{
-          background: 'rgba(28, 25, 23, 0.92)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          background: 'rgba(28, 25, 23, 0.97)',
           borderTop: '1px solid rgba(212, 168, 67, 0.15)',
         }}
       >
@@ -799,6 +890,33 @@ export default function PlayerPanel() {
               Artifacts
             </span>
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+              {/* Aegis token — special artifact that transfers between players */}
+              {game.aegisHolder === viewingPlayer.id && (
+                <div
+                  className="relative rounded-lg flex-shrink-0"
+                  title="The Aegis — Your resources cannot be stolen. Transfers if another player buys it."
+                  style={{
+                    width: '110px',
+                    height: '72px',
+                    background: `linear-gradient(160deg, ${godColors.gold.primary}40 0%, ${godColors.gold.primary}15 40%, rgba(12,10,9,0.95) 100%)`,
+                    border: `1.5px solid ${godColors.gold.primary}88`,
+                    boxShadow: `0 2px 12px rgba(0,0,0,0.5), 0 0 8px ${godColors.gold.glow}, inset 0 0 0 1px rgba(255,255,255,0.03)`,
+                  }}
+                >
+                  <div className="relative z-10 flex flex-col items-center justify-center h-full" style={{ padding: '4px' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                      <path d="M12 2L4 7V13C4 17.4 7.4 21.5 12 22.5C16.6 21.5 20 17.4 20 13V7L12 2Z" fill={godColors.gold.primary + '55'} stroke={godColors.gold.light} strokeWidth="1.5" />
+                      <path d="M12 6L8 8.5V12C8 14.8 9.7 17.3 12 18C14.3 17.3 16 14.8 16 12V8.5L12 6Z" fill={godColors.gold.primary + '88'} />
+                    </svg>
+                    <span style={{ fontSize: '9px', fontWeight: 700, color: godColors.gold.text, marginTop: '2px' }}>
+                      The Aegis
+                    </span>
+                    <span style={{ fontSize: '7px', fontWeight: 600, color: godColors.gold.primary, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      Protected
+                    </span>
+                  </div>
+                </div>
+              )}
               {Array.from({ length: totalSlots }, (_, i) => {
                 const cardId = powerCardIds[i] || null;
                 const isTriggered = cardId
@@ -822,8 +940,8 @@ export default function PlayerPanel() {
             {/* Collapsible log */}
             <CollapsibleLog log={log} />
 
-            <motion.button
-              className="flex-shrink-0 px-5 py-2.5 rounded-lg font-semibold text-sm uppercase tracking-wider"
+            <button
+              className={`flex-shrink-0 px-5 py-2.5 rounded-lg font-semibold text-sm uppercase tracking-wider btn-pop${isMyTurn && game.workerPlacedThisTurn ? ' end-turn-glow' : ''}`}
               title={!isMyTurn ? `Waiting for ${currentPlayer?.name || 'another player'}` : 'End your turn'}
               style={{
                 background: isMyTurn
@@ -835,28 +953,17 @@ export default function PlayerPanel() {
                   : '1px solid rgba(120, 113, 108, 0.15)',
                 cursor: isMyTurn ? 'pointer' : 'not-allowed',
                 opacity: isMyTurn ? 1 : 0.4,
-              }}
-              animate={isMyTurn && game.workerPlacedThisTurn ? {
-                boxShadow: [
-                  `0 0 20px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.15)`,
-                  `0 0 35px ${godColors.gold.glowStrong}, 0 0 15px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.15)`,
-                  `0 0 20px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.15)`,
-                ],
-              } : {
-                boxShadow: isMyTurn
+                boxShadow: isMyTurn && !game.workerPlacedThisTurn
                   ? `0 0 20px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.15)`
-                  : '0 0 0px transparent',
+                  : !isMyTurn ? '0 0 0px transparent' : undefined,
+                '--glow-color': godColors.gold.glow,
+                '--glow-strong': godColors.gold.glowStrong,
               }}
-              transition={isMyTurn && game.workerPlacedThisTurn
-                ? { duration: 1.8, repeat: Infinity, ease: 'easeInOut' }
-                : { duration: 0.3 }}
-              whileHover={isMyTurn ? { scale: 1.04, boxShadow: `0 0 30px ${godColors.gold.glowStrong}` } : {}}
-              whileTap={isMyTurn ? { scale: 0.97 } : {}}
               onClick={() => isMyTurn && actions.endTurn()}
               disabled={!isMyTurn}
             >
               End Turn
-            </motion.button>
+            </button>
           </div>
         </div>
       </div>

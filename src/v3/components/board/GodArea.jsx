@@ -8,22 +8,44 @@
  *
  * Click a collapsed area to focus it. Shops/cards still interactive when collapsed.
  */
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { motion } from 'motion/react';
 import ActionSpace from './ActionSpace';
 import GodIcon from '../icons/GodIcon';
 import ResourceIcon, { WildcardIcon } from '../icons/ResourceIcon';
 import CardPixelIcon from '../icons/CardPixelIcon';
 import ArtifactImage from '../icons/ArtifactImage';
 import WorkerToken from './WorkerToken';
-import { useGame } from '../../hooks/useGame';
-import { godColors, godMeta, base, tierStyles, shopStyles, resourceStyles, favorConditionStyle } from '../../styles/theme';
-import { godAreaGlow, staggerContainer, staggerItem, tooltip as tooltipVariants } from '../../styles/animations';
+import RichEffect from '../shared/RichEffect';
+import { useGameState, useGameActions } from '../../hooks/useGame';
+import { useGameEvents, filterByType } from '../../hooks/useGameEvents';
+import { godColors, godMeta, base, tierStyles, shopStyles, resourceStyles, favorConditionStyle, playerColors } from '../../styles/theme';
 import gods from '../../../engine/v3/data/gods.js';
 import { powerCards } from '../../../engine/v3/data/powerCards';
 import { CARDS_DEALT_PER_GOD } from '../../../engine/v3/data/constants';
 import { getShopCost } from '../../../engine/v3/rules';
+
+// All CSS for god area — keyframes + hover effects
+// Removed godAreaGlow and collapsedPulse (were causing 20+ repaints/frame).
+// One actionSectionPulse per god section is enough visual feedback.
+const godAreaStyle = document.createElement('style');
+godAreaStyle.textContent = `
+@keyframes actionSectionPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.shop-btn { transition: transform 120ms ease, box-shadow 150ms ease, opacity 150ms ease; }
+.shop-btn:hover { transform: translateY(-2px); }
+.card-btn { transition: transform 120ms ease, opacity 150ms ease; }
+.card-btn:hover { transform: translateY(-3px); }
+.card-btn:active { transform: scale(0.97); }
+.collapsed-shop-btn { transition: filter 120ms ease; }
+.collapsed-shop-btn:hover { filter: brightness(1.2); }
+`;
+if (!document.querySelector('[data-god-area-css]')) {
+  godAreaStyle.setAttribute('data-god-area-css', '');
+  document.head.appendChild(godAreaStyle);
+}
 
 function parseCost(cost) {
   if (!cost) return [];
@@ -68,20 +90,14 @@ function FloatingTooltip({ tooltip, godColor }) {
     borderRadius: '10px',
     background: '#000000',
     border: `2px solid ${colors.primary}`,
-    boxShadow: `0 12px 40px rgba(0, 0, 0, 1), 0 0 0 4px rgba(0, 0, 0, 0.8), 0 0 16px ${colors.glow}`,
+    boxShadow: `0 8px 24px rgba(0, 0, 0, 0.8)`,
     pointerEvents: 'none',
   };
 
   if (type === 'action') {
     const action = data;
     return (
-      <motion.div
-        style={tooltipStyle}
-        variants={tooltipVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-      >
+      <div style={tooltipStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
           <span style={{
             fontSize: '9px', fontWeight: 700, letterSpacing: '0.06em',
@@ -97,10 +113,10 @@ function FloatingTooltip({ tooltip, godColor }) {
         </div>
         {action.effect && (
           <div style={{ fontSize: '12px', lineHeight: 1.5, color: base.textSecondary }}>
-            {action.effect}
+            <RichEffect text={action.effect} size={12} />
           </div>
         )}
-      </motion.div>
+      </div>
     );
   }
 
@@ -109,7 +125,7 @@ function FloatingTooltip({ tooltip, godColor }) {
     const costEntries = parseCost(shop.cost);
     const style = shopStyles[shop.type];
     return (
-      <motion.div style={tooltipStyle} variants={tooltipVariants} initial="initial" animate="animate" exit="exit">
+      <div style={tooltipStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
           <span style={{
             fontSize: '9px', fontWeight: 700, letterSpacing: '0.06em',
@@ -133,9 +149,9 @@ function FloatingTooltip({ tooltip, godColor }) {
           ))}
         </div>
         <div style={{ fontSize: '12px', lineHeight: 1.5, color: base.textSecondary }}>
-          {shop.effect}
+          <RichEffect text={shop.effect} size={12} />
         </div>
-      </motion.div>
+      </div>
     );
   }
 
@@ -145,7 +161,7 @@ function FloatingTooltip({ tooltip, godColor }) {
     if (!card) return null;
     const costEntries = Object.entries(card.cost || {});
     return (
-      <motion.div style={tooltipStyle} variants={tooltipVariants} initial="initial" animate="animate" exit="exit">
+      <div style={tooltipStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <ArtifactImage cardId={cardId} size={32} color={colors.light} />
           <div>
@@ -172,28 +188,25 @@ function FloatingTooltip({ tooltip, godColor }) {
           </div>
         </div>
         <div style={{ fontSize: '12px', lineHeight: 1.5, color: base.textSecondary }}>
-          {card.description}
+          <RichEffect text={card.description} size={12} />
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   if (type === 'vpCondition') {
     return (
-      <motion.div
-        style={{ ...tooltipStyle, border: `2px solid ${favorConditionStyle.border}` }}
-        variants={tooltipVariants} initial="initial" animate="animate" exit="exit"
-      >
+      <div style={{ ...tooltipStyle, border: `2px solid ${favorConditionStyle.border}` }}>
         <div style={{ fontSize: '13px', fontWeight: 700, color: favorConditionStyle.text, marginBottom: '6px' }}>
           Favor Condition
         </div>
         <div style={{ fontSize: '12px', lineHeight: 1.5, color: base.textSecondary, marginBottom: '6px' }}>
-          {data.description}
+          <RichEffect text={data.description} size={12} />
         </div>
         <div style={{ fontSize: '11px', lineHeight: 1.5, color: base.textMuted }}>
-          Each god rewards Favor for a different style of play. Earn Favor by meeting this condition during the game. Favor counts as victory points at end of game.
+          Each patron rewards Favor for a different style of play. Earn Favor by meeting this condition during the game.
         </div>
-      </motion.div>
+      </div>
     );
   }
 
@@ -269,14 +282,19 @@ function SectionHint({ label, hint, color }) {
 // Main GodArea Component
 // ============================================================================
 
-export default function GodArea({ godColor, isFocused = true, onFocus }) {
-  const { game, availableActions, actions, currentPlayer, pendingDecision } = useGame();
+export default React.memo(function GodArea({ godColor, isFocused = true, onFocus, isBeingWatched = false, watchingPlayerColor }) {
+  const { game, availableActions, currentPlayer, pendingDecision, isMultiplayer, mySlot } = useGameState();
+  const actions = useGameActions();
   const colors = godColors[godColor];
   const meta = godMeta[godColor];
   const godData = gods[godColor];
 
   // Single tooltip state for the whole god area
   const [tooltip, setTooltip] = useState(null);
+
+  // Ref for pendingDecision so callbacks stay stable
+  const pendingRef = useRef(pendingDecision);
+  pendingRef.current = pendingDecision;
 
   // Clear tooltip when a decision modal opens
   useEffect(() => {
@@ -285,14 +303,17 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
 
   const showTooltip = useCallback((type, data, e) => {
     // Suppress tooltips when a modal/decision is active to prevent z-index conflicts
-    if (pendingDecision) return;
+    if (pendingRef.current) return;
     const rect = e.currentTarget.getBoundingClientRect();
     setTooltip({ type, data, rect });
-  }, [pendingDecision]);
+  }, []);
 
   const hideTooltip = useCallback(() => {
     setTooltip(null);
   }, []);
+
+  // In multiplayer, only allow interactions when it's this player's turn
+  const isMyTurn = !isMultiplayer || game?.currentPlayer === mySlot;
 
   if (!godData || !game) return null;
 
@@ -306,44 +327,124 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
     ? roundActions[roundActions.length - 1].actionId
     : null;
 
-  // Group actions by tier
-  const tier1 = godData.actions.filter(a => a.tier === 1);
-  const tier2 = godData.actions.filter(a => a.tier === 2);
-  const tier3 = godData.actions.filter(a => a.tier === 3);
+  // --- Action flash + placement toast on worker placement ---
+  const events = useGameEvents();
+  const [flashingActionId, setFlashingActionId] = useState(null);
+  const [borderSurge, setBorderSurge] = useState(false);
+  const processedPlacementIds = useRef(new Set());
 
-  const tierGroups = [
-    { tier: 1, actions: tier1, label: 'I' },
-    { tier: 2, actions: tier2, label: 'II' },
-    { tier: 3, actions: tier3, label: 'III' },
-  ];
+  // Clear processed IDs on turn change so new turn's events always fire
+  useEffect(() => {
+    processedPlacementIds.current.clear();
+  }, [game?.currentPlayer]);
+
+  // Pre-build this god's action ID set once (stable across renders)
+  const godActionIdSet = useMemo(
+    () => new Set(godData.actions.map(a => a.id)),
+    [godData.actions]
+  );
+
+  useEffect(() => {
+    // Quick scan — only check workerPlaced events, bail fast if none relevant
+    let recent = null;
+    for (let i = events.length - 1; i >= 0; i--) {
+      const e = events[i];
+      if (e.type === 'workerPlaced' && godActionIdSet.has(e.actionId)) {
+        recent = e;
+        break;
+      }
+    }
+    if (!recent || processedPlacementIds.current.has(recent.id)) return;
+
+    processedPlacementIds.current.add(recent.id);
+    // Prune to last 20 entries
+    if (processedPlacementIds.current.size > 20) {
+      const entries = [...processedPlacementIds.current];
+      processedPlacementIds.current = new Set(entries.slice(-20));
+    }
+
+    setFlashingActionId(recent.actionId);
+    setBorderSurge(true);
+
+    const flashTimer = setTimeout(() => {
+      setFlashingActionId(null);
+      setBorderSurge(false);
+    }, 800);
+
+    return () => {
+      clearTimeout(flashTimer);
+    };
+  }, [events, godActionIdSet]);
+
+  // --- Market "sold" flash — track previous card slots to detect purchases ---
+  const prevCardsRef = useRef(null);
+  const [soldSlotIndex, setSoldSlotIndex] = useState(null);
+
+  const cardMarket = (game.powerCardMarkets || {})[godColor] || [];
+  useEffect(() => {
+    if (!prevCardsRef.current) {
+      prevCardsRef.current = cardMarket.map(c => c?.id || c || null);
+      return;
+    }
+    const prevCards = prevCardsRef.current;
+    const newCards = cardMarket.map(c => c?.id || c || null);
+    prevCardsRef.current = newCards;
+
+    // Find which slot went from filled → empty/null
+    for (let i = 0; i < Math.max(prevCards.length, newCards.length); i++) {
+      if (prevCards[i] && !newCards[i]) {
+        setSoldSlotIndex(i);
+        const timer = setTimeout(() => setSoldSlotIndex(null), 500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [cardMarket]);
+
+  // Group actions by tier — memoized since godData is static
+  const tierGroups = useMemo(() => [
+    { tier: 1, actions: godData.actions.filter(a => a.tier === 1), label: 'I' },
+    { tier: 2, actions: godData.actions.filter(a => a.tier === 2), label: 'II' },
+    { tier: 3, actions: godData.actions.filter(a => a.tier === 3), label: 'III' },
+  ], [godData]);
+
+  // Pre-compute action states — memoized to avoid per-render recalc
+  const actionStates = useMemo(() => {
+    const map = {};
+    for (const action of godData.actions) {
+      const isLocked = action.tier > currentRound;
+      const isOccupied = occupiedSpaces[action.id] != null;
+      const occupiedBy = isOccupied ? occupiedSpaces[action.id] : null;
+      const isNullified = !!nullifiedSpaces[action.id];
+      const isAvailable = isMyTurn && !isLocked && !isNullified && availableActions.includes(action.id);
+      map[action.id] = { isAvailable, isOccupied, occupiedBy, isNullified, isLocked };
+    }
+    return map;
+  }, [godData, currentRound, occupiedSpaces, nullifiedSpaces, availableActions]);
+
+  // Whether any action in this god is currently available (for container pulse)
+  const hasAnyAvailable = useMemo(() =>
+    Object.values(actionStates).some(s => s.isAvailable),
+    [actionStates]
+  );
 
   function getActionState(action) {
-    const isLocked = action.tier > currentRound;
-    const isOccupied = occupiedSpaces[action.id] != null;
-    const occupiedBy = isOccupied ? occupiedSpaces[action.id] : null;
-    const isNullified = !!nullifiedSpaces[action.id];
-    // availableActions already accounts for hourglass (ignore_occupied) modifier,
-    // so trust the engine rather than filtering occupied out here.
-    const isAvailable =
-      !isLocked &&
-      !isNullified &&
-      availableActions.includes(action.id);
-
-    return { isAvailable, isOccupied, occupiedBy, isNullified, isLocked };
+    return actionStates[action.id];
   }
 
-  function handlePlace(actionId) {
+  const handlePlace = useCallback((actionId) => {
     actions.placeWorker(actionId);
-  }
+  }, [actions]);
 
-  function handleShop(shopType) {
+  const handleShop = useCallback((shopType) => {
     const shopId = `${godColor}_${shopType}`;
     actions.useShop(shopId);
-  }
+  }, [actions, godColor]);
 
   // Check if the current player can afford a shop's cost (respects shopCostModifier)
   function canAffordShop(shop) {
     if (!currentPlayer || !game) return false;
+    // Multiplayer: only the current player can buy
+    if (!isMyTurn) return false;
     // Only during action phase
     if (game.phase !== 'action_phase') return false;
     // Must have placed a patron at this god's temple this turn
@@ -379,25 +480,65 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
     slots.push(market[i] || null);
   }
 
+  /**
+   * Compute the effective cost for a power card, accounting for Blessed discount
+   * and Haggle (shopDiscount) effect. Reduces 'any' first, then specific colors.
+   */
+  function getCardCost(cardId) {
+    const card = powerCards[cardId];
+    if (!card) return null;
+    const cost = { ...card.cost };
+    let discount = 0;
+    const playerId = currentPlayer?.id;
+    const champion = game.champions?.[playerId];
+
+    // Haggle shopDiscount (-2)
+    if (currentPlayer?.effects?.includes('shopDiscount')) {
+      discount += 2;
+    }
+    // Blessed first-card discount (-2)
+    if (champion?.id === 'blessed' && !(game.blessedUsed || {})[playerId]) {
+      discount += 2;
+    }
+
+    // Apply discount: reduce 'any' first, then specific colors
+    if (discount > 0) {
+      if (cost.any && cost.any > 0) {
+        const reduction = Math.min(discount, cost.any);
+        cost.any -= reduction;
+        discount -= reduction;
+        if (cost.any === 0) delete cost.any;
+      }
+      if (discount > 0) {
+        for (const color of Object.keys(cost)) {
+          if (color === 'any' || discount <= 0) continue;
+          const reduction = Math.min(discount, cost[color]);
+          cost[color] -= reduction;
+          discount -= reduction;
+          if (cost[color] === 0) delete cost[color];
+        }
+      }
+    }
+    return cost;
+  }
+
   function canBuyCard(cardId) {
     if (!currentPlayer || !cardId) return false;
-    // Only during action phase
+    if (!isMyTurn) return false;
     if (game.phase !== 'action_phase') return false;
     const godAccess = game.godsAccessedThisTurn || [];
     if (!godAccess.includes(godColor)) return false;
-    // One purchase per turn (shop or power card)
     if (game.purchaseMadeThisTurn) return false;
-    // Hoard blocks shopping this turn
     if (currentPlayer.effects?.includes('noShopThisTurn')) return false;
     const playerId = currentPlayer.id;
     const champion = game.champions?.[playerId];
     if (!champion) return false;
-    const card = powerCards[cardId];
-    if (!card) return false;
+    const cost = getCardCost(cardId);
+    if (!cost) return false;
     const playerResources = currentPlayer.resources || {};
     let totalHave = Object.values(playerResources).reduce((s, v) => s + v, 0);
     let totalNeeded = 0;
-    for (const [resource, amount] of Object.entries(card.cost)) {
+    for (const [resource, amount] of Object.entries(cost)) {
       if (resource === 'any') {
         totalNeeded += amount;
       } else {
@@ -457,7 +598,8 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
   // Determine what sections to highlight for turn guidance
   const isActionPhase = game.phase === 'action_phase';
   const shouldHighlightMarket = isActionPhase && game.workerPlacedThisTurn
-    && (game.godsAccessedThisTurn || []).includes(godColor) && !pendingDecision;
+    && (game.godsAccessedThisTurn || []).includes(godColor)
+    && !game.purchaseMadeThisTurn && !pendingDecision;
 
   // ========== COLLAPSED RENDER ==========
   // Narrow vertical strip: god header → actions → shops → cards stacked top to bottom
@@ -466,13 +608,16 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
     return (
       <>
       <div
-        className="relative rounded-xl flex flex-col overflow-hidden transition-all duration-200"
+        className={`relative rounded-xl flex flex-col ${isBeingWatched ? 'god-watching-glow' : ''}`}
         style={{
           border: `1px solid ${colors.border}`,
           background: base.board,
           minHeight: 0,
           height: '100%',
+          overflow: 'hidden',
           cursor: 'pointer',
+          transition: 'border-color 150ms ease, box-shadow 150ms ease',
+          '--watching-color': watchingPlayerColor || 'transparent',
         }}
         onClick={onFocus}
         onMouseEnter={(e) => {
@@ -484,6 +629,17 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
           e.currentTarget.style.boxShadow = 'none';
         }}
       >
+        {/* Placement burst overlay (collapsed) */}
+        {borderSurge && (
+          <div
+            key={`burst-${flashingActionId}`}
+            className="absolute inset-0 rounded-xl god-placement-burst"
+            style={{
+              background: `radial-gradient(ellipse at 50% 50%, ${colors.glowStrong} 0%, transparent 70%)`,
+              zIndex: 25,
+            }}
+          />
+        )}
         {/* God aura */}
         <div
           className="absolute inset-0 pointer-events-none rounded-xl"
@@ -494,53 +650,52 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
           className="relative z-10 flex flex-col h-full overflow-y-auto scrollbar-hide"
           style={{ padding: '6px 5px', gap: '4px' }}
         >
-          {/* God identity — centered header */}
-          <div className="flex flex-col items-center gap-1 flex-shrink-0 pb-1">
+          {/* God identity — left-aligned compact header */}
+          <div className="flex items-center gap-2 flex-shrink-0 pb-1">
             <div
               className="flex items-center justify-center rounded-md"
               style={{
-                width: '28px', height: '28px',
+                width: '22px', height: '22px',
                 background: colors.surface,
                 border: `1px solid ${colors.border}`,
                 boxShadow: `0 0 8px ${colors.glow}`,
+                flexShrink: 0,
               }}
             >
-              <GodIcon god={godColor} size={18} />
+              <ResourceIcon type={godColor} size={16} />
             </div>
-            <div style={{
-              fontSize: '10px', fontWeight: 700,
-              letterSpacing: '0.06em', lineHeight: 1,
-              color: colors.text, textAlign: 'center',
-            }}>
-              {meta.name}
-            </div>
-            <div style={{
-              fontSize: '8px', fontWeight: 500,
-              lineHeight: 1, textAlign: 'center',
-              color: colors.primary, opacity: 0.7,
-            }}>
-              {meta.title}
+            <div style={{ minWidth: 0, flexShrink: 0 }}>
+              <div style={{
+                fontSize: '12px', fontWeight: 800,
+                letterSpacing: '0.04em', lineHeight: 1,
+                textTransform: 'uppercase',
+                color: colors.text,
+              }}>
+                {meta.name}
+              </div>
+              <div style={{
+                fontSize: '8px', fontWeight: 600,
+                lineHeight: 1.3,
+                color: colors.primary, opacity: 0.7,
+              }}>
+                {meta.title}
+              </div>
             </div>
             {godData.gloryCondition && (
-              <div
+              <span
                 onMouseEnter={(e) => showTooltip('vpCondition', godData.gloryCondition, e)}
                 onMouseLeave={hideTooltip}
                 style={{
-                  fontSize: '8px', lineHeight: 1.3, textAlign: 'center',
-                  fontWeight: 700,
-                  color: favorConditionStyle.text,
-                  textShadow: favorConditionStyle.textShadow,
-                  padding: '3px 6px',
-                  marginTop: '2px',
-                  borderRadius: '4px',
-                  background: favorConditionStyle.background,
-                  border: `1px solid ${favorConditionStyle.border}`,
-                  boxShadow: `0 0 8px rgba(220, 220, 240, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.06)`,
+                  fontSize: '8px', lineHeight: 1.3,
+                  fontWeight: 400, fontStyle: 'italic',
+                  color: 'rgba(200, 200, 220, 0.45)',
                   cursor: 'help',
+                  marginLeft: 'auto',
+                  textAlign: 'right',
                 }}
               >
-                {godData.gloryCondition.description}
-              </div>
+                <RichEffect text={godData.gloryCondition.description} size={9} />
+              </span>
             )}
           </div>
 
@@ -554,7 +709,31 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
           </div>
 
           {/* Actions — compact vertical list (stone/utilitarian feel) */}
-          <div className="flex flex-col gap-0.5 min-h-0 overflow-y-auto scrollbar-hide" style={{ flex: 1 }}>
+          <div
+            className="flex flex-col gap-0.5 min-h-0 overflow-y-auto scrollbar-hide"
+            style={{
+              position: 'relative',
+              flexShrink: 0,
+              borderRadius: hasAnyAvailable ? '6px' : undefined,
+              background: hasAnyAvailable ? colors.surface : undefined,
+              border: hasAnyAvailable ? `1px solid ${colors.border}` : undefined,
+              padding: hasAnyAvailable ? '2px' : undefined,
+            }}
+          >
+            {hasAnyAvailable && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: '-1px',
+                  borderRadius: '7px',
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                  boxShadow: `0 0 10px ${colors.glow}, 0 0 3px ${colors.glowStrong}, inset 0 0 6px ${colors.glow}`,
+                  animation: 'actionSectionPulse 2.2s ease-in-out infinite',
+                  willChange: 'opacity',
+                }}
+              />
+            )}
             {godData.actions.map(action => {
               const state = getActionState(action);
               const dynamicAction = { ...action, effect: getDynamicEffect(action) };
@@ -569,6 +748,7 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                 />
               );
             })}
+
           </div>
 
           {/* Shops label */}
@@ -579,56 +759,66 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
             </span>
             <div style={{ flex: 1, height: '1px', background: 'rgba(250, 235, 215, 0.15)' }} />
           </div>
-          <div className="flex flex-col gap-0.5 flex-shrink-0">
+          <div
+            className={`flex flex-col gap-0.5 flex-shrink-0 ${shouldHighlightMarket ? 'buyable-glow' : ''}`}
+            style={{
+              position: 'relative',
+              borderRadius: shouldHighlightMarket ? '6px' : undefined,
+              padding: shouldHighlightMarket ? '2px' : undefined,
+              '--glow-max': shouldHighlightMarket
+                ? '0 0 14px rgba(250, 235, 215, 0.3), inset 0 0 6px rgba(250, 235, 215, 0.1)'
+                : undefined,
+            }}
+          >
             {godData.shops.map(shop => {
               const style = shopStyles[shop.type];
               const isShopLocked = shop.type === 'strong' && currentRound < 2;
               const affordable = !isShopLocked && canAffordShop(shop);
               return (
-                <motion.button
+                <button
                   key={shop.type}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (!isShopLocked) handleShop(shop.type);
+                    if (!isShopLocked && isMyTurn) handleShop(shop.type);
                   }}
                   onMouseEnter={(e) => showTooltip('shop', shop, e)}
                   onMouseLeave={hideTooltip}
-                  disabled={false}
-                  className={`w-full ${affordable ? 'buyable-glow' : ''}`}
+                  className={`w-full collapsed-shop-btn ${affordable ? 'buyable-glow' : ''}`}
                   style={{
                     position: 'relative',
                     display: 'flex', alignItems: 'center', gap: '3px',
                     padding: '3px 5px', borderRadius: '4px',
-                    background: affordable ? 'rgba(250, 235, 215, 0.09)' : 'rgba(250, 235, 215, 0.06)',
-                    border: `1px solid rgba(250, 235, 215, 0.1)`,
+                    background: affordable ? 'rgba(250, 235, 215, 0.12)' : 'rgba(250, 235, 215, 0.06)',
+                    border: affordable ? `1px solid rgba(250, 235, 215, 0.25)` : `1px solid rgba(250, 235, 215, 0.1)`,
                     borderLeft: `${style.borderWidth || '2px'} solid ${style.color}`,
-                    opacity: isShopLocked ? 0.3 : 0.85,
+                    opacity: affordable ? 1 : 0.6,
                     cursor: isShopLocked ? 'default' : 'pointer',
                     outline: 'none', flexShrink: 0,
-                    '--glow-min': `inset 0 0 3px rgba(250, 235, 215, 0.1), 0 0 2px rgba(250, 235, 215, 0.05)`,
-                    '--glow-max': `inset 0 0 6px rgba(250, 235, 215, 0.2), 0 0 4px rgba(250, 235, 215, 0.1)`,
+                    '--glow-max': affordable
+                      ? `0 0 12px rgba(250, 235, 215, 0.35), inset 0 0 8px rgba(250, 235, 215, 0.2), 0 0 4px ${style.color}50`
+                      : undefined,
                   }}
                 >
                   <span style={{
-                    fontSize: style.fontSize || '9px', fontWeight: 700,
+                    fontSize: style.fontSize || '10px', fontWeight: 700,
                     letterSpacing: '0.04em', textTransform: 'uppercase',
                     color: style.color,
                   }}>
                     {style.label}
                   </span>
                   <div className="flex items-center gap-0.5 ml-auto">
-                    {parseCost(shop.cost).map(({ color, amount }) => (
+                    {parseCost((currentPlayer && game) ? getShopCost(game, currentPlayer.id, `${godColor}_${shop.type}`) || shop.cost : shop.cost).map(({ color, amount }) => (
                       <div key={color} className="flex items-center" style={{ gap: '1px' }}>
-                        <span style={{ fontSize: '9px', fontWeight: 700, color: base.textMuted }}>{amount}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: base.textMuted }}>{amount}</span>
                         {color === 'any' ? (
-                          <WildcardIcon size={9} />
+                          <WildcardIcon size={10} />
                         ) : (
-                          <ResourceIcon type={color} size={9} />
+                          <ResourceIcon type={color} size={10} />
                         )}
                       </div>
                     ))}
                   </div>
-                </motion.button>
+                </button>
               );
             })}
           </div>
@@ -641,55 +831,66 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
             </span>
             <div style={{ flex: 1, height: '1px', background: colors.border, opacity: 0.3 }} />
           </div>
-          <div className="flex flex-col gap-1 flex-shrink-0">
+          <div
+            className={`flex flex-col gap-1 ${shouldHighlightMarket ? 'buyable-glow' : ''}`}
+            style={{
+              flex: 1, minHeight: 0, overflow: 'hidden',
+              position: 'relative',
+              borderRadius: shouldHighlightMarket ? '6px' : undefined,
+              padding: shouldHighlightMarket ? '2px' : undefined,
+              '--glow-max': shouldHighlightMarket
+                ? `0 0 14px ${colors.glow}, inset 0 0 6px ${colors.glow}`
+                : undefined,
+            }}
+          >
             {slots.map((cardId, i) => {
               if (!cardId) return null;
               const card = powerCards[cardId];
               if (!card) return null;
               const buyable = canBuyCard(cardId);
               return (
-                <motion.button
+                <button
                   key={cardId}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (buyable) actions.buyCard(cardId);
+                    if (buyable && isMyTurn) actions.buyCard(cardId);
                   }}
                   onMouseEnter={(e) => showTooltip('card', cardId, e)}
                   onMouseLeave={hideTooltip}
-                  className={`w-full ${buyable ? 'buyable-glow' : ''}`}
+                  className={`w-full card-btn ${buyable ? 'buyable-glow' : ''}`}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: '5px',
-                    padding: '4px 6px', borderRadius: '6px',
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '6px 8px', borderRadius: '8px',
                     background: buyable
                       ? `radial-gradient(ellipse at 20% 30%, ${colors.surface} 0%, rgba(28, 25, 23, 0.85) 80%)`
                       : `radial-gradient(ellipse at 20% 30%, ${colors.surface}40 0%, rgba(28, 25, 23, 0.6) 80%)`,
-                    border: `1.5px solid ${buyable ? colors.primary + '66' : colors.border}`,
+                    border: `1.5px solid ${buyable ? colors.primary + '88' : colors.border}`,
                     opacity: buyable ? 1 : 0.5,
                     cursor: buyable ? 'pointer' : 'default',
-                    outline: 'none', flexShrink: 0,
-                    '--glow-min': `0 0 6px ${colors.glow}, inset 0 0 4px ${colors.glow}`,
-                    '--glow-max': `0 0 12px ${colors.glowStrong}, inset 0 0 8px ${colors.glow}`,
-                    boxShadow: buyable ? undefined : `inset 0 0 4px ${colors.glow}`,
+                    outline: 'none',
+                    '--glow-min': `0 0 8px ${colors.glow}, inset 0 0 5px ${colors.glow}`,
+                    '--glow-max': `0 0 16px ${colors.glowStrong}, inset 0 0 10px ${colors.glow}, 0 0 6px ${colors.glowStrong}`,
+                    boxShadow: buyable ? `0 0 6px ${colors.glow}` : `inset 0 0 4px ${colors.glow}`,
                   }}
                 >
                   <div style={{
-                    width: '18px', height: '18px', borderRadius: '50%',
+                    width: '24px', height: '24px', borderRadius: '50%',
                     background: buyable ? colors.surface : 'rgba(255,255,255,0.03)',
                     border: `1px solid ${buyable ? colors.primary + '55' : colors.border}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0,
                     boxShadow: buyable ? `0 0 4px ${colors.glow}` : 'none',
                   }}>
-                    <CardPixelIcon cardId={cardId} size={12} color={buyable ? colors.light : base.textMuted} />
+                    <CardPixelIcon cardId={cardId} size={16} color={buyable ? colors.light : base.textMuted} />
                   </div>
                   <span style={{
-                    fontSize: '9px', fontWeight: 600, color: buyable ? colors.text : base.textMuted,
+                    fontSize: '11px', fontWeight: 600, color: buyable ? colors.text : base.textMuted,
                     flex: 1, minWidth: 0,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
                     {card.name}
                   </span>
-                </motion.button>
+                </button>
               );
             })}
           </div>
@@ -704,19 +905,35 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
   return (
     <>
     <div
-      className="relative rounded-xl flex flex-col"
+      className={`relative rounded-xl flex flex-col ${isBeingWatched ? 'god-watching-glow' : ''}`}
       style={{
-        border: `1px solid ${colors.border}`,
+        border: `1px solid ${borderSurge ? colors.primary : colors.border}`,
         background: base.board,
         minHeight: 0,
+        overflow: 'hidden',
         boxShadow: `0 0 12px ${colors.glow}, inset 0 0 20px ${colors.surface}`,
+        transition: 'border-color 300ms ease-out',
+        '--watching-color': watchingPlayerColor || 'transparent',
       }}
     >
-      {/* God aura background gradient */}
-      <motion.div
+      {/* Placement burst overlay (focused) */}
+      {borderSurge && (
+        <div
+          key={`burst-${flashingActionId}`}
+          className="absolute inset-0 rounded-xl god-placement-burst"
+          style={{
+            background: `radial-gradient(ellipse at 50% 50%, ${colors.glowStrong} 0%, transparent 70%)`,
+            zIndex: 25,
+          }}
+        />
+      )}
+      {/* God aura background gradient — static opacity (no animation = no repaint) */}
+      <div
         className="absolute inset-0 pointer-events-none rounded-xl"
-        style={{ background: colors.gradient }}
-        {...godAreaGlow}
+        style={{
+          background: colors.gradient,
+          opacity: 0.5,
+        }}
       />
 
       {/* Surface noise */}
@@ -732,9 +949,9 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
       {/* Content */}
       <div
         className="relative z-10 flex flex-col h-full"
-        style={{ padding: '8px 12px', gap: '5px' }}
+        style={{ padding: '8px 12px', gap: '6px' }}
       >
-        {/* Header — god identity + favor condition */}
+        {/* Header — god identity + favor condition, single row */}
         <div className="flex items-center gap-2 flex-shrink-0" style={{ minHeight: '32px' }}>
           <div
             className="flex items-center justify-center rounded-md"
@@ -747,77 +964,89 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
               flexShrink: 0,
             }}
           >
-            <GodIcon god={godColor} size={18} />
+            <ResourceIcon type={godColor} size={20} />
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-baseline gap-2">
-              <span style={{
-                fontSize: '12px', fontWeight: 700, letterSpacing: '0.03em',
-                lineHeight: 1.1, color: colors.text,
-              }}>
-                {meta.name}
-              </span>
-              <span style={{
-                fontSize: '9px', lineHeight: 1.1,
-                color: colors.primary, opacity: 0.6,
-              }}>
-                {meta.title}
-              </span>
-            </div>
-            {godData.gloryCondition && (
-              <div
-                className="flex items-center"
-                onMouseEnter={(e) => showTooltip('vpCondition', godData.gloryCondition, e)}
-                onMouseLeave={hideTooltip}
-                style={{
-                  marginTop: '4px',
-                  padding: '4px 10px',
-                  borderRadius: '5px',
-                  background: favorConditionStyle.background,
-                  border: `1px solid ${favorConditionStyle.border}`,
-                  boxShadow: `0 0 12px rgba(220, 220, 240, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.06)`,
-                  cursor: 'help',
-                }}
-              >
-                <span style={{
-                  fontSize: '11px', lineHeight: 1.3, fontWeight: 700,
-                  color: favorConditionStyle.text,
-                  textShadow: favorConditionStyle.textShadow,
-                }}>
-                  {godData.gloryCondition.description}
-                </span>
-              </div>
-            )}
-          </div>
+          <span style={{
+            fontSize: '17px', fontWeight: 800, letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            color: colors.text, flexShrink: 0,
+          }}>
+            {meta.name}
+          </span>
+          <span style={{
+            fontSize: '11px', fontWeight: 600, lineHeight: 1.1,
+            color: colors.primary, opacity: 0.7, flexShrink: 0,
+          }}>
+            {meta.title}
+          </span>
+          {godData.gloryCondition && (
+            <span
+              onMouseEnter={(e) => showTooltip('vpCondition', godData.gloryCondition, e)}
+              onMouseLeave={hideTooltip}
+              style={{
+                fontSize: '11px', lineHeight: 1.3, fontWeight: 400,
+                fontStyle: 'italic',
+                color: 'rgba(200, 200, 220, 0.5)',
+                cursor: 'help',
+                marginLeft: 'auto',
+                textAlign: 'right',
+                maxWidth: '55%',
+              }}
+            >
+              <RichEffect text={godData.gloryCondition.description} size={10} />
+            </span>
+          )}
         </div>
 
         {/* ── ACTIONS SECTION ── cold stone/utilitarian feel */}
         <div
-          className="rounded-lg min-h-0 overflow-y-auto overflow-x-visible"
+          className="rounded-lg overflow-x-visible flex-shrink-0"
           style={{
-            flex: 1,
-            background: 'rgba(180, 195, 210, 0.03)',
-            border: '1px solid rgba(180, 195, 210, 0.06)',
-            boxShadow: 'inset 0 1px 4px rgba(0, 0, 0, 0.25), inset 0 0 8px rgba(180, 195, 210, 0.02)',
+            position: 'relative',
+            background: hasAnyAvailable ? colors.surface : 'rgba(180, 195, 210, 0.03)',
+            border: `1px solid ${hasAnyAvailable ? colors.border : 'rgba(180, 195, 210, 0.06)'}`,
+            boxShadow: hasAnyAvailable
+              ? undefined
+              : 'inset 0 1px 4px rgba(0, 0, 0, 0.25), inset 0 0 8px rgba(180, 195, 210, 0.02)',
             padding: '4px',
           }}
         >
+          {/* Unified pulse glow overlay when actions are available */}
+          {hasAnyAvailable && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: '-1px',
+                borderRadius: '9px',
+                pointerEvents: 'none',
+                zIndex: 0,
+                boxShadow: `0 0 12px ${colors.glow}, 0 0 4px ${colors.glowStrong}, inset 0 0 8px ${colors.glow}`,
+                animation: 'actionSectionPulse 2.2s ease-in-out infinite',
+                willChange: 'opacity',
+              }}
+            />
+          )}
           {tierGroups.map((group) => {
             if (group.actions.length === 0) return null;
+            // T3 actions get full width (usually just 1 big action)
+            const cols = group.tier === 3 ? '1fr' : 'repeat(2, 1fr)';
 
             return (
               <div
                 key={group.tier}
                 className="grid"
-                style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '2px' }}
+                style={{ gridTemplateColumns: cols, gap: '2px' }}
               >
                 {group.actions.map(action => {
                   const state = getActionState(action);
-                  const dynamicAction = { ...action, effect: getDynamicEffect(action) };
+                  const effect = getDynamicEffect(action);
                   return (
                     <ActionSpace
                       key={action.id}
-                      action={dynamicAction}
+                      actionId={action.id}
+                      actionName={action.name}
+                      actionEffect={effect}
+                      actionTier={action.tier}
                       godColor={godColor}
                       isAvailable={state.isAvailable}
                       isOccupied={state.isOccupied}
@@ -825,8 +1054,9 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                       isNullified={state.isNullified}
                       isLocked={state.isLocked}
                       isLastPlaced={action.id === lastPlacedActionId}
+                      isJustPlaced={action.id === flashingActionId}
                       onPlace={handlePlace}
-                      onHover={(e) => showTooltip('action', dynamicAction, e)}
+                      onHover={(e) => showTooltip('action', { ...action, effect }, e)}
                       onLeave={hideTooltip}
                     />
                   );
@@ -834,28 +1064,25 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
               </div>
             );
           })}
+
         </div>
 
         {/* ── MARKET SECTION ── warm parchment/trade feel */}
         <div
           className={`rounded-lg flex-shrink-0 ${shouldHighlightMarket ? 'buyable-glow' : ''}`}
           style={{
-            background: 'rgba(250, 235, 215, 0.05)',
-            border: shouldHighlightMarket ? '1px solid rgba(250, 235, 215, 0.3)' : '1px solid rgba(250, 235, 215, 0.12)',
-            borderTop: shouldHighlightMarket ? '2px solid rgba(250, 235, 215, 0.4)' : '2px solid rgba(250, 235, 215, 0.15)',
-            padding: '4px',
-            '--glow-min': 'inset 0 1px 6px rgba(250, 235, 215, 0.04)',
-            '--glow-max': 'inset 0 1px 6px rgba(250, 235, 215, 0.04), 0 0 14px rgba(250, 235, 215, 0.15)',
+            background: shouldHighlightMarket ? 'rgba(250, 235, 215, 0.08)' : 'rgba(250, 235, 215, 0.05)',
+            border: shouldHighlightMarket ? '1.5px solid rgba(250, 235, 215, 0.4)' : '1px solid rgba(250, 235, 215, 0.12)',
+            borderTop: shouldHighlightMarket ? '2px solid rgba(250, 235, 215, 0.5)' : '2px solid rgba(250, 235, 215, 0.15)',
+            padding: '6px',
+            '--glow-max': shouldHighlightMarket
+              ? '0 0 18px rgba(250, 235, 215, 0.25), inset 0 0 8px rgba(250, 235, 215, 0.08)'
+              : 'inset 0 1px 6px rgba(250, 235, 215, 0.04)',
             boxShadow: shouldHighlightMarket ? undefined : 'inset 0 1px 6px rgba(250, 235, 215, 0.04)',
           }}
         >
-          <SectionHint
-            label="Shops"
-            hint="Spend blessings for powerful effects. Place a patron here first. One purchase per turn (shop or power card)."
-            color="rgba(250, 235, 215, 0.45)"
-          />
-          {/* Shops — compact placards, effect text is the hero */}
-          <div style={{ display: 'flex', gap: '4px' }}>
+          {/* Shops — 3 columns, compact with type label + effect + cost */}
+          <div style={{ display: 'flex', gap: '6px' }}>
             {godData.shops.map(shop => {
               const style = shopStyles[shop.type];
               const modifiedCost = (currentPlayer && game) ? getShopCost(game, currentPlayer.id, `${godColor}_${shop.type}`) : null;
@@ -863,95 +1090,71 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
               const isShopLocked = shop.type === 'strong' && currentRound < 2;
               const affordable = !isShopLocked && canAffordShop(shop);
 
-              const godAccessed = (game?.godsAccessedThisTurn || []).includes(godColor);
-              const alreadyPurchased = !!game?.purchaseMadeThisTurn;
-              const hintText = isShopLocked ? null
-                : affordable ? null
-                : godAccessed && alreadyPurchased ? 'Purchased this turn'
-                : godAccessed ? 'Need more blessings'
-                : null;
+              // Distinct background per shop type
+              const shopBg = affordable
+                ? shop.type === 'vp'
+                  ? `linear-gradient(170deg, ${style.color}18 0%, ${style.color}08 40%, rgba(250, 235, 215, 0.03) 100%)`
+                  : shop.type === 'strong'
+                    ? `linear-gradient(170deg, ${style.color}14 0%, rgba(250, 235, 215, 0.05) 100%)`
+                    : `linear-gradient(180deg, rgba(250, 235, 215, 0.06) 0%, rgba(250, 235, 215, 0.02) 100%)`
+                : 'rgba(250, 235, 215, 0.02)';
 
               return (
-                <motion.button
+                <button
                   key={shop.type}
-                  onClick={isShopLocked ? undefined : () => handleShop(shop.type)}
+                  onClick={isShopLocked || !isMyTurn ? undefined : () => handleShop(shop.type)}
                   onMouseEnter={(e) => showTooltip('shop', shop, e)}
                   onMouseLeave={hideTooltip}
-                  disabled={false}
-                  className={affordable ? 'buyable-glow' : ''}
+                  className={`shop-btn ${affordable ? 'buyable-glow' : ''}`}
                   style={{
                     flex: 1, minWidth: 0,
                     display: 'flex', flexDirection: 'column',
-                    borderRadius: '6px',
-                    background: affordable
-                      ? `linear-gradient(180deg, ${style.color}18 0%, rgba(250, 235, 215, 0.06) 100%)`
-                      : 'rgba(250, 235, 215, 0.02)',
-                    border: `1px solid ${affordable ? `${style.color}50` : 'rgba(250, 235, 215, 0.06)'}`,
-                    opacity: isShopLocked ? 0.3 : affordable ? 1 : 0.55,
+                    borderRadius: '8px',
+                    padding: '8px 10px',
+                    background: shopBg,
+                    border: `1px solid ${affordable ? `${style.color}40` : 'rgba(250, 235, 215, 0.06)'}`,
+                    borderTop: `3px solid ${affordable ? style.color : `${style.color}30`}`,
+                    opacity: isShopLocked ? 0.6 : affordable ? 1 : 0.65,
                     cursor: isShopLocked ? 'default' : 'pointer',
                     outline: 'none',
-                    overflow: 'hidden',
-                    '--glow-min': affordable ? `0 0 4px ${style.color}15, inset 0 0 4px ${style.color}08` : undefined,
-                    '--glow-max': affordable ? `0 0 12px ${style.color}30, inset 0 0 8px ${style.color}15` : undefined,
-                  }}
-                  whileHover={!isShopLocked ? {
-                    y: -2,
+                    overflow: 'visible',
                     boxShadow: affordable
-                      ? `0 4px 20px ${style.color}40, inset 0 0 10px ${style.color}15`
-                      : `0 4px 12px rgba(0,0,0,0.3)`,
-                  } : undefined}
+                      ? `inset 0 0 12px ${style.color}10`
+                      : 'none',
+                    '--glow-max': affordable ? `0 0 16px ${style.color}50, inset 0 0 8px ${style.color}20, 0 0 4px ${style.color}40` : undefined,
+                  }}
                 >
-                  {/* Tier banner — colored strip at top */}
-                  <div style={{
-                    padding: '3px 8px',
-                    background: `${style.color}18`,
-                    borderBottom: `1px solid ${style.color}20`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  }}>
+                  {/* Type label + cost on same line */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <span style={{
-                      fontSize: '9px', fontWeight: 700, letterSpacing: '0.05em',
+                      fontSize: '11px', fontWeight: 700, letterSpacing: '0.04em',
                       textTransform: 'uppercase', color: style.color,
                     }}>
                       {style.label}
                     </span>
-                    {isShopLocked && <span style={{ fontSize: '7px', color: base.textMuted }}>R2</span>}
-                    {/* Cost inline in banner */}
                     <div className="flex items-center" style={{ gap: '3px' }}>
                       {costEntries.map(({ color, amount }) => (
                         <div key={color} className="flex items-center" style={{ gap: '1px' }}>
-                          <span style={{ fontSize: '9px', fontWeight: 700, color: base.textMuted }}>
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: base.textMuted }}>
                             {amount}
                           </span>
                           {color === 'any' ? (
-                            <WildcardIcon size={10} />
+                            <WildcardIcon size={13} />
                           ) : (
-                            <ResourceIcon type={color} size={10} />
+                            <ResourceIcon type={color} size={13} />
                           )}
                         </div>
                       ))}
                     </div>
                   </div>
-                  {/* Effect text — the hero content */}
+                  {/* Effect text */}
                   <div style={{
-                    flex: 1, padding: '6px 8px',
-                    fontSize: '11px', lineHeight: 1.35, textAlign: 'center',
-                    color: affordable ? base.textPrimary : base.textMuted,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '12px', lineHeight: 1.4,
+                    color: affordable ? base.textPrimary : 'rgba(168, 162, 158, 0.8)',
                   }}>
-                    {shop.effect}
+                    <RichEffect text={shop.effect} size={12} />
                   </div>
-                  {/* Hint text for inaccessible shops */}
-                  {hintText && (
-                    <div style={{
-                      padding: '2px 8px 4px',
-                      fontSize: '8px', textAlign: 'center',
-                      color: base.textMuted, opacity: 0.7,
-                      fontStyle: 'italic',
-                    }}>
-                      {hintText}
-                    </div>
-                  )}
-                </motion.button>
+                </button>
               );
             })}
           </div>
@@ -960,47 +1163,36 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
         {/* ── POWER CARDS SECTION ── divine/premium feel with god-colored glow */}
         {slots.some(s => s != null) ? (
           <div
-            className={`rounded-lg flex-shrink-0 ${shouldHighlightMarket ? 'buyable-glow' : ''}`}
+            className={`rounded-lg ${shouldHighlightMarket ? 'buyable-glow' : ''}`}
             style={{
+              flex: 1,
+              minHeight: 0,
               background: `radial-gradient(ellipse at 50% 0%, ${colors.surface} 0%, rgba(28, 25, 23, 0.4) 80%)`,
               border: shouldHighlightMarket ? `1px solid ${colors.primary}55` : `1px solid ${colors.border}`,
-              padding: '4px',
+              padding: '6px',
               '--glow-min': `inset 0 1px 8px ${colors.glow}`,
-              '--glow-max': `inset 0 1px 8px ${colors.glow}, 0 0 14px ${colors.glow}`,
+              '--glow-max': `inset 0 1px 10px ${colors.glow}, 0 0 20px ${colors.glow}, 0 0 6px ${colors.glowStrong}`,
               boxShadow: shouldHighlightMarket ? undefined : `inset 0 1px 8px ${colors.glow}`,
+              display: 'flex', flexDirection: 'column',
             }}
           >
-            <SectionHint
-              label="Artifacts"
-              hint="Permanent artifacts with lasting abilities. New artifacts appear each round. Place a patron here first. One purchase per turn (shop or artifact)."
-              color={colors.text}
-            />
-            <motion.div
-              className="flex"
-              style={{ gap: '6px' }}
-              variants={staggerContainer}
-              initial="initial"
-              animate="animate"
+            <div
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', flex: 1 }}
             >
               {slots.map((cardId, i) => {
                 if (!cardId) {
                   return (
                     <div
                       key={`empty-${i}`}
+                      className={soldSlotIndex === i ? 'market-slot-sold' : ''}
                       style={{
-                        flex: 1, minHeight: '80px', borderRadius: '8px',
+                        borderRadius: '8px',
                         border: `1px dashed ${colors.border}`,
                         background: 'rgba(255, 255, 255, 0.01)',
-                        display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center', gap: '4px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}
                     >
-                      <div style={{
-                        width: '20px', height: '20px', borderRadius: '50%',
-                        border: `1px dashed ${colors.border}`,
-                        opacity: 0.3,
-                      }} />
-                      <span style={{ fontSize: '8px', fontWeight: 600, color: base.textMuted, opacity: 0.4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      <span style={{ fontSize: '9px', fontWeight: 600, color: base.textMuted, opacity: 0.3, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         Sold
                       </span>
                     </div>
@@ -1009,29 +1201,28 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                 const card = powerCards[cardId];
                 if (!card) return null;
                 const buyable = canBuyCard(cardId);
-                const cardCostEntries = Object.entries(card.cost || {});
+                const effectiveCost = getCardCost(cardId) || card.cost || {};
+                const cardCostEntries = Object.entries(effectiveCost);
                 return (
-                  <motion.button
+                  <button
                     key={cardId}
-                    variants={staggerItem}
-                    onClick={buyable ? () => actions.buyCard(cardId) : undefined}
-                    disabled={false}
+                    onClick={buyable && isMyTurn ? () => actions.buyCard(cardId) : undefined}
                     onMouseEnter={(e) => showTooltip('card', cardId, e)}
                     onMouseLeave={hideTooltip}
-                    className="text-center"
+                    className={`text-left card-btn ${buyable ? 'buyable-glow' : ''}`}
                     style={{
-                      position: 'relative', flex: 1, minWidth: 0,
+                      position: 'relative',
                       borderRadius: '8px',
                       overflow: 'visible',
                       outline: 'none',
                       cursor: buyable ? 'pointer' : 'default',
                       opacity: buyable ? 1 : 0.5,
+                      '--glow-max': buyable
+                        ? `0 0 20px ${colors.glow}, 0 0 8px ${colors.glowStrong}, inset 0 0 10px ${colors.glow}`
+                        : undefined,
                     }}
-                    whileHover={buyable ? { y: -3 } : undefined}
-                    whileTap={buyable ? { scale: 0.97 } : undefined}
-                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   >
-                    {/* Card frame — gem-like premium surface */}
+                    {/* Card frame */}
                     <div
                       className="absolute inset-0"
                       style={{
@@ -1041,94 +1232,71 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
                         border: `1.5px solid ${buyable ? colors.primary + '66' : colors.border}`,
                         borderRadius: '8px',
                         boxShadow: buyable
-                          ? `0 3px 12px rgba(0,0,0,0.5), 0 0 14px ${colors.glow}, inset 0 1px 0 rgba(255,255,255,0.1)`
-                          : '0 2px 8px rgba(0,0,0,0.3)',
+                          ? `0 2px 8px rgba(0,0,0,0.4), 0 0 12px ${colors.glow}`
+                          : '0 1px 4px rgba(0,0,0,0.2)',
                       }}
                     />
-                    {/* Specular highlight — top edge catch */}
-                    {buyable && (
-                      <div className="absolute inset-x-0 top-0 pointer-events-none" style={{
-                        height: '40%', borderRadius: '8px 8px 0 0',
-                        background: `linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%)`,
-                      }} />
-                    )}
-                    {/* Content — icon-dominant layout */}
-                    <div className="relative z-10 flex flex-col items-center" style={{ padding: '10px 6px 6px' }}>
-                      {/* Large icon — the artifact's visual identity */}
-                      <div style={{
-                        width: '44px', height: '44px', borderRadius: '50%',
-                        background: buyable
-                          ? `radial-gradient(circle at 38% 32%, ${colors.light}40 0%, ${colors.surface} 45%, rgba(0,0,0,0.6) 100%)`
-                          : 'rgba(255,255,255,0.03)',
-                        border: `1.5px solid ${buyable ? colors.primary + '55' : colors.border}`,
-                        boxShadow: buyable
-                          ? `0 0 16px ${colors.glow}, 0 0 6px ${colors.glowStrong}, inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.15)`
-                          : 'none',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        marginBottom: '6px',
-                      }}>
-                        <ArtifactImage
-                          cardId={cardId}
-                          size={36}
-                          color={buyable ? colors.light : base.textMuted}
-                          glowColor={buyable ? colors.primary : undefined}
-                        />
+                    {/* Content — centered image+text block, cost bottom-right */}
+                    <div className="relative z-10 flex flex-col h-full" style={{ padding: '12px' }}>
+                      {/* Centered block: image + name/desc */}
+                      <div className="flex items-start" style={{ gap: '10px', flex: 1, display: 'flex', alignItems: 'center' }}>
+                        <div style={{
+                          width: '80px', height: '80px', borderRadius: '12px', flexShrink: 0,
+                          background: buyable
+                            ? `radial-gradient(circle at 38% 32%, ${colors.light}30 0%, ${colors.surface} 50%, rgba(0,0,0,0.5) 100%)`
+                            : 'rgba(255,255,255,0.03)',
+                          border: `1.5px solid ${buyable ? colors.primary + '55' : colors.border}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <ArtifactImage
+                            cardId={cardId}
+                            size={60}
+                            color={buyable ? colors.light : base.textMuted}
+                            glowColor={buyable ? colors.primary : undefined}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0" style={{ alignSelf: 'center' }}>
+                          <div style={{
+                            fontSize: '14px', fontWeight: 700, lineHeight: 1.2,
+                            color: buyable ? colors.text : base.textMuted,
+                          }}>
+                            {card.name}
+                          </div>
+                          <div style={{
+                            fontSize: '12px', lineHeight: 1.35,
+                            color: buyable ? base.textSecondary : 'rgba(168, 162, 158, 0.5)',
+                            marginTop: '3px',
+                          }}>
+                            <RichEffect text={card.description} size={12} />
+                          </div>
+                        </div>
                       </div>
-                      {/* Card name */}
-                      <span style={{
-                        fontSize: '10px', fontWeight: 700, lineHeight: 1.2,
-                        color: buyable ? colors.text : base.textMuted,
-                        marginBottom: '3px',
-                        maxWidth: '100%',
-                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>
-                        {card.name}
-                      </span>
-                      {/* Description */}
-                      <div style={{
-                        fontSize: '9px', lineHeight: 1.3,
-                        color: buyable ? base.textSecondary : 'rgba(168, 162, 158, 0.5)',
-                        overflow: 'hidden', display: '-webkit-box',
-                        WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                        marginBottom: '6px',
-                      }}>
-                        {card.description}
-                      </div>
-                      {/* Cost row */}
-                      <div className="flex items-center justify-center" style={{ gap: '4px' }}>
+                      {/* Cost — bottom-right */}
+                      <div className="flex items-center justify-end" style={{ gap: '4px' }}>
+                        <span style={{ fontSize: '8px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: base.textMuted, opacity: 0.6 }}>
+                          Cost
+                        </span>
                         {cardCostEntries.map(([resource, amount]) => (
                           <div key={resource} className="flex items-center" style={{ gap: '2px' }}>
                             <span style={{
-                              fontSize: '11px', fontWeight: 700,
+                              fontSize: '14px', fontWeight: 700,
                               color: buyable ? (resourceStyles[resource]?.highlight || base.textSecondary) : base.textMuted,
                             }}>
                               {amount}
                             </span>
                             {resource === 'any' ? (
-                              <WildcardIcon size={12} />
+                              <WildcardIcon size={15} />
                             ) : (
-                              <ResourceIcon type={resource} size={12} />
+                              <ResourceIcon type={resource} size={15} />
                             )}
                           </div>
                         ))}
-                        {buyable && (
-                          <span style={{
-                            fontSize: '8px', fontWeight: 700, textTransform: 'uppercase',
-                            letterSpacing: '0.06em',
-                            color: '#0a0908',
-                            background: colors.primary,
-                            padding: '2px 6px', borderRadius: '3px',
-                            marginLeft: '2px',
-                          }}>
-                            Buy
-                          </span>
-                        )}
                       </div>
                     </div>
-                  </motion.button>
+                  </button>
                 );
               })}
-            </motion.div>
+            </div>
           </div>
         ) : (
           <div
@@ -1151,13 +1319,13 @@ export default function GodArea({ godColor, isFocused = true, onFocus }) {
     {tooltip && createPortal(<FloatingTooltip tooltip={tooltip} godColor={godColor} />, document.body)}
     </>
   );
-}
+});
 
 // ============================================================================
 // Collapsed Action Row — tier + name + occupation indicator
 // ============================================================================
 
-function CollapsedActionRow({ action, godColor, state, onHover, onLeave }) {
+const CollapsedActionRow = React.memo(function CollapsedActionRow({ action, godColor, state, onHover, onLeave }) {
   const colors = godColors[godColor];
   const tier = tierStyles[action.tier];
 
@@ -1166,41 +1334,37 @@ function CollapsedActionRow({ action, godColor, state, onHover, onLeave }) {
     : state.isLocked
       ? 'rgba(255, 255, 255, 0.04)'
       : state.isAvailable
-        ? colors.border
+        ? colors.glowStrong
         : 'rgba(255, 255, 255, 0.04)';
 
   const bgColor = state.isAvailable
     ? `${colors.surface}`
-    : 'transparent';
+    : state.isOccupied
+      ? 'rgba(0, 0, 0, 0.3)'
+      : 'transparent';
 
   return (
     <div
       className="relative flex items-center gap-1.5 rounded px-2"
       style={{
-        height: '24px',
+        height: '28px',
         border: `1px solid ${borderColor}`,
         background: bgColor,
-        opacity: state.isLocked ? 0.3 : state.isNullified ? 0.45 : state.isOccupied ? 0.65 : 1,
+        opacity: state.isLocked ? 0.2 : state.isNullified ? 0.35 : state.isOccupied ? 0.4 : 1,
         cursor: 'pointer',
       }}
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
     >
-      {/* Available pulse glow */}
+      {/* Available glow — static (section-level pulse handles the "alive" feel) */}
       {state.isAvailable && (
-        <motion.div
-          className="absolute inset-0 rounded pointer-events-none"
-          animate={{
-            boxShadow: [
-              `inset 0 0 4px ${colors.glow}, 0 0 3px ${colors.glow}`,
-              `inset 0 0 8px ${colors.glowStrong}, 0 0 6px ${colors.glow}`,
-              `inset 0 0 4px ${colors.glow}, 0 0 3px ${colors.glow}`,
-            ],
-          }}
-          transition={{
-            duration: 2.5,
-            repeat: Infinity,
-            ease: 'easeInOut',
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            inset: '-1px',
+            borderRadius: '5px',
+            boxShadow: `inset 0 0 6px ${colors.glow}, 0 0 6px ${colors.glow}, 0 0 2px ${colors.glowStrong}`,
+            opacity: 0.5,
           }}
         />
       )}
@@ -1215,8 +1379,8 @@ function CollapsedActionRow({ action, godColor, state, onHover, onLeave }) {
 
       {/* Action name */}
       <span style={{
-        flex: 1, fontSize: '10px', fontWeight: 600, lineHeight: 1,
-        color: state.isLocked ? base.textMuted : base.textPrimary,
+        flex: 1, fontSize: '11px', fontWeight: 600, lineHeight: 1,
+        color: state.isLocked ? 'rgba(120, 113, 108, 0.5)' : state.isOccupied ? 'rgba(168, 162, 158, 0.5)' : base.textPrimary,
         textDecoration: state.isNullified ? 'line-through' : 'none',
         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
       }}>
@@ -1236,5 +1400,5 @@ function CollapsedActionRow({ action, godColor, state, onHover, onLeave }) {
       )}
     </div>
   );
-}
+});
 

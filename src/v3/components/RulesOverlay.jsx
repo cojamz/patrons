@@ -17,27 +17,27 @@ export const SLIDES = [
   },
   {
     heading: 'Choose Your People',
-    body: 'At the start of each game, you\'ll choose your people — a faction whose unique power shapes your strategy. Then you\'ll send your patrons to take actions the gods favor.',
+    body: 'At the start of each game, you\'ll draft a champion — a faction whose unique passive shapes your strategy. Then send your patrons to take actions the gods favor.',
     icon: 'champions',
   },
   {
     heading: 'Honor the Gods',
-    body: 'Place your patrons on action spaces to gather blessings — sacred resources in each god\'s color. But beware: each space holds only one patron. If a rival claims your spot, you\'ll need a new plan.',
+    body: 'Four gods watch over the board: Aurum (gold), Noctis (shadows), Chronis (time), and Solara (abundance). Place your patrons on their action spaces to gather blessings. But beware: each space holds only one patron.',
     icon: 'actions',
   },
   {
     heading: 'Acquire Artifacts & Shops',
-    body: 'Spend your blessings at god shops for powerful one-time effects, or acquire artifacts — permanent relics that grow stronger each round. Build an engine of divine power.',
+    body: 'After placing a worker, you may buy one shop benefit or one artifact from the same god. One purchase per turn. Artifacts are permanent relics that trigger throughout the game.',
     icon: 'artifacts',
   },
   {
     heading: 'Earn Divine Favor',
-    body: 'Each god has a unique Favor condition. Hoard gold for Aurum. Collect variety for Solara. The gods judge you at the end of every round — meet their conditions to earn Favor.',
+    body: 'Each god rewards Favor differently. Aurum: per gold above your richest opponent. Noctis: each time you steal. Chronis: each time you repeat or copy. Solara: each time you gain a new color. Diversify or specialize.',
     icon: 'favor',
   },
   {
     heading: '3 Rounds. Most Favor Wins.',
-    body: 'The game builds across 3 rounds — more patrons, more action spaces, more powerful shops each round. Turn order favors the underdog: lowest Favor goes first. After 3 rounds, the player with the most Favor becomes The Favored.',
+    body: 'The game builds across 3 rounds: 3 workers, then 4, then 5. New action tiers unlock each round. Turn order favors the underdog — lowest Favor goes first. After 3 rounds, the most Favor wins.',
     icon: 'rounds',
   },
 ];
@@ -174,7 +174,7 @@ function IntroSlide() {
   );
 }
 
-export default function RulesOverlay({ onDismiss }) {
+export default function RulesOverlay({ onDismiss, onOpenRules }) {
   const [slideIndex, setSlideIndex] = useState(0);
   const slide = SLIDES[slideIndex];
   const isLast = slideIndex === SLIDES.length - 1;
@@ -274,30 +274,42 @@ export default function RulesOverlay({ onDismiss }) {
               <button
                 key={i}
                 onClick={() => setSlideIndex(i)}
-                className="rounded-full transition-all duration-200"
+                className="rounded-full"
                 style={{
                   width: i === slideIndex ? '24px' : '8px',
                   height: '8px',
                   background: i === slideIndex ? godColors.gold.primary : 'rgba(255, 255, 255, 0.15)',
+                  transition: 'width 150ms ease, background-color 150ms ease',
                 }}
               />
             ))}
           </div>
 
           {/* Next / Play button */}
-          <motion.button
+          <button
             onClick={() => isLast ? onDismiss() : setSlideIndex(s => s + 1)}
-            className="px-10 py-3 rounded-lg text-sm font-bold uppercase tracking-wider"
+            className="px-10 py-3 rounded-lg text-sm font-bold uppercase tracking-wider btn-pop"
             style={{
               background: `linear-gradient(135deg, ${godColors.gold.primary}, ${godColors.gold.dark})`,
               color: base.textDark,
               boxShadow: `0 4px 20px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.2)`,
             }}
-            whileHover={{ scale: 1.02, boxShadow: `0 6px 30px ${godColors.gold.glowStrong}` }}
-            whileTap={{ scale: 0.97 }}
           >
             {isLast ? 'Begin' : isIntro ? 'How to Play' : 'Next'}
-          </motion.button>
+          </button>
+
+          {/* Full Rules link on last slide */}
+          {isLast && onOpenRules && (
+            <button
+              onClick={onOpenRules}
+              className="text-xs font-medium transition-colors duration-150"
+              style={{ color: godColors.gold.primary }}
+              onMouseEnter={(e) => e.target.style.color = godColors.gold.light}
+              onMouseLeave={(e) => e.target.style.color = godColors.gold.primary}
+            >
+              Read Full Rules →
+            </button>
+          )}
 
           {/* Skip link */}
           {!isLast && (

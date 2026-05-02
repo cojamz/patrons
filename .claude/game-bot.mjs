@@ -97,6 +97,12 @@ async function getModalInfo(page) {
       const s = getComputedStyle(overlay);
       if (s.display === 'none' || s.visibility === 'hidden') continue;
 
+      // Check for AI draft waiting screen — these are full-screen overlays with just text
+      const text = overlay.textContent?.trim() || '';
+      if (text === 'Setting up draft...' || text.endsWith('is choosing...')) {
+        return { type: 'ai_waiting', title: text, buttons: [], visible: true, fullText: text };
+      }
+
       // Find title — include h1 (round transition uses h1 for "Round 1" / "Game Over")
       const titleEl = overlay.querySelector('h1, h2, h3, [class*="text-xl"], [class*="text-lg"]');
       const title = titleEl?.textContent?.trim() || '';
@@ -186,6 +192,13 @@ async function handleModal(page, modalInfo) {
   log(`Handling modal: ${type} — "${title}"`);
 
   switch (type) {
+    case 'ai_waiting': {
+      // AI is drafting or processing — just wait, don't click anything
+      log(`AI waiting: "${title}" — waiting 2s`);
+      await page.waitForTimeout(2000);
+      return true; // Signal that we handled it (by waiting)
+    }
+
     case 'UNHANDLED_BUG': {
       // This is a BUG — an unhandled decision type in the UI
       const decisionType = modalInfo.fullText.match(/Unhandled decision type:\s*(\w+)/)?.[1] || 'unknown';
@@ -567,14 +580,19 @@ async function getGameState(page) {
     }
 
     // Count actual action spaces — only buttons with tier badge prefix
+    // NOTE: ActionSpace buttons are NEVER disabled in the DOM.
+    // Occupied actions use opacity: 0.6 and cursor: default.
+    // Available actions use opacity: 1 and cursor: pointer.
     const allBtns = Array.from(document.querySelectorAll('button'));
     for (const btn of allBtns) {
       const rect = btn.getBoundingClientRect();
       if (rect.height >= 28 && rect.height <= 42 && rect.width > 80 && rect.top > 50 && rect.top < 700) {
         const text = btn.textContent.trim();
-        // Only count action buttons (with tier badge: I, II, III or R1, R2, R3)
         if (/^(I{1,3}|R[123])[A-Z]/.test(text)) {
-          if (!btn.disabled) state.availableActions++;
+          const s = getComputedStyle(btn);
+          const opacity = parseFloat(s.opacity);
+          const isInteractive = s.cursor === 'pointer' && opacity >= 0.9;
+          if (isInteractive) state.availableActions++;
           else state.occupiedActions++;
         }
       }
@@ -628,9 +646,14 @@ async function getGameState(page) {
 }
 
 async function placeWorker(page) {
-  // Find action buttons by scanning the DOM for tier-prefixed buttons
+  // Find AVAILABLE action buttons — skip occupied/locked/nullified ones.
+  // ActionSpace buttons are NEVER disabled; they use opacity + cursor to indicate state:
+  //   Available: opacity=1, cursor=pointer
+  //   Occupied:  opacity=0.6, cursor=default
+  //   Nullified: opacity=0.5, cursor=default
+  //   Locked:    opacity=0.35, cursor=default
   const candidates = await page.evaluate(() => {
-    const btns = Array.from(document.querySelectorAll('button:not([disabled])'));
+    const btns = Array.from(document.querySelectorAll('button'));
     const actionBtns = [];
 
     for (const btn of btns) {
@@ -640,10 +663,15 @@ async function placeWorker(page) {
         const text = btn.textContent.trim();
         // Action buttons have a tier badge: "I", "II", "III" followed by uppercase action name
         if (/^I{1,3}[A-Z]/.test(text)) {
+          const s = getComputedStyle(btn);
+          const opacity = parseFloat(s.opacity);
+          const isInteractive = s.cursor === 'pointer' && opacity >= 0.9;
+          if (!isInteractive) continue; // Skip occupied/locked/nullified actions
           actionBtns.push({
             text: text.substring(0, 50),
             centerX: Math.round(rect.x + rect.width / 2),
             centerY: Math.round(rect.y + rect.height / 2),
+            opacity,
           });
         }
       }
@@ -651,9 +679,12 @@ async function placeWorker(page) {
     return actionBtns;
   });
 
-  if (candidates.length === 0) return null;
+  if (candidates.length === 0) {
+    log('No available actions on focused god — will try other gods');
+    return null;
+  }
 
-  // Pick a random action
+  // Pick a random available action
   const chosen = candidates[Math.floor(Math.random() * candidates.length)];
 
   // Use Playwright's native click (proper mouse events, works with motion.button)
@@ -782,9 +813,35 @@ async function main() {
 
     // ── PHASE 2: Handle draft + initial modals ──
     log('Phase 2: Draft & setup modals');
-    const draftResult = await clearAllModals(page);
-    if (typeof draftResult === 'number') summary.modalsHandled += draftResult;
-    log(`Cleared ${draftResult} setup modals`);
+    // Keep clearing modals until the board is actually visible (no more draft overlays)
+    for (let attempt = 0; attempt < 30; attempt++) {
+      if (await hasModal(page)) {
+        const modalResult = await clearAllModals(page, 10);
+        if (typeof modalResult === 'number') summary.modalsHandled += modalResult;
+      }
+
+      // Check if the board is actually ready (no full-screen overlays)
+      const boardReady = await page.evaluate(() => {
+        const overlays = document.querySelectorAll('.fixed.inset-0');
+        const hasBlockingOverlay = Array.from(overlays).some(el => {
+          const s = getComputedStyle(el);
+          return s.display !== 'none' && s.visibility !== 'hidden' && s.opacity !== '0';
+        });
+        // Board is ready when no overlay and the grid is visible
+        const boardGrid = Array.from(document.querySelectorAll('*')).find(el => {
+          const s = getComputedStyle(el);
+          return s.display === 'grid' && el.children.length >= 2 && el.getBoundingClientRect().height > 200;
+        });
+        return !hasBlockingOverlay && !!boardGrid;
+      });
+
+      if (boardReady) {
+        log(`Board ready after ${attempt + 1} attempts`);
+        break;
+      }
+      log(`Board not ready (attempt ${attempt + 1}), waiting...`);
+      await page.waitForTimeout(1000);
+    }
 
     // ── PHASE 3: Board ready ──
     log('Phase 3: Board ready — take baseline screenshots');
@@ -848,8 +905,23 @@ async function main() {
       }
 
       // Place a worker if possible
-      if (state.availableActions > 0 && !state.hasModal) {
-        const actionText = await placeWorker(page);
+      let workerPlaced = false;
+      if (!state.hasModal) {
+        // Snapshot occupied count before attempting placement
+        const preOccupied = state.occupiedActions;
+
+        // Try placing on current god first; if no available actions, cycle through other gods
+        let actionText = await placeWorker(page);
+        if (!actionText) {
+          // Current god has no available actions — try focusing each god
+          const gc = await getGodCount(page);
+          for (let gi = 0; gi < gc; gi++) {
+            await focusGod(page, gi);
+            await page.waitForTimeout(400);
+            actionText = await placeWorker(page);
+            if (actionText) break;
+          }
+        }
         if (actionText) {
           summary.actionsPlaced.push(actionText);
           await page.waitForTimeout(500);
@@ -864,52 +936,80 @@ async function main() {
             if (typeof modalResult === 'number') summary.modalsHandled += modalResult;
           }
 
+          // Verify the worker was actually placed (occupied count should increase)
+          const postState = await getGameState(page);
+          if (postState.occupiedActions > preOccupied || postState.availableActions < state.availableActions) {
+            workerPlaced = true;
+            log(`Worker confirmed: occupied ${preOccupied} → ${postState.occupiedActions}, available ${state.availableActions} → ${postState.availableActions}`);
+          } else {
+            // Worker was NOT placed — don't assume success
+            workerPlaced = false;
+            log(`Worker NOT placed (occupied: ${preOccupied} → ${postState.occupiedActions}, available: ${state.availableActions} → ${postState.availableActions})`);
+          }
           consecutiveFailures = 0;
         } else {
           consecutiveFailures++;
         }
       }
 
-      // End turn if we can
-      const postPlaceState = await getGameState(page);
-      if (postPlaceState.canEndTurn) {
-        const ended = await endTurn(page);
-        if (ended) {
-          summary.turnsPlayed++;
-          log(`Turn ${summary.turnsPlayed} completed`);
+      // Only end turn if we actually placed a worker (or the game is waiting for us to end)
+      if (workerPlaced) {
+        const postPlaceState = await getGameState(page);
+        if (postPlaceState.canEndTurn) {
+          const ended = await endTurn(page);
+          if (ended) {
+            summary.turnsPlayed++;
+            log(`Turn ${summary.turnsPlayed} completed`);
 
-          // Wait for post-turn processing and AI
-          await page.waitForTimeout(1500);
+            // Wait for post-turn processing and AI
+            await page.waitForTimeout(1500);
 
-          // Handle any post-turn modals (round transition, etc.)
-          if (await hasModal(page)) {
-            const modalResult = await clearAllModals(page, 10);
-            if (modalResult === 'game_over') {
-              gameOver = true;
-              break;
+            // Handle any post-turn modals (round transition, etc.)
+            if (await hasModal(page)) {
+              const modalResult = await clearAllModals(page, 10);
+              if (modalResult === 'game_over') {
+                gameOver = true;
+                break;
+              }
+              if (typeof modalResult === 'number') summary.modalsHandled += modalResult;
             }
-            if (typeof modalResult === 'number') summary.modalsHandled += modalResult;
-          }
 
-          // Wait for AI turn(s)
-          await page.waitForTimeout(AI_WAIT_MS);
+            // Wait for AI turn(s)
+            await page.waitForTimeout(AI_WAIT_MS);
 
-          // Handle any modals from AI actions (round transitions, etc.)
-          if (await hasModal(page)) {
-            const modalResult = await clearAllModals(page, 10);
-            if (modalResult === 'game_over') {
-              gameOver = true;
-              break;
+            // Handle any modals from AI actions (round transitions, etc.)
+            if (await hasModal(page)) {
+              const modalResult = await clearAllModals(page, 10);
+              if (modalResult === 'game_over') {
+                gameOver = true;
+                break;
+              }
+              if (typeof modalResult === 'number') summary.modalsHandled += modalResult;
             }
-            if (typeof modalResult === 'number') summary.modalsHandled += modalResult;
-          }
 
-          consecutiveFailures = 0;
+            consecutiveFailures = 0;
+          }
         }
-      } else if (state.availableActions === 0 && !state.canEndTurn && !state.aiThinking) {
-        // No actions available and can't end turn — might be waiting
-        log('No actions and cannot end turn, waiting...');
-        await page.waitForTimeout(2000);
+      } else if (!state.hasModal && state.availableActions === 0) {
+        // No actions available — check if we need to end turn or wait
+        if (state.canEndTurn) {
+          await endTurn(page);
+          summary.turnsPlayed++;
+          await page.waitForTimeout(AI_WAIT_MS);
+          if (await hasModal(page)) {
+            const modalResult = await clearAllModals(page, 10);
+            if (modalResult === 'game_over') { gameOver = true; break; }
+            if (typeof modalResult === 'number') summary.modalsHandled += modalResult;
+          }
+        } else {
+          log('Waiting for game to advance...');
+          await page.waitForTimeout(2000);
+          consecutiveFailures++;
+        }
+      } else if (!workerPlaced) {
+        // Couldn't place a worker — wait and retry
+        log('Worker not placed, waiting...');
+        await page.waitForTimeout(1000);
         consecutiveFailures++;
       }
 

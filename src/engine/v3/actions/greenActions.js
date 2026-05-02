@@ -15,6 +15,9 @@ function addResources(state, playerId, resources) {
   const effective = hasDouble
     ? Object.fromEntries(Object.entries(resources).map(([c, a]) => [c, a * 2]))
     : resources;
+  const newColors = Object.entries(effective)
+    .filter(([color, amount]) => amount > 0 && (player.resources[color] || 0) === 0)
+    .map(([color]) => color);
   const players = state.players.map(p => {
     if (p.id !== playerId) return p;
     const newResources = { ...p.resources };
@@ -29,7 +32,12 @@ function addResources(state, playerId, resources) {
     }
     return { ...p, resources: newResources, lastGain: { ...effective }, ...(hasDouble ? { effects: newEffects } : {}) };
   });
-  return { ...state, players };
+  let newState = { ...state, players };
+  if (newColors.length > 0) {
+    const prev = newState._pendingNewColors || [];
+    newState._pendingNewColors = [...prev, { playerId, newColors }];
+  }
+  return newState;
 }
 
 /**
@@ -76,7 +84,8 @@ export function relive(state, playerId, gods, decisions = {}, recursionDepth = 0
 
   if (!decisions.actionChoice) {
     const repeatable = getRepeatableActions(newState, playerId)
-      .filter(id => getActionTier(id, gods) === 1);
+      .filter(id => getActionTier(id, gods) === 1)
+      .filter(id => id !== 'green_relive'); // can't repeat itself
     if (repeatable.length === 0) {
       return { state: newState, log: ['No Tier 1 actions to repeat — place a worker elsewhere first'], abort: true };
     }
@@ -92,7 +101,7 @@ export function relive(state, playerId, gods, decisions = {}, recursionDepth = 0
   }
 
   const chosenAction = decisions.actionChoice;
-  if (isRepeatExcluded(chosenAction)) {
+  if (isRepeatExcluded(chosenAction) || chosenAction === 'green_relive') {
     return { state: newState, log: [...logPrefix, `Cannot repeat ${chosenAction} (repeat-excluded)`] };
   }
 
@@ -152,7 +161,8 @@ export function recall(state, playerId, gods, decisions = {}, recursionDepth = 0
   const logPrefix = decisions._continued ? [] : ['+1 green'];
 
   if (!decisions.actionChoice) {
-    const unoccupied = getUnoccupiedActions(newState, 1, gods);
+    const unoccupied = getUnoccupiedActions(newState, 1, gods)
+      .filter(id => id !== 'green_recall'); // can't repeat itself
     if (unoccupied.length === 0) {
       return { state: newState, log: ['No unoccupied Tier 1 actions available'], abort: true };
     }
@@ -168,7 +178,7 @@ export function recall(state, playerId, gods, decisions = {}, recursionDepth = 0
   }
 
   const chosenAction = decisions.actionChoice;
-  if (isRepeatExcluded(chosenAction)) {
+  if (isRepeatExcluded(chosenAction) || chosenAction === 'green_recall') {
     return { state: newState, log: [...logPrefix, `Cannot repeat ${chosenAction} (repeat-excluded)`] };
   }
 
@@ -228,7 +238,8 @@ export function foresight(state, playerId, gods, decisions = {}, recursionDepth 
   const logPrefix = decisions._continued ? [] : ['+1 green'];
 
   if (!decisions.actionChoice) {
-    const unoccupied = getUnoccupiedActions(newState, 2, gods);
+    const unoccupied = getUnoccupiedActions(newState, 2, gods)
+      .filter(id => id !== 'green_foresight'); // can't repeat itself
     if (unoccupied.length === 0) {
       return { state: newState, log: ['No unoccupied Tier 2 actions available'], abort: true };
     }
@@ -244,7 +255,7 @@ export function foresight(state, playerId, gods, decisions = {}, recursionDepth 
   }
 
   const chosenAction = decisions.actionChoice;
-  if (isRepeatExcluded(chosenAction)) {
+  if (isRepeatExcluded(chosenAction) || chosenAction === 'green_foresight') {
     return { state: newState, log: [...logPrefix, `Cannot repeat ${chosenAction} (repeat-excluded)`] };
   }
 
@@ -260,15 +271,22 @@ export function foresight(state, playerId, gods, decisions = {}, recursionDepth 
   };
 }
 
-/** eternity: Repeat all actions where you have workers placed this round */
+// Green repeat actions that Eternity should NOT replay (prevents exponential chain)
+const ETERNITY_EXCLUDED = new Set([
+  'green_relive', 'green_echo', 'green_recall',
+  'green_rewind', 'green_foresight', 'green_eternity',
+]);
+
+/** eternity: Repeat all actions where you have workers placed this round.
+ *  Player chooses the order — sequential picks via _actionChainQueue.
+ */
 export function eternity(state, playerId, gods, decisions = {}, recursionDepth = 0) {
   const roundActions = state.roundActions || [];
 
-  // Get this player's placed actions this round, excluding eternity itself and repeat-excluded
+  // Get this player's placed actions this round, excluding eternity itself and all green repeat actions
   const ownActions = roundActions
     .filter(ra => ra.playerId === playerId)
-    .filter(ra => ra.actionId !== 'green_eternity')
-    .filter(ra => !isRepeatExcluded(ra.actionId))
+    .filter(ra => !ETERNITY_EXCLUDED.has(ra.actionId))
     .map(ra => ra.actionId);
 
   // Deduplicate (if placed on same action twice via Timeline Splitter, only replay once)
@@ -278,23 +296,66 @@ export function eternity(state, playerId, gods, decisions = {}, recursionDepth =
     return { state, log: ['Eternity: no actions to replay'] };
   }
 
-  // Chain all actions: execute first, chain the rest
-  const [firstAction, ...restActions] = uniqueActions;
+  // Use _remaining to track which actions are still available (set after first pick)
+  const remaining = decisions._remaining || uniqueActions;
+
+  // If player hasn't chosen yet, present the choice
+  if (!decisions.actionChoice) {
+    // Only 1 action left — auto-execute, no choice needed
+    if (remaining.length === 1) {
+      return {
+        state,
+        log: [`Eternity: replaying ${remaining[0]}`],
+        executeAction: {
+          playerId,
+          actionId: remaining[0],
+          decisions: {},
+          recursionDepth: recursionDepth + 1,
+        },
+      };
+    }
+
+    return {
+      state,
+      log: decisions._continued ? [] : [`Eternity: replaying ${uniqueActions.length} actions — choose order`],
+      pendingDecision: {
+        type: 'actionChoice',
+        title: `Eternity: Choose which action to repeat next (${remaining.length} remaining)`,
+        options: remaining,
+      },
+    };
+  }
+
+  // Player chose an action — execute it and queue the rest
+  const chosenAction = decisions.actionChoice;
+  const nextRemaining = remaining.filter(a => a !== chosenAction);
+
+  // Queue the next Eternity choice for remaining actions (if any)
+  let newState = state;
+  if (nextRemaining.length > 0) {
+    newState = {
+      ...state,
+      _actionChainQueue: [
+        ...(state._actionChainQueue || []),
+        {
+          playerId,
+          actionId: 'green_eternity',
+          decisions: { _remaining: nextRemaining },
+          recursionDepth,
+          isContinuation: true,
+        },
+      ],
+    };
+  }
 
   return {
-    state,
-    log: [`Eternity: replaying ${uniqueActions.length} action${uniqueActions.length > 1 ? 's' : ''}`],
+    state: newState,
+    log: [`Repeating ${chosenAction}`],
     executeAction: {
       playerId,
-      actionId: firstAction,
+      actionId: chosenAction,
       decisions: {},
       recursionDepth: recursionDepth + 1,
-      chainedActions: restActions.map(actionId => ({
-        playerId,
-        actionId,
-        decisions: {},
-        recursionDepth: recursionDepth + 1,
-      })),
     },
   };
 }

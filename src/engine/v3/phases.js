@@ -249,6 +249,7 @@ export function executeRoundEnd(state) {
       phase: Phase.ROUND_START,
       workerPlacedThisTurn: false,
       turnResourceGains: {},
+      turnResourceSpending: {},
       turnActionsThisTurn: [],
       godsAccessedThisTurn: [],
     },
@@ -372,10 +373,17 @@ export function isGameOver(state) {
 
 /**
  * Resort turn order by glory (lowest first — catch-up mechanic).
+ * Ties broken by previous turn order position (later goes first next round).
  */
 export function resortTurnOrder(state) {
+  const prevOrder = state.turnOrder || state.players.map(p => p.id);
   const sorted = [...state.players]
-    .sort((a, b) => a.glory - b.glory)
+    .sort((a, b) => {
+      const gloryDiff = (a.glory || 0) - (b.glory || 0);
+      if (gloryDiff !== 0) return gloryDiff;
+      // Tie: reverse previous order (player who went later goes first next round)
+      return prevOrder.indexOf(b.id) - prevOrder.indexOf(a.id);
+    })
     .map(p => p.id);
 
   return {
@@ -392,11 +400,14 @@ function getPlayer(state, playerId) {
 
 function resetTurnState(state) {
   // Clear per-turn player effects (noShopThisTurn from Hoard, shopDiscount from Haggle)
+  // Convert noShopNextTurn → noShopThisTurn (Green weak shop: extra turn with no shopping)
   const TURN_EFFECTS = ['noShopThisTurn', 'shopDiscount'];
   const players = state.players.map(p => {
     if (!p.effects || p.effects.length === 0) return p;
-    const cleaned = p.effects.filter(e => !TURN_EFFECTS.includes(e));
-    if (cleaned.length === p.effects.length) return p;
+    const hasNoShopNext = p.effects.includes('noShopNextTurn');
+    let cleaned = p.effects.filter(e => !TURN_EFFECTS.includes(e) && e !== 'noShopNextTurn');
+    if (hasNoShopNext) cleaned = [...cleaned, 'noShopThisTurn'];
+    if (cleaned.length === p.effects.length && !hasNoShopNext) return p;
     return { ...p, effects: cleaned };
   });
 
@@ -406,6 +417,7 @@ function resetTurnState(state) {
     workerPlacedThisTurn: false,
     purchaseMadeThisTurn: false,
     turnResourceGains: {},
+    turnResourceSpending: {},
     godsAccessedThisTurn: [],
     turnActionsThisTurn: [],
   };

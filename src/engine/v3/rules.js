@@ -8,14 +8,14 @@
 import gods from './data/gods.js';
 import { powerCards } from './data/powerCards.js';
 
-// --- Action IDs that cannot be repeated (repeat/copy actions) ---
+// --- Action IDs that cannot be repeated (only Eternity — infinite replay risk) ---
+// T1/T2 green repeat actions CAN be targets of other repeats (e.g. Rewind → Foresight).
+// The recursion depth limit (5) prevents infinite chains.
+// Only Eternity is globally excluded from repeat targets (infinite replay risk).
+// Other green repeat actions CAN be targets of other repeats (e.g. Echo → Relive).
+// Each handler self-excludes from its own options. Recursion depth limit (5) prevents chains.
 const REPEAT_EXCLUDED = new Set([
-  'green_relive',
-  'green_echo',
-  'green_recall',
-  'green_rewind',
-  'green_foresight',
-  'green_eternity',
+  'green_eternity',   // repeat all — can't be repeated
 ]);
 
 // --- Modifier checking ---
@@ -290,6 +290,7 @@ export function payCost(state, playerId, cost, decisions = {}) {
           type: 'gemSelection',
           count: anyCost,
           title: `Choose ${anyCost} resource${anyCost > 1 ? 's' : ''} to pay`,
+          remainingResources: { ...resources },
         },
       };
     }

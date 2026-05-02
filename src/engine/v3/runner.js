@@ -56,8 +56,9 @@ export function randomDecisionFn(state, playerId, pendingDecision) {
           remaining -= take;
         }
       } else {
+        const colorPool = pendingDecision.colors || activeColors;
         while (remaining > 0) {
-          const color = activeColors[Math.floor(Math.random() * activeColors.length)];
+          const color = colorPool[Math.floor(Math.random() * colorPool.length)];
           selection[color] = (selection[color] || 0) + 1;
           remaining--;
         }

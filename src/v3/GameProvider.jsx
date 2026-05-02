@@ -10,7 +10,7 @@
  *   → state updated → React re-renders → pendingDecision → modal
  *   → user responds → action.submitDecision(answer) → engine continues
  */
-import React, { createContext, useReducer, useCallback, useMemo } from 'react';
+import React, { createContext, useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   createGame,
   executeAction,
@@ -18,13 +18,17 @@ import {
   buyPowerCard,
   endTurn,
   resolveDecision,
+  processPendingChains,
   getAvailableActions,
   Phase,
 } from '../engine/v3/GameEngine';
 import { executeChampionDraft, executeRoundStart, executeRoundEnd, resortTurnOrder } from '../engine/v3/phases';
 import { dispatchEvent, EventType, resetHandlerFrequencies } from '../engine/v3/events';
 
-export const GameContext = createContext(null);
+export const GameStateContext = createContext(null);
+export const GameActionsContext = createContext(null);
+// Backward compat alias
+export const GameContext = GameStateContext;
 
 // --- Reducer ---
 
@@ -131,6 +135,11 @@ function gameReducer(state, action) {
 export default function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
 
+  // Ref to latest state — action callbacks read from this instead of closing
+  // over `state`, making them stable (never-changing references).
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   // --- Engine action wrappers ---
 
   const initGame = useCallback((config) => {
@@ -183,6 +192,16 @@ export default function GameProvider({ children }) {
     // Set current player to first in turn order
     if (gameState.turnOrder && gameState.turnOrder.length > 0) {
       gameState = { ...gameState, currentPlayer: gameState.turnOrder[0], turnDirection: 1 };
+
+      // Dispatch TURN_START for first player (endTurn handles later turns)
+      const turnStartResult = dispatchEvent(gameState, EventType.TURN_START, {
+        playerId: gameState.turnOrder[0],
+      });
+      gameState = turnStartResult.state;
+      if (turnStartResult.log) log.push(...turnStartResult.log);
+      if (turnStartResult.pendingDecisions && turnStartResult.pendingDecisions.length > 0) {
+        gameState = { ...gameState, decisionQueue: [...(gameState.decisionQueue || []), ...turnStartResult.pendingDecisions] };
+      }
     }
 
     // Check for The Fortunate — grant starting resources (only round 1)
@@ -216,8 +235,9 @@ export default function GameProvider({ children }) {
   };
 
   const draftChampion = useCallback((decision) => {
-    if (!state.game) return;
-    const result = executeChampionDraft(state.game, decision);
+    const { game } = stateRef.current;
+    if (!game) return;
+    const result = executeChampionDraft(game, decision);
     let gameState = result.state;
     let log = result.log || [];
     let pendingDecision = result.pendingDecision || null;
@@ -261,12 +281,13 @@ export default function GameProvider({ children }) {
     }
 
     dispatch({ type: 'UPDATE_STATE', game: gameState, log, pendingDecision });
-  }, [state.game]);
+  }, []);
 
   const placeWorker = useCallback((actionId, decisions = {}) => {
-    if (!state.game) return;
-    const playerId = state.game.currentPlayer;
-    const result = executeAction(state.game, playerId, actionId, decisions);
+    const { game } = stateRef.current;
+    if (!game) return;
+    const playerId = game.currentPlayer;
+    const result = executeAction(game, playerId, actionId, decisions);
 
     if (result.pendingDecision) {
       dispatch({
@@ -291,12 +312,13 @@ export default function GameProvider({ children }) {
     }
 
     dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log });
-  }, [state.game]);
+  }, []);
 
   const useShop = useCallback((shopId, decisions = {}) => {
-    if (!state.game) return;
-    const playerId = state.game.currentPlayer;
-    const result = executeShop(state.game, playerId, shopId, decisions);
+    const { game } = stateRef.current;
+    if (!game) return;
+    const playerId = game.currentPlayer;
+    const result = executeShop(game, playerId, shopId, decisions);
 
     dispatch({
       type: 'UPDATE_STATE',
@@ -306,12 +328,13 @@ export default function GameProvider({ children }) {
         ? { ...result.pendingDecision, _source: 'shop', _playerId: playerId, _shopId: shopId }
         : null,
     });
-  }, [state.game]);
+  }, []);
 
   const buyCard = useCallback((cardId, decisions = {}) => {
-    if (!state.game) return;
-    const playerId = state.game.currentPlayer;
-    const result = buyPowerCard(state.game, playerId, cardId, decisions);
+    const { game } = stateRef.current;
+    if (!game) return;
+    const playerId = game.currentPlayer;
+    const result = buyPowerCard(game, playerId, cardId, decisions);
 
     dispatch({
       type: 'UPDATE_STATE',
@@ -321,11 +344,12 @@ export default function GameProvider({ children }) {
         ? { ...result.pendingDecision, _source: 'card', _playerId: playerId, _cardId: cardId }
         : null,
     });
-  }, [state.game]);
+  }, []);
 
   const doEndTurn = useCallback(() => {
-    if (!state.game) return;
-    const result = endTurn(state.game);
+    const { game } = stateRef.current;
+    if (!game) return;
+    const result = endTurn(game);
 
     // If round ended, score glory NOW so the RoundTransition shows correct values
     if (result.state.phase === Phase.ROUND_END) {
@@ -390,12 +414,15 @@ export default function GameProvider({ children }) {
     }
 
     dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log });
-  }, [state.game]);
+  }, []);
 
   const doAdvanceRound = useCallback(() => {
-    if (!state.game) return;
+    const { game } = stateRef.current;
+    if (!game) return;
+    // Guard: only advance from round_end or game_end phase
+    if (game.phase !== 'round_end' && game.phase !== 'game_end') return;
 
-    let gameState = state.game;
+    let gameState = game;
     const log = [];
     const pendingDecisions = [];
 
@@ -462,6 +489,16 @@ export default function GameProvider({ children }) {
     // Set current player to first in turn order
     if (gameState.turnOrder && gameState.turnOrder.length > 0) {
       gameState = { ...gameState, currentPlayer: gameState.turnOrder[0], turnDirection: 1 };
+
+      // Dispatch TURN_START for first player (endTurn handles later turns)
+      const turnStartResult = dispatchEvent(gameState, EventType.TURN_START, {
+        playerId: gameState.turnOrder[0],
+      });
+      gameState = turnStartResult.state;
+      if (turnStartResult.log) log.push(...turnStartResult.log);
+      if (turnStartResult.pendingDecisions && turnStartResult.pendingDecisions.length > 0) {
+        pendingDecisions.push(...turnStartResult.pendingDecisions);
+      }
     }
 
     // Add any pending decisions to the queue
@@ -481,7 +518,7 @@ export default function GameProvider({ children }) {
     }
 
     dispatch({ type: 'UPDATE_STATE', game: gameState, log });
-  }, [state.game]);
+  }, []);
 
   const cancelDecision = useCallback(() => {
     dispatch({ type: 'CANCEL_DECISION' });
@@ -492,9 +529,10 @@ export default function GameProvider({ children }) {
   }, []);
 
   const submitDecision = useCallback((answer) => {
-    if (!state.game || !state.pendingDecision) return;
+    const { game, pendingDecision } = stateRef.current;
+    if (!game || !pendingDecision) return;
 
-    const decision = state.pendingDecision;
+    const decision = pendingDecision;
 
     // For action-level decisions, re-call the originating function with the decision.
     // IMPORTANT: Pass { isContinuation: true } so it skips occupancy/worker placement
@@ -529,18 +567,22 @@ export default function GameProvider({ children }) {
     };
 
     if (decision.type === 'gemSelection') {
+      // _resolveField remaps the answer key (e.g. gemSelection → gemSelectionGain for Transmute step 2)
+      // _carryForward passes previous step answers (e.g. original gemSelection for Transmute)
+      const key = decision._resolveField || 'gemSelection';
+      const carried = decision._carryForward || {};
       if (decision._source === 'shop') {
-        const result = executeShop(state.game, decision._playerId, decision._shopId, { gemSelection: answer, _costPaid: !!decision._costPaid });
+        const result = executeShop(game, decision._playerId, decision._shopId, { ...carried, [key]: answer, _costPaid: !!decision._costPaid });
         dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log, pendingDecision: nextDecisionFromResult(result) });
         return;
       }
       if (decision._source === 'card') {
-        const result = buyPowerCard(state.game, decision._playerId, decision._cardId, { gemSelection: answer });
+        const result = buyPowerCard(game, decision._playerId, decision._cardId, { ...carried, [key]: answer });
         dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log, pendingDecision: nextDecisionFromResult(result) });
         return;
       }
       if (decision._source === 'action') {
-        const result = executeAction(state.game, decision._playerId, resolveActionId, { gemSelection: answer, _continued: true }, { isContinuation: true });
+        const result = executeAction(game, decision._playerId, resolveActionId, { ...carried, [key]: answer, _continued: true }, { isContinuation: true });
         dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log, pendingDecision: nextDecisionFromResult(result) });
         return;
       }
@@ -548,17 +590,17 @@ export default function GameProvider({ children }) {
 
     if (decision.type === 'targetPlayer') {
       if (decision._source === 'action') {
-        const result = executeAction(state.game, decision._playerId, resolveActionId, { targetPlayer: answer, _continued: true }, { isContinuation: true });
+        const result = executeAction(game, decision._playerId, resolveActionId, { targetPlayer: answer, _continued: true }, { isContinuation: true });
         dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log, pendingDecision: nextDecisionFromResult(result) });
         return;
       }
       if (decision._source === 'shop') {
-        const result = executeShop(state.game, decision._playerId, decision._shopId, { targetPlayer: answer, _costPaid: !!decision._costPaid });
+        const result = executeShop(game, decision._playerId, decision._shopId, { targetPlayer: answer, _costPaid: !!decision._costPaid });
         dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log, pendingDecision: nextDecisionFromResult(result) });
         return;
       }
       if (decision._source === 'card') {
-        const result = buyPowerCard(state.game, decision._playerId, decision._cardId, { targetPlayer: answer });
+        const result = buyPowerCard(game, decision._playerId, decision._cardId, { targetPlayer: answer });
         dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log, pendingDecision: nextDecisionFromResult(result) });
         return;
       }
@@ -566,7 +608,7 @@ export default function GameProvider({ children }) {
 
     if (decision.type === 'stealGems') {
       if (decision._source === 'action') {
-        const result = executeAction(state.game, decision._playerId, resolveActionId, {
+        const result = executeAction(game, decision._playerId, resolveActionId, {
           targetPlayer: decision.targetPlayer,
           stealGems: answer,
           _continued: true,
@@ -578,15 +620,33 @@ export default function GameProvider({ children }) {
 
     if (decision.type === 'discardArtifact') {
       // Player chose which artifact to discard — re-call buyPowerCard with discardCardId
-      const result = buyPowerCard(state.game, decision._playerId, decision._cardId, { discardCardId: answer });
+      const result = buyPowerCard(game, decision._playerId, decision._cardId, { discardCardId: answer });
       dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log, pendingDecision: nextDecisionFromResult(result) });
       return;
+    }
+
+    if (decision.type === 'chooseColor') {
+      // Color selection (Distill, Plunder, etc.)
+      // _resolveField remaps the answer key (e.g. chooseColor → chooseColorGain for Distill step 2)
+      // _carryForward passes previous step answers (e.g. targetPlayer for Plunder)
+      const key = decision._resolveField || 'chooseColor';
+      const carried = decision._carryForward || {};
+      if (decision._source === 'action') {
+        const result = executeAction(game, decision._playerId, resolveActionId, { ...carried, [key]: answer, _continued: true }, { isContinuation: true });
+        dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log, pendingDecision: nextDecisionFromResult(result) });
+        return;
+      }
+      if (decision._source === 'shop') {
+        const result = executeShop(game, decision._playerId, decision._shopId, { ...carried, [key]: answer, _costPaid: !!decision._costPaid });
+        dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log, pendingDecision: nextDecisionFromResult(result) });
+        return;
+      }
     }
 
     if (decision.type === 'actionChoice' || decision.type === 'actionChoices') {
       if (decision._source === 'action') {
         const decisions = decision.type === 'actionChoice' ? { actionChoice: answer, _continued: true } : { actionChoices: answer, _continued: true };
-        const result = executeAction(state.game, decision._playerId, resolveActionId, decisions, { isContinuation: true });
+        const result = executeAction(game, decision._playerId, resolveActionId, decisions, { isContinuation: true });
         dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log, pendingDecision: nextDecisionFromResult(result) });
         return;
       }
@@ -594,7 +654,7 @@ export default function GameProvider({ children }) {
         const decisions = decision.type === 'actionChoice'
           ? { actionChoice: answer, _costPaid: !!decision._costPaid }
           : { actionChoices: answer, _costPaid: !!decision._costPaid };
-        const result = executeShop(state.game, decision._playerId, decision._shopId, decisions);
+        const result = executeShop(game, decision._playerId, decision._shopId, decisions);
         dispatch({ type: 'UPDATE_STATE', game: result.state, log: result.log, pendingDecision: nextDecisionFromResult(result) });
         return;
       }
@@ -603,7 +663,7 @@ export default function GameProvider({ children }) {
     // For queued decisions (voodoo doll, prescient, alchemist's trunk)
     // Ensure the decision is in the engine's decisionQueue before resolving
     // (it may have been surfaced from roundStartDecisionQueue and not in the engine queue)
-    let gameForResolve = state.game;
+    let gameForResolve = game;
     const engineQueue = gameForResolve.decisionQueue || [];
     const alreadyInQueue = engineQueue.some(d => (d.sourceId || d.type) === (decision.sourceId || decision.type));
     if (!alreadyInQueue) {
@@ -619,7 +679,7 @@ export default function GameProvider({ children }) {
     } else if (decision.type === 'gemSelection') {
       wrappedAnswer = { gemSelection: answer };
     } else if (decision.type === 'nullifierPlacement') {
-      wrappedAnswer = (typeof answer === 'object' && answer.actionId) ? answer : { actionId: answer };
+      wrappedAnswer = (typeof answer === 'object' && answer !== null && 'actionId' in answer) ? answer : { actionId: answer };
     } else if (decision.type === 'redistribution' || decision.type === 'redistributeResources') {
       wrappedAnswer = { redistribution: answer };
     }
@@ -636,7 +696,7 @@ export default function GameProvider({ children }) {
     }
 
     dispatch({ type: 'UPDATE_STATE', game: gameState, log });
-  }, [state.game, state.pendingDecision]);
+  }, []);
 
   // --- Derived state ---
 
@@ -650,10 +710,33 @@ export default function GameProvider({ children }) {
     return state.game.players.find(p => p.id === state.game.currentPlayer);
   }, [state.game]);
 
+  // --- Process queued action chains (Eternity chains interrupted by decisions) ---
+  useEffect(() => {
+    if (!state.game) return;
+    if (state.pendingDecision) return;
+    const queue = state.game._actionChainQueue;
+    if (!queue || queue.length === 0) return;
+    const result = processPendingChains(state.game);
+    // Tag pendingDecision with UI metadata so submitDecision can route it.
+    // _chainActionId/_chainPlayerId come from processPendingChains as fallback context.
+    const pd = result.pendingDecision ? {
+      ...result.pendingDecision,
+      _source: result.pendingDecision._source || 'action',
+      _playerId: result.pendingDecision._playerId || result.pendingDecision._chainPlayerId || state.game.currentPlayer,
+      _actionId: result.pendingDecision._actionId || result.pendingDecision._resolveActionId || result.pendingDecision._chainActionId,
+    } : null;
+    dispatch({
+      type: 'UPDATE_STATE',
+      game: result.state,
+      log: result.log,
+      pendingDecision: pd,
+    });
+  }, [state.game, state.pendingDecision]);
+
   // --- Context value ---
 
-  const value = useMemo(() => ({
-    // State
+  // Split context: state (changes often) vs actions (stable references)
+  const stateValue = useMemo(() => ({
     game: state.game,
     phase: state.phase,
     log: state.log,
@@ -662,34 +745,32 @@ export default function GameProvider({ children }) {
     error: state.error,
     initialized: state.initialized,
     aiPlayers: state.aiPlayers,
-
-    // Derived
     availableActions,
     currentPlayer,
+  }), [state.game, state.phase, state.log, state.pendingDecision,
+    state.roundStartDecisionQueue, state.error, state.initialized,
+    state.aiPlayers, availableActions, currentPlayer]);
 
-    // Actions
-    actions: {
-      initGame,
-      draftChampion,
-      placeWorker,
-      useShop,
-      buyCard,
-      endTurn: doEndTurn,
-      advanceRound: doAdvanceRound,
-      submitDecision,
-      cancelDecision,
-      surfaceQueuedDecision,
-    },
-  }), [
-    state, availableActions, currentPlayer,
-    initGame, draftChampion, placeWorker, useShop,
-    buyCard, doEndTurn, doAdvanceRound, submitDecision, cancelDecision,
+  const actionsValue = useMemo(() => ({
+    initGame,
+    draftChampion,
+    placeWorker,
+    useShop,
+    buyCard,
+    endTurn: doEndTurn,
+    advanceRound: doAdvanceRound,
+    submitDecision,
+    cancelDecision,
     surfaceQueuedDecision,
-  ]);
+  }), [initGame, draftChampion, placeWorker, useShop,
+    buyCard, doEndTurn, doAdvanceRound, submitDecision, cancelDecision,
+    surfaceQueuedDecision]);
 
   return (
-    <GameContext.Provider value={value}>
-      {children}
-    </GameContext.Provider>
+    <GameActionsContext.Provider value={actionsValue}>
+      <GameStateContext.Provider value={stateValue}>
+        {children}
+      </GameStateContext.Provider>
+    </GameActionsContext.Provider>
   );
 }

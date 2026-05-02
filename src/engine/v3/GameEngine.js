@@ -40,6 +40,34 @@ function getGloryEventType(godColor) {
   }
 }
 
+// --- Flush pending 0→N color transitions (Yellow Favor condition) ---
+
+/**
+ * Dispatch NEW_COLOR_GAINED events for any 0→N color transitions accumulated
+ * by addResources(). Call this after any block of resource mutations.
+ * Returns { state, log }.
+ */
+function flushNewColorEvents(state) {
+  const pending = state._pendingNewColors || [];
+  if (pending.length === 0) return { state, log: [] };
+
+  const log = [];
+  let s = { ...state, _pendingNewColors: [] };
+  for (const entry of pending) {
+    const result = dispatchEvent(s, EventType.NEW_COLOR_GAINED, {
+      playerId: entry.playerId,
+      newColors: entry.newColors,
+      newColorsCount: entry.newColors.length,
+    });
+    s = result.state;
+    if (result.log) log.push(...result.log);
+    if (result.pendingDecisions && result.pendingDecisions.length > 0) {
+      s = { ...s, decisionQueue: [...(s.decisionQueue || []), ...result.pendingDecisions] };
+    }
+  }
+  return { state: s, log };
+}
+
 // --- Shuffle helper (Fisher-Yates) ---
 
 function shuffle(arr) {
@@ -142,6 +170,8 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
   }
 
   // 6. Snapshot player resources before action for RESOURCE_GAINED detection
+  // Clear pending new-color transitions so we only track THIS action's gains
+  state = { ...state, _pendingNewColors: [] };
   const playerBefore = getPlayer(state, playerId);
   let resourcesBefore = { ...playerBefore.resources };
 
@@ -163,27 +193,58 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
   // 9. Handle chained/recursive executeAction (green repeat/copy)
   if (actionResult.executeAction) {
     const chain = actionResult.executeAction;
-    const subResult = executeAction(
-      state,
-      chain.playerId,
-      chain.actionId,
-      chain.decisions || {},
-      { recursionDepth: chain.recursionDepth || recursionDepth + 1, isRepeat: true }
-    );
-    state = subResult.state;
-    if (subResult.log) log.push(...subResult.log);
-    if (subResult.pendingDecision) {
-      // Annotate with the nested action's ID so the UI resolves
-      // the decision against the correct (inner) action handler
-      return {
-        state, log,
-        pendingDecision: { ...subResult.pendingDecision, _resolveActionId: chain.actionId },
+
+    // Check repeatHappensTwice effect (green strong shop: next repeat executes twice)
+    const repeatPlayer = getPlayer(state, chain.playerId);
+    const hasRepeatTwice = repeatPlayer?.effects?.includes('repeatHappensTwice');
+    const repeatCount = hasRepeatTwice ? 2 : 1;
+
+    // Consume the effect before executing (prevents infinite stacking)
+    if (hasRepeatTwice) {
+      state = {
+        ...state,
+        players: state.players.map(p => {
+          if (p.id !== chain.playerId) return p;
+          const newEffects = [...(p.effects || [])];
+          const idx = newEffects.indexOf('repeatHappensTwice');
+          if (idx >= 0) newEffects.splice(idx, 1);
+          return { ...p, effects: newEffects };
+        }),
       };
+      log.push('Repeat Happens Twice: action will execute twice');
     }
 
-    // Handle chained actions (from loop/unravel)
+    for (let repeatIdx = 0; repeatIdx < repeatCount; repeatIdx++) {
+      const subResult = executeAction(
+        state,
+        chain.playerId,
+        chain.actionId,
+        chain.decisions || {},
+        { recursionDepth: chain.recursionDepth || recursionDepth + 1, isRepeat: true }
+      );
+      state = subResult.state;
+      if (subResult.log) log.push(...subResult.log);
+      if (subResult.pendingDecision) {
+        // Save remaining work: leftover repeat iterations + chained actions
+        const remaining = [];
+        for (let r = repeatIdx + 1; r < repeatCount; r++) {
+          remaining.push({ playerId: chain.playerId, actionId: chain.actionId, decisions: {}, recursionDepth: chain.recursionDepth || recursionDepth + 1 });
+        }
+        if (chain.chainedActions) remaining.push(...chain.chainedActions);
+        if (remaining.length > 0) {
+          state = { ...state, _actionChainQueue: [...(state._actionChainQueue || []), ...remaining] };
+        }
+        return {
+          state, log,
+          pendingDecision: { ...subResult.pendingDecision, _resolveActionId: chain.actionId },
+        };
+      }
+    }
+
+    // Handle chained actions (from Eternity)
     if (chain.chainedActions) {
-      for (const chained of chain.chainedActions) {
+      for (let i = 0; i < chain.chainedActions.length; i++) {
+        const chained = chain.chainedActions[i];
         const chainedResult = executeAction(
           state,
           chained.playerId,
@@ -194,6 +255,11 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
         state = chainedResult.state;
         if (chainedResult.log) log.push(...chainedResult.log);
         if (chainedResult.pendingDecision) {
+          // Save remaining chained actions for later
+          const remaining = chain.chainedActions.slice(i + 1);
+          if (remaining.length > 0) {
+            state = { ...state, _actionChainQueue: [...(state._actionChainQueue || []), ...remaining] };
+          }
           return {
             state, log,
             pendingDecision: { ...chainedResult.pendingDecision, _resolveActionId: chained.actionId },
@@ -315,22 +381,23 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
       state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...gainResult.pendingDecisions] };
     }
 
-    // 10b. Detect 0→N color transitions for Yellow Favor condition
-    const newColorsGained = Object.keys(gainedResources).filter(color =>
-      (resourcesBefore[color] || 0) === 0 && gainedResources[color] > 0
-    );
-    if (newColorsGained.length > 0) {
-      const newColorResult = dispatchEvent(state, EventType.NEW_COLOR_GAINED, {
-        playerId,
-        newColors: newColorsGained,
-        newColorsCount: newColorsGained.length,
-      });
-      state = newColorResult.state;
-      if (newColorResult.log) log.push(...newColorResult.log);
-      if (newColorResult.pendingDecisions && newColorResult.pendingDecisions.length > 0) {
-        state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...newColorResult.pendingDecisions] };
-      }
-    }
+    // 10b. Flush 0→N color transitions for Yellow Favor condition
+    // (accumulated by addResources during the action + any event handlers above)
+    const newColorFlush = flushNewColorEvents(state);
+    state = newColorFlush.state;
+    if (newColorFlush.log.length > 0) log.push(...newColorFlush.log);
+  }
+
+  // 10c. Track resource decreases for Slag Catcher (actions that spend resources like Annihilate, Cash In, Distill)
+  const playerAfterAll = getPlayer(state, playerId);
+  let actionTotalSpent = 0;
+  for (const color of Object.keys(resourcesBefore)) {
+    const diff = (resourcesBefore[color] || 0) - (playerAfterAll.resources[color] || 0);
+    if (diff > 0) actionTotalSpent += diff;
+  }
+  if (actionTotalSpent > 0) {
+    const prevSpending = state.turnResourceSpending || {};
+    state = { ...state, turnResourceSpending: { ...prevSpending, [playerId]: (prevSpending[playerId] || 0) + actionTotalSpent } };
   }
 
   // 11. Dispatch ACTION_EXECUTED event
@@ -348,11 +415,17 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
 
   // 12. If this was a repeat: dispatch ACTION_REPEATED event
   if (isRepeat) {
+    // Look up who originally placed a worker at this action (for Temporal Patent)
+    const roundActions = state.roundActions || [];
+    const originalEntry = roundActions.find(ra => ra.actionId === actionId && ra.playerId !== playerId);
+    const originalPlayerId = originalEntry ? originalEntry.playerId : null;
+
     const repeatResult = dispatchEvent(state, EventType.ACTION_REPEATED, {
       playerId,
       actionId,
       godColor,
       recursionDepth,
+      originalPlayerId,
     });
     state = repeatResult.state;
     if (repeatResult.log) log.push(...repeatResult.log);
@@ -369,6 +442,7 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
  */
 export function executeShop(state, playerId, shopId, decisions = {}) {
   const log = [];
+  state = { ...state, _pendingNewColors: [] };
 
   // 1. Determine god color from shopId (e.g. 'gold_weak' -> 'gold')
   const godColor = shopId.split('_')[0];
@@ -391,6 +465,8 @@ export function executeShop(state, playerId, shopId, decisions = {}) {
 
   // 3. Pay shop cost (skip if already paid in a prior decision step)
   if (!decisions._costPaid) {
+    const prePayPlayer = getPlayer(state, playerId);
+    const prePayResources = { ...prePayPlayer.resources };
     const payResult = payShopCost(state, playerId, shopId, decisions);
     if (!payResult.canAfford) {
       return { state, log: [`Cannot afford ${shopId}`] };
@@ -400,9 +476,23 @@ export function executeShop(state, playerId, shopId, decisions = {}) {
     }
     state = payResult.state;
     log.push(`Paid for ${shopId}`);
+
+    // Track resource spending for Slag Catcher
+    const postPayPlayer = getPlayer(state, playerId);
+    let totalSpent = 0;
+    for (const color of Object.keys(prePayResources)) {
+      const diff = (prePayResources[color] || 0) - (postPayPlayer.resources[color] || 0);
+      if (diff > 0) totalSpent += diff;
+    }
+    if (totalSpent > 0) {
+      const prevSpending = state.turnResourceSpending || {};
+      state = { ...state, turnResourceSpending: { ...prevSpending, [playerId]: (prevSpending[playerId] || 0) + totalSpent } };
+    }
   }
 
-  // 4. Resolve shop benefit
+  // 4. Resolve shop benefit (snapshot resources for Slag Catcher tracking)
+  const preBenefitPlayer = getPlayer(state, playerId);
+  const preBenefitResources = { ...preBenefitPlayer.resources };
   const shopResult = resolveShop(state, playerId, shopId, decisions);
   state = shopResult.state;
   if (shopResult.log) log.push(...shopResult.log);
@@ -487,6 +577,23 @@ export function executeShop(state, playerId, shopId, decisions = {}) {
         state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...stealEvent.pendingDecisions] };
       }
     }
+  }
+
+  // 6d. Flush 0→N color transitions for Yellow Favor condition
+  const shopNewColorFlush = flushNewColorEvents(state);
+  state = shopNewColorFlush.state;
+  if (shopNewColorFlush.log.length > 0) log.push(...shopNewColorFlush.log);
+
+  // 6e. Track resource decreases from shop benefit for Slag Catcher (e.g. yellowVp spends all non-yellow)
+  const postBenefitPlayer = getPlayer(state, playerId);
+  let benefitSpent = 0;
+  for (const color of Object.keys(preBenefitResources)) {
+    const diff = (preBenefitResources[color] || 0) - (postBenefitPlayer.resources[color] || 0);
+    if (diff > 0) benefitSpent += diff;
+  }
+  if (benefitSpent > 0) {
+    const prevSpending = state.turnResourceSpending || {};
+    state = { ...state, turnResourceSpending: { ...prevSpending, [playerId]: (prevSpending[playerId] || 0) + benefitSpent } };
   }
 
   // 7. Mark purchase made this turn + consume shopDiscount effect if active
@@ -636,6 +743,7 @@ export function buyPowerCard(state, playerId, cardId, decisions = {}) {
     log.push('Haggle discount applied (-2 cost)');
   }
 
+  let blessedDiscountApplied = false;
   if (champion.id === 'blessed' && !(state.blessedUsed || {})[playerId]) {
     // Reduce total cost by 2 — remove from 'any' first, then from specific colors
     let discount = 2;
@@ -655,23 +763,42 @@ export function buyPowerCard(state, playerId, cardId, decisions = {}) {
         if (discount <= 0) break;
       }
     }
-    // Mark blessed as used
-    state = {
-      ...state,
-      blessedUsed: { ...(state.blessedUsed || {}), [playerId]: true },
-    };
+    // Don't set blessedUsed on state yet — defer until payment succeeds
+    blessedDiscountApplied = true;
     log.push('The Blessed: first power card discount applied (-2 cost)');
   }
 
   // 6. Pay cost
+  const preCardPayPlayer = getPlayer(state, playerId);
+  const preCardPayResources = { ...preCardPayPlayer.resources };
   const payResult = payCost(state, playerId, cost, decisions);
   if (!payResult.canAfford) {
     return { state, log: [`Cannot afford ${card.name}`] };
   }
   if (payResult.pendingDecision) {
-    return { state: payResult.state, log, pendingDecision: payResult.pendingDecision };
+    // Persist blessedUsed on the pending state so discount isn't re-applied on callback
+    let decisionState = payResult.state;
+    if (blessedDiscountApplied) {
+      decisionState = { ...decisionState, blessedUsed: { ...(decisionState.blessedUsed || {}), [playerId]: true } };
+    }
+    return { state: decisionState, log, pendingDecision: payResult.pendingDecision };
   }
   state = payResult.state;
+  if (blessedDiscountApplied) {
+    state = { ...state, blessedUsed: { ...(state.blessedUsed || {}), [playerId]: true } };
+  }
+
+  // Track resource spending for Slag Catcher
+  const postCardPayPlayer = getPlayer(state, playerId);
+  let cardTotalSpent = 0;
+  for (const color of Object.keys(preCardPayResources)) {
+    const diff = (preCardPayResources[color] || 0) - (postCardPayPlayer.resources[color] || 0);
+    if (diff > 0) cardTotalSpent += diff;
+  }
+  if (cardTotalSpent > 0) {
+    const prevSpending = state.turnResourceSpending || {};
+    state = { ...state, turnResourceSpending: { ...prevSpending, [playerId]: (prevSpending[playerId] || 0) + cardTotalSpent } };
+  }
 
   // 7. Slot the card + mark power card bought this turn
   state = slotPowerCard(state, playerId, cardId);
@@ -904,12 +1031,9 @@ export function resolveDecision(state, decisionId, answer) {
     const targetId = answer.targetPlayer;
     const stealAmount = decision.effect?.glorySteal || decision.effect?.gloryLoss || 2;
     const target = getPlayer(state, targetId);
-    const actualStolen = Math.min(stealAmount, Math.max(0, target?.glory || 0));
-    if (actualStolen > 0) {
-      state = removeGlory(state, targetId, actualStolen, 'voodoo_doll_victim');
-      state = addGlory(state, decision.ownerId, actualStolen, 'voodoo_doll');
-    }
-    log.push(`Voodoo Doll: stole ${actualStolen} Favor from ${targetId}`);
+    state = removeGlory(state, targetId, stealAmount, 'voodoo_doll_victim');
+    state = addGlory(state, decision.ownerId, stealAmount, 'voodoo_doll');
+    log.push(`Voodoo Doll: stole ${stealAmount} Favor from ${targetId}`);
     // Dispatch STEAL_ACTION for black glory condition
     if (decision.isStealing) {
       const stealResult = dispatchEvent(state, EventType.STEAL_ACTION, {
@@ -926,7 +1050,9 @@ export function resolveDecision(state, decisionId, answer) {
     if (currentIdx >= 0 && desiredPosition >= 0 && desiredPosition < turnOrder.length) {
       turnOrder.splice(currentIdx, 1);
       turnOrder.splice(desiredPosition, 0, decision.ownerId);
-      state = { ...state, turnOrder };
+      // Update currentPlayer to reflect new turn order (fixes timing issue
+      // where advanceRound sets currentPlayer before this decision resolves)
+      state = { ...state, turnOrder, currentPlayer: turnOrder[0] };
       log.push(`Chrono Compass: moved to position ${answer.position} in turn order`);
     }
   } else if (decision.sourceId === 'prescient_passive' && answer.actionId) {
@@ -957,6 +1083,41 @@ export function resolveDecision(state, decisionId, answer) {
         log.push(`Golden Chalice: +1 ${chosenColor}`);
       }
     }
+  } else if (decision.sourceId === 'rainbow_crest' && answer.gemSelection) {
+    const selection = answer.gemSelection;
+    const chosenColor = Object.keys(selection)[0];
+    if (chosenColor) {
+      state = addResources(state, decision.ownerId || decision.playerId, { [chosenColor]: 1 });
+      log.push(`Rainbow Crest: +1 ${chosenColor}`);
+    }
+  } else if (decision.sourceId === 'rainbow_scepter' && answer.gemSelection) {
+    const selection = answer.gemSelection;
+    const chosenColor = Object.keys(selection)[0];
+    if (chosenColor) {
+      state = addResources(state, decision.ownerId || decision.playerId, { [chosenColor]: 1 });
+      log.push(`Rainbow Scepter: +1 ${chosenColor}`);
+    }
+  } else if (decision.sourceId === 'skeleton_key' && answer.targetPlayer) {
+    const targetId = answer.targetPlayer;
+    const target = getPlayer(state, targetId);
+    const mostAbundant = Object.entries(target?.resources || {})
+      .filter(([, v]) => v > 0)
+      .sort(([, a], [, b]) => b - a)[0];
+    if (mostAbundant) {
+      const [color] = mostAbundant;
+      state = removeResources(state, targetId, { [color]: 1 });
+      state = addResources(state, decision.ownerId, { [color]: 1 });
+      log.push(`Skeleton Key: stole 1 ${color} from ${targetId}`);
+      // Dispatch STEAL_ACTION for black glory condition
+      if (decision.isStealing) {
+        const stealResult = dispatchEvent(state, EventType.STEAL_ACTION, {
+          playerId: decision.ownerId,
+          actionId: 'skeleton_key',
+        });
+        state = stealResult.state;
+        if (stealResult.log) log.push(...stealResult.log);
+      }
+    }
   } else if (decision.sourceId === 'alchemists_trunk' && answer.redistribution) {
     const player = getPlayer(state, decision.ownerId);
     const totalResources = Object.values(player.resources).reduce((sum, v) => sum + v, 0);
@@ -976,6 +1137,56 @@ export function resolveDecision(state, decisionId, answer) {
   }
 
   return { state, log };
+}
+
+/**
+ * Process any queued chained actions (from Eternity chains interrupted by decisions).
+ * Call this after resolving a decision when no further pendingDecision is active.
+ * Returns { state, log, pendingDecision? }
+ */
+export function processPendingChains(state) {
+  const queue = state._actionChainQueue || [];
+  if (queue.length === 0) return { state, log: [] };
+
+  const log = [];
+  let currentState = { ...state, _actionChainQueue: [] };
+
+  for (let i = 0; i < queue.length; i++) {
+    const chain = queue[i];
+    const result = executeAction(
+      currentState,
+      chain.playerId,
+      chain.actionId,
+      chain.decisions || {},
+      {
+        recursionDepth: chain.recursionDepth || 1,
+        isRepeat: !chain.isContinuation,
+        isContinuation: !!chain.isContinuation,
+      }
+    );
+    currentState = result.state;
+    if (result.log) log.push(...result.log);
+
+    if (result.pendingDecision) {
+      // Save remaining chains for after this decision resolves
+      const remaining = queue.slice(i + 1);
+      if (remaining.length > 0) {
+        currentState = { ...currentState, _actionChainQueue: [...(currentState._actionChainQueue || []), ...remaining] };
+      }
+      // Tag with chain context so the UI layer can route the decision correctly
+      return {
+        state: currentState,
+        log,
+        pendingDecision: {
+          ...result.pendingDecision,
+          _chainActionId: chain.actionId,
+          _chainPlayerId: chain.playerId,
+        },
+      };
+    }
+  }
+
+  return { state: currentState, log };
 }
 
 // Re-exports

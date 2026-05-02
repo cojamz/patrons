@@ -219,11 +219,8 @@ describe('UX Contract: green action decisions', () => {
     expect(Array.isArray(result.pendingDecision.options)).toBe(true);
     // options should contain repeatable actions (at least green_gather)
     expect(result.pendingDecision.options.length).toBeGreaterThan(0);
-    // repeat-excluded actions should NOT appear in options
-    const repeatExcluded = ['green_relive', 'green_echo', 'green_recall', 'green_eternity'];
-    for (const excluded of repeatExcluded) {
-      expect(result.pendingDecision.options).not.toContain(excluded);
-    }
+    // Only green_eternity should be excluded from repeat options
+    expect(result.pendingDecision.options).not.toContain('green_eternity');
   });
 
   it('echo emits actionChoice for other player T1 actions or has no decision if none', () => {
@@ -541,7 +538,7 @@ describe('UX Contract: shop decisions', () => {
     expect(player.effects).toContain('doubleNextTheft');
   });
 
-  it('green_weak shop sets tempoPlay effect without a decision', () => {
+  it('green_weak shop grants extra turn and noShopNextTurn effect', () => {
     let state = createReadyGame({ playerCount: 2, godSet: ['green', 'gold'] });
     const playerId = state.currentPlayer;
 
@@ -549,10 +546,12 @@ describe('UX Contract: shop decisions', () => {
 
     const shopResult = resolveShop(state, playerId, 'green_weak');
 
-    // green_weak now sets tempoPlay effect, no decision needed
+    // green_weak grants extra turn + noShopNextTurn (no buy phase on extra turn)
     expect(shopResult.pendingDecision).toBeUndefined();
+    const playerBefore = state.players.find(p => p.id === playerId);
     const player = shopResult.state.players.find(p => p.id === playerId);
-    expect(player.effects).toContain('tempoPlay');
+    expect(player.effects).toContain('noShopNextTurn');
+    expect(player.extraTurns).toBe((playerBefore.extraTurns || 0) + 1);
   });
 
   it('yellow_weak shop emits gemSelection with count=2', () => {

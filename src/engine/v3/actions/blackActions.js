@@ -15,6 +15,9 @@ function addResources(state, playerId, resources) {
   const effective = hasDouble
     ? Object.fromEntries(Object.entries(resources).map(([c, a]) => [c, a * 2]))
     : resources;
+  const newColors = Object.entries(effective)
+    .filter(([color, amount]) => amount > 0 && (player.resources[color] || 0) === 0)
+    .map(([color]) => color);
   const players = state.players.map(p => {
     if (p.id !== playerId) return p;
     const newResources = { ...p.resources };
@@ -29,7 +32,12 @@ function addResources(state, playerId, resources) {
     }
     return { ...p, resources: newResources, lastGain: { ...effective }, ...(hasDouble ? { effects: newEffects } : {}) };
   });
-  return { ...state, players };
+  let newState = { ...state, players };
+  if (newColors.length > 0) {
+    const prev = newState._pendingNewColors || [];
+    newState._pendingNewColors = [...prev, { playerId, newColors }];
+  }
+  return newState;
 }
 
 function removeResources(state, playerId, resources) {
@@ -85,6 +93,26 @@ function canStealFrom(state, playerId) {
   return !hasAegis(state, playerId) && !hasModifier(state, playerId, 'steal_immunity');
 }
 
+/**
+ * Check for doubleNextTheft effect, return multiplier and consume the effect.
+ * Returns { state, multiplier } — multiplier is 2 if active, 1 otherwise.
+ */
+function consumeDoubleTheft(state, playerId) {
+  const player = getPlayer(state, playerId);
+  if (!player?.effects?.includes('doubleNextTheft')) return { state, multiplier: 1 };
+  const newState = {
+    ...state,
+    players: state.players.map(p => {
+      if (p.id !== playerId) return p;
+      const newEffects = [...(p.effects || [])];
+      const idx = newEffects.indexOf('doubleNextTheft');
+      if (idx >= 0) newEffects.splice(idx, 1);
+      return { ...p, effects: newEffects };
+    }),
+  };
+  return { state: newState, multiplier: 2 };
+}
+
 // --- Black Actions ---
 
 /** skulk: +3 black */
@@ -104,7 +132,6 @@ export function ransack(state, playerId, gods, decisions = {}) {
       return total > 0;
     }).map(p => p.id);
     if (validTargets.length === 0) {
-      // No valid targets — worker is still consumed (no abort)
       return { state, log: ['Ransack: no opponents have resources to steal'] };
     }
     return {
@@ -124,16 +151,20 @@ export function ransack(state, playerId, gods, decisions = {}) {
     return { state, log: ['Steal blocked: target is protected'] };
   }
 
+  // Check doubleNextTheft effect for steal count
+  const { multiplier: theftMult } = consumeDoubleTheft(state, playerId);
+  const baseStealCount = 2 * theftMult;
+
   if (!decisions.stealGems) {
     const target = getPlayer(state, targetId);
     const totalAvailable = Object.values(target.resources).reduce((sum, v) => sum + v, 0);
     if (totalAvailable === 0) {
       return { state, log: [`Ransack: target has no resources to steal`] };
     }
-    const stealCount = Math.min(2, totalAvailable);
+    const stealCount = Math.min(baseStealCount, totalAvailable);
     return {
       state,
-      log: [],
+      log: theftMult > 1 ? ['Double theft active!'] : [],
       pendingDecision: {
         type: 'stealGems',
         count: stealCount,
@@ -152,7 +183,9 @@ export function ransack(state, playerId, gods, decisions = {}) {
     }
   }
 
-  let newState = removeResources(state, targetId, stealGems);
+  // Consume doubleNextTheft effect on the actual steal
+  let newState = consumeDoubleTheft(state, playerId).state;
+  newState = removeResources(newState, targetId, stealGems);
   newState = addResources(newState, playerId, stealGems);
 
   return {
@@ -192,31 +225,35 @@ export function pickpocket(state, playerId, gods, decisions = {}) {
     return { state: newState, log: ['+1 black', 'Steal blocked: target has Favor immunity'] };
   }
 
-  const target = getPlayer(newState, targetId);
-  const stolen = Math.min(2, Math.max(0, target.glory || 0));
-  if (stolen > 0) {
-    newState = removeGlory(newState, targetId, stolen, 'pickpocket_victim');
-    newState = addGlory(newState, playerId, stolen, 'pickpocket');
-  }
+  // Consume doubleNextTheft effect
+  const { state: postTheftState, multiplier: theftMult } = consumeDoubleTheft(newState, playerId);
+  newState = postTheftState;
+  const stolen = 2 * theftMult;
+  newState = removeGlory(newState, targetId, stolen, 'pickpocket_victim');
+  newState = addGlory(newState, playerId, stolen, 'pickpocket');
 
   const logPrefix = decisions._continued ? [] : ['+1 black'];
+  if (theftMult > 1) logPrefix.push('Double theft active!');
   return {
     state: newState,
-    log: [...logPrefix, stolen > 0 ? `Stole ${stolen} Favor from ${targetId}` : 'Target has no Favor to steal'],
-    penalizedPlayers: stolen > 0 ? [targetId] : [],
-    gloryStolen: stolen > 0 ? [{ playerId, targetPlayerId: targetId, amount: stolen }] : [],
+    log: [...logPrefix, `Stole ${stolen} Favor from ${targetId}`],
+    penalizedPlayers: [targetId],
+    gloryStolen: [{ playerId, targetPlayerId: targetId, amount: stolen }],
     isStealing: true,
   };
 }
 
 /** tribute: Each other player gives you 1 resource or 1 Favor (their choice) */
 export function tribute(state, playerId) {
-  // Auto-resolve: each opponent gives 1 of their most abundant resource.
-  // If no resources, they lose 1 Favor instead.
+  // Auto-resolve: each opponent gives resources or Favor.
   // TODO: Add interactive tributeChoice decision for multiplayer
-  let newState = state;
+  const { state: postTheftState, multiplier: theftMult } = consumeDoubleTheft(state, playerId);
+  let newState = postTheftState;
   const log = [];
   let totalResourcesGained = {};
+  const tributeAmount = 1 * theftMult;
+
+  if (theftMult > 1) log.push('Double theft active!');
 
   for (const player of state.players) {
     if (player.id === playerId) continue;
@@ -225,22 +262,23 @@ export function tribute(state, playerId) {
     const totalResources = Object.values(resources).reduce((sum, v) => sum + Math.max(0, v), 0);
 
     if (totalResources > 0) {
-      // Give 1 of most abundant resource
+      // Give most abundant resource(s)
       const mostAbundant = Object.entries(resources)
         .filter(([, v]) => v > 0)
         .sort(([, a], [, b]) => b - a)[0];
       if (mostAbundant) {
         const [color] = mostAbundant;
-        newState = removeResources(newState, player.id, { [color]: 1 });
-        totalResourcesGained[color] = (totalResourcesGained[color] || 0) + 1;
-        log.push(`${player.id} gave 1 ${color}`);
+        const takeAmount = Math.min(tributeAmount, resources[color] || 0);
+        newState = removeResources(newState, player.id, { [color]: takeAmount });
+        totalResourcesGained[color] = (totalResourcesGained[color] || 0) + takeAmount;
+        log.push(`${player.id} gave ${takeAmount} ${color}`);
       }
     } else {
-      // No resources — lose 1 Favor
+      // No resources — lose Favor
       if (!hasModifier(newState, player.id, 'glory_reduction_immunity')) {
-        newState = removeGlory(newState, player.id, 1, 'tribute');
-        newState = addGlory(newState, playerId, 1, 'tribute');
-        log.push(`${player.id} gave 1 Favor`);
+        newState = removeGlory(newState, player.id, tributeAmount, 'tribute');
+        newState = addGlory(newState, playerId, tributeAmount, 'tribute');
+        log.push(`${player.id} gave ${tributeAmount} Favor`);
       } else {
         log.push(`${player.id} has nothing to give (immune)`);
       }
@@ -252,7 +290,7 @@ export function tribute(state, playerId) {
     newState = addResources(newState, playerId, totalResourcesGained);
   }
 
-  return { state: newState, log: ['Tribute: each opponent pays tribute', ...log] };
+  return { state: newState, log: ['Tribute: each opponent pays tribute', ...log], isStealing: true };
 }
 
 /** plunder: Steal half a player's resources of one color (rounded down) */
@@ -266,7 +304,6 @@ export function plunder(state, playerId, gods, decisions = {}) {
       return total > 0;
     }).map(p => p.id);
     if (validTargets.length === 0) {
-      // No valid targets — worker is still consumed (no abort)
       return { state, log: ['Plunder: no opponents have resources to steal'] };
     }
     return {
@@ -303,6 +340,8 @@ export function plunder(state, playerId, gods, decisions = {}) {
         options: colors,
         targetPlayer: targetId,
         targetResources: { ...target.resources },
+        // Carry forward targetPlayer so GameProvider can pass it back
+        _carryForward: { targetPlayer: targetId },
       },
     };
   }
@@ -315,14 +354,18 @@ export function plunder(state, playerId, gods, decisions = {}) {
     return { state, log: [`${targetId} has too few ${color} to plunder`] };
   }
 
-  let newState = removeResources(state, targetId, { [color]: halfAmount });
-  newState = addResources(newState, playerId, { [color]: halfAmount });
+  // Consume doubleNextTheft effect
+  const { state: postTheftState, multiplier: theftMult } = consumeDoubleTheft(state, playerId);
+  const stealAmount = Math.min(halfAmount * theftMult, target.resources[color] || 0);
+  let newState = removeResources(postTheftState, targetId, { [color]: stealAmount });
+  newState = addResources(newState, playerId, { [color]: stealAmount });
 
+  const theftLog = theftMult > 1 ? ' (doubled!)' : '';
   return {
     state: newState,
-    log: [`Plundered ${halfAmount} ${color} from ${targetId} (half of ${target.resources[color] || 0})`],
+    log: [`Plundered ${stealAmount} ${color} from ${targetId}${theftLog}`],
     penalizedPlayers: [targetId],
-    resourcesStolen: [{ playerId, targetPlayerId: targetId, resources: { [color]: halfAmount } }],
+    resourcesStolen: [{ playerId, targetPlayerId: targetId, resources: { [color]: stealAmount } }],
     isStealing: true,
   };
 }

@@ -36,7 +36,7 @@ export const powerCards = {
     god: 'gold',
     cost: { gold: 2, any: 2 },
     description: '+1 gold at start of each turn',
-    handlers: [{ eventType: 'turn.start', config: { triggerOn: 'self' }, frequency: 'once_per_turn' }],
+    handlers: [{ eventType: 'phase.turn_start', config: { triggerOn: 'self' }, frequency: 'once_per_turn' }],
   },
   gold_crown: {
     id: 'gold_crown',
@@ -69,7 +69,7 @@ export const powerCards = {
     name: "Thieves' Gloves",
     god: 'black',
     cost: { black: 1, any: 2 },
-    description: 'When you steal resources, +1 any resource',
+    description: 'When you steal, gain +1 any',
     handlers: [{ eventType: 'resource.stolen', config: { triggerOn: 'self' } }],
   },
   onyx_spyglass: {
@@ -85,7 +85,7 @@ export const powerCards = {
     name: 'Voodoo Doll',
     god: 'black',
     cost: { black: 2, any: 2 },
-    description: 'End of round, steal 2 Favor from a player (triggers Favor condition)',
+    description: 'End of round, steal 2 Favor from a player',
     handlers: [{ eventType: 'phase.round_end', config: { requiresDecision: true } }],
   },
   skeleton_key: {
@@ -193,7 +193,7 @@ export const powerCards = {
     name: "Alchemist's Trunk",
     god: 'yellow',
     cost: { yellow: 2, any: 2 },
-    description: 'Redistribute all resources (same total) now + each round',
+    description: 'Redistribute all resources (same total) now and at the start of each round',
     onPurchase: { type: 'redistribute' },
     handlers: [{ eventType: 'phase.round_start', config: { requiresDecision: true, decisionType: 'redistribute' } }],
   },

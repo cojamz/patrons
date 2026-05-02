@@ -11,44 +11,55 @@
  * Zero engine logic — all game processing happens in GameProvider.
  */
 import React, { useEffect, useRef, useMemo } from 'react';
-import { GameContext } from '../GameProvider';
-import { useGame } from '../hooks/useGame';
+import { GameStateContext } from '../GameProvider';
+import { useGameState } from '../hooks/useGame';
+import { useGameActions } from '../hooks/useGame';
+import { getAvailableActions } from '../../engine/v3/GameEngine';
 import {
   writeSnapshot,
-  onAnyPlayerAction,
+  onPlayerAction,
   clearPlayerAction,
   setRoomStatus,
 } from '../firebase/rooms';
 
 export default function HostSync({ roomCode, playerId, slotMap, children }) {
-  const gameContext = useGame();
-  const { game, pendingDecision, log, actions, phase, initialized } = gameContext;
+  const gameState = useGameState();
+  const actions = useGameActions();
+  const { game, pendingDecision, log, phase, initialized } = gameState;
 
   const mySlot = slotMap?.[playerId] ?? 0;
   const broadcastQueue = useRef(Promise.resolve());
   const actionsRef = useRef(actions);
+  const gameRef = useRef(game);
+  const phaseRef = useRef(phase);
+  const pendingDecisionRef = useRef(pendingDecision);
   const prevPhaseRef = useRef(null);
 
-  // Always keep actions ref current (avoids stale closures in Firebase listener)
+  // Always keep refs current (avoids stale closures in Firebase listener)
   actionsRef.current = actions;
+  gameRef.current = game;
+  phaseRef.current = phase;
+  pendingDecisionRef.current = pendingDecision;
 
   // --- Broadcast state to Firebase on every change ---
   useEffect(() => {
     if (!game) return;
 
+    // Strip internal/transient fields to reduce snapshot size.
+    // These are engine internals that guests don't need — the host
+    // recomputes them locally on each action.
+    const { eventHandlers, decisionQueue, powerCardDecks, _pendingNewColors,
+      _actionChainQueue, actionLog, ...gameForSync } = game;
+
     const snapshot = {
-      game,
+      game: gameForSync,
       pendingDecision: pendingDecision || null,
-      log,
+      log: log.slice(-20),
     };
 
-    broadcastQueue.current = broadcastQueue.current.then(async () => {
-      try {
-        await writeSnapshot(roomCode, snapshot);
-      } catch (err) {
-        console.error('[HostSync] Failed to broadcast:', err);
-      }
-    });
+    broadcastQueue.current = broadcastQueue.current
+      .then(() => writeSnapshot(roomCode, snapshot))
+      .catch(err => console.error('[HostSync] Failed to broadcast:', err));
   }, [game, pendingDecision, log, roomCode]);
 
   // --- Update room status on phase changes ---
@@ -62,64 +73,119 @@ export default function HostSync({ roomCode, playerId, slotMap, children }) {
     else if (phase !== 'round_end') setRoomStatus(roomCode, 'playing');
   }, [phase, game, roomCode]);
 
-  // --- Listen for remote player actions ---
+  // --- Listen for remote player actions (with validation) ---
   useEffect(() => {
     if (!initialized) return;
 
-    const unsubscribe = onAnyPlayerAction(roomCode, (allActions) => {
-      for (const [fbPlayerId, action] of Object.entries(allActions)) {
-        if (fbPlayerId === playerId) continue; // skip own actions
-        const slot = slotMap[fbPlayerId];
-        if (slot === undefined) continue;
+    const unsubscribe = onPlayerAction(roomCode, (fbPlayerId, action) => {
+      // Always clear the action from Firebase first
+      clearPlayerAction(roomCode, fbPlayerId);
 
-        clearPlayerAction(roomCode, fbPlayerId);
-        const a = actionsRef.current;
+      if (fbPlayerId === playerId) return; // skip own actions
+      const slot = slotMap[fbPlayerId];
+      if (slot === undefined) return;
 
-        switch (action.type) {
-          case 'placeWorker':
-            a.placeWorker(action.actionId);
-            break;
-          case 'endTurn':
-            a.endTurn();
-            break;
-          case 'useShop':
-            a.useShop(action.shopId);
-            break;
-          case 'buyCard':
-            a.buyCard(action.cardId);
-            break;
-          case 'submitDecision':
-            a.submitDecision(action.answer);
-            break;
-          case 'draftChampion':
-            a.draftChampion({ championId: action.championId });
-            break;
-          case 'advanceRound':
-            a.advanceRound();
-            break;
-          case 'cancelDecision':
-            a.cancelDecision();
-            break;
+      // --- Validate action before executing ---
+      const currentGame = gameRef.current;
+      const currentPhase = phaseRef.current;
+      const currentDecision = pendingDecisionRef.current;
+
+      if (!currentGame) {
+        console.warn('[HostSync] Rejected action (no game state):', action.type, fbPlayerId);
+        return;
+      }
+
+      // Turn-based actions: verify it's this player's turn
+      if (['placeWorker', 'endTurn', 'useShop', 'buyCard'].includes(action.type)) {
+        if (currentGame.currentPlayer !== slot) {
+          console.warn('[HostSync] Rejected action (not their turn):', action.type, `slot=${slot}, current=${currentGame.currentPlayer}`);
+          return;
         }
+      }
+
+      // Worker placement: verify action is available
+      if (action.type === 'placeWorker') {
+        const available = getAvailableActions(currentGame, slot);
+        if (!available.some(a => a.id === action.actionId)) {
+          console.warn('[HostSync] Rejected placeWorker (action unavailable):', action.actionId);
+          return;
+        }
+      }
+
+      // Decision submissions: verify there's a pending decision for this player
+      if (action.type === 'submitDecision' || action.type === 'cancelDecision') {
+        if (!currentDecision) {
+          console.warn('[HostSync] Rejected decision (no pending decision):', action.type);
+          return;
+        }
+        const decisionOwner = currentDecision.playerId ?? currentDecision._playerId ?? currentGame.currentPlayer;
+        if (decisionOwner !== slot) {
+          console.warn('[HostSync] Rejected decision (wrong player):', action.type, `slot=${slot}, owner=${decisionOwner}`);
+          return;
+        }
+      }
+
+      // Draft: verify it's draft phase and this player's pick
+      if (action.type === 'draftChampion') {
+        if (currentPhase !== 'champion_draft') {
+          console.warn('[HostSync] Rejected draft (wrong phase):', currentPhase);
+          return;
+        }
+        // Null guard: between draft picks, pendingDecision can briefly be null
+        // while host processes the previous pick. Don't reject — just skip validation.
+        if (currentDecision && currentDecision.playerId !== slot) {
+          console.warn('[HostSync] Rejected draft (not their pick):', `slot=${slot}, expected=${currentDecision.playerId}`);
+          return;
+        }
+      }
+
+      const a = actionsRef.current;
+
+      switch (action.type) {
+        case 'placeWorker':
+          a.placeWorker(action.actionId);
+          break;
+        case 'endTurn':
+          a.endTurn();
+          break;
+        case 'useShop':
+          a.useShop(action.shopId);
+          break;
+        case 'buyCard':
+          a.buyCard(action.cardId);
+          break;
+        case 'submitDecision':
+          a.submitDecision(action.answer);
+          break;
+        case 'draftChampion':
+          a.draftChampion({ championId: action.championId });
+          break;
+        case 'advanceRound':
+          a.advanceRound();
+          break;
+        case 'cancelDecision':
+          a.cancelDecision();
+          break;
       }
     });
 
     return unsubscribe;
   }, [initialized, roomCode, playerId, slotMap]);
 
-  // --- Override context with multiplayer metadata ---
+  // --- Override state context with multiplayer metadata ---
+  // Actions flow through from GameProvider unchanged (stable references).
   const value = useMemo(() => ({
-    ...gameContext,
+    ...gameState,
     isMultiplayer: true,
     isHost: true,
     mySlot,
     roomCode,
     playerId,
-  }), [gameContext, mySlot, roomCode, playerId]);
+  }), [gameState, mySlot, roomCode, playerId]);
 
   return (
-    <GameContext.Provider value={value}>
+    <GameStateContext.Provider value={value}>
       {children}
-    </GameContext.Provider>
+    </GameStateContext.Provider>
   );
 }

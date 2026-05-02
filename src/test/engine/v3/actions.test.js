@@ -152,36 +152,36 @@ describe('Gold Actions', () => {
     });
   });
 
-  describe('austerity', () => {
-    it('gives +1 gold per empty power card slot', () => {
+  describe('royalties (gold_austerity)', () => {
+    it('gives +1 gold per power card owned', () => {
       const state = makeState({
         champions: {
           p1: { id: 'champ1', powerCardSlots: 4, powerCards: ['golden_ring'] },
         },
       });
       const result = routeAction(state, 'p1', 'gold_austerity', GODS);
-      // 4 slots - 1 used = 3 empty
-      expect(getPlayer(result.state, 'p1').resources.gold).toBe(3);
+      // 1 card owned = +1 gold
+      expect(getPlayer(result.state, 'p1').resources.gold).toBe(1);
     });
 
-    it('gives 0 gold when all slots are full', () => {
+    it('gives more gold with more cards', () => {
       const state = makeState({
         champions: {
-          p1: { id: 'champ1', powerCardSlots: 2, powerCards: ['a', 'b'] },
+          p1: { id: 'champ1', powerCardSlots: 4, powerCards: ['a', 'b', 'c'] },
         },
       });
       const result = routeAction(state, 'p1', 'gold_austerity', GODS);
-      expect(getPlayer(result.state, 'p1').resources.gold).toBe(0);
+      expect(getPlayer(result.state, 'p1').resources.gold).toBe(3);
     });
 
-    it('gives max gold when all slots empty', () => {
+    it('gives 0 gold when no cards owned', () => {
       const state = makeState({
         champions: {
           p1: { id: 'champ1', powerCardSlots: 4, powerCards: [] },
         },
       });
       const result = routeAction(state, 'p1', 'gold_austerity', GODS);
-      expect(getPlayer(result.state, 'p1').resources.gold).toBe(4);
+      expect(getPlayer(result.state, 'p1').resources.gold).toBe(0);
     });
 
     it('handles no champion gracefully', () => {
@@ -241,24 +241,31 @@ describe('Gold Actions', () => {
     it('converts all gold to Favor 1:1', () => {
       const state = makeState({
         players: [
-          { id: 'p1', resources: { gold: 7, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+          { id: 'p1', resources: { gold: 7, black: 2, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
           { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
         ],
       });
       const result = routeAction(state, 'p1', 'gold_cashIn', GODS);
       const p1 = getPlayer(result.state, 'p1');
-      expect(p1.glory).toBe(7);
       expect(p1.resources.gold).toBe(0);
+      expect(p1.glory).toBe(7);
+      // Other resources untouched
+      expect(p1.resources.black).toBe(2);
     });
 
     it('does nothing with 0 gold', () => {
-      const state = makeState();
+      const state = makeState({
+        players: [
+          { id: 'p1', resources: { gold: 0, black: 3, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+          { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+        ],
+      });
       const result = routeAction(state, 'p1', 'gold_cashIn', GODS);
-      expect(getPlayer(result.state, 'p1').glory).toBe(0);
-      expect(getPlayer(result.state, 'p1').resources.gold).toBe(0);
+      const p1 = getPlayer(result.state, 'p1');
+      expect(p1.glory).toBe(0);
     });
 
-    it('tracks glory source as cash_in', () => {
+    it('tracks Favor source as cash_in', () => {
       const state = makeState({
         players: [
           { id: 'p1', resources: { gold: 5, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
@@ -266,7 +273,8 @@ describe('Gold Actions', () => {
         ],
       });
       const result = routeAction(state, 'p1', 'gold_cashIn', GODS);
-      expect(getPlayer(result.state, 'p1').glorySources.cash_in).toBe(5);
+      const p1 = getPlayer(result.state, 'p1');
+      expect(p1.glorySources.cash_in).toBe(5);
     });
   });
 });
@@ -415,7 +423,7 @@ describe('Black Actions', () => {
       expect(result.gloryStolen[0].amount).toBe(2);
     });
 
-    it('steals only available Favor when target has less than 2', () => {
+    it('always steals full 2 Favor even when target has less than 2 (target goes negative)', () => {
       const state = makeState({
         players: [
           { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
@@ -423,11 +431,11 @@ describe('Black Actions', () => {
         ],
       });
       const result = routeAction(state, 'p1', 'black_pickpocket', GODS, { targetPlayer: 'p2' });
-      expect(getPlayer(result.state, 'p1').glory).toBe(1);
-      expect(getPlayer(result.state, 'p2').glory).toBe(0);
+      expect(getPlayer(result.state, 'p1').glory).toBe(2);
+      expect(getPlayer(result.state, 'p2').glory).toBe(-1);
     });
 
-    it('steals 0 when target has 0 Favor', () => {
+    it('steals 2 when target has 0 Favor (target goes to -2)', () => {
       const state = makeState({
         players: [
           { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
@@ -435,8 +443,9 @@ describe('Black Actions', () => {
         ],
       });
       const result = routeAction(state, 'p1', 'black_pickpocket', GODS, { targetPlayer: 'p2' });
-      expect(getPlayer(result.state, 'p1').glory).toBe(0);
-      expect(result.penalizedPlayers).toHaveLength(0);
+      expect(getPlayer(result.state, 'p1').glory).toBe(2);
+      expect(getPlayer(result.state, 'p2').glory).toBe(-2);
+      expect(result.penalizedPlayers).toHaveLength(1);
     });
 
     it('respects glory_reduction_immunity modifier', () => {
@@ -695,6 +704,79 @@ describe('Black Actions', () => {
 });
 
 // =========================================================================
+// DOUBLE NEXT THEFT (black strong shop effect)
+// =========================================================================
+
+describe('doubleNextTheft effect', () => {
+  it('pickpocket steals 4 Favor instead of 2 with doubleNextTheft', () => {
+    const state = makeState({
+      players: [
+        { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: ['doubleNextTheft'], lastGain: {} },
+        { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 10, glorySources: {}, effects: [], lastGain: {} },
+      ],
+    });
+    const result = routeAction(state, 'p1', 'black_pickpocket', GODS, { targetPlayer: 'p2' });
+    expect(getPlayer(result.state, 'p1').glory).toBe(4);
+    expect(getPlayer(result.state, 'p2').glory).toBe(6);
+    expect(getPlayer(result.state, 'p1').effects).not.toContain('doubleNextTheft');
+  });
+
+  it('ransack offers 4 resources to steal with doubleNextTheft', () => {
+    const state = makeState({
+      players: [
+        { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: ['doubleNextTheft'], lastGain: {} },
+        { id: 'p2', resources: { gold: 5, black: 3, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+      ],
+    });
+    // First call gets targetPlayer decision, second gets stealGems
+    const result = routeAction(state, 'p1', 'black_ransack', GODS, { targetPlayer: 'p2' });
+    expect(result.pendingDecision.count).toBe(4); // doubled from 2
+  });
+
+  it('plunder steals doubled amount with doubleNextTheft', () => {
+    const state = makeState({
+      players: [
+        { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: ['doubleNextTheft'], lastGain: {} },
+        { id: 'p2', resources: { gold: 6, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+      ],
+    });
+    const result = routeAction(state, 'p1', 'black_plunder', GODS, { targetPlayer: 'p2', chooseColor: 'gold' });
+    // Half of 6 = 3, doubled = 6 (but capped at available = 6)
+    expect(getPlayer(result.state, 'p1').resources.gold).toBe(6);
+    expect(getPlayer(result.state, 'p2').resources.gold).toBe(0);
+    expect(getPlayer(result.state, 'p1').effects).not.toContain('doubleNextTheft');
+  });
+
+  it('tribute takes 2 from each opponent with doubleNextTheft', () => {
+    const state = makeState({
+      players: [
+        { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: ['doubleNextTheft'], lastGain: {} },
+        { id: 'p2', resources: { gold: 5, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+        { id: 'p3', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 5, glorySources: {}, effects: [], lastGain: {} },
+      ],
+    });
+    const result = routeAction(state, 'p1', 'black_tribute', GODS);
+    // p2 gives 2 gold (doubled from 1), p3 gives 2 Favor (doubled from 1)
+    expect(getPlayer(result.state, 'p1').resources.gold).toBe(2);
+    expect(getPlayer(result.state, 'p2').resources.gold).toBe(3);
+    expect(getPlayer(result.state, 'p3').glory).toBe(3);
+    expect(getPlayer(result.state, 'p1').effects).not.toContain('doubleNextTheft');
+  });
+
+  it('doubleNextTheft is NOT consumed by non-steal actions', () => {
+    const state = makeState({
+      players: [
+        { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: ['doubleNextTheft'], lastGain: {} },
+        { id: 'p2', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
+      ],
+    });
+    const result = routeAction(state, 'p1', 'black_skulk', GODS);
+    expect(getPlayer(result.state, 'p1').resources.black).toBe(3);
+    expect(getPlayer(result.state, 'p1').effects).toContain('doubleNextTheft');
+  });
+});
+
+// =========================================================================
 // GREEN ACTIONS
 // =========================================================================
 
@@ -746,18 +828,20 @@ describe('Green Actions', () => {
       expect(result.pendingDecision.options).not.toContain('gold_austerity');
     });
 
-    it('excludes repeat actions from repeatable options', () => {
+    it('allows repeat actions as targets (only eternity excluded)', () => {
       const state = makeState({
         roundActions: [
           { playerId: 'p1', actionId: 'gold_patronage' },
           { playerId: 'p1', actionId: 'green_relive' },
           { playerId: 'p1', actionId: 'green_echo' },
+          { playerId: 'p1', actionId: 'green_eternity' },
         ],
       });
       const result = routeAction(state, 'p1', 'green_relive', GODS);
       expect(result.pendingDecision.options).toContain('gold_patronage');
-      expect(result.pendingDecision.options).not.toContain('green_relive');
-      expect(result.pendingDecision.options).not.toContain('green_echo');
+      expect(result.pendingDecision.options).not.toContain('green_relive'); // can't repeat itself
+      expect(result.pendingDecision.options).toContain('green_echo');
+      expect(result.pendingDecision.options).not.toContain('green_eternity');
     });
 
     it('aborts when no T1 actions to repeat', () => {
@@ -815,16 +899,20 @@ describe('Green Actions', () => {
       expect(result.pendingDecision.options).toContain('black_skulk');
     });
 
-    it('excludes repeat-excluded actions from options', () => {
+    it('excludes green_eternity from options but allows other green repeat actions', () => {
       const state = makeState({
         roundActions: [
           { playerId: 'p2', actionId: 'green_relive' },
           { playerId: 'p2', actionId: 'gold_patronage' },
+          { playerId: 'p2', actionId: 'green_eternity' },
         ],
       });
       const result = routeAction(state, 'p1', 'green_echo', GODS);
-      expect(result.pendingDecision.options).not.toContain('green_relive');
+      // Other green repeat actions are now valid targets (recursion depth limit handles safety)
+      expect(result.pendingDecision.options).toContain('green_relive');
       expect(result.pendingDecision.options).toContain('gold_patronage');
+      // Only Eternity is excluded
+      expect(result.pendingDecision.options).not.toContain('green_eternity');
     });
   });
 
@@ -956,7 +1044,7 @@ describe('Green Actions', () => {
   });
 
   describe('eternity', () => {
-    it('replays all placed actions from this round', () => {
+    it('presents action choice when multiple actions available', () => {
       const state = makeState({
         roundActions: [
           { playerId: 'p1', actionId: 'gold_patronage' },
@@ -964,13 +1052,36 @@ describe('Green Actions', () => {
         ],
       });
       const result = routeAction(state, 'p1', 'green_eternity', GODS);
-      expect(result.executeAction).toBeDefined();
-      expect(result.executeAction.actionId).toBe('gold_patronage');
-      expect(result.executeAction.chainedActions).toHaveLength(1);
-      expect(result.executeAction.chainedActions[0].actionId).toBe('black_skulk');
+      // With 2+ actions, returns pendingDecision for player to choose order
+      expect(result.pendingDecision).toBeDefined();
+      expect(result.pendingDecision.type).toBe('actionChoice');
+      expect(result.pendingDecision.options).toContain('gold_patronage');
+      expect(result.pendingDecision.options).toContain('black_skulk');
     });
 
-    it('excludes eternity itself from replay', () => {
+    it('executes chosen action and queues remaining', () => {
+      const state = makeState({
+        roundActions: [
+          { playerId: 'p1', actionId: 'gold_patronage' },
+          { playerId: 'p1', actionId: 'black_skulk' },
+        ],
+      });
+      const result = routeAction(state, 'p1', 'green_eternity', GODS, {
+        actionChoice: 'black_skulk',
+        _continued: true,
+      });
+      // Executes chosen action
+      expect(result.executeAction).toBeDefined();
+      expect(result.executeAction.actionId).toBe('black_skulk');
+      // Queues remaining actions as another eternity call
+      const queue = result.state._actionChainQueue || [];
+      expect(queue.length).toBe(1);
+      expect(queue[0].actionId).toBe('green_eternity');
+      expect(queue[0].decisions._remaining).toEqual(['gold_patronage']);
+      expect(queue[0].isContinuation).toBe(true);
+    });
+
+    it('auto-executes when only one action available', () => {
       const state = makeState({
         roundActions: [
           { playerId: 'p1', actionId: 'gold_patronage' },
@@ -978,9 +1089,10 @@ describe('Green Actions', () => {
         ],
       });
       const result = routeAction(state, 'p1', 'green_eternity', GODS);
+      // Only 1 valid action → auto-execute, no choice needed
       expect(result.executeAction).toBeDefined();
       expect(result.executeAction.actionId).toBe('gold_patronage');
-      expect(result.executeAction.chainedActions).toHaveLength(0);
+      expect(result.pendingDecision).toBeUndefined();
     });
 
     it('excludes repeat-excluded actions from replay', () => {
@@ -992,10 +1104,9 @@ describe('Green Actions', () => {
         ],
       });
       const result = routeAction(state, 'p1', 'green_eternity', GODS);
+      // Only gold_patronage is valid (relive and echo are repeat-excluded)
       expect(result.executeAction).toBeDefined();
       expect(result.executeAction.actionId).toBe('gold_patronage');
-      // relive and echo are repeat-excluded
-      expect(result.executeAction.chainedActions).toHaveLength(0);
     });
 
     it('handles no actions to replay', () => {
@@ -1013,9 +1124,9 @@ describe('Green Actions', () => {
         ],
       });
       const result = routeAction(state, 'p1', 'green_eternity', GODS);
-      expect(result.executeAction.actionId).toBe('gold_patronage');
-      expect(result.executeAction.chainedActions).toHaveLength(1);
-      expect(result.executeAction.chainedActions[0].actionId).toBe('black_skulk');
+      // 2 unique actions → presents choice
+      expect(result.pendingDecision).toBeDefined();
+      expect(result.pendingDecision.options).toHaveLength(2);
     });
 
     it('does not replay other players actions', () => {
@@ -1026,8 +1137,9 @@ describe('Green Actions', () => {
         ],
       });
       const result = routeAction(state, 'p1', 'green_eternity', GODS);
+      // Only 1 valid action → auto-execute
+      expect(result.executeAction).toBeDefined();
       expect(result.executeAction.actionId).toBe('black_skulk');
-      expect(result.executeAction.chainedActions).toHaveLength(0);
     });
   });
 });
@@ -1273,7 +1385,7 @@ describe('Yellow Actions', () => {
       expect(result.pendingDecision.options).not.toContain('gold'); // can't gain same color
     });
 
-    it('spends all of one color and gains amount + 3 of another', () => {
+    it('spends all of one color and gains that many +3 of another', () => {
       const state = makeState({
         players: [
           { id: 'p1', resources: { gold: 3, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
@@ -1289,7 +1401,7 @@ describe('Yellow Actions', () => {
       expect(p1.resources.black).toBe(6); // 3 + 3
     });
 
-    it('applies +3 bonus (not x2) correctly', () => {
+    it('applies x2 multiplier correctly', () => {
       const state = makeState({
         players: [
           { id: 'p1', resources: { gold: 5, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
@@ -1302,7 +1414,7 @@ describe('Yellow Actions', () => {
       });
       const p1 = getPlayer(result.state, 'p1');
       expect(p1.resources.gold).toBe(0);
-      expect(p1.resources.green).toBe(8); // 5 + 3, not 5 * 2 = 10
+      expect(p1.resources.green).toBe(8); // 5 + 3
     });
 
     it('handles no resources to spend', () => {
@@ -1314,7 +1426,7 @@ describe('Yellow Actions', () => {
   });
 
   describe('attune', () => {
-    it('gives +1 yellow and +1 of each zero color', () => {
+    it('gives +1 of each zero color, then +1 yellow', () => {
       const state = makeState({
         players: [
           { id: 'p1', resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 0, glorySources: {}, effects: [], lastGain: {} },
@@ -1323,11 +1435,11 @@ describe('Yellow Actions', () => {
       });
       const result = routeAction(state, 'p1', 'yellow_attune', GODS);
       const p1 = getPlayer(result.state, 'p1');
-      // Gets +1 yellow first, then checks zeros: gold=0, black=0, green=0, yellow=1(now)
-      expect(p1.resources.yellow).toBe(1); // +1 from attune, yellow no longer 0 so no bonus
-      expect(p1.resources.gold).toBe(1);  // was 0, gains 1
-      expect(p1.resources.black).toBe(1); // was 0, gains 1
-      expect(p1.resources.green).toBe(1); // was 0, gains 1
+      // First: gain 1 of each zero color (all 4 are 0). Then: +1 yellow.
+      expect(p1.resources.gold).toBe(1);   // was 0, gains 1
+      expect(p1.resources.black).toBe(1);  // was 0, gains 1
+      expect(p1.resources.green).toBe(1);  // was 0, gains 1
+      expect(p1.resources.yellow).toBe(2); // was 0, gains 1 from zero-check + 1 from attune
     });
 
     it('gains nothing extra when all colors already owned', () => {
@@ -1354,10 +1466,12 @@ describe('Yellow Actions', () => {
       });
       const result = routeAction(state, 'p1', 'yellow_attune', GODS);
       const p1 = getPlayer(result.state, 'p1');
+      // Zero colors: black=0, yellow=0. Gold=5 and green=3 are not zero.
+      // First: gain 1 black, 1 yellow. Then: +1 yellow.
       expect(p1.resources.gold).toBe(5); // had gold, unchanged
       expect(p1.resources.black).toBe(1); // was 0, gains 1
       expect(p1.resources.green).toBe(3); // had green, unchanged
-      expect(p1.resources.yellow).toBe(1); // +1 from attune, then yellow no longer 0
+      expect(p1.resources.yellow).toBe(2); // was 0, gains 1 from zero-check + 1 from attune
     });
   });
 

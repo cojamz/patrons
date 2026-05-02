@@ -418,11 +418,14 @@ function mctsCardDecision(state, playerId, rollouts) {
   }
   if (cards.length === 0) return null;
 
-  const baseState = completeTurnAndAdvance(state);
-  const baseline = avgRolloutGlory(baseState, playerId, rollouts);
+  // Power cards are almost always worth buying — their long-term engine-building
+  // value is hard to detect with few rollouts. If we can afford one, buy it.
+  // Use MCTS only to pick the BEST card when multiple are affordable.
+  if (cards.length === 1) return cards[0];
 
-  let bestCard = null;
-  let bestGlory = baseline;
+  // Multiple affordable cards — use rollouts to pick the best one
+  let bestCard = cards[0]; // default to first affordable
+  let bestGlory = -Infinity;
 
   for (const cardId of cards) {
     try {
@@ -563,7 +566,7 @@ function mctsTargetPlayer(state, playerId, decision, rollouts) {
     const simState = {
       ...state,
       players: state.players.map(p => {
-        if (p.id === target.id) return { ...p, glory: Math.max(0, (p.glory || 0) - 2) };
+        if (p.id === target.id) return { ...p, glory: (p.glory || 0) - 2 };
         if (p.id === playerId) return { ...p, glory: (p.glory || 0) + 1 };
         return p;
       }),

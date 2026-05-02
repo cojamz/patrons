@@ -13,12 +13,12 @@ import { motion } from 'motion/react';
 import Modal from './Modal';
 import ResourceIcon from '../icons/ResourceIcon';
 import WorkerIcon from '../icons/WorkerIcon';
-import { useGame } from '../../hooks/useGame';
+import { useGameState } from '../../hooks/useGame';
 import { godColors, playerColors, base } from '../../styles/theme';
 import { cardReveal } from '../../styles/animations';
 
 export default function TargetPlayer({ decision, onSubmit, onCancel }) {
-  const { game } = useGame();
+  const { game } = useGameState();
   const [selected, setSelected] = useState(null);
 
   const targetPlayers = useMemo(() => {
@@ -72,18 +72,13 @@ export default function TargetPlayer({ decision, onSubmit, onCancel }) {
               initial="initial"
               animate="animate"
               onClick={() => setSelected(player.id)}
-              className="w-full text-left rounded-lg p-4 transition-all duration-150"
+              className="w-full text-left rounded-lg p-4 opt-row"
               style={{
                 backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.02)',
                 border: `1px solid ${isSelected ? pColors.primary : 'rgba(255, 255, 255, 0.05)'}`,
-                boxShadow: isSelected ? `0 0 20px ${pColors.primary}20, inset 0 0 20px ${pColors.primary}08` : 'none',
+                boxShadow: isSelected ? `0 0 20px ${pColors.primary}20` : 'none',
                 cursor: 'pointer',
               }}
-              whileHover={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                transition: { duration: 0.15 },
-              }}
-              whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center justify-between">
                 {/* Left: player identity */}
@@ -137,7 +132,7 @@ export default function TargetPlayer({ decision, onSubmit, onCancel }) {
                   style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
                 >
                   <div
-                    className="h-full rounded-full transition-all duration-300"
+                    className="h-full rounded-full"
                     style={{
                       width: `${Math.min((player.totalResources / 20) * 100, 100)}%`,
                       backgroundColor: pColors.primary,
@@ -156,10 +151,10 @@ export default function TargetPlayer({ decision, onSubmit, onCancel }) {
 
       {/* Confirm */}
       <div className="mt-5 flex justify-center">
-        <motion.button
+        <button
           onClick={handleSubmit}
           disabled={selected === null}
-          className="px-8 py-2.5 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200"
+          className={`px-8 py-2.5 rounded-lg text-sm font-semibold tracking-wide ${selected !== null ? 'btn-pop' : ''}`}
           style={{
             backgroundColor: selected !== null
               ? (playerColors[selected]?.primary || 'rgba(212, 168, 67, 0.9)')
@@ -168,14 +163,12 @@ export default function TargetPlayer({ decision, onSubmit, onCancel }) {
             cursor: selected !== null ? 'pointer' : 'default',
             boxShadow: selected !== null ? '0 4px 16px rgba(0, 0, 0, 0.3)' : 'none',
           }}
-          whileHover={selected !== null ? { scale: 1.03 } : {}}
-          whileTap={selected !== null ? { scale: 0.97 } : {}}
         >
           {selected !== null
             ? `Target ${(game?.players.find(p => p.id === selected)?.name) || playerColors[selected]?.name || 'Player'}`
             : 'Select a Player'
           }
-        </motion.button>
+        </button>
       </div>
     </Modal>
   );

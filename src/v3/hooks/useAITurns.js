@@ -17,8 +17,9 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useGame } from './useGame';
 import godsData from '../../engine/v3/data/gods';
 import { powerCards } from '../../engine/v3/data/powerCards';
-import { getShopCost } from '../../engine/v3/rules';
-import { heuristicActionPicker, heuristicShopDecision, heuristicCardDecision, heuristicDecisionFn } from '../../engine/v3/balanceAI';
+import { getShopCost, canAfford } from '../../engine/v3/rules';
+import { canAffordShop } from '../../engine/v3/shops/shopResolver';
+import { heuristicActionPicker, heuristicDecisionFn } from '../../engine/v3/balanceAI';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -53,8 +54,9 @@ export function useAITurns() {
     if (!game || !aiPlayers || aiPlayers.size === 0) return;
 
     // Wait for round-start decisions (prescient nullifiers, fortunate resources)
-    // to be surfaced and resolved before AI takes actions
-    if (roundStartDecisionQueue && roundStartDecisionQueue.length > 0) return;
+    // to be surfaced and resolved before AI takes actions.
+    // But allow AI to resolve a surfaced pendingDecision even while queue isn't empty.
+    if (roundStartDecisionQueue && roundStartDecisionQueue.length > 0 && !pendingDecision) return;
 
     // Round end: auto-advance if all players are AI
     if (phase === 'round_end') {
@@ -101,8 +103,14 @@ export function useAITurns() {
       if (!endTurnTimerRef.current && !timerRef.current) {
         endTurnTimerRef.current = setTimeout(() => {
           endTurnTimerRef.current = null;
-          actionsRef.current.endTurn();
-          processingRef.current = false;
+          // Try to buy a shop/power card before ending turn
+          // (same as the normal path — without this, actions with
+          // pendingDecisions always skip the purchase window)
+          const purchased = tryAIPurchase(gameRef.current, currentId, actionsRef);
+          if (!purchased) {
+            actionsRef.current.endTurn();
+            processingRef.current = false;
+          }
         }, 1200);
       }
       return;
@@ -181,8 +189,11 @@ function handleAIDecision(decision, game, actions) {
         actions.submitDecision(mctsAnswer.actionChoices);
         return;
       case 'nullifierPlacement':
-        actions.submitDecision({ actionId: mctsAnswer.nullifierPlacement });
-        return;
+        if (mctsAnswer.nullifierPlacement) {
+          actions.submitDecision({ actionId: mctsAnswer.nullifierPlacement });
+          return;
+        }
+        break; // fall through to random
       default:
         break;
     }
@@ -330,6 +341,13 @@ function handleAIDecision(decision, game, actions) {
       break;
     }
 
+    case 'turnOrderChoice': {
+      const options = decision.options || [1];
+      // AI prefers going first
+      actions.submitDecision({ position: options[0] });
+      break;
+    }
+
     case 'redistributeResources': {
       const player = game.players.find(p => p.id === (decision.ownerId || currentPlayerId));
       if (!player) { actions.submitDecision({ redistribution: {} }); break; }
@@ -373,26 +391,62 @@ function tryHeuristicDecision(decision, game, playerId) {
 
 /**
  * Try to buy a shop OR power card for AI player.
- * Uses heuristic evaluation from balanceAI for contextual decisions.
+ * 60% chance to attempt a purchase. Randomly picks from affordable options.
  * Returns true if a purchase was attempted, false otherwise.
  */
 function tryAIPurchase(gameSnapshot, playerId, actionsRef) {
   const game = gameSnapshot;
   if (!game || game.purchaseMadeThisTurn) return false;
 
-  // Try power card first (permanent benefits, higher value)
-  const cardId = heuristicCardDecision(game, playerId);
-  if (cardId) {
-    actionsRef.current.buyCard(cardId);
-    return true;
+  // Hoard effect blocks all purchases this turn
+  const player = game.players?.find(p => p.id === playerId);
+  if (player?.effects?.includes('noShopThisTurn')) return false;
+
+  // 85% chance to try buying
+  if (Math.random() > 0.85) return false;
+
+  const accessed = game.godsAccessedThisTurn || [];
+  if (accessed.length === 0) return false;
+
+  // Gather all affordable options
+  const options = [];
+
+  // Affordable power cards
+  const champion = game.champions?.[playerId];
+  const hasCardSlots = champion && (champion.powerCards?.length || 0) < (champion.powerCardSlots || 4);
+  if (hasCardSlots) {
+    for (const god of accessed) {
+      for (const cardId of ((game.powerCardMarkets || {})[god] || [])) {
+        const card = powerCards[cardId];
+        if (card && canAfford(game, playerId, card.cost)) {
+          options.push({ type: 'card', id: cardId });
+        }
+      }
+    }
   }
 
-  // Fall back to shop
-  const shopId = heuristicShopDecision(game, playerId);
-  if (shopId) {
-    actionsRef.current.useShop(shopId);
-    return true;
+  // Affordable shops
+  for (const god of accessed) {
+    const godData = godsData[god];
+    if (!godData) continue;
+    for (const shop of (godData.shops || [])) {
+      if (shop.tier > (game.round || 1)) continue;
+      const shopId = `${god}_${shop.type}`;
+      if (canAffordShop(game, playerId, shopId)) {
+        options.push({ type: 'shop', id: shopId });
+      }
+    }
   }
 
-  return false;
+  if (options.length === 0) return false;
+
+  // Prioritize cards over shops — cards are strategic investments
+  const cards = options.filter(o => o.type === 'card');
+  const choice = cards.length > 0 ? pick(cards) : pick(options);
+  if (choice.type === 'card') {
+    actionsRef.current.buyCard(choice.id);
+  } else {
+    actionsRef.current.useShop(choice.id);
+  }
+  return true;
 }

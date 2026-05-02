@@ -62,9 +62,8 @@ html {
     will-change: transform;
 }
 
-/* Smoother transitions for all interactive elements */
-button, .action-space, .player-card {
-    will-change: transform;
+/* Hardware-accelerated interactive elements */
+.action-space, .opt-row, .btn-pop, .card-lift {
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
 }
@@ -78,15 +77,57 @@ button, .action-space, .player-card {
     }
 }
 
-/* Reduce animation conflicts during scrolling */
-@media (prefers-reduced-motion: no-preference) {
-    .action-space:hover {
-        transition: all 0.15s ease-out;
-    }
+/* ============================================================
+ * Interactive element utilities — CSS-only hover/active effects
+ * Replaces Framer Motion whileHover/whileTap (10x faster)
+ * ============================================================ */
 
-    button:hover {
-        transition: all 0.15s ease-out;
-    }
+/* Modal option rows/buttons — bg shift + press */
+.opt-row {
+    transition: background-color 80ms ease, border-color 80ms ease, transform 80ms ease;
+}
+.opt-row:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+.opt-row:active {
+    transform: scale(0.97);
+    transition: transform 40ms ease;
+}
+
+/* Confirm / primary action buttons — scale hover + press */
+.btn-pop {
+    transition: transform 80ms ease, filter 80ms ease;
+}
+.btn-pop:hover {
+    transform: scale(1.03);
+    filter: brightness(1.1);
+}
+.btn-pop:active {
+    transform: scale(0.95);
+    transition: transform 40ms ease;
+}
+
+/* Modal close button — pure CSS hover */
+.modal-close-btn {
+    color: rgba(168, 162, 158, 0.6);
+    background: transparent;
+}
+.modal-close-btn:hover {
+    color: rgba(245, 245, 245, 0.9);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* Card lift — translateY hover, scale press */
+.card-lift {
+    transition: transform 100ms ease, box-shadow 120ms ease, filter 100ms ease;
+}
+.card-lift:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+}
+.card-lift:active {
+    transform: scale(0.97);
+    transition: transform 40ms ease;
 }
 
 /* Pulse animation for current player */
@@ -116,14 +157,7 @@ button, .action-space, .player-card {
     }
 }
 
-@keyframes pulse-blue {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-    50% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-}
-
-.pulse-current {
-    animation: pulse-blue 2s infinite;
-}
+/* (pulse-blue duplicate removed — pulse-current defined above) */
 
 .glass {
     background: rgba(255, 255, 255, 0.9);
@@ -131,11 +165,259 @@ button, .action-space, .player-card {
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Buyable item glow pulse — runs on compositor thread, no JS re-renders */
-@keyframes buyable-glow {
-    0%, 100% { box-shadow: var(--glow-min); }
-    50% { box-shadow: var(--glow-max); }
-}
+/* Buyable glow — strong pulse for interactive elements during buy phase */
 .buyable-glow {
-    animation: buyable-glow 2.5s ease-in-out infinite;
+    position: relative;
+}
+.buyable-glow::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    box-shadow: var(--glow-max, 0 0 16px rgba(250, 235, 215, 0.4), 0 0 4px rgba(250, 235, 215, 0.2));
+    opacity: 0;
+    animation: buyable-glow-pulse 2.2s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+    will-change: opacity;
+}
+@keyframes buyable-glow-pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+/* Collapsed panel indicator — whole market area pulses when items are buyable */
+.collapsed-market-glow {
+    position: relative;
+}
+.collapsed-market-glow::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    border: 1.5px solid var(--market-glow-color, rgba(250, 235, 215, 0.35));
+    box-shadow: 0 0 10px var(--market-glow-color, rgba(250, 235, 215, 0.15)),
+                inset 0 0 6px var(--market-glow-color, rgba(250, 235, 215, 0.08));
+    opacity: 0;
+    animation: market-glow-pulse 1.8s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+    will-change: opacity;
+}
+@keyframes market-glow-pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.9; }
+}
+
+/* Setup screen entrance */
+.setup-screen-enter {
+    animation: setupEnter 0.4s ease-out both;
+}
+@keyframes setupEnter {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Begin Game button */
+.begin-game-btn {
+    transition: transform 100ms ease, box-shadow 150ms ease;
+}
+.begin-game-btn:hover {
+    transform: scale(1.02);
+}
+.begin-game-btn:active {
+    transform: scale(0.97);
+}
+
+/* Champion card reveal + hover */
+.champion-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: championReveal 0.3s ease-out forwards;
+    transition: border-color 120ms ease, box-shadow 150ms ease, transform 120ms ease;
+}
+@keyframes championReveal {
+    to { opacity: 1; transform: translateY(0); }
+}
+.champion-card:hover {
+    border-color: rgba(212, 168, 67, 0.4) !important;
+    box-shadow: 0 0 20px rgba(212, 168, 67, 0.15);
+    transform: translateY(-2px);
+}
+.champion-card:active {
+    transform: scale(0.96);
+    transition: transform 60ms ease;
+}
+
+/* Worker icon glow — static strong glow, no animation (was repainting every frame via filter) */
+.worker-icon-glow {
+    filter: drop-shadow(0 0 6px var(--glow-color, rgba(212, 168, 67, 0.6)))
+            drop-shadow(0 0 10px var(--glow-color, rgba(212, 168, 67, 0.3)));
+}
+
+/* Round tracker glow — static shadow + opacity pulse (compositor-friendly) */
+.round-tracker-glow {
+    box-shadow: 0 0 10px var(--glow-strong, rgba(212, 168, 67, 0.5));
+    animation: roundTrackerPulse 2.5s ease-in-out infinite;
+    will-change: opacity;
+}
+@keyframes roundTrackerPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* End turn button glow — static shadow + opacity pulse (compositor-friendly) */
+.end-turn-glow {
+    box-shadow: 0 0 30px var(--glow-strong), 0 0 12px var(--glow-color), inset 0 1px 0 rgba(255,255,255,0.15);
+    animation: endTurnPulse 1.8s ease-in-out infinite;
+    will-change: opacity;
+}
+@keyframes endTurnPulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* End turn button hover/active feedback */
+.end-turn-glow:hover {
+    filter: brightness(1.1);
+    transition: filter 100ms ease;
+}
+.end-turn-glow:active {
+    transform: scale(0.97);
+    transition: transform 60ms ease;
+}
+
+/* Worker entrance — scale pop on mount */
+@keyframes workerEntrance {
+    0% { transform: scale(0); opacity: 0; }
+    70% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.worker-entrance {
+    animation: workerEntrance 350ms ease-out both;
+}
+
+/* Rules slide fade-in */
+.slide-fade-in {
+    animation: slideFade 0.2s ease-out both;
+}
+@keyframes slideFade {
+    from { opacity: 0; transform: translateX(12px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================================================
+ * Animation Overhaul — Turn awareness, action feedback, status
+ * ============================================================ */
+
+/* Active turn tab — breathing glow via opacity on pseudo-element (compositor-friendly) */
+.active-turn-tab {
+    position: relative;
+}
+.active-turn-tab::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    box-shadow: 0 0 16px var(--turn-glow), 0 0 6px var(--turn-glow);
+    animation: turnPulse 2s ease-in-out infinite;
+    pointer-events: none;
+    will-change: opacity;
+}
+@keyframes turnPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+
+/* (think-dot removed — TurnIndicator no longer shows thinking dots) */
+
+/* Action space flash on worker placement — inward glow burst (louder) */
+@keyframes placeFlash {
+    0% { box-shadow: inset 0 0 20px var(--god-glow), 0 0 12px var(--god-glow); }
+    40% { box-shadow: inset 0 0 10px var(--god-glow), 0 0 6px var(--god-glow); }
+    100% { box-shadow: inset 0 0 0 transparent, 0 0 0 transparent; }
+}
+.action-just-placed {
+    animation: placeFlash 800ms ease-out;
+}
+
+/* Victim tab flash on steal/attack — red background fade */
+@keyframes tabHit {
+    0% { background: rgba(225, 29, 72, 0.15); }
+    100% { background: transparent; }
+}
+.tab-hit {
+    animation: tabHit 400ms ease-out;
+}
+
+/* God area "watching" glow — breathing border in active player's color */
+.god-watching-glow {
+    position: relative;
+}
+.god-watching-glow::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    border: 1.5px solid var(--watching-color);
+    box-shadow: 0 0 14px var(--watching-color), inset 0 0 8px var(--watching-color);
+    animation: watchingGlow 1.6s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 20;
+    will-change: opacity;
+}
+@keyframes watchingGlow {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.85; }
+}
+
+/* God area placement burst — radial flash on worker placement */
+@keyframes godPlacementBurst {
+    0% { opacity: 0.5; transform: scale(1.015); }
+    30% { opacity: 0.25; transform: scale(1.005); }
+    100% { opacity: 0; transform: scale(1); }
+}
+.god-placement-burst {
+    animation: godPlacementBurst 600ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    will-change: opacity, transform;
+    pointer-events: none;
+}
+
+/* Board-level action result banner — scale pop + hold + fade out */
+@keyframes placementBannerIn {
+    0% { opacity: 0; transform: translateX(-50%) scale(0.92); }
+    6% { opacity: 1; transform: translateX(-50%) scale(1.02); }
+    10% { transform: translateX(-50%) scale(1); }
+    78% { opacity: 1; transform: translateX(-50%) scale(1); }
+    100% { opacity: 0; transform: translateX(-50%) scale(0.98); }
+}
+.placement-banner-in {
+    animation: placementBannerIn 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    will-change: opacity, transform;
+}
+
+/* Banner glow pulse ring — 2 pulses in player color */
+.placement-banner-in::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    border: 1.5px solid var(--banner-color, rgba(212, 168, 67, 0.4));
+    box-shadow: 0 0 16px var(--banner-color, rgba(212, 168, 67, 0.3));
+    animation: bannerGlowPulse 1s ease-in-out 2;
+    pointer-events: none;
+    will-change: opacity;
+}
+@keyframes bannerGlowPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+}
+
+/* Market card slot "sold" flash — gold border pulse */
+@keyframes marketSoldFlash {
+    0% { border-color: rgba(212, 168, 67, 0.6); box-shadow: inset 0 0 8px rgba(212, 168, 67, 0.3); }
+    100% { border-color: rgba(255, 255, 255, 0.06); box-shadow: none; }
+}
+.market-slot-sold {
+    animation: marketSoldFlash 500ms ease-out;
 }

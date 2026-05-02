@@ -8,6 +8,8 @@
 // --- Helpers ---
 
 function addResourceToPlayer(state, playerId, color, amount) {
+  const player = state.players.find(p => p.id === playerId);
+  const hadZero = (player.resources[color] || 0) === 0;
   const updatedPlayers = state.players.map(p => {
     if (p.id !== playerId) return p;
     return {
@@ -18,7 +20,12 @@ function addResourceToPlayer(state, playerId, color, amount) {
       },
     };
   });
-  return { ...state, players: updatedPlayers };
+  let newState = { ...state, players: updatedPlayers };
+  if (hadZero && amount > 0) {
+    const prev = newState._pendingNewColors || [];
+    newState._pendingNewColors = [...prev, { playerId, newColors: [color] }];
+  }
+  return newState;
 }
 
 // --- Resolvers ---

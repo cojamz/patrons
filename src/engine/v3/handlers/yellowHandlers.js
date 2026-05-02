@@ -8,6 +8,8 @@
 // --- Helpers ---
 
 function addResourceToPlayer(state, playerId, color, amount) {
+  const player = state.players.find(p => p.id === playerId);
+  const hadZero = (player.resources[color] || 0) === 0;
   const updatedPlayers = state.players.map(p => {
     if (p.id !== playerId) return p;
     return {
@@ -18,7 +20,12 @@ function addResourceToPlayer(state, playerId, color, amount) {
       },
     };
   });
-  return { ...state, players: updatedPlayers };
+  let newState = { ...state, players: updatedPlayers };
+  if (hadZero && amount > 0) {
+    const prev = newState._pendingNewColors || [];
+    newState._pendingNewColors = [...prev, { playerId, newColors: [color] }];
+  }
+  return newState;
 }
 
 function addGloryToPlayer(state, playerId, amount, source) {
@@ -44,7 +51,7 @@ function getPlayer(state, playerId) {
 
 /**
  * Rainbow Crest: +1 any when gaining 2+ colors (action or shop).
- * Auto-picks the player's lowest active resource.
+ * Returns a pending decision so the player can choose which resource to gain.
  */
 function rainbowCrestResolver(state, handler, eventData, _options) {
   if (eventData.playerId !== handler.ownerId) {
@@ -59,17 +66,19 @@ function rainbowCrestResolver(state, handler, eventData, _options) {
   }
 
   const activeColors = state.gods || ['gold', 'black', 'green', 'yellow'];
-  const player = getPlayer(state, handler.ownerId);
-  const sortedColors = [...activeColors].sort((a, b) =>
-    (player.resources[a] || 0) - (player.resources[b] || 0)
-  );
-  const chosenColor = sortedColors[0] || activeColors[0];
 
-  const newState = addResourceToPlayer(state, handler.ownerId, chosenColor, 1);
   return {
-    state: newState,
-    log: [`Rainbow Crest: +1 ${chosenColor} (gained 2+ colors)`],
-    pendingDecisions: [],
+    state,
+    log: ['Rainbow Crest: gained 2+ colors — choose a resource to gain'],
+    pendingDecisions: [{
+      type: 'gemSelection',
+      count: 1,
+      title: 'Rainbow Crest: Choose 1 resource to gain',
+      ownerId: handler.ownerId,
+      playerId: handler.ownerId,
+      sourceId: 'rainbow_crest',
+      colors: activeColors,
+    }],
   };
 }
 

@@ -136,7 +136,7 @@ function RoomView({ roomCode, playerId, room, onLeave, onStart, onStartMultiplay
                   <button
                     key={count}
                     onClick={() => handlePlayerCountChange(count)}
-                    className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
+                    className="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors duration-100"
                     style={{
                       background: (room?.settings?.playerCount || 2) === count
                         ? godColors.gold.primary
@@ -204,7 +204,7 @@ function RoomView({ roomCode, playerId, room, onLeave, onStart, onStartMultiplay
                     {isMe ? (
                       <button
                         onClick={handleToggleReady}
-                        className="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider transition-all"
+                        className="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider transition-colors duration-100"
                         style={{
                           background: player.ready ? 'rgba(74, 222, 128, 0.15)' : 'rgba(255, 255, 255, 0.04)',
                           border: `1px solid ${player.ready ? 'rgba(74, 222, 128, 0.4)' : 'rgba(255, 255, 255, 0.08)'}`,
@@ -247,7 +247,7 @@ function RoomView({ roomCode, playerId, room, onLeave, onStart, onStartMultiplay
           <div className="flex gap-3">
             <button
               onClick={onLeave}
-              className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
+              className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-100"
               style={{
                 background: 'rgba(255, 255, 255, 0.04)',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -258,10 +258,10 @@ function RoomView({ roomCode, playerId, room, onLeave, onStart, onStartMultiplay
             </button>
 
             {isHost && (
-              <motion.button
+              <button
                 onClick={onStart}
                 disabled={!canStart}
-                className="flex-[2] py-2.5 rounded-lg text-sm font-bold uppercase tracking-wider"
+                className={`flex-[2] py-2.5 rounded-lg text-sm font-bold uppercase tracking-wider ${canStart ? 'btn-pop' : ''}`}
                 style={{
                   background: canStart
                     ? `linear-gradient(135deg, ${godColors.gold.primary}, ${godColors.gold.dark})`
@@ -273,11 +273,9 @@ function RoomView({ roomCode, playerId, room, onLeave, onStart, onStartMultiplay
                   cursor: canStart ? 'pointer' : 'not-allowed',
                   opacity: canStart ? 1 : 0.5,
                 }}
-                whileHover={canStart ? { scale: 1.02, boxShadow: `0 6px 30px ${godColors.gold.glowStrong}` } : {}}
-                whileTap={canStart ? { scale: 0.97 } : {}}
               >
                 Start Game
-              </motion.button>
+              </button>
             )}
           </div>
         </div>
@@ -465,36 +463,29 @@ export default function LobbyScreen({ onStartLocal, onStartMultiplayer, onBack, 
 
           {/* Create / Join buttons */}
           <div className="flex gap-3">
-            <motion.button
+            <button
               onClick={handleCreateRoom}
-              className="flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider"
+              className="flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider btn-pop"
               style={{
                 background: `linear-gradient(135deg, ${godColors.gold.primary}, ${godColors.gold.dark})`,
                 color: base.textDark,
                 boxShadow: `0 4px 20px ${godColors.gold.glow}, inset 0 1px 0 rgba(255,255,255,0.2)`,
               }}
-              whileHover={{ scale: 1.02, boxShadow: `0 6px 30px ${godColors.gold.glowStrong}` }}
-              whileTap={{ scale: 0.97 }}
             >
               Create Room
-            </motion.button>
+            </button>
 
-            <motion.button
+            <button
               onClick={() => { setView('joining'); setError(null); }}
-              className="flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider"
+              className="flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider opt-row"
               style={{
                 background: 'rgba(255, 255, 255, 0.04)',
                 border: '1px solid rgba(255, 255, 255, 0.12)',
                 color: base.textSecondary,
               }}
-              whileHover={{
-                background: 'rgba(255, 255, 255, 0.06)',
-                borderColor: 'rgba(255, 255, 255, 0.2)',
-              }}
-              whileTap={{ scale: 0.97 }}
             >
               Join Room
-            </motion.button>
+            </button>
           </div>
 
           {error && (

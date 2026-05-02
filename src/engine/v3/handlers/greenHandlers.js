@@ -10,6 +10,8 @@ import { hasModifier } from '../rules.js';
 // --- Helpers ---
 
 function addResourceToPlayer(state, playerId, color, amount) {
+  const player = state.players.find(p => p.id === playerId);
+  const hadZero = (player.resources[color] || 0) === 0;
   const updatedPlayers = state.players.map(p => {
     if (p.id !== playerId) return p;
     return {
@@ -20,7 +22,12 @@ function addResourceToPlayer(state, playerId, color, amount) {
       },
     };
   });
-  return { ...state, players: updatedPlayers };
+  let newState = { ...state, players: updatedPlayers };
+  if (hadZero && amount > 0) {
+    const prev = newState._pendingNewColors || [];
+    newState._pendingNewColors = [...prev, { playerId, newColors: [color] }];
+  }
+  return newState;
 }
 
 function addGloryToPlayer(state, playerId, amount, source) {
@@ -176,15 +183,15 @@ function greenGloryConditionResolver(state, handler, eventData, _options) {
     return { state, log: [], pendingDecisions: [] };
   }
 
-  // Check for permanent buff from VP shop
+  // Check for permanent buff from VP shop — stacks: each purchase adds +1
   const player = getPlayer(state, handler.ownerId);
-  const hasExtraBuff = (player.permanentBuffs || []).includes('extra_repeat_favor');
-  const favorGain = hasExtraBuff ? 2 : 1;
+  const buffCount = (player.permanentBuffs || []).filter(b => b === 'extra_repeat_favor').length;
+  const favorGain = 1 + buffCount;
 
   const newState = addGloryToPlayer(state, handler.ownerId, favorGain, 'green_glory_condition');
   return {
     state: newState,
-    log: [`Green Favor: +${favorGain} Favor (repeated/copied an action)${hasExtraBuff ? ' [+1 from permanent buff]' : ''}`],
+    log: [`Green Favor: +${favorGain} Favor (repeated/copied an action)${buffCount > 0 ? ` [+${buffCount} from VP shop]` : ''}`],
     pendingDecisions: [],
   };
 }

@@ -7,7 +7,7 @@
  */
 import React from 'react';
 import { motion } from 'motion/react';
-import { useGame } from '../../hooks/useGame';
+import { useGameState, useGameActions } from '../../hooks/useGame';
 import PowerCard from './PowerCard';
 import GodIcon from '../icons/GodIcon';
 import { godColors, godMeta, base } from '../../styles/theme';
@@ -16,7 +16,8 @@ import { canAfford } from '../../../engine/v3/rules';
 import { powerCards } from '../../../engine/v3/data/powerCards';
 
 export default function CardMarket({ godColor }) {
-  const { game, actions, currentPlayer } = useGame();
+  const { game, currentPlayer } = useGameState();
+  const actions = useGameActions();
 
   if (!game) return null;
 
