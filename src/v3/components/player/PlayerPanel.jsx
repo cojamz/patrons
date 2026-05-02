@@ -20,6 +20,8 @@ import PowerCardSlot from './PowerCardSlot';
 import WorkerIcon from '../icons/WorkerIcon';
 import ChampionIcon from '../icons/ChampionIcon';
 import CardPixelIcon from '../icons/CardPixelIcon';
+import ResourceIcon from '../icons/ResourceIcon';
+import { resourceStyles } from '../../styles/theme';
 import champions from '../../../engine/v3/data/champions';
 import { powerCards as powerCardsData } from '../../../engine/v3/data/powerCards';
 import { ACTIONS_PER_ROUND } from '../../../engine/v3/data/constants';
@@ -165,6 +167,57 @@ function getTabPhaseLabel(phase, pendingDecision, game, playerId) {
   return wLeft > 0 ? 'Place a worker' : 'End Turn';
 }
 
+// Resource order matches ResourceDisplay for visual consistency
+const TAB_RESOURCE_ORDER = ['gold', 'black', 'green', 'yellow'];
+
+/**
+ * TabResourceRow — compact gem+count row for the player tab.
+ * Only renders resources for active gods. Hides zero counts to save space.
+ * No Framer Motion — uses CSS-only updates for snappiness.
+ */
+function TabResourceRow({ resources, activeGods, isViewing }) {
+  if (!resources) return null;
+  const order = activeGods
+    ? TAB_RESOURCE_ORDER.filter(t => activeGods.includes(t))
+    : TAB_RESOURCE_ORDER;
+  const visible = order.filter(t => (resources[t] || 0) > 0);
+  if (visible.length === 0) {
+    // Empty state — render a thin spacer dash so layout stays stable
+    return (
+      <div className="flex items-center gap-1" style={{ marginTop: '1px', height: '12px' }}>
+        <span style={{ fontSize: '9px', color: 'rgba(168, 162, 158, 0.4)' }}>—</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1.5" style={{ marginTop: '1px', height: '12px' }}>
+      {visible.map(type => {
+        const count = resources[type] || 0;
+        const style = resourceStyles[type];
+        return (
+          <span
+            key={type}
+            className="flex items-center"
+            style={{ gap: '2px', lineHeight: 1 }}
+          >
+            <ResourceIcon type={type} size={11} glow={false} />
+            <span
+              className="tabular-nums font-semibold"
+              style={{
+                fontSize: '11px',
+                color: isViewing ? style.highlight : 'rgba(220, 220, 220, 0.8)',
+                lineHeight: 1,
+              }}
+            >
+              {count}
+            </span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function PlayerTab({ player, isViewing, isActiveTurn, phase, pendingDecision, game, onClick, favorDeltas, resourceDeltas }) {
   const colors = playerColors[player.id] || playerColors[0];
   const { value: favorDisplay } = useAnimatedValue(player.glory);
@@ -297,6 +350,13 @@ function PlayerTab({ player, isViewing, isActiveTurn, phase, pendingDecision, ga
             )}
           </div>
         </div>
+
+        {/* Resource row — compact gems + counts for opponent visibility */}
+        <TabResourceRow
+          resources={player.resources}
+          activeGods={game?.gods}
+          isViewing={isViewing}
+        />
 
         {/* Bottom row: phase label (active turn only) */}
         {phaseLabel && (
@@ -939,6 +999,33 @@ export default function PlayerPanel() {
           <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
             {/* Collapsible log */}
             <CollapsibleLog log={log} />
+
+            {/* Phase guidance chip — tells player what to do at this moment.
+             * Sits next to End Turn so guidance lives at the natural action destination. */}
+            {isMyTurn && (() => {
+              const wLeft = viewingPlayer?.workersLeft ?? 0;
+              let label = null;
+              let tone = base.textMuted;
+              if (!game.workerPlacedThisTurn) {
+                if (wLeft > 0) { label = `Place a worker (${wLeft} left)`; tone = '#FBBF24'; }
+                else { label = 'Out of workers'; }
+              } else if (!game.purchaseMadeThisTurn) {
+                label = 'Buy or end turn';
+                tone = base.textSecondary;
+              } else {
+                label = 'End turn';
+                tone = base.textSecondary;
+              }
+              return label ? (
+                <div
+                  key={label}
+                  className="text-xs font-semibold uppercase tracking-wide phase-chip-fade"
+                  style={{ color: tone, fontSize: '11px' }}
+                >
+                  {label}
+                </div>
+              ) : null;
+            })()}
 
             <button
               className={`flex-shrink-0 px-5 py-2.5 rounded-lg font-semibold text-sm uppercase tracking-wider btn-pop${isMyTurn && game.workerPlacedThisTurn ? ' end-turn-glow' : ''}`}

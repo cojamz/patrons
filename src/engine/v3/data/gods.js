@@ -236,9 +236,9 @@ const gods = {
     ],
 
     gloryCondition: {
-      description: '+1 Favor each time you use an action or shop to steal',
-      trigger: GLORY_TRIGGERS.ON_STEAL_ACTION,
-      formula: 'perStealAction',
+      description: '+1 Favor for each opponent you harm — every steal, every penalty, every Favor reduction. Counts every victim, every time (including repeats).',
+      trigger: GLORY_TRIGGERS.ON_HARM,
+      formula: 'perHarmedVictim',
     },
   },
 

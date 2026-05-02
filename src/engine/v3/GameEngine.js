@@ -34,7 +34,7 @@ function getGloryEventType(godColor) {
   switch (godColor) {
     case 'gold': return EventType.ROUND_END;
     case 'yellow': return EventType.NEW_COLOR_GAINED;
-    case 'black': return EventType.STEAL_ACTION;
+    case 'black': return EventType.PLAYER_HARMED;
     case 'green': return EventType.ACTION_REPEATED;
     default: return EventType.ROUND_END;
   }
@@ -324,7 +324,27 @@ export function executeAction(state, playerId, actionId, decisions = {}, options
     }
   }
 
-  // 9e. Dispatch single STEAL_ACTION event if this was a steal (for Black Favor condition)
+  // 9e. Dispatch PLAYER_HARMED once per unique victim of this action (Black Favor condition).
+  //     "Harm" = penalize, steal Favor, or steal resources. Dedup across event types so an
+  //     action that both steals and penalizes the same player only fires once per victim.
+  const harmedVictims = new Set();
+  for (const v of (actionResult.penalizedPlayers || [])) harmedVictims.add(v);
+  for (const s of (actionResult.gloryStolen || [])) harmedVictims.add(s.targetPlayerId);
+  for (const s of (actionResult.resourcesStolen || [])) harmedVictims.add(s.targetPlayerId);
+  for (const victimId of harmedVictims) {
+    const harmResult = dispatchEvent(state, EventType.PLAYER_HARMED, {
+      playerId,
+      targetPlayerId: victimId,
+      actionId,
+    });
+    state = harmResult.state;
+    if (harmResult.log) log.push(...harmResult.log);
+    if (harmResult.pendingDecisions && harmResult.pendingDecisions.length > 0) {
+      state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...harmResult.pendingDecisions] };
+    }
+  }
+
+  // 9e-legacy. STEAL_ACTION still dispatched for any external/test listeners (no engine handler uses it now).
   if (actionResult.isStealing) {
     const stealActionResult = dispatchEvent(state, EventType.STEAL_ACTION, {
       playerId,
@@ -549,7 +569,25 @@ export function executeShop(state, playerId, shopId, decisions = {}) {
     }
   }
 
-  // 6b. Dispatch STEAL_ACTION for shops that steal (triggers Black Favor condition)
+  // 6b-new. Dispatch PLAYER_HARMED once per unique victim (Black Favor condition).
+  const shopHarmedVictims = new Set();
+  for (const s of (shopResult.gloryStolen || [])) shopHarmedVictims.add(s.targetPlayerId);
+  for (const s of (shopResult.resourcesStolen || [])) shopHarmedVictims.add(s.targetPlayerId);
+  for (const v of (shopResult.penalizedPlayers || [])) shopHarmedVictims.add(v);
+  for (const victimId of shopHarmedVictims) {
+    const harmResult = dispatchEvent(state, EventType.PLAYER_HARMED, {
+      playerId,
+      targetPlayerId: victimId,
+      actionId: shopId,
+    });
+    state = harmResult.state;
+    if (harmResult.log) log.push(...harmResult.log);
+    if (harmResult.pendingDecisions && harmResult.pendingDecisions.length > 0) {
+      state = { ...state, decisionQueue: [...(state.decisionQueue || []), ...harmResult.pendingDecisions] };
+    }
+  }
+
+  // 6b-legacy. STEAL_ACTION still dispatched for any external/test listeners.
   if (shopResult.isStealing) {
     const stealActionResult = dispatchEvent(state, EventType.STEAL_ACTION, {
       playerId,
@@ -1034,14 +1072,15 @@ export function resolveDecision(state, decisionId, answer) {
     state = removeGlory(state, targetId, stealAmount, 'voodoo_doll_victim');
     state = addGlory(state, decision.ownerId, stealAmount, 'voodoo_doll');
     log.push(`Voodoo Doll: stole ${stealAmount} Favor from ${targetId}`);
-    // Dispatch STEAL_ACTION for black glory condition
+    // Dispatch PLAYER_HARMED for Black Favor condition
     if (decision.isStealing) {
-      const stealResult = dispatchEvent(state, EventType.STEAL_ACTION, {
+      const harmResult = dispatchEvent(state, EventType.PLAYER_HARMED, {
         playerId: decision.ownerId,
+        targetPlayerId: targetId,
         actionId: 'voodoo_doll',
       });
-      state = stealResult.state;
-      if (stealResult.log) log.push(...stealResult.log);
+      state = harmResult.state;
+      if (harmResult.log) log.push(...harmResult.log);
     }
   } else if (decision.sourceId === 'chrono_compass' && answer.position) {
     const desiredPosition = answer.position - 1; // Convert 1-indexed to 0-indexed
@@ -1108,14 +1147,15 @@ export function resolveDecision(state, decisionId, answer) {
       state = removeResources(state, targetId, { [color]: 1 });
       state = addResources(state, decision.ownerId, { [color]: 1 });
       log.push(`Skeleton Key: stole 1 ${color} from ${targetId}`);
-      // Dispatch STEAL_ACTION for black glory condition
+      // Dispatch PLAYER_HARMED for Black Favor condition
       if (decision.isStealing) {
-        const stealResult = dispatchEvent(state, EventType.STEAL_ACTION, {
+        const harmResult = dispatchEvent(state, EventType.PLAYER_HARMED, {
           playerId: decision.ownerId,
+          targetPlayerId: targetId,
           actionId: 'skeleton_key',
         });
-        state = stealResult.state;
-        if (stealResult.log) log.push(...stealResult.log);
+        state = harmResult.state;
+        if (harmResult.log) log.push(...harmResult.log);
       }
     }
   } else if (decision.sourceId === 'alchemists_trunk' && answer.redistribution) {

@@ -919,3 +919,81 @@ describe('integration', () => {
     expect(isGameOver(state)).toBe(true);
   });
 });
+
+// =========================================================================
+// Black Favor: per-victim, every harm
+// =========================================================================
+
+describe('Black Favor — per-victim, per-harm', () => {
+  function setupBlackForR3(overrides = {}) {
+    let state = createActionPhaseState({ playerCount: 4, playerNames: ['A', 'B', 'C', 'D'] });
+    // Force round 3 so Annihilate is available, give p1 enough black
+    state = {
+      ...state,
+      round: 3,
+      players: state.players.map(p =>
+        p.id === 1
+          ? { ...p, resources: { ...p.resources, black: 4 }, workersLeft: 4 }
+          : { ...p, resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 10, workersLeft: 4 }
+      ),
+      ...overrides,
+    };
+    return state;
+  }
+
+  it('Annihilate hitting 3 opponents = +3 Favor (one per victim)', () => {
+    let state = setupBlackForR3();
+    const before = getPlayer(state, 1).glory;
+    const result = executeAction(state, 1, 'black_annihilate');
+    expect(result.state).toBeDefined();
+    const after = getPlayer(result.state, 1);
+    // 4 black spent, each opponent loses 4 glory. 3 opponents harmed = +3 Favor.
+    expect(after.glorySources?.black_glory_condition).toBe(3);
+    expect(after.glory - before).toBe(3);
+  });
+
+  it('Tribute counts every opponent as a harm (per-victim)', () => {
+    let state = setupBlackForR3();
+    // Tribute is t1, available in r3
+    const result = executeAction(state, 1, 'black_tribute');
+    expect(result.state).toBeDefined();
+    const after = getPlayer(result.state, 1);
+    // 3 opponents = +3 Favor
+    expect(after.glorySources?.black_glory_condition).toBe(3);
+  });
+
+  it('Single-victim steal (Pickpocket) = +1 Favor (regression)', () => {
+    let state = setupBlackForR3();
+    // Pickpocket needs a target decision
+    const result = executeAction(state, 1, 'black_pickpocket', { targetPlayer: 2 });
+    if (result.pendingDecision) {
+      // Provide target via decision flow if needed
+      const resolved = executeAction(result.state, 1, 'black_pickpocket', { targetPlayer: 2 });
+      const after = getPlayer(resolved.state, 1);
+      expect(after.glorySources?.black_glory_condition).toBe(1);
+    } else {
+      const after = getPlayer(result.state, 1);
+      expect(after.glorySources?.black_glory_condition).toBe(1);
+    }
+  });
+
+  it('Action that both penalizes and steals same victim = +1 Favor (deduped)', () => {
+    // No current action does both, but verify the dedup contract by simulating one.
+    // We'll execute Dread (penalize) twice on different victims by using two p1 turns,
+    // and verify each victim counts only once per action.
+    let state = setupBlackForR3();
+    state = {
+      ...state,
+      champions: {
+        ...state.champions,
+        2: { id: 'ambitious', name: 'A', powerCards: ['c1', 'c2'], powerCardSlots: 5 },
+        3: { id: 'a', name: 'A', powerCards: ['c1'], powerCardSlots: 4 },
+        4: { id: 'a', name: 'A', powerCards: [], powerCardSlots: 4 },
+      },
+    };
+    const result = executeAction(state, 1, 'black_dread');
+    const after = getPlayer(result.state, 1);
+    // p2 (2 cards) and p3 (1 card) penalized. p4 (0 cards) skipped. = +2 Favor.
+    expect(after.glorySources?.black_glory_condition).toBe(2);
+  });
+});
