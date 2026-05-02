@@ -236,7 +236,7 @@ const gods = {
     ],
 
     gloryCondition: {
-      description: '+1 Favor for each opponent you harm — every steal, every penalty, every Favor reduction. Counts every victim, every time (including repeats).',
+      description: '+1 Favor per opponent you harm',
       trigger: GLORY_TRIGGERS.ON_HARM,
       formula: 'perHarmedVictim',
     },
