@@ -429,9 +429,9 @@ export default function GameBoard() {
   // Compute grid layout based on god count and focus — memoized to avoid layout thrashing
   const godCount = activeGods.length;
   const gridStyle = useMemo(() => {
-    const cols = godCount <= 2
-      ? activeGods.map(g => g === focusedGod ? '3fr' : '2fr').join(' ')
-      : activeGods.map(g => g === focusedGod ? '2.5fr' : '1.2fr').join(' ');
+    // Focused god dominates; collapsed gods are genuinely peripheral.
+    // Uniform 5fr/2fr → 2P: 71/29, 3P: 55/22/22, 4P: 45/18/18/18.
+    const cols = activeGods.map(g => g === focusedGod ? '5fr' : '2fr').join(' ');
     return {
       gridTemplateColumns: cols,
       gridTemplateRows: '1fr',

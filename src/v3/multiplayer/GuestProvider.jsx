@@ -37,7 +37,9 @@ export default function GuestProvider({ roomCode, playerId, slotMap, children })
   const [connectionState, setConnectionState] = useState('connected');
   const unsubSnapshotRef = useRef(null);
 
-  const mySlot = slotMap?.[playerId] ?? 0;
+  // Convert Firebase 0-indexed slot → engine 1-indexed playerId.
+  // See HostSync.jsx for full context.
+  const mySlot = (slotMap?.[playerId] ?? 0) + 1;
 
   // --- Connection monitoring via Firebase .info/connected ---
   useEffect(() => {

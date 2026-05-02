@@ -181,13 +181,10 @@ function TabResourceRow({ resources, activeGods, isViewing }) {
     ? TAB_RESOURCE_ORDER.filter(t => activeGods.includes(t))
     : TAB_RESOURCE_ORDER;
   const visible = order.filter(t => (resources[t] || 0) > 0);
+  // Reserve consistent height (12px) so tabs don't reflow when first resource arrives,
+  // but render nothing visible when empty — no awkward "—" placeholder.
   if (visible.length === 0) {
-    // Empty state — render a thin spacer dash so layout stays stable
-    return (
-      <div className="flex items-center gap-1" style={{ marginTop: '1px', height: '12px' }}>
-        <span style={{ fontSize: '9px', color: 'rgba(168, 162, 158, 0.4)' }}>—</span>
-      </div>
-    );
+    return <div style={{ marginTop: '1px', height: '12px' }} />;
   }
   return (
     <div className="flex items-center gap-1.5" style={{ marginTop: '1px', height: '12px' }}>

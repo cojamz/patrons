@@ -1039,7 +1039,15 @@ export default React.memo(function GodArea({ godColor, isFocused = true, onFocus
             }}
           >
             <div
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', flex: 1 }}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gridTemplateRows: '1fr',
+                gap: '6px',
+                flex: 1,
+                minHeight: 0,
+                alignItems: 'stretch',
+              }}
             >
               {slots.map((cardId, i) => {
                 if (!cardId) {
@@ -1079,6 +1087,8 @@ export default React.memo(function GodArea({ godColor, isFocused = true, onFocus
                       outline: 'none',
                       cursor: buyable ? 'pointer' : 'default',
                       opacity: buyable ? 1 : 0.5,
+                      width: '100%',
+                      height: '100%',
                       '--glow-max': buyable
                         ? `0 0 20px ${colors.glow}, 0 0 8px ${colors.glowStrong}, inset 0 0 10px ${colors.glow}`
                         : undefined,

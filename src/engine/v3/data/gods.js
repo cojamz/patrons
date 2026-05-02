@@ -120,7 +120,7 @@ const gods = {
     ],
 
     gloryCondition: {
-      description: '+1 Favor per gold above your richest opponent when using a gold action',
+      description: '+1 Favor per gold above your richest opponent',
       trigger: GLORY_TRIGGERS.ROUND_END,
       formula: 'goldAboveRichestOpponent',
     },
@@ -352,7 +352,7 @@ const gods = {
     ],
 
     gloryCondition: {
-      description: '+1 Favor every time you repeat an action',
+      description: '+1 Favor per action repeated',
       trigger: GLORY_TRIGGERS.ON_REPEAT_OR_COPY,
       formula: 'perRepeatOrCopy',
     },
@@ -463,7 +463,7 @@ const gods = {
     ],
 
     gloryCondition: {
-      description: '+1 Favor each time you gain a resource you had 0 of',
+      description: '+1 Favor per new color gained',
       trigger: GLORY_TRIGGERS.ON_GAIN_NEW_COLOR,
       formula: 'onGainNewColor',
     },
