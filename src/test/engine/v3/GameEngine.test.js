@@ -997,3 +997,80 @@ describe('Black Favor — per-victim, per-harm', () => {
     expect(after.glorySources?.black_glory_condition).toBe(2);
   });
 });
+
+// =========================================================================
+// Multiplayer slot ↔ engine playerId indexing contract
+// Engine creates players with IDs 1..N; Firebase slotMap is 0..N-1.
+// HostSync + GuestProvider must translate slot+1 → engine playerId so that
+// pendingDecision.playerId comparisons in the multiplayer-aware UI work.
+// Regression test for the May 2026 draft deadlock.
+// =========================================================================
+
+describe('MP indexing contract (slot → engine playerId)', () => {
+  it('engine creates 1-indexed player IDs', () => {
+    const { state } = createGame({ playerCount: 2, playerNames: ['Host', 'Guest'] });
+    expect(state.players.map(p => p.id)).toEqual([1, 2]);
+    expect(state.currentPlayer).toBe(1);
+    expect(state.turnOrder).toEqual([1, 2]);
+  });
+
+  it('champion draft pendingDecision.playerId is in engine space (1-indexed)', () => {
+    const { state } = createGame({ playerCount: 2, playerNames: ['Host', 'Guest'] });
+    expect(state.phase).toBe(Phase.CHAMPION_DRAFT);
+    // First drafter in snake order for 2P is player 2 (last-place picks first).
+    // Both 1 and 2 are valid engine playerIds; never 0.
+    const decision = state.pendingDecision || (state.decisionQueue && state.decisionQueue[0]);
+    // pendingDecision lives in the result of executing the draft phase
+    // — exercise it to force the request:
+    const draftResult = require('../../../engine/v3/phases.js').executeChampionDraft(state, undefined);
+    const pd = draftResult.pendingDecision;
+    expect(pd).toBeDefined();
+    expect(pd.type).toBe('championChoice');
+    expect([1, 2]).toContain(pd.playerId);
+    expect(pd.playerId).not.toBe(0);
+  });
+
+  it('HostSync/GuestProvider slot+1 transformation matches first drafter for 2P', () => {
+    // Simulate what the multiplayer wrapper does:
+    const slotMap = { 'host-fb-id': 0, 'guest-fb-id': 1 };
+    const hostMySlot = (slotMap['host-fb-id'] ?? 0) + 1; // = 1
+    const guestMySlot = (slotMap['guest-fb-id'] ?? 0) + 1; // = 2
+    expect(hostMySlot).toBe(1);
+    expect(guestMySlot).toBe(2);
+
+    // Engine: in 2P snake draft, last-place picks first → player 2.
+    const { state } = createGame({ playerCount: 2, playerNames: ['Host', 'Guest'] });
+    const draftResult = require('../../../engine/v3/phases.js').executeChampionDraft(state, undefined);
+    const firstDrafterId = draftResult.pendingDecision.playerId;
+
+    // The "is this me?" check in App.jsx ChampionDraftScreen
+    // (`!isMultiplayer || draftPlayerId === mySlot`) must match for exactly one player.
+    const hostCanPick = firstDrafterId === hostMySlot;
+    const guestCanPick = firstDrafterId === guestMySlot;
+    expect(hostCanPick || guestCanPick).toBe(true); // at least one player can act
+    expect(hostCanPick && guestCanPick).toBe(false); // not both
+    // For 2P snake draft, guest (player 2) picks first.
+    expect(guestCanPick).toBe(true);
+    expect(hostCanPick).toBe(false);
+  });
+
+  it('HostSync action validator accepts the correct player', () => {
+    // Simulate the validator: incoming action from player at fbSlot=1 (guest).
+    // The validator translates fbSlot + 1 → engine playerId, then compares to
+    // currentDecision.playerId.
+    const { state } = createGame({ playerCount: 2, playerNames: ['Host', 'Guest'] });
+    const draftResult = require('../../../engine/v3/phases.js').executeChampionDraft(state, undefined);
+    const currentDecision = draftResult.pendingDecision;
+
+    // Guest (fbSlot=1) sends draftChampion. Translated: slot = 1 + 1 = 2.
+    const guestSlot = 1 + 1;
+    const accepted = !currentDecision || currentDecision.playerId === guestSlot;
+    expect(accepted).toBe(true);
+
+    // Host (fbSlot=0) sends draftChampion. Translated: slot = 0 + 1 = 1.
+    // Should be REJECTED because currentDecision.playerId is 2, not 1.
+    const hostSlot = 0 + 1;
+    const hostAccepted = !currentDecision || currentDecision.playerId === hostSlot;
+    expect(hostAccepted).toBe(false);
+  });
+});
