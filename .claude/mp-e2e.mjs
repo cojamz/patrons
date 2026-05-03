@@ -297,31 +297,38 @@ console.log('\n=== Step 13: Resolve host\'s Prescient nullifier (twice) ===');
 // Prescient places 2 nullifiers per round at round_start. Host has Ambitious in this script —
 // wait, we picked AMBITIOUS for host and PRESCIENT for guest. So GUEST has Prescient.
 // Guest will see the Place Nullifier modal.
+// Note: nullifier modal handling moved to use the canonical resolveModal helper
+// (defined later — quick forward-declare via a closure), which targets <h2>
+// inside fixed-position z>=40 elements (the actual Modal.jsx structure).
+const resolveModalEarly = async (page) => page.evaluate(() => {
+  const headings = Array.from(document.querySelectorAll('h2'));
+  let modal = null;
+  for (const h of headings) {
+    let cur = h;
+    while (cur && cur !== document.body) {
+      const cs = window.getComputedStyle(cur);
+      if (cs.position === 'fixed' && parseInt(cs.zIndex || '0') >= 40) { modal = cur; break; }
+      cur = cur.parentElement;
+    }
+    if (modal) break;
+  }
+  if (!modal) return false;
+  const btns = modal.querySelectorAll('button');
+  for (const b of btns) {
+    if (!b.innerText.trim() && b.querySelector('svg')) continue;
+    const t = (b.innerText || '').trim();
+    if (!t || t.length < 2 || /×|cancel|back|close/i.test(t)) continue;
+    b.click();
+    return true;
+  }
+  return false;
+});
+
 for (let i = 0; i < 2; i++) {
   const ok = await waitFor(guest, ({ text }) => /place nullifier|nullify/i.test(text), 8000, `nullifier modal ${i + 1}`);
   if (!ok) break;
-  // Modal doesn't use role="dialog" — find it by title text and click an action button inside.
-  // The post-May-2 modal groups by god subheaders; each action is a button with name+effect.
-  const optClicked = await guest.evaluate(() => {
-    // Find the modal container — the one whose first prominent text is "Place Nullifier"
-    const candidates = Array.from(document.querySelectorAll('div'));
-    const modal = candidates.find(d => {
-      const h = d.querySelector('h2, h3, [class*="title" i]');
-      const t = (h?.innerText || d.innerText || '').slice(0, 100);
-      return /place nullifier/i.test(t);
-    });
-    if (!modal) return false;
-    const btns = modal.querySelectorAll('button');
-    for (const b of btns) {
-      const t = (b.innerText || '').trim();
-      // Skip the close × and any cancel-ish button
-      if (!t || t.length < 3 || /×|cancel|back/i.test(t)) continue;
-      b.click();
-      return true;
-    }
-    return false;
-  });
-  if (optClicked) pass(`nullifier ${i + 1} clicked`);
+  const clicked = await resolveModalEarly(guest);
+  if (clicked) pass(`nullifier ${i + 1} clicked`);
   else { fail(`could not click nullifier ${i + 1}`); break; }
   await guest.waitForTimeout(1500);
 }
@@ -345,50 +352,64 @@ await snap(host, '14-host-action-phase');
 
 const T1_ACTIONS = ['Skulk', 'Ransack', 'Pickpocket', 'Tribute', 'Patronage', 'Levy', 'Hoard', 'Haggle', 'Gather', 'Relive', 'Echo', 'Recall', 'Forage', 'Transmute', 'Siphon'];
 
-// Click any visible action by name. Returns the name placed, or null.
+// Click any visible action button. Returns the name placed, or null.
+// Strict: only <button> elements with class "action-space" (the ActionSpace component).
+// Avoids matching log entries / tooltips / other DOM where action names appear as text.
 const placeAnyAction = async (page) => {
-  for (const name of T1_ACTIONS) {
-    const found = await page.evaluate((n) => {
-      const els = Array.from(document.querySelectorAll('button, [role="button"], div'));
-      for (const el of els) {
-        const t = (el.innerText || '').trim();
-        if (t === n || t.startsWith(n + '\n') || (t.length < 80 && t.includes(n))) {
-          const rect = el.getBoundingClientRect();
-          if (rect.width > 0 && rect.height > 0) { el.click(); return true; }
-        }
-      }
-      return false;
-    }, name);
-    if (found) return name;
-  }
-  return null;
-};
-
-// Resolve any modal currently open by clicking a "good" button (skip cancel, ×, back).
-// Returns true if a click happened.
-const resolveModal = async (page) => {
-  return page.evaluate(() => {
-    // Find a modal-ish container (no role=dialog convention, look for fixed/absolute overlays with buttons)
-    const candidates = Array.from(document.querySelectorAll('div'));
-    let modal = null;
-    for (const d of candidates) {
-      const cs = window.getComputedStyle(d);
-      if ((cs.position === 'fixed' || cs.position === 'absolute') && d.querySelector('button')) {
-        const t = (d.innerText || '').slice(0, 200);
-        // Skip the bottom HUD / various overlays that aren't decision modals
-        if (/place|choose|select|target|gem|gain|spend|nullify|discard|redistribute/i.test(t)) {
-          modal = d;
-          break;
+  return page.evaluate((names) => {
+    const buttons = Array.from(document.querySelectorAll('button.action-space'));
+    for (const btn of buttons) {
+      const t = (btn.innerText || '').trim();
+      if (!t) continue;
+      // Must be currently interactive (not disabled, cursor pointer)
+      const cs = window.getComputedStyle(btn);
+      if (btn.disabled || cs.cursor !== 'pointer') continue;
+      // Match against known action names — the button's first line is "I Skulk" or "Skulk"
+      for (const n of names) {
+        if (t.includes(n)) {
+          btn.click();
+          return n;
         }
       }
     }
+    return null;
+  }, T1_ACTIONS);
+};
+
+// Resolve any decision modal currently open by clicking the first "good" option.
+// Real modals (Modal.jsx) are fixed-position with z-index:50 and an <h2> title.
+// We use the <h2> as the anchor — the Player Panel and other HUD pieces don't have h2s.
+const resolveModal = async (page) => {
+  return page.evaluate(() => {
+    // Find an h2 inside a fixed-position ancestor (the Modal backdrop is fixed inset-0 z-50).
+    const headings = Array.from(document.querySelectorAll('h2'));
+    let modal = null;
+    let modalTitle = null;
+    for (const h of headings) {
+      // Walk up to find a fixed-position ancestor
+      let cur = h;
+      while (cur && cur !== document.body) {
+        const cs = window.getComputedStyle(cur);
+        if (cs.position === 'fixed' && parseInt(cs.zIndex || '0') >= 40) {
+          modal = cur;
+          modalTitle = h.innerText.trim();
+          break;
+        }
+        cur = cur.parentElement;
+      }
+      if (modal) break;
+    }
     if (!modal) return false;
+    // Click the first non-close, non-cancel button
     const btns = modal.querySelectorAll('button');
     for (const b of btns) {
+      // Skip the close × button (svg child without text)
+      if (!b.innerText.trim() && b.querySelector('svg')) continue;
       const t = (b.innerText || '').trim();
       if (!t || t.length < 2 || /×|cancel|back|close/i.test(t)) continue;
       b.click();
-      return true;
+      // Return what we clicked for diagnostics
+      return modalTitle ? `${modalTitle}: ${t.slice(0, 30)}` : t.slice(0, 30);
     }
     return false;
   });
@@ -428,23 +449,64 @@ const playTurn = async (page, playerLabel) => {
   return { placed, endedTurn: ended };
 };
 
-// Detect which player is active by reading game state (guess via "Place a worker (N left)" hint)
-// Returns 'guest' | 'host' | null
+// Detect which player is active by checking if there's any interactive
+// action.action-space button on their board (cursor: pointer + not disabled).
+// More reliable than the End Turn button which can be enabled when no actions remain.
 const whoseTurn = async () => {
-  const [g, h] = await Promise.all([
-    guest.evaluate(() => /place a worker \(\d+ left\)|buy or end turn|end turn$/im.test(document.body.innerText.split('\n').slice(-20).join('\n'))),
-    host.evaluate(() => /place a worker \(\d+ left\)|buy or end turn|end turn$/im.test(document.body.innerText.split('\n').slice(-20).join('\n'))),
-  ]);
+  const hasInteractiveAction = (page) => page.evaluate(() => {
+    const btns = Array.from(document.querySelectorAll('button.action-space'));
+    for (const b of btns) {
+      if (b.disabled) continue;
+      const cs = window.getComputedStyle(b);
+      if (cs.cursor === 'pointer') return true;
+    }
+    // Fallback: End Turn enabled (means it's our turn even if all actions taken)
+    const ets = Array.from(document.querySelectorAll('button')).filter(b => (b.innerText || '').trim().toLowerCase() === 'end turn');
+    for (const b of ets) {
+      if (b.disabled) continue;
+      const cs = window.getComputedStyle(b);
+      if (cs.cursor === 'pointer' && cs.opacity !== '0.4') return true;
+    }
+    return false;
+  });
+  const [g, h] = await Promise.all([hasInteractiveAction(guest), hasInteractiveAction(host)]);
   if (g && !h) return 'guest';
   if (h && !g) return 'host';
   return null;
 };
 
+// Read the current round number visible to a page (from "ROUND 1/3" badge).
+const readRound = (page) => page.evaluate(() => {
+  const m = document.body.innerText.match(/ROUND\s+(\d)\/3/i);
+  return m ? Number(m[1]) : null;
+});
+
+// Check if a round-transition modal is currently open (looks for "Round Complete" / "Next Round" / etc.).
+const hasRoundTransition = (page) => page.evaluate(() => {
+  const txt = document.body.innerText;
+  return /round complete|next round|continue to round|round end|round summary/i.test(txt);
+});
+
+// Click the round-transition continue button once.
+const advanceRoundOnce = (page) => page.evaluate(() => {
+  const btns = Array.from(document.querySelectorAll('button'));
+  for (const b of btns) {
+    const t = (b.innerText || '').trim().toLowerCase();
+    if (/next round|continue|begin round 2|begin round 3/.test(t) && !b.disabled) { b.click(); return true; }
+  }
+  return false;
+});
+
+// Check if game is over.
+const isGameOver = (page) => page.evaluate(() => /game over|final standings|view final|winner/i.test(document.body.innerText));
+
 console.log('\n=== Step 15: GUEST places a worker (THE bug check) ===');
-// Critical assertion for the bug we fixed today
+// Critical assertion for the bug we fixed today.
+// Wait briefly for guest's action_phase to fully render before clicking.
+await guest.waitForTimeout(800);
 const placedAction1 = await placeAnyAction(guest);
 if (placedAction1) pass(`guest clicked "${placedAction1}"`);
-else fail('guest could not find any action to click');
+else fail('guest could not find any action.action-space button to click');
 
 const guestStateChanged = await waitFor(guest, ({ text }) => /buy or end turn|end turn|choose target|select|gem|steal|target player|choose a player|nullify/i.test(text), 4000, 'guest sees post-placement state');
 if (guestStateChanged) pass('guest state advanced after placement (BUG NOT REPRODUCED — fix is in)');
@@ -476,69 +538,131 @@ await snap(host, '17-host-now-active');
 await snap(guest, '17-guest-watching');
 
 // =================================================================
-// Step 18: Play out the rest of the game (best-effort) so we surface
-// any bugs that hide in mid-game state transitions.
+// Step 18: Play out the FULL game (3 rounds × 3+4+5 = ~24 worker turns).
+// Round-transition tracking: "advance round" only when round number changes.
+// Stuck-detection: bail if 5 iterations pass with no progress.
 // =================================================================
-console.log('\n=== Step 18: Play rest of round 1 + as much of round 2/3 as we can ===');
-let safety = 30; // max turns to attempt
+console.log('\n=== Step 18: Play full 3-round game ===');
+let lastRound = await readRound(guest);
+console.log(`  starting round = ${lastRound}`);
 let turnsPlayed = 0;
-while (safety-- > 0) {
-  // Detect any open modals on either side and resolve them
+let placementsMade = 0;
+let stuckCount = 0;
+let consecutiveNoPlacement = 0;
+const MAX_ITERS = 50;
+
+for (let iter = 0; iter < MAX_ITERS; iter++) {
+  // 1. Game over?
+  if (await isGameOver(guest)) {
+    console.log(`  GAME OVER at iter ${iter} (${turnsPlayed} turns played)`);
+    break;
+  }
+
+  // 2. Round transition? Click each side's continue button ONCE per round.
+  const currentRound = await readRound(guest);
+  const guestHasRT = await hasRoundTransition(guest);
+  const hostHasRT = await hasRoundTransition(host);
+  if (guestHasRT || hostHasRT) {
+    if (guestHasRT) {
+      const clicked = await advanceRoundOnce(guest);
+      if (clicked) console.log(`  guest clicked round-transition continue`);
+    }
+    if (hostHasRT) {
+      const clicked = await advanceRoundOnce(host);
+      if (clicked) console.log(`  host clicked round-transition continue`);
+    }
+    await guest.waitForTimeout(1500);
+    const newRound = await readRound(guest);
+    if (newRound !== currentRound) {
+      console.log(`  → advanced from round ${currentRound} to ${newRound}`);
+      lastRound = newRound;
+    }
+    continue;
+  }
+
+  // 3. Resolve any open decision modal on either side
+  let modalResolved = false;
   for (const [p, label] of [[guest, 'guest'], [host, 'host']]) {
-    for (let i = 0; i < 3; i++) {
-      const had = await resolveModal(p);
-      if (!had) break;
-      await p.waitForTimeout(500);
+    if (await resolveModal(p)) {
+      modalResolved = true;
+      console.log(`  ${label} resolved a modal`);
+      await p.waitForTimeout(700);
+      break;
     }
   }
-  // Round transition modal? Click "Next Round" or similar
-  for (const [p, label] of [[guest, 'guest'], [host, 'host']]) {
-    const advancedRound = await p.evaluate(() => {
-      const btns = Array.from(document.querySelectorAll('button'));
-      for (const b of btns) {
-        const t = (b.innerText || '').trim().toLowerCase();
-        if (/next round|continue|advance|begin round/.test(t) && !b.disabled) { b.click(); return true; }
-      }
-      return false;
-    });
-    if (advancedRound) {
-      console.log(`  ${label} advanced round`);
-      await p.waitForTimeout(1500);
-    }
-  }
-  // Check for game over
-  const gameOver = await guest.evaluate(() => /game over|final standings|winner|end of game/i.test(document.body.innerText));
-  if (gameOver) { console.log('  GAME OVER reached'); break; }
-  // Whose turn?
+  if (modalResolved) continue;
+
+  // 4. Whose turn? Drive that page.
   const who = await whoseTurn();
   if (!who) {
-    // No active player detected — wait briefly, maybe a modal/transition
+    stuckCount++;
+    if (stuckCount > 5) {
+      console.log(`  ❌ STUCK: no active player for 5 iterations, bailing at iter ${iter}`);
+      fail(`game stuck after ${turnsPlayed} turns`);
+      break;
+    }
     await guest.waitForTimeout(800);
     continue;
   }
-  const result = await playTurn(who === 'guest' ? guest : host, who);
-  if (!result.placed && !result.endedTurn) {
-    console.log(`  ${who}: stuck (no action available, no end turn) — skipping`);
-    // Try just clicking End Turn — maybe out of workers
-    await (who === 'guest' ? guest : host).evaluate(() => {
-      const btns = Array.from(document.querySelectorAll('button'));
-      for (const b of btns) {
-        const t = (b.innerText || '').trim().toLowerCase();
-        if (t === 'end turn' && !b.disabled) { b.click(); return true; }
+  stuckCount = 0;
+
+  const page = who === 'guest' ? guest : host;
+  const placed = await placeAnyAction(page);
+  if (placed) {
+    placementsMade++;
+    consecutiveNoPlacement = 0;
+    await page.waitForTimeout(900);
+    // Resolve up to 4 chained decision modals from the action
+    for (let m = 0; m < 4; m++) {
+      const had = await resolveModal(page);
+      if (!had) break;
+      await page.waitForTimeout(700);
+    }
+    const ended = await endTurn(page);
+    if (ended) {
+      turnsPlayed++;
+      console.log(`  turn ${turnsPlayed}: ${who} placed ${placed}, end turn (round ${await readRound(page)})`);
+    } else {
+      console.log(`  ${who} placed ${placed} but End Turn didn't fire`);
+    }
+    await page.waitForTimeout(1500);
+  } else {
+    // No action available — likely all spaces occupied or out of workers. End turn.
+    consecutiveNoPlacement++;
+    const ended = await endTurn(page);
+    if (ended) {
+      turnsPlayed++;
+      console.log(`  turn ${turnsPlayed}: ${who} ended turn (no placement, ${consecutiveNoPlacement} in a row)`);
+      await page.waitForTimeout(1200);
+      // If we've had many no-placements in a row, the game's likely stuck (or done with this round but the round-transition isn't surfacing).
+      if (consecutiveNoPlacement >= 6) {
+        console.log(`  ⚠ ${consecutiveNoPlacement} consecutive no-placements — likely stuck waiting for round transition`);
+        await guest.waitForTimeout(2000);
       }
-      return false;
-    });
-    await guest.waitForTimeout(1500);
+      if (consecutiveNoPlacement >= 12) {
+        console.log(`  ❌ STUCK: ${consecutiveNoPlacement} no-placements in a row, bailing`);
+        fail(`stuck after ${placementsMade} placements (${turnsPlayed} turn-attempts)`);
+        break;
+      }
+    } else {
+      stuckCount++;
+      if (stuckCount > 5) {
+        console.log(`  ❌ STUCK: ${who} can't place or end turn`);
+        fail(`stuck on ${who}'s turn after ${placementsMade} placements`);
+        break;
+      }
+      await page.waitForTimeout(800);
+    }
   }
-  turnsPlayed++;
 }
-console.log(`  Turns played: ${turnsPlayed}`);
+console.log(`  Turns: ${turnsPlayed}, placements: ${placementsMade}, final round: ${await readRound(guest)}`);
 await snap(guest, '18-guest-final');
 await snap(host, '18-host-final');
 
-const finalGameOver = await guest.evaluate(() => /game over|final standings|winner/i.test(document.body.innerText));
-if (finalGameOver) pass(`game completed — ${turnsPlayed} turns played`);
-else console.log(`  game did not complete (${turnsPlayed} turns) — may be normal if 30 turn cap hit`);
+const finalGameOver = await isGameOver(guest);
+if (finalGameOver) pass(`game completed — ${placementsMade} placements over ${turnsPlayed} turn-attempts`);
+else if (placementsMade >= 6) pass(`game progressed substantially — ${placementsMade} placements over ${turnsPlayed} turn-attempts`);
+else fail(`only ${placementsMade} placements made — game did not progress`);
 
 // Variables used in results (need to declare before)
 const guestPlaced = !!placedAction1;
