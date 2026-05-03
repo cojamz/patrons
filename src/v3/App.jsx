@@ -591,16 +591,15 @@ function NullifierPlacementModal({ decision, onSubmit, onCancel }) {
 
   const gods = game.gods || ['gold', 'black', 'green', 'yellow'];
 
-  // Get all action IDs that aren't already nullified
-  const allActions = [];
+  // Group available actions by god so the modal scans by section rather than as a flat wall.
+  const actionsByGod = {};
   for (const godColor of gods) {
     const god = godsData[godColor];
     if (!god) continue;
-    for (const action of god.actions) {
-      if (action.tier > game.round) continue; // locked
-      if (game.nullifiedSpaces?.[action.id]) continue; // already nullified
-      allActions.push({ ...action, godColor });
-    }
+    const list = god.actions
+      .filter(a => a.tier <= game.round && !game.nullifiedSpaces?.[a.id])
+      .map(a => ({ ...a, godColor }));
+    if (list.length > 0) actionsByGod[godColor] = list;
   }
 
   return (
@@ -608,33 +607,49 @@ function NullifierPlacementModal({ decision, onSubmit, onCancel }) {
       <p style={{ color: base.textSecondary, fontSize: '13px', marginBottom: '12px' }}>
         The Prescient: Choose an action space to nullify this round.
       </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        {allActions.map(action => {
-          const colors = godColors[action.godColor];
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {Object.entries(actionsByGod).map(([godColor, actions]) => {
+          const colors = godColors[godColor];
+          const meta = godsData[godColor];
           return (
-            <button
-              key={action.id}
-              onClick={() => onSubmit({ actionId: action.id })}
-              className="text-left rounded-lg transition-colors duration-100"
-              style={{
-                padding: '8px 12px',
-                background: colors.surface,
-                border: `1px solid ${colors.border}`,
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '9px', fontWeight: 700, color: colors.primary, opacity: 0.8 }}>
-                  {action.godColor.toUpperCase()}
+            <div key={godColor}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                marginBottom: '6px', paddingLeft: '4px',
+              }}>
+                <span style={{
+                  fontSize: '11px', fontWeight: 800,
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
+                  color: colors.primary,
+                }}>
+                  {meta?.name || godColor}
                 </span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: base.textPrimary }}>
-                  {action.name}
-                </span>
+                <div style={{ flex: 1, height: '1px', background: colors.border, opacity: 0.4 }} />
               </div>
-              <div style={{ fontSize: '10px', color: base.textMuted, marginTop: '2px' }}>
-                {action.effect}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {actions.map(action => (
+                  <button
+                    key={action.id}
+                    onClick={() => onSubmit({ actionId: action.id })}
+                    className="text-left rounded-lg transition-colors duration-100"
+                    style={{
+                      padding: '8px 12px',
+                      background: colors.surface,
+                      border: `1px solid ${colors.border}`,
+                      borderLeft: `3px solid ${colors.primary}`,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: base.textPrimary }}>
+                      {action.name}
+                    </div>
+                    <div style={{ fontSize: '10px', color: base.textMuted, marginTop: '2px' }}>
+                      {action.effect}
+                    </div>
+                  </button>
+                ))}
               </div>
-            </button>
+            </div>
           );
         })}
       </div>

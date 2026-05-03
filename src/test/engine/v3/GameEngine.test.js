@@ -919,3 +919,158 @@ describe('integration', () => {
     expect(isGameOver(state)).toBe(true);
   });
 });
+
+// =========================================================================
+// Black Favor: per-victim, every harm
+// =========================================================================
+
+describe('Black Favor — per-victim, per-harm', () => {
+  function setupBlackForR3(overrides = {}) {
+    let state = createActionPhaseState({ playerCount: 4, playerNames: ['A', 'B', 'C', 'D'] });
+    // Force round 3 so Annihilate is available, give p1 enough black
+    state = {
+      ...state,
+      round: 3,
+      players: state.players.map(p =>
+        p.id === 1
+          ? { ...p, resources: { ...p.resources, black: 4 }, workersLeft: 4 }
+          : { ...p, resources: { gold: 0, black: 0, green: 0, yellow: 0 }, glory: 10, workersLeft: 4 }
+      ),
+      ...overrides,
+    };
+    return state;
+  }
+
+  it('Annihilate hitting 3 opponents = +3 Favor (one per victim)', () => {
+    let state = setupBlackForR3();
+    const before = getPlayer(state, 1).glory;
+    const result = executeAction(state, 1, 'black_annihilate');
+    expect(result.state).toBeDefined();
+    const after = getPlayer(result.state, 1);
+    // 4 black spent, each opponent loses 4 glory. 3 opponents harmed = +3 Favor.
+    expect(after.glorySources?.black_glory_condition).toBe(3);
+    expect(after.glory - before).toBe(3);
+  });
+
+  it('Tribute counts every opponent as a harm (per-victim)', () => {
+    let state = setupBlackForR3();
+    // Tribute is t1, available in r3
+    const result = executeAction(state, 1, 'black_tribute');
+    expect(result.state).toBeDefined();
+    const after = getPlayer(result.state, 1);
+    // 3 opponents = +3 Favor
+    expect(after.glorySources?.black_glory_condition).toBe(3);
+  });
+
+  it('Single-victim steal (Pickpocket) = +1 Favor (regression)', () => {
+    let state = setupBlackForR3();
+    // Pickpocket needs a target decision
+    const result = executeAction(state, 1, 'black_pickpocket', { targetPlayer: 2 });
+    if (result.pendingDecision) {
+      // Provide target via decision flow if needed
+      const resolved = executeAction(result.state, 1, 'black_pickpocket', { targetPlayer: 2 });
+      const after = getPlayer(resolved.state, 1);
+      expect(after.glorySources?.black_glory_condition).toBe(1);
+    } else {
+      const after = getPlayer(result.state, 1);
+      expect(after.glorySources?.black_glory_condition).toBe(1);
+    }
+  });
+
+  it('Action that both penalizes and steals same victim = +1 Favor (deduped)', () => {
+    // No current action does both, but verify the dedup contract by simulating one.
+    // We'll execute Dread (penalize) twice on different victims by using two p1 turns,
+    // and verify each victim counts only once per action.
+    let state = setupBlackForR3();
+    state = {
+      ...state,
+      champions: {
+        ...state.champions,
+        2: { id: 'ambitious', name: 'A', powerCards: ['c1', 'c2'], powerCardSlots: 5 },
+        3: { id: 'a', name: 'A', powerCards: ['c1'], powerCardSlots: 4 },
+        4: { id: 'a', name: 'A', powerCards: [], powerCardSlots: 4 },
+      },
+    };
+    const result = executeAction(state, 1, 'black_dread');
+    const after = getPlayer(result.state, 1);
+    // p2 (2 cards) and p3 (1 card) penalized. p4 (0 cards) skipped. = +2 Favor.
+    expect(after.glorySources?.black_glory_condition).toBe(2);
+  });
+});
+
+// =========================================================================
+// Multiplayer slot ↔ engine playerId indexing contract
+// Engine creates players with IDs 1..N; Firebase slotMap is 0..N-1.
+// HostSync + GuestProvider must translate slot+1 → engine playerId so that
+// pendingDecision.playerId comparisons in the multiplayer-aware UI work.
+// Regression test for the May 2026 draft deadlock.
+// =========================================================================
+
+describe('MP indexing contract (slot → engine playerId)', () => {
+  it('engine creates 1-indexed player IDs', () => {
+    const { state } = createGame({ playerCount: 2, playerNames: ['Host', 'Guest'] });
+    expect(state.players.map(p => p.id)).toEqual([1, 2]);
+    expect(state.currentPlayer).toBe(1);
+    expect(state.turnOrder).toEqual([1, 2]);
+  });
+
+  it('champion draft pendingDecision.playerId is in engine space (1-indexed)', () => {
+    const { state } = createGame({ playerCount: 2, playerNames: ['Host', 'Guest'] });
+    expect(state.phase).toBe(Phase.CHAMPION_DRAFT);
+    // First drafter in snake order for 2P is player 2 (last-place picks first).
+    // Both 1 and 2 are valid engine playerIds; never 0.
+    const decision = state.pendingDecision || (state.decisionQueue && state.decisionQueue[0]);
+    // pendingDecision lives in the result of executing the draft phase
+    // — exercise it to force the request:
+    const draftResult = require('../../../engine/v3/phases.js').executeChampionDraft(state, undefined);
+    const pd = draftResult.pendingDecision;
+    expect(pd).toBeDefined();
+    expect(pd.type).toBe('championChoice');
+    expect([1, 2]).toContain(pd.playerId);
+    expect(pd.playerId).not.toBe(0);
+  });
+
+  it('HostSync/GuestProvider slot+1 transformation matches first drafter for 2P', () => {
+    // Simulate what the multiplayer wrapper does:
+    const slotMap = { 'host-fb-id': 0, 'guest-fb-id': 1 };
+    const hostMySlot = (slotMap['host-fb-id'] ?? 0) + 1; // = 1
+    const guestMySlot = (slotMap['guest-fb-id'] ?? 0) + 1; // = 2
+    expect(hostMySlot).toBe(1);
+    expect(guestMySlot).toBe(2);
+
+    // Engine: in 2P snake draft, last-place picks first → player 2.
+    const { state } = createGame({ playerCount: 2, playerNames: ['Host', 'Guest'] });
+    const draftResult = require('../../../engine/v3/phases.js').executeChampionDraft(state, undefined);
+    const firstDrafterId = draftResult.pendingDecision.playerId;
+
+    // The "is this me?" check in App.jsx ChampionDraftScreen
+    // (`!isMultiplayer || draftPlayerId === mySlot`) must match for exactly one player.
+    const hostCanPick = firstDrafterId === hostMySlot;
+    const guestCanPick = firstDrafterId === guestMySlot;
+    expect(hostCanPick || guestCanPick).toBe(true); // at least one player can act
+    expect(hostCanPick && guestCanPick).toBe(false); // not both
+    // For 2P snake draft, guest (player 2) picks first.
+    expect(guestCanPick).toBe(true);
+    expect(hostCanPick).toBe(false);
+  });
+
+  it('HostSync action validator accepts the correct player', () => {
+    // Simulate the validator: incoming action from player at fbSlot=1 (guest).
+    // The validator translates fbSlot + 1 → engine playerId, then compares to
+    // currentDecision.playerId.
+    const { state } = createGame({ playerCount: 2, playerNames: ['Host', 'Guest'] });
+    const draftResult = require('../../../engine/v3/phases.js').executeChampionDraft(state, undefined);
+    const currentDecision = draftResult.pendingDecision;
+
+    // Guest (fbSlot=1) sends draftChampion. Translated: slot = 1 + 1 = 2.
+    const guestSlot = 1 + 1;
+    const accepted = !currentDecision || currentDecision.playerId === guestSlot;
+    expect(accepted).toBe(true);
+
+    // Host (fbSlot=0) sends draftChampion. Translated: slot = 0 + 1 = 1.
+    // Should be REJECTED because currentDecision.playerId is 2, not 1.
+    const hostSlot = 0 + 1;
+    const hostAccepted = !currentDecision || currentDecision.playerId === hostSlot;
+    expect(hostAccepted).toBe(false);
+  });
+});

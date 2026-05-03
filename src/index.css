@@ -165,7 +165,8 @@ html {
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Buyable glow — strong pulse for interactive elements during buy phase */
+/* Buyable glow — QUIET secondary signal for shops/artifacts you can afford.
+ * Slower pulse, lower amplitude — should not compete with worker placement (placement-glow). */
 .buyable-glow {
     position: relative;
 }
@@ -174,15 +175,42 @@ html {
     position: absolute;
     inset: -1px;
     border-radius: inherit;
-    box-shadow: var(--glow-max, 0 0 16px rgba(250, 235, 215, 0.4), 0 0 4px rgba(250, 235, 215, 0.2));
+    box-shadow: var(--glow-max, 0 0 12px rgba(250, 235, 215, 0.28), 0 0 3px rgba(250, 235, 215, 0.14));
     opacity: 0;
-    animation: buyable-glow-pulse 2.2s ease-in-out infinite;
+    animation: buyable-glow-pulse 2.8s ease-in-out infinite;
     pointer-events: none;
     z-index: 1;
     will-change: opacity;
 }
 @keyframes buyable-glow-pulse {
-    0%, 100% { opacity: 0.3; }
+    0%, 100% { opacity: 0.18; }
+    50% { opacity: 0.62; }
+}
+
+/* Placement glow — LOUD primary signal for action spaces a worker can be placed on.
+ * Brighter, higher amplitude, faster pulse — this is THE primary board game gesture
+ * and should be the loudest visual signal on the board. God-colored via --god-glow / --god-glow-strong. */
+.placement-glow {
+    position: relative;
+}
+.placement-glow::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    box-shadow: var(--placement-glow-max,
+        0 0 18px var(--god-glow, rgba(250, 235, 215, 0.55)),
+        0 0 6px var(--god-glow-strong, rgba(250, 235, 215, 0.4)),
+        inset 0 0 10px var(--god-glow, rgba(250, 235, 215, 0.3))
+    );
+    opacity: 0;
+    animation: placement-glow-pulse 1.6s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+    will-change: opacity;
+}
+@keyframes placement-glow-pulse {
+    0%, 100% { opacity: 0.55; }
     50% { opacity: 1; }
 }
 
@@ -330,6 +358,17 @@ html {
 }
 
 /* (think-dot removed — TurnIndicator no longer shows thinking dots) */
+
+/* Phase chip — short fade-in when phase guidance changes (place→buy→end).
+ * Keyed on label, so React re-mounts → animation re-fires.
+ * Only opacity, no transform — keeps click feedback instant. */
+.phase-chip-fade {
+    animation: phaseChipFade 220ms ease-out;
+}
+@keyframes phaseChipFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 
 /* Action space flash on worker placement — inward glow burst (louder) */
 @keyframes placeFlash {

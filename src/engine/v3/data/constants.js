@@ -175,7 +175,8 @@ export const EFFECT_TYPES = {
 
 export const GLORY_TRIGGERS = {
   ROUND_END: 'roundEnd',                 // check at end of each round (Gold)
-  ON_STEAL_ACTION: 'onStealAction',     // check on each steal action/shop (Black)
+  ON_STEAL_ACTION: 'onStealAction',     // legacy — kept for backward compat
+  ON_HARM: 'onHarm',                     // check per victim per harmful action (Black)
   ON_REPEAT_OR_COPY: 'onRepeatOrCopy',  // check on each repeat/copy (Green)
   ON_GAIN_NEW_COLOR: 'onGainNewColor',  // check when gaining a color you had 0 of (Yellow)
 };

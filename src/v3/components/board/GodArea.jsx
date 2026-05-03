@@ -25,15 +25,11 @@ import { powerCards } from '../../../engine/v3/data/powerCards';
 import { CARDS_DEALT_PER_GOD } from '../../../engine/v3/data/constants';
 import { getShopCost } from '../../../engine/v3/rules';
 
-// All CSS for god area — keyframes + hover effects
+// All CSS for god area — hover effects only.
 // Removed godAreaGlow and collapsedPulse (were causing 20+ repaints/frame).
-// One actionSectionPulse per god section is enough visual feedback.
+// Action section pulse is now handled by .placement-glow in index.css (loud primary signal).
 const godAreaStyle = document.createElement('style');
 godAreaStyle.textContent = `
-@keyframes actionSectionPulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
 .shop-btn { transition: transform 120ms ease, box-shadow 150ms ease, opacity 150ms ease; }
 .shop-btn:hover { transform: translateY(-2px); }
 .card-btn { transition: transform 120ms ease, opacity 150ms ease; }
@@ -708,9 +704,10 @@ export default React.memo(function GodArea({ godColor, isFocused = true, onFocus
             <div style={{ flex: 1, height: '1px', background: colors.border, opacity: 0.3 }} />
           </div>
 
-          {/* Actions — compact vertical list (stone/utilitarian feel) */}
+          {/* Actions — compact vertical list (stone/utilitarian feel).
+              Worker placement is the primary signal — uses placement-glow (loud, god-colored). */}
           <div
-            className="flex flex-col gap-0.5 min-h-0 overflow-y-auto scrollbar-hide"
+            className={`flex flex-col gap-0.5 min-h-0 overflow-y-auto scrollbar-hide ${hasAnyAvailable ? 'placement-glow' : ''}`}
             style={{
               position: 'relative',
               flexShrink: 0,
@@ -718,22 +715,11 @@ export default React.memo(function GodArea({ godColor, isFocused = true, onFocus
               background: hasAnyAvailable ? colors.surface : undefined,
               border: hasAnyAvailable ? `1px solid ${colors.border}` : undefined,
               padding: hasAnyAvailable ? '2px' : undefined,
+              '--god-glow': colors.glow,
+              '--god-glow-strong': colors.glowStrong,
+              '--placement-glow-max': `0 0 18px ${colors.glow}, 0 0 6px ${colors.glowStrong}, inset 0 0 8px ${colors.glow}`,
             }}
           >
-            {hasAnyAvailable && (
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: '-1px',
-                  borderRadius: '7px',
-                  pointerEvents: 'none',
-                  zIndex: 0,
-                  boxShadow: `0 0 10px ${colors.glow}, 0 0 3px ${colors.glowStrong}, inset 0 0 6px ${colors.glow}`,
-                  animation: 'actionSectionPulse 2.2s ease-in-out infinite',
-                  willChange: 'opacity',
-                }}
-              />
-            )}
             {godData.actions.map(action => {
               const state = getActionState(action);
               const dynamicAction = { ...action, effect: getDynamicEffect(action) };
@@ -751,149 +737,36 @@ export default React.memo(function GodArea({ godColor, isFocused = true, onFocus
 
           </div>
 
-          {/* Shops label */}
-          <div className="flex items-center gap-1 flex-shrink-0" style={{ padding: '0 2px' }}>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(250, 235, 215, 0.15)' }} />
-            <span style={{ fontSize: '7px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(250, 235, 215, 0.4)' }}>
-              Shops
-            </span>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(250, 235, 215, 0.15)' }} />
-          </div>
-          <div
-            className={`flex flex-col gap-0.5 flex-shrink-0 ${shouldHighlightMarket ? 'buyable-glow' : ''}`}
-            style={{
-              position: 'relative',
-              borderRadius: shouldHighlightMarket ? '6px' : undefined,
-              padding: shouldHighlightMarket ? '2px' : undefined,
-              '--glow-max': shouldHighlightMarket
-                ? '0 0 14px rgba(250, 235, 215, 0.3), inset 0 0 6px rgba(250, 235, 215, 0.1)'
-                : undefined,
-            }}
-          >
-            {godData.shops.map(shop => {
-              const style = shopStyles[shop.type];
-              const isShopLocked = shop.type === 'strong' && currentRound < 2;
-              const affordable = !isShopLocked && canAffordShop(shop);
-              return (
-                <button
-                  key={shop.type}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isShopLocked && isMyTurn) handleShop(shop.type);
-                  }}
-                  onMouseEnter={(e) => showTooltip('shop', shop, e)}
-                  onMouseLeave={hideTooltip}
-                  className={`w-full collapsed-shop-btn ${affordable ? 'buyable-glow' : ''}`}
-                  style={{
-                    position: 'relative',
-                    display: 'flex', alignItems: 'center', gap: '3px',
-                    padding: '3px 5px', borderRadius: '4px',
-                    background: affordable ? 'rgba(250, 235, 215, 0.12)' : 'rgba(250, 235, 215, 0.06)',
-                    border: affordable ? `1px solid rgba(250, 235, 215, 0.25)` : `1px solid rgba(250, 235, 215, 0.1)`,
-                    borderLeft: `${style.borderWidth || '2px'} solid ${style.color}`,
-                    opacity: affordable ? 1 : 0.6,
-                    cursor: isShopLocked ? 'default' : 'pointer',
-                    outline: 'none', flexShrink: 0,
-                    '--glow-max': affordable
-                      ? `0 0 12px rgba(250, 235, 215, 0.35), inset 0 0 8px rgba(250, 235, 215, 0.2), 0 0 4px ${style.color}50`
-                      : undefined,
-                  }}
-                >
-                  <span style={{
-                    fontSize: style.fontSize || '10px', fontWeight: 700,
-                    letterSpacing: '0.04em', textTransform: 'uppercase',
-                    color: style.color,
-                  }}>
-                    {style.label}
-                  </span>
-                  <div className="flex items-center gap-0.5 ml-auto">
-                    {parseCost((currentPlayer && game) ? getShopCost(game, currentPlayer.id, `${godColor}_${shop.type}`) || shop.cost : shop.cost).map(({ color, amount }) => (
-                      <div key={color} className="flex items-center" style={{ gap: '1px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: base.textMuted }}>{amount}</span>
-                        {color === 'any' ? (
-                          <WildcardIcon size={10} />
-                        ) : (
-                          <ResourceIcon type={color} size={10} />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Artifacts label */}
-          <div className="flex items-center gap-1 flex-shrink-0" style={{ padding: '0 2px' }}>
-            <div style={{ flex: 1, height: '1px', background: colors.border, opacity: 0.3 }} />
-            <span style={{ fontSize: '7px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: colors.text, opacity: 0.35 }}>
-              Artifacts
-            </span>
-            <div style={{ flex: 1, height: '1px', background: colors.border, opacity: 0.3 }} />
-          </div>
-          <div
-            className={`flex flex-col gap-1 ${shouldHighlightMarket ? 'buyable-glow' : ''}`}
-            style={{
-              flex: 1, minHeight: 0, overflow: 'hidden',
-              position: 'relative',
-              borderRadius: shouldHighlightMarket ? '6px' : undefined,
-              padding: shouldHighlightMarket ? '2px' : undefined,
-              '--glow-max': shouldHighlightMarket
-                ? `0 0 14px ${colors.glow}, inset 0 0 6px ${colors.glow}`
-                : undefined,
-            }}
-          >
-            {slots.map((cardId, i) => {
-              if (!cardId) return null;
-              const card = powerCards[cardId];
-              if (!card) return null;
-              const buyable = canBuyCard(cardId);
-              return (
-                <button
-                  key={cardId}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (buyable && isMyTurn) actions.buyCard(cardId);
-                  }}
-                  onMouseEnter={(e) => showTooltip('card', cardId, e)}
-                  onMouseLeave={hideTooltip}
-                  className={`w-full card-btn ${buyable ? 'buyable-glow' : ''}`}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '6px',
-                    padding: '6px 8px', borderRadius: '8px',
-                    background: buyable
-                      ? `radial-gradient(ellipse at 20% 30%, ${colors.surface} 0%, rgba(28, 25, 23, 0.85) 80%)`
-                      : `radial-gradient(ellipse at 20% 30%, ${colors.surface}40 0%, rgba(28, 25, 23, 0.6) 80%)`,
-                    border: `1.5px solid ${buyable ? colors.primary + '88' : colors.border}`,
-                    opacity: buyable ? 1 : 0.5,
-                    cursor: buyable ? 'pointer' : 'default',
-                    outline: 'none',
-                    '--glow-min': `0 0 8px ${colors.glow}, inset 0 0 5px ${colors.glow}`,
-                    '--glow-max': `0 0 16px ${colors.glowStrong}, inset 0 0 10px ${colors.glow}, 0 0 6px ${colors.glowStrong}`,
-                    boxShadow: buyable ? `0 0 6px ${colors.glow}` : `inset 0 0 4px ${colors.glow}`,
-                  }}
-                >
-                  <div style={{
-                    width: '24px', height: '24px', borderRadius: '50%',
-                    background: buyable ? colors.surface : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${buyable ? colors.primary + '55' : colors.border}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
-                    boxShadow: buyable ? `0 0 4px ${colors.glow}` : 'none',
-                  }}>
-                    <CardPixelIcon cardId={cardId} size={16} color={buyable ? colors.light : base.textMuted} />
-                  </div>
-                  <span style={{
-                    fontSize: '11px', fontWeight: 600, color: buyable ? colors.text : base.textMuted,
-                    flex: 1, minWidth: 0,
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                  }}>
-                    {card.name}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Footer hint: small chip showing how many shops/cards are available here.
+           * Lets the player decide whether to focus this god without overcrowding the column.
+           * Click anywhere on the column to focus and see full shops/artifacts. */}
+          {(() => {
+            const affordableShops = godData.shops.filter(s => {
+              const isLocked = s.type === 'strong' && currentRound < 2;
+              return !isLocked && canAffordShop(s);
+            }).length;
+            const affordableCards = slots.filter(cid => cid && canBuyCard(cid)).length;
+            if (affordableShops === 0 && affordableCards === 0) return null;
+            return (
+              <div
+                className="flex items-center justify-center gap-2 flex-shrink-0 mt-auto"
+                style={{
+                  padding: '4px 6px',
+                  borderTop: `1px solid ${colors.border}`,
+                  fontSize: '9px',
+                  fontWeight: 600,
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  color: colors.text,
+                  opacity: 0.7,
+                }}
+                title="Click column to focus and view shops/artifacts"
+              >
+                {affordableShops > 0 && <span>shops·{affordableShops}</span>}
+                {affordableCards > 0 && <span>artifacts·{affordableCards}</span>}
+              </div>
+            );
+          })()}
         </div>
       </div>
       {tooltip && createPortal(<FloatingTooltip tooltip={tooltip} godColor={godColor} />, document.body)}
@@ -998,9 +871,10 @@ export default React.memo(function GodArea({ godColor, isFocused = true, onFocus
           )}
         </div>
 
-        {/* ── ACTIONS SECTION ── cold stone/utilitarian feel */}
+        {/* ── ACTIONS SECTION ── cold stone/utilitarian feel.
+            Worker placement is THE primary action — uses placement-glow (loud, fast, god-colored). */}
         <div
-          className="rounded-lg overflow-x-visible flex-shrink-0"
+          className={`rounded-lg overflow-x-visible flex-shrink-0 ${hasAnyAvailable ? 'placement-glow' : ''}`}
           style={{
             position: 'relative',
             background: hasAnyAvailable ? colors.surface : 'rgba(180, 195, 210, 0.03)',
@@ -1009,23 +883,11 @@ export default React.memo(function GodArea({ godColor, isFocused = true, onFocus
               ? undefined
               : 'inset 0 1px 4px rgba(0, 0, 0, 0.25), inset 0 0 8px rgba(180, 195, 210, 0.02)',
             padding: '4px',
+            '--god-glow': colors.glow,
+            '--god-glow-strong': colors.glowStrong,
+            '--placement-glow-max': `0 0 22px ${colors.glow}, 0 0 8px ${colors.glowStrong}, inset 0 0 12px ${colors.glow}`,
           }}
         >
-          {/* Unified pulse glow overlay when actions are available */}
-          {hasAnyAvailable && (
-            <div
-              style={{
-                position: 'absolute',
-                inset: '-1px',
-                borderRadius: '9px',
-                pointerEvents: 'none',
-                zIndex: 0,
-                boxShadow: `0 0 12px ${colors.glow}, 0 0 4px ${colors.glowStrong}, inset 0 0 8px ${colors.glow}`,
-                animation: 'actionSectionPulse 2.2s ease-in-out infinite',
-                willChange: 'opacity',
-              }}
-            />
-          )}
           {tierGroups.map((group) => {
             if (group.actions.length === 0) return null;
             // T3 actions get full width (usually just 1 big action)
@@ -1177,7 +1039,15 @@ export default React.memo(function GodArea({ godColor, isFocused = true, onFocus
             }}
           >
             <div
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', flex: 1 }}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gridTemplateRows: '1fr',
+                gap: '6px',
+                flex: 1,
+                minHeight: 0,
+                alignItems: 'stretch',
+              }}
             >
               {slots.map((cardId, i) => {
                 if (!cardId) {
@@ -1217,6 +1087,8 @@ export default React.memo(function GodArea({ godColor, isFocused = true, onFocus
                       outline: 'none',
                       cursor: buyable ? 'pointer' : 'default',
                       opacity: buyable ? 1 : 0.5,
+                      width: '100%',
+                      height: '100%',
                       '--glow-max': buyable
                         ? `0 0 20px ${colors.glow}, 0 0 8px ${colors.glowStrong}, inset 0 0 10px ${colors.glow}`
                         : undefined,

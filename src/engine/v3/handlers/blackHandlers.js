@@ -249,8 +249,9 @@ function poisonedBladeResolver(state, handler, eventData, _options) {
 }
 
 /**
- * Black Favor Condition: +1 Favor each time you use an action or shop to steal.
- * Fires once per steal action (not per resource stolen).
+ * Black Favor Condition: +1 Favor for each opponent harmed by an action/shop/card.
+ * Fires once per (action × victim). Harm = penalize, steal Favor, or steal resources.
+ * Repeats fire because the action re-executes and re-emits PLAYER_HARMED.
  */
 function blackGloryConditionResolver(state, handler, eventData, _options) {
   if (eventData.playerId !== handler.ownerId) {
@@ -265,7 +266,7 @@ function blackGloryConditionResolver(state, handler, eventData, _options) {
   const newState = addGloryToPlayer(state, handler.ownerId, favorGain, 'black_glory_condition');
   return {
     state: newState,
-    log: [`Black Favor: +${favorGain} Favor (steal action)${hasExtraBuff ? ' [+1 from permanent buff]' : ''}`],
+    log: [`Black Favor: +${favorGain} Favor (harmed opponent)${hasExtraBuff ? ' [+1 from permanent buff]' : ''}`],
     pendingDecisions: [],
   };
 }

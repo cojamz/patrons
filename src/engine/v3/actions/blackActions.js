@@ -251,6 +251,8 @@ export function tribute(state, playerId) {
   let newState = postTheftState;
   const log = [];
   let totalResourcesGained = {};
+  const resourcesStolen = [];
+  const gloryStolen = [];
   const tributeAmount = 1 * theftMult;
 
   if (theftMult > 1) log.push('Double theft active!');
@@ -271,6 +273,7 @@ export function tribute(state, playerId) {
         const takeAmount = Math.min(tributeAmount, resources[color] || 0);
         newState = removeResources(newState, player.id, { [color]: takeAmount });
         totalResourcesGained[color] = (totalResourcesGained[color] || 0) + takeAmount;
+        resourcesStolen.push({ playerId, targetPlayerId: player.id, resources: { [color]: takeAmount } });
         log.push(`${player.id} gave ${takeAmount} ${color}`);
       }
     } else {
@@ -278,6 +281,7 @@ export function tribute(state, playerId) {
       if (!hasModifier(newState, player.id, 'glory_reduction_immunity')) {
         newState = removeGlory(newState, player.id, tributeAmount, 'tribute');
         newState = addGlory(newState, playerId, tributeAmount, 'tribute');
+        gloryStolen.push({ playerId, targetPlayerId: player.id, amount: tributeAmount });
         log.push(`${player.id} gave ${tributeAmount} Favor`);
       } else {
         log.push(`${player.id} has nothing to give (immune)`);
@@ -290,7 +294,13 @@ export function tribute(state, playerId) {
     newState = addResources(newState, playerId, totalResourcesGained);
   }
 
-  return { state: newState, log: ['Tribute: each opponent pays tribute', ...log], isStealing: true };
+  return {
+    state: newState,
+    log: ['Tribute: each opponent pays tribute', ...log],
+    isStealing: true,
+    resourcesStolen,
+    gloryStolen,
+  };
 }
 
 /** plunder: Steal half a player's resources of one color (rounded down) */

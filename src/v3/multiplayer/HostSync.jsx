@@ -27,7 +27,12 @@ export default function HostSync({ roomCode, playerId, slotMap, children }) {
   const actions = useGameActions();
   const { game, pendingDecision, log, phase, initialized } = gameState;
 
-  const mySlot = slotMap?.[playerId] ?? 0;
+  // Convert Firebase 0-indexed slot → engine 1-indexed playerId.
+  // The engine creates players with IDs 1..N (createV3Player(i + 1, ...)),
+  // but Firebase slots are 0..N-1. All "is this me?" comparisons in the
+  // multiplayer-aware UI compare against engine playerId, so mySlot must
+  // be in engine space.
+  const mySlot = (slotMap?.[playerId] ?? 0) + 1;
   const broadcastQueue = useRef(Promise.resolve());
   const actionsRef = useRef(actions);
   const gameRef = useRef(game);
@@ -82,8 +87,10 @@ export default function HostSync({ roomCode, playerId, slotMap, children }) {
       clearPlayerAction(roomCode, fbPlayerId);
 
       if (fbPlayerId === playerId) return; // skip own actions
-      const slot = slotMap[fbPlayerId];
-      if (slot === undefined) return;
+      const fbSlot = slotMap[fbPlayerId];
+      if (fbSlot === undefined) return;
+      // Convert Firebase 0-indexed slot → engine 1-indexed playerId for all comparisons below.
+      const slot = fbSlot + 1;
 
       // --- Validate action before executing ---
       const currentGame = gameRef.current;
