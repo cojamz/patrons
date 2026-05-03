@@ -10,7 +10,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "type-check": "tsc --noEmit",
-    "balance": "node src/engine/v3/balance-test.mjs"
+    "balance": "node src/engine/v3/balance-test.mjs",
+    "test:mp": "node .claude/mp-e2e.mjs"
   },
   "dependencies": {
     "firebase": "^12.6.0",

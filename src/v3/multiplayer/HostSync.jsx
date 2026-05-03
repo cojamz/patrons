@@ -111,14 +111,12 @@ export default function HostSync({ roomCode, playerId, slotMap, children }) {
         }
       }
 
-      // Worker placement: verify action is available
-      if (action.type === 'placeWorker') {
-        const available = getAvailableActions(currentGame, slot);
-        if (!available.some(a => a.id === action.actionId)) {
-          console.warn('[HostSync] Rejected placeWorker (action unavailable):', action.actionId);
-          return;
-        }
-      }
+      // NOTE: Removed pre-validation against getAvailableActions. The engine's
+      // executeAction (GameEngine.js step 3-4) already rejects nullified/occupied
+      // actions and returns state unchanged. Pre-validating here was failing in
+      // multiplayer because guest and host views of state can briefly diverge
+      // (snapshot in flight, optimistic UI, etc.), and the host's getAvailableActions
+      // would reject perfectly-valid clicks. Trust the engine.
 
       // Decision submissions: verify there's a pending decision for this player
       if (action.type === 'submitDecision' || action.type === 'cancelDecision') {
