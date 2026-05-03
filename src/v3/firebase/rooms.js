@@ -15,7 +15,7 @@
  *     pendingDecision: { ...decision object | null }
  *     actions/{playerId}: { type, payload, timestamp }
  */
-import { db, ref, set, get, onValue, onChildAdded, off, remove, update, onDisconnect, serverTimestamp, authReady } from './config.js';
+import { db, ref, set, get, onValue, onChildAdded, off, remove, update, onDisconnect, serverTimestamp, runTransaction, authReady } from './config.js';
 
 // --- Room code generation ---
 
@@ -88,45 +88,57 @@ export async function createRoom(hostName) {
 export async function joinRoom(roomCode, playerName) {
   await authReady;
   const roomRef = ref(db, `v3rooms/${roomCode}`);
-  const snapshot = await get(roomRef);
 
-  if (!snapshot.exists()) {
+  // Read room metadata once to validate existence/status and get max players.
+  // The actual seat allocation happens inside a transaction below to prevent
+  // two concurrent joiners from grabbing the same slot.
+  const roomSnap = await get(roomRef);
+  if (!roomSnap.exists()) {
     throw new Error('Room not found');
   }
-
-  const room = snapshot.val();
-
+  const room = roomSnap.val();
   if (room.status !== 'lobby') {
     throw new Error('Game already started');
   }
-
-  const players = room.players || {};
-  const playerCount = Object.keys(players).length;
   const maxPlayers = room.settings?.playerCount || 4;
 
-  if (playerCount >= maxPlayers) {
+  const playerId = generatePlayerId();
+  let assignedSlot = null;
+
+  // Atomic seat allocation. Firebase will retry the function if another
+  // client commits a conflicting write between read and commit.
+  const playersRef = ref(db, `v3rooms/${roomCode}/players`);
+  const result = await runTransaction(playersRef, (currentPlayers) => {
+    const players = currentPlayers || {};
+    const count = Object.keys(players).length;
+    if (count >= maxPlayers) {
+      // Returning undefined aborts the transaction (no write).
+      return;
+    }
+    const usedSlots = new Set(Object.values(players).map(p => p && p.slot));
+    let slot = 0;
+    while (usedSlots.has(slot)) slot++;
+    assignedSlot = slot;
+    return {
+      ...players,
+      [playerId]: {
+        name: playerName,
+        ready: false,
+        connected: true,
+        lastSeen: serverTimestamp(),
+        slot,
+      },
+    };
+  });
+
+  if (!result.committed) {
     throw new Error('Room is full');
   }
 
-  const playerId = generatePlayerId();
-
-  // Find the next available slot
-  const usedSlots = new Set(Object.values(players).map(p => p.slot));
-  let slot = 0;
-  while (usedSlots.has(slot)) slot++;
-
-  await set(ref(db, `v3rooms/${roomCode}/players/${playerId}`), {
-    name: playerName,
-    ready: false,
-    connected: true,
-    lastSeen: serverTimestamp(),
-    slot,
-  });
-
-  // Set up presence
+  // Set up presence after the seat is committed.
   setupPresence(roomCode, playerId);
 
-  return { playerId, room };
+  return { playerId, room, slot: assignedSlot };
 }
 
 /**

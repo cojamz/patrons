@@ -60,11 +60,13 @@ export default function GuestProvider({ roomCode, playerId, slotMap, children })
       unsubSnapshotRef.current();
     }
     unsubSnapshotRef.current = onSnapshotUpdate(roomCode, (snapshot) => {
-      if (!snapshot) return;
-      if (snapshot.game) {
-        setGame(snapshot.game);
-        setInitialized(true);
-      }
+      // Treat snapshot as ATOMIC — host writes game + pendingDecision + log together.
+      // If `game` is missing, ignore the entire update; we'd otherwise route a stale
+      // game state against a fresh pendingDecision (or vice versa), which has caused
+      // wrong-player decision routing in the past.
+      if (!snapshot || !snapshot.game) return;
+      setGame(snapshot.game);
+      setInitialized(true);
       setPendingDecision(snapshot.pendingDecision || null);
       if (snapshot.log) setLog(snapshot.log);
     });

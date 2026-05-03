@@ -20,6 +20,7 @@ import { powerCards } from '../../engine/v3/data/powerCards';
 import { getShopCost, canAfford } from '../../engine/v3/rules';
 import { canAffordShop } from '../../engine/v3/shops/shopResolver';
 import { heuristicActionPicker, heuristicDecisionFn } from '../../engine/v3/balanceAI';
+import { getDecisionOwner } from '../lib/decisionOwner';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -80,7 +81,7 @@ export function useAITurns() {
         endTurnTimerRef.current = null;
       }
 
-      const decisionPlayerId = pendingDecision.playerId || pendingDecision.ownerId || currentId;
+      const decisionPlayerId = getDecisionOwner(pendingDecision, currentId);
       if (!aiPlayers.has(decisionPlayerId)) return;
 
       // Don't re-schedule if we already have a timer pending for this decision
@@ -163,7 +164,7 @@ export function useAITurns() {
 }
 
 function handleAIDecision(decision, game, actions) {
-  const currentPlayerId = decision.playerId || decision.ownerId || game.currentPlayer;
+  const currentPlayerId = getDecisionOwner(decision, game.currentPlayer);
 
   // Try MCTS heuristic first for supported decision types
   const mctsAnswer = tryHeuristicDecision(decision, game, currentPlayerId);

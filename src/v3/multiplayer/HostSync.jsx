@@ -15,6 +15,7 @@ import { GameStateContext } from '../GameProvider';
 import { useGameState } from '../hooks/useGame';
 import { useGameActions } from '../hooks/useGame';
 import { getAvailableActions } from '../../engine/v3/GameEngine';
+import { getDecisionOwner } from '../lib/decisionOwner';
 import {
   writeSnapshot,
   onPlayerAction,
@@ -125,7 +126,17 @@ export default function HostSync({ roomCode, playerId, slotMap, children }) {
           console.warn('[HostSync] Rejected decision (no pending decision):', action.type);
           return;
         }
-        const decisionOwner = currentDecision.playerId ?? currentDecision._playerId ?? currentGame.currentPlayer;
+        // NOTE: Some decisions are owned by a non-currentPlayer (e.g. Tribute asks
+        // every opponent during the active player's turn; Voodoo Doll fires at
+        // round end with no notion of "current turn"). The owner MUST come from
+        // the decision itself — falling back to currentPlayer would let the
+        // wrong player respond. If neither playerId nor _playerId nor ownerId
+        // is set, we cannot safely route the response → REJECT.
+        const decisionOwner = getDecisionOwner(currentDecision);
+        if (decisionOwner == null) {
+          console.warn('[HostSync] Rejected decision (no owner on pendingDecision):', action.type, currentDecision);
+          return;
+        }
         if (decisionOwner !== slot) {
           console.warn('[HostSync] Rejected decision (wrong player):', action.type, `slot=${slot}, owner=${decisionOwner}`);
           return;
@@ -140,9 +151,12 @@ export default function HostSync({ roomCode, playerId, slotMap, children }) {
         }
         // Null guard: between draft picks, pendingDecision can briefly be null
         // while host processes the previous pick. Don't reject — just skip validation.
-        if (currentDecision && currentDecision.playerId !== slot) {
-          console.warn('[HostSync] Rejected draft (not their pick):', `slot=${slot}, expected=${currentDecision.playerId}`);
-          return;
+        if (currentDecision) {
+          const draftOwner = getDecisionOwner(currentDecision);
+          if (draftOwner !== undefined && draftOwner !== slot) {
+            console.warn('[HostSync] Rejected draft (not their pick):', `slot=${slot}, expected=${draftOwner}`);
+            return;
+          }
         }
       }
 

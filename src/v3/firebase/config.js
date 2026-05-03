@@ -6,7 +6,7 @@
  * Safe against double-init if legacy compat code also loads.
  */
 import { initializeApp, getApps } from 'firebase/app';
-import { getDatabase, ref, set, get, onValue, onChildAdded, off, push, remove, update, onDisconnect, serverTimestamp } from 'firebase/database';
+import { getDatabase, ref, set, get, onValue, onChildAdded, off, push, remove, update, onDisconnect, serverTimestamp, runTransaction } from 'firebase/database';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -27,5 +27,5 @@ const authReady = signInAnonymously(auth).catch(err => {
   console.warn('Firebase anonymous auth failed:', err.message);
 });
 
-export { db, ref, set, get, onValue, onChildAdded, off, push, remove, update, onDisconnect, serverTimestamp, auth, authReady };
+export { db, ref, set, get, onValue, onChildAdded, off, push, remove, update, onDisconnect, serverTimestamp, runTransaction, auth, authReady };
 export default db;

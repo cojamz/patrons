@@ -279,7 +279,7 @@ function SectionHint({ label, hint, color }) {
 // ============================================================================
 
 export default React.memo(function GodArea({ godColor, isFocused = true, onFocus, isBeingWatched = false, watchingPlayerColor }) {
-  const { game, availableActions, currentPlayer, pendingDecision, isMultiplayer, mySlot } = useGameState();
+  const { game, availableActions, currentPlayer, pendingDecision, isMultiplayer, mySlot, aiPlayers } = useGameState();
   const actions = useGameActions();
   const colors = godColors[godColor];
   const meta = godMeta[godColor];
@@ -309,7 +309,14 @@ export default React.memo(function GodArea({ godColor, isFocused = true, onFocus
   }, []);
 
   // In multiplayer, only allow interactions when it's this player's turn
-  const isMyTurn = !isMultiplayer || game?.currentPlayer === mySlot;
+  // "My turn" check:
+  //  - Multiplayer: current player must equal my slot (engine 1-indexed)
+  //  - Single-player: current player must NOT be an AI
+  // Both cases prevent click handlers from firing as the wrong player
+  // (e.g. a human in slot P2 clicking while AI in P1 is mid-turn-delay).
+  const isMyTurn = isMultiplayer
+    ? game?.currentPlayer === mySlot
+    : !aiPlayers?.has(game?.currentPlayer);
 
   if (!godData || !game) return null;
 
@@ -729,6 +736,9 @@ export default React.memo(function GodArea({ godColor, isFocused = true, onFocus
                   action={dynamicAction}
                   godColor={godColor}
                   state={state}
+                  isMyTurn={isMyTurn}
+                  onPlace={handlePlace}
+                  onFocus={onFocus}
                   onHover={(e) => { e.stopPropagation(); showTooltip('action', dynamicAction, e); }}
                   onLeave={hideTooltip}
                 />
@@ -1197,7 +1207,7 @@ export default React.memo(function GodArea({ godColor, isFocused = true, onFocus
 // Collapsed Action Row — tier + name + occupation indicator
 // ============================================================================
 
-const CollapsedActionRow = React.memo(function CollapsedActionRow({ action, godColor, state, onHover, onLeave }) {
+const CollapsedActionRow = React.memo(function CollapsedActionRow({ action, godColor, state, isMyTurn, onPlace, onFocus, onHover, onLeave }) {
   const colors = godColors[godColor];
   const tier = tierStyles[action.tier];
 
@@ -1215,6 +1225,21 @@ const CollapsedActionRow = React.memo(function CollapsedActionRow({ action, godC
       ? 'rgba(0, 0, 0, 0.3)'
       : 'transparent';
 
+  // Click semantics for collapsed view:
+  //  - If the action is placeable (available + my turn): focus the god AND place the worker.
+  //  - Otherwise: fall through to focus the god (parent's onClick handles that).
+  // Stop propagation only when we placed, so we don't double-trigger focus then re-render.
+  const handleRowClick = useCallback((e) => {
+    if (state.isAvailable && isMyTurn && onPlace) {
+      e.stopPropagation();
+      // Focus the god first so the visible context matches the action that just landed,
+      // then place the worker. Both are synchronous so no flicker.
+      if (onFocus) onFocus();
+      onPlace(action.id);
+    }
+    // else: let click bubble to parent → onFocus
+  }, [state.isAvailable, isMyTurn, onPlace, onFocus, action.id]);
+
   return (
     <div
       className="relative flex items-center gap-1.5 rounded px-2"
@@ -1223,8 +1248,9 @@ const CollapsedActionRow = React.memo(function CollapsedActionRow({ action, godC
         border: `1px solid ${borderColor}`,
         background: bgColor,
         opacity: state.isLocked ? 0.2 : state.isNullified ? 0.35 : state.isOccupied ? 0.4 : 1,
-        cursor: 'pointer',
+        cursor: state.isAvailable && isMyTurn ? 'pointer' : 'default',
       }}
+      onClick={handleRowClick}
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
     >

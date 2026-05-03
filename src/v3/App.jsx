@@ -43,6 +43,7 @@ import { rejoinRoom, leaveRoom } from './firebase/rooms';
 import { db, ref, get } from './firebase/config';
 import TurnAnnouncement from './components/hud/TurnAnnouncement';
 import { useGameEvents, filterByType } from './hooks/useGameEvents';
+import { getDecisionOwner } from './lib/decisionOwner';
 
 // ============================================================================
 // Setup Screen
@@ -677,18 +678,19 @@ function DecisionModal() {
   // Don't render decision modals during champion draft (handled by ChampionDraftScreen)
   if (phase === 'champion_draft' && pendingDecision.type === 'championChoice') return null;
 
-  // Determine who this decision is for
-  const decisionOwner = pendingDecision.playerId ?? pendingDecision._playerId ?? pendingDecision.ownerId;
+  // Determine who this decision is for (canonical helper — see src/v3/lib/decisionOwner.js)
+  const decisionOwner = getDecisionOwner(pendingDecision);
 
   // Don't show decision modals for AI players — useAITurns handles them
   if (aiPlayers?.size > 0) {
-    const resolvedOwner = decisionOwner ?? game?.currentPlayer;
+    const resolvedOwner = getDecisionOwner(pendingDecision, game?.currentPlayer);
     if (resolvedOwner !== undefined && aiPlayers.has(resolvedOwner)) {
       return null;
     }
   }
 
-  // In multiplayer, only show decision modals for the correct player
+  // In multiplayer, only show decision modals for the correct player.
+  // mySlot is engine 1-indexed (HostSync/GuestProvider both convert from 0-indexed Firebase slot).
   if (isMultiplayer) {
     if (decisionOwner !== undefined && decisionOwner !== mySlot) {
       return null; // WaitingOverlay handles "waiting for X to decide" in GameInner
@@ -1058,13 +1060,15 @@ function GameInner({ isMultiplayer, multiplayerConfig, localConfig }) {
 
   // Champion draft phase
   if (phase === 'champion_draft') {
-    // In multiplayer, only show interactive draft UI if it's this player's pick
-    if (isMultiplayer && pendingDecision?.playerId !== mySlot) {
+    // In multiplayer, only show interactive draft UI if it's this player's pick.
+    // mySlot is engine 1-indexed; getDecisionOwner returns engine playerId.
+    const draftOwner = getDecisionOwner(pendingDecision);
+    if (isMultiplayer && draftOwner !== mySlot) {
       // Show ChampionDraftScreen (non-interactive cards visible at 0.5 opacity)
       // with WaitingOverlay on top. When pendingDecision is null (between picks),
       // still show overlay with a generic "Draft in progress" message.
-      const draftPlayer = pendingDecision
-        ? game?.players.find(p => p.id === pendingDecision.playerId)
+      const draftPlayer = draftOwner !== undefined
+        ? game?.players.find(p => p.id === draftOwner)
         : null;
       const waitingFor = draftPlayer
         ? { name: draftPlayer.name, slot: draftPlayer.id }
@@ -1085,12 +1089,10 @@ function GameInner({ isMultiplayer, multiplayerConfig, localConfig }) {
 
   // All other phases: full game screen
   // In multiplayer, show waiting overlay when it's not your turn
-  // Only hide overlay if the GUEST has a decision to make (e.g., steal target selection)
-  const guestHasDecision = isMultiplayer && pendingDecision && (
-    pendingDecision.playerId === mySlot ||
-    pendingDecision._playerId === mySlot ||
-    pendingDecision.ownerId === mySlot
-  );
+  // Only hide overlay if the GUEST has a decision to make (e.g., steal target selection).
+  // mySlot is engine 1-indexed; getDecisionOwner returns engine playerId.
+  const guestHasDecision = isMultiplayer && pendingDecision &&
+    getDecisionOwner(pendingDecision) === mySlot;
   return (
     <>
       <GameScreen />
