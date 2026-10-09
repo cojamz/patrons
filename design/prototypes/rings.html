@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;600;700&display=swap">
 <style>
 /* Layout: the table. Concentric wheel (outer ring = round I, inner = II, center = III), quadrants run through all three rings.
-   On wide screens the item market sits beside the wheel; on phones it drops below. Single dark "table" look by choice. */
+   Each quadrant keeps two items on its shelf at the wheel's edge; buy one right after placing there. Single dark "table" look by choice. */
 :root{
   --table:#141d1c; --table-2:#1d2928; --rim:#2d3b39; --ink:#ece6d6; --muted:#97a49f;
   --gold:#e3b23c; --black:#9c86c9; --green:#5fb37c; --yellow:#6fb3d6;
@@ -71,7 +71,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   <div class="main">
     <div>
       <div class="stage" id="stage">
-        <svg viewBox="-26 -26 452 452" aria-label="Board"><g id="wheel"></g></svg>
+        <svg viewBox="-62 -62 524 524" aria-label="Board"><g id="wheel"></g></svg>
         <button class="spin l" id="left" aria-label="Spin left">‹</button>
         <button class="spin r" id="right" aria-label="Spin right">›</button>
       </div>
@@ -79,10 +79,6 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     </div>
     <div class="side">
       <section class="panel" id="tray"></section>
-      <section class="panel">
-        <h2>Item market <small>buy from a quadrant you visited this turn</small></h2>
-        <div class="market" id="market"></div>
-      </section>
       <div class="log" id="log"></div>
     </div>
   </div>
@@ -107,24 +103,27 @@ const GODS=[
         [2,'Prism','Pay 2 yellow: +1 of each other color',{gold:1,black:1,green:1,yellow:-2}],[2,'Bloom','+1 of each color you lack',{yellow:1}],
         [3,'Flourish','+2 of each color you hold',{gold:2,black:2,green:2,yellow:2}]]}
 ];
-const ITEMS=[
- {g:0,name:'Ledger',eff:'Mint gives +3 gold',cost:{gold:2},fav:0},
- {g:0,name:'Signet Ring',eff:'Win Crown ties outright',cost:{gold:2},fav:1},
- {g:1,name:'Veil',eff:'Ransack and Plunder can’t hit you',cost:{black:2},fav:0},
- {g:1,name:'Raven Idol',eff:'A trophy',cost:{black:4},fav:2},
- {g:2,name:'Hourglass',eff:'Once a round, repeat a space',cost:{green:3},fav:0},
- {g:2,name:'Echo Stone',eff:'Each repeat also gives +1 any',cost:{green:2},fav:1},
- {g:3,name:'Alembic',eff:'Transmute swaps up to 5',cost:{yellow:2},fav:0},
- {g:3,name:'Sun Disc',eff:'A trophy',cost:{yellow:4},fav:2}
+const ITEMS=[ // each quadrant's own deck; two sit face-up on its shelf
+ [{name:'Ledger',eff:'Mint gives +3 gold',cost:{gold:2},fav:0},{name:'Signet Ring',eff:'Win Crown ties outright',cost:{gold:2},fav:1},
+  {name:'Strongbox',eff:'Your gold can’t be stolen',cost:{gold:3},fav:0},{name:'Gilded Bust',eff:'A trophy',cost:{gold:4},fav:2}],
+ [{name:'Veil',eff:'Ransack and Plunder can’t hit you',cost:{black:2},fav:0},{name:'Dagger',eff:'Ransack steals 3',cost:{black:2},fav:0},
+  {name:'Night Mark',eff:'Win Shadow ties outright',cost:{black:3},fav:1},{name:'Raven Idol',eff:'A trophy',cost:{black:4},fav:2}],
+ [{name:'Sundial',eff:'+1 green each round start',cost:{green:1},fav:0},{name:'Hourglass',eff:'Once a round, repeat a space',cost:{green:3},fav:0},
+  {name:'Echo Stone',eff:'Each repeat also gives +1 any',cost:{green:2},fav:1},{name:'Chrono Seal',eff:'A trophy',cost:{green:4},fav:2}],
+ [{name:'Alembic',eff:'Transmute swaps up to 5',cost:{yellow:2},fav:0},{name:'Cornucopia',eff:'+1 any each round start',cost:{yellow:3},fav:0},
+  {name:'Prism Lens',eff:'Pay any item in yellow',cost:{yellow:2},fav:1},{name:'Sun Disc',eff:'A trophy',cost:{yellow:4},fav:2}]
 ];
+let decks,shelf;
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function refill(q){while(shelf[q].length<2&&decks[q].length)shelf[q].push(decks[q].shift())}
 const RES=['gold','black','green','yellow'];
 const RING={1:{r0:142,r1:198,r:170,n:3},2:{r0:90,r1:142,r:116,n:2},3:{r0:34,r1:90,r:62,n:1}};
 const WORKERS={1:3,2:4,3:5};
 const CX=200,CY=200;
-let rot=0,facing=0,round,slots,players,order,turnIdx,visited,market,busy;
+let rot=0,facing=0,round,slots,players,order,turnIdx,visited,busy,pending=false;
 
 function newGame(){
-  round=1; slots=GODS.map(g=>g.acts.map(()=>null)); market=ITEMS.map(x=>({...x,sold:false}));
+  round=1; slots=GODS.map(g=>g.acts.map(()=>null)); decks=ITEMS.map(d=>shuffle(d)); shelf=ITEMS.map(()=>[]); GODS.forEach((g,q)=>refill(q));
   players=[{name:'You',cls:'you',res:{},fav:0,left:3,items:[]},{name:'Rival',cls:'them',res:{},fav:0,left:3,items:[]}];
   players.forEach(p=>RES.forEach(r=>p.res[r]=0));
   setup={picks:[]}; order=[]; turnIdx=0; draw(); render();
@@ -168,6 +167,13 @@ function draw(){
     // quadrant name along outer rim
     const [lx,ly]=polar(c,208);
     s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="${color(q)}" font-family="Marcellus, serif" font-size="14" letter-spacing="2" transform="rotate(${c+180} ${lx} ${ly})">${g.name.toUpperCase()}</text>`;
+    shelf[q].forEach((it,k)=>{ // the shelf: two item tiles just outside the rim
+      const ang=c+(k?-17:17),[x,y]=polar(ang,236),can=q===visited&&afford(players[0],it.cost)&&!busy;
+      s+=`<g class="tile" data-q="${q}" data-k="${k}" transform="rotate(${ang+180} ${x} ${y})" style="cursor:${can?'pointer':'default'}">
+        <rect x="${x-30}" y="${y-15}" width="60" height="30" rx="5" fill="var(--table)" stroke="${color(q)}" stroke-width="${can?2.5:1.2}" stroke-opacity="${can?1:.7}"/>
+        <text x="${x}" y="${y-3}" text-anchor="middle" fill="var(--ink)" font-size="9" font-weight="700">${it.name}</text>
+        <text x="${x}" y="${y+9}" text-anchor="middle" fill="${color(q)}" font-size="8.5">${Object.values(it.cost)[0]} ${GODS[q].id}${it.fav?' · +'+it.fav+'★':''}</text></g>`;
+    });
     g.acts.forEach((a,i)=>{
       const t=a[0],R=RING[t],idx=g.acts.filter((x,j)=>x[0]===t&&j<i).length;
       const span=t===1?66:t===2?44:0, ang=R.n===1?c:(c+span/2)-idx*(span/(R.n-1));
@@ -182,11 +188,12 @@ function draw(){
   });
   const w=document.getElementById('wheel'); w.innerHTML=s; applyRot();
   w.querySelectorAll('.slot').forEach(el=>el.addEventListener('click',e=>{if(moved)return;tryPlace(+el.dataset.q,+el.dataset.i)}));
+  w.querySelectorAll('.tile').forEach(el=>el.addEventListener('click',e=>{if(moved)return;buy(+el.dataset.q,+el.dataset.k)}));
 }
 
 function render(){
   const done=turnIdx>=order.length, cur=done?null:players[order[turnIdx]];
-  document.getElementById('status').innerHTML=`Round <b>${['I','II','III'][round-1]}</b> · `+(done?'<b>round over</b>':`<b>${cur.name==='You'?'your':'rival’s'} pick</b>`);
+  document.getElementById('status').innerHTML=`Round <b>${['I','II','III'][round-1]}</b> · `+(pending?'<b>your buy</b>':done?'<b>round over</b>':`<b>${cur.name==='You'?'your':'rival’s'} pick</b>`);
   document.getElementById('players').innerHTML=players.map((p,k)=>`
     <div class="pl ${p.cls} ${!done&&order[turnIdx]===k?'active':''}">
       <div class="name">${p.name}<span>${'●'.repeat(p.left)} workers · ${p.items.length} items</span></div>
@@ -198,7 +205,6 @@ function render(){
       <div class="acts">${RES.map(r=>`<button class="act" style="--c:var(--${r})" data-r="${r}" ${busy||setup.picks.length>=2?'disabled':''}><b style="color:var(--${r})">${({gold:'Gold',black:'Shadow',green:'Verdant',yellow:'Sunlight'})[r]}</b><span>${GODS.find(g=>g.id===r).name}'s color</span></button>`).join('')}</div>
       <p class="hint">Going first means the others see your plan before they choose.</p>`;
     document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>setupPick(b.dataset.r));
-    document.getElementById('market').innerHTML=market.map(it=>`<div class="item" style="--c:${color(it.g)}"><b>${it.name}</b><span class="eff">${it.eff}</span></div>`).join('');
     return;
   }
   const g=GODS[facing],myTurn=!done&&order[turnIdx]===0&&!busy;
@@ -209,22 +215,23 @@ function render(){
       h+=`<button class="act" style="--c:${color(facing)}" data-i="${i}" ${(o!==null||!myTurn||t>round)?'disabled':''}>${o!==null?`<i class="who" style="background:var(--${players[o].cls})"></i>`:''}<b>${a[1]}</b><span>${a[2]}</span></button>`;});
     h+=`</div>`;
   });
+  h+=`<div class="tier">Shelf${visited===facing?' · buy one now':' · place here to buy'}</div><div class="market">${shelf[facing].map((it,k)=>{
+    const can=visited===facing&&afford(players[0],it.cost)&&!busy;
+    return `<button class="item" style="--c:${color(facing)}" data-k="${k}" ${can?'':'disabled'}><b>${it.name}</b><span class="eff">${it.eff}</span>
+      <span class="row"><span>${Object.entries(it.cost).map(([r,v])=>`<i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--${r});margin-right:3px"></i>${v}`).join(' ')}</span><span class="fv">${it.fav?'+'+it.fav+' ★':''}</span></span></button>`}).join('')}</div>`;
+  if(pending) h+=`<button class="btn" id="pass">Pass</button>`;
   if(done) h+= round<3?`<button class="btn" id="next">Score round, open ring ${['II','III'][round-1]}</button>`:`<button class="btn" id="next">Final scoring</button>`;
   document.getElementById('tray').innerHTML=h;
   document.querySelectorAll('.act').forEach(b=>b.onclick=()=>tryPlace(facing,+b.dataset.i));
   const nx=document.getElementById('next'); if(nx) nx.onclick=endRound;
-  document.getElementById('market').innerHTML=market.map((it,k)=>{
-    const can=!it.sold&&visited===it.g&&afford(players[0],it.cost);
-    return `<button class="item" style="--c:${color(it.g)}" data-k="${k}" ${can?'':'disabled'}>
-      <b>${it.sold?'Sold':it.name}</b><span class="eff">${it.eff}</span>
-      <span class="row"><span>${Object.entries(it.cost).map(([r,v])=>`<i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--${r});margin-right:3px"></i>${v}`).join(' ')}</span><span class="fv">${it.fav?'+'+it.fav+' ★':''}</span></span></button>`}).join('');
-  document.querySelectorAll('.item').forEach(b=>b.onclick=()=>buy(+b.dataset.k));
+  const ps=document.getElementById('pass'); if(ps) ps.onclick=pass;
+  document.querySelectorAll('.item').forEach(b=>b.onclick=()=>buy(facing,+b.dataset.k));
 }
 function afford(p,c){return Object.entries(c).every(([r,v])=>p.res[r]>=v)}
 function say(t){document.getElementById('log').textContent=t}
 
 function tryPlace(q,i){
-  if(busy||turnIdx>=order.length||order[turnIdx]!==0)return;
+  if(busy||pending||turnIdx>=order.length||order[turnIdx]!==0)return;
   if(GODS[q].acts[i][0]>round||slots[q][i]!==null)return;
   place(0,q,i);
 }
@@ -235,7 +242,8 @@ function place(pid,q,i){
   if(pid===0) visited=q;
   say(`${pid?'Rival':'You'} took ${a[1]} at ${GODS[q].name}. ${a[2]}.`);
   turnIdx++; draw(); render();
-  if(pid===0&&market.some(it=>!it.sold&&it.g===q&&afford(p,it.cost))) say(`You took ${a[1]}. You can buy a ${GODS[q].name} item now.`);
+  if(pid===0&&shelf[q].some(it=>afford(p,it.cost))){say(`You took ${a[1]}. ${GODS[q].name}'s shelf is open: buy, or pass.`);pending=true;render();return}
+  if(pid===1){const k=shelf[q].findIndex(it=>afford(p,it.cost));if(k>=0&&Math.random()<.6)buyFor(1,q,k)}
   maybeRival();
 }
 function maybeRival(){
@@ -244,11 +252,17 @@ function maybeRival(){
     busy=false; visited=null; const [q,i]=open[Math.floor(Math.random()*open.length)]; place(1,q,i);
   },800)}
 }
-function buy(k){
-  const it=market[k],p=players[0]; if(it.sold||visited!==it.g||!afford(p,it.cost))return;
-  Object.entries(it.cost).forEach(([r,v])=>p.res[r]-=v); p.fav+=it.fav; p.items.push(it.name); it.sold=true; visited=null;
-  say(`You bought ${it.name}${it.fav?` (+${it.fav} Favor)`:''}.`); render();
+function buyFor(pid,q,k){
+  const it=shelf[q][k],p=players[pid];
+  Object.entries(it.cost).forEach(([r,v])=>p.res[r]-=v); p.fav+=it.fav; p.items.push(it.name);
+  shelf[q].splice(k,1); refill(q);
+  say(`${pid?'Rival':'You'} bought ${it.name} from ${GODS[q].name}${it.fav?` (+${it.fav} Favor)`:''}.`); draw(); render();
 }
+function buy(q,k){
+  const it=shelf[q][k]; if(!it||busy||visited!==q||!afford(players[0],it.cost))return;
+  visited=null; pending=false; buyFor(0,q,k); maybeRival();
+}
+function pass(){pending=false;visited=null;draw();render();maybeRival()}
 function endRound(){
   const amt=[1,2,4][round-1], msg=[], P=players;
   const g0=P[0].res.gold,g1=P[1].res.gold;
@@ -256,6 +270,7 @@ function endRound(){
   const b0=P[0].res.black,b1=P[1].res.black;
   if(b0!==b1){const w=b0>b1?0:1,v=1-w;const s=Math.min(amt,P[v].fav);P[v].fav-=s;P[w].fav+=s;if(s)msg.push(`Shadow: ${w?'Rival':'You'} steal ${s}`)}
   P.forEach((p,k)=>{const sets=Math.min(...RES.map(r=>p.res[r]));if(sets){p.fav+=sets;msg.push(`Harmony: ${k?'Rival':'You'} +${sets}`)}});
+  GODS.forEach((g,q)=>{if(shelf[q].length&&decks[q].length){decks[q].push(shelf[q].shift());refill(q)}}); // each shelf sheds its oldest item
   const m=msg.length?msg.join(' · '):'No one scored';
   if(round<3){round++;say(m+'. A new ring is open.');startRound();}
   else{const w=P[0].fav>=P[1].fav?'You win':'Rival wins';say(m+`. ${w}.`);render();
