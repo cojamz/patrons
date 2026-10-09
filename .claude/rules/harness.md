@@ -42,5 +42,6 @@ How Claude works on Patrons. Claude owns this file and updates it when something
 - **Skills** (`.claude/skills/<name>/SKILL.md`): repeatable routines, e.g. `/note`.
 - **Subagents** (`.claude/agents/*.md`): `design-critic` (read-only: have it return text, then save it yourself), `playtester`, `ux-reviewer`. Run them in parallel and pass on only their conclusions. Add more when a role keeps coming up.
 - **Hooks** (`.claude/settings.json`): only for things that must happen no matter what. Session start installs deps; a safety hook blocks force-push, `rm -rf` and edits to secrets.
+- **Workflows** (`.claude/workflows/*.js`, run by name): `quadrant-forge` is the evaluator team. It runs inventors, then per sphere a lint/value check, 2 lens judges, a mind-play tester holding a ledger, a red team and a synthesizer (revise up to twice or kill), then combo-table playtests and a meta-critic that proposes rubric changes. Edit it as the process evolves.
 - **/doctor**: audits rules, skills and agents for conflicts. Run it when the setup feels off.
 - When unsure about a Claude Code feature, check the official docs (code.claude.com/docs) before building anything.
