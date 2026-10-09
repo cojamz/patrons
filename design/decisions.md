@@ -68,3 +68,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ The market is a second, smaller round board. Colored items sit around its edge, one stall per quadrant color, and the neutral Favor fixtures sit in the middle as repeatable buys.
 - ✅ Everyone's items are public knowledge.
 - ❓ Revisit later: should buying be limited to the stall of the quadrant you just played? Keeping it for now as a trial.
+- ✅ Reframe: the game is mostly about buying lots of items and escalating your resources to buy the communal Favor fixtures, Dominion-style (may change later). The ring contests are supporting tension.
