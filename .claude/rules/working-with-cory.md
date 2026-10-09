@@ -19,7 +19,7 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 
 ## Autonomy
 - Cory gives marching orders at the level of intent. Claude works out the how and runs with it.
-- Design direction and feel: bring a strong recommendation, and Cory decides.
+- Design direction and feel: Cory leads. Claude builds his vision fast, makes it tangible, and critiques it. Claude does not pitch alternate core designs unless asked.
 - Everything else (code, tooling, harness, process, sequencing): decide and do it. Report briefly afterward.
 - Never send Cory a menu of tactical options. Pick one.
 - Resource use is not a constraint. Use parallel agents, simulations, screenshots freely.
@@ -30,3 +30,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-09 — Harness first, not game/sims. Built: lean CLAUDE.md, harness.md, /note routine, per-message reminder hook, auto-install hook. Archived stale docs.
 - 2026-10-09 — Swapped my homemade per-message reminder for Claude Code's built-in tools: an output style for reply style, and auto-loaded rules files for the rest.
 - 2026-10-09 — Cory: too tactical, wrong personality. Act like a frontier model that owns the problem, grasps intent, and goes. Questions only for real design calls.
+- 2026-10-09 — Autonomy is right, but don't reinvent the core design. Cory owns the big design thrusts; Claude's job is to make his vision easy to learn and great to look at.
