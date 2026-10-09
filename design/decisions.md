@@ -59,3 +59,7 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Design check for every action: every space fills in round 1, so a penalty tied to a space only hits whoever is forced to pick last. Prefer lures over tolls.
 - ✅ Actions should be elemental: simple verbs that items and later spaces can hook into and amplify.
 - 💡 Gold verb candidates: Mint (+2), Sponsor (coin on a space, taker and you both +1), Interest (+1 per 3 held), Exchange (2 any → 3 gold), Wager (stake gold on winning the Crown, doubled or lost), Lend (give 2 gold now, repaid 3 at round end).
+
+## 2026-10-09 — Names dropped; where Favor comes from
+- ✅ Quadrant god names are dropped. Colors stay.
+- ❓ Favor sources: the per-round ring rules (with round 3 as the burst) plus some items? If items are rarer, should the currency shrink or move off-center? Or should items be more frequent and robust, with a wider spread of costs, so buying feels like collecting passives (and some activatables)?

@@ -172,6 +172,8 @@ function arc(a0,a1,r0,r1){
 }
 function qC(q){return 180+q*90} // q=0 starts at the bottom: your seat at the table
 function color(q){return `var(--${GODS[q].id})`}
+const WORD={gold:'Gold',black:'Shadow',green:'Verdant',yellow:'Sunlight'};
+function qn(q){return WORD[GODS[q].id]}
 
 function draw(){
   let s=`<circle cx="${CX}" cy="${CY}" r="200" fill="var(--table-2)" stroke="var(--rim)" stroke-width="2"/>`;
@@ -187,7 +189,6 @@ function draw(){
     });
     // quadrant name along outer rim
     const [lx,ly]=polar(c,208);
-    s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="${color(q)}" font-family="Marcellus, serif" font-size="14" letter-spacing="2" transform="rotate(${c+180} ${lx} ${ly})">${g.name.toUpperCase()}</text>`;
     g.acts.forEach((a,i)=>{
       const t=a[0],R=RING[t],idx=g.acts.filter((x,j)=>x[0]===t&&j<i).length;
       const span=t===1?66:t===2?44:0, ang=R.n===1?c:(c+span/2)-idx*(span/(R.n-1));
@@ -215,14 +216,14 @@ function render(){
   if(setup){
     document.getElementById('status').innerHTML='<b>Setup</b> · pick 2 starting resources';
     document.getElementById('tray').innerHTML=`<h2>Starting resources<small>you're first seat · ${2-setup.picks.length} left</small></h2>
-      <div class="acts">${RES.map(r=>`<button class="act" style="--c:var(--${r})" data-r="${r}" ${busy||setup.picks.length>=2?'disabled':''}><b style="color:var(--${r})">${({gold:'Gold',black:'Shadow',green:'Verdant',yellow:'Sunlight'})[r]}</b><span>${GODS.find(g=>g.id===r).name}'s color</span></button>`).join('')}</div>
+      <div class="acts">${RES.map(r=>`<button class="act" style="--c:var(--${r})" data-r="${r}" ${busy||setup.picks.length>=2?'disabled':''}><b style="color:var(--${r})">${({gold:'Gold',black:'Shadow',green:'Verdant',yellow:'Sunlight'})[r]}</b><span>scores in its own quadrant</span></button>`).join('')}</div>
       <p class="hint">Going first means the others see your plan before they choose.</p>`;
     document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>setupPick(b.dataset.r));
     drawMarket();
     return;
   }
   const g=GODS[facing],myTurn=!done&&order[turnIdx]===0&&!busy;
-  let h=`<h2 style="color:${color(facing)}">${g.name}<small>facing you</small></h2><div class="score" style="--c:${color(facing)}">${g.score}</div>`;
+  let h=`<h2 style="color:${color(facing)}"><i style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${color(facing)}"></i>${qn(facing)}<small>facing you</small></h2><div class="score" style="--c:${color(facing)}">${g.score}</div>`;
   [1,2,3].forEach(t=>{
     h+=`<div class="tier">Round ${['I','II','III'][t-1]}${t>round?' · locked':''} <span style="color:${color(facing)};margin-left:6px">${BANNER[facing](t)}</span></div><div class="acts">`;
     g.acts.forEach((a,i)=>{ if(a[0]!==t)return; const o=slots[facing][i];
@@ -240,7 +241,7 @@ function render(){
 function drawMarket(){
   document.getElementById('mboard').innerHTML=GODS.map((g,q)=>{
     const lit=visited===q&&pending;
-    return `<div class="stall ${lit?'lit':''}" style="--c:${color(q)}"><h3>${g.name.toUpperCase()}</h3>${shelf[q].map((it,k)=>{
+    return `<div class="stall ${lit?'lit':''}" style="--c:${color(q)}"><h3><i style="display:block;height:4px;border-radius:2px;background:var(--c)"></i></h3>${shelf[q].map((it,k)=>{
       const can=lit&&afford(players[0],it.cost);
       return `<button class="ware" data-q="${q}" data-k="${k}" ${can?'':'disabled'}><b>${it.name}</b><span>${it.eff}</span>
         <span class="row"><span>${Object.values(it.cost)[0]} ${g.id}</span><span>${it.fav?'+'+it.fav+' ★':''}</span></span></button>`}).join('')}${lit?'<button class="btn" data-pass style="align-self:center;padding:4px 14px">Pass</button>':''}</div>`}).join('');
@@ -260,9 +261,9 @@ function place(pid,q,i){
   slots[q][i]=pid; p.left--;
   Object.entries(a[3]).forEach(([k,v])=>{ if(v==='x2')p.res[k]*=2; else if(v==='items')p.res[k]+=p.items.length; else if(v==='interest')p.res[k]+=1+Math.floor(p.res[k]/3); else if(v==='exchange'){let n=2;['black','green','yellow','gold'].forEach(r=>{while(n&&p.res[r]>0&&r!=='gold'){p.res[r]--;n--}});if(n===0)p.res.gold+=3} else p.res[k]=Math.max(0,p.res[k]+v); });
   if(pid===0) visited=q;
-  say(`${pid?'Rival':'You'} took ${a[1]} at ${GODS[q].name}. ${a[2]}.`);
+  say(`${pid?'Rival':'You'} took ${a[1]} in ${qn(q)}. ${a[2]}.`);
   turnIdx++; draw(); render();
-  if(pid===0&&shelf[q].some(it=>afford(p,it.cost))){say(`You took ${a[1]}. ${GODS[q].name}'s shelf is open: buy, or pass.`);pending=true;render();return}
+  if(pid===0&&shelf[q].some(it=>afford(p,it.cost))){say(`You took ${a[1]}. The ${qn(q).toLowerCase()} stall is open: buy, or pass.`);pending=true;render();return}
   if(pid===1){const k=shelf[q].findIndex(it=>afford(p,it.cost));if(k>=0&&Math.random()<.6)buyFor(1,q,k)}
   maybeRival();
 }
@@ -276,7 +277,7 @@ function buyFor(pid,q,k){
   const it=shelf[q][k],p=players[pid];
   Object.entries(it.cost).forEach(([r,v])=>p.res[r]-=v); p.fav+=it.fav; p.items.push(it.name);
   shelf[q].splice(k,1); refill(q);
-  say(`${pid?'Rival':'You'} bought ${it.name} from ${GODS[q].name}${it.fav?` (+${it.fav} Favor)`:''}.`); draw(); render();
+  say(`${pid?'Rival':'You'} bought ${it.name} from the ${qn(q).toLowerCase()} stall${it.fav?` (+${it.fav} Favor)`:''}.`); draw(); render();
 }
 function buy(q,k){
   const it=shelf[q][k]; if(!it||busy||visited!==q||!afford(players[0],it.cost))return;
