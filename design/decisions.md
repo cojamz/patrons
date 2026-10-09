@@ -50,3 +50,8 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ No simulator yet. Rules will still shift, so wait until they settle.
 - ❓ Items: one random shared market, or 1–2 items sitting on each quadrant (buyable only when you use it)? Claude leans per-quadrant: the purchase becomes part of the placement read, and items travel with their quadrant when it's swapped.
 - ✅ Items sit on a separate market board, not on the wheel, because you interact with them differently. One stall per quadrant, two items each. A stall lights up after you place in its quadrant.
+
+## 2026-10-09 — Design ideal + Gold scoring locked
+- ✅ Ideal: no quadrant or action should feel weaker than another. The depth comes from creativity, from how you combine them.
+- ✅ Gold scores by the Crown: most gold at the end of each round takes X Favor, and ties share it. Values to tune (working: 2 / 4 / 6).
+- ✅ Each round's scoring is printed on the board, in that quadrant's ring, so it's clear. It should be visually distinct from the actions but sit neatly alongside them.
