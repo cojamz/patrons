@@ -23,7 +23,7 @@ const BRIEFS = [
 ]
 
 phase('Ideate')
-const ideaSets = await parallel(BRIEFS.map((b, i) => () => agent(`${CTX}\n\nYou are an inventive tabletop designer (worker placement, engine building). Task: ${b}\nEach quadrant must follow spec-format exactly (3/2/1 actions ≤14 words, ONE scoring rule paid only at round end with ring values, 6 members costs 1–7, emits/consumes in generic vocabulary). Self-check lints L1–L10 and value bands before returning. Make each sphere feel unmistakably distinct and fun, with cult flavor in names.`, { label: `invent:${i}`, phase: 'Ideate', schema: IDEAS })))
+const ideaSets = (args && args.poolPath) ? [await agent(`Read the JSON file ${args.poolPath} (an array of objects with id, sphere, pitch, spec). Return it verbatim as {quadrants: [...]}, preserving order and every character of each spec. Do not edit anything.`, { label: 'load-pool', phase: 'Ideate', schema: IDEAS, effort: 'low' })] : (args && args.pool) ? [{ quadrants: args.pool }] : await parallel(BRIEFS.map((b, i) => () => agent(`${CTX}\n\nYou are an inventive tabletop designer (worker placement, engine building). Task: ${b}\nEach quadrant must follow spec-format exactly (3/2/1 actions ≤14 words, ONE scoring rule paid only at round end with ring values, 6 members costs 1–7, emits/consumes in generic vocabulary). Self-check lints L1–L10 and value bands before returning. Make each sphere feel unmistakably distinct and fun, with cult flavor in names.`, { label: `invent:${i}`, phase: 'Ideate', schema: IDEAS })))
 const pool = ideaSets.filter(Boolean).flatMap(s => s.quadrants)
 log(`${pool.length} candidate spheres: ${pool.map(q => q.id).join(', ')}`)
 
@@ -51,7 +51,11 @@ async function evaluate(spec, q, i, pass) {
 }
 
 phase('Forge')
-const forged = await pipeline(pool, async (q, _o, i) => {
+const A = args || {}
+const lo = A.from || 0, hi = A.to == null ? pool.length : A.to
+const slice = pool.slice(lo, hi)
+log(`forging slice ${lo}-${hi}: ${slice.map(q => q.id).join(', ')}`)
+const forged = await pipeline(slice, async (q, _o, j) => { const i = lo + j
   let spec = q.spec, history = []
   for (let pass = 0; pass <= 2; pass++) {
     const s = await evaluate(spec, q, i, pass)
@@ -67,6 +71,8 @@ const forged = await pipeline(pool, async (q, _o, i) => {
 const done = forged.filter(Boolean)
 const passed = done.filter(f => f.status === 'pass')
 log(`passed ${passed.length}/${done.length}: ${passed.map(p => p.id).join(', ')}`)
+
+if (A.stage === 'forge') return { passed, killed: done.filter(f => f.status !== 'pass') }
 
 phase('Combos')
 const COMBO = { type: 'object', properties: { table: { type: 'array', items: { type: 'string' } }, interplay: { type: 'integer' }, dependencies: { type: 'array', items: { type: 'string' } }, dominant: { type: 'string' }, flat_spheres: { type: 'array', items: { type: 'string' } }, feel_bad: { type: 'array', items: { type: 'string' } }, highlights: { type: 'array', items: { type: 'string' } }, fixes: { type: 'array', items: { type: 'string' } } }, required: ['table','interplay','dependencies','dominant','flat_spheres','feel_bad','highlights','fixes'] }
