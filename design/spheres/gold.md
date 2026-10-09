@@ -22,3 +22,33 @@
 ## Not gold, just parked here
 - **Doppelganger / Mimic / Actor:** an expensive member that becomes a copy of another member. Could live in any sphere.
 - Principle (Cory): effects should feel powerful and be open or relative (double, half, match, per X) rather than small fixed amounts.
+
+## Cory, round 2
+- **Middleman (member):** +1 gold whenever another player buys a 3- or 6-follower fixture.
+- **Banker:** +3 or +4 gold at the start of every round.
+- A member you can activate to double your gold.
+
+## Claude brainstorm (relative and powerful; costs not set)
+Actions:
+1. Strike: double your gold.
+2. Windfall: gain 1 gold per member you have.
+3. Joint Venture: +4 gold; another player of your choice gains 2.
+4. Tribute: each player with more gold than you gives you 1.
+5. Appraise: gain gold equal to half of everything else you hold.
+6. Catch Up: gain half the difference between your gold and the richest player's.
+7. Cash Out: turn any amount of gold into followers, 2 for 1.
+8. Invest: set gold aside. It comes back doubled next round, and doesn't count for the Crown meanwhile.
+9. Bankroll: pay for a rival's member. You gain gold equal to its cost next round.
+10. Liquidate: release a member for gold equal to double its cost.
+
+Members:
+1. Banker: +4 gold at each round start.
+2. Middleman: +1 gold whenever another player buys a 3- or 6-follower fixture.
+3. Speculator: once per game, double your gold.
+4. Alchemist: every 2 other resources count as 1 gold for the Crown.
+5. Treasurer: your gold counts double for the Crown.
+6. Broker: you may pay any member's specific cost with gold.
+7. Moneylender: lend gold to a rival who's short; they repay double at round end.
+8. Benefactor: when you buy a member, get half its gold cost back.
+9. Tycoon: at game end, +1 follower per 3 gold you hold.
+10. Doppelganger (any sphere): becomes a copy of any member in play.
