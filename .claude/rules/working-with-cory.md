@@ -33,3 +33,4 @@ Claude edits this file the same turn and says what changed in one line.
 ## Changelog of this doc
 - 2026-10-09 — first version, from Cory's kickoff voice note.
 - 2026-10-09 — first reply was way too long and too deep in the current game. Added 8-line cap, no dumps, stay at his altitude.
+- 2026-10-09 — Harness first, not game/sims. Built: lean CLAUDE.md, harness.md, /note routine, per-message reminder hook, auto-install hook. Archived stale docs.
