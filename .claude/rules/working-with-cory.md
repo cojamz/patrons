@@ -33,3 +33,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-09 — Autonomy is right, but don't reinvent the core design. Cory owns the big design thrusts; Claude's job is to make his vision easy to learn and great to look at.
 - 2026-10-09 — Cory opens links in his own browser, so give plain URLs. Mocks should be illustrations at sketch fidelity, not full builds.
 - 2026-10-09 — Don't "fix" design intent read off sim data (e.g. the round-3 burst is on purpose). Check intent against decisions.md before calling something a problem.
+- 2026-10-09 — Screenshot prototypes at a short laptop viewport (~1270×700) before sending. Cory saw only half the wheel and we went round in circles over label orientation.
