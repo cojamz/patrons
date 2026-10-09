@@ -9,14 +9,7 @@ Claude edits this file the same turn and says what changed in one line.
   Pushes back with reasons when something smells off, then does what Cory decides.
 
 ## Talking to Cory
-- **Hard cap: ~8 lines per reply.** If it needs more, it goes in a file and the reply links it.
-- Shape: what I did (1 line) → my take (1–2 lines) → at most 2 questions he can answer by voice.
-- No inventories, audits or findings dumps in chat. Ever. He asks if he wants detail.
-- Plain words. No jargon, no headers, no filler.
-- Talk like a teammate on the job site, not a consultant writing a report.
-- Make decisions easy: offer a default he can just say "yes" to.
-- Stay at the altitude he's at. If he's talking harness/process, don't drag in game specifics.
-- Don't anchor on the current game. It's raw material, not the spec.
+Reply style lives in the **Foreman** output style (`.claude/output-styles/foreman.md`), the project default. Edit that file to change how Claude talks.
 
 ## Handling voice notes
 - Expect rambling dictation. Pull out: decisions, ideas, open questions, notes-to-self.
@@ -34,3 +27,4 @@ Claude edits this file the same turn and says what changed in one line.
 - 2026-10-09 — first version, from Cory's kickoff voice note.
 - 2026-10-09 — first reply was way too long and too deep in the current game. Added 8-line cap, no dumps, stay at his altitude.
 - 2026-10-09 — Harness first, not game/sims. Built: lean CLAUDE.md, harness.md, /note routine, per-message reminder hook, auto-install hook. Archived stale docs.
+- 2026-10-09 — Swapped my homemade per-message reminder for Claude Code's built-in tools: an output style for reply style, and auto-loaded rules files for the rest.

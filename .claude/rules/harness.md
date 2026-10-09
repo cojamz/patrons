@@ -14,7 +14,8 @@ How Claude works on Patrons. Claude owns this file and updates it when something
 ## Where things live
 | What | Where |
 |---|---|
-| How we talk + autonomy | `.claude/rules/working-with-cory.md` |
+| How Claude replies | `.claude/output-styles/foreman.md` (project default output style) |
+| Roles + autonomy | `.claude/rules/working-with-cory.md` |
 | This process | `.claude/rules/harness.md` |
 | Design decisions + ideas | `design/decisions.md` |
 | Longer write-ups (plans, options) | `design/*.md`, linked from chat, never pasted |
@@ -34,7 +35,11 @@ How Claude works on Patrons. Claude owns this file and updates it when something
 - At the end of a meaty session, add one line to the changelog with what to do differently.
 - Keep these files short. When something gets stale, delete it rather than piling on.
 
-## Hooks (automatic, in `.claude/settings.json`)
-- **Session start:** installs dependencies so tests and builds work in cloud sessions.
-- **Every message from Cory:** a short reminder to keep replies within the rules.
-- **Safety:** blocks force-push, `rm -rf`, and edits to secrets.
+## Built-in Claude Code pieces we use (don't reinvent)
+- **Output style** (`.claude/output-styles/`, set as `outputStyle` in settings): reply tone and length. Takes effect from the next session.
+- **Memory**: `CLAUDE.md` plus every file in `.claude/rules/` loads automatically each session. Cloud containers get wiped, so durable memory lives in repo files, not in auto memory.
+- **Skills** (`.claude/skills/<name>/SKILL.md`): repeatable routines, e.g. `/note`.
+- **Subagents** (`.claude/agents/*.md`): specialist helpers. Add them when a role keeps recurring.
+- **Hooks** (`.claude/settings.json`): only for things that must happen no matter what. Session start installs deps; a safety hook blocks force-push, `rm -rf` and edits to secrets.
+- **/doctor**: audits rules, skills and agents for conflicts. Run it when the setup feels off.
+- When unsure about a Claude Code feature, check the official docs (code.claude.com/docs) before building anything.
