@@ -69,3 +69,5 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Everyone's items are public knowledge.
 - ❓ Revisit later: should buying be limited to the stall of the quadrant you just played? Keeping it for now as a trial.
 - ✅ Reframe: the game is mostly about buying lots of items and escalating your resources to buy the communal Favor fixtures, Dominion-style (may change later). The ring contests are supporting tension.
+- ✅ Guard rail: no exponential races in silos. The game must feel very interactive, but never feel BAD.
+- 💡 (Claude) How: interact through the board, not at people. Compete for shared spaces, items, contests and the Diadem clock. Many actions spill a little gain onto others (Patronage-style). Items trigger off rivals' plays, so you watch them. Direct harm is rare, small, and only aimed at the leader.
