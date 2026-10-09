@@ -37,3 +37,10 @@
 | Auction House | Weakest [3, 6]. Haul ties, stall runs dry | **KILL** (kill rule) |
 
 That leaves 9 spheres in the pool, enough for the goal of 8.
+
+## Table 8 (Encore / Auction House / Ladder / Night Shift): followers 46 / 28 / 26 / 22
+- **Encore** ran away. Echoes recomputed the yield for the player echoing, so 8–13 resources per placement. Core rule: an echo copies the original taker's yield.
+- **Diadem** found on turn 4. Fixtures were about 70% of all followers, which confirms the v0.2 price rise.
+- **Night Shift:** Last Word goes to whoever places last in snake order, and that's the leader. Fix: give it to whoever has the most amber workers, with ties going to the player furthest behind.
+- **Ladder** works as a catch-up, but "take from the leader" does nothing when the leader holds no crimson.
+- **Name clashes:** "echo" means something different in Green and Amber, and "Encore" names both Green's rule and an Amber action. Core rule: names are unique, and "echo" is reserved for Green.

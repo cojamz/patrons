@@ -40,8 +40,10 @@ Every sphere spec assumes these. Anything a sphere changes, it states explicitly
 - When the top players are tied on followers, there is no leader. Effects that say "the leader" do nothing.
 - "Ahead of you" means strictly more followers.
 
-## Names
-- Member names are unique across all spheres.
+## Names and echoes
+- Member, action and rule names are unique across all spheres.
+- "Echo" is a reserved verb. It repeats a space's effect with exactly the yield its original taker got, never recomputed for the player echoing. Echoes can't echo, and the round-III center can't be echoed.
+- A member bought in round III that triggers only at round start says so in its text, so nobody buys a dead card by accident.
 
 ## Taking
 - Taking reaches only "a player ahead of you", meaning more followers, as counted at the moment of the action.
