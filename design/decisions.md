@@ -41,3 +41,7 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ The old shop layer is out for now. An ITEM shop replaces it.
 - ✅ Board = concentric wheel. Outer ring is round 1, inner ring is round 2, center is round 3. The quadrants fit together across all three rings.
 - ❓ One item shop per quadrant, or one combined shop? (Claude's lean: one combined market beside the wheel, with items color-tagged by quadrant.)
+
+## 2026-10-09 — Starting resources
+- 💡 Players start by getting resources one at a time, in seat order from first to last, with everyone watching. Seeing what others take helps you read them. Going first is a slight disadvantage (you reveal first), which offsets first pick in round 1.
+- ❓ Does everyone get one of each resource, or does each player pick which ones they take?
