@@ -49,3 +49,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ The four-quadrant draft in `design/quadrants.md` is liked as the working base.
 - ✅ No simulator yet. Rules will still shift, so wait until they settle.
 - ❓ Items: one random shared market, or 1–2 items sitting on each quadrant (buyable only when you use it)? Claude leans per-quadrant: the purchase becomes part of the placement read, and items travel with their quadrant when it's swapped.
+- ✅ Items sit on a separate market board, not on the wheel, because you interact with them differently. One stall per quadrant, two items each. A stall lights up after you place in its quadrant.
