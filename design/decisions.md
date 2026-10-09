@@ -36,3 +36,8 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Keep some patron flavor in Gold.
 - ✅ Tracking difficulty is the UI's job. Only cut rules if we can't make them easy to track on screen.
 - 💡 (Claude) Gold round-1 actions: Mint (+2 gold), Patron (+1 gold, plus +1 each time anyone uses a quadrant you pick), Levy (take 1 gold from the leader). Gold's shop costs gold, so buying engine upgrades costs you Crown standing.
+
+## 2026-10-09 — Board layout + item shop
+- ✅ The old shop layer is out for now. An ITEM shop replaces it.
+- ✅ Board = concentric wheel. Outer ring is round 1, inner ring is round 2, center is round 3. The quadrants fit together across all three rings.
+- ❓ One item shop per quadrant, or one combined shop? (Claude's lean: one combined market beside the wheel, with items color-tagged by quadrant.)
