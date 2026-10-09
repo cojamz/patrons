@@ -21,3 +21,4 @@
 
 ## Not gold, just parked here
 - **Doppelganger / Mimic / Actor:** an expensive member that becomes a copy of another member. Could live in any sphere.
+- Principle (Cory): effects should feel powerful and be open or relative (double, half, match, per X) rather than small fixed amounts.

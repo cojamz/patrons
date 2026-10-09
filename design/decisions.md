@@ -98,3 +98,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 ## 2026-10-09 — Gold, Cory's pass
 - 💡 Cory is designing Gold himself. Ideas are captured in `design/spheres/gold.md`: the Crown (most gold gets followers or members each round), gold as member money, Joint Venture, Jackpot, a round-II cash-out, Banker, Alchemist, Tycoon, and a "counts double" member.
 - 💡 Doppelganger: an expensive member that copies another member. Any sphere.
+- ✅ (Cory) Everything should feel vaguely powerful. Open, relative amounts (double, half and so on) beat small fixed numbers.
