@@ -71,7 +71,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   <div class="main">
     <div>
       <div class="stage" id="stage">
-        <svg viewBox="-62 -62 524 524" aria-label="Board"><g id="wheel"></g></svg>
+        <svg viewBox="-56 -56 512 512" aria-label="Board"><g id="wheel"></g></svg>
         <button class="spin l" id="left" aria-label="Spin left">‹</button>
         <button class="spin r" id="right" aria-label="Spin right">›</button>
       </div>
@@ -157,7 +157,7 @@ function qC(q){return 180+q*90} // q=0 starts at the bottom: your seat at the ta
 function color(q){return `var(--${GODS[q].id})`}
 
 function draw(){
-  let s=`<circle cx="${CX}" cy="${CY}" r="200" fill="var(--table-2)" stroke="var(--rim)" stroke-width="2"/>`;
+  let s=`<circle cx="${CX}" cy="${CY}" r="250" fill="var(--table-2)" stroke="var(--rim)" stroke-width="2"/><circle cx="${CX}" cy="${CY}" r="200" fill="none" stroke="var(--rim)" stroke-width="1.5"/>`;
   GODS.forEach((g,q)=>{
     const c=qC(q),a0=c-45,a1=c+45,f=q===facing;
     [1,2,3].forEach(t=>{
@@ -165,14 +165,17 @@ function draw(){
       s+=`<path d="${arc(a0+.8,a1-.8,R.r0+1,R.r1-1)}" fill="${color(q)}" fill-opacity="${open?(f?.26:.12):.04}" stroke="${color(q)}" stroke-opacity="${open?.55:.18}"/>`;
     });
     // quadrant name along outer rim
-    const [lx,ly]=polar(c,208);
-    s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="${color(q)}" font-family="Marcellus, serif" font-size="14" letter-spacing="2" transform="rotate(${c+180} ${lx} ${ly})">${g.name.toUpperCase()}</text>`;
-    shelf[q].forEach((it,k)=>{ // the shelf: two item tiles just outside the rim
-      const ang=c+(k?-17:17),[x,y]=polar(ang,236),can=q===visited&&afford(players[0],it.cost)&&!busy;
-      s+=`<g class="tile" data-q="${q}" data-k="${k}" transform="rotate(${ang+180} ${x} ${y})" style="cursor:${can?'pointer':'default'}">
-        <rect x="${x-30}" y="${y-15}" width="60" height="30" rx="5" fill="var(--table)" stroke="${color(q)}" stroke-width="${can?2.5:1.2}" stroke-opacity="${can?1:.7}"/>
-        <text x="${x}" y="${y-3}" text-anchor="middle" fill="var(--ink)" font-size="9" font-weight="700">${it.name}</text>
-        <text x="${x}" y="${y+9}" text-anchor="middle" fill="${color(q)}" font-size="8.5">${Object.values(it.cost)[0]} ${GODS[q].id}${it.fav?' · +'+it.fav+'★':''}</text></g>`;
+    const [lx,ly]=polar(c,224);
+    s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="${color(q)}" font-family="Marcellus, serif" font-size="11" letter-spacing="1" transform="rotate(${c+180} ${lx} ${ly}) rotate(90 ${lx} ${ly})">${g.name.toUpperCase()}</text>`;
+    // the shelf: an outer band of the wheel itself, two item cells per quadrant flanking its name
+    s+=`<path d="${arc(a0+.8,a1-.8,201,247)}" fill="${color(q)}" fill-opacity="${f?.14:.07}" stroke="${color(q)}" stroke-opacity=".35"/>`;
+    shelf[q].forEach((it,k)=>{
+      const b0=k?c-44:c+9,b1=k?c-9:c+44,mid=(b0+b1)/2,can=q===visited&&afford(players[0],it.cost)&&!busy;
+      const [x1,y1]=polar(mid,218),[x2,y2]=polar(mid,233);
+      s+=`<g class="tile" data-q="${q}" data-k="${k}" style="cursor:${can?'pointer':'default'}">
+        <path d="${arc(b0,b1,204,244)}" fill="${can?color(q):'var(--table)'}" fill-opacity="${can?.35:.85}" stroke="${color(q)}" stroke-width="${can?2:1}"/>
+        <text x="${x1}" y="${y1}" text-anchor="middle" dominant-baseline="central" fill="var(--ink)" font-size="10" font-weight="700" transform="rotate(${mid+180} ${x1} ${y1})">${it.name}</text>
+        <text x="${x2}" y="${y2}" text-anchor="middle" dominant-baseline="central" fill="${color(q)}" font-size="8.5" transform="rotate(${mid+180} ${x2} ${y2})">${Object.values(it.cost)[0]} ${GODS[q].id}${it.fav?' · +'+it.fav+'★':''}</text></g>`;
     });
     g.acts.forEach((a,i)=>{
       const t=a[0],R=RING[t],idx=g.acts.filter((x,j)=>x[0]===t&&j<i).length;
