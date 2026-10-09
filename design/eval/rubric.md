@@ -1,13 +1,15 @@
-# Quadrant Evaluator: Rubric v1
+# Quadrant Evaluator: Rubric v2
 
 Use this to score a quadrant, a set of quadrants, or a fragment (one action, item or scoring rule).
 It sits on top of `.claude/rules/design-principles.md`, which stays the source of truth for Cory's calls.
 The rubric is firm, not rigid. A judge may overrule a score with a written reason, and repeated overrules are a signal to change the rubric.
 
-The evaluation runs in three layers:
+The evaluation runs in five layers, each owned by a different agent on the team:
 1. **Lints.** Mechanical pass/fail checks. Anyone running them should get the same answer.
 2. **Value model.** Arithmetic on yields and prices (`value-model.md`).
-3. **Judgment scores.** 1–5 on anchored scales, given by 3 blind judges. We take the median and flag any spread of 2 or more.
+3. **Judgment scores.** 1–5 on anchored scales, given by blind judges. We take the median and flag any spread of 2 or more.
+4. **Mind-play.** Playtesters play real turns out move by move. They keep an explicit written ledger of the game state (resources, Favor, items, occupied spaces, turn order) and update it after every move, so knock-on effects are seen rather than guessed.
+5. **Red team.** An adversary tries to break the design: dominant lines, loops, kingmaking, feel-bad moments, dead stalls, analysis paralysis.
 
 ---
 
@@ -26,6 +28,7 @@ Apply these to every action, item and scoring rule.
 | L7 | Ring shape | A quadrant doesn't have exactly 3 / 2 / 1 spaces, or doesn't have 6 items |
 | L8 | No dead turns | A space can give nothing at all in some common state, with no fallback (warn only) |
 | L9 | Termination | A loop (echo of an echo, repeat chains) has no stated limit |
+| L10 | Round-end scoring | Favor changes anywhere but round end (warn if flagged as an experiment, otherwise fail). Item and fixture Favor is banked and counted at round end |
 
 A **Fail** blocks a design from the library until it's fixed. A **Warn** gets noted.
 
@@ -130,6 +133,33 @@ Score each quadrant on Q1–Q8. Then score the set on S1–S6.
 7. **Revise.** Fix lint failures first, then the lowest medians. Keep a changelog per quadrant.
 8. **Meta.** After each batch, ask where the rubric failed to discriminate, or produced disagreement for bad reasons, and revise the rubric (bump its version and log why).
 
+## Layer 4: Mind-play protocol
+- **Setup.** Write a concrete state. 4 players, with seats and Favor. Each player gets two of the starting resource picks, plus a few items appropriate to the round. Every quadrant on the wheel is drawn from the set under test.
+- **Personas, one per seat:**
+  - **Builder**, who goes for engine first.
+  - **Opportunist**, who reads the table and takes the best space now.
+  - **Spoiler**, who blocks and denies, and is fair but sharp.
+  - **Newcomer**, who takes whatever looks obvious.
+- **Play.** At minimum, play one full round II and the start of round III, following the snake order.
+  - After every move, update the ledger.
+  - After every move, write down the ripple: who gained, who lost an option, what changed for the next player.
+  - Resolve round-end scoring explicitly.
+- **Report:**
+  - final ledger;
+  - every moment where a space was obviously right (a non-decision) or useless (dead);
+  - every feel-bad moment, and who felt it;
+  - the best combo seen;
+  - whether the burst arrived in round III;
+  - rule ambiguities found while resolving moves. Treat these as bugs.
+
+## Layer 5: Red-team protocol
+- **Goal:** break the design. Find a strategy that wins against reasonable play, a loop, a free lunch, a kingmaker lever, a griefing line, or a turn that forces a long think.
+- **Each exploit comes with:**
+  - a concrete line of play;
+  - an estimated size in units or Favor;
+  - the smallest fix.
+- **Default to suspicion.** Anything that can't be ruled out goes in the report, marked as "plausible".
+
 ## Pass bar for the library
 - No lint fails.
 - Every Q median is 3 or above.
@@ -139,3 +169,4 @@ Score each quadrant on Q1–Q8. Then score the set on S1–S6.
 
 ## Changelog
 - v1: first version.
+- v2: added L10 (Favor only at round end, a Cory call). Added the mind-play and red-team layers (Cory wants evaluators that hold a game state and see knock-on effects). The evaluator is now a team of agents, run as a workflow.
