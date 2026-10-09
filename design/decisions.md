@@ -57,3 +57,5 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Each round's scoring is printed on the board, in that quadrant's ring, so it's clear. It should be visually distinct from the actions but sit neatly alongside them.
 - 💡 (Claude) New Gold R1 actions: Patronage (+1 gold, sponsor an empty space: whoever takes it, you both gain 1 gold; a lure, not a toll, since every round-1 space gets filled and a toll would only punish the last pick), Interest (+1 gold plus 1 per 3 held), Exchange (trade any 2 resources for 3 gold). Each scales with the game, so they stay live in later rounds.
 - ✅ Design check for every action: every space fills in round 1, so a penalty tied to a space only hits whoever is forced to pick last. Prefer lures over tolls.
+- ✅ Actions should be elemental: simple verbs that items and later spaces can hook into and amplify.
+- 💡 Gold verb candidates: Mint (+2), Sponsor (coin on a space, taker and you both +1), Interest (+1 per 3 held), Exchange (2 any → 3 gold), Wager (stake gold on winning the Crown, doubled or lost), Lend (give 2 gold now, repaid 3 at round end).
