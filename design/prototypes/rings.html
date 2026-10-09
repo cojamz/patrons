@@ -261,23 +261,23 @@ function drawMarket(){ // the market is its own small round board: colored stall
       const a0=k?c+1.5:c-42,a1=k?c+42:c-1.5,mid=(a0+a1)/2,[x,y]=pol(mid,117),can=lit&&afford(players[0],it.cost);
       s+=`<g class="mcell" data-q="${q}" data-k="${k}" style="cursor:${can?'pointer':'default'}"><title>${it.name}: ${it.eff}</title>
         <path d="${seg(a0,a1,94,140)}" fill="var(--table)" fill-opacity="${can?.4:.85}" stroke="${color(q)}" stroke-opacity="${can?1:.5}" stroke-width="${can?2:1}"/>
-        <text x="${x}" y="${y-5}" text-anchor="middle" fill="var(--ink)" font-size="9" font-weight="700">${it.name}</text>
-        <text x="${x}" y="${y+8}" text-anchor="middle" fill="${color(q)}" font-size="8">cost ${Object.values(it.cost)[0]}${it.fav?' · +'+it.fav+'★':''}</text></g>`;
+        <g transform="rotate(${mid+180} ${x} ${y})"><text x="${x}" y="${y-5}" text-anchor="middle" fill="var(--ink)" font-size="9" font-weight="700">${it.name}</text>
+        <text x="${x}" y="${y+8}" text-anchor="middle" fill="${color(q)}" font-size="8">cost ${Object.values(it.cost)[0]}${it.fav?' · +'+it.fav+'★':''}</text></g></g>`;
     });
   });
   fixtures.forEach((f,k)=>{
-    const [x,y]=pol(k*120,44),can=pending&&f.stock>0&&total(players[0])>=f.cost;
+    const [x,y]=pol(k*120+180,44),can=pending&&f.stock>0&&total(players[0])>=f.cost;
     s+=`<g class="mfix" data-f="${k}" style="cursor:${can?'pointer':'default'}"><title>${f.name}: ${f.cost} of anything for ${f.fav} Favor${f.stock<20?` (${f.stock} left)`:''}</title>
       <circle cx="${x}" cy="${y}" r="30" fill="var(--table-2)" stroke="var(--ink)" stroke-opacity="${can?1:.35}" stroke-width="${can?2:1}"/>
-      <text x="${x}" y="${y-8}" text-anchor="middle" fill="var(--ink)" font-family="Marcellus, serif" font-size="11">${f.name}</text>
+      <g transform="rotate(${k*120+360} ${x} ${y})"><text x="${x}" y="${y-8}" text-anchor="middle" fill="var(--ink)" font-family="Marcellus, serif" font-size="11">${f.name}</text>
       <text x="${x}" y="${y+5}" text-anchor="middle" fill="var(--ink)" font-size="10" font-weight="700">+${f.fav}★</text>
-      <text x="${x}" y="${y+17}" text-anchor="middle" fill="var(--muted)" font-size="8">${f.cost} any${f.stock<20?' · '+f.stock+' left':''}</text></g>`;
+      <text x="${x}" y="${y+17}" text-anchor="middle" fill="var(--muted)" font-size="8">${f.cost} any${f.stock<20?' · '+f.stock+' left':''}</text></g></g>`;
   });
   const lq=pending&&visited!==null?visited:null;
   const cap=lq!==null?shelf[lq].map(it=>`<b>${it.name}</b> ${it.eff}`).join(' · '):'Hover a ware to read it. Place a worker to open its stall.';
-  document.getElementById('mboard').innerHTML=`<svg viewBox="0 0 300 300" aria-label="Market">${s}</svg><p class="mcap">${cap}</p>${pending?'<button class="btn" data-pass style="align-self:center">Pass</button>':''}`;
-  document.querySelectorAll('.mcell').forEach(el=>el.addEventListener('click',()=>buy(+el.dataset.q,+el.dataset.k)));
-  document.querySelectorAll('.mfix').forEach(el=>el.addEventListener('click',()=>buyFixture(+el.dataset.f)));
+  document.getElementById('mboard').innerHTML=`<svg viewBox="0 0 300 300" aria-label="Market" id="msvg"><g id="mwheel" style="transform-origin:150px 150px;transform:rotate(${mrot}deg)">${s}</g></svg><div class="pointer">drag to spin</div><p class="mcap">${cap}</p>${pending?'<button class="btn" data-pass style="align-self:center">Pass</button>':''}`;
+  document.querySelectorAll('.mcell').forEach(el=>el.addEventListener('click',()=>{if(!mmoved)buy(+el.dataset.q,+el.dataset.k)}));
+  document.querySelectorAll('.mfix').forEach(el=>el.addEventListener('click',()=>{if(!mmoved)buyFixture(+el.dataset.f)}));
   const pb=document.querySelector('[data-pass]'); if(pb) pb.onclick=pass;
 }
 function afford(p,c){return Object.entries(c).every(([r,v])=>p.res[r]>=v)}
@@ -360,5 +360,18 @@ stage.addEventListener('pointermove',e=>{if(!drag)return;const a=angAt(e);let d=
 stage.addEventListener('pointerup',()=>{if(!drag)return;const v0=drag.v;drag=null;wheel.classList.remove('dragging');if(!moved)return;
   if(!matchMedia('(prefers-reduced-motion: reduce)').matches){let v=v0;const glide=()=>{v*=0.94;rot+=v;applyRot();if(Math.abs(v)>0.05)anim=requestAnimationFrame(glide);else anim=null};anim=requestAnimationFrame(glide)}
   setTimeout(()=>moved=false,0)});
+// the market spins too, on its own
+let mrot=0,mdrag=null,mmoved=false,manim=null;
+const mb=document.getElementById('mboard');
+function mApply(){const g=document.getElementById('mwheel');if(g)g.style.transform=`rotate(${mrot}deg)`}
+function mAng(e){const s=document.getElementById('msvg').getBoundingClientRect();return Math.atan2(e.clientY-(s.top+s.height/2),e.clientX-(s.left+s.width/2))*180/Math.PI}
+mb.addEventListener('pointerdown',e=>{if(!e.target.closest('#msvg'))return;if(manim)cancelAnimationFrame(manim);mdrag={a:mAng(e),t:performance.now(),v:0};mmoved=false});
+mb.addEventListener('pointermove',e=>{if(!mdrag)return;const a=mAng(e);let d=a-mdrag.a;if(d>180)d-=360;if(d<-180)d+=360;
+  if(!mmoved&&Math.abs(d)>3){mmoved=true;mb.setPointerCapture(e.pointerId)}
+  if(mmoved){const now=performance.now();mdrag.v=d/Math.max(1,now-mdrag.t)*16;mdrag.t=now;mdrag.a=a;mrot+=d;mApply()}});
+mb.addEventListener('pointerup',()=>{if(!mdrag)return;const v0=mdrag.v;mdrag=null;if(!mmoved)return;
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches){let v=v0;const glide=()=>{v*=0.94;mrot+=v;mApply();if(Math.abs(v)>0.05)manim=requestAnimationFrame(glide);else manim=null};manim=requestAnimationFrame(glide)}
+  setTimeout(()=>mmoved=false,0)});
+document.getElementById('mboard').style.touchAction='none';
 newGame();
 </script>
