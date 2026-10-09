@@ -43,5 +43,5 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ❓ One item shop per quadrant, or one combined shop? (Claude's lean: one combined market beside the wheel, with items color-tagged by quadrant.)
 
 ## 2026-10-09 — Starting resources
-- 💡 Players start by getting resources one at a time, in seat order from first to last, with everyone watching. Seeing what others take helps you read them. Going first is a slight disadvantage (you reveal first), which offsets first pick in round 1.
-- ❓ Does everyone get one of each resource, or does each player pick which ones they take?
+- ✅ At setup, each player picks their 2 starting resources in one go, in seat order from first to last, with everyone watching.
+- ✅ Seeing what others pick helps you read them. Going first is a slight disadvantage because you reveal your plan first, which offsets having first pick in round 1.
