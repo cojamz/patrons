@@ -160,6 +160,10 @@ Score each quadrant on Q1–Q8. Then score the set on S1–S6.
   - the smallest fix.
 - **Default to suspicion.** Anything that can't be ruled out goes in the report, marked as "plausible".
 
+## Kill rule
+- Don't get attached. If a quadrant fails the pass bar after 2 revision rounds, cut it from the pool and keep it only in the graveyard (`design/eval/graveyard.md`), with one line on why.
+- A fresh idea beats a third patch.
+
 ## Pass bar for the library
 - No lint fails.
 - Every Q median is 3 or above.
