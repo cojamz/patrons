@@ -47,3 +47,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Seeing what others pick helps you read them. Going first is a slight disadvantage because you reveal your plan first, which offsets having first pick in round 1.
 - ✅ Champions are cut. Picking 2 starting resources replaces them: it's personal, balanced by nature (everyone picks from the same pool), and gives round 1 some juice.
 - ✅ The four-quadrant draft in `design/quadrants.md` is liked as the working base.
+- ✅ No simulator yet. Rules will still shift, so wait until they settle.
