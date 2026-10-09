@@ -34,4 +34,4 @@ Notes:
 - **The tension.** Rounds I–II: vaulting delays buying, nothing is lost. Round III: the vault never comes back, so vaulting is a real spend. Bonanza lifts the cap so it can match a Diadem (9 vaulted → 18 → 6 followers), not beat it.
 - **Bonanza only doubles.** The b2 round-end fixture buy is gone.
 - **Interplay.** Accrue spills ingots to rivals' hands, never their vaults. Pawnbroker watches the fixture race. Vaulting competes with the Diadem clock for the same resources.
-- Changed from b2: thresholds 4/6/8 became per-3 (3/6/9 to max out), Bonanza's fixture buy cut, Pension and Broker replaced (Broker clashed), 8 members, coin renamed ingots (gold belongs to the Treasury).
+- Changed from b2: thresholds 4/6/8 became per-3 (3/6/9 to max out), Bonanza's fixture buy cut, Pension and Broker replaced; Strongbox/Moneylender names left to the Treasury, 8 members, coin renamed ingots (gold belongs to the Treasury).
