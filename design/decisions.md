@@ -93,3 +93,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ A quadrant's round-III action doesn't have to gain or convert followers. It just needs to be powerful in general.
 - ✅ Members, like the old items, cost a specific part (the sphere's own resource) plus a wild part (any resources). Some members cost only wild.
 - ❓ (Cory) Members feel less numerous and integral than they should be. Revisit how many get recruited, how cheap the common ones are, and how much they shape your actions.
+- ✅ Division of labor for spheres: Claude brings broad ideas (the core mechanic, how it scores, how it feels and how it touches other spheres). Cory does the granular design: actions, numbers and members.
