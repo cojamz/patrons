@@ -1,0 +1,255 @@
+<title>Patrons Rings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;600;700&display=swap">
+<style>
+/* Layout: the table. Concentric wheel (outer ring = round I, inner = II, center = III), quadrants run through all three rings.
+   On wide screens the item market sits beside the wheel; on phones it drops below. Single dark "table" look by choice. */
+:root{
+  --table:#141d1c; --table-2:#1d2928; --rim:#2d3b39; --ink:#ece6d6; --muted:#97a49f;
+  --gold:#e3b23c; --black:#9c86c9; --green:#5fb37c; --yellow:#6fb3d6;
+  --you:#f2efe6; --them:#e0745a;
+  --display:"Marcellus", Georgia, serif; --body:"Figtree", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+body{background:radial-gradient(120% 80% at 40% 30%, var(--table-2), var(--table) 70%);color:var(--ink);font-family:var(--body);font-size:15px;padding-inline:16px;padding-block:14px;box-sizing:border-box;margin:0}
+.app{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:400;font-size:28px;margin:0;letter-spacing:.04em}
+.status{font-size:14px;color:var(--muted)} .status b{color:var(--ink)}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pl{border:1px solid var(--rim);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.pl.active{box-shadow:0 0 0 1px currentColor inset;border-color:currentColor}
+.pl.you{color:var(--you)} .pl.them{color:var(--them)}
+.pl .name{font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;gap:8px}
+.pl .name span{font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted)}
+.res{display:flex;gap:10px;flex-wrap:wrap;font-variant-numeric:tabular-nums;color:var(--ink);font-size:14px}
+.res i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.res .fav{font-weight:700}
+.main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.main{grid-template-columns:1fr}}
+.stage{position:relative;width:100%;max-width:520px;aspect-ratio:1;margin:0 auto;touch-action:none;user-select:none}
+.stage svg{width:100%;height:100%;display:block;overflow:visible}
+#wheel{transition:transform .6s cubic-bezier(.2,.9,.25,1.12);transform-origin:200px 200px;cursor:grab}
+#wheel.dragging{transition:none;cursor:grabbing}
+.slot{cursor:pointer} .slot.locked{cursor:default}
+.spin{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:1px solid var(--rim);background:var(--table);color:var(--ink);font-size:20px;cursor:pointer}
+.spin.l{left:-8px}.spin.r{right:-8px}
+.pointer{text-align:center;font-size:11px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-top:2px}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel{display:flex;flex-direction:column;gap:8px}
+.panel h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.panel h2 small{font-family:var(--body);font-size:13px;color:var(--muted)}
+.score{font-size:13px;color:var(--ink);border-left:3px solid var(--c);padding:4px 10px;background:var(--table-2);border-radius:0 8px 8px 0}
+.tier{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.act{position:relative;text-align:left;border:1px solid var(--rim);background:var(--table-2);color:var(--ink);border-radius:10px;padding:9px 10px;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px;transition:transform .15s,border-color .15s}
+.act:hover:not(:disabled){transform:translateY(-2px);border-color:var(--c)}
+.act b{font-size:14px} .act span{font-size:12.5px;color:var(--muted)}
+.act:disabled{cursor:default;opacity:.5}
+.act .who{position:absolute;top:8px;right:8px;width:13px;height:13px;border-radius:50%}
+.market{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.item{position:relative;border:1px solid var(--rim);border-top:3px solid var(--c);background:var(--table-2);border-radius:8px;padding:9px 10px;display:flex;flex-direction:column;gap:4px;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.item:disabled{cursor:default;opacity:.5}
+.item b{font-size:14px} .item .eff{font-size:12.5px;color:var(--muted)}
+.item .row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-variant-numeric:tabular-nums}
+.item .fv{font-family:var(--display);font-size:16px}
+.hint{font-size:12.5px;color:var(--muted)}
+.log{font-size:13px;color:var(--muted);min-height:1.4em}
+.btn{align-self:flex-start;border:1px solid var(--ink);background:none;color:var(--ink);border-radius:999px;padding:7px 16px;font:inherit;cursor:pointer}
+@media (prefers-reduced-motion:reduce){#wheel,.act{transition:none}}
+</style>
+
+<div class="app">
+  <header>
+    <h1>Patrons</h1>
+    <div class="status" id="status"></div>
+  </header>
+  <div class="players" id="players"></div>
+
+  <div class="main">
+    <div>
+      <div class="stage" id="stage">
+        <svg viewBox="-12 -12 424 424" aria-label="Board"><g id="wheel"></g></svg>
+        <button class="spin l" id="left" aria-label="Spin left">‹</button>
+        <button class="spin r" id="right" aria-label="Spin right">›</button>
+      </div>
+      <div class="pointer">▲ your side · drag to spin</div>
+    </div>
+    <div class="side">
+      <section class="panel" id="tray"></section>
+      <section class="panel">
+        <h2>Item market <small>buy from a quadrant you visited this turn</small></h2>
+        <div class="market" id="market"></div>
+      </section>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const GODS=[
+ {id:'gold',name:'Aurum',score:'Crown — most gold at round end: +3 / +5 / +8 Favor',
+  acts:[[1,'Mint','+2 gold',{gold:2}],[1,'Patron','+1 gold, +1 more each time anyone visits Solara',{gold:1}],[1,'Levy','Take 1 gold from the richest player',{gold:1}],
+        [2,'Vault','+4 gold',{gold:4}],[2,'Tithe','Every rival gives you 1 gold',{gold:1}],
+        [3,'Coronation','Double your gold',{gold:'x2'}]]},
+ {id:'black',name:'Noctis',score:'Spoils — +1 Favor each time you take from a rival',
+  acts:[[1,'Skulk','+3 black',{black:3}],[1,'Pickpocket','Take 2 of anything from a rival',{black:1}],[1,'Threaten','A rival loses 1 Favor',{black:1}],
+        [2,'Raid','Take 3 of anything from a rival',{black:2}],[2,'Dread','All rivals lose 2 Favor',{black:1}],
+        [3,'Annihilate','Spend all black: rivals lose that much Favor',{black:0}]]},
+ {id:'green',name:'Chronis',score:'Echoes — +1 Favor each time you repeat an action',
+  acts:[[1,'Gather','+3 green',{green:3}],[1,'Relive','Repeat one of your actions',{green:1}],[1,'Echo','Copy a rival’s last action',{green:1}],
+        [2,'Rewind','Repeat two of your actions',{green:2}],[2,'Foresight','+2 green, pick first next round',{green:2}],
+        [3,'Eternity','Repeat every action you’ve taken',{green:3}]]},
+ {id:'yellow',name:'Solara',score:'Spectrum — round end: +1 Favor per color you hold',
+  acts:[[1,'Harvest','+2 yellow',{yellow:2}],[1,'Forage','+2 of any color',{yellow:1,green:1}],[1,'Transmute','Swap 2 resources for 2 others',{yellow:1}],
+        [2,'Distill','Turn one color into another, +2',{yellow:3}],[2,'Attune','+1 of each color you lack',{gold:1,black:1,green:1}],
+        [3,'Flourish','+2 of every color',{gold:2,black:2,green:2,yellow:2}]]}
+];
+const ITEMS=[
+ {g:0,name:'Signet Ring',eff:'Mint gives +1 more gold',cost:{gold:3},fav:1},
+ {g:0,name:'Golden Scale',eff:'Levy takes 2 instead of 1',cost:{gold:2,black:1},fav:0},
+ {g:1,name:'Shadow Cloak',eff:'Rivals can’t take from you',cost:{black:3},fav:1},
+ {g:2,name:'Hourglass',eff:'Your first repeat each round is free',cost:{green:3},fav:1},
+ {g:3,name:'Prism',eff:'Spectrum counts gold twice',cost:{yellow:2,gold:1},fav:2},
+ {g:3,name:'Seed Pouch',eff:'+1 of any color each round',cost:{yellow:3},fav:0}
+];
+const RES=['gold','black','green','yellow'];
+const RING={1:{r0:142,r1:198,r:170,n:3},2:{r0:90,r1:142,r:116,n:2},3:{r0:34,r1:90,r:62,n:1}};
+const WORKERS={1:3,2:4,3:5};
+const CX=200,CY=200;
+let rot=0,facing=0,round,slots,players,order,turnIdx,visited,market,busy;
+
+function newGame(){
+  round=1; slots=GODS.map(g=>g.acts.map(()=>null)); market=ITEMS.map(x=>({...x,sold:false}));
+  players=[{name:'You',cls:'you',res:{},fav:0,left:3,items:[]},{name:'Rival',cls:'them',res:{},fav:0,left:3,items:[]}];
+  players.forEach(p=>RES.forEach(r=>p.res[r]=0));
+  startRound(); say('Round I: only the outer ring is open. Spin the wheel and tap a space.');
+}
+function startRound(){
+  const n=WORKERS[round]; players.forEach(p=>p.left=n);
+  // clear workers each round so every ring re-opens
+  slots=GODS.map(g=>g.acts.map(()=>null));
+  order=[]; const lead=players[0].fav<=players[1].fav?0:1; // last place picks first
+  for(let k=0;k<n;k++){ if(k%2===0) order.push(lead,1-lead); else order.push(1-lead,lead); }
+  turnIdx=0; visited=null; busy=false; draw(); render(); maybeRival();
+}
+function polar(a,r){const t=(a-90)*Math.PI/180;return [CX+r*Math.cos(t),CY+r*Math.sin(t)]}
+function arc(a0,a1,r0,r1){
+  const [x0,y0]=polar(a0,r1),[x1,y1]=polar(a1,r1),[x2,y2]=polar(a1,r0),[x3,y3]=polar(a0,r0);
+  return `M${x0},${y0} A${r1},${r1} 0 0 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 0 0 ${x3},${y3}Z`;
+}
+function qC(q){return 180+q*90}
+function color(q){return `var(--${GODS[q].id})`}
+
+function draw(){
+  let s=`<circle cx="${CX}" cy="${CY}" r="200" fill="var(--table-2)" stroke="var(--rim)" stroke-width="2"/>`;
+  GODS.forEach((g,q)=>{
+    const c=qC(q),a0=c-45,a1=c+45,f=q===facing;
+    [1,2,3].forEach(t=>{
+      const R=RING[t],open=t<=round;
+      s+=`<path d="${arc(a0+.8,a1-.8,R.r0+1,R.r1-1)}" fill="${color(q)}" fill-opacity="${open?(f?.26:.12):.04}" stroke="${color(q)}" stroke-opacity="${open?.55:.18}"/>`;
+    });
+    // quadrant name along outer rim
+    const [lx,ly]=polar(c,206);
+    s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="${color(q)}" font-family="Marcellus, serif" font-size="14" letter-spacing="2" transform="rotate(${c+180} ${lx} ${ly})">${g.name.toUpperCase()}</text>`;
+    g.acts.forEach((a,i)=>{
+      const t=a[0],R=RING[t],idx=g.acts.filter((x,j)=>x[0]===t&&j<i).length;
+      const span=t===1?66:t===2?44:0, ang=R.n===1?c:(c+span/2)-idx*(span/(R.n-1));
+      const [x,y]=polar(ang,R.r),o=slots[q][i],open=t<=round,rad=t===3?15:16;
+      s+=`<g class="slot ${open?'':'locked'}" data-q="${q}" data-i="${i}">`;
+      s+=`<circle cx="${x}" cy="${y}" r="${rad}" fill="var(--table)" stroke="${color(q)}" stroke-opacity="${open?1:.3}" stroke-width="1.5"/>`;
+      if(o!==null) s+=`<circle cx="${x}" cy="${y}" r="${rad-5}" fill="var(--${players[o].cls})"/>`;
+      else if(open) s+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="${color(q)}" font-size="9" font-weight="700" transform="rotate(${-rot} ${x} ${y})">${a[1].slice(0,4).toUpperCase()}</text>`;
+      else s+=`<circle cx="${x}" cy="${y}" r="2.5" fill="${color(q)}" fill-opacity=".4"/>`;
+      s+=`</g>`;
+    });
+  });
+  const w=document.getElementById('wheel'); w.innerHTML=s; w.style.transform=`rotate(${rot}deg)`;
+  w.querySelectorAll('.slot').forEach(el=>el.addEventListener('click',e=>{if(moved)return;const q=+el.dataset.q,i=+el.dataset.i;if(q!==facing){spinTo(q);return}tryPlace(q,i)}));
+}
+
+function render(){
+  const done=turnIdx>=order.length, cur=done?null:players[order[turnIdx]];
+  document.getElementById('status').innerHTML=`Round <b>${['I','II','III'][round-1]}</b> · `+(done?'<b>round over</b>':`<b>${cur.name==='You'?'your':'rival’s'} pick</b>`);
+  document.getElementById('players').innerHTML=players.map((p,k)=>`
+    <div class="pl ${p.cls} ${!done&&order[turnIdx]===k?'active':''}">
+      <div class="name">${p.name}<span>${'●'.repeat(p.left)} workers · ${p.items.length} items</span></div>
+      <div class="res"><span class="fav">${p.fav} Favor</span>${RES.map(r=>`<span><i style="background:var(--${r})"></i>${p.res[r]}</span>`).join('')}</div>
+    </div>`).join('');
+  const g=GODS[facing],myTurn=!done&&order[turnIdx]===0&&!busy;
+  let h=`<h2 style="color:${color(facing)}">${g.name}<small>facing you</small></h2><div class="score" style="--c:${color(facing)}">${g.score}</div>`;
+  [1,2,3].forEach(t=>{
+    h+=`<div class="tier">Round ${['I','II','III'][t-1]}${t>round?' · locked':''}</div><div class="acts">`;
+    g.acts.forEach((a,i)=>{ if(a[0]!==t)return; const o=slots[facing][i];
+      h+=`<button class="act" style="--c:${color(facing)}" data-i="${i}" ${(o!==null||!myTurn||t>round)?'disabled':''}>${o!==null?`<i class="who" style="background:var(--${players[o].cls})"></i>`:''}<b>${a[1]}</b><span>${a[2]}</span></button>`;});
+    h+=`</div>`;
+  });
+  if(done) h+= round<3?`<button class="btn" id="next">Score round, open ring ${['II','III'][round-1]}</button>`:`<button class="btn" id="next">Final scoring</button>`;
+  document.getElementById('tray').innerHTML=h;
+  document.querySelectorAll('.act').forEach(b=>b.onclick=()=>tryPlace(facing,+b.dataset.i));
+  const nx=document.getElementById('next'); if(nx) nx.onclick=endRound;
+  document.getElementById('market').innerHTML=market.map((it,k)=>{
+    const can=!it.sold&&visited===it.g&&afford(players[0],it.cost);
+    return `<button class="item" style="--c:${color(it.g)}" data-k="${k}" ${can?'':'disabled'}>
+      <b>${it.sold?'Sold':it.name}</b><span class="eff">${it.eff}</span>
+      <span class="row"><span>${Object.entries(it.cost).map(([r,v])=>`<i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--${r});margin-right:3px"></i>${v}`).join(' ')}</span><span class="fv">${it.fav?'+'+it.fav+' ★':''}</span></span></button>`}).join('');
+  document.querySelectorAll('.item').forEach(b=>b.onclick=()=>buy(+b.dataset.k));
+}
+function afford(p,c){return Object.entries(c).every(([r,v])=>p.res[r]>=v)}
+function say(t){document.getElementById('log').textContent=t}
+
+function tryPlace(q,i){
+  if(busy||turnIdx>=order.length||order[turnIdx]!==0)return;
+  if(GODS[q].acts[i][0]>round||slots[q][i]!==null)return;
+  place(0,q,i);
+}
+function place(pid,q,i){
+  const p=players[pid],a=GODS[q].acts[i];
+  slots[q][i]=pid; p.left--;
+  Object.entries(a[3]).forEach(([k,v])=>{ if(v==='x2')p.res[k]*=2; else p.res[k]+=v; });
+  if(pid===0) visited=q;
+  say(`${pid?'Rival':'You'} took ${a[1]} at ${GODS[q].name}. ${a[2]}.`);
+  turnIdx++; draw(); render();
+  if(pid===0&&market.some(it=>!it.sold&&it.g===q&&afford(p,it.cost))) say(`You took ${a[1]}. You can buy a ${GODS[q].name} item now.`);
+  maybeRival();
+}
+function maybeRival(){
+  if(turnIdx<order.length&&order[turnIdx]===1){busy=true;render();setTimeout(()=>{
+    const open=[];slots.forEach((row,q)=>row.forEach((o,i)=>{if(o===null&&GODS[q].acts[i][0]<=round)open.push([q,i])}));
+    busy=false; visited=null; const [q,i]=open[Math.floor(Math.random()*open.length)]; place(1,q,i);
+  },800)}
+}
+function buy(k){
+  const it=market[k],p=players[0]; if(it.sold||visited!==it.g||!afford(p,it.cost))return;
+  Object.entries(it.cost).forEach(([r,v])=>p.res[r]-=v); p.fav+=it.fav; p.items.push(it.name); it.sold=true; visited=null;
+  say(`You bought ${it.name}${it.fav?` (+${it.fav} Favor)`:''}.`); render();
+}
+function endRound(){
+  const crown=[3,5,8][round-1]; const g0=players[0].res.gold,g1=players[1].res.gold; let msg=[];
+  if(g0!==g1){const w=g0>g1?0:1;players[w].fav+=crown;msg.push(`${w?'Rival':'You'} took the Crown (+${crown})`)}
+  players.forEach(p=>{const n=RES.filter(r=>p.res[r]>0).length;p.fav+=n});
+  msg.push('Spectrum paid out');
+  if(round<3){round++;say(msg.join(' · ')+'. A new ring is open.');startRound();}
+  else{const w=players[0].fav>=players[1].fav?'You win':'Rival wins';say(msg.join(' · ')+`. ${w}.`);render();
+    document.getElementById('tray').insertAdjacentHTML('beforeend','<button class="btn" id="again">Play again</button>');document.getElementById('again').onclick=newGame;}
+}
+function spinTo(q){
+  const t=((q%4)+4)%4; let want=180-qC(t);
+  while(want-rot>180)want-=360; while(want-rot<-180)want+=360;
+  rot=want; facing=t; draw(); render();
+}
+document.getElementById('left').onclick=()=>spinTo(facing+1);
+document.getElementById('right').onclick=()=>spinTo(facing-1);
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft')spinTo(facing+1);if(e.key==='ArrowRight')spinTo(facing-1)});
+const stage=document.getElementById('stage'),wheel=document.getElementById('wheel');
+let drag=null,moved=false;
+function angAt(e){const b=stage.getBoundingClientRect();return Math.atan2(e.clientY-(b.top+b.height/2),e.clientX-(b.left+b.width/2))*180/Math.PI}
+stage.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;drag={a:angAt(e),r:rot};moved=false});
+stage.addEventListener('pointermove',e=>{if(!drag)return;const d=angAt(e)-drag.a;if(Math.abs(d)>4&&!moved){moved=true;wheel.classList.add('dragging');stage.setPointerCapture(e.pointerId)}if(moved){rot=drag.r+d;wheel.style.transform=`rotate(${rot}deg)`}});
+stage.addEventListener('pointerup',()=>{if(!drag)return;drag=null;if(!moved)return;wheel.classList.remove('dragging');
+  let best=0,bd=1e9;GODS.forEach((g,q)=>{const a=((qC(q)+rot-180)%360+540)%360-180;if(Math.abs(a)<bd){bd=Math.abs(a);best=q}});
+  spinTo(best);setTimeout(()=>moved=false,0)});
+newGame();
+</script>
