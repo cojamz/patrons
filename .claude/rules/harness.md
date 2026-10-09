@@ -17,7 +17,8 @@ How Claude works on Patrons. Claude owns this file and updates it when something
 | How Claude replies | `.claude/output-styles/foreman.md` (project default output style) |
 | Roles + autonomy | `.claude/rules/working-with-cory.md` |
 | This process | `.claude/rules/harness.md` |
-| Design decisions + ideas | `design/decisions.md` |
+| Design principles (distilled, auto-loaded) | `.claude/rules/design-principles.md` |
+| Design decisions + ideas (full log) | `design/decisions.md` |
 | Longer write-ups (plans, options) | `design/*.md`, linked from chat, never pasted |
 | Lessons learned about working together | bottom of `working-with-cory.md` (changelog) |
 

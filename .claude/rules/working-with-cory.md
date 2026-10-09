@@ -35,3 +35,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-09 — Don't "fix" design intent read off sim data (e.g. the round-3 burst is on purpose). Check intent against decisions.md before calling something a problem.
 - 2026-10-09 — Screenshot prototypes at a short laptop viewport (~1270×700) before sending. Cory saw only half the wheel and we went round in circles over label orientation.
 - 2026-10-09 — Still too formal. Voice: terse, articulate, a hint of poetry; sharp, fun creative, restrained. Also: hold off on simulators until the rules settle.
+- 2026-10-09 — Design principles now live in .claude/rules/design-principles.md (auto-loaded). Check every suggestion against it.

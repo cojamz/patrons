@@ -71,3 +71,8 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Reframe: the game is mostly about buying lots of items and escalating your resources to buy the communal Favor fixtures, Dominion-style (may change later). The ring contests are supporting tension.
 - ✅ Guard rail: no exponential races in silos. The game must feel very interactive, but never feel BAD.
 - 💡 (Claude) How: interact through the board, not at people. Compete for shared spaces, items, contests and the Diadem clock. Many actions spill a little gain onto others (Patronage-style). Items trigger off rivals' plays, so you watch them. Direct harm is rare, small, and only aimed at the leader.
+
+## 2026-10-09 — Quadrant set v2
+- ✅ Old items are thrown out (kept only as a cross-reference in git history).
+- ✅ Design principles are now distilled into `.claude/rules/design-principles.md`, which auto-loads every session.
+- 💡 (Claude) Quadrants v2 drafted in `design/quadrants.md` (viewable in `design/quadrants.html`): Gold the merchant, Shadow the thief, Verdant the gardener, Sunlight the giver. All interplay is generic.
