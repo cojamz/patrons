@@ -76,3 +76,5 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Old items are thrown out (kept only as a cross-reference in git history).
 - ✅ Design principles are now distilled into `.claude/rules/design-principles.md`, which auto-loads every session.
 - 💡 (Claude) Quadrants v2 drafted in `design/quadrants.md` (viewable in `design/quadrants.html`): Gold the merchant, Shadow the thief, Verdant the gardener, Sunlight the giver. All interplay is generic.
+- ✅ Scoring happens at round end. Nothing changes Favor in real time during a round (for now), because it confuses players. Claude may bend this as an experiment and report back.
+- ✅ The evaluator is a team of agents: blind judges, mind-playtesters who hold a written game state and play moves out, a red team, and a synthesizer. Use cutting-edge harness patterns.
