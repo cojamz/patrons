@@ -52,3 +52,27 @@ Members:
 8. Benefactor: when you buy a member, get half its gold cost back.
 9. Tycoon: at game end, +1 follower per 3 gold you hold.
 10. Doppelganger (any sphere): becomes a copy of any member in play.
+
+## Cory's verdicts on the brainstorm
+- **Keep:**
+  - Windfall (gold per member).
+  - Strike (double your gold).
+  - Joint Venture, now +3 for you and +1 for a player you choose.
+  - Tribute.
+  - Cash Out.
+  - Invest.
+  - Buying off a rival's member: keep, but make it expensive.
+  - Liquidate: release a member for its cost (maybe +2).
+- **Cut:** Appraise (lukewarm), Catch Up.
+- **Names:** he doesn't like them. A naming pass comes later.
+- **Members to keep:**
+  - Banker.
+  - Middleman, triggering only on 6-follower fixture buys.
+  - Speculator.
+  - Treasurer.
+  - Tycoon.
+  - Alchemist (no strong verdict).
+- **Members cut:**
+  - Moneylender: you can't be short for a buy, so it would never trigger.
+  - Doppelganger: doesn't belong in Gold.
+- **Open:** buying off a rival's member has to follow "harm points up". The rival should probably get paid, and it should only reach players ahead of you.
