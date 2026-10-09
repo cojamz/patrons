@@ -33,7 +33,7 @@ h1{font-family:var(--display);font-weight:400;font-size:28px;margin:0;letter-spa
 #wheel{transform-origin:200px 200px;cursor:grab}
 #wheel.dragging{cursor:grabbing}
 .slot{cursor:pointer} .slot.locked{cursor:default}
-.spin{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:1px solid var(--rim);background:var(--table);color:var(--ink);font-size:20px;cursor:pointer}
+.spin{position:absolute;top:6%;width:40px;height:40px;border-radius:50%;border:1px solid var(--rim);background:var(--table);color:var(--ink);font-size:20px;cursor:pointer}
 .spin.l{left:-8px}.spin.r{right:-8px}
 .pointer{text-align:center;font-size:11px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-top:2px}
 button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -70,12 +70,12 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
   <div class="main">
     <div>
+      <div class="pointer">your side · drag to spin ▼</div>
       <div class="stage" id="stage">
         <svg viewBox="-26 -26 452 452" aria-label="Board"><g id="wheel"></g></svg>
         <button class="spin l" id="left" aria-label="Spin left">‹</button>
         <button class="spin r" id="right" aria-label="Spin right">›</button>
       </div>
-      <div class="pointer">▲ your side · drag to spin</div>
     </div>
     <div class="side">
       <section class="panel" id="tray"></section>
@@ -140,7 +140,7 @@ function arc(a0,a1,r0,r1){
   const [x0,y0]=polar(a0,r1),[x1,y1]=polar(a1,r1),[x2,y2]=polar(a1,r0),[x3,y3]=polar(a0,r0);
   return `M${x0},${y0} A${r1},${r1} 0 0 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 0 0 ${x3},${y3}Z`;
 }
-function qC(q){return 180+q*90}
+function qC(q){return q*90} // q=0 starts at the top, your side
 function color(q){return `var(--${GODS[q].id})`}
 
 function draw(){
@@ -153,15 +153,15 @@ function draw(){
     });
     // quadrant name along outer rim
     const [lx,ly]=polar(c,208);
-    s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="${color(q)}" font-family="Marcellus, serif" font-size="14" letter-spacing="2" transform="rotate(${c+180} ${lx} ${ly})">${g.name.toUpperCase()}</text>`;
+    s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="${color(q)}" font-family="Marcellus, serif" font-size="14" letter-spacing="2" transform="rotate(${c} ${lx} ${ly})">${g.name.toUpperCase()}</text>`;
     g.acts.forEach((a,i)=>{
       const t=a[0],R=RING[t],idx=g.acts.filter((x,j)=>x[0]===t&&j<i).length;
-      const span=t===1?66:t===2?44:0, ang=R.n===1?c:(c+span/2)-idx*(span/(R.n-1));
+      const span=t===1?66:t===2?44:0, ang=R.n===1?c:(c-span/2)+idx*(span/(R.n-1));
       const [x,y]=polar(ang,R.r),o=slots[q][i],open=t<=round,rad=t===3?15:16;
       s+=`<g class="slot ${open?'':'locked'}" data-q="${q}" data-i="${i}">`;
       s+=`<circle cx="${x}" cy="${y}" r="${rad}" fill="var(--table)" stroke="${color(q)}" stroke-opacity="${open?1:.3}" stroke-width="1.5"/>`;
       if(o!==null) s+=`<circle cx="${x}" cy="${y}" r="${rad-5}" fill="var(--${players[o].cls})"/>`;
-      else if(open) s+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="${color(q)}" font-size="9" font-weight="700" transform="rotate(${ang+180} ${x} ${y})">${a[1].slice(0,4).toUpperCase()}</text>`;
+      else if(open) s+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="${color(q)}" font-size="9" font-weight="700" transform="rotate(${ang} ${x} ${y})">${a[1].slice(0,4).toUpperCase()}</text>`;
       else s+=`<circle cx="${x}" cy="${y}" r="2.5" fill="${color(q)}" fill-opacity=".4"/>`;
       s+=`</g>`;
     });
@@ -235,10 +235,10 @@ function endRound(){
   else{const w=players[0].fav>=players[1].fav?'You win':'Rival wins';say(msg.join(' · ')+`. ${w}.`);render();
     document.getElementById('tray').insertAdjacentHTML('beforeend','<button class="btn" id="again">Play again</button>');document.getElementById('again').onclick=newGame;}
 }
-// Free spin: no snapping. The quadrant nearest the bottom is "facing you" and updates as it passes.
+// Free spin: no snapping. The quadrant nearest the top is "facing you" and updates as it passes.
 function applyRot(){
   wheel.style.transform=`rotate(${rot}deg)`;
-  let best=0,bd=1e9;GODS.forEach((g,q)=>{const a=((qC(q)+rot-180)%360+540)%360-180;if(Math.abs(a)<bd){bd=Math.abs(a);best=q}});
+  let best=0,bd=1e9;GODS.forEach((g,q)=>{const a=((qC(q)+rot)%360+540)%360-180;if(Math.abs(a)<bd){bd=Math.abs(a);best=q}});
   if(best!==facing){facing=best;draw();render()}
 }
 let anim=null;
