@@ -26,7 +26,7 @@ Every sphere spec assumes these. Anything a sphere changes, it states explicitly
 ## Members (items)
 - Each sphere has a deck of 8 members, shuffled. Its stall shows 2.
 - A sold member is replaced from the deck. When the deck runs out, the stall stays empty.
-- A member costs its printed cost in its own sphere's resource, unless it prints "any".
+- A member's cost has two parts: a **specific** part, paid in its sphere's own resource, and a **wild** part, payable with any resources. Printed like "2 gold + 1 wild". Some members cost only wild. (A Cory call.)
 - After each placement, you may make one buy: a member from the stall of the sphere you just placed in, or a fixture.
 - Members burned or released go to the bottom of their deck.
 
@@ -51,4 +51,3 @@ Every sphere spec assumes these. Anything a sphere changes, it states explicitly
 
 ## Open questions for Cory
 - Should fixtures be flatter, so members stay worth buying in round III? Tables 5 and 7 saw fixtures crowd out members.
-- Should a member cost its own color, or anything?

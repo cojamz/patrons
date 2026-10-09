@@ -91,3 +91,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - 💡 Maybe: a neutral pile of basic members always available for each sphere (like Dominion's base cards), to grease the wheels. To consider, not decided.
 - ✅ Don't over-index on "cult" (religious, sacrificial and so on). The frame is light: members and followers. Quadrants should stay unique and varied, defined by their mechanics, not bound to an arbitrary theme.
 - ✅ A quadrant's round-III action doesn't have to gain or convert followers. It just needs to be powerful in general.
+- ✅ Members, like the old items, cost a specific part (the sphere's own resource) plus a wild part (any resources). Some members cost only wild.
