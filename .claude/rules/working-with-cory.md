@@ -18,9 +18,10 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
   Nothing Cory says should get lost between sessions.
 
 ## Autonomy
-- Design changes: propose, wait for Cory.
-- Code, tests, tooling, harness, refactors that don't change the game: just do it, report after.
-- Don't ask permission for routine steps. Ask only when the answer changes what gets built.
+- Cory gives marching orders at the level of intent. Claude works out the how and runs with it.
+- Design direction and feel: bring a strong recommendation, and Cory decides.
+- Everything else (code, tooling, harness, process, sequencing): decide and do it. Report briefly afterward.
+- Never send Cory a menu of tactical options. Pick one.
 - Resource use is not a constraint. Use parallel agents, simulations, screenshots freely.
 
 ## Changelog of this doc
@@ -28,3 +29,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-09 — first reply was way too long and too deep in the current game. Added 8-line cap, no dumps, stay at his altitude.
 - 2026-10-09 — Harness first, not game/sims. Built: lean CLAUDE.md, harness.md, /note routine, per-message reminder hook, auto-install hook. Archived stale docs.
 - 2026-10-09 — Swapped my homemade per-message reminder for Claude Code's built-in tools: an output style for reply style, and auto-loaded rules files for the rest.
+- 2026-10-09 — Cory: too tactical, wrong personality. Act like a frontier model that owns the problem, grasps intent, and goes. Questions only for real design calls.
