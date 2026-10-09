@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;600;700&display=swap">
 <style>
 /* Layout: the table. Concentric wheel (outer ring = round I, inner = II, center = III), quadrants run through all three rings.
-   Each quadrant keeps two items on its shelf at the wheel's edge; buy one right after placing there. Single dark "table" look by choice. */
+   A separate market board holds one stall per quadrant, two items each; a stall lights after you place in its quadrant. Single dark "table" look by choice. */
 :root{
   --table:#141d1c; --table-2:#1d2928; --rim:#2d3b39; --ink:#ece6d6; --muted:#97a49f;
   --gold:#e3b23c; --black:#9c86c9; --green:#5fb37c; --yellow:#6fb3d6;
@@ -55,6 +55,16 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .item b{font-size:14px} .item .eff{font-size:12.5px;color:var(--muted)}
 .item .row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-variant-numeric:tabular-nums}
 .item .fv{font-family:var(--display);font-size:16px}
+.mboard{border:1px solid var(--rim);border-radius:14px;background:linear-gradient(180deg,var(--table-2),var(--table));padding:10px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04)}
+@media (max-width:560px){.mboard{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stall{display:flex;flex-direction:column;gap:6px;border-radius:9px;padding:6px;border:1px solid transparent;transition:border-color .2s,background .2s}
+.stall.lit{border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent)}
+.stall h3{margin:0;font-family:var(--display);font-weight:400;font-size:13px;letter-spacing:.12em;color:var(--c);text-align:center}
+.ware{border:1px solid var(--rim);border-left:3px solid var(--c);background:var(--table);border-radius:6px;padding:6px 7px;display:flex;flex-direction:column;gap:2px;font:inherit;color:var(--ink);text-align:left;cursor:pointer;min-height:58px}
+.ware:disabled{cursor:default}
+.stall:not(.lit) .ware{opacity:.75}
+.ware b{font-size:12.5px}.ware span{font-size:11px;color:var(--muted);line-height:1.25}
+.ware .row{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;color:var(--ink)}
 .hint{font-size:12.5px;color:var(--muted)}
 .log{font-size:13px;color:var(--muted);min-height:1.4em}
 .btn{align-self:flex-start;border:1px solid var(--ink);background:none;color:var(--ink);border-radius:999px;padding:7px 16px;font:inherit;cursor:pointer}
@@ -71,13 +81,14 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   <div class="main">
     <div>
       <div class="stage" id="stage">
-        <svg viewBox="-56 -56 512 512" aria-label="Board"><g id="wheel"></g></svg>
+        <svg viewBox="-26 -26 452 452" aria-label="Board"><g id="wheel"></g></svg>
         <button class="spin l" id="left" aria-label="Spin left">‹</button>
         <button class="spin r" id="right" aria-label="Spin right">›</button>
       </div>
       <div class="pointer">▲ your seat · drag to spin</div>
     </div>
     <div class="side">
+      <section class="mboard" id="mboard" aria-label="Market"></section>
       <section class="panel" id="tray"></section>
       <div class="log" id="log"></div>
     </div>
@@ -157,7 +168,7 @@ function qC(q){return 180+q*90} // q=0 starts at the bottom: your seat at the ta
 function color(q){return `var(--${GODS[q].id})`}
 
 function draw(){
-  let s=`<circle cx="${CX}" cy="${CY}" r="250" fill="var(--table-2)" stroke="var(--rim)" stroke-width="2"/><circle cx="${CX}" cy="${CY}" r="200" fill="none" stroke="var(--rim)" stroke-width="1.5"/>`;
+  let s=`<circle cx="${CX}" cy="${CY}" r="200" fill="var(--table-2)" stroke="var(--rim)" stroke-width="2"/>`;
   GODS.forEach((g,q)=>{
     const c=qC(q),a0=c-45,a1=c+45,f=q===facing;
     [1,2,3].forEach(t=>{
@@ -165,18 +176,8 @@ function draw(){
       s+=`<path d="${arc(a0+.8,a1-.8,R.r0+1,R.r1-1)}" fill="${color(q)}" fill-opacity="${open?(f?.26:.12):.04}" stroke="${color(q)}" stroke-opacity="${open?.55:.18}"/>`;
     });
     // quadrant name along outer rim
-    const [lx,ly]=polar(c,224);
-    s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="${color(q)}" font-family="Marcellus, serif" font-size="11" letter-spacing="1" transform="rotate(${c+180} ${lx} ${ly}) rotate(90 ${lx} ${ly})">${g.name.toUpperCase()}</text>`;
-    // the shelf: an outer band of the wheel itself, two item cells per quadrant flanking its name
-    s+=`<path d="${arc(a0+.8,a1-.8,201,247)}" fill="${color(q)}" fill-opacity="${f?.14:.07}" stroke="${color(q)}" stroke-opacity=".35"/>`;
-    shelf[q].forEach((it,k)=>{
-      const b0=k?c-44:c+9,b1=k?c-9:c+44,mid=(b0+b1)/2,can=q===visited&&afford(players[0],it.cost)&&!busy;
-      const [x1,y1]=polar(mid,218),[x2,y2]=polar(mid,233);
-      s+=`<g class="tile" data-q="${q}" data-k="${k}" style="cursor:${can?'pointer':'default'}">
-        <path d="${arc(b0,b1,204,244)}" fill="${can?color(q):'var(--table)'}" fill-opacity="${can?.35:.85}" stroke="${color(q)}" stroke-width="${can?2:1}"/>
-        <text x="${x1}" y="${y1}" text-anchor="middle" dominant-baseline="central" fill="var(--ink)" font-size="10" font-weight="700" transform="rotate(${mid+180} ${x1} ${y1})">${it.name}</text>
-        <text x="${x2}" y="${y2}" text-anchor="middle" dominant-baseline="central" fill="${color(q)}" font-size="8.5" transform="rotate(${mid+180} ${x2} ${y2})">${Object.values(it.cost)[0]} ${GODS[q].id}${it.fav?' · +'+it.fav+'★':''}</text></g>`;
-    });
+    const [lx,ly]=polar(c,208);
+    s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="${color(q)}" font-family="Marcellus, serif" font-size="14" letter-spacing="2" transform="rotate(${c+180} ${lx} ${ly})">${g.name.toUpperCase()}</text>`;
     g.acts.forEach((a,i)=>{
       const t=a[0],R=RING[t],idx=g.acts.filter((x,j)=>x[0]===t&&j<i).length;
       const span=t===1?66:t===2?44:0, ang=R.n===1?c:(c+span/2)-idx*(span/(R.n-1));
@@ -191,7 +192,6 @@ function draw(){
   });
   const w=document.getElementById('wheel'); w.innerHTML=s; applyRot();
   w.querySelectorAll('.slot').forEach(el=>el.addEventListener('click',e=>{if(moved)return;tryPlace(+el.dataset.q,+el.dataset.i)}));
-  w.querySelectorAll('.tile').forEach(el=>el.addEventListener('click',e=>{if(moved)return;buy(+el.dataset.q,+el.dataset.k)}));
 }
 
 function render(){
@@ -208,6 +208,7 @@ function render(){
       <div class="acts">${RES.map(r=>`<button class="act" style="--c:var(--${r})" data-r="${r}" ${busy||setup.picks.length>=2?'disabled':''}><b style="color:var(--${r})">${({gold:'Gold',black:'Shadow',green:'Verdant',yellow:'Sunlight'})[r]}</b><span>${GODS.find(g=>g.id===r).name}'s color</span></button>`).join('')}</div>
       <p class="hint">Going first means the others see your plan before they choose.</p>`;
     document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>setupPick(b.dataset.r));
+    drawMarket();
     return;
   }
   const g=GODS[facing],myTurn=!done&&order[turnIdx]===0&&!busy;
@@ -218,17 +219,23 @@ function render(){
       h+=`<button class="act" style="--c:${color(facing)}" data-i="${i}" ${(o!==null||!myTurn||t>round)?'disabled':''}>${o!==null?`<i class="who" style="background:var(--${players[o].cls})"></i>`:''}<b>${a[1]}</b><span>${a[2]}</span></button>`;});
     h+=`</div>`;
   });
-  h+=`<div class="tier">Shelf${visited===facing?' · buy one now':' · place here to buy'}</div><div class="market">${shelf[facing].map((it,k)=>{
-    const can=visited===facing&&afford(players[0],it.cost)&&!busy;
-    return `<button class="item" style="--c:${color(facing)}" data-k="${k}" ${can?'':'disabled'}><b>${it.name}</b><span class="eff">${it.eff}</span>
-      <span class="row"><span>${Object.entries(it.cost).map(([r,v])=>`<i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--${r});margin-right:3px"></i>${v}`).join(' ')}</span><span class="fv">${it.fav?'+'+it.fav+' ★':''}</span></span></button>`}).join('')}</div>`;
   if(pending) h+=`<button class="btn" id="pass">Pass</button>`;
   if(done) h+= round<3?`<button class="btn" id="next">Score round, open ring ${['II','III'][round-1]}</button>`:`<button class="btn" id="next">Final scoring</button>`;
   document.getElementById('tray').innerHTML=h;
   document.querySelectorAll('.act').forEach(b=>b.onclick=()=>tryPlace(facing,+b.dataset.i));
   const nx=document.getElementById('next'); if(nx) nx.onclick=endRound;
   const ps=document.getElementById('pass'); if(ps) ps.onclick=pass;
-  document.querySelectorAll('.item').forEach(b=>b.onclick=()=>buy(facing,+b.dataset.k));
+  drawMarket();
+}
+function drawMarket(){
+  document.getElementById('mboard').innerHTML=GODS.map((g,q)=>{
+    const lit=visited===q&&pending;
+    return `<div class="stall ${lit?'lit':''}" style="--c:${color(q)}"><h3>${g.name.toUpperCase()}</h3>${shelf[q].map((it,k)=>{
+      const can=lit&&afford(players[0],it.cost);
+      return `<button class="ware" data-q="${q}" data-k="${k}" ${can?'':'disabled'}><b>${it.name}</b><span>${it.eff}</span>
+        <span class="row"><span>${Object.values(it.cost)[0]} ${g.id}</span><span>${it.fav?'+'+it.fav+' ★':''}</span></span></button>`}).join('')}${lit?'<button class="btn" data-pass style="align-self:center;padding:4px 14px">Pass</button>':''}</div>`}).join('');
+  document.querySelectorAll('.ware').forEach(b=>b.onclick=()=>buy(+b.dataset.q,+b.dataset.k));
+  const pb=document.querySelector('[data-pass]'); if(pb) pb.onclick=pass;
 }
 function afford(p,c){return Object.entries(c).every(([r,v])=>p.res[r]>=v)}
 function say(t){document.getElementById('log').textContent=t}
