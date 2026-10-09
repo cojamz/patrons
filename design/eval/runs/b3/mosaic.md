@@ -1,4 +1,4 @@
-## Teal: Mosaic
+## Pearl: Mosaic
 *Was: Mosaic (b2, gold). Fix.*
 
 Pitch: Complete the spectrum. Hold one of every color, as many times over as you can.
