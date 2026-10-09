@@ -117,6 +117,10 @@ Score each quadrant on Q1–Q8. Then score the set on S1–S6.
 - 1 = solitaire or a slugfest.
 - 5 = warm, tense, social.
 
+**S7 Table character.** Does swapping spheres change the game's tempo and score scale (low-scoring versus explosive tables), while staying fair between players at any one table?
+- 1 = every table plays the same.
+- 5 = each table has its own economy.
+
 **S6 Economy fit.** Do the quadrants feed the main loop (buy items, escalate, buy fixtures), with ring contests staying seasoning?
 - 1 = contests dominate.
 - 5 = contests shape where you place but the market decides who wins.
@@ -173,4 +177,5 @@ Score each quadrant on Q1–Q8. Then score the set on S1–S6.
 
 ## Changelog
 - v1: first version.
+- v2.1: added S7 (score scale should vary by table, Dominion-style; a Cory call). The ring-contest budget is relative to the table, not an absolute cap.
 - v2: added L10 (Favor only at round end, a Cory call). Added the mind-play and red-team layers (Cory wants evaluators that hold a game state and see knock-on effects). The evaluator is now a team of agents, run as a workflow.

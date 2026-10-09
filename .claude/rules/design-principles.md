@@ -7,6 +7,8 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - Items are **members**: people you recruit. Each one leans toward a sphere, through its color and its ability.
 - Victory points are **followers**. Your followers include yourself (everyone starts with 1) and every member (each member is worth at least 1 follower). Favor fixtures become ways to win followers in bulk.
 - Generic cult verbs that any sphere may use: recruit (buy a member), release (discard a member for something), sway (draw a follower or member from a player ahead of you), and scaling by member count or follower count.
+- Fixtures are bulk followers: the 6-point fixture is literally 6 followers.
+- Score scale varies by table, as in Dominion. Some sphere combinations make low-scoring games and others very high-scoring ones. That's welcome, as long as it's fair between players.
 - It's a frame, not a cage. Let it guide names and verbs, and drop any part that hurts the play.
 
 ## Shape of the game

@@ -86,3 +86,6 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Members lean toward certain actions or spheres (wealth, subterfuge, charisma and "getting people to switch"…), so who you recruit shapes what you do.
 - 💡 Hooks this unlocks: things that scale with the size of your following or your member count; X resource per member; releasing a member for a resource.
 - ✅ Use it as the brainstorming frame. It gives the design a cohesive feel.
+- ✅ The communal fixtures are bulk followers (the 6-point fixture = 6 followers). They're the organic way to grow your following.
+- ✅ Scoring is Dominion-like in scale. A game can be low-scoring for everyone or extremely high-scoring, depending on which spheres are on the wheel and which members can be recruited. Different tables, different engines.
+- 💡 Maybe: a neutral pile of basic members always available for each sphere (like Dominion's base cards), to grease the wheels. To consider, not decided.
