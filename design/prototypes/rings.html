@@ -65,6 +65,11 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .stall:not(.lit) .ware{opacity:.75}
 .ware b{font-size:12.5px}.ware span{font-size:11px;color:var(--muted);line-height:1.25}
 .ware .row{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;color:var(--ink)}
+.fixtures{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;border-top:1px dashed var(--rim);padding-top:8px}
+.fix{border:1px solid var(--rim);background:var(--table);border-radius:10px;padding:6px 12px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;color:var(--ink);font:inherit;cursor:pointer;text-align:left}
+.fix:disabled{cursor:default;opacity:.6}
+.fix:not(:disabled){border-color:var(--ink)}
+.fix b{font-family:var(--display);font-weight:400;font-size:15px}.fix span{font-size:11.5px;color:var(--muted)}.fix .fv{color:var(--ink);font-size:13px}
 .hint{font-size:12.5px;color:var(--muted)}
 .log{font-size:13px;color:var(--muted);min-height:1.4em}
 .btn{align-self:flex-start;border:1px solid var(--ink);background:none;color:var(--ink);border-radius:999px;padding:7px 16px;font:inherit;cursor:pointer}
@@ -124,7 +129,11 @@ const ITEMS=[ // each quadrant's own deck; two sit face-up on its shelf
  [{name:'Alembic',eff:'Transmute swaps up to 5',cost:{yellow:2},fav:0},{name:'Cornucopia',eff:'+1 any each round start',cost:{yellow:3},fav:0},
   {name:'Prism Lens',eff:'Pay any item in yellow',cost:{yellow:2},fav:1},{name:'Sun Disc',eff:'A trophy',cost:{yellow:4},fav:2}]
 ];
-let decks,shelf;
+let decks,shelf,fixtures;
+const FIXTURES=[ // permanent piles, like Dominion's victory cards: any resources, always open
+ {name:'Laurel',cost:2,fav:1,stock:99},{name:'Garland',cost:5,fav:3,stock:99},{name:'Diadem',cost:8,fav:6,stock:4}];
+function total(p){return RES.reduce((s,r)=>s+p.res[r],0)}
+function payAny(p,n){while(n>0){const r=RES.reduce((a,b)=>p.res[b]>p.res[a]?b:a);p.res[r]--;n--}}
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function refill(q){while(shelf[q].length<2&&decks[q].length)shelf[q].push(decks[q].shift())}
 const RES=['gold','black','green','yellow'];
@@ -140,7 +149,7 @@ const CX=200,CY=200;
 let rot=0,facing=0,round,slots,players,order,turnIdx,visited,busy,pending=false;
 
 function newGame(){
-  round=1; slots=GODS.map(g=>g.acts.map(()=>null)); decks=ITEMS.map(d=>shuffle(d)); shelf=ITEMS.map(()=>[]); GODS.forEach((g,q)=>refill(q));
+  round=1; slots=GODS.map(g=>g.acts.map(()=>null)); decks=ITEMS.map(d=>shuffle(d)); shelf=ITEMS.map(()=>[]); GODS.forEach((g,q)=>refill(q)); fixtures=FIXTURES.map(f=>({...f}));
   players=[{name:'You',cls:'you',res:{},fav:0,left:3,items:[]},{name:'Rival',cls:'them',res:{},fav:0,left:3,items:[]}];
   players.forEach(p=>RES.forEach(r=>p.res[r]=0));
   setup={picks:[]}; order=[]; turnIdx=0; draw(); render();
@@ -245,7 +254,11 @@ function drawMarket(){
       const can=lit&&afford(players[0],it.cost);
       return `<button class="ware" data-q="${q}" data-k="${k}" ${can?'':'disabled'}><b>${it.name}</b><span>${it.eff}</span>
         <span class="row"><span>${Object.values(it.cost)[0]} ${g.id}</span><span>${it.fav?'+'+it.fav+' ★':''}</span></span></button>`}).join('')}${lit?'<button class="btn" data-pass style="align-self:center;padding:4px 14px">Pass</button>':''}</div>`}).join('');
+  document.getElementById('mboard').insertAdjacentHTML('beforeend',`<div class="fixtures">${fixtures.map((f,k)=>{
+    const can=pending&&f.stock>0&&total(players[0])>=f.cost;
+    return `<button class="fix" data-f="${k}" ${can?'':'disabled'}><b>${f.name}</b><span>${f.cost} of anything</span><span class="fv">+${f.fav} ★</span><span class="stock">${f.stock>20?'always':f.stock+' left'}</span></button>`}).join('')}</div>`);
   document.querySelectorAll('.ware').forEach(b=>b.onclick=()=>buy(+b.dataset.q,+b.dataset.k));
+  document.querySelectorAll('.fix').forEach(b=>b.onclick=()=>buyFixture(+b.dataset.f));
   const pb=document.querySelector('[data-pass]'); if(pb) pb.onclick=pass;
 }
 function afford(p,c){return Object.entries(c).every(([r,v])=>p.res[r]>=v)}
@@ -263,7 +276,7 @@ function place(pid,q,i){
   if(pid===0) visited=q;
   say(`${pid?'Rival':'You'} took ${a[1]} in ${qn(q)}. ${a[2]}.`);
   turnIdx++; draw(); render();
-  if(pid===0&&shelf[q].some(it=>afford(p,it.cost))){say(`You took ${a[1]}. The ${qn(q).toLowerCase()} stall is open: buy, or pass.`);pending=true;render();return}
+  if(pid===0&&(shelf[q].some(it=>afford(p,it.cost))||fixtures.some(f=>f.stock>0&&total(p)>=f.cost))){say(`You took ${a[1]}. Buy one thing: the ${qn(q).toLowerCase()} stall or a fixture. Or pass.`);pending=true;render();return}
   if(pid===1){const k=shelf[q].findIndex(it=>afford(p,it.cost));if(k>=0&&Math.random()<.6)buyFor(1,q,k)}
   maybeRival();
 }
@@ -282,6 +295,11 @@ function buyFor(pid,q,k){
 function buy(q,k){
   const it=shelf[q][k]; if(!it||busy||visited!==q||!afford(players[0],it.cost))return;
   visited=null; pending=false; buyFor(0,q,k); maybeRival();
+}
+function buyFixture(k){
+  const f=fixtures[k],p=players[0]; if(!pending||f.stock<=0||total(p)<f.cost)return;
+  payAny(p,f.cost); p.fav+=f.fav; f.stock--; pending=false; visited=null;
+  say(`You bought a ${f.name}: +${f.fav} Favor.`); draw(); render(); maybeRival();
 }
 function pass(){pending=false;visited=null;draw();render();maybeRival()}
 function endRound(){

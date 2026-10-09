@@ -63,5 +63,5 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 ## 2026-10-09 — Names dropped; where Favor comes from
 - ✅ Quadrant god names are dropped. Colors stay.
 - ❓ Favor sources: the per-round ring rules (with round 3 as the burst) plus some items? If items are rarer, should the currency shrink or move off-center? Or should items be more frequent and robust, with a wider spread of costs, so buying feels like collecting passives (and some activatables)?
-- ✅ The market has permanent fixtures alongside the rotating items, tied to Favor. ❓ Do they turn resources into Favor (always-open, fixed rates), or do you spend Favor to buy power?
+- ✅ The market has permanent fixtures, like Dominion's victory piles. Any resources buy Favor at fixed, always-open tiers that get more efficient as they get bigger (working: Laurel 2→1, Garland 5→3, Diadem 8→6, with limited Diadems). One purchase per turn: either an item from the stall you just visited, or a fixture.
 - ✅ (from discussion) Two Favor channels: ring contests (public, per round) and items (private; top-cost items carry Favor). Resources have two jobs, counting toward ring contests or being spent on items. Market should feel like a bazaar: frequent cheap items, rare grand ones, with a wide cost spread.
