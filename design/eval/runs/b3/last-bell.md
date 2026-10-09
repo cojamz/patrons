@@ -19,16 +19,16 @@ Scoring — **Night Watch**: at round end, whoever has the most workers in this 
 | II | Double Shift | +2 oil. Place your next worker now, in this sphere if a space is open. |
 | III | Midnight | +2 oil per worker you have yet to place. Place your next now. |
 
-| Member | Cost | Effect (≤14 words) | Extra followers |
+| Member | Cost (specific + wild) | Effect (≤14 words) | Extra followers |
 |---|---|---|---|
-| Night Porter | 1 | When a rival hastens or holds, gain 1 oil. | 0 |
-| Early Bird | 2 | Your first placement each round gains 1 more of its color. | 0 |
-| Night Owl | 3 | Your last placement each round gains 2 more of its color. | 0 |
-| Sleepwalker | 3 | When your held worker places, gain 1 any. | 0 |
-| Metronome | 4 | Hasten and Last Call each give you 2 more oil. | 0 |
-| Insomniac | 5 | Once per round, you may hold any one of your workers. | 0 |
-| Watchman | 6 | You count one extra worker here for Night Watch. | +1 |
-| Overtime | 7 | Each round, place one extra worker, held, outside this sphere, if a space is open. | +1 |
+| Night Porter | 1 wild | When a rival hastens or holds, gain 1 oil. | 0 |
+| Early Bird | 2 oil | Your first placement each round gains 1 more of its color. | 0 |
+| Night Owl | 2 oil + 1 wild | Your last placement each round gains 2 more of its color. | 0 |
+| Sleepwalker | 3 wild | When your held worker places, gain 1 any. | 0 |
+| Metronome | 3 oil + 1 wild | Hasten and Last Call each give you 2 more oil. | 0 |
+| Insomniac | 3 oil + 2 wild | Once per round, you may hold any one of your workers. | 0 |
+| Watchman | 4 oil + 2 wild | You count one extra worker here for Night Watch. | +1 |
+| Overtime | 4 oil + 3 wild | Each round, place one extra worker, held, outside this sphere, if a space is open. | +1 |
 
 Notes:
 - **Night Watch no longer feeds the leader.** b2's "last worker in Amber" went to whoever placed last in snake order, usually the leader. Now it's a majority over 6 spaces, and ties lean to whoever is behind.

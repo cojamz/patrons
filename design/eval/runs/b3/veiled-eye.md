@@ -20,16 +20,16 @@ Scoring — **Payout**: at round end, +1 follower per tip of yours that paid thi
 | II | Long Shot | Tip a space. If it pays, you gain 4 chips, not 1. |
 | III | Big Book | Tip three spaces. This round, each tip of yours that pays gives +1 any. |
 
-| Member | Cost | Effect (≤14 words) | Extra followers |
+| Member | Cost (specific + wild) | Effect (≤14 words) | Extra followers |
 |---|---|---|---|
-| Runner | 1 | Round start: gain 1 chip. | 0 |
-| Tout | 2 | When you tip, gain 1 chip. | 0 |
-| Bagman | 3 | When you take a space a rival tipped, gain 1 more chip. | 0 |
-| Fixer | 3 | Once per round, move one of your unpaid tips. | 0 |
-| Watcher | 4 | When any tip pays, gain 1 chip. Max 2 per round. | 0 |
-| Oddsmaker | 5 | Your Payout max is 1 higher. | +1 |
-| Tipster | 6 | When a tip of yours pays, also gain 1 any. | +1 |
-| Kingpin | 7 | Tip and Spread each place one more tip. | +2 |
+| Runner | 1 chip | Round start: gain 1 chip. | 0 |
+| Tout | 2 chips | When you tip, gain 1 chip. | 0 |
+| Bagman | 3 wild | When you take a space a rival tipped, gain 1 more chip. | 0 |
+| Fixer | 2 chips + 1 wild | Once per round, move one of your unpaid tips. | 0 |
+| Watcher | 2 chips + 2 wild | When any tip pays, gain 1 chip. Max 2 per round. | 0 |
+| Oddsmaker | 3 chips + 2 wild | Your Payout max is 1 higher. | +1 |
+| Tipster | 4 chips + 2 wild | When a tip of yours pays, also gain 1 any. | +1 |
+| Kingpin | 4 chips + 3 wild | Tip and Spread each place one more tip. | +2 |
 
 Notes:
 - **A read, not a tax.** A tip only lives until your next placement, so it pays only if someone takes that space in the next few picks. In round I every space fills eventually, but not before your next turn. The taker always gains more than you: a lure, never a toll.
