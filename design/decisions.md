@@ -48,3 +48,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Champions are cut. Picking 2 starting resources replaces them: it's personal, balanced by nature (everyone picks from the same pool), and gives round 1 some juice.
 - ✅ The four-quadrant draft in `design/quadrants.md` is liked as the working base.
 - ✅ No simulator yet. Rules will still shift, so wait until they settle.
+- ❓ Items: one random shared market, or 1–2 items sitting on each quadrant (buyable only when you use it)? Claude leans per-quadrant: the purchase becomes part of the placement read, and items travel with their quadrant when it's swapped.
