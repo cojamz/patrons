@@ -1,4 +1,4 @@
-# Value Model v1
+# Value Model v2
 
 These are rough, shared numbers so prices and yields can be argued with arithmetic instead of vibes. They'll be refined when a simulator exists. Until then they're a ruler, not the truth.
 
@@ -20,6 +20,13 @@ These are rough, shared numbers so prices and yields can be argued with arithmet
   - Round III: **about 7u** (band 5–9). This is the burst.
 - Total income for a decent player is **about 45–55u** across the game, plus 2 at setup.
 - That works out to roughly 4–6 items, plus 2–4 fixtures.
+
+## Members (items) under the Cult Wars frame
+- Every member counts as 1 follower (that's 1 VP, about 1.5u) on top of its ability.
+- So a member's price ≈ 1.5u plus 50–70% of the ability's EV.
+- A 2-cost member with a decent ability beats the Laurel fixture (2u for 1 follower). That's intended: recruiting should be the main path, and the fixtures should be the bulk path for big late hauls.
+- Fixtures therefore need to be more efficient than members only at the high end. Garland and Diadem are where saving up pays off.
+- Releasing a member gives up its follower (−1.5u), so whatever releasing it buys must beat that.
 
 ## Pricing items
 - Expected value (EV) of an item = value per use × expected uses for the rest of the game, assuming it's bought at the start of round II, so 9 placements remain.
