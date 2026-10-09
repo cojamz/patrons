@@ -9,7 +9,7 @@ How Claude works on Patrons. Claude owns this file and updates it when something
    - log them in `design/decisions.md`
    - apply any changes to how we work
 3. Claude does the legwork. Done means Cory has something he can react to: a link to play, a picture, or a single yes/no.
-4. Claude replies within the rules in `working-with-cory.md`.
+4. Claude replies in the Foreman output style.
 
 ## Where things live
 | What | Where |
