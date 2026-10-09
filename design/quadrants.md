@@ -8,7 +8,7 @@ You can buy an item of a color only right after placing a worker in that quadran
 **Rule: Crown.** Most gold at each round's end takes the Favor printed on that ring (working: 2/4/6). Ties share.
 | Ring | Action | Effect |
 |---|---|---|
-| I | Patronage | +1 gold. Set a coin on an empty space: whoever takes it pays you 1 |
+| I | Patronage | +1 gold. Sponsor an empty space: whoever takes it, you both gain 1 gold |
 | I | Interest | +1 gold, plus 1 for every 3 you hold |
 | I | Exchange | Trade any 2 resources for 3 gold |
 | II | Royalties | +1 gold per item you own |
