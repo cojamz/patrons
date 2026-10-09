@@ -31,3 +31,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-09 — Swapped my homemade per-message reminder for Claude Code's built-in tools: an output style for reply style, and auto-loaded rules files for the rest.
 - 2026-10-09 — Cory: too tactical, wrong personality. Act like a frontier model that owns the problem, grasps intent, and goes. Questions only for real design calls.
 - 2026-10-09 — Autonomy is right, but don't reinvent the core design. Cory owns the big design thrusts; Claude's job is to make his vision easy to learn and great to look at.
+- 2026-10-09 — Cory opens links in his own browser, so give plain URLs. Mocks should be illustrations at sketch fidelity, not full builds.

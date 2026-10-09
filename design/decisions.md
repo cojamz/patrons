@@ -15,3 +15,10 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ The rework is about making it easy to learn and finding a great way to visualize it, not inventing new mechanics.
 - 💡 Board as a circle: each quadrant is one god. Spin the wheel toward you to look at a quadrant's options. One shared board everyone looks at, like a real table.
 - ❌ The three alternate directions in `design/directions.md` (Shrines, Patron Hand, Piles) are shelved. Too much redesign.
+
+## 2026-10-09 — Wheel sketch + where the game is broken
+- ✅ The wheel board is the visual direction. The sketch's fidelity is about right. Mocks are illustrations, not full builds.
+- 💡 Shop could sit apart from the god cards. But keep the rule that you must take an action at a god to buy from its shop.
+- ✅ Keep the structure and themes. Rework the resources and the play, and rebalance rather than revamp.
+- ✅ The biggest gap is scoring. It's too complex and too opaque, so players can't tell how they're doing. Engine-building should stay rich, and scoring should become obvious.
+- ❓ What are the other balance and design gaps? Claude is reviewing the game and the playtest/sim history.
