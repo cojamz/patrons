@@ -36,3 +36,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-09 — Screenshot prototypes at a short laptop viewport (~1270×700) before sending. Cory saw only half the wheel and we went round in circles over label orientation.
 - 2026-10-09 — Still too formal. Voice: terse, articulate, a hint of poetry; sharp, fun creative, restrained. Also: hold off on simulators until the rules settle.
 - 2026-10-09 — Design principles now live in .claude/rules/design-principles.md (auto-loaded). Check every suggestion against it.
+- 2026-10-09 — Showed Cory an agent-written sphere (Bookie) without reading it closely myself, and its core rule didn't make sense. Never present agent output unvetted: read it, play one turn in your head, and fix incoherence before it reaches Cory.
