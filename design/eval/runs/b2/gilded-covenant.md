@@ -1,4 +1,4 @@
-## Gold: The Vault
+## Gold: The Treasury
 Pitch: Gold is the score you're always tempted to spend.
 Verbs: gain, sponsor (mark a space), trade
 Scoring: Hoard. At round end, whoever holds the most gold gains I 1 / II 2 / III 3 followers. Ties: every tied player scores.
