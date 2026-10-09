@@ -98,7 +98,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 <script>
 const GODS=[
  {id:'gold',name:'Aurum',score:'Crown — most gold at each round’s end takes the Favor printed on that ring. Ties share.',
-  acts:[[1,'Mint','+2 gold',{gold:2}],[1,'Patron','+1 gold, +1 per use of a quadrant you pick',{gold:1}],[1,'Levy','Take 1 gold from the gold leader',{gold:1}],
+  acts:[[1,'Patronage','+1 gold. Set a coin on an empty space: whoever takes it pays you 1',{gold:1}],[1,'Interest','+1 gold, plus 1 for every 3 you hold',{gold:'interest'}],[1,'Exchange','Trade any 2 resources for 3 gold',{gold:'exchange'}],
         [2,'Royalties','+1 gold per item you own',{gold:'items'}],[2,'Tariff','+1 gold per quadrant you occupy',{gold:2}],
         [3,'Treasury','Double your gold',{gold:'x2'}]]},
  {id:'black',name:'Noctis',score:'Shadow — most black at round end steals 1 / 2 / 4 Favor from the leader',
@@ -115,7 +115,7 @@ const GODS=[
         [3,'Flourish','+2 of each color you hold',{gold:2,black:2,green:2,yellow:2}]]}
 ];
 const ITEMS=[ // each quadrant's own deck; two sit face-up on its shelf
- [{name:'Ledger',eff:'Mint gives +3 gold',cost:{gold:2},fav:0},{name:'Signet Ring',eff:'Win Crown ties outright',cost:{gold:2},fav:1},
+ [{name:'Ledger',eff:'Interest counts every 2, not 3',cost:{gold:2},fav:0},{name:'Signet Ring',eff:'Win Crown ties outright',cost:{gold:2},fav:1},
   {name:'Strongbox',eff:'Your gold can’t be stolen',cost:{gold:3},fav:0},{name:'Gilded Bust',eff:'A trophy',cost:{gold:4},fav:2}],
  [{name:'Veil',eff:'Ransack and Plunder can’t hit you',cost:{black:2},fav:0},{name:'Dagger',eff:'Ransack steals 3',cost:{black:2},fav:0},
   {name:'Night Mark',eff:'Win Shadow ties outright',cost:{black:3},fav:1},{name:'Raven Idol',eff:'A trophy',cost:{black:4},fav:2}],
@@ -258,7 +258,7 @@ function tryPlace(q,i){
 function place(pid,q,i){
   const p=players[pid],a=GODS[q].acts[i];
   slots[q][i]=pid; p.left--;
-  Object.entries(a[3]).forEach(([k,v])=>{ if(v==='x2')p.res[k]*=2; else if(v==='items')p.res[k]+=p.items.length; else p.res[k]=Math.max(0,p.res[k]+v); });
+  Object.entries(a[3]).forEach(([k,v])=>{ if(v==='x2')p.res[k]*=2; else if(v==='items')p.res[k]+=p.items.length; else if(v==='interest')p.res[k]+=1+Math.floor(p.res[k]/3); else if(v==='exchange'){let n=2;['black','green','yellow','gold'].forEach(r=>{while(n&&p.res[r]>0&&r!=='gold'){p.res[r]--;n--}});if(n===0)p.res.gold+=3} else p.res[k]=Math.max(0,p.res[k]+v); });
   if(pid===0) visited=q;
   say(`${pid?'Rival':'You'} took ${a[1]} at ${GODS[q].name}. ${a[2]}.`);
   turnIdx++; draw(); render();

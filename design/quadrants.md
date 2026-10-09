@@ -5,12 +5,12 @@ You can buy an item of a color only right after placing a worker in that quadran
 **1/2/4** = Favor at the end of rounds I, II and III.
 
 ## Aurum (Gold): wealth is power, and everyone can see who's richest
-**Rule: Crown.** Most gold at round end gains 1/2/4 Favor. Everyone tied gets it.
+**Rule: Crown.** Most gold at each round's end takes the Favor printed on that ring (working: 2/4/6). Ties share.
 | Ring | Action | Effect |
 |---|---|---|
-| I | Mint | +2 gold |
-| I | Patron | +1 gold, +1 per use of your chosen quadrant |
-| I | Levy | Take 1 gold from the gold leader |
+| I | Patronage | +1 gold. Set a coin on an empty space: whoever takes it pays you 1 |
+| I | Interest | +1 gold, plus 1 for every 3 you hold |
+| I | Exchange | Trade any 2 resources for 3 gold |
 | II | Royalties | +1 gold per item you own |
 | II | Tariff | +1 gold per quadrant you occupy |
 | III | Treasury | Double your gold |
@@ -19,7 +19,7 @@ You can buy an item of a color only right after placing a worker in that quadran
 | Item | Cost | Effect | Favor |
 |---|---|---|---|
 | Strongbox | 3 gold | Your gold can't be stolen | 0 |
-| Ledger | 2 gold | Mint gives +3 gold | 0 |
+| Ledger | 2 gold | Interest counts every 2, not 3 | 0 |
 | Signet Ring | 2 gold | You win Crown ties outright | 1 |
 | Gilded Bust | 4 gold | none | 2 |
 

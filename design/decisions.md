@@ -55,3 +55,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Ideal: no quadrant or action should feel weaker than another. The depth comes from creativity, from how you combine them.
 - ✅ Gold scores by the Crown: most gold at the end of each round takes X Favor, and ties share it. Values to tune (working: 2 / 4 / 6).
 - ✅ Each round's scoring is printed on the board, in that quadrant's ring, so it's clear. It should be visually distinct from the actions but sit neatly alongside them.
+- 💡 (Claude) New Gold R1 actions: Patronage (+1 gold, set a coin on an empty space and whoever takes it pays you 1), Interest (+1 gold plus 1 per 3 held), Exchange (trade any 2 resources for 3 gold). Each scales with the game, so they stay live in later rounds.
