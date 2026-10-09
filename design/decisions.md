@@ -29,3 +29,10 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Quadrants are modular: swap different ones in, each plays very differently with its own interactions, so no two games are the same.
 - 💡 (Claude) Each quadrant has exactly ONE printed way to earn Favor. 4 quadrants means 4 scoring rules a game, and swapping quadrants changes how the game is won.
 - ❓ Working through a sample quadrant (Gold) at concept level. See chat for the three stabs.
+
+## 2026-10-09 — Gold quadrant in a vacuum
+- ✅ One quadrant per player. Everyone starts with 3 workers, and in round 1 every action space gets filled.
+- ✅ Gold scores by the Crown: whoever has the most gold at round end gets the Favor. Someone can run away with it if nobody stops them, and that's on purpose.
+- ✅ Keep some patron flavor in Gold.
+- ✅ Tracking difficulty is the UI's job. Only cut rules if we can't make them easy to track on screen.
+- 💡 (Claude) Gold round-1 actions: Mint (+2 gold), Patron (+1 gold, plus +1 each time anyone uses a quadrant you pick), Levy (take 1 gold from the leader). Gold's shop costs gold, so buying engine upgrades costs you Crown standing.
