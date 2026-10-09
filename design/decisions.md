@@ -67,3 +67,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (from discussion) Two Favor channels: ring contests (public, per round) and items (private; top-cost items carry Favor). Resources have two jobs, counting toward ring contests or being spent on items. Market should feel like a bazaar: frequent cheap items, rare grand ones, with a wide cost spread.
 - ✅ The market is a second, smaller round board. Colored items sit around its edge, one stall per quadrant color, and the neutral Favor fixtures sit in the middle as repeatable buys.
 - ✅ Everyone's items are public knowledge.
+- ❓ Revisit later: should buying be limited to the stall of the quadrant you just played? Keeping it for now as a trial.
