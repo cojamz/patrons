@@ -40,7 +40,8 @@ ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
 
   <section>
     <h2>2. Gold is the only real strategy</h2>
-    <p>In the last big simulation run, about 73% of all Favor came from hoarding gold and cashing it in. Printed scoring fixes most of this on its own, because gold stops being a scoring engine.</p>
+    <p>I re-ran 300 games with the strong AI today. The Gold god produces 71% of all Favor at 2 players and 45% at 4. The winner is usually just whoever hoarded the most gold. Printed scoring fixes most of this on its own, because gold stops being a scoring engine.</p>
+    <p class="eg">Also lopsided: Green-heavy players win 68% at 2 players. Yellow-heavy players won 0 of 7 games, and Black-heavy players won 1 of 28 at 4 players.</p>
   </section>
 
   <section>
@@ -59,8 +60,11 @@ ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
   </section>
 
   <section>
-    <h2>5. Fix the seat bug</h2>
-    <p>In round 1 the last player both picks a champion first and plays first. That probably explains why seat 3 wins more often in 3-player games. It's a straight fix.</p>
+    <h2>5. The game is decided in one late burst</h2>
+    <p>Round 3 hands out 60–65% of all Favor. The player in last place after round 1 wins only 13% of 4-player games, where a fair share would be 25%. Rounds 1 and 2 feel like they don't matter, and then the score explodes.</p>
+    <div class="pick"><b>Recommend</b>
+      <p>Spread scoring evenly across rounds, using offerings that pay steadily rather than round-3 mega-actions. Keep turn order as the comeback: the player in last place picks first.</p>
+    </div>
   </section>
 
   <section>
