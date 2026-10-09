@@ -39,7 +39,7 @@ How Claude works on Patrons. Claude owns this file and updates it when something
 - **Output style** (`.claude/output-styles/`, set as `outputStyle` in settings): reply tone and length. Takes effect from the next session.
 - **Memory**: `CLAUDE.md` plus every file in `.claude/rules/` loads automatically each session. Cloud containers get wiped, so durable memory lives in repo files, not in auto memory.
 - **Skills** (`.claude/skills/<name>/SKILL.md`): repeatable routines, e.g. `/note`.
-- **Subagents** (`.claude/agents/*.md`): `design-critic`, `playtester`, `ux-reviewer`. Run them in parallel and pass on only their conclusions. Add more when a role keeps coming up.
+- **Subagents** (`.claude/agents/*.md`): `design-critic` (read-only: have it return text, then save it yourself), `playtester`, `ux-reviewer`. Run them in parallel and pass on only their conclusions. Add more when a role keeps coming up.
 - **Hooks** (`.claude/settings.json`): only for things that must happen no matter what. Session start installs deps; a safety hook blocks force-push, `rm -rf` and edits to secrets.
 - **/doctor**: audits rules, skills and agents for conflicts. Run it when the setup feels off.
 - When unsure about a Claude Code feature, check the official docs (code.claude.com/docs) before building anything.
