@@ -78,3 +78,11 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - 💡 (Claude) Quadrants v2 drafted in `design/quadrants.md` (viewable in `design/quadrants.html`): Gold the merchant, Shadow the thief, Verdant the gardener, Sunlight the giver. All interplay is generic.
 - ✅ Scoring happens at round end. Nothing changes Favor in real time during a round (for now), because it confuses players. Claude may bend this as an experiment and report back.
 - ✅ The evaluator is a team of agents: blind judges, mind-playtesters who hold a written game state and play moves out, a red team, and a synthesizer. Use cutting-edge harness patterns.
+
+## 2026-10-09 — Theme: Cult Wars
+- ✅ (working frame, don't over-commit) You're a cult leader taking actions on the wheel to build your cult.
+- ✅ The items you buy are cult **members**.
+- ✅ Victory points are **followers**. Followers include your members and yourself, so everyone starts with 1.
+- ✅ Members lean toward certain actions or spheres (wealth, subterfuge, charisma and "getting people to switch"…), so who you recruit shapes what you do.
+- 💡 Hooks this unlocks: things that scale with the size of your following or your member count; X resource per member; releasing a member for a resource.
+- ✅ Use it as the brainstorming frame. It gives the design a cohesive feel.

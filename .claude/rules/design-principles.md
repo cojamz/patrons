@@ -2,6 +2,13 @@
 
 Distilled from `design/decisions.md`, which stays the full log. Check every suggestion against this list before proposing it. Cory can change any line.
 
+## Theme (working frame: Cult Wars)
+- You are a cult leader. Quadrants are spheres of cult activity (wealth, subterfuge, charisma, ritual…).
+- Items are **members**: people you recruit. Each one leans toward a sphere, through its color and its ability.
+- Victory points are **followers**. Your followers include yourself (everyone starts with 1) and every member (each member is worth at least 1 follower). Favor fixtures become ways to win followers in bulk.
+- Generic cult verbs that any sphere may use: recruit (buy a member), release (discard a member for something), sway (draw a follower or member from a player ahead of you), and scaling by member count or follower count.
+- It's a frame, not a cage. Let it guide names and verbs, and drop any part that hurts the play.
+
 ## Shape of the game
 - Core loop: snake-draft actions from a shared pool, gain resources, buy one thing. Don't redesign it.
 - Board: a spinning wheel of 4 color quadrants (no god names). Outer ring is round I (3 spaces per quadrant), inner ring is round II (2 spaces), center is round III (1 space). Spaces carry over: earlier rings stay open in later rounds.
@@ -12,7 +19,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - Everyone's items are public.
 
 ## How you win
-- The game is about buying lots of items and escalating your resources to buy communal Favor. Ring contests are seasoning, not the meal.
+- The game is about recruiting lots of members (items) and escalating your resources to win followers in bulk (the fixtures). Ring contests are seasoning, not the meal.
 - Each quadrant has exactly one scoring rule, printed on each of its rings, visually distinct from the actions.
 - Favor can go down, but only rarely, a little at a time, and only from the leader.
 - Favor changes only at round end. Contests, per-event counts, items and fixtures are all tallied and paid out when the round ends, with nothing real-time. Experiments may bend this, but must be flagged.
