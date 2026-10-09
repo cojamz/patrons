@@ -90,30 +90,32 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 <script>
 const GODS=[
- {id:'gold',name:'Aurum',score:'Crown — most gold at round end: +3 / +5 / +8 Favor',
-  acts:[[1,'Mint','+2 gold',{gold:2}],[1,'Patron','+1 gold, +1 more each time anyone visits Solara',{gold:1}],[1,'Levy','Take 1 gold from the richest player',{gold:1}],
-        [2,'Vault','+4 gold',{gold:4}],[2,'Tithe','Every rival gives you 1 gold',{gold:1}],
-        [3,'Coronation','Double your gold',{gold:'x2'}]]},
- {id:'black',name:'Noctis',score:'Spoils — +1 Favor each time you take from a rival',
-  acts:[[1,'Skulk','+3 black',{black:3}],[1,'Pickpocket','Take 2 of anything from a rival',{black:1}],[1,'Threaten','A rival loses 1 Favor',{black:1}],
-        [2,'Raid','Take 3 of anything from a rival',{black:2}],[2,'Dread','All rivals lose 2 Favor',{black:1}],
-        [3,'Annihilate','Spend all black: rivals lose that much Favor',{black:0}]]},
- {id:'green',name:'Chronis',score:'Echoes — +1 Favor each time you repeat an action',
-  acts:[[1,'Gather','+3 green',{green:3}],[1,'Relive','Repeat one of your actions',{green:1}],[1,'Echo','Copy a rival’s last action',{green:1}],
-        [2,'Rewind','Repeat two of your actions',{green:2}],[2,'Foresight','+2 green, pick first next round',{green:2}],
-        [3,'Eternity','Repeat every action you’ve taken',{green:3}]]},
- {id:'yellow',name:'Solara',score:'Spectrum — round end: +1 Favor per color you hold',
-  acts:[[1,'Harvest','+2 yellow',{yellow:2}],[1,'Forage','+2 of any color',{yellow:1,green:1}],[1,'Transmute','Swap 2 resources for 2 others',{yellow:1}],
-        [2,'Distill','Turn one color into another, +2',{yellow:3}],[2,'Attune','+1 of each color you lack',{gold:1,black:1,green:1}],
-        [3,'Flourish','+2 of every color',{gold:2,black:2,green:2,yellow:2}]]}
+ {id:'gold',name:'Aurum',score:'Crown — most gold at round end: +1 / +2 / +4 Favor',
+  acts:[[1,'Mint','+2 gold',{gold:2}],[1,'Patron','+1 gold, +1 per use of a quadrant you pick',{gold:1}],[1,'Levy','Take 1 gold from the gold leader',{gold:1}],
+        [2,'Royalties','+1 gold per item you own',{gold:'items'}],[2,'Tariff','+1 gold per quadrant you occupy',{gold:2}],
+        [3,'Treasury','Double your gold',{gold:'x2'}]]},
+ {id:'black',name:'Noctis',score:'Shadow — most black at round end steals 1 / 2 / 4 Favor from the leader',
+  acts:[[1,'Skulk','+2 black',{black:2}],[1,'Ransack','Steal 2 resources from a player',{black:1}],[1,'Grudge','+1 black per player ahead of you',{black:1}],
+        [2,'Extort','Each rival gives you 1 resource',{black:1}],[2,'Plunder','Steal half of one color',{black:2}],
+        [3,'Nightfall','Take all black from every rival',{black:3}]]},
+ {id:'green',name:'Chronis',score:'Echo — +1 Favor each time you repeat an action',
+  acts:[[1,'Gather','+2 green',{green:2}],[1,'Relive','Repeat a space you occupy',{green:1}],[1,'Echo','Repeat a rival’s space',{green:1}],
+        [2,'Rewind','Pay 2 green: repeat any ring-I space',{green:1}],[2,'Haste','+1 green, place again now',{green:1}],
+        [3,'Eternity','Repeat every space you occupy',{green:3}]]},
+ {id:'yellow',name:'Solara',score:'Harmony — round end: +1 Favor per full set of colors',
+  acts:[[1,'Harvest','+2 yellow',{yellow:2}],[1,'Forage','+2 resources, any colors',{gold:1,green:1}],[1,'Transmute','Swap up to 3 for any colors',{yellow:1}],
+        [2,'Prism','Pay 2 yellow: +1 of each other color',{gold:1,black:1,green:1,yellow:-2}],[2,'Bloom','+1 of each color you lack',{yellow:1}],
+        [3,'Flourish','+2 of each color you hold',{gold:2,black:2,green:2,yellow:2}]]}
 ];
 const ITEMS=[
- {g:0,name:'Signet Ring',eff:'Mint gives +1 more gold',cost:{gold:3},fav:1},
- {g:0,name:'Golden Scale',eff:'Levy takes 2 instead of 1',cost:{gold:2,black:1},fav:0},
- {g:1,name:'Shadow Cloak',eff:'Rivals can’t take from you',cost:{black:3},fav:1},
- {g:2,name:'Hourglass',eff:'Your first repeat each round is free',cost:{green:3},fav:1},
- {g:3,name:'Prism',eff:'Spectrum counts gold twice',cost:{yellow:2,gold:1},fav:2},
- {g:3,name:'Seed Pouch',eff:'+1 of any color each round',cost:{yellow:3},fav:0}
+ {g:0,name:'Ledger',eff:'Mint gives +3 gold',cost:{gold:2},fav:0},
+ {g:0,name:'Signet Ring',eff:'Win Crown ties outright',cost:{gold:2},fav:1},
+ {g:1,name:'Veil',eff:'Ransack and Plunder can’t hit you',cost:{black:2},fav:0},
+ {g:1,name:'Raven Idol',eff:'A trophy',cost:{black:4},fav:2},
+ {g:2,name:'Hourglass',eff:'Once a round, repeat a space',cost:{green:3},fav:0},
+ {g:2,name:'Echo Stone',eff:'Each repeat also gives +1 any',cost:{green:2},fav:1},
+ {g:3,name:'Alembic',eff:'Transmute swaps up to 5',cost:{yellow:2},fav:0},
+ {g:3,name:'Sun Disc',eff:'A trophy',cost:{yellow:4},fav:2}
 ];
 const RES=['gold','black','green','yellow'];
 const RING={1:{r0:142,r1:198,r:170,n:3},2:{r0:90,r1:142,r:116,n:2},3:{r0:34,r1:90,r:62,n:1}};
@@ -125,7 +127,19 @@ function newGame(){
   round=1; slots=GODS.map(g=>g.acts.map(()=>null)); market=ITEMS.map(x=>({...x,sold:false}));
   players=[{name:'You',cls:'you',res:{},fav:0,left:3,items:[]},{name:'Rival',cls:'them',res:{},fav:0,left:3,items:[]}];
   players.forEach(p=>RES.forEach(r=>p.res[r]=0));
-  startRound(); say('Round I: only the outer ring is open. Spin the wheel and tap a space.');
+  setup={picks:[]}; order=[]; turnIdx=0; draw(); render();
+  say('Setup: pick your 2 starting resources. Seat order, first to last, everyone sees.');
+}
+let setup=null;
+function setupPick(r){
+  setup.picks.push(r); players[0].res[r]++;
+  if(setup.picks.length<2){render();return}
+  say(`You picked ${setup.picks.join(' + ')}. Rival is choosing…`); busy=true; render();
+  setTimeout(()=>{ // rival reacts to what it saw: avoids your colors when it can
+    const pool=RES.filter(x=>!setup.picks.includes(x)); const pick=[pool[0]||'gold',pool[1]||pool[0]||'black'];
+    pick.forEach(x=>players[1].res[x]++); busy=false;
+    say(`Rival picked ${pick.join(' + ')}. Round I: only the outer ring is open.`); setup=null; startRound();
+  },900);
 }
 function startRound(){
   const n=WORKERS[round]; players.forEach(p=>p.left=n);
@@ -178,6 +192,15 @@ function render(){
       <div class="name">${p.name}<span>${'●'.repeat(p.left)} workers · ${p.items.length} items</span></div>
       <div class="res"><span class="fav">${p.fav} Favor</span>${RES.map(r=>`<span><i style="background:var(--${r})"></i>${p.res[r]}</span>`).join('')}</div>
     </div>`).join('');
+  if(setup){
+    document.getElementById('status').innerHTML='<b>Setup</b> · pick 2 starting resources';
+    document.getElementById('tray').innerHTML=`<h2>Starting resources<small>you're first seat · ${2-setup.picks.length} left</small></h2>
+      <div class="acts">${RES.map(r=>`<button class="act" style="--c:var(--${r})" data-r="${r}" ${busy||setup.picks.length>=2?'disabled':''}><b style="color:var(--${r})">${({gold:'Gold',black:'Shadow',green:'Verdant',yellow:'Sunlight'})[r]}</b><span>${GODS.find(g=>g.id===r).name}'s color</span></button>`).join('')}</div>
+      <p class="hint">Going first means the others see your plan before they choose.</p>`;
+    document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>setupPick(b.dataset.r));
+    document.getElementById('market').innerHTML=market.map(it=>`<div class="item" style="--c:${color(it.g)}"><b>${it.name}</b><span class="eff">${it.eff}</span></div>`).join('');
+    return;
+  }
   const g=GODS[facing],myTurn=!done&&order[turnIdx]===0&&!busy;
   let h=`<h2 style="color:${color(facing)}">${g.name}<small>facing you</small></h2><div class="score" style="--c:${color(facing)}">${g.score}</div>`;
   [1,2,3].forEach(t=>{
@@ -208,7 +231,7 @@ function tryPlace(q,i){
 function place(pid,q,i){
   const p=players[pid],a=GODS[q].acts[i];
   slots[q][i]=pid; p.left--;
-  Object.entries(a[3]).forEach(([k,v])=>{ if(v==='x2')p.res[k]*=2; else p.res[k]+=v; });
+  Object.entries(a[3]).forEach(([k,v])=>{ if(v==='x2')p.res[k]*=2; else if(v==='items')p.res[k]+=p.items.length; else p.res[k]=Math.max(0,p.res[k]+v); });
   if(pid===0) visited=q;
   say(`${pid?'Rival':'You'} took ${a[1]} at ${GODS[q].name}. ${a[2]}.`);
   turnIdx++; draw(); render();
@@ -227,12 +250,15 @@ function buy(k){
   say(`You bought ${it.name}${it.fav?` (+${it.fav} Favor)`:''}.`); render();
 }
 function endRound(){
-  const crown=[3,5,8][round-1]; const g0=players[0].res.gold,g1=players[1].res.gold; let msg=[];
-  if(g0!==g1){const w=g0>g1?0:1;players[w].fav+=crown;msg.push(`${w?'Rival':'You'} took the Crown (+${crown})`)}
-  players.forEach(p=>{const n=RES.filter(r=>p.res[r]>0).length;p.fav+=n});
-  msg.push('Spectrum paid out');
-  if(round<3){round++;say(msg.join(' · ')+'. A new ring is open.');startRound();}
-  else{const w=players[0].fav>=players[1].fav?'You win':'Rival wins';say(msg.join(' · ')+`. ${w}.`);render();
+  const amt=[1,2,4][round-1], msg=[], P=players;
+  const g0=P[0].res.gold,g1=P[1].res.gold;
+  if(g0!==g1){const w=g0>g1?0:1;P[w].fav+=amt;msg.push(`Crown: ${w?'Rival':'You'} +${amt}`)} else if(g0>0){P.forEach(p=>p.fav+=amt);msg.push(`Crown tied: both +${amt}`)}
+  const b0=P[0].res.black,b1=P[1].res.black;
+  if(b0!==b1){const w=b0>b1?0:1,v=1-w;const s=Math.min(amt,P[v].fav);P[v].fav-=s;P[w].fav+=s;if(s)msg.push(`Shadow: ${w?'Rival':'You'} steal ${s}`)}
+  P.forEach((p,k)=>{const sets=Math.min(...RES.map(r=>p.res[r]));if(sets){p.fav+=sets;msg.push(`Harmony: ${k?'Rival':'You'} +${sets}`)}});
+  const m=msg.length?msg.join(' · '):'No one scored';
+  if(round<3){round++;say(m+'. A new ring is open.');startRound();}
+  else{const w=P[0].fav>=P[1].fav?'You win':'Rival wins';say(m+`. ${w}.`);render();
     document.getElementById('tray').insertAdjacentHTML('beforeend','<button class="btn" id="again">Play again</button>');document.getElementById('again').onclick=newGame;}
 }
 // Free spin: no snapping. The quadrant nearest the bottom is "facing you" and updates as it passes.
