@@ -90,3 +90,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Scoring is Dominion-like in scale. A game can be low-scoring for everyone or extremely high-scoring, depending on which spheres are on the wheel and which members can be recruited. Different tables, different engines.
 - 💡 Maybe: a neutral pile of basic members always available for each sphere (like Dominion's base cards), to grease the wheels. To consider, not decided.
 - ✅ Don't over-index on "cult" (religious, sacrificial and so on). The frame is light: members and followers. Quadrants should stay unique and varied, defined by their mechanics, not bound to an arbitrary theme.
+- ✅ A quadrant's round-III action doesn't have to gain or convert followers. It just needs to be powerful in general.
