@@ -92,3 +92,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Don't over-index on "cult" (religious, sacrificial and so on). The frame is light: members and followers. Quadrants should stay unique and varied, defined by their mechanics, not bound to an arbitrary theme.
 - ✅ A quadrant's round-III action doesn't have to gain or convert followers. It just needs to be powerful in general.
 - ✅ Members, like the old items, cost a specific part (the sphere's own resource) plus a wild part (any resources). Some members cost only wild.
+- ❓ (Cory) Members feel less numerous and integral than they should be. Revisit how many get recruited, how cheap the common ones are, and how much they shape your actions.
