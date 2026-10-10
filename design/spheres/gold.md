@@ -131,7 +131,7 @@ Members:
   - Speculator (double your gold once)
   - ×2 Treasurer (gold counts double for the Crown)
   - Tycoon (game end: +1 follower per 3 gold)
-  - Alchemist (choose 2 other resources: they always count as gold, for the Crown and for paying)
+  - Alchemist (choose 2 other resources: they always count as gold, for the Crown and for paying; doubling effects like Strike and Speculator double only real gold)
   - (open slot; 5th pair tbd)
   - (open slot; single tbd)
   - (open slot; single tbd)
