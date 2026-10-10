@@ -115,3 +115,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Deck is 60: 15 cards per sphere, 10 member types, 5 of them doubled.
 - ❌ (Cory) Patron is out of Gold; he never okayed it. Gold has 9 members, and the 5th pair is open.
 - ❌ (Cory) Steward and Gambler are out. Gold has 7 members: pairs are Banker, Prospector, Middleman and Treasurer; singles are Speculator, Tycoon and Alchemist. 1 pair slot and 2 single slots are open.
+- 💡 (Cory) Gold member: whenever you use a gold action, gain 1 gold. It overlaps Prospector. The difference: it triggers on any gold space, including ones that spend gold (Cash Out), while Prospector triggers on any gold gain from any sphere.
