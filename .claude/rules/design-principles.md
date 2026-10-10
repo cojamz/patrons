@@ -5,7 +5,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 ## Theme (working frame: Cult Wars)
 - The frame is light. You lead a following: items are members, VP are followers. Don't over-index on 'cult' (religious, sacrificial, ritual).
 - Quadrants are defined by their mechanics first: economy, tempo, space, market, information, interaction… They should be unique and varied, with names and flavor that fit the mechanic, not a forced theme.
-- Items are **members**: people you recruit. Each quadrant has 10 member types, with a couple of copies of each. Everything stacks. Each one leans toward a sphere, through its color and its ability.
+- Items are **members**: people you recruit. Each quadrant has 10 member types. Workhorses come in pairs; signature members are one-offs. Everything stacks. Each one leans toward a sphere, through its color and its ability.
 - Victory points are **followers**. Your followers include yourself (everyone starts with 1) and every member (each member is worth at least 1 follower). Favor fixtures become ways to win followers in bulk.
 - Generic cult verbs that any sphere may use: recruit (buy a member), release (discard a member for something), sway (draw a follower or member from a player ahead of you), and scaling by member count or follower count.
 - Fixtures are bulk followers: the 6-point fixture is literally 6 followers.

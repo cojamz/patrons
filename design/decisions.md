@@ -111,3 +111,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Buys per player ≈ 1.5 / 3 / 4 by round (~8.5 a game, ~34 at 4 players), with some buys going to fixtures.
 - ✅ (Claude, answering "5 unique feels thin") Don't size the deck to the buys. Keep 10 kinds × 2 per sphere (~80 cards); most go unseen each game, which is the replay variety.
 - ❓ Is "always buy a member" too automatic? Watch it once fixtures and costs are real; resources, not the pool, should be the limit.
+- ✅ (Cory) 80 feels like a lot; not everything needs a duplicate. Working: workhorses doubled, signature members single, ~14 cards per sphere, ~56 total.
