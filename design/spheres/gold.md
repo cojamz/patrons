@@ -133,6 +133,6 @@ Members:
   - Tycoon (game end: +1 follower per 3 gold)
   - Alchemist (other resources count toward the Crown)
   - Steward* (round start: gain half your gold)
-  - ×2 Patron* (give gold, get +1 follower)
+  - (open slot; 5th pair tbd)
   - Gambler* (stake gold on the Crown, double or nothing)
   - (* = Claude's picks to fill out to 10; not yet confirmed by Cory)

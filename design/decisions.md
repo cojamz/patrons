@@ -113,3 +113,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ❓ Is "always buy a member" too automatic? Watch it once fixtures and costs are real; resources, not the pool, should be the limit.
 - ✅ (Cory) 80 feels like a lot; not everything needs a duplicate. Working: workhorses doubled, signature members single, ~14 cards per sphere, ~56 total.
 - ✅ (Cory) Deck is 60: 15 cards per sphere, 10 member types, 5 of them doubled.
+- ❌ (Cory) Patron is out of Gold; he never okayed it. Gold has 9 members, and the 5th pair is open.
