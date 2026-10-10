@@ -98,3 +98,17 @@ Members:
 - New: +2 gold, and you may buy any revealed member (from any stall) at its cost.
 - Claude's suggestion: the new buy-anywhere action takes Invest's round-II slot.
 - Note: the buy-anywhere member is paid at that member's own cost, so it doesn't have to touch your gold. It lets a gold player recruit from other spheres without weakening their Crown.
+
+## More member ideas (Claude, 2026-10-10)
+- **Steward:** at each round start, gain half your gold.
+- **Accountant:** at round end, +1 gold per member you have.
+- **Landlord:** whenever a rival takes a gold space, +1 gold.
+- **Patron:** whenever you give gold to another player, +1 follower at round end.
+- **Philanthropist:** at round end, give away any gold; +1 follower per 2 you gave.
+- **Miser:** you win Crown ties.
+- **Fence:** each gold you spend pays 2 of a wild cost.
+- **Jeweler:** fixtures cost you 2 less when you pay entirely in gold.
+- **Merchant Prince:** Cash Out gives +1 extra follower per 4 gold cashed.
+- **Gambler:** at round start, stake any gold; if you win the Crown, it doubles, and if you don't, you lose it.
+- **Bodyguard:** rivals can't take your gold.
+- **Collector:** whenever anyone buys a gold member, +1 gold.
