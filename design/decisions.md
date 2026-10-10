@@ -118,3 +118,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - 💡 (Cory) Gold member: whenever you use a gold action, gain 1 gold. It overlaps Prospector. The difference: it triggers on any gold space, including ones that spend gold (Cash Out), while Prospector triggers on any gold gain from any sphere.
 - ✅ (Cory) Alchemist: 2 other resources always count as gold (Claude's reading: you pick 2 resource types, and they count as gold everywhere, for the Crown and for paying).
 - ✅ (Cory) Alchemist doesn't feed doubling: Strike and Speculator double only real gold.
+- 💡 (Cory) Gold wants a couple of activated members. Claude's ideas, each usable once per round on your turn: Broker (recruit a member paying its whole cost in gold), Climber (raise your gold to match the player just ahead of you), Fence (swap any amount of gold 1:1 for other resources).
