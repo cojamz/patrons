@@ -114,3 +114,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) 80 feels like a lot; not everything needs a duplicate. Working: workhorses doubled, signature members single, ~14 cards per sphere, ~56 total.
 - ✅ (Cory) Deck is 60: 15 cards per sphere, 10 member types, 5 of them doubled.
 - ❌ (Cory) Patron is out of Gold; he never okayed it. Gold has 9 members, and the 5th pair is open.
+- ❌ (Cory) Steward and Gambler are out. Gold has 7 members: pairs are Banker, Prospector, Middleman and Treasurer; singles are Speculator, Tycoon and Alchemist. 1 pair slot and 2 single slots are open.
