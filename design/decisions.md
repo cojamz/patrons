@@ -121,3 +121,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - 💡 (Cory) Gold wants a couple of activated members. Claude's ideas, each usable once per round on your turn: Broker (recruit a member paying its whole cost in gold), Climber (raise your gold to match the player just ahead of you), Fence (swap any amount of gold 1:1 for other resources).
 - ❌ (Cory) Broker and Climber are rejected. Gold's 2 open singles are his to fill.
 - 💡 (Cory) Gold activated single: once per round, pay 3–4 gold to bribe a rival's member over to you. Claude: only from a player ahead of you, and they get the gold, per the harm-points-up rule. It overlaps the buy-off idea that was moved to the member-mover sphere.
+- ✅ (Cory) Gold single, activated: once per round, pay 4 gold to bribe another player's member to come over. As he said it: any player, the gold goes to the bank. It's a deliberate exception to harm-points-up.
