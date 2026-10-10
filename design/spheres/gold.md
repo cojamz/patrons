@@ -113,3 +113,26 @@ Members:
 - **Bodyguard:** rivals can't take your gold.
 - **Collector:** whenever anyone buys a gold member, +1 gold.
 - (Cory) **Prospector** (name tbd): whenever an action gains you gold, gain 1 more. A core gold engine piece.
+
+## Gold v1 (assembled 2026-10-10)
+- **Scoring:** the Crown. Most gold at each round's end takes that ring's followers.
+- **Round I:**
+  - Joint Venture: +3 gold, +1 to a player you choose.
+  - Windfall: gold per member.
+  - Tribute: each player with more gold gives you 1.
+- **Round II:**
+  - Cash Out: 2 gold for 1 follower.
+  - +2 gold, then buy any revealed member at its own cost.
+- **Round III:** Strike, double your gold.
+- **Members (10):**
+  - Banker (gold each round start)
+  - Prospector (+1 whenever an action gains you gold)
+  - Middleman (gold when anyone buys the 6)
+  - Speculator (double your gold once)
+  - Treasurer (gold counts double for the Crown)
+  - Tycoon (game end: +1 follower per 3 gold)
+  - Alchemist (other resources count toward the Crown)
+  - Steward* (round start: gain half your gold)
+  - Patron* (give gold, get +1 follower)
+  - Gambler* (stake gold on the Crown, double or nothing)
+  - (* = Claude's picks to fill out to 10; not yet confirmed by Cory)

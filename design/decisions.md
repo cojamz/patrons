@@ -103,3 +103,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - (Cory) Member-mover sphere: he likes the actions (recruit anywhere, swap, poach paying the leader, release, copy). He doesn't like count- or variety-based scoring.
 - ✅ (Cory) Members come in copies, a couple of each, so no one can monopolize a member. It also deepens each sphere's deck, which fixes stalls running dry.
 - ✅ (Cory) One player can own both copies and stack them. Everything stacks, multipliers included (two Treasurers is fine).
+- ✅ (Cory) Each quadrant aims for 10 members (with a couple of copies each).
