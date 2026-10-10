@@ -97,3 +97,4 @@ Members:
 - Otherwise the shape is good.
 - New: +2 gold, and you may buy any revealed member (from any stall) at its cost.
 - Claude's suggestion: the new buy-anywhere action takes Invest's round-II slot.
+- Note: the buy-anywhere member is paid at that member's own cost, so it doesn't have to touch your gold. It lets a gold player recruit from other spheres without weakening their Crown.
