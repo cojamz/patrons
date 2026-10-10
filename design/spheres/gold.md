@@ -124,15 +124,15 @@ Members:
   - Cash Out: 2 gold for 1 follower.
   - +2 gold, then buy any revealed member at its own cost.
 - **Round III:** Strike, double your gold.
-- **Members (10):**
-  - Banker (gold each round start)
-  - Prospector (+1 whenever an action gains you gold)
-  - Middleman (gold when anyone buys the 6)
+- **Members (10 types, 15 cards; ×2 = pair, proposed):**
+  - ×2 Banker (gold each round start)
+  - ×2 Prospector (+1 whenever an action gains you gold)
+  - ×2 Middleman (gold when anyone buys the 6)
   - Speculator (double your gold once)
-  - Treasurer (gold counts double for the Crown)
+  - ×2 Treasurer (gold counts double for the Crown)
   - Tycoon (game end: +1 follower per 3 gold)
   - Alchemist (other resources count toward the Crown)
   - Steward* (round start: gain half your gold)
-  - Patron* (give gold, get +1 follower)
+  - ×2 Patron* (give gold, get +1 follower)
   - Gambler* (stake gold on the Crown, double or nothing)
   - (* = Claude's picks to fill out to 10; not yet confirmed by Cory)
