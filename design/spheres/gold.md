@@ -76,3 +76,17 @@ Members:
   - Moneylender: you can't be short for a buy, so it would never trigger.
   - Doppelganger: doesn't belong in Gold.
 - **Open:** buying off a rival's member has to follow "harm points up". The rival should probably get paid, and it should only reach players ahead of you.
+
+## Current shape (Claude's slotting proposal, 2026-10-10)
+- **Scoring:** the Crown. Most gold at the end of each round takes the followers printed on that ring.
+- **Round I:**
+  - Joint Venture: +3 gold, and +1 gold to a player you choose.
+  - Windfall: gold per member you have.
+  - Tribute: each player with more gold than you gives you 1.
+- **Round II:** Cash Out (gold into followers), Invest (set gold aside; it returns doubled next round).
+- **Round III:** Strike (double your gold).
+- **Moved to the member-mover sphere:** buying off a rival's member, and Liquidate (release a member for its cost +2).
+- **Members:** Banker, Middleman (6-follower fixtures only), Speculator, Treasurer, Tycoon, Alchemist.
+- **Open:**
+  - Speculator, Treasurer and Strike may stack too hard.
+  - Names.
