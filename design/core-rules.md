@@ -24,7 +24,7 @@ Every sphere spec assumes these. Anything a sphere changes, it states explicitly
 - The word is **followers** everywhere. Never "Favor".
 
 ## Members (items)
-- Each sphere has a deck of 8 members, shuffled. Its stall shows 2.
+- Each sphere's deck holds a couple of copies of each member (e.g. 6–8 kinds × 2), shuffled. Its stall shows 2. Copies mean nobody can monopolize a member, and the deck lasts all 3 rounds.
 - A sold member is replaced from the deck. When the deck runs out, the stall stays empty.
 - A member's cost has two parts: a **specific** part, paid in its sphere's own resource, and a **wild** part, payable with any resources. Printed like "2 gold + 1 wild". Some members cost only wild. (A Cory call.)
 - After each placement, you may make one buy: a member from the stall of the sphere you just placed in, or a fixture.
