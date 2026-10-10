@@ -23,6 +23,7 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - Design direction and feel: Cory leads. Claude builds his vision fast, makes it tangible, and critiques it. Claude does not pitch alternate core designs unless asked.
 - Everything else (code, tooling, harness, process, sequencing): decide and do it. Report briefly afterward.
 - Never send Cory a menu of tactical options. Pick one.
+- **Price every card before showing it.** Use `design/eval/value-model.md`: a ring-I space is worth about 2.5u, ring II about 4u, ring III about 7u, and a member is worth about its cost plus 1.5u. A free swap or an extra recruit already uses up a whole space's budget, so never stack a resource gain on top of a strong verb. Anything outside its band gets cut before Cory sees it.
 - Resource use is not a constraint. Use parallel agents, simulations, screenshots freely.
 
 ## Changelog of this doc
@@ -40,3 +41,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-09 — Showed Cory an agent-written sphere (Bookie) without reading it closely myself, and its core rule didn't make sense. Never present agent output unvetted: read it, play one turn in your head, and fix incoherence before it reaches Cory.
 - 2026-10-09 — Cory: the agent-forged quadrants mostly sucked. From now on Claude stays at broad ideas and Cory does the granular design. Also: drop the report voice (headers, tables, bold labels) — talk like a person.
 - 2026-10-10 — Cory: shorter, give him easier, snappier decisions. Calls come as a one-line yes/no; ideas get one line each, no commentary.
+- 2026-10-10 — Cory: I have no sense of strong vs weak (I put +3 red on a free swap, and an extra recruit on +2). Hard rule added: price every card against the value model before showing it.

@@ -2,13 +2,14 @@
 
 About members themselves: getting them, moving them, cashing them in, copying them. Red actions and members pay out in red.
 
-## Actions (Claude draft, 2026-10-10)
-- I · Recruit: +2 red, and make one extra recruit this turn.
-- I · Swap: +3 red. You may swap one of your members for a face-up one.
-- I · Shuffle: +2 red, then replace any face-up members from the deck.
-- II · Liquidate: release a member for red equal to its cost +2.
-- II · Copy: +2 red. One of your members copies another member in play until round end.
-- III · Muster: gain red equal to your member count, then recruit twice.
+## Actions (v2, priced: ring I ≈2.5u, ring II ≈4u, ring III ≈7u)
+- I · Swap: swap one of your members for a face-up one costing up to 3 more (no members: +2 red). ≈2.5–3u
+- I · Recruit: +1 red, and make one extra recruit this turn (you still pay). ≈2.5u
+- I · Turnout: +1 red per member recruited by anyone this round (min 2). ≈2–4u, grows late
+- II · Liquidate: release a member for red equal to its cost +2. ≈4u (you lose its follower)
+- II · Copy: one of your members copies another member in play until round end. ≈3–5u
+- III · Rally: gain red equal to your member count. ≈6–9u
+- v1 was overtuned: Swap +3 red, Recruit +2 red plus an extra recruit, and Muster were each 2–3× their band.
 
 ## Members (Claude draft)
 - ×2 Recruiter: whenever you recruit, +1 red.
