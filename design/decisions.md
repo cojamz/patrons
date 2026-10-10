@@ -100,3 +100,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - 💡 Doppelganger: an expensive member that copies another member. Any sphere.
 - ✅ (Cory) Everything should feel vaguely powerful. Open, relative amounts (double, half and so on) beat small fixed numbers.
 - 💡 (Cory) He likes a sphere that moves members around, one that's about members themselves. Claude's broad sketch, a "Guild" sphere, is in chat: recruit, swap, poach (paying the leader), release, copy. It scores on member count or member variety. Doppelganger fits here.
+- (Cory) Member-mover sphere: he likes the actions (recruit anywhere, swap, poach paying the leader, release, copy). He doesn't like count- or variety-based scoring.
