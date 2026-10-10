@@ -1,0 +1,74 @@
+<title>Patrons Fix List</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;600;700&display=swap">
+<style>
+/* Layout: one narrow column, read top to bottom in two minutes. Same table palette as the wheel sketch. */
+:root{--bg:#f4f2ec;--fg:#1d2524;--muted:#5f6b67;--rule:#d9d6cc;--accent:#a8781c;--chip:#e9e4d6;
+  --display:"Marcellus",Georgia,serif;--body:"Figtree",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16201f;--fg:#ece6d6;--muted:#9aa7a2;--rule:#2c3a38;--accent:#e0b44a;--chip:#1f2b2a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#16201f;--fg:#ece6d6;--muted:#9aa7a2;--rule:#2c3a38;--accent:#e0b44a;--chip:#1f2b2a;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5;padding-inline:16px;padding-block:28px}
+main{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
+h1{font-family:var(--display);font-weight:400;font-size:34px;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0 0 6px;text-wrap:balance}
+p{margin:0}
+.lede{color:var(--muted)}
+section{border-top:1px solid var(--rule);padding-top:18px;display:flex;flex-direction:column;gap:8px}
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.pick{background:var(--chip);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.pick b{color:var(--accent);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.eg{font-variant-numeric:tabular-nums;color:var(--muted);font-size:15px}
+</style>
+<main>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Rebalance, don't revamp</h1>
+    <p class="lede">The core is solid. Most of the confusion comes from scoring, plus about five rules that take more to learn than they give back.</p>
+  </header>
+
+  <section>
+    <h2>1. Scoring: every point printed, only goes up</h2>
+    <p>Today you can earn Favor about 20 ways, at 4 different times, and lose it about 10 ways. Nobody can look at the board and say "I'm 4 behind, here's how I catch up."</p>
+    <div class="pick"><b>Recommend</b>
+      <p>Every point comes from a number you can see, like Splendor. Power cards show 0 to 3 Favor. Each god's VP shop becomes one visible offering. Favor never goes down.</p>
+      <p class="eg">Aurum offering: 4 gold → 3 Favor · Card: "Gilded Ledger", +1 gold each round · 2 Favor</p>
+    </div>
+    <ul>
+      <li>Cut: the 4 hidden Favor conditions, Favor-stealing, negative Favor, and score multipliers.</li>
+      <li>Keep: the engine. Cards still power your drafting. They also show their worth.</li>
+      <li>Optional: one bonus per god, like "own 2 of my cards = +3".</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>2. Gold is the only real strategy</h2>
+    <p>I re-ran 300 games with the strong AI today. The Gold god produces 71% of all Favor at 2 players and 45% at 4. The winner is usually just whoever hoarded the most gold. Printed scoring fixes most of this on its own, because gold stops being a scoring engine.</p>
+    <p class="eg">Also lopsided: Green-heavy players win 68% at 2 players. Yellow-heavy players won 0 of 7 games, and Black-heavy players won 1 of 28 at 4 players.</p>
+  </section>
+
+  <section>
+    <h2>3. Black loses its point, so give it a new one</h2>
+    <p>Without Favor-stealing, Black needs a clear job. I'd make it the god of taking resources: one clean "take 2" action and a shop that blocks or bumps a rival's worker. That keeps the conflict and avoids score swings.</p>
+  </section>
+
+  <section>
+    <h2>4. Cut the hidden-state rules</h2>
+    <ul>
+      <li><b>Champions.</b> Six different passives, some hidden. Replace them with "pick 2 starting resources".</li>
+      <li><b>Repeat family.</b> Seven Green variants. Merge them into one Echo: copy any action on the board.</li>
+      <li><b>"Next time" buffs</b> (double next gain, next repeat twice, Haggle). Make them happen right away, or cut them.</li>
+      <li><b>Cards that fire on other players' turns.</b> They're surprises you can't plan around. Cut them.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>5. The game is decided in one late burst</h2>
+    <p>Round 3 hands out 60–65% of all Favor. The player in last place after round 1 wins only 13% of 4-player games, where a fair share would be 25%. Rounds 1 and 2 feel like they don't matter, and then the score explodes.</p>
+    <div class="pick"><b>Recommend</b>
+      <p>Spread scoring evenly across rounds, using offerings that pay steadily rather than round-3 mega-actions. Keep turn order as the comeback: the player in last place picks first.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Where that lands</h2>
+    <p>Same loop on the wheel: draft actions, gain resources, buy at a god you visited. A new player learns about 10 things instead of 26, and can always see who's winning and why.</p>
+  </section>
+</main>
