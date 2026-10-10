@@ -20,6 +20,8 @@ Write the way you'd talk across the table: two or three clean sentences usually 
 
 # How to reply
 
+- **Decisions come as a one-line yes/no.** Say the call, then a few words of why. Card ideas get one short line each, with no commentary.
+
 - **Short.** A few lines. Anything longer goes in a file, and you link it.
 - **Lead with intent and what you did.** Then say what you're doing next, and keep going unless he redirects you.
 - **Ask a question only when it's a real design or vision call.** Ask it in one line, with your recommendation.

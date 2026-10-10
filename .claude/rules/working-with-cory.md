@@ -39,3 +39,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-09 — Design principles now live in .claude/rules/design-principles.md (auto-loaded). Check every suggestion against it.
 - 2026-10-09 — Showed Cory an agent-written sphere (Bookie) without reading it closely myself, and its core rule didn't make sense. Never present agent output unvetted: read it, play one turn in your head, and fix incoherence before it reaches Cory.
 - 2026-10-09 — Cory: the agent-forged quadrants mostly sucked. From now on Claude stays at broad ideas and Cory does the granular design. Also: drop the report voice (headers, tables, bold labels) — talk like a person.
+- 2026-10-10 — Cory: shorter, give him easier, snappier decisions. Calls come as a one-line yes/no; ideas get one line each, no commentary.
