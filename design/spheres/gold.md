@@ -90,3 +90,10 @@ Members:
 - **Open:**
   - Speculator, Treasurer and Strike may stack too hard.
   - Names.
+
+## Cory, 2026-10-10
+- Cash Out: 2 gold per 1 follower.
+- Invest: needs changing.
+- Otherwise the shape is good.
+- New: +2 gold, and you may buy any revealed member (from any stall) at its cost.
+- Claude's suggestion: the new buy-anywhere action takes Invest's round-II slot.
