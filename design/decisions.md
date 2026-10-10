@@ -104,3 +104,10 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Members come in copies, a couple of each, so no one can monopolize a member. It also deepens each sphere's deck, which fixes stalls running dry.
 - ✅ (Cory) One player can own both copies and stack them. Everything stacks, multipliers included (two Treasurers is fine).
 - ✅ (Cory) Each quadrant aims for 10 members (with a couple of copies each).
+
+## 2026-10-10 — Member economy
+- ✅ (Cory) Drop the "buy from the quadrant you just played" rule. Any face-up member is buyable. Why: buying a member is usually the best move, and the stall rule just starved people.
+- ✅ (Cory) One combined market: all spheres' members in one deck, 5 face up.
+- ✅ Buys per player ≈ 1.5 / 3 / 4 by round (~8.5 a game, ~34 at 4 players), with some buys going to fixtures.
+- ✅ (Claude, answering "5 unique feels thin") Don't size the deck to the buys. Keep 10 kinds × 2 per sphere (~80 cards); most go unseen each game, which is the replay variety.
+- ❓ Is "always buy a member" too automatic? Watch it once fixtures and costs are real; resources, not the pool, should be the limit.

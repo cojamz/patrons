@@ -24,10 +24,11 @@ Every sphere spec assumes these. Anything a sphere changes, it states explicitly
 - The word is **followers** everywhere. Never "Favor".
 
 ## Members (items)
-- Each sphere's deck holds a couple of copies of each member (e.g. 6–8 kinds × 2), shuffled. Its stall shows 2. Copies mean nobody can monopolize a member, and the deck lasts all 3 rounds.
-- A sold member is replaced from the deck. When the deck runs out, the stall stays empty.
+- Each sphere brings 10 member kinds × 2 copies. All four spheres' members shuffle into one deck (~80 cards). The market shows 5 face up. Copies mean nobody can monopolize a member.
+- The deck is bigger than the game on purpose: ~34 get bought at 4 players, so most members go unseen in any one game. Variety lives between games, like Dominion.
+- A bought member is replaced from the deck at once.
 - A member's cost has two parts: a **specific** part, paid in its sphere's own resource, and a **wild** part, payable with any resources. Printed like "2 gold + 1 wild". Some members cost only wild. (A Cory call.)
-- After each placement, you may make one buy: a member from the stall of the sphere you just placed in, or a fixture.
+- After each placement, you may make one buy: any face-up member, or a fixture.
 - Members burned or released go to the bottom of their deck.
 
 ## Fixtures (bulk followers)
