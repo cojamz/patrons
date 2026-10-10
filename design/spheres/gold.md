@@ -133,5 +133,5 @@ Members:
   - Tycoon (game end: +1 follower per 3 gold)
   - Alchemist (choose 2 other resources: they always count as gold, for the Crown and for paying; doubling effects like Strike and Speculator double only real gold)
   - (open slot; 5th pair tbd)
-  - (name tbd) once per round: pay 4 gold, and another player's member comes over to you
+  - (name tbd) once per round: pay 4 gold to the bank, and another player's member comes over to you
   - (open slot; single tbd)
