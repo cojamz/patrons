@@ -112,3 +112,4 @@ Members:
 - **Gambler:** at round start, stake any gold; if you win the Crown, it doubles, and if you don't, you lose it.
 - **Bodyguard:** rivals can't take your gold.
 - **Collector:** whenever anyone buys a gold member, +1 gold.
+- (Cory) **Prospector** (name tbd): whenever an action gains you gold, gain 1 more. A core gold engine piece.
