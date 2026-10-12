@@ -133,3 +133,7 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ❌ (Cory) He doesn't like the 30-member pool. Also: 4 resources for a 2-follower member is too expensive.
 - ✅ (Cory) Fixtures: 2→1, 4→3, 6→6. He says something feels a little off. Claude's read: at 1:1, late resources are followers outright, so Strike doubles followers and members (~3 for 1 follower + effect) can't keep up.
 - ✅ (Cory) Member costs vary: the cheapest 1–2, most around 2–3, the most expensive 5–6.
+- ✅ (Cory) Gold member pool narrowed to 24 keepers (see gold-members-pool.md). He likes the direction.
+- ✅ Cory's member taste so far:
+  - Likes: simple effects; hooks into other quadrants (Midas, Tinker, Coin Purse); steady income (Banker, Interest); rival-watching on fixtures and recruits; catch-up (Underdog, Safety Net); time-shifts (Investor).
+  - Dislikes: Crown-specific effects; win-more; fiddly timing for small gains; anything hooking mechanics that don't exist yet (trade, release).

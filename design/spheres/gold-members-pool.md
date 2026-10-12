@@ -22,24 +22,19 @@
 Bookkeeper, Copycat, Crown Prince, Consolation, Spendthrift, Accountant, Patron, Insurance, Bulk Buyer, Collector, Early Bird, Closer, Golden Touch.
 Cory's taste: no Crown-specific effects for now, nothing win-more, no fiddly timing for small gains.
 
-## 20 new (v3)
-1. Banker (back): at round start, +3 gold.
-2. Prospector (back): whenever an action gains you gold, +1 more.
-3. Speculator (back): once per game, double your gold.
-4. Tycoon (back): at game end, +1 follower per 3 gold.
-5. Tinker: whenever you gain 3+ of another resource at once, gain 1 gold.
-6. Landlord: pick a color; whenever a rival takes a space there, gain 1 gold.
-7. Paymaster: at round start, gain 1 gold per member of another color you have.
-8. Diversifier: at round end, gain 1 gold per resource type you hold.
-9. Coin Purse: whenever you recruit a non-gold member, gain 1 gold.
-10. Recycler: whenever a rival releases a member, gain 2 gold.
-11. Converter: once per round, swap all of one resource for that much gold.
-12. Smelter: once per round, trade gold 1:1 for other resources.
-13. Heirloom: release this member any time for 6 gold.
-14. Trader: whenever you trade resources, gain 1 gold.
-15. Mint: at round end, gain 1 gold per gold member you have.
-16. Dowry: whenever you recruit your first member of a color, gain 2 gold.
-17. Bargain Hunter: whenever you recruit a member costing 2 or less, gain 1 gold.
-18. Big Spender: whenever you recruit a member costing 5+, gain 2 gold.
-19. Seed Money: when you recruit it, gain gold equal to your member count.
-20. Stipend: whenever you skip your buy, gain 2 gold.
+## Kept from v3 (Cory's pass)
+- Banker: at round start, +3 gold.
+- Prospector: whenever an action gains you gold, +1 more.
+- Speculator: once per game, double your gold. (price carefully)
+- Tycoon: at game end, +1 follower per 3 gold. (some version of this)
+- Tinker: whenever you gain 2+ of another resource at once, gain 1 gold.
+- Diversifier: at round end, gain 1 gold per resource type you hold.
+- Coin Purse: whenever you recruit a non-gold member, gain 1 gold.
+- Heirloom: in round III, return it to the member pile for 6 gold.
+- Seed Money: when you recruit it, gain gold equal to your member count. (some version)
+- Cut: Landlord, Paymaster, Recycler, Converter, Smelter, Trader, Mint, Dowry, Bargain Hunter, Big Spender, Stipend.
+
+## Proposed 10 (Claude, for Cory to react to)
+- Pairs: Banker, Prospector, Coin Purse, Tinker, Tax Collector.
+- Singles: Midas, Jackpot, Speculator, Investor, Tycoon.
+- Bench (layer 2 or variety): Goldsmith, Safety Net, Thrift, Interest, Underdog, Counterfeiter, Vault, Heir, Pawn Shop, Merchant, Hustler, Diversifier, Heirloom, Seed Money.
