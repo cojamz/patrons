@@ -132,3 +132,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - 💡 (Cory) Members could upgrade individual actions. Claude drafted one upgrade per Gold action (see gold.md).
 - ❌ (Cory) He doesn't like the 30-member pool. Also: 4 resources for a 2-follower member is too expensive.
 - ✅ (Cory) Fixtures: 2→1, 4→3, 6→6. He says something feels a little off. Claude's read: at 1:1, late resources are followers outright, so Strike doubles followers and members (~3 for 1 follower + effect) can't keep up.
+- ✅ (Cory) Member costs vary: the cheapest 1–2, most around 2–3, the most expensive 5–6.

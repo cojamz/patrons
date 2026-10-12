@@ -27,7 +27,7 @@ Every sphere spec assumes these. Anything a sphere changes, it states explicitly
 - Each sphere brings 10 member kinds: the plain workhorses come in pairs, the signature ones are single (5 pairs + 5 singles = 15 cards). All four spheres shuffle into one deck of 60. The market shows 5 face up. Copies mean nobody can monopolize a member.
 - The deck is bigger than the game on purpose: ~34 get bought at 4 players, so plenty go unseen in any one game. Variety lives between games, like Dominion.
 - A bought member is replaced from the deck at once.
-- A member's cost has two parts: a **specific** part, paid in its sphere's own resource, and a **wild** part, payable with any resources. Printed like "2 gold + 1 wild". Some members cost only wild. (A Cory call.)
+- A member's cost has two parts: a **specific** part, paid in its sphere's own resource, and a **wild** part, payable with any resources. Printed like "2 gold + 1 wild". Some members cost only wild. Cost range: cheapest 1–2, most 2–3, top 5–6. (Cory, 2026-10-12) (A Cory call.)
 - After each placement, you may make one buy: any face-up member, or a fixture.
 - Members burned or released go to the bottom of their deck.
 
