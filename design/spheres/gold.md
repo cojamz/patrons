@@ -137,14 +137,15 @@ Members:
   - (open slot; single tbd)
 
 ## Gold basic (2026-10-12, Cory: start basic, add complexity later)
+- ✅ (Cory) Keep Joint Venture and Strike. Windfall moves to round II and replaces Mint.
 - **Scoring:** the Crown. Most gold at round end takes the ring's followers.
 - **Round I:**
   - Joint Venture: +3 gold, and +1 gold to a player you choose.
-  - Windfall: +1 gold, plus 1 per member you have.
+  - (open slot)
   - Tribute: each player with more gold than you gives you 1.
 - **Round II:**
   - Cash Out: trade 2 gold for 1 follower, as many times as you like.
-  - Mint: +4 gold. (This replaces the buy-anywhere action, which lost its point when the stall rule went.)
+  - Windfall: +1 gold per member you have.
 - **Round III:** Strike: double your gold.
 - **Members (basic):**
   - ×2 Banker: at round start, +3 gold.

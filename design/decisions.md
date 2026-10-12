@@ -125,3 +125,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 
 ## 2026-10-12 — Start basic
 - ✅ (Cory) We're getting too complicated. Start basic for actions and members, and add complexity later. Gold gets redone as a basic layer; Alchemist, the bribe and the gold-space member are parked for layer 2.
+- ✅ (Cory) Gold basic: keep Joint Venture and Strike. Round II gets Windfall (+1 gold per member), replacing Mint. Round I has one open slot.
