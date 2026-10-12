@@ -141,8 +141,8 @@ Members:
 - **Scoring:** the Crown. Most gold at round end takes the ring's followers.
 - **Round I:**
   - Joint Venture: +3 gold, and +1 gold to a player you choose.
-  - (open slot)
-  - Tribute: each player with more gold than you gives you 1.
+  - Rush: +2 gold per round number (2 / 4 / 6).
+  - Discount (name tbd): your next member costs 2 less, taken off any part of its cost (gold, wild, or a mix).
 - **Round II:**
   - Heist (name tbd): steal 2 gold from a player.
   - Windfall: +1 gold per member you have.
