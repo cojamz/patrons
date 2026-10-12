@@ -135,3 +135,22 @@ Members:
   - (open slot; 5th pair tbd)
   - (name tbd) once per round: pay 4 gold to the bank, and another player's member comes over to you
   - (open slot; single tbd)
+
+## Gold basic (2026-10-12, Cory: start basic, add complexity later)
+- **Scoring:** the Crown. Most gold at round end takes the ring's followers.
+- **Round I:**
+  - Joint Venture: +3 gold, and +1 gold to a player you choose.
+  - Windfall: +1 gold, plus 1 per member you have.
+  - Tribute: each player with more gold than you gives you 1.
+- **Round II:**
+  - Cash Out: trade 2 gold for 1 follower, as many times as you like.
+  - Mint: +4 gold. (This replaces the buy-anywhere action, which lost its point when the stall rule went.)
+- **Round III:** Strike: double your gold.
+- **Members (basic):**
+  - ×2 Banker: at round start, +3 gold.
+  - ×2 Prospector: whenever an action gains you gold, +1 more.
+  - ×2 Treasurer: your gold counts double for the Crown.
+  - ×2 Middleman: whenever anyone buys a 6-follower fixture, +2 gold.
+  - Speculator: once per game, double your gold.
+  - Tycoon: at game end, +1 follower per 3 gold.
+- **Parked for layer 2:** Alchemist, the bribe, and the +1-per-gold-space member.
