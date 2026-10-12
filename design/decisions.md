@@ -127,3 +127,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) We're getting too complicated. Start basic for actions and members, and add complexity later. Gold gets redone as a basic layer; Alchemist, the bribe and the gold-space member are parked for layer 2.
 - ✅ (Cory) Gold basic: keep Joint Venture and Strike. Round II gets Windfall (+1 gold per member), replacing Mint. Round I has one open slot.
 - ✅ (Cory) Gold ring II: steal 2 gold from a player (any player). It replaces Cash Out. Like the bribe, it's a deliberate exception to harm-points-up.
+- ✅ (Cory) Gold ring I: Rush (+2 gold per round number) and a discount: your next member costs 2 less, off any part of the cost (1 gold + 1 wild becomes free; with 2 gold + 2 wild you choose which 2 to skip). Tribute is out. Claude's reading: the discount waits until your next recruit.
