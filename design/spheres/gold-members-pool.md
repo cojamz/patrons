@@ -1,37 +1,32 @@
-# Gold member pool (30 candidates, 2026-10-12)
+# Gold member pool v2 (fresh 30, effects only, 2026-10-12)
 
-Format: Name (cost: Ng = gold, +N = wild · ★ = followers): effect. Numbers are rough, priced against design/eval/value-model.md.
-
-## Already on the board or parked
-1. Partner (2g+1 · ★1): Joint Venture gives you +2 more.
-2. Runner (2g+1 · ★1): Rush pays +3 per round instead of +2.
-3. Collector (2g+2 · ★1): Windfall pays 2 per member.
-4. Haggler (1g+2 · ★1): your discounts take 2 more off.
-5. Thief (2g+1 · ★1): Steal takes 2 more.
-6. Kingpin (4g+3 · ★1): Strike triples your gold instead of doubling it.
-7. Banker (2g+2 · ★1): at round start, +3 gold.
-8. Treasurer (3g+1 · ★1): your gold counts double for the Crown.
-9. Speculator (3g+2 · ★1): once per game, double your gold.
-10. Tycoon (2g+2 · ★1): at game end, +1 follower per 3 gold.
-11. Prospector (3g+1 · ★1): whenever an action gains you gold, +1 more.
-12. Middleman (1g+2 · ★1): whenever anyone buys a 6-follower fixture, +2 gold.
-13. Alchemist (3g+3 · ★1): choose 2 other resources; they count as gold.
-14. Briber (3g+2 · ★1): once per round, pay 4 gold to the bank, and another player's member comes to you.
-15. Regular (1g+1 · ★1): whenever you take a gold space, +1 gold.
-
-## New
-16. Magnate (2g+2 · ★2): counts as 2 followers.
-17. Dowager (3g+3 · ★3): counts as 3 followers.
-18. Old Money (3g+2 · ★2): counts as 2 followers; at round start, +1 gold.
-19. Heiress (1g+2 · ★2): counts as 2 followers, but your gold doesn't count for the Crown.
-20. Miser (2g · ★1): you win Crown ties.
-21. Vaultkeeper (2g+1 · ★1): rivals can't steal your gold.
-22. Moneychanger (1g+2 · ★1): once per round, swap up to 3 gold 1:1 for other resources, either way.
-23. Benefactor (2g+2 · ★1): when you recruit, get back half the gold you paid.
-24. Landlord (2g+1 · ★1): whenever a rival takes a gold space, +1 gold.
-25. Courtier (2g+2 · ★1): if you win the Crown, +1 more follower.
-26. Pawnbroker (1g+1 · ★1): release it any time for 6 gold.
-27. Ledger (2g+2 · ★1): gold you spent this round still counts for the Crown.
-28. Hoarder (2g+1 · ★1): at round end, +1 gold per 4 gold you hold.
-29. Philanthropist (3g+3 · ★2): counts as 2 followers; whenever you give gold, +1 gold.
-30. Auditor (2g+1 · ★1): whenever a rival doubles their gold, +2 gold.
+1. Midas: you may take any resource gain as gold instead.
+2. Bookkeeper: each of your members counts as 1 gold for the Crown.
+3. Goldsmith: whenever you buy a fixture, gain 2 gold.
+4. Tax Collector: whenever a rival buys a fixture, gain 1 gold.
+5. Copycat: whenever a rival takes a gold space, gain half what they gained.
+6. Safety Net: at round start, top your gold up to 5.
+7. Investor: at round start, set aside any gold; it comes back doubled next round.
+8. Jackpot: once per game, gain gold equal to the richest rival's gold.
+9. Crown Prince: you win Crown ties.
+10. Consolation: if you lose the Crown, gain half the winner's gold.
+11. Spendthrift: whenever you spend 5+ gold at once, gain 2 back.
+12. Thrift: gold you spend on members counts double.
+13. Fixer: your discounts also work on fixtures.
+14. Accountant: Strike also doubles one other resource of your choice.
+15. Generous: whenever you give gold, gain the same amount.
+16. Patron: once per round, pay 2 gold to a rival for 1 follower.
+17. Interest: at round end, +1 gold per 3 you hold.
+18. Underdog: while you have the least gold, your gold gains are doubled.
+19. Counterfeiter: once per round, add 3 to your gold for the Crown only.
+20. Vault: rivals can't steal from you.
+21. Insurance: when a rival steals from you, gain that much from the bank.
+22. Heir: whenever you lose a member, gain 4 gold.
+23. Pawn Shop: release a member for twice its cost in gold.
+24. Merchant: whenever anyone recruits a gold member, gain 1 gold.
+25. Bulk Buyer: when you recruit a member you already own, gain 3 gold.
+26. Collector: at round end, +1 gold per different color among your members.
+27. Moneybags: you can hold any amount; at game end, +1 follower per 4 gold.
+28. Early Bird: your first placement each round gains +2 gold.
+29. Closer: your last placement each round gains gold equal to your member count.
+30. Golden Touch: whenever you gain exactly 1 gold, gain 2 instead.
