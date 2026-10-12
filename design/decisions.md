@@ -130,3 +130,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Gold ring I: Rush (+2 gold per round number) and a discount: your next member costs 2 less, off any part of the cost (1 gold + 1 wild becomes free; with 2 gold + 2 wild you choose which 2 to skip). Tribute is out. Claude's reading: the discount waits until your next recruit.
 - ✅ (Cory) Gold ring II: Steal takes 3 gold from any combination of players.
 - 💡 (Cory) Members could upgrade individual actions. Claude drafted one upgrade per Gold action (see gold.md).
+- ❌ (Cory) He doesn't like the 30-member pool. Also: 4 resources for a 2-follower member is too expensive.

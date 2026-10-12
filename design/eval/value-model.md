@@ -2,6 +2,17 @@
 
 These are rough, shared numbers so prices and yields can be argued with arithmetic instead of vibes. They'll be refined when a simulator exists. Until then they're a ruler, not the truth.
 
+## Cory's anchors (these override everything below)
+Calibrate from his calls, not from this model. When they disagree, he's right and the model is wrong.
+- Cash Out: 2 gold for 1 follower. So in his head a follower costs about 2 resources, not 3.
+- 4 resources for a member worth 2 followers is "too expensive". A member takes your one buy, so its follower rate has to beat 2:1 clearly.
+- Joint Venture: +3 gold, +1 to another player (a solid round-I space).
+- Banker: +3–4 gold every round start (a solid workhorse member).
+- Bribe: 4 gold to take a rival's member, once per round.
+- Steal: 3 gold from players (a round-II space).
+- Too strong: +3 resources plus a free swap; an extra recruit plus +2.
+- Open conflict: the fixtures (Laurel 3→1, Garland 6→3) are pricier than his 2:1 instinct. Flag it for Cory, don't resolve it silently.
+
 ## Units
 - **1 resource = 1 unit (u)**, any color. A flexible resource ("any color") is worth 1.2u, and a specific off-color one is worth 0.9u.
 - **1 Favor ≈ 1.5u.** The fixtures set the rate:
