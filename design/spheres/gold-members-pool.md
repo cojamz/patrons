@@ -26,7 +26,7 @@
 24. Merchant: whenever anyone recruits a gold member, gain 1 gold.
 25. Bulk Buyer: when you recruit a member you already own, gain 3 gold.
 26. Collector: at round end, +1 gold per different color among your members.
-27. Moneybags: you can hold any amount; at game end, +1 follower per 4 gold.
+27. Hustler: whenever you take a space of another color, gain 1 gold.
 28. Early Bird: your first placement each round gains +2 gold.
 29. Closer: your last placement each round gains gold equal to your member count.
 30. Golden Touch: whenever you gain exactly 1 gold, gain 2 instead.
