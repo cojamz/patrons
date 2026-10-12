@@ -38,3 +38,21 @@ Cory's taste: no Crown-specific effects for now, nothing win-more, no fiddly tim
 - Pairs: Banker, Prospector, Coin Purse, Tinker, Tax Collector.
 - Singles: Midas, Jackpot, Speculator, Investor, Tycoon.
 - Bench (layer 2 or variety): Goldsmith, Safety Net, Thrift, Interest, Underdog, Counterfeiter, Vault, Heir, Pawn Shop, Merchant, Hustler, Diversifier, Heirloom, Seed Money.
+
+## Gold 15 (Cory, 2026-10-12)
+1. Midas: you may take any resource gain as gold instead.
+2. Banker: at round start, +3 gold.
+3. Prospector: whenever an action gains you gold, +1 more.
+4. Tax Collector: whenever a rival buys followers, gain 1 gold.
+5. Merchant: whenever anyone recruits a gold member, gain 1 gold.
+6. Thrift: gold you spend on members counts double.
+7. Coin Purse: whenever you recruit a non-gold member, gain 1 gold.
+8. Underdog: while you have the least gold, your gold gains are doubled.
+9. Tinker: whenever you gain 2+ of another resource at once, gain 1 gold.
+10. Investor: at round start, set aside any gold; at round end it comes back doubled.
+11. Jackpot: once per game, gain gold equal to the richest rival's gold.
+12. Speculator: once per game, double your gold.
+13. Tycoon: at game end, +1 follower per 3 gold. (a win condition on its own)
+14. Seed Money: when you recruit it, gain gold equal to your member count.
+15. Hustler: pick a color; from now on, actions there give you +1 gold.
+- Bench: Goldsmith, Counterfeiter, Diversifier, Heir, Safety Net, Heirloom, Interest, Vault, Pawn Shop.

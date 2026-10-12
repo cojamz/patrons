@@ -138,3 +138,5 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
   - Likes: simple effects; hooks into other quadrants (Midas, Tinker, Coin Purse); steady income (Banker, Interest); rival-watching on fixtures and recruits; catch-up (Underdog, Safety Net); time-shifts (Investor).
   - Dislikes: Crown-specific effects; win-more; fiddly timing for small gains; anything hooking mechanics that don't exist yet (trade, release).
 - ✅ (Cory) 15 member types per quadrant for now. (Claude's reading: 15 types, up from 10. Copies are still to settle.)
+- ✅ (Cory) Don't call them fixtures. For now they're just "followers" (buying followers).
+- ✅ (Cory) Gold's 15: Midas, Banker, Prospector, Tax Collector, Merchant, Thrift, Coin Purse, Underdog, Tinker, Investor, Jackpot, Speculator, Tycoon, Seed Money, Hustler. Dropped Goldsmith, Counterfeiter and Diversifier.

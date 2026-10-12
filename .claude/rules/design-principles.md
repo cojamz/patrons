@@ -3,6 +3,7 @@
 Distilled from `design/decisions.md`, which stays the full log. Check every suggestion against this list before proposing it. Cory can change any line.
 
 ## Theme (working frame: Cult Wars)
+- Say "buy followers", never "fixtures" (or Laurel/Garland/Diadem) when talking to Cory. Rates: 2→1, 4→3, 6→6.
 - The frame is light. You lead a following: items are members, VP are followers. Don't over-index on 'cult' (religious, sacrificial, ritual).
 - Quadrants are defined by their mechanics first: economy, tempo, space, market, information, interaction… They should be unique and varied, with names and flavor that fit the mechanic, not a forced theme.
 - Items are **members**: people you recruit. Each quadrant has 10 member types. Workhorses come in pairs; signature members are one-offs (5 pairs + 5 singles = 15 cards; 60 in the deck). Everything stacks. Each one leans toward a sphere, through its color and its ability.
