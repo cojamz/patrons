@@ -137,3 +137,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ Cory's member taste so far:
   - Likes: simple effects; hooks into other quadrants (Midas, Tinker, Coin Purse); steady income (Banker, Interest); rival-watching on fixtures and recruits; catch-up (Underdog, Safety Net); time-shifts (Investor).
   - Dislikes: Crown-specific effects; win-more; fiddly timing for small gains; anything hooking mechanics that don't exist yet (trade, release).
+- ✅ (Cory) 15 member types per quadrant for now. (Claude's reading: 15 types, up from 10. Copies are still to settle.)
