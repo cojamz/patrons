@@ -144,14 +144,18 @@ Members:
   - Rush: +2 gold per round number (2 / 4 / 6).
   - Discount (name tbd): your next member costs 2 less, taken off any part of its cost (gold, wild, or a mix).
 - **Round II:**
-  - Heist (name tbd): steal 2 gold from a player.
+  - Steal: take 3 gold from players, split however you like.
   - Windfall: +1 gold per member you have.
 - **Round III:** Strike: double your gold.
-- **Members (basic):**
+- **Members (basic, Claude draft): each upgrades one action, plus 4 plain ones**
+  - ×2 Partner: Joint Venture gives you +2 more.
+  - ×2 Runner: Rush pays +3 per round instead of +2.
+  - ×2 Collector: Windfall pays 2 per member.
+  - Haggler: your discounts take 2 more off.
+  - Thief: Steal takes 2 more.
+  - Kingpin: Strike triples your gold instead of doubling it.
   - ×2 Banker: at round start, +3 gold.
-  - ×2 Prospector: whenever an action gains you gold, +1 more.
   - ×2 Treasurer: your gold counts double for the Crown.
-  - ×2 Middleman: whenever anyone buys a 6-follower fixture, +2 gold.
   - Speculator: once per game, double your gold.
   - Tycoon: at game end, +1 follower per 3 gold.
-- **Parked for layer 2:** Alchemist, the bribe, and the +1-per-gold-space member.
+- **Parked for layer 2:** Prospector, Middleman, Alchemist, the bribe, and the +1-per-gold-space member.
