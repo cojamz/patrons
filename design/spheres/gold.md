@@ -144,7 +144,7 @@ Members:
   - (open slot)
   - Tribute: each player with more gold than you gives you 1.
 - **Round II:**
-  - Cash Out: trade 2 gold for 1 follower, as many times as you like.
+  - Heist (name tbd): steal 2 gold from a player.
   - Windfall: +1 gold per member you have.
 - **Round III:** Strike: double your gold.
 - **Members (basic):**
