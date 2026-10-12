@@ -11,7 +11,7 @@ Calibrate from his calls, not from this model. When they disagree, he's right an
 - Bribe: 4 gold to take a rival's member, once per round.
 - Steal: 3 gold from players (a round-II space).
 - Too strong: +3 resources plus a free swap; an extra recruit plus +2.
-- Open conflict: the fixtures (Laurel 3→1, Garland 6→3) are pricier than his 2:1 instinct. Flag it for Cory, don't resolve it silently.
+- Fixtures (Cory, 2026-10-12): Laurel 2→1, Garland 4→3, Diadem 6→6. He says something still feels off.
 
 ## Units
 - **1 resource = 1 unit (u)**, any color. A flexible resource ("any color") is worth 1.2u, and a specific off-color one is worth 0.9u.

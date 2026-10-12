@@ -32,9 +32,9 @@ Every sphere spec assumes these. Anything a sphere changes, it states explicitly
 - Members burned or released go to the bottom of their deck.
 
 ## Fixtures (bulk followers)
-- Laurel: 3 resources for 1 follower. Any resources. Unlimited.
-- Garland: 6 resources for 3 followers. They must include at least 2 different resources. Unlimited.
-- Diadem: 9 resources for 6 followers. They must include at least 3 different resources.
+- Laurel: 2 resources for 1 follower. Any resources. Unlimited. (Cory, 2026-10-12)
+- Garland: 4 resources for 3 followers. They must include at least 2 different resources. Unlimited.
+- Diadem: 6 resources for 6 followers. They must include at least 3 different resources.
 - (v0.2: the fixtures crowded out members at 4 of 7 tables, so they're more expensive now. Members stay the main way to buy followers. Fixtures are the late-game bulk path.) There are 2 per player. When the last Diadem is sold, finish the round, then the game ends.
 
 ## Ties and leaders
