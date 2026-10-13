@@ -13,11 +13,8 @@ Priced against Cory's anchors (Joint Venture, Steal 3, Windfall, Strike).
 - ✅ Hire: recruit the cheapest face-up member, free.
 
 ## Ring II
-- ★ Swap: return one of your members to the pile, and recruit a face-up one costing up to 2 more.
-- ★ Headcount: +2 red per color among your members.
-- Extra: Poach: recruit a rival's member, paying them its cost.
-- Extra: Liquidate: return a member to the pile for red equal to its cost +2.
-- Extra: Double Up: recruit a copy of a member you own at half price.
+- ✅ Hire Up (name tbd): +2 red, and recruit the cheapest face-up member, free.
+- ✅ Trade (name tbd): swap one of your members with one of another player's. (Claude's reading: you pick both; both players keep their member count.)
 
 ## Ring III
 - ★ Rally: recruit face-up members free, up to a total cost equal to your member count.

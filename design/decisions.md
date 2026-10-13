@@ -146,3 +146,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Red I: Scout (+2 red, put a face-up member at the bottom of the pile) and +1 red per member recruited this round by anyone (worth waiting for). Muster is out. One slot is open.
 - ❓ (Cory) We need better terms for the face-up row ("shop") and the member pile.
 - ✅ (Cory) Red I: Hire — recruit the cheapest face-up member, free. Round I is complete.
+- ✅ (Cory) Red II: +2 red and recruit the cheapest face-up member free; and swap one of your members with another player's.
