@@ -149,3 +149,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Red II: +2 red and recruit the cheapest face-up member free; and swap one of your members with another player's.
 - ✅ (Cory) Red III: take a member for free. Rally, Encore and Payroll weren't strong enough. Open: from the face-up row, or from a rival.
 - ✅ (Cory) Red III: take any face-up member in the shop, free. Cory said the shop has "6 or 7" face-up members; it was 5. Check.
+- ✅ (Cory) The shop shows 6 face-up members (was 5).

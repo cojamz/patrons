@@ -18,7 +18,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - Board: a spinning wheel of 4 color quadrants (no god names). Outer ring is round I (3 spaces per quadrant), inner ring is round II (2 spaces), center is round III (1 space). Spaces carry over: earlier rings stay open in later rounds.
 - Workers per round: 3, then 4, then 5. Every round-I space fills. Whoever is last in Favor picks first each round.
 - Setup: each player picks 2 starting resources in one go, first seat to last, while everyone watches. This replaces champions.
-- Market: a second, smaller spinning board. One shared deck of every sphere's members, 5 face up around the rim. Neutral Favor fixtures sit in the middle, repeatable and Dominion-style (Laurel, Garland, Diadem; Diadems are limited and act as a clock).
+- Market: a second, smaller spinning board. One shared deck of every sphere's members, 6 face up around the rim. Neutral Favor fixtures sit in the middle, repeatable and Dominion-style (Laurel, Garland, Diadem; Diadems are limited and act as a clock).
 - After each placement you buy one thing: any face-up member, or a fixture. The deck is far bigger than one game's buys.
 - Everyone's items are public.
 
