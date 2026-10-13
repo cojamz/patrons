@@ -150,3 +150,7 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Red III: take a member for free. Rally, Encore and Payroll weren't strong enough. Open: from the face-up row, or from a rival.
 - ✅ (Cory) Red III: take any face-up member in the shop, free. Cory said the shop has "6 or 7" face-up members; it was 5. Check.
 - ✅ (Cory) The shop shows 6 face-up members (was 5).
+- ✅ (Cory) Red keeps "most members" scoring. People gain members in other spheres too, so it won't run away.
+- ✅ (Cory) Weaker versions of other actions are good: they give the draft its texture (miss the strong one, take the weak one; or take the strong one to deny it). Hire stays alongside Hire Up.
+- ✅ (Cory) Don't price scaling actions at their theoretical max. In a draft, people grab them before they peak (Turnout).
+- ✅ (Cory) Trade is a little too strong. "They pick" is rejected; alternatives are pending.

@@ -37,6 +37,8 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - Round-I actions stay interesting in rounds II and III. They scale with the game rather than going flat.
 - Everything should feel vaguely powerful. Prefer open, relative effects (double, half, match, per member, per follower) over small fixed amounts like +2. Relative effects scale with the game and stay exciting.
 - Concise and easy to understand. One line per action. Not too strong. Each action contributes or sets up an engine.
+- Weak versions of strong actions are welcome: the draft makes them matter (consolation, denial).
+- Price scaling actions by when they'll really be drafted, not by their theoretical max.
 - No penalties tied to a space in round I. Every space fills, so a penalty only punishes whoever picks last. Use lures, not tolls.
 
 ## Interaction
