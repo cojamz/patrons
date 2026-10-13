@@ -17,9 +17,7 @@ Priced against Cory's anchors (Joint Venture, Steal 3, Windfall, Strike).
 - ✅ Trade (name tbd): swap one of your members with one of another player's. (Claude's reading: you pick both; both players keep their member count.)
 
 ## Ring III
-- ★ Rally: recruit face-up members free, up to a total cost equal to your member count.
-- Extra: Encore: make two extra recruits this turn (you pay).
-- Extra: Payroll: +2 red per member you have.
+- ✅ Take (name tbd): take a member for free. (Open: any face-up member, or one from a rival?)
 
 ## Members (15)
 1. Recruiter: whenever you recruit, +1 red.

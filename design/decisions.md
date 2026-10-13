@@ -147,3 +147,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ❓ (Cory) We need better terms for the face-up row ("shop") and the member pile.
 - ✅ (Cory) Red I: Hire — recruit the cheapest face-up member, free. Round I is complete.
 - ✅ (Cory) Red II: +2 red and recruit the cheapest face-up member free; and swap one of your members with another player's.
+- ✅ (Cory) Red III: take a member for free. Rally, Encore and Payroll weren't strong enough. Open: from the face-up row, or from a rival.
