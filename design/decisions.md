@@ -140,3 +140,8 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) 15 member types per quadrant for now. (Claude's reading: 15 types, up from 10. Copies are still to settle.)
 - ✅ (Cory) Don't call them fixtures. For now they're just "followers" (buying followers).
 - ✅ (Cory) Gold's 15: Midas, Banker, Prospector, Tax Collector, Merchant, Thrift, Coin Purse, Underdog, Tinker, Investor, Jackpot, Speculator, Tycoon, Seed Money, Hustler. Dropped Goldsmith, Counterfeiter and Diversifier.
+
+## 2026-10-13 — Red
+- ✅ (Cory) Red scoring: most members at round end; red members break ties. Red members are usually cheap (the synergy).
+- ✅ (Cory) Red I: Scout (+2 red, put a face-up member at the bottom of the pile) and +1 red per member recruited this round by anyone (worth waiting for). Muster is out. One slot is open.
+- ❓ (Cory) We need better terms for the face-up row ("shop") and the member pile.

@@ -3,18 +3,14 @@
 Gold hoards; Red spends. Red's actions pay out in red, and its members reward recruiting.
 Priced against Cory's anchors (Joint Venture, Steal 3, Windfall, Strike).
 
-## Scoring (pick one)
-- ★ Most red spent this round takes the ring's followers. (The mirror of Gold's Crown: Gold rewards holding, Red rewards spending.)
-- Most members recruited this round.
-- Priciest single recruit this round.
-- Most members of one color.
+## Scoring (Cory, 2026-10-13)
+- Most members at round end takes the ring's followers. Red members break ties.
+- Synergy: red members are usually cheap.
 
 ## Ring I
-- ★ Muster: +3 red.
-- ★ Scout: +2 red, then replace any face-up members from the pile.
-- ★ Appraise: gain red equal to a face-up member's cost (max 4).
-- Extra: Tithe: +1 red per player who has recruited this round (min 2).
-- Extra: Showcase: +2 red; reveal 2 more members, and they join the row this round.
+- ✅ Scout: +2 red, and put a face-up member at the bottom of the pile.
+- ✅ Turnout (name tbd): +1 red per member recruited this round, by anyone. (Built to be worth waiting for.)
+- Open slot. Muster is cut, and the other v1 ideas were rejected.
 
 ## Ring II
 - ★ Swap: return one of your members to the pile, and recruit a face-up one costing up to 2 more.
