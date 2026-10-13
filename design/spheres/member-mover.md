@@ -10,7 +10,7 @@ Priced against Cory's anchors (Joint Venture, Steal 3, Windfall, Strike).
 ## Ring I
 - ✅ Scout: +2 red, and put a face-up member at the bottom of the pile.
 - ✅ Turnout (name tbd): +1 red per member recruited this round, by anyone. (Built to be worth waiting for.)
-- Open slot. Muster is cut, and the other v1 ideas were rejected.
+- ✅ Hire: recruit the cheapest face-up member, free.
 
 ## Ring II
 - ★ Swap: return one of your members to the pile, and recruit a face-up one costing up to 2 more.
