@@ -14,7 +14,7 @@ Priced against Cory's anchors (Joint Venture, Steal 3, Windfall, Strike).
 
 ## Ring II
 - ✅ Hire Up (name tbd): +2 red, and recruit the cheapest face-up member, free.
-- ✅ Trade (name tbd): swap one of your members with one of another player's. (Claude's reading: you pick both; both players keep their member count.)
+- ✅ Trade (name tbd): swap one of your members for another player's costing no more than yours +1.
 
 ## Ring III
 - ✅ Take (name tbd): take any face-up member in the shop, free.
