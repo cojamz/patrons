@@ -155,3 +155,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Don't price scaling actions at their theoretical max. In a draft, people grab them before they peak (Turnout).
 - ✅ (Cory) Trade is a little too strong. "They pick" is rejected; alternatives are pending.
 - ✅ (Cory) Trade: swap one of your members for another player's costing no more than yours +1.
+- ✅ (Cory) Red members: 13 keepers plus 3 maybes (see red-members-pool.md). Proselytizer is now 'whenever you recruit a member, gain a follower'. Founder becomes Mentor & Protégé (cost 5).
