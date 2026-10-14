@@ -273,3 +273,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
   - A visual of each player's cult: members as figures, plus something for followers so the cult looks bigger as it grows, without taking much space.
   - Keep the spinning wheel, but nothing elsewhere changes with the wheel's orientation (no "facing quadrant" panel).
   - Yes: pay by dropping coins into cost slots; the hierarchy rule (≤7 groups on screen, the rest one hover away); round end as "the Reckoning"; seat rail with sigils.
+- ✅ (Cory) Much clearer UI for what's happening; at round end, a little animation showing which cult wins each prize (the Reckoning, quadrant by quadrant, followers flying to the winner).

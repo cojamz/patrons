@@ -125,3 +125,33 @@ describe('keyword glossary: one source, every keyword in the cards defined', () 
   });
 });
 void defById; void within;
+
+describe('"You\'d get" on a space (the engine\'s dry run)', () => {
+  it('shows the exact gain for a plain space, and a range plus "your choice" for a space that asks', async () => {
+    const { waitFor } = await import('@testing-library/react');
+    const { YoudGet } = await import('../../../v4/game/Info.jsx');
+    let s = createGame({ seats, seed: 9, quadrants: ['gold', 'red', 'market', 'echo'] });
+    const { applyMove, chooseBotMove } = await import('../../../engine/v4/index.js');
+    while (s.pending.kind !== 'place') s = applyMove(s, chooseBotMove(s, () => 0.3));
+    const pid = s.pending.player;
+    const echo = s.quadrants.indexOf('echo'), hum = quadrant('echo').actions.findIndex(a => a.key === 'hum');
+    const one = render(<YoudGet state={s} pid={pid} q={echo} i={hum} />);
+    await waitFor(() => expect(one.container.querySelector('[data-youd-get]').dataset.youdGet).toBe('+3 green'));
+    cleanup();
+    const gold = s.quadrants.indexOf('gold'), jv = quadrant('gold').actions.findIndex(a => a.key === 'jv');
+    const two = render(<YoudGet state={s} pid={pid} q={gold} i={jv} />);
+    await waitFor(() => expect(two.container.querySelector('[data-youd-get]').dataset.youdGet).toBe('+3 gold'));
+    expect(two.container.textContent).toMatch(/rivals \+1 gold/);
+  });
+
+  it('worker figures carry their seat sigil', async () => {
+    const { default: Wheel } = await import('../../../v4/game/Wheel.jsx');
+    const s = createGame({ seats, seed: 5 });
+    s.round = 1; s.slots = { '0-0': 0, '1-0': 1, '2-0': 2 };
+    const { container } = render(<Wheel state={s} legal={new Map()} onPick={() => {}} flash={new Set()} facing={0} onFacing={() => {}} />);
+    const figs = [...container.querySelectorAll('.worker-fig')];
+    expect(figs.map(f => f.dataset.seat).sort()).toEqual(['0', '1', '2']);
+    const shapes = new Set(figs.map(f => f.querySelector('.sigil').getAttribute('d').replace(/[\d.\-,\s]+/g, '')));
+    expect(shapes.size).toBe(3); // three seats, three different shapes
+  });
+});
