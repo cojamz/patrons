@@ -512,7 +512,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               <i className="dot" /><b>{meP.name}</b>
               <span className="yf"><Tick value={followers(state, meP)} color={playerColor(meP.id)} className="num" float={false} /> {followers(state, meP) === 1 ? 'follower' : 'followers'}</span>
               <Resources state={state} p={meP} float={false} />
-              <Workers p={meP} caption={false} />
+              <Workers p={meP} />
             </span>
           )}
           {canUndo && <button type="button" className="btn ghost undo undo-row" onClick={undo}>↶ Undo {undoWord}</button>}
