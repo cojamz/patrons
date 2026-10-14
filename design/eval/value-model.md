@@ -1,6 +1,10 @@
 # Value Model v2
 
-> Stale rates (2026-10-14): follower buys are now 2→1, 4→3, 8→6 and 10→10, and member costs doubled, so a unit here is worth about half a member-cost point. Re-anchor before pricing new cards; Cory's anchors still rule.
+> **Superseded for pricing (2026-10-14).** Keep it as a rough ruler for actions; don't price members from it.
+> - Rates changed: follower buys take any resources at 2→1, 4→3, 8→6 (stock 2 per player) and 10→10 (stock 4, the clock); member costs doubled, so a unit here is about half a member-cost point. Plain "worth N" members kept their old price. "Fixtures", Laurel, Garland and Diadem are retired words: say "buy followers".
+> - "Take only from players ahead of you" no longer holds: most steals hit any rival.
+> - Members are now priced by measurement: `scripts/v4-member-value.mjs` (hand one member to one seat, compare) and the fair-price screen `scripts/v4-fair-price.mjs` (every card at once, then outliers), plus the dead-window audit's systemic rules (design/eval/cory-notes-2026-10-14.md §4). Name the instrument with every number.
+> - Cory's anchors still rule.
 
 These are rough, shared numbers so prices and yields can be argued with arithmetic instead of vibes. They'll be refined when a simulator exists. Until then they're a ruler, not the truth.
 

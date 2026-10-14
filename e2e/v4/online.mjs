@@ -1,19 +1,59 @@
 // E2E: a 3-person online game, with the things friends actually do.
-//   Hana hosts on a laptop. Gus joins by typing the code. Pia opens the invite link (a phone, when contexts allow).
-//   Mid-game: Gus reloads; Pia closes her tab, so Hana gets "Pia left — let a bot play for them" and taps it; Pia
-//   reopens the link and has her seat back; Hana reloads, so the host role moves to Gus and back she comes as a guest.
-//   Everyone clicks the first legal option on their turn, through to final results, and all three must agree.
-// Transport: BroadcastChannel tabs of one browser (default, the gate), or a Firebase RTDB emulator with V4_RTDB=host:port
-// (separate browser contexts, so each person has their own storage; Pia is an iPhone 13). Fails on any console error.
+//   Hana hosts on a laptop. Gus joins by typing the code. Pia opens the invite link (an iPhone 13 over Firebase).
+//   Mid-game: Gus reloads, then swipes Back (it must ask, not leave); Pia closes her tab, so Hana gets "Pia left — let a
+//   bot play for them" and taps it; Pia reopens the link and has her seat back; Hana reloads, so the host role moves
+//   to Gus and back she comes as a guest. Everyone clicks the first legal option on their turn, through to final
+//   results, and all three must agree. Fails on any console error.
+// Transport: a Firebase RTDB emulator whenever this box can run one (java + the emulator jar, cached in
+//   ~/.cache/patrons; or V4_RTDB=host:port for one already running). Each person then has their own browser context,
+//   so their own storage, which is where rejoin ids live. Otherwise (V4_NO_EMU=1, or no java) BroadcastChannel tabs
+//   of one browser context, which share localStorage: the rejoin is weaker there, and the run says so.
 // Server: $V4_URL if set, else starts `npx vite --port 5181` itself.
 import { chromium, devices } from 'playwright';
-import { spawn } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import { mkdirSync, existsSync, readFileSync, renameSync } from 'node:fs';
+import { createServer } from 'node:net';
+import { homedir } from 'node:os';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '';
 mkdirSync(SHOTS, { recursive: true });
-const RTDB = process.env.V4_RTDB || '';
+
+// ---- the RTDB emulator (real Firebase SDK and the repo's database rules, on localhost) ----
+const EMU_VERSION = '4.11.2';
+const EMU_NS = 'cornycolonies-default-rtdb';
+const freePort = () => new Promise((res, rej) => { const s = createServer(); s.listen(0, '127.0.0.1', () => { const { port } = s.address(); s.close(() => res(port)); }); s.on('error', rej); });
+async function startEmulator() {
+  if (process.env.V4_RTDB) return { host: process.env.V4_RTDB, stop() {} };
+  if (process.env.V4_NO_EMU) return null;
+  if (spawnSync('java', ['-version'], { stdio: 'ignore' }).status !== 0) return null;
+  const jar = process.env.V4_RTDB_JAR || `${homedir()}/.cache/patrons/firebase-database-emulator-v${EMU_VERSION}.jar`;
+  if (!existsSync(jar)) {
+    mkdirSync(jar.slice(0, jar.lastIndexOf('/')), { recursive: true });
+    const url = `https://storage.googleapis.com/firebase-preview-drop/emulator/firebase-database-emulator-v${EMU_VERSION}.jar`;
+    const r = spawnSync('curl', ['-sSfL', '--max-time', '180', '-o', `${jar}.part`, url], { stdio: 'ignore' });
+    if (r.status !== 0) return null;
+    renameSync(`${jar}.part`, jar);
+  }
+  const port = await freePort();
+  const proc = spawn('java', ['-jar', jar, '--host', '127.0.0.1', '--port', String(port)], { stdio: 'ignore' });
+  const stop = () => { try { proc.kill('SIGKILL'); } catch { /* gone */ } };
+  const at = `http://127.0.0.1:${port}`;
+  for (let k = 0; k < 120; k++) {
+    await new Promise(r => setTimeout(r, 500));
+    if (await fetch(`${at}/.json?ns=${EMU_NS}`).then(r => r.status < 500, () => false)) {
+      const rules = readFileSync(new URL('../../database.rules.json', import.meta.url), 'utf8');
+      const put = await fetch(`${at}/.settings/rules.json?ns=${EMU_NS}`, { method: 'PUT', headers: { Authorization: 'Bearer owner' }, body: rules }).then(r => r.ok, () => false);
+      if (put) return { host: `127.0.0.1:${port}`, stop };
+    }
+  }
+  stop();
+  return null;
+}
+const emu = await startEmulator();
+const RTDB = emu ? emu.host : '';
 const tag = RTDB ? 'firebase-emulator' : 'broadcast';
+if (!RTDB) console.log('[online broadcast] no RTDB emulator here: three tabs of one browser share storage, so the rejoin check is weaker');
+
 let server = null;
 let base = process.env.V4_URL;
 if (!base) {
@@ -21,7 +61,7 @@ if (!base) {
   server = spawn('npx', ['vite', '--port', '5181', '--strictPort'], { stdio: 'pipe' });
   let up = false;
   for (let k = 0; k < 60 && !up; k++) { await new Promise(r => setTimeout(r, 500)); up = await fetch(base).then(r => r.ok, () => false); }
-  if (!up) { server.kill(); console.error('vite did not start'); process.exit(1); }
+  if (!up) { server.kill(); emu?.stop(); console.error('vite did not start'); process.exit(1); }
 }
 
 const errors = [];
@@ -41,22 +81,49 @@ const watch = (page, who) => {
   }
   return page;
 };
-const params = `${RTDB ? `rtdb=${RTDB}` : 'transport=broadcast'}&botDelay=30&subAfter=1500`;
+// the game screen's root (stable across UI reworks; seat panels come and go)
+const GAME = '.app.game';
+const params = `${RTDB ? `rtdb=${RTDB}` : 'transport=broadcast'}&botDelay=30&subAfter=1500&intro=0`; // intro=0: no first-game intro over the table (src/v4/Intro.jsx; hotseat.mjs gates the intro)
 const url = `${base}/?${params}`;
 const pages = { hana: watch(await ctxs.hana.newPage(), 'hana'), gus: watch(await ctxs.gus.newPage(), 'gus'), pia: null };
 
+// Clicks the first legal option (choice panels first). The same option id can show in two places (a choice panel and
+// the shop row), and the UI keeps changing, so if a click leaves the page where it was, the next try starts further down.
+const stuck = new Map(); // page -> { key, tries }
 async function stepFirstOption(page) {
   if (!page || page.isClosed()) return false;
+  // tabs of one context: only the front tab is "visible" (its animations and pacing run); bring each to the front
+  if (shared) await page.bringToFront().catch(() => {});
   const next = await page.$('[data-next-round]');
   if (next) { await next.click().catch(() => {}); return true; }
   // touch (and online) placement asks to confirm: "Place here"
   const place = await page.$('[data-place]');
   if (place) { try { await place.click({ timeout: 1500 }); return true; } catch { /* fall through */ } }
-  const els = await page.$$('[data-option]:not([disabled])');
-  for (const el of els) {
-    const id = await el.getAttribute('data-option').catch(() => null);
-    if (!id || id.startsWith('toggle:') || id === 'back') continue;
+  const usable = async els => {
+    const out = [];
+    for (const el of els) {
+      const id = await el.getAttribute('data-option').catch(() => null);
+      if (id && !id.startsWith('toggle:') && id !== 'back') out.push(el);
+    }
+    return out;
+  };
+  const inPanel = await usable(await page.$$('.prompt.choice [data-option]:not([disabled]), [role="dialog"] [data-option]:not([disabled])'));
+  const all = await usable(await page.$$('[data-option]:not([disabled])'));
+  const cands = [...inPanel, ...all.filter(e => !inPanel.includes(e))];
+  if (!cands.length) return false;
+  const key = await page.evaluate(() => `${document.querySelector('.app.game')?.dataset.moves}|${document.querySelector('[data-prompt]')?.textContent}`).catch(() => '');
+  const st = stuck.get(page);
+  const skip = st && st.key === key ? st.tries : 0;
+  stuck.set(page, { key, tries: skip + 1 });
+  const order = cands.map((_, i) => cands[(i + skip) % cands.length]);
+  for (const el of order) {
     try { await el.click({ timeout: 1500 }); return true; } catch { /* try the next */ }
+  }
+  // Everything refused a real click: usually a hover card left open under the pointer. This e2e tests the online flow
+  // (the UI e2e test hit-testing), so park the pointer and press the option directly.
+  await page.mouse.move(1, 1).catch(() => {});
+  for (const el of order) {
+    if (await el.evaluate(e => { if (!e.isConnected) return false; e.click(); return true; }).catch(() => false)) return true;
   }
   return false;
 }
@@ -98,7 +165,7 @@ try {
 
   // Pia opens the invite link: the code is already filled in
   pages.pia = watch(await ctxs.pia.newPage(), 'pia');
-  await pages.pia.goto(invite);
+  await pages.pia.goto(`${invite}&intro=0`);
   await pages.pia.waitForSelector('input[aria-label="Room code"]');
   const filled = await pages.pia.$eval('input[aria-label="Room code"]', e => e.value);
   if (filled !== code) throw new Error(`invite link didn't fill the code: "${filled}"`);
@@ -110,14 +177,22 @@ try {
   await pages.hana.screenshot({ path: `${SHOTS}/online-lobby.png` });
   await pages.pia.screenshot({ path: `${SHOTS}/online-lobby-guest.png` });
   await pages.hana.click('text=Start game');
-  await Promise.all(Object.values(pages).map(p => p.waitForSelector('.players', { timeout: 20000 })));
+  await Promise.all(Object.values(pages).map(p => p.waitForSelector(GAME, { timeout: 20000 })));
   log('started');
 
   // Gus reloads mid-game: same tab, same seat
   await playUntil(async () => (await moves(pages.hana)) >= 8, 60000, 'a few moves');
   await pages.gus.reload();
-  await pages.gus.waitForSelector('.players', { timeout: 20000 });
+  await pages.gus.waitForSelector(GAME, { timeout: 20000 });
   log('gus reloaded');
+  // Back (an iPhone edge swipe) mid-game must ask, not leave: still in the game, seat still his, the confirm is up
+  await pages.gus.evaluate(() => history.back());
+  await pages.gus.waitForSelector('[role="alertdialog"][aria-label="Leave this game?"]', { timeout: 10000 });
+  if (!(await pages.gus.$(GAME))) throw new Error('Back left the game');
+  if (!(await pages.gus.evaluate(() => sessionStorage.getItem('patrons.v4.online')))) throw new Error('Back dropped the saved seat');
+  await pages.gus.click('[role="alertdialog"] >> text=Keep playing');
+  await pages.gus.waitForSelector('[role="alertdialog"][aria-label="Leave this game?"]', { state: 'detached', timeout: 10000 });
+  log('gus pressed Back: asked, kept his seat');
   await pages.gus.screenshot({ path: `${SHOTS}/online-guest.png` });
 
   // Pia closes her tab. After a moment Hana is offered a bot for her, and taps it
@@ -146,8 +221,8 @@ try {
 
   // Pia reopens the invite link: straight back into her seat, the bot steps aside
   pages.pia = watch(await ctxs.pia.newPage(), 'pia');
-  await pages.pia.goto(invite);
-  await pages.pia.waitForSelector('.players', { timeout: 20000 });
+  await pages.pia.goto(`${invite}&intro=0`);
+  await pages.pia.waitForSelector(GAME, { timeout: 20000 });
   // the bot has stepped aside: when it's Pia's turn the table waits for her (a bot would move within ~30 ms)
   {
     const t0 = Date.now();
@@ -160,7 +235,7 @@ try {
     await pages.hana.waitForTimeout(1500);
     if ((await moves(pages.hana)) !== n) throw new Error('a bot kept playing Pia’s seat after she came back');
   }
-  const piaYou = await pages.pia.$eval('.players', e => e.textContent).catch(() => '');
+  const piaYou = await pages.pia.$eval(GAME, e => e.textContent).catch(() => '');
   if (!/you/i.test(piaYou)) throw new Error('Pia rejoined but no seat shows as hers');
   await pages.pia.screenshot({ path: `${SHOTS}/online-rejoined-phone.png` });
   log('pia back');
@@ -168,7 +243,7 @@ try {
   // Hana (the host) reloads: Gus takes over as host while she's gone, and she comes back as a guest
   await playUntil(async () => (await moves(pages.hana)) >= before + 35, 60000, 'a few more moves');
   await pages.hana.reload();
-  await pages.hana.waitForSelector('.players', { timeout: 20000 });
+  await pages.hana.waitForSelector(GAME, { timeout: 20000 });
   log('hana reloaded');
 
   await playUntil(atResults, 240000, 'final results');
@@ -189,6 +264,7 @@ try {
 } finally {
   await browser.close();
   if (server) server.kill();
+  emu?.stop();
 }
 if (errors.length) console.error(errors.join('\n'));
 console.log(ok ? `PASS online (${tag})` : `FAIL online (${tag})`);

@@ -1,7 +1,8 @@
 // Final results: ranking with the followers breakdown, then Play again.
 import { followers, memberCount, TIERS } from '../../engine/v4/index.js';
-import { breakdown, playerColor, winSentence, plural, contestLines } from '../format.js';
+import { breakdown, playerColor, winSentence, plural, contestLines, finalWinners } from '../format.js';
 import { Tip, NamedText } from './Info.jsx';
+import { Who } from './Glyphs.jsx';
 import { Follower } from '../art/Follower.jsx';
 
 export default function Results({ state, onPlayAgain, onHome }) {
@@ -11,7 +12,8 @@ export default function Results({ state, onPlayAgain, onHome }) {
   const key = p => `${followers(state, p)}|${memberCount(state, p)}`;
   const rankOf = ranked.map((p, k) => ranked.findIndex(o => key(o) === key(p)) + 1);
   const shared = r => rankOf.filter(x => x === r).length > 1;
-  const winners = ranked.filter((p, k) => rankOf[k] === 1);
+  // the winners are the rule's (format.js finalWinners), the same call the game-over cults use, so the two never disagree
+  const winners = finalWinners(state).map(id => state.players[id]);
   const brokeTie = ranked.some((p, k) => k > 0 && followers(state, p) === followers(state, ranked[k - 1]) && key(p) !== key(ranked[k - 1]));
   return (
     <section className="results" aria-label="Final results">
@@ -30,7 +32,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
               return (
                 <tr key={p.id} className={k === 0 ? 'first' : ''}>
                   <td className="rank" data-label="#">{rankOf[k]}{shared(rankOf[k]) ? '=' : ''}</td>
-                  <td className="who" style={{ color: playerColor(p.id) }}>{p.name}{p.kind === 'bot' ? ' · bot' : ''}<small>{plural(memberCount(state, p), 'member')}</small></td>
+                  <td className="who"><Who state={state} id={p.id} />{p.kind === 'bot' ? ' · bot' : ''}<small>{plural(memberCount(state, p), 'member')}</small></td>
                   <td className="tot" data-label="Followers" title={`${followers(state, p)} = 1 (yourself) + ${b.members} from members + ${b.bought} bought + ${b.effects} effects + ${b.contests} contests + ${b.endGame} end-game`}>{followers(state, p)}</td>
                   <td data-label="From members" title={`What ${p.name}'s ${plural(p.members.length, 'member')} are worth at the end`}>{b.members}</td>
                   <td data-label="Bought" title={`Follower buys: ${b.bought} followers bought with resources`}>{b.bought}</td>

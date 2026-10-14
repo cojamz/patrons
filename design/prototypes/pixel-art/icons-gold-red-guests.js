@@ -6,7 +6,7 @@
 (function (g) {
   const ICONS = [
     {
-      id: 'gold.rush', name: 'Rush', kind: 'action', sphere: 'gold',
+      id: 'gold.rush', name: 'Golden Years', kind: 'action', sphere: 'gold',
       text: '+2 gold per round number (2 / 4 / 6).',
       idea: 'a coin racing past, speed streaks behind it',
       px: [
@@ -37,7 +37,7 @@
       ],
     },
     {
-      id: 'gold.discount', name: 'Discount', kind: 'action', sphere: 'gold',
+      id: 'gold.discount', name: 'Intro Offer', kind: 'action', sphere: 'gold',
       text: 'Your next member costs 4 less, off any part of its cost.',
       idea: 'scissors snip a price tag',
       px: [
@@ -68,7 +68,7 @@
       ],
     },
     {
-      id: 'gold.steal', name: 'Steal', kind: 'action', sphere: 'gold',
+      id: 'gold.steal', name: 'Collect Debts', kind: 'action', sphere: 'gold',
       text: 'Take up to 3 gold from rivals, split however you like.',
       idea: 'a hook on a line lifts away a sack of gold',
       px: [
@@ -99,7 +99,7 @@
       ],
     },
     {
-      id: 'gold.windfall', name: 'Windfall', kind: 'action', sphere: 'gold',
+      id: 'gold.windfall', name: 'Tithe', kind: 'action', sphere: 'gold',
       text: '+1 gold per member you have.',
       idea: 'coins falling out of the sky into open hands',
       px: [
@@ -254,7 +254,7 @@
       ],
     },
     {
-      id: 'gold.thrift', name: 'Thrift', kind: 'member', sphere: 'gold',
+      id: 'gold.thrift', name: 'Penny Pincher', kind: 'member', sphere: 'gold',
       text: 'Gold you spend on members counts double.',
       idea: 'a thrifty granny in spectacles hugging a piggy bank',
       px: [
@@ -285,7 +285,7 @@
       ],
     },
     {
-      id: 'gold.coinpurse', name: 'Coin Purse', kind: 'member', sphere: 'gold',
+      id: 'gold.coinpurse', name: 'Middleman', kind: 'member', sphere: 'gold',
       text: 'Whenever you recruit a non-gold member, +1 gold.',
       idea: 'a young saver dangling a kiss-lock coin purse',
       px: [
@@ -409,7 +409,7 @@
       ],
     },
     {
-      id: 'gold.jackpot', name: 'Jackpot', kind: 'member', sphere: 'gold',
+      id: 'gold.jackpot', name: 'Lottery Winner', kind: 'member', sphere: 'gold',
       text: 'Once per game: gain gold equal to the richest rival’s gold.',
       idea: 'a whooping winner with a pot overflowing with gold',
       px: [
@@ -471,7 +471,7 @@
       ],
     },
     {
-      id: 'gold.seed', name: 'Seed Money', kind: 'member', sphere: 'gold',
+      id: 'gold.seed', name: 'Treasurer', kind: 'member', sphere: 'gold',
       text: 'When recruited: gain gold equal to your member count.',
       idea: 'a gardener in a straw hat holding a coin with a sprout growing out of it',
       px: [
@@ -533,38 +533,38 @@
       ],
     },
     {
-      id: 'red.scout', name: 'Scout', kind: 'action', sphere: 'red',
-      text: '+2 red, and put a face-up member at the bottom of the pile.',
-      idea: 'a spyglass, pulled out to look ahead',
+      id: 'red.evenswap', name: 'Even Swap', kind: 'action', sphere: 'red',
+      text: '+1 red, and swap one of your members for a rival’s of equal cost.',
+      idea: 'two members on equal red pedestals, trading places: a red arrow each way',
       px: [
         '........................',
         '........................',
-        '.................l......',
-        '................mll.....',
-        '...............3mmll....',
-        '..............332mmll...',
-        '.............33222mdll..',
-        '............3322221dd...',
-        '...........m32222111....',
-        '...........mm222111.....',
-        '..........33mm2111......',
-        '.........3322dd11.......',
-        '........332221dd........',
-        '.......3322211..........',
-        '......mm22211...........',
-        '......mmm211............',
-        '.....32mdd1.............',
-        '....3222dd..............',
-        '...32221................',
-        '..32221.................',
-        '...221..................',
-        '....1...................',
+        '........................',
+        '........................',
+        '...ll..............ll...',
+        '..llll............llll..',
+        '..lllm.......3....lllm..',
+        '...lm...3333322....lm...',
+        '........22222222........',
+        '..lllm..1111121...lllm..',
+        '.llllmm......1...llllmm.',
+        '.llllmm..........llllmm.',
+        '.l.lm.m...3......l.lm.m.',
+        '.l.lm.m..3233333.l.lm.m.',
+        '..llmm..22222222..llmm..',
+        '..l..m...1211111..l..m..',
+        '..l..m....1.......l..m..',
+        '.ll..mm..........ll..mm.',
+        '.322221..........322221.',
+        '.222221..........222221.',
+        '.111111..........111111.',
+        '........................',
         '........................',
         '........................',
       ],
     },
     {
-      id: 'red.turnout', name: 'Turnout', kind: 'action', sphere: 'red',
+      id: 'red.turnout', name: 'Bandwagon', kind: 'action', sphere: 'red',
       text: '+1 red per member recruited this round, by anyone.',
       idea: 'a crowd of members turns up under festive bunting',
       px: [
@@ -595,7 +595,7 @@
       ],
     },
     {
-      id: 'red.hire', name: 'Hire', kind: 'action', sphere: 'red',
+      id: 'red.hire', name: 'Open Door', kind: 'action', sphere: 'red',
       text: 'Recruit the cheapest face-up member, free.',
       idea: 'a pointing hand picks out a member: you’re hired',
       px: [
@@ -626,7 +626,7 @@
       ],
     },
     {
-      id: 'red.hireup', name: 'Hire Up', kind: 'action', sphere: 'red',
+      id: 'red.hireup', name: 'Open House', kind: 'action', sphere: 'red',
       text: '+2 red, and recruit the cheapest face-up member, free.',
       idea: 'a hand lifts a member up, with red to spare',
       px: [
@@ -657,7 +657,7 @@
       ],
     },
     {
-      id: 'red.trade', name: 'Trade', kind: 'action', sphere: 'red',
+      id: 'red.trade', name: 'Swap Sides', kind: 'action', sphere: 'red',
       text: 'Swap one of your members for another player’s costing no more than yours +2.',
       idea: 'a balance with a member in each pan: a fair swap',
       px: [
@@ -688,7 +688,7 @@
       ],
     },
     {
-      id: 'red.take', name: 'Take', kind: 'action', sphere: 'red',
+      id: 'red.take', name: 'Hand-pick', kind: 'action', sphere: 'red',
       text: 'Take any face-up member, free.',
       idea: 'an arcade claw snatches a member',
       px: [
@@ -967,7 +967,7 @@
       ],
     },
     {
-      id: 'red.drive', name: 'Recruiting Drive', kind: 'member', sphere: 'red',
+      id: 'red.drive', name: 'Pied Piper', kind: 'member', sphere: 'red',
       text: 'Recruit 2+ members in one turn: +2 red.',
       idea: 'a campaigner in a boater waving a recruiting flag',
       px: [
@@ -1122,7 +1122,7 @@
       ],
     },
     {
-      id: 'red.reserve', name: 'Reserve', kind: 'member', sphere: 'red',
+      id: 'red.reserve', name: 'Benchwarmer', kind: 'member', sphere: 'red',
       text: 'No effect.',
       idea: 'a reservist in a tin helmet, waiting to be called up',
       px: [

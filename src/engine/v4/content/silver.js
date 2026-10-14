@@ -5,7 +5,7 @@
 //
 // "Give" is Silver's verb: anything a Silver space or member hands to another player. Gifts fire two
 // module-level hooks on members: onGive (the giver's members) and onGiven (the receiver's members).
-// Gold's Joint Venture also gives (Cory): gold.js fires the receiver's onGiven hooks itself.
+// Gold's Kickback also gives (Cory): gold.js fires the receiver's onGiven hooks itself.
 import { defById } from './index.js';
 
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
@@ -34,7 +34,7 @@ function giveAll(ctx, giver, color, n) {
   for (const o of others(ctx, giver)) giveTo(ctx, giver, o, color, n);
   afterGive(ctx, giver);
 }
-/** One gift from giver to one player, as any sphere gives (Gold's Joint Venture): receiver's and giver's gift hooks fire. */
+/** One gift from giver to one player, as any sphere gives (Gold's Kickback): receiver's and giver's gift hooks fire. */
 export function give(ctx, giver, to, color, n) {
   if (!(n > 0)) return;
   giveTo(ctx, giver, to, color, n);
@@ -77,17 +77,17 @@ export const silverActions = [
     },
   },
   {
-    key: 'gift', ring: 1, name: 'Gift', text: '+2 silver and +2 of another color; everyone else gets 1 of that color.',
+    key: 'gift', ring: 1, name: 'Goody Bags', text: '+2 silver and +2 of another color; everyone else gets 1 of that color.',
     estimate: ctx => 4 - spillCost(ctx, 1),
     resolve(ctx, p) {
       hostGain(ctx, p, 2);
-      ctx.choose(p, 'Gift: which color? You get 2, everyone else gets 1.', otherColors(ctx).map(c => ({
+      ctx.choose(p, 'Goody Bags: which color? You get 2, everyone else gets 1.', otherColors(ctx).map(c => ({
         id: `color:${c}`, label: c, kind: 'color', value: c, hint: colorHint(ctx, p, c),
       })), 'silver.gift', { mine: 2 });
     },
   },
   {
-    key: 'alms', ring: 1, name: 'Alms', text: '+4 silver, and a rival you choose gets 2 of a color you choose.',
+    key: 'alms', ring: 1, name: 'Good Deed', text: '+4 silver, and a rival you choose gets 2 of a color you choose.',
     estimate: () => 4 - 0.5,
     resolve(ctx, p) {
       hostGain(ctx, p, 4);
@@ -101,11 +101,11 @@ export const silverActions = [
           hint: -0.3 * ctx.followers(o) + (lead >= -2 && lead <= 0 ? 1 : 0) - (ctx.followers(o) === leader ? 2 : 0) + (c === S ? -0.5 : 0),
         });
       }
-      ctx.choose(p, 'Alms: give 2 of which color, to whom?', opts, 'silver.alms');
+      ctx.choose(p, 'Good Deed: give 2 of which color, to whom?', opts, 'silver.alms');
     },
   },
   {
-    key: 'tongue', ring: 2, name: 'Silver Tongue', text: '+4 silver, then swap any of your silver for one other color, one for one. Everyone else +1 silver.',
+    key: 'tongue', ring: 2, name: 'Sweet Talk', text: '+4 silver, then swap any of your silver for one other color, one for one. Everyone else +1 silver.',
     estimate: ctx => 5 - spillCost(ctx, 1),
     resolve(ctx, p) {
       hostGain(ctx, p, 4);
@@ -116,7 +116,7 @@ export const silverActions = [
           // bots: turn half into the color they're shortest of
           hint: x === Math.floor(have / 2) ? 1 - 0.2 * (p.res[c] || 0) : -1 });
       }
-      ctx.choose(p, `Silver Tongue: swap silver for another color? (you have ${have})`, opts, 'silver.tongue');
+      ctx.choose(p, `Sweet Talk: swap silver for another color? (you have ${have})`, opts, 'silver.tongue');
     },
   },
   {
@@ -130,13 +130,13 @@ export const silverActions = [
     },
   },
   {
-    key: 'jubilee', ring: 3, name: 'Jubilee', text: 'Gain 1 follower per 2 silver you hold (keep the silver). Everyone else +2 silver.',
+    key: 'jubilee', ring: 3, name: 'Hold Court', text: 'Gain 1 follower per 2 silver you hold (keep the silver). Everyone else +2 silver.',
     estimate: (ctx, p) => 2 * Math.floor(p.res[S] / 2) - spillCost(ctx, 2),
     resolve(ctx, p) {
       const f = Math.floor(p.res[S] / 2);
       p.bonus += f;
       giveAll(ctx, p, S, 2);
-      ctx.log(`${p.name}'s Jubilee: +${f} followers, +2 silver to everyone else.`);
+      ctx.log(`${p.name}'s Hold Court: +${f} followers, +2 silver to everyone else.`);
     },
   },
 ];
@@ -216,18 +216,18 @@ const silver = {
       onRecruited(ctx, owner) { ctx.gain(owner, S, ctx.memberCount(owner)); },
       onRoundStart(ctx, owner) { if (ctx.state.round === 3) ctx.gain(owner, S, ctx.memberCount(owner)); },
     }),
-    m('spoon', 'Silver Spoon', 4, 2, 'When recruited, gain silver equal to the most silver any rival has.', {
+    m('spoon', 'Upstart', 4, 2, 'When recruited, gain silver equal to the most silver any rival has.', {
       onRecruited(ctx, owner) { ctx.gain(owner, S, Math.max(0, ...others(ctx, owner).map(o => o.res[S]))); },
     }),
     m('toastmaster', 'Toastmaster', 4, 4, 'Whenever you take a Silver space, +1 follower.', {
       afterAction(ctx, owner, card, qid) { if (qid === S) owner.bonus += 1; },
     }),
-    m('gala', 'Gala', 4, 4, 'Once per game: double your silver, and everyone else +2 silver.', {
+    m('gala', 'Debutante', 4, 4, 'Once per game: double your silver, and everyone else +2 silver.', {
       activate: 'game',
       onActivate(ctx, owner) {
         ctx.gain(owner, S, owner.res[S]);
         giveAll(ctx, owner, S, 2);
-        ctx.log(`${owner.name}'s Gala: silver doubled to ${owner.res[S]}, +2 silver to everyone else.`);
+        ctx.log(`${owner.name}'s Debutante: silver doubled to ${owner.res[S]}, +2 silver to everyone else.`);
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res[S] >= 6,
     }),

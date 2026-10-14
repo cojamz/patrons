@@ -10,9 +10,10 @@ import { seededRandom } from '../../../engine/v4/rng.js';
 import { namesCard } from './cards-helpers.js';
 import { runFireAudit, silentMembers } from './fire-audit-runner.js';
 
-/** A plain member ("Worth 2 followers.", "No effect.") has nothing to fire. Goes by the printed text: some members
- *  with effects have no hooks of their own (their sphere reads them by key, like Green's Choir, Muse, Wallflower). */
-export const plain = def => /^(Free\. )?(No effect\.|Worth \d+ followers\.)$/.test(def.text.trim());
+/** A plain member ("Worth 2 followers.", "No effect.", "Counts as 3 members.") has nothing to fire: its number is a
+ *  count the contests read, not a payout. Goes by the printed text: some members with effects have no hooks of their
+ *  own (their sphere reads them by key, like Green's Choir, Muse, Wallflower). */
+export const plain = def => /^(Free\. )?(No effect\.|Worth \d+ followers\.|Counts as \d+ members\.)$/.test(def.text.trim());
 
 /**
  * Play `games` seeded 4-bot games over `tables`; per member id: games it was held (recruited, or dealt), games a
@@ -55,8 +56,8 @@ export function audit(tables, games, { seed = 3100, hand = [], perSeat = 0, rule
 
 describe('fire audit: Blue, Magenta, White, Green', () => {
   const GROUP = ['market', 'thieves', 'trading', 'echo'];
-  // Watchdog changes no number (it only refuses a steal). Social Climber: bots never trade a member in (their hint
-  // only likes plain cheap members), so it can't fire in bot games; cards-market.test.js covers it.
+  // Bodyguard changes no number (it only refuses a steal). Social Climber pays only on a Release, and this audit plays
+  // with Release off; cards-market.test.js covers it.
   // Magnate pays only from white left at game end (1 follower per 3); normal bots spend white down because any
   // follower buy beats that rate, so it fires about 1 hold in 13 (ledger) and 4 holds can all miss. Since the
   // 2026-10-14 White rework changed these seeds' games it does; cards-trading.test.js (Magnate) covers its line.
@@ -92,15 +93,15 @@ describe('namesCard: what counts as a line naming a card', () => {
   it('counts the engine’s and content’s trace forms', () => {
     for (const [l, n] of [
       ["P1's Banker: +3 gold.", 'Banker'], ['P2 +1 silver (P1\'s Retinue).', 'Retinue'], ['P1 uses Big Spender.', 'Big Spender'],
-      ['P1 used Jackpot: +7 gold.', 'Jackpot'], ['Tycoon +3', 'Tycoon'], ['P1 recruited Banker (1 gold; Sponsor saves 2).', 'Sponsor'],
-      ['P1 recruited Banker (2 gold; Thrift: gold counts double).', 'Thrift'], ['P1 pays 3 purple for Overtime (Double Time: 6 → 3).', 'Double Time'],
+      ['P1 used Lottery Winner: +7 gold.', 'Lottery Winner'], ['Tycoon +3', 'Tycoon'], ['P1 recruited Banker (1 gold; Sponsor saves 2).', 'Sponsor'],
+      ['P1 recruited Banker (2 gold; Penny Pincher: gold counts double).', 'Penny Pincher'], ['P1 pays 3 purple for Overtime (Corner-Cutter: 6 → 3).', 'Corner-Cutter'],
       ['Round II begins. P1 picks first. (P1\'s Front-runner: always picks first.)', 'Front-runner'],
     ]) expect(namesCard(l, n), l).toBe(true);
   });
   it('does not count lines that only move the card', () => {
     for (const [l, n] of [
       ['P1 recruited Banker (2 gold, 1 red).', 'Banker'], ['P1 traded Intern for P2\'s Banker.', 'Banker'],
-      ['P1 released Banker to the bottom of the pile, for 4 in any colors.', 'Banker'], ["P1's Doppelganger copies Banker.", 'Banker'],
+      ['P1 released Banker to the bottom of the pile, for 2 gold.', 'Banker'], ["P1's Doppelganger copies Banker.", 'Banker'],
       ['P1 pulled a heist: P2\'s Banker.', 'Banker'], ['P1 sent Banker to the bottom of the pile.', 'Banker'],
     ]) expect(namesCard(l, n), l).toBe(false);
   });

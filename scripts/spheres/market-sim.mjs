@@ -59,7 +59,7 @@ for (let g = 1; g <= games; g++) {
 }
 const avg = a => (a.reduce((x, y) => x + y, 0) / a.length).toFixed(1);
 const pct = x => (100 * x / games).toFixed(0) + '%';
-console.log(`${games} games, 4 greedy bots, ${quadrants.join('/')}, Blue scoring: ${market.scoring.label}${process.argv[5] === 'lean' ? ', lean (Bargain/Clearance use your buy)' : ''}`);
+console.log(`${games} games, 4 greedy bots, ${quadrants.join('/')}, Blue scoring: ${market.scoring.label}${process.argv[5] === 'lean' ? ', lean (Snap Up/Half Price use your buy)' : ''}`);
 console.log(`wins by seat: ${st.wins.map(pct).join(' / ')}`);
 console.log(`avg followers ${avg(st.fol)} · members ${avg(st.mem)} · member value ${avg(st.val)} · members costing 4+ ${avg(st.pricey)} · leftover resources ${avg(st.left)} · buys/game: members ${(st.buys.member / games).toFixed(1)}, follower buys ${(st.buys.tier / games).toFixed(1)}`);
 console.log('takes per game (rounds I/II/III):');

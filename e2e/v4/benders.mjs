@@ -13,7 +13,7 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { createGame, applyMove, chooseBotMove } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
-import { BUILD } from '../../src/v4/session/record.js';
+import { buildStamp } from './lib/stamp.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/benders';
 mkdirSync(SHOTS, { recursive: true });
@@ -34,7 +34,7 @@ if (!base) {
 function benderSave(seed) {
   const seats = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
   let s = createGame({ seats, seed });
-  s.build = { ...BUILD }; // this build's stamp, or the app sets the save aside as "older version"
+  s.build = buildStamp(); // this build's stamp, or the app sets the save aside as "older version"
   const rand = seededRandom(seed);
   for (let n = 0; n < 800 && !(s.round === 1 && s.pending && s.pending.player === 0 && s.pending.kind === 'place' && Object.keys(s.slots).length > 0); n++) {
     s = applyMove(s, s.pending.player === 0 ? chooseBotMove(s, rand) : chooseBotMove(s, rand));
@@ -71,7 +71,7 @@ try {
   await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
   await page.reload();
   await page.click('[data-home="resume"]');
-  await page.waitForSelector('.players');
+  await page.waitForSelector('.lt-seat[data-pid]');
   await page.waitForTimeout(400);
 
   const t0 = Date.now();
@@ -101,7 +101,7 @@ try {
       continue;
     }
 
-    if (await page.$('.fbuy.live')) {
+    if (await page.$('.lt[data-phase="buy"][data-yours="1"]')) {
       // (b2) Insider: pile cards in the shop
       if (!seen.has('pile')) {
         const pile = await page.$$('.lt-shop .card .from-pile');
@@ -110,12 +110,12 @@ try {
           await shot('b2-pile-cards');
           const card = await page.$('.lt-shop .card.can:has(.from-pile)');
           if (card) {
-            const n0 = await page.$eval('.pl[data-pid="0"]', e => e.textContent);
+            const n0 = await page.$eval('.lt-seat[data-pid="0"]', e => e.textContent);
             await card.click();
             const pay = await page.waitForSelector('.dialog.pay .btn.pri[data-option]', { timeout: 2500 }).catch(() => null);
             if (pay) { await page.waitForTimeout(300); await pay.click(); }
             await page.waitForTimeout(500);
-            const n1 = await page.$eval('.pl[data-pid="0"]', e => e.textContent);
+            const n1 = await page.$eval('.lt-seat[data-pid="0"]', e => e.textContent);
             if (n0 === n1) errors.push('(b2) recruiting from the pile changed nothing on P1');
             seen.add('pile-bought');
             continue;
@@ -123,9 +123,9 @@ try {
         }
       }
       // (b3) Release
-      const fold = !seen.has('release') && await page.$('.fbuy.live .release-row:not(.open) .rel-toggle');
+      const fold = !seen.has('release') && await page.$('.lt-prompt .release-row:not(.open) .rel-toggle');
       if (fold) { await fold.click(); await page.waitForTimeout(150); }
-      const rel = await page.$('.fbuy.live [data-option^="release:"]');
+      const rel = await page.$('.lt-prompt [data-option^="release:"]');
       if (rel && !seen.has('release')) {
         seen.add('release');
         if (!(await rel.isVisible())) errors.push('(b3) the Release buttons did not open from their row');
@@ -154,7 +154,7 @@ try {
       seen.add('straggler');
       await shot(`b4-straggler-${seen.size}`);
       const btns = await page.$$eval('.prompt.choice button[data-option]', els => els.map(e => [e.getAttribute('data-option'), e.textContent.trim()]));
-      if (btns.length < (/move one of your workers/.test(prompt) ? 2 : 1)) errors.push(`(b4) Straggler choice shows ${btns.length} buttons`);
+      if (btns.length < (/move one of your minions/.test(prompt) ? 2 : 1)) errors.push(`(b4) Straggler choice shows ${btns.length} buttons`);
       for (const [id, t] of btns) if (!t || /undefined/.test(t)) errors.push(`(b4) Straggler option ${id} has label "${t}"`);
       const onBoard = await page.$$eval('.slot[data-option]', els => els.map(e => e.getAttribute('data-option')).filter(id => /^(from|to):/.test(id)));
       if (onBoard.length) errors.push(`(b4) Straggler options mapped onto the board: ${onBoard.join(', ')}`);

@@ -1,5 +1,5 @@
 // Display helpers. No rules here: everything is read off engine state.
-import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds } from '../engine/v4/index.js';
+import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, memberCount, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds } from '../engine/v4/index.js';
 import { contextFor } from '../engine/v4/core.js';
 import { defaultEmoji } from './art/emojis.js';
 
@@ -81,13 +81,13 @@ export function promptFor(state, mine) {
         const m = l.match(/^(.+?) took .+ \(\w+\)\.$/);
         if (m) { again = m[1] === name; break; }
       }
-      if (mine && again) return { who: p, text: 'Your turn again (snake order) — place a worker' };
+      if (mine && again) return { who: p, text: 'Your turn again (snake order) — place a minion' };
     }
     // falls through
     case 'place-plain':
       return mine
-        ? { who: p, text: `Place a worker on a glowing space` }
-        : { who: p, text: `${name} is placing a worker` };
+        ? { who: p, text: `Place a minion on a glowing space` }
+        : { who: p, text: `${name} is placing a minion` };
     case 'buy':
       return mine
         ? { who: p, text: 'Recruit a member, buy followers, or pass' }
@@ -309,7 +309,7 @@ export function roundGains(start, end, p, contests) {
 
 // ---------- log lines, said plainly ----------
 const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-/** The action the actor took most recently before line i ("P1 took Joint Venture (Gold).") */
+/** The action the actor took most recently before line i ("P1 took Kickback (Gold).") */
 function lastAction(log, i, actor) {
   const re = new RegExp(`^${esc(actor)} took (.+?) \\(\\w+\\)\\.$`);
   for (let k = i - 1; k >= 0 && k >= i - 12; k--) { const m = log[k].match(re); if (m) return m[1]; }
@@ -317,7 +317,7 @@ function lastAction(log, i, actor) {
 }
 /**
  * Rewrites log lines whose wording teaches the wrong rule. Gifts in the engine create resources for the receiver
- * (nobody loses them), so "P1 gave 1 gold to P2" reads as "P2 gains 1 gold (P1's Joint Venture)".
+ * (nobody loses them), so "P1 gave 1 gold to P2" reads as "P2 gains 1 gold (P1's Kickback)".
  * Returns { text, gift? } where gift = { to, n, color, text } for a receiver's pill.
  */
 export function explainLine(log, i) {
@@ -451,7 +451,7 @@ export function projectedEndGame(state) {
  * One turn told in plain words, for the line by the board after anyone's turn (Cory: "too hard to tell what's going
  * on"). `start` is the state when `actor`'s turn began, `end` when it passed on. Everything is read off the two
  * states and the log between them, so it's true whatever the action or member did:
- *   "P3 took Pickpocket · +1 gold +1 green · from you 1 gold · from P4 1 green · recruited Mob (paid 4 red) · +1 follower"
+ *   "P3 took Help Yourself · +1 gold +1 green · from you 1 gold · from P4 1 green · recruited Mob (paid 4 red) · +1 follower"
  * Returns { text, touched } (touched: the other players whose resources changed), or null if nothing happened.
  * `me` is the person at this device (named "you"), or null.
  */
@@ -492,4 +492,11 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   if (!took && !parts.length) return null;
   const head = took ? `${who} took ${took[1]}` : `${who}`;
   return { text: [head, ...parts].join(' · '), touched, actor };
+}
+
+/** Who won a finished game: most followers, members breaking a follower tie (the rule; Results ranks the same way). */
+export function finalWinners(state) {
+  const ids = state.ranking || state.players.map(p => p.id);
+  const key = id => `${engineFollowers(state, state.players[id])}|${memberCount(state, state.players[id])}`;
+  return ids.filter(id => key(id) === key(ids[0]));
 }

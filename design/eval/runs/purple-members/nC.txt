@@ -1,0 +1,9 @@
+member value when handed over at the start of round II (320 games each, 4 normal bots, release on). Baseline win rate 25%.
+name                 cost  +followers  win%
+Patience                8         5.8    50
+Double Time             8         4.9    50
+Lamplighter             8         4.9    42
+Bookkeeper              6         4.8    48
+Overseer                6         3.9    44
+Clockmaker              4         2.5    41
+Shift Crew              2         2.5    36

@@ -1,5 +1,5 @@
 // Hot-seat session: the whole game runs on this device. Bots move on their own after a short delay.
-import { isLegal, chooseBotMove } from '../../engine/v4/index.js';
+import { isLegal, chooseBotMove, setBotLevels } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import { createEmitter } from './emitter.js';
 import { newGame, step, trackState, botStep } from './record.js';
@@ -60,9 +60,11 @@ export const UNDO_BUY_HOLD_MS = 1600;
  *   Pass `undo` (a saved `undoCheckpoint`) with it to keep undo across a reload; it's dropped unless still valid for `state`.
  * @returns {Session & { canUndo(): boolean, undo(): boolean, readonly undoCheckpoint: UndoCheckpoint|null }}
  */
-export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 ** 31), botDelayMs = 450, quadrants, state: saved, undo: savedUndo }) {
+export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 ** 31), botDelayMs = 450, quadrants, botLevel, state: saved, undo: savedUndo }) {
   // A new game is stamped with this build's content hash and records its moves (state.build, state.history).
   let state = saved || newGame({ seats: seats.map(s => ({ name: s.name, kind: s.kind || 'human' })), seed, ...(quadrants ? { quadrants } : {}) });
+  // The setup screen's bot level (Easy / Normal / Hard) goes on every bot seat of a new game; a resumed game keeps its own.
+  if (!saved && botLevel) setBotLevels(state, state.players.map(p => (p.kind === 'bot' ? botLevel : null)));
   let version = 1;
   let timer = null;
   let destroyed = false;

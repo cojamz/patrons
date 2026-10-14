@@ -27,7 +27,7 @@ describe('Guest members (rule-benders)', () => {
 
   it('Big Spender: a second buy after a real first one, once per round; named', () => {
     let s = sceneQ({ res: [rich], members: [['benders.bigspender']] });
-    s = take(s, 'Rush');
+    s = take(s, 'Golden Years');
     s = move(s, 'tier:small');
     expect(s.pending.extra).toBe(true);
     s = move(s, 'tier:small');
@@ -36,16 +36,15 @@ describe('Guest members (rule-benders)', () => {
   });
   it('Big Spender × Crowd-Pleaser: two follower buys, two payouts', () => {
     let s = sceneQ({ res: [rich], members: [['benders.bigspender', 'red.crowd']] });
-    s = move(move(take(s, 'Rush'), 'tier:small'), 'tier:small');
+    s = move(move(take(s, 'Golden Years'), 'tier:small'), 'tier:small');
     expect(named(s, 'Crowd-Pleaser')).toHaveLength(2);
   });
 
   it('Freelancer: a member’s colored part paid in other colors, and the recruit line names Freelancer', () => {
     const restore = pinCosts({ 'gold.banker': [2, 0] });
     try {
-      let s = sceneQ({ res: [{ red: 2 }], members: [['benders.freelancer']], shop: ['gold.banker'] });
-      s = take(s, 'Scout');
-      s = move(s, s.pending.options.find(o => s.cards[o.value].def !== 'gold.banker').id);
+      let s = sceneQ({ res: [{ red: 4 }], members: [['benders.freelancer']], shop: ['gold.banker'] });
+      s = take(s, 'Bandwagon'); // +0 red: nobody has recruited yet
       s = buy(s, 'gold.banker');
       expect(s.players[0].res.red).toBe(2);
       expect(named(s, 'Freelancer')).toHaveLength(1);
@@ -55,7 +54,7 @@ describe('Guest members (rule-benders)', () => {
     const restore = pinCosts({ 'gold.prospector': [2, 0] });
     try {
       let s = sceneQ({ res: [{ gold: 2 }], members: [['benders.freelancer']], shop: ['gold.prospector'] });
-      s = buy(move(take(s, 'Joint Venture'), 'player:1'), 'gold.prospector');
+      s = buy(move(take(s, 'Kickback'), 'player:1'), 'gold.prospector');
       expect(s.players[0].res.gold).toBe(3);
       expect(named(s, 'Freelancer')).toHaveLength(0);
     } finally { restore(); }
@@ -64,7 +63,7 @@ describe('Guest members (rule-benders)', () => {
   it('Insider: recruit from the top 3 of the pile; the recruit line names Insider', () => {
     let s = sceneQ({ res: [rich], members: [['benders.insider']] });
     const top = s.pile[0];
-    s = take(s, 'Rush');
+    s = take(s, 'Golden Years');
     s = move(s, `card:${top}`);
     expect(s.players[0].members).toContain(top);
     expect(named(s, 'Insider')[0]).toMatch(/from the pile with P1's Insider/);
@@ -73,12 +72,12 @@ describe('Guest members (rule-benders)', () => {
   it('Extra Hand: +1 worker in round III, named in the round’s opening line; a Doppelganger copy adds another', () => {
     let s = sceneQ({ members: [['benders.extrahand']], queue: [{ t: 'round', r: 3 }] });
     expect(s.players[0].left).toBe(6);
-    expect(named(s, 'Extra Hand')[0]).toMatch(/P1's Extra Hand: \+1 worker/);
+    expect(named(s, 'Extra Hand')[0]).toMatch(/P1's Extra Hand: \+1 minion/);
     s = sceneQ({ members: [['benders.extrahand', 'red.doppel']], queue: [] });
     s.cards[uidOf(s, 'red.doppel', 0)].copy = 'benders.extrahand';
     s.queue = [{ t: 'round', r: 3 }]; s = resume(s);
     expect(s.players[0].left).toBe(7);
-    expect(named(s, 'Extra Hand')[0]).toMatch(/\+2 workers/);
+    expect(named(s, 'Extra Hand')[0]).toMatch(/\+2 minions/);
     s = sceneQ({ members: [['benders.extrahand']], queue: [{ t: 'round', r: 2 }] });
     expect(named(s, 'Extra Hand')).toHaveLength(0);
   });

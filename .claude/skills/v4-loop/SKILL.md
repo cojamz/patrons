@@ -8,7 +8,7 @@ Architecture: design/architecture.md. Engine is the only place rules live; UI an
 
 Each iteration:
 1. Change the smallest thing that moves the build forward (engine change → add or adjust its unit test in src/test/engine/v4).
-2. `npm run check:v4` — unit + fuzz + session tests, production build, browser e2e (hot-seat and two-tab online). Must be all PASS. `--fast` skips e2e while iterating.
+2. `npm run check:v4` — unit + fuzz + session tests, production build, browser e2e (hot-seat and two-tab online). Must be all PASS. `--fast` skips e2e while iterating. The live tree is never a verdict (others' edits land mid-run): the verdict is `npm run check:v4 -- --commit HEAD` (or a sha) on a commit, which gates an exported copy nobody can touch. `-- --help` lists the options. At most 2 runs share the box; a third waits its turn.
 3. Look at the real screens: e2e saves screenshots to /tmp/patrons-shots/v4/. Read them at ~1270×700 and ~400px.
 4. Every few iterations, run review agents in parallel and pass on only their conclusions:
    - `playtester` — plays the hot-seat game in a browser as a first-timer.
@@ -27,10 +27,10 @@ Never present agent output to Cory unvetted.
 ## Speed without cutting corners
 - Run independent work side by side: audits, fixers split by file area, and testers.
 - Triage each tester's report as soon as it lands; don't wait for the whole panel.
-- `check:v4 --fast` while fixing; the full gate (with browser e2e) before every panel.
+- `check:v4 --fast` while fixing; the full gate on a commit (`check:v4 -- --commit <sha>`) before every panel. After a rules change, `npm run records:refresh` re-records the kept game records from their seeds (the records test says when).
 - Reuse agents that already know the code (SendMessage) for fixes. Testers are never reused.
 - One fresh tester between milestones; the full panel of 3 for the verdict.
-- Testers get a FROZEN snapshot. Before each panel: build, copy to `.v4-panel/<n>/`, and serve that folder on port 5190 (`npx vite preview --outDir .v4-panel/<n>`). Never point testers at .v4-build: check:v4 rebuilds it mid-panel, and panel 2's saboteur ended up grading half-finished UI work.
+- Testers get a FROZEN snapshot. Before each panel: build, copy to `.v4-panel/<n>/`, and serve that folder on port 5190 (`node scripts/v4-peek.mjs freeze <n> 5190`, never a bare `npx vite preview`, which leaks servers). Never point testers at .v4-build: check:v4 rebuilds it mid-panel, and panel 2's saboteur ended up grading half-finished UI work.
 
 ## Agent claims need gates (2026-10-14)
 - The UI agent twice reported fixes that blind testers then found still broken on the frozen build (44px targets, stale Undo, bot pacing), and its screenshot paths didn't exist. A fix only counts once it's an automated e2e assertion that fails the build, or Claude has seen it in a screenshot of a fresh frozen build.

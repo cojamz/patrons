@@ -14,7 +14,8 @@ describe('v4 app', () => {
     fireEvent.click(screen.getAllByRole('radio', { name: 'Empty' })[2]);
     fireEvent.click(screen.getAllByRole('radio', { name: 'Empty' })[3]);
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
-    expect(container.querySelectorAll('.pl')).toHaveLength(2);
+    // two chairs at the table hold a cult; the other two stay empty
+    expect(container.querySelectorAll('.lt-seat[data-pid]')).toHaveLength(2);
     expect(container.querySelector('[data-prompt]').textContent).toMatch(/starting resource/i);
     expect(container.querySelectorAll('.prompt [data-option]')).toHaveLength(4);
   });

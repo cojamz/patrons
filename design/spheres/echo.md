@@ -5,7 +5,7 @@ Built and measured as `src/engine/v4/content/echo.js` (tests: `src/test/engine/v
 ## The idea
 Green copies the table's best moves instead of making its own. Gold hoards its own money and Red recruits many cheap members; Green waits for a rival to hit big, then takes the same haul. Its question is "will the echo still be open after the big move lands?", and the other side of it: "if I take this juicy space, who gets to echo it?"
 
-The copy rule: every taken space shows a chip, and a copy gives exactly what the chip shows. That's the space's own printed gain for its taker: never what they paid, and never their members' bonuses (Prospector, Underdog). A free member copies as "any face-up member costing no more, free"; when none that cheap is face up, the chip says so ("a member (≤2; none face up)"). A space that took or traded (Steal, Trade) is copied by doing it yourself. Echoes can't be echoed, and the center can't be echoed.
+The copy rule: every taken space shows a chip, and a copy gives exactly what the chip shows. That's the space's own printed gain for its taker: never what they paid, and never their members' bonuses (Prospector, Underdog). A free member copies as "any face-up member costing no more, free"; when none that cheap is face up, the chip says so ("a member (≤2; none face up)"). A space that took or traded (Steal, Trade) is copied by doing it yourself. Green's one rule, printed once (on the sphere, in the rulebook and in the glossary's "copy") instead of on each card: **copies never reach the center or another copy.**
 
 Every copy target is in plain sight (the 2026-10-14 rework): Echo copies a rival's space taken since your last turn (the spaces in the "Since your turn" line, ringed in their taker's color in UX mock A); Encore copies any space taken this round; Refrain, Eternity and the members copy your own spaces from this round. Nothing asks you to remember last round except Afterimage.
 
@@ -20,6 +20,12 @@ What changed (one line each; the full log is in design/decisions.md):
 5. Chips are honest: a copied free member whose price nothing face up meets reads "a member (≤2; none face up)", instead of promising a member the copy can't give.
 Not changed: Most green (the copy-pile idea is an unspendable pile, which Cory ruled out for Magenta; "+1 green per copy" was measured and dropped, below), Hum, Chant, Encore, Eternity and the other 13 members.
 
+## Design critic follow-ups (2026-10-14, Claude under Cory's "go with your gut")
+1. One Green rule, printed once: "Copies never reach the center or another copy." It's on the sphere (`rule` in echo.js), in the rulebook (The board) and in the glossary's "copy" entry. Echo and Encore dropped "(not the center)". The engine already worked this way: Echo, Encore, Refrain, Eternity, Understudy, Afterimage, Hourglass and Déjà Vu all go through `copyable()` (ring < 3, not an echo).
+2. Keepsake is cut ("When recruited: copy one of your spaces from this round"): Refrain does the same job on a space.
+3. Ensemble (now 4+2, was 2+2): "Whenever you copy a rival's space, +1 follower." The follower counts at once (a won follower, so it's loose). Was "Game end: +1 follower per green member." Not measured yet.
+4. Not done: fallbacks for an empty copy (the critic's "if there's none, +2 green" on Echo and "+3 green" on Understudy). Cory: no rescue clauses; taking a space you can't use is on you.
+
 ## For Cory (answer by number)
 Value math: what a space gave its taker in 300 Normal-bot games (150 each on gold/red/blue/green and magenta/blue-market/yellow/green), resources plus 2.5 per free member, by round. Anchors: Joint Venture 3.0, Rush 2/4/6, Turnout 4.0/5.3/6.8, Windfall 4.9/7.7, Steal 3, Strike 13.3. Costs are green + any.
 
@@ -29,10 +35,10 @@ Value math: what a space gave its taker in 300 Normal-bot games (150 each on gol
 **Ring I**
 2. Hum: +3 green. Flat 3.0 = Joint Venture 3.0; the weak, early pick.
 3. Chant: +2 green per round number. 2.0/4.1/6.2 = Rush 2/4/6.
-4. Echo: copy a space a rival took since your last turn (not the center). 2.6/4.0/5.3 (was 2.6/4.3/6.1): Rush's level; a touch under Turnout late.
+4. Echo: copy a space a rival took since your last turn. 2.6/4.0/5.3 (was 2.6/4.3/6.1): Rush's level; a touch under Turnout late.
 
 **Ring II**
-5. Encore: copy any space taken this round (not the center). 4.0/6.0 against Windfall 4.9/7.7: the generalist.
+5. Encore: copy any space taken this round. 4.0/6.0 against Windfall 4.9/7.7: the generalist.
 6. Refrain: +2 green, and copy one of your spaces from this round. 5.9/6.9 against Windfall 4.9/7.7 (Recall was 4.6/4.7).
 
 **Ring III**
@@ -43,19 +49,19 @@ Value math: what a space gave its taker in 300 Normal-bot games (150 each on gol
 9. Muse (2+2): whenever a rival copies one of your spaces, +2 green. +0.6 (rival copies are rare among bots; the new Echo makes them likelier with people).
 10. Wallflower (2+2): while no one has fewer followers than you, the resources you copy are doubled.
 11. Tuning Fork (2+2): whenever you copy a space, also gain 1 of that space's color.
-12. Ensemble (2+2, new): game end, +1 follower per green member. +1.7.
-13. Choir (4+2): whenever you copy a space, +1 green.
-14. Translator (4+2): what you copy comes as green; switch it off or on when you buy.
-15. Keepsake (4+2): when recruited, copy one of your spaces from this round. +0.0 in this run (80 games; noisy).
-16. Understudy (4+2, new): when recruited, copy a space a rival took since your last turn. +3.1.
-17. Mirror (4+2): when recruited, gain as much green as the rival with the most green.
-18. Afterimage (4+2): now and at round start, copy one of your spaces from last round.
-19. Groupie (4+4): whenever anyone recruits a green member, +1 green.
-20. Chronicler (4+4): at game end, +1 follower per 2 green.
-21. Hourglass (6+4): once per round, copy the space you just took.
-22. Déjà Vu (8+4): once per game, copy every space you took this round.
+12. Choir (4+2): whenever you copy a space, +1 green.
+13. Translator (4+2): what you copy comes as green; switch it off or on when you buy.
+14. Ensemble (4+2, reworked): whenever you copy a rival's space, +1 follower (it counts at once). Was "game end, +1 follower per green member" at 2+2 (+1.7). Not measured yet.
+15. Understudy (4+2, new): when recruited, copy a space a rival took since your last turn. +3.1.
+16. Mirror (4+2): when recruited, gain as much green as the rival with the most green.
+17. Afterimage (4+2): now and at round start, copy one of your spaces from last round.
+18. Groupie (4+4): whenever anyone recruits a green member, +1 green.
+19. Chronicler (4+4): at game end, +1 follower per 2 green.
+20. Hourglass (6+4): once per round, copy the space you just took.
+21. Déjà Vu (8+4): once per game, copy every space you took this round.
+(Keepsake, "when recruited, copy one of your spaces from this round", is cut: Refrain does the same job.)
 
-Watch items: Understudy, Keepsake and Mirror are one-shot "when recruited" cards; since Cory's Release ruling (refund the colored part only) a buy, copy, release costs them the "any" part, so they're no longer free. Chronicler turned 24 unspent green into +12 followers in a hand-played game: it's the only green sink, and copies pile up green faster than one buy a turn can spend.
+Watch items: Understudy and Mirror are one-shot "when recruited" cards; since Cory's Release ruling (refund the colored part only) a buy, copy, release costs them the "any" part, so they're no longer free. Chronicler turned 24 unspent green into +12 followers in a hand-played game: it's the only green sink, and copies pile up green faster than one buy a turn can spend.
 
 ## Extra ideas (one line each)
 **Ring I**

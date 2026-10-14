@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minions and Leaders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,500&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<script src="emojis.js"></script>
+<script src="leaders.js"></script>
+<script src="icons.js"></script>
+<script src="../vision/px.js"></script>
+<style>
+/* The Lamplit Table look (tokens from design/prototypes/vision/vision.css): walnut, cream paper, muted inks. */
+:root{
+  --table:#1d1611; --table-2:#271d16; --table-3:#33271e;
+  --paper:#f4ebd7; --paper-2:#eadfc4; --paper-3:#d9caa8;
+  --ink:#2a1f17; --ink-2:#5f4e3d; --ink-3:#8a7760; --rule:rgba(42,31,23,.18);
+  --cream:#f3e6c8; --cream-2:#cbb894; --cream-3:#8f7f66; --line:rgba(243,230,200,.10);
+  --gold:#c99327; --lamp:255,206,140;
+  --serif:'Alegreya',Georgia,serif; --sans:'Alegreya Sans',system-ui,sans-serif;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{color:var(--cream);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  background:
+    radial-gradient(ellipse 900px 520px at 30% 12%, rgba(var(--lamp),.13), transparent 70%),
+    repeating-linear-gradient(92deg, transparent 0 9px, rgba(0,0,0,.07) 9px 10px, rgba(255,255,255,.012) 10px 23px, rgba(0,0,0,.05) 23px 24px),
+    linear-gradient(180deg,#221a14,#1a140f);
+  background-color:var(--table)}
+svg[shape-rendering]{display:block;flex:none}
+h1,h2{font-family:var(--serif);font-weight:500;margin:0;letter-spacing:.01em}
+.page{max-width:1240px;margin:0 auto;padding:20px 16px 32px;display:flex;flex-direction:column;gap:22px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;border-bottom:1px solid var(--line);padding-bottom:12px}
+header h1{font-size:30px}
+header p{margin:0;color:var(--cream-2);font-size:15px;flex:1;min-width:280px;line-height:1.4}
+h2{font-size:21px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+h2 small{font-family:var(--sans);font-size:13px;color:var(--cream-3);letter-spacing:.01em}
+section{display:flex;flex-direction:column;gap:10px}
+.fig{filter:drop-shadow(0 3px 2px rgba(0,0,0,.45))}
+
+/* ---------- in play ---------- */
+.play{display:grid;grid-template-columns:520px minmax(0,1fr);gap:24px;align-items:start;border-radius:14px;padding:16px;
+  background:rgba(243,230,200,.03);box-shadow:inset 0 0 0 1px var(--line)}
+.cap{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--cream-3)}
+.wheel{position:relative;width:520px;height:270px}
+.wheel > svg{position:absolute;inset:0;overflow:visible}
+.sock{position:absolute;width:88px;height:88px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:radial-gradient(circle at 50% 38%, #fbf5e7, #efe3c8 70%);
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--q) 70%,#5a4630),inset 0 2px 4px rgba(60,40,15,.25),0 1px 0 rgba(255,255,255,.6)}
+.sock .yl{font-family:var(--serif);font-weight:700;font-size:13px;color:var(--ink);line-height:1;display:flex;align-items:center;gap:2px}
+.sock.taken .ico,.sock.taken .yl{opacity:.25}
+.sock.legal{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--q) 80%,#5a4630),inset 0 2px 4px rgba(60,40,15,.25),0 0 14px 2px rgba(255,200,120,.45)}
+.sock .on{position:absolute;left:50%;top:50%;transform:translate(-50%,-58%);display:flex;gap:2px}
+.sock .on svg{filter:drop-shadow(0 3px 2px rgba(0,0,0,.4))}
+.sock .fresh{position:absolute;inset:-6px;border-radius:50%;border:2px dashed #e0a23a}
+.who-tag{position:absolute;font-size:11px;color:var(--cream-2);white-space:nowrap}
+
+.rails{display:flex;flex-direction:column;gap:14px;min-width:0}
+.rail{display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap}
+.seat{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:52px 10px 10px;border-radius:16px;min-width:150px;flex:1}
+.seat.now{background:rgba(var(--lamp),.09);box-shadow:0 0 0 1px rgba(var(--lamp),.35)}
+.seat.now::after{content:"now";position:absolute;top:-8px;left:14px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#ffd99a;background:var(--table);padding:0 5px}
+.orbit{position:relative}
+.orbit .m{position:absolute;animation:bob 2.6s ease-in-out infinite}
+.orbit .m:nth-child(2n){animation-delay:-1.3s}
+.orbit .m:nth-child(3n){animation-delay:-.6s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@media (prefers-reduced-motion: reduce){ .orbit .m{animation:none} }
+.seat .nm{font-family:var(--serif);font-size:16px;line-height:1;display:flex;align-items:baseline;gap:8px}
+.seat .nm b{font-size:21px;font-weight:700;display:inline-flex;align-items:center;gap:3px}
+.seat .left{font-size:11px;color:var(--cream-3);letter-spacing:.04em}
+.rail.compact .seat{padding:28px 8px 8px;min-width:96px;gap:4px}
+.rail.compact .seat .nm{font-size:13px}
+.rail.compact .seat .nm b{font-size:15px}
+.note{font-size:12.5px;color:var(--cream-3);line-height:1.45;max-width:72ch}
+
+/* ---------- size ladder ---------- */
+.ladder{display:flex;flex-wrap:wrap;gap:18px 40px;align-items:flex-end;border-radius:14px;padding:16px 18px;box-shadow:inset 0 0 0 1px var(--line)}
+.rung{display:flex;align-items:flex-end;gap:14px}
+.step{display:flex;flex-direction:column;align-items:center;gap:6px}
+.step span{font-size:11px;color:var(--cream-3);letter-spacing:.05em;text-align:center;line-height:1.25}
+.step span b{display:block;font-family:var(--serif);font-size:15px;color:var(--cream);letter-spacing:0}
+.gt{font-family:var(--serif);font-size:22px;color:var(--cream-3);align-self:center;margin-top:-18px}
+
+/* ---------- minions ---------- */
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.tile{display:flex;flex-direction:column;gap:8px;border-radius:12px;padding:12px;background:rgba(243,230,200,.035);box-shadow:inset 0 0 0 1px var(--line);min-width:0}
+.sizes{display:flex;align-items:flex-end;gap:10px}
+.paper{display:flex;align-items:flex-end;gap:8px;padding:6px 8px;border-radius:6px;background:linear-gradient(180deg,var(--paper),var(--paper-2));box-shadow:0 0 0 1px rgba(80,60,30,.25)}
+.tile .t{display:flex;align-items:baseline;gap:6px}
+.tile b{font-family:var(--serif);font-size:17px;font-weight:700}
+.tile .e{font-size:14px}
+.tile .idea{font-size:12.5px;color:var(--cream-3);line-height:1.35}
+.strip{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:10px 14px;border-radius:10px}
+.strip.dark{box-shadow:inset 0 0 0 1px var(--line)}
+.strip.light{background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--ink)}
+.strip .lbl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--cream-3);width:92px}
+.strip.light .lbl{color:var(--ink-3)}
+
+/* ---------- leaders ---------- */
+.lgrid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:8px 6px}
+.lgrid figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px}
+.lgrid figcaption{font-size:12px;color:var(--cream-2);text-align:center}
+.lgrid figcaption small{display:block;font-size:10.5px;color:var(--cream-3)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:12px;color:var(--cream-3)}
+.legend .sw{display:inline-flex;margin-right:6px;vertical-align:middle}
+.legend .sw i{width:14px;height:14px;display:block;box-shadow:0 0 0 1px rgba(0,0,0,.4) inset}
+
+@media (max-width:1100px){
+  .play{grid-template-columns:minmax(0,1fr)}
+  .wheel{transform-origin:top left}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lgrid{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media (max-width:560px){ .grid{grid-template-columns:minmax(0,1fr)} .lgrid{grid-template-columns:repeat(3,minmax(0,1fr))} .wheel{width:100%;overflow:hidden} }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Minions &amp; cult leaders</h1>
+    <p>Each player picks one emoji when they join. Every minion they place is that emoji, and their cult leader wears it on a gold medallion. Size order everywhere: <b>leader 32</b> &gt; member 24 &gt; minion 16 &gt; follower 10. Every pixel stays square, at 1×, 2× or 4×.</p>
+  </header>
+
+  <section>
+    <h2>In play <small>round I: 3 minions each. A leader's unplaced minions float around it, so you can count them at a glance.</small></h2>
+    <div class="play">
+      <div>
+        <div class="wheel" id="wheel"></div>
+        <div class="cap" style="margin-top:4px">a gold wedge of the wheel · 2× (minions 32px)</div>
+        <p class="note" style="margin:10px 0 0">You have all 3 minions left, and it's your turn. Ossian is down to his last robot. Wren's frog and Ossian's robot share Joint Venture, and Ilse's fresh octopus wears the dashed "just moved" ring. Each player's identity is the emoji. The robe colour is only a quiet seat accent, so it never competes with the resource colours.</p>
+      </div>
+      <div class="rails">
+        <div class="rail" id="rail"></div>
+        <div class="cap">seat rail · 2× (leaders 64px, minions 32px)</div>
+        <div class="rail compact" id="rail1"></div>
+        <div class="cap">the same rail at 1× for phone (leaders 32px, minions 16px)</div>
+
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Size ladder <small>leader &gt; member &gt; minion &gt; follower, at 2× and 1×</small></h2>
+    <div class="ladder" id="ladder"></div>
+  </section>
+
+  <section>
+    <h2>Minions <small>20 emojis, 16×16, each in its own colours · shown at 64, 32 and 16px on walnut, and 32 and 16px on paper</small></h2>
+    <div class="strip dark" id="s16"><span class="lbl">16px walnut</span></div>
+    <div class="strip light" id="p16"><span class="lbl">16px paper</span></div>
+    <div class="grid" id="minions"></div>
+  </section>
+
+  <section>
+    <h2>Cult leaders <small>32×32 · robe in a muted seat accent · the emoji redrawn 8×8 on the medallion · 64px, then 32px</small></h2>
+    <div class="lgrid" id="leaders"></div>
+    <div class="strip dark" id="l32"><span class="lbl">32px walnut</span></div>
+    <div class="legend" id="legend"></div>
+  </section>
+</div>
+<script>
+(function () {
+  const M = window.CultMinions, L = window.CultLeaders, I = window.CultIcons;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const errs = L.validate().concat(I.ICONS.flatMap(I.validate));
+  if (errs.length) console.error(errs.join('\n'));
+  const mini = (id, n) => M.toSVG(id, n);
+  const lead = (id, acc, n) => L.leaderSVG(id, acc, n);
+  const fol = n => L.followerSVG(n);
+
+  // ---------- the table: four seats, round I, 3 minions each ----------
+  const seats = [
+    { name: 'You', emoji: 'santa', acc: 'plum', left: 3, score: 2, now: true },
+    { name: 'Wren', emoji: 'frog', acc: 'moss', left: 2, score: 2 },
+    { name: 'Ossian', emoji: 'robot', acc: 'clay', left: 1, score: 3 },
+    { name: 'Ilse', emoji: 'octopus', acc: 'slate', left: 2, score: 1 },
+  ];
+  // Minions orbit above the leader's head: an arc from left to right, evenly spread.
+  const ARCS = { 1: [-58], 2: [-135, -45], 3: [-158, -90, -22], 4: [-165, -115, -65, -15], 5: [-170, -130, -90, -50, -10] };
+  function orbit(s, z) {
+    const LS = 32 * z, MS = 16 * z, R = 28 * z, c = LS / 2;
+    const ms = (ARCS[s.left] || []).map((a, i) => {
+      const r = a * Math.PI / 180, x = Math.round(c + R * Math.cos(r) - MS / 2), y = Math.round(c - 2 * z + R * Math.sin(r) - MS / 2);
+      return `<span class="m fig" style="left:${x}px;top:${y}px">${mini(s.emoji, MS)}</span>`;
+    }).join('');
+    return `<div class="orbit" style="width:${LS}px;height:${LS}px"><span class="fig">${lead(s.emoji, s.acc, LS)}</span>${ms}</div>`;
+  }
+  const seatHTML = z => seats.map(s => `<div class="seat${s.now ? ' now' : ''}">${orbit(s, z)}
+      <div class="nm">${esc(s.name)} <b>${s.score}${fol(z === 2 ? 20 : 10)}</b></div>${z === 2 ? `<div class="left">${s.left} minion${s.left === 1 ? '' : 's'} left</div>` : ''}</div>`).join('');
+  document.getElementById('rail').innerHTML = seatHTML(2);
+  document.getElementById('rail1').innerHTML = seatHTML(1);
+
+  // ---------- a wedge of the wheel with three spaces ----------
+  const W = 520, H = 270, cx = 260, cy = 430, r0 = 230, r1 = 412, rim = 430, q = '#c99327';
+  const pol = (r, a) => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)];
+  const arc = (ra, rb, a0, a1) => { const [x0, y0] = pol(rb, a0), [x1, y1] = pol(rb, a1), [x2, y2] = pol(ra, a1), [x3, y3] = pol(ra, a0);
+    return `M${x0},${y0} A${rb},${rb} 0 0 1 ${x1},${y1} L${x2},${y2} A${ra},${ra} 0 0 0 ${x3},${y3} Z`; };
+  const A0 = -128, A1 = -52;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+    <defs><radialGradient id="pp" cx="${cx}" cy="${cy}" r="${rim}" gradientUnits="userSpaceOnUse"><stop offset=".5" stop-color="#f7efdd"/><stop offset=".9" stop-color="#ecdfc3"/><stop offset="1" stop-color="#dccba6"/></radialGradient>
+    <filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#000" flood-opacity=".5"/></filter></defs>
+    <g filter="url(#sh)"><path d="${arc(r0, rim, A0, A1)}" fill="url(#pp)"/>
+    <path d="${arc(r0, r1, A0, A1)}" fill="${q}" opacity=".24"/>
+    <path d="${arc(r1, rim, A0, A1)}" fill="${q}" opacity=".9"/></g>
+    <path d="${arc(r0, rim, A0, A1)}" fill="none" stroke="#7a6244" stroke-width="1.5"/>
+    <path d="${arc(r1, r1 + .01, A0, A1)}" fill="none" stroke="rgba(42,31,23,.35)"/>
+  </svg>`;
+  const spaces = [
+    { a: -112, icon: 'rush', y: `+2${PX.sprite('gold', 1)}`, legal: true },
+    { a: -90, icon: 'joint', y: `+3${PX.sprite('gold', 1)}+1`, on: ['frog', 'robot'] },
+    { a: -68, icon: 'discount', y: '−4 cost', on: ['octopus'], fresh: true },
+  ];
+  svg += spaces.map(s => {
+    const [x, y] = pol(321, s.a);
+    const on = s.on ? `<div class="on">${s.on.map(id => mini(id, 32)).join('')}</div>` : '';
+    return `<div class="sock${s.on ? ' taken' : ''}${s.legal ? ' legal' : ''}" style="--q:${q};left:${Math.round(x - 44)}px;top:${Math.round(y - 44)}px">
+      <div class="ico">${PX.sprite(s.icon, 2)}</div><div class="yl">${s.y}</div>${on}${s.fresh ? '<div class="fresh"></div>' : ''}</div>`;
+  }).join('');
+  document.getElementById('wheel').innerHTML = svg;
+
+  // ---------- size ladder: one pixel scale, four sizes ----------
+  const banker = I.ICONS.find(i => i.id === 'banker');
+  const rung = z => `<div class="rung"><div class="step" style="align-self:center;margin-top:-18px"><span class="cap">${z}×</span></div>
+    <div class="step"><span class="fig">${lead('wizard', 'teal', 32 * z)}</span><span><b>Leader</b>32×32</span></div><div class="gt">&gt;</div>
+    <div class="step"><span class="fig">${I.toSVG(banker, 24 * z, { title: true })}</span><span><b>Member</b>24×24</span></div><div class="gt">&gt;</div>
+    <div class="step"><span class="fig">${mini('wizard', 16 * z)}</span><span><b>Minion</b>16×16</span></div><div class="gt">&gt;</div>
+    <div class="step"><span class="fig">${fol(10 * z)}</span><span><b>Follower</b>10×10</span></div>
+    </div>`;
+  document.getElementById('ladder').innerHTML = rung(2) + rung(1);
+
+  // ---------- minions ----------
+  document.getElementById('s16').insertAdjacentHTML('beforeend', M.MINIONS.map(m => mini(m.id, 16)).join(''));
+  document.getElementById('p16').insertAdjacentHTML('beforeend', M.MINIONS.map(m => mini(m.id, 16)).join(''));
+  document.getElementById('minions').innerHTML = M.MINIONS.map(m => `<article class="tile">
+      <div class="sizes"><span class="fig">${mini(m.id, 64)}</span><span class="fig">${mini(m.id, 32)}</span><span class="fig">${mini(m.id, 16)}</span>
+        <span class="paper">${mini(m.id, 32)}${mini(m.id, 16)}</span></div>
+      <div class="t"><b>${esc(m.name)}</b><span class="e">${m.emoji}</span></div>
+      <div class="idea">${esc(m.idea)}</div></article>`).join('');
+
+  // ---------- leaders ----------
+  const acc = Object.keys(L.SEAT_ACCENTS);
+  document.getElementById('leaders').innerHTML = M.MINIONS.map((m, i) =>
+    `<figure><span class="fig">${lead(m.id, acc[i % acc.length], 64)}</span><figcaption>${esc(m.name)}<small>${acc[i % acc.length]}</small></figcaption></figure>`).join('');
+  document.getElementById('l32').insertAdjacentHTML('beforeend', M.MINIONS.map((m, i) => `<span class="fig">${lead(m.id, acc[i % acc.length], 32)}</span>`).join(''));
+  const sw = cols => `<span class="sw">${cols.map(c => `<i style="background:${c}"></i>`).join('')}</span>`;
+  document.getElementById('legend').innerHTML = `<span>seat accents</span>` +
+    acc.map(a => { const p = L.accentPalette(a); return `<span>${sw([p[1], p[2], p[3]])}${a}</span>`; }).join('') +
+    `<span>shared letters ${sw(Object.values(M.SHARED))}k w c s t o x b</span>`;
+})();
+</script>
+</body>
+</html>

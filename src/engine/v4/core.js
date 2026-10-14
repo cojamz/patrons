@@ -7,19 +7,20 @@ import { shuffleInPlace } from './rng.js';
 export const RING_VALUE = [2, 4, 6];
 export const WORKERS = [3, 4, 5];
 export const SHOP_SIZE = 10; // a bigger community pool, so a member you want is more often still there (Cory, 2026-10-14)
-// Follower buys take any resources (Cory, 2026-10-14: no color requirements). A limited tier has a stock per game (stock: seats -> count). The clock tier ends the game:
-// when its last buy is gone, the game ends after that round.
+// Follower buys take any resources (Cory, 2026-10-14: no color requirements). A limited tier has a stock per game (stock: seats -> count).
+// 10→10 is unlimited and nothing ends the game early (Cory, 2026-10-14: "the turns are the end game clock"): the game
+// always ends after round III. (It was a stock of 4 whose last buy ended the game after that round.)
 export const TIERS = [
   { key: 'small', cost: 2, get: 1, colors: 1, label: '2 of anything' },
   { key: 'mid', cost: 4, get: 3, colors: 1, label: '4 of anything' },
   { key: 'big', cost: 8, get: 6, colors: 1, label: '8 of anything', limited: true, stock: n => 2 * n },
-  { key: 'top', cost: 10, get: 10, colors: 1, label: '10 of anything', limited: true, stock: () => 4, clock: true },
+  { key: 'top', cost: 10, get: 10, colors: 1, label: '10 of anything' },
 ];
 /** How many buys of a limited tier are left (Infinity for unlimited tiers). */
 export const tierLeft = (state, tier) => (tier.limited ? state.stock?.[tier.key] ?? 0 : Infinity);
 const LOG_MAX = 300;
 // Rule flags a table can toggle (sims flip them). release: once per round, on your turn, release one of your
-// members (it goes to the bottom of the pile) for its printed cost in any colors. guests: rule-bending guest
+// members (it goes to the bottom of the pile) for its colored part in its own color (not one recruited this round). guests: rule-bending guest
 // members join the deck.
 export const DEFAULT_RULES = { release: true, guests: true };
 
@@ -47,7 +48,7 @@ export function createGame({ seats, seed = 1, quadrants = DEFAULT_QUADRANTS, rul
     })),
     cards, pile: Object.keys(cards).map(Number), shop: [],
     round: 0, slots: {}, squats: {}, order: [], turnIndex: 0, current: null,
-    recruits: 0, stock: Object.fromEntries(TIERS.filter(t => t.limited).map(t => [t.key, t.stock(seats.length)])), endEarly: false,
+    recruits: 0, stock: Object.fromEntries(TIERS.filter(t => t.limited).map(t => [t.key, t.stock(seats.length)])),
     // contests: each round's scoring as the engine decided it (see contestTable); turns: who has taken a turn this round
     contests: [], turns: [],
     queue: [], pending: null, log: [], moves: 0, over: false, ranking: null,
@@ -289,7 +290,7 @@ function inputFor(state, task) {
       };
     case 'place':
       return {
-        kind: 'place', prompt: `${p.name}: place a worker`,
+        kind: 'place', prompt: `${p.name}: place a minion`,
         options: [
           ...openSlots(state).filter(([q, i]) => !task.ring || actionAt(state, q, i).ring <= task.ring)
             .map(([q, i]) => ({ id: `slot:${q}-${i}`, label: actionAt(state, q, i).name, kind: 'slot', q, i })),
@@ -486,7 +487,7 @@ function runTask(state, task) {
     }
     case 'endRound': return endRound(state);
     case 'afterRound':
-      if (state.round < 3 && !state.endEarly) state.queue.push({ t: 'round', r: state.round + 1 });
+      if (state.round < 3) state.queue.push({ t: 'round', r: state.round + 1 });
       else state.queue.push({ t: 'finish' });
       return;
     case 'finish': return finish(state);
@@ -540,7 +541,7 @@ function startRound(state, r) {
     snake.push({ t: 'turn', p: id, ...(extras[id][k] ? { ring: extras[id][k] } : {}) });
   }
   // the cards that bend this round's order and workers are named, so the order and the extra worker trace to them
-  const hands = base.filter(id => extras[id].length).map(id => `${state.players[id].name}'s ${flagName(state, state.players[id], 'extraWorkers')}: +${extras[id].length} worker${extras[id].length > 1 ? 's' : ''}.`);
+  const hands = base.filter(id => extras[id].length).map(id => `${state.players[id].name}'s ${flagName(state, state.players[id], 'extraWorkers')}: +${extras[id].length} minion${extras[id].length > 1 ? 's' : ''}.`);
   log(state, `Round ${roman(r)} begins. ${state.players[base[0]].name} picks first.${lead.length ? ` (${lead.map(id => `${state.players[id].name}'s ${flagName(state, state.players[id], 'pickFirst')}`).join(', ')}: always pick${lead.length === 1 ? 's' : ''} first.)` : ''}${hands.length ? ` ${hands.join(' ')}` : ''}`);
   state.queue.push(...snake, { t: 'allPlaced' }, { t: 'endRound' }, { t: 'afterRound' });
 }
@@ -685,10 +686,7 @@ function buyFollowers(state, p, tier, chosen) {
   p.bonus += tier.get;
   p.bought = (p.bought || 0) + tier.get;
   log(state, `${p.name} bought ${tier.get} follower${tier.get > 1 ? 's' : ''} (${payString(spend)}).`);
-  if (tier.limited) {
-    state.stock[tier.key] -= 1;
-    if (tier.clock && state.stock[tier.key] <= 0 && !state.endEarly) { state.endEarly = true; log(state, `The last ${tier.get}-follower buy is gone. The game ends after this round.`); }
-  }
+  if (tier.limited) state.stock[tier.key] -= 1;
   const ctx = ctxFor(state);
   eachMember(state, (owner, card, def) => { if (def.onBuyFollowers) def.onBuyFollowers(ctx, owner, card, p, tier); });
 }

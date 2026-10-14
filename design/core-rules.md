@@ -1,6 +1,11 @@
-# Core Rules v0.2 (shared by every sphere)
+# Core Rules v0.2 (shared by every sphere) — ARCHIVED
 
-> Superseded in places (2026-10-14): follower buys are now 2→1, 4→3, 8→6 (limited, the clock) and 10→10 (limited); member costs were doubled; Release is a base rule on trial. design/decisions.md and design/rulebook.md win where this file disagrees.
+> **Archived 2026-10-14.** Don't use this file for rules. The player rules are `design/rulebook.md` (the in-game How to play), every call is in `design/decisions.md`, and the engine (`src/engine/v4/core.js`) is what's built.
+> What changed since it was written: the shop shows 10 face up; member costs doubled (plain "worth N" members kept their old price); follower buys take any resources (2→1, 4→3, 8→6 with a stock of 2 per player, 10→10 with a stock of 4, and the last 10→10 is the clock); "Now and at round start" members also pay when recruited; Release is a base rule (colored part back only, never in the round you recruited it); workers are minions.
+> Wrong here, right in the code: tied leaders all count as "the leader" (this file says nobody does); taking isn't limited to players ahead of you (most steals hit any rival).
+> Still true and not in the rulebook (designer defaults): member, action and rule names are unique across all spheres; a copy gives the space's own printed gain (a space that took or traded is done again by the copier), copies can't be copied, and the center can't be copied (echo.js); nothing drops below 0; followers from a purchase or a member trigger count at once, round-end bonuses only at round end.
+>
+> The original text follows, for history.
 
 These are defaults, decided so that playtests stop tripping on the same ambiguities. They're marked for Cory to confirm.
 Every sphere spec assumes these. Anything a sphere changes, it states explicitly.

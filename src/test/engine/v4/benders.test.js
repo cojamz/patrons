@@ -92,17 +92,17 @@ describe('Squatter: once per round, place on a space a rival already took', () =
   it('Echo can copy a space that was joined: the copy gives what the space gives', () => {
     const Q = ['gold', 'red', 'echo', 'purple'];
     let s = scene({ quadrants: Q, members: [['benders.squatter']], queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
-    s = move(s, `slot:${RUSH}`); s = passBuys(pickAny(s)); // P2 takes Rush (+2 gold)
+    s = move(s, `slot:${RUSH}`); s = passBuys(pickAny(s)); // P2 takes Golden Years (+2 gold)
     s = move(s, `squat:${RUSH}`); s = passBuys(pickAny(s)); // P1 joins it
     expect(R(s, 0).gold).toBe(2);
-    // both workers on Rush leave a chip: the first taker's and the joiner's
-    expect(Object.values(s.echo.now).filter(e => e.name === 'Rush').map(e => e.p).sort()).toEqual([0, 1]);
+    // both workers on Golden Years leave a chip: the first taker's and the joiner's
+    expect(Object.values(s.echo.now).filter(e => e.name === 'Golden Years').map(e => e.p).sort()).toEqual([0, 1]);
     s = move(s, 'slot:2-2'); // P2 takes Echo
     expect(s.pending.kind).toBe('choose');
-    // Echo copies a rival's space taken since your last turn (Green rework, 2026-10-14): P1's joined Rush
-    // is on offer; P2's own Rush isn't (that's Refrain's or Encore's job)
-    expect(s.pending.options.filter(o => o.label.startsWith('Rush')).map(o => o.label)).toEqual(['Rush (P1): +2 gold']);
-    s = choose(s, o => o.label.startsWith('Rush'));
+    // Echo copies a rival's space taken since your last turn (Green rework, 2026-10-14): P1's joined Golden Years
+    // is on offer; P2's own Golden Years isn't (that's Reprise's or Encore's job)
+    expect(s.pending.options.filter(o => o.label.startsWith('Golden Years')).map(o => o.label)).toEqual(['Golden Years (P1): +2 gold']);
+    s = choose(s, o => o.label.startsWith('Golden Years'));
     expect(R(s, 1).gold).toBe(4);
   });
 });
@@ -219,7 +219,7 @@ describe('Straggler: after the last worker is placed, move one of yours to an un
     expect(s.pending.kind).toBe('choose');
     s = choose(s, o => o.id === `from:${JV}`);
     s = choose(s, o => o.value === RUSH);
-    expect(R(s).gold).toBe(3 + 4); // Rush in round II
+    expect(R(s).gold).toBe(3 + 4); // Golden Years in round II
     expect(s.slots[JV]).toBeUndefined();
     expect(s.slots[RUSH]).toBe(0);
     expect(s.pending).toBe(null); // no buy
@@ -351,7 +351,7 @@ describe('Release with once-per-game members, just-bought members and Echo copie
     s.current = 0; s = resume(s);
     const u = uidOf(s, 'echo.mirror', 'shop');
     s = payFirst(move(s, `card:${u}`));
-    expect(R(s).green).toBe(10 - cost('echo.mirror') + 5); // Mirror: as much green as the rival with the most
+    expect(R(s).green).toBe(10 - cost('echo.mirror') + 5); // Mime: as much green as the rival with the most
     expect(s.pending.extra).toBe(true);
     expect(ids(s)).not.toContain(`release:${u}`);
     expect(s.cards[u]).toMatchObject({ recruitedRound: 1, recruitedBy: 0 });
@@ -379,7 +379,7 @@ describe('Release with once-per-game members, just-bought members and Echo copie
     s.queue = [{ t: 'buy', p: 0 }]; s.current = 0; s.pending = null; s = resume(s);
     expect(ids(s)).toContain(`release:${u}`);
   });
-  it('an Echo copy made with Hourglass keeps its gains after Hourglass is released', () => {
+  it('an Echo copy made with Stunt Double keeps its gains after Stunt Double is released', () => {
     const Q = ['gold', 'red', 'echo', 'purple'];
     let s = scene({ quadrants: Q, members: [['echo.hourglass']] });
     s = move(s, `slot:${RUSH}`); s = pickAny(s);
@@ -416,7 +416,7 @@ describe('Doppelganger and Magenta theft with once-per-round benders', () => {
     s = move(s, 'tier:mid');
     expect(s.pending?.extra).toBe(true);
   });
-  it('Magenta’s Heist can take a Front-runner, and the turn order follows the card', () => {
+  it('Magenta’s Poach can take a Front-runner, and the turn order follows the card', () => {
     const s = scene({ n: 3, members: [['benders.frontrunner']], order: [0, 1, 2], queue: [] });
     contextFor(s).steal(s.players[2], s.players[0], { uid: uidOf(s, 'benders.frontrunner', 0) });
     s.queue = [{ t: 'round', r: 2 }];

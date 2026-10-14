@@ -7,12 +7,12 @@ const S = {
     jv: '+3 gold · gift 1', rush: r => `+${2 * r} gold`, discount: '−4 cost', steal: 'steal 3 gold', windfall: '+1 gold/member', strike: 'double gold',
   },
   red: {
-    scout: '+2 red · bury 1', turnout: '+1 red/recruit', hire: 'cheapest, free', hireup: '+2 red · cheapest', trade: 'swap a member', take: 'any member, free',
+    evenswap: '+1 red · swap same cost', turnout: '+1 red/recruit', hire: 'cheapest, free', hireup: '+2 red · cheapest', trade: 'swap a member', take: 'any member, free',
   },
   blue: { a1: '+3 blue', a2: '+2 blue +1 red', a3: '+2 blue +1 green', a4: '+5 blue', a5: '+4 blue +1 gold', a6: '+8 blue' },
   green: { a1: '+3 green', a2: '+2 green +1 gold', a3: '+2 green +1 blue', a4: '+5 green', a5: '+4 green +1 red', a6: '+8 green' },
   purple: {
-    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +2/rival', windup: '+1 purple/worker', planahead: '+2 purple/left', overtime: 'pay 8: 2 turns', rally: 'purple → turns',
+    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +2/rival', windup: '+1 purple/minion', planahead: '+2 purple/left', overtime: 'pay 8: 2 turns', rally: 'purple → turns',
   },
   silver: {
     toast: r => `+${3 * r} silver · all +1`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the richest', jubilee: 'silver → followers',
@@ -27,7 +27,7 @@ const S = {
     pickpocket: r => `steal ${r + 1}`, tipoff: 'steal 1 each richer', hideout: 'steal 1 · safe', rob: 'steal 3', ransom: 'ransom a member', heist: 'steal a member',
   },
   trading: {
-    haggle: '+2 white +1/leader', buylow: r => `${2 * r} → followers`, pawn: r => `${r} follower or +${2 * r} white`, sellhigh: 'sell 2 for 6 white', barter: 'pay in followers', boom: 'all → followers',
+    haggle: '+2 white +1/leader', buylow: r => `${2 * r} → followers`, pawn: r => `${r} follower or +${2 * r} white`, sellhigh: 'sell 2 for 6 white', dividend: '+1 white/loose follower', boom: 'all → followers',
   },
   echo: { hum: '+3 green', chant: r => `+${2 * r} green`, echo: 'copy a rival', encore: 'copy any', refrain: '+2 green · copy yours', eternity: 'copy all yours' },
 };

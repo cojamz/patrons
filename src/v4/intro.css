@@ -25,10 +25,10 @@
 
 .intro-kicker{position:absolute;top:max(18px, env(safe-area-inset-top));left:18px;margin:0;font-family:var(--i-serif);font-size:17px;color:var(--i-cream-2);letter-spacing:.01em;z-index:2}
 .intro-kicker i{color:var(--i-cream-3)}
-.intro-skip{position:absolute;top:max(10px, env(safe-area-inset-top));right:12px;z-index:3;min-height:44px;padding:0 18px;border-radius:999px;cursor:pointer;
+.intro-skip{position:absolute;top:max(10px, env(safe-area-inset-top));right:14px;z-index:3;min-height:44px;padding:0 18px;border-radius:999px;cursor:pointer;
   font:500 15px/1 var(--i-sans);letter-spacing:.03em;color:var(--i-cream);background:rgba(20,14,10,.35);border:1px solid rgba(243,230,200,.28)}
 .intro-skip:hover{border-color:rgba(243,230,200,.6);background:rgba(243,230,200,.08)}
-.intro-skip:focus-visible,.intro-btn:focus-visible{outline:2px solid var(--i-lamp-ink);outline-offset:3px}
+.intro-skip:focus-visible,.intro-btn:focus-visible{outline:2px solid var(--i-lamp-ink);outline-offset:2px}
 @media (max-width:420px){ .intro-kicker i{display:none} }
 
 .intro-main{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;max-width:100%}
@@ -172,5 +172,22 @@
 /* ---------- still storyboard (prefers-reduced-motion): every beat shows its last frame, nothing moves ---------- */
 .intro.still,.intro.still .intro-line,.intro.still .intro-btn{animation:none}
 .intro.still .intro-lamp{transition:none}
-.intro.still .intro-scene,.intro.still .intro-scene *{animation-delay:-60s !important;animation-iteration-count:1 !important}
-.intro.still .in-num{animation:none}
+/* Each effect whose last frame differs from its resting style is re-applied already finished (1ms, delay −1s), with
+   !important so it also survives v4.css's global reduced-motion `animation:none!important`; the rest stay at rest. */
+.intro.still .intro-scene :is(.in-hop,.in-hy,.in-shade,.in-lit,.in-flash,.in-spent,.in-leave,.in-glowbox,.in-plaque-lit,.in-glow,.in-round,.in-jump,.in-fall),
+.intro.still .intro-scene .in-hop.post-fade .in-land{animation-duration:1ms !important;animation-delay:-1s !important;animation-iteration-count:1 !important;animation-fill-mode:both !important;animation-play-state:paused !important}
+.intro.still .intro-scene .in-hop{animation-name:in-hopx !important}
+.intro.still .intro-scene .in-hop > .in-hy{animation-name:in-hopy !important}
+.intro.still .intro-scene .in-hop.post-fade .in-land{animation-name:in-used !important}
+.intro.still .intro-scene .in-shade{animation-name:in-shade !important}
+.intro.still .intro-scene .in-lit{animation-name:in-lit !important}
+.intro.still .intro-scene .in-flash{animation-name:in-flash !important}
+.intro.still .intro-scene .in-spent{animation-name:in-spent !important}
+.intro.still .intro-scene .in-leave{animation-name:in-leave !important}
+.intro.still .intro-scene .in-glowbox{animation-name:in-glowbox !important}
+.intro.still .intro-scene .in-plaque-lit{animation-name:in-plaque !important}
+.intro.still .intro-scene .in-glow{animation-name:in-glow !important}
+.intro.still .intro-scene .in-round{animation-name:in-roundlit !important}
+.intro.still .intro-scene .in-jump{animation-name:in-jump !important}
+.intro.still .intro-scene .in-fall{animation-name:in-fall !important}
+.intro.still .intro-scene :is(.in-fade,.in-rise,.in-pop,.in-slide,.in-appear,.in-land,.in-num){animation:none}

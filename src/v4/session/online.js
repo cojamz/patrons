@@ -30,6 +30,15 @@ const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1
 const RECENT_KEEP = 24;
 /** How long a player has to be gone before the host is offered "let a bot play for them". */
 export const SUB_AFTER_MS = 15000;
+/**
+ * Host heartbeat. Firebase can take a minute or more to mark a sleeping phone disconnected, and meanwhile nobody runs
+ * the moves. The host writes `hostBeat` every BEAT_MS; when a client hasn't seen it change for STALE_MS (its own clock,
+ * so clock skew doesn't matter), the next connected human takes the host role.
+ */
+export const BEAT_MS = 5000;
+/** A move sent again this long after the first try ("Try again") is re-pushed with the same mid. */
+export const RESEND_MS = 4000;
+export const STALE_MS = 15000;
 // Test hooks on the page URL (?subAfter=ms), like ?botDelay: e2e can't wait 15 s per scenario.
 const urlNumber = key => { try { return Number(new URLSearchParams(globalThis.location?.search || '').get(key)) || 0; } catch { return 0; } };
 const defaultSubAfter = () => urlNumber('subAfter') || SUB_AFTER_MS;
@@ -257,18 +266,31 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
   let healedAt = 0;
   const awaySince = new Map(); // playerId -> when this client first saw them gone (local clock)
   let awayTimer = null;
+  let beatTimer = null; // host: writes hostBeat
+  let watchTimer = null; // everyone: is the host still beating?
+  let beatSeen = { host: null, value: null, at: Date.now() };
   const views = createEmitter();
   const starts = createEmitter();
   let resolveReady;
   const ready = new Promise(r => { resolveReady = r; });
   const view = () => ({ ...lobbyView(room, code, playerId, { awaySince, subAfterMs }), selfOnline: up });
+  // Screens re-render on every emit. Most room writes (heartbeats, the move queue, lastSeen) change nothing they
+  // show, so a view goes out only when it differs from the last one (awayMs ticks by itself and isn't news).
+  let lastViewKey = '';
+  const emitView = () => {
+    const v = view();
+    const key = JSON.stringify({ ...v, players: v.players.map(({ awayMs, ...p }) => p) }); // eslint-disable-line no-unused-vars
+    if (key === lastViewKey) return;
+    lastViewKey = key;
+    views.emit(v);
+  };
 
   transport.onDisconnectSet(myConnPath, false).catch(() => {});
   const offConn = transport.onConnectedChange?.(u => {
     const was = up;
     up = !!u;
     if (up) imHere(true);
-    if (was !== up && gotFirst && !destroyed) { views.emit(view()); session?.roomChanged(); }
+    if (was !== up && gotFirst && !destroyed) { emitView(); session?.roomChanged(); }
   }) || (() => {});
 
   const offRoom = transport.subscribe(base, value => {
@@ -311,7 +333,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
     clearTimeout(awayTimer);
     awayTimer = null;
     // re-announce when someone crosses the line, so "let a bot play for them" appears without another room change
-    if (next < Infinity && !destroyed) awayTimer = setTimeout(() => { awayTimer = null; if (!destroyed) { trackAway(); views.emit(view()); session?.roomChanged(); } }, next + 5);
+    if (next < Infinity && !destroyed) awayTimer = setTimeout(() => { awayTimer = null; if (!destroyed) { trackAway(); emitView(); session?.roomChanged(); } }, next + 5);
   }
 
   function onRoom() {
@@ -327,18 +349,37 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
     if (!shouldHost && host) { host.stop(); host = null; }
     host?.roomChanged();
     session?.roomChanged();
-    views.emit(view());
+    emitView();
     imHere();
+    heartbeat();
     elect();
   }
 
+  // The host beats; everyone notes when they last saw a beat (or a new host), by their own clock.
+  function heartbeat() {
+    if (!room) return;
+    const hb = room.hostBeat ?? null;
+    if (room.hostId !== beatSeen.host || hb !== beatSeen.value) beatSeen = { host: room.hostId ?? null, value: hb, at: Date.now() };
+    const hosting = room.hostId === playerId && !destroyed;
+    if (hosting && !beatTimer) {
+      const beat = () => { if (!destroyed && up && room && room.hostId === playerId) transport.update(base, { hostBeat: transport.serverTime() }).catch(() => {}); };
+      beat();
+      beatTimer = setInterval(beat, BEAT_MS);
+    } else if (!hosting && beatTimer) { clearInterval(beatTimer); beatTimer = null; }
+    if (!watchTimer && !destroyed) watchTimer = setInterval(() => { if (!destroyed) elect(); }, BEAT_MS / 2);
+  }
+  const hostStale = () => !!room && !!room.hostId && room.hostId !== playerId && Date.now() - beatSeen.at > STALE_MS;
+
   // If the host has dropped, the lowest-seat connected human claims the role.
+  // ...or has stopped beating (a phone asleep still reads as connected for a while).
   function elect() {
     if (!room || electing || destroyed) return;
     const old = room.hostId;
-    if (old && room.players?.[old]?.connected === true) return;
-    if (room.players?.[playerId]?.connected !== true) return;
-    const first = seatList(room).find(s => s.kind === 'human' && room.players?.[s.id]?.connected === true);
+    if (old === playerId) return;
+    const stale = hostStale();
+    if (old && room.players?.[old]?.connected === true && !stale) return;
+    if (room.players?.[playerId]?.connected !== true || !up) return;
+    const first = seatList(room).find(s => s.kind === 'human' && !(stale && s.id === old) && room.players?.[s.id]?.connected === true);
     if (!first || first.id !== playerId) return;
     electing = true;
     transport.transaction(`${base}/hostId`, cur => {
@@ -471,6 +512,8 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
       if (destroyed) return;
       destroyed = true;
       clearTimeout(awayTimer);
+      clearInterval(beatTimer);
+      clearInterval(watchTimer);
       offRoom();
       offConn();
       host?.stop();
@@ -493,7 +536,8 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
   let destroyed = false;
   const subs = createEmitter();
   const waiting = new Map(); // mid -> { resolve, reject }
-  const inflight = new Map(); // signature -> promise (same move twice = one submission)
+  const inflight = new Map(); // signature -> { p, mid, rec, at } (same move twice = one submission; a late retry re-sends)
+  let lastInfoKey = '';
   let seenNotice = getRoom()?.notice?.id ?? null; // a notice from before this session (a rejoin) isn't news
 
   const mySeats = () => seatList(getRoom()).filter(s => s.kind === 'human' && s.id === playerId).map(s => s.seat);
@@ -503,7 +547,7 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
     const v = getView();
     return {
       mode: 'online', roomCode: code, isHost: room?.hostId === playerId, playerId,
-      seats: v.players.map(p => ({ seat: p.seat, name: p.name, ...withEmoji(p.emoji), kind: p.kind, connected: p.connected, host: p.host, away: p.away, awayMs: p.awayMs, sub: p.sub, canSub: p.canSub, me: p.id === playerId })),
+      seats: v.players.map(p => ({ seat: p.seat, name: p.name, ...withEmoji(p.emoji), kind: p.kind, connected: p.connected, host: p.host, away: p.away, sub: p.sub, canSub: p.canSub, me: p.id === playerId })),
       subAfterMs: v.subAfterMs, selfOnline: v.selfOnline,
       version,
     };
@@ -520,7 +564,9 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
     const done = new Set(String(node.recent || '').split(',').filter(Boolean));
     if (node.lastMove?.mid) done.add(node.lastMove.mid);
     for (const [mid, w] of [...waiting]) if (done.has(mid)) { waiting.delete(mid); w.resolve(state); }
-    subs.emit(state, info());
+    const i = info();
+    lastInfoKey = JSON.stringify(i);
+    subs.emit(state, i);
   });
 
   const rejectsPath = `${base}/rejects/${playerId}`;
@@ -538,17 +584,25 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
       if (problem) return Promise.reject(new Error(problem));
     } else if (!state) return Promise.reject(new Error('The game has not started.'));
     const sig = `${move.player}|${move.option}|${version}`;
-    if (inflight.has(sig)) return inflight.get(sig);
-    const mid = randomId(12);
-    const p = new Promise((resolve, reject) => { waiting.set(mid, { resolve, reject }); });
-    inflight.set(sig, p);
-    const clear = () => inflight.delete(sig);
-    p.then(clear, clear);
-    transport.push(`${base}/moves`, { by: playerId, seat: move.player, move, n: version, mid, at: transport.serverTime() })
+    const send = (rec, mid) => transport.push(`${base}/moves`, { ...rec, at: transport.serverTime() })
       .catch(err => {
         const w = waiting.get(mid);
         if (w) { waiting.delete(mid); w.reject(new Error(`Couldn't send the move: ${err?.message || err}`)); }
       });
+    // The same move again: a double tap gets the same answer; a "Try again" after a while also sends it again, with
+    // the same mid, in case the first was lost (the host applies a mid once: `recent`).
+    const prior = inflight.get(sig);
+    if (prior) {
+      if (Date.now() - prior.at >= RESEND_MS) { prior.at = Date.now(); send(prior.rec, prior.mid); }
+      return prior.p;
+    }
+    const mid = randomId(12);
+    const p = new Promise((resolve, reject) => { waiting.set(mid, { resolve, reject }); });
+    const rec = { by: playerId, seat: move.player, move, n: version, mid };
+    inflight.set(sig, { p, mid, rec, at: Date.now() });
+    const clear = () => inflight.delete(sig);
+    p.then(clear, clear);
+    send(rec, mid);
     return p;
   }
 
@@ -570,7 +624,12 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
     roomChanged() {
       const n = !destroyed && getRoom()?.notice;
       if (n && n.id && n.id !== seenNotice) { seenNotice = n.id; reportProblem({ kind: n.kind, seat: n.seat, message: n.message, detail: n.detail }); }
-      if (state && !destroyed) subs.emit(state, info());
+      // the room changes far more often than anything the game screen shows (heartbeats, the move queue): only news
+      if (state && !destroyed) {
+        const i = info();
+        const key = JSON.stringify(i);
+        if (key !== lastInfoKey) { lastInfoKey = key; subs.emit(state, i); }
+      }
     },
     _teardown() {
       if (destroyed) return;

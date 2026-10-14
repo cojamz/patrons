@@ -80,7 +80,7 @@ describe('v4 game screen', () => {
     expect(clickable(container)).toEqual([]);
     fireEvent.click(container.querySelector('.slot'));
     expect(session.submit).not.toHaveBeenCalled();
-    expect(container.querySelector('[data-prompt]').textContent).toMatch(/is placing a worker/);
+    expect(container.querySelector('[data-prompt]').textContent).toMatch(/is placing a minion/);
   });
 
   it('buy: affordable shop cards, follower buys and Pass match the options; the rest are inert', () => {
@@ -91,10 +91,11 @@ describe('v4 game screen', () => {
     const legal = new Set(state.pending.options.map(o => o.id));
     expect(new Set(clickable(container))).toEqual(legal);
     for (const uid of state.shop) {
-      const el = container.querySelector(`.shop .card[data-option="card:${uid}"]`);
+      const el = container.querySelector(`.lt-shop .card[data-option="card:${uid}"]`);
       expect(!!el).toBe(legal.has(`card:${uid}`));
     }
-    const pass = within(container.querySelector('.fbuy')).getByRole('button', { name: 'Pass' });
+    // Pass is an answer to the question: it sits with the prompt
+    const pass = within(container.querySelector('.lt-prompt')).getByRole('button', { name: 'Pass' });
     fireEvent.click(pass);
     expect(session.submit).toHaveBeenCalledWith({ player: me, option: 'pass' });
   });

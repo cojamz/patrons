@@ -56,7 +56,7 @@ const TOKEN = (() => {
 const TEMPLATES = { member: { id: '_member', name: 'Member', kind: 'member', px: HOOD }, action: { id: '_action', name: 'Action', kind: 'action', px: TOKEN } };
 
 // ids: engine ids for the batches ("gold.banker", "gold.rush"), kebab names for the calibration set ("banker")
-const BY_ID = new Map(SETS.filter(i => i.kind !== 'emoji' && i.kind !== 'leader').map(i => [i.id, i]));
+const BY_ID = new Map(SETS.filter(i => i.kind === 'member' || i.kind === 'action').map(i => [i.id, i]));
 /** An icon id from a card or space name: "Mentor & Protégé" → "mentor-protege". */
 export const spriteId = name => String(name).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/&/g, ' ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 /** The icon for an id (or the first of several candidate ids), or the template for its kind. */
@@ -85,4 +85,16 @@ export function rectsFor(icon, sphere) {
   });
   rectCache.set(k, out);
   return out;
+}
+
+/** How much of an icon is its sphere's color (keys 1/2/3) among its filled cells: 0..1. */
+const shareCache = new Map();
+export function sphereShare(id, kind = 'member') {
+  const { icon } = iconFor(id, kind);
+  if (shareCache.has(icon.id)) return shareCache.get(icon.id);
+  let sphere = 0, filled = 0;
+  for (const row of icon.px) for (const ch of row) { if (ch === '.' || ch === 'k') continue; filled++; if (ch === '1' || ch === '2' || ch === '3') sphere++; }
+  const v = filled ? sphere / filled : 0;
+  shareCache.set(icon.id, v);
+  return v;
 }

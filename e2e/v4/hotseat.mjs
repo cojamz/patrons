@@ -66,7 +66,21 @@ try {
   await page.waitForSelector('[data-start]');
   await shot('02-setup');
   await page.click('[data-start]');
-  await page.waitForSelector('.players');
+  // The intro (src/v4/Intro.jsx): this browser's first game shows it once, over the table; one tap on Skip ends it
+  {
+    const shown = await page.waitForSelector('[data-intro]', { timeout: 4000 }).catch(() => null);
+    if (!shown) errors.push('the intro did not appear on the first game start');
+    else {
+      await page.waitForTimeout(700);
+      await shot('02a-intro');
+      const t = Date.now();
+      await page.click('[data-intro-skip]');
+      const gone = await page.waitForSelector('[data-intro]', { state: 'detached', timeout: 1500 }).then(() => true, () => false);
+      if (!gone) errors.push('one tap on Skip did not dismiss the intro');
+      else if (Date.now() - t > 1000) errors.push(`the intro took ${Date.now() - t}ms to go after Skip`);
+    }
+  }
+  await page.waitForSelector('.lt-seat[data-pid]');
   // How to play lives behind the one menu glyph
   await page.click('.lt-menu .menu-glyph');
   await page.click('.lt-menu .rules-btn');
@@ -82,7 +96,7 @@ try {
     await page.waitForSelector('.prompt.choice.setup');
     await page.waitForTimeout(300);
     const r = await page.evaluate(() => {
-      const cards = [...document.querySelectorAll('.shop-panel.compact .card')];
+      const cards = [...document.querySelectorAll('.lt-shop .card')];
       const vis = e => { const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden' || e.closest('[aria-hidden="true"]')) return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0 && b.left >= -0.5 && b.top >= -0.5 && b.right <= innerWidth + 0.5 && b.bottom <= innerHeight + 0.5; };
       return { n: cards.length, shown: cards.filter(vis).length, named: cards.filter(c => (c.querySelector('.nm') || {}).textContent).length };
     });
@@ -98,6 +112,7 @@ try {
   let clicks = 0;
   while (!(await page.$('.results'))) {
     if (Date.now() - t0 > 240000) throw new Error('game did not finish in 4 minutes');
+    if (await page.$('[data-intro]')) { errors.push('the intro showed again mid-game (resume or reload)'); await page.click('[data-intro-skip]').catch(() => {}); }
     const hand = await page.$('[data-handoff]');
     if (hand) { await hand.click(); continue; }
     const next = await page.$('[data-next-round]');
@@ -123,7 +138,7 @@ try {
     {
       const r = await page.evaluate(() => {
         const vp = innerWidth + 'x' + innerHeight;
-        const regions = Object.fromEntries(['prompt', 'rail', 'wheel', 'shop', 'table'].map(k => { const e = document.querySelector(`.lt [data-region="${k}"]`); if (!e) return [k, null]; const b = e.getBoundingClientRect(); return [k, [b.left, b.top, b.width, b.height].map(Math.round).join(',')]; }));
+        const regions = Object.fromEntries(['prompt', 'wheel', 'shop', 'seat-0', 'seat-1', 'seat-2', 'seat-3'].map(k => { const e = document.querySelector(`.lt [data-region="${k}"]`); if (!e) return [k, null]; const b = e.getBoundingClientRect(); return [k, [b.left, b.top, b.width, b.height].map(Math.round).join(',')]; }));
         const phase = (document.querySelector('.app.game') || {}).dataset?.phase;
         const bad = [];
         for (const sl of document.querySelectorAll('.lt .slot.open')) {
@@ -147,18 +162,20 @@ try {
       lastClipCheck = movesNow;
       for (const x of await page.evaluate(TEXT_CLIP)) { const m = `text cut: ${x}`; if (!errors.includes(m)) { errors.push(m); await shot(`zz-text-cut-${errors.length}`); } }
     }
-    const cap = await page.$eval('.caption', e => e.textContent).catch(() => null);
+    // the turn card carries its whole line in data-turn-story (UI-A); the older screen had a .caption
+    const cap = await page.evaluate(() => { const t = document.querySelector('[data-turn-story]'); if (t) return t.getAttribute('data-turn-story'); const c = document.querySelector('.caption'); return c ? c.textContent : null; }).catch(() => null);
     if (cap) stories.add(cap);
-    const facingNow = await page.$eval('.qtab.on', e => e.textContent).catch(() => null);
+    // the board never turns by itself (this run never spins it): its rotation stays put from step to step
+    const facingNow = await page.$eval('.lt-wheel g.wheel', e => e.getAttribute('transform')).catch(() => null);
     if (facingNow && !facingSeen) facingSeen = facingNow;
     if (facingNow && facingSeen && facingNow !== facingSeen) { errors.push(`the board turned by itself (${facingSeen} -> ${facingNow})`); facingSeen = facingNow; }
-    // a choice panel has its own space: never over the compact shop, the buy row or the "More below" pill
+    // a choice panel has its own space: never over the shop's cards, the follower buys or a cult
     if (await page.$('.prompt.choice:not(.setup)')) {
       const bad = await page.evaluate(() => {
         const vis = e => { const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden') return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
         const ch = document.querySelector('.prompt.choice:not(.setup)'); if (!ch || !vis(ch)) return [];
         const a = ch.getBoundingClientRect(); const out = [];
-        for (const sel of ['.shop-panel.compact', '.fbuy', '.more-hint']) {
+        for (const sel of ['.lt-shop .lt-cards', '.lt-shop .lt-rates', '.lt-seat-0', '.lt-seat-1', '.lt-seat-2', '.lt-seat-3']) {
           const o = document.querySelector(sel); if (!o || !vis(o) || o.closest('[aria-hidden="true"]')) continue;
           const b = o.getBoundingClientRect();
           const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
@@ -173,7 +190,7 @@ try {
       const bad = await page.evaluate(() => {
         const vis = e => { const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden') return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
         // the fixed regions never overlap each other, and a question note never covers the shop or the buy row
-        const els = ['.lt-prompt', '.lt-rail', '.lt-wheel', '.lt-shop', '.lt-table', '.lt-wheel > .prompt.choice', '.lt-shop .fbuy'].map(s => [s, document.querySelector(s)]).filter(([, e]) => e && vis(e) && !e.closest('[aria-hidden="true"]'));
+        const els = ['.lt-prompt', '.lt-wheel', '.lt-shop', '.lt-seat-0', '.lt-seat-1', '.lt-seat-2', '.lt-seat-3', '.lt-wheel > .prompt.choice', '.lt-shop .lt-rates'].map(s => [s, document.querySelector(s)]).filter(([, e]) => e && vis(e) && !e.closest('[aria-hidden="true"]'));
         const nested = (a, b) => a.contains(b) || b.contains(a);
         const out = [];
         for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) {
@@ -207,13 +224,14 @@ try {
       const bb = base && await base.boundingBox();
       if (bb) {
         await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2); await page.waitForTimeout(250);
-        if (!(await page.$('.peek'))) errors.push('hovering a space did not show its card');
+        if (!(await page.$('[data-hover-card="space"]'))) errors.push('hovering a space did not show its card');
         await shot('07-space-card');
       }
-      const chip = await page.$('.pl .chip');
+      // a member in a cult (a figure at the table) opens its card
+      const chip = await page.$('.lt-seat [data-member] .fig, .lt-seat .lt-member .fig');
       if (chip) {
         await chip.click(); await page.waitForTimeout(250); await shot('07-chip-popover');
-        if (!(await page.$('.popover'))) errors.push('member chip did not open its card');
+        if (!(await page.$('.popover [data-card], .popover .card-face'))) errors.push('a member figure did not open its card');
         await page.keyboard.press('Escape');
       }
       // tapping a taken space explains itself on the space, and leaves the turn prompt alone
@@ -226,7 +244,7 @@ try {
         const after = await page.$eval('[data-prompt]', e => e.textContent);
         if (before !== after) errors.push(`clicking a taken space changed the prompt ("${before}" -> "${after}")`);
         // a click hides the hover card (tester S); hovering shows it, which the check above covers
-        if (await page.$('.peek.pinned')) errors.push('clicking a taken space pinned a card on desktop');
+        if (await page.$('.lt-note.pinned[data-hover-card="space"]')) errors.push('clicking a taken space pinned a card on desktop');
         await page.keyboard.press('Escape');
       }
       await page.mouse.move(5, 5);
@@ -266,17 +284,17 @@ try {
     }
     if (seen.has('undo') && !seen.has('reload') && /II/.test(round)) {
       seen.add('reload');
-      const f0 = await page.$eval('.pl[data-pid="0"] .fol .num', e => e.childNodes[0].textContent);
+      const f0 = await page.$eval('.lt-seat[data-pid="0"] [data-followers]', e => e.dataset.followers);
       await carry(); await page.reload();
       // a reload mid-game goes straight back into it
-      await page.waitForSelector('.players', { timeout: 8000 }).catch(() => errors.push('reload did not reopen the game'));
+      await page.waitForSelector('.lt-seat[data-pid]', { timeout: 8000 }).catch(() => errors.push('reload did not reopen the game'));
       await shot('06-after-reload');
-      const f1 = await page.$eval('.pl[data-pid="0"] .fol .num', e => e.childNodes[0].textContent);
+      const f1 = await page.$eval('.lt-seat[data-pid="0"] [data-followers]', e => e.dataset.followers);
       if (f0 !== f1) errors.push(`resume changed P1's followers (${f0} -> ${f1})`);
       await page.goBack();
       await page.waitForSelector('[data-home="resume"]', { timeout: 5000 }).catch(() => errors.push('browser Back did not return home'));
       await page.click('[data-home="resume"]');
-      await page.waitForSelector('.players');
+      await page.waitForSelector('.lt-seat[data-pid]');
       facingSeen = null; // a reopened game starts facing its default quadrant
       continue;
     }
@@ -287,7 +305,7 @@ try {
       const keys0 = await page.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith('patrons.v4.')).sort());
       if (!keys0.includes('patrons.v4.local')) errors.push(`round III: no main save in storage (${keys0.join(', ')})`);
       await carry(); await page.reload();
-      await page.waitForSelector('.players, .results', { timeout: 8000 }).catch(() => errors.push('reload in round III did not reopen the game'));
+      await page.waitForSelector('.lt-seat[data-pid], .results', { timeout: 8000 }).catch(() => errors.push('reload in round III did not reopen the game'));
       const r3 = await page.$eval('header .round', e => e.textContent).catch(() => '');
       if (!/III|Final/.test(r3)) errors.push(`reload in round III reopened at "${r3}"`);
       await shot('06-after-reload-round3');
@@ -327,8 +345,10 @@ try {
   console.log(`finished after ${clicks} clicks: ${winner}`);
   // Play again returns to a fresh game.
   await page.click('[data-play-again]');
-  await page.waitForSelector('.players');
+  await page.waitForSelector('.lt-seat[data-pid]');
   if (await page.$('.results')) throw new Error('Play again did not start a new game');
+  await page.waitForTimeout(500);
+  if (await page.$('[data-intro]')) errors.push('the intro showed again on a second game');
   ok = errors.length === 0;
 } catch (e) {
   errors.push(`run: ${e.stack || e.message}`);

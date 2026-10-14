@@ -4,6 +4,7 @@
 import { Follower } from '../art/Follower.jsx';
 import { playerColor, seatSigil, seatEmoji } from '../format.js';
 import { Leader, Minion } from '../art/Leader.jsx';
+import Tick from './Tick.jsx';
 
 // 16×16 outlines, one per resource; anything else is a disc.
 const SHAPES = {
@@ -13,7 +14,7 @@ const SHAPES = {
   green: 'M13.5 2.5C13.5 9 10 13.5 3 13.5C3 7 6.5 2.5 13.5 2.5Z',
   magenta: 'M8 1.5L14 6.5L8 14.5L2 6.5Z',
   silver: 'M8 1.8C11 1.8 12 4.5 12 7.5V10.5L13.6 12.6H2.4L4 10.5V7.5C4 4.5 5 1.8 8 1.8ZM6.6 13.4H9.4A1.4 1.4 0 0 1 6.6 13.4Z',
-  yellow: 'M8 1.2L9.9 5.9L14.8 6.2L11 9.4L12.2 14.3L8 11.6L3.8 14.3L5 9.4L1.2 6.2L6.1 5.9Z',
+  yellow: 'M8 4.3a3.7 3.7 0 1 1 0 7.4a3.7 3.7 0 1 1 0-7.4ZM6.82 3.55L8.00 1.00L9.18 3.55ZM10.31 4.02L12.95 3.05L11.98 5.69ZM12.45 6.82L15.00 8.00L12.45 9.18ZM11.98 10.31L12.95 12.95L10.31 11.98ZM9.18 12.45L8.00 15.00L6.82 12.45ZM5.69 11.98L3.05 12.95L4.02 10.31ZM3.55 9.18L1.00 8.00L3.55 6.82ZM4.02 5.69L3.05 3.05L5.69 4.02Z', // a sun, never a star
   purple: 'M3.5 1.8H12.5V4.2L9.2 8L12.5 11.8V14.2H3.5V11.8L6.8 8L3.5 4.2Z',
   white: 'M8 1.5L13.6 4.75V11.25L8 14.5L2.4 11.25V4.75Z',
 };
@@ -43,7 +44,7 @@ export function FollowerMark({ n, size = 6, label = true }) {
   const title = `${n} follower${n === 1 ? '' : 's'}${n >= 5 ? ` (${[tens && `${tens}×10`, fives && '5', ones && `${ones}×1`].filter(Boolean).join(' + ')})` : ''}`;
   return (
     <span className="fol-mark" title={title} aria-label={title} role="img" data-followers={n}>
-      {label && <b className="num">{n}</b>}
+      {label && <b className="num"><Tick value={n} className="num" float={false} /></b>}
       <span className="dots" aria-hidden="true">
         {Array.from({ length: tens }, (_, k) => <i key={`t${k}`} className="d10" style={{ width: size * 2, height: size * 2 }} />)}
         {Array.from({ length: fives }, (_, k) => <i key={`f${k}`} className="d5" style={{ width: size * 1.5, height: size * 1.5 }} />)}
@@ -68,8 +69,9 @@ export function SeatMinion({ id, size = 16, dim = false, title = null }) {
 
 /**
  * A leader with its unplaced minions floating around it (Cory, 2026-10-14): how many are left is seen, not read.
+ * Each minion bobs slowly by one pixel on its own period and phase, so the ring never moves in step.
  * The leader is the anchor a placed minion flies from (data-leader={id}); each floating minion is data-minion.
- * size: the leader (32 on your table); minion: each minion (16). compact packs the ring for the seat rail.
+ * size: the leader (32); minion: each minion (16). compact packs the ring tighter.
  */
 export function LeaderRing({ state, id, size = 32, minion = 16, compact = false }) {
   const p = state.players[id];
@@ -84,18 +86,34 @@ export function LeaderRing({ state, id, size = 32, minion = 16, compact = false 
     const a = (n === 1 ? 0 : -span / 2 + (span * k) / (n - 1)) * (Math.PI / 180);
     return { left: cx + R * Math.sin(a) - minion / 2, top: cy - R * Math.cos(a) - minion / 2 };
   };
-  const name = state.players[id].name;
+  const name = p.name;
   const label = `${name}'s leader${n ? ` and ${n} minion${n === 1 ? '' : 's'} still to place` : ', every minion placed'}`;
   return (
     <span className={`lt-ring${compact ? ' compact' : ''}`} style={{ width: W, height: H }} title={label} aria-label={label} role="img" data-leader-ring={id} data-left={n}>
       <span className="lead" data-leader={id} style={{ left: cx - size / 2, top: cy - size / 2 }}>
         <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} />
       </span>
-      {Array.from({ length: n }, (_, k) => (
-        <span key={k} className="orbit" data-minion={id} data-k={k} style={{ ...at(k), width: minion, height: minion, animationDelay: `${-(k * 0.37).toFixed(2)}s` }}>
-          <Minion color={playerColor(id)} size={minion} />
-        </span>
-      ))}
+      {Array.from({ length: n }, (_, k) => {
+        // its own slow period and phase (golden-ratio spread), so no two bob together
+        const f = ((id * 3 + k) * 0.618034) % 1;
+        return (
+          <span key={k} className="orbit" data-minion={id} data-k={k}
+            style={{ ...at(k), width: minion, height: minion, animationDuration: `${(3.6 + f * 1.6).toFixed(2)}s`, animationDelay: `${(-f * 5).toFixed(2)}s` }}>
+            <Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={minion} />
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+/** A player, as players see them: their emoji (a minion) and their name. No shapes, no color-only dots. */
+export function Who({ state, id, name = null, size = 16 }) {
+  const p = state.players[id];
+  return (
+    <span className="who-tag" data-pid={id}>
+      <Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={size} title={`${p.name}'s emoji`} />
+      <span className="who-name">{name ?? p.name}</span>
     </span>
   );
 }

@@ -107,7 +107,7 @@ export function chooseGreedyMove(state, rand = Math.random, { noise = 1.6 } = {}
       if (use) return move(use);
       const tiers = pend.options.filter(o => o.kind === 'tier');
       const tierOf = o => TIERS.find(t => t.key === o.tier);
-      const last = (state.round === 3 || state.endEarly) && p.left === 0;
+      const last = state.round === 3 && p.left === 0;
       if (last && tiers.length) return move(best(tiers, o => tierOf(o).get));
       const cards = pend.options.filter(o => o.kind === 'card').map(o => {
         const d = cardDef(state, o.uid), c = d.s + d.w;
@@ -202,15 +202,12 @@ export function horizon(state) {
   const roundTotal = (WORKERS[state.round - 1] || 1) * n;
   return { turns, roundLeft: Math.min(1, turns.reduce((a, b) => a + b, 0) / roundTotal) };
 }
-// Turns (and the income they bring) in rounds not started yet. The 6-follower clock may cut them short.
+// Turns (and the income they bring) in rounds not started yet. The game always ends after round III (no clock).
 function laterTurns(s) {
-  if (s.round >= 3 || s.endEarly) return { turns: 0, income: 0 };
-  const clock = TIERS.find(t => t.clock);
-  const left = clock ? tierLeft(s, clock) : Infinity;
-  const risk = left <= 1 ? 0.35 : left <= s.players.length / 2 ? 0.7 : 1;
+  if (s.round >= 3) return { turns: 0, income: 0 };
   let turns = 0, income = 0;
   for (let r = s.round; r < 3; r++) { turns += WORKERS[r]; income += WORKERS[r] * INCOME[r]; }
-  return { turns: turns * risk, income: income * risk };
+  return { turns, income };
 }
 
 // What a pile of resources can still become: the best follower buys it can make with the buys that are left.
@@ -254,7 +251,7 @@ function liquidate(s, res, extra, buys, wild) {
 function contests(s, ctx, p, roundLeft, future = FUTURE_CONTESTS) {
   if (s.over || !s.round) return 0;
   // later rounds' rings count too, discounted: a lead in members lasts, a pile of resources mostly gets spent
-  const later = s.endEarly ? 0 : RING_VALUE.slice(s.round).reduce((a, b) => a + b, 0) * future;
+  const later = RING_VALUE.slice(s.round).reduce((a, b) => a + b, 0) * future;
   const v = RING_VALUE[s.round - 1];
   let out = 0;
   for (const qid of s.quadrants) {
@@ -307,7 +304,7 @@ function evaluate(s, buysLeft, incomeLeft, roundLeft, extraAbility = {}, future)
 }
 const marginOf = (vals, me, spite = SPITE) => vals[me] - spite * Math.max(...vals.filter((_, i) => i !== me));
 
-// Resolve follow-up choices a hypothetical move queued (Take, Hire ties, Joint Venture's gift…) by their hints.
+// Resolve follow-up choices a hypothetical move queued (Hand-pick, Open Door ties, Kickback's gift…) by their hints.
 function settle(s, ctx) {
   for (let k = 0; k < 40 && s.queue.length; k++) {
     const t = s.queue.shift();
@@ -334,7 +331,7 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
   };
   // extra: placements still ahead for the decider that this move adds (extra turns), each worth a placement's income
   const incomeAt = (s, extra = 0) => { const li = laterTurns(s).income * (opts.income ?? INCOME_SCALE); return turns.map((t, i) => (t + (i === me ? extra : 0)) * nowIncome + li); };
-  // extra turns a move queued for the decider (Overtime, Rally, Errand Runner…): each is a placement and a buy
+  // extra turns a move queued for the decider (Overtime, Crunch Time, Errand Runner…): each is a placement and a buy
   const turnsQueued = s => s.queue.filter(t => t.t === 'turn' && t.p === me).length;
   const placesLeft = turns[me] + laterTurns(state).turns;
   const buyNoise = opts.buyNoise ?? opts.noise ?? 0.05;
@@ -361,7 +358,7 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
         const moreBuys = s.queue.filter(t => t.t === 'buy' && t.p === me && !t.extra).length;
         const moreTurns = Math.max(0, turnsQueued(s) - turns0);
         settle(s, ctx);
-        // members the action brought in (Hire, Take…) bring their abilities too
+        // members the action brought in (Open Door, Hand-pick…) bring their abilities too
         const gained = p.members.filter(u => !had.has(u)).reduce((a, u) => a + abilityValue(cardDef(s, u), placesLeft, opts.k), 0);
         v = marginOf(evaluate(s, buysAt(s, 1 + moreBuys + moreTurns), incomeAt(s, moreTurns), roundLeft, { [me]: gained }, opts.future), me, opts.spite);
         if (opts.noMembers && memberCount(s, p) > before) v -= 100;
@@ -388,10 +385,7 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
           const tier = TIERS.find(t => t.key === what.tier);
           for (const r of s.resources) p.res[r] -= full[r];
           p.bonus += tier.get;
-          if (tier.limited) {
-            s.stock[tier.key] -= 1;
-            if (tier.clock && s.stock[tier.key] <= 0) s.endEarly = true;
-          }
+          if (tier.limited) s.stock[tier.key] -= 1;
         }
         const moreTurns = Math.max(0, turnsQueued(s) - turns0);
         return marginOf(evaluate(s, buysAt(s, moreTurns), incomeAt(s, moreTurns), roundLeft, extraAbility, opts.future), me, opts.spite);

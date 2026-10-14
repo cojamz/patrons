@@ -3,8 +3,9 @@
 //
 // The copy rule: a copy gives the space's own printed gain, as its chip shows: the resources and discount the
 // action itself handed its taker, never their members' bonuses and never what they paid. A free member copies as
-// "a face-up member costing no more, free". A space that took or traded (Steal, Trade…) is copied by doing the
-// action yourself. Echoes can't be echoed, and the center can't be echoed.
+// "a face-up member costing no more, free". A space that took or traded (Collect Debts, Swap Sides…) is copied by doing the
+// action yourself. Green's one rule, printed once (the sphere's `rule`, the rulebook and the glossary's "copy"), not
+// on each card: copies never reach the center or another copy (copyable() below: ring < 3, not an echo).
 //
 // Prototype notes (engine changes this module would like, see design/spheres/echo.md):
 // - The engine doesn't record what a space gave. install() wraps every action's resolve and every handler,
@@ -12,7 +13,7 @@
 //   their bonuses never land on a chip). The real fix in core.js: an 'act'-scoped ctx that tags gains and free
 //   recruits with the space, kept per round on state (this round and last round, for the board's chips).
 // - Member defs keep quadrant 'echo' (core pays the colored part in quadrant('echo').resource = green), so
-//   color counts (Gather, countMembersOfColor) see Green members.
+//   color counts (Potluck, countMembersOfColor) see Green members.
 import { registerQuadrant, allQuadrantIds, quadrant, defById } from './index.js';
 
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
@@ -60,7 +61,7 @@ function track(ctx, e) {
     return gain(t, c, n, o);
   };
   ctx.recruit = (t, uid, o) => {
-    // a member the taker paid for (Bargain, Clearance) is a trade: a copy does the action itself
+    // a member the taker paid for (Snap Up, Half Price) is a trade: a copy does the action itself
     if (t.id === e.p && o?.free && o.paid) e.redo = true;
     else if (t.id === e.p && o?.free) { e.members.push(costOf(quadrantDef(ctx.state, uid))); e.members.sort((x, y) => x - y); }
     return recruit(t, uid, o);
@@ -141,7 +142,7 @@ export function targets(ctx, p, which, skip = null) {
 /** A rival's spaces since p's last turn, from inside p's own turn (the space p just took doesn't count as "last turn"). */
 const sinceNow = (ctx, p) => { const L = ledger(ctx.state); return targets(ctx, p, 'since', L.now[L.open]?.p === p.id ? L.open : null); };
 const bestValue = (ctx, list, p) => Math.max(0, ...list.map(e => entryValue(ctx, e, p)));
-// by: the member making the copy (Keepsake, Afterimage…), so the log names it
+// by: the member making the copy (Understudy, Sleepwalker…), so the log names it
 function offer(ctx, p, list, prompt, from, by = null) {
   if (!list.length) { ctx.log(`${p.name}${by ? `'s ${by}` : ''} had nothing to copy.`); return; }
   ctx.choose(p, prompt, list.map(e => ({
@@ -176,10 +177,13 @@ export function copy(ctx, p, e, { later = null, by = null } = {}) {
 function heard(ctx, p, e, taker) {
   // each runs as its member, so the log names it ("P1's Choir: +1 green.")
   const fork = has(ctx, p, 'tuningfork');
-  if (fork) ctx.asMember(p, 'Tuning Fork', () => ctx.gain(p, ctx.quadrant(e.color).resource, fork));
+  if (fork) ctx.asMember(p, 'Impressionist', () => ctx.gain(p, ctx.quadrant(e.color).resource, fork));
   const choir = has(ctx, p, 'choir');
   if (choir) ctx.asMember(p, 'Choir', () => ctx.gain(p, 'green', choir));
   if (taker !== p) { const muse = has(ctx, taker, 'muse'); if (muse) ctx.asMember(taker, 'Muse', () => ctx.gain(taker, 'green', 2 * muse)); }
+  // Ensemble: a rival's space only; the follower counts at once (a won follower, so it's loose: White can sell it)
+  const ensemble = taker !== p ? has(ctx, p, 'ensemble') : 0;
+  if (ensemble) ctx.asMember(p, 'Ensemble', () => { p.bonus += ensemble; });
 }
 /** Copy several spaces; free members are picked one after another at the end. */
 export function copyAll(ctx, p, list, by = null) {
@@ -202,6 +206,7 @@ const echoQ = {
   id: 'echo',
   name: 'Green',
   resource: 'green',
+  rule: 'Copies never reach the center or another copy. Most green at round end wins.',
   scoring: { label: 'Most green', counts: 'the green you hold when the round ends', score: (ctx, p) => p.res.green || 0 },
 
   actions: [
@@ -211,33 +216,33 @@ const echoQ = {
       resolve(ctx, p) { ctx.gain(p, 'green', 3, { fromAction: true }); },
     },
     {
-      key: 'chant', ring: 1, name: 'Chant', text: '+2 green per round number (2 / 4 / 6).',
+      key: 'chant', ring: 1, name: 'Crescendo', text: '+2 green per round number (2 / 4 / 6).',
       estimate: ctx => 2 * ctx.state.round,
       resolve(ctx, p) { ctx.gain(p, 'green', 2 * ctx.state.round, { fromAction: true }); },
     },
     {
       // the rivals' spaces since your last turn: what the "since your turn" line shows, so you know before you place
-      key: 'echo', ring: 1, name: 'Echo', echo: true, text: 'Copy a space a rival took since your last turn (not the center).',
+      key: 'echo', ring: 1, name: 'Echo', echo: true, text: 'Copy a space a rival took since your last turn.',
       estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'since'), p),
       resolve(ctx, p) { plus(ctx, p); offer(ctx, p, sinceNow(ctx, p), 'Echo: copy which rival’s space (taken since your last turn)?', 'now'); },
     },
     {
-      key: 'encore', ring: 2, name: 'Encore', echo: true, text: 'Copy any space taken this round (not the center).',
+      key: 'encore', ring: 2, name: 'Encore', echo: true, text: 'Copy any space taken this round.',
       estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'any'), p),
       resolve(ctx, p) { plus(ctx, p); offer(ctx, p, targets(ctx, p, 'any'), 'Encore: copy which space?', 'now'); },
     },
     {
       // your own spaces are on the board in your color: no memory of last round needed (it replaced Recall)
-      key: 'refrain', ring: 2, name: 'Refrain', echo: true, text: '+2 green, and copy one of your spaces from this round.',
+      key: 'refrain', ring: 2, name: 'Reprise', echo: true, text: '+2 green, and copy one of your spaces from this round.',
       estimate: (ctx, p) => 2 + VARIANT.plus + bestValue(ctx, targets(ctx, p, 'own'), p),
       resolve(ctx, p) {
         plus(ctx, p);
         ctx.gain(p, 'green', 2, { fromAction: true });
-        offer(ctx, p, targets(ctx, p, 'own'), 'Refrain: copy which of your spaces?', 'now');
+        offer(ctx, p, targets(ctx, p, 'own'), 'Reprise: copy which of your spaces?', 'now');
       },
     },
     {
-      key: 'eternity', ring: 3, name: 'Eternity', echo: true, text: 'Copy every space you took this round.',
+      key: 'eternity', ring: 3, name: 'Greatest Hits', echo: true, text: 'Copy every space you took this round.',
       estimate: (ctx, p) => VARIANT.plus + targets(ctx, p, 'own').reduce((s, e) => s + entryValue(ctx, e, p), 0),
       resolve(ctx, p) {
         plus(ctx, p);
@@ -262,7 +267,7 @@ const echoQ = {
   },
 
   members: [
-    m('evergreen', 'Evergreen', 2, 2, 'Now and at round start, +3 green.', { now: true,
+    m('evergreen', 'Busker', 2, 2, 'Now and at round start, +3 green.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', 3); },
     }),
     m('choir', 'Choir', 4, 2, 'Whenever you copy a space, +1 green.'),
@@ -272,9 +277,9 @@ const echoQ = {
     m('understudy', 'Understudy', 4, 2, 'When recruited: copy a space a rival took since your last turn.', {
       onRecruited(ctx, owner) { offer(ctx, owner, sinceNow(ctx, owner), 'Understudy: copy which rival’s space (taken since your last turn)?', 'now', 'Understudy'); },
     }),
-    m('ensemble', 'Ensemble', 2, 2, 'Game end: +1 follower per green member.', {
-      onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'echo'),
-    }),
+    // was "Game end: +1 follower per green member." (2+2) until the design critic's follow-ups (2026-10-14): now it
+    // pays for the copy itself, a rival's space only, and the follower counts at once (heard() above).
+    m('ensemble', 'Ensemble', 4, 2, 'Whenever you copy a rival’s space, +1 follower.'),
     m('groupie', 'Groupie', 4, 4, 'Whenever anyone recruits a green member, +1 green.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (recruited.uid !== card.uid && recruited.def.id.startsWith('echo.')) ctx.gain(owner, 'green', 1);
@@ -284,41 +289,39 @@ const echoQ = {
       toggle: true,
       onRecruited(ctx, owner, card) { card.on = true; },
     }),
-    m('tuningfork', 'Tuning Fork', 2, 2, 'Whenever you copy a space, also gain 1 of that space’s color.'),
+    m('tuningfork', 'Impressionist', 2, 2, 'Whenever you copy a space, also gain 1 of that space’s color.'),
     m('wallflower', 'Wallflower', 2, 2, 'While no one has fewer followers than you, the resources you copy are doubled.'),
-    m('keepsake', 'Keepsake', 4, 2, 'When recruited: copy one of your spaces from this round.', {
-      onRecruited(ctx, owner) { offer(ctx, owner, targets(ctx, owner, 'own'), 'Keepsake: copy which of your spaces?', 'now', 'Keepsake'); },
-    }),
-    m('mirror', 'Mirror', 4, 2, 'When recruited: gain as much green as the rival with the most green.', {
+    // Keepsake ("When recruited: copy one of your spaces from this round") is cut: Reprise does the same on a space.
+    m('mirror', 'Mime', 4, 2, 'When recruited: gain as much green as the rival with the most green.', {
       onRecruited(ctx, owner) {
         const g = Math.max(0, ...ctx.rivals(owner).map(o => o.res.green || 0));
         if (g) ctx.gain(owner, 'green', g);
-        ctx.log(`${owner.name}'s Mirror: +${g} green.`);
+        ctx.log(`${owner.name}'s Mime: +${g} green.`);
       },
     }),
-    m('afterimage', 'Afterimage', 4, 2, 'Now and at round start: copy one of your spaces from last round.', { now: true,
+    m('afterimage', 'Sleepwalker', 4, 2, 'Now and at round start: copy one of your spaces from last round.', { now: true,
       onRoundStart(ctx, owner) {
         const L = ledger(ctx.state);
         const list = Object.values(L.last).filter(e => copyable(e) && e.p === owner.id);
-        offer(ctx, owner, list, 'Afterimage: copy which of your spaces from last round?', 'last', 'Afterimage');
+        offer(ctx, owner, list, 'Sleepwalker: copy which of your spaces from last round?', 'last', 'Sleepwalker');
       },
     }),
-    m('hourglass', 'Hourglass', 6, 4, 'Once per round: copy the space you just took.', {
+    m('hourglass', 'Stunt Double', 6, 4, 'Once per round: copy the space you just took.', {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
         const e = justTook(ctx, owner);
-        if (!e) { card.used = false; ctx.log(`${owner.name}'s Hourglass has nothing to copy.`); return; }
-        copy(ctx, owner, e, { by: 'Hourglass' });
+        if (!e) { card.used = false; ctx.log(`${owner.name}'s Stunt Double has nothing to copy.`); return; }
+        copy(ctx, owner, e, { by: 'Stunt Double' });
       },
       botActivate: (ctx, owner) => { const e = justTook(ctx, owner); return !!e && entryValue(ctx, e, owner) >= 3; },
     }),
-    m('dejavu', 'Déjà Vu', 8, 4, 'Once per game: copy every space you took this round.', {
+    m('dejavu', 'Tribute Band', 8, 4, 'Once per game: copy every space you took this round.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const list = targets(ctx, owner, 'own');
-        if (!list.length) ctx.log(`${owner.name}'s Déjà Vu has nothing to copy.`);
-        copyAll(ctx, owner, list, 'Déjà Vu');
+        if (!list.length) ctx.log(`${owner.name}'s Tribute Band has nothing to copy.`);
+        copyAll(ctx, owner, list, 'Tribute Band');
       },
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e, owner), 0) >= (ctx.state.round === 3 ? 6 : 10),

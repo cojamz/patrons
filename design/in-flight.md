@@ -1,54 +1,44 @@
-# In flight — catalogue at handoff (2026-10-14, ~17:00 UTC)
+# In flight
 
-Resumed 2026-10-14 ~17:10 UTC in a new session: items 1–5 relaunched as fresh agents from these briefs, each told to read git log and continue. Agents never commit; the foreman checkpoints. Each agent runs check:v4 on its own V4_OUTDIR/V4_PORT (a1 5281, ui 5282, a3 5283, a4 5284, a5 5285). Baseline at resume: one failing UI test (GameScreen.test.jsx handoff dialog), build green.
+Updated 2026-10-14 ~21:40 UTC. Agents never commit; the foreman verifies and checkpoints. Each agent runs check:v4 on its own `V4_OUTDIR`/`V4_PORT` (build dirs seen on disk are noted). If a session dies, relaunch each workstream from its brief below and tell it to read `git log` first. Done items are ticked in design/todo.md.
 
-Five agents were running in the old session. They don't carry over, but their work lands in git through frequent WIP checkpoints. A new session should check `git log` and the files below, then restart whatever isn't finished.
+## Current roster
+1. **UI-A: wheel, shell, pay, the Reckoning, phone.** Brief: design/prototypes/vision/build-plan.md (Split: UI-A; Making it clear; Layout revision). Owns `lamp.css`, the GameScreen shell, `Wheel.jsx`, `PayPicker.jsx`, `RoundEnd.jsx` and the phone layout. Now: the layout revision (the wheel centred and bigger, a cult at each corner, minions on a space's rim so its text stays readable, "minion" in the prompt), then the animated Reckoning. Build dir `.v4-build-ui` (port 5282).
+2. **UI-B: shop strip, corner cults, hover layer, art import, animations, e2e selectors.** Brief: build-plan.md (Split: UI-B; Layout revision; hover; sports cards; minions float). Owns `ShopCards.jsx`, `CultSeat.jsx`, `HoverCards.jsx`/`Info.jsx`, `game/lamp-b.css` and the art wiring. Next (Cory, 21:40): a visible face-down member deck with its count at the head of the shop strip. Earlier: a slim strip of 10 sports-card members (figure, name, cost, worth; effect on hover; only what you can afford lit when buying), the four corner cults (leader, floating minions, member crowd, follower mark, resources), instant hover (<100ms, one sticky layer, the info.mjs gate), the turn story, then idle loops and reactions (stretch). Keeps every e2e gate green as selectors change, never weakening an assertion. Build dir `.v4-build-uib`.
+3. **Hardening.** Brief: design/eval/engineering-review.md ("Do now", then "Do soon") and the hardening line in todo.md. Landed: honest gate, CI, version stamps and content hash, game records and replay, the Recovery screen, bot-failure fallback. Build dir `.v4-build-hard`.
+4. **Multiplayer.** Brief: todo.md's friends-build milestone (the online lines) and design/eval/multiplayer-readiness.md. Real Firebase and the Netlify link are blocked from this container, so it tests on the RTDB emulator (`V4_RTDB=host:port`, `?rtdb=`). Build dir `.v4-build-mp`.
+5. **White rework.** Brief: design/eval/cory-notes-2026-10-14.md §2, design/spheres/trading.md, `content/trading.js`. Landed: Pawn, Barter (replaces Cash In), Broker and Dealer at 2+0.
+6. **Green rework.** Brief: cory-notes §3, design/spheres/echo.md, `content/echo.js`. Landed: Echo (a space a rival took since your last turn), Refrain, Understudy, Ensemble.
+7. **Dead-window fixes.** Brief: cory-notes §4 (the ranked list and the systemic rules). Landed (logged in decisions.md): "Now and at round start" on 19 members, Extra Hand, Heir, Revelers (was Feast Hall), Social Climber, Prism, Bloom, Tip-off, Silversmith, Grifter, and no Release in the round you recruited. Remaining: the rest of the ranked list; the other systemic rules are proposals until logged.
+8. **Icon batch Blue/White/Green/Purple.** Brief: design/prototypes/pixel-art/style.md; drawings in `icons-blue-white-green-purple.js`, imported by `scripts/v4-art-import.mjs`. All batches are drawn (681046c). Cory: good enough for now, polish later.
+9. **Emoji minions + cult leaders.** Brief: build-plan.md "Minions and cult leaders"; drawings in design/prototypes/pixel-art/emojis.js and leaders.js, the identity sheet beside them. Landed: 20 emojis, robed leaders, emojis kept per seat online (f8aa8c0, friends.test.js). Remaining: the emoji pick when joining (one per table; bots take a free one), "minion" everywhere a player reads "worker", unplaced minions floating around the leader.
+10. **Intro.** Done (7 beats, ~20s, once per browser; Skip/Esc/tap; storyboard under reduced motion; `?intro=0|1`; unit + hotseat gates). Menu replay → UI-A. Brief was: build-plan.md "Intro and follower symbol"; `src/v4/Intro.jsx`. Built: per player and local, skippable, a still storyboard under reduced motion, `?intro=0` / `?intro=1`, replay from the menu. Build dir `.v4-build-intro` (port 5298).
+11. **Purple: Night Owl + reprice.** Brief: design/eval/purple-members.md (from the remote Purple session). Night Owl (8+2, "When you place your last minion of a round, take an extra turn right after this one.") takes Relay's slot; Double Time 6, Overseer 4, Taskmaster 6, Second Wind 8, Late Riser 6. Build dir `.v4-build-purple` (port 5310).
+13. **Game and fun critic, round 2 (blind).** boardgame-enthusiast on the frozen build 4fa162a (`.v4-panel/d9`, port 5202), two full games, with a Vision section. Report → design/eval/boardgame-enthusiast-round2.md.
+15. **Engineering review, round 2.** Done → design/eval/engineering-review-round2.md. Routed: online blockers (Back leaves the game, effect-blind hash, host heartbeat, Try again, Recovery rejoin, per-player contexts) → Multiplayer; preview warmup, end-screen tie, memo → UI-A; ShopCards preview subscription, worker fallback → UI-B; harness → roster 16.
+16. **Harness hardening.** v4-check/peek spawn vite directly and kill the process group, port checked before spawn; dead-component tests ported to live ones; kept records re-recorded (`records:refresh`); dist/ untracked; architecture.md CI line. Build dir `.v4-build-harness` (port 5316).
+17. **Names + Even Swap.** Action names batch 1 (Cory approved) and batch 2 (pending his grade), member renames (Cory trusts), Even Swap replaces Scout. Build dir `.v4-build-names` (port 5314).
+18. **Rules: unlimited 10→10, Barter → Dividend.** The critic follow-ups agent, resumed. Build dir `.v4-build-follow` (port 5312).
+14. **Action spaces: three directions.** Static mocks in design/prototypes/actions/ (Cory: "I still don't like the actions"), for Cory to pick by number; then UI-A builds the pick in Wheel.jsx.
+12. **Design critic, round 2 (blind).** On the frozen build 4da59a3 (`.v4-panel/d8`, port 5201), with a Vision section (visual actions, elegant round scoring, cults at a glance) and a mocked frame. Report → design/eval/ui-critic-round2.md.
 
-1. **Cost change + top tier + tuning.**
-   - On disk already: member costs ×2 in content/*.js; TIERS in core.js are 2→1, 4→3, 8→6 (limited 2/player, the clock) and 10→10 (4 colors, limited 4).
-   - Remaining:
-     - Tune so the pure "big followers" strategy wins ~25% (15–30% band) with ~6–7 members per player, and a good engine (thinking bot) beats it.
-     - Measure the pricier set 3→1, 5→3, 8→6 (as a comparison only).
-     - Decide whether the 8→6 or the 10-tier is the clock.
-     - Write design/eval/top-tier.md.
-     - Rulebook text for the new rates.
-     - check:v4 green.
-   - Tools: scripts/v4-big-followers.mjs (pure buyer vs 3 bots, Release on/off), scripts/v4-member-value.mjs.
-2. **UI agent.** Owns src/v4, e2e, and the content/index.js registration.
-   - Table picker: register all spheres; setup "Table" option (default, random 4, custom); `?table=gold,red,thieves,echo`; online passes the table; colors for every resource; e2e/v4/tables.mjs smoke.
-   - PRIORITY bug: a reload near game end erased a hot-seat game (only patrons.v4.roundStart left). Never clear the save before results render, keep a round-start fallback, add a reload-at-every-step session test.
-   - Bug: the prompt pill stays stuck on "Placement undone — place again". Clear it on the next state change and gate it in e2e.
-   - Panel 7 fixes:
-     - Laptop V: the choice panel overlaps the buy row; the recruit flight reflows its text; the digit roller shows "-10"; shop text is unreadable while placing; bots too fast on desktop; dropped steal clicks; "×2" wording; 900px clipping; 6-step type scale; ring labels I/II/III.
-     - Phone W: own moves snap (gate e may be checking the wrong thing); the end-notice is offscreen; landscape popover; round III modal; chips clip; labels collide with discs; setup undo; "+2 recruited"; ★ on chips; fling steps; dead band on cards; "Hustler (Gold)"; worker label; tray hint.
-     - Saboteur X: the Take panel draws over the shop; count-ups need ≥3 intermediate values (gate at 1270×700 and phone); fold hot-seat handoff into the next modal; verb by pointer type; results headline wording; "take all"; reserve the Undo slot; focus after handoff.
-   - Report when check:v4 passes. Claude commits after verifying on a frozen build.
-3. **Cross-sphere integration.**
-   - New: src/test/engine/v4/fuzz-tables.test.js plus fuzz-tables-runner.js (random 4-sphere tables from all 11 quadrants, invariants, determinism).
-   - Targeted interaction tests for risky pairs: Echo×steal/extra turn/sale, Linger, Doppelganger, Silver gifts×Guest×JV, Midas/Underdog on copies, Blue recruits×Recruiting Drive, Heist/Double Agent×once-per-game state, White selling, Hideout×Steal/Ransom.
-   - Fix real bugs minimally; list unclear rules for Cory, one line each, with a recommendation.
-4. **Smarter bots** (bots.js, thinker.js; scripts/v4-bot-levels.mjs).
-   - Fix hoarding (ended a game holding 50 gold) and recruiting everything.
-   - Easy/Normal/Hard levels via player.bot.
-   - Measure Normal vs Easy, Hard vs Normal, members/player, leftover resources, and the pure buyer vs Normal.
-   - Then expose the levels in the setup UI.
-5. **Rule-bending members** (content/benders.js; design/rule-benders.md; commit 2f14216 priced them from the member-value sim).
-   - Remaining:
-     - Straggler (after the round's last placement, move one of your workers to an unused space and take that action).
-     - Rename Purple's old Straggler.
-     - Release as a base rule on trial (flag, on by default).
-     - Interaction tests.
-     - The big-followers rate with and without Release.
-     - Report one line per member to Cory.
-6. **Next, in order:**
-   - Apply each draft sphere's critic defaults (design/spheres/*.md).
-   - Freeze a build.
-   - Screenshot it yourself.
-   - Blind panel of 3 on MIXED tables (Magenta, Purple, Echo, Silver, White, Blue, Yellow), with the "felt unfair or unfun" section.
-   - Fix.
-   - Send Cory a link where he can pick any 4 spheres.
+## Held
+- **Fair-price screen, bot levels + 4-thinker tables:** offloaded to the remote sessions below. The Purple session is done (roster 11).
+- **Board game enthusiast:** the missing third reviewer of fresh-eyes round 1. Held until the layout revision lands and a build is frozen from a commit; then run the full trio (ui-critic, enthusiast, engineer) as round 2, plus the meta synthesis.
 
-## Live roster (18:55 UTC): ALL AGENTS PAUSED by the account usage limit (resets 21:40 UTC)
-Their partial work is committed (cc788f7). A send_later at 21:42 UTC resumes each with SendMessage (agent ids in that message), staggered: UI-A, UI-B, hardening, multiplayer, test updates first; then bots, fair-price, Purple, White, Green, UX solver, dead-window audit, Relay replacements, pixel art, action names, visionary designer, board game enthusiast.
-If that session is gone, relaunch each from its brief: design/todo.md (friends-build milestone), design/eval/cory-notes-2026-10-14.md (sections 1–6), design/eval/ui-critic-round1.md, design/eval/engineering-review.md.
+## Done from the 17:00 catalogue
+- Cost change and top tier: costs ×2, follower buys take any resources, the last 10→10 is the clock, design/eval/top-tier.md, the rulebook.
+- The UI agent's list: table picker, the reload-erase bug, the stuck Undo pill, panel 7 fixes (each now an e2e gate).
+- Cross-sphere fuzz and interaction tests (`fuzz-tables.test.js`, `interactions.test.js`).
+- Bot levels Easy/Normal/Hard in the engine (the setup screen doesn't offer them yet).
+- Rule-benders: Straggler, Late Riser (Purple's old Straggler), Release on by default, interaction tests, `e2e/v4/benders.mjs`.
+- Still owed from that list: the blind panel on mixed tables, then fixes.
 
+## Resume after a usage-limit pause
+Limits hit four times on 2026-10-14 (06:30, 11:40, 16:40, 18:55 UTC). The foreman's `send_later` check-in pings each paused agent with SendMessage (ids in that message), UI-A and UI-B first. If the session is gone, relaunch from the briefs above.
+
+## Remote sessions (own machines, started 20:48 UTC): heavy simulation offloaded from this 4-CPU box
+- Fair-price screen for every card → branch claude/cults-fair-price (session_01SAnMH5dXApptnHJqsFTvdV)
+- Bot levels + 4-thinker balance tables → branch claude/cults-bots (session_012LrFkfKC8GG3gLHPuLK2jF)
+- Purple member replacements + per-turn repricing → branch claude/cults-purple-members (session_01KzNtqok74Xvo1pxX1pqWkS). Done 21:09; report brought in by roster 11.
+The foreman merges each branch after reviewing it (proposals only: no content price changes land without review; design changes go to Cory).

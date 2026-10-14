@@ -26,13 +26,19 @@ Kept, with measurements:
 
 Flagged for Cory (not White's to fix):
 - Release refunds a once-per-game member's full price after it's been used (buy Liquidator, use it, release it: free).
-- One seller can empty the 10→10 stock in round II and end the game early.
+- One seller can empty the 10→10 stock in round II and end the game early. (Moot: Cory made 10→10 unlimited with no clock; the game always ends after round III.)
+
+## Design critic follow-ups (2026-10-14, Claude under Cory's "go with your gut")
+1. "Loose followers" is defined once, in the rulebook (What you have) and the glossary: followers you bought or won, not the ones your members are worth. The cards use the word instead of each explaining it: Sell High "Sell up to 2 loose followers for 3 white each.", Pawnbroker "Once per round: sell 1 loose follower for 3 white.", Liquidator "Once per game: sell up to 5 loose followers for 2 white each."
+2. Barter is cut (Cory: "I don't like that"). Dividend fills its ring-II slot (Claude, under go-with-your-gut): "+1 white per loose follower you have." Your loose followers pay out without being sold, so it feeds Most white and leaves the score alone. Bots value it at the white it gives. Not measured yet.
+3. The 10-follower buy is unlimited and nothing ends the game early (Cory: "the turns are the end game clock"). The game always ends after round III; 8→6 keeps its limit of 2 per player. (A once-per-player-per-round limit was built and dropped the same day.)
+4. Not done: fallbacks ("If you can't, +3 white" on the old Barter; "If you have no loose followers, +3 white" on Sell High). Cory: no rescue clauses; taking a space you can't use is on you.
 
 ## The idea
 Your followers are cash. Sell them for white when you need fuel, buy them back later, and cash everything out in round III.
 Gold sits on its pile and Red buys lots of cheap members. White moves its own score back and forth. Selling also moves you up in turn order, since fewest followers picks first.
 
-One new rule: you can sell only followers you've won or bought, never yourself or a member. So nobody drops below 1.
+One new rule: you can sell or spend only your **loose followers** (the ones you've won or bought), never yourself or a member. So nobody drops below 1.
 
 ## Numbered list (answer by number; default = keep; all Claude fill-ins)
 Scoring
@@ -42,14 +48,14 @@ Actions (value in resources: early = round I with typical holdings, late = round
 2. I · Haggle: +2 white, and +1 white per player with more followers than you. Early +2 (Rush gives 2). Late +3 to +5 for whoever is behind (Rush gives 6).
 3. I · Buy Low: trade up to 2 resources per round number for followers, 1 for 1. Early: 2 resources for 2 followers, about +2 (Joint Venture is 3.3). Late: up to 6 for 6, about +2 (it saves a buy and skips the color rule). This is the weak version of Cash In.
 4. I · Pawn: per round number, +1 follower or +2 white (you pick the mix). Round I: 1 follower or 2 white (Rush gives 2). Round III: up to 3 followers or 6 white (Rush gives 6). (Was "+2 white, and sell up to 1 follower per round number for 2 white each", whose sale was dead in round I.)
-5. II · Sell High: sell up to 2 followers for 3 white each. Round II about +3 (Steal is 3). Late about +4.
-6. II · Barter: recruit a face-up member, paying 1 follower per 2 of its cost, rounded up (only followers you've won or bought). On top of your buy. At the 4→3 rate, a cost-8 member for 4 followers is about +1.3 followers of value, plus the member's ability and an extra recruit; the plain high-follower members (Patron, worth 5 for 6) net +2. (Replaces Cash In: "+1 follower, then trade any of your white for followers, 1 for 1".)
+5. II · Sell High: sell up to 2 loose followers for 3 white each. Round II about +3 (Steal is 3). Late about +4.
+6. II · Dividend: +1 white per loose follower you have. Round II with 3–5 loose followers about +3 to +5 (Windfall 4.9); late, more for whoever bought big. Not measured yet. (Replaces Barter, cut by Cory, which replaced Cash In.)
 7. III · Boom: trade all your resources for followers, 1 for 1 (you may keep your white). Greedy bots cash out about 11. That's par for the 6-for-6 buy, but it saves 2 buys and ignores colors: about +6 (Strike: +8 to 12 gold).
 
 Members (cost = white + any)
 8. Shopkeeper (1+1): at round start, +2 white.
 9. Dealer (1+0, now 2+0 at doubled costs): whenever you sell followers, +1 white each.
-10. Pawnbroker (1+1): once per round, sell 1 follower for 3 white.
+10. Pawnbroker (1+1): once per round, sell 1 loose follower for 3 white.
 11. Safety Net (1+0): at round start, if you have no white, +3 white.
 12. Tipster (2+1): whenever a rival buys followers, +1 white.
 13. Lender (1+0): when it joins you, +5 white. Game end: lose 2 followers. **Flag:** with its debt, Lender is a net −1 follower whenever you have 2+ won or bought followers. That breaks "each member is worth at least 1 follower". The debt never touches yourself or a member.
@@ -59,7 +65,7 @@ Members (cost = white + any)
 17. Bulk Buyer (2+1): whenever you buy 3 or 6 followers, +1 more. (Was Bargain Hunter, which paid on every buy and doubled the 2-for-1 rate.)
 18. Broker (1+0, now 2+0 at doubled costs): whenever a White action gives you followers, +1 more (once per action; Buy Low used to pay it per resource).
 19. Exporter (2+2): whenever you recruit a non-white member, +1 white.
-20. Liquidator (2+1): once per game, sell up to 5 followers for 2 white each.
+20. Liquidator (2+1): once per game, sell up to 5 loose followers for 2 white each.
 21. Reinvestor (1+1): whenever you sell followers, your next member costs 1 less per follower sold.
 22. Raider (1+0): once per game, buy up to 3 followers from the leader for 1 white each. They get the white.
 
@@ -71,7 +77,7 @@ Members (cost = white + any)
 
 ## Extra ideas (one line each, fill-ins)
 23. I · Tip Jar: +3 white, and +1 white to a player you choose.
-24. (Retired: the name Barter now belongs to the ring-II action, item 6.)
+24. (Retired: Barter, cut by Cory on 2026-10-14.)
 31. Pawn pile (the critic's bolder idea): sold followers sit in a visible pile on your board. Buy them back any time for 3 white each; whatever's left at game end is lost. Closes any sell/buy loop by itself.
 32. Moving price: each sale this round drops White's sale price by 1 (a Power Grid-style track), so the market itself stops a loop.
 25. II · Market Day: every player may sell 1 follower for 3 white; you get +1 white per seller.

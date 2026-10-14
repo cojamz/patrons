@@ -73,28 +73,29 @@ for (const size of [{ width: 1270, height: 700 }, { width: 900, height: 700 }, {
     await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), richSave());
     await page.reload();
     await page.click('[data-home="resume"]');
-    await page.waitForSelector('.shop-panel.compact .card');
+    await page.waitForSelector('.lt-shop .card');
     await page.waitForTimeout(500);
     await page.screenshot({ path: `${SHOTS}/${tag}-place.png` });
-    await check('place', ['.shop-panel.compact .card .nm', '.shop-panel.compact .card .row.cost', '.shop-panel.compact .card .cost-box', '.fbuy .fb b', '.fbuy .fb span']);
+    await check('place', ['.lt-shop .card .nm', '.lt-shop .card .ft', '.lt-shop .card .lt-cost', '.lt-shop .lt-rate b', '.lt-shop .lt-rate']);
     // (l4) the classic table has no magenta: a magenta-leaning guest's cost reads in "any"
-    const res = await page.evaluate(() => [...document.querySelectorAll('.pl[data-pid="0"] .r')].map(e => e.getAttribute('title') || e.textContent));
-    const costs = await page.$$eval('.shop-panel.compact .card .cost-box', els => els.map(e => e.textContent));
+    const res = await page.evaluate(() => [...document.querySelectorAll('.lt-seat[data-pid="0"] [data-res]')].map(e => e.getAttribute('title') || e.textContent));
+    // a cost is drawn as shapes: its words are in its label
+    const costs = await page.$$eval('.lt-shop .card .lt-cost', els => els.map(e => e.getAttribute('aria-label') || e.textContent));
     for (const c of costs) for (const color of ['magenta', 'purple', 'silver', 'white', 'yellow']) if (c.includes(color)) errors.push(`[${tag}] (l4) a cost names ${color}, which isn't on this table: "${c}" (${res.join(',')})`);
     // place, answer any question, then the buy step
     const slot = await page.$('.slot.can .base');
     const bb = await slot.boundingBox();
     await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
     await page.waitForTimeout(300);
-    for (let k = 0; k < 8 && !(await page.$('.fbuy.live')); k++) {
+    for (let k = 0; k < 8 && !(await page.$('.lt[data-phase="buy"][data-yours="1"]')); k++) {
       const o = await page.$('.prompt.choice button[data-option]:not([disabled])');
       if (o) await o.click().catch(() => {});
       await page.waitForTimeout(250);
     }
-    await page.waitForSelector('.fbuy.live', { timeout: 5000 });
+    await page.waitForSelector('.lt[data-phase="buy"][data-yours="1"]', { timeout: 5000 });
     await page.waitForTimeout(300);
     await page.screenshot({ path: `${SHOTS}/${tag}-buy.png` });
-    await check('buy', ['.fbuy .fb b', '.fbuy .fb span', '.lt-shop .card .nm']);
+    await check('buy', ['.lt-shop .lt-rate b', '.lt-shop .lt-rate', '.lt-shop .card .nm']);
   } catch (e) {
     errors.push(`[${tag}] run: ${e.message}`);
     await page.screenshot({ path: `${SHOTS}/${tag}-fail.png` }).catch(() => {});

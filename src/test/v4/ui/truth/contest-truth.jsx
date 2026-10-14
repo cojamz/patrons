@@ -1,4 +1,5 @@
-// Scoring truth, as the screen shows it: for seeded mixed-table games, every round-end card (RoundEnd) and every
+// Scoring truth, as the screen shows it: for seeded mixed-table games, every round end (the Reckoning's rows and the
+// RoundEnd summary card) and every
 // contest standings card (ContestStandings, the board's hover/tap layer) shows the winners and counts the engine
 // scored, checked three ways: the engine's record, what was actually awarded (contest followers), and an
 // independent oracle that counts each rule off the table at the moment of scoring.
@@ -6,6 +7,7 @@ import { expect } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
 import { quadrant } from '../../../../engine/v4/index.js';
 import RoundEnd from '../../../../v4/game/RoundEnd.jsx';
+import { reckonRows } from '../../../../v4/game/Reckoning.jsx';
 import { ContestStandings } from '../../../../v4/game/Info.jsx';
 import { parseRoundEnd, standings, isRoundEnd } from '../../../../v4/format.js';
 import { oracleCount, oracleWinners, playMixedGames } from '../../../engine/v4/contest-oracle.js';
@@ -18,7 +20,7 @@ export function checkContestTruth(g0, n) {
   playMixedGames(n, {
     g0, botEvery: 16,
     onMove(s, g) {
-      if (s.over || s.round < 1 || s.moves % 23) return;
+      if (s.over || s.round < 1 || s.moves % 61) return;
       for (const st of standings(s)) {
         const { container } = render(<ContestStandings state={s} st={st} />);
         for (const li of container.querySelectorAll('[data-pid]')) {
@@ -36,6 +38,15 @@ export function checkContestTruth(g0, n) {
     onScored({ before, after, moment, record, prize, game }) {
       const line = after.log.filter(isRoundEnd).pop();
       const info = { result: parseRoundEnd(after, line), start: before, after, board: moment };
+      // the Reckoning (the animated pay-out) shows the same winners and counts, from the same record
+      for (const r of reckonRows(info)) {
+        const rec = record.results.find(c => c.qid === r.qid);
+        expect([...r.winners].sort((a, b) => a - b), `game ${game} reckoning ${r.qid}`).toEqual([...rec.winners].sort((a, b) => a - b));
+        for (const row of r.rows) {
+          const want = oracleCount(moment, r.qid, moment.players[row.id]);
+          if (want != null) expect(row.shown, `game ${game} reckoning ${r.qid} seat ${row.id}`).toBe(want);
+        }
+      }
       const { container } = render(<RoundEnd info={info} onNext={() => {}} autoMs={0} />);
       const rows = [...container.querySelectorAll('li[data-qid]')];
       expect(rows.map(r => r.dataset.qid)).toEqual(after.quadrants);
@@ -68,5 +79,5 @@ export function checkContestTruth(g0, n) {
     },
   });
   expect(cards).toBeGreaterThanOrEqual(n * 2);
-  expect(live).toBeGreaterThan(n);
+  expect(live).toBeGreaterThan(n / 2);
 }

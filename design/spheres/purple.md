@@ -6,6 +6,8 @@ v4 is Claude's rework after Cory's first play, under his "for fixes, go with you
 Purple is time. You gather it, then either spend it to act again or hold it, because the purple you hold at round end is what Purple's ring counts.
 In this game an extra turn is one more placement plus one more buy. So a space that only hands back the worker you used is a wasted worker, as Cory said of Rally. Every extra turn a Purple space gives is now a net gain: one worker goes in and two or more come out.
 
+Night Owl and the five reprices (marked) come from the member-value sim in design/eval/purple-members.md (Claude's gut call, logged in decisions.md).
+
 ## For Cory (answer by number; "(fill-in)" marks Claude's own, which nobody has approved; costs are colored part + any, after the ×2)
 1. Scoring (changed): most purple at round end. Ties all score. It was "most workers on the board, purple breaks ties", which tied almost every round and so was really most purple under another name.
 2. Ring I, Hourly: +4 / +5 / +6 purple, by round.
@@ -14,19 +16,19 @@ In this game an extra turn is one more placement plus one more buy. So a space t
 5. Ring II, Plan Ahead (fill-in, replaces Linger): +2 purple per worker you have left to place this round.
 6. Ring II, Overtime (changed): pay 8 purple to take 2 extra turns right after this one. If you can't, +3 purple.
 7. Ring III, Rally (changed): spend all your purple. You take 1 extra turn right after this one per 4 spent, plus 1, up to 3. With less than 4 purple, +4 purple. Double Time makes it 1 per 2.
-8. Second Wind (8+4): once per game, take an extra turn right after this one.
+8. Second Wind (6+2, repriced): once per game, take an extra turn right after this one.
 9. Errand Runner (4+4): when you recruit it, take an extra turn right after this one.
-10. Taskmaster (6+2): once per round, pay 5 purple to take an extra turn right after this one.
-11. Late Riser (6+2): from round II on, if you have the fewest followers at round start, you take an extra turn before anyone else.
+10. Taskmaster (4+2, repriced): once per round, pay 5 purple to take an extra turn right after this one.
+11. Late Riser (4+2, repriced): from round II on, if you have the fewest followers at round start, you take an extra turn before anyone else.
 12. Foreman (4+2): whenever you take an extra turn, +1 purple per worker you have on the board.
 13. Courier (4+2): whenever you take an extra turn, +1 of each other color.
 14. Apprentice (2+2): whenever you take an extra turn, your next member costs 4 less.
-15. Overseer (4+2): whenever a rival takes an extra turn, gain half your purple (up to 4).
-16. Double Time (6+2): extra turns you pay purple for cost you half (rounded up).
+15. Overseer (2+2, repriced): whenever a rival takes an extra turn, gain half your purple (up to 4).
+16. Double Time (4+2, repriced): extra turns you pay purple for cost you half (rounded up).
 17. Bookkeeper (4+2, changed): when you place your last worker of a round, +1 purple per 2 workers you have on the board.
 18. Clockmaker (2+2): now and at round start, +1 purple per 2 purple you have.
 19. Lamplighter (6+2): now and at round start, +1 purple per worker you get this round (3 / 4 / 5).
-20. (open) Relay was cut by Cory. Another agent is pricing 3 replacements, so Purple has 14 members for now.
+20. Night Owl (8+2, replaces Relay): each round, after your last minion, place one more and buy again. It counts as an extra turn (Foreman, Overseer…), and needs a space to spare.
 21. Patience (6+2): at game end, +1 follower per 3 purple.
 22. Shift Crew (1+1): worth 2 followers. No effect.
 

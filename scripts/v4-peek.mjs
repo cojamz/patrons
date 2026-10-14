@@ -1,19 +1,25 @@
 // Foreman's own eyes: freeze a build and screenshot it, so no UI claim rests on an agent's word.
-//   node scripts/v4-peek.mjs freeze <n> [port]   build into .v4-panel/<n> and serve it (stays up; Ctrl-C to stop)
+//   node scripts/v4-peek.mjs freeze <n> [port]   build into .v4-panel/<n> and serve it (stays up; Ctrl-C or kill to stop;
+//        refuses a busy port, and the server dies with this process)
 //   node scripts/v4-peek.mjs shots <url> <outDir> [query]
 //        plays a full hot-seat game (first legal option each time) and screenshots
 //        setup, each round's first moves and results at 1270×700 and iPhone 13 (touch).
 import { chromium, devices } from 'playwright';
-import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
+import { runChild, exitOf, VITE, portBusy, busyMessage, servePreview } from './lib/procs.mjs';
 
 const [cmd, a, b, c] = process.argv.slice(2);
 
 if (cmd === 'freeze') {
-  const out = `.v4-panel/${a}`, port = b || 5190;
-  const r = spawnSync('npx', ['vite', 'build', '--outDir', out, '--emptyOutDir'], { stdio: 'inherit' });
-  if (r.status) process.exit(r.status);
-  spawn('npx', ['vite', 'preview', '--outDir', out, '--port', String(port), '--strictPort', '--host'], { stdio: 'inherit' });
+  // the server runs inside this process (scripts/lib/procs.mjs): stopping this script stops it, nothing is left behind
+  const out = `.v4-panel/${a}`, port = Number(b || 5190);
+  if (await portBusy(port)) { console.error(busyMessage(port)); process.exit(2); }
+  const code = await exitOf(runChild(process.execPath, [VITE, 'build', '--outDir', out, '--emptyOutDir']));
+  if (code) process.exit(code);
+  try {
+    const { url } = await servePreview({ outDir: out, port, host: true });
+    console.log(`frozen build ${out} at ${url} (this build, confirmed; Ctrl-C to stop)`);
+  } catch (err) { console.error(err.message); process.exit(2); }
 } else if (cmd === 'shots') {
   const url = a, out = b, query = c || '';
   mkdirSync(out, { recursive: true });
@@ -25,7 +31,7 @@ if (cmd === 'freeze') {
     page.on('pageerror', e => errs.push(e.message));
     page.on('console', m => m.type() === 'error' && errs.push(m.text()));
     const snap = async n => page.screenshot({ path: `${out}/${tag}-${n}.png` });
-    await page.goto(`${url}/?botDelay=40${query ? '&' + query : ''}`);
+    await page.goto(`${url}/?botDelay=40&intro=0${query ? '&' + query : ''}`);
     await page.click('[data-home="local"]');
     await page.waitForSelector('[data-start]');
     await snap('00-setup');
@@ -38,7 +44,12 @@ if (cmd === 'freeze') {
       if (next) { const r = await page.$eval('.roundend h2', e => e.textContent).catch(() => 'end'); if (!seen.has(r)) { seen.add(r); await page.waitForTimeout(700); await snap(`r-${r.replace(/\W+/g, '_')}`); } await next.click(); continue; }
       const opts = await page.$$('[data-option]:not([disabled])');
       let opt = null;
-      for (const o of opts) if (!/^(back|undo)/.test(await o.getAttribute('data-option'))) { opt = o; break; }
+      // prefer recruiting (cults with members make better screenshots), then followers, then anything but back/undo/pass
+      const ids = []; for (const o of opts) ids.push([o, await o.getAttribute('data-option')]);
+      const rank = id => (/^card:/.test(id) ? 0 : /^pay:/.test(id) ? 0 : /^tier:/.test(id) ? 1 : /^(back|undo|pass)/.test(id) ? 9 : 2);
+      ids.sort((x, y) => rank(x[1]) - rank(y[1]));
+      if (ids.length && rank(ids[0][1]) < 9) opt = ids[0][0];
+      else for (const [o, id] of ids) if (!/^(back|undo)/.test(id)) { opt = o; break; }
       if (!opt) { await page.waitForTimeout(40); continue; }
       const kind = (await opt.getAttribute('data-option')).split(':')[0];
       const round = await page.$eval('header .round', e => e.textContent).catch(() => '');

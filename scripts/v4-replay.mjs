@@ -8,6 +8,7 @@
 //   --state F    write the state at the stop point (failure, --upto, or the end) to F as JSON
 // Exit code: 0 replayed cleanly, 1 an illegal move or exception, 2 bad input.
 // To keep a record as a regression test, save it under src/test/v4/records/ (see src/test/v4/replay.js).
+import './v4-node-stamp.mjs'; // first: record.js must see the rules-source hash, as in the built app
 import { readFileSync, writeFileSync } from 'node:fs';
 import { replayRecord, parseRecord, CONTENT_HASH } from '../src/v4/session/record.js';
 import { followers } from '../src/engine/v4/index.js';

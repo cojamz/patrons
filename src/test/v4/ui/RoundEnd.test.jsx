@@ -11,7 +11,8 @@ describe('round end card', () => {
     const session = createLocalSession({ seats: [{ name: 'A', kind: 'bot' }, { name: 'B', kind: 'bot' }], seed: 4, botDelayMs: 1 });
     // a viewer with no seats of their own: the card would auto-advance after 4s, so it must be visible before then
     const { container } = render(<GameScreen session={session} pace={0} />);
-    const dlg = await waitFor(() => screen.getByRole('dialog', { name: /Round I scoring/ }), { timeout: 20000 });
+    // a loaded box can take a while to play a round in jsdom: the wait is a backstop, not a budget (vitest.config.js)
+    const dlg = await waitFor(() => screen.getByRole('dialog', { name: /Round I scoring/ }), { timeout: 120000 });
     expect(within(dlg).getAllByRole('listitem')).toHaveLength(4);
     const held = session.getState().moves;
     // behind the card the board stays as it was scored: round I, workers still on their spaces
@@ -22,5 +23,5 @@ describe('round end card', () => {
     await waitFor(() => expect(container.querySelector('header .round').textContent).toMatch(/Round II/));
     session.destroy();
     expect(held).toBeGreaterThan(0);
-  }, 30000);
+  }, 180000);
 });

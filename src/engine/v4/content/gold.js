@@ -12,38 +12,38 @@ export default {
 
   actions: [
     {
-      key: 'jv', ring: 1, name: 'Joint Venture', text: '+3 gold, and +1 gold to a player you choose.',
+      key: 'jv', ring: 1, name: 'Kickback', text: '+3 gold, and +1 gold to a player you choose.',
       estimate: () => 3.3,
       resolve(ctx, p) {
         ctx.gain(p, 'gold', 3, { fromAction: true });
         const rivals = ctx.rivals(p);
-        ctx.choose(p, 'Joint Venture: give 1 gold to…', rivals.map(o => ({
+        ctx.choose(p, 'Kickback: give 1 gold to…', rivals.map(o => ({
           id: `player:${o.id}`, label: o.name, kind: 'player', value: o.id, hint: -ctx.followers(o),
         })), 'gold.jvGift');
       },
     },
     {
-      key: 'rush', ring: 1, name: 'Rush', text: '+2 gold per round number (2 / 4 / 6).',
+      key: 'rush', ring: 1, name: 'Golden Years', text: '+2 gold per round number (2 / 4 / 6).',
       estimate: ctx => 2 * ctx.state.round,
       resolve(ctx, p) { ctx.gain(p, 'gold', 2 * ctx.state.round, { fromAction: true }); },
     },
     {
-      key: 'discount', ring: 1, name: 'Discount', text: 'Your next member costs 4 less, off any part of its cost.',
+      key: 'discount', ring: 1, name: 'Intro Offer', text: 'Your next member costs 4 less, off any part of its cost.',
       estimate: ctx => (ctx.shopCards().some(c => c.def.s + c.def.w >= 6) ? 2.4 : 1.2),
-      resolve(ctx, p) { p.discount += 4; ctx.log(p.discount > 4 ? `Discount stacks: ${p.name}'s next member costs ${p.discount} less.` : `${p.name}'s next member costs 4 less.`); },
+      resolve(ctx, p) { p.discount += 4; ctx.log(p.discount > 4 ? `Intro Offer stacks: ${p.name}'s next member costs ${p.discount} less.` : `${p.name}'s next member costs 4 less.`); },
     },
     {
-      key: 'steal', ring: 2, name: 'Steal', text: 'Take up to 3 gold from rivals, split however you like.',
+      key: 'steal', ring: 2, name: 'Collect Debts', text: 'Take up to 3 gold from rivals, split however you like.',
       estimate: (ctx, p) => Math.min(3, ctx.rivals(p).filter(o => ctx.canSteal(p, o)).reduce((s, o) => s + o.res.gold, 0)) * 1.4,
       resolve(ctx, p) { stealStep(ctx, p, { left: ctx.stealCount(p, 3, { say: true }), picked: {} }); },
     },
     {
-      key: 'windfall', ring: 2, name: 'Windfall', text: '+1 gold per member you have.',
+      key: 'windfall', ring: 2, name: 'Tithe', text: '+1 gold per member you have.',
       estimate: (ctx, p) => ctx.memberCount(p),
       resolve(ctx, p) { ctx.gain(p, 'gold', ctx.memberCount(p), { fromAction: true }); },
     },
     {
-      key: 'strike', ring: 3, name: 'Strike', text: 'Double your gold.',
+      key: 'strike', ring: 3, name: 'Double Down', text: 'Double your gold.',
       estimate: (ctx, p) => p.res.gold,
       resolve(ctx, p) { ctx.gain(p, 'gold', p.res.gold, { fromAction: true }); },
     },
@@ -94,8 +94,8 @@ export default {
         if (recruited.uid !== card.uid && ctx.defOf(recruited).quadrant === 'gold') ctx.gain(owner, 'gold', 1);
       },
     }),
-    m('thrift', 'Thrift', 4, 0, 'Gold you spend on members counts double.', { goldPaysDouble: true }),
-    m('coinpurse', 'Coin Purse', 2, 2, 'Whenever you recruit a non-gold member, +1 gold.', {
+    m('thrift', 'Penny Pincher', 4, 0, 'Gold you spend on members counts double.', { goldPaysDouble: true }),
+    m('coinpurse', 'Middleman', 2, 2, 'Whenever you recruit a non-gold member, +1 gold.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'gold') ctx.gain(owner, 'gold', 1);
       },
@@ -129,11 +129,11 @@ export default {
         if (x) { owner.res.gold += x; card.invested = 0; ctx.log(`${owner.name}'s Investor leaves: ${x} gold set aside comes back.`); }
       },
     }),
-    m('jackpot', 'Jackpot', 6, 4, 'Once per game: gain gold equal to the richest rival’s gold.', {
+    m('jackpot', 'Lottery Winner', 6, 4, 'Once per game: gain gold equal to the richest rival’s gold.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const r = Math.max(0, ...ctx.rivals(owner).map(o => o.res.gold));
-        ctx.gain(owner, 'gold', r); ctx.log(`${owner.name} used Jackpot: +${r} gold.`);
+        ctx.gain(owner, 'gold', r); ctx.log(`${owner.name} used Lottery Winner: +${r} gold.`);
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => o.res.gold >= 4),
     }),
@@ -145,7 +145,7 @@ export default {
     m('tycoon', 'Tycoon', 8, 4, 'Game end: +1 follower per 3 gold.', {
       onGameEnd: (ctx, owner) => Math.floor(owner.res.gold / 3),
     }),
-    m('seed', 'Seed Money', 4, 0, 'When recruited: gain gold equal to your member count.', {
+    m('seed', 'Treasurer', 4, 0, 'When recruited: gain gold equal to your member count.', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'gold', ctx.memberCount(owner)); },
     }),
     m('hustler', 'Hustler', 2, 0, 'When recruited, pick a color. Actions there give you +1 gold per round number.', {
@@ -159,12 +159,12 @@ export default {
   ],
 };
 
-// Steal: pick one gold at a time (counting what's already picked), then take it all through the shared steal.
+// Collect Debts: pick one gold at a time (counting what's already picked), then take it all through the shared steal.
 function stealStep(ctx, p, data) {
   const left = o => o.res.gold - (data.picked[o.id] || 0);
   const targets = ctx.rivals(p).filter(o => left(o) > 0 && ctx.canSteal(p, o));
   if (data.left > 0 && targets.length) {
-    ctx.choose(p, `Steal: take 1 gold from… (${data.left} left)`, targets.map(o => ({
+    ctx.choose(p, `Collect Debts: take 1 gold from… (${data.left} left)`, targets.map(o => ({
       id: `player:${o.id}`, label: `${o.name} · ${left(o)} gold`, kind: 'player', value: o.id, hint: left(o),
     })), 'gold.steal', data);
     return;

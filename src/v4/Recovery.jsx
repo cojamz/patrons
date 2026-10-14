@@ -8,7 +8,7 @@
 // Inline styles on purpose: these screens must render even if the stylesheet is the thing that broke.
 import { Component, Fragment, useEffect, useState } from 'react';
 import { currentRecord, recordText, onProblem, latestProblem } from './session/record.js';
-import { loadLocal, setAsideLocal, staleSave, staleRecord, markStaleSeen, clearOnline } from './saved.js';
+import { loadLocal, setAsideLocal, staleSave, staleRecord, markStaleSeen, clearOnline, loadOnline } from './saved.js';
 
 const IN_GAME = 'patrons.v4.inGame';
 const forgetInGame = () => { try { sessionStorage.removeItem(IN_GAME); } catch { /* ignore */ } };
@@ -52,7 +52,7 @@ export function CopyRecord({ getRecord, style }) {
 }
 
 /** The plain screen shown after a crash. */
-export function RecoveryScreen({ error, record, onStartNew }) {
+export function RecoveryScreen({ error, record, onStartNew, online = false, onRejoin, onLeave }) {
   return (
     <div style={{ minHeight: '80dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ece6d6', fontFamily: 'Figtree, system-ui, sans-serif' }}>
       <div role="alert" data-recovery="screen" style={{ maxWidth: 440, width: '100%', display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start', background: '#1d2928', border: '1px solid #2d3b39', borderRadius: 14, padding: 18 }}>
@@ -61,7 +61,12 @@ export function RecoveryScreen({ error, record, onStartNew }) {
         {error?.message && <p style={{ margin: 0, fontSize: 13, color: '#97a49f' }}>{String(error.message).slice(0, 200)}</p>}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, width: '100%' }}>
           <CopyRecord getRecord={() => record} />
-          <button type="button" style={pri} onClick={onStartNew} data-recovery="new">Start a new game</button>
+          {online ? (
+            <>
+              <button type="button" style={pri} onClick={onRejoin} data-recovery="rejoin">Rejoin the game</button>
+              <button type="button" style={btn} onClick={onLeave} data-recovery="leave">Leave this game</button>
+            </>
+          ) : <button type="button" style={pri} onClick={onStartNew} data-recovery="new">Start a new game</button>}
         </div>
       </div>
     </div>
@@ -77,7 +82,7 @@ const errorInfo = (error, componentStack) => ({
 export class Boundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { error: null, record: null, key: 0 };
+    this.state = { error: null, record: null, key: 0, online: false };
   }
 
   static getDerivedStateFromError(error) { return { error }; }
@@ -86,7 +91,7 @@ export class Boundary extends Component {
     console.error('[v4] crashed:', error, info?.componentStack);
     forgetInGame(); // a reload must not auto-resume straight back into this crash
     // the session tracked every state it published, so the record survives React unmounting the game
-    this.setState({ record: currentRecord({ error: errorInfo(error, info?.componentStack) }) || staleRecord() });
+    this.setState({ record: currentRecord({ error: errorInfo(error, info?.componentStack) }) || staleRecord(), online: !!loadOnline() });
   }
 
   startNew = () => {
@@ -96,8 +101,18 @@ export class Boundary extends Component {
     this.setState(s => ({ error: null, record: null, key: s.key + 1 })); // remount the app fresh, on the home screen
   };
 
+  // Online, a remount would keep this tab's connection open: the seat would read as connected while nobody plays it, so
+  // the host is never offered a bot. A reload closes it. Rejoin reloads into the same seat (sessionStorage keeps it);
+  // Leave forgets the seat first, so the reload lands on the home screen and the seat reads as gone.
+  reload = () => (this.props.reload ? this.props.reload() : globalThis.location?.reload());
+  rejoin = () => { forgetInGame(); this.reload(); };
+  leaveOnline = () => { clearOnline(); forgetInGame(); this.reload(); };
+
   render() {
-    if (this.state.error) return <RecoveryScreen error={this.state.error} record={this.state.record} onStartNew={this.startNew} />;
+    if (this.state.error) {
+      return <RecoveryScreen error={this.state.error} record={this.state.record} onStartNew={this.startNew}
+        online={this.state.online} onRejoin={this.rejoin} onLeave={this.leaveOnline} />;
+    }
     return <Fragment key={this.state.key}>{this.props.children}</Fragment>;
   }
 }
@@ -146,9 +161,9 @@ export function Notices({ botNoticeMs = 10000 }) {
 }
 
 /** The v4 app root: crash boundary plus notices. */
-export function Recovered({ children }) {
+export function Recovered({ children, reload }) {
   return (
-    <Boundary>
+    <Boundary reload={reload}>
       {children}
       <Notices />
     </Boundary>

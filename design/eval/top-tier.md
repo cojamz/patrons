@@ -1,5 +1,7 @@
 # Top tier and the big-followers target
 
+> Since this was written (2026-10-14): follower buys need no colors at all (Cory), and the last 10→10 is the game-end clock, not 8→6 (Claude's gut call under Cory's go-with-your-gut). The measurements below were taken with the color rules and 8→6 as the clock.
+
 2026-10-14. The brief: member costs ×2; follower buys 2→1, 4→3, 8→6 (3+ colors, limited) and a new 10→10 (4 colors, limited, supply 4); gold counts as any color. Then tune limits and tier details until the pure "big followers" strategy wins about 25% of 4-player games (15–30% band), with about 6–7 members per player, and a good engine still beats it.
 
 ## What's built

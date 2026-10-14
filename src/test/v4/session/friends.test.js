@@ -183,6 +183,95 @@ for (const [label, make] of backends) {
       stops.forEach(f => f());
     }, TIMEOUT);
 
+    it('a host whose phone sleeps (still reads as connected, but stops its heartbeat) is replaced after 15 s', async () => {
+      setup();
+      const { host, guests } = await table(['G1', 'G2'], { seed: 51, subAfterMs: 400 });
+      const [g1, g2] = guests;
+      const errors = [];
+      // the host's phone locks the moment the table waits on the host: its code stops, its socket still reads as connected
+      const stops = [autoPlay(g1.s, { seed: 2, errors }), autoPlay(g2.s, { seed: 3, errors })];
+      await be.wait(() => host.s.getState().pending?.player === 0, 'the host to move');
+      host.lobby.destroy();
+      await be.pause(8000);
+      let room = await roomAt(host.code);
+      expect(room.hostId).toBe(host.playerId); // a few seconds of silence isn't enough
+      expect(room.players[host.playerId].connected).toBe(true);
+      await be.wait(() => g1.lobby.getView().isHost, 'G1 takes over once the heartbeat is 15 s old');
+      room = await roomAt(host.code);
+      expect(room.players[host.playerId].connected).toBe(true); // Firebase still hadn't noticed: the heartbeat did
+      const beat = room.hostBeat;
+      await be.pause(6000);
+      expect((await roomAt(host.code)).hostBeat).not.toBe(beat); // the new host beats
+      // later the server notices the dead socket; the new host lets a bot play the old host's seat; the game ends
+      host.t.close();
+      await be.wait(() => g1.s.info.seats[0].canSub, 'offered a bot for the old host');
+      await g1.s.letBotPlay(0);
+      await be.wait(() => g1.s.getState()?.over && g2.s.getState()?.over, 'game over');
+      expect(errors).toEqual([]);
+      stops.forEach(f => f());
+    }, TIMEOUT);
+
+    it('"Try again" after a lost move sends it again with the same id: the table moves on and it counts once', async () => {
+      setup();
+      const { host, guests } = await table(['G1'], { seed: 61 });
+      const g1 = guests[0];
+      const stopHost = autoPlay(host.s, { seed: 1 });
+      await be.wait(() => g1.s.getState().pending?.player === 1, 'G1 to move');
+      stopHost();
+      // the host's code stops for a moment; G1's move goes into the queue and is lost there
+      host.lobby.destroy();
+      const v0 = g1.s.info.version;
+      const move = { player: 1, option: g1.s.getState().pending.options[0].id };
+      let settled = false;
+      const first = g1.s.submit(move).then(() => { settled = true; });
+      await be.wait(async () => true, 'push');
+      await be.pause(200);
+      const admin = be.client();
+      await admin.remove(`${ROOM_ROOT}/${host.code}/moves`);
+      // the host is back (same id): nothing in the queue, so nothing happens
+      const back = await reopen(host.code, { playerId: host.playerId });
+      await be.pause(8000); // the screen says "No answer yet" after 8 s
+      expect(settled).toBe(false);
+      expect(g1.s.info.version).toBe(v0);
+      // "No answer yet. Try again." → the same option again
+      const again = g1.s.submit(move);
+      await be.wait(() => settled, 'the retried move is applied');
+      await again;
+      await be.pause(500);
+      expect(g1.s.info.version).toBe(v0 + 1); // once, not twice
+      expect(g1.s.getState().history.at(-1)).toEqual([1, move.option]);
+      await first;
+      back.lobby.destroy();
+      admin.close();
+    }, TIMEOUT);
+
+    it('screens re-render only when something they show changes: heartbeats and queue traffic don’t count', async () => {
+      setup();
+      const { host, guests } = await table(['G1', 'G2'], { seed: 71 });
+      const g1 = guests[0];
+      await be.pause(500);
+      let renders = 0, lobbyRenders = 0;
+      const off = g1.s.subscribe(() => { renders++; });
+      const offL = g1.lobby.subscribe(() => { lobbyRenders++; });
+      renders = 0; lobbyRenders = 0; // (subscribe calls back once with the current state)
+      await be.pause(31000); // six host heartbeats, nothing else
+      expect(renders).toBe(0);
+      expect(lobbyRenders).toBe(0);
+      // one move: one new state (plus at most one for the queue settling), not one per room write
+      const v = host.s.info.version;
+      const pend = host.s.getState().pending;
+      const mover = [host.s, ...guests.map(g => g.s)].find(x => x.mySeats.includes(pend.player));
+      await mover.submit({ player: pend.player, option: pend.options[0].id });
+      await be.wait(() => g1.s.info.version > v, 'the move arrives');
+      await be.pause(500);
+      expect(renders).toBeLessThanOrEqual(2);
+      // a presence change is news
+      renders = 0;
+      closeTab(guests[1]);
+      await be.wait(() => renders > 0 && g1.s.info.seats[2].away, 'G2 shown gone');
+      off(); offL();
+    }, TIMEOUT);
+
     it('Leave mid-game hands your seat to a bot at once; the host closing the tab migrates host, and the new host can bot the old host’s seat', async () => {
       setup();
       const { host, guests } = await table(['G1', 'G2'], { seed: 44, subAfterMs: 400 });

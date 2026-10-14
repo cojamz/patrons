@@ -16,7 +16,7 @@ function play(seed, giveDef, seat) {
   let given = !giveDef;
   while (!s.over) {
     // "when recruited" copies need a space taken this round: hand those over at the seat's first buy of round II
-    const mid = giveDef === 'echo.keepsake' || giveDef === 'echo.understudy';
+    const mid = giveDef === 'echo.understudy'; // a when-recruited copy (Keepsake is cut)
     if (!given && s.round === 2 && (mid ? s.pending?.kind === 'buy' && s.pending.player === seat : s.pending?.kind === 'place')) {
       s = structuredClone(s);
       const uid = Object.values(s.cards).find(c => c.def === giveDef).uid;

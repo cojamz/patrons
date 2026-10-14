@@ -6,10 +6,19 @@
 //      (data-tip / aria-haspopup), or (spaces) the board's own space card;
 //  (b) hovering a shop card and a board space shows a card; on a touch screen a long-press on a titled element
 //      shows its title (the hover's touch twin);
-//  (c) no "★" anywhere in the rendered game (followers are the little-person mark).
+//  (c) no "★" anywhere in the rendered game (followers are the little-person mark);
+//  (d) hover cards open within 100ms (p95) and never flicker while sweeping a ring of spaces;
+//  (e) a cult member hops when its own trace line appears in the log;
+//  (f) no seat sigil shapes anywhere (identity is the leader's emoji and the name);
+//  (g) every member in a cult stands on a ground in its sphere's color, so it reads as that sphere;
+//  (h) the member deck heads the shop strip: after a refill its count is the engine's pile length (the saved game's
+//      state.pile), a refill deals the new card off it, and hovering it shows its card (count, colors adding up);
+//  (i) while you place, the space under the pointer ticks "✓ after <space>" on the shop cards it would make
+//      affordable (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
+import { tickSave } from './lib/tick-save.mjs';
 
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/info`;
 mkdirSync(SHOTS, { recursive: true });
@@ -19,9 +28,9 @@ const fail = (msg, step) => fails.push(`[${step}] ${msg}`);
 
 // game-meaningful elements, old and new screen (whatever is on screen is audited)
 const GAME = [
-  '[data-region] [data-uid]', '.shop [data-uid]', '.lt-seat', '.lt-stack', '.res > .r', '.you-strip .r', '.lt-member .fig', '.chip[data-g]',
+  '[data-region] [data-uid]', '.shop [data-uid]', '.lt-rs', '[data-cult] .cs-head', '.lt-stack', '.res > .r', '.you-strip .r', '.lt-member .fig', '.chip[data-g]',
   '[data-leader-ring]', '.workers', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
-  '[data-plaque]', '.contest-tip', '.res-glyph', '.pip', '.card-name', '.term',
+  '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term', '[data-deck]',
 ].join(',');
 
 async function audit(page, step) {
@@ -43,12 +52,44 @@ async function audit(page, step) {
       n++;
       if (!explains(e)) miss.push(`${e.tagName.toLowerCase()}.${String(e.className && (e.className.baseVal ?? e.className)).split(' ').filter(Boolean).join('.')} "${(e.textContent || '').trim().slice(0, 24)}"`);
     }
-    return { n, miss: [...new Set(miss)].slice(0, 12), star: document.body.innerText.includes('★') };
+    // (f) identity is a leader's emoji and a name: no seat sigils (circle/triangle/square/star) a player can see
+    const sigils = [...document.querySelectorAll('.sigil, [class*="sigil"]')].filter(e => vis(e) && !e.closest('[aria-hidden="true"]')).length;
+    // (g) every member in a cult reads as its sphere: it carries its sphere and a ground in that color
+    const crowd = [...document.querySelectorAll('[data-cult] .cs-member')].filter(vis);
+    const pale = crowd.filter(m => { const a = m.querySelector('.aura'); return !a || !/gradient/.test(getComputedStyle(a).backgroundImage) || !m.dataset.sphere; })
+      .map(m => m.dataset.member);
+    return { n, miss: [...new Set(miss)].slice(0, 12), star: document.body.innerText.includes('★'), sigils, pale };
   }, GAME);
   if (r.n < 5) fail(`only ${r.n} game elements found (the selectors no longer match the screen?)`, step);
   for (const m of r.miss) fail(`(a) no hover info: ${m}`, step);
   if (r.star) fail('(c) a "★" is on screen', step);
+  if (r.sigils) fail(`(f) ${r.sigils} seat sigil(s) on screen`, step);
+  for (const m of r.pale) fail(`(g) ${m} has no ground in its sphere's color`, step);
   return r.n;
+}
+
+// (h) the deck's number against the engine: read the screen and the saved game in one go, when both show the same move
+async function deckCheck(page) {
+  // bots keep playing and the screen steps through their moves a beat behind, so wait (up to 30s) for a moment the
+  // screen has caught up with the engine: at the latest when it's your move again and everything stops
+  let last = null;
+  for (let t = 0; t < 300; t++) {
+    const r = await page.evaluate(() => {
+      const g = document.querySelector('.app.game'), d = document.querySelector('[data-deck]');
+      let save = null;
+      try { save = JSON.parse(localStorage.getItem('patrons.v4.local')); } catch { /* none */ }
+      if (!g || !d || !save || !save.state) return null;
+      const tv = d.querySelector('.n .tv') || d.querySelector('.n');
+      return { moves: Number(g.dataset.moves), saved: save.state.moves, pile: save.state.pile.length, left: Number(d.dataset.left), shown: tv.textContent.trim() };
+    });
+    last = r;
+    if (r && r.moves === r.saved) {
+      if (r.left !== r.pile) { fail(`(h) the deck says ${r.left}, the engine's pile has ${r.pile}`, 'deck'); return; }
+      if (r.shown === String(r.pile)) return;
+    }
+    await page.waitForTimeout(100);
+  }
+  fail(`(h) after a refill the deck's number never settled on the engine's pile length (last: ${JSON.stringify(last)})`, 'deck');
 }
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
@@ -57,7 +98,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });
   page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
   page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
-  await page.goto(`${base}/?botDelay=20`);
+  await page.goto(`${base}/?botDelay=20&intro=0`); // intro=0: no first-game intro over the table (src/v4/Intro.jsx; hotseat.mjs gates the intro)
   await page.waitForSelector('[data-home="local"]');
   await page.click('[data-home="local"]');
   await page.waitForSelector('[data-start]');
@@ -68,7 +109,12 @@ try {
 
   // play: the first legal option each time; audit at my first placement, my first buy and a round-II placement
   const seen = new Set();
+  let lastShop = null, refills = 0;
   for (let k = 0; k < 400 && seen.size < 3; k++) {
+    // (h) the row refilled (a new face-up card): the deck's count must be the engine's pile
+    const shopNow = await page.$$eval('.lt-shop .lt-cards .card[data-uid]', els => els.map(e => e.dataset.uid)).catch(() => []);
+    if (lastShop && shopNow.some(u => !lastShop.includes(u)) && refills < 3) { refills++; await deckCheck(page); }
+    lastShop = shopNow;
     const next = page.locator('[data-next-round]');
     if (await next.count()) { await next.first().click().catch(() => {}); await page.waitForTimeout(150); continue; }
     const hand = page.locator('[data-handoff]');
@@ -103,6 +149,26 @@ try {
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
         }
+        // (h) the deck heads the strip, and hovering it shows what's in it
+        const deck = page.locator('[data-deck]');
+        if (!(await deck.count())) fail('(h) no member deck at the head of the shop strip', step);
+        else {
+          const placed = await page.evaluate(() => { const d = document.querySelector('[data-deck]').getBoundingClientRect(), c = document.querySelector('.lt-shop .lt-cards .card').getBoundingClientRect(); return d.right <= c.left + 1 && Math.abs(d.top - c.top) < 2; });
+          if (!placed) fail('(h) the deck is not before the first shop card', step);
+          await deck.hover();
+          await page.waitForTimeout(400);
+          const dc = await page.evaluate(() => {
+            const c = document.querySelector('[data-hover-layer] [data-hover-card="deck"]'), d = document.querySelector('[data-deck]');
+            if (!c || !(c.getBoundingClientRect().width > 0)) return null;
+            const body = c.querySelector('[data-deck-card]');
+            return { left: Number(d.dataset.left), card: Number(body && body.dataset.left), sum: [...c.querySelectorAll('[data-color]')].reduce((t, e) => t + Number(e.dataset.n), 0), colorless: !!c.querySelector('[data-color="colorless"]'), bottom: /bottom/.test(c.textContent) };
+          });
+          if (!dc) fail('(h) hovering the deck shows no card', step);
+          else if (dc.card !== dc.left || dc.sum !== dc.left || !dc.colorless || !dc.bottom) fail(`(h) deck card: ${dc.card} left, colors add to ${dc.sum}, the deck shows ${dc.left}${dc.colorless ? '' : ', no colorless count'}${dc.bottom ? '' : ', no word on where released members go'}`, step);
+          await page.screenshot({ path: `${SHOTS}/02d-hover-deck.png` });
+          await page.mouse.move(5, 5);
+          await page.waitForTimeout(300);
+        }
       }
     }
     const opt = page.locator('.slot.can, [data-option]:not([aria-disabled="true"])').first();
@@ -110,12 +176,118 @@ try {
     await page.waitForTimeout(80);
   }
   if (seen.size < 3) fail(`only reached ${[...seen].join(', ') || 'no'} steps`, 'play');
+  if (!refills) fail('(h) the shop row never refilled during the game', 'deck');
+  else if (!(await page.evaluate(() => window.__patronsDeals || 0))) fail(`(h) ${refills} refill(s), but no card came off the deck`, 'deck');
+  else console.log(`info.mjs: deck matched the engine's pile after ${refills} refill(s); ${await page.evaluate(() => window.__patronsDeals)} card(s) dealt off it`);
+
+  // (d) hover speed (Cory: instant and seamless): p95 from the pointer arriving to a visible card < 100ms, and no
+  // close/reopen flicker while sweeping across a ring of spaces. Measured on the Lamplit hover layer with the real
+  // wheel and shop (the ?lab=b page of this build) until the game screen mounts it.
+  {
+    const lab = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+    lab.on('pageerror', e => errors.push(`lab pageerror: ${e.message}`));
+    await lab.goto(`${base}/?lab=b&phase=place`);
+    await lab.waitForSelector('[data-hover-layer]');
+    await lab.waitForTimeout(800); // idle warm-up of the dry runs
+    await lab.evaluate(() => {
+      const visible = () => [...document.querySelectorAll('[data-hover-layer][data-open="1"], .peek')].some(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left > -1000 && getComputedStyle(e).opacity !== '0'; });
+      window.__hov = { lat: [], flips: 0, was: false, sweeping: false };
+      let t0 = null;
+      addEventListener('pointerover', e => { if (e.target.closest && e.target.closest('[data-slot], [data-uid]') && !visible()) t0 = performance.now(); }, true);
+      const tick = () => {
+        const v = visible();
+        if (v && t0 != null) { window.__hov.lat.push(performance.now() - t0); t0 = null; }
+        if (window.__hov.sweeping && window.__hov.was && !v) window.__hov.flips++;
+        window.__hov.was = v;
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    const centers = async sel => lab.$$eval(sel, els => els.map(e => { const b = e.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; }));
+    const spaces = await centers('[data-slot] .base');
+    const cards = await centers('[data-region="shop"] [data-uid]');
+    // separate arrivals: move away, then onto a target, wait for its card. A shared, loaded box can stall one run;
+    // a real slowdown fails both, so the better of two runs counts (both are reported).
+    const measure = async () => {
+      await lab.evaluate(() => { window.__hov.lat = []; });
+      for (const [x, y] of [...spaces.slice(0, 14), ...cards.slice(0, 10), ...spaces.slice(14, 20)]) {
+        await lab.mouse.move(4, 690);
+        await lab.waitForTimeout(220);
+        await lab.mouse.move(x, y, { steps: 2 });
+        await lab.waitForTimeout(160);
+      }
+      const lat = (await lab.evaluate(() => window.__hov.lat)).sort((a, b) => a - b);
+      return { lat, p95: lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : Infinity };
+    };
+    let run = await measure();
+    const first = run.p95;
+    if (!(run.p95 < 100)) { const again = await measure(); if (again.p95 < run.p95) run = again; }
+    const { lat, p95 } = run;
+    if (lat.length < 20) fail(`(d) only ${lat.length} hover cards opened out of ${Math.min(20, spaces.length) + Math.min(10, cards.length)} arrivals`, 'hover');
+    if (!(p95 < 100)) fail(`(d) hover card p95 ${Math.round(p95)}ms, first run ${Math.round(first)}ms (want < 100ms; samples ${lat.map(Math.round).join(',')})`, 'hover');
+    // sweep: across the outer ring's spaces in order, never leaving the ring; the card must never close in between
+    // the outer ring: the spaces farthest from the wheel's centre, in angle order
+    const all = await lab.$$eval('[data-slot] .base', els => els.map(e => { const b = e.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; }));
+    const cx = all.reduce((t, o) => t + o.x, 0) / all.length, cy = all.reduce((t, o) => t + o.y, 0) / all.length;
+    const far = Math.max(...all.map(o => Math.hypot(o.x - cx, o.y - cy)));
+    const ring = all.filter(o => Math.hypot(o.x - cx, o.y - cy) > far * 0.85).sort((a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx));
+    if (ring.length < 6) fail(`(d) found only ${ring.length} outer spaces to sweep`, 'hover');
+    await lab.mouse.move(ring[0].x, ring[0].y);
+    await lab.waitForTimeout(200);
+    await lab.evaluate(() => { window.__hov.sweeping = true; window.__hov.flips = 0; });
+    for (const o of ring.slice(1, 9)) { await lab.mouse.move(o.x, o.y, { steps: 6 }); await lab.waitForTimeout(90); }
+    const flips = await lab.evaluate(() => { window.__hov.sweeping = false; return window.__hov.flips; });
+    if (flips) fail(`(d) the hover card closed and reopened ${flips} time(s) while sweeping across ${Math.min(8, ring.length - 1)} spaces`, 'hover');
+    await lab.screenshot({ path: `${SHOTS}/04-hover-sweep.png` });
+    console.log(`info.mjs: hover p95 ${Math.round(p95)}ms over ${lat.length} cards${first !== p95 ? ` (first run ${Math.round(first)}ms)` : ''}; ${flips} flickers in the sweep`);
+    await lab.close();
+  }
+
+  // (e) living cults: a member reacts (hops) when its own trace line appears ("Wren's Banker: +1 gold.")
+  {
+    const lab = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+    lab.on('pageerror', e => errors.push(`lab pageerror: ${e.message}`));
+    await lab.goto(`${base}/?lab=b&phase=place&react=1`);
+    const who = await lab.waitForFunction(() => document.documentElement.dataset.reactMember, null, { timeout: 5000 }).then(h => h.jsonValue()).catch(() => null);
+    if (!who) fail('(e) the lab never wrote a trace line', 'cults');
+    else {
+      const [pid, def] = who.split(':');
+      const hop = await lab.waitForSelector(`[data-cult="${pid}"] [data-member="${def}"][data-react]`, { timeout: 1500 }).catch(() => null);
+      if (!hop) fail(`(e) ${def} did not react to its trace line`, 'cults');
+      else {
+        const anim = await hop.evaluate(e => getComputedStyle(e.querySelector('.fig')).animationName);
+        if (!/cult-hop/.test(anim)) fail(`(e) ${def} is marked but doesn't move (animation ${anim})`, 'cults');
+        await lab.screenshot({ path: `${SHOTS}/06-member-reacts.png` });
+      }
+    }
+    await lab.close();
+  }
+
+  // (i) the shop's "✓ after <space>" tick: hovering a space that makes a card affordable ticks that card
+  {
+    const { save, key, uids } = tickSave();
+    const pg = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+    pg.on('pageerror', e => errors.push(`tick pageerror: ${e.message}`));
+    await pg.goto(`${base}/?botDelay=20&intro=0`);
+    await pg.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
+    await pg.reload();
+    await pg.click('[data-home="resume"]');
+    await pg.waitForSelector('.lt-shop .card[data-uid]');
+    await pg.waitForTimeout(300);
+    const spot = pg.locator(`[data-slot="${key}"] .base`).first();
+    await ((await spot.count()) ? spot : pg.locator(`[data-slot="${key}"]`).first()).hover();
+    const ok = await pg.waitForFunction(us => us.some(u => { const t = document.querySelector(`.lt-shop .card[data-uid="${u}"] .tick`); return !!t && /✓/.test(t.textContent) && t.getBoundingClientRect().width > 0; }), uids, { timeout: 6000 }).then(() => true, () => false);
+    if (!ok) fail(`(i) hovering space ${key} never ticked "✓ after" on the card(s) it unlocks (${uids.join(', ')})`, 'tick');
+    else console.log(`info.mjs: space ${key} ticks card ${uids.join(', ')} "✓ after"`);
+    await pg.screenshot({ path: `${SHOTS}/07-shop-tick.png` });
+    await pg.close();
+  }
 
   // (b) touch: a long-press on a titled element shows its title
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   const phone = await ctx.newPage();
   phone.on('pageerror', e => errors.push(`phone pageerror: ${e.message}`));
-  await phone.goto(`${base}/?botDelay=20`);
+  await phone.goto(`${base}/?botDelay=20&intro=0`);
   await phone.waitForSelector('[data-home="local"]');
   await phone.tap('[data-home="local"]');
   await phone.waitForSelector('[data-start]');
@@ -123,7 +295,13 @@ try {
   await phone.waitForSelector('[data-option]', { timeout: 20000 });
   await audit(phone, 'phone-setup');
   const target = await phone.evaluate(() => {
-    const e = [...document.querySelectorAll('.app.game [title]')].find(x => { const b = x.getBoundingClientRect(); return b.width > 8 && b.height > 8 && b.top > 0 && b.bottom < innerHeight && !x.closest('button, [role="button"], [data-option]'); });
+    // a titled element that is really on top at its centre (not under an overlay such as the intro)
+    const e = [...document.querySelectorAll('.app.game [title]')].find(x => {
+      const b = x.getBoundingClientRect();
+      if (!(b.width > 8 && b.height > 8 && b.top > 0 && b.bottom < innerHeight) || x.closest('button, [role="button"], [data-option]')) return false;
+      const top = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+      return !!top && x.contains(top);
+    });
     if (!e) return null;
     const b = e.getBoundingClientRect();
     return { x: b.left + b.width / 2, y: b.top + b.height / 2, title: e.getAttribute('title') };

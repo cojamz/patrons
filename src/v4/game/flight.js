@@ -1,5 +1,6 @@
-// Things that move between places on the table: a recruited card flies from the shop to its new owner,
-// and a worker travels from its owner to the space it took. Both use fixed-position ghosts + Web Animations.
+// Things that move between places on the table: a recruited card flies from the shop to its new owner, a minion
+// travels from its leader to the space it took, and at round end the minions fly home. All use fixed-position
+// ghosts + Web Animations.
 import { reducedMotion } from './Tick.jsx';
 
 export const motionOK = () => !reducedMotion() && typeof document !== 'undefined' && !!document.body.animate;
@@ -16,15 +17,22 @@ const below = (el, header) => {
   return el.getBoundingClientRect().top >= h.bottom - 4;
 };
 
-/** Where a player's things land: the "you" strip in the header for you, else their card if it's in view. */
+/** Where a player's things land: their chair at the table (their leader, if it's drawn), else the older anchors. */
 export function playerAnchor(root, pid, part = '') {
+  const seat = root.querySelector(`.lt-seat[data-pid="${pid}"]`);
+  if (seat) {
+    const lead = seat.querySelector(`[data-leader="${pid}"]`);
+    if (lead && visible(lead)) return lead;
+    if (visible(seat)) return seat;
+  }
   const header = root.querySelector('header.bar');
   const you = root.querySelector(`.you-strip[data-pid="${pid}"]`);
   if (you && visible(you)) return you;
   const card = root.querySelector(`.pl[data-pid="${pid}"] ${part}`.trim()) || root.querySelector(`.pl[data-pid="${pid}"]`);
   if (card && visible(card) && below(card, header)) return card;
-  return root.querySelector('.ticker') || header;
+  return seat || root.querySelector('.ticker') || header;
 }
+const SHOP_CARDS = '.lt-shop .card[data-uid], .shop .card[data-uid]';
 
 // the flying copy is a picture of the card, not a control: no button, no option id, not focusable
 const inert = html => html.replace(/^<button/, '<div').replace(/<\/button>$/, '</div>').replace(/ data-option="[^"]*"/g, '').replace(/ type="button"/g, '').replace(/ tabindex="[^"]*"/g, '') ;
@@ -33,7 +41,7 @@ export function snapshotShop(root) {
   const snap = new Map();
   if (!root) return snap;
   // the visible copy of each card wins (the compact row hides under the buy view)
-  root.querySelectorAll('.shop .card[data-uid]').forEach((el, index) => {
+  root.querySelectorAll(SHOP_CARDS).forEach((el, index) => {
     const r = el.getBoundingClientRect();
     if (!r.width || el.closest('[aria-hidden="true"]')) return;
     // the card's own styles hang off its shop panel (compact or full): keep that context, so the flying copy
@@ -75,7 +83,7 @@ function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 
 
 export function flyCards(root, snap, moves) {
   if (!root || !motionOK()) return;
-  const cells = [...root.querySelectorAll('.shop .card[data-uid]')];
+  const cells = [...root.querySelectorAll(SHOP_CARDS)];
   for (const { uid, to } of moves) {
     const s = snap.get(uid);
     const cell = s && (s.rect ? true : (cells[s.index] || cells[cells.length - 1]));
@@ -85,7 +93,7 @@ export function flyCards(root, snap, moves) {
     if (!a.width || !b.width) continue;
     // the card lifts off the shop, holds a beat so you see which one, then travels to its new owner
     // land on the new member's own chip (or the "+N more" pill holding it) and make that chip glow
-    const chip = root.querySelector(`.pl[data-pid="${to}"] .chip[data-uids~="${uid}"]`);
+    const chip = root.querySelector(`.lt-seat[data-pid="${to}"] [data-uids~="${uid}"]`) || root.querySelector(`.lt-seat[data-pid="${to}"] [data-uid="${uid}"]`);
     const land = chip && visibleEl(chip) ? chip : target;
     const lb = land.getBoundingClientRect();
     ghostFly(s.html, 'flight', a, lb.width ? lb : b, { duration: 760, scaleTo: 0.28, hold: true });
@@ -99,19 +107,66 @@ export function flyCards(root, snap, moves) {
   }
 }
 
-/** A worker token travels from its owner to the space. `color` is the player's color. */
+/**
+ * A minion leaves its leader and lands on the space (Cory: "placing a minion animates it from the leader to the wheel
+ * space"). The ghost is the minion's own sprite; the minion on the space shows once it has landed.
+ */
 export function flyWorker(root, pid, slotKey, color) {
   if (!root || !motionOK()) return false;
   const from = playerAnchor(root, pid, '.workers');
-  const to = root.querySelector(`[data-slot="${slotKey}"] .base`);
+  const slot = root.querySelector(`[data-slot="${slotKey}"]`);
+  const landed = slot && (slot.querySelector(`.worker[data-seat="${pid}"]`) || slot.querySelector('.worker'));
+  const to = landed || (slot && slot.querySelector('.base'));
   if (!from || !to) return false;
   const f = from.getBoundingClientRect(), t = to.getBoundingClientRect();
   if (!t.width) return false;
-  const size = Math.max(14, t.width * 0.72);
+  const size = Math.max(16, landed ? t.width : t.width * 0.6);
   const a = { left: f.left + f.width / 2 - size / 2, top: f.top + f.height / 2 - size / 2, width: size, height: size };
   const b = { left: t.left + t.width / 2 - size / 2, top: t.top + t.height / 2 - size / 2, width: size, height: size };
-  ghostFly(`<i style="background:${color}"></i>`, 'worker-flight', a, b, { duration: 260, scaleTo: 1, fadeTo: 1, arc: 30 });
+  const html = landed ? landed.innerHTML : `<i style="background:${color}"></i>`;
+  const duration = 480;
+  ghostFly(html, 'worker-flight minion-flight', a, b, { duration, scaleTo: 1, fadeTo: 1, arc: 46 });
+  if (landed && landed.animate) landed.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: duration + 30 });
   return true;
+}
+
+/** A small token (e.g. "+2" followers) arcs from one element to another. */
+export function flyToken(fromEl, toEl, html, { tag = '', duration = 640 } = {}) {
+  if (!motionOK() || !fromEl || !toEl) return false;
+  const f = fromEl.getBoundingClientRect(), t = toEl.getBoundingClientRect();
+  if (!f.width || !t.width) return false;
+  const size = 34;
+  const a = { left: f.left + f.width / 2 - size / 2, top: f.top + f.height / 2 - size / 2, width: size, height: size };
+  const b = { left: t.left + t.width / 2 - size / 2, top: t.top + t.height / 2 - size / 2, width: size, height: size };
+  ghostFly(html, `token-flight ${tag}`.trim(), a, b, { duration, scaleTo: 0.9, fadeTo: 0.15, arc: 70 });
+  if (toEl.animate) toEl.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }, { transform: 'scale(1)' }], { duration: 420, delay: duration - 80, easing: 'ease-out' });
+  return true;
+}
+
+/** Where every placed minion is right now (to send them home when the round clears the wheel). */
+export function snapshotMinions(root) {
+  const snap = [];
+  if (!root) return snap;
+  root.querySelectorAll('.lt-wheel [data-slot] .worker[data-seat]').forEach(el => {
+    const r = el.getBoundingClientRect();
+    if (r.width) snap.push({ pid: Number(el.dataset.seat), html: el.innerHTML, rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
+  });
+  return snap;
+}
+/** At round end the wheel's minions fly home to their leaders, one after another. */
+export function flyMinionsHome(root, snap) {
+  if (!root || !motionOK() || !snap || !snap.length) return 0;
+  let n = 0;
+  snap.forEach((m, k) => {
+    const home = playerAnchor(root, m.pid);
+    if (!home) return;
+    const h = home.getBoundingClientRect();
+    if (!h.width) return;
+    const b = { left: h.left + h.width / 2 - m.rect.width / 2, top: h.top + h.height / 2 - m.rect.height / 2, width: m.rect.width, height: m.rect.height };
+    setTimeout(() => ghostFly(m.html, 'worker-flight minion-flight home', m.rect, b, { duration: 520, scaleTo: 0.8, fadeTo: 0.2, arc: 40 }), k * 45);
+    n++;
+  });
+  return n;
 }
 
 /** Remove flying ghosts: all of them (a modal opened), or those older than maxAge ms (they should be gone). */
@@ -124,7 +179,7 @@ export function clearFlights(maxAge = 0) {
 /** The cards still in the shop slide from where they were to where they are now (no one-frame reflow). */
 export function slideShop(root, snap) {
   if (!root || !motionOK()) return;
-  root.querySelectorAll('.shop .card[data-uid]').forEach(el => {
+  root.querySelectorAll(SHOP_CARDS).forEach(el => {
     const s = snap.get(Number(el.dataset.uid));
     if (!s || !s.rect || el.closest('[aria-hidden="true"]') || s.full !== !!el.closest('.buy-view')) return;
     const r = el.getBoundingClientRect();

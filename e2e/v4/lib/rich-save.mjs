@@ -2,12 +2,12 @@
 // 6 of every color: enough for the +6 follower buy right after. Used by the motion gate.
 import { createGame, applyMove, chooseBotMove } from '../../../src/engine/v4/index.js';
 import { seededRandom } from '../../../src/engine/v4/rng.js';
-import { BUILD } from '../../../src/v4/session/record.js';
+import { buildStamp } from './stamp.mjs';
 
 export function richSave(seed = 4) {
   const seats = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
   let s = createGame({ seats, seed });
-  s.build = { ...BUILD }; // this build's stamp, or the app sets the save aside as "older version"
+  s.build = buildStamp(); // this build's stamp, or the app sets the save aside as "older version"
   const rand = seededRandom(seed);
   for (let n = 0; n < 500 && !(s.round === 1 && s.pending && s.pending.player === 0 && s.pending.kind === 'place'); n++) s = applyMove(s, chooseBotMove(s, rand));
   if (!(s.pending && s.pending.player === 0 && s.pending.kind === 'place')) throw new Error('rich save: never reached P1 placing');
