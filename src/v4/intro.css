@@ -41,7 +41,7 @@
 .intro-scene.leaving{animation:in-out 320ms ease both}
 .intro-scene.leaving .in-moves{visibility:hidden}
 
-.intro-line{margin:calc(7 * var(--u)) 0 0;max-width:min(30ch, 100%);min-height:2.4em;display:flex;align-items:flex-start;justify-content:center;
+.intro-line{margin:calc(7 * var(--u)) 0 0;max-width:min(30ch, 100%);min-height:2.4em;display:block;
   font-family:var(--i-serif);font-weight:500;font-size:21px;line-height:1.2;color:var(--i-cream);text-wrap:balance;animation:in-line 520ms cubic-bezier(.2,.8,.3,1) both}
 .intro-line em{font-style:italic;color:var(--i-lamp-ink)}
 @media (min-width:700px) and (min-height:560px){ .intro-line{font-size:28px;max-width:34ch} }

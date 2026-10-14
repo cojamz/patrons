@@ -192,7 +192,8 @@ const trading = {
     m('shopkeeper', 'Shopkeeper', 2, 2, 'Now and at round start, +2 white.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
-    m('dealer', 'Dealer', 2, 2, 'Whenever you sell followers, +1 white each.', {
+    // 2+0 since the 2026-10-14 rework (was 2+2): with Pawn no longer selling, bots sell half as often; value 6.2 → 2.1
+    m('dealer', 'Dealer', 2, 0, 'Whenever you sell followers, +1 white each.', {
       onSell(ctx, owner, card, k) { ctx.gain(owner, W, k); },
     }),
     m('pawnbroker', 'Pawnbroker', 2, 2, 'Once per round: sell 1 follower for 3 white.', {
@@ -205,7 +206,7 @@ const trading = {
       },
       botActivate: (ctx, owner) => sellable(owner) > 0 && ctx.state.round < 3,
     }),
-    m('safetynet', 'Safety Net', 2, 0, 'At round start, if you have no white, +3 white.', {
+    m('safetynet', 'Safety Net', 2, 0, 'Now and at round start, if you have no white, +3 white.', { now: true,
       onRoundStart(ctx, owner) { if (!owner.res[W]) ctx.gain(owner, W, 3); },
     }),
     m('tipster', 'Tipster', 4, 2, 'Whenever a rival buys followers, +1 white.', {
@@ -237,8 +238,9 @@ const trading = {
         if (buyer === owner && tier?.get >= 3) { owner.bonus += 1; ctx.log(`${owner.name}'s Bulk Buyer: +1 follower.`); }
       },
     }),
-    // once per action use (2026-10-14): Buy Low used to pay it on every resource traded
-    m('broker', 'Broker', 2, 2, 'Whenever a White action gives you followers, +1 more (once per action).', { brokerBonus: 1 }),
+    // once per action use, and 2+0 (was 2+2), since the 2026-10-14 rework: Buy Low paid it per resource traded,
+    // and Cash In, its main trigger, is gone. Member value 3.5 → 0.6 (160 games, normal bots, White table)
+    m('broker', 'Broker', 2, 0, 'Whenever a White action gives you followers, +1 more (once per action).', { brokerBonus: 1 }),
     m('exporter', 'Exporter', 4, 4, 'Whenever you recruit a non-white member, +1 white.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);

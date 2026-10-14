@@ -17,7 +17,8 @@ Root cause: White was tuned on the old ladder (colors required, best rate 6 for 
 Changes:
 1. Pawn is now "Per round number: +1 follower or +2 white." You pick the mix. It always pays and has no sale.
 2. Cash In is replaced by Barter: "Recruit a face-up member, paying 1 follower per 2 of its cost, rounded up (only followers you've won or bought)." Followers become cash for members, not more followers. Magnate is left as the one white→followers card, so the redundancy is gone. Your normal buy still follows. Barter isn't a sale, so Dealer and Reinvestor don't fire.
-3. Broker pays once per action. Buy Low used to pay it per resource traded.
+3. Broker pays once per action (Buy Low used to pay it per resource traded) and costs 2+0 (was 2+2).
+4. Dealer costs 2+0 (was 2+2). Pawn no longer sells, so bots sell half as often.
 
 Kept, with measurements:
 - Sell High and Pawnbroker stay at 3 white per follower. With Cash In gone, a scripted seller doesn't win more, and bots that sell out-win bots that don't. At 2, selling stops paying off. The critic preferred 2; see below.
@@ -47,7 +48,7 @@ Actions (value in resources: early = round I with typical holdings, late = round
 
 Members (cost = white + any)
 8. Shopkeeper (1+1): at round start, +2 white.
-9. Dealer (1+1): whenever you sell followers, +1 white each.
+9. Dealer (1+0, now 2+0 at doubled costs): whenever you sell followers, +1 white each.
 10. Pawnbroker (1+1): once per round, sell 1 follower for 3 white.
 11. Safety Net (1+0): at round start, if you have no white, +3 white.
 12. Tipster (2+1): whenever a rival buys followers, +1 white.
@@ -56,7 +57,7 @@ Members (cost = white + any)
 15. Shareholder (2+1): worth 3 followers.
 16. Heiress (3+2): once per game, +1 white per member you have.
 17. Bulk Buyer (2+1): whenever you buy 3 or 6 followers, +1 more. (Was Bargain Hunter, which paid on every buy and doubled the 2-for-1 rate.)
-18. Broker (1+1): whenever a White action gives you followers, +1 more (once per action; Buy Low used to pay it per resource).
+18. Broker (1+0, now 2+0 at doubled costs): whenever a White action gives you followers, +1 more (once per action; Buy Low used to pay it per resource).
 19. Exporter (2+2): whenever you recruit a non-white member, +1 white.
 20. Liquidator (2+1): once per game, sell up to 5 followers for 2 white each.
 21. Reinvestor (1+1): whenever you sell followers, your next member costs 1 less per follower sold.
@@ -81,6 +82,29 @@ Members (cost = white + any)
 30. Scoring · Most white; ties go to whoever has fewer followers.
 
 ## Measurements
+Third pass (2026-10-14; 4 players, Normal bots, gold/red/White/green; shop of 10):
+- Pure follower buyer vs 3 bots, n=400:
+  - before the rework: 7.5% [5–10] on the White table, 11.6% [9–15] on the stand-in table;
+  - after: 9.4% [7–13].
+- Scripted seller seat (sells every loose follower, never recruits, buys back big), n=400:
+  - before: 6.8% [5–10];
+  - after: 7.4% [5–10];
+  - with every sale at 2: 5.0% [3–8].
+- Bots beside it that sell vs bots that don't:
+  - with sales at 3: 35% vs 29%;
+  - with sales at 2: 30% vs 33%.
+- 4 bots, n=200, before → after:
+  - members per player: 5.3 → 5.6;
+  - followers per player: 46.0 → 47.2;
+  - followers sold per game: 9.2 → 4.5;
+  - followers from White's conversions per player: 4.2 → 3.7;
+  - Barter: taken about once a game, about 3 followers paid.
+- Member value (handed over at round II, 160 games):
+  - before: Dealer 6.2, Broker 3.5;
+  - after: Magnate 5.0, Liquidator 4.1, Reinvestor 2.6, Pawnbroker 2.4, Dealer 2.1, Broker 0.6;
+  - reference: Shareholder (worth 3) 2.6.
+
+Second pass (older table and costs):
 - Seat balance, 400 games with greedy bots on gold/red/blue/White: 25/28/26/22% at 4 players and 49/51% at 2. Average 46 followers (the stand-in table gives 48). Bots sell about 9 followers a game.
 - White contest at 4 players: nobody scores 13% of the time and it's shared 6%. The win spread is 250/310/277/284. The leader holds about 4 more white than second.
 - Member value: each member handed to one seat at round II start, 200 games, greedy bots. On this table a do-nothing member is worth +4.3, Tax Collector +4.4 and Tycoon +8.1. Heiress 7.5, Exporter 7.3, Tipster 6.2, Dealer 6.0, Broker 5.6, Reinvestor 5.6, Shareholder 5.1, Liquidator 5.0, Bulk Buyer 4.9, Pawnbroker 4.8, Raider 4.3, Magnate 4.1, Shopkeeper 3.8, Lender 3.3, Safety Net 3.1. These numbers are noisy, about ±1. I priced from the data, with Tax Collector at 2 and Tycoon at 6 as anchors. Magnate's price is my judgment, because bots don't save white.

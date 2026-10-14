@@ -291,7 +291,7 @@ function BeatBuy({ c, still }) {
 }
 
 const W6 = { cx: 88, cy: 50, r: 44 };
-const PLAQUE = { gold: [75, 88], silver: [31, 44], magenta: [75, 0], green: [119, 44] };
+const PLAQUE = { gold: [75, 88], silver: [27, 44], magenta: [75, 0], green: [122, 44] }; // top-left, on the rim
 function BeatReckon({ c, still }) {
   return (
     <>
@@ -301,14 +301,14 @@ function BeatReckon({ c, still }) {
           <span className="in-w9"><Res kind={GLYPH[q]} /></span><b>+2</b>
         </At>
       ))}
-      <Rival color={RIVAL_A} emoji={c.a} sigil="triangle" x={0} y={12} t={2450} className="in-glow in-far" />
-      <At x={2} y={50} className="in-count"><Count steps={[[0, 4], [2450, 6]]} still={still} /></At>
-      <At x={12} y={50}><Fol /></At>
-      <You c={c} x={142} y={12} t={1250} className="in-glow" />
-      <At x={144} y={50} className="in-count"><Count steps={[[0, 5], [1250, 7]]} still={still} /></At>
-      <At x={154} y={50}><Fol /></At>
-      <Hop from={[80, 88]} to={[150, 52]} h={20} show={600} t={620} dur={640} post="fade" className="in-token"><b>+2</b><Fol /></Hop>
-      <Hop from={[36, 44]} to={[6, 52]} h={12} show={1850} t={1870} dur={580} post="fade" className="in-token"><b>+2</b><Fol /></Hop>
+      <Rival color={RIVAL_A} emoji={c.a} sigil="triangle" x={0} y={6} t={2450} className="in-glow in-far" />
+      <At x={2} y={43} className="in-count"><Count steps={[[0, 4], [2450, 6]]} still={still} /></At>
+      <At x={12} y={43}><Fol /></At>
+      <You c={c} x={144} y={6} t={1250} className="in-glow" />
+      <At x={146} y={43} className="in-count"><Count steps={[[0, 5], [1250, 7]]} still={still} /></At>
+      <At x={156} y={43}><Fol /></At>
+      <Hop from={[80, 88]} to={[150, 45]} h={20} show={600} t={620} dur={640} post="fade" className="in-token"><b>+2</b><Fol /></Hop>
+      <Hop from={[32, 44]} to={[4, 45]} h={12} show={1850} t={1870} dur={580} post="fade" className="in-token"><b>+2</b><Fol /></Hop>
     </>
   );
 }

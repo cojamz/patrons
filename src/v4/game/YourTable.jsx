@@ -48,8 +48,8 @@ export default function YourTable({ state, me = null, mySeats = [], optionFor = 
                     <Sprite id={spriteId(d.name)} kind="member" sphere={sphereOf(state, d)} size={24} />
                     {g.count > 1 && <b className="x num">×{g.count}</b>}
                   </Tip>
-                  {use && <button type="button" className="lt-btn mini" data-option={use.id} onClick={() => onPick(use.id)} title={`Use ${d.name} now`}>Use</button>}
-                  {toggle && <button type="button" className="lt-btn mini" data-option={toggle.id} onClick={() => onPick(toggle.id)} title={toggle.label}>{g.card.on === false ? 'On' : 'Off'}</button>}
+                  {use && <button type="button" className="lt-btn mini" data-option={use.id} onClick={() => onPick(use.id)} title={`Use ${d.name} now`}>Use<span className="hitbox" aria-hidden="true" /></button>}
+                  {toggle && <button type="button" className="lt-btn mini" data-option={toggle.id} onClick={() => onPick(toggle.id)} title={toggle.label}>{g.card.on === false ? 'On' : 'Off'}<span className="hitbox" aria-hidden="true" /></button>}
                 </span>
               );
             })}

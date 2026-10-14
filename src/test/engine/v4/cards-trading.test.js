@@ -12,9 +12,9 @@ const QE = ['gold', 'red', 'trading', 'echo'];
 useCosts({
   'gold.tycoon': [8, 4], 'gold.taxman': [2, 2], 'gold.midas': [4, 4], 'red.bigfamily': [4, 4], 'red.twins': [2, 2],
   'red.intern': [2, 0], 'red.volunteer': [0, 0], 'red.doppel': [4, 2],
-  'trading.shopkeeper': [2, 2], 'trading.dealer': [2, 2], 'trading.pawnbroker': [2, 2], 'trading.safetynet': [2, 0],
+  'trading.shopkeeper': [2, 2], 'trading.dealer': [2, 0], 'trading.pawnbroker': [2, 2], 'trading.safetynet': [2, 0],
   'trading.tipster': [4, 2], 'trading.lender': [2, 0], 'trading.magnate': [4, 4], 'trading.heiress': [6, 4],
-  'trading.bulkbuyer': [4, 2], 'trading.broker': [2, 2], 'trading.exporter': [4, 4], 'trading.liquidator': [4, 2],
+  'trading.bulkbuyer': [4, 2], 'trading.broker': [2, 0], 'trading.exporter': [4, 4], 'trading.liquidator': [4, 2],
   'trading.reinvestor': [2, 2], 'trading.raider': [2, 0],
 });
 const ROW = ['gold.tycoon', 'red.bigfamily', 'red.twins', 'red.intern', 'gold.taxman', 'red.volunteer'];

@@ -76,13 +76,14 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
                 if (opt) onPick(opt.id); else if (onDenied) onDenied({ type: 'card', uid, name: d.name }, e.currentTarget);
               }}
             >
-              <span className="band">{fromPile ? 'From the pile' : timingOf(d)}</span>
+              <span className="band">{fromPile ? 'From the pile' : timingOf(d)}{short && <span className="need" title={`You need ${short.total} more`}>need {short.total}</span>}</span>
+              {/* buying: the name, then the text where the figure was (same card size) */}
+              {buying && <span className="nm">{d.name}<BadgeMark state={state} def={d} /></span>}
               {buying
                 ? <span className="txt"><CardText text={d.text} /></span>
                 : <span className="art"><Sprite id={spriteId(d.name)} kind="member" sphere={sphereOf(state, d)} size={48} /></span>}
               {tick && <span className="tick" title={`You could afford it after ${after}`}>✓ after {after}</span>}
-              {short && <span className="need" title={`You need ${short.total} more`}>need {short.total}</span>}
-              <span className="nm">{d.name}<BadgeMark state={state} def={d} /></span>
+              {!buying && <span className="nm">{d.name}<BadgeMark state={state} def={d} /></span>}
               <span className="ft">
                 <CostShapes parts={parts} />
                 <span className="val" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}><b className="num">{d.f}</b><FollowerGlyph size={13} title={`worth ${d.f}`} /></span>

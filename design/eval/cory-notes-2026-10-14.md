@@ -60,6 +60,64 @@ Format per section: what Cory saw · diagnosis (root cause, not symptom) · the 
   - By Banker's yardstick, Apprentice looks cheap and Double Time looks dear. That's one noisy run, so I handed it to the fair-price screen (section 4) instead of repricing here.
 
 ## 2. White: Pawn can't sell in round I, Cash In vs Magnate redundant, Cash In too strong (White agent)
+*White agent. I played three games driving one seat from a script and reading the log, all on gold/red/White/green: two on today's rules and one on the rework. Sims ran 4-player games against Normal bots, with the instrument named on each number.*
+
+**What Cory saw.**
+- Pawn ("+2 white, and sell up to 1 follower per round number for 2 white each") can't sell anything in round I.
+- Cash In ("+1 follower, then trade any of your white for followers, 1 for 1") and Magnate ("Game end: +1 follower per 3 white") seem redundant.
+- Cash In may be too strong.
+
+**Diagnosis (root causes).**
+- **The market moved under White.** White was tuned on the old ladder, where buys needed several colors and the best rate was 6 for 6. There, "1 for 1" was a premium and a sale at 2–3 white was fair. Today buys take any resources and 10→10 exists, so a follower costs 1.33 resources (4→3) or 1 (10→10). That made Cash In's uncapped 1 for 1 the back half of a loop: sell for 3, cash back in at par. It's as good as the top tier, with no stock limit and no buy step.
+- **Pawn's dead half.** "Only loose followers sell" (Cory's ruling) meets round I, where nobody has loose followers yet. Pawn in round I is never better than Haggle: both give +2 white, and Haggle adds 1 per player ahead of you.
+- **The redundancy.** Cash In and Magnate both turn white into followers. Cash In does it sooner, at three times Magnate's rate, with no cap. With Cash In on the board, Magnate never mattered.
+
+**My own feedback.** I agree with all three notes. What else I found:
+- **The loop is real for a person, though bots miss it.**
+  - Game 1 (first hand-played game): I sold every loose follower (Pawn, Sell High, and a Liquidator I bought, used and released). I turned the white into two 10→10 buys.
+  - Game 2 (replayed after the shop went to 10): my seat took 3 of the 4 10→10 buys in round II. The stock ran out and the game ended after round II. I won 35–25 with 0 members.
+  - A scripted seller seat (sells every loose follower, never recruits, buys back big) wins only 6.8% [5–10] (n=400 games). The skill is in the timing.
+- **Release makes once-per-game members free.** It refunds a member's full price after you've used it, so the Liquidator cost me nothing. That's Release's problem, not White's. Flagged in decisions.md.
+- **White doesn't make "just buy followers" easier for bots.** The pure follower buyer against 3 Normal bots, 400 games per table: 7.5% [5–10] on the White table, against 11.6% [9–15] on the stand-in table. White's 1-for-1 conversions are about 9% of a bot's followers. Buy Low and Boom are capped by round, or by being a single space.
+- **Selling does pay off for bots today.** Bots that sell win 27%, and bots that don't win 20% (200 games). So the rework must not kill the sell verbs.
+
+**Options considered.**
+1. **Cap Cash In** at 2 white per round number and keep Magnate. Fixes the strength, not the redundancy.
+2. **One sale price of 2 white everywhere** (the design-critic's pick). It closes any loop at the price, but selling stops paying: sellers 30% vs non-sellers 33%. Cory asked for sells that pay off.
+3. **Replace Cash In with Barter** (chosen). Followers pay for members, so selling pays off in members, an engine, not in more followers. Magnate becomes White's only white→followers card.
+4. **Bolder, a pawn pile** (from the critic). Sold followers sit visibly on your board. You buy them back any time for 3 white each, and whatever's left at game end is lost. It closes the loop by itself and makes buying back a real choice. It needs a new pile and UI.
+5. **Boldest, a moving price** (like Power Grid's market). Each sale this round drops White's sale price by 1, so the market itself stops a loop.
+6. **Scoring "fewest followers (need 1 white)"**. Selling becomes a contest play that stacks with fewest-picks-first. Not shipped: it pays the trailing seat twice, and scoring is Cory's call.
+
+**What shipped (Claude, under go-with-your-gut).**
+1. **Pawn:** "Per round number: +1 follower or +2 white." You pick the mix. It always pays and has no sale, so Dealer and Reinvestor can't stack on it (the critic's wording).
+2. **Barter replaces Cash In:** "Recruit a face-up member, paying 1 follower per 2 of its cost, rounded up (only followers you've won or bought)." It's on top of your buy.
+3. **Broker:** pays once per action. It used to pay per resource traded on Buy Low. Cost 2+2 → 2+0.
+4. **Dealer:** cost 2+2 → 2+0. Pawn no longer sells, so bots sell half as often.
+5. **Kept, measured:** Sell High and Pawnbroker at 3 white per follower; Buy Low, Boom and Magnate unchanged.
+
+**How it measured** (4 players, Normal bots, gold/red/White/green):
+- **Pure follower buyer:** 9.4% [7–13] (n=400), against 11.6% on the stand-in table.
+- **Scripted seller seat:**
+  - with sales at 3: 7.4% [5–10] (n=400), against 6.8% before the rework;
+  - with sales at 2: 5.0% [3–8].
+- **Do sellers win more?** (the 3 Normal bots beside the scripted seller, n=400)
+  - With sales at 3: sellers 35% vs non-sellers 29%.
+  - With sales at 2: sellers 30% vs non-sellers 33%. That's why the price stays 3.
+- **Normal bots (n=200), before → after:**
+  - members per player: 5.3 → 5.6;
+  - followers per player: 46.0 → 47.2;
+  - followers sold per game: 9.2 → 4.5;
+  - Barter: taken about once a game, about 3 followers paid.
+- **10→10 sold out before round III** (scripted-seller runs, n=400): 18 games before, 15 after, 7 with sales at 2.
+- **Member value** (member handed over at round II, 160 games, old → new):
+  - Broker 3.5 → 0.6 (hence 2+0);
+  - Dealer 6.2 → 2.1 (hence 2+0);
+  - after the rework: Magnate 5.0, Liquidator 4.1, Reinvestor 2.6, Pawnbroker 2.4, against Shareholder (worth 3) at 2.6.
+
+**Watch.**
+- Magnate now fires rarely: Normal bots spend white down, because any follower buy beats 1 per 3. The White fire-audit gate exempts it, and its own card test covers it.
+- Barter makes the plain high-follower members good targets: Patron, worth 5, costs 3 followers.
 ## 3. Green needs tweaking as a whole (Green agent)
 *Green agent. I played two full 4-player games by hand, driving one seat against three Normal bots and reading the log and every space's copy chip each turn: gold/red/magenta/green (seed 11) and blue-market/yellow/white/green (seed 23). I also took the copy spaces on the real UI, both the frozen build (5192) and HEAD (5193), at 1270×800. Sims: Normal bots, 300 games per variant. Shipped: echo.js, its tests, design/spheres/echo.md.*
 

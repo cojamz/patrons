@@ -296,7 +296,7 @@ const echoQ = {
         ctx.log(`${owner.name}'s Mirror: +${g} green.`);
       },
     }),
-    m('afterimage', 'Afterimage', 4, 2, 'At round start: copy one of your spaces from last round.', {
+    m('afterimage', 'Afterimage', 4, 2, 'Now and at round start: copy one of your spaces from last round.', { now: true,
       onRoundStart(ctx, owner) {
         const L = ledger(ctx.state);
         const list = Object.values(L.last).filter(e => copyable(e) && e.p === owner.id);

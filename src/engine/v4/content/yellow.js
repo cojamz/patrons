@@ -10,6 +10,8 @@ const others = ctx => colors(ctx).filter(c => c !== Y);
 export const setsOf = (ctx, p) => Math.min(...colors(ctx).map(c => p.res[c] || 0));
 const held = (ctx, p) => colors(ctx).filter(c => (p.res[c] || 0) > 0);
 const missing = (ctx, p) => colors(ctx).filter(c => !(p.res[c] > 0));
+/** The colors p holds the fewest of (ties: all of them). */
+const fewest = (ctx, p) => { const low = Math.min(...colors(ctx).map(c => p.res[c] || 0)); return colors(ctx).filter(c => (p.res[c] || 0) === low); };
 const total = (ctx, p) => colors(ctx).reduce((a, c) => a + (p.res[c] || 0), 0);
 // a member's color, or null when its sphere isn't on this table (a guest member leaning to an absent sphere)
 const colorOf = (ctx, card) => { const r = ctx.quadrant(ctx.defOf(card).quadrant).resource; return ctx.state.resources.includes(r) ? r : null; };
@@ -35,10 +37,15 @@ export default {
       resolve(ctx, p) { ctx.gain(p, Y, harvestAmount(ctx, p), { fromAction: true }); },
     },
     {
-      key: 'bloom', ring: 1, name: 'Bloom', text: '+1 of each color you have none of.',
-      // always leaves you holding a full set
-      estimate: (ctx, p) => missing(ctx, p).length + (setsOf(ctx, p) === 0 ? 0.5 : 0),
-      resolve(ctx, p) { for (const c of missing(ctx, p)) ctx.gain(p, c, 1, { fromAction: true }); },
+      // never 0 (Claude under Cory's go-with-your-gut, from the dead-window audit): "colors you have none of" was dead
+      // whenever you held every color. Raising every lowest color always adds one full set.
+      key: 'bloom', ring: 1, name: 'Bloom', text: '+1 of each color you hold the fewest of (ties: all of them).',
+      estimate: (ctx, p) => fewest(ctx, p).length + 0.5,
+      resolve(ctx, p) {
+        const list = fewest(ctx, p);
+        for (const c of list) ctx.gain(p, c, 1, { fromAction: true });
+        ctx.log(`${p.name}'s Bloom: +1 ${list.join(', +1 ')}.`);
+      },
     },
     {
       key: 'transmute', ring: 1, name: 'Transmute', text: 'Swap up to 3 of your resources for other colors, then +1 yellow.',
@@ -46,12 +53,13 @@ export default {
       resolve(ctx, p) { transmuteStep(ctx, p, { left: Math.min(3, total(ctx, p)), done: 0 }); },
     },
     {
-      key: 'prism', ring: 2, name: 'Prism', text: '+1 of each other color per 3 yellow you have (you keep the yellow).',
-      estimate: (ctx, p) => 3 * Math.floor(p.res[Y] / 3),
+      // a base of 1 (Claude under Cory's go-with-your-gut, from the dead-window audit): it was dead in 76–84% of offers
+      key: 'prism', ring: 2, name: 'Prism', text: '+1 of each other color, and +1 more of each per 3 yellow you have (you keep the yellow).',
+      estimate: (ctx, p) => others(ctx).length * (1 + Math.floor((p.res[Y] || 0) / 3)),
       resolve(ctx, p) {
-        const k = Math.floor(p.res[Y] / 3);
+        const k = 1 + Math.floor((p.res[Y] || 0) / 3);
         for (const c of others(ctx)) ctx.gain(p, c, k, { fromAction: true });
-        ctx.log(k ? `${p.name}'s Prism: +${k} of each other color.` : `${p.name}'s Prism had too little yellow.`);
+        ctx.log(`${p.name}'s Prism: +${k} of each other color.`);
       },
     },
     {
@@ -116,7 +124,7 @@ export default {
     m('dyer', 'Dyer', 4, 2, 'At round end, +1 yellow per color you hold.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, Y, held(ctx, owner).length); },
     }),
-    m('latebloomer', 'Late Bloomer', 2, 2, 'At round start, if you have the fewest followers (ties count), +1 of each color.', {
+    m('latebloomer', 'Late Bloomer', 2, 2, 'Now and at round start, if you have the fewest followers (ties count), +1 of each color.', { now: true,
       onRoundStart(ctx, owner) {
         const mine = ctx.followers(owner);
         if (ctx.rivals(owner).every(o => ctx.followers(o) >= mine)) eachColor(ctx, owner, 1);

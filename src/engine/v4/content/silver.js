@@ -195,8 +195,10 @@ const silver = {
     m('majordomo', 'Majordomo', 4, 2, 'Whenever you take a Silver space, +2 silver.', {
       afterAction(ctx, owner, card, qid) { if (qid === S) ctx.gain(owner, S, 2); },
     }),
-    m('silversmith', 'Silversmith', 4, 2, 'Whenever an action gains you silver, +1 more.', {
-      afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === S && g.n > 0) owner.res[S] += 1; },
+    // rewards not hosting (Claude under Cory's go-with-your-gut, from the dead-window audit): "+1 more per action silver"
+    // was Majordomo at half the yield, since almost all action silver comes from Silver spaces
+    m('silversmith', 'Silversmith', 4, 2, 'Whenever a rival takes a Silver space, +1 silver.', {
+      afterRivalAction(ctx, owner, card, qid) { if (qid === S) ctx.gain(owner, S, 1); },
     }),
     m('steward', 'Steward', 2, 2, 'Now and at round start, +1 silver per 3 silver you hold.', { now: true,
       // counts after every other round-start income (Benefactor, Banker…), as a player reads it (Cory hit this, 2026-10-14)
@@ -206,10 +208,12 @@ const silver = {
       f: 2,
       onRecruited(ctx, owner) { giveAll(ctx, owner, S, 1); },
     }),
-    m('feasthall', 'Feast Hall', 4, 2, 'When recruited, +2 silver per round number.', {
-      onRecruited(ctx, owner) { ctx.gain(owner, S, 2 * ctx.state.round); },
-    }),
-    m('heir', 'Heir', 6, 2, 'At the start of round III, +1 silver per member you have.', {
+    // Cory (2026-10-14): replaces Feast Hall. Members are people or groups, and a hall is lots of people: it counts as
+    // 3 members (n: 3) everywhere members are counted. Same cost for now; the fair-price screen checks it.
+    m('revelers', 'Revelers', 4, 2, 'Counts as 3 members.', { n: 3 }),
+    // pays when recruited too (Claude under Cory's go-with-your-gut, from the dead-window audit): blank if recruited in round III
+    m('heir', 'Heir', 6, 2, 'Now and at the start of round III: +1 silver per member you have.', {
+      onRecruited(ctx, owner) { ctx.gain(owner, S, ctx.memberCount(owner)); },
       onRoundStart(ctx, owner) { if (ctx.state.round === 3) ctx.gain(owner, S, ctx.memberCount(owner)); },
     }),
     m('spoon', 'Silver Spoon', 4, 2, 'When recruited, gain silver equal to the most silver any rival has.', {
