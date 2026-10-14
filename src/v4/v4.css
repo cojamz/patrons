@@ -1282,8 +1282,9 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
   .contest .c1{font-size:var(--fs-1)}
   .contest .c2 small{display:none}
   .contest .c2{white-space:nowrap;overflow:visible}
-  .app.game .stage{width:min(100cqw, 100cqh - 84px)}
 }
+/* no contest strip above the board any more: the board takes the room back */
+@media (min-width:861px) and (min-height:500px){ .app.game .stage{width:min(100cqw, 100cqh - 46px)} }
 .last-tag{font-style:normal}
 /* phones: "(last)" goes under "Round III" instead of running into the header buttons */
 @media (max-width:520px){
@@ -1308,3 +1309,6 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 @media (max-width:1100px){ .buy-view .shop{grid-template-columns:repeat(3,minmax(0,1fr))} }
 .for-sale .fs-strip{grid-template-columns:none;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:minmax(136px,42%);overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:4px;scroll-snap-type:x proximity}
 .for-sale .fs-card{scroll-snap-align:start}
+/* the version, small: home screen and How to play */
+.version{margin:2px 0 0;font-size:var(--fs-1);color:var(--muted);letter-spacing:.06em}
+.rules .version{margin-top:14px;text-align:right}

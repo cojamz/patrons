@@ -5,6 +5,7 @@ Finish every running process and to-do, then a multiplayer version Cory can play
 - [ ] Land all running agents' work; check:v4 green on a committed snapshot
 - [ ] Online play verified on the real link: 2–4 real browsers, create/join by link, full game to results
 - [ ] Friends-proof online: rejoin after reload or dropped wifi, a bot takes over a player who leaves, host can leave without killing the room, mismatched versions refused
+- [ ] Fresh eyes at every milestone: picky designer (ui-critic), board game enthusiast, engineer — new blind instances each time; round 1 done for designer (C-) and engineer
 - [ ] Blind panel on mixed tables (laptop, phone, saboteur) + "felt unfair or unfun"; fix worst-first; game-skeptic SHIP gate
 - [ ] A stable release link that only changes when Claude has verified a build (separate from the working preview)
 - [ ] One-page "how to start a game with friends" in the rulebook / home screen

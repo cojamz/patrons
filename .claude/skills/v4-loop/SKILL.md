@@ -35,3 +35,7 @@ Never present agent output to Cory unvetted.
 ## Agent claims need gates (2026-10-14)
 - The UI agent twice reported fixes that blind testers then found still broken on the frozen build (44px targets, stale Undo, bot pacing), and its screenshot paths didn't exist. A fix only counts once it's an automated e2e assertion that fails the build, or Claude has seen it in a screenshot of a fresh frozen build.
 - Freeze from a commit, never the live tree (2026-10-14): a build caught gold.js 7s into an agent's edit and showed a fake crash. Commit, `git worktree add .v4-wt/<sha> <sha>`, symlink node_modules, build there into .v4-panel/<n>. `scripts/v4-peek.mjs shots <url> <dir> [query]` plays a full game at laptop + iPhone 13 for your own screenshots.
+
+## Fresh eyes at every milestone (Cory, 2026-10-14)
+At each frozen milestone, run three NEW blind reviewers in parallel, never reused: `ui-critic` (picky designer: information access, polish), `boardgame-enthusiast` (the game: decisions, tension, arc, balance feel, fun), and an engineering reviewer (repo access, no prior context; design/eval/engineering-review.md is round 1). Save each report to design/eval/<role>-round<N>.md, verify single-reviewer claims before fixing, and track grades round over round.
+

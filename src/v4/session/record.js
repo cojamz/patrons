@@ -13,6 +13,7 @@ import { createGame, applyMove, isLegal, followers, TIERS, DEFAULT_RULES, RING_V
 import { allQuadrantIds, quadrant, guestMembers, defById, handlerById } from '../../engine/v4/content/index.js';
 import { setBotLevels } from '../../engine/v4/bots.js';
 import { createEmitter } from './emitter.js';
+import { VERSION } from '../version.js';
 
 export const RECORD_KIND = 'patrons.v4.record';
 export const SCHEMA = 1;
@@ -65,7 +66,8 @@ export const hashContent = manifest => cyrb53(JSON.stringify(manifest)).toString
 export const CONTENT_HASH = hashContent(contentManifest());
 // eslint-disable-next-line no-undef
 export const BUILD_ID = typeof __V4_BUILD__ !== 'undefined' ? String(__V4_BUILD__) : 'dev';
-export const BUILD = Object.freeze({ schema: SCHEMA, content: CONTENT_HASH, id: BUILD_ID });
+// version: the player-facing version (version.js), for people reading a record; compatibility is `content` alone
+export const BUILD = Object.freeze({ schema: SCHEMA, content: CONTENT_HASH, id: BUILD_ID, version: VERSION });
 
 // ---------- stamped games ----------
 
