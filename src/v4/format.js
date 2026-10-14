@@ -335,7 +335,7 @@ export const plainLine = (log, i) => explainLine(log, i).text;
 
 /** The tiebreak folded into a "most members"-style score ("(red members break ties)" -> "red"), if any. */
 export function tiebreakWord(label) {
-  const m = label.match(/\((\w+) members? breaks? ties\)/i);
+  const m = label.match(/\((\w+)(?: members?)? breaks? ties\)/i);
   return m ? m[1] : null;
 }
 /** For tied shown counts, the tiebreak amount to show next to the name ("2 red"), else null. */

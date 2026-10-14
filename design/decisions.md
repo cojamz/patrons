@@ -211,3 +211,12 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Design target, Dominion's Big Money: just buying followers is a solid baseline strategy that a good member engine beats.
 - ✅ (Cory) Testers report what FEELS unfair or unfun, on both sides of an interaction. Member movement is wanted; the question is how it can sting in a good way (e.g. member theft).
 - ✅ (Cory) Target: the pure 'big followers' strategy wins ~25% of 4-player games (20–30% ideal, 15–30% acceptable). Outside that, retune.
+- ✅ (Cory) Rule-bending members, first set ("good set!"):
+  - Squatter (once/round place on a taken space): yes; very strong, make it expensive.
+  - Big Spender (once/round buy twice): yes.
+  - Early Bird (next ring's space): no, too strong.
+  - Freelancer (pay colored part in any colors): yes; belongs to Yellow.
+  - Insider (also recruit from top 3 of the pile): yes; expensive. He wants more interaction with the pile.
+  - Extra Hand (+1 worker in round III): yes, but SUPER strong; price very carefully.
+  - Fence/Release (once/round release a member for its cost in any colors): yes; try it as a base rule for everyone.
+  - Front-runner (always pick first in a round): yes.
