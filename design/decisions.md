@@ -181,3 +181,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - Note: gold left at game end is still ~22 per player even with the gold sink. Mostly that's held for the Crown and freshly Struck in round III with no buys left. That may be fine.
 - Tech debt: local games run on src/v4/localTable.js (resume + undo); session/local.js has neither. Merge into one later.
 - Finding (1500 bot games per variant): the round-I last-picker edge (~33% vs ~22%) comes from Turnout. Variants: +1 starting resource for the first picker gives 25/20/24/31; no contests gives 22/21/26/32 (so contests aren't the cause); flipping the tiebreak gives 21/22/25/32; Turnout flat at +3 gives 28/27/23/23; Turnout capped at 4 gives 20/22/24/33; Turnout at +1 per 2 recruits gives 30/25/25/20. Cory's call.
+- ✅ (Cory) Keep Turnout as is. The last-picker edge is probably a bot blind spot (greedy bots never take Turnout early to deny it). The thinking-bot run will check it.
