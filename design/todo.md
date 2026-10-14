@@ -70,5 +70,7 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] Member renames, people or groups only (design/eval/member-names.md, 28 lines): grade by number or "all good"
 - [ ] Swap space: one of your members for a rival's of equal cost, +1 red, round I? [yes]
 - [ ] What the ~25% big-followers target is measured against [an in-between bot level, then a check with people]
+- [ ] Default table for the friends build: the real Blue (shop sphere) and Green (copy sphere) instead of the plain stand-ins, which only say "+N color" [yes]
+- [ ] Night Owl replaces Relay at 10, and five Purple members get cheaper (gut call from the Purple sim; overturn any) [yes]
 
 Settled 2026-10-14 (Cory's calls or Claude's logged gut calls, see decisions.md): Lamplit Table look; spinning wheel kept; pay by coins; Watchdog blocks Trade; loot stays magenta; Release on, refunds the colored part only, not in the round recruited; Late Riser; doubled discounts; 10→10 is the clock; Investor/Sower set-asides return undoubled; only loose followers sell (White rework fixes Pawn); shop of 10; pixel art good enough for now.

@@ -15,7 +15,7 @@ import RoundEnd from './RoundEnd.jsx';
 import Reckoning from './Reckoning.jsx';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker from './PayPicker.jsx';
-import { Rich } from './Rich.jsx';
+import { Rich, Pip } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome } from './flight.js';
 import { friendlyError, isNetworkError } from '../errors.js';
@@ -232,7 +232,8 @@ function seatCorners(state, me) {
   return [0, 1, 2, 3].map(k => (k < n ? (base + k) % n : null));
 }
 
-/** The buy step's other answers live with the question: Pass, and (once a round) Release a member for its cost. */
+const RELEASE_TEXT = 'Once per round: put one of your members at the bottom of the pile and take back the colored part of its cost, in its own color.';
+/** The buy step's other answers live with the question: Pass, and (once a round) Release a member. */
 function PromptActions({ state, optionFor, onPick }) {
   const pend = state.pending;
   const releases = pend.options.filter(o => o.kind === 'release');
@@ -245,18 +246,21 @@ function PromptActions({ state, optionFor, onPick }) {
       {releases.length > 0 && (
         <span className={`release-row${open ? ' open' : ''}`}>
           <button type="button" className="btn ghost rel-toggle" aria-expanded={open} onClick={() => setOpen(o => !o)}
-            title="Once per round: discard one of your members (it goes to the bottom of the pile) for its cost, in any colors you choose.">Release…</button>
+            title={RELEASE_TEXT}>Release…</button>
           {open && (
-            <span className="rel-list" role="group" aria-label="Release which member (once a round: its cost back in any colors)">
+            <span className="rel-list" role="group" aria-label={`Release which member? ${RELEASE_TEXT}`}>
               {releases.map(o => {
                 const d = state.cards[o.uid] ? cardDef(state, o.uid) : null;
+                const n = o.refund ?? 0, color = o.color || 'any';
                 return (
                   <button key={o.id} type="button" className="btn ghost rel" data-option={o.id} onClick={() => onPick(o.id)} style={d ? { '--c': `var(--${d.quadrant})` } : undefined}
-                    title={o.label}>{d ? <>{d.name} <span className="num">+{d.s + d.w}</span></> : o.label}</button>
+                    title={o.label}>{d ? d.name : o.label} <span className="num">+{n}</span> <Pip color={color} n={n} /></button>
                 );
               })}
             </span>
           )}
+        </span>
+      )}
         </span>
       )}
       <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title="End your turn without buying" data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>Pass</button>

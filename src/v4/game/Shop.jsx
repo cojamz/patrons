@@ -148,7 +148,7 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
   const pend = state.pending;
   const viewer = me != null ? state.players[me] : null;
   const extras = mine && pend ? pend.options.filter(o => o.kind === 'use' || o.kind === 'toggle') : [];
-  // Release (base rule): once per round, discard a member for its cost in any colors (the colors come next)
+  // Release (base rule): once per round, a member to the bottom of the pile for the colored part of its cost
   const releases = mine && pend && pend.kind === 'buy' ? pend.options.filter(o => o.kind === 'release') : [];
   const [relOpen, setRelOpen] = useState(false);
   const relTurn = buying_key(state);
@@ -183,8 +183,8 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
         // while open, so nothing hidden carries a live option.
         <div className={`release-row${relOpen ? ' open' : ''}`}>
           <button type="button" className="btn ghost rel-toggle" aria-expanded={relOpen} onClick={() => setRelOpen(o => !o)}
-            title="Once per round: discard one of your members (it goes to the bottom of the pile) for its cost, in any colors you choose.">
-            Release a member <small>once a round · its cost back in any colors</small>
+            title="Once per round: put one of your members at the bottom of the pile and take back the colored part of its cost, in its own color.">
+            Release a member <small>once a round · the colored part of its cost back</small>
           </button>
           {relOpen && (
             <div className="rel-list" role="group" aria-label="Release which member">

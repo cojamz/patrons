@@ -341,3 +341,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - (Cory) A picky game player does a pass too (game-design and fun critic): the boardgame-enthusiast, blind, on the frozen build.
 - ✅ (Cory) Placed minions sit ON the action (over the space itself), not offset to its edge. Replaces build-plan's "offset the minion onto the space's rim".
 - ✅ (Cory) The contest leader on the rim is a small version of the leader's emoji inline with the engraved rule text ("MOST BLUE · +2 · 🐱"), several side by side for a tie; nothing when no one leads. Replaces the tiny leader figure and name beside the label (off-center and confusing).
+- (Claude, under Cory's go-with-your-gut) The open ❓ on releasing a used once-per-game member: no special rule. Release now returns only the colored part, so recruiting, using and releasing one still costs its "any" part; one rule beats an exception.
