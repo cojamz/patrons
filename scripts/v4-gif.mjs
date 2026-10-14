@@ -1,5 +1,5 @@
 // Record a page as a crisp pixel-art GIF plus an MP4 (send Cory the MP4: the app plays video but shows a GIF as a still).
-//   node scripts/v4-gif.mjs <url> <out.gif> [ms=8000] [width=960] [fps=15]   (GIF_READY=<css selector> waits for it before the clock starts)
+//   [STEP=1] node scripts/v4-gif.mjs <url> <out.gif> [ms=8000] [width=960] [fps=15]  (STEP=1: exact frame stepping, best for the intro)   (GIF_READY=<css selector> waits for it before the clock starts)
 // e.g. node scripts/v4-gif.mjs "http://localhost:5324/?lab=intro&beat=1" design/prototypes/vision/shots/intro2-beat1.gif 5000
 // Records at 1270×700 in Chromium, trims the page-load lead-in, and converts with a generated palette and no dithering
 // (nearest-neighbour scaling) so pixel art stays sharp. Keeps the GIF under ~15 MB by lowering fps/width if needed.
@@ -16,6 +16,30 @@ const vdir = join(tmpdir(), `v4-gif-${process.pid}`);
 mkdirSync(vdir, { recursive: true });
 mkdirSync(dirname(out), { recursive: true });
 
+// STEP=1: deterministic frame stepping for Web-Animations pages (the intro): load with &at=0, pause every animation,
+// set its currentTime frame by frame and screenshot. No stutter on a busy box, exact timing. Real-time video otherwise.
+if (process.env.STEP) {
+  const fpsS = Number(fpsArg);
+  const fdir = join(vdir, 'frames'); mkdirSync(fdir, { recursive: true });
+  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+  const pg = await b.newPage({ viewport: { width: 1270, height: 700 } });
+  await pg.goto(url + (url.includes('at=') ? '' : (url.includes('?') ? '&' : '?') + 'at=0'), { waitUntil: 'load' });
+  if (process.env.GIF_READY) await pg.waitForSelector(process.env.GIF_READY, { timeout: 20000 });
+  await pg.waitForTimeout(800);
+  const n = Math.round((ms / 1000) * fpsS);
+  for (let i = 0; i < n; i++) {
+    await pg.evaluate(t => { for (const a of document.getAnimations()) { a.pause(); a.currentTime = t; } }, (i * 1000) / fpsS);
+    await pg.screenshot({ path: join(fdir, `f${String(i).padStart(4, '0')}.png`) });
+  }
+  await b.close();
+  const seq = ['-framerate', String(fpsS), '-i', join(fdir, 'f%04d.png')];
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...seq, '-vf', `scale=${widthArg}:-1:flags=neighbor,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=none`, '-loop', '0', out]);
+  const mp4s = out.replace(/\.gif$/, '.mp4');
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...seq, '-vf', 'scale=1270:-2:flags=neighbor', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-movflags', '+faststart', mp4s]);
+  rmSync(vdir, { recursive: true, force: true });
+  console.log(`${out} ${(statSync(out).size / 1e6).toFixed(1)} MB (stepped, ${n} frames @ ${fpsS}fps); mp4: ${mp4s}`);
+  process.exit(0);
+}
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 }, recordVideo: { dir: vdir, size: { width: 1270, height: 700 } } });
 const page = await ctx.newPage();
