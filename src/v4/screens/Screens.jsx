@@ -1,6 +1,7 @@
 // Home, local setup and the online lobby.
 import { useEffect, useState } from 'react';
 import { PLAYER_COLORS } from '../format.js';
+import HowToPlay from '../HowToPlay.jsx';
 
 const KINDS = [['human', 'Person'], ['bot', 'Bot'], ['empty', 'Empty']];
 
@@ -17,6 +18,7 @@ function Seg({ value, options, onChange, label }) {
 export function Home({ onLocal, onHost, onJoin, onlineReady }) {
   const [code, setCode] = useState(() => (new URLSearchParams(location.search).get('join') || '').toUpperCase().slice(0, 8));
   const [err, setErr] = useState('');
+  const [rules, setRules] = useState(false);
   const [working, setWorking] = useState(false);
   const go = fn => { setErr(''); setWorking(true); Promise.resolve(fn()).then(e => { if (e) setErr(e); }).finally(() => setWorking(false)); };
   const [name, setName] = useState(() => { try { return localStorage.getItem('patrons.name') || ''; } catch { return ''; } });
@@ -46,7 +48,9 @@ export function Home({ onLocal, onHost, onJoin, onlineReady }) {
           {err && <p className="error" role="alert">{err}</p>}
           {!onlineReady && <p className="hint">Online play is being wired up. Hot-seat works now.</p>}
         </div>
+        <button type="button" className="btn ghost rules-link" onClick={() => setRules(true)}>How to play</button>
       </div>
+      {rules && <HowToPlay onClose={() => setRules(false)} />}
     </div>
   );
 }

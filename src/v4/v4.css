@@ -205,6 +205,45 @@ table.res-t tr.first td{background:color-mix(in srgb,var(--ink) 5%,transparent)}
   .code{font-size:40px}
 }
 
+@media (max-width:520px){.bar-btns .btn.ghost{padding:3px 9px;font-size:12px}.status .round small{display:none}.status{order:3;flex-basis:100%}}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
+
+/* header buttons */
+.bar-btns{display:flex;gap:6px;margin-left:auto}
+.rules-link{align-self:center}
+
+/* payment picker: a dialog on desktop, a bottom sheet on phones */
+.dialog.pay{border-color:var(--c,var(--ink));gap:14px;max-width:460px}
+.pay-head{display:flex;flex-direction:column;gap:2px}
+.coins{display:flex;flex-wrap:wrap;gap:6px;min-height:26px;align-items:center;padding:8px 10px;background:var(--table);border:1px solid var(--rim);border-radius:10px}
+.coin{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 -2px 0 rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.4);animation:pop .25s ease-out}
+.steppers{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.stepper{display:flex;align-items:center;justify-content:space-between;border:1px solid color-mix(in srgb,var(--c) 60%,var(--rim));border-radius:999px;padding:2px;min-width:0}
+.stepper button{width:30px;height:30px;border-radius:50%;border:0;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--ink);font-size:18px;cursor:pointer;line-height:1;flex:none}
+.stepper button:disabled{opacity:.3;cursor:default}
+.stepper span{display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;font-weight:700}
+.stepper span i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.stepper small{color:var(--muted);font-weight:400}
+.ways{display:flex;flex-direction:column;gap:6px}
+.way{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--rim);background:var(--table);border-radius:999px;padding:5px 12px;cursor:pointer;font-variant-numeric:tabular-nums}
+.way i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px}
+.way em{font-style:normal;font-size:11px;color:var(--muted)}
+.way.on{border-color:var(--ink);background:var(--table-3)}
+@media (max-width:520px){
+  .overlay.sheet{align-items:flex-end;padding:0}
+  .overlay.sheet .dialog{border-radius:16px 16px 0 0;max-width:none;padding-bottom:22px}
+  .steppers{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* how to play */
+.dialog.rules{max-width:640px;max-height:calc(100dvh - 32px);overflow:auto;position:relative;gap:0}
+.rules .close{position:sticky;top:0;align-self:flex-end;background:var(--table-2)}
+.rules-body h2{font-family:var(--display);font-weight:400;font-size:26px;margin:0 0 8px}
+.rules-body h3{font-family:var(--display);font-weight:400;font-size:19px;margin:16px 0 4px;color:var(--gold)}
+.rules-body p,.rules-body li{font-size:14.5px;line-height:1.5;color:var(--ink)}
+.rules-body p{margin:6px 0}
+.rules-body ul,.rules-body ol{margin:4px 0;padding-left:22px}
+.rules-body b{color:#fff}

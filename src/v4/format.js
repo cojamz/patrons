@@ -63,6 +63,8 @@ export function promptFor(state, mine) {
       return mine
         ? { who: p, text: 'Recruit a member, buy followers, or pass' }
         : { who: p, text: `${name} is shopping` };
+    case 'pay':
+      return mine ? { who: p, text: 'Choose how to pay' } : { who: p, text: `${name} is paying` };
     case 'choose':
       return mine ? { who: p, text: pend.prompt } : { who: p, text: `${name} is deciding: ${pend.prompt}` };
     default:

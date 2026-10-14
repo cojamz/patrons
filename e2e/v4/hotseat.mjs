@@ -56,6 +56,13 @@ try {
   await shot('02-setup');
   await page.click('[data-start]');
   await page.waitForSelector('.players');
+  await page.click('text=How to play');
+  await page.waitForSelector('.rules-body');
+  await page.waitForTimeout(400);
+  await shot('02-how-to-play');
+  await shot('02-how-to-play-phone', PHONE);
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('.rules-body', { state: 'detached' });
 
   const seen = new Set();
   const t0 = Date.now();
@@ -71,18 +78,18 @@ try {
     if (!kind) { await page.waitForTimeout(30); continue; }
     const round = await page.$eval('.status .round', e => e.textContent).catch(() => '');
     const tag = `${kind}@${round.split(' ·')[0]}`;
-    if (!seen.has(tag) && ['slot', 'card', 'color', 'tier', 'pass'].includes(kind)) {
+    if (!seen.has(tag) && ['slot', 'card', 'color', 'tier', 'pass', 'pay'].includes(kind)) {
       seen.add(tag);
       const name = `03-${String(seen.size).padStart(2, '0')}-${tag.replace(/[^a-z0-9@]+/gi, '_')}`;
       await shot(name);
-      if (seen.size === 2 || (/III/.test(round) && !seen.has('phone3') && seen.add('phone3'))) await shot(`${name}-phone`, PHONE);
+      if (seen.size === 2 || kind === 'pay' || (/III/.test(round) && !seen.has('phone3') && seen.add('phone3'))) await shot(`${name}-phone`, PHONE);
     }
     // the first legal option in page order (skip on/off toggles, which would loop)
     const els = await page.$$('[data-option]:not([disabled])');
     let clicked = false;
     for (const el of els) {
       const id = await el.getAttribute('data-option').catch(() => null);
-      if (!id || id.startsWith('toggle:')) continue;
+      if (!id || id.startsWith('toggle:') || id === 'back') continue; // pay: confirm the default
       try { await el.click({ timeout: 1500 }); clicked = true; clicks++; break; } catch { /* covered, moved or detached; try the next */ }
     }
     if (!clicked) await page.waitForTimeout(30);

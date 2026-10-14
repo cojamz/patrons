@@ -21,7 +21,7 @@ export default function PayPicker({ state, onPick, busy }) {
 
   const def = pend.uid !== undefined ? cardDef(state, pend.uid) : null;
   const tier = pend.tier ? TIERS.find(t => t.key === pend.tier) : null;
-  const title = def ? `Recruit ${def.name}` : `Buy ${tier.get} followers`;
+  const title = def ? `Recruit ${def.name}` : `Buy ${tier.get} follower${tier.get > 1 ? 's' : ''}`;
   const costLine = def
     ? (costParts(def).map(c => `${c.n} ${c.color}`).join(' + ') || 'free') + (p.discount ? ` · your discount applies` : '')
     : tierCostText(tier);

@@ -9,6 +9,8 @@ import QuadrantPanel from './QuadrantPanel.jsx';
 import Shop from './Shop.jsx';
 import Results from './Results.jsx';
 import { ChoicePrompt, Handoff, Log } from './parts.jsx';
+import PayPicker from './PayPicker.jsx';
+import HowToPlay from '../HowToPlay.jsx';
 
 export function useSessionState(session) {
   const [state, setState] = useState(() => session.getState());
@@ -35,6 +37,7 @@ export default function GameScreen({ session, onPlayAgain, onHome }) {
   useEffect(() => { sendToken.current += 1; setBusy(false); }, [state]);
   const prevLog = useRef(state.log[state.log.length - 1]);
   const [toast, setToast] = useState('');
+  const [rules, setRules] = useState(false);
 
   const options = useMemo(() => (mine ? new Map(pend.options.map(o => [o.id, o])) : new Map()), [mine, pend]);
   const optionFor = useCallback(id => options.get(id) || null, [options]);
@@ -106,7 +109,10 @@ export default function GameScreen({ session, onPlayAgain, onHome }) {
             </span>
           )}
         </div>
-        {onHome && <button type="button" className="btn ghost" onClick={onHome}>Leave</button>}
+        <div className="bar-btns">
+          <button type="button" className="btn ghost" onClick={() => setRules(true)}>How to play</button>
+          {onHome && <button type="button" className="btn ghost" onClick={onHome}>Leave</button>}
+        </div>
       </header>
       {session.info && session.info.mode === 'online' && session.info.roomCode && (
         <div className="hint">Room {session.info.roomCode}</div>
@@ -130,7 +136,9 @@ export default function GameScreen({ session, onPlayAgain, onHome }) {
           </div>
         </div>
       )}
-      {toast && !state.over && <div className="toast" role="status" onClick={() => setToast('')}>{toast}</div>}
+      {toast && !state.over && !rules && !needHandoff && !(mine && pend.kind === 'pay') && <div className="toast" role="status" onClick={() => setToast('')}>{toast}</div>}
+      {mine && !needHandoff && pend.kind === 'pay' && <PayPicker state={state} onPick={onPick} busy={busy} />}
+      {rules && <HowToPlay onClose={() => setRules(false)} />}
       {needHandoff && <Handoff player={state.players[pend.player]} onReady={() => setReady(pend.player)} />}
     </div>
   );
