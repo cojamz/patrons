@@ -14,9 +14,12 @@ describe('round end card', () => {
     const dlg = await waitFor(() => screen.getByRole('dialog', { name: /Round I scoring/ }), { timeout: 8000 });
     expect(within(dlg).getAllByRole('listitem')).toHaveLength(4);
     const held = session.getState().moves;
-    expect(container.querySelector('header .round').textContent).toMatch(/Round II/);
+    // behind the card the board stays as it was scored: round I, workers still on their spaces
+    expect(container.querySelector('header .round').textContent).toMatch(/Round I\b/);
+    expect(container.querySelectorAll('.slot .worker').length).toBeGreaterThan(0);
     fireEvent.click(within(dlg).getByRole('button', { name: /Start round II/ }));
     expect(screen.queryByRole('dialog', { name: /Round I scoring/ })).toBeNull();
+    await waitFor(() => expect(container.querySelector('header .round').textContent).toMatch(/Round II/));
     session.destroy();
     expect(held).toBeGreaterThan(0);
   }, 15000);
