@@ -194,8 +194,8 @@ describe('Silver members', () => {
   });
 
   it('Heir: at the start of round III, +1 silver per member (nothing in round II)', () => {
-    let s = scene({ members: [['silver.heir', 'red.twins', 'gold.banker']], queue: [{ t: 'round', r: 3 }] });
-    // Heir 1 + Twins 2 + Banker 1 = 4 members; Banker also pays its 3 gold
+    let s = scene({ members: [['silver.heir', 'silver.retinue', 'gold.banker']], queue: [{ t: 'round', r: 3 }] });
+    // Heir 1 + Retinue 2 + Banker 1 = 4 members; Banker also pays its 3 gold
     expect(R(s).silver).toBe(4);
     s = scene({ members: [['silver.heir']], queue: [{ t: 'round', r: 2 }] });
     expect(R(s).silver).toBe(0);

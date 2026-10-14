@@ -9,7 +9,7 @@ install();
 
 const games = Number(process.argv[2] || 400), n = 4;
 const quadrants = (process.argv[3] || 'gold,red,market,green').split(',');
-const gains = {}; let bargains = { Bargain: [0, 0], Clearance: [0, 0] };
+const gains = {};
 const st = { wins: Array(n).fill(0), fol: [], mem: [], val: [], left: [], takes: {}, contest: {}, contestRounds: 0, top: [], winContest: [], uses: {}, buys: { member: 0, tier: 0 } };
 const labels = quadrants.map(q => quadrant(q).scoring.label);
 for (let g = 1; g <= games; g++) {
@@ -29,10 +29,6 @@ for (let g = 1; g <= games; g++) {
     const next = applyMove(s, m);
     if (pend.kind === 'place' && quadrants[o.q] === 'market') {
       const a = actionAt(s, o.q, o.i).name; gains[a] ??= [0, 0]; gains[a][0] += next.players[pend.player].res.blue - blue0; gains[a][1]++;
-    }
-    for (const l of next.log.slice(s.log.length >= 300 ? 0 : s.log.length)) {
-      const mm = l.match(/^(Bargain|Clearance): .* pays (.*) for (.*)\.$/);
-      if (mm && s.log[s.log.length - 1] !== l) { bargains[mm[1]][0]++; }
     }
     if (next.round !== r0 || next.over) {
       const line = [...next.log].reverse().find(l => l.startsWith(`Round ${['I', 'II', 'III'][r0 - 1]} ends.`));
@@ -70,5 +66,4 @@ console.log('contests (share of rounds nobody scored / shared; wins by seat):');
 for (const [k, v] of Object.entries(st.contest)) console.log(`  ${k.padEnd(18)} none ${(100 * v.none / (games * 3)).toFixed(0)}% · shared ${(100 * v.ties / (games * 3)).toFixed(0)}% · ${v.bySeat.join('/')}`);
 console.log(`winner's followers from the member-value contest: ${avg(st.winContest)}`);
 console.log(`avg blue gained per take: ${Object.entries(gains).map(([k, [a, b]]) => `${k} ${(a / b).toFixed(1)}`).join(' · ')}`);
-console.log(`paid recruits per game: Bargain ${(bargains.Bargain[0] / games).toFixed(2)} · Clearance ${(bargains.Clearance[0] / games).toFixed(2)}`);
 console.log(`activations per game: ${Object.entries(st.uses).map(([k, v]) => `${k} ${(v / games).toFixed(2)}`).join(' · ')}`);

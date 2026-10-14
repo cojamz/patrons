@@ -175,7 +175,7 @@ const market = {
         if (rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 1);
       },
     }),
-    m('broker', 'Broker', 2, 1, 'Whenever a rival recruits a member costing 4 or more, +1 blue.', {
+    m('broker', 'Broker', 2, 2, 'Whenever a rival recruits a member costing 4 or more, +1 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by !== owner && priceOf(rec) >= 4) ctx.gain(owner, B, 1); },
     }),
     m('connoisseur', 'Connoisseur', 2, 1, 'Whenever you recruit a member costing 4 or more, +2 blue.', {

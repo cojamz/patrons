@@ -37,6 +37,16 @@ Members (cost = silver + any)
 21. Confidant (2+2): when recruited, pick a rival. Whenever they recruit, +1 silver.
 22. Patron Saint (3+2): game end, +1 follower per 2 silver members in play, anyone's.
 
+## Arithmetic per action (4 players; "table" = what the other three get combined)
+Anchors: ring I is Joint Venture (3 + 1 to one rival) or Rush (2 / 4 / 6); ring II is Steal 3 or Windfall (about 4 in round II, 8 in round III); ring III is Strike (doubles about 15 gold, so about 15).
+- Feast: 4 early, 4 late; table 3. Like Joint Venture, plus 1 for you, and the gift goes to everyone. Flat, so it fades by round III (Rush pays 6 there).
+- Gift: 4 early, 4 late (2 of them in the color you need); table 3. Same as Feast, but you aim it.
+- Alms: 3 early, 3 late; one trailing rival gets 2. Joint Venture's twin, with the gift pointed down the table.
+- Banquet: 6 in round II and III; table 3. Over Steal 3, under Windfall's 8 in round III.
+- Rising Tide: half the richest rival's silver. Round II they hold about 6 to 10, so 3 to 5; round III about 12 to 16, so 6 to 8. Table 3. Climbs like Windfall.
+- Jubilee: round III only. Holding 12 to 15 silver gives 6 to 7 followers, about 12 to 14 at Cory's 2-for-1, and you keep the silver. Table 6. Just under Strike.
+- Measured, including member triggers: Feast 4.5, Gift 4.6, Alms 3.5, Banquet 6.8, Rising Tide 8.1, Jubilee 13.9. Same table: Joint Venture 4.4, Rush 4.9, Windfall 8.4, Strike 18.1.
+
 ## Extra ideas (one line each)
 Ring I
 23. Toast: +2 silver per round number; everyone else +1 silver.
@@ -69,9 +79,11 @@ Scoring (all visible state)
 - Most-silver contest: nobody scored 0%, shared 19%, one player swept all three rounds 22%. It's about 4.6 of a winner's 58 followers.
 - Member value (handed over at round II start vs control, 160 games each; noise about ±1.5): Patron Saint 8.0, Confidant 7.1, Hanger-On 6.2, Heir 5.9, Guest 5.4, Silver Spoon 5.0, Caterer 4.9, Diplomat 4.7, Ambassador 4.6, Benefactor 3.9, Toastmaster 3.7, Gala 3.6, Socialite 3.5, Almoner 2.8, Retinue 2.7. Same harness: Tycoon 11.6, Twins 5.1, Merchant 4.0, Speculator 3.7, Banker 1.2.
 - Cut on the first pass: Rising Tide as "match the richest rival" (14.5, over band), Patron Saint at 1 per silver member (13.2), Heir at 2 per member (10.3).
-- Thinking bot: see the report line at the bottom.
+- Thinking bot (1 thinker vs 3 greedy, 24 games, 4 rollouts): the thinker won 22 of 24 (92%), by 17.8 followers on average. On the default table it won 9 of 16 (56%; decisions.md, different run). It put only 14% of its workers on Silver vs 33% for the greedy bots. Silver members came out even: 3.1 each.
 
 ## What to watch
+- Planning pays a lot on this table, and the planner mostly skips the Silver spaces. There are two possible reasons. Greedy bots grab Silver first, so the spaces may be gone by the planner's turn. Or the planner sits back and collects the crumbs. A bot can't tell them apart. If a human playtest shows the host losing to the guests, raise the host's share before cutting the spill.
+- Feast, Gift and Alms are flat (they fade in round III, the way Joint Venture does). Idea 23 (Toast) is the climbing version.
 - Inflation: leftover resources at game end are 64 per player vs 25 on the baseline table. The spills add about 40 resources a game, and with one buy a turn they pile up. Followers don't rise, so it's mostly dead weight, but humans may feel a glut.
 - Jubilee plus Gala (double, then 1 follower per 2) is the big combo, like Speculator plus Strike.
 - Bots can't judge the crumb choice: which color to hand out and whom to give alms to run on a simple rule, so the main decision isn't measured.

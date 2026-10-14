@@ -7,7 +7,7 @@ export default {
   name: 'Red',
   resource: 'red',
   scoring: {
-    label: 'Most members',
+    label: 'Most members (red members break ties)',
     // red members only break ties, so they weigh less than one whole member
     score: (ctx, p) => ctx.memberCount(p) * 1000 + ctx.countMembersOfColor(p, 'red'),
   },

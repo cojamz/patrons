@@ -2,29 +2,38 @@
 // Usage: node scripts/spheres/echo-sim.mjs [games=400] [players=4] [quadrants=gold,red,blue,echo]
 import { createGame, applyMove, chooseBotMove, followers, memberCount, actionAt } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
-import { install, VARIANT } from '../../src/engine/v4/content/echo.js';
+import echoQ, { install, VARIANT } from '../../src/engine/v4/content/echo.js';
 install();
-if (process.env.ECHO) VARIANT.echo = process.env.ECHO;
-if (process.env.RELIVE) VARIANT.relive = process.env.RELIVE;
 if (process.env.PLUS) VARIANT.plus = Number(process.env.PLUS);
+// record every round-end scoring call so we can see how much green it took to win
+let scoreBuf = [];
+const baseScore = echoQ.scoring.score;
+echoQ.scoring.score = (ctx, p) => { const v = baseScore(ctx, p); scoreBuf.push(v); return v; };
 
 const games = Number(process.argv[2] || 400), n = Number(process.argv[3] || 4);
 const quadrants = (process.argv[4] || 'gold,red,blue,echo').split(',');
 const eq = quadrants.indexOf('echo');
 const label = quadrants.includes('echo') ? 'Most green' : 'Most green';
-const st = { wins: Array(n).fill(0), winsByPick: Array(n).fill(0), fol: [], mem: [], takes: {}, yieldBy: {}, contestRounds: 0, noScore: 0, ties: 0,
+const st = { wins: Array(n).fill(0), winsByPick: Array(n).fill(0), fol: [], mem: [], takes: {}, yieldBy: {}, contestRounds: 0, winGreen: [], echoR1ByPos: Array.from({ length: 12 }, () => []), echoR1Pos: Array(12).fill(0), bestAt: Array.from({ length: 12 }, () => []), r1PosWins: Array(12).fill(0), r1PosFol: Array.from({ length: 12 }, () => []), noScore: 0, ties: 0,
   contestToLeader: 0, contestToLast: 0, sameTwice: 0, sameTwiceN: 0, winnerWonGreen: 0, greenEnd: [], greenMembers: [], leftover: [], copies: 0, sixBuys: 0, spread: [] };
 const tot = r => Object.values(r).reduce((a, b) => a + b, 0);
 for (let g = 1; g <= games; g++) {
   const rand = seededRandom(g * 9973);
   let s = createGame({ seats: Array.from({ length: n }, () => ({ kind: 'bot' })), seed: g, quadrants });
-  let firstOrder = null; let prevWinners = null; let winnerGreen = new Set();
+  let firstOrder = null; let prevWinners = null; let winnerGreen = new Set(); let r1pos = 0; const posOf = {}; const echoPos = {};
   while (!s.over) {
     const pend = s.pending;
     const m = chooseBotMove(s, rand);
     if (pend.kind === 'place') {
       const o = pend.options.find(x => x.id === m.option);
       if (o.q === eq) { const k = `${actionAt(s, o.q, o.i).name} r${s.round}`; st.takes[k] = (st.takes[k] || 0) + 1; }
+      if (s.round === 1) {
+        // what Echo would pay if taken right now: the best outer-ring space so far this round
+        const now = Object.values(s.echo?.round === 1 ? s.echo.now : {}).filter(e => !e.echo && e.ring === 1);
+        st.bestAt[r1pos]?.push(Math.max(0, ...now.map(e => tot(e.res) + e.discount + 2.5 * e.members.length)));
+        if (actionAt(s, o.q, o.i).name === 'Echo') { st.echoR1Pos[r1pos]++; echoPos[pend.player] = r1pos; }
+        r1pos++;
+      }
     }
     // what each space gave, read from the ledger once the taker reaches their buy step
     if (pend.kind === 'buy' && s.echo?.lastBy && s.echo.counted !== s.echo.lastBy + ':' + s.moves) {
@@ -32,13 +41,16 @@ for (let g = 1; g <= games; g++) {
       if (e && e.p === pend.player && !s.echo.seen?.[e.key]) {
         s.echo.seen = { ...(s.echo.seen || {}), [e.key]: 1 };
         const k = `${e.name} r${s.round}`;
-        (st.yieldBy[k] ||= []).push(tot(e.res) + e.discount + 2.5 * e.members.length);
+        const y = tot(e.res) + e.discount + 2.5 * e.members.length;
+        (st.yieldBy[k] ||= []).push(y);
+        if (k === 'Echo r1') st.echoR1ByPos[echoPos[e.p]].push(y);
       }
     }
     if (pend.kind === 'buy' && m.option === 'tier:big') st.sixBuys++;
     const r0 = s.round;
     // followers before the round ends (leader/last for the contest)
     const folBefore = s.players.map(p => followers(s, p));
+    scoreBuf = [];
     const next = applyMove(s, m);
     if (next.round !== r0 && next.echo) next.echo.seen = {};
     if (!firstOrder && next.order.length) firstOrder = next.order.slice(0, n);
@@ -57,6 +69,7 @@ for (let g = 1; g <= games; g++) {
           if (ids.some(i => folBefore[i] === bot)) st.contestToLast++;
           if (prevWinners) { st.sameTwiceN++; if (ids.some(i => prevWinners.includes(i))) st.sameTwice++; }
           prevWinners = ids; ids.forEach(i => winnerGreen.add(i));
+          if (scoreBuf.length >= n) st.winGreen.push(Math.max(...scoreBuf.slice(-n)));
         }
       }
     }
@@ -86,5 +99,9 @@ if (eq >= 0) {
   for (const k of Object.keys(st.takes).sort((a, b) => a.slice(-2).localeCompare(b.slice(-2)) || a.localeCompare(b)))
     console.log(`  ${k.padEnd(14)} ${(st.takes[k] / games).toFixed(2)}  yield ${st.yieldBy[k] ? avg(st.yieldBy[k]) : '-'}`);
   if (process.env.ALL) for (const k of Object.keys(st.yieldBy).sort()) console.log(`    all: ${k.padEnd(18)} ${(st.yieldBy[k].length / games).toFixed(2)} yield ${avg(st.yieldBy[k])}`);
+  console.log(`Echo in round I by pick (1-12): taken ${st.echoR1Pos.map(x => (x / games).toFixed(2)).join(' ')}`);
+  console.log(`  Echo's worth at each pick (best outer space so far): ${st.bestAt.map(a => (a.length ? avg(a) : '-')).join(' ')}`);
+  console.log(`  yield by pick: ${st.echoR1ByPos.map(a => (a.length ? avg(a) : '-')).join(' ')}`);
+  console.log(`Most green: winning green held avg ${avg(st.winGreen)} (median ${[...st.winGreen].sort((a, b) => a - b)[st.winGreen.length >> 1]}); `);
   console.log(`Most green: nobody scored ${pct(st.noScore, st.contestRounds)}; shared ${pct(st.ties, st.contestRounds)}; to the follower leader ${pct(st.contestToLeader, st.contestRounds)}; to last place ${pct(st.contestToLast, st.contestRounds)}; same winner next round ${pct(st.sameTwice, st.sameTwiceN)}; game winner won it at least once ${pct(st.winnerWonGreen, games)}`);
 }
