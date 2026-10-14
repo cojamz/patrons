@@ -1395,3 +1395,7 @@ svg.sigil{display:inline-block;vertical-align:-1px;flex:none}
   .app.game header.bar .you-strip{grid-area:y;min-height:24px;flex-wrap:nowrap;overflow:visible;min-width:0}
   .app.game header.bar .you-strip .workers small{display:none}
 }
+.youd-get{display:flex;flex-wrap:wrap;gap:2px 6px;align-items:baseline;font-size:var(--fs-2);color:var(--ink);border-top:1px dashed color-mix(in srgb,var(--rim) 80%,transparent);padding-top:6px;margin-top:2px}
+.youd-get.pending{color:var(--muted)}
+.youd-get em{font-style:normal;color:var(--muted)}
+.youd-get .youd-others{flex-basis:100%;color:var(--muted)}

@@ -4,7 +4,7 @@
 // ranges. Nothing hidden leaks: it reports the player's own changes and rivals' totals, never the refilled shop.
 import { applyMove, resume, followers } from './core.js';
 
-const NODE_BUDGET = 90; // states explored per preview (a counted pick can branch a lot; extremes are kept)
+const NODE_BUDGET = 36; // states explored per preview (a counted pick branches a lot; past the budget only the extremes are kept)
 
 /**
  * previewSpace(state, pid, q, i) → null when it can't be run, else

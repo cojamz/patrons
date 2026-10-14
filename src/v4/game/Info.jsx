@@ -5,7 +5,7 @@
 // - ContestStandings / ContestTip: a quadrant's contest straight from the engine's contestTable (who'd score now).
 // - TouchTips: on touch screens a long-press on anything with a title shows that title (hover's touch twin).
 import { useEffect, useRef, useState } from 'react';
-import { cardDef, defById, quadrant } from '../../engine/v4/index.js';
+import { cardDef, defById, quadrant, previewSpace } from '../../engine/v4/index.js';
 import { badgedDef } from '../../engine/v4/content/market.js';
 import { term, splitTerms } from '../glossary.js';
 import { costParts, playerColor, seatSigil, standings, toStanding, tiebreakNote } from '../format.js';
@@ -245,5 +245,51 @@ export function Sigil({ id, size = 10, title = null }) {
     <svg className="sigil" viewBox="0 0 10 10" width={size} height={size} role={title ? 'img' : undefined} aria-label={title || undefined} aria-hidden={title ? undefined : 'true'}>
       <path d={sigilPath(kind, 5, 5, 4.6)} fill={playerColor(id)} />
     </svg>
+  );
+}
+
+// ---------- "You'd get": a space's outcome for you, from the engine's dry run (previewSpace) ----------
+const previews = new WeakMap();
+function cachedPreview(state, pid, q, i) {
+  let m = previews.get(state);
+  if (!m) { m = new Map(); previews.set(state, m); }
+  const k = `${pid}|${q}-${i}`;
+  if (!m.has(k)) m.set(k, previewSpace(state, pid, q, i));
+  return m.get(k);
+}
+const signed = n => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
+const span = (r, unit, plural = unit + 's') => {
+  if (r[0] === 0 && r[1] === 0) return null;
+  const u = Math.max(Math.abs(r[0]), Math.abs(r[1])) === 1 ? unit : plural;
+  return r[0] === r[1] ? `${signed(r[0])} ${u}` : `${signed(r[0])} to ${signed(r[1])} ${u}`;
+};
+/** The preview as words: { you: "+3 gold, +1 member", others: "rivals +1 gold" | null, choose: bool, partial }. */
+export function previewWords(pv, state) {
+  const you = [
+    ...state.resources.map(r => span(pv.you.res[r], r, r)),
+    span(pv.you.followers, 'follower'), span(pv.you.members, 'member'), span(pv.you.turns, 'extra turn'),
+  ].filter(Boolean);
+  const others = [...state.resources.map(r => span(pv.others.res[r], r, r)), span(pv.others.followers, 'follower'), span(pv.others.members, 'member')].filter(Boolean);
+  return { you: you.join(', ') || 'nothing right now', others: others.length ? `rivals ${others.join(', ')}` : null, choose: pv.asks.length > 0, theyChoose: pv.theirAsks.length > 0, partial: pv.partial };
+}
+/** "You'd get: +3 ●, +1 member · you choose" for player pid on space (q, i), computed just after it shows. */
+export function YoudGet({ state, pid, q, i }) {
+  const [pv, setPv] = useState(undefined);
+  useEffect(() => {
+    let alive = true;
+    setPv(undefined);
+    const t = setTimeout(() => { let r = null; try { r = cachedPreview(state, pid, q, i); } catch { r = null; } if (alive) setPv(r); }, 0);
+    return () => { alive = false; clearTimeout(t); };
+  }, [state, pid, q, i]);
+  if (pid == null) return null;
+  if (pv === undefined) return <span className="youd-get pending" data-youd-get="">You’d get: …</span>;
+  if (!pv) return null;
+  const w = previewWords(pv, state);
+  return (
+    <span className="youd-get" data-youd-get={w.you} title="Worked out by playing this space on a copy of the table, right now">
+      <b>You’d get:</b> <Rich text={w.you} />{w.choose ? <em> · {pv.exact ? 'you choose how' : 'depends on your choice'}</em> : null}
+      {w.theyChoose ? <em> · a rival decides part of it</em> : null}{w.partial ? <em> (roughly)</em> : null}
+      {w.others ? <small className="youd-others"><Rich text={w.others} /></small> : null}
+    </span>
   );
 }
