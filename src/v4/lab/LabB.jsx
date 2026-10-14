@@ -1,4 +1,4 @@
-// UI-B's lab (?lab=b[&seed=N&phase=place|buy]): the Lamplit shop, seat rail, your table and every hover card on a
+// UI-B's lab (?lab=b[&seed=N&phase=place|buy&deck=N&deal=1]): the Lamplit shop, seat rail, your table and every hover card on a
 // real mid-game state, for screenshots beside the vision frames before the shell mounts them. Not part of the game.
 import { useEffect, useMemo, useState } from 'react';
 import '../v4.css';
@@ -26,7 +26,8 @@ export default function LabB() {
   const q = new URLSearchParams(location.search);
   const seed = Number(q.get('seed')) || 7;
   const phase = q.get('phase') || 'place';
-  const base = useMemo(() => labState(seed, phase), [seed, phase]);
+  const deck = q.get('deck'); // ?deck=N: the pile cut to N cards (low / empty deck)
+  const base = useMemo(() => { const s = labState(seed, phase); return deck == null ? s : { ...s, pile: s.pile.slice(0, Number(deck)) }; }, [seed, phase, deck]);
   const [state, setState] = useState(base);
   useEffect(() => { setState(base); }, [base]);
   // ?react=1: a moment after load, the log gains a trace line for a member someone holds ("Wren's Banker: +3 gold."),
@@ -40,6 +41,13 @@ export default function LabB() {
       document.documentElement.dataset.reactMember = `${p.id}:${d.id}`;
       return { ...s, log: [...s.log, `${p.name}'s ${d.name}: +1 gold.`] };
     }), 700);
+    return () => clearTimeout(t);
+  }, [base]); // eslint-disable-line react-hooks/exhaustive-deps
+  // ?deal=1: a moment after load the first face-up card leaves and the row refills from the deck (a recruit, as the
+  // engine's refill does it), so the new card comes off the deck
+  useEffect(() => {
+    if (q.get('deal') !== '1') return undefined;
+    const t = setTimeout(() => setState(s => s.pile.length ? { ...s, moves: s.moves + 1, shop: [...s.shop.slice(1), s.pile[0]], pile: s.pile.slice(1) } : s), 900);
     return () => clearTimeout(t);
   }, [base]); // eslint-disable-line react-hooks/exhaustive-deps
   const hover = useHoverCards();
