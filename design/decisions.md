@@ -306,3 +306,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - (Cory) The live feedback pipeline is tabled until Cory allows Firebase/Netlify in the environment; the in-game "Copy feedback" tab may stay if it's done.
 - ✅ (Cory, stretch goal) Leaders and members have small idle animations, each on its own loop, so a cult looks alive. Plus reactions: a member does something when its ability fires (e.g. +silver when you take a Silver space); the leader gestures when sending a minion, celebrates a round-end prize, and gives a little scheming shake/laugh when recruiting.
 - ✅ (Cory) Layout: the wheel in focus; every player's cult visible around the wheel's corners; the shop condensed.
+- (Cory) Hover-overs don't feel quick or seamless. Target: instant (<100ms), one sticky layer that swaps content as you move, no flicker.

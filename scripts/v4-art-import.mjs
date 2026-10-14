@@ -41,9 +41,10 @@ if (existsSync(`${SRC}/emojis.js`)) {
   run('emojis.js');
   const M = box.CultMinions;
   const errs = M.validateAll ? M.validateAll() : [];
-  const bad = new Set(errs.map(e => e.split(' ')[0]));
+  // an unused palette slot is untidy, not broken; anything else (bad keys, sizes) leaves the emoji out
+  const bad = new Set(errs.filter(e => !/never used/.test(e)).map(e => e.split(/[ :]/)[0]));
   const list = M.MINIONS.filter(m => !bad.has(m.id)).map(m => ({ id: m.id, name: m.name, emoji: m.emoji, kind: 'emoji', px: m.px, em: m.em, palette: M.palette(m) }));
-  if (errs.length) console.warn(`emojis.js: ${errs.length} problems, ${bad.size} left out:\n  ${errs.slice(0, 6).join('\n  ')}`);
+  if (errs.length) console.warn(`emojis.js: ${errs.length} notes, ${bad.size} left out (${[...bad].join(', ')}):\n  ${errs.slice(0, 6).join('\n  ')}`);
   write('emojis', list, 'emojis.js');
   names.push('emojis');
   console.log(`emojis.js → emojis (${list.length})`);

@@ -107,7 +107,7 @@ function roomTable(t) {
 
 /**
  * Create a room; the creator is host and takes seat 0.
- * @param {{ name: string, transport: import('./transport/tree.js').Transport, playerId?: string, seed?: number, botDelayMs?: number, subAfterMs?: number }} opts
+ * @param {{ name: string, emoji?: string, transport: import('./transport/tree.js').Transport, playerId?: string, seed?: number, botDelayMs?: number, subAfterMs?: number }} opts
  * @returns {Promise<{ code: string, playerId: string, lobby: Lobby }>}
  */
 export async function createRoom({ name, emoji, transport, playerId = newPlayerId(), seed, table = null, botDelayMs = 450, subAfterMs }) {
@@ -144,7 +144,8 @@ export async function createRoom({ name, emoji, transport, playerId = newPlayerI
  *    someone who left. Taking it back clears the bot.
  * Otherwise a new seat, in the lobby only. `onlyRejoin`: never take a new or someone else's seat (an invite link
  * reopened on a device that was in the room tries this first, and falls back to the join form).
- * @param {{ code: string, name?: string, transport: import('./transport/tree.js').Transport, playerId?: string,
+ * A new seat gets `emoji`; a seat taken back keeps the emoji it had (it's in the game state too).
+ * @param {{ code: string, name?: string, emoji?: string, transport: import('./transport/tree.js').Transport, playerId?: string,
  *   knownIds?: string[], onlyRejoin?: boolean, botDelayMs?: number, subAfterMs?: number }} opts
  * @returns {Promise<{ code: string, playerId: string, lobby: Lobby, rejoined: boolean, tookSeat?: string }>}
  */
@@ -230,7 +231,7 @@ export async function rejoinRoom({ code, playerId, transport, botDelayMs = 450, 
  *   code: string, playerId: string, transport: any, ready: Promise<void>,
  *   getView(): LobbyView,
  *   subscribe(fn: (view: LobbyView) => void): () => void,
- *   addBot(name?: string): Promise<number>,
+ *   addBot(name?: string, emoji?: string): Promise<number>,
  *   removeSeat(seat: number): Promise<void>,
  *   setSeed(seed: number): Promise<void>,
  *   setTable(table: { mode: string, quadrants: string[] }): Promise<void>,
@@ -381,7 +382,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
       });
       if (!res.committed || res.value?.sub !== 'bot') throw new Error('Couldn’t hand that seat to a bot. Try again.');
     },
-    async addBot(name) {
+    async addBot(name, emoji) {
       await hostOnly('add bots');
       let seat = -1;
       const res = await transport.transaction(`${base}/seats`, seats => {
@@ -390,7 +391,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
         seat = 0;
         while (used.has(seat)) seat++;
         if (seat >= MAX_SEATS) return undefined;
-        return { ...seats, [`s${seat}`]: { kind: 'bot', name: name || `Bot ${seat + 1}` } };
+        return { ...seats, [`s${seat}`]: { kind: 'bot', name: name || `Bot ${seat + 1}`, ...withEmoji(emoji) } };
       });
       if (!res.committed || !res.value) throw new Error('The table is full.');
       return seat;

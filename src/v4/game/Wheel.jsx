@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { quadrant, roman, RING_VALUE } from '../../engine/v4/index.js';
 import { playerColor, seatSigil, standings } from '../format.js';
-import { sigilPath, YoudGet, ContestTip, Sigil } from './Info.jsx';
+import { sigilPath, Sigil } from './Info.jsx';
 import { sheetMode } from './parts.jsx';
 import { realHover } from '../hover.js';
 import { Rich } from './Rich.jsx';
@@ -62,9 +62,22 @@ export function spaceGeometry(state) {
  * @param {{ state:any, legal:Map<string,string>, onPick:(id:string)=>void, onDenied?:(info:object, el:Element)=>void,
  *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void }} props
  */
-export default function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing }) {
+export default function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null }) {
   const [rot, setRot] = useState(() => -90 * facing);
   const [peek, setPeek] = useState(null); // { key, pinned }
+  // the space card itself is UI-B's hover layer: the wheel only says which space is under the pointer (or pinned)
+  const hoverRef = useRef(hover);
+  hoverRef.current = hover;
+  useEffect(() => {
+    const h = hoverRef.current;
+    if (!h) return;
+    if (peek) {
+      const el = stage.current && stage.current.querySelector(`[data-slot="${peek.key}"]`);
+      if (el) h.onSpaceHover(peek.key, el, { pinned: !!peek.pinned });
+    } else if (h.card && h.card.kind === 'space') {
+      if (h.card.pinned) h.close(); else h.onSpaceHover(h.card.key, null);
+    }
+  }, [peek]); // eslint-disable-line react-hooks/exhaustive-deps
   const rotRef = useRef(rot);
   const anim = useRef(null);
   const drag = useRef(null);
@@ -314,56 +327,21 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     const leaders = st ? st.leaders : [];
     return (
       <div key={`pl${qid}`} className={`plaque${Math.abs(ax) > 0.7 ? ' side' : ''}`} data-plaque={qid} style={{ ...at(X, Y), '--c': `var(--${qid})`, '--ax': ax.toFixed(2), '--ay': ay.toFixed(2) }}>
-        <ContestTip state={state} qid={qid} meId={meId}>
+        <span
+          className="plaque-face" role="button" tabIndex={0} aria-haspopup="dialog"
+          title={`${st ? st.label : quadrant(qid).scoring.label}: +${RING_VALUE[paying - 1]} at round end${leaders.length ? `; ${leaders.map(id => (id === meId ? 'you' : state.players[id].name)).join(' & ')} ${leaders.length > 1 ? 'lead' : 'leads'}` : '; no one yet'}. Show the standings.`}
+          onPointerEnter={e => { if (hover && realHover(e)) hover.onPlaqueHover(qid, e.currentTarget); }}
+          onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onPlaqueHover(qid, null); }}
+          onClick={e => { if (hover) hover.onPlaqueHover(qid, e.currentTarget, { pinned: true }); }}
+          onKeyDown={e => { if (hover && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); hover.onPlaqueHover(qid, e.currentTarget, { pinned: true }); } }}
+        >
           <i className="dot" aria-hidden="true" /><span className="r">{st ? st.rule : quadrant(qid).scoring.label}</span>
           <b className="num rw">+{RING_VALUE[paying - 1]}</b>
           <span className="ld">{leaders.length ? leaders.slice(0, 2).map(id => <Sigil key={id} id={id} size={12} />) : '—'}</span>
-        </ContestTip>
+        </span>
       </div>
     );
   });
-
-  // The peek card: full name, text and status of a space, near it on screen.
-  let peekCard = null;
-  if (peek) {
-    const s = spaces.find(x => x.key === peek.key);
-    if (s) {
-      const [X, Y] = turned(s.xy[0], s.xy[1]);
-      const owner = state.slots[s.key];
-      const open = s.ring <= round;
-      const opt = legal.get(s.key);
-      const sr = stage.current ? stage.current.getBoundingClientRect() : null;
-      const half = 120;
-      let leftPx = sr ? ((X - VB0) / VBS) * sr.width : 0;
-      if (sr) leftPx = Math.max(12 + half - sr.left, Math.min(innerWidth - 12 - half - sr.left, leftPx));
-      const left = sr ? null : ((X - VB0) / VBS) * 100;
-      const top = ((Y - VB0) / VBS) * 100;
-      const below = Y < CY;
-      peekCard = (
-        <div
-          className={`peek${below ? ' below' : ''}${peek.pinned ? ' pinned' : ''}${peek.pinned && sheetMode() ? ' as-sheet' : ''}`}
-          style={peek.pinned && sheetMode() ? { '--c': `var(--${s.qid})` } : { left: left == null ? `${leftPx}px` : `${left}%`, top: `${top}%`, '--c': `var(--${s.qid})` }}
-          role={peek.pinned ? 'dialog' : 'tooltip'}
-        >
-          <b>{s.a.name}</b>
-          <small>{quadrant(s.qid).name} · round {roman(s.ring)}</small>
-          <span><Rich text={s.a.text} /></span>
-          {/* exactly what you'd get, from the engine's dry run (hover / tap layer) */}
-          {open && (owner === undefined || opt) && !state.over && (meId != null || (legal.size && state.pending)) && (
-            <YoudGet state={state} pid={meId != null ? meId : state.pending.player} q={s.q} i={s.i} />
-          )}
-          <em>
-            {owner !== undefined ? <><i style={{ background: playerColor(owner) }} />Taken by {state.players[owner].name}{opt ? ' — you can join it (Squatter)' : ''}</>
-              : open ? (opt ? 'Open — yours to take' : 'Open') : `Opens in round ${roman(s.ring)}`}
-          </em>
-          {opt && peek.pinned && (
-            <button type="button" className="btn pri" data-place={opt} onClick={() => { setPeek(null); onPick(opt); }}>{String(opt).startsWith('squat:') ? 'Join here' : 'Place here'}</button>
-          )}
-          {peek.pinned && sheetMode() && <button type="button" className="btn ghost sheet-close" onClick={() => setPeek(null)}>Close</button>}
-        </div>
-      );
-    }
-  }
 
   return (
     <div className="wheel-wrap">
@@ -383,8 +361,6 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
         </div>
         {sockets}
         {plaques}
-        {peek && peek.pinned && sheetMode() && <div className="sheet-backdrop" onPointerDown={e => { e.preventDefault(); e.stopPropagation(); setPeek(null); }} />}
-        {peekCard}
         {caption && <div key={caption.n} className="caption" style={{ '--pc': playerColor(caption.pid) }} role="status"><i />{caption.text}</div>}
       </div>
     </div>

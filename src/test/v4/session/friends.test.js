@@ -232,3 +232,33 @@ describe('device memory of rooms (saved.js)', () => {
     } finally { vi.useRealTimers(); localStorage.clear(); }
   });
 });
+
+describe('player emoji online', () => {
+  it('each seat keeps its emoji into the game, through a reload and through a takeover by name', async () => {
+    vi.useFakeTimers();
+    const store = createMemoryStore();
+    const wait = (c, l) => untilFake(c, { label: l, step: 20, maxSteps: 50000 });
+    const ht = createMemoryTransport(store);
+    const host = await createRoom({ name: 'Hana', emoji: '🦊', transport: ht, botDelayMs: 0, subAfterMs: 100 });
+    const gt = createMemoryTransport(store);
+    const g = await joinRoom({ code: host.code, name: 'Gus', emoji: '🐙', transport: gt, botDelayMs: 0 });
+    await host.lobby.addBot('Botty', '🤖');
+    await wait(() => host.lobby.getView().players.length === 3, 'seated');
+    expect(host.lobby.getView().players.map(p => p.emoji)).toEqual(['🦊', '🐙', '🤖']);
+    const [hs] = await Promise.all([started(host.lobby), started(g.lobby), host.lobby.start()]);
+    await wait(() => hs.getState(), 'state');
+    expect(hs.getState().players.map(p => p.emoji)).toEqual(['🦊', '🐙', '🤖']);
+    expect(hs.info.seats.map(s => s.emoji)).toEqual(['🦊', '🐙', '🤖']);
+    // Gus's phone dies; a newcomer takes his seat by name with another emoji: the seat (and game) keep 🐙
+    g.lobby.destroy(); gt.close();
+    await wait(() => host.lobby.getView().players[1].away, 'gone');
+    const t2 = createMemoryTransport(store);
+    const back = await joinRoom({ code: host.code, name: 'gus', emoji: '🐸', transport: t2, botDelayMs: 0 });
+    expect(back.tookSeat).toBe('Gus');
+    await wait(() => !host.lobby.getView().players[1].away, 'back');
+    expect(host.lobby.getView().players[1].emoji).toBe('🐙');
+    expect(store.data[ROOM_ROOT][host.code].seats.s1.emoji).toBe('🐙');
+    host.lobby.destroy(); back.lobby.destroy();
+    vi.useRealTimers();
+  }, 60000);
+});
