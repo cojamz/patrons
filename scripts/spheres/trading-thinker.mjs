@@ -16,9 +16,9 @@ const wq = quadrants.indexOf('trading');
 let wins = 0, margin = 0, tW = 0, tAll = 0, bW = 0, bAll = 0, tWM = 0, bWM = 0, tSold = 0, tBoom = [], tF = 0, gF = 0, tFirst3 = 0;
 const tTakes = {};
 for (let g = 1; g <= N; g++) {
-  const rand = seededRandom(g * 7 + 1);
+  const rand = seededRandom(g * 7 + 1 + Number(process.env.SEED || 0));
   const thinker = g % 4;
-  let s = createGame({ seats: [0, 1, 2, 3].map(() => ({ kind: 'bot' })), seed: 7000 + g, quadrants });
+  let s = createGame({ seats: [0, 1, 2, 3].map(() => ({ kind: 'bot' })), seed: 7000 + Number(process.env.SEED || 0) + g, quadrants });
   while (!s.over) {
     const me = s.pending.player === thinker;
     const m = me ? chooseThinkerMove(s, rand, { rollouts: R }) : chooseBotMove(s, rand);

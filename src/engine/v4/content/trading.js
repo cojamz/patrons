@@ -7,7 +7,7 @@
 // - "Sell" is White's own verb: White members can react to it (onSell), which only White's actions and
 //   members call.
 //
-// Prototype notes (engine changes this module would like, see design/spheres/trading.md):
+// Engine note (see design/spheres/trading.md):
 // - Actions can't leave anything due later (a loan repaid at game end) because only members have
 //   round-end and game-end hooks. That's why the loan lives on a member (Lender), not on a space.
 import { registerQuadrant, defById } from './index.js';
@@ -151,7 +151,7 @@ const trading = {
   },
 
   members: [
-    m('shopkeeper', 'Shopkeeper', 2, 1, 'At round start, +2 white.', {
+    m('shopkeeper', 'Shopkeeper', 1, 1, 'At round start, +2 white.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
     m('dealer', 'Dealer', 1, 1, 'Whenever you sell followers, +1 white each.', {
@@ -167,13 +167,13 @@ const trading = {
       },
       botActivate: (ctx, owner) => sellable(owner) > 0 && ctx.state.round < 3,
     }),
-    m('safetynet', 'Safety Net', 1, 1, 'At round start, if you have no white, +3 white.', {
+    m('safetynet', 'Safety Net', 1, 0, 'At round start, if you have no white, +3 white.', {
       onRoundStart(ctx, owner) { if (!owner.res[W]) ctx.gain(owner, W, 3); },
     }),
-    m('tipster', 'Tipster', 2, 2, 'Whenever a rival buys followers, +1 white.', {
+    m('tipster', 'Tipster', 2, 1, 'Whenever a rival buys followers, +1 white.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer !== owner) ctx.gain(owner, W, 1); },
     }),
-    m('lender', 'Lender', 2, 1, 'When it joins you: +5 white. Game end: lose 2 followers.', {
+    m('lender', 'Lender', 1, 0, 'When it joins you: +5 white. Game end: lose 2 followers.', {
       onRecruited(ctx, owner, card) { payLoan(ctx, owner, card); },
       // a Doppelganger copying Lender is a full copy (Cory): it gets the +5 too. Copies don't run
       // onRecruited, so the loan pays out at the end of the turn the copy was made.
@@ -181,7 +181,7 @@ const trading = {
       // can't take you below the followers you've won or bought (never yourself or a member)
       onGameEnd: (ctx, owner) => -Math.min(2, owner.bonus),
     }),
-    m('magnate', 'Magnate', 3, 2, 'Game end: +1 follower per 3 white.', {
+    m('magnate', 'Magnate', 2, 2, 'Game end: +1 follower per 3 white.', {
       onGameEnd: (ctx, owner) => Math.floor(owner.res[W] / 3),
     }),
     m('shareholder', 'Shareholder', 2, 1, 'Worth 3 followers.', { f: 3 }),
@@ -201,8 +201,8 @@ const trading = {
         if (buyer === owner && got >= 3) { owner.bonus += 1; ctx.log(`${owner.name}'s Bulk Buyer: +1 follower.`); }
       },
     }),
-    m('broker', 'Broker', 2, 1, 'Whenever a White action gives you followers, +1 more.', { brokerBonus: 1 }),
-    m('exporter', 'Exporter', 3, 2, 'Whenever you recruit a non-white member, +1 white.', {
+    m('broker', 'Broker', 1, 1, 'Whenever a White action gives you followers, +1 more.', { brokerBonus: 1 }),
+    m('exporter', 'Exporter', 2, 2, 'Whenever you recruit a non-white member, +1 white.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);
       },
