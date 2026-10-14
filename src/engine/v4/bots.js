@@ -28,7 +28,8 @@ export function chooseBotMove(state, rand = Math.random) {
         return a.estimate(ctx, p) + hustle + rand() * 1.2;
       }));
     case 'buy': {
-      const use = pend.options.find(o => o.kind === 'use' && defById(state.cards[o.uid].def).botActivate?.(ctx, p));
+      const canUse = c => [c.def, c.copy].some(id => id && defById(id).botActivate?.(ctx, p));
+      const use = pend.options.find(o => o.kind === 'use' && canUse(state.cards[o.uid]));
       if (use) return move(use);
       const tiers = pend.options.filter(o => o.kind === 'tier');
       const tierOf = o => TIERS.find(t => t.key === o.tier);

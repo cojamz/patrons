@@ -81,6 +81,8 @@ export default {
       const target = ctx.card(uid);
       const self = ctx.card(data.uid);
       self.copy = target.def.id;
+      // a copied Hustler works the same color
+      if (target.color !== undefined) self.color = target.color;
       ctx.log(`${p.name}'s Doppelganger copies ${target.def.name}.`);
     },
   },

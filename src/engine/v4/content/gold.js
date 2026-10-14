@@ -67,7 +67,8 @@ export default {
     m('midas', 'Midas', 3, 2, 'Gains from actions come as gold instead. You can switch it off or on when you buy.', {
       toggle: true,
       onRecruited(ctx, owner, card) { card.on = true; },
-      modifyGain(ctx, owner, card, g) {
+      // a conversion: runs before every other gain modifier, so "gold gains" sees the converted gain
+      convertGain(ctx, owner, card, g) {
         if (card.on !== false && g.fromAction && g.color !== 'gold') g.color = 'gold';
       },
     }),

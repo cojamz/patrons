@@ -28,7 +28,7 @@ export function createGame({ seats, seed = 1, quadrants = DEFAULT_QUADRANTS }) {
   for (const q of quadrants) for (const def of quadrant(q).members)
     for (let k = 0; k < def.copies; k++) { cards[uid] = { uid, def: def.id }; uid++; }
   const state = {
-    v: 4, seed: seed >>> 0, rng: seed >>> 0, quadrants, resources,
+    v: 4, seed: seed >>> 0, rng: seed >>> 0, quadrants: [...quadrants], resources,
     players: seats.map((s, i) => ({
       id: i, name: s.name || `P${i + 1}`, kind: s.kind || 'human',
       res: { ...zero }, bonus: 0, contest: 0, members: [], discount: 0, left: 0, turnRecruits: 0, final: null,
@@ -67,6 +67,16 @@ export function applyMove(prev, move) {
   state.moves += 1;
   resolveTask(state, task, move.option);
   clearFresh(state);
+  advance(state);
+  return state;
+}
+
+/**
+ * Runs queued tasks until the next decision (or game over). For tools and tests that edit a state
+ * directly and need the engine to pick up from there. Mutates and returns the state.
+ */
+export function resume(state) {
+  state.pending = null;
   advance(state);
   return state;
 }
@@ -167,8 +177,10 @@ function inputFor(state, task) {
       TIERS.forEach(t => { if (followerPlan(state, p, t)) opts.push({ id: `tier:${t.key}`, label: `+${t.get} followers`, kind: 'tier', tier: t.key }); });
       for (const uid of p.members) {
         const c = state.cards[uid], d = defById(c.def);
-        if (d.activate && !c.used) opts.push({ id: `use:${uid}`, label: `Use ${d.name}`, kind: 'use', uid });
-        if (d.toggle) opts.push({ id: `toggle:${uid}`, label: `${d.name}: switch ${c.on === false ? 'on' : 'off'}`, kind: 'toggle', uid });
+        // a Doppelganger offers what it copies too
+        const eff = effectiveDefs(c);
+        if (eff.some(e => e.activate) && !c.used) opts.push({ id: `use:${uid}`, label: `Use ${d.name}`, kind: 'use', uid });
+        if (eff.some(e => e.toggle)) opts.push({ id: `toggle:${uid}`, label: `${d.name}: switch ${c.on === false ? 'on' : 'off'}`, kind: 'toggle', uid });
       }
       const real = opts.filter(o => o.kind === 'card' || o.kind === 'tier' || o.kind === 'use');
       if (!real.length) return { kind: 'buy', prompt: '', options: [], onEmpty: () => log(state, `${p.name} couldn't buy anything.`) };
@@ -208,7 +220,7 @@ function resolveTask(state, task, optionId) {
       if (kind === 'use') {
         const c = state.cards[Number(rest)];
         c.used = true;
-        defById(c.def).onActivate(ctxFor(state), p, wrap(state, c));
+        effectiveDefs(c).find(e => e.onActivate).onActivate(ctxFor(state), p, wrap(state, c));
         state.queue.unshift({ t: 'buy', p: p.id });
         return;
       }
@@ -277,8 +289,9 @@ function startRound(state, r) {
   for (const p of state.players) p.left = n;
   const ctx = ctxFor(state);
   eachMember(state, (owner, card, def) => { if (def.onRoundStart) def.onRoundStart(ctx, owner, card); });
-  // Fewest followers picks first. Ties: whoever picked later last round (round I: later seat).
-  const prev = state.order.length ? state.order.slice(-state.players.length) : [...state.players.map(p => p.id)];
+  // Fewest followers picks first. Ties: whoever was later in last round's turn order (round I: later seat).
+  // The first pass of last round's snake is its turn order (the last pass is reversed in even rounds).
+  const prev = state.order.length ? state.order.slice(0, state.players.length) : [...state.players.map(p => p.id)];
   const lastPos = id => prev.indexOf(id);
   const base = [...state.players].sort((a, b) => followers(state, a) - followers(state, b) || lastPos(b.id) - lastPos(a.id)).map(p => p.id);
   state.order = [];
@@ -367,6 +380,8 @@ function gain(state, p, color, n, { fromAction = false } = {}) {
   if (!(n > 0)) return;
   const g = { color, n, fromAction, doubled: false };
   const ctx = ctxFor(state);
+  // conversions (Midas) first, then amount changes (Underdog), so member order never matters
+  eachMemberOf(state, p, (card, def) => { if (def.convertGain) def.convertGain(ctx, p, card, g); });
   eachMemberOf(state, p, (card, def) => { if (def.modifyGain) def.modifyGain(ctx, p, card, g); });
   p.res[g.color] = (p.res[g.color] || 0) + g.n;
   eachMemberOf(state, p, (card, def) => { if (def.afterGain) def.afterGain(ctx, p, card, g); });
