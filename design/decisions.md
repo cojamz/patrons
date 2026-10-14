@@ -200,3 +200,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - Finding (thinking bot): on every new-sphere table the thinker wins 65–90% (stand-in table ~55%) and places far less on the new sphere than greedy bots do (Echo 15% vs 33%). The greedy bots likely overvalue new spaces, so greedy-bot action values for new spheres are suspect. Check with 2 thinkers before quoting balance.
 - ✅ (Cory) Loot must be spendable. Black change: stolen goods become black in your supply at once; no loot piles; scoring is most black at round end.
 - ✅ (Cory) Black scoring is 'most Black members' for now (not most black, which copied Gold's contest).
+- ✅ (Cory) The thieves sphere's color is magenta, not black (black was hard to see on the table).
