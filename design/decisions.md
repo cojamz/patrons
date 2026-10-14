@@ -203,3 +203,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) The thieves sphere's color is magenta, not black (black was hard to see on the table).
 - 💡 (Cory) Many spheres feel same-y; we're missing something in the design space. The atoms are spaces/workers, currencies, members, followers. Claude's read: almost everything pays out in currency, colors have no distinct job, and each atom has one fixed rule. Levers pitched: give each color a job (Claude's pick), members that bend your rules, workers/spaces with more than one rule. Awaiting Cory.
 - ✅ (Cory) Design direction: members that bend the rules (not new income). Calibrate on a handful of example members with Cory before scaling.
+- Finding (thinking bot, 50 games, plain table): thinker wins 78% (39/50). So its 65–90% on new-sphere tables is the instrument, not the spheres.

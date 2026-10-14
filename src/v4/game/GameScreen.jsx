@@ -2,18 +2,18 @@
 // What's clickable is exactly state.pending.options, and only for seats this client controls.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { followers, WORKERS } from '../../engine/v4/index.js';
-import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove } from '../format.js';
+import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn } from '../format.js';
 import Wheel from './Wheel.jsx';
 import Players, { Resources, Workers } from './Players.jsx';
 import QuadrantPanel from './QuadrantPanel.jsx';
 import Shop, { BuyTray } from './Shop.jsx';
 import Results from './Results.jsx';
 import RoundEnd from './RoundEnd.jsx';
-import { ChoicePrompt, Confirm, Handoff, Log, useDialog } from './parts.jsx';
+import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker from './PayPicker.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import Tick from './Tick.jsx';
-import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights } from './flight.js';
+import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop } from './flight.js';
 import { friendlyError, isNetworkError } from '../errors.js';
 
 const STEP_MS = 320;      // pace when catching up on moves that happened behind the round-end card
@@ -106,7 +106,10 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
       const pa = actor != null ? prev.players[actor] : null, na = actor != null ? next.players[actor] : null;
       const rivalBought = !!(pa && na && (na.members.length !== pa.members.length || na.bonus !== pa.bonus));
       const rivalSetup = !!(prev.pending && prev.pending.kind === 'setup' && actor != null);
-      const dwell = rivalPlaced || rivalBought ? rivalDwell : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
+      const meActed = prev.pending && mine.includes(prev.pending.player) ? prev.pending.player : null;
+      const myRecruitThenGone = meActed != null && next.players[meActed].members.length > prev.players[meActed].members.length
+        && !(next.pending && next.pending.player === meActed);
+      const dwell = myRecruitThenGone ? 1500 : rivalPlaced || rivalBought ? rivalDwell : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
       if (!queue.current.length) paced.current = false;
       if (dwell) {
         timer.current = setTimeout(() => { timer.current = null; pump(); }, dwell);
@@ -180,6 +183,14 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
 
   const [gifts, setGifts] = useState([]); // short-lived "+1 gold from P2" floaters on player cards
   const [toast, setToast] = useState(null);
+  const [robbed, setRobbed] = useState(null); // { pid, n }: flash that player's resources
+  const [cardDetail, setCardDetail] = useState(null); // phones: { el, uid } for a shop card's details
+  const [spacePeek, setSpacePeek] = useState(null); // a space selected from the panel list (one sheet, shared with the wheel)
+  // re-render on every session change, so Undo disappears the moment control passes even while the table catches up
+  const [, setTick] = useState(0);
+  useEffect(() => session.subscribe(() => setTick(t => t + 1)), [session]);
+  // results open at the top, on the winner
+  useEffect(() => { if (live0.over && !moment) window.scrollTo(0, 0); }, [live0.over, moment]);
   const [caption, setCaption] = useState(null); // "P3 took Swell (+5 blue)", pinned over the wheel for a beat
   const captionTimer = useRef(null);
   const [busy, setBusy] = useState(false);
@@ -240,7 +251,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const flights = before.shop.filter(u => !state.shop.includes(u))
       .map(uid => ({ uid, to: state.players.findIndex(p => p.members.includes(uid)) }))
       .filter(m => m.to >= 0);
-    if (flights.length) flyCards(root.current, shopSnap.current, flights);
+    if (flights.length) { flyCards(root.current, shopSnap.current, flights); slideShop(root.current, shopSnap.current); }
     shopSnap.current = snapshotShop(root.current);
 
     const lines = newLogLines(before, state);
@@ -253,6 +264,23 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       if (to) got.push({ pid: to.id, text: g.text, color: g.color, n: Date.now() + got.length });
     });
     if (got.length) { setGifts(gg => [...gg, ...got]); setTimeout(() => setGifts(gg => gg.filter(x => !got.includes(x))), 2400); }
+    // Your own recruit that ends your turn (Hire, Take…) gets its moment before the turn moves on.
+    const actor = before.pending ? before.pending.player : null;
+    if (actor != null && mySeats.includes(actor) && !(state.pending && state.pending.player === actor)) {
+      const rec = lines.map(l => l.match(new RegExp(`^${state.players[actor].name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} recruited (.+?) \\((.*)\\)\\.$`))).filter(Boolean).pop();
+      if (rec) showToast(`${humansHere ? state.players[actor].name : 'You'} recruited ${rec[1]} (${rec[2].split(';')[0]})`, 1600);
+    }
+    // Getting robbed is never silent: a rival's move that took your resources says so.
+    if (actor != null && !mySeats.includes(actor)) {
+      for (const id of mySeats) {
+        const lost = state.resources.map(r => [r, before.players[id].res[r] - state.players[id].res[r]]).filter(([, d]) => d > 0);
+        if (lost.length) {
+          showToast(`${state.players[actor].name} took ${lost.map(([r, d]) => `${d} ${r}`).join(', ')} from ${humansHere ? state.players[id].name : 'you'}`, 2400);
+          setRobbed({ pid: id, n: Date.now() });
+          setTimeout(() => setRobbed(r => (r && r.pid === id ? null : r)), 1600);
+        }
+      }
+    }
     // Nothing to afford: say so in a readable toast — after anything you just got has landed.
     const skipped = lines.find(l => mySeats.some(id => l === `${state.players[id].name} couldn't buy anything.`));
     if (skipped) {
@@ -368,11 +396,12 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       else text = null;
     } else if (pend.kind === 'place') text = 'Place a worker first';
     else if (info.type === 'card') text = `You can’t afford ${info.name} yet`;
+    if (info.type === 'card' && !wide && el && !(pend.kind === 'buy' && mySeats.includes(pend.player))) { setCardDetail({ el, uid: info.uid }); return; }
     else if (info.type === 'tier') text = info.tier.limited && state.bigLeft <= 0 ? 'No +6 buys left' : `+${info.tier.get} needs ${tierCostText(info.tier)}`;
     else text = 'Not right now';
     if (text) say(text);
     if (el && el.animate && motionOK()) el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(-2px)' }, { transform: 'translateX(0)' }], { duration: 260, easing: 'ease-out' });
-  }, [state, pend, moment, mySeats, needHandoff, say]);
+  }, [state, pend, moment, mySeats, needHandoff, say, wide]);
 
   const live = needHandoff ? () => null : optionFor;
   // A modal takes the stage: sweep any flying ghosts so nothing floats over it.
@@ -387,12 +416,13 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, [modalOpen]);
   const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
-  const players = <Players state={state} active={pend ? pend.player : null} mySeats={mySeats} optionFor={live} onPick={onPick} gifts={gifts} />;
+  const players = <Players state={state} active={pend ? pend.player : null} mySeats={mySeats} optionFor={live} onPick={onPick} gifts={gifts} robbed={robbed} />;
   const roundText = state.over ? 'Final' : state.round ? `Round ${roman(state.round)}` : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
   // The latest rival placement, marked on the wheel; read from the state so it survives a reload.
   const lastMove = useMemo(() => (state.over ? null : latestRivalMove(state, mySeats)), [state]); // eslint-disable-line react-hooks/exhaustive-deps
+  const recentMoves = useMemo(() => (state.over ? [] : movesSinceYourTurn(state, mySeats)), [state]); // eslint-disable-line react-hooks/exhaustive-deps
   const openLog = () => {
     const log = root.current && root.current.querySelector('.log');
     // inline log (phones, results) scrolls into view; on the desktop table it opens in a drawer
@@ -467,7 +497,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </div>
       ) : (
         <div className="main">
-          <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+          <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
           <div className={`side${wide ? ' framed' : ''}`}>
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} />}
             {wide ? (
@@ -475,7 +505,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               // so nothing reflows between placing and buying.
               <div className="frame">
                 <Scroller className="side-scroll" hint="More below">
-                  <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} />
+                  <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} onPeek={setSpacePeek} />
                 </Scroller>
                 <Shop variant="compact" hidden={buyingNow} state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />
                 {buyingNow && (
@@ -487,7 +517,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             ) : (
               <>
                 <Scroller className="side-scroll" hint="More below">
-                  <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} />
+                  <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} onPeek={setSpacePeek} />
                   <Log state={state} />
                 </Scroller>
                 <div className="dock">
@@ -500,6 +530,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </div>
       )}
       {toast && <div key={toast.n} className="toast" role="status">{toast.text}</div>}
+      {cardDetail && state.cards[cardDetail.uid] && (
+        <Popover anchor={cardDetail.el} onClose={() => setCardDetail(null)}>
+          <CardFace state={state} uid={cardDetail.uid} />
+        </Popover>
+      )}
       {mine && !needHandoff && pend.kind === 'pay' && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} />}
       {moment && <RoundEnd info={moment} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}

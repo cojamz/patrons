@@ -208,7 +208,7 @@ export function Handoff({ player, onReady }) {
         <div className="big-dot" />
         <h2>{player.name}’s turn</h2>
         <p className="hint">Pass the device to {player.name}.</p>
-        <button type="button" className="btn pri" data-autofocus onClick={onReady} data-handoff>I’m {player.name} — go</button>
+        <button type="button" className="btn pri" data-autofocus autoFocus onClick={onReady} data-handoff>I’m {player.name} — go</button>
       </div>
     </div>
   );
@@ -258,4 +258,17 @@ export function Popover({ anchor, onClose, children }) {
   if (!pos) return null;
   if (sheet) return <div className="popover sheet-pop" ref={box} role="dialog">{children}</div>;
   return <div className="popover" ref={box} role="dialog" style={pos}>{children}</div>;
+}
+
+/** A member card face: color band, sphere glyph, name, ★, ability and list cost. */
+export function CardFace({ state, uid }) {
+  const d = cardDef(state, uid);
+  const cost = costParts(d).map(c => `${c.n} ${c.color}`).join(' + ') || 'free';
+  return (
+    <div className="card-face" style={{ '--c': `var(--${d.quadrant})` }}>
+      <div className="row"><span className="glyph" aria-hidden="true" /><b>{d.name}</b><span className="num star">{d.f}★</span></div>
+      <p>{d.text}</p>
+      <small>Costs {cost}{d.n > 1 ? ` · counts as ${d.n} members` : ''}</small>
+    </div>
+  );
 }

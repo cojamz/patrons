@@ -307,6 +307,13 @@ export function explainLine(log, i) {
   }
   m = line.match(/^(.+?) took (\d+) (\w+) and gave everyone else (\d+) (\w+)\.$/);
   if (m) return { text: `${m[1]} gains ${m[2]} ${m[3]}; everyone else gains ${m[4]} ${m[5]}.` };
+  m = line.match(/^(.+?)'s (.+?): (\w+) gain (\d+) → (\d+)\.$/);
+  if (m) {
+    const [, who, card, color, a, b2] = m;
+    const why = lastAction(log, i, who);
+    const extra = Number(b2) - Number(a);
+    return { text: line, gift: { to: who, n: Number(b2), color, text: `+${a} ${why || color}, ${extra >= 0 ? '+' : '−'}${Math.abs(extra)} ${card}` } };
+  }
   m = line.match(/^(.+?)'s Hustler works the (\w+) spaces\.$/);
   if (m) return { text: `${m[1]}'s Hustler: +1 gold each time ${m[1]} takes a ${m[2]} space.` };
   return { text: line };
@@ -340,4 +347,29 @@ export function latestRivalMove(state, mine) {
     if (state.slots[key] === p.id) return { key, pid: p.id, n: i };
   }
   return null;
+}
+
+/**
+ * Placements this round since your last one, oldest first: [{ key, pid, action }]. Your own latest placement is
+ * included when it's the newest thing on the board, so the strip always says what just happened.
+ */
+export function movesSinceYourTurn(state, mine) {
+  const out = [];
+  for (let i = state.log.length - 1; i >= 0; i--) {
+    const line = state.log[i];
+    if (/^Round \S+ begins\./.test(line)) break;
+    const m = line.match(/^(.+?) took (.+?) \((\w+)\)\.$/);
+    if (!m) continue;
+    const p = state.players.find(x => x.name === m[1]);
+    if (!p) continue;
+    const q = state.quadrants.findIndex(id => quadrant(id).name === m[3]);
+    if (q < 0) continue;
+    const i2 = quadrant(state.quadrants[q]).actions.findIndex(a => a.name === m[2]);
+    const key = `${q}-${i2}`;
+    if (state.slots[key] !== p.id) continue;
+    if (mine.includes(p.id)) { if (!out.length) out.push({ key, pid: p.id, action: m[2], mine: true }); break; }
+    out.push({ key, pid: p.id, action: m[2] });
+    if (out.length >= 6) break;
+  }
+  return out.reverse();
 }

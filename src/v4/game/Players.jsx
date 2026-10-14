@@ -50,7 +50,7 @@ export function Workers({ p, caption = true }) {
           <svg key={k} viewBox="0 0 10 12" width="9" height="11"><circle cx="5" cy="3" r="2.4" /><path d="M1 12 Q1 6.2 5 6.2 Q9 6.2 9 12 Z" /></svg>
         )) : <span className="none">no workers</span>}
       </span>
-      {caption && <small>{p.left === 1 ? 'worker' : 'workers'}</small>}
+      {caption && <small><span className="num">{n}</span> {n === 1 ? 'worker' : 'workers'}</small>}
     </span>
   );
 }
@@ -98,7 +98,7 @@ function ChipRow({ state, p, own, onOpen, onAll }) {
             style={{ '--c': `var(--${g.def.quadrant})` }} title={memberTip(g.def)} aria-haspopup="dialog"
             onClick={e => onOpen(e.currentTarget, g)}
           >
-            {g.label}{g.count > 1 ? ` ×${g.count}` : ''}{g.card.used ? <em className="used"> · used</em> : null}
+            <span className="glyph" aria-hidden="true" />{g.label}{g.count > 1 ? <em className="copies"> ·{g.count}</em> : ''}{g.card.used ? <em className="used"> · used</em> : null}
             {sw && <i className={`sw${g.card.on === false ? '' : ' on'}`} aria-label={g.card.on === false ? 'off' : 'on'} />}
           </button>
         );
@@ -110,7 +110,7 @@ function ChipRow({ state, p, own, onOpen, onAll }) {
   );
 }
 
-export default function Players({ state, active, mySeats, gifts = [] }) {
+export default function Players({ state, active, mySeats, gifts = [], robbed = null }) {
   const [pop, setPop] = useState(null); // { el, group?, all?, pid, opt }
   const close = useCallback(() => setPop(null), []);
   const changes = useChanges(state);
@@ -127,14 +127,15 @@ export default function Players({ state, active, mySeats, gifts = [] }) {
               <span className="nm"><i />{p.name}{p.kind === 'bot' ? <em> · bot</em> : isYou ? <em> · you</em> : null}</span>
               <span className="fol"><Tick value={f} color={playerColor(p.id)} className="num" dur={650} float={false} /><small>{f === 1 ? 'follower' : 'followers'}</small></span>
             </div>
-            <div className="res">
+            <div className={`res${robbed && robbed.pid === p.id ? ' robbed' : ''}`}>
               <Resources state={state} p={p} float={false} dur={600} />
               <span className="meta">
-                <Workers p={p} caption={false} />
+                <Workers p={p} />
+                <span className="sep" aria-hidden="true" />
                 <button type="button" className="mcount" aria-haspopup="dialog" title="Show members" onClick={e => setPop({ el: e.currentTarget, all: true, pid: p.id })}>{plural(n, 'member')}</button>
-                {p.discount && !state.over ? <span className="disc" title={`Your next member costs ${p.discount} less`}> −{p.discount} next</span> : null}
               </span>
             </div>
+            {p.discount && !state.over ? <div className="disc" title={`The next member ${p.name} recruits costs ${p.discount} less`}>Next member −{p.discount}</div> : null}
             {/* gains and losses get their own lane under the resources, never over the chips */}
             <div className="lane" aria-live="polite">
               {gifts.filter(g => g.pid === p.id).map(g => (
@@ -160,7 +161,7 @@ export default function Players({ state, active, mySeats, gifts = [] }) {
             <b>{state.players[pop.pid].name}’s members</b>
             {memberChips(state, state.players[pop.pid]).map(g => (
               <div key={g.key} className="pop-row" style={{ '--c': `var(--${g.def.quadrant})` }}>
-                <span><i />{g.label}{g.count > 1 ? ` ×${g.count}` : ''} <span className="num star">{g.def.f}★</span></span>
+                <span><i />{g.label} <span className="num star">{g.count > 1 ? `${g.count} copies · ${g.def.f}★ each` : `${g.def.f}★`}</span></span>
                 <small>{g.def.text}</small>
               </div>
             ))}
@@ -170,7 +171,7 @@ export default function Players({ state, active, mySeats, gifts = [] }) {
       {pop && pop.group && (
         <Popover anchor={pop.el} onClose={close}>
           <div className="pop-card" style={{ '--c': `var(--${pop.group.def.quadrant})` }}>
-            <div className="row"><b>{pop.group.label}{pop.group.count > 1 ? ` ×${pop.group.count}` : ''}</b><span className="num star">{pop.group.def.f}★</span></div>
+            <div className="row"><b>{pop.group.label}</b><span className="num star">{pop.group.count > 1 ? `${pop.group.count} copies · ${pop.group.def.f}★ each` : `${pop.group.def.f}★`}</span></div>
             <span>{pop.group.def.text}</span>
             {pop.group.card.used && <small>Used</small>}
           </div>

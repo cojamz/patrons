@@ -52,7 +52,7 @@ export function spaceGeometry(state) {
  * @param {{ state:any, legal:Map<string,string>, onPick:(id:string)=>void, onDenied?:(info:object, el:Element)=>void,
  *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void }} props
  */
-export default function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, meId = null, facing, onFacing }) {
+export default function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing }) {
   const [rot, setRot] = useState(() => -90 * facing);
   const [peek, setPeek] = useState(null); // { key, pinned }
   const rotRef = useRef(rot);
@@ -123,6 +123,22 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     addEventListener('pointerdown', close);
     return () => removeEventListener('pointerdown', close);
   }, [peek]);
+  // A space picked from the panel list opens here: one sheet for the same space, wherever you tapped it.
+  useEffect(() => { if (spacePeek && spacePeek.key) setPeek({ key: spacePeek.key, pinned: true }); }, [spacePeek]);
+  useEffect(() => {
+    if (!peek || !peek.pinned || !sheetMode()) return;
+    const t = setTimeout(() => {
+      const el = stage.current && stage.current.querySelector(`[data-slot="${peek.key}"] .base`);
+      const sheet = document.querySelector('.peek.as-sheet');
+      if (!el || !sheet) return;
+      const r = el.getBoundingClientRect(), top = sheet.getBoundingClientRect().top;
+      if (r.bottom > top - 12) window.scrollBy({ top: r.bottom - top + 40, behavior: 'smooth' });
+    }, 60);
+    return () => clearTimeout(t);
+  }, [peek]);
+  // turning the board hides a hover card (it no longer sits over its space)
+  const rotSeen = useRef(rot);
+  useEffect(() => { if (Math.abs(rot - rotSeen.current) > 2) { rotSeen.current = rot; setPeek(p => (p && !p.pinned ? null : p)); } }, [rot]);
   // A new decision clears a stale selection.
   useEffect(() => { setPeek(null); }, [state]);
 
@@ -264,23 +280,22 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     );
   }
 
-  // The latest rival move stays marked (a ring and a rim arrow in their color) until the next one.
-  if (lastMove && state.slots[lastMove.key] !== undefined) {
-    const sp = spaces.find(x => x.key === lastMove.key);
-    if (sp) {
-      const [x, y] = sp.xy;
-      const pc = playerColor(lastMove.pid);
-      const [ax, ay] = polar(sp.ang, 203), [bx, by] = polar(sp.ang - 3.2, 214), [cx2, cy2] = polar(sp.ang + 3.2, 214);
-      parts.push(
-        <g key={`last${lastMove.key}${lastMove.n}`} className="lastmove" aria-hidden="true">
-          <title>{`Last move by ${state.players[lastMove.pid].name}`}</title>
-          <circle cx={x} cy={y} r={(sp.ring === 3 ? 15 : 16) + 5} fill="none" stroke={pc} strokeWidth="2.6" />
-          <circle cx={x} cy={y} r={(sp.ring === 3 ? 15 : 16) + 8} fill="none" stroke="var(--table)" strokeWidth="1.5" />
-          <path d={`M${ax},${ay} L${bx},${by} L${cx2},${cy2}Z`} fill={pc} />
-        </g>,
-      );
-    }
-  }
+  // Every rival placement since your last turn stays ringed in its player's color; the newest gets a rim arrow.
+  recentMoves.filter(m => !m.mine && state.slots[m.key] !== undefined).forEach((m, k, arr) => {
+    const sp = spaces.find(x => x.key === m.key);
+    if (!sp) return;
+    const [x, y] = sp.xy;
+    const pc = playerColor(m.pid);
+    const newest = k === arr.length - 1;
+    const [ax, ay] = polar(sp.ang, 203), [bx, by] = polar(sp.ang - 3.2, 214), [cx2, cy2] = polar(sp.ang + 3.2, 214);
+    parts.push(
+      <g key={`mv${m.key}`} className={`lastmove${newest ? ' newest' : ''}`} aria-hidden="true">
+        <title>{`${state.players[m.pid].name} took ${m.action}`}</title>
+        <circle cx={x} cy={y} r={(sp.ring === 3 ? 15 : 16) + 5} fill="none" stroke={pc} strokeWidth={newest ? 2.8 : 1.8} strokeOpacity={newest ? 1 : 0.75} />
+        {newest && <path d={`M${ax},${ay} L${bx},${by} L${cx2},${cy2}Z`} fill={pc} />}
+      </g>,
+    );
+  });
 
   // The peek card: full name, text and status of a space, near it on screen.
   let peekCard = null;
@@ -353,12 +368,16 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
         <button type="button" className="spin l" aria-label="Turn the board left" title="Turn the board left" onClick={() => nudge(-90)}>‹</button>
         <button type="button" className="spin r" aria-label="Turn the board right" title="Turn the board right" onClick={() => nudge(90)}>›</button>
       </div>
-      {lastMove && state.slots[lastMove.key] !== undefined && (
-        <div className="lm-legend" style={{ '--pc': playerColor(lastMove.pid) }}>
-          <i aria-hidden="true" />Ring and rim arrow: last move by {state.players[lastMove.pid].name}
-          {(() => { const sp = spaces.find(x => x.key === lastMove.key); return sp ? ` (${sp.a.name})` : ''; })()}
-        </div>
-      )}
+      <div className="lm-legend" aria-live="polite">
+        {recentMoves.length ? (
+          <>
+            <span className="lbl">{recentMoves[0].mine ? 'Last:' : 'Since your turn:'}</span>
+            {recentMoves.map((m, k) => (
+              <span key={m.key} className="mv" style={{ '--pc': playerColor(m.pid) }}><i aria-hidden="true" />{m.mine ? 'you' : state.players[m.pid].name} {m.action}{k < recentMoves.length - 1 ? ',' : ''}</span>
+            ))}
+          </>
+        ) : <span className="lbl">No moves yet this round</span>}
+      </div>
       <div className="pointer">▲ facing you<span className="kbd-hint"> · drag, arrows or ← → to spin</span><span className="touch-hint"> · swipe sideways to spin</span></div>
     </div>
   );

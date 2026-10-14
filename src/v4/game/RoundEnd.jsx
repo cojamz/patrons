@@ -2,7 +2,7 @@
 // everything else gained this round), then the button that starts the next round.
 import { useEffect } from 'react';
 import { followers, WORKERS } from '../../engine/v4/index.js';
-import { playerColor, roman, standings, roundGains, tiebreakNote } from '../format.js';
+import { playerColor, roman, standings, roundGains, tiebreakNote, shortLabel, tiebreakWord } from '../format.js';
 import Tick from './Tick.jsx';
 import { useDialog } from './parts.jsx';
 
@@ -37,7 +37,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
         <ul className="re-rows">
           {result.rows.map(r => (
             <li key={r.qid} style={{ '--c': `var(--${r.qid})` }} className={r.winners.length ? '' : 'none'}>
-              <span className="re-q"><i />{r.label}</span>
+              <span className="re-q"><i /><span>{shortLabel(r.label)}{tiebreakWord(r.label) && <small className="re-tb">{tiebreakWord(r.label)} members break ties</small>}</span></span>
               <span className="re-w">
                 <span className="re-win">
                   {r.winners.length
@@ -82,9 +82,11 @@ export default function RoundEnd({ info, onNext, autoMs }) {
         )}
         {first && <p className="hint">Round {roman(after.round)} · <span className="num">{WORKERS[after.round - 1]}</span> workers each · {first.name} picks first</p>}
         </div>
+        <div className="re-foot">
         <button type="button" className="btn pri" data-next-round data-autofocus onClick={onNext}>
           {after.over ? 'See results' : `Start round ${roman(after.round)}`}
         </button>
+        </div>
       </div>
     </div>
   );

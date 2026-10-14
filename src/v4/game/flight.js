@@ -29,7 +29,12 @@ export function playerAnchor(root, pid, part = '') {
 export function snapshotShop(root) {
   const snap = new Map();
   if (!root) return snap;
-  root.querySelectorAll('.shop .card[data-uid]').forEach((el, index) => snap.set(Number(el.dataset.uid), { html: el.outerHTML, index }));
+  // the visible copy of each card wins (the compact row hides under the buy view)
+  root.querySelectorAll('.shop .card[data-uid]').forEach((el, index) => {
+    const r = el.getBoundingClientRect();
+    if (!r.width || el.closest('[aria-hidden="true"]')) return;
+    snap.set(Number(el.dataset.uid), { html: el.outerHTML, index, full: !!el.closest('.buy-view'), rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
+  });
   return snap;
 }
 
@@ -65,10 +70,10 @@ export function flyCards(root, snap, moves) {
   const cells = [...root.querySelectorAll('.shop .card[data-uid]')];
   for (const { uid, to } of moves) {
     const s = snap.get(uid);
-    const cell = s && (cells[s.index] || cells[cells.length - 1]);
+    const cell = s && (s.rect ? true : (cells[s.index] || cells[cells.length - 1]));
     const target = playerAnchor(root, to, '.chips');
     if (!s || !cell || !target) continue;
-    const a = cell.getBoundingClientRect(), b = target.getBoundingClientRect();
+    const a = s.rect || cell.getBoundingClientRect(), b = target.getBoundingClientRect();
     if (!a.width || !b.width) continue;
     // the card lifts off the shop, holds a beat so you see which one, then travels to its new owner
     // land on the new member's own chip (or the "+N more" pill holding it) and make that chip glow
@@ -106,4 +111,17 @@ export function clearFlights(maxAge = 0) {
   if (typeof document === 'undefined') return;
   const now = Date.now();
   document.querySelectorAll('.ghost-layer').forEach(g => { if (!maxAge || now - Number(g.dataset.born || 0) > maxAge) g.remove(); });
+}
+
+/** The cards still in the shop slide from where they were to where they are now (no one-frame reflow). */
+export function slideShop(root, snap) {
+  if (!root || !motionOK()) return;
+  root.querySelectorAll('.shop .card[data-uid]').forEach(el => {
+    const s = snap.get(Number(el.dataset.uid));
+    if (!s || !s.rect || el.closest('[aria-hidden="true"]') || s.full !== !!el.closest('.buy-view')) return;
+    const r = el.getBoundingClientRect();
+    const dx = s.rect.left - r.left, dy = s.rect.top - r.top;
+    if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
+    el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.3,.7,.4,1)' });
+  });
 }
