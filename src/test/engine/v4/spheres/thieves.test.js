@@ -79,7 +79,7 @@ describe('Magenta actions', () => {
     expect(z.pending?.kind).not.toBe('choose');
   });
 
-  it('Hideout: take 1 from a rival; then no one can steal from you this round, resources or members, Gold’s Steal included', () => {
+  it('Hideout: take 1 from a rival; then no one can steal resources from you this round, Gold’s Steal included (members stay takeable)', () => {
     let s = scene({ round: 2, res: [{ gold: 4 }, {}, { gold: 2 }], members: [['red.intern'], [], []],
       queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'turn', p: 1 }, { t: 'turn', p: 1 }] });
     s = take(s, 'Hideout');
@@ -89,8 +89,11 @@ describe('Magenta actions', () => {
     s = take(s, 'Pickpocket');
     expect(ids(s)).toEqual(['take:2:gold']);
     s = pass(play(s, 'take:2:gold'));
-    s = pass(take(s, 'Ransom'));
-    expect(defs(s, 0)).toEqual(['red.intern']);
+    // Cory: Hideout shields resources only, so Ransom can still pick the Intern
+    s = take(s, 'Ransom');
+    expect(ids(s)).toEqual([`card:${uidOf(s, 'red.intern', 0)}`]);
+    s = pass(play(s, `card:${uidOf(s, 'red.intern', 0)}`, 'let'));
+    expect(defs(s, 0)).toEqual([]);
     s = take(s, 'Steal');
     expect(s.pending?.kind).not.toBe('choose');
     expect(R(s)[0].gold).toBe(4);

@@ -415,11 +415,11 @@ describe('Hideout against Gold’s Steal and Ransom', () => {
     s.players[1].hideout = 1; // a Hideout from an earlier round protects nothing
     expect(quadrant('thieves').guardSteal({ state: s }, s.players[0], s.players[1])).toBe(false);
   });
-  it('Ransom can’t pick a member of the player in the Hideout', () => {
+  it('Ransom can still pick a member of the player in the Hideout (Cory: Hideout shields resources only)', () => {
     let s = scene({ quads: Q, n: 3, round: 2, turns: [1, 0], res: [{}, { gold: 4 }, { gold: 4 }], members: [[], ['red.twins'], ['red.bigfamily']] });
     s = go(s, 'Hideout', 'take:2:gold');
     s = take(s, 'Ransom');
-    expect(ids(s)).toEqual([`card:${uidOf(s, 'red.bigfamily', 2)}`]);
+    expect(ids(s).sort()).toEqual([`card:${uidOf(s, 'red.twins', 1)}`, `card:${uidOf(s, 'red.bigfamily', 2)}`].sort());
   });
   it('Gold’s Steal sets off Magenta’s reactions (Lookout)', () => {
     let s = scene({ quads: Q, n: 3, round: 2, res: [{ gold: 1 }, { gold: 4 }, {}], members: [[], [], ['thieves.lookout']] });

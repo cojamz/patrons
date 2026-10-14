@@ -3,7 +3,7 @@
 // The ring goes to most Magenta members at round end.
 // Every steal (Magenta's, Gold's Steal, anyone's) goes through the engine's shared ctx.steal(), so Hideout,
 // Watchdog, Lookout and Robin Hood apply to all of them.
-import { registerQuadrant } from './index.js';
+import { registerQuadrant, defById } from './index.js';
 
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const cost = c => c.def.s + c.def.w;
@@ -17,6 +17,13 @@ export const SCORING = { members: { label: 'Most Magenta members', score: (ctx, 
 // ---------- helpers ----------
 const fewestFollowers = (ctx, p) => ctx.state.players.every(o => ctx.followers(o) >= ctx.followers(p));
 const isLeader = (ctx, p) => ctx.state.players.every(o => ctx.followers(o) <= ctx.followers(p));
+// Was the victim the leader when the steal began? A member steal has already moved the card (and its followers).
+function ledBefore(ctx, { thief, victim, uid }) {
+  if (uid === undefined) return isLeader(ctx, victim);
+  const c = ctx.card(uid), f = c.copy ? Math.max(c.def.f, defById(c.copy).f) : c.def.f;
+  const before = o => ctx.followers(o) + (o === victim ? f : o === thief ? -f : 0);
+  return ctx.state.players.every(o => before(o) <= before(victim));
+}
 const rankOf = (ctx, p) => ctx.state.players.filter(o => ctx.followers(o) > ctx.followers(p)).length;
 
 // What a thief could lift from `o` right now, minus what this action already picked: [[pile, n]].
@@ -46,7 +53,7 @@ function autoSteal(ctx, thief, victim, why, n = 1, reaction = false) {
     pick[top[0]] = (pick[top[0]] || 0) + 1;
   }
   const got = commit(ctx, thief, victim, pick, reaction, false);
-  if (got) ctx.log(`${why}: ${thief.name} took ${got} from ${victim.name}.`);
+  if (got) ctx.log(`${thief.name}'s ${why}: took ${got} from ${victim.name}.`);
   return got;
 }
 
@@ -199,7 +206,12 @@ const thieves = {
           const col = Object.keys(left).filter(x => left[x] > 0).sort((a, b) => left[b] - left[a])[0];
           left[col] -= 1; take[col] = (take[col] || 0) + 1;
         }
-        const got = ctx.steal(p, v, { take, give: x => stash(ctx, p, x) });
+        // it counts as a steal; in a Hideout (which only stops thieves taking) the holder still pays by choice
+        let got = ctx.steal(p, v, { take, give: x => stash(ctx, p, x) });
+        if (!got && !ctx.canSteal(p, v)) {
+          for (const [col, x] of Object.entries(take)) v.res[col] -= x;
+          got = n; stash(ctx, p, n);
+        }
         ctx.log(`${v.name} paid ${got} (${Object.entries(take).map(([k, x]) => `${x} ${k}`).join(', ')}) to keep ${c.def.name}.`);
       } else {
         ctx.steal(p, v, { uid: data.uid });
@@ -249,7 +261,7 @@ const thieves = {
     }),
     m('robinhood', 'Robin Hood', 2, 2, 'Whenever you steal from the player with the most followers, +1 follower.', {
       onSteal(ctx, owner, card, info) {
-        if (info.thief === owner && isLeader(ctx, info.victim)) { owner.bonus += 1; ctx.log(`${owner.name}'s Robin Hood: +1 follower.`); }
+        if (info.thief === owner && ledBefore(ctx, info)) { owner.bonus += 1; ctx.log(`${owner.name}'s Robin Hood: +1 follower.`); }
       },
     }),
     m('lookout', 'Lookout', 4, 2, 'Once per round, when a rival steals from someone else, take 1 resource from the thief.', {
