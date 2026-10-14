@@ -1,0 +1,8 @@
+member value when handed over at the start of round II (320 games each, 4 normal bots, release on). Baseline win rate 25%.
+name                 cost  +followers  win%
+Sprinter                6         9.3    60
+Relief Crew             6         7.5    57
+Night Owl               6         6.9    53
+Second Wind            12         6.5    50
+Banker                  4         3.7    41
+Cheerleaders            6         3.4    43

@@ -1,0 +1,8 @@
+member value when handed over at the start of round II (320 games each, 4 normal bots, release on). Baseline win rate 25%.
+name                 cost  +followers  win%
+Taskmaster              8         5.4    48
+Foreman                 6         5.0    47
+Courier                 6         4.8    46
+Late Riser              8         4.8    47
+Apprentice              4         3.7    43
+Errand Runner           8         2.1    36
