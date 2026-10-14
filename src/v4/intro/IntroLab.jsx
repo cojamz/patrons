@@ -2,7 +2,7 @@
 // (scripts/v4-gif.mjs). beat=N plays only beat N, on a loop; at=MS freezes it MS into the beat; still=1 shows the
 // reduced-motion storyboard. No beat: the whole intro, replayed when it closes.
 import { useState } from 'react';
-import '../lamp.css';
+import '../app.css'; // the game's CSS in its one order (v4.css, then lamp.css)
 import Intro from '../Intro.jsx';
 
 export default function IntroLab() {

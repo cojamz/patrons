@@ -12,7 +12,7 @@ import {
   Act, At, LEAD, LEAD_UP, LeadFrames, Mini, Fol, Res, Aura, ArcaneFloor, ArcaneColumn,
   FSLOT, PILE, SWIRL, WHEEL, QUAD, ringTL, space, onSpace, Z, useCast,
 } from './shared.jsx';
-import Initiation, { BECKON, SETTLE } from './Initiation.jsx';
+import Initiation, { BECKON, SETTLE, WALK_MS, T as IT } from './Initiation.jsx';
 
 /** How long this beat plays before the next (ms). */
 export const DURATION = 9300;
@@ -29,19 +29,19 @@ const HOP_MS = 650;
 const PAY = 50; // after a landing, the space's two glyphs start up (110 apart, 600 each)
 const DIM = 3000; // the wheel dims; the camera moves to the cult
 const INIT = 3100; // <Initiation/> starts (the card rises)
-const GOLD_OUT = INIT + 600; // Initiation takes the two gold glyphs from the pile here
-const STEP_BACK = INIT + SETTLE - 520; // the followers clear the member's slot as it walks in
-const BUY = 6650; // the green and blue glyphs rise into the glow
-const SPAWN = 7500; // three followers appear in the glow
-const PLUS = 8050; // "+3 follower"
-const POWER = 8400; // the aura blooms, the leader rises
+const GOLD_OUT = n => INIT + IT.pay + 100 * n; // Initiation takes the two gold glyphs from the pile here
+const STEP_BACK = INIT + SETTLE; // the followers step back a row as the member walks to its slot (WALK_MS)
+const BUY = 6900; // the green and blue glyphs rise into the glow (as the initiation's "+1" fades)
+const SPAWN = 7700; // three followers appear in the glow
+const PLUS = 8350; // "+3 follower"
+const POWER = 8550; // the aura blooms, the leader rises
 
 // ---------- the actions: which minion goes where, what each space pays ----------
 const rnd = ([x, y]) => [Math.round(x), Math.round(y)];
 const ACTS = [
   { q: 'green', k: 0, arc: 10 }, // left minion → green, centre space
   { q: 'blue', k: 1, arc: 13 }, // top minion → blue, right of centre
-  { q: 'gold', k: -1, arc: 16 }, // right minion → gold, right of centre (the long hop, over the leader)
+  { q: 'gold', k: -1, arc: 20 }, // right minion → gold, right of centre (the long hop, behind the leader)
 ];
 const INK = { green: '#3d8c66', blue: '#4f7ea8', gold: '#c99327', red: '#b4533e' };
 // the pile fills in landing order: green 0–1, blue 2–3, gold 4–5 (the gold pays for the member)
@@ -106,7 +106,8 @@ function minionTrack(i) {
     [HOP[i] + 120, HOP_MS - 120, { x, y }, 'io', ACTS[i].arc], // the hop,
     [HOP[i] + 120, 140, { sx: 0.94, sy: 1.08 }, 'out'], // stretched in the air,
     [t - 40, 110, { sx: 1.1, sy: 0.88 }, 'out'], // a soft landing
-    [t + 70, 200, { sx: 1, sy: 1 }, 'out']];
+    [t + 70, 200, { sx: 1, sy: 1 }, 'out'],
+    [DIM, 600, { o: 0.22 }, 'sine']]; // done: it dims with the wheel
 }
 /** A glyph pops up out of its space and hops to the pile (then, later, leaves it). */
 function glyphTrack(a, n) {
@@ -115,14 +116,14 @@ function glyphTrack(a, n) {
   const [px, py] = PILE(i);
   const t = land(a) + PAY + 110 * n;
   const start = [{ x: sx - 4.5 + (n ? 2 : -2), y: sy - 8, o: 0, s: 0.5 }, [t, 160, { o: 1, s: 1 }, 'out'], [t + 60, 600, { x: px - 4.5, y: py - 4.5 }, 'io', 12]];
-  if (ACTS[a].q === 'gold') return [...start, [GOLD_OUT, 1, { o: 0 }, 'lin']]; // Initiation carries these on
+  if (ACTS[a].q === 'gold') return [...start, [GOLD_OUT(n), 1, { o: 0 }, 'lin']]; // Initiation carries these on
   // the buy: rise into the glow, circle once (a shrinking spiral), and dissolve into light
   const k = i; // 0–3: four phases around the circle
   const ph = 90 * k - 90;
   const enter = [SWIRL[0] + 9 * Math.cos(ph * Math.PI / 180) - 4.5, SWIRL[1] + 9 * Math.sin(ph * Math.PI / 180) - 4.5];
   const b = BUY + 60 * k;
   const steps = [[b, 380, { x: enter[0], y: enter[1] }, 'io']];
-  const SEG = 12, T0 = BUY + 440, LAP = 560;
+  const SEG = 12, T0 = BUY + 440, LAP = 520;
   for (let s = 1; s <= SEG; s++) {
     const ang = (ph + (360 * s) / SEG) * Math.PI / 180, r = 9 - 6 * (s / SEG);
     steps.push([T0 + (LAP * (s - 1)) / SEG, LAP / SEG, { x: SWIRL[0] + r * Math.cos(ang) - 4.5, y: SWIRL[1] + r * Math.sin(ang) - 4.5 }, 'lin']);
@@ -136,12 +137,12 @@ function boughtTrack({ j, off }, n) {
   const [x, y] = FSLOT(j, 1);
   const x0 = SWIRL[0] + off[0] - 5, y0 = SWIRL[1] + off[1] - 5;
   const t = SPAWN + 70 * n;
-  return [{ x: x0, y: y0, o: 0, s: 0.4 }, [t, 240, { o: 1, s: 1 }, 'back'], [t + 330, 480, { x, y }, 'io', 10]];
+  return [{ x: x0, y: y0, o: 0, s: 0.4 }, [t, 240, { o: 1, s: 1 }, 'back'], [t + 220, 450, { x, y }, 'io', 10]];
 }
 /** The three followers from beat 2 step back a row (FSLOT row 0 → 1) to make room for the member. */
 function stepTrack(j) {
   const [x0, y0] = FSLOT(j, 0), [x, y] = FSLOT(j, 1);
-  return [{ x: x0, y: y0 }, [STEP_BACK + 60 * j, 520, { x, y }, 'io', 0, 2]];
+  return [{ x: x0, y: y0 }, [STEP_BACK + 40 * j, WALK_MS, { x, y }, 'io', 0, 2]];
 }
 const SEQ = [[0, 'idle'], ...BECKON.map(([t, p]) => [INIT + t, p])];
 
@@ -163,33 +164,34 @@ export default function Beat3() {
         ))}
       </Act>
 
+      {/* the minions hop onto their spaces, one by one (behind the leader: the right one's long hop passes behind it) */}
+      {[0, 1, 2].map(i => <Act key={`m${i}`} track={minionTrack(i)} stillAs={{ o: 1 }}><Mini emoji={you} /></Act>)}
+
       {/* the warm aura of power (behind the leader), blooming at the end */}
-      <Act track={[{ x: -28, y: -28, o: 0, s: 0.8 }, [POWER, 800, { o: 1, s: 1, y: -30 }, 'sine']]} origin="50% 50%"><Aura w={56} h={56} /></Act>
-      <Act track={[{ x: LEAD[0], y: LEAD[1] }, [POWER, 650, { y: LEAD_UP[1] }, 'out'], [POWER, 800, { f: 1.08 }, 'sine']]}>
+      <Act track={[{ x: -28, y: -28, o: 0, s: 0.8 }, [POWER, 700, { o: 1, s: 1, y: -30 }, 'sine']]} origin="50% 50%"><Aura w={56} h={56} /></Act>
+      <Act track={[{ x: LEAD[0], y: LEAD[1] }, [POWER, 600, { y: LEAD_UP[1] }, 'out'], [POWER, 700, { f: 1.08 }, 'sine']]}>
         <LeadFrames emoji={you} seq={SEQ} stillAs="idle" />
       </Act>
 
       {/* the followers from beat 2, stepping back a row for the member */}
       {[0, 1, 2].map(j => <Act key={`f${j}`} track={stepTrack(j)}><Fol /></Act>)}
 
-      {/* the minions hop onto their spaces (drawn over the leader: the right one's hop passes above it) */}
-      {[0, 1, 2].map(i => <Act key={`m${i}`} track={minionTrack(i)}><Mini emoji={you} /></Act>)}
-
       {/* recruit: the full ceremony (it takes the two gold glyphs from the pile) */}
       <Initiation at={INIT} pile={[pileOf(2, 0), pileOf(2, 1)]} />
 
       {/* buy followers: a small arcane glow at SWIRL, the glyphs that pay for them, the followers that come out */}
-      <Act track={[{ x: SWIRL[0] - 16, y: SWIRL[1] - 12, o: 0 }, [BUY - 150, 450, { o: 1 }, 'sine'], [SPAWN + 300, 600, { o: 0 }, 'sine']]}>
-        <ArcaneFloor w={32} h={24} />
+      <Act track={[{ x: SWIRL[0] - 18, y: SWIRL[1] - 14, o: 0 }, [BUY - 150, 450, { o: 1 }, 'sine'], [SPAWN + 300, 600, { o: 0 }, 'sine']]}>
+        <ArcaneFloor w={36} h={28} />
       </Act>
       {ACTS.map((a, ai) => [0, 1].map(n => (
         <Act key={`g${ai}${n}`} track={glyphTrack(ai, n)} origin="50% 50%"><Res r={a.q} /></Act>
       )))}
       {BOUGHT.map((b, n) => <Act key={`b${b.j}`} track={boughtTrack(b, n)}><Fol /></Act>)}
       {/* "+3 [follower]": rises beside the new followers, holds, and is gone before the hand-over */}
-      <Act track={[{ x: 32, y: 26, o: 0 }, [PLUS, 420, { y: 22, o: 1 }, 'out'], [DURATION - 650, 450, { o: 0 }, 'sine']]} stillAs={{ o: 0 }}>
-        <span className="in-num" style={{ display: 'inline-flex', alignItems: 'center', gap: 1, fontSize: 8, whiteSpace: 'nowrap', color: '#ffd99a' }}>
-          +3<span style={{ display: 'block', transform: 'scale(.7)', transformOrigin: '0 50%' }}><Fol /></span>
+      <Act track={[{ x: 22, y: 28, o: 0 }, [PLUS, 400, { y: 23, o: 1 }, 'out'], [DURATION - 500, 400, { o: 0 }, 'in']]} stillAs={{ o: 0 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 1.5, lineHeight: 1 }}>
+          <b className="in-num" style={{ fontSize: 9, textShadow: '0 1px 1px rgba(0,0,0,.6)' }}>+3</b>
+          <Fol />
         </span>
       </Act>
     </>

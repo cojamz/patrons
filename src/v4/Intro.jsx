@@ -56,11 +56,10 @@ export function IntroGate() {
 
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// ---------- the cast: your emoji (a spooky one if drawn) and three rivals ----------
-const SPOOKY = ['ghost', 'skull', 'pumpkin', 'wizard', 'alien', 'octopus', 'cat', 'ninja'];
+// ---------- the cast: your cult wears pizza (Cory: cheerful, and it reads on the 8×8 medallion); rivals cheerful too ----------
 function cast() {
   const emo = emojiIds();
-  const you = SPOOKY.find(id => emo.includes(id)) || emo[0] || null;
+  const you = ['pizza', 'cactus'].find(id => emo.includes(id)) || emo[0] || null;
   const rest = ['frog', 'robot', 'unicorn', 'bee', 'crab', 'santa'].filter(id => emo.includes(id) && id !== you);
   const more = emo.filter(id => id !== you && !rest.includes(id));
   const [a, b, c] = [...rest, ...more];

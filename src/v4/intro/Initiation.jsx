@@ -1,7 +1,7 @@
 // The initiation (beat 3's recruit): the member card (back: the cult mark) rises at CARD and flips; two gold glyphs
 // arc from the pile into its cost; the leader beckons; the member steps off the card into a small ring of arcane
 // light at INIT_RING; it bows to the leader; the cult's mark (your emoji) blooms above its head; it walks to its slot
-// in the crowd, the mark settling into it, and "+1 [follower]" rises. One thing at a time, slow and eased.
+// in the crowd once the mark has sunk into it, and "+1 [follower]" rises. One thing at a time, slow and eased.
 // Spec: design/prototypes/intro2/storyboard.md (beat 3). Every time below is relative to `at` (the beat-3 ms it starts).
 import { Act, CARD, INIT_RING, MSLOT, PILE, YOU_MEMBERS, Emblem, Fol, Frames, Member, Res, ArcaneFloor, ArcaneRing, useCast } from './shared.jsx';
 
@@ -12,10 +12,10 @@ export const T = {
   pay: 600, // the two glyphs leave the pile, 100 apart (600 each): Beat3 hides its pile glyphs then
   beckon: 1200, // the leader beckons (BECKON)
   ring: 1250, // the ring of light fades in (400)
-  step: 1450, // the member steps off the card into the ring (520); the card fades behind it (from 1700, 400)
+  step: 1450, // the member steps off the card into the ring (520); the empty card fades behind it (from 1600, 350)
   bow: 2050, // it bows: bow1, bow2 (held), bow1, up (to 2620)
-  mark: 2300, // the cult's mark blooms above its head (380, back ease)
-  walk: 2800, // it walks to its slot (550, three little steps); the mark settles into it on the way
+  mark: 2200, // the cult's mark blooms above its head mid-bow (360, back ease), holds, and sinks into it (2700, 200)
+  walk: 2800, // it walks to its slot (550, three little steps)
   plus: 3350, // "+1 [follower]" rises beside it (400), holds, fades (3900–4150)
 };
 /** Length from the card rising to the "+1" gone (ms). */
@@ -72,7 +72,7 @@ export default function Initiation({ at = 3100, member = YOU_MEMBERS[0], slot = 
   const onCard = [cx + 1, cy + 2]; // the member, standing on the card's art panel
   const inRing = [rx - 12, ry - 23]; // the bust's bottom row sits on the ring's centre line
   const flipOut = t('flip'), flipIn = t('flip') + 180;
-  const cardGone = [t('step') + 250, 400, { o: 0 }, 'sine'];
+  const cardGone = [t('step') + 150, 350, { o: 0 }, 'sine'];
   return (
     <>
       {/* the card: rises back-up, turns over, pays, and fades once its member has stepped off */}
@@ -106,13 +106,13 @@ export default function Initiation({ at = 3100, member = YOU_MEMBERS[0], slot = 
         <Frames seq={[[0, 'up'], [t('bow'), 'bow1'], [t('bow') + 120, 'bow2'], [t('bow') + 450, 'bow1'], [t('bow') + 570, 'up']]} stillAs="up">
           {pose => <Member id={member} pose={pose === 'up' ? null : pose} />}
         </Frames>
-        {/* the cult's mark: blooms above its head mid-bow, rides along, settles into it as it arrives */}
-        <Act track={[{ x: 3, y: -11, o: 0, s: 0 }, [t('mark'), 380, { s: 1 }, 'back'], [t('mark'), 260, { o: 1 }, 'sine'],
-          [t('walk') + 300, 250, { o: 0, y: -7 }, 'in']]} origin="50% 50%">
+        {/* the cult's mark: blooms above its head mid-bow, holds, then sinks into it just before it walks */}
+        <Act track={[{ x: 3, y: -11, o: 0, s: 0 }, [t('mark'), 360, { s: 1 }, 'back'], [t('mark'), 260, { o: 1 }, 'sine'],
+          [t('walk') - 100, 200, { o: 0, y: -6 }, 'in']]} origin="50% 50%">
           <ArcaneFloor w={14} h={14} />
         </Act>
-        <Act track={[{ x: 6, y: -8, o: 0, s: 0 }, [t('mark'), 380, { s: 1 }, 'back'], [t('mark'), 200, { o: 1 }, 'sine'],
-          [t('walk') + 300, 250, { o: 0, y: -4 }, 'in']]} origin="50% 50%">
+        <Act track={[{ x: 6, y: -8, o: 0, s: 0 }, [t('mark'), 360, { s: 1 }, 'back'], [t('mark'), 200, { o: 1 }, 'sine'],
+          [t('walk') - 100, 200, { o: 0, y: -4, s: 0.5 }, 'in']]} origin="50% 50%">
           <Emblem emoji={you} />
         </Act>
       </Act>
