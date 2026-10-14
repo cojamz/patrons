@@ -7,11 +7,17 @@ import { Popover } from './parts.jsx';
 export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPick, onDenied, meId = null, confirmPlace = false }) {
   const [pop, setPop] = useState(null); // touch: { el, key, a, opt }
   // Collapsible to a one-line summary (remembered); short screens start collapsed.
-  const [folded, setFolded] = useState(() => {
-    try { const v = localStorage.getItem('patrons.v4.quadFolded'); if (v != null) return v === '1'; } catch { /* ignore */ }
-    return typeof innerHeight === 'number' && innerHeight < 600;
-  });
-  const fold = v => { setFolded(v); try { localStorage.setItem('patrons.v4.quadFolded', v ? '1' : '0'); } catch { /* ignore */ } };
+  // Until you choose, it follows the window: short laptop screens start folded so the shop stays in view.
+  const autoFold = () => typeof innerHeight === 'number' && typeof innerWidth === 'number' && innerWidth > 860 && innerHeight < 640;
+  const [chosen, setChosen] = useState(() => { try { const v = localStorage.getItem('patrons.v4.quadFolded'); return v == null ? null : v === '1'; } catch { return null; } });
+  const [auto, setAuto] = useState(autoFold);
+  useEffect(() => {
+    const onResize = () => setAuto(autoFold());
+    addEventListener('resize', onResize);
+    return () => removeEventListener('resize', onResize);
+  }, []);
+  const folded = chosen ?? auto;
+  const fold = v => { setChosen(v); try { localStorage.setItem('patrons.v4.quadFolded', v ? '1' : '0'); } catch { /* ignore */ } };
   const pointer = useRef('mouse');
   const close = useCallback(() => setPop(null), []);
   useEffect(() => { setPop(null); }, [state, facing]);

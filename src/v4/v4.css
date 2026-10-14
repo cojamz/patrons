@@ -508,7 +508,7 @@ td.rank{font-weight:700}
 /* shop strip: only in the phone buy sheet and on landscape phones */
 .strip{display:none}
 .fbuy .strip{grid-column:1 / -1}
-.mini{flex:0 0 150px;display:flex;flex-direction:column;gap:2px;text-align:left;border:1px solid var(--rim);border-top:3px solid var(--c);background:var(--table-2);border-radius:8px;padding:6px 8px;color:var(--ink);font-size:12px;opacity:.6;min-height:44px}
+.mini{flex:0 0 150px;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:2px;text-align:left;border:1px solid var(--rim);border-top:3px solid var(--c);background:var(--table-2);border-radius:8px;padding:6px 8px;color:var(--ink);font-size:12px;opacity:.6;min-height:44px}
 .mini.can{opacity:1;border-color:var(--c)}
 .mini .row{display:flex;justify-content:space-between;gap:6px}
 .mini small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -555,7 +555,11 @@ td.rank{font-weight:700}
 header.bar .status{align-items:center;gap:8px}
 .undo-slot{flex:none;width:150px;display:flex;justify-content:flex-start}
 .undo-slot .undo{margin:0}
-@media (max-width:520px){ .undo-slot{width:84px} }
+@media (max-width:520px){
+  .undo-slot{width:84px}
+  .fbuy{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .fbuy .pass{grid-column:1 / -1}
+}
 /* buy tray: three equal buttons, one-line subtext */
 .fbuy .fb{overflow:hidden}
 .fbuy .fb b,.fbuy .fb span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

@@ -297,7 +297,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
             <span className="you-strip" data-pid={meP.id} style={{ '--pc': playerColor(meP.id) }} aria-label={`You, ${meP.name}`}>
               <i className="dot" /><b>{meP.name}</b>
               <span className="yf"><Tick value={followers(state, meP)} color={playerColor(meP.id)} className="num" /> {followers(state, meP) === 1 ? 'follower' : 'followers'}</span>
-              <Resources state={state} p={meP} />
+              <Resources state={state} p={meP} float={false} />
               <Workers p={meP} />
             </span>
           )}
