@@ -84,9 +84,11 @@ export function resume(state) {
 // ---------- derived values (also used by the UI) ----------
 
 export const followers = (state, p) => 1 + p.bonus + p.members.reduce((s, u) => s + defById(state.cards[u].def).f, 0);
-export const memberCount = (state, p) => p.members.reduce((s, u) => s + defById(state.cards[u].def).n, 0);
+// A Doppelganger that copies Twins or Big Family counts as that many members too.
+const countOf = card => (card.copy ? Math.max(defById(card.def).n, defById(card.copy).n) : defById(card.def).n);
+export const memberCount = (state, p) => p.members.reduce((s, u) => s + countOf(state.cards[u]), 0);
 export const countMembersOfColor = (state, p, q) => p.members.reduce((s, u) => {
-  const d = defById(state.cards[u].def); return s + (d.quadrant === q ? d.n : 0);
+  const c = state.cards[u]; return s + (defById(c.def).quadrant === q ? countOf(c) : 0);
 }, 0);
 export const cardDef = (state, uid) => defById(state.cards[uid].def);
 export function actionAt(state, q, i) { return quadrant(state.quadrants[q]).actions[i]; }
@@ -119,6 +121,60 @@ export function paymentPlan(state, p, uid) {
     res[c] -= 1; spend[c] += 1; left -= c === 'gold' && goldDouble ? 2 : 1;
   }
   return spend;
+}
+
+// ---------- choosing how to pay ----------
+// Every way to pay that is legal and has no wasted coin. The player picks one; the plan above is the default.
+function vectors(res, keys, maxTotal, exactTotal) {
+  const out = [];
+  const walk = (i, left, cur) => {
+    if (i === keys.length) { if (exactTotal === undefined || left === 0) out.push({ ...cur }); return; }
+    for (let k = 0; k <= Math.min(res[keys[i]], left); k++) { cur[keys[i]] = k; walk(i + 1, left - k, cur); }
+    cur[keys[i]] = 0;
+  };
+  walk(0, exactTotal ?? maxTotal, {});
+  return out;
+}
+function memberPayOk(state, p, def, v) {
+  const goldDouble = sumMemberFlag(state, p, 'goldPaysDouble') > 0;
+  const worth = c => (c === 'gold' && goldDouble ? 2 : 1);
+  const d = p.discount + sumMemberFlag(state, p, 'costReduction');
+  const q = def.quadrant;
+  for (let ds = 0; ds <= Math.min(def.s, d); ds++) {
+    const needS = def.s - ds, needW = Math.max(0, def.w - (d - ds));
+    for (let a = 0; a <= (v[q] || 0); a++) {
+      if (a * worth(q) < needS) continue;
+      let rest = ((v[q] || 0) - a) * worth(q);
+      for (const c in v) if (c !== q) rest += v[c] * worth(c);
+      if (rest >= needW) return true;
+    }
+  }
+  return false;
+}
+const vecKey = (state, v) => state.resources.map(r => v[r] || 0).join('-');
+export function paymentChoices(state, p, uid) {
+  const def = cardDef(state, uid);
+  const keys = state.resources;
+  const all = vectors(p.res, keys, def.s + def.w).filter(v => memberPayOk(state, p, def, v));
+  const minimal = all.filter(v => keys.every(c => !v[c] || !memberPayOk(state, p, def, { ...v, [c]: v[c] - 1 })));
+  return orderChoices(state, minimal, paymentPlan(state, p, uid));
+}
+export function followerChoices(state, p, tier) {
+  if (tier.limited && state.bigLeft <= 0) return [];
+  const keys = state.resources;
+  const all = vectors(p.res, keys, tier.cost, tier.cost).filter(v => keys.filter(c => v[c] > 0).length >= tier.colors);
+  return orderChoices(state, all, followerPlan(state, p, tier));
+}
+function orderChoices(state, list, preferred) {
+  const pk = preferred ? vecKey(state, preferred) : null;
+  const seen = new Set();
+  const out = [];
+  for (const v of list) { const k = vecKey(state, v); if (!seen.has(k)) { seen.add(k); out.push(v); } }
+  out.sort((a, b) => (vecKey(state, b) === pk) - (vecKey(state, a) === pk));
+  return out;
+}
+function payOption(state, v, i) {
+  return { id: `pay:${vecKey(state, v)}`, label: payString(v), kind: 'pay', spend: Object.fromEntries(state.resources.map(r => [r, v[r] || 0])), default: i === 0 };
 }
 
 /** Paying for a follower buy: needs `colors` different resources. Gold is spent last. */
@@ -172,9 +228,9 @@ function inputFor(state, task) {
       };
     case 'buy': {
       const opts = [];
-      for (const uid of state.shop) if (paymentPlan(state, p, uid))
+      for (const uid of state.shop) if (paymentChoices(state, p, uid).length)
         opts.push({ id: `card:${uid}`, label: cardDef(state, uid).name, kind: 'card', uid });
-      TIERS.forEach(t => { if (followerPlan(state, p, t)) opts.push({ id: `tier:${t.key}`, label: `+${t.get} followers`, kind: 'tier', tier: t.key }); });
+      TIERS.forEach(t => { if (followerChoices(state, p, t).length) opts.push({ id: `tier:${t.key}`, label: `+${t.get} followers`, kind: 'tier', tier: t.key }); });
       for (const uid of p.members) {
         const c = state.cards[uid], d = defById(c.def);
         // a Doppelganger offers what it copies too
@@ -189,6 +245,14 @@ function inputFor(state, task) {
     }
     case 'choose':
       return { kind: 'choose', prompt: task.prompt, options: task.options };
+    case 'pay': {
+      const list = task.uid !== undefined ? paymentChoices(state, p, task.uid) : followerChoices(state, p, TIERS.find(t => t.key === task.tier));
+      const what = task.uid !== undefined ? cardDef(state, task.uid).name : `${TIERS.find(t => t.key === task.tier).get} followers`;
+      return {
+        kind: 'pay', prompt: `${p.name}: choose how to pay for ${what}`, ...(task.uid !== undefined ? { uid: task.uid } : { tier: task.tier }),
+        options: [...list.map((v, i) => payOption(state, v, i)), { id: 'back', label: 'Back', kind: 'back' }],
+      };
+    }
     default:
       return null;
   }
@@ -215,8 +279,18 @@ function resolveTask(state, task, optionId) {
     case 'buy': {
       if (optionId === 'pass') { log(state, `${p.name} passed.`); return; }
       const [kind, rest] = optionId.split(':');
-      if (kind === 'card') { recruit(state, p, Number(rest), { free: false }); return; }
-      if (kind === 'tier') { buyFollowers(state, p, TIERS.find(t => t.key === rest)); return; }
+      if (kind === 'card') {
+        const uid = Number(rest), list = paymentChoices(state, p, uid);
+        if (list.length === 1) recruit(state, p, uid, { free: false, spend: list[0] });
+        else state.queue.unshift({ t: 'pay', p: p.id, uid });
+        return;
+      }
+      if (kind === 'tier') {
+        const tier = TIERS.find(t => t.key === rest), list = followerChoices(state, p, tier);
+        if (list.length === 1) buyFollowers(state, p, tier, list[0]);
+        else state.queue.unshift({ t: 'pay', p: p.id, tier: tier.key });
+        return;
+      }
       if (kind === 'use') {
         const c = state.cards[Number(rest)];
         c.used = true;
@@ -236,6 +310,13 @@ function resolveTask(state, task, optionId) {
     case 'choose': {
       const o = task.options.find(x => x.id === optionId);
       handlerById(task.h)(ctxFor(state), p, o.value, task.data);
+      return;
+    }
+    case 'pay': {
+      if (optionId === 'back') { state.queue.unshift({ t: 'buy', p: p.id }); return; }
+      const v = Object.fromEntries(optionId.slice(4).split('-').map((n, i) => [state.resources[i], Number(n)]));
+      if (task.uid !== undefined) recruit(state, p, task.uid, { free: false, spend: v });
+      else buyFollowers(state, p, TIERS.find(t => t.key === task.tier), v);
       return;
     }
     default:
@@ -340,13 +421,13 @@ function refill(state) {
   while (state.shop.length < SHOP_SIZE && state.pile.length) state.shop.push(state.pile.shift());
 }
 
-function recruit(state, p, uid, { free }) {
+function recruit(state, p, uid, { free, spend: chosen }) {
   const idx = state.shop.indexOf(uid);
   if (idx < 0) throw new Error(`Card ${uid} is not in the shop`);
   let paid = 'free';
   if (!free) {
-    const spend = paymentPlan(state, p, uid);
-    if (!spend) throw new Error('Cannot afford');
+    const spend = chosen || paymentPlan(state, p, uid);
+    if (!spend || !memberPayOk(state, p, cardDef(state, uid), spend) || Object.keys(spend).some(r => spend[r] > (p.res[r] || 0))) throw new Error('Cannot afford');
     for (const r in spend) p.res[r] -= spend[r];
     paid = payString(spend);
     p.discount = 0;
@@ -364,8 +445,8 @@ function recruit(state, p, uid, { free }) {
   if (def.onRecruited) def.onRecruited(ctx, p, w);
 }
 
-function buyFollowers(state, p, tier) {
-  const spend = followerPlan(state, p, tier);
+function buyFollowers(state, p, tier, chosen) {
+  const spend = chosen || followerPlan(state, p, tier);
   if (!spend) throw new Error('Cannot afford');
   for (const r in spend) p.res[r] -= spend[r];
   p.bonus += tier.get;

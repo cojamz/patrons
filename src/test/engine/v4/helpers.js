@@ -50,9 +50,12 @@ export function uidOf(s, def, where) {
   return u;
 }
 
-export function move(s, option) {
+// Paying auto-picks the default way to pay unless a test asks to choose ({ manualPay: true }).
+export function move(s, option, { manualPay = false } = {}) {
   if (!s.pending) throw new Error('game is over');
-  return applyMove(s, { player: s.pending.player, option });
+  let next = applyMove(s, { player: s.pending.player, option });
+  if (!manualPay && next.pending?.kind === 'pay') next = applyMove(next, { player: next.pending.player, option: next.pending.options.find(o => o.default).id });
+  return next;
 }
 
 /** Apply a series of option ids (or predicates on options) for whoever is pending. */

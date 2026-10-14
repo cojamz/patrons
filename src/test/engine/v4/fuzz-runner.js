@@ -50,7 +50,7 @@ export function checkInvariants(s, ctx) {
   if (s.pending) {
     const { options, player, kind } = s.pending;
     if (!s.players[player]) fail(`pending player ${player}`, s, ctx);
-    if (!['setup', 'place', 'buy', 'choose'].includes(kind)) fail(`pending kind ${kind}`, s, ctx);
+    if (!['setup', 'place', 'buy', 'choose', 'pay'].includes(kind)) fail(`pending kind ${kind}`, s, ctx);
     if (!options.length) fail('pending with no options', s, ctx);
     if (new Set(options.map(o => o.id)).size !== options.length) fail(`duplicate option ids ${options.map(o => o.id)}`, s, ctx);
     if (kind === 'buy' && !options.some(o => o.id === 'pass')) fail('buy without pass', s, ctx);

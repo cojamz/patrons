@@ -49,6 +49,8 @@ export function chooseBotMove(state, rand = Math.random) {
       if (mid && state.round >= 2 && held >= 7) return move(mid);
       return move(pend.options.find(o => o.kind === 'pass'));
     }
+    case 'pay':
+      return move(pend.options.find(o => o.default) || pend.options[0]);
     case 'choose':
       return move(best(pend.options, o => (o.hint || 0) + rand() * 0.01));
     default:

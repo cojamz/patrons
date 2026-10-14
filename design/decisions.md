@@ -157,3 +157,9 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Trade: swap one of your members for another player's costing no more than yours +1.
 - ✅ (Cory) Red members: 13 keepers plus 3 maybes (see red-members-pool.md). Proselytizer is now 'whenever you recruit a member, gain a follower'. Founder becomes Mentor & Protégé (cost 5).
 - ✅ Playable hot-seat prototype: design/prototypes/play.html (https://claude.ai/artifact/D32uNuYuSq3pUEn4VrQ8YN). Gold and Red as designed; Blue and Green are plain stand-ins. Working calls: rings pay +2/+4/+6 and ties all score; wild costs are paid from blue/green/red before gold; Investor sets aside half automatically. First bot finding: gold piles up at game end (20–60 left), because the follower buys need 2–3 colors.
+
+## 2026-10-14 — Rule calls for the build
+- ✅ (Cory) Doppelganger copies member count too (copying Twins counts as 2 members).
+- ✅ (Cory) You choose where a discount comes off (the colored part or "any").
+- ✅ (Cory) You choose which resources pay "any" costs (and follower buys).
+- ✅ (Cory) Fine for now: ties all score the full ring value; every quadrant pays +2/+4/+6; turn-order ties go to whoever picked later last round; you can start with the same color twice; one copy of each member (15 per quadrant); Twins and Big Family are worth 2 and 3 followers; Midas is an on/off switch for gains from actions; Tinker only fires on gains from actions; Underdog doubles every gold gain; Steal must take all 3 if it can; Hire ties let you pick.

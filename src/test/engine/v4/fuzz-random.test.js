@@ -24,8 +24,8 @@ describe('random-move fuzz (explores branches bots avoid)', () => {
         s = applyMove(s, m);
       }
     }
-    expect([...kinds].sort()).toEqual(['buy', 'choose', 'place', 'setup']);
-    for (const k of ['card', 'tier', 'pass', 'slot', 'player', 'color', 'trade', 'use', 'toggle', 'member'])
+    expect([...kinds].sort()).toEqual(['buy', 'choose', 'pay', 'place', 'setup']);
+    for (const k of ['card', 'tier', 'pass', 'slot', 'player', 'color', 'trade', 'use', 'toggle', 'member', 'pay', 'back'])
       expect(optionKinds.has(k), k).toBe(true);
   });
 });
