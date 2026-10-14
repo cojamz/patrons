@@ -4,6 +4,61 @@ Each note gets an agent that plays it, writes its own diagnosis, weighs options 
 Format per section: what Cory saw · diagnosis (root cause, not symptom) · the agent's own feedback (agree/disagree, what else it found) · options considered · what shipped and how it was measured.
 
 ## 1. Purple: Linger is bad, Rally wastes a worker, "most workers" always ties, purple dead at end of round III (Purple agent)
+*Purple agent. I played Purple myself, driving one seat from a script and reading the log, in four games: one on today's rules (gold/red/purple/magenta), one on my first proposal, and two on the shipped rework (gold/red/purple/magenta and gold/purple/green/yellow). On top of that I ran bot sims, and each number names its instrument.*
+
+**What Cory saw.**
+- Linger is "just bad".
+- Rally "makes no sense, basically wasting a worker", and Overtime has the same problem.
+- "Most workers on the board" almost always ties, so it's really "most purple".
+- Clockmaker costs too much, and purple is worth nothing at the end of round III.
+
+**Diagnosis (root causes).**
+- **A turn-for-a-turn space is a wasted worker.** An extra turn here is one more placement plus one more buy. A space whose only effect is "take an extra turn" hands back exactly the placement it used, so the net gain is one buy, minus the purple paid. That's Rally, and it's Overtime. The old sims hid it because the players who could pay were the purple-rich ones, so taker win rates looked healthy (Overtime 30%, Easy bots, today's rules, 300 random tables). Rally's takers won 21%, the lowest on the board.
+- **Linger is less than nothing.** Moving a worker to an open space and doing that action is the same as placing on that space. On top of that you've given up Linger itself and reopened your old space for a rival. It also does nothing when all your workers are on Purple, which happened to me in my first game ("Me has no worker to move").
+- **"Most workers" can't break ties.** Every player gets the same 3/4/5 workers, and at 4 players every round-I space fills. The spare-space rule then makes extra turns impossible in round I. So the tiebreak (most purple) was the real rule. Easy bots, today's rules: round I never had a unique leader on workers. With "ties score nothing", Purple's ring paid nobody in 100% of round Is, 77% of round IIs and 60% of round IIIs.
+- **Dead purple.** Round-end payouts land after the last buy. Clockmaker was already fixed; Bookkeeper had the same problem.
+- **Bot blind spot (new).** The normal bot (the default opponent) scores a placement by trying it on a copy of the game whose turn queue is empty, so it can't see an extra turn. Probe, round III, a normal bot holding 10 purple: Rally scored −9.6 and Overtime −8.7, both below Hourly at −1.5. So bots never took a turn from a space; they used Rally and Overtime only for the fallback purple. That's what Cory played against. After my report, bots.js now counts the turns a move queues (committed 2026-10-14 as "bots value extra turns").
+
+**My feedback.**
+- I agree with all four notes, and the first two are one bug: a turn that costs a turn.
+- I also disagree with my own earlier gut call. "Ties score nothing" doesn't fix the contest. It switches round I off at 4 players and pays only whoever bought turns, which snowballs.
+- The design critic said the same, and I took its fix: name the rule for what it already measured, most purple. That's simple and visible. It turns Overtime and Rally into a spend-or-hold choice, and it gives purple left at the end of round III a use (+6).
+- Also found:
+  - Normal bots ignore Purple's tempo (above).
+  - Overseer, Foreman, Courier and Apprentice fire once per extra turn, so multi-turn spaces fire them 2–3 times. Priced below.
+  - Plan Ahead is a juicy chip for Echo. A copy gives the taker's printed gain, which is +6 or +8 when it's taken first in a round. One of my games saw it copied four times. If that feels off, look at Echo's copy rule.
+  - A crash outside Purple: Straggler (benders.js:75) is handed a stale joined worker. It crashed the member-value sim, so I reported it.
+
+**Options considered.**
+1. Cheaper turns (Rally 3, Overtime 4). Rejected: it's still a worker for a worker, so the feel doesn't change.
+2. A free extra turn plus a payout (e.g. "+3 purple and an extra turn"). Rejected: a free turn is worth a whole space plus a buy, it's too strong, and purple loses its sink.
+3. Spaces that bend timing without adding workers: Sleep In ("+2 per worker left, your turns go last"; precedent: Lords of Waterdeep's Harbor) and Hurry ("+3, place your next worker now"). The foreman, reading as Cory, called Sleep In fiddly timing, and the critic cut Hurry. Plan Ahead keeps Sleep In's payout without the delay.
+4. Shipped: two-for-one Overtime, all-in Rally, Plan Ahead, most purple, Bookkeeper on your last placement.
+5. Bolder: purple as time itself. On a Purple table, anyone may pay 5 purple in a buy step for an extra turn, and every Purple space just gathers. It's cleanest for identity, but it needs a core hook for buy options, so it's parked for Cory. The critic's note for later: if turn chains still feel bad, the precedent is permanent workers (Agricola's family growth), but don't pair that with a most-workers ring.
+6. Other scoring rules measured: ties go to fewer followers (a catch-up ring, not Purple's identity), and most workers on Purple's spaces.
+
+**Shipped and measured** (code: content/purple.js; tests: spheres/purple.test.js, cards-purple.test.js and the Purple cases in interactions.test.js). Main instrument: easy bots, 300 games each at 4 players, on seeded random tables of Purple plus three other spheres. "Takers" means players who took that space at least once; 25% is par.
+1. **Ring: "Most purple"** (ties all score).
+   - Today it was most purple in all but name.
+   - "Ties score nothing" on the new spaces paid nobody in 100% / 69% / 40% of rounds I / II / III.
+   - "Most purple" paid nobody in 7% / 9% / 15% (no one held purple).
+2. **Plan Ahead** replaces Linger: "+2 purple per worker you have left to place this round." Takers won 27% (Linger 30%, but Linger was taken every round as filler).
+3. **Overtime:** "Pay 8 purple: take 2 extra turns right after this one. If you can't, +3 purple." Takers won 26% at 8 and 29% at 6. Kept at 8, which is 4 a turn, the same rate as Rally.
+4. **Rally:** "Spend all your purple: 1 extra turn right after this one per 4 spent, plus 1 (up to 3). With less than 4, +4 purple."
+   - Takers won 37%, against Strike 33%, Jubilee 37%, Boom 39% and Eternity 37%. Today's Rally was 21%.
+   - The critic's version without the "plus 1" came out at 28%. But at 4–7 purple it buys one worker for one, which is Cory's complaint, so I kept the plus 1.
+   - Double Time makes it 1 per 2.
+5. **Bookkeeper:** "When you place your last worker of a round, +1 purple per 2 workers you have on the board."
+   - It pays before that turn's buy, so round III's purple isn't dead.
+   - The critic's "+1 per worker" version measured 8.4 followers and a 57% win rate. Purple landing just before round end decides the ring.
+   - Halved, it measured 5.0 and 44%, and the cost stays 6. Instrument: the member-value sim, Easy bots, 160 games; Banker read 3.0 in the same run.
+- Whole table: 3.2 extra turns a game (0.96 today). Wins by seat 28/25/26/21%. Followers 37.3 (37.1). The player who placed most on Purple won 31% (28%).
+- Dead air: one player places 4+ times in a row in 57% of games (3% today). The longest run averages 3.6 (2.35). That's the burst; it's the thing to feel for when playing.
+- Normal bots, after the extra-turn fix: 1.3 extra turns a game against 0.5 before, and Purple's share of placements 26% against 22% (30 games each, too few for win rates).
+- Members (member-value sim, Easy bots, handed over at the start of round II, 160 games each, ±1.5; Banker, cost 4, reads 2.7):
+  - The per-turn triggers now fire 2–3 times a turn: Apprentice (cost 4) 4.4, Taskmaster (8) 4.2, Overseer (6) 2.9, Foreman (6) 2.8, Courier (6) 2.2, Double Time (8) 2.1.
+  - By Banker's yardstick, Apprentice looks cheap and Double Time looks dear. That's one noisy run, so I handed it to the fair-price screen (section 4) instead of repricing here.
+
 ## 2. White: Pawn can't sell in round I, Cash In vs Magnate redundant, Cash In too strong (White agent)
 ## 3. Green needs tweaking as a whole (Green agent)
 ## 4. Members miscosted: Feast Hall weak, Shift Crew and Clockmaker too expensive (fair-price screen + dead-window audit)

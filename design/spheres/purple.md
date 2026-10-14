@@ -65,7 +65,11 @@ Main instrument: easy bots, 300 games at 4 players, on seeded random tables of P
   - Purple's share of placements 26% (22%).
   - Runs of 4+ placements in a row in 20% of games (0%).
   - Too few games for win rates.
-- MEMBERS
+- Member value (member-value sim, Easy bots, handed over at the start of round II, 160 games each on gold/red/purple/green, about ±1.5 noise; Banker, cost 4, reads 2.7–3.0 in the same runs):
+  - Bookkeeper, "+1 per worker" version: 8.4 followers, 57% win. Late purple decides the ring.
+  - Bookkeeper as shipped, "+1 per 2": 5.0, 44% win. Kept at 6.
+  - The per-turn triggers now fire 2–3 times: Apprentice (cost 4) 4.4, Taskmaster (8) 4.2, Overseer (6) 2.9, Foreman (6) 2.8, Courier (6) 2.2, Double Time (8) 2.1.
+  - By Banker's yardstick, Apprentice is cheap and Double Time and Courier are dear. That's one run, so the fair-price screen should look rather than me repricing them here.
 
 ## Watch
 - Bots: the normal bot used to score a placement on a copy of the game whose turn queue was empty, so it couldn't see an extra turn. Rally and Overtime read as "lose the purple" to it. A fix that counts the queued turns is in bots.js (the bot owner's). Recheck the normal-bot numbers once it lands.
