@@ -234,3 +234,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Heist takes the card, not an Investor's set-aside gold: that gold goes back to the victim, not doubled.
 - ✅ (Cory) Weaver and Extortionist fire on the 10-follower buy too ("6 or more").
 - ✅ (Cory) Releasing (or trading in) an Investor: its set-aside gold comes back, not doubled.
+- ✅ (Cory) Hideout protects resources only, not members: "Take 1 resource from a rival. Then no one can steal resources from you this round." (So it doesn't block Trade, Heist or Ransom.)
