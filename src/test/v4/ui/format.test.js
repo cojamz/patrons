@@ -1,6 +1,6 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
-import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.js';
+import { createGame, applyMove, chooseBotMove, followers } from '../../../engine/v4/index.js';
 import { parseRoundEnd, newLogLines, winSentence, breakdown } from '../../../v4/format.js';
 
 const seats = [{ name: 'Ana', kind: 'bot' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }];
@@ -34,7 +34,7 @@ describe('v4 format helpers', () => {
       expect(text).toMatch(new RegExp(`^${w.name} (won|and)`));
       expect(text.split('. ').length).toBe(1);
       const b = breakdown(s, w);
-      expect(b.self + b.members + b.contests + b.bought + b.endGame).toBe(1 + w.bonus + b.members);
+      expect(b.self + b.members + b.contests + b.bought + b.effects + b.endGame).toBe(followers(s, w));
     }
   });
 });

@@ -1,5 +1,5 @@
 // Display helpers. No rules here: everything is read off engine state.
-import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE } from '../engine/v4/index.js';
+import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, followers as engineFollowers } from '../engine/v4/index.js';
 
 export const PLAYER_COLORS = ['#f4efe2', '#ff8fb1', '#b9a2ff', '#ffa94d'];
 export const playerColor = id => PLAYER_COLORS[id % PLAYER_COLORS.length];
@@ -81,7 +81,8 @@ export function boughtFollowers(state, p) {
 
 /** Follower breakdown for the results table: self + members + bought + member effects + contests + end game. */
 export function breakdown(state, p) {
-  const members = p.members.reduce((s, u) => s + cardDef(state, u).f, 0);
+  // followers that members are worth, as the engine counts them (a Doppelganger can copy a follower value)
+  const members = engineFollowers(state, p) - 1 - p.bonus;
   const endGame = p.final ? p.final.total : 0;
   const bought = Math.min(boughtFollowers(state, p), Math.max(0, p.bonus - p.contest - endGame));
   const effects = p.bonus - p.contest - endGame - bought;
@@ -132,7 +133,7 @@ export function contestWins(state) {
 /** One sentence on why the winner won, built from the followers breakdown. */
 export function winSentence(state) {
   const ranked = (state.ranking || state.players.map(p => p.id)).map(id => state.players[id]);
-  const f = p => 1 + p.bonus + p.members.reduce((s, u) => s + cardDef(state, u).f, 0);
+  const f = p => engineFollowers(state, p);
   const w = ranked[0];
   const tied = ranked.filter(p => f(p) === f(w));
   if (tied.length > 1) return `${tied.map(p => p.name).join(' and ')} tie on ${f(w)} followers.`;

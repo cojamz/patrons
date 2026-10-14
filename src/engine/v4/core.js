@@ -31,7 +31,7 @@ export function createGame({ seats, seed = 1, quadrants = DEFAULT_QUADRANTS }) {
     v: 4, seed: seed >>> 0, rng: seed >>> 0, quadrants: [...quadrants], resources,
     players: seats.map((s, i) => ({
       id: i, name: s.name || `P${i + 1}`, kind: s.kind || 'human',
-      res: { ...zero }, bonus: 0, contest: 0, members: [], discount: 0, left: 0, turnRecruits: 0, final: null,
+      res: { ...zero }, bonus: 0, contest: 0, bought: 0, members: [], discount: 0, left: 0, turnRecruits: 0, final: null,
     })),
     cards, pile: Object.keys(cards).map(Number), shop: [],
     round: 0, slots: {}, order: [], turnIndex: 0, current: null,
@@ -464,6 +464,7 @@ function buyFollowers(state, p, tier, chosen) {
   if (!spend) throw new Error('Cannot afford');
   for (const r in spend) p.res[r] -= spend[r];
   p.bonus += tier.get;
+  p.bought = (p.bought || 0) + tier.get;
   if (tier.limited) {
     state.bigLeft -= 1;
     if (state.bigLeft <= 0 && !state.endEarly) { state.endEarly = true; log(state, 'The last 6-follower buy is gone. The game ends after this round.'); }

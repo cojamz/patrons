@@ -179,3 +179,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory: buff/rework the weak Gold cards) Underdog: doubled while anyone has more gold than you. Tinker: an action gaining another resource also gives half as much gold. Hustler: +1 gold per round number in your color. Re-measured: Underdog 6.7, Tinker 4.9 (both repriced to 3), Hustler 1.3 (still weak), Investor 1.9.
 - ❓ Even with random round I, whoever picks LAST in round I wins ~33% (2000 games). It's the position, not the seat.
 - Note: gold left at game end is still ~22 per player even with the gold sink. Mostly that's held for the Crown and freshly Struck in round III with no buys left. That may be fine.
+- Tech debt: local games run on src/v4/localTable.js (resume + undo); session/local.js has neither. Merge into one later.
