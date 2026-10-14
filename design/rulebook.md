@@ -25,7 +25,7 @@ On your turn:
 1. **Send a minion** to an open space and do what it says. Some spaces recruit a member for free; that doesn't use up your buy.
 2. **Buy one thing**, or pass:
    - **Recruit a member** from the shop, which always shows 10 face up. A cost has a colored part (that color only) plus "any" (any resources). The suggested coins drop into the cost for you; tap a coin to swap it.
-   - Or **buy followers** with any resources: 2 for 1 follower, 4 for 3, 8 for 6, 10 for 10. The two big buys are limited: the 6-follower buy has 2 per player in stock (8 in a 4-player game), and the 10-follower buy has 4, at most one per player per round. When the last 10-follower buy is gone, the game ends after that round.
+   - Or **buy followers** with any resources: 2 for 1 follower, 4 for 3, 8 for 6, 10 for 10. Only the 6-follower buy is limited: 2 per player in stock (8 in a 4-player game). The 10-follower buy is unlimited.
    - Once per round, before you buy, you may **release** one of your members you didn't recruit this round: it goes to the bottom of the pile, and you take back its colored part in its color (in any colors if its color isn't on the table). The "any" part doesn't come back, so a member with no colored part can't be released.
 
 Members keep working for you: some pay out at each round start (a member that says "Now and at round start" also pays the moment it joins you), some react to what other players do, and some you use once. Some members come in more than one copy; a "×2" on a card means you hold two of them.

@@ -166,7 +166,7 @@ export default {
       // in 4 of 6 holdings, dead-window audit 2026-10-14)
       botActivate: (ctx, owner) => {
         const gain = others(ctx).reduce((s, c) => s + Math.max(0, owner.res[Y] - owner.res[c]), 0);
-        const last = (ctx.state.round === 3 || ctx.state.endEarly) && owner.left === 0;
+        const last = ctx.state.round === 3 && owner.left === 0;
         return (ctx.state.round === 3 && gain >= 6) || (last && gain > 0);
       },
     }),

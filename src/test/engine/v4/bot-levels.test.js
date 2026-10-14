@@ -89,7 +89,7 @@ describe('bot levels', () => {
       while (!s.over) {
         const pend = s.pending;
         const m = chooseBotMove(s, rand);
-        const finalBuy = pend.kind === 'buy' && (s.round === 3 || s.endEarly) && horizon(s).turns[pend.player] === 0;
+        const finalBuy = pend.kind === 'buy' && s.round === 3 && horizon(s).turns[pend.player] === 0;
         if (finalBuy && pend.options.some(o => o.kind === 'tier')) {
           lastBuys++;
           if (m.option === 'pass') {

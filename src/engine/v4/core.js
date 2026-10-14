@@ -7,21 +7,17 @@ import { shuffleInPlace } from './rng.js';
 export const RING_VALUE = [2, 4, 6];
 export const WORKERS = [3, 4, 5];
 export const SHOP_SIZE = 10; // a bigger community pool, so a member you want is more often still there (Cory, 2026-10-14)
-// Follower buys take any resources (Cory, 2026-10-14: no color requirements). A limited tier has a stock per game (stock: seats -> count). The clock tier ends the game:
-// when its last buy is gone, the game ends after that round. oncePerRound: each player may make that buy at most once
-// per round (design critic follow-up, 2026-10-14: one player could take 3 of the 4 clock buys in round II).
+// Follower buys take any resources (Cory, 2026-10-14: no color requirements). A limited tier has a stock per game (stock: seats -> count).
+// 10→10 is unlimited and nothing ends the game early (Cory, 2026-10-14: "the turns are the end game clock"): the game
+// always ends after round III. (It was a stock of 4 whose last buy ended the game after that round.)
 export const TIERS = [
   { key: 'small', cost: 2, get: 1, colors: 1, label: '2 of anything' },
   { key: 'mid', cost: 4, get: 3, colors: 1, label: '4 of anything' },
   { key: 'big', cost: 8, get: 6, colors: 1, label: '8 of anything', limited: true, stock: n => 2 * n },
-  { key: 'top', cost: 10, get: 10, colors: 1, label: '10 of anything', limited: true, stock: () => 4, clock: true, oncePerRound: true },
+  { key: 'top', cost: 10, get: 10, colors: 1, label: '10 of anything' },
 ];
 /** How many buys of a limited tier are left (Infinity for unlimited tiers). */
 export const tierLeft = (state, tier) => (tier.limited ? state.stock?.[tier.key] ?? 0 : Infinity);
-/** Has p already made this once-per-round buy this round? (p.tierRound: tier key -> the round of p's last such buy) */
-export const tierUsed = (state, p, tier) => !!tier.oncePerRound && p?.tierRound?.[tier.key] === state.round;
-/** Can p make this buy at all right now (stock left, and not a once-per-round buy p already made this round)? */
-export const tierOpen = (state, p, tier) => tierLeft(state, tier) > 0 && !tierUsed(state, p, tier);
 const LOG_MAX = 300;
 // Rule flags a table can toggle (sims flip them). release: once per round, on your turn, release one of your
 // members (it goes to the bottom of the pile) for its colored part in its own color (not one recruited this round). guests: rule-bending guest
@@ -52,7 +48,7 @@ export function createGame({ seats, seed = 1, quadrants = DEFAULT_QUADRANTS, rul
     })),
     cards, pile: Object.keys(cards).map(Number), shop: [],
     round: 0, slots: {}, squats: {}, order: [], turnIndex: 0, current: null,
-    recruits: 0, stock: Object.fromEntries(TIERS.filter(t => t.limited).map(t => [t.key, t.stock(seats.length)])), endEarly: false,
+    recruits: 0, stock: Object.fromEntries(TIERS.filter(t => t.limited).map(t => [t.key, t.stock(seats.length)])),
     // contests: each round's scoring as the engine decided it (see contestTable); turns: who has taken a turn this round
     contests: [], turns: [],
     queue: [], pending: null, log: [], moves: 0, over: false, ranking: null,
@@ -202,7 +198,7 @@ const colorsCovered = (state, v) => {
   return n;
 };
 export function followerChoices(state, p, tier) {
-  if (!tierOpen(state, p, tier)) return [];
+  if (tierLeft(state, tier) <= 0) return [];
   const keys = state.resources;
   const all = vectors(p.res, keys, tier.cost, tier.cost).filter(v => colorsCovered(state, v) >= tier.colors);
   return orderChoices(state, all, followerPlan(state, p, tier), p);
@@ -249,7 +245,7 @@ function payOption(state, v, i) {
 
 /** Paying for a follower buy: needs `colors` different resources; each wild one (gold) covers a color. Gold is spent last. */
 export function followerPlan(state, p, tier) {
-  if (!tierOpen(state, p, tier)) return null;
+  if (tierLeft(state, tier) <= 0) return null;
   const res = { ...p.res };
   const spend = Object.fromEntries(Object.keys(res).map(r => [r, 0]));
   const order = () => Object.keys(res).filter(c => res[c] > 0).sort((a, b) => (a === 'gold') - (b === 'gold') || res[b] - res[a]);
@@ -491,7 +487,7 @@ function runTask(state, task) {
     }
     case 'endRound': return endRound(state);
     case 'afterRound':
-      if (state.round < 3 && !state.endEarly) state.queue.push({ t: 'round', r: state.round + 1 });
+      if (state.round < 3) state.queue.push({ t: 'round', r: state.round + 1 });
       else state.queue.push({ t: 'finish' });
       return;
     case 'finish': return finish(state);
@@ -689,12 +685,8 @@ function buyFollowers(state, p, tier, chosen) {
   for (const r in spend) p.res[r] -= spend[r];
   p.bonus += tier.get;
   p.bought = (p.bought || 0) + tier.get;
-  if (tier.oncePerRound) p.tierRound = { ...(p.tierRound || {}), [tier.key]: state.round };
   log(state, `${p.name} bought ${tier.get} follower${tier.get > 1 ? 's' : ''} (${payString(spend)}).`);
-  if (tier.limited) {
-    state.stock[tier.key] -= 1;
-    if (tier.clock && state.stock[tier.key] <= 0 && !state.endEarly) { state.endEarly = true; log(state, `The last ${tier.get}-follower buy is gone. The game ends after this round.`); }
-  }
+  if (tier.limited) state.stock[tier.key] -= 1;
   const ctx = ctxFor(state);
   eachMember(state, (owner, card, def) => { if (def.onBuyFollowers) def.onBuyFollowers(ctx, owner, card, p, tier); });
 }

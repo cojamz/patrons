@@ -1,11 +1,11 @@
-// White: the exchange. Your followers are liquid: sell them for white when you need fuel, pay for members with
-// them (Barter), buy them back cheap. Most white at round end takes the ring's followers.
+// White: the exchange. Your followers are liquid: sell them for white when you need fuel, draw white on them
+// (Dividend), buy them back cheap. Most white at round end takes the ring's followers.
 //
 // Rules this module adds:
 // - You can only sell or spend loose followers: the ones you've won or bought (p.bonus). Never yourself, never your members
 //   (Cory, 2026-10-14). So nobody can drop below 1 follower, and nobody sells in round I unless they bought first.
 // - "Sell" is White's own verb: White members can react to it (onSell), which only White's actions and
-//   members call. Paying for a member with followers (Barter) isn't a sale: no white changes hands.
+//   members call.
 // - No white→followers at par in ring II (2026-10-14 rework, Claude under Cory's go-with-your-gut): Cash In's
 //   "trade any white for followers 1 for 1" turned "sell for 3, buy back for 1" into a loop. Sales stay at 3
 //   (Sell High, Pawnbroker): measured, a scripted seller doesn't win more, and sellers out-win non-sellers.
@@ -65,29 +65,7 @@ function sellChoice(ctx, p, prompt, most, each, why) {
   ctx.choose(p, prompt, opts, 'trading.sell', { each, why });
 }
 
-// Barter's price: 1 follower per 2 of the member's printed cost, rounded up (discounts don't apply: no resources
-// are paid).
-const cardCost = c => c.def.s + c.def.w;
-export const barterPrice = c => Math.ceil(cardCost(c) / 2);
-const barterable = (ctx, p) => ctx.shopCards().filter(c => barterPrice(c) <= sellable(p));
-// what a member is worth to a bot by round (its follower, plus an ability that has less time to pay late)
-const memberWorth = (ctx, c) => c.def.f + cardCost(c) * ([1.2, 0.8, 0.3][ctx.state.round - 1] ?? 0.3);
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-/** Barter's question: the face-up members p can pay for in followers right now, or nobody. */
-function offerBarter(ctx, p) {
-  const ok = barterable(ctx, p);
-  if (!ok.length) {
-    ctx.log(`Barter: ${p.name} has too few loose followers to pay for any face-up member (only followers you bought or won can be paid).`);
-    return;
-  }
-  ctx.choose(p, `Barter: recruit which member, paid in loose followers? (you can pay ${sellable(p)})`, [
-    ...ok.map(c => ({
-      id: `card:${c.uid}`, label: `${c.def.name} for ${plural(barterPrice(c), 'follower')}`, kind: 'card', value: c.uid,
-      hint: memberWorth(ctx, c) - barterPrice(c),
-    })),
-    { id: 'none', label: 'Recruit nobody', kind: 'none', value: 'none', hint: 0 },
-  ], 'trading.barter');
-}
 
 const trading = {
   id: 'trading',
@@ -134,11 +112,16 @@ const trading = {
       },
     },
     {
-      // 2026-10-14 rework: replaces Cash In ("+1 follower, then trade any of your white for followers, 1 for 1"),
-      // which did Magnate's job three times better and closed a sell-high, cash-in-at-par loop.
-      key: 'barter', ring: 2, name: 'Barter', text: 'Recruit a face-up member for half its cost (round up), paid in loose followers.',
-      estimate: (ctx, p) => Math.max(0, ...barterable(ctx, p).map(c => memberWorth(ctx, c) - barterPrice(c))),
-      resolve(ctx, p) { offerBarter(ctx, p); },
+      // Cory cut Barter (2026-10-14: "I don't like that"), which had replaced Cash In. Dividend fills the slot
+      // (Claude, under go-with-your-gut): your loose followers pay out without being sold, so nothing leaves.
+      key: 'dividend', ring: 2, name: 'Dividend', text: '+1 white per loose follower you have.',
+      estimate: (ctx, p) => sellable(p),
+      resolve(ctx, p) {
+        const n = sellable(p);
+        if (!n) { ctx.log(`${p.name}'s Dividend: no loose followers yet (followers you bought or won).`); return; }
+        ctx.gain(p, W, n, { fromAction: true });
+        ctx.log(`${p.name}'s Dividend: +${n} white (${plural(n, 'loose follower')}).`);
+      },
     },
     {
       key: 'boom', ring: 3, name: 'Boom', text: 'Trade all your resources for followers, 1 for 1 (you may keep your white).',
@@ -174,17 +157,6 @@ const trading = {
       if (white) ctx.gain(p, W, white, { fromAction: true });
       actionFollowers(ctx, p, r - k);
       ctx.log(`${p.name}'s Pawn: ${[r - k ? `+${plural(r - k, 'follower')}` : '', white ? `+${white} white` : ''].filter(Boolean).join(', ')}.`);
-    },
-    barter(ctx, p, uid) {
-      if (uid === 'none') { ctx.log(`Barter: ${p.name} recruited nobody.`); return; }
-      const c = ctx.card(uid), k = barterPrice(c);
-      // the row can change between the offer and the pick (an Eternity copying Barter, then Hire, takes the same
-      // card first): say so and offer what's face up now
-      if (!ctx.state.shop.includes(uid)) { ctx.log(`Barter: ${c.def.name} is no longer face up.`); offerBarter(ctx, p); return; }
-      if (k > sellable(p)) { ctx.log(`Barter: ${p.name} can no longer pay ${plural(k, 'follower')} for ${c.def.name}.`); offerBarter(ctx, p); return; }
-      p.bonus -= k;
-      ctx.log(`${p.name} bartered ${plural(k, 'follower')} for ${c.def.name}.`);
-      ctx.recruit(p, uid, { free: true });
     },
   },
 

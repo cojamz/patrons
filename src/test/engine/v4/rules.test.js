@@ -51,7 +51,7 @@ describe('setup', () => {
     expect(s.shop).toHaveLength(SHOP_SIZE);
     expect(s.pile).toHaveLength(60 - SHOP_SIZE);
     expect(Object.keys(createGame({ seats: seats(2), seed: 9 }).cards)).toHaveLength(60 + guestMembers().length);
-    expect(s.stock).toEqual({ big: 4, top: 4 });
+    expect(s.stock).toEqual({ big: 4 }); // only the 6-follower buy is limited (10→10 is unlimited)
     const t = createGame({ seats: seats(2), seed: 10 });
     expect(t.shop).not.toEqual(s.shop);
   });
@@ -178,43 +178,26 @@ describe('follower buys', () => {
     p.res = { gold: 5, red: 7, blue: 1, green: 0 };
     expect(followerPlan(s, p, tier('big'))).toEqual({ gold: 0, red: 7, blue: 1, green: 0 });
     for (const t of ['mid', 'big', 'top']) expect(tier(t).colors).toBe(1);
-    expect(tier('top')).toMatchObject({ cost: 10, get: 10, limited: true, clock: true });
+    expect(tier('top')).toMatchObject({ cost: 10, get: 10 });
+    expect([tier('top').limited, tier('top').clock, tier('top').oncePerRound]).toEqual([undefined, undefined, undefined]);
   });
 
-  it('a 10-follower buy uses up one of 4; the last one ends the game after that round (the clock, 2026-10-14)', () => {
-    let s = scene({ res: [{ gold: 2, red: 3, blue: 3, green: 2 }], queue: [] });
-    s.stock.top = 1;
-    s.queue = [{ t: 'turn', p: 0 }, { t: 'endRound' }, { t: 'afterRound' }];
+  // Cory, 2026-10-14: "the turns are the end game clock. there should basically be unlimited number of the 10 follower
+  // buys." (It was a stock of 4 whose last buy ended the game after that round, then once per player per round.)
+  it('10→10 is unlimited: buy it every turn, more than 4 in a round, and the game still goes on to round II', () => {
+    let s = scene({ res: [{ gold: 10, red: 10, blue: 10, green: 10 }, { gold: 10, red: 10 }], queue: [] });
+    s.queue = [0, 1, 0, 1, 0].map(p => ({ t: 'turn', p })).concat([{ t: 'endRound' }, { t: 'afterRound' }]);
     resume(s);
-    s = take(s, 'Sprout');
-    s = move(s, 'tier:top');
-    expect(s.stock).toEqual({ big: 4, top: 0 });
-    expect(s.endEarly).toBe(true);
-    expect(s.over).toBe(true);
-    expect(s.round).toBe(1);
-    expect(hasOpt(s, 'tier:top')).toBe(false);
-  });
-
-  // design critic follow-up (2026-10-14): one seat took 3 of the 4 clock buys in round II and ended the game early
-  it('the 10-follower buy: at most once per player per round; a rival still can, and it comes back next round', () => {
-    let s = scene({ round: 2, res: [{ gold: 10, red: 10, blue: 10 }, { red: 10 }], queue: [] });
-    s.queue = [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }, { t: 'turn', p: 1 }];
-    resume(s);
-    s = take(s, 'Sprout');
-    s = move(s, 'tier:top');
-    expect([s.stock.top, s.players[0].bonus]).toEqual([3, 10]);
-    s = take(s, 'Tide');
-    expect(Object.values(s.players[0].res).reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(20);
-    expect(hasOpt(s, 'tier:top')).toBe(false); // 20+ resources, but not twice in round II
-    expect(hasOpt(s, 'tier:big')).toBe(true);
-    expect(followerPlan(s, s.players[0], tier('top'))).toBe(null);
-    s = move(s, 'pass');
-    s = take(s, 'Rush');
-    expect(hasOpt(s, 'tier:top')).toBe(true); // P2 hasn't made it this round
-    s = move(s, 'tier:top');
-    expect(s.stock.top).toBe(2);
-    s.round = 3; // next round, P1 may again
-    expect(followerPlan(s, s.players[0], tier('top'))).not.toBe(null);
+    for (const name of ['Sprout', 'Tide', 'Rush', 'Graft', 'Root']) {
+      s = take(s, name);
+      expect(hasOpt(s, 'tier:top'), name).toBe(true);
+      s = move(s, 'tier:top');
+    }
+    expect(s.players.map(p => p.bought)).toEqual([30, 20]); // 5 buys of 10 in round I
+    expect(s.stock.top).toBeUndefined();
+    expect(s.over).toBe(false);
+    expect(s.round).toBe(2);
+    expect(s.log.some(l => /game ends after this round/.test(l))).toBe(false);
   });
 
   it('a 6-follower buy uses up one of 2 per player and does not end the game', () => {
@@ -226,7 +209,7 @@ describe('follower buys', () => {
     expect(hasOpt(s, 'tier:big')).toBe(true);
     s = move(s, 'tier:big');
     expect(s.stock.big).toBe(0);
-    expect(s.endEarly).toBe(false);
+    expect(s.over).toBe(false);
     expect(s.players[0].bonus).toBe(6);
   });
 
