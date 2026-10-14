@@ -211,16 +211,18 @@ function analyseScreen(games, { boot = 200, printed = {} } = {}) {
 }
 
 // ======================= sweep =======================
-let CLONE = null;
+// A private copy of a member (its own def, so its price can move without touching the real card). Known gaps: code
+// that checks a def id by name (Translator, Hustler's bot hint, Doppelganger's hint) doesn't see the copy as that card.
+const CLONES = new Map();
 function cloneFor(def) {
-  if (!CLONE || CLONE.src !== def.id) {
+  if (!CLONES.has(def.id)) {
     const c = { ...def, key: `fp_${def.key}`, copies: 1 };
     registerQuadrant({ id: `fp${def.key}`, name: 'fair-price probe', resource: null, actions: [], members: [c] });
     c.quadrant = def.quadrant; // pays and counts as its own color
     c.src = def.id;
-    CLONE = c;
+    CLONES.set(def.id, c);
   }
-  return CLONE;
+  return CLONES.get(def.id);
 }
 const margin = (s, me) => followers(s, s.players[me]) - Math.max(...s.players.filter(p => p.id !== me).map(p => followers(s, p)));
 
@@ -375,6 +377,100 @@ function analyseSweep(results, { cards, deltas, printed }) {
   return rows;
 }
 
+
+// ======================= panel =======================
+// The sweep, four at a time: in each paired game every seat gets its own private probe (a different card, each at
+// printed −4 / printed / +4) and recruits it at its first affordable buy step instead of its normal buy. One base game
+// per seed (no probes). Cards are fitted jointly, since a seat's margin also moves with its rivals' probes:
+//   Δmargin_i = (a_ci + b_ci·P_i) − ⅓ Σ_{j≠i} (a_cj + b_cj·P_j) + noise,  b_c = b̄ + β_c (β ridged to 0),
+// and fair = the P where a_c + b_c·P = 0.
+function playPanel(fork, seed, probes) { // probes[seat] = { uid, def } | null
+  const rands = Array.from({ length: SEATS }, (_, i) => seededRandom(seed * 31 + i * 1009 + 7));
+  let s = fork;
+  const got = probes.map(() => ({ bought: 0, round: 0, aff: 0 }));
+  let n = 0;
+  while (!s.over && n++ < 6000) {
+    const pend = s.pending, pl = pend.player, pr = probes[pl];
+    if (pr && !got[pl].bought && pend.kind === 'buy' && paymentChoices(s, s.players[pl], pr.uid).length) {
+      got[pl].aff = 1; got[pl].round = s.round;
+      s = buyProbe(s, pr.uid, rands[pl]);
+      got[pl].bought = s.players[pl].members.includes(pr.uid) ? 1 : 0;
+      if (!got[pl].bought) got[pl].bought = -1; // tried, failed (shouldn't happen)
+      continue;
+    }
+    s = applyMove(s, chooseNormalMove(s, rands[pl]));
+  }
+  const fs = s.players.map(p => followers(s, p));
+  return s.players.map((p, i) => ({ own: fs[i], m: fs[i] - mean(fs.filter((_, j) => j !== i)), win: s.ranking[0] === i ? 1 : 0, ...got[i] }));
+}
+
+function panelSeed(g, { K, deltas, printed, only }) {
+  const seed = 200000 + g;
+  const table = TABLES[(g * 2654435761 >>> 0) % TABLES.length];
+  const elig = allDefs().filter(d => (d.guest || table.includes(d.quadrant)) && (!only || only.includes(d.id)));
+  const rng = seededRandom(seed * 13 + 5);
+  const fork = forkAt(seed, table, 1);
+  const base = playPanel(fork, seed, [null, null, null, null]);
+  // shuffle the eligible cards and deal them 4 per game
+  const deck = [...elig].sort(() => rng() - 0.5);
+  const games = [];
+  for (let k = 0; k < K && deck.length; k++) {
+    const pick = Array.from({ length: SEATS }, () => (deck.length ? deck.pop() : null));
+    if (!deck.length) deck.push(...[...elig].sort(() => rng() - 0.5).filter(d => !pick.includes(d)));
+    const cards = { ...fork.cards }, probes = pick.map((d, i) => {
+      if (!d) return null;
+      const grid = gridFor(d, deltas, printed), P = grid[Math.floor(rng() * grid.length)];
+      const c = cloneFor(d); Object.assign(c, split(d, P));
+      cards[9000 + i] = { uid: 9000 + i, def: c.id };
+      return { uid: 9000 + i, def: d.id, P };
+    });
+    const r = playPanel({ ...fork, cards }, seed, probes);
+    games.push(probes.map((pr, i) => (pr ? [pr.def, pr.P, r[i].m - base[i].m, r[i].own - base[i].own, r[i].win - base[i].win, r[i].bought, r[i].round] : null)));
+  }
+  return { g, table, games };
+}
+
+function analysePanel(results, { printed, boot = 200 }) {
+  const defs = allDefs(), ids = defs.map(d => d.id), col = Object.fromEntries(ids.map((id, i) => [id, i]));
+  const C = ids.length, K = 2 * C + 1; // a_c (C), β_c (C), b̄
+  const pOf = id => printed?.[id] ?? priceOf(defs[col[id]]);
+  const rows = []; // { gi, y, x: [[j, v]...] }
+  results.forEach((R, gi) => R.games.forEach(game => game.forEach((e, i) => {
+    if (!e) return;
+    const x = new Map(), add = (j, v) => x.set(j, (x.get(j) || 0) + v);
+    const put = (f, w) => { const j = col[f[0]], P = f[1] - pOf(f[0]); add(j, w); add(C + j, w * P); add(2 * C, w * P); };
+    put(e, 1);
+    game.forEach((f, k) => { if (f && k !== i) put(f, -1 / 3); });
+    rows.push({ gi, y: e[2], yo: e[3], x: [...x] });
+  })));
+  // P is centred on printed, so a_c = the card's net margin when recruited at printed
+  const fit = (w, key = 'y') => {
+    const A = Array.from({ length: K }, () => new Float64Array(K)), b = new Float64Array(K);
+    for (const r of rows) {
+      const wt = w ? w[r.gi] : 1; if (!wt) continue;
+      for (const [i, vi] of r.x) { b[i] += wt * vi * r[key]; for (const [j, vj] of r.x) A[i][j] += wt * vi * vj; }
+    }
+    for (let j = 0; j < C; j++) { A[j][j] += 1; A[C + j][C + j] += 400; } // light ridge on a, heavy on per-card slope
+    return solve(A.map(r => [...r]), [...b]);
+  };
+  const beta = fit(null), betaOwn = fit(null, 'yo');
+  const rng = seededRandom(17);
+  const pois = () => { let k = 0, p = 1; const L = Math.exp(-1); do { k++; p *= rng(); } while (p > L); return k - 1; };
+  boot = Number(process.env.FP_BOOT || boot);
+  const bs = [];
+  for (let k = 0; k < boot; k++) bs.push(fit(results.map(pois)));
+  const q = (a, p) => { const s = [...a].filter(Number.isFinite).sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.max(0, Math.floor(p * s.length)))]; };
+  const fairOf = (bb, j) => { const sl = bb[2 * C] + bb[C + j]; return pOf(ids[j]) + (sl < -0.05 ? -bb[j] / sl : bb[j] > 0 ? 30 : -30); };
+  const n = new Array(C).fill(0), buy = new Array(C).fill(0), rnd = new Array(C).fill(0), win = new Array(C).fill(0);
+  results.forEach(R => R.games.forEach(game => game.forEach(e => { if (!e) return; const j = col[e[0]]; n[j]++; if (e[5] === 1) { buy[j]++; rnd[j] += e[6]; } win[j] += e[4]; })));
+  const cards = defs.map((d, j) => {
+    const fs = bs.map(bb => fairOf(bb, j)), T = pOf(d.id);
+    return { id: d.id, name: d.name, printed: T, n: n[j], boughtShare: n[j] ? buy[j] / n[j] : NaN, meanRound: buy[j] ? rnd[j] / buy[j] : NaN, winDelta: n[j] ? win[j] / n[j] : NaN,
+      net: beta[j], netOwn: betaOwn[j], slope: beta[2 * C] + beta[C + j], fair: fairOf(beta, j), lo: q(fs, 0.05), hi: q(fs, 0.95), se: sd(fs.filter(Number.isFinite)) };
+  });
+  return { slope: beta[2 * C], rows: rows.length, cards };
+}
+
 // ======================= driver =======================
 function runPool(kind, n, params, workers, raw) {
   const save = results => raw && writeFileSync(raw, JSON.stringify({ kind, n, params: { ...params, tables: undefined }, results }));
@@ -383,7 +479,8 @@ function runPool(kind, n, params, workers, raw) {
     let next = 0, done = 0;
     const t0 = Date.now();
     const pool = Array.from({ length: Math.min(workers, n) }, () => new Worker(fileURLToPath(import.meta.url), { workerData: { kind, params } }));
-    const feed = w => { if (next < n) w.postMessage(next++); else w.postMessage(-1); };
+    const off = params.fromSeed || 0;
+    const feed = w => { if (next < n) w.postMessage(off + next++); else w.postMessage(-1); };
     pool.forEach(w => {
       w.on('message', r => {
         results.push(r); done++;
@@ -408,7 +505,7 @@ if (!isMainThread) {
   parentPort.on('message', g => {
     if (g < 0) { process.exit(0); }
     // an engine crash loses one game, not the run; crashed games are listed for the engine owner
-    try { parentPort.postMessage(kind === 'screen' ? screenGame(g, params) : sweepSeed(g, params)); }
+    try { parentPort.postMessage(kind === 'screen' ? screenGame(g, params) : kind === 'panel' ? panelSeed(g, params) : sweepSeed(g, params)); }
     catch (e) { parentPort.postMessage({ g, error: String(e.stack || e).split('\n').slice(0, 4).join(' | ') }); }
   });
 } else {
@@ -421,7 +518,7 @@ if (!isMainThread) {
   if (mode === 'screen') {
     const games = Number(flags.games || 3000), jitter = Number(flags.jitter || 0.4), hardFrac = Number(flags.hard || 0);
     let res, printed = Object.fromEntries(allDefs().map(d => [d.id, priceOf(d)]));
-    if (flags.from) { const R = JSON.parse(readFileSync(flags.from, 'utf8')); res = R.results; printed = R.params.printed || printed; }
+    if (flags.from) { const R = JSON.parse(readFileSync(flags.from, "utf8")); res = R.results.filter(r => !r.error); printed = R.params.printed || printed; const bad = R.results.filter(r => r.error); if (bad.length) console.log(`${bad.length} crashed games skipped: ${bad.map(r => `g=${r.g}`).join(", ")} — ${bad[0].error}`); }
     else res = await runPool('screen', games, { jitter, printed, hardFrac }, workers, flags.raw);
     const A = analyseScreen(res, { printed });
     const out = { mode, games, jitter, secs: (Date.now() - t0) / 1000, ...A };
@@ -465,7 +562,21 @@ if (!isMainThread) {
         '  |', p.nFree ? `${p.free[0].toFixed(2)} ±${p.free[1].toFixed(2)}`.padStart(13) : '            –', p.nAff ? `${(p.buyRate * 100).toFixed(0)}% (${p.nAff})`.padStart(10) : '         –', p.nFree ? (p.freeWin * 100).toFixed(0).padStart(5) : '    –',
         '  |', `${p.mpp.toFixed(2)} (${p.mppB.toFixed(2)})`.padStart(14), f1(p.boughtRound).padStart(8));
     }
+  } else if (mode === 'panel') {
+    // usage: panel [--games=seeds] [--from-seed=0] [--k=12] [--deltas=-4,0,4] [--only=a,b] [--raw=f] [--from=f1,f2] [--out=f]
+    const params = { K: Number(flags.k || 12), deltas: (flags.deltas || '-4,0,4').split(',').map(Number), fromSeed: Number(flags['from-seed'] || 0),
+      only: names ? findDefs(names.split(',')).map(d => d.id) : null };
+    params.printed = Object.fromEntries(allDefs().map(d => [d.id, priceOf(d)]));
+    let res = [];
+    if (flags.from) for (const f of String(flags.from).split(',')) { const R = JSON.parse(readFileSync(f, 'utf8')); res.push(...R.results.filter(r => !r.error)); params.printed = R.params.printed; }
+    else res = await runPool('panel', Number(flags.games || 200), params, workers, flags.raw);
+    const A = analysePanel(res, params);
+    const out = { mode, seeds: res.length, ...params, secs: (Date.now() - t0) / 1000, ...A };
+    if (flags.out) writeFileSync(flags.out, JSON.stringify(out, null, 1));
+    console.log(`panel: ${res.length} seeds × ${params.K} probe games (4 probes each), random real tables, 4 normal bots; joint fit over ${A.rows} probes. Shared slope ${A.slope.toFixed(2)} followers of margin per resource. ${out.secs.toFixed(0)}s.`);
+    console.log('card'.padEnd(24), 'print', ' fair', '  90% CI     ', '    n', 'net@printed', 'own@printed', 'slope', 'bought', 'round');
+    for (const c of [...A.cards].sort((a, b) => (b.fair - b.printed) - (a.fair - a.printed))) console.log(c.id.slice(0, 24).padEnd(24), String(c.printed).padStart(5), f1(c.fair).padStart(5), `${f1(c.lo)}–${f1(c.hi)}`.padEnd(13), String(c.n).padStart(5), c.net.toFixed(2).padStart(11), c.netOwn.toFixed(2).padStart(11), c.slope.toFixed(2).padStart(5), (c.boughtShare * 100).toFixed(0).padStart(6), f1(c.meanRound).padStart(5));
   } else {
-    console.log('mode: screen | sweep (see the header of this file)');
+    console.log('mode: screen | sweep | panel (see the header of this file)');
   }
 }
