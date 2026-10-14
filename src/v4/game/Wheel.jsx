@@ -10,7 +10,7 @@
 // shakes it and says why at the pointer ("Taken by P3", "Opens in round II"), never silence.
 // Each quadrant's contest is engraved on its rim (rule, prize, tiebreak, leaders), with the standings on hover/tap.
 // Hover or focus (mouse) or a first tap (touch) shows a space's card; on touch, placing takes a second tap.
-import { memo, useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { memo, useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { quadrant, roman, RING_VALUE } from '../../engine/v4/index.js';
 import { playerColor, standings, seatEmoji, shortLabel } from '../format.js';
@@ -112,6 +112,30 @@ const Stamp = memo(function Stamp({ id, size = 24 }) {
     </svg>
   );
 });
+
+// ---------- the rim's engraved text: its width from the font itself (a canvas measure, cached), never from the page ----------
+const collapse = t => String(t).replace(/\s+/g, ' ');
+const rimWidths = new Map();
+let rimCtx, rimEarly = false; // rimEarly: something was measured before the web font arrived
+/** Width of `text` in the rim's face (Alegreya Sans at `weight`, letter-spacing `ls` em), per pixel of font size. */
+export function rimWidth(text, weight = 700, ls = 0) {
+  const t = collapse(text);
+  const k = `${weight}|${ls}|${t}`;
+  if (rimWidths.has(k)) return rimWidths.get(k);
+  let w = null;
+  try {
+    if (rimCtx === undefined) rimCtx = typeof document !== 'undefined' && !/jsdom/i.test(globalThis.navigator?.userAgent || '') ? document.createElement('canvas').getContext('2d') : null;
+    if (rimCtx) {
+      rimCtx.font = `${weight} 100px "Alegreya Sans", system-ui, sans-serif`;
+      w = rimCtx.measureText(t).width / 100;
+      if (document.fonts && document.fonts.status !== 'loaded') rimEarly = true;
+    }
+  } catch { rimCtx = null; }
+  if (!(w > 0)) w = t.length * 0.62; // no canvas (tests): an Alegreya Sans capital's average
+  w = Math.round((w + ls * t.length) * 1000) / 1000;
+  rimWidths.set(k, w);
+  return w;
+}
 
 /** A yield in short clauses, one a line in a narrow cell: "+2 green +1 blue" → ["+2 green", "+1 blue"],
  *  "+1 gold/member" → ["+1 gold", "/member"]. */
@@ -363,8 +387,11 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
 
   const stand = standings(state);
   const stdById = Object.fromEntries(stand.map(x => [x.qid, x]));
-  // The engraved rule: "MOST MEMBERS · +2 · ties: red", at least 12px on screen. A long line drops its tiebreak to
-  // one word ("red members" → "red"); the full sentence is in the rim's hover.
+  // The engraved rule: "MOST MEMBERS · +2 · ties: red members", at least 12px on screen. Its length is worked out
+  // from the font (rimWidth: a canvas measure, cached per text), never read back from the drawn page, so drawing it
+  // can't feed a re-render (a measure → setState → re-measure cycle crashed frozen builds with React #185). To fit
+  // the arc, a long line first tightens its letter-spacing, then drops the tiebreak to one word ("ties: red"), and
+  // only then steps its size down. The full tiebreak sentence is in the rim's title and hover card.
   const RIM_PX = 12.2;
   const rimFont = Math.min(16, Math.max(11, RIM_PX / (scale || 1)));
   const arcHalf = 44; // the path the text runs on (wider than any label)
@@ -376,22 +403,28 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     const top = Math.abs(norm(qCenter(q) + rot)) < 90;
     const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;
     const room = (2 * arcHalf * Math.PI / 180) * rr - 18; // the arc, less a little air at each end
-    const tail = leaders.length ? rimFont * (0.9 + 1.55 * leaders.length) : 0;
-    const est = (tie, f) => f * (rule.length * 0.74 + (tie ? (tie.length + 9) * 0.5 : 0)) + tail * (f / rimFont);
+    const tailK = leaders.length ? 0.9 + 1.55 * leaders.length : 0; // the leaders' emojis, per unit of font size
+    const head = `${rule}${leaders.length ? '  ·' : ''}`;
+    const base = rimWidth(head, 700, 0), n = collapse(head).length;
+    const tieW = t => (t ? rimWidth(`  ·  ties: ${t}`, 600, 0.04) : 0);
+    // letter-spacing (em) that makes the line fit at size f, between .03 and .11
+    const spacing = (t, f) => Math.max(0.03, Math.min(0.11, (room / f - tailK - tieW(t) - base) / n));
+    const width = (t, f, ls) => f * (base + ls * n + tieW(t) + tailK);
     let tie = tb ? tb.unit : null;
-    if (tie && est(tie, rimFont) > room) tie = tie.split(' ')[0];
-    return { rule, tie, tieText: tb ? tb.text : null, top, rr, font: rimFont };
+    if (tie && width(tie, rimFont, spacing(tie, rimFont)) > room) tie = tie.split(' ')[0];
+    const ls = spacing(tie, rimFont);
+    const font = Math.max(9, Math.min(rimFont, room / (base + ls * n + tieW(tie) + tailK)));
+    return { rule, tie, tieText: tb ? tb.text : null, top, rr, font, ls, textW: font * (base + ls * n + tieW(tie)) };
   };
   const rimAnchor = qid => stage.current && stage.current.querySelector(`[data-plaque="${qid}"]`);
-  // the engraved text's real length, so text + emoji sit centred on the rim (measured once it's drawn)
-  const [rimW, setRimW] = useState({});
-  useLayoutEffect(() => {
-    if (!stage.current) return;
-    const next = {};
-    // per unit of font size, so a line that has to step down to fit can be sized without measuring again
-    stage.current.querySelectorAll('[data-rim-text]').forEach(t => { try { const tp = t.querySelector('textPath'); const f = Number(t.getAttribute('font-size')) || 1; next[t.dataset.rimText] = ((tp && tp.getComputedTextLength ? tp.getComputedTextLength() : 0) || 0) / f; } catch { /* jsdom */ } });
-    if (Object.keys(next).some(k => next[k] && Math.abs((rimW[k] || 0) - next[k]) > 0.02)) setRimW(next);
-  });
+  // once the web font has loaded, its widths replace the fallback's: one more render, once
+  const [, setFontsIn] = useState(0);
+  useEffect(() => {
+    let on = true;
+    const f = typeof document !== 'undefined' && document.fonts;
+    if (f && f.ready) f.ready.then(() => { if (on && rimEarly) { rimEarly = false; rimWidths.clear(); setFontsIn(1); } }, () => {});
+    return () => { on = false; };
+  }, []);
 
   // the newest rival moves since your last turn (a dotted ring in the mover's color)
   const freshOf = key => {
@@ -448,19 +481,15 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     const st = stdById[qid];
     const leaders = st && st.leaders.length ? st.leaders : [];
     const lab = rimLabel(qid, q, leaders);
-    const rr = lab.rr;
+    const rr = lab.rr, F = lab.font, textW = lab.textW;
     const arcLen = (2 * arcHalf * Math.PI / 180) * rr;
-    // the line as measured (per unit of font size): if it and its leaders don't fit the arc, it steps down to fit
-    const perF = rimW[q] || (lab.rule.length * 0.74 + (lab.tie ? (lab.tie.length + 9) * 0.5 : 0));
-    const F = Math.max(9, Math.min(lab.font, (arcLen - 18) / (perF + (leaders.length ? 0.9 + 1.55 * leaders.length : 0))));
-    const textW = perF * F;
     const EM = F * 1.55; // one emoji's room on the line
     const tail = leaders.length ? F * 0.9 + leaders.length * EM : 0;
     const startS = Math.max(0, (arcLen - textW - tail) / 2);
     paper.push(<path key={`ra${q}`} id={`rim-arc-${q}`} d={textArc(c, arcHalf, rr, rot)} fill="none" />);
     const lit = lampQid === qid ? ' lit' : lampQid ? ' wait' : '';
     paper.push(
-      <text key={`rt${q}`} className={`rim-rule${lit}`} fontSize={F.toFixed(2)} data-plaque={qid} data-rim-text={q}>
+      <text key={`rt${q}`} className={`rim-rule${lit}`} fontSize={F.toFixed(2)} style={{ letterSpacing: `${lab.ls.toFixed(3)}em` }} data-plaque={qid} data-rim-text={q}>
         <textPath href={`#rim-arc-${q}`} startOffset={startS.toFixed(1)}>
           {lab.rule}
           {lab.tie ? <tspan className="rim-tie" data-rim-tie={lab.tie}>{`  ·  ties: ${lab.tie}`}</tspan> : null}

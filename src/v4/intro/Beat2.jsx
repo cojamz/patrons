@@ -5,6 +5,8 @@
 // followers walk in out of the dark to the front of the cult (FSLOT 0–2), and everything holds while the line lands.
 import { Act, At, LEAD, LeadFrames, Mini, Fol, FSLOT, RING, ringTL, ArcaneFloor, ArcaneColumn, Z, useCast } from './shared.jsx';
 
+/** How long this beat plays (ms; added by the shell owner). */
+export const DURATION = 5200;
 export const shots = [{ t: 0, cam: [0, -4, Z.mid], d: 1200, lamp: [0, -2, 210, 150] }];
 
 /** The leader lets go of its steepled hands (beat 1's last pose) just as the minions come out. */

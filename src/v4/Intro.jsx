@@ -11,7 +11,7 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import './intro.css';
 import { emojiIds } from './art/emojis.js';
-import { Cast, Clock, Camera, Lamp, BEAT_MS, STAGE, nowT0, clockIn, toStage } from './intro/shared.jsx';
+import { Cast, Clock, Camera, Lamp, BEAT_MS, BEGIN_AT, STAGE, nowT0, clockIn, toStage } from './intro/shared.jsx';
 import Beat1, * as B1 from './intro/Beat1.jsx';
 import Beat2, * as B2 from './intro/Beat2.jsx';
 import Beat3, * as B3 from './intro/Beat3.jsx';
@@ -75,7 +75,7 @@ const BEATS = [
   { Beat: Beat4, mod: B4, line: ['After three rounds,', 'the cult with the most *followers*', '(including members!)', 'wins!'] },
 ];
 const LAST = BEATS.length - 1;
-const durationOf = b => BEATS[b].mod.DURATION ?? BEAT_MS[b];
+const durationOf = b => BEATS[b].mod.DURATION ?? BEAT_MS[b] ?? BEGIN_AT;
 /** Where each beat starts on the one timeline, and when Begin shows (the end). */
 const STARTS = BEATS.map((_, b) => BEATS.slice(0, b).reduce((t, _x, k) => t + durationOf(k), 0));
 const END = STARTS[LAST] + durationOf(LAST);
@@ -102,6 +102,8 @@ function useClocked(ref, build, deps, { t0, at, on }) {
     const el = ref.current;
     if (!on || !el || typeof el.animate !== 'function') return undefined;
     const [frames, opts] = build();
+    let last = 0; // offsets must never go back (a short beat can squeeze a caption's fade)
+    for (const f of frames) { f.offset = Math.min(1, Math.max(last, f.offset)); last = f.offset; }
     const a = clockIn(el.animate(frames, { fill: 'both', ...opts }), t0, at);
     return () => a.cancel();
   }, deps); // eslint-disable-line react-hooks/exhaustive-deps
@@ -246,7 +248,7 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
   const timed = { t0, at, on: !still };
   return (
     <div ref={root} className={`intro${still ? ' still' : ''}${closing ? ' out' : ''}${at != null ? ' frozen' : ''}`} role="dialog" aria-modal="true" aria-label="Cults in twenty seconds"
-      data-intro={still ? 'still' : 'motion'} data-beat={beat + 1} onClick={onBackdrop} onKeyDown={e => e.stopPropagation()}>
+      data-intro={still ? 'still' : 'motion'} data-beat={beat + 1} data-intro-end={END} data-intro-starts={STARTS.join(",")} onClick={onBackdrop} onKeyDown={e => e.stopPropagation()}>
       <p className="intro-kicker" aria-hidden="true">Cults <i>in twenty seconds</i></p>
       <button type="button" className="intro-skip" data-intro-skip onClick={close}>Skip intro</button>
       <div className="intro-main">

@@ -315,8 +315,21 @@ try {
       await shot('06-after-reload');
       const f1 = await page.$eval('.lt-seat[data-pid="0"] [data-followers]', e => e.dataset.followers);
       if (f0 !== f1) errors.push(`resume changed P1's followers (${f0} -> ${f1})`);
+      // browser Back mid-game (an edge swipe on a phone) asks first: "Keep playing" stays put, "Leave" goes home
+      const leaveAsk = '[role="alertdialog"][aria-label="Leave this game?"]';
       await page.goBack();
-      await page.waitForSelector('[data-home="resume"]', { timeout: 5000 }).catch(() => errors.push('browser Back did not return home'));
+      if (!(await page.waitForSelector(leaveAsk, { timeout: 5000 }).catch(() => null))) errors.push('browser Back mid-game did not ask before leaving');
+      else {
+        if (!(await page.$('.lt-seat[data-pid]'))) errors.push('browser Back left the game before the player answered');
+        await page.click(`${leaveAsk} >> text=Keep playing`);
+        await page.waitForSelector(leaveAsk, { state: 'detached', timeout: 5000 }).catch(() => errors.push('"Keep playing" did not close the Leave question'));
+        const f2 = await page.$eval('.lt-seat[data-pid="0"] [data-followers]', e => e.dataset.followers).catch(() => null);
+        if (f2 !== f1) errors.push(`"Keep playing" after Back changed the game (P1 followers ${f1} -> ${f2})`);
+        await page.goBack();
+        await page.waitForSelector(leaveAsk, { timeout: 5000 }).catch(() => errors.push('a second Back did not ask again'));
+        await page.click(`${leaveAsk} [data-confirm]`).catch(() => errors.push('no Leave button on the Leave question'));
+      }
+      await page.waitForSelector('[data-home="resume"]', { timeout: 5000 }).catch(() => errors.push('Leave after browser Back did not return home'));
       await page.click('[data-home="resume"]');
       await page.waitForSelector('.lt-seat[data-pid]');
       facingSeen = null; // a reopened game starts facing its default quadrant

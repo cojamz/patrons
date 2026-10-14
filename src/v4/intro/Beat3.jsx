@@ -12,7 +12,7 @@
 //             there and hop into the crowd: "+3";
 //   power     a warm aura blooms behind the leader as it rises two units (LEAD → LEAD_UP).
 import {
-  Act, At, LEAD, LEAD_UP, LeadFrames, Mini, Fol, Res, Aura, ArcaneFloor, ArcaneColumn, Count, CAM,
+  Act, At, LEAD, LEAD_UP, LeadFrames, Mini, Fol, Res, Aura, ArcaneFloor, ArcaneColumn, Frames, CAM,
   FSLOT, PILE, SWIRL, WHEEL, QUAD, YOU_MEMBERS, ringTL, space, onSpace, useCast,
 } from './shared.jsx';
 import Initiation, { BECKON, SETTLE, WALK_MS, T as IT } from './Initiation.jsx';
@@ -209,7 +209,7 @@ export default function Beat3() {
       {[0, 1, 2].map(j => <Act key={`f${j}`} track={stepTrack(j)}><Fol /></Act>)}
 
       {/* the pile's count, under it */}
-      <Act track={countTrack} stillAs={{ o: 0 }}><span style={{ display: 'block', fontSize: 8, lineHeight: 1, textShadow: '0 1px 1px rgba(0,0,0,.6)' }}><Count steps={COUNT} /></span></Act>
+      <Act track={countTrack} stillAs={{ o: 0 }}><span style={{ display: 'block', fontSize: 8, lineHeight: 1, textShadow: '0 1px 1px rgba(0,0,0,.6)' }}><Frames seq={COUNT}>{v => <b className="in-num">{v}</b>}</Frames></span></Act>
 
       {/* buy followers: a small arcane glow at SWIRL (under the glyphs that pay for them and the followers that come out) */}
       <Act track={[{ x: SWIRL[0] - 18, y: SWIRL[1] - 14, o: 0 }, [BUY - 150, 450, { o: 1 }, 'sine'], [SPAWN + 300, 600, { o: 0 }, 'sine']]}>
