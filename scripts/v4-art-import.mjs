@@ -17,7 +17,14 @@ const names = [];
 run('icons.js');
 const api = box.CultIcons;
 const clean = i => ({ id: i.id, name: i.name, kind: i.kind, sphere: i.sphere, px: i.px || i.rows });
-write('calibration', api.ICONS.map(clean), 'icons.js');
+// The calibration set is keyed by kebab names. A card renamed since (action names, 2026-10-14) is rekeyed to its
+// engine id and its new name here, so the game keeps its drawing; the design mocks keep using the kebab ids.
+const CAL_KEYS = {
+  'joint-venture': ['gold.jv', 'Kickback'], strike: ['gold.strike', 'Double Down'],
+  pickpocket: ['thieves.pickpocket', 'Help Yourself'], heist: ['thieves.heist', 'Poach'],
+};
+const calib = i => (CAL_KEYS[i.id] ? { ...clean(i), id: CAL_KEYS[i.id][0], name: CAL_KEYS[i.id][1] } : clean(i));
+write('calibration', api.ICONS.map(calib), 'icons.js');
 names.push('calibration');
 console.log(`icons.js → calibration (${api.ICONS.length})`);
 

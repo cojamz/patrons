@@ -55,7 +55,8 @@
       const open = sp.ring <= round;
       const owner = STATE.taken[a.id];
       const can = open && owner === undefined;
-      const cls = ['sp', `r${sp.ring}`, `q-${a.qid}`, open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', can ? 'can' : '', STATE.newest === a.id ? 'fresh' : ''].filter(Boolean).join(' ');
+      const side = Math.abs(Math.sin(sp.ang * Math.PI / 180)) > 0.7;
+      const cls = ['sp', `r${sp.ring}`, side ? 'side' : '', `q-${a.qid}`, open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', can ? 'can' : '', STATE.newest === a.id ? 'fresh' : ''].filter(Boolean).join(' ');
       html += `<div class="${cls}" data-id="${a.id}" style="left:${HALF + x}px;top:${HALF + y}px;--c:${INK[a.res]};--ang:${sp.ang}deg">${O.space(sp, { open, owner, can })}${owner !== undefined ? `<span class="minion">${emoji(SEATS[owner].emoji, O.minionPx || 24)}</span>` : ''}${STATE.newest === a.id ? '<span class="fresh-ring"></span>' : ''}</div>`;
     }
     html += `<div class="hub"><small>Round</small><b>I</b><span class="pips"><i class="on"></i><i></i><i></i></span></div>`;

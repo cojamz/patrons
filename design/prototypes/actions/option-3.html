@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1270">
+<title>Actions: Engraved</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;0,800;1,500&family=Alegreya+Sans:wght@400;500;700;800&display=swap">
+<script src="art.js"></script>
+<script src="kit.js"></script>
+<script src="glyphs.js"></script>
+<script>
+// Option 3: Engraved. No pieces sit on the board: each space is a cell of its ring, printed into the paper. The
+// quadrant's ink washes the open cells; the action's picture is a one-ink stamp, its name set in small capitals and
+// its yield inked beneath. Locked rings are hatched, not yet inked. The minion stands in the cell, on the stamp.
+// Quiet, board-like: Tzolk'in's gears, an astrolabe, a letterpress map.
+const { res, INK, mix, polar, arc } = AK;
+const S = 209 / 200;
+const BANDS = { 1: { r0: 122, r1: 182 }, 2: { r0: 73, r1: 122 }, 3: { r0: 25.5, r1: 73 } };
+const HALF = { 1: 15, 2: 22.5, 3: 45 };
+const stampPal = c => {
+  const dark = mix(c, '#2a1f17', 0.55), light = mix(c, '#f4ebd7', 0.6);
+  return { k: dark, d: dark, 1: dark, 2: c, m: c, 3: light, l: light, o: light };
+};
+const stamp = (a, px = 24) => { const i = AK.A.ACTIONS[a.icon]; return AK.gridSVG(i.px, stampPal(INK[a.res]), px); };
+const n = t => `<b class="num">${t}</b>`, w = t => `<span class="wd">${t}</span>`;
+function effect(a) {
+  const R = r => res(r, 12, { stroke: mix(INK[r], '#2a1f17', 0.55), sw: 1.2 }), c = (o = {}) => G1.card(10.5, o);
+  switch (a.id) {
+    case 'gold.jv': return n('+3') + R('gold') + `<span class="q">${n('+1')}${G1.arrow('right', 11)}${G1.hood(10)}</span>`;
+    case 'gold.rush': return n('+2') + R('gold') + `<span class="q">${G1.grows(12, 1)}</span>`;
+    case 'gold.discount': return n('−4') + w('cost');
+    case 'gold.steal': return w('take') + n('3') + R('gold');
+    case 'gold.windfall': return n('+1') + R('gold') + w('/') + c();
+    case 'gold.strike': return n('×2') + R('gold');
+    case 'red.scout': return n('+2') + R('red') + `<span class="q">${G1.card(9.5, { back: true })}${G1.arrow('down', 11)}</span>`;
+    case 'red.turnout': return n('+1') + R('red') + w('/') + c({ mark: '+' });
+    case 'red.hire': return c() + w('free');
+    case 'red.hireup': return n('+2') + R('red') + w('+') + c();
+    case 'red.trade': return c() + G1.arrow('swap', 13) + c({ rival: true });
+    case 'red.take': return c({ mark: '★' }) + w('free');
+    case 'blue.bargain': return n('+2') + R('blue') + w('+') + c();
+    case 'blue.restock': return n('+2') + R('blue') + G1.arrow('sweep', 12);
+    case 'blue.showroom': return n('+1') + R('blue') + w('/') + c({ mark: '◆' });
+    case 'blue.clearance': return n('½') + w('price');
+    case 'blue.pricecheck': return R('blue') + w('=') + n('½') + c({ mark: '★' });
+    case 'blue.spree': return n('3') + w('buys');
+    case 'green.hum': return n('+3') + R('green');
+    case 'green.chant': return n('+2') + R('green') + `<span class="q">${G1.grows(12, 1)}</span>`;
+    case 'green.echo': return w('copy') + G1.hood(11);
+    case 'green.encore': return w('copy any');
+    case 'green.refrain': return n('+2') + R('green') + w('copy');
+    case 'green.eternity': return w('copy all');
+  }
+  return '';
+}
+function cellFace(a) {
+  return `<div class="face"><span class="nm">${a.name.replace('-', '-\u200b')}</span><span class="st">${stamp(a)}</span><span class="ef">${effect(a)}</span></div>`;
+}
+window.OPT = {
+  n: '3', title: 'Engraved',
+  tag: 'No pieces on the board: each space is a cell of the ring, printed in the quadrant’s ink.',
+  blurb: 'No bubbles and no cards: each space is a cell of its ring, printed into the paper. The quadrant’s ink washes the open cells; the picture is a one-ink stamp of today’s icon, the name in small capitals, the yield inked beneath. Rings not open yet are hatched. A minion stands in its cell, on the stamp.',
+  ring: { 1: { ...BANDS[1] }, 2: { ...BANDS[2] }, 3: { ...BANDS[3] } }, rim: { r0: 182, r1: 200 }, hubR: 25.5,
+  ringR: { 1: 154, 2: 98, 3: 49.5 }, spans: { 1: 60, 2: 45 },
+  bandOpacity: () => 0,
+  minionPx: 24,
+  defs: `<pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(42,31,23,.16)" stroke-width="1"/></pattern>`,
+  paperExtra(S) {
+    let s = '';
+    for (const sp of AK.spaces(this.ringR, this.spans)) {
+      const B = BANDS[sp.ring], h = HALF[sp.ring], a = sp.a;
+      const open = sp.ring <= AK.STATE.round, owner = AK.STATE.taken[a.id];
+      const can = open && owner === undefined, fresh = AK.STATE.newest === a.id;
+      const d = arc(sp.ang - h, sp.ang + h, B.r0 * S, B.r1 * S);
+      const inset = arc(sp.ang - h + 1.2, sp.ang + h - 1.2, B.r0 * S + 2.2, B.r1 * S - 2.2);
+      const c = INK[a.res];
+      if (open) {
+        s += `<path d="${d}" fill="${c}" fill-opacity="${can ? 0.3 : 0.2}"/>`;
+        s += `<path d="${inset}" fill="none" stroke="${can ? 'rgba(255,222,160,.95)' : 'rgba(255,250,238,.55)'}" stroke-width="${can ? 1.6 : 1}"/>`;
+      } else {
+        s += `<path d="${d}" fill="url(#hatch)"/><path d="${d}" fill="${c}" fill-opacity=".05"/>`;
+      }
+      s += `<path d="${d}" fill="none" stroke="rgba(42,31,23,.5)" stroke-width="1.1"/>`;
+      if (fresh) s += `<path d="${inset}" fill="none" stroke="#e0a23a" stroke-width="2" stroke-dasharray="4 3"/>`;
+    }
+    return s;
+  },
+  space(sp, st) { return cellFace(sp.a) + (st.open ? '' : `<span class="seal">${AK.roman(sp.ring)}</span>`); },
+  vocab(a) {
+    const d = arc(-15, 15, 122 * S, 182 * S);
+    return `<div class="sp r1 open unrolled" style="position:relative;transform:none;zoom:2;--c:${INK[a.res]}">
+      <svg class="cellbg" viewBox="-60 -192 120 70" width="120" height="70"><path d="${d}" fill="${INK[a.res]}" fill-opacity=".2"/><path d="${arc(-13.8, 13.8, 124.2 * S, 179.8 * S)}" fill="none" stroke="rgba(255,250,238,.55)"/><path d="${d}" fill="none" stroke="rgba(42,31,23,.5)" stroke-width="1.1"/></svg>
+      ${cellFace(a)}</div>`;
+  },
+  css: `
+  .face{display:flex;flex-direction:column;align-items:center;gap:1px;color:color-mix(in srgb,var(--c) 45%,#2a1f17);line-height:1}
+  .face .nm{font-family:'Alegreya Sans',sans-serif;font-weight:800;font-size:8.6px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;text-shadow:0 1px 0 rgba(255,250,238,.55)}
+  .face .st{line-height:0}
+  .face .st svg{display:block}
+  .face .ef{display:flex;align-items:center;gap:1px;white-space:nowrap;margin-top:1px}
+  .face .ef svg{display:block;flex:none}
+  .face .num{font-family:'Alegreya',serif;font-weight:800;font-size:13.5px;letter-spacing:-.01em;text-shadow:0 1px 0 rgba(255,250,238,.6)}
+  .face .wd{font-family:'Alegreya',serif;font-weight:700;font-style:italic;font-size:12.5px;margin:0 1px;text-shadow:0 1px 0 rgba(255,250,238,.6)}
+  .face .q{display:inline-flex;align-items:center;margin-left:3px}
+  .face .q .num{font-size:11px}
+  .face .tag{margin:0}
+  .sp.locked .face{opacity:.34;filter:grayscale(.85)}
+  .sp.side.r2 .face .nm,.sp.side.r3 .face .nm{white-space:normal;max-width:44px;text-align:center;line-height:1.05;letter-spacing:.08em}
+  .sp.r3 .face .nm{letter-spacing:.08em}
+  .sp.locked .seal{position:absolute;left:50%;top:-11px;transform:translateX(-50%);font-family:'Alegreya',serif;font-weight:700;font-size:9px;color:color-mix(in srgb,var(--c) 50%,#2a1f17);opacity:.6;letter-spacing:.06em;display:none}
+  /* a minion stands in its cell, on the stamp; the name and the yield stay printed around it */
+  .sp.taken .face .st svg{opacity:.18}
+  .sp .minion{left:50%;top:50%;transform:translate(-50%,-56%);filter:drop-shadow(0 2px 1px rgba(0,0,0,.45))}
+  .sp .fresh-ring{display:none}
+  .sp.unrolled{display:grid;place-items:center;width:120px;height:70px}
+  .sp.unrolled .cellbg{position:absolute;inset:0}
+  .closeup .voc .sp.unrolled{position:relative}
+  `,
+};
+</script>
+<script src="page.js"></script>
+</head>
+<body></body>
+</html>

@@ -9,9 +9,9 @@ setScoring(process.argv[3] || 'pricey');
 const N = Number(process.argv[2] || 160);
 const QUADS = ['gold', 'red', 'market', 'green'];
 const LIST = [
-  ['Joint Venture', 1], ['Rush', 1], ['Discount', 1], ['Hire', 1], ['Scout', 1], ['Bargain', 1], ['Restock', 1], ['Showroom', 1],
-  ['Steal', 2], ['Windfall', 2], ['Hire Up', 2], ['Clearance', 2], ['Price Check', 2],
-  ['Strike', 3], ['Take', 3], ['Spree', 3],
+  ['Kickback', 1], ['Golden Years', 1], ['Intro Offer', 1], ['Open Door', 1], ['Even Swap', 1], ['Snap Up', 1], ['New Faces', 1], ['Name Drop', 1],
+  ['Collect Debts', 2], ['Tithe', 2], ['Open House', 2], ['Half Price', 2], ['Show Off', 2],
+  ['Double Down', 3], ['Hand-pick', 3], ['Spree', 3],
 ];
 function play(seed, force) {
   const rand = seededRandom(seed * 104729 + 7);

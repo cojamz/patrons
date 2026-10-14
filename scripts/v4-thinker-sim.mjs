@@ -12,7 +12,7 @@ for (let g = 1; g <= N; g++) {
   while (!s.over) {
     const m = s.pending.player === thinker ? chooseThinkerMove(s, rand, { rollouts: R }) : chooseBotMove(s, rand);
     const opt = s.pending.options.find(o => o.id === m.option);
-    if (s.pending.player === thinker && s.round === 1 && opt?.kind === 'slot' && opt.label === 'Turnout') turnoutTakes.total++;
+    if (s.pending.player === thinker && s.round === 1 && opt?.kind === 'slot' && opt.label === 'Bandwagon') turnoutTakes.total++;
     s = applyMove(s, m);
     if (!r1 && s.round === 1 && s.order.length) r1 = s.order.slice(0, 4);
   }
@@ -20,4 +20,4 @@ for (let g = 1; g <= N; g++) {
   posWins[r1.indexOf(s.ranking[0])]++;
   if (g % 10 === 0) console.error(`${g}/${N}: thinker wins ${wins}`);
 }
-console.log(`thinker win rate ${(100 * wins / N).toFixed(0)}% over ${N} games (25% = no better than greedy); round-I Turnout taken by thinker ${turnoutTakes.total}x; wins by round-I position ${posWins.join('/')}`);
+console.log(`thinker win rate ${(100 * wins / N).toFixed(0)}% over ${N} games (25% = no better than greedy); round-I Bandwagon taken by thinker ${turnoutTakes.total}x; wins by round-I position ${posWins.join('/')}`);

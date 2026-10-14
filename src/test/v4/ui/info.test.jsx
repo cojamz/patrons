@@ -25,6 +25,10 @@ function marketState() {
   const plain = all.filter(u => price(cardDef(s, u)) < BADGE);
   s.shop = [badged[0], plain[0], ...s.shop.filter(u => u !== badged[0] && u !== plain[0])].slice(0, 10);
   s.pile = all.filter(u => !s.shop.includes(u) && u !== badged[1]);
+  s.players[1].members = [badged[1]];
+  return { s, badged, plain };
+}
+
 // Ported from the retired Shop.jsx / Players.jsx to what the table shows now: the shop strip (ShopCards), each cult at
 // the table (CultSeat: its member figures and their cards) and a cult's card (SeatCard: its member list).
 describe('badges are visible wherever a card shows (Blue on the table)', () => {
@@ -82,10 +86,6 @@ describe('badges are visible wherever a card shows (Blue on the table)', () => {
     const { container } = render(<ShopCards state={s} me={0} mySeats={[0]} optionFor={none} onPick={() => {}} />);
     expect(container.querySelectorAll('.card[data-uid]').length).toBe(s.shop.length);
     expect(container.querySelector('.badge-mark')).toBeNull();
-  });
-});
-
-  expect(container.querySelector('.badge-mark')).toBeNull();
   });
 });
 
