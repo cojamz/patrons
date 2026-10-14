@@ -22,7 +22,7 @@ Branch `claude/gifted-newton-3lcy3i`. I reviewed the working tree at `e28806a` o
 | D2 | Live content isn't gated, and its tests have already rotted | `v4-check.mjs:18` `--exclude 'src/test/engine/v4/spheres/**'` (added in 6fce2fa as "spheres-in-design"). Meanwhile `src/v4/tables.js:48` (`randomTable`) and Custom tables let players pick all 11 spheres. *Measured:* running the 7 excluded files gives **2 real assertion failures**. `spheres/trading.test.js:130` expects the log line "Sell High: P1 has no followers to sell yet", but the engine now says "P1 had no followers to sell." `spheres/yellow.test.js:115` ("Transmute: a bot evens out its colors") gets a different resource split. The run also had 6 timeouts in the 200-game blocks. | Regressions in 7 playable spheres go unnoticed. The first failure is exactly the log-text coupling of item 6. |
 | D3 | A stale save crash-loops the tab | `core.js:43` stamps only `v: 4`. `saved.js:181-187` accepts any object that has `state.players`. `App.jsx:55-57` auto-resumes on reload. `src/v4` has no error boundary anywhere. *Measured* (`stale.mjs`): with one card id renamed in a save, both `followers()` and play throw `Unknown member`. Since 12:21 today, **45 member costs changed**. `design/eval/graveyard.md` shows cards do get killed. | The first killed or renamed card blanks the app for anyone with a save. A blank render leaves `patrons.v4.inGame=1` set, so every reload of that tab auto-resumes into the same crash. Before then, saves resume silently under new costs and rules. |
 | D4 | Mixed builds in one online room are never detected | The room has no build field (`online.js:84-90, 298-302`). Any client can become host (`online.js:224-236`). Guests also run rules code for display (`format.js:221-252, 265-279, 400-421`). | A Netlify deploy mid-game, followed by one reload, mixes engine versions. The new host applies different rules to an old state, or crashes on an unknown id, and nobody is told. |
-| D5 | A thrown bot move stalls the game silently | `session/local.js:120` (`catch → console.error`, no retry, no UI). `online.js:449` (the host chain swallows errors) and `online.js:521-528` (a throw inside `chooseBotMove`/`applyMove` never reschedules). | One content bug that a bot hits leaves the game waiting forever on "Bot is deciding…". Online, that happens to every client at once. |
+| D5 | A thrown bot move stalls the game silently | `session/local.js:120` (`catch → console.error`, no retry, no UI). `online.js:449` (the host chain swallows errors) and `online.js:521-528` (a throw inside `chooseBotMove`/`applyMove` never reschedules). | One content bug that a bot hits leaves the game stuck on that bot's turn forever, with nothing on screen to say why. Online, every client is stuck at once. A stale `botTimer` id also blocks `roomChanged()` from rescheduling (`online.js:532`). |
 
 ---
 
@@ -104,7 +104,7 @@ Tests and sims flip them per process (`market.test.js:25-26, 55, 74`; `scripts/s
 
 ### 5. Parallel-agent isolation: one worktree and branch per agent, lead merges green — **S/M**
 **Problem.**
-- Agents edit one shared working tree, and the lead commits it as "WIP checkpoint". *Measured:* 33 of the last 60 commits are WIP checkpoints. Such commits mix half-done work from several agents, so `git bisect` and revert are useless.
+- Agents edit one shared working tree, and the lead commits it as "WIP checkpoint". *Measured:* 33 of the last 60 commits are WIP checkpoints. Such commits mix half-done work from several agents, so `git bisect` and revert are useless. *Observed during this review:* checkpoints `e3b1f2f`/`4105696` committed this very report half-written, and a freeze worktree was deleted while my gate run was reading it (D1).
 - `check:v4` builds and tests whatever is on disk mid-edit. The loop file records a build that "caught gold.js 7s into an agent's edit and showed a fake crash".
 - `.claude/hooks/protect.sh:44,48` tells agents to "Use git stash", which in a shared tree stashes everyone's work.
 - Hotspots invite conflicts: `GameScreen.jsx` (626 lines, 38 of the last 200 commits), `v4.css` (1241 lines, 37), `core.js` (30).
@@ -190,7 +190,7 @@ On the engine side, "every number traces to a line" is enforced by snapshot-diff
 - Add `firebase.json` with the rules plus a rules test on the emulator using `@firebase/rules-unit-testing` `assertFails` ([rules unit tests](https://firebase.google.com/docs/rules/unit-tests)).
 - Move the Firebase config into `src/v4/session/transport/`.
 - Let the host turn a seat that has been disconnected for more than N seconds into a bot (flip `seats/sN.kind`; the host loop already plays bot seats, `online.js:519`), with a "Take my seat back" on rejoin.
-- Write down hidden-info leakage as accepted for friends play. A real fix needs a server ([boardgame.io-style secret state](https://github.com/philihp/boardgame.io)) and isn't worth it now.
+- Write down hidden-info leakage as accepted for friends play. A real fix needs a server that filters per-player views, like boardgame.io's secret state ([README mirror](https://github.com/philihp/boardgame.io)), and isn't worth it now.
 
 **Risk of not doing it.** Medium. The stall is near-certain, corruption is plausible, and malice is unlikely.
 

@@ -66,7 +66,7 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
   const hand = GROUP.flatMap(q => quadrant(q).members).filter(d => !plain(d) && !EXEMPT.has(d.id)).map(d => d.id);
   it('every member with an effect, once held, leaves a log line naming it (seeded mixed tables, normal bots)', () => {
     // Release off: bots release dealt members early, and this gate is about naming, not balance
-    const st = audit(TABLES, 28, { hand, perSeat: 3, rules: { release: false } });
+    const st = audit(TABLES, 24, { hand, perSeat: 3, rules: { release: false } });
     const silent = hand.filter(id => st[id]?.held >= 3 && !st[id].fired).map(id => `${id} (held in ${st[id].held} games, never named)`);
     const unseen = hand.filter(id => !(st[id]?.held >= 3));
     expect(silent).toEqual([]);

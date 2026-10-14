@@ -18,6 +18,9 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] Design pod: research best design skills/references, write a ui-critic agent; blind expert UI critic round 1 on the frozen build
 - [ ] Engineering expert review (blind): what saves headaches long-term
 
+- [ ] Hardening: saves never crash-loop across deploys, error screen, "copy game record" + replay, bot errors never stall, a gate that runs every sphere test fast, CI (hardening agent)
+- [ ] Later (engineering review): structured events instead of log parsing; shared verbs for copies; online auth rules and bot takeover for dropped players; type checking
+
 ## 2. Balance (serves play)
 - [ ] Big followers at ~25% with the final bots; members ~6–7 a player (cost agent)
 - [ ] Fair-price test: screen every card, then a careful check on outliers
