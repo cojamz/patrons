@@ -103,7 +103,7 @@ export default {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n >= 2) owner.res.gold += 1; },
     }),
     m('investor', 'Investor', 2, 2, 'Round start: half your gold is set aside. Round end: it comes back doubled.', {
-      onRoundStart(ctx, owner, card) {
+      onRoundStartLate(ctx, owner, card) {
         const x = Math.floor(owner.res.gold / 2);
         owner.res.gold -= x; card.invested = (card.invested || 0) + x;
         if (x) ctx.log(`${owner.name}'s Investor sets aside ${x} gold.`);

@@ -289,6 +289,8 @@ function startRound(state, r) {
   for (const p of state.players) p.left = n;
   const ctx = ctxFor(state);
   eachMember(state, (owner, card, def) => { if (def.onRoundStart) def.onRoundStart(ctx, owner, card); });
+  // late hooks see everything the round-start income gave (Investor sets aside after Banker pays)
+  eachMember(state, (owner, card, def) => { if (def.onRoundStartLate) def.onRoundStartLate(ctx, owner, card); });
   // Fewest followers picks first. Ties: whoever was later in last round's turn order (round I: later seat).
   // The first pass of last round's snake is its turn order (the last pass is reversed in even rounds).
   const prev = state.order.length ? state.order.slice(0, state.players.length) : [...state.players.map(p => p.id)];
