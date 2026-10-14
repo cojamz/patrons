@@ -404,17 +404,19 @@ function playPanel(fork, seed, probes) { // probes[seat] = { uid, def } | null
   return s.players.map((p, i) => ({ own: fs[i], m: fs[i] - mean(fs.filter((_, j) => j !== i)), win: s.ranking[0] === i ? 1 : 0, ...got[i] }));
 }
 
-function panelSeed(g, { K, deltas, printed, only }) {
+function panelSeed(g, { K, deltas, printed, only, rounds = [1] }) {
   const seed = 200000 + g;
   const table = TABLES[(g * 2654435761 >>> 0) % TABLES.length];
   const elig = allDefs().filter(d => (d.guest || table.includes(d.quadrant)) && (!only || only.includes(d.id)));
   const rng = seededRandom(seed * 13 + 5);
-  const fork = forkAt(seed, table, 1);
-  const base = playPanel(fork, seed, [null, null, null, null]);
-  // shuffle the eligible cards and deal them 4 per game
+  // timing arms: a probe dealt to round r is forked at the start of round r (the shared prefix) and recruited at the
+  // first affordable buy step from there; each round has its own base game from the same fork
+  const forks = {}, bases = {};
+  for (const r of rounds) { forks[r] = forkAt(seed, table, r); bases[r] = playPanel(forks[r], seed, [null, null, null, null]); }
   const deck = [...elig].sort(() => rng() - 0.5);
   const games = [];
   for (let k = 0; k < K && deck.length; k++) {
+    const r = rounds[k % rounds.length], fork = forks[r], base = bases[r];
     const pick = Array.from({ length: SEATS }, () => (deck.length ? deck.pop() : null));
     if (!deck.length) deck.push(...[...elig].sort(() => rng() - 0.5).filter(d => !pick.includes(d)));
     const cards = { ...fork.cards }, probes = pick.map((d, i) => {
@@ -424,33 +426,37 @@ function panelSeed(g, { K, deltas, printed, only }) {
       cards[9000 + i] = { uid: 9000 + i, def: c.id };
       return { uid: 9000 + i, def: d.id, P };
     });
-    const r = playPanel({ ...fork, cards }, seed, probes);
-    games.push(probes.map((pr, i) => (pr ? [pr.def, pr.P, r[i].m - base[i].m, r[i].own - base[i].own, r[i].win - base[i].win, r[i].bought, r[i].round] : null)));
+    const res = playPanel({ ...fork, cards }, seed, probes);
+    games.push(probes.map((pr, i) => (pr ? [pr.def, pr.P, res[i].m - base[i].m, res[i].own - base[i].own, res[i].win - base[i].win, res[i].bought, res[i].round, r] : null)));
   }
   return { g, table, games };
 }
 
 function analysePanel(results, { printed, boot = 200 }) {
   const defs = allDefs(), ids = defs.map(d => d.id), col = Object.fromEntries(ids.map((id, i) => [id, i]));
-  const C = ids.length, K = 2 * C + 1; // a_c (C), β_c (C), b̄
+  const C = ids.length, K = 4 * C + 3; // a_{c,r} (3C: r = 1..3), β_c (C), b̄_r (3)
+  const A0 = r => (r - 1) * C, B = 3 * C, BR = r => 4 * C + r - 1;
   const pOf = id => printed?.[id] ?? priceOf(defs[col[id]]);
-  const rows = []; // { gi, y, x: [[j, v]...] }
+  const rows = [];
   results.forEach((R, gi) => R.games.forEach(game => game.forEach((e, i) => {
     if (!e) return;
-    const x = new Map(), add = (j, v) => x.set(j, (x.get(j) || 0) + v);
-    const put = (f, w) => { const j = col[f[0]], P = f[1] - pOf(f[0]); add(j, w); add(C + j, w * P); add(2 * C, w * P); };
+    const r = e[7] || 1, x = new Map(), add = (j, v) => x.set(j, (x.get(j) || 0) + v);
+    const put = (f, w) => { const j = col[f[0]], P = f[1] - pOf(f[0]); add(A0(r) + j, w); add(B + j, w * P); add(BR(r), w * P); };
     put(e, 1);
     game.forEach((f, k) => { if (f && k !== i) put(f, -1 / 3); });
     rows.push({ gi, y: e[2], yo: e[3], x: [...x] });
   })));
-  // P is centred on printed, so a_c = the card's net margin when recruited at printed
+  const seen = new Set(rows.flatMap(r => r.x.map(([j]) => j)));
+  // P is centred on printed, so a_{c,r} = the card's net margin when recruited at printed from round r
   const fit = (w, key = 'y') => {
     const A = Array.from({ length: K }, () => new Float64Array(K)), b = new Float64Array(K);
     for (const r of rows) {
       const wt = w ? w[r.gi] : 1; if (!wt) continue;
       for (const [i, vi] of r.x) { b[i] += wt * vi * r[key]; for (const [j, vj] of r.x) A[i][j] += wt * vi * vj; }
     }
-    for (let j = 0; j < C; j++) { A[j][j] += 1; A[C + j][C + j] += 400; } // light ridge on a, heavy on per-card slope
+    for (let j = 0; j < 3 * C; j++) A[j][j] += 1;
+    for (let j = 0; j < C; j++) A[B + j][B + j] += 400; // light ridge on a, heavy on the per-card slope
+    for (let j = 0; j < K; j++) if (!seen.has(j)) A[j][j] += 1; // arms with no data stay 0
     return solve(A.map(r => [...r]), [...b]);
   };
   const beta = fit(null), betaOwn = fit(null, 'yo');
@@ -460,15 +466,24 @@ function analysePanel(results, { printed, boot = 200 }) {
   const bs = [];
   for (let k = 0; k < boot; k++) bs.push(fit(results.map(pois)));
   const q = (a, p) => { const s = [...a].filter(Number.isFinite).sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.max(0, Math.floor(p * s.length)))]; };
-  const fairOf = (bb, j) => { const sl = bb[2 * C] + bb[C + j]; return pOf(ids[j]) + (sl < -0.05 ? -bb[j] / sl : bb[j] > 0 ? 30 : -30); };
-  const n = new Array(C).fill(0), buy = new Array(C).fill(0), rnd = new Array(C).fill(0), win = new Array(C).fill(0);
-  results.forEach(R => R.games.forEach(game => game.forEach(e => { if (!e) return; const j = col[e[0]]; n[j]++; if (e[5] === 1) { buy[j]++; rnd[j] += e[6]; } win[j] += e[4]; })));
+  const n = Array.from({ length: 3 }, () => new Array(C).fill(0)), buy = new Array(C).fill(0), rnd = new Array(C).fill(0);
+  results.forEach(R => R.games.forEach(game => game.forEach(e => { if (!e) return; const j = col[e[0]]; n[(e[7] || 1) - 1][j]++; if (e[5] === 1) { buy[j]++; rnd[j] += e[6]; } })));
+  const R = [1, 2, 3].filter(r => n[r - 1].some(x => x > 0));
+  // price → margin: the card's own slope in that round, held to 0.4–1.5 followers per resource (anchors measured
+  // 0.8–1.2; a flatter fitted slope is mostly noise, or a later recruit dodging the price, and would blow the ratio up)
+  const fairR = (bb, j, r) => { const sl = Math.min(1.5, Math.max(0.4, -(bb[BR(r)] + bb[B + j]))); return pOf(ids[j]) + bb[A0(r) + j] / sl; };
+  // a player picks when to recruit: the card's price is its best round's (rounds with under 100 probes left out)
+  const okR = j => R.filter(r => n[r - 1][j] >= 100);
+  const fairOf = (bb, j) => { const rs = okR(j); return rs.length ? Math.max(...rs.map(r => fairR(bb, j, r))) : NaN; };
   const cards = defs.map((d, j) => {
     const fs = bs.map(bb => fairOf(bb, j)), T = pOf(d.id);
-    return { id: d.id, name: d.name, printed: T, n: n[j], boughtShare: n[j] ? buy[j] / n[j] : NaN, meanRound: buy[j] ? rnd[j] / buy[j] : NaN, winDelta: n[j] ? win[j] / n[j] : NaN,
-      net: beta[j], netOwn: betaOwn[j], slope: beta[2 * C] + beta[C + j], fair: fairOf(beta, j), lo: q(fs, 0.05), hi: q(fs, 0.95), se: sd(fs.filter(Number.isFinite)) };
+    const byRound = Object.fromEntries(R.map(r => { const f = bs.map(bb => fairR(bb, j, r)), nt = bs.map(bb => bb[A0(r) + j]); return [r, { n: n[r - 1][j], net: beta[A0(r) + j], netLo: q(nt, 0.05), netHi: q(nt, 0.95), fair: fairR(beta, j, r), lo: q(f, 0.05), hi: q(f, 0.95) }]; }));
+    const best = okR(j).reduce((a, r) => (a === null || byRound[r].fair > byRound[a].fair ? r : a), null);
+    return { id: d.id, name: d.name, printed: T, n: R.reduce((s, r) => s + n[r - 1][j], 0), byRound, bestRound: best,
+      boughtShare: buy[j] / Math.max(1, R.reduce((s, r) => s + n[r - 1][j], 0)), meanRound: buy[j] ? rnd[j] / buy[j] : NaN,
+      net: beta[A0(best || 1) + j], netOwn: betaOwn[A0(best || 1) + j], slope: beta[BR(best || 1)] + beta[B + j], fair: fairOf(beta, j), lo: q(fs, 0.05), hi: q(fs, 0.95), se: sd(fs.filter(Number.isFinite)) };
   });
-  return { slope: beta[2 * C], rows: rows.length, cards };
+  return { slope: R.map(r => beta[BR(r)]), rows: rows.length, cards };
 }
 
 // ======================= driver =======================
@@ -564,7 +579,7 @@ if (!isMainThread) {
     }
   } else if (mode === 'panel') {
     // usage: panel [--games=seeds] [--from-seed=0] [--k=12] [--deltas=-4,0,4] [--only=a,b] [--raw=f] [--from=f1,f2] [--out=f]
-    const params = { K: Number(flags.k || 12), deltas: (flags.deltas || '-4,0,4').split(',').map(Number), fromSeed: Number(flags['from-seed'] || 0),
+    const params = { K: Number(flags.k || 12), deltas: (flags.deltas || '-4,0,4').split(',').map(Number), fromSeed: Number(flags['from-seed'] || 0), rounds: String(flags.rounds || '1').split(',').map(Number),
       only: names ? findDefs(names.split(',')).map(d => d.id) : null };
     params.printed = Object.fromEntries(allDefs().map(d => [d.id, priceOf(d)]));
     let res = [];
@@ -573,9 +588,9 @@ if (!isMainThread) {
     const A = analysePanel(res, params);
     const out = { mode, seeds: res.length, ...params, secs: (Date.now() - t0) / 1000, ...A };
     if (flags.out) writeFileSync(flags.out, JSON.stringify(out, null, 1));
-    console.log(`panel: ${res.length} seeds × ${params.K} probe games (4 probes each), random real tables, 4 normal bots; joint fit over ${A.rows} probes. Shared slope ${A.slope.toFixed(2)} followers of margin per resource. ${out.secs.toFixed(0)}s.`);
-    console.log('card'.padEnd(24), 'print', ' fair', '  90% CI     ', '    n', 'net@printed', 'own@printed', 'slope', 'bought', 'round');
-    for (const c of [...A.cards].sort((a, b) => (b.fair - b.printed) - (a.fair - a.printed))) console.log(c.id.slice(0, 24).padEnd(24), String(c.printed).padStart(5), f1(c.fair).padStart(5), `${f1(c.lo)}–${f1(c.hi)}`.padEnd(13), String(c.n).padStart(5), c.net.toFixed(2).padStart(11), c.netOwn.toFixed(2).padStart(11), c.slope.toFixed(2).padStart(5), (c.boughtShare * 100).toFixed(0).padStart(6), f1(c.meanRound).padStart(5));
+    console.log(`panel: ${res.length} seeds × ${params.K} probe games (4 probes each), random real tables, 4 normal bots; joint fit over ${A.rows} probes. Shared slope by round ${A.slope.map(x => x.toFixed(2)).join(' / ')} followers of margin per resource. ${out.secs.toFixed(0)}s.`);
+    console.log('card'.padEnd(24), 'print', ' fair', '  90% CI     ', 'best', '    n', '  fair from round I / II / III (n)');
+    for (const c of [...A.cards].sort((a, b) => (b.fair - b.printed) - (a.fair - a.printed))) console.log(c.id.slice(0, 24).padEnd(24), String(c.printed).padStart(5), f1(c.fair).padStart(5), `${f1(c.lo)}–${f1(c.hi)}`.padEnd(13), String(c.bestRound ?? '–').padStart(4), String(c.n).padStart(5), '  ' + Object.entries(c.byRound).map(([r, b]) => `${r}: ${f1(b.fair)} (${b.n})`).join('  '));
   } else {
     console.log('mode: screen | sweep | panel (see the header of this file)');
   }
