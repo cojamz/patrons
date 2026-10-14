@@ -493,3 +493,10 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   const head = took ? `${who} took ${took[1]}` : `${who}`;
   return { text: [head, ...parts].join(' · '), touched, actor };
 }
+
+/** Who won a finished game: most followers, members breaking a follower tie (the rule; Results ranks the same way). */
+export function finalWinners(state) {
+  const ids = state.ranking || state.players.map(p => p.id);
+  const key = id => `${engineFollowers(state, state.players[id])}|${memberCount(state, state.players[id])}`;
+  return ids.filter(id => key(id) === key(ids[0]));
+}

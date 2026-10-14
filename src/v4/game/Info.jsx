@@ -250,21 +250,57 @@ export function cachedPreview(state, pid, q, i) {
   if (!m.has(k)) m.set(k, computeHere(state, pid, q, i));
   return m.get(k);
 }
-let worker = null, workerGen = 0, workerState = null;
+let worker = null, workerGen = 0, workerState = null, lastAnswer = 0;
 const pending = new Map(); // gen → state
+const inflight = new Set(); // requests posted to the worker: { state, pid, keys, t }
+const WATCHDOG_MS = 2500;
+const notify = (state, pid, key) => { for (const fn of listeners) fn(state, pid, key); };
+/** Work the keys out here, one at a time and a moment apart, so a hover never waits on a whole batch. */
+function onMainThread(state, pid, keys) {
+  const m = mapFor(state);
+  let k = 0;
+  const step = () => {
+    if (k >= keys.length) return;
+    const key = keys[k++];
+    if (!m.has(`${pid}|${key}`)) { const [q, i] = key.split('-').map(Number); try { m.set(`${pid}|${key}`, computeHere(state, pid, q, i)); } catch { m.set(`${pid}|${key}`, null); } notify(state, pid, key); }
+    setTimeout(step, 0);
+  };
+  setTimeout(step, 0);
+}
+const missing = r => r.keys.filter(k => !mapFor(r.state).has(`${r.pid}|${k}`));
+/** The worker is gone (its file 404s after a deploy, it crashed, it went silent): nothing waits on it any more. */
+function workerFailed() {
+  if (worker) { try { worker.terminate(); } catch { /* gone */ } }
+  worker = false;
+  const left = [...inflight];
+  inflight.clear();
+  for (const r of left) { const keys = missing(r); if (keys.length) onMainThread(r.state, r.pid, keys); }
+}
+// A request the worker never answers (not one result since it was posted) means the worker is dead: fall back.
+// A slow but working worker is left alone (no duplicate work on the main thread).
+function watch(r) {
+  setTimeout(() => {
+    if (!inflight.has(r)) return;
+    if (!missing(r).length) { inflight.delete(r); return; }
+    if (lastAnswer < r.t) workerFailed();
+    else { r.t = Date.now(); watch(r); }
+  }, WATCHDOG_MS);
+}
 function getWorker() {
   if (worker !== null) return worker || null;
   try {
     if (typeof Worker === 'undefined' || typeof window === 'undefined' || /jsdom/i.test(navigator.userAgent || '')) { worker = false; return null; }
     worker = new Worker(new URL('./previewWorker.js', import.meta.url), { type: 'module' });
     worker.onmessage = e => {
+      lastAnswer = Date.now();
       const { gen, pid, key, pv } = e.data;
       const st = pending.get(gen);
       if (!st) return;
       mapFor(st).set(`${pid}|${key}`, pv);
-      for (const fn of listeners) fn(st, pid, key);
+      notify(st, pid, key);
     };
-    worker.onerror = () => { worker = false; };
+    worker.onerror = workerFailed;
+    worker.onmessageerror = workerFailed;
   } catch { worker = false; }
   return worker || null;
 }
@@ -275,19 +311,19 @@ export function requestPreviews(state, pid, keys) {
   if (!todo.length) return;
   const w = getWorker();
   if (w) {
-    if (workerState !== state) { workerState = state; workerGen++; pending.clear(); pending.set(workerGen, state); }
-    try { w.postMessage({ gen: workerGen, state: stripped(state), pid, keys: todo }); return; } catch { worker = false; }
+    if (workerState !== state) { workerState = state; workerGen++; pending.clear(); pending.set(workerGen, state); inflight.clear(); }
+    try {
+      w.postMessage({ gen: workerGen, state: stripped(state), pid, keys: todo });
+      const r = { state, pid, keys: todo, t: Date.now() };
+      inflight.add(r);
+      watch(r);
+      return;
+    } catch { workerFailed(); }
   }
-  // no worker: one at a time, a moment apart, so a hover never waits on a whole batch
-  let k = 0;
-  const step = () => {
-    if (k >= todo.length) return;
-    const key = todo[k++];
-    if (!m.has(`${pid}|${key}`)) { const [q, i] = key.split('-').map(Number); try { m.set(`${pid}|${key}`, computeHere(state, pid, q, i)); } catch { m.set(`${pid}|${key}`, null); } for (const fn of listeners) fn(state, pid, key); }
-    setTimeout(step, 0);
-  };
-  setTimeout(step, 0);
+  onMainThread(state, pid, todo);
 }
+/** For tests: forget the worker (null: try again; false: there is none). */
+export const _setPreviewWorker = w => { worker = w; };
 /** A preview already computed for this state, or undefined (never computes: a hover must not wait). */
 export function peekPreview(state, pid, q, i) {
   const m = previews.get(state);
