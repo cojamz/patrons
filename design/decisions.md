@@ -168,3 +168,8 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Proselytizer's follower counts the moment you recruit. The round-end principle only covers round-end bonuses.
 - ✅ (Cory) Doppelganger effectively becomes a copy of the member card: its effect, member count and follower value.
 - ✅ (Cory) Member costs: Claude makes an informed pass, using bot win rates as one input.
+
+## 2026-10-14 — Blind panel 1 + balance read
+- Blind panel 1 (laptop newcomer, phone, saboteur): all three said NOT YET, overall C / C- / C+. The common problems: reload and Leave lose the game; developer copy on screen; 4-letter codes on the wheel; hover-only information on touch; the "1" glyph reads as "I"; unlabeled worker dots; no answer to illegal clicks; layout jumps. All of it was sent to the UI fix round.
+- Rule fixes from the panel: Recruiting Drive pays on your 2nd recruit (so it's spendable); Steal names who it took from; the rulebook now explains free recruits, contest timing, the turn-order tiebreak and that each quadrant prints its own rule.
+- ❓ Balance (bots, 2000 games): the seat that picks last in round I wins ~32% vs ~23%. Picking last in a round lets you snipe the round-end contests. For Cory.
