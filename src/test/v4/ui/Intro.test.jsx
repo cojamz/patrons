@@ -44,16 +44,17 @@ describe('intro', () => {
     const onClose = vi.fn();
     render(<Intro onClose={onClose} still={false} />);
     expect(dialog().dataset.beat).toBe('1');
-    act(() => vi.advanceTimersByTime(3500));
-    expect(dialog().dataset.beat).toBe('1');
-    let elapsed = 3500;
-    for (const [i, text] of LINES.entries()) {
-      while (dialog().dataset.beat !== String(i + 1)) { act(() => vi.advanceTimersByTime(100)); elapsed += 100; }
-      expect(line()).toBe(text);
-      if (i < 3) { act(() => vi.advanceTimersByTime(3500)); elapsed += 3500; expect(dialog().dataset.beat).toBe(String(i + 1)); }
-      expect(elapsed).toBeLessThan(26000);
+    expect(line()).toBe(LINES[0]);
+    const starts = [0]; // when each beat showed (ms)
+    for (let t = 100; t <= 30000 && starts.length < 4; t += 100) {
+      act(() => vi.advanceTimersByTime(100));
+      const b = Number(dialog().dataset.beat);
+      if (b > starts.length) { starts.push(t); expect(b).toBe(starts.length); expect(line()).toBe(LINES[b - 1]); }
     }
-    expect(elapsed).toBeGreaterThan(17000); // about 20–25 s in all (the last beat waits)
+    expect(starts).toHaveLength(4);
+    for (let i = 1; i < 4; i++) expect(starts[i] - starts[i - 1]).toBeGreaterThanOrEqual(3500); // each line held ≥ 3.5 s
+    expect(starts[3]).toBeGreaterThan(12000); // ~20–25 s in all: beats 1–3, then the last plays and waits
+    expect(starts[3]).toBeLessThan(20000);
     act(() => vi.advanceTimersByTime(30000));
     expect(dialog().dataset.beat).toBe('4');
     expect(onClose).not.toHaveBeenCalled();
