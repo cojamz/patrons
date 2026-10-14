@@ -15,7 +15,9 @@ function play(seed, giveDef, seat) {
   let s = createGame({ seats: Array.from({ length: SEATS }, () => ({ kind: 'bot' })), seed, quadrants: QUADS });
   let given = !giveDef;
   while (!s.over) {
-    if (!given && s.round === 2 && s.pending?.kind === 'place') {
+    // "when recruited" copies need a space taken this round: hand those over at the seat's first buy of round II
+    const mid = giveDef === 'echo.keepsake';
+    if (!given && s.round === 2 && (mid ? s.pending?.kind === 'buy' && s.pending.player === seat : s.pending?.kind === 'place')) {
       s = structuredClone(s);
       const uid = Object.values(s.cards).find(c => c.def === giveDef).uid;
       for (const p of s.players) p.members = p.members.filter(u => u !== uid);

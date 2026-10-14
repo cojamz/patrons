@@ -209,18 +209,18 @@ const echoQ = {
   },
 
   members: [
-    m('evergreen', 'Evergreen', 1, 1, 'At round start, +2 green.', {
-      onRoundStart(ctx, owner) { ctx.gain(owner, 'green', 2); },
+    m('evergreen', 'Evergreen', 1, 1, 'At round start, +3 green.', {
+      onRoundStart(ctx, owner) { ctx.gain(owner, 'green', 3); },
     }),
     m('choir', 'Choir', 1, 1, 'Whenever you copy a space, +1 green.'),
     m('muse', 'Muse', 1, 0, 'Whenever a rival copies one of your spaces, +2 green.'),
     m('choirmaster', 'Choirmaster', 1, 1, 'Whenever a rival copies a space, +1 green.'),
-    m('fan', 'Fan', 1, 1, 'Whenever a rival takes a space that gives them 5 or more resources, +1 green.', {
+    m('fan', 'Fan', 1, 1, 'Whenever a rival takes a center space, +2 green.', {
       onTurnEnd(ctx, owner, card, p) {
         if (p === owner) return;
         const L = ledger(ctx.state);
         const e = L.lastBy && L.now[L.lastBy];
-        if (e && e.p === p.id && spaceTotal(e) >= 5) ctx.gain(owner, 'green', 1);
+        if (e && e.p === p.id && e.ring === 3) ctx.gain(owner, 'green', 2);
       },
     }),
     m('groupie', 'Groupie', 1, 1, 'Whenever anyone recruits a green member, +1 green.', {
@@ -232,10 +232,10 @@ const echoQ = {
       toggle: true,
       onRecruited(ctx, owner, card) { card.on = true; },
     }),
-    m('straggler', 'Straggler', 1, 0, 'At round start, +1 green per player with more followers than you.', {
+    m('straggler', 'Straggler', 1, 0, 'At round start, +2 green per player with more followers than you.', {
       onRoundStart(ctx, owner) {
         const n = ctx.rivals(owner).filter(o => ctx.followers(o) > ctx.followers(owner)).length;
-        if (n) ctx.gain(owner, 'green', n);
+        if (n) ctx.gain(owner, 'green', 2 * n);
       },
     }),
     m('wallflower', 'Wallflower', 1, 1, 'While no one has fewer followers than you, the resources you copy are doubled.'),
@@ -276,8 +276,8 @@ const echoQ = {
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e), 0) >= (ctx.state.round === 3 ? 6 : 10),
     }),
-    m('chronicler', 'Chronicler', 4, 2, 'Game end: +1 follower per 3 green.', {
-      onGameEnd: (ctx, owner) => Math.floor((owner.res.green || 0) / 3),
+    m('chronicler', 'Chronicler', 4, 2, 'Game end: +1 follower per 2 green.', {
+      onGameEnd: (ctx, owner) => Math.floor((owner.res.green || 0) / 2),
     }),
   ],
 };

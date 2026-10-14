@@ -67,18 +67,18 @@ describe('Purple scoring: most resting workers at round end', () => {
 });
 
 describe('Purple actions', () => {
-  it('Rest: +3 purple, your next turn is skipped and that worker rests', () => {
+  it('Rest: +4 purple, your next turn is skipped and that worker rests', () => {
     let s = scene({ queue: turns(0, 1, 0, 1) });
     s = take(s, 'Rest');
-    expect(R(s).purple).toBe(3);
+    expect(R(s).purple).toBe(4);
     expect(rest(s)).toBe(1);
     expect(s.players[0].left).toBe(1); // 3 - placed - skipped
     expect(s.queue.filter(t => t.t === 'turn' && t.p === 0)).toHaveLength(0);
     expect(nextPlacer(s)).toBe(1);
   });
-  it('Rest on your last turn: just +3 purple', () => {
+  it('Rest on your last turn: just +4 purple', () => {
     let s = take(scene({ queue: turns(0, 1) }), 'Rest');
-    expect(R(s).purple).toBe(3);
+    expect(R(s).purple).toBe(4);
     expect(rest(s)).toBe(0);
   });
   it('Doze: +2 purple, +2 per resting worker', () => {
