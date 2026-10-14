@@ -45,8 +45,11 @@ describe('badges are visible wherever a card shows (Blue on the table)', () => {
       const d = cardDef(s, Number(el.dataset.uid));
       expect(!!el.querySelector('.badge-mark'), d.name).toBe(price(d) >= BADGE);
     }
-    fireEvent.click(card(badged[0]).querySelector('.badge-mark'));
-    expect(document.querySelector('[data-tip-body]').textContent).toMatch(new RegExp(`Badged.*${BADGE} or more`));
+    // inside a shop card (a control) the ◆ explains itself by its title (hover, long-press) and the card keeps the click
+    const mark = card(badged[0]).querySelector('.badge-mark');
+    expect(mark.getAttribute('title')).toMatch(new RegExp(`Badged.*${BADGE} or more`, 'i'));
+    fireEvent.click(mark);
+    expect(document.querySelector('[data-tip-body]')).toBeNull();
     cleanup();
     // a rival's cult at the table: the badged member's card (tap its figure) carries ◆
     const bo = cardDef(s, badged[1]);
