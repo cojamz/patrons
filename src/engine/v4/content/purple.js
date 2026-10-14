@@ -11,8 +11,9 @@ const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1,
 const P = 'purple';
 const TURN_VALUE = [3, 5, 7]; // a placement plus its buy, by round
 
-/** Workers p has on the board right now. */
-export const onBoard = (ctx, p) => Object.values(ctx.state.slots).filter(o => o === p.id).length;
+/** Workers p has on the board right now (a worker sharing a rival's space counts too). */
+export const onBoard = (ctx, p) => Object.values(ctx.state.slots).filter(o => o === p.id).length
+  + Object.values(ctx.state.squats || {}).reduce((s, list) => s + list.filter(o => o === p.id).length, 0);
 /** Open spaces right now, as [quadrant index, action index]. */
 function openSpaces(ctx) {
   const out = [];
@@ -198,14 +199,14 @@ export default {
       },
       botActivate: (ctx, owner) => canBuyTurn(ctx, owner, 5) && ctx.state.round >= 2,
     }),
-    m('straggler', 'Straggler', 6, 2, 'At round start, if you have the fewest followers (ties count), take an extra turn before anyone else.', {
+    m('lateriser', 'Late Riser', 6, 2, 'At round start, if you have the fewest followers (ties count), take an extra turn before anyone else.', {
       // the round's turns are queued after round-start hooks, so this one goes first
       onRoundStart(ctx, owner) {
         const me = ctx.followers(owner);
         if (ctx.state.round > 1 && ctx.rivals(owner).every(o => ctx.followers(o) >= me)) {
           ctx.state.queue.unshift({ t: 'turn', p: owner.id });
           owner.left += 1;
-          ctx.log(`${owner.name}'s Straggler: an extra turn first.`);
+          ctx.log(`${owner.name}'s Late Riser: an extra turn first.`);
           extraHooks(ctx, owner);
         }
       },

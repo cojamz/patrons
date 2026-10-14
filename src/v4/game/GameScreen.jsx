@@ -230,13 +230,15 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
 
   const say = useCallback((text, tone = 'nudge', ms = 1900) => {
     clearTimeout(noteTimer.current);
-    setNote(n => ({ text, tone, n: (n ? n.n : 0) + 1 }));
+    const at = session.getState()?.moves ?? null; // the step it's about (after an undo: the restored one)
+    setNote(n => ({ text, tone, at, n: (n ? n.n : 0) + 1 }));
     noteTimer.current = setTimeout(() => setNote(null), ms);
   }, []);
   useEffect(() => () => clearTimeout(noteTimer.current), []);
   // an answer clears the nudge at once (it never lingers past the question it was about)
   const stepKey = state.pending ? `${state.moves}` : 'none';
-  useEffect(() => { clearTimeout(noteTimer.current); setNote(n => (n && n.tone === 'nudge' ? null : n)); }, [stepKey]);
+  // any note (a nudge, "Placement undone") lasts only until the table moves on from the step it was about
+  useEffect(() => { setNote(n => { if (n && n.at !== (state.pending ? state.moves : null) && n.at !== state.moves) { clearTimeout(noteTimer.current); return null; } return n; }); }, [stepKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A fresh state means our move (or someone's) landed: the table is live again.
   useEffect(() => { sendToken.current += 1; setBusy(false); }, [state]);
@@ -269,6 +271,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     shopSnap.current = snapshotShop(root.current);
 
     const lines = newLogLines(before, state);
+    // the clock running out is news for everyone: say it where people look, not only in the log
+    const clock = lines.find(l => /The game ends after this round\./.test(l));
+    if (clock) showToast(clock.replace('The last', 'The last').replace(' is gone.', ' is gone:').replace(' The game', ' the game'), 3600);
     // Gifts float onto the receiver's card, worded as what they are: the receiver gains (nobody loses).
     const got = [];
     const startAt = state.log.length - lines.length;
@@ -352,7 +357,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
 
   // Clicks during an in-flight move are kept and replayed if they're still legal next; "take all" repeats a
   // counted pick (Steal: 1 gold at a time) while that's still the only choice.
-  const queuedClick = useRef(null);
+  const queuedClick = useRef([]); // clicks made while a move is in flight, replayed in order if still legal
   const repeat = useRef(null);
   useEffect(() => { if (mine && pend && pend.kind === 'place') setCaption(null); }, [mine, pend]);
   const lastPick = useRef({ id: null, t: 0 });
@@ -370,11 +375,13 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const onPick = useCallback((optionId, mode) => {
     // a double-click is one choice: the same option again within 350ms is ignored (replays are exempt)
     const now = Date.now();
-    if (mode !== 'replay' && lastPick.current.id === optionId && now - lastPick.current.t < 350) return;
-    if (mode !== 'replay' && now < lockUntil.current) return;
+    // counted picks ("take 1 gold… (2 left)") are meant to be clicked fast and repeatedly: every click counts
+    const counted = !!(pend && /\(\d+ left\)/.test(pend.prompt || ''));
+    if (mode !== 'replay' && !counted && lastPick.current.id === optionId && now - lastPick.current.t < 350) return;
+    if (mode !== 'replay' && !counted && now < lockUntil.current) return;
     lastPick.current = { id: optionId, t: now };
     if (mode === 'all') repeat.current = optionId;
-    if (busy && mine) { queuedClick.current = optionId; return; }
+    if (busy && mine) { queuedClick.current = counted ? [...queuedClick.current, optionId].slice(-4) : [optionId]; return; }
     if (!mine || needHandoff || !options.has(optionId)) return;
     setBusy(true);
     setError('');
@@ -389,11 +396,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, [mine, busy, needHandoff, options, session, pend]);
   useEffect(() => {
     if (busy) return;
-    const q = queuedClick.current;
-    queuedClick.current = null;
+    const q = queuedClick.current.shift();
     if (q && mine && options.has(q)) { onPick(q, 'replay'); return; }
+    if (q) queuedClick.current = []; // the table moved on: the rest of the queue no longer applies
     const r = repeat.current;
-    if (r && mine && pend.kind === 'choose' && pend.options.length === 1 && options.has(r)) { onPick(r, 'replay'); return; }
+    if (r && mine && pend.kind === 'choose' && /\(\d+ left\)/.test(pend.prompt || '') && options.has(r)) { onPick(r, 'replay'); return; }
     if (r && !(mine && pend.kind === 'choose' && options.has(r))) repeat.current = null;
   }, [busy, state]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -448,7 +455,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
   const players = <Players state={state} active={pend ? pend.player : null} mySeats={mySeats} optionFor={live} onPick={onPick} gifts={gifts} robbed={robbed} />;
-  const roundText = state.over ? 'Final' : state.round ? `Round ${roman(state.round)}` : 'Setup';
+  const roundText = state.over ? 'Final' : state.round ? `Round ${roman(state.round)}${state.endEarly ? ' (last)' : ''}` : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
   // The latest rival placement, marked on the wheel; read from the state so it survives a reload.
@@ -471,7 +478,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // only while the seat to act (on screen) is the person who made the move
     && pend && session.undoSeat != null && pend.player === session.undoSeat && session.undoSeat === holder ? (session.undoKind || 'place') : null;
   const canUndo = !!undoKind && !state.over;
-  const undo = () => { const k = undoKind; noLock.current = true; lockUntil.current = 0; if (session.undo && session.undo()) say(k === 'buy' ? 'Buy undone — choose again' : 'Placement undone — place again', 'info', 1800); };
+  const undo = () => { const k = undoKind; noLock.current = true; lockUntil.current = 0; if (session.undo && session.undo()) say(k === 'buy' ? 'Buy undone — choose again' : k === 'setup' ? 'Pick undone — pick again' : 'Placement undone — place again', 'info', 1800); };
+  const undoWord = undoKind === 'buy' ? 'buy' : undoKind === 'setup' ? 'pick' : 'placement';
 
   return (
     <div className={`app game${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}`} ref={root} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
@@ -495,7 +503,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             </span>
           ) : <span className="say" data-prompt tabIndex={-1} />}
           <span className="undo-slot">
-            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : 'Take back your worker until you buy or pass'}>↶ Undo {undoKind === 'buy' ? 'buy' : 'placement'}</button>}
+            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your first pick' : 'Take back your worker until you buy or pass'}>↶ Undo {undoWord}</button>}
           </span>
         </div>
         <div className="bar-row you-row">
@@ -507,7 +515,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               <Workers p={meP} caption={false} />
             </span>
           )}
-          {canUndo && <button type="button" className="btn ghost undo undo-row" onClick={undo}>↶ Undo {undoKind === 'buy' ? 'buy' : 'placement'}</button>}
+          {canUndo && <button type="button" className="btn ghost undo undo-row" onClick={undo}>↶ Undo {undoWord}</button>}
           <button type="button" className="ticker" title={`${lastLine} — open the log`} onClick={openLog} aria-label={`Last: ${lastLine}. Open the log.`}><span className="tk">{lastLine}</span><span className="cue">Log ↓</span></button>
         </div>
       </header>

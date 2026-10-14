@@ -5,20 +5,26 @@ import { useEffect, useRef, useState } from 'react';
 export const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 let floatId = 0;
 
-export default function Tick({ value, from, color, className = '', float = true, dur = 320 }) {
+/** How long a change of d takes to count: long enough to see each step (about 420–650ms). */
+export const countMs = (d, dur = 0) => Math.max(dur, Math.min(650, 400 + 40 * Math.abs(d)));
+
+export default function Tick({ value, from, color, className = '', float = true, dur = 0 }) {
   const [shown, setShown] = useState(from ?? value);
   const [floats, setFloats] = useState([]);
   const [bump, setBump] = useState(0);
-  const [roll, setRoll] = useState(null); // { from, n } while the old number slides out
   const last = useRef(from ?? value);
+  const shownRef = useRef(from ?? value);
+  shownRef.current = shown;
   useEffect(() => {
-    const start = last.current;
+    // count from what's on screen (a change mid-count carries on from there), through every whole number
+    const start = shownRef.current;
     last.current = value;
     if (start === value) return undefined;
     const d = value - start;
+    const ms = countMs(d, dur);
     const timers = [];
     setBump(d > 0 ? 1 : -1);
-    timers.push(setTimeout(() => setBump(0), Math.max(dur, 380)));
+    timers.push(setTimeout(() => setBump(0), ms + 220));
     if (typeof window !== 'undefined') window.__patronsTicks = (window.__patronsTicks || 0) + 1;
     if (float) {
       const id = ++floatId;
@@ -26,26 +32,21 @@ export default function Tick({ value, from, color, className = '', float = true,
       timers.push(setTimeout(() => setFloats(f => f.filter(x => x.id !== id)), 900));
     }
     if (reducedMotion() || typeof requestAnimationFrame !== 'function') { setShown(value); return () => timers.forEach(clearTimeout); }
-    if (Math.abs(d) <= 3) {
-      setShown(value);
-      setRoll({ from: start, n: Date.now(), up: d > 0 });
-      timers.push(setTimeout(() => setRoll(null), 520));
-      return () => { setRoll(null); setBump(0); timers.forEach(clearTimeout); };
-    }
     const t0 = performance.now();
     let raf = 0;
+    const lo = Math.min(start, value), hi = Math.max(start, value);
     const step = now => {
-      const k = Math.min(1, (now - t0) / dur);
-      setShown(Math.round(start + d * (1 - Math.pow(1 - k, 3))));
+      const k = Math.min(1, (now - t0) / ms);
+      const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; // ease in-out: the middle numbers stay readable
+      setShown(Math.max(lo, Math.min(hi, Math.round(start + d * e))));
       if (k < 1) raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
-    return () => { cancelAnimationFrame(raf); setShown(value); setBump(0); timers.forEach(clearTimeout); };
-  }, [value, float, dur]);
+    return () => { cancelAnimationFrame(raf); timers.forEach(clearTimeout); };
+  }, [value, float, dur]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <span className={`tick ${className}${bump > 0 ? ' bump' : bump < 0 ? ' dip' : ''}${roll ? (roll.up ? ' rolling up' : ' rolling down') : ''}`} style={bump && color ? { '--tc': color } : undefined}>
-      <span className="tv" key={roll ? roll.n : 'v'}>{shown}</span>
-      {roll && <span className="tv-out" aria-hidden="true">{roll.from}</span>}
+    <span className={`tick ${className}${bump > 0 ? ' bump' : bump < 0 ? ' dip' : ''}`} style={bump && color ? { '--tc': color } : undefined}>
+      <span className="tv">{shown}</span>
       {floats.map(f => (
         <span key={f.id} className={`floater ${f.d > 0 ? 'up' : 'down'}`} style={color ? { color } : undefined} aria-hidden="true">
           {f.d > 0 ? '+' : '−'}{Math.abs(f.d)}

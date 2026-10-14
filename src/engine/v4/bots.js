@@ -114,9 +114,18 @@ const INCOME = [3.5, 5.5, 8];
 const K_ABILITY = 0.42;
 // How many ways to pay a buy are compared (the engine lists the contest-safe ones first).
 const PAY_WAYS = 10;
+// A copy of the game for trying a move: everything but the log, queue and pending decision (state is plain JSON,
+// and a hand copy is several times faster than structuredClone).
+const copy = v => {
+  if (v === null || typeof v !== 'object') return v;
+  if (Array.isArray(v)) return v.map(copy);
+  const o = {};
+  for (const k in v) o[k] = copy(v[k]);
+  return o;
+};
 const lightClone = s => {
-  const { log, queue, pending, ...rest } = s; void log; void queue; void pending;
-  const c = structuredClone(rest);
+  const c = {};
+  for (const k in s) if (k !== 'log' && k !== 'queue' && k !== 'pending') c[k] = copy(s[k]);
   c.log = []; c.queue = []; c.pending = null;
   return c;
 };
@@ -212,7 +221,7 @@ function gameEndPay(s, ctx, p) {
 /** A member's ability, in followers, for the turns left (its stars are counted separately). */
 export function abilityValue(def, placementsLeft, k = K_ABILITY) {
   if (def.vanilla) return 0;
-  const hooks = Object.keys(def).filter(k => typeof def[k] === 'function' || ['activate', 'costReduction', 'goldPaysDouble', 'stealMore'].includes(k));
+  const hooks = Object.keys(def).filter(k => typeof def[k] === 'function' || ['activate', 'costReduction', 'goldPaysDouble', 'stealMore', 'bends'].includes(k));
   const engine = hooks.filter(k => !['onGameEnd', 'onRecruited', 'botActivate', 'estimate'].includes(k));
   if (!engine.length) return 0; // pays on recruit or at game end: measured directly
   return k * (def.s + def.w) * Math.min(1, placementsLeft / 12);
@@ -231,7 +240,7 @@ function evaluate(s, buysLeft, incomeLeft, roundLeft, extraAbility = {}) {
       + liquidate(s, p.res, extra, buysLeft[p.id], wild) + contests(s, ctx, p, roundLeft);
   });
 }
-const marginOf = (vals, me) => vals[me] - Math.max(...vals.filter((_, i) => i !== me));
+const marginOf = (vals, me, spite = 1) => vals[me] - spite * Math.max(...vals.filter((_, i) => i !== me));
 
 // Resolve follow-up choices a hypothetical move queued (Take, Hire ties, Joint Venture's gift…) by their hints.
 function settle(s, ctx) {
@@ -252,13 +261,13 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
   const me = pend.player;
   const { turns, roundLeft } = horizon(state);
-  const nowIncome = INCOME[state.round - 1];
+  const nowIncome = INCOME[state.round - 1] * (opts.income ?? 1);
   // buys and income still ahead; extraNow: this turn's buy is still ahead for the deciding player
   const buysAt = (s, extraNow) => {
     const lt = laterTurns(s).turns;
     return state.players.map((_, i) => turns[i] + lt + (i === me ? extraNow : 0));
   };
-  const incomeAt = s => { const li = laterTurns(s).income; return turns.map(t => t * nowIncome + li); };
+  const incomeAt = s => { const li = laterTurns(s).income * (opts.income ?? 1); return turns.map(t => t * nowIncome + li); };
   const placesLeft = turns[me] + laterTurns(state).turns;
   const out = [];
   if (pend.kind === 'place') {
@@ -275,7 +284,7 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
         for (const c of ctx.membersOf(p)) for (const id of [c.def.id, c.copy].filter(Boolean)) defById(id).afterAction?.(ctx, p, c, qid);
         actionAt(s, o.q, o.i).resolve(ctx, p);
         settle(s, ctx);
-        v = marginOf(evaluate(s, buysAt(s, 1), incomeAt(s), roundLeft), me);
+        v = marginOf(evaluate(s, buysAt(s, 1), incomeAt(s), roundLeft), me, opts.spite);
         if (opts.noMembers && memberCount(s, p) > before) v -= 100;
       } catch {
         v = -50 + actionAt(state, o.q, o.i).estimate(contextFor(state), state.players[me]);
@@ -304,13 +313,30 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
             if (tier.clock && s.stock[tier.key] <= 0) s.endEarly = true;
           }
         }
-        return marginOf(evaluate(s, buysAt(s, 0), incomeAt(s), roundLeft, extraAbility), me);
+        return marginOf(evaluate(s, buysAt(s, 0), incomeAt(s), roundLeft, extraAbility), me, opts.spite);
+      } catch {
+        return -1e6;
+      }
+    };
+    // Release (a base rule): lose the member (its stars and what its ability would still bring), take its cost
+    // spread over the colors held least, and keep this turn's buy.
+    const releaseValue = uid => {
+      try {
+        const s = lightClone(state);
+        const p = s.players[me];
+        const def = cardDef(s, uid);
+        p.members = p.members.filter(u => u !== uid);
+        for (let k = 0; k < def.s + def.w; k++) {
+          const c = s.resources.reduce((x, y) => ((p.res[y] || 0) < (p.res[x] || 0) ? y : x));
+          p.res[c] = (p.res[c] || 0) + 1;
+        }
+        return marginOf(evaluate(s, buysAt(s, 1), incomeAt(s), roundLeft, { [me]: -abilityValue(def, placesLeft, opts.k) }), me, opts.spite) - 0.5;
       } catch {
         return -1e6;
       }
     };
     // the ways to pay worth comparing (they differ in which contests they give up)
-    const ways = what => (what.uid !== undefined ? paymentChoices(state, state.players[me], what.uid) : followerChoices(state, state.players[me], TIERS.find(t => t.key === what.tier))).slice(0, PAY_WAYS);
+    const ways = what => (what.uid !== undefined ? paymentChoices(state, state.players[me], what.uid) : followerChoices(state, state.players[me], TIERS.find(t => t.key === what.tier))).slice(0, opts.payWays ?? PAY_WAYS);
     if (pend.kind === 'pay') {
       const what = pend.uid !== undefined ? { uid: pend.uid } : { tier: pend.tier };
       for (const o of pend.options) if (o.kind === 'pay') out.push({ o, v: valueOf(what, o.spend) + (o.default ? 0.01 : 0) });
@@ -318,6 +344,8 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
       for (const o of pend.options) {
         if (o.kind === 'toggle' || o.kind === 'use') continue;
         if (opts.noMembers && o.kind === 'card') continue;
+        if (o.kind === 'release') { out.push({ o, v: releaseValue(o.uid) + rand() * (opts.noise ?? 0.05) }); continue; }
+        if (o.kind !== 'pass' && o.kind !== 'card' && o.kind !== 'tier') continue;
         let v;
         if (o.kind === 'pass') v = valueOf({}, {});
         else v = Math.max(-1e6, ...ways(o.kind === 'card' ? { uid: o.uid } : { tier: o.tier }).map(w => valueOf(o.kind === 'card' ? { uid: o.uid } : { tier: o.tier }, w)));

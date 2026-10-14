@@ -905,6 +905,7 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 .chip{border-radius:5px;border:1px solid color-mix(in srgb,var(--c) 55%,var(--rim));border-left:4px solid var(--c);background:linear-gradient(180deg,color-mix(in srgb,var(--c) 10%,var(--table-2)),var(--table-2));padding:1px 8px 1px 6px;display:inline-flex;align-items:center;gap:5px;box-shadow:0 1px 2px rgba(0,0,0,.35)}
 .chip .glyph,.card-face .glyph{width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8,var(--c) 55%);box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 70%,#000);flex:none}
 .chip .copies{font-style:normal;color:var(--muted)}
+.chip .stars{font-style:normal;color:var(--c);font-weight:700}
 .chip.more{border-left-width:1px}
 .card-face{display:flex;flex-direction:column;gap:6px;border-left:4px solid var(--c);padding-left:10px}
 .card-face .row{display:flex;align-items:center;gap:8px}

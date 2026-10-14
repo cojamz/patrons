@@ -5,7 +5,7 @@ import { createGame, applyMove, resume, followers } from '../../../../engine/v4/
 import { chooseBotMove } from '../../../../engine/v4/bots.js';
 import { seededRandom } from '../../../../engine/v4/rng.js';
 import { registerQuadrant } from '../../../../engine/v4/content/index.js';
-import market, { memberValue, priceyCount, install, setScoring } from '../../../../engine/v4/content/market.js';
+import market, { memberValue, priceyCount, install, setScoring, setBadge } from '../../../../engine/v4/content/market.js';
 import { contextFor } from '../../../../engine/v4/core.js';
 import { take, move, uidOf, ids, fol, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
@@ -21,8 +21,9 @@ const MARKET_TEST_COSTS = {
   'market.blackmarket': [2, 2], 'market.snob': [3, 2], 'market.recluse': [2, 1],
 };
 let restore;
-beforeEach(() => { restore = pinCosts({ ...TEST_COSTS, ...MARKET_TEST_COSTS }); });
-afterEach(() => restore());
+// These costs are the pre-doubling scale, so the badge cutoff goes back to 4 with them.
+beforeEach(() => { restore = pinCosts({ ...TEST_COSTS, ...MARKET_TEST_COSTS }); setBadge(4); });
+afterEach(() => { restore(); setBadge(8); });
 
 function scene({ n = 2, seed = 7, round = 1, res = [], members = [], shop = null, bonus = [], turn = 0, queue = null, pileFirst = null } = {}) {
   const s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants: Q });
@@ -139,8 +140,8 @@ describe('Blue actions', () => {
     t = move(t, card(t, 'red.intern'));
     expect(has(t, 'red.intern')).toBe(true);
   });
-  it('Price Check (ring II): blue equal to the cost of your priciest member', () => {
-    expect(R(take(scene({ round: 2, members: [['gold.tycoon', 'red.intern']] }), 'Price Check')).blue).toBe(4);
+  it('Price Check (ring II): blue equal to half the cost of your priciest member', () => {
+    expect(R(take(scene({ round: 2, members: [['gold.tycoon', 'red.intern']] }), 'Price Check')).blue).toBe(2);
     expect(R(take(scene({ round: 2 }), 'Price Check')).blue).toBe(0);
   });
   it('Spree (ring III): three buys this turn', () => {
@@ -196,12 +197,12 @@ describe('Blue members', () => {
   it('Curator: round start, +1 blue per badged member', () => {
     expect(R(start([['market.curator', 'gold.midas', 'gold.tycoon', 'red.intern']])).blue).toBe(2); // Midas 5, Tycoon 4
   });
-  it('Planner: round start, your next member costs 1 less per round number', () => {
-    expect(start([['market.planner']]).players[0].discount).toBe(2);
+  it('Planner: round start, your next member costs 2 less per round number', () => {
+    expect(start([['market.planner']]).players[0].discount).toBe(4);
   });
-  it('Underbidder: round start, next member 1 less per rival with more members', () => {
+  it('Underbidder: round start, next member 2 less per rival with more members', () => {
     const s = scene({ n: 3, members: [['market.underbidder'], ['red.intern', 'red.volunteer'], ['red.twins', 'red.drive']], queue: [{ t: 'round', r: 2 }] });
-    expect(s.players[0].discount).toBe(2);
+    expect(s.players[0].discount).toBe(4);
     const t = scene({ n: 3, members: [['market.underbidder', 'red.twins'], ['red.intern', 'red.drive'], []], queue: [{ t: 'round', r: 2 }] });
     expect(t.players[0].discount).toBe(0);
   });
@@ -233,10 +234,10 @@ describe('Blue members', () => {
     expect(R(rivalBuys([['market.auctioneer']], 'red.twins')).blue).toBe(1);
     expect(R(rivalBuys([['market.auctioneer']], 'gold.tycoon')).blue).toBe(0);
   });
-  it('Sommelier: whenever you recruit a badged member, your next costs 1 less', () => {
+  it('Sommelier: whenever you recruit a badged member, your next costs 2 less', () => {
     let s = take(scene({ res: [{ gold: 9 }], members: [['market.sommelier']], shop: SHOP }), 'Showroom');
     s = move(s, card(s, 'gold.tycoon'));
-    expect(s.players[0].discount).toBe(1);
+    expect(s.players[0].discount).toBe(2);
   });
   it('Patroness: whenever you recruit a badged member, +1 follower', () => {
     let s = take(scene({ res: [{ gold: 9 }], members: [['market.patroness']], shop: SHOP }), 'Showroom');
@@ -272,7 +273,7 @@ describe('Blue members', () => {
 
 describe('Blue table: 200 seeded bot games', () => {
   it('finish cleanly with invariants holding', { timeout: 120000 }, () => {
-    const restoreReal = restore; restoreReal(); restore = () => {};
+    const restoreReal = restore; restoreReal(); setBadge(8); restore = () => {};
     let usedSpree = 0;
     for (let g = 1; g <= 200; g++) {
       const rand = seededRandom(g * 131);

@@ -221,3 +221,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
   - Fence/Release (once/round release a member for its cost in any colors): yes; try it as a base rule for everyone.
   - Front-runner (always pick first in a round): yes.
 - ✅ (Cory) New member, Straggler: after the last worker of the round is placed, move one of your workers to an unused space and take that action (useful in rounds II–III only). Purple's old Straggler gets renamed.
+- 💡 (Cory) Relics: no, too similar to members. Omens: liked, but must not hand a committed color a lucky round; prefers neutral. Options pitched: all omens face up at setup, trailing player picks from 2, structural-only effects; alternatives Rank, Titles, Devotion.

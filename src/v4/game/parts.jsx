@@ -48,10 +48,10 @@ function optionDetail(state, o) {
 }
 
 /** "P4 (34)" from an engine label reads as "P4 · 34 gold" when the question is about gold. */
-function withUnits(label, prompt) {
+function withUnits(label, prompt, colors = ['gold', 'red', 'blue', 'green']) {
   const m = label.match(/^(.*) \((\d+)\)$/);
   if (!m) return label;
-  const unit = (prompt.match(/\b(gold|red|blue|green)\b/i) || [])[1];
+  const unit = (prompt.match(new RegExp(`\\b(${colors.join('|')})\\b`, 'i')) || [])[1];
   return `${m[1]} · ${m[2]}${unit ? ` ${unit.toLowerCase()}` : ''}`;
 }
 
@@ -76,14 +76,22 @@ export function ChoicePrompt({ state, onPick, busy }) {
       {setup ? <SetupTokens state={state} pend={pend} onPick={pick} busy={busy} />
         : trade ? <TradePicker state={state} pend={pend} onPick={pick} busy={busy} />
           : <MergedOptions state={state} pend={pend} onPick={pick} busy={busy} />}
-      {!setup && !trade && pend.options.length === 1 && /\((\d+) left\)/.test(pend.prompt) && (
-        <button type="button" className="btn pri take-all" onClick={() => pick(pend.options[0].id, 'all')}>
-          {`Take all ${pend.prompt.match(/\((\d+) left\)/)[1]} from ${withUnits(pend.options[0].label, pend.prompt).split(' · ')[0]}`}
-        </button>
+      {!setup && !trade && left != null && Number(left) > 1 && (
+        // a counted pick: one button per target that can cover all of what's left ("Take all 3 from P3")
+        <div className="take-alls">
+          {pend.options.filter(o => holds(o) >= Number(left) || pend.options.length === 1).map(o => (
+            <button key={o.id} type="button" className="btn pri take-all" disabled={busy} onClick={() => pick(o.id, 'all')}>
+              {`Take all ${left} from ${withUnits(o.label, pend.prompt, state.resources).split(' · ')[0]}`}
+            </button>
+          ))}
+        </div>
       )}
     </section>
   );
 }
+
+// how many a counted-pick target holds: "P3 · 5 gold" or "P3 (5)"
+const holds = o => Number((String(o.label).match(/· (\d+)\b/) || String(o.label).match(/\((\d+)\)$/) || [])[1] || 0);
 
 function SetupTokens({ state, pend, onPick, busy }) {
   return (
@@ -128,11 +136,11 @@ function MergedOptions({ state, pend, onPick, busy }) {
             {color && <i />}
             {det ? (
               <span className="rich-body">
-                <b>{det.name}{n > 1 && <span className="num"> ×{n}</span>}{det.f != null && <span className="num star"> {det.f}★</span>}</b>
+                <b>{det.name}{n > 1 && <span className="num copies"> {state.shop && state.shop.includes(o.value) ? `· ${n} in the shop` : `· ${n} of them`}</span>}{det.f != null && <span className="num star"> {det.f}★</span>}</b>
                 <small>{det.text}</small>
                 {det.cost && <small className="cost-line">Costs <span className="num">{det.cost}</span></small>}
               </span>
-            ) : (q ? q.name : withUnits(o.label, pend.prompt))}
+            ) : (q ? q.name : withUnits(o.label, pend.prompt, state.resources))}
           </button>
         );
       })}

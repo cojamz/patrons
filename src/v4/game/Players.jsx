@@ -9,7 +9,7 @@ import { Popover } from './parts.jsx';
 
 export const memberTip = d => `${d.name} · ${d.f}★ · ${d.text}`;
 
-export function Resources({ state, p, float = true, dur = 600 }) {
+export function Resources({ state, p, float = true, dur = 0 }) {
   return state.resources.map(r => (
     <span key={r} className="r" title={`${p.res[r]} ${r}`} aria-label={`${p.res[r]} ${r}`}>
       <i style={{ background: `var(--${r})` }} /><Tick value={p.res[r]} color={`var(--${r})`} className="num" float={float} dur={dur} />
@@ -98,7 +98,7 @@ function ChipRow({ state, p, own, onOpen, onAll }) {
             style={{ '--c': `var(--${g.def.quadrant})` }} title={memberTip(g.def)} aria-haspopup="dialog"
             onClick={e => onOpen(e.currentTarget, g)}
           >
-            <span className="glyph" aria-hidden="true" />{g.label}{g.count > 1 ? <em className="copies"> ×{g.count} copies</em> : ''}{g.card.used ? <em className="used"> · used</em> : null}
+            <span className="glyph" aria-hidden="true" />{g.label}{g.def.f > 1 ? <em className="stars"> {g.def.f}★</em> : null}{g.count > 1 ? <em className="copies"> ×{g.count} copies</em> : ''}{g.card.used ? <em className="used"> · used</em> : null}
             {sw && <i className={`sw${g.card.on === false ? '' : ' on'}`} aria-label={g.card.on === false ? 'off' : 'on'} />}
           </button>
         );
@@ -137,14 +137,14 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
             <div className="top">
               <span className="nm"><i />{p.name}{p.hideout && p.hideout === state.round && !state.over ? <span className="hideout" title="Hideout: no one can steal from this player this round">⛨ hidden</span> : null}{p.kind === 'bot' ? <em> · bot</em> : isYou ? <em> · you</em> : null}</span>
               <span className="fol">
-                <Tick value={f} color={playerColor(p.id)} className="num" dur={650} float={false} /><small>{f === 1 ? 'follower' : 'followers'}</small>
+                <Tick value={f} color={playerColor(p.id)} className="num" float={false} /><small>{f === 1 ? 'follower' : 'followers'}</small>
                 {proj && proj[p.id] && proj[p.id].total > 0 && (
                   <em className="at-end" title={`If the game ended now: ${proj[p.id].parts.map(x => `${x.name} +${x.n}`).join(', ')}`}>+{proj[p.id].total} at end</em>
                 )}
               </span>
             </div>
             <div className={`res${robbed && robbed.pid === p.id ? ' robbed' : ''}`}>
-              <Resources state={state} p={p} float={false} dur={600} />
+              <Resources state={state} p={p} float={false} />
               <span className="meta">
                 <Workers p={p} />
                 <span className="sep" aria-hidden="true" />

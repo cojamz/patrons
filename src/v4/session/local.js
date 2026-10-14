@@ -43,6 +43,8 @@ export function checkpointValid(cp, state) {
   if (!(cp && cp.state && state && !state.over && state.moves === cp.moves && state.round === cp.state.round)) return false;
   // a buy can be taken back until anyone moves next; a placement only while it's still the placer's decision
   if (cp.kind === 'buy') return true;
+  // a first starting pick, while its second pick is still open
+  if (cp.kind === 'setup') return !!(state.pending && state.pending.player === cp.player && state.pending.kind === 'setup');
   return !!(state.pending && state.pending.player === cp.player && state.pending.kind !== 'place');
 }
 /** How long the next bot waits after a human's buy, so "Undo buy" is really there to press. */
@@ -92,7 +94,9 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     if (kind === 'buy' && human && /^(card|tier):/.test(move.option)) buyStart = before;
     const bought = human && buyStart && ((kind === 'buy' && /^(card|tier):/.test(move.option) && !(state.pending && state.pending.kind === 'pay'))
       || (kind === 'pay' && move.option !== 'back'));
+    const firstPick = kind === 'setup' && human && state.pending && state.pending.kind === 'setup' && state.pending.player === move.player;
     if (placed) checkpoint = { kind: 'place', state: before, player: move.player, moves: state.moves };
+    else if (firstPick) checkpoint = { kind: 'setup', state: before, player: move.player, moves: state.moves };
     // a purchase is undoable only while the next to move is a bot: handing the device to another person ends it
     else if (bought && !(state.pending && mySeats.includes(state.pending.player) && state.pending.player !== move.player)) checkpoint = { kind: 'buy', state: buyStart, player: move.player, moves: state.moves };
     else checkpoint = null;
@@ -144,7 +148,7 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     },
     /** The live undo checkpoint (or null), for saving next to the state so undo survives a reload. */
     get undoCheckpoint() { return canUndo() ? checkpoint : null; },
-    /** 'place' or 'buy' while undo is available, else null. */
+    /** 'place', 'buy' or 'setup' (a first starting pick) while undo is available, else null. */
     get undoKind() { return canUndo() ? checkpoint.kind || 'place' : null; },
     /** The seat whose move undo would take back, or null. */
     get undoSeat() { return canUndo() ? checkpoint.player : null; },

@@ -136,11 +136,20 @@ try {
       continue;
     }
     // Once: undo a placement, then reload mid-game and resume, then browser Back and resume again.
-    if (!seen.has('undo') && await page.$('.undo')) {
+    // Once: the first starting pick can be taken back (a double tap no longer commits it for good).
+    if (!seen.has('undo-pick') && await page.$('.undo:has-text("pick")')) {
+      seen.add('undo-pick');
+      await page.click('.undo:has-text("pick")');
+      await page.waitForTimeout(200);
+      const p = await page.$eval('.prompt.choice p', e => e.textContent).catch(() => '');
+      if (!/1 of 2/.test(p)) errors.push(`undoing the first starting pick did not reopen it ("${p}")`);
+      continue;
+    }
+    if (!seen.has('undo') && await page.$('.undo:not(:has-text("pick"))')) {
       seen.add('undo');
       const before = await page.$$eval('.slot .worker', e => e.length);
       await shot('05-undo-offered');
-      await page.click('.undo');
+      await page.click('.undo:not(:has-text("pick"))');
       await page.waitForTimeout(150);
       const after = await page.$$eval('.slot .worker', e => e.length);
       if (after !== before - 1) errors.push(`undo did not take the worker back (${before} -> ${after})`);
@@ -152,6 +161,9 @@ try {
         await page.waitForTimeout(250);
         const again = await page.$$eval('.slot .worker', e => e.length);
         if (again !== after + 1) errors.push(`center click after undo did not place (${after} -> ${again})`);
+        // the "Placement undone" note goes with the step it was about: the pill now tracks the real prompt
+        const pill = await page.$eval('[data-prompt]', e => e.textContent).catch(() => '');
+        if (/undone/i.test(pill)) errors.push(`after undo and a new placement the pill still says "${pill}"`);
       }
       continue;
     }
@@ -191,7 +203,7 @@ try {
   console.log(`motion: ${flights} flights (cards and workers), ${ticks} number count-ups`);
   if (!ticks) errors.push('no numbers counted up');
   if (!flights) errors.push('no card or worker flights ran');
-  for (const why of ['undo', 'reload']) if (!seen.has(why)) errors.push(`never exercised ${why}`);
+  for (const why of ['undo', 'undo-pick', 'reload']) if (!seen.has(why)) errors.push(`never exercised ${why}`);
   console.log(`finished after ${clicks} clicks: ${winner}`);
   // Play again returns to a fresh game.
   await page.click('[data-play-again]');

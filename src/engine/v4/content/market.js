@@ -9,7 +9,9 @@ const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1,
 const B = 'blue';
 const Q = 'market';
 // One cutoff, scaled with member costs (they doubled 2026-10-14: 4 became 8).
-export const BADGE = 8;
+export let BADGE = 8;
+/** Move the cutoff (tests written against small pinned costs use 4). */
+export function setBadge(n) { BADGE = n; }
 const isBlue = def => def.quadrant === Q;
 
 /** Printed cost of a member (before any discount). */

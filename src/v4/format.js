@@ -21,7 +21,7 @@ export function memberChips(state, p) {
   for (const uid of p.members) {
     const c = state.cards[uid];
     const d = cardDef(state, uid);
-    const extra = c.copy ? ` → ${defById(c.copy).name}` : c.color ? ` · works ${quadrant(c.color).name}` : '';
+    const extra = c.copy ? ` → ${defById(c.copy).name}` : c.color ? ` (${quadrant(c.color).name})` : '';
     const key = [d.id, c.used ? 'u' : '', c.on === false ? 'off' : '', c.copy || '', c.color || ''].join('|');
     if (!out.has(key)) out.set(key, { key, uids: [], def: d, card: c, label: d.name + extra, count: 0 });
     const g = out.get(key);
@@ -170,21 +170,21 @@ export function winSentence(state) {
   const lead = ranked[1] ? `${w.name} won by ${f(w) - f(ranked[1])}` : `${w.name} won`;
   // Name the biggest real sources, in the words the results table uses.
   const n = w.members.reduce((s2, u) => s2 + cardDef(state, u).n, 0);
-  const best = b.parts.map(x => { const m = x.match(/^(.*) \+(\d+)$/); return m ? { name: m[1], n: Number(m[2]) } : null; }).filter(Boolean).sort((a2, c) => c.n - a2.n)[0];
   const swept = Object.entries(contestRounds(state)[w.id] || {}).sort((a2, c) => c[1].rounds - a2[1].rounds || c[1].v - a2[1].v)[0];
+  // "P4 won by 17, mostly by holding Most members all three rounds (+20)." Biggest source first, in plain words.
   const say = {
-    members: v => `${v} from ${n} members' ★`,
-    bought: v => `${v} bought`,
-    effects: v => `${v} from members' effects`,
-    endGame: v => (b.parts.length ? `${v} in end-game bonuses (${b.parts.join(', ')})` : `${v} in end-game bonuses`),
+    members: v => `by recruiting ${n} members (+${v})`,
+    bought: v => `by buying followers (+${v})`,
+    effects: v => `from members' abilities (+${v})`,
+    endGame: v => `from end-game bonuses (+${v})`,
     contests: v => (swept && swept[1].rounds >= 2
-      ? `${v} from contests (${shortLabel(swept[0])} ${swept[1].rounds === 3 ? 'all three rounds' : `${swept[1].rounds} of 3 rounds`})`
-      : `${v} from contests`),
+      ? `by holding ${shortLabel(swept[0])} ${swept[1].rounds === 3 ? 'all three rounds' : 'two rounds of three'} (+${v})`
+      : `from contests (+${v})`),
   };
   const top = [['members', b.members], ['bought', b.bought], ['effects', b.effects], ['endGame', b.endGame], ['contests', b.contests]]
     .filter(([, v]) => v > 0).sort((x, y) => y[1] - x[1]).slice(0, 2);
   if (!top.length) return `${lead}.`;
-  return `${lead}: ${top.map(([k, v]) => say[k](v)).join(' and ')}.`;
+  return `${lead}, mostly ${say[top[0][0]](top[0][1])}${top[1] ? `, then ${say[top[1][0]](top[1][1])}` : ''}.`;
 }
 
 /** Lines added to the log between two states. The log only appends (and trims its front past a cap). */

@@ -13,7 +13,7 @@ registerQuadrant(purple);
 const Q = ['gold', 'red', 'purple', 'green'];
 
 const PURPLE_TEST_COSTS = {
-  'purple.secondwind': [4, 2], 'purple.errand': [2, 2], 'purple.taskmaster': [2, 1], 'purple.straggler': [3, 2],
+  'purple.secondwind': [4, 2], 'purple.errand': [2, 2], 'purple.taskmaster': [2, 1], 'purple.lateriser': [3, 2],
   'purple.foreman': [1, 1], 'purple.courier': [1, 1], 'purple.apprentice': [1, 1], 'purple.overseer': [1, 1],
   'purple.doubletime': [2, 1], 'purple.bookkeeper': [1, 1], 'purple.clockmaker': [2, 1], 'purple.lamplighter': [1, 0],
   'purple.relay': [2, 2], 'purple.patience': [3, 2], 'purple.crew': [1, 1],
@@ -150,12 +150,12 @@ describe('Purple members', () => {
     t = move(t, `use:${u}`);
     expect(ids(t)).toContain(`use:${u}`); // not used up
   });
-  it('Straggler: from round II, the trailing player takes an extra turn first', () => {
-    const s = start([['purple.straggler']], { bonus: [0, 3] });
+  it('Late Riser: from round II, the trailing player takes an extra turn first', () => {
+    const s = start([['purple.lateriser']], { bonus: [0, 3] });
     expect(s.pending.kind).toBe('place');
     expect(s.pending.player).toBe(0);
     expect(s.queue.filter(t => t.t === 'turn' && t.p === 0)).toHaveLength(4); // 1 extra + 4 - this one
-    const t = start([['purple.straggler']], { bonus: [3, 0] });
+    const t = start([['purple.lateriser']], { bonus: [3, 0] });
     expect(t.queue.filter(x => x.t === 'turn' && x.p === 0)).toHaveLength(4);
   });
   it('Foreman, Courier, Apprentice: whenever you take an extra turn', () => {

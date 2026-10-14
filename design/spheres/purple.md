@@ -15,7 +15,7 @@ Gold hoards money and Red stacks cheap members. Purple multiplies turns. Its con
 8. Second Wind (4+2): once per game, take an extra turn right after this one.
 9. Errand Runner (2+2): when you recruit it, take an extra turn right after this one.
 10. Taskmaster (3+1): once per round, pay 5 purple to take an extra turn right after this one.
-11. Straggler (3+1): from round II on, if you have the fewest followers at round start, you take an extra turn before anyone else.
+11. Late Riser (3+1): from round II on, if you have the fewest followers at round start, you take an extra turn before anyone else.
 12. Foreman (2+1): whenever you take an extra turn, +1 purple per worker you have on the board.
 13. Courier (2+1): whenever you take an extra turn, +1 of each other color.
 14. Apprentice (1+1): whenever you take an extra turn, your next member costs 2 less.
@@ -46,7 +46,7 @@ Cut: 23. Lend a Hand (a copy of Joint Venture). 24. Timekeeper. 25. Marathoner (
 - Contest when nobody takes extra turns: everyone is level on the board, so the purple tiebreak decides it. That's every round I, and about 56% of all rounds; 66% of rounds go to the tiebreak. Read honestly, Purple's contest is "most purple" most of the time, and "most workers" only once someone has bought turns.
 - Member value (handed over at round II start, 120 games each, about ±1.5 noise; Banker reads 2.3 in the same run):
   - Changed this pass: Double Time 5.3 → 4. Lamplighter (relative) 4.9 → 4. Relay 4.1 → 4. Foreman (relative) 3.2 → 3. Overseer (half your purple) 2.4 → 3. Apprentice (2 less) 2.2 → 2.
-  - Earlier pass: Second Wind 8.8, Taskmaster 5.4, Patience 4.9, Courier 4.5, Bookkeeper 4.5, Straggler 4.1, Clockmaker 3.9, Shift Crew 3.8.
+  - Earlier pass: Second Wind 8.8, Taskmaster 5.4, Patience 4.9, Courier 4.5, Bookkeeper 4.5, Late Riser 4.1, Clockmaker 3.9, Shift Crew 3.8.
   - Errand Runner's effect fires on recruit, so handing it over can't measure it; it's priced as one turn on a fixed clock.
 - Thinking bot (20 games, 4 rollouts): wins 65% (13/20, average margin +6.1) against 55% on the stand-in table. It plays slightly more Purple than the greedy bots (28% of its placements against 23%), grabs Catch Up early and saves Overtime and Rally for rounds II–III.
 

@@ -63,7 +63,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
             const c = contest(p.id);
             const g = start ? roundGains(start, at, p, c) : null;
             const other = now - was - c;
-            const why = g ? [g.members && `${g.members > 0 ? '+' : ''}${g.members} from members`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : ''}${g.effects} effects`].filter(Boolean).join(' · ') : '';
+            const why = g ? [g.members && `${g.members > 0 ? '+' : ''}${g.members} recruited`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : ''}${g.effects} effects`].filter(Boolean).join(' · ') : '';
             return (
               <div key={p.id} className="re-p" role="row" style={{ '--pc': playerColor(p.id) }}>
                 <span className="nm" role="cell"><i />{p.name}</span>

@@ -9,6 +9,7 @@ import { install as installMarket } from './market.js';
 import { install as installThieves } from './thieves.js';
 import { install as installTrading } from './trading.js';
 import { install as installEcho } from './echo.js';
+import { install as installBenders } from './benders.js';
 
 const QUADRANTS = { gold, red, blue, green };
 
@@ -51,12 +52,30 @@ export const handlerById = id => {
 };
 export const allQuadrantIds = () => Object.keys(QUADRANTS);
 
+// Guest members: cards that join the shared deck without a quadrant of their own (the rule-benders, while they
+// wait for a sphere). Each def names the sphere it leans to (def.lean): that is its color, and it counts as one of
+// that sphere's members. Ids are "<group>.<key>". A table with the rule flag rules.guests off leaves them out.
+const GUESTS = [];
+export function registerGuests(group, defs, handlers = {}) {
+  for (const [k, fn] of Object.entries(handlers)) HANDLERS[`${group}.${k}`] = fn;
+  for (const def of defs) {
+    def.id = `${group}.${def.key}`;
+    def.quadrant = def.lean;
+    def.copies = def.copies || 1;
+    def.guest = group;
+    DEFS[def.id] = def;
+    if (!GUESTS.includes(def)) GUESTS.push(def);
+  }
+}
+export const guestMembers = () => [...GUESTS];
+
 // Every sphere, so a table can pick any four. A sphere only acts when it's on the table: its scoring, hooks
 // and guards are looked up through state.quadrants, and its members only enter decks that include it.
 for (const q of [purple, silver, yellow]) registerQuadrant(q);
 installMarket();
 installThieves();
 installTrading();
+installBenders();
 // Echo goes last: it wraps every action registered so far to record what spaces gave. Gate the wrapper so a
 // table without Echo runs each action's own resolve and its state never grows an echo ledger.
 installEcho();
