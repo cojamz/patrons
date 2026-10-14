@@ -1,12 +1,13 @@
-// Player colors never read as resources: each is ΔE ≥ 40 (CIE76, Lab D65) from all nine resource colors in v4.css,
-// ≥ 40 from each other, and readable on the table (contrast ≥ 4.5).
+// Player colors never read as resources: each is ΔE ≥ 30 (CIE76, Lab D65) from all nine resource colors in v4.css,
+// ≥ 30 from each other, and readable on the table and on dark wood (contrast ≥ 4.5). Seat sigils carry identity too.
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { PLAYER_COLORS } from '../../../v4/format.js';
+import { PLAYER_COLORS, SEAT_SIGILS } from '../../../v4/format.js';
 
 const css = readFileSync(`${process.cwd()}/src/v4/v4.css`, 'utf8');
 const root = css.slice(css.indexOf(':root{'), css.indexOf('}', css.indexOf(':root{')));
 const varOf = name => (root.match(new RegExp(`--${name}:(#[0-9a-fA-F]{6})`)) || [])[1];
+const WALNUT = '#1d1611'; // the Lamplit Table direction's wood (design/prototypes/vision/vision.css)
 const RESOURCES = ['gold', 'red', 'blue', 'green', 'magenta', 'yellow', 'purple', 'silver', 'white'];
 
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
@@ -26,9 +27,11 @@ describe('player colors', () => {
     const res = RESOURCES.map(r => [r, varOf(r)]);
     for (const [r, h] of res) expect(h, `--${r} in v4.css`).toMatch(/^#/);
     for (const p of PLAYER_COLORS) {
-      for (const [r, h] of res) expect(dE(p, h), `${p} vs ${r} ${h}`).toBeGreaterThanOrEqual(40);
-      expect(contrast(p, varOf('table')), `${p} on the table`).toBeGreaterThanOrEqual(4.5);
+      for (const [r, h] of res) expect(dE(p, h), `${p} vs ${r} ${h}`).toBeGreaterThanOrEqual(30);
+      for (const t of [varOf('table'), WALNUT]) expect(contrast(p, t), `${p} on ${t}`).toBeGreaterThanOrEqual(4.5);
     }
-    PLAYER_COLORS.forEach((a, i) => PLAYER_COLORS.slice(i + 1).forEach(b => expect(dE(a, b), `${a} vs ${b}`).toBeGreaterThanOrEqual(40)));
+    PLAYER_COLORS.forEach((a, i) => PLAYER_COLORS.slice(i + 1).forEach(b => expect(dE(a, b), `${a} vs ${b}`).toBeGreaterThanOrEqual(30)));
+    // and a distinct sigil per seat, so color is never the only cue
+    expect(new Set(SEAT_SIGILS).size).toBe(4);
   });
 });

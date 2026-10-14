@@ -127,7 +127,7 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
     <div className={`players${open ? ' open' : ''}`}>
       <button type="button" className="pl-summary" aria-expanded={open} onClick={() => setOpen(o => !o)}>
         {state.players.map(p => (
-          <span key={p.id} className={`ps${active === p.id ? ' act' : ''}`} style={{ '--pc': playerColor(p.id) }}>
+          <span key={p.id} className={`ps${active === p.id ? ' act' : ''}`} data-seat={p.id} style={{ '--pc': playerColor(p.id) }}>
             <i />{p.name} <b className="num">{followers(state, p)}</b>
           </span>
         ))}

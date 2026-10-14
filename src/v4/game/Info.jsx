@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { cardDef, defById, quadrant } from '../../engine/v4/index.js';
 import { badgedDef } from '../../engine/v4/content/market.js';
 import { term, splitTerms } from '../glossary.js';
-import { costParts, playerColor, standings, toStanding, tiebreakNote } from '../format.js';
+import { costParts, playerColor, seatSigil, standings, toStanding, tiebreakNote } from '../format.js';
 import { realHover } from '../hover.js';
 import { Popover } from './parts.jsx';
 import { Rich, CostPips } from './Rich.jsx';
@@ -227,4 +227,23 @@ export function TouchTips() {
   if (!bubble) return null;
   const left = Math.max(12, Math.min((typeof innerWidth === 'number' ? innerWidth : 400) - 252, bubble.x - 120));
   return <div key={bubble.n} className="touch-tip" role="tooltip" data-touch-tip style={{ left, top: Math.max(8, bubble.y - 64) }}>{bubble.text}</div>;
+}
+
+// ---------- seat sigils: identity by shape, so a seat never depends on its color ----------
+/** SVG path for a seat's sigil centred on (x, y) with radius r: circle, triangle, square or star. */
+export function sigilPath(kind, x, y, r) {
+  const pt = (a, k = r) => `${(x + k * Math.sin(a)).toFixed(2)},${(y - k * Math.cos(a)).toFixed(2)}`;
+  if (kind === 'triangle') return `M${pt(0)} L${pt((2 * Math.PI) / 3)} L${pt((4 * Math.PI) / 3)}Z`;
+  if (kind === 'square') { const h = r * 0.8; return `M${x - h},${y - h} H${x + h} V${y + h} H${x - h}Z`; }
+  if (kind === 'star') return `M${Array.from({ length: 8 }, (_, k) => pt((k * Math.PI) / 4, k % 2 ? r * 0.42 : r)).join(' L')}Z`;
+  return `M${x - r * 0.75},${y} a${r * 0.75},${r * 0.75} 0 1,0 ${r * 1.5},0 a${r * 0.75},${r * 0.75} 0 1,0 ${-r * 1.5},0`;
+}
+/** A seat's sigil as a small inline mark in the seat's color (names, rails, standings). */
+export function Sigil({ id, size = 10, title = null }) {
+  const kind = seatSigil(id);
+  return (
+    <svg className="sigil" viewBox="0 0 10 10" width={size} height={size} role={title ? 'img' : undefined} aria-label={title || undefined} aria-hidden={title ? undefined : 'true'}>
+      <path d={sigilPath(kind, 5, 5, 4.6)} fill={playerColor(id)} />
+    </svg>
+  );
 }

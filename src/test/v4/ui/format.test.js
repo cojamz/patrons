@@ -54,10 +54,14 @@ describe('v4 format helpers', () => {
       const before = s;
       s = applyMove(s, chooseBotMove(s, () => 0.4));
       const actor = before.pending.player;
-      if (!start || start.actor !== actor) start = { actor, state: before };
+      if (!start || start.actor !== actor) start = { actor, state: before, mid: null };
+      if (s.pending && s.pending.kind === 'buy' && s.pending.player === actor && !start.mid) start.mid = s;
       const passed = before.round >= 1 && s.round === before.round && !(s.pending && s.pending.player === actor);
       if (!passed) continue;
-      const story = turnStory(start.state, s, actor, 0);
+      const story = turnStory(start.state, s, actor, 0, start.mid);
+      // the action's gains and the buy's cost are told apart: a recruit says what it cost
+      const got = s.players[actor].members.length > before.players[actor].members.length || s.players[actor].members.some(u => !start.state.players[actor].members.includes(u));
+      if (got && start.mid) expect(story.text).toMatch(/recruited [^·]+(\(paid [^)]+\))?/);
       start = null;
       const a0 = before.players[actor];
       expect(story).toBeTruthy();

@@ -314,7 +314,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const turnOf = before.pending ? before.pending.player : null;
     const passed = turnOf != null && before.round >= 1 && !(state.pending && state.pending.player === turnOf && state.round === before.round);
     if (passed && turnStart.current && turnStart.current.actor === turnOf && state.round === before.round) {
-      const story = turnStory(turnStart.current.state, state, turnOf, mySeats.length === 1 ? mySeats[0] : null);
+      const story = turnStory(turnStart.current.state, state, turnOf, mySeats.length === 1 ? mySeats[0] : null, turnStart.current.mid);
       if (story) {
         clearTimeout(captionTimer.current);
         setCaption({ text: story.text, pid: turnOf, n: Date.now(), story: true });
@@ -326,7 +326,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         }
       }
     }
-    if (state.pending && (!before.pending || state.pending.player !== before.pending.player || state.round !== before.round)) turnStart.current = { actor: state.pending.player, state };
+    if (state.pending && (!before.pending || state.pending.player !== before.pending.player || state.round !== before.round)) turnStart.current = { actor: state.pending.player, state, mid: null };
+    // the turn reached its buy: what the action gave is settled (the buy's cost is told apart)
+    if (state.pending && state.pending.kind === 'buy' && turnStart.current && turnStart.current.actor === state.pending.player && !turnStart.current.mid) turnStart.current.mid = state;
     // Getting robbed is never silent: a rival's move that took your resources says so.
     if (actor != null && !mySeats.includes(actor)) {
       for (const id of mySeats) {
@@ -567,7 +569,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             </span>
           ) : <span className="say" data-prompt tabIndex={-1} />}
           <span className="undo-slot">
-            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your first pick' : 'Take back your worker until you buy or pass'}>↶ Undo {undoWord}</button>}
+            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your first pick' : 'Take back your worker until you buy or pass'}>↶ Undo<span className="undo-word"> {undoWord}</span></button>}
           </span>
         </div>
         <div className="bar-row you-row">

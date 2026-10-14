@@ -38,7 +38,7 @@ Phase changes move **the lamp, never the furniture**. Placing lights the wheel. 
   - Spaces are objects (goblets, a door, a pouch).
   - Each resource colour has its own shape: coin, crescent, gem, leaf. Any resource is a rainbow ring.
   - Timing gets a tint, the way Wingspan colours its bird powers ([BGA help](https://en.doc.boardgamearena.com/Gamehelpwingspan)).
-- **Phone:** your seat is in your hand, in a bottom dock. The wheel is a half-disc you spin with your thumb, the shop is a row you swipe, and a long-press does what hover does.
+- **Phone:** your seat is a bottom dock, the whole wheel fits on screen (372px wide, with 46px thumb targets), and the shop is a row you swipe. Long-press does what hover does, in the same place, and adds a big **Place here** button for the thumb.
 - **References:**
   - [Wingspan, by Monster Couch](https://pcgamer.com/wingspan-review): it serves the screen rather than copying the tabletop, and its cream paper and warmth are the right register.
   - [Everdell, by Dire Wolf](https://www.meeplemountain.com/reviews/everdell-digital/): a crafted woodland table, and characters standing in for meeples.
@@ -91,5 +91,21 @@ Phase changes move **the lamp, never the furniture**. Placing lights the wheel. 
   - From the Séance, *the Reckoning*, used only at round end. Spend the boldness in one place.
   - From the Chronicle, *the ink*: the log drawer reads like a book, and its names open the cards.
 
-## Key frames (Lamplit Table)
-`shots/f1-place.png`: your turn, placing a worker, with Rush hovered.
+## Key frames (Lamplit Table, real gold, silver, thieves and echo content)
+- `shots/f1-place.png`: your turn to place, with Rush hovered. You see a ghost figure, "+2 gold → 5", the gold race, and "✓ after Rush" ticks on Underdog and Seed Money. Ilse's two fresh steals wear dashed rings, and "Ilse took 1 gold" stays on your table.
+- `shots/f2-buy.png`: the lamp moves to the shop, and the cards turn to their rules side. Cards you can't afford go dark with a "need 1◆" chip. Hovering Underdog lifts its exact cost off your stacks and warns that "Ossian would lead, 2 to your 1".
+- `shots/f3-round-end.png`: the Reckoning. Gold is sealed, and silver is live, with each count shown as a pile of bells and a +2 token in flight to Ossian's seat. Magenta and green wait their turn. The ledger shows the same numbers in words and waits for **Continue**, while ring II glows.
+- `shots/f4-phone.png`: iPhone 13, with Rush long-pressed. A rail of four chips sits on top, the full wheel and the same note are in the middle, then the swipe shop and your dock.
+- Sources are `f1-place.html`, `f2-buy.html`, `f3-round-end.html` and `f4-phone.html`, with `px.js` (sprites), `board.js` and `scene.js`. To re-shoot, run `node design/prototypes/vision/shoot.mjs`.
+
+## Ten signature moments
+1. **Coin hop:** gains arc from the space onto your stack one at a time, each clink a semitone higher, the way Balatro scores chips ([Crosley](https://blakecrosley.com/guides/design/balatro)).
+2. **The lift:** a figure you pick up tilts 6° and casts a longer shadow, then lands with a one-frame squash. It's the dragged-not-clicked physicality of Inscryption's table ([DiGRA](https://dl.digra.org/index.php/dl/article/download/2474/2467/2503)).
+3. **Fresh rings:** a rival's new figure lands in a dashed ring that unwinds when your turn ends. If they stole from you, the coin visibly flies off your stack to their seat. This is the "highlight the last move" that BGA players keep requesting ([#14183](https://gl.boardgamearena.com/bug?id=14183)).
+4. **Cards perk up:** while you hover a space, the cards it would let you afford tilt up 2px and tick "✓ after Rush", like Race for the Galaxy's glow on affordable cards ([BoardGameQuest](https://boardgamequest.com/race-for-the-galaxy-ios-review)).
+5. **Lead flip:** when you take a contest lead, the leader sigil on that rim plaque spins like a tossed coin to your figure. Marvel Snap does the same when a location's winner changes ([Game Developer](https://www.gamedeveloper.com/game-platforms/designers-don-t-sleep-on-marvel-snap-s-simultaneous-turns)).
+6. **The Reckoning:** the room dims. One contest at a time, each count rises as a pile of tokens, the winner's figure steps forward, and a +2 arcs to their seat. The pacing borrows Persona 5's timed calendar card ([itch.io study](https://itch.io/blog/533534/making-ui-come-to-life-study-of-persona-5)).
+7. **A ring opens:** at round II the engraved sockets crack open from the hub outward, and each new icon inks itself in stroke by stroke, like Pentiment's writing ([languageatplay](https://languageatplay.de/?p=3624)).
+8. **A member joins:** the card slides from the shop into your fan, and its acolyte turns its head to look at you (a two-frame sprite). Everdell's critters have the same small life ([Tabletop Gaming](https://tabletopgaming.co.uk/news/digital-everdell-coming-soon)).
+9. **Paying is physical:** hovering a card lifts exactly its cost off your stacks, and clicking a stack swaps which colour pays the "any" part. One payment gesture everywhere, made tactile, which fixes critic #10. The precedent is Wingspan's food-to-bird payment ([PC Gamer](https://pcgamer.com/wingspan-review)).
+10. **Bots have hands:** a bot's ghost hand hovers about 400ms over two options before it commits. That telegraphs intent the way Into the Breach does ([Game Informer](https://gameinformer.com/b/features/archive/2018/02/27/23-tips-to-help-you-dominate-into-the-breach)), and paces bots so a human can follow them.

@@ -21,7 +21,7 @@
 .top .ar{color:var(--cream-3);font-size:10px;opacity:.6}
 .top .menu{position:static;margin-left:auto;width:32px;height:32px}
 .prompt .big{font-size:23px}
-.shopstrip{position:absolute;left:0;right:0;top:548px;height:122px;overflow:hidden}
+.shopstrip{position:absolute;left:0;right:0;top:562px;height:122px;overflow:hidden}
 .shopstrip .lbl{position:absolute;left:14px;top:0;font-family:var(--serif);font-size:14px;color:var(--cream-2)}
 .shopstrip .lbl small{font-family:var(--sans);font-size:11.5px;color:var(--cream-3)}
 .shoprow{position:absolute;left:14px;top:22px;display:flex;gap:8px}
@@ -33,7 +33,7 @@
 .mc .ct .rz svg{width:10px;height:10px}
 .mc.ok{filter:none}
 .mc .tick{position:absolute;top:7px;right:4px;font-size:9px;font-weight:700;color:#3e7a2c;background:#eef6d9;border-radius:6px;padding:0 4px}
-.dock{position:absolute;left:8px;right:8px;top:676px;height:132px;border-radius:16px;padding:10px 14px;background:linear-gradient(180deg,rgba(243,230,200,.07),rgba(243,230,200,.03));box-shadow:inset 0 0 0 1px rgba(243,230,200,.1),0 -8px 20px rgba(0,0,0,.25)}
+.dock{position:absolute;left:8px;right:8px;top:694px;height:112px;border-radius:16px;padding:10px 14px;background:linear-gradient(180deg,rgba(243,230,200,.07),rgba(243,230,200,.03));box-shadow:inset 0 0 0 1px rgba(243,230,200,.1),0 -8px 20px rgba(0,0,0,.25)}
 .dock .row{display:flex;align-items:flex-end;justify-content:space-between;height:100%}
 .dock .stacks{gap:10px}
 .dock .stack{min-width:26px}
@@ -74,7 +74,7 @@ const { sp, inl, SEAT: S, Q, CARDS, SHOP, QUADS } = Scene;
 const T = document.getElementById('T');
 const quads = QUADS({ joint: S.you, gift: S.ossian, hum: S.wren, pickpocket: { ...S.ilse, fresh: 1 }, tipoff: { ...S.ilse, fresh: 1 } });
 quads[0].leader = S.you; quads[1].leader = S.ossian; quads[2].leader = null; quads[3].leader = S.wren;
-Board.render(T, { x: 195, y: 330, size: 372, round: 1, hover: 'gold-1', ghost: S.you, quads });
+Board.render(T, { x: 195, y: 334, size: 372, round: 1, hover: 'gold-1', ghost: S.you, quads, compact: 1 });
 // rail: four chips, figure + followers + workers left; the snake arrows sit between
 const seats = [['wren', 2, 1], ['ossian', 3, 1], ['you', 2, 1, 1], ['ilse', 1, 2]];
 document.getElementById('top').innerHTML = seats.map(([w, f, u, now], i) => `${i ? '<span class="ar">◂</span>' : ''}<span class="chip ${now ? 'now' : ''}">${sp('acolyte', 2, S[w])}${f}<span class="f">${sp('follower', 1)}</span><span class="w">${[0, 1, 2].map(k => `<i class="${k < u ? 'u' : ''}"></i>`).join('')}</span></span>`).join('') + `<span class="menu"><i></i></span>`;
@@ -85,7 +85,7 @@ document.getElementById('stacks').innerHTML = Scene.stacks([['gold', 3], ['silve
 document.getElementById('figs').innerHTML = sp('acolyte', 3, S.you) + sp('acolyte', 3, S.you);
 document.getElementById('hand').innerHTML = `<div class="mc paper ok" style="--q:${Q.gold};width:56px;height:70px"><div class="band"></div><div class="art" style="height:34px">${sp('acolyte', 2, { robe: 'gold', prop: 'coin' })}</div><div class="nm" style="font-size:10px">Banker</div></div>`;
 // long-press on Rush = hover on desktop: same note, same place (over the closed rings), plus a real Place button for thumbs
-const [rx, ry] = Board.pol(195, 330, .748 * 186, 90);
+const [rx, ry] = Board.pol(195, 334, .748 * 186, 90);
 T.insertAdjacentHTML('beforeend', `<div class="press" style="left:${rx - 32}px;top:${ry - 26}px"></div>
 <div class="note paper up" style="left:70px;top:${ry - 288}px">
   <div class="t">${sp('rush', 3)}<h4>Rush<small>Gold · outer ring</small></h4></div>

@@ -465,6 +465,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
     get session() { return session; },
     destroy() {
       if (destroyed) return;
+      console.warn('TRACE lobby destroy', playerId, new Error().stack.split('\n').slice(1, 8).join(' <- '));
       destroyed = true;
       clearTimeout(awayTimer);
       offRoom();

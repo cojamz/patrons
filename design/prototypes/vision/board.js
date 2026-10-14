@@ -67,10 +67,10 @@
       { const [x, y] = pol(cx, cy, .31 * R, m); const d = 20; html += `<div class="sock2" style="--q:${q.color};left:${x - d / 2}px;top:${y - d / 2}px;width:${d}px;height:${d}px"></div>`; }
       // ring numerals for closed rings (once, in the gold quadrant gap)
       // rim plaque: the contest. Leader shown by default; standings on hover.
-      const [px, py] = pol(cx, cy, .968 * R, m);
+      const [px, py] = pol(cx, cy, (B.compact && (m === 0 || m === 180) ? .86 : .968) * R, m);
       const pl = q.plaque || {};
       html += `<div class="plaque ${pl.hover ? 'hov' : ''}" style="--q:${q.color};left:${px}px;top:${py}px">
-        ${PX.sprite(q.glyph, 2)}<span class="r">${q.rule}</span><span class="rw">+${2 * round}</span>
+        ${PX.sprite(q.glyph, 2)}${B.compact ? '' : `<span class="r">${q.rule}</span>`}<span class="rw">+${2 * round}</span>
         ${q.leader ? `<span class="ld">${PX.sprite('acolyte', 1, { robe: q.leader.robe, sig: q.leader.sig })}</span>` : `<span class="ld none">—</span>`}
       </div>`;
     }

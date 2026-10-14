@@ -3,7 +3,8 @@
 // or a first tap (touch) shows a card with the action's text; on touch, placing takes a second tap.
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { quadrant, roman } from '../../engine/v4/index.js';
-import { playerColor } from '../format.js';
+import { playerColor, seatSigil } from '../format.js';
+import { sigilPath } from './Info.jsx';
 import { sheetMode } from './parts.jsx';
 import { realHover } from '../hover.js';
 import { Rich, CostPips } from './Rich.jsx';
@@ -289,7 +290,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
         {opt && <circle className="halo" cx={x} cy={y} r={rad + 4} fill="none" stroke={col} />}
         <circle className="base" cx={x} cy={y} r={rad} fill={open ? 'var(--table)' : 'none'} stroke={col} strokeOpacity={open ? 1 : 0.45} strokeWidth={opt || selected ? 2.5 : 1.5} strokeDasharray={open ? undefined : '3 3.2'} />
         {owner !== undefined
-          ? <circle className="worker" cx={x} cy={y} r={rad - 5} fill={playerColor(owner)} />
+          ? <g className="worker-fig" data-seat={owner}><circle className="worker" cx={x} cy={y} r={rad - 5} fill={playerColor(owner)} /><path className="sigil" d={sigilPath(seatSigil(owner), x, y, (rad - 5) * 0.55)} fill="var(--table)" fillOpacity=".85" /></g>
           : open ? <circle cx={x} cy={y} r="3" fill={col} fillOpacity=".55" /> : null}
         {flash.has(key) && <circle className="ping" cx={x} cy={y} r={rad} fill="none" stroke={playerColor(owner ?? 0)} />}
         <path id={lid} d={textArc(ang, L.h, L.r, rot)} fill="none" />
