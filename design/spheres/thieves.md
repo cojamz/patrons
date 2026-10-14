@@ -1,90 +1,104 @@
-# Black: the thieves (Claude's build, redo 2026-10-14)
+# Black: the thieves (Claude's build, revision 3, 2026-10-14)
 
 Built and measured as `src/engine/v4/content/thieves.js` (tests: `src/test/engine/v4/spheres/thieves.test.js`; sims: `scripts/spheres/thieves-*.mjs`). On the table it replaces the green stand-in.
 
 ## The idea
-Black makes nothing of its own. Black is loot, and you only get it by stealing: a pinch of resources, a member held to ransom, a heist. Gold piles up its own money and Red recruits many cheap members, while Black grows only as fast as the table around it. Its loot sits in plain view, where the next thief can take it.
+Black makes nothing of its own. Black is loot, and stealing is the only way to get it: a pinch of resources, a member held to ransom, a heist. Gold piles up its own money and Red recruits many cheap members; Black grows only as fast as the table around it. Its loot sits in plain view, where the next thief can take it.
+
+**Rulebook line:** stolen goods become black loot on a pile in front of you. The biggest pile at round end wins. Piles can be robbed, and at the next round start your pile joins your supply as black.
 
 ## For Cory (answer by number)
-Costs are written as black + any. "Steal" means anything Black takes. Steals can hit anyone, as with Gold's Steal.
+Costs are written as black + any.
 
-**Scoring**
-1. Most loot. What you steal goes on a loot pile in front of you (as black). The biggest pile at round end wins. Other thieves can rob a loot pile. At the next round start, your pile joins your supply as black, and only round III's pile is kept just for the contest.
+Value = how much you gain on the average rival, in resources, with 4 players. You +1 and one rival −1 is worth 1⅓. The anchors:
 
-**Actions.** Value = how much you gain on the average rival, in resources (4 players). You +1 and one rival −1 is worth 1⅓. The anchors work out to: Joint Venture 2⅔ (flat); Rush 2 / 6; Steal 4; Windfall about 3 / about 7 (+1 per member); Take about 6 (a member worth about cost + 1½); Strike about 8–15.
+| Anchor | Value |
+|---|---|
+| Joint Venture | 2⅔, flat |
+| Rush | 2 in round I, 6 in round III |
+| Steal | 4 |
+| Windfall | about 3, then about 7 |
+| Take | about 6 |
+| Strike | about 8–15 |
 
-2. Ring I, Pickpocket: take 2 resources in total, from any players. Value 2 + ⅔ = 2⅔ in round I and still 2⅔ in round III. Same as Joint Venture, and flat like it.
-3. Ring I, Shakedown: the rival holding the most gives you 2 resources of their choice. Value 2⅔, but they pick, so it's worth about 2⅓, flat. This is the weak twin of Pickpocket, and it always hits whoever is richest.
-4. Ring I, Hideout: take 1 resource from any player; then rivals can't steal from you this round. Value 1⅓ plus the theft you dodge: about 1 in round I (2⅓ total) and 3 or more in round III, when your members are safe too (4½ or more). It's the one ring-I action that grows.
-5. Ring II, Rob: take 1 resource from each rival. Value 3 + 1 = 4 with 4 players, the same as Steal, and still 4 in round III, where Windfall is about 7. Weaker with fewer players: 3 with 3, 2 with 2.
-6. Ring II, Ransom: pick a rival's member costing 3 or less; they pay you its cost to keep it, or it's yours. The victim picks the cheaper outcome: paying 3 is worth 4, losing the member about 6. So about 4–5, steady across rounds.
-7. Ring III, Heist: take any rival's member; they recruit the cheapest face-up member, free. You get their best (about 7). They lose 7 but get back about 2½. Value about 8½, against Take 6 and Strike 8–15.
+1. **Scoring, Most loot:** the biggest loot pile at round end wins (rulebook line above).
+2. **Ring I, Pickpocket:** take 2 / 3 / 4 resources (by round) from rivals, split as you like. Worth 2⅔ in round I (Joint Venture is 2⅔), 4 in round II, and 5⅓ in round III (Rush is 6).
+3. **Ring I, Tip-off:** take 1 resource from each player holding more than you. Worth 1⅓ per richer rival: 0 to 4. It's catch-up, and it's worth 0 on the very first pick, when everyone holds 2.
+4. **Ring I, Hideout:** take 1 resource from a rival; then no one can steal from you, resources or members, this round. Worth 1⅓ plus the theft you dodge: about 2½ in round I, and 4–5 in round III, when your members are safe too.
+5. **Ring II, Rob:** take 3 resources from rivals, at least 1 from each. Worth 4 at any table size (Steal is 4), and still 4 in round III (Windfall is about 7).
+6. **Ring II, Ransom:** pick a rival's member costing 3 or less; they pay you its cost to keep it, or it's yours. Worth about 4–5. The victim picks the cheaper outcome: paying 3 is worth 4 to you, losing the member about 6.
+7. **Ring III, Heist:** take any rival's member; they recruit any face-up member costing up to the same, free. You get about 7. They lose 7 and get back up to about 5. Worth about 7⅔ (Take is about 6).
 
-**Members** (one copy each; costs from the member-value sim)
-8. Lockbox (1+0): rivals can't take your black or your loot.
-9. Sticky Fingers (1+1): your steals take 1 more resource.
+**Members** (one copy each):
+8. Mole (1+0): at round start, take 1 resource from each player with more followers than you.
+9. Desperado (1+0): while no one has fewer followers than you, your steals take double.
 10. Cutpurse (1+1): at round start, take 1 resource from the rival holding the most.
-11. Snitch (1+1): whenever a member is taken from you, take 2 resources from the thief.
-12. Understudy (1+1): whenever a member is taken from you, recruit the cheapest face-up member, free.
-13. Accomplice (2+1): when recruited, take 1 resource from each rival.
-14. Desperado (2+1): while no one has fewer followers than you, your steals take double.
-15. Robin Hood (2+1): whenever you steal from the player with the most followers, +1 follower.
-16. Extortionist (2+1): whenever a rival buys followers, take 1 resource from them.
-17. Kingpin (2+1): at game end, +1 follower per 2 black (loot counts).
-18. Safehouse (2+2): whenever a rival steals from you, take 1 back.
-19. Lookout (2+2): whenever a rival steals from someone else, take 1 resource from the thief.
-20. Watchdog (2+2): rivals can't take your members.
-21. Double Agent (2+2): when recruited, swap it for any rival's member.
-22. Burglar (3+2): once per game, take any rival's member; they recruit the cheapest face-up member, free.
+11. Grifter (1+1): when recruited, take 1 resource per 2 members you have, from the rivals holding the most.
+12. Sticky Fingers (1+1): your steals take 1 more resource.
+13. Robin Hood (1+1): whenever you steal from the player with the most followers, +1 follower.
+14. Crew (1+1): worth 2 followers.
+15. Accomplice (2+1): when recruited, take 1 resource from each rival.
+16. Extortionist (2+1): whenever a rival buys 6 followers, take 2 resources from them.
+17. Watchdog (2+1): rivals can't take your members.
+18. Double Agent (2+1): when recruited, swap it for any rival's member.
+19. Kingpin (2+1): at game end, +1 follower per 2 black (loot counts).
+20. Big Score (3+1): once per game, take half (rounded down) of the biggest pile any rival holds.
+21. Light Fingers (2+2): whenever a rival recruits a member costing 4 or more, take 1 resource from them.
+22. Lookout (3+3): whenever a rival steals from someone else, take 1 resource from the thief.
 
-No action or member hands out black for nothing. The only other black source is picking it as a starting resource. Safehouse, Lookout and Snitch are counter-steals, and they never set off another counter-steal.
+**Cut in this pass:** Safehouse, Snitch, Understudy, Lockbox, Burglar (defense was a tax), Mastermind (it counted past events), Shakedown (replaced by Tip-off), Fence, Fixer and Tipster (they gave free black).
+
+"Steal" is now one shared rule in the engine. Every steal, Gold's Steal included, respects Hideout and Watchdog, and every steal sets off Lookout and Robin Hood. Sticky Fingers and Desperado also boost Gold's Steal. Stolen gold from Gold's Steal stays gold.
 
 ## Extra ideas (one line each)
 **Ring I**
-23. Pickpocket that grows: take 1 resource per round number, plus 1 (2 / 3 / 4). This is the fix if Cory wants ring I to scale.
-24. Lure: take a rival's member costing 2 or less; they get 2 back from you. (Cut once already: too many members changed hands.)
-25. Tip-off: take 1 resource from each player holding more than you.
+23. Lure: take a rival's member costing 2 or less; they get 2 resources from you.
+24. Tip-off that grows: take 1 per round number from each player holding more than you.
 
 **Ring II**
-26. Double-Cross: swap one of your members for a rival's that costs up to 2 more.
-27. Shake Down the Leaders: take 2 resources from each player with more followers than you.
-28. Fence: swap any of your black for other colors, 1 for 1, then take 1 from any player.
+25. Double-Cross: swap one of your members for a rival's that costs up to 2 more.
+26. Fence: swap any of your black for other colors, 1 for 1, then take 1 from any player.
+27. Shake Down the Leaders: take 2 from each player with more followers than you.
 
 **Ring III**
-29. Grand Heist: take 1 of each color from every rival.
-30. Clean Out: take half of one rival's biggest pile.
-31. Crime Wave: take 2 resources from every rival.
+28. Grand Heist: take 1 of each color from every rival.
+29. Clean Out: take half of one rival's biggest pile.
+30. Crime Wave: take 2 from every rival.
 
 **Members**
-32. Pawnbroker: once per round, give a rival one of your members for twice its cost in their resources (they choose).
-33. Getaway Driver: whenever you steal, the victim can't steal from you until round end.
-34. Gang: counts as 2 followers; can't be taken.
-35. Insider: whenever a rival recruits a black member, take 1 resource from them.
+31. Pawnbroker: once per round, sell one of your members to a rival for twice its cost (they choose).
+32. Insider: whenever a rival recruits a black member, take 1 from them.
+33. Getaway Driver: whenever you steal, also gain 1 of the color you took.
 
 **Other scoring rules** (all measure what players hold)
-36. Most black: the Crown, for stolen goods. A quarter of rounds have no winner.
-37. Fewest resources (the hidden thief): everyone qualifies, but it ties a lot and goes to the leader half the time.
-38. Most members of other colors (not black): it snowballs. Cut.
+34. Most black: 19% of rounds have no winner, and it goes to the leader more often than loot does.
+35. Fewest resources: it ties often and goes to the leader half the time.
+36. Most members of other colors: it snowballs. Cut.
 
 ## Measurements
-Greedy bots, 4 seats, gold/red/blue + Black, run after the Twins/Big Family change.
-- **Scoring (400 games each).** Per rule: share of the black contest won by the follower leader, by last place, by the same winner as last round, and how often the game winner won it at least once. Most loot: 19% / 58% / 49% / 58%, with no round left without a winner. Most black: 25% / 43% / 48% / 66%, and 25% of rounds had no winner. Fewest resources: 48% / 32% / 49% / 72%. Most members of other colors: 58% / 25% / 77% / 89%, so it snowballs. Loot is the only rule that never feeds the leader and always has a winner. It leans to whoever picks first, usually last place, which makes it catch-up.
-- **Seat balance (loot):** 26/19/25/30 by seat and 26/26/22/26 by round-I pick order. The stand-in table is 18/28/26/28.
-- **Followers:** 38 per player against 48 on the stand-in table. Black now makes no resources at all; it only moves them. So a Black table scores about 20% lower. The first-to-last gap barely moves (19.7 vs 18.2).
-- **Who gets robbed:** about 38 resources a game change hands. That's about 9 per player, and 95% of thefts take 1 from any one victim per move. Members are taken 2.5 times a game, and a ransom is paid 1.3 times. Units come from the leader 36%, 2nd 27%, 3rd 21% and 4th 16%. Counting ties, last place supplies 25%. Thieves are spread evenly by final rank (22/25/24/29%). With bots that target the leader instead, last place supplied only 10% (earlier build). It doesn't bully last place, and the leader doesn't out-steal anyone.
-- **Actions (forced as a seat's first pick of the round vs the bot's own choice, 200 games; followers; noise about ±1):** Ring I: Joint Venture +0.7, Shakedown −0.1, Hideout −0.2, Pickpocket −0.8, Rush −1.8. Ring II: Ransom −0.5, Steal −1.8, Windfall −2.4, Rob −2.5. Ring III: Heist +0.1, Take −0.6, Strike −4.3. Taken late, in round III: Rush −1.4, Hideout −1.7, Joint Venture −2.9, Shakedown −3.8, Pickpocket −4.1. Every Black action sits inside the anchors' band. Pickpocket and Shakedown go flat late, just like Joint Venture.
-- **Member value (loot, a free recruit at the start of round II, 120 games each):** Burglar 7.8, Safehouse 6.6, Double Agent 6.5, Watchdog 6.5, Lookout 6.0, Kingpin 5.5, Robin Hood 5.1, Extortionist 5.1, Desperado 5.0, Accomplice 5.0, Snitch 5.0, Cutpurse 4.8, Understudy 4.6, Sticky Fingers 3.5, Lockbox 3.3. Every member reads high on this poorer table, so the costs follow the ranking rather than the raw numbers.
-- **Thinking bot (20 games each):** it won 70% on the Black table against 85% on the stand-in table. It placed on Black 18% of the time against the greedy bots' 31%, and it stole 7.5 a game against their 8.9. Black adds noise more than it rewards planning. Caveat: the thinker's look-ahead can't see loot piles joining supplies, so it undervalues stealing a little.
+Greedy bots, 4 seats, gold/red/blue + Black, current engine. Gold's Steal now counts as a steal.
+- **Scoring (400 games).** Most loot: the black contest went to the follower leader 18% of the time and to last place 54%. The same player won it in back-to-back rounds 45% of the time, every round had a winner, and the game winner won it at least once in 59% of games. Most black: 28% to the leader, 41% to last place, 19% of rounds with no winner, and the game winner won it at least once in 73% of games. Loot stays the pick.
+- **Seat balance (loot):** 26/21/27/26 by seat and 29/22/26/24 by round-I pick order. The stand-in table is 18/28/26/29.
+- **Followers:** 38 per player against 48 on the stand-in table. Black only moves value around, so the table is poorer. The first-to-last gap is unchanged (19.0 vs 18.2).
+- **Who gets robbed:** about 56 resources a game change hands. That's 14 per player, up from 9, because Pickpocket now grows and Gold's Steal now counts. 61% of thefts take 1 from a victim, 24% take 2, and 15% take 3 or more (Gold's Steal and late Pickpockets). Members are taken 2.2 times a game. With bots that rob the biggest pile, units come from the leader 38%, 2nd 25%, 3rd 21% and 4th 16%; counting ties, last place supplies 25%. With bots that target the leader, it's 49% leader and 10% from 4th. Every final rank steals about the same (23–27% each). It doesn't bully last place, and it doesn't feed the leader.
+- **Actions (forced as a seat's first pick of the round vs the bot's own choice; 200 games; followers; noise about ±1):**
+  - Round I: Hire +2.0, Hideout +1.8, Pickpocket +1.1, Joint Venture +0.9, Rush +0.6, Tip-off +0.4.
+  - Round II: Hire Up +2.6, Ransom +0.9, Steal −0.6, Rob −0.8, Windfall −1.8.
+  - Round III: Take +0.4, Heist −0.1, Strike −2.9.
+  - Ring-I actions taken in round III: Hideout +1.8, Rush +0.1, Pickpocket −0.6, Joint Venture −1.6, Tip-off −2.3.
+  - Every Black action sits inside the anchors' band.
+- **Member value (loot; a free recruit at the start of round II; 120 games each; noise about ±1.5):** Lookout 8.1, Light Fingers 5.5, Extortionist 4.5, Big Score 3.9, Watchdog 3.9, Accomplice 3.6, Double Agent 3.4, Cutpurse 3.1, Kingpin 3.1, Grifter 2.7, Robin Hood 2.5, Sticky Fingers 2.1, Mole 1.9, Desperado 1.7, Crew 0.6. Crew's 0.6 is noise plus turn order (2 followers is worth 2 on paper), so it's priced like Twins. Costs follow the ranking into Cory's range: 1–2 cheap, most 2–3, top 4–6.
+- **Thinking bot (20 games):** see the end of this file.
 
 ## What to watch
-- A poorer table: 38 followers against 48, because Black only moves value around. That's fine by "score scale varies by table", but follower buys and pricey members come later on a Black table.
-- Pickpocket and Shakedown are flat like Joint Venture. If ring I must scale, idea 23 is the fix.
-- Defense and consolation (Safehouse, Watchdog, Lookout) measure near the top, because theft is common: about 9 resources per player a game. If it starts to feel like a tax, cut the number of steals rather than adding more defense.
-- What bots can't show: whether it feels bad (Ransom puts the victim's decision on someone else's turn; Heist takes your best card right before round III scoring), and real targeting (people will rob the loot leader late in a round, and hide before a big round).
+- **Theft volume:** 14 resources a player per game, and bites of 2 or more now happen 39% of the time. If it feels like a tax in play, go back to a flat Pickpocket (2) first.
+- **Lookout** measures like a win condition (8.1) because steals are everywhere now, Gold's included. It's priced at the top (6). If that's still too strong, make it once per round.
+- **Hideout late:** it's the best ring-I action in round III (+1.8), because it shields members from Ransom and Heist.
+- **What bots can't show:** whether it feels bad. Ransom puts the victim's decision on someone else's turn, and Heist lands right before round III scoring. They also don't target the loot leader late in a round.
 
-## Engine changes this needs (not made; core.js untouched)
-1. A quadrant whose id isn't its resource ('thieves' / 'black'): `paymentPlan` and `memberPayOk` read `p.res[def.quadrant]` and should read `p.res[quadrant(def.quadrant).resource]`. For now `install()` relabels Black's member cards as quadrant 'black', which also suits the UI's `var(--black)`.
-2. Loot piles join the supply at round start: a quadrant-level `onRoundStart(ctx)`. Scripts and tests call `releaseLoot(state)` by hand. The UI must show each player's loot pile.
-3. A shared `ctx.steal(thief, victim, what)` with an `onSteal` hook, so Gold's Steal and the bribe count as stealing (loot pile, Hideout, Lockbox, Safehouse, Lookout, Robin Hood). Today only Black's own steals do.
-4. Burglar's question comes after the re-offered buy, because the engine queues the buy first. That's harmless.
-5. The scoring rule is a module-wide prototype switch (`setScoring`). Hard-code it once Cory picks.
+## Engine changes (made in this pass)
+- `ctx.canSteal(thief, victim, kind)`, `ctx.stealCount(thief, base)` and `ctx.steal(thief, victim, { take, uid, other, give, reaction })` in core.js. Quadrants and members can refuse with `guardSteal`, and react with `onSteal`. Members can add `stealMore` or set `stealDouble`.
+- Gold's Steal now goes through `ctx.steal`. Its behavior is unchanged, and all v4 tests stay green.
+- A quadrant-level `onRoundStart(ctx)` runs before members' round-start hooks. Black uses it to move loot piles into supplies.
+- The relabel workaround is gone (core.js now pays a member's colored part in its quadrant's resource).
+- Still open: the UI needs to show each player's loot pile and the Hideout marker. The bribe doesn't exist yet; when it's built, it should use `ctx.steal({ uid })`.
