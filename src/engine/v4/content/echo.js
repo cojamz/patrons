@@ -249,7 +249,7 @@ const echoQ = {
   },
 
   members: [
-    m('evergreen', 'Evergreen', 2, 2, 'At round start, +3 green.', {
+    m('evergreen', 'Evergreen', 2, 2, 'Now and at round start, +3 green.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', 3); },
     }),
     m('choir', 'Choir', 4, 2, 'Whenever you copy a space, +1 green.'),

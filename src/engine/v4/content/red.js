@@ -111,7 +111,7 @@ export default {
         if (by === owner && ctx.state.current === owner.id && owner.turnRecruits === 2) { ctx.gain(owner, 'red', 2); ctx.log(`${owner.name}'s Recruiting Drive: +2 red.`); }
       },
     }),
-    m('host', 'Host', 4, 2, 'At round start, +1 red per 2 members.', {
+    m('host', 'Host', 4, 2, 'Now and at round start, +1 red per 2 members.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'red', Math.floor(ctx.memberCount(owner) / 2)); },
     }),
     m('sponsor', 'Sponsor', 6, 4, 'Your members cost 2 less.', { costReduction: 2 }),

@@ -317,12 +317,12 @@ export default {
         ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2));
       },
     }),
-    m('clockmaker', 'Clockmaker', 2, 2, 'At round start, +1 purple per 2 purple you have.', {
+    m('clockmaker', 'Clockmaker', 2, 2, 'Now and at round start, +1 purple per 2 purple you have.', { now: true,
       // round start, not end (Claude, 2026-10-14, after Cory: purple left at the end of round III is worth nothing)
       // counts after other round-start income (Lamplighter…), like Steward
       onRoundStartLate(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
     }),
-    m('lamplighter', 'Lamplighter', 6, 2, 'At round start, +1 purple per worker you get this round (3 / 4 / 5).', {
+    m('lamplighter', 'Lamplighter', 6, 2, 'Now and at round start, +1 purple per worker you get this round (3 / 4 / 5).', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
     // Relay was cut by Cory (2026-10-14); Purple has 14 members until a replacement is priced.

@@ -658,6 +658,10 @@ function recruit(state, p, uid, { free, spend: chosen }) {
   eachMember(state, (owner, c, d) => { if (d.onAnyRecruit) d.onAnyRecruit(ctx, owner, c, p, w); });
   // a when-recruited effect leaves a trace like any other member hook (Seed Money, Pilgrim, Retinue…)
   if (def.onRecruited) { const before = traceSnapshot(state); def.onRecruited(ctx, p, w); traceChanges(state, before, p, def); }
+  // "Now and at round start" members (flag now): their round-start effect also fires once when recruited (Cory, 2026-10-14)
+  if (def.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (def[hook]) {
+    const before = traceSnapshot(state); def[hook](ctx, p, w); traceChanges(state, before, p, def);
+  }
 }
 
 function buyFollowers(state, p, tier, chosen) {

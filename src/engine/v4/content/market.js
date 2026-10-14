@@ -231,7 +231,7 @@ const market = {
     m('reseller', 'Reseller', 8, 4, 'Whenever you recruit, +1 of that member’s color.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && colorOf(ctx, rec)) ctx.gain(owner, colorOf(ctx, rec), 1); },
     }),
-    m('curator', 'Curator', 2, 2, 'At round start, +1 blue per badged member you have.', {
+    m('curator', 'Curator', 2, 2, 'Now and at round start, +1 blue per badged member you have.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, B, priceyCount(ctx, owner)); },
     }),
     m('planner', 'Planner', 2, 2, 'At round start, your next member costs 2 less per round number.', {
@@ -240,7 +240,7 @@ const market = {
     m('underbidder', 'Underbidder', 2, 0, 'At round start, your next member costs 2 less per rival with more members than you.', {
       onRoundStart(ctx, owner) { owner.discount += 2 * rivalsBigger(ctx, owner); },
     }),
-    m('minimalist', 'Minimalist', 2, 0, 'At round start, +1 blue per rival with more members than you.', {
+    m('minimalist', 'Minimalist', 2, 0, 'Now and at round start, +1 blue per rival with more members than you.', { now: true,
       onRoundStart(ctx, owner) { const k = rivalsBigger(ctx, owner); if (k) ctx.gain(owner, B, k); },
     }),
     m('climber', 'Social Climber', 2, 0, 'Once per game, at a round start: you may send one of your members to the bottom of the pile; your next member costs that much less.', {

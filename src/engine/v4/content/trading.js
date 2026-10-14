@@ -155,7 +155,7 @@ const trading = {
   },
 
   members: [
-    m('shopkeeper', 'Shopkeeper', 2, 2, 'At round start, +2 white.', {
+    m('shopkeeper', 'Shopkeeper', 2, 2, 'Now and at round start, +2 white.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
     m('dealer', 'Dealer', 2, 2, 'Whenever you sell followers, +1 white each.', {

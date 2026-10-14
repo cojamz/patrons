@@ -80,7 +80,7 @@ export default {
         if (card.on !== false && g.fromAction && g.color !== 'gold') g.color = 'gold';
       },
     }),
-    m('banker', 'Banker', 2, 2, 'At round start, +3 gold.', {
+    m('banker', 'Banker', 2, 2, 'Now and at round start, +3 gold.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'gold', 3); },
     }),
     m('prospector', 'Prospector', 2, 2, 'Whenever an action gains you gold, +1 more.', {

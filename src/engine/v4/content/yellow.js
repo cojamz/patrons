@@ -90,10 +90,10 @@ export default {
   },
 
   members: [
-    m('gardener', 'Gardener', 2, 0, 'At round start, +1 of each color you have none of.', {
+    m('gardener', 'Gardener', 2, 0, 'Now and at round start, +1 of each color you have none of.', { now: true,
       onRoundStart(ctx, owner) { for (const c of missing(ctx, owner)) ctx.gain(owner, c, 1); },
     }),
-    m('peddler', 'Peddler', 2, 2, 'At round start, +1 of each other color.', {
+    m('peddler', 'Peddler', 2, 2, 'Now and at round start, +1 of each other color.', { now: true,
       onRoundStart(ctx, owner) { for (const c of others(ctx)) ctx.gain(owner, c, 1); },
     }),
     m('gleaner', 'Gleaner', 6, 4, 'Whenever an action gains you 2+ of another color at once, +1 yellow.', {
