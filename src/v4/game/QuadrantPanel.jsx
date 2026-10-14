@@ -1,7 +1,7 @@
 // The quadrant facing you: its scoring rule and its action cards, by ring.
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { quadrant, RING_VALUE } from '../../engine/v4/index.js';
-import { playerColor, roman, standings } from '../format.js';
+import { playerColor, roman, standings, shortLabel } from '../format.js';
 import { Popover } from './parts.jsx';
 
 export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPick, onDenied, meId = null, confirmPlace = false }) {
@@ -66,14 +66,14 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
       </div>
       {folded && (
         <button type="button" className="quad-line" onClick={() => fold(false)}>
-          <b>{Q.scoring.label} <span className="num">+{RING_VALUE[round - 1]}</span></b>
+          <b>{shortLabel(Q.scoring.label)} <span className="num">+{RING_VALUE[round - 1]}</span></b>
           {standing && standing.top > 0 && <span> · now {standing.rows.slice(0, 3).map(r => `${r.id === meId ? 'you' : state.players[r.id].name} ${r.shown}`).join(', ')}</span>}
           <span> · {openCount ? `${openCount} open for you` : `${Q.actions.filter((a, i) => a.ring <= round && state.slots[`${facing}-${i}`] === undefined).length} open`}</span>
         </button>
       )}
       <div className="score" title={`${Q.scoring.label} at round end wins ${RING_VALUE.map(v => `+${v}`).join(' / ')} in rounds I / II / III. Ties all score.`}>
         <span className="score-line">
-          <b>{Q.scoring.label} <span className="num">+{RING_VALUE[round - 1]}</span></b> this round
+          <b>{shortLabel(Q.scoring.label)} <span className="num">+{RING_VALUE[round - 1]}</span></b> this round
           {standing && standing.top > 0 ? (
             <> · now {standing.rows.slice(0, 4).map((r, k) => (
               <span key={r.id} className={standing.leaders.includes(r.id) ? 'leads' : ''} style={{ '--pc': playerColor(r.id) }}>

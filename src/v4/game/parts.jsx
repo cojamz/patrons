@@ -64,14 +64,17 @@ export function ChoicePrompt({ state, onPick, busy }) {
     if (b) b.focus({ preventScroll: true });
   }, [pend]);
   const trade = pend.options.length > 0 && pend.options.every(o => o.kind === 'trade');
+  const [settled, setSettled] = useState(false);
+  useEffect(() => { setSettled(false); const t = setTimeout(() => setSettled(true), 320); return () => clearTimeout(t); }, [pend]);
+  const pick = (id, mode) => { if (settled) onPick(id, mode); };
   return (
     <section className={`prompt choice${setup ? ' setup' : ''}`} aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}>
       <p>{setup ? `Pick a starting resource${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] ? ` (${pend.prompt.match(/\((\d) of 2\)/)[1]} of 2)` : ''}` : pend.prompt}</p>
-      {setup ? <SetupTokens state={state} pend={pend} onPick={onPick} busy={busy} />
-        : trade ? <TradePicker state={state} pend={pend} onPick={onPick} busy={busy} />
-          : <MergedOptions state={state} pend={pend} onPick={onPick} busy={busy} />}
+      {setup ? <SetupTokens state={state} pend={pend} onPick={pick} busy={busy} />
+        : trade ? <TradePicker state={state} pend={pend} onPick={pick} busy={busy} />
+          : <MergedOptions state={state} pend={pend} onPick={pick} busy={busy} />}
       {!setup && !trade && pend.options.length === 1 && /\((\d+) left\)/.test(pend.prompt) && (
-        <button type="button" className="btn pri take-all" onClick={() => onPick(pend.options[0].id, 'all')}>
+        <button type="button" className="btn pri take-all" onClick={() => pick(pend.options[0].id, 'all')}>
           {`Take all ${pend.prompt.match(/\((\d+) left\)/)[1]} from ${withUnits(pend.options[0].label, pend.prompt).split(' · ')[0]}`}
         </button>
       )}
@@ -237,11 +240,15 @@ export function Confirm({ title, text, yes, no = 'Stay', onYes, onNo }) {
 }
 
 /** A small card anchored to an element (member chips on touch). */
+export const sheetMode = () => typeof matchMedia === 'function' && (matchMedia('(pointer: coarse)').matches || matchMedia('(max-width: 520px)').matches);
+
 export function Popover({ anchor, onClose, children }) {
   const box = useRef(null);
   const [pos, setPos] = useState(null);
+  const sheet = sheetMode();
   useLayoutEffect(() => {
     if (!anchor) return;
+    if (sheet) { setPos({}); return; }
     const a = anchor.getBoundingClientRect();
     const w = Math.min(280, innerWidth - 24);
     const left = Math.max(12, Math.min(innerWidth - w - 12, a.left + a.width / 2 - w / 2));
@@ -251,12 +258,13 @@ export function Popover({ anchor, onClose, children }) {
   useEffect(() => {
     const close = e => { if (box.current && !box.current.contains(e.target) && e.target !== anchor && !anchor.contains(e.target)) onClose(); };
     const key = e => { if (e.key === 'Escape') onClose(); };
-    const scroll = () => onClose();
+    const scroll = () => { if (!sheet) onClose(); };
     addEventListener('pointerdown', close, true);
     addEventListener('keydown', key);
     addEventListener('scroll', scroll, true);
     return () => { removeEventListener('pointerdown', close, true); removeEventListener('keydown', key); removeEventListener('scroll', scroll, true); };
   }, [anchor, onClose]);
   if (!pos) return null;
+  if (sheet) return <div className="popover sheet-pop" ref={box} role="dialog">{children}</div>;
   return <div className="popover" ref={box} role="dialog" style={pos}>{children}</div>;
 }

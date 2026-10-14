@@ -34,6 +34,7 @@ export default function PayPicker({ state, onPick, busy }) {
       <div className="dialog pay" ref={box} onKeyDown={e => { if (e.key === 'Enter' && match && !busy) { e.preventDefault(); onPick(match.id); } }} style={def ? { '--c': `var(--${def.quadrant})` } : undefined}>
         <div className="pay-head">
           <h2>{title}</h2>
+          {def && <span className="ability">{def.text} <span className="num star">{def.f}★</span></span>}
           <span className="hint">Costs {costLine}</span>
         </div>
         <div className="coins" aria-label={`Paying ${match ? match.label : 'nothing yet'}`}>

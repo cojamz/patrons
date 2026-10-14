@@ -10,7 +10,9 @@ export const cap = s => (s ? s[0].toUpperCase() + s.slice(1) : s);
 export const plural = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many}`;
 
 /** Scoring banner text for a quadrant on a ring, e.g. "MOST GOLD +2". */
-export const bannerText = (qid, ring) => `${quadrant(qid).scoring.label.toUpperCase()}  +${RING_VALUE[ring - 1]}`;
+/** A scoring label without its parenthetical note ("Most members (red members break ties)" -> "Most members"). */
+export const shortLabel = label => label.replace(/\s*\(.*\)\s*$/, '');
+export const bannerText = (qid, ring) => `${shortLabel(quadrant(qid).scoring.label).toUpperCase()}  +${RING_VALUE[ring - 1]}`;
 
 /** Group a player's members into chips. Identical cards in identical states share one chip. */
 export function memberChips(state, p) {
@@ -158,7 +160,8 @@ export function winSentence(state) {
   // A contest won round after round is usually the real story.
   const swept = Object.entries(contestRounds(state)[w.id] || {}).sort((a, c) => c[1].rounds - a[1].rounds || c[1].v - a[1].v)[0];
   if (swept && swept[1].rounds >= 2 && b.contests >= Math.max(b.members, b.bought, b.effects, b.endGame) * 0.6) {
-    const [label, { rounds, v }] = swept;
+    const [full, { rounds, v }] = swept;
+    const label = shortLabel(full);
     const res = (label.match(/^Most (gold|red|blue|green)$/i) || [])[1];
     const lead2 = res ? `hoarded ${res.toLowerCase()}` : `led ${label.toLowerCase()}`;
     const when = rounds === 3 ? 'all three rounds' : `${rounds} of 3 rounds`;
@@ -172,7 +175,7 @@ export function winSentence(state) {
     const per = contestWins(state)[w.id];
     const most = Object.entries(per).sort((a, c) => c[1] - a[1])[0];
     return most
-      ? `${lead}: ${b.contests} followers from ring contests, ${most[1]} of them for ${most[0].toLowerCase()}.`
+      ? `${lead}: ${b.contests} followers from ring contests, ${most[1]} of them for ${shortLabel(most[0]).toLowerCase()}.`
       : `${lead}: ${b.contests} followers from ring contests.`;
   }
   if (top === 'bought') return `${lead}: ${b.bought} followers bought outright.`;
