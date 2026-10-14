@@ -47,34 +47,34 @@ describe('White actions', () => {
     expect([R(s).red, s.players[0].bonus]).toEqual([3, 6]);
   });
 
-  it('Take Your Pick: per round number, +1 follower or +2 white (named)', () => {
+  it('Your Call: per round number, +1 follower or +2 white (named)', () => {
     let s = table(Q, { round: 2, bonus: [3], shop: ROW });
-    s = take(s, 'Take Your Pick');
+    s = take(s, 'Your Call');
     expect(ids(s)).toEqual(['amount:0', 'amount:1', 'amount:2']);
     s = move(s, 'amount:1');
     expect([R(s).white, s.players[0].bonus]).toEqual([2, 4]);
-    expect(named(s, 'Take Your Pick')).toEqual(["P1's Take Your Pick: +1 follower, +2 white."]);
+    expect(named(s, 'Your Call')).toEqual(["P1's Your Call: +1 follower, +2 white."]);
   });
-  it('Take Your Pick in round I with nothing bought or won still pays: 1 follower or 2 white (Cory\'s play: the old sale was dead)', () => {
-    const s = take(table(Q, { members: [['red.twins']], shop: ROW }), 'Take Your Pick');
+  it('Your Call in round I with nothing bought or won still pays: 1 follower or 2 white (Cory\'s play: the old sale was dead)', () => {
+    const s = take(table(Q, { members: [['red.twins']], shop: ROW }), 'Your Call');
     expect(ids(s)).toEqual(['amount:0', 'amount:1']);
     const f = move(s, 'amount:0');
     expect([R(f).white, f.players[0].bonus]).toEqual([0, 1]);
     const w = move(s, 'amount:1');
     expect([R(w).white, w.players[0].bonus]).toEqual([2, 0]);
   });
-  it('× Echo: a Take Your Pick taken as white is copied as that white; taken as followers, there is nothing to copy', () => {
+  it('× Echo: a Your Call taken as white is copied as that white; taken as followers, there is nothing to copy', () => {
     let s = table(QE, { round: 2, bonus: [3, 2], shop: ROW, queue: turns(0, 1) });
-    s = pass(move(take(s, 'Take Your Pick'), 'amount:1'));
+    s = pass(move(take(s, 'Your Call'), 'amount:1'));
     s = take(s, 'Echo');
-    const copy = s.pending.options.find(o => o.label.startsWith('Take Your Pick'));
-    expect(copy.label).toBe('Take Your Pick (P1): +2 white');
+    const copy = s.pending.options.find(o => o.label.startsWith('Your Call'));
+    expect(copy.label).toBe('Your Call (P1): +2 white');
     s = move(s, copy.id);
     expect(R(s, 1).white).toBe(2);
     let t = table(QE, { round: 2, shop: ROW, queue: turns(0, 1) });
-    t = pass(move(take(t, 'Take Your Pick'), 'amount:0'));
+    t = pass(move(take(t, 'Your Call'), 'amount:0'));
     t = take(t, 'Echo');
-    expect((t.pending?.options || []).some(o => o.label.startsWith('Take Your Pick'))).toBe(false);
+    expect((t.pending?.options || []).some(o => o.label.startsWith('Your Call'))).toBe(false);
   });
 
   // design critic follow-up (2026-10-14): "loose followers" is defined once (rulebook, glossary); the cards use it
@@ -226,8 +226,8 @@ describe('White members', () => {
     s = payDefault(move(take(table(Q, { res: [{ red: 2 }], members: [['trading.bulkbuyer']], shop: ROW }), 'Sob Story'), 'tier:small'));
     expect(s.players[0].bonus).toBe(1);
   });
-  it('Broker: whenever a White action gives you followers, +1 more (Take Your Pick)', () => {
-    let s = move(take(table(Q, { round: 2, members: [['trading.broker']], shop: ROW }), 'Take Your Pick'), 'amount:0');
+  it('Broker: whenever a White action gives you followers, +1 more (Your Call)', () => {
+    let s = move(take(table(Q, { round: 2, members: [['trading.broker']], shop: ROW }), 'Your Call'), 'amount:0');
     expect(s.players[0].bonus).toBe(3);
     expect(named(s, 'Broker').length).toBe(1);
   });

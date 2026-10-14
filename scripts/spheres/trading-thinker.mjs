@@ -31,7 +31,7 @@ for (let g = 1; g <= N; g++) {
     for (const l of next.log) {
       const mm = l.match(/^(P\d) (sold|pawned)[^\d]*(\d+) follower/);
       if (mm && Number(mm[1].slice(1)) - 1 === thinker) tSold += Number(mm[3]);
-      const bm = l.match(/^(P\d)'s Boom: (\d+) resources/);
+      const bm = l.match(/^(P\d)'s All In: (\d+) resources/);
       const rf = l.match(/^Round III begins\. (P\d) picks first/);
       if (rf && Number(rf[1].slice(1)) - 1 === thinker) tFirst3++;
       if (bm && Number(bm[1].slice(1)) - 1 === thinker) tBoom.push(Number(bm[2]));

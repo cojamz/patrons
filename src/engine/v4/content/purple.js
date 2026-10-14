@@ -2,8 +2,8 @@
 // Most purple at round end takes the ring's followers.
 // Rework (Claude, 2026-10-14, under Cory's go-with-your-gut, after his first play): every extra turn a Purple space
 // gives is a net gain (one worker in, two or more out); Linger became Plan Ahead; the ring counts purple honestly.
-// Reprice (Claude, 2026-10-14, go-with-your-gut, from the member-value sim in design/eval/purple-members.md): Double Time,
-// Taskmaster, Late Riser 4+2; Overseer 2+2; Second Wind 6+2. Night Owl takes Relay's slot.
+// Reprice (Claude, 2026-10-14, go-with-your-gut, from the member-value sim in design/eval/purple-members.md): Corner-Cutter,
+// Taskmaster, Late Riser 4+2; Overseer 2+2; Go-Getter 6+2. Night Owl takes Relay's slot.
 //
 // Engine notes (content-only, no core change):
 // - An extra turn is an ordinary { t: 'turn' } task put right after the current turn ends (p.left += 1).
@@ -30,16 +30,16 @@ function openSpaces(ctx) {
 const scheduled = ctx => ctx.state.queue.filter(t => t.t === 'turn').length;
 /** True when one more turn can't squeeze anyone out of a space. */
 export const spareSpace = ctx => openSpaces(ctx).length > scheduled(ctx);
-// Overtime: this many purple for 2 extra turns. Rally: 1 extra turn per RALLY_PER purple spent, plus 1, up to RALLY_CAP.
+// Overtime: this many purple for 2 extra turns. Crunch Time: 1 extra turn per RALLY_PER purple spent, plus 1, up to RALLY_CAP.
 const OT = 8;
 const RALLY_PER = 4, RALLY_CAP = 3;
-/** What extra turns that cost `base` purple cost p (Double Time halves it, rounded up). */
+/** What extra turns that cost `base` purple cost p (Corner-Cutter halves it, rounded up). */
 const priceFor = (ctx, p, base) => (ctx.membersOf(p).some(c => c.def.halfTurns || (c.copy && c.copy.endsWith('.doubletime'))) ? Math.ceil(base / 2) : base);
 /** How many more turns the board has room for (open spaces beyond the turns still to come). */
 const room = ctx => openSpaces(ctx).length - scheduled(ctx);
 const canBuyTurn = (ctx, p, base, n = 1) => (p.res[P] || 0) >= priceFor(ctx, p, base) && room(ctx) >= n;
-/** "(Double Time: 8 → 4)" when Double Time made it cheaper, so the price traces to the card. */
-const halfNote = (base, c) => (c < base ? ` (Double Time: ${base} → ${c})` : '');
+/** "(Corner-Cutter: 8 → 4)" when Corner-Cutter made it cheaper, so the price traces to the card. */
+const halfNote = (base, c) => (c < base ? ` (Corner-Cutter: ${base} → ${c})` : '');
 /** Pay for n extra turns; without the purple (or the spare spaces), take the fallback gain instead. */
 function buyTurn(ctx, p, base, what, fallback, member = false, n = 1) {
   if (canBuyTurn(ctx, p, base, n)) {
@@ -57,8 +57,8 @@ const buyEstimate = (ctx, p, base, fallback, n = 1) => (canBuyTurn(ctx, p, base,
 /** Rivals with more workers on the board than p (+extra for the worker p is about to place). */
 const behind = (ctx, p, extra = 0) => ctx.rivals(p).filter(o => onBoard(ctx, o) > onBoard(ctx, p) + extra).length;
 const turnValue = ctx => TURN_VALUE[ctx.state.round - 1] || 3;
-/** Rally: the turns all of p's purple buys (1 per RALLY_PER, plus 1, up to RALLY_CAP), as far as the board has room.
- *  Double Time halves the rate (1 per 2), as it halves every extra turn paid in purple. */
+/** Crunch Time: the turns all of p's purple buys (1 per RALLY_PER, plus 1, up to RALLY_CAP), as far as the board has room.
+ *  Corner-Cutter halves the rate (1 per 2), as it halves every extra turn paid in purple. */
 const rallyPer = (ctx, p) => priceFor(ctx, p, RALLY_PER);
 const rallyWant = (ctx, p) => {
   const v = p.res[P] || 0, per = rallyPer(ctx, p);
@@ -90,7 +90,7 @@ export function extraTurns(ctx, p, n = 1, why = null) {
     p.left += 1;
   }
   if (k) {
-    // why: the member that gave it (Errand Runner, Second Wind), so the turn traces to the card
+    // why: the member that gave it (Errand Runner, Go-Getter), so the turn traces to the card
     ctx.log(`${why ? `${p.name}'s ${why}: ${p.name}` : p.name} takes ${k === 1 ? 'an extra turn' : `${k} extra turns`}.`);
     for (let i = 0; i < k; i++) extraHooks(ctx, p);
   } else ctx.log(`No space to spare: ${p.name} gets no extra turn${why ? ` from ${why}` : ''}.`);
@@ -107,7 +107,7 @@ export default {
 
   actions: [
     {
-      key: 'hourly', ring: 1, name: 'Hourly', text: '+4 / +5 / +6 purple, by round.',
+      key: 'hourly', ring: 1, name: 'Clock In', text: '+4 / +5 / +6 purple, by round.',
       estimate: ctx => [3, 4, 5][ctx.state.round - 1] + 1,
       resolve(ctx, p) { ctx.gain(p, P, [3, 4, 5][ctx.state.round - 1] + 1, { fromAction: true }); },
     },
@@ -118,7 +118,7 @@ export default {
       resolve(ctx, p) { ctx.gain(p, P, 1 + 2 * behind(ctx, p), { fromAction: true }); },
     },
     {
-      key: 'windup', ring: 1, name: 'Wind-up', text: '+1 purple per minion you have on the board, this one included.',
+      key: 'windup', ring: 1, name: 'Roll Call', text: '+1 purple per minion you have on the board, this one included.',
       estimate: (ctx, p) => onBoard(ctx, p) + 1,
       resolve(ctx, p) { ctx.gain(p, P, onBoard(ctx, p), { fromAction: true }); },
     },
@@ -136,29 +136,29 @@ export default {
     },
     {
       // the burst: all the purple you've banked becomes turns (and leaves the ring's count)
-      key: 'rally', ring: 3, name: 'Rally',
+      key: 'rally', ring: 3, name: 'Crunch Time',
       text: `Spend all your purple: 1 extra turn right after this one per ${RALLY_PER} spent, plus 1 (up to ${RALLY_CAP}). With less than ${RALLY_PER}, +4 purple.`,
       estimate(ctx, p) { const k = rallyTurns(ctx, p); return k ? k * turnValue(ctx) - (p.res[P] || 0) * 0.8 + 1 : 4; },
       resolve(ctx, p) {
         const want = rallyWant(ctx, p), k = rallyTurns(ctx, p), per = rallyPer(ctx, p);
         if (!k) {
-          if (want) ctx.log(`No space to spare: ${p.name} gets no extra turn from Rally.`);
+          if (want) ctx.log(`No space to spare: ${p.name} gets no extra turn from Crunch Time.`);
           ctx.gain(p, P, 4, { fromAction: true });
           return;
         }
         // all of it; if the board has room for fewer turns than it buys, only what those turns cost
         const paid = k === want ? p.res[P] : (k - 1) * per;
         p.res[P] -= paid;
-        if (paid) ctx.log(`${p.name} spends ${paid} purple on Rally${per < RALLY_PER ? ` (Double Time: 1 turn per ${per}, not ${RALLY_PER})` : ''}.`);
+        if (paid) ctx.log(`${p.name} spends ${paid} purple on Crunch Time${per < RALLY_PER ? ` (Corner-Cutter: 1 turn per ${per}, not ${RALLY_PER})` : ''}.`);
         extraTurns(ctx, p, k);
       },
     },
   ],
 
   members: [
-    m('secondwind', 'Second Wind', 6, 2, 'Once per game: take an extra turn right after this one.', {
+    m('secondwind', 'Go-Getter', 6, 2, 'Once per game: take an extra turn right after this one.', {
       activate: 'game',
-      onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Second Wind')) card.used = false; },
+      onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Go-Getter')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
     }),
     m('errand', 'Errand Runner', 4, 4, 'When recruited: take an extra turn right after this one.', {
@@ -196,8 +196,8 @@ export default {
     m('overseer', 'Overseer', 2, 2, 'Whenever a rival takes an extra turn, gain half your purple (up to 4).', {
       onRivalExtraTurn(ctx, owner) { ctx.gain(owner, P, Math.min(4, Math.floor((owner.res[P] || 0) / 2))); },
     }),
-    // fill-in (critic): replaces Timekeeper
-    m('doubletime', 'Double Time', 4, 2, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
+    // fill-in (critic): took the slot of an earlier card called Timekeeper (the name now belongs to the game-end purple card)
+    m('doubletime', 'Corner-Cutter', 4, 2, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
     // pays on your last placement of the round, before that turn's buy (at round end, round III's purple came too late).
     // +1 per worker measured 8.4 followers (57% win, easy bots): late purple decides the ring. Half that is the card.
     m('bookkeeper', 'Bookkeeper', 4, 2, 'When you place your last minion of a round, +1 purple per 2 minions you have on the board.', {
@@ -225,7 +225,7 @@ export default {
         extraTurns(ctx, owner, 1, 'Night Owl');
       },
     }),
-    m('patience', 'Patience', 6, 2, 'Game end: +1 follower per 3 purple.', {
+    m('patience', 'Timekeeper', 6, 2, 'Game end: +1 follower per 3 purple.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res[P] || 0) / 3),
     }),
     m('crew', 'Shift Crew', 1, 1, 'Worth 2 followers. No effect.', { f: 2, vanilla: true }),

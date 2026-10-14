@@ -96,8 +96,8 @@ describe('White actions', () => {
     expect(s.pending?.kind).not.toBe('choose');
   });
 
-  it('Take Your Pick: per round number, +1 follower or +2 white (you pick how many of each)', () => {
-    let r3 = take(scene({ round: 3, bonus: [5] }), 'Take Your Pick');
+  it('Your Call: per round number, +1 follower or +2 white (you pick how many of each)', () => {
+    let r3 = take(scene({ round: 3, bonus: [5] }), 'Your Call');
     expect(ids(r3)).toEqual(['amount:0', 'amount:1', 'amount:2', 'amount:3']);
     const mix = move(r3, 'amount:2');
     expect(R(mix).white).toBe(4);
@@ -106,11 +106,11 @@ describe('White actions', () => {
     expect([R(allWhite).white, B(allWhite)]).toEqual([6, 5]);
     const allFollowers = move(r3, 'amount:0');
     expect([R(allFollowers).white, B(allFollowers)]).toEqual([0, 8]);
-    expect(allFollowers.log.join('\n')).toContain("P1's Take Your Pick: +3 followers.");
+    expect(allFollowers.log.join('\n')).toContain("P1's Your Call: +3 followers.");
   });
 
-  it('Take Your Pick in round I is live with nothing bought or won: 1 follower or 2 white (Cory found the old sale dead here)', () => {
-    let s = take(scene({ members: [['red.twins', 'red.intern']] }), 'Take Your Pick');
+  it('Your Call in round I is live with nothing bought or won: 1 follower or 2 white (Cory found the old sale dead here)', () => {
+    let s = take(scene({ members: [['red.twins', 'red.intern']] }), 'Your Call');
     expect(ids(s)).toEqual(['amount:0', 'amount:1']);
     const f = move(s, 'amount:0');
     expect([R(f).white, B(f), F(f)]).toEqual([0, 1, 5]);
@@ -158,7 +158,7 @@ describe('White actions', () => {
   });
 
   it('Midas takes action gains as gold, sales included', () => {
-    let s = take(scene({ bonus: [2], members: [['gold.midas']] }), 'Take Your Pick');
+    let s = take(scene({ bonus: [2], members: [['gold.midas']] }), 'Your Call');
     s = move(s, 'amount:1');
     expect(R(s)).toEqual({ ...Z, gold: 2 });
     s = move(take(scene({ round: 2, bonus: [2], members: [['gold.midas']] }), 'Sell High'), 'amount:2');
@@ -284,9 +284,9 @@ describe('White members', () => {
     expect(B(s)).toBe(3); // 2 traded, +1 Broker once (not once per resource)
     s = move(take(scene({ round: 3, res: [{ white: 2 }], members: [['trading.broker']] }), 'All In'), 'boom:all');
     expect(B(s)).toBe(3);
-    s = move(take(scene({ round: 2, members: [['trading.broker']] }), 'Take Your Pick'), 'amount:0');
+    s = move(take(scene({ round: 2, members: [['trading.broker']] }), 'Your Call'), 'amount:0');
     expect(B(s)).toBe(3); // 2 followers, +1 Broker
-    s = move(take(scene({ round: 2, members: [['trading.broker']] }), 'Take Your Pick'), 'amount:2');
+    s = move(take(scene({ round: 2, members: [['trading.broker']] }), 'Your Call'), 'amount:2');
     expect([B(s), R(s).white]).toEqual([0, 4]); // all white: no followers, no Broker
     s = take(scene({ round: 3, members: [['trading.broker']] }), 'All In');
     expect(B(s)).toBe(0); // nothing traded, no bonus

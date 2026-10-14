@@ -85,8 +85,8 @@ describe('Yellow actions', () => {
     expect(R(take(scene({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'Top Up'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
   });
 
-  it('Mix It Up: up to 3 one-for-one swaps, then +1 yellow', () => {
-    let s = take(scene({ res: [{ gold: 5, red: 1 }] }), 'Mix It Up');
+  it('Trade Seeds: up to 3 one-for-one swaps, then +1 yellow', () => {
+    let s = take(scene({ res: [{ gold: 5, red: 1 }] }), 'Trade Seeds');
     expect(s.pending.kind).toBe('choose');
     expect(ids(s)).toContain('swap:gold:yellow');
     expect(ids(s)).not.toContain('swap:yellow:gold'); // nothing to swap from yellow
@@ -99,23 +99,23 @@ describe('Yellow actions', () => {
     expect(s.log.join('\n')).toContain('P1 transmuted 1 gold → yellow, 1 gold → green.');
   });
 
-  it('Mix It Up: stops after 3 swaps (or what you held); with nothing held it still gives +1 yellow', () => {
-    let s = take(scene({ res: [{ gold: 9 }] }), 'Mix It Up');
+  it('Trade Seeds: stops after 3 swaps (or what you held); with nothing held it still gives +1 yellow', () => {
+    let s = take(scene({ res: [{ gold: 9 }] }), 'Trade Seeds');
     s = move(s, 'swap:gold:red');
     s = move(s, 'swap:gold:green');
     s = move(s, 'swap:gold:yellow');
     expect(s.pending?.kind).not.toBe('choose');
     expect(R(s)).toEqual({ gold: 6, red: 1, yellow: 2, green: 1 });
-    let t = take(scene({ res: [{ gold: 2 }] }), 'Mix It Up');
+    let t = take(scene({ res: [{ gold: 2 }] }), 'Trade Seeds');
     t = move(t, 'swap:gold:red');
     t = move(t, 'swap:red:green');
     expect(t.pending?.kind).not.toBe('choose');
     expect(R(t)).toEqual({ gold: 1, red: 0, yellow: 1, green: 1 });
-    expect(R(take(scene({}), 'Mix It Up'))).toEqual({ ...Z, yellow: 1 });
+    expect(R(take(scene({}), 'Trade Seeds'))).toEqual({ ...Z, yellow: 1 });
   });
 
-  it('Mix It Up: swap up to 3 resources for other colors, then +1 yellow (the rule, whatever a bot picks)', () => {
-    let s = take(scene({ res: [{ gold: 7, red: 1 }] }), 'Mix It Up');
+  it('Trade Seeds: swap up to 3 resources for other colors, then +1 yellow (the rule, whatever a bot picks)', () => {
+    let s = take(scene({ res: [{ gold: 7, red: 1 }] }), 'Trade Seeds');
     while (s.pending?.kind === 'choose') s = applyMove(s, chooseBotMove(s, () => 0.5));
     const r = R(s), total = Object.values(r).reduce((a, b) => a + b, 0);
     expect(total).toBe(8 + 1); // swaps keep the count; then +1 yellow

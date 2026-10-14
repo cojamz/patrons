@@ -46,7 +46,7 @@ for (let g = 1; g <= games; g++) {
     for (const l of next.log) {
       let mm;
       if ((mm = l.match(/ (sold|pawned)[^\d]*(\d+) follower/))) st.sold += Number(mm[2]);
-      if ((mm = l.match(/Boom: (\d+) resources became/))) st.boom.push(Number(mm[1]));
+      if ((mm = l.match(/All In: (\d+) resources became/))) st.boom.push(Number(mm[1]));
       if ((mm = l.match(/used Heiress: \+(\d+) white/))) st.heiress.push(Number(mm[1]));
       if ((mm = l.match(/traded (\d+) white for/))) st.cashed.push(Number(mm[1]));
     }

@@ -117,13 +117,13 @@ describe('Green copies the risky spaces', () => {
     s = take(s, 'Encore');
     expect(labels(s)).toEqual(['Sell High (P2): do Sell High yourself']);
   });
-  it('copying a Take Your Pick taken as white gives that white (Take Your Pick sells nothing since the 2026-10-14 rework)', () => {
+  it('copying a Your Call taken as white gives that white (Your Call sells nothing since the 2026-10-14 rework)', () => {
     const W = ['gold', 'red', 'trading', 'echo'];
     let s = scene({ quads: W, turns: [1, 0], bonus: [0, 3] });
-    s = go(s, 'Take Your Pick', 'amount:1'); // round I: 2 white instead of its 1 follower
+    s = go(s, 'Your Call', 'amount:1'); // round I: 2 white instead of its 1 follower
     expect([R(s, 1).white, s.players[1].bonus]).toEqual([2, 3]);
     s = take(s, 'Echo');
-    expect(labels(s)).toEqual(['Take Your Pick (P2): +2 white']);
+    expect(labels(s)).toEqual(['Your Call (P2): +2 white']);
   });
 
   it('copying Blue’s Snap Up doesn’t hand out the member its taker paid for', () => {

@@ -1,5 +1,5 @@
 // @vitest-environment node
-// Gate: an action that skips a printed part says so in the log (Cory took Take Your Pick in round I, couldn't sell, and the
+// Gate: an action that skips a printed part says so in the log (Cory took Your Call in round I, couldn't sell, and the
 // table said nothing). For every action of Blue, Magenta, White and Green:
 //  A. in a barren position (only P2's opening Hum on the board) the action asks, changes a number, or leaves a log
 //     line after "took";

@@ -1,4 +1,6 @@
 node_modules
+# build output: Netlify builds from source (previews and deploys run vite build)
+dist/
 
 # Local Netlify folder
 .netlify

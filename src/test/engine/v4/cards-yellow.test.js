@@ -24,8 +24,8 @@ describe('Yellow actions', () => {
     expect(named(s, 'Top Up')).toEqual(["P1's Top Up: +1 red, +1 yellow."]);
     expect(R(take(sc({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'Top Up'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
   });
-  it('Mix It Up: up to 3 one-for-one swaps, then +1 yellow', () => {
-    let s = take(sc({ res: [{ gold: 4 }] }), 'Mix It Up');
+  it('Trade Seeds: up to 3 one-for-one swaps, then +1 yellow', () => {
+    let s = take(sc({ res: [{ gold: 4 }] }), 'Trade Seeds');
     s = move(s, 'swap:gold:red'); s = move(s, 'swap:gold:green'); s = move(s, 'swap:gold:red');
     expect(R(s)).toEqual({ gold: 1, red: 2, yellow: 1, green: 1 });
   });

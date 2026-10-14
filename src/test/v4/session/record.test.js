@@ -116,15 +116,21 @@ describe('replayRecord', () => {
     expect(() => parseRecord({ ...rec, moves: null })).toThrow(/no move list/);
   });
 
-  it('the vitest helper: passes a clean record, fails on an exception, skips an older-content record that no longer fits', () => {
+  it('the vitest helper: passes a clean record, fails a stale one (pointing at records:refresh), skips only a seed that can\'t be set up', () => {
     const { rec, st } = botRecord(6, 50);
     expect(checkRecord({ ...rec, expect: { moves: st.moves } }).state.moves).toBe(50);
-    expect(() => checkRecord({ ...rec, expect: { moves: 49 } })).toThrow();
+    expect(() => checkRecord({ ...rec, expect: { moves: 49 } })).toThrow(/records:refresh/);
+    // older content that no longer fits fails loudly (it used to be skipped, which left the gate checking nothing)
     const older = { ...rec, build: { ...rec.build, content: 'older' }, moves: [...rec.moves.slice(0, 10), [0, 'nope']] };
     const ctx = { skip: vi.fn() };
-    checkRecord(older, { ctx, name: 'older.json' });
-    expect(ctx.skip).toHaveBeenCalledWith(expect.stringMatching(/older rules content/));
+    expect(() => checkRecord(older, { ctx, name: 'older.json' })).toThrow(/Move 11[\s\S]*older rules content[\s\S]*records:refresh/);
     expect(() => checkRecord({ ...older, build: rec.build }, { ctx, name: 'current.json' })).toThrow(/Move 11/);
+    // a different ending on older content fails too, even when every move is still legal
+    expect(() => checkRecord({ ...rec, build: { ...rec.build, content: 'older' }, expect: { moves: 49 } }, { ctx })).toThrow(/older rules content/);
+    expect(ctx.skip).not.toHaveBeenCalled();
+    // the one skip: a table this build can't set up
+    checkRecord({ ...rec, quadrants: [...rec.quadrants.slice(0, 3), 'nosuchsphere'] }, { ctx, name: 'gone.json' });
+    expect(ctx.skip).toHaveBeenCalledWith(expect.stringMatching(/gone\.json: its seed can't be replayed/));
   });
 
   it('scripts/v4-replay.mjs replays a record file and reports the first illegal move with where the game stood', ctx => {

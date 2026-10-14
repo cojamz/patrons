@@ -192,7 +192,7 @@
         <h2>Hover</h2>
         <div class="peek"><div class="pk-head"><b>${hover.name}</b>${hover.proposal ? `<em>proposed name · was ${hover.was}</em>` : ''}</div><p>${hover.text}</p><div class="pk-get"><small>YOU’D GET</small><span>${O.hoverGet || `+3 ${res('gold', 14)} now, then 1 ${res('gold', 14)} to a rival you pick`}</span></div></div>
         <h2>The same language on other verbs <small>(2×)</small></h2>
-        <div class="vocab">${vocabHTML}</div>
+        <div class="vocab" style="grid-template-columns:repeat(${O.vocabCols || 3},1fr)">${vocabHTML}</div>
         <p class="note">* Gold and Red names are proposals from design/eval/action-names-calibration.md (not yet graded). Blue and Green keep today’s names.</p>
       </aside>`;
     return Promise.resolve();
