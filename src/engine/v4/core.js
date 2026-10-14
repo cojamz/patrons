@@ -6,7 +6,7 @@ import { shuffleInPlace } from './rng.js';
 
 export const RING_VALUE = [2, 4, 6];
 export const WORKERS = [3, 4, 5];
-export const SHOP_SIZE = 6;
+export const SHOP_SIZE = 10; // a bigger community pool, so a member you want is more often still there (Cory, 2026-10-14)
 // Follower buys take any resources (Cory, 2026-10-14: no color requirements). A limited tier has a stock per game (stock: seats -> count). The clock tier ends the game:
 // when its last buy is gone, the game ends after that round.
 export const TIERS = [

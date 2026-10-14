@@ -22,7 +22,7 @@ Players take turns in a snake order (1-2-3-4, then 4-3-2-1, and so on). Round I'
 On your turn:
 1. **Place a worker** on an open space and do what it says. Some spaces recruit a member for free; that doesn't use up your buy.
 2. **Buy one thing**, or pass:
-   - **Recruit a member** from the shop, which always shows 6 face up. Costs show a colored part (that color only) plus "any" (any resources).
+   - **Recruit a member** from the shop, which always shows 10 face up. Costs show a colored part (that color only) plus "any" (any resources).
    - Or **buy followers**: any resources: 2 for 1 follower, 4 for 3, 8 for 6, 10 for 10. The two big buys are limited: 2 per player of the 6-follower buy (8 in a 4-player game) and 4 of the 10-follower buy. When the last 10-follower buy is gone, the game ends after that round.
    - Once per round, before you buy, you may **release** one of your members: it goes to the bottom of the pile, and you take its cost in resources of any colors.
 

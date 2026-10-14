@@ -2,6 +2,9 @@
 //
 // Room layout (under v3rooms/<CODE>, the only path the deployed DB rules allow writes to):
 //   game: 'v4'  code  hostId  status: 'lobby'|'playing'|'over'  seed  createdAt
+//   build:        { schema, content, id }  // the rules content hash + build id that made the room (record.js);
+//                                          // a client with other content can't join, rejoin or host it
+//   notice:       { id, kind, seat, message, detail, at } // host-reported problem (a bot move threw), shown to all
 //   seats/s<i>:   { kind: 'human'|'bot', name, id? }   // id = playerId for humans. Compacted to s0..sN-1 at start.
 //   players/<id>: { name, connected, lastSeen }
 //   state:        { stateJson, version, lastMove, recent, at } // engine state as a STRING (RTDB mangles arrays/nulls)

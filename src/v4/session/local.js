@@ -1,7 +1,8 @@
 // Hot-seat session: the whole game runs on this device. Bots move on their own after a short delay.
-import { createGame, applyMove, isLegal, chooseBotMove } from '../../engine/v4/index.js';
+import { isLegal, chooseBotMove } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import { createEmitter } from './emitter.js';
+import { newGame, step, trackState, botStep } from './record.js';
 
 /**
  * @typedef {{ player: number, option: string }} Move
@@ -60,7 +61,8 @@ export const UNDO_BUY_HOLD_MS = 1600;
  * @returns {Session & { canUndo(): boolean, undo(): boolean, readonly undoCheckpoint: UndoCheckpoint|null }}
  */
 export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 ** 31), botDelayMs = 450, quadrants, state: saved, undo: savedUndo }) {
-  let state = saved || createGame({ seats: seats.map(s => ({ name: s.name, kind: s.kind || 'human' })), seed, ...(quadrants ? { quadrants } : {}) });
+  // A new game is stamped with this build's content hash and records its moves (state.build, state.history).
+  let state = saved || newGame({ seats: seats.map(s => ({ name: s.name, kind: s.kind || 'human' })), seed, ...(quadrants ? { quadrants } : {}) });
   let version = 1;
   let timer = null;
   let destroyed = false;
@@ -79,12 +81,15 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
 
   function emit() {
     version += 1;
+    trackState(state);
     subs.emit(state, info());
   }
+  trackState(state);
 
-  function apply(move) {
+  // `next` is passed when the move was already applied (a bot step); otherwise it's applied here.
+  function apply(move, next = step(state, move)) {
     const before = state;
-    state = applyMove(state, move);
+    state = next;
     // Only a human's placement opens a checkpoint; every other move closes it. A round ending inside the
     // placement (or the game ending) leaves nothing to undo.
     const human = mySeats.includes(move.player);
@@ -117,7 +122,11 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     timer = setTimeout(() => {
       timer = null;
       if (destroyed) return;
-      try { apply(chooseBotMove(state, rand)); } catch (err) { console.error('[v4 local] bot move failed:', err); }
+      // A bot move that throws never stalls the game silently: it's logged, the first option that applies cleanly
+      // is played instead, and a notice is reported (record.js reportProblem). Only if no option applies does the
+      // game stop, with a 'stuck' notice.
+      const r = botStep(state, st => chooseBotMove(st, rand), { tag: 'v4 local' });
+      if (r.state) apply(r.move, r.state);
     }, hold);
   }
   schedule();

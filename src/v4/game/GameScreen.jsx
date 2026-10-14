@@ -486,7 +486,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
   const players = <Players state={state} active={pend ? pend.player : null} mySeats={mySeats} optionFor={live} onPick={onPick} gifts={gifts} robbed={robbed} />;
-  const roundText = state.over ? 'Final' : state.round ? `Round ${roman(state.round)}${state.endEarly ? ' (last)' : ''}` : 'Setup';
+  const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)}{state.endEarly ? <em className="last-tag"> (last)</em> : null}</> : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
   // The latest rival placement, marked on the wheel; read from the state so it survives a reload.

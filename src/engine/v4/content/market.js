@@ -146,7 +146,7 @@ const market = {
       resolve(ctx, p) { ctx.gain(p, B, 2, { fromAction: true }); offerRow(ctx, p, priceOf, 'Bargain'); },
     },
     {
-      key: 'restock', ring: 1, name: 'Restock', text: '+2 blue, and sweep the face-up row: 6 new members come out.',
+      key: 'restock', ring: 1, name: 'Restock', text: '+2 blue, and sweep the face-up row: a fresh row of members comes out.',
       estimate: () => 2.4,
       resolve(ctx, p) {
         ctx.gain(p, B, 2, { fromAction: true });
