@@ -35,5 +35,6 @@ The target feel is a beautiful physical board game come alive. Pieces have weigh
 - **Verdict:** SHIP or NOT YET, in one line.
 - **Grades A–F:** flow, feedback/feel, learnability, legibility, craft, robustness, overall. Give a one-line reason for each.
 - **Top issues, worst first** (at most 12). For each: what happened, the screenshot file, why a player would notice, and the smallest fix.
+- **Misreads:** every screen element you misidentified or misunderstood at first. What it is, what you took it for, how you found out, and the screenshot. Also every rule you got wrong from the rulebook or the screen. These are the most valuable findings: they show where the UI or the rules mislead.
 - **What genuinely works** (at most 3 lines).
 Don't soften anything. A B+ means "a friend would happily play this tonight". An A means "this feels like a real product".
