@@ -199,18 +199,18 @@ function Menu({ onRules, onLog, onLeave, getState }) {
 function TurnCard({ card, root, state }) {
   const [pos, setPos] = useState(null);
   useLayoutEffect(() => {
-    const seat = root && (root.querySelector(`.lt-seat[data-pid="${card.pid}"]`));
+    // the card sits in the open space beside its cult: under a top chair, over a bottom one (never over the prompt)
+    const region = root && root.querySelector(`.lt-seat[data-pid="${card.pid}"]`);
+    const seat = region && (region.querySelector('.lt-cult-seat') || region);
     if (!seat) { setPos(null); return; }
     const r = seat.getBoundingClientRect();
-    const lead = seat.querySelector(`[data-leader="${card.pid}"]`);
-    const a = lead ? lead.getBoundingClientRect() : r;
     const left = r.left + r.width / 2 < innerWidth / 2;
     const top = r.top + r.height / 2 < innerHeight / 2;
     setPos({
-      left: left ? Math.min(innerWidth - 300, r.right + 10) : undefined,
-      right: left ? undefined : Math.max(10, innerWidth - r.left + 10),
-      top: top ? Math.max(8, a.top) : undefined,
-      bottom: top ? undefined : Math.max(8, innerHeight - (a.bottom + 12)),
+      left: left ? Math.max(10, r.left) : undefined,
+      right: left ? undefined : Math.max(10, innerWidth - r.right),
+      top: top ? r.bottom + 10 : undefined,
+      bottom: top ? undefined : Math.max(8, innerHeight - r.top + 10),
       ox: left ? '0%' : '100%', oy: top ? '0%' : '100%',
     });
   }, [card.pid, card.n, root]);

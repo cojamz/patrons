@@ -261,7 +261,7 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .over-seat.won{background:rgba(var(--lamp),.1);box-shadow:0 0 0 1px rgba(var(--lamp),.45),0 0 26px rgba(var(--lamp),.18)}
 .lt .over-seat.won .final{color:var(--lamp-ink)}
 /* the turn card: one turn told by its cult, a line per beat; it folds into the chair when the turn has passed */
-.turn-card{position:fixed;z-index:30;max-width:280px;display:flex;flex-direction:column;gap:2px;padding:9px 13px 10px;border-radius:12px;
+.turn-card{position:fixed;z-index:30;max-width:280px;width:max-content;display:flex;flex-direction:column;gap:2px;padding:9px 13px 10px;border-radius:12px;
   background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);box-shadow:0 0 0 1.5px var(--pc),0 12px 26px rgba(0,0,0,.5);
   pointer-events:none;animation:rise .2s ease-out;transition:transform .45s cubic-bezier(.5,0,.7,.4),opacity .45s}
 .turn-card .tc-head{font-family:var(--serif);font-size:16px;line-height:1.15}
