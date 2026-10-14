@@ -203,14 +203,14 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="engraved"] .stage .slot.flash .base{animation:none}
 .lt [data-spaces="engraved"] .stage .slot .face{inset:auto;left:50%;top:50%;width:var(--fw);transform:translate(-50%,-50%);gap:2px;padding:0;color:color-mix(in srgb,var(--c) 40%,#2a1f17)}
 /* the name: bold sans at 12px (small capitals don't fit the narrow cells at 12px; this keeps the floor) */
-.lt [data-spaces="engraved"] .stage .slot .face .nm{font-family:var(--sans);font-weight:800;font-size:12px;letter-spacing:.015em;line-height:1.02;margin:0;color:inherit;text-shadow:0 1px 0 rgba(255,250,238,.55)}
+.lt [data-spaces="engraved"] .stage .slot .face .nm{font-family:var(--sans);font-weight:800;font-size:12px;letter-spacing:0;line-height:1.02;margin:0;color:inherit;text-shadow:0 1px 0 rgba(255,250,238,.55)}
 .lt [data-spaces="engraved"] .stage .slot.low .face{flex-direction:column-reverse}
 .lt [data-spaces="engraved"] .stage .slot .face .row{display:flex;align-items:center;justify-content:center;gap:4px}
-.lt [data-spaces="engraved"] .stage .slot.side .face .row{flex-direction:column;gap:1px}
 .lt [data-spaces="engraved"] .stage .slot .face .ico{line-height:0;margin:0}
 .lt [data-spaces="engraved"] .stage .slot .face .ico svg{width:24px;height:24px;image-rendering:pixelated}
 .lt [data-spaces="engraved"] .stage .slot .face .yl{font-family:var(--serif);font-weight:800;font-size:12.5px;line-height:1.05;color:inherit;max-width:none;white-space:nowrap;text-shadow:0 1px 0 rgba(255,250,238,.6)}
-.lt [data-spaces="engraved"] .stage .slot.side .face .yl{white-space:normal}
+.lt [data-spaces="engraved"] .stage .slot .face .yl{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
+.lt [data-spaces="engraved"] .stage .slot .face .yl .cl{white-space:nowrap;display:flex;align-items:center;gap:.15em}
 .lt [data-spaces="engraved"] .stage .stamp .d{fill:color-mix(in srgb,var(--c) 45%,#2a1f17)}
 .lt [data-spaces="engraved"] .stage .stamp .m{fill:var(--c)}
 .lt [data-spaces="engraved"] .stage .stamp .l{fill:color-mix(in srgb,var(--c) 38%,#f4ebd7)}

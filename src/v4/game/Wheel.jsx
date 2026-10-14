@@ -554,12 +554,16 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
         <span className="hit" aria-hidden="true" />
         <span className="base" aria-hidden="true" />
         {engraved ? (
-          // name in small capitals; beneath it the stamp (or the minion standing on it) and the yield
+          // the name; beneath it the stamp (or the minion standing on it) with the yield beside it, one clause a line
           <span className="face" aria-hidden="true">
             <span className="nm">{a.name}</span>
             <span className="row">
               {minions || <span className="ico"><Stamp id={[`${qid}.${a.key}`, spriteId(a.name)]} /></span>}
-              {open && <span className="yl" data-yield><Rich text={shortEffect(qid, a, round)} /></span>}
+              {open && (
+                <span className="yl" data-yield>
+                  {shortEffect(qid, a, round).split(' · ').map((c, k) => <span key={k} className="cl"><Rich text={c} /></span>)}
+                </span>
+              )}
             </span>
           </span>
         ) : (

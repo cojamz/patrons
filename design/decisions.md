@@ -375,3 +375,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Cult leaders don't wear colored robes: brown or gray for everyone; the emoji is what sets them apart. Replaces the muted seat-color robe.
 - (Cory) The intro's recruit moment needs more than a member walking into the crowd. Claude's take: a small initiation (the leader beckons, the member steps off its card into a ring of arcane light, bows, the cult's emoji mark blooms above it, +1 follower).
 - ✅ (Cory) In the intro, more members join the leader as the beats progress, so the cult grows into a crowd by the end.
+- ✅ (Cory) The intro also shows the leader buying followers with power (resources swirl into the glow and become followers who join the crowd).
