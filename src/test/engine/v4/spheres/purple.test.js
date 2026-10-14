@@ -46,7 +46,7 @@ const pass = s => (s.pending?.kind === 'buy' ? move(s, 'pass') : s);
 const turns = (...ps) => ps.map(p => ({ t: 'turn', p }));
 const nextPlacer = s => { while (s.pending && s.pending.kind !== 'place') s = pass(s); return s.pending?.player; };
 const JV = '0-0', RUSH = '0-1', STRIKE = '0-5', HIRE = '1-2', HOURLY = '2-0';
-const RALLY_COST = 3;
+const RALLY_COST = 5;
 // every round-I space but the ones named, taken by P2
 const fullRoundI = (...free) => Object.fromEntries([0, 1, 2, 3].flatMap(q => [0, 1, 2].map(i => `${q}-${i}`)).filter(k => !free.includes(k)).map(k => [k, 1]));
 

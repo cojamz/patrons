@@ -25,7 +25,7 @@ const scheduled = ctx => ctx.state.queue.filter(t => t.t === 'turn').length;
 /** True when one more turn can't squeeze anyone out of a space. */
 export const spareSpace = ctx => openSpaces(ctx).length > scheduled(ctx);
 const OT = 6; // Overtime's price (measured: 4 → 47% taker win rate, 5 → 43%, 6 → 37%)
-const RALLY = Number(globalThis.process?.env?.PURPLE_RALLY_COST || 3); // EXPLORE
+const RALLY = 5; // Rally's price (measured taker win rate: 3 → 45%, 4 → 42%, 5 → 36%; Strike 34%)
 /** What an extra turn that costs `base` purple costs p (Double Time halves it, rounded up). */
 const priceFor = (ctx, p, base) => (ctx.membersOf(p).some(c => c.def.halfTurns || (c.copy && c.copy.endsWith('.doubletime'))) ? Math.ceil(base / 2) : base);
 const canBuyTurn = (ctx, p, base) => (p.res[P] || 0) >= priceFor(ctx, p, base) && spareSpace(ctx);
@@ -219,18 +219,18 @@ export default {
     m('apprentice', 'Apprentice', 1, 1, 'Whenever you take an extra turn, your next member costs 2 less.', {
       onExtraTurn(ctx, owner) { owner.discount += 2; },
     }),
-    m('overseer', 'Overseer', 3, 1, 'Whenever a rival takes an extra turn, gain half your purple (up to 4).', {
+    m('overseer', 'Overseer', 2, 1, 'Whenever a rival takes an extra turn, gain half your purple (up to 4).', {
       onRivalExtraTurn(ctx, owner) { ctx.gain(owner, P, Math.min(4, Math.floor((owner.res[P] || 0) / 2))); },
     }),
     // fill-in (critic): replaces Timekeeper
-    m('doubletime', 'Double Time', 2, 1, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
+    m('doubletime', 'Double Time', 3, 1, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
     m('bookkeeper', 'Bookkeeper', 2, 1, 'At round end, +1 purple per 2 workers you have on the board.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2)); },
     }),
     m('clockmaker', 'Clockmaker', 2, 1, 'At round end, +1 purple per 2 purple you have.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
     }),
-    m('lamplighter', 'Lamplighter', 1, 1, 'At round start, +1 purple per worker you get this round (3 / 4 / 5).', {
+    m('lamplighter', 'Lamplighter', 3, 1, 'At round start, +1 purple per worker you get this round (3 / 4 / 5).', {
       onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
     // fill-in (critic): replaces Marathoner
