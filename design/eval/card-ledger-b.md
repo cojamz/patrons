@@ -19,9 +19,9 @@ Status key:
 ## Blue (market)
 - Bargain: OK. Cross: an Echo copy of a Bargain does Bargain again for the copier.
 - Restock: OK. Cross: Midas turns the blue into gold, and the log names Midas.
-- Showroom: OK. Cross: Encore copies the printed number.
+- Showroom: FIXED. With no badged member face up it gained 0 and said nothing; it now logs why. Guard: `cards-skips-b.test.js`. Cross: Encore copies the printed number.
 - Clearance: FIXED. Clearance is "your buy", but it didn't count as a real first buy, so Big Spender's second buy was lost. It now counts. Guard: `× Big Spender: Clearance counts as your first buy`.
-- Price Check: QUESTION 1.
+- Price Check: FIXED. With no member costing 2 or more it gained 0 and said nothing; it now logs why. Guard: `cards-skips-b.test.js` (Price Check). See QUESTION 1.
 - Spree: OK. Cross: with Big Spender you get 4 buys. See QUESTION 2.
 - Stylist: OK. Cross: a Doppelganger copy gives +2.
 - Onlooker: OK. Cross: the Heist victim's free recruit of a badged member counts.
@@ -65,13 +65,13 @@ Status key:
 ## White (trading)
 - Haggle: OK. Cross: Midas.
 - Buy Low: OK. The cap is 2 per round number.
-- Pawn: OK. Cross: an Echo copy redoes Pawn, because a sale is a trade.
-- Sell High: OK. It only sells won or bought followers.
-- Cash In: OK.
+- Pawn: QUESTION 10 (Cory's play: in round I it can't sell). FIXED meanwhile: it skipped the sale silently. It now logs "Pawn: P1 has no followers to sell yet (only followers you bought or won can be sold)." Guards: `cards-skips-b.test.js` (Pawn) and `Pawn in round I with nothing bought or won`. Cross: an Echo copy redoes Pawn, because a sale is a trade.
+- Sell High: OK. It only sells won or bought followers. Its no-sale line now gives the same reason as Pawn's (see QUESTION 10).
+- Cash In: FIXED. With no white, the trade part was skipped silently; it now logs it.
 - Boom: OK. You can keep your white.
 - Shopkeeper: OK.
 - Dealer: FIXED. It was silent: White's `sell()` ran the hook outside the engine's trace. It now runs through `ctx.asMember`. Guard: `Dealer: … (named)`. Cross: a Doppelganger copy gives +1 more each.
-- Pawnbroker: FIXED (log form). The line now reads "P1's Pawnbroker: sold 1 follower for 3 white." It's back each round. Cross: with Reinvestor, the sale makes the next member 2 cheaper.
+- Pawnbroker: FIXED (log form). The line now reads "P1's Pawnbroker: sold 1 follower for 3 white." With nothing to sell, it says why. It's back each round. Cross: with Reinvestor, the sale makes the next member 2 cheaper.
 - Safety Net: OK.
 - Tipster: OK.
 - Lender: FIXED (display): the game-end part printed "Lender +-1". Guard: `Lender: …`. Cross: a stolen Lender doesn't pay again, and a Doppelganger copy pays +5 at turn end.
@@ -100,6 +100,12 @@ Status key:
 - Déjà Vu: OK. Its copy lines now name it too.
 - Chronicler: OK.
 
+## Gate: a skipped printed part says so
+`src/test/engine/v4/cards-skips-b.test.js` checks all 23 Blue, Magenta, White and Green actions; Hum is the opener in its positions.
+- **Barren position:** with only an opening Hum on the board, each action must ask a question, change a number, or log a line after "took".
+- **Rich vs barren:** if an action asks its taker a question in a rich position, it must log a line saying why when it skips that question in the barren position.
+- **What it caught:** Pawn's silent no-sale and Price Check's silent zero. The same review fixed Showroom's zero and Cash In's empty trade.
+
 ## Questions for Cory
 1. **Price Check:** "gain blue equal to half the cost of your priciest member." The text doesn't say how to round, and odd costs exist (Jackpot 11). [Round down, as coded. Print "(rounded down)" the way Clearance does.]
 2. **Spree through Straggler:** Straggler moves a worker after the last placement, so it isn't anyone's turn. Spree still queues 2 extra buys for that player before the contests; I ran this in a scene. "This turn you buy 3 times." [No extra buys outside your own turn.]
@@ -110,12 +116,13 @@ Status key:
 7. **"Up to" with no choice:** Liquidator ("sell up to 5") and Raider ("buy up to 3") always take the most they can. [Let the player choose how many.]
 8. **Translator and Wallflower on "do it yourself" copies:** a copy of a space that took or traded (Steal, Pawn, Bargain) redoes the action, and neither card applies. [Keep: they change resources a copy hands over, not an action you redo.]
 9. **Doppelganger copying a when-recruited member:** copying Accomplice, Grifter, Double Agent, Keepsake or Mirror does nothing, because copies skip "when recruited". Lender was ruled a full copy. [Fire the copied effect once when the copy is made, like Lender.]
+10. **Pawn, and selling in general:** only followers you bought or won can be sold, so Pawn's sale does nothing in round I. Cory hit this in play. Not changed here; it's his open call. [Any follower can be sold, down to a floor of 1. That's the recommendation; the foreman sends it if Cory says yes.]
 
 ## Counts
 82 cards checked (Crew and Shareholder are plain):
-- OK: 46
-- FIXED: 30
-- QUESTION only: 4 (Price Check, Broker, Big Score, Raider)
+- OK: 43
+- FIXED: 33
+- QUESTION only: 4 (Pawn, Broker, Big Score, Raider)
 - DEAD-BY-DESIGN for bots or the gate: 2 (Social Climber, Watchdog)
 
-Some cards carry both FIXED and a question (Ransom, Liquidator, Translator, Wallflower, Sticky Fingers, Desperado, Spree).
+Some cards carry both FIXED and a question (Price Check, Ransom, Liquidator, Translator, Wallflower, Sticky Fingers, Desperado). Spree is OK with a question.
