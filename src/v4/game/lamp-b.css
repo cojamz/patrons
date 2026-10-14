@@ -136,13 +136,12 @@
 .lt-chron ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13.5px;line-height:1.35;color:var(--paper-ink)}
 .lt-chron li{padding:3px 0;border-bottom:1px solid rgba(42,31,23,.08)}
 
-/* ---------- leaders and the minions they still have to place (a quiet row, no motion) ---------- */
-.lt-ring{display:inline-flex;flex-direction:column;align-items:center;gap:2px;flex:none;line-height:0}
-.lt-ring.compact{flex-direction:row;align-items:flex-end;gap:3px}
-.lt-ring .lead{display:block;line-height:0}
-.lt-ring .row{display:flex;align-items:flex-end;line-height:0}
-.lt-ring .row .min{display:block;margin-left:calc(var(--m) * -0.25)}
-.lt-ring .row .min:first-child{margin-left:0}
+/* ---------- leaders and their floating minions (a slow 1px bob, each on its own period and phase) ---------- */
+.lt-ring{position:relative;display:inline-block;flex:none}
+.lt-ring .lead,.lt-ring .orbit{position:absolute;display:block;line-height:0}
+.lt-ring .orbit{animation:minion-bob 4.2s steps(1,end) infinite}
+@keyframes minion-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
+@media (prefers-reduced-motion: reduce){.lt-ring .orbit{animation:none}}
 .leader,.minion{display:block;image-rendering:pixelated}
 .leader.dim,.minion.dim{opacity:.32}
 

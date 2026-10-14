@@ -230,3 +230,4 @@ h1,h2,h3{font-family:var(--serif)}
 
 /* the question's first letter keeps its overhang (the line clamp clips at the box edge) */
 .lt-prompt .status .say .say-text{padding-left:3px;padding-right:2px}
+.lt-menu .record-text{width:100%;min-height:110px;background:var(--walnut);color:var(--cream);border:1px solid rgba(243,230,200,.2);border-radius:8px;font:12px ui-monospace,monospace}

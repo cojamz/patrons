@@ -236,7 +236,14 @@ export function ShopCardHover({ state, me, uid, optionFor = () => null, onPick, 
   const d = cardDef(state, uid);
   const viewer = me != null ? state.players[me] : null;
   const pay = viewer ? payBreakdown(state, viewer, uid) : null;
-  const effect = viewer && pay && pay.spend ? contestEffect(state, viewer, uid, pay.spend) : [];
+  // how the buy moves the contests clones the table: worked out just after the card is up, never before it
+  const [effect, setEffect] = useState([]);
+  useEffect(() => {
+    setEffect([]);
+    if (!viewer || !pay || !pay.spend) return undefined;
+    const t = setTimeout(() => setEffect(contestEffect(state, viewer, uid, pay.spend)), 0);
+    return () => clearTimeout(t);
+  }, [state, uid, me]); // eslint-disable-line react-hooks/exhaustive-deps
   const opt = optionFor(`card:${uid}`);
   const list = costParts(d, state.resources);
   return (

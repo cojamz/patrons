@@ -138,7 +138,7 @@ try {
     const spaces = await centers('[data-slot] .base');
     const cards = await centers('[data-region="shop"] [data-uid]');
     // separate arrivals: move away, then onto a target, wait for its card
-    for (const [x, y] of [...spaces.slice(0, 8), ...cards.slice(0, 6)]) {
+    for (const [x, y] of [...spaces.slice(0, 14), ...cards.slice(0, 10), ...spaces.slice(14, 20)]) {
       await lab.mouse.move(4, 690);
       await lab.waitForTimeout(220);
       await lab.mouse.move(x, y, { steps: 2 });
@@ -146,7 +146,7 @@ try {
     }
     const lat = (await lab.evaluate(() => window.__hov.lat)).sort((a, b) => a - b);
     const p95 = lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : Infinity;
-    if (lat.length < 10) fail(`(d) only ${lat.length} hover cards opened out of 14 arrivals`, 'hover');
+    if (lat.length < 20) fail(`(d) only ${lat.length} hover cards opened out of ${Math.min(20, spaces.length) + Math.min(10, cards.length)} arrivals`, 'hover');
     if (!(p95 < 100)) fail(`(d) hover card p95 ${Math.round(p95)}ms (want < 100ms; samples ${lat.map(Math.round).join(',')})`, 'hover');
     // sweep: across the outer ring's spaces in order, never leaving the ring; the card must never close in between
     // the outer ring: the spaces farthest from the wheel's centre, in angle order
@@ -178,7 +178,13 @@ try {
   await phone.waitForSelector('[data-option]', { timeout: 20000 });
   await audit(phone, 'phone-setup');
   const target = await phone.evaluate(() => {
-    const e = [...document.querySelectorAll('.app.game [title]')].find(x => { const b = x.getBoundingClientRect(); return b.width > 8 && b.height > 8 && b.top > 0 && b.bottom < innerHeight && !x.closest('button, [role="button"], [data-option]'); });
+    // a titled element that is really on top at its centre (not under an overlay such as the intro)
+    const e = [...document.querySelectorAll('.app.game [title]')].find(x => {
+      const b = x.getBoundingClientRect();
+      if (!(b.width > 8 && b.height > 8 && b.top > 0 && b.bottom < innerHeight) || x.closest('button, [role="button"], [data-option]')) return false;
+      const top = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+      return !!top && x.contains(top);
+    });
     if (!e) return null;
     const b = e.getBoundingClientRect();
     return { x: b.left + b.width / 2, y: b.top + b.height / 2, title: e.getAttribute('title') };

@@ -21,7 +21,8 @@ import Tick from './Tick.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop } from './flight.js';
 import { friendlyError, isNetworkError } from '../errors.js';
 import { ROUND_START } from '../saved.js';
-import { GAME_NAME } from '../version.js';
+import { gameRecord, recordText } from '../session/record.js';
+import { copyText } from '../Recovery.jsx';
 
 const STEP_MS = 320;      // pace when catching up on moves that happened behind the round-end card
 const RIVAL_DWELL_MS = 700; // each visible bot step (placing, recruiting, buying) holds this long; a pass doesn't wait
@@ -154,8 +155,15 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
 }
 
 /** One glyph for the rest (How to play, the log, Leave): the table carries no header buttons. */
-function Menu({ onRules, onLog, onLeave }) {
+function Menu({ onRules, onLog, onLeave, getState }) {
   const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(null); // null | 'copied' | the record text, when the clipboard refused
+  useEffect(() => { if (!open) setCopied(null); }, [open]);
+  const copyRecord = async () => {
+    const st = getState && getState();
+    const text = recordText(st ? gameRecord(st) : { empty: true });
+    setCopied((await copyText(text)) ? 'copied' : text);
+  };
   const box = useRef(null);
   useEffect(() => {
     if (!open) return undefined;
@@ -173,6 +181,11 @@ function Menu({ onRules, onLog, onLeave }) {
         <div className="menu-list" role="menu">
           <button type="button" role="menuitem" className="btn ghost rules-btn" onClick={pick(onRules)}>How to play</button>
           <button type="button" role="menuitem" className="btn ghost log-btn" onClick={pick(onLog)}>The log</button>
+          <button type="button" role="menuitem" className="btn ghost record-btn" data-copy-record onClick={copyRecord}
+            title="Copies this game, move by move, so a problem can be replayed exactly">{copied === 'copied' ? 'Copied ✓' : 'Copy game record'}</button>
+          {copied && copied !== 'copied' && (
+            <textarea className="record-text" readOnly value={copied} aria-label="Game record (copy it by hand)" onFocus={e => e.target.select()} autoFocus />
+          )}
           {onLeave && <button type="button" role="menuitem" className="btn ghost leave-btn" onClick={pick(onLeave)}>Leave</button>}
         </div>
       )}
@@ -631,7 +644,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             </span>
           )}
         </div>
-        <Menu onRules={() => setRules(true)} onLog={openLog} onLeave={onHome ? () => (state.over ? onHome() : setLeaving(true)) : null} />
+        <Menu onRules={() => setRules(true)} onLog={openLog} getState={() => session.getState()} onLeave={onHome ? () => (state.over ? onHome() : setLeaving(true)) : null} />
       </header>
       {session.info && session.info.mode === 'online' && session.info.roomCode && (
         <div className="hint room">Room {session.info.roomCode}</div>

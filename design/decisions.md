@@ -326,3 +326,5 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - Watch items from the reworks: Green's last round-I seat wins 31% (±2.6) after the Echo change (was 28%); in one White game a single seat took 3 of the four 10-follower buys in round II and the game ended after round II (the clock can be rushed by one player).
 - (Cory) GitHub's automatic test runs emailed a failure on every work-in-progress push. They now run only by hand or on a release tag (v0.2…).
 - (Cory) Actually keep the minions floating by the leader for now; judge the noise in play.
+- (Claude, under Cory's go-with-your-gut, from the dead-window audit) Rainmaker is unchanged, but bots now use it on their last buy of the game whenever it gives anything. They had left it unused, so the fire-audit gate never saw it fire.
+- (Claude) Cards, prompts and log lines now say "minion" instead of "worker": Squatter, Straggler, Extra Hand, Catch Up, Wind-up, Plan Ahead, Foreman, Bookkeeper, Lamplighter, "place a minion", and "+1 minion" in the round's opening line. The glossary follows. Code names (p.left, workersOnBoard…) stay.
