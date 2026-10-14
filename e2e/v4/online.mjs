@@ -41,6 +41,8 @@ const watch = (page, who) => {
   }
   return page;
 };
+// the game screen's root (stable across UI reworks; seat panels come and go)
+const GAME = '.app.game';
 const params = `${RTDB ? `rtdb=${RTDB}` : 'transport=broadcast'}&botDelay=30&subAfter=1500&intro=0`; // intro=0: no first-game intro over the table (src/v4/Intro.jsx; hotseat.mjs gates the intro)
 const url = `${base}/?${params}`;
 const pages = { hana: watch(await ctxs.hana.newPage(), 'hana'), gus: watch(await ctxs.gus.newPage(), 'gus'), pia: null };
@@ -110,13 +112,13 @@ try {
   await pages.hana.screenshot({ path: `${SHOTS}/online-lobby.png` });
   await pages.pia.screenshot({ path: `${SHOTS}/online-lobby-guest.png` });
   await pages.hana.click('text=Start game');
-  await Promise.all(Object.values(pages).map(p => p.waitForSelector('.players', { timeout: 20000 })));
+  await Promise.all(Object.values(pages).map(p => p.waitForSelector(GAME, { timeout: 20000 })));
   log('started');
 
   // Gus reloads mid-game: same tab, same seat
   await playUntil(async () => (await moves(pages.hana)) >= 8, 60000, 'a few moves');
   await pages.gus.reload();
-  await pages.gus.waitForSelector('.players', { timeout: 20000 });
+  await pages.gus.waitForSelector(GAME, { timeout: 20000 });
   log('gus reloaded');
   await pages.gus.screenshot({ path: `${SHOTS}/online-guest.png` });
 
@@ -147,7 +149,7 @@ try {
   // Pia reopens the invite link: straight back into her seat, the bot steps aside
   pages.pia = watch(await ctxs.pia.newPage(), 'pia');
   await pages.pia.goto(`${invite}&intro=0`);
-  await pages.pia.waitForSelector('.players', { timeout: 20000 });
+  await pages.pia.waitForSelector(GAME, { timeout: 20000 });
   // the bot has stepped aside: when it's Pia's turn the table waits for her (a bot would move within ~30 ms)
   {
     const t0 = Date.now();
@@ -160,7 +162,7 @@ try {
     await pages.hana.waitForTimeout(1500);
     if ((await moves(pages.hana)) !== n) throw new Error('a bot kept playing Pia’s seat after she came back');
   }
-  const piaYou = await pages.pia.$eval('.players', e => e.textContent).catch(() => '');
+  const piaYou = await pages.pia.$eval(GAME, e => e.textContent).catch(() => '');
   if (!/you/i.test(piaYou)) throw new Error('Pia rejoined but no seat shows as hers');
   await pages.pia.screenshot({ path: `${SHOTS}/online-rejoined-phone.png` });
   log('pia back');
@@ -168,7 +170,7 @@ try {
   // Hana (the host) reloads: Gus takes over as host while she's gone, and she comes back as a guest
   await playUntil(async () => (await moves(pages.hana)) >= before + 35, 60000, 'a few more moves');
   await pages.hana.reload();
-  await pages.hana.waitForSelector('.players', { timeout: 20000 });
+  await pages.hana.waitForSelector(GAME, { timeout: 20000 });
   log('hana reloaded');
 
   await playUntil(atResults, 240000, 'final results');
