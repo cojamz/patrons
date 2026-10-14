@@ -1,33 +1,50 @@
 // The board: a printed paper wheel of 4 quadrants (the Lamplit Table). Outer ring = round I, middle = round II,
 // inner = round III. It still spins (drag, arrow keys, a sideways swipe), but everything on it stays upright and
-// nothing else on screen changes with its orientation. Each space is a socket with its name and its effect in a
-// few words (readable without hovering); a placed minion (the player's emoji) stands on its rim; a rival's
-// fresh placement wears a dashed ring. Each quadrant's contest sits on a rim plaque (rule, prize, leader), with the
-// standings on hover/tap. Hover or focus (mouse) or a first tap (touch) shows a space's card; on touch, placing takes
-// a second tap.
+// nothing else on screen changes with its orientation. Two looks for the spaces (Cory picks; `?spaces=engraved`):
+//  - sockets (default): each space is a cream socket with its picture, name and yield;
+//  - engraved (design/prototypes/actions option 3): each space is a cell of its ring printed into the paper, washed
+//    in the quadrant's ink, with a one-ink stamp of its picture, its name in small capitals and its yield beneath.
+// In both, a space has three states you can read at a glance: lit (yours to take: a lamp-lit edge, full strength),
+// taken (dimmed to ~40% with the owner's minion standing in it), and not open yet (hatched / hollow). A rival's
+// fresh move wears a dotted ring in that player's color, never the lamp's. A click on a space you can't take
+// shakes it and says why at the pointer ("Taken by P3", "Opens in round II"), never silence.
+// Each quadrant's contest is engraved on its rim (rule, prize, tiebreak, leaders), with the standings on hover/tap.
+// Hover or focus (mouse) or a first tap (touch) shows a space's card; on touch, placing takes a second tap.
 import { memo, useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { quadrant, roman, RING_VALUE } from '../../engine/v4/index.js';
-import { playerColor, standings, seatEmoji } from '../format.js';
+import { playerColor, standings, seatEmoji, shortLabel } from '../format.js';
 import { Minion } from '../art/Leader.jsx';
 import { emojiArt } from '../art/emojis.js';
 import { Sprite } from '../art/Sprite.jsx';
-import { spriteId } from '../art/index.js';
+import { spriteId, iconFor, withOutline } from '../art/index.js';
 import { sheetMode } from './parts.jsx';
 import { realHover } from '../hover.js';
 import { Rich } from './Rich.jsx';
 import { shortEffect } from '../shorts.js';
 
-// Discs sit toward the outer edge of their ring and names on a fixed radius along the inner edge, so a name
-// never runs into its disc, the disc's glow or a recent-move ring at any board size.
-const RING = { 1: { r0: 128, r1: 180, r: 151, n: 3 }, 2: { r0: 82, r1: 128, r: 104, n: 2 }, 3: { r0: 36, r1: 82, r: 58, n: 1 } };
+// sockets: discs toward the outer edge of their ring, so a name never runs into a neighbour at any board size
+const RING_S = { 1: { r0: 128, r1: 180, r: 151, n: 3, span: 66 }, 2: { r0: 82, r1: 128, r: 104, n: 2, span: 40 }, 3: { r0: 36, r1: 82, r: 58, n: 1, span: 0 } };
+// engraved: the cells tile each quadrant (ring I: three 30° cells, ring II: two 45° cells, ring III: one 90° cell)
+const RING_E = { 1: { r0: 122, r1: 180, r: 151, n: 3, span: 60 }, 2: { r0: 72, r1: 122, r: 97, n: 2, span: 45 }, 3: { r0: 27, r1: 72, r: 51, n: 1, span: 0 } };
+const ringsOf = look => (look === 'engraved' ? RING_E : RING_S);
 const RIM = { r0: 180, r1: 200, r: 190 }; // the rim band: each quadrant's rule, engraved
 const CX = 200, CY = 200, VB0 = -26, VBS = 452;
+const BOX = 40; // engraved: the space's own box (its click and hover target, in board units); the cell takes the rest
 const qCenter = q => 180 + q * 90;
 const norm = a => ((a % 360) + 540) % 360 - 180;
 function polar(a, r) { const t = (a - 90) * Math.PI / 180; return [CX + r * Math.cos(t), CY + r * Math.sin(t)]; }
 function arc(a0, a1, r0, r1) {
   const [x0, y0] = polar(a0, r1), [x1, y1] = polar(a1, r1), [x2, y2] = polar(a1, r0), [x3, y3] = polar(a0, r0);
   return `M${x0},${y0} A${r1},${r1} 0 0 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 0 0 ${x3},${y3}Z`;
+}
+/** A ring cell inset by `pad` board units on every side (the same width at the inner and the outer edge). */
+function cellPath(a0, a1, r0, r1, pad = 0) {
+  const ro = r1 - pad, ri = Math.max(1, r0 + pad);
+  const dO = (pad / ro) * 180 / Math.PI, dI = (pad / ri) * 180 / Math.PI;
+  const [x0, y0] = polar(a0 + dO, ro), [x1, y1] = polar(a1 - dO, ro), [x2, y2] = polar(a1 - dI, ri), [x3, y3] = polar(a0 + dI, ri);
+  const f = n => n.toFixed(2);
+  return `M${f(x0)},${f(y0)} A${ro},${ro} 0 0 1 ${f(x1)},${f(y1)} L${f(x2)},${f(y2)} A${ri},${ri} 0 0 0 ${f(x3)},${f(y3)}Z`;
 }
 
 /** An arc for text that reads upright wherever it sits once the wheel is turned by `rot`. */
@@ -45,38 +62,92 @@ export const facingOf = (rot, count) => {
 };
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** Where each space sits on the (unturned) wheel. */
-export function spaceGeometry(state) {
+/** Which look the spaces wear: 'engraved' behind `?spaces=engraved` (until Cory picks), else 'sockets'. */
+export function spacesLook() {
+  try { return new URLSearchParams(globalThis.location?.search || '').get('spaces') === 'engraved' ? 'engraved' : 'sockets'; } catch { return 'sockets'; }
+}
+
+/** Where each space sits on the (unturned) wheel: its angle, the half-width of its cell, and its centre. */
+export function spaceGeometry(state, look = 'sockets') {
+  const rings = ringsOf(look);
   const out = [];
   state.quadrants.forEach((qid, q) => {
     const Q = quadrant(qid);
     Q.actions.forEach((a, i) => {
-      const t = a.ring, R = RING[t];
+      const t = a.ring, R = rings[t];
       const idx = Q.actions.filter((x, j) => x.ring === t && j < i).length;
-      const span = t === 1 ? 66 : t === 2 ? 40 : 0;
       const c = qCenter(q);
-      const ang = R.n === 1 ? c : (c + span / 2) - idx * (span / (R.n - 1));
-      out.push({ key: `${q}-${i}`, q, i, qid, a, ring: t, ang, xy: polar(ang, R.r) });
+      const ang = R.n === 1 ? c : (c + R.span / 2) - idx * (R.span / (R.n - 1));
+      out.push({ key: `${q}-${i}`, q, i, qid, a, ring: t, ang, half: 45 / R.n, xy: polar(ang, R.r) });
     });
   });
   return out;
 }
 
+// ---------- the engraved stamp: today's 24×24 action icon printed in one ink (dark, the ink, a light tint) ----------
+const STAMP_TONE = { k: 'd', d: 'd', 1: 'd', 2: 'm', m: 'm', 3: 'l', l: 'l', o: 'l' };
+const stampCache = new Map();
+function stampRects(id) {
+  const { icon } = iconFor(id, 'action');
+  if (stampCache.has(icon.id)) return stampCache.get(icon.id);
+  const out = [];
+  withOutline(icon.px).forEach((r, y) => {
+    let x = 0;
+    while (x < r.length) {
+      const ch = r[x];
+      let w = 1;
+      while (r[x + w] === ch) w++;
+      if (ch !== '.') out.push({ x, y, w, t: STAMP_TONE[ch] || 'm' });
+      x += w;
+    }
+  });
+  stampCache.set(icon.id, out);
+  return out;
+}
+const Stamp = memo(function Stamp({ id, size = 24 }) {
+  return (
+    <svg className="stamp" viewBox="0 0 24 24" width={size} height={size} shapeRendering="crispEdges" aria-hidden="true">
+      {stampRects(id).map((r, k) => <rect key={k} className={r.t} x={r.x} y={r.y} width={r.w} height="1" />)}
+    </svg>
+  );
+});
+
+/** Why a space can't be taken, in a few words at the pointer (null when it's open: the turn itself explains). */
+export function deniedText(state, key, meId = null) {
+  const owner = state.slots[key];
+  if (owner !== undefined) return `Taken by ${owner === meId ? 'you' : state.players[owner].name}`;
+  const [q, i] = key.split('-').map(Number);
+  const a = quadrant(state.quadrants[q]).actions[i];
+  if (a && a.ring > Math.max(1, state.round)) return `Opens in round ${roman(a.ring)}`;
+  return null;
+}
+
 /**
  * @param {{ state:any, legal:Map<string,string>, onPick:(id:string)=>void, onDenied?:(info:object, el:Element)=>void,
- *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void }} props
+ *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void, look?:'sockets'|'engraved' }} props
  */
-function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null }) {
+function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null, look: lookProp = null }) {
+  const look = useMemo(() => lookProp || spacesLook(), [lookProp]);
+  const engraved = look === 'engraved';
+  const rings = ringsOf(look);
   const [rot, setRot] = useState(() => -90 * facing);
   const [peek, setPeek] = useState(null); // { key, pinned }
+  const [deny, setDeny] = useState(null); // { text, x, y, n }: the note at the pointer after a click on a space you can't take
   // the space card itself is UI-B's hover layer: the wheel only says which space is under the pointer (or pinned)
   const hoverRef = useRef(hover);
   hoverRef.current = hover;
+  const stage = useRef(null);
+  // what a space's hover card sits beside: the whole cell (engraved), or the socket
+  const anchorOf = (key, el = null) => {
+    const root = stage.current;
+    if (engraved && root) { const c = root.querySelector(`[data-cell="${key}"] .wash`); if (c) return c; }
+    return el || (root && root.querySelector(`[data-slot="${key}"]`));
+  };
   useEffect(() => {
     const h = hoverRef.current;
     if (!h) return;
     if (peek) {
-      const el = stage.current && stage.current.querySelector(`[data-slot="${peek.key}"]`);
+      const el = anchorOf(peek.key);
       if (el) h.onSpaceHover(peek.key, el, { pinned: !!peek.pinned });
     } else if (h.card && h.card.kind === 'space') {
       if (h.card.pinned) h.close(); else h.onSpaceHover(h.card.key, null);
@@ -87,9 +158,8 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
   const drag = useRef(null);
   const moved = useRef(false);
   const lastPointer = useRef('mouse');
-  const stage = useRef(null);
   const nq = state.quadrants.length;
-  // On-screen scale of the board, so text is sized in real pixels: never under 10px, hidden if it can't fit.
+  // On-screen scale of the board, so text is sized in real pixels.
   const [scale, setScale] = useState(1);
   useEffect(() => {
     const el = stage.current;
@@ -145,7 +215,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
   // A pinned peek (touch) closes on any tap elsewhere.
   useEffect(() => {
     if (!peek || !peek.pinned) return undefined;
-    const close = e => { if (!e.target.closest || !e.target.closest('.peek, .slot, [data-hover-card], .popover')) setPeek(null); };
+    const close = e => { if (!e.target.closest || !e.target.closest('.peek, .slot, [data-cell], [data-hover-card], .popover')) setPeek(null); };
     addEventListener('pointerdown', close);
     return () => removeEventListener('pointerdown', close);
   }, [peek]);
@@ -165,8 +235,14 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
   // turning the board hides a hover card (it no longer sits over its space)
   const rotSeen = useRef(rot);
   useEffect(() => { if (Math.abs(rot - rotSeen.current) > 2) { rotSeen.current = rot; setPeek(p => (p && !p.pinned ? null : p)); } }, [rot]);
-  // A new decision clears a stale selection.
-  useEffect(() => { setPeek(null); }, [state]);
+  // A new decision clears a stale selection and any note.
+  useEffect(() => { setPeek(null); setDeny(null); }, [state]);
+  // the note at the pointer fades on its own
+  useEffect(() => {
+    if (!deny) return undefined;
+    const t = setTimeout(() => setDeny(d => (d === deny ? null : d)), 1700);
+    return () => clearTimeout(t);
+  }, [deny]);
 
   const local = e => {
     const b = stage.current.getBoundingClientRect();
@@ -212,9 +288,9 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
       const ux = CX + (p.x - CX) * Math.cos(-r) - (p.y - CY) * Math.sin(-r);
       const uy = CY + (p.x - CX) * Math.sin(-r) + (p.y - CY) * Math.cos(-r);
       let best = null, bd = 1e9;
-      for (const sp of spaceGeometry(state)) { const d = Math.hypot(sp.xy[0] - ux, sp.xy[1] - uy); if (d < bd) { bd = d; best = sp; } }
+      for (const sp of spaceGeometry(state, look)) { const d = Math.hypot(sp.xy[0] - ux, sp.xy[1] - uy); if (d < bd) { bd = d; best = sp; } }
       drag.current = null;
-      if (best && bd < 44) { e.preventDefault(); touchTapped.current = Date.now(); tap(best, stage.current.querySelector(`[data-slot="${best.key}"]`)); }
+      if (best && bd < 44) { e.preventDefault(); touchTapped.current = Date.now(); tap(best, stage.current.querySelector(`[data-slot="${best.key}"]`), { x: e.clientX, y: e.clientY }); }
       return;
     }
     if (!drag.current) return;
@@ -232,14 +308,25 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
   };
 
   const round = Math.max(1, state.round);
-  const spaces = spaceGeometry(state);
+  const spaces = spaceGeometry(state, look);
 
+  // a small shake (the space, and its printed cell) that says "not this one"
+  const shake = key => {
+    const root = stage.current;
+    if (!root || reduced()) return;
+    for (const el of root.querySelectorAll(`[data-slot="${key}"], [data-cell="${key}"]`)) {
+      el.classList.remove('shake');
+      void el.getBoundingClientRect(); // restart the animation on a second click
+      el.classList.add('shake');
+      setTimeout(() => el.classList.remove('shake'), 380);
+    }
+  };
   const touchTapped = useRef(0);
-  const tap = (s, el) => {
+  const tap = (s, el, pt = null) => {
     if (moved.current) return;
     const opt = legal.get(s.key);
     const touch = confirmPlace || lastPointer.current === 'touch';
-    if (opt && !touch) { setPeek(null); onPick(opt); return; }
+    if (opt && !touch) { setPeek(null); setDeny(null); onPick(opt); return; }
     if (opt && touch) {
       if (peek && peek.key === s.key && peek.pinned) { setPeek(null); onPick(opt); return; }
       setPeek({ key: s.key, pinned: true });
@@ -247,7 +334,17 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     }
     // touch pins the card (it's how you read a space); a mouse already sees it on hover
     setPeek(touch ? { key: s.key, pinned: true } : null);
-    if (onDenied) onDenied({ type: 'slot', key: s.key, q: s.q, i: s.i }, el);
+    shake(s.key);
+    const text = deniedText(state, s.key, meId);
+    if (text) {
+      // a taken or unopened space says why, right where you clicked
+      const r = el ? el.getBoundingClientRect() : null;
+      const x = pt && pt.x != null ? pt.x : r ? r.left + r.width / 2 : 0, y = pt && pt.y != null ? pt.y : r ? r.top + r.height / 2 : 0;
+      setDeny(d => ({ text, x, y, key: s.key, n: (d ? d.n : 0) + 1 }));
+      return;
+    }
+    setDeny(null);
+    if (onDenied) onDenied({ type: 'slot', key: s.key, q: s.q, i: s.i }, null);
   };
 
   const paying = Math.max(1, state.round);
@@ -261,13 +358,25 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
 
   const stand = standings(state);
   const stdById = Object.fromEntries(stand.map(x => [x.qid, x]));
-  // the engraved rule: "MOST GOLD · +2", and how far round the rim it runs (to seat the leader beside it)
-  const RIM_FONT = 11;
-  const rimLabel = (qid, q) => {
+  // The engraved rule: "MOST MEMBERS · +2 · ties: red", at least 12px on screen. A long line drops its tiebreak to
+  // one word ("red members" → "red"); the full sentence is in the rim's hover.
+  const RIM_PX = 12.2;
+  const rimFont = Math.min(16, Math.max(11, RIM_PX / (scale || 1)));
+  const arcHalf = 44; // the path the text runs on (wider than any label)
+  const rimLabel = (qid, q, leaders) => {
     const st = stdById[qid];
-    const text = `${(st ? st.rule : quadrant(qid).scoring.label).toUpperCase()}  ·  +${RING_VALUE[paying - 1]}`;
-    const half = Math.min(40, (text.length * RIM_FONT * 0.66) / (2 * RIM.r) * (180 / Math.PI));
-    return { text, half, top: Math.abs(norm(qCenter(q) + rot)) < 90 };
+    const sc = quadrant(qid).scoring;
+    const rule = `${(st ? st.rule : shortLabel(sc.label)).toUpperCase()}  ·  +${RING_VALUE[paying - 1]}`;
+    const tb = (st && st.tiebreak) || sc.tiebreak || null;
+    const top = Math.abs(norm(qCenter(q) + rot)) < 90;
+    const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;
+    const room = (2 * arcHalf * Math.PI / 180) * rr - 18; // the arc, less a little air at each end
+    const tail = leaders.length ? rimFont * (0.9 + 1.55 * leaders.length) : 0;
+    const est = (tie, f) => f * (rule.length * 0.74 + (tie ? (tie.length + 9) * 0.5 : 0)) + tail * (f / rimFont);
+    let tie = tb ? tb.unit : null;
+    if (tie && est(tie, rimFont) > room) tie = tie.split(' ')[0];
+    const font = Math.max(9, Math.min(rimFont, rimFont * room / est(tie, rimFont)));
+    return { rule, tie, tieText: tb ? tb.text : null, top, rr, font };
   };
   const rimAnchor = qid => stage.current && stage.current.querySelector(`[data-plaque="${qid}"]`);
   // the engraved text's real length, so text + emoji sit centred on the rim (measured once it's drawn)
@@ -278,44 +387,88 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     stage.current.querySelectorAll('[data-rim-text]').forEach(t => { try { const tp = t.querySelector('textPath'); next[t.dataset.rimText] = (tp && tp.getComputedTextLength ? tp.getComputedTextLength() : 0) || 0; } catch { /* jsdom */ } });
     if (Object.keys(next).some(k => next[k] && Math.abs((rimW[k] || 0) - next[k]) > 0.5)) setRimW(next);
   });
-  // the printed paper wheel: quadrant inks, ring bands (closed rings carved and dim), seams, the dark hub
+
+  // the newest rival moves since your last turn (a dotted ring in the mover's color)
+  const freshOf = key => {
+    const owner = state.slots[key];
+    if (owner === undefined) return null;
+    const fresh = recentMoves.find(m => m.key === key && !m.mine);
+    if (!fresh) return null;
+    const rivals = recentMoves.filter(m => !m.mine);
+    return { ...fresh, newest: rivals[rivals.length - 1] === fresh };
+  };
+
+  // the printed paper wheel: quadrant inks, ring bands or cells, seams, the dark hub
+  const live = useRef({});
   const paper = [];
   state.quadrants.forEach((qid, q) => {
     const c = qCenter(q), a0 = c - 45, a1 = c + 45;
     const col = `var(--${qid})`;
-    [1, 2, 3].forEach(t => {
-      const R = RING[t], open = t <= round;
-      paper.push(<path key={`b${q}${t}`} className={`band${open ? ' open' : ''}${t === paying ? ' pays' : ''}`} d={arc(a0, a1, R.r0, R.r1)} fill={col} fillOpacity={open ? (t === 1 ? 0.26 : 0.2) : 0.05} />);
-    });
+    if (!engraved) {
+      [1, 2, 3].forEach(t => {
+        const R = rings[t], open = t <= round;
+        paper.push(<path key={`b${q}${t}`} className={`band${open ? ' open' : ''}${t === paying ? ' pays' : ''}`} d={arc(a0, a1, R.r0, R.r1)} fill={col} fillOpacity={open ? (t === 1 ? 0.26 : 0.2) : 0.05} />);
+      });
+    }
     paper.push(<path key={`rim${q}`} className={`rim${lampQid === qid ? ' lit' : lampQid ? ' wait' : ''}`} d={arc(a0, a1, RIM.r0, RIM.r1)} fill={col} fillOpacity=".88" />);
+  });
+  // engraved: one printed cell per space, its state in the print (wash, lamp edge, hatch, a mover's dotted ring)
+  if (engraved) {
+    for (const s of spaces) {
+      const R = rings[s.ring], open = s.ring <= round, owner = state.slots[s.key];
+      const lit = legal.has(s.key);
+      const fresh = freshOf(s.key);
+      const d = cellPath(s.ang - s.half, s.ang + s.half, R.r0, R.r1);
+      const inset = cellPath(s.ang - s.half, s.ang + s.half, R.r0, R.r1, 2.6);
+      const cls = ['cell', open ? 'open' : 'locked', lit ? 'lit' : '', owner !== undefined ? 'taken' : '', peek && peek.pinned && peek.key === s.key ? 'sel' : ''].filter(Boolean).join(' ');
+      paper.push(
+        <g key={`cell${s.key}`} className={cls} data-cell={s.key} style={{ '--c': `var(--${s.qid})` }}
+          onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, stage.current && stage.current.querySelector(`[data-slot="${s.key}"]`), { x: e.clientX, y: e.clientY }); }}
+          onPointerEnter={e => { const h = live.current.hover; e.currentTarget.classList.add('hot'); if (h && realHover(e)) h.onSpaceHover(s.key, e.currentTarget.querySelector('.wash')); }}
+          onPointerLeave={e => { const h = live.current.hover; e.currentTarget.classList.remove('hot'); if (h && e.pointerType === 'mouse') h.onSpaceHover(s.key, null); }}>
+          <path className="wash" d={d} />
+          {!open && <path className="hatch" d={d} />}
+          {lit && <path className="glow" d={inset} />}
+          <path className={lit ? 'edge-lit' : 'edge-in'} d={inset} />
+          {fresh && <path className={`fresh${fresh.newest ? ' newest' : ''}`} d={inset} style={{ stroke: playerColor(fresh.pid) }}><title>{`${state.players[fresh.pid].name} took ${fresh.action}`}</title></path>}
+          <path className="line" d={d} />
+        </g>,
+      );
+    }
+  }
+  state.quadrants.forEach((qid, q) => {
+    const c = qCenter(q), a0 = c - 45, a1 = c + 45;
     // the quadrant's rule, engraved along its rim, upright wherever the wheel is turned, with whoever leads it as
     // their pixel emoji inline at the end of the line, on the same arc and baseline: "MOST BLUE · +2 · 🐱"
-    const lab = rimLabel(qid, q);
     const st = stdById[qid];
     const leaders = st && st.leaders.length ? st.leaders : [];
-    const arcHalf = 44; // the path the text runs on (wider than any label)
-    const rr = lab.top ? RIM.r - 3.6 : RIM.r + 3.6;
+    const lab = rimLabel(qid, q, leaders);
+    const rr = lab.rr, F = lab.font;
     const arcLen = (2 * arcHalf * Math.PI / 180) * rr;
-    const textW = rimW[q] || lab.text.length * RIM_FONT * 0.66;
-    const EM = RIM_FONT * 1.55; // one emoji's room on the line
-    const tail = leaders.length ? RIM_FONT * 0.9 + leaders.length * EM : 0;
+    const textW = rimW[q] || F * (lab.rule.length * 0.74 + (lab.tie ? (lab.tie.length + 9) * 0.5 : 0));
+    const EM = F * 1.55; // one emoji's room on the line
+    const tail = leaders.length ? F * 0.9 + leaders.length * EM : 0;
     const startS = Math.max(0, (arcLen - textW - tail) / 2);
     paper.push(<path key={`ra${q}`} id={`rim-arc-${q}`} d={textArc(c, arcHalf, rr, rot)} fill="none" />);
     const lit = lampQid === qid ? ' lit' : lampQid ? ' wait' : '';
     paper.push(
-      <text key={`rt${q}`} className={`rim-rule${lit}`} fontSize={RIM_FONT} data-plaque={qid} data-rim-text={q}>
-        <textPath href={`#rim-arc-${q}`} startOffset={startS.toFixed(1)}>{lab.text}{leaders.length ? '  ·' : ''}</textPath>
+      <text key={`rt${q}`} className={`rim-rule${lit}`} fontSize={F.toFixed(2)} data-plaque={qid} data-rim-text={q}>
+        <textPath href={`#rim-arc-${q}`} startOffset={startS.toFixed(1)}>
+          {lab.rule}
+          {lab.tie ? <tspan className="rim-tie" data-rim-tie={lab.tie}>{`  ·  ties: ${lab.tie}`}</tspan> : null}
+          {leaders.length ? '  ·' : ''}
+        </textPath>
       </text>,
     );
     // each leader's emoji, placed along the same arc right after the text, upright like the letters
     leaders.forEach((id, k) => {
       const art = emojiArt(seatEmoji(state, id));
       if (!art) return;
-      const sAt = startS + textW + RIM_FONT * 0.9 + k * EM + EM / 2;
+      const sAt = startS + textW + F * 0.9 + k * EM + EM / 2;
       const deg = (sAt / rr) * 180 / Math.PI;
       const a = lab.top ? c - arcHalf + deg : c + arcHalf - deg;
       const [ex, ey] = polar(a, rr);
-      const cap = RIM_FONT * 1.7; // the emoji art has a margin: this reads at cap height
+      const cap = F * 1.7; // the emoji art has a margin: this reads at cap height
       paper.push(
         <g key={`re${q}-${id}`} className={`rim-emoji${lit}`} data-rim-leader={id} transform={`translate(${ex.toFixed(2)} ${ey.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap * 0.82).toFixed(2)}) scale(${(cap / art.size).toFixed(4)})`}>
           <title>{`${state.players[id].name} leads`}</title>
@@ -323,30 +476,33 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
         </g>,
       );
     });
-    // the whole rim of a quadrant is its hover target: the standings
+    // the whole rim of a quadrant is its hover target: the standings (and the sphere's own rule, in words)
+    const label = st ? st.label : quadrant(qid).scoring.label;
+    const tieLine = lab.tieText ? ` ${lab.tieText[0].toUpperCase()}${lab.tieText.slice(1)}.` : '';
+    const ruleLine = quadrant(qid).rule ? ` ${quadrant(qid).rule}` : '';
     paper.push(
       <path key={`rh${q}`} className="rim-hit" d={arc(a0 + 1, a1 - 1, RIM.r0 - 2, RIM.r1 + 4)} data-rim={qid}
         role="button" tabIndex={0} aria-haspopup="dialog"
-        aria-label={`${st ? st.label : quadrant(qid).scoring.label}: +${RING_VALUE[paying - 1]} at round end${leaders.length ? `; ${leaders.map(id => (id === meId ? 'you' : state.players[id].name)).join(' & ')} ${leaders.length > 1 ? 'lead' : 'leads'}` : '; no one yet'}. Show the standings.`}
+        aria-label={`${shortLabel(label)}: +${RING_VALUE[paying - 1]} at round end.${tieLine}${leaders.length ? ` ${leaders.map(id => (id === meId ? 'You' : state.players[id].name)).join(' & ')} ${leaders.length > 1 || leaders[0] === meId ? 'lead' : 'leads'}.` : ' No one leads yet.'}${ruleLine} Show the standings.`}
         onPointerEnter={e => { if (hover && realHover(e)) hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget); }}
         onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onPlaqueHover(qid, null); }}
         onClick={e => { e.stopPropagation(); if (hover) hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget, { pinned: true }); }}
         onKeyDown={e => { if (hover && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget, { pinned: true }); } }}>
-        <title>{`${st ? st.label : quadrant(qid).scoring.label}: +${RING_VALUE[paying - 1]} at round end. Show the standings.`}</title>
+        <title>{`${shortLabel(label)}: +${RING_VALUE[paying - 1]} at round end.${tieLine}${ruleLine} Show the standings.`}</title>
       </path>,
     );
   });
-  for (const r of [RIM.r0, RING[1].r0, RING[2].r0, RING[3].r0]) paper.push(<circle key={`c${r}`} cx={CX} cy={CY} r={r} fill="none" className="ring-line" />);
+  const hubR = rings[3].r0;
+  for (const r of [RIM.r0, rings[1].r0, rings[2].r0, hubR]) paper.push(<circle key={`c${r}`} cx={CX} cy={CY} r={r} fill="none" className="ring-line" />);
   state.quadrants.forEach((qid, q) => {
-    const [x0, y0] = polar(qCenter(q) - 45, RING[3].r0), [x1, y1] = polar(qCenter(q) - 45, 200);
+    const [x0, y0] = polar(qCenter(q) - 45, hubR), [x1, y1] = polar(qCenter(q) - 45, 200);
     paper.push(<line key={`seam${q}`} x1={x0} y1={y0} x2={x1} y2={y1} className="seam" />);
   });
 
-  // spaces: a socket per space, upright wherever the wheel is turned, with its effect printed on it
+  // spaces: one per space, upright wherever the wheel is turned, with its effect printed on it
   // Sockets are memoized: hovering never re-renders the wheel (the hover card lives in UI-B's layer, told directly on
   // pointerenter, no timers here). Handlers reach the latest closures through refs.
-  const live = useRef({});
-  live.current = { tap, onPick, hover };
+  live.current = { tap, onPick, hover, anchorOf };
   const pinnedKey = peek && peek.pinned ? peek.key : null;
   const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');
   const flashKey = [...flash].join('|');
@@ -359,54 +515,79 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     const open = t <= round;
     const opt = legal.get(key);
     const selected = pinnedKey === key;
-    const fresh = recentMoves.find(m => m.key === key && !m.mine && owner !== undefined);
-    const rivals = recentMoves.filter(m => !m.mine);
-    const newest = fresh && rivals[rivals.length - 1] === fresh;
-    const cls = ['slot', `r${t}`, opt ? 'can' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', newest ? 'newest' : ''].filter(Boolean).join(' ');
-    const status = owner !== undefined ? `Taken by ${state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? 'Open' : `Opens in round ${roman(t)}`;
+    const fresh = freshOf(key);
+    // engraved: does the cell lie on its side once the wheel is turned (tall and narrow on screen)?
+    const sa = (norm(s.ang + rot) * Math.PI) / 180;
+    const side = engraved && Math.abs(Math.sin(sa)) > Math.abs(Math.cos(sa));
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', side ? 'side' : ''].filter(Boolean).join(' ');
+    const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>
         <Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={16} title={`${state.players[id].name}’s minion`} />
       </span>
     );
+    const minions = owner !== undefined ? <span className="worker-fig" data-seat={owner}>{[owner, ...joiners].map(minion)}</span> : null;
+    let style = { ...at(X, Y), '--c': `var(--${qid})` };
+    if (engraved) {
+      // the words get the cell's width on screen: its chord when it lies flat, its depth when it stands on its side
+      const R = rings[t];
+      const fw = side ? (R.r1 - R.r0) * 0.9 : 2 * R.r * Math.sin((s.half * Math.PI) / 180) * 0.9;
+      style = { ...style, '--fw': `${((fw / BOX) * 100).toFixed(1)}%` };
+    }
     return (
       <div
-        key={key} className={cls} data-slot={key} data-option={opt || undefined} style={{ ...at(X, Y), '--c': `var(--${qid})` }}
+        key={key} className={cls} data-slot={key} data-option={opt || undefined} style={style}
         role="button" tabIndex={opt ? 0 : -1} aria-label={`${a.name}, ${quadrant(qid).name} round ${roman(t)}: ${a.text} ${status}.`}
-        onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, e.currentTarget); }}
+        onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, e.currentTarget, { x: e.clientX, y: e.clientY }); }}
         onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.onPick(opt); } }}
-        onPointerEnter={e => { const h = live.current.hover; if (h && realHover(e)) h.onSpaceHover(key, e.currentTarget); }}
-        onPointerLeave={e => { const h = live.current.hover; if (h && e.pointerType === 'mouse') h.onSpaceHover(key, null); }}
-        onFocus={e => { const h = live.current.hover; if (h && e.currentTarget.matches(':focus-visible')) h.onSpaceHover(key, e.currentTarget); }}
+        onPointerEnter={e => { const h = live.current.hover; if (engraved) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.add('hot'); } if (h && realHover(e)) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
+        onPointerLeave={e => { const h = live.current.hover; if (engraved) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.remove('hot'); } if (h && e.pointerType === 'mouse') h.onSpaceHover(key, null); }}
+        onFocus={e => { const h = live.current.hover; if (h && e.currentTarget.matches(':focus-visible')) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
         onBlur={() => { const h = live.current.hover; if (h) h.onSpaceHover(key, null); }}
       >
         <span className="hit" aria-hidden="true" />
         <span className="base" aria-hidden="true" />
-        {open && (
+        {engraved ? (
+          // name in small capitals; beneath it the stamp (or the minion standing on it) and the yield
           <span className="face" aria-hidden="true">
-            <span className="ico"><Sprite id={[`${qid}.${a.key}`, spriteId(a.name)]} kind="action" sphere={quadrant(qid).resource} size={24} /></span>
             <span className="nm">{a.name}</span>
-            <span className="yl" data-yield><Rich text={shortEffect(qid, a, round)} /></span>
+            <span className="row">
+              {minions || <span className="ico"><Stamp id={[`${qid}.${a.key}`, spriteId(a.name)]} /></span>}
+              <span className="yl" data-yield><Rich text={shortEffect(qid, a, round)} /></span>
+            </span>
           </span>
+        ) : (
+          <>
+            {open && (
+              <span className="face" aria-hidden="true">
+                <span className="ico"><Sprite id={[`${qid}.${a.key}`, spriteId(a.name)]} kind="action" sphere={quadrant(qid).resource} size={24} /></span>
+                <span className="nm">{a.name}</span>
+                <span className="yl" data-yield><Rich text={shortEffect(qid, a, round)} /></span>
+              </span>
+            )}
+            {!open && <span className="seal" aria-hidden="true">{roman(t)}</span>}
+            {/* a placed minion stands on the space, over its picture */}
+            {minions}
+            {fresh && <span className="fresh-ring" aria-hidden="true" style={{ '--pc': playerColor(fresh.pid) }} title={`${state.players[fresh.pid].name} took ${fresh.action}`} />}
+          </>
         )}
-        {/* a placed minion stands on the space's rim, so the space still reads */}
-        {owner !== undefined && <span className="worker-fig" data-seat={owner}>{[owner, ...joiners].map(minion)}</span>}
-        {fresh && <span className="fresh-ring" aria-hidden="true" title={`${state.players[fresh.pid].name} took ${fresh.action}`} />}
       </div>
     );
-  }), [state, rot, legalKey, flashKey, recentKey, pinnedKey, round]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), [state, rot, legalKey, flashKey, recentKey, pinnedKey, round, look]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="wheel-wrap">
-      <div className="stage" ref={stage} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ '--wheel-px': `${Math.round(boardPx)}px` }}>
+    <div className="wheel-wrap" data-spaces={look}>
+      <div className="stage" ref={stage} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ '--wheel-px': `${Math.round(boardPx)}px`, '--px': (1 / (scale || 1)).toFixed(4) }}>
         <svg viewBox="-26 -26 452 452" role="group" aria-label="Board" className={`wheel-paper${late ? ' late' : ''}`}>
           <defs>
             <radialGradient id="ltPaper" cx="50%" cy="45%" r="60%"><stop offset="0" stopColor="var(--paper)" /><stop offset=".8" stopColor="var(--paper-2)" /><stop offset="1" stopColor="var(--paper-3)" /></radialGradient>
+            <filter id="ltGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4" /></filter>
+            <pattern id="ltHatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(42,31,23,.2)" strokeWidth="1" /></pattern>
           </defs>
           <circle cx={CX} cy={CY} r="200" fill="url(#ltPaper)" className="disk" />
           <g transform={`rotate(${rot} ${CX} ${CY})`} className="wheel">{paper}</g>
           <circle cx={CX} cy={CY} r="199.5" fill="none" className="edge" />
-          <circle cx={CX} cy={CY} r={RING[3].r0} className="hub" />
+          <circle cx={CX} cy={CY} r={hubR} className="hub" />
         </svg>
         <div className="hub-label" aria-label={`Round ${roman(round)}`}>
           <small>Round</small><b>{state.round ? roman(state.round) : '·'}</b>
@@ -415,6 +596,10 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
         {sockets}
         {caption && <div key={caption.n} className="caption" style={{ '--pc': playerColor(caption.pid) }} role="status"><i />{caption.text}</div>}
       </div>
+      {deny && typeof document !== 'undefined' && createPortal(
+        <div key={deny.n} className="deny-note" role="status" data-deny-note={deny.key} style={{ left: deny.x, top: deny.y }}>{deny.text}</div>,
+        document.body,
+      )}
     </div>
   );
 }
