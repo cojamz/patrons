@@ -66,25 +66,38 @@ describe('White actions', () => {
     expect(R(take(scene({ n: 4, bonus: [5, 3, 1, 0] }), 'Haggle')).white).toBe(2);
   });
 
-  it('Buy Low: trade 1 resource (you pick) for 2 followers', () => {
+  it('Buy Low (round I): trade 1 resource (you pick) for 2 followers', () => {
     let s = take(scene({ res: [{ gold: 2, red: 1 }] }), 'Buy Low');
-    expect(ids(s)).toEqual(['color:gold', 'color:red']);
+    expect(ids(s)).toEqual(['color:gold', 'color:red', 'done']);
     s = move(s, 'color:red');
+    expect(s.pending.kind).toBe('buy'); // round I: just one
     expect(R(s)).toEqual({ ...Z, gold: 2 });
     expect(B(s)).toBe(2);
     expect(F(s)).toBe(3);
   });
 
-  it('Buy Low: one color pays itself; with nothing to pay it does nothing', () => {
-    let s = take(scene({ res: [{ blue: 2 }] }), 'Buy Low');
-    expect(s.pending.kind).toBe('buy');
-    expect(R(s).blue).toBe(1);
+  it('Buy Low: up to 1 resource per round number; Done stops early; nothing to pay, nothing happens', () => {
+    let s = take(scene({ round: 3, res: [{ gold: 1, red: 3 }] }), 'Buy Low');
+    s = move(s, 'color:red');
+    s = move(s, 'color:gold');
+    expect(ids(s)).toEqual(['color:red', 'done']);
+    s = move(s, 'color:red');
+    expect(R(s)).toEqual({ ...Z, red: 1 });
+    expect(B(s)).toBe(6);
+    s = move(move(take(scene({ round: 2, res: [{ blue: 3 }] }), 'Buy Low'), 'color:blue'), 'done');
+    expect(R(s).blue).toBe(2);
     expect(B(s)).toBe(2);
     s = take(scene({}), 'Buy Low');
     expect(B(s)).toBe(0);
+    expect(s.pending?.kind).not.toBe('choose');
   });
 
-  it('Pawn: +2 white; may sell 1 follower for 2 white', () => {
+  it('Pawn: +2 white; may sell up to 1 follower per round number for 2 white each', () => {
+    let r3 = take(scene({ round: 3, bonus: [5] }), 'Pawn');
+    expect(ids(r3)).toEqual(['amount:0', 'amount:1', 'amount:2', 'amount:3']);
+    r3 = move(r3, 'amount:3');
+    expect(R(r3).white).toBe(8);
+    expect(B(r3)).toBe(2);
     let s = take(scene({ bonus: [3] }), 'Pawn');
     expect(R(s).white).toBe(2);
     expect(ids(s)).toEqual(['amount:0', 'amount:1']);
@@ -240,7 +253,7 @@ describe('White members', () => {
   });
 
   it('Broker: whenever a White action gives you followers, +1 more', () => {
-    let s = take(scene({ res: [{ red: 1 }], members: [['trading.broker']] }), 'Buy Low');
+    let s = move(take(scene({ res: [{ red: 1 }], members: [['trading.broker']] }), 'Buy Low'), 'color:red');
     expect(B(s)).toBe(3);
     s = take(scene({ round: 3, res: [{ white: 2 }], members: [['trading.broker']] }), 'Boom');
     expect(B(s)).toBe(5);

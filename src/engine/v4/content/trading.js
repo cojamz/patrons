@@ -26,7 +26,9 @@ const fv = ctx => [1.6, 1.3, 1.2][ctx.state.round - 1] ?? 1.2;
 const lastTurn = (ctx, p) => ctx.state.round === 3 && p.left === 0;
 
 export const SELL_HIGH = { most: 2, each: 3 };
-export const PAWN = { base: 2, most: 1, each: 2 };
+export const PAWN = { base: 2, each: 2 };
+// Boom pays this many followers per white (experiments may set halves; followers are rounded down)
+export const BOOM = { per: 2 };
 
 /** Sell k followers for `each` white apiece. Fires onSell on the seller's members (a Doppelganger's copy too). */
 export function sell(ctx, p, k, each, { fromAction = false, why = 'sold' } = {}) {
@@ -79,25 +81,19 @@ const trading = {
       resolve(ctx, p) { ctx.gain(p, W, 2 + ahead(ctx, p), { fromAction: true }); },
     },
     {
-      key: 'buylow', ring: 1, name: 'Buy Low', text: 'Trade 1 resource for 2 followers.',
-      estimate: (ctx, p) => (Object.values(p.res).some(x => x > 0) ? 2 * fv(ctx) - 0.6 : 0),
+      key: 'buylow', ring: 1, name: 'Buy Low', text: 'Trade up to 1 resource per round number for 2 followers each.',
+      estimate: (ctx, p) => Math.min(ctx.state.round, totalRes(p)) * (2 * fv(ctx) - 1) + 0.4,
       resolve(ctx, p) {
-        const held = ctx.state.resources.filter(r => p.res[r] > 0);
-        if (!held.length) { ctx.log(`${p.name} had nothing to trade.`); return; }
-        if (held.length === 1) { buyLow(ctx, p, held[0]); return; }
-        ctx.choose(p, 'Buy Low: pay which resource for 2 followers?', held.map(r => ({
-          id: `color:${r}`, label: `1 ${r}`, kind: 'color', value: r,
-          // pay from the biggest pile, white last (it scores here)
-          hint: p.res[r] - (r === W ? 3 : 0) - (r === 'gold' ? 1 : 0),
-        })), 'trading.buyLow');
+        if (!totalRes(p)) { ctx.log(`${p.name} had nothing to trade.`); return; }
+        buyLowStep(ctx, p, { left: ctx.state.round, done: 0 });
       },
     },
     {
-      key: 'pawn', ring: 1, name: 'Pawn', text: '+2 white, and you may sell 1 follower for 2 white.',
-      estimate: (ctx, p) => PAWN.base + (sellable(p) > 0 ? Math.max(0, PAWN.each - fv(ctx)) : 0),
+      key: 'pawn', ring: 1, name: 'Pawn', text: '+2 white, and sell up to 1 follower per round number for 2 white each.',
+      estimate: (ctx, p) => PAWN.base + Math.min(ctx.state.round, sellable(p)) * Math.max(0, PAWN.each - fv(ctx)),
       resolve(ctx, p) {
         ctx.gain(p, W, PAWN.base, { fromAction: true });
-        sellChoice(ctx, p, 'Pawn: sell a follower for 2 white?', PAWN.most, PAWN.each, 'pawned');
+        sellChoice(ctx, p, `Pawn: sell how many followers for ${PAWN.each} white each?`, ctx.state.round, PAWN.each, 'pawned');
       },
     },
     {
@@ -119,19 +115,23 @@ const trading = {
     },
     {
       key: 'boom', ring: 3, name: 'Boom', text: 'Each white you have becomes 2 followers.',
-      estimate: (ctx, p) => p.res[W] * (2 * fv(ctx) - 1),
+      estimate: (ctx, p) => p.res[W] * (BOOM.per * fv(ctx) - 1),
       resolve(ctx, p) {
-        const w = p.res[W];
+        const w = p.res[W], f = Math.floor(BOOM.per * w);
         p.res[W] = 0;
-        actionFollowers(ctx, p, 2 * w);
-        ctx.log(w ? `${p.name}'s Boom: ${w} white became ${2 * w} followers.` : `${p.name} had no white to turn into followers.`);
+        actionFollowers(ctx, p, f);
+        ctx.log(w ? `${p.name}'s Boom: ${w} white became ${f} followers.` : `${p.name} had no white to turn into followers.`);
       },
     },
   ],
 
   handlers: {
     sell(ctx, p, k, data) { sell(ctx, p, k, data.each, { fromAction: true, why: data.why }); },
-    buyLow(ctx, p, color) { buyLow(ctx, p, color); },
+    buyLow(ctx, p, value, data) {
+      if (value === 'done') return;
+      buyLow(ctx, p, value);
+      buyLowStep(ctx, p, { left: data.left - 1, done: data.done + 1 });
+    },
     cashIn(ctx, p, x) {
       if (!x) return;
       p.res[W] -= x; p.bonus += x;
@@ -210,6 +210,20 @@ const trading = {
   ],
 };
 
+const totalRes = p => Object.values(p.res).reduce((a, b) => a + b, 0);
+// Buy Low pays one resource at a time (you pick the color), until the round's limit or Done.
+function buyLowStep(ctx, p, data) {
+  const held = ctx.state.resources.filter(r => p.res[r] > 0);
+  if (data.left <= 0 || !held.length) return;
+  const v = fv(ctx);
+  const opts = held.map(r => ({
+    id: `color:${r}`, label: `1 ${r} → 2 followers`, kind: 'color', value: r,
+    // bots pay from the biggest pile, white last (it scores here); late in round III they spend everything
+    hint: (2 * v - 1) + 0.01 * (p.res[r] - (r === W ? 3 : 0) - (r === 'gold' ? 1 : 0)),
+  }));
+  opts.push({ id: 'done', label: data.done ? 'Done' : 'Trade nothing', kind: 'done', value: 'done', hint: 0.9 });
+  ctx.choose(p, `Buy Low: pay which resource for 2 followers? (${data.left} left)`, opts, 'trading.buyLow', data);
+}
 function buyLow(ctx, p, color) {
   p.res[color] -= 1;
   actionFollowers(ctx, p, 2);

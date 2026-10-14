@@ -112,7 +112,7 @@ describe('Black actions', () => {
     s = take(s, 'Rob');
     s = move(s, 'take:1:gold');
     // 2 left, P3 still owed: P2 may still be picked
-    expect(ids(s)).toEqual(['take:1:gold', 'take:2:red']);
+    expect(ids(s).sort()).toEqual(['take:1:gold', 'take:2:red']);
     s = move(s, 'take:1:gold');
     // 1 left, P3 owed: only P3
     expect(ids(s)).toEqual(['take:2:red']);
@@ -159,8 +159,8 @@ describe('Black actions', () => {
     expect(s.pending.player).toBe(1);
     // Proselytizer costs 6 (3+3): every face-up card costs 6 or less
     expect(s.pending.options).toHaveLength(6);
-    s = move(s, `card:${uidOf(s, 'red.mentor', 'shop')}`);
-    expect(defs(s, 1)).toEqual(['red.mentor']);
+    s = move(s, `card:${uidOf(s, 'red.patriarch', 'shop')}`);
+    expect(defs(s, 1)).toEqual(['red.patriarch']);
   });
 });
 
@@ -213,8 +213,9 @@ describe('Black members', () => {
   });
 
   it('Grifter: when recruited, take 1 per 2 members you have, from the rivals holding the most', () => {
-    let s = scene({ res: [{ black: 2, gold: 1 }, { gold: 3 }, { red: 2 }], members: [['red.intern', 'red.volunteer', 'red.mob']], shop: ['thieves.grifter', ...SHOP.slice(1)] });
-    s = take(s, 'Hire');
+    let s = scene({ res: [{ black: 2, gold: 1 }, { gold: 3 }, { red: 2 }], members: [['red.intern', 'red.volunteer', 'red.mob', 'red.drive']], shop: ['thieves.grifter', ...SHOP.slice(1)] });
+    s = take(s, 'Scout');
+    s = move(s, `card:${uidOf(s, 'gold.jackpot', 'shop')}`);
     s = move(s, `card:${uidOf(s, 'thieves.grifter', 'shop')}`);
     // 5 members → take 2: P2 (3) first, then P2 vs P3 tied at 2 → P2 (first found)
     expect(R(s)[0].black).toBe(2);

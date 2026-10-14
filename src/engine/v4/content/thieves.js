@@ -57,9 +57,7 @@ function commit(ctx, thief, victim, pick, reaction = false) {
   const fromLoot = Math.min(take.loot || 0, victim.loot || 0);
   delete take.loot;
   if (fromLoot) victim.loot -= fromLoot;
-  const n = ctx.steal(thief, victim, { take, other: fromLoot, reaction });
-  stash(ctx, thief, n);
-  return n;
+  return ctx.steal(thief, victim, { take, other: fromLoot, reaction, give: n => stash(ctx, thief, n) });
 }
 // Automatic small steal used by members: from the victim's biggest pile, one at a time.
 function autoSteal(ctx, thief, victim, why, n = 1, reaction = false) {
@@ -225,8 +223,7 @@ const thieves = {
           const col = Object.keys(left).filter(x => left[x] > 0).sort((a, b) => left[b] - left[a])[0];
           left[col] -= 1; take[col] = (take[col] || 0) + 1;
         }
-        const got = ctx.steal(p, v, { take });
-        stash(ctx, p, got);
+        const got = ctx.steal(p, v, { take, give: x => stash(ctx, p, x) });
         ctx.log(`${v.name} paid ${got} (${Object.entries(take).map(([k, x]) => `${x} ${k}`).join(', ')}) to keep ${c.def.name}.`);
       } else {
         ctx.steal(p, v, { uid: data.uid });

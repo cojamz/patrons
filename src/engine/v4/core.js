@@ -579,7 +579,8 @@ function ctxFor(state) {
     },
     /** One steal event from one victim. what: { take: {color: n} } moves resources (clamped to what they hold),
      *  { uid } moves a member, { other: n } reports units the caller already moved (e.g. a loot pile).
-     *  The caller gives the thief the proceeds. Fires onSteal on every quadrant and member. Returns units taken. */
+     *  what.give(n) hands the thief the proceeds before anyone reacts (so a reaction can take from the thief).
+     *  Then fires onSteal on every quadrant and member. Returns units taken. */
     steal(thief, victim, what = {}) {
       if (!ctx.canSteal(thief, victim, what.uid !== undefined ? 'member' : 'res')) return 0;
       const took = {};
@@ -590,6 +591,7 @@ function ctxFor(state) {
       }
       if (what.uid !== undefined) { ctx.moveMember(what.uid, victim, thief); n += 1; }
       if (!n) return 0;
+      if (what.give) what.give(n);
       const info = { thief, victim, took, uid: what.uid, n, reaction: !!what.reaction };
       for (const qid of state.quadrants) { const q = quadrant(qid); if (q.onSteal) q.onSteal(ctx, info); }
       eachMember(state, (owner, card, def) => { if (def.onSteal) def.onSteal(ctx, owner, card, info); });

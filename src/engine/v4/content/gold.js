@@ -165,9 +165,9 @@ function stealStep(ctx, p, data) {
   let got = 0;
   const from = [];
   for (const [id, k] of Object.entries(data.picked)) {
-    const v = ctx.player(Number(id)), x = ctx.steal(p, v, { take: { gold: k } });
+    const v = ctx.player(Number(id));
+    const x = ctx.steal(p, v, { take: { gold: k }, give: n => ctx.gain(p, 'gold', n, { fromAction: true }) });
     if (x) { got += x; from.push(`${x} from ${v.name}`); }
   }
-  if (got) ctx.gain(p, 'gold', got, { fromAction: true });
   ctx.log(got ? `${p.name} stole ${got} gold (${from.join(', ')}).` : `${p.name} found no gold to steal.`);
 }
