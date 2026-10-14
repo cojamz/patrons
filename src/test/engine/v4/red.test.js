@@ -187,7 +187,7 @@ describe('Red members', () => {
     expect(fol(s, 0)).toBe(3);
   });
 
-  it('Doppelganger: copies one of your members (Banker pays twice)', () => {
+  it('Doppelganger: copies one of your members (Banker pays twice; the copy\'s "now" +3 comes at once)', () => {
     let s = scene({ members: [['gold.banker']], res: [{ red: 2, gold: 2 }], shop: ['red.doppel', ...SHOP.slice(1)], queue: [{ t: 'turn', p: 0 }, { t: 'round', r: 2 }] });
     s = take(s, 'Turnout');
     s = move(s, `card:${uidOf(s, 'red.doppel', 'shop')}`);
@@ -196,15 +196,19 @@ describe('Red members', () => {
     expect(ids(s)).toEqual([`card:${banker}`]);
     s = move(s, `card:${banker}`);
     expect(s.cards[uidOf(s, 'red.doppel', 0)].copy).toBe('gold.banker');
-    expect(R(s)[0].gold).toBe(6);
+    expect(R(s)[0].gold).toBe(9); // the copy's now part +3, then round II start: Banker +3, the copy +3
   });
 
-  it('Doppelganger copying Hustler works the same color', () => {
+  it('Doppelganger copying Hustler: Hustler\'s when-recruited fires for the copy, so it picks its own color', () => {
     let s = scene({ members: [['gold.hustler']], res: [{ red: 2, gold: 2 }], shop: ['red.doppel', ...SHOP.slice(1)], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }] });
     s.cards[uidOf(s, 'gold.hustler', 0)].color = 'blue';
     s = take(s, 'Turnout');
     s = move(s, `card:${uidOf(s, 'red.doppel', 'shop')}`);
     s = move(s, `card:${uidOf(s, 'gold.hustler', 0)}`);
+    expect(s.pending.kind).toBe('choose');
+    expect(ids(s).every(id => id.startsWith('color:'))).toBe(true);
+    s = move(s, 'color:blue');
+    expect(s.cards[uidOf(s, 'red.doppel', 0)].color).toBe('blue');
     expect(R(s)[0].gold).toBe(0);
     s = take(s, 'Tide');
     expect(R(s)[0]).toMatchObject({ blue: 3, gold: 2 });

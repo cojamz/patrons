@@ -94,7 +94,7 @@ for (const size of [{ width: 1270, height: 700 }, { width: 900, height: 700 }, {
     await page.waitForSelector('.fbuy.live', { timeout: 5000 });
     await page.waitForTimeout(300);
     await page.screenshot({ path: `${SHOTS}/${tag}-buy.png` });
-    await check('buy', ['.fbuy .fb b', '.fbuy .fb span', '.buy-view .card .nm']);
+    await check('buy', ['.fbuy .fb b', '.fbuy .fb span', '.lt-shop .card .nm']);
   } catch (e) {
     errors.push(`[${tag}] run: ${e.message}`);
     await page.screenshot({ path: `${SHOTS}/${tag}-fail.png` }).catch(() => {});

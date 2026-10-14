@@ -67,7 +67,9 @@ try {
   await shot('02-setup');
   await page.click('[data-start]');
   await page.waitForSelector('.players');
-  await page.click('text=How to play');
+  // How to play lives behind the one menu glyph
+  await page.click('.lt-menu .menu-glyph');
+  await page.click('.lt-menu .rules-btn');
   await page.waitForSelector('.rules-body');
   await page.waitForTimeout(400);
   await shot('02-how-to-play');
@@ -146,9 +148,12 @@ try {
     {
       const bad = await page.evaluate(() => {
         const vis = e => { const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden') return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
-        const els = ['.side .side-scroll', '.side .shop-panel.compact', '.side .fbuy', '.side .prompt.choice'].map(s => [s, document.querySelector(s)]).filter(([, e]) => e && vis(e) && !e.closest('[aria-hidden="true"]') && !e.closest('.buy-view'));
+        // the fixed regions never overlap each other, and a question note never covers the shop or the buy row
+        const els = ['.lt-prompt', '.lt-rail', '.lt-wheel', '.lt-shop', '.lt-table', '.lt-wheel > .prompt.choice', '.lt-shop .fbuy'].map(s => [s, document.querySelector(s)]).filter(([, e]) => e && vis(e) && !e.closest('[aria-hidden="true"]'));
+        const nested = (a, b) => a.contains(b) || b.contains(a);
         const out = [];
         for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) {
+          if (nested(els[i][1], els[j][1])) continue;
           const a = els[i][1].getBoundingClientRect(), b = els[j][1].getBoundingClientRect();
           const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
           if (w > 1 && h > 1) out.push(`${els[i][0]} overlaps ${els[j][0]} by ${Math.round(h)}px`);

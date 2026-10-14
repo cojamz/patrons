@@ -142,18 +142,19 @@ describe('Red members', () => {
     s = take(s, 'Rush'); s = buy(s, 'red.doppel');
     s = move(s, s.pending.options[0].id);
     expect(named(s, 'Doppelganger')[0]).toMatch(/copies Banker/);
+    expect(named(s, 'Banker')).toHaveLength(1); // the copy's "now" +3, at once
     s.queue = [{ t: 'round', r: 2 }]; s.pending = null; s = resume(s);
-    expect(named(s, 'Banker')).toHaveLength(2);
+    expect(named(s, 'Banker')).toHaveLength(3);
   });
-  it('Doppelganger copying a when-recruited member (Seed Money) gets nothing more (current reading; see ledger)', () => {
+  it('Doppelganger copying a when-recruited member (Seed Money) fires it once for the copy (Cory: a copy of the card)', () => {
     const restore = pinCosts({ 'red.doppel': [0, 0] });
     let s = sceneQ({ res: [rich], members: [['gold.seed']], shop: ['red.doppel'] });
     s = take(s, 'Rush');
     const g = s.players[0].res.gold;
     s = buy(s, 'red.doppel');
     s = move(s, s.pending.options[0].id);
-    expect(s.players[0].res.gold).toBe(g); // no Seed Money payout
-    expect(named(s, 'Seed Money')).toHaveLength(0);
+    expect(s.players[0].res.gold).toBe(g + 2); // Seed Money pays the copy: +1 gold per member (Seed Money, Doppelganger)
+    expect(named(s, 'Seed Money')).toHaveLength(1);
     restore();
   });
 

@@ -104,11 +104,11 @@ try {
     if (await page.$('.fbuy.live')) {
       // (b2) Insider: pile cards in the shop
       if (!seen.has('pile')) {
-        const pile = await page.$$('.buy-view .card .from-pile');
+        const pile = await page.$$('.lt-shop .card .from-pile');
         if (pile.length) {
           seen.add('pile');
           await shot('b2-pile-cards');
-          const card = await page.$('.buy-view .card.can:has(.from-pile)');
+          const card = await page.$('.lt-shop .card.can:has(.from-pile)');
           if (card) {
             const n0 = await page.$eval('.pl[data-pid="0"]', e => e.textContent);
             await card.click();

@@ -114,7 +114,7 @@ for (const prof of PROFILES) {
     const { ctx, page, go } = await resumeRich(prof);
     try {
       await place(page, go, prof);
-      const card = await page.waitForSelector('.fbuy.live .mini.can, .buy-view .card.can, .shop .card.can[data-option]', { timeout: 8000 });
+      const card = await page.waitForSelector('.fbuy.live .mini.can, .lt-shop .card.can, .shop .card.can[data-option]', { timeout: 8000 });
       await card.scrollIntoViewIfNeeded();
       await page.evaluate(() => { window.__ghosts = []; });
       await go(card);
