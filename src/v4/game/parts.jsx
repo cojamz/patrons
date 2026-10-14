@@ -1,7 +1,7 @@
 // Small game-screen pieces: the choice prompt, the log, the hot-seat handoff, a confirm dialog and a popover.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { quadrant, cardDef } from '../../engine/v4/index.js';
-import { logSections, playerColor } from '../format.js';
+import { logSections, playerColor, costParts } from '../format.js';
 
 /** Escape closes; focus moves in on open and back to where it was on close. */
 export function useDialog(onClose) {
@@ -35,7 +35,10 @@ function optionDetail(state, o) {
   const cardOf = uid => (state.cards && state.cards[uid] ? cardDef(state, uid) : null);
   if ((o.kind === 'card' || o.kind === 'member') && typeof o.value === 'number') {
     const d = cardOf(o.value);
-    if (d) return { name: d.name, text: d.text, f: d.f, color: d.quadrant, id: d.id };
+    if (d) {
+      const cost = costParts(d).map(c => `${c.n} ${c.color}`).join(' + ') || 'free';
+      return { name: d.name, text: d.text, f: d.f, color: d.quadrant, id: d.id, cost: o.kind === 'card' ? cost : null };
+    }
   }
   if (o.kind === 'trade' && Array.isArray(o.value)) {
     const [a, b] = o.value.map(cardOf);
@@ -116,6 +119,7 @@ function MergedOptions({ state, pend, onPick, busy }) {
               <span className="rich-body">
                 <b>{det.name}{n > 1 && <span className="num"> ×{n}</span>}{det.f != null && <span className="num star"> {det.f}★</span>}</b>
                 <small>{det.text}</small>
+                {det.cost && <small className="cost-line">Costs <span className="num">{det.cost}</span></small>}
               </span>
             ) : (q ? q.name : withUnits(o.label, pend.prompt))}
           </button>

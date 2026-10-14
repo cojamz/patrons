@@ -541,6 +541,32 @@ td.rank{font-weight:700}
 }
 @media (max-height:480px) and (orientation:landscape) and (pointer:coarse){ .slot .hit{r:34px} }
 
+/* ---------- round 3, tester F ---------- */
+/* only the hit circle takes clicks: dots, labels, rings and markers never eat the center of a space */
+.slot > :not(.hit){pointer-events:none}
+.slot .hit{pointer-events:all}
+.lastmove,.ring,.ring *{pointer-events:none}
+/* glowing spaces glow plainly */
+.slot.can .halo{stroke-width:3;animation:glow2 1.3s ease-in-out infinite}
+.slot.can .base{fill:color-mix(in srgb,var(--table) 70%,white 6%)}
+@keyframes glow2{0%,100%{opacity:.55;stroke-width:2.5}50%{opacity:1;stroke-width:5}}
+@media (prefers-reduced-motion:reduce){ .slot.can .halo{opacity:1;stroke-width:3.5} }
+/* undo has its own slot in the header, so nothing jumps when it comes and goes */
+header.bar .status{align-items:center;gap:8px}
+.undo-slot{flex:none;width:150px;display:flex;justify-content:flex-start}
+.undo-slot .undo{margin:0}
+@media (max-width:520px){ .undo-slot{width:84px} }
+/* buy tray: three equal buttons, one-line subtext */
+.fbuy .fb{overflow:hidden}
+.fbuy .fb b,.fbuy .fb span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tray-note{grid-column:1 / -1;font-size:11px;color:var(--muted)}
+/* collapsible quadrant panel */
+.fold{background:none;border:0;color:var(--muted);font-size:14px;cursor:pointer;padding:0 6px 0 0;min-width:24px;min-height:24px}
+.quad.folded .score,.quad.folded .acts{display:none}
+.quad-line{display:block;text-align:left;width:100%;background:var(--table-2);border:1px solid var(--rim);border-left:3px solid var(--c);border-radius:0 8px 8px 0;padding:6px 10px;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.quad-line b{color:var(--ink)}
+.cost-line{color:var(--ink)!important;opacity:.8}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }

@@ -16,7 +16,7 @@ import Tick from './Tick.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop } from './flight.js';
 
 const STEP_MS = 320;      // pace when catching up on moves that happened behind the round-end card
-const PLACE_STEP_MS = 900; // a rival's placement gets time for the wheel to turn and the worker to land
+const RIVAL_DWELL_MS = 620; // a rival's placement holds this long before the next thing is shown
 
 export function useSessionState(session) {
   const [state, setState] = useState(() => session.getState());
@@ -65,14 +65,18 @@ function useTable(session) {
     const next = queue.current.shift();
     const prev = shownRef.current;
     show(next);
-    if (!paced.current && !queue.current.length) return;
-    const placed = Object.keys(next.slots).some(k => prev.slots[k] === undefined);
+    // A rival's placement stays on screen long enough to read (the worker travels, the card shows its delta);
+    // after the round-end card, the backlog replays at that pace too.
+    const mine = session.mySeats || [];
+    const rivalPlaced = Object.keys(next.slots).some(k => prev.slots[k] === undefined && !mine.includes(next.slots[k]));
+    const dwell = rivalPlaced ? RIVAL_DWELL_MS : paced.current ? STEP_MS : 0;
+    if (!dwell) return;
     timer.current = setTimeout(() => {
       timer.current = null;
       if (!queue.current.length) paced.current = false;
       pump();
-    }, placed ? PLACE_STEP_MS : STEP_MS);
-  }, [show]);
+    }, dwell);
+  }, [show, session]);
 
   useEffect(() => {
     const off = session.subscribe(s => {

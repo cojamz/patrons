@@ -6,6 +6,12 @@ import { Popover } from './parts.jsx';
 
 export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPick, onDenied, meId = null, confirmPlace = false }) {
   const [pop, setPop] = useState(null); // touch: { el, key, a, opt }
+  // Collapsible to a one-line summary (remembered); short screens start collapsed.
+  const [folded, setFolded] = useState(() => {
+    try { const v = localStorage.getItem('patrons.v4.quadFolded'); if (v != null) return v === '1'; } catch { /* ignore */ }
+    return typeof innerHeight === 'number' && innerHeight < 600;
+  });
+  const fold = v => { setFolded(v); try { localStorage.setItem('patrons.v4.quadFolded', v ? '1' : '0'); } catch { /* ignore */ } };
   const pointer = useRef('mouse');
   const close = useCallback(() => setPop(null), []);
   useEffect(() => { setPop(null); }, [state, facing]);
@@ -15,6 +21,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
   const col = `var(--${qid})`;
   const tabs = useRef(null);
   const standing = state.round >= 1 && !state.over ? standings(state)[facing] : null;
+  const openCount = Q.actions.filter((a, i) => optionFor(`slot:${facing}-${i}`)).length;
 
   // Tabs are one control: focus follows the selected tab (arrow keys, or the wheel turning under it).
   useEffect(() => {
@@ -31,9 +38,12 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
   };
 
   return (
-    <section className="panel quad" style={{ '--c': col }}>
+    <section className={`panel quad${folded ? ' folded' : ''}`} style={{ '--c': col }}>
       <div className="quad-head">
-      <h2 style={{ color: col }}>{Q.name}<small>facing you</small></h2>
+      <h2 style={{ color: col }}>
+        <button type="button" className="fold" aria-expanded={!folded} onClick={() => fold(!folded)} aria-label={folded ? `Show ${Q.name}'s actions` : `Collapse ${Q.name}`}>{folded ? '▸' : '▾'}</button>
+        {Q.name}<small>facing you</small>
+      </h2>
       <div className="qtabs" role="tablist" aria-label="Quadrants" ref={tabs} onKeyDown={onTabKey} hidden={state.round === 0}>
         {state.quadrants.map((id, q) => {
           const free = state.pending && state.pending.kind === 'place'
@@ -48,6 +58,13 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
         })}
       </div>
       </div>
+      {folded && (
+        <button type="button" className="quad-line" onClick={() => fold(false)}>
+          <b>{Q.scoring.label} <span className="num">+{RING_VALUE[round - 1]}</span></b>
+          {standing && standing.top > 0 && <span> · now {standing.rows.slice(0, 3).map(r => `${r.id === meId ? 'you' : state.players[r.id].name} ${r.shown}`).join(', ')}</span>}
+          <span> · {openCount ? `${openCount} open for you` : `${Q.actions.filter((a, i) => a.ring <= round && state.slots[`${facing}-${i}`] === undefined).length} open`}</span>
+        </button>
+      )}
       <div className="score">
         <span><b>{Q.scoring.label}</b> at round end wins <b className="num">+{RING_VALUE[round - 1]}</b> this round <small className="num">({RING_VALUE.map(v => `+${v}`).join(' / ')} by round; ties all score)</small></span>
         {standing && standing.top > 0 ? (

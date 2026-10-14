@@ -29,8 +29,8 @@ function play(seed, giveDef, seat) {
   return s;
 }
 const only = process.argv[3] && process.argv[3] !== 'all' ? process.argv[3].split(',') : null;
-const ids0 = quadrant('yellow').members.map(d => d.id);
-const ids = only ? ids0.filter(i => only.some(o => i.endsWith('.' + o))) : ids0;
+const ids0 = [...quadrant('yellow').members, ...quadrant('gold').members, ...quadrant('red').members].map(d => d.id);
+const ids = only ? ids0.filter(i => only.some(o => i === o || i.endsWith('.' + o))) : ids0.filter(i => i.startsWith('yellow.'));
 const control = [];
 for (let g = 0; g < N; g++) control.push(play(1000 + g));
 const rows = [];
