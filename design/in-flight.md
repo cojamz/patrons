@@ -1,6 +1,6 @@
 # In flight
 
-Updated 2026-10-14 ~21:00 UTC. Agents never commit; the foreman verifies and checkpoints. Each agent runs check:v4 on its own `V4_OUTDIR`/`V4_PORT` (build dirs seen on disk are noted). If a session dies, relaunch each workstream from its brief below and tell it to read `git log` first. Done items are ticked in design/todo.md.
+Updated 2026-10-14 ~21:40 UTC. Agents never commit; the foreman verifies and checkpoints. Each agent runs check:v4 on its own `V4_OUTDIR`/`V4_PORT` (build dirs seen on disk are noted). If a session dies, relaunch each workstream from its brief below and tell it to read `git log` first. Done items are ticked in design/todo.md.
 
 ## Current roster
 1. **UI-A: wheel, shell, pay, the Reckoning, phone.** Brief: design/prototypes/vision/build-plan.md (Split: UI-A; Making it clear; Layout revision). Owns `lamp.css`, the GameScreen shell, `Wheel.jsx`, `PayPicker.jsx`, `RoundEnd.jsx` and the phone layout. Now: the layout revision (the wheel centred and bigger, a cult at each corner, minions on a space's rim so its text stays readable, "minion" in the prompt), then the animated Reckoning. Build dir `.v4-build-ui` (port 5282).
@@ -13,9 +13,11 @@ Updated 2026-10-14 ~21:00 UTC. Agents never commit; the foreman verifies and che
 8. **Icon batch Blue/White/Green/Purple.** Brief: design/prototypes/pixel-art/style.md; drawings in `icons-blue-white-green-purple.js`, imported by `scripts/v4-art-import.mjs`. All batches are drawn (681046c). Cory: good enough for now, polish later.
 9. **Emoji minions + cult leaders.** Brief: build-plan.md "Minions and cult leaders"; drawings in design/prototypes/pixel-art/emojis.js and leaders.js, the identity sheet beside them. Landed: 20 emojis, robed leaders, emojis kept per seat online (f8aa8c0, friends.test.js). Remaining: the emoji pick when joining (one per table; bots take a free one), "minion" everywhere a player reads "worker", unplaced minions floating around the leader.
 10. **Intro.** Brief: build-plan.md "Intro and follower symbol"; `src/v4/Intro.jsx`. Built: per player and local, skippable, a still storyboard under reduced motion, `?intro=0` / `?intro=1`, replay from the menu. Build dir `.v4-build-intro` (port 5298).
+11. **Purple: Night Owl + reprice.** Brief: design/eval/purple-members.md (from the remote Purple session). Night Owl (8+2, "When you place your last minion of a round, take an extra turn right after this one.") takes Relay's slot; Double Time 6, Overseer 4, Taskmaster 6, Second Wind 8, Late Riser 6. Build dir `.v4-build-purple` (port 5310).
+12. **Design critic, round 2 (blind).** On the frozen build 4da59a3 (`.v4-panel/d8`, port 5201), with a Vision section (visual actions, elegant round scoring, cults at a glance) and a mocked frame. Report → design/eval/ui-critic-round2.md.
 
 ## Held
-- **Fair-price screen, bot levels + 4-thinker tables, Purple member replacements:** not run on this box; offloaded to the remote sessions below. Relay's 2–3 priced replacements (Cory cut Relay) ride with the Purple session (Claude's reading of its brief; check when it reports).
+- **Fair-price screen, bot levels + 4-thinker tables:** offloaded to the remote sessions below. The Purple session is done (roster 11).
 - **Board game enthusiast:** the missing third reviewer of fresh-eyes round 1. Held until the layout revision lands and a build is frozen from a commit; then run the full trio (ui-critic, enthusiast, engineer) as round 2, plus the meta synthesis.
 
 ## Done from the 17:00 catalogue
@@ -32,5 +34,5 @@ Limits hit four times on 2026-10-14 (06:30, 11:40, 16:40, 18:55 UTC). The forema
 ## Remote sessions (own machines, started 20:48 UTC): heavy simulation offloaded from this 4-CPU box
 - Fair-price screen for every card → branch claude/cults-fair-price (session_01SAnMH5dXApptnHJqsFTvdV)
 - Bot levels + 4-thinker balance tables → branch claude/cults-bots (session_012LrFkfKC8GG3gLHPuLK2jF)
-- Purple member replacements + per-turn repricing → branch claude/cults-purple-members (session_01KzNtqok74Xvo1pxX1pqWkS)
+- Purple member replacements + per-turn repricing → branch claude/cults-purple-members (session_01KzNtqok74Xvo1pxX1pqWkS). Done 21:09; report brought in by roster 11.
 The foreman merges each branch after reviewing it (proposals only: no content price changes land without review; design changes go to Cory).

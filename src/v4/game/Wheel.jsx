@@ -1,7 +1,7 @@
 // The board: a printed paper wheel of 4 quadrants (the Lamplit Table). Outer ring = round I, middle = round II,
 // inner = round III. It still spins (drag, arrow keys, a sideways swipe), but everything on it stays upright and
 // nothing else on screen changes with its orientation. Each space is a socket with its name and its effect in a
-// few words (readable without hovering); a worker stands on it as a hooded figure with its seat's sigil; a rival's
+// few words (readable without hovering); a placed minion (the player's emoji) stands on its rim; a rival's
 // fresh placement wears a dashed ring. Each quadrant's contest sits on a rim plaque (rule, prize, leader), with the
 // standings on hover/tap. Hover or focus (mouse) or a first tap (touch) shows a space's card; on touch, placing takes
 // a second tap.
@@ -372,7 +372,9 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
         onClick={e => { if (hover) hover.onPlaqueHover(qid, e.currentTarget, { pinned: true }); }}
         onKeyDown={e => { if (hover && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); hover.onPlaqueHover(qid, e.currentTarget, { pinned: true }); } }}>
         {leaders.length
-          ? leaders.slice(0, 2).map(id => <Leader key={id} color={playerColor(id)} emoji={seatEmoji(state, id)} size={20} title={`${state.players[id].name} leads`} />)
+          ? leaders.slice(0, 2).map(id => (
+            <span key={id} className="who"><Leader color={playerColor(id)} emoji={seatEmoji(state, id)} size={20} /><small>{id === meId ? 'You' : state.players[id].name}</small></span>
+          ))
           : <i className="none" aria-hidden="true" />}
       </span>
     );

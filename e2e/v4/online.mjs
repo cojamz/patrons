@@ -60,6 +60,14 @@ async function stepFirstOption(page) {
     if (!id || id.startsWith('toggle:') || id === 'back') continue;
     try { await el.click({ timeout: 1500 }); return true; } catch { /* try the next */ }
   }
+  // Everything refused a real click: usually a hover card left open under the pointer. This e2e tests the online flow
+  // (the UI e2e test hit-testing), so park the pointer and press the first option directly.
+  for (const el of els) {
+    const id = await el.getAttribute('data-option').catch(() => null);
+    if (!id || id.startsWith('toggle:') || id === 'back') continue;
+    await page.mouse.move(1, 1).catch(() => {});
+    if (await el.evaluate(e => { if (!e.isConnected) return false; e.click(); return true; }).catch(() => false)) return true;
+  }
   return false;
 }
 const moves = page => page.evaluate(() => { try { return JSON.parse(window.patronsRecord()).moves?.length ?? 0; } catch { return 0; } }).catch(() => 0);

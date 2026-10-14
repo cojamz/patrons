@@ -36,7 +36,7 @@ export default function Reckoning({ info, root, onDone, onLamp, meId = null }) {
       const a = playerAnchor(root, p.id);
       if (!a) continue;
       const r = a.getBoundingClientRect();
-      out[p.id] = { left: r.left + r.width / 2, top: r.top };
+      out[p.id] = { left: r.right + 6, top: r.top + r.height / 2 }; // beside the leader, never over it
     }
     setSpots(out);
   }, [root, info]);
@@ -69,7 +69,7 @@ export default function Reckoning({ info, root, onDone, onLamp, meId = null }) {
   const name = id => (id === meId ? 'You' : info.after.players[id].name);
   const head = row
     ? row.winners.length
-      ? `${row.rule}: ${row.winners.map(name).join(' & ')} ${row.winners.length > 1 ? 'tie' : 'wins'} +${row.prize}`
+      ? `${row.rule}: ${row.winners.map(name).join(' & ')} ${row.winners.length > 1 ? 'tie' : row.winners[0] === meId ? 'win' : 'wins'} +${row.prize}`
       : `${row.rule}: no one scores`
     : '';
   return (

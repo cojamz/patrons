@@ -219,10 +219,10 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-reckon .reckon-dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--c);opacity:.6}
 .lt-reckon .reckon-dots i.done{background:var(--c);opacity:.55}
 .lt-reckon .reckon-dots i.on{background:var(--c);opacity:1;box-shadow:0 0 8px var(--c)}
-.lt-reckon .reckon-count{position:fixed;transform:translate(-50%,-110%);display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;
+.lt-reckon .reckon-count{position:fixed;transform:translate(0,-50%);display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;
   background:var(--paper);color:var(--paper-ink);font-family:var(--serif);font-weight:700;font-size:22px;box-shadow:0 0 0 2px var(--c),0 8px 18px rgba(0,0,0,.5);pointer-events:none;animation:rise .25s ease-out}
 .lt-reckon .reckon-count.won{box-shadow:0 0 0 3px var(--lamp-ink),0 0 22px 6px rgba(var(--lamp),.6);animation:rise .25s ease-out, reckonwin .5s .6s ease-out 2}
-@keyframes reckonwin{50%{transform:translate(-50%,-110%) scale(1.18)}}
+@keyframes reckonwin{50%{transform:translate(0,-50%) scale(1.18)}}
 .lt-reckon .reckon-skip{position:absolute;right:18px;bottom:18px;min-height:44px;padding:0 18px;color:var(--cream);border-color:rgba(243,230,200,.4);background:rgba(29,22,17,.7)}
 .token-flight{position:fixed;z-index:45;pointer-events:none;display:grid;place-items:center;will-change:transform}
 .token-flight .reckon-token{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--lamp-ink);color:var(--paper-ink);font-family:var(--serif);font-weight:700;font-size:15px;box-shadow:0 0 0 2px var(--pc),0 6px 14px rgba(0,0,0,.5)}
@@ -248,3 +248,19 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage .slot.r2 .face .ico svg,.lt .stage .slot.r3 .face .ico svg{width:clamp(14px, calc(var(--wheel-px) * .036), 20px)}
 /* the chairs: yours only a little larger than the rivals' (same layout) */
 @media (min-width:861px) and (min-height:500px){ .lt > .lt-seat-0 > .lt-cult-seat{zoom:1.15} }
+
+.lt .stage .rim-lead{border-radius:12px;gap:4px}
+.lt .stage .rim-lead .who{display:inline-flex;align-items:center;gap:3px}
+.lt .stage .rim-lead .who small{font-family:var(--serif);font-weight:700;font-size:12px;color:var(--cream);text-shadow:0 1px 2px rgba(0,0,0,.7);white-space:nowrap}
+/* the chairs carry no box of their own: the cult sits on the walnut (yours a little larger) */
+@media (min-width:861px) and (min-height:500px){
+  .lt > .lt-seat{background:none;box-shadow:none;padding:0;overflow:visible}
+  .lt > .lt-seat.now{background:none;box-shadow:none}
+}
+/* game over: every cult in final order, its followers big, the winner lit */
+.lt .over-cults{display:flex;flex-direction:column;gap:10px}
+.lt .over-seat{position:relative;display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:rgba(243,230,200,.03)}
+.lt .over-seat .rank{font-family:var(--serif);font-size:18px;color:var(--cream-3)}
+.lt .over-seat .final{font-family:var(--serif);font-size:34px;color:var(--cream)}
+.lt .over-seat.won{background:rgba(var(--lamp),.1);box-shadow:0 0 0 1px rgba(var(--lamp),.45),0 0 26px rgba(var(--lamp),.18)}
+.lt .over-seat.won .final{color:var(--lamp-ink)}

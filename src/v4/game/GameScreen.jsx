@@ -5,7 +5,6 @@ import { followers, tierLeft, tierUsed } from '../../engine/v4/index.js';
 import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote, turnStory } from '../format.js';
 import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
-import Players, { Resources, Workers } from './Players.jsx';
 import ShopCards from './ShopCards.jsx';
 import CultSeat from './CultSeat.jsx';
 import { useHoverCards, HoverCardLayer } from './HoverCards.jsx';
@@ -17,7 +16,6 @@ import Reckoning from './Reckoning.jsx';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker from './PayPicker.jsx';
 import HowToPlay from '../HowToPlay.jsx';
-import Tick from './Tick.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome } from './flight.js';
 import { friendlyError, isNetworkError } from '../errors.js';
 import { ROUND_START } from '../saved.js';
@@ -577,7 +575,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, [modalOpen]);
   const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
-  const players = <Players state={state} active={pend ? pend.player : null} mySeats={mySeats} optionFor={live} onPick={onPick} gifts={gifts} robbed={robbed} />;
   const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)}{state.endEarly ? <em className="last-tag"> (last)</em> : null}</> : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
@@ -651,7 +648,19 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       {state.over && !moment ? (
         <div className="main over">
           <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} />
-          <div className="side">{players}<Log state={state} /></div>
+          <div className="side over-cults" aria-label="The cults at the end">
+            {(state.ranking || state.players.map(p => p.id)).map((pid, k) => {
+              const won = followers(state, state.players[pid]) === Math.max(...state.players.map(p => followers(state, p)));
+              return (
+                <div key={pid} className={`over-seat${won ? ' won' : ''}`} data-pid={pid}>
+                  <span className="rank num" aria-hidden="true">{k + 1}</span>
+                  <CultSeat state={state} pid={pid} me={me} mine={pid === me} now={won} hover={hover} onPick={onPick} />
+                  <b className="final num" title="Followers at the end">{followers(state, state.players[pid])}</b>
+                </div>
+              );
+            })}
+            <Log state={state} />
+          </div>
         </div>
       ) : (
         <>
