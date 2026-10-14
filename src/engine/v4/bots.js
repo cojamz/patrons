@@ -42,8 +42,8 @@ export function chooseBotMove(state, rand = Math.random) {
       });
       const top = cards.length ? cards.reduce((a, b) => (b.v > a.v ? b : a)) : null;
       if (top && top.v > 1.5) return move(top.o);
-      const big = tiers.find(o => tierOf(o).get === 6);
-      if (big) return move(big);
+      const bulk = tiers.filter(o => tierOf(o).limited);
+      if (bulk.length) return move(best(bulk, o => tierOf(o).get));
       const mid = tiers.find(o => tierOf(o).get === 3);
       const held = Object.values(p.res).reduce((a, b) => a + b, 0);
       if (mid && state.round >= 2 && held >= 7) return move(mid);

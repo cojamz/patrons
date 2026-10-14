@@ -216,8 +216,8 @@ export default {
     m('courier', 'Courier', 4, 2, 'Whenever you take an extra turn, +1 of each other color.', {
       onExtraTurn(ctx, owner) { for (const c of ctx.state.resources) if (c !== P) ctx.gain(owner, c, 1); },
     }),
-    m('apprentice', 'Apprentice', 2, 2, 'Whenever you take an extra turn, your next member costs 2 less.', {
-      onExtraTurn(ctx, owner) { owner.discount += 2; },
+    m('apprentice', 'Apprentice', 2, 2, 'Whenever you take an extra turn, your next member costs 4 less.', {
+      onExtraTurn(ctx, owner) { owner.discount += 4; },
     }),
     m('overseer', 'Overseer', 4, 2, 'Whenever a rival takes an extra turn, gain half your purple (up to 4).', {
       onRivalExtraTurn(ctx, owner) { ctx.gain(owner, P, Math.min(4, Math.floor((owner.res[P] || 0) / 2))); },

@@ -7,11 +7,16 @@ import { shuffleInPlace } from './rng.js';
 export const RING_VALUE = [2, 4, 6];
 export const WORKERS = [3, 4, 5];
 export const SHOP_SIZE = 6;
+// Follower buys. A limited tier has a stock per game (stock: seats -> count). The clock tier ends the game:
+// when its last buy is gone, the game ends after that round.
 export const TIERS = [
   { key: 'small', cost: 2, get: 1, colors: 1, label: '2 of anything' },
   { key: 'mid', cost: 4, get: 3, colors: 2, label: '4, at least 2 colors' },
-  { key: 'big', cost: 6, get: 6, colors: 3, label: '6, at least 3 colors', limited: true },
+  { key: 'big', cost: 8, get: 6, colors: 3, label: '8, at least 3 colors', limited: true, stock: n => 2 * n, clock: true },
+  { key: 'top', cost: 10, get: 10, colors: 4, label: '10, at least 4 colors', limited: true, stock: () => 4 },
 ];
+/** How many buys of a limited tier are left (Infinity for unlimited tiers). */
+export const tierLeft = (state, tier) => (tier.limited ? state.stock?.[tier.key] ?? 0 : Infinity);
 const LOG_MAX = 300;
 
 // ---------- creation ----------
@@ -35,7 +40,7 @@ export function createGame({ seats, seed = 1, quadrants = DEFAULT_QUADRANTS }) {
     })),
     cards, pile: Object.keys(cards).map(Number), shop: [],
     round: 0, slots: {}, order: [], turnIndex: 0, current: null,
-    recruits: 0, bigLeft: 2 * seats.length, endEarly: false,
+    recruits: 0, stock: Object.fromEntries(TIERS.filter(t => t.limited).map(t => [t.key, t.stock(seats.length)])), endEarly: false,
     queue: [], pending: null, log: [], moves: 0, over: false, ranking: null,
   };
   shuffleInPlace(state, state.pile);
@@ -172,7 +177,7 @@ const colorsCovered = (state, v) => {
   return n;
 };
 export function followerChoices(state, p, tier) {
-  if (tier.limited && state.bigLeft <= 0) return [];
+  if (tierLeft(state, tier) <= 0) return [];
   const keys = state.resources;
   const all = vectors(p.res, keys, tier.cost, tier.cost).filter(v => colorsCovered(state, v) >= tier.colors);
   return orderChoices(state, all, followerPlan(state, p, tier), p);
@@ -219,7 +224,7 @@ function payOption(state, v, i) {
 
 /** Paying for a follower buy: needs `colors` different resources. Gold is spent last. */
 export function followerPlan(state, p, tier) {
-  if (tier.limited && state.bigLeft <= 0) return null;
+  if (tierLeft(state, tier) <= 0) return null;
   const res = { ...p.res };
   const spend = Object.fromEntries(Object.keys(res).map(r => [r, 0]));
   const order = () => Object.keys(res).filter(c => res[c] > 0).sort((a, b) => (a === 'gold') - (b === 'gold') || res[b] - res[a]);
@@ -510,8 +515,8 @@ function buyFollowers(state, p, tier, chosen) {
   p.bought = (p.bought || 0) + tier.get;
   log(state, `${p.name} bought ${tier.get} follower${tier.get > 1 ? 's' : ''} (${payString(spend)}).`);
   if (tier.limited) {
-    state.bigLeft -= 1;
-    if (state.bigLeft <= 0 && !state.endEarly) { state.endEarly = true; log(state, 'The last 6-follower buy is gone. The game ends after this round.'); }
+    state.stock[tier.key] -= 1;
+    if (tier.clock && state.stock[tier.key] <= 0 && !state.endEarly) { state.endEarly = true; log(state, `The last ${tier.get}-follower buy is gone. The game ends after this round.`); }
   }
   const ctx = ctxFor(state);
   eachMember(state, (owner, card, def) => { if (def.onBuyFollowers) def.onBuyFollowers(ctx, owner, card, p, tier); });

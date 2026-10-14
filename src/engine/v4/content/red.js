@@ -41,7 +41,7 @@ export default {
       resolve(ctx, p) { ctx.gain(p, 'red', 2, { fromAction: true }); hireCheapest(ctx, p); },
     },
     {
-      key: 'trade', ring: 2, name: 'Trade', text: 'Swap one of your members for another player’s costing no more than yours +1.',
+      key: 'trade', ring: 2, name: 'Trade', text: 'Swap one of your members for another player’s costing no more than yours +2.',
       estimate: (ctx, p) => (tradePairs(ctx, p).length ? 2 : 0),
       resolve(ctx, p) {
         const pairs = tradePairs(ctx, p);
@@ -113,7 +113,7 @@ export default {
     m('host', 'Host', 4, 2, 'At round start, +1 red per 2 members.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, 'red', Math.floor(ctx.memberCount(owner) / 2)); },
     }),
-    m('sponsor', 'Sponsor', 6, 4, 'Your members cost 1 less.', { costReduction: 1 }),
+    m('sponsor', 'Sponsor', 6, 4, 'Your members cost 2 less.', { costReduction: 2 }),
     m('crowd', 'Crowd-Pleaser', 2, 0, 'Whenever you buy followers, +1 red.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer === owner) ctx.gain(owner, 'red', 1); },
     }),
@@ -158,6 +158,6 @@ function tradePairs(ctx, p) {
   for (const a of ctx.membersOf(p))
     for (const o of ctx.rivals(p))
       for (const b of ctx.membersOf(o))
-        if (cost(b) <= cost(a) + 1) out.push([a, o, b]);
+        if (cost(b) <= cost(a) + 2) out.push([a, o, b]);
   return out;
 }

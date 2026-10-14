@@ -194,7 +194,7 @@ const trading = {
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 || (ctx.state.round === 2 && ctx.memberCount(owner) >= 6),
     }),
-    m('bulkbuyer', 'Bulk Buyer', 4, 2, 'Whenever you buy 3 or 6 followers, +1 more.', {
+    m('bulkbuyer', 'Bulk Buyer', 4, 2, 'Whenever you buy 3 or more followers, +1 more.', {
       onBuyFollowers(ctx, owner, card, buyer) {
         // the engine logs the buy just before this hook runs: read its size from there
         const got = Number((ctx.state.log.at(-1) || '').match(/bought (\d+) follower/)?.[1] || 0);
@@ -216,8 +216,8 @@ const trading = {
       },
       botActivate: (ctx, owner) => ctx.state.round === 2 && sellable(owner) >= 3,
     }),
-    m('reinvestor', 'Reinvestor', 2, 2, 'Whenever you sell followers, your next member costs 1 less per follower sold.', {
-      onSell(ctx, owner, card, k) { owner.discount += k; ctx.log(`${owner.name}'s next member costs ${owner.discount} less.`); },
+    m('reinvestor', 'Reinvestor', 2, 2, 'Whenever you sell followers, your next member costs 2 less per follower sold.', {
+      onSell(ctx, owner, card, k) { owner.discount += 2 * k; ctx.log(`${owner.name}'s next member costs ${owner.discount} less.`); },
     }),
     m('raider', 'Raider', 2, 0, 'Once per game: buy up to 3 followers from the leader for 1 white each. They get the white.', {
       activate: 'game',

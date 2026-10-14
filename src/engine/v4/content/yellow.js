@@ -156,12 +156,8 @@ export default {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === Y && g.n > 0) owner.res[Y] += 1; },
     }),
     m('weaver', 'Weaver', 4, 2, 'Whenever you buy 6 followers, +1 of each color.', {
-      onRecruited(ctx, owner, card) { card.seenBig = ctx.state.bigLeft; },
-      onBuyFollowers(ctx, owner, card, buyer) {
-        // the 6-follower buy is the only one that uses up a limited pile; that's how we tell it apart
-        const big = ctx.state.bigLeft < (card.seenBig ?? ctx.state.bigLeft);
-        card.seenBig = ctx.state.bigLeft;
-        if (big && buyer === owner) eachColor(ctx, owner, 1);
+      onBuyFollowers(ctx, owner, card, buyer, tier) {
+        if (buyer === owner && tier?.get === 6) eachColor(ctx, owner, 1);
       },
     }),
     m('explorer', 'Explorer', 4, 4, 'Whenever you take a space outside Yellow, +1 yellow.', {

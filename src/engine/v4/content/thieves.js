@@ -149,13 +149,13 @@ const thieves = {
       resolve(ctx, p) { startSteal(ctx, p, 'Rob', ctx.stealCount(p, 3), { each: ctx.rivals(p).map(o => o.id) }); },
     },
     {
-      key: 'ransom', ring: 2, name: 'Ransom', text: 'Pick a rival’s member costing 3 or less. They pay you its cost to keep it, or it’s yours.',
+      key: 'ransom', ring: 2, name: 'Ransom', text: 'Pick a rival’s member costing 6 or less. They pay you its cost to keep it, or it’s yours.',
       estimate: (ctx, p) => {
-        const l = takeable(ctx, p, 3).filter(([, c]) => cost(c) > 0);
+        const l = takeable(ctx, p, 6).filter(([, c]) => cost(c) > 0);
         return l.length ? Math.max(...l.map(([, c]) => cost(c) * 1.33 + 0.5)) : 0;
       },
       resolve(ctx, p) {
-        const list = takeable(ctx, p, 3).filter(([, c]) => cost(c) > 0);
+        const list = takeable(ctx, p, 6).filter(([, c]) => cost(c) > 0);
         if (!list.length) { ctx.log(`${p.name} found no one to hold to ransom.`); return; }
         ctx.choose(p, 'Ransom: which member?', list.map(([o, c]) => ({
           id: `card:${c.uid}`, label: `${o.name}'s ${c.def.name} (${cost(c)})`, kind: 'member', value: c.uid,
@@ -257,9 +257,9 @@ const thieves = {
         if (autoSteal(ctx, owner, info.thief, 'Lookout', 1, true)) card.round = ctx.state.round;
       },
     }),
-    m('lightfingers', 'Light Fingers', 4, 4, 'Whenever a rival recruits a member costing 4 or more, take 1 resource from them.', {
+    m('lightfingers', 'Light Fingers', 4, 4, 'Whenever a rival recruits a member costing 8 or more, take 1 resource from them.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
-        if (by !== owner && cost(recruited) >= 4) autoSteal(ctx, owner, by, 'Light Fingers');
+        if (by !== owner && cost(recruited) >= 8) autoSteal(ctx, owner, by, 'Light Fingers');
       },
     }),
     m('extortionist', 'Extortionist', 4, 2, 'Whenever a rival buys 6 followers, take 2 resources from them.', {

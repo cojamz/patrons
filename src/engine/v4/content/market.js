@@ -8,8 +8,8 @@ import { registerQuadrant } from './index.js';
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const B = 'blue';
 const Q = 'market';
-// One cutoff. If member costs double, BADGE becomes 8.
-export const BADGE = 4;
+// One cutoff, scaled with member costs (they doubled 2026-10-14: 4 became 8).
+export const BADGE = 8;
 const isBlue = def => def.quadrant === Q;
 
 /** Printed cost of a member (before any discount). */
@@ -157,9 +157,9 @@ const market = {
       resolve(ctx, p) { offerRow(ctx, p, half, 'Clearance'); },
     },
     {
-      key: 'pricecheck', ring: 2, name: 'Price Check', text: 'Gain blue equal to the cost of your priciest member.',
-      estimate: (ctx, p) => priciest(ctx, p),
-      resolve(ctx, p) { ctx.gain(p, B, priciest(ctx, p), { fromAction: true }); },
+      key: 'pricecheck', ring: 2, name: 'Price Check', text: 'Gain blue equal to half the cost of your priciest member.',
+      estimate: (ctx, p) => Math.floor(priciest(ctx, p) / 2),
+      resolve(ctx, p) { ctx.gain(p, B, Math.floor(priciest(ctx, p) / 2), { fromAction: true }); },
     },
     {
       key: 'spree', ring: 3, name: 'Spree', text: 'This turn you buy 3 times.',
@@ -215,11 +215,11 @@ const market = {
     m('curator', 'Curator', 2, 2, 'At round start, +1 blue per badged member you have.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, B, priceyCount(ctx, owner)); },
     }),
-    m('planner', 'Planner', 2, 2, 'At round start, your next member costs 1 less per round number.', {
-      onRoundStart(ctx, owner) { owner.discount += ctx.state.round; },
+    m('planner', 'Planner', 2, 2, 'At round start, your next member costs 2 less per round number.', {
+      onRoundStart(ctx, owner) { owner.discount += 2 * ctx.state.round; },
     }),
-    m('underbidder', 'Underbidder', 2, 0, 'At round start, your next member costs 1 less per rival with more members than you.', {
-      onRoundStart(ctx, owner) { owner.discount += rivalsBigger(ctx, owner); },
+    m('underbidder', 'Underbidder', 2, 0, 'At round start, your next member costs 2 less per rival with more members than you.', {
+      onRoundStart(ctx, owner) { owner.discount += 2 * rivalsBigger(ctx, owner); },
     }),
     m('minimalist', 'Minimalist', 2, 0, 'At round start, +1 blue per rival with more members than you.', {
       onRoundStart(ctx, owner) { const k = rivalsBigger(ctx, owner); if (k) ctx.gain(owner, B, k); },
@@ -243,8 +243,8 @@ const market = {
     m('auctioneer', 'Auctioneer', 4, 2, 'Whenever a rival recruits an unbadged member, +1 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by !== owner && !badged(rec)) ctx.gain(owner, B, 1); },
     }),
-    m('sommelier', 'Sommelier', 2, 2, 'Whenever you recruit a badged member, your next member costs 1 less.', {
-      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && badged(rec)) owner.discount += 1; },
+    m('sommelier', 'Sommelier', 2, 2, 'Whenever you recruit a badged member, your next member costs 2 less.', {
+      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && badged(rec)) owner.discount += 2; },
     }),
     m('patroness', 'Patroness', 4, 4, 'Whenever you recruit a badged member, +1 follower.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && badged(rec)) owner.bonus += 1; },
