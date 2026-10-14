@@ -1,13 +1,13 @@
 // The seat rail: the scoreboard in this round's turn order. Each seat: its leader (the player's emoji), name, followers, minions
 // left, the space it took last, and a mini crowd of its members in their sphere colors. The seat whose turn it is
 // is lit. Hover (or tap) a seat for its card: resources, members, last three moves (HoverCards SeatCard).
-import { followers, quadrant, cardDef, roundWorkers } from '../../engine/v4/index.js';
+import { followers, quadrant, cardDef } from '../../engine/v4/index.js';
 import { playerColor } from '../format.js';
 import { realHover } from '../hover.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { cardColor } from './Info.jsx';
-import { SeatFigure, FollowerGlyph } from './Glyphs.jsx';
+import { LeaderRing, FollowerGlyph } from './Glyphs.jsx';
 import { seatOrder, railInfo, lastSpace } from './seats.js';
 import './lamp-b.css';
 
@@ -22,7 +22,6 @@ export default function SeatRail({ state, me = null, mySeats = [], hover = null 
       {order.map((pid, k) => {
         const p = state.players[pid];
         const f = followers(state, p);
-        const total = state.round ? roundWorkers(state, p) : 0;
         const last = lastSpace(state, pid);
         const crowd = p.members.slice(0, CROWD);
         const you = mySeats.length === 1 ? mySeats[0] === pid : me === pid;
@@ -38,16 +37,11 @@ export default function SeatRail({ state, me = null, mySeats = [], hover = null 
               onClick={e => hover && hover.onSeatHover(pid, e.currentTarget, { pinned: true })}
               onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && hover) { e.preventDefault(); hover.onSeatHover(pid, e.currentTarget, { pinned: true }); } }}
             >
-              <SeatFigure id={pid} state={state} size={32} />
+              <LeaderRing state={state} id={pid} size={32} minion={12} compact />
               <span className="who">{you ? 'You' : p.name}
                 <small>{last ? <>last: <Sprite id={spriteId(last.name)} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /></> : p.kind === 'bot' ? 'bot' : ' '}</small>
               </span>
               <span className="score"><b className="num">{f}</b><FollowerGlyph size={14} title={`${f} followers`} /></span>
-              {total > 0 && (
-                <span className="wk" title={`${p.left} of ${total} minions left this round`} aria-hidden="true">
-                  {Array.from({ length: total }, (_, w) => <span key={w} className={w < p.left ? '' : 'used'} />)}
-                </span>
-              )}
               {crowd.length > 0 && (
                 <span className="crowd" aria-hidden="true">
                   {crowd.map(u => <i key={u} style={{ background: cardColor(state, cardDef(state, u)) }} />)}

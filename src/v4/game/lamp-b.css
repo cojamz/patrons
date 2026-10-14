@@ -122,3 +122,12 @@
 .lt-chron h4{font-family:var(--serif);font-size:15px;color:var(--paper-ink-3);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 4px}
 .lt-chron ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13.5px;line-height:1.35;color:var(--paper-ink)}
 .lt-chron li{padding:3px 0;border-bottom:1px solid rgba(42,31,23,.08)}
+
+/* ---------- leaders and their floating minions ---------- */
+.lt-ring{position:relative;display:inline-block;flex:none}
+.lt-ring .lead,.lt-ring .orbit{position:absolute;display:block;line-height:0}
+.lt-ring .orbit{animation:minion-bob 2.6s ease-in-out infinite}
+@keyframes minion-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@media (prefers-reduced-motion: reduce){.lt-ring .orbit{animation:none}}
+.leader,.minion{display:block;image-rendering:pixelated}
+.leader.dim,.minion.dim{opacity:.32}

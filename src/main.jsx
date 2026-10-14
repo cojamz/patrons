@@ -17,6 +17,8 @@ if (v3) {
         </div>
       </div>,
     )
-  import('./v4/App.jsx').then(({ default: App }) => root.render(<App />)).catch(offline)
+  // ?lab=b: UI-B's component lab (screenshots of the Lamplit pieces on a real state); otherwise the game
+  if (new URLSearchParams(location.search).get('lab') === 'b') import('./v4/lab/LabB.jsx').then(({ default: Lab }) => root.render(<Lab />)).catch(offline)
+  else import('./v4/App.jsx').then(({ default: App }) => root.render(<App />)).catch(offline)
   // Later chunk failures (e.g. the online code) reach their caller, which shows the same friendly message.
 }

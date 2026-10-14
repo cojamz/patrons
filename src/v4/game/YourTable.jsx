@@ -1,12 +1,12 @@
 // Your table: your resources as stacks (one shape per color), your leader and minions left, and your cult: each
 // member standing as its pixel figure in its sphere's color, beside a follower mark that grows. Hover or tap a
 // figure for its card; members you can use (or switch) this step carry a small button.
-import { followers, quadrant, roundWorkers } from '../../engine/v4/index.js';
+import { followers, quadrant } from '../../engine/v4/index.js';
 import { memberChips } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
-import { ResourceGlyph, FollowerMark, SeatFigure, SeatMinion } from './Glyphs.jsx';
+import { ResourceGlyph, FollowerMark, LeaderRing } from './Glyphs.jsx';
 import './lamp-b.css';
 
 const STACK = 6; // coins drawn per stack before the number carries the rest
@@ -16,7 +16,6 @@ export default function YourTable({ state, me = null, mySeats = [], optionFor = 
   if (me == null || !state.players[me]) return <section className="lt-mine" aria-label="Your table" />;
   const p = state.players[me];
   const f = followers(state, p);
-  const total = state.round ? roundWorkers(state, p) : 0;
   const groups = memberChips(state, p);
   return (
     <section className="lt-mine" aria-label="Your table" data-pid={me}>
@@ -35,10 +34,8 @@ export default function YourTable({ state, me = null, mySeats = [], optionFor = 
             );
           })}
         </div>
-        <div className="lt-workers" title={`Your leader and ${p.left} minion${p.left === 1 ? '' : 's'} left this round${total ? ` (of ${total})` : ''}`}>
-          <span className="figs"><SeatFigure id={me} state={state} size={32} title={`${p.name}, your leader`} />{Array.from({ length: Math.max(total, p.left) }, (_, k) => <SeatMinion key={k} id={me} size={16} dim={k >= p.left} />)}</span>
-          <small>{p.left} {p.left === 1 ? 'minion' : 'minions'} left</small>
-        </div>
+        {/* your leader with the minions still to place floating around it (the count is seen, not read) */}
+        <div className="lt-workers"><LeaderRing state={state} id={me} size={32} minion={16} /></div>
         <div className="lt-cult" role="group" aria-label="Your cult">
           <span className="crowd">
             {groups.map(g => {
