@@ -8,9 +8,6 @@
 //   members call.
 //
 // Prototype notes (engine changes this module would like, see design/spheres/trading.md):
-// - core.js pays a member's colored part from p.res[def.quadrant], which assumes quadrant id === resource.
-//   Here id 'trading' ≠ resource 'white', so install() relabels the member defs' quadrant to 'white'.
-//   Real fix (one line each in paymentPlan and memberPayOk): use quadrant(def.quadrant).resource.
 // - Actions can't leave anything due later (a loan repaid at game end) because only members have
 //   round-end and game-end hooks. That's why the loan lives on a member (Lender), not on a space.
 import { registerQuadrant, defById } from './index.js';
@@ -27,6 +24,10 @@ const lastTurn = (ctx, p) => ctx.state.round === 3 && p.left === 0;
 
 export const SELL_HIGH = { most: 2, each: 3 };
 export const PAWN = { base: 2, each: 2 };
+export const BUY_LOW = { per: 2 }; // up to this many resources per round number, 1 for 1
+export const LIQUIDATE = { most: 5, each: 2 };
+// Boom pays this many followers per resource (experiments try 0.5: 2 resources per follower)
+export const BOOM = { per: 1 };
 // experiment knob: greedy bots' appetite for selling followers
 export const BOTS = { sell: true };
 
@@ -81,11 +82,11 @@ const trading = {
       resolve(ctx, p) { ctx.gain(p, W, 2 + ahead(ctx, p), { fromAction: true }); },
     },
     {
-      key: 'buylow', ring: 1, name: 'Buy Low', text: 'Trade up to 1 resource per round number for 2 followers each.',
-      estimate: (ctx, p) => Math.min(ctx.state.round, totalRes(p)) * (2 * fv(ctx) - 1) + 0.4,
+      key: 'buylow', ring: 1, name: 'Buy Low', text: 'Trade up to 2 resources per round number for followers, 1 for 1.',
+      estimate: (ctx, p) => Math.min(BUY_LOW.per * ctx.state.round, totalRes(p)) * (fv(ctx) - 0.9) + 0.4,
       resolve(ctx, p) {
         if (!totalRes(p)) { ctx.log(`${p.name} had nothing to trade.`); return; }
-        buyLowStep(ctx, p, { left: ctx.state.round, done: 0 });
+        buyLowStep(ctx, p, { left: BUY_LOW.per * ctx.state.round, done: 0 });
       },
     },
     {
@@ -101,7 +102,7 @@ const trading = {
       estimate: (ctx, p) => Math.min(SELL_HIGH.most, sellable(p)) * (SELL_HIGH.each - fv(ctx)) * (lastTurn(ctx, p) ? 0 : 1),
       resolve(ctx, p) {
         if (!sellable(p)) { ctx.log(`${p.name} had no followers to sell.`); return; }
-        sellChoice(ctx, p, 'Sell High: sell how many followers for 3 white each?', SELL_HIGH.most, SELL_HIGH.each, 'sold');
+        sellChoice(ctx, p, `Sell High: sell how many followers for ${SELL_HIGH.each} white each?`, SELL_HIGH.most, SELL_HIGH.each, 'sold');
       },
     },
     {
@@ -119,8 +120,8 @@ const trading = {
       resolve(ctx, p) {
         if (!totalRes(p)) { ctx.log(`${p.name} had nothing to turn into followers.`); return; }
         const all = totalRes(p), rest = all - p.res[W], last = p.left === 0;
-        const opts = [{ id: 'boom:all', label: `Everything: ${all} followers`, kind: 'boom', value: 'all', hint: last ? 2 : 0.5 }];
-        if (p.res[W] && rest) opts.push({ id: 'boom:keep', label: `Keep your white: ${rest} followers`, kind: 'boom', value: 'keep', hint: 1 });
+        const opts = [{ id: 'boom:all', label: `Everything: ${Math.floor(all * BOOM.per)} followers`, kind: 'boom', value: 'all', hint: last ? 2 : 0.5 }];
+        if (p.res[W] && rest) opts.push({ id: 'boom:keep', label: `Keep your white: ${Math.floor(rest * BOOM.per)} followers`, kind: 'boom', value: 'keep', hint: 1 });
         opts.push({ id: 'boom:none', label: 'Nothing', kind: 'boom', value: 'none', hint: 0 });
         ctx.choose(p, 'Boom: trade which resources for followers, 1 for 1?', opts, 'trading.boom');
       },
@@ -132,8 +133,9 @@ const trading = {
       if (value === 'none') return;
       let n = 0;
       for (const r of ctx.state.resources) if (value === 'all' || r !== W) { n += p.res[r]; p.res[r] = 0; }
-      actionFollowers(ctx, p, n);
-      ctx.log(`${p.name}'s Boom: ${n} resources became ${n} followers.`);
+      const f = Math.floor(n * BOOM.per);
+      actionFollowers(ctx, p, f);
+      ctx.log(`${p.name}'s Boom: ${n} resources became ${f} followers.`);
     },
     sell(ctx, p, k, data) { sell(ctx, p, k, data.each, { fromAction: true, why: data.why }); },
     buyLow(ctx, p, value, data) {
@@ -165,19 +167,22 @@ const trading = {
       },
       botActivate: (ctx, owner) => sellable(owner) > 0 && ctx.state.round < 3,
     }),
-    m('comeback', 'Comeback Kid', 1, 1, 'At round start, +1 white per player with more followers than you.', {
-      onRoundStart(ctx, owner) { ctx.gain(owner, W, ahead(ctx, owner)); },
+    m('safetynet', 'Safety Net', 1, 1, 'At round start, if you have no white, +3 white.', {
+      onRoundStart(ctx, owner) { if (!owner.res[W]) ctx.gain(owner, W, 3); },
     }),
     m('tipster', 'Tipster', 2, 2, 'Whenever a rival buys followers, +1 white.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer !== owner) ctx.gain(owner, W, 1); },
     }),
-    m('lender', 'Lender', 2, 1, 'When recruited: +5 white. Game end: lose 2 followers.', {
-      onRecruited(ctx, owner) { ctx.gain(owner, W, 5); },
+    m('lender', 'Lender', 2, 1, 'When it joins you: +5 white. Game end: lose 2 followers.', {
+      onRecruited(ctx, owner, card) { payLoan(ctx, owner, card); },
+      // a Doppelganger copying Lender is a full copy (Cory): it gets the +5 too. Copies don't run
+      // onRecruited, so the loan pays out at the end of the turn the copy was made.
+      onTurnEnd(ctx, owner, card) { if (!card.loanPaid) payLoan(ctx, owner, card); },
       // can't take you below the followers you've won or bought (never yourself or a member)
       onGameEnd: (ctx, owner) => -Math.min(2, owner.bonus),
     }),
-    m('magnate', 'Magnate', 3, 2, 'Game end: +1 follower per 2 white.', {
-      onGameEnd: (ctx, owner) => Math.floor(owner.res[W] / 2),
+    m('magnate', 'Magnate', 3, 2, 'Game end: +1 follower per 3 white.', {
+      onGameEnd: (ctx, owner) => Math.floor(owner.res[W] / 3),
     }),
     m('shareholder', 'Shareholder', 2, 1, 'Worth 3 followers.', { f: 3 }),
     m('heiress', 'Heiress', 3, 2, 'Once per game: +1 white per member you have.', {
@@ -189,17 +194,27 @@ const trading = {
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 || (ctx.state.round === 2 && ctx.memberCount(owner) >= 6),
     }),
-    m('bargain', 'Bargain Hunter', 2, 1, 'Whenever you buy followers, +1 more.', {
-      onBuyFollowers(ctx, owner, card, buyer) { if (buyer === owner) owner.bonus += 1; },
+    m('bulkbuyer', 'Bulk Buyer', 2, 1, 'Whenever you buy 3 or 6 followers, +1 more.', {
+      onBuyFollowers(ctx, owner, card, buyer) {
+        // the engine logs the buy just before this hook runs: read its size from there
+        const got = Number((ctx.state.log.at(-1) || '').match(/bought (\d+) follower/)?.[1] || 0);
+        if (buyer === owner && got >= 3) { owner.bonus += 1; ctx.log(`${owner.name}'s Bulk Buyer: +1 follower.`); }
+      },
     }),
     m('broker', 'Broker', 2, 1, 'Whenever a White action gives you followers, +1 more.', { brokerBonus: 1 }),
     m('exporter', 'Exporter', 3, 2, 'Whenever you recruit a non-white member, +1 white.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
-        if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== W) ctx.gain(owner, W, 1);
+        if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);
       },
     }),
-    m('changer', 'Money Changer', 3, 2, 'Whenever an action gains you 3+ of another color at once, +1 white.', {
-      afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== W && g.n >= 3) owner.res[W] += 1; },
+    m('liquidator', 'Liquidator', 2, 1, `Once per game: sell up to ${LIQUIDATE.most} followers for ${LIQUIDATE.each} white each.`, {
+      activate: 'game',
+      onActivate(ctx, owner, card) {
+        if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name} has no followers to sell.`); return; }
+        // sells as many as it can (up to the cap) the moment you use it, so the white is there for this buy
+        sell(ctx, owner, LIQUIDATE.most, LIQUIDATE.each, { why: 'liquidated' });
+      },
+      botActivate: (ctx, owner) => ctx.state.round === 2 && sellable(owner) >= 3,
     }),
     m('reinvestor', 'Reinvestor', 1, 1, 'Whenever you sell followers, your next member costs 1 less per follower sold.', {
       onSell(ctx, owner, card, k) { owner.discount += k; ctx.log(`${owner.name}'s next member costs ${owner.discount} less.`); },
@@ -226,17 +241,22 @@ function buyLowStep(ctx, p, data) {
   if (data.left <= 0 || !held.length) return;
   const v = fv(ctx);
   const opts = held.map(r => ({
-    id: `color:${r}`, label: `1 ${r} → 2 followers`, kind: 'color', value: r,
-    // bots pay from the biggest pile, white last (it scores here); late in round III they spend everything
-    hint: (2 * v - 1) + 0.01 * (p.res[r] - (r === W ? 3 : 0) - (r === 'gold' ? 1 : 0)),
+    id: `color:${r}`, label: `1 ${r} → 1 follower`, kind: 'color', value: r,
+    // bots pay from the biggest pile, white last (it scores here); they keep a little to recruit with until late
+    hint: (v - 1) + 0.01 * (p.res[r] - (r === W ? 3 : 0) - (r === 'gold' ? 1 : 0)),
   }));
-  opts.push({ id: 'done', label: data.done ? 'Done' : 'Trade nothing', kind: 'done', value: 'done', hint: 0.9 });
-  ctx.choose(p, `Buy Low: pay which resource for 2 followers? (${data.left} left)`, opts, 'trading.buyLow', data);
+  opts.push({ id: 'done', label: data.done ? 'Done' : 'Trade nothing', kind: 'done', value: 'done', hint: totalRes(p) <= 3 && !lastTurn(ctx, p) ? 0.5 : 0.1 });
+  ctx.choose(p, `Buy Low: pay which resource for 1 follower? (${data.left} left)`, opts, 'trading.buyLow', data);
+}
+function payLoan(ctx, owner, card) {
+  card.loanPaid = true;
+  ctx.gain(owner, W, 5);
+  ctx.log(`${owner.name}'s Lender: +5 white.`);
 }
 function buyLow(ctx, p, color) {
   p.res[color] -= 1;
-  actionFollowers(ctx, p, 2);
-  ctx.log(`${p.name} traded 1 ${color} for 2 followers.`);
+  actionFollowers(ctx, p, 1);
+  ctx.log(`${p.name} traded 1 ${color} for 1 follower.`);
 }
 /** Followers from a White action, plus 1 per Broker (a Doppelganger's copy counts too). */
 function actionFollowers(ctx, p, n) {
@@ -264,8 +284,6 @@ let installed = false;
 export function install() {
   if (installed) return trading;
   registerQuadrant(trading);
-  // engine workaround: member colored parts are paid from p.res[def.quadrant]
-  for (const d of trading.members) d.quadrant = W;
   installed = true;
   return trading;
 }

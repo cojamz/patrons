@@ -752,7 +752,7 @@ header.bar .ticker .cue{flex:none;color:var(--ink);opacity:.8}
 .contest .who{color:var(--ink)}
 .contest small{color:var(--muted)}
 .contest .mine{color:var(--muted)}
-.app.game .stage{width:min(100cqw, 100cqh - 66px)}
+@media (min-width:861px) and (min-height:500px){ .app.game .stage{width:min(100cqw, 100cqh - 66px)} }
 .hub{pointer-events:none}
 .ring.pays path:last-child{pointer-events:none}
 /* the shop outside your buy: one compact row (ability on hover), so the board's actions fit */
