@@ -30,4 +30,4 @@ Never present agent output to Cory unvetted.
 - `check:v4 --fast` while fixing; the full gate (with browser e2e) before every panel.
 - Reuse agents that already know the code (SendMessage) for fixes. Testers are never reused.
 - One fresh tester between milestones; the full panel of 3 for the verdict.
-- Keep one preview server running for testers (port 5190) and rebuild into .v4-build between rounds.
+- Testers get a FROZEN snapshot. Before each panel: build, copy to `.v4-panel/<n>/`, and serve that folder on port 5190 (`npx vite preview --outDir .v4-panel/<n>`). Never point testers at .v4-build: check:v4 rebuilds it mid-panel, and panel 2's saboteur ended up grading half-finished UI work.
