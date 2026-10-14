@@ -32,14 +32,16 @@ export const BOOM = { per: 1 };
 export const BOTS = { sell: true };
 
 /** Sell k followers for `each` white apiece. Fires onSell on the seller's members (a Doppelganger's copy too). */
-export function sell(ctx, p, k, each, { fromAction = false, why = 'sold' } = {}) {
+export function sell(ctx, p, k, each, { fromAction = false, why = 'sold', by = null } = {}) {
   k = Math.min(k, sellable(p));
   if (!(k > 0)) return 0;
   p.bonus -= k;
   ctx.gain(p, W, k * each, { fromAction });
-  ctx.log(`${p.name} ${why} ${k} follower${k > 1 ? 's' : ''} for ${k * each} white.`);
+  // a member's sale names the member ("P1's Pawnbroker: sold 1 follower for 3 white.")
+  ctx.log(`${p.name}${by ? `'s ${by}:` : ''} ${why} ${k} follower${k > 1 ? 's' : ''} for ${k * each} white.`);
+  // members reacting to the sale (Dealer, Reinvestor) are named in the log like any member hook
   for (const c of ctx.membersOf(p)) {
-    for (const d of [c.def, c.copy ? defById(c.copy) : null]) if (d?.onSell) d.onSell(ctx, p, c, k);
+    for (const d of [c.def, c.copy ? defById(c.copy) : null]) if (d?.onSell) ctx.asMember(p, d.name, () => d.onSell(ctx, p, c, k));
   }
   return k;
 }
@@ -163,7 +165,7 @@ const trading = {
       onActivate(ctx, owner, card) {
         // nothing to sell: the use doesn't count
         if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name} has no followers to sell.`); return; }
-        sell(ctx, owner, 1, 3, { why: 'sold (Pawnbroker)' });
+        sell(ctx, owner, 1, 3, { by: 'Pawnbroker' });
       },
       botActivate: (ctx, owner) => sellable(owner) > 0 && ctx.state.round < 3,
     }),
@@ -210,12 +212,12 @@ const trading = {
       onActivate(ctx, owner, card) {
         if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name} has no followers to sell.`); return; }
         // sells as many as it can (up to the cap) the moment you use it, so the white is there for this buy
-        sell(ctx, owner, LIQUIDATE.most, LIQUIDATE.each, { why: 'liquidated' });
+        sell(ctx, owner, LIQUIDATE.most, LIQUIDATE.each, { why: 'liquidated', by: 'Liquidator' });
       },
       botActivate: (ctx, owner) => ctx.state.round === 2 && sellable(owner) >= 3,
     }),
     m('reinvestor', 'Reinvestor', 2, 2, 'Whenever you sell followers, your next member costs 2 less per follower sold.', {
-      onSell(ctx, owner, card, k) { owner.discount += 2 * k; ctx.log(`${owner.name}'s next member costs ${owner.discount} less.`); },
+      onSell(ctx, owner, card, k) { owner.discount += 2 * k; ctx.log(`${owner.name}'s Reinvestor: next member costs ${owner.discount} less.`); },
     }),
     m('raider', 'Raider', 2, 0, 'Once per game: buy up to 3 followers from the leader for 1 white each. They get the white.', {
       activate: 'game',

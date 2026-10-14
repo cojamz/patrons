@@ -105,7 +105,7 @@ async function audit(step) {
     out.side = { sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, sx: scrollX };
     if (out.side.sw > out.side.cw) {
       const cls = e => (e.tagName.toLowerCase() + '.' + String(e.className && (e.className.baseVal ?? e.className)).split(' ')[0]);
-      const wide = [...document.querySelectorAll('body *')].filter(e => e.scrollWidth > innerWidth + 1 || e.getBoundingClientRect().right > innerWidth + 1);
+      const lim = document.documentElement.clientWidth + 1; const wide = [...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > lim);
       const pseudo = [...document.querySelectorAll('body *')].filter(e => ['::before', '::after'].some(ps => { const st = getComputedStyle(e, ps); return st.content !== 'none' && st.position !== 'static'; })).length;
       out.side.who = wide.slice(-4).map(cls).join(' < ') + ` [sw ${out.side.sw} cw ${out.side.cw} iw ${innerWidth} vv ${visualViewport && visualViewport.width}x${visualViewport && visualViewport.scale} body ${document.body.scrollWidth}]`;
     }

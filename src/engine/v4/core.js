@@ -550,7 +550,7 @@ function finish(state) {
   eachMember(state, (owner, card, def) => {
     if (!def.onGameEnd) return;
     const got = def.onGameEnd(ctx, owner, card) || 0;
-    if (got) { owner.bonus += got; owner.final.total += got; owner.final.parts.push(`${def.name} +${got}`); }
+    if (got) { owner.bonus += got; owner.final.total += got; owner.final.parts.push(`${def.name} ${got > 0 ? '+' : '−'}${Math.abs(got)}`); }
   });
   const ranked = [...state.players].sort((a, b) => followers(state, b) - followers(state, a) || memberCount(state, b) - memberCount(state, a));
   state.ranking = ranked.map(p => p.id);

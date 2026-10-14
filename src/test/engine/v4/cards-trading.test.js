@@ -139,7 +139,7 @@ describe('White members', () => {
     expect(R(s).white).toBe(4 - 2 + 5);
     expect(named(s, 'Lender').length).toBe(1);
     const f = table(Q, { members: [['trading.lender'], ['trading.lender'.replace('lender', 'magnate')]], bonus: [1], shop: ROW, queue: [{ t: 'finish' }] });
-    expect(f.players[0].final.parts).toContain('Lender -1');
+    expect(f.players[0].final.parts).toContain('Lender −1');
   });
   it('× Heist: a stolen Lender doesn\'t pay its +5 again; its debt goes with it', () => {
     let s = table(Q, { round: 3, left: 5, bonus: [2], members: [[], ['trading.lender']], shop: ROW });
@@ -152,10 +152,10 @@ describe('White members', () => {
     let s = table(Q, { members: [['trading.lender', 'red.twins']], shop: ['red.doppel', ...ROW], res: [{ red: 4, gold: 2 }] });
     s.cards[uidIn(s, 'trading.lender', 0)].loanPaid = true;
     s = payDefault(move(take(s, 'Haggle'), cardOpt(s, 'red.doppel', 'shop')));
-    s = move(s, `card:${uidIn(s, 'trading.lender', 0)}`);
-    const w = R(s).white;
-    s = pass(s);
-    expect(R(s).white).toBe(w + 5);
+    expect(R(s).white).toBe(0); // Haggle's 2 went on the Doppelganger
+    s = pass(move(s, `card:${uidIn(s, 'trading.lender', 0)}`)); // the copy, then the turn ends
+    expect(R(s).white).toBe(5);
+    expect(named(s, 'Lender').length).toBe(1);
   });
   it('Magnate: game end +1 follower per 3 white', () => {
     const s = table(Q, { res: [{ white: 8 }], members: [['trading.magnate']], shop: ROW, queue: [{ t: 'finish' }] });

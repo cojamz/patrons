@@ -25,3 +25,8 @@ Value = member-value sim, 4 normal bots, handed over at round II, 120–160 game
 - Release (base rule, flag `release`, on): once per round, in your buy step and before buying, release one of your members to the bottom of the pile for its printed cost in any colors (not a gain, so gain doublers skip it). Normal bots release ~1.3 times per player per game.
 - Big followers (pure buyer vs 3 bots, 200–300 games): vs normal bots 7.3% (Release off) → 8.0% (on); vs easy bots 29.1% either way (easy bots never release). Release doesn't move it; the new normal bot does.
 - Purple's old Straggler is renamed Late Riser.
+
+## Re-measured after costs ×2 (2026-10-14, member-value sim, 160 games each, 4 normal bots, handed over at round II, Release on; baseline win 25%; value ±1.5)
+- Extra Hand 10: value 5.7, 52% win. The formula says 8; kept at 10 (top win rate, Cory's "SUPER strong").
+- Straggler 8: 5.4, 44%. Squatter 8: 5.2, 47% (formula 6; kept at 8 on Cory's "very strong"). Insider 6: 4.3, 45%. Freelancer 4: 3.6, 48%. Big Spender 4: 3.5, 42% (was 1.8 before the doubling). Front-runner 2: 0.6, 24% (a floor: bots can't value turn order).
+- Big followers, pure buyer vs 3 normal bots, n=400: Release on 11.8% (CI 8.6–15.0, 3.0 releases a game), off 17.0% (13.3–20.7). Bots were mid-change during this run; the tuning agent re-measures on the final bots.
