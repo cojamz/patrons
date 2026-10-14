@@ -505,12 +505,21 @@ function startRound(state, r) {
   state.order = [];
   for (let k = 0; k < n; k++) state.order.push(...(k % 2 ? [...base].reverse() : base));
   // extra workers go after the snake, in this round's order
-  const extraTurns = [];
-  const most = Math.max(0, ...base.map(more));
-  for (let k = 0; k < most; k++) for (const id of base) if (more(id) > k) extraTurns.push(id);
-  state.order.push(...extraTurns);
+  // (a member with extraWorkerRing limits its worker to spaces of that ring or lower)
+  const extras = Object.fromEntries(base.map(id => {
+    const rings = [];
+    for (const uid of state.players[id].members) for (const d of effectiveDefs(state.cards[uid]))
+      for (let k = 0; k < ((d.extraWorkers || [])[r - 1] || 0); k++) rings.push(d.extraWorkerRing || 0);
+    return [id, rings];
+  }));
+  const snake = state.order.map(id => ({ t: 'turn', p: id }));
+  const most = Math.max(0, ...base.map(id => extras[id].length));
+  for (let k = 0; k < most; k++) for (const id of base) if (extras[id].length > k) {
+    state.order.push(id);
+    snake.push({ t: 'turn', p: id, ...(extras[id][k] ? { ring: extras[id][k] } : {}) });
+  }
   log(state, `Round ${roman(r)} begins. ${state.players[base[0]].name} picks first.${lead.length ? ` (${lead.map(id => state.players[id].name).join(', ')} always pick${lead.length === 1 ? 's' : ''} first.)` : ''}`);
-  state.queue.push(...state.order.map(id => ({ t: 'turn', p: id })), { t: 'allPlaced' }, { t: 'endRound' }, { t: 'afterRound' });
+  state.queue.push(...snake, { t: 'allPlaced' }, { t: 'endRound' }, { t: 'afterRound' });
 }
 
 function endRound(state) {
