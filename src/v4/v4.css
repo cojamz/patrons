@@ -1405,3 +1405,16 @@ svg.sigil{display:inline-block;vertical-align:-1px;flex:none}
 .rules-body dl.glossary dt{font-weight:700}
 .rules-body dl.glossary dd{margin:0;color:var(--muted)}
 @media (max-width:520px){.rules-body dl.glossary{grid-template-columns:1fr}.rules-body dl.glossary dd{margin-bottom:6px}}
+
+/* Resources never by color alone (meta round 2, #9 "gold or yellow?"): a pip in text is the resource's shape in its
+   color (Rich.jsx Pip → Glyphs.jsx ResourceGlyph); a coin (setup, pay) carries the shape inside (Glyphs.jsx CoinMark). */
+.pip.glyph{background:none;box-shadow:none;border-radius:0;width:1em;height:1em;vertical-align:-.16em;margin:0 .08em}
+.pip.glyph > svg{display:block;width:100%;height:100%}
+.coin-big:has(.coin-mark){flex-direction:column;gap:1px;line-height:1}
+.coin-big .coin-mark{display:block;flex:none}
+.slot-coin{display:grid;place-items:center;padding:0}
+.slot-coin .coin-mark{display:block}
+.tray-coin i{display:grid;place-items:center}
+.tray-coin i .coin-mark{display:block}
+/* the setup picker sits on cream paper: its labels are ink, not cream */
+.app.game.lt .prompt.choice .token{color:var(--paper-ink)}

@@ -14,7 +14,9 @@
 //  (h) the member deck heads the shop strip: after a refill its count is the engine's pile length (the saved game's
 //      state.pile), a refill deals the new card off it, and hovering it shows its card (count, colors adding up);
 //  (i) while you place, the space under the pointer ticks "✓ after <space>" on the shop cards it would make
-//      affordable (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands.
+//      affordable (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands;
+//  (k) a resource is never color alone: every pip is its shape, every coin (setup, pay) carries its mark, and the
+//      setup picker's labels read on its paper (contrast ≥ 4.5).
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -58,13 +60,35 @@ async function audit(page, step) {
     const crowd = [...document.querySelectorAll('[data-cult] .cs-member')].filter(vis);
     const pale = crowd.filter(m => { const a = m.querySelector('.aura'); return !a || !/gradient/.test(getComputedStyle(a).backgroundImage) || !m.dataset.sphere; })
       .map(m => m.dataset.member);
-    return { n, miss: [...new Set(miss)].slice(0, 12), star: document.body.innerText.includes('★'), sigils, pale };
+    // (k) a resource is never color alone: every pip shows its shape, every coin (setup, pay) its mark inside
+    const bare = [...document.querySelectorAll('.pip:not(.wild)')].filter(e => vis(e) && !e.closest('[aria-hidden="true"]') && !e.querySelector('svg.res-glyph')).length;
+    const blank = [...document.querySelectorAll('.coin-big, .slot-coin, .tray-coin i')].filter(e => vis(e) && !e.querySelector('[data-coin-mark]')).length;
+    // and the setup picker's labels read on their paper (contrast ≥ 4.5)
+    const rgb = c => (String(c).match(/[\d.]+/g) || []).map(Number);
+    const L = c => { const f = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+    const bgOf = e => {
+      for (let x = e; x; x = x.parentElement) {
+        const st = getComputedStyle(x), c = rgb(st.backgroundColor);
+        if (c.length >= 3 && (c.length < 4 || c[3] > 0.5)) return c;
+        const g = st.backgroundImage.match(/rgba?\([^)]*\)/);
+        if (g) return rgb(g[0]);
+      }
+      return [29, 22, 17];
+    };
+    const faint = [...document.querySelectorAll('.prompt.choice .token > span')].filter(vis).map(e => {
+      const a = L(rgb(getComputedStyle(e).color)), b = L(bgOf(e));
+      return { t: e.textContent.trim(), c: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) };
+    }).filter(x => x.c < 4.5);
+    return { n, miss: [...new Set(miss)].slice(0, 12), star: document.body.innerText.includes('★'), sigils, pale, bare, blank, faint };
   }, GAME);
   if (r.n < 5) fail(`only ${r.n} game elements found (the selectors no longer match the screen?)`, step);
   for (const m of r.miss) fail(`(a) no hover info: ${m}`, step);
   if (r.star) fail('(c) a "★" is on screen', step);
   if (r.sigils) fail(`(f) ${r.sigils} seat sigil(s) on screen`, step);
   for (const m of r.pale) fail(`(g) ${m} has no ground in its sphere's color`, step);
+  if (r.bare) fail(`(k) ${r.bare} resource pip(s) drawn as a plain color disc (no shape)`, step);
+  if (r.blank) fail(`(k) ${r.blank} coin(s) without the resource's mark inside`, step);
+  for (const f of r.faint) fail(`(k) setup label "${f.t}" is hard to read (contrast ${f.c.toFixed(2)})`, step);
   return r.n;
 }
 

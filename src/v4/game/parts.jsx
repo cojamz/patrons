@@ -5,6 +5,7 @@ import { logSections, playerColor, costParts, plainLine } from '../format.js';
 import { Rich, CostPips } from './Rich.jsx';
 import { MemberCard, NamedText, BadgeMark, CardText, cardColor } from './Info.jsx';
 import { Follower } from '../art/Follower.jsx';
+import { CoinMark } from './Glyphs.jsx';
 
 /** Escape closes; focus moves in on open and back to where it was on close. */
 export function useDialog(onClose) {
@@ -142,7 +143,7 @@ function SetupTokens({ state, pend, onPick, busy }) {
         const res = q ? q.resource : o.value;
         return (
           <button key={o.id} type="button" className="token" data-option={o.id} disabled={busy} style={{ '--c': `var(--${o.value})` }} onClick={() => onPick(o.id)} aria-label={`Take 1 ${res}`}>
-            <i className="coin-big"><span className="num">+1</span></i>
+            <i className="coin-big"><CoinMark r={res} size={18} /><span className="num">+1</span></i>
             <span>{res}</span>
           </button>
         );

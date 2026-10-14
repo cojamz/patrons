@@ -11,6 +11,23 @@ export function railInfo(state) {
   const r = turnRail(state);
   return { current: r.current, next: r.next[0] ?? null, done: r.done, upcoming: r.next };
 }
+/**
+ * Each seat's place in what's left of this round's turn order (the engine's queue, snake and extra turns included):
+ * { pid: { place: 0 (up now) | 1 (next) | 2… , label: 'now' | 'next' | '3rd' … | 'done' } }, plus the order itself.
+ * Empty outside the placing rounds.
+ */
+export function turnPlaces(state) {
+  const out = {}, order = [];
+  if (!(state.round >= 1) || state.over) return { places: out, order };
+  const r = turnRail(state);
+  for (const p of [r.current, ...r.next]) if (p != null && !order.includes(p)) order.push(p);
+  const ord = n => `${n}${n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'}`;
+  for (const p of state.players) {
+    const k = order.indexOf(p.id);
+    out[p.id] = k < 0 ? { place: null, label: 'done' } : { place: k, label: k === 0 ? (r.current === p.id ? 'now' : 'first') : k === 1 ? 'next' : ord(k + 1) };
+  }
+  return { places: out, order };
+}
 /** A player's last n placements this round, newest first: ["Rush (Gold)", …]. */
 export function lastMoves(state, pid, n = 3) {
   const name = state.players[pid].name;
