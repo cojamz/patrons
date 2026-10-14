@@ -88,8 +88,8 @@ export default {
   },
 
   members: [
-    m('twins', 'Twins', 1, 1, 'Counts as 2 members.', { f: 2, n: 2 }),
-    m('bigfamily', 'Big Family', 2, 2, 'Counts as 3 members.', { f: 3, n: 3 }),
+    m('twins', 'Twins', 1, 1, 'Worth 2 followers.', { f: 2 }),
+    m('bigfamily', 'Big Family', 2, 2, 'Worth 3 followers.', { f: 3 }),
     m('volunteer', 'Volunteer', 0, 0, 'Free. No effect.'),
     m('intern', 'Intern', 1, 0, 'No effect.'),
     m('mentor', 'Mentor & Protégé', 3, 2, 'When recruited: also take the cheapest face-up member free.', {
