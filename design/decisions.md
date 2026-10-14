@@ -220,3 +220,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
   - Extra Hand (+1 worker in round III): yes, but SUPER strong; price very carefully.
   - Fence/Release (once/round release a member for its cost in any colors): yes; try it as a base rule for everyone.
   - Front-runner (always pick first in a round): yes.
+- ✅ (Cory) New member, Straggler: after the last worker of the round is placed, move one of your workers to an unused space and take that action (useful in rounds II–III only). Purple's old Straggler gets renamed.

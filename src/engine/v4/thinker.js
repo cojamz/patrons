@@ -1,39 +1,62 @@
-// A bot that thinks ahead: for each candidate move it plays the game out several times with greedy bots
-// and picks the move with the best average final margin. Slow; for balance checks, not for the UI.
+// Hard bot: normal's judgment plus lookahead. For its few best placements and buys it plays the game forward
+// with normal bots to the end of the round (to the end of the game in round III) and keeps the option with the
+// best average result. Work is counted in simulated moves, not wall time, so a seed always gives the same move;
+// the default budget keeps a move well under ~150ms in a browser.
 import { applyMove, followers } from './core.js';
-import { chooseBotMove } from './bots.js';
+import { chooseNormalMove, scoreOptions } from './bots.js';
 import { seededRandom } from './rng.js';
 
-function margin(state, id) {
-  const mine = followers(state, state.players[id]);
-  const best = Math.max(...state.players.filter(p => p.id !== id).map(p => followers(state, p)));
-  return mine - best;
+const margin = (state, id) =>
+  followers(state, state.players[id]) - Math.max(...state.players.filter(p => p.id !== id).map(p => followers(state, p)));
+
+/**
+ * opts.budget: simulated moves to spend on this decision (default 160).
+ * opts.candidates: how many of normal's top options to look at (default 3).
+ * opts.full: play every rollout to game end (slow; for offline balance checks).
+ */
+export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
+  const pend = state.pending;
+  if (!pend) return null;
+  if (!['place', 'buy'].includes(pend.kind)) return chooseNormalMove(state, rand);
+  const me = pend.player;
+  const first = chooseNormalMove(state, rand);
+  const chosen = pend.options.find(o => o.id === first.option);
+  // an activation, or a buy with one real choice: nothing to think about
+  if (chosen?.kind === 'use') return first;
+  const ranked = scoreOptions(state, rand);
+  if (ranked.length <= 1) return first;
+  const { candidates = 3, budget = 160, full = false } = opts;
+  // only weigh options normal rates close to its best
+  const pool = ranked.slice(0, candidates).filter((r, i) => i === 0 || r.v >= ranked[0].v - 4);
+  if (pool.length === 1) return { player: me, option: pool[0].o.id };
+  const round = state.round;
+  const totals = pool.map(() => 0), counts = pool.map(() => 0);
+  let spent = 0;
+  // round-robin rollouts until the budget is gone; every candidate gets at least one
+  for (let k = 0; spent < budget || counts.some(c => c === 0); k++) {
+    const i = k % pool.length;
+    if (counts[i] > 0 && spent >= budget) break;
+    const r = seededRandom(Math.floor(rand() * 2 ** 31));
+    let s = applyMove(state, { player: me, option: pool[i].o.id });
+    let steps = 1;
+    while (!s.over && (full || s.round === round) && steps < 800) {
+      s = applyMove(s, chooseNormalMove(s, r, { noise: 0.6 }));
+      steps++;
+    }
+    spent += steps;
+    // at a round boundary, value what's left the way normal does (followers + resources' worth)
+    totals[i] += s.over ? margin(s, me) : valueAtBoundary(s, me);
+    counts[i] += 1;
+    if (k > 200) break;
+  }
+  let best = 0;
+  for (let i = 1; i < pool.length; i++) if (totals[i] / counts[i] > totals[best] / counts[best]) best = i;
+  return { player: me, option: pool[best].o.id };
 }
 
-/** Think only about placements and buys; follow-up choices go to the greedy bot. */
-export function chooseThinkerMove(state, rand = Math.random, { rollouts = 6, maxOptions = 10 } = {}) {
-  const pend = state.pending;
-  if (!pend || !['place', 'buy'].includes(pend.kind)) return chooseBotMove(state, rand);
-  const me = pend.player;
-  let options = pend.options.filter(o => o.kind !== 'toggle' && o.kind !== 'back');
-  if (options.length === 1) return { player: me, option: options[0].id };
-  // trim to a manageable set: keep the greedy pick plus a spread of others
-  if (options.length > maxOptions) {
-    const greedy = chooseBotMove(state, rand).option;
-    options = [options.find(o => o.id === greedy), ...options.filter(o => o.id !== greedy).sort(() => rand() - 0.5).slice(0, maxOptions - 1)];
-  }
-  let best = null, bestScore = -Infinity;
-  for (const o of options) {
-    let total = 0;
-    for (let k = 0; k < rollouts; k++) {
-      const r = seededRandom(Math.floor(rand() * 2 ** 31));
-      let s = applyMove(state, { player: me, option: o.id });
-      let guard = 0;
-      while (!s.over && guard++ < 600) s = applyMove(s, chooseBotMove(s, r));
-      total += margin(s, me);
-    }
-    const avg = total / rollouts;
-    if (avg > bestScore) { bestScore = avg; best = o; }
-  }
-  return { player: me, option: best.id };
+// A position mid-game, scored the way normal scores a pass: followers, contests, and what resources can still become.
+function valueAtBoundary(s, me) {
+  if (!s.pending) return margin(s, me);
+  const probe = { ...s, pending: { player: me, kind: 'buy', options: [{ id: 'pass', kind: 'pass' }] } };
+  return scoreOptions(probe, () => 0)[0].v;
 }
