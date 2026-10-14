@@ -49,13 +49,15 @@ window.OPT = {
   .sp.can .tray{box-shadow:inset 0 0 0 1.6px color-mix(in srgb,var(--c) 85%,#4a3824),inset 0 3px 5px rgba(70,45,15,.28),0 0 12px 2px rgba(255,206,140,.55)}
   /* not open yet: an empty printed outline, its pieces only sketched, with the round it opens */
   .sp.locked .tray{background:rgba(255,250,238,.22);box-shadow:inset 0 0 0 1.2px color-mix(in srgb,var(--c) 45%,transparent)}
-  .sp.locked .bounty{opacity:.5;filter:grayscale(1) sepia(.35)}
+  .sp.locked .bounty{opacity:.42;filter:grayscale(1) sepia(.35)}
   .sp.locked .bounty .chips svg{filter:none}
-  .sp.locked .seal{position:absolute;top:-7px;left:50%;transform:translateX(-50%);font-family:'Alegreya',serif;font-weight:700;font-size:10px;line-height:1;color:#f4ebd7;background:color-mix(in srgb,var(--c) 60%,#2a1f17);border-radius:7px;padding:2px 5px 1px;letter-spacing:.04em;opacity:.85}
+  .sp.locked .seal{position:absolute;top:-7px;left:50%;transform:translateX(-50%);font-family:'Alegreya',serif;font-weight:700;font-size:9.5px;line-height:1;color:#f4ebd7;background:color-mix(in srgb,var(--c) 55%,#2a1f17);border-radius:7px;padding:2px 5px 1px;letter-spacing:.04em;opacity:.7}
   /* a minion stands in the middle of the tray; the pieces it took slide to its feet, smaller */
-  .sp.taken .bounty{transform:translateY(32%) scale(.6)}
+  .sp.taken .bounty{flex-direction:row;gap:4px;transform:translateY(46%) scale(.66)}
+  .sp.taken .bounty .ln.sm{margin-top:0}
   .sp.taken .tray{background:linear-gradient(180deg,#f3ead6,#e6d8b9)}
-  .sp .minion{left:50%;top:50%;transform:translate(-50%,-80%);filter:drop-shadow(0 2px 1.5px rgba(0,0,0,.5))}
+  .sp .minion{left:50%;top:50%;transform:translate(-50%,-78%);filter:drop-shadow(0 2px 1.5px rgba(0,0,0,.5))}
+  .sp .minion::after{content:"";position:absolute;left:50%;bottom:-3px;width:26px;height:6px;transform:translateX(-50%);border-radius:50%;background:rgba(42,31,23,.35);z-index:-1;filter:blur(1px)}
   .sp .fresh-ring{position:absolute;inset:-5px;border-radius:17px;border:2px dashed #e0a23a;pointer-events:none}
   `,
 };

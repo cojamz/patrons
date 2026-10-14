@@ -3,13 +3,13 @@
 // afford are dim and a "✓ after X" tick marks the ones the space under your pointer would unlock (engine dry run).
 // While buying, the figure gives way to the card's text; hover shows what you'd pay. On touch a tap opens the card
 // as a sheet with Recruit (reading a card never recruits it); with a mouse a click on an affordable card recruits.
-import { useRef } from 'react';
+import { memo, useRef } from 'react';
 import { cardDef, paymentPlan, TIERS, tierLeft, quadrant } from '../../engine/v4/index.js';
 import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { BadgeMark, cardColor, onTable, peekPreview } from './Info.jsx';
+import { BadgeMark, cardColor, onTable, usePreview } from './Info.jsx';
 import { ResourceGlyph, FollowerGlyph } from './Glyphs.jsx';
 import { timingOf, payBreakdown, unlockedBy, surely } from './cards.js';
 void timingOf;
@@ -31,7 +31,7 @@ export function CostShapes({ parts, size = 14 }) {
   );
 }
 
-export default function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, onDenied, phase, hover = null }) {
+function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, onDenied, phase, hover = null }) {
   const pend = state.pending;
   const viewer = me != null ? state.players[me] : null;
   const mine = !!(pend && mySeats.includes(pend.player));
@@ -42,13 +42,14 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
   useDeal(rowRef, deckRef, state); // a refill comes off the deck
   const space = useHoverSpace(hover); // only the space under the pointer re-renders the shop (for its ticks)
   // the space under the pointer, and the cards its sure gains would unlock (no tick a choice might not give)
+  // the preview comes from the cache (warmed in idle time, or the worker's answer): subscribed, so the ticks appear
+  // the moment it lands, never computed on a hover
+  const sp = placing && space && viewer ? space.split('-').map(Number) : null;
+  const pv = usePreview(state, sp ? viewer.id : null, sp ? sp[0] : 0, sp ? sp[1] : 0);
   let after = null, unlocked = [];
-  if (placing && space && viewer) {
-    const [q, i] = space.split('-').map(Number);
-    const a = quadrant(state.quadrants[q]).actions[i];
-    let pv = null;
-    pv = peekPreview(state, viewer.id, q, i) || null; // cached (warmed in idle time); a hover never computes
-    if (pv) { after = a.name; unlocked = unlockedBy(state, viewer, surely(pv)); }
+  if (sp && pv) {
+    after = quadrant(state.quadrants[sp[0]]).actions[sp[1]].name;
+    unlocked = unlockedBy(state, viewer, surely(pv));
   }
   const pileOpts = buying ? pend.options.filter(o => o.kind === 'card' && o.fromPile).map(o => o.uid) : [];
   const uids = [...state.shop, ...pileOpts];
@@ -113,6 +114,10 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
     </section>
   );
 }
+
+/** Memoized on its props: GameScreen passes the state and stable handlers, so the shop re-renders when the table
+ *  changes, the space under the pointer changes (useHoverSpace) or that space's preview lands (usePreview). */
+export default memo(ShopCards);
 
 /** Followers for any resources: one quiet line of rates, each a button while you can buy it. */
 export function FollowerRates({ state, optionFor = () => null, onPick, onDenied }) {

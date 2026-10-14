@@ -133,44 +133,14 @@ describe('White actions', () => {
     expect(s.log.join('\n')).toContain('Sell High: P1 has no loose followers to sell');
   });
 
-  it('Barter (ring II): recruit a face-up member, paying 1 follower per 2 of its cost, rounded up', () => {
-    // pinned costs: Midas 5 → 3 followers, Jackpot 6 → 3, Tycoon 4 → 2, Mentor 5 → 3, Proselytizer 6 → 3, Big Family 4 → 2
-    let s = take(scene({ round: 2, bonus: [2], res: [{ red: 3 }], shop: SHOP }), 'Barter');
-    const card = def => `card:${uidOf(s, def, 'shop')}`;
-    expect(ids(s)).toEqual([card('gold.tycoon'), card('red.bigfamily'), 'none']); // 3 followers is too many
-    s = move(s, card('red.bigfamily'));
-    expect(B(s)).toBe(0);
-    expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(['red.bigfamily']);
-    expect(R(s).red).toBe(3); // no resources paid
-    expect(s.log.join('\n')).toContain('P1 bartered 2 followers for Big Family.');
-    expect(s.pending.kind).toBe('buy'); // your normal buy still follows
-    s = move(take(scene({ round: 2, bonus: [3], shop: SHOP }), 'Barter'), 'none');
-    expect(B(s)).toBe(3);
-    expect(s.players[0].members).toEqual([]);
-  });
-
-  it('Barter: if the picked member left the row before the choice resolved (a copy recruited it first), it asks again', () => {
-    // fire-audit crash "Card N is not in the shop": an Eternity copying Barter then Hire queues Barter's choice,
-    // and Hire takes the same cheapest member before that choice resolves.
-    let s = take(scene({ round: 2, bonus: [4], shop: SHOP }), 'Barter');
-    const gone = uidOf(s, 'gold.tycoon', 'shop');
-    s.shop = s.shop.filter(u => u !== gone);
-    s.players[1].members.push(gone);
-    s = move(s, `card:${gone}`);
-    expect(B(s)).toBe(4); // nothing paid
-    expect(s.log.join('\n')).toContain('Barter: Tycoon is no longer face up.');
-    expect(s.pending.kind).toBe('choose');
-    expect(ids(s)).not.toContain(`card:${gone}`);
-    s = move(s, `card:${uidOf(s, 'red.bigfamily', 'shop')}`);
-    expect(B(s)).toBe(2);
-    expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(['red.bigfamily']);
-  });
-
-  it('Barter: members and yourself never pay; too few followers, nothing happens and the log says why', () => {
-    const s = take(scene({ round: 2, bonus: [1], members: [['red.twins']], shop: SHOP }), 'Barter');
-    expect(s.pending?.kind).not.toBe('choose');
-    expect(s.log.join('\n')).toContain('Barter: P1 has too few loose followers to pay for any face-up member');
-    expect([B(s), F(s)]).toEqual([1, 4]);
+  it('Dividend (ring II): +1 white per loose follower; never yourself or a member, and nothing leaves', () => {
+    expect(() => take(scene({ round: 1, bonus: [4] }), 'Dividend')).toThrow();
+    let s = take(scene({ round: 2, bonus: [5], members: [['red.twins']] }), 'Dividend');
+    expect([R(s).white, B(s)]).toEqual([5, 5]);
+    expect(s.pending.kind).toBe('buy'); // no question: the buy follows
+    s = take(scene({ round: 3, bonus: [0], members: [['red.twins']] }), 'Dividend');
+    expect(R(s)).toEqual(Z);
+    expect(s.log.join('\n')).toContain("P1's Dividend: no loose followers yet");
   });
 
   it('Boom (ring III): trade all your resources for followers 1 for 1, or all but your white', () => {

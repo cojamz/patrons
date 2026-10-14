@@ -78,10 +78,10 @@ describe('White actions', () => {
   });
 
   // design critic follow-up (2026-10-14): "loose followers" is defined once (rulebook, glossary); the cards use it
-  it('"loose followers", defined once: Barter, Sell High, Pawnbroker and Liquidator say it', () => {
+  it('"loose followers", defined once: Dividend, Sell High, Pawnbroker and Liquidator say it', () => {
     expect(term('loose followers').def).toMatch(/^Followers you bought or won, not the ones your members are worth/);
     const W = quadrant('trading'), text = k => [...W.actions, ...W.members].find(c => c.key === k).text;
-    expect(text('barter')).toBe('Recruit a face-up member for half its cost (round up), paid in loose followers.');
+    expect(text('dividend')).toBe('+1 white per loose follower you have.');
     expect(text('sellhigh')).toBe('Sell up to 2 loose followers for 3 white each.');
     expect(text('pawnbroker')).toBe('Once per round: sell 1 loose follower for 3 white.');
     expect(text('liquidator')).toBe('Once per game: sell up to 5 loose followers for 2 white each.');
@@ -95,23 +95,27 @@ describe('White actions', () => {
     expect(s.log).toContain('Sell High: P1 has no loose followers to sell (only followers you bought or won can be sold).');
   });
 
-  it('Barter: recruit a face-up member, paying 1 follower per 2 of its doubled cost (round up); then your buy', () => {
-    // Tycoon 12 → 6, Big Family 8 → 4, Twins 4 → 2, Intern 2 → 1, Tax Collector 4 → 2, Volunteer 0 → 0
-    let s = take(table(Q, { round: 2, bonus: [4], res: [{ red: 2 }], shop: ROW }), 'Barter');
-    const offered = s.pending.options.map(o => o.label);
-    expect(offered).toEqual(['Big Family for 4 followers', 'Twins for 2 followers', 'Intern for 1 follower', 'Tax Collector for 2 followers', 'Volunteer for 0 followers', 'Recruit nobody']);
-    s = move(s, cardOpt(s, 'red.bigfamily', 'shop'));
-    expect([s.players[0].bonus, R(s).red]).toEqual([0, 2]);
-    expect(owns(s, 0, 'red.bigfamily')).toBe(true);
-    expect(s.log).toContain('P1 bartered 4 followers for Big Family.');
+  // Cory cut Barter (2026-10-14: "I don't like that"); Dividend fills its ring-II slot (Claude, go-with-your-gut)
+  it('Barter is gone; Dividend: +1 white per loose follower you have (named); members and yourself don\'t count, nothing is sold', () => {
+    expect(quadrant('trading').actions.map(a => a.key)).not.toContain('barter');
+    expect(quadrant('trading').actions.find(a => a.key === 'dividend').ring).toBe(2);
+    let s = take(table(Q, { round: 2, bonus: [4], members: [['red.twins', 'trading.dealer']], shop: ROW }), 'Dividend');
+    expect([R(s).white, s.players[0].bonus]).toEqual([4, 4]);
+    expect(named(s, 'Dividend')).toEqual(["P1's Dividend: +4 white (4 loose followers)."]);
+    expect(named(s, 'Dealer')).toEqual([]); // not a sale
     expect(s.pending.kind).toBe('buy');
+    s = take(table(Q, { round: 2, members: [['red.twins']], shop: ROW }), 'Dividend');
+    expect(R(s).white).toBe(0);
+    expect(s.log).toContain("P1's Dividend: no loose followers yet (followers you bought or won).");
   });
-  it('× Exporter: a bartered member is a recruit (named); Dealer doesn\'t fire (no white changes hands)', () => {
-    let s = take(table(Q, { round: 2, bonus: [2], members: [['trading.exporter', 'trading.dealer']], shop: ROW }), 'Barter');
-    s = move(s, cardOpt(s, 'red.twins', 'shop'));
-    expect(R(s).white).toBe(1);
-    expect(named(s, 'Exporter').length).toBe(1);
-    expect(named(s, 'Dealer')).toEqual([]);
+  it('× Echo: a Dividend is copied as the white it gave (the chip), whatever the copier holds', () => {
+    let s = table(QE, { round: 2, bonus: [3, 0], shop: ROW, queue: turns(0, 1) });
+    s = pass(take(s, 'Dividend'));
+    s = take(s, 'Echo');
+    const copy = s.pending.options.find(o => o.label.startsWith('Dividend'));
+    expect(copy.label).toBe('Dividend (P1): +3 white');
+    s = move(s, copy.id);
+    expect(R(s, 1).white).toBe(3);
   });
 
   it('Boom: trade all resources for followers 1 for 1, or keep your white', () => {
