@@ -274,14 +274,28 @@ export function previewWords(pv, state) {
   return { you: you.join(', ') || 'nothing right now', others: others.length ? `rivals ${others.join(', ')}` : null, choose: pv.asks.length > 0, theyChoose: pv.theirAsks.length > 0, partial: pv.partial };
 }
 /** "You'd get: +3 ●, +1 member · you choose" for player pid on space (q, i), computed just after it shows. */
-export function YoudGet({ state, pid, q, i }) {
-  const [pv, setPv] = useState(undefined);
+/** A preview already computed for this state, or undefined (never computes: a hover must not wait). */
+export function peekPreview(state, pid, q, i) {
+  const m = previews.get(state);
+  return m ? m.get(`${pid}|${q}-${i}`) : undefined;
+}
+/** The preview for a space: the cached one at once, else computed just after the card is on screen. */
+export function usePreview(state, pid, q, i) {
+  const hit = pid == null ? null : peekPreview(state, pid, q, i);
+  const [pv, setPv] = useState(hit);
   useEffect(() => {
+    if (pid == null) { setPv(null); return undefined; }
+    const now = peekPreview(state, pid, q, i);
+    if (now !== undefined) { setPv(now); return undefined; }
     let alive = true;
     setPv(undefined);
     const t = setTimeout(() => { let r = null; try { r = cachedPreview(state, pid, q, i); } catch { r = null; } if (alive) setPv(r); }, 0);
     return () => { alive = false; clearTimeout(t); };
   }, [state, pid, q, i]);
+  return hit !== undefined ? hit : pv;
+}
+export function YoudGet({ state, pid, q, i }) {
+  const pv = usePreview(state, pid, q, i);
   if (pid == null) return null;
   if (pv === undefined) return <span className="youd-get pending" data-youd-get="">You’d get: …</span>;
   if (!pv) return null;

@@ -81,13 +81,13 @@ export function promptFor(state, mine) {
         const m = l.match(/^(.+?) took .+ \(\w+\)\.$/);
         if (m) { again = m[1] === name; break; }
       }
-      if (mine && again) return { who: p, text: 'Your turn again (snake order) — place a worker' };
+      if (mine && again) return { who: p, text: 'Your turn again (snake order) — place a minion' };
     }
     // falls through
     case 'place-plain':
       return mine
-        ? { who: p, text: `Place a worker on a glowing space` }
-        : { who: p, text: `${name} is placing a worker` };
+        ? { who: p, text: `Place a minion on a glowing space` }
+        : { who: p, text: `${name} is placing a minion` };
     case 'buy':
       return mine
         ? { who: p, text: 'Recruit a member, buy followers, or pass' }

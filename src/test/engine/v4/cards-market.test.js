@@ -224,34 +224,50 @@ describe('Blue members', () => {
     expect(s.players[0].discount).toBe(2);
     expect(named(s, 'Underbidder')).toEqual(["P1's Underbidder: next member costs 2 less."]);
   });
+  // "now" (dead-window audit, 2026-10-14): recruited in round III, Planner and Underbidder used to give nothing
+  it('Planner recruited in round III: 6 less right away, named', () => {
+    let s = table(Q, { round: 3, res: [{ blue: 4 }], shop: ['market.planner', ...ROW.slice(1)] });
+    s = move(take(s, 'Tip-off'), card(s, 'market.planner'));
+    expect(s.players[0].discount).toBe(6);
+    expect(named(s, 'Planner')).toEqual(["P1's Planner: next member costs 6 less."]);
+  });
+  it('Underbidder recruited: 2 less per rival with more members, right away, named', () => {
+    let s = table(Q, { n: 3, round: 3, res: [{ blue: 2 }], members: [[], ['red.twins', 'red.intern'], ['red.volunteer', 'red.bigfamily']], shop: ['market.underbidder', ...ROW.slice(1)] });
+    s = move(take(s, 'Tip-off'), card(s, 'market.underbidder'));
+    expect(s.players[0].discount).toBe(4);
+    expect(named(s, 'Underbidder')).toEqual(["P1's Underbidder: next member costs 4 less."]);
+  });
   it('Minimalist: at round start, +1 blue per rival with more members', () => {
     const s = roundStart([['market.minimalist'], ['red.twins', 'red.intern'], ['red.volunteer', 'red.bigfamily']], { n: 3 });
     expect(R(s).blue).toBe(2);
     expect(named(s, 'Minimalist').length).toBe(1);
   });
 
-  it('Social Climber: once per game at a round start, send a member to the pile; next member costs that much less', () => {
-    let s = roundStart([['market.climber', 'red.bigfamily']]);
+  // replaced (dead-window audit, 2026-10-14): the old once-per-game round-start trade-in never fired in bot play
+  it('Social Climber: whenever you release another member, +2 of a color you choose, named; bots take their least-held', () => {
+    let s = table(Q, { round: 2, members: [['market.climber', 'red.bigfamily']], res: [{ gold: 1 }], shop: ROW, queue: [{ t: 'buy', p: 0 }] });
+    s = move(s, `release:${uidIn(s, 'red.bigfamily', 0)}`);
+    expect(R(s).red).toBe(4); // Big Family's colored part
     expect(s.pending.prompt).toMatch(/Social Climber/);
-    s = move(s, `card:${uidIn(s, 'red.bigfamily', 0)}`);
-    expect(s.players[0].discount).toBe(8);
-    expect(s.pile[s.pile.length - 1]).toBe(uidIn(s, 'red.bigfamily', 'pile'));
-    expect(named(s, 'Social Climber').length).toBe(1);
-    // spent: the next round start doesn't ask again
-    s.queue = [{ t: 'round', r: 3 }]; s.pending = null;
-    const t = table(Q, { members: [['market.climber', 'red.twins']], shop: ROW });
-    t.cards[uidIn(t, 'market.climber', 0)].used = true;
-    t.queue = [{ t: 'round', r: 3 }];
-    let u = applyMove({ ...t, pending: { player: 0, options: [{ id: 'x' }] }, queue: [{ t: 'choose', p: 0, options: [{ id: 'x', value: null }], h: 'market.pickRow', data: { why: 'test' } }, ...t.queue] }, { player: 0, option: 'x' });
-    expect(u.pending.prompt).not.toMatch(/Social Climber/);
+    const top = s.pending.options.reduce((a, b) => (b.hint > a.hint ? b : a));
+    expect(R(s)[top.value]).toBe(0);
+    s = move(s, 'color:gold');
+    expect(R(s).gold).toBe(3);
+    expect(named(s, 'Social Climber')).toEqual(["P1's Social Climber: +2 gold."]);
+    expect(s.pending.kind).toBe('buy');
+    // releasing the Climber itself gives only its colored part
+    let t = table(Q, { round: 2, members: [['market.climber']], shop: ROW, queue: [{ t: 'buy', p: 0 }] });
+    t = move(t, `release:${uidIn(t, 'market.climber', 0)}`);
+    expect(R(t).blue).toBe(2);
+    expect(named(t, 'Social Climber')).toHaveLength(0);
   });
-  it('× Heist: a stolen Social Climber that was used stays used for its new owner', () => {
-    let s = table(Q, { round: 3, left: 5, members: [['red.twins'], ['market.climber', 'red.bigfamily']], shop: ROW });
-    s.cards[uidIn(s, 'market.climber', 1)].used = true;
-    s = take(s, 'Heist');
-    s = move(s, `card:${uidIn(s, 'market.climber', 1)}`);
-    expect(owns(s, 0, 'market.climber')).toBe(true);
-    expect(s.cards[uidIn(s, 'market.climber', 0)].used).toBe(true);
+  it('× Doppelganger copying Social Climber: one release pays +2 twice', () => {
+    let s = table(Q, { round: 2, members: [['market.climber', 'red.doppel', 'red.twins']], shop: ROW, queue: [{ t: 'buy', p: 0 }] });
+    s.cards[uidIn(s, 'red.doppel', 0)].copy = 'market.climber';
+    s = move(s, `release:${uidIn(s, 'red.twins', 0)}`);
+    s = move(move(s, 'color:magenta'), 'color:magenta');
+    expect(R(s).magenta).toBe(4);
+    expect(named(s, 'Social Climber')).toHaveLength(2);
   });
 
   it('Auctioneer: whenever a rival recruits an unbadged member, +1 blue', () => {

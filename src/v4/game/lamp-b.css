@@ -144,3 +144,7 @@
 .lt-note .fol-mark .dots i.d10{background:var(--paper-ink)}
 .lt-card .follower-mark,.lt-note .follower-mark{color:var(--paper-ink)}
 .lt-cult .follower-mark,.lt-rail-seats .follower-mark{color:var(--cream-2)}
+
+/* the one hover layer: always mounted, pointer-transparent, swaps content in place */
+.lt-hover.popover{position:fixed;z-index:35;pointer-events:none;opacity:0;transition:opacity .06s linear;padding:12px 14px;background:linear-gradient(180deg,var(--paper,#f4ebd7),var(--paper-2,#eadfc4));color:var(--paper-ink,#2a1f17);border:0;border-radius:9px;box-shadow:0 0 0 1px rgba(80,60,30,.25),0 14px 30px -10px rgba(0,0,0,.75);animation:none}
+.lt-hover.popover.on{opacity:1}

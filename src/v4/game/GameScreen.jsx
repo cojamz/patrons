@@ -6,7 +6,12 @@ import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, 
 import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
 import Players, { Resources, Workers } from './Players.jsx';
-import Shop, { BuyTray } from './Shop.jsx';
+import ShopCards from './ShopCards.jsx';
+import YourTable from './YourTable.jsx';
+import { useHoverCards, HoverCardLayer } from './HoverCards.jsx';
+import Chronicle from './Chronicle.jsx';
+import { LeaderRing, ResourceGlyph, FollowerMark } from './Glyphs.jsx';
+import { cardDef } from '../../engine/v4/index.js';
 import Results from './Results.jsx';
 import RoundEnd from './RoundEnd.jsx';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
@@ -175,19 +180,62 @@ function Menu({ onRules, onLog, onLeave }) {
   );
 }
 
-function LogDrawer({ state, onClose }) {
-  const box = useDialog(onClose);
+/** Which player sits in each corner chair: you bottom left (0), then clockwise from you (1 top left, 2 top right,
+ *  3 bottom right). Empty chairs (2–3 players) stay empty. */
+function seatCorners(state, me) {
+  const n = state.players.length, base = me != null ? me : 0;
+  return [0, 1, 2, 3].map(k => (k < n ? (base + k) % n : null));
+}
+
+/** A rival's chair until UI-B's CultSeat lands: leader with unplaced minions, name, followers, resources. */
+function InterimSeat({ state, pid, hover }) {
+  const p = state.players[pid];
+  const f = followers(state, p);
   return (
-    <div className="overlay top" role="dialog" aria-modal="true" aria-label="Game log" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="dialog logbox" ref={box}>
-        <div className="row-btns"><h2 style={{ marginRight: 'auto' }}>Log</h2><button type="button" className="btn ghost" data-autofocus onClick={onClose}>Close</button></div>
-        <Log state={state} />
-      </div>
+    <div className="lt-cult" data-pid={pid}
+      onPointerEnter={e => { if (hover && e.pointerType === 'mouse') hover.onSeatHover(pid, e.currentTarget); }}
+      onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onSeatHover(pid, null); }}>
+      <LeaderRing state={state} id={pid} size={32} minion={14} compact />
+      <div className="who"><b>{p.name}</b><span className="f"><b className="num">{f}</b> {f === 1 ? 'follower' : 'followers'}</span></div>
+      <div className="res">{state.resources.map(r => <span key={r} className="rs" title={`${p.res[r] || 0} ${r}`}><ResourceGlyph r={r} size={14} /><b className="num">{p.res[r] || 0}</b></span>)}</div>
+      <div className="mem"><FollowerMark n={f} size={5} label={false} /><small>{p.members.length} member{p.members.length === 1 ? '' : 's'}</small></div>
     </div>
   );
 }
 
-const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing a worker', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
+/** The buy step's other answers live with the question: Pass, and (once a round) Release a member for its cost. */
+function PromptActions({ state, optionFor, onPick }) {
+  const pend = state.pending;
+  const releases = pend.options.filter(o => o.kind === 'release');
+  const [open, setOpen] = useState(false);
+  const turn = `${state.round}:${pend.player}`;
+  useEffect(() => { setOpen(false); }, [turn]);
+  const pass = optionFor('pass');
+  return (
+    <span className="pr-actions">
+      {releases.length > 0 && (
+        <span className={`release-row${open ? ' open' : ''}`}>
+          <button type="button" className="btn ghost rel-toggle" aria-expanded={open} onClick={() => setOpen(o => !o)}
+            title="Once per round: discard one of your members (it goes to the bottom of the pile) for its cost, in any colors you choose.">Release…</button>
+          {open && (
+            <span className="rel-list" role="group" aria-label="Release which member (once a round: its cost back in any colors)">
+              {releases.map(o => {
+                const d = state.cards[o.uid] ? cardDef(state, o.uid) : null;
+                return (
+                  <button key={o.id} type="button" className="btn ghost rel" data-option={o.id} onClick={() => onPick(o.id)} style={d ? { '--c': `var(--${d.quadrant})` } : undefined}
+                    title={o.label}>{d ? <>{d.name} <span className="num">+{d.s + d.w}</span></> : o.label}</button>
+                );
+              })}
+            </span>
+          )}
+        </span>
+      )}
+      <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title="End your turn without buying" data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>Pass</button>
+    </span>
+  );
+}
+
+const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing a minion', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
 
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults }) {
   const [live0, moment, dismissMoment] = useTable(session, pace ?? RIVAL_DWELL_MS);
@@ -208,6 +256,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     hoverTimer.current = setTimeout(() => setCardDetail(c => (c && !c.hover ? c : { uid, el, hover: true })), 160);
   }, []);
   useEffect(() => () => clearTimeout(hoverTimer.current), []);
+  const hover = useHoverCards(); // UI-B's one hover layer: spaces, plaques, seats, shop cards
   const [spacePeek, setSpacePeek] = useState(null); // a space selected from the panel list (one sheet, shared with the wheel)
   // re-render on every session change, so Undo disappears the moment control passes even while the table catches up
   const [, setTick] = useState(0);
@@ -502,7 +551,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       // A taken or unopened space explains itself on its own card (wheel) or row (panel); the prompt stays put.
       const owner = state.slots[info.key];
       text = owner === undefined && pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers or pass' : null;
-    } else if (pend.kind === 'place') text = info.type === 'card' || info.type === 'tier' ? 'Place a worker first, then recruit' : 'Place a worker first';
+    } else if (pend.kind === 'place') text = info.type === 'card' || info.type === 'tier' ? 'Place a minion first, then recruit' : 'Place a minion first';
     else if (info.type === 'card') text = `You can’t afford ${info.name} yet`;
     else if (info.type === 'tier') text = tierLeft(state, info.tier) <= 0 ? `No +${info.tier.get} buys left` : `+${info.tier.get} needs ${tierCostText(info.tier)}`;
     else text = 'Not right now';
@@ -568,8 +617,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               </span>
             </span>
           ) : <span className="say" data-prompt tabIndex={-1} />}
+          {buyingNow && <PromptActions state={state} optionFor={live} onPick={onPick} />}
           <span className="undo-slot">
-            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your first pick' : 'Take back your worker until you buy or pass'}>↶ Undo<span className="undo-word"> {undoWord}</span></button>}
+            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your first pick' : 'Take back your minion until you buy or pass'}>↶ Undo<span className="undo-word"> {undoWord}</span></button>}
           </span>
         </div>
         <div className="bar-row steps-row">
@@ -600,24 +650,21 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </div>
       ) : (
         <>
-          <section className="lt-rail" data-region="rail" aria-label="Seats">{players}</section>
           <section className="lt-wheel" data-region="wheel">
-            <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+            <Wheel state={state} hover={hover} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
           </section>
+          {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
+              others clockwise. UI-B fills each chair (CultSeat); the chairs never move. */}
+          {seatCorners(state, me).map((pid, k) => (
+            <section key={k} className={`lt-seat lt-seat-${k}${pid === me ? ' mine' : ''}${pid != null && pend && pend.player === pid && !state.over ? ' now' : ''}`} data-region={`seat-${k}`} data-pid={pid ?? undefined} aria-label={pid == null ? undefined : pid === me ? 'Your cult' : `${state.players[pid].name}’s cult`}>
+              {pid == null ? null : pid === me
+                ? <YourTable state={state} me={me} mySeats={mySeats} optionFor={live} onPick={onPick} />
+                : <InterimSeat state={state} pid={pid} hover={hover} />}
+            </section>
+          ))}
           <section className="lt-shop" data-region="shop" aria-label="Shop">
-            <Shop variant="compact" state={state} me={me} mine={yours} optionFor={live} onPick={onPick} onDenied={onDenied} onHoverCard={onHoverCard} />
-            <BuyTray state={state} me={me} mine={yours} optionFor={live} onPick={onPick} onDenied={onDenied} />
-          </section>
-          <section className="lt-table" data-region="table" aria-label="Your table">
-            {meP && (
-              <span className="you-strip" data-pid={meP.id} style={{ '--pc': playerColor(meP.id) }} aria-label={`You, ${meP.name}`}>
-                <i className="dot" /><b>{meP.name}</b>
-                <span className="yf"><Tick value={followers(state, meP)} color={playerColor(meP.id)} className="num" float={false} /> {followers(state, meP) === 1 ? 'follower' : 'followers'}</span>
-                <Resources state={state} p={meP} float={false} />
-                <Workers p={meP} />
-              </span>
-            )}
+            <ShopCards state={state} me={me} mySeats={yours ? mySeats : []} optionFor={live} onPick={onPick} onDenied={onDenied} phase={phase} hover={hover} />
           </section>
         </>
       )}
@@ -631,7 +678,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       {mine && !needHandoff && pend.kind === 'pay' && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
       {moment && <RoundEnd info={moment} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
-      {logOpen && <LogDrawer state={state} onClose={() => setLogOpen(false)} />}
+      {logOpen && <Chronicle state={state} onClose={() => setLogOpen(false)} />}
+      <HoverCardLayer hover={hover} state={state} me={me} optionFor={live} onPick={onPick} />
       {leaving && (
         <Confirm
           title="Leave this game?" text={leaveText || 'You can resume it from the home screen.'}

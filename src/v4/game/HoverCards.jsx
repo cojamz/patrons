@@ -3,13 +3,13 @@
 // YOU GET from the dry run (previewSpace), standings from contestTable, pay from paymentPlan.
 // UI-A's wheel calls onSpaceHover(key, el|null, { pinned }), plaques onPlaqueHover(qid, el|null); seats and shop
 // cards are mine. GameScreen mounts <HoverCardLayer> once.
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { quadrant, roman, contestTable, cardDef, followers as followersOf } from '../../engine/v4/index.js';
 import { playerColor, standings, costParts } from '../format.js';
 import { Popover } from './parts.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
-import { CardText, ContestStandings, MemberCard, CardName, YoudGet, cachedPreview } from './Info.jsx';
+import { CardText, ContestStandings, MemberCard, CardName, YoudGet, cachedPreview, usePreview } from './Info.jsx';
 import { CostPips } from './Rich.jsx';
 import { ResourceGlyph, FollowerMark, SeatFigure } from './Glyphs.jsx';
 import { payBreakdown, contestEffect, unlockedBy, surely } from './cards.js';
@@ -19,41 +19,120 @@ import './lamp-b.css';
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
 
-/** The hover/pin state: one card at a time. */
+/**
+ * The hover/pin state: one card at a time. Opens ~40ms after the pointer arrives (no flash when the pointer only
+ * crosses something); moving to a neighbour swaps the card in place at once; leaving closes it 150ms later
+ * (unless the pointer arrives somewhere else first). A tap pins it (a sheet on phones). Cory: instant and seamless.
+ */
+export const OPEN_MS = 40, CLOSE_MS = 150;
 export function useHoverCards() {
   const [card, setCard] = useState(null); // { kind, key|qid|pid|uid, el, pinned }
-  const timer = useRef(null);
-  useEffect(() => () => clearTimeout(timer.current), []);
-  const show = useCallback((next, delay) => {
-    clearTimeout(timer.current);
-    if (!next.el) { setCard(c => (c && !c.pinned && c.kind === next.kind ? null : c)); return; }
+  const cur = useRef(null);
+  cur.current = card;
+  const openT = useRef(null), closeT = useRef(null);
+  useEffect(() => () => { clearTimeout(openT.current); clearTimeout(closeT.current); }, []);
+  const show = useCallback(next => {
+    clearTimeout(closeT.current);
+    if (!next.el) {
+      clearTimeout(openT.current);
+      closeT.current = setTimeout(() => setCard(c => (c && !c.pinned ? null : c)), CLOSE_MS);
+      return;
+    }
+    clearTimeout(openT.current);
     if (next.pinned) { setCard(next); return; }
-    timer.current = setTimeout(() => setCard(c => (c && c.pinned ? c : next)), delay);
+    const c = cur.current;
+    if (c && c.pinned) return; // a pinned card stays until it's closed
+    if (c) { setCard(next); return; } // a card is up: swap its content in place, no delay, no flicker
+    openT.current = setTimeout(() => setCard(x => (x && x.pinned ? x : next)), OPEN_MS);
   }, []);
   return {
     card,
-    close: useCallback(() => { clearTimeout(timer.current); setCard(null); }, []),
-    onSpaceHover: useCallback((key, el, o = {}) => show({ kind: 'space', key, el, pinned: !!o.pinned }, 140), [show]),
-    onPlaqueHover: useCallback((qid, el, o = {}) => show({ kind: 'plaque', qid, el, pinned: !!o.pinned }, 140), [show]),
-    onSeatHover: useCallback((pid, el, o = {}) => show({ kind: 'seat', pid, el, pinned: !!o.pinned }, 160), [show]),
-    onCardHover: useCallback((uid, el, o = {}) => show({ kind: 'card', uid, el, pinned: !!o.pinned }, 160), [show]),
+    close: useCallback(() => { clearTimeout(openT.current); clearTimeout(closeT.current); setCard(null); }, []),
+    onSpaceHover: useCallback((key, el, o = {}) => show({ kind: 'space', key, el, pinned: !!o.pinned }), [show]),
+    onPlaqueHover: useCallback((qid, el, o = {}) => show({ kind: 'plaque', qid, el, pinned: !!o.pinned }), [show]),
+    onSeatHover: useCallback((pid, el, o = {}) => show({ kind: 'seat', pid, el, pinned: !!o.pinned }), [show]),
+    onCardHover: useCallback((uid, el, o = {}) => show({ kind: 'card', uid, el, pinned: !!o.pinned }), [show]),
     /** the space under the pointer (the shop ticks "✓ after X" for it) */
     space: card && card.kind === 'space' ? card.key : null,
   };
 }
 
-/** The one hover card on screen, anchored to what it explains (a sheet when pinned on a phone). */
+/**
+ * Warms the dry runs while nothing else is happening: after each new state, every space the viewer could take
+ * gets its preview computed in idle time, so a hover never waits on one.
+ */
+export function usePreviewWarmup(state, pid) {
+  useEffect(() => {
+    if (pid == null || !state.pending || state.pending.player !== pid || state.pending.kind !== 'place') return undefined;
+    const todo = state.pending.options.filter(o => o.q != null && o.i != null);
+    let k = 0, handle = null, alive = true;
+    const idle = typeof requestIdleCallback === 'function' ? requestIdleCallback : fn => setTimeout(() => fn({ timeRemaining: () => 8 }), 16);
+    const cancel = typeof cancelIdleCallback === 'function' ? cancelIdleCallback : clearTimeout;
+    const step = dl => {
+      while (alive && k < todo.length && dl.timeRemaining() > 3) { const o = todo[k++]; try { cachedPreview(state, pid, o.q, o.i); } catch { /* shown as text only */ } }
+      if (alive && k < todo.length) handle = idle(step);
+    };
+    handle = idle(step);
+    return () => { alive = false; cancel(handle); };
+  }, [state, pid]);
+}
+
+/**
+ * The one hover card on screen. Hovering: a single persistent layer beside what it explains (never over it,
+ * pointer-transparent, so moving through it changes nothing); its side is chosen once per target, so content
+ * filling in never makes it jump. Pinned (a tap): a sheet on phones, a card beside the target elsewhere.
+ */
 export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPick }) {
   const c = hover.card;
+  const box = useRef(null);
+  const [pos, setPos] = useState(null);
   useEffect(() => { if (c && !c.pinned) hover.close(); }, [state.moves]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (!c || !c.el || !c.el.isConnected) return null;
-  let body = null;
-  if (c.kind === 'space') body = <SpaceCard state={state} me={me} spaceKey={c.key} optionFor={optionFor} onPick={id => { hover.close(); onPick(id); }} pinned={c.pinned} />;
-  if (c.kind === 'plaque') body = <StandingsCard state={state} qid={c.qid} meId={me} />;
-  if (c.kind === 'seat') body = <SeatCard state={state} pid={c.pid} meId={me} />;
-  if (c.kind === 'card') body = <ShopCardHover state={state} me={me} uid={c.uid} optionFor={optionFor} onPick={id => { hover.close(); onPick(id); }} pinned={c.pinned} />;
-  if (!body) return null;
-  return <Popover anchor={c.el} onClose={hover.close} float={!c.pinned}><div className={`lt-note${c.pinned ? ' pinned' : ''}`} data-hover-card={c.kind}>{body}</div></Popover>;
+  useLayoutEffect(() => {
+    if (!c || c.pinned || !c.el || !c.el.isConnected || !box.current) { setPos(null); return; }
+    const a = c.el.getBoundingClientRect();
+    const w = Math.min(280, innerWidth - 16);
+    const h = box.current.offsetHeight || 160;
+    const gap = 10;
+    // beside (left or right) when there's room, else below or above; never over the target
+    const right = a.right + gap + w <= innerWidth - 8, left = a.left - gap - w >= 8;
+    let p;
+    if (right || left) {
+      const x = right ? a.right + gap : a.left - gap - w;
+      const top = Math.max(8, Math.min(innerHeight - 8 - h, a.top + a.height / 2 - 60));
+      p = { left: x, top, width: w };
+    } else {
+      const below = a.bottom + gap + h <= innerHeight - 8 || a.top < innerHeight / 2;
+      const x = Math.max(8, Math.min(innerWidth - w - 8, a.left + a.width / 2 - w / 2));
+      p = below ? { left: x, top: a.bottom + gap, width: w } : { left: x, bottom: innerHeight - a.top + gap, width: w };
+    }
+    setPos(p);
+  }, [c && c.el, c && c.pinned]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!c || c.pinned) return undefined;
+    const off = () => hover.close();
+    const key = e => { if (e.key === 'Escape') hover.close(); };
+    addEventListener('scroll', off, true);
+    addEventListener('keydown', key);
+    return () => { removeEventListener('scroll', off, true); removeEventListener('keydown', key); };
+  }, [c, hover]);
+  const body = c && c.el && c.el.isConnected ? cardBody(c, state, me, optionFor, id => { hover.close(); onPick(id); }) : null;
+  if (c && c.pinned && body) {
+    return <Popover anchor={c.el} onClose={hover.close}><div className="lt-note pinned" data-hover-card={c.kind}>{body}</div></Popover>;
+  }
+  // always mounted: content swaps in place; hidden (not unmounted) between cards
+  return (
+    <div ref={box} className={`lt-hover popover${body ? ' on' : ''}`} data-hover-layer="" data-open={body ? '1' : '0'} aria-hidden={!body}
+      style={body && pos ? pos : { left: -9999, top: 0, width: 280 }}>
+      {body && <div className="lt-note" data-hover-card={c.kind} role="tooltip">{body}</div>}
+    </div>
+  );
+}
+function cardBody(c, state, me, optionFor, pick) {
+  if (c.kind === 'space') return <SpaceCard state={state} me={me} spaceKey={c.key} optionFor={optionFor} onPick={pick} pinned={c.pinned} />;
+  if (c.kind === 'plaque') return <StandingsCard state={state} qid={c.qid} meId={me} />;
+  if (c.kind === 'seat') return <SeatCard state={state} pid={c.pid} meId={me} />;
+  if (c.kind === 'card') return state.cards[c.uid] ? <ShopCardHover state={state} me={me} uid={c.uid} optionFor={optionFor} onPick={pick} pinned={c.pinned} /> : null;
+  return null;
 }
 
 // ---------- the cards ----------
@@ -69,12 +148,13 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
   const round = Math.max(1, state.round);
   const open = a.ring <= round && (owner === undefined || opt);
   const viewer = me != null ? me : state.pending && state.pending.player;
-  const pv = open && viewer != null && !state.over ? safePreview(state, viewer, q, i) : null;
+  // the dry run is read from the cache (warmed in idle time); if it isn't there yet it fills in a moment later
+  const pv = usePreview(state, open && viewer != null && !state.over ? viewer : null, q, i) || null;
   const race = pv && pv.sample ? raceAfter(state, pv.sample, qid, viewer) : null;
   const unlocks = pv && viewer != null ? unlockedBy(state, state.players[viewer], surely(pv)) : [];
   return (
     <div className="lt-card-body" data-space-card={spaceKey} style={{ '--q': `var(--q-${sphereOf(qid)}, var(--${qid}))` }}>
-      <div className="t"><Sprite id={spriteId(a.name)} kind="action" sphere={sphereOf(qid)} size={48} /><h4>{a.name}<small>{Q.name} · {RINGS[a.ring - 1]}</small></h4></div>
+      <div className="t"><Sprite id={[a.id, spriteId(a.name)]} kind="action" sphere={sphereOf(qid)} size={48} /><h4>{a.name}<small>{Q.name} · {RINGS[a.ring - 1]}</small></h4></div>
       <p><CardText text={a.text} /></p>
       <div className="lt-yd">
         {open && viewer != null && !state.over ? <Row k="You get"><YoudGet state={state} pid={viewer} q={q} i={i} /></Row> : null}
@@ -87,7 +167,6 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
     </div>
   );
 }
-function safePreview(state, pid, q, i) { try { return cachedPreview(state, pid, q, i); } catch { return null; } }
 /** "You 5 · Ossian 2 · leader +2": the space's own contest after taking it (the dry run's first branch). */
 function raceAfter(state, sample, qid, pid) {
   let c;

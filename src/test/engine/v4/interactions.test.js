@@ -327,22 +327,26 @@ describe('Magenta takes members that carry state', () => {
     expect(defs(s, 1)).toEqual(['thieves.doubleagent']);
     expect(s.cards[uidOf(s, 'gold.jackpot', 0)].used).toBeFalsy(); // usable on P1's next buy
   });
-  it('a member traded in by Social Climber goes back to the pile clean (no Doppelganger copy, used flag, switch)', () => {
-    let s = scene({ quads: Q, round: 1, queue: [{ t: 'round', r: 2 }], members: [['market.climber', 'red.doppel']], copies: { 0: { 'red.doppel': 'gold.midas' } } });
+  // Social Climber now pays on Release (dead-window audit, 2026-10-14); these were its round-start trade-in
+  it('a member released with Social Climber held goes back to the pile clean (no Doppelganger copy, used flag), and Climber pays +2', () => {
+    let s = scene({ quads: Q, round: 2, queue: [{ t: 'buy', p: 0 }], members: [['market.climber', 'red.doppel']], copies: { 0: { 'red.doppel': 'gold.midas' } } });
     const d = uidOf(s, 'red.doppel', 0);
     s.cards[d].used = true;
-    expect(s.pending.prompt).toContain('Social Climber');
-    s = move(s, `card:${d}`);
+    s = move(s, `release:${d}`);
     expect(s.pile).toContain(d);
     expect(s.cards[d]).toEqual({ uid: d, def: 'red.doppel' });
+    expect(s.pending.prompt).toContain('Social Climber');
+    s = move(s, 'color:magenta');
+    expect(R(s, 0).magenta).toBe(2);
   });
-  it('trading in an Investor with Social Climber gives back the gold set aside, not doubled', () => {
-    let s = scene({ quads: Q, round: 1, queue: [{ t: 'round', r: 2 }], members: [['market.climber', 'gold.investor']] });
+  it('releasing an Investor with Social Climber gives back the gold set aside, not doubled, plus Climber’s +2', () => {
+    let s = scene({ quads: Q, round: 2, queue: [{ t: 'buy', p: 0 }], members: [['market.climber', 'gold.investor']] });
     const u = uidOf(s, 'gold.investor', 0);
     s.cards[u].invested = 3;
-    s = move(s, `card:${u}`);
+    s = move(s, `release:${u}`);
+    s = move(s, 'color:gold');
     expect(s.cards[u]).toEqual({ uid: u, def: 'gold.investor' });
-    expect(R(s, 0).gold).toBe(3);
+    expect(R(s, 0).gold).toBe(3 + 2 + 2); // set aside 3, Investor's colored part 2 (pinned), Climber 2
   });
   it('Double Agent swapping for an Investor: the gold set aside stays with its old owner', () => {
     let s = scene({ quads: Q, round: 2, res: [{ magenta: 8, gold: 8 }], members: [[], ['gold.investor']], shop: ['thieves.doubleagent', ...SHOP.slice(1)] });
@@ -464,10 +468,9 @@ describe('Release on members that carry state', () => {
     const u = uidOf(s, 'gold.investor', 0);
     s.cards[u].invested = 4;
     s = move(s, `release:${u}`);
-    while (s.pending?.kind === 'choose') s = move(s, s.pending.options.find(o => o.id === 'all:red')?.id ?? s.pending.options[0].id);
     s = pass(s);
     expect(s.cards[u]).toEqual({ uid: u, def: 'gold.investor' }); // clean in the pile
-    expect(R(s, 0).gold).toBe(4);
+    expect(R(s, 0).gold).toBe(4 + 2); // the 4 set aside, plus Investor's colored part (2 gold, pinned): Release gives back only that (Cory, 2026-10-14)
   });
   it('a released Doppelganger goes back clean and stops copying', () => {
     let s = scene({ quads: Q, round: 2, queue: buyStep(0), members: [['red.doppel', 'gold.midas']], copies: { 0: { 'red.doppel': 'gold.midas' } } });

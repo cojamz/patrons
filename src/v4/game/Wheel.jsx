@@ -5,10 +5,11 @@
 // fresh placement wears a dashed ring. Each quadrant's contest sits on a rim plaque (rule, prize, leader), with the
 // standings on hover/tap. Hover or focus (mouse) or a first tap (touch) shows a space's card; on touch, placing takes
 // a second tap.
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { quadrant, roman, RING_VALUE } from '../../engine/v4/index.js';
-import { playerColor, seatSigil, standings } from '../format.js';
-import { sigilPath, Sigil } from './Info.jsx';
+import { playerColor, standings, seatEmoji } from '../format.js';
+import { Sigil } from './Info.jsx';
+import { Minion } from '../art/Leader.jsx';
 import { sheetMode } from './parts.jsx';
 import { realHover } from '../hover.js';
 import { Rich } from './Rich.jsx';
@@ -141,7 +142,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
   // A pinned peek (touch) closes on any tap elsewhere.
   useEffect(() => {
     if (!peek || !peek.pinned) return undefined;
-    const close = e => { if (!e.target.closest || !e.target.closest('.peek, .slot')) setPeek(null); };
+    const close = e => { if (!e.target.closest || !e.target.closest('.peek, .slot, [data-hover-card], .popover')) setPeek(null); };
     addEventListener('pointerdown', close);
     return () => removeEventListener('pointerdown', close);
   }, [peek]);
@@ -275,27 +276,42 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
   });
 
   // spaces: a socket per space, upright wherever the wheel is turned, with its effect printed on it
-  const sockets = spaces.map(s => {
+  // Sockets are memoized: hovering never re-renders the wheel (the hover card lives in UI-B's layer, told directly on
+  // pointerenter, no timers here). Handlers reach the latest closures through refs.
+  const live = useRef({});
+  live.current = { tap, onPick, hover };
+  const pinnedKey = peek && peek.pinned ? peek.key : null;
+  const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');
+  const flashKey = [...flash].join('|');
+  const legalKey = [...legal.entries()].map(([k, v]) => `${k}=${v}`).join('|');
+  const sockets = useMemo(() => spaces.map(s => {
     const { key, q, a, ring: t, qid } = s;
     const [X, Y] = turned(s.xy[0], s.xy[1]);
     const owner = state.slots[key];
+    const joiners = (state.squats && state.squats[key]) || [];
     const open = t <= round;
     const opt = legal.get(key);
-    const selected = peek && peek.key === key;
+    const selected = pinnedKey === key;
     const fresh = recentMoves.find(m => m.key === key && !m.mine && owner !== undefined);
-    const newest = fresh && recentMoves.filter(m => !m.mine)[recentMoves.filter(m => !m.mine).length - 1] === fresh;
+    const rivals = recentMoves.filter(m => !m.mine);
+    const newest = fresh && rivals[rivals.length - 1] === fresh;
     const cls = ['slot', `r${t}`, opt ? 'can' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', newest ? 'newest' : ''].filter(Boolean).join(' ');
-    const status = owner !== undefined ? `Taken by ${state.players[owner].name}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? 'Open' : `Opens in round ${roman(t)}`;
+    const status = owner !== undefined ? `Taken by ${state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? 'Open' : `Opens in round ${roman(t)}`;
+    const minion = id => (
+      <span key={id} className="worker" data-seat={id}>
+        <Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={16} title={`${state.players[id].name}’s minion`} />
+      </span>
+    );
     return (
       <div
         key={key} className={cls} data-slot={key} data-option={opt || undefined} style={{ ...at(X, Y), '--c': `var(--${qid})` }}
         role="button" tabIndex={opt ? 0 : -1} aria-label={`${a.name}, ${quadrant(qid).name} round ${roman(t)}: ${a.text} ${status}.`}
-        onClick={e => { if (Date.now() - touchTapped.current > 500) tap(s, e.currentTarget); }}
-        onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onPick(opt); } }}
-        onPointerEnter={e => { if (realHover(e)) setPeek(p => (p && p.pinned ? p : { key, pinned: false })); }}
-        onPointerLeave={e => { if (e.pointerType === 'mouse') setPeek(p => (p && !p.pinned && p.key === key ? null : p)); }}
-        onFocus={e => { if (e.currentTarget.matches(':focus-visible')) setPeek({ key, pinned: false }); }}
-        onBlur={() => setPeek(p => (p && !p.pinned && p.key === key ? null : p))}
+        onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, e.currentTarget); }}
+        onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.onPick(opt); } }}
+        onPointerEnter={e => { const h = live.current.hover; if (h && realHover(e)) h.onSpaceHover(key, e.currentTarget); }}
+        onPointerLeave={e => { const h = live.current.hover; if (h && e.pointerType === 'mouse') h.onSpaceHover(key, null); }}
+        onFocus={e => { const h = live.current.hover; if (h && e.currentTarget.matches(':focus-visible')) h.onSpaceHover(key, e.currentTarget); }}
+        onBlur={() => { const h = live.current.hover; if (h) h.onSpaceHover(key, null); }}
       >
         <span className="hit" aria-hidden="true" />
         <span className="base" aria-hidden="true" />
@@ -305,18 +321,12 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
             <span className="yl" data-yield><Rich text={shortEffect(qid, a, round)} /></span>
           </span>
         )}
-        {owner !== undefined && (
-          <span className="worker-fig" data-seat={owner} title={`${state.players[owner].name}’s worker`}>
-            <svg className="worker" viewBox="0 0 20 24" aria-hidden="true">
-              <path d="M10 1.5c3.6 0 5.6 3 5.6 6.4 0 1.6-.5 2.9-1.2 3.9 2.6 1.5 4.3 5 4.3 10.7H1.3c0-5.7 1.7-9.2 4.3-10.7-.7-1-1.2-2.3-1.2-3.9 0-3.4 2-6.4 5.6-6.4z" fill={playerColor(owner)} stroke="rgba(30,20,12,.85)" strokeWidth="1.1" />
-              <path className="sigil" d={sigilPath(seatSigil(owner), 10, 16.5, 3.4)} fill="rgba(30,20,12,.8)" />
-            </svg>
-          </span>
-        )}
+        {/* a placed minion stands on the space's rim, so the space still reads */}
+        {owner !== undefined && <span className="worker-fig" data-seat={owner}>{[owner, ...joiners].map(minion)}</span>}
         {fresh && <span className="fresh-ring" aria-hidden="true" title={`${state.players[fresh.pid].name} took ${fresh.action}`} />}
       </div>
     );
-  });
+  }), [state, rot, legalKey, flashKey, recentKey, pinnedKey, round]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // rim plaques: each quadrant's contest (its rule, the prize, who leads), upright; standings on hover/tap
   const plaques = state.quadrants.map((qid, q) => {

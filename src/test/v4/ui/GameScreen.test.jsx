@@ -80,7 +80,7 @@ describe('v4 game screen', () => {
     expect(clickable(container)).toEqual([]);
     fireEvent.click(container.querySelector('.slot'));
     expect(session.submit).not.toHaveBeenCalled();
-    expect(container.querySelector('[data-prompt]').textContent).toMatch(/is placing a worker/);
+    expect(container.querySelector('[data-prompt]').textContent).toMatch(/is placing a minion/);
   });
 
   it('buy: affordable shop cards, follower buys and Pass match the options; the rest are inert', () => {

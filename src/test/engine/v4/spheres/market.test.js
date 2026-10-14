@@ -217,23 +217,16 @@ describe('Blue members', () => {
     const t = scene({ members: [['market.minimalist', 'red.twins'], ['red.intern']], queue: [{ t: 'round', r: 2 }] });
     expect(R(t).blue).toBe(0);
   });
-  it('Social Climber: once per game at a round start, trade a member back to the pile; your next member costs that much less', () => {
-    let s = start([['market.climber', 'gold.midas', 'red.intern']]);
+  // replaced (dead-window audit, 2026-10-14): the round-start trade-in became a payout on Release
+  it('Social Climber: whenever you release another member, +2 of any color you choose (not for itself)', () => {
+    let s = scene({ round: 2, members: [['market.climber', 'gold.midas']], queue: [{ t: 'buy', p: 0 }] });
+    s = move(s, `release:${uidOf(s, 'gold.midas', 0)}`);
     expect(s.pending.prompt).toContain('Social Climber');
-    const m = uidOf(s, 'gold.midas', 0);
-    s = move(s, `card:${m}`);
-    expect(s.players[0].members.includes(m)).toBe(false);
-    expect(s.pile.at(-1)).toBe(m);
-    expect(s.players[0].discount).toBe(5);
-    // once per game: next round start asks nothing
-    const c = uidOf(s, 'market.climber', 0);
-    expect(s.cards[c].used).toBe(true);
-    s.round = 2; s.queue = [{ t: 'round', r: 3 }]; s = resume(s);
-    expect(s.pending?.prompt || '').not.toContain('Social Climber');
-    let k = start([['market.climber', 'red.intern']]);
-    k = move(k, 'none');
-    expect(k.players[0].members).toHaveLength(2);
-    expect(k.cards[uidOf(k, 'market.climber', 0)].used).toBeFalsy(); // keeping everyone doesn't use it up
+    s = move(s, 'color:green');
+    expect(R(s).green).toBe(2);
+    let k = scene({ round: 2, members: [['market.climber']], queue: [{ t: 'buy', p: 0 }] });
+    k = move(k, `release:${uidOf(k, 'market.climber', 0)}`);
+    expect(k.pending?.prompt || '').not.toContain('Social Climber');
   });
   it('Auctioneer: whenever a rival recruits an unbadged member, +1 blue', () => {
     expect(R(rivalBuys([['market.auctioneer']], 'red.twins')).blue).toBe(1);

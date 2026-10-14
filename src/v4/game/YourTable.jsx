@@ -45,7 +45,7 @@ export default function YourTable({ state, me = null, mySeats = [], optionFor = 
               return (
                 <span key={g.key} className={`lt-member${g.card.used ? ' used' : ''}`} style={{ '--q': cardColor(state, d) }} data-member={d.id}>
                   <Tip className="fig" label={`${d.name}: show the card`} content={() => <MemberCard state={state} uid={g.uids[0]} />}>
-                    <Sprite id={spriteId(d.name)} kind="member" sphere={sphereOf(state, d)} size={24} />
+                    <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                     {g.count > 1 && <b className="x num">×{g.count}</b>}
                   </Tip>
                   {use && <button type="button" className="lt-btn mini" data-option={use.id} onClick={() => onPick(use.id)} title={`Use ${d.name} now`}>Use<span className="hitbox" aria-hidden="true" /></button>}

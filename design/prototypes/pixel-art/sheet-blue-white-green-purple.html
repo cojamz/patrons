@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel Icons: Blue, White, Green, Purple</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="pix.css">
+<style>
+.page{max-width:1240px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;border-bottom:1px solid color-mix(in srgb,var(--rim) 60%,transparent);padding-bottom:10px}
+header h1{font-size:var(--fs-6)}
+header p{margin:0;color:var(--muted);font-size:var(--fs-2);flex:1;min-width:260px}
+.tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:var(--fs-2);color:var(--muted)}
+h2{font-size:var(--fs-5);display:flex;align-items:baseline;gap:10px;color:var(--c);margin-top:6px}
+h2 small{font-family:var(--body);font-size:var(--fs-2);color:var(--muted);letter-spacing:0}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.tile{display:flex;flex-direction:column;gap:6px;border:1px solid var(--rim);border-top:3px solid var(--c);border-radius:10px;background:var(--table-2);padding:10px;min-width:0}
+.sizes{display:flex;align-items:flex-end;gap:8px}
+.well{display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--bg,var(--table))}
+.info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.info b{font-family:var(--display);font-weight:400;font-size:var(--fs-4);color:var(--c);line-height:1.15}
+.info .tag{font-size:var(--fs-1);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.info .rule{font-size:var(--fs-2);line-height:1.3}
+.info .idea{font-size:var(--fs-1);color:var(--muted);font-style:italic;line-height:1.3}
+.strip{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;border:1px dashed var(--rim);border-radius:10px;padding:10px 14px;font-size:var(--fs-2)}
+.strip span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+@media (max-width:1100px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:680px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr))} .sizes figure:first-child{display:none} }
+@media (max-width:420px){ .grid{grid-template-columns:minmax(0,1fr)} }
+</style>
+<script src="icons.js"></script>
+<script src="icons-blue-white-green-purple.js"></script>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Cults · Blue, White, Green, Purple</h1>
+    <p>Every action and member of Blue (the market), White (trading), Green (echo) and Purple, plus one shared plain ladder for the stand-in “Worth N followers” members of Blue and Green. Members wear their sphere’s color. Shown at 96, 48 and 24px.</p>
+    <div class="tools">
+      <span>Outline</span><button class="btn" id="tOutline" aria-pressed="true">on</button>
+      <span>Behind</span><button class="btn bg" data-bg="var(--table)" aria-pressed="true">table</button><button class="btn bg" data-bg="var(--table-2)" aria-pressed="false">card</button><button class="btn bg" data-bg="tint" aria-pressed="false">sphere tint</button>
+    </div>
+  </header>
+  <div class="strip" id="strip"></div>
+  <div id="sections"></div>
+</div>
+<script>
+(function () {
+  const P = window.CultIcons;
+  const ICONS = window.CultIconBatches['blue-white-green-purple'];
+  const COLORS = ['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', 'purple', 'white'];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const rich = t => esc(t).replace(new RegExp(`\\b(${COLORS.join('|')})\\b`, 'g'), m => `<span class="pip" style="--c:var(--${m})" title="${m}"></span>`)
+    .replace(/(\d )any\b/g, '$1<span class="pip wild" title="any"></span>');
+  const SECTIONS = [
+    ['market', 'Blue · the market', 'price tags, carts and the badge-diamond'],
+    ['trading', 'White · trading', 'followers bought and sold; coins, scales, paper'],
+    ['echo', 'Green · echo', 'notes and copies'],
+    ['purple', 'Purple · extra turns', 'clocks, tools and the working day'],
+    ['ladder', 'Shared plain ladder', 'one drawing per tier, recolored for Blue and Green: a plain figure and its N followers'],
+  ];
+  const errs = ICONS.flatMap(i => P.validate({ ...i, px: i.rows }));
+  if (errs.length) console.error(errs.join('\n'));
+  let outline = true, bg = 'var(--table)';
+  const quad = i => (i.id.startsWith('blue.') || i.id.startsWith('green.')) ? 'ladder' : i.id.split('.')[0];
+  function render() {
+    const svg = (i, n) => P.toSVG({ ...i, px: i.rows }, n, { outline });
+    document.getElementById('strip').innerHTML = ICONS.filter(i => !i.id.startsWith('green.')).map(i => `<span>${svg(i, 24)}${esc(i.name)}</span>`).join('');
+    document.getElementById('sections').innerHTML = SECTIONS.map(([q, title, sub]) => {
+      const list = ICONS.filter(i => quad(i) === q);
+      const c = q === 'ladder' ? 'var(--ink)' : P.SPHERES[list[0].sphere];
+      return `<h2 style="--c:${c}">${esc(title)} <small>${list.length} · ${esc(sub)}</small></h2><div class="grid">` + list.map(i => {
+        const ic = P.SPHERES[i.sphere];
+        const b = bg === 'tint' ? `color-mix(in srgb, ${ic} 16%, var(--table-2))` : bg;
+        const well = n => `<figure style="margin:0"><div class="well" style="--bg:${b};width:${n + 12}px;height:${n + 12}px">${svg(i, n)}</div></figure>`;
+        return `<article class="tile" style="--c:${ic}">
+          <div class="sizes">${well(96)}${well(48)}${well(24)}</div>
+          <div class="info"><span class="tag">${esc(i.sphere)} · ${esc(i.kind)}</span><b>${esc(i.name)}</b>
+            <span class="rule">${rich(i.text)}</span><span class="idea">${esc(i.idea)}</span></div>
+        </article>`;
+      }).join('') + '</div>';
+    }).join('');
+  }
+  document.getElementById('tOutline').addEventListener('click', e => { outline = !outline; e.currentTarget.setAttribute('aria-pressed', outline); e.currentTarget.textContent = outline ? 'on' : 'off'; render(); });
+  document.querySelectorAll('.btn.bg').forEach(btn => btn.addEventListener('click', () => {
+    bg = btn.dataset.bg; document.querySelectorAll('.btn.bg').forEach(x => x.setAttribute('aria-pressed', x === btn)); render();
+  }));
+  render();
+})();
+</script>
+</body>
+</html>

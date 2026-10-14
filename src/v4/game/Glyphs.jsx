@@ -93,7 +93,7 @@ export function LeaderRing({ state, id, size = 32, minion = 16, compact = false 
       </span>
       {Array.from({ length: n }, (_, k) => (
         <span key={k} className="orbit" data-minion={id} data-k={k} style={{ ...at(k), width: minion, height: minion, animationDelay: `${-(k * 0.37).toFixed(2)}s` }}>
-          <Minion color={playerColor(id)} size={minion} />
+          <Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={minion} />
         </span>
       ))}
     </span>

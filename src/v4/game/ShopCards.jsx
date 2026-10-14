@@ -9,7 +9,7 @@ import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { BadgeMark, CardText, cardColor, onTable, cachedPreview } from './Info.jsx';
+import { BadgeMark, CardText, cardColor, onTable, peekPreview } from './Info.jsx';
 import { ResourceGlyph, FollowerGlyph } from './Glyphs.jsx';
 import { timingOf, payBreakdown, unlockedBy, surely } from './cards.js';
 import './lamp-b.css';
@@ -41,7 +41,7 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
     const [q, i] = hover.space.split('-').map(Number);
     const a = quadrant(state.quadrants[q]).actions[i];
     let pv = null;
-    try { pv = cachedPreview(state, viewer.id, q, i); } catch { pv = null; }
+    pv = peekPreview(state, viewer.id, q, i) || null; // cached (warmed in idle time); a hover never computes
     if (pv) { after = a.name; unlocked = unlockedBy(state, viewer, surely(pv)); }
   }
   const pileOpts = buying ? pend.options.filter(o => o.kind === 'card' && o.fromPile).map(o => o.uid) : [];
@@ -81,7 +81,7 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
               {buying && <span className="nm">{d.name}<BadgeMark state={state} def={d} /></span>}
               {buying
                 ? <span className="txt"><CardText text={d.text} /></span>
-                : <span className="art"><Sprite id={spriteId(d.name)} kind="member" sphere={sphereOf(state, d)} size={48} /></span>}
+                : <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} /></span>}
               {tick && <span className="tick" title={`You could afford it after ${after}`}>✓ after {after}</span>}
               {!buying && <span className="nm">{d.name}<BadgeMark state={state} def={d} /></span>}
               <span className="ft">

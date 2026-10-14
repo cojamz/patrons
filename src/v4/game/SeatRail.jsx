@@ -39,7 +39,7 @@ export default function SeatRail({ state, me = null, mySeats = [], hover = null 
             >
               <LeaderRing state={state} id={pid} size={32} minion={12} compact />
               <span className="who">{you ? 'You' : p.name}
-                <small>{last ? <>last: <Sprite id={spriteId(last.name)} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /></> : p.kind === 'bot' ? 'bot' : ' '}</small>
+                <small>{last ? <>last: <Sprite id={[`${last.qid}.${actionKey(last)}`, spriteId(last.name)]} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /></> : p.kind === 'bot' ? 'bot' : ' '}</small>
               </span>
               <span className="lt-pts"><b className="num">{f}</b><FollowerGlyph size={14} title={`${f} followers`} /></span>
               {crowd.length > 0 && (
@@ -55,3 +55,5 @@ export default function SeatRail({ state, me = null, mySeats = [], hover = null 
     </nav>
   );
 }
+
+const actionKey = last => { try { return quadrant(last.qid).actions.find(a => a.name === last.name).key; } catch { return ''; } };

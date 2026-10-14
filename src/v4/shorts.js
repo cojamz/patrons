@@ -12,7 +12,7 @@ const S = {
   blue: { a1: '+3 blue', a2: '+2 blue +1 red', a3: '+2 blue +1 green', a4: '+5 blue', a5: '+4 blue +1 gold', a6: '+8 blue' },
   green: { a1: '+3 green', a2: '+2 green +1 gold', a3: '+2 green +1 blue', a4: '+5 green', a5: '+4 green +1 red', a6: '+8 green' },
   purple: {
-    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +2/rival', windup: '+1 purple/worker', planahead: '+2 purple/left', overtime: 'pay 8: 2 turns', rally: 'purple → turns',
+    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +2/rival', windup: '+1 purple/minion', planahead: '+2 purple/left', overtime: 'pay 8: 2 turns', rally: 'purple → turns',
   },
   silver: {
     toast: r => `+${3 * r} silver · all +1`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the richest', jubilee: 'silver → followers',
