@@ -12,10 +12,13 @@
 //  (f) no seat sigil shapes anywhere (identity is the leader's emoji and the name);
 //  (g) every member in a cult stands on a ground in its sphere's color, so it reads as that sphere;
 //  (h) the member deck heads the shop strip: after a refill its count is the engine's pile length (the saved game's
-//      state.pile), a refill deals the new card off it, and hovering it shows its card (count, colors adding up).
+//      state.pile), a refill deals the new card off it, and hovering it shows its card (count, colors adding up);
+//  (i) while you place, the space under the pointer ticks "✓ after <space>" on the shop cards it would make
+//      affordable (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
+import { tickSave } from './lib/tick-save.mjs';
 
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/info`;
 mkdirSync(SHOTS, { recursive: true });
@@ -256,6 +259,26 @@ try {
       }
     }
     await lab.close();
+  }
+
+  // (i) the shop's "✓ after <space>" tick: hovering a space that makes a card affordable ticks that card
+  {
+    const { save, key, uids } = tickSave();
+    const pg = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+    pg.on('pageerror', e => errors.push(`tick pageerror: ${e.message}`));
+    await pg.goto(`${base}/?botDelay=20&intro=0`);
+    await pg.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
+    await pg.reload();
+    await pg.click('[data-home="resume"]');
+    await pg.waitForSelector('.lt-shop .card[data-uid]');
+    await pg.waitForTimeout(300);
+    const spot = pg.locator(`[data-slot="${key}"] .base`).first();
+    await ((await spot.count()) ? spot : pg.locator(`[data-slot="${key}"]`).first()).hover();
+    const ok = await pg.waitForFunction(us => us.some(u => { const t = document.querySelector(`.lt-shop .card[data-uid="${u}"] .tick`); return !!t && /✓/.test(t.textContent) && t.getBoundingClientRect().width > 0; }), uids, { timeout: 6000 }).then(() => true, () => false);
+    if (!ok) fail(`(i) hovering space ${key} never ticked "✓ after" on the card(s) it unlocks (${uids.join(', ')})`, 'tick');
+    else console.log(`info.mjs: space ${key} ticks card ${uids.join(', ')} "✓ after"`);
+    await pg.screenshot({ path: `${SHOTS}/07-shop-tick.png` });
+    await pg.close();
   }
 
   // (b) touch: a long-press on a titled element shows its title

@@ -32,8 +32,8 @@ const colorOf = (ctx, c) => { const r = ctx.quadrant(c.def.quadrant).resource; r
 const botWorth = c => c.def.f * 1.4 + (c.def.vanilla ? 0 : 1.6) + priceOf(c) * 0.3;
 
 let MODE = 'pricey';
-// Measuring knob: with lean on, Bargain and Clearance use up your buy this turn instead of adding a recruit.
-// Clearance always uses your buy; this knob makes Bargain's recruit use it too.
+// Measuring knob: with lean on, Snap Up and Half Price use up your buy this turn instead of adding a recruit.
+// Half Price always uses your buy; this knob makes Snap Up's recruit use it too.
 let LEAN = false;
 export function setLean(on) { LEAN = !!on; }
 /** Switch Blue's scoring rule (for measuring): 'pricey' or 'value'. */
@@ -93,9 +93,9 @@ function payAndRecruit(ctx, p, v, { uid, why, fromPile }) {
   }
   if (!ctx.state.shop.includes(uid)) { ctx.log(`${why}: ${card.def.name} is gone.`); return; }
   for (const r in v) p.res[r] -= v[r];
-  // a member's own recruit names the member ("P1's Black Market: pays …"); an action's names the action
+  // a member's own recruit names the member ("P1's Talent Scout: pays …"); an action's names the action
   ctx.log(fromPile ? `${p.name}'s ${why}: pays ${payLabel(v)} for ${card.def.name}.` : `${why}: ${p.name} pays ${payLabel(v)} for ${card.def.name}.`);
-  if ((why === 'Clearance' || (LEAN && why === 'Bargain')) && !fromPile) {
+  if ((why === 'Half Price' || (LEAN && why === 'Snap Up')) && !fromPile) {
     const q = ctx.state.queue, k = q.findIndex(t => t.t === 'buy' && !t.extra && t.p === p.id);
     // it is this turn's buy: it counts as a real first buy, so a second buy (Big Spender) still follows
     if (k >= 0) { q.splice(k, 1); p.turnBuys = (p.turnBuys || 0) + 1; }
@@ -149,12 +149,12 @@ const market = {
 
   actions: [
     {
-      key: 'bargain', ring: 1, name: 'Bargain', text: '+2 blue, then you may recruit a face-up member now, in any colors.',
+      key: 'bargain', ring: 1, name: 'Snap Up', text: '+2 blue, then you may recruit a face-up member now, in any colors.',
       estimate: (ctx, p) => 2 + bestRowValue(ctx, p, priceOf) * 0.3,
-      resolve(ctx, p) { ctx.gain(p, B, 2, { fromAction: true }); offerRow(ctx, p, priceOf, 'Bargain'); },
+      resolve(ctx, p) { ctx.gain(p, B, 2, { fromAction: true }); offerRow(ctx, p, priceOf, 'Snap Up'); },
     },
     {
-      key: 'restock', ring: 1, name: 'Restock', text: '+2 blue, and sweep the face-up row: a fresh row of members comes out.',
+      key: 'restock', ring: 1, name: 'New Faces', text: '+2 blue, and sweep the face-up row: a fresh row of members comes out.',
       estimate: () => 2.4,
       resolve(ctx, p) {
         ctx.gain(p, B, 2, { fromAction: true });
@@ -163,25 +163,25 @@ const market = {
       },
     },
     {
-      key: 'showroom', ring: 1, name: 'Showroom', text: '+1 blue per badged face-up member.',
+      key: 'showroom', ring: 1, name: 'Name Drop', text: '+1 blue per badged face-up member.',
       estimate: ctx => showroomCount(ctx),
       resolve(ctx, p) {
         const k = showroomCount(ctx);
-        if (!k) ctx.log(`Showroom: no badged member is face up, so ${p.name} gains nothing.`);
+        if (!k) ctx.log(`Name Drop: no badged member is face up, so ${p.name} gains nothing.`);
         ctx.gain(p, B, k, { fromAction: true });
       },
     },
     {
-      key: 'clearance', ring: 2, name: 'Clearance', text: 'As your buy this turn: a face-up member for half its cost (rounded down), in any colors.',
+      key: 'clearance', ring: 2, name: 'Half Price', text: 'As your buy this turn: a face-up member for half its cost (rounded down), in any colors.',
       estimate: (ctx, p) => bestRowValue(ctx, p, half),
-      resolve(ctx, p) { offerRow(ctx, p, half, 'Clearance'); },
+      resolve(ctx, p) { offerRow(ctx, p, half, 'Half Price'); },
     },
     {
-      key: 'pricecheck', ring: 2, name: 'Price Check', text: 'Gain blue equal to half the cost of your priciest member.',
+      key: 'pricecheck', ring: 2, name: 'Show Off', text: 'Gain blue equal to half the cost of your priciest member.',
       estimate: (ctx, p) => Math.floor(priciest(ctx, p) / 2),
       resolve(ctx, p) {
         const k = Math.floor(priciest(ctx, p) / 2);
-        if (!k) ctx.log(`Price Check: ${p.name} has no member costing 2 or more, so gains nothing.`);
+        if (!k) ctx.log(`Show Off: ${p.name} has no member costing 2 or more, so gains nothing.`);
         ctx.gain(p, B, k, { fromAction: true });
       },
     },
@@ -196,7 +196,7 @@ const market = {
     pickRow(ctx, p, uid, data) {
       if (uid === null) { ctx.log(`${data.why}: ${p.name} recruits nothing.`); return; }
       const c = ctx.card(uid);
-      buyAt(ctx, p, uid, 0, data.why === 'Clearance' ? half(c) : priceOf(c), data.why);
+      buyAt(ctx, p, uid, 0, data.why === 'Half Price' ? half(c) : priceOf(c), data.why);
     },
     pay(ctx, p, v, data) { payAndRecruit(ctx, p, v, data); },
     blackMarket(ctx, p, uid) {
@@ -204,9 +204,9 @@ const market = {
       const c = ctx.card(uid);
       const list = payVectors(ctx, p, colorOf(ctx, c), c.def.s, c.def.w);
       if (!list.length) return;
-      const data = { uid, why: 'Black Market', fromPile: true };
+      const data = { uid, why: 'Talent Scout', fromPile: true };
       if (list.length === 1) { payAndRecruit(ctx, p, list[0], data); return; }
-      ctx.choose(p, `Black Market: how do you pay for ${c.def.name}?`, list.map((v, i) => ({
+      ctx.choose(p, `Talent Scout: how do you pay for ${c.def.name}?`, list.map((v, i) => ({
         id: `pay:${ctx.state.resources.map(r => v[r] || 0).join('-')}`, label: payLabel(v), kind: 'pay', value: v, hint: i === 0 ? 1 : 0,
       })), `${Q}.pay`, data);
     },
@@ -262,15 +262,15 @@ const market = {
     m('patroness', 'Patroness', 4, 4, 'Whenever you recruit a badged member, +1 follower.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && badged(rec)) owner.bonus += 1; },
     }),
-    m('blackmarket', 'Black Market', 2, 2, 'Once per game, on your turn: also look at the top 5 of the pile and recruit one at its cost.', {
+    m('blackmarket', 'Talent Scout', 2, 2, 'Once per game, on your turn: also look at the top 5 of the pile and recruit one at its cost.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const opts = ctx.state.pile.slice(0, 5).map(u => ctx.card(u))
           .filter(c => payVectors(ctx, owner, colorOf(ctx, c), c.def.s, c.def.w).length)
           .map(c => ({ id: `card:${c.uid}`, label: `${c.def.name} (${priceOf(c)})`, kind: 'card', value: c.uid, hint: botWorth(c) }));
-        if (!opts.length) { ctx.log(`${owner.name}'s Black Market has nothing affordable.`); return; }
+        if (!opts.length) { ctx.log(`${owner.name}'s Talent Scout has nothing affordable.`); return; }
         opts.push({ id: 'none', label: 'Recruit nothing', kind: 'pass', value: null, hint: -1 });
-        ctx.choose(owner, 'Black Market: recruit which of the top 5?', opts, `${Q}.blackMarket`);
+        ctx.choose(owner, 'Talent Scout: recruit which of the top 5?', opts, `${Q}.blackMarket`);
       },
       botActivate: (ctx, owner) => ctx.state.round >= 2 && totalRes(owner) >= 8,
     }),
