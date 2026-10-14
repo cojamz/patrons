@@ -2,6 +2,13 @@
 import gold from './gold.js';
 import red from './red.js';
 import { blue, green } from './standins.js';
+import purple from './purple.js';
+import silver from './silver.js';
+import yellow from './yellow.js';
+import { install as installMarket } from './market.js';
+import { install as installThieves } from './thieves.js';
+import { install as installTrading } from './trading.js';
+import { install as installEcho } from './echo.js';
 
 const QUADRANTS = { gold, red, blue, green };
 
@@ -43,3 +50,20 @@ export const handlerById = id => {
   return h;
 };
 export const allQuadrantIds = () => Object.keys(QUADRANTS);
+
+// Every sphere, so a table can pick any four. A sphere only acts when it's on the table: its scoring, hooks
+// and guards are looked up through state.quadrants, and its members only enter decks that include it.
+for (const q of [purple, silver, yellow]) registerQuadrant(q);
+installMarket();
+installThieves();
+installTrading();
+// Echo goes last: it wraps every action registered so far to record what spaces gave. Gate the wrapper so a
+// table without Echo runs each action's own resolve and its state never grows an echo ledger.
+installEcho();
+for (const q of Object.values(QUADRANTS)) for (const a of q.actions) {
+  const w = a.resolve;
+  if (!w.__echo || w.__gated) continue;
+  const gated = function (ctx, p) { return (ctx.state.quadrants.includes('echo') ? w : w.__orig).call(this, ctx, p); };
+  Object.assign(gated, { __echo: true, __gated: true, __orig: w.__orig });
+  a.resolve = gated;
+}

@@ -210,3 +210,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Add a top follower tier: 10 resources → 10 followers. Build it now, tune numbers after.
 - ✅ (Cory) Design target, Dominion's Big Money: just buying followers is a solid baseline strategy that a good member engine beats.
 - ✅ (Cory) Testers report what FEELS unfair or unfun, on both sides of an interaction. Member movement is wanted; the question is how it can sting in a good way (e.g. member theft).
+- ✅ (Cory) Target: the pure 'big followers' strategy wins ~25% of 4-player games (20–30% ideal, 15–30% acceptable). Outside that, retune.

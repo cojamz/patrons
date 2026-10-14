@@ -23,7 +23,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - Everyone's items are public.
 
 ## How you win
-- Pure follower-buying is the baseline strategy, like Big Money in Dominion: solid, but a good member engine beats it. (Cory, 2026-10-14)
+- Pure follower-buying ("big followers") is the baseline strategy, like Big Money in Dominion: it should win about 25% of 4-player games (15–30% acceptable; outside that, retune), and a good member engine beats it. (Cory, 2026-10-14)
 - The game is about recruiting lots of members (items) and escalating your resources to win followers in bulk (the fixtures). Ring contests are seasoning, not the meal.
 - Each quadrant has exactly one scoring rule, printed on each of its rings, visually distinct from the actions.
 - Scoring rules measure visible state (what players hold right now), never counts of events during turns. Anyone looking at the other players can tell who's winning each contest. (Cory, 2026-10-14)

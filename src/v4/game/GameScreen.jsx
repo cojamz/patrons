@@ -1,7 +1,7 @@
 // The game table. Renders engine state from a session and turns clicks into { player, option } moves.
 // What's clickable is exactly state.pending.options, and only for seats this client controls.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { followers, WORKERS } from '../../engine/v4/index.js';
+import { followers, WORKERS, tierLeft } from '../../engine/v4/index.js';
 import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn } from '../format.js';
 import Wheel from './Wheel.jsx';
 import Players, { Resources, Workers } from './Players.jsx';
@@ -423,7 +423,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       text = owner === undefined && pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers or pass' : null;
     } else if (pend.kind === 'place') text = info.type === 'card' || info.type === 'tier' ? 'Place a worker first, then recruit' : 'Place a worker first';
     else if (info.type === 'card') text = `You can’t afford ${info.name} yet`;
-    else if (info.type === 'tier') text = info.tier.limited && state.bigLeft <= 0 ? 'No +6 buys left' : `+${info.tier.get} needs ${tierCostText(info.tier)}`;
+    else if (info.type === 'tier') text = tierLeft(state, info.tier) <= 0 ? `No +${info.tier.get} buys left` : `+${info.tier.get} needs ${tierCostText(info.tier)}`;
     else text = 'Not right now';
     if (text) say(text);
     if (el && el.animate && motionOK()) el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(-2px)' }, { transform: 'translateX(0)' }], { duration: 260, easing: 'ease-out' });

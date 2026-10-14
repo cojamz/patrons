@@ -354,7 +354,7 @@ table.res-t tr.first td{background:color-mix(in srgb,var(--ink) 5%,transparent)}
 
 /* ---------- round 2 additions ---------- */
 /* buy tray: one height, three equal follower buttons, Pass to match; activations on their own row */
-.fbuy{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(72px,.6fr);gap:6px}
+.fbuy{display:grid;grid-template-columns:repeat(var(--tiers,3),minmax(0,1fr)) minmax(72px,.6fr);gap:6px}
 .fbuy .fb,.fbuy .pass{min-height:44px;height:100%;margin:0;border-radius:10px;justify-content:center}
 .fbuy .pass{display:flex;align-items:center;justify-content:center;border-color:var(--ink)}
 .fbuy .pass.idle{border-color:var(--rim)}
@@ -558,7 +558,7 @@ header.bar .status{align-items:center;gap:8px}
 .undo-slot .undo{margin:0}
 @media (max-width:520px){
   .undo-slot{width:84px}
-  .fbuy{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .fbuy{grid-template-columns:repeat(var(--tiers-narrow,3),minmax(0,1fr))}
   .fbuy .pass{grid-column:1 / -1}
 }
 /* buy tray: three equal buttons, one-line subtext */
@@ -695,7 +695,7 @@ header.bar .ticker .cue{flex:none;color:var(--ink);opacity:.8}
   .app.game .side-scroll{flex:none;overflow:visible}
   .app.game .scroller{display:block;flex:none}
   .app.game .dock{flex:none}
-  .app.game.buying .fbuy.live{position:fixed;left:0;right:0;bottom:0;z-index:15;margin:0;padding:8px 12px 10px;background:var(--table-2);border-top:1px solid var(--rim);border-radius:14px 14px 0 0;box-shadow:0 -10px 24px rgba(0,0,0,.5);grid-template-columns:repeat(3,minmax(0,1fr)) minmax(72px,.6fr)}
+  .app.game.buying .fbuy.live{position:fixed;left:0;right:0;bottom:0;z-index:15;margin:0;padding:8px 12px 10px;background:var(--table-2);border-top:1px solid var(--rim);border-radius:14px 14px 0 0;box-shadow:0 -10px 24px rgba(0,0,0,.5);grid-template-columns:repeat(var(--tiers,3),minmax(0,1fr)) minmax(72px,.6fr)}
   .app.game.buying .fbuy.live .strip{display:flex}
   .app.game.buying .side{padding-bottom:190px}
   .ring text{display:none}

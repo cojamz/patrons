@@ -1,5 +1,5 @@
 // The shop (6 face-up members) and the buy tray (follower buys, member activations, Pass).
-import { cardDef, paymentPlan, followerChoices, TIERS } from '../../engine/v4/index.js';
+import { cardDef, paymentPlan, followerChoices, TIERS, tierLeft } from '../../engine/v4/index.js';
 import { useEffect, useRef } from 'react';
 import { costParts, tierCostText } from '../format.js';
 
@@ -68,7 +68,7 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
           );
         })}
       </div>
-      {state.endEarly && !state.over && !compact && <p className="hint warn">The last +6 is gone — the game ends after this round.</p>}
+      {state.endEarly && !state.over && !compact && <p className="hint warn">The last +{TIERS.find(t => t.clock)?.get} is gone — the game ends after this round.</p>}
     </section>
   );
 }
@@ -110,7 +110,7 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
   const pass = optionFor('pass');
   const buying = mine && pend && pend.kind === 'buy';
   return (
-    <div className={`fbuy${buying ? ' live' : ''}`} role="group" aria-label="Buy followers or pass">
+    <div className={`fbuy${buying ? ' live' : ''}`} style={{ '--tiers': TIERS.length, '--tiers-narrow': TIERS.length > 3 ? 2 : TIERS.length }} role="group" aria-label="Buy followers or pass">
       <ShopStrip state={state} me={me} optionFor={optionFor} onPick={onPick} onDenied={onDenied} />
       {TIERS.map(t => {
         const opt = optionFor(`tier:${t.key}`);
@@ -125,7 +125,7 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
               Pay <span className="num">{t.cost}</span> · {t.colors === 1 ? 'any' : `${t.colors}+ colors`}
               {(() => { const ways = opt && viewer ? followerChoices(state, viewer, t) : []; return ways.length > 1 ? <em className="picks" title="You'll choose how to pay"> ▸</em> : null; })()}
             </span>
-            {t.limited && <span className="left-line num" title={`${state.bigLeft} of these left; the last one ends the game after that round`}>{state.bigLeft} left</span>}
+            {t.limited && <span className="left-line num" title={`${tierLeft(state, t)} of these left${t.clock ? '; the last one ends the game after that round' : ''}`}>{tierLeft(state, t)} left</span>}
           </button>
         );
       })}

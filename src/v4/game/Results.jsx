@@ -1,5 +1,5 @@
 // Final results: ranking with the followers breakdown, then Play again.
-import { followers, memberCount } from '../../engine/v4/index.js';
+import { followers, memberCount, TIERS } from '../../engine/v4/index.js';
 import { breakdown, playerColor, winSentence, plural } from '../format.js';
 
 export default function Results({ state, onPlayAgain, onHome }) {
@@ -20,7 +20,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
       <div className="table-scroll">
         <table className="res-t">
           <thead>
-            <tr><th>#</th><th>Player</th><th>Followers</th><th title="Followers printed on your members (the ★ on each card)">From members ★</th><th title="The +1 / +3 / +6 follower buys">Bought</th><th title="Effects: followers from members' abilities during play (e.g. Proselytizer)">Effects</th><th title="Ring contests won at round end">Contests</th><th title="End-game member bonuses (e.g. Patriarch, Tycoon)">End-game bonuses</th><th title="You count as 1 follower">Self (1)</th></tr>
+            <tr><th>#</th><th>Player</th><th>Followers</th><th title="Followers printed on your members (the ★ on each card)">From members ★</th><th title={`The ${TIERS.map(t => `+${t.get}`).join(' / ')} follower buys`}>Bought</th><th title="Effects: followers from members' abilities during play (e.g. Proselytizer)">Effects</th><th title="Ring contests won at round end">Contests</th><th title="End-game member bonuses (e.g. Patriarch, Tycoon)">End-game bonuses</th><th title="You count as 1 follower">Self (1)</th></tr>
           </thead>
           <tbody>
             {ranked.map((p, k) => {
