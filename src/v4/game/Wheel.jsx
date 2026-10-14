@@ -537,7 +537,8 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
       </span>
     );
     const minions = owner !== undefined ? <span className="worker-fig" data-seat={owner}>{[owner, ...joiners].map(minion)}</span> : null;
-    if (side && t === 1) [X, Y] = turned(...polar(s.ang, rings[1].r - 6)); // a tall stack sits a little in from the rim
+    // a tall stack on its side sits a little in from the rim (ring I), and ring II's a little in from ring I's
+    if (side && t < 3) [X, Y] = turned(...polar(s.ang, rings[t].r - (t === 1 ? 5 : 3)));
     let style = { ...at(X, Y), '--c': `var(--${qid})` };
     if (engraved) {
       // the words get the cell's width on screen: its chord when it lies flat, its depth when it stands on its side

@@ -218,7 +218,7 @@ export default {
     // Relay's slot (Cory cut Relay, 2026-10-14). Member-value sim, handed over at round II: 6.9 followers, 53% win
     // (Normal bots, n=320), so 8+2 (design/eval/purple-members.md). At 4 players round I has no space to spare, so it
     // pays from round II. Fires once per round (owlRound), whether or not the board had room.
-    m('nightowl', 'Night Owl', 8, 2, 'Each round, after your last minion, place one more and buy again.', {
+    m('nightowl', 'Night Owl', 8, 2, 'Each round, after your last minion, take an extra turn: place one more and buy again.', {
       afterAction(ctx, owner, card) {
         if (owner.left !== 0 || card.owlRound === ctx.state.round) return;
         card.owlRound = ctx.state.round;

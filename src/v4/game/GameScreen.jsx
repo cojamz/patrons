@@ -399,9 +399,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     shopSnap.current = snapshotShop(root.current);
 
     const lines = newLogLines(before, state);
-    // the clock running out is news for everyone: say it where people look, not only in the log
-    const clock = lines.find(l => /The game ends after this round\./.test(l));
-    if (clock) showToast(clock.replace('The last', 'The last').replace(' is gone.', ' is gone:').replace(' The game', ' the game'), 3600);
     // Gifts float onto the receiver's card, worded as what they are: the receiver gains (nobody loses).
     const got = [];
     const startAt = state.log.length - lines.length;
@@ -635,7 +632,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, [modalOpen]);
   const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
-  const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)}{state.endEarly ? <em className="last-tag"> (last)</em> : null}</> : 'Setup';
+  const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)}</> : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
   // The latest rival placement, marked on the wheel; read from the state so it survives a reload.

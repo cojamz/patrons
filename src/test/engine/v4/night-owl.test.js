@@ -1,5 +1,5 @@
 // @vitest-environment node
-// Night Owl (Purple, Relay's slot): "Each round, after your last minion, place one more and buy again."
+// Night Owl (Purple, Relay's slot): "Each round, after your last minion, take an extra turn: place one more and buy again."
 // In the engine this is one extra turn (glossary: "you place one more minion and may buy again", only while the board
 // has a space to spare), queued right after the turn of your last minion. Through real moves: only after the last
 // minion, one more minion with its own buy, before the next player; once per round; nothing when no space is spare.
@@ -24,7 +24,7 @@ describe('Night Owl', () => {
   it('is printed as decided: 8 purple + 2 any, worth 1 follower, in plain words', () => {
     const d = defById('purple.nightowl');
     expect([d.s, d.w, d.f]).toEqual([8, 2, 1]);
-    expect(d.text).toBe('Each round, after your last minion, place one more and buy again.');
+    expect(d.text).toBe('Each round, after your last minion, take an extra turn: place one more and buy again.');
   });
 
   it('does nothing on a minion that is not your last', () => {
