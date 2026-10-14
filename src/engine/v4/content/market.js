@@ -1,16 +1,23 @@
 // Blue (the market): bend the shop. Buy outside your buy, ignore colors, pay half, churn the row.
 // Scoring: most member value, the total printed cost of the members you hold. Blue members break ties.
 // Gold hoards money and Red piles up cheap members; Blue collects the expensive ones, cheaply.
+//
+// Engine note: core.js pays a member's colored part from p.res[def.quadrant], which assumes a quadrant's id
+// equals its resource. Here id 'market' ≠ resource 'blue', so install() relabels the member defs' quadrant
+// as 'blue'. The real fix is one line in paymentPlan and memberPayOk: use quadrant(def.quadrant).resource.
+import { registerQuadrant } from './index.js';
+
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const B = 'blue';
 const Q = 'market';
+const isBlue = def => def.quadrant === Q || def.quadrant === B;
 
 /** Printed cost of a member (before any discount). */
 export const priceOf = c => c.def.s + c.def.w;
 /** Blue's measure: total printed cost of a player's members. */
 export const memberValue = (ctx, p) => ctx.membersOf(p).reduce((s, c) => s + priceOf(c), 0);
 const totalRes = p => Object.values(p.res).reduce((a, b) => a + b, 0);
-const colorOf = (ctx, c) => ctx.quadrant(c.def.quadrant).resource;
+const colorOf = (ctx, c) => (isBlue(c.def) ? B : ctx.quadrant(c.def.quadrant).resource);
 // what a bot thinks a member is worth to it (mirrors the greedy buy score)
 const botWorth = c => c.def.f * 1.4 + (c.def.vanilla ? 0 : 1.6) + priceOf(c) * 0.3;
 
@@ -56,15 +63,16 @@ function buyAt(ctx, p, uid, s, w, why) {
   })), `${Q}.pay`, data);
 }
 function payAndRecruit(ctx, p, v, { uid, why, fromPile }) {
-  for (const r in v) p.res[r] -= v[r];
   const card = ctx.card(uid);
-  ctx.log(`${why}: ${p.name} pays ${payLabel(v)} for ${card.def.name}.`);
-  if (fromPile) {
+  const pile = ctx.state.pile;
+  if (fromPile && pile.includes(uid)) {
     // lift it out of the pile into the row for a moment, so it is recruited the normal way
-    const pile = ctx.state.pile;
     pile.splice(pile.indexOf(uid), 1);
     ctx.state.shop.push(uid);
   }
+  if (!ctx.state.shop.includes(uid)) { ctx.log(`${why}: ${card.def.name} is gone.`); return; }
+  for (const r in v) p.res[r] -= v[r];
+  ctx.log(`${why}: ${p.name} pays ${payLabel(v)} for ${card.def.name}.`);
   ctx.recruit(p, uid, { free: true });
 }
 
@@ -92,14 +100,14 @@ function extraBuys(ctx, p, k) {
   for (let i = 0; i < k; i++) ctx.state.queue.unshift({ t: 'buy', p: p.id });
 }
 
-export default {
+const market = {
   id: Q,
   name: 'Blue',
   resource: B,
   scoring: {
     label: 'Most member value',
     // total printed cost of your members; blue members break ties
-    score: (ctx, p) => { const v = memberValue(ctx, p); return v > 0 ? v * 100 + ctx.countMembersOfColor(p, Q) : 0; },
+    score: (ctx, p) => { const v = memberValue(ctx, p); return v > 0 ? v * 100 + ctx.membersOf(p).filter(c => isBlue(c.def)).length : 0; },
   },
 
   actions: [
@@ -162,7 +170,7 @@ export default {
   members: [
     m('dealer', 'Dealer', 1, 1, 'Whenever anyone recruits a blue member, +1 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) {
-        if (rec.uid !== card.uid && ctx.defOf(rec).quadrant === Q) ctx.gain(owner, B, 1);
+        if (rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 1);
       },
     }),
     m('broker', 'Broker', 1, 1, 'Whenever a rival recruits a member costing 4 or more, +1 blue.', {
@@ -231,6 +239,18 @@ export default {
     }),
   ],
 };
+
+export default market;
+
+let installed = false;
+/** Register Blue with the engine (tests and scripts call this; index.js is untouched). */
+export function install() {
+  if (installed) return market;
+  registerQuadrant(market);
+  for (const d of market.members) d.quadrant = B; // engine workaround, see the note at the top
+  installed = true;
+  return market;
+}
 
 function showroomCount(ctx) { return ctx.shopCards().filter(c => priceOf(c) >= 4).length; }
 function priciest(ctx, p) { return Math.max(0, ...ctx.membersOf(p).map(priceOf)); }

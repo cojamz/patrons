@@ -49,7 +49,7 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, er
           <label className="field"><span>Your name</span><input value={name} maxLength={NAME_MAX} onChange={e => saveName(e.target.value)} placeholder="Name" /><small className="count num">{name.length}/{NAME_MAX}</small></label>
           <button type="button" className="btn big" disabled={!onlineReady || working || !name.trim()} onClick={() => go(() => onHost(name.trim()))}>Host online game</button>
           <form className="join" onSubmit={e => { e.preventDefault(); if (code.trim() && name.trim()) go(() => onJoin(code.trim().toUpperCase(), name.trim())); }}>
-            <input aria-label="Room code" value={code} maxLength={8} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="CODE" disabled={!onlineReady} />
+            <input aria-label="Room code" value={code} maxLength={8} onChange={e => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="CODE" disabled={!onlineReady} />
             <button type="submit" className="btn" disabled={!onlineReady || working || !code.trim() || !name.trim()}>Join with code</button>
           </form>
           {working && <p className="hint">Connecting…</p>}

@@ -11,7 +11,7 @@
 //   'act' task, and close the entry when that player's 'buy' task starts.
 // - core.js pays a member's colored part from p.res[def.quadrant]; here id 'echo' ≠ resource 'green', so
 //   install() relabels the member defs' quadrant as 'green' (same one-line fix as thieves.js).
-import { registerQuadrant, allQuadrantIds, quadrant } from './index.js';
+import { registerQuadrant, allQuadrantIds, quadrant, defById } from './index.js';
 
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const costOf = def => def.s + def.w;
@@ -38,10 +38,7 @@ function settle(state, e) {
   const fresh = p.members.filter(u => !e.before.members.includes(u)).map(u => costOf(quadrantDef(state, u))).sort((a, b) => a - b);
   e.members = fresh.slice(0, k);
 }
-const quadrantDef = (state, uid) => {
-  const [qid, key] = state.cards[uid].def.split('.');
-  return quadrant(qid).members.find(d => d.key === key);
-};
+const quadrantDef = (state, uid) => defById(state.cards[uid].def);
 // The window for a space stays open while its follow-up choices run, until the taker's buy step.
 function windowOpen(state, e) {
   const next = state.queue.find(t => t.t !== 'choose');
@@ -114,7 +111,7 @@ function offer(ctx, p, list, prompt, from) {
 }
 
 /** p copies entry e: same resources, same discount, and a free face-up member (cost ≤ theirs) per member. */
-export function copy(ctx, p, e) {
+export function copy(ctx, p, e, { later = null } = {}) {
   const fewest = ctx.state.players.every(o => ctx.followers(o) >= ctx.followers(p));
   const mult = has(ctx, p, 'wallflower') && fewest ? 2 : 1;
   const asGreen = ctx.membersOf(p).some(c => (c.def.id === 'echo.translator' || c.copy === 'echo.translator') && c.on !== false);
@@ -127,7 +124,14 @@ export function copy(ctx, p, e) {
   const taker = ctx.player(e.p);
   if (taker !== p) { const muse = has(ctx, taker, 'muse'); if (muse) ctx.gain(taker, 'green', 2 * muse); }
   for (const o of ctx.rivals(p)) { const cm = has(ctx, o, 'choirmaster'); if (cm) ctx.gain(o, 'green', cm); }
-  if (e.members.length) freeStep(ctx, p, { left: [...e.members] });
+  if (later) later.push(...e.members);
+  else if (e.members.length) freeStep(ctx, p, { left: [...e.members] });
+}
+/** Copy several spaces; free members are picked one after another at the end. */
+export function copyAll(ctx, p, list) {
+  const later = [];
+  for (const e of list) copy(ctx, p, e, { later });
+  if (later.length) freeStep(ctx, p, { left: later.sort((a, b) => b - a) });
 }
 function freeStep(ctx, p, data) {
   if (!data.left.length) return;
@@ -136,7 +140,7 @@ function freeStep(ctx, p, data) {
   if (!fits.length) { ctx.log(`${p.name}: no face-up member costs ${c} or less.`); freeStep(ctx, p, { left: data.left.slice(1) }); return; }
   ctx.choose(p, `Copy: take a face-up member costing ${c} or less, free`, fits.map(x => ({
     id: `card:${x.uid}`, label: `${x.def.name} (${costOf(x.def)})`, kind: 'card', value: x.uid, hint: x.def.f * 1.4 + costOf(x.def),
-  })), 'echo.free', { left: data.left.slice(1) });
+  })), 'echo.free', { cost: c, left: data.left.slice(1) });
 }
 
 // ---------- the quadrant ----------
@@ -178,7 +182,7 @@ const echoQ = {
       resolve(ctx, p) {
         const list = targets(ctx, p, 'own');
         if (!list.length) { ctx.log(`${p.name} had nothing to copy.`); return; }
-        for (const e of list) copy(ctx, p, e);
+        copyAll(ctx, p, list);
       },
     },
   ],
@@ -190,6 +194,7 @@ const echoQ = {
       if (e) copy(ctx, p, e);
     },
     free(ctx, p, uid, data) {
+      if (!ctx.state.shop.includes(uid)) { freeStep(ctx, p, { left: [data.cost, ...data.left] }); return; }
       ctx.recruit(p, uid, { free: true });
       freeStep(ctx, p, data);
     },
@@ -258,7 +263,7 @@ const echoQ = {
       onActivate(ctx, owner) {
         const list = targets(ctx, owner, 'own');
         if (!list.length) ctx.log(`${owner.name}'s Déjà Vu has nothing to copy.`);
-        for (const e of list) copy(ctx, owner, e);
+        copyAll(ctx, owner, list);
       },
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e), 0) >= (ctx.state.round === 3 ? 6 : 10),
@@ -285,7 +290,10 @@ export function install() {
     const q = quadrant(id);
     q.actions.forEach((a, i) => wrapAction(id, a, i));
     for (const k of Object.keys(q.handlers || {})) wrapHandler(q, k);
-    registerQuadrant(q); // re-index the wrapped handlers
+    // re-index the wrapped handlers, keeping any relabelled member colors (thieves.js does the same trick)
+    const labels = q.members.map(d => d.quadrant);
+    registerQuadrant(q);
+    q.members.forEach((d, i) => { if (labels[i]) d.quadrant = labels[i]; });
   }
   // member costs are paid in green (see the note at the top)
   for (const d of echoQ.members) d.quadrant = 'green';

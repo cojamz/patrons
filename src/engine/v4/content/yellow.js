@@ -109,7 +109,7 @@ export default {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'yellow') ctx.gain(owner, colorOf(ctx, recruited), 1);
       },
     }),
-    m('dyer', 'Dyer', 1, 1, 'At round end, +1 yellow per color you hold.', {
+    m('dyer', 'Dyer', 2, 1, 'At round end, +1 yellow per color you hold.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, Y, held(ctx, owner).length); },
     }),
     m('latebloomer', 'Late Bloomer', 1, 1, 'At round start, if you have the fewest followers (ties count), +1 of each color.', {
@@ -138,7 +138,7 @@ export default {
     m('harmonist', 'Harmonist', 3, 1, 'Game end: +1 follower per full set you hold.', {
       onGameEnd: (ctx, owner) => setsOf(ctx, owner),
     }),
-    m('rainmaker', 'Rainmaker', 2, 2, 'Once per game: raise each of your colors to match your yellow.', {
+    m('rainmaker', 'Rainmaker', 2, 1, 'Once per game: raise each of your colors to match your yellow.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const top = owner.res[Y];

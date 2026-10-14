@@ -13,11 +13,11 @@ const quadrants = (process.argv[4] || 'gold,red,blue,silver').split(',');
 const sq = quadrants.indexOf('silver');
 const sum = r => Object.values(r).reduce((a, b) => a + b, 0);
 const st = { wins: Array(n).fill(0), fol: [], winFol: [], mem: [], takes: {}, takesByRound: {}, contestWins: Array(n).fill(0), contestRounds: 0, noScore: 0, ties: 0,
-  silverContestOfWinner: [], silverMembers: [], winnerSilverMembers: [], silverEnd: [], self: 0, spill: 0, perAction: {}, winnerTookSilver: [], leftover: [] };
+  silverContestOfWinner: [], sweep: 0, almsToWinner: 0, alms: 0, gameWinnerWonSilver: 0, silverSpecialistWin: 0, silverMembers: [], winnerSilverMembers: [], silverEnd: [], self: 0, spill: 0, perAction: {}, winnerTookSilver: [], leftover: [] };
 for (let g = 1; g <= games; g++) {
   const rand = seededRandom(g * 9973);
   let s = createGame({ seats: Array.from({ length: n }, () => ({ kind: 'bot' })), seed: g, quadrants });
-  const sContest = Array(n).fill(0), silverTakes = Array(n).fill(0);
+  const sContest = Array(n).fill(0), silverTakes = Array(n).fill(0), almsGot = Array(n).fill(0);
   let act = null; // a Silver action in flight: { who, name, before }
   const snap = st2 => st2.players.map(p => sum(p.res) + 2 * p.bonus);
   const close = st2 => {
@@ -44,6 +44,10 @@ for (let g = 1; g <= games; g++) {
     }
     const r0 = s.round;
     const next = applyMove(s, m);
+    for (const l of next.log.slice(s.log.length >= 300 ? -3 : s.log.length)) {
+      const hit = /^P\d gave (P\d) 2 /.exec(l);
+      if (hit) almsGot[Number(hit[1].slice(1)) - 1]++;
+    }
     if (next.round !== r0 || next.over) {
       const line = [...next.log].reverse().find(l => l.startsWith(`Round ${['I', 'II', 'III'][r0 - 1]} ends.`));
       if (line) {
@@ -61,6 +65,12 @@ for (let g = 1; g <= games; g++) {
   }
   const w = s.ranking[0];
   st.wins[w]++;
+  if (sContest.some(v => v === 12)) st.sweep++;
+  st.alms += almsGot.reduce((a, b) => a + b, 0); st.almsToWinner += almsGot[w];
+  if (sContest[w] > 0) st.gameWinnerWonSilver++;
+  // the seat that took the most Silver spaces: how often does it win?
+  const top = Math.max(...silverTakes);
+  if (silverTakes[w] === top) st.silverSpecialistWin++;
   st.silverContestOfWinner.push(sContest[w]);
   st.winnerTookSilver.push(silverTakes[w]);
   st.winFol.push(followers(s, s.players[w]));
@@ -79,6 +89,7 @@ if (sq >= 0) {
   console.log(`Silver takes per game: ${Object.entries(st.takes).map(([k, v]) => `${k} ${(v / games).toFixed(2)}`).join(' · ')}`);
   console.log(`  by round: ${Object.entries(st.takesByRound).sort().map(([k, v]) => `${k} ${(v / games).toFixed(2)}`).join(' · ')}`);
   console.log(`Most-silver contest: nobody scored ${(100 * st.noScore / st.contestRounds).toFixed(0)}%; shared ${(100 * st.ties / st.contestRounds).toFixed(0)}%; wins by seat ${st.contestWins.join('/')}; winner's followers from it ${avg(st.silverContestOfWinner)}; winner took ${avg(st.winnerTookSilver)} Silver spaces`);
+  console.log(`  one player swept all 3 rounds ${(100 * st.sweep / games).toFixed(0)}% · game winner won the silver ring at least once ${(100 * st.gameWinnerWonSilver / games).toFixed(0)}% · a top Silver-space taker won ${(100 * st.silverSpecialistWin / games).toFixed(0)}% · Alms gifts that went to the eventual winner ${(100 * st.almsToWinner / st.alms).toFixed(0)}% (25% = neutral)`);
   console.log(`Spill ratio (rivals' gain ÷ taker's gain, resources + 2 per follower, incl. member triggers): ${(st.spill / st.self).toFixed(2)}`);
   console.log('  per action: ' + Object.entries(st.perAction).map(([k, a]) => `${k} you ${(a.self / a.k).toFixed(1)} / table ${(a.spill / a.k).toFixed(1)}`).join(' · '));
 }

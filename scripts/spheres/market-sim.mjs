@@ -3,9 +3,9 @@
 import { createGame, applyMove, chooseBotMove, followers, memberCount, actionAt } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { registerQuadrant, quadrant } from '../../src/engine/v4/content/index.js';
-import market, { memberValue } from '../../src/engine/v4/content/market.js';
+import market, { memberValue, install } from '../../src/engine/v4/content/market.js';
 import { contextFor } from '../../src/engine/v4/core.js';
-registerQuadrant(market);
+install();
 
 const games = Number(process.argv[2] || 400), n = 4;
 const quadrants = (process.argv[3] || 'gold,red,market,green').split(',');

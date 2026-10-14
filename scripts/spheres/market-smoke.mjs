@@ -2,8 +2,8 @@
 import { createGame, applyMove, chooseBotMove, followers } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { registerQuadrant } from '../../src/engine/v4/content/index.js';
-import market from '../../src/engine/v4/content/market.js';
-registerQuadrant(market);
+import market, { install } from '../../src/engine/v4/content/market.js';
+install();
 const N = Number(process.argv[2] || 200);
 let bad = 0, moves = 0;
 for (let g = 1; g <= N; g++) {
