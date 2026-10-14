@@ -1,6 +1,16 @@
-# Sphere design brief (draft for Cory, 2026-10-14)
+# Sphere design brief (approved by Cory, 2026-10-14)
 
 Handed to every sphere-design agent, together with design-principles.md, decisions.md and the Gold and Red files.
+
+## Principles (Cory approved)
+1. Each sphere is defined by one mechanic and plays differently from Gold (hoarding) and Red (many cheap members).
+2. One scoring rule, counted at round end.
+3. Actions match the anchors: round I like Joint Venture or Rush, round II like Steal or Windfall, round III a burst like Strike.
+4. Weak versions of strong actions are welcome; the draft gives them meaning.
+5. 15 simple members, built from what Cory has kept: income, triggers on rivals, links to other spheres, catch-up, a way to win, a once-per-game burst.
+6. No members tied to one specific contest, nothing that only helps whoever's already winning, no fiddly timing.
+7. Interaction, including harm, is fine when it's fun on both sides.
+8. Every card is measured by simulation before Cory sees it.
 
 ## What a sphere is
 - One resource (its color) and one scoring rule, measured at round end. You need at least 1 to score, ties all score, and it pays +2/+4/+6.
