@@ -1,4 +1,4 @@
-# Patrons — How to play
+# Cults — How to play
 
 You lead a growing following. Recruit **members**, gather resources, and win **followers**. Whoever has the most followers after three rounds wins.
 

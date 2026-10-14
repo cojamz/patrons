@@ -9,13 +9,19 @@ import GameScreen from './game/GameScreen.jsx';
 import { friendlyError } from './errors.js';
 import { Home, LocalSetup, Lobby, initialTable } from './screens/Screens.jsx';
 import { tableProblem } from './tables.js';
+import { Recovered } from './Recovery.jsx';
 
 // Bots decide quickly; the table paces what you see (each visible bot step holds PACE ms, a pass doesn't wait).
 const BOT_DELAY = { slow: 400, normal: 250, fast: 120 };
 const PACE = { slow: 1100, normal: 700, fast: 350 };
 const urlBotDelay = () => Number(new URLSearchParams(location.search).get('botDelay')) || 0;
 
-export default function App() {
+/** The v4 root: a crash anywhere shows a recovery screen, not a blank page; notices sit on top (Recovery.jsx). */
+export default function V4Root() {
+  return <Recovered><App /></Recovered>;
+}
+
+function App() {
   const [screen, setScreen] = useState(() => (loadOnline() && rejoinRoom ? { name: 'rejoining' } : { name: 'home' }));
   const [config, setConfig] = useState(null);
   const [session, setSession] = useState(null);
