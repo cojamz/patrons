@@ -14,7 +14,8 @@
     "test:mp": "node .claude/mp-e2e.mjs",
     "check:v4": "node scripts/v4-check.mjs",
     "records:refresh": "node scripts/v4-records-refresh.mjs",
-    "sim:v4": "node scripts/v4-sim.mjs"
+    "sim:v4": "node scripts/v4-sim.mjs",
+    "bench:v4": "node scripts/v4-bench.mjs"
   },
   "dependencies": {
     "firebase": "^12.6.0",

@@ -19,6 +19,8 @@ const margin = (state, id) =>
  * opts.maxMs: a wall-clock cap for the UI (chooseBotMove sets 250). Off by default, so direct calls and sims stay
  *   deterministic; when it bites, rollouts stop early and are scored statically, so a slow machine plays a bit weaker.
  * opts.now: the clock for maxMs (default performance.now).
+ * opts.trace: called once per weighed decision with { kind, means } (each candidate's mean rollout result), for the
+ *   balance bench's decision-richness reading. It never changes the choice.
  */
 export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
@@ -62,6 +64,7 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   }
   let best = 0;
   for (let i = 1; i < pool.length; i++) if (totals[i] / counts[i] > totals[best] / counts[best]) best = i;
+  if (opts.trace) opts.trace({ kind: pend.kind, means: totals.map((t, i) => t / counts[i]) });
   return { player: me, option: pool[best].o.id };
 }
 
