@@ -376,8 +376,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     const est = (tie, f) => f * (rule.length * 0.74 + (tie ? (tie.length + 9) * 0.5 : 0)) + tail * (f / rimFont);
     let tie = tb ? tb.unit : null;
     if (tie && est(tie, rimFont) > room) tie = tie.split(' ')[0];
-    const font = Math.max(9, Math.min(rimFont, rimFont * room / est(tie, rimFont)));
-    return { rule, tie, tieText: tb ? tb.text : null, top, rr, font };
+    return { rule, tie, tieText: tb ? tb.text : null, top, rr, font: rimFont };
   };
   const rimAnchor = qid => stage.current && stage.current.querySelector(`[data-plaque="${qid}"]`);
   // the engraved text's real length, so text + emoji sit centred on the rim (measured once it's drawn)
@@ -385,8 +384,9 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
   useLayoutEffect(() => {
     if (!stage.current) return;
     const next = {};
-    stage.current.querySelectorAll('[data-rim-text]').forEach(t => { try { const tp = t.querySelector('textPath'); next[t.dataset.rimText] = (tp && tp.getComputedTextLength ? tp.getComputedTextLength() : 0) || 0; } catch { /* jsdom */ } });
-    if (Object.keys(next).some(k => next[k] && Math.abs((rimW[k] || 0) - next[k]) > 0.5)) setRimW(next);
+    // per unit of font size, so a line that has to step down to fit can be sized without measuring again
+    stage.current.querySelectorAll('[data-rim-text]').forEach(t => { try { const tp = t.querySelector('textPath'); const f = Number(t.getAttribute('font-size')) || 1; next[t.dataset.rimText] = ((tp && tp.getComputedTextLength ? tp.getComputedTextLength() : 0) || 0) / f; } catch { /* jsdom */ } });
+    if (Object.keys(next).some(k => next[k] && Math.abs((rimW[k] || 0) - next[k]) > 0.02)) setRimW(next);
   });
 
   // the newest rival moves since your last turn (a dotted ring in the mover's color)
@@ -444,9 +444,12 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     const st = stdById[qid];
     const leaders = st && st.leaders.length ? st.leaders : [];
     const lab = rimLabel(qid, q, leaders);
-    const rr = lab.rr, F = lab.font;
+    const rr = lab.rr;
     const arcLen = (2 * arcHalf * Math.PI / 180) * rr;
-    const textW = rimW[q] || F * (lab.rule.length * 0.74 + (lab.tie ? (lab.tie.length + 9) * 0.5 : 0));
+    // the line as measured (per unit of font size): if it and its leaders don't fit the arc, it steps down to fit
+    const perF = rimW[q] || (lab.rule.length * 0.74 + (lab.tie ? (lab.tie.length + 9) * 0.5 : 0));
+    const F = Math.max(9, Math.min(lab.font, (arcLen - 18) / (perF + (leaders.length ? 0.9 + 1.55 * leaders.length : 0))));
+    const textW = perF * F;
     const EM = F * 1.55; // one emoji's room on the line
     const tail = leaders.length ? F * 0.9 + leaders.length * EM : 0;
     const startS = Math.max(0, (arcLen - textW - tail) / 2);

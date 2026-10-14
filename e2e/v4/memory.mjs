@@ -69,16 +69,19 @@ try {
       await end.click().catch(() => {});
       continue;
     }
-    const opts = await page.$$('[data-option]:not([disabled])');
-    const ids = [];
-    for (const o of opts) ids.push([o, await o.getAttribute('data-option').catch(() => '')]);
+    // ids, clicked by selector: some pickers re-create their buttons on every render, so a held handle goes stale
+    const ids = (await page.$$eval('[data-option]:not([disabled])', els => els.map(e => e.getAttribute('data-option'))).catch(() => [])).map(id => [id, id]);
     // prefer recruiting (cults with members are the heavier screen), then followers; never back/undo
     // (a member's on/off switch is a free toggle: flipping it forever would stall the game)
     const rank = id => (/^(card|pay):/.test(id) ? 0 : /^tier:/.test(id) ? 1 : /^toggle:/.test(id) ? 8 : /^(back|undo|pass)/.test(id) ? 9 : 2);
     ids.sort((x, y) => rank(x[1]) - rank(y[1]));
     const pick = ids.find(([, id]) => !/^(back|undo)/.test(id));
     if (!pick) { await page.waitForTimeout(40); }
-    else await pick[0].click({ timeout: 2000 }).catch(() => pick[0].evaluate(e => e.click()).catch(() => {}));
+    else {
+      // a hover card can cover the target: then a plain DOM click on a fresh lookup
+      const sel = `[data-option="${pick[0]}"]:not([disabled])`;
+      await page.click(sel, { timeout: 1500 }).catch(() => page.$eval(sel, e => e.click()).catch(() => {}));
+    }
     const n = await moves();
     if (n !== lastMoves) { lastMoves = n; movedAt = Date.now(); }
     if (n >= next) { await sample(`move ${n}`); next = n - (n % EVERY) + EVERY; }

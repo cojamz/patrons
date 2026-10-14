@@ -307,7 +307,7 @@ h1,h2,h3{font-family:var(--serif)}
    part of the board) ---------- */
 .lt .stage svg.wheel-paper .rim{transition:fill-opacity .3s}
 .lt .stage svg.wheel-paper .rim.wait{fill-opacity:.45}
-.lt .stage svg.wheel-paper .rim-rule{fill:rgba(255,249,236,.95);font-family:var(--sans);font-weight:700;letter-spacing:.14em;dominant-baseline:central;pointer-events:none;paint-order:stroke;stroke:rgba(42,31,23,.18);stroke-width:.6}
+.lt .stage svg.wheel-paper .rim-rule{fill:rgba(255,249,236,.95);font-family:var(--sans);font-weight:700;letter-spacing:.11em;dominant-baseline:central;pointer-events:none;paint-order:stroke;stroke:rgba(42,31,23,.18);stroke-width:.6}
 .lt .stage svg.wheel-paper .rim-rule.wait{opacity:.5}
 .lt .stage svg.wheel-paper .rim-rule.lit{fill:#fffdf6}
 .lt .stage svg.wheel-paper .rim-hit{fill:transparent;cursor:help;pointer-events:all}

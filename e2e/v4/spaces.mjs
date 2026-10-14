@@ -1,0 +1,298 @@
+// E2E: the action spaces, at 1270×700, in both looks (sockets, the default; engraved, behind ?spaces=engraved).
+//  (s1) lit: during your placement every space you can take has the lit class, no other does, and no taken space you
+//       can't join is lit (engraved: the printed cell is lit exactly when its space is);
+//  (s2) a click on a taken space shakes it and says "Taken by …" at the pointer;
+//  (s3) a click on a space whose ring isn't open shakes it and says "Opens in round II/III";
+//  (s4) after every placement, each space shows exactly its minions (the owner and anyone squatting there), and an
+//       empty space shows none (the saved state at the same move count is the truth);
+//  (s5) no flying ghost (a minion, a card, a "+N" of followers) outlives its flight;
+//  (s6) every quadrant with a tiebreak prints it on its rim ("ties: red …");
+//  (s7) every word on the wheel is at least 12px on screen (the rim's engraved text included);
+//  (s8) the headline prompt fits: no ellipsis, nothing clipped, one line, while placing and while buying;
+//  (s9) engraved: every word, stamp and minion sits inside its own printed cell.
+// Server: $V4_URL if set, else its own `npx vite` on a free port from 5196.
+import { chromium } from 'playwright';
+import { spawn } from 'node:child_process';
+import { mkdirSync } from 'node:fs';
+import { createServer } from 'node:net';
+import { createGame, applyMove, chooseBotMove, quadrant } from '../../src/engine/v4/index.js';
+import { seededRandom } from '../../src/engine/v4/rng.js';
+import { buildStamp } from './lib/stamp.mjs';
+
+const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/spaces';
+mkdirSync(SHOTS, { recursive: true });
+let server = null;
+let base = process.env.V4_URL;
+if (!base) {
+  const free = port => new Promise(res => { const srv = createServer().once('error', () => res(false)).once('listening', () => srv.close(() => res(true))).listen(port, 'localhost'); });
+  let port = 5196;
+  while (!(await free(port))) port++;
+  base = `http://localhost:${port}`;
+  server = spawn('npx', ['vite', '--port', String(port), '--strictPort'], { stdio: 'pipe' });
+  let up = false;
+  for (let k = 0; k < 60 && !up; k++) { await new Promise(r => setTimeout(r, 500)); up = await fetch(base).then(r => r.ok, () => false); }
+  if (!up) { server.kill(); console.error('vite did not start'); process.exit(1); }
+}
+
+/** Round I, P1 (the only person) to place, with at least two rival minions already down; plenty of every color. */
+function spaceSave(quadrants) {
+  const seats = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
+  for (let seed = 1; seed < 80; seed++) {
+    let s = createGame({ seats, seed, ...(quadrants ? { quadrants } : {}) });
+    s.build = buildStamp();
+    const rand = seededRandom(seed);
+    const ready = x => x.round === 1 && x.pending && x.pending.player === 0 && x.pending.kind === 'place' && Object.keys(x.slots).length >= 2;
+    for (let n = 0; n < 600 && !ready(s) && !(s.round > 1); n++) s = applyMove(s, chooseBotMove(s, rand));
+    if (!ready(s)) continue;
+    for (const r of s.resources) s.players[0].res[r] = 6;
+    return { config: { seats: seats.map(x => ({ kind: x.kind, name: x.name })), speed: 'normal' }, state: s, undo: null, savedAt: Date.now() };
+  }
+  throw new Error('spaces: no seed reached P1 placing with rivals down');
+}
+
+const errors = [];
+const fail = (m, tag) => { const msg = tag ? `${tag} ${m}` : m; if (!errors.includes(msg)) errors.push(msg); };
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+
+// in-page: every flying ghost's life (born → removed), and every class the spaces wear (to catch a shake)
+const WATCH = () => {
+  window.__sp = { ghosts: [], shakes: [] };
+  const born = new Map();
+  new MutationObserver(ms => {
+    const now = performance.now();
+    for (const m of ms) {
+      if (m.type === 'childList') {
+        for (const n of m.addedNodes) if (n.nodeType === 1 && n.classList.contains('ghost-layer')) born.set(n, { at: now, cls: n.className });
+        for (const n of m.removedNodes) if (born.has(n)) { const b = born.get(n); window.__sp.ghosts.push({ cls: b.cls, ms: now - b.at }); born.delete(n); }
+      } else if (m.attributeName === 'class' && m.target.classList && m.target.classList.contains('shake')) {
+        window.__sp.shakes.push(m.target.dataset.slot || m.target.dataset.cell || '?');
+      }
+    }
+  }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+  // a ghost still on screen long after any flight would have ended
+  setInterval(() => {
+    const now = performance.now();
+    for (const [n, b] of born) if (now - b.at > 2500 && !b.flagged && n.isConnected) { b.flagged = true; window.__sp.ghosts.push({ cls: b.cls, ms: now - b.at, alive: true }); }
+  }, 250);
+};
+
+// ---------- the in-page checks ----------
+const LIT = () => {
+  const out = [];
+  const slots = [...document.querySelectorAll('.lt-wheel .slot[data-slot]')];
+  for (const s of slots) {
+    const can = s.hasAttribute('data-option'), lit = s.classList.contains('lit');
+    if (can && !lit) out.push(`${s.dataset.slot} can be taken but isn't lit`);
+    if (!can && lit) out.push(`${s.dataset.slot} is lit but can't be taken`);
+    if (s.classList.contains('taken') && !can && lit) out.push(`${s.dataset.slot} is taken and lit`);
+    const cell = document.querySelector(`.lt-wheel [data-cell="${s.dataset.slot}"]`);
+    if (cell && cell.classList.contains('lit') !== lit) out.push(`${s.dataset.slot}: its printed cell is ${cell.classList.contains('lit') ? '' : 'not '}lit`);
+  }
+  return { out, lit: slots.filter(s => s.classList.contains('lit')).length, can: slots.filter(s => s.hasAttribute('data-option')).length };
+};
+const MINIONS = () => {
+  let save = null;
+  try { save = JSON.parse(localStorage.getItem('patrons.v4.local')); } catch { /* none */ }
+  const st = save && save.state;
+  const root = document.querySelector('.lt');
+  if (!st || !root || String(st.moves) !== root.dataset.moves) return null; // not settled on the same move yet
+  const out = [];
+  let taken = 0;
+  for (const s of document.querySelectorAll('.lt-wheel .slot[data-slot]')) {
+    const key = s.dataset.slot;
+    const want = st.slots[key] === undefined ? [] : [st.slots[key], ...((st.squats && st.squats[key]) || [])];
+    const have = [...s.querySelectorAll('.worker[data-seat]')].map(w => Number(w.dataset.seat));
+    if (want.length) taken++;
+    if (JSON.stringify([...want].sort()) !== JSON.stringify([...have].sort())) out.push(`${key}: shows minions [${have}] but holds [${want}] (move ${st.moves})`);
+    for (const w of s.querySelectorAll('.worker')) { const r = w.getBoundingClientRect(); if (want.length && (!r.width || !r.height)) out.push(`${key}: a minion has no size`); }
+  }
+  return { out, taken, moves: st.moves };
+};
+const RIM = () => {
+  const out = [];
+  for (const t of document.querySelectorAll('.lt-wheel [data-rim-text]')) out.push({ qid: t.dataset.plaque, text: t.textContent });
+  return out;
+};
+const FLOOR = () => {
+  const out = [];
+  const stage = document.querySelector('.lt-wheel .stage');
+  const k = stage.getBoundingClientRect().width / 452;
+  const visible = e => { for (let a = e; a && a !== stage; a = a.parentElement) { const s = getComputedStyle(a); if (s.display === 'none' || s.visibility === 'hidden') return false; } return true; };
+  for (const e of stage.querySelectorAll('*')) {
+    if (e instanceof SVGElement) continue;
+    if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
+    if (!visible(e)) continue;
+    const fs = parseFloat(getComputedStyle(e).fontSize);
+    if (fs < 11.95) out.push(`"${e.textContent.trim().slice(0, 24)}" at ${fs}px`);
+  }
+  for (const t of stage.querySelectorAll('[data-rim-text]')) {
+    const px = Number(t.getAttribute('font-size')) * k;
+    if (px < 11.95) out.push(`rim "${t.textContent.slice(0, 24)}" at ${px.toFixed(1)}px`);
+  }
+  return out;
+};
+const PROMPT = () => {
+  const out = [];
+  const say = document.querySelector('.lt-prompt [data-prompt]');
+  if (!say) return ['no prompt'];
+  const text = say.textContent.trim();
+  if (/…|\.\.\.$/.test(text)) out.push(`the headline ends in an ellipsis: "${text}"`);
+  const box = say.querySelector('.say-text') || say;
+  if (box.scrollWidth > box.clientWidth + 1 || box.scrollHeight > box.clientHeight + 1) out.push(`the headline overflows its box: "${text}"`);
+  const fs = parseFloat(getComputedStyle(box).fontSize);
+  const r = document.createRange(); r.selectNodeContents(box);
+  const lines = new Set([...r.getClientRects()].filter(x => x.width > 1).map(x => Math.round(x.top / (fs * 0.6))));
+  if (lines.size > 1) out.push(`the headline wraps to ${lines.size} lines: "${text}"`);
+  const b = r.getBoundingClientRect();
+  if (b.top < 0 || b.right > innerWidth || b.left < 0) out.push(`the headline runs off screen: "${text}"`);
+  const region = document.querySelector('.lt-prompt').getBoundingClientRect();
+  if (b.top < region.top - 1 || b.bottom > region.bottom + 1) out.push(`the headline spills out of the prompt region: "${text}"`);
+  const sub = document.querySelector('[data-prompt-sub]');
+  if (sub && (sub.scrollWidth > sub.clientWidth + 1 || /…$/.test(sub.textContent))) out.push(`the sub-line is cut: "${sub.textContent}"`);
+  return out;
+};
+const INSIDE = () => {
+  // engraved: every word (each line of it), stamp and minion is over its own printed cell, a little in from each corner
+  const out = [];
+  for (const s of document.querySelectorAll('.lt-wheel .slot[data-slot]')) {
+    const key = s.dataset.slot;
+    const boxes = [];
+    for (const el of s.querySelectorAll('.face .nm, .face .yl')) {
+      const r = document.createRange(); r.selectNodeContents(el);
+      for (const x of r.getClientRects()) if (x.width > 2 && x.height > 2) boxes.push({ what: el.className, x });
+    }
+    for (const el of s.querySelectorAll('.face .ico svg, .face .worker svg')) boxes.push({ what: el.closest('.ico') ? 'stamp' : 'minion', x: el.getBoundingClientRect() });
+    for (const { what, x } of boxes) {
+      const pts = [[x.left + 2, x.top + 2], [x.right - 2, x.top + 2], [x.left + 2, x.bottom - 2], [x.right - 2, x.bottom - 2]];
+      for (const [px, py] of pts) {
+        const hit = document.elementsFromPoint(px, py).find(e => e.matches && e.matches('[data-cell] .wash'));
+        if (!hit || hit.closest('[data-cell]').dataset.cell !== key) { out.push(`${key} ${what} pokes out of its cell at (${px | 0},${py | 0})${hit ? ` into ${hit.closest('[data-cell]').dataset.cell}` : ''}`); break; }
+      }
+    }
+  }
+  return out;
+};
+
+const passes = [
+  { look: 'sockets', quadrants: null, play: true },
+  { look: 'engraved', quadrants: null, play: true },
+  { look: 'engraved', quadrants: ['red', 'yellow', 'market', 'gold'], play: false },
+];
+const totals = {};
+try {
+  for (const pass of passes) {
+    const tag = `[${pass.look}${pass.quadrants ? ' ' + pass.quadrants.join('/') : ''}]`;
+    const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+    page.on('pageerror', e => fail(`pageerror: ${e.message}`, tag));
+    page.on('console', m => { if (m.type() === 'error') fail(`console: ${m.text()}`, tag); });
+    await page.addInitScript(WATCH);
+    const shot = n => page.screenshot({ path: `${SHOTS}/${pass.look}${pass.quadrants ? '-tb' : ''}-${n}.png` }).catch(() => {});
+    const q = `?botDelay=40${pass.look === 'engraved' ? '&spaces=engraved' : ''}`;
+    await page.goto(`${base}/${q}`);
+    await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), spaceSave(pass.quadrants));
+    await page.reload();
+    await page.click('[data-home="resume"]');
+    await page.waitForTimeout(400);
+    { const skip = await page.$('[data-intro-skip]'); if (skip) await skip.click(); }
+    await page.waitForSelector('.lt[data-yours="1"][data-phase="place"] .lt-wheel .slot.lit', { timeout: 15000 });
+    await page.waitForTimeout(700);
+    const look = await page.$eval('.lt-wheel .wheel-wrap', e => e.dataset.spaces);
+    if (look !== pass.look) fail(`the wheel wears "${look}"`, tag);
+    await shot('place');
+
+    // (s1) lit, (s6) tiebreaks, (s7) 12px, (s8) prompt, (s9) inside the cells
+    const lit = await page.evaluate(LIT);
+    lit.out.forEach(m => fail(`(s1) ${m}`, tag));
+    if (!lit.lit) fail('(s1) nothing is lit during your placement', tag);
+    for (const r of await page.evaluate(RIM)) {
+      const tb = quadrant(r.qid).scoring.tiebreak;
+      if (tb && !r.text.includes(`ties: ${tb.unit.split(' ')[0]}`)) fail(`(s6) ${r.qid}'s rim doesn't print its tiebreak ("${tb.text}"): "${r.text}"`, tag);
+    }
+    (await page.evaluate(FLOOR)).forEach(m => fail(`(s7) ${m}`, tag));
+    (await page.evaluate(PROMPT)).forEach(m => fail(`(s8) placing: ${m}`, tag));
+    if (pass.look === 'engraved') (await page.evaluate(INSIDE)).forEach(m => fail(`(s9) ${m}`, tag));
+
+    // (s2) a taken space: shake + "Taken by …" at the pointer
+    const taken = await page.$('.lt-wheel .slot.taken:not([data-option])');
+    if (!taken) fail('(s2) no taken space to click', tag);
+    else {
+      const key = await taken.getAttribute('data-slot');
+      const b = await taken.boundingBox();
+      const at = { x: b.x + b.width / 2 + 5, y: b.y + b.height / 2 + 3 };
+      await page.mouse.click(at.x, at.y);
+      const note = await page.waitForSelector('[data-deny-note]', { timeout: 1500 }).catch(() => null);
+      const text = note ? await note.textContent() : '';
+      if (!/^Taken by (you|P\d)$/.test(text)) fail(`(s2) a click on taken ${key} said "${text || 'nothing'}"`, tag);
+      if (note) { const r = await note.boundingBox(); if (Math.hypot(r.x - at.x, r.y + r.height - at.y) > 70) fail(`(s2) the note is ${Math.round(Math.hypot(r.x - at.x, r.y + r.height - at.y))}px from the pointer`, tag); }
+      const shook = await page.evaluate(k => window.__sp.shakes.includes(k), key);
+      if (!shook) fail(`(s2) taken ${key} didn't shake`, tag);
+      await shot('deny-taken');
+      await page.waitForTimeout(1900);
+    }
+    // (s3) a space not open yet: shake + "Opens in round …"
+    const locked = await page.$('.lt-wheel .slot.locked');
+    if (locked) {
+      const key = await locked.getAttribute('data-slot');
+      const b = await locked.boundingBox();
+      await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+      const note = await page.waitForSelector('[data-deny-note]', { timeout: 1500 }).catch(() => null);
+      const text = note ? await note.textContent() : '';
+      if (!/^Opens in round (II|III)$/.test(text)) fail(`(s3) a click on locked ${key} said "${text || 'nothing'}"`, tag);
+      if (!(await page.evaluate(k => window.__sp.shakes.includes(k), key))) fail(`(s3) locked ${key} didn't shake`, tag);
+      await shot('deny-locked');
+    } else fail('(s3) no locked space in round I', tag);
+    await page.mouse.move(4, 4);
+
+    // play round I out: my placements (lit checked each time), the buys (prompt checked), the minions after every move
+    let checks = 0, placed = 0, buys = 0;
+    const counts = new Set();
+    if (pass.play) {
+      const t0 = Date.now();
+      let lastMoves = -1;
+      while (Date.now() - t0 < 120000 && !(await page.$('.lt-reckon, [data-next-round]'))) {
+        const m = await page.evaluate(MINIONS);
+        if (m && m.moves !== lastMoves) { lastMoves = m.moves; checks++; counts.add(m.taken); m.out.forEach(x => fail(`(s4) ${x}`, tag)); }
+        const phase = await page.$eval('.lt', e => (e.dataset.yours === '1' ? e.dataset.phase : '')).catch(() => '');
+        if (phase === 'place') {
+          await page.waitForTimeout(250);
+          const l = await page.evaluate(LIT);
+          l.out.forEach(x => fail(`(s1) ${x}`, tag));
+          (await page.evaluate(PROMPT)).forEach(x => fail(`(s8) placing: ${x}`, tag));
+          const slot = await page.$('.lt-wheel .slot.lit .base');
+          if (slot) { const bb = await slot.boundingBox(); await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2); placed++; await page.mouse.move(4, 4); }
+          await page.waitForTimeout(300);
+        } else if (phase === 'choose' || phase === 'setup') {
+          const o = await page.$('.prompt.choice button[data-option]:not([disabled])');
+          if (o) await o.click().catch(() => {});
+          await page.waitForTimeout(250);
+        } else if (phase === 'buy') {
+          await page.waitForTimeout(300);
+          (await page.evaluate(PROMPT)).forEach(x => fail(`(s8) buying: ${x}`, tag));
+          if (!buys) await shot('buy');
+          buys++;
+          await page.click('[data-option="pass"]').catch(() => {});
+          await page.waitForTimeout(250);
+        } else await page.waitForTimeout(120);
+      }
+      if (placed < 2) fail(`(s4) only ${placed} placements were made`, tag);
+      if (checks < 6) fail(`(s4) the minions were checked at only ${checks} moves`, tag);
+      await shot('round-end');
+    }
+    // (s5) the ghosts: none outlived its flight
+    await page.waitForTimeout(pass.play ? 2600 : 300);
+    const ghosts = await page.evaluate(() => window.__sp.ghosts);
+    const stuck = ghosts.filter(g => g.alive || g.ms > 2500);
+    stuck.forEach(g => fail(`(s5) a ${g.cls.replace(' ghost-layer', '')} ghost stayed ${Math.round(g.ms)}ms${g.alive ? ' (still on screen)' : ''}`, tag));
+    totals[tag] = `${lit.lit} lit, ${checks} minion checks (${[...counts].sort((a, b) => a - b).join('/')} taken), ${placed} placed, ${buys} buys, ${ghosts.length} ghosts (longest ${Math.round(Math.max(0, ...ghosts.map(g => g.ms)))}ms)`;
+    await page.close();
+  }
+} catch (e) {
+  errors.push(`run: ${e.stack || e.message}`);
+}
+await browser.close();
+if (server) server.kill();
+for (const [k, v] of Object.entries(totals)) console.log(`spaces ${k}: ${v}`);
+if (errors.length) console.error(errors.join('\n'));
+const ok = errors.length === 0;
+console.log(ok ? 'PASS spaces' : 'FAIL spaces');
+process.exit(ok ? 0 : 1);

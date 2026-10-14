@@ -24,7 +24,8 @@ describe('ranked row', () => {
     const shown = [...container.querySelectorAll('[data-rank] .rk')];
     expect(shown.map(e => Number(e.dataset.pid))).toEqual(rows.map(r => r.id));
     expect(shown.map(e => Number(e.dataset.followers))).toEqual(rows.map(r => r.f));
-    expect(shown[0].className).toMatch(/\blead\b/);
+    const level = rows.every(r => r.f === rows[0].f && r.m === rows[0].m);
+    if (level) expect(container.querySelector('.rk.lead')).toBeNull(); else expect(shown[0].className).toMatch(/\blead\b/);
     const top = rows[0], second = rows.find(r => r.f < top.f || r.m < top.m);
     if (second && top.f > second.f) expect(shown[0].title).toContain(`by ${top.f - second.f}`);
     for (const e of shown.slice(1)) if (!/\blead\b/.test(e.className)) expect(e.title).toMatch(/behind/);

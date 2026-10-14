@@ -22,6 +22,11 @@ Updated 2026-10-14 ~21:40 UTC. Agents never commit; the foreman verifies and che
 14. **Action spaces: three directions.** Static mocks in design/prototypes/actions/ (Cory: "I still don't like the actions"), for Cory to pick by number; then UI-A builds the pick in Wheel.jsx.
 12. **Design critic, round 2 (blind).** On the frozen build 4da59a3 (`.v4-panel/d8`, port 5201), with a Vision section (visual actions, elegant round scoring, cults at a glance) and a mocked frame. Report → design/eval/ui-critic-round2.md.
 
+19. **Two-device online check.** QA agent over the RTDB emulator (real SDK) on a frozen HEAD: laptop host + iPhone 13 guest, reload mid-turn, 30s offline, Back swipe, host offline, to results. Port 5320, emulator 9124. Production Firebase/Netlify blocked (proxy 403) until Cory allows the hosts.
+20. **Emoji pick + online bot level.** Setup and lobby emoji picker (unique per table, bots random), host picks bot level for online bots. Port 5322.
+21. **Friends docs.** Rulebook to tonight's rules, design/friends-guide.md, design/release-notes-v0.2.md.
+- Release-candidate panel briefs are ready: design/eval/panel-rc-briefs.md.
+
 ## Held
 - **Fair-price screen, bot levels + 4-thinker tables:** offloaded to the remote sessions below. The Purple session is done (roster 11).
 - **Board game enthusiast:** the missing third reviewer of fresh-eyes round 1. Held until the layout revision lands and a build is frozen from a commit; then run the full trio (ui-critic, enthusiast, engineer) as round 2, plus the meta synthesis.

@@ -18,8 +18,10 @@ export default function RankRow({ state, me = null }) {
   const top = rows[0];
   const shared = rows.filter(r => r.f === top.f && r.m === top.m);
   const second = rows.find(r => r.f < top.f || r.m < top.m);
+  const lit = shared.length < rows.length; // everyone level: nobody is lit
   const say = (r, k) => {
     const unit = n => `${n} follower${n === 1 ? '' : 's'}`;
+    if (!second) return `Everyone has ${unit(r.f)}`;
     if (shared.length > 1 && shared.includes(r)) return `${shared.map(x => x.name).join(' and ')} share the lead with ${unit(r.f)}`;
     if (k === 0) return `${r.name} ${r.name === 'You' ? 'lead' : 'leads'} by ${top.f - second.f || 0}${top.f === second.f ? ` (members break the tie: ${top.m} to ${second.m})` : ''} · ${unit(r.f)}`;
     return `${r.name}: ${unit(r.f)}, ${top.f - r.f} behind ${shared.map(x => x.name).join(' and ')}`;
@@ -29,7 +31,7 @@ export default function RankRow({ state, me = null }) {
       <Follower size={10} title="followers" />
       {rows.map((r, k) => (
         <span key={r.id} role="listitem" data-pid={r.id} data-followers={r.f}
-          className={`rk${shared.includes(r) ? ' lead' : ''}${r.id === me ? ' me' : ''}`} title={say(r, k)}>
+          className={`rk${lit && shared.includes(r) ? ' lead' : ''}${r.id === me ? ' me' : ''}`} title={say(r, k)}>
           {k ? <i aria-hidden="true">·</i> : null}{r.name} <b className="num">{r.f}</b>
         </span>
       ))}

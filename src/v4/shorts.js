@@ -7,7 +7,7 @@ const S = {
     jv: '+3 gold · gift 1', rush: r => `+${2 * r} gold`, discount: '−4 cost', steal: 'steal 3 gold', windfall: '+1 gold/member', strike: 'double gold',
   },
   red: {
-    evenswap: '+1 red · swap same cost', turnout: '+1 red/recruit', hire: 'cheapest, free', hireup: '+2 red · cheapest', trade: 'swap a member', take: 'any member, free',
+    evenswap: '+1 red · swap', turnout: '+1 red/recruit', hire: 'cheapest, free', hireup: '+2 red · cheapest', trade: 'swap a member', take: 'any member, free',
   },
   blue: { a1: '+3 blue', a2: '+2 blue +1 red', a3: '+2 blue +1 green', a4: '+5 blue', a5: '+4 blue +1 gold', a6: '+8 blue' },
   green: { a1: '+3 green', a2: '+2 green +1 gold', a3: '+2 green +1 blue', a4: '+5 green', a5: '+4 green +1 red', a6: '+8 green' },

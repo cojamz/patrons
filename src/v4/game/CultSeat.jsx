@@ -52,7 +52,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           {place && <span className={`cs-order ${place.label}`} data-order={place.label} title={place.label === 'done' ? `${mine ? 'You have' : `${p.name} has`} no turns left this round${orderText ? `. Still to play: ${orderText}` : ''}` : `Turn order: ${orderText}`}>{place.label}</span>}
           <small>{last ? <>last: <Sprite id={[`${last.qid}.${actionKey(last)}`, spriteId(last.name)]} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /></> : p.kind === 'bot' ? 'bot' : ' '}</small>
         </span>
-        <span className="cs-total" title={`${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
+        <span className="cs-total" data-followers={f} title={`${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
       </header>
       <div className="cs-crowd" role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members`}>
         {shown.map(g => {

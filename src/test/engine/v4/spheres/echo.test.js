@@ -78,7 +78,7 @@ describe('Green actions', () => {
     s = pass(play(s, spaceOpt(s, 'Hum')));
     expect(R(s)[0]).toEqual({ ...Z, gold: 6, green: 3 });
     s = take(s, 'Encore');
-    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Hum (P2): +3 green', 'Golden Years (P1): +6 gold', 'Tithe (P2): +1 gold']);
+    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Golden Years (P1): +6 gold', 'Hum (P2): +3 green', 'Tithe (P2): +1 gold']);
   });
 
   it('Echo: on your second pick in a row (the snake’s turn), no rival has placed since: nothing to copy', () => {
@@ -221,7 +221,7 @@ describe('Green actions', () => {
     s = go(s, 'Collect Debts', 'player:0'); // P2 steals P1's only gold: +1
     expect(R(s)[0].gold).toBe(0);
     s = take(s, 'Encore');
-    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Intro Offer (P2): 4 off', 'Collect Debts (P2): do Collect Debts yourself']);
+    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Collect Debts (P2): do Collect Debts yourself', 'Intro Offer (P2): 4 off']);
     s = pass(play(s, spaceOpt(s, 'Intro Offer')));
     expect(s.players[0].discount).toBe(4);
     s = go(s, 'Reprise'); // nothing of P1's to copy (Encore is an echo): just +2 green

@@ -33,6 +33,10 @@ const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromi
 // elements whose text must be whole: cut means it overflows its own box or its nearest clipping ancestor
 const CUT = sels => {
   const out = [];
+  // an invisible hit-area helper (.hitbox: a 44px touch target around a small control) isn't text: measure without it
+  const quiet = document.createElement('style');
+  quiet.textContent = '.hitbox{display:none!important}';
+  document.head.appendChild(quiet);
   const vis = e => { const s = getComputedStyle(e); if (s.display === 'none' || s.visibility === 'hidden') return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
   for (const sel of sels) for (const e of document.querySelectorAll(sel)) {
     if (!vis(e) || e.closest('[aria-hidden="true"]')) continue;
@@ -50,6 +54,7 @@ const CUT = sels => {
       }
     }
   }
+  quiet.remove();
   return out;
 };
 

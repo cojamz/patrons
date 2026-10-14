@@ -4,7 +4,7 @@
 // - CardName / MemberCard / BadgeMark: a member named anywhere opens the full card (badge, color, cost, owner).
 // - ContestStandings / ContestTip: a quadrant's contest straight from the engine's contestTable (who'd score now).
 // - TouchTips: on touch screens a long-press on anything with a title shows that title (hover's touch twin).
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { cardDef, defById, quadrant, previewSpace, contestTable } from '../../engine/v4/index.js';
 import { badgedDef } from '../../engine/v4/content/market.js';
 import { term, splitTerms } from '../glossary.js';
@@ -19,23 +19,33 @@ import { Follower } from '../art/Follower.jsx';
  * An element that explains itself. content: a node or a function returning one (built only when shown).
  * Hover (a real mouse) shows it after a beat; a click or tap pins it; the click never reaches a parent button.
  */
-export function Tip({ content, children, as: As = 'span', className = '', label, ...rest }) {
+// Inside a control (an option button, a card): the control owns the click, the tip only explains on hover/long-press.
+const CONTROL = 'button, a[href], [data-option], [role="button"]';
+export function Tip({ content, children, as: As = 'span', className = '', label, hint = null, ...rest }) {
   const [open, setOpen] = useState(null); // { el, pinned }
+  const [nested, setNested] = useState(false);
   const ref = useRef(null);
   const timer = useRef(null);
   useEffect(() => () => clearTimeout(timer.current), []);
-  const pin = e => { e.stopPropagation(); e.preventDefault(); clearTimeout(timer.current); setOpen(o => (o && o.pinned ? null : { el: ref.current, pinned: true })); };
+  useLayoutEffect(() => { const up = ref.current && ref.current.parentElement; setNested(!!(up && up.closest(CONTROL))); }, []);
+  const inControl = () => { const up = ref.current && ref.current.parentElement; return !!(up && up.closest(CONTROL)); };
+  const pin = e => {
+    // a keyword in an option's text never eats the option's click (a tap there picks the option)
+    if (inControl()) return;
+    e.stopPropagation(); e.preventDefault(); clearTimeout(timer.current); setOpen(o => (o && o.pinned ? null : { el: ref.current, pinned: true }));
+  };
   return (
     <>
       <As
-        ref={ref} className={`tip${className ? ` ${className}` : ''}`} data-tip="" role="button" tabIndex={0}
-        aria-haspopup="dialog" aria-expanded={!!open} aria-label={label}
+        ref={ref} className={`tip${className ? ` ${className}` : ''}`} data-tip="" role={nested ? undefined : 'button'} tabIndex={nested ? undefined : 0}
+        aria-haspopup={nested ? undefined : 'dialog'} aria-expanded={nested ? undefined : !!open} aria-label={label}
+        title={nested ? hint || label || undefined : undefined}
         onPointerEnter={e => { if (!realHover(e)) return; clearTimeout(timer.current); timer.current = setTimeout(() => setOpen(o => o || { el: ref.current, pinned: false }), 260); }}
         onPointerLeave={e => { clearTimeout(timer.current); if (e.pointerType === 'mouse') setOpen(o => (o && !o.pinned ? null : o)); }}
         onClick={pin}
-        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') pin(e); }}
+        onKeyDown={e => { if (!nested && (e.key === 'Enter' || e.key === ' ')) pin(e); }}
         {...rest}
-      >{children}<span className="hitbox" aria-hidden="true" /></As>
+      >{children}{nested ? null : <span className="hitbox" aria-hidden="true" />}</As>
       {open && (
         <Popover anchor={open.el} onClose={() => setOpen(null)} float={!open.pinned}>
           <div className="tip-body" data-tip-body>{typeof content === 'function' ? content() : content}</div>
@@ -51,7 +61,7 @@ export function Term({ k, children, className = '' }) {
   const t = term(k);
   if (!t) return <>{children}</>;
   return (
-    <Tip className={`term${className ? ` ${className}` : ''}`} data-term={k} label={`${t.word}: what it means`}
+    <Tip className={`term${className ? ` ${className}` : ''}`} data-term={k} label={`${t.word}: what it means`} hint={`${t.word}: ${t.def}`}
       content={() => <Definition k={k} />}>{children}</Tip>
   );
 }

@@ -557,6 +557,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (busy && mine) { queuedClick.current = counted ? [...queuedClick.current, optionId].slice(-4) : [optionId]; return; }
     if (!mine || needHandoff || !options.has(optionId)) return;
     setBusy(true);
+    // the shop as you see it right now (a row you may have scrolled, on a phone): a recruit flies from where you saw it
+    { const snap = snapshotShop(root.current); if (snap.size) shopSnap.current = snap; }
     setError('');
     const token = ++sendToken.current;
     let sent;

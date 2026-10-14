@@ -67,7 +67,7 @@ export async function acquireSlot(what, { log = msg => console.log(msg) } = {}) 
     }
     const who = holders().map(describeOwner).join('; ');
     const key = holders().map(o => o.pid).join(',');
-    if (key !== said || Date.now() - saidAt > 60000) {
+    if (key !== said || Date.now() - saidAt > 300000) {
       log(`waiting for a check slot: ${SLOTS} of ${SLOTS} in use by ${who} (at most ${SLOTS} check:v4 runs at once on this box; V4_CHECK_SLOTS changes it)`);
       said = key; saidAt = Date.now();
     }
