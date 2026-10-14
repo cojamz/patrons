@@ -36,6 +36,8 @@ export const SUB_AFTER_MS = 15000;
  * so clock skew doesn't matter), the next connected human takes the host role.
  */
 export const BEAT_MS = 5000;
+/** A move sent again this long after the first try ("Try again") is re-pushed with the same mid. */
+export const RESEND_MS = 4000;
 export const STALE_MS = 15000;
 // Test hooks on the page URL (?subAfter=ms), like ?botDelay: e2e can't wait 15 s per scenario.
 const urlNumber = key => { try { return Number(new URLSearchParams(globalThis.location?.search || '').get(key)) || 0; } catch { return 0; } };
@@ -524,7 +526,7 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
   let destroyed = false;
   const subs = createEmitter();
   const waiting = new Map(); // mid -> { resolve, reject }
-  const inflight = new Map(); // signature -> promise (same move twice = one submission)
+  const inflight = new Map(); // signature -> { p, mid, rec, at } (same move twice = one submission; a late retry re-sends)
   let seenNotice = getRoom()?.notice?.id ?? null; // a notice from before this session (a rejoin) isn't news
 
   const mySeats = () => seatList(getRoom()).filter(s => s.kind === 'human' && s.id === playerId).map(s => s.seat);
@@ -569,17 +571,25 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
       if (problem) return Promise.reject(new Error(problem));
     } else if (!state) return Promise.reject(new Error('The game has not started.'));
     const sig = `${move.player}|${move.option}|${version}`;
-    if (inflight.has(sig)) return inflight.get(sig);
-    const mid = randomId(12);
-    const p = new Promise((resolve, reject) => { waiting.set(mid, { resolve, reject }); });
-    inflight.set(sig, p);
-    const clear = () => inflight.delete(sig);
-    p.then(clear, clear);
-    transport.push(`${base}/moves`, { by: playerId, seat: move.player, move, n: version, mid, at: transport.serverTime() })
+    const send = (rec, mid) => transport.push(`${base}/moves`, { ...rec, at: transport.serverTime() })
       .catch(err => {
         const w = waiting.get(mid);
         if (w) { waiting.delete(mid); w.reject(new Error(`Couldn't send the move: ${err?.message || err}`)); }
       });
+    // The same move again: a double tap gets the same answer; a "Try again" after a while also sends it again, with
+    // the same mid, in case the first was lost (the host applies a mid once: `recent`).
+    const prior = inflight.get(sig);
+    if (prior) {
+      if (Date.now() - prior.at >= RESEND_MS) { prior.at = Date.now(); send(prior.rec, prior.mid); }
+      return prior.p;
+    }
+    const mid = randomId(12);
+    const p = new Promise((resolve, reject) => { waiting.set(mid, { resolve, reject }); });
+    const rec = { by: playerId, seat: move.player, move, n: version, mid };
+    inflight.set(sig, { p, mid, rec, at: Date.now() });
+    const clear = () => inflight.delete(sig);
+    p.then(clear, clear);
+    send(rec, mid);
     return p;
   }
 
