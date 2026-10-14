@@ -19,6 +19,8 @@ Each iteration:
 6. Blind panel (final gate). Each round runs FRESH agent instances that have never seen the game, 3 in parallel with different seats: a laptop newcomer, a phone tapper (touch emulation) and a saboteur (misclicks, spam, keyboard only). Never reuse a tester, because once it has learned the game it's no longer blind. A misread or issue reported by 2+ testers is confirmed; a single report gets verified by Claude before it's fixed. While iterating, one fresh tester is enough; run the full panel at milestones.
    Final gate: start the build yourself and give the `game-skeptic` agent only the URL and the player rulebook text (design/rulebook.md); it must never see the repo. The agent plays the real build adversarially and grades it. Loop until its verdict is SHIP with overall A- or better; fix its issues worst-first and re-run it fresh (no memory of the last run).
 
+Final output for Cory: besides the verdict, a short "how it feels" write-up synthesized from the testers' table talk (fun, tension, best moments, boredom, replay pull), clearly marked as AI players against bots, not real people.
+
 Done = check:v4 green, game-skeptic says SHIP (A- or better), and Cory has a link.
 Never present agent output to Cory unvetted.
 

@@ -37,4 +37,5 @@ The target feel is a beautiful physical board game come alive. Pieces have weigh
 - **Top issues, worst first** (at most 12). For each: what happened, the screenshot file, why a player would notice, and the smallest fix.
 - **Misreads:** every screen element you misidentified or misunderstood at first. What it is, what you took it for, how you found out, and the screenshot. Also every rule you got wrong from the rulebook or the screen. These are the most valuable findings: they show where the UI or the rules mislead.
 - **What genuinely works** (at most 3 lines).
+- **Table talk:** 5–8 lines in your own voice, as a player telling a friend about game night, not as a reviewer. Was it fun? Where was the tension? What was the best moment, and the most boring stretch? Did your choices feel like they mattered? Would you play again, and with whom? No grades and no UI jargon here: just how it felt.
 Don't soften anything. A B+ means "a friend would happily play this tonight". An A means "this feels like a real product".

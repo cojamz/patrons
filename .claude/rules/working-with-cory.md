@@ -47,3 +47,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-14 — Cory: the skeptic must be super picky and precise, judging a human, elegant, tactile feel; and phone means real touch emulation. Updated game-skeptic.
 - 2026-10-14 — Cory: testers go in blind. No knowledge of the game, only the rulebook a real player would get plus the screen. The skeptic never reads the repo, and the lead hands it a URL and the rulebook.
 - 2026-10-14 — Cory: audit for hallucinations after each panel (claims vs reality), and go faster without weakening the gates. Added speed rules to the v4-loop skill.
+- 2026-10-14 — Cory: the final output must convey how the game FEELS to play, as real players would say it, not just numbers. Testers now write "table talk", and the final report synthesizes it.
