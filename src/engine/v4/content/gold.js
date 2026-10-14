@@ -29,7 +29,7 @@ export default {
     {
       key: 'discount', ring: 1, name: 'Discount', text: 'Your next member costs 2 less, off any part of its cost.',
       estimate: ctx => (ctx.shopCards().some(c => c.def.s + c.def.w >= 3) ? 2.4 : 1.2),
-      resolve(ctx, p) { p.discount += 2; ctx.log(`${p.name}'s next member costs 2 less.`); },
+      resolve(ctx, p) { p.discount += 2; ctx.log(p.discount > 2 ? `Discount stacks: ${p.name}'s next member costs ${p.discount} less.` : `${p.name}'s next member costs 2 less.`); },
     },
     {
       key: 'steal', ring: 2, name: 'Steal', text: 'Take up to 3 gold from rivals, split however you like.',

@@ -165,12 +165,12 @@ describe('Black actions', () => {
 
 describe('Scoring and stolen goods', () => {
   it('stolen goods are black in your supply at once, spendable on the same turn', () => {
-    let s = scene({ round: 2, res: [{}, { gold: 3 }], shop: ['red.intern', ...SHOP.slice(1)] });
+    let s = scene({ round: 2, res: [{}, { gold: 3 }], shop: ['thieves.mole', ...SHOP.slice(1)] });
     s = play(take(s, 'Pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold');
     expect(R(s)[0].black).toBe(3);
-    s = move(s, `card:${uidOf(s, 'red.intern', 'shop')}`);
-    expect(defs(s, 0)).toEqual(['red.intern']);
-    expect(R(s)[0].black).toBe(2);
+    s = move(s, `card:${uidOf(s, 'thieves.mole', 'shop')}`);
+    expect(defs(s, 0)).toEqual(['thieves.mole']);
+    expect(R(s)[0].black).toBe(1);
   });
   it('Gold’s Steal still takes gold as gold', () => {
     let s = scene({ round: 2, res: [{}, { gold: 3 }] });

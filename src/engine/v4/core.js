@@ -472,6 +472,18 @@ function recruit(state, p, uid, { free, spend: chosen }) {
     if (!spend || !memberPayOk(state, p, cardDef(state, uid), spend) || Object.keys(spend).some(r => spend[r] > (p.res[r] || 0))) throw new Error('Cannot afford');
     for (const r in spend) p.res[r] -= spend[r];
     paid = payString(spend);
+    // name what made it cheaper: a discount, cost reductions, gold paying double
+    const notes = [];
+    const def0 = cardDef(state, uid);
+    if (p.discount && def0.s + def0.w > 0) notes.push(`discount −${p.discount}`);
+    for (const flag of ['costReduction', 'goldPaysDouble']) {
+      for (const u of p.members) for (const d of effectiveDefs(state.cards[u])) {
+        if (!d[flag]) continue;
+        if (flag === 'goldPaysDouble' && !spend.gold) continue;
+        notes.push(flag === 'costReduction' ? `${d.name} −${d[flag] === true ? 1 : d[flag]}` : `${d.name}: gold counts double`);
+      }
+    }
+    if (notes.length) paid += `; ${notes.join(', ')}`;
     // a discount waits for a member that actually costs something
     if (cardDef(state, uid).s + cardDef(state, uid).w > 0) p.discount = 0;
   }
@@ -507,9 +519,15 @@ function gain(state, p, color, n, { fromAction = false } = {}) {
   if (!(n > 0)) return;
   const g = { color, n, fromAction, doubled: false };
   const ctx = ctxFor(state);
-  // conversions (Midas) first, then amount changes (Underdog), so member order never matters
-  eachMemberOf(state, p, (card, def) => { if (def.convertGain) def.convertGain(ctx, p, card, g); });
-  eachMemberOf(state, p, (card, def) => { if (def.modifyGain) def.modifyGain(ctx, p, card, g); });
+  // conversions (Midas) first, then amount changes (Underdog), so member order never matters.
+  // Each one that changes the gain says so in the log ("Ana's Underdog: gold gain 4 → 8").
+  const said = (def, c0, n0) => {
+    if (g.color === c0 && g.n === n0) return;
+    const what = g.color === c0 ? `${c0} gain ${n0} → ${g.n}` : `${n0} ${c0} comes as ${g.n} ${g.color}`;
+    log(state, `${p.name}'s ${def.name}: ${what}.`);
+  };
+  eachMemberOf(state, p, (card, def) => { if (def.convertGain) { const c0 = g.color, n0 = g.n; def.convertGain(ctx, p, card, g); said(def, c0, n0); } });
+  eachMemberOf(state, p, (card, def) => { if (def.modifyGain) { const c0 = g.color, n0 = g.n; def.modifyGain(ctx, p, card, g); said(def, c0, n0); } });
   p.res[g.color] = (p.res[g.color] || 0) + g.n;
   eachMemberOf(state, p, (card, def) => { if (def.afterGain) def.afterGain(ctx, p, card, g); });
 }
