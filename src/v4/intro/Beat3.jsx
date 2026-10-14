@@ -10,7 +10,7 @@
 //   power     a warm aura blooms behind the leader as it rises two units (LEAD → LEAD_UP).
 import {
   Act, At, LEAD, LEAD_UP, LeadFrames, Mini, Fol, Res, Aura, ArcaneFloor, ArcaneColumn,
-  FSLOT, PILE, SWIRL, WHEEL, QUAD, ringTL, space, onSpace, Z, useCast,
+  FSLOT, PILE, SWIRL, WHEEL, QUAD, YOU_MEMBERS, ringTL, space, onSpace, Z, useCast,
 } from './shared.jsx';
 import Initiation, { BECKON, SETTLE, WALK_MS, T as IT } from './Initiation.jsx';
 
@@ -173,11 +173,11 @@ export default function Beat3() {
         <LeadFrames emoji={you} seq={SEQ} stillAs="idle" />
       </Act>
 
+      {/* recruit: the full ceremony (it takes the two gold glyphs from the pile; drawn after the leader, before the followers) */}
+      <Initiation at={INIT} member={YOU_MEMBERS[0]} slot={0} pile={[pileOf(2, 0), pileOf(2, 1)]} />
+
       {/* the followers from beat 2, stepping back a row for the member */}
       {[0, 1, 2].map(j => <Act key={`f${j}`} track={stepTrack(j)}><Fol /></Act>)}
-
-      {/* recruit: the full ceremony (it takes the two gold glyphs from the pile) */}
-      <Initiation at={INIT} pile={[pileOf(2, 0), pileOf(2, 1)]} />
 
       {/* buy followers: a small arcane glow at SWIRL, the glyphs that pay for them, the followers that come out */}
       <Act track={[{ x: SWIRL[0] - 18, y: SWIRL[1] - 14, o: 0 }, [BUY - 150, 450, { o: 1 }, 'sine'], [SPAWN + 300, 600, { o: 0 }, 'sine']]}>
