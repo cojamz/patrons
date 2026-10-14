@@ -54,3 +54,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - Start basic. Each sphere gets a plain first layer (simple gains, simple members); complexity comes in later layers.
 - The tracking burden is the UI's job. Only cut a rule if it can't be shown clearly.
 - No simulator until the rules settle.
+
+## Screen
+- Every UI element has a hover that gives more info (long-press/tap on phone). Numbers explain where they came from; card names open the card; icons say what they are. (Cory, 2026-10-14)
+- Strip what doesn't earn its place: fold it into the board or one tap. (Cory, 2026-10-14)

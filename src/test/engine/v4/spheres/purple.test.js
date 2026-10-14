@@ -185,8 +185,10 @@ describe('Purple members', () => {
   it('Bookkeeper: round end, +1 purple per 2 workers on the board', () => {
     expect(R(scene({ members: [['purple.bookkeeper']], slots: { [JV]: 0, [RUSH]: 0, [HIRE]: 0 }, queue: [{ t: 'endRound' }] })).purple).toBe(1);
   });
-  it('Clockmaker: round end, +1 purple per 2 purple', () => {
-    expect(R(scene({ members: [['purple.clockmaker']], res: [{ purple: 7 }], queue: [{ t: 'endRound' }] })).purple).toBe(10);
+  it('Clockmaker: round start (after other round-start income), +1 purple per 2 purple; nothing at round end', () => {
+    expect(R(scene({ members: [['purple.clockmaker']], res: [{ purple: 7 }], queue: [{ t: 'endRound' }] })).purple).toBe(7);
+    // Lamplighter pays 4 at round II start first, then Clockmaker counts 3 + 4 = 7 → +3
+    expect(R(scene({ members: [['purple.clockmaker', 'purple.lamplighter']], res: [{ purple: 3 }], queue: [{ t: 'round', r: 2 }] })).purple).toBe(10);
   });
   it('Lamplighter: round start, +1 purple per worker you get this round', () => {
     expect(R(start([['purple.lamplighter']])).purple).toBe(4);

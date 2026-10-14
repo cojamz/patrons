@@ -199,7 +199,8 @@ const silver = {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === S && g.n > 0) owner.res[S] += 1; },
     }),
     m('steward', 'Steward', 2, 2, 'At round start, +1 silver per 3 silver you hold.', {
-      onRoundStart(ctx, owner) { ctx.gain(owner, S, Math.floor(owner.res[S] / 3)); },
+      // counts after every other round-start income (Benefactor, Banker…), as a player reads it (Cory hit this, 2026-10-14)
+      onRoundStartLate(ctx, owner) { ctx.gain(owner, S, Math.floor(owner.res[S] / 3)); },
     }),
     m('retinue', 'Retinue', 2, 2, 'Worth 2 followers. When recruited, everyone else +1 silver.', {
       f: 2,

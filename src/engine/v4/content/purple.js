@@ -319,7 +319,8 @@ export default {
     }),
     m('clockmaker', 'Clockmaker', 2, 2, 'At round start, +1 purple per 2 purple you have.', {
       // round start, not end (Claude, 2026-10-14, after Cory: purple left at the end of round III is worth nothing)
-      onRoundStart(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
+      // counts after other round-start income (Lamplighter…), like Steward
+      onRoundStartLate(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
     }),
     m('lamplighter', 'Lamplighter', 6, 2, 'At round start, +1 purple per worker you get this round (3 / 4 / 5).', {
       onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },

@@ -31,6 +31,8 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] Hardening: saves never crash-loop across deploys, error screen, "copy game record" + replay, bot errors never stall, a gate that runs every sphere test fast, CI (hardening agent)
 - [ ] Later (engineering review): structured events instead of log parsing; shared verbs for copies; online auth rules and bot takeover for dropped players; type checking
 
+- [ ] Every UI element has a hover with more info (long-press on phone); e2e gate that game-meaningful elements expose one (UI-B)
+
 ## 2. Balance (serves play)
 - [ ] Big followers at ~25% with the final bots; members ~6–7 a player (cost agent)
 - [ ] Fair-price test: screen every card, then a careful check on outliers

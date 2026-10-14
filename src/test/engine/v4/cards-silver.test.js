@@ -99,6 +99,12 @@ describe('Silver members', () => {
     expect(named(s, 'Steward')).toHaveLength(1);
   });
 
+  it('Steward counts after other round-start income: listed before Benefactor, 1 + 3 = 4 silver pays +1 (Cory hit this)', () => {
+    const s = sc({ res: [{ silver: 1 }], members: [['silver.steward', 'silver.benefactor']], queue: [{ t: 'round', r: 2 }] });
+    expect(S(s)).toBe(5);
+    expect(named(s, 'Steward')).toHaveLength(1);
+  });
+
   it('Retinue: worth 2 followers; when recruited everyone else +1 silver, named; a rival’s Guest gets 1 more', () => {
     let s = sc({ n: 3, res: [rich], members: [[], [], ['silver.guest']], shop: ['silver.retinue'] });
     const f0 = followers(s, s.players[0]);
