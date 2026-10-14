@@ -1,14 +1,16 @@
 // Green: the echo. You copy what spaces gave: a rival's, your own, last round's.
 // Scoring: most green at round end.
 //
-// The echo rule (core-rules.md): an echo gives exactly what the space gave its original taker, never
-// recomputed for you. Echoes can't be echoed, and the round-III center can't be echoed.
-// A copied member comes as "a face-up member costing no more than theirs, free" (the card itself is gone).
+// The copy rule: a copy gives the space's own printed gain, as its chip shows: the resources and discount the
+// action itself handed its taker, never their members' bonuses and never what they paid. A free member copies as
+// "a face-up member costing no more, free". A space that took or traded (Steal, Trade…) is copied by doing the
+// action yourself. Echoes can't be echoed, and the center can't be echoed.
 //
 // Prototype notes (engine changes this module would like, see design/spheres/echo.md):
-// - The engine doesn't record what a space gave. install() wraps every action's resolve and every handler
-//   to keep a yield ledger on state.echo. The real fix is ~10 lines in core.js: snapshot the taker in the
-//   'act' task, and close the entry when that player's 'buy' task starts.
+// - The engine doesn't record what a space gave. install() wraps every action's resolve and every handler,
+//   and records the gains/free recruits made through that content's own ctx (members run on a fresh ctx, so
+//   their bonuses never land on a chip). The real fix in core.js: an 'act'-scoped ctx that tags gains and free
+//   recruits with the space, kept per round on state (this round and last round, for the board's chips).
 // - core.js pays a member's colored part from p.res[def.quadrant]; here id 'echo' ≠ resource 'green', so
 //   install() relabels the member defs' quadrant as 'green' (same one-line fix as thieves.js).
 import { registerQuadrant, allQuadrantIds, quadrant, defById } from './index.js';
@@ -235,8 +237,8 @@ const echoQ = {
     m('evergreen', 'Evergreen', 1, 1, 'At round start, +3 green.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', 3); },
     }),
-    m('choir', 'Choir', 1, 1, 'Whenever you copy a space, +1 green.'),
-    m('muse', 'Muse', 1, 0, 'Whenever a rival copies one of your spaces, +2 green.'),
+    m('choir', 'Choir', 2, 1, 'Whenever you copy a space, +1 green.'),
+    m('muse', 'Muse', 1, 1, 'Whenever a rival copies one of your spaces, +2 green.'),
     m('choirmaster', 'Choirmaster', 2, 1, 'Whenever a rival copies a space, +1 green.'),
     m('fan', 'Fan', 1, 1, 'Whenever a rival takes a center space, +2 green.', {
       onTurnEnd(ctx, owner, card, p) {
@@ -284,7 +286,7 @@ const echoQ = {
       },
       botActivate: (ctx, owner) => { const e = justTook(ctx, owner); return !!e && entryValue(ctx, e, owner) >= 3; },
     }),
-    m('dejavu', 'Déjà Vu', 3, 2, 'Once per game: copy every space you took this round.', {
+    m('dejavu', 'Déjà Vu', 4, 2, 'Once per game: copy every space you took this round.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const list = targets(ctx, owner, 'own');
@@ -294,7 +296,7 @@ const echoQ = {
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e, owner), 0) >= (ctx.state.round === 3 ? 6 : 10),
     }),
-    m('chronicler', 'Chronicler', 2, 1, 'Game end: +1 follower per 2 green.', {
+    m('chronicler', 'Chronicler', 2, 2, 'Game end: +1 follower per 2 green.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res.green || 0) / 2),
     }),
   ],
