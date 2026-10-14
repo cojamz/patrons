@@ -12,7 +12,7 @@ In seat order, each player picks 2 starting resources. Everyone can see what you
 
 ## The board
 The round board is split into four colored quadrants. Each quadrant has its own actions and its own way to score.
-- The **outer ring** opens in round I. The **middle ring** opens in round II. The **center** opens in round III. Rings stay open once opened.
+- The **outer ring** opens in round I. The **middle ring** opens in round II. The **inner ring** (the 4 spaces around the hub) opens in round III. Rings stay open once opened.
 - Each space holds one worker per round. All spaces empty out between rounds.
 - Spin the board to read a quadrant up close. The quadrant facing you is shown in full beside the board, and you can point at any space to read it.
 
