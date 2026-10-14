@@ -58,6 +58,7 @@ const turnValue = ctx => TURN_VALUE[ctx.state.round - 1] || 3;
 const rallyTurns = (ctx, p) => {
   const v = p.res[P] || 0;
   if (VARIANT.rally === 'hold') return v >= 2 * VARIANT.rallyMin ? 3 : v >= VARIANT.rallyMin ? 2 : 0;
+  if (VARIANT.rally === 'one') return v >= VARIANT.rallyMin ? 2 : 0;
   return Math.min(VARIANT.rallyCap, Math.floor(v / VARIANT.rallyDiv));
 };
 /** p's turns still queued this round (not the one being played). */
@@ -169,17 +170,19 @@ export default {
     },
     {
       key: 'linger', ring: 2,
-      get name() { return { linger: 'Linger', sleepin: 'Sleep In', hurry: 'Hurry' }[VARIANT.slot4]; },
+      get name() { return { linger: 'Linger', sleepin: 'Sleep In', hurry: 'Hurry', early: 'Head Start' }[VARIANT.slot4]; },
       get text() {
         return {
           linger: 'Move one of your workers from an outer or middle space of another color to a different open space, and do that action.',
           sleepin: '+2 purple per worker you have left to place this round. Those turns come after everyone else’s.',
           hurry: `+${VARIANT.hurry} purple. Then place your next worker right away.`,
+          early: '+2 purple per worker you have left to place this round.',
         }[VARIANT.slot4];
       },
       estimate(ctx, p) {
         if (VARIANT.slot4 === 'sleepin') { const left = Math.max(0, p.left - 1); return left * (2 - [0, 1, 1.5][ctx.state.round - 1]); }
         if (VARIANT.slot4 === 'hurry') return VARIANT.hurry + (p.left > 1 ? 1 : 0);
+        if (VARIANT.slot4 === 'early') return 2 * Math.max(0, p.left - 1);
         return movable(ctx, p).length ? bestTarget(ctx, p) : 0;
       },
       resolve(ctx, p) {
@@ -194,6 +197,7 @@ export default {
           ctx.log(`${p.name} sleeps in: ${mine.length === 1 ? 'their last turn comes' : `their ${mine.length} turns come`} after everyone else's.`);
           return;
         }
+        if (VARIANT.slot4 === 'early') { ctx.gain(p, P, 2 * p.left, { fromAction: true }); return; }
         if (VARIANT.slot4 === 'hurry') {
           ctx.gain(p, P, VARIANT.hurry, { fromAction: true });
           const next = laterTurns(ctx, p)[0];
@@ -234,16 +238,25 @@ export default {
       key: 'rally', ring: 3, name: 'Rally',
       get text() {
         if (VARIANT.rally === 'hold') return `With ${VARIANT.rallyMin}+ purple, take 2 extra turns right after this one (3 with ${2 * VARIANT.rallyMin}+). If you can’t, +4 purple.`;
+        if (VARIANT.rally === 'one') return `With ${VARIANT.rallyMin}+ purple, take 2 extra turns right after this one. If not, +4 purple.`;
+        if (VARIANT.rally === 'per') return `Take an extra turn right after this one per ${VARIANT.rallyDiv} purple you have (up to ${VARIANT.rallyCap}). With less, +4 purple.`;
         if (VARIANT.rally === 'pay') return `Pay ${VARIANT.rallyDiv} purple per extra turn right after this one (up to ${VARIANT.rallyCap}). If you take none, +3 purple.`;
         return `Pay ${RALLY} purple: take an extra turn right after this one. If you can’t, +3 purple.`;
       },
       estimate(ctx, p) {
-        if (VARIANT.rally === 'hold') { const k = Math.min(rallyTurns(ctx, p), room(ctx)); return k >= 2 ? k * turnValue(ctx) : 4; }
+        if (VARIANT.rally === 'hold' || VARIANT.rally === 'one') { const k = Math.min(rallyTurns(ctx, p), room(ctx)); return k >= 2 ? k * turnValue(ctx) : 4; }
+        if (VARIANT.rally === 'per') { const k = Math.min(rallyTurns(ctx, p), room(ctx)); return k ? k * turnValue(ctx) : 4; }
         if (VARIANT.rally === 'pay') { const k = Math.min(rallyTurns(ctx, p), room(ctx)); return k ? k * (turnValue(ctx) - VARIANT.rallyDiv * 0.8) + 1 : 3; }
         return buyEstimate(ctx, p, RALLY, 3);
       },
       resolve(ctx, p) {
-        if (VARIANT.rally === 'hold') {
+        if (VARIANT.rally === 'per') {
+          const k = Math.min(rallyTurns(ctx, p), room(ctx));
+          if (k >= 1) extraTurns(ctx, p, k, null);
+          else ctx.gain(p, P, 4, { fromAction: true });
+          return;
+        }
+        if (VARIANT.rally === 'hold' || VARIANT.rally === 'one') {
           const k = Math.min(rallyTurns(ctx, p), room(ctx));
           if (k >= 2) extraTurns(ctx, p, k, null);
           else ctx.gain(p, P, 4, { fromAction: true });

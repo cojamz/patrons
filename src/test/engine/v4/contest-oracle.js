@@ -43,14 +43,23 @@ export function oracleWinners(state, qid) {
 }
 
 const SEAT_NAMES = ['Ana', 'Bo', 'Cy', 'Di'];
+const randomMove = (s, rand) => { const o = s.pending.options; return { player: s.pending.player, option: o[Math.floor(rand() * o.length)].id }; };
+
+/** The table exactly when a round was scored: `move` replayed onto `before`, stopping right after endRound. */
+export function scoringMoment(before, move) {
+  const cut = before.queue.findIndex(t => t.t === 'endRound');
+  return applyMove({ ...before, queue: before.queue.slice(0, cut + 1) }, move);
+}
+
 /**
- * Plays `n` seeded bot games on mixed tables (every registered sphere, 2–4 seats) and calls
- * onScored({ before, after, record, game }) at each round end, and onMove(state) after each move.
- * before: the state just before the move that ended the round; after: right after it; record: after.contests[-1].
+ * Plays games g0..g0+n-1, seeded, on mixed tables (every registered sphere, 2–4 seats): even games with random legal
+ * movers, odd games with the normal bots. Calls onMove(state, g) after each move, and at each round end
+ * onScored({ before, move, after, moment, record, prize, game }): moment is the table at scoring, record is
+ * after.contests's newest entry.
  */
-export function playMixedGames(n, { onScored, onMove, seed0 = 9100 } = {}) {
+export function playMixedGames(n, { onScored, onMove, g0 = 0, seed0 = 9100 } = {}) {
   const { tables } = makeTables(4242, 1);
-  for (let g = 0; g < n; g++) {
+  for (let g = g0; g < g0 + n; g++) {
     const rand = seededRandom(seed0 + g);
     const quadrants = tables[g % tables.length];
     const seats = SEAT_NAMES.slice(0, 2 + (g % 3)).map((name, k) => ({ name, kind: k === 0 && g % 2 ? 'human' : 'bot' }));
@@ -58,10 +67,12 @@ export function playMixedGames(n, { onScored, onMove, seed0 = 9100 } = {}) {
     let guard = 0;
     while (!s.over && guard++ < 6000) {
       const before = s;
-      s = applyMove(s, chooseBotMove(s, rand));
+      const move = g % 4 === 3 ? chooseBotMove(s, rand) : randomMove(s, rand);
+      s = applyMove(s, move);
       if (onMove) onMove(s, g);
       if ((s.contests || []).length > (before.contests || []).length && onScored) {
-        onScored({ before, after: s, record: s.contests[s.contests.length - 1], game: g, prize: RING_VALUE[s.contests.length - 1] });
+        const record = s.contests[s.contests.length - 1];
+        onScored({ before, move, after: s, moment: scoringMoment(before, move), record, game: g, prize: RING_VALUE[record.round - 1] });
       }
     }
     if (!s.over) throw new Error(`game ${g} did not finish`);
