@@ -3,7 +3,7 @@
 // best average result. Work is counted in simulated moves, not wall time, so a seed always gives the same move;
 // chooseBotMove also caps a move at 250ms of wall time for the UI (see opts.maxMs).
 import { applyMove, followers } from './core.js';
-import { chooseNormalMove, chooseEasyMove, scoreOptions, buyShortcut } from './bots.js';
+import { chooseNormalMove, chooseGreedyMove, scoreOptions, buyShortcut } from './bots.js';
 import { seededRandom } from './rng.js';
 
 // rollouts play normal, a little noisier, comparing fewer ways to pay
@@ -15,7 +15,7 @@ const margin = (state, id) =>
  * opts.budget: simulated moves to spend on this decision (default 100).
  * opts.candidates: how many of normal's top options to look at (default 3).
  * opts.full: play every rollout to game end (slow; for offline balance checks).
- * opts.rollout: 'normal' (default) or 'easy' — the policy the rollouts play (measured: easy rollouts lose the edge).
+ * opts.rollout: 'normal' (default) or 'greedy' — the policy the rollouts play (measured: greedy rollouts lose the edge).
  * opts.maxMs: a wall-clock cap for the UI (chooseBotMove sets 250). Off by default, so direct calls and sims stay
  *   deterministic; when it bites, rollouts stop early and are scored statically, so a slow machine plays a bit weaker.
  * opts.now: the clock for maxMs (default performance.now).
@@ -51,7 +51,7 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
     let s = applyMove(state, { player: me, option: pool[i].o.id });
     let steps = 1;
     while (!s.over && (full || (s.round === round && steps < cap)) && steps < 800 && !late()) {
-      s = applyMove(s, opts.rollout === 'easy' ? chooseEasyMove(s, r, { noise: 1 }) : chooseNormalMove(s, r, ROLLOUT));
+      s = applyMove(s, opts.rollout === 'greedy' ? chooseGreedyMove(s, r, { noise: 1 }) : chooseNormalMove(s, r, ROLLOUT));
       steps++;
     }
     spent += steps;
@@ -69,5 +69,5 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
 function valueAtBoundary(s, me) {
   if (!s.pending) return margin(s, me);
   const probe = { ...s, pending: { player: me, kind: 'buy', options: [{ id: 'pass', kind: 'pass' }] } };
-  return scoreOptions(probe, () => 0)[0].v;
+  return scoreOptions(probe, () => 0, { spite: 1 })[0].v; // the same yardstick as a finished game's margin
 }

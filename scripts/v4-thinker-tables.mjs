@@ -1,8 +1,11 @@
 // Four thinking (Hard) bots per table, on random 4-sphere tables. The baseline instrument from now on: a lone
 // thinker beats greedy bots ~78%, so all-thinker tables are what we quote.
-// Usage: node scripts/v4-thinker-tables.mjs [games=40] [--workers=2] [--budget=40] [--buyer] [--first=1] [--table=a,b,c,d]
+// Usage: node scripts/v4-thinker-tables.mjs [games=40] [--workers=4] [--budget=100] [--buyer] [--first=1] [--table=a,b,c,d]
 //   --buyer: seat (g % 4) plays the pure big-followers buyer (never recruits) against 3 Hard bots.
-//   --budget: Hard's rollout budget in moves (the UI plays 100 with a 250ms cap; 40 keeps a 4-Hard game ~6s of CPU).
+//   --budget: Hard's rollout budget in moves (the UI plays 100 with a wall-clock cap; 40 is ~2.5× cheaper).
+// Reports seat and round-III pick-position win rates, each sphere's share of winners' followers, members, follower-buy
+// share, leftover resources, placements beyond the base 12 a player (extra workers and extra turns), and the longest
+// run of placements by one player with nobody else placing in between.
 // Tables come from makeTables (fuzz-tables-runner.js): pair-covering random tables, game g plays table g % count.
 // Hard runs without its wall-clock cap here, so every game is deterministic for its seed.
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
@@ -25,8 +28,17 @@ function playGame({ g, quadrants, budget, buyer }) {
   let actionQ = null; // the sphere of the action whose follow-ups are resolving
   const t0 = process.cpuUsage();
   let moves = 0, hardMs = 0, hardMoves = 0, maxMs = 0;
+  const places = [0, 0, 0, 0];
+  let runP = -1, run = 0, longest = 0, longestBy = -1;
+  let r3order = null;
   while (!s.over) {
     const p = s.pending.player, kind = s.pending.kind;
+    if (s.round === 3 && !r3order) r3order = [...new Set(s.order)];
+    if (kind === 'place') {
+      places[p]++;
+      run = p === runP ? run + 1 : 1; runP = p;
+      if (run > longest) { longest = run; longestBy = p; }
+    }
     const t = performance.now();
     const m = p === buyerSeat ? chooseFollowerBuyerMove(s, rand) : chooseBotMove(s, rand, { level: 'hard', budget, maxMs: Infinity });
     const dt = performance.now() - t;
@@ -77,6 +89,7 @@ function playGame({ g, quadrants, budget, buyer }) {
       members: memberCount(s, x), left: sum(x.res), bought: x.bought || 0, src: src[i],
     })),
     cpuS: (cpu.user + cpu.system) / 1e6, moves, hardMs, hardMoves, maxMs,
+    places, longest, longestBy, r3order, endedEarly: !!s.endEarly && s.round < 3,
   };
 }
 
@@ -85,8 +98,8 @@ if (!isMainThread) {
 } else {
   const args = Object.fromEntries(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
   const games = Number(process.argv.slice(2).find(a => !a.startsWith('--')) || 40);
-  const workers = Math.max(1, Number(args.workers || 2));
-  const budget = Number(args.budget || 40);
+  const workers = Math.max(1, Number(args.workers || 4));
+  const budget = Number(args.budget || 100);
   const first = Number(args.first || 1);
   const buyer = !!args.buyer;
   const tables = args.table ? [String(args.table).split(',')] : makeTables().tables;
@@ -112,6 +125,19 @@ if (!isMainThread) {
   // seat = turn position in round I (createGame seats play in seat order; later rounds re-sort)
   const seat = [0, 1, 2, 3].map(i => results.reduce((a, r) => a + r.players[i].win, 0) / n);
   console.log(`seat win rate (n=${n} each, ±95%): ${seat.map((w, i) => `seat ${i + 1} ${pct(w)} ±${(100 * ci(w, n)).toFixed(1)}`).join(' · ')}`);
+  // round-III pick position (the order re-sorts each round; whoever is last in followers picks first)
+  const withR3 = results.filter(r => r.r3order?.length === 4);
+  const pos = [0, 1, 2, 3].map(k => withR3.reduce((a, r) => a + r.players[r.r3order[k]].win, 0) / Math.max(1, withR3.length));
+  console.log(`round-III pick position win rate (n=${withR3.length}): ${pos.map((w, k) => `${k + 1}st ${pct(w)} ±${(100 * ci(w, withR3.length)).toFixed(1)}`).join(' · ').replace('2st', '2nd').replace('3st', '3rd').replace('4st', '4th')}`);
+  const early = results.filter(r => r.endedEarly).length;
+  console.log(`games ended after round II (clock sold out): ${early}/${n} (${pct(early / n)})`);
+  const extra = results.map(r => r.places.reduce((a, b) => a + b, 0) - 12 * 4);
+  const runs = results.map(r => r.longest);
+  const hist = {};
+  for (const x of runs) hist[x] = (hist[x] || 0) + 1;
+  const ge4 = runs.filter(x => x >= 4).length;
+  console.log(`placements beyond the base 12 a player, per game: mean ${(extra.reduce((a, b) => a + b, 0) / n).toFixed(1)} (max ${Math.max(...extra)}; games with any ${pct(extra.filter(x => x > 0).length / n)})`);
+  console.log(`longest run of one player's placements in a row: ${Object.entries(hist).map(([k, v]) => `${k}: ${pct(v / n)}`).join(' · ')} · 4+ in ${pct(ge4 / n)} ±${(100 * ci(ge4 / n, n)).toFixed(1)}`);
   const all = results.flatMap(r => r.players.filter(p => p.id !== r.buyerSeat));
   const per = k => (all.reduce((a, p) => a + p[k], 0) / all.length).toFixed(1);
   const boughtShare = all.reduce((a, p) => a + p.bought, 0) / all.reduce((a, p) => a + p.f, 0);

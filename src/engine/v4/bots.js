@@ -2,7 +2,9 @@
 //
 // Difficulty levels. A seat's level comes from `state.players[i].bot` ('easy' | 'normal' | 'hard'), or from
 // `chooseBotMove(state, rand, { level })`, which wins over the seat. Anything else plays 'normal'.
-//   easy   – the original greedy bot, a little noisier. Recruits nearly anything affordable, can hoard.
+//   easy   – normal's end-of-game judgment, played carelessly: noisy placements and buys, a soft spot for members,
+//            little attention to rivals. Spends down like normal (the old greedy easy hoarded 50+ gold and recruited
+//            11 members; it lives on as chooseGreedyMove for sims).
 //   normal – the same greedy shape, fixed: it values every option by what it's worth at game end (followers now,
 //            a member's ability over the turns left, what its resources can still turn into with the buys it has
 //            left, and the ring contests it leads). Never ends holding resources a follower buy could use.
@@ -17,14 +19,35 @@ import { defById, quadrant, handlerById } from './content/index.js';
 import { chooseThinkerMove } from './thinker.js';
 
 export const BOT_LEVELS = ['easy', 'normal', 'hard'];
+// A liking for members on top of what they're measured to be worth, in followers, fading to BIAS_FLOOR of itself
+// as the game runs out. The valuation alone under-recruits: with it, normal beat the old normal 37% to 21% and
+// recruits ~7 members instead of ~4 (400 games each; design/eval/bots.md). SPITE: how much the best rival's
+// expected total counts against the bot's own (1 = pure margin; 0.4 measured stronger than 1 and than 0).
+const MEMBER_BIAS = 2, BIAS_FLOOR = 0.3, SPITE = 0.4;
+// Easy and casual are normal with other options (see scoreOptions): noise = random spread on placements, buyNoise
+// on buys, memberBias = followers added to every recruit (biasFloor: what's left of it at game end), k = weight of
+// member abilities, spite = how much the best rival's total counts. Easy is sloppy and blind to engines.
+const EASY = { noise: 6, buyNoise: 4, k: 1, spite: 1, memberBias: 0, biasFloor: 1 };
+const NORMAL = { noise: 0.3, buyNoise: 0.05, k: 2, spite: SPITE, memberBias: MEMBER_BIAS, biasFloor: BIAS_FLOOR };
+/** A level between easy (t = 0) and normal (t = 1): every option interpolated. For sims. */
+export const blendProfile = t => Object.fromEntries(Object.keys(NORMAL).map(key => [key, EASY[key] + (NORMAL[key] - EASY[key]) * t]));
+// Sim-only levels (not offered in setup). casual: halfway between easy and normal, a stand-in for a table of
+// reasonable people. collector: loose play and a love of members that never fades (recruits ~9 a player).
+export const SIM_LEVELS = [...BOT_LEVELS, 'casual', 'collector'];
+export const BOT_PROFILES = {
+  easy: EASY,
+  casual: blendProfile(0.5),
+  collector: { noise: 3, buyNoise: 2, memberBias: 3, biasFloor: 1, spite: 1 },
+  normal: {},
+};
 // Hard's wall-clock cap per move (pass { maxMs: Infinity } for deterministic sims).
-const HARD_MAX_MS = 250;
+const HARD_MAX_MS = 200; // plus ~10–40ms of setup before the clock starts: under 300ms a move in a browser
 const SETUP_WEIGHTS = { gold: 3, red: 3, blue: 1, green: 1 };
 
 /** For a setup screen: the levels in order, with a name and a one-line blurb. */
 export const BOT_LEVEL_INFO = [
-  { level: 'easy', name: 'Easy', blurb: 'Greedy and a little careless.' },
-  { level: 'normal', name: 'Normal', blurb: 'Plays for the end: spends down, stops recruiting when it no longer pays.' },
+  { level: 'easy', name: 'Easy', blurb: 'Careless: often takes a worse move, and undervalues what members do.' },
+  { level: 'normal', name: 'Normal', blurb: 'Plays for the end: builds a following of members, then spends down into followers.' },
   { level: 'hard', name: 'Hard', blurb: 'Normal, plus it plays its best few moves ahead before choosing.' },
 ];
 export const DEFAULT_BOT_LEVEL = 'normal';
@@ -33,7 +56,7 @@ export const DEFAULT_BOT_LEVEL = 'normal';
 export function botLevel(state, player, opts = {}) {
   const b = state.players[player]?.bot;
   const l = opts.level ?? (b && typeof b === 'object' ? b.level : b);
-  return BOT_LEVELS.includes(l) ? l : DEFAULT_BOT_LEVEL;
+  return SIM_LEVELS.includes(l) ? l : DEFAULT_BOT_LEVEL;
 }
 
 /** Sets seat levels on a fresh game (levels[i] for player i; missing or unknown entries are left alone). */
@@ -52,15 +75,17 @@ export function chooseBotMove(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
   if (!pend) return null;
   const level = botLevel(state, pend.player, opts);
-  if (level === 'easy') return chooseEasyMove(state, rand);
   if (level === 'hard') return chooseThinkerMove(state, rand, { maxMs: HARD_MAX_MS, ...opts });
-  return chooseNormalMove(state, rand, opts);
+  return chooseNormalMove(state, rand, { ...BOT_PROFILES[level], ...opts });
 }
 
-// ---------- easy: the original greedy bot ----------
+/** The easy level: normal, played carelessly. */
+export const chooseEasyMove = (state, rand = Math.random, opts = {}) => chooseNormalMove(state, rand, { ...BOT_PROFILES.easy, ...opts });
 
-/** The first greedy bot, kept as the easy level (with a little more noise). */
-export function chooseEasyMove(state, rand = Math.random, { noise = 1.6 } = {}) {
+// ---------- greedy: the first bot (the old easy level), kept for sims ----------
+
+/** The first greedy bot: rates each option on its own. Recruits nearly anything affordable and can hoard. */
+export function chooseGreedyMove(state, rand = Math.random, { noise = 1.6 } = {}) {
   const pend = state.pending;
   if (!pend) return null;
   const p = state.players[pend.player];
@@ -277,7 +302,7 @@ function evaluate(s, buysLeft, incomeLeft, roundLeft, extraAbility = {}, future)
       + liquidate(s, p.res, extra, buysLeft[p.id], wild) + contests(s, ctx, p, roundLeft, future);
   });
 }
-const marginOf = (vals, me, spite = 1) => vals[me] - spite * Math.max(...vals.filter((_, i) => i !== me));
+const marginOf = (vals, me, spite = SPITE) => vals[me] - spite * Math.max(...vals.filter((_, i) => i !== me));
 
 // Resolve follow-up choices a hypothetical move queued (Hand-pick, Open Door ties, Kickback's gift…) by their hints.
 function settle(s, ctx) {
@@ -309,6 +334,10 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
   // extra turns a move queued for the decider (Overtime, Crunch Time, Errand Runner…): each is a placement and a buy
   const turnsQueued = s => s.queue.filter(t => t.t === 'turn' && t.p === me).length;
   const placesLeft = turns[me] + laterTurns(state).turns;
+  const buyNoise = opts.buyNoise ?? opts.noise ?? 0.05;
+  // a liking for members, fading to biasFloor of itself as the game runs out (1 = flat)
+  const floor = opts.biasFloor ?? BIAS_FLOOR;
+  const memberBias = (opts.memberBias ?? MEMBER_BIAS) * (floor + (1 - floor) * Math.min(1, placesLeft / 12));
   const out = [];
   if (pend.kind === 'place') {
     for (const o of pend.options) {
@@ -399,12 +428,13 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
       for (const o of pend.options) {
         if (!['card', 'tier', 'pass'].includes(o.kind)) continue;
         if (opts.noMembers && o.kind === 'card') continue;
-        if (o.kind === 'release') { out.push({ o, v: releaseValue(o.uid) + rand() * (opts.noise ?? 0.05) }); continue; }
+        if (o.kind === 'release') { out.push({ o, v: releaseValue(o.uid) + rand() * buyNoise }); continue; }
         if (o.kind !== 'pass' && o.kind !== 'card' && o.kind !== 'tier') continue;
         let v;
         if (o.kind === 'pass') v = valueOf({}, {});
         else v = Math.max(-1e6, ...ways(o.kind === 'card' ? { uid: o.uid } : { tier: o.tier }).map(w => valueOf(o.kind === 'card' ? { uid: o.uid } : { tier: o.tier }, w)));
-        out.push({ o, v: v + rand() * (opts.noise ?? 0.05) });
+        if (o.kind === 'card') v += memberBias;
+        out.push({ o, v: v + rand() * buyNoise });
       }
     }
   }
