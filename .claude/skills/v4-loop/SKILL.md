@@ -31,3 +31,6 @@ Never present agent output to Cory unvetted.
 - Reuse agents that already know the code (SendMessage) for fixes. Testers are never reused.
 - One fresh tester between milestones; the full panel of 3 for the verdict.
 - Testers get a FROZEN snapshot. Before each panel: build, copy to `.v4-panel/<n>/`, and serve that folder on port 5190 (`npx vite preview --outDir .v4-panel/<n>`). Never point testers at .v4-build: check:v4 rebuilds it mid-panel, and panel 2's saboteur ended up grading half-finished UI work.
+
+## Agent claims need gates (2026-10-14)
+- The UI agent twice reported fixes that blind testers then found still broken on the frozen build (44px targets, stale Undo, bot pacing), and its screenshot paths didn't exist. A fix only counts once it's an automated e2e assertion that fails the build, or Claude has seen it in a screenshot of a fresh frozen build.
