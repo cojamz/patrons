@@ -156,6 +156,8 @@ try {
     const first = run.p95;
     if (!(run.p95 < 100)) { const again = await measure(); if (again.p95 < run.p95) run = again; }
     const { lat, p95 } = run;
+    if (lat.length < 20) fail(`(d) only ${lat.length} hover cards opened out of ${Math.min(20, spaces.length) + Math.min(10, cards.length)} arrivals`, 'hover');
+    if (!(p95 < 100)) fail(`(d) hover card p95 ${Math.round(p95)}ms, first run ${Math.round(first)}ms (want < 100ms; samples ${lat.map(Math.round).join(',')})`, 'hover');
     // sweep: across the outer ring's spaces in order, never leaving the ring; the card must never close in between
     // the outer ring: the spaces farthest from the wheel's centre, in angle order
     const all = await lab.$$eval('[data-slot] .base', els => els.map(e => { const b = e.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; }));

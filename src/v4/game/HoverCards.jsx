@@ -21,11 +21,10 @@ const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
 
 /**
- * The hover/pin state: one card at a time. Opens ~24ms after the pointer arrives (no flash when the pointer only
- * crosses something); moving to a neighbour swaps the card in place at once; leaving closes it 150ms later
+ * The hover/pin state: one card at a time. Opens the moment the pointer arrives (Cory: instant); moving to a neighbour swaps the card in place at once; leaving closes it 150ms later
  * (unless the pointer arrives somewhere else first). A tap pins it (a sheet on phones). Cory: instant and seamless.
  */
-export const OPEN_MS = 24, CLOSE_MS = 150;
+export const OPEN_MS = 0, CLOSE_MS = 150;
 /**
  * The hover state lives outside React's render path: the object is stable, `card` and `space` are getters, and only
  * the layer (useHoverCard) and the shop's tick (useHoverSpace) subscribe, so a hover never re-renders the table.
@@ -51,6 +50,7 @@ export function createHover() {
     if (next.pinned) { set(next); return; }
     if (card && card.pinned) return; // a pinned card stays until it's closed
     if (card) { set(next); return; } // a card is up: swap its content in place, no delay, no flicker
+    if (!OPEN_MS) { set(next); return; } // at once: the layer only swaps, so crossing something can't flicker
     openT = setTimeout(() => { if (!(card && card.pinned)) set(next); }, OPEN_MS);
   };
   return {

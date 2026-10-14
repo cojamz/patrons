@@ -52,7 +52,11 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
   const affordable = viewer ? uids.filter(u => paymentPlan(state, viewer, u)).length : 0;
   return (
     <section className="lt-shop-cards" data-phase={phase} aria-label="Shop">
-      <h3 className="lt-h">Shop<small>{buying ? `${affordable} you can afford · hover to see the cost` : `${state.shop.length} face up · ${state.pile.length} in the pile`}</small></h3>
+      {/* one header line: the shop's title, then the follower rates (the strip's height is all cards) */}
+      <div className="lt-shop-head">
+        <h3 className="lt-h">Shop<small>{buying ? `${affordable} you can afford · hover to see the cost` : `${state.shop.length} face up · ${state.pile.length} in the pile`}</small></h3>
+        <FollowerRates state={state} optionFor={optionFor} onPick={onPick} onDenied={onDenied} />
+      </div>
       <div className="lt-cards">
         {uids.map(uid => {
           const d = cardDef(state, uid);
@@ -100,7 +104,6 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
           );
         })}
       </div>
-      <FollowerRates state={state} optionFor={optionFor} onPick={onPick} onDenied={onDenied} />
     </section>
   );
 }
@@ -117,7 +120,7 @@ export function FollowerRates({ state, optionFor = () => null, onPick, onDenied 
           <button key={t.key} type="button" className={`fb lt-rate${opt ? ' can' : ''}`} data-option={opt ? opt.id : undefined} aria-disabled={!opt}
             title={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}${t.limited ? ` (${left} left in this game${t.oncePerRound ? ', one per player per round' : ''}${t.clock ? '; the last one ends the game after that round' : ''})` : ''}`}
             onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'tier', tier: t }, e.currentTarget))}>
-            <b className="num">{t.cost}</b> → <b className="num">{t.get}</b>{t.limited && <small className="num"> {left} left</small>}
+            <b className="num">{t.cost}</b> → <b className="num">{t.get}</b>{t.limited && <small className="num"> {left} left</small>}<span className="hitbox" aria-hidden="true" />
           </button>
         );
       })}

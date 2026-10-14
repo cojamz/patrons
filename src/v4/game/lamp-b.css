@@ -11,7 +11,8 @@
 .lt-btn{font-family:var(--serif);font-size:15px;border-radius:20px;padding:6px 16px;border:1px solid var(--paper-ink-3);background:transparent;color:var(--paper-ink);cursor:pointer;min-height:36px}
 .lt-btn.pri{background:var(--paper-ink);color:var(--paper);border-color:var(--paper-ink);font-weight:700}
 .lt-btn.mini{position:relative;font-family:var(--sans);font-size:11px;line-height:1;padding:3px 8px;height:20px;min-height:0;flex:none;border-color:rgba(243,230,200,.3);color:var(--cream)}
-.lt-btn > .hitbox{position:absolute;left:50%;top:50%;width:max(44px,100%);height:max(44px,100%);transform:translate(-50%,-50%)}
+.lt-rates .lt-rate{position:relative}
+.lt-btn > .hitbox,.lt-rate > .hitbox{position:absolute;left:50%;top:50%;width:max(44px,100%);height:max(44px,100%);transform:translate(-50%,-50%)}
 .paper{background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);
   box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 0 0 1px rgba(80,60,30,.25),0 6px 14px -6px rgba(0,0,0,.7),0 2px 3px rgba(0,0,0,.35)}
 
@@ -19,7 +20,7 @@
 .lt-shop-cards{display:flex;flex-direction:column;min-width:0}
 .lt-cards{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px}
 /* (keeps the .card class for the e2e selectors; v4.css's dark .card look is undone here) */
-.lt-card.card{position:relative;height:118px;border-radius:6px;padding:0;gap:0;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;text-align:left;border:0;font:inherit;cursor:pointer;transition:transform .12s ease,filter .15s;min-width:0;color:var(--paper-ink)}
+.lt-card.card{position:relative;height:96px;border-radius:6px;padding:0;gap:0;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;text-align:left;border:0;font:inherit;cursor:pointer;transition:transform .12s ease,filter .15s;min-width:0;color:var(--paper-ink)}
 .lt-card.card.paper{background:linear-gradient(180deg,var(--paper),var(--paper-2))}
 /* the frame in the sphere's ink: a hairline outside, a thin inset rule (a printed card, not a box) */
 .lt-card.card{box-shadow:0 0 0 1px color-mix(in srgb,var(--q) 70%,#000),inset 0 0 0 2px var(--paper),inset 0 0 0 3px color-mix(in srgb,var(--q) 55%,transparent),0 6px 14px -6px rgba(0,0,0,.7)}
@@ -28,9 +29,9 @@
 .lt-card.recede{filter:brightness(.55) saturate(.55);opacity:.85}
 .lt-card.card.can:hover{background:linear-gradient(180deg,#fff7e6,var(--paper));transform:translateY(-2px)}
 .lt-card .band{display:none}
-.lt-card .art{position:relative;height:56px;margin:5px 5px 0;border-radius:4px;display:grid;place-items:center;flex:none;
+.lt-card .art{position:relative;height:50px;margin:4px 4px 0;border-radius:4px;display:grid;place-items:center;flex:none;
   background:radial-gradient(circle at 50% 70%, color-mix(in srgb,var(--q) 30%,var(--paper)), color-mix(in srgb,var(--q) 12%,var(--paper-2)) 70%);box-shadow:inset 0 0 0 1px rgba(42,31,23,.18)}
-.lt-card .nm{font-family:var(--serif);font-weight:700;font-size:12px;line-height:1.08;margin:4px 4px 0;text-align:center;color:var(--paper-ink);display:block;overflow-wrap:anywhere;hyphens:auto;min-height:2.16em}
+.lt-card .nm{font-family:var(--serif);font-weight:700;font-size:12px;line-height:1.1;margin:3px 4px 0;text-align:center;color:var(--paper-ink);display:block;overflow-wrap:anywhere;hyphens:auto}
 .lt-card .ft{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:2px;padding:3px 5px 4px;border-top:1px solid rgba(42,31,23,.16);font-size:13.5px;font-weight:700;color:var(--paper-ink)}
 .lt-card .ft .res-glyph{width:14px;height:14px}
 .lt-card .ft .pip{width:12px;height:12px}
@@ -44,9 +45,11 @@
 .lt-card .tick{color:#3e7a2c;background:#eef6d9;box-shadow:0 0 0 1px rgba(62,122,44,.35)}
 .lt-card .need{color:var(--paper-ink);background:rgba(244,235,215,.92);box-shadow:0 0 0 1px rgba(42,31,23,.2)}
 .lt-card .badge-mark{color:color-mix(in srgb,var(--blue,#6aa6dc) 80%,#000)}
-.lt-rates{display:flex;align-items:center;gap:8px;margin-top:8px;color:var(--cream-3);font-size:12px;flex-wrap:wrap}
+.lt-shop-head{display:flex;align-items:center;gap:14px;margin:0 0 5px;min-width:0}
+.lt-shop-head .lt-h{margin:0}
+.lt-rates{display:flex;align-items:center;gap:6px;color:var(--cream-3);font-size:12px;flex-wrap:wrap;margin-left:auto}
 .lt-rates .lbl{font-family:var(--serif);font-size:15px;color:var(--cream-2)}
-.lt-rates .lt-rate{flex-direction:row;opacity:1;text-align:center;display:inline-flex;align-items:center;gap:3px;padding:3px 10px;border-radius:14px;border:1px solid rgba(243,230,200,.16);color:var(--cream-2);background:transparent;font:inherit;cursor:pointer;min-height:28px}
+.lt-rates .lt-rate{flex-direction:row;opacity:1;text-align:center;display:inline-flex;align-items:center;gap:3px;padding:1px 10px;border-radius:14px;border:1px solid rgba(243,230,200,.16);color:var(--cream-2);background:transparent;font:inherit;cursor:pointer;min-height:24px}
 .lt-rates .lt-rate b{color:var(--cream);font-weight:700}
 .lt-rates .lt-rate small{color:var(--cream-3);font-size:10.5px}
 .lt-rates .lt-rate.can{background:transparent;border-color:rgba(var(--lamp,255,206,140),.55);color:var(--cream)}
@@ -166,7 +169,12 @@
 .lt-cult-seat .cs-who small{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--cream-3)}
 .lt-cult-seat .cs-total{margin-left:auto;display:inline-flex;align-items:center;gap:3px;font-family:var(--serif);font-size:22px;font-weight:700}
 .lt-cult-seat .cs-total .follower-mark{color:var(--cream-2)}
-.lt-cult-seat.mine .cs-total{font-size:26px}
+.lt-cult-seat.mine .cs-total{font-size:25px}
+/* yours: the same chair, ~1.15× (type and spacing; pixel figures keep whole-pixel sizes) */
+.lt-cult-seat.mine{padding:7px 9px;gap:5px}
+.lt-cult-seat.mine .cs-who b{font-size:18px}
+.lt-cult-seat.mine .cs-who small{font-size:12.5px}
+.lt-cult-seat.mine .cs-crowd{gap:3px 4px}
 .lt-cult-seat .cs-crowd{display:flex;flex-wrap:wrap;gap:2px 3px;align-items:flex-end;min-height:26px}
 .lt-cult-seat .cs-member{display:inline-flex;flex-direction:column;align-items:center;gap:2px;position:relative}
 .lt-cult-seat .cs-member .fig{display:inline-block;position:relative}

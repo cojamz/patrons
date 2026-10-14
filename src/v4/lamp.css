@@ -43,7 +43,7 @@ h1,h2,h3{font-family:var(--serif)}
   .app.game.lt{
     height:100dvh;display:grid;
     grid-template-columns:minmax(210px,1fr) minmax(0,1.85fr) minmax(210px,1fr);
-    grid-template-rows:60px minmax(0,1fr) minmax(0,1fr) 140px;
+    grid-template-rows:54px minmax(0,1fr) minmax(0,1fr) 128px;
     grid-template-areas:"s1 prompt s2" "s1 wheel s2" "s0 wheel s3" "shop shop shop";
     column-gap:18px;row-gap:8px;padding:12px 18px;overflow:hidden
   }
@@ -117,9 +117,9 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage .hub-label .pips i.on{background:var(--lamp-ink);border-color:var(--lamp-ink)}
 
 /* spaces: upright sockets (sizes are shares of the board, so they scale with it) */
-.lt .stage .slot{position:absolute;transform:translate(-50%,-50%);width:12.8%;aspect-ratio:1;border-radius:50%;cursor:default;z-index:2;outline:none}
-.lt .stage .slot.r2{width:9.6%}
-.lt .stage .slot.r3{width:10%}
+.lt .stage .slot{position:absolute;transform:translate(-50%,-50%);width:14%;aspect-ratio:1;border-radius:50%;cursor:default;z-index:2;outline:none}
+.lt .stage .slot.r2{width:10.6%}
+.lt .stage .slot.r3{width:11%}
 .lt .stage .slot .hit{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max(100%, 46px);aspect-ratio:1;border-radius:50%}
 .lt .stage .slot .base{position:absolute;inset:0;border-radius:50%;
   background:radial-gradient(circle at 50% 38%, #fbf5e7, #efe3c8 70%);
@@ -129,7 +129,6 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage .slot .face .nm{font-family:var(--serif);font-weight:700;font-size:clamp(10px, calc(var(--wheel-px) * .021), 13px);line-height:1;max-width:100%;color:var(--paper-ink-2)}
 .lt .stage .slot .face .yl{font-family:var(--sans);font-weight:700;font-size:clamp(11px, calc(var(--wheel-px) * .022), 13px);line-height:1.05;color:var(--paper-ink);display:block;max-width:140%;white-space:normal}
 .lt .stage .slot .face .yl .pip{width:.95em;height:.95em}
-.lt .stage .slot.r2 .face .nm,.lt .stage .slot.r3 .face .nm{display:none}
 .lt .stage .slot.can{cursor:pointer}
 .lt .stage .slot.can .base{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 82%,#5a4630),inset 0 2px 4px rgba(60,40,15,.25),0 0 14px 3px rgba(var(--lamp),.5)}
 .lt .stage .slot.can:hover,.lt .stage .slot.sel{z-index:4}
@@ -143,13 +142,6 @@ h1,h2,h3{font-family:var(--serif)}
 @keyframes freshspin{to{transform:rotate(360deg)}}
 .lt .stage .slot.flash .base{animation:socketland .5s ease-out}
 @keyframes socketland{0%{transform:scale(1.15)}60%{transform:scale(.96)}100%{transform:none}}
-
-/* rim plaques: each quadrant's contest */
-.lt .stage .plaque{position:absolute;transform:translate(calc(-50% + var(--ax,0) * 50%), calc(-50% + var(--ay,0) * 50%));z-index:5;--c:var(--gold)}
-.lt .stage .plaque .contest-tip,.lt .stage .plaque > span{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 7px;border-radius:12px;background:var(--paper);color:var(--paper-ink);font-size:12px;font-weight:600;white-space:nowrap;box-shadow:0 0 0 1.5px var(--c),0 3px 6px rgba(0,0,0,.35);cursor:help;border:0}
-.lt .stage .plaque .dot{width:9px;height:9px;border-radius:50%;background:var(--c);flex:none}
-.lt .stage .plaque .rw{font-family:var(--serif);color:#7a4f10}
-.lt .stage .plaque .ld{display:inline-flex;gap:2px;align-items:center;min-width:14px;justify-content:center;color:var(--paper-ink-3)}
 
 /* the hover card on a space: paper */
 .lt .stage .peek{background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);border:0;box-shadow:0 0 0 1px rgba(80,60,30,.25),0 12px 30px rgba(0,0,0,.55);border-radius:10px;width:250px;z-index:20}
@@ -191,16 +183,10 @@ h1,h2,h3{font-family:var(--serif)}
   .lt > .lt-shop{grid-area:shop;min-width:0;overflow:hidden}
   .lt > .lt-seat-0{grid-area:s0;margin:0 -12px -10px;padding:8px 12px 10px;background:color-mix(in srgb,var(--walnut-2) 96%,transparent);border-top:1px solid rgba(243,230,200,.1)}
   .lt .lt-wheel .stage{width:min(100% - 64px, 480px)}
-  .lt .stage .plaque.side .r{display:none}
-  .lt .stage .plaque.side .contest-tip,.lt .stage .plaque.side > span{max-width:56px;padding:3px 5px}
   .lt > .lt-seat-1{grid-area:s1}.lt > .lt-seat-2{grid-area:s2}.lt > .lt-seat-3{grid-area:s3}
   .lt > .lt-seat:not(.lt-seat-0){min-width:0;overflow:hidden;font-size:12px}
 
 }
-
-/* plaques on the left and right of the wheel stand narrow (two lines), so they lean only a little past the rim */
-.lt .stage .plaque.side .contest-tip,.lt .stage .plaque.side > span{white-space:normal;flex-wrap:wrap;justify-content:center;max-width:92px;text-align:center;line-height:1.1;padding:4px 7px;border-radius:10px}
-@media (min-width:861px) and (min-height:500px){ .app.game.lt .lt-wheel .stage{width:min(100cqw - 24px, 100cqh - 8px)} }
 
 /* the buy step's other answers, beside the question */
 .lt-prompt .pr-actions{display:inline-flex;align-items:center;gap:8px;flex:none}
@@ -238,8 +224,27 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-reckon .reckon-count.won{box-shadow:0 0 0 3px var(--lamp-ink),0 0 22px 6px rgba(var(--lamp),.6);animation:rise .25s ease-out, reckonwin .5s .6s ease-out 2}
 @keyframes reckonwin{50%{transform:translate(-50%,-110%) scale(1.18)}}
 .lt-reckon .reckon-skip{position:absolute;right:18px;bottom:18px;min-height:44px;padding:0 18px;color:var(--cream);border-color:rgba(243,230,200,.4);background:rgba(29,22,17,.7)}
-.lt .stage .plaque.lit{z-index:41}
-.lt .stage .plaque.lit > span{box-shadow:0 0 0 2.5px var(--paper-ink),0 0 0 6px var(--lamp-ink),0 0 26px 8px rgba(var(--lamp),.55);transform:scale(1.12);transition:transform .25s}
-.lt .stage .plaque.wait > span{opacity:.6}
 .token-flight{position:fixed;z-index:45;pointer-events:none;display:grid;place-items:center;will-change:transform}
 .token-flight .reckon-token{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--lamp-ink);color:var(--paper-ink);font-family:var(--serif);font-weight:700;font-size:15px;box-shadow:0 0 0 2px var(--pc),0 6px 14px rgba(0,0,0,.5)}
+
+/* ---------- the rim: each quadrant's rule engraved along its arc, its leader beside it (Cory: elegant, typographic,
+   part of the board) ---------- */
+.lt .stage svg.wheel-paper .rim{transition:fill-opacity .3s}
+.lt .stage svg.wheel-paper .rim.wait{fill-opacity:.45}
+.lt .stage svg.wheel-paper .rim-rule{fill:rgba(255,249,236,.95);font-family:var(--sans);font-weight:700;letter-spacing:.14em;dominant-baseline:central;pointer-events:none;paint-order:stroke;stroke:rgba(42,31,23,.18);stroke-width:.6}
+.lt .stage svg.wheel-paper .rim-rule.wait{opacity:.5}
+.lt .stage svg.wheel-paper .rim-rule.lit{fill:#fffdf6}
+.lt .stage svg.wheel-paper .rim-hit{fill:transparent;cursor:help;pointer-events:all}
+.lt .stage .rim-lead{position:absolute;transform:translate(-50%,-50%);z-index:5;display:inline-flex;gap:1px;align-items:center;justify-content:center;min-width:22px;min-height:22px;border-radius:50%;cursor:help;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+.lt .stage .rim-lead .none{width:6px;height:6px;border-radius:50%;background:rgba(255,249,236,.6)}
+.lt .stage .rim-lead svg{image-rendering:pixelated}
+.lt .stage .rim-lead.lit{filter:drop-shadow(0 0 6px var(--lamp-ink)) drop-shadow(0 0 14px rgba(var(--lamp),.8));transform:translate(-50%,-50%) scale(1.25);transition:transform .25s}
+/* spaces: the action's picture first, then its name and effect */
+.lt .stage .slot .face{gap:0}
+.lt .stage .slot .face .ico{line-height:0;margin-top:-2px}
+.lt .stage .slot .face .ico svg{width:clamp(18px, calc(var(--wheel-px) * .046), 24px);height:auto;image-rendering:pixelated}
+.lt .stage .slot .face .nm{font-size:clamp(9px, calc(var(--wheel-px) * .019), 11px);margin-top:1px}
+.lt .stage .slot .face .yl{font-size:clamp(10px, calc(var(--wheel-px) * .021), 12px)}
+.lt .stage .slot.r2 .face .ico svg,.lt .stage .slot.r3 .face .ico svg{width:clamp(14px, calc(var(--wheel-px) * .036), 20px)}
+/* the chairs: yours only a little larger than the rivals' (same layout) */
+@media (min-width:861px) and (min-height:500px){ .lt > .lt-seat-0 > .lt-cult-seat{zoom:1.15} }

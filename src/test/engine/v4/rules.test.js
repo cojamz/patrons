@@ -195,6 +195,28 @@ describe('follower buys', () => {
     expect(hasOpt(s, 'tier:top')).toBe(false);
   });
 
+  // design critic follow-up (2026-10-14): one seat took 3 of the 4 clock buys in round II and ended the game early
+  it('the 10-follower buy: at most once per player per round; a rival still can, and it comes back next round', () => {
+    let s = scene({ round: 2, res: [{ gold: 10, red: 10, blue: 10 }, { red: 10 }], queue: [] });
+    s.queue = [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }, { t: 'turn', p: 1 }];
+    resume(s);
+    s = take(s, 'Sprout');
+    s = move(s, 'tier:top');
+    expect([s.stock.top, s.players[0].bonus]).toEqual([3, 10]);
+    s = take(s, 'Tide');
+    expect(Object.values(s.players[0].res).reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(20);
+    expect(hasOpt(s, 'tier:top')).toBe(false); // 20+ resources, but not twice in round II
+    expect(hasOpt(s, 'tier:big')).toBe(true);
+    expect(followerPlan(s, s.players[0], tier('top'))).toBe(null);
+    s = move(s, 'pass');
+    s = take(s, 'Rush');
+    expect(hasOpt(s, 'tier:top')).toBe(true); // P2 hasn't made it this round
+    s = move(s, 'tier:top');
+    expect(s.stock.top).toBe(2);
+    s.round = 3; // next round, P1 may again
+    expect(followerPlan(s, s.players[0], tier('top'))).not.toBe(null);
+  });
+
   it('a 6-follower buy uses up one of 2 per player and does not end the game', () => {
     let s = scene({ res: [{ gold: 2, red: 3, blue: 3 }], queue: [] });
     s.stock.big = 1;
