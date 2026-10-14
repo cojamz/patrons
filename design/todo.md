@@ -64,7 +64,9 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] Later, only if bot prices keep disagreeing with Cory's feel in play: a bot that learns from its own games
 
 ## Waiting on Cory
-- [ ] What the ~25% big-followers target is measured against [an in-between bot level, then a check with people]
+- [ ] What the ~25% big-followers target is measured against [Normal bots on Classic, then a check with people]
+- [ ] Bandwagon (Turnout) "+1 red per member recruited this round, by anyone" gave +8 red late in round I; tame it? [yes, bring one measured variant]
+- [ ] Contest ties: every tied leader keeps scoring in full? [keep, unless the measurement shows contests are the meal]
 - [ ] Action names batch 2 (Blue, Green, Purple, Silver, Yellow, White): grade by number or "all good" once drafted
 - [ ] The action spaces' look: pick one of three directions (design/prototypes/actions/shots/compare.png)
 - [ ] Rework candidates (design/eval/rework-candidates.md, being compiled): judge by playing
