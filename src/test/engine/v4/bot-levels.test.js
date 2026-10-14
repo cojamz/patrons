@@ -52,14 +52,30 @@ describe('bot levels', () => {
   });
 
   it('hard plays a whole game legally (small budget)', { timeout: T }, () => {
-    const { s } = play(3, 5, ['hard', 'normal', 'easy'], { budget: 20 });
+    const { s } = play(3, 5, ['hard', 'normal', 'easy'], { budget: 20, maxMs: Infinity });
     expect(s.over).toBe(true);
+  });
+
+  it('hard stops thinking at its time cap and still moves legally', { timeout: T }, () => {
+    let t = 0, calls = 0;
+    const now = () => { calls++; return (t += 100); }; // every look at the clock costs 100ms
+    let s = createGame({ seats: [{}, {}, {}], seed: 3 });
+    const rand = seededRandom(3);
+    let thought = 0;
+    while (!s.over && thought < 6) {
+      const before = calls;
+      const m = chooseBotMove(s, rand, { level: 'hard', now, maxMs: 250 });
+      expect(isLegal(s, m)).toBe(true);
+      if (calls > before) { thought++; expect(calls - before).toBeLessThan(12); }
+      s = applyMove(s, m);
+    }
+    expect(thought).toBeGreaterThan(0);
   });
 
   it('every level is deterministic for a seed', { timeout: T }, () => {
     for (const levels of [['easy', 'easy', 'easy'], ['normal', 'normal', 'normal'], ['hard', 'normal', 'easy']]) {
-      const a = play(3, 9, levels, { budget: 20 });
-      const b = play(3, 9, levels, { budget: 20 });
+      const a = play(3, 9, levels, { budget: 20, maxMs: Infinity });
+      const b = play(3, 9, levels, { budget: 20, maxMs: Infinity });
       expect(b.moves).toEqual(a.moves);
       expect(b.s).toStrictEqual(a.s);
     }

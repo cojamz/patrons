@@ -6,9 +6,12 @@
 //  (d) no interactive element is clipped by its nearest overflow-hidden ancestor;
 //  (e) your own recruit visibly flies into your panel (a frame check);
 //  (f) no two header items overlap (the header's rows stack cleanly);
-//  (g) a choice panel never overlaps the compact shop, the buy row or the "More below" pill (a sheet must be opaque).
+//  (g) a choice panel never overlaps the compact shop, the buy row or the "More below" pill (a sheet must be opaque);
+//  (h) the page never scrolls sideways: scrollWidth <= clientWidth and scrollX stays 0 after every tap;
+//  (i) no hover card ever opens from a touch (or a synthetic hover after a tap);
+//  (j) setup: the starting-resource chips are fully on screen without scrolling (iPhone 13, taps and clicks).
 // Server: $V4_URL if set, else starts `npx vite` on a free port from 5182.
-import { chromium } from 'playwright';
+import { chromium, devices } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -99,6 +102,9 @@ async function audit(step) {
         }
       }
     }
+    out.side = { sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, sx: scrollX };
+    if (out.side.sw > out.side.cw) out.side.who = [...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && getComputedStyle(e).position !== 'fixed').map(e => String(e.className && (e.className.baseVal ?? e.className)).split(' ')[0] || e.tagName).slice(-3).join(' < ');
+    out.peek = [...document.querySelectorAll('.peek:not(.pinned), .popover.hover')].some(vis);
     const u = [...document.querySelectorAll('.undo')].find(vis);
     const g = document.querySelector('.app.game');
     if (u && g) out.undo = { actor: g.dataset.actor, bot: g.dataset.bot };
@@ -108,12 +114,62 @@ async function audit(step) {
   for (const x of r.clipped) note(`(d) clipped: ${x}`, step);
   for (const x of r.overlap || []) note(`(f) header rows overlap: ${x}`, step);
   for (const x of r.choice || []) note(`(g) ${x}`, step);
+  if (r.side.sw > r.side.cw) note(`(h) the page is wider than the screen (${r.side.who})`, step);
+  if (r.side.sx !== 0) note(`(h) the page scrolled sideways (scrollX ${r.side.sx})`, step);
+  if (r.peek) note('(i) a hover card opened on a touch screen', step);
   if (r.undo && (r.undo.bot === '1' || r.undo.actor !== '0')) note(`(b) Undo visible while seat ${r.undo.actor} (${r.undo.bot === '1' ? 'bot' : 'person'}) is to act`, step);
+}
+
+// (h)(i)(j) on an iPhone 13 profile, the way the foreman's peek drives it: mouse-style clicks on a touch screen.
+async function setupPhase() {
+  const c2 = await browser.newContext({ ...devices['iPhone 13'] });
+  const p2 = await c2.newPage();
+  p2.on('pageerror', e => errors.push(`pageerror (setup phase): ${e.message}`));
+  const look = async step => {
+    const r = await p2.evaluate(() => {
+      const vis = e => { const s = getComputedStyle(e); if (s.display === 'none' || s.visibility === 'hidden') return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
+      const chips = [...document.querySelectorAll('.prompt.choice.setup [data-option]')].filter(vis).map(e => e.getBoundingClientRect());
+      return {
+        sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, sx: scrollX,
+        peek: [...document.querySelectorAll('.peek:not(.pinned)')].some(vis),
+        chips: chips.length, off: chips.filter(b => b.left < -0.5 || b.right > innerWidth + 0.5 || b.top < -0.5 || b.bottom > innerHeight + 0.5).length,
+      };
+    });
+    if (r.sw > r.cw) note(`(h) iPhone 13: the page is ${r.sw - r.cw}px wider than the screen`, step);
+    if (r.sx !== 0) note(`(h) iPhone 13: the page scrolled sideways (scrollX ${r.sx})`, step);
+    if (r.peek) note('(i) iPhone 13: a hover card opened after a tap', step);
+    return r;
+  };
+  try {
+    for (const how of ['click', 'tap']) {
+      await p2.goto(`${base}/?botDelay=40`);
+      await p2.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
+      await p2.goto(`${base}/?botDelay=40`);
+      const go = async sel => { const el = await p2.waitForSelector(sel); if (how === 'tap') { await el.scrollIntoViewIfNeeded(); await el.tap(); } else await el.click(); };
+      await go('[data-home="local"]');
+      await go('[data-start]');
+      await p2.waitForSelector('.prompt.choice.setup [data-option]');
+      await p2.waitForTimeout(500); // the tray's slide-up
+      for (let k = 0; k < 2; k++) {
+        const r = await look(`setup ${how} pick ${k + 1}`);
+        if (!r.chips) note(`(j) iPhone 13 (${how}): no starting-resource chips showing`, `pick ${k + 1}`);
+        if (r.off) note(`(j) iPhone 13 (${how}): ${r.off} of ${r.chips} starting-resource chips are off screen`, `pick ${k + 1}`);
+        await p2.screenshot({ path: `${SHOTS}/setup-${how}-${k + 1}.png` });
+        const chip = await p2.$('.prompt.choice.setup [data-option]:not([disabled])');
+        if (!chip) break;
+        if (how === 'tap') await chip.tap(); else await chip.click();
+        await p2.waitForTimeout(450);
+        await look(`setup ${how} after pick ${k + 1}`);
+      }
+    }
+  } catch (e) { errors.push(`setup phase: ${e.message}`); await p2.screenshot({ path: `${SHOTS}/zz-setup-phase.png` }).catch(() => {}); }
+  await c2.close();
 }
 
 let ok = false;
 let sawFlight = null;
 try {
+  await setupPhase();
   await page.goto(`${base}/`);
   await page.waitForSelector('[data-home="local"]');
   await audit('home');

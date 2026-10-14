@@ -17,6 +17,8 @@ import { defById, quadrant, handlerById } from './content/index.js';
 import { chooseThinkerMove } from './thinker.js';
 
 export const BOT_LEVELS = ['easy', 'normal', 'hard'];
+// Hard's wall-clock cap per move (pass { maxMs: Infinity } for deterministic sims).
+const HARD_MAX_MS = 250;
 const SETUP_WEIGHTS = { gold: 3, red: 3, blue: 1, green: 1 };
 
 /** For a setup screen: the levels in order, with a name and a one-line blurb. */
@@ -51,7 +53,7 @@ export function chooseBotMove(state, rand = Math.random, opts = {}) {
   if (!pend) return null;
   const level = botLevel(state, pend.player, opts);
   if (level === 'easy') return chooseEasyMove(state, rand);
-  if (level === 'hard') return chooseThinkerMove(state, rand, opts);
+  if (level === 'hard') return chooseThinkerMove(state, rand, { maxMs: HARD_MAX_MS, ...opts });
   return chooseNormalMove(state, rand, opts);
 }
 
@@ -390,7 +392,9 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
     };
     if (pend.kind === 'pay') {
       const what = pend.uid !== undefined ? { uid: pend.uid } : { tier: pend.tier };
-      for (const o of pend.options) if (o.kind === 'pay') out.push({ o, v: valueOf(what, o.spend) + (o.default ? 0.01 : 0) });
+      // all the ways (the menu is the engine's); rollouts pass payWays to look at only the first few
+      const pays = pend.options.filter(o => o.kind === 'pay').slice(0, opts.payWays ?? Infinity);
+      for (const o of pays) out.push({ o, v: valueOf(what, o.spend) + (o.default ? 0.01 : 0) });
     } else {
       for (const o of pend.options) {
         if (!['card', 'tier', 'pass'].includes(o.kind)) continue;

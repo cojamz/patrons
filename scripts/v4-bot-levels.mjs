@@ -1,6 +1,7 @@
 // Bot levels head to head. Usage: node scripts/v4-bot-levels.mjs [games=100] [seats=hard,normal,normal,normal] [firstGame=1]
 // Seats rotate every game so no policy keeps one seat. A policy is easy | normal | hard | buyer (pure follower buying,
-// never recruits), optionally with options: normal:k=0.8, hard:budget=300.
+// never recruits), optionally with options: normal:k=0.8, hard:budget=300, hard:maxMs=250 (Hard runs uncapped here
+// unless maxMs is given, so results are deterministic; the UI caps it at 250ms).
 // Prints, per policy: win share (ties split), members, resources left at game end, followers, and the slowest move.
 import { createGame, applyMove, followers, memberCount, quadrant } from '../src/engine/v4/index.js';
 import { chooseBotMove, chooseFollowerBuyerMove } from '../src/engine/v4/bots.js';
@@ -29,10 +30,10 @@ for (let g = first; g < first + games; g++) {
   while (!s.over) {
     const pol = seatPol[s.pending.player];
     const t = performance.now();
-    const m = pol.name === 'buyer' ? chooseFollowerBuyerMove(s, rand) : chooseBotMove(s, rand, { level: pol.name, ...pol.opts });
+    const m = pol.name === 'buyer' ? chooseFollowerBuyerMove(s, rand) : chooseBotMove(s, rand, { level: pol.name, maxMs: Infinity, ...pol.opts });
     const dt = performance.now() - t;
     const st = stat[pol.key];
-    st.ms += dt; st.moves += 1; if (dt > st.maxMs) st.maxMs = dt;
+    st.ms += dt; st.moves += 1; (st.times ??= []).push(dt); if (dt > st.maxMs) st.maxMs = dt;
     s = applyMove(s, m);
   }
   const top = Math.max(...s.players.map(p => followers(s, p)));
@@ -64,5 +65,5 @@ for (const [k, st] of Object.entries(stat)) {
   // 95% interval on the win share (normal approximation; seats of one policy in the same game aren't independent,
   // so read it for a policy that holds one seat)
   const w = st.wins / st.seats, ci = 1.96 * Math.sqrt(Math.max(w * (1 - w), 1e-9) / st.seats);
-  console.log(`${k.padEnd(18)} win ${(100 * w).toFixed(1)}% ±${(100 * ci).toFixed(1)} (n=${st.seats} seats, parity ${(100 / n).toFixed(0)}%) · members ${per(st.members)} (max ${st.membersMax}) · left ${per(st.left)} (max ${st.leftMax}; needed to hold a lead ${per(st.held)}, spare ${per(st.left - st.held)}) · followers ${per(st.followers)} (bought ${per(st.bought)}, contests ${per(st.contest)}) · ms/move ${(st.ms / st.moves).toFixed(1)} max ${st.maxMs.toFixed(0)}`);
+  console.log(`${k.padEnd(18)} win ${(100 * w).toFixed(1)}% ±${(100 * ci).toFixed(1)} (n=${st.seats} seats, parity ${(100 / n).toFixed(0)}%) · members ${per(st.members)} (max ${st.membersMax}) · left ${per(st.left)} (max ${st.leftMax}; needed to hold a lead ${per(st.held)}, spare ${per(st.left - st.held)}) · followers ${per(st.followers)} (bought ${per(st.bought)}, contests ${per(st.contest)}) · ms/move ${(st.ms / st.moves).toFixed(1)} p95 ${st.times.sort((a, b) => a - b)[Math.floor(st.times.length * 0.95)].toFixed(0)} max ${st.maxMs.toFixed(0)}`);
 }

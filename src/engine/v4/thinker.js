@@ -1,11 +1,13 @@
 // Hard bot: normal's judgment plus lookahead. For its few best placements and buys it plays the game forward
 // with normal bots to the end of the round (to the end of the game in round III) and keeps the option with the
 // best average result. Work is counted in simulated moves, not wall time, so a seed always gives the same move;
-// the default budget keeps a move well under ~150ms in a browser.
+// chooseBotMove also caps a move at 250ms of wall time for the UI (see opts.maxMs).
 import { applyMove, followers } from './core.js';
 import { chooseNormalMove, chooseEasyMove, scoreOptions } from './bots.js';
 import { seededRandom } from './rng.js';
 
+// rollouts play normal, a little noisier, comparing fewer ways to pay
+const ROLLOUT = { noise: 0.6, payWays: 2 };
 const margin = (state, id) =>
   followers(state, state.players[id]) - Math.max(...state.players.filter(p => p.id !== id).map(p => followers(state, p)));
 
@@ -13,7 +15,10 @@ const margin = (state, id) =>
  * opts.budget: simulated moves to spend on this decision (default 100).
  * opts.candidates: how many of normal's top options to look at (default 3).
  * opts.full: play every rollout to game end (slow; for offline balance checks).
- * opts.rollout: 'normal' (default) or 'easy' — the policy the rollouts play (easy is ~20× cheaper per move).
+ * opts.rollout: 'normal' (default) or 'easy' — the policy the rollouts play (measured: easy rollouts lose the edge).
+ * opts.maxMs: a wall-clock cap for the UI (chooseBotMove sets 250). Off by default, so direct calls and sims stay
+ *   deterministic; when it bites, rollouts stop early and are scored statically, so a slow machine plays a bit weaker.
+ * opts.now: the clock for maxMs (default performance.now).
  */
 export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
@@ -23,10 +28,13 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   const first = chooseNormalMove(state, rand);
   const chosen = pend.options.find(o => o.id === first.option);
   // an activation, or a buy with one real choice: nothing to think about
-  if (chosen?.kind === 'use') return first;
+  if (chosen?.kind === 'use' || chosen?.kind === 'release') return first;
   const ranked = scoreOptions(state, rand);
   if (ranked.length <= 1) return first;
-  const { candidates = 3, budget = 100, full = false } = opts;
+  const { candidates = 3, budget = 100, full = false, maxMs = Infinity } = opts;
+  const now = opts.now ?? (globalThis.performance ? () => globalThis.performance.now() : () => Date.now());
+  const until = Number.isFinite(maxMs) ? now() + maxMs : Infinity;
+  const late = () => until !== Infinity && now() > until;
   // only weigh options normal rates close to its best
   const pool = ranked.slice(0, candidates).filter((r, i) => i === 0 || r.v >= ranked[0].v - 4);
   if (pool.length === 1) return { player: me, option: pool[0].o.id };
@@ -38,12 +46,12 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   // round-robin rollouts until the budget is gone; every candidate gets at least one
   for (let k = 0; spent < budget || counts.some(c => c === 0); k++) {
     const i = k % pool.length;
-    if (counts[i] > 0 && spent >= budget) break;
+    if (counts[i] > 0 && (spent >= budget || late())) break;
     const r = seededRandom(Math.floor(rand() * 2 ** 31));
     let s = applyMove(state, { player: me, option: pool[i].o.id });
     let steps = 1;
-    while (!s.over && (full || (s.round === round && steps < cap)) && steps < 800) {
-      s = applyMove(s, opts.rollout === 'easy' ? chooseEasyMove(s, r, { noise: 1 }) : chooseNormalMove(s, r, { noise: 0.6, payWays: 2 }));
+    while (!s.over && (full || (s.round === round && steps < cap)) && steps < 800 && !late()) {
+      s = applyMove(s, opts.rollout === 'easy' ? chooseEasyMove(s, r, { noise: 1 }) : chooseNormalMove(s, r, ROLLOUT));
       steps++;
     }
     spent += steps;
