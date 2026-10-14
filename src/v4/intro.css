@@ -105,3 +105,9 @@
 /* ---------- still storyboard (prefers-reduced-motion): each beat at rest, nothing moves ---------- */
 .intro.still,.intro.still .intro-line,.intro.still .intro-btn,.intro.still .intro-lamp,.intro.still .in-bob{animation:none}
 .intro.still .in-cam,.intro.still .intro-lamp{transition:none}
+/* the next beat, mounted early and hidden until its cue */
+.intro-scene.ahead{visibility:hidden}
+/* leaders blink here too (the game's rule lives in lamp-b.css, which the lab doesn't load) */
+.intro .leader .blink{opacity:0;animation:in-blink 4.7s steps(1,end) infinite}
+@keyframes in-blink{0%,93%,100%{opacity:0}94%,97%{opacity:1}}
+.intro.still .leader .blink{animation:none}

@@ -18,8 +18,9 @@ import { iconFor, rectsFor } from '../art/index.js';
 
 // ---------- clock and cast ----------
 /** still: the reduced-motion storyboard (nothing animates; everything shows its rest). t0: the beat's start.
- * at: a frozen moment (ms into the beat; the lab's &at=MS), else null. */
-export const Clock = createContext({ still: false, t0: null, at: null });
+ * at: a frozen moment (ms into the beat; the lab's &at=MS), else null. run: false while the beat is mounted ahead
+ * of time, hidden (so a heavy beat never hitches on its cue); its clock starts when run turns true. */
+export const Clock = createContext({ still: false, t0: null, at: null, run: true });
 export const useClock = () => useContext(Clock);
 /** The cast: emoji ids for you and the three rivals ({ you, a, b, c }). */
 export const Cast = createContext({ you: null, a: null, b: null, c: null });
@@ -56,7 +57,7 @@ export const ftop = rows => (rows ? 12 + 12 * (rows - 1) + 22 : 14);
 export const FSLOT = (j, rows) => [FX[j % 6] - 5, ftop(rows) + 10 * Math.floor(j / 6)];
 export const memberRows = n => Math.ceil(n / 3);
 /** Beat 4's four cults side by side (cult origin x; your leader is at 0). */
-export const COLS = { a: -62, you: 0, b: 62, c: 124 };
+export const COLS = { a: -66, you: 0, b: 66, c: 132 };
 /** Beat 3: the member card (top-left, 26×36), the initiation ring (centre of its floor), the follower swirl. */
 export const CARD = [30, -24];
 export const INIT_RING = [44, 33];
@@ -130,12 +131,12 @@ const tf = (v, rest) => `translate(${v.x - rest.x}px, ${v.y - rest.y}px) ${geo(v
  */
 export function Act({ track, origin = '50% 100%', stillT = null, stillAs = null, className = '', style = null, children }) {
   const ref = useRef(null);
-  const { still, t0, at: frozen } = useClock();
+  const { still, t0, at: frozen, run } = useClock();
   const tl = useMemo(() => compile(track), []); // eslint-disable-line react-hooks/exhaustive-deps
   const rest = still ? { ...tl.at(stillT ?? tl.end), ...(stillAs || {}) } : tl.at(tl.end);
   useLayoutEffect(() => {
     const el = ref.current;
-    if (still || !el || typeof el.animate !== 'function' || !tl.end) return undefined;
+    if (still || !run || !el || typeof el.animate !== 'function' || !tl.end) return undefined;
     const moves = ['x', 'y', 's', 'sx', 'sy', 'r'].some(k => tl.moved.has(k)) || tl.steps.some(st => st.arc || st.hops);
     const ts = new Set([0, tl.end]);
     for (const st of tl.steps) { ts.add(st.at); ts.add(st.at + st.d); for (let t = st.at; t < st.at + st.d; t += 16) ts.add(t); }
@@ -149,7 +150,7 @@ export function Act({ track, origin = '50% 100%', stillT = null, stillAs = null,
     const a = el.animate(frames, { duration: tl.end, fill: 'both', easing: 'linear' });
     if (frozen != null) { a.pause(); a.currentTime = Math.min(frozen, tl.end); } else if (t0 != null) a.startTime = t0;
     return () => a.cancel();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
   const st = { left: rest.x, top: rest.y, transformOrigin: origin, ...style };
   if (rest.o !== 1) st.opacity = rest.o;
   if (rest.r || rest.s !== 1 || rest.sx !== 1 || rest.sy !== 1) st.transform = geo(rest);
@@ -166,13 +167,13 @@ export const At = ({ x, y, at = null, d = 400, className, style, children, still
  * stacked; one shows at a time, switched on the beat's clock (no tweening: frames step, like a sprite sheet).
  */
 export function Frames({ seq, stillAs = null, children }) {
-  const { still, t0, at: frozen } = useClock();
+  const { still, t0, at: frozen, run } = useClock();
   const last = seq[seq.length - 1][1];
   const keys = useMemo(() => [...new Set(seq.map(s => s[1]))], []); // eslint-disable-line react-hooks/exhaustive-deps
   const refs = useRef({});
   const end = Math.max(1, seq[seq.length - 1][0] + 1);
   useLayoutEffect(() => {
-    if (still) return undefined;
+    if (still || !run) return undefined;
     const anims = keys.map(k => {
       const el = refs.current[k];
       if (!el || typeof el.animate !== 'function') return null;
@@ -183,7 +184,7 @@ export function Frames({ seq, stillAs = null, children }) {
       return a;
     });
     return () => anims.forEach(a => a && a.cancel());
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
   if (still) return <span className="in-frames">{children(stillAs ?? last)}</span>;
   return (
     <span className="in-frames">
@@ -194,20 +195,20 @@ export function Frames({ seq, stillAs = null, children }) {
 
 /** A number that steps through [[ms, value], …] on the beat's clock (the storyboard shows the last). */
 export function Count({ steps, className = '' }) {
-  const { still, at: frozen } = useClock();
+  const { still, at: frozen, run } = useClock();
   const [v, setV] = useState(() => (still ? steps[steps.length - 1][1] : frozen != null ? steps.filter(([ms]) => ms <= frozen).pop()[1] : steps[0][1]));
   useEffect(() => {
-    if (still || frozen != null) return undefined;
+    if (still || frozen != null || !run) return undefined;
     const ids = steps.slice(1).map(([ms, val]) => setTimeout(() => setV(val), ms));
     return () => ids.forEach(clearTimeout);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
   return <b className={`in-num ${className}`} key={v}>{v}</b>;
 }
 /** true once `ms` of the beat have passed (at once in the storyboard): for state that flips mid-beat. */
 export function useAfter(ms) {
-  const { still, at: frozen } = useClock();
+  const { still, at: frozen, run } = useClock();
   const [on, setOn] = useState(still || ms <= 0 || (frozen != null && ms <= frozen));
-  useEffect(() => { if (on || frozen != null) return undefined; const id = setTimeout(() => setOn(true), ms); return () => clearTimeout(id); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (on || frozen != null || !run) return undefined; const id = setTimeout(() => setOn(true), ms); return () => clearTimeout(id); }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
   return on;
 }
 
@@ -325,3 +326,15 @@ export function Lamp({ shot }) {
   const [lx, ly] = toStage(shot.cam, [wx, wy]);
   return <span className="intro-lamp" style={{ '--lx': lx, '--ly': ly, '--lw': w, '--lh': h, '--cd': `${shot.d ?? 1100}ms` }} />;
 }
+
+// ---------- camera presets (added for beat 3's wheel close-up; cam = [cx, cy, z], lamp = [wx, wy, w, h]) ----------
+export const CAM = {
+  /** the whole wheel, large and centred (80 units across at zoom 1) */
+  wheel: { cam: [WHEEL.cx, WHEEL.cy, Z.one], lamp: [WHEEL.cx, WHEEL.cy, 170, 130] },
+  /** closer: the wheel's right half (green and the spaces near the cult) at 4/3 */
+  wheelNear: { cam: [WHEEL.cx + 18, WHEEL.cy, Z.mid], lamp: [WHEEL.cx + 22, WHEEL.cy, 150, 120] },
+  /** the wheel on the left and your cult on the right (zoom 1) */
+  wheelAndCult: { cam: [-44, 10, Z.one], lamp: [-46, 10, 240, 160] },
+  /** your cult, close (4/3): card, initiation ring, pile, crowd */
+  cult: { cam: [4, 11, Z.mid], lamp: [6, 6, 200, 150] },
+};

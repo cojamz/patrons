@@ -8,7 +8,7 @@
 // always on screen; after the first beat Esc or a tap anywhere also closes it. prefers-reduced-motion gets a still
 // storyboard with Back/Next instead. replayIntro() opens it again from a menu. ?intro=0 never shows it on a game
 // start (the e2e suites), ?intro=1 shows it on every one (review).
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import './intro.css';
 import { emojiIds } from './art/emojis.js';
 import { Cast, Clock, Camera, Lamp, BEAT_MS, BEGIN_AT, STAGE, nowT0 } from './intro/shared.jsx';
@@ -75,13 +75,18 @@ const BEATS = [
 ];
 const LAST = BEATS.length - 1;
 
-/** One beat's world, on its own clock (t0 = when it mounted; at = a frozen moment, for the lab). */
-function Scene({ b, still, leaving, at = null }) {
-  const [t0] = useState(nowT0);
+/**
+ * One beat's world, on its own clock: t0 is when it started (at = a frozen moment, for the lab). A beat is mounted
+ * one beat ahead, hidden and not running (ahead), so even a heavy one starts on its cue without a hitch.
+ */
+function Scene({ b, still, leaving, ahead = false, at = null }) {
+  const run = !ahead;
+  const t0 = useMemo(() => (run ? nowT0() : null), [run]);
+  const clock = useMemo(() => ({ still, t0, at, run }), [still, t0, at, run]);
   const { Beat } = BEATS[b];
   return (
-    <Clock.Provider value={{ still, t0, at }}>
-      <div className={`intro-scene${leaving ? ' leaving' : ''}`} aria-hidden="true" data-scene={b + 1}><Beat /></div>
+    <Clock.Provider value={clock}>
+      <div className={`intro-scene${leaving ? ' leaving' : ''}${ahead ? ' ahead' : ''}`} aria-hidden="true" data-scene={ahead ? undefined : b + 1}><Beat /></div>
     </Clock.Provider>
   );
 }
@@ -181,6 +186,7 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
     : at != null ? shots.filter(s => s.t <= at).pop() || shots[0]
       : shots[shot.b === beat ? Math.min(shot.i, shots.length - 1) : 0];
   const shown = prev != null ? [prev, beat] : [beat];
+  const ahead = !still && at == null && !only && beat < LAST ? beat + 1 : null; // the next beat, mounted early and hidden
   return (
     <div ref={root} className={`intro${still ? ' still' : ''}${closing ? ' out' : ''}${at != null ? ' frozen' : ''}`} role="dialog" aria-modal="true" aria-label="Cults in twenty seconds"
       data-intro={still ? 'still' : 'motion'} data-beat={beat + 1} onClick={onBackdrop} onKeyDown={e => e.stopPropagation()}>
@@ -193,6 +199,7 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
             <Cast.Provider value={c}>
               <Camera shot={cur}>
                 {shown.map(b => <Scene key={`${b}.${loop}`} b={b} still={still} at={at} leaving={b !== beat} />)}
+                {ahead != null && ahead !== prev && <Scene key={`${ahead}.${loop}`} b={ahead} still={still} ahead />}
               </Camera>
             </Cast.Provider>
           </div>

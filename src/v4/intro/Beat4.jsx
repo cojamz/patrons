@@ -6,7 +6,7 @@
 import { Act, At, Frames, Lead, LeadFrames, Member, Fol, Crown, Aura, ArcaneRing, COLS, RIVALS, YOU_MEMBERS, YOU_COUNTS,
   LEAD, LEAD_UP, MSLOT, FSLOT, memberRows, Z, useCast } from './shared.jsx';
 
-export const shots = [{ t: 0, cam: [31, 13, Z.far], d: 1300, lamp: [31, 14, 260, 150] }];
+export const shots = [{ t: 0, cam: [33, 13, Z.far], d: 1300, lamp: [33, 14, 260, 150] }];
 
 // ---------- the timeline (ms into the beat) ----------
 /** When each round's mark lights, and when that round's arrivals start (yours, then the rivals' quieter ones). */
