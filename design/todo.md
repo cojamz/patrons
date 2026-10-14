@@ -47,16 +47,9 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] Later, only if bot prices keep disagreeing with Cory's feel in play: a bot that learns from its own games
 
 ## Waiting on Cory
-- [ ] Board sketch: A, B, or B with A on phone?
-- [ ] Green: what bugs you most (copy spaces, members, scoring)?
-- [ ] What followers can be sold (Pawn, Sell High…)? Today only bought or contest-won ones, so Pawn is dead in round I. [any follower, down to 1]
-- [ ] Watchdog ("Rivals can't take your members"): does it stop Red's Trade? [yes]
-- [ ] Stolen loot stays magenta (Midas/Underdog don't touch it)? [yes]
-- [ ] Use-then-release / buy-then-release in the same turn? [yes]
-- [ ] Release on by default? [yes]
-- [ ] Late Riser as the new name for Purple's old Straggler? [yes]
-- [ ] Card discounts doubled with costs (Discount 4 off, Trade +2…)? [yes]
-- [ ] Which opponents define the ~25% big-followers target? Normal bots read ~10%, easy ~80%. [an in-between bot level, then a check with people]
-- [ ] Make the 10→10 buy the game-end clock instead of 8→6 (8→6 almost never sells out)? [yes]
-- [ ] Swap space: any two members at the table, or one of yours? [one of yours] And +1 red in round I? [yes]
-- [ ] Investor moved by Ransom or Trade: set-aside gold stays with the old owner, like Heist (Claude's extension of your ruling)? [yes]
+- [ ] The 18 action names (design/eval/action-names-calibration.md): grade by number or "all good"
+- [ ] Member renames, people or groups only (design/eval/member-names.md, being written)
+- [ ] Swap space: one of your members for a rival's of equal cost, +1 red, round I? [yes]
+- [ ] What the ~25% big-followers target is measured against [an in-between bot level, then a check with people]
+
+Settled 2026-10-14 (Cory's calls or Claude's logged gut calls, see decisions.md): Lamplit Table look; spinning wheel kept; pay by coins; Watchdog blocks Trade; loot stays magenta; Release on, refunds the colored part only, not in the round recruited; Late Riser; doubled discounts; 10→10 is the clock; Investor/Sower set-asides return undoubled; only loose followers sell (White rework fixes Pawn).
