@@ -28,6 +28,7 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] Design pod: research best design skills/references, write a ui-critic agent; blind expert UI critic round 1 on the frozen build
 - [ ] Engineering expert review (blind): what saves headaches long-term
 
+- [ ] (tabled by Cory) Live feedback tab + auto-fix pipeline: needs firebaseio.com / netlify.app allowed in the environment
 - [ ] Hardening: saves never crash-loop across deploys, error screen, "copy game record" + replay, bot errors never stall, a gate that runs every sphere test fast, CI (hardening agent)
 - [ ] Later (engineering review): structured events instead of log parsing; shared verbs for copies; online auth rules and bot takeover for dropped players; type checking
 
