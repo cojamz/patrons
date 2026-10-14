@@ -52,3 +52,9 @@ Five agents were running in the old session. They don't carry over, but their wo
 Their partial work is committed (cc788f7). A send_later at 21:42 UTC resumes each with SendMessage (agent ids in that message), staggered: UI-A, UI-B, hardening, multiplayer, test updates first; then bots, fair-price, Purple, White, Green, UX solver, dead-window audit, Relay replacements, pixel art, action names, visionary designer, board game enthusiast.
 If that session is gone, relaunch each from its brief: design/todo.md (friends-build milestone), design/eval/cory-notes-2026-10-14.md (sections 1–6), design/eval/ui-critic-round1.md, design/eval/engineering-review.md.
 
+
+## Remote sessions (own machines, started 20:48 UTC): heavy simulation offloaded from this 4-CPU box
+- Fair-price screen for every card → branch claude/cults-fair-price (session_01SAnMH5dXApptnHJqsFTvdV)
+- Bot levels + 4-thinker balance tables → branch claude/cults-bots (session_012LrFkfKC8GG3gLHPuLK2jF)
+- Purple member replacements + per-turn repricing → branch claude/cults-purple-members (session_01KzNtqok74Xvo1pxX1pqWkS)
+The foreman merges each branch after reviewing it (proposals only: no content price changes land without review; design changes go to Cory).
