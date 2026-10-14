@@ -101,42 +101,63 @@ const SpaceGlow = ({ q, k }) => (
   </svg>
 );
 
+/** What a space gives, said big over it: "+3 [glyph]", the space's name small beneath (a walnut plaque). */
+const Plaque = ({ r, n, name }) => (
+  <span style={{ display: 'block', width: 'max-content', transform: 'translateX(-50%)', padding: '2.5px 5px 3px', borderRadius: 3,
+    background: 'rgba(28,20,15,.92)', boxShadow: '0 0 0 .5px rgba(243,230,200,.32), 0 2px 5px rgba(0,0,0,.55)', textAlign: 'center', lineHeight: 1 }}>
+    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+      <b className="in-num" style={{ fontSize: 11 }}>+{n}</b><Res r={r} size={10} />
+    </span>
+    <span style={{ display: 'block', marginTop: 2, fontFamily: 'var(--i-sans)', fontWeight: 700, fontSize: 4.5, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(243,230,200,.72)' }}>{name}</span>
+  </span>
+);
+
 // ---------- tracks ----------
-const land = i => HOP[i] + HOP_MS;
-function minionTrack(i) {
-  const [x0, y0] = ringTL(i);
-  const [x, y] = rnd(onSpace(space(ACTS[i].q, ACTS[i].k)));
-  const t = land(i);
+/** A minion lifts off the leader, floats to its space, and lands softly; once the wheel's work is done it dims. */
+function floatTrack(a) {
+  const [x0, y0] = ringTL(a.m);
+  const [x, y] = rnd(onSpace(space(a.q, a.k)));
   return [{ x: x0, y: y0 },
-    [HOP[i], 120, { sx: 1.08, sy: 0.9 }, 'out'], // a crouch,
-    [HOP[i] + 120, HOP_MS - 120, { x, y }, 'io', ACTS[i].arc], // the hop,
-    [HOP[i] + 120, 140, { sx: 0.94, sy: 1.08 }, 'out'], // stretched in the air,
-    [t - 40, 110, { sx: 1.1, sy: 0.88 }, 'out'], // a soft landing
-    [t + 70, 200, { sx: 1, sy: 1 }, 'out'],
-    [DIM, 600, { o: 0.22 }, 'sine']]; // done: it dims with the wheel
+    [a.at, a.float, { x, y }, 'io', a.arc],
+    [a.land - 50, 110, { sx: 1.1, sy: 0.88 }, 'out'], // a soft landing
+    [a.land + 60, 220, { sx: 1, sy: 1 }, 'out'],
+    [DIM, 600, { o: 0.22 }, 'sine']];
 }
-/** A glyph pops up out of its space and hops to the pile (then, later, leaves it). */
-function glyphTrack(a, n) {
-  const [sx, sy] = space(ACTS[a].q, ACTS[a].k);
-  const i = pileOf(a, n);
-  const [px, py] = PILE(i);
-  const t = land(a) + PAY + 110 * n;
-  const start = [{ x: sx - 4.5 + (n ? 2 : -2), y: sy - 8, o: 0, s: 0.5 }, [t, 160, { o: 1, s: 1 }, 'out'], [t + 60, 600, { x: px - 4.5, y: py - 4.5 }, 'io', 12]];
-  if (ACTS[a].q === 'gold') return [...start, [GOLD_OUT(n), 1, { o: 0 }, 'lin']]; // Initiation carries these on
+/** The minion that stays home (beside the leader, out of the pile's and the card's way). */
+const HOME = 1;
+/** The plaque over the space: pops in above the minion's head, holds while the glyphs leave, then goes. */
+function plaqueTrack(a) {
+  const [sx, sy] = space(a.q, a.k);
+  return [{ x: sx, y: sy - 36, o: 0, s: 0.6 }, [a.plaque, a.m ? 200 : 300, { o: 1, s: 1 }, 'back'], [a.done, 300, { o: 0 }, 'sine']];
+}
+/** Glyph g of an action: pops up out of its space, then flies to its pile slot (arriving = the pile counts up). */
+function glyphTrack(a, g) {
+  const [sx, sy] = space(a.q, a.k);
+  const slot = a.pile[g];
+  const [px, py] = PILE(slot);
+  const t = a.lift + g * a.gap;
+  const track = [{ x: sx - 4.5 + (g - 1) * 7, y: sy - 1, o: 0, s: 0.4 },
+    [t, a.pop, { o: 1, s: 1, y: sy - 6 }, 'out'],
+    [t + a.pop, a.fly, { x: px - 4.5, y: py - 4.5 }, 'io', a.m ? 10 : 14]];
+  if (PAID.includes(slot)) return [...track, [INIT + IT.pay + 100 * PAID.indexOf(slot), 1, { o: 0 }, 'lin']]; // the initiation carries these on
   // the buy: rise into the glow, circle once (a shrinking spiral), and dissolve into light
-  const k = i; // 0–3: four phases around the circle
+  const k = SPENT.indexOf(slot); // 0–3: four phases around the circle
   const ph = 90 * k - 90;
   const enter = [SWIRL[0] + 9 * Math.cos(ph * Math.PI / 180) - 4.5, SWIRL[1] + 9 * Math.sin(ph * Math.PI / 180) - 4.5];
   const b = BUY + 60 * k;
   const steps = [[b, 380, { x: enter[0], y: enter[1] }, 'io']];
   const SEG = 12, T0 = BUY + 440, LAP = 520;
-  for (let s = 1; s <= SEG; s++) {
-    const ang = (ph + (360 * s) / SEG) * Math.PI / 180, r = 9 - 6 * (s / SEG);
-    steps.push([T0 + (LAP * (s - 1)) / SEG, LAP / SEG, { x: SWIRL[0] + r * Math.cos(ang) - 4.5, y: SWIRL[1] + r * Math.sin(ang) - 4.5 }, 'lin']);
+  for (let i = 1; i <= SEG; i++) {
+    const ang = (ph + (360 * i) / SEG) * Math.PI / 180, r = 9 - 6 * (i / SEG);
+    steps.push([T0 + (LAP * (i - 1)) / SEG, LAP / SEG, { x: SWIRL[0] + r * Math.cos(ang) - 4.5, y: SWIRL[1] + r * Math.sin(ang) - 4.5 }, 'lin']);
   }
   steps.push([T0 + 160, LAP - 160, { o: 0, s: 0.35, f: 1.8 }, 'in']);
-  return [...start, ...steps];
+  return [...track, ...steps];
 }
+/** The pile's count: up by one as each glyph lands; down as the initiation pays; gone when the rest is spent. */
+const COUNT = [[0, 0], ...ACTS.flatMap((a, ai) => a.lands.map((t, g) => [t, 3 * ai + g + 1])),
+  [INIT + IT.pay, 5], [INIT + IT.pay + 100, 4]];
+const countTrack = [{ x: -37, y: 15, o: 0 }, [ACTS[0].lands[0] - 120, 200, { o: 1 }, 'sine'], [BUY, 300, { o: 0 }, 'sine']];
 /** The three bought followers: appear in the glow, hop to the second row of the crowd. */
 const BOUGHT = [{ j: 4, off: [-7, 2] }, { j: 3, off: [0, -3] }, { j: 5, off: [7, 2] }];
 function boughtTrack({ j, off }, n) {
@@ -161,17 +182,18 @@ export default function Beat3() {
       <At x={-44} y={11}><ArcaneFloor w={88} h={10} /></At>
       <At x={-20} y={12} className="in-shadow"><span className="in-floor" style={{ width: 40, height: 6 }} /></At>
 
-      {/* actions: the wheel rises in at the left, then dims once its work is done */}
-      <Act track={[{ x: wheelTL[0], y: wheelTL[1] + 8, o: 0 }, [WHEEL_IN, 700, { y: wheelTL[1] }, 'out'], [WHEEL_IN, 600, { o: 1 }, 'sine'], [DIM, 600, { o: 0.22 }, 'sine']]}
+      {/* the wheel rises in at the left as the camera comes to it, and dims once its work is done */}
+      <Act track={[{ x: wheelTL[0], y: wheelTL[1] + 8, o: 0 }, [0, 800, { y: wheelTL[1] }, 'out'], [0, 700, { o: 1 }, 'sine'], [DIM, 600, { o: 0.22 }, 'sine']]}
         stillAs={{ o: 1 }} origin="50% 50%">
         <WheelArt />
-        {ACTS.map((a, i) => (
-          <Act key={a.q} track={[{ x: 0, y: 0, o: 0 }, [land(i) - 60, 320, { o: 1 }, 'sine']]}><SpaceGlow q={a.q} k={a.k} /></Act>
+        {ACTS.map(a => (
+          <Act key={a.q} track={[{ x: 0, y: 0, o: 0 }, [a.land - 60, 300, { o: 1 }, 'sine']]}><SpaceGlow q={a.q} k={a.k} /></Act>
         ))}
       </Act>
 
-      {/* the minions hop onto their spaces, one by one (behind the leader: the right one's long hop passes behind it) */}
-      {[0, 1, 2].map(i => <Act key={`m${i}`} track={minionTrack(i)} stillAs={{ o: 1 }}><Mini emoji={you} /></Act>)}
+      {/* the minions: two float to their spaces, one stays home (behind the leader, so the long float passes behind it) */}
+      {ACTS.map(a => <Act key={`m${a.m}`} track={floatTrack(a)} stillAs={{ o: 1 }}><Mini emoji={you} /></Act>)}
+      <At x={ringTL(HOME)[0]} y={ringTL(HOME)[1]}><Mini emoji={you} /></At>
 
       {/* the warm aura of power (behind the leader), blooming at the end */}
       <Act track={[{ x: -28, y: -28, o: 0, s: 0.8 }, [POWER, 700, { o: 1, s: 1, y: -30 }, 'sine']]} origin="50% 50%"><Aura w={56} h={56} /></Act>
@@ -179,19 +201,25 @@ export default function Beat3() {
         <LeadFrames emoji={you} seq={SEQ} stillAs="idle" />
       </Act>
 
-      {/* recruit: the full ceremony (it takes the two gold glyphs from the pile; drawn after the leader, before the followers) */}
-      <Initiation at={INIT} member={YOU_MEMBERS[0]} slot={0} pile={[pileOf(2, 0), pileOf(2, 1)]} />
+      {/* recruit: the full ceremony (it takes two gold from the pile; drawn after the leader, before the followers) */}
+      <Initiation at={INIT} member={YOU_MEMBERS[0]} slot={0} pile={PAID} />
 
       {/* the followers from beat 2, stepping back a row for the member */}
       {[0, 1, 2].map(j => <Act key={`f${j}`} track={stepTrack(j)}><Fol /></Act>)}
 
-      {/* buy followers: a small arcane glow at SWIRL, the glyphs that pay for them, the followers that come out */}
+      {/* the pile's count, under it */}
+      <Act track={countTrack} stillAs={{ o: 0 }}><span style={{ display: 'block', fontSize: 8, lineHeight: 1, textShadow: '0 1px 1px rgba(0,0,0,.6)' }}><Count steps={COUNT} /></span></Act>
+
+      {/* buy followers: a small arcane glow at SWIRL (under the glyphs that pay for them and the followers that come out) */}
       <Act track={[{ x: SWIRL[0] - 18, y: SWIRL[1] - 14, o: 0 }, [BUY - 150, 450, { o: 1 }, 'sine'], [SPAWN + 300, 600, { o: 0 }, 'sine']]}>
         <ArcaneFloor w={36} h={28} />
       </Act>
-      {ACTS.map((a, ai) => [0, 1].map(n => (
-        <Act key={`g${ai}${n}`} track={glyphTrack(ai, n)} origin="50% 50%"><Res r={a.q} /></Act>
+      {/* the glyphs: off the spaces into the pile, then on (to the card, or into the glow) */}
+      {ACTS.map(a => [0, 1, 2].map(g => (
+        <Act key={`g${a.q}${g}`} track={glyphTrack(a, g)} origin="50% 50%"><Res r={a.r} /></Act>
       )))}
+      {/* what each space gives, said big over it */}
+      {ACTS.map(a => <Act key={`p${a.q}`} track={plaqueTrack(a)} origin="0 100%" stillAs={{ o: 0 }}><Plaque r={a.r} n={a.n} name={a.name} /></Act>)}
       {BOUGHT.map((b, n) => <Act key={`b${b.j}`} track={boughtTrack(b, n)}><Fol /></Act>)}
       {/* "+3 [follower]": rises beside the new followers, holds, and is gone before the hand-over */}
       <Act track={[{ x: 22, y: 28, o: 0 }, [PLUS, 400, { y: 23, o: 1 }, 'out'], [DURATION - 500, 400, { o: 0 }, 'in']]} stillAs={{ o: 0 }}>
