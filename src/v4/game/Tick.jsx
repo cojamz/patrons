@@ -7,6 +7,7 @@ let floatId = 0;
 export default function Tick({ value, from, color, className = '', float = true, dur = 320 }) {
   const [shown, setShown] = useState(from ?? value);
   const [floats, setFloats] = useState([]);
+  const [bump, setBump] = useState(0);
   const last = useRef(from ?? value);
   useEffect(() => {
     const start = last.current;
@@ -14,6 +15,9 @@ export default function Tick({ value, from, color, className = '', float = true,
     if (start === value) return undefined;
     const d = value - start;
     const timers = [];
+    setBump(d > 0 ? 1 : -1);
+    timers.push(setTimeout(() => setBump(0), Math.max(dur, 380)));
+    if (typeof window !== 'undefined') window.__patronsTicks = (window.__patronsTicks || 0) + 1;
     if (float) {
       const id = ++floatId;
       setFloats(f => [...f.slice(-2), { id, d }]);
@@ -28,10 +32,10 @@ export default function Tick({ value, from, color, className = '', float = true,
       if (k < 1) raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
-    return () => { cancelAnimationFrame(raf); setShown(value); timers.forEach(clearTimeout); };
+    return () => { cancelAnimationFrame(raf); setShown(value); setBump(0); timers.forEach(clearTimeout); };
   }, [value, float, dur]);
   return (
-    <span className={`tick ${className}`}>
+    <span className={`tick ${className}${bump > 0 ? ' bump' : bump < 0 ? ' dip' : ''}`} style={bump && color ? { '--tc': color } : undefined}>
       {shown}
       {floats.map(f => (
         <span key={f.id} className={`floater ${f.d > 0 ? 'up' : 'down'}`} style={color ? { color } : undefined} aria-hidden="true">

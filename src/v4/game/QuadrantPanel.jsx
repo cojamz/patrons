@@ -32,6 +32,8 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
 
   return (
     <section className="panel quad" style={{ '--c': col }}>
+      <div className="quad-head">
+      <h2 style={{ color: col }}>{Q.name}<small>facing you</small></h2>
       <div className="qtabs" role="tablist" aria-label="Quadrants" ref={tabs} onKeyDown={onTabKey} hidden={state.round === 0}>
         {state.quadrants.map((id, q) => {
           const free = state.pending && state.pending.kind === 'place'
@@ -45,7 +47,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
           );
         })}
       </div>
-      <h2 style={{ color: col }}>{Q.name}<small>facing you</small></h2>
+      </div>
       <div className="score">
         <span><b>{Q.scoring.label}</b> at round end wins <b className="num">+{RING_VALUE[round - 1]}</b> this round <small className="num">({RING_VALUE.map(v => `+${v}`).join(' / ')} by round; ties all score)</small></span>
         {standing && standing.top > 0 ? (
@@ -58,36 +60,33 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
           </span>
         ) : state.round >= 1 && <span className="lead-line">Now: nobody has any yet.</span>}
       </div>
-      {[1, 2, 3].map(t => (
-        <div key={t} className="ringrow">
-          <div className="tier">Round {roman(t)}{t > round ? ' · opens later' : ''}</div>
-          <div className="acts">
-            {Q.actions.map((a, i) => {
-              if (a.ring !== t) return null;
-              const key = `${facing}-${i}`;
-              const owner = state.slots[key];
-              const opt = optionFor(`slot:${key}`);
-              const locked = t > round;
-              const cls = ['act', opt ? 'can' : '', owner !== undefined ? 'taken' : '', locked ? 'locked' : ''].join(' ');
-              return (
-                <button
-                  key={i} type="button" className={cls} aria-disabled={!opt} title={`${a.name}: ${a.text}`}
-                  data-option={opt ? opt.id : undefined}
-                  onPointerDown={e => { pointer.current = e.pointerType || 'mouse'; }}
-                  onClick={e => {
-                    if (opt && (pointer.current === 'touch' || confirmPlace)) { setPop({ el: e.currentTarget, key, a, opt: opt.id }); return; }
-                    if (opt) onPick(opt.id); else if (onDenied) onDenied({ type: 'slot', key, q: facing, i }, e.currentTarget);
-                  }}
-                >
-                  <span className="act-line"><b>{a.name}</b><span className="act-text">{a.text}</span></span>
-                  {owner !== undefined && <i className="who" style={{ background: playerColor(owner) }} title={`Taken by ${state.players[owner].name}`} aria-label={`taken by ${state.players[owner].name}`} />}
-                  {locked && <em className="lockt">round {roman(t)}</em>}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+      <div className="acts">
+        {Q.actions.map((a, i) => {
+          const t = a.ring;
+          const key = `${facing}-${i}`;
+          const owner = state.slots[key];
+          const opt = optionFor(`slot:${key}`);
+          const locked = t > round;
+          const cls = ['act', opt ? 'can' : '', owner !== undefined ? 'taken' : '', locked ? 'locked' : ''].join(' ');
+          return (
+            <button
+              key={i} type="button" className={cls} aria-disabled={!opt} title={`${a.name} (round ${roman(t)}): ${a.text}`}
+              data-option={opt ? opt.id : undefined}
+              onPointerDown={e => { pointer.current = e.pointerType || 'mouse'; }}
+              onClick={e => {
+                if (opt && (pointer.current === 'touch' || confirmPlace)) { setPop({ el: e.currentTarget, key, a, opt: opt.id }); return; }
+                if (opt) onPick(opt.id); else if (onDenied) onDenied({ type: 'slot', key, q: facing, i }, e.currentTarget);
+              }}
+            >
+              <span className="rn" aria-label={`round ${roman(t)}`}>{roman(t)}</span>
+              <b>{a.name}</b><span className="act-text">{a.text}</span>
+              {owner !== undefined
+                ? <span className="by" style={{ '--pc': playerColor(owner) }}><i />{state.players[owner].name}</span>
+                : locked ? <span className="by lockt">opens round {roman(t)}</span> : null}
+            </button>
+          );
+        })}
+      </div>
       {pop && (
         <Popover anchor={pop.el} onClose={close}>
           <div className="pop-card" style={{ '--c': col }}>
