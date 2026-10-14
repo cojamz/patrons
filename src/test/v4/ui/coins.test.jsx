@@ -55,7 +55,7 @@ describe('resources are never color alone', () => {
     expect(coins.length).toBeGreaterThan(0);
     for (const c of coins) expect(c.querySelector('[data-coin-mark]')).not.toBeNull();
     const css = readFileSync(`${process.cwd()}/src/v4/v4.css`, 'utf8');
-    expect(css).toMatch(/\.app\.game\.lt \.prompt\.choice \.token\{color:var\(--paper-ink\)\}/);
+    expect(css).toMatch(/\.app\.game\.lt \.lt-wheel > \.prompt\.choice \.token\{color:var\(--paper-ink\)\}/);
     expect(contrast(varOf('paper-ink'), varOf('paper'))).toBeGreaterThanOrEqual(4.5);
   });
 });

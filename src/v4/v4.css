@@ -1416,5 +1416,6 @@ svg.sigil{display:inline-block;vertical-align:-1px;flex:none}
 .slot-coin .coin-mark{display:block}
 .tray-coin i{display:grid;place-items:center}
 .tray-coin i .coin-mark{display:block}
-/* the setup picker sits on cream paper: its labels are ink, not cream */
-.app.game.lt .prompt.choice .token{color:var(--paper-ink)}
+/* the setup picker sits on cream paper on a laptop (lamp.css: the paper note at the foot of the board): its labels are
+   ink there, not cream; on a phone the picker is on the dark table and keeps cream */
+@media (min-width:861px) and (min-height:500px){ .app.game.lt .lt-wheel > .prompt.choice .token{color:var(--paper-ink)} }
