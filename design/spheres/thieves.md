@@ -24,7 +24,7 @@ Value = how much you gain on the average rival, in resources, with 4 players. Yo
 1. ✱ **Scoring, Most Magenta members:** the most Magenta members at round end takes the ring. A Magenta member you steal counts for you.
 2. **Pickpocket (I):** take 2 / 3 / 4 resources (by round) from rivals, split as you like. Worth 2⅔ in round I, 4 in round II and 5⅓ in round III (Rush is 6).
 3. **Tip-off (I):** take 1 resource from each player holding more than you. Worth 1⅓ per richer player (0–4). It's catch-up, and it's worth 0 on the very first pick, when everyone holds 2.
-4. **Hideout (I):** take 1 resource from a rival; then no one can steal from you, resources or members, this round. Worth about 2½ in round I and 4–5 in round III.
+4. **Hideout (I):** take 1 resource from a rival; then no one can steal resources from you this round (Cory, 2026-10-14: members stay takeable). Worth about 2½ in round I and 4–5 in round III.
 5. **Rob (II):** take 3 resources from rivals, at least 1 from each. Worth 4 at any table size (Steal is 4; Windfall is about 7 late).
 6. **Ransom (II):** pick a rival's member costing 3 or less; they pay you its cost to keep it, or it's yours. Worth about 4–5.
 7. **Heist (III):** take any rival's member; they recruit any face-up member costing up to the same, free. Worth about 7⅔ (Take is about 6).
@@ -80,7 +80,7 @@ Greedy bots unless noted, 4 seats, gold/red/blue + Magenta, current engine. Gold
   - With bots that target the leader, it's 45% leader and 12% from 4th.
   - Every final rank steals about the same (22–29% each).
 - **Member value** (most-Magenta-members scoring; free recruit at the start of round II; 120 games each; noise about ±1.5): Lookout 11.9 (before the once-per-round change; 5.6 after), Sticky Fingers 7.7, Light Fingers 7.3, Accomplice 7.0, Grifter 6.2, Watchdog 5.8, Extortionist 5.6, Desperado 5.3, Robin Hood 5.3, Double Agent 5.2, Mole 5.0, Cutpurse 4.7, Big Score 4.2, Crew 4.1, Kingpin 3.2. Every Magenta member is now also a ring token, so they all measure high. Costs follow the ranking.
-- **Actions** (last pass; this change doesn't touch them): every Magenta action sits inside the anchors' band. Hideout is the best ring-I action in round III, because it shields members.
+- **Actions** (last pass; this change doesn't touch them): every Magenta action sits inside the anchors' band. Hideout was the best ring-I action in round III because it shielded members; since Cory's call it shields resources only, so that edge is gone (not re-measured).
 - **Thinking bot:** see the end of this file.
 
 ## What to watch

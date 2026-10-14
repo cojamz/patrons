@@ -108,8 +108,8 @@ const thieves = {
   rule: 'Whatever you steal turns magenta in your supply, ready to spend. Most Magenta members at round end wins.',
   scoring: SCORING.members,
 
-  // quadrant-level hooks (engine): Hideout refuses steals; thefts are recorded
-  guardSteal: (ctx, thief, victim) => victim.hideout === ctx.state.round,
+  // quadrant-level hooks (engine): Hideout refuses resource steals (not members: Cory, 2026-10-14); thefts are recorded
+  guardSteal: (ctx, thief, victim, kind = 'res') => kind === 'res' && victim.hideout === ctx.state.round,
   onSteal(ctx, info) {
     // measurement only: who robbed whom, and where the victim stood
     const s = ctx.state;
@@ -136,7 +136,7 @@ const thieves = {
       },
     },
     {
-      key: 'hideout', ring: 1, name: 'Hideout', text: 'Take 1 resource from a rival. Then no one can steal from you, resources or members, this round.',
+      key: 'hideout', ring: 1, name: 'Hideout', text: 'Take 1 resource from a rival. Then no one can steal resources from you this round.',
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, 1)) + 0.8 + 0.6 * ctx.state.round,
       resolve(ctx, p) {
         p.hideout = ctx.state.round;

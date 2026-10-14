@@ -350,6 +350,23 @@ describe('Magenta takes members that carry state', () => {
     expect(s.pile).toContain(d);
     expect(s.cards[d]).toEqual({ uid: d, def: 'red.doppel' });
   });
+  it('trading in an Investor with Social Climber gives back the gold set aside, not doubled', () => {
+    let s = scene({ quads: Q, round: 1, queue: [{ t: 'round', r: 2 }], members: [['market.climber', 'gold.investor']] });
+    const u = uidOf(s, 'gold.investor', 0);
+    s.cards[u].invested = 3;
+    s = move(s, `card:${u}`);
+    expect(s.cards[u]).toEqual({ uid: u, def: 'gold.investor' });
+    expect(R(s, 0).gold).toBe(3);
+  });
+  it('Double Agent swapping for an Investor: the gold set aside stays with its old owner', () => {
+    let s = scene({ quads: Q, round: 2, res: [{ magenta: 8, gold: 8 }], members: [[], ['gold.investor']], shop: ['thieves.doubleagent', ...SHOP.slice(1)] });
+    s.cards[uidOf(s, 'gold.investor', 1)].invested = 2;
+    s = take(s, 'Rush');
+    s = move(s, `card:${uidOf(s, 'thieves.doubleagent', 'shop')}`);
+    s = move(s, s.pending.options.find(o => o.id === `card:${uidOf(s, 'gold.investor', 1)}`).id);
+    expect(defs(s, 0)).toContain('gold.investor');
+    expect(R(s, 1).gold).toBe(2);
+  });
 });
 
 // ---------------------------------------------------------------------------------------------------------
@@ -382,7 +399,8 @@ describe('White sells followers that contests and bonuses counted', () => {
     s = move(s, 'tier:top');
     expect(s.players[1].bonus).toBe(10);
     expect(R(s, 0).magenta).toBe(2); // Extortionist took 2
-    expect(R(s, 1).red + R(s, 1).yellow + R(s, 1).gold + R(s, 1).magenta).toBe(2); // Weaver's +4, less Extortionist's 2
+    // 10 held after Rush's +2, 10 spent, Extortionist takes the 2 left, then Weaver's +1 of each color
+    expect(R(s, 1)).toMatchObject({ gold: 1, red: 1, magenta: 1, yellow: 1 });
   });
 });
 
