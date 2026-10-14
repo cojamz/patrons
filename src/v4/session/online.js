@@ -11,11 +11,16 @@
 //   moves/<key>:  { by, seat, move:{player, option}, n, mid } // guests (and the host) push; host consumes
 //   rejects/<playerId>/<key>: { mid, reason }                // host's answer to a refused move
 // Codes are 5 characters, so they can't collide with v3's 4-character rooms.
-import { createGame, applyMove, isLegal, chooseBotMove } from '../../engine/v4/index.js';
+import { isLegal, chooseBotMove } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import { parseTable } from '../tables.js';
 import { createEmitter, randomId } from './emitter.js';
 import { moveProblem, normalizeMove } from './local.js';
+import { BUILD, CONTENT_HASH, newGame, step, trackState, botStep, reportProblem } from './record.js';
+
+/** Shown when a room was made by a build with different rules content (a deploy happened in between). */
+export const VERSION_MISMATCH = 'That room is on a different version of Patrons. Refresh this page and try again; if it still won’t join, the host should refresh and make a new room.';
+const sameBuild = room => !!(room && room.build && room.build.content === CONTENT_HASH);
 
 export const ROOM_ROOT = 'v3rooms';
 export const MAX_SEATS = 4;
@@ -85,7 +90,7 @@ export async function createRoom({ name, transport, playerId = newPlayerId(), se
   for (let attempt = 0; attempt < 8; attempt++) {
     const code = newRoomCode();
     const room = {
-      game: 'v4', code, hostId: playerId, status: 'lobby', createdAt: now,
+      game: 'v4', code, hostId: playerId, status: 'lobby', createdAt: now, build: { ...BUILD },
       seed: Number.isFinite(seed) ? seed >>> 0 : Math.floor(Math.random() * 2 ** 31),
       seats: { s0: { kind: 'human', name: name || 'Host', id: playerId } },
       ...roomTable(table),
@@ -114,6 +119,8 @@ export async function joinRoom({ code, name, transport, playerId, botDelayMs = 4
   const room = await transport.get(roomPath(code));
   if (!room) throw new Error('Room not found.');
   if (room.game !== 'v4') throw new Error('That code belongs to an old (v3) game.');
+  // Mixed builds would apply different rules to one state (or crash on an unknown card): refuse, rejoins included.
+  if (!sameBuild(room)) throw new Error(VERSION_MISMATCH);
 
   // Reconnect: same playerId, still seated.
   if (playerId && seatList(room).some(s => s.kind === 'human' && s.id === playerId)) {
@@ -214,7 +221,8 @@ function openLobby({ transport, code, playerId, botDelayMs }) {
       session = createOnlineSession({ transport, base, code, playerId, getRoom: () => room, lobby: api });
       starts.emit(session);
     }
-    const shouldHost = !!room && room.hostId === playerId && (status === 'playing' || status === 'over');
+    // never host a room made by other rules content (joinRoom already refuses; this is the backstop)
+    const shouldHost = !!room && room.hostId === playerId && (status === 'playing' || status === 'over') && sameBuild(room);
     if (shouldHost && !host) host = startHost({ transport, base, getRoom: () => room, botDelayMs });
     if (!shouldHost && host) { host.stop(); host = null; }
     host?.roomChanged();
@@ -298,9 +306,9 @@ function openLobby({ transport, code, playerId, botDelayMs }) {
         list.forEach((s, i) => { seats[`s${i}`] = { kind: s.kind, name: s.name, ...(s.id ? { id: s.id } : {}) }; });
         const seed = Number.isFinite(r.seed) ? r.seed : Math.floor(Math.random() * 2 ** 31);
         const quadrants = parseTable(r.table);
-        const game = createGame({ seats: list.map(s => ({ name: s.name, kind: s.kind })), seed, ...(quadrants ? { quadrants } : {}) });
+        const game = newGame({ seats: list.map(s => ({ name: s.name, kind: s.kind })), seed, ...(quadrants ? { quadrants } : {}) });
         return {
-          ...r, seats, seed, status: 'playing', startedAt: Date.now(),
+          ...r, seats, seed, status: 'playing', startedAt: Date.now(), build: { ...BUILD },
           state: { stateJson: JSON.stringify(game), version: 1, lastMove: null, recent: '', at: Date.now() },
           moves: null, rejects: null,
         };
@@ -378,6 +386,7 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, lobby }
     try { next = JSON.parse(node.stateJson); } catch { return; }
     state = next;
     version = node.version;
+    trackState(state);
     const done = new Set(String(node.recent || '').split(',').filter(Boolean));
     if (node.lastMove?.mid) done.add(node.lastMove.mid);
     for (const [mid, w] of [...waiting]) if (done.has(mid)) { waiting.delete(mid); w.resolve(state); }
