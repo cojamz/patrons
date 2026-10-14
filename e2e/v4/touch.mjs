@@ -13,7 +13,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 
-const SHOTS = '/tmp/patrons-shots/v4/touch-e2e';
+const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/touch-e2e';
 mkdirSync(SHOTS, { recursive: true });
 let server = null;
 let base = process.env.V4_URL;

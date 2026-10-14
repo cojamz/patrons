@@ -10,7 +10,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
 
-const SHOTS = '/tmp/patrons-shots/v4/tables';
+const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/tables';
 rmSync(SHOTS, { recursive: true, force: true });
 mkdirSync(SHOTS, { recursive: true });
 

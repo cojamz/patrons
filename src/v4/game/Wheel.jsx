@@ -6,6 +6,7 @@ import { quadrant, roman } from '../../engine/v4/index.js';
 import { playerColor, standings, shortLabel, tiebreakWord } from '../format.js';
 import { RING_VALUE } from '../../engine/v4/index.js';
 import { sheetMode } from './parts.jsx';
+import { realHover } from '../hover.js';
 
 // Discs sit toward the outer edge of their ring and names on a fixed radius along the inner edge, so a name
 // never runs into its disc, the disc's glow or a recent-move ring at any board size.
@@ -279,7 +280,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
         role="button" tabIndex={opt ? 0 : -1} aria-label={`${a.name}, ${quadrant(qid).name} round ${roman(t)}: ${a.text} ${status}.`}
         onClick={e => { if (Date.now() - touchTapped.current > 500) tap(s, e.currentTarget); }}
         onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onPick(opt); } }}
-        onPointerEnter={e => { if (e.pointerType === 'mouse') setPeek(p => (p && p.pinned ? p : { key, pinned: false })); }}
+        onPointerEnter={e => { if (realHover(e)) setPeek(p => (p && p.pinned ? p : { key, pinned: false })); }}
         onPointerLeave={e => { if (e.pointerType === 'mouse') setPeek(p => (p && !p.pinned && p.key === key ? null : p)); }}
         onFocus={e => { if (e.currentTarget.matches(':focus-visible')) setPeek({ key, pinned: false }); }}
         onBlur={() => setPeek(p => (p && !p.pinned && p.key === key ? null : p))}

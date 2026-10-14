@@ -6,7 +6,7 @@ import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 
-const SHOTS = '/tmp/patrons-shots/v4';
+const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '';
 mkdirSync(SHOTS, { recursive: true });
 let server = null;
 let base = process.env.V4_URL;

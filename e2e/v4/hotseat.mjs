@@ -8,7 +8,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
 
-const SHOTS = '/tmp/patrons-shots/v4';
+const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '';
 rmSync(SHOTS, { recursive: true, force: true });
 mkdirSync(SHOTS, { recursive: true });
 const DESKTOP = { width: 1270, height: 700 };

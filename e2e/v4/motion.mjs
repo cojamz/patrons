@@ -11,7 +11,7 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { richSave } from './lib/rich-save.mjs';
 
-const SHOTS = '/tmp/patrons-shots/v4/motion';
+const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/motion';
 mkdirSync(SHOTS, { recursive: true });
 let server = null;
 let base = process.env.V4_URL;

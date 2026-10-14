@@ -2,6 +2,7 @@
 import { cardDef, paymentPlan, followerChoices, TIERS, tierLeft } from '../../engine/v4/index.js';
 import { useEffect, useRef, useState } from 'react';
 import { costParts, tierCostText } from '../format.js';
+import { realHover } from '../hover.js';
 
 // long words get a soft hyphen in the middle: it shows only when the word must break ("Doppel-ganger")
 const softBreak = name => name.replace(/[A-Za-z]{9,}/g, w => `${w.slice(0, Math.ceil(w.length / 2))}\u00AD${w.slice(Math.ceil(w.length / 2))}`);
@@ -49,7 +50,7 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
               aria-disabled={!opt} title={compact && onHoverCard ? undefined : `${d.name} · ${d.f}★ · ${d.text}`}
               onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'card', uid, name: d.name }, e.currentTarget))}
               // the compact row is too small to read: hovering a card shows it in full (touch: a tap does)
-              onPointerEnter={compact && onHoverCard ? e => { if (e.pointerType === 'mouse') onHoverCard(uid, e.currentTarget); } : undefined}
+              onPointerEnter={compact && onHoverCard ? e => { if (realHover(e)) onHoverCard(uid, e.currentTarget); } : undefined}
               onPointerLeave={compact && onHoverCard ? e => { if (e.pointerType === 'mouse') onHoverCard(null); } : undefined}
             >
               {compact ? (
