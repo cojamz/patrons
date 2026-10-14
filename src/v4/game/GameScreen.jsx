@@ -383,6 +383,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const onDenied = useCallback((info, el) => {
     if (state.over || !pend) return;
     const who = state.players[pend.player];
+    // phones: a shop card you can't buy right now opens its details instead (you can't hover there)
+    if (info.type === 'card' && !wide && el && !(pend.kind === 'buy' && mySeats.includes(pend.player) && !needHandoff)) {
+      setCardDetail({ el, uid: info.uid });
+      return;
+    }
     let text;
     if (moment) text = 'Start the round first';
     else if (!mySeats.includes(pend.player)) text = `${who.name} is ${verbFor(pend.kind)} — your turn comes`;
@@ -392,11 +397,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     else if (info.type === 'slot') {
       // A taken or unopened space explains itself on its own card (wheel) or row (panel); the prompt stays put.
       const owner = state.slots[info.key];
-      if (owner === undefined && pend.kind === 'buy') text = 'You’ve placed this turn — recruit, buy followers or pass';
-      else text = null;
-    } else if (pend.kind === 'place') text = 'Place a worker first';
+      text = owner === undefined && pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers or pass' : null;
+    } else if (pend.kind === 'place') text = info.type === 'card' || info.type === 'tier' ? 'Place a worker first, then recruit' : 'Place a worker first';
     else if (info.type === 'card') text = `You can’t afford ${info.name} yet`;
-    if (info.type === 'card' && !wide && el && !(pend.kind === 'buy' && mySeats.includes(pend.player))) { setCardDetail({ el, uid: info.uid }); return; }
     else if (info.type === 'tier') text = info.tier.limited && state.bigLeft <= 0 ? 'No +6 buys left' : `+${info.tier.get} needs ${tierCostText(info.tier)}`;
     else text = 'Not right now';
     if (text) say(text);
