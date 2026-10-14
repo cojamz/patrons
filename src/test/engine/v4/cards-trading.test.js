@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { followers } from '../../../engine/v4/core.js';
 import { quadrant } from '../../../engine/v4/content/index.js';
 import { term } from '../../../v4/glossary.js';
-import { take, move, play, ids } from './helpers.js';
+import { take, move, play, ids, actionName } from './helpers.js';
 import { table, useCosts, named, uidIn, owns } from './cards-helpers-b.js';
 
 const Q = ['gold', 'red', 'trading', 'thieves'];
@@ -67,14 +67,14 @@ describe('White actions', () => {
     let s = table(QE, { round: 2, bonus: [3, 2], shop: ROW, queue: turns(0, 1) });
     s = pass(move(take(s, 'trading.pawn'), 'amount:1'));
     s = take(s, 'echo.echo');
-    const copy = s.pending.options.find(o => o.label.startsWith('Your Call'));
+    const copy = s.pending.options.find(o => o.label.startsWith(actionName('trading.pawn')));
     expect(copy.label).toBe('Your Call (P1): +2 white');
     s = move(s, copy.id);
     expect(R(s, 1).white).toBe(2);
     let t = table(QE, { round: 2, shop: ROW, queue: turns(0, 1) });
     t = pass(move(take(t, 'trading.pawn'), 'amount:0'));
     t = take(t, 'echo.echo');
-    expect((t.pending?.options || []).some(o => o.label.startsWith('Your Call'))).toBe(false);
+    expect((t.pending?.options || []).some(o => o.label.startsWith(actionName('trading.pawn')))).toBe(false);
   });
 
   // design critic follow-up (2026-10-14): "loose followers" is defined once (rulebook, glossary); the cards use it

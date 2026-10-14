@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { applyMove, followers, SHOP_SIZE } from '../../../engine/v4/core.js';
 import { BADGE } from '../../../engine/v4/content/market.js';
-import { take, move, play, ids } from './helpers.js';
+import { take, move, play, ids, actionName } from './helpers.js';
 import { table, useCosts, named, uidIn, owns } from './cards-helpers-b.js';
 
 const Q = ['gold', 'red', 'market', 'thieves'];
@@ -45,7 +45,7 @@ describe('Blue actions', () => {
     let s = table(QE, { res: [{ red: 4 }, { gold: 2 }], shop: ROW, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
     s = move(pickPay(move(take(s, 'market.bargain'), card(s, 'red.twins'))), 'pass');
     s = take(s, 'echo.echo');
-    s = move(s, s.pending.options.find(o => o.label.startsWith('Snap Up')).id);
+    s = move(s, s.pending.options.find(o => o.label.startsWith(actionName('market.bargain'))).id);
     expect(R(s, 1).blue).toBe(2);
     expect(s.pending.prompt).toMatch(/Snap Up: recruit/);
     expect(s.log.some(l => /P2 copies Snap Up \(P1's\): doing it again/.test(l))).toBe(true);
@@ -76,7 +76,7 @@ describe('Blue actions', () => {
     let s = table(QE, { shop: ROW, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }], round: 2 });
     s = move(take(s, 'market.showroom'), 'pass');
     s = take(s, 'echo.encore');
-    s = move(s, s.pending.options.find(o => o.label.startsWith('Name Drop')).id);
+    s = move(s, s.pending.options.find(o => o.label.startsWith(actionName('market.showroom'))).id);
     expect(R(s, 1).blue).toBe(2);
   });
 

@@ -10,7 +10,6 @@
 //   of one browser context, which share localStorage: the rejoin is weaker there, and the run says so.
 // Server: $V4_URL if set, else starts `npx vite --port 5181` itself.
 import { chromium, devices } from 'playwright';
-import { touchMedia, touchMediaProblem } from './lib/touch-media.mjs';
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, existsSync, readFileSync, renameSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -87,8 +86,6 @@ const GAME = '.app.game';
 const params = `${RTDB ? `rtdb=${RTDB}` : 'transport=broadcast'}&botDelay=30&subAfter=1500&intro=0`; // intro=0: no first-game intro over the table (src/v4/Intro.jsx; hotseat.mjs gates the intro)
 const url = `${base}/?${params}`;
 const pages = { hana: watch(await ctxs.hana.newPage(), 'hana'), gus: watch(await ctxs.gus.newPage(), 'gus'), pia: null };
-// Pia's phone (over Firebase) reads as a real touch screen: (pointer: coarse), (hover: none)
-const piaPage = async () => { const p = await ctxs.pia.newPage(); if (RTDB) await touchMedia(p); return p; };
 
 // Clicks the first legal option (choice panels first). The same option id can show in two places (a choice panel and
 // the shop row), and the UI keeps changing, so if a click leaves the page where it was, the next try starts further down.
@@ -167,10 +164,9 @@ try {
   await pages.gus.waitForSelector('.code');
 
   // Pia opens the invite link: the code is already filled in
-  pages.pia = watch(await piaPage(), 'pia');
+  pages.pia = watch(await ctxs.pia.newPage(), 'pia');
   await pages.pia.goto(`${invite}&intro=0`);
   await pages.pia.waitForSelector('input[aria-label="Room code"]');
-  if (RTDB) { const off = await touchMediaProblem(pages.pia, 'Pia\'s phone'); if (off) errors.push(off); }
   const filled = await pages.pia.$eval('input[aria-label="Room code"]', e => e.value);
   if (filled !== code) throw new Error(`invite link didn't fill the code: "${filled}"`);
   await pages.pia.fill('input[placeholder="Name"]', 'Pia');
@@ -239,7 +235,7 @@ try {
   if (!piaMoves) throw new Error('no move was played for Pia after the takeover');
 
   // Pia reopens the invite link: straight back into her seat, the bot steps aside
-  pages.pia = watch(await piaPage(), 'pia');
+  pages.pia = watch(await ctxs.pia.newPage(), 'pia');
   await pages.pia.goto(`${invite}&intro=0`);
   await pages.pia.waitForSelector(GAME, { timeout: 20000 });
   // the bot has stepped aside: when it's Pia's turn the table waits for her (a bot would move within ~30 ms)

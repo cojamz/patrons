@@ -21,7 +21,7 @@ afterEach(() => { restore(); });
 const T = ['gold', 'red', 'thieves', 'green'];
 const R = (s, i = 0) => s.players[i].res;
 const defs = (s, i) => s.players[i].members.map(u => s.cards[u].def);
-const evenSwap = () => quadrant('red').actions.find(a => a.name === 'Even Swap');
+const evenSwap = () => quadrant('red').actions.find(a => a.key === 'evenswap');
 
 describe('Even Swap', () => {
   it('sits in Red’s outer ring where Scout was, and Scout is gone', () => {
