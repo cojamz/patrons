@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { scene, move, uidOf, play, useTestCosts } from './helpers.js';
 
 useTestCosts();
-import { memberCount } from '../../../engine/v4/core.js';
+import { memberCount, followers } from '../../../engine/v4/core.js';
 
 const buyPhase = opts => scene({ ...opts, queue: [{ t: 'buy', p: 0 }] });
 
@@ -62,23 +62,14 @@ describe('choosing how to pay', () => {
   });
 });
 
-describe('Doppelganger copies member count', () => {
-  it('copying Twins makes it count as 2 members', () => {
-    let s = buyPhase({ res: [{ red: 2, blue: 2 }], members: [['red.twins']], shop: ['red.doppel'] });
-    const before = memberCount(s, s.players[0]);
-    s = move(s, `card:${uidOf(s, 'red.doppel', 'shop')}`);
-    if (s.pending?.kind === 'choose') s = play(s, o => o.label === 'Twins');
-    expect(memberCount(s, s.players[0])).toBe(before + 2);
-  });
-});
-
 describe('Doppelganger becomes a copy of the card', () => {
-  it('copying Twins is worth 2 followers as well as 2 members', async () => {
-    const { followers } = await import('../../../engine/v4/core.js');
+  it('copying Twins is worth 2 followers (and is still one member)', () => {
     let s = buyPhase({ res: [{ red: 2, blue: 2 }], members: [['red.twins']], shop: ['red.doppel'] });
     const before = followers(s, s.players[0]);
+    const members = memberCount(s, s.players[0]);
     s = move(s, `card:${uidOf(s, 'red.doppel', 'shop')}`);
     if (s.pending?.kind === 'choose') s = play(s, o => o.label === 'Twins');
     expect(followers(s, s.players[0])).toBe(before + 2);
+    expect(memberCount(s, s.players[0])).toBe(members + 1);
   });
 });

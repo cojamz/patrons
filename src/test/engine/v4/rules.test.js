@@ -210,12 +210,13 @@ describe('round-end contests', () => {
   });
 
   it('most members wins red; red members break member ties', () => {
-    let s = scene({ n: 3, members: [['gold.banker', 'gold.midas'], ['red.intern', 'gold.tycoon'], ['red.twins']], queue: [{ t: 'endRound' }] });
-    // all have 2 members; P2 has 1 red, P3 has 2 red (Twins)
+    let s = scene({ n: 3, members: [['gold.banker', 'gold.midas'], ['red.intern', 'gold.tycoon'], ['red.twins', 'red.crowd']], queue: [{ t: 'endRound' }] });
+    // all have 2 members; P2 has 1 red, P3 has 2 red
     expect(s.players.map(p => p.contest)).toEqual([0, 0, 2]);
     s = scene({ n: 3, members: [['red.intern', 'gold.midas'], ['red.mob', 'gold.tycoon'], ['gold.banker']], queue: [{ t: 'endRound' }] });
     expect(s.players.map(p => p.contest)).toEqual([2, 2, 0]);
-    s = scene({ n: 2, members: [['gold.banker', 'gold.midas', 'gold.tycoon'], ['red.twins']], queue: [{ t: 'endRound' }] });
+    // more members beats more red members, and Twins' 2 followers don't make it 2 members
+    s = scene({ n: 2, members: [['gold.banker', 'gold.midas', 'gold.tycoon'], ['red.twins', 'red.bigfamily']], queue: [{ t: 'endRound' }] });
     expect(s.players.map(p => p.contest)).toEqual([2, 0]);
   });
 });
@@ -284,8 +285,8 @@ describe('followers and the end', () => {
   });
 
   it('ranking: most followers, then most members', () => {
-    const s = scene({ n: 3, members: [['gold.banker'], ['red.twins'], []], bonus: [1, 0, 3], queue: [{ t: 'finish' }] });
-    // P1: 1+1+1 = 3, P2: 1+0+2 = 3 (2 members), P3: 4
+    const s = scene({ n: 3, members: [['red.twins'], ['red.intern', 'red.crowd'], []], bonus: [0, 0, 3], queue: [{ t: 'finish' }] });
+    // P1: 1+2 = 3 (1 member), P2: 1+1+1 = 3 (2 members), P3: 4
     expect(s.ranking).toEqual([2, 1, 0]);
     expect(s.over).toBe(true);
     expect(s.pending).toBe(null);

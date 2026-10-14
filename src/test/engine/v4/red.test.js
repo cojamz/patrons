@@ -101,9 +101,9 @@ describe('Stand-in actions are plain gains', () => {
 });
 
 describe('Red members', () => {
-  it('Twins counts as 2 members, Big Family as 3, and each counts its followers', () => {
+  it('Twins is worth 2 followers, Big Family 3, and each is one member', () => {
     const s = scene({ members: [['red.twins', 'red.bigfamily', 'red.intern']] });
-    expect(memberCount(s, s.players[0])).toBe(6);
+    expect(memberCount(s, s.players[0])).toBe(3);
     expect(fol(s, 0)).toBe(1 + 2 + 3 + 1);
   });
 
@@ -138,7 +138,7 @@ describe('Red members', () => {
 
   it('Mob: game end +1 follower per red member', () => {
     const s = scene({ members: [['red.mob', 'red.twins', 'red.intern', 'gold.banker']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.total).toBe(4);
+    expect(s.players[0].final.total).toBe(3);
   });
 
   it('Recruiter: +1 red whenever you recruit (not for itself)', () => {
@@ -163,7 +163,7 @@ describe('Red members', () => {
   });
 
   it('Host: at round start +1 red per 2 members', () => {
-    const s = scene({ members: [['red.host', 'red.twins', 'red.intern']], queue: [{ t: 'round', r: 2 }] });
+    const s = scene({ members: [['red.host', 'red.twins', 'red.intern', 'red.crowd', 'gold.banker']], queue: [{ t: 'round', r: 2 }] });
     expect(R(s)[0].red).toBe(2);
   });
 
@@ -242,8 +242,8 @@ describe('Red members', () => {
   });
 
   it('Patriarch: game end +1 follower per 2 members', () => {
-    const s = scene({ members: [['red.patriarch', 'red.bigfamily', 'red.intern']], queue: [{ t: 'finish' }] });
+    const s = scene({ members: [['red.patriarch', 'red.bigfamily', 'red.intern', 'red.crowd', 'gold.banker']], queue: [{ t: 'finish' }] });
     expect(s.players[0].final.total).toBe(2);
-    expect(fol(s, 0)).toBe(1 + 1 + 3 + 1 + 2);
+    expect(fol(s, 0)).toBe(1 + (1 + 3 + 1 + 1 + 1) + 2);
   });
 });

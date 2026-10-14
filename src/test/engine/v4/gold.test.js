@@ -83,8 +83,8 @@ describe('Gold actions', () => {
     expect(() => take(s, 'Steal')).toThrow(/not open/);
   });
 
-  it('Windfall: +1 gold per member (Twins counts 2)', () => {
-    const s = take(scene({ round: 2, members: [['red.twins', 'red.intern']] }), 'Windfall');
+  it('Windfall: +1 gold per member (Twins is one member)', () => {
+    const s = take(scene({ round: 2, members: [['red.twins', 'red.intern', 'red.crowd']] }), 'Windfall');
     expect(R(s)[0].gold).toBe(3);
   });
 
@@ -278,7 +278,7 @@ describe('Gold members', () => {
     let s = scene({ members: [['red.twins', 'red.intern']], res: [{ gold: 2 }], shop: ['gold.seed', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'] });
     s = take(s, 'Tide');
     s = move(s, `card:${uidOf(s, 'gold.seed', 'shop')}`);
-    expect(R(s)[0].gold).toBe(0 + 4);
+    expect(R(s)[0].gold).toBe(0 + 3);
   });
 
   it('Hustler: pick a color; your actions there give +1 gold', () => {
