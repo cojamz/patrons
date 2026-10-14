@@ -9,9 +9,9 @@ const store = k => (k === ONLINE ? globalThis.sessionStorage : globalThis.localS
 const read = k => { try { return JSON.parse(store(k).getItem(k) || 'null'); } catch { return null; } };
 const write = (k, v) => { try { if (v == null) store(k).removeItem(k); else store(k).setItem(k, JSON.stringify(v)); } catch { /* ignore */ } };
 
-/** { config, state, savedAt } or null. Finished games aren't kept. */
+/** { config, state, undo, savedAt } or null. `undo` is the session's undo checkpoint, if any. Finished games aren't kept. */
 export const loadLocal = () => { const v = read(LOCAL); return v && v.state && !v.state.over ? v : null; };
-export const saveLocal = (config, state) => write(LOCAL, state && !state.over ? { config, state, savedAt: Date.now() } : null);
+export const saveLocal = (config, state, undo = null) => write(LOCAL, state && !state.over ? { config, state, undo, savedAt: Date.now() } : null);
 export const clearLocal = () => write(LOCAL, null);
 
 /** { code, playerId, transport } or null. */

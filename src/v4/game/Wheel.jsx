@@ -3,7 +3,7 @@
 // or a first tap (touch) shows a card with the action's text; on touch, placing takes a second tap.
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { quadrant, roman } from '../../engine/v4/index.js';
-import { bannerText, playerColor } from '../format.js';
+import { bannerText, playerColor, standings, standingLine } from '../format.js';
 
 const RING = { 1: { r0: 142, r1: 198, r: 170, n: 3 }, 2: { r0: 90, r1: 142, r: 116, n: 2 }, 3: { r0: 34, r1: 90, r: 62, n: 1 } };
 const LABEL = { 1: { r: 147.5, h: 16, f: 9.2 }, 2: { r: 95, h: 22, f: 8.6 }, 3: { r: 40.5, h: 44, f: 8.6 } }; // name arcs, toward the center
@@ -50,7 +50,7 @@ export function spaceGeometry(state) {
  * @param {{ state:any, legal:Map<string,string>, onPick:(id:string)=>void, onDenied?:(info:object, el:Element)=>void,
  *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void }} props
  */
-export default function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, facing, onFacing }) {
+export default function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, lastMove = null, meId = null, facing, onFacing }) {
   const [rot, setRot] = useState(() => -90 * facing);
   const [peek, setPeek] = useState(null); // { key, pinned }
   const rotRef = useRef(rot);
@@ -108,7 +108,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     return () => removeEventListener('pointerdown', close);
   }, [peek]);
   // A new decision clears a stale selection.
-  useEffect(() => { setPeek(p => (p && p.pinned ? null : p)); }, [state]);
+  useEffect(() => { setPeek(null); }, [state]);
 
   const local = e => {
     const b = stage.current.getBoundingClientRect();
@@ -141,7 +141,19 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     dr.a = a;
     applyRot(rotRef.current + d);
   };
-  const onUp = () => {
+  const onUp = e => {
+    if (e && e.pointerType === 'touch' && !moved.current && drag.current) {
+      const p = local(e);
+      const r = (rotRef.current * Math.PI) / 180;
+      // undo the wheel's rotation, then take the nearest space within reach
+      const ux = CX + (p.x - CX) * Math.cos(-r) - (p.y - CY) * Math.sin(-r);
+      const uy = CY + (p.x - CX) * Math.sin(-r) + (p.y - CY) * Math.cos(-r);
+      let best = null, bd = 1e9;
+      for (const sp of spaceGeometry(state)) { const d = Math.hypot(sp.xy[0] - ux, sp.xy[1] - uy); if (d < bd) { bd = d; best = sp; } }
+      drag.current = null;
+      if (best && bd < 44) { e.preventDefault(); touchTapped.current = Date.now(); tap(best, stage.current.querySelector(`[data-slot="${best.key}"]`)); }
+      return;
+    }
     if (!drag.current) return;
     drag.current = null;
     if (!moved.current) return;
@@ -152,6 +164,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
   const round = Math.max(1, state.round);
   const spaces = spaceGeometry(state);
 
+  const touchTapped = useRef(0);
   const tap = (s, el) => {
     if (moved.current) return;
     const opt = legal.get(s.key);
@@ -167,19 +180,25 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
   };
 
   const parts = [];
+  const live = state.round >= 1 && !state.over ? standings(state) : null;
+  const paying = Math.max(1, state.round);
   state.quadrants.forEach((qid, q) => {
     const c = qCenter(q), a0 = c - 45, a1 = c + 45, isFacing = q === facing;
     const col = `var(--${qid})`;
     [1, 2, 3].forEach(t => {
       const R = RING[t], open = t <= round;
+      const pays = t === paying;
       const id = `b${q}${t}`;
+      const st = live && pays ? live[q] : null;
+      const who = st && st.top > 0 ? ` · ${standingLine(state, st, meId, t === 1 ? 3 : 2).toUpperCase()}` : '';
+      const text = pays ? `${bannerText(qid, t)}${state.round >= 1 ? ' NOW' : ''}${who}` : bannerText(qid, t);
       parts.push(
-        <g key={`ring${q}${t}`} className="ring">
+        <g key={`ring${q}${t}`} className={`ring${pays ? ' pays' : ''}`}>
           <path d={arc(a0 + 0.8, a1 - 0.8, R.r0 + 1, R.r1 - 1)} fill={col} fillOpacity={open ? (isFacing ? 0.26 : 0.12) : 0.04} stroke={col} strokeOpacity={open ? 0.55 : 0.18} />
-          <path d={arc(a0 + 1.6, a1 - 1.6, R.r1 - 12, R.r1 - 1.6)} fill="var(--table)" fillOpacity={open ? 0.55 : 0.3} />
-          <path id={id} d={textArc(c, 42, R.r1 - 6.5, rot)} fill="none" />
-          <text fontSize="7" fontWeight="700" letterSpacing="1.2" fill={col} fillOpacity={open ? 1 : 0.45} dominantBaseline="central">
-            <textPath href={`#${id}`} startOffset="50%" textAnchor="middle">{bannerText(qid, t)}</textPath>
+          <path d={arc(a0 + 1.6, a1 - 1.6, R.r1 - 12, R.r1 - 1.6)} fill={pays ? col : 'var(--table)'} fillOpacity={pays ? 0.22 : open ? 0.55 : 0.3} />
+          <path id={id} d={textArc(c, 43, R.r1 - 6.5, rot)} fill="none" />
+          <text fontSize={pays ? 6.6 : 6.4} fontWeight="700" letterSpacing={pays ? 0.5 : 1} fill={pays ? 'var(--ink)' : col} fillOpacity={pays ? 1 : 0.4} dominantBaseline="central">
+            <textPath href={`#${id}`} startOffset="50%" textAnchor="middle">{text}</textPath>
           </text>
         </g>,
       );
@@ -202,11 +221,11 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
       <g
         key={`s${key}`} className={cls} data-slot={key} data-option={opt || undefined}
         role="button" tabIndex={opt ? 0 : -1} aria-label={`${a.name}, ${quadrant(qid).name} round ${roman(t)}: ${a.text} ${status}.`}
-        onClick={e => tap(s, e.currentTarget)}
+        onClick={e => { if (Date.now() - touchTapped.current > 500) tap(s, e.currentTarget); }}
         onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onPick(opt); } }}
         onPointerEnter={e => { if (e.pointerType === 'mouse') setPeek(p => (p && p.pinned ? p : { key, pinned: false })); }}
         onPointerLeave={e => { if (e.pointerType === 'mouse') setPeek(p => (p && !p.pinned && p.key === key ? null : p)); }}
-        onFocus={() => setPeek({ key, pinned: false })}
+        onFocus={e => { if (e.currentTarget.matches(':focus-visible')) setPeek({ key, pinned: false }); }}
         onBlur={() => setPeek(p => (p && !p.pinned && p.key === key ? null : p))}
       >
         <circle className="hit" cx={x} cy={y} r={t === 3 ? 24 : 26} fill="transparent" />
@@ -224,6 +243,22 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     );
   }
 
+  // The latest rival move stays marked (a ring and a rim arrow in their color) until the next one.
+  if (lastMove && state.slots[lastMove.key] !== undefined) {
+    const sp = spaces.find(x => x.key === lastMove.key);
+    if (sp) {
+      const [x, y] = sp.xy;
+      const pc = playerColor(lastMove.pid);
+      const [ax, ay] = polar(sp.ang, 203), [bx, by] = polar(sp.ang - 3.2, 214), [cx2, cy2] = polar(sp.ang + 3.2, 214);
+      parts.push(
+        <g key={`last${lastMove.key}${lastMove.n}`} className="lastmove" aria-hidden="true">
+          <circle cx={x} cy={y} r={(sp.ring === 3 ? 15 : 16) + 6} fill="none" stroke={pc} strokeWidth="2" strokeDasharray="4 3" />
+          <path d={`M${ax},${ay} L${bx},${by} L${cx2},${cy2}Z`} fill={pc} />
+        </g>,
+      );
+    }
+  }
+
   // The peek card: full name, text and status of a space, near it on screen.
   let peekCard = null;
   if (peek) {
@@ -236,11 +271,15 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
       const owner = state.slots[s.key];
       const open = s.ring <= round;
       const opt = legal.get(s.key);
-      const left = Math.min(82, Math.max(18, ((X - VB0) / VBS) * 100));
+      const sr = stage.current ? stage.current.getBoundingClientRect() : null;
+      const half = 105;
+      let leftPx = sr ? ((X - VB0) / VBS) * sr.width : 0;
+      if (sr) leftPx = Math.max(12 + half - sr.left, Math.min(innerWidth - 12 - half - sr.left, leftPx));
+      const left = sr ? null : ((X - VB0) / VBS) * 100;
       const top = ((Y - VB0) / VBS) * 100;
       const below = Y < CY;
       peekCard = (
-        <div className={`peek${below ? ' below' : ''}`} style={{ left: `${left}%`, top: `${top}%`, '--c': `var(--${s.qid})` }} role="tooltip">
+        <div className={`peek${below ? ' below' : ''}${peek.pinned ? ' pinned' : ''}`} style={{ left: left == null ? `${leftPx}px` : `${left}%`, top: `${top}%`, '--c': `var(--${s.qid})` }} role="tooltip">
           <b>{s.a.name}</b>
           <small>{quadrant(s.qid).name} · round {roman(s.ring)}</small>
           <span>{s.a.text}</span>

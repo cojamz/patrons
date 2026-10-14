@@ -1,5 +1,5 @@
 // Display helpers. No rules here: everything is read off engine state.
-import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, followers as engineFollowers } from '../engine/v4/index.js';
+import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, followers as engineFollowers, memberCount, countMembersOfColor, applyMove } from '../engine/v4/index.js';
 
 export const PLAYER_COLORS = ['#f4efe2', '#ff8fb1', '#b9a2ff', '#ffa94d'];
 export const playerColor = id => PLAYER_COLORS[id % PLAYER_COLORS.length];
@@ -18,7 +18,7 @@ export function memberChips(state, p) {
   for (const uid of p.members) {
     const c = state.cards[uid];
     const d = cardDef(state, uid);
-    const extra = c.copy ? ` → ${defById(c.copy).name}` : c.color ? ` · ${quadrant(c.color).name}` : '';
+    const extra = c.copy ? ` → ${defById(c.copy).name}` : c.color ? ` · works ${quadrant(c.color).name}` : '';
     const key = [d.id, c.used ? 'u' : '', c.on === false ? 'off' : '', c.copy || '', c.color || ''].join('|');
     if (!out.has(key)) out.set(key, { key, uids: [], def: d, card: c, label: d.name + extra, count: 0 });
     const g = out.get(key);
@@ -35,7 +35,7 @@ export function costParts(def) {
   return parts;
 }
 
-export const tierCostText = t => (t.colors === 1 ? `${t.cost} of anything` : `${t.cost}, ${t.colors}+ colors`);
+export const tierCostText = t => (t.colors === 1 ? `${t.cost} of anything` : `${t.cost}, ${t.colors}+ colors (gold counts as any)`);
 export { TIERS };
 
 /**
@@ -130,6 +130,20 @@ export function contestWins(state) {
   return wins;
 }
 
+/** Per player, per contest label: { rounds, v } from every round-end line in the log. */
+export function contestRounds(state) {
+  const out = state.players.map(() => ({}));
+  for (const line of state.log) {
+    const r = isRoundEnd(line) ? parseRoundEnd(state, line) : null;
+    if (!r) continue;
+    for (const row of r.rows) for (const id of row.winners) {
+      const e = out[id][row.label] || (out[id][row.label] = { rounds: 0, v: 0 });
+      e.rounds += 1; e.v += row.v;
+    }
+  }
+  return out;
+}
+
 /** One sentence on why the winner won, built from the followers breakdown. */
 export function winSentence(state) {
   const ranked = (state.ranking || state.players.map(p => p.id)).map(id => state.players[id]);
@@ -141,6 +155,15 @@ export function winSentence(state) {
   const lead = ranked[1] ? `${w.name} won by ${f(w) - f(ranked[1])}` : `${w.name} won`;
   const sources = [['members', b.members], ['contests', b.contests], ['bought', b.bought], ['effects', b.effects], ['endGame', b.endGame]];
   const [top] = sources.reduce((a, c) => (c[1] > a[1] ? c : a));
+  // A contest won round after round is usually the real story.
+  const swept = Object.entries(contestRounds(state)[w.id] || {}).sort((a, c) => c[1].rounds - a[1].rounds || c[1].v - a[1].v)[0];
+  if (swept && swept[1].rounds >= 2 && b.contests >= Math.max(b.members, b.bought, b.effects, b.endGame) * 0.6) {
+    const [label, { rounds, v }] = swept;
+    const res = (label.match(/^Most (gold|red|blue|green)$/i) || [])[1];
+    const lead2 = res ? `hoarded ${res.toLowerCase()}` : `led ${label.toLowerCase()}`;
+    const when = rounds === 3 ? 'all three rounds' : `${rounds} of 3 rounds`;
+    return `${lead}: ${lead2}, winning ${label} ${when} (+${v}).`;
+  }
   if (top === 'endGame' && b.parts.length) {
     const best = b.parts.map(s => { const m = s.match(/^(.*) \+(\d+)$/); return m ? { name: m[1], n: Number(m[2]) } : null; }).filter(Boolean).sort((a, c) => c.n - a.n)[0];
     return `${lead}: ${best.name} turned the endgame into ${best.n} followers.`;
@@ -180,4 +203,77 @@ export function logSections(state) {
     out[out.length - 1].lines.push(line);
   }
   return out.filter(s => s.lines.length);
+}
+
+// ---------- live contest standings (display only, using each quadrant's own scoring rule) ----------
+function scoringCtx(state) {
+  return {
+    state,
+    memberCount: p => memberCount(state, p),
+    countMembersOfColor: (p, q) => countMembersOfColor(state, p, q),
+    followers: p => engineFollowers(state, p),
+    rivals: p => state.players.filter(o => o !== p),
+    player: id => state.players[id],
+    quadrant,
+  };
+}
+/**
+ * For each quadrant: { qid, label, rows:[{ id, score, shown }] sorted best first, leaders:[ids], margin }.
+ * `shown` is the number people see; a rule may fold a tiebreak into its score (Most members adds red members
+ * as a fraction of 1000), so scores of 1000 and up show their whole part.
+ */
+export function standings(state) {
+  const ctx = scoringCtx(state);
+  return state.quadrants.map(qid => {
+    const q = quadrant(qid);
+    const rows = state.players.map(p => {
+      let score = 0;
+      try { score = q.scoring.score(ctx, p); } catch { score = 0; }
+      return { id: p.id, score, shown: score >= 1000 ? Math.floor(score / 1000) : score };
+    }).sort((a, b) => b.score - a.score);
+    const top = rows[0] ? rows[0].score : 0;
+    const leaders = top > 0 ? rows.filter(r => r.score === top).map(r => r.id) : [];
+    const next = rows.find(r => r.score < top);
+    const margin = leaders.length === 1 && next ? rows[0].shown - next.shown : 0;
+    return { qid, label: q.scoring.label, rows, leaders, margin, top };
+  });
+}
+
+/** "P2 8 · P3 8 · you 1": the top few, by name ("you" for meId). */
+export function standingLine(state, st, meId, max = 3) {
+  return st.rows.slice(0, max).map(r => `${r.id === meId ? 'you' : state.players[r.id].name} ${r.shown}`).join(' · ');
+}
+
+// ---------- the round-end moment ----------
+/**
+ * The table exactly when the round was scored: the move that ended the round replayed onto the state before it,
+ * stopping right after scoring (before the next round's start effects and reset board). Display only.
+ * Returns null if it can't be reconstructed.
+ */
+export function scoringSnapshot(before, after) {
+  if (!before || !before.pending || !after) return null;
+  const cut = before.queue.findIndex(t => t.t === 'endRound');
+  if (cut < 0) return null;
+  const target = JSON.stringify(after.log.slice(-6));
+  for (const o of before.pending.options) {
+    const move = { player: before.pending.player, option: o.id };
+    let full;
+    try { full = applyMove(before, move); } catch { continue; }
+    if (JSON.stringify(full.log.slice(-6)) !== target || full.round !== after.round) continue;
+    const trimmed = { ...before, queue: before.queue.slice(0, cut + 1) };
+    try { return applyMove(trimmed, move); } catch { return null; }
+  }
+  return null;
+}
+
+/** Where a player's followers came from during a round: { contests, members, bought, effects }. */
+export function roundGains(start, end, p, contests) {
+  const was = start.players[p.id];
+  const memF = st => engineFollowers(st, st.players[p.id]) - 1 - st.players[p.id].bonus;
+  const members = memF(end) - memF(start);
+  const roundLines = newLogLines(start, end);
+  const re = new RegExp(`^${p.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} bought (\\d+) followers?\\b`);
+  const bought = roundLines.reduce((s, l) => { const m = l.match(re); return s + (m ? Number(m[1]) : 0); }, 0);
+  const total = engineFollowers(end, end.players[p.id]) - engineFollowers(start, was);
+  return { contests, members, bought, effects: total - contests - members - bought, total };
 }

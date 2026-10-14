@@ -58,6 +58,24 @@ async function placeOnce(s) {
   return pre;
 }
 
+/** What undo should allow after `after`, given the state `before` the last move and who made it. */
+const expectUndo = (before, move, after, humans) =>
+  !!(before.pending && before.pending.kind === 'place' && humans.includes(move.player) && !after.over
+    && after.round === before.round && after.pending && after.pending.player === move.player && after.pending.kind !== 'place');
+
+/** Drives to a placement and makes one that leads straight to the placer's buy (trying options via undo). */
+async function placeToBuy(s) {
+  await driveUntil(s, st => st.pending && st.pending.kind === 'place');
+  const pre = s.getState();
+  for (const o of pre.pending.options) {
+    await s.submit({ option: o.id });
+    const st = s.getState();
+    if (st.pending && st.pending.player === pre.pending.player && st.pending.kind === 'buy') return pre;
+    expect(s.undo()).toBe(true);
+  }
+  throw new Error('no placement leads straight to a buy');
+}
+
 describe('local session: undo', () => {
   it('undo restores exactly the pre-placement state, once', async () => {
     const s = createLocalSession({ seats: humans2, seed: 21, botDelayMs: 0 });
@@ -81,10 +99,7 @@ describe('local session: undo', () => {
 
   it('is not offered after a pass', async () => {
     const s = createLocalSession({ seats: humans2, seed: 21, botDelayMs: 0 });
-    const pre = await placeOnce(s);
-    const me = pre.pending.player;
-    await driveUntil(s, st => st.pending.player !== me || st.pending.kind === 'buy');
-    expect(s.getState().pending.kind).toBe('buy'); // seed 21: the placement leads straight to a buy
+    await placeToBuy(s);
     expect(s.canUndo()).toBe(true);
     await s.submit({ option: 'pass' });
     expect(s.canUndo()).toBe(false);
@@ -92,53 +107,81 @@ describe('local session: undo', () => {
     s.destroy();
   });
 
-  it('is not offered after a buy, even if the same player still has a decision', async () => {
-    let found = false;
-    for (let seed = 1; seed < 40 && !found; seed++) {
+  it('is not offered after a buy, or after any follow-up decision by the placer', async () => {
+    let bought = false, followedUp = false;
+    for (let seed = 1; seed < 60 && !(bought && followedUp); seed++) {
       const s = createLocalSession({ seats: humans2, seed, botDelayMs: 0 });
-      // play placements until one is followed by a buy with something real to buy
-      for (let turn = 0; turn < 12 && !found && !s.getState().over; turn++) {
+      for (let turn = 0; turn < 12 && !s.getState().over; turn++) {
         const pre = await placeOnce(s);
-        const me = pre.pending.player;
-        await driveUntil(s, st => st.over || st.pending.player !== me || st.pending.kind === 'buy');
         const st = s.getState();
-        const buy = st.pending && st.pending.player === me && st.pending.kind === 'buy'
-          && st.pending.options.find(o => o.kind === 'card' || o.kind === 'tier');
-        if (!buy) continue;
+        if (!st.pending || st.pending.player !== pre.pending.player) continue;
         expect(s.canUndo()).toBe(true);
-        await s.submit({ option: buy.id });
-        // a multi-way payment opens a 'pay' step: still undoable until paid
-        if (s.getState().pending?.kind === 'pay') {
-          expect(s.canUndo()).toBe(true);
-          await s.submit({ option: s.getState().pending.options[0].id });
-        }
+        const buy = st.pending.kind === 'buy' && st.pending.options.find(o => o.kind === 'card' || o.kind === 'tier');
+        if (buy) { await s.submit({ option: buy.id }); bought = true; }
+        else { await s.submit(chooseBotMove(st)); followedUp = true; } // a 'choose' from the action, etc.
         expect(s.canUndo()).toBe(false);
         expect(s.undo()).toBe(false);
-        found = true;
+        await driveUntil(s, x => x.over || x.pending.kind === 'place');
       }
       s.destroy();
     }
-    expect(found).toBe(true);
+    expect(bought).toBe(true);
+    expect(followedUp).toBe(true);
   });
 
-  it('is never offered for bot placements', async () => {
-    const s = createLocalSession({ seats: [{ name: 'Bot', kind: 'bot' }, { name: 'H' }], seed: 9, botDelayMs: 0 });
-    let botTurnsSeen = 0;
-    const errors = [];
-    s.subscribe(st => {
-      if (!st.pending || st.over) return;
-      if (st.players[st.pending.player].kind === 'bot') {
-        botTurnsSeen++;
-        if (s.canUndo()) errors.push(`undo offered on bot turn at move ${st.moves}`);
-        if (s.undo()) errors.push('bot placement was undone');
-      } else {
-        queueMicrotask(() => s.submit(chooseBotMove(s.getState())).catch(() => {}));
+  it('is offered exactly while the human placement is the last move: never past other moves, bots or round ends', async () => {
+    let roundEndsSeen = 0, undoable = 0, botMovesSeen = 0;
+    for (const seed of [3, 9, 27]) {
+      const s = createLocalSession({ seats: [{ name: 'H1' }, { name: 'Bot', kind: 'bot' }, { name: 'H2' }], seed, botDelayMs: 0 });
+      const errors = [];
+      let prev = s.getState();
+      let lastMove = null;
+      // wrap submit-side moves; bot moves are inferred from the pending player of `prev`
+      s.subscribe(st => {
+        if (st !== prev) check(st);
+        if (st.pending && !st.over && s.mySeats.includes(st.pending.player)) {
+          const m = chooseBotMove(st);
+          lastMove = { ...m, at: st.moves };
+          queueMicrotask(() => s.submit(m).catch(e => errors.push(e.message)));
+        }
+      });
+      function check(st) {
+        const move = lastMove && lastMove.at === prev.moves ? lastMove : { player: prev.pending?.player };
+        const want = !!move.option && expectUndo(prev, move, st, s.mySeats);
+        if (want) undoable++;
+        if (!move.option) botMovesSeen++;
+        if (st.round !== prev.round) roundEndsSeen++;
+        if (s.canUndo() !== want) errors.push(`seed ${seed} move ${st.moves}: canUndo ${s.canUndo()}, expected ${want}`);
+        if (st.pending && st.players[st.pending.player].kind === 'bot' && s.undo()) errors.push('undid on a bot turn');
+        prev = st;
       }
-    });
-    await until(() => s.getState().over, { label: 'game over' });
-    expect(botTurnsSeen).toBeGreaterThan(10);
-    expect(errors).toEqual([]);
-    s.destroy();
+      await until(() => s.getState().over, { label: 'game over' });
+      expect(errors).toEqual([]);
+      s.destroy();
+    }
+    expect(roundEndsSeen).toBeGreaterThan(3);
+    expect(undoable).toBeGreaterThan(10);
+    expect(botMovesSeen).toBeGreaterThan(10);
+  });
+
+  it('a placement that ends the round is never undoable', async () => {
+    let found = 0;
+    for (let seed = 1; seed < 80 && found < 2; seed++) {
+      const s = createLocalSession({ seats: humans2, seed, botDelayMs: 0 });
+      while (!s.getState().over) {
+        const st = s.getState();
+        const move = st.pending.kind === 'place' ? { option: st.pending.options[0].id } : chooseBotMove(st);
+        await s.submit(move);
+        const after = s.getState();
+        if (st.pending.kind === 'place' && (after.round !== st.round || after.over)) {
+          found++;
+          expect(s.canUndo()).toBe(false);
+          expect(s.undo()).toBe(false);
+        }
+      }
+      s.destroy();
+    }
+    expect(found).toBeGreaterThan(0);
   });
 
   it('an all-bot game never offers undo', async () => {
@@ -147,6 +190,7 @@ describe('local session: undo', () => {
     s.subscribe(() => { if (s.canUndo()) offered = true; });
     await until(() => s.getState().over, { label: 'game over' });
     expect(offered).toBe(false);
+    expect(s.undoCheckpoint).toBe(null);
     s.destroy();
   });
 });
@@ -165,7 +209,6 @@ describe('local session: resume', () => {
   });
 
   it('bots pick up where they left off after a resume, and the game finishes', async () => {
-    // Play the human seat until it's the bot's turn, with bots frozen.
     const a = createLocalSession({ seats: [{ name: 'H' }, { name: 'Bot', kind: 'bot' }], seed: 17, botDelayMs: 10_000 });
     await driveUntil(a, st => st.pending && st.pending.player === 1);
     const saved = JSON.parse(JSON.stringify(a.getState()));
@@ -181,7 +224,35 @@ describe('local session: resume', () => {
     b.destroy();
   });
 
-  it('undo works in a resumed game', async () => {
+  it('keeps undo across a reload when the saved checkpoint is still valid', async () => {
+    const a = createLocalSession({ seats: humans2, seed: 21, botDelayMs: 0 });
+    const pre = structuredClone(await placeOnce(a));
+    expect(a.undoCheckpoint).not.toBe(null);
+    const saved = JSON.parse(JSON.stringify({ state: a.getState(), undo: a.undoCheckpoint }));
+    a.destroy();
+    const b = createLocalSession({ state: saved.state, undo: saved.undo, botDelayMs: 0 });
+    expect(b.canUndo()).toBe(true);
+    expect(b.undo()).toBe(true);
+    expect(b.getState()).toEqual(pre);
+    expect(b.undoCheckpoint).toBe(null);
+    b.destroy();
+  });
+
+  it('drops a saved checkpoint that no longer matches the saved state', async () => {
+    const a = createLocalSession({ seats: humans2, seed: 21, botDelayMs: 0 });
+    await placeToBuy(a);
+    const stale = JSON.parse(JSON.stringify(a.undoCheckpoint));
+    await a.submit({ option: 'pass' });
+    const state = JSON.parse(JSON.stringify(a.getState()));
+    a.destroy();
+    const b = createLocalSession({ state, undo: stale, botDelayMs: 0 });
+    expect(b.canUndo()).toBe(false);
+    expect(b.undo()).toBe(false);
+    expect(b.getState()).toEqual(state);
+    b.destroy();
+  });
+
+  it('undo works for a placement made after a resume', async () => {
     const a = createLocalSession({ seats: humans2, seed: 21, botDelayMs: 0 });
     await driveUntil(a, st => st.pending && st.pending.kind === 'place');
     const saved = JSON.parse(JSON.stringify(a.getState()));

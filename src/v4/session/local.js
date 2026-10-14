@@ -34,30 +34,31 @@ export function normalizeMove(state, move) {
 }
 
 /**
- * True when `move`, made from `before` (leaving `after`), commits the checkpointed player's turn:
- * a recruit, follower buy, activation or pass, or a payment (anything but Back).
+ * An undo checkpoint: the state from just before a human's placement, valid only while nothing else has happened.
+ * @typedef {{ state: object, player: number, moves: number }} UndoCheckpoint  (`moves` = state.moves right after the placement)
  */
-function commits(before, move, after) {
-  const kind = before.pending && before.pending.kind;
-  if (kind === 'buy') return /^(card|tier|pass|use)/.test(move.option) && !(after.pending && after.pending.kind === 'pay');
-  if (kind === 'pay') return move.option !== 'back';
-  return false;
+
+/** True when `cp` can still undo from `state`: the placement was the very last move, in the same round, and it's still the placer's decision. */
+export function checkpointValid(cp, state) {
+  return !!(cp && cp.state && state && !state.over && state.moves === cp.moves && state.round === cp.state.round
+    && state.pending && state.pending.player === cp.player && state.pending.kind !== 'place');
 }
 
 /**
- * Local sessions add undo for the acting human's last placement: `undo()` restores the state from just
- * before their last 'place' move, offered until they commit anything else (buy, pass, pay, use) or the
- * turn moves on. Bots never undo.
- * @param {{ seats?: { name?: string, kind?: 'human'|'bot' }[], seed?: number, botDelayMs?: number, quadrants?: string[], state?: object }} opts
+ * Local sessions add undo for the acting human's last placement: `undo()` restores the state from just before it,
+ * offered only while that placement is the last thing that happened. Any further move (by anyone, bots included)
+ * or a round ending clears it. Bots never undo.
+ * @param {{ seats?: { name?: string, kind?: 'human'|'bot' }[], seed?: number, botDelayMs?: number, quadrants?: string[], state?: object, undo?: UndoCheckpoint|null }} opts
  *   Pass `state` (a saved engine state) to resume instead of starting a new game; `seats`, `seed` and `quadrants` are then ignored.
- * @returns {Session & { canUndo(): boolean, undo(): boolean }}
+ *   Pass `undo` (a saved `undoCheckpoint`) with it to keep undo across a reload; it's dropped unless still valid for `state`.
+ * @returns {Session & { canUndo(): boolean, undo(): boolean, readonly undoCheckpoint: UndoCheckpoint|null }}
  */
-export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 ** 31), botDelayMs = 450, quadrants, state: saved }) {
+export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 ** 31), botDelayMs = 450, quadrants, state: saved, undo: savedUndo }) {
   let state = saved || createGame({ seats: seats.map(s => ({ name: s.name, kind: s.kind || 'human' })), seed, ...(quadrants ? { quadrants } : {}) });
   let version = 1;
   let timer = null;
   let destroyed = false;
-  let checkpoint = null; // { state, player }: the state from just before a human's placement
+  let checkpoint = saved && checkpointValid(savedUndo, saved) && saved.players[savedUndo.player]?.kind !== 'bot' ? savedUndo : null;
   const subs = createEmitter();
   // Bot tie-breaks: seeded from the game seed, or (on resume) from the engine's current rng so it varies by position.
   const rand = seededRandom(((saved ? saved.rng ^ saved.seed : seed) ^ 0x9e3779b9) >>> 0);
@@ -77,17 +78,16 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
   function apply(move) {
     const before = state;
     state = applyMove(state, move);
-    if (before.pending && before.pending.kind === 'place' && mySeats.includes(move.player)) {
-      checkpoint = { state: before, player: move.player };
-    } else if (checkpoint) {
-      const turnOver = !state.pending || state.pending.player !== checkpoint.player || state.pending.kind === 'place';
-      if (turnOver || (move.player === checkpoint.player && commits(before, move, state))) checkpoint = null;
-    }
+    // Only a human's placement opens a checkpoint; every other move closes it. A round ending inside the
+    // placement (or the game ending) leaves nothing to undo.
+    const placed = before.pending && before.pending.kind === 'place' && mySeats.includes(move.player);
+    checkpoint = placed ? { state: before, player: move.player, moves: state.moves } : null;
+    if (!checkpointValid(checkpoint, state)) checkpoint = null;
     emit();
     schedule();
   }
 
-  const canUndo = () => !!(!destroyed && checkpoint && state.pending && state.pending.player === checkpoint.player);
+  const canUndo = () => !destroyed && checkpointValid(checkpoint, state);
 
   function schedule() {
     clearTimeout(timer);
@@ -126,6 +126,8 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
       schedule();
       return true;
     },
+    /** The live undo checkpoint (or null), for saving next to the state so undo survives a reload. */
+    get undoCheckpoint() { return canUndo() ? checkpoint : null; },
     get mySeats() { return [...mySeats]; },
     get info() { return info(); },
     destroy() { destroyed = true; clearTimeout(timer); subs.clear(); },

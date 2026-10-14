@@ -44,7 +44,7 @@ export default function App() {
   // Save local games on every change.
   useEffect(() => {
     if (!session || session.info?.mode === 'online') return undefined;
-    const save = s => saveLocal(configRef.current, s);
+    const save = s => saveLocal(configRef.current, s, session.undoCheckpoint);
     save(session.getState());
     return session.subscribe(save);
   }, [session]);
@@ -67,7 +67,7 @@ export default function App() {
     const v = loadLocal();
     if (!v) { setSaved(null); return; }
     const botDelayMs = urlBotDelay() || BOT_DELAY[v.config?.speed] || 650;
-    begin(createLocalSession({ state: v.state, botDelayMs }), v.config);
+    begin(createLocalSession({ state: v.state, undo: v.undo, botDelayMs }), v.config);
   }, [begin]);
 
   const goHome = useCallback(() => {
