@@ -64,7 +64,7 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] Later, only if bot prices keep disagreeing with Cory's feel in play: a bot that learns from its own games
 
 ## Waiting on Cory
-- [ ] Barter (White, replaced Cash In): "Recruit a face-up member for half its cost (round up), paid in loose followers. If you can't, +3 white." You once rejected a cousin (Gold's 'recruit paying the whole cost in gold'). Keep it? [yes; it's one space, used about once a game]
+- [ ] Barter (White, replaced Cash In): "Recruit a face-up member for half its cost (round up), paid in loose followers." You once rejected a cousin (Gold's 'recruit paying the whole cost in gold'). Keep it? [yes; it's one space, used about once a game]
 - [ ] The 10-follower buy limited to once per player per round, so one player can't rush the game-end clock (built under go-with-your-gut). [yes]
 - [ ] The 18 action names (design/eval/action-names-calibration.md): grade by number or "all good"
 - [ ] Member renames, people or groups only (design/eval/member-names.md, 28 lines): grade by number or "all good"

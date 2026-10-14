@@ -93,7 +93,7 @@ export function flyCards(root, snap, moves) {
     if (!a.width || !b.width) continue;
     // the card lifts off the shop, holds a beat so you see which one, then travels to its new owner
     // land on the new member's own chip (or the "+N more" pill holding it) and make that chip glow
-    const chip = root.querySelector(`.lt-seat[data-pid="${to}"] [data-uid="${uid}"]`) || root.querySelector(`.pl[data-pid="${to}"] .chip[data-uids~="${uid}"]`);
+    const chip = root.querySelector(`.lt-seat[data-pid="${to}"] [data-uids~="${uid}"]`) || root.querySelector(`.lt-seat[data-pid="${to}"] [data-uid="${uid}"]`);
     const land = chip && visibleEl(chip) ? chip : target;
     const lb = land.getBoundingClientRect();
     ghostFly(s.html, 'flight', a, lb.width ? lb : b, { duration: 760, scaleTo: 0.28, hold: true });
