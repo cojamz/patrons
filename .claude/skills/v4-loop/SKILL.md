@@ -21,3 +21,11 @@ Each iteration:
 
 Done = check:v4 green, game-skeptic says SHIP (A- or better), and Cory has a link.
 Never present agent output to Cory unvetted.
+
+## Speed without cutting corners
+- Run independent work side by side: audits, fixers split by file area, and testers.
+- Triage each tester's report as soon as it lands; don't wait for the whole panel.
+- `check:v4 --fast` while fixing; the full gate (with browser e2e) before every panel.
+- Reuse agents that already know the code (SendMessage) for fixes. Testers are never reused.
+- One fresh tester between milestones; the full panel of 3 for the verdict.
+- Keep one preview server running for testers (port 5190) and rebuild into .v4-build between rounds.

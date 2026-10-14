@@ -46,3 +46,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-14 — Cory: builds get graded by an AI skeptic hunting for slop before he sees them. Added the game-skeptic agent as the loop's final gate (SHIP at A- or better).
 - 2026-10-14 — Cory: the skeptic must be super picky and precise, judging a human, elegant, tactile feel; and phone means real touch emulation. Updated game-skeptic.
 - 2026-10-14 — Cory: testers go in blind. No knowledge of the game, only the rulebook a real player would get plus the screen. The skeptic never reads the repo, and the lead hands it a URL and the rulebook.
+- 2026-10-14 — Cory: audit for hallucinations after each panel (claims vs reality), and go faster without weakening the gates. Added speed rules to the v4-loop skill.
