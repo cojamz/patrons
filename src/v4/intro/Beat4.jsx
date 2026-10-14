@@ -12,17 +12,17 @@ export const shots = [{ t: 0, cam: [31, 13, Z.far], d: 1300, lamp: [31, 14, 260,
 /** When each round's mark lights, and when that round's arrivals start (yours, then the rivals' quieter ones). */
 const ROUND = [
   { lit: 250 },
-  { lit: 1150, members: 1300, fols: 1800, rivals: 1400, back: null },
-  { lit: 2400, members: 2550, fols: 3250, rivals: 2650, back: 2550 },
+  { lit: 1050, members: 1200, fols: 1700, rivals: 1300, back: null },
+  { lit: 2250, members: 2400, fols: 3100, rivals: 2500, back: 2400 },
 ];
 const GAP = { member: 190, fol: 130, rival: 90 };
 const RIVALS_IN = 250; // the rivals fade up to .5 as the camera pulls back
-const FULL = 3600; // the rivals come up to full for the tally
-const TALLY = 3850; // the count starts (all four at once; the biggest keeps counting)
-const STEP = 55; // ms per counted figure
-const CROWN = 5050; // the crown drops (lands 420 ms later)
-const DIM = 5150; // the rivals dim back to .5
-const LAUGH = 5480; // your leader's scheming laugh
+const FULL = 3450; // the rivals come up to full for the tally
+const TALLY = 3700; // the count starts (all four at once; the biggest keeps counting)
+const STEP = 65; // ms per counted figure (slow enough to see the members counted)
+const CROWN = 4950; // the crown drops (lands 420 ms later)
+const DIM = 5050; // the rivals dim back to .5
+const LAUGH = CROWN + 420; // your leader's scheming laugh, as the crown lands
 
 // ---------- the four cults: members in join order; members and followers held after rounds I, II, III ----------
 const CULTS = {
@@ -82,7 +82,7 @@ function Tally({ cult }) {
   const n = total(cult);
   const seq = [[0, 'none'], ...Array.from({ length: n }, (_, i) => [countAt(i), i + 1])];
   return (
-    <At x={cult.ox - 14} y={-49}>
+    <At x={cult.ox - 14} y={-45}>
       <Frames seq={seq}>{v => (
         <span style={{ display: 'block', width: 28, textAlign: 'center', fontFamily: 'Alegreya, Georgia, serif', fontWeight: 700, fontSize: 12, lineHeight: '12px', color: '#f3e6c8', textShadow: '0 1px 2px rgba(0,0,0,.6)', visibility: v === 'none' ? 'hidden' : 'visible' }}>{v === 'none' ? 0 : v}</span>
       )}</Frames>
@@ -127,8 +127,8 @@ function RoundMarks() {
 
 const LAUGH_SEQ = [
   [0, 'idle'], [LAUGH, 'steeple'], [LAUGH + 140, 'scheme'],
-  [LAUGH + 320, 'laughA'], [LAUGH + 450, 'laughB'], [LAUGH + 580, 'laughA'], [LAUGH + 710, 'laughB'], [LAUGH + 840, 'laughA'], [LAUGH + 970, 'laughB'],
-  [LAUGH + 1100, 'scheme'],
+  [LAUGH + 310, 'laughA'], [LAUGH + 440, 'laughB'], [LAUGH + 570, 'laughA'], [LAUGH + 700, 'laughB'], [LAUGH + 830, 'laughA'],
+  [LAUGH + 960, 'scheme'],
 ];
 
 export default function Beat4() {
@@ -148,7 +148,7 @@ export default function Beat4() {
       })}
       <At x={-28} y={-30}><Aura w={56} h={56} /></At>
       <Act track={[{ x: LEAD_UP[0], y: LEAD_UP[1] }, ...blink(0)]}><LeadFrames emoji={cast.you} seq={LAUGH_SEQ} stillAs="laughB" /></Act>
-      <Act track={[{ x: -6.5, y: -37, o: 0 }, [CROWN, 160, { o: 1 }, 'sine'], [CROWN, 420, { y: -25 }, 'in'], [CROWN + 420, 90, { sx: 1.18, sy: 0.72 }, 'out'], [CROWN + 510, 260, { sx: 1, sy: 1 }, 'back']]}>
+      <Act track={[{ x: -6.5, y: -35, o: 0 }, [CROWN, 160, { o: 1 }, 'sine'], [CROWN, 420, { y: -25 }, 'in'], [CROWN + 420, 90, { sx: 1.18, sy: 0.72 }, 'out'], [CROWN + 510, 260, { sx: 1, sy: 1 }, 'back']]}>
         <Crown />
       </Act>
       <Tally cult={CULTS.you} />
