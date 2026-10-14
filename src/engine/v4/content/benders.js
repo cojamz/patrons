@@ -13,6 +13,8 @@
 // Straggler uses the onAllPlaced hook (after the round's last placement, before its contests).
 import { registerGuests } from './index.js';
 
+// Prices: member-value sim (scripts/v4-member-value.mjs, 4 normal bots, Release off, handed over at round II),
+// priced so value ≈ cost + 1.5 at 1.5 per follower, rounded to the even cost grid. See design/rule-benders.md.
 const m = (key, name, lean, s, w, text, extra = {}) => ({ key, name, lean, s, w, text, f: 1, n: 1, bends: true, ...extra });
 
 // ---------- Straggler: after the last placement, move one of your workers to an unused space and do it ----------
@@ -34,13 +36,13 @@ function myWorkers(ctx, p) {
 }
 
 const members = [
-  m('squatter', 'Squatter', 'thieves', 6, 4, 'Once per round: place a worker on a space a rival already took.', { squat: true }),
-  m('bigspender', 'Big Spender', 'gold', 6, 4, 'Once per round: buy twice in one turn.', { extraBuy: true }),
+  m('squatter', 'Squatter', 'thieves', 6, 2, 'Once per round: place a worker on a space a rival already took.', { squat: true }),
+  m('bigspender', 'Big Spender', 'gold', 2, 2, 'Once per round: buy twice in one turn.', { extraBuy: true }),
   m('freelancer', 'Freelancer', 'yellow', 2, 2, 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
   m('insider', 'Insider', 'market', 4, 2, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
-  m('extrahand', 'Extra Hand', 'purple', 8, 4, '+1 worker in round III.', { extraWorkers: [0, 0, 1] }),
-  m('frontrunner', 'Front-runner', 'purple', 4, 2, 'You always pick first in a round.', { pickFirst: true }),
-  m('straggler', 'Straggler', 'purple', 4, 2, 'Once per round, after the last worker is placed: move one of your workers to an unused space and do that action.', {
+  m('extrahand', 'Extra Hand', 'purple', 6, 4, '+1 worker in round III.', { extraWorkers: [0, 0, 1] }),
+  m('frontrunner', 'Front-runner', 'purple', 2, 0, 'You always pick first in a round.', { pickFirst: true }),
+  m('straggler', 'Straggler', 'purple', 6, 2, 'Once per round, after the last worker is placed: move one of your workers to an unused space and do that action.', {
     onAllPlaced(ctx, owner, card) {
       if (card.usedRound === ctx.state.round) return;
       const from = myWorkers(ctx, owner), to = openSpaces(ctx);
