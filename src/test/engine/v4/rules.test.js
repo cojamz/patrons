@@ -48,7 +48,7 @@ describe('setup', () => {
     expect(Object.keys(s.cards)).toHaveLength(60);
     expect(s.shop).toHaveLength(6);
     expect(s.pile).toHaveLength(54);
-    expect(s.bigLeft).toBe(4);
+    expect(s.stock).toEqual({ big: 4, top: 4 });
     const t = createGame({ seats: seats(2), seed: 10 });
     expect(t.shop).not.toEqual(s.shop);
   });
@@ -163,7 +163,7 @@ describe('follower buys', () => {
     expect(fol(s, 0)).toBe(2);
   });
 
-  it('4 needs 2+ colors and buys 3; 6 needs 3+ colors and buys 6', () => {
+  it('4 needs 2+ colors and buys 3; 8 needs 3+ colors and buys 6', () => {
     const p = { res: { gold: 9, red: 0, blue: 0, green: 0 } };
     const s = scene({});
     expect(followerPlan(s, p, tier('mid'))).toBe(null);
@@ -172,21 +172,47 @@ describe('follower buys', () => {
     expect(followerPlan(s, p, tier('big'))).toBe(null);
     p.res = { gold: 9, red: 9, blue: 0, green: 0 };
     expect(followerPlan(s, p, tier('big'))).toBe(null);
-    p.res = { gold: 1, red: 4, blue: 1, green: 0 };
-    expect(followerPlan(s, p, tier('big'))).toEqual({ gold: 1, red: 4, blue: 1, green: 0 });
-    p.res = { gold: 5, red: 5, blue: 1, green: 0 };
-    expect(followerPlan(s, p, tier('big'))).toEqual({ gold: 1, red: 4, blue: 1, green: 0 });
+    p.res = { gold: 1, red: 5, blue: 1, green: 0 };
+    expect(followerPlan(s, p, tier('big'))).toBe(null);
+    p.res = { gold: 1, red: 6, blue: 1, green: 0 };
+    expect(followerPlan(s, p, tier('big'))).toEqual({ gold: 1, red: 6, blue: 1, green: 0 });
+    p.res = { gold: 5, red: 7, blue: 1, green: 0 };
+    expect(followerPlan(s, p, tier('big'))).toEqual({ gold: 1, red: 6, blue: 1, green: 0 });
+  });
+
+  it('10 needs 4+ colors and buys 10', () => {
+    const s = scene({});
+    expect(tier('top')).toMatchObject({ cost: 10, get: 10, colors: 4, limited: true });
+    const p = { res: { gold: 0, red: 6, blue: 6, green: 6 } };
+    expect(followerPlan(s, p, tier('top'))).toBe(null);
+    p.res = { gold: 1, red: 3, blue: 3, green: 2 };
+    expect(followerPlan(s, p, tier('top'))).toBe(null);
+    p.res = { gold: 1, red: 4, blue: 3, green: 2 };
+    expect(followerPlan(s, p, tier('top'))).toEqual({ gold: 1, red: 4, blue: 3, green: 2 });
+  });
+
+  it('a 10-follower buy uses up its own stock and does not end the game', () => {
+    let s = scene({ res: [{ gold: 2, red: 3, blue: 3, green: 2 }], queue: [] });
+    s.stock.top = 1;
+    s.queue = [{ t: 'turn', p: 0 }];
+    resume(s);
+    s = take(s, 'Sprout');
+    s = move(s, 'tier:top');
+    expect(s.stock).toEqual({ big: 4, top: 0 });
+    expect(s.endEarly).toBe(false);
+    expect(s.players[0].bonus).toBe(10);
+    expect(hasOpt(s, 'tier:top')).toBe(false);
   });
 
   it('a 6-follower buy uses up one of 2 per player; the last one ends the game after that round', () => {
-    let s = scene({ res: [{ gold: 2, red: 2, blue: 2 }], queue: [] });
-    s.bigLeft = 1;
+    let s = scene({ res: [{ gold: 2, red: 3, blue: 3 }], queue: [] });
+    s.stock.big = 1;
     s.queue = [{ t: 'turn', p: 0 }, { t: 'endRound' }, { t: 'afterRound' }];
     resume(s);
     s = take(s, 'Sprout');
     expect(hasOpt(s, 'tier:big')).toBe(true);
     s = move(s, 'tier:big');
-    expect(s.bigLeft).toBe(0);
+    expect(s.stock.big).toBe(0);
     expect(s.endEarly).toBe(true);
     expect(s.over).toBe(true);
     expect(s.pending).toBe(null);
@@ -195,8 +221,8 @@ describe('follower buys', () => {
   });
 
   it('no 6-follower buy once they are gone', () => {
-    const s = scene({ res: [{ gold: 2, red: 2, blue: 2 }], queue: [] });
-    s.bigLeft = 0;
+    const s = scene({ res: [{ gold: 3, red: 3, blue: 3 }], queue: [] });
+    s.stock.big = 0;
     expect(followerPlan(s, s.players[0], tier('big'))).toBe(null);
   });
 });

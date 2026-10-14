@@ -60,14 +60,15 @@ describe('Red actions', () => {
     expect(defs(s, 0)).toEqual(['red.volunteer']);
   });
 
-  it('Trade: swap for another player\'s member costing no more than yours +1', () => {
-    let s = scene({ round: 2, members: [['red.intern'], ['gold.banker', 'red.twins', 'red.volunteer']] });
+  it('Trade: swap for another player\'s member costing no more than yours +2', () => {
+    let s = scene({ round: 2, members: [['red.intern'], ['gold.banker', 'red.twins', 'red.volunteer', 'gold.midas']] });
     s = take(s, 'Trade');
-    const intern = uidOf(s, 'red.intern', 0), twins = uidOf(s, 'red.twins', 1), vol = uidOf(s, 'red.volunteer', 1);
-    expect(ids(s).sort()).toEqual([`trade:${intern}:${twins}`, `trade:${intern}:${vol}`].sort());
+    const intern = uidOf(s, 'red.intern', 0), twins = uidOf(s, 'red.twins', 1), vol = uidOf(s, 'red.volunteer', 1), banker = uidOf(s, 'gold.banker', 1);
+    // Intern costs 1: Banker (3) is in reach, Midas (5) is not
+    expect(ids(s).sort()).toEqual([`trade:${intern}:${twins}`, `trade:${intern}:${vol}`, `trade:${intern}:${banker}`].sort());
     s = move(s, `trade:${intern}:${twins}`);
     expect(defs(s, 0)).toEqual(['red.twins']);
-    expect(defs(s, 1).sort()).toEqual(['gold.banker', 'red.intern', 'red.volunteer']);
+    expect(defs(s, 1).sort()).toEqual(['gold.banker', 'gold.midas', 'red.intern', 'red.volunteer']);
     expect(fol(s, 0)).toBe(3);
   });
 
@@ -167,8 +168,8 @@ describe('Red members', () => {
     expect(R(s)[0].red).toBe(2);
   });
 
-  it('Sponsor: members cost 1 less, and stacks with Discount', () => {
-    let s = scene({ members: [['red.sponsor']], res: [{ gold: 1, blue: 1 }], shop: ['gold.banker', ...SHOP.slice(1)] });
+  it('Sponsor: members cost 2 less, and stacks with Discount', () => {
+    let s = scene({ members: [['red.sponsor']], res: [{ blue: 1 }], shop: ['gold.banker', ...SHOP.slice(1)] });
     s = take(s, 'Turnout');
     s = move(s, `card:${uidOf(s, 'gold.banker', 'shop')}`);
     expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 0, green: 0 });

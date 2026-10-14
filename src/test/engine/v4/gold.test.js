@@ -26,12 +26,12 @@ describe('Gold actions', () => {
     }
   });
 
-  it('Discount: the next paid member costs 2 less, color part first, then it is used up', () => {
-    // Midas: 3 gold + 2 wild. With Discount: 1 gold + 2 wild.
-    let s = scene({ res: [{ gold: 1, blue: 2 }], shop: ['gold.midas', 'gold.banker', 'red.intern', 'red.host', 'red.mob', 'red.sponsor'] });
+  it('Discount: the next paid member costs 4 less, color part first, then it is used up', () => {
+    // Midas: 3 gold + 2 wild. With Discount: 0 gold + 1 wild.
+    let s = scene({ res: [{ blue: 1 }], shop: ['gold.midas', 'gold.banker', 'red.intern', 'red.host', 'red.mob', 'red.sponsor'] });
     expect(hasOpt(s, `card:${uidOf(s, 'gold.midas', 'shop')}`)).toBe(false);
     s = take(s, 'Discount');
-    expect(s.players[0].discount).toBe(2);
+    expect(s.players[0].discount).toBe(4);
     const midas = uidOf(s, 'gold.midas', 'shop');
     s = move(s, `card:${midas}`);
     expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 0, green: 0 });
@@ -39,10 +39,10 @@ describe('Gold actions', () => {
   });
 
   it('Discount spills onto the wild part when the color part is smaller', () => {
-    // Banker: 2 gold + 1 wild, with 2 off becomes 0 gold + 1 wild.
+    // Midas: 3 gold + 2 wild, with 4 off becomes 0 gold + 1 wild.
     let s = scene({ res: [{ red: 1 }], shop: ['gold.banker', 'red.mentor', 'red.patriarch', 'red.bigfamily', 'gold.midas', 'gold.jackpot'] });
     s = take(s, 'Discount');
-    s = move(s, `card:${uidOf(s, 'gold.banker', 'shop')}`);
+    s = move(s, `card:${uidOf(s, 'gold.midas', 'shop')}`);
     expect(R(s)[0].red).toBe(0);
     expect(s.players[0].members.length).toBe(1);
   });

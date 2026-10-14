@@ -1130,6 +1130,44 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 .sphere:disabled{opacity:.38;cursor:default}
 .sphere .ord{position:absolute;top:4px;right:7px;font-size:11px;font-weight:700;color:var(--c)}
 
+/* bottom sheets never run off a short screen (landscape phones): capped height, the action button always in view */
+.peek.as-sheet,.popover.sheet-pop{max-height:calc(100dvh - 12px);overflow-y:auto;overscroll-behavior:contain}
+.peek.as-sheet .btn{position:sticky;bottom:0;box-shadow:0 -8px 12px var(--table-2)}
+@media (max-height:500px){
+  .peek.as-sheet,.popover.sheet-pop{padding:10px 16px 10px;max-height:calc(100dvh - 8px)}
+  .peek.as-sheet b{font-size:17px}
+  .peek.as-sheet span{font-size:14px}
+}
+
+/* round card: tighter rows; when it scrolls, a fade and a cue sit on the bottom edge of the body */
+.dialog.roundend{gap:10px}
+.dialog.roundend .re-body{gap:10px}
+.re-rows{gap:4px}
+.re-rows li{padding:5px 9px}
+.re-totals{gap:2px}
+.re-f{font-size:20px}
+.dialog.roundend{position:relative}
+.dialog.roundend .re-body.more{-webkit-mask-image:linear-gradient(#000 calc(100% - 34px),transparent);mask-image:linear-gradient(#000 calc(100% - 34px),transparent)}
+.re-more{align-self:center;margin:-8px 0 -4px;font-size:12px;color:var(--muted);letter-spacing:.04em}
+
+/* contest chips: four across when there's room, else 2×2; words never cut mid-word (ellipsis at worst) */
+.wheel-wrap{container-type:inline-size;container-name:board}
+.contests{width:100%}
+.contest .c1,.contest .c2{white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+@container board (max-width:600px){
+  .contests{grid-template-columns:repeat(2,minmax(0,1fr))!important;display:grid!important}
+  .contest{height:auto;min-height:36px}
+}
+@container board (max-width:300px){ .contest small.you{display:none} }
+
+.ring-nums text{fill:var(--muted);fill-opacity:.45;font-family:var(--display);letter-spacing:.06em;pointer-events:none}
+.ring-nums text.on{fill-opacity:.8}
+
+/* a card with no members says so instead of leaving a blank band; the band itself is one row, not two */
+.chips.none{align-items:center}
+.no-members{font-size:12px;color:var(--muted);font-style:italic;opacity:.75}
+.app.game .players .pl:has(.chips.none) .lane:empty{display:none}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }

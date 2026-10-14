@@ -139,11 +139,12 @@ describe('Magenta actions', () => {
     expect(R(s)[1]).toEqual({ ...Z, gold: 1, red: 2 });
   });
 
-  it('Ransom: or they let it go; only cost 1–3 members are targets; can’t pay means let go', () => {
+  it('Ransom: or they let it go; only cost 1–6 members are targets; can’t pay means let go', () => {
     let s = scene({ round: 2, res: [{}, { gold: 1 }], members: [[], ['red.mob', 'red.bigfamily', 'red.volunteer']] });
     s = take(s, 'Ransom');
-    const mob = uidOf(s, 'red.mob', 1);
-    expect(ids(s)).toEqual([`card:${mob}`]);
+    const mob = uidOf(s, 'red.mob', 1), fam = uidOf(s, 'red.bigfamily', 1);
+    // Volunteer costs 0, so only Mob (3) and Big Family (4) are targets
+    expect(ids(s).sort()).toEqual([`card:${mob}`, `card:${fam}`].sort());
     s = move(s, `card:${mob}`);
     expect(ids(s)).toEqual(['let']);
     s = move(s, 'let');
@@ -254,11 +255,18 @@ describe('Magenta members', () => {
     expect(R(s)[2].magenta).toBe(1);
   });
 
-  it('Light Fingers: when a rival recruits a member costing 4+, take 1 from them', () => {
+  it('Light Fingers: when a rival recruits a member costing 8+, take 1 from them', () => {
     let s = scene({ res: [{ gold: 9 }], members: [[], ['thieves.lightfingers']] });
     s = take(s, 'Rush');
-    s = move(s, `card:${uidOf(s, 'gold.midas', 'shop')}`); // 5
-    expect(R(s)[1].magenta).toBe(1);
+    s = move(s, `card:${uidOf(s, 'gold.midas', 'shop')}`); // 5: too cheap
+    expect(R(s)[1].magenta).toBe(0);
+    const back = pinCosts({ 'gold.midas': [5, 3] });
+    try {
+      let t = scene({ res: [{ gold: 9 }], members: [[], ['thieves.lightfingers']] });
+      t = take(t, 'Rush');
+      t = move(t, `card:${uidOf(t, 'gold.midas', 'shop')}`); // 8
+      expect(R(t)[1].magenta).toBe(1);
+    } finally { back(); }
   });
 
   it('Extortionist: only when a rival buys 6 followers, take 2 from them', () => {

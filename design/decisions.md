@@ -222,3 +222,6 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
   - Front-runner (always pick first in a round): yes.
 - ✅ (Cory) New member, Straggler: after the last worker of the round is placed, move one of your workers to an unused space and take that action (useful in rounds II–III only). Purple's old Straggler gets renamed.
 - 💡 (Cory) Relics: no, too similar to members. Omens: liked, but must not hand a committed color a lucky round; prefers neutral. Options pitched: all omens face up at setup, trailing player picks from 2, structural-only effects; alternatives Rank, Titles, Devotion.
+- ✅ (Cory) Omens: tabled until we see whether the game needs it. If used, all three are revealed (or peekable) up front.
+- ❌ (Cory) Rank: no, win-more. Titles: maybe, but he doesn't like the mechanism. Devotion: second favorite after Omens.
+- 💡 (Cory) Maybe members need more types that overlap across spheres (think Wingspan).

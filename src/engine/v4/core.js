@@ -718,8 +718,8 @@ export function squatSlots(state, p) {
 /** Workers p has on the board: placed spaces plus spaces joined. */
 export const workersOnBoard = (state, p) => Object.values(state.slots).filter(o => o === p.id).length
   + Object.values(state.squats || {}).reduce((s, list) => s + list.filter(o => o === p.id).length, 0);
-/** Release (a base rule): once per round, on your turn. */
-export const canRelease = (state, p) => !!state.rules?.release && p.releasedRound !== state.round && state.current === p.id;
+/** Release (a base rule): once per round, in your buy step. */
+export const canRelease = (state, p) => !!state.rules?.release && p.releasedRound !== state.round;
 // The card goes to the bottom of the pile, wiped clean (a released Doppelganger forgets what it copied).
 function release(state, p, uid) {
   const def = cardDef(state, uid);
@@ -731,7 +731,7 @@ function release(state, p, uid) {
   return def.s + def.w;
 }
 /** This round's turn order (its first pass). */
-const turnOrder = state => state.order.slice(0, state.players.length);
+const turnOrder = state => (state.order.length ? state.order.slice(0, state.players.length) : state.players.map(p => p.id));
 
 // Cards in state are plain JSON. Content code sees a live view with `.def` attached.
 function wrap(state, card) {

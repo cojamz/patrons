@@ -162,7 +162,7 @@ describe('Purple members', () => {
     let s = take(scene({ round: 2, res: [{ purple: 6 }], slots: { [JV]: 0 }, members: [['purple.foreman', 'purple.courier', 'purple.apprentice']], queue: turns(0, 1) }), 'Overtime');
     // Foreman: 2 workers on the board (Joint Venture + Overtime)
     expect(R(s)).toEqual({ gold: 1, red: 1, purple: 2, green: 1 });
-    expect(s.players[0].discount).toBe(2);
+    expect(s.players[0].discount).toBe(4);
   });
   it('Overseer: whenever a rival takes an extra turn, gain half your purple, up to 4', () => {
     let s = take(scene({ round: 2, res: [{ purple: 6 }, { purple: 5 }], members: [[], ['purple.overseer']], queue: turns(0, 1) }), 'Overtime');

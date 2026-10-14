@@ -7,8 +7,10 @@ import { playerColor, standings, shortLabel, tiebreakWord } from '../format.js';
 import { RING_VALUE } from '../../engine/v4/index.js';
 import { sheetMode } from './parts.jsx';
 
-const RING = { 1: { r0: 142, r1: 198, r: 170, n: 3 }, 2: { r0: 90, r1: 142, r: 116, n: 2 }, 3: { r0: 34, r1: 90, r: 62, n: 1 } };
-const LABEL = { 1: { r: 147.5, h: 21, f: 9.2 }, 2: { r: 95, h: 27, f: 8.6 }, 3: { r: 40.5, h: 44, f: 8.6 } }; // name arcs, toward the center
+// Discs sit toward the outer edge of their ring and names on a fixed radius along the inner edge, so a name
+// never runs into its disc, the disc's glow or a recent-move ring at any board size.
+const RING = { 1: { r0: 142, r1: 198, r: 175, n: 3 }, 2: { r0: 90, r1: 142, r: 122, n: 2 }, 3: { r0: 34, r1: 90, r: 66, n: 1 } };
+const LABEL = { 1: { r: 148, h: 21, f: 9.2 }, 2: { r: 96.5, h: 27, f: 8.6 }, 3: { r: 40, h: 44, f: 8.6 } }; // name arcs, toward the center
 const CX = 200, CY = 200, VB0 = -26, VBS = 452;
 const qCenter = q => 180 + q * 90;
 const norm = a => ((a % 360) + 540) % 360 - 180;
@@ -165,7 +167,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     const p = local(e);
     if (p.d > 205 || p.d < 30) return; // only drags that start on the ring
     stop();
-    drag.current = { a: p.a, x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch' };
+    drag.current = { a: p.a, x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch', start: rotRef.current, t: performance.now(), v: 0 };
     moved.current = false;
   };
   const onMove = e => {
@@ -177,13 +179,16 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
       // on touch, a mostly-vertical swipe is a page scroll, not a spin; a sideways swipe turns one notch on release
       if (dr.touch && dy > dx) { drag.current = null; return; }
       moved.current = true;
-      if (dr.touch) { dr.swipe = true; return; }
+      if (dr.touch) { dr.swipe = true; dr.lastX = e.clientX; return; }
       try { stage.current.setPointerCapture(e.pointerId); } catch { /* ignore */ }
     }
     if (dr.swipe) { dr.lastX = e.clientX; return; }
     const a = local(e).a;
     const d = norm(a - dr.a);
     dr.a = a;
+    // angular speed (deg/ms), smoothed, so a quick flick can carry the wheel on to the next quadrant
+    const now = performance.now(), dt = Math.max(1, now - dr.t);
+    dr.v = 0.6 * (d / dt) + 0.4 * dr.v; dr.t = now;
     applyRot(rotRef.current + d);
   };
   const onUp = e => {
@@ -204,8 +209,12 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     drag.current = null;
     if (!moved.current) return;
     // swipe right moves the facing quadrant right (the wheel turns counter-clockwise), and the other way round
-    if (dr.swipe) { const dx = (dr.lastX ?? dr.x) - dr.x; if (Math.abs(dx) > 24) nudge(dx > 0 ? -90 : 90); setTimeout(() => { moved.current = false; }, 0); return; }
-    animateTo(Math.round(rotRef.current / 90) * 90);
+    if (dr.swipe) { const dx = (e && e.type !== 'pointercancel' && e.clientX != null ? e.clientX : dr.lastX ?? dr.x) - dr.x; if (Math.abs(dx) > 24) nudge(dx > 0 ? -90 : 90); setTimeout(() => { moved.current = false; }, 0); return; }
+    // a fling (fast and recent) steps one quadrant in its direction; a slow drag settles on the nearest
+    const home = Math.round(dr.start / 90) * 90;
+    let target = Math.round(rotRef.current / 90) * 90;
+    if (Math.abs(dr.v) > 0.18 && performance.now() - dr.t < 120 && target === home) target = home + Math.sign(dr.v) * 90;
+    animateTo(target);
     setTimeout(() => { moved.current = false; }, 0);
   };
 
@@ -277,10 +286,10 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
       >
         <circle className="hit" cx={x} cy={y} r={t === 3 ? 33 : t === 2 ? 31 : 29} fill="transparent" />
         {opt && <circle className="halo" cx={x} cy={y} r={rad + 4} fill="none" stroke={col} />}
-        <circle className="base" cx={x} cy={y} r={rad} fill="var(--table)" stroke={col} strokeOpacity={open ? 1 : 0.3} strokeWidth={opt || selected ? 2.5 : 1.5} />
+        <circle className="base" cx={x} cy={y} r={rad} fill={open ? 'var(--table)' : 'none'} stroke={col} strokeOpacity={open ? 1 : 0.45} strokeWidth={opt || selected ? 2.5 : 1.5} strokeDasharray={open ? undefined : '3 3.2'} />
         {owner !== undefined
           ? <circle className="worker" cx={x} cy={y} r={rad - 5} fill={playerColor(owner)} />
-          : open ? <circle cx={x} cy={y} r="3" fill={col} fillOpacity=".55" /> : <circle cx={x} cy={y} r="2.5" fill={col} fillOpacity=".3" />}
+          : open ? <circle cx={x} cy={y} r="3" fill={col} fillOpacity=".55" /> : null}
         {flash.has(key) && <circle className="ping" cx={x} cy={y} r={rad} fill="none" stroke={playerColor(owner ?? 0)} />}
         <path id={lid} d={textArc(ang, L.h, L.r, rot)} fill="none" />
         {open && (boardPx >= 360 || q === facing) && (
@@ -365,7 +374,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
                 <span className="c1"><i />{shortLabel(st.label).replace(/^Most /, '')} <b className="num">+{RING_VALUE[paying - 1]}</b></span>
                 <span className="c2">
                   {leaders.length ? <>{leaders.map(nm).join(' & ')} <b className="num">{leaders[0].shown}</b>{shownTie && tb ? <small> tie→{tb}</small> : null}</> : 'no one yet'}
-                  {me && leaders.length && !st.leaders.includes(me.id) ? <small> · you {me.shown}</small> : null}
+                  {me && leaders.length && !st.leaders.includes(me.id) ? <small className="you"> · you {me.shown}</small> : null}
                 </span>
               </span>
             );
@@ -376,6 +385,10 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
         <svg viewBox="-26 -26 452 452" role="group" aria-label="Board" className={late ? 'late' : undefined}>
           <circle cx={CX} cy={CY} r="200" fill="var(--table-2)" stroke="var(--rim)" strokeWidth="2" />
           <g transform={`rotate(${rot} ${CX} ${CY})`} className="wheel">{parts}</g>
+          {/* ring numerals, upright on the top-left seam between quadrants (no space sits on a seam) */}
+          <g className="ring-nums" aria-hidden="true">
+            {[1, 2, 3].map(t => { const [x, y] = polar(-45, RING[t].r - (t === 3 ? 6 : 0)); return <text key={t} x={x} y={y} fontSize={Math.max(8, 9.5 / scale)} textAnchor="middle" dominantBaseline="central" className={t <= round ? 'on' : ''}>{roman(t)}</text>; })}
+          </g>
           <path d={`M${CX - 9},${CY + 214} L${CX},${CY + 203} L${CX + 9},${CY + 214}Z`} fill="var(--ink)" opacity=".8" />
         </svg>
         {peek && peek.pinned && sheetMode() && <div className="sheet-backdrop" onPointerDown={e => { e.preventDefault(); e.stopPropagation(); setPeek(null); }} />}

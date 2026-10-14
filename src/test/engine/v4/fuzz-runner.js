@@ -1,5 +1,5 @@
 // Shared runner for the fuzz tests: plays seeded games and checks every invariant after every move.
-import { createGame, applyMove, legalMoves, followers } from '../../../engine/v4/core.js';
+import { createGame, applyMove, legalMoves, followers, TIERS } from '../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 
@@ -34,7 +34,10 @@ export function checkInvariants(s, ctx) {
     if (followers(s, p) < 1) fail(`${p.name} has under 1 follower`, s, ctx);
   }
   for (const c of Object.values(s.cards)) if ((c.invested || 0) < 0) fail(`card ${c.uid} invested ${c.invested}`, s, ctx);
-  if (s.bigLeft < 0 || s.bigLeft > 2 * s.players.length) fail(`bigLeft ${s.bigLeft}`, s, ctx);
+  for (const t of TIERS.filter(x => x.limited)) {
+    const left = s.stock?.[t.key];
+    if (!(left >= 0 && left <= t.stock(s.players.length))) fail(`stock ${t.key} ${left}`, s, ctx);
+  }
   // every card in exactly one place
   const seen = new Map();
   const put = (u, where) => { if (seen.has(u)) fail(`card ${u} in ${seen.get(u)} and ${where}`, s, ctx); seen.set(u, where); };

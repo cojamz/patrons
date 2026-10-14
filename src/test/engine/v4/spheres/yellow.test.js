@@ -237,7 +237,7 @@ describe('Yellow members', () => {
     s = take(s, 'Harvest'); // +3 yellow
     s = move(s, 'tier:big');
     const after = R(s);
-    expect(after.gold + after.red + after.green + after.yellow).toBe(2 + 2 + 2 + 4 - 6 + 4); // Harvest +4 (1 + 3 other colors)
+    expect(after.gold + after.red + after.green + after.yellow).toBe(2 + 2 + 2 + 4 - 8 + 4); // Harvest +4 (1 + 3 other colors), the 6-buy costs 8
     expect(s.players[0].bonus).toBe(6);
     let t = scene({ members: [['yellow.weaver']], res: [{ gold: 2, red: 2 }] });
     t.cards[uidOf(t, 'yellow.weaver', 0)].seenBig = t.bigLeft;

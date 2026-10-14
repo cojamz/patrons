@@ -194,9 +194,9 @@ describe('Green actions', () => {
     s = go(s, 'Steal', 'player:0'); // P2 steals P1's only gold: +1
     expect(R(s)[0].gold).toBe(0);
     s = take(s, 'Encore');
-    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Discount (P2): 2 off', 'Steal (P2): do Steal yourself']);
+    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Discount (P2): 4 off', 'Steal (P2): do Steal yourself']);
     s = pass(play(s, spaceOpt(s, 'Discount')));
-    expect(s.players[0].discount).toBe(2);
+    expect(s.players[0].discount).toBe(4);
     s = go(s, 'Recall'); // nothing last round
     expect(R(s)[0].gold).toBe(0);
   });

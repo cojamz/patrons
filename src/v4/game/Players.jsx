@@ -84,7 +84,7 @@ function ChipRow({ state, p, own, onOpen, onAll }) {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  if (!groups.length) return <div className="chips" ref={box} />;
+  if (!groups.length) return <div className="chips none" ref={box}><span className="no-members">No members yet</span></div>;
   const shown = groups.slice(0, fit === Infinity ? groups.length : fit);
   const hidden = groups.length - shown.length;
   return (

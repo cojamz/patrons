@@ -310,10 +310,10 @@ describe('White members', () => {
     expect(ids(s)).toContain(`use:${uidOf(s, 'trading.liquidator', 0)}`); // nothing to sell: not spent
   });
 
-  it('Reinvestor: selling followers knocks 1 per follower off your next member', () => {
+  it('Reinvestor: selling followers knocks 2 per follower off your next member', () => {
     let s = take(scene({ round: 2, bonus: [3], members: [['trading.reinvestor']] }), 'Sell High');
     s = move(s, 'amount:2');
-    expect(s.players[0].discount).toBe(2);
+    expect(s.players[0].discount).toBe(4);
   });
 
   it('Raider: once per game, buy up to 3 followers from the leader at 1 white each; they get the white', () => {

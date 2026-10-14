@@ -1,6 +1,6 @@
 // Round end as a moment: each quadrant's winner with a +N chip, follower totals ticking up (contests split from
 // everything else gained this round), then the button that starts the next round.
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { followers, WORKERS } from '../../engine/v4/index.js';
 import { playerColor, roman, standings, roundGains, tiebreakNote, shortLabel, tiebreakWord } from '../format.js';
 import Tick from './Tick.jsx';
@@ -16,6 +16,19 @@ export default function RoundEnd({ info, onNext, autoMs }) {
     addEventListener('keydown', onKey);
     return () => removeEventListener('keydown', onKey);
   }, [onNext]);
+  // a body taller than the card scrolls, and says so with a fade at the bottom edge
+  const body = useRef(null);
+  const [more, setMore] = useState(false);
+  useEffect(() => {
+    const el = body.current;
+    if (!el) return undefined;
+    const check = () => setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 4);
+    check();
+    el.addEventListener('scroll', check, { passive: true });
+    addEventListener('resize', check);
+    const t = setTimeout(check, 400);
+    return () => { el.removeEventListener('scroll', check); removeEventListener('resize', check); clearTimeout(t); };
+  }, []);
   useEffect(() => {
     if (!autoMs) return undefined;
     const t = setTimeout(onNext, autoMs);
@@ -33,7 +46,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
     <div className="overlay moment" role="dialog" aria-modal="true" aria-label={`Round ${result.round} scoring`}>
       <div className="dialog roundend" ref={box}>
         <h2>Round {result.round} scored</h2>
-        <div className="re-body">
+        <div className={`re-body${more ? ' more' : ''}`} ref={body}>
         <ul className="re-rows">
           {result.rows.map(r => (
             <li key={r.qid} style={{ '--c': `var(--${r.qid})` }} className={r.winners.length ? '' : 'none'}>
@@ -82,6 +95,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
         )}
         {first && <p className="hint">Round {roman(after.round)} · <span className="num">{WORKERS[after.round - 1]}</span> workers each · {first.name} picks first</p>}
         </div>
+        {more && <span className="re-more" aria-hidden="true">More below ↓</span>}
         <div className="re-foot">
         <button type="button" className="btn pri" data-next-round data-autofocus onClick={onNext}>
           {after.over ? 'See results' : `Start round ${roman(after.round)}`}

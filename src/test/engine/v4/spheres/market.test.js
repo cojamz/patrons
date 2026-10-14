@@ -145,7 +145,7 @@ describe('Blue actions', () => {
     expect(R(take(scene({ round: 2 }), 'Price Check')).blue).toBe(0);
   });
   it('Spree (ring III): three buys this turn', () => {
-    let s = take(scene({ round: 3, res: [{ red: 6, gold: 6, green: 6 }], shop: CHEAP }), 'Spree');
+    let s = take(scene({ round: 3, res: [{ red: 8, gold: 8, green: 8 }], shop: CHEAP }), 'Spree');
     s = move(s, card(s, 'red.intern'));
     expect(s.pending.kind).toBe('buy');
     s = move(s, 'tier:big');
