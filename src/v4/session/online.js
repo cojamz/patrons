@@ -30,6 +30,13 @@ const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1
 const RECENT_KEEP = 24;
 /** How long a player has to be gone before the host is offered "let a bot play for them". */
 export const SUB_AFTER_MS = 15000;
+/**
+ * Host heartbeat. Firebase can take a minute or more to mark a sleeping phone disconnected, and meanwhile nobody runs
+ * the moves. The host writes `hostBeat` every BEAT_MS; when a client hasn't seen it change for STALE_MS (its own clock,
+ * so clock skew doesn't matter), the next connected human takes the host role.
+ */
+export const BEAT_MS = 5000;
+export const STALE_MS = 15000;
 // Test hooks on the page URL (?subAfter=ms), like ?botDelay: e2e can't wait 15 s per scenario.
 const urlNumber = key => { try { return Number(new URLSearchParams(globalThis.location?.search || '').get(key)) || 0; } catch { return 0; } };
 const defaultSubAfter = () => urlNumber('subAfter') || SUB_AFTER_MS;
@@ -257,6 +264,9 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
   let healedAt = 0;
   const awaySince = new Map(); // playerId -> when this client first saw them gone (local clock)
   let awayTimer = null;
+  let beatTimer = null; // host: writes hostBeat
+  let watchTimer = null; // everyone: is the host still beating?
+  let beatSeen = { host: null, value: null, at: Date.now() };
   const views = createEmitter();
   const starts = createEmitter();
   let resolveReady;
@@ -329,16 +339,35 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
     session?.roomChanged();
     views.emit(view());
     imHere();
+    heartbeat();
     elect();
   }
 
+  // The host beats; everyone notes when they last saw a beat (or a new host), by their own clock.
+  function heartbeat() {
+    if (!room) return;
+    const hb = room.hostBeat ?? null;
+    if (room.hostId !== beatSeen.host || hb !== beatSeen.value) beatSeen = { host: room.hostId ?? null, value: hb, at: Date.now() };
+    const hosting = room.hostId === playerId && !destroyed;
+    if (hosting && !beatTimer) {
+      const beat = () => { if (!destroyed && up && room && room.hostId === playerId) transport.update(base, { hostBeat: transport.serverTime() }).catch(() => {}); };
+      beat();
+      beatTimer = setInterval(beat, BEAT_MS);
+    } else if (!hosting && beatTimer) { clearInterval(beatTimer); beatTimer = null; }
+    if (!watchTimer && !destroyed) watchTimer = setInterval(() => { if (!destroyed) elect(); }, BEAT_MS / 2);
+  }
+  const hostStale = () => !!room && !!room.hostId && room.hostId !== playerId && Date.now() - beatSeen.at > STALE_MS;
+
   // If the host has dropped, the lowest-seat connected human claims the role.
+  // ...or has stopped beating (a phone asleep still reads as connected for a while).
   function elect() {
     if (!room || electing || destroyed) return;
     const old = room.hostId;
-    if (old && room.players?.[old]?.connected === true) return;
-    if (room.players?.[playerId]?.connected !== true) return;
-    const first = seatList(room).find(s => s.kind === 'human' && room.players?.[s.id]?.connected === true);
+    if (old === playerId) return;
+    const stale = hostStale();
+    if (old && room.players?.[old]?.connected === true && !stale) return;
+    if (room.players?.[playerId]?.connected !== true || !up) return;
+    const first = seatList(room).find(s => s.kind === 'human' && !(stale && s.id === old) && room.players?.[s.id]?.connected === true);
     if (!first || first.id !== playerId) return;
     electing = true;
     transport.transaction(`${base}/hostId`, cur => {
@@ -471,6 +500,8 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
       if (destroyed) return;
       destroyed = true;
       clearTimeout(awayTimer);
+      clearInterval(beatTimer);
+      clearInterval(watchTimer);
       offRoom();
       offConn();
       host?.stop();

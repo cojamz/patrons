@@ -140,18 +140,7 @@
     return out;
   }
 
-  /** The rim: each quadrant's band, its rule and prize, and the leaders' emojis inline on the same arc (Cory). */
-  function rim(scale, { fill = q => INK[q.res], opacity = 0.88, textFill = 'rgba(255,249,236,.96)', font = 11, gap = 6, emojiPx = 16, r0 = RIM.r0, r1 = RIM.r1, extra = '' } = {}) {
-    // returns { svg (in units, for the paper layer), html (absolutely placed emoji spans, in px), measure: fn }
-    let svg = '', defs = '';
-    const r = (r0 + r1) / 2;
-    Q.forEach((q, qi) => {
-      const c = qCenter(qi), a0 = c - 45, a1 = c + 45;
-      svg += `<path d="${arc(a0, a1, r0, r1)}" fill="${fill(q)}" fill-opacity="${opacity}"/>`;
-    });
-    return { svg, r };
-  }
   const roman = n => ['', 'I', 'II', 'III'][n];
 
-  window.AK = { A, mix, palette, withOutline, gridSVG, actionIcon, emoji, res, SHAPES, INK, Q, action, SEATS, STATE, RING, RIM, qCenter, polar, arc, spaces, rim, roman };
+  window.AK = { A, mix, palette, withOutline, gridSVG, actionIcon, emoji, res, SHAPES, INK, Q, action, SEATS, STATE, RING, RIM, qCenter, polar, arc, spaces, roman };
 })();
