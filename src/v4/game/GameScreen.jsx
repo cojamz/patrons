@@ -80,6 +80,7 @@ function useTable(session) {
 
   useEffect(() => {
     const off = session.subscribe(s => {
+      console.log('DBG sub', s.moves, s.pending && s.pending.player, s.pending && s.pending.kind, 'q', queue.current.length, 'timer', !!timer.current, 'held', held.current);
       if (s === shownRef.current || queue.current.includes(s)) return;
       queue.current.push(s);
       pump();

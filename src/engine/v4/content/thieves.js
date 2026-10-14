@@ -274,7 +274,7 @@ const thieves = {
   },
 
   members: [
-    m('cutpurse', 'Cutpurse', 1, 1, 'At round start, take 1 resource from the rival holding the most.', {
+    m('cutpurse', 'Cutpurse', 1, 0, 'At round start, take 1 resource from the rival holding the most.', {
       onRoundStart(ctx, owner) {
         const list = ctx.rivals(owner).filter(o => !hidden(ctx, o) && stealable(o) > 0);
         if (!list.length) return;
@@ -282,33 +282,33 @@ const thieves = {
         autoSteal(ctx, owner, v, 'Cutpurse');
       },
     }),
-    m('sticky', 'Sticky Fingers', 2, 1, 'Your steals take 1 more resource.', { stealMore: 1 }),
-    m('safehouse', 'Safehouse', 1, 0, 'Whenever a rival steals from you, +2 black.', {
+    m('sticky', 'Sticky Fingers', 1, 1, 'Your steals take 1 more resource.', { stealMore: 1 }),
+    m('safehouse', 'Safehouse', 1, 2, 'Whenever a rival steals from you, +2 black.', {
       onRobbed(ctx, owner) { ctx.gain(owner, 'black', 2); ctx.log(`${owner.name}'s Safehouse: +2 black.`); },
     }),
-    m('watchdog', 'Watchdog', 1, 0, 'Rivals can’t take your members.', { guardMembers: true }),
+    m('watchdog', 'Watchdog', 2, 1, 'Rivals can’t take your members.', { guardMembers: true }),
     m('robinhood', 'Robin Hood', 1, 1, 'Whenever you steal from the player with the most followers, +1 follower.', {
       onStealFrom(ctx, owner, card, victim) {
         if (isLeader(ctx, victim)) { owner.bonus += 1; ctx.log(`${owner.name}'s Robin Hood: +1 follower.`); }
       },
     }),
-    m('desperado', 'Desperado', 1, 1, 'While no one has fewer followers than you, your steals take double.', { stealDouble: true }),
-    m('lookout', 'Lookout', 1, 1, 'Whenever a rival steals, +1 black.', {
+    m('desperado', 'Desperado', 1, 0, 'While no one has fewer followers than you, your steals take double.', { stealDouble: true }),
+    m('lookout', 'Lookout', 2, 2, 'Whenever a rival steals, +1 black.', {
       onRivalSteals(ctx, owner) { ctx.gain(owner, 'black', 1); },
     }),
-    m('accomplice', 'Accomplice', 2, 0, 'When recruited: take 1 resource from each rival.', {
+    m('accomplice', 'Accomplice', 1, 0, 'When recruited: take 1 resource from each rival.', {
       onRecruited(ctx, owner) { for (const o of ctx.rivals(owner)) autoSteal(ctx, owner, o, 'Accomplice'); },
     }),
-    m('understudy', 'Understudy', 0, 1, 'Whenever a member is taken from you, recruit the cheapest face-up member, free.', {
+    m('understudy', 'Understudy', 1, 2, 'Whenever a member is taken from you, recruit the cheapest face-up member, free.', {
       onLoseMember(ctx, owner) { cheapestFree(ctx, owner, 'Understudy'); },
     }),
-    m('fixer', 'Fixer', 1, 0, 'Whenever you take a Black space, +1 black.', {
+    m('fixer', 'Fixer', 1, 1, 'Whenever you take a Black space, +1 black.', {
       afterAction(ctx, owner, card, quadrant) { if (quadrant === 'thieves') ctx.gain(owner, 'black', 1); },
     }),
-    m('extortionist', 'Extortionist', 1, 1, 'Whenever a rival buys followers, take 1 resource from them.', {
+    m('extortionist', 'Extortionist', 2, 2, 'Whenever a rival buys followers, take 1 resource from them.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer !== owner) autoSteal(ctx, owner, buyer, 'Extortionist'); },
     }),
-    m('doubleagent', 'Double Agent', 3, 2, 'When recruited: swap it for any rival’s member.', {
+    m('doubleagent', 'Double Agent', 2, 1, 'When recruited: swap it for any rival’s member.', {
       onRecruited(ctx, owner, card) {
         const list = takeable(ctx, owner).filter(([, c]) => c.uid !== card.uid);
         if (!list.length) return;
@@ -317,7 +317,7 @@ const thieves = {
         })), 'thieves.doubleAgent', { uid: card.uid });
       },
     }),
-    m('burglar', 'Burglar', 2, 2, 'Once per game: take any rival’s member. They recruit the cheapest face-up member, free.', {
+    m('burglar', 'Burglar', 3, 2, 'Once per game: take any rival’s member. They recruit the cheapest face-up member, free.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const list = takeable(ctx, owner);
@@ -328,10 +328,10 @@ const thieves = {
       },
       botActivate: (ctx, owner) => ctx.state.round >= 2 && takeable(ctx, owner).some(([, c]) => cost(c) >= 4),
     }),
-    m('kingpin', 'Kingpin', 3, 2, 'Game end: +1 follower per 2 black.', {
-      onGameEnd: (ctx, owner) => Math.floor((owner.res.black || 0) / 2),
+    m('kingpin', 'Kingpin', 2, 1, 'Game end: +1 follower per 2 black (loot counts).', {
+      onGameEnd: (ctx, owner) => Math.floor(((owner.res.black || 0) + (owner.loot || 0)) / 2),
     }),
-    m('mastermind', 'Mastermind', 3, 2, 'Game end: +2 followers per member you took from a rival.', {
+    m('mastermind', 'Mastermind', 2, 1, 'Game end: +2 followers per member you took from a rival.', {
       onGameEnd: (ctx, owner) => 2 * trophies(ctx, owner),
     }),
   ],
