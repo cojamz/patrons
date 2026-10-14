@@ -43,9 +43,10 @@ h1,h2,h3{font-family:var(--serif)}
   .app.game.lt{
     height:100dvh;display:grid;
     grid-template-columns:minmax(210px,1fr) minmax(0,1.85fr) minmax(210px,1fr);
-    grid-template-rows:62px minmax(0,1fr) minmax(0,1fr) 128px;
+    /* the prompt holds three short lines: the question, the round and its steps (or the details), who's winning */
+    grid-template-rows:66px minmax(0,1fr) minmax(0,1fr) 128px;
     grid-template-areas:"s1 prompt s2" "s1 wheel s2" "s0 wheel s3" "shop shop shop";
-    column-gap:18px;row-gap:8px;padding:12px 18px;overflow:hidden
+    column-gap:18px;row-gap:8px;padding:6px 18px 10px;overflow:hidden
   }
   .lt > .lt-prompt{grid-area:prompt}
   .lt > .lt-wheel{grid-area:wheel;container-type:size;min-height:0;display:flex;align-items:center;justify-content:center}

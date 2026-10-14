@@ -55,7 +55,7 @@ export async function acquireSlot(what, { log = msg => console.log(msg) } = {}) 
       for (let i = 0; i < SLOTS; i++) {
         const o = readSlot(i);
         if (o && alive(o) && o.pid !== process.pid) continue;
-        writeFileSync(slotFile(i), JSON.stringify(me));
+        writeFileSync(slotFile(i), JSON.stringify({ ...me, since: Date.now() }));
         return i;
       }
       return -1;

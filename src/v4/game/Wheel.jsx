@@ -113,6 +113,9 @@ const Stamp = memo(function Stamp({ id, size = 24 }) {
   );
 });
 
+/** A yield in short clauses, one a line in a narrow cell: "+2 green +1 blue" → ["+2 green", "+1 blue"]. */
+export const clauses = text => String(text || '').split(/ · |, (?=\S)| (?=[+−-]\d)/).filter(Boolean);
+
 /** Why a space can't be taken, in a few words at the pointer (null when it's open: the turn itself explains). */
 export function deniedText(state, key, meId = null) {
   const owner = state.slots[key];
@@ -557,12 +560,12 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
         {engraved ? (
           // the name; beneath it the stamp (or the minion standing on it) with the yield beside it, one clause a line
           <span className="face" aria-hidden="true">
-            <span className="nm">{a.name}</span>
+            {open && <span className="nm">{a.name}</span>}
             <span className="row">
               {minions || <span className="ico"><Stamp id={[`${qid}.${a.key}`, spriteId(a.name)]} /></span>}
               {open && (
                 <span className="yl" data-yield>
-                  {shortEffect(qid, a, round).split(' · ').map((c, k) => <span key={k} className="cl"><Rich text={c} /></span>)}
+                  {clauses(shortEffect(qid, a, round)).map((c, k) => <span key={k} className="cl"><Rich text={c} /></span>)}
                 </span>
               )}
             </span>

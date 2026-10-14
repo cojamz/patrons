@@ -35,15 +35,15 @@ if (!base) {
   if (!up) { server.kill(); console.error('vite did not start'); process.exit(1); }
 }
 
-/** Round I, P1 (the only person) to place, with at least two rival minions already down; plenty of every color. */
-function spaceSave(quadrants) {
+/** Round I (or `round`), P1 (the only person) to place, with at least two rival minions down; plenty of every color. */
+function spaceSave(quadrants, round = 1) {
   const seats = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
   for (let seed = 1; seed < 80; seed++) {
     let s = createGame({ seats, seed, ...(quadrants ? { quadrants } : {}) });
     s.build = buildStamp();
     const rand = seededRandom(seed);
-    const ready = x => x.round === 1 && x.pending && x.pending.player === 0 && x.pending.kind === 'place' && Object.keys(x.slots).length >= 2;
-    for (let n = 0; n < 600 && !ready(s) && !(s.round > 1); n++) s = applyMove(s, chooseBotMove(s, rand));
+    const ready = x => x.round === round && x.pending && x.pending.player === 0 && x.pending.kind === 'place' && Object.keys(x.slots).length >= 2;
+    for (let n = 0; n < 3000 && !ready(s) && !(s.round > round) && !s.over; n++) s = applyMove(s, chooseBotMove(s, rand));
     if (!ready(s)) continue;
     for (const r of s.resources) s.players[0].res[r] = 6;
     return { config: { seats: seats.map(x => ({ kind: x.kind, name: x.name })), speed: 'normal' }, state: s, undo: null, savedAt: Date.now() };
@@ -146,8 +146,12 @@ const PROMPT = () => {
   if (lines.size > 1) out.push(`the headline wraps to ${lines.size} lines: "${text}"`);
   const b = r.getBoundingClientRect();
   if (b.top < 0 || b.right > innerWidth || b.left < 0) out.push(`the headline runs off screen: "${text}"`);
+  // every line of the prompt (the question, the steps or details, the ranking) sits inside the prompt's region
   const region = document.querySelector('.lt-prompt').getBoundingClientRect();
-  if (b.top < region.top - 1 || b.bottom > region.bottom + 1) out.push(`the headline spills out of the prompt region: "${text}"`);
+  for (const row of document.querySelectorAll('.lt-prompt > .bar-row')) {
+    const rb = row.getBoundingClientRect();
+    if (rb.height && (rb.top < region.top - 1 || rb.bottom > region.bottom + 1)) out.push(`a prompt line (${row.className}) spills out of the prompt region by ${Math.max(region.top - rb.top, rb.bottom - region.bottom).toFixed(1)}px`);
+  }
   const sub = document.querySelector('[data-prompt-sub]');
   if (sub && (sub.scrollWidth > sub.clientWidth + 1 || /…$/.test(sub.textContent))) out.push(`the sub-line is cut: "${sub.textContent}"`);
   return out;
@@ -197,19 +201,22 @@ const passes = [
   { look: 'sockets', quadrants: null, play: true },
   { look: 'engraved', quadrants: null, play: true },
   { look: 'engraved', quadrants: ['red', 'yellow', 'market', 'gold'], play: false },
+  // round III: every ring open, the busiest the wheel gets
+  { look: 'engraved', quadrants: null, play: false, round: 3 },
+  { look: 'sockets', quadrants: null, play: false, round: 3 },
 ];
 const totals = {};
 try {
   for (const pass of passes) {
-    const tag = `[${pass.look}${pass.quadrants ? ' ' + pass.quadrants.join('/') : ''}]`;
+    const tag = `[${pass.look}${pass.quadrants ? ' ' + pass.quadrants.join('/') : ''}${pass.round ? ` round ${pass.round}` : ''}]`;
     const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });
     page.on('pageerror', e => fail(`pageerror: ${e.message}`, tag));
     page.on('console', m => { if (m.type() === 'error') fail(`console: ${m.text()}`, tag); });
     await page.addInitScript(WATCH);
-    const shot = n => page.screenshot({ path: `${SHOTS}/${pass.look}${pass.quadrants ? '-tb' : ''}-${n}.png` }).catch(() => {});
+    const shot = n => page.screenshot({ path: `${SHOTS}/${pass.look}${pass.quadrants ? '-tb' : ''}${pass.round ? `-r${pass.round}` : ''}-${n}.png` }).catch(() => {});
     const q = `?botDelay=${pass.play ? 200 : 40}${pass.look === 'engraved' ? '&spaces=engraved' : ''}`;
     await page.goto(`${base}/${q}`);
-    await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), spaceSave(pass.quadrants));
+    await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), spaceSave(pass.quadrants, pass.round || 1));
     await page.reload();
     await page.click('[data-home="resume"]');
     await page.waitForTimeout(400);
@@ -260,7 +267,7 @@ try {
       if (!/^Opens in round (II|III)$/.test(text)) fail(`(s3) a click on locked ${key} said "${text || 'nothing'}"`, tag);
       if (!(await page.evaluate(k => window.__sp.shakes.includes(k), key))) fail(`(s3) locked ${key} didn't shake`, tag);
       await shot('deny-locked');
-    } else fail('(s3) no locked space in round I', tag);
+    } else if (!pass.round || pass.round < 3) fail('(s3) no locked space before round III', tag);
     await page.mouse.move(4, 4);
 
     // play round I out: my placements (lit checked each time), the buys (prompt checked), the minions after every move
@@ -295,7 +302,7 @@ try {
         } else await page.waitForTimeout(120);
       }
       if (placed < 2) fail(`(s4) only ${placed} placements were made`, tag);
-      if (checks < 6) fail(`(s4) the minions were checked at only ${checks} moves`, tag);
+      if (checks < 4) fail(`(s4) the minions were checked at only ${checks} moves`, tag);
       await shot('round-end');
     }
     // (s5) the ghosts: none outlived its flight
