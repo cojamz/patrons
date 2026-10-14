@@ -30,6 +30,8 @@ const guest = await ctx.newPage(); watch(guest, 'guest');
 const url = `${base}/?transport=broadcast&botDelay=30`;
 
 async function stepFirstOption(page) {
+  const next = await page.$('[data-next-round]');
+  if (next) { await next.click().catch(() => {}); return true; }
   const els = await page.$$('[data-option]:not([disabled])');
   for (const el of els) {
     const id = await el.getAttribute('data-option').catch(() => null);
@@ -79,7 +81,23 @@ try {
     const r = d && d.v3rooms && Object.values(d.v3rooms).find(x => x.game === 'v4');
     return r ? { status: r.status, version: r.state && r.state.version, lastMove: r.state && r.state.lastMove, moves: r.moves, rejects: r.rejects, seats: r.seats } : null;
   }).catch(() => null);
-  errors.push(`room store: ${JSON.stringify(dump)}`);
+  errors.push(`room store (mirror): ${JSON.stringify(dump)}`);
+  const idb = await host.evaluate(() => new Promise(res => {
+    const rq = indexedDB.open('patrons-bt');
+    rq.onsuccess = () => {
+      const g = rq.result.transaction('kv').objectStore('kv').get('patrons-bt:patrons-v4');
+      g.onsuccess = () => {
+        const rec = g.result; const r = rec && rec.data && Object.values(rec.data.v3rooms || {}).find(x => x.game === 'v4');
+        res(r ? { rev: rec.rev, status: r.status, version: r.state && r.state.version, pending: r.state && JSON.parse(r.state.stateJson).pending?.player, moves: r.moves, rejects: r.rejects, hostId: r.hostId, players: r.players } : null);
+      };
+      g.onerror = () => res('read error');
+    };
+    rq.onerror = () => res('open error');
+  })).catch(e => String(e));
+  errors.push(`room store (idb): ${JSON.stringify(idb)}`);
+  for (const [who, pg] of [['host', host], ['guest', guest]]) {
+    errors.push(`${who} options: ${JSON.stringify(await pg.$$eval('[data-option]', els => els.map(e => e.getAttribute('data-option') + (e.disabled ? '(off)' : ''))).catch(() => '-'))}`);
+  }
   errors.push(`host prompt: ${await host.$eval('[data-prompt]', e => e.textContent).catch(() => '-')} | guest prompt: ${await guest.$eval('[data-prompt]', e => e.textContent).catch(() => '-')}`);
   await host.screenshot({ path: `${SHOTS}/zz-online-host-failure.png` }).catch(() => {});
   await guest.screenshot({ path: `${SHOTS}/zz-online-guest-failure.png` }).catch(() => {});
