@@ -20,8 +20,7 @@ const STEP_MS = 320;      // pace when catching up on moves that happened behind
 const RIVAL_DWELL_MS = 700; // each visible bot step (placing, recruiting, buying) holds this long; a pass doesn't wait
 
 /** Desktop and laptop frame (the side column is a fixed frame) vs phones and tablets (stacked). */
-function useWide() {
-  const q = '(min-width: 861px) and (min-height: 500px)';
+function useMedia(q) {
   const get = () => typeof matchMedia === 'function' && matchMedia(q).matches;
   const [wide, setWide] = useState(get);
   useEffect(() => {
@@ -33,6 +32,8 @@ function useWide() {
   }, []);
   return wide;
 }
+const useWide = () => useMedia('(min-width: 861px) and (min-height: 500px)');
+const useShort = () => useMedia('(max-height: 640px)');
 
 export function useSessionState(session) {
   const [state, setState] = useState(() => session.getState());
@@ -190,7 +191,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const [, setTick] = useState(0);
   useEffect(() => session.subscribe(() => setTick(t => t + 1)), [session]);
   // results open at the top, on the winner
-  useEffect(() => { if (live0.over && !moment) window.scrollTo(0, 0); }, [live0.over, moment]);
+  useEffect(() => { if (live0.over && !moment && typeof window !== 'undefined' && window.scrollTo) { try { window.scrollTo(0, 0); } catch { /* jsdom */ } } }, [live0.over, moment]);
   const [caption, setCaption] = useState(null); // "P3 took Swell (+5 blue)", pinned over the wheel for a beat
   const captionTimer = useRef(null);
   const [busy, setBusy] = useState(false);
@@ -199,6 +200,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const [ready, setReady] = useState(null); // hot-seat: which human seat has been handed the device
   const [rules, setRules] = useState(false);
   const wide = useWide();
+  const short = useShort();
+  const shopUnderWheel = false; // (short laptops keep the shop in the frame; player cards go compact instead)
+  void short;
   const [logOpen, setLogOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [note, setNote] = useState(null); // { text, tone, n } — a gentle answer in the status pill
@@ -500,7 +504,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </div>
       ) : (
         <div className="main">
-          <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+          <div className={`left${shopUnderWheel ? ' with-shop' : ''}`}>
+            <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+            {shopUnderWheel && <Shop variant="compact" hidden={buyingNow} state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />}
+          </div>
           <div className={`side${wide ? ' framed' : ''}`}>
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} />}
             {wide ? (
@@ -510,7 +517,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
                 <Scroller className="side-scroll" hint="More below">
                   <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} onPeek={setSpacePeek} />
                 </Scroller>
-                <Shop variant="compact" hidden={buyingNow} state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />
+                {!shopUnderWheel && <Shop variant="compact" hidden={buyingNow} state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />}
                 {buyingNow && (
                   <div className="buy-view" role="region" aria-label="Recruit a member">
                     <Shop variant="full" state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />

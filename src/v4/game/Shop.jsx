@@ -3,6 +3,8 @@ import { cardDef, paymentPlan, followerChoices, TIERS } from '../../engine/v4/in
 import { useEffect, useRef } from 'react';
 import { costParts, tierCostText } from '../format.js';
 
+// long words get a soft hyphen in the middle: it shows only when the word must break ("Doppel-ganger")
+const softBreak = name => name.replace(/[A-Za-z]{9,}/g, w => `${w.slice(0, Math.ceil(w.length / 2))}\u00AD${w.slice(Math.ceil(w.length / 2))}`);
 const total = spend => Object.values(spend).reduce((a, b) => a + b, 0);
 
 function Cost({ d, plan }) {
@@ -47,12 +49,19 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
               aria-disabled={!opt} title={`${d.name} · ${d.f}★ · ${d.text}`}
               onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'card', uid, name: d.name }, e.currentTarget))}
             >
-              <div className="row"><b className="nm">{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
+              {compact ? (
+                <>
+                  <b className="nm">{softBreak(d.name)}</b>
+                  <div className="row cost"><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span><Cost d={d} plan={null} /></div>
+                </>
+              ) : (
+                <div className="row"><b className="nm">{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
+              )}
               {!compact && <span className="eff">{d.text}</span>}
-              <div className="row cost">
-                <Cost d={d} plan={compact ? null : plan} />
-                {d.n > 1 && !compact && <span><span className="num">{d.n}</span> members</span>}
-              </div>
+              {!compact && <div className="row cost">
+                <Cost d={d} plan={plan} />
+                {d.n > 1 && <span><span className="num">{d.n}</span> members</span>}
+              </div>}
               {!compact && <span className={`afford${opt ? '' : ' none'}`} aria-hidden={!opt}>You can afford</span>}
             </button>
           );
