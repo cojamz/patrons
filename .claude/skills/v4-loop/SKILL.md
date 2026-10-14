@@ -16,5 +16,7 @@ Each iteration:
    Fix what they find (verify before trusting; no blind fixes).
 5. Commit with a clear message and push; the PR's Netlify preview redeploys.
 
-Done = check:v4 green, both reviewers have nothing above "minor", a full game by hand feels smooth, and Cory has a link.
+6. Final gate: the `game-skeptic` agent plays the real build adversarially and grades it. Loop until its verdict is SHIP with overall A- or better; fix its issues worst-first and re-run it fresh (no memory of the last run).
+
+Done = check:v4 green, game-skeptic says SHIP (A- or better), and Cory has a link.
 Never present agent output to Cory unvetted.

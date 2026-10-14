@@ -43,3 +43,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-10 — Cory: shorter, give him easier, snappier decisions. Calls come as a one-line yes/no; ideas get one line each, no commentary.
 - 2026-10-10 — Cory: I have no sense of strong vs weak (I put +3 red on a free swap, and an extra recruit on +2). Hard rule added: price every card against the value model before showing it.
 - 2026-10-12 — Cory: my balance intuition is off again (priced 4 resources → 2 followers as fair; he says too expensive). Calibrate from his anchors (Cash Out 2:1), not my model.
+- 2026-10-14 — Cory: builds get graded by an AI skeptic hunting for slop before he sees them. Added the game-skeptic agent as the loop's final gate (SHIP at A- or better).
