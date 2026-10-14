@@ -7,7 +7,7 @@ import { seededRandom } from '../../src/engine/v4/rng.js';
 
 install();
 const N = Number(process.argv[2] || 24), MODE = process.argv[3] || 'black', R = Number(process.argv[4] || 6);
-if (MODE !== 'control') let wins = 0, blackPlace = 0, places = 0, contestWins = 0, botBlack = 0, botPlaces = 0, stole = 0, botStole = 0;
+let wins = 0, blackPlace = 0, places = 0, contestWins = 0, botBlack = 0, botPlaces = 0, stole = 0, botStole = 0;
 for (let g = 1; g <= N; g++) {
   const rand = seededRandom(g * 7 + 3);
   const me = g % 4;

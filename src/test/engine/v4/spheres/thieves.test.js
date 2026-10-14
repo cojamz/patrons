@@ -239,10 +239,15 @@ describe('Magenta members', () => {
     expect(followers(s, s.players[0])).toBe(f0 + 1);
   });
 
-  it('Lookout: whenever a rival steals from someone else, take 1 from the thief (also on Gold’s Steal)', () => {
+  it('Lookout: once per round, when a rival steals from someone else, take 1 from the thief (also on Gold’s Steal)', () => {
     let s = scene({ res: [{}, { gold: 3 }, {}], members: [[], [], ['thieves.lookout']] });
     s = play(take(s, 'Pickpocket'), 'take:1:gold', 'take:1:gold');
     expect(R(s).map(r => r.magenta)).toEqual([1, 0, 1]);
+    // once per round: a second steal in the same round doesn't trigger it
+    s = pass(s);
+    s.queue = [{ t: 'turn', p: 0 }]; s = resume(s);
+    s = play(take(s, 'Hideout'), 'take:1:gold');
+    expect(R(s)[2].magenta).toBe(1);
     s = scene({ round: 2, res: [{}, { gold: 3 }, {}], members: [[], [], ['thieves.lookout']] });
     s = play(take(s, 'Steal'), 'player:1', 'player:1', 'player:1');
     expect(R(s)[0].gold).toBe(2);

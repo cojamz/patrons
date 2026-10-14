@@ -228,22 +228,22 @@ const thieves = {
     m('cutpurse', 'Cutpurse', 1, 1, 'At round start, take 1 resource from the rival holding the most.', {
       onRoundStart(ctx, owner) { const t = richest(ctx, owner); if (t) autoSteal(ctx, owner, t, 'Cutpurse'); },
     }),
-    m('mole', 'Mole', 1, 0, 'At round start, take 1 resource from each player with more followers than you.', {
+    m('mole', 'Mole', 1, 1, 'At round start, take 1 resource from each player with more followers than you.', {
       onRoundStart(ctx, owner) {
         for (const o of ctx.rivals(owner)) if (ctx.followers(o) > ctx.followers(owner)) autoSteal(ctx, owner, o, 'Mole');
       },
     }),
-    m('accomplice', 'Accomplice', 2, 1, 'When recruited: take 1 resource from each rival.', {
+    m('accomplice', 'Accomplice', 2, 2, 'When recruited: take 1 resource from each rival.', {
       onRecruited(ctx, owner) { for (const o of ctx.rivals(owner)) autoSteal(ctx, owner, o, 'Accomplice'); },
     }),
-    m('grifter', 'Grifter', 1, 1, 'When recruited: take 1 resource per 2 members you have, from the rivals holding the most.', {
+    m('grifter', 'Grifter', 2, 1, 'When recruited: take 1 resource per 2 members you have, from the rivals holding the most.', {
       onRecruited(ctx, owner) {
         const n = Math.floor(ctx.memberCount(owner) / 2);
         for (let k = 0; k < n; k++) { const t = richest(ctx, owner); if (!t || !autoSteal(ctx, owner, t, 'Grifter')) break; }
       },
     }),
-    m('sticky', 'Sticky Fingers', 1, 1, 'Your steals take 1 more resource.', { stealMore: 1 }),
-    m('desperado', 'Desperado', 1, 0, 'While no one has fewer followers than you, your steals take double.', {
+    m('sticky', 'Sticky Fingers', 2, 2, 'Your steals take 1 more resource.', { stealMore: 1 }),
+    m('desperado', 'Desperado', 1, 1, 'While no one has fewer followers than you, your steals take double.', {
       stealDouble: (ctx, owner) => fewestFollowers(ctx, owner),
     }),
     m('robinhood', 'Robin Hood', 1, 1, 'Whenever you steal from the player with the most followers, +1 follower.', {
@@ -251,9 +251,10 @@ const thieves = {
         if (info.thief === owner && isLeader(ctx, info.victim)) { owner.bonus += 1; ctx.log(`${owner.name}'s Robin Hood: +1 follower.`); }
       },
     }),
-    m('lookout', 'Lookout', 3, 3, 'Whenever a rival steals from someone else, take 1 resource from the thief.', {
+    m('lookout', 'Lookout', 2, 1, 'Once per round, when a rival steals from someone else, take 1 resource from the thief.', {
       onSteal(ctx, owner, card, info) {
-        if (!info.reaction && info.thief !== owner && info.victim !== owner) autoSteal(ctx, owner, info.thief, 'Lookout', 1, true);
+        if (info.reaction || info.thief === owner || info.victim === owner || card.round === ctx.state.round) return;
+        if (autoSteal(ctx, owner, info.thief, 'Lookout', 1, true)) card.round = ctx.state.round;
       },
     }),
     m('lightfingers', 'Light Fingers', 2, 2, 'Whenever a rival recruits a member costing 4 or more, take 1 resource from them.', {
@@ -276,7 +277,7 @@ const thieves = {
         if (list.length) pickMember(ctx, owner, list, 'Double Agent: swap for which member?', 'thieves.doubleAgent', { uid: card.uid });
       },
     }),
-    m('bigscore', 'Big Score', 3, 1, 'Once per game: take half (rounded down) of the magenta held by the rival with the most magenta.', {
+    m('bigscore', 'Big Score', 1, 1, 'Once per game: take half (rounded down) of the magenta held by the rival with the most magenta.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const list = ctx.rivals(owner).filter(o => ctx.canSteal(owner, o) && (o.res.magenta || 0) >= 2);
@@ -287,7 +288,7 @@ const thieves = {
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => ctx.canSteal(owner, o) && (o.res.magenta || 0) >= 4),
     }),
-    m('kingpin', 'Kingpin', 2, 1, 'Game end: +1 follower per 2 magenta.', {
+    m('kingpin', 'Kingpin', 1, 0, 'Game end: +1 follower per 2 magenta.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res.magenta || 0) / 2),
     }),
   ],
