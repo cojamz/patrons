@@ -8,7 +8,7 @@ import { RING_VALUE } from '../../engine/v4/index.js';
 import { sheetMode } from './parts.jsx';
 
 const RING = { 1: { r0: 142, r1: 198, r: 170, n: 3 }, 2: { r0: 90, r1: 142, r: 116, n: 2 }, 3: { r0: 34, r1: 90, r: 62, n: 1 } };
-const LABEL = { 1: { r: 147.5, h: 16, f: 9.2 }, 2: { r: 95, h: 22, f: 8.6 }, 3: { r: 40.5, h: 44, f: 8.6 } }; // name arcs, toward the center
+const LABEL = { 1: { r: 147.5, h: 21, f: 9.2 }, 2: { r: 95, h: 27, f: 8.6 }, 3: { r: 40.5, h: 44, f: 8.6 } }; // name arcs, toward the center
 const CX = 200, CY = 200, VB0 = -26, VBS = 452;
 const qCenter = q => 180 + q * 90;
 const norm = a => ((a % 360) + 540) % 360 - 180;
@@ -24,6 +24,14 @@ function textArc(center, half, r, rot) {
   const [bx, by] = polar(top ? center + half : center - half, r);
   return `M${ax},${ay} A${r},${r} 0 0 ${top ? 1 : 0} ${bx},${by}`;
 }
+/** A space's board label: its name if short, else its first word, unless that word clashes in its quadrant. */
+function shortName(state, q, a) {
+  if (a.name.length <= 9) return a.name;
+  const first = a.name.split(/[\s&-]+/)[0];
+  const clash = quadrant(state.quadrants[q]).actions.some(o => o !== a && o.name.split(/[\s&-]+/)[0] === first);
+  return clash ? a.name : first;
+}
+
 export const facingOf = (rot, count) => {
   let best = 0, bd = 1e9;
   for (let q = 0; q < count; q++) { const d = Math.abs(norm(qCenter(q) + rot - 180)); if (d < bd) { bd = d; best = q; } }
@@ -74,8 +82,11 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const nameUnits = 10.4 / scale;
-  const showNames = nameUnits <= 11.2;
+  // Names on the board: at least 10px on screen, upright. Boards 360px+ across label every open space;
+  // smaller boards label the facing quadrant's open spaces.
+  const nameUnits = Math.max(8.6, 10.4 / scale);
+  const boardPx = scale * VBS;
+  const nameFor = (q, a) => shortName(state, q, a);
 
   const applyRot = useCallback(r => {
     rotRef.current = r;
@@ -272,9 +283,9 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
           : open ? <circle cx={x} cy={y} r="3" fill={col} fillOpacity=".55" /> : <circle cx={x} cy={y} r="2.5" fill={col} fillOpacity=".3" />}
         {flash.has(key) && <circle className="ping" cx={x} cy={y} r={rad} fill="none" stroke={playerColor(owner ?? 0)} />}
         <path id={lid} d={textArc(ang, L.h, L.r, rot)} fill="none" />
-        {showNames && (
-          <text className="name" fontSize={nameUnits} fontWeight="700" fill={col} fillOpacity={open ? 1 : 0.45} dominantBaseline="central">
-            <textPath href={`#${lid}`} startOffset="50%" textAnchor="middle">{a.name}</textPath>
+        {open && (boardPx >= 360 || q === facing) && (
+          <text className="name" fontSize={nameUnits} fontWeight="700" fill={col} fillOpacity={owner !== undefined ? 0.75 : 1} dominantBaseline="central">
+            <textPath href={`#${lid}`} startOffset="50%" textAnchor="middle">{nameFor(q, a)}</textPath>
           </text>
         )}
       </g>,

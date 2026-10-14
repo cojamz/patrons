@@ -4,7 +4,8 @@
 //  (b) "Undo" is never visible while the seat to act isn't the human who made the move;
 //  (c) consecutive bot steps are at least 600ms apart (in-page timestamps of each displayed move);
 //  (d) no interactive element is clipped by its nearest overflow-hidden ancestor;
-//  (e) your own recruit visibly flies into your panel (a frame check).
+//  (e) your own recruit visibly flies into your panel (a frame check);
+//  (f) no two header items overlap (the header's rows stack cleanly).
 // Server: $V4_URL if set, else starts `npx vite` on a free port from 5182.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -71,6 +72,13 @@ async function audit(step) {
         }
       }
     }
+    // header rows never overlap each other
+    const hdr = [...document.querySelectorAll('header.bar h1, header.bar .round, header.bar .rules-btn, header.bar .leave-btn, header.bar [data-prompt], header.bar .you-strip, header.bar .undo-row, header.bar .ticker')].filter(vis);
+    for (let i = 0; i < hdr.length; i++) for (let j = i + 1; j < hdr.length; j++) {
+      const a = hdr[i].getBoundingClientRect(), b = hdr[j].getBoundingClientRect();
+      const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      if (w > 1 && h > 1) out.overlap = out.overlap || [], out.overlap.push(`${String(hdr[i].className).split(' ')[0] || hdr[i].tagName} × ${String(hdr[j].className).split(' ')[0] || hdr[j].tagName}`);
+    }
     const u = [...document.querySelectorAll('.undo')].find(vis);
     const g = document.querySelector('.app.game');
     if (u && g) out.undo = { actor: g.dataset.actor, bot: g.dataset.bot };
@@ -78,6 +86,7 @@ async function audit(step) {
   });
   for (const x of r.small) note(`(a) under 44px: ${x}`, step);
   for (const x of r.clipped) note(`(d) clipped: ${x}`, step);
+  for (const x of r.overlap || []) note(`(f) header rows overlap: ${x}`, step);
   if (r.undo && (r.undo.bot === '1' || r.undo.actor !== '0')) note(`(b) Undo visible while seat ${r.undo.actor} (${r.undo.bot === '1' ? 'bot' : 'person'}) is to act`, step);
 }
 

@@ -1106,6 +1106,13 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
   .act .act-text{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 }
 
+/* phone header: every row sizes to its content, so rows never ride over each other */
+@media (max-width:520px){
+  header.bar{grid-template-rows:auto auto auto auto auto !important;row-gap:4px;align-items:center}
+  header.bar .you-strip{min-height:28px;flex-wrap:wrap;row-gap:2px}
+  header.bar .ticker{align-self:start}
+}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
