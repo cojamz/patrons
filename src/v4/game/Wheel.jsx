@@ -513,7 +513,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
   const legalKey = [...legal.entries()].map(([k, v]) => `${k}=${v}`).join('|');
   const sockets = useMemo(() => spaces.map(s => {
     const { key, q, a, ring: t, qid } = s;
-    const [X, Y] = turned(s.xy[0], s.xy[1]);
+    let [X, Y] = turned(s.xy[0], s.xy[1]);
     const owner = state.slots[key];
     const joiners = (state.squats && state.squats[key]) || [];
     const open = t <= round;
@@ -533,6 +533,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
       </span>
     );
     const minions = owner !== undefined ? <span className="worker-fig" data-seat={owner}>{[owner, ...joiners].map(minion)}</span> : null;
+    if (side && t === 1) [X, Y] = turned(...polar(s.ang, rings[1].r - 6)); // a tall stack sits a little in from the rim
     let style = { ...at(X, Y), '--c': `var(--${qid})` };
     if (engraved) {
       // the words get the cell's width on screen: its chord when it lies flat, its depth when it stands on its side

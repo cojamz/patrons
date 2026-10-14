@@ -213,7 +213,6 @@ h1,h2,h3{font-family:var(--serif)}
 /* a cell standing on its side is narrow: the name, the stamp and the yield stack, centred */
 .lt [data-spaces="engraved"] .stage .slot.side .face .row{flex-direction:column;gap:1px}
 .lt [data-spaces="engraved"] .stage .slot.side .face .yl{align-items:center}
-.lt [data-spaces="engraved"] .stage .slot.low.side .face .row{flex-direction:column-reverse}
 .lt [data-spaces="engraved"] .stage .slot .face .yl .cl{white-space:nowrap;display:block}
 .lt [data-spaces="engraved"] .stage .stamp .d{fill:color-mix(in srgb,var(--c) 45%,#2a1f17)}
 .lt [data-spaces="engraved"] .stage .stamp .m{fill:var(--c)}
