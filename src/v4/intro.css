@@ -107,7 +107,7 @@
   background:var(--i-paper);color:var(--i-ink);font-family:var(--i-serif);font-size:calc(7.5 * var(--u));box-shadow:0 0 0 1.5px var(--q),0 calc(1.5 * var(--u)) calc(3 * var(--u)) rgba(0,0,0,.35)}
 .intro .in-plaque b{color:#7a4f10}
 .intro .in-plaque-lit{animation:in-plaque 1100ms ease var(--t) both}
-.intro .in-token .in-land{display:flex;align-items:center;gap:calc(1 * var(--u));padding:calc(1.5 * var(--u)) calc(3 * var(--u));border-radius:calc(6 * var(--u));line-height:1;
+.intro .in-hop.in-token .in-land{display:flex;align-items:center;gap:calc(1 * var(--u));padding:calc(1.5 * var(--u)) calc(3 * var(--u));border-radius:calc(6 * var(--u));line-height:1;
   background:var(--i-paper);color:var(--i-ink);font-family:var(--i-serif);font-weight:700;font-size:calc(8 * var(--u));box-shadow:0 0 0 1.5px #e0a23a,0 calc(2 * var(--u)) calc(4 * var(--u)) rgba(0,0,0,.5)}
 .intro .in-token .in-fol{color:var(--i-ink)}
 .intro .in-glow{animation:in-glow 1100ms ease var(--t) both}

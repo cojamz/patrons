@@ -19,7 +19,7 @@ const fail = (msg, step) => fails.push(`[${step}] ${msg}`);
 
 // game-meaningful elements, old and new screen (whatever is on screen is audited)
 const GAME = [
-  '[data-region] [data-uid]', '.shop [data-uid]', '.lt-seat', '.lt-stack', '.r', '.lt-member .fig', '.chip[data-g]',
+  '[data-region] [data-uid]', '.shop [data-uid]', '.lt-seat', '.lt-stack', '.res > .r', '.you-strip .r', '.lt-member .fig', '.chip[data-g]',
   '[data-leader-ring]', '.workers', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
   '[data-plaque]', '.contest-tip', '.res-glyph', '.pip', '.card-name', '.term',
 ].join(',');
@@ -75,7 +75,7 @@ try {
     if (await hand.count()) { await hand.first().click().catch(() => {}); continue; }
     const kind = await page.evaluate(() => {
       const g = document.querySelector('.app.game');
-      const round = (document.querySelector('header .round, .lt-prompt .round') || {}).textContent || '';
+      const round = [...document.querySelectorAll('header .round, [data-region="prompt"], .lt-prompt, .rnd, [data-round]')].map(e => e.textContent).join(' ');
       const place = !!document.querySelector('.slot.can, .slot[data-option]');
       const buy = !!document.querySelector('[data-option^="card:"], [data-option^="tier:"], [data-option="pass"]');
       return { place, buy, r2: /Round II\b/.test(round), moves: g && g.dataset.moves };

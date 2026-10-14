@@ -158,3 +158,13 @@ describe('"You\'d get" on a space (the engine\'s dry run)', () => {
     expect(shapes.size).toBe(3); // three seats, three different shapes
   });
 });
+
+describe('How to play lists the glossary', () => {
+  it('every glossary term is defined on the How to play page', async () => {
+    const { default: HowToPlay } = await import('../../../v4/HowToPlay.jsx');
+    const { container } = render(<HowToPlay onClose={() => {}} />);
+    const dts = [...container.querySelectorAll('[data-glossary] dt')].map(e => e.textContent);
+    expect(dts).toEqual(GLOSSARY.map(t => t.word));
+    expect(container.querySelector('[data-glossary]').textContent).toMatch(/Badged/);
+  });
+});

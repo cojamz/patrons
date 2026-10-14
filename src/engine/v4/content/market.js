@@ -210,17 +210,9 @@ const market = {
         id: `pay:${ctx.state.resources.map(r => v[r] || 0).join('-')}`, label: payLabel(v), kind: 'pay', value: v, hint: i === 0 ? 1 : 0,
       })), `${Q}.pay`, data);
     },
-    tradeIn(ctx, p, uid, data) {
-      if (uid === null) return;
-      ctx.card(data.uid).used = true;
-      const c = ctx.card(uid);
-      ctx.cardLeaves(p, uid);
-      p.members.splice(p.members.indexOf(uid), 1);
-      ctx.state.pile.push(uid);
-      // back in the pile it's a fresh card: no copy, used flag, switch or gold set aside from its old owner
-      ctx.state.cards[uid] = { uid, def: c.def.id };
-      p.discount += priceOf(c);
-      ctx.log(`${p.name}'s Social Climber trades in ${c.def.name}: next member costs ${priceOf(c)} less.`);
+    climb(ctx, p, color) {
+      ctx.gain(p, color, 2);
+      ctx.log(`${p.name}'s Social Climber: +2 ${color}.`);
     },
   },
 
@@ -242,29 +234,23 @@ const market = {
     m('curator', 'Curator', 2, 2, 'Now and at round start, +1 blue per badged member you have.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, B, priceyCount(ctx, owner)); },
     }),
-    m('planner', 'Planner', 2, 2, 'At round start, your next member costs 2 less per round number.', {
+    m('planner', 'Planner', 2, 2, 'Now and at round start, your next member costs 2 less per round number.', { now: true,
       onRoundStart(ctx, owner) { owner.discount += 2 * ctx.state.round; },
     }),
-    m('underbidder', 'Underbidder', 2, 0, 'At round start, your next member costs 2 less per rival with more members than you.', {
+    m('underbidder', 'Underbidder', 2, 0, 'Now and at round start, your next member costs 2 less per rival with more members than you.', { now: true,
       onRoundStart(ctx, owner) { owner.discount += 2 * rivalsBigger(ctx, owner); },
     }),
     m('minimalist', 'Minimalist', 2, 0, 'Now and at round start, +1 blue per rival with more members than you.', { now: true,
       onRoundStart(ctx, owner) { const k = rivalsBigger(ctx, owner); if (k) ctx.gain(owner, B, k); },
     }),
-    m('climber', 'Social Climber', 2, 0, 'Once per game, at a round start: you may send one of your members to the bottom of the pile; your next member costs that much less.', {
-      onRoundStart(ctx, owner, card) {
-        if (card.used) return;
-        const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid);
-        if (!own.length) return;
-        const top = Math.max(0, ...ctx.shopCards().map(priceOf));
-        ctx.choose(owner, 'Social Climber: trade in a member?', [
-          { id: 'none', label: 'Keep everyone', kind: 'pass', value: null, hint: 0 },
-          ...own.map(c => ({
-            id: `card:${c.uid}`, label: `${c.def.name} (${priceOf(c)} off)`, kind: 'member', value: c.uid,
-            // bots trade a plain cheap member up when the row has something pricier
-            hint: c.def.vanilla && priceOf(c) >= 1 && top >= priceOf(c) + 3 ? 1 + priceOf(c) * 0.1 : -1,
-          })),
-        ], `${Q}.tradeIn`, { uid: card.uid });
+    // replaced (Claude under Cory's go-with-your-gut, from the dead-window audit): the old round-start trade-in never fired
+    // in bot play, and the base Release rule does its job better. Releasing the Climber itself gives nothing extra.
+    m('climber', 'Social Climber', 2, 0, 'Whenever you release another member, +2 of any color you choose.', {
+      onRelease(ctx, owner) {
+        ctx.choose(owner, 'Social Climber: +2 of which color?', ctx.state.resources.map(c => ({
+          // bots take the color they hold least of
+          id: `color:${c}`, label: `+2 ${c}`, kind: 'color', value: c, hint: -(owner.res[c] || 0),
+        })), `${Q}.climb`);
       },
     }),
     m('auctioneer', 'Auctioneer', 4, 2, 'Whenever a rival recruits an unbadged member, +1 blue.', {

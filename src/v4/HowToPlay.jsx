@@ -3,6 +3,7 @@ import { Fragment } from 'react';
 import { useDialog } from './game/parts.jsx';
 import { RULEBOOK } from './rulebook.js';
 import { GAME_NAME, VERSION } from './version.js';
+import { GLOSSARY } from './glossary.js';
 
 function inline(text) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, k) =>
@@ -42,7 +43,11 @@ export default function HowToPlay({ onClose }) {
     <div className="overlay top" role="dialog" aria-modal="true" aria-label="How to play" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="dialog rules" ref={box}>
         <button type="button" className="btn ghost close" onClick={onClose} data-autofocus aria-label="Close how to play">Close</button>
-        <div className="rules-body">{renderRules(RULEBOOK)}</div>
+        <div className="rules-body">{renderRules(RULEBOOK)}
+          {/* every game word, from the one glossary the underlined keywords open */}
+          <h3 id="glossary">Glossary</h3>
+          <dl className="glossary" data-glossary>{GLOSSARY.map(t => <Fragment key={t.key}><dt>{t.word}</dt><dd>{t.def}</dd></Fragment>)}</dl>
+        </div>
         <p className="version" data-version>{GAME_NAME} {VERSION}</p>
       </div>
     </div>

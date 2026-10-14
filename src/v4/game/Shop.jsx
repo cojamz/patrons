@@ -49,7 +49,7 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
               key={uid} data-uid={uid} type="button" className={`card${opt ? ' can' : ''}${buying && !opt ? ' cant' : ''}`}
               style={{ '--c': cardColor(state, d) }} data-option={opt && !hidden ? opt.id : undefined}
               tabIndex={hidden ? -1 : undefined}
-              aria-disabled={!opt} title={compact && onHoverCard ? undefined : `${d.name} · worth ${d.f} · ${d.text}`}
+              aria-disabled={!opt} title={compact && onHoverCard ? undefined : `${d.name} · worth ${d.f} · ${d.text}`} aria-haspopup={compact && onHoverCard ? 'dialog' : undefined}
               onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'card', uid, name: d.name }, e.currentTarget))}
               // the compact row is too small to read: hovering a card shows it in full (touch: a tap does)
               onPointerEnter={compact && onHoverCard ? e => { if (realHover(e)) onHoverCard(uid, e.currentTarget); } : undefined}

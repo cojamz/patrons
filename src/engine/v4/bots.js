@@ -11,7 +11,7 @@
 // Every level is deterministic for a given state and rand.
 import {
   contextFor, actionAt, cardDef, TIERS, followers, memberCount, RING_VALUE, WORKERS, tierLeft,
-  paymentChoices, followerChoices,
+  paymentChoices, followerChoices, releaseRefund,
 } from './core.js';
 import { defById, quadrant, handlerById } from './content/index.js';
 import { chooseThinkerMove } from './thinker.js';
@@ -370,18 +370,15 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
         return -1e6;
       }
     };
-    // Release (a base rule): lose the member (its stars and what its ability would still bring), take its cost
-    // spread over the colors held least, and keep this turn's buy.
+    // Release (a base rule): lose the member (its stars and what its ability would still bring), take back its
+    // colored part (in its color, or spread over the colors held least), and keep this turn's buy.
     const releaseValue = uid => {
       try {
         const s = lightClone(state);
         const p = s.players[me];
         const def = cardDef(s, uid);
+        refundInto(s, p, uid);
         p.members = p.members.filter(u => u !== uid);
-        for (let k = 0; k < def.s + def.w; k++) {
-          const c = s.resources.reduce((x, y) => ((p.res[y] || 0) < (p.res[x] || 0) ? y : x));
-          p.res[c] = (p.res[c] || 0) + 1;
-        }
         return marginOf(evaluate(s, buysAt(s, 1), incomeAt(s), roundLeft, { [me]: -abilityValue(def, placesLeft, opts.k) }), me, opts.spite) - 0.5;
       } catch {
         return -1e6;
@@ -421,8 +418,21 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
 }
 
 /**
- * Release (when the table plays it): a free move before the buy that turns a member back into its cost in any
- * colors. Worth it when the resources buy more than the member is still worth, mostly on the last turns.
+ * What a release gives back, added to p in a copy of the game (Cory, 2026-10-14): only the colored part, in the
+ * member's color; when that color isn't on the table, in any colors (bots spread it over the colors held least).
+ */
+function refundInto(s, p, uid) {
+  const back = releaseRefund(s, uid);
+  if (back.color) { p.res[back.color] = (p.res[back.color] || 0) + back.n; return; }
+  for (let k = 0; k < back.n; k++) {
+    const c = s.resources.reduce((a, b) => ((p.res[b] || 0) < (p.res[a] || 0) ? b : a));
+    p.res[c] = (p.res[c] || 0) + 1;
+  }
+}
+
+/**
+ * Release (when the table plays it): a free move before the buy that turns a member back into its colored part.
+ * Worth it when the resources buy more than the member is still worth, mostly on the last turns.
  */
 function releaseOption(state, opts) {
   const pend = state.pending;
@@ -441,12 +451,8 @@ function releaseOption(state, opts) {
       const s = lightClone(state);
       const p = s.players[me];
       const def = cardDef(s, o.uid);
+      refundInto(s, p, o.uid);
       p.members = p.members.filter(u => u !== o.uid);
-      // the resources come in whatever colors help most: spread over the colors held least
-      for (let k = 0; k < def.s + def.w; k++) {
-        const c = s.resources.reduce((a, b) => ((p.res[b] || 0) < (p.res[a] || 0) ? b : a));
-        p.res[c] = (p.res[c] || 0) + 1;
-      }
       const v = marginOf(evaluate(s, buys, income, roundLeft, { [me]: -abilityValue(def, placesLeft, opts.k) }, opts.future), me, opts.spite);
       if (v > bestV) { bestV = v; best = o; }
     } catch { /* skip */ }

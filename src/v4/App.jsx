@@ -12,6 +12,7 @@ import { Home, LocalSetup, Lobby, initialTable } from './screens/Screens.jsx';
 import OnlineBar from './screens/OnlineBar.jsx';
 import { tableProblem } from './tables.js';
 import { Recovered } from './Recovery.jsx';
+import { IntroGate, introOnGameStart } from './Intro.jsx';
 
 // Bots decide quickly; the table paces what you see (each visible bot step holds PACE ms, a pass doesn't wait).
 const BOT_DELAY = { slow: 400, normal: 250, fast: 120 };
@@ -23,7 +24,7 @@ const linkRejoin = () => (linkCode() && roomIds(linkCode()).length ? linkCode() 
 
 /** The v4 root: a crash anywhere shows a recovery screen, not a blank page; notices sit on top (Recovery.jsx). */
 export default function V4Root() {
-  return <Recovered><App /></Recovered>;
+  return <Recovered><App /><IntroGate /></Recovered>;
 }
 
 function App() {
@@ -93,6 +94,7 @@ function App() {
     const botDelayMs = urlBotDelay() || BOT_DELAY[cfg.speed] || 650;
     const quadrants = cfg.table && !tableProblem(cfg.table.quadrants) ? cfg.table.quadrants : undefined;
     begin(createLocalSession({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs, quadrants }), cfg);
+    introOnGameStart(); // this browser's first game: the intro, on this screen only (Intro.jsx)
   }, [begin]);
 
   const resume = useCallback(() => {
@@ -124,7 +126,7 @@ function App() {
       saveOnline({ code: res.code || lobby.code, playerId: res.playerId, transport: kind });
       rememberRoom(res.code || lobby.code, res.playerId);
       setScreen({ name: 'lobby', lobby, myId: res.playerId });
-      lobby.onStart(s => { setSession(s); setGameKey(k => k + 1); setScreen({ name: 'game', lobby }); });
+      lobby.onStart(s => { setSession(s); setGameKey(k => k + 1); setScreen({ name: 'game', lobby }); introOnGameStart(); });
       return null;
     } catch (e) {
       // a late new seat is freed (the retry takes one); a late rejoin just stops listening (the seat stays yours)

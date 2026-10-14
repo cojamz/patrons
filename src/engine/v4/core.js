@@ -316,8 +316,9 @@ function inputFor(state, task) {
         if (eff.some(e => e.toggle)) opts.push({ id: `toggle:${uid}`, label: `${d.name}: switch ${c.on === false ? 'on' : 'off'}`, kind: 'toggle', uid });
       }
       if (canRelease(state, p)) for (const uid of p.members) {
-        const d = cardDef(state, uid);
-        if (d.s + d.w > 0) opts.push({ id: `release:${uid}`, label: `Release ${d.name} for ${d.s + d.w}`, kind: 'release', uid });
+        if (!canRelease(state, p, uid)) continue;
+        const d = cardDef(state, uid), back = releaseRefund(state, uid);
+        if (back.n > 0) opts.push({ id: `release:${uid}`, label: `Release ${d.name} for ${back.label}`, kind: 'release', uid, refund: back.n, color: back.color });
       }
       const real = opts.filter(o => o.kind === 'card' || o.kind === 'tier' || o.kind === 'use' || o.kind === 'release');
       if (!real.length) return { kind: 'buy', prompt: '', options: [], onEmpty: task.extra ? undefined : () => log(state, `${p.name} couldn't buy anything.`) };
@@ -405,9 +406,10 @@ function resolveTask(state, task, optionId) {
         return;
       }
       if (kind === 'release') {
-        const n = release(state, p, Number(rest));
-        // the colors come first, then this buy step again
-        state.queue.unshift({ t: 'release', p: p.id, left: n }, { t: 'buy', p: p.id, ...extraOf(task) });
+        const uid = Number(rest), def = state.cards[uid].def;
+        const back = release(state, p, uid);
+        // the colors come first (a refund in any colors), then what reacts to the release (Social Climber), then this buy step again
+        state.queue.unshift(...(back.color ? [] : [{ t: 'release', p: p.id, left: back.n }]), { t: 'released', p: p.id, def }, { t: 'buy', p: p.id, ...extraOf(task) });
         return;
       }
       throw new Error(`Bad buy option ${optionId}`);
@@ -455,8 +457,12 @@ function runTask(state, task) {
       const qid = state.quadrants[task.q];
       const a = actionAt(state, task.q, task.i);
       const ctx = ctxFor(state);
-      // hooks that react to taking a space (Hustler) fire first so follow-up choices keep their order
-      eachMember(state, (owner, card, def) => { if (owner === p && def.afterAction) def.afterAction(ctx, owner, card, qid); });
+      // hooks that react to taking a space (Hustler) fire first so follow-up choices keep their order;
+      // afterRivalAction: a member reacting to a rival taking a space (Silversmith)
+      eachMember(state, (owner, card, def) => {
+        if (owner === p && def.afterAction) def.afterAction(ctx, owner, card, qid);
+        if (owner !== p && def.afterRivalAction) def.afterRivalAction(ctx, owner, card, qid, p);
+      });
       a.resolve(ctx, p);
       return;
     }
@@ -470,6 +476,12 @@ function runTask(state, task) {
       // after the round's last placement, before its contests: members that act then (Straggler), in turn order
       const ctx = ctxFor(state);
       for (const id of turnOrder(state)) eachMemberOf(state, state.players[id], (card, def) => { if (def.onAllPlaced) def.onAllPlaced(ctx, state.players[id], card); });
+      return;
+    }
+    case 'released': {
+      // members that react to their owner releasing another member (Social Climber); task.def is the released member's def id
+      const ctx = ctxFor(state);
+      eachMemberOf(state, p, (card, def) => { if (def.onRelease) def.onRelease(ctx, p, card, defById(task.def)); });
       return;
     }
     case 'endRound': return endRound(state);
@@ -652,6 +664,8 @@ function recruit(state, p, uid, { free, spend: chosen }) {
   state.recruits += 1;
   p.turnRecruits += 1;
   const card = state.cards[uid], def = defById(card.def);
+  // who recruited it and when: a member can't be released in the round its owner recruited it
+  card.recruitedRound = state.round; card.recruitedBy = p.id;
   log(state, `${p.name} recruited ${def.name}${idx < 0 ? ` from the pile with ${p.name}'s ${flagName(state, p, 'pileReach')}` : ''} (${paid}).`);
   const ctx = ctxFor(state);
   const w = wrap(state, card);
@@ -807,18 +821,35 @@ export function squatSlots(state, p) {
 /** Workers p has on the board: placed spaces plus spaces joined. */
 export const workersOnBoard = (state, p) => Object.values(state.slots).filter(o => o === p.id).length
   + Object.values(state.squats || {}).reduce((s, list) => s + list.filter(o => o === p.id).length, 0);
-/** Release (a base rule): once per round, in your buy step. */
-export const canRelease = (state, p) => !!state.rules?.release && p.releasedRound !== state.round;
+/**
+ * Release (a base rule): once per round, in your buy step. With uid: may p release that member now? Not in the
+ * round p recruited it (stops buy-collect-release loops such as Lender's +5; Claude under Cory's go-with-your-gut,
+ * from the dead-window audit, 2026-10-14).
+ */
+export const canRelease = (state, p, uid) => !!state.rules?.release && p.releasedRound !== state.round
+  && (uid === undefined || !(state.cards[uid]?.recruitedRound === state.round && state.cards[uid]?.recruitedBy === p.id));
+/**
+ * What releasing a member gives back (Cory, 2026-10-14): only its colored part, in its own color: { n, color, label }.
+ * When its color isn't on the table (a guest leaning to an absent sphere), the colored part comes back in any colors
+ * (color null). A member with no colored part gives back nothing.
+ */
+export function releaseRefund(state, uid) {
+  const def = cardDef(state, uid), c = colorOf(def), n = def.s;
+  const color = state.resources.includes(c) ? c : null;
+  return { n, color, label: !n ? 'nothing' : color ? `${n} ${color}` : `${n} in any colors` };
+}
 // The card goes to the bottom of the pile, wiped clean (a released Doppelganger forgets what it copied).
+// A refund in its own color is paid here; one in any colors is picked in the release task. Returns the refund.
 function release(state, p, uid) {
-  const def = cardDef(state, uid);
+  const def = cardDef(state, uid), back = releaseRefund(state, uid);
   cardLeaves(state, p, uid);
   p.members.splice(p.members.indexOf(uid), 1);
   state.cards[uid] = { uid, def: state.cards[uid].def };
   state.pile.push(uid);
   p.releasedRound = state.round;
-  log(state, `${p.name} released ${def.name} to the bottom of the pile, for ${def.s + def.w} in any colors.`);
-  return def.s + def.w;
+  if (back.color) p.res[back.color] = (p.res[back.color] || 0) + back.n;
+  log(state, `${p.name} released ${def.name} to the bottom of the pile, for ${back.label}.`);
+  return back;
 }
 // A member leaves its owner (stolen, swapped, released, traded in): its onLeave hooks settle what it held for them
 // (Investor's set-aside gold goes back to the owner, not doubled).

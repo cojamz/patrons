@@ -1405,3 +1405,7 @@ svg.sigil{display:inline-block;vertical-align:-1px;flex:none}
 /* the follower mark (src/v4/art/Follower.jsx): a tiny pixel person, never a star */
 .follower{display:inline-flex;align-items:center;gap:2px;white-space:nowrap}
 .follower-mark{display:inline-block;vertical-align:-1px;flex:none;image-rendering:pixelated}
+.rules-body dl.glossary{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:6px 0 0}
+.rules-body dl.glossary dt{font-weight:700}
+.rules-body dl.glossary dd{margin:0;color:var(--muted)}
+@media (max-width:520px){.rules-body dl.glossary{grid-template-columns:1fr}.rules-body dl.glossary dd{margin-bottom:6px}}
