@@ -73,6 +73,21 @@ const barterable = (ctx, p) => ctx.shopCards().filter(c => barterPrice(c) <= sel
 // what a member is worth to a bot by round (its follower, plus an ability that has less time to pay late)
 const memberWorth = (ctx, c) => c.def.f + cardCost(c) * ([1.2, 0.8, 0.3][ctx.state.round - 1] ?? 0.3);
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+/** Barter's question: the face-up members p can pay for in followers right now, or nobody. */
+function offerBarter(ctx, p) {
+  const ok = barterable(ctx, p);
+  if (!ok.length) {
+    ctx.log(`Barter: ${p.name} has too few followers to pay for any face-up member (only followers you bought or won can be paid).`);
+    return;
+  }
+  ctx.choose(p, `Barter: recruit which member, paid in followers? (you can pay ${sellable(p)})`, [
+    ...ok.map(c => ({
+      id: `card:${c.uid}`, label: `${c.def.name} for ${plural(barterPrice(c), 'follower')}`, kind: 'card', value: c.uid,
+      hint: memberWorth(ctx, c) - barterPrice(c),
+    })),
+    { id: 'none', label: 'Recruit nobody', kind: 'none', value: 'none', hint: 0 },
+  ], 'trading.barter');
+}
 
 const trading = {
   id: 'trading',
@@ -123,20 +138,7 @@ const trading = {
       // which did Magnate's job three times better and closed a sell-high, cash-in-at-par loop.
       key: 'barter', ring: 2, name: 'Barter', text: 'Recruit a face-up member, paying 1 follower per 2 of its cost, rounded up (only followers you’ve won or bought).',
       estimate: (ctx, p) => Math.max(0, ...barterable(ctx, p).map(c => memberWorth(ctx, c) - barterPrice(c))),
-      resolve(ctx, p) {
-        const ok = barterable(ctx, p);
-        if (!ok.length) {
-          ctx.log(`Barter: ${p.name} has too few followers to pay for any face-up member (only followers you bought or won can be paid).`);
-          return;
-        }
-        ctx.choose(p, `Barter: recruit which member, paid in followers? (you can pay ${sellable(p)})`, [
-          ...ok.map(c => ({
-            id: `card:${c.uid}`, label: `${c.def.name} for ${plural(barterPrice(c), 'follower')}`, kind: 'card', value: c.uid,
-            hint: memberWorth(ctx, c) - barterPrice(c),
-          })),
-          { id: 'none', label: 'Recruit nobody', kind: 'none', value: 'none', hint: 0 },
-        ], 'trading.barter');
-      },
+      resolve(ctx, p) { offerBarter(ctx, p); },
     },
     {
       key: 'boom', ring: 3, name: 'Boom', text: 'Trade all your resources for followers, 1 for 1 (you may keep your white).',
@@ -176,7 +178,10 @@ const trading = {
     barter(ctx, p, uid) {
       if (uid === 'none') { ctx.log(`Barter: ${p.name} recruited nobody.`); return; }
       const c = ctx.card(uid), k = barterPrice(c);
-      if (k > sellable(p)) { ctx.log(`Barter: ${p.name} can no longer pay ${plural(k, 'follower')} for ${c.def.name}.`); return; }
+      // the row can change between the offer and the pick (an Eternity copying Barter, then Hire, takes the same
+      // card first): say so and offer what's face up now
+      if (!ctx.state.shop.includes(uid)) { ctx.log(`Barter: ${c.def.name} is no longer face up.`); offerBarter(ctx, p); return; }
+      if (k > sellable(p)) { ctx.log(`Barter: ${p.name} can no longer pay ${plural(k, 'follower')} for ${c.def.name}.`); offerBarter(ctx, p); return; }
       p.bonus -= k;
       ctx.log(`${p.name} bartered ${plural(k, 'follower')} for ${c.def.name}.`);
       ctx.recruit(p, uid, { free: true });

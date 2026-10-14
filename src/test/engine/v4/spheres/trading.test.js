@@ -149,6 +149,23 @@ describe('White actions', () => {
     expect(s.players[0].members).toEqual([]);
   });
 
+  it('Barter: if the picked member left the row before the choice resolved (a copy recruited it first), it asks again', () => {
+    // fire-audit crash "Card N is not in the shop": an Eternity copying Barter then Hire queues Barter's choice,
+    // and Hire takes the same cheapest member before that choice resolves.
+    let s = take(scene({ round: 2, bonus: [4], shop: SHOP }), 'Barter');
+    const gone = uidOf(s, 'gold.tycoon', 'shop');
+    s.shop = s.shop.filter(u => u !== gone);
+    s.players[1].members.push(gone);
+    s = move(s, `card:${gone}`);
+    expect(B(s)).toBe(4); // nothing paid
+    expect(s.log.join('\n')).toContain('Barter: Tycoon is no longer face up.');
+    expect(s.pending.kind).toBe('choose');
+    expect(ids(s)).not.toContain(`card:${gone}`);
+    s = move(s, `card:${uidOf(s, 'red.bigfamily', 'shop')}`);
+    expect(B(s)).toBe(2);
+    expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(['red.bigfamily']);
+  });
+
   it('Barter: members and yourself never pay; too few followers, nothing happens and the log says why', () => {
     const s = take(scene({ round: 2, bonus: [1], members: [['red.twins']], shop: SHOP }), 'Barter');
     expect(s.pending?.kind).not.toBe('choose');

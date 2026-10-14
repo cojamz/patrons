@@ -211,3 +211,7 @@ h1,h2,h3{font-family:var(--serif)}
   .lt .lt-rail .pl .chips{height:auto;max-height:24px;overflow:hidden}
   .lt .lt-rail .pl .chips.none{display:none}
 }
+
+/* plaques on the left and right of the wheel stand narrow (two lines), so they lean only a little past the rim */
+.lt .stage .plaque.side .contest-tip,.lt .stage .plaque.side > span{white-space:normal;flex-wrap:wrap;justify-content:center;max-width:92px;text-align:center;line-height:1.1;padding:4px 7px;border-radius:10px}
+@media (min-width:861px) and (min-height:500px){ .app.game.lt .lt-wheel .stage{width:min(100cqw - 90px, 100cqh - 16px)} }

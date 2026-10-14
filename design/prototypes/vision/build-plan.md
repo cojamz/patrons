@@ -32,3 +32,10 @@ Cory's adjustments win over the frames:
 ## Intro and follower symbol (Cory, 2026-10-14)
 - **Intro:** on a player's first game start (and from the menu later), a ~20s skippable pixel animation of the gist: you lead a cult → place a worker on the wheel → gain resources → recruit members (they join your crowd) → buy followers (the crowd grows) → each round the quadrant leaders win followers → most followers after round III wins. Per player: shown locally, never blocks other seats online; Skip always visible; respects reduced-motion (a still storyboard instead).
 - **Follower symbol:** a small pixel follower figure (not ★) used everywhere a follower count or "worth N" appears; distinct from member figures and from resource pips.
+
+## Minions and cult leaders (Cory, 2026-10-14)
+- Workers are **minions**. Each player picks one of ~20 pixel emojis (Santa, unicorn, surfer, bug…) when joining (unique per table; bots get a random free one). All their minions are that emoji as a small pixel creature, placed on wheel spaces.
+- Each player's **cult leader** is a robed pixel figure with their emoji on the robe: the player's identity on the seat rail, their table and the Reckoning. This replaces seat sigils/colours as identity (keep a muted seat colour as an accent).
+- Size order everywhere: leader > members > minions > followers.
+- Say "minion(s)" everywhere a player reads "worker(s)": rulebook, screen, card texts, log, intro.
+

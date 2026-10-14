@@ -26,6 +26,14 @@ function arc(a0, a1, r0, r1) {
   return `M${x0},${y0} A${r1},${r1} 0 0 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 0 0 ${x3},${y3}Z`;
 }
 
+/** An arc for text that reads upright wherever it sits once the wheel is turned by `rot`. */
+function textArc(center, half, r, rot) {
+  const top = Math.abs(norm(center + rot)) < 90;
+  const [ax, ay] = polar(top ? center - half : center + half, r);
+  const [bx, by] = polar(top ? center + half : center - half, r);
+  return `M${ax},${ay} A${r},${r} 0 0 ${top ? 1 : 0} ${bx},${by}`;
+}
+
 export const facingOf = (rot, count) => {
   let best = 0, bd = 1e9;
   for (let q = 0; q < count; q++) { const d = Math.abs(norm(qCenter(q) + rot - 180)); if (d < bd) { bd = d; best = q; } }
@@ -234,6 +242,8 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     return [CX + (x0 - CX) * Math.cos(r) - (y0 - CY) * Math.sin(r), CY + (x0 - CX) * Math.sin(r) + (y0 - CY) * Math.cos(r)];
   };
 
+  const stand = standings(state);
+  const stdById = Object.fromEntries(stand.map(x => [x.qid, x]));
   // the printed paper wheel: quadrant inks, ring bands (closed rings carved and dim), seams, the dark hub
   const paper = [];
   state.quadrants.forEach((qid, q) => {
@@ -296,15 +306,14 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
   });
 
   // rim plaques: each quadrant's contest (its rule, the prize, who leads), upright; standings on hover/tap
-  const stand = standings(state);
   const plaques = state.quadrants.map((qid, q) => {
-    const [X, Y] = turned(...polar(qCenter(q), 196));
+    const [X, Y] = turned(...polar(qCenter(q), 198));
     // anchored on the rim and leaning outward, so a plaque never covers a space
     const ax = Math.max(-1, Math.min(1, (X - CX) / 120)), ay = Math.max(-1, Math.min(1, (Y - CY) / 120));
     const st = stand.find(x => x.qid === qid);
     const leaders = st ? st.leaders : [];
     return (
-      <div key={`pl${qid}`} className="plaque" data-plaque={qid} style={{ ...at(X, Y), '--c': `var(--${qid})`, '--ax': ax.toFixed(2), '--ay': ay.toFixed(2) }}>
+      <div key={`pl${qid}`} className={`plaque${Math.abs(ax) > 0.7 ? ' side' : ''}`} data-plaque={qid} style={{ ...at(X, Y), '--c': `var(--${qid})`, '--ax': ax.toFixed(2), '--ay': ay.toFixed(2) }}>
         <ContestTip state={state} qid={qid} meId={meId}>
           <i className="dot" aria-hidden="true" /><span className="r">{st ? st.rule : quadrant(qid).scoring.label}</span>
           <b className="num rw">+{RING_VALUE[paying - 1]}</b>

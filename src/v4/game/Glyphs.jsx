@@ -26,7 +26,7 @@ export function ResourceGlyph({ r, size = 16, n = null }) {
   return (
     <svg className="res-glyph" viewBox="0 0 16 16" width={size} height={size} role="img" aria-label={label}>
       <title>{label}</title>
-      <path d={SHAPES[r] || SHAPES.gold} fill={`var(--q-${r}, var(--${r}))`} stroke="var(--ink, #1c1410)" strokeWidth="1.1" strokeLinejoin="round" />
+      <path d={SHAPES[r] || SHAPES.gold} fill={`var(--q-${r}, var(--${r}))`} stroke="var(--paper-ink, #1c1410)" strokeWidth="1.1" strokeLinejoin="round" />
       {r === 'gold' && <path d="M8 4.2a3.8 3.8 0 1 1 0 7.6a3.8 3.8 0 1 1 0-7.6Z" fill="none" stroke="rgba(0,0,0,.28)" strokeWidth="1" />}
     </svg>
   );
@@ -60,7 +60,7 @@ export function SeatFigure({ id, size = 24, title = null, dim = false }) {
     <span className={`seat-fig${dim ? ' dim' : ''}`} data-seat={id} title={title || undefined} style={{ width: size, height: size }}>
       <Sprite id="_seat" kind="member" sphere={playerColor(id)} size={size} />
       <svg className="sig" viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
-        <path d={sigilPath(seatSigil(id), 12, 17.5, 2.6)} fill="var(--ink, #1c1410)" fillOpacity=".8" />
+        <path d={sigilPath(seatSigil(id), 12, 17.5, 2.6)} fill="var(--paper-ink, #1c1410)" fillOpacity=".8" />
       </svg>
     </span>
   );

@@ -4,10 +4,11 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { PLAYER_COLORS, SEAT_SIGILS } from '../../../v4/format.js';
 
-const css = readFileSync(`${process.cwd()}/src/v4/v4.css`, 'utf8');
-const root = css.slice(css.indexOf(':root{'), css.indexOf('}', css.indexOf(':root{')));
-const varOf = name => (root.match(new RegExp(`--${name}:(#[0-9a-fA-F]{6})`)) || [])[1];
-const WALNUT = '#1d1611'; // the Lamplit Table direction's wood (design/prototypes/vision/vision.css)
+// the colors on screen: v4.css's :root, overridden by the Lamplit theme (lamp.css) where it sets them
+const rootOf = file => { try { const css = readFileSync(`${process.cwd()}/src/v4/${file}`, 'utf8'); return css.slice(css.indexOf(':root{'), css.indexOf('}', css.indexOf(':root{'))); } catch { return ''; } };
+const ROOTS = [rootOf('lamp.css'), rootOf('v4.css')];
+const varOf = name => { for (const root of ROOTS) { const m = root.match(new RegExp(`--${name}:(#[0-9a-fA-F]{6})`)); if (m) return m[1]; } return undefined; };
+const WALNUT = '#1d1611'; // the Lamplit Table's wood (design/prototypes/vision/vision.css)
 const RESOURCES = ['gold', 'red', 'blue', 'green', 'magenta', 'yellow', 'purple', 'silver', 'white'];
 
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255);

@@ -95,10 +95,13 @@ describe('Squatter: once per round, place on a space a rival already took', () =
     s = move(s, `slot:${RUSH}`); s = passBuys(pickAny(s)); // P2 takes Rush (+2 gold)
     s = move(s, `squat:${RUSH}`); s = passBuys(pickAny(s)); // P1 joins it
     expect(R(s, 0).gold).toBe(2);
+    // both workers on Rush leave a chip: the first taker's and the joiner's
+    expect(Object.values(s.echo.now).filter(e => e.name === 'Rush').map(e => e.p).sort()).toEqual([0, 1]);
     s = move(s, 'slot:2-2'); // P2 takes Echo
     expect(s.pending.kind).toBe('choose');
-    // both workers on Rush leave a chip: the first taker's and the joiner's
-    expect(s.pending.options.filter(o => o.label.startsWith('Rush')).length).toBe(2);
+    // Echo copies a rival's space taken since your last turn (Green rework, 2026-10-14): P1's joined Rush
+    // is on offer; P2's own Rush isn't (that's Refrain's or Encore's job)
+    expect(s.pending.options.filter(o => o.label.startsWith('Rush')).map(o => o.label)).toEqual(['Rush (P1): +2 gold']);
     s = choose(s, o => o.label.startsWith('Rush'));
     expect(R(s, 1).gold).toBe(4);
   });
