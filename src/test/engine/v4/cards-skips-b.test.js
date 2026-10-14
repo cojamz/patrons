@@ -23,7 +23,7 @@ function run(name, rich) {
     round: 3, left: 5, shop: ROW, queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }],
     res: rich ? [full, full] : [], bonus: rich ? [6, 8] : [], members: rich ? [['thieves.crew'], ['trading.shareholder']] : [],
   });
-  s = take(s, 'Hum');
+  s = take(s, 'echo.hum');
   if (s.pending?.kind === 'buy') s = move(s, 'pass');
   const before = numbers(s), len = s.log.length;
   s = take(s, name);

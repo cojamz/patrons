@@ -14,19 +14,19 @@ const rich = { gold: 30, red: 30, silver: 30, green: 30 };
 
 describe('Silver actions', () => {
   it('Toast 3 / 6 / 9 and everyone else +1; Goody Bags +2 silver +2 of a color, others 1 of it; Good Deed +4, a rival gets 2', () => {
-    let s = take(sc({ n: 3, round: 2 }), 'Toast');
+    let s = take(sc({ n: 3, round: 2 }), 'silver.toast');
     expect(s.players.map(p => p.res.silver)).toEqual([6, 1, 1]);
-    s = move(take(sc({ n: 3 }), 'Goody Bags'), 'color:red');
+    s = move(take(sc({ n: 3 }), 'silver.gift'), 'color:red');
     expect(s.players.map(p => [p.res.silver, p.res.red])).toEqual([[2, 2], [0, 1], [0, 1]]);
-    s = move(take(sc({ n: 3 }), 'Good Deed'), 'give:2:green');
+    s = move(take(sc({ n: 3 }), 'silver.alms'), 'give:2:green');
     expect(s.players.map(p => [p.res.silver, p.res.green])).toEqual([[4, 0], [0, 0], [0, 2]]);
   });
   it('Sweet Talk +4 then swap; Rising Tide: others +1 then half the richest rival’s, rounded up; Hold Court', () => {
-    let s = move(take(sc({ round: 2 }), 'Sweet Talk'), 'swap:red:4');
+    let s = move(take(sc({ round: 2 }), 'silver.tongue'), 'swap:red:4');
     expect(s.players.map(p => [p.res.silver, p.res.red])).toEqual([[0, 4], [1, 0]]);
-    s = take(sc({ round: 2, res: [{}, { silver: 4 }] }), 'Rising Tide');
+    s = take(sc({ round: 2, res: [{}, { silver: 4 }] }), 'silver.tide');
     expect(s.players.map(p => p.res.silver)).toEqual([3, 5]);
-    s = take(sc({ round: 3, res: [{ silver: 7 }] }), 'Hold Court');
+    s = take(sc({ round: 3, res: [{ silver: 7 }] }), 'silver.jubilee');
     expect(s.players[0].bonus).toBe(3);
     expect(s.players.map(p => p.res.silver)).toEqual([7, 2]);
   });
@@ -34,12 +34,12 @@ describe('Silver actions', () => {
 
 describe('Silver members', () => {
   it('Guest: another player’s gift gives +1 more, named', () => {
-    const s = take(sc({ members: [[], ['silver.guest']] }), 'Toast');
+    const s = take(sc({ members: [[], ['silver.guest']] }), 'silver.toast');
     expect(S(s, 1)).toBe(2);
     expect(named(s, 'Guest')[0]).toMatch(/P2's Guest: \+1 silver/);
   });
   it('Guest × Kickback: Gold’s gift counts, named', () => {
-    const s = move(take(sc({ members: [[], ['silver.guest']] }), 'Kickback'), 'player:1');
+    const s = move(take(sc({ members: [[], ['silver.guest']] }), 'gold.jv'), 'player:1');
     expect(s.players[1].res.gold).toBe(2);
     expect(named(s, 'Guest')).toHaveLength(1);
   });
@@ -58,18 +58,18 @@ describe('Silver members', () => {
   });
 
   it('Caterer: +1 silver per gift (not per player), named', () => {
-    const s = take(sc({ n: 4, members: [['silver.caterer']] }), 'Toast');
+    const s = take(sc({ n: 4, members: [['silver.caterer']] }), 'silver.toast');
     expect(S(s)).toBe(3 + 1);
     expect(named(s, 'Caterer')[0]).toMatch(/P1's Caterer: \+1 silver/);
   });
   it('Caterer × Kickback: giving gold is giving too', () => {
-    const s = move(take(sc({ members: [['silver.caterer']] }), 'Kickback'), 'player:1');
+    const s = move(take(sc({ members: [['silver.caterer']] }), 'gold.jv'), 'player:1');
     expect(S(s)).toBe(1);
     expect(named(s, 'Caterer')).toHaveLength(1);
   });
 
   it('Majordomo: +2 silver for taking a Silver space, named', () => {
-    const s = take(sc({ members: [['silver.majordomo']] }), 'Toast');
+    const s = take(sc({ members: [['silver.majordomo']] }), 'silver.toast');
     expect(S(s)).toBe(5);
     expect(named(s, 'Majordomo')).toHaveLength(1);
   });
@@ -83,17 +83,17 @@ describe('Silver members', () => {
 
   // rewards not hosting (dead-window audit, 2026-10-14): it was "+1 more when an action gains you silver"
   it('Silversmith: whenever a rival takes a Silver space, +1 silver, named; not your own, not other spaces', () => {
-    let s = take(sc({ members: [[], ['silver.silversmith']] }), 'Toast');
+    let s = take(sc({ members: [[], ['silver.silversmith']] }), 'silver.toast');
     expect(S(s, 1)).toBe(1 + 1); // Toast's +1 to everyone else, and Silversmith's
     expect(named(s, 'Silversmith')).toEqual(["P2's Silversmith: +1 silver."]);
-    s = take(sc({ members: [['silver.silversmith']] }), 'Toast');
+    s = take(sc({ members: [['silver.silversmith']] }), 'silver.toast');
     expect(S(s)).toBe(3);
     expect(named(s, 'Silversmith')).toHaveLength(0);
-    s = take(sc({ members: [[], ['silver.silversmith']] }), 'Golden Years');
+    s = take(sc({ members: [[], ['silver.silversmith']] }), 'gold.rush');
     expect(S(s, 1)).toBe(0);
   });
   it('Silversmith × Grand Host: the host’s doubling doesn’t touch the rival’s +1', () => {
-    const s = take(sc({ members: [['silver.grandhost'], ['silver.silversmith']] }), 'Toast');
+    const s = take(sc({ members: [['silver.grandhost'], ['silver.silversmith']] }), 'silver.toast');
     expect([S(s), S(s, 1)]).toEqual([6, 2]);
   });
 
@@ -112,7 +112,7 @@ describe('Silver members', () => {
   it('Retinue: worth 2 followers; when recruited everyone else +1 silver, named; a rival’s Guest gets 1 more', () => {
     let s = sc({ n: 3, res: [rich], members: [[], [], ['silver.guest']], shop: ['silver.retinue'] });
     const f0 = followers(s, s.players[0]);
-    s = take(s, 'Golden Years'); s = buy(s, 'silver.retinue');
+    s = take(s, 'gold.rush'); s = buy(s, 'silver.retinue');
     expect(followers(s, s.players[0])).toBe(f0 + 2);
     expect([S(s, 1), S(s, 2)]).toEqual([1, 2]);
     expect(named(s, 'Retinue').length).toBeGreaterThanOrEqual(1);
@@ -126,7 +126,7 @@ describe('Silver members', () => {
     const red = contestTable(s).find(c => c.qid === 'red');
     expect(red.rows.find(r => r.player === 0).count).toBe(3);
     expect(red.winners).toEqual([0]);
-    expect(take(sc({ round: 2, members: [['silver.revelers']] }), 'Tithe').players[0].res.gold).toBe(3);
+    expect(take(sc({ round: 2, members: [['silver.revelers']] }), 'gold.windfall').players[0].res.gold).toBe(3);
     s = sc({ members: [['silver.revelers', 'red.patriarch']], queue: [{ t: 'finish' }] });
     expect(s.players[0].final.parts).toContain('Patriarch +2');
     s = sc({ members: [['silver.heir', 'silver.revelers']], queue: [{ t: 'round', r: 3 }] });
@@ -150,13 +150,13 @@ describe('Silver members', () => {
 
   it('Upstart: when recruited, silver equal to the richest rival’s, named', () => {
     let s = sc({ n: 3, round: 3, res: [{}, { silver: 4 }, { silver: 9 }], shop: ['silver.spoon'] });
-    s = move(take(s, 'Hand-pick'), `card:${uidOf(s, 'silver.spoon', 'shop')}`);
+    s = move(take(s, 'red.take'), `card:${uidOf(s, 'silver.spoon', 'shop')}`);
     expect(S(s)).toBe(9);
     expect(named(s, 'Upstart')).toHaveLength(1);
   });
 
   it('Toastmaster: +1 follower per Silver space, named; Straggler onto Silver counts', () => {
-    let s = take(sc({ members: [['silver.toastmaster']] }), 'Good Deed');
+    let s = take(sc({ members: [['silver.toastmaster']] }), 'silver.alms');
     expect(s.players[0].bonus).toBe(1);
     expect(named(s, 'Toastmaster')[0]).toMatch(/P1's Toastmaster: \+1 follower/);
     s = sc({ round: 2, members: [['silver.toastmaster', 'benders.straggler']], slots: { '0-0': 0 }, queue: [{ t: 'allPlaced' }] });
@@ -166,7 +166,7 @@ describe('Silver members', () => {
 
   it('Debutante: once per game, double your silver and everyone else +2; named; a rival’s Guest gets 1 more', () => {
     let s = sc({ res: [{ silver: 5 }], members: [['silver.gala'], ['silver.guest']] });
-    s = take(s, 'Golden Years');
+    s = take(s, 'gold.rush');
     s = move(s, `use:${uidOf(s, 'silver.gala', 0)}`);
     expect(S(s)).toBe(10);
     expect(S(s, 1)).toBe(3);
@@ -174,7 +174,7 @@ describe('Silver members', () => {
   });
 
   it('Grand Host: Silver spaces give twice the silver, and the log says Grand Host did it', () => {
-    const s = take(sc({ members: [['silver.grandhost']] }), 'Toast');
+    const s = take(sc({ members: [['silver.grandhost']] }), 'silver.toast');
     expect(S(s)).toBe(6);
     expect(S(s, 1)).toBe(1); // the spill is not doubled
     expect(named(s, 'Grand Host')).toHaveLength(1);
@@ -182,7 +182,7 @@ describe('Silver members', () => {
   it('Grand Host × Doppelganger: each copy doubles again (×4)', () => {
     let s = sc({ members: [['silver.grandhost', 'red.doppel']] });
     s.cards[uidOf(s, 'red.doppel', 0)].copy = 'silver.grandhost';
-    s = take(s, 'Toast');
+    s = take(s, 'silver.toast');
     expect(S(s)).toBe(12);
   });
 

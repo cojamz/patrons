@@ -27,7 +27,7 @@ describe('Guest members (rule-benders)', () => {
 
   it('Big Spender: a second buy after a real first one, once per round; named', () => {
     let s = sceneQ({ res: [rich], members: [['benders.bigspender']] });
-    s = take(s, 'Golden Years');
+    s = take(s, 'gold.rush');
     s = move(s, 'tier:small');
     expect(s.pending.extra).toBe(true);
     s = move(s, 'tier:small');
@@ -36,7 +36,7 @@ describe('Guest members (rule-benders)', () => {
   });
   it('Big Spender × Crowd-Pleaser: two follower buys, two payouts', () => {
     let s = sceneQ({ res: [rich], members: [['benders.bigspender', 'red.crowd']] });
-    s = move(move(take(s, 'Golden Years'), 'tier:small'), 'tier:small');
+    s = move(move(take(s, 'gold.rush'), 'tier:small'), 'tier:small');
     expect(named(s, 'Crowd-Pleaser')).toHaveLength(2);
   });
 
@@ -44,7 +44,7 @@ describe('Guest members (rule-benders)', () => {
     const restore = pinCosts({ 'gold.banker': [2, 0] });
     try {
       let s = sceneQ({ res: [{ red: 4 }], members: [['benders.freelancer']], shop: ['gold.banker'] });
-      s = take(s, 'Bandwagon'); // +0 red: nobody has recruited yet
+      s = take(s, 'red.turnout'); // +0 red: nobody has recruited yet
       s = buy(s, 'gold.banker');
       expect(s.players[0].res.red).toBe(2);
       expect(named(s, 'Freelancer')).toHaveLength(1);
@@ -54,7 +54,7 @@ describe('Guest members (rule-benders)', () => {
     const restore = pinCosts({ 'gold.prospector': [2, 0] });
     try {
       let s = sceneQ({ res: [{ gold: 2 }], members: [['benders.freelancer']], shop: ['gold.prospector'] });
-      s = buy(move(take(s, 'Kickback'), 'player:1'), 'gold.prospector');
+      s = buy(move(take(s, 'gold.jv'), 'player:1'), 'gold.prospector');
       expect(s.players[0].res.gold).toBe(3);
       expect(named(s, 'Freelancer')).toHaveLength(0);
     } finally { restore(); }
@@ -63,7 +63,7 @@ describe('Guest members (rule-benders)', () => {
   it('Insider: recruit from the top 3 of the pile; the recruit line names Insider', () => {
     let s = sceneQ({ res: [rich], members: [['benders.insider']] });
     const top = s.pile[0];
-    s = take(s, 'Golden Years');
+    s = take(s, 'gold.rush');
     s = move(s, `card:${top}`);
     expect(s.players[0].members).toContain(top);
     expect(named(s, 'Insider')[0]).toMatch(/from the pile with P1's Insider/);

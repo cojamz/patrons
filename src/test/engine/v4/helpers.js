@@ -1,7 +1,7 @@
 // Test helpers for the v4 engine: build a game, set it up by hand, then drive it by option id.
 import { beforeEach, afterEach } from 'vitest';
 import { createGame, applyMove, resume, actionAt, followers } from '../../../engine/v4/core.js';
-import { defById } from '../../../engine/v4/content/index.js';
+import { defById, quadrant } from '../../../engine/v4/content/index.js';
 
 /**
  * Build a game and put it in a hand-made position.
@@ -72,10 +72,21 @@ export function play(s, ...opts) {
   return s;
 }
 
-/** Place the pending player's worker on the named action. */
+/** An action's printed name from its id ("gold.rush" → its current name); a name passes through. Tests pick spaces
+ *  by id, so renaming a space never breaks them. */
+export function actionName(idOrName) {
+  if (!String(idOrName).includes('.')) return idOrName;
+  const [q, key] = idOrName.split('.');
+  const a = quadrant(q).actions.find(x => x.key === key);
+  if (!a) throw new Error(`no action ${idOrName}`);
+  return a.name;
+}
+
+/** Place the pending player's worker on the action with this id ("gold.rush") or name. */
 export function take(s, name) {
   if (s.pending?.kind !== 'place') throw new Error(`not placing: ${s.pending?.kind}`);
-  const o = s.pending.options.find(x => actionAt(s, x.q, x.i).name === name);
+  const want = actionName(name);
+  const o = s.pending.options.find(x => actionAt(s, x.q, x.i).name === want);
   if (!o) throw new Error(`${name} is not open; open: ${s.pending.options.map(x => x.label).join(', ')}`);
   return move(s, o.id);
 }

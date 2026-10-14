@@ -61,17 +61,17 @@ describe('Silver scoring: most silver', () => {
 
 describe('Silver actions', () => {
   it('Toast: +3 silver per round number, everyone else +1 silver', () => {
-    let s = take(scene({ res: [{}, { gold: 2 }] }), 'Toast');
+    let s = take(scene({ res: [{}, { gold: 2 }] }), 'silver.toast');
     expect(R(s)).toEqual({ ...Z, silver: 3 });
     expect(R(s, 1)).toEqual({ ...Z, gold: 2, silver: 1 });
     expect(R(s, 2)).toEqual({ ...Z, silver: 1 });
-    s = take(scene({ round: 3 }), 'Toast');
+    s = take(scene({ round: 3 }), 'silver.toast');
     expect(R(s).silver).toBe(9);
     expect(R(s, 1).silver).toBe(1);
   });
 
   it('Goody Bags: +2 silver and +2 of the color you pick; everyone else 1 of it; silver is not a pick', () => {
-    let s = take(scene(), 'Goody Bags');
+    let s = take(scene(), 'silver.gift');
     expect(ids(s)).toEqual(['color:gold', 'color:red', 'color:blue']);
     s = move(s, 'color:red');
     expect(R(s)).toEqual({ ...Z, silver: 2, red: 2 });
@@ -80,7 +80,7 @@ describe('Silver actions', () => {
   });
 
   it('Good Deed: +4 silver; any rival you choose gets 2 of the color you choose; never yourself', () => {
-    let s = take(scene({ bonus: [0, 3, 1] }), 'Good Deed');
+    let s = take(scene({ bonus: [0, 3, 1] }), 'silver.alms');
     expect(R(s).silver).toBe(4);
     expect(ids(s)).toHaveLength(8);
     expect(ids(s).some(id => id.startsWith('give:0:'))).toBe(false);
@@ -90,25 +90,25 @@ describe('Silver actions', () => {
   });
 
   it('Sweet Talk (ring II): +4 silver, swap silver into one other color, then everyone else +1 silver', () => {
-    let s = take(scene({ round: 2, res: [{ silver: 2 }] }), 'Sweet Talk');
+    let s = take(scene({ round: 2, res: [{ silver: 2 }] }), 'silver.tongue');
     expect(R(s).silver).toBe(6);
     expect(ids(s)).toEqual(['keep', 'swap:gold:3', 'swap:gold:6', 'swap:red:3', 'swap:red:6', 'swap:blue:3', 'swap:blue:6']);
     s = move(s, 'swap:red:6');
     expect(R(s)).toEqual({ ...Z, red: 6 });
     expect(R(s, 1).silver).toBe(1);
-    s = move(take(scene({ round: 2 }), 'Sweet Talk'), 'keep');
+    s = move(take(scene({ round: 2 }), 'silver.tongue'), 'keep');
     expect(R(s).silver).toBe(4);
   });
 
   it('Rising Tide (ring II): everyone else +1 silver, then half the richest rival’s silver, rounded up', () => {
-    const s = take(scene({ round: 2, res: [{ silver: 1 }, { silver: 4 }, { silver: 2 }] }), 'Rising Tide');
+    const s = take(scene({ round: 2, res: [{ silver: 1 }, { silver: 4 }, { silver: 2 }] }), 'silver.tide');
     expect(R(s, 1).silver).toBe(5);
     expect(R(s, 2).silver).toBe(3);
     expect(R(s).silver).toBe(1 + 3);
   });
 
   it('Hold Court (ring III): +1 follower per 2 silver, silver kept; everyone else +2 silver', () => {
-    const s = take(scene({ round: 3, res: [{ silver: 9 }] }), 'Hold Court');
+    const s = take(scene({ round: 3, res: [{ silver: 9 }] }), 'silver.jubilee');
     expect(s.players[0].bonus).toBe(4);
     expect(R(s).silver).toBe(9);
     expect(R(s, 1).silver).toBe(2);
@@ -126,12 +126,12 @@ describe('Silver actions', () => {
 
 describe('Silver members', () => {
   it('Guest: whenever another player gives you something, +1 more of it (not on your own gains)', () => {
-    let s = take(scene({ members: [[], ['silver.guest']] }), 'Toast');
+    let s = take(scene({ members: [[], ['silver.guest']] }), 'silver.toast');
     expect(R(s, 1).silver).toBe(2);
     expect(R(s, 2).silver).toBe(1);
-    s = move(take(scene({ members: [[], ['silver.guest']] }), 'Goody Bags'), 'color:blue');
+    s = move(take(scene({ members: [[], ['silver.guest']] }), 'silver.gift'), 'color:blue');
     expect(R(s, 1).blue).toBe(2);
-    s = take(scene({ members: [['silver.guest']] }), 'Toast');
+    s = take(scene({ members: [['silver.guest']] }), 'silver.toast');
     expect(R(s).silver).toBe(3);
   });
 
@@ -145,24 +145,24 @@ describe('Silver members', () => {
   });
 
   it('Caterer: whenever you give to other players, +1 silver (once per gift, not per player)', () => {
-    let s = take(scene({ members: [['silver.caterer']] }), 'Toast');
+    let s = take(scene({ members: [['silver.caterer']] }), 'silver.toast');
     expect(R(s).silver).toBe(4);
-    s = move(take(scene({ members: [['silver.caterer']] }), 'Good Deed'), 'give:1:gold');
+    s = move(take(scene({ members: [['silver.caterer']] }), 'silver.alms'), 'give:1:gold');
     expect(R(s).silver).toBe(5);
   });
 
   it('Majordomo: whenever you take a Silver space, +2 silver (not elsewhere)', () => {
-    let s = take(scene({ members: [['silver.majordomo']] }), 'Toast');
+    let s = take(scene({ members: [['silver.majordomo']] }), 'silver.toast');
     expect(R(s).silver).toBe(5);
-    s = take(scene({ members: [['silver.majordomo']] }), 'Golden Years');
+    s = take(scene({ members: [['silver.majordomo']] }), 'gold.rush');
     expect(R(s).silver).toBe(0);
   });
 
   // rewards not hosting (dead-window audit, 2026-10-14)
   it('Silversmith: whenever a rival takes a Silver space, +1 silver (not your own)', () => {
-    let s = take(scene({ members: [[], ['silver.silversmith']] }), 'Toast');
+    let s = take(scene({ members: [[], ['silver.silversmith']] }), 'silver.toast');
     expect([R(s, 1).silver, R(s, 2).silver]).toEqual([2, 1]);
-    s = take(scene({ members: [['silver.silversmith']] }), 'Toast');
+    s = take(scene({ members: [['silver.silversmith']] }), 'silver.toast');
     expect(R(s).silver).toBe(3);
   });
 
@@ -202,9 +202,9 @@ describe('Silver members', () => {
   });
 
   it('Toastmaster: whenever you take a Silver space, +1 follower', () => {
-    let s = take(scene({ members: [['silver.toastmaster']] }), 'Toast');
+    let s = take(scene({ members: [['silver.toastmaster']] }), 'silver.toast');
     expect(s.players[0].bonus).toBe(1);
-    s = take(scene({ members: [['silver.toastmaster']] }), 'Golden Years');
+    s = take(scene({ members: [['silver.toastmaster']] }), 'gold.rush');
     expect(s.players[0].bonus).toBe(0);
   });
 
@@ -224,12 +224,12 @@ describe('Silver members', () => {
   });
 
   it('Grand Host: silver from Silver spaces is doubled; gifts and other spaces are not', () => {
-    let s = take(scene({ round: 2, members: [['silver.grandhost']] }), 'Toast');
+    let s = take(scene({ round: 2, members: [['silver.grandhost']] }), 'silver.toast');
     expect(R(s).silver).toBe(12);
     expect(R(s, 1).silver).toBe(1);
-    s = move(take(scene({ members: [['silver.grandhost']] }), 'Goody Bags'), 'color:red');
+    s = move(take(scene({ members: [['silver.grandhost']] }), 'silver.gift'), 'color:red');
     expect(R(s)).toEqual({ ...Z, silver: 4, red: 2 });
-    s = take(scene({ members: [['silver.grandhost'], ['silver.guest']] }), 'Toast');
+    s = take(scene({ members: [['silver.grandhost'], ['silver.guest']] }), 'silver.toast');
     expect(R(s).silver).toBe(6);
   });
 
