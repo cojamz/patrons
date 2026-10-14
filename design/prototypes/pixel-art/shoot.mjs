@@ -1,4 +1,4 @@
-// Screenshots of the pixel-icon calibration set. Run from the repo root: node design/prototypes/pixel-art/shoot.mjs
+// Screenshots of the pixel-icon sheets. Run from the repo root: node design/prototypes/pixel-art/shoot.mjs [name...]
 // Shot at deviceScaleFactor 2 (a retina laptop): one icon pixel at 24px = 2×2 screen pixels.
 import { chromium } from 'playwright';
 import { fileURLToPath } from 'node:url';
@@ -8,9 +8,12 @@ const dir = path.dirname(fileURLToPath(import.meta.url));
 const shots = [
   ['sheet', 'sheet.html', { width: 1270, height: 900 }, true],
   ['context', 'context.html', { width: 1270, height: 720 }, false],
+  ['identity-sheet', 'identity-sheet.html', { width: 1270, height: 900 }, true],
 ];
+const want = process.argv.slice(2);
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 for (const [name, file, viewport, full] of shots) {
+  if (want.length && !want.includes(name)) continue;
   const ctx = await browser.newContext({ viewport, deviceScaleFactor: 2 });
   const page = await ctx.newPage();
   const errs = [];

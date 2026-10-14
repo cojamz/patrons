@@ -19,7 +19,7 @@ const fail = (msg, step) => fails.push(`[${step}] ${msg}`);
 
 // game-meaningful elements, old and new screen (whatever is on screen is audited)
 const GAME = [
-  '[data-region] [data-uid]', '.shop [data-uid]', '.lt-seat', '.lt-stack', '.res > .r', '.you-strip .r', '.lt-member .fig', '.chip[data-g]',
+  '[data-region] [data-uid]', '.shop [data-uid]', '.lt-rs', '[data-cult] .cs-head', '.lt-stack', '.res > .r', '.you-strip .r', '.lt-member .fig', '.chip[data-g]',
   '[data-leader-ring]', '.workers', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
   '[data-plaque]', '.contest-tip', '.res-glyph', '.pip', '.card-name', '.term',
 ].join(',');
@@ -110,6 +110,58 @@ try {
     await page.waitForTimeout(80);
   }
   if (seen.size < 3) fail(`only reached ${[...seen].join(', ') || 'no'} steps`, 'play');
+
+  // (d) hover speed (Cory: instant and seamless): p95 from the pointer arriving to a visible card < 100ms, and no
+  // close/reopen flicker while sweeping across a ring of spaces. Measured on the Lamplit hover layer with the real
+  // wheel and shop (the ?lab=b page of this build) until the game screen mounts it.
+  {
+    const lab = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+    lab.on('pageerror', e => errors.push(`lab pageerror: ${e.message}`));
+    await lab.goto(`${base}/?lab=b&phase=place`);
+    await lab.waitForSelector('[data-hover-layer]');
+    await lab.waitForTimeout(800); // idle warm-up of the dry runs
+    await lab.evaluate(() => {
+      const visible = () => [...document.querySelectorAll('[data-hover-layer][data-open="1"], .peek')].some(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left > -1000 && getComputedStyle(e).opacity !== '0'; });
+      window.__hov = { lat: [], flips: 0, was: false, sweeping: false };
+      let t0 = null;
+      addEventListener('pointerover', e => { if (e.target.closest && e.target.closest('[data-slot], [data-uid]') && !visible()) t0 = performance.now(); }, true);
+      const tick = () => {
+        const v = visible();
+        if (v && t0 != null) { window.__hov.lat.push(performance.now() - t0); t0 = null; }
+        if (window.__hov.sweeping && window.__hov.was && !v) window.__hov.flips++;
+        window.__hov.was = v;
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    const centers = async sel => lab.$$eval(sel, els => els.map(e => { const b = e.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; }));
+    const spaces = await centers('[data-slot] .base');
+    const cards = await centers('[data-region="shop"] [data-uid]');
+    // separate arrivals: move away, then onto a target, wait for its card
+    for (const [x, y] of [...spaces.slice(0, 8), ...cards.slice(0, 6)]) {
+      await lab.mouse.move(4, 690);
+      await lab.waitForTimeout(220);
+      await lab.mouse.move(x, y, { steps: 2 });
+      await lab.waitForTimeout(160);
+    }
+    const lat = (await lab.evaluate(() => window.__hov.lat)).sort((a, b) => a - b);
+    const p95 = lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : Infinity;
+    if (lat.length < 10) fail(`(d) only ${lat.length} hover cards opened out of 14 arrivals`, 'hover');
+    if (!(p95 < 100)) fail(`(d) hover card p95 ${Math.round(p95)}ms (want < 100ms; samples ${lat.map(Math.round).join(',')})`, 'hover');
+    // sweep: across the outer ring's spaces in order, never leaving the ring; the card must never close in between
+    const ring = await lab.$$eval('[data-slot] .base', els => els.map(e => { const b = e.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2, r: Number(e.getAttribute('r')) }; }).filter(o => o.r === 16));
+    const cx = 300 + 280, cy = 10 + 280;
+    ring.sort((a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx));
+    await lab.mouse.move(ring[0].x, ring[0].y);
+    await lab.waitForTimeout(200);
+    await lab.evaluate(() => { window.__hov.sweeping = true; window.__hov.flips = 0; });
+    for (const o of ring.slice(1, 9)) { await lab.mouse.move(o.x, o.y, { steps: 6 }); await lab.waitForTimeout(90); }
+    const flips = await lab.evaluate(() => { window.__hov.sweeping = false; return window.__hov.flips; });
+    if (flips) fail(`(d) the hover card closed and reopened ${flips} time(s) while sweeping across ${Math.min(8, ring.length - 1)} spaces`, 'hover');
+    await lab.screenshot({ path: `${SHOTS}/04-hover-sweep.png` });
+    console.log(`info.mjs: hover p95 ${Math.round(p95)}ms over ${lat.length} cards; ${flips} flickers in the sweep`);
+    await lab.close();
+  }
 
   // (b) touch: a long-press on a titled element shows its title
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });

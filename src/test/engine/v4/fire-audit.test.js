@@ -55,8 +55,8 @@ export function audit(tables, games, { seed = 3100, hand = [], perSeat = 0, rule
 
 describe('fire audit: Blue, Magenta, White, Green', () => {
   const GROUP = ['market', 'thieves', 'trading', 'echo'];
-  // Watchdog changes no number (it only refuses a steal). Social Climber: bots never trade a member in (their hint
-  // only likes plain cheap members), so it can't fire in bot games; cards-market.test.js covers it.
+  // Watchdog changes no number (it only refuses a steal). Social Climber pays only on a Release, and this audit plays
+  // with Release off; cards-market.test.js covers it.
   // Magnate pays only from white left at game end (1 follower per 3); normal bots spend white down because any
   // follower buy beats that rate, so it fires about 1 hold in 13 (ledger) and 4 holds can all miss. Since the
   // 2026-10-14 White rework changed these seeds' games it does; cards-trading.test.js (Magnate) covers its line.
@@ -100,7 +100,7 @@ describe('namesCard: what counts as a line naming a card', () => {
   it('does not count lines that only move the card', () => {
     for (const [l, n] of [
       ['P1 recruited Banker (2 gold, 1 red).', 'Banker'], ['P1 traded Intern for P2\'s Banker.', 'Banker'],
-      ['P1 released Banker to the bottom of the pile, for 4 in any colors.', 'Banker'], ["P1's Doppelganger copies Banker.", 'Banker'],
+      ['P1 released Banker to the bottom of the pile, for 2 gold.', 'Banker'], ["P1's Doppelganger copies Banker.", 'Banker'],
       ['P1 pulled a heist: P2\'s Banker.', 'Banker'], ['P1 sent Banker to the bottom of the pile.', 'Banker'],
     ]) expect(namesCard(l, n), l).toBe(false);
   });

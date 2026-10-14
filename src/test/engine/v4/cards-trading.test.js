@@ -153,6 +153,13 @@ describe('White members', () => {
     const t = roundStart({ members: [['trading.safetynet']], res: [{ white: 1 }] });
     expect(R(t).white).toBe(1);
   });
+  // "now" (dead-window audit, 2026-10-14): recruited in round III it used to give nothing
+  it('Safety Net recruited with no white left: +3 white right away (named)', () => {
+    let s = table(Q, { round: 3, res: [{ white: 2 }], shop: ['trading.safetynet', ...ROW], queue: [{ t: 'buy', p: 0 }] });
+    s = payDefault(move(s, cardOpt(s, 'trading.safetynet', 'shop')));
+    expect(R(s).white).toBe(3);
+    expect(named(s, 'Safety Net').length).toBe(1);
+  });
   it('Tipster: whenever a rival buys followers, +1 white (named)', () => {
     let s = take(table(Q, { res: [{ red: 2 }], members: [[], ['trading.tipster']], shop: ROW }), 'Haggle');
     s = payDefault(move(s, 'tier:small'));

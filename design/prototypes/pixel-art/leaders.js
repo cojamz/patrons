@@ -55,17 +55,17 @@
     '................................',
   ];
 
-  // Follower mark: a tiny cream person, the unit of score. 10×10 with the same outline rule.
+  // Follower mark: a tiny cream meeple-person, the unit of score. 10×10 with the same outline rule.
   const FOLLOWER = [
     '..........',
-    '....ww....',
     '...wwwc...',
     '...wwwc...',
-    '....cc....',
+    '....wc....',
+    '.wwwwwwwc.',
     '..wwwwwc..',
-    '.wwwwwwwc.',
-    '.wwwwwwwc.',
-    '.cccccccc.',
+    '..wwwwwc..',
+    '..wc..wc..',
+    '..cc..cc..',
     '..........',
   ];
   const FOLLOWER_PAL = { k: M.INK, w: '#f6eedb', c: '#cbbd9c' };

@@ -29,7 +29,7 @@ export default function SeatRail({ state, me = null, mySeats = [], hover = null 
           <span key={pid} className="lt-seat-wrap">
             {k > 0 && <span className="arrow" aria-hidden="true">◂</span>}
             <span
-              className={`lt-seat${now === pid ? ' now' : ''}${you ? ' you' : ''}`} data-seat={pid} role="button" tabIndex={0} aria-haspopup="dialog"
+              className={`lt-rs${now === pid ? ' now' : ''}${you ? ' you' : ''}`} data-seat={pid} role="button" tabIndex={0} aria-haspopup="dialog"
               style={{ '--pc': playerColor(pid) }} title={`${p.name}: ${f} followers, ${p.left} minion${p.left === 1 ? '' : 's'} left${now === pid ? ' — their turn' : ''}`}
               aria-label={`${you ? 'You' : p.name}, ${f} followers, ${p.left} minions left${now === pid ? ', to play' : ''}. Show their seat.`}
               onPointerEnter={e => { if (hover && realHover(e)) hover.onSeatHover(pid, e.currentTarget); }}

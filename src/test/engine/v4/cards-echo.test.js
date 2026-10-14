@@ -3,6 +3,7 @@
 // costs, through real legal moves, plus one cross-sphere case each. Every number a card changes must show up in a
 // log line that names the card.
 import { describe, it, expect } from 'vitest';
+import { resume } from '../../../engine/v4/core.js';
 import { take, move, play, ids } from './helpers.js';
 import { table, useCosts, named, uidIn, owns } from './cards-helpers-b.js';
 
@@ -170,6 +171,17 @@ describe('Green members', () => {
     s = go(s, 'Chant');
     s.queue = [{ t: 'round', r: 2 }];
     s = move({ ...s, queue: [{ t: 'choose', p: 0, options: [{ id: 'x', value: null }], h: 'market.pickRow', data: { why: 'test' } }, ...s.queue], pending: { player: 0, options: [{ id: 'x' }] } }, 'x');
+    expect(s.pending.prompt).toMatch(/Afterimage/);
+    s = play(s, sp('Chant'));
+    expect(R(s).green).toBe(2 + 2);
+    expect(named(s, 'Afterimage').length).toBe(1);
+  });
+  // "now" (dead-window audit, 2026-10-14): recruited in round III it used to give nothing
+  it('Afterimage recruited: copy one of your spaces from last round right away (named)', () => {
+    let s = table(Q, { shop: ['echo.afterimage', ...ROW], queue: turns(0) });
+    s = go(s, 'Chant');
+    s.players[0].res.green += 6; s.round = 2; s.queue = [{ t: 'buy', p: 0 }];
+    s = payDefault(move(resume(s), cardOpt(s, 'echo.afterimage', 'shop')));
     expect(s.pending.prompt).toMatch(/Afterimage/);
     s = play(s, sp('Chant'));
     expect(R(s).green).toBe(2 + 2);

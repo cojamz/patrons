@@ -36,7 +36,7 @@ export default function YourTable({ state, me = null, mySeats = [], optionFor = 
         </div>
         {/* your leader with the minions still to place floating around it (the count is seen, not read) */}
         <div className="lt-workers"><LeaderRing state={state} id={me} size={32} minion={16} /></div>
-        <div className="lt-cult" role="group" aria-label="Your cult">
+        <div className="lt-mycult" role="group" aria-label="Your cult">
           <span className="crowd">
             {groups.map(g => {
               const d = g.def;

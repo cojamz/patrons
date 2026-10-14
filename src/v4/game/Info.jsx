@@ -5,7 +5,7 @@
 // - ContestStandings / ContestTip: a quadrant's contest straight from the engine's contestTable (who'd score now).
 // - TouchTips: on touch screens a long-press on anything with a title shows that title (hover's touch twin).
 import { useEffect, useRef, useState } from 'react';
-import { cardDef, defById, quadrant, previewSpace } from '../../engine/v4/index.js';
+import { cardDef, defById, quadrant, previewSpace, contestTable } from '../../engine/v4/index.js';
 import { badgedDef } from '../../engine/v4/content/market.js';
 import { term, splitTerms } from '../glossary.js';
 import { costParts, playerColor, seatSigil, standings, toStanding, tiebreakNote } from '../format.js';
@@ -250,13 +250,79 @@ export function Sigil({ id, size = 10, title = null }) {
 }
 
 // ---------- "You'd get": a space's outcome for you, from the engine's dry run (previewSpace) ----------
+// Dry runs are cached per state object. In a browser they run in a worker (previewWorker.js) so the page never
+// waits; elsewhere (tests) they run here, a moment after they're asked for. A preview carries `race`: every
+// contest after the space's first branch (what the space card shows as the race).
 const previews = new WeakMap();
+const listeners = new Set();
+const mapFor = state => { let m = previews.get(state); if (!m) { m = new Map(); previews.set(state, m); } return m; };
+const stripped = state => ({ ...state, log: [] });
+function computeHere(state, pid, q, i) {
+  const pv = previewSpace(stripped(state), pid, q, i);
+  if (pv) { pv.race = pv.sample ? contestTable(pv.sample).map(c => ({ qid: c.qid, rule: c.rule, prize: c.prize, winners: c.winners, rows: c.rows })) : null; delete pv.sample; }
+  return pv;
+}
+/** The preview for a space, computed now on this thread if it isn't cached (tests, tools). */
 export function cachedPreview(state, pid, q, i) {
-  let m = previews.get(state);
-  if (!m) { m = new Map(); previews.set(state, m); }
-  const k = `${pid}|${q}-${i}`;
-  if (!m.has(k)) m.set(k, previewSpace(state, pid, q, i));
+  const m = mapFor(state), k = `${pid}|${q}-${i}`;
+  if (!m.has(k)) m.set(k, computeHere(state, pid, q, i));
   return m.get(k);
+}
+let worker = null, workerGen = 0, workerState = null;
+const pending = new Map(); // gen → state
+function getWorker() {
+  if (worker !== null) return worker || null;
+  try {
+    if (typeof Worker === 'undefined' || typeof window === 'undefined' || /jsdom/i.test(navigator.userAgent || '')) { worker = false; return null; }
+    worker = new Worker(new URL('./previewWorker.js', import.meta.url), { type: 'module' });
+    worker.onmessage = e => {
+      const { gen, pid, key, pv } = e.data;
+      const st = pending.get(gen);
+      if (!st) return;
+      mapFor(st).set(`${pid}|${key}`, pv);
+      for (const fn of listeners) fn(st, pid, key);
+    };
+    worker.onerror = () => { worker = false; };
+  } catch { worker = false; }
+  return worker || null;
+}
+/** Ask for previews of these spaces ("q-i" keys) for pid on this state; results arrive in the cache. */
+export function requestPreviews(state, pid, keys) {
+  const m = mapFor(state);
+  const todo = keys.filter(k => !m.has(`${pid}|${k}`));
+  if (!todo.length) return;
+  const w = getWorker();
+  if (w) {
+    if (workerState !== state) { workerState = state; workerGen++; pending.clear(); pending.set(workerGen, state); }
+    try { w.postMessage({ gen: workerGen, state: stripped(state), pid, keys: todo }); return; } catch { worker = false; }
+  }
+  // no worker: one at a time, a moment apart, so a hover never waits on a whole batch
+  let k = 0;
+  const step = () => {
+    if (k >= todo.length) return;
+    const key = todo[k++];
+    if (!m.has(`${pid}|${key}`)) { const [q, i] = key.split('-').map(Number); try { m.set(`${pid}|${key}`, computeHere(state, pid, q, i)); } catch { m.set(`${pid}|${key}`, null); } for (const fn of listeners) fn(state, pid, key); }
+    setTimeout(step, 0);
+  };
+  setTimeout(step, 0);
+}
+/** A preview already computed for this state, or undefined (never computes: a hover must not wait). */
+export function peekPreview(state, pid, q, i) {
+  const m = previews.get(state);
+  return m ? m.get(`${pid}|${q}-${i}`) : undefined;
+}
+/** The preview for a space: the cached one at once, else asked for and filled in when it arrives. */
+export function usePreview(state, pid, q, i) {
+  const [, bump] = useState(0);
+  useEffect(() => {
+    if (pid == null) return undefined;
+    const key = `${q}-${i}`;
+    const fn = (st, p, k) => { if (st === state && p === pid && k === key) bump(n => n + 1); };
+    listeners.add(fn);
+    if (peekPreview(state, pid, q, i) === undefined) requestPreviews(state, pid, [key]);
+    return () => { listeners.delete(fn); };
+  }, [state, pid, q, i]);
+  return pid == null ? null : peekPreview(state, pid, q, i);
 }
 const signed = n => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
 const span = (r, unit, plural = unit + 's') => {
@@ -269,31 +335,12 @@ export function previewWords(pv, state) {
   const you = [
     ...state.resources.map(r => span(pv.you.res[r], r, r)),
     span(pv.you.followers, 'follower'), span(pv.you.members, 'member'), span(pv.you.turns, 'extra turn'),
+    pv.you.discount && (pv.you.discount[0] || pv.you.discount[1]) ? `next member −${pv.you.discount[0] === pv.you.discount[1] ? pv.you.discount[0] : `${pv.you.discount[0]}–${pv.you.discount[1]}`}` : null,
   ].filter(Boolean);
   const others = [...state.resources.map(r => span(pv.others.res[r], r, r)), span(pv.others.followers, 'follower'), span(pv.others.members, 'member')].filter(Boolean);
   return { you: you.join(', ') || 'nothing right now', others: others.length ? `rivals ${others.join(', ')}` : null, choose: pv.asks.length > 0, theyChoose: pv.theirAsks.length > 0, partial: pv.partial };
 }
 /** "You'd get: +3 ●, +1 member · you choose" for player pid on space (q, i), computed just after it shows. */
-/** A preview already computed for this state, or undefined (never computes: a hover must not wait). */
-export function peekPreview(state, pid, q, i) {
-  const m = previews.get(state);
-  return m ? m.get(`${pid}|${q}-${i}`) : undefined;
-}
-/** The preview for a space: the cached one at once, else computed just after the card is on screen. */
-export function usePreview(state, pid, q, i) {
-  const hit = pid == null ? null : peekPreview(state, pid, q, i);
-  const [pv, setPv] = useState(hit);
-  useEffect(() => {
-    if (pid == null) { setPv(null); return undefined; }
-    const now = peekPreview(state, pid, q, i);
-    if (now !== undefined) { setPv(now); return undefined; }
-    let alive = true;
-    setPv(undefined);
-    const t = setTimeout(() => { let r = null; try { r = cachedPreview(state, pid, q, i); } catch { r = null; } if (alive) setPv(r); }, 0);
-    return () => { alive = false; clearTimeout(t); };
-  }, [state, pid, q, i]);
-  return hit !== undefined ? hit : pv;
-}
 export function YoudGet({ state, pid, q, i }) {
   const pv = usePreview(state, pid, q, i);
   if (pid == null) return null;

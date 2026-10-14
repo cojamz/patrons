@@ -8,7 +8,7 @@ const NODE_BUDGET = 36; // states explored per preview (a counted pick branches 
 
 /**
  * previewSpace(state, pid, q, i) → null when it can't be run, else
- * { exact, partial, leaves, you: { res:{color:[min,max]}, followers:[min,max], members:[min,max], turns:[min,max] },
+ * { exact, partial, leaves, you: { res:{color:[min,max]}, followers:[min,max], members:[min,max], turns:[min,max], discount:[min,max] },
  *   others: { res:{color:[min,max]}, followers:[min,max], members:[min,max] }, asks:[prompt], theirAsks:[prompt], sample }.
  * exact: every branch gives the same to you. others: the rivals' summed change.
  */
@@ -44,7 +44,7 @@ export function previewSpace(state, pid, q, i) {
   if (!leaves.length) return null;
   const range = () => [Infinity, -Infinity];
   const put = (r, v) => { r[0] = Math.min(r[0], v); r[1] = Math.max(r[1], v); };
-  const you = { res: {}, followers: range(), members: range(), turns: range() };
+  const you = { res: {}, followers: range(), members: range(), turns: range(), discount: range() };
   const others = { res: {}, followers: range(), members: range() };
   const me0 = state.players[pid];
   for (const s of leaves) {
@@ -52,6 +52,7 @@ export function previewSpace(state, pid, q, i) {
     for (const r of state.resources) put(you.res[r] = you.res[r] || range(), (me.res[r] || 0) - (me0.res[r] || 0));
     put(you.followers, followers(s, me) - followers(state, me0));
     put(you.members, me.members.length - me0.members.length);
+    put(you.discount, (me.discount || 0) - (me0.discount || 0)); // "your next member costs N less"
     // an extra turn shows up as a worker given back (left grows past the one just placed)
     put(you.turns, Math.max(0, me.left - (me0.left - 1)));
     const rivals = s.players.filter(o => o.id !== pid);
@@ -60,7 +61,7 @@ export function previewSpace(state, pid, q, i) {
     put(others.members, rivals.reduce((t, o) => t + o.members.length - state.players[o.id].members.length, 0));
   }
   const same = r => r[0] === r[1];
-  const exact = Object.values(you.res).every(same) && same(you.followers) && same(you.members) && same(you.turns);
+  const exact = Object.values(you.res).every(same) && same(you.followers) && same(you.members) && same(you.turns) && same(you.discount);
   // sample: the table after the first branch (for the screen to recount a contest on); exact when `exact`
   return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], sample: leaves[0] };
 }

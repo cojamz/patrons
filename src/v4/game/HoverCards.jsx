@@ -9,7 +9,7 @@ import { playerColor, standings, costParts } from '../format.js';
 import { Popover } from './parts.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
-import { CardText, ContestStandings, MemberCard, CardName, YoudGet, cachedPreview, usePreview } from './Info.jsx';
+import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews } from './Info.jsx';
 import { CostPips } from './Rich.jsx';
 import { ResourceGlyph, FollowerMark, SeatFigure } from './Glyphs.jsx';
 import { payBreakdown, contestEffect, unlockedBy, surely } from './cards.js';
@@ -63,17 +63,9 @@ export function useHoverCards() {
  */
 export function usePreviewWarmup(state, pid) {
   useEffect(() => {
-    if (pid == null || !state.pending || state.pending.player !== pid || state.pending.kind !== 'place') return undefined;
-    const todo = state.pending.options.filter(o => o.q != null && o.i != null);
-    let k = 0, handle = null, alive = true;
-    const idle = typeof requestIdleCallback === 'function' ? requestIdleCallback : fn => setTimeout(() => fn({ timeRemaining: () => 8 }), 16);
-    const cancel = typeof cancelIdleCallback === 'function' ? cancelIdleCallback : clearTimeout;
-    const step = dl => {
-      while (alive && k < todo.length && dl.timeRemaining() > 3) { const o = todo[k++]; try { cachedPreview(state, pid, o.q, o.i); } catch { /* shown as text only */ } }
-      if (alive && k < todo.length) handle = idle(step);
-    };
-    handle = idle(step);
-    return () => { alive = false; cancel(handle); };
+    if (pid == null || !state.pending || state.pending.player !== pid || state.pending.kind !== 'place') return;
+    // every space you could take, worked out in the background (a worker in the browser) as soon as it's your move
+    requestPreviews(state, pid, state.pending.options.filter(o => o.q != null && o.i != null).map(o => `${o.q}-${o.i}`));
   }, [state, pid]);
 }
 
@@ -150,7 +142,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
   const viewer = me != null ? me : state.pending && state.pending.player;
   // the dry run is read from the cache (warmed in idle time); if it isn't there yet it fills in a moment later
   const pv = usePreview(state, open && viewer != null && !state.over ? viewer : null, q, i) || null;
-  const race = pv && pv.sample ? raceAfter(state, pv.sample, qid, viewer) : null;
+  const race = pv && pv.race ? raceAfter(state, pv.race, qid, viewer) : null;
   const unlocks = pv && viewer != null ? unlockedBy(state, state.players[viewer], surely(pv)) : [];
   return (
     <div className="lt-card-body" data-space-card={spaceKey} style={{ '--q': `var(--q-${sphereOf(qid)}, var(--${qid}))` }}>
@@ -167,10 +159,9 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
     </div>
   );
 }
-/** "You 5 · Ossian 2 · leader +2": the space's own contest after taking it (the dry run's first branch). */
-function raceAfter(state, sample, qid, pid) {
-  let c;
-  try { c = contestTable(sample).find(x => x.qid === qid); } catch { return null; }
+/** "You 5 · Ossian 2 · you'd lead, +2": the space's own contest after taking it (the dry run's first branch). */
+function raceAfter(state, race, qid, pid) {
+  const c = race.find(x => x.qid === qid);
   if (!c) return null;
   const nm = id => (id === pid ? 'You' : state.players[id].name);
   const top = c.rows.slice(0, 3).map(r => `${nm(r.player)} ${r.count}`).join(' · ');

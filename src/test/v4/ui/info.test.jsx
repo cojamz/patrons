@@ -147,15 +147,15 @@ describe('"You\'d get" on a space (the engine\'s dry run)', () => {
     expect(two.container.textContent).toMatch(/you choose how/);
   });
 
-  it('worker figures carry their seat sigil', async () => {
+  it('minions on the board carry their seat: one emoji per seat, never color alone', async () => {
     const { default: Wheel } = await import('../../../v4/game/Wheel.jsx');
     const s = createGame({ seats, seed: 5 });
     s.round = 1; s.slots = { '0-0': 0, '1-0': 1, '2-0': 2 };
     const { container } = render(<Wheel state={s} legal={new Map()} onPick={() => {}} flash={new Set()} facing={0} onFacing={() => {}} />);
     const figs = [...container.querySelectorAll('.worker-fig')];
     expect(figs.map(f => f.dataset.seat).sort()).toEqual(['0', '1', '2']);
-    const shapes = new Set(figs.map(f => f.querySelector('.sigil').getAttribute('d').replace(/[\d.\-,\s]+/g, '')));
-    expect(shapes.size).toBe(3); // three seats, three different shapes
+    const emojis = new Set(figs.map(f => f.querySelector('[data-emoji]')?.dataset.emoji));
+    expect(emojis.size).toBe(3); // three seats, three different emojis
   });
 });
 

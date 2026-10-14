@@ -356,7 +356,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
   return (
     <div className="wheel-wrap">
       <div className="stage" ref={stage} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ '--wheel-px': `${Math.round(boardPx)}px` }}>
-        <svg viewBox="-26 -26 452 452" role="group" aria-label="Board" className={`paper${late ? ' late' : ''}`}>
+        <svg viewBox="-26 -26 452 452" role="group" aria-label="Board" className={`wheel-paper${late ? ' late' : ''}`}>
           <defs>
             <radialGradient id="ltPaper" cx="50%" cy="45%" r="60%"><stop offset="0" stopColor="var(--paper)" /><stop offset=".8" stopColor="var(--paper-2)" /><stop offset="1" stopColor="var(--paper-3)" /></radialGradient>
           </defs>
