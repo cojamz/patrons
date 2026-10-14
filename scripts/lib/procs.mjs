@@ -79,8 +79,9 @@ export async function portBusy(port) {
 /** Who listens on the port, best effort (for the refusal message). */
 function whoListens(port) {
   try {
-    const out = spawnSync('ss', ['-ltnpH', `sport = :${port}`], { encoding: 'utf8' }).stdout || '';
-    const pids = [...new Set([...out.matchAll(/pid=(\d+)/g)].map(m => m[1]))];
+    const lsof = spawnSync('lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN', '-t'], { encoding: 'utf8' }).stdout || '';
+    const ss = lsof.trim() ? '' : spawnSync('ss', ['-ltnpH', `sport = :${port}`], { encoding: 'utf8' }).stdout || '';
+    const pids = [...new Set([...lsof.split(/\s+/).filter(Boolean), ...[...ss.matchAll(/pid=(\d+)/g)].map(m => m[1])])];
     return pids.map(pid => { try { return `pid ${pid}: ${readFileSync(`/proc/${pid}/cmdline`, 'utf8').split('\0').join(' ').trim()}`; } catch { return `pid ${pid}`; } }).join('; ');
   } catch { return ''; }
 }

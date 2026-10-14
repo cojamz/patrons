@@ -110,7 +110,7 @@ See `design/in-flight.md` for the roster, briefs, build dirs and ports. In short
 
 1. The action spaces' look: pick one of the three directions in `design/prototypes/actions/` (shots/compare.png). [Claude's pick in its README]
 2. Action names batch 2 (Blue, Green, Purple, Silver, Yellow, White) in `design/eval/action-names-calibration.md`: "all good" or by number. [Claude's picks, already applied]
-3. Neutral rule-bending members in the Straggler mold (`design/eval/neutral-members.md`): which to build and measure. [Claude's top picks]
+3. Neutral rule-benders: Cory rejected the first batch (no out-of-turn minion placement). Next time calibrate on one or two, after learning what he likes in Straggler.
 4. The tentative rework list (`design/eval/rework-candidates.md`). [judge by playing]
 5. What the ~25% big-followers target is measured against. [an in-between bot level, then a check with people]
 6. Allow `firebaseio.com` and `netlify.app` in the cloud environment's network settings, so online play can be verified on the real link and the feedback pipeline can come off the table. [yes]
@@ -128,7 +128,7 @@ See `design/in-flight.md` for the roster, briefs, build dirs and ports. In short
 - **Follower ladder:** with 10→10 unlimited at 1:1, watch whether pure follower buying climbs past the 25% target and whether 8→6 still matters. Report the number; don't retune without Cory.
 - **Making the game more distinctive** (design/novelty.md): the wheel is navigation today; a mechanic using rotation or neighbouring quadrants would make the board the signature. Raise it, don't build it.
 - **Tabled overlays, in Cory's order:** role tags across spheres (Wingspan-like) → Omens (three revealed up front, neutral) → Devotion (sets). Rejected: Relics, Rank. Titles: maybe.
-- **Design direction:** members that bend the rules. Cory loves pile interaction (Insider) and "really likes" Straggler. Neutral rule-benders are proposed in `design/eval/neutral-members.md`; more come in calibrated small batches he grades by number.
+- **Design direction:** members that bend the rules. Cory loves pile interaction (Insider) and "really likes" Straggler. Cory rejected the first neutral batch (`design/eval/neutral-members.md`; no out-of-turn minion placement); more come in calibrated small batches he grades by number.
 - Report the big-followers number with every balance change.
 
 ## 8. Code map (v4)

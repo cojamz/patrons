@@ -67,7 +67,6 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] What the ~25% big-followers target is measured against [an in-between bot level, then a check with people]
 - [ ] Action names batch 2 (Blue, Green, Purple, Silver, Yellow, White): grade by number or "all good" once drafted
 - [ ] The action spaces' look: pick one of three directions (design/prototypes/actions/shots/compare.png)
-- [ ] Neutral rule-benders in the Straggler mold (design/eval/neutral-members.md): which to build and measure [Line Cutter, Doorman, Drifter]
 - [ ] Rework candidates (design/eval/rework-candidates.md, being compiled): judge by playing
 
 Settled 2026-10-14 (Cory's calls or Claude's logged gut calls, see decisions.md): Lamplit Table look; spinning wheel kept; pay by coins; Watchdog blocks Trade; loot stays magenta; Release on, refunds the colored part only, not in the round recruited; Late Riser; doubled discounts; the game always ends after round III and 10→10 is unlimited; Barter cut (Dividend); Even Swap replaces Scout; action names batch 1 and member renames applied; Investor/Sower set-asides return undoubled; only loose followers sell (White rework fixes Pawn); shop of 10; pixel art good enough for now.

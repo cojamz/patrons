@@ -1,4 +1,6 @@
-# Neutral members in the Straggler mold (Claude's proposals, 2026-10-14; nothing approved)
+# Neutral members in the Straggler mold (Claude's proposals, 2026-10-14; REJECTED by Cory)
+
+Cory: "I don't like your neutrals. Esp ones where players interject out of order to play minions." Kept as a record of what missed. Next batch: calibrate on one or two ideas first, and no out-of-turn placement.
 
 Cory "really likes" Straggler ("Once per round, after the last minion is placed: move one of your minions to an unused space and do that action."). These bend a placement or turn-order rule instead of paying out, like the guests in content/benders.js. Like the guests, each leans to a sphere for its color.
 
