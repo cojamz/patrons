@@ -22,7 +22,7 @@ function ribbon(a) {
   const R = r => res(r, g + 1), c = (o = {}) => G1.card(11, o);
   switch (a.id) {
     case 'gold.jv': return n('+3') + R('gold') + `<span class="q">${n('1')}${res('gold', 10)}${G1.arrow('right', 13)}${G1.hood(11)}</span>`;
-    case 'gold.rush': return n('+2') + R('gold') + `<span class="q">${G1.grows(13, 1)}</span>`;
+    case 'gold.rush': return n('+2') + R('gold') + `<span class="q">${G1.grows(13, 1, 'gold')}</span>`;
     case 'gold.discount': return c() + n('−4');
     case 'gold.steal': return G1.hood(12) + G1.arrow('right', 13) + n('3') + R('gold');
     case 'gold.windfall': return n('+1') + R('gold') + w('/') + c();
@@ -40,7 +40,7 @@ function ribbon(a) {
     case 'blue.pricecheck': return R('blue') + w('=') + n('½') + c({ mark: '★' });
     case 'blue.spree': return n('3') + w('buys');
     case 'green.hum': return n('+3') + R('green');
-    case 'green.chant': return n('+2') + R('green') + `<span class="q">${G1.grows(13, 1)}</span>`;
+    case 'green.chant': return n('+2') + R('green') + `<span class="q">${G1.grows(13, 1, 'green')}</span>`;
     case 'green.echo': return w('copy') + G1.hood(12);
     case 'green.encore': return w('copy any');
     case 'green.refrain': return n('+2') + R('green') + w('copy');

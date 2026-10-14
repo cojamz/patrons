@@ -27,7 +27,7 @@ function effect(a) {
   const R = r => res(r, 12, { stroke: mix(INK[r], '#2a1f17', 0.55), sw: 1.2 }), c = (o = {}) => G1.card(10.5, o);
   switch (a.id) {
     case 'gold.jv': return n('+3') + R('gold') + `<span class="q">${n('+1')}${G1.arrow('right', 11)}${G1.hood(10)}</span>`;
-    case 'gold.rush': return n('+2') + R('gold') + `<span class="q">${G1.grows(12, 1)}</span>`;
+    case 'gold.rush': return n('+2') + R('gold') + `<span class="q">${G1.grows(12, 1, 'gold')}</span>`;
     case 'gold.discount': return n('−4') + w('cost');
     case 'gold.steal': return w('take') + n('3') + R('gold');
     case 'gold.windfall': return n('+1') + R('gold') + w('/') + c();
@@ -45,7 +45,7 @@ function effect(a) {
     case 'blue.pricecheck': return R('blue') + w('=') + n('½') + c({ mark: '★' });
     case 'blue.spree': return n('3') + w('buys');
     case 'green.hum': return n('+3') + R('green');
-    case 'green.chant': return n('+2') + R('green') + `<span class="q">${G1.grows(12, 1)}</span>`;
+    case 'green.chant': return n('+2') + R('green') + `<span class="q">${G1.grows(12, 1, 'green')}</span>`;
     case 'green.echo': return w('copy') + G1.hood(11);
     case 'green.encore': return w('copy any');
     case 'green.refrain': return n('+2') + R('green') + w('copy');

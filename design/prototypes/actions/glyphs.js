@@ -69,9 +69,10 @@
     return svg(u * 1.0, u * 1.0, one(0, 0), '0 0 16 16', 'copy') + (n > 1 ? svg(u * 1.0, u * 1.0, one(0, 0), '0 0 16 16', 'copy') : '');
   }
   /** "Grows by round": three stacks rising, this round's filled. */
-  function grows(u, now = 1) {
+  function grows(u, now = 1, r = null) {
     let b = '';
-    [3, 6, 9].forEach((h, i) => { b += `<rect x="${1 + i * 5}" y="${11 - h}" width="3.6" height="${h}" rx=".8" fill="${i < now ? INKC : 'none'}" stroke="${INKC}" stroke-width=".9" opacity="${i < now ? 1 : .6}"/>`; });
+    const f = r ? INK[r] : INKC;
+    [3, 6, 9].forEach((h, i) => { b += `<rect x="${1 + i * 5}" y="${11 - h}" width="3.6" height="${h}" rx=".8" fill="${i < now ? f : 'none'}" stroke="${INKC}" stroke-width=".9" stroke-dasharray="${i < now ? 'none' : '1.4 1'}" opacity="${i < now ? 1 : .75}"/>`; });
     return svg(u * 0.95, u * 0.62, b, '0 0 16 11.6', 'grows');
   }
   const word = (t, cls = '') => `<span class="w ${cls}">${t}</span>`;
@@ -83,7 +84,7 @@
     const small = (...xs) => `<span class="ln sm">${xs.join('')}</span>`;
     switch (a.id) {
       case 'gold.jv': return L(c('gold', 3)) + small(tok('gold', s * 0.8), arrow('right', s), hood(s));
-      case 'gold.rush': return L(c('gold', 2)) + small(grows(s, 1));
+      case 'gold.rush': return L(c('gold', 2)) + small(grows(s, 1, 'gold'));
       case 'gold.discount': return L(card(u * 1.25), tag('−4', u));
       case 'gold.steal': return L(c('gold', 3)) + small(hood(s), arrow('take', s));
       case 'gold.windfall': return L(tok('gold', u), word('/', 'per'), card(u * 1.1));
@@ -101,7 +102,7 @@
       case 'blue.pricecheck': return L(tok('blue', u), word('=', 'per'), word('½', 'big'), card(u * 1.1, { mark: '★' }));
       case 'blue.spree': return L(word('×3', 'big'), card(u * 1.1, { mark: '+' }));
       case 'green.hum': return L(c('green', 3));
-      case 'green.chant': return L(c('green', 2)) + small(grows(s, 1));
+      case 'green.chant': return L(c('green', 2)) + small(grows(s, 1, 'green'));
       case 'green.echo': return L(hood(u), copy(u));
       case 'green.encore': return L(copy(u), word('any', 'qual'));
       case 'green.refrain': return L(c('green', 2)) + small(copy(s), hood(s, true));

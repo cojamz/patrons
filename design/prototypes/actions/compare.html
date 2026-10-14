@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Actions: Compare</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700;800&family=Alegreya+Sans:wght@500;700&display=swap">
+<style>
+html,body{margin:0}
+body{width:1500px;height:640px;box-sizing:border-box;padding:22px 30px;background:#1d1611 linear-gradient(180deg,#221a14,#1a140f);color:#f3e6c8;font-family:'Alegreya Sans',sans-serif;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+figcaption{display:flex;align-items:baseline;gap:12px;align-self:stretch;padding-left:16px}
+figcaption b{font-family:'Alegreya',serif;font-weight:800;font-size:84px;line-height:.8;color:#ffd99a}
+figcaption span{font-family:'Alegreya',serif;font-weight:700;font-size:28px}
+figcaption small{display:block;font-family:'Alegreya Sans',sans-serif;font-weight:500;font-size:14px;color:#b09f82;margin-top:2px}
+.w{width:440px;height:450px;background-repeat:no-repeat;background-position:-414px -88px;border-radius:12px}
+.foot{position:absolute;left:30px;bottom:12px;font-size:13px;color:#8f7f66}
+</style>
+</head>
+<body>
+  <figure><figcaption><b>1</b><span>The Spoils<small>what you get, drawn as the pieces; names on hover</small></span></figcaption><div class="w" style="background-image:url(shots/option-1-wheel.png)"></div></figure>
+  <figure><figcaption><b>2</b><span>Vignettes<small>little illustrated cards: scene, name, pips</small></span></figcaption><div class="w" style="background-image:url(shots/option-2-wheel.png)"></div></figure>
+  <figure><figcaption><b>3</b><span>Engraved<small>cells printed into the board, no pieces on it</small></span></figcaption><div class="w" style="background-image:url(shots/option-3-wheel.png)"></div></figure>
+  <div class="foot">Each wheel is cut from its 1270×700 laptop frame at 1×. Round I, your turn; P2’s robot on Restock, P3’s frog on Golden Years, P4’s ghost on Chant (newest). Gold and Red names are proposals.</div>
+  <script>document.fonts.ready.then(() => { document.body.dataset.ready = '1'; });</script>
+</body>
+</html>
