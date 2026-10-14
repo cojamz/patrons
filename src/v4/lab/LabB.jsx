@@ -1,9 +1,9 @@
 // UI-B's lab (?lab=b[&seed=N&phase=place|buy]): the Lamplit shop, seat rail, your table and every hover card on a
 // real mid-game state, for screenshots beside the vision frames before the shell mounts them. Not part of the game.
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import '../v4.css';
 import '../lamp.css';
-import { createGame, applyMove, chooseBotMove } from '../../engine/v4/index.js';
+import { createGame, applyMove, chooseBotMove, cardDef } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import ShopCards from '../game/ShopCards.jsx';
 import CultSeat from '../game/CultSeat.jsx';
@@ -26,7 +26,22 @@ export default function LabB() {
   const q = new URLSearchParams(location.search);
   const seed = Number(q.get('seed')) || 7;
   const phase = q.get('phase') || 'place';
-  const state = useMemo(() => labState(seed, phase), [seed, phase]);
+  const base = useMemo(() => labState(seed, phase), [seed, phase]);
+  const [state, setState] = useState(base);
+  useEffect(() => { setState(base); }, [base]);
+  // ?react=1: a moment after load, the log gains a trace line for a member someone holds ("Wren's Banker: +3 gold."),
+  // exactly as the engine writes it, so its figure should hop (e2e/v4/info.mjs watches for it)
+  useEffect(() => {
+    if (q.get('react') !== '1') return undefined;
+    const t = setTimeout(() => setState(s => {
+      const p = s.players.find(x => x.members.length);
+      if (!p) return s;
+      const d = cardDef(s, p.members[0]);
+      document.documentElement.dataset.reactMember = `${p.id}:${d.id}`;
+      return { ...s, log: [...s.log, `${p.name}'s ${d.name}: +1 gold.`] };
+    }), 700);
+    return () => clearTimeout(t);
+  }, [base]); // eslint-disable-line react-hooks/exhaustive-deps
   const hover = useHoverCards();
   usePreviewWarmup(state, 0);
   const opts = new Map((state.pending && state.pending.player === 0 ? state.pending.options : []).map(o => [o.id, o]));

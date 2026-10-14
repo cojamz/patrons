@@ -10,6 +10,8 @@ const rings = RING_VALUE.map(v => `+${v}`).join(' / ');
 export const GLOSSARY = [
   { key: 'follower', word: 'Followers', link: false, match: /\bfollowers?\b/,
     def: 'Your score. You start with 1 (yourself); members add what they are worth, and you gain more from contests, follower buys and abilities. Most followers after round III wins.' },
+  { key: 'loose followers', word: 'Loose followers', match: /\bloose followers?\b/,
+    def: 'Followers you bought or won, not the ones your members are worth (and never yourself). Only loose followers can be sold or spent.' },
   { key: 'member', word: 'Member', link: false, match: /\bmembers?\b/,
     def: 'A card you recruit. It is worth the followers shown on it (the little person) and most have an ability that keeps working for you.' },
   { key: 'worth', word: 'Worth', match: /\bworth \d+ followers?\b/i,
@@ -31,7 +33,7 @@ export const GLOSSARY = [
   { key: 'extra turn', word: 'Extra turn', match: /\bextra turns?\b/,
     def: 'Another turn right after this one: you place one more minion and may buy again. It only happens while the board has a space to spare.' },
   { key: 'copy', word: 'Copy', match: /\bcop(y|ies|ied)\b(?= (?:any|every|one|the|it|that|what|a)\b)|\bwhat you copy\b|\bcopy a space\b/,
-    def: 'Copy a space: do what it does, as if you had taken it. Its taker keeps what they got.' },
+    def: 'Copy a space: do what it does, as if you had taken it. Its taker keeps what they got. Copies never reach the center or another copy (a space that itself copies, like Echo).' },
   { key: 'face-up', word: 'Face-up', match: /\bface-up\b/,
     def: 'The members in the shop that everyone can see. When one leaves, the pile refills the row.' },
   { key: 'pile', word: 'Pile', match: /\b(?:the|of the) pile\b/,

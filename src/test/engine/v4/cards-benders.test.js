@@ -82,19 +82,6 @@ describe('Guest members (rule-benders)', () => {
     s = sceneQ({ members: [['benders.extrahand']], queue: [{ t: 'round', r: 2 }] });
     expect(named(s, 'Extra Hand')).toHaveLength(0);
   });
-  // dead-window audit (2026-10-14): recruited in round III it used to give nothing (workers are counted at round start)
-  it('Extra Hand recruited in round III: an extra turn right after this one, named; not when recruited in round II', () => {
-    const turns = [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }];
-    let s = sceneQ({ round: 3, left: 5, res: [rich], shop: ['benders.extrahand'], queue: turns });
-    s = buy(take(s, 'Rush'), 'benders.extrahand');
-    expect(named(s, 'Extra Hand')).toEqual(["P1's Extra Hand: P1 takes an extra turn."]);
-    expect([s.pending.kind, s.pending.player]).toEqual(['place', 0]);
-    expect(s.players[0].left).toBe(5); // 5, one placed, one more
-    let t = sceneQ({ round: 2, left: 4, res: [rich], shop: ['benders.extrahand'], queue: turns });
-    t = buy(take(t, 'Rush'), 'benders.extrahand');
-    expect(named(t, 'Extra Hand')).toHaveLength(0);
-    expect([t.pending.kind, t.pending.player]).toEqual(['place', 1]);
-  });
 
   it('Front-runner: picks first even when ahead; the round’s opening line names it', () => {
     const s = sceneQ({ bonus: [9, 0], members: [['benders.frontrunner']], queue: [{ t: 'round', r: 2 }] });

@@ -268,9 +268,16 @@ describe('Green members', () => {
     expect(R(s)[0]).toEqual({ ...Z, gold: 4, green: 7 });
   });
 
-  it('Ensemble: game end, +1 follower per green member', () => {
-    const s = scene({ members: [['echo.ensemble', 'echo.choir', 'echo.muse', 'red.twins'], []], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.total).toBe(3);
+  it('Ensemble: +1 follower whenever you copy a rival’s space, at once; your own space pays nothing', () => {
+    let s = scene({ round: 2, turns: [1, 0, 0, 0], members: [['echo.ensemble'], []] });
+    s = go(s, 'Rush');                       // P2 +4 gold
+    s = go(s, 'Echo', spaceOpt(s, 'Rush'));  // a rival's space: +1 follower now
+    expect([s.players[0].bonus, followers(s, s.players[0])]).toEqual([1, 3]);
+    s = go(s, 'Hum');
+    s = go(s, 'Encore', spaceOpt(s, 'Hum'));  // your own: nothing
+    expect(s.players[0].bonus).toBe(1);
+    const f = scene({ members: [['echo.ensemble', 'echo.choir', 'echo.muse', 'red.twins'], []], queue: [{ t: 'finish' }] });
+    expect(f.players[0].final.total).toBe(0); // no game-end bonus any more
   });
 
   it('Groupie: +1 green whenever anyone recruits a green member', () => {
@@ -315,14 +322,6 @@ describe('Green members', () => {
     s = go(s, 'Hum');
     s = go(s, 'Echo', spaceOpt(s, 'Hum'));
     expect(R(s)[0].green).toBe(3); // P1 2 followers, P2 1
-  });
-
-  it('Keepsake: when recruited, copy one of your spaces from this round', () => {
-    let s = scene({ round: 2, turns: [0], res: [{ green: 2 }, {}], shop: ['echo.keepsake', ...SHOP.slice(1)] });
-    s = take(s, 'Rush');
-    s = play(s, `card:${uidOf(s, 'echo.keepsake', 'shop')}`);
-    s = move(s, s.pending.options.find(o => o.label.startsWith('Rush')).id);
-    expect(R(s)[0]).toEqual({ ...Z, gold: 8, green: 0 });
   });
 
   it('Mirror: when recruited, gain as much green as the rival with the most', () => {

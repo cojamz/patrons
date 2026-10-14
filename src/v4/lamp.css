@@ -195,24 +195,13 @@ h1,h2,h3{font-family:var(--serif)}
   .lt .stage .plaque.side .contest-tip,.lt .stage .plaque.side > span{max-width:56px;padding:3px 5px}
   .lt > .lt-seat-1{grid-area:s1}.lt > .lt-seat-2{grid-area:s2}.lt > .lt-seat-3{grid-area:s3}
   .lt > .lt-seat:not(.lt-seat-0){min-width:0;overflow:hidden;font-size:12px}
-  .lt .lt-seat:not(.lt-seat-0) .lt-cult{grid-template-columns:1fr;grid-template-areas:"ring" "who"}
-  .lt .lt-seat:not(.lt-seat-0) .lt-cult .res,.lt .lt-seat:not(.lt-seat-0) .lt-cult .mem{display:none}
+
 }
 
 /* plaques on the left and right of the wheel stand narrow (two lines), so they lean only a little past the rim */
 .lt .stage .plaque.side .contest-tip,.lt .stage .plaque.side > span{white-space:normal;flex-wrap:wrap;justify-content:center;max-width:92px;text-align:center;line-height:1.1;padding:4px 7px;border-radius:10px}
 @media (min-width:861px) and (min-height:500px){ .app.game.lt .lt-wheel .stage{width:min(100cqw - 24px, 100cqh - 8px)} }
 
-/* a rival's chair (interim until UI-B's CultSeat): leader with unplaced minions, name, followers, resources */
-.lt .lt-cult{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"ring who" "ring res" "mem mem";gap:4px 10px;align-items:center;color:var(--cream)}
-.lt .lt-cult .lt-ring{grid-area:ring}
-.lt .lt-cult .who{grid-area:who;display:flex;flex-direction:column;line-height:1.1}
-.lt .lt-cult .who b{font-family:var(--serif);font-size:17px}
-.lt .lt-cult .who .f{font-size:13px;color:var(--cream-2)}
-.lt .lt-cult .who .f b{font-size:18px;color:var(--cream)}
-.lt .lt-cult .res{grid-area:res;display:flex;flex-wrap:wrap;gap:4px 8px;font-size:13px}
-.lt .lt-cult .res .rs{display:inline-flex;align-items:center;gap:2px}
-.lt .lt-cult .mem{grid-area:mem;display:flex;align-items:center;gap:8px;color:var(--cream-3);font-size:12px}
 /* the buy step's other answers, beside the question */
 .lt-prompt .pr-actions{display:inline-flex;align-items:center;gap:8px;flex:none}
 .lt-prompt .pr-actions .pass{min-height:36px;padding:0 16px;border-color:rgba(243,230,200,.4)}

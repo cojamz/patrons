@@ -124,11 +124,10 @@ describe('Yellow actions', () => {
     expect(r.yellow).toBeGreaterThanOrEqual(1);
   });
 
-  // a base of 1 (dead-window audit, 2026-10-14)
-  it('Prism (ring II): +1 of each other color, +1 more per 3 yellow you have, and keeps the yellow', () => {
+  it('Prism (ring II): +1 of each other color per 3 yellow you have, and keeps the yellow', () => {
     expect(() => take(scene({ round: 1, res: [{ yellow: 4 }] }), 'Prism')).toThrow();
-    expect(R(take(scene({ round: 2, res: [{ yellow: 7, gold: 1 }] }), 'Prism'))).toEqual({ gold: 4, red: 3, yellow: 7, green: 3 });
-    expect(R(take(scene({ round: 2, res: [{ yellow: 2 }] }), 'Prism'))).toEqual({ gold: 1, red: 1, yellow: 2, green: 1 });
+    expect(R(take(scene({ round: 2, res: [{ yellow: 7, gold: 1 }] }), 'Prism'))).toEqual({ gold: 3, red: 2, yellow: 7, green: 2 });
+    expect(R(take(scene({ round: 2, res: [{ yellow: 2 }] }), 'Prism'))).toEqual({ ...Z, yellow: 2 });
   });
 
   it('Gather (ring II): each member brings 1 of its color (Twins is one member)', () => {

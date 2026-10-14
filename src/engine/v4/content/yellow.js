@@ -37,8 +37,8 @@ export default {
       resolve(ctx, p) { ctx.gain(p, Y, harvestAmount(ctx, p), { fromAction: true }); },
     },
     {
-      // never 0 (Claude under Cory's go-with-your-gut, from the dead-window audit): "colors you have none of" was dead
-      // whenever you held every color. Raising every lowest color always adds one full set.
+      // the fewest, not "none of" (Claude under Cory's go-with-your-gut, from the dead-window audit): it printed Gardener's
+      // text. Raising every lowest color always adds one full set.
       key: 'bloom', ring: 1, name: 'Bloom', text: '+1 of each color you hold the fewest of (ties: all of them).',
       estimate: (ctx, p) => fewest(ctx, p).length + 0.5,
       resolve(ctx, p) {
@@ -53,13 +53,12 @@ export default {
       resolve(ctx, p) { transmuteStep(ctx, p, { left: Math.min(3, total(ctx, p)), done: 0 }); },
     },
     {
-      // a base of 1 (Claude under Cory's go-with-your-gut, from the dead-window audit): it was dead in 76–84% of offers
-      key: 'prism', ring: 2, name: 'Prism', text: '+1 of each other color, and +1 more of each per 3 yellow you have (you keep the yellow).',
-      estimate: (ctx, p) => others(ctx).length * (1 + Math.floor((p.res[Y] || 0) / 3)),
+      key: 'prism', ring: 2, name: 'Prism', text: '+1 of each other color per 3 yellow you have (you keep the yellow).',
+      estimate: (ctx, p) => 3 * Math.floor(p.res[Y] / 3),
       resolve(ctx, p) {
-        const k = 1 + Math.floor((p.res[Y] || 0) / 3);
+        const k = Math.floor(p.res[Y] / 3);
         for (const c of others(ctx)) ctx.gain(p, c, k, { fromAction: true });
-        ctx.log(`${p.name}'s Prism: +${k} of each other color.`);
+        ctx.log(k ? `${p.name}'s Prism: +${k} of each other color.` : `${p.name}'s Prism had too little yellow.`);
       },
     },
     {

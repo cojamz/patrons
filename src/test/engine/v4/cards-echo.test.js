@@ -3,7 +3,10 @@
 // costs, through real legal moves, plus one cross-sphere case each. Every number a card changes must show up in a
 // log line that names the card.
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { resume } from '../../../engine/v4/core.js';
+import { quadrant } from '../../../engine/v4/content/index.js';
+import { term } from '../../../v4/glossary.js';
 import { take, move, play, ids } from './helpers.js';
 import { table, useCosts, named, uidIn, owns } from './cards-helpers-b.js';
 
@@ -12,9 +15,9 @@ const QT = ['gold', 'thieves', 'market', 'echo'];
 useCosts({
   'gold.tycoon': [8, 4], 'gold.taxman': [2, 2], 'gold.midas': [4, 4], 'red.bigfamily': [4, 4], 'red.twins': [2, 2],
   'red.intern': [2, 0], 'red.volunteer': [0, 0], 'red.doppel': [4, 2],
-  'echo.evergreen': [2, 2], 'echo.choir': [4, 2], 'echo.muse': [2, 2], 'echo.understudy': [4, 2], 'echo.ensemble': [2, 2],
+  'echo.evergreen': [2, 2], 'echo.choir': [4, 2], 'echo.muse': [2, 2], 'echo.understudy': [4, 2], 'echo.ensemble': [4, 2],
   'echo.groupie': [4, 4], 'echo.translator': [4, 2], 'echo.tuningfork': [2, 2], 'echo.wallflower': [2, 2],
-  'echo.keepsake': [4, 2], 'echo.mirror': [4, 2], 'echo.afterimage': [4, 2], 'echo.hourglass': [6, 4],
+  'echo.mirror': [4, 2], 'echo.afterimage': [4, 2], 'echo.hourglass': [6, 4],
   'echo.dejavu': [8, 4], 'echo.chronicler': [4, 4], 'thieves.watchdog': [4, 2],
 });
 const ROW = ['gold.tycoon', 'red.bigfamily', 'red.twins', 'red.intern', 'gold.taxman', 'red.volunteer'];
@@ -71,6 +74,33 @@ describe('Green actions', () => {
     expect(R(s).green).toBe(4 + 2 + 4);
     expect(s.log.some(l => /P1 copied Chant: \+4 green/.test(l))).toBe(true);
   });
+  // design critic follow-up (2026-10-14): the rule is printed once (sphere rule, rulebook, glossary), not per card
+  it('One Green rule, printed once: copies never reach the center or another copy (Echo, Understudy, Encore, Refrain, Eternity)', () => {
+    const echo = quadrant('echo');
+    expect(echo.rule).toMatch(/^Copies never reach the center or another copy\./);
+    expect(term('copy').def).toMatch(/never reach the center or another copy/);
+    expect(readFileSync(new URL('../../../../design/rulebook.md', import.meta.url), 'utf8')).toMatch(/Copies never reach the center \(the inner ring\) or another copy/);
+    for (const t of [...echo.actions.map(a => a.text), ...echo.members.map(d => d.text)]) expect(t).not.toMatch(/center/);
+    let s = table(Q, { round: 3, left: 5, shop: ['echo.understudy', ...ROW], res: [{ red: 2 }], queue: turns(1, 1, 0, 0, 0, 0, 0) });
+    s = go(s, 'Strike'); s = go(s, 'Chant'); // P2: the center, then +6 green
+    s = take(s, 'Echo');
+    expect(s.pending.options.map(o => o.label)).toEqual(['Chant (P2): +6 green']); // not the center
+    s = move(s, s.pending.options[0].id);
+    s = payDefault(move(s, cardOpt(s, 'echo.understudy', 'shop')));
+    expect(s.pending.options.map(o => o.label)).toEqual(['Chant (P2): +6 green']); // Understudy: not the center
+    s = move(s, s.pending.options[0].id);
+    s = take(s, 'Encore');
+    expect(s.pending.options.map(o => o.label)).toEqual(['Chant (P2): +6 green']); // not the center, not P1's Echo
+    s = pass(move(s, s.pending.options[0].id));
+    s = go(s, 'Hum');
+    s = take(s, 'Refrain');
+    expect(s.pending.options.map(o => o.label)).toEqual(['Hum (P1): +3 green']); // not Echo or Encore
+    s = pass(move(s, s.pending.options[0].id));
+    const before = R(s).green;
+    s = go(s, 'Eternity'); // Hum only: Echo, Encore and Refrain were copies
+    expect(R(s).green - before).toBe(3);
+    expect(s.log.filter(l => /P1 copied (Strike|Echo|Encore|Refrain)/.test(l))).toEqual([]);
+  });
   it('Eternity: copy every space you took this round', () => {
     let s = table(Q, { round: 3, left: 5, shop: ROW, queue: turns(0, 0, 0) });
     s = go(s, 'Hum'); s = go(s, 'Chant');
@@ -111,9 +141,19 @@ describe('Green members', () => {
     expect(R(s).green).toBe(4 + 3 - 4 + 4 - Math.max(0, 2 - 2));
     expect(named(s, 'Understudy').length).toBe(1);
   });
-  it('Ensemble: game end, +1 follower per green member (named in the final parts)', () => {
-    const s = table(Q, { members: [['echo.ensemble', 'echo.muse', 'red.twins']], shop: ROW, queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.parts).toContain('Ensemble +2');
+  // design critic follow-up (2026-10-14): was "Game end: +1 follower per green member"
+  it('Ensemble: whenever you copy a rival\'s space, +1 follower at once (named); not for your own space', () => {
+    const s = humThenEcho({ members: [['echo.ensemble', 'echo.muse']] });
+    expect(s.players[0].bonus).toBe(1); // a won follower: loose, counted now
+    expect(named(s, 'Ensemble')).toEqual(["P1's Ensemble: +1 follower."]);
+    // your own space (Refrain) pays nothing
+    let t = table(Q, { round: 2, shop: ROW, queue: turns(0, 0), members: [['echo.ensemble']] });
+    t = go(t, 'Hum');
+    t = go(t, 'Refrain', sp('Hum'));
+    expect([R(t).green, t.players[0].bonus, named(t, 'Ensemble')]).toEqual([3 + 2 + 3, 0, []]);
+    // and no game-end bonus any more
+    const f = table(Q, { members: [['echo.ensemble', 'echo.muse', 'red.twins']], shop: ROW, queue: [{ t: 'finish' }] });
+    expect(f.players[0].final.parts.join(' ')).not.toMatch(/Ensemble/);
   });
   it('Groupie: whenever anyone recruits a green member, +1 green (named)', () => {
     let s = table(Q, { res: [{ green: 6 }], shop: ['echo.muse', ...ROW], members: [[], ['echo.groupie']] });
@@ -152,13 +192,8 @@ describe('Green members', () => {
     const t = humThenEcho({ members: [['echo.wallflower', 'red.twins']] }); // 4 followers vs 1
     expect(R(t).green).toBe(3);
   });
-  it('Keepsake: when recruited, copy one of your spaces from this round (named)', () => {
-    let s = table(Q, { shop: ['echo.keepsake', ...ROW], res: [{ green: 3, red: 3 }] });
-    s = move(take(s, 'Hum'), cardOpt(s, 'echo.keepsake', 'shop'));
-    s = payDefault(s);
-    s = play(s, sp('Hum'));
-    expect(R(s).green).toBe(3 + 3 + 3 - 4 - Math.max(0, 2 - 3)); // paid 4 green + 2 red
-    expect(named(s, 'Keepsake').length).toBe(1);
+  it('Keepsake is cut (design critic: Refrain already copies one of your spaces)', () => {
+    expect(quadrant('echo').members.map(d => d.key)).not.toContain('keepsake');
   });
   it('Mirror: when recruited, as much green as the rival with the most green', () => {
     let s = table(Q, { n: 3, shop: ['echo.mirror', ...ROW], res: [{ green: 4, red: 2 }, { green: 5 }, { green: 2 }] });

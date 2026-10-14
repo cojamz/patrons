@@ -106,14 +106,6 @@ function richest(ctx, p) {
   if (!list.length) return null;
   return list.reduce((a, b) => (holding(b) > holding(a) ? b : a));
 }
-// Tip-off: 1 from each player holding more than you (ids, owed 1 each), TIP_MIN in all at least; the rest may come only
-// from the richest rival you can steal from. floor: that rival, when the minimum adds picks.
-const TIP_MIN = 2;
-function tipoff(ctx, p) {
-  const ids = richer(ctx, p).map(o => o.id);
-  const top = ids.length < TIP_MIN ? richest(ctx, p) : null;
-  return { ids, only: top && !ids.includes(top.id) ? [...ids, top.id] : ids, n: Math.max(TIP_MIN, ids.length), floor: top };
-}
 
 // ---------- the quadrant ----------
 const thieves = {
@@ -142,14 +134,12 @@ const thieves = {
       resolve(ctx, p) { startSteal(ctx, p, 'Pickpocket', ctx.stealCount(p, ctx.state.round + 1, { say: true })); },
     },
     {
-      // floor (Claude under Cory's go-with-your-gut, from the dead-window audit): it was dead in 19–45% of offers
-      key: 'tipoff', ring: 1, name: 'Tip-off', text: `Take 1 resource from each player holding more than you; at least ${TIP_MIN} in total (from the richest).`,
-      estimate: (ctx, p) => { const t = tipoff(ctx, p); return estimateSteal(ctx, p, t.n, t.only.map(id => ctx.player(id))); },
+      key: 'tipoff', ring: 1, name: 'Tip-off', text: 'Take 1 resource from each player holding more than you.',
+      estimate: (ctx, p) => estimateSteal(ctx, p, richer(ctx, p).length, richer(ctx, p)),
       resolve(ctx, p) {
-        const t = tipoff(ctx, p);
-        if (t.floor) ctx.log(`${p.name}'s Tip-off: at least ${TIP_MIN} in total, so the rest comes from ${t.floor.name} (the richest rival).`);
-        const n = ctx.stealCount(p, t.n, { say: true });
-        startSteal(ctx, p, 'Tip-off', n, { each: t.ids, only: t.only });
+        const ids = richer(ctx, p).map(o => o.id);
+        const n = ctx.stealCount(p, ids.length, { say: true });
+        startSteal(ctx, p, 'Tip-off', n, { each: ids, only: ids });
       },
     },
     {
@@ -259,10 +249,9 @@ const thieves = {
     m('accomplice', 'Accomplice', 4, 4, 'When recruited: take 1 resource from each rival.', {
       onRecruited(ctx, owner) { for (const o of ctx.rivals(owner)) autoSteal(ctx, owner, o, 'Accomplice'); },
     }),
-    // never 0 (Claude under Cory's go-with-your-gut, from the dead-window audit): as a first member it took nothing
-    m('grifter', 'Grifter', 4, 2, 'When recruited: take 1 resource per member you have (at least 2), from the rivals holding the most.', {
+    m('grifter', 'Grifter', 4, 2, 'When recruited: take 1 resource per 2 members you have, from the rivals holding the most.', {
       onRecruited(ctx, owner) {
-        const n = Math.max(2, ctx.memberCount(owner));
+        const n = Math.floor(ctx.memberCount(owner) / 2);
         for (let k = 0; k < n; k++) { const t = richest(ctx, owner); if (!t || !autoSteal(ctx, owner, t, 'Grifter')) break; }
       },
     }),

@@ -6,7 +6,9 @@
 //      (data-tip / aria-haspopup), or (spaces) the board's own space card;
 //  (b) hovering a shop card and a board space shows a card; on a touch screen a long-press on a titled element
 //      shows its title (the hover's touch twin);
-//  (c) no "★" anywhere in the rendered game (followers are the little-person mark).
+//  (c) no "★" anywhere in the rendered game (followers are the little-person mark);
+//  (d) hover cards open within 100ms (p95) and never flicker while sweeping a ring of spaces;
+//  (e) a cult member hops when its own trace line appears in the log.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -21,7 +23,7 @@ const fail = (msg, step) => fails.push(`[${step}] ${msg}`);
 const GAME = [
   '[data-region] [data-uid]', '.shop [data-uid]', '.lt-rs', '[data-cult] .cs-head', '.lt-stack', '.res > .r', '.you-strip .r', '.lt-member .fig', '.chip[data-g]',
   '[data-leader-ring]', '.workers', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
-  '[data-plaque]', '.contest-tip', '.res-glyph', '.pip', '.card-name', '.term',
+  '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term',
 ].join(',');
 
 async function audit(page, step) {
@@ -169,6 +171,26 @@ try {
     if (flips) fail(`(d) the hover card closed and reopened ${flips} time(s) while sweeping across ${Math.min(8, ring.length - 1)} spaces`, 'hover');
     await lab.screenshot({ path: `${SHOTS}/04-hover-sweep.png` });
     console.log(`info.mjs: hover p95 ${Math.round(p95)}ms over ${lat.length} cards${first !== p95 ? ` (first run ${Math.round(first)}ms)` : ''}; ${flips} flickers in the sweep`);
+    await lab.close();
+  }
+
+  // (e) living cults: a member reacts (hops) when its own trace line appears ("Wren's Banker: +1 gold.")
+  {
+    const lab = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+    lab.on('pageerror', e => errors.push(`lab pageerror: ${e.message}`));
+    await lab.goto(`${base}/?lab=b&phase=place&react=1`);
+    const who = await lab.waitForFunction(() => document.documentElement.dataset.reactMember, null, { timeout: 5000 }).then(h => h.jsonValue()).catch(() => null);
+    if (!who) fail('(e) the lab never wrote a trace line', 'cults');
+    else {
+      const [pid, def] = who.split(':');
+      const hop = await lab.waitForSelector(`[data-cult="${pid}"] [data-member="${def}"][data-react]`, { timeout: 1500 }).catch(() => null);
+      if (!hop) fail(`(e) ${def} did not react to its trace line`, 'cults');
+      else {
+        const anim = await hop.evaluate(e => getComputedStyle(e.querySelector('.fig')).animationName);
+        if (!/cult-hop/.test(anim)) fail(`(e) ${def} is marked but doesn't move (animation ${anim})`, 'cults');
+        await lab.screenshot({ path: `${SHOTS}/06-member-reacts.png` });
+      }
+    }
     await lab.close();
   }
 

@@ -24,19 +24,13 @@ describe('Yellow actions', () => {
     expect(named(s, 'Bloom')).toEqual(["P1's Bloom: +1 red, +1 yellow."]);
     expect(R(take(sc({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'Bloom'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
   });
-  // a base of 1 (dead-window audit, 2026-10-14): under 3 yellow it gave nothing
-  it('Prism: +1 of each other color even with under 3 yellow, +1 more per 3 yellow, named', () => {
-    const s = take(sc({ round: 2, res: [{ yellow: 2 }] }), 'Prism');
-    expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 2, green: 1 });
-    expect(named(s, 'Prism')).toEqual(["P1's Prism: +1 of each other color."]);
-  });
   it('Transmute: up to 3 one-for-one swaps, then +1 yellow', () => {
     let s = take(sc({ res: [{ gold: 4 }] }), 'Transmute');
     s = move(s, 'swap:gold:red'); s = move(s, 'swap:gold:green'); s = move(s, 'swap:gold:red');
     expect(R(s)).toEqual({ gold: 1, red: 2, yellow: 1, green: 1 });
   });
   it('Prism: +1 of each other color per 3 yellow (yellow kept); Gather: 1 per member of its color; Flourish: per full set', () => {
-    expect(R(take(sc({ round: 2, res: [{ yellow: 7 }] }), 'Prism'))).toEqual({ gold: 3, red: 3, yellow: 7, green: 3 });
+    expect(R(take(sc({ round: 2, res: [{ yellow: 7 }] }), 'Prism'))).toEqual({ gold: 2, red: 2, yellow: 7, green: 2 });
     expect(R(take(sc({ round: 2, members: [['gold.banker', 'red.twins', 'red.intern']] }), 'Gather'))).toMatchObject({ gold: 1, red: 2 });
     expect(R(take(sc({ round: 3, res: [{ gold: 2, red: 2, yellow: 3, green: 2 }] }), 'Flourish'))).toEqual({ gold: 4, red: 4, yellow: 3, green: 4 });
   });

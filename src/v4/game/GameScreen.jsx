@@ -1,16 +1,15 @@
 // The game table. Renders engine state from a session and turns clicks into { player, option } moves.
 // What's clickable is exactly state.pending.options, and only for seats this client controls.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { followers, tierLeft } from '../../engine/v4/index.js';
+import { followers, tierLeft, tierUsed } from '../../engine/v4/index.js';
 import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote, turnStory } from '../format.js';
 import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
 import Players, { Resources, Workers } from './Players.jsx';
 import ShopCards from './ShopCards.jsx';
-import YourTable from './YourTable.jsx';
+import CultSeat from './CultSeat.jsx';
 import { useHoverCards, HoverCardLayer } from './HoverCards.jsx';
 import Chronicle from './Chronicle.jsx';
-import { LeaderRing, ResourceGlyph, FollowerMark } from './Glyphs.jsx';
 import { cardDef } from '../../engine/v4/index.js';
 import Results from './Results.jsx';
 import RoundEnd from './RoundEnd.jsx';
@@ -199,22 +198,6 @@ function Menu({ onRules, onLog, onLeave, getState }) {
 function seatCorners(state, me) {
   const n = state.players.length, base = me != null ? me : 0;
   return [0, 1, 2, 3].map(k => (k < n ? (base + k) % n : null));
-}
-
-/** A rival's chair until UI-B's CultSeat lands: leader with unplaced minions, name, followers, resources. */
-function InterimSeat({ state, pid, hover }) {
-  const p = state.players[pid];
-  const f = followers(state, p);
-  return (
-    <div className="lt-cult" data-pid={pid}
-      onPointerEnter={e => { if (hover && e.pointerType === 'mouse') hover.onSeatHover(pid, e.currentTarget); }}
-      onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onSeatHover(pid, null); }}>
-      <LeaderRing state={state} id={pid} size={32} minion={14} compact />
-      <div className="who"><b>{p.name}</b><span className="f"><b className="num">{f}</b> {f === 1 ? 'follower' : 'followers'}</span></div>
-      <div className="res">{state.resources.map(r => <span key={r} className="rs" title={`${p.res[r] || 0} ${r}`}><ResourceGlyph r={r} size={14} /><b className="num">{p.res[r] || 0}</b></span>)}</div>
-      <div className="mem"><FollowerMark n={f} size={5} label={false} /><small>{p.members.length} member{p.members.length === 1 ? '' : 's'}</small></div>
-    </div>
-  );
 }
 
 /** The buy step's other answers live with the question: Pass, and (once a round) Release a member for its cost. */
@@ -574,7 +557,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       text = owner === undefined && pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers or pass' : null;
     } else if (pend.kind === 'place') text = info.type === 'card' || info.type === 'tier' ? 'Place a minion first, then recruit' : 'Place a minion first';
     else if (info.type === 'card') text = `You can’t afford ${info.name} yet`;
-    else if (info.type === 'tier') text = tierLeft(state, info.tier) <= 0 ? `No +${info.tier.get} buys left` : `+${info.tier.get} needs ${tierCostText(info.tier)}`;
+    else if (info.type === 'tier') text = tierLeft(state, info.tier) <= 0 ? `No +${info.tier.get} buys left`
+      : tierUsed(state, state.players[pend.player], info.tier) ? `One +${info.tier.get} buy per round: yours is made` : `+${info.tier.get} needs ${tierCostText(info.tier)}`;
     else text = 'Not right now';
     if (text) say(text);
     if (el && el.animate && motionOK()) el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(-2px)' }, { transform: 'translateX(0)' }], { duration: 260, easing: 'ease-out' });
@@ -679,9 +663,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               others clockwise. UI-B fills each chair (CultSeat); the chairs never move. */}
           {seatCorners(state, me).map((pid, k) => (
             <section key={k} className={`lt-seat lt-seat-${k}${pid === me ? ' mine' : ''}${pid != null && pend && pend.player === pid && !state.over ? ' now' : ''}`} data-region={`seat-${k}`} data-pid={pid ?? undefined} aria-label={pid == null ? undefined : pid === me ? 'Your cult' : `${state.players[pid].name}’s cult`}>
-              {pid == null ? null : pid === me
-                ? <YourTable state={state} me={me} mySeats={mySeats} optionFor={live} onPick={onPick} />
-                : <InterimSeat state={state} pid={pid} hover={hover} />}
+              {pid == null ? null : (
+                <CultSeat state={state} pid={pid} me={me} mine={pid === me} now={pend && pend.player === pid && !state.over} hover={hover} optionFor={pid === me ? live : undefined} onPick={onPick} />
+              )}
             </section>
           ))}
           <section className="lt-shop" data-region="shop" aria-label="Shop">

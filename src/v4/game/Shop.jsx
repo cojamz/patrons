@@ -171,7 +171,7 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
               Pay <span className="num">{t.cost}</span> · {t.colors > 1 ? `${t.colors}+ colors` : 'any'}
               {(() => { const ways = opt && viewer ? followerChoices(state, viewer, t) : []; return ways.length > 1 ? <em className="picks" title="You'll choose how to pay"> ▸</em> : null; })()}
             </span>
-            {t.limited && <span className="left-line num" title={`${tierLeft(state, t)} of these left${t.clock ? '; the last one ends the game after that round' : ''}`}>{tierLeft(state, t)} left</span>}
+            {t.limited && <span className="left-line num" title={`${tierLeft(state, t)} of these left${t.oncePerRound ? ', one per player per round' : ''}${t.clock ? '; the last one ends the game after that round' : ''}`}>{tierLeft(state, t)} left</span>}
           </button>
         );
       })}

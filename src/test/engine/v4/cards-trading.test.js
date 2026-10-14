@@ -4,6 +4,8 @@
 // show up in a log line that names the card.
 import { describe, it, expect } from 'vitest';
 import { followers } from '../../../engine/v4/core.js';
+import { quadrant } from '../../../engine/v4/content/index.js';
+import { term } from '../../../v4/glossary.js';
 import { take, move, play, ids } from './helpers.js';
 import { table, useCosts, named, uidIn, owns } from './cards-helpers-b.js';
 
@@ -75,13 +77,22 @@ describe('White actions', () => {
     expect((t.pending?.options || []).some(o => o.label.startsWith('Pawn'))).toBe(false);
   });
 
+  // design critic follow-up (2026-10-14): "loose followers" is defined once (rulebook, glossary); the cards use it
+  it('"loose followers", defined once: Barter, Sell High, Pawnbroker and Liquidator say it', () => {
+    expect(term('loose followers').def).toMatch(/^Followers you bought or won, not the ones your members are worth/);
+    const W = quadrant('trading'), text = k => [...W.actions, ...W.members].find(c => c.key === k).text;
+    expect(text('barter')).toBe('Recruit a face-up member for half its cost (round up), paid in loose followers.');
+    expect(text('sellhigh')).toBe('Sell up to 2 loose followers for 3 white each.');
+    expect(text('pawnbroker')).toBe('Once per round: sell 1 loose follower for 3 white.');
+    expect(text('liquidator')).toBe('Once per game: sell up to 5 loose followers for 2 white each.');
+  });
   it('Sell High: sell up to 2 followers for 3 white each; only won or bought followers', () => {
     let s = take(table(Q, { round: 2, bonus: [5], shop: ROW }), 'Sell High');
     expect(ids(s)).toEqual(['amount:0', 'amount:1', 'amount:2']);
     s = move(s, 'amount:2');
     expect([R(s).white, s.players[0].bonus]).toEqual([6, 3]);
     s = take(table(Q, { round: 2, members: [['red.twins']], shop: ROW }), 'Sell High');
-    expect(s.log).toContain('Sell High: P1 has no followers to sell yet (only followers you bought or won can be sold).');
+    expect(s.log).toContain('Sell High: P1 has no loose followers to sell (only followers you bought or won can be sold).');
   });
 
   it('Barter: recruit a face-up member, paying 1 follower per 2 of its doubled cost (round up); then your buy', () => {

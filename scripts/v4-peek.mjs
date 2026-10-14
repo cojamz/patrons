@@ -38,7 +38,12 @@ if (cmd === 'freeze') {
       if (next) { const r = await page.$eval('.roundend h2', e => e.textContent).catch(() => 'end'); if (!seen.has(r)) { seen.add(r); await page.waitForTimeout(700); await snap(`r-${r.replace(/\W+/g, '_')}`); } await next.click(); continue; }
       const opts = await page.$$('[data-option]:not([disabled])');
       let opt = null;
-      for (const o of opts) if (!/^(back|undo)/.test(await o.getAttribute('data-option'))) { opt = o; break; }
+      // prefer recruiting (cults with members make better screenshots), then followers, then anything but back/undo/pass
+      const ids = []; for (const o of opts) ids.push([o, await o.getAttribute('data-option')]);
+      const rank = id => (/^card:/.test(id) ? 0 : /^pay:/.test(id) ? 0 : /^tier:/.test(id) ? 1 : /^(back|undo|pass)/.test(id) ? 9 : 2);
+      ids.sort((x, y) => rank(x[1]) - rank(y[1]));
+      if (ids.length && rank(ids[0][1]) < 9) opt = ids[0][0];
+      else for (const [o, id] of ids) if (!/^(back|undo)/.test(id)) { opt = o; break; }
       if (!opt) { await page.waitForTimeout(40); continue; }
       const kind = (await opt.getAttribute('data-option')).split(':')[0];
       const round = await page.$eval('header .round', e => e.textContent).catch(() => '');

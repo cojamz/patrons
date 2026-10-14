@@ -115,7 +115,7 @@ export function FollowerRates({ state, optionFor = () => null, onPick, onDenied 
         const left = tierLeft(state, t);
         return (
           <button key={t.key} type="button" className={`fb lt-rate${opt ? ' can' : ''}`} data-option={opt ? opt.id : undefined} aria-disabled={!opt}
-            title={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}${t.limited ? ` (${left} left in this game${t.clock ? '; the last one ends the game after that round' : ''})` : ''}`}
+            title={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}${t.limited ? ` (${left} left in this game${t.oncePerRound ? ', one per player per round' : ''}${t.clock ? '; the last one ends the game after that round' : ''})` : ''}`}
             onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'tier', tier: t }, e.currentTarget))}>
             <b className="num">{t.cost}</b> → <b className="num">{t.get}</b>{t.limited && <small className="num"> {left} left</small>}
           </button>

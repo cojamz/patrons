@@ -80,11 +80,8 @@ describe('Magenta actions', () => {
     expect(ids(s)).toEqual(['take:1:gold', 'take:2:red', 'take:2:blue']);
     s = play(s, 'take:2:red', 'take:1:gold');
     expect(R(s).map(r => [r.gold, r.red, r.blue, r.magenta])).toEqual([[2, 0, 0, 2], [2, 0, 0, 0], [0, 0, 2, 0], [2, 0, 0, 0]]);
-    // no one holds more: at least 2 in total, from the richest rival (dead-window audit, 2026-10-14; it took nothing)
-    let z = take(scene({ res: [{ gold: 5 }, { gold: 1 }] }), 'Tip-off');
-    expect(ids(z)).toEqual(['take:1:gold']);
-    z = move(z, 'take:1:gold');
-    expect([R(z)[0].magenta, R(z)[1].gold]).toEqual([1, 0]);
+    const z = take(scene({ res: [{ gold: 5 }, { gold: 1 }] }), 'Tip-off');
+    expect(z.pending?.kind).not.toBe('choose');
   });
 
   it('Hideout: take 1 from a rival; then no one can steal resources from you this round, Gold’s Steal included (members stay takeable)', () => {
@@ -219,16 +216,14 @@ describe('Magenta members', () => {
     expect(R(s).map(r => [r.gold, r.red, r.magenta])).toEqual([[2, 0, 2], [1, 0, 0], [0, 0, 0]]);
   });
 
-  // 1 per member, at least 2 (dead-window audit, 2026-10-14): it was 1 per 2 members
-  it('Grifter: when recruited, take 1 per member you have (at least 2), from the rivals holding the most', () => {
-    let s = scene({ res: [{ magenta: 2, gold: 1 }, { gold: 3 }, { red: 3 }], members: [['red.intern', 'red.volunteer', 'red.mob']], shop: ['thieves.grifter', ...SHOP.slice(1)], queue: [{ t: 'buy', p: 0 }] });
+  it('Grifter: when recruited, take 1 per 2 members you have, from the rivals holding the most', () => {
+    let s = scene({ res: [{ magenta: 2, gold: 1 }, { gold: 3 }, { red: 2 }], members: [['red.intern', 'red.volunteer', 'red.mob', 'red.drive']], shop: ['thieves.grifter', ...SHOP.slice(1)] });
+    s = take(s, 'Scout');
+    s = move(s, `card:${uidOf(s, 'gold.jackpot', 'shop')}`);
     s = move(s, `card:${uidOf(s, 'thieves.grifter', 'shop')}`);
-    // 4 members → take 4, one at a time from whoever holds the most then: P2, P3, P2, P3
-    expect(R(s)[0].magenta).toBe(4);
-    expect([R(s)[1].gold, R(s)[2].red]).toEqual([1, 1]);
-    let t = scene({ res: [{ magenta: 2, gold: 1 }, { gold: 3 }, { red: 3 }], shop: ['thieves.grifter', ...SHOP.slice(1)], queue: [{ t: 'buy', p: 0 }] });
-    t = move(t, `card:${uidOf(t, 'thieves.grifter', 'shop')}`);
-    expect(R(t)[0].magenta).toBe(2); // as your first member: still 2
+    // 5 members → take 2: P2 (3) first, then P2 vs P3 tied at 2 → P2 (first found)
+    expect(R(s)[0].magenta).toBe(2);
+    expect(R(s)[1].gold + R(s)[2].red).toBe(3);
   });
 
   it('Sticky Fingers: steals take 1 more — Magenta’s and Gold’s', () => {

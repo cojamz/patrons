@@ -130,7 +130,7 @@ describe('White actions', () => {
     expect(ids(s)).toEqual(['amount:0', 'amount:1']);
     s = take(scene({ round: 2 }), 'Sell High');
     expect(s.pending?.kind).not.toBe('choose');
-    expect(s.log.join('\n')).toContain('Sell High: P1 has no followers to sell yet');
+    expect(s.log.join('\n')).toContain('Sell High: P1 has no loose followers to sell');
   });
 
   it('Barter (ring II): recruit a face-up member, paying 1 follower per 2 of its cost, rounded up', () => {
@@ -169,7 +169,7 @@ describe('White actions', () => {
   it('Barter: members and yourself never pay; too few followers, nothing happens and the log says why', () => {
     const s = take(scene({ round: 2, bonus: [1], members: [['red.twins']], shop: SHOP }), 'Barter');
     expect(s.pending?.kind).not.toBe('choose');
-    expect(s.log.join('\n')).toContain('Barter: P1 has too few followers to pay for any face-up member');
+    expect(s.log.join('\n')).toContain('Barter: P1 has too few loose followers to pay for any face-up member');
     expect([B(s), F(s)]).toEqual([1, 4]);
   });
 

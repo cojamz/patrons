@@ -2,7 +2,7 @@
 // them (Barter), buy them back cheap. Most white at round end takes the ring's followers.
 //
 // Rules this module adds:
-// - You can only sell or spend followers you've won or bought (p.bonus). Never yourself, never your members
+// - You can only sell or spend loose followers: the ones you've won or bought (p.bonus). Never yourself, never your members
 //   (Cory, 2026-10-14). So nobody can drop below 1 follower, and nobody sells in round I unless they bought first.
 // - "Sell" is White's own verb: White members can react to it (onSell), which only White's actions and
 //   members call. Paying for a member with followers (Barter) isn't a sale: no white changes hands.
@@ -18,7 +18,7 @@ import { registerQuadrant, defById } from './index.js';
 const W = 'white';
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 
-/** Followers you can sell: the ones you've won or bought. */
+/** Followers you can sell: your loose followers (the ones you've won or bought). */
 export const sellable = p => p.bonus;
 const ahead = (ctx, p) => ctx.rivals(p).filter(o => ctx.followers(o) > ctx.followers(p)).length;
 // How bots value a follower against one resource, by round (resources compound early, followers are the score late).
@@ -50,7 +50,7 @@ export function sell(ctx, p, k, each, { fromAction = false, why = 'sold', by = n
 }
 
 // Why a sale finds nothing to sell (Cory: a skipped printed part says so in the log).
-const NOTHING_TO_SELL = 'no followers to sell yet (only followers you bought or won can be sold)';
+const NOTHING_TO_SELL = 'no loose followers to sell (only followers you bought or won can be sold)';
 function sellChoice(ctx, p, prompt, most, each, why) {
   const max = Math.min(most, sellable(p));
   if (max <= 0) { ctx.log(`${prompt.split(':')[0]}: ${p.name} has ${NOTHING_TO_SELL}.`); return; }
@@ -77,10 +77,10 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 function offerBarter(ctx, p) {
   const ok = barterable(ctx, p);
   if (!ok.length) {
-    ctx.log(`Barter: ${p.name} has too few followers to pay for any face-up member (only followers you bought or won can be paid).`);
+    ctx.log(`Barter: ${p.name} has too few loose followers to pay for any face-up member (only followers you bought or won can be paid).`);
     return;
   }
-  ctx.choose(p, `Barter: recruit which member, paid in followers? (you can pay ${sellable(p)})`, [
+  ctx.choose(p, `Barter: recruit which member, paid in loose followers? (you can pay ${sellable(p)})`, [
     ...ok.map(c => ({
       id: `card:${c.uid}`, label: `${c.def.name} for ${plural(barterPrice(c), 'follower')}`, kind: 'card', value: c.uid,
       hint: memberWorth(ctx, c) - barterPrice(c),
@@ -126,7 +126,7 @@ const trading = {
       },
     },
     {
-      key: 'sellhigh', ring: 2, name: 'Sell High', text: 'Sell up to 2 followers for 3 white each.',
+      key: 'sellhigh', ring: 2, name: 'Sell High', text: 'Sell up to 2 loose followers for 3 white each.',
       estimate: (ctx, p) => Math.min(SELL_HIGH.most, sellable(p)) * (SELL_HIGH.each - fv(ctx)) * (lastTurn(ctx, p) ? 0 : 1),
       resolve(ctx, p) {
         if (!sellable(p)) { ctx.log(`Sell High: ${p.name} has ${NOTHING_TO_SELL}.`); return; }
@@ -136,7 +136,7 @@ const trading = {
     {
       // 2026-10-14 rework: replaces Cash In ("+1 follower, then trade any of your white for followers, 1 for 1"),
       // which did Magnate's job three times better and closed a sell-high, cash-in-at-par loop.
-      key: 'barter', ring: 2, name: 'Barter', text: 'Recruit a face-up member, paying 1 follower per 2 of its cost, rounded up (only followers you’ve won or bought).',
+      key: 'barter', ring: 2, name: 'Barter', text: 'Recruit a face-up member for half its cost (round up), paid in loose followers.',
       estimate: (ctx, p) => Math.max(0, ...barterable(ctx, p).map(c => memberWorth(ctx, c) - barterPrice(c))),
       resolve(ctx, p) { offerBarter(ctx, p); },
     },
@@ -196,7 +196,7 @@ const trading = {
     m('dealer', 'Dealer', 2, 0, 'Whenever you sell followers, +1 white each.', {
       onSell(ctx, owner, card, k) { ctx.gain(owner, W, k); },
     }),
-    m('pawnbroker', 'Pawnbroker', 2, 2, 'Once per round: sell 1 follower for 3 white.', {
+    m('pawnbroker', 'Pawnbroker', 2, 2, 'Once per round: sell 1 loose follower for 3 white.', {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
@@ -246,7 +246,7 @@ const trading = {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);
       },
     }),
-    m('liquidator', 'Liquidator', 4, 2, `Once per game: sell up to ${LIQUIDATE.most} followers for ${LIQUIDATE.each} white each.`, {
+    m('liquidator', 'Liquidator', 4, 2, `Once per game: sell up to ${LIQUIDATE.most} loose followers for ${LIQUIDATE.each} white each.`, {
       activate: 'game',
       onActivate(ctx, owner, card) {
         if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name}'s Liquidator: ${NOTHING_TO_SELL}.`); return; }

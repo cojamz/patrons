@@ -12,7 +12,6 @@
 //   pickFirst: true        always first in a round's turn order
 // Straggler uses the onAllPlaced hook (after the round's last placement, before its contests).
 import { registerGuests } from './index.js';
-import { extraTurns } from './purple.js';
 
 // Prices: member-value sim (scripts/v4-member-value.mjs, 4 normal bots, Release off, handed over at round II),
 // priced so value ≈ cost + 1.5 at 1.5 per follower, rounded to the even cost grid. See design/rule-benders.md.
@@ -54,12 +53,7 @@ const members = [
   m('bigspender', 'Big Spender', 'gold', 2, 2, 'Once per round: buy twice in one turn.', { extraBuy: true }),
   m('freelancer', 'Freelancer', 'yellow', 2, 2, 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
   m('insider', 'Insider', 'market', 4, 2, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
-  // recruited in round III its worker had already been counted, so it gave nothing: it brings an extra turn instead
-  // (Claude under Cory's go-with-your-gut, from the dead-window audit). Purple's extra turn: only with a space to spare.
-  m('extrahand', 'Extra Hand', 'purple', 6, 4, '+1 minion in round III. If you recruit it in round III, take an extra turn right after this one.', {
-    extraWorkers: [0, 0, 1],
-    onRecruited(ctx, owner) { if (ctx.state.round === 3) extraTurns(ctx, owner, 1, 'Extra Hand'); },
-  }),
+  m('extrahand', 'Extra Hand', 'purple', 6, 4, '+1 minion in round III.', { extraWorkers: [0, 0, 1] }),
   m('frontrunner', 'Front-runner', 'purple', 2, 0, 'You always pick first in a round.', { pickFirst: true }),
   m('straggler', 'Straggler', 'purple', 6, 2, 'Once per round, after the last minion is placed: move one of your minions to an unused space and do that action.', {
     onAllPlaced(ctx, owner, card) {
