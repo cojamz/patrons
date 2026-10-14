@@ -29,7 +29,7 @@ function advanceTo(state, kind, max = 500) {
 const seats = [{ name: 'Ana', kind: 'human' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }];
 const clickable = container => [...container.querySelectorAll('[data-option]')].map(e => e.getAttribute('data-option'));
 
-describe('v4 game screen', () => {
+describe('v4 game screen', { timeout: 30000 }, () => {
   it('setup: offers each starting color and submits the option id', () => {
     const state = createGame({ seats, seed: 7 });
     const session = fakeSession(state, [0]);

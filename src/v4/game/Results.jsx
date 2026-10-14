@@ -27,15 +27,15 @@ export default function Results({ state, onPlayAgain, onHome }) {
               const b = breakdown(state, p);
               return (
                 <tr key={p.id} className={k === 0 ? 'first' : ''}>
-                  <td className="rank">{rankOf[k]}{shared(rankOf[k]) ? '=' : ''}</td>
-                  <td style={{ color: playerColor(p.id) }}>{p.name}{p.kind === 'bot' ? ' · bot' : ''}<small>{plural(memberCount(state, p), 'member')}</small></td>
-                  <td className="tot">{followers(state, p)}</td>
-                  <td>{b.members}</td>
-                  <td>{b.bought}</td>
-                  <td>{b.effects}</td>
-                  <td>{b.contests}</td>
-                  <td title={b.parts.join(', ')}>{b.endGame}</td>
-                  <td>1</td>
+                  <td className="rank" data-label="#">{rankOf[k]}{shared(rankOf[k]) ? '=' : ''}</td>
+                  <td className="who" style={{ color: playerColor(p.id) }}>{p.name}{p.kind === 'bot' ? ' · bot' : ''}<small>{plural(memberCount(state, p), 'member')}</small></td>
+                  <td className="tot" data-label="Followers">{followers(state, p)}</td>
+                  <td data-label="From members ★">{b.members}</td>
+                  <td data-label="Bought">{b.bought}</td>
+                  <td data-label="Effects in play">{b.effects}</td>
+                  <td data-label="Contests">{b.contests}</td>
+                  <td data-label="End-game bonuses" title={b.parts.join(', ')}>{b.endGame}</td>
+                  <td data-label="Self">1</td>
                 </tr>
               );
             })}

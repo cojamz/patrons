@@ -1,6 +1,6 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
-import { createGame, applyMove, chooseBotMove, followers } from '../../../engine/v4/index.js';
+import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
 import { parseRoundEnd, newLogLines, winSentence, breakdown } from '../../../v4/format.js';
 
 const seats = [{ name: 'Ana', kind: 'bot' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }];
@@ -9,7 +9,8 @@ const play = seed => { let s = createGame({ seats, seed }); while (!s.over) s = 
 describe('v4 format helpers', () => {
   it('parses a round-end line into one row per quadrant', () => {
     const s = createGame({ seats, seed: 1 });
-    const r = parseRoundEnd(s, 'Round II ends. Most gold: Ana & Bo +4 · Most members: Cy +4');
+    const L = q => quadrant(q).scoring.label;
+    const r = parseRoundEnd(s, `Round II ends. ${L('gold')}: Ana & Bo +4 · ${L('red')}: Cy +4`);
     expect(r.round).toBe('II');
     expect(r.rows).toHaveLength(4);
     expect(r.rows.find(x => x.qid === 'gold').winners).toEqual([0, 1]);

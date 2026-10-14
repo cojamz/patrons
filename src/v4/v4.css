@@ -634,6 +634,72 @@ header.bar .status{align-items:center;gap:8px}
 @keyframes rollout-down{from{transform:none;opacity:1}to{transform:translateY(90%);opacity:0}}
 .tick.rolling .floater{display:none}
 
+/* ---------- round 4, tester H (touch) ---------- */
+/* the "Last:" line is a link to the log */
+header.bar .ticker{background:none;border:0;padding:0;text-align:left;cursor:pointer;font:inherit;font-size:12.5px;color:var(--muted)}
+header.bar .ticker:hover{color:var(--ink);text-decoration:underline}
+header.bar .ticker{display:flex;gap:8px;min-width:0;align-items:baseline}
+header.bar .ticker .tk{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+header.bar .ticker .cue{flex:none;color:var(--ink);opacity:.8}
+/* bot action caption over the wheel */
+.caption{position:absolute;left:50%;top:-2px;transform:translateX(-50%);z-index:2;background:var(--table-2);border:1px solid var(--pc);border-radius:999px;padding:4px 12px;font-size:13px;white-space:nowrap;max-width:96%;overflow:hidden;text-overflow:ellipsis;pointer-events:none;box-shadow:0 6px 16px rgba(0,0,0,.45);animation:rise .2s ease-out}
+.caption i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--pc);margin-right:6px}
+/* +6 counter as a corner badge, so the subtext never clips */
+.fb{position:relative}
+.left-badge{position:absolute;bottom:5px;right:8px;font-style:normal;font-size:10.5px;color:var(--muted)}
+.mini .afford{font-size:13px}
+/* member ability in the recruit sheet */
+.ability{font-size:13.5px;color:var(--ink)}
+/* results players: show every member chip, there's room */
+.main.over .pl{height:auto}
+.main.over .chips{height:auto;overflow:visible}
+/* touch: popovers and a selected space come up as bottom sheets */
+.popover.sheet-pop{left:0;right:0;bottom:0;top:auto;max-width:none;border-radius:16px 16px 0 0;padding:16px 16px 22px;animation:sheet .22s ease-out both}
+.peek.as-sheet{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;transform:none;border-radius:16px 16px 0 0;border-width:1px 0 0;padding:16px 16px 22px;z-index:16;animation:sheet .22s ease-out both}
+.peek.as-sheet b{font-size:20px}
+.peek.as-sheet span{font-size:15px}
+.peek.as-sheet .btn{align-self:stretch;min-height:44px;font-size:16px}
+/* the shop strip in sheets shows two lines of ability */
+.mini small{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mini{flex-basis:170px}
+/* last move: a solid ring in the player's color (open spaces pulse in the quadrant color instead) */
+.lm-legend i{border-style:solid}
+
+@media (max-width:520px){
+  /* the member count gets its own line on narrow cards, never clipped */
+  .res{flex-wrap:wrap;row-gap:2px}
+  .res .meta{flex-basis:100%}
+  /* curved ring text is unreadable at this size; the panel's "Now" line carries it */
+  .ring text{display:none}
+  .slot.can .halo{stroke-width:5}
+  .slot.can .base{fill:color-mix(in srgb,var(--c, var(--table)) 22%,var(--table))}
+  @keyframes glow2{0%,100%{opacity:.7;stroke-width:4}50%{opacity:1;stroke-width:7}}
+  /* results: one card per player — rank, name, total on top; each part of the total as a labelled line */
+  .main.over table.res-t{min-width:0}
+  table.res-t thead{display:none}
+  table.res-t,table.res-t tbody{display:block}
+  table.res-t tr{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:2px 8px;border:1px solid var(--rim);border-radius:10px;padding:8px 10px;margin-bottom:8px}
+  table.res-t td{border:0;padding:0;text-align:left;white-space:normal}
+  table.res-t td:nth-child(n+4){grid-column:1 / -1;display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}
+  table.res-t td:nth-child(n+4)::before{content:attr(data-label)}
+  table.res-t tr.first{background:color-mix(in srgb,var(--ink) 5%,transparent);border-color:var(--gold)}
+  table.res-t tr.first td{background:none}
+}
+/* landscape phones: the page scrolls if it must (setup, results); in a game the side column scrolls and the
+   buy controls come up as a bottom sheet, like portrait */
+@media (max-height:480px) and (orientation:landscape){
+  #root{overflow:visible;height:auto;min-height:100dvh}
+  .app.game{height:calc(100dvh - 12px)}
+  .app.game .side{overflow-y:auto;overflow-x:hidden}
+  .app.game .side-scroll{flex:none;overflow:visible}
+  .app.game .scroller{display:block;flex:none}
+  .app.game .dock{flex:none}
+  .app.game.buying .fbuy.live{position:fixed;left:0;right:0;bottom:0;z-index:15;margin:0;padding:8px 12px 10px;background:var(--table-2);border-top:1px solid var(--rim);border-radius:14px 14px 0 0;box-shadow:0 -10px 24px rgba(0,0,0,.5);grid-template-columns:repeat(3,minmax(0,1fr)) minmax(72px,.6fr)}
+  .app.game.buying .fbuy.live .strip{display:flex}
+  .app.game.buying .side{padding-bottom:190px}
+  .ring text{display:none}
+}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }

@@ -79,7 +79,7 @@ Scoring alternatives
 - Takes per game, rounds I/II/III: Bargain, Clearance, Appraise and Spree are always taken. Restock 1.0/0.64/0.48 and Showroom 1.0/0.43/0.45 are the weak ring-I picks.
 - Forced first pick of the round (followers vs free choice; noise is about ±1.5): Bargain −2.2 (n=57), Restock +1.1, Showroom +0.7 vs JV −1.2, Rush −0.1, Hire −0.8. Clearance +1.1 and Appraise +0.4 vs Steal −1.7, Windfall −2.2, Hire Up +2.1. Spree −2.3 vs Strike −1.9, Take +1.4.
 - Member value (handed over at round II, 160 games each). Every member is worth more on a Blue table, because each one adds its price to the contest: Recruiter is 12.0 here vs 6.8 on the stand-in table. Same-table anchors: Sponsor 13.3 (cost 5), Recruiter 12.0 (4), Merchant 10.0 (3), Banker 8.3 (2), Intern 3.8 (1). Blue: Personal Shopper 14.1 (72% win), Broker 10.6, Reseller 9.7, Shopaholic 9.6, Dealer 9.3, Connoisseur 9.2, Collector 9.1, Appraiser 8.6, Black Market 7.7, Regular 7.2, Heirloom 6.6, Outfitter 5.7, Underbidder 4.4, Window Shopper 3.5, Promoter 2.7. Costs above are set from this.
-- Thinking bot: see the report line (THINKER).
+- Thinking bot (one seat, 4 rollouts, 24 games): won 67% with a +9.3 margin (the default table read 56%), so planning pays. It used Blue less than greedy bots did (19% of placements vs 25%) and never took Bargain in round I. It used Bargain 14 times in rounds II–III, and Spree in 7 of 24 games. Blue reads as a late-game toolkit.
 - 200 seeded bot games run clean (unit test plus invariants).
 
 ## What to watch

@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { quadrant, roman } from '../../engine/v4/index.js';
 import { bannerText, playerColor, standings, standingLine } from '../format.js';
+import { sheetMode } from './parts.jsx';
 
 const RING = { 1: { r0: 142, r1: 198, r: 170, n: 3 }, 2: { r0: 90, r1: 142, r: 116, n: 2 }, 3: { r0: 34, r1: 90, r: 62, n: 1 } };
 const LABEL = { 1: { r: 147.5, h: 16, f: 9.2 }, 2: { r: 95, h: 22, f: 8.6 }, 3: { r: 40.5, h: 44, f: 8.6 } }; // name arcs, toward the center
@@ -50,7 +51,7 @@ export function spaceGeometry(state) {
  * @param {{ state:any, legal:Map<string,string>, onPick:(id:string)=>void, onDenied?:(info:object, el:Element)=>void,
  *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void }} props
  */
-export default function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, lastMove = null, meId = null, facing, onFacing }) {
+export default function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, meId = null, facing, onFacing }) {
   const [rot, setRot] = useState(() => -90 * facing);
   const [peek, setPeek] = useState(null); // { key, pinned }
   const rotRef = useRef(rot);
@@ -253,7 +254,8 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
       parts.push(
         <g key={`last${lastMove.key}${lastMove.n}`} className="lastmove" aria-hidden="true">
           <title>{`Last move by ${state.players[lastMove.pid].name}`}</title>
-          <circle cx={x} cy={y} r={(sp.ring === 3 ? 15 : 16) + 6} fill="none" stroke={pc} strokeWidth="2" strokeDasharray="4 3" />
+          <circle cx={x} cy={y} r={(sp.ring === 3 ? 15 : 16) + 5} fill="none" stroke={pc} strokeWidth="2.6" />
+          <circle cx={x} cy={y} r={(sp.ring === 3 ? 15 : 16) + 8} fill="none" stroke="var(--table)" strokeWidth="1.5" />
           <path d={`M${ax},${ay} L${bx},${by} L${cx2},${cy2}Z`} fill={pc} />
         </g>,
       );
@@ -280,7 +282,11 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
       const top = ((Y - VB0) / VBS) * 100;
       const below = Y < CY;
       peekCard = (
-        <div className={`peek${below ? ' below' : ''}${peek.pinned ? ' pinned' : ''}`} style={{ left: left == null ? `${leftPx}px` : `${left}%`, top: `${top}%`, '--c': `var(--${s.qid})` }} role="tooltip">
+        <div
+          className={`peek${below ? ' below' : ''}${peek.pinned ? ' pinned' : ''}${peek.pinned && sheetMode() ? ' as-sheet' : ''}`}
+          style={peek.pinned && sheetMode() ? { '--c': `var(--${s.qid})` } : { left: left == null ? `${leftPx}px` : `${left}%`, top: `${top}%`, '--c': `var(--${s.qid})` }}
+          role={peek.pinned ? 'dialog' : 'tooltip'}
+        >
           <b>{s.a.name}</b>
           <small>{quadrant(s.qid).name} · round {roman(s.ring)}</small>
           <span>{s.a.text}</span>
@@ -305,12 +311,13 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
           <path d={`M${CX - 9},${CY + 214} L${CX},${CY + 203} L${CX + 9},${CY + 214}Z`} fill="var(--ink)" opacity=".8" />
         </svg>
         {peekCard}
+        {caption && <div key={caption.n} className="caption" style={{ '--pc': playerColor(caption.pid) }} role="status"><i />{caption.text}</div>}
         <button type="button" className="spin l" aria-label="Turn the board left" title="Turn the board left" onClick={() => nudge(-90)}>‹</button>
         <button type="button" className="spin r" aria-label="Turn the board right" title="Turn the board right" onClick={() => nudge(90)}>›</button>
       </div>
       {lastMove && state.slots[lastMove.key] !== undefined && (
         <div className="lm-legend" style={{ '--pc': playerColor(lastMove.pid) }}>
-          <i aria-hidden="true" />Dashed ring and arrow: last move by {state.players[lastMove.pid].name}
+          <i aria-hidden="true" />Ring and rim arrow: last move by {state.players[lastMove.pid].name}
           {(() => { const sp = spaces.find(x => x.key === lastMove.key); return sp ? ` (${sp.a.name})` : ''; })()}
         </div>
       )}

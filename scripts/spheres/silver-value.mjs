@@ -23,7 +23,7 @@ function play(seed, giveDef, seat) {
       s.players[seat].members.push(uid);
       // one-shot recruit effects, done by hand (the member is handed over, not recruited)
       const me = s.players[seat], rivals = s.players.filter(o => o !== me);
-      if (giveDef === 'silver.confidant') card.target = rivals.reduce((a, b) => (b.members.length > a.members.length ? b : a)).id;
+      if (giveDef === 'silver.feasthall') me.res.silver += 4;
       if (giveDef === 'silver.spoon') me.res.silver += Math.max(0, ...rivals.map(o => o.res.silver));
       if (giveDef === 'silver.retinue') for (const o of rivals) o.res.silver += 1;
       given = true;

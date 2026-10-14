@@ -32,7 +32,7 @@ export function useSessionState(session) {
  * (the round-end card) and queues whatever happens next; dismissing it replays the queue at a readable pace,
  * so the first move of the new round happens in front of you.
  */
-function useTable(session) {
+function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
   const first = session.getState();
   const [table, setTable] = useState(() => ({ shown: first, moment: null }));
   const queue = useRef([]);
@@ -69,14 +69,14 @@ function useTable(session) {
       show(next);
       const mine = session.mySeats || [];
       const rivalPlaced = Object.keys(next.slots).some(k => prev.slots[k] === undefined && !mine.includes(next.slots[k]));
-      const dwell = rivalPlaced ? RIVAL_DWELL_MS : paced.current && queue.current.length ? STEP_MS : 0;
+      const dwell = rivalPlaced ? rivalDwell : paced.current && queue.current.length ? STEP_MS : 0;
       if (!queue.current.length) paced.current = false;
       if (dwell) {
         timer.current = setTimeout(() => { timer.current = null; pump(); }, dwell);
         return;
       }
     }
-  }, [show, session]);
+  }, [show, session, rivalDwell]);
 
   useEffect(() => {
     const off = session.subscribe(s => {
@@ -121,8 +121,8 @@ function Scroller({ className, hint, children }) {
 
 const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing a worker', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
 
-export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) {
-  const [live0, moment, dismissMoment] = useTable(session);
+export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace }) {
+  const [live0, moment, dismissMoment] = useTable(session, pace ?? RIVAL_DWELL_MS);
   const state = moment && moment.board ? moment.board : live0;
   const mySeats = session.mySeats || [];
   const pend = state.pending;
@@ -131,6 +131,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
   const [lastMove, setLastMove] = useState(null); // the latest rival placement, marked on the wheel
   const [gifts, setGifts] = useState([]); // short-lived "+1 gold from P2" floaters on player cards
   const [toast, setToast] = useState(null);
+  const [caption, setCaption] = useState(null); // "P3 took Swell (+5 blue)", pinned over the wheel for a beat
+  const captionTimer = useRef(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [flash, setFlash] = useState(() => new Set());
@@ -211,7 +213,17 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
     if (!fresh.length) return undefined;
     const key = fresh[fresh.length - 1];
     const owner = state.slots[key];
-    if (!mySeats.includes(owner)) setLastMove(m => ({ key, pid: owner, n: (m ? m.n : 0) + 1 }));
+    if (!mySeats.includes(owner)) {
+      setLastMove(m => ({ key, pid: owner, n: (m ? m.n : 0) + 1 }));
+      const took = lines.map(l => l.match(new RegExp(`^${state.players[owner].name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} took (.+) \\((\\w+)\\)\\.$`))).find(Boolean);
+      const b0 = before.players[owner], p1 = state.players[owner];
+      const delta = state.resources.map(r => [r, p1.res[r] - b0.res[r]]).filter(([, d]) => d).map(([r, d]) => `${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`).join(', ');
+      if (took) {
+        clearTimeout(captionTimer.current);
+        setCaption({ text: `${p1.name} took ${took[1]}${delta ? ` (${delta})` : ''}`, pid: owner, n: Date.now() });
+        captionTimer.current = setTimeout(() => setCaption(null), 1800);
+      }
+    }
     setFlash(new Set(fresh));
     flyWorker(root.current, owner, key, playerColor(owner));
     const t = setTimeout(() => setFlash(new Set()), 2000);
@@ -299,6 +311,13 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
   const roundText = state.over ? 'Final' : state.round ? `Round ${roman(state.round)}` : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log[state.log.length - 1] || '';
+  const openLog = () => {
+    const log = root.current && root.current.querySelector('.log');
+    if (!log) return;
+    const d = log.querySelector('details');
+    if (d) d.open = true;
+    log.scrollIntoView({ behavior: motionOK() ? 'smooth' : 'auto', block: 'start' });
+  };
   const meP = me != null ? state.players[me] : null;
   const buyingNow = mine && !needHandoff && pend.kind === 'buy';
   const canUndo = mine && !needHandoff && !busy && typeof session.canUndo === 'function' && session.canUndo();
@@ -335,10 +354,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
               <i className="dot" /><b>{meP.name}</b>
               <span className="yf"><Tick value={followers(state, meP)} color={playerColor(meP.id)} className="num" /> {followers(state, meP) === 1 ? 'follower' : 'followers'}</span>
               <Resources state={state} p={meP} float={false} />
-              <Workers p={meP} />
+              <Workers p={meP} caption={false} />
             </span>
           )}
-          <span className="ticker" title={lastLine} aria-label={`Last: ${lastLine}`}>{lastLine}</span>
+          <button type="button" className="ticker" title={`${lastLine} — open the log`} onClick={openLog} aria-label={`Last: ${lastLine}. Open the log.`}><span className="tk">{lastLine}</span><span className="cue">Log ↓</span></button>
         </div>
       </header>
       {session.info && session.info.mode === 'online' && session.info.roomCode && (
@@ -353,7 +372,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
         </div>
       ) : (
         <div className="main">
-          <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+          <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
           <div className="side">
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} />}
             <Scroller className="side-scroll" hint="More below (rounds II / III, log)">

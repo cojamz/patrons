@@ -1,10 +1,10 @@
 // One thinking seat vs greedy bots on a Purple table. Does planning pay with Purple on the wheel?
-// Usage: node scripts/spheres/purple-thinker.mjs [games=24] [rollouts=4] [quadrants=gold,red,purple,green]
+// Usage: node scripts/spheres/purple-thinker.mjs [games=24] [rollouts=4] [quadrants=gold,red,purple,green] [firstGame=1]
 import { createGame, applyMove, chooseBotMove, followers, actionAt } from '../../src/engine/v4/index.js';
 import { chooseThinkerMove } from '../../src/engine/v4/thinker.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { registerQuadrant } from '../../src/engine/v4/content/index.js';
-import purple, { restingOf } from '../../src/engine/v4/content/purple.js';
+import purple, { onBoard } from '../../src/engine/v4/content/purple.js';
 import { contextFor } from '../../src/engine/v4/core.js';
 registerQuadrant(purple);
 const N = Number(process.argv[2] || 24), R = Number(process.argv[3] || 4);
@@ -12,7 +12,8 @@ const quadrants = (process.argv[4] || 'gold,red,purple,green').split(',');
 const pq = quadrants.indexOf('purple');
 let wins = 0, margin = 0, tP = 0, tAll = 0, bP = 0, bAll = 0, tRest = 0, bRest = 0, rounds = 0;
 const tTakes = {};
-for (let g = 1; g <= N; g++) {
+const G0 = Number(process.argv[5] || 1);
+for (let g = G0; g < G0 + N; g++) {
   const rand = seededRandom(g * 7 + 1);
   const thinker = g % 4;
   let s = createGame({ seats: [0, 1, 2, 3].map(() => ({ kind: 'bot' })), seed: 7000 + g, quadrants });
@@ -26,7 +27,7 @@ for (let g = 1; g <= N; g++) {
     }
     const r0 = s.round;
     const ctx = contextFor(s);
-    const restNow = s.players.map(p => restingOf(ctx, p));
+    const restNow = s.players.map(p => onBoard(ctx, p));
     const next = applyMove(s, m);
     if (next.round !== r0 || next.over) { rounds++; tRest += restNow[thinker]; bRest += restNow.filter((_, i) => i !== thinker).reduce((a, b) => a + b, 0) / 3; }
     s = next;
@@ -36,4 +37,4 @@ for (let g = 1; g <= N; g++) {
   console.error(`${g}/${N}: thinker wins ${wins}`);
 }
 console.log(`${quadrants.join('/')}: thinker win ${(100 * wins / N).toFixed(0)}% over ${N} games (25% = no edge); avg margin ${(margin / N).toFixed(1)}`);
-if (pq >= 0) console.log(`share of placements on Purple: thinker ${(100 * tP / tAll).toFixed(0)}% vs greedy ${(100 * bP / bAll).toFixed(0)}% · resting at round end: thinker ${(tRest / rounds).toFixed(2)} vs greedy ${(bRest / rounds).toFixed(2)} · thinker's Purple picks ${JSON.stringify(tTakes)}`);
+if (pq >= 0) console.log(`share of placements on Purple: thinker ${(100 * tP / tAll).toFixed(0)}% vs greedy ${(100 * bP / bAll).toFixed(0)}% · workers on the board at round end: thinker ${(tRest / rounds).toFixed(2)} vs greedy ${(bRest / rounds).toFixed(2)} · thinker's Purple picks ${JSON.stringify(tTakes)}`);

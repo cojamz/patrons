@@ -121,9 +121,9 @@ describe('Yellow actions', () => {
     expect(R(take(scene({ round: 2, res: [{ yellow: 2 }] }), 'Prism'))).toEqual({ ...Z, yellow: 2 });
   });
 
-  it('Gather (ring II): each member brings 1 of its color; Twins count twice', () => {
+  it('Gather (ring II): each member brings 1 of its color (Twins is one member)', () => {
     const s = take(scene({ round: 2, members: [['gold.banker', 'red.twins', 'red.intern', 'yellow.farmer']] }), 'Gather');
-    expect(R(s)).toEqual({ gold: 1, red: 3, yellow: 2, green: 0 }); // Farmer adds 1 to the yellow
+    expect(R(s)).toEqual({ gold: 1, red: 2, yellow: 2, green: 0 }); // Farmer adds 1 to the yellow
   });
 
   it('Flourish (ring III): +1 of each other color per full set', () => {

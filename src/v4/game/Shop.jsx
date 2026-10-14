@@ -72,7 +72,7 @@ function ShopStrip({ state, me, optionFor, onPick, onDenied }) {
           >
             <span className="row"><b>{d.name}</b><span className="num">{d.f}★</span></span>
             <small>{d.text}</small>
-            <span className="row cost"><Cost d={d} plan={plan} />{opt && <span className="afford">afford</span>}</span>
+            <span className="row cost"><Cost d={d} plan={plan} />{opt && <span className="afford" aria-label="you can afford this" title="You can afford this" />}</span>
           </button>
         );
       })}
@@ -97,7 +97,8 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
             title={`Buy ${t.get} follower${t.get > 1 ? 's' : ''} for ${tierCostText(t)}`}
           >
             <b><span className="num">+{t.get}</span> follower{t.get > 1 ? 's' : ''}</b>
-            <span>{t.colors === 1 ? `${t.cost} of anything` : `${t.cost} · ${t.colors}+ colors`}{t.limited ? <> · <span className="num">{state.bigLeft}</span> left</> : ''}</span>
+            <span>{t.colors === 1 ? `${t.cost} of anything` : `${t.cost} · ${t.colors}+ colors`}</span>
+            {t.limited && <em className="left-badge num" title={`${state.bigLeft} of these left; the last one ends the game after that round`}>{state.bigLeft} left</em>}
           </button>
         );
       })}

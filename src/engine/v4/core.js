@@ -102,6 +102,9 @@ export function openSlots(state) {
 }
 
 /** What a member would cost this player right now: { spend, colorPart, anyPart } or null if unaffordable. */
+// A member's colored part is paid in its quadrant's resource. Some sphere drafts still relabel
+// def.quadrant to a color name, so a bare color is accepted too.
+const colorOf = def => { try { return quadrant(def.quadrant).resource; } catch { return def.quadrant; } };
 export function paymentPlan(state, p, uid) {
   const def = cardDef(state, uid);
   let s = def.s, w = def.w;
@@ -110,7 +113,7 @@ export function paymentPlan(state, p, uid) {
   const goldDouble = sumMemberFlag(state, p, 'goldPaysDouble') > 0;
   const res = { ...p.res };
   const spend = Object.fromEntries(Object.keys(res).map(r => [r, 0]));
-  const q = def.quadrant;
+  const q = colorOf(def);
   const need = goldDouble && q === 'gold' ? Math.ceil(s / 2) : s;
   if ((res[q] ?? 0) < need) return null;
   res[q] -= need; spend[q] += need;
@@ -140,7 +143,7 @@ function memberPayOk(state, p, def, v) {
   const goldDouble = sumMemberFlag(state, p, 'goldPaysDouble') > 0;
   const worth = c => (c === 'gold' && goldDouble ? 2 : 1);
   const d = p.discount + sumMemberFlag(state, p, 'costReduction');
-  const q = def.quadrant;
+  const q = colorOf(def);
   for (let ds = 0; ds <= Math.min(def.s, d); ds++) {
     const needS = def.s - ds, needW = Math.max(0, def.w - (d - ds));
     for (let a = 0; a <= (v[q] || 0); a++) {
