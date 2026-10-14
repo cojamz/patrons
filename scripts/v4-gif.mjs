@@ -1,5 +1,5 @@
 // Record a page as a crisp pixel-art GIF plus an MP4 (send Cory the MP4: the app plays video but shows a GIF as a still).
-//   [STEP=1] node scripts/v4-gif.mjs <url> <out.gif> [ms=8000] [width=960] [fps=15]  (STEP=1: exact frame stepping, best for the intro)   (GIF_READY=<css selector> waits for it before the clock starts)
+//   [STEP=1] node scripts/v4-gif.mjs <url> <out.gif> [ms=8000] [width=960] [fps=15]  (use fps 30 for motion Cory judges)  (STEP=1: exact frame stepping, best for the intro)   (GIF_READY=<css selector> waits for it before the clock starts)
 // e.g. node scripts/v4-gif.mjs "http://localhost:5324/?lab=intro&beat=1" design/prototypes/vision/shots/intro2-beat1.gif 5000
 // Records at 1270×700 in Chromium, trims the page-load lead-in, and converts with a generated palette and no dithering
 // (nearest-neighbour scaling) so pixel art stays sharp. Keeps the GIF under ~15 MB by lowering fps/width if needed.
