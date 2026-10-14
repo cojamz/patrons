@@ -115,7 +115,8 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
         && !(next.pending && next.pending.player === meActed);
       // every bot step during a round holds the pace (≥600ms at Normal): placing, buying, choosing, passing
       const rivalStep = actor != null && next.round >= 1 && !rivalSetup;
-      const dwell = myRecruitThenGone ? 1500 : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
+      // a rival's recruit holds a beat longer: the card's flight to their row is the thing to see
+      const dwell = myRecruitThenGone ? 1500 : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(400, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
       if (!queue.current.length) paced.current = false;
       if (dwell) {
         timer.current = setTimeout(() => { timer.current = null; pump(); }, dwell);
