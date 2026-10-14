@@ -208,8 +208,9 @@ function orderChoices(state, list, preferred, p) {
   const out = [];
   for (const v of list) { const k = vecKey(state, v); if (!seen.has(k)) { seen.add(k); out.push(v); } }
   // The default way to pay comes first. It never spends a color whose contest you lead or tie when another way
-  // exists; then the usual plan (surplus colors first); without one, as little gold as possible.
-  out.sort((a, b) => risk(a) - risk(b) || (vecKey(state, b) === pk) - (vecKey(state, a) === pk) || (a.gold || 0) - (b.gold || 0));
+  // exists; then as little gold as possible; then the usual plan (surplus colors first).
+  // Gold is wild and scores its own contest, so among ways that spare your contests, spend the least gold.
+  out.sort((a, b) => risk(a) - risk(b) || (a.gold || 0) - (b.gold || 0) || (vecKey(state, b) === pk) - (vecKey(state, a) === pk));
   return out;
 }
 function payOption(state, v, i) {

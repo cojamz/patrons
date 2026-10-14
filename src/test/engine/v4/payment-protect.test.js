@@ -25,3 +25,15 @@ it('member "any" part avoids the led green', () => {
   const w = paymentChoices(s, s.players[0], uid);
   if (w.length > 1) expect(w[0].green || 0).toBe(0);
 });
+
+// Tester U: gold is wild and scores the gold contest, so the suggestion spends the least gold it can.
+it('+1 follower (2 of anything) with gold, blue and red: pays without gold', () => {
+  const s = scene({ gold: 1, red: 1, blue: 1, green: 0 }, { gold: 3, red: 3, blue: 3, green: 0 });
+  const w = followerChoices(s, s.players[0], TIERS[0]);
+  expect(w[0].gold || 0).toBe(0);
+});
+it('+3 followers (4, 2+ colors) with gold 2, red 1, blue 3: pays 1 red + 3 blue, not gold', () => {
+  const s = scene({ gold: 2, red: 1, blue: 3, green: 0 }, { gold: 5, red: 5, blue: 5, green: 0 });
+  const w = followerChoices(s, s.players[0], TIERS[1]);
+  expect(w[0]).toMatchObject({ gold: 0, red: 1, blue: 3 });
+});

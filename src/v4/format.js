@@ -1,5 +1,6 @@
 // Display helpers. No rules here: everything is read off engine state.
 import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, followers as engineFollowers, memberCount, countMembersOfColor, applyMove } from '../engine/v4/index.js';
+import { contextFor } from '../engine/v4/core.js';
 
 export const PLAYER_COLORS = ['#f4efe2', '#ff8fb1', '#b9a2ff', '#ffa94d'];
 export const playerColor = id => PLAYER_COLORS[id % PLAYER_COLORS.length];
@@ -57,7 +58,19 @@ export function promptFor(state, mine) {
         ? { who: p, text: `Pick a starting resource${k ? ` (${k} of 2)` : ''}` }
         : { who: p, text: `${name} is picking a starting resource` };
     }
-    case 'place':
+    case 'place': {
+      // back-to-back snake turn: say so
+      let again = false;
+      for (let i = state.log.length - 1; i >= 0; i--) {
+        const l = state.log[i];
+        if (/^Round \S+ begins\./.test(l)) break;
+        const m = l.match(/^(.+?) took .+ \(\w+\)\.$/);
+        if (m) { again = m[1] === name; break; }
+      }
+      if (mine && again) return { who: p, text: 'Your turn again (snake order) — place a worker' };
+    }
+    // falls through
+    case 'place-plain':
       return mine
         ? { who: p, text: `Place a worker on a glowing space` }
         : { who: p, text: `${name} is placing a worker` };
@@ -163,7 +176,7 @@ export function winSentence(state) {
     members: v => `${v} from ${n} members' ★`,
     bought: v => `${v} bought`,
     effects: v => `${v} from members' effects`,
-    endGame: v => (best ? `${v} in end-game bonuses (${best.name} +${best.n})` : `${v} in end-game bonuses`),
+    endGame: v => (b.parts.length ? `${v} in end-game bonuses (${b.parts.join(', ')})` : `${v} in end-game bonuses`),
     contests: v => (swept && swept[1].rounds >= 2
       ? `${v} from contests (${shortLabel(swept[0])} ${swept[1].rounds === 3 ? 'all three rounds' : `${swept[1].rounds} of 3 rounds`})`
       : `${v} from contests`),
@@ -372,4 +385,31 @@ export function movesSinceYourTurn(state, mine) {
     if (out.length >= 6) break;
   }
   return out.reverse();
+}
+
+/**
+ * Each player's end-game bonuses if the game ended now: { [pid]: { total, parts:[{ name, n }] } }.
+ * Runs the members' own onGameEnd scoring on a copy of the state (display only).
+ */
+export function projectedEndGame(state) {
+  const out = {};
+  let copy;
+  try { copy = structuredClone(state); } catch { return out; }
+  const ctx = contextFor(copy);
+  for (const p of copy.players) {
+    const parts = [];
+    for (const uid of p.members) {
+      const card = copy.cards[uid];
+      const defs = [defById(card.def)];
+      if (card.copy) defs.push(defById(card.copy));
+      for (const d of defs) {
+        if (!d.onGameEnd) continue;
+        let n = 0;
+        try { n = d.onGameEnd(ctx, p, ctx.card(uid)) || 0; } catch { n = 0; }
+        if (n) parts.push({ name: d.name, n });
+      }
+    }
+    out[p.id] = { total: parts.reduce((s, x) => s + x.n, 0), parts };
+  }
+  return out;
 }

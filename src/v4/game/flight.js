@@ -26,6 +26,9 @@ export function playerAnchor(root, pid, part = '') {
   return root.querySelector('.ticker') || header;
 }
 
+// the flying copy is a picture of the card, not a control: no button, no option id, not focusable
+const inert = html => html.replace(/^<button/, '<div').replace(/<\/button>$/, '</div>').replace(/ data-option="[^"]*"/g, '').replace(/ type="button"/g, '').replace(/ tabindex="[^"]*"/g, '') ;
+
 export function snapshotShop(root) {
   const snap = new Map();
   if (!root) return snap;
@@ -33,7 +36,7 @@ export function snapshotShop(root) {
   root.querySelectorAll('.shop .card[data-uid]').forEach((el, index) => {
     const r = el.getBoundingClientRect();
     if (!r.width || el.closest('[aria-hidden="true"]')) return;
-    snap.set(Number(el.dataset.uid), { html: el.outerHTML, index, full: !!el.closest('.buy-view'), rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
+    snap.set(Number(el.dataset.uid), { html: inert(el.outerHTML), index, full: !!el.closest('.buy-view'), rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
   });
   return snap;
 }

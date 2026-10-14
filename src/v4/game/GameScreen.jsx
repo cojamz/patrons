@@ -229,6 +229,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     noteTimer.current = setTimeout(() => setNote(null), ms);
   }, []);
   useEffect(() => () => clearTimeout(noteTimer.current), []);
+  // an answer clears the nudge at once (it never lingers past the question it was about)
+  const stepKey = state.pending ? `${state.moves}` : 'none';
+  useEffect(() => { clearTimeout(noteTimer.current); setNote(n => (n && n.tone === 'nudge' ? null : n)); }, [stepKey]);
 
   // A fresh state means our move (or someone's) landed: the table is live again.
   useEffect(() => { sendToken.current += 1; setBusy(false); }, [state]);
@@ -274,7 +277,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const actor = before.pending ? before.pending.player : null;
     if (actor != null && mySeats.includes(actor) && !(state.pending && state.pending.player === actor)) {
       const rec = lines.map(l => l.match(new RegExp(`^${state.players[actor].name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} recruited (.+?) \\((.*)\\)\\.$`))).filter(Boolean).pop();
-      if (rec) showToast(`${humansHere ? state.players[actor].name : 'You'} recruited ${rec[1]} (${rec[2].split(';')[0]})`, 1600);
+      if (rec) {
+        const g = { pid: actor, text: `Recruited ${rec[1]} (${rec[2].split(';')[0]})`, color: null, n: Date.now() + 7 };
+        setGifts(gg => [...gg, g]);
+        setTimeout(() => setGifts(gg => gg.filter(x => x !== g)), 2400);
+      }
     }
     // Getting robbed is never silent: a rival's move that took your resources says so.
     if (actor != null && !mySeats.includes(actor)) {

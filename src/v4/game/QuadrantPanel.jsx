@@ -58,7 +58,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
             <button
               key={id} type="button" role="tab" aria-selected={q === facing} tabIndex={q === facing ? 0 : -1}
               className={`qtab${q === facing ? ' on' : ''}${free ? ' open' : ''}`} style={{ '--c': `var(--${id})` }}
-              onClick={() => onFacing(q)} aria-label={`${quadrant(id).name}${free ? ', has open spaces for you' : ''}`}
+              onClick={() => onFacing(q)} aria-label={`${quadrant(id).name}${free ? ', has open spaces for you' : ''}`} title={free ? `${quadrant(id).name}: the dot means it has open spaces for you` : quadrant(id).name}
             >{quadrant(id).name}</button>
           );
         })}

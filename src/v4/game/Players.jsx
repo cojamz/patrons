@@ -3,7 +3,7 @@
 // card on tap (touch-safe) with the member's effect, ★, and Use / switch when it's yours to use.
 import { useState, useCallback, useLayoutEffect, useRef } from 'react';
 import { followers, memberCount } from '../../engine/v4/index.js';
-import { memberChips, playerColor, plural } from '../format.js';
+import { memberChips, playerColor, plural, projectedEndGame } from '../format.js';
 import Tick from './Tick.jsx';
 import { Popover } from './parts.jsx';
 
@@ -98,7 +98,7 @@ function ChipRow({ state, p, own, onOpen, onAll }) {
             style={{ '--c': `var(--${g.def.quadrant})` }} title={memberTip(g.def)} aria-haspopup="dialog"
             onClick={e => onOpen(e.currentTarget, g)}
           >
-            <span className="glyph" aria-hidden="true" />{g.label}{g.count > 1 ? <em className="copies"> ·{g.count}</em> : ''}{g.card.used ? <em className="used"> · used</em> : null}
+            <span className="glyph" aria-hidden="true" />{g.label}{g.count > 1 ? <em className="copies"> ×{g.count} copies</em> : ''}{g.card.used ? <em className="used"> · used</em> : null}
             {sw && <i className={`sw${g.card.on === false ? '' : ' on'}`} aria-label={g.card.on === false ? 'off' : 'on'} />}
           </button>
         );
@@ -114,8 +114,19 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
   const [pop, setPop] = useState(null); // { el, group?, all?, pid, opt }
   const close = useCallback(() => setPop(null), []);
   const changes = useChanges(state);
+  // from round II on, what each player's end-game bonuses would add if the game ended now
+  const proj = state.round >= 2 && !state.over ? projectedEndGame(state) : null;
+  const [open, setOpen] = useState(false); // phones: the player list starts as one summary line
   return (
-    <div className="players">
+    <div className={`players${open ? ' open' : ''}`}>
+      <button type="button" className="pl-summary" aria-expanded={open} onClick={() => setOpen(o => !o)}>
+        {state.players.map(p => (
+          <span key={p.id} className={`ps${active === p.id ? ' act' : ''}`} style={{ '--pc': playerColor(p.id) }}>
+            <i />{p.name} <b className="num">{followers(state, p)}</b>
+          </span>
+        ))}
+        <span className="more-ind" aria-hidden="true">{open ? '▴' : '▾'}</span>
+      </button>
       {state.players.map(p => {
         const f = followers(state, p);
         const isActive = active === p.id && !state.over;
@@ -125,7 +136,12 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
           <section key={p.id} data-pid={p.id} className={`pl${isActive ? ' active' : ''}`} style={{ '--pc': playerColor(p.id) }} aria-label={`${p.name}${isActive ? ', to act' : ''}`}>
             <div className="top">
               <span className="nm"><i />{p.name}{p.hideout && p.hideout === state.round && !state.over ? <span className="hideout" title="Hideout: no one can steal from this player this round">⛨ hidden</span> : null}{p.kind === 'bot' ? <em> · bot</em> : isYou ? <em> · you</em> : null}</span>
-              <span className="fol"><Tick value={f} color={playerColor(p.id)} className="num" dur={650} float={false} /><small>{f === 1 ? 'follower' : 'followers'}</small></span>
+              <span className="fol">
+                <Tick value={f} color={playerColor(p.id)} className="num" dur={650} float={false} /><small>{f === 1 ? 'follower' : 'followers'}</small>
+                {proj && proj[p.id] && proj[p.id].total > 0 && (
+                  <em className="at-end" title={`If the game ended now: ${proj[p.id].parts.map(x => `${x.name} +${x.n}`).join(', ')}`}>+{proj[p.id].total} at end</em>
+                )}
+              </span>
             </div>
             <div className={`res${robbed && robbed.pid === p.id ? ' robbed' : ''}`}>
               <Resources state={state} p={p} float={false} dur={600} />

@@ -1010,6 +1010,102 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 
 @media (max-width:860px){ .contest{white-space:normal;overflow:visible;text-overflow:clip} }
 
+/* ---------- round 8, testers T, S, U ---------- */
+/* focus: a ring in the game's colors, keyboard only */
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+.slot:focus-visible .base{stroke:var(--gold)}
+/* player cards: height follows content (equal per row), chips one row with "+N more" on it; nothing clipped */
+.pl{height:auto}
+.players{align-items:stretch}
+.chips{height:26px;overflow:hidden;align-items:center;flex-wrap:wrap}
+.chips .chip{height:24px}
+.res,.res .meta{overflow:visible}
+.mcount{margin:0}
+.fol .at-end{display:block;font-style:normal;font-size:11px;color:var(--gold);text-align:right;line-height:1.1}
+.lane .gift.change::before{content:"last move  ";font-weight:400;color:var(--muted)}
+/* contest chips: one row of four equal chips, always two lines tall */
+.contests{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-bottom:4px}
+.contest{display:flex;flex-direction:column;justify-content:center;gap:0;height:38px;padding:2px 8px;border-radius:8px;line-height:16px;white-space:nowrap;overflow:hidden;min-width:0}
+.contest .c1{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:11.5px;overflow:hidden}
+.contest .c1 i{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.contest .c2{font-size:12px;color:var(--ink);overflow:hidden}
+.contest small{color:var(--muted)}
+@media (max-width:520px){ .contest{height:40px;padding:2px 6px} .contest .c1,.contest .c2{font-size:11px} }
+/* the choice prompt has its own slot above the board panel (pushes it down; never covers the rows) */
+@media (min-width:861px){ .app.game .side > .prompt{position:static;box-shadow:none;margin-bottom:var(--gap)} }
+.prompt .tally{color:var(--gold)}
+/* the action list always says when more is below, at every height */
+.app.game .scroller.more::after,.app.game .more-hint{display:block}
+.more-hint{position:absolute;left:50%;bottom:4px;transform:translateX(-50%)}
+.scroller.more::after{bottom:0}
+/* round card: room for FOLLOWERS */
+.re-head,.re-p{grid-template-columns:minmax(0,.8fr) 64px minmax(0,1.5fr) 84px}
+.re-head span{white-space:normal;line-height:1.2}
+/* names never hyphenate; action rows wrap rather than cut on narrower desktops */
+.nm,.card .nm,.act b{-webkit-hyphens:manual;hyphens:manual;overflow-wrap:normal;word-break:normal}
+.shop-panel.compact .card .nm{font-size:11px}
+.shop-panel.compact .eff1{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (min-width:861px) and (max-width:1100px){
+  .act{flex-wrap:wrap}
+  .act .act-text{white-space:normal;flex-basis:100%;order:3}
+}
+/* game-critical text wraps instead of cutting off */
+.fb .sub{white-space:normal}
+/* every dialog fits the screen and scrolls inside */
+.dialog{max-height:calc(100dvh - 24px);overflow:auto}
+.overlay.sheet .dialog{max-height:100dvh}
+/* sheets: a backdrop that blocks the board, and a Close */
+.sheet-backdrop{position:fixed;inset:0;z-index:14;background:color-mix(in srgb,var(--table) 45%,transparent)}
+.popover.sheet-pop{z-index:36}
+.peek.as-sheet{z-index:16}
+.sheet-close{align-self:flex-end;min-height:44px;margin-bottom:4px}
+.popover.sheet-pop .sheet-close{float:right}
+/* touch-size targets on phones by width too (not only coarse pointers) */
+@media (max-width:520px),(pointer:coarse){
+  .btn,.seg button,.way,.fb,.stepper button,.dialog .btn,.prompt .btn,.qtab,.token,.chip,.mcount,.fold,header.bar .ticker,.spin,.rules-btn,.leave-btn,.undo{min-height:44px}
+  .stepper button{width:44px;height:44px}
+  .spin,.rules-btn,.fold{min-width:44px}
+  .chips{height:46px}
+  .chips .chip{height:44px}
+  .mini{min-height:52px}
+  .seat .seg button{min-height:44px}
+  .seat .namebox input,.field input,.join input{min-height:44px}
+}
+/* name counters only while typing */
+.namebox .count,.field .count{opacity:0;transition:opacity .15s}
+.namebox:focus-within .count,.field:focus-within .count{opacity:1}
+/* phones: the player list collapses to one summary line (tap to open) */
+.pl-summary{display:none}
+@media (max-width:520px){
+  .app.game > .players .pl-summary{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;justify-content:flex-start;background:var(--table-2);border:1px solid var(--rim);border-radius:10px;padding:6px 10px;color:var(--ink);font-size:13px;min-height:44px;text-align:left;width:100%}
+  .pl-summary .ps{display:inline-flex;align-items:center;gap:4px}
+  .pl-summary .ps i{width:8px;height:8px;border-radius:50%;background:var(--pc)}
+  .pl-summary .ps.act{font-weight:700;color:var(--pc)}
+  .pl-summary .more-ind{margin-left:auto;color:var(--muted)}
+  .app.game > .players:not(.open) > .pl{display:none}
+  .app.game > .players{grid-template-columns:minmax(0,1fr)}
+}
+
+.roundend .btn.pri{min-height:46px} /* stays ≥44px even during the card's 98% settle-in */
+.flight [data-option],.flight button{pointer-events:none}
+
+/* compact shop card: name and ★ on one line, one line of ability, the cost on one line */
+.shop-panel.compact .card .row.top{display:flex;justify-content:space-between;align-items:flex-start;gap:4px}
+.shop-panel.compact .card .row.cost{white-space:nowrap;font-size:10px;overflow:hidden}
+.shop-panel.compact .card .cost-box{flex-wrap:nowrap}
+.shop-panel.compact .card{min-height:0;gap:1px}
+@media (max-width:520px){ .contest .mine{display:none} }
+
+@media (min-width:861px) and (max-width:1100px){
+  .shop-panel.compact .card .row.top{flex-direction:column;gap:0}
+  .act{padding:3px 8px;gap:6px;row-gap:0}
+  .act .rn{min-width:0;font-size:9px;letter-spacing:.04em}
+  .act b{font-size:12.5px}
+  .act .act-text{font-size:11.5px;line-height:1.25;flex-basis:auto;order:0;min-width:0}
+  .act{flex-wrap:nowrap}
+  .act .act-text{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }

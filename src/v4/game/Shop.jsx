@@ -51,8 +51,9 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
             >
               {compact ? (
                 <>
-                  <b className="nm">{softBreak(d.name)}</b>
-                  <div className="row cost"><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span><Cost d={d} plan={null} /></div>
+                  <div className="row top"><b className="nm">{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
+                  <span className="eff1">{d.text}</span>
+                  <div className="row cost"><Cost d={d} plan={null} /></div>
                 </>
               ) : (
                 <div className="row"><b className="nm">{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>

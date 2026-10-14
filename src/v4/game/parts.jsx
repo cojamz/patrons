@@ -64,10 +64,15 @@ export function ChoicePrompt({ state, onPick, busy }) {
     if (b) b.focus({ preventScroll: true });
   }, [pend]);
   const trade = pend.options.length > 0 && pend.options.every(o => o.kind === 'trade');
+  // counted picks ("Steal: take 1 gold from… (2 left)") show how many are already taken
+  const total = useRef(null);
+  const left = (pend.prompt.match(/\((\d+) left\)/) || [])[1];
+  if (left == null) total.current = null; else if (total.current == null || Number(left) > total.current) total.current = Number(left);
+  const tally = left != null && total.current ? `${total.current - Number(left)} of ${total.current} taken` : null;
   const pick = (id, mode) => onPick(id, mode); // step changes are guarded by the table's input lock
   return (
     <section className={`prompt choice${setup ? ' setup' : ''}`} aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}>
-      <p>{setup ? `Pick a starting resource${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] ? ` (${pend.prompt.match(/\((\d) of 2\)/)[1]} of 2)` : ''}` : pend.prompt}</p>
+      <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `Pick a starting resource${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] ? ` (${pend.prompt.match(/\((\d) of 2\)/)[1]} of 2)` : ''}` : pend.prompt}</p>
       {setup ? <SetupTokens state={state} pend={pend} onPick={pick} busy={busy} />
         : trade ? <TradePicker state={state} pend={pend} onPick={pick} busy={busy} />
           : <MergedOptions state={state} pend={pend} onPick={pick} busy={busy} />}
@@ -256,7 +261,18 @@ export function Popover({ anchor, onClose, children }) {
     return () => { removeEventListener('pointerdown', close, true); removeEventListener('keydown', key); removeEventListener('scroll', scroll, true); };
   }, [anchor, onClose]);
   if (!pos) return null;
-  if (sheet) return <div className="popover sheet-pop" ref={box} role="dialog">{children}</div>;
+  if (sheet) {
+    // a sheet blocks the board until it's closed (the backdrop takes stray taps), and always has a Close
+    return (
+      <>
+        <div className="sheet-backdrop" onPointerDown={e => { e.preventDefault(); e.stopPropagation(); onClose(); }} />
+        <div className="popover sheet-pop" ref={box} role="dialog">
+          <button type="button" className="btn ghost sheet-close" onClick={onClose}>Close</button>
+          {children}
+        </div>
+      </>
+    );
+  }
   return <div className="popover" ref={box} role="dialog" style={pos}>{children}</div>;
 }
 

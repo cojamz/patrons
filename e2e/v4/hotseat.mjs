@@ -128,7 +128,8 @@ try {
         await page.waitForTimeout(200);
         const after = await page.$eval('[data-prompt]', e => e.textContent);
         if (before !== after) errors.push(`clicking a taken space changed the prompt ("${before}" -> "${after}")`);
-        if (!(await page.$('.peek'))) errors.push('clicking a taken space showed no space card');
+        // a click hides the hover card (tester S); hovering shows it, which the check above covers
+        if (await page.$('.peek.pinned')) errors.push('clicking a taken space pinned a card on desktop');
         await page.keyboard.press('Escape');
       }
       await page.mouse.move(5, 5);

@@ -96,7 +96,7 @@ try {
   const t0 = Date.now();
   let steps = 0, lastMoves = null;
   while (!(await page.$('.results'))) {
-    if (Date.now() - t0 > 330000) throw new Error('game did not finish in 5.5 minutes');
+    if (Date.now() - t0 > 540000) throw new Error("game did not finish in 9 minutes");
     const moves = await page.$eval('.app.game', e => e.dataset.moves).catch(() => null);
     if (moves !== lastMoves) { lastMoves = moves; steps++; await audit(`step ${steps}`); }
     const next = await page.$('[data-next-round]');

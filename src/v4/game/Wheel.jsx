@@ -3,7 +3,7 @@
 // or a first tap (touch) shows a card with the action's text; on touch, placing takes a second tap.
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { quadrant, roman } from '../../engine/v4/index.js';
-import { playerColor, standings, shortLabel, tiebreakNote } from '../format.js';
+import { playerColor, standings, shortLabel, tiebreakWord } from '../format.js';
 import { RING_VALUE } from '../../engine/v4/index.js';
 import { sheetMode } from './parts.jsx';
 
@@ -212,7 +212,8 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
       setPeek({ key: s.key, pinned: true });
       return;
     }
-    setPeek({ key: s.key, pinned: true });
+    // touch pins the card (it's how you read a space); a mouse already sees it on hover
+    setPeek(touch ? { key: s.key, pinned: true } : null);
     if (onDenied) onDenied({ type: 'slot', key: s.key, q: s.q, i: s.i }, el);
   };
 
@@ -263,7 +264,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
         onFocus={e => { if (e.currentTarget.matches(':focus-visible')) setPeek({ key, pinned: false }); }}
         onBlur={() => setPeek(p => (p && !p.pinned && p.key === key ? null : p))}
       >
-        <circle className="hit" cx={x} cy={y} r={t === 3 ? 30 : t === 2 ? 28 : 26} fill="transparent" />
+        <circle className="hit" cx={x} cy={y} r={t === 3 ? 33 : t === 2 ? 31 : 29} fill="transparent" />
         {opt && <circle className="halo" cx={x} cy={y} r={rad + 4} fill="none" stroke={col} />}
         <circle className="base" cx={x} cy={y} r={rad} fill="var(--table)" stroke={col} strokeOpacity={open ? 1 : 0.3} strokeWidth={opt || selected ? 2.5 : 1.5} />
         {owner !== undefined
@@ -332,6 +333,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
           {opt && peek.pinned && (
             <button type="button" className="btn pri" data-place={opt} onClick={() => { setPeek(null); onPick(opt); }}>Place here</button>
           )}
+          {peek.pinned && sheetMode() && <button type="button" className="btn ghost sheet-close" onClick={() => setPeek(null)}>Close</button>}
         </div>
       );
     }
@@ -342,15 +344,17 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
       {state.round >= 1 && !state.over && (
         <div className="contests" aria-label={`Contests this round, +${RING_VALUE[paying - 1]} each`}>
           {standings(state).map(st => {
-            const leaders = st.rows.filter(r => st.leaders.includes(r.id));
-            const me = meId != null ? st.rows.find(r => r.id === meId) : null;
             const nm = r => (r.id === meId ? 'you' : state.players[r.id].name);
+            const leaders = st.top > 0 ? st.rows.filter(r => st.leaders.includes(r.id)) : [];
+            const shownTie = leaders.length === 1 && st.rows.some(r => r !== leaders[0] && r.shown === leaders[0].shown);
+            const me = meId != null ? st.rows.find(r => r.id === meId) : null;
+            const tb = tiebreakWord(st.label);
             return (
               <span key={st.qid} className="contest" style={{ '--c': `var(--${st.qid})` }} title={`${st.label}: +${RING_VALUE[paying - 1]} at round end`}>
-                <i />{shortLabel(st.label).replace(/^Most /, '')} <b className="num">+{RING_VALUE[paying - 1]}</b>
-                <span className="who">
-                  {st.top > 0 ? leaders.map((r, k) => <span key={r.id}>{k ? ' & ' : ' '}{nm(r)} <b className="num">{r.shown}</b>{tiebreakNote(st, r) ? <small> ({tiebreakNote(st, r)})</small> : null}</span>) : ' nobody yet'}
-                  {me && st.top > 0 && !st.leaders.includes(me.id) ? <span className="mine"> · you {me.shown}</span> : null}
+                <span className="c1"><i />{shortLabel(st.label).replace(/^Most /, '')} <b className="num">+{RING_VALUE[paying - 1]}</b></span>
+                <span className="c2">
+                  {leaders.length ? <>{leaders.map(nm).join(' & ')} <b className="num">{leaders[0].shown}</b>{shownTie && tb ? <small> tie→{tb}</small> : null}</> : 'no one yet'}
+                  {me && leaders.length && !st.leaders.includes(me.id) ? <small> · you {me.shown}</small> : null}
                 </span>
               </span>
             );
@@ -363,6 +367,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
           <g transform={`rotate(${rot} ${CX} ${CY})`} className="wheel">{parts}</g>
           <path d={`M${CX - 9},${CY + 214} L${CX},${CY + 203} L${CX + 9},${CY + 214}Z`} fill="var(--ink)" opacity=".8" />
         </svg>
+        {peek && peek.pinned && sheetMode() && <div className="sheet-backdrop" onPointerDown={e => { e.preventDefault(); e.stopPropagation(); setPeek(null); }} />}
         {peekCard}
         {caption && <div key={caption.n} className="caption" style={{ '--pc': playerColor(caption.pid) }} role="status"><i />{caption.text}</div>}
         <button type="button" className="spin l" aria-label="Turn the board left" title="Turn the board left" onClick={() => nudge(-90)}>‹</button>
@@ -371,7 +376,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
       <div className="lm-legend" aria-live="polite">
         {recentMoves.length ? (
           <>
-            <span className="lbl">{recentMoves[0].mine ? 'Last:' : 'Since your turn:'}</span>
+            <span className="lbl">{recentMoves[0].mine ? 'You placed:' : 'Since your turn:'}</span>
             {recentMoves.map((m, k) => (
               <span key={m.key} className="mv" style={{ '--pc': playerColor(m.pid) }}><i aria-hidden="true" />{m.mine ? 'you' : state.players[m.pid].name} {m.action}{k < recentMoves.length - 1 ? ',' : ''}</span>
             ))}
