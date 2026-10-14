@@ -1,11 +1,19 @@
-// The intro: shows once per browser on a new game, Skip closes it, the flag sticks (and storage failures don't
-// break it), Esc/tap only work after the first beat, replay always works, reduced motion gets a still storyboard.
+// The intro (Cory's four-beat script): shows once per browser on a new game, Skip closes it, the flag sticks (and
+// storage failures don't break it), Esc/tap only work after the first beat, replay always works, reduced motion gets
+// a still storyboard, and the line's box never changes height between beats.
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import Intro, { IntroGate, introOnGameStart, replayIntro, introSeen } from '../../../v4/Intro.jsx';
 
 const FLAG = 'patrons.v4.introSeen';
 const dialog = () => document.querySelector('[data-intro]');
+const line = () => document.querySelector('.intro-line.now').textContent;
+const LINES = [
+  'You are a cult leader.',
+  'You and your minions have learned to tap into mysterious powers to gain influence and followers.',
+  'Take actions granted by the mysterious powers to add to your resources, recruit new members, and become more powerful.',
+  'After three rounds, the cult with the most followers (including members!) wins!',
+];
 const media = reduce => vi.stubGlobal('matchMedia', q => ({ matches: reduce && /reduced-motion/.test(q), media: q, addEventListener() {}, removeEventListener() {} }));
 
 beforeEach(() => { localStorage.clear(); vi.useFakeTimers(); });
@@ -18,8 +26,8 @@ describe('intro', () => {
     act(() => introOnGameStart());
     expect(dialog()).toBeTruthy();
     expect(screen.getByRole('dialog', { name: /Cults in twenty seconds/ })).toBeTruthy();
-    expect(screen.getByText(/You lead a little/)).toBeTruthy();
-    expect(document.querySelectorAll('.intro-dots i')).toHaveLength(7);
+    expect(line()).toBe(LINES[0]);
+    expect(document.querySelectorAll('.intro-dots i')).toHaveLength(4);
     expect(localStorage.getItem(FLAG)).toBe('1');
     expect(introSeen()).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Skip intro' }));
@@ -32,16 +40,22 @@ describe('intro', () => {
     expect(dialog()).toBeTruthy();
   });
 
-  it('plays its seven beats on its own, then waits on Begin', () => {
+  it('plays its four beats on its own, in Cory\'s words, each line held at least 3.5 s, then waits on Begin', () => {
     const onClose = vi.fn();
     render(<Intro onClose={onClose} still={false} />);
     expect(dialog().dataset.beat).toBe('1');
-    act(() => vi.advanceTimersByTime(3000));
-    expect(dialog().dataset.beat).toBe('2');
-    expect(screen.getByText(/minion/)).toBeTruthy();
-    for (let i = 0; i < 8; i++) act(() => vi.advanceTimersByTime(3200)); // each beat's clock starts as it shows
-    expect(dialog().dataset.beat).toBe('7');
-    expect(screen.getByText(/after round III wins/)).toBeTruthy();
+    act(() => vi.advanceTimersByTime(3500));
+    expect(dialog().dataset.beat).toBe('1');
+    let elapsed = 3500;
+    for (const [i, text] of LINES.entries()) {
+      while (dialog().dataset.beat !== String(i + 1)) { act(() => vi.advanceTimersByTime(100)); elapsed += 100; }
+      expect(line()).toBe(text);
+      if (i < 3) { act(() => vi.advanceTimersByTime(3500)); elapsed += 3500; expect(dialog().dataset.beat).toBe(String(i + 1)); }
+      expect(elapsed).toBeLessThan(26000);
+    }
+    expect(elapsed).toBeGreaterThan(17000); // about 20–25 s in all (the last beat waits)
+    act(() => vi.advanceTimersByTime(30000));
+    expect(dialog().dataset.beat).toBe('4');
     expect(onClose).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Begin' }));
     act(() => vi.advanceTimersByTime(300));
@@ -55,7 +69,8 @@ describe('intro', () => {
     fireEvent.click(dialog());
     act(() => vi.advanceTimersByTime(300));
     expect(onClose).not.toHaveBeenCalled();
-    act(() => vi.advanceTimersByTime(2700)); // beat 2
+    act(() => vi.advanceTimersByTime(3600)); // beat 2
+    expect(dialog().dataset.beat).toBe('2');
     fireEvent.click(dialog());
     act(() => vi.advanceTimersByTime(300));
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -88,18 +103,23 @@ describe('intro', () => {
     act(() => vi.advanceTimersByTime(30000));
     expect(dialog().dataset.beat).toBe('1');
     expect(screen.getByRole('button', { name: 'Back' }).disabled).toBe(true);
-    for (let i = 2; i <= 7; i++) {
+    expect(line()).toBe(LINES[0]);
+    // each still shows its beat at rest: one scene, nothing scheduled
+    expect(document.querySelectorAll('.intro-scene')).toHaveLength(1);
+    expect(document.querySelector('[data-scene="1"] [data-pose="scheme"]')).toBeTruthy(); // the scheming look, held
+    for (let i = 2; i <= 4; i++) {
       fireEvent.click(screen.getByRole('button', { name: 'Next' }));
       expect(dialog().dataset.beat).toBe(String(i));
+      expect(line()).toBe(LINES[i - 1]);
+      expect(document.querySelectorAll('.intro-scene')).toHaveLength(1);
+      expect(document.querySelector(`[data-scene="${i}"]`)).toBeTruthy();
     }
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-    expect(dialog().dataset.beat).toBe('6');
+    expect(dialog().dataset.beat).toBe('3');
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     // a tap on the storyboard itself does nothing (only the buttons act)
     fireEvent.click(dialog());
     expect(onClose).not.toHaveBeenCalled();
-    // counts show their final values at once
-    expect(document.querySelector('.in-mine').textContent).toBe('16');
     fireEvent.click(screen.getByRole('button', { name: 'Begin' }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -114,6 +134,16 @@ describe('intro', () => {
     expect(dialog()).toBe(null);
     act(() => replayIntro());
     expect(dialog()).toBeTruthy();
+  });
+
+  it('the line sits in a box as tall as the longest line, so nothing jumps between beats', () => {
+    render(<Intro onClose={() => {}} still={false} />);
+    const lines = [...document.querySelectorAll('.intro-lines .intro-line')];
+    expect(lines.map(l => l.textContent)).toEqual(LINES); // every line is in the box, one shown
+    expect(lines.filter(l => l.classList.contains('now'))).toHaveLength(1);
+    expect(lines.filter(l => !l.classList.contains('now')).every(l => l.getAttribute('aria-hidden') === 'true')).toBe(true);
+    fireEvent.keyDown(document.body, { key: 'ArrowRight' });
+    expect([...document.querySelectorAll('.intro-lines .intro-line')].map(l => l.textContent)).toEqual(LINES);
   });
 
   it('?intro=0 never shows it on a game start; ?intro=1 always does', () => {
