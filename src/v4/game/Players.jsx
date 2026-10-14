@@ -9,12 +9,35 @@ import { Popover } from './parts.jsx';
 
 export const memberTip = d => `${d.name} · ${d.f}★ · ${d.text}`;
 
-export function Resources({ state, p }) {
+export function Resources({ state, p, float = true }) {
   return state.resources.map(r => (
     <span key={r} className="r" title={`${p.res[r]} ${r}`} aria-label={`${p.res[r]} ${r}`}>
-      <i style={{ background: `var(--${r})` }} /><Tick value={p.res[r]} color={`var(--${r})`} className="num" />
+      <i style={{ background: `var(--${r})` }} /><Tick value={p.res[r]} color={`var(--${r})`} className="num" float={float} />
     </span>
   ));
+}
+
+/** One pill per card summing what just changed ("+3 gold −2 red"), instead of floaters jostling each other. */
+function useChanges(state) {
+  const prev = useRef(state);
+  const [changes, setChanges] = useState({});
+  useLayoutEffect(() => {
+    const before = prev.current;
+    prev.current = state;
+    if (before === state || before.round !== state.round && before.round === 0) return undefined;
+    const next = {};
+    for (const p of state.players) {
+      const b = before.players[p.id];
+      if (!b) continue;
+      const parts = state.resources.map(r => [r, p.res[r] - b.res[r]]).filter(([, d]) => d);
+      if (parts.length) next[p.id] = { n: Date.now(), parts };
+    }
+    if (!Object.keys(next).length) return undefined;
+    setChanges(c => ({ ...c, ...next }));
+    const t = setTimeout(() => setChanges(c => { const o = { ...c }; for (const k in next) if (o[k] === next[k]) delete o[k]; return o; }), 1600);
+    return () => clearTimeout(t);
+  }, [state]);
+  return changes;
 }
 
 export function Workers({ p }) {
@@ -38,8 +61,10 @@ function ChipRow({ state, p, optionFor, onOpen, onAll }) {
     if (!el || fit !== Infinity) return undefined;
     const measure = () => {
       const kids = [...el.querySelectorAll('.chip[data-g]')];
-      const limit = el.clientHeight + 1;
-      const inside = kids.filter(k => k.offsetTop + k.offsetHeight <= limit).length;
+      const box2 = el.getBoundingClientRect();
+      if (!box2.height) { setFit(kids.length); return; }
+      const limit = box2.top + el.clientHeight + 1;
+      const inside = kids.filter(k => k.getBoundingClientRect().bottom <= limit).length;
       setFit(inside >= kids.length ? kids.length : Math.max(0, inside - 1));
     };
     measure();
@@ -82,6 +107,7 @@ function ChipRow({ state, p, optionFor, onOpen, onAll }) {
 export default function Players({ state, active, mySeats, optionFor, onPick, gifts = [] }) {
   const [pop, setPop] = useState(null); // { el, group?, all?, pid, opt }
   const close = useCallback(() => setPop(null), []);
+  const changes = useChanges(state);
   return (
     <div className="players">
       {state.players.map(p => {
@@ -96,7 +122,7 @@ export default function Players({ state, active, mySeats, optionFor, onPick, gif
               <span className="fol"><Tick value={f} color={playerColor(p.id)} className="num" dur={420} /><small>{f === 1 ? 'follower' : 'followers'}</small></span>
             </div>
             <div className="res">
-              <Resources state={state} p={p} />
+              <Resources state={state} p={p} float={false} />
               <span className="meta"><Workers p={p} /> · {plural(n, 'member')}{p.discount ? ` · −${p.discount} next` : ''}</span>
             </div>
             <ChipRow
@@ -104,6 +130,11 @@ export default function Players({ state, active, mySeats, optionFor, onPick, gif
               onOpen={(el, g, opt) => setPop(pp => (pp && pp.group && pp.group.key === g.key && pp.pid === p.id ? null : { el, group: g, pid: p.id, opt }))}
               onAll={el => setPop({ el, all: true, pid: p.id })}
             />
+            {changes[p.id] && !gifts.some(g => g.pid === p.id) && (
+              <span key={changes[p.id].n} className="gift change" aria-hidden="true">
+                {changes[p.id].parts.map(([r, d]) => <span key={r} style={{ color: `var(--${r})` }}>{d > 0 ? '+' : '−'}{Math.abs(d)} {r} </span>)}
+              </span>
+            )}
             {gifts.filter(g => g.pid === p.id).map(g => (
               <span key={g.n} className="gift" style={{ '--c': `var(--${g.color}, var(--ink))` }} role="status">{g.text}</span>
             ))}

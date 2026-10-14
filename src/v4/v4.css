@@ -475,6 +475,7 @@ td.rank{font-weight:700}
 .tick.bump,.tick.dip{animation:bump .42s cubic-bezier(.3,.7,.4,1)}
 .tick.bump{color:var(--tc,inherit)}
 @keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
+.gift.change{border-color:var(--rim);font-variant-numeric:tabular-nums}
 .gift{position:absolute;right:8px;bottom:6px;background:var(--table-2);border:1px solid var(--c);color:var(--ink);font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;animation:giftin 2.2s ease-out forwards;pointer-events:none}
 @keyframes giftin{0%{opacity:0;transform:translateY(6px)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-4px)}}
 /* toast: readable, opaque, under the header, never takes the pointer */

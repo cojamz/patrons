@@ -161,7 +161,9 @@ try {
   await shot('09-results-phone', PHONE);
   const winner = await page.$eval('.results .win', e => e.textContent);
   const flights = await page.evaluate(() => window.__patronsFlights || 0);
-  console.log(`motion: ${flights} flights (cards and workers)`);
+  const ticks = await page.evaluate(() => window.__patronsTicks || 0);
+  console.log(`motion: ${flights} flights (cards and workers), ${ticks} number count-ups`);
+  if (!ticks) errors.push('no numbers counted up');
   if (!flights) errors.push('no card or worker flights ran');
   for (const why of ['undo', 'reload']) if (!seen.has(why)) errors.push(`never exercised ${why}`);
   console.log(`finished after ${clicks} clicks: ${winner}`);
