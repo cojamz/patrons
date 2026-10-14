@@ -519,7 +519,7 @@ if (!isMainThread) {
     const games = Number(flags.games || 3000), jitter = Number(flags.jitter || 0.4), hardFrac = Number(flags.hard || 0);
     let res, printed = Object.fromEntries(allDefs().map(d => [d.id, priceOf(d)]));
     if (flags.from) { const R = JSON.parse(readFileSync(flags.from, "utf8")); res = R.results.filter(r => !r.error); printed = R.params.printed || printed; const bad = R.results.filter(r => r.error); if (bad.length) console.log(`${bad.length} crashed games skipped: ${bad.map(r => `g=${r.g}`).join(", ")} — ${bad[0].error}`); }
-    else res = await runPool('screen', games, { jitter, printed, hardFrac }, workers, flags.raw);
+    else res = await runPool('screen', games, { jitter, printed, hardFrac, fromSeed: Number(flags['from-seed'] || 0) }, workers, flags.raw);
     const A = analyseScreen(res, { printed });
     const out = { mode, games, jitter, secs: (Date.now() - t0) / 1000, ...A };
     if (flags.out) writeFileSync(flags.out, JSON.stringify(out, null, 1));
