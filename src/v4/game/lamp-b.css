@@ -17,7 +17,11 @@
 /* ---------- shop cards ---------- */
 .lt-shop-cards{display:flex;flex-direction:column;min-width:0}
 .lt-cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-.lt-card{position:relative;height:150px;border-radius:7px;padding:0;overflow:hidden;display:flex;flex-direction:column;text-align:left;border:0;font:inherit;cursor:pointer;transition:transform .12s ease,filter .15s}
+/* (keeps the .card class for the e2e selectors; v4.css's dark .card look is undone here) */
+.lt-card.card{position:relative;height:150px;border-radius:7px;padding:0;gap:0;overflow:hidden;display:flex;flex-direction:column;text-align:left;border:0;font:inherit;cursor:pointer;transition:transform .12s ease,filter .15s;min-width:0;color:var(--paper-ink)}
+.lt-card.card.paper{background:linear-gradient(180deg,var(--paper),var(--paper-2))}
+.lt-card.card.can{border:0;box-shadow:0 0 0 2px rgba(var(--lamp,255,206,140),.6),0 6px 14px -6px rgba(0,0,0,.7)}
+.lt-card.card.can:hover{background:linear-gradient(180deg,#fff7e6,var(--paper))}
 .lt-card .band{display:block;height:15px;line-height:15px;padding:0 7px;background:var(--q);color:var(--paper);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lt-card .art{height:58px;margin:5px 6px 0;border-radius:4px;display:grid;place-items:center;
   background:radial-gradient(circle at 50% 70%, color-mix(in srgb,var(--q) 30%,var(--paper)), color-mix(in srgb,var(--q) 12%,var(--paper-2)) 70%);box-shadow:inset 0 0 0 1px rgba(42,31,23,.18)}
@@ -33,11 +37,11 @@
 .lt-card .badge-mark{color:color-mix(in srgb,var(--q-blue,#6aa6dc) 80%,#000)}
 .lt-rates{display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--cream-3);font-size:12px;flex-wrap:wrap}
 .lt-rates .lbl{font-family:var(--serif);font-size:15px;color:var(--cream-2)}
-.lt-rate{display:inline-flex;align-items:center;gap:3px;padding:3px 10px;border-radius:14px;border:1px solid rgba(243,230,200,.16);color:var(--cream-2);background:transparent;font:inherit;cursor:pointer;min-height:28px}
-.lt-rate b{color:var(--cream);font-weight:700}
-.lt-rate small{color:var(--cream-3);font-size:10.5px}
-.lt-rate.can{border-color:rgba(var(--lamp,255,206,140),.55);color:var(--cream)}
-.lt-rate[aria-disabled="true"]{opacity:.55;cursor:default}
+.lt-rates .lt-rate{flex-direction:row;opacity:1;text-align:center;display:inline-flex;align-items:center;gap:3px;padding:3px 10px;border-radius:14px;border:1px solid rgba(243,230,200,.16);color:var(--cream-2);background:transparent;font:inherit;cursor:pointer;min-height:28px}
+.lt-rates .lt-rate b{color:var(--cream);font-weight:700}
+.lt-rates .lt-rate small{color:var(--cream-3);font-size:10.5px}
+.lt-rates .lt-rate.can{background:transparent;border-color:rgba(var(--lamp,255,206,140),.55);color:var(--cream)}
+.lt-rates .lt-rate[aria-disabled="true"]{opacity:.55;cursor:default}
 @media (max-width:860px){
   .lt-cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;padding-bottom:4px}
   .lt-card{flex:0 0 132px;scroll-snap-align:start}
@@ -50,8 +54,8 @@
 .lt-seat{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 5px;border-radius:30px;color:var(--cream);position:relative;cursor:pointer;min-height:44px}
 .lt-seat .who{font-family:var(--serif);font-size:15px;line-height:1;white-space:nowrap}
 .lt-seat .who small{display:flex;align-items:center;gap:3px;font-family:var(--sans);font-size:11px;color:var(--cream-3);margin-top:2px;letter-spacing:.02em}
-.lt-seat .score{font-family:var(--serif);font-size:21px;font-weight:700;display:flex;align-items:center;gap:2px;color:var(--cream)}
-.lt-seat .score .fol-glyph{color:var(--cream-2)}
+.lt-seat .lt-pts{font-family:var(--serif);font-size:21px;font-weight:700;display:flex;align-items:center;gap:3px;color:var(--cream)}
+.lt-seat .lt-pts .follower-mark{color:var(--cream-2)}
 .lt-seat.now{background:rgba(var(--lamp,255,206,140),.12);box-shadow:0 0 0 1px rgba(var(--lamp,255,206,140),.4)}
 .lt-seat.now::after{content:"now";position:absolute;top:-8px;left:12px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#ffd99a;background:var(--walnut,#1d1611);padding:0 4px}
 .lt-seat .wk{display:flex;gap:1px}
@@ -69,9 +73,9 @@
 .lt-mine-row{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap}
 .lt-stacks{display:flex;gap:14px;align-items:flex-end}
 .lt-stack{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:30px}
-.lt-stack .coins{display:flex;flex-direction:column-reverse;align-items:center}
-.lt-stack .coins .res-glyph{margin-top:-13px}
-.lt-stack .coins .res-glyph:last-child{margin-top:0}
+.lt-stack .lt-coins{display:flex;flex-direction:column-reverse;align-items:center}
+.lt-stack .lt-coins .res-glyph{margin-top:-13px}
+.lt-stack .lt-coins .res-glyph:last-child{margin-top:0}
 .lt-stack .n{font-family:var(--serif);font-weight:700;font-size:18px;color:var(--cream);line-height:1}
 .lt-stack.zero{opacity:.32}
 .lt-workers{display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -131,3 +135,10 @@
 @media (prefers-reduced-motion: reduce){.lt-ring .orbit{animation:none}}
 .leader,.minion{display:block;image-rendering:pixelated}
 .leader.dim,.minion.dim{opacity:.32}
+
+/* marks on paper (hover cards) read in ink, not cream */
+.lt-note .fol-mark,.lt-note .fol-mark b{color:var(--paper-ink)}
+.lt-note .fol-mark .dots i{background:var(--paper-ink-3)}
+.lt-note .fol-mark .dots i.d10{background:var(--paper-ink)}
+.lt-card .follower-mark,.lt-note .follower-mark{color:var(--paper-ink)}
+.lt-cult .follower-mark,.lt-rail-seats .follower-mark{color:var(--cream-2)}

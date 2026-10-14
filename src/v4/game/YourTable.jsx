@@ -26,7 +26,7 @@ export default function YourTable({ state, me = null, mySeats = [], optionFor = 
             const n = p.res[r] || 0;
             return (
               <span key={r} className={`lt-stack${n ? '' : ' zero'}`} data-res={r} title={`${n} ${r}`}>
-                <span className="coins" aria-hidden="true">
+                <span className="lt-coins" aria-hidden="true">
                   {Array.from({ length: Math.max(1, Math.min(n, STACK)) }, (_, k) => <ResourceGlyph key={k} r={r} size={20} />)}
                 </span>
                 <b className="n num">{n}</b>
