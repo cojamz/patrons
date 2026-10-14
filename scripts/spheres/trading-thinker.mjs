@@ -3,18 +3,20 @@
 import { createGame, applyMove, chooseBotMove, followers, actionAt } from '../../src/engine/v4/index.js';
 import { chooseThinkerMove } from '../../src/engine/v4/thinker.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
-import { install } from '../../src/engine/v4/content/trading.js';
+import { install, SELL_HIGH, PAWN } from '../../src/engine/v4/content/trading.js';
 install();
+// experiments: SELL_EACH=2 PAWN_EACH=1 node scripts/spheres/trading-thinker.mjs …
+if (process.env.SELL_EACH) SELL_HIGH.each = Number(process.env.SELL_EACH);
+if (process.env.PAWN_EACH) PAWN.each = Number(process.env.PAWN_EACH);
 const N = Number(process.argv[2] || 24), R = Number(process.argv[3] || 4);
 const quadrants = (process.argv[4] || 'gold,red,blue,trading').split(',');
 const wq = quadrants.indexOf('trading');
-let wins = 0, margin = 0, tW = 0, tAll = 0, bW = 0, bAll = 0, tWM = 0, bWM = 0, tSold = 0, bSold = 0, tWhiteEnd = 0, bWhiteEnd = 0;
+let wins = 0, margin = 0, tW = 0, tAll = 0, bW = 0, bAll = 0, tWM = 0, bWM = 0, tSold = 0;
 const tTakes = {};
 for (let g = 1; g <= N; g++) {
   const rand = seededRandom(g * 7 + 1);
   const thinker = g % 4;
   let s = createGame({ seats: [0, 1, 2, 3].map(() => ({ kind: 'bot' })), seed: 7000 + g, quadrants });
-  const roundWhite = [];
   while (!s.over) {
     const me = s.pending.player === thinker;
     const m = me ? chooseThinkerMove(s, rand, { rollouts: R }) : chooseBotMove(s, rand);
@@ -23,14 +25,13 @@ for (let g = 1; g <= N; g++) {
       const w = o.q === wq;
       if (me) { tAll++; if (w) { tW++; const a = `${actionAt(s, o.q, o.i).name} r${s.round}`; tTakes[a] = (tTakes[a] || 0) + 1; } } else { bAll++; if (w) bW++; }
     }
-    const before = s.players.map(p => p.bonus);
     const next = applyMove(s, m);
-    for (const l of next.log.slice(Math.max(0, next.log.length - 6))) void l;
+    for (const l of next.log) {
+      const mm = l.match(/^(P\d) (sold|pawned)[^\d]*(\d+) follower/);
+      if (mm && Number(mm[1].slice(1)) - 1 === thinker) tSold += Number(mm[3]);
+    }
+    next.log = []; // the engine caps the log; read new lines only
     s = next;
-  }
-  for (const l of s.log) {
-    const mm = l.match(/^(P\d) (sold|pawned)[^\d]*(\d+) follower/);
-    if (mm) { const id = Number(mm[1].slice(1)) - 1; if (id === thinker) tSold += Number(mm[3]); else bSold += Number(mm[3]) / 3; }
   }
   if (s.ranking[0] === thinker) wins++;
   const mine = followers(s, s.players[thinker]);
@@ -40,4 +41,4 @@ for (let g = 1; g <= N; g++) {
   console.error(`${g}/${N}: thinker wins ${wins}`);
 }
 console.log(`${quadrants.join('/')}: thinker win ${(100 * wins / N).toFixed(0)}% over ${N} games (25% = no edge); avg margin ${(margin / N).toFixed(1)}`);
-if (wq >= 0) console.log(`share of placements on White: thinker ${(100 * tW / tAll).toFixed(0)}% vs greedy ${(100 * bW / bAll).toFixed(0)}% · white members: thinker ${(tWM / N).toFixed(1)} vs greedy ${(bWM / N).toFixed(1)} · thinker's White picks ${JSON.stringify(tTakes)}`);
+if (wq >= 0) console.log(`share of placements on White: thinker ${(100 * tW / tAll).toFixed(0)}% vs greedy ${(100 * bW / bAll).toFixed(0)}% · white members: thinker ${(tWM / N).toFixed(1)} vs greedy ${(bWM / N).toFixed(1)} · followers the thinker sold per game ${(tSold / N).toFixed(1)} · thinker's White picks ${JSON.stringify(tTakes)}`);

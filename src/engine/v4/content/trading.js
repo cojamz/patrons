@@ -25,8 +25,8 @@ const ahead = (ctx, p) => ctx.rivals(p).filter(o => ctx.followers(o) > ctx.follo
 const fv = ctx => [1.6, 1.3, 1.2][ctx.state.round - 1] ?? 1.2;
 const lastTurn = (ctx, p) => ctx.state.round === 3 && p.left === 0;
 
-const SELL_HIGH = { most: 2, each: 3 };
-const PAWN = { base: 2, most: 1, each: 2 };
+export const SELL_HIGH = { most: 2, each: 3 };
+export const PAWN = { base: 2, most: 1, each: 2 };
 
 /** Sell k followers for `each` white apiece. Fires onSell on the seller's members (a Doppelganger's copy too). */
 export function sell(ctx, p, k, each, { fromAction = false, why = 'sold' } = {}) {

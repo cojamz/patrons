@@ -621,6 +621,19 @@ header.bar .status{align-items:center;gap:8px}
 .slot.flash .worker{animation-delay:.38s}
 .take-all{align-self:flex-start}
 
+.tick{overflow:visible}
+.tick .tv{display:inline-block}
+.tick.rolling{overflow:hidden;vertical-align:bottom}
+.tick.rolling .tv{animation:rollin .48s cubic-bezier(.3,.7,.4,1) both}
+.tick.rolling.down .tv{animation-name:rollin-down}
+.tick .tv-out{position:absolute;left:0;top:0;animation:rollout .48s cubic-bezier(.3,.7,.4,1) both;pointer-events:none}
+.tick.rolling.down .tv-out{animation-name:rollout-down}
+@keyframes rollin{from{transform:translateY(90%);opacity:0}to{transform:none;opacity:1}}
+@keyframes rollout{from{transform:none;opacity:1}to{transform:translateY(-90%);opacity:0}}
+@keyframes rollin-down{from{transform:translateY(-90%);opacity:0}to{transform:none;opacity:1}}
+@keyframes rollout-down{from{transform:none;opacity:1}to{transform:translateY(90%);opacity:0}}
+.tick.rolling .floater{display:none}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
