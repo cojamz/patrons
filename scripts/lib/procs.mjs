@@ -11,7 +11,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { createConnection } from 'node:net';
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, resolve, isAbsolute } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 // the real bin scripts behind node_modules/.bin/vite and .bin/vitest, run with this node (no npx, no shell in between)
@@ -19,6 +19,7 @@ export const VITE = resolve('node_modules/vite/bin/vite.js');
 export const VITEST = resolve('node_modules/vitest/vitest.mjs');
 
 const groups = new Set();
+const dirs = new Set(); // scratch dirs removed when we exit (after the groups are killed), by the reaper if we're killed
 let reaper = null;
 let installed = false;
 
@@ -28,14 +29,15 @@ export function killAll(sig = 'SIGKILL') { for (const g of groups) killGroup(g, 
 function install() {
   if (installed) return;
   installed = true;
-  process.on('exit', () => killAll('SIGKILL'));
+  process.on('exit', () => { killAll('SIGKILL'); for (const d of dirs) { try { rmSync(d, { recursive: true, force: true }); } catch { /* best effort */ } } });
   for (const [sig, code] of [['SIGINT', 130], ['SIGTERM', 143], ['SIGHUP', 129]]) {
     process.on(sig, () => { console.error(`\n${sig}: stopping ${groups.size} child process group(s)`); killAll('SIGTERM'); process.exit(code); });
   }
   // the reaper: outlives a SIGKILL of this process, kills what we left behind, then exits
-  const code = `const g=new Set();const k=s=>{for(const p of g){try{process.kill(-p,s)}catch{}}};`
-    + `process.on('message',m=>{if(m&&m.add)g.add(m.add);if(m&&m.del)g.delete(m.del)});`
-    + `process.on('disconnect',()=>{if(!g.size)process.exit(0);k('SIGTERM');setTimeout(()=>{k('SIGKILL');process.exit(0)},1500)});`;
+  const code = `const g=new Set(),d=new Set();const k=s=>{for(const p of g){try{process.kill(-p,s)}catch{}}};`
+    + `const rm=()=>{for(const x of d){try{require('fs').rmSync(x,{recursive:true,force:true})}catch{}}};`
+    + `process.on('message',m=>{if(m&&m.add)g.add(m.add);if(m&&m.del)g.delete(m.del);if(m&&m.dir)d.add(m.dir);if(m&&m.undir)d.delete(m.undir)});`
+    + `process.on('disconnect',()=>{if(!g.size){rm();process.exit(0)}k('SIGTERM');setTimeout(()=>{k('SIGKILL');rm();process.exit(0)},1500)});`;
   try {
     reaper = spawn(process.execPath, ['-e', code], { detached: true, stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
     reaper.on('error', () => { reaper = null; });
@@ -45,13 +47,26 @@ function install() {
 }
 const tell = msg => { try { reaper?.connected && reaper.send(msg); } catch { /* the reaper is optional */ } };
 
+/** Removes `dir` (recursively; symlinks inside are removed, never followed) when this process ends, however it ends. */
+export function removeOnExit(dir) {
+  install();
+  dirs.add(dir);
+  tell({ dir });
+}
+/** Removes it now (and forgets it). */
+export function removeNow(dir) {
+  dirs.delete(dir);
+  tell({ undir: dir });
+  rmSync(dir, { recursive: true, force: true });
+}
+
 /**
  * spawn() in its own process group, tracked until it exits (then its whole group is killed: no grandchild lingers).
- * opts: { env, quiet } — quiet captures stdout+stderr into child.output instead of printing them.
+ * opts: { env, quiet, cwd } — quiet captures stdout+stderr into child.output instead of printing them.
  */
-export function runChild(cmd, args, { env = {}, quiet = false } = {}) {
+export function runChild(cmd, args, { env = {}, quiet = false, cwd } = {}) {
   install();
-  const child = spawn(cmd, args, { detached: true, stdio: ['ignore', quiet ? 'pipe' : 'inherit', quiet ? 'pipe' : 'inherit'], env: { ...process.env, ...env } });
+  const child = spawn(cmd, args, { cwd, detached: true, stdio: ['ignore', quiet ? 'pipe' : 'inherit', quiet ? 'pipe' : 'inherit'], env: { ...process.env, ...env } });
   child.output = '';
   if (quiet) { child.stdout.on('data', d => (child.output += d)); child.stderr.on('data', d => (child.output += d)); }
   if (child.pid) { groups.add(child.pid); tell({ add: child.pid }); }
@@ -94,11 +109,13 @@ export function busyMessage(port) {
 const assetHash = html => (html.match(/\/assets\/index-[\w-]+\.js/) || [null])[0];
 
 /**
- * Serves outDir with `vite preview` inside this process. Throws with a clear message when the port is busy, the
- * server can't start, or the server answering isn't serving this outDir. Returns { url, close }.
+ * Serves outDir (relative to root, default the cwd) with `vite preview` inside this process. Throws with a clear
+ * message when the port is busy, the server can't start, or the server answering isn't serving this outDir.
+ * Returns { url, close }.
  */
-export async function servePreview({ outDir, port, host }) {
+export async function servePreview({ outDir: out, port, host, root = process.cwd() }) {
   if (await portBusy(port)) throw new Error(busyMessage(port));
+  const outDir = isAbsolute(out) ? out : resolve(root, out);
   const html = readFileSync(join(outDir, 'index.html'), 'utf8');
   const token = `check-token-${randomUUID()}.txt`;
   const nonce = randomUUID();
@@ -106,7 +123,7 @@ export async function servePreview({ outDir, port, host }) {
   const { preview } = await import('vite');
   let server;
   try {
-    server = await preview({ build: { outDir }, preview: { port, strictPort: true, ...(host ? { host } : {}) }, logLevel: 'warn' });
+    server = await preview({ root, build: { outDir }, preview: { port, strictPort: true, ...(host ? { host } : {}) }, logLevel: 'warn' });
   } catch (err) {
     rmSync(join(outDir, token), { force: true });
     throw new Error(`preview server could not start on port ${port}: ${err.message}`);

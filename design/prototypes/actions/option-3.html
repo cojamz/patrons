@@ -64,6 +64,14 @@ window.OPT = {
   ringR: { 1: 154, 2: 98, 3: 49.5 }, spans: { 1: 60, 2: 45 },
   bandOpacity: () => 0,
   vocabCols: 2,
+  after(doc) {
+    // a name wider than its cell steps down a size (never below 7.5px)
+    doc.querySelectorAll('.wheel .sp.r1 .face .nm').forEach(s => {
+      const max = s.closest('.sp').classList.contains('side') ? 56 : 78;
+      let f = parseFloat(getComputedStyle(s).fontSize);
+      while (s.getBoundingClientRect().width > max && f > 7.5) { f -= 0.2; s.style.fontSize = f + 'px'; }
+    });
+  },
   minionPx: 24,
   defs: `<pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(42,31,23,.16)" stroke-width="1"/></pattern>`,
   paperExtra(S) {
@@ -95,7 +103,7 @@ window.OPT = {
   },
   css: `
   .face{display:flex;flex-direction:column;align-items:center;gap:1px;color:color-mix(in srgb,var(--c) 45%,#2a1f17);line-height:1}
-  .face .nm{font-family:'Alegreya Sans',sans-serif;font-weight:800;font-size:8.6px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;text-shadow:0 1px 0 rgba(255,250,238,.55)}
+  .face .nm{font-family:'Alegreya Sans',sans-serif;font-weight:800;font-size:9.4px;letter-spacing:.09em;text-transform:uppercase;white-space:nowrap;text-shadow:0 1px 0 rgba(255,250,238,.55)}
   .face .st{line-height:0}
   .face .st svg{display:block}
   .face .ef{display:flex;align-items:center;gap:1px;white-space:nowrap;margin-top:1px}
@@ -103,7 +111,7 @@ window.OPT = {
   .face .num{font-family:'Alegreya',serif;font-weight:800;font-size:13.5px;letter-spacing:-.01em;text-shadow:0 1px 0 rgba(255,250,238,.6)}
   .face .wd{font-family:'Alegreya',serif;font-weight:700;font-style:italic;font-size:12.5px;margin:0 1px;text-shadow:0 1px 0 rgba(255,250,238,.6)}
   .face .q{display:inline-flex;align-items:center;margin-left:3px}
-  .face .q .num{font-size:11px}
+  .face .q .num{font-size:12px}
   .face .tag{margin:0}
   .sp.locked .face{opacity:.34;filter:grayscale(.85)}
   .sp.r2 .face .nm,.sp.r3 .face .nm{font-size:7.8px;letter-spacing:.06em}
