@@ -16,7 +16,7 @@ const Q = ['gold', 'red', 'market', 'green'];
 // Costs these tests are written against; repricing the real cards doesn't break them.
 const MARKET_TEST_COSTS = {
   'market.dealer': [1, 1], 'market.broker': [1, 1], 'market.connoisseur': [2, 1], 'market.reseller': [2, 1],
-  'market.outfitter': [1, 1], 'market.collector': [2, 1], 'market.regular': [1, 1], 'market.patron': [1, 0],
+  'market.outfitter': [1, 1], 'market.collector': [2, 1], 'market.regular': [1, 1], 'market.promoter': [1, 0],
   'market.underbidder': [1, 0], 'market.windowshopper': [1, 1], 'market.shopper': [3, 2], 'market.shopaholic': [2, 1],
   'market.blackmarket': [2, 2], 'market.heirloom': [3, 2], 'market.appraiser': [3, 2],
 };
@@ -58,7 +58,7 @@ describe('Blue scoring: most member value (printed cost), blue members break tie
     expect(memberValue(ctx, s.players[1])).toBe(1);
   });
   it('no value scores nothing; a blue member breaks a tie', () => {
-    const s = scene({ members: [['red.volunteer'], ['market.patron'], []], n: 3 });
+    const s = scene({ members: [['red.volunteer'], ['market.promoter'], []], n: 3 });
     const ctx = contextFor(s);
     expect(market.scoring.score(ctx, s.players[0])).toBe(0);
     const t = scene({ members: [['gold.taxman'], ['market.dealer']] }); // both worth 2
@@ -159,7 +159,7 @@ describe('Blue members', () => {
   };
 
   it('Dealer: whenever anyone recruits a blue member, +1 blue', () => {
-    expect(R(rivalBuys([['market.dealer']], 'market.patron')).blue).toBe(1);
+    expect(R(rivalBuys([['market.dealer']], 'market.promoter')).blue).toBe(1);
     expect(R(rivalBuys([['market.dealer']], 'red.intern')).blue).toBe(0);
   });
   it('Broker: whenever a rival recruits a member costing 4 or more, +1 blue', () => {
@@ -194,8 +194,8 @@ describe('Blue members', () => {
   it('Regular: round start, your next member costs 1 less per round number', () => {
     expect(start([['market.regular']]).players[0].discount).toBe(2);
   });
-  it('Patron: whenever you buy followers, your next member costs 1 less', () => {
-    let s = take(scene({ res: [{ red: 4 }], members: [['market.patron']] }), 'Showroom');
+  it('Promoter: whenever you buy followers, your next member costs 1 less', () => {
+    let s = take(scene({ res: [{ red: 4 }], members: [['market.promoter']] }), 'Showroom');
     s = move(s, 'tier:small');
     expect(s.players[0].discount).toBe(1);
   });

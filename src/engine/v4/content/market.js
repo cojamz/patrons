@@ -193,7 +193,7 @@ const market = {
     m('regular', 'Regular', 1, 1, 'At round start, your next member costs 1 less per round number.', {
       onRoundStart(ctx, owner) { owner.discount += ctx.state.round; },
     }),
-    m('patron', 'Patron', 1, 0, 'Whenever you buy followers, your next member costs 1 less.', {
+    m('promoter', 'Promoter', 1, 0, 'Whenever you buy followers, your next member costs 1 less.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer === owner) owner.discount += 1; },
     }),
     m('underbidder', 'Underbidder', 1, 0, 'At round start, your next member costs 1 less per rival with more members than you.', {

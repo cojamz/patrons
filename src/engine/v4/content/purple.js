@@ -256,19 +256,24 @@ export default {
       },
       botActivate: (ctx, owner) => restingOf(ctx, owner) >= 1 && ctx.state.round === 3,
     }),
-    m('lullaby', 'Lullaby', 2, 1, 'Once per game: the leader (most followers, not you) skips their next turn; that worker rests.', {
+    m('lullaby', 'Lullaby', 2, 1, 'Once per game: the leader (most followers, if not you) skips their next turn; that worker rests.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
-        const top = Math.max(...ctx.rivals(owner).map(o => ctx.followers(o)));
-        const leaders = ctx.rivals(owner).filter(o => ctx.followers(o) === top && o !== owner && ctx.followers(o) > ctx.followers(owner));
-        const hit = leaders.filter(o => hasNextTurn(ctx, o));
-        if (!hit.length) { card.used = false; ctx.log(`Lullaby: no leader with a turn left to put to sleep.`); return; }
+        const hit = lullabyTargets(ctx, owner);
+        if (!hit.length) { card.used = false; ctx.log('Lullaby: no leader with a turn left to put to sleep.'); return; }
         ctx.choose(owner, 'Lullaby: who sleeps?', hit.map(o => ({ id: `player:${o.id}`, label: o.name, kind: 'player', value: o.id, hint: 0 })), 'purple.lullaby');
       },
-      botActivate: (ctx, owner) => ctx.state.round >= 2 && ctx.rivals(owner).some(o => ctx.followers(o) > ctx.followers(owner) + 4 && hasNextTurn(ctx, o)),
+      botActivate: (ctx, owner) => ctx.state.round >= 2 && lullabyTargets(ctx, owner).some(o => ctx.followers(o) > ctx.followers(owner) + 4),
     }),
   ],
 };
+
+/** The leader(s), if ahead of p and still due a turn this round. */
+function lullabyTargets(ctx, p) {
+  const top = Math.max(...ctx.state.players.map(o => ctx.followers(o)));
+  if (ctx.followers(p) === top) return [];
+  return ctx.rivals(p).filter(o => ctx.followers(o) === top && hasNextTurn(ctx, o));
+}
 
 // what a member hook adds to an action, for bot estimates
 function memberBonus(ctx, p, hook) {

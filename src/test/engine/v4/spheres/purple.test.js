@@ -45,7 +45,7 @@ function scene({ n = 2, seed = 7, round = 1, res = [], members = [], shop = null
 const R = (s, i = 0) => s.players[i].res;
 const rest = (s, i = 0) => restingOf(contextFor(s), s.players[i]);
 const pass = s => move(s, 'pass');
-const turns = (s, ...ps) => ps.map(p => ({ t: 'turn', p }));
+const turns = (...ps) => ps.map(p => ({ t: 'turn', p }));
 // who places next, after the current turn ends
 const nextPlacer = s => { while (s.pending && s.pending.kind !== 'place') s = pass(s); return s.pending?.player; };
 const RUSH = '0-1', JV = '0-0', STRIKE = '0-5', HIREUP = '1-3', REST = '2-0';
