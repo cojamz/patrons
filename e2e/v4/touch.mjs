@@ -11,10 +11,12 @@
 //  (h) the page never scrolls sideways: scrollWidth <= clientWidth and scrollX stays 0 after every tap;
 //  (i) no hover card ever opens from a touch (or a synthetic hover after a tap);
 //  (j) setup: the starting-resource chips are fully on screen without scrolling (iPhone 13, taps and clicks);
-//  (k) setup: the 6 face-up members for sale are on screen in the setup tray, and each opens its card on a tap.
+//  (k) setup: the face-up members for sale are in the setup tray (its strip on screen, each card a swipe away at
+//      most), and each opens its card on a tap.
 // Server: $V4_URL if set, else starts `npx vite` on a free port from 5182.
 import { chromium, devices } from 'playwright';
 import { TEXT_CLIP } from './lib/textclip.mjs';
+import { SHOP_SIZE } from '../../src/engine/v4/index.js';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -160,15 +162,23 @@ async function setupPhase() {
       await go('[data-start]');
       await p2.waitForSelector('.prompt.choice.setup [data-option]');
       await p2.waitForTimeout(500); // the tray's slide-up
-      // the 6 face-up members ride in the setup tray: all on screen, and each opens in full on a tap
+      // the face-up members ride in the setup tray: the strip is on screen, every card is reachable in it (a swipe at
+      // most) and each opens in full on a tap
       {
-        const sale = await p2.evaluate(() => [...document.querySelectorAll('.for-sale .fs-card')].map(e => { const b = e.getBoundingClientRect(); return { on: b.top >= -0.5 && b.bottom <= innerHeight + 0.5 && b.left >= -0.5 && b.right <= innerWidth + 0.5, h: b.height, w: b.width }; }));
-        if (sale.length !== 6) note(`(k) iPhone 13 (${how}): ${sale.length} members for sale in the setup tray (want 6)`, 'setup');
-        const off = sale.filter(x => !x.on).length;
-        if (off) note(`(k) iPhone 13 (${how}): ${off} of the members for sale are off screen during setup`, 'setup');
+        const r = await p2.evaluate(() => {
+          const strip = document.querySelector('.for-sale .fs-strip');
+          const b = strip && strip.getBoundingClientRect();
+          return { n: document.querySelectorAll('.for-sale .fs-card').length, on: !!b && b.top >= -0.5 && b.bottom <= innerHeight + 0.5 && b.left >= -0.5 && b.right <= innerWidth + 0.5 };
+        });
+        if (r.n !== SHOP_SIZE) note(`(k) iPhone 13 (${how}): ${r.n} members for sale in the setup tray (want ${SHOP_SIZE})`, 'setup');
+        if (!r.on) note(`(k) iPhone 13 (${how}): the setup tray's shop strip is not fully on screen`, 'setup');
         if (how === 'tap') {
-          for (let c = 0; c < sale.length; c++) {
+          for (let c = 0; c < r.n; c++) {
             const el = (await p2.$$('.for-sale .fs-card'))[c];
+            await el.evaluate(e => e.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
+            await p2.waitForTimeout(120);
+            const box = await el.boundingBox();
+            if (!box || box.x < -0.5 || box.x + box.width > 390.5) { note(`(k) iPhone 13: member ${c + 1} for sale can't be scrolled into view`, 'setup'); continue; }
             const name = await el.$eval('b', e => e.textContent);
             await el.tap();
             await p2.waitForTimeout(350);
@@ -179,6 +189,7 @@ async function setupPhase() {
             if (close) await close.tap(); else await p2.keyboard.press('Escape');
             await p2.waitForTimeout(250);
           }
+          await p2.evaluate(() => { const s = document.querySelector('.for-sale .fs-strip'); if (s) s.scrollLeft = 0; });
         }
       }
       for (let k = 0; k < 2; k++) {

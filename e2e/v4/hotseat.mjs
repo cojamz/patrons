@@ -5,6 +5,7 @@
 // `npx vite` itself on the first free port from 5180 and stops it at the end.
 import { chromium } from 'playwright';
 import { TEXT_CLIP } from './lib/textclip.mjs';
+import { SHOP_SIZE } from '../../src/engine/v4/index.js';
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -74,7 +75,7 @@ try {
   await page.keyboard.press('Escape');
   await page.waitForSelector('.rules-body', { state: 'detached' });
 
-  // Setup: what's for sale decides the starting picks, so the 6 face-up members are on screen (no scrolling)
+  // Setup: what's for sale decides the starting picks, so every face-up member is on screen (no scrolling)
   {
     await page.waitForSelector('.prompt.choice.setup');
     await page.waitForTimeout(300);
@@ -83,7 +84,7 @@ try {
       const vis = e => { const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden' || e.closest('[aria-hidden="true"]')) return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0 && b.left >= -0.5 && b.top >= -0.5 && b.right <= innerWidth + 0.5 && b.bottom <= innerHeight + 0.5; };
       return { n: cards.length, shown: cards.filter(vis).length, named: cards.filter(c => (c.querySelector('.nm') || {}).textContent).length };
     });
-    if (r.n !== 6 || r.shown !== 6 || r.named !== 6) { errors.push(`setup: ${r.shown} of ${r.n} shop members fully on screen at 1270×700 (want 6)`); await shot('zz-setup-shop'); }
+    if (r.n !== SHOP_SIZE || r.shown !== SHOP_SIZE || r.named !== SHOP_SIZE) { errors.push(`setup: ${r.shown} of ${r.n} shop members fully on screen at 1270×700 (want ${SHOP_SIZE})`); await shot('zz-setup-shop'); }
     await shot('02b-setup-shop');
   }
   const seen = new Set();

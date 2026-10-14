@@ -1,7 +1,11 @@
 // Reload-proofing. Local games save their state and setup on every change; online games remember the room and
 // your player id so a reload rejoins your seat. Everything is wrapped: storage can be missing or full.
+import { stateProblem, gameRecord } from './session/record.js';
+
 const LOCAL = 'patrons.v4.local';
 const ONLINE = 'patrons.v4.online';
+// A save this build can't resume, set aside so its game record can still be copied (see loadLocal).
+const STALE = 'patrons.v4.stale';
 
 // Local games live in localStorage (resume from any later visit). Online seats live in sessionStorage: a reload of
 // this tab rejoins, but a second tab is a second person, not a copy of you.
@@ -21,10 +25,38 @@ export const ROUND_START = 'patrons.v4.roundStart';
  */
 export const loadLocal = () => {
   const v = read(LOCAL);
-  if (v && v.state && v.state.players) return v;
+  if (v && v.state && v.state.players) return usable(v);
   const rs = read(ROUND_START);
-  if (rs && rs.state && rs.state.players && !rs.state.over) return { config: null, state: rs.state, undo: null, savedAt: null, fromRoundStart: true };
+  if (rs && rs.state && rs.state.players && !rs.state.over) return usable({ config: null, state: rs.state, undo: null, savedAt: null, fromRoundStart: true });
   return null;
+};
+// Saves outlive the code that made them (every deploy can change cards). A save from other rules content, or one the
+// engine can't read, is never returned (so never auto-resumed into a crash): it's set aside under STALE and the home
+// screen says "saved on an older version: start fresh" (Recovery.jsx), with its game record still copyable.
+function usable(v) {
+  const problem = stateProblem(v.state); // never throws: engine calls inside are wrapped
+  if (!problem) return v;
+  setAside(v, problem.kind, problem.message);
+  return null;
+}
+function setAside(v, reason, message) {
+  write(STALE, { state: v.state, config: v.config ?? null, savedAt: v.savedAt ?? null, reason, message, at: Date.now(), seen: reason === 'crash' });
+  write(LOCAL, null);
+  write(ROUND_START, null);
+}
+/** The error screen's "Start a new game": set the current save aside (record kept) so nothing resumes into the crash. */
+export const setAsideLocal = (message = '') => {
+  const v = read(LOCAL) || read(ROUND_START);
+  if (v && v.state && v.state.players) setAside(v, 'crash', message); else clearLocal();
+};
+/** The save set aside, or null: { state, config, savedAt, reason: 'version'|'broken'|'crash', message, at, seen }. */
+export const staleSave = () => { const v = read(STALE); return v && v.state ? v : null; };
+/** The player has seen the "older version" notice. */
+export const markStaleSeen = () => { const v = read(STALE); if (v) write(STALE, { ...v, seen: true }); };
+/** The set-aside game as a record: its moves (if it kept them) plus the saved snapshot. */
+export const staleRecord = () => {
+  const v = staleSave();
+  return v ? gameRecord(v.state, { state: v.state, setAside: { reason: v.reason, message: v.message, at: v.at, savedAt: v.savedAt } }) : null;
 };
 export const saveLocal = (config, state, undo = null) => { if (state) write(LOCAL, { config, state, undo, savedAt: Date.now() }); };
 /** Starting over or leaving: forget the saved game and its round-start snapshot. */

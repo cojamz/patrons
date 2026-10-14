@@ -1,5 +1,14 @@
 # v4 to-do
 
+## Milestone: friends build (Cory, 2026-10-14)
+Finish every running process and to-do, then a multiplayer version Cory can play with friends.
+- [ ] Land all running agents' work; check:v4 green on a committed snapshot
+- [ ] Online play verified on the real link: 2–4 real browsers, create/join by link, full game to results
+- [ ] Friends-proof online: rejoin after reload or dropped wifi, a bot takes over a player who leaves, host can leave without killing the room, mismatched versions refused
+- [ ] Blind panel on mixed tables (laptop, phone, saboteur) + "felt unfair or unfun"; fix worst-first; game-skeptic SHIP gate
+- [ ] A stable release link that only changes when Claude has verified a build (separate from the working preview)
+- [ ] One-page "how to start a game with friends" in the rulebook / home screen
+
 Cory's rule (2026-10-14): anything that makes the game playable by humans comes first. Bots and agent tooling only as far as they serve that; no rabbit holes.
 
 ## 1. Playable by humans (always first)

@@ -109,7 +109,7 @@ function ForSale({ state }) {
   if (!state.shop || !state.shop.length) return null;
   return (
     <div className="for-sale" role="group" aria-label="For sale: the face-up members">
-      <span className="fs-lbl">For sale <small>tap a card to read it</small></span>
+      <span className="fs-lbl">For sale <small><span className="num">{state.shop.length}</span> members · swipe for more, tap to read</small></span>
       <div className="fs-strip">
         {state.shop.map(uid => {
           const d = cardDef(state, uid);

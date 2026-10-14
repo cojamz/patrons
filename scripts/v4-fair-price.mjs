@@ -67,6 +67,7 @@ function screenGame(g, { jitter, tables }) {
     const events = []; // [defId, price, round, bought]
     const got = s.players.map(() => new Map()); // uid -> [defId, round, paid]
     let buying = null; // uid being bought this turn
+    let early = null; // each player's standing when round II starts: followers + 0.75 per resource, vs the table mean
     while (!s.over) {
       const pend = s.pending;
       const mv = chooseNormalMove(s, rand);
@@ -80,6 +81,10 @@ function screenGame(g, { jitter, tables }) {
       const before = s.players.map(p => new Set(p.members));
       const round = s.round;
       s = applyMove(s, mv);
+      if (!early && s.round >= 2) {
+        const v = s.players.map(p => followers(s, p) + 0.75 * Object.values(p.res).reduce((a, b) => a + b, 0)), m = mean(v);
+        early = v.map(x => x - m);
+      }
       s.players.forEach((p, i) => {
         for (const u of p.members) if (!before[i].has(u) && !got[i].has(u)) {
           const d = defs.find(x => x.id === s.cards[u].def);
@@ -89,7 +94,7 @@ function screenGame(g, { jitter, tables }) {
     }
     const fs = s.players.map(p => followers(s, p)), avg = mean(fs);
     const players = s.players.map((p, i) => ({
-      y: fs[i] - avg,
+      y: fs[i] - avg, early: early ? early[i] : 0,
       own: p.members.map(u => got[i].get(u) || [s.cards[u].def, 1, 0]),
       members: memberCount(s, p),
     }));
@@ -124,17 +129,18 @@ function logistic(xs, ys) { // y ~ sigmoid(a + b x), Newton with a tiny ridge
   return { a, b };
 }
 
-function analyseScreen(games, { boot = 100, printed = {} } = {}) {
+function analyseScreen(games, { boot = 200, printed = {} } = {}) {
   const defs = allDefs(), ids = defs.map(d => d.id), col = Object.fromEntries(ids.map((id, i) => [id, i]));
   // y = margin vs the table mean. Columns: one per card (its net worth at its printed price), const,
   // surcharge (price paid − printed, summed over owned cards; the jitter makes it exogenous), got in round I / III.
-  const C = ids.length, K = C + 4;
+  // also the player's standing at the start of round II (a control for luck: lucky players buy more and win more)
+  const C = ids.length, K = C + 5;
   const printedOf = Object.fromEntries(defs.map(d => [d.id, printed[d.id] ?? priceOf(d)]));
   const rows = [];
   games.forEach((G, gi) => G.players.forEach(p => {
     const x = new Map();
     const add = (j, v) => x.set(j, (x.get(j) || 0) + v);
-    add(C, 1);
+    add(C, 1); add(C + 4, p.early || 0);
     for (const [id, r, paid] of p.own) { if (col[id] === undefined) continue; add(col[id], 1); add(C + 1, paid - printedOf[id]); if (r === 1) add(C + 2, 1); if (r === 3) add(C + 3, 1); }
     rows.push({ gi, y: p.y, x: [...x] });
   }));
@@ -148,6 +154,7 @@ function analyseScreen(games, { boot = 100, printed = {} } = {}) {
     return solve(A.map(r => [...r]), [...b]);
   };
   const beta = fit(null);
+  boot = Number(process.env.FP_BOOT || boot);
   const rng = seededRandom(99);
   const pois = () => { let k = 0, p = 1; const L = Math.exp(-1); do { k++; p *= rng(); } while (p > L); return k - 1; };
   const bootV = ids.map(() => []), bootSlope = [];
@@ -157,7 +164,8 @@ function analyseScreen(games, { boot = 100, printed = {} } = {}) {
     ids.forEach((_, j) => bootV[j].push(bb[j]));
   }
   const slopeFit = -beta[C + 1];
-  const owners = new Array(C).fill(0);
+  const owners = new Array(C).fill(0), roundSum = new Array(C).fill(0);
+  games.forEach(G => G.players.forEach(p => p.own.forEach(([id, r]) => { if (col[id] !== undefined) roundSum[col[id]] += r; })));
   rows.forEach(r => r.x.forEach(([j]) => { if (j < C) owners[j]++; }));
   const ev = Object.fromEntries(ids.map(id => [id, []]));
   games.forEach(G => G.events.forEach(e => ev[e[0]]?.push(e)));
@@ -181,11 +189,20 @@ function analyseScreen(games, { boot = 100, printed = {} } = {}) {
       demandSlope: lg ? lg.b : NaN, // log-odds per +100% of printed price; ≥ 0 means the bots don't see the price
       demandP50: lg && lg.b < 0 ? T * (1 - lg.a / lg.b) : NaN,
       value: beta[j], vSE: sd(bootV[j]), fair: T + (beta[j] - vMed) / slope, lo: q(fairs, 0.05), hi: q(fairs, 0.95), se: sd(fairs),
-      low: owners[j] < 40,
+      low: owners[j] < 40, meanRound: owners[j] ? roundSum[j] / owners[j] : NaN,
     };
   });
-  for (const c of cards) c.gap = c.fair - c.printed;
-  return { slope, slopeFit, slopeCI, vMed, r1: beta[C + 2], r3: beta[C + 3], cards };
+  for (const c of cards) {
+    c.gap = c.fair - c.printed;
+    const d = defs.find(x => x.id === c.id), T = c.printed;
+    // outside its band: the 90% CI misses printed by a clear margin
+    c.outside = !c.low && (c.lo > T || c.hi < T) && Math.abs(c.gap) >= 1.5;
+    // can't be fixed by price: worth nothing even free (the fit says ≤ 0.5 with its CI under 1.5)
+    c.abilityFix = !c.low && c.fair <= 0.5 && c.hi < 1.5;
+    const P = Math.max(0, Math.round(c.fair));
+    c.proposed = c.outside ? { P, ...split(d, P) } : null;
+  }
+  return { slope, slopeFit, slopeCI, vMed, early: beta[C + 4], r1: beta[C + 2], r3: beta[C + 3], cards };
 }
 
 // ======================= sweep =======================
@@ -386,12 +403,22 @@ if (!isMainThread) {
     const out = { mode, games, jitter, secs: (Date.now() - t0) / 1000, ...A };
     if (flags.out) writeFileSync(flags.out, JSON.stringify(out, null, 1));
     console.log(`screen: ${res.length} games, random 4-sphere tables, 4 normal bots, every price ×U[${1 - jitter},${1 + jitter}]. ${out.secs.toFixed(0)}s on ${workers} workers.`);
-    console.log(`price slope: each resource over printed costs ${A.slopeFit.toFixed(2)} followers of margin (90% ${A.slopeCI.map(x => x.toFixed(2)).join('–')}); used ${A.slope.toFixed(2)}. Median card nets ${A.vMed.toFixed(2)} at printed. Got in round I ${A.r1.toFixed(2)}, round III ${A.r3.toFixed(2)} vs round II.`);
+    console.log(`price slope: each resource over printed costs ${A.slopeFit.toFixed(2)} followers of margin (90% ${A.slopeCI.map(x => x.toFixed(2)).join('–')}); used ${A.slope.toFixed(2)}. Median card nets ${A.vMed.toFixed(2)} at printed. Got in round I ${A.r1.toFixed(2)}, round III ${A.r3.toFixed(2)} vs round II. Standing at round II carries ${A.early.toFixed(2)}.`);
     // outliers: well-sampled cards first, by how far the fitted price sits from printed (in bootstrap SEs)
     const ranked = A.cards.filter(c => c.printed > 0 || c.owners > 0).sort((a, b) => (a.low ? 1 : 0) - (b.low ? 1 : 0) || Math.abs(b.gap) / (b.se || 1) - Math.abs(a.gap) / (a.se || 1));
+    console.log(`\nREPRICE (well sampled, 90% CI misses printed, gap ≥ 1.5). Instrument: jitter screen, normal bots, ${res.length} games.`);
+    console.log('card'.padEnd(30), 'printed → proposed (colored+any)', ' evidence: net followers at printed ±SE, fair 90% CI, buy%, mean round got, n owners');
+    for (const c of A.cards.filter(c => c.outside).sort((a, b) => a.gap - b.gap)) {
+      const d = allDefs().find(x => x.id === c.id);
+      console.log(`${c.id}`.padEnd(30), `${c.printed} (${d.s}+${d.w}) → ${c.proposed.P} (${c.proposed.s}+${c.proposed.w})`.padEnd(32), `${c.value - A.vMed >= 0 ? '+' : ''}${(c.value - A.vMed).toFixed(2)}±${c.vSE.toFixed(2)}, ${f1(c.lo)}–${f1(c.hi)}, ${(c.buyRate * 100).toFixed(0)}%, R${f1(c.meanRound)}, n=${c.owners}`, c.abilityFix ? '  NEEDS AN ABILITY CHANGE, NOT A PRICE' : '');
+    }
+    const fixes = A.cards.filter(c => c.abilityFix && !c.outside);
+    if (fixes.length) console.log('also worth ~nothing even free:', fixes.map(c => `${c.id} (printed ${c.printed}, fair ${f1(c.fair)}, n=${c.owners})`).join('; '));
+    console.log('low sample (<40 owners):', A.cards.filter(c => c.low).map(c => `${c.id} n=${c.owners}`).join(', '));
+    console.log('');
     for (const q of ['gold', 'red']) console.log(`most bought ${q}:`, A.cards.filter(c => c.id.startsWith(q + '.')).sort((a, b) => b.buys - a.buys).slice(0, 5).map(c => `${c.name} ${c.buys}`).join(', '));
     console.log('card'.padEnd(22), 'print', ' fair', '  90% CI     ', 'owners', 'offers', 'buy%', 'demand', ' net@printed');
-    for (const c of ranked) console.log(c.name.padEnd(22), String(c.printed).padStart(5), f1(c.fair).padStart(5), `${f1(c.lo)}–${f1(c.hi)}`.padEnd(13), String(c.owners).padStart(6), String(c.offers).padStart(6), (c.buyRate * 100).toFixed(0).padStart(4), f1(c.demandSlope).padStart(6), `${c.value.toFixed(2)}±${c.vSE.toFixed(2)}`.padStart(11), c.low ? 'LOW SAMPLE' : '');
+    for (const c of ranked) console.log(c.id.slice(0, 22).padEnd(22), String(c.printed).padStart(5), f1(c.fair).padStart(5), `${f1(c.lo)}–${f1(c.hi)}`.padEnd(13), String(c.owners).padStart(6), String(c.offers).padStart(6), (c.buyRate * 100).toFixed(0).padStart(4), f1(c.demandSlope).padStart(6), `${c.value.toFixed(2)}±${c.vSE.toFixed(2)}`.padStart(11), c.low ? 'LOW SAMPLE' : '');
   } else if (mode === 'sweep') {
     const cards = findDefs((names || 'anchors').split(',')).map(d => d.id);
     const params = {

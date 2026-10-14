@@ -1292,3 +1292,19 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 }
 /* the quadrant's score line wraps instead of cutting off the standings */
 .score-line{white-space:normal;overflow:visible;text-overflow:clip}
+
+/* ---------- 10 face-up members (Cory, 2026-10-14) ----------
+   Laptop: the compact shop is two rows of five, each card its whole name, ★ and list cost (the ability is on hover);
+   phones: the read-only setup shop is a two-row strip you swipe. Gated by layout.mjs, hotseat.mjs and touch.mjs. */
+.shop-panel.compact .shop{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.shop-panel.compact .eff1{display:none}
+.shop-panel.compact .card{padding:4px 7px;gap:1px;min-height:0}
+.shop-panel.compact .card .row.top{flex-direction:row;align-items:flex-start;gap:4px}
+.shop-panel.compact .card .nm{font-size:var(--fs-1);line-height:1.2;white-space:normal;overflow-wrap:anywhere;hyphens:auto;-webkit-hyphens:auto}
+.shop-panel.compact .card .fv{font-size:var(--fs-1);flex:none}
+.shop-panel.compact .card .row.cost{white-space:normal}
+.shop-panel.compact .card .cost-box{flex-wrap:wrap;white-space:normal}
+.buy-view .shop{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:1100px){ .buy-view .shop{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.for-sale .fs-strip{grid-template-columns:none;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:minmax(136px,42%);overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:4px;scroll-snap-type:x proximity}
+.for-sale .fs-card{scroll-snap-align:start}
