@@ -44,7 +44,7 @@ export function costParts(def, resources = null) {
   return parts;
 }
 
-export const tierCostText = t => (t.colors === 1 ? `${t.cost} of anything` : `${t.cost}, ${t.colors}+ colors (gold counts as any)`);
+export const tierCostText = t => (t.colors > 1 ? `${t.cost}, ${t.colors}+ colors` : `${t.cost} of anything`);
 export { TIERS };
 
 /**

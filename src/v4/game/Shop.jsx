@@ -163,7 +163,7 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
           >
             <b><span className="num">+{t.get}</span> follower{t.get > 1 ? 's' : ''}</b>
             <span className="sub">
-              Pay <span className="num">{t.cost}</span> · {t.colors === 1 ? 'any' : `${t.colors}+ colors`}
+              Pay <span className="num">{t.cost}</span> · {t.colors > 1 ? `${t.colors}+ colors` : 'any'}
               {(() => { const ways = opt && viewer ? followerChoices(state, viewer, t) : []; return ways.length > 1 ? <em className="picks" title="You'll choose how to pay"> ▸</em> : null; })()}
             </span>
             {t.limited && <span className="left-line num" title={`${tierLeft(state, t)} of these left${t.clock ? '; the last one ends the game after that round' : ''}`}>{tierLeft(state, t)} left</span>}
@@ -194,7 +194,6 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
         type="button" className={`btn pass${pass ? '' : ' idle'}`} title="End your turn without buying" data-option={pass ? 'pass' : undefined} aria-disabled={!pass}
         onClick={e => (pass ? onPick('pass') : onDenied && onDenied({ type: 'pass' }, e.currentTarget))}
       >Pass</button>
-      <small className="tray-note">Follower buys: gold counts as any color.</small>
     </div>
   );
 }

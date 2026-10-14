@@ -2,7 +2,8 @@
 //  (l1) while you place, every compact shop card shows its whole name and whole list cost (no ellipsis, no clip);
 //  (l2) every follower buy shows its whole label and price, while placing and while buying;
 //  (l3) nothing makes the page scroll sideways;
-//  (l4) a member whose color isn't on the table never prints that color as its cost.
+//  (l4) a member whose color isn't on the table never prints that color as its cost;
+//  (l5) no color rule for follower buys anywhere (they take anything).
 // Checked at 1270×700, 900×700 (the "900px clipping") and 1100×700, from a saved game (e2e/v4/lib/rich-save.mjs).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5186.
 import { chromium } from 'playwright';
@@ -63,6 +64,9 @@ for (const size of [{ width: 1270, height: 700 }, { width: 900, height: 700 }, {
     const side = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (side > 0) errors.push(`[${tag} ${step}] (l3) the page scrolls sideways by ${side}px`);
     if (cut.length) await page.screenshot({ path: `${SHOTS}/${tag}-${step}-cut.png` });
+    // (l5) follower buys take anything (Cory, 2026-10-14): no color rule anywhere on the table
+    const rule = await page.evaluate(() => (document.body.innerText.match(/\d\+ colors|counts as any colou?r|at least \d colou?rs/i) || [])[0]);
+    if (rule) errors.push(`[${tag} ${step}] (l5) the table still shows a color rule: "${rule}"`);
   };
   try {
     await page.goto(`${base}/`);
