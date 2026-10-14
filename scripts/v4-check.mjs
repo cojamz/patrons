@@ -25,7 +25,13 @@ if (!fast && existsSync('e2e/v4')) {
   const port = Number(process.env.V4_PORT || 5180);
   const server = spawn('npx', ['vite', 'preview', '--outDir', outDir, '--port', String(port), '--strictPort'], { stdio: 'pipe' });
   // wait until the preview server answers (up to 30s)
-  for (let i = 0; i < 60; i++) { try { if ((await fetch(`http://localhost:${port}/`)).ok) break; } catch {} await new Promise(r => setTimeout(r, 500)); }
+  let exited = false;
+  server.on('exit', () => { exited = true; });
+  let up = false;
+  for (let i = 0; i < 60 && !exited; i++) { try { if ((await fetch(`http://localhost:${port}/`)).ok) { up = true; break; } } catch {} await new Promise(r => setTimeout(r, 500)); }
+  // never run the e2e against someone else's server (a stale preview on this port serves an old or deleted build)
+  await new Promise(r => setTimeout(r, 300));
+  if (exited || !up) { console.error(`preview server on port ${port} did not start (port busy or build missing): pick another V4_PORT`); process.exit(2); }
   for (const f of readdirSync('e2e/v4').filter(f => f.endsWith('.mjs')).sort())
     await run(`e2e ${f}`, 'node', [`e2e/v4/${f}`], { env: { V4_URL: `http://localhost:${port}` } });
   server.kill();
