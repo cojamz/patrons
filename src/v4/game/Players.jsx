@@ -40,17 +40,17 @@ function useChanges(state) {
   return changes;
 }
 
-export function Workers({ p }) {
+export function Workers({ p, caption = true }) {
   return (
     <span className="workers" title={`${plural(p.left, 'worker')} left this round`} aria-label={`${plural(p.left, 'worker')} left this round`}>
       <span className="dots" aria-hidden="true">{'●'.repeat(Math.max(0, p.left)) || '○'}</span>
-      <small>{p.left === 1 ? 'worker' : 'workers'}</small>
+      {caption && <small>{p.left === 1 ? 'worker' : 'workers'}</small>}
     </span>
   );
 }
 
 /** Chips for one player: as many as fit on the card, then "+N". */
-function ChipRow({ state, p, optionFor, onOpen, onAll }) {
+function ChipRow({ state, p, own, onOpen, onAll }) {
   const groups = p.members.length ? memberChips(state, p) : [];
   const box = useRef(null);
   const [fit, setFit] = useState(Infinity);
@@ -84,27 +84,27 @@ function ChipRow({ state, p, optionFor, onOpen, onAll }) {
   return (
     <div className="chips" ref={box}>
       {shown.map(g => {
-        const use = g.uids.map(u => optionFor(`use:${u}`)).find(Boolean);
-        const tog = g.uids.map(u => optionFor(`toggle:${u}`)).find(Boolean);
-        const onoff = g.def.toggle ? (g.card.on === false ? ' · off' : ' · on') : '';
+        // Your own switchable member shows its switch; on a rival's card it's just a name.
+        const sw = own && g.def.toggle;
         return (
           <button
-            key={g.key} data-g type="button" className={`chip${use || tog ? ' use' : ''}${g.card.used || g.card.on === false ? ' off' : ''}`}
+            key={g.key} data-g type="button" className={`chip${g.card.used || (sw && g.card.on === false) ? ' off' : ''}${sw ? ' switch' : ''}`}
             style={{ '--c': `var(--${g.def.quadrant})` }} title={memberTip(g.def)} aria-haspopup="dialog"
-            onClick={e => onOpen(e.currentTarget, g, use || tog)}
+            onClick={e => onOpen(e.currentTarget, g)}
           >
-            {g.label}{g.count > 1 ? ` ×${g.count}` : ''}{onoff}{use ? ' · use' : ''}
+            {g.label}{g.count > 1 ? ` ×${g.count}` : ''}
+            {sw && <i className={`sw${g.card.on === false ? '' : ' on'}`} aria-label={g.card.on === false ? 'off' : 'on'} />}
           </button>
         );
       })}
       {hidden > 0 && (
-        <button type="button" className="chip more" aria-haspopup="dialog" title={`${hidden} more`} onClick={e => onAll(e.currentTarget)}>+{hidden}</button>
+        <button type="button" className="chip more" aria-haspopup="dialog" title={`Show all ${groups.length} members`} onClick={e => onAll(e.currentTarget)}>+{hidden} more</button>
       )}
     </div>
   );
 }
 
-export default function Players({ state, active, mySeats, optionFor, onPick, gifts = [] }) {
+export default function Players({ state, active, mySeats, gifts = [] }) {
   const [pop, setPop] = useState(null); // { el, group?, all?, pid, opt }
   const close = useCallback(() => setPop(null), []);
   const changes = useChanges(state);
@@ -123,11 +123,11 @@ export default function Players({ state, active, mySeats, optionFor, onPick, gif
             </div>
             <div className="res">
               <Resources state={state} p={p} float={false} />
-              <span className="meta"><Workers p={p} /> · {plural(n, 'member')}{p.discount ? ` · −${p.discount} next` : ''}</span>
+              <span className="meta"><Workers p={p} caption={false} /><span className="mcount">{plural(n, 'member')}</span>{p.discount ? <span className="disc"> −{p.discount} next</span> : null}</span>
             </div>
             <ChipRow
-              state={state} p={p} optionFor={optionFor}
-              onOpen={(el, g, opt) => setPop(pp => (pp && pp.group && pp.group.key === g.key && pp.pid === p.id ? null : { el, group: g, pid: p.id, opt }))}
+              state={state} p={p} own={mySeats.includes(p.id)}
+              onOpen={(el, g) => setPop(pp => (pp && pp.group && pp.group.key === g.key && pp.pid === p.id ? null : { el, group: g, pid: p.id }))}
               onAll={el => setPop({ el, all: true, pid: p.id })}
             />
             {changes[p.id] && !gifts.some(g => g.pid === p.id) && (
@@ -160,7 +160,6 @@ export default function Players({ state, active, mySeats, optionFor, onPick, gif
             <div className="row"><b>{pop.group.label}{pop.group.count > 1 ? ` ×${pop.group.count}` : ''}</b><span className="num star">{pop.group.def.f}★</span></div>
             <span>{pop.group.def.text}</span>
             {pop.group.card.used && <small>Used</small>}
-            {pop.opt && <button type="button" className="btn pri" onClick={() => { const id = pop.opt.id; setPop(null); onPick(id); }}>{pop.opt.label}</button>}
           </div>
         </Popover>
       )}

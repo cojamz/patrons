@@ -19,7 +19,10 @@ export default function RoundEnd({ info, onNext, autoMs }) {
 
   const name = id => after.players[id].name;
   const contest = id => result.rows.reduce((s, r) => s + (r.winners.includes(id) ? r.v : 0), 0);
-  const ranked = [...after.players].sort((a, b) => followers(after, b) - followers(after, a));
+  // Sorted by the total shown on this card (end-game bonuses, if any, come next on the results screen).
+  const shownTotal = p => followers(at, at.players[p.id]);
+  const ranked = [...after.players].sort((a, b) => shownTotal(b) - shownTotal(a));
+  const finalParts = after.over ? after.players.filter(p => p.final && p.final.parts.length) : [];
   const first = !after.over && after.order && after.order.length ? after.players[after.order[0]] : null;
   return (
     <div className="overlay moment" role="dialog" aria-modal="true" aria-label={`Round ${result.round} scoring`}>
@@ -30,12 +33,14 @@ export default function RoundEnd({ info, onNext, autoMs }) {
             <li key={r.qid} style={{ '--c': `var(--${r.qid})` }} className={r.winners.length ? '' : 'none'}>
               <span className="re-q"><i />{r.label}</span>
               <span className="re-w">
-                {r.winners.length
-                  ? r.winners.map((id, k) => <b key={id} style={{ color: playerColor(id) }}>{k ? ' & ' : ''}{name(id)}</b>)
-                  : <em>no one</em>}
+                <span className="re-win">
+                  {r.winners.length
+                    ? r.winners.map((id, k) => <b key={id} style={{ color: playerColor(id) }}>{k ? ' & ' : ''}{name(id)}</b>)
+                    : <em>no one scored</em>}
+                </span>
                 <small className="re-counts num">
-                  {(counts.find(c => c.qid === r.qid)?.rows || []).map((row, k) => (
-                    <span key={row.id} className={r.winners.includes(row.id) ? 'won' : ''}>{k ? ' · ' : ''}{name(row.id)} {row.shown}</span>
+                  {(counts.find(c => c.qid === r.qid)?.rows || []).map(row => (
+                    <span key={row.id} className={r.winners.includes(row.id) ? 'won' : ''}>{name(row.id)} {row.shown}</span>
                   ))}
                 </small>
               </span>
@@ -44,7 +49,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
           ))}
         </ul>
         <div className="re-totals" role="table" aria-label="Followers after this round">
-          <div className="re-head" role="row"><span role="columnheader">Player</span><span role="columnheader">Contests</span><span role="columnheader">This round, besides contests</span><span role="columnheader">Followers</span></div>
+          <div className="re-head" role="row"><span role="columnheader">Player</span><span role="columnheader">Contests</span><span role="columnheader">Other</span><span role="columnheader">Followers</span></div>
           {ranked.map(p => {
             const now = followers(at, at.players[p.id]);
             const was = start && start.players[p.id] ? followers(start, start.players[p.id]) : now;
@@ -62,6 +67,12 @@ export default function RoundEnd({ info, onNext, autoMs }) {
             );
           })}
         </div>
+        {after.over && (
+          <p className="hint re-next">
+            End-game bonuses come next{finalParts.length ? ': ' : '.'}
+            {finalParts.map((p, k) => <span key={p.id}>{k ? ' · ' : ''}<b style={{ color: playerColor(p.id) }}>{p.name}</b> {p.final.parts.join(', ')}</span>)}
+          </p>
+        )}
         {first && <p className="hint">Round {roman(after.round)} · <span className="num">{WORKERS[after.round - 1]}</span> workers each · {first.name} picks first</p>}
         <button type="button" className="btn pri" data-next-round data-autofocus onClick={onNext}>
           {after.over ? 'See results' : `Start round ${roman(after.round)}`}

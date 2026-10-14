@@ -180,6 +180,13 @@ function TradePicker({ state, pend, onPick, busy }) {
   );
 }
 
+/** A few engine log lines, said plainly. */
+function plainLog(line) {
+  const h = line.match(/^(.+?)'s Hustler works the (\w+) spaces\.$/);
+  if (h) return `${h[1]}'s Hustler: +1 gold each time ${h[1]} takes a ${h[2]} space.`;
+  return line;
+}
+
 export function Log({ state }) {
   const sections = logSections(state);
   return (
@@ -187,7 +194,7 @@ export function Log({ state }) {
       {sections.slice().reverse().map((s, k) => (
         <details key={s.title} open={k === 0}>
           <summary>{s.title}<small> · {s.lines.length}</small></summary>
-          <div className="lines">{s.lines.slice().reverse().map((l, j) => <div key={j}>{l}</div>)}</div>
+          <div className="lines">{s.lines.map((l, j) => <div key={j}>{plainLog(l)}</div>)}</div>
         </details>
       ))}
     </div>
