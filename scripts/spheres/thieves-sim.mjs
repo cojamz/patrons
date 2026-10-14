@@ -6,7 +6,7 @@ import { seededRandom } from '../../src/engine/v4/rng.js';
 
 install();
 const N = Number(process.argv[2] || 400);
-const MODES = (process.argv[3] || 'loot,others,black,fewest').split(',');
+const MODES = (process.argv[3] || 'loot,black').split(',');
 const POLICY = process.argv[4] || 'rich';
 const QUADS = ['gold', 'red', 'blue', 'thieves'];
 const avg = a => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);

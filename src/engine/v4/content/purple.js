@@ -25,6 +25,25 @@ const scheduled = ctx => ctx.state.queue.filter(t => t.t === 'turn').length;
 /** True when one more turn can't squeeze anyone out of a space. */
 export const spareSpace = ctx => openSpaces(ctx).length > scheduled(ctx);
 const OT = 6; // Overtime's price (measured: 4 → 47% taker win rate, 5 → 43%, 6 → 37%)
+const RALLY = Number(globalThis.process?.env?.PURPLE_RALLY_COST || 3); // EXPLORE
+/** What an extra turn that costs `base` purple costs p (Double Time halves it, rounded up). */
+const priceFor = (ctx, p, base) => (ctx.membersOf(p).some(c => c.def.halfTurns || (c.copy && c.copy.endsWith('.doubletime'))) ? Math.ceil(base / 2) : base);
+const canBuyTurn = (ctx, p, base) => (p.res[P] || 0) >= priceFor(ctx, p, base) && spareSpace(ctx);
+/** Pay for an extra turn; without the purple (or a spare space), take the fallback gain instead. */
+function buyTurn(ctx, p, base, what, fallback) {
+  if (canBuyTurn(ctx, p, base)) {
+    const c = priceFor(ctx, p, base);
+    p.res[P] -= c;
+    ctx.log(`${p.name} pays ${c} purple for ${what}.`);
+    extraTurns(ctx, p, 1);
+    return true;
+  }
+  if (fallback) ctx.gain(p, P, fallback, { fromAction: true });
+  return false;
+}
+const buyEstimate = (ctx, p, base, fallback) => (canBuyTurn(ctx, p, base) ? turnValue(ctx) - priceFor(ctx, p, base) * 0.8 + 1 : fallback);
+/** Rivals with more workers on the board than p (+extra for the worker p is about to place). */
+const behind = (ctx, p, extra = 0) => ctx.rivals(p).filter(o => onBoard(ctx, o) > onBoard(ctx, p) + extra).length;
 const turnValue = ctx => TURN_VALUE[ctx.state.round - 1] || 3;
 
 function fire(ctx, p, hook, ...args) {
@@ -87,19 +106,15 @@ export default {
 
   actions: [
     {
-      key: 'hourly', ring: 1, name: 'Hourly', text: '+1 purple per worker you get this round, +1 (4 / 5 / 6).',
+      key: 'hourly', ring: 1, name: 'Hourly', text: '+4 / +5 / +6 purple, by round.',
       estimate: ctx => [3, 4, 5][ctx.state.round - 1] + 1,
       resolve(ctx, p) { ctx.gain(p, P, [3, 4, 5][ctx.state.round - 1] + 1, { fromAction: true }); },
     },
     {
-      key: 'lend', ring: 1, name: 'Lend a Hand', text: '+3 purple, and +1 purple to a player you choose.',
-      estimate: () => 3.3,
-      resolve(ctx, p) {
-        ctx.gain(p, P, 3, { fromAction: true });
-        ctx.choose(p, 'Lend a Hand: give 1 purple to…', ctx.rivals(p).map(o => ({
-          id: `player:${o.id}`, label: o.name, kind: 'player', value: o.id, hint: -ctx.followers(o),
-        })), 'purple.lend');
-      },
+      // fill-in (critic): replaces Lend a Hand
+      key: 'catchup', ring: 1, name: 'Catch Up', text: '+1 purple, and +2 per rival with more workers on the board than you.',
+      estimate: (ctx, p) => 1 + 2 * behind(ctx, p, 1),
+      resolve(ctx, p) { ctx.gain(p, P, 1 + 2 * behind(ctx, p), { fromAction: true }); },
     },
     {
       key: 'windup', ring: 1, name: 'Wind-up', text: '+1 purple per worker you have on the board, this one included.',
@@ -119,27 +134,32 @@ export default {
     },
     {
       key: 'overtime', ring: 2, name: 'Overtime', text: `Pay ${OT} purple: take an extra turn right after this one. If you can’t, +2 purple.`,
-      estimate: (ctx, p) => ((p.res[P] || 0) >= OT && spareSpace(ctx) ? turnValue(ctx) - OT * 0.8 + 1 : 2),
-      resolve(ctx, p) {
-        if ((p.res[P] || 0) >= OT && spareSpace(ctx)) {
-          p.res[P] -= OT;
-          ctx.log(`${p.name} pays ${OT} purple for Overtime.`);
-          extraTurns(ctx, p, 1);
-        } else ctx.gain(p, P, 2, { fromAction: true });
-      },
+      estimate: (ctx, p) => buyEstimate(ctx, p, OT, 2),
+      resolve(ctx, p) { buyTurn(ctx, p, OT, 'Overtime', 2); },
     },
     {
-      key: 'rally', ring: 3, name: 'Rally', text: 'Take an extra turn right after this one.',
-      estimate: ctx => (spareSpace(ctx) ? turnValue(ctx) : 0),
-      resolve(ctx, p) { extraTurns(ctx, p, 1); },
+      key: 'rally', ring: 3, name: 'Rally', text: `Pay ${RALLY} purple: take an extra turn right after this one. If you can’t, +3 purple.`,
+      estimate: (ctx, p) => buyEstimate(ctx, p, RALLY, 3),
+      resolve(ctx, p) { buyTurn(ctx, p, RALLY, 'Rally', 3); },
     },
   ],
 
   handlers: {
-    lend(ctx, p, id) {
-      const t = ctx.player(id);
-      ctx.gain(t, P, 1);
-      ctx.log(`${p.name} lent 1 purple to ${t.name}.`);
+    relay(ctx, p, rivalId, data) {
+      if (rivalId < 0 || !canBuyTurn(ctx, p, 3)) return;
+      const card = ctx.card(data.uid);
+      card.relayRound = ctx.state.round;
+      const c = priceFor(ctx, p, 3);
+      p.res[P] -= c;
+      // right after the rival's extra turn(s), which sit just after the current turn's end
+      const q = ctx.state.queue;
+      let at = q.findIndex(t => t.t === 'endTurn');
+      at = at < 0 ? 0 : at + 1;
+      while (q[at] && q[at].t === 'turn' && q[at].p === rivalId) at++;
+      q.splice(at, 0, { t: 'turn', p: p.id });
+      p.left += 1;
+      ctx.log(`${p.name} pays ${c} purple to Relay: a turn right after ${ctx.player(rivalId).name}.`);
+      extraHooks(ctx, p);
     },
     lingerFrom(ctx, p, from) {
       const opts = targets(ctx, p).map(({ key, q, a }) => ({
@@ -174,11 +194,9 @@ export default {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
-        if ((owner.res[P] || 0) < 5 || !spareSpace(ctx)) { card.used = false; ctx.log(`${owner.name} can't pay for Taskmaster now.`); return; }
-        owner.res[P] -= 5;
-        extraTurns(ctx, owner, 1);
+        if (!buyTurn(ctx, owner, 5, 'Taskmaster', 0)) { card.used = false; ctx.log(`${owner.name} can't pay for Taskmaster now.`); }
       },
-      botActivate: (ctx, owner) => (owner.res[P] || 0) >= 5 && spareSpace(ctx) && ctx.state.round >= 2,
+      botActivate: (ctx, owner) => canBuyTurn(ctx, owner, 5) && ctx.state.round >= 2,
     }),
     m('straggler', 'Straggler', 3, 1, 'At round start, if you have the fewest followers (ties count), take an extra turn before anyone else.', {
       // the round's turns are queued after round-start hooks, so this one goes first
@@ -192,35 +210,38 @@ export default {
         }
       },
     }),
-    m('foreman', 'Foreman', 2, 1, 'Whenever you take an extra turn, +2 purple.', {
-      onExtraTurn(ctx, owner) { ctx.gain(owner, P, 2); },
+    m('foreman', 'Foreman', 2, 1, 'Whenever you take an extra turn, +1 purple per worker you have on the board.', {
+      onExtraTurn(ctx, owner) { ctx.gain(owner, P, onBoard(ctx, owner)); },
     }),
     m('courier', 'Courier', 2, 1, 'Whenever you take an extra turn, +1 of each other color.', {
       onExtraTurn(ctx, owner) { for (const c of ctx.state.resources) if (c !== P) ctx.gain(owner, c, 1); },
     }),
-    m('apprentice', 'Apprentice', 1, 1, 'Whenever you take an extra turn, your next member costs 1 less.', {
-      onExtraTurn(ctx, owner) { owner.discount += 1; },
+    m('apprentice', 'Apprentice', 1, 1, 'Whenever you take an extra turn, your next member costs 2 less.', {
+      onExtraTurn(ctx, owner) { owner.discount += 2; },
     }),
-    m('overseer', 'Overseer', 3, 1, 'Whenever a rival takes an extra turn, +1 purple.', {
-      onRivalExtraTurn(ctx, owner) { ctx.gain(owner, P, 1); },
+    m('overseer', 'Overseer', 3, 1, 'Whenever a rival takes an extra turn, gain half your purple (up to 4).', {
+      onRivalExtraTurn(ctx, owner) { ctx.gain(owner, P, Math.min(4, Math.floor((owner.res[P] || 0) / 2))); },
     }),
-    m('timekeeper', 'Timekeeper', 1, 1, 'Whenever a rival buys 6 followers, +1 purple.', {
-      onBuyFollowers(ctx, owner, card, buyer, tier) {
-        const six = tier ? tier.get === 6 : ctx.state.log[ctx.state.log.length - 1]?.startsWith(`${buyer.name} bought 6 followers`);
-        if (buyer !== owner && six) ctx.gain(owner, P, 1);
-      },
-    }),
+    // fill-in (critic): replaces Timekeeper
+    m('doubletime', 'Double Time', 2, 1, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
     m('bookkeeper', 'Bookkeeper', 2, 1, 'At round end, +1 purple per 2 workers you have on the board.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2)); },
     }),
     m('clockmaker', 'Clockmaker', 2, 1, 'At round end, +1 purple per 2 purple you have.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
     }),
-    m('lamplighter', 'Lamplighter', 1, 1, 'At round start, +2 purple.', {
-      onRoundStart(ctx, owner) { ctx.gain(owner, P, 2); },
+    m('lamplighter', 'Lamplighter', 1, 1, 'At round start, +1 purple per worker you get this round (3 / 4 / 5).', {
+      onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
-    m('marathoner', 'Marathoner', 4, 2, 'Game end: +1 follower per worker you have on the board.', {
-      onGameEnd: (ctx, owner) => onBoard(ctx, owner),
+    // fill-in (critic): replaces Marathoner
+    m('relay', 'Relay', 2, 2, 'Once per round, when a rival takes an extra turn, you may pay 3 purple to take one right after it.', {
+      onRivalExtraTurn(ctx, owner, card, rival) {
+        if (card.relayRound === ctx.state.round || !canBuyTurn(ctx, owner, 3)) return;
+        ctx.choose(owner, `Relay: pay ${priceFor(ctx, owner, 3)} purple to take a turn right after ${rival.name}'s?`, [
+          { id: 'yes', label: 'Yes', kind: 'yes', value: rival.id, hint: ctx.state.round >= 2 ? 1 : 0 },
+          { id: 'no', label: 'No', kind: 'no', value: -1, hint: ctx.state.round >= 2 ? 0 : 1 },
+        ], 'purple.relay', { uid: card.uid });
+      },
     }),
     m('patience', 'Patience', 3, 1, 'Game end: +1 follower per 3 purple.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res[P] || 0) / 3),

@@ -3,14 +3,15 @@
 import { createGame, applyMove, chooseBotMove, followers, memberCount, actionAt } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { registerQuadrant } from '../../src/engine/v4/content/index.js';
-import purple from '../../src/engine/v4/content/purple.js';
+import purple, { onBoard } from '../../src/engine/v4/content/purple.js';
+import { contextFor } from '../../src/engine/v4/core.js';
 registerQuadrant(purple);
 
 const games = Number(process.argv[2] || 400), n = Number(process.argv[3] || 4);
 const quadrants = (process.argv[4] || 'gold,red,purple,green').split(',');
 const pq = quadrants.indexOf('purple');
 const st = { wins: Array(n).fill(0), fol: [], mem: [], takes: {}, takesByRound: {}, contestWins: Array(n).fill(0), contestRounds: 0, noScore: 0, ties: 0,
-  purpleMembers: [], placements: [], winnerContest: [], takers: {}, sixBuys: 0, errors: 0, streaks: {}, longest: [], squeezed: 0, decidedByPurple: 0 };
+  purpleMembers: [], placements: [], winnerContest: [], takers: {}, sixBuys: 0, errors: 0, streaks: {}, longest: [], squeezed: 0, boardTop: 0, purpleTie: 0, allEqual: 0 };
 for (let g = 1; g <= games; g++) {
   const rand = seededRandom(g * 9973);
   let s = createGame({ seats: Array.from({ length: n }, () => ({ kind: 'bot' })), seed: g, quadrants });
@@ -35,12 +36,17 @@ for (let g = 1; g <= games; g++) {
       }
       if (pend.kind === 'buy' && mv.option === 'tier:big') st.sixBuys++;
       const r0 = s.round;
+      const ctxS = contextFor(s);
+      const boards = s.players.map(p => onBoard(ctxS, p));
       const next = applyMove(s, mv);
       st.squeezed += next.log.slice(s.log.length).filter(l => l.includes('No space to spare')).length;
       if (next.round !== r0 || next.over) {
         const line = [...next.log].reverse().find(l => l.startsWith(`Round ${['I', 'II', 'III'][r0 - 1]} ends.`));
         if (line) {
           st.contestRounds++;
+          const top = Math.max(...boards);
+          if (boards.every(b => b === top)) st.allEqual++;
+          if (boards.filter(b => b === top).length > 1) st.purpleTie++; else st.boardTop++;
           const part = line.split(' · ').find(x => x.includes('Most workers on the board'));
           if (!part) st.noScore++;
           else {
@@ -74,5 +80,6 @@ if (pq >= 0) {
   console.log(`Purple takes per game: ${Object.entries(st.takes).map(([k, v]) => `${k} ${(v / played).toFixed(2)}`).join(' · ')}`);
   console.log(`  by round: ${Object.entries(st.takesByRound).sort().map(([k, v]) => `${k} ${(v / played).toFixed(2)}`).join(' · ')}`);
   console.log(`Board contest: nobody scored ${(100 * st.noScore / st.contestRounds).toFixed(0)}% of rounds; shared ${(100 * st.ties / st.contestRounds).toFixed(0)}%; wins by seat ${st.contestWins.join('/')}; winner's followers from it ${avg(st.winnerContest)}`);
+  console.log(`  decided by more workers ${(100 * st.boardTop / st.contestRounds).toFixed(0)}% · by the purple tiebreak ${(100 * st.purpleTie / st.contestRounds).toFixed(0)}% (everyone level on the board ${(100 * st.allEqual / st.contestRounds).toFixed(0)}%)`);
   console.log(`Win rate of players who took each action at least once (25% = average at 4p): ${Object.entries(st.takers).sort((a, b) => b[1].w / b[1].n - a[1].w / a[1].n).map(([k, v]) => `${k} ${(100 * v.w / v.n).toFixed(0)}%`).join(' · ')}`);
 }
