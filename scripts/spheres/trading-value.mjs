@@ -21,8 +21,6 @@ function play(seed, giveDef, seat) {
       s.shop = s.shop.filter(u => u !== uid); s.pile = s.pile.filter(u => u !== uid);
       while (s.shop.length < 6 && s.pile.length) s.shop.push(s.pile.shift());
       s.players[seat].members.push(uid);
-      // a handed-over Lender still pays out its loan, as if recruited
-      if (giveDef === 'trading.lender') s.players[seat].res.white += 5;
       given = true;
     }
     s = applyMove(s, chooseBotMove(s, rand));

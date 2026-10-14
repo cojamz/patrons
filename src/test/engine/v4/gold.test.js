@@ -154,7 +154,8 @@ describe('Gold members', () => {
 
   it('Merchant: +1 gold whenever anyone recruits a gold member', () => {
     const shop = ['gold.banker', 'red.intern', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'];
-    let s = scene({ members: [[], ['gold.merchant']], res: [{ gold: 3, red: 1 }, { gold: 3 }], shop, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
+    // (red: 2 so P0 can still pay Intern after the default spends red rather than blue, which P0 leads)
+    let s = scene({ members: [[], ['gold.merchant']], res: [{ gold: 3, red: 2 }, { gold: 3 }], shop, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
     s = take(s, 'Tide');
     s = move(s, `card:${uidOf(s, 'gold.banker', 'shop')}`);
     expect(R(s)[1].gold).toBe(4);
@@ -172,8 +173,8 @@ describe('Gold members', () => {
     let s = scene({ members: [['gold.thrift']], res: [{ gold: 2, red: 2 }], shop: ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'] });
     s = take(s, 'Tide');
     s = move(s, `card:${uidOf(s, 'gold.midas', 'shop')}`);
-    // wild 2 paid from blue (3, most held) then red
-    expect(R(s)[0]).toEqual({ gold: 0, red: 1, blue: 2, green: 0 });
+    // wild 2 paid from red: P0 leads blue (3 from Tide), and the default never spends a color whose contest you lead
+    expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 3, green: 0 });
   });
 
   it('Thrift: gold also pays the wild part double when nothing else is left', () => {
@@ -297,5 +298,15 @@ describe('Gold members', () => {
     // a rival on red gets nothing from it
     s = take(s, 'Hire');
     expect(R(s)[0].gold).toBe(before + 1);
+  });
+});
+
+describe('default payment protects contests you lead', () => {
+  it('pays "any" from a color nobody contests rather than one you lead', () => {
+    // P0 leads blue after Tide; Banker's 1 "any" should come from red, not blue
+    let s = scene({ members: [[], []], res: [{ gold: 2, red: 1 }, { gold: 0 }], shop: ['gold.banker', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'] });
+    s = take(s, 'Tide');
+    s = move(s, `card:${uidOf(s, 'gold.banker', 'shop')}`);
+    expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 3, green: 0 });
   });
 });

@@ -161,7 +161,7 @@ export function paymentChoices(state, p, uid) {
   const keys = state.resources;
   const all = vectors(p.res, keys, def.s + def.w).filter(v => memberPayOk(state, p, def, v));
   const minimal = all.filter(v => keys.every(c => !v[c] || !memberPayOk(state, p, def, { ...v, [c]: v[c] - 1 })));
-  return orderChoices(state, minimal, paymentPlan(state, p, uid));
+  return orderChoices(state, minimal, paymentPlan(state, p, uid), p);
 }
 // Resources that count as any color when buying followers (Gold: "gold is money").
 const wildColors = state => state.quadrants.map(quadrant).filter(q => q.wildInFollowerBuys).map(q => q.resource);
@@ -175,15 +175,41 @@ export function followerChoices(state, p, tier) {
   if (tier.limited && state.bigLeft <= 0) return [];
   const keys = state.resources;
   const all = vectors(p.res, keys, tier.cost, tier.cost).filter(v => colorsCovered(state, v) >= tier.colors);
-  return orderChoices(state, all, followerPlan(state, p, tier));
+  return orderChoices(state, all, followerPlan(state, p, tier), p);
 }
-function orderChoices(state, list, preferred) {
+/**
+ * Colors a player shouldn't spend by default: those where they lead or tie a contest that counts that color
+ * (a quadrant whose score drops when they hold one less of it). Display/default only; any legal spend stays legal.
+ */
+function protectedColors(state, p) {
+  const ctx = ctxFor(state);
+  const out = new Set();
+  for (const qid of state.quadrants) {
+    const q = quadrant(qid);
+    const r = q.resource;
+    if (!r || !(p.res[r] > 0)) continue;
+    let mine, top, less;
+    try {
+      mine = q.scoring.score(ctx, p);
+      top = Math.max(...state.players.map(o => q.scoring.score(ctx, o)));
+      p.res[r] -= 1;
+      try { less = q.scoring.score(ctx, p); } finally { p.res[r] += 1; }
+    } catch { continue; }
+    if (less < mine && top > 0 && mine >= top) out.add(r);
+  }
+  return out;
+}
+
+function orderChoices(state, list, preferred, p) {
   const pk = preferred ? vecKey(state, preferred) : null;
+  const guard = p ? protectedColors(state, p) : new Set();
+  const risk = v => [...guard].reduce((s, c) => s + (v[c] || 0), 0);
   const seen = new Set();
   const out = [];
   for (const v of list) { const k = vecKey(state, v); if (!seen.has(k)) { seen.add(k); out.push(v); } }
-  // the default way to pay comes first; without one, spend as little gold as possible
-  out.sort((a, b) => (vecKey(state, b) === pk) - (vecKey(state, a) === pk) || (a.gold || 0) - (b.gold || 0));
+  // The default way to pay comes first. It never spends a color whose contest you lead or tie when another way
+  // exists; then the usual plan (surplus colors first); without one, as little gold as possible.
+  out.sort((a, b) => risk(a) - risk(b) || (vecKey(state, b) === pk) - (vecKey(state, a) === pk) || (a.gold || 0) - (b.gold || 0));
   return out;
 }
 function payOption(state, v, i) {

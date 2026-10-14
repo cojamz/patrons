@@ -32,7 +32,7 @@ export default {
       resolve(ctx, p) { p.discount += 2; ctx.log(`${p.name}'s next member costs 2 less.`); },
     },
     {
-      key: 'steal', ring: 2, name: 'Steal', text: 'Take 3 gold from players, split however you like.',
+      key: 'steal', ring: 2, name: 'Steal', text: 'Take up to 3 gold from rivals, split however you like.',
       estimate: (ctx, p) => Math.min(3, ctx.rivals(p).filter(o => ctx.canSteal(p, o)).reduce((s, o) => s + o.res.gold, 0)) * 1.4,
       resolve(ctx, p) { stealStep(ctx, p, { left: ctx.stealCount(p, 3), picked: {} }); },
     },

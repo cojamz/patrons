@@ -13,10 +13,10 @@ const Q = ['gold', 'red', 'blue', 'trading'];
 
 // Costs these tests are written against; repricing the real cards doesn't break them.
 const WHITE_TEST_COSTS = {
-  'trading.shopkeeper': [1, 1], 'trading.dealer': [1, 1], 'trading.pawnbroker': [1, 0], 'trading.comeback': [1, 1],
+  'trading.shopkeeper': [1, 1], 'trading.dealer': [1, 1], 'trading.pawnbroker': [1, 0], 'trading.safetynet': [1, 1],
   'trading.tipster': [1, 1], 'trading.lender': [1, 0], 'trading.magnate': [3, 2], 'trading.shareholder': [2, 2],
-  'trading.heiress': [2, 2], 'trading.bargain': [3, 2], 'trading.broker': [1, 0], 'trading.exporter': [1, 1],
-  'trading.changer': [1, 1], 'trading.reinvestor': [1, 1], 'trading.raider': [2, 1],
+  'trading.heiress': [2, 2], 'trading.bulkbuyer': [3, 2], 'trading.broker': [1, 0], 'trading.exporter': [1, 1],
+  'trading.liquidator': [1, 1], 'trading.reinvestor': [1, 1], 'trading.raider': [2, 1],
 };
 let restore;
 beforeEach(() => { restore = pinCosts({ ...TEST_COSTS, ...WHITE_TEST_COSTS }); });
@@ -66,27 +66,27 @@ describe('White actions', () => {
     expect(R(take(scene({ n: 4, bonus: [5, 3, 1, 0] }), 'Haggle')).white).toBe(2);
   });
 
-  it('Buy Low (round I): trade 1 resource (you pick) for 2 followers', () => {
-    let s = take(scene({ res: [{ gold: 2, red: 1 }] }), 'Buy Low');
+  it('Buy Low (round I): trade up to 2 resources (you pick) for followers, 1 for 1', () => {
+    let s = take(scene({ res: [{ gold: 3, red: 1 }] }), 'Buy Low');
     expect(ids(s)).toEqual(['color:gold', 'color:red', 'done']);
     s = move(s, 'color:red');
-    expect(s.pending.kind).toBe('buy'); // round I: just one
+    expect(ids(s)).toEqual(['color:gold', 'done']);
+    s = move(s, 'color:gold');
+    expect(s.pending.kind).toBe('buy'); // round I: 2 at most
     expect(R(s)).toEqual({ ...Z, gold: 2 });
     expect(B(s)).toBe(2);
     expect(F(s)).toBe(3);
   });
 
-  it('Buy Low: up to 1 resource per round number; Done stops early; nothing to pay, nothing happens', () => {
-    let s = take(scene({ round: 3, res: [{ gold: 1, red: 3 }] }), 'Buy Low');
-    s = move(s, 'color:red');
+  it('Buy Low: up to 2 per round number; Done stops early; nothing to pay, nothing happens', () => {
+    let s = take(scene({ round: 3, res: [{ gold: 2, red: 5 }] }), 'Buy Low');
+    for (let k = 0; k < 5; k++) s = move(s, 'color:red');
     s = move(s, 'color:gold');
-    expect(ids(s)).toEqual(['color:red', 'done']);
-    s = move(s, 'color:red');
-    expect(R(s)).toEqual({ ...Z, red: 1 });
+    expect(R(s)).toEqual({ ...Z, gold: 1 });
     expect(B(s)).toBe(6);
     s = move(move(take(scene({ round: 2, res: [{ blue: 3 }] }), 'Buy Low'), 'color:blue'), 'done');
     expect(R(s).blue).toBe(2);
-    expect(B(s)).toBe(2);
+    expect(B(s)).toBe(1);
     s = take(scene({}), 'Buy Low');
     expect(B(s)).toBe(0);
     expect(s.pending?.kind).not.toBe('choose');
@@ -207,9 +207,9 @@ describe('White members', () => {
     expect(ids(s)).toContain(`use:${u}`);
   });
 
-  it('Comeback Kid: at round start, +1 white per player with more followers than you', () => {
-    const s = scene({ n: 4, bonus: [0, 2, 3, 0], members: [['trading.comeback']], queue: [{ t: 'round', r: 2 }] });
-    expect(R(s).white).toBe(2); // P1 has 2 (self + Comeback Kid): P2 and P3 have more, P4 has fewer
+  it('Safety Net: at round start, +3 white only if you have none', () => {
+    expect(R(start([['trading.safetynet']])).white).toBe(3);
+    expect(R(start([['trading.safetynet']], [{ white: 1 }, {}])).white).toBe(1);
   });
 
   it('Tipster: whenever a rival buys followers, +1 white (not your own buys)', () => {
@@ -226,18 +226,31 @@ describe('White members', () => {
     let s = scene({ res: [{ white: 1 }], bonus: [5], shop: ['trading.lender'] });
     s = take(s, 'Rush');
     s = move(s, `card:${uidOf(s, 'trading.lender', 'shop')}`);
-    expect(R(s).white).toBe(5);
+    expect(R(s).white).toBe(5); // paid once, not again at turn end
     expect(F(s)).toBe(7);
     s = scene({ bonus: [5], members: [['trading.lender']], queue: [{ t: 'finish' }] });
     expect(B(s)).toBe(3);
     s = scene({ bonus: [1], members: [['trading.lender']], queue: [{ t: 'finish' }] });
     expect(B(s)).toBe(0);
-    expect(F(s)).toBe(2); // yourself + the Lender
+    expect(F(s)).toBe(2); // yourself + the Lender: the debt never touches yourself or a member
   });
 
-  it('Magnate: game end, +1 follower per 2 white', () => {
-    const s = scene({ res: [{ white: 7 }], members: [['trading.magnate']], queue: [{ t: 'finish' }] });
-    expect(B(s)).toBe(3);
+  it('Lender: a Doppelganger copying it is a full copy, +5 white included', () => {
+    let s = scene({ res: [{ red: 2, gold: 2 }], members: [['trading.lender']], shop: ['red.doppel'] });
+    s.cards[uidOf(s, 'trading.lender', 0)].loanPaid = true; // the original already paid out
+    s = take(s, 'Rush');
+    s = move(s, `card:${uidOf(s, 'red.doppel', 'shop')}`);
+    s = move(s, `card:${uidOf(s, 'trading.lender', 0)}`);
+    expect(R(s).white).toBe(5);
+    s.players[0].bonus = 6;
+    s.queue = [{ t: 'finish' }];
+    s = resume(s);
+    expect(B(s)).toBe(2); // two debts of 2
+  });
+
+  it('Magnate: game end, +1 follower per 3 white', () => {
+    const s = scene({ res: [{ white: 8 }], members: [['trading.magnate']], queue: [{ t: 'finish' }] });
+    expect(B(s)).toBe(2);
   });
 
   it('Shareholder: worth 3 followers', () => {
@@ -253,15 +266,17 @@ describe('White members', () => {
     expect(ids(s)).not.toContain(`use:${u}`);
   });
 
-  it('Bargain Hunter: whenever you buy followers, +1 more', () => {
-    let s = take(scene({ res: [{ red: 2, blue: 2 }], members: [['trading.bargain']] }), 'Haggle');
+  it('Bulk Buyer: whenever you buy 3 or 6 followers, +1 more (not the 2-for-1 buy)', () => {
+    let s = take(scene({ res: [{ red: 2, blue: 2 }], members: [['trading.bulkbuyer']] }), 'Haggle');
     s = move(s, 'tier:mid');
     expect(B(s)).toBe(4);
+    s = move(take(scene({ res: [{ red: 2 }], members: [['trading.bulkbuyer']] }), 'Haggle'), 'tier:small');
+    expect(B(s)).toBe(1);
   });
 
   it('Broker: whenever a White action gives you followers, +1 more', () => {
     let s = move(take(scene({ res: [{ red: 1 }], members: [['trading.broker']] }), 'Buy Low'), 'color:red');
-    expect(B(s)).toBe(3);
+    expect(B(s)).toBe(2); // 1, +1 Broker
     s = move(take(scene({ round: 3, res: [{ white: 2 }], members: [['trading.broker']] }), 'Boom'), 'boom:all');
     expect(B(s)).toBe(3);
     s = move(take(scene({ round: 2, res: [{ white: 2 }], members: [['trading.broker']] }), 'Cash In'), 'amount:2');
@@ -283,10 +298,16 @@ describe('White members', () => {
     expect(R(s).white).toBe(0);
   });
 
-  it('Money Changer: an action gaining 3+ of another color gives +1 white', () => {
-    expect(R(take(scene({ members: [['trading.changer']] }), 'Joint Venture')).white).toBe(1);
-    expect(R(take(scene({ members: [['trading.changer']] }), 'Rush')).white).toBe(0); // only 2 gold
-    expect(R(take(scene({ members: [['trading.changer']] }), 'Haggle')).white).toBe(2); // white itself doesn't count
+  it('Liquidator: once per game, sell up to 5 followers for 2 white each, right when you use it', () => {
+    let s = take(scene({ round: 2, bonus: [7], members: [['trading.liquidator', 'trading.dealer']] }), 'Rush');
+    const u = uidOf(s, 'trading.liquidator', 0);
+    s = move(s, `use:${u}`);
+    expect(B(s)).toBe(2);
+    expect(R(s).white).toBe(15); // 10, +5 Dealer
+    expect(ids(s)).not.toContain(`use:${u}`);
+    s = take(scene({ round: 2, members: [['trading.liquidator']] }), 'Rush');
+    s = move(s, `use:${uidOf(s, 'trading.liquidator', 0)}`);
+    expect(ids(s)).toContain(`use:${uidOf(s, 'trading.liquidator', 0)}`); // nothing to sell: not spent
   });
 
   it('Reinvestor: selling followers knocks 1 per follower off your next member', () => {
