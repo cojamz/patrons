@@ -1,5 +1,5 @@
-// One thinking seat (rollouts) vs greedy bots on the Black table. Does Black reward planning?
-// Usage: node scripts/spheres/thieves-thinker.mjs [games=24] [mode=black|control] [rollouts=6]
+// One thinking seat (rollouts) vs greedy bots on the Magenta table. Does Black reward planning?
+// Usage: node scripts/spheres/thieves-thinker.mjs [games=24] [mode=members|control] [rollouts=6]
 import { install } from '../../src/engine/v4/content/thieves.js';
 import { createGame, applyMove, chooseBotMove, actionAt } from '../../src/engine/v4/index.js';
 import { chooseThinkerMove } from '../../src/engine/v4/thinker.js';
@@ -28,4 +28,4 @@ for (let g = 1; g <= N; g++) {
   console.error(`${g}/${N}: thinker wins ${wins}`);
 }
 console.log(`[${MODE}] thinker win rate ${(100 * wins / N).toFixed(0)}% over ${N} games (25% = no better than greedy)`);
-console.log(`thinker places on Black ${(100 * blackPlace / places).toFixed(0)}% of the time vs greedy ${(100 * botBlack / botPlaces).toFixed(0)}%; units stolen per game: thinker ${(stole / N).toFixed(1)} vs each greedy bot ${(botStole / N / 3).toFixed(1)}`);
+console.log(`thinker places on Magenta ${(100 * blackPlace / places).toFixed(0)}% of the time vs greedy ${(100 * botBlack / botPlaces).toFixed(0)}%; units stolen per game: thinker ${(stole / N).toFixed(1)} vs each greedy bot ${(botStole / N / 3).toFixed(1)}`);

@@ -1,6 +1,6 @@
-// Action value on the Black table: force one seat's first placement of a round onto an action, compare against
-// the same games where the bot chose freely. Black's actions are read against Cory's anchors on the same ring.
-// Usage: node scripts/spheres/thieves-actions.mjs [games=120] [mode=black|control]
+// Action value on the Magenta table: force one seat's first placement of a round onto an action, compare against
+// the same games where the bot chose freely. Magenta's actions are read against Cory's anchors on the same ring.
+// Usage: node scripts/spheres/thieves-actions.mjs [games=120] [mode=members|control]
 import { install } from '../../src/engine/v4/content/thieves.js';
 import { createGame, applyMove, chooseBotMove, followers, actionAt } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';

@@ -1,5 +1,5 @@
-// Black (thieves) balance sim: greedy bots, 4 seats, gold/red/blue + Black, one run per scoring mode.
-// Usage: node scripts/spheres/thieves-sim.mjs [games=400] [modes=black] [policy=rich|leader|random]
+// Magenta (thieves) balance sim: greedy bots, 4 seats, gold/red/blue + Magenta, one run per scoring mode.
+// Usage: node scripts/spheres/thieves-sim.mjs [games=400] [label=members] [policy=rich|leader|random]
 import { install } from '../../src/engine/v4/content/thieves.js';
 import { createGame, applyMove, chooseBotMove, followers, memberCount, actionAt } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
@@ -61,10 +61,10 @@ function run(mode, control = false) {
         } else s = applyMove(s, botMove(s, rand));
         if (!r1 && s.order.length) r1 = s.order.slice(0, 4);
         if (prevContest && s.players.some((p, i) => p.contest !== prevContest[i])) {
-          // a round just ended: find Black's winners from the log line
+          // a round just ended: find Magenta's winners from the log line
           const line = [...s.log].reverse().find(l => /^Round (I|II|III) ends/.test(l));
           if (!control && line) {
-            const lab = { loot: 'Most loot', others: 'Most members of other colors', black: 'Most black', fewest: 'Fewest resources' }[mode];
+            const lab = 'Most Magenta members';
             const seg = line.split(' · ').find(x => x.includes(lab));
             st.contestRounds++;
             const before = s.players.map((p, i) => followers(s, p) - (p.contest - prevContest[i]));
@@ -92,7 +92,7 @@ function run(mode, control = false) {
     st.fol.push(...f); st.winFol.push(Math.max(...f));
     st.spread.push(Math.max(...f) - Math.min(...f));
     st.members.push(...s.players.map(p => memberCount(s, p)));
-    st.blackLeft.push(...s.players.map(p => p.res.black || 0));
+    st.blackLeft.push(...s.players.map(p => p.res.magenta || 0));
     const th = s.thefts || [];
     const robbed = [0, 0, 0, 0];
     const perAction = {};
@@ -108,7 +108,7 @@ function run(mode, control = false) {
     // thief stats: who robs (by follower rank at the end)
     for (const t of th) st.thiefRank[s.ranking.indexOf(t.by)] += t.n;
     st.robbedPerPlayer.push(...robbed);
-    // game winner's share of the Black contest
+    // game winner's share of the Magenta contest
     if (!control) {
       const w = s.ranking[0];
       const wins = (st._perGame = st.contestWinners.slice(st._cw || 0)); st._cw = st.contestWinners.length;
@@ -123,13 +123,13 @@ function report(mode, st, base) {
   const out = [];
   out.push(`\n=== ${mode} (${games} games, policy ${POLICY}${st.errors ? `, ${st.errors} ERRORS` : ''}) ===`);
   out.push(`seat wins ${st.wins.map(w => pct(w, games)).join(' / ')} · by round-I pick order ${st.posWins.map(w => pct(w, games)).join(' / ')}`);
-  out.push(`avg followers ${avg(st.fol).toFixed(1)}${base ? ` (green stand-in table ${avg(base.fol).toFixed(1)})` : ''} · winner ${avg(st.winFol).toFixed(1)} · first-to-last gap ${avg(st.spread).toFixed(1)}${base ? ` (stand-in ${avg(base.spread).toFixed(1)})` : ''} · black left at end ${avg(st.blackLeft).toFixed(1)}`);
+  out.push(`avg followers ${avg(st.fol).toFixed(1)}${base ? ` (green stand-in table ${avg(base.fol).toFixed(1)})` : ''} · winner ${avg(st.winFol).toFixed(1)} · first-to-last gap ${avg(st.spread).toFixed(1)}${base ? ` (stand-in ${avg(base.spread).toFixed(1)})` : ''} · magenta left at end ${avg(st.blackLeft).toFixed(1)}`);
   if (mode !== 'control') {
-    out.push(`Black action takes per game: ${Object.entries(st.takesByRound).sort().map(([k, v]) => `${k} ${(v / games).toFixed(2)}`).join(', ')}`);
+    out.push(`Magenta action takes per game: ${Object.entries(st.takesByRound).sort().map(([k, v]) => `${k} ${(v / games).toFixed(2)}`).join(', ')}`);
     const pp = Object.entries(st.pickPos).filter(([k]) => / R(1|2|3)$/.test(k)).map(([k, v]) => [k, avg(v), v.length / games]);
     for (const r of [1, 2, 3]) out.push(`R${r} avg pick position, all actions (0 = picked first): ` + pp.filter(([k]) => k.endsWith(`R${r}`)).sort((a, b) => a[1] - b[1]).map(([k, v, n]) => `${k.replace(/ R\d$/, '')} ${v.toFixed(2)}${n < 0.95 ? ` (taken ${(n * 100).toFixed(0)}%)` : ''}`).join(', '));
     const cw = [0, 0, 0, 0]; for (const id of st.contestWinners) cw[id]++;
-    out.push(`Black contest: rounds with no winner ${pct(st.contestNone, st.contestRounds)}, ties ${pct(st.contestTies, st.contestRounds)}, avg winners ${(st.contestWinners.length / Math.max(1, st.contestRounds - st.contestNone)).toFixed(2)}; went to the follower leader ${pct(st.leaderWonContest, st.contestRounds - st.contestNone)}, to last place ${pct(st.lastWonContest, st.contestRounds - st.contestNone)}; same winner as last round ${pct(st.repeatWinner, st.repeatChances)}; game winner won it at least once ${pct(st.contestWinnerWonGame, games)}`);
+    out.push(`Magenta contest: rounds with no winner ${pct(st.contestNone, st.contestRounds)}, ties ${pct(st.contestTies, st.contestRounds)}, avg winners ${(st.contestWinners.length / Math.max(1, st.contestRounds - st.contestNone)).toFixed(2)}; went to the follower leader ${pct(st.leaderWonContest, st.contestRounds - st.contestNone)}, to last place ${pct(st.lastWonContest, st.contestRounds - st.contestNone)}; same winner as last round ${pct(st.repeatWinner, st.repeatChances)}; game winner won it at least once ${pct(st.contestWinnerWonGame, games)}`);
     out.push(`Thefts per game ${(st.thefts / games).toFixed(1)} (${(st.units / games).toFixed(1)} units; members taken ${(st.memberThefts / games).toFixed(2)}, ransoms paid ${(st.ransomPaid / games).toFixed(2)}). Units taken from: leader ${pct(st.unitsByRank[0], st.units)}, 2nd ${pct(st.unitsByRank[1], st.units)}, 3rd ${pct(st.unitsByRank[2], st.units)}, 4th ${pct(st.unitsByRank[3], st.units)} · from last place ${pct(st.lastHit, st.units)}`);
     const rp = st.robbedPerPlayer;
     const b = st.perVictimMax;

@@ -1,5 +1,5 @@
-// Black member value: hand one member to one seat at the start of round II, compare against the same games without it.
-// Usage: node scripts/spheres/thieves-value.mjs [gamesPerMember=120] [mode=black|control] [only=key,key]
+// Magenta member value: hand one member to one seat at the start of round II, compare against the same games without it.
+// Usage: node scripts/spheres/thieves-value.mjs [gamesPerMember=120] [mode=members|control] [only=key,key]
 import { install } from '../../src/engine/v4/content/thieves.js';
 import { createGame, applyMove, chooseBotMove, followers, quadrant, defById } from '../../src/engine/v4/index.js';
 import { contextFor, resume } from '../../src/engine/v4/core.js';
@@ -47,6 +47,6 @@ for (const id of ids) {
   rows.push({ name: d.name, cost: d.s + d.w, sw: `${d.s}+${d.w}`, gain: dF / N, win: wins / N });
 }
 rows.sort((a, b) => b.gain - a.gain);
-console.log(`Black member value, handed over at the start of round II (${N} games each, 4 bots, scoring ${MODE}). Baseline win rate 25%.`);
+console.log(`Magenta member value, handed over at the start of round II (${N} games each, 4 bots, scoring ${MODE}). Baseline win rate 25%.`);
 console.log('name'.padEnd(16), 'cost', ' +followers', ' win%');
 for (const r of rows) console.log(r.name.padEnd(16), r.sw.padStart(4), r.gain.toFixed(1).padStart(11), (r.win * 100).toFixed(0).padStart(5));

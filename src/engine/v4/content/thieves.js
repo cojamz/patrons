@@ -1,7 +1,7 @@
-// Black: the thieves. Black makes nothing of its own: it takes from the table, resources and members.
-// Black IS stolen goods: whatever you steal turns black in your supply right away, spendable on your next buy.
-// Most black at round end wins the ring.
-// Every steal (Black's, Gold's Steal, anyone's) goes through the engine's shared ctx.steal(), so Hideout,
+// Magenta (module id 'thieves'): the thieves. Magenta makes nothing of its own: it takes from the table, resources and members.
+// Magenta is stolen goods: whatever you steal turns magenta in your supply right away, spendable on your next buy.
+// The ring goes to most Magenta members at round end.
+// Every steal (Magenta's, Gold's Steal, anyone's) goes through the engine's shared ctx.steal(), so Hideout,
 // Watchdog, Lookout and Robin Hood apply to all of them.
 import { registerQuadrant } from './index.js';
 
@@ -10,8 +10,9 @@ const cost = c => c.def.s + c.def.w;
 const total = p => Object.values(p.res).reduce((a, b) => a + b, 0);
 const holding = p => total(p);
 
-// ---------- scoring: most black (what you hold right now) ----------
-export const SCORING = { black: { label: 'Most black', score: (ctx, p) => p.res.black || 0 } };
+// ---------- scoring: most Magenta members (what you hold right now) ----------
+// Most Magenta members: a member stolen from a rival counts if it's magenta, so Heist and Ransom move the ring too.
+export const SCORING = { members: { label: 'Most Magenta members', score: (ctx, p) => ctx.countMembersOfColor(p, 'thieves') } };
 
 // ---------- helpers ----------
 const fewestFollowers = (ctx, p) => ctx.state.players.every(o => ctx.followers(o) >= ctx.followers(p));
@@ -27,8 +28,8 @@ function piles(ctx, thief, o, picked = {}) {
 }
 const stealable = (ctx, thief, o, picked) => piles(ctx, thief, o, picked).reduce((s, [, n]) => s + n, 0);
 
-// Stolen goods turn black in the thief's supply.
-const stash = (ctx, p, n) => { if (n) ctx.gain(p, 'black', n, { fromAction: true }); };
+// Stolen goods turn magenta in the thief's supply.
+const stash = (ctx, p, n) => { if (n) ctx.gain(p, 'magenta', n, { fromAction: true }); };
 // Take `pick` ({ pile: n }) from one victim through the shared steal, and stash it. Returns units taken.
 function commit(ctx, thief, victim, pick, reaction = false) {
   if (!ctx.canSteal(thief, victim)) return 0;
@@ -101,10 +102,10 @@ function richest(ctx, p) {
 // ---------- the quadrant ----------
 const thieves = {
   id: 'thieves',
-  name: 'Black',
-  resource: 'black',
-  rule: 'Whatever you steal turns black in your supply, ready to spend. Most black at round end wins.',
-  scoring: SCORING.black,
+  name: 'Magenta',
+  resource: 'magenta',
+  rule: 'Whatever you steal turns magenta in your supply, ready to spend. Most Magenta members at round end wins.',
+  scoring: SCORING.members,
 
   // quadrant-level hooks (engine): Hideout refuses steals; thefts are recorded
   guardSteal: (ctx, thief, victim) => victim.hideout === ctx.state.round,
@@ -275,19 +276,19 @@ const thieves = {
         if (list.length) pickMember(ctx, owner, list, 'Double Agent: swap for which member?', 'thieves.doubleAgent', { uid: card.uid });
       },
     }),
-    m('bigscore', 'Big Score', 3, 1, 'Once per game: take half (rounded down) of the black held by the rival with the most black.', {
+    m('bigscore', 'Big Score', 3, 1, 'Once per game: take half (rounded down) of the magenta held by the rival with the most magenta.', {
       activate: 'game',
       onActivate(ctx, owner) {
-        const list = ctx.rivals(owner).filter(o => ctx.canSteal(owner, o) && (o.res.black || 0) >= 2);
-        if (!list.length) { ctx.log(`${owner.name}'s Big Score found no black worth taking.`); return; }
-        const o = list.reduce((a, b) => (b.res.black > a.res.black ? b : a));
-        const got = commit(ctx, owner, o, { black: Math.floor(o.res.black / 2) });
-        ctx.log(`${owner.name}'s Big Score: ${got} black from ${o.name}.`);
+        const list = ctx.rivals(owner).filter(o => ctx.canSteal(owner, o) && (o.res.magenta || 0) >= 2);
+        if (!list.length) { ctx.log(`${owner.name}'s Big Score found no magenta worth taking.`); return; }
+        const o = list.reduce((a, b) => (b.res.magenta > a.res.magenta ? b : a));
+        const got = commit(ctx, owner, o, { magenta: Math.floor(o.res.magenta / 2) });
+        ctx.log(`${owner.name}'s Big Score: ${got} magenta from ${o.name}.`);
       },
-      botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => ctx.canSteal(owner, o) && (o.res.black || 0) >= 4),
+      botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => ctx.canSteal(owner, o) && (o.res.magenta || 0) >= 4),
     }),
-    m('kingpin', 'Kingpin', 2, 1, 'Game end: +1 follower per 2 black.', {
-      onGameEnd: (ctx, owner) => Math.floor((owner.res.black || 0) / 2),
+    m('kingpin', 'Kingpin', 2, 1, 'Game end: +1 follower per 2 magenta.', {
+      onGameEnd: (ctx, owner) => Math.floor((owner.res.magenta || 0) / 2),
     }),
   ],
 };
@@ -295,7 +296,7 @@ const thieves = {
 export default thieves;
 
 let installed = false;
-/** Register Black with the engine (tests and scripts call this; index.js is untouched). */
+/** Register Magenta with the engine (tests and scripts call this; index.js is untouched). */
 export function install() {
   if (!installed) { registerQuadrant(thieves); installed = true; }
   return thieves;

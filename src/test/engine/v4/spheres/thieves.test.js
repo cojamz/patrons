@@ -1,11 +1,11 @@
 // @vitest-environment node
-// Black (thieves): every action and every member, with exact numbers. Plus 200 seeded bot games.
-// Stolen goods turn black in the thief's supply right away; the ring goes to most black.
+// Magenta (thieves): every action and every member, with exact numbers. Plus 200 seeded bot games.
+// Stolen goods turn magenta in the thief's supply right away; the ring goes to most magenta.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createGame, applyMove, resume, followers, contextFor } from '../../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../../engine/v4/bots.js';
 import { seededRandom } from '../../../../engine/v4/rng.js';
-import thieves, { install, SCORING } from '../../../../engine/v4/content/thieves.js';
+import thieves, { install } from '../../../../engine/v4/content/thieves.js';
 import { take, move, play, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
 
@@ -26,12 +26,12 @@ let restore;
 beforeEach(() => { restore = pinCosts(PINNED); });
 afterEach(() => { restore(); });
 
-const Z = { gold: 0, red: 0, blue: 0, black: 0 };
+const Z = { gold: 0, red: 0, blue: 0, magenta: 0 };
 const R = s => s.players.map(p => p.res);
 const defs = (s, i) => s.players[i].members.map(u => s.cards[u].def);
 const SHOP = ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.patriarch', 'red.sponsor'];
 
-// scene() from helpers, on the Black table
+// scene() from helpers, on the Magenta table
 function scene({ n = 3, seed = 7, round = 1, res = [], members = [], shop = SHOP, bonus = [], turn = 0, queue = null } = {}) {
   const s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants: QUADS });
   Object.assign(s, { queue: [], pending: null, round, slots: {}, order: [], log: [] });
@@ -45,28 +45,28 @@ function scene({ n = 3, seed = 7, round = 1, res = [], members = [], shop = SHOP
 }
 const pass = s => (s.pending?.kind === 'buy' ? move(s, 'pass') : s);
 
-describe('Black actions', () => {
+describe('Magenta actions', () => {
   it('Pickpocket: take 2 / 3 / 4 resources by round, split as you like (one pick at a time, from what is left)', () => {
     let s = scene({ res: [{}, { gold: 2 }, { red: 1, blue: 1 }] });
     s = take(s, 'Pickpocket');
     expect(ids(s)).toEqual(['take:1:gold', 'take:2:red', 'take:2:blue']);
     s = play(s, 'take:1:gold', 'take:1:gold');
-    expect(R(s)).toEqual([{ ...Z, black: 2 }, { ...Z }, { ...Z, red: 1, blue: 1 }]);
+    expect(R(s)).toEqual([{ ...Z, magenta: 2 }, { ...Z }, { ...Z, red: 1, blue: 1 }]);
     for (const [round, n] of [[2, 3], [3, 4]]) {
       let t = scene({ round, res: [{}, { gold: 9 }] });
       t = take(t, 'Pickpocket');
       for (let k = 0; k < n; k++) t = move(t, 'take:1:gold');
-      expect(R(t)[0].black).toBe(n);
+      expect(R(t)[0].magenta).toBe(n);
       expect(t.pending?.kind).not.toBe('choose');
     }
   });
 
   it('Pickpocket: takes only what there is; nothing asks nothing', () => {
     let s = play(take(scene({ res: [{}, { gold: 1 }] }), 'Pickpocket'), 'take:1:gold');
-    expect(R(s)[0].black).toBe(1);
+    expect(R(s)[0].magenta).toBe(1);
     const z = take(scene({}), 'Pickpocket');
     expect(z.pending?.kind).not.toBe('choose');
-    expect(R(z)[0].black).toBe(0);
+    expect(R(z)[0].magenta).toBe(0);
   });
 
   it('Tip-off: take 1 from each player holding more than you (you pick what)', () => {
@@ -74,7 +74,7 @@ describe('Black actions', () => {
     s = take(s, 'Tip-off');
     expect(ids(s)).toEqual(['take:1:gold', 'take:2:red', 'take:2:blue']);
     s = play(s, 'take:2:red', 'take:1:gold');
-    expect(R(s).map(r => [r.gold, r.red, r.blue, r.black])).toEqual([[2, 0, 0, 2], [2, 0, 0, 0], [0, 0, 2, 0], [2, 0, 0, 0]]);
+    expect(R(s).map(r => [r.gold, r.red, r.blue, r.magenta])).toEqual([[2, 0, 0, 2], [2, 0, 0, 0], [0, 0, 2, 0], [2, 0, 0, 0]]);
     const z = take(scene({ res: [{ gold: 5 }, { gold: 1 }] }), 'Tip-off');
     expect(z.pending?.kind).not.toBe('choose');
   });
@@ -85,7 +85,7 @@ describe('Black actions', () => {
     s = take(s, 'Hideout');
     expect(ids(s)).toEqual(['take:2:gold']);
     s = pass(move(s, 'take:2:gold'));
-    expect(R(s)[0]).toEqual({ ...Z, gold: 4, black: 1 });
+    expect(R(s)[0]).toEqual({ ...Z, gold: 4, magenta: 1 });
     s = take(s, 'Pickpocket');
     expect(ids(s)).toEqual(['take:2:gold']);
     s = pass(play(s, 'take:2:gold'));
@@ -103,7 +103,7 @@ describe('Black actions', () => {
     s = move(s, 'take:2:blue');
     expect(ids(s)).toEqual(['take:1:gold', 'take:3:gold']);
     s = play(s, 'take:1:gold', 'take:3:gold');
-    expect(R(s).map(r => [r.gold, r.red, r.blue, r.black])).toEqual([[0, 0, 0, 3], [4, 0, 0, 0], [0, 2, 0, 0], [0, 0, 0, 0]]);
+    expect(R(s).map(r => [r.gold, r.red, r.blue, r.magenta])).toEqual([[0, 0, 0, 3], [4, 0, 0, 0], [0, 2, 0, 0], [0, 0, 0, 0]]);
   });
 
   it('Rob: 3 players — one free pick, but the last picks must cover whoever is still owed', () => {
@@ -116,13 +116,13 @@ describe('Black actions', () => {
     // 1 left, P3 owed: only P3
     expect(ids(s)).toEqual(['take:2:red']);
     s = move(s, 'take:2:red');
-    expect(R(s).map(r => r.black)).toEqual([3, 0, 0]);
+    expect(R(s).map(r => r.magenta)).toEqual([3, 0, 0]);
   });
 
   it('Rob: 2 players — all 3 from the one rival', () => {
     let s = scene({ n: 2, round: 2, res: [{}, { gold: 5 }] });
     s = play(take(s, 'Rob'), 'take:1:gold', 'take:1:gold', 'take:1:gold');
-    expect(R(s).map(r => [r.gold, r.black])).toEqual([[0, 3], [2, 0]]);
+    expect(R(s).map(r => [r.gold, r.magenta])).toEqual([[0, 3], [2, 0]]);
   });
 
   it('Ransom: the owner pays its cost (from their biggest piles) to keep it', () => {
@@ -135,7 +135,7 @@ describe('Black actions', () => {
     s = move(s, 'pay');
     void c;
     expect(defs(s, 1)).toEqual(['red.recruiter']);
-    expect(R(s)[0].black).toBe(2);
+    expect(R(s)[0].magenta).toBe(2);
     expect(R(s)[1]).toEqual({ ...Z, gold: 1, red: 2 });
   });
 
@@ -164,59 +164,63 @@ describe('Black actions', () => {
 });
 
 describe('Scoring and stolen goods', () => {
-  it('stolen goods are black in your supply at once, spendable on the same turn', () => {
+  it('stolen goods are magenta in your supply at once, spendable on the same turn', () => {
     let s = scene({ round: 2, res: [{}, { gold: 3 }], shop: ['thieves.mole', ...SHOP.slice(1)] });
     s = play(take(s, 'Pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold');
-    expect(R(s)[0].black).toBe(3);
+    expect(R(s)[0].magenta).toBe(3);
     s = move(s, `card:${uidOf(s, 'thieves.mole', 'shop')}`);
     expect(defs(s, 0)).toEqual(['thieves.mole']);
-    expect(R(s)[0].black).toBe(1);
+    expect(R(s)[0].magenta).toBe(1);
   });
   it('Gold’s Steal still takes gold as gold', () => {
     let s = scene({ round: 2, res: [{}, { gold: 3 }] });
     s = play(take(s, 'Steal'), 'player:1', 'player:1', 'player:1');
-    expect([R(s)[0].gold, R(s)[0].black]).toEqual([3, 0]);
+    expect([R(s)[0].gold, R(s)[0].magenta]).toEqual([3, 0]);
   });
-  it('scores most black', () => {
-    const s = scene({ res: [{}, { black: 3, gold: 9 }] });
-    expect(thieves.scoring.label).toBe('Most black');
-    expect(SCORING.black.score(null, s.players[1])).toBe(3);
+  it('scores most Magenta members (members only; stolen magenta members count for the thief)', () => {
+    let s = scene({ round: 3, res: [{}, { magenta: 9 }], members: [['thieves.mole'], ['thieves.crew', 'thieves.cutpurse', 'red.twins']] });
+    const ctx = contextFor(s);
+    expect(thieves.scoring.label).toBe('Most Magenta members');
+    expect([thieves.scoring.score(ctx, s.players[0]), thieves.scoring.score(ctx, s.players[1])]).toEqual([1, 2]);
+    s = move(take(s, 'Heist'), `card:${uidOf(s, 'thieves.crew', 1)}`);
+    const c2 = contextFor(s);
+    expect([thieves.scoring.score(c2, s.players[0]), thieves.scoring.score(c2, s.players[1])]).toEqual([2, 1]);
   });
 });
 
-describe('Black members', () => {
+describe('Magenta members', () => {
   it('Cutpurse: round start, take 1 from the rival holding the most (their biggest pile)', () => {
     const s = scene({ res: [{}, { gold: 2, red: 1 }, { blue: 2 }], members: [['thieves.cutpurse']], queue: [{ t: 'round', r: 2 }] });
-    expect(R(s)[0].black).toBe(1);
+    expect(R(s)[0].magenta).toBe(1);
     expect(R(s)[1]).toEqual({ ...Z, gold: 1, red: 1 });
   });
 
   it('Mole: round start, take 1 from each player with more followers', () => {
     const s = scene({ res: [{}, { gold: 2 }, { red: 2 }], bonus: [0, 3, 0], members: [['thieves.mole']], queue: [{ t: 'round', r: 2 }] });
-    expect(R(s).map(r => [r.gold, r.red, r.black])).toEqual([[0, 0, 1], [1, 0, 0], [0, 2, 0]]);
+    expect(R(s).map(r => [r.gold, r.red, r.magenta])).toEqual([[0, 0, 1], [1, 0, 0], [0, 2, 0]]);
   });
 
   it('Accomplice: when recruited, take 1 from each rival', () => {
-    let s = scene({ res: [{ black: 2 }, { gold: 2 }, { red: 1 }], shop: ['thieves.accomplice', ...SHOP.slice(1)] });
+    let s = scene({ res: [{ magenta: 2 }, { gold: 2 }, { red: 1 }], shop: ['thieves.accomplice', ...SHOP.slice(1)] });
     s = take(s, 'Rush');
     s = move(s, `card:${uidOf(s, 'thieves.accomplice', 'shop')}`);
-    expect(R(s).map(r => [r.gold, r.red, r.black])).toEqual([[2, 0, 2], [1, 0, 0], [0, 0, 0]]);
+    expect(R(s).map(r => [r.gold, r.red, r.magenta])).toEqual([[2, 0, 2], [1, 0, 0], [0, 0, 0]]);
   });
 
   it('Grifter: when recruited, take 1 per 2 members you have, from the rivals holding the most', () => {
-    let s = scene({ res: [{ black: 2, gold: 1 }, { gold: 3 }, { red: 2 }], members: [['red.intern', 'red.volunteer', 'red.mob', 'red.drive']], shop: ['thieves.grifter', ...SHOP.slice(1)] });
+    let s = scene({ res: [{ magenta: 2, gold: 1 }, { gold: 3 }, { red: 2 }], members: [['red.intern', 'red.volunteer', 'red.mob', 'red.drive']], shop: ['thieves.grifter', ...SHOP.slice(1)] });
     s = take(s, 'Scout');
     s = move(s, `card:${uidOf(s, 'gold.jackpot', 'shop')}`);
     s = move(s, `card:${uidOf(s, 'thieves.grifter', 'shop')}`);
     // 5 members → take 2: P2 (3) first, then P2 vs P3 tied at 2 → P2 (first found)
-    expect(R(s)[0].black).toBe(2);
+    expect(R(s)[0].magenta).toBe(2);
     expect(R(s)[1].gold + R(s)[2].red).toBe(3);
   });
 
-  it('Sticky Fingers: steals take 1 more — Black’s and Gold’s', () => {
+  it('Sticky Fingers: steals take 1 more — Magenta’s and Gold’s', () => {
     let s = scene({ res: [{}, { gold: 5 }], members: [['thieves.sticky']] });
     s = play(take(s, 'Pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold');
-    expect(R(s)[0].black).toBe(3);
+    expect(R(s)[0].magenta).toBe(3);
     s = scene({ round: 2, res: [{}, { gold: 9 }], members: [['thieves.sticky']] });
     s = play(take(s, 'Steal'), 'player:1', 'player:1', 'player:1', 'player:1');
     expect(R(s)[0].gold).toBe(4);
@@ -225,7 +229,7 @@ describe('Black members', () => {
   it('Desperado: while no one has fewer followers, steals take double', () => {
     let s = scene({ res: [{}, { gold: 9 }], bonus: [0, 2, 1], members: [['thieves.desperado']] });
     s = play(take(s, 'Pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold', 'take:1:gold');
-    expect(R(s)[0].black).toBe(4);
+    expect(R(s)[0].magenta).toBe(4);
   });
 
   it('Robin Hood: stealing from the follower leader gives +1 follower', () => {
@@ -238,27 +242,27 @@ describe('Black members', () => {
   it('Lookout: whenever a rival steals from someone else, take 1 from the thief (also on Gold’s Steal)', () => {
     let s = scene({ res: [{}, { gold: 3 }, {}], members: [[], [], ['thieves.lookout']] });
     s = play(take(s, 'Pickpocket'), 'take:1:gold', 'take:1:gold');
-    expect(R(s).map(r => r.black)).toEqual([1, 0, 1]);
+    expect(R(s).map(r => r.magenta)).toEqual([1, 0, 1]);
     s = scene({ round: 2, res: [{}, { gold: 3 }, {}], members: [[], [], ['thieves.lookout']] });
     s = play(take(s, 'Steal'), 'player:1', 'player:1', 'player:1');
     expect(R(s)[0].gold).toBe(2);
-    expect(R(s)[2].black).toBe(1);
+    expect(R(s)[2].magenta).toBe(1);
   });
 
   it('Light Fingers: when a rival recruits a member costing 4+, take 1 from them', () => {
     let s = scene({ res: [{ gold: 9 }], members: [[], ['thieves.lightfingers']] });
     s = take(s, 'Rush');
     s = move(s, `card:${uidOf(s, 'gold.midas', 'shop')}`); // 5
-    expect(R(s)[1].black).toBe(1);
+    expect(R(s)[1].magenta).toBe(1);
   });
 
   it('Extortionist: only when a rival buys 6 followers, take 2 from them', () => {
     let s = scene({ res: [{ gold: 9, red: 1, blue: 1 }], members: [[], ['thieves.extortionist']] });
     s = move(take(s, 'Rush'), 'tier:small');
-    expect(R(s)[1].black).toBe(0);
+    expect(R(s)[1].magenta).toBe(0);
     s = scene({ res: [{ gold: 9, red: 1, blue: 1 }], members: [[], ['thieves.extortionist']] });
     s = move(take(s, 'Rush'), 'tier:big');
-    expect(R(s)[1].black).toBe(2);
+    expect(R(s)[1].magenta).toBe(2);
   });
 
   it('Watchdog: your members can’t be taken', () => {
@@ -273,7 +277,7 @@ describe('Black members', () => {
   });
 
   it('Double Agent: when recruited, swap it for any rival member', () => {
-    let s = scene({ res: [{ black: 5 }], members: [[], ['red.proselytizer']], shop: ['thieves.doubleagent', ...SHOP.slice(1)] });
+    let s = scene({ res: [{ magenta: 5 }], members: [[], ['red.proselytizer']], shop: ['thieves.doubleagent', ...SHOP.slice(1)] });
     s = take(s, 'Rush');
     s = move(s, `card:${uidOf(s, 'thieves.doubleagent', 'shop')}`);
     s = move(s, `card:${uidOf(s, 'red.proselytizer', 1)}`);
@@ -281,24 +285,24 @@ describe('Black members', () => {
     expect(defs(s, 1)).toEqual(['thieves.doubleagent']);
   });
 
-  it('Big Score: once per game, take half the black of the rival with the most black', () => {
-    let s = scene({ res: [{}, { black: 7, gold: 9 }, { black: 5 }], members: [['thieves.bigscore']] });
+  it('Big Score: once per game, take half the magenta of the rival with the most magenta', () => {
+    let s = scene({ res: [{}, { magenta: 7, gold: 9 }, { magenta: 5 }], members: [['thieves.bigscore']] });
     s = take(s, 'Rush');
     const b = uidOf(s, 'thieves.bigscore', 0);
     s = move(s, `use:${b}`);
-    expect(R(s).map(r => r.black)).toEqual([3, 4, 5]);
+    expect(R(s).map(r => r.magenta)).toEqual([3, 4, 5]);
     expect(R(s)[1].gold).toBe(9);
     expect(s.cards[b].used).toBe(true);
   });
 
-  it('Kingpin: game end, +1 follower per 2 black', () => {
-    const s = scene({ res: [{ black: 7 }] });
+  it('Kingpin: game end, +1 follower per 2 magenta', () => {
+    const s = scene({ res: [{ magenta: 7 }] });
     const km = thieves.members.find(d => d.key === 'kingpin');
     expect(km.onGameEnd(contextFor(s), s.players[0])).toBe(3);
   });
 });
 
-describe('Black on the table: 200 seeded bot games', () => {
+describe('Magenta on the table: 200 seeded bot games', () => {
   it('200 games finish cleanly with every invariant', () => {
     restore(); restore = () => {};
     for (let g = 1; g <= 200; g++) {
