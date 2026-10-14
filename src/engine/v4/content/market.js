@@ -204,7 +204,7 @@ const market = {
     m('connoisseur', 'Connoisseur', 2, 1, `Whenever you recruit a member costing ${PRICEY} or more, +2 blue.`, {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && priceOf(rec) >= PRICEY) ctx.gain(owner, B, 2); },
     }),
-    m('reseller', 'Reseller', 2, 2, 'Whenever you recruit, +1 of that member’s color.', {
+    m('reseller', 'Reseller', 3, 2, 'Whenever you recruit, +1 of that member’s color.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid) ctx.gain(owner, colorOf(ctx, rec), 1); },
     }),
     m('curator', 'Curator', 2, 1, `At round start, +1 blue per member you have costing ${MID} or more.`, {
@@ -216,13 +216,13 @@ const market = {
     m('underbidder', 'Underbidder', 1, 0, 'At round start, your next member costs 1 less per rival with more members than you.', {
       onRoundStart(ctx, owner) { owner.discount += rivalsBigger(ctx, owner); },
     }),
-    m('minimalist', 'Minimalist', 2, 1, 'At round start, +1 blue per member fewer than the rival with the most.', {
+    m('minimalist', 'Minimalist', 1, 0, 'At round start, +1 blue per member fewer than the rival with the most.', {
       onRoundStart(ctx, owner) {
         const gap = Math.max(0, ...ctx.rivals(owner).map(o => ctx.memberCount(o))) - ctx.memberCount(owner);
         if (gap > 0) ctx.gain(owner, B, gap);
       },
     }),
-    m('climber', 'Social Climber', 1, 1, 'At round start, you may send one of your members to the bottom of the pile; your next member costs that much less.', {
+    m('climber', 'Social Climber', 1, 0, 'At round start, you may send one of your members to the bottom of the pile; your next member costs that much less.', {
       onRoundStart(ctx, owner, card) {
         const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid);
         if (!own.length) return;
@@ -243,10 +243,10 @@ const market = {
     m('sommelier', 'Sommelier', 1, 1, `Whenever you recruit a member costing ${PRICEY} or more, your next member costs 1 less.`, {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && priceOf(rec) >= PRICEY) owner.discount += 1; },
     }),
-    m('patroness', 'Patroness', 3, 2, `Whenever you recruit a member costing ${LUXURY} or more, +1 follower.`, {
+    m('patroness', 'Patroness', 2, 2, `Whenever you recruit a member costing ${LUXURY} or more, +1 follower.`, {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && priceOf(rec) >= LUXURY) owner.bonus += 1; },
     }),
-    m('blackmarket', 'Black Market', 2, 1, 'Once per game, on your turn: also look at the top 5 of the pile and recruit one at its cost.', {
+    m('blackmarket', 'Black Market', 1, 1, 'Once per game, on your turn: also look at the top 5 of the pile and recruit one at its cost.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const opts = ctx.state.pile.slice(0, 5).map(u => ctx.card(u))
@@ -261,7 +261,7 @@ const market = {
     m('snob', 'Snob', 2, 2, `Game end: +1 follower per member you have costing ${PRICEY} or more.`, {
       onGameEnd: (ctx, owner) => priceyCount(ctx, owner),
     }),
-    m('recluse', 'Recluse', 2, 1, 'Game end: +2 followers per rival with more members than you.', {
+    m('recluse', 'Recluse', 1, 1, 'Game end: +2 followers per rival with more members than you.', {
       onGameEnd: (ctx, owner) => 2 * rivalsBigger(ctx, owner),
     }),
   ],
