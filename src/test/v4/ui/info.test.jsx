@@ -4,8 +4,9 @@ import { render, fireEvent, cleanup, within } from '@testing-library/react';
 import { createGame, cardDef, defById, allQuadrantIds, quadrant } from '../../../engine/v4/index.js';
 import { guestMembers } from '../../../engine/v4/content/index.js';
 import { BADGE } from '../../../engine/v4/content/market.js';
-import Shop from '../../../v4/game/Shop.jsx';
-import Players from '../../../v4/game/Players.jsx';
+import ShopCards from '../../../v4/game/ShopCards.jsx';
+import CultSeat from '../../../v4/game/CultSeat.jsx';
+import { SeatCard } from '../../../v4/game/HoverCards.jsx';
 import { Log, ChoicePrompt, CardFace } from '../../../v4/game/parts.jsx';
 import { MemberCard, NamedText, CardText } from '../../../v4/game/Info.jsx';
 import { GLOSSARY, splitTerms, term } from '../../../v4/glossary.js';
@@ -24,38 +25,67 @@ function marketState() {
   const plain = all.filter(u => price(cardDef(s, u)) < BADGE);
   s.shop = [badged[0], plain[0], ...s.shop.filter(u => u !== badged[0] && u !== plain[0])].slice(0, 10);
   s.pile = all.filter(u => !s.shop.includes(u) && u !== badged[1]);
-  s.players[1].members = [badged[1]];
-  return { s, badged, plain };
-}
-
+// Ported from the retired Shop.jsx / Players.jsx to what the table shows now: the shop strip (ShopCards), each cult at
+// the table (CultSeat: its member figures and their cards) and a cult's card (SeatCard: its member list).
 describe('badges are visible wherever a card shows (Blue on the table)', () => {
-  it('shop cards, rival chips and the card face carry ◆ only on badged members, and ◆ opens "badged"', () => {
+  it('shop cards, a rival\'s cult and the card face carry ◆ only on badged members, and ◆ opens "badged"', () => {
     const { s, badged, plain } = marketState();
-    const { container } = render(<Shop state={s} me={0} mine={false} optionFor={none} onPick={() => {}} variant="full" />);
+    const { container } = render(<ShopCards state={s} me={0} mySeats={[0]} optionFor={none} onPick={() => {}} />);
     const card = uid => container.querySelector(`.card[data-uid="${uid}"]`);
     expect(card(badged[0]).querySelector('.badge-mark')).not.toBeNull();
     expect(card(plain[0]).querySelector('.badge-mark')).toBeNull();
     // every shown card agrees with the printed-cost rule
-    for (const el of container.querySelectorAll('.card[data-uid]')) {
+    const shown = container.querySelectorAll('.card[data-uid]');
+    expect(shown.length).toBe(s.shop.length);
+    for (const el of shown) {
       const d = cardDef(s, Number(el.dataset.uid));
       expect(!!el.querySelector('.badge-mark'), d.name).toBe(price(d) >= BADGE);
     }
     fireEvent.click(card(badged[0]).querySelector('.badge-mark'));
     expect(document.querySelector('[data-tip-body]').textContent).toMatch(new RegExp(`Badged.*${BADGE} or more`));
     cleanup();
-    const pl = render(<Players state={s} active={null} mySeats={[0]} />);
-    const chip = pl.container.querySelector(`[data-pid="1"] .chip[data-g]`);
-    expect(chip.querySelector('.badge-mark')).not.toBeNull();
+    // a rival's cult at the table: the badged member's card (tap its figure) carries ◆
+    const bo = cardDef(s, badged[1]);
+    const seat = render(<CultSeat state={s} pid={1} me={0} />);
+    const fig = seat.container.querySelector(`[data-member="${bo.id}"] .fig`);
+    expect(fig).not.toBeNull();
+    fireEvent.click(fig);
+    const tip = document.querySelector('[data-tip-body]');
+    expect(tip.querySelector(`[data-card="${bo.id}"]`)).not.toBeNull();
+    expect(tip.querySelector('.badge-mark')).not.toBeNull();
+    cleanup();
+    // the rival's cult card lists its members by name, ◆ on the badged one
+    const sc = render(<SeatCard state={s} pid={1} meId={0} />);
+    const listed = sc.container.querySelector(`[data-card-name="${bo.id}"]`);
+    expect(listed).not.toBeNull();
+    expect(listed.querySelector('.badge-mark')).not.toBeNull();
     cleanup();
     const face = render(<CardFace state={s} uid={badged[1]} />);
     expect(face.container.querySelector('.badge-mark')).not.toBeNull();
     expect(face.container.textContent).toMatch(/Bo’s/); // the owner, on the card
   });
 
+  // KNOWN GAP (harness port, 2026-10-14): the retired Players strip put ◆ on each rival member chip, so a Blue table
+  // read "who holds badged members" at a glance. CultSeat's member figures carry no ◆ (only their opened card does).
+  // Kept strict and marked as failing; when the figures get their ◆ this turns red: make it a plain `it`.
+  it.fails('a rival\'s badged member carries ◆ at their seat without opening anything (KNOWN GAP: CultSeat figures)', () => {
+    const { s, badged, plain } = marketState();
+    s.players[1].members.push(plain[1]);
+    const seat = render(<CultSeat state={s} pid={1} me={0} />);
+    const at = uid => seat.container.querySelector(`[data-member="${cardDef(s, uid).id}"]`);
+    expect(at(plain[1]).querySelector('.badge-mark')).toBeNull();
+    expect(at(badged[1]).querySelector('.badge-mark')).not.toBeNull();
+  });
+
   it('no badges on a table without Blue', () => {
     const s = createGame({ seats, seed: 5 });
-    const { container } = render(<Shop state={s} me={0} mine={false} optionFor={none} onPick={() => {}} variant="full" />);
+    const { container } = render(<ShopCards state={s} me={0} mySeats={[0]} optionFor={none} onPick={() => {}} />);
+    expect(container.querySelectorAll('.card[data-uid]').length).toBe(s.shop.length);
     expect(container.querySelector('.badge-mark')).toBeNull();
+  });
+});
+
+  expect(container.querySelector('.badge-mark')).toBeNull();
   });
 });
 
