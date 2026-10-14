@@ -8,7 +8,13 @@ const QUADRANTS = { gold, red, blue, green };
 // Member defs get a global id "<quadrant>.<key>" and know their quadrant.
 const DEFS = {};
 const HANDLERS = {};
-for (const q of Object.values(QUADRANTS)) {
+/** Add a quadrant module to the registry (used by index below, and by new spheres while they're being designed). */
+export function registerQuadrant(q) {
+  QUADRANTS[q.id] = q;
+  index(q);
+  return q;
+}
+function index(q) {
   for (const def of q.members) {
     def.id = `${q.id}.${def.key}`;
     def.quadrant = q.id;
@@ -18,6 +24,7 @@ for (const q of Object.values(QUADRANTS)) {
   for (const a of q.actions) a.id = `${q.id}.${a.key}`;
   for (const [k, fn] of Object.entries(q.handlers || {})) HANDLERS[`${q.id}.${k}`] = fn;
 }
+for (const q of Object.values(QUADRANTS)) index(q);
 
 export const DEFAULT_QUADRANTS = ['gold', 'red', 'blue', 'green'];
 export const quadrant = id => {
