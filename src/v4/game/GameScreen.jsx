@@ -258,7 +258,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const optionFor = useCallback(id => options.get(id) || null, [options]);
   const legalSlots = useMemo(() => {
     const m = new Map();
-    for (const o of options.values()) if (o.kind === 'slot') m.set(`${o.q}-${o.i}`, o.id);
+    // board spaces only: a choice that names spaces by label (Straggler's from/to) has no q/i and stays a list
+    for (const o of options.values()) if (o.kind === 'slot' && o.q != null && o.i != null) m.set(`${o.q}-${o.i}`, o.id);
     return m;
   }, [options]);
 

@@ -3,7 +3,7 @@
 // best average result. Work is counted in simulated moves, not wall time, so a seed always gives the same move;
 // chooseBotMove also caps a move at 250ms of wall time for the UI (see opts.maxMs).
 import { applyMove, followers } from './core.js';
-import { chooseNormalMove, chooseEasyMove, scoreOptions } from './bots.js';
+import { chooseNormalMove, chooseEasyMove, scoreOptions, buyShortcut } from './bots.js';
 import { seededRandom } from './rng.js';
 
 // rollouts play normal, a little noisier, comparing fewer ways to pay
@@ -25,12 +25,12 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   if (!pend) return null;
   if (!['place', 'buy'].includes(pend.kind)) return chooseNormalMove(state, rand);
   const me = pend.player;
-  const first = chooseNormalMove(state, rand);
-  const chosen = pend.options.find(o => o.id === first.option);
-  // an activation, or a buy with one real choice: nothing to think about
-  if (chosen?.kind === 'use' || chosen?.kind === 'release') return first;
+  // an activation or a Release normal would take: nothing to think about
+  const short = pend.kind === 'buy' ? buyShortcut(state) : null;
+  if (short) return { player: me, option: short.id };
   const ranked = scoreOptions(state, rand);
-  if (ranked.length <= 1) return first;
+  if (!ranked.length) return chooseNormalMove(state, rand);
+  if (ranked.length === 1) return { player: me, option: ranked[0].o.id };
   const { candidates = 3, budget = 100, full = false, maxMs = Infinity } = opts;
   const now = opts.now ?? (globalThis.performance ? () => globalThis.performance.now() : () => Date.now());
   const until = Number.isFinite(maxMs) ? now() + maxMs : Infinity;

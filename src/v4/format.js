@@ -21,7 +21,7 @@ export function memberChips(state, p) {
   for (const uid of p.members) {
     const c = state.cards[uid];
     const d = cardDef(state, uid);
-    const extra = c.copy ? ` → ${defById(c.copy).name}` : c.color ? ` (${quadrant(c.color).name})` : '';
+    const extra = c.copy ? ` → ${defById(c.copy).name}` : c.color ? ` · ${quadrant(c.color).name} spaces` : ''; // "Hustler · Gold spaces" (it read as a color tag)
     const key = [d.id, c.used ? 'u' : '', c.on === false ? 'off' : '', c.copy || '', c.color || ''].join('|');
     if (!out.has(key)) out.set(key, { key, uids: [], def: d, card: c, label: d.name + extra, count: 0 });
     const g = out.get(key);

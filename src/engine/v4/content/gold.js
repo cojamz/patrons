@@ -1,5 +1,5 @@
 // Gold: hoard it. Most gold at round end takes the ring's followers.
-import { defById } from './index.js';
+import { give } from './silver.js';
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 
 export default {
@@ -52,10 +52,9 @@ export default {
   handlers: {
     jvGift(ctx, p, value) {
       const t = ctx.player(value);
-      ctx.gain(t, 'gold', 1);
       ctx.log(`${p.name} gave 1 gold to ${t.name}.`);
-      // the gold is a gift (Cory): the receiver's gift hooks fire (Silver's Guest: +1 more)
-      for (const c of ctx.membersOf(t)) for (const d of [c.def, c.copy ? defById(c.copy) : null]) if (d?.onGiven) d.onGiven(ctx, t, c, p, 'gold', 1);
+      // the gold is a gift (Cory): Silver's gift hooks fire, the receiver's (Guest: +1 more) and the giver's (Caterer)
+      give(ctx, p, t, 'gold', 1);
     },
     steal(ctx, p, value, data) {
       stealStep(ctx, p, { left: data.left - 1, picked: { ...data.picked, [value]: (data.picked[value] || 0) + 1 } });

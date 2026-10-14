@@ -1229,3 +1229,13 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 /* the rival-move caption centers with `translate` (its `rise` animation owns `transform`): it once slid half its
    width off to the right while appearing, widening the phone page sideways. Gated by touch.mjs (h). */
 .caption{transform:none;translate:-50% 0}
+/* Release (base rule): folded under the buy row, one button per member you could release */
+.fbuy .release-row{grid-column:1 / -1;order:99;font-size:var(--fs-2);color:var(--muted)}
+.fbuy .release-row summary{min-height:44px;display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none}
+.fbuy .release-row summary::-webkit-details-marker{display:none}
+.fbuy .release-row summary::before{content:'▸';transition:transform .15s}
+.fbuy .release-row[open] summary::before{transform:rotate(90deg)}
+.fbuy .release-row summary small{font-size:var(--fs-1)}
+.fbuy .rel-list{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 4px}
+.fbuy .btn.rel{min-height:44px;padding:0 12px;font-size:var(--fs-2);border-color:color-mix(in srgb,var(--c,var(--rim)) 70%,transparent)}
+.from-pile{font-size:var(--fs-1);color:var(--gold);letter-spacing:.04em}

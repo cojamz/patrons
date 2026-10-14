@@ -148,7 +148,7 @@ function checkLedger(books, s, prev, lines, ctx, fail) {
   if (s.over) for (const p of s.players) {
     if (books[p.id].contest !== p.contest) fail(`${p.name} has ${p.contest} contest followers, the log adds up to ${books[p.id].contest}`, s, ctx);
     if (books[p.id].bought !== (p.bought || 0)) fail(`${p.name} bought ${p.bought} followers, the log adds up to ${books[p.id].bought}`, s, ctx);
-    if (p.final && p.final.total !== p.final.parts.reduce((a, x) => a + Number(x.slice(x.lastIndexOf('+') + 1)), 0)) fail(`${p.name}'s game-end parts don't add up`, s, ctx);
+    if (p.final && p.final.total !== p.final.parts.reduce((a, x) => { const m = x.match(/([+−-])(\d+)$/); return a + (m[1] === '+' ? 1 : -1) * Number(m[2]); }, 0)) fail(`${p.name}'s game-end parts don't add up`, s, ctx);
   }
   if (s.over) {
     const f = s.ranking.map(id => followers(s, s.players[id]));

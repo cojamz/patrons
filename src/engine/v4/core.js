@@ -523,7 +523,9 @@ function startRound(state, r) {
     state.order.push(id);
     snake.push({ t: 'turn', p: id, ...(extras[id][k] ? { ring: extras[id][k] } : {}) });
   }
-  log(state, `Round ${roman(r)} begins. ${state.players[base[0]].name} picks first.${lead.length ? ` (${lead.map(id => state.players[id].name).join(', ')} always pick${lead.length === 1 ? 's' : ''} first.)` : ''}`);
+  // the cards that bend this round's order and workers are named, so the order and the extra worker trace to them
+  const hands = base.filter(id => extras[id].length).map(id => `${state.players[id].name}'s ${flagName(state, state.players[id], 'extraWorkers')}: +${extras[id].length} worker${extras[id].length > 1 ? 's' : ''}.`);
+  log(state, `Round ${roman(r)} begins. ${state.players[base[0]].name} picks first.${lead.length ? ` (${lead.map(id => `${state.players[id].name}'s ${flagName(state, state.players[id], 'pickFirst')}`).join(', ')}: always pick${lead.length === 1 ? 's' : ''} first.)` : ''}${hands.length ? ` ${hands.join(' ')}` : ''}`);
   state.queue.push(...snake, { t: 'allPlaced' }, { t: 'endRound' }, { t: 'afterRound' });
 }
 
@@ -586,6 +588,13 @@ function recruit(state, p, uid, { free, spend: chosen }) {
         notes.push(flag === 'costReduction' ? `${d.name} saves ${d[flag] === true ? 1 : d[flag]}` : `${d.name}: gold counts double`);
       }
     }
+    // Freelancer (anyColorPart): say so when the colored part was paid in other colors
+    const q0 = colorOf(def0);
+    if (state.resources.includes(q0) && sumMemberFlag(state, p, 'anyColorPart') > 0) {
+      const needS = Math.max(0, def0.s - p.discount - sumMemberFlag(state, p, 'costReduction'));
+      const worth = q0 === 'gold' && sumMemberFlag(state, p, 'goldPaysDouble') > 0 ? 2 : 1;
+      if ((spend[q0] || 0) * worth < needS) notes.push(`${flagName(state, p, 'anyColorPart')}: colored part in any colors`);
+    }
     if (notes.length) paid += `; ${notes.join(', ')}`;
     // a discount waits for a member that actually costs something
     if (cardDef(state, uid).s + cardDef(state, uid).w > 0) p.discount = 0;
@@ -597,7 +606,7 @@ function recruit(state, p, uid, { free, spend: chosen }) {
   state.recruits += 1;
   p.turnRecruits += 1;
   const card = state.cards[uid], def = defById(card.def);
-  log(state, `${p.name} recruited ${def.name}${idx < 0 ? ' from the pile' : ''} (${paid}).`);
+  log(state, `${p.name} recruited ${def.name}${idx < 0 ? ` from the pile with ${p.name}'s ${flagName(state, p, 'pileReach')}` : ''} (${paid}).`);
   const ctx = ctxFor(state);
   const w = wrap(state, card);
   eachMember(state, (owner, c, d) => { if (d.onAnyRecruit) d.onAnyRecruit(ctx, owner, c, p, w); });
@@ -684,6 +693,11 @@ function traceChanges(state, before, owner, def) {
 }
 function eachMember(state, fn) {
   for (const owner of state.players) eachMemberOf(state, owner, (card, def) => fn(owner, card, def));
+}
+/** Name of p's member that carries a flag (a Doppelganger copying it reads as the copied card). */
+function flagName(state, p, flag) {
+  for (const uid of p.members) for (const def of effectiveDefs(state.cards[uid])) if (def[flag]) return def.name;
+  return 'member';
 }
 function sumMemberFlag(state, p, flag, map) {
   let s = 0;

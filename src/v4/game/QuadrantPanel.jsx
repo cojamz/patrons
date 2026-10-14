@@ -27,7 +27,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
   const col = `var(--${qid})`;
   const tabs = useRef(null);
   const standing = state.round >= 1 && !state.over ? standings(state)[facing] : null;
-  const openCount = Q.actions.filter((a, i) => optionFor(`slot:${facing}-${i}`)).length;
+  const openCount = Q.actions.filter((a, i) => (optionFor(`slot:${facing}-${i}`) || optionFor(`squat:${facing}-${i}`))).length;
 
   // Tabs are one control: focus follows the selected tab (arrow keys, or the wheel turning under it).
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
       <div className="qtabs" role="tablist" aria-label="Quadrants" ref={tabs} onKeyDown={onTabKey} hidden={state.round === 0}>
         {state.quadrants.map((id, q) => {
           const free = state.pending && state.pending.kind === 'place'
-            ? quadrant(id).actions.some((a, i) => optionFor(`slot:${q}-${i}`)) : false;
+            ? quadrant(id).actions.some((a, i) => (optionFor(`slot:${q}-${i}`) || optionFor(`squat:${q}-${i}`))) : false;
           return (
             <button
               key={id} type="button" role="tab" aria-selected={q === facing} tabIndex={q === facing ? 0 : -1}
@@ -90,7 +90,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
           const t = a.ring;
           const key = `${facing}-${i}`;
           const owner = state.slots[key];
-          const opt = optionFor(`slot:${key}`);
+          const opt = optionFor(`slot:${key}`) || optionFor(`squat:${key}`); // squat: a rival's space you may join (Squatter)
           const locked = t > round;
           const cls = ['act', opt ? 'can' : '', owner !== undefined ? 'taken' : '', locked ? 'locked' : ''].join(' ');
           return (
@@ -107,7 +107,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
               <span className="rn">Round {roman(t)}</span>
               <b>{a.name}</b><span className="act-text">{a.text}</span>
               {owner !== undefined
-                ? <span className="by" style={{ '--pc': playerColor(owner) }}><i />{state.players[owner].name}</span>
+                ? <span className="by" style={{ '--pc': playerColor(owner) }}><i />{state.players[owner].name}{opt && opt.squat ? ' · you can join' : ''}</span>
                 : locked ? <span className="by lockt">opens round {roman(t)}</span> : null}
             </button>
           );

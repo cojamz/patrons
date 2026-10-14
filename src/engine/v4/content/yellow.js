@@ -135,6 +135,11 @@ export default {
         for (const c of others(ctx)) owner.res[c] += x;
         ctx.log(`${owner.name}'s Sower harvests +${x} of each other color.`);
       },
+      // leaving mid-round (released, stolen, swapped): the planted yellow comes back, unharvested (as Investor's gold does)
+      onLeave(ctx, owner, card) {
+        const x = card.sown || 0;
+        if (x) { owner.res[Y] += x; card.sown = 0; ctx.log(`${owner.name}'s Sower leaves: ${x} planted yellow comes back.`); }
+      },
     }),
     m('harmonist', 'Harmonist', 6, 2, 'Game end: +1 follower per full set you hold.', {
       onGameEnd: (ctx, owner) => setsOf(ctx, owner),

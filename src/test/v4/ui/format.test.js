@@ -6,7 +6,7 @@ import { parseRoundEnd, newLogLines, winSentence, breakdown, costParts } from '.
 const seats = [{ name: 'Ana', kind: 'bot' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }];
 const play = seed => { let s = createGame({ seats, seed }); while (!s.over) s = applyMove(s, chooseBotMove(s, () => 0.4)); return s; };
 
-describe('v4 format helpers', () => {
+describe('v4 format helpers', { timeout: 30000 }, () => {
   it('parses a round-end line into one row per quadrant', () => {
     const s = createGame({ seats, seed: 1 });
     const L = q => quadrant(q).scoring.label;

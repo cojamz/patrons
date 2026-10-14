@@ -447,6 +447,12 @@ function releaseOption(state, opts) {
   return best;
 }
 
+/** A buy decision normal takes before weighing purchases: an activation worth using, or a Release worth taking. */
+export function buyShortcut(state, opts = {}) {
+  const pend = state.pending;
+  return useOption(state, pend, contextFor(state), state.players[pend.player]) || releaseOption(state, opts);
+}
+
 /** The fixed greedy bot. */
 export function chooseNormalMove(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
@@ -457,10 +463,8 @@ export function chooseNormalMove(state, rand = Math.random, opts = {}) {
     case 'place': return move(scoreOptions(state, rand, opts)[0].o);
     case 'buy': {
       const p = state.players[pend.player];
-      const use = useOption(state, pend, contextFor(state), p);
-      if (use) return move(use);
-      const rel = releaseOption(state, opts);
-      if (rel) return move(rel);
+      const short = buyShortcut(state, opts);
+      if (short) return move(short);
       const ranked = scoreOptions(state, rand, opts);
       return move(ranked.length ? ranked[0].o : pend.options.find(o => o.kind === 'pass'));
     }

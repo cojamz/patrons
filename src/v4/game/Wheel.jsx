@@ -271,7 +271,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     const opt = legal.get(key);
     const selected = peek && peek.key === key;
     const cls = ['slot', opt ? 'can' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? '' : 'locked'].join(' ');
-    const status = owner !== undefined ? `Taken by ${state.players[owner].name}` : open ? 'Open' : `Opens in round ${roman(t)}`;
+    const status = owner !== undefined ? `Taken by ${state.players[owner].name}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? 'Open' : `Opens in round ${roman(t)}`;
     const L = LABEL[t];
     const lid = `n${key}`;
     parts.push(
@@ -348,11 +348,11 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
           <small>{quadrant(s.qid).name} · round {roman(s.ring)}</small>
           <span>{s.a.text}</span>
           <em>
-            {owner !== undefined ? <><i style={{ background: playerColor(owner) }} />Taken by {state.players[owner].name}</>
+            {owner !== undefined ? <><i style={{ background: playerColor(owner) }} />Taken by {state.players[owner].name}{opt ? ' — you can join it (Squatter)' : ''}</>
               : open ? (opt ? 'Open — yours to take' : 'Open') : `Opens in round ${roman(s.ring)}`}
           </em>
           {opt && peek.pinned && (
-            <button type="button" className="btn pri" data-place={opt} onClick={() => { setPeek(null); onPick(opt); }}>Place here</button>
+            <button type="button" className="btn pri" data-place={opt} onClick={() => { setPeek(null); onPick(opt); }}>{String(opt).startsWith('squat:') ? 'Join here' : 'Place here'}</button>
           )}
           {peek.pinned && sheetMode() && <button type="button" className="btn ghost sheet-close" onClick={() => setPeek(null)}>Close</button>}
         </div>

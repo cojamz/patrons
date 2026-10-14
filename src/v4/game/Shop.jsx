@@ -38,8 +38,9 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
     <section className={`panel shop-panel ${compact ? 'compact' : 'open'}`} aria-hidden={hidden || undefined} style={hidden ? { visibility: 'hidden' } : undefined}>
       <h2>Shop<small><span className="num">{state.pile.length}</span> in the pile{buying && !compact ? ` · ${coarse() ? 'tap' : 'click'} a member to recruit` : ''}</small></h2>
       <div className="shop">
-        {state.shop.map(uid => {
+        {[...state.shop, ...(!compact ? pileUids(state, mine) : [])].map(uid => {
           const d = cardDef(state, uid);
+          const fromPile = !state.shop.includes(uid);
           const opt = optionFor(`card:${uid}`);
           const plan = viewer ? paymentPlan(state, viewer, uid) : null;
           return (
@@ -62,6 +63,9 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
               ) : (
                 <div className="row"><b className="nm">{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
               )}
+              {fromPile && !compact && (
+                <span className="from-pile">From the pile (Insider)</span>
+              )}
               {!compact && <span className="eff">{d.text}</span>}
               {!compact && <div className="row cost">
                 <Cost d={d} plan={plan} disc={!!(viewer && viewer.discount)} res={state.resources} />
@@ -77,8 +81,12 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
   );
 }
 
+/** Cards you may recruit from the top of the pile right now (Insider): offered as buy options marked fromPile. */
+const pileUids = (state, mine) => (mine && state.pending && state.pending.kind === 'buy'
+  ? state.pending.options.filter(o => o.kind === 'card' && o.fromPile).map(o => o.uid) : []);
+
 /** The shop as a compact strip, affordable first (phone buy sheet and landscape). */
-function ShopStrip({ state, me, optionFor, onPick, onDenied }) {
+function ShopStrip({ state, me, mine = false, optionFor, onPick, onDenied }) {
   const viewer = me != null ? state.players[me] : null;
   const box = useRef(null);
   const turn = state.pending ? `${state.round}:${state.pending.player}` : '';
@@ -100,12 +108,12 @@ function ShopStrip({ state, me, optionFor, onPick, onDenied }) {
     if (ro) ro.observe(el);
     return () => { el.removeEventListener('scroll', check); if (ro) ro.disconnect(); };
   }, []);
-  const cards = state.shop.map(uid => ({ uid, d: cardDef(state, uid), opt: optionFor(`card:${uid}`) }))
+  const cards = [...state.shop, ...pileUids(state, mine)].map(uid => ({ uid, d: cardDef(state, uid), opt: optionFor(`card:${uid}`), fromPile: !state.shop.includes(uid) }))
     .sort((a, b) => (!!b.opt - !!a.opt));
   return (
     <>
     <div className={`strip${pager.over && !pager.end ? ' more-r' : ''}${pager.over && pager.at > 0 ? ' more-l' : ''}`} role="group" aria-label={`Shop, ${cards.length} cards${pager.over ? ', swipe for more' : ''}`} ref={box}>
-      {cards.map(({ uid, d, opt }) => {
+      {cards.map(({ uid, d, opt, fromPile }) => {
         const plan = viewer ? paymentPlan(state, viewer, uid) : null;
         return (
           <button
@@ -114,6 +122,7 @@ function ShopStrip({ state, me, optionFor, onPick, onDenied }) {
             onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'card', uid, name: d.name }, e.currentTarget))}
           >
             <span className="row"><b>{d.name}</b><span className="num">{d.f}★</span></span>
+            {fromPile && <span className="from-pile">From the pile (Insider)</span>}
             <small>{d.text}</small>
             <span className="row cost"><Cost d={d} plan={plan} res={state.resources} />{opt && <span className="afford" aria-label="you can afford this" title="You can afford this" />}</span>
           </button>
@@ -137,11 +146,13 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
   const pend = state.pending;
   const viewer = me != null ? state.players[me] : null;
   const extras = mine && pend ? pend.options.filter(o => o.kind === 'use' || o.kind === 'toggle') : [];
+  // Release (base rule): once per round, discard a member for its cost in any colors (the colors come next)
+  const releases = mine && pend && pend.kind === 'buy' ? pend.options.filter(o => o.kind === 'release') : [];
   const pass = optionFor('pass');
   const buying = mine && pend && pend.kind === 'buy';
   return (
     <div className={`fbuy${buying ? ' live' : ''}`} style={{ '--tiers': TIERS.length, '--tiers-narrow': TIERS.length > 3 ? 2 : TIERS.length }} role="group" aria-label="Buy followers or pass">
-      <ShopStrip state={state} me={me} optionFor={optionFor} onPick={onPick} onDenied={onDenied} />
+      <ShopStrip state={state} me={me} mine={mine} optionFor={optionFor} onPick={onPick} onDenied={onDenied} />
       {TIERS.map(t => {
         const opt = optionFor(`tier:${t.key}`);
         return (
@@ -162,6 +173,23 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
       {extras.map(o => (
         <button key={o.id} type="button" className="btn" data-option={o.id} onClick={() => onPick(o.id)}>{o.label}</button>
       ))}
+      {releases.length > 0 && (
+        // folded by default: it's a once-a-round extra, and the buy row stays the buy row
+        <details className="release-row">
+          <summary title="Once per round: discard one of your members (it goes to the bottom of the pile) for its cost, in any colors you choose.">
+            Release a member <small>once a round · get its cost back in any colors</small>
+          </summary>
+          <div className="rel-list" role="group" aria-label="Release which member">
+            {releases.map(o => {
+              const d = state.cards[o.uid] ? cardDef(state, o.uid) : null;
+              return (
+                <button key={o.id} type="button" className="btn ghost rel" data-option={o.id} onClick={() => onPick(o.id)} style={d ? { '--c': `var(--${d.quadrant})` } : undefined}
+                  title={o.label}>{d ? <>{d.name} <span className="num">+{d.s + d.w}</span></> : o.label}</button>
+              );
+            })}
+          </div>
+        </details>
+      )}
       <button
         type="button" className={`btn pass${pass ? '' : ' idle'}`} title="End your turn without buying" data-option={pass ? 'pass' : undefined} aria-disabled={!pass}
         onClick={e => (pass ? onPick('pass') : onDenied && onDenied({ type: 'pass' }, e.currentTarget))}

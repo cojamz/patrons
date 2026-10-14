@@ -25,7 +25,8 @@ function hooks(ctx, p, name) {
 function giveTo(ctx, giver, to, color, n) {
   if (!(n > 0)) return;
   ctx.gain(to, color, n);
-  for (const [c, d] of hooks(ctx, to, 'onGiven')) d.onGiven(ctx, to, c, giver, color, n);
+  // run as the member, so what it gives traces to it (Guest)
+  for (const [c, d] of hooks(ctx, to, 'onGiven')) ctx.asMember(to, d.name, () => d.onGiven(ctx, to, c, giver, color, n));
 }
 /** Give n of a color to every other player. One gift for the giver's onGive hooks. */
 function giveAll(ctx, giver, color, n) {
@@ -33,12 +34,19 @@ function giveAll(ctx, giver, color, n) {
   for (const o of others(ctx, giver)) giveTo(ctx, giver, o, color, n);
   afterGive(ctx, giver);
 }
+/** One gift from giver to one player, as any sphere gives (Gold's Joint Venture): receiver's and giver's gift hooks fire. */
+export function give(ctx, giver, to, color, n) {
+  if (!(n > 0)) return;
+  giveTo(ctx, giver, to, color, n);
+  afterGive(ctx, giver);
+}
 function afterGive(ctx, giver) {
-  for (const [c, d] of hooks(ctx, giver, 'onGive')) d.onGive(ctx, giver, c);
+  for (const [c, d] of hooks(ctx, giver, 'onGive')) ctx.asMember(giver, d.name, () => d.onGive(ctx, giver, c));
 }
 /** Silver a Silver space pays its taker: Grand Host doubles it (each copy doubles again). */
 function hostGain(ctx, p, n) {
   const k = hooks(ctx, p, 'hostDouble').length;
+  if (k) ctx.log(`${p.name}'s Grand Host: the space's ${n} silver comes as ${n * 2 ** k}.`);
   // printed: the space's own gain, which is what a copy (Green) gets
   ctx.gain(p, S, n * 2 ** k, { fromAction: true, printed: n });
 }
@@ -214,7 +222,7 @@ const silver = {
       onActivate(ctx, owner) {
         ctx.gain(owner, S, owner.res[S]);
         giveAll(ctx, owner, S, 2);
-        ctx.log(`${owner.name} threw a Gala: silver doubled to ${owner.res[S]}, +2 silver to everyone else.`);
+        ctx.log(`${owner.name}'s Gala: silver doubled to ${owner.res[S]}, +2 silver to everyone else.`);
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res[S] >= 6,
     }),
