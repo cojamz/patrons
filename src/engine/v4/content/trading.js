@@ -112,7 +112,7 @@ const trading = {
       key: 'cashin', ring: 2, name: 'Cash In', text: '+1 follower, then trade any of your white for followers, 1 for 1.',
       estimate: (ctx, p) => fv(ctx) + p.res[W] * (ctx.state.round === 3 ? 0.4 : 0.2),
       resolve(ctx, p) {
-        p.bonus += 1;
+        actionFollowers(ctx, p, 1);
         ctx.log(`${p.name} cashes in: +1 follower.`);
         cashInChoice(ctx, p);
       },
@@ -123,7 +123,7 @@ const trading = {
       resolve(ctx, p) {
         const w = p.res[W];
         p.res[W] = 0;
-        p.bonus += 2 * w;
+        actionFollowers(ctx, p, 2 * w);
         ctx.log(w ? `${p.name}'s Boom: ${w} white became ${2 * w} followers.` : `${p.name} had no white to turn into followers.`);
       },
     },
@@ -183,9 +183,7 @@ const trading = {
     m('bargain', 'Bargain Hunter', 3, 2, 'Whenever you buy followers, +1 more.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer === owner) owner.bonus += 1; },
     }),
-    m('regular', 'Regular', 1, 0, 'Whenever you buy followers, +1 white.', {
-      onBuyFollowers(ctx, owner, card, buyer) { if (buyer === owner) ctx.gain(owner, W, 1); },
-    }),
+    m('broker', 'Broker', 1, 0, 'Whenever a White action gives you followers, +1 more.', { brokerBonus: 1 }),
     m('exporter', 'Exporter', 1, 1, 'Whenever you recruit a non-white member, +1 white.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== W) ctx.gain(owner, W, 1);
@@ -197,15 +195,15 @@ const trading = {
     m('reinvestor', 'Reinvestor', 1, 1, 'Whenever you sell followers, your next member costs 1 less per follower sold.', {
       onSell(ctx, owner, card, k) { owner.discount += k; ctx.log(`${owner.name}'s next member costs ${owner.discount} less.`); },
     }),
-    m('raider', 'Raider', 2, 1, 'Once per game: buy up to 3 followers from the leader, 2 white each. They get the white.', {
+    m('raider', 'Raider', 2, 1, 'Once per game: buy up to 3 followers from the leader for 1 white each. They get the white.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const t = raidTarget(ctx, owner);
         const k = t ? raidAmount(ctx, owner, t) : 0;
         if (!k) { card.used = false; ctx.log(`${owner.name}'s Raider found no one to buy from.`); return; }
-        owner.res[W] -= 2 * k; t.res[W] += 2 * k;
+        owner.res[W] -= k; t.res[W] += k;
         t.bonus -= k; owner.bonus += k;
-        ctx.log(`${owner.name}'s Raider bought ${k} follower${k > 1 ? 's' : ''} from ${t.name} for ${2 * k} white.`);
+        ctx.log(`${owner.name}'s Raider bought ${k} follower${k > 1 ? 's' : ''} from ${t.name} for ${k} white.`);
       },
       botActivate: (ctx, owner) => { const t = raidTarget(ctx, owner); return !!t && raidAmount(ctx, owner, t) >= 2; },
     }),
@@ -214,8 +212,16 @@ const trading = {
 
 function buyLow(ctx, p, color) {
   p.res[color] -= 1;
-  p.bonus += 2;
+  actionFollowers(ctx, p, 2);
   ctx.log(`${p.name} traded 1 ${color} for 2 followers.`);
+}
+/** Followers from a White action, plus 1 per Broker (a Doppelganger's copy counts too). */
+function actionFollowers(ctx, p, n) {
+  if (!(n > 0)) return;
+  let extra = 0;
+  for (const c of ctx.membersOf(p)) for (const d of [c.def, c.copy ? defById(c.copy) : null]) extra += d?.brokerBonus || 0;
+  p.bonus += n + extra;
+  if (extra) ctx.log(`${p.name}'s Broker: +${extra} follower${extra > 1 ? 's' : ''}.`);
 }
 
 /** The leader: most followers, and more than you. Ties go to whoever has more followers to sell. */
@@ -225,7 +231,7 @@ function raidTarget(ctx, p) {
   return ctx.rivals(p).filter(o => ctx.followers(o) === top).sort((a, b) => b.bonus - a.bonus)[0];
 }
 function raidAmount(ctx, p, t) {
-  return Math.min(3, t.bonus, Math.floor(p.res[W] / 2));
+  return Math.min(3, t.bonus, p.res[W]);
 }
 
 export default trading;

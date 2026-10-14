@@ -167,7 +167,7 @@ const silver = {
   },
 
   members: [
-    m('guest', 'Guest', 1, 0, 'Whenever another player gives you something, +1 more of it.', {
+    m('guest', 'Guest', 1, 1, 'Whenever another player gives you something, +1 more of it.', {
       onGiven(ctx, owner, card, giver, color) { if (giver !== owner) ctx.gain(owner, color, 1); },
     }),
     m('benefactor', 'Benefactor', 1, 1, 'At round start, +3 silver, and a rival you pick gets 1 silver.', {
@@ -188,14 +188,14 @@ const silver = {
         ctx.gain(owner, S, 2 * k);
       },
     }),
-    m('saint', 'Patron Saint', 3, 2, 'Game end: +1 follower per silver member in play, anyone’s.', {
-      onGameEnd: ctx => ctx.state.players.reduce((s, o) => s + ctx.countMembersOfColor(o, S), 0),
+    m('saint', 'Patron Saint', 3, 2, 'Game end: +1 follower per 2 silver members in play, anyone’s.', {
+      onGameEnd: ctx => Math.floor(ctx.state.players.reduce((s, o) => s + ctx.countMembersOfColor(o, S), 0) / 2),
     }),
     m('retinue', 'Retinue', 1, 1, 'Counts as 2 members. When recruited, everyone else +1 silver.', {
       f: 2, n: 2,
       onRecruited(ctx, owner) { giveAll(ctx, owner, S, 1); },
     }),
-    m('gala', 'Gala', 2, 2, 'Once per game: double your silver, and everyone else +2 silver.', {
+    m('gala', 'Gala', 2, 1, 'Once per game: double your silver, and everyone else +2 silver.', {
       activate: 'game',
       onActivate(ctx, owner) {
         ctx.gain(owner, S, owner.res[S]);
@@ -204,28 +204,28 @@ const silver = {
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res[S] >= 6,
     }),
-    m('ambassador', 'Ambassador', 1, 1, 'Whenever a rival recruits a silver member, +1 silver.', {
+    m('ambassador', 'Ambassador', 2, 1, 'Whenever a rival recruits a silver member, +1 silver.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by !== owner && ctx.defOf(recruited).quadrant === S) ctx.gain(owner, S, 1);
       },
     }),
-    m('diplomat', 'Diplomat', 2, 2, 'Whenever you take a space outside Silver, +2 silver, and everyone else +1 silver.', {
+    m('diplomat', 'Diplomat', 2, 1, 'Whenever you take a space outside Silver, +2 silver, and everyone else +1 silver.', {
       afterAction(ctx, owner, card, qid) {
         if (qid === S) return;
         ctx.gain(owner, S, 2);
         giveAll(ctx, owner, S, 1);
       },
     }),
-    m('heir', 'Heir', 1, 1, 'At the start of round III, +2 silver per member you have.', {
-      onRoundStart(ctx, owner) { if (ctx.state.round === 3) ctx.gain(owner, S, 2 * ctx.memberCount(owner)); },
+    m('heir', 'Heir', 2, 1, 'At the start of round III, +1 silver per member you have.', {
+      onRoundStart(ctx, owner) { if (ctx.state.round === 3) ctx.gain(owner, S, ctx.memberCount(owner)); },
     }),
-    m('hangeron', 'Hanger-On', 1, 0, 'Whenever a rival takes a Silver space, +1 silver.', {
+    m('hangeron', 'Hanger-On', 1, 1, 'Whenever a rival takes a Silver space, +1 silver.', {
       onSilverSpace(ctx, owner) { ctx.gain(owner, S, 1); },
     }),
-    m('toastmaster', 'Toastmaster', 3, 2, 'Whenever you take a Silver space, +1 follower.', {
+    m('toastmaster', 'Toastmaster', 2, 1, 'Whenever you take a Silver space, +1 follower.', {
       afterAction(ctx, owner, card, qid) { if (qid === S) owner.bonus += 1; },
     }),
-    m('confidant', 'Confidant', 1, 1, 'When recruited, pick a rival. Whenever they recruit, +1 silver.', {
+    m('confidant', 'Confidant', 2, 2, 'When recruited, pick a rival. Whenever they recruit, +1 silver.', {
       onRecruited(ctx, owner, card) {
         ctx.choose(owner, 'Confidant: watch which rival?', others(ctx, owner).map(o => ({
           id: `player:${o.id}`, label: o.name, kind: 'player', value: o.id, hint: ctx.memberCount(o),
@@ -236,7 +236,7 @@ const silver = {
     m('socialite', 'Socialite', 1, 1, 'At round start, +1 silver per rival who has any silver.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, S, others(ctx, owner).filter(o => o.res[S] > 0).length); },
     }),
-    m('spoon', 'Silver Spoon', 2, 0, 'When recruited, gain silver equal to the most silver any rival has.', {
+    m('spoon', 'Silver Spoon', 2, 1, 'When recruited, gain silver equal to the most silver any rival has.', {
       onRecruited(ctx, owner) { ctx.gain(owner, S, Math.max(0, ...others(ctx, owner).map(o => o.res[S]))); },
     }),
   ],

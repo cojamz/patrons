@@ -122,7 +122,7 @@ export function copy(ctx, p, e, { later = null } = {}) {
   const mult = has(ctx, p, 'wallflower') && fewest ? 2 : 1;
   const asGreen = ctx.membersOf(p).some(c => (c.def.id === 'echo.translator' || c.copy === 'echo.translator') && c.on !== false);
   for (const [c, n] of Object.entries(e.res)) ctx.gain(p, asGreen ? 'green' : c, n * mult, { fromAction: true });
-  if (e.discount) p.discount += e.discount * mult;
+  if (e.discount) p.discount += e.discount;
   ctx.log(`${p.name} copied ${e.name}${e.p !== p.id ? ` (${ctx.player(e.p).name}'s)` : ''}: ${describe(ctx, e)}${mult > 1 ? ', doubled' : ''}.`);
   // who hears it
   const choir = has(ctx, p, 'choir');
@@ -213,7 +213,7 @@ const echoQ = {
     m('choir', 'Choir', 1, 1, 'Whenever you copy a space, +1 green.'),
     m('muse', 'Muse', 1, 0, 'Whenever a rival copies one of your spaces, +2 green.'),
     m('choirmaster', 'Choirmaster', 1, 1, 'Whenever a rival copies a space, +1 green.'),
-    m('fan', 'Fan', 1, 1, 'Whenever a rival takes a space that gives them 5 or more, +1 green.', {
+    m('fan', 'Fan', 1, 1, 'Whenever a rival takes a space that gives them 5 or more resources, +1 green.', {
       onTurnEnd(ctx, owner, card, p) {
         if (p === owner) return;
         const L = ledger(ctx.state);
@@ -236,7 +236,7 @@ const echoQ = {
         if (n) ctx.gain(owner, 'green', n);
       },
     }),
-    m('wallflower', 'Wallflower', 1, 1, 'While no one has fewer followers than you, what you copy is doubled.'),
+    m('wallflower', 'Wallflower', 1, 1, 'While no one has fewer followers than you, the resources you copy are doubled.'),
     m('keepsake', 'Keepsake', 1, 1, 'When recruited: copy one of your spaces from this round.', {
       onRecruited(ctx, owner) { offer(ctx, owner, targets(ctx, owner, 'own'), 'Keepsake: copy which of your spaces?', 'now'); },
     }),

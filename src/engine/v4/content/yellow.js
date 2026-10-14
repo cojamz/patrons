@@ -26,28 +26,28 @@ export default {
 
   actions: [
     {
-      key: 'harvest', ring: 1, name: 'Harvest', text: '+1 yellow per color you hold (yellow always counts).',
+      key: 'harvest', ring: 1, name: 'Harvest', text: '+1 yellow, plus 1 per other color you hold.',
       estimate: (ctx, p) => harvestAmount(ctx, p),
       resolve(ctx, p) { ctx.gain(p, Y, harvestAmount(ctx, p), { fromAction: true }); },
     },
     {
-      key: 'bloom', ring: 1, name: 'Bloom', text: '+2 of each color you have none of.',
-      estimate: (ctx, p) => 2 * missing(ctx, p).length * 0.85,
-      resolve(ctx, p) { for (const c of missing(ctx, p)) ctx.gain(p, c, 2, { fromAction: true }); },
+      key: 'bloom', ring: 1, name: 'Bloom', text: '+1 of each color you have none of.',
+      // always leaves you holding a full set
+      estimate: (ctx, p) => missing(ctx, p).length + (setsOf(ctx, p) === 0 ? 0.5 : 0),
+      resolve(ctx, p) { for (const c of missing(ctx, p)) ctx.gain(p, c, 1, { fromAction: true }); },
     },
     {
-      key: 'transmute', ring: 1, name: 'Transmute', text: 'Swap any of your resources for other colors, one for one.',
-      // worth what it adds in sets, plus a little for fixing colors
-      estimate: (ctx, p) => Math.max(0, Math.floor(total(ctx, p) / colors(ctx).length) - setsOf(ctx, p)) * 1.6 + 0.4,
-      resolve(ctx, p) { transmuteStep(ctx, p, { left: total(ctx, p), done: 0 }); },
+      key: 'transmute', ring: 1, name: 'Transmute', text: 'Swap up to 3 of your resources for other colors, then +1 yellow.',
+      estimate: (ctx, p) => 1 + Math.min(3, Math.max(0, Math.floor(total(ctx, p) / colors(ctx).length) - setsOf(ctx, p))) * 0.8,
+      resolve(ctx, p) { transmuteStep(ctx, p, { left: Math.min(3, total(ctx, p)), done: 0 }); },
     },
     {
-      key: 'prism', ring: 2, name: 'Prism', text: '+1 of each other color per 2 yellow you have.',
-      estimate: (ctx, p) => 3 * Math.floor(p.res[Y] / 2),
+      key: 'prism', ring: 2, name: 'Prism', text: '+1 of each other color per 3 yellow you have (you keep the yellow).',
+      estimate: (ctx, p) => 3 * Math.floor(p.res[Y] / 3),
       resolve(ctx, p) {
-        const k = Math.floor(p.res[Y] / 2);
+        const k = Math.floor(p.res[Y] / 3);
         for (const c of others(ctx)) ctx.gain(p, c, k, { fromAction: true });
-        ctx.log(`${p.name}'s Prism splits ${2 * k} yellow's worth into +${k} of each other color.`);
+        ctx.log(k ? `${p.name}'s Prism: +${k} of each other color.` : `${p.name}'s Prism had too little yellow.`);
       },
     },
     {
@@ -61,12 +61,12 @@ export default {
       },
     },
     {
-      key: 'flourish', ring: 3, name: 'Flourish', text: 'Double your full sets: +1 of each color per full set you hold.',
-      estimate: (ctx, p) => 4 * setsOf(ctx, p),
+      key: 'flourish', ring: 3, name: 'Flourish', text: '+1 of each other color per full set you hold.',
+      estimate: (ctx, p) => 3 * setsOf(ctx, p),
       resolve(ctx, p) {
         const k = setsOf(ctx, p);
-        eachColor(ctx, p, k, { fromAction: true });
-        ctx.log(k ? `${p.name} flourishes: +${k} of each color.` : `${p.name} had no full set to flourish.`);
+        for (const c of others(ctx)) ctx.gain(p, c, k, { fromAction: true });
+        ctx.log(k ? `${p.name} flourishes: +${k} of each other color.` : `${p.name} had no full set to flourish.`);
       },
     },
   ],
@@ -180,10 +180,10 @@ export default {
 };
 
 function harvestAmount(ctx, p) {
-  return colors(ctx).filter(c => c === Y || p.res[c] > 0).length;
+  return 1 + others(ctx).filter(c => p.res[c] > 0).length;
 }
 
-// Transmute is a run of one-for-one swaps, with Done at any time. It can't run longer than what you held.
+// Transmute is up to 3 one-for-one swaps, with Done at any time, then +1 yellow.
 function transmuteStep(ctx, p, data) {
   const cs = colors(ctx);
   const opts = [];
@@ -201,6 +201,7 @@ function transmuteStep(ctx, p, data) {
   ctx.choose(p, `Transmute: swap one for one, or stop (${data.done} swapped so far)`, opts, 'yellow.swap', data);
 }
 function finishTransmute(ctx, p, data) {
+  ctx.gain(p, Y, 1, { fromAction: true });
   const what = Object.entries(data.tally || {}).map(([k, n]) => `${n} ${k.replace('>', ' → ')}`).join(', ');
   ctx.log(data.done ? `${p.name} transmuted ${what}.` : `${p.name} swapped nothing.`);
 }

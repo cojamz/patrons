@@ -10,7 +10,7 @@ const quadrants = (process.argv[4] || 'gold,red,blue,trading').split(',');
 const wq = quadrants.indexOf('trading');
 const st = { wins: Array(n).fill(0), fol: [], mem: [], takes: {}, contestWins: Array(n).fill(0), contestRounds: 0, noScore: 0, ties: 0,
   winnerWhiteContest: [], whiteMembers: [], leftover: [], whiteLeft: [], sold: 0, sixBuys: 0, winnerWhiteMembers: 0, contestWinnerWonGame: 0, gameRounds: 0,
-  whiteAtRoundEnd: [[], [], []], spread: [] };
+  whiteAtRoundEnd: [[], [], []], spread: [], boom: [], heiress: [], cashed: [] };
 for (let g = 1; g <= games; g++) {
   const rand = seededRandom(g * 9973);
   let s = createGame({ seats: Array.from({ length: n }, () => ({ kind: 'bot' })), seed: g, quadrants });
@@ -43,7 +43,16 @@ for (let g = 1; g <= games; g++) {
         }
       }
     }
-    for (const l of next.log.slice(s.log.length >= 300 ? 0 : s.log.length)) if (/ (sold|pawned) \d+ follower/.test(l)) st.sold += Number(l.match(/(\d+) follower/)[1]);
+    for (const l of next.log) {
+      let mm;
+      if ((mm = l.match(/ (sold|pawned)[^\d]*(\d+) follower/))) st.sold += Number(mm[2]);
+      if ((mm = l.match(/Boom: (\d+) white became/))) st.boom.push(Number(mm[1]));
+      if (/had no white to turn/.test(l)) st.boom.push(0);
+      if ((mm = l.match(/used Heiress: \+(\d+)/))) st.heiress.push(Number(mm[1]));
+      if ((mm = l.match(/traded (\d+) white for/))) st.cashed.push(Number(mm[1]));
+    }
+    // only new lines matter; the engine caps the log, so clear it after reading
+    next.log = [];
     s = next;
   }
   const w = s.ranking[0];
@@ -65,7 +74,7 @@ console.log(`wins by seat: ${st.wins.join(' / ')}  (${st.wins.map(x => (100 * x 
 console.log(`avg followers ${avg(st.fol)} · avg members ${avg(st.mem)} · white members owned ${avg(st.whiteMembers)} · leftover resources ${avg(st.leftover)} (white ${avg(st.whiteLeft)}) · 6-buys/game ${(st.sixBuys / games).toFixed(1)}`);
 if (wq >= 0) {
   console.log(`White action takes per game: ${Object.entries(st.takes).sort().map(([k, v]) => `${k} ${(v / games).toFixed(2)}`).join(' · ')}`);
-  console.log(`followers sold per game ${(st.sold / games).toFixed(1)}`);
+  console.log(`followers sold per game ${(st.sold / games).toFixed(1)} · Boom turns ${avg(st.boom)} white into followers (x2) · Cash In trades ${avg(st.cashed)} white · Heiress gives ${avg(st.heiress)}`);
   console.log(`White contest: ${st.contestRounds} rounds; nobody scored ${(100 * st.noScore / st.contestRounds).toFixed(0)}%; shared ${(100 * st.ties / st.contestRounds).toFixed(0)}%; wins by seat ${st.contestWins.join('/')}`);
   console.log(`  white held at round end (avg) I ${avg(st.whiteAtRoundEnd[0])} · II ${avg(st.whiteAtRoundEnd[1])} · III ${avg(st.whiteAtRoundEnd[2])}; leader's margin over 2nd ${avg(st.spread)}`);
   console.log(`  winner's followers from the White contest ${avg(st.winnerWhiteContest)}; the game's top White scorer won the game ${(100 * st.contestWinnerWonGame / games).toFixed(0)}%`);

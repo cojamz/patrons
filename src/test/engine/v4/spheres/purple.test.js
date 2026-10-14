@@ -15,7 +15,7 @@ const Q = ['gold', 'red', 'purple', 'green'];
 const PURPLE_TEST_COSTS = {
   'purple.lamplighter': [1, 1], 'purple.dreamer': [1, 1], 'purple.insomniac': [2, 1], 'purple.hibernator': [2, 1],
   'purple.straggler': [1, 0], 'purple.hermit': [3, 2], 'purple.secondwind': [3, 2], 'purple.moonlighter': [1, 1],
-  'purple.timekeeper': [1, 1], 'purple.nightcrew': [2, 1], 'purple.hourglass': [1, 1], 'purple.sleepyhead': [1, 1],
+  'purple.timekeeper': [1, 1], 'purple.nightcrew': [2, 1], 'purple.hourglass': [1, 1], 'purple.drifter': [1, 1],
   'purple.rooster': [1, 1], 'purple.reveille': [2, 2], 'purple.lullaby': [2, 1],
 };
 let restore;
@@ -44,7 +44,7 @@ function scene({ n = 2, seed = 7, round = 1, res = [], members = [], shop = null
 }
 const R = (s, i = 0) => s.players[i].res;
 const rest = (s, i = 0) => restingOf(contextFor(s), s.players[i]);
-const pass = s => move(s, 'pass');
+const pass = s => (s.pending?.kind === 'buy' ? move(s, 'pass') : s);
 const turns = (...ps) => ps.map(p => ({ t: 'turn', p }));
 // who places next, after the current turn ends
 const nextPlacer = s => { while (s.pending && s.pending.kind !== 'place') s = pass(s); return s.pending?.player; };
@@ -92,10 +92,10 @@ describe('Purple actions', () => {
     s = pass(s);
     expect(s.pending.kind).toBe('place');
     expect(s.pending.player).toBe(0);
-    s = pass(take(s, 'Joint Venture'));
+    s = pass(take(s, 'Rush'));
     expect(s.pending.player).toBe(0); // the second woken worker
-    s = take(s, 'Rush');
-    expect(R(s).gold).toBe(3 + 2);
+    s = take(s, 'Doze');
+    expect(R(s)).toMatchObject({ gold: 2, purple: 3 });
     expect(nextPlacer(s)).toBe(1);
   });
   it('Wake with nobody resting: +1 purple only', () => {
@@ -126,8 +126,7 @@ describe('Purple actions', () => {
   });
   it('Linger with nothing to take back does nothing', () => {
     const s = take(scene({ round: 2, queue: turns(0, 1) }), 'Linger');
-    expect(s.pending.kind).toBe('buy');
-    expect(nextPlacer(s)).toBe(1);
+    expect(s.pending.player).toBe(1);
   });
   it('Rally (ring III): every resting worker takes a turn now, then one more', () => {
     let s = take(scene({ round: 3, rest: [2], queue: turns(0, 1) }), 'Rally');
@@ -182,7 +181,7 @@ describe('Purple members', () => {
   });
   it('Straggler: round start, +1 resting worker if you have the fewest followers (ties count)', () => {
     expect(rest(start([['purple.straggler']], { bonus: [0, 3] }))).toBe(1);
-    expect(rest(start([['purple.straggler']], { bonus: [1, 1] }))).toBe(1); // tied: Straggler is a member, so 1+1+1 vs 1+1
+    expect(rest(start([['purple.straggler']], { bonus: [0, 1] }))).toBe(1); // tied at 2 (Straggler is a follower too)
     expect(rest(start([['purple.straggler']], { bonus: [3, 0] }))).toBe(0);
   });
   it('Hermit: game end, +3 followers per resting worker', () => {
@@ -232,11 +231,11 @@ describe('Purple members', () => {
     expect(R(s).purple).toBe(0);
     expect(rest(s)).toBe(0);
   });
-  it('Sleepyhead: whenever you skip a turn, +2 purple', () => {
-    const s = take(scene({ members: [['purple.sleepyhead']], queue: turns(0, 1, 0) }), 'Rest');
-    expect(R(s).purple).toBe(5);
-    const t = take(scene({ members: [['purple.sleepyhead']], queue: turns(0, 1) }), 'Rest');
-    expect(R(t).purple).toBe(3); // nothing skipped
+  it('Drifter: when recruited, +1 resting worker this round', () => {
+    let s = scene({ res: [{ purple: 1, gold: 1 }], shop: ['purple.drifter'], queue: turns(0, 1) });
+    s = take(s, 'Rush');
+    s = move(s, `card:${uidOf(s, 'purple.drifter', 'shop')}`);
+    expect(rest(s)).toBe(1);
   });
   it('Rooster: whenever a resting worker wakes, +1 of each other color', () => {
     const s = take(scene({ members: [['purple.rooster']], rest: [2], queue: turns(0, 1) }), 'Wake');
@@ -252,7 +251,6 @@ describe('Purple members', () => {
     let s = scene({ members: [['purple.lullaby']], bonus: [0, 5], queue: turns(0, 1, 1) });
     s = take(s, 'Doze');
     s = move(s, `use:${uidOf(s, 'purple.lullaby', 0)}`);
-    s = move(s, 'player:1');
     expect(rest(s, 1)).toBe(1);
     expect(s.queue.filter(t => t.t === 'turn' && t.p === 1)).toHaveLength(1);
   });

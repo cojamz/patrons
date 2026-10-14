@@ -152,10 +152,10 @@ describe('Silver members', () => {
     expect(R(s).silver).toBe(4);
   });
 
-  it('Patron Saint: game end +1 follower per silver member in play, anyone’s', () => {
+  it('Patron Saint: game end +1 follower per 2 silver members in play, anyone’s', () => {
     const s = scene({ members: [['silver.saint', 'gold.banker'], ['silver.caterer', 'silver.heir'], ['silver.retinue']], queue: [{ t: 'finish' }] });
-    // Saint, Caterer, Heir, and Retinue (counts as 2 members)
-    expect(s.players[0].final.total).toBe(5);
+    // Saint, Caterer, Heir, and Retinue (counts as 2 members): 5 silver members, so +2
+    expect(s.players[0].final.total).toBe(2);
   });
 
   it('Retinue: counts as 2 members and 2 followers; when recruited, everyone else +1 silver', () => {
@@ -193,10 +193,10 @@ describe('Silver members', () => {
     expect(R(s).silver).toBe(4);
   });
 
-  it('Heir: at the start of round III, +2 silver per member (nothing in round II)', () => {
+  it('Heir: at the start of round III, +1 silver per member (nothing in round II)', () => {
     let s = scene({ members: [['silver.heir', 'red.twins', 'gold.banker']], queue: [{ t: 'round', r: 3 }] });
     // Heir 1 + Twins 2 + Banker 1 = 4 members; Banker also pays its 3 gold
-    expect(R(s).silver).toBe(8);
+    expect(R(s).silver).toBe(4);
     s = scene({ members: [['silver.heir']], queue: [{ t: 'round', r: 2 }] });
     expect(R(s).silver).toBe(0);
   });

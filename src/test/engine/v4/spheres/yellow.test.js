@@ -67,20 +67,20 @@ describe('Yellow scoring: most full sets, yellow breaks ties', () => {
 });
 
 describe('Yellow actions', () => {
-  it('Harvest: +1 yellow per color you hold, yellow always counts', () => {
+  it('Harvest: +1 yellow, plus 1 per other color you hold', () => {
     expect(R(take(scene({ res: [{ gold: 2, red: 1 }] }), 'Harvest')).yellow).toBe(3);
     expect(R(take(scene({ res: [{ gold: 2, red: 1, yellow: 1 }] }), 'Harvest')).yellow).toBe(4);
     expect(R(take(scene({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'Harvest')).yellow).toBe(5);
     expect(R(take(scene({}), 'Harvest')).yellow).toBe(1);
   });
 
-  it('Bloom: +2 of each color you have none of', () => {
-    expect(R(take(scene({ res: [{ gold: 3, red: 1 }] }), 'Bloom'))).toEqual({ gold: 3, red: 1, yellow: 2, green: 2 });
-    expect(R(take(scene({}), 'Bloom'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
+  it('Bloom: +1 of each color you have none of, which always completes a set', () => {
+    expect(R(take(scene({ res: [{ gold: 3, red: 1 }] }), 'Bloom'))).toEqual({ gold: 3, red: 1, yellow: 1, green: 1 });
+    expect(R(take(scene({}), 'Bloom'))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
     expect(R(take(scene({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'Bloom'))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
   });
 
-  it('Transmute: swaps one for one until Done; nothing gained or lost', () => {
+  it('Transmute: up to 3 one-for-one swaps, then +1 yellow', () => {
     let s = take(scene({ res: [{ gold: 5, red: 1 }] }), 'Transmute');
     expect(s.pending.kind).toBe('choose');
     expect(ids(s)).toContain('swap:gold:yellow');
@@ -89,30 +89,36 @@ describe('Yellow actions', () => {
     s = move(s, 'swap:gold:green');
     expect(R(s)).toEqual({ gold: 3, red: 1, yellow: 1, green: 1 });
     s = move(s, 'done');
+    expect(R(s)).toEqual({ gold: 3, red: 1, yellow: 2, green: 1 });
     expect(s.pending.kind).toBe('buy');
     expect(s.log.join('\n')).toContain('P1 transmuted 1 gold → yellow, 1 gold → green.');
   });
 
-  it('Transmute: can swap at most as many as you held; with nothing held it just passes', () => {
-    let s = take(scene({ res: [{ gold: 2 }] }), 'Transmute');
+  it('Transmute: stops after 3 swaps (or what you held); with nothing held it still gives +1 yellow', () => {
+    let s = take(scene({ res: [{ gold: 9 }] }), 'Transmute');
     s = move(s, 'swap:gold:red');
-    s = move(s, 'swap:red:green');
-    expect(R(s)).toEqual({ gold: 1, red: 0, yellow: 0, green: 1 });
-    expect(s.pending?.kind).not.toBe('choose'); // 2 swaps used up
-    const z = take(scene({}), 'Transmute');
-    expect(z.pending?.kind).not.toBe('choose');
+    s = move(s, 'swap:gold:green');
+    s = move(s, 'swap:gold:yellow');
+    expect(s.pending?.kind).not.toBe('choose');
+    expect(R(s)).toEqual({ gold: 6, red: 1, yellow: 2, green: 1 });
+    let t = take(scene({ res: [{ gold: 2 }] }), 'Transmute');
+    t = move(t, 'swap:gold:red');
+    t = move(t, 'swap:red:green');
+    expect(t.pending?.kind).not.toBe('choose');
+    expect(R(t)).toEqual({ gold: 1, red: 0, yellow: 1, green: 1 });
+    expect(R(take(scene({}), 'Transmute'))).toEqual({ ...Z, yellow: 1 });
   });
 
-  it('Transmute: a bot evens out its colors and stops', () => {
+  it('Transmute: a bot evens out its colors', () => {
     let s = take(scene({ res: [{ gold: 7, red: 1 }] }), 'Transmute');
-    while (s.pending.kind === 'choose') s = applyMove(s, chooseBotMove(s, () => 0.5));
-    expect(R(s)).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
+    while (s.pending?.kind === 'choose') s = applyMove(s, chooseBotMove(s, () => 0.5));
+    expect(R(s)).toEqual({ gold: 4, red: 2, yellow: 2, green: 1 }); // 3 swaps off the big pile, then +1 yellow
   });
 
-  it('Prism (ring II): +1 of each other color per 2 yellow you have, and keeps the yellow', () => {
+  it('Prism (ring II): +1 of each other color per 3 yellow you have, and keeps the yellow', () => {
     expect(() => take(scene({ round: 1, res: [{ yellow: 4 }] }), 'Prism')).toThrow();
-    expect(R(take(scene({ round: 2, res: [{ yellow: 5, gold: 1 }] }), 'Prism'))).toEqual({ gold: 3, red: 2, yellow: 5, green: 2 });
-    expect(R(take(scene({ round: 2, res: [{ yellow: 1 }] }), 'Prism'))).toEqual({ ...Z, yellow: 1 });
+    expect(R(take(scene({ round: 2, res: [{ yellow: 7, gold: 1 }] }), 'Prism'))).toEqual({ gold: 3, red: 2, yellow: 7, green: 2 });
+    expect(R(take(scene({ round: 2, res: [{ yellow: 2 }] }), 'Prism'))).toEqual({ ...Z, yellow: 2 });
   });
 
   it('Gather (ring II): each member brings 1 of its color; Twins count twice', () => {
@@ -120,14 +126,14 @@ describe('Yellow actions', () => {
     expect(R(s)).toEqual({ gold: 1, red: 3, yellow: 2, green: 0 }); // Farmer adds 1 to the yellow
   });
 
-  it('Flourish (ring III): +1 of each color per full set', () => {
-    expect(R(take(scene({ round: 3, res: [{ gold: 4, red: 2, yellow: 3, green: 2 }] }), 'Flourish'))).toEqual({ gold: 6, red: 4, yellow: 5, green: 4 });
+  it('Flourish (ring III): +1 of each other color per full set', () => {
+    expect(R(take(scene({ round: 3, res: [{ gold: 4, red: 2, yellow: 3, green: 2 }] }), 'Flourish'))).toEqual({ gold: 6, red: 4, yellow: 3, green: 4 });
     expect(R(take(scene({ round: 3, res: [{ gold: 4, red: 2, yellow: 3 }] }), 'Flourish'))).toEqual({ gold: 4, red: 2, yellow: 3, green: 0 });
   });
 
   it('Midas turns Bloom into gold (action gains)', () => {
     const s = take(scene({ members: [['gold.midas']] }), 'Bloom');
-    expect(R(s)).toEqual({ ...Z, gold: 8 });
+    expect(R(s)).toEqual({ ...Z, gold: 4 });
   });
 });
 
@@ -145,7 +151,8 @@ describe('Yellow members', () => {
 
   it('Gleaner: an action gaining 2+ of another color gives +1 yellow (once per color gained)', () => {
     const s = take(scene({ members: [['yellow.gleaner']], res: [{ gold: 1 }] }), 'Bloom');
-    expect(R(s)).toEqual({ gold: 1, red: 2, yellow: 2 + 2, green: 2 }); // red and green each trigger it
+    expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 }); // 1s don't trigger it
+    expect(R(take(scene({ members: [['yellow.gleaner']] }), 'Rush')).yellow).toBe(1);
     expect(R(take(scene({ members: [['yellow.gleaner']] }), 'Joint Venture')).yellow).toBe(1);
     expect(R(take(scene({ members: [['yellow.gleaner']], res: [{ gold: 1 }] }), 'Harvest')).yellow).toBe(2);
   });
@@ -204,7 +211,7 @@ describe('Yellow members', () => {
 
   it('Rainmaker: once per game, every color rises to match your yellow (never lowers one)', () => {
     let s = scene({ members: [['yellow.rainmaker']], res: [{ gold: 7, red: 1, yellow: 2 }] });
-    s = take(s, 'Harvest'); // +3 yellow → 5
+    s = take(s, 'Harvest'); // +3 yellow (1 + gold, red) → 5
     const use = `use:${uidOf(s, 'yellow.rainmaker', 0)}`;
     s = move(s, use);
     expect(R(s)).toEqual({ gold: 7, red: 5, yellow: 5, green: 5 });
@@ -221,7 +228,7 @@ describe('Yellow members', () => {
 
   it('Farmer: whenever an action gains you yellow, +1 more', () => {
     expect(R(take(scene({ members: [['yellow.farmer']], res: [{ gold: 1 }] }), 'Harvest')).yellow).toBe(3);
-    expect(R(take(scene({ members: [['yellow.farmer']], res: [{ gold: 1 }] }), 'Bloom')).yellow).toBe(3);
+    expect(R(take(scene({ members: [['yellow.farmer']], res: [{ gold: 1 }] }), 'Bloom')).yellow).toBe(2);
   });
 
   it('Weaver: buying 6 followers gives +1 of each color; smaller buys don’t', () => {
@@ -230,7 +237,7 @@ describe('Yellow members', () => {
     s = take(s, 'Harvest'); // +3 yellow
     s = move(s, 'tier:big');
     const after = R(s);
-    expect(after.gold + after.red + after.green + after.yellow).toBe(2 + 2 + 2 + 4 - 6 + 4); // Harvest +4 (4 colors held)
+    expect(after.gold + after.red + after.green + after.yellow).toBe(2 + 2 + 2 + 4 - 6 + 4); // Harvest +4 (1 + 3 other colors)
     expect(s.players[0].bonus).toBe(6);
     let t = scene({ members: [['yellow.weaver']], res: [{ gold: 2, red: 2 }] });
     t.cards[uidOf(t, 'yellow.weaver', 0)].seenBig = t.bigLeft;

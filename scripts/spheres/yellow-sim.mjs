@@ -10,7 +10,7 @@ registerQuadrant(yellow);
 const games = Number(process.argv[2] || 400), n = Number(process.argv[3] || 4);
 const quadrants = (process.argv[4] || 'gold,red,yellow,green').split(',');
 const yq = quadrants.indexOf('yellow');
-const st = { wins: Array(n).fill(0), fol: [], mem: [], takes: {}, takesByRound: {}, contestWins: Array(n).fill(0), contestRounds: 0, noScore: 0, ties: 0,
+const st = { wins: Array(n).fill(0), fol: [], mem: [], takes: {}, takesByRound: {}, contestWins: Array(n).fill(0), contestRounds: 0, noScore: 0, noScoreByRound: [0, 0, 0], ties: 0,
   winnerHadYellow: 0, yellowMembersOwned: [], setsAtEnd: [], yellowContestFollowersOfWinner: [], leftover: [], winnerIsYellowLeader: 0, sixBuys: 0 };
 for (let g = 1; g <= games; g++) {
   const rand = seededRandom(g * 9973);
@@ -36,7 +36,7 @@ for (let g = 1; g <= games; g++) {
       if (line) {
         st.contestRounds++;
         const part = line.split(' · ').find(x => x.includes('Most full sets'));
-        if (!part) st.noScore++;
+        if (!part) { st.noScore++; st.noScoreByRound[r0 - 1]++; }
         else {
           const names = part.split(': ')[1].replace(/ \+\d+$/, '').split(' & ');
           if (names.length > 1) st.ties++;
@@ -64,6 +64,6 @@ console.log(`avg followers ${avg(st.fol)} · avg members ${avg(st.mem)} · avg y
 if (yq >= 0) {
   console.log(`Yellow action takes per game: ${Object.entries(st.takes).map(([k, v]) => `${k} ${(v / games).toFixed(2)}`).join(' · ')}`);
   console.log(`  by round: ${Object.entries(st.takesByRound).sort().map(([k, v]) => `${k} ${(v / games).toFixed(2)}`).join(' · ')}`);
-  console.log(`Sets contest: ${st.contestRounds} rounds; nobody scored ${(100 * st.noScore / st.contestRounds).toFixed(0)}%; shared ${(100 * st.ties / st.contestRounds).toFixed(0)}%; wins by seat ${st.contestWins.join('/')}`);
+  console.log(`Sets contest: ${st.contestRounds} rounds; nobody scored ${(100 * st.noScore / st.contestRounds).toFixed(0)}% (by round ${st.noScoreByRound.map(x => (100 * x / games).toFixed(0) + '%').join('/')}); shared ${(100 * st.ties / st.contestRounds).toFixed(0)}%; wins by seat ${st.contestWins.join('/')}`);
   console.log(`  winner's followers from the sets contest: ${avg(st.yellowContestFollowersOfWinner)}; full sets held at game end: ${avg(st.setsAtEnd)}`);
 }

@@ -8,7 +8,7 @@
 // - p.left stays "turns still scheduled", so bots and the UI keep working: a rest removes a scheduled turn,
 //   a wake adds one.
 // - Extra turns are ordinary { t: 'turn' } tasks put right after the current turn ends.
-// - onRest / onWake / onLift are purple-only member hooks, fired by the helpers below.
+// - onWake / onLift are purple-only member hooks, fired by the helpers below.
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 
 const P = 'purple';
@@ -37,7 +37,6 @@ export function restNext(ctx, p) {
   p.left -= 1;
   setRest(ctx, p, restingOf(ctx, p) + 1);
   ctx.log(`${p.name} rests a worker (skips a turn).`);
-  fire(ctx, p, 'onRest');
   return true;
 }
 
@@ -116,7 +115,7 @@ export default {
   actions: [
     {
       key: 'rest', ring: 1, name: 'Rest', text: '+3 purple. Skip your next turn this round; that worker rests.',
-      estimate: (ctx, p) => 3 + restSwing(ctx, p) + memberBonus(ctx, p, 'onRest'),
+      estimate: (ctx, p) => 3 + restSwing(ctx, p),
       resolve(ctx, p) { ctx.gain(p, P, 3, { fromAction: true }); restNext(ctx, p); },
     },
     {
@@ -131,7 +130,7 @@ export default {
     },
     {
       key: 'slumber', ring: 2, name: 'Slumber', text: 'Skip your next turn this round (that worker rests), then +3 purple per resting worker.',
-      estimate: (ctx, p) => 3 * (restingOf(ctx, p) + (hasNextTurn(ctx, p) ? 1 : 0)) + restSwing(ctx, p) + memberBonus(ctx, p, 'onRest'),
+      estimate: (ctx, p) => 3 * (restingOf(ctx, p) + (hasNextTurn(ctx, p) ? 1 : 0)) + restSwing(ctx, p),
       resolve(ctx, p) {
         restNext(ctx, p);
         ctx.gain(p, P, 3 * restingOf(ctx, p), { fromAction: true });
@@ -177,12 +176,11 @@ export default {
       setRest(ctx, p, restingOf(ctx, p) + 1);
       ctx.gain(p, P, 4);
       ctx.log(`${p.name}'s Hourglass: rests their last worker, +4 purple.`);
-      fire(ctx, p, 'onRest');
     },
   },
 
   members: [
-    m('lamplighter', 'Lamplighter', 1, 1, 'At round start, +1 purple per worker you get this round (3 / 4 / 5).', {
+    m('lamplighter', 'Lamplighter', 1, 0, 'At round start, +1 purple per worker you get this round (3 / 4 / 5).', {
       onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
     m('dreamer', 'Dreamer', 1, 1, 'At round end, +2 purple per resting worker you have.', {
@@ -204,34 +202,31 @@ export default {
         if (n) { setRest(ctx, owner, restingOf(ctx, owner) + n); ctx.log(`${owner.name}'s Hibernator: ${n} worker${n > 1 ? 's' : ''} still resting.`); }
       },
     }),
-    m('straggler', 'Straggler', 1, 0, 'At round start, if you have the fewest followers (ties count), +1 resting worker.', {
+    m('straggler', 'Straggler', 2, 1, 'At round start, if you have the fewest followers (ties count), +1 resting worker.', {
       onRoundStart(ctx, owner) {
         const me = ctx.followers(owner);
         if (ctx.rivals(owner).every(o => ctx.followers(o) >= me)) setRest(ctx, owner, restingOf(ctx, owner) + 1);
       },
     }),
-    m('hermit', 'Hermit', 3, 2, 'Game end: +3 followers per resting worker you have.', {
+    m('hermit', 'Hermit', 3, 1, 'Game end: +3 followers per resting worker you have.', {
       onGameEnd: (ctx, owner) => 3 * restingOf(ctx, owner),
     }),
-    m('secondwind', 'Second Wind', 3, 2, 'Once per game: take an extra turn right after this one.', {
+    m('secondwind', 'Second Wind', 4, 2, 'Once per game: take an extra turn right after this one.', {
       activate: 'game',
       onActivate(ctx, owner) { extraTurns(ctx, owner, 1); ctx.log(`${owner.name} used Second Wind: an extra turn.`); },
       botActivate: ctx => ctx.state.round === 3,
     }),
-    m('moonlighter', 'Moonlighter', 1, 1, 'Whenever you take back a worker, +2 of that space’s color.', {
+    m('moonlighter', 'Moonlighter', 2, 1, 'Whenever you take back a worker, +2 of that space’s color.', {
       onLift(ctx, owner, card, qid) { ctx.gain(owner, ctx.quadrant(qid).resource, 2); },
     }),
-    m('timekeeper', 'Timekeeper', 1, 1, 'Whenever a rival buys 6 followers, +3 purple.', {
-      // a 6-follower buy is the only one that lowers the limited count, so watch that count
-      onRecruited(ctx, owner, card) { card.big = ctx.state.bigLeft; },
-      onRoundStart(ctx, owner, card) { card.big = ctx.state.bigLeft; },
-      onBuyFollowers(ctx, owner, card, buyer) {
-        const before = card.big ?? ctx.state.bigLeft;
-        card.big = ctx.state.bigLeft;
-        if (buyer !== owner && ctx.state.bigLeft < before) ctx.gain(owner, P, 3);
+    m('timekeeper', 'Timekeeper', 2, 1, 'Whenever a rival buys 6 followers, +3 purple.', {
+      onBuyFollowers(ctx, owner, card, buyer, tier) {
+        // older engines don't pass the tier: fall back to the line just logged
+        const six = tier ? tier.get === 6 : ctx.state.log[ctx.state.log.length - 1]?.startsWith(`${buyer.name} bought 6 followers`);
+        if (buyer !== owner && six) ctx.gain(owner, P, 3);
       },
     }),
-    m('nightcrew', 'Night Crew', 2, 1, 'Worth 3 followers. When recruited, skip your next turn this round (that worker rests).', {
+    m('nightcrew', 'Night Crew', 3, 1, 'Worth 3 followers. When recruited, skip your next turn this round (that worker rests).', {
       f: 3,
       onRecruited(ctx, owner) { restNext(ctx, owner); },
     }),
@@ -243,8 +238,8 @@ export default {
         ], 'purple.hourglass');
       },
     }),
-    m('sleepyhead', 'Sleepyhead', 1, 1, 'Whenever you skip a turn, +2 purple.', {
-      onRest(ctx, owner) { ctx.gain(owner, P, 2); },
+    m('drifter', 'Drifter', 1, 1, 'When recruited, +1 resting worker this round.', {
+      onRecruited(ctx, owner) { setRest(ctx, owner, restingOf(ctx, owner) + 1); },
     }),
     m('rooster', 'Rooster', 1, 1, 'Whenever one of your resting workers wakes, +1 of each other color.', {
       onWake(ctx, owner) { for (const c of ctx.state.resources) if (c !== P) ctx.gain(owner, c, 1); },
@@ -261,6 +256,7 @@ export default {
       onActivate(ctx, owner, card) {
         const hit = lullabyTargets(ctx, owner);
         if (!hit.length) { card.used = false; ctx.log('Lullaby: no leader with a turn left to put to sleep.'); return; }
+        if (hit.length === 1) { ctx.log(`${owner.name}'s Lullaby puts ${hit[0].name} to sleep.`); restNext(ctx, hit[0]); return; }
         ctx.choose(owner, 'Lullaby: who sleeps?', hit.map(o => ({ id: `player:${o.id}`, label: o.name, kind: 'player', value: o.id, hint: 0 })), 'purple.lullaby');
       },
       botActivate: (ctx, owner) => ctx.state.round >= 2 && lullabyTargets(ctx, owner).some(o => ctx.followers(o) > ctx.followers(owner) + 4),
@@ -280,7 +276,7 @@ function memberBonus(ctx, p, hook) {
   let v = 0;
   for (const c of ctx.membersOf(p)) {
     if (!c.def[hook]) continue;
-    v += { onRest: 2, onLift: 2, onWake: 3 }[hook] || 0;
+    v += { onLift: 2, onWake: 3 }[hook] || 0;
   }
   return v;
 }
