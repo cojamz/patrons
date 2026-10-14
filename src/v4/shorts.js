@@ -27,7 +27,7 @@ const S = {
     pickpocket: r => `steal ${r + 1}`, tipoff: 'steal 1 each richer', hideout: 'steal 1 · safe', rob: 'steal 3', ransom: 'ransom a member', heist: 'steal a member',
   },
   trading: {
-    haggle: '+2 white +1/leader', buylow: r => `${2 * r} → followers`, pawn: r => `${r} follower or +${2 * r} white`, sellhigh: 'sell 2 for 6 white', barter: 'pay in followers', boom: 'all → followers',
+    haggle: '+2 white +1/leader', buylow: r => `${2 * r} → followers`, pawn: r => `${r} follower or +${2 * r} white`, sellhigh: 'sell 2 for 6 white', dividend: '+1 white/loose follower', boom: 'all → followers',
   },
   echo: { hum: '+3 green', chant: r => `+${2 * r} green`, echo: 'copy a rival', encore: 'copy any', refrain: '+2 green · copy yours', eternity: 'copy all yours' },
 };
