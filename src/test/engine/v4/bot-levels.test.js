@@ -2,7 +2,8 @@
 // Bot difficulty levels: legal, deterministic, picked from the seat, and the normal bot doesn't waste its last buy.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, isLegal, quadrant } from '../../../engine/v4/index.js';
-import { chooseBotMove, botLevel, horizon, BOT_LEVELS, setBotLevels } from '../../../engine/v4/bots.js';
+import { chooseBotMove, botLevel, horizon, BOT_LEVELS, setBotLevels, SIM_LEVELS, blendProfile, BOT_PROFILES } from '../../../engine/v4/bots.js';
+import { followers, memberCount } from '../../../engine/v4/index.js';
 import * as engine from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 
@@ -103,5 +104,34 @@ describe('bot levels', () => {
       }
     }
     expect(lastBuys).toBeGreaterThan(10);
+  });
+
+  it('sim-only levels play when asked for, but setup still offers easy, normal and hard', () => {
+    const s = createGame({ seats: [{}, {}], seed: 4 });
+    expect(botLevel(s, 0, { level: 'casual' })).toBe('casual');
+    s.players[0].bot = 'collector';
+    expect(botLevel(s, 0)).toBe('collector');
+    expect(SIM_LEVELS.slice(0, 3)).toEqual(BOT_LEVELS);
+    expect(blendProfile(0)).toEqual(BOT_PROFILES.easy);
+    const { s: end } = play(3, 6, ['casual', 'collector', 'easy']);
+    expect(end.over).toBe(true);
+  });
+
+  it("easy and normal tables don't recruit everything or hoard", () => {
+    for (const level of ['easy', 'normal']) {
+      let members = 0, left = 0, seats = 0;
+      for (let seed = 1; seed <= 6; seed++) {
+        const { s } = play(4, seed, [level, level, level, level]);
+        for (const p of s.players) {
+          seats++;
+          members += memberCount(s, p);
+          left += Object.values(p.res).reduce((a, b) => a + b, 0);
+          expect(followers(s, p)).toBeGreaterThan(10);
+        }
+      }
+      // the old greedy easy bot: ~11 members and ~17 resources left a player
+      expect(members / seats).toBeLessThan(9.5);
+      expect(left / seats).toBeLessThan(16);
+    }
   });
 });

@@ -19,26 +19,35 @@ import { defById, quadrant, handlerById } from './content/index.js';
 import { chooseThinkerMove } from './thinker.js';
 
 export const BOT_LEVELS = ['easy', 'normal', 'hard'];
-// Sim-only levels (not offered in setup). casual: between easy and normal, a stand-in for a human table that
-// likes members: it recruits about as much as the design target (6–7 a player) and plays a little loose.
-export const SIM_LEVELS = [...BOT_LEVELS, 'casual'];
-// Easy and casual are normal with these options (see scoreOptions: noise = random spread on placements, buyNoise
-// on buys, memberBias = followers added to every recruit (biasFloor 1 = it never fades), k = weight of member
-// abilities, spite = how much the best rival's total counts). Easy is sloppy and blind to engines; casual plays a
-// little loose and loves members all game.
+// A liking for members on top of what they're measured to be worth, in followers, fading to BIAS_FLOOR of itself
+// as the game runs out. The valuation alone under-recruits: with it, normal beat the old normal 37% to 21% and
+// recruits ~7 members instead of ~4 (400 games each; design/eval/bots.md). SPITE: how much the best rival's
+// expected total counts against the bot's own (1 = pure margin; 0.4 measured stronger than 1 and than 0).
+const MEMBER_BIAS = 2, BIAS_FLOOR = 0.3, SPITE = 0.4;
+// Easy and casual are normal with other options (see scoreOptions): noise = random spread on placements, buyNoise
+// on buys, memberBias = followers added to every recruit (biasFloor: what's left of it at game end), k = weight of
+// member abilities, spite = how much the best rival's total counts. Easy is sloppy and blind to engines.
+const EASY = { noise: 6, buyNoise: 4, k: 1, spite: 1, memberBias: 0, biasFloor: 1 };
+const NORMAL = { noise: 0.3, buyNoise: 0.05, k: 2, spite: SPITE, memberBias: MEMBER_BIAS, biasFloor: BIAS_FLOOR };
+/** A level between easy (t = 0) and normal (t = 1): every option interpolated. For sims. */
+export const blendProfile = t => Object.fromEntries(Object.keys(NORMAL).map(key => [key, EASY[key] + (NORMAL[key] - EASY[key]) * t]));
+// Sim-only levels (not offered in setup). casual: halfway between easy and normal, a stand-in for a table of
+// reasonable people. collector: loose play and a love of members that never fades (recruits ~9 a player).
+export const SIM_LEVELS = [...BOT_LEVELS, 'casual', 'collector'];
 export const BOT_PROFILES = {
-  easy: { noise: 6, buyNoise: 4, k: 1, spite: 1 },
-  casual: { noise: 3, buyNoise: 2, memberBias: 3, biasFloor: 1, spite: 1 },
+  easy: EASY,
+  casual: blendProfile(0.5),
+  collector: { noise: 3, buyNoise: 2, memberBias: 3, biasFloor: 1, spite: 1 },
   normal: {},
 };
 // Hard's wall-clock cap per move (pass { maxMs: Infinity } for deterministic sims).
-const HARD_MAX_MS = 250;
+const HARD_MAX_MS = 200; // plus ~10–40ms of setup before the clock starts: under 300ms a move in a browser
 const SETUP_WEIGHTS = { gold: 3, red: 3, blue: 1, green: 1 };
 
 /** For a setup screen: the levels in order, with a name and a one-line blurb. */
 export const BOT_LEVEL_INFO = [
-  { level: 'easy', name: 'Easy', blurb: 'Greedy and a little careless.' },
-  { level: 'normal', name: 'Normal', blurb: 'Plays for the end: spends down, stops recruiting when it no longer pays.' },
+  { level: 'easy', name: 'Easy', blurb: 'Careless: often takes a worse move, and undervalues what members do.' },
+  { level: 'normal', name: 'Normal', blurb: 'Plays for the end: builds a following of members, then spends down into followers.' },
   { level: 'hard', name: 'Hard', blurb: 'Normal, plus it plays its best few moves ahead before choosing.' },
 ];
 export const DEFAULT_BOT_LEVEL = 'normal';
@@ -149,11 +158,6 @@ const INCOME_SCALE = 0.4;
 // sims (normal with K = 2 or 3 beat K = 1 and recruited more; 200 games each); it also covers the contests and
 // member counts a member keeps paying into.
 const K_ABILITY = 2;
-// A liking for members on top of what they're measured to be worth, in followers, fading to BIAS_FLOOR of itself
-// as the game runs out. The valuation alone under-recruits: with it, normal beat the old normal 37% to 21% and
-// recruits ~7 members instead of ~4 (400 games each; design/eval/bots.md). SPITE: how much the best rival's
-// expected total counts against the bot's own (1 = pure margin; 0.4 measured stronger than 1 and than 0).
-const MEMBER_BIAS = 2, BIAS_FLOOR = 0.3, SPITE = 0.4;
 // How many ways to pay a buy are compared (the engine lists the contest-safe ones first).
 const PAY_WAYS = 4; // 4 vs 10: same win rate (200 games), ~20% faster, far lower worst case
 // Extra ways to pay compared: the ones that spend only what's over a contest lead.
