@@ -57,6 +57,12 @@ export default {
       t.res.gold -= 1;
       stealStep(ctx, p, { left: data.left - 1, got: data.got + 1 });
     },
+    invest(ctx, p, x, data) {
+      if (!x) return;
+      const card = ctx.card(data.uid);
+      p.res.gold -= x; card.invested = (card.invested || 0) + x;
+      ctx.log(`${p.name}'s Investor sets aside ${x} gold.`);
+    },
     hustlerColor(ctx, p, value, data) {
       ctx.card(data.uid).color = value;
       ctx.log(`${p.name}'s Hustler works the ${ctx.quadrant(value).name} spaces.`);
@@ -102,11 +108,14 @@ export default {
     m('tinker', 'Tinker', 1, 1, 'Whenever an action gains you 2+ of another resource, +1 gold.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n >= 2) owner.res.gold += 1; },
     }),
-    m('investor', 'Investor', 2, 2, 'Round start: half your gold is set aside. Round end: it comes back doubled.', {
+    m('investor', 'Investor', 2, 2, 'Round start: set aside any of your gold. Round end: it comes back doubled.', {
       onRoundStartLate(ctx, owner, card) {
-        const x = Math.floor(owner.res.gold / 2);
-        owner.res.gold -= x; card.invested = (card.invested || 0) + x;
-        if (x) ctx.log(`${owner.name}'s Investor sets aside ${x} gold.`);
+        const g = owner.res.gold;
+        if (!g) return;
+        const amounts = [...new Set([0, Math.floor(g / 4), Math.floor(g / 2), Math.floor((3 * g) / 4), g])].filter(x => x >= 0);
+        ctx.choose(owner, `Investor: set aside how much gold? (you have ${g})`, amounts.map(x => ({
+          id: `amount:${x}`, label: x === 0 ? 'None' : x === g ? `All ${x}` : `${x}`, kind: 'amount', value: x, hint: x === Math.floor(g / 2) ? 1 : 0,
+        })), 'gold.invest', { uid: card.uid });
       },
       onRoundEnd(ctx, owner, card) {
         const x = card.invested || 0;

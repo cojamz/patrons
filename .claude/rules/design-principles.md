@@ -26,7 +26,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - The game is about recruiting lots of members (items) and escalating your resources to win followers in bulk (the fixtures). Ring contests are seasoning, not the meal.
 - Each quadrant has exactly one scoring rule, printed on each of its rings, visually distinct from the actions.
 - Favor can go down, but only rarely, a little at a time, and only from the leader.
-- Favor changes only at round end. Contests, per-event counts, items and fixtures are all tallied and paid out when the round ends, with nothing real-time. Experiments may bend this, but must be flagged.
+- Round-end bonuses (ring contests, per-round counts) pay out only at round end. Followers that come straight from a purchase or a member trigger (e.g. Proselytizer) count the moment they happen. (Cory, 2026-10-14)
 - The round-III action only has to be powerful. It doesn't have to gain or convert followers.
 - Round 3 is the intended burst. Small early choices build the engine that explodes late (the Civ arc). Yields should climb ring by ring.
 

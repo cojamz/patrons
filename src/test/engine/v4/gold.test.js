@@ -226,9 +226,12 @@ describe('Gold members', () => {
     expect(R(take(s, 'Turnout'))[0]).toMatchObject({ red: 1, gold: 0 });
   });
 
-  it('Investor: half your gold is set aside at round start and comes back doubled at round end', () => {
+  it('Investor: you choose how much gold to set aside at round start; it comes back doubled at round end', () => {
     let s = scene({ members: [['gold.investor']], res: [{ gold: 7 }], queue: [{ t: 'round', r: 2 }] });
     const uid = uidOf(s, 'gold.investor', 0);
+    expect(s.pending.kind).toBe('choose');
+    expect(s.pending.options.map(o => o.id)).toEqual(['amount:0', 'amount:1', 'amount:3', 'amount:5', 'amount:7']);
+    s = move(s, 'amount:3');
     expect(R(s)[0].gold).toBe(4);
     expect(s.cards[uid].invested).toBe(3);
     s = scene({ members: [['gold.investor'], ['red.intern']], res: [{ gold: 4 }, { gold: 9 }], queue: [] });

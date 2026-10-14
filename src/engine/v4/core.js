@@ -83,8 +83,9 @@ export function resume(state) {
 
 // ---------- derived values (also used by the UI) ----------
 
-export const followers = (state, p) => 1 + p.bonus + p.members.reduce((s, u) => s + defById(state.cards[u].def).f, 0);
-// A Doppelganger that copies Twins or Big Family counts as that many members too.
+// A Doppelganger becomes a copy of the member card it copies: its follower value and member count too.
+const valueOf = card => (card.copy ? Math.max(defById(card.def).f, defById(card.copy).f) : defById(card.def).f);
+export const followers = (state, p) => 1 + p.bonus + p.members.reduce((s, u) => s + valueOf(state.cards[u]), 0);
 const countOf = card => (card.copy ? Math.max(defById(card.def).n, defById(card.copy).n) : defById(card.def).n);
 export const memberCount = (state, p) => p.members.reduce((s, u) => s + countOf(state.cards[u]), 0);
 export const countMembersOfColor = (state, p, q) => p.members.reduce((s, u) => {
