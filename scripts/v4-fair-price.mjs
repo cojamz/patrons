@@ -250,14 +250,16 @@ function rollout(s, rand, me) {
 }
 
 /** Play a forked game to the end. arm: 'none' | 'forced' | 'free'. */
-function playOut(fork, seed, seat, arm, uid, rollouts, think = 3) {
+function playOut(fork, seed, seat, arm, uid, rollouts, think = 3, hard = 0) {
+  // hard > 0: the test seat plays Hard (thinker, that budget) in both arms; rivals stay normal
+  const pick = (st, r) => (hard && st.pending.player === seat ? chooseThinkerMove(st, r, { budget: hard }) : chooseNormalMove(st, r));
   const rands = Array.from({ length: SEATS }, (_, i) => seededRandom(seed * 31 + i * 1009 + 7));
   let s = fork, bought = false, affordable = false, decisions = 0, boughtRound = 0;
   while (!s.over) {
     const pend = s.pending, pl = pend.player;
     if (arm !== 'none' && !bought && pl === seat && pend.kind === 'buy' && paymentChoices(s, s.players[seat], uid).length) {
       affordable = true;
-      const base = chooseNormalMove(s, rands[pl]);
+      const base = pick(s, rands[pl]);
       let take = arm === 'forced';
       if (arm === 'free' && decisions < think) {
         decisions++;
@@ -273,7 +275,7 @@ function playOut(fork, seed, seat, arm, uid, rollouts, think = 3) {
       s = applyMove(s, base);
       continue;
     }
-    s = applyMove(s, chooseNormalMove(s, rands[pl]));
+    s = applyMove(s, pick(s, rands[pl]));
   }
   return {
     mx: margin(s, seat), m: followers(s, s.players[seat]) - mean(s.players.filter(p => p.id !== seat).map(p => followers(s, p))), own: followers(s, s.players[seat]), win: s.ranking[0] === seat ? 1 : 0, bought: bought ? 1 : 0, affordable: affordable ? 1 : 0, boughtRound,
@@ -281,7 +283,14 @@ function playOut(fork, seed, seat, arm, uid, rollouts, think = 3) {
   };
 }
 
-function tableFor(def) {
+// The table a card is swept on: by default a random real table holding its sphere (any table for a guest), drawn per
+// seed from makeTables, so no one table's quirks set the price. --fixed: the default table with its sphere swapped in.
+let TABLES = null;
+function tableFor(def, g = 0, fixed = false) {
+  if (!fixed && TABLES) {
+    const ok = TABLES.filter(t => def.guest || t.includes(def.quadrant));
+    if (ok.length) return ok[(g * 2654435761 >>> 0) % ok.length];
+  }
   if (DEFAULT_QUADRANTS.includes(def.quadrant) || def.guest) return DEFAULT_QUADRANTS;
   const r = quadrant(def.quadrant).resource;
   const keep = DEFAULT_QUADRANTS.filter(q => quadrant(q).resource !== r);
@@ -297,20 +306,20 @@ function gridFor(def, deltas, printed) {
 
 // the free-choice arm (expensive: it plays the game out both ways) runs at three prices: printed −4, printed, +4
 const freePs = (d, deltas, printed) => { const g = gridFor(d, deltas, printed), T = printed?.[d.id] ?? priceOf(d); return [...new Set([T - 4, T, T + 4].map(x => g.reduce((a, b) => (Math.abs(b - x) < Math.abs(a - x) ? b : a))))]; };
-function sweepSeed(g, { cards, round, freeN, rollouts, deltas, think, printed }) {
+function sweepSeed(g, { cards, round, freeN, rollouts, deltas, think, printed, hard = 0, fixed = false }) {
   const seed = 1000 + g, seat = g % SEATS;
-  const out = { g, seat, base: {}, A: {} };
+  const out = { g, seat, base: {}, A: {}, tab: {} };
   const byTable = new Map();
-  for (const id of cards) { const d = allDefs().find(x => x.id === id); const t = tableFor(d).join(','); if (!byTable.has(t)) byTable.set(t, []); byTable.get(t).push(d); }
+  for (const id of cards) { const d = allDefs().find(x => x.id === id); const t = tableFor(d, g, fixed).join(','); out.tab[id] = t; if (!byTable.has(t)) byTable.set(t, []); byTable.get(t).push(d); }
   for (const [t, defs] of byTable) {
     const fork = forkAt(seed, t.split(','), round);
-    out.base[t] = playOut(fork, seed, seat, 'none');
+    out.base[t] = playOut(fork, seed, seat, 'none', 0, 0, 0, hard);
     for (const d of defs) {
       const c = cloneFor(d);
       for (const P of gridFor(d, deltas, printed)) {
         Object.assign(c, split(d, P));
         const f = { ...fork, cards: { ...fork.cards, 9999: { uid: 9999, def: c.id } } };
-        out.A[`${d.id}|${P}|forced`] = playOut(f, seed, seat, 'forced', 9999, rollouts);
+        out.A[`${d.id}|${P}|forced`] = playOut(f, seed, seat, 'forced', 9999, rollouts, 0, hard);
         if (g < freeN && freePs(d, deltas, printed).includes(P)) out.A[`${d.id}|${P}|free`] = playOut(f, seed, seat, 'free', 9999, rollouts, think);
       }
     }
@@ -334,9 +343,11 @@ function linCross(ps, ds) {
 function analyseSweep(results, { cards, deltas, printed }) {
   const rows = [];
   for (const id of cards) {
-    const d = allDefs().find(x => x.id === id), t = tableFor(d).join(','), grid = gridFor(d, deltas, printed);
+    const d = allDefs().find(x => x.id === id), grid = gridFor(d, deltas, printed);
+    const baseOf = r => r.base[r.tab?.[id] ?? tableFor(d, r.g, true).join(',')];
+    const t = results[0]?.tab?.[id] ? 'random tables with its sphere' : tableFor(d, 0, true).join(',');
     const per = grid.map(P => {
-      const arm = a => results.filter(r => r.A[`${id}|${P}|${a}`]).map(r => ({ a: r.A[`${id}|${P}|${a}`], b: r.base[t] }));
+      const arm = a => results.filter(r => r.A[`${id}|${P}|${a}`]).map(r => ({ a: r.A[`${id}|${P}|${a}`], b: baseOf(r) }));
       const F = arm('forced'), R = arm('free');
       const fd = F.map(x => x.a.m - x.b.m);
       const aff = R.filter(x => x.a.affordable);
@@ -387,7 +398,8 @@ function runPool(kind, n, params, workers, raw) {
 
 if (!isMainThread) {
   const { kind, params } = workerData;
-  if (kind === 'screen') { const { makeTables } = await import('../src/test/engine/v4/fuzz-tables-runner.js'); params.tables = makeTables(4242, 2).tables; }
+  const { makeTables } = await import('../src/test/engine/v4/fuzz-tables-runner.js');
+  if (kind === 'screen') params.tables = makeTables(4242, 2).tables; else TABLES = makeTables(4242, 2).tables;
   parentPort.on('message', g => {
     if (g < 0) { process.exit(0); }
     parentPort.postMessage(kind === 'screen' ? screenGame(g, params) : sweepSeed(g, params));
@@ -428,7 +440,7 @@ if (!isMainThread) {
     const cards = findDefs((names || 'anchors').split(',')).map(d => d.id);
     const params = {
       cards, round: Number(flags.round || 2), freeN: Number(flags.free ?? 40), rollouts: Number(flags.rollouts || 2), think: Number(flags.think || 3),
-      deltas: (flags.deltas || '-6,-4,-2,0,2,4').split(',').map(Number),
+      deltas: (flags.deltas || '-6,-4,-2,0,2,4').split(',').map(Number), hard: Number(flags.hard || 0), fixed: !!flags.fixed,
     };
     // prices as printed when the run starts (content files change under parallel agents)
     params.printed = Object.fromEntries(cards.map(id => [id, priceOf(allDefs().find(x => x.id === id))]));
@@ -438,7 +450,7 @@ if (!isMainThread) {
     const rows = analyseSweep(res, params);
     const out = { mode, games, ...params, secs: (Date.now() - t0) / 1000, rows };
     if (flags.out) writeFileSync(flags.out, JSON.stringify(out, null, 1));
-    console.log(`sweep: ${res.length} paired seeds (free-choice arm on the first ${params.freeN}, ${params.rollouts} rollouts a side), forked at round ${params.round}. ${out.secs.toFixed(0)}s on ${workers} workers.`);
+    console.log(`sweep: test seat ${params.hard ? `Hard (thinker, budget ${params.hard})` : 'normal'} vs 3 normal bots. ${res.length} paired seeds (free-choice arm on the first ${params.freeN}, ${params.rollouts} rollouts a side), forked at round ${params.round}. ${out.secs.toFixed(0)}s on ${workers} workers.`);
     for (const r of rows) {
       console.log(`\n${r.name}: printed ${r.printed}, fair ~${f1(r.fair)} (90% ${f1(r.lo)}–${f1(r.hi)}; line ${r.at0.toFixed(2)} ${r.slope.toFixed(2)}·P; interpolated ${r.interpCens}${f1(r.interp)})  [${r.table}]`);
       console.log('   P  forced A−B margin   buy  win±   | free A−B   buy%(aff)  win±  | members/player A (B)  round bought');
