@@ -209,9 +209,9 @@ export const latestProblem = () => lastProblem;
 /**
  * The bot's move, or a fallback: if choosing or applying it throws, the first option that applies cleanly.
  * Returns { state, move, fallback, error } — `state` is null when no option at all could be played.
- * Pure apart from console.error and reportProblem.
+ * Pure apart from console.error and `report` (reportProblem unless the caller routes it, e.g. to the online room).
  */
-export function botStep(state, choose, { tag = 'v4', seat = state?.pending?.player } = {}) {
+export function botStep(state, choose, { tag = 'v4', seat = state?.pending?.player, report = reportProblem } = {}) {
   let error = null;
   try {
     const move = choose(state);
@@ -224,10 +224,10 @@ export function botStep(state, choose, { tag = 'v4', seat = state?.pending?.play
     const move = { player: pend.player, option: o.id };
     try {
       const next = step(state, move);
-      reportProblem({ kind: 'bot', seat, message: `${state.players[seat]?.name || 'A bot'} hit a bug, so it made a plain move instead.`, detail: String(error?.message || error) });
+      report({ kind: 'bot', seat, message: `${state.players[seat]?.name || 'A bot'} hit a bug, so it made a plain move instead.`, detail: String(error?.message || error) });
       return { state: next, move, fallback: true, error };
     } catch (err) { console.error(`[${tag}] fallback ${o.id} failed too:`, err); }
   }
-  reportProblem({ kind: 'stuck', seat, message: `${state?.players?.[seat]?.name || 'A bot'} hit a bug and the game can't continue.`, detail: String(error?.message || error) });
+  report({ kind: 'stuck', seat, message: `${state?.players?.[seat]?.name || 'A bot'} hit a bug and the game can't continue.`, detail: String(error?.message || error) });
   return { state: null, move: null, fallback: true, error };
 }
