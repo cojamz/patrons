@@ -6,7 +6,6 @@ import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, 
 import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
 import Players, { Resources, Workers } from './Players.jsx';
-import QuadrantPanel from './QuadrantPanel.jsx';
 import Shop, { BuyTray } from './Shop.jsx';
 import Results from './Results.jsx';
 import RoundEnd from './RoundEnd.jsx';
@@ -149,24 +148,29 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
   return [table.shown, table.moment, dismiss];
 }
 
-/** A scroll box that fades its bottom edge and says so while more is hidden below. */
-function Scroller({ className, hint, children }) {
+/** One glyph for the rest (How to play, the log, Leave): the table carries no header buttons. */
+function Menu({ onRules, onLog, onLeave }) {
+  const [open, setOpen] = useState(false);
   const box = useRef(null);
-  const [more, setMore] = useState(false);
-  useLayoutEffect(() => {
-    const el = box.current;
-    if (!el) return undefined;
-    const check = () => setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 6 && getComputedStyle(el).overflowY !== 'visible');
-    check();
-    el.addEventListener('scroll', check, { passive: true });
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(check) : null;
-    if (ro) { ro.observe(el); if (el.firstElementChild) ro.observe(el.firstElementChild); }
-    return () => { el.removeEventListener('scroll', check); if (ro) ro.disconnect(); };
-  });
+  useEffect(() => {
+    if (!open) return undefined;
+    const away = e => { if (box.current && !box.current.contains(e.target)) setOpen(false); };
+    const key = e => { if (e.key === 'Escape') setOpen(false); };
+    addEventListener('pointerdown', away, true);
+    addEventListener('keydown', key);
+    return () => { removeEventListener('pointerdown', away, true); removeEventListener('keydown', key); };
+  }, [open]);
+  const pick = fn => () => { setOpen(false); fn(); };
   return (
-    <div className={`scroller${more ? ' more' : ''}`}>
-      <div className={className} ref={box}>{children}</div>
-      {more && <button type="button" className="more-hint" onClick={() => box.current && box.current.scrollBy({ top: box.current.clientHeight * 0.7, behavior: 'smooth' })}>{hint} ▾</button>}
+    <div className="lt-menu" ref={box}>
+      <button type="button" className="menu-glyph" aria-label="Menu" aria-haspopup="menu" aria-expanded={open} title="How to play, the log, leave" onClick={() => setOpen(o => !o)}><i /></button>
+      {open && (
+        <div className="menu-list" role="menu">
+          <button type="button" role="menuitem" className="btn ghost rules-btn" onClick={pick(onRules)}>How to play</button>
+          <button type="button" role="menuitem" className="btn ghost log-btn" onClick={pick(onLog)}>The log</button>
+          {onLeave && <button type="button" role="menuitem" className="btn ghost leave-btn" onClick={pick(onLeave)}>Leave</button>}
+        </div>
+      )}
     </div>
   );
 }
@@ -222,7 +226,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const [rules, setRules] = useState(false);
   const wide = useWide();
   const short = useShort();
-  const shopUnderWheel = false; // (short laptops keep the shop in the frame; player cards go compact instead)
   void short;
   const [logOpen, setLogOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
@@ -547,15 +550,12 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const undo = () => { const k = undoKind; noLock.current = true; lockUntil.current = 0; if (session.undo && session.undo()) say(k === 'buy' ? 'Buy undone — choose again' : k === 'setup' ? 'Pick undone — pick again' : 'Placement undone — place again', 'info', 1800); };
   const undoWord = undoKind === 'buy' ? 'buy' : undoKind === 'setup' ? 'pick' : 'placement';
 
+  // The lamp follows the decision; the furniture never moves (fixed regions, phase only re-lights them).
+  const phase = state.over && !moment ? 'over' : moment ? 'reckon' : !pend ? 'wait' : pend.kind === 'pay' ? 'pay' : pend.kind === 'buy' ? 'buy' : pend.kind === 'place' ? 'place' : pend.kind === 'setup' ? 'setup' : 'choose';
+  const yours = mine && !needHandoff;
   return (
-    <div className={`app game${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${pend && pend.kind === 'setup' && !state.over ? ' in-setup' : ''}`} ref={root} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
-      <header className="bar">
-        <div className="bar-row">
-          <h1>{GAME_NAME}</h1>
-          <span className="round">{roundText}{state.round && !state.over ? <small title="Workers this round: one per turn. Extra Hand and similar members add one."> · <span className="num">{workersNote(state)}</span></small> : null}</span>
-          <button type="button" className="btn ghost rules-btn" onClick={() => setRules(true)} aria-label="How to play"><span className="lbl">How to play</span><span className="ico" aria-hidden="true">?</span></button>
-          {onHome && <button type="button" className="btn ghost leave-btn" onClick={() => (state.over ? onHome() : setLeaving(true))}>Leave</button>}
-        </div>
+    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${pend && pend.kind === 'setup' && !state.over ? ' in-setup' : ''}`} ref={root} data-phase={phase} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
+      <header className="bar lt-prompt" data-region="prompt">
         <div className="bar-row status" aria-live="polite">
           {note ? (
             <span key={note.n} className={`say ${note.tone}`} data-prompt tabIndex={-1} role="status">{note.text}</span>
@@ -564,7 +564,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               {pr.who && <i style={{ background: playerColor(pr.who.id) }} />}
               <span className="say-text">
                 {mine && humansHere && pr.who ? <b style={{ color: playerColor(pr.who.id) }}>{pr.who.name}: </b> : null}
-                {mine ? <b>{pr.text}</b> : state.over ? pr.text : <>{pr.text}<span className="dots" aria-hidden="true"> ···</span></>}
+                {mine ? <><span className="lead">Your turn — </span><em>{pr.text}</em></> : state.over ? pr.text : <>{pr.text}<span className="dots" aria-hidden="true"> ···</span></>}
               </span>
             </span>
           ) : <span className="say" data-prompt tabIndex={-1} />}
@@ -572,24 +572,20 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your first pick' : 'Take back your worker until you buy or pass'}>↶ Undo<span className="undo-word"> {undoWord}</span></button>}
           </span>
         </div>
-        <div className="bar-row you-row">
-          {meP && !state.over && (
-            <span className="you-strip" data-pid={meP.id} style={{ '--pc': playerColor(meP.id) }} aria-label={`You, ${meP.name}`}>
-              <i className="dot" /><b>{meP.name}</b>
-              <span className="yf"><Tick value={followers(state, meP)} color={playerColor(meP.id)} className="num" float={false} /> {followers(state, meP) === 1 ? 'follower' : 'followers'}</span>
-              <Resources state={state} p={meP} float={false} />
-              <Workers p={meP} />
+        <div className="bar-row steps-row">
+          <span className="round">{roundText}{state.round && !state.over ? <small title="Workers this round: one per turn. Extra Hand and similar members add one."> · <span className="num">{workersNote(state)}</span></small> : null}</span>
+          {state.round > 0 && !state.over && (
+            <span className="steps" aria-hidden="true">
+              <span className={phase === 'place' || phase === 'choose' ? 'on' : ''}>Place</span>
+              <span className={phase === 'buy' || phase === 'pay' ? 'on' : ''}>Recruit or buy</span>
             </span>
           )}
-          {canUndo ? <button type="button" className="btn ghost undo undo-row" onClick={undo}>↶ Undo {undoWord}</button>
-            : state.round > 0 || state.pending?.kind === 'setup' ? <span className="undo-row undo-hold" aria-hidden="true" /> : null /* phones: Undo's row is kept, so nothing jumps */}
-          <button type="button" className="ticker" title={`${lastLine} — open the log`} onClick={openLog} aria-label={`Last: ${lastLine}. Open the log.`}><span className="tk" data-clip-ok>{lastLine}</span><span className="cue">Log ↓</span></button>
         </div>
+        <Menu onRules={() => setRules(true)} onLog={openLog} onLeave={onHome ? () => (state.over ? onHome() : setLeaving(true)) : null} />
       </header>
       {session.info && session.info.mode === 'online' && session.info.roomCode && (
         <div className="hint room">Room {session.info.roomCode}</div>
       )}
-      {!(state.over && !moment) && players}
       {error && (
         <div className="error" role="alert">{error}{' '}
           {isNetworkError(error) || /Check your connection/.test(error)
@@ -603,41 +599,27 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           <div className="side">{players}<Log state={state} /></div>
         </div>
       ) : (
-        <div className="main">
-          <div className={`left${shopUnderWheel ? ' with-shop' : ''}`}>
+        <>
+          <section className="lt-rail" data-region="rail" aria-label="Seats">{players}</section>
+          <section className="lt-wheel" data-region="wheel">
             <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
-            {shopUnderWheel && <Shop variant="compact" hidden={buyingNow} state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} onHoverCard={onHoverCard} />}
-          </div>
-          <div className={`side${wide ? ' framed' : ''}`}>
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
-            {wide ? (
-              // A constant frame: the board panel and a compact shop row; your buy view slides over both,
-              // so nothing reflows between placing and buying.
-              <div className="frame">
-                <Scroller className="side-scroll" hint="More below">
-                  <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} onPeek={setSpacePeek} />
-                </Scroller>
-                {!shopUnderWheel && <Shop variant="compact" hidden={buyingNow} state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} onHoverCard={onHoverCard} />}
-                {buyingNow && (
-                  <div className="buy-view" role="region" aria-label="Recruit a member">
-                    <Shop variant="full" state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />
-                  </div>
-                )}
-              </div>
-            ) : (
-              <>
-                <Scroller className="side-scroll" hint="More below">
-                  <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} onPeek={setSpacePeek} />
-                  <Log state={state} />
-                </Scroller>
-                <div className="dock">
-                  <Shop variant="full" state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />
-                </div>
-              </>
+          </section>
+          <section className="lt-shop" data-region="shop" aria-label="Shop">
+            <Shop variant="compact" state={state} me={me} mine={yours} optionFor={live} onPick={onPick} onDenied={onDenied} onHoverCard={onHoverCard} />
+            <BuyTray state={state} me={me} mine={yours} optionFor={live} onPick={onPick} onDenied={onDenied} />
+          </section>
+          <section className="lt-table" data-region="table" aria-label="Your table">
+            {meP && (
+              <span className="you-strip" data-pid={meP.id} style={{ '--pc': playerColor(meP.id) }} aria-label={`You, ${meP.name}`}>
+                <i className="dot" /><b>{meP.name}</b>
+                <span className="yf"><Tick value={followers(state, meP)} color={playerColor(meP.id)} className="num" float={false} /> {followers(state, meP) === 1 ? 'follower' : 'followers'}</span>
+                <Resources state={state} p={meP} float={false} />
+                <Workers p={meP} />
+              </span>
             )}
-            <BuyTray state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />
-          </div>
-        </div>
+          </section>
+        </>
       )}
       {toast && <div key={toast.n} className="toast" role="status">{toast.text}</div>}
       <TouchTips />
