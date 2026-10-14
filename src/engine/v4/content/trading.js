@@ -29,6 +29,8 @@ export const SELL_HIGH = { most: 2, each: 3 };
 export const PAWN = { base: 2, each: 2 };
 // Boom pays this many followers per white (experiments may set halves; followers are rounded down)
 export const BOOM = { per: 2 };
+// experiment knob: greedy bots' appetite for selling followers
+export const BOTS = { sell: true };
 
 /** Sell k followers for `each` white apiece. Fires onSell on the seller's members (a Doppelganger's copy too). */
 export function sell(ctx, p, k, each, { fromAction = false, why = 'sold' } = {}) {
@@ -51,7 +53,7 @@ function sellChoice(ctx, p, prompt, most, each, why) {
   for (let k = 0; k <= max; k++) {
     opts.push({
       id: `amount:${k}`, label: k === 0 ? 'Sell none' : `Sell ${k} for ${k * each} white`, kind: 'amount', value: k,
-      hint: late ? -k : k * (each - v),
+      hint: late || !BOTS.sell ? -k : k * (each - v),
     });
   }
   ctx.choose(p, prompt, opts, 'trading.sell', { each, why });
