@@ -868,6 +868,93 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
   .app.game .qtabs .qtab{min-height:36px;padding:0 12px}
 }
 
+/* ---------- round 7, testers P, Q, R ---------- */
+/* desktop: the side column is a fixed frame — board panel + compact shop, the buy view overlays both */
+@media (min-width:861px) and (min-height:500px){
+  .side.framed{display:flex;flex-direction:column;min-height:0;position:relative}
+  .side.framed .frame{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;gap:var(--gap)}
+  .side.framed .frame .scroller{flex:1;min-height:0}
+  .side.framed .frame .side-scroll{overflow-y:auto;scroll-snap-type:y proximity}
+  .side.framed .frame .act{scroll-snap-align:start}
+  .side.framed .frame > .shop-panel.compact{flex:none}
+  .side.framed .fbuy{flex:none}
+  .buy-view{position:absolute;inset:0;z-index:4;background:var(--table);overflow-y:auto;animation:fade .18s ease-out;padding-right:6px}
+  .buy-view .shop-panel{gap:6px}
+}
+.shop-panel.compact .shop{grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:1fr}
+.shop-panel.compact .card{padding:5px 7px;gap:2px;min-height:62px}
+.shop-panel.compact .card .nm{font-size:12px;line-height:1.2;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.shop-panel.compact .card .row{align-items:flex-start;font-size:11px}
+.shop-panel.compact .card .row.cost{flex-wrap:wrap}
+.shop-panel.compact h2{font-size:17px}
+.shop-panel.open .card .eff{-webkit-line-clamp:unset;display:block;overflow:visible}
+.card:hover{transform:translateY(-2px)}
+.card .nm{white-space:normal}
+/* worker count, apart from the member count */
+.res .meta{gap:8px}
+.res .meta .sep{width:1px;height:12px;background:var(--rim);align-self:center}
+.workers small{font-size:11px;color:var(--muted);margin-left:3px}
+.disc{font-size:11.5px;color:var(--green);line-height:16px}
+/* robbed: the resource row flashes */
+.res.robbed{animation:robbed .9s ease-out 2}
+@keyframes robbed{0%,100%{background:none}35%{background:color-mix(in srgb,var(--red) 28%,transparent)}}
+/* members as card faces: color band + sphere glyph */
+.chip{border-radius:5px;border:1px solid color-mix(in srgb,var(--c) 55%,var(--rim));border-left:4px solid var(--c);background:linear-gradient(180deg,color-mix(in srgb,var(--c) 10%,var(--table-2)),var(--table-2));padding:1px 8px 1px 6px;display:inline-flex;align-items:center;gap:5px;box-shadow:0 1px 2px rgba(0,0,0,.35)}
+.chip .glyph,.card-face .glyph{width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8,var(--c) 55%);box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 70%,#000);flex:none}
+.chip .copies{font-style:normal;color:var(--muted)}
+.chip.more{border-left-width:1px}
+.card-face{display:flex;flex-direction:column;gap:6px;border-left:4px solid var(--c);padding-left:10px}
+.card-face .row{display:flex;align-items:center;gap:8px}
+.card-face .row b{flex:1;font-size:16px}
+.card-face p{margin:0;font-size:14px;line-height:1.4}
+.card-face small{color:var(--muted)}
+/* workers with a little weight */
+.slot .worker{filter:drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+.pawns svg{filter:drop-shadow(0 1px 0 rgba(0,0,0,.6))}
+/* the moves line under the board always takes its space */
+.lm-legend{min-height:20px;flex-wrap:wrap;gap:2px 8px;line-height:18px}
+.lm-legend .lbl{color:var(--muted)}
+.lm-legend .mv{display:inline-flex;align-items:center;gap:4px;color:var(--ink)}
+.lm-legend .mv i{width:9px;height:9px;border-radius:50%;border:2px solid var(--pc)}
+/* follower buttons: one subtitle pattern, "N left" on its own line */
+.fb .sub{white-space:nowrap}
+.fb .picks{font-style:normal;color:var(--ink)}
+.fb .left-line{font-size:10.5px;color:var(--muted);line-height:1.1}
+.left-badge{display:none}
+/* round card: short label with its tiebreak below; a pinned footer with breathing room */
+.re-q > span{display:flex;flex-direction:column}
+.re-tb{font-size:11px;color:var(--muted);font-weight:400}
+.re-head,.re-p{grid-template-columns:minmax(0,.8fr) 60px minmax(0,1.6fr) 60px}
+.re-foot{flex:none;display:flex;justify-content:center;padding-top:10px;border-top:1px solid var(--rim);background:var(--table-2)}
+.dialog.roundend .re-body{position:relative;padding-bottom:6px}
+/* header: How to play becomes "?" below 360px */
+.rules-btn .ico{display:none}
+@media (max-width:360px){ .rules-btn .lbl{display:none} .rules-btn .ico{display:inline;font-weight:700;font-size:16px} header.bar h1{font-size:19px} }
+/* landscape: the turn pill gets a full-width row */
+@media (max-height:480px) and (orientation:landscape){
+  header.bar{grid-template-columns:auto auto minmax(0,1fr) auto auto;grid-template-rows:40px auto 22px;grid-template-areas:"t r . h l" "s s s s s" "y y y k k"}
+}
+/* touch: no hover lift; the keyboard hint never shows */
+@media (pointer:coarse){ .kbd-hint{display:none} .card:hover{transform:none} .touch-hint{display:inline} }
+/* setup rows line up */
+.seat{align-items:center}
+.seat .seg{align-self:center}
+.seat .seg button{min-height:40px}
+.seat .namebox input{min-height:42px}
+/* a selected space lifts and rings strongly */
+.slot.sel .base{stroke:var(--ink);stroke-width:3.5}
+.slot.sel{filter:drop-shadow(0 0 6px rgba(236,230,214,.6))}
+/* 900-1100 wide laptops: the compact shop takes two rows of three, names stay whole */
+@media (min-width:861px) and (max-width:1100px){
+  .shop-panel.compact .shop{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .shop-panel.compact .card{min-height:50px}
+  .pl .fol small{display:none}
+}
+@media (min-width:861px) and (max-height:640px){
+  .pl{height:100px}
+  .chips{height:24px}
+}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
