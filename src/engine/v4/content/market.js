@@ -198,21 +198,21 @@ const market = {
   },
 
   members: [
-    m('stylist', 'Stylist', 2, 1, 'Whenever anyone recruits a blue member, +1 blue.', {
+    m('stylist', 'Stylist', 1, 1, 'Whenever anyone recruits a blue member, +1 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) {
         if (rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 1);
       },
     }),
-    m('onlooker', 'Onlooker', 2, 2, 'Whenever a rival recruits a badged member, +1 blue.', {
+    m('onlooker', 'Onlooker', 3, 2, 'Whenever a rival recruits a badged member, +1 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by !== owner && badged(rec)) ctx.gain(owner, B, 1); },
     }),
-    m('connoisseur', 'Connoisseur', 2, 1, 'Whenever you recruit a badged member, +2 blue.', {
+    m('connoisseur', 'Connoisseur', 1, 1, 'Whenever you recruit a badged member, +2 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && badged(rec)) ctx.gain(owner, B, 2); },
     }),
-    m('reseller', 'Reseller', 3, 2, 'Whenever you recruit, +1 of that member’s color.', {
+    m('reseller', 'Reseller', 4, 2, 'Whenever you recruit, +1 of that member’s color.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid) ctx.gain(owner, colorOf(ctx, rec), 1); },
     }),
-    m('curator', 'Curator', 2, 1, 'At round start, +1 blue per badged member you have.', {
+    m('curator', 'Curator', 1, 1, 'At round start, +1 blue per badged member you have.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, B, priceyCount(ctx, owner)); },
     }),
     m('planner', 'Planner', 1, 1, 'At round start, your next member costs 1 less per round number.', {
@@ -240,7 +240,7 @@ const market = {
         ], `${Q}.tradeIn`, { uid: card.uid });
       },
     }),
-    m('auctioneer', 'Auctioneer', 1, 1, 'Whenever a rival recruits an unbadged member, +1 blue.', {
+    m('auctioneer', 'Auctioneer', 2, 1, 'Whenever a rival recruits an unbadged member, +1 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by !== owner && !badged(rec)) ctx.gain(owner, B, 1); },
     }),
     m('sommelier', 'Sommelier', 1, 1, 'Whenever you recruit a badged member, your next member costs 1 less.', {
@@ -261,7 +261,7 @@ const market = {
       },
       botActivate: (ctx, owner) => ctx.state.round >= 2 && totalRes(owner) >= 8,
     }),
-    m('snob', 'Snob', 2, 2, 'Game end: +1 follower per badged member you have.', {
+    m('snob', 'Snob', 3, 2, 'Game end: +1 follower per badged member you have.', {
       onGameEnd: (ctx, owner) => priceyCount(ctx, owner),
     }),
     m('recluse', 'Recluse', 1, 1, 'Game end: +2 followers per rival with more members than you.', {
