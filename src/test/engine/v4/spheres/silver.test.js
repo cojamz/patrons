@@ -19,7 +19,7 @@ const Q = ['gold', 'red', 'blue', 'silver'];
 // Costs these tests are written against; repricing the real cards doesn't break them.
 const SILVER_TEST_COSTS = {
   'silver.guest': [1, 0], 'silver.benefactor': [1, 1], 'silver.caterer': [1, 1], 'silver.majordomo': [1, 1],
-  'silver.silversmith': [1, 1], 'silver.steward': [1, 1], 'silver.retinue': [1, 1], 'silver.feasthall': [2, 0],
+  'silver.silversmith': [1, 1], 'silver.steward': [1, 1], 'silver.retinue': [1, 1], 'silver.revelers': [2, 0],
   'silver.heir': [1, 1], 'silver.spoon': [2, 0], 'silver.toastmaster': [3, 2], 'silver.gala': [2, 2],
   'silver.dowager': [2, 2], 'silver.grandhost': [3, 2], 'silver.saint': [3, 2],
 };
@@ -158,11 +158,12 @@ describe('Silver members', () => {
     expect(R(s).silver).toBe(0);
   });
 
-  it('Silversmith: whenever an action gains you silver, +1 more (not gifts or member income)', () => {
-    let s = take(scene({ members: [['silver.silversmith']] }), 'Toast');
-    expect(R(s).silver).toBe(4);
-    s = take(scene({ members: [[], ['silver.silversmith']] }), 'Toast');
-    expect(R(s, 1).silver).toBe(1);
+  // rewards not hosting (dead-window audit, 2026-10-14)
+  it('Silversmith: whenever a rival takes a Silver space, +1 silver (not your own)', () => {
+    let s = take(scene({ members: [[], ['silver.silversmith']] }), 'Toast');
+    expect([R(s, 1).silver, R(s, 2).silver]).toEqual([2, 1]);
+    s = take(scene({ members: [['silver.silversmith']] }), 'Toast');
+    expect(R(s).silver).toBe(3);
   });
 
   it('Steward: at round start +1 silver per 3 silver you hold', () => {
@@ -179,10 +180,12 @@ describe('Silver members', () => {
     expect(R(s, 2).silver).toBe(1);
   });
 
-  it('Feast Hall: when recruited, +2 silver per round number', () => {
-    let s = scene({ round: 3, res: [{ silver: 2 }], shop: ['silver.feasthall'], queue: [{ t: 'buy', p: 0 }] });
-    s = move(s, `card:${uidOf(s, 'silver.feasthall', 'shop')}`);
-    expect(R(s).silver).toBe(6);
+  // Cory (2026-10-14): Feast Hall became Revelers
+  it('Revelers: counts as 3 members, no silver', () => {
+    let s = scene({ round: 3, res: [{ silver: 2 }], shop: ['silver.revelers'], queue: [{ t: 'buy', p: 0 }] });
+    s = move(s, `card:${uidOf(s, 'silver.revelers', 'shop')}`);
+    expect(memberCount(s, s.players[0])).toBe(3);
+    expect(R(s).silver).toBe(0);
   });
 
   it('Heir: at the start of round III, +1 silver per member (nothing in round II)', () => {

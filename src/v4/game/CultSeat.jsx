@@ -3,8 +3,9 @@
 // members as a small crowd of figures, its follower mark and total, and its resources as small stacks. Yours sits
 // nearest you and is a little larger, with Use/switch on members you can use now. Hover or tap the cult for its
 // card (resources, members, last moves); hover or tap a member for that member's card.
-import { followers, quadrant } from '../../engine/v4/index.js';
-import { memberChips, playerColor } from '../format.js';
+import { useEffect, useRef, useState } from 'react';
+import { followers, quadrant, cardDef } from '../../engine/v4/index.js';
+import { memberChips, playerColor, newLogLines } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { Follower } from '../art/Follower.jsx';
@@ -21,8 +22,10 @@ const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try
  * now (their turn), react (recent reactions: { leader: 'gesture'|'celebrate'|'scheme', members: { defId: n } }),
  * hover (useHoverCards), optionFor/onPick (your members' Use / switch).
  */
-export default function CultSeat({ state, pid, me = null, mine = false, now = false, react = null, hover = null, optionFor = () => null, onPick = () => {} }) {
+export default function CultSeat({ state, pid, me = null, mine = false, now = false, react: given = null, hover = null, optionFor = () => null, onPick = () => {} }) {
   const p = state.players[pid];
+  const own = useCultReactions(state, pid);
+  const react = given || own;
   const f = followers(state, p);
   const groups = memberChips(state, p);
   const last = lastSpace(state, pid);
@@ -80,3 +83,51 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
 // each figure breathes on its own period and phase, so a crowd never moves in step
 const phase = uid => `${((uid * 0.61803) % 1).toFixed(3)}`;
 const actionKey = last => { try { return quadrant(last.qid).actions.find(a => a.name === last.name).key; } catch { return ''; } };
+
+// ---------- reactions: the cult answers what its cards and its leader just did ----------
+const REACT_MS = 900;
+/**
+ * Diffs each new state against the last for one player: a member hops when a log line names it as theirs
+ * ("Ana's Banker: +3 gold.", "Bo +1 silver (Ana's Retinue)."), the leader gestures when one of its minions is placed,
+ * celebrates when it wins a round-end prize, and schemes when it recruits. { leader, members:{ defId: n } } or null.
+ */
+export function useCultReactions(state, pid) {
+  const prev = useRef(state);
+  const [react, setReact] = useState(null);
+  const timer = useRef(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    const before = prev.current;
+    prev.current = state;
+    if (before === state || !before || before.seed !== state.seed) return;
+    const out = reactionsBetween(before, state, pid);
+    if (!out) return;
+    setReact(r => ({ leader: out.leader || (r && r.leader) || null, members: { ...(r && r.members), ...out.members }, n: Date.now() }));
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setReact(null), REACT_MS);
+  }, [state, pid]);
+  return react;
+}
+const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** What player pid's cult reacts to between two states (pure; exported for tests). */
+export function reactionsBetween(before, state, pid) {
+  const p = state.players[pid];
+  const lines = newLogLines(before, state);
+  const members = {};
+  let leader = null;
+  if (lines.length) {
+    const defs = new Map();
+    for (const u of p.members) { try { const d = cardDef(state, u); defs.set(d.name, d.id); } catch { /* gone */ } }
+    for (const [name, id] of defs) {
+      const re = new RegExp(`(^|\\(|\\s)${esc(p.name)}'s ${esc(name)}(?![A-Za-z0-9\u00C0-\u024F])`);
+      if (lines.some(l => re.test(l))) members[id] = Date.now();
+    }
+    if (lines.some(l => l.startsWith(`${p.name} recruited `))) leader = 'scheme';
+  }
+  // a minion just placed (a new space of theirs this round)
+  if (!leader && state.round === before.round && Object.keys(state.slots).some(k => state.slots[k] === pid && before.slots[k] !== pid)) leader = 'gesture';
+  // a round-end prize won
+  const h0 = (before.contests || []).length, h1 = (state.contests || []).length;
+  if (h1 > h0 && state.contests[h1 - 1].results.some(c => c.winners.includes(pid))) leader = 'celebrate';
+  return leader || Object.keys(members).length ? { leader, members } : null;
+}

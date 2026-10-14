@@ -153,7 +153,7 @@ for (const prof of PROFILES) {
     addEventListener('DOMContentLoaded', watch);
   });
   try {
-    await page.goto(`${base}/`);
+    await page.goto(`${base}/?intro=0`); // intro=0: no first-game intro over the table (src/v4/Intro.jsx; hotseat.mjs gates the intro)
     await page.click('[data-home="local"]');
     await page.click('[data-start]');
     await page.waitForSelector('.players');

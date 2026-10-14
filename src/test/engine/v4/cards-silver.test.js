@@ -2,7 +2,7 @@
 // Card-by-card: every Silver action and member, through real moves, against the printed text, with a log line naming
 // the card whenever it changes a number. Plus one cross-sphere case per member.
 import { describe, it, expect } from 'vitest';
-import { followers, resume } from '../../../engine/v4/core.js';
+import { followers, resume, memberCount, contestTable } from '../../../engine/v4/core.js';
 import { take, move, uidOf } from './helpers.js';
 import { sceneQ, buy, linesNaming } from './cards-helpers.js';
 
@@ -81,16 +81,20 @@ describe('Silver members', () => {
     expect(named(s, 'Straggler')).toHaveLength(1);
   });
 
-  it('Silversmith: +1 more when an action gains silver, named; not on gifts', () => {
-    let s = take(sc({ members: [['silver.silversmith']] }), 'Toast');
-    expect(S(s)).toBe(4);
-    expect(named(s, 'Silversmith')).toHaveLength(1);
-    s = take(sc({ members: [[], ['silver.silversmith']] }), 'Toast');
-    expect(S(s, 1)).toBe(1);
+  // rewards not hosting (dead-window audit, 2026-10-14): it was "+1 more when an action gains you silver"
+  it('Silversmith: whenever a rival takes a Silver space, +1 silver, named; not your own, not other spaces', () => {
+    let s = take(sc({ members: [[], ['silver.silversmith']] }), 'Toast');
+    expect(S(s, 1)).toBe(1 + 1); // Toast's +1 to everyone else, and Silversmith's
+    expect(named(s, 'Silversmith')).toEqual(["P2's Silversmith: +1 silver."]);
+    s = take(sc({ members: [['silver.silversmith']] }), 'Toast');
+    expect(S(s)).toBe(3);
+    expect(named(s, 'Silversmith')).toHaveLength(0);
+    s = take(sc({ members: [[], ['silver.silversmith']] }), 'Rush');
+    expect(S(s, 1)).toBe(0);
   });
-  it('Silversmith × Grand Host: the doubled Toast still gets just +1', () => {
-    const s = take(sc({ members: [['silver.silversmith', 'silver.grandhost']] }), 'Toast');
-    expect(S(s)).toBe(7);
+  it('Silversmith × Grand Host: the host’s doubling doesn’t touch the rival’s +1', () => {
+    const s = take(sc({ members: [['silver.grandhost'], ['silver.silversmith']] }), 'Toast');
+    expect([S(s), S(s, 1)]).toEqual([6, 2]);
   });
 
   it('Steward: round start +1 per 3 silver held, named', () => {
@@ -114,14 +118,29 @@ describe('Silver members', () => {
     expect(named(s, 'Retinue').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('Feast Hall: when recruited +2 silver per round number, named (Red’s Take in round III: +6)', () => {
-    let s = sc({ round: 3, shop: ['silver.feasthall'] });
-    s = move(take(s, 'Take'), `card:${uidOf(s, 'silver.feasthall', 'shop')}`);
-    expect(S(s)).toBe(6);
-    expect(named(s, 'Feast Hall')[0]).toMatch(/P1's Feast Hall: \+6 silver/);
+  // Cory (2026-10-14): Feast Hall became Revelers, a group: more members, not more silver
+  it('Revelers: counts as 3 members: Red’s most-members contest, Patriarch, Windfall and Heir all see 3; worth 1 follower', () => {
+    let s = sc({ members: [['silver.revelers'], ['red.intern', 'red.twins']], queue: [] });
+    expect(memberCount(s, s.players[0])).toBe(3);
+    expect(followers(s, s.players[0])).toBe(2);
+    const red = contestTable(s).find(c => c.qid === 'red');
+    expect(red.rows.find(r => r.player === 0).count).toBe(3);
+    expect(red.winners).toEqual([0]);
+    expect(R(take(sc({ round: 2, members: [['silver.revelers']] }), 'Windfall')).gold).toBe(3);
+    s = sc({ members: [['silver.revelers', 'red.patriarch']], queue: [{ t: 'finish' }] });
+    expect(s.players[0].final.parts).toContain('Patriarch +2');
+    s = sc({ members: [['silver.heir', 'silver.revelers']], queue: [{ t: 'round', r: 3 }] });
+    expect(S(s)).toBe(4);
   });
 
-  it('Heir: start of round III only, +1 silver per member, named', () => {
+  // pays when recruited too (dead-window audit, 2026-10-14): recruited in round III it used to give nothing
+  it('Heir: when recruited, +1 silver per member you have (itself included), named', () => {
+    let s = sc({ round: 3, res: [{ silver: 8 }], members: [['red.intern', 'red.twins']], shop: ['silver.heir'], queue: [{ t: 'buy', p: 0 }] });
+    s = buy(s, 'silver.heir');
+    expect(S(s)).toBe(3);
+    expect(named(s, 'Heir')).toEqual(["P1's Heir: +3 silver."]);
+  });
+  it('Heir: at round start, only round III pays, +1 silver per member, named', () => {
     let s = sc({ members: [['silver.heir', 'red.intern', 'red.twins']], queue: [{ t: 'round', r: 2 }] });
     expect(S(s)).toBe(0);
     s = sc({ members: [['silver.heir', 'red.intern', 'red.twins']], queue: [{ t: 'round', r: 3 }] });

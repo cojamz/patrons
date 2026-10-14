@@ -158,9 +158,9 @@ async function setupPhase() {
   };
   try {
     for (const how of ['click', 'tap']) {
-      await p2.goto(`${base}/?botDelay=40`);
+      await p2.goto(`${base}/?botDelay=40&intro=0`); // intro=0: no first-game intro over the table (src/v4/Intro.jsx; hotseat.mjs gates the intro)
       await p2.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
-      await p2.goto(`${base}/?botDelay=40`);
+      await p2.goto(`${base}/?botDelay=40&intro=0`);
       const go = async sel => { const el = await p2.waitForSelector(sel); if (how === 'tap') { await el.scrollIntoViewIfNeeded(); await el.tap(); } else await el.click(); };
       await go('[data-home="local"]');
       await go('[data-start]');
@@ -217,7 +217,7 @@ let ok = false;
 let sawFlight = null;
 try {
   await setupPhase();
-  await page.goto(`${base}/`);
+  await page.goto(`${base}/?intro=0`);
   await page.waitForSelector('[data-home="local"]');
   await audit('home');
   await page.tap('[data-home="local"]');

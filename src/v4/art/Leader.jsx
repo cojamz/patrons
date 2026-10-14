@@ -39,6 +39,7 @@ export const Leader = memo(function Leader({ color, emoji = null, sigil = 'circl
       role={title ? 'img' : undefined} aria-label={title || undefined} aria-hidden={title ? undefined : 'true'} data-emoji={art ? emoji : undefined}>
       {title ? <title>{title}</title> : null}
       {body.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
+      <g className="blink"><rect x="13" y="7" width="1" height="1" fill={pal.d} /><rect x="18" y="7" width="1" height="1" fill={pal.d} /></g>
       {art
         ? <g transform={`translate(${P.x + 2} ${P.y + 2})`}><circle cx="4" cy="4" r="4.6" fill="#2e2430" />{art.rects.map((r, k) => <rect key={`e${k}`} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}</g>
         : <path transform={`translate(${P.x} ${P.y})`} d={SIGILS[sigil] || SIGILS.circle} fill={pal[1]} />}

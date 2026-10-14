@@ -177,3 +177,23 @@
 .lt-cult-seat .cs-stack{display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:700}
 .lt-cult-seat.mine .cs-stack{font-size:14px}
 .lt-cult-seat .cs-stack.zero{opacity:.35}
+
+/* ---------- living cults: idle loops (each figure on its own period and phase) and reactions ---------- */
+.cs-member .fig .sprite{animation:cult-breathe calc(2.3s + var(--ph,0) * 1.9s) steps(1,end) infinite;animation-delay:calc(var(--ph,0) * -4s)}
+.cs-member:nth-child(3n+1) .fig .sprite{animation-name:cult-shift}
+@keyframes cult-breathe{0%,100%{transform:translateY(0)}55%{transform:translateY(-1px)}}
+@keyframes cult-shift{0%,100%{transform:translateX(0)}40%{transform:translateX(1px)}70%{transform:translateX(-1px)}}
+.lt-ring .lead .leader{animation:cult-breathe 3.1s steps(1,end) infinite;animation-delay:calc(var(--lph,0) * -3s)}
+.leader .blink{opacity:0;animation:cult-blink 4.7s steps(1,end) infinite}
+@keyframes cult-blink{0%,93%,100%{opacity:0}94%,97%{opacity:1}}
+.cs-member.react-hop .fig{animation:cult-hop .5s steps(5,end) 1}
+@keyframes cult-hop{0%{transform:translateY(0);filter:none}20%{transform:translateY(-4px);filter:brightness(1.6) drop-shadow(0 0 3px rgba(255,217,154,.9))}40%{transform:translateY(-6px)}70%{transform:translateY(-2px);filter:brightness(1.25)}100%{transform:translateY(0);filter:none}}
+.cs-leader.react-gesture .lead{animation:cult-gesture .55s steps(4,end) 1;transform-origin:50% 100%}
+@keyframes cult-gesture{0%,100%{transform:rotate(0)}30%{transform:rotate(-6deg)}60%{transform:rotate(4deg)}}
+.cs-leader.react-celebrate .lead{animation:cult-celebrate .8s steps(6,end) 1}
+@keyframes cult-celebrate{0%,100%{transform:translateY(0)}20%{transform:translateY(-6px)}40%{transform:translateY(0)}60%{transform:translateY(-4px)}80%{transform:translateY(0)}}
+.cs-leader.react-scheme .lead{animation:cult-scheme .6s steps(6,end) 1}
+@keyframes cult-scheme{0%,100%{transform:translateX(0)}17%{transform:translateX(-1px)}33%{transform:translateX(1px)}50%{transform:translateX(-1px)}67%{transform:translateX(1px)}83%{transform:translateX(0)}}
+@media (prefers-reduced-motion: reduce){
+  .cs-member .fig .sprite,.lt-ring .lead .leader,.leader .blink,.cs-member.react-hop .fig,.cs-leader[class*="react-"] .lead{animation:none}
+}

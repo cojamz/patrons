@@ -41,7 +41,7 @@ const watch = (page, who) => {
   }
   return page;
 };
-const params = `${RTDB ? `rtdb=${RTDB}` : 'transport=broadcast'}&botDelay=30&subAfter=1500`;
+const params = `${RTDB ? `rtdb=${RTDB}` : 'transport=broadcast'}&botDelay=30&subAfter=1500&intro=0`; // intro=0: no first-game intro over the table (src/v4/Intro.jsx; hotseat.mjs gates the intro)
 const url = `${base}/?${params}`;
 const pages = { hana: watch(await ctxs.hana.newPage(), 'hana'), gus: watch(await ctxs.gus.newPage(), 'gus'), pia: null };
 
@@ -98,7 +98,7 @@ try {
 
   // Pia opens the invite link: the code is already filled in
   pages.pia = watch(await ctxs.pia.newPage(), 'pia');
-  await pages.pia.goto(invite);
+  await pages.pia.goto(`${invite}&intro=0`);
   await pages.pia.waitForSelector('input[aria-label="Room code"]');
   const filled = await pages.pia.$eval('input[aria-label="Room code"]', e => e.value);
   if (filled !== code) throw new Error(`invite link didn't fill the code: "${filled}"`);
@@ -146,7 +146,7 @@ try {
 
   // Pia reopens the invite link: straight back into her seat, the bot steps aside
   pages.pia = watch(await ctxs.pia.newPage(), 'pia');
-  await pages.pia.goto(invite);
+  await pages.pia.goto(`${invite}&intro=0`);
   await pages.pia.waitForSelector('.players', { timeout: 20000 });
   // the bot has stepped aside: when it's Pia's turn the table waits for her (a bot would move within ~30 ms)
   {

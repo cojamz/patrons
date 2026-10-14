@@ -309,3 +309,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - (Cory) Hover-overs don't feel quick or seamless. Target: instant (<100ms), one sticky layer that swaps content as you move, no flicker.
 - Doppelganger copying a 'Now and at round start' member also pays its 'now' part when it copies (Claude, consistent with 'becomes a copy of the card').
 - ✅ (Cory) Shop cards are like elegant sports cards: the pixel member, name, cost and followers; the effect on hover. When buying, only what you can afford is highlighted.
+- (Cory) Pixel art is a little weak but good enough for now; an art polish pass comes later.

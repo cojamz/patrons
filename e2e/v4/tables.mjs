@@ -46,7 +46,7 @@ async function play(t) {
   page.on('pageerror', e => err(`pageerror: ${e.message}`));
   const shot = name => page.screenshot({ path: `${SHOTS}/${t.tag}-${name}.png` }).catch(() => {});
   try {
-    await page.goto(`${base}/?botDelay=30${t.how === 'url' ? `&table=${t.url || t.ids.join(',')}` : ''}`);
+    await page.goto(`${base}/?botDelay=30&intro=0${t.how === 'url' ? `&table=${t.url || t.ids.join(',')}` : ''}`);
     await page.click('[data-home="local"]');
     await page.waitForSelector('[data-start]');
     if (t.how === 'click') {

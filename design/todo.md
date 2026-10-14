@@ -34,6 +34,8 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 
 - [ ] Every UI element has a hover with more info (long-press on phone); e2e gate that game-meaningful elements expose one (UI-B)
 
+- [ ] Later: pixel-art polish pass (Cory: "a little weak, good enough for now"); start with the weakest named in the batch reports
+
 ## 2. Balance (serves play)
 - [ ] Big followers at ~25% with the final bots; members ~6–7 a player (cost agent)
 - [ ] Fair-price test: screen every card, then a careful check on outliers

@@ -25,7 +25,7 @@ if (cmd === 'freeze') {
     page.on('pageerror', e => errs.push(e.message));
     page.on('console', m => m.type() === 'error' && errs.push(m.text()));
     const snap = async n => page.screenshot({ path: `${out}/${tag}-${n}.png` });
-    await page.goto(`${url}/?botDelay=40${query ? '&' + query : ''}`);
+    await page.goto(`${url}/?botDelay=40&intro=0${query ? '&' + query : ''}`);
     await page.click('[data-home="local"]');
     await page.waitForSelector('[data-start]');
     await snap('00-setup');

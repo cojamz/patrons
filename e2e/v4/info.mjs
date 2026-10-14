@@ -57,7 +57,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });
   page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
   page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
-  await page.goto(`${base}/?botDelay=20`);
+  await page.goto(`${base}/?botDelay=20&intro=0`); // intro=0: no first-game intro over the table (src/v4/Intro.jsx; hotseat.mjs gates the intro)
   await page.waitForSelector('[data-home="local"]');
   await page.click('[data-home="local"]');
   await page.waitForSelector('[data-start]');
@@ -115,7 +115,7 @@ try {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   const phone = await ctx.newPage();
   phone.on('pageerror', e => errors.push(`phone pageerror: ${e.message}`));
-  await phone.goto(`${base}/?botDelay=20`);
+  await phone.goto(`${base}/?botDelay=20&intro=0`);
   await phone.waitForSelector('[data-home="local"]');
   await phone.tap('[data-home="local"]');
   await phone.waitForSelector('[data-start]');

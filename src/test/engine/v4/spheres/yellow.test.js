@@ -78,10 +78,11 @@ describe('Yellow actions', () => {
     expect(R(take(scene({}), 'Harvest')).yellow).toBe(1);
   });
 
-  it('Bloom: +1 of each color you have none of, which always completes a set', () => {
+  it('Bloom: +1 of each color you hold the fewest of (ties: all), which always adds a full set', () => {
     expect(R(take(scene({ res: [{ gold: 3, red: 1 }] }), 'Bloom'))).toEqual({ gold: 3, red: 1, yellow: 1, green: 1 });
     expect(R(take(scene({}), 'Bloom'))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
-    expect(R(take(scene({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'Bloom'))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
+    // holding every color: the fewest (here all, tied) still get +1 (dead-window audit, 2026-10-14; it gave nothing)
+    expect(R(take(scene({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'Bloom'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
   });
 
   it('Transmute: up to 3 one-for-one swaps, then +1 yellow', () => {
@@ -123,10 +124,11 @@ describe('Yellow actions', () => {
     expect(r.yellow).toBeGreaterThanOrEqual(1);
   });
 
-  it('Prism (ring II): +1 of each other color per 3 yellow you have, and keeps the yellow', () => {
+  // a base of 1 (dead-window audit, 2026-10-14)
+  it('Prism (ring II): +1 of each other color, +1 more per 3 yellow you have, and keeps the yellow', () => {
     expect(() => take(scene({ round: 1, res: [{ yellow: 4 }] }), 'Prism')).toThrow();
-    expect(R(take(scene({ round: 2, res: [{ yellow: 7, gold: 1 }] }), 'Prism'))).toEqual({ gold: 3, red: 2, yellow: 7, green: 2 });
-    expect(R(take(scene({ round: 2, res: [{ yellow: 2 }] }), 'Prism'))).toEqual({ ...Z, yellow: 2 });
+    expect(R(take(scene({ round: 2, res: [{ yellow: 7, gold: 1 }] }), 'Prism'))).toEqual({ gold: 4, red: 3, yellow: 7, green: 3 });
+    expect(R(take(scene({ round: 2, res: [{ yellow: 2 }] }), 'Prism'))).toEqual({ gold: 1, red: 1, yellow: 2, green: 1 });
   });
 
   it('Gather (ring II): each member brings 1 of its color (Twins is one member)', () => {
