@@ -7,7 +7,8 @@ import { createLocalSession } from './session/local.js';
 import { loadLocal, saveLocal, clearLocal, loadOnline, saveOnline, clearOnline } from './saved.js';
 import GameScreen from './game/GameScreen.jsx';
 import { friendlyError } from './errors.js';
-import { Home, LocalSetup, Lobby } from './screens/Screens.jsx';
+import { Home, LocalSetup, Lobby, initialTable } from './screens/Screens.jsx';
+import { tableProblem } from './tables.js';
 
 // Bots decide quickly; the table paces what you see (each visible bot step holds PACE ms, a pass doesn't wait).
 const BOT_DELAY = { slow: 400, normal: 250, fast: 120 };
@@ -75,7 +76,8 @@ export default function App() {
   const startLocal = useCallback(cfg => {
     const seats = cfg.seats.filter(s => s.kind !== 'empty').map((s, i) => ({ name: s.name.trim() || `P${i + 1}`, kind: s.kind }));
     const botDelayMs = urlBotDelay() || BOT_DELAY[cfg.speed] || 650;
-    begin(createLocalSession({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs }), cfg);
+    const quadrants = cfg.table && !tableProblem(cfg.table.quadrants) ? cfg.table.quadrants : undefined;
+    begin(createLocalSession({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs, quadrants }), cfg);
   }, [begin]);
 
   const resume = useCallback(() => {
@@ -147,7 +149,7 @@ export default function App() {
       onResume={resume}
       error={homeError}
       onLocal={() => setScreen({ name: 'setup' })}
-      onHost={name => enterLobby(() => createRoom({ name, transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
+      onHost={name => enterLobby(() => createRoom({ name, table: initialTable(config?.table), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
       onJoin={(code, name) => enterLobby(() => joinRoom({ code, name, transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
     />
   );
