@@ -324,10 +324,12 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
         const qid = s.quadrants[o.q];
         for (const c of ctx.membersOf(p)) for (const id of [c.def.id, c.copy].filter(Boolean)) defById(id).afterAction?.(ctx, p, c, qid);
         actionAt(s, o.q, o.i).resolve(ctx, p);
+        // buys the action queues (Spree…) are buys still ahead, like this turn's own
+        const moreBuys = s.queue.filter(t => t.t === 'buy' && t.p === me && !t.extra).length;
         settle(s, ctx);
         // members the action brought in (Hire, Take…) bring their abilities too
         const gained = p.members.filter(u => !had.has(u)).reduce((a, u) => a + abilityValue(cardDef(s, u), placesLeft, opts.k), 0);
-        v = marginOf(evaluate(s, buysAt(s, 1), incomeAt(s), roundLeft, { [me]: gained }, opts.future), me, opts.spite);
+        v = marginOf(evaluate(s, buysAt(s, 1 + moreBuys), incomeAt(s), roundLeft, { [me]: gained }, opts.future), me, opts.spite);
         if (opts.noMembers && memberCount(s, p) > before) v -= 100;
       } catch {
         v = -50 + actionAt(state, o.q, o.i).estimate(contextFor(state), state.players[me]);
@@ -392,8 +394,8 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
     };
     if (pend.kind === 'pay') {
       const what = pend.uid !== undefined ? { uid: pend.uid } : { tier: pend.tier };
-      // all the ways (the menu is the engine's); rollouts pass payWays to look at only the first few
-      const pays = pend.options.filter(o => o.kind === 'pay').slice(0, opts.payWays ?? Infinity);
+      // all the ways (the menu is the engine's); rollouts pass payOptions to look at only the first few
+      const pays = pend.options.filter(o => o.kind === 'pay').slice(0, opts.payOptions ?? Infinity);
       for (const o of pays) out.push({ o, v: valueOf(what, o.spend) + (o.default ? 0.01 : 0) });
     } else {
       for (const o of pend.options) {

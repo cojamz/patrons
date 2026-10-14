@@ -240,15 +240,17 @@ function payOption(state, v, i) {
   return { id: `pay:${vecKey(state, v)}`, label: payString(v), kind: 'pay', spend: Object.fromEntries(state.resources.map(r => [r, v[r] || 0])), default: i === 0 };
 }
 
-/** Paying for a follower buy: needs `colors` different resources. Gold is spent last. */
+/** Paying for a follower buy: needs `colors` different resources; each wild one (gold) covers a color. Gold is spent last. */
 export function followerPlan(state, p, tier) {
   if (tierLeft(state, tier) <= 0) return null;
   const res = { ...p.res };
   const spend = Object.fromEntries(Object.keys(res).map(r => [r, 0]));
   const order = () => Object.keys(res).filter(c => res[c] > 0).sort((a, b) => (a === 'gold') - (b === 'gold') || res[b] - res[a]);
-  const cols = order();
-  if (cols.length < tier.colors) return null;
-  for (let i = 0; i < tier.colors; i++) { res[cols[i]]--; spend[cols[i]]++; }
+  const wild = wildColors(state);
+  let need = tier.colors;
+  for (const c of order().filter(c => !wild.includes(c)).slice(0, need)) { res[c]--; spend[c]++; need--; }
+  for (const c of wild) while (need > 0 && res[c] > 0) { res[c]--; spend[c]++; need--; }
+  if (need > 0) return null;
   let left = tier.cost - tier.colors;
   while (left > 0) { const c = order()[0]; if (!c) return null; res[c]--; spend[c]++; left--; }
   return spend;
@@ -386,7 +388,10 @@ function resolveTask(state, task, optionId) {
       if (kind === 'use') {
         const c = state.cards[Number(rest)];
         c.used = true;
-        effectiveDefs(c).find(e => e.onActivate).onActivate(ctxFor(state), p, wrap(state, c));
+        const act = effectiveDefs(c).find(e => e.onActivate);
+        const before = traceSnapshot(state);
+        act.onActivate(ctxFor(state), p, wrap(state, c));
+        traceChanges(state, before, p, act);
         state.queue.unshift({ t: 'buy', p: p.id, ...extraOf(task) });
         return;
       }
@@ -596,7 +601,8 @@ function recruit(state, p, uid, { free, spend: chosen }) {
   const ctx = ctxFor(state);
   const w = wrap(state, card);
   eachMember(state, (owner, c, d) => { if (d.onAnyRecruit) d.onAnyRecruit(ctx, owner, c, p, w); });
-  if (def.onRecruited) def.onRecruited(ctx, p, w);
+  // a when-recruited effect leaves a trace like any other member hook (Seed Money, Pilgrim, Retinue…)
+  if (def.onRecruited) { const before = traceSnapshot(state); def.onRecruited(ctx, p, w); traceChanges(state, before, p, def); }
 }
 
 function buyFollowers(state, p, tier, chosen) {
@@ -654,12 +660,14 @@ function eachMemberOf(state, p, fn) {
 // Every member trigger leaves a trace: if a hook changed anyone's resources or followers and didn't say so itself,
 // the log says it for the hook ("Kay's Tax Collector: +1 gold"), so every number on the table traces to a line.
 function traceSnapshot(state) {
-  return { len: state.log.length, last: state.log[state.log.length - 1], players: state.players.map(o => ({ res: { ...o.res }, bonus: o.bonus })) };
+  return { len: state.log.length, last: state.log[state.log.length - 1], players: state.players.map(o => ({ res: { ...o.res }, bonus: o.bonus, discount: o.discount })) };
 }
 function traceChanges(state, before, owner, def) {
-  if (state.log.length !== before.len || state.log[state.log.length - 1] !== before.last) return; // the hook logged
   const name = def && def.name;
   if (!name) return;
+  // the hook said so itself: a new line names it. A nested line that doesn't (Underdog doubling Banker's gold) doesn't count.
+  const fresh = state.log.length < LOG_MAX ? state.log.slice(before.len) : state.log.slice(state.log.lastIndexOf(before.last) + 1);
+  if (fresh.some(l => l.includes(name))) return;
   state.players.forEach((o, i) => {
     const b = before.players[i];
     if (!b) return;
@@ -667,6 +675,9 @@ function traceChanges(state, before, owner, def) {
       .map(([r, d]) => `${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`);
     const f = o.bonus - b.bonus;
     if (f) parts.push(`${f > 0 ? '+' : '−'}${Math.abs(f)} follower${Math.abs(f) === 1 ? '' : 's'}`);
+    // a discount for the next member (Planner, Sommelier…) is a number on the table too
+    const d = (o.discount || 0) - (b.discount || 0);
+    if (d > 0) parts.push(`next member costs ${d} less`);
     if (!parts.length) return;
     log(state, o === owner ? `${owner.name}'s ${name}: ${parts.join(', ')}.` : `${o.name} ${parts.join(', ')} (${owner.name}'s ${name}).`);
   });
@@ -774,6 +785,14 @@ function ctxFor(state) {
     gain: (p, color, n, opts) => gain(state, p, color, n, opts),
     recruit: (p, uid, opts) => recruit(state, p, uid, opts),
     log: text => log(state, text),
+    /** Run fn on behalf of owner's member `name` (a hook content code calls itself, e.g. Choir reacting to a copy):
+     *  whatever it changes and doesn't log is logged under that name, like the engine's own member hooks. */
+    asMember(owner, name, fn) {
+      const before = traceSnapshot(state);
+      const out = fn();
+      traceChanges(state, before, owner, { name });
+      return out;
+    },
     buryFromShop(uid) {
       const i = state.shop.indexOf(uid);
       if (i < 0) return;

@@ -165,15 +165,20 @@ describe('follower buys', () => {
     expect(fol(s, 0)).toBe(2);
   });
 
-  it('4 needs 2+ colors and buys 3; 8 needs 3+ colors and buys 6', () => {
-    const p = { res: { gold: 9, red: 0, blue: 0, green: 0 } };
+  it('4 needs 2+ colors and buys 3; 8 needs 3+ colors and buys 6; gold counts as any color', () => {
+    const p = { res: { gold: 0, red: 9, blue: 0, green: 0 } };
     const s = scene({});
     expect(followerPlan(s, p, tier('mid'))).toBe(null);
+    // gold is wild in follower buys: each gold covers a color
+    p.res = { gold: 9, red: 0, blue: 0, green: 0 };
+    expect(followerPlan(s, p, tier('mid'))).toEqual({ gold: 4, red: 0, blue: 0, green: 0 });
     p.res = { gold: 3, red: 1, blue: 0, green: 0 };
     expect(followerPlan(s, p, tier('mid'))).toEqual({ gold: 3, red: 1, blue: 0, green: 0 });
     expect(followerPlan(s, p, tier('big'))).toBe(null);
-    p.res = { gold: 9, red: 9, blue: 0, green: 0 };
+    p.res = { gold: 0, red: 9, blue: 9, green: 0 };
     expect(followerPlan(s, p, tier('big'))).toBe(null);
+    p.res = { gold: 9, red: 9, blue: 0, green: 0 };
+    expect(followerPlan(s, p, tier('big'))).toEqual({ gold: 2, red: 6, blue: 0, green: 0 });
     p.res = { gold: 1, red: 5, blue: 1, green: 0 };
     expect(followerPlan(s, p, tier('big'))).toBe(null);
     p.res = { gold: 1, red: 6, blue: 1, green: 0 };

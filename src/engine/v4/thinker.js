@@ -7,7 +7,7 @@ import { chooseNormalMove, chooseEasyMove, scoreOptions } from './bots.js';
 import { seededRandom } from './rng.js';
 
 // rollouts play normal, a little noisier, comparing fewer ways to pay
-const ROLLOUT = { noise: 0.6, payWays: 2 };
+const ROLLOUT = { noise: 0.6, payWays: 2, payOptions: 2 };
 const margin = (state, id) =>
   followers(state, state.players[id]) - Math.max(...state.players.filter(p => p.id !== id).map(p => followers(state, p)));
 

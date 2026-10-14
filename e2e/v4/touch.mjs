@@ -107,7 +107,7 @@ async function audit(step) {
       const cls = e => (e.tagName.toLowerCase() + '.' + String(e.className && (e.className.baseVal ?? e.className)).split(' ')[0]);
       const wide = [...document.querySelectorAll('body *')].filter(e => e.scrollWidth > innerWidth + 1 || e.getBoundingClientRect().right > innerWidth + 1);
       const pseudo = [...document.querySelectorAll('body *')].filter(e => ['::before', '::after'].some(ps => { const st = getComputedStyle(e, ps); return st.content !== 'none' && st.position !== 'static'; })).length;
-      out.side.who = wide.slice(-4).map(cls).join(' < ') + ` [${pseudo} positioned pseudos]`;
+      out.side.who = wide.slice(-4).map(cls).join(' < ') + ` [sw ${out.side.sw} cw ${out.side.cw} iw ${innerWidth} vv ${visualViewport && visualViewport.width}x${visualViewport && visualViewport.scale} body ${document.body.scrollWidth}]`;
     }
     out.peek = [...document.querySelectorAll('.peek:not(.pinned), .popover.hover')].some(vis);
     const u = [...document.querySelectorAll('.undo')].find(vis);

@@ -230,3 +230,7 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Claude may adjust and rework the unconfirmed spheres (Green, Silver, Purple, Blue, White, Yellow, Magenta details) as playtest feedback comes in. Log each change here; Cory's earlier calls on them still stand.
 - Built (Claude): the approved rule-benders plus Straggler as guest members in the shared deck, and Release as a base rule (toggleable). Measured prices: Squatter 8, Big Spender 4, Freelancer 4 (Yellow), Insider 6, Extra Hand 10, Front-runner 2, Straggler 8. Details in design/rule-benders.md. Purple's old Straggler is now Late Riser.
 - Finding (normal bots): the pure big-followers strategy wins ~8% against the new normal bot with or without Release (29% against easy bots). Release barely moves it; the bot level does.
+- ✅ (Cory) Joint Venture's gold is a gift: a Guest (Silver: "whenever another player gives you something, +1 more of it") gets +1.
+- ✅ (Cory) Heist takes the card, not an Investor's set-aside gold: that gold goes back to the victim, not doubled.
+- ✅ (Cory) Weaver and Extortionist fire on the 10-follower buy too ("6 or more").
+- ✅ (Cory) Releasing (or trading in) an Investor: its set-aside gold comes back, not doubled.
