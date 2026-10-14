@@ -4,6 +4,7 @@ import { reducedMotion } from './Tick.jsx';
 
 export const motionOK = () => !reducedMotion() && typeof document !== 'undefined' && !!document.body.animate;
 
+const visibleEl = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
 const visible = el => {
   if (!el) return false;
   const r = el.getBoundingClientRect();
@@ -69,8 +70,18 @@ export function flyCards(root, snap, moves) {
     const a = cell.getBoundingClientRect(), b = target.getBoundingClientRect();
     if (!a.width || !b.width) continue;
     // the card lifts off the shop, holds a beat so you see which one, then travels to its new owner
-    ghostFly(s.html, 'flight', a, b, { duration: 760, scaleTo: 0.28, hold: true });
-    target.animate && target.animate([{ boxShadow: '0 0 0 0 rgba(236,230,214,0)' }, { boxShadow: '0 0 0 3px rgba(236,230,214,.7)' }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)' }], { duration: 700, delay: 640 });
+    // land on the new member's own chip (or the "+N more" pill holding it) and make that chip glow
+    const chip = root.querySelector(`.pl[data-pid="${to}"] .chip[data-uids~="${uid}"]`);
+    const land = chip && visibleEl(chip) ? chip : target;
+    const lb = land.getBoundingClientRect();
+    ghostFly(s.html, 'flight', a, lb.width ? lb : b, { duration: 760, scaleTo: 0.28, hold: true });
+    if (chip && chip.animate) {
+      chip.animate([
+        { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' },
+        { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.08)' },
+        { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' },
+      ], { duration: 900, delay: 620, easing: 'ease-out' });
+    }
   }
 }
 

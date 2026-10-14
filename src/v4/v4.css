@@ -743,6 +743,54 @@ header.bar .ticker .cue{flex:none;color:var(--ink);opacity:.8}
   .app.game.buying .dock .fbuy{position:sticky;bottom:0;z-index:2;background:var(--table);padding:6px 0;box-shadow:0 -10px 16px var(--table)}
 }
 
+/* ---------- round 6, tester J ---------- */
+/* contest standings: one upright 12px pill per quadrant above the board */
+.contests{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 6px;margin-bottom:4px;flex:none}
+.contest{display:inline-flex;align-items:baseline;gap:4px;font-size:12px;line-height:20px;padding:0 9px;border-radius:999px;background:var(--table-2);border:1px solid color-mix(in srgb,var(--c) 55%,var(--rim));white-space:nowrap;color:var(--muted)}
+.contest > i{width:8px;height:8px;border-radius:50%;background:var(--c);align-self:center}
+.contest b{color:var(--ink);font-weight:700}
+.contest .who{color:var(--ink)}
+.contest small{color:var(--muted)}
+.contest .mine{color:var(--muted)}
+.app.game .stage{width:min(100cqw, 100cqh - 66px)}
+.hub{pointer-events:none}
+.ring.pays path:last-child{pointer-events:none}
+/* the shop outside your buy: one compact row (ability on hover), so the board's actions fit */
+@media (min-width:861px){
+  .shop-panel.compact .shop{grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:auto}
+  .shop-panel.compact .card{padding:5px 7px;gap:2px}
+  .shop-panel.compact .card .eff,.shop-panel.compact .card .afford{display:none}
+  .shop-panel.compact .card b{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .shop-panel.compact .card .row{font-size:11.5px}
+  .shop-panel.compact .card .row.cost{flex-wrap:wrap}
+  .shop-panel.compact h2{font-size:18px}
+  /* the log lives behind "Log ↓" in the header on desktop, out of the action column */
+  .app.game .main:not(.over) .side-scroll > .log{display:none}
+}
+/* "You can afford" always takes its line, so cards never jump */
+.afford.none{visibility:hidden}
+/* the "More below" note sits under the list, never over a row */
+.scroller{display:flex;flex-direction:column}
+.more-hint{position:static;transform:none;align-self:center;margin-top:4px}
+.scroller.more::after{bottom:28px}
+/* a choice prompt floats over the top of the side column instead of pushing the panel down */
+@media (min-width:861px){
+  .app.game .side{position:relative}
+  .app.game .side > .prompt{position:absolute;top:0;left:0;right:6px;z-index:6;box-shadow:0 12px 30px rgba(0,0,0,.55)}
+}
+[data-prompt]:focus{outline:none}
+.chip .used{font-style:normal;color:var(--muted)}
+.tb{color:var(--muted)}
+/* the log drawer (desktop) */
+.dialog.logbox{max-width:560px;max-height:calc(100dvh - 32px);overflow:auto}
+.dialog.logbox .log{border-top:0;padding-top:0}
+
+@media (max-width:860px){
+  .contests{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-width:100%}
+  .contest{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .contest .mine{display:none}
+}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }

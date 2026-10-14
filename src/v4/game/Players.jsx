@@ -88,17 +88,17 @@ function ChipRow({ state, p, own, onOpen, onAll }) {
         const sw = own && g.def.toggle;
         return (
           <button
-            key={g.key} data-g type="button" className={`chip${g.card.used || (sw && g.card.on === false) ? ' off' : ''}${sw ? ' switch' : ''}`}
+            key={g.key} data-g data-uids={g.uids.join(' ')} type="button" className={`chip${g.card.used || (sw && g.card.on === false) ? ' off' : ''}${sw ? ' switch' : ''}`}
             style={{ '--c': `var(--${g.def.quadrant})` }} title={memberTip(g.def)} aria-haspopup="dialog"
             onClick={e => onOpen(e.currentTarget, g)}
           >
-            {g.label}{g.count > 1 ? ` ×${g.count}` : ''}
+            {g.label}{g.count > 1 ? ` ×${g.count}` : ''}{g.card.used ? <em className="used"> · used</em> : null}
             {sw && <i className={`sw${g.card.on === false ? '' : ' on'}`} aria-label={g.card.on === false ? 'off' : 'on'} />}
           </button>
         );
       })}
       {hidden > 0 && (
-        <button type="button" className="chip more" aria-haspopup="dialog" title={`Show all ${groups.length} members`} onClick={e => onAll(e.currentTarget)}>+{hidden} more</button>
+        <button type="button" className="chip more" data-uids={groups.slice(shown.length).flatMap(g => g.uids).join(' ')} aria-haspopup="dialog" title={`Show all ${groups.length} members`} onClick={e => onAll(e.currentTarget)}>+{hidden} more</button>
       )}
     </div>
   );
@@ -126,7 +126,7 @@ export default function Players({ state, active, mySeats, gifts = [] }) {
               <span className="meta">
                 <Workers p={p} caption={false} />
                 <button type="button" className="mcount" aria-haspopup="dialog" title="Show members" onClick={e => setPop({ el: e.currentTarget, all: true, pid: p.id })}>{plural(n, 'member')}</button>
-                {p.discount ? <span className="disc"> −{p.discount} next</span> : null}
+                {p.discount && !state.over ? <span className="disc" title={`Your next member costs ${p.discount} less`}> −{p.discount} next</span> : null}
               </span>
             </div>
             {/* gains and losses get their own lane under the resources, never over the chips */}

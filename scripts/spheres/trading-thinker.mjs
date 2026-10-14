@@ -3,11 +3,10 @@
 import { createGame, applyMove, chooseBotMove, followers, actionAt } from '../../src/engine/v4/index.js';
 import { chooseThinkerMove } from '../../src/engine/v4/thinker.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
-import { install, SELL_HIGH, PAWN, BOOM, BOTS } from '../../src/engine/v4/content/trading.js';
+import { install, SELL_HIGH, PAWN, BOTS } from '../../src/engine/v4/content/trading.js';
 install();
 // experiments: SELL_EACH=2 PAWN_EACH=1 node scripts/spheres/trading-thinker.mjs …
 if (process.env.SELL_EACH) SELL_HIGH.each = Number(process.env.SELL_EACH);
-if (process.env.BOOM_PER) BOOM.per = Number(process.env.BOOM_PER);
 if (process.env.NOSELL) BOTS.sell = false;
 if (process.env.PAWN_EACH) PAWN.each = Number(process.env.PAWN_EACH);
 const N = Number(process.argv[2] || 24), R = Number(process.argv[3] || 4);
@@ -31,7 +30,7 @@ for (let g = 1; g <= N; g++) {
     for (const l of next.log) {
       const mm = l.match(/^(P\d) (sold|pawned)[^\d]*(\d+) follower/);
       if (mm && Number(mm[1].slice(1)) - 1 === thinker) tSold += Number(mm[3]);
-      const bm = l.match(/^(P\d)'s Boom: (\d+) white/);
+      const bm = l.match(/^(P\d)'s Boom: (\d+) resources/);
       if (bm && Number(bm[1].slice(1)) - 1 === thinker) tBoom.push(Number(bm[2]));
     }
     next.log = []; // the engine caps the log; read new lines only
@@ -46,4 +45,4 @@ for (let g = 1; g <= N; g++) {
   console.error(`${g}/${N}: thinker wins ${wins}`);
 }
 console.log(`${quadrants.join('/')}: thinker win ${(100 * wins / N).toFixed(0)}% over ${N} games (25% = no edge); avg margin ${(margin / N).toFixed(1)}; thinker ends with ${(tF / N).toFixed(1)} followers vs greedy ${(gF / N).toFixed(1)}`);
-if (wq >= 0) console.log(`share of placements on White: thinker ${(100 * tW / tAll).toFixed(0)}% vs greedy ${(100 * bW / bAll).toFixed(0)}% · white members: thinker ${(tWM / N).toFixed(1)} vs greedy ${(bWM / N).toFixed(1)} · followers the thinker sold per game ${(tSold / N).toFixed(1)} · thinker Boomed ${tBoom.length}x on avg ${(tBoom.reduce((a, b) => a + b, 0) / Math.max(1, tBoom.length)).toFixed(1)} white · thinker's White picks ${JSON.stringify(tTakes)}`);
+if (wq >= 0) console.log(`share of placements on White: thinker ${(100 * tW / tAll).toFixed(0)}% vs greedy ${(100 * bW / bAll).toFixed(0)}% · white members: thinker ${(tWM / N).toFixed(1)} vs greedy ${(bWM / N).toFixed(1)} · followers the thinker sold per game ${(tSold / N).toFixed(1)} · thinker Boomed ${tBoom.length}x on avg ${(tBoom.reduce((a, b) => a + b, 0) / Math.max(1, tBoom.length)).toFixed(1)} resources · thinker's White picks ${JSON.stringify(tTakes)}`);

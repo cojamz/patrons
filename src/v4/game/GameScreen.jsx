@@ -2,14 +2,14 @@
 // What's clickable is exactly state.pending.options, and only for seats this client controls.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { followers, WORKERS } from '../../engine/v4/index.js';
-import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot } from '../format.js';
+import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove } from '../format.js';
 import Wheel from './Wheel.jsx';
 import Players, { Resources, Workers } from './Players.jsx';
 import QuadrantPanel from './QuadrantPanel.jsx';
 import Shop, { BuyTray } from './Shop.jsx';
 import Results from './Results.jsx';
 import RoundEnd from './RoundEnd.jsx';
-import { ChoicePrompt, Confirm, Handoff, Log } from './parts.jsx';
+import { ChoicePrompt, Confirm, Handoff, Log, useDialog } from './parts.jsx';
 import PayPicker from './PayPicker.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import Tick from './Tick.jsx';
@@ -120,6 +120,18 @@ function Scroller({ className, hint, children }) {
   );
 }
 
+function LogDrawer({ state, onClose }) {
+  const box = useDialog(onClose);
+  return (
+    <div className="overlay top" role="dialog" aria-modal="true" aria-label="Game log" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="dialog logbox" ref={box}>
+        <div className="row-btns"><h2 style={{ marginRight: 'auto' }}>Log</h2><button type="button" className="btn ghost" data-autofocus onClick={onClose}>Close</button></div>
+        <Log state={state} />
+      </div>
+    </div>
+  );
+}
+
 const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing a worker', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
 
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace }) {
@@ -129,7 +141,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const pend = state.pending;
   const mine = !!(pend && !state.over && !moment && mySeats.includes(pend.player));
   const [facing, setFacing] = useState(0);
-  const [lastMove, setLastMove] = useState(null); // the latest rival placement, marked on the wheel
+
   const [gifts, setGifts] = useState([]); // short-lived "+1 gold from P2" floaters on player cards
   const [toast, setToast] = useState(null);
   const [caption, setCaption] = useState(null); // "P3 took Swell (+5 blue)", pinned over the wheel for a beat
@@ -139,6 +151,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const [flash, setFlash] = useState(() => new Set());
   const [ready, setReady] = useState(null); // hot-seat: which human seat has been handed the device
   const [rules, setRules] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [note, setNote] = useState(null); // { text, tone, n } — a gentle answer in the status pill
   const prevState = useRef(state);
@@ -193,14 +206,15 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     shopSnap.current = snapshotShop(root.current);
 
     const lines = newLogLines(before, state);
-    // Gifts from rivals' actions float onto the receiver's card ("+1 gold from P2").
+    // Gifts float onto the receiver's card, worded as what they are: the receiver gains (nobody loses).
     const got = [];
-    for (const l of lines) {
-      const m = l.match(/^(.+?) gave (\d+) (\w+) to (.+?)\.$/);
-      const to = m && state.players.find(p => p.name === m[4]);
-      if (to) got.push({ pid: to.id, text: `+${m[2]} ${m[3]} from ${m[1]}`, color: m[3], n: Date.now() + got.length });
-    }
-    if (got.length) { setGifts(g => [...g, ...got]); setTimeout(() => setGifts(g => g.filter(x => !got.includes(x))), 2200); }
+    const startAt = state.log.length - lines.length;
+    lines.forEach((l, k) => {
+      const g = explainLine(state.log, startAt + k).gift;
+      const to = g && state.players.find(p => p.name === g.to);
+      if (to) got.push({ pid: to.id, text: g.text, color: g.color, n: Date.now() + got.length });
+    });
+    if (got.length) { setGifts(gg => [...gg, ...got]); setTimeout(() => setGifts(gg => gg.filter(x => !got.includes(x))), 2400); }
     // Nothing to afford: say so in a readable toast — after anything you just got has landed.
     const skipped = lines.find(l => mySeats.some(id => l === `${state.players[id].name} couldn't buy anything.`));
     if (skipped) {
@@ -215,7 +229,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const key = fresh[fresh.length - 1];
     const owner = state.slots[key];
     if (!mySeats.includes(owner)) {
-      setLastMove(m => ({ key, pid: owner, n: (m ? m.n : 0) + 1 }));
       const took = lines.map(l => l.match(new RegExp(`^${state.players[owner].name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} took (.+) \\((\\w+)\\)\\.$`))).find(Boolean);
       const b0 = before.players[owner], p1 = state.players[owner];
       const delta = state.resources.map(r => [r, p1.res[r] - b0.res[r]]).filter(([, d]) => d).map(([r, d]) => `${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`).join(', ');
@@ -257,7 +270,12 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // counted pick (Steal: 1 gold at a time) while that's still the only choice.
   const queuedClick = useRef(null);
   const repeat = useRef(null);
+  const lastPick = useRef({ id: null, t: 0 });
   const onPick = useCallback((optionId, mode) => {
+    // a double-click is one choice: the same option again within 350ms is ignored (replays are exempt)
+    const now = Date.now();
+    if (mode !== 'replay' && lastPick.current.id === optionId && now - lastPick.current.t < 350) return;
+    lastPick.current = { id: optionId, t: now };
     if (mode === 'all') repeat.current = optionId;
     if (busy && mine) { queuedClick.current = optionId; return; }
     if (!mine || needHandoff || !options.has(optionId)) return;
@@ -276,9 +294,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (busy) return;
     const q = queuedClick.current;
     queuedClick.current = null;
-    if (q && mine && options.has(q)) { onPick(q); return; }
+    if (q && mine && options.has(q)) { onPick(q, 'replay'); return; }
     const r = repeat.current;
-    if (r && mine && pend.kind === 'choose' && pend.options.length === 1 && options.has(r)) { onPick(r); return; }
+    if (r && mine && pend.kind === 'choose' && pend.options.length === 1 && options.has(r)) { onPick(r, 'replay'); return; }
     if (r && !(mine && pend.kind === 'choose' && options.has(r))) repeat.current = null;
   }, [busy, state]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -310,13 +328,17 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const players = <Players state={state} active={pend ? pend.player : null} mySeats={mySeats} optionFor={live} onPick={onPick} gifts={gifts} />;
   const roundText = state.over ? 'Final' : state.round ? `Round ${roman(state.round)}` : 'Setup';
   const someoneHere = mySeats.length > 0;
-  const lastLine = state.log[state.log.length - 1] || '';
+  const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
+  // The latest rival placement, marked on the wheel; read from the state so it survives a reload.
+  const lastMove = useMemo(() => (state.over ? null : latestRivalMove(state, mySeats)), [state]); // eslint-disable-line react-hooks/exhaustive-deps
   const openLog = () => {
     const log = root.current && root.current.querySelector('.log');
-    if (!log) return;
-    const d = log.querySelector('details');
-    if (d) d.open = true;
-    log.scrollIntoView({ behavior: motionOK() ? 'smooth' : 'auto', block: 'start' });
+    // inline log (phones, results) scrolls into view; on the desktop table it opens in a drawer
+    if (log && log.offsetParent) {
+      const d = log.querySelector('details');
+      if (d) d.open = true;
+      log.scrollIntoView({ behavior: motionOK() ? 'smooth' : 'auto', block: 'start' });
+    } else setLogOpen(true);
   };
   const meP = me != null ? state.players[me] : null;
   const buyingNow = mine && !needHandoff && pend.kind === 'buy';
@@ -381,7 +403,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
           <div className="side">
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} />}
-            <Scroller className="side-scroll" hint="More below (rounds II / III, log)">
+            <Scroller className="side-scroll" hint="More below">
               <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} />
               <Log state={state} />
             </Scroller>
@@ -396,6 +418,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       {mine && !needHandoff && pend.kind === 'pay' && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} />}
       {moment && <RoundEnd info={moment} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
+      {logOpen && <LogDrawer state={state} onClose={() => setLogOpen(false)} />}
       {leaving && (
         <Confirm
           title="Leave this game?" text={leaveText || 'You can resume it from the home screen.'}

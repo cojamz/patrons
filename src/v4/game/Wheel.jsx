@@ -3,7 +3,8 @@
 // or a first tap (touch) shows a card with the action's text; on touch, placing takes a second tap.
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { quadrant, roman } from '../../engine/v4/index.js';
-import { bannerText, playerColor, standings, standingLine } from '../format.js';
+import { playerColor, standings, shortLabel, tiebreakNote } from '../format.js';
+import { RING_VALUE } from '../../engine/v4/index.js';
 import { sheetMode } from './parts.jsx';
 
 const RING = { 1: { r0: 142, r1: 198, r: 170, n: 3 }, 2: { r0: 90, r1: 142, r: 116, n: 2 }, 3: { r0: 34, r1: 90, r: 62, n: 1 } };
@@ -61,6 +62,20 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
   const lastPointer = useRef('mouse');
   const stage = useRef(null);
   const nq = state.quadrants.length;
+  // On-screen scale of the board, so text is sized in real pixels: never under 10px, hidden if it can't fit.
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const el = stage.current;
+    if (!el) return undefined;
+    const measure = () => { const w = el.getBoundingClientRect().width; if (w) setScale(w / VBS); };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const nameUnits = 10.4 / scale;
+  const showNames = nameUnits <= 11.2;
 
   const applyRot = useCallback(r => {
     rotRef.current = r;
@@ -181,26 +196,24 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
   };
 
   const parts = [];
-  const live = state.round >= 1 && !state.over ? standings(state) : null;
   const paying = Math.max(1, state.round);
+  // The hub belongs to the round-III spaces: each quadrant's color runs into it, so it doesn't read as a space.
+  state.quadrants.forEach((qid, q) => {
+    const c = qCenter(q);
+    const [hx0, hy0] = polar(c - 44, 33), [hx1, hy1] = polar(c + 44, 33);
+    parts.push(<path key={`hub${q}`} className="hub" d={`M${CX},${CY} L${hx0},${hy0} A33,33 0 0 1 ${hx1},${hy1} Z`} fill={`var(--${qid})`} fillOpacity={paying === 3 ? 0.3 : 0.12} />);
+  });
+  parts.push(<circle key="hubdot" className="hub" cx={CX} cy={CY} r="6" fill="var(--table-2)" stroke="var(--rim)" />);
   state.quadrants.forEach((qid, q) => {
     const c = qCenter(q), a0 = c - 45, a1 = c + 45, isFacing = q === facing;
     const col = `var(--${qid})`;
     [1, 2, 3].forEach(t => {
       const R = RING[t], open = t <= round;
       const pays = t === paying;
-      const id = `b${q}${t}`;
-      const st = live && pays ? live[q] : null;
-      const who = st && st.top > 0 ? ` · ${standingLine(state, st, meId, t === 1 ? 3 : 2).toUpperCase()}` : '';
-      const text = pays ? `${bannerText(qid, t)}${state.round >= 1 ? ' NOW' : ''}${who}` : bannerText(qid, t);
       parts.push(
         <g key={`ring${q}${t}`} className={`ring${pays ? ' pays' : ''}`}>
           <path d={arc(a0 + 0.8, a1 - 0.8, R.r0 + 1, R.r1 - 1)} fill={col} fillOpacity={open ? (isFacing ? 0.26 : 0.12) : 0.04} stroke={col} strokeOpacity={open ? 0.55 : 0.18} />
-          <path d={arc(a0 + 1.6, a1 - 1.6, R.r1 - 12, R.r1 - 1.6)} fill={pays ? col : 'var(--table)'} fillOpacity={pays ? 0.22 : open ? 0.55 : 0.3} />
-          <path id={id} d={textArc(c, 43, R.r1 - 6.5, rot)} fill="none" />
-          <text fontSize={pays ? 6.6 : 6.4} fontWeight="700" letterSpacing={pays ? 0.5 : 1} fill={pays ? 'var(--ink)' : col} fillOpacity={pays ? 1 : 0.4} dominantBaseline="central">
-            <textPath href={`#${id}`} startOffset="50%" textAnchor="middle">{text}</textPath>
-          </text>
+          {pays && <path d={arc(a0 + 1.6, a1 - 1.6, R.r1 - 6, R.r1 - 1.6)} fill={col} fillOpacity={0.35} />}
         </g>,
       );
     });
@@ -237,9 +250,11 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
           : open ? <circle cx={x} cy={y} r="3" fill={col} fillOpacity=".55" /> : <circle cx={x} cy={y} r="2.5" fill={col} fillOpacity=".3" />}
         {flash.has(key) && <circle className="ping" cx={x} cy={y} r={rad} fill="none" stroke={playerColor(owner ?? 0)} />}
         <path id={lid} d={textArc(ang, L.h, L.r, rot)} fill="none" />
-        <text className="name" fontSize={L.f} fontWeight="700" fill={col} fillOpacity={open ? 1 : 0.4} dominantBaseline="central">
-          <textPath href={`#${lid}`} startOffset="50%" textAnchor="middle">{a.name}</textPath>
-        </text>
+        {showNames && (
+          <text className="name" fontSize={nameUnits} fontWeight="700" fill={col} fillOpacity={open ? 1 : 0.45} dominantBaseline="central">
+            <textPath href={`#${lid}`} startOffset="50%" textAnchor="middle">{a.name}</textPath>
+          </text>
+        )}
       </g>,
     );
   }
@@ -304,6 +319,24 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
 
   return (
     <div className="wheel-wrap">
+      {state.round >= 1 && !state.over && (
+        <div className="contests" aria-label={`Contests this round, +${RING_VALUE[paying - 1]} each`}>
+          {standings(state).map(st => {
+            const leaders = st.rows.filter(r => st.leaders.includes(r.id));
+            const me = meId != null ? st.rows.find(r => r.id === meId) : null;
+            const nm = r => (r.id === meId ? 'you' : state.players[r.id].name);
+            return (
+              <span key={st.qid} className="contest" style={{ '--c': `var(--${st.qid})` }} title={`${st.label}: +${RING_VALUE[paying - 1]} at round end`}>
+                <i />{shortLabel(st.label).replace(/^Most /, '')} <b className="num">+{RING_VALUE[paying - 1]}</b>
+                <span className="who">
+                  {st.top > 0 ? leaders.map((r, k) => <span key={r.id}>{k ? ' & ' : ' '}{nm(r)} <b className="num">{r.shown}</b>{tiebreakNote(st, r) ? <small> ({tiebreakNote(st, r)})</small> : null}</span>) : ' nobody yet'}
+                  {me && st.top > 0 && !st.leaders.includes(me.id) ? <span className="mine"> · you {me.shown}</span> : null}
+                </span>
+              </span>
+            );
+          })}
+        </div>
+      )}
       <div className="stage" ref={stage} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
         <svg viewBox="-26 -26 452 452" role="group" aria-label="Board" className={late ? 'late' : undefined}>
           <circle cx={CX} cy={CY} r="200" fill="var(--table-2)" stroke="var(--rim)" strokeWidth="2" />

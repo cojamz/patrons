@@ -2,7 +2,7 @@
 // everything else gained this round), then the button that starts the next round.
 import { useEffect } from 'react';
 import { followers, WORKERS } from '../../engine/v4/index.js';
-import { playerColor, roman, standings, roundGains } from '../format.js';
+import { playerColor, roman, standings, roundGains, tiebreakNote } from '../format.js';
 import Tick from './Tick.jsx';
 import { useDialog } from './parts.jsx';
 
@@ -11,6 +11,11 @@ export default function RoundEnd({ info, onNext, autoMs }) {
   const at = board || after; // the table at the moment of scoring
   const counts = standings(at);
   const box = useDialog(onNext);
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Enter' && !e.defaultPrevented) { e.preventDefault(); onNext(); } };
+    addEventListener('keydown', onKey);
+    return () => removeEventListener('keydown', onKey);
+  }, [onNext]);
   useEffect(() => {
     if (!autoMs) return undefined;
     const t = setTimeout(onNext, autoMs);
@@ -39,9 +44,10 @@ export default function RoundEnd({ info, onNext, autoMs }) {
                     : <em>no one scored</em>}
                 </span>
                 <small className="re-counts num">
-                  {(counts.find(c => c.qid === r.qid)?.rows || []).map(row => (
-                    <span key={row.id} className={r.winners.includes(row.id) ? 'won' : ''}>{name(row.id)} {row.shown}</span>
-                  ))}
+                  {(() => { const st = counts.find(c => c.qid === r.qid); return (st?.rows || []).map(row => {
+                    const tb = tiebreakNote(st, row);
+                    return <span key={row.id} className={r.winners.includes(row.id) ? 'won' : ''}>{name(row.id)} {row.shown}{tb ? <small> ({tb})</small> : null}</span>;
+                  }); })()}
                 </small>
               </span>
               <span className="re-chip num" aria-label={`plus ${r.v} followers`}>+{r.v}</span>
@@ -56,7 +62,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
             const c = contest(p.id);
             const g = start ? roundGains(start, at, p, c) : null;
             const other = now - was - c;
-            const why = g ? [g.members && `${g.members > 0 ? '+' : ''}${g.members} members`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : ''}${g.effects} effects`].filter(Boolean).join(' · ') : '';
+            const why = g ? [g.members && `${g.members > 0 ? '+' : ''}${g.members} from members`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : ''}${g.effects} effects`].filter(Boolean).join(' · ') : '';
             return (
               <div key={p.id} className="re-p" role="row" style={{ '--pc': playerColor(p.id) }}>
                 <span className="nm" role="cell"><i />{p.name}</span>

@@ -199,12 +199,12 @@ export function newLogLines(prev, next) {
 
 /** The log split into sections: Setup, then one per round. Each: { title, lines }. */
 export function logSections(state) {
-  const out = [{ title: 'Setup', lines: [] }];
-  for (const line of state.log) {
+  const out = [{ title: 'Setup', lines: [], start: 0 }];
+  state.log.forEach((line, i) => {
     const m = line.match(/^Round (\S+) begins\./);
-    if (m) out.push({ title: `Round ${m[1]}`, lines: [] });
+    if (m) out.push({ title: `Round ${m[1]}`, lines: [], start: i });
     out[out.length - 1].lines.push(line);
-  }
+  });
   return out.filter(s => s.lines.length);
 }
 
@@ -279,4 +279,75 @@ export function roundGains(start, end, p, contests) {
   const bought = roundLines.reduce((s, l) => { const m = l.match(re); return s + (m ? Number(m[1]) : 0); }, 0);
   const total = engineFollowers(end, end.players[p.id]) - engineFollowers(start, was);
   return { contests, members, bought, effects: total - contests - members - bought, total };
+}
+
+// ---------- log lines, said plainly ----------
+const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** The action the actor took most recently before line i ("P1 took Joint Venture (Gold).") */
+function lastAction(log, i, actor) {
+  const re = new RegExp(`^${esc(actor)} took (.+?) \\(\\w+\\)\\.$`);
+  for (let k = i - 1; k >= 0 && k >= i - 12; k--) { const m = log[k].match(re); if (m) return m[1]; }
+  return null;
+}
+/**
+ * Rewrites log lines whose wording teaches the wrong rule. Gifts in the engine create resources for the receiver
+ * (nobody loses them), so "P1 gave 1 gold to P2" reads as "P2 gains 1 gold (P1's Joint Venture)".
+ * Returns { text, gift? } where gift = { to, n, color, text } for a receiver's pill.
+ */
+export function explainLine(log, i) {
+  const line = log[i];
+  let m = line.match(/^(.+?) gave (\d+) (\w+) to (.+?)\.$/) || null;
+  if (m) {
+    const [, from, n, color, to] = m;
+    const why = lastAction(log, i, from);
+    const src = why ? `${from}'s ${why}` : from;
+    return { text: `${to} gains ${n} ${color} (${src}).`, gift: { to, n: Number(n), color, text: `+${n} ${color} (${src})` } };
+  }
+  m = line.match(/^(.+?) gave (.+?) (\d+) (\w+)\.$/);
+  if (m) {
+    const [, from, to, n, color] = m;
+    const why = lastAction(log, i, from);
+    const src = why ? `${from}'s ${why}` : from;
+    return { text: `${to} gains ${n} ${color} (${src}).`, gift: { to, n: Number(n), color, text: `+${n} ${color} (${src})` } };
+  }
+  m = line.match(/^(.+?)'s (\w[\w ]*?) gives (.+?) (\d+) (\w+)\.$/);
+  if (m) {
+    const [, from, card, to, n, color] = m;
+    return { text: `${to} gains ${n} ${color} (${from}'s ${card}).`, gift: { to, n: Number(n), color, text: `+${n} ${color} (${from}'s ${card})` } };
+  }
+  m = line.match(/^(.+?) took (\d+) (\w+) and gave everyone else (\d+) (\w+)\.$/);
+  if (m) return { text: `${m[1]} gains ${m[2]} ${m[3]}; everyone else gains ${m[4]} ${m[5]}.` };
+  m = line.match(/^(.+?)'s Hustler works the (\w+) spaces\.$/);
+  if (m) return { text: `${m[1]}'s Hustler: +1 gold each time ${m[1]} takes a ${m[2]} space.` };
+  return { text: line };
+}
+export const plainLine = (log, i) => explainLine(log, i).text;
+
+/** The tiebreak folded into a "most members"-style score ("(red members break ties)" -> "red"), if any. */
+export function tiebreakWord(label) {
+  const m = label.match(/\((\w+) members? breaks? ties\)/i);
+  return m ? m[1] : null;
+}
+/** For tied shown counts, the tiebreak amount to show next to the name ("2 red"), else null. */
+export function tiebreakNote(st, row) {
+  const word = tiebreakWord(st.label);
+  if (!word || row.score < 1000) return null;
+  const tied = st.rows.some(r => r !== row && r.shown === row.shown);
+  return tied ? `${row.score - row.shown * 1000} ${word}` : null;
+}
+
+/** The latest placement by someone other than `mine`, read from the log and the board (survives a reload). */
+export function latestRivalMove(state, mine) {
+  for (let i = state.log.length - 1; i >= 0; i--) {
+    const m = state.log[i].match(/^(.+?) took (.+?) \((\w+)\)\.$/);
+    if (!m) { if (/^Round \S+ begins\./.test(state.log[i])) return null; continue; }
+    const p = state.players.find(x => x.name === m[1]);
+    if (!p || mine.includes(p.id)) continue;
+    const q = state.quadrants.findIndex(id => quadrant(id).name === m[3]);
+    if (q < 0) continue;
+    const i2 = quadrant(state.quadrants[q]).actions.findIndex(a => a.name === m[2]);
+    const key = `${q}-${i2}`;
+    if (state.slots[key] === p.id) return { key, pid: p.id, n: i };
+  }
+  return null;
 }

@@ -27,8 +27,6 @@ const lastTurn = (ctx, p) => ctx.state.round === 3 && p.left === 0;
 
 export const SELL_HIGH = { most: 2, each: 3 };
 export const PAWN = { base: 2, each: 2 };
-// Boom pays this many followers per white (experiments may set halves; followers are rounded down)
-export const BOOM = { per: 2 };
 // experiment knob: greedy bots' appetite for selling followers
 export const BOTS = { sell: true };
 
@@ -116,18 +114,27 @@ const trading = {
       },
     },
     {
-      key: 'boom', ring: 3, name: 'Boom', text: 'Each white you have becomes 2 followers.',
-      estimate: (ctx, p) => p.res[W] * (BOOM.per * fv(ctx) - 1),
+      key: 'boom', ring: 3, name: 'Boom', text: 'Trade all your resources for followers, 1 for 1 (you may keep your white).',
+      estimate: (ctx, p) => 0.6 * totalRes(p),
       resolve(ctx, p) {
-        const w = p.res[W], f = Math.floor(BOOM.per * w);
-        p.res[W] = 0;
-        actionFollowers(ctx, p, f);
-        ctx.log(w ? `${p.name}'s Boom: ${w} white became ${f} followers.` : `${p.name} had no white to turn into followers.`);
+        if (!totalRes(p)) { ctx.log(`${p.name} had nothing to turn into followers.`); return; }
+        const all = totalRes(p), rest = all - p.res[W], last = p.left === 0;
+        const opts = [{ id: 'boom:all', label: `Everything: ${all} followers`, kind: 'boom', value: 'all', hint: last ? 2 : 0.5 }];
+        if (p.res[W] && rest) opts.push({ id: 'boom:keep', label: `Keep your white: ${rest} followers`, kind: 'boom', value: 'keep', hint: 1 });
+        opts.push({ id: 'boom:none', label: 'Nothing', kind: 'boom', value: 'none', hint: 0 });
+        ctx.choose(p, 'Boom: trade which resources for followers, 1 for 1?', opts, 'trading.boom');
       },
     },
   ],
 
   handlers: {
+    boom(ctx, p, value) {
+      if (value === 'none') return;
+      let n = 0;
+      for (const r of ctx.state.resources) if (value === 'all' || r !== W) { n += p.res[r]; p.res[r] = 0; }
+      actionFollowers(ctx, p, n);
+      ctx.log(`${p.name}'s Boom: ${n} resources became ${n} followers.`);
+    },
     sell(ctx, p, k, data) { sell(ctx, p, k, data.each, { fromAction: true, why: data.why }); },
     buyLow(ctx, p, value, data) {
       if (value === 'done') return;
@@ -142,13 +149,13 @@ const trading = {
   },
 
   members: [
-    m('shopkeeper', 'Shopkeeper', 1, 1, 'At round start, +2 white.', {
+    m('shopkeeper', 'Shopkeeper', 2, 1, 'At round start, +2 white.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, W, 2); },
     }),
     m('dealer', 'Dealer', 1, 1, 'Whenever you sell followers, +1 white each.', {
       onSell(ctx, owner, card, k) { ctx.gain(owner, W, k); },
     }),
-    m('pawnbroker', 'Pawnbroker', 1, 0, 'Once per round: sell 1 follower for 3 white.', {
+    m('pawnbroker', 'Pawnbroker', 1, 1, 'Once per round: sell 1 follower for 3 white.', {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
@@ -161,10 +168,10 @@ const trading = {
     m('comeback', 'Comeback Kid', 1, 1, 'At round start, +1 white per player with more followers than you.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, W, ahead(ctx, owner)); },
     }),
-    m('tipster', 'Tipster', 1, 1, 'Whenever a rival buys followers, +1 white.', {
+    m('tipster', 'Tipster', 2, 2, 'Whenever a rival buys followers, +1 white.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer !== owner) ctx.gain(owner, W, 1); },
     }),
-    m('lender', 'Lender', 1, 0, 'When recruited: +5 white. Game end: lose 2 followers.', {
+    m('lender', 'Lender', 2, 1, 'When recruited: +5 white. Game end: lose 2 followers.', {
       onRecruited(ctx, owner) { ctx.gain(owner, W, 5); },
       // can't take you below the followers you've won or bought (never yourself or a member)
       onGameEnd: (ctx, owner) => -Math.min(2, owner.bonus),
@@ -172,32 +179,32 @@ const trading = {
     m('magnate', 'Magnate', 3, 2, 'Game end: +1 follower per 2 white.', {
       onGameEnd: (ctx, owner) => Math.floor(owner.res[W] / 2),
     }),
-    m('shareholder', 'Shareholder', 2, 2, 'Worth 3 followers.', { f: 3 }),
-    m('heiress', 'Heiress', 2, 2, 'Once per game: gain followers equal to your white.', {
+    m('shareholder', 'Shareholder', 2, 1, 'Worth 3 followers.', { f: 3 }),
+    m('heiress', 'Heiress', 3, 2, 'Once per game: +1 white per member you have.', {
       activate: 'game',
       onActivate(ctx, owner) {
-        const w = owner.res[W];
-        owner.bonus += w;
-        ctx.log(`${owner.name} used Heiress: +${w} followers.`);
+        const n = ctx.memberCount(owner);
+        ctx.gain(owner, W, n);
+        ctx.log(`${owner.name} used Heiress: +${n} white.`);
       },
-      botActivate: (ctx, owner) => ctx.state.round === 3 && (owner.res[W] >= 5 || (owner.left === 0 && owner.res[W] > 0)),
+      botActivate: (ctx, owner) => ctx.state.round === 3 || (ctx.state.round === 2 && ctx.memberCount(owner) >= 6),
     }),
-    m('bargain', 'Bargain Hunter', 3, 2, 'Whenever you buy followers, +1 more.', {
+    m('bargain', 'Bargain Hunter', 2, 1, 'Whenever you buy followers, +1 more.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer === owner) owner.bonus += 1; },
     }),
-    m('broker', 'Broker', 1, 0, 'Whenever a White action gives you followers, +1 more.', { brokerBonus: 1 }),
-    m('exporter', 'Exporter', 1, 1, 'Whenever you recruit a non-white member, +1 white.', {
+    m('broker', 'Broker', 2, 1, 'Whenever a White action gives you followers, +1 more.', { brokerBonus: 1 }),
+    m('exporter', 'Exporter', 3, 2, 'Whenever you recruit a non-white member, +1 white.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== W) ctx.gain(owner, W, 1);
       },
     }),
-    m('changer', 'Money Changer', 1, 1, 'Whenever an action gains you 3+ of another color at once, +1 white.', {
+    m('changer', 'Money Changer', 3, 2, 'Whenever an action gains you 3+ of another color at once, +1 white.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== W && g.n >= 3) owner.res[W] += 1; },
     }),
     m('reinvestor', 'Reinvestor', 1, 1, 'Whenever you sell followers, your next member costs 1 less per follower sold.', {
       onSell(ctx, owner, card, k) { owner.discount += k; ctx.log(`${owner.name}'s next member costs ${owner.discount} less.`); },
     }),
-    m('raider', 'Raider', 2, 1, 'Once per game: buy up to 3 followers from the leader for 1 white each. They get the white.', {
+    m('raider', 'Raider', 1, 0, 'Once per game: buy up to 3 followers from the leader for 1 white each. They get the white.', {
       activate: 'game',
       onActivate(ctx, owner, card) {
         const t = raidTarget(ctx, owner);

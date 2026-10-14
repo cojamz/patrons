@@ -1,5 +1,5 @@
 // The shop (6 face-up members) and the buy tray (follower buys, member activations, Pass).
-import { cardDef, paymentPlan, TIERS } from '../../engine/v4/index.js';
+import { cardDef, paymentPlan, followerChoices, TIERS } from '../../engine/v4/index.js';
 import { costParts, tierCostText } from '../format.js';
 
 const total = spend => Object.values(spend).reduce((a, b) => a + b, 0);
@@ -24,8 +24,9 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied }) {
   const pend = state.pending;
   const buying = mine && pend && pend.kind === 'buy';
   const viewer = me != null ? state.players[me] : null;
+  // Outside your buy the shop is one compact row (name, ★, cost; ability on hover), so the board's actions fit.
   return (
-    <section className="panel shop-panel">
+    <section className={`panel shop-panel${buying ? ' open' : ' compact'}`}>
       <h2>Shop<small><span className="num">{state.pile.length}</span> in the pile{buying ? ' · tap a member to recruit' : ''}</small></h2>
       <div className="shop">
         {state.shop.map(uid => {
@@ -45,7 +46,7 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied }) {
                 <Cost d={d} plan={plan} />
                 {d.n > 1 && <span><span className="num">{d.n}</span> members</span>}
               </div>
-              {opt && <span className="afford">You can afford</span>}
+              <span className={`afford${opt ? '' : ' none'}`} aria-hidden={!opt}>You can afford</span>
             </button>
           );
         })}
@@ -80,8 +81,11 @@ function ShopStrip({ state, me, optionFor, onPick, onDenied }) {
   );
 }
 
+const spendText = v => Object.entries(v).filter(([, n]) => n).map(([c, n]) => `${n} ${c}`).join(', ');
+
 export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
   const pend = state.pending;
+  const viewer = me != null ? state.players[me] : null;
   const extras = mine && pend ? pend.options.filter(o => o.kind === 'use' || o.kind === 'toggle') : [];
   const pass = optionFor('pass');
   const buying = mine && pend && pend.kind === 'buy';
@@ -97,7 +101,13 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
             title={`Buy ${t.get} follower${t.get > 1 ? 's' : ''} for ${tierCostText(t)}`}
           >
             <b><span className="num">+{t.get}</span> follower{t.get > 1 ? 's' : ''}</b>
-            <span>{t.colors === 1 ? `${t.cost} of anything` : `${t.cost} · ${t.colors}+ colors`}</span>
+            <span>{(() => {
+              // Say how it would be paid: one way pays at once; several ways opens the picker.
+              const ways = opt && viewer ? followerChoices(state, viewer, t) : [];
+              if (ways.length === 1) return `pays ${spendText(ways[0])}`;
+              if (ways.length > 1) return `${t.cost} · you choose how`;
+              return t.colors === 1 ? `${t.cost} of anything` : `${t.cost} · ${t.colors}+ colors`;
+            })()}</span>
             {t.limited && <em className="left-badge num" title={`${state.bigLeft} of these left; the last one ends the game after that round`}>{state.bigLeft} left</em>}
           </button>
         );

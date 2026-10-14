@@ -1,7 +1,7 @@
 // The quadrant facing you: its scoring rule and its action cards, by ring.
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { quadrant, RING_VALUE } from '../../engine/v4/index.js';
-import { playerColor, roman, standings, shortLabel } from '../format.js';
+import { playerColor, roman, standings, shortLabel, tiebreakNote } from '../format.js';
 import { Popover } from './parts.jsx';
 
 export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPick, onDenied, meId = null, confirmPlace = false }) {
@@ -78,6 +78,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
             <> · now {standing.rows.slice(0, 4).map((r, k) => (
               <span key={r.id} className={standing.leaders.includes(r.id) ? 'leads' : ''} style={{ '--pc': playerColor(r.id) }}>
                 {k ? ', ' : ''}<i />{r.id === meId ? 'you' : state.players[r.id].name} <b className="num">{r.shown}</b>
+                {tiebreakNote(standing, r) && <small className="tb"> ({tiebreakNote(standing, r)})</small>}
               </span>
             ))}</>
           ) : state.round >= 1 ? <> · nobody has any yet</> : null}
