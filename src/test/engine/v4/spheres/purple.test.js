@@ -15,8 +15,8 @@ const Q = ['gold', 'red', 'purple', 'green'];
 const PURPLE_TEST_COSTS = {
   'purple.secondwind': [4, 2], 'purple.errand': [2, 2], 'purple.taskmaster': [2, 1], 'purple.straggler': [3, 2],
   'purple.foreman': [1, 1], 'purple.courier': [1, 1], 'purple.apprentice': [1, 1], 'purple.overseer': [1, 1],
-  'purple.timekeeper': [2, 1], 'purple.bookkeeper': [1, 1], 'purple.clockmaker': [2, 1], 'purple.lamplighter': [1, 0],
-  'purple.marathoner': [3, 2], 'purple.patience': [3, 2], 'purple.crew': [1, 1],
+  'purple.doubletime': [2, 1], 'purple.bookkeeper': [1, 1], 'purple.clockmaker': [2, 1], 'purple.lamplighter': [1, 0],
+  'purple.relay': [2, 2], 'purple.patience': [3, 2], 'purple.crew': [1, 1],
 };
 let restore;
 beforeEach(() => {
@@ -46,7 +46,7 @@ const pass = s => (s.pending?.kind === 'buy' ? move(s, 'pass') : s);
 const turns = (...ps) => ps.map(p => ({ t: 'turn', p }));
 const nextPlacer = s => { while (s.pending && s.pending.kind !== 'place') s = pass(s); return s.pending?.player; };
 const JV = '0-0', RUSH = '0-1', STRIKE = '0-5', HIRE = '1-2', HOURLY = '2-0';
-const RALLY_N = 1;
+const RALLY_COST = 3;
 // every round-I space but the ones named, taken by P2
 const fullRoundI = (...free) => Object.fromEntries([0, 1, 2, 3].flatMap(q => [0, 1, 2].map(i => `${q}-${i}`)).filter(k => !free.includes(k)).map(k => [k, 1]));
 
@@ -65,16 +65,14 @@ describe('Purple scoring: most workers on the board, purple breaks ties', () => 
 });
 
 describe('Purple actions', () => {
-  it('Hourly: +1 purple per worker you get this round, +1 (4 / 5 / 6)', () => {
+  it('Hourly: +4 / +5 / +6 purple, by round', () => {
     expect(R(take(scene(), 'Hourly')).purple).toBe(4);
     expect(R(take(scene({ round: 2 }), 'Hourly')).purple).toBe(5);
     expect(R(take(scene({ round: 3 }), 'Hourly')).purple).toBe(6);
   });
-  it('Lend a Hand: +3 purple, +1 to a player you choose', () => {
-    let s = take(scene(), 'Lend a Hand');
-    expect(R(s).purple).toBe(3);
-    s = move(s, 'player:1');
-    expect(R(s, 1).purple).toBe(1);
+  it('Catch Up: +1 purple, +2 per rival with more workers on the board', () => {
+    expect(R(take(scene({ n: 3, slots: { [RUSH]: 1, [HIRE]: 1, '1-0': 2, '1-1': 2 } }), 'Catch Up')).purple).toBe(5);
+    expect(R(take(scene({ n: 3, slots: { [RUSH]: 1, [HIRE]: 2 } }), 'Catch Up')).purple).toBe(1); // equal counts don't pay
   });
   it('Wind-up: +1 purple per worker you have on the board, this one included', () => {
     expect(R(take(scene(), 'Wind-up')).purple).toBe(1);
@@ -114,13 +112,13 @@ describe('Purple actions', () => {
     expect(R(s).purple).toBe(8); // 1 open, 1 turn queued: no spare, so +2
     expect(nextPlacer(s)).toBe(1);
   });
-  it(`Rally (ring III): ${RALLY_N} extra turn${RALLY_N > 1 ? 's' : ''} right after this one`, () => {
-    let s = take(scene({ round: 3, queue: turns(0, 1) }), 'Rally');
-    let n = 0;
-    s = pass(s);
-    while (s.pending.kind === 'place' && s.pending.player === 0) { s = take(s, 'Hourly' in {} ? '' : s.pending.options.find(o => o.label === 'Rush' || o.label === 'Hourly' || o.label === 'Wind-up').label); n++; s = pass(s); }
-    expect(n).toBe(RALLY_N);
-    expect(s.pending.player).toBe(1);
+  it(`Rally (ring III): pay ${RALLY_COST} purple for an extra turn; without it, +3 purple`, () => {
+    let s = take(scene({ round: 3, res: [{ purple: RALLY_COST + 1 }], queue: turns(0, 1) }), 'Rally');
+    expect(R(s).purple).toBe(1);
+    expect(nextPlacer(s)).toBe(0);
+    s = take(scene({ round: 3, res: [{ purple: RALLY_COST - 1 }], queue: turns(0, 1) }), 'Rally');
+    expect(R(s).purple).toBe(RALLY_COST + 2);
+    expect(nextPlacer(s)).toBe(1);
   });
 });
 
@@ -161,26 +159,28 @@ describe('Purple members', () => {
     expect(t.queue.filter(x => x.t === 'turn' && x.p === 0)).toHaveLength(4);
   });
   it('Foreman, Courier, Apprentice: whenever you take an extra turn', () => {
-    let s = take(scene({ round: 2, res: [{ purple: 6 }], members: [['purple.foreman', 'purple.courier', 'purple.apprentice']], queue: turns(0, 1) }), 'Overtime');
+    let s = take(scene({ round: 2, res: [{ purple: 6 }], slots: { [JV]: 0 }, members: [['purple.foreman', 'purple.courier', 'purple.apprentice']], queue: turns(0, 1) }), 'Overtime');
+    // Foreman: 2 workers on the board (Joint Venture + Overtime)
     expect(R(s)).toEqual({ gold: 1, red: 1, purple: 2, green: 1 });
-    expect(s.players[0].discount).toBe(1);
+    expect(s.players[0].discount).toBe(2);
   });
-  it('Overseer: whenever a rival takes an extra turn, +1 purple', () => {
-    const s = take(scene({ round: 2, res: [{ purple: 6 }], members: [[], ['purple.overseer']], queue: turns(0, 1) }), 'Overtime');
-    expect(R(s, 1).purple).toBe(1);
+  it('Overseer: whenever a rival takes an extra turn, gain half your purple, up to 4', () => {
+    let s = take(scene({ round: 2, res: [{ purple: 6 }, { purple: 5 }], members: [[], ['purple.overseer']], queue: turns(0, 1) }), 'Overtime');
+    expect(R(s, 1).purple).toBe(7);
+    s = take(scene({ round: 2, res: [{ purple: 6 }, { purple: 20 }], members: [[], ['purple.overseer']], queue: turns(0, 1) }), 'Overtime');
+    expect(R(s, 1).purple).toBe(24);
   });
   it('Linger counts as an extra turn for the triggers', () => {
     let s = take(scene({ round: 2, members: [['purple.foreman']], slots: { [JV]: 0 }, queue: turns(0, 1) }), 'Linger');
     s = move(move(s, `from:${JV}`), `to:${RUSH}`);
     expect(R(s).purple).toBe(2);
   });
-  it('Timekeeper: whenever a rival buys 6 followers, +1 purple', () => {
-    let s = scene({ members: [[], ['purple.timekeeper']], res: [{ gold: 2, red: 2, green: 2, purple: 2 }], queue: [{ t: 'buy', p: 0 }] });
-    s = move(s, 'tier:big');
-    expect(R(s, 1).purple).toBe(1);
-    s = scene({ members: [[], ['purple.timekeeper']], res: [{ gold: 2, red: 2 }], queue: [{ t: 'buy', p: 0 }] });
-    s = move(s, 'tier:mid');
-    expect(R(s, 1).purple).toBe(0);
+  it('Double Time: extra turns you pay purple for cost half, rounded up', () => {
+    let s = take(scene({ round: 2, res: [{ purple: 3 }], members: [['purple.doubletime']], queue: turns(0, 1) }), 'Overtime');
+    expect(R(s).purple).toBe(0);
+    expect(nextPlacer(s)).toBe(0);
+    s = take(scene({ round: 3, res: [{ purple: Math.ceil(RALLY_COST / 2) }], members: [['purple.doubletime']], queue: turns(0, 1) }), 'Rally');
+    expect(R(s).purple).toBe(0);
   });
   it('Bookkeeper: round end, +1 purple per 2 workers on the board', () => {
     expect(R(scene({ members: [['purple.bookkeeper']], slots: { [JV]: 0, [RUSH]: 0, [HIRE]: 0 }, queue: [{ t: 'endRound' }] })).purple).toBe(1);
@@ -188,12 +188,26 @@ describe('Purple members', () => {
   it('Clockmaker: round end, +1 purple per 2 purple', () => {
     expect(R(scene({ members: [['purple.clockmaker']], res: [{ purple: 7 }], queue: [{ t: 'endRound' }] })).purple).toBe(10);
   });
-  it('Lamplighter: round start, +2 purple', () => {
-    expect(R(start([['purple.lamplighter']])).purple).toBe(2);
+  it('Lamplighter: round start, +1 purple per worker you get this round', () => {
+    expect(R(start([['purple.lamplighter']])).purple).toBe(4);
+    expect(R(scene({ members: [['purple.lamplighter']], queue: [{ t: 'round', r: 3 }] })).purple).toBe(5);
   });
-  it('Marathoner: game end, +1 follower per worker on the board', () => {
-    const s = scene({ round: 3, members: [['purple.marathoner']], slots: { [JV]: 0, [RUSH]: 0, [HIRE]: 0 }, queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.parts).toContain('Marathoner +3');
+  it('Relay: once per round, pay 3 purple to take a turn right after a rival\'s extra turn', () => {
+    let s = take(scene({ round: 2, res: [{ purple: 6 }, { purple: 7 }], members: [[], ['purple.relay']], queue: turns(0, 1, 0) }), 'Overtime');
+    expect(s.pending.kind).toBe('choose');
+    expect(s.pending.player).toBe(1);
+    s = move(s, 'yes');
+    expect(R(s, 1).purple).toBe(4);
+    // P1's extra turn is running now; the relay turn comes right after it, before P2's own turn
+    expect(s.pending).toMatchObject({ kind: 'place', player: 0 });
+    expect(s.queue.filter(t => t.t === 'turn').map(t => t.p)).toEqual([1, 1, 0]);
+    // once per round: a second extra turn this round doesn't ask again
+    expect(s.cards[uidOf(s, 'purple.relay', 1)].relayRound).toBe(2);
+  });
+  it('Relay: saying no keeps your purple', () => {
+    let s = take(scene({ round: 2, res: [{ purple: 6 }, { purple: 7 }], members: [[], ['purple.relay']], queue: turns(0, 1) }), 'Overtime');
+    s = move(s, 'no');
+    expect(R(s, 1).purple).toBe(7);
   });
   it('Patience: game end, +1 follower per 3 purple', () => {
     const s = scene({ round: 3, members: [['purple.patience']], res: [{ purple: 10 }], queue: [{ t: 'finish' }] });
