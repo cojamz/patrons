@@ -333,3 +333,6 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - (Claude, under Cory's go-with-your-gut, from the design critic) "Loose followers" is defined once (rulebook and glossary): followers you bought or won, not the ones your members are worth. Sell High, Pawnbroker and Liquidator use it, and Barter reads "Recruit a face-up member for half its cost (round up), paid in loose followers." (same rule as before).
 - (Claude, under Cory's go-with-your-gut, from the design critic) The 10-follower buy (the game-end clock) is at most once per player per round; the stock of 4 stays. One seat had taken 3 of the 4 in round II and ended the game early. Bots follow it because the option is hidden.
 - (Cory, overruling the design critic's fallbacks) Cory: no rescue clauses; taking a space you can't use is on you. Echo ("If there's none, +2 green"), Understudy ("+3 green"), Barter ("If you can't, +3 white") and Sell High ("If you have no loose followers, +3 white") stay without them.
+- ✅ (Cory) Floating minions or a minion count, not both: keep the floating minions, drop the count dots.
+- ✅ (Cory) No geometric seat shapes (circle/triangle/square/star) anywhere players see: identity is the leader's emoji.
+- ✅ (Cory) A member's sphere color must be obvious from its clothes/color, with an aura if needed.
