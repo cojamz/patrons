@@ -6,6 +6,7 @@ import { friendlyError } from '../errors.js';
 import { quadrant } from '../../engine/v4/index.js';
 import { CLASSIC, spheres, sphereName, tableProblem, randomTable, urlTable } from '../tables.js';
 import { GAME_NAME, VERSION } from '../version.js';
+import { copyText } from '../Recovery.jsx';
 
 const KINDS = [['human', 'Person'], ['bot', 'Bot'], ['empty', 'Empty']];
 const NAME_MAX = 14;
@@ -184,6 +185,15 @@ export function LocalSetup({ initial, onStart, onBack }) {
   );
 }
 
+/** The link that joins room `code`, keeping this page's test/transport params (?transport=, ?rtdb=). */
+export function inviteLink(code) {
+  const q = new URLSearchParams();
+  const here = new URLSearchParams(location.search);
+  for (const k of ['transport', 'rtdb']) if (here.get(k)) q.set(k, here.get(k));
+  q.set('join', code);
+  return `${location.origin}${location.pathname}?${q}`;
+}
+
 /** Online lobby, built against the lobby contract: subscribe(fn) -> {code, hostId, status, players}; host: addBot, removeSeat, start. */
 export function Lobby({ lobby, myId, onLeave }) {
   const [view, setView] = useState(() => (lobby && lobby.getView ? lobby.getView() : null));
@@ -195,10 +205,11 @@ export function Lobby({ lobby, myId, onLeave }) {
   const me = view.me?.playerId ?? myId;
   const isHost = view.isHost ?? view.hostId === me;
   const players = [...view.players].sort((a, b) => a.seat - b.seat);
-  const copy = () => {
-    const url = `${location.origin}${location.pathname}?join=${view.code}`;
-    Promise.resolve(navigator.clipboard?.writeText(url)).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {});
-  };
+  const link = inviteLink(view.code);
+  // copy with a fallback (no clipboard API on plain http or some phones); if both fail the link is right there to select
+  const copy = () => copyText(link).then(ok => { setCopied(ok ? 'link copied' : 'select the link below to copy it'); setTimeout(() => setCopied(false), 2500); });
+  const share = typeof navigator !== 'undefined' && navigator.share
+    ? () => navigator.share({ title: GAME_NAME, text: `Join my ${GAME_NAME} game: room ${view.code}`, url: link }).catch(() => {}) : null;
   const act = fn => Promise.resolve().then(fn).catch(e => setErr(friendlyError(e)));
   const roomTable = view.table && view.table.quadrants ? view.table : { mode: 'classic', quadrants: [...CLASSIC] };
   const shownTable = isHost && draft ? draft : roomTable;
@@ -209,14 +220,19 @@ export function Lobby({ lobby, myId, onLeave }) {
         <h2>Room</h2>
         {view.status === 'closed' && <p className="error">This room is closed.</p>}
         <button type="button" className="code" onClick={copy} title="Copy invite link" aria-label={`Room code ${view.code}, copy invite link`}>
-          {view.code}<small>{copied ? 'link copied' : 'tap to copy invite link'}</small>
+          {view.code}<small>{copied || 'tap to copy invite link'}</small>
         </button>
+        <div className="invite" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <input readOnly value={link} aria-label="Invite link" data-invite onFocus={e => e.target.select()} style={{ flex: '1 1 220px', minWidth: 0, font: 'inherit', fontSize: 'var(--fs-2)', color: 'var(--muted)', background: 'var(--table)', border: '1px solid var(--rim)', borderRadius: 8, padding: '6px 10px' }} />
+          <button type="button" className="btn" onClick={copy} data-copy-link>Copy link</button>
+          {share && <button type="button" className="btn" onClick={share}>Share</button>}
+        </div>
         <ul className="seats">
           {players.map(p => (
             <li key={p.id} className="seat" style={{ '--pc': PLAYER_COLORS[p.seat % 4] }}>
               <i className="dot" />
               <span className="nm">{p.name}{p.id === me ? ' (you)' : ''}</span>
-              <span className="hint">{p.kind === 'bot' ? 'bot' : p.connected === false ? 'offline' : p.id === view.hostId ? 'host' : 'ready'}</span>
+              <span className="hint" data-presence={p.kind === 'bot' ? 'bot' : p.connected === false ? 'offline' : 'here'}>{p.kind === 'bot' ? 'bot' : `${p.id === view.hostId ? 'host · ' : ''}${p.connected === false ? 'offline' : 'connected'}`}</span>
               {isHost && p.id !== me && <button type="button" className="btn ghost" onClick={() => act(() => lobby.removeSeat(p.seat))}>Remove</button>}
             </li>
           ))}
@@ -228,7 +244,8 @@ export function Lobby({ lobby, myId, onLeave }) {
             <button type="button" className="btn" disabled={players.length >= 4} onClick={() => act(() => lobby.addBot())}>Add bot</button>
             <button type="button" className="btn pri" disabled={view.canStart === false || players.length < 2 || !!tableProblem(shownTable.quadrants)} onClick={() => act(() => lobby.start())}>Start game</button>
           </div>
-        ) : <p className="hint">Waiting for the host to start…</p>}
+        ) : <p className="hint">Waiting for {view.hostName || 'the host'} to start…</p>}
+        {isHost && view.startHint && <p className="hint" data-start-hint>{view.startHint}</p>}
         <button type="button" className="btn ghost" onClick={onLeave}>Leave</button>
       </div>
     </div>

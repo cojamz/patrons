@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createGame, applyMove, resume, followers } from '../../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../../engine/v4/bots.js';
 import { seededRandom } from '../../../../engine/v4/rng.js';
-import trading, { install } from '../../../../engine/v4/content/trading.js';
+import trading, { install, SELL_HIGH } from '../../../../engine/v4/content/trading.js';
 import { take, move, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
 
@@ -92,28 +92,27 @@ describe('White actions', () => {
     expect(s.pending?.kind).not.toBe('choose');
   });
 
-  it('Pawn: +2 white; may sell up to 1 follower per round number for 2 white each', () => {
+  it('Pawn: per round number, +1 follower or +2 white (you pick how many of each)', () => {
     let r3 = take(scene({ round: 3, bonus: [5] }), 'Pawn');
     expect(ids(r3)).toEqual(['amount:0', 'amount:1', 'amount:2', 'amount:3']);
-    r3 = move(r3, 'amount:3');
-    expect(R(r3).white).toBe(8);
-    expect(B(r3)).toBe(2);
-    let s = take(scene({ bonus: [3] }), 'Pawn');
-    expect(R(s).white).toBe(2);
-    expect(ids(s)).toEqual(['amount:0', 'amount:1']);
-    s = move(s, 'amount:1');
-    expect(R(s).white).toBe(4);
-    expect(B(s)).toBe(2);
-    s = move(take(scene({ bonus: [3] }), 'Pawn'), 'amount:0');
-    expect(R(s).white).toBe(2);
-    expect(B(s)).toBe(3);
+    const mix = move(r3, 'amount:2');
+    expect(R(mix).white).toBe(4);
+    expect(B(mix)).toBe(6);
+    const allWhite = move(r3, 'amount:3');
+    expect([R(allWhite).white, B(allWhite)]).toEqual([6, 5]);
+    const allFollowers = move(r3, 'amount:0');
+    expect([R(allFollowers).white, B(allFollowers)]).toEqual([0, 8]);
+    expect(allFollowers.log.join('\n')).toContain("P1's Pawn: +3 followers.");
   });
 
-  it('Pawn: with no followers to sell (members and yourself never sell), just +2 white', () => {
-    const s = take(scene({ members: [['red.twins', 'red.intern']] }), 'Pawn');
-    expect(s.pending.kind).toBe('buy');
-    expect(R(s).white).toBe(2);
-    expect(F(s)).toBe(4);
+  it('Pawn in round I is live with nothing bought or won: 1 follower or 2 white (Cory found the old sale dead here)', () => {
+    let s = take(scene({ members: [['red.twins', 'red.intern']] }), 'Pawn');
+    expect(ids(s)).toEqual(['amount:0', 'amount:1']);
+    const f = move(s, 'amount:0');
+    expect([R(f).white, B(f), F(f)]).toEqual([0, 1, 5]);
+    const w = move(s, 'amount:1');
+    expect([R(w).white, B(w), F(w)]).toEqual([2, 0, 4]);
+    expect(w.pending.kind).toBe('buy');
   });
 
   it('Sell High (ring II): sell up to 2 followers for 3 white each', () => {
@@ -130,16 +129,27 @@ describe('White actions', () => {
     expect(s.log.join('\n')).toContain('Sell High: P1 has no followers to sell yet');
   });
 
-  it('Cash In (ring II): +1 follower, then trade white for followers 1 for 1', () => {
-    let s = take(scene({ round: 2, res: [{ white: 8 }] }), 'Cash In');
-    expect(B(s)).toBe(1);
-    expect(ids(s)).toEqual(['amount:0', 'amount:2', 'amount:4', 'amount:6', 'amount:8']);
-    s = move(s, 'amount:6');
-    expect(R(s).white).toBe(2);
-    expect(B(s)).toBe(7);
-    s = take(scene({ round: 2 }), 'Cash In');
+  it('Barter (ring II): recruit a face-up member, paying 1 follower per 2 of its cost, rounded up', () => {
+    // pinned costs: Midas 5 → 3 followers, Jackpot 6 → 3, Tycoon 4 → 2, Mentor 5 → 3, Proselytizer 6 → 3, Big Family 4 → 2
+    let s = take(scene({ round: 2, bonus: [2], res: [{ red: 3 }], shop: SHOP }), 'Barter');
+    const card = def => `card:${uidOf(s, def, 'shop')}`;
+    expect(ids(s)).toEqual([card('gold.tycoon'), card('red.bigfamily'), 'none']); // 3 followers is too many
+    s = move(s, card('red.bigfamily'));
+    expect(B(s)).toBe(0);
+    expect(s.players[0].members.map(u => s.cards[u].def)).toEqual(['red.bigfamily']);
+    expect(R(s).red).toBe(3); // no resources paid
+    expect(s.log.join('\n')).toContain('P1 bartered 2 followers for Big Family.');
+    expect(s.pending.kind).toBe('buy'); // your normal buy still follows
+    s = move(take(scene({ round: 2, bonus: [3], shop: SHOP }), 'Barter'), 'none');
+    expect(B(s)).toBe(3);
+    expect(s.players[0].members).toEqual([]);
+  });
+
+  it('Barter: members and yourself never pay; too few followers, nothing happens and the log says why', () => {
+    const s = take(scene({ round: 2, bonus: [1], members: [['red.twins']], shop: SHOP }), 'Barter');
     expect(s.pending?.kind).not.toBe('choose');
-    expect(B(s)).toBe(1);
+    expect(s.log.join('\n')).toContain('Barter: P1 has too few followers to pay for any face-up member');
+    expect([B(s), F(s)]).toEqual([1, 4]);
   });
 
   it('Boom (ring III): trade all your resources for followers 1 for 1, or all but your white', () => {
@@ -159,7 +169,9 @@ describe('White actions', () => {
   it('Midas takes action gains as gold, sales included', () => {
     let s = take(scene({ bonus: [2], members: [['gold.midas']] }), 'Pawn');
     s = move(s, 'amount:1');
-    expect(R(s)).toEqual({ ...Z, gold: 4 });
+    expect(R(s)).toEqual({ ...Z, gold: 2 });
+    s = move(take(scene({ round: 2, bonus: [2], members: [['gold.midas']] }), 'Sell High'), 'amount:2');
+    expect(R(s)).toEqual({ ...Z, gold: 2 * SELL_HIGH.each });
   });
 
   it('a bot sells early and keeps its followers on its last turn', () => {
@@ -274,13 +286,17 @@ describe('White members', () => {
     expect(B(s)).toBe(1);
   });
 
-  it('Broker: whenever a White action gives you followers, +1 more', () => {
+  it('Broker: whenever a White action gives you followers, +1 more (once per action)', () => {
     let s = move(take(scene({ res: [{ red: 1 }], members: [['trading.broker']] }), 'Buy Low'), 'color:red');
     expect(B(s)).toBe(2); // 1, +1 Broker
+    s = move(move(take(scene({ res: [{ red: 2 }], members: [['trading.broker']] }), 'Buy Low'), 'color:red'), 'color:red');
+    expect(B(s)).toBe(3); // 2 traded, +1 Broker once (not once per resource)
     s = move(take(scene({ round: 3, res: [{ white: 2 }], members: [['trading.broker']] }), 'Boom'), 'boom:all');
     expect(B(s)).toBe(3);
-    s = move(take(scene({ round: 2, res: [{ white: 2 }], members: [['trading.broker']] }), 'Cash In'), 'amount:2');
-    expect(B(s)).toBe(4); // +1 (+1 Broker), then 2 white for 2
+    s = move(take(scene({ round: 2, members: [['trading.broker']] }), 'Pawn'), 'amount:0');
+    expect(B(s)).toBe(3); // 2 followers, +1 Broker
+    s = move(take(scene({ round: 2, members: [['trading.broker']] }), 'Pawn'), 'amount:2');
+    expect([B(s), R(s).white]).toEqual([0, 4]); // all white: no followers, no Broker
     s = take(scene({ round: 3, members: [['trading.broker']] }), 'Boom');
     expect(B(s)).toBe(0); // nothing traded, no bonus
     s = move(take(scene({ res: [{ red: 2 }], members: [['trading.broker']] }), 'Rush'), 'tier:small');

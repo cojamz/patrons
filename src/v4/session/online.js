@@ -57,7 +57,8 @@ const isConnected = (room, s) => s.kind === 'bot' || room?.players?.[s.id]?.conn
  *   canSub: (host's view) gone long enough that the host may let a bot play for them.
  * @typedef {{ code: string, hostId: string|null, hostName: string, status: 'lobby'|'playing'|'over'|'closed', seed: number|null,
  *   players: LobbyPlayer[], seats: number, maxSeats: number, canStart: boolean, startHint: string,
- *   me: { playerId: string, seat: number|null }, isHost: boolean, subAfterMs: number }} LobbyView
+ *   me: { playerId: string, seat: number|null }, isHost: boolean, subAfterMs: number, selfOnline?: boolean }} LobbyView
+ *   selfOnline: this client's own connection is up (Lobby.getView adds it).
  */
 
 function lobbyView(room, code, playerId, { awaySince = new Map(), subAfterMs = SUB_AFTER_MS, now = Date.now() } = {}) {
@@ -138,12 +139,13 @@ export async function createRoom({ name, transport, playerId = newPlayerId(), se
  *    looks connected (a phone killed mid-game can take the server a minute to notice).
  * 3. Once the game has started: a seat whose player has left, with your name; or the one seat a bot is playing for
  *    someone who left. Taking it back clears the bot.
- * Otherwise a new seat, in the lobby only.
+ * Otherwise a new seat, in the lobby only. `onlyRejoin`: never take a new or someone else's seat (an invite link
+ * reopened on a device that was in the room tries this first, and falls back to the join form).
  * @param {{ code: string, name?: string, transport: import('./transport/tree.js').Transport, playerId?: string,
- *   knownIds?: string[], botDelayMs?: number, subAfterMs?: number }} opts
+ *   knownIds?: string[], onlyRejoin?: boolean, botDelayMs?: number, subAfterMs?: number }} opts
  * @returns {Promise<{ code: string, playerId: string, lobby: Lobby, rejoined: boolean, tookSeat?: string }>}
  */
-export async function joinRoom({ code, name, transport, playerId, knownIds = [], botDelayMs = 450, subAfterMs }) {
+export async function joinRoom({ code, name, transport, playerId, knownIds = [], onlyRejoin = false, botDelayMs = 450, subAfterMs }) {
   if (!transport) throw new Error('joinRoom needs a transport.');
   await transport.ready;
   code = normCode(code);
@@ -160,6 +162,7 @@ export async function joinRoom({ code, name, transport, playerId, knownIds = [],
   let back = (playerId && humans.find(s => s.id === playerId)) || known.find(gone)
     || (status !== 'lobby' && known.length === 1 ? known[0] : null);
   let tookSeat = null;
+  if (!back && onlyRejoin) throw new Error('You are no longer seated in that room.');
   if (!back && status !== 'lobby') {
     const left = humans.filter(gone);
     const subbed = left.filter(s => s.sub === 'bot');
@@ -254,12 +257,14 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
   const starts = createEmitter();
   let resolveReady;
   const ready = new Promise(r => { resolveReady = r; });
-  const view = () => lobbyView(room, code, playerId, { awaySince, subAfterMs });
+  const view = () => ({ ...lobbyView(room, code, playerId, { awaySince, subAfterMs }), selfOnline: up });
 
   transport.onDisconnectSet(myConnPath, false).catch(() => {});
   const offConn = transport.onConnectedChange?.(u => {
+    const was = up;
     up = !!u;
     if (up) imHere(true);
+    if (was !== up && gotFirst && !destroyed) { views.emit(view()); session?.roomChanged(); }
   }) || (() => {});
 
   const offRoom = transport.subscribe(base, value => {
@@ -495,7 +500,7 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
     return {
       mode: 'online', roomCode: code, isHost: room?.hostId === playerId, playerId,
       seats: v.players.map(p => ({ seat: p.seat, name: p.name, kind: p.kind, connected: p.connected, host: p.host, away: p.away, awayMs: p.awayMs, sub: p.sub, canSub: p.canSub, me: p.id === playerId })),
-      subAfterMs: v.subAfterMs,
+      subAfterMs: v.subAfterMs, selfOnline: v.selfOnline,
       version,
     };
   };

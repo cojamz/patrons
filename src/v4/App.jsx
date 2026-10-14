@@ -4,10 +4,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import './v4.css';
 import { createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineReady } from './sessionApi.js';
 import { createLocalSession } from './session/local.js';
-import { loadLocal, saveLocal, clearLocal, finishLocal, loadOnline, saveOnline, clearOnline } from './saved.js';
+import { loadLocal, saveLocal, clearLocal, finishLocal, loadOnline, saveOnline, clearOnline, rememberRoom, roomIds } from './saved.js';
 import GameScreen from './game/GameScreen.jsx';
-import { friendlyError } from './errors.js';
+import { friendlyError, OFFLINE } from './errors.js';
 import { Home, LocalSetup, Lobby, initialTable } from './screens/Screens.jsx';
+import OnlineBar from './screens/OnlineBar.jsx';
 import { tableProblem } from './tables.js';
 import { Recovered } from './Recovery.jsx';
 
@@ -15,6 +16,9 @@ import { Recovered } from './Recovery.jsx';
 const BOT_DELAY = { slow: 400, normal: 250, fast: 120 };
 const PACE = { slow: 1100, normal: 700, fast: 350 };
 const urlBotDelay = () => Number(new URLSearchParams(location.search).get('botDelay')) || 0;
+// An invite link (?join=CODE) reopened on a device that already sat in that room goes straight back to its seat.
+const linkCode = () => (new URLSearchParams(location.search).get('join') || '').trim().toUpperCase();
+const linkRejoin = () => (linkCode() && roomIds(linkCode()).length ? linkCode() : '');
 
 /** The v4 root: a crash anywhere shows a recovery screen, not a blank page; notices sit on top (Recovery.jsx). */
 export default function V4Root() {
@@ -22,7 +26,7 @@ export default function V4Root() {
 }
 
 function App() {
-  const [screen, setScreen] = useState(() => (loadOnline() && rejoinRoom ? { name: 'rejoining' } : { name: 'home' }));
+  const [screen, setScreen] = useState(() => (loadOnline() && rejoinRoom ? { name: 'rejoining' } : linkRejoin() && joinRoom ? { name: 'rejoining', link: linkRejoin() } : { name: 'home' }));
   const [config, setConfig] = useState(null);
   const [session, setSession] = useState(null);
   const [gameKey, setGameKey] = useState(0);
@@ -114,6 +118,7 @@ function App() {
       ]).finally(() => clearTimeout(timer));
       const lobby = res.lobby;
       saveOnline({ code: res.code || lobby.code, playerId: res.playerId, transport: kind });
+      rememberRoom(res.code || lobby.code, res.playerId);
       setScreen({ name: 'lobby', lobby, myId: res.playerId });
       lobby.onStart(s => { setSession(s); setGameKey(k => k + 1); setScreen({ name: 'game', lobby }); });
       return null;
@@ -125,9 +130,22 @@ function App() {
   // After a reload: take your seat back in the room you were in.
   useEffect(() => {
     if (screen.name !== 'rejoining') return;
+    if (screen.link) {
+      // a reopened invite link: this device's seat if it still has one, else the ordinary join form (code filled in)
+      const kind = transportKind();
+      enterLobby(() => joinRoom({ code: screen.link, transport: makeTransport(kind), knownIds: roomIds(screen.link), onlyRejoin: true, botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)
+        .then(err => { if (err) setScreen({ name: 'home' }); });
+      return;
+    }
     const v = loadOnline();
     enterLobby(() => rejoinRoom({ code: v.code, playerId: v.playerId, transport: makeTransport(v.transport), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), v.transport)
-      .then(err => { if (err) { clearOnline(); setHomeError(`Couldn't rejoin room ${v.code}: ${err}`); setScreen({ name: 'home' }); } });
+      .then(err => {
+        if (!err) return;
+        // offline: keep the seat to try again (Join with the same code takes it back); otherwise it's gone
+        if (err !== OFFLINE) clearOnline();
+        setHomeError(`Couldn't rejoin room ${v.code}: ${err}`);
+        setScreen({ name: 'home' });
+      });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dropLobby = lobby => {
@@ -140,6 +158,8 @@ function App() {
   if (screen.name === 'game' && session) {
     const online = session.info?.mode === 'online';
     return (
+      <>
+      {online && <OnlineBar session={session} />}
       <GameScreen
         key={gameKey} session={session} pace={urlBotDelay() ? Math.min(urlBotDelay() * 2, PACE.normal) : PACE[config?.speed] ?? PACE.normal}
         onHome={screen.lobby ? () => leaveLobby(screen.lobby) : goHome}
@@ -147,6 +167,7 @@ function App() {
         onPlayAgain={config && !online ? () => { clearLocal(); startLocal(config); } : null}
         onResults={online ? null : onResultsShown}
       />
+      </>
     );
   }
   if (screen.name === 'rejoining') return <div className="app narrow"><div className="dialog page"><h2>Rejoining your game…</h2></div></div>;
@@ -161,7 +182,7 @@ function App() {
       error={homeError}
       onLocal={() => setScreen({ name: 'setup' })}
       onHost={name => enterLobby(() => createRoom({ name, table: initialTable(config?.table), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
-      onJoin={(code, name) => enterLobby(() => joinRoom({ code, name, transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
+      onJoin={(code, name) => enterLobby(() => joinRoom({ code, name, knownIds: roomIds(code), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
     />
   );
 }

@@ -231,7 +231,8 @@ const trading = {
         if (buyer === owner && tier?.get >= 3) { owner.bonus += 1; ctx.log(`${owner.name}'s Bulk Buyer: +1 follower.`); }
       },
     }),
-    m('broker', 'Broker', 2, 2, 'Whenever a White action gives you followers, +1 more.', { brokerBonus: 1 }),
+    // once per action use (2026-10-14): Buy Low used to pay it on every resource traded
+    m('broker', 'Broker', 2, 2, 'Whenever a White action gives you followers, +1 more (once per action).', { brokerBonus: 1 }),
     m('exporter', 'Exporter', 4, 4, 'Whenever you recruit a non-white member, +1 white.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);
@@ -283,12 +284,13 @@ function payLoan(ctx, owner, card) {
   ctx.gain(owner, W, 5);
   ctx.log(`${owner.name}'s Lender: +5 white.`);
 }
-function buyLow(ctx, p, color) {
+// Buy Low trades one resource at a time; Broker pays once per use of the action (on its first trade), not per trade.
+function buyLow(ctx, p, color, first = true) {
   p.res[color] -= 1;
-  actionFollowers(ctx, p, 1);
+  if (first) actionFollowers(ctx, p, 1); else p.bonus += 1;
   ctx.log(`${p.name} traded 1 ${color} for 1 follower.`);
 }
-/** Followers from a White action, plus 1 per Broker (a Doppelganger's copy counts too). */
+/** Followers from a White action, plus 1 per Broker (a Doppelganger's copy counts too). Called once per action use. */
 function actionFollowers(ctx, p, n) {
   if (!(n > 0)) return;
   let extra = 0;

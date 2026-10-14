@@ -61,6 +61,13 @@ const rallyTurns = (ctx, p) => {
   if (VARIANT.rally === 'one') return v >= VARIANT.rallyMin ? 2 : 0;
   return Math.min(VARIANT.rallyCap, Math.floor(v / VARIANT.rallyDiv));
 };
+/** Rally (spend): turns bought by spending all your purple, as the board has room. */
+const spendTurns = (ctx, p) => {
+  const v = p.res[P] || 0;
+  if (v < VARIANT.rallyDiv) return 0;
+  const k = Math.min(VARIANT.rallyCap, Math.floor(v / VARIANT.rallyDiv) + (VARIANT.rally === 'spend1' ? 1 : 0));
+  return Math.min(k, room(ctx));
+};
 /** p's turns still queued this round (not the one being played). */
 const laterTurns = (ctx, p) => ctx.state.queue.filter(t => t.t === 'turn' && t.p === p.id);
 const endOfTurn = ctx => ctx.state.queue.findIndex(t => t.t === 'endTurn');
@@ -123,11 +130,12 @@ export default {
   resource: P,
   scoring: {
     get label() {
-      return { today: 'Most workers on the board (purple breaks ties)', ties: 'Most workers on the board (ties score nothing)', behind: 'Most workers on the board (fewer followers break ties)', space: 'Most workers on Purple spaces (ties score nothing)' }[VARIANT.score];
+      return { today: 'Most workers on the board (purple breaks ties)', ties: 'Most workers on the board (ties score nothing)', behind: 'Most workers on the board (fewer followers break ties)', space: 'Most workers on Purple spaces (ties score nothing)', purple: 'Most purple' }[VARIANT.score];
     },
     score(ctx, p) {
       const mine = onBoard(ctx, p);
       if (VARIANT.score === 'today') return mine * 1000 + (p.res[P] || 0);
+      if (VARIANT.score === 'purple') return p.res[P] || 0;
       const best = Math.max(0, ...ctx.state.players.filter(o => o.id !== p.id).map(o => onBoard(ctx, o)));
       if (VARIANT.score === 'behind') return mine * 1000 + (999 - ctx.followers(p));
       if (VARIANT.score === 'space') {
@@ -170,7 +178,7 @@ export default {
     },
     {
       key: 'linger', ring: 2,
-      get name() { return { linger: 'Linger', sleepin: 'Sleep In', hurry: 'Hurry', early: 'Head Start' }[VARIANT.slot4]; },
+      get name() { return { linger: 'Linger', sleepin: 'Sleep In', hurry: 'Hurry', early: 'Plan Ahead' }[VARIANT.slot4]; },
       get text() {
         return {
           linger: 'Move one of your workers from an outer or middle space of another color to a different open space, and do that action.',
@@ -238,6 +246,8 @@ export default {
       key: 'rally', ring: 3, name: 'Rally',
       get text() {
         if (VARIANT.rally === 'hold') return `With ${VARIANT.rallyMin}+ purple, take 2 extra turns right after this one (3 with ${2 * VARIANT.rallyMin}+). If you can’t, +4 purple.`;
+        if (VARIANT.rally === 'spend') return `Spend all your purple: take 1 extra turn right after this one per ${VARIANT.rallyDiv} spent (up to ${VARIANT.rallyCap}). With less than ${VARIANT.rallyDiv}, +4 purple.`;
+        if (VARIANT.rally === 'spend1') return `Spend all your purple: take 1 extra turn right after this one per ${VARIANT.rallyDiv} spent, plus 1 (up to ${VARIANT.rallyCap}). With less than ${VARIANT.rallyDiv}, +4 purple.`;
         if (VARIANT.rally === 'one') return `With ${VARIANT.rallyMin}+ purple, take 2 extra turns right after this one. If not, +4 purple.`;
         if (VARIANT.rally === 'per') return `Take an extra turn right after this one per ${VARIANT.rallyDiv} purple you have (up to ${VARIANT.rallyCap}). With less, +4 purple.`;
         if (VARIANT.rally === 'pay') return `Pay ${VARIANT.rallyDiv} purple per extra turn right after this one (up to ${VARIANT.rallyCap}). If you take none, +3 purple.`;
@@ -245,11 +255,24 @@ export default {
       },
       estimate(ctx, p) {
         if (VARIANT.rally === 'hold' || VARIANT.rally === 'one') { const k = Math.min(rallyTurns(ctx, p), room(ctx)); return k >= 2 ? k * turnValue(ctx) : 4; }
+        if (VARIANT.rally === 'spend' || VARIANT.rally === 'spend1') { const k = spendTurns(ctx, p); return k ? k * turnValue(ctx) - (p.res[P] || 0) * 0.8 + 1 : 4; }
         if (VARIANT.rally === 'per') { const k = Math.min(rallyTurns(ctx, p), room(ctx)); return k ? k * turnValue(ctx) : 4; }
         if (VARIANT.rally === 'pay') { const k = Math.min(rallyTurns(ctx, p), room(ctx)); return k ? k * (turnValue(ctx) - VARIANT.rallyDiv * 0.8) + 1 : 3; }
         return buyEstimate(ctx, p, RALLY, 3);
       },
       resolve(ctx, p) {
+        if (VARIANT.rally === 'spend' || VARIANT.rally === 'spend1') {
+          const k = spendTurns(ctx, p);
+          if (!k) { ctx.gain(p, P, 4, { fromAction: true }); return; }
+          const all = p.res[P] || 0;
+          // all of it, unless the board has room for fewer turns than it buys: then 4 per turn taken
+          const want = Math.min(VARIANT.rallyCap, Math.floor(all / VARIANT.rallyDiv) + (VARIANT.rally === 'spend1' ? 1 : 0));
+          const paid = k < want ? (k - (VARIANT.rally === 'spend1' ? 1 : 0)) * VARIANT.rallyDiv : all;
+          p.res[P] -= paid;
+          ctx.log(`${p.name} spends ${paid} purple on Rally.`);
+          extraTurns(ctx, p, k);
+          return;
+        }
         if (VARIANT.rally === 'per') {
           const k = Math.min(rallyTurns(ctx, p), room(ctx));
           if (k >= 1) extraTurns(ctx, p, k, null);
@@ -342,9 +365,9 @@ export default {
     m('bookkeeper', 'Bookkeeper', 4, 2, 'At round end, +1 purple per 2 workers you have on the board.', {
       onRoundEnd(ctx, owner) { if (VARIANT.bookkeeper === 'end') ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2)); },
       afterAction(ctx, owner, card) {
-        if (VARIANT.bookkeeper !== 'last' || owner.left !== 0 || card.paidRound === ctx.state.round) return;
+        if (VARIANT.bookkeeper === 'end' || owner.left !== 0 || card.paidRound === ctx.state.round) return;
         card.paidRound = ctx.state.round;
-        ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2));
+        ctx.gain(owner, P, VARIANT.bookkeeper === 'board' ? onBoard(ctx, owner) : Math.floor(onBoard(ctx, owner) / 2));
       },
     }),
     m('clockmaker', 'Clockmaker', 2, 2, 'Now and at round start, +1 purple per 2 purple you have.', { now: true,

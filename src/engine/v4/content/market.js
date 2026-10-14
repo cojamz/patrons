@@ -18,8 +18,10 @@ const isBlue = def => def.quadrant === Q;
 export const priceOf = c => c.def.s + c.def.w;
 /** Total printed cost of a player's members. */
 export const memberValue = (ctx, p) => ctx.membersOf(p).reduce((s, c) => s + priceOf(c), 0);
+/** Badged: a member def whose printed cost is BADGE or more (the screen marks these with one helper, this one). */
+export const badgedDef = def => def.s + def.w >= BADGE;
 /** Badged: costs BADGE or more. */
-export const badged = c => priceOf(c) >= BADGE;
+export const badged = c => badgedDef(c.def);
 /** How many badged members a player holds. */
 export const priceyCount = (ctx, p) => ctx.membersOf(p).filter(badged).length;
 const totalRes = p => Object.values(p.res).reduce((a, b) => a + b, 0);

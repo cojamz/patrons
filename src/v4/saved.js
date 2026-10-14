@@ -68,3 +68,23 @@ export const finishLocal = clearLocal;
 export const loadOnline = () => read(ONLINE);
 export const saveOnline = v => write(ONLINE, v);
 export const clearOnline = () => write(ONLINE, null);
+
+// Rooms this device has sat in: { [code]: { ids: [playerId…], at } }, in localStorage (sessionStorage dies with the tab).
+// A reopened invite link or a closed-then-reopened tab passes these ids to joinRoom (knownIds) and gets the seat back.
+// Several ids per room: two tabs of one browser are two people (tests, a shared laptop). Kept 12 h, at most 12 rooms.
+const ROOMS = 'patrons.v4.rooms';
+const ROOM_TTL = 12 * 3600e3;
+const rooms = () => { const v = read(ROOMS); return v && typeof v === 'object' ? v : {}; };
+export const rememberRoom = (code, playerId) => {
+  if (!code || !playerId) return;
+  const all = rooms();
+  const cur = all[code] || { ids: [] };
+  all[code] = { ids: [...cur.ids.filter(id => id !== playerId), playerId].slice(-4), at: Date.now() };
+  const keep = Object.entries(all).filter(([, v]) => v && Date.now() - (v.at || 0) < ROOM_TTL).sort((a, b) => b[1].at - a[1].at).slice(0, 12);
+  write(ROOMS, Object.fromEntries(keep));
+};
+/** Player ids this device used in room `code` (most recent last); [] if none. */
+export const roomIds = code => {
+  const v = rooms()[String(code || '').toUpperCase()];
+  return v && Date.now() - (v.at || 0) < ROOM_TTL && Array.isArray(v.ids) ? [...v.ids] : [];
+};

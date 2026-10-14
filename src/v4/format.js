@@ -1,5 +1,5 @@
 // Display helpers. No rules here: everything is read off engine state.
-import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, followers as engineFollowers, memberCount, countMembersOfColor, applyMove } from '../engine/v4/index.js';
+import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds } from '../engine/v4/index.js';
 import { contextFor } from '../engine/v4/core.js';
 
 export const PLAYER_COLORS = ['#f4efe2', '#ff8fb1', '#b9a2ff', '#ffa94d'];
@@ -140,29 +140,43 @@ export function parseRoundEnd(state, line) {
   };
 }
 
-/** Contest wins per player per quadrant label, from every round-end line still in the log. */
-export function contestWins(state) {
-  const wins = state.players.map(() => ({}));
+/**
+ * Each round's contests as the engine decided them: [{ round, prize, results:[contest] }] (state.contests, which
+ * endRound writes). Saves from before the record existed fall back to the round-end lines still in the log.
+ */
+export function contestHistory(state) {
+  if (Array.isArray(state.contests)) return state.contests;
+  const out = [];
   for (const line of state.log) {
     const r = isRoundEnd(line) ? parseRoundEnd(state, line) : null;
     if (!r) continue;
-    for (const row of r.rows) for (const id of row.winners) wins[id][row.label] = (wins[id][row.label] || 0) + row.v;
+    const round = ['I', 'II', 'III'].indexOf(r.round) + 1;
+    out.push({ round, prize: RING_VALUE[round - 1], results: r.rows.map(row => ({ qid: row.qid, label: row.label, rule: shortLabel(row.label), winners: row.winners, prize: row.v, rows: [] })) });
   }
+  return out;
+}
+
+/** Contest wins per player per contest label: followers won there over the game. */
+export function contestWins(state) {
+  const wins = state.players.map(() => ({}));
+  for (const h of contestHistory(state)) for (const c of h.results) for (const id of c.winners) wins[id][c.label] = (wins[id][c.label] || 0) + (c.prize ?? h.prize);
   return wins;
 }
 
-/** Per player, per contest label: { rounds, v } from every round-end line in the log. */
+/** Per player, per contest label: { rounds, v, qid, rule } over the game (the engine's record). */
 export function contestRounds(state) {
   const out = state.players.map(() => ({}));
-  for (const line of state.log) {
-    const r = isRoundEnd(line) ? parseRoundEnd(state, line) : null;
-    if (!r) continue;
-    for (const row of r.rows) for (const id of row.winners) {
-      const e = out[id][row.label] || (out[id][row.label] = { rounds: 0, v: 0 });
-      e.rounds += 1; e.v += row.v;
-    }
+  for (const h of contestHistory(state)) for (const c of h.results) for (const id of c.winners) {
+    const e = out[id][c.label] || (out[id][c.label] = { rounds: 0, v: 0, qid: c.qid, rule: c.rule || shortLabel(c.label), list: [] });
+    e.rounds += 1; e.v += c.prize ?? h.prize; e.list.push(roman(h.round));
   }
   return out;
+}
+
+/** "Most Magenta members: +10 over the game (rounds I, III)" for each contest a player won, biggest first. */
+export function contestLines(state, p) {
+  return Object.values(contestRounds(state)[p.id] || {}).sort((a, b) => b.v - a.v)
+    .map(e => ({ ...e, text: `${e.rule}: +${e.v} over the game (round${e.rounds > 1 ? 's' : ''} ${e.list.join(', ')})` }));
 }
 
 /** One sentence on why the winner won, built from the followers breakdown. */
@@ -183,8 +197,11 @@ export function winSentence(state) {
     bought: v => `by buying followers (+${v})`,
     effects: v => `from members' abilities (+${v})`,
     endGame: v => `from end-game bonuses (+${v})`,
+    // the sweep names its own followers, never the contests' total (Most Magenta members gave +10 of +18)
     contests: v => (swept && swept[1].rounds >= 2
-      ? `by holding ${shortLabel(swept[0])} ${swept[1].rounds === 3 ? 'all three rounds' : 'two rounds of three'} (+${v})`
+      ? (swept[1].v === v
+        ? `by holding ${swept[1].rule} ${swept[1].rounds === 3 ? 'all three rounds' : 'two rounds of three'} (+${v})`
+        : `from contests (+${v}; ${swept[1].rule} ${swept[1].rounds === 3 ? 'all three rounds' : 'two rounds of three'}, +${swept[1].v})`)
       : `from contests (+${v})`),
   };
   const top = [['members', b.members], ['bought', b.bought], ['effects', b.effects], ['endGame', b.endGame], ['contests', b.contests]]
@@ -217,38 +234,30 @@ export function logSections(state) {
   return out.filter(s => s.lines.length);
 }
 
-// ---------- live contest standings (display only, using each quadrant's own scoring rule) ----------
-function scoringCtx(state) {
-  return {
-    state,
-    memberCount: p => memberCount(state, p),
-    countMembersOfColor: (p, q) => countMembersOfColor(state, p, q),
-    followers: p => engineFollowers(state, p),
-    rivals: p => state.players.filter(o => o !== p),
-    player: id => state.players[id],
-    quadrant,
-  };
-}
+// ---------- contest standings: the engine's contestTable, the same function that scores the round ----------
 /**
- * For each quadrant: { qid, label, rows:[{ id, score, shown }] sorted best first, leaders:[ids], margin }.
- * `shown` is the number people see; a rule may fold a tiebreak into its score (Most members adds red members
- * as a fraction of 1000), so scores of 1000 and up show their whole part.
+ * One contest for display: { qid, label, rule, counts, tiebreak, prize, rows:[{ id, score, shown, tiebreak }],
+ * leaders:[ids], margin, top }. shown is the rule's count (never a re-derived number); leaders are the ids that
+ * would take the prize if the round ended now (none when the best score is 0).
  */
+export function toStanding(c) {
+  const rows = c.rows.map(r => ({ id: r.player, score: r.score, shown: r.count, tiebreak: r.tiebreak }));
+  const leaders = [...c.winners];
+  const lead = rows.find(r => leaders.includes(r.id));
+  const next = rows.find(r => !leaders.includes(r.id));
+  const margin = leaders.length === 1 && next ? lead.shown - next.shown : 0;
+  return { qid: c.qid, label: c.label, rule: c.rule || shortLabel(c.label), counts: c.counts || null, tiebreak: c.tiebreak || null, prize: c.prize, rows, leaders, margin, top: rows[0] ? rows[0].score : 0 };
+}
+/** Every quadrant's contest if the round ended now, from the engine. */
 export function standings(state) {
-  const ctx = scoringCtx(state);
-  return state.quadrants.map(qid => {
-    const q = quadrant(qid);
-    const rows = state.players.map(p => {
-      let score = 0;
-      try { score = q.scoring.score(ctx, p); } catch { score = 0; }
-      return { id: p.id, score, shown: score >= 1000 ? Math.floor(score / 1000) : score };
-    }).sort((a, b) => b.score - a.score);
-    const top = rows[0] ? rows[0].score : 0;
-    const leaders = top > 0 ? rows.filter(r => r.score === top).map(r => r.id) : [];
-    const next = rows.find(r => r.score < top);
-    const margin = leaders.length === 1 && next ? rows[0].shown - next.shown : 0;
-    return { qid, label: q.scoring.label, rows, leaders, margin, top };
-  });
+  let table;
+  try { table = contestTable(state); } catch { return []; }
+  return table.map(toStanding);
+}
+/** A round's contests as recorded when they were scored (state.contests), or null for an old save. */
+export function scoredStandings(state, round) {
+  const h = Array.isArray(state.contests) ? state.contests.find(x => x.round === round) : null;
+  return h ? h.results.map(toStanding) : null;
 }
 
 /** "P2 8 · P3 8 · you 1": the top few, by name ("you" for meId). */
@@ -339,17 +348,27 @@ export function explainLine(log, i) {
 }
 export const plainLine = (log, i) => explainLine(log, i).text;
 
-/** The tiebreak folded into a "most members"-style score ("(red members break ties)" -> "red"), if any. */
+/** The unit a contest's tiebreak counts ("red members", "purple"), from the engine's scoring, or null. */
 export function tiebreakWord(label) {
-  const m = label.match(/\((\w+)(?: members?)? breaks? ties\)/i);
-  return m ? m[1] : null;
+  for (const id of allQuadrantIds()) {
+    const q = quadrant(id);
+    if (q.scoring.label === label) return q.scoring.tiebreak ? q.scoring.tiebreak.unit : null;
+  }
+  return null;
 }
-/** For tied shown counts, the tiebreak amount to show next to the name ("2 red"), else null. */
+/** For a row tied on the shown count, its tiebreak ("2 red members"), else null. */
 export function tiebreakNote(st, row) {
-  const word = tiebreakWord(st.label);
-  if (!word || row.score < 1000) return null;
+  if (!st.tiebreak || row.tiebreak == null) return null;
   const tied = st.rows.some(r => r !== row && r.shown === row.shown);
-  return tied ? `${row.score - row.shown * 1000} ${word}` : null;
+  return tied ? `${row.tiebreak} ${st.tiebreak.unit}` : null;
+}
+
+/** "5 workers each", or "5 workers each · Bo 6" when someone's members change their count this round (Extra Hand). */
+export function workersNote(state) {
+  if (!state.round) return '';
+  const base = WORKERS[state.round - 1];
+  const odd = state.players.filter(p => roundWorkers(state, p) !== base);
+  return `${base} workers each${odd.length ? ` · ${odd.map(p => `${p.name} ${roundWorkers(state, p)}`).join(', ')}` : ''}`;
 }
 
 /** The latest placement by someone other than `mine`, read from the log and the board (survives a reload). */
