@@ -145,7 +145,7 @@ const silver = {
   id: 'silver',
   name: 'Silver',
   resource: S,
-  scoring: { label: 'Most silver', score: (ctx, p) => p.res[S] },
+  scoring: { label: 'Most silver', counts: 'the silver you hold when the round ends', score: (ctx, p) => p.res[S] },
   actions: silverActions,
 
   handlers: {

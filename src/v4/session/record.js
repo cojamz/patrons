@@ -37,7 +37,8 @@ export function contentManifest() {
     quadrants: allQuadrantIds().sort().map(id => {
       const q = quadrant(id);
       return {
-        id, resource: q.resource, rest: shape(without(q, ['actions', 'members', 'id', 'resource'])),
+        // scoring's display keys (show, counts, tiebreak) describe a rule, they don't change it: left out of the hash
+        id, resource: q.resource, rest: shape({ ...without(q, ['actions', 'members', 'id', 'resource']), ...(q.scoring ? { scoring: without(q.scoring, ['show', 'counts', 'tiebreak']) } : {}) }),
         actions: q.actions.map(a => ({ id: a.id, ...shape(without(a, ['id'])) })),
         members: q.members.map(d => ({ id: d.id, ...shape(without(d, ['id'])) })),
       };

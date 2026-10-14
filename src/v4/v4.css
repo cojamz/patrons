@@ -1231,11 +1231,10 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 .caption{transform:none;translate:-50% 0}
 /* Release (base rule): folded under the buy row, one button per member you could release */
 .fbuy .release-row{grid-column:1 / -1;order:99;font-size:var(--fs-2);color:var(--muted)}
-.fbuy .release-row summary{min-height:44px;display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none}
-.fbuy .release-row summary::-webkit-details-marker{display:none}
-.fbuy .release-row summary::before{content:'▸';transition:transform .15s}
-.fbuy .release-row[open] summary::before{transform:rotate(90deg)}
-.fbuy .release-row summary small{font-size:var(--fs-1)}
+.fbuy .rel-toggle{min-height:44px;justify-content:flex-start;gap:6px;padding:0 10px;font-size:var(--fs-2);color:var(--muted);border-color:transparent}
+.fbuy .rel-toggle::before{content:'▸';transition:transform .15s}
+.fbuy .release-row.open .rel-toggle::before{transform:rotate(90deg)}
+.fbuy .rel-toggle small{font-size:var(--fs-1)}
 .fbuy .rel-list{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 4px}
 .fbuy .btn.rel{min-height:44px;padding:0 12px;font-size:var(--fs-2);border-color:color-mix(in srgb,var(--c,var(--rim)) 70%,transparent)}
 .from-pile{font-size:var(--fs-1);color:var(--gold);letter-spacing:.04em}

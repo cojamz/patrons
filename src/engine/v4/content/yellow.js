@@ -23,6 +23,9 @@ export default {
     label: 'Most full sets',
     // a full set is one of each color; you need at least one to score; yellow breaks ties
     score: (ctx, p) => { const s = setsOf(ctx, p); return s > 0 ? s * 1000 + p.res[Y] : 0; },
+    show: (ctx, p) => ({ count: setsOf(ctx, p), tiebreak: p.res[Y] || 0 }),
+    counts: 'full sets: how many times you hold one of each color on the table',
+    tiebreak: { unit: 'yellow', text: 'yellow breaks ties' },
   },
 
   actions: [

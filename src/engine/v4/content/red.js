@@ -10,6 +10,10 @@ export default {
     label: 'Most members (red members break ties)',
     // red members only break ties, so they weigh less than one whole member
     score: (ctx, p) => ctx.memberCount(p) * 1000 + ctx.countMembersOfColor(p, 'red'),
+    // display: what the score is made of (every screen shows these numbers, never its own count)
+    show: (ctx, p) => ({ count: ctx.memberCount(p), tiebreak: ctx.countMembersOfColor(p, 'red') }),
+    counts: 'the members you hold (a card that counts as 2 members counts 2)',
+    tiebreak: { unit: 'red members', text: 'red members break ties' },
   },
 
   actions: [

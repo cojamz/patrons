@@ -138,6 +138,7 @@ function ShopStrip({ state, me, mine = false, optionFor, onPick, onDenied }) {
   );
 }
 
+const buying_key = state => (state.pending ? `${state.round}:${state.pending.player}:${state.pending.kind}` : '');
 const coarse = () => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 const spendText = v => Object.entries(v).filter(([, n]) => n).map(([c, n]) => `${n} ${c}`).join(', ');
 
@@ -147,6 +148,9 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
   const extras = mine && pend ? pend.options.filter(o => o.kind === 'use' || o.kind === 'toggle') : [];
   // Release (base rule): once per round, discard a member for its cost in any colors (the colors come next)
   const releases = mine && pend && pend.kind === 'buy' ? pend.options.filter(o => o.kind === 'release') : [];
+  const [relOpen, setRelOpen] = useState(false);
+  const relTurn = buying_key(state);
+  useEffect(() => { setRelOpen(false); }, [relTurn]);
   const pass = optionFor('pass');
   const buying = mine && pend && pend.kind === 'buy';
   return (
@@ -173,21 +177,25 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
         <button key={o.id} type="button" className="btn" data-option={o.id} onClick={() => onPick(o.id)}>{o.label}</button>
       ))}
       {releases.length > 0 && (
-        // folded by default: it's a once-a-round extra, and the buy row stays the buy row
-        <details className="release-row">
-          <summary title="Once per round: discard one of your members (it goes to the bottom of the pile) for its cost, in any colors you choose.">
-            Release a member <small>once a round · get its cost back in any colors</small>
-          </summary>
-          <div className="rel-list" role="group" aria-label="Release which member">
-            {releases.map(o => {
-              const d = state.cards[o.uid] ? cardDef(state, o.uid) : null;
-              return (
-                <button key={o.id} type="button" className="btn ghost rel" data-option={o.id} onClick={() => onPick(o.id)} style={d ? { '--c': `var(--${d.quadrant})` } : undefined}
-                  title={o.label}>{d ? <>{d.name} <span className="num">+{d.s + d.w}</span></> : o.label}</button>
-              );
-            })}
-          </div>
-        </details>
+        // folded by default: it's a once-a-round extra, and the buy row stays the buy row. The list is only in the page
+        // while open, so nothing hidden carries a live option.
+        <div className={`release-row${relOpen ? ' open' : ''}`}>
+          <button type="button" className="btn ghost rel-toggle" aria-expanded={relOpen} onClick={() => setRelOpen(o => !o)}
+            title="Once per round: discard one of your members (it goes to the bottom of the pile) for its cost, in any colors you choose.">
+            Release a member <small>once a round · its cost back in any colors</small>
+          </button>
+          {relOpen && (
+            <div className="rel-list" role="group" aria-label="Release which member">
+              {releases.map(o => {
+                const d = state.cards[o.uid] ? cardDef(state, o.uid) : null;
+                return (
+                  <button key={o.id} type="button" className="btn ghost rel" data-option={o.id} onClick={() => onPick(o.id)} style={d ? { '--c': `var(--${d.quadrant})` } : undefined}
+                    title={o.label}>{d ? <>{d.name} <span className="num">+{d.s + d.w}</span></> : o.label}</button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
       <button
         type="button" className={`btn pass${pass ? '' : ' idle'}`} title="End your turn without buying" data-option={pass ? 'pass' : undefined} aria-disabled={!pass}

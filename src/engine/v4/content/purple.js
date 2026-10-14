@@ -131,6 +131,17 @@ export default {
       if (VARIANT.score === 'behind') return mine * 1000 + (999 - ctx.followers(p));
       return mine > best ? mine : 0;
     },
+    // display: what the score is made of, for each variant (every screen shows these numbers)
+    show(ctx, p) {
+      const mine = onBoard(ctx, p);
+      if (VARIANT.score === 'today') return { count: mine, tiebreak: p.res[P] || 0 };
+      if (VARIANT.score === 'behind') return { count: mine, tiebreak: ctx.followers(p) };
+      return { count: mine };
+    },
+    counts: 'your workers on the board (spaces you took or joined this round)',
+    get tiebreak() {
+      return { today: { unit: 'purple', text: 'purple breaks ties' }, behind: { unit: 'followers', text: 'fewer followers break ties', low: true }, ties: null }[VARIANT.score];
+    },
   },
 
   actions: [

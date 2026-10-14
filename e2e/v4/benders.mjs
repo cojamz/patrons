@@ -123,7 +123,7 @@ try {
         }
       }
       // (b3) Release
-      const fold = !seen.has('release') && await page.$('.fbuy.live details.release-row:not([open]) summary');
+      const fold = !seen.has('release') && await page.$('.fbuy.live .release-row:not(.open) .rel-toggle');
       if (fold) { await fold.click(); await page.waitForTimeout(150); }
       const rel = await page.$('.fbuy.live [data-option^="release:"]');
       if (rel && !seen.has('release')) {

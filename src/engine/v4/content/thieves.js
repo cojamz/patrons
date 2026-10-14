@@ -12,7 +12,7 @@ const holding = p => total(p);
 
 // ---------- scoring: most Magenta members (what you hold right now) ----------
 // Most Magenta members: a member stolen from a rival counts if it's magenta, so Heist and Ransom move the ring too.
-export const SCORING = { members: { label: 'Most Magenta members', score: (ctx, p) => ctx.countMembersOfColor(p, 'thieves') } };
+export const SCORING = { members: { label: 'Most Magenta members', counts: 'the magenta members you hold right now (stolen ones count)', score: (ctx, p) => ctx.countMembersOfColor(p, 'thieves') } };
 
 // ---------- helpers ----------
 const fewestFollowers = (ctx, p) => ctx.state.players.every(o => ctx.followers(o) >= ctx.followers(p));

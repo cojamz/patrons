@@ -8,7 +8,7 @@ export default {
   resource: 'gold',
   // gold is money: each gold counts as any color when buying followers
   wildInFollowerBuys: true,
-  scoring: { label: 'Most gold', score: (ctx, p) => p.res.gold },
+  scoring: { label: 'Most gold', counts: 'the gold you hold when the round ends', score: (ctx, p) => p.res.gold },
 
   actions: [
     {

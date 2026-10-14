@@ -77,7 +77,7 @@ const trading = {
   id: 'trading',
   name: 'White',
   resource: W,
-  scoring: { label: 'Most white', score: (ctx, p) => p.res[W] },
+  scoring: { label: 'Most white', counts: 'the white you hold when the round ends', score: (ctx, p) => p.res[W] },
 
   actions: [
     {

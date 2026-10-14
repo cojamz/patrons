@@ -16,7 +16,7 @@ function standIn(id, name, other1, other2) {
   ];
   return {
     id, name, resource: id, standIn: true,
-    scoring: { label: `Most ${id}`, score: (ctx, p) => p.res[id] },
+    scoring: { label: `Most ${id}`, counts: `the ${id} you hold when the round ends`, score: (ctx, p) => p.res[id] },
     actions: [
       plain('a1', 1, name === 'Blue' ? 'Tide' : 'Sprout', { [id]: 3 }),
       plain('a2', 1, name === 'Blue' ? 'Current' : 'Graft', { [id]: 2, [other1]: 1 }),

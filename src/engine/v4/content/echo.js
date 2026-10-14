@@ -195,7 +195,7 @@ const echoQ = {
   id: 'echo',
   name: 'Green',
   resource: 'green',
-  scoring: { label: 'Most green', score: (ctx, p) => p.res.green || 0 },
+  scoring: { label: 'Most green', counts: 'the green you hold when the round ends', score: (ctx, p) => p.res.green || 0 },
 
   actions: [
     {

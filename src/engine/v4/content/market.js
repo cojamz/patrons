@@ -137,6 +137,12 @@ const market = {
       const v = MODE === 'value' ? memberValue(ctx, p) : priceyCount(ctx, p);
       return v > 0 ? v * 100 + blueCount(ctx, p) : 0;
     },
+    show: (ctx, p) => ({ count: MODE === 'value' ? memberValue(ctx, p) : priceyCount(ctx, p), tiebreak: blueCount(ctx, p) }),
+    get counts() {
+      return MODE === 'value' ? 'the total printed cost of your members'
+        : `your badged members: members whose printed cost is ${BADGE} or more`;
+    },
+    tiebreak: { unit: 'blue members', text: 'blue members break ties' },
   },
 
   actions: [
