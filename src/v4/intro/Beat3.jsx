@@ -13,7 +13,7 @@
 //   power     a warm aura blooms behind the leader as it rises two units (LEAD → LEAD_UP).
 import {
   Act, At, LEAD, LEAD_UP, LeadFrames, Mini, Fol, Res, Aura, ArcaneFloor, ArcaneColumn, Frames, CAM,
-  FSLOT, PILE, SWIRL, WHEEL, QUAD, YOU_MEMBERS, ringTL, space, onSpace, useCast,
+  FSLOT, PILE, SWIRL, WHEEL, QUAD, YOU_MEMBERS, RING, ringTL, space, onSpace, useCast,
 } from './shared.jsx';
 import Initiation, { BECKON, SETTLE, WALK_MS, T as IT } from './Initiation.jsx';
 
@@ -29,9 +29,11 @@ const PLUS = BUY + 1450; // "+3 follower"
 const POWER = BUY + 1650; // the aura blooms, the leader rises
 /** How long this beat plays before the next (ms). */
 export const DURATION = POWER + 1150;
+/** The wheel, its minions and the violet pool fade out in the last second, so beat 4 opens on the cult alone. */
+const CLEAR = DURATION - 950;
 
 export const shots = [
-  { t: 0, d: 1500, ...CAM.wheelNear }, // to the wheel, following the first minion
+  { t: 0, d: 1500, ...CAM.wheelAndCult }, // to the wheel, the cult in frame on the right (the coins land in its pile)
   { t: DIM, d: 1100, ...CAM.cult }, // back to the cult for the recruit
 ];
 export const stillShot = { ...CAM.wheelAndCult };
@@ -121,7 +123,8 @@ function floatTrack(a) {
     [a.at, a.float, { x, y }, 'io', a.arc],
     [a.land - 50, 110, { sx: 1.1, sy: 0.88 }, 'out'], // a soft landing
     [a.land + 60, 220, { sx: 1, sy: 1 }, 'out'],
-    [DIM, 600, { o: 0.22 }, 'sine']];
+    [DIM, 600, { o: 0.22 }, 'sine'],
+    [CLEAR, 700, { o: 0 }, 'sine']]; // the wheel's work is done: it leaves before the last beat's wide shot
 }
 /** The minion that stays home: as the camera pulls back it slips down behind its leader (out of the card's way). */
 const HOME = 1;
@@ -178,13 +181,14 @@ export default function Beat3() {
   const { you } = useCast();
   return (
     <>
-      {/* carried over from beat 2, as it rests */}
-      <At x={-32} y={-42}><ArcaneColumn w={64} h={58} /></At>
-      <At x={-44} y={11}><ArcaneFloor w={88} h={10} /></At>
-      <At x={-20} y={12} className="in-shadow"><span className="in-floor" style={{ width: 40, height: 6 }} /></At>
+      {/* carried over from beat 2 exactly as it rests (floor pool, a column of light behind each minion); the columns
+          fade as the minions go to work, the pool stays under the cult */}
+      <Act track={[{ x: -50, y: 7 }, [CLEAR, 700, { o: 0 }, 'sine']]} stillAs={{ o: 1 }} origin="50% 50%"><ArcaneFloor w={100} h={16} /></Act>
+      {[0, 1, 2].map(i => <Act key={`c${i}`} track={[{ x: RING[i][0] - 14, y: RING[i][1] + 9 - 34 }, [250 + 120 * i, 900, { o: 0 }, 'sine']]}><ArcaneColumn w={28} h={34} /></Act>)}
+      <Act track={[{ x: -20, y: 12 }, [CLEAR, 700, { o: 0 }, 'sine']]} stillAs={{ o: 1 }} className="in-shadow" origin="50% 50%"><span className="in-floor" style={{ width: 40, height: 6 }} /></Act>
 
       {/* the wheel rises in at the left as the camera comes to it, and dims once its work is done */}
-      <Act track={[{ x: wheelTL[0], y: wheelTL[1] + 8, o: 0 }, [0, 800, { y: wheelTL[1] }, 'out'], [0, 700, { o: 1 }, 'sine'], [DIM, 600, { o: 0.22 }, 'sine']]}
+      <Act track={[{ x: wheelTL[0], y: wheelTL[1] + 8, o: 0 }, [0, 800, { y: wheelTL[1] }, 'out'], [0, 700, { o: 1 }, 'sine'], [DIM, 600, { o: 0.22 }, 'sine'], [CLEAR, 700, { o: 0 }, 'sine']]}
         stillAs={{ o: 1 }} origin="50% 50%">
         <WheelArt />
         {ACTS.map(a => (
@@ -198,7 +202,7 @@ export default function Beat3() {
 
       {/* the warm aura of power (behind the leader), blooming at the end */}
       <Act track={[{ x: -28, y: -28, o: 0, s: 0.8 }, [POWER, 700, { o: 1, s: 1, y: -30 }, 'sine']]} origin="50% 50%"><Aura w={56} h={56} /></Act>
-      <Act track={[{ x: LEAD[0], y: LEAD[1] }, [POWER, 600, { y: LEAD_UP[1] }, 'out'], [POWER, 700, { f: 1.08 }, 'sine']]}>
+      <Act track={[{ x: LEAD[0], y: LEAD[1] }, [POWER, 600, { y: LEAD_UP[1] }, 'out'], [POWER, 450, { f: 1.08 }, 'sine'], [POWER + 450, 500, { f: 1 }, 'sine']]}>
         <LeadFrames emoji={you} seq={SEQ} stillAs="idle" />
       </Act>
 

@@ -1,4 +1,5 @@
 // E2E: the action spaces, at 1270×700, in both looks (sockets, the default; engraved, behind ?spaces=engraved).
+//  (s0) the Lamplit stylesheet is in force (walnut table), whatever order the bundler loads CSS chunks in;
 //  (s1) lit: during your placement every space you can take has the lit class, no other does, and no taken space you
 //       can't join is lit (engraved: the printed cell is lit exactly when its space is);
 //  (s2) a click on a taken space shakes it and says "Taken by …" at the pointer;
@@ -228,6 +229,10 @@ try {
     await page.waitForTimeout(700);
     const look = await page.$eval('.lt-wheel .wheel-wrap', e => e.dataset.spaces);
     if (look !== pass.look) fail(`the wheel wears "${look}"`, tag);
+    // (s0) the Lamplit stylesheet wins over the base one (a bundling change once loaded v4.css after lamp.css: the
+    // walnut went teal and the wheel's layout fell apart)
+    const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    if (bg !== 'rgb(29, 22, 17)') fail(`(s0) the table isn't walnut (body ${bg}): the base stylesheet is winning over lamp.css`, tag);
     await shot('place');
 
     // (s1) lit, (s6) tiebreaks, (s7) 12px, (s8) prompt, (s9) inside the cells

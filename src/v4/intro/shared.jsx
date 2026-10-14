@@ -159,7 +159,7 @@ export function Act({ track, origin = '50% 100%', stillT = null, stillAs = null,
     clockIn(a, t0, frozen);
     return () => a.cancel();
   }, [run, t0, frozen]); // eslint-disable-line react-hooks/exhaustive-deps
-  const st = { left: rest.x, top: rest.y, transformOrigin: origin, ...(!still && tl.steps.length ? { willChange: 'transform, opacity' } : null), ...style };
+  const st = { left: rest.x, top: rest.y, transformOrigin: origin, ...style };
   if (rest.o !== 1) st.opacity = rest.o;
   if (rest.r || rest.s !== 1 || rest.sx !== 1 || rest.sy !== 1) st.transform = geo(rest);
   if (rest.f !== 1) st.filter = `brightness(${rest.f})`;

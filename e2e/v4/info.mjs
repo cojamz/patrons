@@ -113,10 +113,12 @@ async function dockCheck(page, what, step) {
 
 async function deckCheck(page) {
   // bots keep playing and the screen steps through their moves a beat behind, so wait (up to 30s) for a moment the
-  // screen has caught up with the engine: at the latest when it's your move again and everything stops
+  // screen has caught up with the engine: at the latest when it's your move again and everything stops. A round end
+  // holds the screen until you go on (the engine is already past it): then the check waits for the next round.
   let last = null;
   for (let t = 0; t < 300; t++) {
     const r = await page.evaluate(() => {
+      if (document.querySelector('[data-next-round], .lt-reckon')) return { held: true };
       const g = document.querySelector('.app.game'), d = document.querySelector('[data-deck]');
       let save = null;
       try { save = JSON.parse(localStorage.getItem('patrons.v4.local')); } catch { /* none */ }
@@ -125,13 +127,15 @@ async function deckCheck(page) {
       return { moves: Number(g.dataset.moves), saved: save.state.moves, pile: save.state.pile.length, left: Number(d.dataset.left), shown: tv.textContent.trim() };
     });
     last = r;
+    if (r && r.held) return 'held';
     if (r && r.moves === r.saved) {
-      if (r.left !== r.pile) { fail(`(h) the deck says ${r.left}, the engine's pile has ${r.pile}`, 'deck'); return; }
-      if (r.shown === String(r.pile)) return;
+      if (r.left !== r.pile) { fail(`(h) the deck says ${r.left}, the engine's pile has ${r.pile}`, 'deck'); return 'checked'; }
+      if (r.shown === String(r.pile)) return 'checked';
     }
     await page.waitForTimeout(100);
   }
   fail(`(h) after a refill the deck's number never settled on the engine's pile length (last: ${JSON.stringify(last)})`, 'deck');
+  return 'checked';
 }
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
@@ -151,12 +155,13 @@ try {
 
   // play: the first legal option each time; audit at my first placement, my first buy and a round-II placement
   const seen = new Set();
-  let lastShop = null, refills = 0;
+  let lastShop = null, refills = 0, deckDue = false;
   for (let k = 0; k < 400 && seen.size < 3; k++) {
     // (h) the row refilled (a new face-up card): the deck's count must be the engine's pile
     const shopNow = await page.$$eval('.lt-shop .lt-cards .card[data-uid]', els => els.map(e => e.dataset.uid)).catch(() => []);
-    if (lastShop && shopNow.some(u => !lastShop.includes(u)) && refills < 3) { refills++; await deckCheck(page); }
+    if (lastShop && shopNow.some(u => !lastShop.includes(u)) && refills < 3) deckDue = true;
     lastShop = shopNow;
+    if (deckDue && (await deckCheck(page)) === 'checked') { deckDue = false; refills++; }
     const next = page.locator('[data-next-round]');
     if (await next.count()) { await next.first().click().catch(() => {}); await page.waitForTimeout(150); continue; }
     const hand = page.locator('[data-handoff]');

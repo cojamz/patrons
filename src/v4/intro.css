@@ -17,7 +17,7 @@
     repeating-linear-gradient(88deg, rgba(255,220,180,.018) 0 41px, rgba(0,0,0,.06) 41px 43px),
     linear-gradient(180deg,#221a14,#1a140f);
   background-color:#1d1611;
-  animation:in-fade 260ms ease both;
+  animation:in-fade 200ms ease both;
 }
 .intro::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 120% 110% at 50% 46%, transparent 50%, rgba(0,0,0,.5))}
 .intro.out{animation:in-out 200ms ease both;pointer-events:none}
@@ -39,7 +39,7 @@
   transform:translate(-50%,-50%);pointer-events:none;border-radius:50%;
   background:radial-gradient(closest-side, rgba(var(--i-lamp),.33), rgba(var(--i-lamp),.11) 50%, transparent);
   transition:left var(--cd) cubic-bezier(.45,.05,.25,1), top var(--cd) cubic-bezier(.45,.05,.25,1), width var(--cd) ease, height var(--cd) ease;
-  animation:in-fade 1200ms ease both}
+  animation:in-fade 500ms ease both}
 /* the view: the stage's window onto the world, its edges fading into the dark */
 .intro .in-view{position:absolute;inset:0;overflow:hidden;pointer-events:none;
   -webkit-mask-image:linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent), linear-gradient(180deg, transparent, #000 3%, #000 97%, transparent);
@@ -55,12 +55,12 @@
 .intro-scene.leaving{animation:in-out 380ms ease both}
 
 /* Cory's line: every line sits in the same cell, so the box is always as tall as the longest (no jump) */
-.intro-lines{display:grid;margin-top:calc(7 * var(--u));max-width:min(36ch, 100%)}
-.intro-line{grid-area:1/1;margin:0;align-self:start;font-family:var(--i-serif);font-weight:500;font-size:20px;line-height:1.25;color:var(--i-cream);text-wrap:balance}
+.intro-lines{display:grid;margin-top:calc(7 * var(--u));max-width:min(34ch, 100%);font-family:var(--i-serif);font-weight:500;font-size:20px;line-height:1.25}
+.intro-line{grid-area:1/1;margin:0;align-self:start;color:var(--i-cream);text-wrap:balance}
 .intro-group{display:inline-block}
 .intro-line:not(.now) .intro-group:not([style]){pointer-events:none}
 .intro-line em{font-style:italic;color:var(--i-lamp-ink)}
-@media (min-width:700px) and (min-height:560px){ .intro-lines{max-width:40ch} .intro-line{font-size:26px} }
+@media (min-width:700px) and (min-height:560px){ .intro-lines{max-width:38ch;font-size:26px} }
 .intro-dots{display:flex;gap:9px;margin-top:10px}
 .intro-dots i{width:7px;height:7px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--i-cream-3);transition:background .3s, box-shadow .3s}
 .intro-dots i.done{background:var(--i-cream-3)}

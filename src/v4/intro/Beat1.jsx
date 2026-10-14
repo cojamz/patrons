@@ -18,8 +18,8 @@ export default function Beat1() {
   const { you } = useCast();
   return (
     <>
-      <Act track={[{ x: -20, y: 12, o: 0 }, [250, 1000, { o: 1 }, 'sine']]} className="in-shadow" origin="50% 50%"><span className="in-floor" style={{ width: 40, height: 6 }} /></Act>
-      <Act track={[{ x: LEAD[0], y: LEAD[1] + 6, o: 0 }, [250, 1000, { y: LEAD[1], o: 1 }, 'out']]}>
+      <Act track={[{ x: -20, y: 12, o: 0.2 }, [0, 900, { o: 1 }, 'sine']]} className="in-shadow" origin="50% 50%"><span className="in-floor" style={{ width: 40, height: 6 }} /></Act>
+      <Act track={[{ x: LEAD[0], y: LEAD[1] + 5, o: 0.25 }, [0, 1100, { y: LEAD[1], o: 1 }, 'out']]}>
         <LeadFrames emoji={you} seq={SCHEME} stillAs="scheme" />
       </Act>
     </>

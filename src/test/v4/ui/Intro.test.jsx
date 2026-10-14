@@ -53,8 +53,8 @@ describe('intro', () => {
     }
     expect(starts).toHaveLength(4);
     for (let i = 1; i < 4; i++) expect(starts[i] - starts[i - 1]).toBeGreaterThanOrEqual(3500); // each line held ≥ 3.5 s
-    expect(starts[3]).toBeGreaterThan(12000); // ~20–25 s in all: beats 1–3, then the last plays and waits
-    expect(starts[3]).toBeLessThan(20000);
+    expect(starts[3]).toBeGreaterThan(12000); // ~25 s in all: beats 1–3 (beat 3 carries the most), then the last plays and waits
+    expect(starts[3]).toBeLessThan(21500);
     act(() => vi.advanceTimersByTime(30000));
     expect(dialog().dataset.beat).toBe('4');
     expect(onClose).not.toHaveBeenCalled();
@@ -145,6 +145,17 @@ describe('intro', () => {
     expect(lines.filter(l => !l.classList.contains('now')).every(l => l.getAttribute('aria-hidden') === 'true')).toBe(true);
     fireEvent.keyDown(document.body, { key: 'ArrowRight' });
     expect([...document.querySelectorAll('.intro-lines .intro-line')].map(l => l.textContent)).toEqual(LINES);
+  });
+
+  it('in motion it is one continuous shot: all four beats live in one world from the start (no remount between beats)', () => {
+    render(<Intro onClose={() => {}} still={false} />);
+    const scenes = () => [...document.querySelectorAll('.intro-scene')].map(e => e.dataset.scene);
+    expect(scenes()).toEqual(['1', '2', '3', '4']);
+    const first = document.querySelector('[data-scene="4"]');
+    act(() => vi.advanceTimersByTime(9500));
+    fireEvent.keyDown(document.body, { key: 'ArrowRight' });
+    expect(dialog().dataset.beat).toBe('4');
+    expect(document.querySelector('[data-scene="4"]')).toBe(first); // the same world, carried forward
   });
 
   it('?intro=0 never shows it on a game start; ?intro=1 always does', () => {

@@ -752,9 +752,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       )}
       {mine && !needHandoff && pend.kind === 'pay' && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
       {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={root.current} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onDone={() => setReckoned(moment)} />}
-      {moment && reckoned === moment && <RoundEnd info={moment} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
+      {moment && reckoned === moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
-      {logOpen && <Chronicle state={state} onClose={() => setLogOpen(false)} />}
+      {logOpen && <Chronicle state={state} meId={mySeats.length === 1 ? mySeats[0] : null} onClose={() => setLogOpen(false)} />}
       <HoverCardLayer hover={hover} state={state} me={me} optionFor={live} onPick={onPick} />
       {leaving && (
         <Confirm
