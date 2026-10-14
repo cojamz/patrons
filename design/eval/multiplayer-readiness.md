@@ -58,3 +58,18 @@ Owner: multiplayer agent. Interim note, 2026-10-14; the final results are added 
   2. PUT `database.rules.json` to `/.settings/rules.json?ns=cornycolonies-default-rtdb` with `Authorization: Bearer owner`.
   3. `V4_RTDB_EMULATOR=127.0.0.1:9123 npx vitest run src/test/v4/session/friends.test.js`
   4. `V4_RTDB=127.0.0.1:9123 V4_URL=<preview> node e2e/v4/online.mjs`
+
+## Round-2 review fixes (2026-10-14, evening)
+Each fix below has a test that fails on the old code and passes now.
+- **Back mid-game (the ship blocker).** Back, including an iPhone edge swipe, now re-pushes the history entry and opens the Leave confirm. Online and local games both do this. Proof: `e2e/v4/online.mjs` (Gus: `history.back()` → the confirm shows, he's still in the game, the saved seat is kept, then "Keep playing").
+- **The content stamp sees effects.** The stamp is now `<shape hash>.<rules-source hash>`.
+  - The source hash comes from `scripts/v4-src-hash.mjs` and covers `src/engine/v4` minus the bots and preview. It's defined as `__V4_SRC__` in `vite.config.js` and `vitest.config.js`.
+  - Plain node gets the same stamp by importing `scripts/v4-node-stamp.mjs` first: v4-replay, v4-records-refresh, `e2e/v4/lib/stamp.mjs`.
+  - Proof: `content-hash.test.js`.
+  - Side effect: any rules edit sets old saves aside and refuses old rooms. Kept records stay skipped until they're refreshed (`scripts/v4-records-refresh.mjs`) on each frozen release.
+- **Host heartbeat.** The host writes `hostBeat` every 5 s. When a client hasn't seen it change for 15 s (by its own clock), the next connected human takes over. Proof: `friends.test.js` "a host whose phone sleeps…".
+  - Limit: a sleeping *guest* still reads as connected until Firebase notices, so "let a bot play" waits until then.
+- **Try again.** The same move sent again 4 s or more after the first is re-pushed with the same mid. The host applies a mid once. Proof: `friends.test.js` "Try again after a lost move…".
+- **A crash in an online game.** The recovery screen now offers "Rejoin the game" (a reload into the same seat) and "Leave this game" (forget the seat, then reload, so the old socket closes). Proof: `src/test/v4/ui/RecoveryOnline.test.jsx`.
+- **Render churn.** The lobby view and the session's `info` are sent only when something on screen changes. Heartbeats, queue traffic and lastSeen no longer re-render. Proof: `friends.test.js` "screens re-render only when…".
+- **Separate people in the e2e.** `online.mjs` starts a local RTDB emulator whenever java is present: it uses the jar cached in `~/.cache/patrons`, or downloads it once. Each person then gets their own browser context, so their own storage, and Pia runs as an iPhone 13. If no emulator is available, it falls back to BroadcastChannel tabs and says so.
