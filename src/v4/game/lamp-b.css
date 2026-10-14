@@ -220,3 +220,31 @@
 .cs-member .aura{position:absolute;left:50%;bottom:-2px;width:30px;height:12px;transform:translateX(-50%);border-radius:50%;z-index:-1;
   background:radial-gradient(closest-side,color-mix(in srgb,var(--q) 55%,transparent),transparent);pointer-events:none}
 .cs-member .aura.strong{width:32px;height:30px;bottom:0;background:radial-gradient(closest-side,color-mix(in srgb,var(--q) 70%,transparent),color-mix(in srgb,var(--q) 18%,transparent) 70%,transparent)}
+
+/* ---------- the member deck at the head of the shop strip (face down, cult mark, count; warm when low) ---------- */
+.lt-shop-body{display:flex;gap:6px;min-width:0}
+.lt-shop-body > .lt-cards{flex:1 1 auto;min-width:0}
+.lt-deck{position:relative;flex:0 0 60px;height:96px;padding:0;border:0;background:none;font:inherit;color:inherit;cursor:help;border-radius:6px}
+.lt-deck .back,.lt-deck .edge{position:absolute;left:0;top:0;width:calc(100% - 6px);height:calc(100% - 6px);border-radius:6px}
+.lt-deck .edge{transform:translate(calc(var(--k) * 2px),calc(var(--k) * 2px));background:linear-gradient(180deg,#3a2333,#2a1822);box-shadow:0 0 0 1px #120c0a,inset 0 0 0 1px rgba(217,166,58,.32)}
+.lt-deck .edge:last-of-type{box-shadow:0 0 0 1px #120c0a,inset 0 0 0 1px rgba(217,166,58,.32),0 6px 12px -6px rgba(0,0,0,.7)}
+.lt-deck .back{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  background:radial-gradient(circle at 50% 36%,rgba(255,217,120,.12),transparent 62%),repeating-linear-gradient(45deg,rgba(0,0,0,.16) 0 2px,transparent 2px 6px),linear-gradient(180deg,#4b2e41,#36202f);
+  box-shadow:0 0 0 1px #120c0a,inset 0 0 0 2px #36202f,inset 0 0 0 3px rgba(217,166,58,.72),0 6px 14px -6px rgba(0,0,0,.7);transition:transform .12s ease}
+.lt-deck .cult-mark{display:block;flex:none}
+.lt-deck .n{font-family:var(--serif);font-weight:700;font-size:24px;line-height:1;color:var(--cream);text-shadow:0 1px 0 rgba(0,0,0,.8);transition:color .4s}
+.lt-deck.low .n{color:#f2a654}
+.lt-deck.last .n{color:#ec7a4c}
+.lt-deck.empty .back{background:none;box-shadow:none;border:1.5px dashed rgba(243,230,200,.32);box-sizing:border-box}
+.lt-deck.empty .n{font-size:12.5px;font-weight:500;font-style:italic;color:var(--cream-3);text-shadow:none}
+.lt-deck:hover .back{transform:translateY(-2px)}
+.lt-deck:focus-visible{outline:2px solid rgba(var(--lamp),.7);outline-offset:2px}
+.lt-deck-card .lt-deck-mini{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:6px;background:linear-gradient(180deg,#4b2e41,#36202f);box-shadow:inset 0 0 0 1px rgba(217,166,58,.7);flex:none}
+.lt-deck-colors{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+.lt-deck-colors li{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--paper-ink)}
+.lt-deck-colors li .k{flex:1}
+.lt-deck-colors li b{font-family:var(--serif);font-weight:700;font-size:15px}
+.lt-deck-colors li.none{color:var(--paper-ink-3)}
+.lt-colorless-dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--colorless,#8d9693);box-shadow:0 0 0 1px var(--paper-ink,#2a1f17)}
+.lt-deck-card p{font-size:13px}
+@media (max-width:860px){.lt-deck{flex-basis:56px}}

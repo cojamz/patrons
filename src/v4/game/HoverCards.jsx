@@ -16,6 +16,7 @@ import { Follower } from '../art/Follower.jsx';
 import { payBreakdown, contestEffect, unlockedBy, surely } from './cards.js';
 import { lastMoves } from './seats.js';
 import { memberCopyTargets } from './cards.js';
+import { DeckCard } from './MemberDeck.jsx';
 import './lamp-b.css';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
@@ -64,6 +65,7 @@ export function createHover() {
     onPlaqueHover: (qid, el, o = {}) => show({ kind: 'plaque', qid, el, pinned: !!o.pinned }),
     onSeatHover: (pid, el, o = {}) => show({ kind: 'seat', pid, el, pinned: !!o.pinned }),
     onCardHover: (uid, el, o = {}) => show({ kind: 'card', uid, el, pinned: !!o.pinned }),
+    onDeckHover: (el, o = {}) => show({ kind: 'deck', el, pinned: !!o.pinned }),
     dispose() { clearTimeout(openT); clearTimeout(closeT); subs.clear(); },
   };
 }
@@ -159,6 +161,7 @@ function cardBody(c, state, me, optionFor, pick) {
   if (c.kind === 'space') return <SpaceCard state={state} me={me} spaceKey={c.key} optionFor={optionFor} onPick={pick} pinned={c.pinned} />;
   if (c.kind === 'plaque') return <StandingsCard state={state} qid={c.qid} meId={me} />;
   if (c.kind === 'seat') return <SeatCard state={state} pid={c.pid} meId={me} />;
+  if (c.kind === 'deck') return <DeckCard state={state} />;
   if (c.kind === 'card') return state.cards[c.uid] ? <ShopCardHover state={state} me={me} uid={c.uid} optionFor={optionFor} onPick={pick} pinned={c.pinned} /> : null;
   return null;
 }
