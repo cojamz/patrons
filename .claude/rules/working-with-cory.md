@@ -26,6 +26,15 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - **Price every card before showing it.** Use `design/eval/value-model.md`: a ring-I space is worth about 2.5u, ring II about 4u, ring III about 7u, and a member is worth about its cost plus 1.5u. A free swap or an extra recruit already uses up a whole space's budget, so never stack a resource gain on top of a strong verb. Anything outside its band gets cut before Cory sees it. Cory's own anchors at the top of the value model beat the model's numbers.
 - Resource use is not a constraint. Use parallel agents, simulations, screenshots freely.
 
+## What works with Cory (self-review, 2026-10-14)
+- **Numbered lists he can answer by number.** He replies "1 yes, 2 no, 3 …". That's the fastest loop we have. Use it for every set of decisions or ideas, one line each, with the default stated.
+- **His words only.** Never introduce my own names or jargon (Diadem, fixtures, sway…). If a thing needs a name, ask or use a plain description.
+- **Do it the way he said.** No added restrictions or "improvements" on his calls (the Steal and bribe exceptions). If I see a risk, build it his way and flag it in one line.
+- **My fill-ins are labeled and never treated as approved** (Patron, Steward and Gambler slipped in as if agreed).
+- **Sanity-check the direction of every balance suggestion** before sending it (I once proposed giving the advantaged player more).
+- **Status = what's running / what's next / rough ETA**, in 3 lines. Give an ETA whenever work will take longer than a few minutes.
+- **Show, don't describe.** He responds well to things he can see or open: diagrams, transcripts, links.
+
 ## Changelog of this doc
 - 2026-10-09 — first version, from Cory's kickoff voice note.
 - 2026-10-09 — first reply was way too long and too deep in the current game. Added 8-line cap, no dumps, stay at his altitude.
@@ -49,3 +58,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-14 — Cory: audit for hallucinations after each panel (claims vs reality), and go faster without weakening the gates. Added speed rules to the v4-loop skill.
 - 2026-10-14 — Cory: the final output must convey how the game FEELS to play, as real players would say it, not just numbers. Testers now write "table talk", and the final report synthesizes it.
 - 2026-10-14 — Cory: replies were creeping long again (second time). Made it a hard rule: 5-line cap unless he asks for detail, and no tables unless he asks for data.
+- 2026-10-14 — Self-review at Cory's request: added "What works with Cory" (numbered decisions, his words only, do it his way, label my fill-ins, sanity-check balance direction, 3-line status with ETA, show don't describe).
