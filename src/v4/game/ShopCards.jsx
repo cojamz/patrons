@@ -17,6 +17,8 @@ import { useHoverSpace } from './HoverCards.jsx';
 import { MemberDeck, useDeal } from './MemberDeck.jsx';
 import './lamp-b.css';
 
+// a phone (no hover): say tap, never hover
+const touchOnly = () => typeof matchMedia === 'function' && matchMedia('(hover: none)').matches;
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
 
 /** A cost as shapes: "4 ● 2 ◍". */
@@ -58,7 +60,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
     <section className="lt-shop-cards" data-phase={phase} aria-label="Shop">
       {/* one header line: the shop's title, then the follower rates (the strip's height is all cards) */}
       <div className="lt-shop-head">
-        <h3 className="lt-h">Shop<small>{buying ? `${affordable} you can afford · hover to see the cost` : `${state.shop.length} face up`}</small></h3>
+        <h3 className="lt-h">Shop<small>{buying ? `${affordable} you can afford · ${touchOnly() ? 'tap a card' : 'hover'} to see the cost` : `${state.shop.length} face up`}</small></h3>
         <FollowerRates state={state} optionFor={optionFor} onPick={onPick} onDenied={onDenied} />
       </div>
       <div className="lt-shop-body">

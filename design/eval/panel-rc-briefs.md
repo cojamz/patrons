@@ -12,8 +12,8 @@ Shared rules for all four (paste into each prompt):
 ## 1. Laptop newcomer (subagent: playtester)
 You've never played this game. Open {URL}/?intro=1 at 1270×700, watch or skip the intro, start a local game against 3 Normal bots on the Classic table, and play to win. Grade A–F: first five minutes, knowing what to do each turn, knowing why your numbers changed, round end, fun. Top 8 issues worst first, each with a screenshot path and the smallest fix.
 
-## 2. Phone by touch (subagent: playtester)
-You're on an iPhone 13 (Playwright devices['iPhone 13'], hasTouch, tap only, no hover, long-press for details). Open {URL}/?intro=0, start a local game against 3 bots, and play a full game by touch. Check: every target tappable without zooming, nothing clipped or overlapping, long-press gives the details a hover would, no sideways scroll, the wheel usable with a thumb. Top 8 issues with screenshots.
+## 2. Laptop strategist (subagent: playtester)
+(Cory: no phone for a long time, so the second seat is a laptop player too.) You've played lots of strategy games. Open {URL}/?intro=0 at 1270×700, set the bots to Hard, and play to win with a plan you form in round I. Report whether you could plan and execute, which choices felt real, what you couldn't find on screen when you needed it, and the top 8 issues with screenshots.
 
 ## 3. Saboteur (subagent: playtester)
 Break it. Open {URL}/?intro=0 at 1270×700. Spam clicks, double-tap buys, press Undo mid-animation, reload mid-turn and mid-Reckoning, use only the keyboard for a round, resize the window mid-game, press Back, open two tabs of the same game, click illegal spaces and unaffordable cards. Report every crash, stuck state, wrong number, lost turn or silent failure with exact steps to reproduce and a screenshot. Grade robustness A–F.

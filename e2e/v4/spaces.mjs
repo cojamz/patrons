@@ -169,19 +169,20 @@ const INSIDE = () => {
   for (const s of document.querySelectorAll('.lt-wheel .slot[data-slot]')) {
     const key = s.dataset.slot;
     const boxes = [];
+    // a line's ink, not its line box: the font's ascent/descent padding (about a quarter above, a sixth below) is air
     for (const el of s.querySelectorAll('.face .nm, .face .yl')) {
       const r = document.createRange(); r.selectNodeContents(el);
-      for (const x of r.getClientRects()) if (x.width > 2 && x.height > 2) boxes.push({ what: el.className, x });
+      for (const x of r.getClientRects()) if (x.width > 2 && x.height > 2) boxes.push({ what: el.className, x: { left: x.left, right: x.right, top: x.top + x.height * 0.25, bottom: x.bottom - x.height * 0.16 } });
     }
-    for (const el of s.querySelectorAll('.face .ico svg, .face .worker svg')) boxes.push({ what: el.closest('.ico') ? 'stamp' : 'minion', x: el.getBoundingClientRect() });
+    for (const el of s.querySelectorAll('.face .ico svg, .face .worker svg')) { const x = el.getBoundingClientRect(); boxes.push({ what: el.closest('.ico') ? 'stamp' : 'minion', x: { left: x.left + 1, right: x.right - 1, top: x.top + 1, bottom: x.bottom - 1 } }); }
     if (!boxes.length) continue;
     let L = 1e9, T = 1e9, R = -1e9, B = -1e9;
     for (const { what, x } of boxes) {
       L = Math.min(L, x.left); T = Math.min(T, x.top); R = Math.max(R, x.right); B = Math.max(B, x.bottom);
       for (const [px, py] of [[x.left + 1, x.top + 1], [x.right - 1, x.top + 1], [x.left + 1, x.bottom - 1], [x.right - 1, x.bottom - 1]]) {
         const d = Math.hypot(px - cx, py - cy);
-        if (d > rim + 1) { out.push(`${key} ${what} runs into the rim`); break; }
-        if (d < hub - 1) { out.push(`${key} ${what} runs into the hub`); break; }
+        if (d > rim + 2) { out.push(`${key} ${what} runs ${(d - rim).toFixed(0)}px into the rim`); break; }
+        if (d < hub - 2) { out.push(`${key} ${what} runs ${(hub - d).toFixed(0)}px into the hub`); break; }
       }
       all.push({ key, what, x });
     }

@@ -7,6 +7,7 @@
 import { chromium, devices } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { runChild, exitOf, VITE, portBusy, busyMessage, servePreview } from './lib/procs.mjs';
+import { touchMedia } from '../e2e/v4/lib/touch-media.mjs';
 
 const [cmd, a, b, c] = process.argv.slice(2);
 
@@ -27,6 +28,7 @@ if (cmd === 'freeze') {
   for (const [tag, ctxOpts] of [['laptop', { viewport: { width: 1270, height: 700 } }], ['phone', devices['iPhone 13']]]) {
     const ctx = await browser.newContext(ctxOpts);
     const page = await ctx.newPage();
+    if (tag === 'phone') await touchMedia(page); // a real phone's (pointer: coarse) and (hover: none)
     const errs = [];
     page.on('pageerror', e => errs.push(e.message));
     page.on('console', m => m.type() === 'error' && errs.push(m.text()));

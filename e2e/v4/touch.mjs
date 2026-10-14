@@ -18,6 +18,7 @@
 // Server: $V4_URL if set, else starts `npx vite` on a free port from 5182.
 import { chromium, devices } from 'playwright';
 import { TEXT_CLIP } from './lib/textclip.mjs';
+import { touchMedia, touchMediaProblem } from './lib/touch-media.mjs';
 import { SHOP_SIZE } from '../../src/engine/v4/index.js';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
@@ -44,6 +45,7 @@ const note = (msg, step) => { if (!fail.has(msg)) fail.set(msg, step); };
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
 const page = await ctx.newPage();
+await touchMedia(page); // (pointer: coarse) and (hover: none), as on a real phone
 page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
 page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
 
@@ -140,6 +142,7 @@ async function audit(step) {
 async function setupPhase() {
   const c2 = await browser.newContext({ ...devices['iPhone 13'] });
   const p2 = await c2.newPage();
+  await touchMedia(p2);
   p2.on('pageerror', e => errors.push(`pageerror (setup phase): ${e.message}`));
   const look = async step => {
     const r = await p2.evaluate(() => {
@@ -220,6 +223,7 @@ try {
   await setupPhase();
   await page.goto(`${base}/?intro=0`);
   await page.waitForSelector('[data-home="local"]');
+  { const off = await touchMediaProblem(page); if (off) errors.push(off); }
   await audit('home');
   await page.tap('[data-home="local"]');
   await page.waitForSelector('[data-start]');

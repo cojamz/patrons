@@ -17,8 +17,8 @@ export const plain = def => /^(Free\. )?(No effect\.|Worth \d+ followers\.|Count
 
 /**
  * Play `games` seeded 4-bot games over `tables`; per member id: games it was held (recruited, or dealt), games a
- * log line named it acting. `hand` (def ids) is dealt round-robin, `perSeat` to each seat before the first move,
- * so every member is held often enough to show whether it fires. `rules` go to createGame.
+ * log line named it acting. `hand` (def ids) is dealt round-robin, `perSeat` to each seat before the first move
+ * (from the pile, or from the face-up row), so every member is held often enough to show whether it fires. `rules` go to createGame.
  */
 export function audit(tables, games, { seed = 3100, hand = [], perSeat = 0, rules = {} } = {}) {
   const st = {};
@@ -31,6 +31,12 @@ export function audit(tables, games, { seed = 3100, hand = [], perSeat = 0, rule
       const id = onTable[deal++ % onTable.length];
       const k = s.pile.findIndex(u => s.cards[u].def === id);
       if (k >= 0) p.members.push(s.pile.splice(k, 1)[0]);
+      else {
+        // face up: deal it from the row and refill its slot from the pile, so a deal never silently misses (cutting
+        // Keepsake shifted the deal and Muse sat face up in 2 of its 3 deals)
+        const f = s.shop.findIndex(u => s.cards[u].def === id);
+        if (f >= 0 && s.pile.length) { p.members.push(s.shop[f]); s.shop[f] = s.pile.shift(); }
+      }
     }
     const rand = seededRandom(seed + g * 7 + 1);
     const full = [...s.log];

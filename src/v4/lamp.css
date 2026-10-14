@@ -83,7 +83,7 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-prompt .status .say:not(.mine){color:var(--cream-2);font-size:20px}
 .lt-prompt .status .say.nudge,.lt-prompt .status .say.info{font-size:18px;color:var(--lamp-ink)}
 .lt-prompt .undo-slot{display:flex;width:auto;flex:none}
-.lt-prompt .undo{border:1px solid rgba(243,230,200,.22);color:var(--cream-2);font-family:var(--sans);font-size:13px;min-height:32px;padding:0 12px}
+.lt-prompt .undo{border:1px solid rgba(243,230,200,.22);color:var(--cream-2);font-family:var(--sans);font-size:13px;min-height:28px;padding:0 12px}
 .lt-prompt .steps-row{gap:16px;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--cream-3)}
 .lt-prompt .round{font-family:var(--sans) !important;font-size:12.5px !important;color:var(--cream-3) !important;letter-spacing:.06em}
 .lt-prompt .round small{font-size:inherit;color:inherit}
@@ -256,7 +256,7 @@ h1,h2,h3{font-family:var(--serif)}
   .lt-prompt .status .say{font-size:18px}
   .lt-prompt .status .say:not(.mine){font-size:16px}
   .lt-prompt .steps-row{font-size:11px}
-  .lt-prompt .undo{min-height:44px}
+  .lt-prompt .undo,.lt-prompt .pr-actions .pass,.lt-prompt .pr-actions .rel-toggle{min-height:44px}
   .lt-menu{right:6px}
   .lt .lt-wheel .stage{width:min(100%, 520px)}
   /* phones: rivals' chairs in a row up top, the wheel, the shop strip, and your chair docked at the bottom */
@@ -273,8 +273,8 @@ h1,h2,h3{font-family:var(--serif)}
 
 /* the buy step's other answers, beside the question */
 .lt-prompt .pr-actions{display:inline-flex;align-items:center;gap:8px;flex:none}
-.lt-prompt .pr-actions .pass{min-height:36px;padding:0 16px;border-color:rgba(243,230,200,.4)}
-.lt-prompt .pr-actions .rel-toggle{min-height:36px}
+.lt-prompt .pr-actions .pass{min-height:28px;padding:0 16px;border-color:rgba(243,230,200,.4)}
+.lt-prompt .pr-actions .rel-toggle{min-height:28px}
 .lt-prompt .pr-actions .rel-list{display:inline-flex;flex-wrap:wrap;gap:6px}
 .lt-prompt .pr-actions .rel{min-height:36px;border-color:color-mix(in srgb,var(--c,var(--rim)) 70%,transparent)}
 
