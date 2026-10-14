@@ -1,5 +1,7 @@
 // Test helpers for the v4 engine: build a game, set it up by hand, then drive it by option id.
+import { beforeEach, afterEach } from 'vitest';
 import { createGame, applyMove, resume, actionAt, followers } from '../../../engine/v4/core.js';
+import { defById } from '../../../engine/v4/content/index.js';
 
 /**
  * Build a game and put it in a hand-made position.
@@ -83,3 +85,35 @@ export const hasOpt = (s, id) => ids(s).includes(id);
 export const fol = (s, i) => followers(s, s.players[i]);
 export const total = res => Object.values(res).reduce((a, b) => a + b, 0);
 export const zero = { gold: 0, red: 0, blue: 0, green: 0 };
+
+// Member costs [color part, wild part] the unit tests are written against. Balance changes to the real
+// defs don't touch these tests: useTestCosts() pins this table for every test in a file and restores
+// the real costs afterwards. The fuzz tests run on the real costs.
+export const TEST_COSTS = {
+  'gold.midas': [3, 2], 'gold.banker': [2, 1], 'gold.prospector': [2, 1], 'gold.taxman': [1, 1],
+  'gold.merchant': [1, 1], 'gold.thrift': [2, 0], 'gold.coinpurse': [1, 1], 'gold.underdog': [1, 1],
+  'gold.tinker': [1, 1], 'gold.investor': [2, 2], 'gold.jackpot': [3, 3], 'gold.speculator': [3, 2],
+  'gold.tycoon': [3, 1], 'gold.seed': [2, 0], 'gold.hustler': [2, 1],
+  'red.twins': [1, 1], 'red.bigfamily': [2, 2], 'red.volunteer': [0, 0], 'red.intern': [1, 0],
+  'red.mentor': [3, 2], 'red.proselytizer': [3, 3], 'red.mob': [2, 1], 'red.recruiter': [1, 1],
+  'red.drive': [1, 1], 'red.host': [1, 1], 'red.sponsor': [2, 1], 'red.crowd': [1, 0],
+  'red.doppel': [2, 2], 'red.patriarch': [3, 1], 'red.reserve': [1, 0],
+  ...Object.fromEntries(['blue', 'green'].flatMap(q => [
+    ['recruit', 1, 0], ['hand', 1, 1], ['helper', 2, 0], ['regular', 2, 1],
+    ['devotee', 2, 2], ['elder', 3, 1], ['pillar', 3, 3], ['patron', 4, 2],
+  ].map(([k, s, w]) => [`${q}.${k}`, [s, w]]))),
+};
+
+/** Override member costs; returns a function that restores the real ones. */
+export function pinCosts(costs) {
+  const saved = Object.keys(costs).map(id => { const d = defById(id); return [d, d.s, d.w]; });
+  for (const [id, [s, w]] of Object.entries(costs)) Object.assign(defById(id), { s, w });
+  return () => { for (const [d, s, w] of saved) Object.assign(d, { s, w }); };
+}
+
+/** Pin TEST_COSTS around every test in the calling file. */
+export function useTestCosts() {
+  let restore = null;
+  beforeEach(() => { restore = pinCosts(TEST_COSTS); });
+  afterEach(() => { restore?.(); restore = null; });
+}

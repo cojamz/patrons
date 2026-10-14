@@ -1,6 +1,8 @@
 // Players choose how to pay: which colors cover "any", and which part a discount comes off.
 import { describe, it, expect } from 'vitest';
-import { scene, move, uidOf, play } from './helpers.js';
+import { scene, move, uidOf, play, useTestCosts } from './helpers.js';
+
+useTestCosts();
 import { memberCount } from '../../../engine/v4/core.js';
 
 const buyPhase = opts => scene({ ...opts, queue: [{ t: 'buy', p: 0 }] });

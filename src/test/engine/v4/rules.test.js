@@ -6,7 +6,9 @@ import {
 } from '../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
-import { scene, take, move, uidOf, ids, hasOpt, fol } from './helpers.js';
+import { scene, take, move, uidOf, ids, hasOpt, fol, useTestCosts } from './helpers.js';
+
+useTestCosts();
 
 const R = s => s.players.map(p => p.res);
 const tier = key => TIERS.find(t => t.key === key);

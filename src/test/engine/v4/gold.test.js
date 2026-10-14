@@ -2,7 +2,9 @@
 // Gold: every action and every member hook, with exact numbers.
 import { describe, it, expect } from 'vitest';
 import { resume } from '../../../engine/v4/core.js';
-import { scene, take, play, move, uidOf, ids, hasOpt, fol } from './helpers.js';
+import { scene, take, play, move, uidOf, ids, hasOpt, fol, useTestCosts } from './helpers.js';
+
+useTestCosts();
 
 const R = s => s.players.map(p => p.res);
 
