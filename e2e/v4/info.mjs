@@ -16,7 +16,10 @@
 //  (i) while you place, the space under the pointer ticks "✓ after <space>" on the shop cards it would make
 //      affordable (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands;
 //  (k) a resource is never color alone: every pip is its shape, every coin (setup, pay) carries its mark, and the
-//      setup picker's labels read on its paper (contrast ≥ 4.5).
+//      setup picker's labels read on its paper (contrast ≥ 4.5);
+//  (l) who's winning and who's next: a ranked line of every player under the prompt, and each cult's place in the
+//      turn order;
+//  (m) on a laptop the hover card docks in one spot that never overlaps the wheel, the shop or your seat.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -33,6 +36,7 @@ const GAME = [
   '[data-region] [data-uid]', '.shop [data-uid]', '.lt-rs', '[data-cult] .cs-head', '.lt-stack', '.res > .r', '.you-strip .r', '.lt-member .fig', '.chip[data-g]',
   '[data-leader-ring]', '.workers', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
   '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term', '[data-deck]',
+  '[data-rank] .rk', '.cs-order',
 ].join(',');
 
 async function audit(page, step) {
@@ -93,6 +97,20 @@ async function audit(page, step) {
 }
 
 // (h) the deck's number against the engine: read the screen and the saved game in one go, when both show the same move
+// (m) the open hover card is docked and clear of the wheel, the shop and your seat
+async function dockCheck(page, what, step) {
+  const r = await page.evaluate(() => {
+    const L = document.querySelector('[data-hover-layer][data-open="1"]');
+    if (!L) return null;
+    const a = L.getBoundingClientRect();
+    const hit = sel => { const e = document.querySelector(sel); if (!e) return 0; const b = e.getBoundingClientRect(); const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top); return w > 1 && h > 1 ? Math.round(w * h) : 0; };
+    return { dock: L.dataset.dock || null, wheel: hit('.lt > [data-region="wheel"]'), shop: hit('.lt > [data-region="shop"]'), seat: hit('.lt > .lt-seat-0') };
+  });
+  if (!r) { fail(`(m) hovering ${what} opened no hover card`, step); return; }
+  if (!r.dock) fail(`(m) the hover card for ${what} isn't docked`, step);
+  for (const k of ['wheel', 'shop', 'seat']) if (r[k]) fail(`(m) the hover card for ${what} overlaps the ${k === 'seat' ? 'your seat' : k} (${r[k]}px²)`, step);
+}
+
 async function deckCheck(page) {
   // bots keep playing and the screen steps through their moves a beat behind, so wait (up to 30s) for a moment the
   // screen has caught up with the engine: at the latest when it's your move again and everything stops
@@ -161,6 +179,7 @@ try {
         await slot.hover();
         await page.waitForTimeout(500);
         if (!(await page.locator('.peek, [data-hover-card="space"], [data-space-card]').count())) fail('(b) hovering a space shows no card', step);
+        await dockCheck(page, 'a space', step);
         await page.screenshot({ path: `${SHOTS}/02b-hover-space.png` });
         await page.mouse.move(5, 5);
         const card = page.locator('[data-region] [data-uid], .shop [data-uid]').first();
@@ -169,6 +188,7 @@ try {
           await page.waitForTimeout(600);
           const shown = await page.evaluate(() => [...document.querySelectorAll('.popover, [data-hover-card]')].some(e => e.getBoundingClientRect().width > 0) || !!document.querySelector('.card-face'));
           if (!shown) fail('(b) hovering a shop card shows no card', step);
+          await dockCheck(page, 'a shop card', step);
           await page.screenshot({ path: `${SHOTS}/02c-hover-card.png` });
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
@@ -189,10 +209,17 @@ try {
           });
           if (!dc) fail('(h) hovering the deck shows no card', step);
           else if (dc.card !== dc.left || dc.sum !== dc.left || !dc.colorless || !dc.bottom) fail(`(h) deck card: ${dc.card} left, colors add to ${dc.sum}, the deck shows ${dc.left}${dc.colorless ? '' : ', no colorless count'}${dc.bottom ? '' : ', no word on where released members go'}`, step);
+          await dockCheck(page, 'the deck', step);
           await page.screenshot({ path: `${SHOTS}/02d-hover-deck.png` });
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
         }
+        // (m) your own seat's card docks clear of your seat; (l) the ranked line and the turn-order places
+        const head = page.locator('.lt > .lt-seat-0 .cs-head').first();
+        if (await head.count()) { await head.hover(); await page.waitForTimeout(300); await dockCheck(page, 'your seat', step); await page.mouse.move(5, 5); await page.waitForTimeout(200); }
+        const tops = await page.evaluate(() => ({ seats: document.querySelectorAll('.lt > .lt-seat [data-cult]').length, rank: [...document.querySelectorAll('[data-rank] .rk')].map(e => e.textContent.trim()), order: [...document.querySelectorAll('.lt > .lt-seat .cs-order')].map(e => e.dataset.order) }));
+        if (tops.rank.length !== tops.seats) fail(`(l) the ranked line shows ${tops.rank.length} players for ${tops.seats} cults`, step);
+        if (tops.order.length !== tops.seats || !tops.order.includes('now')) fail(`(l) turn-order places: ${JSON.stringify(tops.order)}`, step);
       }
     }
     const opt = page.locator('.slot.can, [data-option]:not([aria-disabled="true"])').first();

@@ -6,6 +6,7 @@ import { finalWinners, isRoundEnd, newLogLines, parseRoundEnd, playerColor, prom
 import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
 import ShopCards from './ShopCards.jsx';
+import RankRow from './RankRow.jsx';
 import CultSeatRaw from './CultSeat.jsx';
 // online room updates that don't touch the table don't re-render the chairs
 const CultSeat = memo(CultSeatRaw);
@@ -604,13 +605,14 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     else if (info.type === 'slot') {
       // A taken or unopened space explains itself on its own card (wheel) or row (panel); the prompt stays put.
       const owner = state.slots[info.key];
-      text = owner === undefined && pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers or pass' : null;
+      text = owner !== undefined ? null : pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers or pass' : 'You can’t take this space right now';
     } else if (pend.kind === 'place') text = info.type === 'card' || info.type === 'tier' ? 'Place a minion first, then recruit' : 'Place a minion first';
     else if (info.type === 'card') text = `You can’t afford ${info.name} yet`;
     else if (info.type === 'tier') text = tierLeft(state, info.tier) <= 0 ? `No +${info.tier.get} buys left` : `+${info.tier.get} needs ${tierCostText(info.tier)}`;
     else text = 'Not right now';
     if (text) say(text);
-    if (el && el.animate && motionOK()) el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(-2px)' }, { transform: 'translateX(0)' }], { duration: 260, easing: 'ease-out' });
+    // the translate property, so the element's own transform (a socket's centring, a card's lift) stays put
+    if (el && el.animate && motionOK()) el.animate([{ translate: '0 0' }, { translate: '-4px 0' }, { translate: '4px 0' }, { translate: '-2px 0' }, { translate: '0 0' }], { duration: 260, easing: 'ease-out' });
   }, [state, pend, moment, mySeats, needHandoff, say, wide]);
 
   const live = needHandoff ? NO_OPTIONS : optionFor;
@@ -671,7 +673,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               {pr.who && <i style={{ background: playerColor(pr.who.id) }} />}
               <span className="say-text">
                 {mine && humansHere && pr.who ? <b style={{ color: playerColor(pr.who.id) }}>{pr.who.name}: </b> : null}
-                {mine ? <><span className="lead">Your turn — </span><em>{pr.text ? pr.text[0].toLowerCase() + pr.text.slice(1) : pr.text}</em></> : state.over ? pr.text : <>{pr.text}<span className="dots" aria-hidden="true"> ···</span></>}
+                {mine ? <><span className="lead">{pr.lead ?? 'Your turn — '}</span><em>{pr.text && !pr.keepCase ? pr.text[0].toLowerCase() + pr.text.slice(1) : pr.text}</em></> : state.over ? pr.text : <>{pr.text}<span className="dots" aria-hidden="true"> ···</span></>}
               </span>
             </span>
           ) : <span className="say" data-prompt tabIndex={-1} />}
@@ -682,13 +684,16 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </div>
         <div className="bar-row steps-row">
           <span className="round">{roundText}{state.round && !state.over ? <small title="Minions this round: one per turn. Extra Hand and similar members add one."> · <span className="num">{workersNote(state)}</span></small> : null}</span>
-          {state.round > 0 && !state.over && (
+          {/* your turn's details sit under the headline (it stays one short line); otherwise the turn's two steps */}
+          {mine && !needHandoff && pr.sub && !note ? <span className="say-sub" data-prompt-sub>{pr.sub}</span> : state.round > 0 && !state.over && (
             <span className="steps" aria-hidden="true">
               <span className={phase === 'place' || phase === 'choose' ? 'on' : ''}>Place</span>
               <span className={phase === 'buy' || phase === 'pay' ? 'on' : ''}>Recruit or buy</span>
             </span>
           )}
         </div>
+        {/* who's winning, one quiet line (UI-B RankRow): most followers first, the leader lit, the margin on hover */}
+        {state.round > 0 && !state.over && <div className="bar-row rank-row"><RankRow state={state} me={me} /></div>}
         <Menu onRules={() => setRules(true)} onLog={openLog} getState={() => session.getState()} onLeave={onHome ? () => (state.over ? onHome() : setLeaving(true)) : null} />
       </header>
       {session.info && session.info.mode === 'online' && session.info.roomCode && (

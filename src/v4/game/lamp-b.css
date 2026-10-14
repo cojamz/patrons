@@ -248,3 +248,22 @@
 .lt-colorless-dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--colorless,#8d9693);box-shadow:0 0 0 1px var(--paper-ink,#2a1f17)}
 .lt-deck-card p{font-size:13px}
 @media (max-width:860px){.lt-deck{flex-basis:56px}}
+
+/* ---------- who's winning: one quiet line under the prompt (RankRow) ---------- */
+.lt-rank{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--cream-3);white-space:nowrap;min-width:0;overflow:hidden;line-height:16px}
+.lt-rank .follower-mark{color:var(--cream-3);flex:none}
+.lt-rank .rk{display:inline-flex;align-items:baseline;gap:4px;cursor:help}
+.lt-rank .rk i{font-style:normal;color:var(--cream-3);opacity:.6;margin-right:2px}
+.lt-rank .rk b{font-family:var(--serif);font-weight:700;color:var(--cream-2)}
+.lt-rank .rk.me{color:var(--cream-2)}
+.lt-rank .rk.lead{color:var(--lamp-ink)}
+.lt-rank .rk.lead b{color:var(--lamp-ink)}
+.lt-prompt .rank-row{margin-top:1px}
+@media (max-width:860px){.lt-prompt .rank-row{display:none}}
+/* a seat's place in this round's turn order */
+.cs-order{display:inline-block;margin-left:6px;padding:0 5px;border-radius:7px;font-family:var(--sans);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:14px;color:var(--cream-3);box-shadow:inset 0 0 0 1px rgba(243,230,200,.16);vertical-align:2px;cursor:help}
+.cs-order.now,.cs-order.first{color:var(--paper-ink);background:var(--lamp-ink);box-shadow:none}
+.cs-order.next{color:var(--lamp-ink);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.55)}
+.cs-order.done{opacity:.55}
+/* the docked hover card (laptop): a fixed spot in the right-hand column, clipped to it so it never reaches the shop */
+.lt-hover.popover.docked{box-sizing:border-box;overflow:hidden}

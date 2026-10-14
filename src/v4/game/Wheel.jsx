@@ -597,7 +597,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
         {caption && <div key={caption.n} className="caption" style={{ '--pc': playerColor(caption.pid) }} role="status"><i />{caption.text}</div>}
       </div>
       {deny && typeof document !== 'undefined' && createPortal(
-        <div key={deny.n} className="deny-note" role="status" data-deny-note={deny.key} style={{ left: deny.x, top: deny.y }}>{deny.text}</div>,
+        <div key={deny.n} className="deny-note" role="status" data-deny-note={deny.key} style={{ left: Math.max(8, Math.min(deny.x, (typeof innerWidth === 'number' ? innerWidth : 1e4) - 220)), top: Math.max(48, deny.y) }}>{deny.text}</div>,
         document.body,
       )}
     </div>
