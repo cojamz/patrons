@@ -55,7 +55,7 @@ export function EmojiButton({ value, taken = new Map(), bots = new Map(), onPick
             const by = taken.get(id);
             const bot = bots.get(id);
             return (
-              <button key={id} type="button" role="radio" aria-checked={id === value} data-emoji={id} disabled={!!by}
+              <button key={id} type="button" role="radio" aria-checked={id === value} data-pick={id} disabled={!!by}
                 className={`emoji-cell${id === value ? ' on' : ''}${by ? ' taken' : ''}`}
                 aria-label={by ? `${nm}, taken by ${by}` : nm}
                 title={by ? `${nm}: ${by} has it` : bot ? `${nm}: ${bot} has it and will pick another` : nm}

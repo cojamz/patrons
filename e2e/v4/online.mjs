@@ -180,11 +180,11 @@ try {
   await pages.hana.waitForFunction(() => document.querySelectorAll('.seats li').length === 3 && document.querySelectorAll('.seats [data-presence="here"]').length === 3, null, { timeout: 15000 });
   // Pick your emoji in the lobby, one per table: Hana takes the Pizza; Gus sees it taken and takes the Crab
   await pages.hana.click('.seats [data-emoji-btn]');
-  await pages.hana.click('[data-emoji-grid] [data-emoji="pizza"]');
+  await pages.hana.click('[data-emoji-grid] [data-pick="pizza"]');
   await pages.gus.waitForFunction(() => document.querySelector('.seats [data-emoji-face="pizza"]'), null, { timeout: 15000 });
   await pages.gus.click('.seats [data-emoji-btn]');
-  if (!(await pages.gus.$('[data-emoji-grid] [data-emoji="pizza"][disabled]'))) throw new Error('Gus could pick the Pizza Hana holds');
-  await pages.gus.click('[data-emoji-grid] [data-emoji="crab"]');
+  if (!(await pages.gus.$('[data-emoji-grid] [data-pick="pizza"][disabled]'))) throw new Error('Gus could pick the Pizza Hana holds');
+  await pages.gus.click('[data-emoji-grid] [data-pick="crab"]');
   await pages.hana.waitForFunction(() => document.querySelector('.seats [data-emoji-face="crab"]'), null, { timeout: 15000 });
   log('emojis picked');
   await pages.hana.screenshot({ path: `${SHOTS}/online-lobby.png` });

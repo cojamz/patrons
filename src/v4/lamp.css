@@ -213,7 +213,8 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="engraved"] .stage .slot .face .yl{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
 /* a cell standing on its side is narrow: the name, the stamp and the yield stack, centred */
 .lt [data-spaces="engraved"] .stage .slot.side .face .row{flex-direction:column;gap:1px}
-.lt [data-spaces="engraved"] .stage .slot.side .face .yl{align-items:center}
+.lt [data-spaces="engraved"] .stage .slot.side .face .yl{align-items:center;max-width:100%}
+.lt [data-spaces="engraved"] .stage .slot.side .face .yl .cl{white-space:normal;text-align:center}
 .lt [data-spaces="engraved"] .stage .slot .face .yl .cl{white-space:nowrap;display:block}
 .lt [data-spaces="engraved"] .stage .stamp .d{fill:color-mix(in srgb,var(--c) 45%,#2a1f17)}
 .lt [data-spaces="engraved"] .stage .stamp .m{fill:var(--c)}
@@ -273,8 +274,8 @@ h1,h2,h3{font-family:var(--serif)}
 
 /* the buy step's other answers, beside the question */
 .lt-prompt .pr-actions{display:inline-flex;align-items:center;gap:8px;flex:none}
-.lt-prompt .pr-actions .pass{min-height:28px;padding:0 16px;border-color:rgba(243,230,200,.4)}
-.lt-prompt .pr-actions .rel-toggle{min-height:28px}
+.lt-prompt .pr-actions .pass{min-height:26px;height:26px;padding:0 16px;border-color:rgba(243,230,200,.4)}
+.lt-prompt .pr-actions .rel-toggle{min-height:26px;height:26px}
 .lt-prompt .pr-actions .rel-list{display:inline-flex;flex-wrap:wrap;gap:6px}
 .lt-prompt .pr-actions .rel{min-height:36px;border-color:color-mix(in srgb,var(--c,var(--rim)) 70%,transparent)}
 

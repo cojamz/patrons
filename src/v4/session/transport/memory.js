@@ -26,7 +26,7 @@ export function createMemoryTransport(store = createMemoryStore(), { nullFirst =
   const tick = () => new Promise(r => queueMicrotask(r));
   const write = mutate => {
     store.data = mutate(store.data);
-    for (const c of store.clients) if (c.isOnline()) c.hub.notify();
+    for (const c of store.clients) if (c.isOnline() && !c.lagging) c.hub.notify();
   };
   const op = async fn => {
     await tick();
@@ -63,16 +63,21 @@ export function createMemoryTransport(store = createMemoryStore(), { nullFirst =
     async cancelDisconnect(path) { disconnects.delete(splitPath(path).join('/')); },
     onConnectedChange(cb) { connCbs.add(cb); queueMicrotask(() => connCbs.has(cb) && cb(client.isOnline())); return () => connCbs.delete(cb); },
     serverTime: () => Date.now(),
+    serverNow: () => Date.now(),
     goOffline() {
       if (!online) return;
       online = false;
       for (const [p, v] of disconnects) write(d => setAt(d, splitPath(p), v));
       for (const cb of [...connCbs]) cb(false);
     },
-    goOnline() {
+    /** lagMs: like RTDB after a reconnect, "connected" comes first and the fresh data lagMs later (a timer). */
+    goOnline(lagMs = 0) {
       if (online || closed) return;
       online = true;
-      hub.notify();
+      if (lagMs > 0) {
+        client.lagging = true;
+        setTimeout(() => { client.lagging = false; if (!closed && online) hub.notify(); }, lagMs);
+      } else hub.notify();
       for (const cb of [...connCbs]) cb(true);
     },
     close() {

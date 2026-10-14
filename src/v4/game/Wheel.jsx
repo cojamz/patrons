@@ -113,8 +113,9 @@ const Stamp = memo(function Stamp({ id, size = 24 }) {
   );
 });
 
-/** A yield in short clauses, one a line in a narrow cell: "+2 green +1 blue" → ["+2 green", "+1 blue"]. */
-export const clauses = text => String(text || '').split(/ · |, (?=\S)| (?=[+−-]\d)/).filter(Boolean);
+/** A yield in short clauses, one a line in a narrow cell: "+2 green +1 blue" → ["+2 green", "+1 blue"],
+ *  "+1 gold/member" → ["+1 gold", "/member"]. */
+export const clauses = text => String(text || '').split(/ · |, (?=\S)| (?=[+−-]\d)|(?=\/[a-z]{4,})/).filter(Boolean);
 
 /** Why a space can't be taken, in a few words at the pointer (null when it's open: the turn itself explains). */
 export function deniedText(state, key, meId = null) {

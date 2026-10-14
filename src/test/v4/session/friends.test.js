@@ -211,6 +211,22 @@ for (const [label, make] of backends) {
       stops.forEach(f => f());
     }, TIMEOUT);
 
+    it('a guest back from 30 s offline (its own clock says the host went quiet) leaves a healthy host alone; a host really gone is still replaced', async () => {
+      setup();
+      if (!be.fake) return; // needs the memory transport's reconnect lag (connected first, fresh data later), like RTDB
+      const { host, guests } = await table(['G1', 'G2'], { seed: 81 });
+      const g1 = guests[0]; // the lowest seat after the host: the one that would take over
+      g1.t.goOffline();
+      await be.pause(30000);
+      g1.t.goOnline(3000); // the phone wakes: "connected" at once, the room's fresh snapshot 3 s later
+      await be.pause(25000);
+      expect((await roomAt(host.code)).hostId).toBe(host.playerId);
+      expect(host.lobby.getView().isHost).toBe(true);
+      // and when the host's code really stops, G1 still takes over
+      host.lobby.destroy();
+      await be.wait(() => g1.lobby.getView().isHost, 'G1 takes over from a host that really went quiet');
+    }, TIMEOUT);
+
     it('"Try again" after a lost move sends it again with the same id: the table moves on and it counts once', async () => {
       setup();
       const { host, guests } = await table(['G1'], { seed: 61 });

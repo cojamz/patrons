@@ -71,11 +71,11 @@ try {
   {
     await page.click('[data-seat-row="0"] [data-emoji-btn]');
     await page.waitForSelector('[data-emoji-grid]');
-    const cells = await page.$$eval('[data-emoji-grid] [data-emoji] svg rect', els => els.length);
-    const n = await page.$$eval('[data-emoji-grid] [data-emoji]', els => els.length);
+    const cells = await page.$$eval('[data-emoji-grid] [data-pick] svg rect', els => els.length);
+    const n = await page.$$eval('[data-emoji-grid] [data-pick]', els => els.length);
     if (n !== 20 || cells < 20 * 10) errors.push(`emoji picker: ${n} emojis (want 20), drawn with ${cells} pixels`);
     await shot('02-setup-emoji');
-    await page.click(`[data-emoji-grid] [data-emoji="${PICK}"]`);
+    await page.click(`[data-emoji-grid] [data-pick="${PICK}"]`);
     await page.waitForSelector('[data-emoji-grid]', { state: 'detached', timeout: 2000 }).catch(() => errors.push('the emoji picker stayed open after a pick'));
     const faces = await page.$$eval('[data-seat-row]', rows => rows.map(r => { const e = r.querySelector('[data-emoji-btn], [data-emoji-face]'); return e ? (e.getAttribute('data-emoji-btn') ?? e.getAttribute('data-emoji-face')) : ''; }));
     if (faces[0] !== PICK) errors.push(`setup: seat 1 shows "${faces[0]}" after picking ${PICK}`);

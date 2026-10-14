@@ -275,6 +275,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
   let awayTimer = null;
   let beatTimer = null; // host: writes hostBeat
   let watchTimer = null; // everyone: is the host still beating?
+  let lastTick = Date.now();
   let beatSeen = { host: null, value: null, at: Date.now() };
   const views = createEmitter();
   const starts = createEmitter();
@@ -296,6 +297,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
   const offConn = transport.onConnectedChange?.(u => {
     const was = up;
     up = !!u;
+    if (up && !was) backAgain(); // a reconnect: what this client last saw of the host is old news
     if (up) imHere(true);
     if (was !== up && gotFirst && !destroyed) { emitView(); session?.roomChanged(); }
   }) || (() => {});
@@ -373,8 +375,22 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
       beat();
       beatTimer = setInterval(beat, BEAT_MS);
     } else if (!hosting && beatTimer) { clearInterval(beatTimer); beatTimer = null; }
-    if (!watchTimer && !destroyed) watchTimer = setInterval(() => { if (!destroyed) elect(); }, BEAT_MS / 2);
+    if (!watchTimer && !destroyed) {
+      lastTick = Date.now();
+      watchTimer = setInterval(() => {
+        if (destroyed) return;
+        const now = Date.now();
+        const slept = now - lastTick > BEAT_MS * 2; // this page's timers were frozen (a phone asleep, a suspended tab)
+        lastTick = now;
+        if (slept) backAgain(); else elect();
+      }, BEAT_MS / 2);
+    }
   }
+  // Back from a reconnect, a sleep, or a hidden tab: the beats this client missed say nothing about the host. Judge
+  // it afresh, from now (the next STALE_MS of silence, seen from here, after the fresh snapshot has had time to land).
+  function backAgain() { beatSeen = { ...beatSeen, at: Date.now() }; }
+  const onVisible = () => { if (globalThis.document?.visibilityState === 'visible') backAgain(); };
+  globalThis.document?.addEventListener?.('visibilitychange', onVisible);
   const hostStale = () => !!room && !!room.hostId && room.hostId !== playerId && Date.now() - beatSeen.at > STALE_MS;
 
   // If the host has dropped, the lowest-seat connected human claims the role.
@@ -389,10 +405,19 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
     const first = seatList(room).find(s => s.kind === 'human' && !(stale && s.id === old) && room.players?.[s.id]?.connected === true);
     if (!first || first.id !== playerId) return;
     electing = true;
-    transport.transaction(`${base}/hostId`, cur => {
-      if (cur === null || cur === undefined) return old ? null : playerId; // null pass: RTDB retries with the real value
-      return cur === old ? playerId : undefined;
-    }).catch(() => {}).finally(() => { electing = false; });
+    (async () => {
+      // Taking over from a host that still reads as connected: check its heartbeat on a fresh read, by the server's
+      // clock. A beat written within STALE_MS (say, while this phone was asleep and catching up) means it's fine.
+      if (stale && old && room.players?.[old]?.connected === true) {
+        const beat = await transport.get(`${base}/hostBeat`);
+        const now = transport.serverNow ? transport.serverNow() : Date.now();
+        if (typeof beat === 'number' && now - beat < STALE_MS) { beatSeen = { host: old, value: beat, at: Date.now() }; return; }
+      }
+      await transport.transaction(`${base}/hostId`, cur => {
+        if (cur === null || cur === undefined) return old ? null : playerId; // null pass: RTDB retries with the real value
+        return cur === old ? playerId : undefined;
+      });
+    })().catch(() => {}).finally(() => { electing = false; });
   }
 
   async function hostOnly(what) {
@@ -550,6 +575,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
       clearTimeout(awayTimer);
       clearInterval(beatTimer);
       clearInterval(watchTimer);
+      globalThis.document?.removeEventListener?.('visibilitychange', onVisible);
       offRoom();
       offConn();
       host?.stop();
