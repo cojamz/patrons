@@ -5,7 +5,8 @@ function standIn(id, name, other1, other2) {
     return {
       key, ring, name: nm, text,
       estimate: () => Object.values(gains).reduce((a, b) => a + b, 0),
-      resolve(ctx, p) { for (const [c, n] of Object.entries(gains)) ctx.gain(p, c, n, { fromAction: true }); },
+      // a named color that isn't on this table comes as the stand-in's own color instead
+      resolve(ctx, p) { for (const [c, n] of Object.entries(gains)) ctx.gain(p, ctx.state.resources.includes(c) ? c : id, n, { fromAction: true }); },
     };
   };
   const vanilla = [

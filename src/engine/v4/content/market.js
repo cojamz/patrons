@@ -23,7 +23,9 @@ export const badged = c => priceOf(c) >= BADGE;
 /** How many badged members a player holds. */
 export const priceyCount = (ctx, p) => ctx.membersOf(p).filter(badged).length;
 const totalRes = p => Object.values(p.res).reduce((a, b) => a + b, 0);
-const colorOf = (ctx, c) => ctx.quadrant(c.def.quadrant).resource;
+// A member's color, or null when its sphere isn't on this table (a guest member leaning to an absent sphere):
+// then its colored part is paid in any colors, and nothing gains 'its color'.
+const colorOf = (ctx, c) => { const r = ctx.quadrant(c.def.quadrant).resource; return ctx.state.resources.includes(r) ? r : null; };
 // what a bot thinks a member is worth to it (mirrors the greedy buy score)
 const botWorth = c => c.def.f * 1.4 + (c.def.vanilla ? 0 : 1.6) + priceOf(c) * 0.3;
 
@@ -40,6 +42,7 @@ const blueCount = (ctx, p) => ctx.membersOf(p).filter(c => isBlue(c.def)).length
 // ---------- paying outside the normal buy ----------
 // Every exact way to pay `s` of `color` plus `w` of anything. Gold is spent last by default.
 function payVectors(ctx, p, color, s, w) {
+  if (!color) { w += s; s = 0; }
   const keys = ctx.state.resources;
   const need = s + w;
   const out = [];
@@ -215,7 +218,7 @@ const market = {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && badged(rec)) ctx.gain(owner, B, 2); },
     }),
     m('reseller', 'Reseller', 8, 4, 'Whenever you recruit, +1 of that member’s color.', {
-      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid) ctx.gain(owner, colorOf(ctx, rec), 1); },
+      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && colorOf(ctx, rec)) ctx.gain(owner, colorOf(ctx, rec), 1); },
     }),
     m('curator', 'Curator', 2, 2, 'At round start, +1 blue per badged member you have.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, B, priceyCount(ctx, owner)); },

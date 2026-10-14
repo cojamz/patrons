@@ -375,32 +375,32 @@ function resolveTask(state, task, optionId) {
         const uid = Number(rest), list = paymentChoices(state, p, uid);
         const nothing = list.length === 1 && Object.values(list[0]).every(v => !v);
         if (nothing) { boughtOnce(state, p, task); recruit(state, p, uid, { free: false, spend: list[0] }); }
-        else state.queue.unshift({ t: 'pay', p: p.id, uid, extra: task.extra });
+        else state.queue.unshift({ t: 'pay', p: p.id, uid, ...extraOf(task) });
         return;
       }
       if (kind === 'tier') {
         const tier = TIERS.find(t => t.key === rest);
-        state.queue.unshift({ t: 'pay', p: p.id, tier: tier.key, extra: task.extra });
+        state.queue.unshift({ t: 'pay', p: p.id, tier: tier.key, ...extraOf(task) });
         return;
       }
       if (kind === 'use') {
         const c = state.cards[Number(rest)];
         c.used = true;
         effectiveDefs(c).find(e => e.onActivate).onActivate(ctxFor(state), p, wrap(state, c));
-        state.queue.unshift({ t: 'buy', p: p.id, extra: task.extra });
+        state.queue.unshift({ t: 'buy', p: p.id, ...extraOf(task) });
         return;
       }
       if (kind === 'toggle') {
         const c = state.cards[Number(rest)];
         c.on = c.on === false;
         log(state, `${p.name} switched ${defById(c.def).name} ${c.on ? 'on' : 'off'}.`);
-        state.queue.unshift({ t: 'buy', p: p.id, extra: task.extra });
+        state.queue.unshift({ t: 'buy', p: p.id, ...extraOf(task) });
         return;
       }
       if (kind === 'release') {
         const n = release(state, p, Number(rest));
         // the colors come first, then this buy step again
-        state.queue.unshift({ t: 'release', p: p.id, left: n }, { t: 'buy', p: p.id, extra: task.extra });
+        state.queue.unshift({ t: 'release', p: p.id, left: n }, { t: 'buy', p: p.id, ...extraOf(task) });
         return;
       }
       throw new Error(`Bad buy option ${optionId}`);
@@ -419,7 +419,7 @@ function resolveTask(state, task, optionId) {
       return;
     }
     case 'pay': {
-      if (optionId === 'back') { state.queue.unshift({ t: 'buy', p: p.id, extra: task.extra }); return; }
+      if (optionId === 'back') { state.queue.unshift({ t: 'buy', p: p.id, ...extraOf(task) }); return; }
       const v = Object.fromEntries(optionId.slice(4).split('-').map((n, i) => [state.resources[i], Number(n)]));
       boughtOnce(state, p, task);
       if (task.uid !== undefined) recruit(state, p, task.uid, { free: false, spend: v });
@@ -703,6 +703,8 @@ function spendAllowance(state, p, flag) {
   card.spent = { ...(card.spent || {}), [flag]: state.round };
   log(state, `${p.name} uses ${defById(card.def).name}.`);
 }
+// Queue tasks stay plain JSON: only a second buy carries the flag.
+const extraOf = task => (task.extra ? { extra: true } : {});
 // A real buy (member or followers) in a buy step. The second one spends a Big Spender.
 function boughtOnce(state, p, task) {
   if (task.extra) spendAllowance(state, p, 'extraBuy');

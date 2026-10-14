@@ -11,7 +11,8 @@ export const setsOf = (ctx, p) => Math.min(...colors(ctx).map(c => p.res[c] || 0
 const held = (ctx, p) => colors(ctx).filter(c => (p.res[c] || 0) > 0);
 const missing = (ctx, p) => colors(ctx).filter(c => !(p.res[c] > 0));
 const total = (ctx, p) => colors(ctx).reduce((a, c) => a + (p.res[c] || 0), 0);
-const colorOf = (ctx, card) => ctx.quadrant(ctx.defOf(card).quadrant).resource;
+// a member's color, or null when its sphere isn't on this table (a guest member leaning to an absent sphere)
+const colorOf = (ctx, card) => { const r = ctx.quadrant(ctx.defOf(card).quadrant).resource; return ctx.state.resources.includes(r) ? r : null; };
 const eachColor = (ctx, p, n, opts) => { for (const c of colors(ctx)) ctx.gain(p, c, n, opts); };
 
 export default {
@@ -101,12 +102,12 @@ export default {
     m('admirer', 'Admirer', 4, 2, 'Whenever a rival recruits a member of a color you have none of, +1 of that color.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         const c = colorOf(ctx, recruited);
-        if (by !== owner && !(owner.res[c] > 0)) ctx.gain(owner, c, 1);
+        if (c && by !== owner && !(owner.res[c] > 0)) ctx.gain(owner, c, 1);
       },
     }),
     m('gobetween', 'Go-Between', 4, 4, 'Whenever you recruit a non-yellow member, +1 of its color.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
-        if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'yellow') ctx.gain(owner, colorOf(ctx, recruited), 1);
+        if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'yellow' && colorOf(ctx, recruited)) ctx.gain(owner, colorOf(ctx, recruited), 1);
       },
     }),
     m('dyer', 'Dyer', 4, 2, 'At round end, +1 yellow per color you hold.', {
