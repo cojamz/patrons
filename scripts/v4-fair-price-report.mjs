@@ -1,60 +1,63 @@
-// Builds design/eval/fair-price.md's card list and design/eval/reprice-proposal.json from a screen run and any sweeps
-// (see scripts/v4-fair-price.mjs). Sweep evidence wins over the screen when it has a finite crossing.
-// Usage: node scripts/v4-fair-price-report.mjs screen.json [sweep1.json,sweep2.json...] [--md=out.md] [--json=out.json]
+// Builds the card list for design/eval/fair-price.md and design/eval/reprice-proposal.json from
+//   a panel run (the price: causal, paired, every card), a screen run (demand: how often bots recruit it when offered
+//   and affordable, at jittered prices) and optional single-card sweeps (anchors; a Hard test seat).
+// Usage: node scripts/v4-fair-price-report.mjs --panel=p.json --screen=s.json [--sweeps=a.json,b.json] [--md=out.md] [--json=out.json]
 import { readFileSync, writeFileSync } from 'node:fs';
 import { allQuadrantIds, quadrant, guestMembers } from '../src/engine/v4/content/index.js';
 
-const argv = process.argv.slice(2);
-const flags = Object.fromEntries(argv.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
-const [screenFile, sweepFiles = ''] = argv.filter(a => !a.startsWith('--'));
-const S = JSON.parse(readFileSync(screenFile, 'utf8'));
-const sweeps = sweepFiles.split(',').filter(Boolean).map(f => JSON.parse(readFileSync(f, 'utf8')));
+const flags = Object.fromEntries(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
+const load = f => JSON.parse(readFileSync(f, 'utf8'));
+const P = load(flags.panel), S = flags.screen ? load(flags.screen) : { cards: [] };
+const sweeps = String(flags.sweeps || '').split(',').filter(Boolean).map(load);
 const defs = [...allQuadrantIds().flatMap(q => quadrant(q).members), ...guestMembers()];
-const f1 = x => (Number.isFinite(x) ? (Math.round(x * 2) / 2).toFixed(1).replace(/\.0$/, '') : '–');
+const h = x => (Number.isFinite(x) ? String(Math.round(x * 2) / 2) : '–');
 const even = x => Math.max(0, 2 * Math.round(x / 2));
-const split = (d, P) => { const T = d.s + d.w; if (!T) return [Math.min(P, 2 * Math.round(P / 4)), P - Math.min(P, 2 * Math.round(P / 4))]; let s = Math.round((P * d.s) / T); if (s % 2 && P % 2 === 0 && P - s > 0) s += (d.s >= d.w ? 1 : -1); s = Math.max(0, Math.min(P, s)); return [s, P - s]; };
-
-// latest sweep row per card (later files override earlier ones; a Hard-seat row is kept alongside)
-const sw = {}, swHard = {};
-for (const R of sweeps) for (const r of R.rows) {
-  const n = r.per[0]?.n ?? 0, row = { ...r, n, hard: R.hard || 0, games: R.games };
-  if (R.hard) swHard[r.id] = row; else if (!sw[r.id] || n >= sw[r.id].n) sw[r.id] = row;
+// keep the colored share of the printed split; colored part even when it can be
+function split(d, P) {
+  const T = d.s + d.w;
+  if (!T) return [Math.min(P, 2 * Math.floor(P / 4)), P - Math.min(P, 2 * Math.floor(P / 4))];
+  let s = Math.round((P * d.s) / T);
+  if (s % 2 && P - s > 0) s += 1; else if (s % 2) s -= 1;
+  s = Math.max(0, Math.min(P, s));
+  return [s, P - s];
 }
+const sw = {};
+for (const R of sweeps) for (const r of R.rows) (sw[r.id] ||= []).push({ ...r, n: r.per[0]?.n ?? 0, hard: R.hard || 0 });
 
-const lines = [], proposal = [];
-const order = allQuadrantIds();
-const byQ = q => defs.filter(d => (d.guest ? 'guests' : d.quadrant) === q);
-for (const q of [...order, 'guests']) {
-  const ds = byQ(q); if (!ds.length) continue;
-  lines.push('', `### ${q === 'guests' ? 'Guest rule-benders' : quadrant(q).name || q}`);
+const MIN_N = 150;
+const lines = [], proposal = [], tally = { fair: 0, under: 0, over: 0, thin: 0, ability: 0 };
+for (const q of [...allQuadrantIds(), 'guests']) {
+  const ds = defs.filter(d => (d.guest ? 'guests' : d.quadrant) === q);
+  if (!ds.length) continue;
+  lines.push('', `### ${q === 'guests' ? 'Guest rule-benders' : (quadrant(q).name || q)}`);
   for (const d of ds) {
-    const c = S.cards.find(x => x.id === d.id), T = d.s + d.w, s = sw[d.id], h = swHard[d.id];
+    const c = P.cards.find(x => x.id === d.id), sc = S.cards.find(x => x.id === d.id), T = d.s + d.w;
     if (!c) continue;
-    const useSweep = s && Number.isFinite(s.fair) && Number.isFinite(s.lo) && Number.isFinite(s.hi) && s.hi - s.lo < (c.hi - c.lo) * 1.5;
-    const fair = useSweep ? s.fair : c.fair, lo = useSweep ? s.lo : c.lo, hi = useSweep ? s.hi : c.hi;
-    const instr = useSweep ? `sweep, normal seat, ${s.n} paired seeds` : `screen, ${c.owners} owners`;
-    const low = !useSweep && c.low;
-    const covers = lo <= T && T <= hi;
-    const gap = fair - T;
+    const thin = c.n < MIN_N || !Number.isFinite(c.lo) || !Number.isFinite(c.hi);
+    const covers = c.lo <= T && T <= c.hi, gap = c.fair - T;
     let verdict;
-    if (low) verdict = 'too few owners to call';
-    else if (covers || Math.abs(gap) < 1.5) verdict = 'fair';
-    else verdict = gap > 0 ? `underpriced: raise to ${even(fair)}` : `overpriced: cut to ${even(fair)}`;
-    const flagsOut = [];
-    if (!low && fair <= 0.5 && hi < 1.5 && T > 0) flagsOut.push('NEEDS AN ABILITY CHANGE, NOT A PRICE (worth ~nothing even free)');
-    if (!low && fair - T >= 8) flagsOut.push('NEEDS AN ABILITY CHANGE, NOT A PRICE (a price this high makes it a late-only buy; trim the ability)');
-    if (d.vanilla && verdict.startsWith('under')) flagsOut.push('plain member: kept at old price by Cory’s rule');
-    const hardTxt = h ? `; Hard seat ~${f1(h.fair)} (${f1(h.lo)}–${f1(h.hi)}, n=${h.n})` : '';
-    const sTxt = useSweep ? `; screen ~${f1(c.fair)}` : (s ? `; sweep ~${f1(s.fair)} (${f1(s.lo)}–${f1(s.hi)}, n=${s.n})` : '');
-    lines.push(`- ${d.name} (${d.s}+${d.w}=${T}): fair ~${f1(fair)} (90% ${f1(lo)}–${f1(hi)}, ${instr}${sTxt}${hardTxt}); buy ${Number.isFinite(c.buyRate) ? Math.round(c.buyRate * 100) : '–'}% of affordable offers, got in round ~${f1(c.meanRound)}; ${verdict}${flagsOut.length ? '. ' + flagsOut.join('; ') : ''}`);
-    if (!low && !covers && Math.abs(gap) >= 1.5 && !d.vanilla) {
-      const P = even(fair), [ps, pw] = split(d, P);
-      proposal.push({ id: d.id, name: d.name, printed: [d.s, d.w], proposed: [ps, pw], fair: +fair.toFixed(2), ci90: [+lo.toFixed(2), +hi.toFixed(2)],
-        evidence: `${instr}; buy rate ${Math.round(c.buyRate * 100)}%${sTxt}${hardTxt}`, flags: flagsOut });
+    if (thin) { verdict = 'too few probes to call'; tally.thin++; }
+    else if (covers || Math.abs(gap) < 1.5) { verdict = 'fair as printed'; tally.fair++; }
+    else if (gap > 0) { verdict = `underpriced, raise to ${even(c.fair)}`; tally.under++; }
+    else { verdict = `overpriced, cut to ${even(c.fair)}`; tally.over++; }
+    const fl = [];
+    // worth nothing even free: the fit says ≤ 0.5 and its CI stays under 1.5, at a printed price above 0
+    if (!thin && c.fair <= 0.5 && c.hi < 1.5 && T > 0) fl.push('NEEDS AN ABILITY CHANGE, NOT A PRICE: worth ~nothing even free');
+    // so strong a price can't hold it: it would have to more than double
+    if (!thin && c.lo > Math.max(2 * T, T + 6)) fl.push('NEEDS AN ABILITY CHANGE, NOT A PRICE: it would have to cost more than double');
+    if (fl.length) tally.ability++;
+    const extra = (sw[d.id] || []).map(r => `${r.hard ? `Hard seat` : 'single-card sweep'} ~${h(r.fair)} (${h(r.lo)}–${h(r.hi)}, ${r.n} seeds)`);
+    const demand = sc && Number.isFinite(sc.buyRate) ? `recruited at ${Math.round(sc.buyRate * 100)}% of affordable offers (screen)` : '';
+    lines.push(`- ${d.name} (${d.s}+${d.w}=${T}): fair ~${h(c.fair)} (90% ${h(c.lo)}–${h(c.hi)}, panel n=${c.n}${extra.length ? '; ' + extra.join('; ') : ''}); ${demand}; ${verdict}${fl.length ? '. ' + fl.join('; ') : ''}`);
+    if (!thin && !covers && Math.abs(gap) >= 1.5) {
+      const Pp = even(c.fair), [ps, pw] = split(d, Pp);
+      proposal.push({ id: d.id, name: d.name, printed: [d.s, d.w], proposed: fl.length ? [d.s, d.w] : [ps, pw], fair: +c.fair.toFixed(1), ci90: [+c.lo.toFixed(1), +c.hi.toFixed(1)],
+        evidence: `panel (paired forced-recruit, normal bots, random real tables): n=${c.n}, net margin at printed ${c.net.toFixed(2)}, ${Math.round((c.boughtShare || 0) * 100)}% of probes recruited, round ~${h(c.meanRound)}${demand ? '; ' + demand : ''}${extra.length ? '; ' + extra.join('; ') : ''}`,
+        ...(fl.length ? { flags: fl, note: 'price left as printed: fix the ability first' } : {}),
+        ...(d.vanilla ? { note: 'plain member: Cory set plain members at their old price; review before applying' } : {}) });
     }
   }
 }
-const md = lines.join('\n');
-if (flags.md) writeFileSync(flags.md, md + '\n'); else console.log(md);
+if (flags.md) writeFileSync(flags.md, lines.join('\n') + '\n'); else console.log(lines.join('\n'));
 if (flags.json) writeFileSync(flags.json, JSON.stringify(proposal, null, 1) + '\n');
-console.error(`${proposal.length} cards proposed for repricing`);
+console.error(JSON.stringify(tally), `${proposal.length} in the proposal`);
