@@ -59,9 +59,16 @@ async function placeOnce(s) {
 }
 
 /** What undo should allow after `after`, given the state `before` the last move and who made it. */
-const expectUndo = (before, move, after, humans) =>
-  !!(before.pending && before.pending.kind === 'place' && humans.includes(move.player) && !after.over
-    && after.round === before.round && after.pending && after.pending.player === move.player && after.pending.kind !== 'place');
+const expectUndo = (before, move, after, humans) => {
+  if (!before.pending || !humans.includes(move.player) || after.over || after.round !== before.round) return false;
+  const k = before.pending.kind;
+  // a placement: while it's still the placer's decision
+  if (k === 'place') return !!(after.pending && after.pending.player === move.player && after.pending.kind !== 'place');
+  // a completed purchase: until anyone moves next (paid at once, or after choosing how to pay)
+  if (k === 'buy') return /^(card|tier):/.test(move.option) && !(after.pending && after.pending.kind === 'pay');
+  if (k === 'pay') return move.option !== 'back';
+  return false;
+};
 
 /** Drives to a placement and makes one that leads straight to the placer's buy (trying options via undo). */
 async function placeToBuy(s) {
@@ -107,7 +114,7 @@ describe('local session: undo', () => {
     s.destroy();
   });
 
-  it('is not offered after a buy, or after any follow-up decision by the placer', async () => {
+  it('after a buy it undoes the buy (back to the buy step); never after any other follow-up decision', async () => {
     let bought = false, followedUp = false;
     for (let seed = 1; seed < 60 && !(bought && followedUp); seed++) {
       const s = createLocalSession({ seats: humans2, seed, botDelayMs: 0 });
@@ -117,8 +124,26 @@ describe('local session: undo', () => {
         if (!st.pending || st.pending.player !== pre.pending.player) continue;
         expect(s.canUndo()).toBe(true);
         const buy = st.pending.kind === 'buy' && st.pending.options.find(o => o.kind === 'card' || o.kind === 'tier');
-        if (buy) { await s.submit({ option: buy.id }); bought = true; }
-        else { await s.submit(chooseBotMove(st)); followedUp = true; } // a 'choose' from the action, etc.
+        if (buy) {
+          await s.submit({ option: buy.id });
+          // paying may ask how; a completed purchase is then undoable as a buy, back to the buy step
+          if (s.getState().pending?.kind === 'pay') await s.submit({ option: s.getState().pending.options.find(o => o.default).id });
+          bought = true;
+          const after = s.getState();
+          if (after.over || after.round !== st.round) {
+            // a buy that ends the round (or game) can't be taken back
+            expect(s.undoKind).toBe(null);
+          } else {
+            expect(s.undoKind).toBe('buy');
+            expect(s.undo()).toBe(true);
+            expect(s.getState().pending.kind).toBe('buy');
+            expect(s.getState().pending.player).toBe(pre.pending.player);
+            expect(s.canUndo()).toBe(false);
+          }
+          await driveUntil(s, x => x.over || x.pending.kind === 'place');
+          continue;
+        }
+        await s.submit(chooseBotMove(st)); followedUp = true; // a 'choose' from the action, etc.
         expect(s.canUndo()).toBe(false);
         expect(s.undo()).toBe(false);
         await driveUntil(s, x => x.over || x.pending.kind === 'place');
@@ -129,7 +154,7 @@ describe('local session: undo', () => {
     expect(followedUp).toBe(true);
   });
 
-  it('is offered exactly while the human placement is the last move: never past other moves, bots or round ends', async () => {
+  it('is offered exactly while a human placement or buy is the last move: never past other moves, bots or round ends', async () => {
     let roundEndsSeen = 0, undoable = 0, botMovesSeen = 0;
     for (const seed of [3, 9, 27]) {
       const s = createLocalSession({ seats: [{ name: 'H1' }, { name: 'Bot', kind: 'bot' }, { name: 'H2' }], seed, botDelayMs: 0 });
@@ -152,7 +177,8 @@ describe('local session: undo', () => {
         if (!move.option) botMovesSeen++;
         if (st.round !== prev.round) roundEndsSeen++;
         if (s.canUndo() !== want) errors.push(`seed ${seed} move ${st.moves}: canUndo ${s.canUndo()}, expected ${want}`);
-        if (st.pending && st.players[st.pending.player].kind === 'bot' && s.undo()) errors.push('undid on a bot turn');
+        // on a bot's turn, undo only ever takes back a human's just-made buy, never anything else
+        if (!want && st.pending && st.players[st.pending.player].kind === 'bot' && s.undo()) errors.push('undid on a bot turn');
         prev = st;
       }
       await until(() => s.getState().over, { label: 'game over' });

@@ -13,7 +13,7 @@ import { ChoicePrompt, Confirm, Handoff, Log, useDialog } from './parts.jsx';
 import PayPicker from './PayPicker.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import Tick from './Tick.jsx';
-import { flyCards, flyWorker, motionOK, snapshotShop } from './flight.js';
+import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights } from './flight.js';
 import { friendlyError, isNetworkError } from '../errors.js';
 
 const STEP_MS = 320;      // pace when catching up on moves that happened behind the round-end card
@@ -198,6 +198,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   useLayoutEffect(() => {
     const before = prevState.current;
     prevState.current = state;
+    clearFlights(1200); // nothing from earlier moves lingers
     if (before === state) { shopSnap.current = snapshotShop(root.current); return undefined; }
     const flights = before.shop.filter(u => !state.shop.includes(u))
       .map(uid => ({ uid, to: state.players.findIndex(p => p.members.includes(uid)) }))
@@ -323,6 +324,16 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, [state, pend, moment, mySeats, needHandoff, say]);
 
   const live = needHandoff ? () => null : optionFor;
+  // A modal takes the stage: sweep any flying ghosts so nothing floats over it.
+  const modalOpen = !!(moment || rules || leaving || logOpen || (needHandoff && !moment) || (mine && pend && pend.kind === 'pay'));
+  useEffect(() => { if (modalOpen) clearFlights(0); }, [modalOpen]);
+  // and the page behind a modal doesn't scroll
+  useEffect(() => {
+    if (!modalOpen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [modalOpen]);
   const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
   const players = <Players state={state} active={pend ? pend.player : null} mySeats={mySeats} optionFor={live} onPick={onPick} gifts={gifts} />;
@@ -342,8 +353,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   };
   const meP = me != null ? state.players[me] : null;
   const buyingNow = mine && !needHandoff && pend.kind === 'buy';
-  const canUndo = mine && !needHandoff && !busy && typeof session.canUndo === 'function' && session.canUndo();
-  const undo = () => { if (session.undo && session.undo()) say('Placement undone — place again', 'info', 1800); };
+  const undoKind = !needHandoff && !busy && typeof session.canUndo === 'function' && session.canUndo() ? (session.undoKind || 'place') : null;
+  const canUndo = !!undoKind && !state.over;
+  const undo = () => { const k = undoKind; if (session.undo && session.undo()) say(k === 'buy' ? 'Buy undone — choose again' : 'Placement undone — place again', 'info', 1800); };
 
   return (
     <div className={`app game${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}`} ref={root}>
@@ -367,7 +379,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             </span>
           ) : <span className="say" data-prompt tabIndex={-1} />}
           <span className="undo-slot">
-            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} title="Take back your worker until you buy or pass">↶ Undo<span className="long"> placement</span></button>}
+            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : 'Take back your worker until you buy or pass'}>↶ Undo {undoKind === 'buy' ? 'buy' : 'placement'}</button>}
           </span>
         </div>
         <div className="bar-row you-row">

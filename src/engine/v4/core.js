@@ -496,11 +496,11 @@ function buyFollowers(state, p, tier, chosen) {
   for (const r in spend) p.res[r] -= spend[r];
   p.bonus += tier.get;
   p.bought = (p.bought || 0) + tier.get;
+  log(state, `${p.name} bought ${tier.get} follower${tier.get > 1 ? 's' : ''} (${payString(spend)}).`);
   if (tier.limited) {
     state.bigLeft -= 1;
     if (state.bigLeft <= 0 && !state.endEarly) { state.endEarly = true; log(state, 'The last 6-follower buy is gone. The game ends after this round.'); }
   }
-  log(state, `${p.name} bought ${tier.get} follower${tier.get > 1 ? 's' : ''} (${payString(spend)}).`);
   const ctx = ctxFor(state);
   eachMember(state, (owner, card, def) => { if (def.onBuyFollowers) def.onBuyFollowers(ctx, owner, card, p, tier); });
 }
@@ -528,8 +528,33 @@ function effectiveDefs(card) {
 function eachMemberOf(state, p, fn) {
   for (const uid of [...p.members]) {
     const card = state.cards[uid];
-    for (const def of effectiveDefs(card)) fn(wrap(state, card), def);
+    for (const def of effectiveDefs(card)) {
+      const before = traceSnapshot(state);
+      fn(wrap(state, card), def);
+      traceChanges(state, before, p, def);
+    }
   }
+}
+
+// Every member trigger leaves a trace: if a hook changed anyone's resources or followers and didn't say so itself,
+// the log says it for the hook ("Kay's Tax Collector: +1 gold"), so every number on the table traces to a line.
+function traceSnapshot(state) {
+  return { len: state.log.length, last: state.log[state.log.length - 1], players: state.players.map(o => ({ res: { ...o.res }, bonus: o.bonus })) };
+}
+function traceChanges(state, before, owner, def) {
+  if (state.log.length !== before.len || state.log[state.log.length - 1] !== before.last) return; // the hook logged
+  const name = def && def.name;
+  if (!name) return;
+  state.players.forEach((o, i) => {
+    const b = before.players[i];
+    if (!b) return;
+    const parts = Object.keys({ ...b.res, ...o.res }).map(r => [r, (o.res[r] || 0) - (b.res[r] || 0)]).filter(([, d]) => d)
+      .map(([r, d]) => `${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`);
+    const f = o.bonus - b.bonus;
+    if (f) parts.push(`${f > 0 ? '+' : '−'}${Math.abs(f)} follower${Math.abs(f) === 1 ? '' : 's'}`);
+    if (!parts.length) return;
+    log(state, o === owner ? `${owner.name}'s ${name}: ${parts.join(', ')}.` : `${o.name} ${parts.join(', ')} (${owner.name}'s ${name}).`);
+  });
 }
 function eachMember(state, fn) {
   for (const owner of state.players) eachMemberOf(state, owner, (card, def) => fn(owner, card, def));

@@ -35,7 +35,8 @@ export function snapshotShop(root) {
 
 function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 0, hold = false }) {
   const ghost = document.createElement('div');
-  ghost.className = className;
+  ghost.className = className + ' ghost-layer';
+  ghost.dataset.born = String(Date.now());
   ghost.innerHTML = html;
   Object.assign(ghost.style, { left: `${a.left}px`, top: `${a.top}px`, width: `${a.width}px`, height: `${a.height}px` });
   document.body.appendChild(ghost);
@@ -98,4 +99,11 @@ export function flyWorker(root, pid, slotKey, color) {
   const b = { left: t.left + t.width / 2 - size / 2, top: t.top + t.height / 2 - size / 2, width: size, height: size };
   ghostFly(`<i style="background:${color}"></i>`, 'worker-flight', a, b, { duration: 260, scaleTo: 1, fadeTo: 1, arc: 30 });
   return true;
+}
+
+/** Remove flying ghosts: all of them (a modal opened), or those older than maxAge ms (they should be gone). */
+export function clearFlights(maxAge = 0) {
+  if (typeof document === 'undefined') return;
+  const now = Date.now();
+  document.querySelectorAll('.ghost-layer').forEach(g => { if (!maxAge || now - Number(g.dataset.born || 0) > maxAge) g.remove(); });
 }
