@@ -169,10 +169,10 @@ const silver = {
   },
 
   members: [
-    m('guest', 'Guest', 2, 2, 'Whenever another player gives you something, +1 more of it.', {
+    m('guest', 'Guest', 4, 4, 'Whenever another player gives you something, +1 more of it.', {
       onGiven(ctx, owner, card, giver, color) { if (giver !== owner) ctx.gain(owner, color, 1); },
     }),
-    m('benefactor', 'Benefactor', 2, 1, 'At round start, +3 silver, and a rival you pick gets 1 silver.', {
+    m('benefactor', 'Benefactor', 4, 2, 'At round start, +3 silver, and a rival you pick gets 1 silver.', {
       onRoundStart(ctx, owner) {
         ctx.gain(owner, S, 3);
         const low = Math.min(...others(ctx, owner).map(o => ctx.followers(o)));
@@ -181,35 +181,35 @@ const silver = {
         })), 'silver.benefactor');
       },
     }),
-    m('caterer', 'Caterer', 1, 1, 'Whenever you give something to other players, +1 silver.', {
+    m('caterer', 'Caterer', 2, 2, 'Whenever you give something to other players, +1 silver.', {
       onGive(ctx, owner) { ctx.gain(owner, S, 1); },
     }),
-    m('majordomo', 'Majordomo', 2, 1, 'Whenever you take a Silver space, +2 silver.', {
+    m('majordomo', 'Majordomo', 4, 2, 'Whenever you take a Silver space, +2 silver.', {
       afterAction(ctx, owner, card, qid) { if (qid === S) ctx.gain(owner, S, 2); },
     }),
-    m('silversmith', 'Silversmith', 2, 1, 'Whenever an action gains you silver, +1 more.', {
+    m('silversmith', 'Silversmith', 4, 2, 'Whenever an action gains you silver, +1 more.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === S && g.n > 0) owner.res[S] += 1; },
     }),
-    m('steward', 'Steward', 1, 1, 'At round start, +1 silver per 3 silver you hold.', {
+    m('steward', 'Steward', 2, 2, 'At round start, +1 silver per 3 silver you hold.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, S, Math.floor(owner.res[S] / 3)); },
     }),
-    m('retinue', 'Retinue', 1, 1, 'Worth 2 followers. When recruited, everyone else +1 silver.', {
+    m('retinue', 'Retinue', 2, 2, 'Worth 2 followers. When recruited, everyone else +1 silver.', {
       f: 2,
       onRecruited(ctx, owner) { giveAll(ctx, owner, S, 1); },
     }),
-    m('feasthall', 'Feast Hall', 2, 1, 'When recruited, +2 silver per round number.', {
+    m('feasthall', 'Feast Hall', 4, 2, 'When recruited, +2 silver per round number.', {
       onRecruited(ctx, owner) { ctx.gain(owner, S, 2 * ctx.state.round); },
     }),
-    m('heir', 'Heir', 3, 1, 'At the start of round III, +1 silver per member you have.', {
+    m('heir', 'Heir', 6, 2, 'At the start of round III, +1 silver per member you have.', {
       onRoundStart(ctx, owner) { if (ctx.state.round === 3) ctx.gain(owner, S, ctx.memberCount(owner)); },
     }),
-    m('spoon', 'Silver Spoon', 2, 1, 'When recruited, gain silver equal to the most silver any rival has.', {
+    m('spoon', 'Silver Spoon', 4, 2, 'When recruited, gain silver equal to the most silver any rival has.', {
       onRecruited(ctx, owner) { ctx.gain(owner, S, Math.max(0, ...others(ctx, owner).map(o => o.res[S]))); },
     }),
-    m('toastmaster', 'Toastmaster', 2, 2, 'Whenever you take a Silver space, +1 follower.', {
+    m('toastmaster', 'Toastmaster', 4, 4, 'Whenever you take a Silver space, +1 follower.', {
       afterAction(ctx, owner, card, qid) { if (qid === S) owner.bonus += 1; },
     }),
-    m('gala', 'Gala', 2, 2, 'Once per game: double your silver, and everyone else +2 silver.', {
+    m('gala', 'Gala', 4, 4, 'Once per game: double your silver, and everyone else +2 silver.', {
       activate: 'game',
       onActivate(ctx, owner) {
         ctx.gain(owner, S, owner.res[S]);
@@ -218,9 +218,9 @@ const silver = {
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res[S] >= 6,
     }),
-    m('dowager', 'Dowager', 2, 2, 'Worth 3 followers.', { f: 3 }),
-    m('grandhost', 'Grand Host', 4, 2, 'Silver spaces give you twice the silver.', { hostDouble: true }),
-    m('saint', 'Patron Saint', 4, 2, 'Game end: +1 follower per 2 silver members in play, anyone’s.', {
+    m('dowager', 'Dowager', 4, 4, 'Worth 3 followers.', { f: 3 }),
+    m('grandhost', 'Grand Host', 8, 4, 'Silver spaces give you twice the silver.', { hostDouble: true }),
+    m('saint', 'Patron Saint', 8, 4, 'Game end: +1 follower per 2 silver members in play, anyone’s.', {
       onGameEnd: ctx => Math.floor(ctx.state.players.reduce((s, o) => s + ctx.countMembersOfColor(o, S), 0) / 2),
     }),
   ],

@@ -234,13 +234,13 @@ const echoQ = {
   },
 
   members: [
-    m('evergreen', 'Evergreen', 1, 1, 'At round start, +3 green.', {
+    m('evergreen', 'Evergreen', 2, 2, 'At round start, +3 green.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', 3); },
     }),
-    m('choir', 'Choir', 2, 1, 'Whenever you copy a space, +1 green.'),
-    m('muse', 'Muse', 1, 1, 'Whenever a rival copies one of your spaces, +2 green.'),
-    m('choirmaster', 'Choirmaster', 2, 1, 'Whenever a rival copies a space, +1 green.'),
-    m('fan', 'Fan', 1, 1, 'Whenever a rival takes a center space, +2 green.', {
+    m('choir', 'Choir', 4, 2, 'Whenever you copy a space, +1 green.'),
+    m('muse', 'Muse', 2, 2, 'Whenever a rival copies one of your spaces, +2 green.'),
+    m('choirmaster', 'Choirmaster', 4, 2, 'Whenever a rival copies a space, +1 green.'),
+    m('fan', 'Fan', 2, 2, 'Whenever a rival takes a center space, +2 green.', {
       onTurnEnd(ctx, owner, card, p) {
         if (p === owner) return;
         const L = ledger(ctx.state);
@@ -248,35 +248,35 @@ const echoQ = {
         if (e && e.p === p.id && e.ring === 3) ctx.gain(owner, 'green', 2);
       },
     }),
-    m('groupie', 'Groupie', 2, 2, 'Whenever anyone recruits a green member, +1 green.', {
+    m('groupie', 'Groupie', 4, 4, 'Whenever anyone recruits a green member, +1 green.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (recruited.uid !== card.uid && recruited.def.id.startsWith('echo.')) ctx.gain(owner, 'green', 1);
       },
     }),
-    m('translator', 'Translator', 2, 1, 'What you copy comes as green. You can switch it off or on when you buy.', {
+    m('translator', 'Translator', 4, 2, 'What you copy comes as green. You can switch it off or on when you buy.', {
       toggle: true,
       onRecruited(ctx, owner, card) { card.on = true; },
     }),
-    m('tuningfork', 'Tuning Fork', 1, 1, 'Whenever you copy a space, also gain 1 of that space’s color.'),
-    m('wallflower', 'Wallflower', 1, 1, 'While no one has fewer followers than you, the resources you copy are doubled.'),
-    m('keepsake', 'Keepsake', 2, 1, 'When recruited: copy one of your spaces from this round.', {
+    m('tuningfork', 'Tuning Fork', 2, 2, 'Whenever you copy a space, also gain 1 of that space’s color.'),
+    m('wallflower', 'Wallflower', 2, 2, 'While no one has fewer followers than you, the resources you copy are doubled.'),
+    m('keepsake', 'Keepsake', 4, 2, 'When recruited: copy one of your spaces from this round.', {
       onRecruited(ctx, owner) { offer(ctx, owner, targets(ctx, owner, 'own'), 'Keepsake: copy which of your spaces?', 'now'); },
     }),
-    m('mirror', 'Mirror', 2, 1, 'When recruited: gain as much green as the rival with the most green.', {
+    m('mirror', 'Mirror', 4, 2, 'When recruited: gain as much green as the rival with the most green.', {
       onRecruited(ctx, owner) {
         const g = Math.max(0, ...ctx.rivals(owner).map(o => o.res.green || 0));
         if (g) ctx.gain(owner, 'green', g);
         ctx.log(`${owner.name}'s Mirror: +${g} green.`);
       },
     }),
-    m('afterimage', 'Afterimage', 2, 1, 'At round start: copy one of your spaces from last round.', {
+    m('afterimage', 'Afterimage', 4, 2, 'At round start: copy one of your spaces from last round.', {
       onRoundStart(ctx, owner) {
         const L = ledger(ctx.state);
         const list = Object.values(L.last).filter(e => copyable(e) && e.p === owner.id);
         offer(ctx, owner, list, 'Afterimage: copy which of your spaces from last round?', 'last');
       },
     }),
-    m('hourglass', 'Hourglass', 3, 2, 'Once per round: copy the space you just took.', {
+    m('hourglass', 'Hourglass', 6, 4, 'Once per round: copy the space you just took.', {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
@@ -286,7 +286,7 @@ const echoQ = {
       },
       botActivate: (ctx, owner) => { const e = justTook(ctx, owner); return !!e && entryValue(ctx, e, owner) >= 3; },
     }),
-    m('dejavu', 'Déjà Vu', 4, 2, 'Once per game: copy every space you took this round.', {
+    m('dejavu', 'Déjà Vu', 8, 4, 'Once per game: copy every space you took this round.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const list = targets(ctx, owner, 'own');
@@ -296,7 +296,7 @@ const echoQ = {
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e, owner), 0) >= (ctx.state.round === 3 ? 6 : 10),
     }),
-    m('chronicler', 'Chronicler', 2, 2, 'Game end: +1 follower per 2 green.', {
+    m('chronicler', 'Chronicler', 4, 4, 'Game end: +1 follower per 2 green.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res.green || 0) / 2),
     }),
   ],

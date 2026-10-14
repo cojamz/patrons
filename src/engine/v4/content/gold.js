@@ -70,7 +70,7 @@ export default {
   },
 
   members: [
-    m('midas', 'Midas', 2, 2, 'Gains from actions come as gold instead. You can switch it off or on when you buy.', {
+    m('midas', 'Midas', 4, 4, 'Gains from actions come as gold instead. You can switch it off or on when you buy.', {
       toggle: true,
       onRecruited(ctx, owner, card) { card.on = true; },
       // a conversion: runs before every other gain modifier, so "gold gains" sees the converted gain
@@ -78,37 +78,37 @@ export default {
         if (card.on !== false && g.fromAction && g.color !== 'gold') g.color = 'gold';
       },
     }),
-    m('banker', 'Banker', 1, 1, 'At round start, +3 gold.', {
+    m('banker', 'Banker', 2, 2, 'At round start, +3 gold.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, 'gold', 3); },
     }),
-    m('prospector', 'Prospector', 1, 1, 'Whenever an action gains you gold, +1 more.', {
+    m('prospector', 'Prospector', 2, 2, 'Whenever an action gains you gold, +1 more.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === 'gold' && g.n > 0) owner.res.gold += 1; },
     }),
-    m('taxman', 'Tax Collector', 1, 1, 'Whenever a rival buys followers, +1 gold.', {
+    m('taxman', 'Tax Collector', 2, 2, 'Whenever a rival buys followers, +1 gold.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer !== owner) ctx.gain(owner, 'gold', 1); },
     }),
-    m('merchant', 'Merchant', 2, 1, 'Whenever anyone recruits a gold member, +1 gold.', {
+    m('merchant', 'Merchant', 4, 2, 'Whenever anyone recruits a gold member, +1 gold.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (recruited.uid !== card.uid && ctx.defOf(recruited).quadrant === 'gold') ctx.gain(owner, 'gold', 1);
       },
     }),
-    m('thrift', 'Thrift', 2, 0, 'Gold you spend on members counts double.', { goldPaysDouble: true }),
-    m('coinpurse', 'Coin Purse', 1, 1, 'Whenever you recruit a non-gold member, +1 gold.', {
+    m('thrift', 'Thrift', 4, 0, 'Gold you spend on members counts double.', { goldPaysDouble: true }),
+    m('coinpurse', 'Coin Purse', 2, 2, 'Whenever you recruit a non-gold member, +1 gold.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'gold') ctx.gain(owner, 'gold', 1);
       },
     }),
-    m('underdog', 'Underdog', 2, 1, 'While anyone has more gold than you, your gold gains are doubled.', {
+    m('underdog', 'Underdog', 4, 2, 'While anyone has more gold than you, your gold gains are doubled.', {
       modifyGain(ctx, owner, card, g) {
         if (g.color === 'gold' && !g.doubled && ctx.state.players.some(o => o !== owner && o.res.gold > owner.res.gold)) {
           g.n *= 2; g.doubled = true;
         }
       },
     }),
-    m('tinker', 'Tinker', 2, 1, 'Whenever an action gains you another resource, also gain half as much gold (rounded up).', {
+    m('tinker', 'Tinker', 4, 2, 'Whenever an action gains you another resource, also gain half as much gold (rounded up).', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n > 0) owner.res.gold += Math.ceil(g.n / 2); },
     }),
-    m('investor', 'Investor', 2, 1, 'Round start: set aside any of your gold. Round end: it comes back doubled.', {
+    m('investor', 'Investor', 4, 2, 'Round start: set aside any of your gold. Round end: it comes back doubled.', {
       onRoundStartLate(ctx, owner, card) {
         const g = owner.res.gold;
         if (!g) return;
@@ -122,7 +122,7 @@ export default {
         if (x) { owner.res.gold += 2 * x; card.invested = 0; ctx.log(`${owner.name}'s Investor returns ${2 * x} gold.`); }
       },
     }),
-    m('jackpot', 'Jackpot', 3, 2, 'Once per game: gain gold equal to the richest rival’s gold.', {
+    m('jackpot', 'Jackpot', 6, 4, 'Once per game: gain gold equal to the richest rival’s gold.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const r = Math.max(0, ...ctx.rivals(owner).map(o => o.res.gold));
@@ -130,18 +130,18 @@ export default {
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => o.res.gold >= 4),
     }),
-    m('speculator', 'Speculator', 2, 2, 'Once per game: double your gold.', {
+    m('speculator', 'Speculator', 4, 4, 'Once per game: double your gold.', {
       activate: 'game',
       onActivate(ctx, owner) { ctx.gain(owner, 'gold', owner.res.gold); ctx.log(`${owner.name} used Speculator: gold doubled to ${owner.res.gold}.`); },
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res.gold >= 6,
     }),
-    m('tycoon', 'Tycoon', 4, 2, 'Game end: +1 follower per 3 gold.', {
+    m('tycoon', 'Tycoon', 8, 4, 'Game end: +1 follower per 3 gold.', {
       onGameEnd: (ctx, owner) => Math.floor(owner.res.gold / 3),
     }),
-    m('seed', 'Seed Money', 2, 0, 'When recruited: gain gold equal to your member count.', {
+    m('seed', 'Seed Money', 4, 0, 'When recruited: gain gold equal to your member count.', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'gold', ctx.memberCount(owner)); },
     }),
-    m('hustler', 'Hustler', 1, 0, 'When recruited, pick a color. Actions there give you +1 gold per round number.', {
+    m('hustler', 'Hustler', 2, 0, 'When recruited, pick a color. Actions there give you +1 gold per round number.', {
       onRecruited(ctx, owner, card) {
         ctx.choose(owner, 'Hustler: actions in which color give you extra gold?', ctx.state.quadrants.map(q => ({
           id: `color:${q}`, label: ctx.quadrant(q).name, kind: 'color', value: q, hint: q === 'gold' ? 1 : 0,

@@ -9,9 +9,9 @@ function standIn(id, name, other1, other2) {
     };
   };
   const vanilla = [
-    ['recruit', 'Recruit', 1, 0, 1, 2], ['hand', 'Hand', 1, 1, 1, 2], ['helper', 'Helper', 2, 0, 1, 2],
-    ['regular', 'Regular', 2, 1, 2, 2], ['devotee', 'Devotee', 2, 2, 2, 2], ['elder', 'Elder', 3, 1, 3, 2],
-    ['pillar', 'Pillar', 3, 3, 5, 2], ['patron', 'Patron', 4, 2, 5, 1],
+    ['recruit', 'Recruit', 2, 0, 1, 2], ['hand', 'Hand', 2, 2, 1, 2], ['helper', 'Helper', 4, 0, 1, 2],
+    ['regular', 'Regular', 4, 2, 2, 2], ['devotee', 'Devotee', 4, 4, 2, 2], ['elder', 'Elder', 6, 2, 3, 2],
+    ['pillar', 'Pillar', 6, 6, 5, 2], ['patron', 'Patron', 8, 4, 5, 1],
   ];
   return {
     id, name, resource: id, standIn: true,

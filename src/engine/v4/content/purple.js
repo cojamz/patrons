@@ -182,15 +182,15 @@ export default {
   },
 
   members: [
-    m('secondwind', 'Second Wind', 4, 2, 'Once per game: take an extra turn right after this one.', {
+    m('secondwind', 'Second Wind', 8, 4, 'Once per game: take an extra turn right after this one.', {
       activate: 'game',
       onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1)) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
     }),
-    m('errand', 'Errand Runner', 2, 2, 'When recruited: take an extra turn right after this one.', {
+    m('errand', 'Errand Runner', 4, 4, 'When recruited: take an extra turn right after this one.', {
       onRecruited(ctx, owner) { extraTurns(ctx, owner, 1); },
     }),
-    m('taskmaster', 'Taskmaster', 3, 1, 'Once per round: pay 5 purple to take an extra turn right after this one.', {
+    m('taskmaster', 'Taskmaster', 6, 2, 'Once per round: pay 5 purple to take an extra turn right after this one.', {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
@@ -198,7 +198,7 @@ export default {
       },
       botActivate: (ctx, owner) => canBuyTurn(ctx, owner, 5) && ctx.state.round >= 2,
     }),
-    m('straggler', 'Straggler', 3, 1, 'At round start, if you have the fewest followers (ties count), take an extra turn before anyone else.', {
+    m('straggler', 'Straggler', 6, 2, 'At round start, if you have the fewest followers (ties count), take an extra turn before anyone else.', {
       // the round's turns are queued after round-start hooks, so this one goes first
       onRoundStart(ctx, owner) {
         const me = ctx.followers(owner);
@@ -210,31 +210,31 @@ export default {
         }
       },
     }),
-    m('foreman', 'Foreman', 2, 1, 'Whenever you take an extra turn, +1 purple per worker you have on the board.', {
+    m('foreman', 'Foreman', 4, 2, 'Whenever you take an extra turn, +1 purple per worker you have on the board.', {
       onExtraTurn(ctx, owner) { ctx.gain(owner, P, onBoard(ctx, owner)); },
     }),
-    m('courier', 'Courier', 2, 1, 'Whenever you take an extra turn, +1 of each other color.', {
+    m('courier', 'Courier', 4, 2, 'Whenever you take an extra turn, +1 of each other color.', {
       onExtraTurn(ctx, owner) { for (const c of ctx.state.resources) if (c !== P) ctx.gain(owner, c, 1); },
     }),
-    m('apprentice', 'Apprentice', 1, 1, 'Whenever you take an extra turn, your next member costs 2 less.', {
+    m('apprentice', 'Apprentice', 2, 2, 'Whenever you take an extra turn, your next member costs 2 less.', {
       onExtraTurn(ctx, owner) { owner.discount += 2; },
     }),
-    m('overseer', 'Overseer', 2, 1, 'Whenever a rival takes an extra turn, gain half your purple (up to 4).', {
+    m('overseer', 'Overseer', 4, 2, 'Whenever a rival takes an extra turn, gain half your purple (up to 4).', {
       onRivalExtraTurn(ctx, owner) { ctx.gain(owner, P, Math.min(4, Math.floor((owner.res[P] || 0) / 2))); },
     }),
     // fill-in (critic): replaces Timekeeper
-    m('doubletime', 'Double Time', 3, 1, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
-    m('bookkeeper', 'Bookkeeper', 2, 1, 'At round end, +1 purple per 2 workers you have on the board.', {
+    m('doubletime', 'Double Time', 6, 2, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
+    m('bookkeeper', 'Bookkeeper', 4, 2, 'At round end, +1 purple per 2 workers you have on the board.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2)); },
     }),
-    m('clockmaker', 'Clockmaker', 2, 1, 'At round end, +1 purple per 2 purple you have.', {
+    m('clockmaker', 'Clockmaker', 4, 2, 'At round end, +1 purple per 2 purple you have.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
     }),
-    m('lamplighter', 'Lamplighter', 3, 1, 'At round start, +1 purple per worker you get this round (3 / 4 / 5).', {
+    m('lamplighter', 'Lamplighter', 6, 2, 'At round start, +1 purple per worker you get this round (3 / 4 / 5).', {
       onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
     // fill-in (critic): replaces Marathoner
-    m('relay', 'Relay', 2, 2, 'Once per round, when a rival takes an extra turn, you may pay 3 purple to take one right after it.', {
+    m('relay', 'Relay', 4, 4, 'Once per round, when a rival takes an extra turn, you may pay 3 purple to take one right after it.', {
       onRivalExtraTurn(ctx, owner, card, rival) {
         if (card.relayRound === ctx.state.round || !canBuyTurn(ctx, owner, 3)) return;
         ctx.choose(owner, `Relay: pay ${priceFor(ctx, owner, 3)} purple to take a turn right after ${rival.name}'s?`, [
@@ -243,9 +243,9 @@ export default {
         ], 'purple.relay', { uid: card.uid });
       },
     }),
-    m('patience', 'Patience', 3, 1, 'Game end: +1 follower per 3 purple.', {
+    m('patience', 'Patience', 6, 2, 'Game end: +1 follower per 3 purple.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res[P] || 0) / 3),
     }),
-    m('crew', 'Shift Crew', 1, 1, 'Worth 2 followers. No effect.', { f: 2, vanilla: true }),
+    m('crew', 'Shift Crew', 2, 2, 'Worth 2 followers. No effect.', { f: 2, vanilla: true }),
   ],
 };
