@@ -1,8 +1,9 @@
 // @vitest-environment node
 // Night Owl (Purple, Relay's slot): "Each round, after your last minion, place one more and buy again."
-// Through real moves: it fires on the last minion only, gives exactly one extra turn (before the next player), never
-// fires twice in a round (its own extra turn is a "last minion" too), and gives nothing when the board has no space to
-// spare (the glossary's extra-turn rule). Price: design/eval/purple-members.md (member-value sim, 8+2).
+// In the engine this is one extra turn (glossary: "you place one more minion and may buy again", only while the board
+// has a space to spare), queued right after the turn of your last minion. Through real moves: only after the last
+// minion, one more minion with its own buy, before the next player; once per round; nothing when no space is spare.
+// Price: design/eval/purple-members.md (member-value sim, 8+2).
 import { describe, it, expect } from 'vitest';
 import { defById } from '../../../engine/v4/content/index.js';
 import { take, move, uidOf } from './helpers.js';
@@ -20,7 +21,7 @@ function nextPlacer(s) {
 const queuedTurns = (s, id) => s.queue.filter(t => t.t === 'turn' && t.p === id).length;
 
 describe('Night Owl', () => {
-  it('is printed as decided: 8 purple + 2 any, worth 1 follower, the house text', () => {
+  it('is printed as decided: 8 purple + 2 any, worth 1 follower, in plain words', () => {
     const d = defById('purple.nightowl');
     expect([d.s, d.w, d.f]).toEqual([8, 2, 1]);
     expect(d.text).toBe('Each round, after your last minion, place one more and buy again.');
@@ -32,7 +33,7 @@ describe('Night Owl', () => {
     expect(owl(s)).toEqual([]);
   });
 
-  it('fires on your last minion of the round: one extra turn, right after this one (before the next player), named', () => {
+  it('after your last minion (and that turn’s buy), you place one more before the next player does, named', () => {
     let s = take(sc({ round: 2, left: 1, members: [['purple.nightowl']], queue: turns(0, 1) }), 'Hourly');
     expect(s.players[0].left).toBe(1);
     expect(owl(s)).toEqual(["P1's Night Owl: P1 takes an extra turn."]);
@@ -41,17 +42,18 @@ describe('Night Owl', () => {
     expect(next.who).toBe(0);
   });
 
-  it('does not fire twice: the extra turn places your last minion again, and nothing more comes of it', () => {
+  it('and buy again; one more, not two: that minion is a last minion too, and nothing more comes of it', () => {
     let s = take(sc({ round: 2, left: 1, members: [['purple.nightowl']], queue: turns(0, 1) }), 'Hourly');
     ({ s } = nextPlacer(s));
-    s = take(s, 'Wind-up'); // the extra turn's minion: the last again
+    s = take(s, 'Wind-up'); // the one more minion: the last again
+    expect(s.pending).toMatchObject({ kind: 'buy', player: 0 }); // buy again
     expect(s.players[0].left).toBe(0);
     expect(owl(s)).toHaveLength(1);
     expect(queuedTurns(s, 0)).toBe(0);
     expect(nextPlacer(s).who).toBe(1);
   });
 
-  it('fires again in the next round (once per round, not once per game)', () => {
+  it('each round: it works again in the next round', () => {
     let s = sc({ round: 3, left: 1, members: [['purple.nightowl']], queue: turns(0, 1) });
     s.cards[uidOf(s, 'purple.nightowl', 0)].owlRound = 2; // it fired last round
     s = take(s, 'Hourly');
@@ -59,7 +61,7 @@ describe('Night Owl', () => {
     expect(s.players[0].left).toBe(1);
   });
 
-  it('gives no extra turn when the board has no space to spare, says so, and does not try again that round', () => {
+  it('no space to spare, no minion more: it says so, and does not try again that round', () => {
     // round I, two players: every space taken but two, and P2 still has a turn to come
     const probe = sc({});
     const free = [spaceOf(probe, 'Hourly'), spaceOf(probe, 'Rush')];
@@ -71,7 +73,7 @@ describe('Night Owl', () => {
     expect(nextPlacer(s).who).toBe(1);
   });
 
-  it('× Foreman: the Night Owl turn is an extra turn like any other, so Foreman pays, named', () => {
+  it('× Foreman: the one more minion counts as an extra turn, so Foreman pays, named', () => {
     const s = take(sc({ round: 2, left: 1, slots: { '0-0': 0, '0-1': 0 }, members: [['purple.nightowl', 'purple.foreman']], queue: turns(0, 1) }), 'Hourly');
     // Hourly +5 in round II, then Foreman: +1 per minion on the board (3)
     expect(s.players[0].res.purple).toBe(5 + 3);
