@@ -103,7 +103,12 @@ async function audit(step) {
       }
     }
     out.side = { sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, sx: scrollX };
-    if (out.side.sw > out.side.cw) out.side.who = [...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && getComputedStyle(e).position !== 'fixed').map(e => String(e.className && (e.className.baseVal ?? e.className)).split(' ')[0] || e.tagName).slice(-3).join(' < ');
+    if (out.side.sw > out.side.cw) {
+      const cls = e => (e.tagName.toLowerCase() + '.' + String(e.className && (e.className.baseVal ?? e.className)).split(' ')[0]);
+      const wide = [...document.querySelectorAll('body *')].filter(e => e.scrollWidth > innerWidth + 1 || e.getBoundingClientRect().right > innerWidth + 1);
+      const pseudo = [...document.querySelectorAll('body *')].filter(e => ['::before', '::after'].some(ps => { const st = getComputedStyle(e, ps); return st.content !== 'none' && st.position !== 'static'; })).length;
+      out.side.who = wide.slice(-4).map(cls).join(' < ') + ` [${pseudo} positioned pseudos]`;
+    }
     out.peek = [...document.querySelectorAll('.peek:not(.pinned), .popover.hover')].some(vis);
     const u = [...document.querySelectorAll('.undo')].find(vis);
     const g = document.querySelector('.app.game');
