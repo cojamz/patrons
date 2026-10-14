@@ -15,7 +15,7 @@ function Seg({ value, options, onChange, label }) {
   );
 }
 
-export function Home({ onLocal, onHost, onJoin, onlineReady }) {
+export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, error }) {
   const [code, setCode] = useState(() => (new URLSearchParams(location.search).get('join') || '').toUpperCase().slice(0, 8));
   const [err, setErr] = useState('');
   const [rules, setRules] = useState(false);
@@ -36,7 +36,13 @@ export function Home({ onLocal, onHost, onJoin, onlineReady }) {
         <p className="tag">Draft the wheel. Recruit members. Win followers.</p>
       </div>
       <div className="menu">
-        <button type="button" className="btn pri big" onClick={onLocal} data-home="local">Play on this device</button>
+        {error && <p className="error" role="alert">{error}</p>}
+        {saved && (
+          <button type="button" className="btn pri big resume" onClick={onResume} data-home="resume">
+            Resume game<small>{savedLine(saved)}</small>
+          </button>
+        )}
+        <button type="button" className={`btn big${saved ? '' : ' pri'}`} onClick={onLocal} data-home="local">{saved ? 'New game on this device' : 'Play on this device'}</button>
         <div className="online-box">
           <label className="field"><span>Your name</span><input value={name} maxLength={16} onChange={e => saveName(e.target.value)} placeholder="Name" /></label>
           <button type="button" className="btn big" disabled={!onlineReady || working} onClick={() => go(() => onHost(name.trim() || 'Host'))}>Host online game</button>
@@ -53,6 +59,13 @@ export function Home({ onLocal, onHost, onJoin, onlineReady }) {
       {rules && <HowToPlay onClose={() => setRules(false)} />}
     </div>
   );
+}
+
+function savedLine({ state, savedAt }) {
+  const round = state.round ? `Round ${['I', 'II', 'III'][state.round - 1]}` : 'Setup';
+  const names = state.players.map(p => p.name).join(', ');
+  const mins = Math.round((Date.now() - (savedAt || Date.now())) / 60000);
+  return `${round} · ${names}${mins > 0 ? ` · ${mins < 60 ? `${mins} min` : `${Math.round(mins / 60)} h`} ago` : ''}`;
 }
 
 function wedge(q) {
@@ -72,7 +85,7 @@ export function LocalSetup({ initial, onStart, onBack }) {
     <div className="app narrow">
       <div className="dialog page">
         <h2>Play on this device</h2>
-        <p className="hint">Everyone plays on this screen. Bots fill the other seats. Gold and Red are designed; Blue and Green are plain stand-ins.</p>
+        <p className="hint">Everyone plays on this screen. Bots fill the other seats.</p>
         {seats.map((s, i) => (
           <div className="seat" key={i} style={{ '--pc': PLAYER_COLORS[i] }}>
             <i className="dot" />

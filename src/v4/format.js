@@ -72,12 +72,20 @@ export function promptFor(state, mine) {
   }
 }
 
-/** Follower breakdown for the results table. */
+/** Followers a player bought with the follower buys. Uses p.bought when the engine tracks it, else the log. */
+export function boughtFollowers(state, p) {
+  if (typeof p.bought === 'number') return p.bought;
+  const re = new RegExp(`^${p.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} bought (\\d+) followers?\\b`);
+  return state.log.reduce((s, l) => { const m = l.match(re); return s + (m ? Number(m[1]) : 0); }, 0);
+}
+
+/** Follower breakdown for the results table: self + members + bought + member effects + contests + end game. */
 export function breakdown(state, p) {
   const members = p.members.reduce((s, u) => s + cardDef(state, u).f, 0);
   const endGame = p.final ? p.final.total : 0;
-  const bought = p.bonus - p.contest - endGame;
-  return { self: 1, members, contests: p.contest, bought, endGame, parts: p.final ? p.final.parts : [] };
+  const bought = Math.min(boughtFollowers(state, p), Math.max(0, p.bonus - p.contest - endGame));
+  const effects = p.bonus - p.contest - endGame - bought;
+  return { self: 1, members, contests: p.contest, bought, effects, endGame, parts: p.final ? p.final.parts : [] };
 }
 
 // ---------- round end, read back from the engine's log line ----------
@@ -130,7 +138,7 @@ export function winSentence(state) {
   if (tied.length > 1) return `${tied.map(p => p.name).join(' and ')} tie on ${f(w)} followers.`;
   const b = breakdown(state, w);
   const lead = ranked[1] ? `${w.name} won by ${f(w) - f(ranked[1])}` : `${w.name} won`;
-  const sources = [['members', b.members], ['contests', b.contests], ['bought', b.bought], ['endGame', b.endGame]];
+  const sources = [['members', b.members], ['contests', b.contests], ['bought', b.bought], ['effects', b.effects], ['endGame', b.endGame]];
   const [top] = sources.reduce((a, c) => (c[1] > a[1] ? c : a));
   if (top === 'endGame' && b.parts.length) {
     const best = b.parts.map(s => { const m = s.match(/^(.*) \+(\d+)$/); return m ? { name: m[1], n: Number(m[2]) } : null; }).filter(Boolean).sort((a, c) => c.n - a.n)[0];
@@ -144,6 +152,7 @@ export function winSentence(state) {
       : `${lead}: ${b.contests} followers from ring contests.`;
   }
   if (top === 'bought') return `${lead}: ${b.bought} followers bought outright.`;
+  if (top === 'effects') return `${lead}: members' effects added ${b.effects} followers during play.`;
   const n = w.members.reduce((s, u) => s + cardDef(state, u).n, 0);
   return `${lead}: ${n} members worth ${b.members} followers.`;
 }
@@ -159,4 +168,15 @@ export function newLogLines(prev, next) {
     if (tail.every((l, k) => b[j - tail.length + k] === l)) return b.slice(j);
   }
   return b.slice(-1);
+}
+
+/** The log split into sections: Setup, then one per round. Each: { title, lines }. */
+export function logSections(state) {
+  const out = [{ title: 'Setup', lines: [] }];
+  for (const line of state.log) {
+    const m = line.match(/^Round (\S+) begins\./);
+    if (m) out.push({ title: `Round ${m[1]}`, lines: [] });
+    out[out.length - 1].lines.push(line);
+  }
+  return out.filter(s => s.lines.length);
 }

@@ -1,65 +1,87 @@
-// The shop: 6 face-up members, the follower buys, member activations and Pass.
+// The shop (6 face-up members) and the buy tray (follower buys, member activations, Pass).
 import { cardDef, paymentPlan, TIERS } from '../../engine/v4/index.js';
 import { costParts, tierCostText } from '../format.js';
 
-const payText = spend => Object.entries(spend).filter(([, v]) => v).map(([c, v]) => `${v} ${c}`).join(', ') || 'nothing';
+const total = spend => Object.values(spend).reduce((a, b) => a + b, 0);
 
-export default function Shop({ state, mine, optionFor, onPick }) {
+function Cost({ d, plan }) {
+  const parts = costParts(d);
+  const full = d.s + d.w;
+  const cheaper = plan && total(plan) < full;
+  const dots = list => list.map((c, k) => (
+    <span key={k} className="cp">{k ? ' + ' : ''}{c.color !== 'any' && <i style={{ background: `var(--${c.color})` }} />}<span className="num">{c.n}</span> {c.color}</span>
+  ));
+  if (!cheaper) return <span>{parts.length ? dots(parts) : 'free'}</span>;
+  const now = Object.entries(plan).filter(([, v]) => v).map(([color, n]) => ({ color, n }));
+  return (
+    <span className="cheaper" aria-label={`Costs ${full}, ${total(plan)} for you now`}>
+      <s className="num">{full}</s> {now.length ? dots(now) : <b>free</b>}
+    </span>
+  );
+}
+
+export default function Shop({ state, me, mine, optionFor, onPick, onDenied }) {
   const pend = state.pending;
   const buying = mine && pend && pend.kind === 'buy';
-  const buyer = pend ? state.players[pend.player] : null;
-  const extras = mine && pend ? pend.options.filter(o => o.kind === 'use' || o.kind === 'toggle') : [];
-  const pass = optionFor('pass');
+  const viewer = me != null ? state.players[me] : null;
   return (
     <section className="panel shop-panel">
-      <h2>Shop<small>{state.pile.length} in the pile{buying ? ' · tap one to recruit' : ''}</small></h2>
+      <h2>Shop<small><span className="num">{state.pile.length}</span> in the pile{buying ? ' · tap a member to recruit' : ''}</small></h2>
       <div className="shop">
         {state.shop.map(uid => {
           const d = cardDef(state, uid);
           const opt = optionFor(`card:${uid}`);
-          const plan = buying && buyer ? paymentPlan(state, buyer, uid) : null;
-          const tip = `${d.name}: ${d.text}${opt && plan ? ` — you'd pay ${payText(plan)}` : buying ? ' — can’t afford yet' : ''}`;
+          const plan = viewer ? paymentPlan(state, viewer, uid) : null;
           return (
             <button
               key={uid} data-uid={uid} type="button" className={`card${opt ? ' can' : ''}${buying && !opt ? ' cant' : ''}`}
               style={{ '--c': `var(--${d.quadrant})` }} data-option={opt ? opt.id : undefined}
-              aria-disabled={!opt} tabIndex={opt ? 0 : -1} title={tip}
-              onClick={() => opt && onPick(opt.id)}
+              aria-disabled={!opt} title={`${d.name} · ${d.f}★ · ${d.text}`}
+              onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'card', uid, name: d.name }, e.currentTarget))}
             >
-              <div className="row"><b>{d.name}</b><span className="fv" aria-label={`${d.f} followers`}>{d.f}★</span></div>
+              <div className="row"><b>{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
               <span className="eff">{d.text}</span>
               <div className="row cost">
-                <span>
-                  {costParts(d).length ? costParts(d).map((c, k) => (
-                    <span key={k} className="cp">{k ? ' + ' : ''}{c.color !== 'any' && <i style={{ background: `var(--${c.color})` }} />}{c.n} {c.color}</span>
-                  )) : 'free'}
-                </span>
-                {d.n > 1 && <span>{d.n} members</span>}
+                <Cost d={d} plan={plan} />
+                {d.n > 1 && <span><span className="num">{d.n}</span> members</span>}
               </div>
+              {opt && <span className="afford">You can afford</span>}
             </button>
           );
         })}
-      </div>
-      <div className="fbuy">
-        {TIERS.map(t => {
-          const opt = optionFor(`tier:${t.key}`);
-          return (
-            <button
-              key={t.key} type="button" className={`fb${opt ? ' can' : ''}`} data-option={opt ? opt.id : undefined}
-              aria-disabled={!opt} tabIndex={opt ? 0 : -1} onClick={() => opt && onPick(opt.id)}
-              title={`Buy ${t.get} follower${t.get > 1 ? 's' : ''} for ${tierCostText(t)}`}
-            >
-              <b>+{t.get} follower{t.get > 1 ? 's' : ''}</b>
-              <span>{tierCostText(t)}{t.limited ? ` · ${state.bigLeft} left` : ''}</span>
-            </button>
-          );
-        })}
-        {extras.map(o => (
-          <button key={o.id} type="button" className="btn" data-option={o.id} onClick={() => onPick(o.id)}>{o.label}</button>
-        ))}
-        {pass && <button type="button" className="btn" data-option="pass" onClick={() => onPick('pass')}>Pass</button>}
       </div>
       {state.endEarly && !state.over && <p className="hint warn">The last +6 is gone — the game ends after this round.</p>}
     </section>
+  );
+}
+
+export function BuyTray({ state, mine, optionFor, onPick, onDenied }) {
+  const pend = state.pending;
+  const extras = mine && pend ? pend.options.filter(o => o.kind === 'use' || o.kind === 'toggle') : [];
+  const pass = optionFor('pass');
+  const buying = mine && pend && pend.kind === 'buy';
+  return (
+    <div className={`fbuy${buying ? ' live' : ''}`} role="group" aria-label="Buy followers or pass">
+      {TIERS.map(t => {
+        const opt = optionFor(`tier:${t.key}`);
+        return (
+          <button
+            key={t.key} type="button" className={`fb${opt ? ' can' : ''}`} data-option={opt ? opt.id : undefined}
+            aria-disabled={!opt} onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'tier', tier: t }, e.currentTarget))}
+            title={`Buy ${t.get} follower${t.get > 1 ? 's' : ''} for ${tierCostText(t)}`}
+          >
+            <b><span className="num">+{t.get}</span> follower{t.get > 1 ? 's' : ''}</b>
+            <span>{tierCostText(t)}{t.limited ? <> · <span className="num">{state.bigLeft}</span> left</> : ''}</span>
+          </button>
+        );
+      })}
+      {extras.map(o => (
+        <button key={o.id} type="button" className="btn" data-option={o.id} onClick={() => onPick(o.id)}>{o.label}</button>
+      ))}
+      <button
+        type="button" className={`btn pass${pass ? '' : ' idle'}`} data-option={pass ? 'pass' : undefined} aria-disabled={!pass}
+        onClick={e => (pass ? onPick('pass') : onDenied && onDenied({ type: 'pass' }, e.currentTarget))}
+      >Pass</button>
+    </div>
   );
 }

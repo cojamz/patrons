@@ -8,13 +8,13 @@ export default function Results({ state, onPlayAgain, onHome }) {
   return (
     <section className="results" aria-label="Final results">
       <h2 className="win" style={{ '--pc': playerColor(ranked[0].id) }}>
-        <span>{ranked.filter(p => followers(state, p) === top).map(p => p.name).join(' & ')}</span> wins with {top} followers
+        <span>{ranked.filter(p => followers(state, p) === top).map(p => p.name).join(' & ')}</span> wins with <span className="num big">{top}</span> followers
       </h2>
       <p className="why" data-why>{winSentence(state)}</p>
       <div className="table-scroll">
         <table className="res-t">
           <thead>
-            <tr><th>#</th><th>Player</th><th>Followers</th><th title="Followers printed on members">From members</th><th title="Ring contests won at round end">Contests</th><th title="Followers bought, plus followers members gave during play">Bought</th><th title="End-game member bonuses">End game</th><th>Self</th></tr>
+            <tr><th>#</th><th>Player</th><th>Followers</th><th title="Followers printed on your members">Members</th><th title="The +1 / +3 / +6 follower buys">Bought</th><th title="Followers your members' effects gave during play">Member effects</th><th title="Ring contests won at round end">Contests</th><th title="End-game member bonuses">End game</th><th title="You count as 1 follower">You</th></tr>
           </thead>
           <tbody>
             {ranked.map((p, k) => {
@@ -25,8 +25,9 @@ export default function Results({ state, onPlayAgain, onHome }) {
                   <td style={{ color: playerColor(p.id) }}>{p.name}{p.kind === 'bot' ? ' · bot' : ''}<small>{memberCount(state, p)} members</small></td>
                   <td className="tot">{followers(state, p)}</td>
                   <td>{b.members}</td>
-                  <td>{b.contests}</td>
                   <td>{b.bought}</td>
+                  <td>{b.effects}</td>
+                  <td>{b.contests}</td>
                   <td title={b.parts.join(', ')}>{b.endGame}</td>
                   <td>1</td>
                 </tr>

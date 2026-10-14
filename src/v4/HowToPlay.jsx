@@ -1,5 +1,6 @@
 // "How to play": renders the rulebook (design/rulebook.md, via src/v4/rulebook.js) in an overlay.
-import { useEffect, Fragment } from 'react';
+import { Fragment } from 'react';
+import { useDialog } from './game/parts.jsx';
 import { RULEBOOK } from './rulebook.js';
 
 function inline(text) {
@@ -35,15 +36,11 @@ export function renderRules(md) {
 }
 
 export default function HowToPlay({ onClose }) {
-  useEffect(() => {
-    const onKey = e => { if (e.key === 'Escape') onClose(); };
-    addEventListener('keydown', onKey);
-    return () => removeEventListener('keydown', onKey);
-  }, [onClose]);
+  const box = useDialog(onClose);
   return (
-    <div className="overlay" role="dialog" aria-modal="true" aria-label="How to play" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="dialog rules">
-        <button type="button" className="btn ghost close" onClick={onClose} autoFocus aria-label="Close how to play">Close</button>
+    <div className="overlay top" role="dialog" aria-modal="true" aria-label="How to play" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="dialog rules" ref={box}>
+        <button type="button" className="btn ghost close" onClick={onClose} data-autofocus aria-label="Close how to play">Close</button>
         <div className="rules-body">{renderRules(RULEBOOK)}</div>
       </div>
     </div>

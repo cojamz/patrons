@@ -8,11 +8,14 @@ const pick = name => Object.values(found).map(m => m[name]).find(Boolean);
 // createRoom({name, transport}) / joinRoom({code, name, transport}) -> { lobby }
 export const createRoom = pick('createRoom') || null;
 export const joinRoom = pick('joinRoom') || null;
+export const rejoinRoom = pick('rejoinRoom') || null;
 const firebase = pick('createFirebaseTransport');
 const broadcast = pick('createBroadcastTransport');
 /** Firebase in production; `?transport=broadcast` plays across tabs of one browser (tests, local demos). */
-export function makeTransport() {
-  const want = new URLSearchParams(location.search).get('transport');
+/** Which transport this page uses: 'broadcast' with ?transport=broadcast, else 'firebase'. */
+export const transportKind = () => (new URLSearchParams(location.search).get('transport') === 'broadcast' ? 'broadcast' : 'firebase');
+export function makeTransport(kind = transportKind()) {
+  const want = kind;
   if (want === 'broadcast' && broadcast) return broadcast();
   if (firebase) return firebase();
   throw new Error('No online transport available.');

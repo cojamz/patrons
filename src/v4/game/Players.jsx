@@ -1,51 +1,61 @@
-// Players strip: followers big, resources, workers left, member chips (tooltips), active player highlighted.
-import { useState } from 'react';
+// Players strip: followers, resources, workers left, member chips. The active player is highlighted.
+// Chips open a small card on tap (touch-safe) with the member's effect, ★, and Use / switch when it's yours to use.
+import { useState, useCallback } from 'react';
 import { followers, memberCount } from '../../engine/v4/index.js';
 import { memberChips, playerColor, plural } from '../format.js';
 import Tick from './Tick.jsx';
+import { Popover } from './parts.jsx';
+
+export const memberTip = d => `${d.name} · ${d.f}★ · ${d.text}`;
+
+export function Resources({ state, p }) {
+  return state.resources.map(r => (
+    <span key={r} className="r" title={`${p.res[r]} ${r}`} aria-label={`${p.res[r]} ${r}`}>
+      <i style={{ background: `var(--${r})` }} /><Tick value={p.res[r]} color={`var(--${r})`} className="num" />
+    </span>
+  ));
+}
+
+export function Workers({ p }) {
+  return (
+    <span className="workers" title={`${plural(p.left, 'worker')} left this round`} aria-label={`${plural(p.left, 'worker')} left this round`}>
+      <span className="dots" aria-hidden="true">{'●'.repeat(Math.max(0, p.left)) || '○'}</span>
+      <small>{p.left === 1 ? 'worker' : 'workers'}</small>
+    </span>
+  );
+}
 
 export default function Players({ state, active, mySeats, optionFor, onPick }) {
-  const [open, setOpen] = useState(() => new Set());
-  const flip = id => setOpen(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const [pop, setPop] = useState(null); // { el, group, pid }
+  const close = useCallback(() => setPop(null), []);
   return (
     <div className="players">
       {state.players.map(p => {
         const f = followers(state, p);
         const isActive = active === p.id && !state.over;
         return (
-          <section key={p.id} data-pid={p.id} className={`pl${isActive ? ' active' : ''}${open.has(p.id) ? ' open' : ''}`} style={{ '--pc': playerColor(p.id) }} aria-label={`${p.name}${isActive ? ', to act' : ''}`}>
+          <section key={p.id} data-pid={p.id} className={`pl${isActive ? ' active' : ''}`} style={{ '--pc': playerColor(p.id) }} aria-label={`${p.name}${isActive ? ', to act' : ''}`}>
             <div className="top">
               <span className="nm"><i />{p.name}{p.kind === 'bot' ? <em> · bot</em> : mySeats.includes(p.id) && mySeats.length < state.players.length ? <em> · you</em> : null}</span>
-              <span className="fol"><Tick value={f} color={playerColor(p.id)} /><small>{f === 1 ? 'follower' : 'followers'}</small></span>
+              <span className="fol"><Tick value={f} color={playerColor(p.id)} className="num" /><small>{f === 1 ? 'follower' : 'followers'}</small></span>
             </div>
             <div className="res">
-              {state.resources.map(r => (
-                <span key={r} title={`${p.res[r]} ${r}`}><i style={{ background: `var(--${r})` }} /><Tick value={p.res[r]} color={`var(--${r})`} /></span>
-              ))}
-              <span className="meta">
-                <span className="workers" title={`${plural(p.left, 'worker')} left this round`} aria-label={`${plural(p.left, 'worker')} left`}>{'●'.repeat(Math.max(0, p.left)) || '○'}</span>
-                {' · '}{plural(memberCount(state, p), 'member')}
-                {p.discount ? ` · −${p.discount} next` : ''}
-              </span>
-              {p.members.length > 0 && (
-                <button type="button" className="more" aria-expanded={open.has(p.id)} onClick={() => flip(p.id)}>{open.has(p.id) ? 'hide' : 'show'}</button>
-              )}
+              <Resources state={state} p={p} />
+              <span className="meta"><Workers p={p} /> · {plural(memberCount(state, p), 'member')}{p.discount ? ` · −${p.discount} next` : ''}</span>
             </div>
             <div className="chips">
               {p.members.length ? memberChips(state, p).map(g => {
                 const use = g.uids.map(u => optionFor(`use:${u}`)).find(Boolean);
                 const tog = g.uids.map(u => optionFor(`toggle:${u}`)).find(Boolean);
                 const opt = use || tog;
-                const state2 = g.def.toggle ? (g.card.on === false ? ' · off' : ' · on') : '';
-                const tip = `${g.def.name}: ${g.def.text}${g.def.f > 1 ? ` (${g.def.f} followers)` : ''}${g.def.n > 1 ? ` Counts as ${g.def.n} members.` : ''}${g.card.used ? ' Used.' : ''}`;
+                const onoff = g.def.toggle ? (g.card.on === false ? ' · off' : ' · on') : '';
                 return (
                   <button
                     key={g.key} type="button" className={`chip${opt ? ' use' : ''}${g.card.used || g.card.on === false ? ' off' : ''}`}
-                    style={{ '--c': `var(--${g.def.quadrant})` }} title={tip} aria-label={tip}
-                    data-option={opt ? opt.id : undefined} tabIndex={opt ? 0 : -1}
-                    onClick={() => opt && onPick(opt.id)}
+                    style={{ '--c': `var(--${g.def.quadrant})` }} title={memberTip(g.def)} aria-haspopup="dialog"
+                    onClick={e => setPop(pp => (pp && pp.group.key === g.key && pp.pid === p.id ? null : { el: e.currentTarget, group: g, pid: p.id, opt }))}
                   >
-                    {g.label}{g.count > 1 ? ` ×${g.count}` : ''}{state2}{use ? ' · use' : ''}
+                    {g.label}{g.count > 1 ? ` ×${g.count}` : ''}{onoff}{use ? ' · use' : ''}
                   </button>
                 );
               }) : <em>no members yet</em>}
@@ -53,6 +63,17 @@ export default function Players({ state, active, mySeats, optionFor, onPick }) {
           </section>
         );
       })}
+      {pop && (
+        <Popover anchor={pop.el} onClose={close}>
+          <div className="pop-card" style={{ '--c': `var(--${pop.group.def.quadrant})` }}>
+            <div className="row"><b>{pop.group.def.name}{pop.group.count > 1 ? ` ×${pop.group.count}` : ''}</b><span className="num star">{pop.group.def.f}★</span></div>
+            <span>{pop.group.def.text}</span>
+            {pop.group.card.copy && <small>Copying {pop.group.label.split('→ ')[1]}</small>}
+            {pop.group.card.used && <small>Used</small>}
+            {pop.opt && <button type="button" className="btn pri" data-autofocus onClick={() => { const id = pop.opt.id; setPop(null); onPick(id); }}>{pop.opt.label}</button>}
+          </div>
+        </Popover>
+      )}
     </div>
   );
 }

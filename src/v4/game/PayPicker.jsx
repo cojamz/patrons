@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { cardDef, TIERS } from '../../engine/v4/index.js';
 import { costParts, tierCostText } from '../format.js';
+import { useDialog } from './parts.jsx';
 
 export default function PayPicker({ state, onPick, busy }) {
   const pend = state.pending;
@@ -25,11 +26,12 @@ export default function PayPicker({ state, onPick, busy }) {
   const costLine = def
     ? (costParts(def).map(c => `${c.n} ${c.color}`).join(' + ') || 'free') + (p.discount ? ` · your discount applies` : '')
     : tierCostText(tier);
+  const box = useDialog(back ? () => onPick('back') : null);
   const step = (r, d) => setSpend(s => ({ ...s, [r]: Math.max(0, Math.min(p.res[r], (s[r] || 0) + d)) }));
 
   return (
     <div className="overlay sheet" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="dialog pay" style={def ? { '--c': `var(--${def.quadrant})` } : undefined}>
+      <div className="dialog pay" ref={box} style={def ? { '--c': `var(--${def.quadrant})` } : undefined}>
         <div className="pay-head">
           <h2>{title}</h2>
           <span className="hint">Costs {costLine}</span>
@@ -42,7 +44,7 @@ export default function PayPicker({ state, onPick, busy }) {
           {res.map(r => (
             <div key={r} className="stepper" style={{ '--c': `var(--${r})` }}>
               <button type="button" aria-label={`One less ${r}`} disabled={!spend[r]} onClick={() => step(r, -1)}>−</button>
-              <span><i />{spend[r] || 0}<small>/{p.res[r]}</small></span>
+              <span><i /><span className="num">{spend[r] || 0}</span><small className="num">/{p.res[r]}</small></span>
               <button type="button" aria-label={`One more ${r}`} disabled={(spend[r] || 0) >= p.res[r]} onClick={() => step(r, 1)}>+</button>
             </div>
           ))}
@@ -53,7 +55,7 @@ export default function PayPicker({ state, onPick, busy }) {
             <div className="opts">
               {ways.map(o => (
                 <button key={o.id} type="button" className={`way${o.id === id ? ' on' : ''}`} aria-pressed={o.id === id} onClick={() => setSpend(o.spend)}>
-                  {res.filter(r => o.spend[r]).map(r => <span key={r}><i style={{ background: `var(--${r})` }} />{o.spend[r]}</span>)}
+                  {res.filter(r => o.spend[r]).map(r => <span key={r}><i style={{ background: `var(--${r})` }} /><span className="num">{o.spend[r]}</span></span>)}
                   {o.default && <em>suggested</em>}
                 </button>
               ))}
@@ -63,7 +65,7 @@ export default function PayPicker({ state, onPick, busy }) {
         <p className={`hint${match ? '' : ' warn'}`} aria-live="polite">{match ? `You pay ${match.label}.` : 'That spend doesn’t fit the cost. Adjust it, or pick a way above.'}</p>
         <div className="row-btns">
           {back && <button type="button" className="btn" data-option="back" disabled={busy} onClick={() => onPick('back')}>Back</button>}
-          <button type="button" className="btn pri" autoFocus data-option={match ? match.id : undefined} disabled={!match || busy} onClick={() => match && onPick(match.id)}>Confirm</button>
+          <button type="button" className="btn pri" data-autofocus data-option={match ? match.id : undefined} disabled={!match || busy} onClick={() => match && onPick(match.id)}>Confirm</button>
         </div>
       </div>
     </div>
