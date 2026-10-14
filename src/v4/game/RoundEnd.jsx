@@ -46,7 +46,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
         <div className="re-totals" role="table" aria-label="Followers after this round">
           <div className="re-head" role="row"><span role="columnheader">Player</span><span role="columnheader">Contests</span><span role="columnheader">This round, besides contests</span><span role="columnheader">Followers</span></div>
           {ranked.map(p => {
-            const now = followers(after, p);
+            const now = followers(at, at.players[p.id]);
             const was = start && start.players[p.id] ? followers(start, start.players[p.id]) : now;
             const c = contest(p.id);
             const g = start ? roundGains(start, at, p, c) : null;

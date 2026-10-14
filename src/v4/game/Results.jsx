@@ -1,6 +1,6 @@
 // Final results: ranking with the followers breakdown, then Play again.
 import { followers, memberCount } from '../../engine/v4/index.js';
-import { breakdown, playerColor, winSentence } from '../format.js';
+import { breakdown, playerColor, winSentence, plural } from '../format.js';
 
 export default function Results({ state, onPlayAgain, onHome }) {
   const ranked = (state.ranking || state.players.map(p => p.id)).map(id => state.players[id]);
@@ -20,7 +20,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
       <div className="table-scroll">
         <table className="res-t">
           <thead>
-            <tr><th>#</th><th>Player</th><th>Followers</th><th title="Followers printed on your members">Members</th><th title="The +1 / +3 / +6 follower buys">Bought</th><th title="Followers your members' effects gave during play">Member effects</th><th title="Ring contests won at round end">Contests</th><th title="End-game member bonuses">End game</th><th title="You count as 1 follower">You</th></tr>
+            <tr><th>#</th><th>Player</th><th>Followers</th><th title="Followers printed on your members (the ★ on each card)">From members ★</th><th title="The +1 / +3 / +6 follower buys">Bought</th><th title="Followers members' effects gave during play (e.g. Proselytizer)">Effects in play</th><th title="Ring contests won at round end">Contests</th><th title="End-game member bonuses (e.g. Patriarch, Tycoon)">End-game bonuses</th><th title="You count as 1 follower">Self (1)</th></tr>
           </thead>
           <tbody>
             {ranked.map((p, k) => {
@@ -28,7 +28,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
               return (
                 <tr key={p.id} className={k === 0 ? 'first' : ''}>
                   <td className="rank">{rankOf[k]}{shared(rankOf[k]) ? '=' : ''}</td>
-                  <td style={{ color: playerColor(p.id) }}>{p.name}{p.kind === 'bot' ? ' · bot' : ''}<small>{memberCount(state, p)} members</small></td>
+                  <td style={{ color: playerColor(p.id) }}>{p.name}{p.kind === 'bot' ? ' · bot' : ''}<small>{plural(memberCount(state, p), 'member')}</small></td>
                   <td className="tot">{followers(state, p)}</td>
                   <td>{b.members}</td>
                   <td>{b.bought}</td>

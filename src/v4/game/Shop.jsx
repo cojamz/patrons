@@ -55,13 +55,39 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied }) {
   );
 }
 
-export function BuyTray({ state, mine, optionFor, onPick, onDenied }) {
+/** The shop as a compact strip, affordable first (phone buy sheet and landscape). */
+function ShopStrip({ state, me, optionFor, onPick, onDenied }) {
+  const viewer = me != null ? state.players[me] : null;
+  const cards = state.shop.map(uid => ({ uid, d: cardDef(state, uid), opt: optionFor(`card:${uid}`) }))
+    .sort((a, b) => (!!b.opt - !!a.opt));
+  return (
+    <div className="strip" role="group" aria-label="Shop">
+      {cards.map(({ uid, d, opt }) => {
+        const plan = viewer ? paymentPlan(state, viewer, uid) : null;
+        return (
+          <button
+            key={uid} type="button" className={`mini${opt ? ' can' : ''}`} style={{ '--c': `var(--${d.quadrant})` }}
+            aria-disabled={!opt} title={`${d.name} · ${d.f}★ · ${d.text}`}
+            onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'card', uid, name: d.name }, e.currentTarget))}
+          >
+            <span className="row"><b>{d.name}</b><span className="num">{d.f}★</span></span>
+            <small>{d.text}</small>
+            <span className="row cost"><Cost d={d} plan={plan} />{opt && <span className="afford">afford</span>}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
   const pend = state.pending;
   const extras = mine && pend ? pend.options.filter(o => o.kind === 'use' || o.kind === 'toggle') : [];
   const pass = optionFor('pass');
   const buying = mine && pend && pend.kind === 'buy';
   return (
     <div className={`fbuy${buying ? ' live' : ''}`} role="group" aria-label="Buy followers or pass">
+      <ShopStrip state={state} me={me} optionFor={optionFor} onPick={onPick} onDenied={onDenied} />
       {TIERS.map(t => {
         const opt = optionFor(`tier:${t.key}`);
         return (

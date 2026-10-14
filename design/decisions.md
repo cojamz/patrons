@@ -184,3 +184,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Keep Turnout as is. The last-picker edge is probably a bot blind spot (greedy bots never take Turnout early to deny it). The thinking-bot run will check it.
 - ✅ (Cory) New sphere wanted: Yellow, themed on the old yellow quadrant (getting various resources). Four design agents launched in parallel: Yellow (variety and sets), Tempo (turn order and echo), Territory (claim spaces), Patronage (giving). Each builds and measures its sphere and hands Cory a numbered list.
 - ✅ (Cory) Add a Thieves sphere (stealing resources and members). Scoring is open; the agent is testing 'most loot' (a visible stolen pile), 'most members from other colors', 'most black' and 'fewest resources'.
+- ❌ (Cory) Tempo, Territory and Patronage are bad ideas. Their designers were stopped and deleted. Yellow and Thieves continue.
