@@ -158,8 +158,8 @@ describe('Red members', () => {
     expect(s.pending).toBe(null);
     expect(R(s)[0].red).toBe(2);
     let t = scene({ members: [['red.drive']], shop: ['red.volunteer', ...SHOP.slice(1)] });
-    t = take(t, 'Hire'); // nothing affordable after, so the buy is skipped
-    expect(t.pending).toBe(null);
+    t = take(t, 'Hire'); // nothing affordable after: only Release (a base rule) or pass
+    expect(t.pending.options.every(o => o.kind === 'release' || o.kind === 'pass')).toBe(true);
     expect(R(t)[0].red).toBe(0);
   });
 

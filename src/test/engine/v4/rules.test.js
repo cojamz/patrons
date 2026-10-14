@@ -1,3 +1,4 @@
+import { guestMembers } from '../../../engine/v4/content/index.js';
 // @vitest-environment node
 // Table rules: setup, turn order, workers, rings, shop, follower buys, contests, payment, followers, endgame.
 import { describe, it, expect } from 'vitest';
@@ -43,11 +44,12 @@ describe('setup', () => {
     expect(() => createGame({ seats: seats(5) })).toThrow();
   });
 
-  it('starts with a shuffled 60-card deck and 6 face up', () => {
-    const s = createGame({ seats: seats(2), seed: 9 });
+  it('starts with a shuffled 60-card deck (plus the guest rule-benders) and 6 face up', () => {
+    const s = createGame({ seats: seats(2), seed: 9, rules: { guests: false } });
     expect(Object.keys(s.cards)).toHaveLength(60);
     expect(s.shop).toHaveLength(6);
     expect(s.pile).toHaveLength(54);
+    expect(Object.keys(createGame({ seats: seats(2), seed: 9 }).cards)).toHaveLength(60 + guestMembers().length);
     expect(s.stock).toEqual({ big: 4, top: 4 });
     const t = createGame({ seats: seats(2), seed: 10 });
     expect(t.shop).not.toEqual(s.shop);
