@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { execSync } from 'node:child_process'
+import { engineSourceHashSafe } from './scripts/v4-src-hash.mjs'
 
 // The build id stamped on v4 games, saves and rooms (src/v4/session/record.js): Netlify's commit, else the local git
 // commit, plus the build time. Diagnostic only; compatibility is decided by the rules-content hash.
@@ -13,5 +14,6 @@ function buildId() {
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  define: { __V4_BUILD__: JSON.stringify(buildId()) },
+  // __V4_SRC__: a hash of the rules source, part of the content stamp (record.js), so effect changes refuse old rooms/saves
+  define: { __V4_BUILD__: JSON.stringify(buildId()), __V4_SRC__: JSON.stringify(engineSourceHashSafe()) },
 })

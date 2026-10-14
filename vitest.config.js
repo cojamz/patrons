@@ -1,8 +1,11 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import { engineSourceHashSafe } from './scripts/v4-src-hash.mjs'
 
 export default defineConfig({
   plugins: [react()],
+  // the rules-source hash in the content stamp, as in the build (vite.config.js; src/v4/session/record.js)
+  define: { __V4_SRC__: JSON.stringify(engineSourceHashSafe()) },
   test: {
     environment: 'jsdom',
     globals: true,

@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createLocalSession, createRoom, joinRoom, rejoinRoom, createMemoryStore, createMemoryTransport, ROOM_ROOT } from '../../../v4/session/index.js';
 import { VERSION_MISMATCH } from '../../../v4/session/online.js';
-import { CONTENT_HASH, BUILD, contentManifest, hashContent, stateProblem, newGame } from '../../../v4/session/record.js';
+import { CONTENT_HASH, SHAPE_HASH, BUILD, contentManifest, hashContent, stateProblem, newGame } from '../../../v4/session/record.js';
 import { defById } from '../../../engine/v4/index.js';
 import { loadLocal, saveLocal, staleSave, staleRecord, markStaleSeen, setAsideLocal, ROUND_START } from '../../../v4/saved.js';
 
@@ -22,7 +22,7 @@ describe('content hash and stamps', () => {
   it('changes when a cost, a flag or an id changes, but not when wording does', () => {
     const def = defById('gold.' + contentManifest().quadrants.find(q => q.id === 'gold').members[0].id.split('.')[1]);
     const base = hashContent(contentManifest());
-    expect(base).toBe(CONTENT_HASH);
+    expect(base).toBe(SHAPE_HASH); // the shape part; CONTENT_HASH adds the rules-source hash (content-hash.test.js)
     const text = def.text;
     def.text = 'Reworded entirely.';
     expect(hashContent(contentManifest())).toBe(base);

@@ -64,7 +64,13 @@ function cyrb53(str, seed = 0) {
 export const hashContent = manifest => cyrb53(JSON.stringify(manifest)).toString(36);
 
 /** Taken once, when this module loads (after every sphere has registered). */
-export const CONTENT_HASH = hashContent(contentManifest());
+export const SHAPE_HASH = hashContent(contentManifest());
+// The shape hash sees a hook only as "a function", so a changed effect slips past it. The build adds a hash of the rules
+// source (scripts/v4-src-hash.mjs, defined as __V4_SRC__ by vite.config.js and vitest.config.js): any rules edit is a
+// new content stamp. Without the define (some other bundler) it falls back to the shape alone.
+// eslint-disable-next-line no-undef
+export const SRC_HASH = typeof __V4_SRC__ !== 'undefined' ? String(__V4_SRC__) : '';
+export const CONTENT_HASH = SRC_HASH ? `${SHAPE_HASH}.${SRC_HASH}` : SHAPE_HASH;
 // eslint-disable-next-line no-undef
 export const BUILD_ID = typeof __V4_BUILD__ !== 'undefined' ? String(__V4_BUILD__) : 'dev';
 // version: the player-facing version (version.js), for people reading a record; compatibility is `content` alone

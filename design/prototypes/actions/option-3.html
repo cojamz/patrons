@@ -58,7 +58,7 @@ function cellFace(a) {
 }
 window.OPT = {
   n: '3', title: 'Engraved',
-  tag: 'No pieces on the board: each space is a cell of the ring, printed in the quadrant’s ink.',
+  tag: 'No pieces on the board: each space is a cell of the ring, printed in the quadrant’s ink. Gold and Red names are proposals.',
   blurb: 'No bubbles and no cards: each space is a cell of its ring, printed into the paper. The quadrant’s ink washes the open cells; the picture is a one-ink stamp of today’s icon, the name in small capitals, the yield inked beneath. Rings not open yet are hatched. A minion stands in its cell, on the stamp.',
   ring: { 1: { ...BANDS[1] }, 2: { ...BANDS[2] }, 3: { ...BANDS[3] } }, rim: { r0: 182, r1: 200 }, hubR: 25.5,
   ringR: { 1: 154, 2: 98, 3: 49.5 }, spans: { 1: 60, 2: 45 },
@@ -73,7 +73,7 @@ window.OPT = {
     });
   },
   minionPx: 24,
-  defs: `<pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(42,31,23,.16)" stroke-width="1"/></pattern>`,
+  defs: `<filter id="lampglow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4"/></filter><pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(42,31,23,.16)" stroke-width="1"/></pattern>`,
   paperExtra(S) {
     let s = '';
     for (const sp of AK.spaces(this.ringR, this.spans)) {
@@ -85,7 +85,8 @@ window.OPT = {
       const c = INK[a.res];
       if (open) {
         s += `<path d="${d}" fill="${c}" fill-opacity="${can ? 0.3 : 0.2}"/>`;
-        s += `<path d="${inset}" fill="none" stroke="${can ? 'rgba(255,222,160,.95)' : 'rgba(255,250,238,.55)'}" stroke-width="${can ? 1.6 : 1}"/>`;
+        if (can) s += `<path d="${inset}" fill="none" stroke="rgba(255,206,140,.95)" stroke-width="4" filter="url(#lampglow)"/>`;
+        s += `<path d="${inset}" fill="none" stroke="${can ? 'rgba(255,226,170,1)' : 'rgba(255,250,238,.55)'}" stroke-width="${can ? 1.5 : 1}"/>`;
       } else {
         s += `<path d="${d}" fill="url(#hatch)"/><path d="${d}" fill="${c}" fill-opacity=".05"/>`;
       }
