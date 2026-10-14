@@ -211,6 +211,40 @@ for (const [label, make] of backends) {
       stops.forEach(f => f());
     }, TIMEOUT);
 
+    it('"Try again" after a lost move sends it again with the same id: the table moves on and it counts once', async () => {
+      setup();
+      const { host, guests } = await table(['G1'], { seed: 61 });
+      const g1 = guests[0];
+      const stopHost = autoPlay(host.s, { seed: 1 });
+      await be.wait(() => g1.s.getState().pending?.player === 1, 'G1 to move');
+      stopHost();
+      // the host's code stops for a moment; G1's move goes into the queue and is lost there
+      host.lobby.destroy();
+      const v0 = g1.s.info.version;
+      const move = { player: 1, option: g1.s.getState().pending.options[0].id };
+      let settled = false;
+      const first = g1.s.submit(move).then(() => { settled = true; });
+      await be.wait(async () => true, 'push');
+      await be.pause(200);
+      const admin = be.client();
+      await admin.remove(`${ROOM_ROOT}/${host.code}/moves`);
+      // the host is back (same id): nothing in the queue, so nothing happens
+      const back = await reopen(host.code, { playerId: host.playerId });
+      await be.pause(8000); // the screen says "No answer yet" after 8 s
+      expect(settled).toBe(false);
+      expect(g1.s.info.version).toBe(v0);
+      // "No answer yet. Try again." → the same option again
+      const again = g1.s.submit(move);
+      await be.wait(() => settled, 'the retried move is applied');
+      await again;
+      await be.pause(500);
+      expect(g1.s.info.version).toBe(v0 + 1); // once, not twice
+      expect(g1.s.getState().history.at(-1)).toEqual([1, move.option]);
+      await first;
+      back.lobby.destroy();
+      admin.close();
+    }, TIMEOUT);
+
     it('Leave mid-game hands your seat to a bot at once; the host closing the tab migrates host, and the new host can bot the old host’s seat', async () => {
       setup();
       const { host, guests } = await table(['G1', 'G2'], { seed: 44, subAfterMs: 400 });
