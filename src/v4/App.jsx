@@ -2,6 +2,7 @@
 // Local games save on every change and can be resumed; online seats are rejoined after a reload.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import './v4.css';
+import './lamp.css';
 import { createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineReady } from './sessionApi.js';
 import { createLocalSession } from './session/local.js';
 import { loadLocal, saveLocal, clearLocal, finishLocal, loadOnline, saveOnline, clearOnline, rememberRoom, roomIds } from './saved.js';
