@@ -26,7 +26,8 @@ for (let g = 1; g <= games; g++) {
         placed[pend.player]++;
         lastPlacer = pend.player;
         const o = pend.options.find(x => x.id === mv.option);
-        if (o.q === pq) { const a = actionAt(s, o.q, o.i).name; took[pend.player].add(a); st.takes[a] = (st.takes[a] || 0) + 1; const k = `${a} r${s.round}`; st.takesByRound[k] = (st.takesByRound[k] || 0) + 1; }
+        took[pend.player].add(actionAt(s, o.q, o.i).name);
+        if (o.q === pq) { const a = actionAt(s, o.q, o.i).name; st.takes[a] = (st.takes[a] || 0) + 1; const k = `${a} r${s.round}`; st.takesByRound[k] = (st.takesByRound[k] || 0) + 1; }
       }
       if (pend.kind === 'buy' && mv.option === 'tier:big') st.sixBuys++;
       const r0 = s.round;
@@ -71,6 +72,6 @@ if (pq >= 0) {
   console.log(`Purple takes per game: ${Object.entries(st.takes).map(([k, v]) => `${k} ${(v / games).toFixed(2)}`).join(' · ')}`);
   console.log(`  by round: ${Object.entries(st.takesByRound).sort().map(([k, v]) => `${k} ${(v / games).toFixed(2)}`).join(' · ')}`);
   console.log(`Resting contest: nobody scored ${(100 * st.noScore / st.contestRounds).toFixed(0)}% of rounds; shared ${(100 * st.ties / st.contestRounds).toFixed(0)}%; wins by seat ${st.contestWins.join('/')}; won by the round's last placer ${st.contestFromLast}`);
-  console.log(`Win rate of players who took each action at least once (25% = average): ${Object.entries(st.takers).map(([k, v]) => `${k} ${(100 * v.w / v.n).toFixed(0)}%`).join(' · ')}`);
+  console.log(`Win rate of players who took each action at least once (25% = average): ${Object.entries(st.takers).sort((a, b) => b[1].w / b[1].n - a[1].w / a[1].n).map(([k, v]) => `${k} ${(100 * v.w / v.n).toFixed(0)}%`).join(' · ')}`);
   console.log(`  resting workers per player at round end ${avg(st.restingAtRoundEnd)}; winner's followers from the contest ${avg(st.winnerPurpleContest)}`);
 }

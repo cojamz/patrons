@@ -10,9 +10,12 @@ const N = Number(process.argv[2] || 120), MODE = process.argv[3] || 'loot';
 setScoring(MODE);
 const QUADS = ['gold', 'red', 'blue', 'thieves'];
 const LIST = [
-  ['Joint Venture', 1], ['Rush', 1], ['Hire', 1], ['Pickpocket', 1], ['Hideout', 1], ['Fence', 1],
+  ['Joint Venture', 1], ['Rush', 1], ['Hire', 1], ['Pickpocket', 1], ['Shakedown', 1], ['Hideout', 1],
   ['Steal', 2], ['Windfall', 2], ['Hire Up', 2], ['Trade', 2], ['Rob', 2], ['Ransom', 2],
   ['Strike', 3], ['Take', 3], ['Heist', 3],
+  // the same early actions taken late
+  ['Joint Venture', 3], ['Rush', 3], ['Pickpocket', 3], ['Shakedown', 3], ['Hideout', 3],
+  ['Steal', 3], ['Windfall', 3], ['Rob', 3], ['Ransom', 3],
 ];
 function play(seed, force) {
   const rand = seededRandom(seed * 104729 + 7);
