@@ -5,7 +5,7 @@ import { createGame, applyMove, resume, followers } from '../../../../engine/v4/
 import { chooseBotMove } from '../../../../engine/v4/bots.js';
 import { seededRandom } from '../../../../engine/v4/rng.js';
 import { registerQuadrant } from '../../../../engine/v4/content/index.js';
-import market, { memberValue, install } from '../../../../engine/v4/content/market.js';
+import market, { memberValue, priceyCount, install, setScoring } from '../../../../engine/v4/content/market.js';
 import { contextFor } from '../../../../engine/v4/core.js';
 import { take, move, uidOf, ids, fol, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
@@ -16,9 +16,9 @@ const Q = ['gold', 'red', 'market', 'green'];
 // Costs these tests are written against; repricing the real cards doesn't break them.
 const MARKET_TEST_COSTS = {
   'market.dealer': [1, 1], 'market.broker': [1, 1], 'market.connoisseur': [2, 1], 'market.reseller': [2, 1],
-  'market.outfitter': [1, 1], 'market.collector': [2, 1], 'market.regular': [1, 1], 'market.promoter': [1, 0],
-  'market.underbidder': [1, 0], 'market.windowshopper': [1, 1], 'market.shopper': [3, 2], 'market.shopaholic': [2, 1],
-  'market.blackmarket': [2, 2], 'market.heirloom': [3, 2], 'market.appraiser': [3, 2],
+  'market.curator': [2, 1], 'market.regular': [1, 1], 'market.underbidder': [1, 0], 'market.minimalist': [2, 1],
+  'market.climber': [1, 1], 'market.auctioneer': [1, 1], 'market.sommelier': [1, 1], 'market.patroness': [3, 2],
+  'market.blackmarket': [2, 2], 'market.snob': [3, 2], 'market.recluse': [2, 1],
 };
 let restore;
 beforeEach(() => { restore = pinCosts({ ...TEST_COSTS, ...MARKET_TEST_COSTS }); });
@@ -50,58 +50,61 @@ const SHOP = ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.pr
 const CHEAP = ['red.intern', 'red.volunteer', 'red.twins', 'gold.taxman', 'red.drive', 'gold.thrift'];
 const card = (s, def) => `card:${uidOf(s, def, 'shop')}`;
 
-describe('Blue scoring: most member value (printed cost), blue members break ties', () => {
-  it('counts printed cost, not what was paid', () => {
+describe('Blue scoring (switchable): most members costing 4+, or most member value', () => {
+  afterEach(() => setScoring('pricey'));
+  it('member value counts printed cost, not what was paid', () => {
     const s = scene({ members: [['gold.midas', 'red.volunteer', 'red.twins'], ['red.intern']] });
     const ctx = contextFor(s);
     expect(memberValue(ctx, s.players[0])).toBe(5 + 0 + 2);
     expect(memberValue(ctx, s.players[1])).toBe(1);
   });
-  it('no value scores nothing; a blue member breaks a tie', () => {
-    const s = scene({ members: [['red.volunteer'], ['market.promoter'], []], n: 3 });
+  it('pricey (default): counts members costing 4 or more; blue members break ties', () => {
+    const s = scene({ members: [['gold.midas', 'gold.tycoon', 'red.twins'], ['red.bigfamily', 'market.snob']] });
+    const ctx = contextFor(s);
+    expect(priceyCount(ctx, s.players[0])).toBe(2);
+    expect(priceyCount(ctx, s.players[1])).toBe(2);
+    expect(market.scoring.score(ctx, s.players[1])).toBeGreaterThan(market.scoring.score(ctx, s.players[0]));
+    const t = scene({ members: [['red.twins', 'red.intern'], []] });
+    expect(market.scoring.score(contextFor(t), t.players[0])).toBe(0); // nothing pricey scores nothing
+  });
+  it('value: total printed cost; no value scores nothing', () => {
+    setScoring('value');
+    const s = scene({ members: [['red.volunteer'], ['gold.taxman'], ['market.dealer']], n: 3 });
     const ctx = contextFor(s);
     expect(market.scoring.score(ctx, s.players[0])).toBe(0);
-    const t = scene({ members: [['gold.taxman'], ['market.dealer']] }); // both worth 2
-    const c2 = contextFor(t);
-    expect(market.scoring.score(c2, t.players[1])).toBeGreaterThan(market.scoring.score(c2, t.players[0]));
+    expect(market.scoring.score(ctx, s.players[2])).toBeGreaterThan(market.scoring.score(ctx, s.players[1])); // both 2, blue breaks it
   });
   it('pays the ring value at round end', () => {
     const s = scene({ members: [['gold.midas'], ['gold.taxman']], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Most member value: P1 +2');
+    expect(s.log.at(-1)).toContain('Most members costing 4+: P1 +2');
   });
 });
 
 describe('Blue actions', () => {
-  it('Bargain: recruit a face-up member now for a third off (rounded up), in any colors; your buy is still to come', () => {
+  it('Bargain: recruit a face-up member now at its cost, in any colors; your buy is still to come', () => {
     let s = take(scene({ res: [{ red: 5, blue: 2 }], shop: SHOP }), 'Bargain');
     expect(s.pending.kind).toBe('choose');
-    s = move(s, card(s, 'gold.midas')); // 5 → 3 (2 off), no gold needed
-    expect(s.pending.prompt).toContain('how do you pay 3');
-    s = move(s, 'pay:0-3-0-0');
+    expect(ids(s)).toContain(card(s, 'gold.jackpot')); // 6 of the 7 held
+    s = move(s, card(s, 'gold.midas')); // 5, no gold needed
+    expect(s.pending.prompt).toContain('how do you pay 5');
+    s = move(s, 'pay:0-5-0-0');
     expect(has(s, 'gold.midas')).toBe(true);
-    expect(R(s)).toEqual({ ...Z, red: 2, blue: 2 });
+    expect(R(s)).toEqual({ ...Z, blue: 2 });
     expect(s.pending.kind).toBe('buy'); // the normal buy is still to come
-    const t = take(scene({ res: [{ red: 3 }], shop: SHOP }), 'Bargain');
-    expect(ids(t)).toContain(card(t, 'gold.midas'));
-    expect(ids(t)).not.toContain(card(t, 'gold.jackpot')); // 6 → 4 is too much
   });
-  it('Bargain: you choose how to pay, may recruit nothing; a 2-cost member costs 1', () => {
+  it('Bargain: you choose how to pay, and may recruit nothing', () => {
     let s = take(scene({ res: [{ red: 3, gold: 3 }], shop: SHOP }), 'Bargain');
-    s = move(s, card(s, 'gold.tycoon')); // 4 → 2
-    expect(s.pending.options[0].id).toBe('pay:0-2-0-0'); // default spends red before gold
-    s = move(s, 'pay:2-0-0-0');
-    expect(R(s)).toEqual({ ...Z, red: 3, gold: 1 });
+    s = move(s, card(s, 'gold.tycoon')); // 4
+    expect(s.pending.options[0].id).toBe('pay:1-3-0-0'); // default spends red before gold
+    s = move(s, 'pay:3-1-0-0');
+    expect(R(s)).toEqual({ ...Z, red: 2 });
     let t = take(scene({ res: [{ red: 5 }], shop: SHOP }), 'Bargain');
     t = move(t, 'none');
     expect(t.players[0].members).toEqual([]);
     expect(R(t).red).toBe(5);
-    let u = take(scene({ res: [{ green: 1 }], shop: CHEAP }), 'Bargain');
-    u = move(u, card(u, 'red.twins'));
-    expect(has(u, 'red.twins')).toBe(true);
-    expect(R(u).green).toBe(0);
   });
   it('Bargain: with nothing affordable, nothing happens', () => {
-    const s = take(scene({ res: [{ red: 1 }], shop: SHOP }), 'Bargain');
+    const s = take(scene({ res: [{ red: 3 }], shop: SHOP }), 'Bargain');
     expect(s.players[0].members).toEqual([]);
     expect(s.log.join('\n')).toContain("Bargain: P1 can't pay for anything.");
   });
@@ -131,21 +134,23 @@ describe('Blue actions', () => {
     t = move(t, card(t, 'red.intern'));
     expect(has(t, 'red.intern')).toBe(true);
   });
-  it('Appraise (ring II): blue equal to the cost of your priciest member', () => {
-    expect(R(take(scene({ round: 2, members: [['gold.tycoon', 'red.intern']] }), 'Appraise')).blue).toBe(4);
-    expect(R(take(scene({ round: 2 }), 'Appraise')).blue).toBe(0);
+  it('Price Check (ring II): blue equal to the cost of your priciest member', () => {
+    expect(R(take(scene({ round: 2, members: [['gold.tycoon', 'red.intern']] }), 'Price Check')).blue).toBe(4);
+    expect(R(take(scene({ round: 2 }), 'Price Check')).blue).toBe(0);
   });
-  it('Spree (ring III): two buys this turn', () => {
+  it('Spree (ring III): three buys this turn', () => {
     let s = take(scene({ round: 3, res: [{ red: 6, gold: 6, green: 6 }], shop: CHEAP }), 'Spree');
     s = move(s, card(s, 'red.intern'));
     expect(s.pending.kind).toBe('buy');
     s = move(s, 'tier:big');
+    expect(s.pending.kind).toBe('buy');
+    s = move(s, card(s, 'red.twins'));
     expect(s.pending?.kind).not.toBe('buy');
-    expect(s.players[0].members).toHaveLength(1);
+    expect(s.players[0].members).toHaveLength(2);
     expect(s.players[0].bonus).toBe(6);
   });
   it('Free recruits from Bargain trigger recruit hooks (Recruiter pays)', () => {
-    let s = take(scene({ res: [{ green: 3 }], members: [['red.recruiter']], shop: SHOP }), 'Bargain');
+    let s = take(scene({ res: [{ green: 5 }], members: [['red.recruiter']], shop: SHOP }), 'Bargain');
     s = move(s, card(s, 'gold.midas'));
     expect(R(s).red).toBe(1);
   });
@@ -161,7 +166,7 @@ describe('Blue members', () => {
   };
 
   it('Dealer: whenever anyone recruits a blue member, +1 blue', () => {
-    expect(R(rivalBuys([['market.dealer']], 'market.promoter')).blue).toBe(1);
+    expect(R(rivalBuys([['market.dealer']], 'market.underbidder')).blue).toBe(1);
     expect(R(rivalBuys([['market.dealer']], 'red.intern')).blue).toBe(0);
   });
   it('Broker: whenever a rival recruits a member costing 4 or more, +1 blue', () => {
@@ -182,24 +187,11 @@ describe('Blue members', () => {
     s = move(s, card(s, 'gold.tycoon'));
     expect(R(s)).toEqual({ gold: 9 - 3 + 1, red: 0, blue: 6 - 1, green: 0 });
   });
-  it('Outfitter: +2 blue for your first member of each color', () => {
-    let s = take(scene({ res: [{ red: 9 }], members: [['market.outfitter']], shop: CHEAP }), 'Showroom');
-    s = move(s, card(s, 'red.intern'));
-    expect(R(s).blue).toBe(2);
-    let t = take(scene({ res: [{ red: 9 }], members: [['market.outfitter', 'red.volunteer']], shop: CHEAP.filter(d => d !== 'red.volunteer') }), 'Showroom');
-    t = move(t, card(t, 'red.intern'));
-    expect(R(t).blue).toBe(0);
-  });
-  it('Collector: round start, +1 blue per member costing 3 or more', () => {
-    expect(R(start([['market.collector', 'gold.midas', 'red.intern']])).blue).toBe(2); // Collector 3, Midas 5
+  it('Curator: round start, +1 blue per member costing 3 or more', () => {
+    expect(R(start([['market.curator', 'gold.midas', 'red.intern']])).blue).toBe(2); // Curator 3, Midas 5
   });
   it('Regular: round start, your next member costs 1 less per round number', () => {
     expect(start([['market.regular']]).players[0].discount).toBe(2);
-  });
-  it('Promoter: whenever you buy followers, your next member costs 1 less', () => {
-    let s = take(scene({ res: [{ red: 4 }], members: [['market.promoter']] }), 'Showroom');
-    s = move(s, 'tier:small');
-    expect(s.players[0].discount).toBe(1);
   });
   it('Underbidder: round start, next member 1 less per rival with more members', () => {
     const s = scene({ n: 3, members: [['market.underbidder'], ['red.intern', 'red.volunteer'], ['red.twins', 'red.drive']], queue: [{ t: 'round', r: 2 }] });
@@ -207,41 +199,48 @@ describe('Blue members', () => {
     const t = scene({ n: 3, members: [['market.underbidder', 'red.twins'], ['red.intern', 'red.drive'], []], queue: [{ t: 'round', r: 2 }] });
     expect(t.players[0].discount).toBe(0);
   });
-  it('Window Shopper: once per round, sweep the row before buying; resets next round', () => {
-    let s = take(scene({ members: [['market.windowshopper']], shop: SHOP }), 'Showroom');
-    const old = [...s.shop];
-    const u = uidOf(s, 'market.windowshopper', 0);
-    s = move(s, `use:${u}`);
-    expect(s.pending.kind).toBe('buy');
-    expect(s.shop.some(x => old.includes(x))).toBe(false);
-    expect(ids(s)).not.toContain(`use:${u}`);
-    s.round = 1; s.queue = [{ t: 'round', r: 2 }]; s = resume(s);
-    expect(s.cards[u].used).toBe(false);
+  it('Minimalist: round start, +1 blue per member fewer than the rival with the most', () => {
+    const s = scene({ n: 3, members: [['market.minimalist'], ['red.intern', 'red.volunteer', 'red.drive', 'red.crowd'], ['red.twins']], queue: [{ t: 'round', r: 2 }] });
+    expect(R(s).blue).toBe(3);
+    const t = scene({ members: [['market.minimalist', 'red.twins'], ['red.intern']], queue: [{ t: 'round', r: 2 }] });
+    expect(R(t).blue).toBe(0);
   });
-  it('Personal Shopper: once per round, one more buy this turn', () => {
-    let s = take(scene({ res: [{ red: 9 }], members: [['market.shopper']], shop: CHEAP }), 'Showroom');
-    s = move(s, `use:${uidOf(s, 'market.shopper', 0)}`);
-    s = move(s, card(s, 'red.intern'));
-    expect(s.pending.kind).toBe('buy');
-    s = move(s, card(s, 'red.twins'));
-    expect(s.pending?.kind).not.toBe('buy');
-    expect(s.players[0].members).toHaveLength(3);
+  it('Social Climber: round start, trade a member back to the pile; your next member costs that much less', () => {
+    let s = start([['market.climber', 'gold.midas', 'red.intern']]);
+    expect(s.pending.prompt).toContain('Social Climber');
+    const m = uidOf(s, 'gold.midas', 0);
+    s = move(s, `card:${m}`);
+    expect(s.players[0].members.includes(m)).toBe(false);
+    expect(s.pile.at(-1)).toBe(m);
+    expect(s.players[0].discount).toBe(5);
+    let k = start([['market.climber', 'red.intern']]);
+    k = move(k, 'none');
+    expect(k.players[0].members).toHaveLength(2);
   });
-  it('Shopaholic: once per game, two more buys this turn', () => {
-    let s = take(scene({ res: [{ red: 9 }], members: [['market.shopaholic']], shop: CHEAP }), 'Showroom');
-    const u = uidOf(s, 'market.shopaholic', 0);
-    s = move(s, `use:${u}`);
-    s = move(s, card(s, 'red.intern'));
-    s = move(s, card(s, 'red.twins'));
-    s = move(s, card(s, 'red.drive'));
-    expect(s.players[0].members).toHaveLength(4);
-    expect(s.cards[u].used).toBe(true);
+  it('Auctioneer: whenever a rival recruits a member costing 2 or less, +1 blue', () => {
+    expect(R(rivalBuys([['market.auctioneer']], 'red.twins')).blue).toBe(1);
+    expect(R(rivalBuys([['market.auctioneer']], 'gold.tycoon')).blue).toBe(0);
   });
-  it('Black Market: once per game, also recruit any member from the pile at its cost', () => {
-    let s = take(scene({ res: [{ gold: 9 }], members: [['market.blackmarket']], shop: CHEAP }), 'Showroom');
+  it('Sommelier: whenever you recruit a member costing 4 or more, your next costs 1 less', () => {
+    let s = take(scene({ res: [{ gold: 9 }], members: [['market.sommelier']], shop: SHOP }), 'Showroom');
+    s = move(s, card(s, 'gold.tycoon'));
+    expect(s.players[0].discount).toBe(1);
+  });
+  it('Patroness: whenever you recruit a member costing 5 or more, +1 follower', () => {
+    let s = take(scene({ res: [{ gold: 9 }], members: [['market.patroness']], shop: SHOP }), 'Showroom');
+    s = move(s, card(s, 'gold.midas'));
+    expect(s.players[0].bonus).toBe(1);
+    let t = take(scene({ res: [{ gold: 9 }], members: [['market.patroness']], shop: SHOP }), 'Showroom');
+    t = move(t, card(t, 'gold.tycoon'));
+    expect(t.players[0].bonus).toBe(0);
+  });
+  it('Black Market: once per game, also recruit one of the top 5 of the pile at its cost', () => {
+    let s = scene({ res: [{ gold: 9 }], members: [['market.blackmarket']], shop: CHEAP, pileFirst: ['red.mob', 'red.host', 'gold.jackpot', 'red.sponsor', 'red.patriarch', 'gold.midas'] });
+    s = take(s, 'Showroom');
     s = move(s, `use:${uidOf(s, 'market.blackmarket', 0)}`);
     s = move(s, 'pass'); // your normal buy comes first
-    expect(s.pending.prompt).toContain('Black Market');
+    expect(s.pending.prompt).toContain('top 5');
+    expect(ids(s)).not.toContain(`card:${uidOf(s, 'gold.midas', 'pile')}`); // 6th card is out of reach
     const j = uidOf(s, 'gold.jackpot', 'pile');
     s = move(s, `card:${j}`); // 3 gold + 3 any → all gold, one way to pay
     expect(has(s, 'gold.jackpot')).toBe(true);
@@ -249,13 +248,13 @@ describe('Blue members', () => {
     expect(s.shop).toHaveLength(6);
     expect(s.pile.includes(j)).toBe(false);
   });
-  it('Heirloom: worth 3 followers', () => {
-    const s = scene({ members: [['market.heirloom']] });
-    expect(fol(s, 0)).toBe(4);
-  });
-  it('Appraiser: game end, +1 follower per member costing 4 or more (itself included)', () => {
-    let s = scene({ members: [['market.appraiser', 'gold.midas', 'gold.tycoon', 'red.intern']], queue: [{ t: 'finish' }] });
+  it('Snob: game end, +1 follower per member costing 4 or more (itself included)', () => {
+    const s = scene({ members: [['market.snob', 'gold.midas', 'gold.tycoon', 'red.intern']], queue: [{ t: 'finish' }] });
     expect(s.players[0].final.total).toBe(3);
+  });
+  it('Recluse: game end, +2 followers per rival with more members', () => {
+    const s = scene({ n: 3, members: [['market.recluse'], ['red.intern', 'red.drive'], ['red.twins']], queue: [{ t: 'finish' }] });
+    expect(s.players[0].final.total).toBe(2);
   });
 });
 

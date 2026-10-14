@@ -382,6 +382,8 @@ function startRound(state, r) {
   const n = WORKERS[r - 1];
   for (const p of state.players) p.left = n;
   const ctx = ctxFor(state);
+  // quadrant-level round start (Black: loot piles join their owners' supplies) runs before member income
+  for (const qid of state.quadrants) { const q = quadrant(qid); if (q.onRoundStart) q.onRoundStart(ctx); }
   eachMember(state, (owner, card, def) => { if (def.onRoundStart) def.onRoundStart(ctx, owner, card); });
   // late hooks see everything the round-start income gave (Investor sets aside after Banker pays)
   eachMember(state, (owner, card, def) => { if (def.onRoundStartLate) def.onRoundStartLate(ctx, owner, card); });
@@ -555,6 +557,43 @@ function ctxFor(state) {
     moveMember(uid, from, to) {
       from.members.splice(from.members.indexOf(uid), 1);
       to.members.push(uid);
+    },
+    // ---- stealing: one shared verb, so protections and reactions apply to every sphere's steals ----
+    /** May `thief` steal from `victim`? kind is 'res' (resources, piles) or 'member'. Quadrants and the
+     *  victim's members can refuse (guardSteal returns true). */
+    canSteal(thief, victim, kind = 'res') {
+      if (!victim || victim === thief) return false;
+      for (const qid of state.quadrants) { const q = quadrant(qid); if (q.guardSteal && q.guardSteal(ctx, thief, victim, kind)) return false; }
+      let blocked = false;
+      eachMemberOf(state, victim, (card, def) => { if (def.guardSteal && def.guardSteal(ctx, victim, card, thief, kind)) blocked = true; });
+      return !blocked;
+    },
+    /** How many a steal of `base` takes for this thief (members: stealMore adds, stealDouble(ctx, owner) doubles). */
+    stealCount(thief, base) {
+      let n = base, double = false;
+      eachMemberOf(state, thief, (card, def) => {
+        if (typeof def.stealMore === 'number') n += def.stealMore;
+        if (def.stealDouble && def.stealDouble(ctx, thief)) double = true;
+      });
+      return double ? n * 2 : n;
+    },
+    /** One steal event from one victim. what: { take: {color: n} } moves resources (clamped to what they hold),
+     *  { uid } moves a member, { other: n } reports units the caller already moved (e.g. a loot pile).
+     *  The caller gives the thief the proceeds. Fires onSteal on every quadrant and member. Returns units taken. */
+    steal(thief, victim, what = {}) {
+      if (!ctx.canSteal(thief, victim, what.uid !== undefined ? 'member' : 'res')) return 0;
+      const took = {};
+      let n = what.other || 0;
+      for (const [c, k] of Object.entries(what.take || {})) {
+        const x = Math.max(0, Math.min(k, victim.res[c] || 0));
+        if (x) { victim.res[c] -= x; took[c] = x; n += x; }
+      }
+      if (what.uid !== undefined) { ctx.moveMember(what.uid, victim, thief); n += 1; }
+      if (!n) return 0;
+      const info = { thief, victim, took, uid: what.uid, n, reaction: !!what.reaction };
+      for (const qid of state.quadrants) { const q = quadrant(qid); if (q.onSteal) q.onSteal(ctx, info); }
+      eachMember(state, (owner, card, def) => { if (def.onSteal) def.onSteal(ctx, owner, card, info); });
+      return n;
     },
     // Queue a decision for player p. It runs before anything else still queued.
     choose(p, prompt, options, handler, data = null) {

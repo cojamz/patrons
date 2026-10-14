@@ -33,8 +33,8 @@ export default {
     },
     {
       key: 'steal', ring: 2, name: 'Steal', text: 'Take 3 gold from players, split however you like.',
-      estimate: (ctx, p) => Math.min(3, ctx.rivals(p).reduce((s, o) => s + o.res.gold, 0)) * 1.4,
-      resolve(ctx, p) { stealStep(ctx, p, { left: 3, got: 0 }); },
+      estimate: (ctx, p) => Math.min(3, ctx.rivals(p).filter(o => ctx.canSteal(p, o)).reduce((s, o) => s + o.res.gold, 0)) * 1.4,
+      resolve(ctx, p) { stealStep(ctx, p, { left: ctx.stealCount(p, 3), picked: {} }); },
     },
     {
       key: 'windfall', ring: 2, name: 'Windfall', text: '+1 gold per member you have.',
@@ -55,9 +55,7 @@ export default {
       ctx.log(`${p.name} gave 1 gold to ${t.name}.`);
     },
     steal(ctx, p, value, data) {
-      const t = ctx.player(value);
-      t.res.gold -= 1;
-      stealStep(ctx, p, { left: data.left - 1, got: data.got + 1, from: { ...(data.from || {}), [t.name]: ((data.from || {})[t.name] || 0) + 1 } });
+      stealStep(ctx, p, { left: data.left - 1, picked: { ...data.picked, [value]: (data.picked[value] || 0) + 1 } });
     },
     invest(ctx, p, x, data) {
       if (!x) return;
@@ -154,15 +152,22 @@ export default {
   ],
 };
 
+// Steal: pick one gold at a time (counting what's already picked), then take it all through the shared steal.
 function stealStep(ctx, p, data) {
-  const targets = ctx.rivals(p).filter(o => o.res.gold > 0);
+  const left = o => o.res.gold - (data.picked[o.id] || 0);
+  const targets = ctx.rivals(p).filter(o => left(o) > 0 && ctx.canSteal(p, o));
   if (data.left > 0 && targets.length) {
     ctx.choose(p, `Steal: take 1 gold from… (${data.left} left)`, targets.map(o => ({
-      id: `player:${o.id}`, label: `${o.name} · ${o.res.gold} gold`, kind: 'player', value: o.id, hint: o.res.gold,
+      id: `player:${o.id}`, label: `${o.name} · ${left(o)} gold`, kind: 'player', value: o.id, hint: left(o),
     })), 'gold.steal', data);
     return;
   }
-  if (data.got) ctx.gain(p, 'gold', data.got, { fromAction: true });
-  const from = Object.entries(data.from || {}).map(([n, k]) => `${k} from ${n}`).join(', ');
-  ctx.log(data.got ? `${p.name} stole ${data.got} gold (${from}).` : `${p.name} found no gold to steal.`);
+  let got = 0;
+  const from = [];
+  for (const [id, k] of Object.entries(data.picked)) {
+    const v = ctx.player(Number(id)), x = ctx.steal(p, v, { take: { gold: k } });
+    if (x) { got += x; from.push(`${x} from ${v.name}`); }
+  }
+  if (got) ctx.gain(p, 'gold', got, { fromAction: true });
+  ctx.log(got ? `${p.name} stole ${got} gold (${from.join(', ')}).` : `${p.name} found no gold to steal.`);
 }
