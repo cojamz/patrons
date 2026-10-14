@@ -430,7 +430,8 @@ function recruit(state, p, uid, { free, spend: chosen }) {
     if (!spend || !memberPayOk(state, p, cardDef(state, uid), spend) || Object.keys(spend).some(r => spend[r] > (p.res[r] || 0))) throw new Error('Cannot afford');
     for (const r in spend) p.res[r] -= spend[r];
     paid = payString(spend);
-    p.discount = 0;
+    // a discount waits for a member that actually costs something
+    if (cardDef(state, uid).s + cardDef(state, uid).w > 0) p.discount = 0;
   }
   state.shop.splice(idx, 1);
   refill(state);

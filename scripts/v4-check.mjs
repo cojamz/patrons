@@ -19,7 +19,8 @@ await run('production build', 'npx', ['vite', 'build', '--outDir', '.v4-build', 
 if (!fast && existsSync('e2e/v4')) {
   const port = 5180;
   const server = spawn('npx', ['vite', 'preview', '--outDir', '.v4-build', '--port', String(port), '--strictPort'], { stdio: 'pipe' });
-  await new Promise(r => setTimeout(r, 2500));
+  // wait until the preview server answers (up to 30s)
+  for (let i = 0; i < 60; i++) { try { if ((await fetch(`http://localhost:${port}/`)).ok) break; } catch {} await new Promise(r => setTimeout(r, 500)); }
   for (const f of readdirSync('e2e/v4').filter(f => f.endsWith('.mjs')).sort())
     await run(`e2e ${f}`, 'node', [`e2e/v4/${f}`], { env: { V4_URL: `http://localhost:${port}` } });
   server.kill();

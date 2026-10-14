@@ -31,4 +31,4 @@ Members keep working for you: some pay out each round, some react to what other 
 Each quadrant scores: the player who leads in what it measures (for example "most gold") gains followers. That's +2 in round I, +4 in round II and +6 in round III. Tied leaders all score.
 
 ## Game end
-After round III, end-of-game member bonuses are added. The most followers wins.
+After round III, end-of-game member bonuses are added. The most followers wins. If players tie, the one with more members wins.

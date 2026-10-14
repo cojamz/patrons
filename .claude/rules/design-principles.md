@@ -6,7 +6,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - Say "buy followers", never "fixtures" (or Laurel/Garland/Diadem) when talking to Cory. Rates: 2→1, 4→3, 6→6.
 - The frame is light. You lead a following: items are members, VP are followers. Don't over-index on 'cult' (religious, sacrificial, ritual).
 - Quadrants are defined by their mechanics first: economy, tempo, space, market, information, interaction… They should be unique and varied, with names and flavor that fit the mechanic, not a forced theme.
-- Items are **members**: people you recruit. Each quadrant has 10 member types. Workhorses come in pairs; signature members are one-offs (5 pairs + 5 singles = 15 cards; 60 in the deck). Everything stacks. Each one leans toward a sphere, through its color and its ability.
+- Items are **members**: people you recruit. Each quadrant has 15 member types, one copy each for now (15 cards; 60 in the deck). Everything stacks. Each one leans toward a sphere, through its color and its ability.
 - Victory points are **followers**. Your followers include yourself (everyone starts with 1) and every member (each member is worth at least 1 follower). Favor fixtures become ways to win followers in bulk.
 - Generic cult verbs that any sphere may use: recruit (buy a member), release (discard a member for something), sway (draw a follower or member from a player ahead of you), and scaling by member count or follower count.
 - Fixtures are bulk followers: the 6-point fixture is literally 6 followers.
@@ -18,8 +18,8 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - Board: a spinning wheel of 4 color quadrants (no god names). Outer ring is round I (3 spaces per quadrant), inner ring is round II (2 spaces), center is round III (1 space). Spaces carry over: earlier rings stay open in later rounds.
 - Workers per round: 3, then 4, then 5. Every round-I space fills. Whoever is last in Favor picks first each round.
 - Setup: each player picks 2 starting resources in one go, first seat to last, while everyone watches. This replaces champions.
-- Market: a second, smaller spinning board. One shared deck of every sphere's members, 6 face up around the rim. Neutral Favor fixtures sit in the middle, repeatable and Dominion-style (Laurel, Garland, Diadem; Diadems are limited and act as a clock).
-- After each placement you buy one thing: any face-up member, or a fixture. The deck is far bigger than one game's buys.
+- Market: a second, smaller spinning board. One shared deck of every sphere's members, 6 face up around the rim. Follower buys sit in the middle, repeatable and Dominion-style (2→1, 4→3, 6→6; the 6s are limited and act as a clock).
+- After each placement you buy one thing: any face-up member, or followers. The deck is far bigger than one game's buys.
 - Everyone's items are public.
 
 ## How you win
@@ -43,7 +43,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 
 ## Interaction
 - No exponential races in silos. Interact through the board, not at people.
-- Compete over shared spaces, face-up members, ring contests and the Diadem clock.
+- Compete over shared spaces, face-up members, ring contests and the 6-follower clock.
 - Many actions spill a little gain onto others.
 - Some items trigger off rivals' moves, so you watch the table.
 - Never make it feel BAD. Direct harm stays rare and small, and only ever points at the leader.

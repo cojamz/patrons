@@ -163,3 +163,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) You choose where a discount comes off (the colored part or "any").
 - ✅ (Cory) You choose which resources pay "any" costs (and follower buys).
 - ✅ (Cory) Fine for now: ties all score the full ring value; every quadrant pays +2/+4/+6; turn-order ties go to whoever picked later last round; you can start with the same color twice; one copy of each member (15 per quadrant); Twins and Big Family are worth 2 and 3 followers; Midas is an on/off switch for gains from actions; Tinker only fires on gains from actions; Underdog doubles every gold gain; Steal must take all 3 if it can; Hire ties let you pick.
+- ✅ (Claude, working call) Final ties go to more members; it's in the rulebook. A Discount waits for a member that costs something (a free Volunteer doesn't use it up).

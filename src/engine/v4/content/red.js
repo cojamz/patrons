@@ -129,7 +129,7 @@ export default {
     m('patriarch', 'Patriarch', 3, 1, 'Game end: +1 follower per 2 members.', {
       onGameEnd: (ctx, owner) => Math.floor(ctx.memberCount(owner) / 2),
     }),
-    m('reserve', 'Reserve', 1, 0, 'Effect coming later.'),
+    m('reserve', 'Reserve', 1, 0, 'No effect.'), // placeholder until Cory designs Reserve
   ],
 };
 

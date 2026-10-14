@@ -24,18 +24,18 @@ Every sphere spec assumes these. Anything a sphere changes, it states explicitly
 - The word is **followers** everywhere. Never "Favor".
 
 ## Members (items)
-- Each sphere brings 10 member kinds: the plain workhorses come in pairs, the signature ones are single (5 pairs + 5 singles = 15 cards). All four spheres shuffle into one deck of 60. The market shows 6 face up. Copies mean nobody can monopolize a member.
+- Each sphere brings 15 member kinds, one copy each for now (15 cards). All four spheres shuffle into one deck of 60. The market shows 6 face up. Copies mean nobody can monopolize a member.
 - The deck is bigger than the game on purpose: ~34 get bought at 4 players, so plenty go unseen in any one game. Variety lives between games, like Dominion.
 - A bought member is replaced from the deck at once.
 - A member's cost has two parts: a **specific** part, paid in its sphere's own resource, and a **wild** part, payable with any resources. Printed like "2 gold + 1 wild". Some members cost only wild. Cost range: cheapest 1–2, most 2–3, top 5–6. (Cory, 2026-10-12) (A Cory call.)
 - After each placement, you may make one buy: any face-up member, or a fixture.
 - Members burned or released go to the bottom of their deck.
 
-## Fixtures (bulk followers)
-- Laurel: 2 resources for 1 follower. Any resources. Unlimited. (Cory, 2026-10-12)
-- Garland: 4 resources for 3 followers. They must include at least 2 different resources. Unlimited.
-- Diadem: 6 resources for 6 followers. They must include at least 3 different resources.
-- (v0.2: the fixtures crowded out members at 4 of 7 tables, so they're more expensive now. Members stay the main way to buy followers. Fixtures are the late-game bulk path.) There are 2 per player. When the last Diadem is sold, finish the round, then the game ends.
+## Buying followers
+- 2 resources for 1 follower. Any resources. Unlimited. (Cory, 2026-10-12)
+- 4 resources for 3 followers. At least 2 different resources. Unlimited.
+- 6 resources for 6 followers. At least 3 different resources.
+- (v0.2: the fixtures crowded out members at 4 of 7 tables, so they're more expensive now. Members stay the main way to buy followers. Fixtures are the late-game bulk path.) There are 2 per player. When the last 6-follower buy is taken, finish the round, then the game ends.
 
 ## Ties and leaders
 - When the top players are tied on followers, there is no leader. Effects that say "the leader" do nothing.
@@ -47,8 +47,11 @@ Every sphere spec assumes these. Anything a sphere changes, it states explicitly
 - A member bought in round III that triggers only at round start says so in its text, so nobody buys a dead card by accident.
 
 ## Taking
-- Taking reaches only "a player ahead of you", meaning more followers, as counted at the moment of the action.
+- Taking reaches only "a player ahead of you" by default. Cory's exceptions: Gold's Steal and the bribe member can hit anyone.
 - Nothing ever drops below 0.
 
 ## Open questions for Cory
 - Should fixtures be flatter, so members stay worth buying in round III? Tables 5 and 7 saw fixtures crowd out members.
+
+## Final ties
+- Most followers wins. If tied, more members wins (working call, in the rulebook).
