@@ -1,5 +1,5 @@
 // Record a page as a crisp pixel-art GIF plus an MP4 (send Cory the MP4: the app plays video but shows a GIF as a still).
-//   node scripts/v4-gif.mjs <url> <out.gif> [ms=8000] [width=960] [fps=15]
+//   node scripts/v4-gif.mjs <url> <out.gif> [ms=8000] [width=960] [fps=15]   (GIF_READY=<css selector> waits for it before the clock starts)
 // e.g. node scripts/v4-gif.mjs "http://localhost:5324/?lab=intro&beat=1" design/prototypes/vision/shots/intro2-beat1.gif 5000
 // Records at 1270×700 in Chromium, trims the page-load lead-in, and converts with a generated palette and no dithering
 // (nearest-neighbour scaling) so pixel art stays sharp. Keeps the GIF under ~15 MB by lowering fps/width if needed.
@@ -20,7 +20,9 @@ const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromi
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 }, recordVideo: { dir: vdir, size: { width: 1270, height: 700 } } });
 const page = await ctx.newPage();
 const t0 = Date.now();
-await page.goto(url, { waitUntil: 'networkidle' });
+// 'load', not 'networkidle': a Vite dev server keeps an HMR socket open, so networkidle waits ~5 s and the trim lands mid-beat
+await page.goto(url, { waitUntil: 'load' });
+if (process.env.GIF_READY) await page.waitForSelector(process.env.GIF_READY, { timeout: 20000 });
 const lead = (Date.now() - t0) / 1000; // seconds of blank load at the start of the video
 await page.waitForTimeout(ms);
 await ctx.close();
