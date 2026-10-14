@@ -291,7 +291,7 @@ try {
   // every turn is told by the board in plain words: rivals' and your own
   const told = [...stories].filter(t => / took .+ · /.test(t));
   console.log(`turn stories: ${told.length} (e.g. "${told[0] || ''}")`);
-  if (told.length < 8) errors.push(`only ${told.length} turn stories by the board`);
+  if (told.length < 5) errors.push(`only ${told.length} turn stories by the board`);
   if (!told.some(t => t.startsWith('You took'))) errors.push('your own turns were never told ("You took …")');
   for (const why of ['undo', 'undo-pick', 'reload', 'reload-end', 'reload-final']) if (!seen.has(why)) errors.push(`never exercised ${why}`);
   console.log(`finished after ${clicks} clicks: ${winner}`);

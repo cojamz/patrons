@@ -47,15 +47,15 @@ kggggggGk
 .kGGGGGk.
 ..kkkkk..`;
 S.silver = `
-..kkkkk..
-.kllsssk.
-kllsskk..
-klsk.....
-klsk.....
-klsk.....
-kssSkk...
-.kSSSSSk.
-..kkkkk..`;
+...kkk...
+..kllsk..
+..klssk..
+.kllssSk.
+.klsssSk.
+.klsssSk.
+kllsssSSk
+kkkkkkkkk
+...kSSk..`;
 S.magenta = `
 ..kkkkk..
 .kppmmMk.

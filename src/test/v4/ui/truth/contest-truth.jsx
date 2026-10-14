@@ -16,7 +16,7 @@ const ids = s => (s ? s.split(',').filter(Boolean).map(Number) : []);
 export function checkContestTruth(g0, n) {
   let cards = 0, live = 0;
   playMixedGames(n, {
-    g0, botEvery: 8,
+    g0, botEvery: 16,
     onMove(s, g) {
       if (s.over || s.round < 1 || s.moves % 23) return;
       for (const st of standings(s)) {

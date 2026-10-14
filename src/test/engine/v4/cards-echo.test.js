@@ -11,7 +11,7 @@ const QT = ['gold', 'thieves', 'market', 'echo'];
 useCosts({
   'gold.tycoon': [8, 4], 'gold.taxman': [2, 2], 'gold.midas': [4, 4], 'red.bigfamily': [4, 4], 'red.twins': [2, 2],
   'red.intern': [2, 0], 'red.volunteer': [0, 0], 'red.doppel': [4, 2],
-  'echo.evergreen': [2, 2], 'echo.choir': [4, 2], 'echo.muse': [2, 2], 'echo.choirmaster': [4, 2], 'echo.fan': [2, 2],
+  'echo.evergreen': [2, 2], 'echo.choir': [4, 2], 'echo.muse': [2, 2], 'echo.understudy': [4, 2], 'echo.ensemble': [4, 4],
   'echo.groupie': [4, 4], 'echo.translator': [4, 2], 'echo.tuningfork': [2, 2], 'echo.wallflower': [2, 2],
   'echo.keepsake': [4, 2], 'echo.mirror': [4, 2], 'echo.afterimage': [4, 2], 'echo.hourglass': [6, 4],
   'echo.dejavu': [8, 4], 'echo.chronicler': [4, 4], 'thieves.watchdog': [4, 2],
@@ -37,7 +37,7 @@ describe('Green actions', () => {
     expect(R(go(table(Q, { shop: ROW }), 'Chant')).green).toBe(2);
     expect(R(go(table(Q, { shop: ROW, round: 3, left: 5 }), 'Chant')).green).toBe(6);
   });
-  it('Echo: copy an outer-ring space taken this round (exactly its chip)', () => {
+  it('Echo: copy a space a rival took since your last turn (exactly its chip)', () => {
     const s = humThenEcho();
     expect(R(s).green).toBe(3);
     expect(s.log.some(l => /P1 copied Hum \(P2's\): \+3 green/.test(l))).toBe(true);
@@ -61,13 +61,14 @@ describe('Green actions', () => {
     s = take(s, 'Encore');
     expect(s.pending.options.map(o => o.label)).toEqual(['Chant (P2): +6 green']);
   });
-  it('Recall: any space taken last round', () => {
-    let s = table(Q, { shop: ROW, queue: turns(1) });
-    s = go(s, 'Chant');
-    s.round = 2; s.slots = {}; s.queue = turns(0); s.pending = null;
-    s = move({ ...s, queue: [{ t: 'choose', p: 0, options: [{ id: 'x', value: null }], h: 'market.pickRow', data: { why: 'test' } }, ...s.queue], pending: { player: 0, options: [{ id: 'x' }] } }, 'x');
-    s = go(s, 'Recall', sp('Chant'));
-    expect(R(s).green).toBe(2); // last round's printed 2
+  it('Refrain: +2 green, and copy one of your spaces from this round (named in the log)', () => {
+    let s = table(Q, { round: 2, shop: ROW, queue: turns(0, 1, 0) });
+    s = go(s, 'Chant'); s = go(s, 'Hum');
+    s = take(s, 'Refrain');
+    expect(s.pending.options.map(o => o.label)).toEqual(['Chant (P1): +4 green']); // P2's Hum isn't yours
+    s = pass(move(s, s.pending.options[0].id));
+    expect(R(s).green).toBe(4 + 2 + 4);
+    expect(s.log.some(l => /P1 copied Chant: \+4 green/.test(l))).toBe(true);
   });
   it('Eternity: copy every space you took this round', () => {
     let s = table(Q, { round: 3, left: 5, shop: ROW, queue: turns(0, 0, 0) });
@@ -99,16 +100,19 @@ describe('Green members', () => {
     expect(R(s, 1).green).toBe(3 + 2);
     expect(named(s, 'Muse')).toEqual(["P2's Muse: +2 green."]);
   });
-  it('Choirmaster: whenever a rival copies a space, +1 green (named)', () => {
-    const s = humThenEcho({ n: 3, members: [[], [], ['echo.choirmaster']] });
-    expect(R(s, 2).green).toBe(1);
-    expect(named(s, 'Choirmaster').length).toBe(1);
+  it('Understudy: when recruited, copy a space a rival took since your last turn (named)', () => {
+    let s = table(Q, { round: 2, shop: ['echo.understudy', ...ROW], res: [{ green: 4, red: 2 }], queue: turns(1, 0) });
+    s = go(s, 'Chant');
+    s = move(take(s, 'Hum'), cardOpt(s, 'echo.understudy', 'shop'));
+    s = payDefault(s);
+    expect(s.pending.options.map(o => o.label)).toEqual(['Chant (P2): +4 green']);
+    s = move(s, s.pending.options[0].id);
+    expect(R(s).green).toBe(4 + 3 - 4 + 4 - Math.max(0, 2 - 2));
+    expect(named(s, 'Understudy').length).toBe(1);
   });
-  it('Fan: whenever a rival takes a center space, +2 green (named)', () => {
-    let s = table(Q, { round: 3, left: 5, shop: ROW, members: [[], ['echo.fan']] });
-    s = go(s, 'Strike');
-    expect(R(s, 1).green).toBe(2);
-    expect(named(s, 'Fan').length).toBe(1);
+  it('Ensemble: game end, +1 follower per green member (named in the final parts)', () => {
+    const s = table(Q, { members: [['echo.ensemble', 'echo.muse', 'red.twins']], shop: ROW, queue: [{ t: 'finish' }] });
+    expect(s.players[0].final.parts).toContain('Ensemble +2');
   });
   it('Groupie: whenever anyone recruits a green member, +1 green (named)', () => {
     let s = table(Q, { res: [{ green: 6 }], shop: ['echo.muse', ...ROW], members: [[], ['echo.groupie']] });

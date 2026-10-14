@@ -171,7 +171,8 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
             </div>
             <ChipRow
               state={state} p={p} own={mySeats.includes(p.id)}
-              onOpen={(el, g) => setPop(pp => (pp && pp.group && pp.group.key === g.key && pp.pid === p.id ? null : { el, group: g, pid: p.id }))}
+              // a click on a chip whose card is open from hovering pins it (it used to close it: hover opened, click shut)
+              onOpen={(el, g) => setPop(pp => (pp && pp.group && pp.group.key === g.key && pp.pid === p.id && !pp.hover ? null : { el, group: g, pid: p.id }))}
               onAll={el => setPop({ el, all: true, pid: p.id })}
               onHover={(el, g) => setPop(pp => (g ? (pp && !pp.hover ? pp : { el, group: g, pid: p.id, hover: true }) : (pp && pp.hover ? null : pp)))}
             />

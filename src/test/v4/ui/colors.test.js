@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { PLAYER_COLORS } from '../../../v4/format.js';
 
-const css = readFileSync(new URL('../../../v4/v4.css', import.meta.url), 'utf8');
+const css = readFileSync(`${process.cwd()}/src/v4/v4.css`, 'utf8');
 const root = css.slice(css.indexOf(':root{'), css.indexOf('}', css.indexOf(':root{')));
 const varOf = name => (root.match(new RegExp(`--${name}:(#[0-9a-fA-F]{6})`)) || [])[1];
 const RESOURCES = ['gold', 'red', 'blue', 'green', 'magenta', 'yellow', 'purple', 'silver', 'white'];
