@@ -72,7 +72,7 @@ Main instrument: easy bots, 300 games at 4 players, on seeded random tables of P
   - By Banker's yardstick, Apprentice is cheap and Double Time and Courier are dear. That's one run, so the fair-price screen should look rather than me repricing them here.
 
 ## Watch
-- Bots: the normal bot used to score a placement on a copy of the game whose turn queue was empty, so it couldn't see an extra turn. Rally and Overtime read as "lose the purple" to it. A fix that counts the queued turns is in bots.js (the bot owner's). Recheck the normal-bot numbers once it lands.
+- Bots: the normal bot used to score a placement on a copy of the game whose turn queue was empty, so it couldn't see an extra turn. Rally and Overtime read as "lose the purple" to it. Cory's first game was played against that. It's fixed in bots.js ("bots value extra turns", 2026-10-14), and the normal-bot numbers above come after the fix. They still take fewer turns than Easy bots do.
 - "Spend all" on Rally wastes whatever is over 8. That's on purpose: it makes Rally a choice against holding purple for the ring. If it feels punishing, the fix is "spend 4 or 8".
 - Per-turn member hooks (Foreman, Courier, Apprentice, Overseer) fire twice on Overtime and up to 3 times on Rally. See the member numbers above.
 - Plan Ahead and Echo. A copy gives the space's printed gain, so when Plan Ahead is taken first in a round (+6 or +8), it becomes the best chip for Echo players to copy. In one of my test games it was copied four times. If that feels off, it's Echo's copy rule to look at, not Plan Ahead.
