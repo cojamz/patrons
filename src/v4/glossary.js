@@ -11,7 +11,7 @@ export const GLOSSARY = [
   { key: 'follower', word: 'Followers', link: false, match: /\bfollowers?\b/,
     def: 'Your score. You start with 1 (yourself); members add what they are worth, and you gain more from contests, follower buys and abilities. Most followers after round III wins.' },
   { key: 'loose followers', word: 'Loose followers', match: /\bloose followers?\b/,
-    def: 'Followers you bought or won, not the ones your members are worth (and never yourself). Only loose followers can be sold or spent.' },
+    def: 'Followers you bought or won, not the ones your members are worth (and never yourself). Only loose followers can be sold or taken away.' },
   { key: 'member', word: 'Member', link: false, match: /\bmembers?\b/,
     def: 'A card you recruit. It is worth the followers shown on it (the little person) and most have an ability that keeps working for you.' },
   { key: 'worth', word: 'Worth', match: /\bworth \d+ followers?\b/i,

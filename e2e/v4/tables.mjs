@@ -52,7 +52,7 @@ async function play(t) {
     if (t.how === 'click') {
       // Classic by default; Random 4 offers a fresh table on Reroll; Custom picks by clicks, in wheel order.
       const classic = await page.$eval('[data-table]', e => e.getAttribute('data-table'));
-      if (classic !== 'gold,red,blue,green') err(`default table is ${classic}`);
+      if (classic !== 'gold,red,market,echo') err(`default table is ${classic}`);
       await page.click('.table-pick [role="radio"]:has-text("Random 4")');
       const r1 = await page.$eval('[data-table]', e => e.getAttribute('data-table'));
       await page.click('[data-reroll]');

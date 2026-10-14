@@ -26,13 +26,13 @@ Kept, with measurements:
 
 Flagged for Cory (not White's to fix):
 - Release refunds a once-per-game member's full price after it's been used (buy Liquidator, use it, release it: free).
-- One seller can empty the 10→10 stock in round II and end the game early. (Addressed: the 10→10 buy is now at most once per player per round; see the follow-ups below.)
+- One seller can empty the 10→10 stock in round II and end the game early. (Moot: Cory made 10→10 unlimited with no clock; the game always ends after round III.)
 
 ## Design critic follow-ups (2026-10-14, Claude under Cory's "go with your gut")
 1. "Loose followers" is defined once, in the rulebook (What you have) and the glossary: followers you bought or won, not the ones your members are worth. The cards use the word instead of each explaining it: Sell High "Sell up to 2 loose followers for 3 white each.", Pawnbroker "Once per round: sell 1 loose follower for 3 white.", Liquidator "Once per game: sell up to 5 loose followers for 2 white each."
-2. Barter reads "Recruit a face-up member for half its cost (round up), paid in loose followers." Same engine behaviour.
-3. The 10-follower buy (the game-end clock) is at most once per player per round; the stock of 4 stays. The option is hidden once you've made it this round, so bots respect it too.
-4. Not done: fallbacks ("If you can't, +3 white" on Barter; "If you have no loose followers, +3 white" on Sell High). Cory: no rescue clauses; taking a space you can't use is on you.
+2. Barter is cut (Cory: "I don't like that"). Dividend fills its ring-II slot (Claude, under go-with-your-gut): "+1 white per loose follower you have." Your loose followers pay out without being sold, so it feeds Most white and leaves the score alone. Bots value it at the white it gives. Not measured yet.
+3. The 10-follower buy is unlimited and nothing ends the game early (Cory: "the turns are the end game clock"). The game always ends after round III; 8→6 keeps its limit of 2 per player. (A once-per-player-per-round limit was built and dropped the same day.)
+4. Not done: fallbacks ("If you can't, +3 white" on the old Barter; "If you have no loose followers, +3 white" on Sell High). Cory: no rescue clauses; taking a space you can't use is on you.
 
 ## The idea
 Your followers are cash. Sell them for white when you need fuel, buy them back later, and cash everything out in round III.
@@ -49,7 +49,7 @@ Actions (value in resources: early = round I with typical holdings, late = round
 3. I · Buy Low: trade up to 2 resources per round number for followers, 1 for 1. Early: 2 resources for 2 followers, about +2 (Joint Venture is 3.3). Late: up to 6 for 6, about +2 (it saves a buy and skips the color rule). This is the weak version of Cash In.
 4. I · Pawn: per round number, +1 follower or +2 white (you pick the mix). Round I: 1 follower or 2 white (Rush gives 2). Round III: up to 3 followers or 6 white (Rush gives 6). (Was "+2 white, and sell up to 1 follower per round number for 2 white each", whose sale was dead in round I.)
 5. II · Sell High: sell up to 2 loose followers for 3 white each. Round II about +3 (Steal is 3). Late about +4.
-6. II · Barter: recruit a face-up member for half its cost (round up), paid in loose followers. On top of your buy. At the 4→3 rate, a cost-8 member for 4 followers is about +1.3 followers of value, plus the member's ability and an extra recruit; the plain high-follower members (Patron, worth 5 for 6) net +2. (Replaces Cash In: "+1 follower, then trade any of your white for followers, 1 for 1".)
+6. II · Dividend: +1 white per loose follower you have. Round II with 3–5 loose followers about +3 to +5 (Windfall 4.9); late, more for whoever bought big. Not measured yet. (Replaces Barter, cut by Cory, which replaced Cash In.)
 7. III · Boom: trade all your resources for followers, 1 for 1 (you may keep your white). Greedy bots cash out about 11. That's par for the 6-for-6 buy, but it saves 2 buys and ignores colors: about +6 (Strike: +8 to 12 gold).
 
 Members (cost = white + any)
@@ -77,7 +77,7 @@ Members (cost = white + any)
 
 ## Extra ideas (one line each, fill-ins)
 23. I · Tip Jar: +3 white, and +1 white to a player you choose.
-24. (Retired: the name Barter now belongs to the ring-II action, item 6.)
+24. (Retired: Barter, cut by Cory on 2026-10-14.)
 31. Pawn pile (the critic's bolder idea): sold followers sit in a visible pile on your board. Buy them back any time for 3 white each; whatever's left at game end is lost. Closes any sell/buy loop by itself.
 32. Moving price: each sale this round drops White's sale price by 1 (a Power Grid-style track), so the market itself stops a loop.
 25. II · Market Day: every player may sell 1 follower for 3 white; you get +1 white per seller.

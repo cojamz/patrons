@@ -253,7 +253,7 @@ export function cachedPreview(state, pid, q, i) {
 let worker = null, workerGen = 0, workerState = null, lastAnswer = 0;
 const pending = new Map(); // gen → state
 const inflight = new Set(); // requests posted to the worker: { state, pid, keys, t }
-const WATCHDOG_MS = 2500;
+const WATCHDOG_MS = 4000;
 const notify = (state, pid, key) => { for (const fn of listeners) fn(state, pid, key); };
 /** Work the keys out here, one at a time and a moment apart, so a hover never waits on a whole batch. */
 function onMainThread(state, pid, keys) {
@@ -323,7 +323,7 @@ export function requestPreviews(state, pid, keys) {
   onMainThread(state, pid, todo);
 }
 /** For tests: forget the worker (null: try again; false: there is none). */
-export const _setPreviewWorker = w => { worker = w; };
+export const _setPreviewWorker = w => { worker = w; lastAnswer = 0; inflight.clear(); if (w) { w.onerror = workerFailed; w.onmessageerror = workerFailed; } };
 /** A preview already computed for this state, or undefined (never computes: a hover must not wait). */
 export function peekPreview(state, pid, q, i) {
   const m = previews.get(state);

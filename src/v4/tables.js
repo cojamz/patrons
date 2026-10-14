@@ -1,7 +1,8 @@
-// Tables: which 4 spheres sit on the wheel. Classic (Gold, Red and the plain Blue/Green), random 4, or a custom pick.
-import { allQuadrantIds, quadrant, DEFAULT_QUADRANTS } from '../engine/v4/index.js';
+// Tables: which 4 spheres sit on the wheel. Classic (Gold, Red, Blue and Green, all real spheres), random 4, or a custom pick.
+// Classic was Gold, Red and the plain stand-in Blue/Green until Cory moved the friends build to the real ones (2026-10-14).
+import { allQuadrantIds, quadrant } from '../engine/v4/index.js';
 
-export const CLASSIC = [...DEFAULT_QUADRANTS];
+export const CLASSIC = ['gold', 'red', 'market', 'echo'];
 const ALIAS = { magenta: 'thieves', white: 'trading' };
 
 /** Every sphere a table can use, real ones first, the plain stand-ins last. */

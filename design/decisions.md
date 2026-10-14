@@ -355,3 +355,8 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - (Cory) Night Owl's text was "extremely confusing"; reworded to say plainly what happens.
 - ✅ (Cory) Action names batch 1 (Gold, Red, Magenta) "looks good": Claude's picks applied. Batch 2 (the other spheres) is drafted and applied the same way, pending his grade.
 - ✅ (Cory) Member renames (people or groups only): "I trust you on this for now". Claude's picks applied.
+- ✅ (Cory) The 10-follower buy is unlimited, and nothing ends the game early: "the turns are the end game clock. there should basically be unlimited number of the 10 follower buys." The game always ends after round III. The 8→6 buy keeps its limit (2 per player). This replaces both the once-per-player-per-round limit above and the stock of 4 whose last buy ended the game after that round.
+- ✅ (Cory) Barter is cut ("I don't like that").
+- (Claude, under Cory's go-with-your-gut) Dividend fills Barter's slot: '+1 white per loose follower you have.' (White, ring II). Your loose followers pay out without being sold. Bots value it at the white it gives. Not measured yet.
+- ✅ (Cory) The friends build's default table (Classic) is Gold, Red, Blue and Green as real spheres: Blue = the shop sphere (market), Green = the copy sphere (echo). The plain stand-ins stay pickable under Custom as "(plain)".
+- ✅ (Cory) The stable friends link is a second, never-merged PR from a frozen release branch (its own Netlify deploy preview), updated only when a release is cut; the working PR keeps redeploying on every push.

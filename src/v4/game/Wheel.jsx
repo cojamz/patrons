@@ -5,7 +5,7 @@
 // fresh placement wears a dashed ring. Each quadrant's contest sits on a rim plaque (rule, prize, leader), with the
 // standings on hover/tap. Hover or focus (mouse) or a first tap (touch) shows a space's card; on touch, placing takes
 // a second tap.
-import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { memo, useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { quadrant, roman, RING_VALUE } from '../../engine/v4/index.js';
 import { playerColor, standings, seatEmoji } from '../format.js';
 import { Minion } from '../art/Leader.jsx';
@@ -66,7 +66,7 @@ export function spaceGeometry(state) {
  * @param {{ state:any, legal:Map<string,string>, onPick:(id:string)=>void, onDenied?:(info:object, el:Element)=>void,
  *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void }} props
  */
-export default function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null }) {
+function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null }) {
   const [rot, setRot] = useState(() => -90 * facing);
   const [peek, setPeek] = useState(null); // { key, pinned }
   // the space card itself is UI-B's hover layer: the wheel only says which space is under the pointer (or pinned)
@@ -418,3 +418,6 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     </div>
   );
 }
+
+// the board re-renders only when what it shows changes (online room chatter that doesn't touch the table doesn't)
+export default memo(Wheel);

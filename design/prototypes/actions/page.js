@@ -186,10 +186,10 @@
     }).join('');
     document.body.innerHTML = `
       <header><b>${O.n}</b><div><h1>${O.title}</h1><p>${O.blurb}</p></div></header>
-      <section class="zoom"><div class="clip"><div class="zoomer" style="zoom:2;left:${-(HALF - 165)}px;top:${-(HALF - 12)}px">${wheelHTML(O)}</div></div><p class="cap">Gold quadrant at 2×, round I. P3’s frog is on Golden Years; the ring II and III spaces are not open yet.</p></section>
+      <section class="zoom"><div class="clip"><div class="zoomer" style="left:${350 - 2 * HALF}px;top:${(O.zoomTop ?? 26) - 2 * HALF}px"><div style="zoom:2">${wheelHTML(O)}</div></div></div><p class="cap">Gold quadrant at 2×, round I. P3’s frog is on Golden Years; the ring II and III spaces are not open yet.</p></section>
       <aside>
         <h2>Hover</h2>
-        <div class="peek"><div class="pk-head"><b>${hover.name}</b>${hover.proposal ? `<em>proposed name · was ${hover.was}</em>` : ''}</div><p>${hover.text}</p><div class="pk-get"><small>YOU’D GET</small><span>${O.hoverGet || '+3 ● now, then you give 1 ● to a rival you pick'}</span></div></div>
+        <div class="peek"><div class="pk-head"><b>${hover.name}</b>${hover.proposal ? `<em>proposed name · was ${hover.was}</em>` : ''}</div><p>${hover.text}</p><div class="pk-get"><small>YOU’D GET</small><span>${O.hoverGet || `+3 ${res('gold', 14)} now, then 1 ${res('gold', 14)} to a rival you pick`}</span></div></div>
         <h2>The same language on other verbs <small>(2×)</small></h2>
         <div class="vocab">${vocabHTML}</div>
         <p class="note">* Gold and Red names are proposals from design/eval/action-names-calibration.md (not yet graded). Blue and Green keep today’s names.</p>
@@ -215,6 +215,7 @@
   .closeup .peek em{font-size:12px;color:#8a7760}
   .closeup .peek p{margin:6px 0 8px;font-size:15px;line-height:1.3}
   .closeup .peek .pk-get{border-top:1px solid rgba(42,31,23,.15);padding-top:6px;display:flex;flex-direction:column;gap:2px;font-size:14px}
+  .closeup .peek .pk-get svg{display:inline-block;vertical-align:-2px}
   .closeup .peek .pk-get small{font-size:10.5px;letter-spacing:.14em;color:#8a7760}
   .closeup .vocab{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 14px}
   .closeup .voc{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px}

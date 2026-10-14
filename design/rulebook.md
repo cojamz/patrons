@@ -5,7 +5,7 @@ You lead a cult. Send your minions to the wheel, gather resources, recruit **mem
 ## What you have
 - **Your cult leader** is the robed figure that stands for you. It wears your emoji, and your **minions** are little copies of that emoji.
 - **Minions** are your workers. You get 3 in round I, 4 in round II and 5 in round III. The ones you haven't sent yet wait by your leader.
-- **Followers** are your score, shown by a little-person mark. You start with 1 (yourself). Every member you recruit is worth followers too: usually 1, sometimes more (the number beside the mark on its card). Some members win you more followers during play. Followers you bought or won, not the ones your members are worth (and never yourself), are your **loose followers**: only they can be sold or spent.
+- **Followers** are your score, shown by a little-person mark. You start with 1 (yourself). Every member you recruit is worth followers too: usually 1, sometimes more (the number beside the mark on its card). Some members win you more followers during play. Followers you bought or won, not the ones your members are worth (and never yourself), are your **loose followers**: only they can be sold or taken away.
 - **Resources** come in four colors, one per quadrant on the table (for example gold, red, blue and green). In costs and card text each color is a small colored symbol; the ringed symbol means "any resources".
 
 ## Setup

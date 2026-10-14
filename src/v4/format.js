@@ -1,5 +1,5 @@
 // Display helpers. No rules here: everything is read off engine state.
-import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds } from '../engine/v4/index.js';
+import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, memberCount, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds } from '../engine/v4/index.js';
 import { contextFor } from '../engine/v4/core.js';
 import { defaultEmoji } from './art/emojis.js';
 

@@ -1,13 +1,19 @@
 // The game table. Renders engine state from a session and turns clicks into { player, option } moves.
 // What's clickable is exactly state.pending.options, and only for seats this client controls.
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { followers, tierLeft } from '../../engine/v4/index.js';
-import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote, turnStory } from '../format.js';
+import { finalWinners, isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote, turnStory } from '../format.js';
 import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
 import ShopCards from './ShopCards.jsx';
-import CultSeat from './CultSeat.jsx';
-import { useHoverCards, HoverCardLayer } from './HoverCards.jsx';
+import CultSeatRaw from './CultSeat.jsx';
+// online room updates that don't touch the table don't re-render the chairs
+const CultSeat = memo(CultSeatRaw);
+const NO_SLOTS = new Map();
+const NO_SEATS = [];
+const NO_OPTIONS = () => null;
+import { useHoverCards, HoverCardLayer, usePreviewWarmup } from './HoverCards.jsx';
+import { replayIntro } from '../Intro.jsx';
 import Chronicle from './Chronicle.jsx';
 import { cardDef } from '../../engine/v4/index.js';
 import Results from './Results.jsx';
@@ -179,6 +185,7 @@ function Menu({ onRules, onLog, onLeave, getState }) {
       {open && (
         <div className="menu-list" role="menu">
           <button type="button" role="menuitem" className="btn ghost rules-btn" onClick={pick(onRules)}>How to play</button>
+          <button type="button" role="menuitem" className="btn ghost intro-btn" onClick={pick(replayIntro)}>How it works (20s)</button>
           <button type="button" role="menuitem" className="btn ghost log-btn" onClick={pick(onLog)}>The log</button>
           <button type="button" role="menuitem" className="btn ghost record-btn" data-copy-record onClick={copyRecord}
             title="Copies this game, move by move, so a problem can be replayed exactly">{copied === 'copied' ? 'Copied ✓' : 'Copy game record'}</button>
@@ -271,7 +278,7 @@ const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults }) {
   const [live0, moment, dismissMoment] = useTable(session, pace ?? RIVAL_DWELL_MS);
   const state = moment && moment.board ? moment.board : live0;
-  const mySeats = session.mySeats || [];
+  const mySeats = session.mySeats || NO_SEATS;
   const pend = state.pending;
   const mine = !!(pend && !state.over && !moment && mySeats.includes(pend.player));
   const [facing, setFacing] = useState(0);
@@ -367,6 +374,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const needHandoff = humansHere && mine && ready !== pend.player;
   // Whose strip sits in the header: the person at the device.
   const me = mine ? pend.player : humansHere ? (ready ?? mySeats[0]) : mySeats[0];
+  // the spaces you could take, worked out in the background as soon as it's your move (the shop's "✓ after X")
+  usePreviewWarmup(state, mine && !needHandoff ? pend.player : null);
 
   // What just happened, made physical: a rival's move turns the wheel to face it, a worker travels from its
   // owner to the space, a recruited card flies from the shop to its new owner.
@@ -601,7 +610,12 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (el && el.animate && motionOK()) el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(-2px)' }, { transform: 'translateX(0)' }], { duration: 260, easing: 'ease-out' });
   }, [state, pend, moment, mySeats, needHandoff, say, wide]);
 
-  const live = needHandoff ? () => null : optionFor;
+  const live = needHandoff ? NO_OPTIONS : optionFor;
+  // the shop is memoized (UI-B): stable handlers that always call the latest onPick / onDenied
+  const handlers = useRef(null);
+  handlers.current = { onPick, onDenied };
+  const shopPick = useCallback((...a) => handlers.current.onPick(...a), []);
+  const shopDenied = useCallback((...a) => handlers.current.onDenied(...a), []);
   // A modal takes the stage: sweep any flying ghosts so nothing floats over it.
   const modalOpen = !!(moment || rules || leaving || logOpen || (needHandoff && !moment) || (mine && pend && pend.kind === 'pay'));
   useEffect(() => { if (modalOpen) clearFlights(0); }, [modalOpen]);
@@ -689,7 +703,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} />
           <div className="side over-cults" aria-label="The cults at the end">
             {(state.ranking || state.players.map(p => p.id)).map((pid, k) => {
-              const won = followers(state, state.players[pid]) === Math.max(...state.players.map(p => followers(state, p)));
+              const won = finalWinners(state).includes(pid); // the rule: most followers, members break a tie
               return (
                 <div key={pid} className={`over-seat${won ? ' won' : ''}`} data-pid={pid}>
                   <span className="rank num" aria-hidden="true">{k + 1}</span>
@@ -704,7 +718,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       ) : (
         <>
           <section className="lt-wheel" data-region="wheel">
-            <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+            <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
@@ -717,7 +731,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             </section>
           ))}
           <section className="lt-shop" data-region="shop" aria-label="Shop">
-            <ShopCards state={state} me={me} mySeats={yours ? mySeats : []} optionFor={live} onPick={onPick} onDenied={onDenied} phase={phase} hover={hover} />
+            <ShopCards state={state} me={me} mySeats={yours ? mySeats : NO_SEATS} optionFor={live} onPick={shopPick} onDenied={shopDenied} phase={phase} hover={hover} />
           </section>
         </>
       )}
