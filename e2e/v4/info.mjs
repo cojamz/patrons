@@ -70,8 +70,10 @@ async function audit(page, step) {
 
 // (h) the deck's number against the engine: read the screen and the saved game in one go, when both show the same move
 async function deckCheck(page) {
+  // bots keep playing and the screen steps through their moves a beat behind, so wait (up to 30s) for a moment the
+  // screen has caught up with the engine: at the latest when it's your move again and everything stops
   let last = null;
-  for (let t = 0; t < 60; t++) {
+  for (let t = 0; t < 300; t++) {
     const r = await page.evaluate(() => {
       const g = document.querySelector('.app.game'), d = document.querySelector('[data-deck]');
       let save = null;

@@ -79,8 +79,10 @@ export function DeckCard({ state }) {
 }
 
 /**
- * Deals the row: a card that wasn't face up a moment ago came off the top of the deck, so it flips there and slides to
- * its slot. Only forward moves animate (never on the first paint, an undo or a new game); reduced motion: no motion.
+ * Deals the row: a card that wasn't face up a moment ago came off the top of the deck, so a picture of it flips there
+ * and slides to its slot, and the real card shows once it lands. The real card never moves (its layout box stays in
+ * its slot), so the table's own shop snapshot (GameScreen: recruited cards flying, the row sliding) stays true.
+ * Only forward moves animate (never on the first paint, an undo or a new game); reduced motion: no motion.
  */
 export function useDeal(rowRef, deckRef, state) {
   const prev = useRef(null);
@@ -97,20 +99,32 @@ export function useDeal(rowRef, deckRef, state) {
     if (!a.width) return;
     dealt.forEach((uid, k) => {
       const el = row.querySelector(`.lt-card[data-uid="${uid}"]`);
-      if (!el || !el.animate) return;
+      if (!el) return;
       const b = el.getBoundingClientRect();
       if (!b.width) return;
       const dx = a.left + a.width / 2 - (b.left + b.width / 2), dy = a.top + a.height / 2 - (b.top + b.height / 2);
       const s = `scale(${(a.width / b.width).toFixed(3)},${(a.height / b.height).toFixed(3)})`;
-      el.style.zIndex = '3';
-      const anim = el.animate([
+      const ghost = el.cloneNode(true);
+      ghost.removeAttribute('data-option');
+      ghost.removeAttribute('data-uid');
+      ghost.setAttribute('aria-hidden', 'true');
+      ghost.setAttribute('tabindex', '-1');
+      ghost.classList.add('lt-deal', 'ghost-layer');
+      ghost.dataset.born = String(Date.now());
+      Object.assign(ghost.style, { position: 'fixed', left: `${b.left}px`, top: `${b.top}px`, width: `${b.width}px`, height: `${b.height}px`, margin: '0', zIndex: '13', pointerEvents: 'none' });
+      document.body.appendChild(ghost);
+      const duration = 560, delay = k * 70;
+      const anim = ghost.animate([
         { transform: `translate(${dx}px,${dy}px) ${s} perspective(500px) rotateY(88deg)` },
         { transform: `translate(${dx}px,${dy}px) ${s} perspective(500px) rotateY(0deg)`, offset: 0.32 },
         { transform: 'translate(0,0) scale(1,1) perspective(500px) rotateY(0deg)' },
-      ], { duration: 560, delay: k * 70, easing: 'cubic-bezier(.3,.7,.4,1)', fill: 'backwards' });
-      const done = () => { el.style.zIndex = ''; };
+      ], { duration, delay, easing: 'cubic-bezier(.3,.7,.4,1)', fill: 'both' });
+      const done = () => ghost.remove();
       anim.onfinish = done;
       anim.oncancel = done;
+      setTimeout(done, duration + delay + 400);
+      // the card itself waits in its slot, unseen, until the picture lands on it
+      el.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: duration + delay + 20 });
       if (typeof window !== 'undefined') window.__patronsDeals = (window.__patronsDeals || 0) + 1;
     });
   }, [state.shop]); // eslint-disable-line react-hooks/exhaustive-deps
