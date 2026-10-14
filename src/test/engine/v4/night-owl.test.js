@@ -5,7 +5,7 @@
 // spare (the glossary's extra-turn rule). Price: design/eval/purple-members.md (member-value sim, 8+2).
 import { describe, it, expect } from 'vitest';
 import { defById } from '../../../engine/v4/content/index.js';
-import { take, move } from './helpers.js';
+import { take, move, uidOf } from './helpers.js';
 import { sceneQ, linesNaming, spaceOf } from './cards-helpers.js';
 
 const Q = ['gold', 'red', 'purple', 'green'];
@@ -52,21 +52,17 @@ describe('Night Owl', () => {
   });
 
   it('fires again in the next round (once per round, not once per game)', () => {
-    let s = take(sc({ round: 2, left: 1, members: [['purple.nightowl']], queue: turns(0) }), 'Hourly');
-    ({ s } = nextPlacer(s));
-    s = take(s, 'Wind-up');
-    expect(owl(s)).toHaveLength(1);
-    // round III, the same card
-    s.round = 3; s.slots = {}; s.players[0].left = 1;
-    s = take(nextPlacer(Object.assign(s, { queue: turns(0, 1) }) && s).s.pending ? s : s, 'Hourly');
-    expect(owl(s)).toHaveLength(2);
+    let s = sc({ round: 3, left: 1, members: [['purple.nightowl']], queue: turns(0, 1) });
+    s.cards[uidOf(s, 'purple.nightowl', 0)].owlRound = 2; // it fired last round
+    s = take(s, 'Hourly');
+    expect(owl(s)).toEqual(["P1's Night Owl: P1 takes an extra turn."]);
     expect(s.players[0].left).toBe(1);
   });
 
   it('gives no extra turn when the board has no space to spare, says so, and does not try again that round', () => {
     // round I, two players: every space taken but two, and P2 still has a turn to come
     const probe = sc({});
-    const free = [spaceOf(probe, 'Hourly'), spaceOf(probe, 'Mine')];
+    const free = [spaceOf(probe, 'Hourly'), spaceOf(probe, 'Rush')];
     const slots = Object.fromEntries([0, 1, 2, 3].flatMap(q => [0, 1, 2].map(i => `${q}-${i}`)).filter(k => !free.includes(k)).map(k => [k, 1]));
     let s = take(sc({ round: 1, left: 1, slots, members: [['purple.nightowl']], queue: turns(0, 1) }), 'Hourly');
     expect(s.players[0].left).toBe(0);
