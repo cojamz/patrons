@@ -385,3 +385,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - (Cory) Beat 1 of the new intro: "that's a great gif". The intro's emoji must not be clearly cult-related: your cult wears your own chosen emoji, else a cheerful default (pizza or cactus); rivals cheerful too (no ghost, skull, pumpkin, wizard).
 - (Cory) Never mind the intro emoji: the ghost on the example leader is fine.
 - ✅ (Cory) The example cult in the intro wears pizza or cactus (he likes them "a lot"), if easy: one line in the intro's cast.
+- (Cory) Intro beat 3: the taking-action part isn't clear. Rework: the camera comes to the wheel, one minion lands on one space, the space shows its gain big ("+3 gold"), those glyphs fly one by one into the cult's pile, a second quicker action repeats the pattern, then back to the leader.

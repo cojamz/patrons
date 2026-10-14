@@ -223,7 +223,7 @@ try {
     await page.click('[data-home="resume"]');
     await page.waitForTimeout(400);
     { const skip = await page.$('[data-intro-skip]'); if (skip) await skip.click(); }
-    await page.waitForSelector('.lt[data-yours="1"][data-phase="place"] .lt-wheel .slot.lit', { timeout: 15000 });
+    await page.waitForSelector('.lt[data-yours="1"][data-phase="place"] .lt-wheel .slot[data-option]', { timeout: 15000 });
     await page.waitForTimeout(700);
     const look = await page.$eval('.lt-wheel .wheel-wrap', e => e.dataset.spaces);
     if (look !== pass.look) fail(`the wheel wears "${look}"`, tag);
