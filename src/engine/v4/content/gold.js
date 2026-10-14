@@ -1,4 +1,5 @@
 // Gold: hoard it. Most gold at round end takes the ring's followers.
+import { defById } from './index.js';
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 
 export default {
@@ -53,6 +54,8 @@ export default {
       const t = ctx.player(value);
       ctx.gain(t, 'gold', 1);
       ctx.log(`${p.name} gave 1 gold to ${t.name}.`);
+      // the gold is a gift (Cory): the receiver's gift hooks fire (Silver's Guest: +1 more)
+      for (const c of ctx.membersOf(t)) for (const d of [c.def, c.copy ? defById(c.copy) : null]) if (d?.onGiven) d.onGiven(ctx, t, c, p, 'gold', 1);
     },
     steal(ctx, p, value, data) {
       stealStep(ctx, p, { left: data.left - 1, picked: { ...data.picked, [value]: (data.picked[value] || 0) + 1 } });
@@ -120,6 +123,11 @@ export default {
       onRoundEnd(ctx, owner, card) {
         const x = card.invested || 0;
         if (x) { owner.res.gold += 2 * x; card.invested = 0; ctx.log(`${owner.name}'s Investor returns ${2 * x} gold.`); }
+      },
+      // stolen, swapped, released or traded in: the gold set aside goes back to its owner, not doubled (Cory)
+      onLeave(ctx, owner, card) {
+        const x = card.invested || 0;
+        if (x) { owner.res.gold += x; card.invested = 0; ctx.log(`${owner.name}'s Investor leaves: ${x} gold set aside comes back.`); }
       },
     }),
     m('jackpot', 'Jackpot', 6, 4, 'Once per game: gain gold equal to the richest rival’s gold.', {

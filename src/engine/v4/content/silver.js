@@ -5,8 +5,7 @@
 //
 // "Give" is Silver's verb: anything a Silver space or member hands to another player. Gifts fire two
 // module-level hooks on members: onGive (the giver's members) and onGiven (the receiver's members).
-// Engine note (see design/spheres/silver.md): Gold's Joint Venture also gives, but core.js has no gift
-// signal, so Guest doesn't fire on it. A `from` option on ctx.gain would fix that.
+// Gold's Joint Venture also gives (Cory): gold.js fires the receiver's onGiven hooks itself.
 import { defById } from './index.js';
 
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });

@@ -156,9 +156,9 @@ export default {
     m('farmer', 'Farmer', 4, 2, 'Whenever an action gains you yellow, +1 more.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === Y && g.n > 0) owner.res[Y] += 1; },
     }),
-    m('weaver', 'Weaver', 4, 2, 'Whenever you buy 6 followers, +1 of each color.', {
+    m('weaver', 'Weaver', 4, 2, 'Whenever you buy 6 or more followers, +1 of each color.', {
       onBuyFollowers(ctx, owner, card, buyer, tier) {
-        if (buyer === owner && tier?.get === 6) eachColor(ctx, owner, 1);
+        if (buyer === owner && tier?.get >= 6) eachColor(ctx, owner, 1);
       },
     }),
     m('explorer', 'Explorer', 4, 4, 'Whenever you take a space outside Yellow, +1 yellow.', {

@@ -134,7 +134,7 @@ const INCOME_SCALE = 0.4;
 // member counts a member keeps paying into.
 const K_ABILITY = 2;
 // How many ways to pay a buy are compared (the engine lists the contest-safe ones first).
-const PAY_WAYS = 10;
+const PAY_WAYS = 4; // 4 vs 10: same win rate (200 games), ~20% faster, far lower worst case
 // Extra ways to pay compared: the ones that spend only what's over a contest lead.
 const SURPLUS_WAYS = 3;
 /** Per color, what a player can spend without giving up a lead in a contest that counts it: all of it where they

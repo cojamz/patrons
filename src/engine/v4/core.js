@@ -745,12 +745,19 @@ export const canRelease = (state, p) => !!state.rules?.release && p.releasedRoun
 // The card goes to the bottom of the pile, wiped clean (a released Doppelganger forgets what it copied).
 function release(state, p, uid) {
   const def = cardDef(state, uid);
+  cardLeaves(state, p, uid);
   p.members.splice(p.members.indexOf(uid), 1);
   state.cards[uid] = { uid, def: state.cards[uid].def };
   state.pile.push(uid);
   p.releasedRound = state.round;
   log(state, `${p.name} released ${def.name} to the bottom of the pile, for ${def.s + def.w} in any colors.`);
   return def.s + def.w;
+}
+// A member leaves its owner (stolen, swapped, released, traded in): its onLeave hooks settle what it held for them
+// (Investor's set-aside gold goes back to the owner, not doubled).
+function cardLeaves(state, p, uid) {
+  const card = state.cards[uid], ctx = ctxFor(state);
+  for (const def of effectiveDefs(card)) if (def.onLeave) def.onLeave(ctx, p, wrap(state, card));
 }
 /** This round's turn order (its first pass). */
 const turnOrder = state => (state.order.length ? state.order.slice(0, state.players.length) : state.players.map(p => p.id));
@@ -785,6 +792,7 @@ function ctxFor(state) {
     gain: (p, color, n, opts) => gain(state, p, color, n, opts),
     recruit: (p, uid, opts) => recruit(state, p, uid, opts),
     log: text => log(state, text),
+    cardLeaves: (p, uid) => cardLeaves(state, p, uid),
     /** Run fn on behalf of owner's member `name` (a hook content code calls itself, e.g. Choir reacting to a copy):
      *  whatever it changes and doesn't log is logged under that name, like the engine's own member hooks. */
     asMember(owner, name, fn) {
@@ -801,6 +809,7 @@ function ctxFor(state) {
       refill(state);
     },
     moveMember(uid, from, to) {
+      cardLeaves(state, from, uid);
       from.members.splice(from.members.indexOf(uid), 1);
       to.members.push(uid);
     },

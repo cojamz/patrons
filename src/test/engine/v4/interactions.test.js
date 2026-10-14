@@ -260,9 +260,9 @@ describe('Silver gifts with Guest and Joint Venture', () => {
     expect(R(s, 1).silver).toBe(7);
     expect(R(s, 0).silver).toBe(4);
   });
-  it('DESIGN QUESTION: Joint Venture’s gold to a Guest isn’t a gift today (no +1)', () => {
+  it('Joint Venture’s gold is a gift: the Guest gets 1 more', () => {
     const s = go(scene({ quads: Q, members: [[], ['silver.guest']] }), 'Joint Venture', 'player:1');
-    expect(R(s, 1).gold).toBe(1);
+    expect(R(s, 1).gold).toBe(2);
   });
 });
 
@@ -323,14 +323,15 @@ describe('Magenta takes members that carry state', () => {
     expect(s.cards[uidOf(s, 'gold.midas', 0)].on).toBe(false);
     expect(s.pending.options.find(o => o.kind === 'toggle').label).toContain('switch on');
   });
-  it('DESIGN QUESTION: Heist on an Investor carries the gold set aside with it (the thief gets it back doubled)', () => {
+  it('Heist on an Investor takes the card; the gold set aside goes back to the victim, not doubled', () => {
     let s = scene({ quads: Q, round: 3, members: [[], ['gold.investor']] });
     s.cards[uidOf(s, 'gold.investor', 1)].invested = 4;
     s = move(take(s, 'Heist'), `card:${uidOf(s, 'gold.investor', 1)}`);
     s = move(s, s.pending.options[0].id);
     s = resume(Object.assign(s, { queue: [{ t: 'endRound' }] }));
-    expect(R(s, 0).gold).toBe(8);
-    expect(R(s, 1).gold).toBe(0);
+    expect(defs(s, 0)).toContain('gold.investor');
+    expect(R(s, 0).gold).toBe(0);
+    expect(R(s, 1).gold).toBe(4);
   });
   it('Double Agent swaps for a Jackpot that still works for its new owner', () => {
     let s = scene({ quads: Q, round: 3, res: [{ gold: 9, red: 9, magenta: 9, blue: 9 }, { gold: 7 }], members: [[], ['gold.jackpot']], shop: ['thieves.doubleagent', ...SHOP.slice(1)] });
@@ -374,14 +375,14 @@ describe('White sells followers that contests and bonuses counted', () => {
     const s = scene({ quads: Q, bonus: [1], members: [['trading.lender']], queue: [{ t: 'finish' }] });
     expect(s.players[0].bonus).toBe(0);
   });
-  it('DESIGN QUESTION: Weaver and Extortionist only fire on the 6-follower buy, not the 10', () => {
+  it('Weaver and Extortionist fire on the 10-follower buy too (6 or more)', () => {
     const Y = ['gold', 'red', 'thieves', 'yellow'];
     let s = scene({ quads: Y, turns: [1, 0], res: [{}, { gold: 4, red: 2, magenta: 2, yellow: 2 }], members: [['thieves.extortionist'], ['yellow.weaver']] });
     s = take(s, 'Rush');
     s = move(s, 'tier:top');
     expect(s.players[1].bonus).toBe(10);
-    expect(R(s, 0).magenta).toBe(0); // no Extortionist
-    expect(R(s, 1)).toMatchObject({ red: 0, yellow: 0 }); // no Weaver
+    expect(R(s, 0).magenta).toBe(2); // Extortionist took 2
+    expect(R(s, 1).red + R(s, 1).yellow + R(s, 1).gold + R(s, 1).magenta).toBe(2); // Weaver's +4, less Extortionist's 2
   });
 });
 
@@ -453,7 +454,7 @@ describe('member colors across spheres', () => {
 describe('Release on members that carry state', () => {
   const Q = ['gold', 'red', 'thieves', 'market'];
   const buyStep = p => [{ t: 'buy', p }, { t: 'endRound' }];
-  it('DESIGN QUESTION: releasing an Investor forfeits the gold set aside (nothing comes back at round end)', () => {
+  it('releasing an Investor gives back the gold set aside, not doubled', () => {
     let s = scene({ quads: Q, round: 2, queue: buyStep(0), members: [['gold.investor']] });
     const u = uidOf(s, 'gold.investor', 0);
     s.cards[u].invested = 4;
@@ -461,7 +462,7 @@ describe('Release on members that carry state', () => {
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options.find(o => o.id === 'all:red')?.id ?? s.pending.options[0].id);
     s = pass(s);
     expect(s.cards[u]).toEqual({ uid: u, def: 'gold.investor' }); // clean in the pile
-    expect(R(s, 0).gold).toBe(0);
+    expect(R(s, 0).gold).toBe(4);
   });
   it('a released Doppelganger goes back clean and stops copying', () => {
     let s = scene({ quads: Q, round: 2, queue: buyStep(0), members: [['red.doppel', 'gold.midas']], copies: { 0: { 'red.doppel': 'gold.midas' } } });

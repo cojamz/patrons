@@ -198,6 +198,7 @@ const market = {
       if (uid === null) return;
       ctx.card(data.uid).used = true;
       const c = ctx.card(uid);
+      ctx.cardLeaves(p, uid);
       p.members.splice(p.members.indexOf(uid), 1);
       ctx.state.pile.push(uid);
       // back in the pile it's a fresh card: no copy, used flag, switch or gold set aside from its old owner
