@@ -48,7 +48,7 @@ Five agents were running in the old session. They don't carry over, but their wo
    - Fix.
    - Send Cory a link where he can pick any 4 spheres.
 
-## Live roster (18:30 UTC, session 017rw3aQa9iJEjdvvwQLY84z)
-Running: UI agent (setup shop visible → reload bug → Undo pill → contest strip → pay redesign → turn narration → panel 7); bots (levels, then 4-thinker tables); card verifier B (market/thieves/trading/echo + Hideout ruling + Pawn log); fair-price screen (every card); blind UI critic round 1 (frozen 49c94c3); engineering review (blind); Relay replacements; Purple rework; White rework.
-Done: costs/tiers tuning (design/eval/top-tier.md), cross-sphere fuzz, rule-benders, card verifier A (design/eval/card-ledger-a.md), design research (design/eval/ui-research.md, .claude/agents/ui-critic.md), board mocks (design/prototypes/board-readability/).
-Waiting on Cory: board mock pick (A/B), what bugs him about Green, swap-space shape.
+## Live roster (18:55 UTC): ALL AGENTS PAUSED by the account usage limit (resets 21:40 UTC)
+Their partial work is committed (cc788f7). A send_later at 21:42 UTC resumes each with SendMessage (agent ids in that message), staggered: UI-A, UI-B, hardening, multiplayer, test updates first; then bots, fair-price, Purple, White, Green, UX solver, dead-window audit, Relay replacements, pixel art, action names, visionary designer, board game enthusiast.
+If that session is gone, relaunch each from its brief: design/todo.md (friends-build milestone), design/eval/cory-notes-2026-10-14.md (sections 1–6), design/eval/ui-critic-round1.md, design/eval/engineering-review.md.
+
