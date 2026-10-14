@@ -1,5 +1,5 @@
 // @vitest-environment node
-// Night Owl (Purple, Relay's slot): "When you place your last minion of a round, take an extra turn right after this one."
+// Night Owl (Purple, Relay's slot): "Each round, after your last minion, place one more and buy again."
 // Through real moves: it fires on the last minion only, gives exactly one extra turn (before the next player), never
 // fires twice in a round (its own extra turn is a "last minion" too), and gives nothing when the board has no space to
 // spare (the glossary's extra-turn rule). Price: design/eval/purple-members.md (member-value sim, 8+2).
@@ -23,7 +23,7 @@ describe('Night Owl', () => {
   it('is printed as decided: 8 purple + 2 any, worth 1 follower, the house text', () => {
     const d = defById('purple.nightowl');
     expect([d.s, d.w, d.f]).toEqual([8, 2, 1]);
-    expect(d.text).toBe('When you place your last minion of a round, take an extra turn right after this one.');
+    expect(d.text).toBe('Each round, after your last minion, place one more and buy again.');
   });
 
   it('does nothing on a minion that is not your last', () => {

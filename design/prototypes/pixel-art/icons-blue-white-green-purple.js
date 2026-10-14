@@ -2579,7 +2579,7 @@
         '........................',
       ] },
     { id: 'purple.nightowl', name: 'Night Owl', sphere: 'purple', kind: 'member',
-      text: 'When you place your last minion of a round, take an extra turn right after this one.',
+      text: 'Each round, after your last minion, place one more and buy again.',
       idea: 'a night watcher in a knit cap, an owl perched on the raised fist',
       rows: [
         '........................',
