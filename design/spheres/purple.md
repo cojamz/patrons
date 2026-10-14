@@ -23,7 +23,7 @@ In this game an extra turn is one more placement plus one more buy. So a space t
 14. Apprentice (2+2): whenever you take an extra turn, your next member costs 4 less.
 15. Overseer (4+2): whenever a rival takes an extra turn, gain half your purple (up to 4).
 16. Double Time (6+2): extra turns you pay purple for cost you half (rounded up).
-17. Bookkeeper (4+2, changed): when you place your last worker of a round, +1 purple per worker you have on the board.
+17. Bookkeeper (4+2, changed): when you place your last worker of a round, +1 purple per 2 workers you have on the board.
 18. Clockmaker (2+2): now and at round start, +1 purple per 2 purple you have.
 19. Lamplighter (6+2): now and at round start, +1 purple per worker you get this round (3 / 4 / 5).
 20. (open) Relay was cut by Cory. Another agent is pricing 3 replacements, so Purple has 14 members for now.
@@ -60,7 +60,11 @@ Main instrument: easy bots, 300 games at 4 players, on seeded random tables of P
   - Rally without the "plus 1" (the critic's version): 28%, level with Strike. But at 4–7 purple it hands back one worker for one, which is exactly Cory's complaint. With the plus 1: 37%.
   - "Most workers, ties score nothing" with the new spaces: the ring paid nobody in 100% / 69% / 40% of rounds.
 - Dead air: one player placed 4 or more times in a row in 57% of games (3% today). The longest run per game averages 3.6 (2.35 today). That's the burst; watch how it feels.
-- NORMALBOTS
+- Normal bots, with the fix that lets them see extra turns (bots.js, committed 2026-10-14), 30 games each on the same tables:
+  - 1.3 extra turns per game (0.5 on today's rules).
+  - Purple's share of placements 26% (22%).
+  - Runs of 4+ placements in a row in 20% of games (0%).
+  - Too few games for win rates.
 - MEMBERS
 
 ## Watch

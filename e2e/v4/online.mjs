@@ -49,6 +49,9 @@ async function stepFirstOption(page) {
   if (!page || page.isClosed()) return false;
   const next = await page.$('[data-next-round]');
   if (next) { await next.click().catch(() => {}); return true; }
+  // touch (and online) placement asks to confirm: "Place here"
+  const place = await page.$('[data-place]');
+  if (place) { try { await place.click({ timeout: 1500 }); return true; } catch { /* fall through */ } }
   const els = await page.$$('[data-option]:not([disabled])');
   for (const el of els) {
     const id = await el.getAttribute('data-option').catch(() => null);

@@ -198,15 +198,15 @@ describe('Purple members', () => {
     expect(s.players[0].left).toBe(2 + 2); // 2 purple → 1 per 2, plus 1
     expect(s.log.some(l => l.includes('Double Time: 1 turn per 2'))).toBe(true);
   });
-  it('Bookkeeper: when you place your last worker of a round, +1 purple per worker you have on the board; nothing at round end', () => {
+  it('Bookkeeper: when you place your last worker of a round, +1 purple per 2 workers you have on the board; nothing at round end', () => {
     expect(R(scene({ members: [['purple.bookkeeper']], slots: { [JV]: 0, [RUSH]: 0, [HIRE]: 0 }, queue: [{ t: 'endRound' }] })).purple).toBe(0);
     let s = scene({ members: [['purple.bookkeeper']], slots: { [JV]: 0, [HIRE]: 0 }, queue: turns(0, 1, 0) });
     s.players[0].left = 2;
     s = pass(take(s, 'Rush')); // 1 worker left after this: nothing yet
     expect(R(s).purple).toBe(0);
     s = pass(take(s, 'Hourly')); // P2
-    s = take(s, 'Turnout'); // the last one: 4 workers on the board → +4, before this turn's buy
-    expect(R(s).purple).toBe(4);
+    s = take(s, 'Turnout'); // the last one: 4 workers on the board → +2, before this turn's buy
+    expect(R(s).purple).toBe(2);
     expect(s.pending.kind).toBe('buy');
   });
   it('Clockmaker: round start (after other round-start income), +1 purple per 2 purple; nothing at round end', () => {

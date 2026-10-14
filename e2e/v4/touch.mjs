@@ -69,8 +69,8 @@ async function audit(step) {
     const label = e => (e.getAttribute('aria-label') || e.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 30);
     for (const e of document.querySelectorAll('button, [role="button"], input, select')) {
       if (!vis(e) || e.closest('[aria-hidden="true"]')) continue;
-      // a wheel space is measured by its invisible hit circle
-      const box = (e.matches('.slot') ? e.querySelector('.hit') : e).getBoundingClientRect();
+      // a wheel space is measured by its invisible hit circle, an inline hover/tap word (Info.jsx Tip) by its hit box
+      const box = (e.matches('.slot') ? e.querySelector('.hit') : e.querySelector(':scope > .hitbox') || e).getBoundingClientRect();
       if (box.width < 43.5 || box.height < 43.5) out.small.push(`${label(e) || e.className.baseVal || e.className} ${Math.round(box.width)}×${Math.round(box.height)}`);
       // clipped by the nearest ancestor that hides overflow?
       for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) {

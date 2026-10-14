@@ -33,7 +33,7 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
         onClick={pin}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') pin(e); }}
         {...rest}
-      >{children}</As>
+      >{children}<span className="hitbox" aria-hidden="true" /></As>
       {open && (
         <Popover anchor={open.el} onClose={() => setOpen(null)} float={!open.pinned}>
           <div className="tip-body" data-tip-body>{typeof content === 'function' ? content() : content}</div>
@@ -250,7 +250,7 @@ export function Sigil({ id, size = 10, title = null }) {
 
 // ---------- "You'd get": a space's outcome for you, from the engine's dry run (previewSpace) ----------
 const previews = new WeakMap();
-function cachedPreview(state, pid, q, i) {
+export function cachedPreview(state, pid, q, i) {
   let m = previews.get(state);
   if (!m) { m = new Map(); previews.set(state, m); }
   const k = `${pid}|${q}-${i}`;

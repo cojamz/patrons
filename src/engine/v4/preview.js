@@ -9,7 +9,7 @@ const NODE_BUDGET = 36; // states explored per preview (a counted pick branches 
 /**
  * previewSpace(state, pid, q, i) → null when it can't be run, else
  * { exact, partial, leaves, you: { res:{color:[min,max]}, followers:[min,max], members:[min,max], turns:[min,max] },
- *   others: { res:{color:[min,max]}, followers:[min,max], members:[min,max] }, asks:[prompt], theirAsks:[prompt] }.
+ *   others: { res:{color:[min,max]}, followers:[min,max], members:[min,max] }, asks:[prompt], theirAsks:[prompt], sample }.
  * exact: every branch gives the same to you. others: the rivals' summed change.
  */
 export function previewSpace(state, pid, q, i) {
@@ -61,5 +61,6 @@ export function previewSpace(state, pid, q, i) {
   }
   const same = r => r[0] === r[1];
   const exact = Object.values(you.res).every(same) && same(you.followers) && same(you.members) && same(you.turns);
-  return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks] };
+  // sample: the table after the first branch (for the screen to recount a contest on); exact when `exact`
+  return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], sample: leaves[0] };
 }

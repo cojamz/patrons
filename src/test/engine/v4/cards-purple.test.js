@@ -125,8 +125,8 @@ describe('Purple members', () => {
   it('Bookkeeper on your last placement of the round (before its buy), not at round end; Clockmaker and Lamplighter at round start; all named', () => {
     let s = sc({ res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 }, queue: [{ t: 'endRound' }] });
     expect(P(s)).toBe(5);
-    s = take(sc({ left: 1, res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0 } }), 'Scout');
-    expect(P(s)).toBe(5 + 3); // its last worker: 3 workers on the board
+    s = take(sc({ left: 1, res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 } }), 'Scout');
+    expect(P(s)).toBe(5 + 2); // its last worker: 4 workers on the board → +1 per 2
     expect(named(s, 'Bookkeeper')).toHaveLength(1);
     s = sc({ res: [{ purple: 7 }], members: [['purple.clockmaker']], queue: [{ t: 'round', r: 2 }] });
     expect(P(s)).toBe(7 + 3); // +1 per 2 purple held

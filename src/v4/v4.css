@@ -1399,3 +1399,6 @@ svg.sigil{display:inline-block;vertical-align:-1px;flex:none}
 .youd-get.pending{color:var(--muted)}
 .youd-get em{font-style:normal;color:var(--muted)}
 .youd-get .youd-others{flex-basis:100%;color:var(--muted)}
+/* an inline hover/tap word keeps its size; its tap area is a 44×44 (or larger) invisible box centred on it */
+.tip{position:relative}
+.tip > .hitbox{position:absolute;left:50%;top:50%;width:max(44px,100%);height:max(44px,100%);transform:translate(-50%,-50%);pointer-events:auto;background:transparent}

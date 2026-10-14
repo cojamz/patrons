@@ -1,0 +1,88 @@
+// Card facts for the Lamplit shop and hover cards: timing tags, what paying leaves, how a buy moves the contests,
+// and which face-up cards a space would make affordable. All read off the engine; nothing here is a rule.
+import { cardDef, paymentPlan, contestTable, quadrant } from '../../engine/v4/index.js';
+
+// The card's timing, from how its text opens (the tag above the name).
+const TIMINGS = [
+  [/^now and at round start\b/i, 'Now + round start'],
+  [/^(?:at )?round start\b/i, 'Round start'],
+  [/^round end\b/i, 'Round end'],
+  [/^(?:when recruited|when it joins you)\b/i, 'On recruit'],
+  [/^whenever\b/i, 'Whenever'],
+  [/^game end\b/i, 'Game end'],
+  [/^once per round\b/i, 'Once a round'],
+  [/^once per game\b/i, 'Once a game'],
+  [/^while\b/i, 'While'],
+];
+/** "Round start", "On recruit", "Worth 2"… for a member def. */
+export function timingOf(def) {
+  const t = (def.text || '').trim();
+  const rest = t.replace(/^Worth \d+ followers?\.\s*/i, '');
+  if (!rest || /^no effect\.?$/i.test(rest)) return `Worth ${def.f}`;
+  for (const [re, label] of TIMINGS) if (re.test(rest)) return label;
+  return 'Always';
+}
+
+const sum = v => Object.values(v || {}).reduce((a, b) => a + b, 0);
+/** What recruiting uid costs player p now: { spend, leaves, short } (short: resources still missing, when unaffordable). */
+export function payBreakdown(state, p, uid) {
+  const spend = paymentPlan(state, p, uid);
+  if (spend) {
+    const leaves = Object.fromEntries(state.resources.map(r => [r, (p.res[r] || 0) - (spend[r] || 0)]));
+    return { spend, leaves, short: null };
+  }
+  // how far off: the colored part first, then the any part
+  const d = cardDef(state, uid);
+  let color = d.quadrant;
+  try { color = quadrant(d.quadrant).resource; } catch { /* bare color */ }
+  const colored = state.resources.includes(color) ? d.s : 0;
+  const haveColor = Math.min(p.res[color] || 0, colored);
+  const shortColor = colored - haveColor;
+  const total = sum(p.res) - haveColor;
+  const shortAny = Math.max(0, (d.s + d.w - colored) - total);
+  return { spend: null, leaves: null, short: { color: shortColor ? color : null, colorN: shortColor, any: shortAny, total: shortColor + shortAny } };
+}
+
+/**
+ * How recruiting uid (paying `spend`) would change the contests for p, if the round ended right after:
+ * [{ qid, rule, was:[ids], now:[ids], mine:{ before, after }, text }] for each contest whose leaders change for p.
+ */
+export function contestEffect(state, p, uid, spend) {
+  let after;
+  try {
+    after = structuredClone({ ...state, log: [], pending: null, queue: [] });
+    const q = after.players[p.id];
+    for (const r in spend || {}) q.res[r] -= spend[r];
+    after.shop = after.shop.filter(u => u !== uid);
+    q.members.push(uid);
+  } catch { return []; }
+  const before = contestTable(state), next = contestTable(after);
+  const name = id => (id === p.id ? 'you' : state.players[id].name);
+  const out = [];
+  before.forEach((c, k) => {
+    const n = next[k];
+    const had = c.winners.includes(p.id), has = n.winners.includes(p.id);
+    if (had === has && (had || c.winners.join() === n.winners.join())) return;
+    const mine0 = c.rows.find(r => r.player === p.id)?.count ?? 0, mine1 = n.rows.find(r => r.player === p.id)?.count ?? 0;
+    const leader = n.rows.find(r => n.winners.includes(r.player) && r.player !== p.id);
+    const text = had && !has
+      ? `${leader ? `${cap(name(leader.player))} would lead` : 'You’d lose the lead'}, ${leader ? leader.count : ''}${leader ? ' to your ' : ''}${mine1}`
+      : !had && has ? `You’d lead, ${mine1}` : `Leaders change: ${n.winners.map(name).join(' & ') || 'no one'}`;
+    out.push({ qid: c.qid, rule: c.rule, was: c.winners, now: n.winners, mine: { before: mine0, after: mine1 }, lost: had && !has, text });
+  });
+  return out;
+}
+const cap = s => s[0].toUpperCase() + s.slice(1);
+
+/**
+ * Face-up cards p can't afford now but could after gaining at least `gain` ({ color: n }): uids. The space's
+ * worst case is used, so a tick never promises what a choice might not give.
+ */
+export function unlockedBy(state, p, gain) {
+  const res = { ...p.res };
+  for (const r in gain || {}) res[r] = (res[r] || 0) + Math.max(0, gain[r]);
+  const richer = { ...p, res };
+  return state.shop.filter(u => !paymentPlan(state, p, u) && paymentPlan(state, richer, u));
+}
+/** The guaranteed gains of a preview (the low end of each color's range). */
+export const surely = pv => (pv ? Object.fromEntries(Object.entries(pv.you.res).map(([r, [lo]]) => [r, lo])) : {});

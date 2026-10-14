@@ -196,12 +196,13 @@ export default {
     }),
     // fill-in (critic): replaces Timekeeper
     m('doubletime', 'Double Time', 6, 2, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
-    // pays on your last placement of the round, before that turn's buy (at round end, round III's purple came too late)
-    m('bookkeeper', 'Bookkeeper', 4, 2, 'When you place your last worker of a round, +1 purple per worker you have on the board.', {
+    // pays on your last placement of the round, before that turn's buy (at round end, round III's purple came too late).
+    // +1 per worker measured 8.4 followers (57% win, easy bots): late purple decides the ring. Half that is the card.
+    m('bookkeeper', 'Bookkeeper', 4, 2, 'When you place your last worker of a round, +1 purple per 2 workers you have on the board.', {
       afterAction(ctx, owner, card) {
         if (owner.left !== 0 || card.paidRound === ctx.state.round) return;
         card.paidRound = ctx.state.round;
-        ctx.gain(owner, P, onBoard(ctx, owner));
+        ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2));
       },
     }),
     m('clockmaker', 'Clockmaker', 2, 2, 'Now and at round start, +1 purple per 2 purple you have.', { now: true,
