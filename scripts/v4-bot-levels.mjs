@@ -1,10 +1,11 @@
 // Bot levels head to head. Usage: node scripts/v4-bot-levels.mjs [games=100] [seats=hard,normal,normal,normal] [firstGame=1]
-// Seats rotate every game so no policy keeps one seat. A policy is easy | normal | hard | buyer (pure follower buying,
-// never recruits), optionally with options: normal:k=0.8, hard:budget=300, hard:maxMs=250 (Hard runs uncapped here
+// Seats rotate every game so no policy keeps one seat. A policy is easy | casual | normal | hard | greedy (the first bot)
+// | buyer (pure follower buying, never recruits), optionally with options: normal:k=0.8, normal:memberBias=1,
+// hard:budget=300, hard:maxMs=250 (Hard runs uncapped here
 // unless maxMs is given, so results are deterministic; the UI caps it at 250ms).
 // Prints, per policy: win share (ties split), members, resources left at game end, followers, and the slowest move.
 import { createGame, applyMove, followers, memberCount, quadrant } from '../src/engine/v4/index.js';
-import { chooseBotMove, chooseFollowerBuyerMove } from '../src/engine/v4/bots.js';
+import { chooseBotMove, chooseFollowerBuyerMove, chooseGreedyMove } from '../src/engine/v4/bots.js';
 import { seededRandom } from '../src/engine/v4/rng.js';
 
 const games = Number(process.argv[2] || 100);
@@ -30,7 +31,7 @@ for (let g = first; g < first + games; g++) {
   while (!s.over) {
     const pol = seatPol[s.pending.player];
     const t = performance.now();
-    const m = pol.name === 'buyer' ? chooseFollowerBuyerMove(s, rand) : chooseBotMove(s, rand, { level: pol.name, maxMs: Infinity, ...pol.opts });
+    const m = pol.name === 'buyer' ? chooseFollowerBuyerMove(s, rand) : pol.name === 'greedy' ? chooseGreedyMove(s, rand) : chooseBotMove(s, rand, { level: pol.name, maxMs: Infinity, ...pol.opts });
     const dt = performance.now() - t;
     const st = stat[pol.key];
     st.ms += dt; st.moves += 1; (st.times ??= []).push(dt); if (dt > st.maxMs) st.maxMs = dt;
