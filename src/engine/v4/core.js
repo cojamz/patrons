@@ -48,6 +48,8 @@ export function createGame({ seats, seed = 1, quadrants = DEFAULT_QUADRANTS, rul
     cards, pile: Object.keys(cards).map(Number), shop: [],
     round: 0, slots: {}, squats: {}, order: [], turnIndex: 0, current: null,
     recruits: 0, stock: Object.fromEntries(TIERS.filter(t => t.limited).map(t => [t.key, t.stock(seats.length)])), endEarly: false,
+    // contests: each round's scoring as the engine decided it (see contestTable); turns: who has taken a turn this round
+    contests: [], turns: [],
     queue: [], pending: null, log: [], moves: 0, over: false, ranking: null,
   };
   shuffleInPlace(state, state.pile);
@@ -442,6 +444,7 @@ function runTask(state, task) {
     case 'round': return startRound(state, task.r);
     case 'turn': {
       state.current = p.id;
+      (state.turns = state.turns || []).push(p.id);
       p.turnRecruits = 0;
       p.turnBuys = 0;
       // task.ring: a turn limited to spaces of that ring or lower (a weaker extra worker)
@@ -487,10 +490,11 @@ function startRound(state, r) {
   state.slots = {};
   state.squats = {};
   state.recruits = 0;
+  state.turns = [];
   const n = WORKERS[r - 1];
-  // extra workers this round (Extra Hand: flag extraWorkers = [I, II, III])
+  // extra workers this round (Extra Hand: flag extraWorkers = [I, II, III]); p.workers keeps the round's count
   const more = id => sumMemberFlag(state, state.players[id], 'extraWorkers', v => v[r - 1] || 0);
-  for (const p of state.players) p.left = n + more(p.id);
+  for (const p of state.players) { p.left = n + more(p.id); p.workers = p.left; }
   const ctx = ctxFor(state);
   eachMember(state, (owner, card, def) => { if (def.onRoundStart) def.onRoundStart(ctx, owner, card); });
   // late hooks see everything the round-start income gave (Investor sets aside after Banker pays)
@@ -533,17 +537,47 @@ function endRound(state) {
   const ctx = ctxFor(state);
   eachMember(state, (owner, card, def) => { if (def.onRoundEnd) def.onRoundEnd(ctx, owner, card); });
   const v = RING_VALUE[state.round - 1];
+  const table = contestTable(state, ctx);
   const msg = [];
-  for (const qid of state.quadrants) {
-    const q = quadrant(qid);
-    const scores = state.players.map(p => q.scoring.score(ctx, p));
-    const top = Math.max(...scores);
-    if (top <= 0) continue;
-    const winners = state.players.filter((p, i) => scores[i] === top);
+  for (const c of table) {
+    if (!c.winners.length) continue;
+    const winners = c.winners.map(id => state.players[id]);
     for (const w of winners) { w.bonus += v; w.contest += v; }
-    msg.push(`${q.scoring.label}: ${winners.map(w => w.name).join(' & ')} +${v}`);
+    msg.push(`${c.label}: ${winners.map(w => w.name).join(' & ')} +${v}`);
   }
+  // the round's scoring, kept as decided: the round-end card and the results read it back (never re-derived)
+  state.contests = [...(state.contests || []), { round: state.round, prize: v, results: table }];
   log(state, `Round ${roman(state.round)} ends. ${msg.join(' · ') || 'No one scored.'}`);
+}
+
+// ---------- contests: one function decides them, and every screen shows it ----------
+const ruleOf = label => label.replace(/\s*\(.*\)\s*$/, '');
+/**
+ * Each quadrant's contest, scored by the rule endRound uses, as if the round ended now:
+ * [{ qid, label, rule, counts, tiebreak, prize, rows:[{ player, score, count, tiebreak? }], winners:[ids] }].
+ * rows are best first (seat order among equals). count is the number the rule measures and tiebreak the number
+ * that breaks a tie (a quadrant's scoring.show says how its score splits; without it the score is the count).
+ * winners take the prize; nobody does when the best score is 0. tiebreak (top level) is { unit, text } or null.
+ */
+export function contestTable(state, ctx = ctxFor(state)) {
+  const prize = RING_VALUE[Math.min(3, Math.max(1, state.round)) - 1];
+  return state.quadrants.map(qid => {
+    const q = quadrant(qid);
+    const sc = q.scoring;
+    const scores = state.players.map(p => sc.score(ctx, p));
+    const top = Math.max(...scores);
+    const winners = top > 0 ? state.players.filter((p, i) => scores[i] === top).map(p => p.id) : [];
+    const rows = state.players.map((p, i) => {
+      const shown = sc.show ? sc.show(ctx, p) : { count: scores[i] };
+      const row = { player: p.id, score: scores[i], count: shown.count };
+      if (shown.tiebreak !== undefined) row.tiebreak = shown.tiebreak;
+      return row;
+    }).sort((a, b) => b.score - a.score || a.player - b.player);
+    return {
+      qid, label: sc.label, rule: ruleOf(sc.label), counts: sc.counts || null, tiebreak: sc.tiebreak || null,
+      prize, rows, winners,
+    };
+  });
 }
 
 function finish(state) {
@@ -560,6 +594,18 @@ function finish(state) {
   state.current = null;
   log(state, `Game over. ${ranked[0].name} wins with ${followers(state, ranked[0])} followers.`);
 }
+
+/**
+ * This round's turns in order: done (taken, oldest first), current (the seat whose turn is running, or null) and
+ * next (the turns still queued, extra turns included). Read straight from the engine's record and queue.
+ */
+export function turnRail(state) {
+  const taken = state.turns || [];
+  const current = state.current ?? null;
+  return { done: current != null ? taken.slice(0, -1) : [...taken], current, next: state.queue.filter(t => t.t === 'turn').map(t => t.p) };
+}
+/** Workers p had this round (Extra Hand adds to the round's count); older saves fall back to the round's count. */
+export const roundWorkers = (state, p) => p.workers ?? WORKERS[Math.max(1, state.round) - 1];
 
 // ---------- recruiting, buying, gaining ----------
 
