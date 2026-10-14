@@ -3,6 +3,7 @@ import { cardDef, paymentPlan, followerChoices, TIERS, tierLeft } from '../../en
 import { useEffect, useRef, useState } from 'react';
 import { costParts, tierCostText } from '../format.js';
 import { realHover } from '../hover.js';
+import { BadgeMark, cardColor } from './Info.jsx';
 import { Rich, CostPips } from './Rich.jsx';
 
 // long words get a soft hyphen in the middle: it shows only when the word must break ("Doppel-ganger")
@@ -45,7 +46,7 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
           return (
             <button
               key={uid} data-uid={uid} type="button" className={`card${opt ? ' can' : ''}${buying && !opt ? ' cant' : ''}`}
-              style={{ '--c': `var(--${d.quadrant})` }} data-option={opt && !hidden ? opt.id : undefined}
+              style={{ '--c': cardColor(state, d) }} data-option={opt && !hidden ? opt.id : undefined}
               tabIndex={hidden ? -1 : undefined}
               aria-disabled={!opt} title={compact && onHoverCard ? undefined : `${d.name} · ${d.f}★ · ${d.text}`}
               onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'card', uid, name: d.name }, e.currentTarget))}
@@ -55,12 +56,12 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
             >
               {compact ? (
                 <>
-                  <div className="row top"><b className="nm">{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
+                  <div className="row top"><b className="nm">{d.name}<BadgeMark state={state} def={d} /></b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
                   <span className="eff1"><Rich text={d.text} /></span>
                   <div className="row cost"><Cost d={d} plan={null} res={state.resources} /></div>
                 </>
               ) : (
-                <div className="row"><b className="nm">{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
+                <div className="row"><b className="nm">{d.name}<BadgeMark state={state} def={d} /></b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
               )}
               {fromPile && !compact && (
                 <span className="from-pile">From the pile (Insider)</span>
@@ -116,11 +117,11 @@ function ShopStrip({ state, me, mine = false, optionFor, onPick, onDenied }) {
         const plan = viewer ? paymentPlan(state, viewer, uid) : null;
         return (
           <button
-            key={uid} type="button" className={`mini${opt ? ' can' : ''}`} style={{ '--c': `var(--${d.quadrant})` }}
+            key={uid} type="button" className={`mini${opt ? ' can' : ''}`} style={{ '--c': cardColor(state, d) }}
             aria-disabled={!opt} title={`${d.name} · ${d.f}★ · ${d.text}`}
             onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'card', uid, name: d.name }, e.currentTarget))}
           >
-            <span className="row"><b>{d.name}</b><span className="num">{d.f}★</span></span>
+            <span className="row"><b>{d.name}<BadgeMark state={state} def={d} /></b><span className="num">{d.f}★</span></span>
             {fromPile && <span className="from-pile">From the pile (Insider)</span>}
             <small><Rich text={d.text} /></small>
             <span className="row cost"><Cost d={d} plan={plan} res={state.resources} />{opt && <span className="afford" aria-label="you can afford this" title="You can afford this" />}</span>

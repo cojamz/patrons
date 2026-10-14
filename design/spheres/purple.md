@@ -1,60 +1,75 @@
-# Purple: extra turns (Claude's draft v3, 2026-10-14, nothing approved)
+# Purple: extra turns (Claude's draft v4, 2026-10-14, nothing approved)
+
+v4 is Claude's rework after Cory's first play, under his "for fixes, go with your gut". Every change is logged in decisions.md and can be overturned by number.
 
 ## The idea
-Purple is the currency of time: gather it, then spend it to act again. Extra turns are the meal. Every placement brings a buy, so an extra turn is the strongest thing on the wheel, and it's priced that way.
-Gold hoards money and Red stacks cheap members. Purple multiplies turns. Its contest counts something anyone can see: whose workers cover the most of the board.
+Purple is time. You gather it, then either spend it to act again or hold it, because the purple you hold at round end is what Purple's ring counts.
+In this game an extra turn is one more placement plus one more buy. So a space that only hands back the worker you used is a wasted worker, as Cory said of Rally. Every extra turn a Purple space gives is now a net gain: one worker goes in and two or more come out.
 
-## For Cory (answer by number; "(fill-in)" marks the critic's suggestions, which nobody has approved)
-1. Scoring: most workers on the board at round end. Purple breaks ties.
+## For Cory (answer by number; "(fill-in)" marks Claude's own, which nobody has approved; costs are colored part + any, after the ×2)
+1. Scoring (changed): most purple at round end. Ties all score. It was "most workers on the board, purple breaks ties", which tied almost every round and so was really most purple under another name.
 2. Ring I, Hourly: +4 / +5 / +6 purple, by round.
-3. Ring I, Catch Up (fill-in): +1 purple, and +2 per rival with more workers on the board than you.
+3. Ring I, Catch Up: +1 purple, and +2 per rival with more workers on the board than you.
 4. Ring I, Wind-up: +1 purple per worker you have on the board, this one included.
-5. Ring II, Linger: move one of your workers from an outer or middle space of another color to a different open space, and do that action.
-6. Ring II, Overtime: pay 6 purple to take an extra turn right after this one. If you can't, +2 purple.
-7. Ring III, Rally: pay 5 purple to take an extra turn right after this one. If you can't, +3 purple.
-8. Second Wind (4+2): once per game, take an extra turn right after this one.
-9. Errand Runner (2+2): when you recruit it, take an extra turn right after this one.
-10. Taskmaster (3+1): once per round, pay 5 purple to take an extra turn right after this one.
-11. Late Riser (3+1; the name is a fill-in, it was Straggler until that name went to the new rule-bender): from round II on, if you have the fewest followers at round start, you take an extra turn before anyone else.
-12. Foreman (2+1): whenever you take an extra turn, +1 purple per worker you have on the board.
-13. Courier (2+1): whenever you take an extra turn, +1 of each other color.
-14. Apprentice (1+1): whenever you take an extra turn, your next member costs 2 less.
-15. Overseer (2+1): whenever a rival takes an extra turn, gain half your purple (up to 4).
-16. Double Time (3+1, fill-in): extra turns you pay purple for cost you half (rounded up).
-17. Bookkeeper (2+1): at round end, +1 purple per 2 workers you have on the board.
-18. Clockmaker (2+1): at round end, +1 purple per 2 purple you have. (A close cousin of Gold's interest/Investor ideas.)
-19. Lamplighter (3+1): at round start, +1 purple per worker you get this round (3 / 4 / 5).
-20. ~~Relay (2+2, fill-in): once per round, when a rival takes an extra turn, you may pay 3 purple to take one right after it.~~ Cut by Cory 2026-10-14. Purple has 14 members until a replacement is priced.
-21. Patience (3+1): at game end, +1 follower per 3 purple. (A close cousin of Gold's Tycoon.)
+5. Ring II, Plan Ahead (fill-in, replaces Linger): +2 purple per worker you have left to place this round.
+6. Ring II, Overtime (changed): pay 8 purple to take 2 extra turns right after this one. If you can't, +3 purple.
+7. Ring III, Rally (changed): spend all your purple. You take 1 extra turn right after this one per 4 spent, plus 1, up to 3. With less than 4 purple, +4 purple. Double Time makes it 1 per 2.
+8. Second Wind (8+4): once per game, take an extra turn right after this one.
+9. Errand Runner (4+4): when you recruit it, take an extra turn right after this one.
+10. Taskmaster (6+2): once per round, pay 5 purple to take an extra turn right after this one.
+11. Late Riser (6+2): from round II on, if you have the fewest followers at round start, you take an extra turn before anyone else.
+12. Foreman (4+2): whenever you take an extra turn, +1 purple per worker you have on the board.
+13. Courier (4+2): whenever you take an extra turn, +1 of each other color.
+14. Apprentice (2+2): whenever you take an extra turn, your next member costs 4 less.
+15. Overseer (4+2): whenever a rival takes an extra turn, gain half your purple (up to 4).
+16. Double Time (6+2): extra turns you pay purple for cost you half (rounded up).
+17. Bookkeeper (4+2, changed): when you place your last worker of a round, +1 purple per worker you have on the board.
+18. Clockmaker (2+2): now and at round start, +1 purple per 2 purple you have.
+19. Lamplighter (6+2): now and at round start, +1 purple per worker you get this round (3 / 4 / 5).
+20. (open) Relay was cut by Cory. Another agent is pricing 3 replacements, so Purple has 14 members for now.
+21. Patience (6+2): at game end, +1 follower per 3 purple.
 22. Shift Crew (1+1): worth 2 followers. No effect.
-House rule: every extra turn needs a space to spare (more open spaces than turns still to come), so nobody ever loses the last space. Linger counts as an extra turn for the members.
 
-Cut: 23. Lend a Hand (a copy of Joint Venture). 24. Timekeeper. 25. Marathoner (it paid a third time for the same turns). 26. Rally as a free turn, and as two turns. 27. From v1: Rest, Doze, Wake, Slumber, Dreamer, Insomniac, Hibernator, Hermit, Moonlighter, Night Crew, Hourglass, Drifter, Rooster, Reveille, Lullaby. 28. Linger back onto the same space, or buying again.
+House rule: every extra turn needs a spare space (more open spaces than turns still to come), so nobody ever loses the last space. "If you can't" on Overtime covers the board having room for fewer than 2.
+
+Cut in v4:
+23. Linger. Moving a worker to an open space and doing it is the same as placing there, except you also gave up Linger and reopened your old space for a rival. It fizzled whenever your workers sat on Purple.
+24. Rally and Overtime as "pay purple for one extra turn". The space handed back the worker it used, so the only gain was a buy.
+25. "Most workers on the board". At 4 players every round-I space fills and the spare-space rule blocks extra turns, so round I always tied.
+
+Earlier cuts: Lend a Hand, Timekeeper, Marathoner, Rally as a free turn, the v1 set (Rest, Doze, Wake, Slumber, Dreamer, Insomniac, Hibernator, Hermit, Moonlighter, Night Crew, Hourglass, Drifter, Rooster, Reveille, Lullaby), Relay.
 
 ## Value math (1 resource = 1u; an extra turn = a space plus its buy, about 3u in round I, 5u in round II, 7u in round III)
-- Hourly, against Rush (2/4/6) and Joint Venture (4): 4 early, 6 late.
-- Catch Up: 1 for whoever is level or ahead. 3–7 for whoever is behind on the board (usually whoever picks late in a pass, or a table where rivals chain turns). Measured as the weak space (21% taker win rate), which is fine as a consolation.
-- Wind-up: 1–3 early, 3–6 late, more after extra turns.
-- Linger, against Steal 3 (about 4u) and Windfall: one more action with no buy, about 3–5u in round II and 4–7u in round III. Measured at par (25–26%).
-- Overtime: 6 purple becomes about 5–7u, so 0–1u net plus tempo; +2 without the purple. 33% taker win rate, against Strike at 34%.
-- Rally, against Strike (gold ×2, about 10–20 late) and Take (one free member, 4–7u): 5 purple for a round-III turn (about 7u), so about 2u net plus tempo; +3 without the purple. The price came from the sim: at 3 purple takers won 45%, at 4 42%, at 5 36%, against Strike 34% and Take 29%. Priced at 5.
+- Plan Ahead, against Steal 3 (about 4u) and Windfall (+1 per member): about +6 for the first pick of round II and +8 for the first pick of round III. It's worth almost nothing on your last worker. It pays most to whoever picks first, and that's the player with the fewest followers.
+- Overtime: 8 purple buys 2 placements and 2 buys, about 10u in round II and 14u in round III, so about +2 to +6 net. Without the purple it's +3.
+- Rally, against Strike (gold ×2, about 10–20 late) and Take (a free member): 4–7 purple buys 2 round-III turns (about 14u) and 8+ buys 3 (about 21u). The cost is everything you hold, including your claim on the +6 ring.
 
-## Measurements (greedy bots, gold/red/purple/green)
-- 400 games at 4 players (final prices): wins by seat 25/27/26/23%. Average followers 45.6 (stand-in table 47.8). About 12.5 placements per player against 12 base. Taker win rates: Strike 35%, Rally 32%, Overtime 29%, Take 29%, Linger and Catch Up near the bottom.
-- 300 games at 3 players: wins by seat 32/33/35%.
-- Dead air: one player rarely takes more than 3 turns in a row. The longest such run per game averages 2.7 (one run of 6 in 400 games) (the snake alone gives 2). Runs of 4 happen about once in 10 games, runs of 5 about once in 50. With Relay, a rival's extra turn is followed by at most one Relay turn (once per round, one copy). The longest Relay chain is 2: their extra turn, then yours.
-- Contest when nobody takes extra turns: everyone is level on the board, so the purple tiebreak decides it. That's every round I, and about 56% of all rounds; 66% of rounds go to the tiebreak. Read honestly, Purple's contest is "most purple" most of the time, and "most workers" only once someone has bought turns.
-- Member value (handed over at round II start, 120 games each, about ±1.5 noise; Banker reads 2.3 in the same run):
-  - Changed this pass: Double Time 5.3 → 4. Lamplighter (relative) 4.9 → 4. Relay 4.1 → 4. Foreman (relative) 3.2 → 3. Overseer (half your purple) 2.4 → 3. Apprentice (2 less) 2.2 → 2.
-  - Earlier pass: Second Wind 8.8, Taskmaster 5.4, Patience 4.9, Courier 4.5, Bookkeeper 4.5, Late Riser 4.1, Clockmaker 3.9, Shift Crew 3.8.
-  - Errand Runner's effect fires on recruit, so handing it over can't measure it; it's priced as one turn on a fixed clock.
-- Thinking bot (20 games, 4 rollouts): wins 65% (13/20, average margin +6.1) against 55% on the stand-in table. It plays slightly more Purple than the greedy bots (28% of its placements against 23%), grabs Catch Up early and saves Overtime and Rally for rounds II–III.
+## Measurements (2026-10-14 rework; each line names its instrument)
+Main instrument: easy bots, 300 games at 4 players, on seeded random tables of Purple plus three other spheres. Easy bots pick spaces by each action's estimate, so they do take paid turns. "Taker" means a player who took that space at least once; 25% is par. It's confounded by who can afford a space.
+- Today's rules:
+  - Takers won: Rally 21%, Linger 30%, Overtime 30%, Catch Up 22%, Hourly 23%, Wind-up 26%. For comparison, Strike 30% and Take 24%.
+  - 0.96 extra turns per game.
+  - Round I never had a single leader on workers. Under "ties score nothing", the ring would have paid nobody in 100% / 77% / 60% of rounds I / II / III.
+- The rework as shipped:
+  - Takers won: Rally 37%, Overtime 26%, Plan Ahead 27%, Hourly 26%, Wind-up 27%, Catch Up 22%. For comparison, Strike 33%, Take 23%, and the other round-III bursts Jubilee 37%, Boom 39%, Eternity 37%.
+  - 3.2 extra turns per game. Wins by seat 28/25/26/21%. Average followers 37.3 (37.1 today).
+  - The player who placed most on Purple won 31% (28% today).
+  - The ring paid nobody in 7% / 9% / 15% of rounds (nobody held purple) and was shared in 28% / 18% / 10%.
+- Price checks (same instrument):
+  - Overtime at 6 purple: takers won 29%. At 8: 26%. Kept at 8, which is 4 a turn, the same rate as Rally.
+  - Rally without the "plus 1" (the critic's version): 28%, level with Strike. But at 4–7 purple it hands back one worker for one, which is exactly Cory's complaint. With the plus 1: 37%.
+  - "Most workers, ties score nothing" with the new spaces: the ring paid nobody in 100% / 69% / 40% of rounds.
+- Dead air: one player placed 4 or more times in a row in 57% of games (3% today). The longest run per game averages 3.6 (2.35 today). That's the burst; watch how it feels.
+- NORMALBOTS
+- MEMBERS
 
 ## Watch
-- Round III still has the strongest pair (Rally and Overtime). With Double Time they cost 3 each.
-- The contest mostly rewards purple held. If Cory wants the board count to matter, the cleanest fix is "ties: nobody scores" (I haven't measured it).
-- Clockmaker and Patience are close cousins of Gold cards.
+- Bots: the normal bot used to score a placement on a copy of the game whose turn queue was empty, so it couldn't see an extra turn. Rally and Overtime read as "lose the purple" to it. A fix that counts the queued turns is in bots.js (the bot owner's). Recheck the normal-bot numbers once it lands.
+- "Spend all" on Rally wastes whatever is over 8. That's on purpose: it makes Rally a choice against holding purple for the ring. If it feels punishing, the fix is "spend 4 or 8".
+- Per-turn member hooks (Foreman, Courier, Apprentice, Overseer) fire twice on Overtime and up to 3 times on Rally. See the member numbers above.
+- Plan Ahead and Echo. A copy gives the space's printed gain, so when Plan Ahead is taken first in a round (+6 or +8), it becomes the best chip for Echo players to copy. In one of my test games it was copied four times. If that feels off, it's Echo's copy rule to look at, not Plan Ahead.
+- "Most purple" is the same shape as Gold's, Silver's and White's rings. Cory once turned down "most black" for Magenta because it copied Gold's. Here the difference is the spending: purple held for the ring is purple not turned into turns.
 
 ## Engine notes (no core edits)
-- Extra turns are queued turn tasks right after the current turn (Relay's went after the rival's extra turn, before Relay was cut). Linger queues the engine's own act task. It all goes through ctx.state.queue. A ctx.addTurn(p, after) helper in core.js would be cleaner.
-- Files: src/engine/v4/content/purple.js, src/test/engine/v4/spheres/purple.test.js, scripts/spheres/purple-{sim,value,thinker}.mjs.
+- Extra turns are queued turn tasks right after the current turn, and it all goes through ctx.state.queue. A ctx.addTurn(p, after) helper in core.js would be cleaner.
+- Files: src/engine/v4/content/purple.js, src/test/engine/v4/spheres/purple.test.js, src/test/engine/v4/cards-purple.test.js, scripts/spheres/purple-{sim,value,thinker}.mjs.

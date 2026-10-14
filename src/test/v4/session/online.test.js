@@ -1,8 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   createRoom, joinRoom, createMemoryStore, createMemoryTransport, ROOM_ROOT,
 } from '../../../v4/session/index.js';
-import { until, autoPlay, fingerprint } from './helpers.js';
+import { until, pause, autoPlay, fingerprint } from './helpers.js';
+
+// No wall clock: bots and the host run on fake timers, and until() advances them (helpers.js).
+beforeEach(() => { vi.useFakeTimers(); });
+afterEach(() => { vi.useRealTimers(); });
 
 const DELAY = 0;
 
@@ -95,7 +99,7 @@ describe('online session over the memory transport', () => {
     await t.push(`${base}/moves`, rec);
     await t.push(`${base}/moves`, rec);
     await until(() => hs.info.version === 3 && !room(store, host.code).moves, { label: 'moves drained' });
-    await new Promise(r => setTimeout(r, 20));
+    await pause(20);
     expect(hs.info.version).toBe(3);
     expect(room(store, host.code).state.version).toBe(3);
     host.lobby.destroy(); guests[0].lobby.destroy();
@@ -127,7 +131,7 @@ describe('online session over the memory transport', () => {
     const fpBefore = fingerprint(gs.getState());
     // a stale writer republishes version 1
     await guests[0].t.set(`${ROOM_ROOT}/${host.code}/state`, oldNode);
-    await new Promise(r => setTimeout(r, 20));
+    await pause(20);
     expect(gs.info.version).toBe(2);
     expect(fingerprint(gs.getState())).toBe(fpBefore);
     host.lobby.destroy(); guests[0].lobby.destroy();

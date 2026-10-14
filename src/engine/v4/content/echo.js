@@ -1,4 +1,4 @@
-// Green: the echo. You copy what spaces gave: a rival's, your own, last round's.
+// Green: the echo. You copy what spaces gave: a rival's (since your last turn, or any this round), or your own.
 // Scoring: most green at round end.
 //
 // The copy rule: a copy gives the space's own printed gain, as its chip shows: the resources and discount the
@@ -121,17 +121,25 @@ export const describe = (ctx, e) => {
   if (e.redo) return `do ${e.name} yourself`;
   const bits = Object.entries(e.res).map(([c, n]) => `+${n} ${c}`);
   if (e.discount) bits.push(`${e.discount} off`);
-  for (const c of e.members) bits.push(`a member (≤${c})`);
+  // say so when no face-up member is that cheap right now, so the chip never promises a member you can't get
+  for (const c of e.members) bits.push(ctx.shopCards().some(x => costOf(x.def) <= c) ? `a member (≤${c})` : `a member (≤${c}; none face up)`);
   return bits.join(', ') || 'nothing';
 };
-/** Spaces p could copy: which = 'outer' (any outer-ring space this round) | 'any' | 'last' | 'own'. */
+/**
+ * Spaces p could copy this round: which = 'since' (a rival's, taken since p's last turn: the "since your turn"
+ * line) | 'any' | 'own'. skip: the key of the space p is taking right now (an echo resolving, or this turn's
+ * space when a member copies in the buy step), so "your last turn" means the one before it.
+ */
 export const VARIANT = { plus: 0 }; // sim switch: +N green on every copy action (idea 29); 0 is the pitched rule
 const plus = (ctx, p) => { if (VARIANT.plus) ctx.gain(p, 'green', VARIANT.plus, { fromAction: true }); };
-export function targets(ctx, p, which) {
+export function targets(ctx, p, which, skip = null) {
   const L = ledger(ctx.state);
-  const pool = which === 'last' ? Object.values(L.last) : Object.values(L.now);
-  return pool.filter(e => copyable(e) && (which === 'outer' ? e.ring === 1 : which === 'own' ? e.p === p.id : true));
+  const pool = Object.values(L.now);
+  const since = which === 'since' ? Math.max(0, ...pool.filter(e => e.p === p.id && e.key !== skip).map(e => e.seq || 0)) : 0;
+  return pool.filter(e => copyable(e) && (which === 'since' ? e.p !== p.id && (e.seq || 0) > since : which === 'own' ? e.p === p.id : true));
 }
+/** A rival's spaces since p's last turn, from inside p's own turn (the space p just took doesn't count as "last turn"). */
+const sinceNow = (ctx, p) => { const L = ledger(ctx.state); return targets(ctx, p, 'since', L.now[L.open]?.p === p.id ? L.open : null); };
 const bestValue = (ctx, list, p) => Math.max(0, ...list.map(e => entryValue(ctx, e, p)));
 // by: the member making the copy (Keepsake, Afterimage…), so the log names it
 function offer(ctx, p, list, prompt, from, by = null) {
@@ -172,7 +180,6 @@ function heard(ctx, p, e, taker) {
   const choir = has(ctx, p, 'choir');
   if (choir) ctx.asMember(p, 'Choir', () => ctx.gain(p, 'green', choir));
   if (taker !== p) { const muse = has(ctx, taker, 'muse'); if (muse) ctx.asMember(taker, 'Muse', () => ctx.gain(taker, 'green', 2 * muse)); }
-  for (const o of ctx.rivals(p)) { const cm = has(ctx, o, 'choirmaster'); if (cm) ctx.asMember(o, 'Choirmaster', () => ctx.gain(o, 'green', cm)); }
 }
 /** Copy several spaces; free members are picked one after another at the end. */
 export function copyAll(ctx, p, list, by = null) {
@@ -209,9 +216,10 @@ const echoQ = {
       resolve(ctx, p) { ctx.gain(p, 'green', 2 * ctx.state.round, { fromAction: true }); },
     },
     {
-      key: 'echo', ring: 1, name: 'Echo', echo: true, text: 'Copy any outer-ring space taken this round.',
-      estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'outer'), p),
-      resolve(ctx, p) { plus(ctx, p); offer(ctx, p, targets(ctx, p, 'outer'), 'Echo: copy which outer-ring space?', 'now'); },
+      // the rivals' spaces since your last turn: what the "since your turn" line shows, so you know before you place
+      key: 'echo', ring: 1, name: 'Echo', echo: true, text: 'Copy a space a rival took since your last turn (not the center).',
+      estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'since'), p),
+      resolve(ctx, p) { plus(ctx, p); offer(ctx, p, sinceNow(ctx, p), 'Echo: copy which rival’s space (taken since your last turn)?', 'now'); },
     },
     {
       key: 'encore', ring: 2, name: 'Encore', echo: true, text: 'Copy any space taken this round (not the center).',
@@ -219,9 +227,14 @@ const echoQ = {
       resolve(ctx, p) { plus(ctx, p); offer(ctx, p, targets(ctx, p, 'any'), 'Encore: copy which space?', 'now'); },
     },
     {
-      key: 'recall', ring: 2, name: 'Recall', echo: true, text: 'Copy any space taken last round.',
-      estimate: (ctx, p) => VARIANT.plus + bestValue(ctx, targets(ctx, p, 'last'), p),
-      resolve(ctx, p) { plus(ctx, p); offer(ctx, p, targets(ctx, p, 'last'), 'Recall: copy which space from last round?', 'last'); },
+      // your own spaces are on the board in your color: no memory of last round needed (it replaced Recall)
+      key: 'refrain', ring: 2, name: 'Refrain', echo: true, text: '+2 green, and copy one of your spaces from this round.',
+      estimate: (ctx, p) => 2 + VARIANT.plus + bestValue(ctx, targets(ctx, p, 'own'), p),
+      resolve(ctx, p) {
+        plus(ctx, p);
+        ctx.gain(p, 'green', 2, { fromAction: true });
+        offer(ctx, p, targets(ctx, p, 'own'), 'Refrain: copy which of your spaces?', 'now');
+      },
     },
     {
       key: 'eternity', ring: 3, name: 'Eternity', echo: true, text: 'Copy every space you took this round.',
@@ -254,14 +267,13 @@ const echoQ = {
     }),
     m('choir', 'Choir', 4, 2, 'Whenever you copy a space, +1 green.'),
     m('muse', 'Muse', 2, 2, 'Whenever a rival copies one of your spaces, +2 green.'),
-    m('choirmaster', 'Choirmaster', 4, 2, 'Whenever a rival copies a space, +1 green.'),
-    m('fan', 'Fan', 2, 2, 'Whenever a rival takes a center space, +2 green.', {
-      onTurnEnd(ctx, owner, card, p) {
-        if (p === owner) return;
-        const L = ledger(ctx.state);
-        const e = L.lastBy && L.now[L.lastBy];
-        if (e && e.p === p.id && e.ring === 3) ctx.gain(owner, 'green', 2);
-      },
+    // Understudy and Ensemble replaced Choirmaster (green for a rival's copy: a gift for doing nothing, and Muse's
+    // twin) and Fan (green when a rival takes the center: nothing to do with copying). Claude, 2026-10-14.
+    m('understudy', 'Understudy', 4, 2, 'When recruited: copy a space a rival took since your last turn.', {
+      onRecruited(ctx, owner) { offer(ctx, owner, sinceNow(ctx, owner), 'Understudy: copy which rival’s space (taken since your last turn)?', 'now', 'Understudy'); },
+    }),
+    m('ensemble', 'Ensemble', 4, 4, 'Game end: +1 follower per green member.', {
+      onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'echo'),
     }),
     m('groupie', 'Groupie', 4, 4, 'Whenever anyone recruits a green member, +1 green.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {

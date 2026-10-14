@@ -12,14 +12,22 @@ export async function untilFake(cond, { step = 50, maxSteps = 20000, label = 'co
   if (!cond()) throw new Error(`Never reached ${label} within ${maxSteps} fake-timer steps of ${step} ms`);
 }
 
-/** Polls until cond() is truthy (real timers). */
-export async function until(cond, { timeout = 8000, label = 'condition' } = {}) {
-  const t0 = Date.now();
-  while (!cond()) {
-    if (Date.now() - t0 > timeout) throw new Error(`Timed out waiting for ${label}`);
-    await new Promise(r => setTimeout(r, 2));
+/**
+ * Polls until cond() is truthy. Bounded by a poll count (timeout / step), never by the wall clock: under fake timers
+ * (vi.useFakeTimers(), what session tests use) each poll advances fake time by `step` ms; with real timers (the
+ * BroadcastChannel test) each poll sleeps `step` ms, so a loaded box stretches the wait instead of failing it.
+ */
+export async function until(cond, { timeout = 8000, step = 2, label = 'condition' } = {}) {
+  const polls = Math.ceil(timeout / step);
+  const fake = vi.isFakeTimers();
+  for (let i = 0; i < polls && !cond(); i++) {
+    if (fake) await vi.advanceTimersByTimeAsync(step); else await new Promise(r => setTimeout(r, step));
   }
+  if (!cond()) throw new Error(`Never reached ${label} within ${polls} polls of ${step} ms${fake ? ' of fake time' : ''}`);
 }
+
+/** Waits `ms`: advances fake time under fake timers, else really sleeps. */
+export const pause = ms => (vi.isFakeTimers() ? vi.advanceTimersByTimeAsync(ms) : new Promise(r => setTimeout(r, ms)));
 
 /**
  * Plays every seat this session owns with the bot brain, through session.submit().

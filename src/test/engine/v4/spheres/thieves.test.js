@@ -9,6 +9,10 @@ import thieves, { install } from '../../../../engine/v4/content/thieves.js';
 import { take, move, play, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
 import { SHOP_SIZE } from '../../../../engine/v4/core.js';
+import { games } from '../budget.js';
+
+// seeded games in the table block below: a game count, not a time budget (the fast gate plays 20; budget.js)
+const GAMES = games(200);
 
 install();
 const QUADS = ['gold', 'red', 'blue', 'thieves'];
@@ -319,10 +323,10 @@ describe('Magenta members', () => {
   });
 });
 
-describe('Magenta on the table: 200 seeded bot games', () => {
-  it('200 games finish cleanly with every invariant', () => {
+describe(`Magenta on the table: ${GAMES} seeded bot games`, () => {
+  it(`${GAMES} games finish cleanly with every invariant`, () => {
     restore(); restore = () => {};
-    for (let g = 1; g <= 200; g++) {
+    for (let g = 1; g <= GAMES; g++) {
       const rand = seededRandom(g * 31);
       let s = createGame({ seats: [0, 1, 2, 3].map(() => ({ kind: 'bot' })), seed: g, quadrants: QUADS });
       let guard = 0;
@@ -332,5 +336,5 @@ describe('Magenta on the table: 200 seeded bot games', () => {
       }
       expect(s.over).toBe(true);
     }
-  }, 300000);
+  });
 });

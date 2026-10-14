@@ -47,7 +47,7 @@ for (let g = 1; g <= games; g++) {
           const top = Math.max(...boards);
           if (boards.every(b => b === top)) st.allEqual++;
           if (boards.filter(b => b === top).length > 1) st.purpleTie++; else st.boardTop++;
-          const part = line.split(' · ').find(x => x.includes('Most workers on the board'));
+          const part = line.split(' · ').map(x => x.replace(/^Round \S+ ends\. /, '')).find(x => x.startsWith(`${purple.scoring.label}:`));
           if (!part) st.noScore++;
           else {
             const names = part.split(': ')[1].replace(/ \+\d+$/, '').split(' & ');

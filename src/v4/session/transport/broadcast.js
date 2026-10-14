@@ -94,7 +94,13 @@ export function createBroadcastTransport(channelName = 'patrons-v4') {
     return true;
   };
   const refresh = () => backend.read().then(rec => { if (!closed && adopt(rec)) hub.notify(); }).catch(err => console.error('[broadcast] read failed', err));
-  channel.onmessage = refresh;
+  // A closing tab can't finish an IndexedDB write, so it announces its onDisconnect writes and the tabs still open
+  // apply them (like the RTDB server does). Idempotent: every open tab may apply the same writes.
+  channel.onmessage = ev => {
+    const gone = ev && ev.data && ev.data.disconnect;
+    if (Array.isArray(gone)) { if (!closed) mutate(d => { for (const [p, v] of gone) d = setAt(d, splitPath(p), v); return { data: d }; }).catch(() => {}); return; }
+    refresh();
+  };
 
   const ready = backend.read().then(rec => { adopt(rec); loaded = true; });
 
@@ -122,7 +128,10 @@ export function createBroadcastTransport(channelName = 'patrons-v4') {
       return { data: d };
     }).then(({ rec }) => { try { channel.postMessage(rec.rev); } catch { /* closing */ } }).catch(() => {});
   };
-  const onHide = () => { fireDisconnects(); };
+  const onHide = () => {
+    if (disconnects.size) { try { channel.postMessage({ disconnect: [...disconnects] }); } catch { /* closing */ } }
+    fireDisconnects();
+  };
   globalThis.addEventListener?.('pagehide', onHide);
 
   return {

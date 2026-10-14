@@ -2,7 +2,10 @@
 import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds } from '../engine/v4/index.js';
 import { contextFor } from '../engine/v4/core.js';
 
-export const PLAYER_COLORS = ['#f4efe2', '#ff8fb1', '#b9a2ff', '#ffa94d'];
+// Seat colors sit clear of every resource color (CIE76 ΔE ≥ 40 from all nine, measured in src/test/v4/ui/colors.test.js),
+// so a player never reads as a resource (the old cream, pink, lavender and orange read as white, magenta, purple, gold).
+// Worker tokens also carry the seat number, so color is never the only cue.
+export const PLAYER_COLORS = ['#00f0ff', '#ff33ff', '#9cff3a', '#ff4400'];
 export const playerColor = id => PLAYER_COLORS[id % PLAYER_COLORS.length];
 export const resColor = r => `var(--${r})`;
 export { roman };
@@ -437,4 +440,48 @@ export function projectedEndGame(state) {
     out[p.id] = { total: parts.reduce((s, x) => s + x.n, 0), parts };
   }
   return out;
+}
+
+/**
+ * One turn told in plain words, for the line by the board after anyone's turn (Cory: "too hard to tell what's going
+ * on"). `start` is the state when `actor`'s turn began, `end` when it passed on. Everything is read off the two
+ * states and the log between them, so it's true whatever the action or member did:
+ *   "P3 took Pickpocket · +1 gold +1 green · from you 1 gold · from P4 1 green · recruited Mob · +3 followers"
+ * Returns { text, touched } (touched: the other players whose resources changed), or null if nothing happened.
+ * `me` is the person at this device (named "you"), or null.
+ */
+export function turnStory(start, end, actor, me = null) {
+  if (!start || !end || actor == null || !end.players[actor]) return null;
+  const nm = id => (id === me ? 'you' : end.players[id].name);
+  const who = actor === me ? 'You' : end.players[actor].name;
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const lines = newLogLines(start, end);
+  const took = lines.map(l => l.match(new RegExp(`^${esc(end.players[actor].name)} took (.+) \\((\\w+)\\)\\.$`))).find(Boolean);
+  const res = end.resources;
+  const delta = id => res.map(r => [r, (end.players[id].res[r] || 0) - (start.players[id].res[r] || 0)]).filter(([, d]) => d);
+  const signed = list => list.map(([r, d]) => `${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`).join(' ');
+  const plain = list => list.map(([r, d]) => `${Math.abs(d)} ${r}`).join(', ');
+  const parts = [];
+  const mine = delta(actor);
+  if (mine.length) parts.push(signed(mine));
+  const touched = [];
+  for (const p of end.players) {
+    if (p.id === actor) continue;
+    const d = delta(p.id);
+    if (!d.length) continue;
+    touched.push(p.id);
+    const lost = d.filter(([, x]) => x < 0), got = d.filter(([, x]) => x > 0);
+    if (lost.length) parts.push(`from ${nm(p.id)} ${plain(lost)}`);
+    if (got.length) parts.push(`${nm(p.id)} ${signed(got)}`);
+  }
+  const before = new Set(start.players[actor].members);
+  const recruits = end.players[actor].members.filter(u => !before.has(u)).map(u => (end.cards[u] ? cardDef(end, u).name : null)).filter(Boolean);
+  if (recruits.length) parts.push(`recruited ${recruits.join(', ')}`);
+  const lostMembers = start.players[actor].members.length + recruits.length - end.players[actor].members.length;
+  if (lostMembers > 0) parts.push(`${lostMembers} member${lostMembers > 1 ? 's' : ''} gone`);
+  const f = engineFollowers(end, end.players[actor]) - engineFollowers(start, start.players[actor]);
+  if (f) parts.push(`${f > 0 ? '+' : '−'}${Math.abs(f)} follower${Math.abs(f) === 1 ? '' : 's'}`);
+  if (!took && !parts.length) return null;
+  const head = took ? `${who} took ${took[1]}` : `${who}`;
+  return { text: [head, ...parts].join(' · '), touched, actor };
 }

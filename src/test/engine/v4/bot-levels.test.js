@@ -6,7 +6,7 @@ import { chooseBotMove, botLevel, horizon, BOT_LEVELS, setBotLevels } from '../.
 import * as engine from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 
-const T = 300000;
+// No wall-clock timeouts: games are bounded by move caps, and the blocks by game counts (budget.js).
 
 function play(n, seed, levels, opts = {}) {
   const rand = seededRandom(seed * 101);
@@ -44,19 +44,19 @@ describe('bot levels', () => {
     expect(engine.BOT_LEVEL_INFO.map(x => x.level)).toEqual(BOT_LEVELS);
   });
 
-  it('easy and normal play whole games legally at 2, 3 and 4 players', { timeout: T }, () => {
+  it('easy and normal play whole games legally at 2, 3 and 4 players', () => {
     for (const n of [2, 3, 4]) for (let seed = 1; seed <= 4; seed++) {
       const { s } = play(n, seed, Array.from({ length: n }, (_, i) => (i % 2 ? 'easy' : 'normal')));
       expect(s.over).toBe(true);
     }
   });
 
-  it('hard plays a whole game legally (small budget)', { timeout: T }, () => {
+  it('hard plays a whole game legally (small budget)', () => {
     const { s } = play(3, 5, ['hard', 'normal', 'easy'], { budget: 20, maxMs: Infinity });
     expect(s.over).toBe(true);
   });
 
-  it('hard stops thinking at its time cap and still moves legally', { timeout: T }, () => {
+  it('hard stops thinking at its time cap and still moves legally', () => {
     let t = 0, calls = 0;
     const now = () => { calls++; return (t += 100); }; // every look at the clock costs 100ms
     let s = createGame({ seats: [{}, {}, {}], seed: 3 });
@@ -72,7 +72,7 @@ describe('bot levels', () => {
     expect(thought).toBeGreaterThan(0);
   });
 
-  it('every level is deterministic for a seed', { timeout: T }, () => {
+  it('every level is deterministic for a seed', () => {
     for (const levels of [['easy', 'easy', 'easy'], ['normal', 'normal', 'normal'], ['hard', 'normal', 'easy']]) {
       const a = play(3, 9, levels, { budget: 20, maxMs: Infinity });
       const b = play(3, 9, levels, { budget: 20, maxMs: Infinity });
@@ -81,7 +81,7 @@ describe('bot levels', () => {
     }
   });
 
-  it("normal never passes its last buy with a follower buy affordable, unless what it holds leads a contest", { timeout: T }, () => {
+  it("normal never passes its last buy with a follower buy affordable, unless what it holds leads a contest", () => {
     let lastBuys = 0;
     for (let seed = 1; seed <= 12; seed++) {
       const rand = seededRandom(seed);

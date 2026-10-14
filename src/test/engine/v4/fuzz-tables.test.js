@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest';
 import { createGame, applyMove } from '../../../engine/v4/core.js';
 import { ALL, resOf, makeTables, runTable } from './fuzz-tables-runner.js';
 
-const T = 600000; // generous: the box is often busy running sims and agents
+// No wall-clock timeouts: games are bounded by move caps, and the blocks by game counts (budget.js).
 
 // Default: every compatible pair of quadrants meets at least once, one game per table (seat count and mover
 // cycle through 2–4 and bot/random/mixed), a few games trying every legal option at every decision.
@@ -34,7 +34,7 @@ describe('cross-sphere tables', () => {
   });
 
   if (HEAVY) for (const n of [2, 3, 4]) {
-    it(`${n} players: every table × ${SEEDS.length} seeds × ${KINDS.join('/')}`, { timeout: T }, () => {
+    it(`${n} players: every table × ${SEEDS.length} seeds × ${KINDS.join('/')}`, () => {
       let games = 0;
       tables.forEach((quadrants, ti) => {
         for (const seed of SEEDS) for (const kind of KINDS) {
@@ -45,7 +45,7 @@ describe('cross-sphere tables', () => {
       expect(games).toBe(tables.length * SEEDS.length * KINDS.length);
     });
   } else {
-    it('every table once, cycling 2–4 seats and bot/random/mixed movers', { timeout: T }, () => {
+    it('every table once, cycling 2–4 seats and bot/random/mixed movers', () => {
       const seen = new Set();
       tables.forEach((quadrants, ti) => {
         const n = 2 + (ti % 3), kind = KINDS[Math.floor(ti / 3) % 3];
@@ -56,12 +56,12 @@ describe('cross-sphere tables', () => {
     });
   }
 
-  it('every legal option at every decision executes cleanly', { timeout: T }, () => {
+  it('every legal option at every decision executes cleanly', () => {
     const picks = HEAVY ? tables.filter((_, i) => i % 3 === 0) : tables.filter((_, i) => i % 8 === 0);
     picks.forEach((quadrants, i) => runTable({ quadrants, n: 2 + (i % 3), seed: 300 + i, kind: i % 2 ? 'bot' : 'random', allOptions: true }));
   });
 
-  it('random movers reach every kind of decision across the tables', { timeout: T }, () => {
+  it('random movers reach every kind of decision across the tables', () => {
     const kinds = new Set(), optionKinds = new Set();
     tables.forEach((quadrants, ti) => {
       const { stats } = runTable({ quadrants, n: 3, seed: 77 + ti, kind: 'random' });
@@ -76,7 +76,7 @@ describe('cross-sphere tables', () => {
 
 describe('cross-sphere determinism', () => {
   const sample = tables.filter((_, i) => i % (HEAVY ? 5 : 8) === 0);
-  it('the same seed and the same bots replay to an identical game', { timeout: T }, () => {
+  it('the same seed and the same bots replay to an identical game', () => {
     sample.forEach((quadrants, i) => {
       for (const kind of HEAVY ? KINDS : [KINDS[i % 3]]) {
         const a = runTable({ quadrants, n: 2 + (i % 3), seed: 500 + i, kind });
@@ -87,7 +87,7 @@ describe('cross-sphere determinism', () => {
     });
   });
 
-  it('replaying the moves through a JSON round trip at every step gives the same final state', { timeout: T }, () => {
+  it('replaying the moves through a JSON round trip at every step gives the same final state', () => {
     sample.forEach((quadrants, i) => {
       const n = 2 + ((i + 1) % 3);
       const { state, moves } = runTable({ quadrants, n, seed: 900 + i, kind: 'mixed' });

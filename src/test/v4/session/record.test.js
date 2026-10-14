@@ -139,5 +139,5 @@ describe('replayRecord', () => {
     expect(out).toMatch(/FAIL at move 26 of 40 \(illegal\)/);
     expect(out).toMatch(/Pending: P\d/);
     expect(out).toMatch(/State written to/);
-  }, 60000);
+  });
 });

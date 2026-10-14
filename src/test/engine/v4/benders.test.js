@@ -408,6 +408,6 @@ describe('bots play every bender and Release without breaking the game', () => {
       expect(new Set(seen).size).toBe(seen.length);
       expect(seen.length).toBe(Object.keys(s.cards).length);
     }
-  }, 60000);
+  });
 });
 void cardDef;

@@ -8,6 +8,10 @@ import { registerQuadrant } from '../../../../engine/v4/content/index.js';
 import yellow, { setsOf } from '../../../../engine/v4/content/yellow.js';
 import { take, move, uidOf, ids, fol, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
+import { games } from '../budget.js';
+
+// seeded games in the table block below: a game count, not a time budget (the fast gate plays 20; budget.js)
+const GAMES = games(200);
 
 registerQuadrant(yellow);
 const Q = ['gold', 'red', 'yellow', 'green'];
@@ -273,9 +277,9 @@ describe('Yellow members', () => {
   });
 });
 
-describe('Yellow table: 200 seeded bot games', () => {
-  it('finish cleanly with every invariant holding', { timeout: 120000 }, () => {
-    for (let seed = 1; seed <= 200; seed++) {
+describe(`Yellow table: ${GAMES} seeded bot games`, () => {
+  it('finish cleanly with every invariant holding', () => {
+    for (let seed = 1; seed <= GAMES; seed++) {
       const n = 2 + (seed % 3);
       const rand = seededRandom(seed * 31 + n);
       let s = createGame({ seats: Array.from({ length: n }, () => ({ kind: 'bot' })), seed, quadrants: Q });

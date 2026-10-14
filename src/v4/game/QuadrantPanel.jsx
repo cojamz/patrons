@@ -1,7 +1,8 @@
 // The quadrant facing you: its scoring rule and its action cards, by ring.
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { quadrant, RING_VALUE } from '../../engine/v4/index.js';
-import { playerColor, roman, standings, shortLabel, tiebreakNote, tiebreakWord } from '../format.js';
+import { playerColor, roman, standings, shortLabel, tiebreakNote } from '../format.js';
+import { ContestTip } from './Info.jsx';
 import { Popover } from './parts.jsx';
 import { Rich, CostPips } from './Rich.jsx';
 
@@ -74,8 +75,9 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
       )}
       <div className="score" title={`${Q.scoring.label} at round end wins ${RING_VALUE.map(v => `+${v}`).join(' / ')} in rounds I / II / III. Ties all score.`}>
         <span className="score-line">
-          <b>{shortLabel(Q.scoring.label)} <span className="num">+{RING_VALUE[round - 1]}</span></b> this round
-          {tiebreakWord(Q.scoring.label) && <small className="tb"> ({tiebreakWord(Q.scoring.label)} members break ties)</small>}
+          {/* the rule opens its standings, from the engine (what it counts, every count, who'd score now) */}
+          <b><ContestTip state={state} qid={qid} meId={meId}>{shortLabel(Q.scoring.label)}</ContestTip> <span className="num">+{RING_VALUE[round - 1]}</span></b> this round
+          {Q.scoring.tiebreak && <small className="tb"> ({Q.scoring.tiebreak.text})</small>}
           {standing && standing.top > 0 ? (
             <> · now {standing.rows.slice(0, 4).map((r, k) => (
               <span key={r.id} className={standing.leaders.includes(r.id) ? 'leads' : ''} style={{ '--pc': playerColor(r.id) }}>

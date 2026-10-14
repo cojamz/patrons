@@ -1327,3 +1327,44 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
   .side.framed > .prompt.choice .opts:has(.btn.rich):has(> :nth-child(7)){grid-template-columns:repeat(3,minmax(0,1fr))}
   .side.framed .frame{min-height:90px}
 }
+
+/* ---------- the information layer (Info.jsx): hover / tap explanations, never always-on ---------- */
+:root{--colorless:#8d9693}
+.tip{cursor:help;border-radius:3px}
+.tip:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.term{text-decoration:underline dotted color-mix(in srgb,currentColor 60%,transparent);text-underline-offset:3px;text-decoration-thickness:1px}
+.card-name{text-decoration:underline dotted color-mix(in srgb,var(--c,currentColor) 70%,transparent);text-underline-offset:3px;cursor:pointer}
+.badge-mark{color:var(--blue);font-size:.85em;margin-left:3px;text-decoration:none;cursor:help}
+.badge-mark.inline{margin-left:2px}
+.colorless-tag{color:var(--muted);font-style:italic}
+.tip-body{font-size:var(--fs-2);line-height:1.4}
+.pop-card.gloss span{font-size:var(--fs-2);line-height:1.45;color:var(--ink)}
+.contest-card .row b{font-size:var(--fs-3)}
+.contest-rows{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:3px}
+.contest-rows li{display:flex;align-items:baseline;gap:6px;color:var(--muted)}
+.contest-rows li i{width:8px;height:8px;border-radius:50%;background:var(--pc);flex:none;align-self:center}
+.contest-rows li .who{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.contest-rows li b{color:var(--ink);min-width:2ch;text-align:right}
+.contest-rows li.leads{color:var(--ink)}
+.contest-rows li em{font-style:normal;font-size:var(--fs-1);color:var(--c);border:1px solid var(--c);border-radius:999px;padding:0 6px}
+.card-face .owner{display:flex;align-items:center;gap:6px}
+.card-face .owner i{width:8px;height:8px;border-radius:50%;background:var(--pc)}
+.touch-tip{position:fixed;z-index:60;max-width:240px;background:var(--table-3);color:var(--ink);border:1px solid var(--rim);border-radius:10px;padding:8px 10px;font-size:var(--fs-2);line-height:1.35;box-shadow:0 10px 24px rgba(0,0,0,.5);pointer-events:none;animation:rise .15s ease-out}
+/* pay: the cost as slots that fill with coins (tap a coin to take it back), your resources as coins to tap in */
+.pay-slots{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 10px;background:var(--table);border:1px solid var(--rim);border-radius:12px;min-height:60px}
+.pay-slots.done{border-color:var(--green)}
+.slot-coin,.slot-empty{width:44px;height:44px;border-radius:50%;flex:none}
+.slot-coin{border:0;background:var(--c);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25);cursor:pointer;animation:coinin .22s ease-out}
+.slot-empty{border:2px dashed var(--rim)}
+.slot-empty.colored{border-color:var(--c)}
+@keyframes coinin{from{transform:translateY(16px);opacity:.2}to{transform:none;opacity:1}}
+.pay-status{margin-left:auto;font-size:var(--fs-2);color:var(--muted)}
+.pay-status.ok{color:var(--green);font-weight:700}
+.pay-tray{display:flex;flex-wrap:wrap;gap:8px}
+.tray-coin{display:inline-flex;align-items:center;gap:6px;min-height:44px;min-width:64px;padding:0 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 60%,var(--rim));background:var(--table);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+.tray-coin i{width:18px;height:18px;border-radius:50%;background:var(--c)}
+.tray-coin:disabled{opacity:.35;cursor:default}
+.pay-reset{align-self:flex-start;min-height:44px}
+@media (prefers-reduced-motion:reduce){ .slot-coin{animation:none} }
+/* the turn's story by the board: wraps to a second line instead of cutting off */
+.caption{white-space:normal;text-overflow:clip;overflow:visible;border-radius:12px;max-width:min(96%,520px);width:max-content;line-height:1.3;text-align:center}

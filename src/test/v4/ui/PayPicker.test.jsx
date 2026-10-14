@@ -1,4 +1,5 @@
-// Payment picker: default preselected (one tap confirms), adjustable, Confirm only on a legal spend, Back works.
+// Payment picker: default preselected (one tap confirms), adjusted by tapping coins in and out, Confirm only on a
+// legal spend, Back works.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.js';
@@ -36,24 +37,32 @@ function searchPayState() {
   throw new Error('no pay state found');
 }
 
-describe('v4 payment picker', { timeout: 30000 }, () => {
-  it('preselects the default so one tap confirms; another way can be picked', () => {
+describe('v4 payment picker', () => {
+  it('preselects the default so one tap confirms; tapping a resource swaps it in for another legal way', () => {
     const state = findPayState();
     const me = state.pending.player;
     const ss = session(state, [me]);
     render(<GameScreen session={ss} />);
     const dlg = screen.getByRole('dialog');
+    const res = state.resources;
     const ways = state.pending.options.filter(o => o.kind === 'pay');
     const def = ways.find(o => o.default);
     const confirm = within(dlg).getByRole('button', { name: 'Confirm' });
     expect(confirm.disabled).toBe(false);
     expect(confirm.getAttribute('data-option')).toBe(def.id);
-    // pick another way from the quick list: Confirm now carries that option
-    const quick = [...dlg.querySelectorAll('.way')].find(b => b.getAttribute('aria-pressed') === 'false');
-    fireEvent.click(quick);
+    expect(dlg.querySelector('[data-pay-status]').textContent).toMatch(/Paid in full/);
+    // the cost shows one coin per resource spent
+    expect(dlg.querySelectorAll('[data-pay-coin]').length).toBe(res.reduce((n, r) => n + def.spend[r], 0));
+    // a swap the engine allows: one more of r, one less of the most-spent other color
+    const ids = new Set(ways.map(o => o.id));
+    const id = v => `pay:${res.map(r => v[r] || 0).join('-')}`;
+    const r = res.find(c => state.players[me].res[c] > def.spend[c]
+      && res.some(y => y !== c && def.spend[y] > 0 && ids.has(id({ ...def.spend, [c]: def.spend[c] + 1, [y]: def.spend[y] - 1 }))));
+    expect(r).toBeTruthy();
+    fireEvent.click(dlg.querySelector(`[data-pay-add="${r}"]`));
     const chosen = within(dlg).getByRole('button', { name: 'Confirm' }).getAttribute('data-option');
     expect(chosen).not.toBe(def.id);
-    expect(ways.map(o => o.id)).toContain(chosen);
+    expect(ids.has(chosen)).toBe(true);
     fireEvent.click(within(dlg).getByRole('button', { name: 'Confirm' }));
     expect(ss.submit).toHaveBeenCalledWith({ player: me, option: chosen });
   });
@@ -71,11 +80,16 @@ describe('v4 payment picker', { timeout: 30000 }, () => {
     const state = findPayState();
     render(<GameScreen session={session(state, [state.pending.player])} />);
     const dlg = screen.getByRole('dialog');
-    // remove one coin of whatever the default spends: no longer pays the cost
+    // take one coin back out of the cost: no longer pays it, and the slot says so
     const def = state.pending.options.find(o => o.default);
     const color = state.resources.find(r => def.spend[r] > 0);
-    fireEvent.click(within(dlg).getByRole('button', { name: `One less ${color}` }));
+    fireEvent.click(dlg.querySelector(`[data-pay-coin="${color}"]`));
     expect(within(dlg).getByRole('button', { name: 'Confirm' }).disabled).toBe(true);
+    expect(dlg.querySelector('[data-pay-status]').textContent).toMatch(/1 more to pay/);
+    // tap that color in your resources: it goes back in, and the cost is paid again
+    fireEvent.click(dlg.querySelector(`[data-pay-add="${color}"]`));
+    expect(within(dlg).getByRole('button', { name: 'Confirm' }).getAttribute('data-option')).toBe(def.id);
+    expect(dlg.querySelector('[data-pay-status]').textContent).toMatch(/Paid in full/);
   });
 });
 

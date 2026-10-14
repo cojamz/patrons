@@ -1,0 +1,30 @@
+# The v4 gate on every push to the v4 branch, on a clean machine: unit + engine + sphere + session + UI tests and a
+# production build (npm run check:v4 -- --fast). Same command agents run locally, so a red can't depend on whose box
+# it ran on. Nothing here deploys: Netlify builds previews on its own; this job only checks.
+name: v4 gate
+
+on:
+  push:
+    branches: [claude/gifted-newton-3lcy3i]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v4-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: check:v4 --fast
+        run: npm run check:v4 -- --fast

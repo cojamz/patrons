@@ -3,14 +3,16 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove } from '../../../engine/v4/core.js';
 import { runGame, MOVE_CAP } from './fuzz-runner.js';
+import { games } from './budget.js';
 
-const T = 300000; // generous: the box is often busy running sims and agents
+// No wall-clock timeouts: games are bounded by move caps, and the blocks by game counts (budget.js).
+const GAMES = games(170, 12); // per seat count
 
 describe('bot fuzz: invariants after every move', () => {
   for (const n of [2, 3, 4]) {
-    it(`${n} players, 170 seeded games`, { timeout: T }, () => {
+    it(`${n} players, ${GAMES} seeded games`, () => {
       const lengths = [];
-      for (let seed = 1; seed <= 170; seed++) lengths.push(runGame({ n, seed, kind: 'bot' }).moves.length);
+      for (let seed = 1; seed <= GAMES; seed++) lengths.push(runGame({ n, seed, kind: 'bot' }).moves.length);
       expect(Math.max(...lengths)).toBeLessThan(MOVE_CAP.bot);
     });
   }

@@ -1,12 +1,12 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
-import { parseRoundEnd, newLogLines, winSentence, breakdown, costParts } from '../../../v4/format.js';
+import { parseRoundEnd, newLogLines, winSentence, breakdown, costParts, turnStory } from '../../../v4/format.js';
 
 const seats = [{ name: 'Ana', kind: 'bot' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }];
 const play = seed => { let s = createGame({ seats, seed }); while (!s.over) s = applyMove(s, chooseBotMove(s, () => 0.4)); return s; };
 
-describe('v4 format helpers', { timeout: 30000 }, () => {
+describe('v4 format helpers', () => {
   it('parses a round-end line into one row per quadrant', () => {
     const s = createGame({ seats, seed: 1 });
     const L = q => quadrant(q).scoring.label;
@@ -45,5 +45,33 @@ describe('v4 format helpers', { timeout: 30000 }, () => {
     expect(costParts(def)).toEqual([{ color: 'magenta', n: 6 }, { color: 'any', n: 2 }]);
     expect(costParts(def, s.resources)).toEqual([{ color: 'any', n: 8 }]);
     expect(costParts({ quadrant: 'gold', s: 2, w: 2 }, s.resources)).toEqual([{ color: 'gold', n: 2 }, { color: 'any', n: 2 }]);
+  });
+
+  it('tells every turn in one line: the action, what changed, who it touched, recruits and followers', () => {
+    let s = createGame({ seats, seed: 11 });
+    let start = null, told = 0, touched = 0, recruits = 0;
+    for (let k = 0; k < 3000 && !s.over; k++) {
+      const before = s;
+      s = applyMove(s, chooseBotMove(s, () => 0.4));
+      const actor = before.pending.player;
+      if (!start || start.actor !== actor) start = { actor, state: before };
+      const passed = before.round >= 1 && s.round === before.round && !(s.pending && s.pending.player === actor);
+      if (!passed) continue;
+      const story = turnStory(start.state, s, actor, 0);
+      start = null;
+      const a0 = before.players[actor];
+      expect(story).toBeTruthy();
+      expect(story.text.startsWith(actor === 0 ? 'You' : a0.name)).toBe(true);
+      told++;
+      // every rival whose resources changed this turn is named in the line
+      for (const id of story.touched) {
+        touched++;
+        expect(story.text).toMatch(new RegExp(`(from |· )${id === 0 ? 'you' : s.players[id].name} `));
+      }
+      if (/recruited /.test(story.text)) recruits++;
+    }
+    expect(told).toBeGreaterThan(20);
+    expect(recruits).toBeGreaterThan(0);
+    expect(touched).toBeGreaterThan(0);
   });
 });

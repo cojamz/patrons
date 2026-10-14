@@ -7,6 +7,8 @@ import { memberChips, playerColor, plural, projectedEndGame } from '../format.js
 import Tick from './Tick.jsx';
 import { Popover } from './parts.jsx';
 import { Rich, CostPips } from './Rich.jsx';
+import { BadgeMark, CardText, MemberCard, cardColor } from './Info.jsx';
+import { realHover } from '../hover.js';
 
 export const memberTip = d => `${d.name} · ${d.f}★ · ${d.text}`;
 
@@ -57,7 +59,7 @@ export function Workers({ p, caption = true }) {
 }
 
 /** Chips for one player: as many as fit on the card, then "+N". */
-function ChipRow({ state, p, own, onOpen, onAll }) {
+function ChipRow({ state, p, own, onOpen, onAll, onHover }) {
   const groups = p.members.length ? memberChips(state, p) : [];
   const box = useRef(null);
   const [fit, setFit] = useState(Infinity);
@@ -96,10 +98,13 @@ function ChipRow({ state, p, own, onOpen, onAll }) {
         return (
           <button
             key={g.key} data-g data-uids={g.uids.join(' ')} type="button" className={`chip${g.card.used || (sw && g.card.on === false) ? ' off' : ''}${sw ? ' switch' : ''}`}
-            style={{ '--c': `var(--${g.def.quadrant})` }} title={memberTip(g.def)} aria-haspopup="dialog"
+            style={{ '--c': cardColor(state, g.def) }} title={memberTip(g.def)} aria-haspopup="dialog"
             onClick={e => onOpen(e.currentTarget, g)}
+            // a mouse hover opens the same card a tap does (rival chips too)
+            onPointerEnter={e => { if (onHover && realHover(e)) onHover(e.currentTarget, g); }}
+            onPointerLeave={e => { if (onHover && e.pointerType === 'mouse') onHover(null, null); }}
           >
-            <span className="glyph" aria-hidden="true" />{g.label}{g.def.f > 1 ? <em className="stars"> {g.def.f}★</em> : null}{g.count > 1 ? <em className="copies"> ×{g.count} copies</em> : ''}{g.card.used ? <em className="used"> · used</em> : null}
+            <span className="glyph" aria-hidden="true" />{g.label}<BadgeMark state={state} def={g.def} />{g.def.f > 1 ? <em className="stars"> {g.def.f}★</em> : null}{g.count > 1 ? <em className="copies"> ×{g.count} copies</em> : ''}{g.card.used ? <em className="used"> · used</em> : null}
             {sw && <i className={`sw${g.card.on === false ? '' : ' on'}`} aria-label={g.card.on === false ? 'off' : 'on'} />}
           </button>
         );
@@ -144,7 +149,7 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
                 )}
               </span>
             </div>
-            <div className={`res${robbed && robbed.pid === p.id ? ' robbed' : ''}`}>
+            <div className={`res${robbed && (robbed.pid === p.id || (robbed.pids || []).includes(p.id)) ? ' robbed' : ''}`}>
               <Resources state={state} p={p} float={false} />
               <span className="meta">
                 <Workers p={p} />
@@ -168,6 +173,7 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
               state={state} p={p} own={mySeats.includes(p.id)}
               onOpen={(el, g) => setPop(pp => (pp && pp.group && pp.group.key === g.key && pp.pid === p.id ? null : { el, group: g, pid: p.id }))}
               onAll={el => setPop({ el, all: true, pid: p.id })}
+              onHover={(el, g) => setPop(pp => (g ? (pp && !pp.hover ? pp : { el, group: g, pid: p.id, hover: true }) : (pp && pp.hover ? null : pp)))}
             />
           </section>
         );
@@ -177,21 +183,19 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
           <div className="pop-list">
             <b>{state.players[pop.pid].name}’s members</b>
             {memberChips(state, state.players[pop.pid]).map(g => (
-              <div key={g.key} className="pop-row" style={{ '--c': `var(--${g.def.quadrant})` }}>
-                <span><i />{g.label} <span className="num star">{g.count > 1 ? `${g.count} copies · ${g.def.f}★ each` : `${g.def.f}★`}</span></span>
-                <small><Rich text={g.def.text} /></small>
+              <div key={g.key} className="pop-row" style={{ '--c': cardColor(state, g.def) }}>
+                <span><i />{g.label}<BadgeMark state={state} def={g.def} /> <span className="num star">{g.count > 1 ? `${g.count} copies · ${g.def.f}★ each` : `${g.def.f}★`}</span></span>
+                <small><CardText text={g.def.text} /></small>
               </div>
             ))}
           </div>
         </Popover>
       )}
       {pop && pop.group && (
-        <Popover anchor={pop.el} onClose={close}>
-          <div className="pop-card" style={{ '--c': `var(--${pop.group.def.quadrant})` }}>
-            <div className="row"><b>{pop.group.label}</b><span className="num star">{pop.group.count > 1 ? `${pop.group.count} copies · ${pop.group.def.f}★ each` : `${pop.group.def.f}★`}</span></div>
-            <span><Rich text={pop.group.def.text} /></span>
-            {pop.group.card.used && <small>Used</small>}
-          </div>
+        <Popover anchor={pop.el} onClose={close} float={!!pop.hover}>
+          {/* the full card (badge, keywords, cost, owner), the same one a member name opens anywhere */}
+          <MemberCard state={state} uid={pop.group.uids[0]} />
+          {pop.group.count > 1 && <small className="copies-note">{pop.group.count} copies · {pop.group.def.f}★ each</small>}
         </Popover>
       )}
     </div>

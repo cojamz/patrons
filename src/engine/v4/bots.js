@@ -307,7 +307,10 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
     const lt = laterTurns(s).turns;
     return state.players.map((_, i) => turns[i] + lt + (i === me ? extraNow : 0));
   };
-  const incomeAt = s => { const li = laterTurns(s).income * (opts.income ?? INCOME_SCALE); return turns.map(t => t * nowIncome + li); };
+  // extra: placements still ahead for the decider that this move adds (extra turns), each worth a placement's income
+  const incomeAt = (s, extra = 0) => { const li = laterTurns(s).income * (opts.income ?? INCOME_SCALE); return turns.map((t, i) => (t + (i === me ? extra : 0)) * nowIncome + li); };
+  // extra turns a move queued for the decider (Overtime, Rally, Errand Runner…): each is a placement and a buy
+  const turnsQueued = s => s.queue.filter(t => t.t === 'turn' && t.p === me).length;
   const placesLeft = turns[me] + laterTurns(state).turns;
   const out = [];
   if (pend.kind === 'place') {
@@ -319,6 +322,7 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
         const p = s.players[me];
         const before = memberCount(s, p);
         const had = new Set(p.members);
+        const turns0 = turnsQueued(s);
         s.slots[`${o.q}-${o.i}`] = me;
         p.left -= 1;
         const qid = s.quadrants[o.q];
@@ -326,10 +330,11 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
         actionAt(s, o.q, o.i).resolve(ctx, p);
         // buys the action queues (Spree…) are buys still ahead, like this turn's own
         const moreBuys = s.queue.filter(t => t.t === 'buy' && t.p === me && !t.extra).length;
+        const moreTurns = Math.max(0, turnsQueued(s) - turns0);
         settle(s, ctx);
         // members the action brought in (Hire, Take…) bring their abilities too
         const gained = p.members.filter(u => !had.has(u)).reduce((a, u) => a + abilityValue(cardDef(s, u), placesLeft, opts.k), 0);
-        v = marginOf(evaluate(s, buysAt(s, 1 + moreBuys), incomeAt(s), roundLeft, { [me]: gained }, opts.future), me, opts.spite);
+        v = marginOf(evaluate(s, buysAt(s, 1 + moreBuys + moreTurns), incomeAt(s, moreTurns), roundLeft, { [me]: gained }, opts.future), me, opts.spite);
         if (opts.noMembers && memberCount(s, p) > before) v -= 100;
       } catch {
         v = -50 + actionAt(state, o.q, o.i).estimate(contextFor(state), state.players[me]);
@@ -344,6 +349,7 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
         const ctx = contextFor(s);
         const p = s.players[me];
         const extraAbility = {};
+        const turns0 = turnsQueued(s);
         const full = Object.fromEntries(s.resources.map(r => [r, spend[r] || 0]));
         if (what.uid !== undefined) {
           ctx.recruit(p, what.uid, { free: false, spend: full });
@@ -358,7 +364,8 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
             if (tier.clock && s.stock[tier.key] <= 0) s.endEarly = true;
           }
         }
-        return marginOf(evaluate(s, buysAt(s, 0), incomeAt(s), roundLeft, extraAbility, opts.future), me, opts.spite);
+        const moreTurns = Math.max(0, turnsQueued(s) - turns0);
+        return marginOf(evaluate(s, buysAt(s, moreTurns), incomeAt(s, moreTurns), roundLeft, extraAbility, opts.future), me, opts.spite);
       } catch {
         return -1e6;
       }

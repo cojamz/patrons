@@ -7,6 +7,10 @@ import { seededRandom } from '../../../../engine/v4/rng.js';
 import trading, { install, SELL_HIGH } from '../../../../engine/v4/content/trading.js';
 import { take, move, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
+import { games } from '../budget.js';
+
+// seeded games in the table block below: a game count, not a time budget (the fast gate plays 20; budget.js)
+const GAMES = games(200);
 
 install();
 const Q = ['gold', 'red', 'blue', 'trading'];
@@ -358,9 +362,9 @@ describe('White members', () => {
   });
 });
 
-describe('White table: 200 seeded bot games', () => {
-  it('finish cleanly with every invariant holding', { timeout: 180000 }, () => {
-    for (let seed = 1; seed <= 200; seed++) {
+describe(`White table: ${GAMES} seeded bot games`, () => {
+  it('finish cleanly with every invariant holding', () => {
+    for (let seed = 1; seed <= GAMES; seed++) {
       const n = 2 + (seed % 3);
       const rand = seededRandom(seed * 31 + n);
       let s = createGame({ seats: Array.from({ length: n }, () => ({ kind: 'bot' })), seed, quadrants: Q });

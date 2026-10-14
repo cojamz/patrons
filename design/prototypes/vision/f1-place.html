@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1270">
+<title>Lamplit Table · Placing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,500&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="vision.css">
+<script src="px.js"></script>
+<script src="board.js"></script>
+<style>
+.note.up::before{left:calc(50% - 7px);bottom:-7px;box-shadow:1px 1px 0 rgba(80,60,30,.25)}
+.meadow{position:absolute;left:664px;top:96px;display:grid;grid-template-columns:repeat(5,108px);gap:12px}
+.lbl-shop{position:absolute;left:664px;top:70px;font-family:var(--serif);font-size:15px;color:var(--cream-2);display:flex;gap:10px;align-items:baseline}
+.lbl-shop small{font-family:var(--sans);font-size:12px;color:var(--cream-3)}
+.shade{position:absolute;left:650px;top:62px;width:620px;height:380px;background:linear-gradient(90deg,rgba(20,14,10,.0),rgba(20,14,10,.22));pointer-events:none}
+.mine{left:664px;top:480px;width:588px;height:206px;border-radius:14px;padding:14px 16px;background:rgba(243,230,200,.035);box-shadow:inset 0 0 0 1px rgba(243,230,200,.08)}
+.mine .row{display:flex;align-items:flex-end;gap:26px;margin-top:10px}
+.workers{display:flex;gap:2px;align-items:flex-end}
+.workers .px{filter:drop-shadow(0 4px 3px rgba(0,0,0,.5))}
+.workers .used{opacity:.22;filter:none}
+.cap{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3);margin-top:6px;text-align:center}
+.took{position:absolute;font-size:11px;color:#f0b3a0;white-space:nowrap}
+.took::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#e07a5f;margin-right:5px;vertical-align:1px}
+.grab{position:absolute;font-size:11px;color:var(--cream-3)}
+</style>
+</head>
+<body>
+<div class="table" id="T" style="--lx:344px;--ly:372px">
+  <div class="prompt" style="left:34px;top:20px">
+    <div class="big">Your turn — <em>place a worker.</em></div>
+    <div class="steps"><span class="on">Place</span><span>Recruit or buy</span></div>
+  </div>
+  <div class="menu"><i></i></div>
+  <div class="rail" id="rail" style="right:66px;top:18px"></div>
+  <div class="lbl-shop">Shop <small>10 face up · 47 in the pile</small></div>
+  <div class="meadow" id="meadow"></div>
+  <div class="shade"></div>
+  <div class="offer" style="left:664px;top:420px"><span class="lbl">Followers</span><span style="color:var(--cream-3)">for any resources</span>
+    <span class="rate"><b>2</b>→<b>1</b></span><span class="rate"><b>4</b>→<b>3</b></span><span class="rate"><b>8</b>→<b>6</b> <small>8 left</small></span><span class="rate"><b>10</b>→<b>10</b> <small>4 left</small></span></div>
+  <div class="mine" id="mine">
+    <div class="hd">Your table <small style="font-family:var(--sans);font-size:12px;color:var(--cream-3)">· the Star</small></div>
+    <div class="row">
+      <div><div class="stacks" id="stacks"></div></div>
+      <div style="width:1px;align-self:stretch;background:rgba(243,230,200,.1)"></div>
+      <div><div class="workers" id="workers"></div><div class="cap">2 workers left</div></div>
+      <div style="width:1px;align-self:stretch;background:rgba(243,230,200,.1)"></div>
+      <div><div class="hand" id="hand"></div><div class="cap" style="text-align:left">1 member</div></div>
+    </div>
+  </div>
+</div>
+<script>
+const { sprite, R } = PX;
+const T = document.getElementById('T');
+const seat = { you: { robe: 'bone', sig: 'star' }, wren: { robe: 'ebony', sig: 'eye' }, ossian: { robe: 'clay', sig: 'hand' }, ilse: { robe: 'slate', sig: 'flame' } };
+const g = (c, n) => `${n !== undefined ? n : ''}${sprite(c, 1)}`;
+Board.render(T, {
+  x: 344, y: 374, size: 572, round: 1, hover: 'gold-1', ghost: seat.you,
+  quads: [
+    { id: 'gold', color: '#c99327', glyph: 'gold', rule: 'Most', leader: seat.you, spaces: [
+      { icon: 'joint', y: `+3${sprite('gold', 1)}+1→` , taken: seat.you },
+      { icon: 'rush', y: `+2${sprite('gold', 1)}` },
+      { icon: 'discount', y: `−4 cost` } ] },
+    { id: 'silver', color: '#8794a2', glyph: 'silver', rule: 'Most', leader: seat.ossian, spaces: [
+      { icon: 'toast', y: `+3${sprite('silver', 1)}` },
+      { icon: 'gift', y: `+2${sprite('silver', 1)}+2${sprite('any', 1)}`, taken: seat.ossian },
+      { icon: 'alms', y: `+4${sprite('silver', 1)}` } ] },
+    { id: 'magenta', color: '#b2386c', glyph: 'magenta', rule: 'Most members', leader: null, spaces: [
+      { icon: 'pickpocket', y: `steal 2`, taken: { ...seat.ilse, fresh: 1 } },
+      { icon: 'tipoff', y: `steal 1s`, taken: { ...seat.ilse, fresh: 1 } },
+      { icon: 'hideout', y: `steal 1` } ] },
+    { id: 'green', color: '#3d8c66', glyph: 'green', rule: 'Most', leader: seat.wren, spaces: [
+      { icon: 'hum', y: `+3${sprite('green', 1)}`, taken: seat.wren },
+      { icon: 'chant', y: `+2${sprite('green', 1)}` },
+      { icon: 'echo', y: `copy` } ] },
+  ]
+});
+// rail = scoreboard in turn order; arrows show the snake direction (going back this pass)
+const rail = [
+  ['Wren', seat.wren, 2, 3, 1, 'hum'], ['Ossian', seat.ossian, 3, 3, 1, 'gift'], ['You', seat.you, 2, 3, 1, null, 1], ['Ilse', seat.ilse, 1, 3, 2, 'tipoff'] ];
+document.getElementById('rail').innerHTML = rail.map(([n, s, f, w, u, last, now], i) => `
+  ${i ? '<span class="arrow">◂</span>' : ''}
+  <div class="seat ${now ? 'now' : ''}">${sprite('acolyte', 2, s)}
+    <div class="who">${n}<small>${last ? 'last: ' + sprite(last, 1).replace('<svg', '<svg style="display:inline;vertical-align:-3px;width:14px;height:14px"') : '&nbsp;'}</small></div>
+    <div class="score">${f}${sprite('follower', 2)}</div>
+    <div class="wk">${Array.from({ length: w }, (_, k) => `<span class="${k < u ? 'used' : ''}"></span>`).join('')}</div>
+  </div>`).join('');
+// shop: art, name, timing, cost, worth. Text lives one hover away (dim while you place).
+const cards = [
+  ['Underdog', 'gold', 'up', 'While', [4, 'gold'], 2, 1, 'after Rush'], ['Seed Money', 'gold', 'sprout', 'On recruit', [4, 'gold'], 0, 1, 'after Rush'],
+  ['Prospector', 'gold', 'coin', 'Whenever', [2, 'gold'], 2, 1], ['Cutpurse', 'magenta', 'dagger', 'Round start', [2, 'magenta'], 2, 1],
+  ['Robin Hood', 'magenta', 'bow', 'Whenever', [2, 'magenta'], 2, 1], ['Crew', 'magenta', 'mask', 'Worth 2', [1, 'magenta'], 1, 2],
+  ['Muse', 'green', 'lyre', 'Whenever', [2, 'green'], 2, 1], ['Choir', 'green', 'note', 'Whenever', [4, 'green'], 2, 1],
+  ['Retinue', 'silver', 'cup', 'On recruit', [2, 'silver'], 2, 2], ['Steward', 'silver', 'key', 'Round start', [2, 'silver'], 2, 1] ];
+const Q = { gold: '#c99327', silver: '#8794a2', magenta: '#b2386c', green: '#3d8c66' };
+document.getElementById('meadow').innerHTML = cards.map(([n, q, p, tm, [s, c], w, f, tick]) => `
+  <div class="card paper ${tick ? '' : 'dim'}" style="--q:${Q[q]}">
+    <div class="band"></div>
+    <div class="art">${sprite('acolyte', 3, { robe: q, prop: p })}</div>
+    <div class="nm">${n}</div><div class="tm">${tm}</div>
+    <div class="ft"><span class="cost"><span class="rz"><b>${s}</b>${sprite(c, 2)}</span>${w ? `<span class="rz"><b>${w}</b>${sprite('any', 2)}</span>` : ''}</span><span class="val">${f}${sprite('follower', 1)}</span></div>
+    ${tick ? `<span class="tick">✓ ${tick}</span>` : ''}
+  </div>`).join('');
+// your resources as physical stacks (shape + colour), workers as figures, members as a small fan
+const res = [['gold', 3], ['silver', 0], ['magenta', 1], ['green', 1]];
+document.getElementById('stacks').innerHTML = res.map(([c, n]) => `
+  <div class="stack ${n ? '' : 'zero'}"><div class="coins">${Array.from({ length: Math.max(n, 1) }, () => sprite(c, 3)).join('')}</div><div class="n">${n}</div></div>`).join('');
+document.getElementById('workers').innerHTML = sprite('acolyte', 3, seat.you) + sprite('acolyte', 3, seat.you) + `<span class="used">${sprite('acolyte', 3, seat.you)}</span>`;
+document.getElementById('hand').innerHTML = `<div class="mini paper" style="--q:${Q.gold};position:relative"><div class="band"></div>${sprite('acolyte', 3, { robe: 'gold', prop: 'coin' })}<div class="nm">Banker</div><div style="font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-top:2px">Round start</div></div>`;
+// a hostile move stays marked on what it touched until your turn ends
+T.insertAdjacentHTML('beforeend', `<div class="took" style="left:680px;top:664px">Ilse took 1 ${sprite('gold', 1).replace('<svg', '<svg style="display:inline;vertical-align:-2px"')} (Pickpocket)</div>`);
+T.insertAdjacentHTML('beforeend', `<div class="grab" style="left:1000px;top:664px">drag a worker, or click a space</div>`);
+// hover note on Rush: full text + exact preview + what it unlocks
+T.insertAdjacentHTML('beforeend', `
+<div class="note paper up" style="left:213px;top:286px">
+  <div class="t">${sprite('rush', 3)}<h4>Rush<small>Gold · outer ring</small></h4></div>
+  <p>+2 gold per round number <span style="color:var(--ink-3)">(2 / 4 / 6)</span>.</p>
+  <div class="yd">
+    <div class="row"><span class="k">You get</span><b>+2</b>${sprite('gold', 2)} <span style="color:var(--ink-3)">→</span> <b>5</b>${sprite('gold', 2)}</div>
+    <div class="row"><span class="k">Gold race</span>You 5 · Ossian 2 <span style="color:var(--ink-3)">· leader +2${sprite('follower', 1)}</span></div>
+    <div class="row"><span class="k">Unlocks</span>Underdog, Seed Money</div>
+  </div>
+</div>`);
+</script>
+</body>
+</html>

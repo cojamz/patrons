@@ -71,7 +71,7 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
     const unseen = hand.filter(id => !(st[id]?.held >= 3));
     expect(silent).toEqual([]);
     expect(unseen).toEqual([]);
-  }, 120000);
+  });
 });
 
 // ---------------------------------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ describe('namesCard: what counts as a line naming a card', () => {
 });
 
 describe('fire audit gate (Gold, Red, Purple, Silver, Yellow, guests)', () => {
-  it('every recruited member with an effect is named acting at least once', { timeout: 120000 }, () => {
+  it('every recruited member with an effect is named acting at least once', () => {
     const { crashes, stats } = runFireAudit({ games: 140, spheres: SPHERES, levels: ['easy', 'easy', 'easy', 'easy'] });
     expect(crashes).toEqual([]);
     const silent = silentMembers(stats, [...SPHERES, 'benders'], ALLOW).map(e => `${e.name} (${e.def}): recruited in ${e.rec} games, never named`);

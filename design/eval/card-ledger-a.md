@@ -55,6 +55,10 @@ Status key:
 Relay was cut by Cory (2026-10-14), so it's not in this ledger. Purple has 14 members.
 
 - Hourly, Catch Up, Wind-up, Linger, Overtime, Rally: **OK.**
+- Reworked later on 2026-10-14 (Purple agent, design/spheres/purple.md v4):
+  - Linger was replaced by Plan Ahead.
+  - Overtime, Rally, Bookkeeper and the scoring rule changed.
+  - The new texts are checked by the updated cards-purple.test.js and spheres/purple.test.js, which have a log line naming each card.
 - Second Wind: **FIXED.** It now logs "P1's Second Wind: P1 takes an extra turn".
 - Errand Runner: **FIXED (same).** A rival's Overseer reacts to its turn and is named.
 - Taskmaster: **FIXED.** It now logs "P1's Taskmaster: pays 5 purple …".

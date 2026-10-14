@@ -1,15 +1,20 @@
 // Round end as a moment: each quadrant's winner with a +N chip, follower totals ticking up (contests split from
 // everything else gained this round), then the button that starts the next round.
 import { useEffect, useRef, useState } from 'react';
-import { followers, WORKERS } from '../../engine/v4/index.js';
-import { playerColor, roman, standings, roundGains, tiebreakNote, shortLabel, tiebreakWord } from '../format.js';
+import { followers } from '../../engine/v4/index.js';
+import { playerColor, roman, standings, scoredStandings, roundGains, tiebreakNote, workersNote } from '../format.js';
 import Tick from './Tick.jsx';
 import { useDialog } from './parts.jsx';
+import { Tip, ContestStandings, NamedText } from './Info.jsx';
 
 export default function RoundEnd({ info, onNext, autoMs }) {
   const { result, start, after, board } = info;
   const at = board || after; // the table at the moment of scoring
-  const counts = standings(at);
+  // The contests exactly as the engine scored them (state.contests); an old save without the record re-reads the
+  // engine's contest table on the scoring snapshot. Every number and winner below comes from one of those two.
+  const roundNo = ['I', 'II', 'III'].indexOf(result.round) + 1;
+  const counts = scoredStandings(after, roundNo) || standings(at).map(st => ({ ...st, leaders: result.rows.find(r => r.qid === st.qid)?.winners || [] }));
+  const rows = counts.map(st => ({ ...st, winners: st.leaders, v: st.prize ?? result.rows.find(r => r.qid === st.qid)?.v ?? 0 }));
   const box = useDialog(onNext);
   useEffect(() => {
     const onKey = e => { if (e.key === 'Enter' && !e.defaultPrevented) { e.preventDefault(); onNext(); } };
@@ -36,7 +41,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
   }, [autoMs, onNext]);
 
   const name = id => after.players[id].name;
-  const contest = id => result.rows.reduce((s, r) => s + (r.winners.includes(id) ? r.v : 0), 0);
+  const contest = id => rows.reduce((s, r) => s + (r.winners.includes(id) ? r.v : 0), 0);
   // Sorted by the total shown on this card (end-game bonuses, if any, come next on the results screen).
   const shownTotal = p => followers(at, at.players[p.id]);
   const ranked = [...after.players].sort((a, b) => shownTotal(b) - shownTotal(a));
@@ -48,9 +53,12 @@ export default function RoundEnd({ info, onNext, autoMs }) {
         <h2>Round {result.round} scored</h2>
         <div className={`re-body${more ? ' more' : ''}`} ref={body}>
         <ul className="re-rows">
-          {result.rows.map(r => (
-            <li key={r.qid} style={{ '--c': `var(--${r.qid})` }} className={r.winners.length ? '' : 'none'}>
-              <span className="re-q"><i /><span>{shortLabel(r.label)}{tiebreakWord(r.label) && <small className="re-tb">{tiebreakWord(r.label)} members break ties</small>}</span></span>
+          {rows.map(r => (
+            <li key={r.qid} style={{ '--c': `var(--${r.qid})` }} className={r.winners.length ? '' : 'none'} data-qid={r.qid} data-winners={r.winners.join(',')}>
+              <span className="re-q"><i /><span>
+                <Tip className="re-rule" label={`${r.rule}: what it counts and every count`} content={() => <ContestStandings state={at} st={r} scored />}>{r.rule}</Tip>
+                {r.tiebreak && <small className="re-tb">{r.tiebreak.text}</small>}
+              </span></span>
               <span className="re-w">
                 <span className="re-win">
                   {r.winners.length
@@ -58,13 +66,13 @@ export default function RoundEnd({ info, onNext, autoMs }) {
                     : <em>no one scored</em>}
                 </span>
                 <small className="re-counts num">
-                  {(() => { const st = counts.find(c => c.qid === r.qid); return (st?.rows || []).map(row => {
-                    const tb = tiebreakNote(st, row);
-                    return <span key={row.id} className={r.winners.includes(row.id) ? 'won' : ''}>{name(row.id)} {row.shown}{tb ? <small> ({tb})</small> : null}</span>;
-                  }); })()}
+                  {r.rows.map(row => {
+                    const tb = tiebreakNote(r, row);
+                    return <span key={row.id} className={r.winners.includes(row.id) ? 'won' : ''} data-pid={row.id} data-count={row.shown}>{name(row.id)} {row.shown}{tb ? <small> ({tb})</small> : null}</span>;
+                  })}
                 </small>
               </span>
-              <span className="re-chip num" aria-label={`plus ${r.v} followers`}>+{r.v}</span>
+              <span className="re-chip num" aria-label={`plus ${r.v} followers`} title={`${r.rule}: the leader gains +${r.v} followers in round ${result.round}`}>+{r.v}</span>
             </li>
           ))}
         </ul>
@@ -90,10 +98,10 @@ export default function RoundEnd({ info, onNext, autoMs }) {
         {after.over && (
           <p className="hint re-next">
             End-game bonuses come next{finalParts.length ? ': ' : '.'}
-            {finalParts.map((p, k) => <span key={p.id}>{k ? ' · ' : ''}<b style={{ color: playerColor(p.id) }}>{p.name}</b> {p.final.parts.join(', ')}</span>)}
+            {finalParts.map((p, k) => <span key={p.id}>{k ? ' · ' : ''}<b style={{ color: playerColor(p.id) }}>{p.name}</b> <NamedText state={after} text={p.final.parts.join(', ')} /></span>)}
           </p>
         )}
-        {first && <p className="hint">Round {roman(after.round)} · <span className="num">{WORKERS[after.round - 1]}</span> workers each · {first.name} picks first</p>}
+        {first && <p className="hint">Round {roman(after.round)} · <span className="num">{workersNote(after)}</span> · {first.name} picks first</p>}
         </div>
         {more && <span className="re-more" aria-hidden="true">More below ↓</span>}
         <div className="re-foot">

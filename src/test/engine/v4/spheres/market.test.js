@@ -10,6 +10,10 @@ import { contextFor } from '../../../../engine/v4/core.js';
 import { take, move, uidOf, ids, fol, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
 import { SHOP_SIZE } from '../../../../engine/v4/core.js';
+import { games } from '../budget.js';
+
+// seeded games in the table block below: a game count, not a time budget (the fast gate plays 20; budget.js)
+const GAMES = games(200);
 
 install();
 const Q = ['gold', 'red', 'market', 'green'];
@@ -272,11 +276,11 @@ describe('Blue members', () => {
   });
 });
 
-describe('Blue table: 200 seeded bot games', () => {
-  it('finish cleanly with invariants holding', { timeout: 120000 }, () => {
+describe(`Blue table: ${GAMES} seeded bot games`, () => {
+  it('finish cleanly with invariants holding', () => {
     const restoreReal = restore; restoreReal(); setBadge(8); restore = () => {};
     let usedSpree = 0;
-    for (let g = 1; g <= 200; g++) {
+    for (let g = 1; g <= GAMES; g++) {
       const rand = seededRandom(g * 131);
       let s = createGame({ seats: [0, 1, 2, 3].map(() => ({ kind: 'bot' })), seed: g, quadrants: Q });
       let k = 0;
@@ -289,6 +293,6 @@ describe('Blue table: 200 seeded bot games', () => {
       expect(s.ranking).toHaveLength(4);
       for (const p of s.players) expect(followers(s, p)).toBeGreaterThan(0);
     }
-    expect(usedSpree).toBeGreaterThan(150);
+    expect(usedSpree).toBeGreaterThan(GAMES * 0.75);
   });
 });

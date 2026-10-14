@@ -10,11 +10,13 @@ import { makeTables } from './fuzz-tables-runner.js';
 /** The number a quadrant's rule measures for player p (its count), or null when the oracle doesn't know the rule. */
 export function oracleCount(state, qid, p) {
   const res = r => p.res[r] || 0;
+  const q = quadrant(qid);
+  // a plain "Most <resource>" rule counts that resource (Gold, Silver, White, Green, Purple…)
+  if (q.scoring.label === `Most ${q.resource}`) return res(q.resource);
   switch (qid) {
-    case 'gold': case 'silver': case 'trading': case 'echo': case 'blue': case 'green': return res(quadrant(qid).resource);
     case 'red': return memberCount(state, p);
     case 'market': return p.members.filter(u => { const d = cardDef(state, u); return d.s + d.w >= BADGE; }).length;
-    case 'purple': return workersOnBoard(state, p);
+    case 'purple': return /workers on the board/.test(q.scoring.label) ? workersOnBoard(state, p) : null;
     case 'yellow': return Math.min(...state.resources.map(res));
     case 'thieves': return countMembersOfColor(state, p, 'thieves');
     default: return null;
@@ -25,7 +27,7 @@ export function oracleTiebreak(state, qid, p) {
   switch (qid) {
     case 'red': return countMembersOfColor(state, p, 'red');
     case 'market': return p.members.filter(u => cardDef(state, u).quadrant === 'market').length;
-    case 'purple': return p.res.purple || 0;
+    case 'purple': return /purple breaks ties/.test(quadrant(qid).scoring.label) ? p.res.purple || 0 : null;
     case 'yellow': return p.res.yellow || 0;
     default: return null;
   }
@@ -53,11 +55,11 @@ export function scoringMoment(before, move) {
 
 /**
  * Plays games g0..g0+n-1, seeded, on mixed tables (every registered sphere, 2–4 seats): even games with random legal
- * movers, odd games with the normal bots. Calls onMove(state, g) after each move, and at each round end
+ * movers, every botEvery-th game with the normal bots. Calls onMove(state, g) after each move, and at each round end
  * onScored({ before, move, after, moment, record, prize, game }): moment is the table at scoring, record is
  * after.contests's newest entry.
  */
-export function playMixedGames(n, { onScored, onMove, g0 = 0, seed0 = 9100 } = {}) {
+export function playMixedGames(n, { onScored, onMove, g0 = 0, seed0 = 9100, botEvery = 4 } = {}) {
   const { tables } = makeTables(4242, 1);
   for (let g = g0; g < g0 + n; g++) {
     const rand = seededRandom(seed0 + g);
@@ -67,7 +69,7 @@ export function playMixedGames(n, { onScored, onMove, g0 = 0, seed0 = 9100 } = {
     let guard = 0;
     while (!s.over && guard++ < 6000) {
       const before = s;
-      const move = g % 4 === 3 ? chooseBotMove(s, rand) : randomMove(s, rand);
+      const move = g % botEvery === botEvery - 1 ? chooseBotMove(s, rand) : randomMove(s, rand);
       s = applyMove(s, move);
       if (onMove) onMove(s, g);
       if ((s.contests || []).length > (before.contests || []).length && onScored) {

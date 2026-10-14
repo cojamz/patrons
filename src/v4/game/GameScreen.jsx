@@ -1,8 +1,9 @@
 // The game table. Renders engine state from a session and turns clicks into { player, option } moves.
 // What's clickable is exactly state.pending.options, and only for seats this client controls.
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { followers, WORKERS, tierLeft } from '../../engine/v4/index.js';
-import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn } from '../format.js';
+import { followers, tierLeft } from '../../engine/v4/index.js';
+import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote, turnStory } from '../format.js';
+import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
 import Players, { Resources, Workers } from './Players.jsx';
 import QuadrantPanel from './QuadrantPanel.jsx';
@@ -212,6 +213,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   useEffect(() => { if (live0.over && !moment && onResults) onResults(); }, [live0.over, moment]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (live0.over && !moment && typeof window !== 'undefined' && window.scrollTo) { try { window.scrollTo(0, 0); } catch { /* jsdom */ } } }, [live0.over, moment]);
   const [caption, setCaption] = useState(null); // "P3 took Swell (+5 blue)", pinned over the wheel for a beat
+  const turnStart = useRef(null); // { actor, state }: where the current turn began (its story is told when it passes)
   const captionTimer = useRef(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -307,6 +309,24 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         setTimeout(() => setGifts(gg => gg.filter(x => x !== g)), 2400);
       }
     }
+    // Each finished turn (anyone's, yours too) is told in one plain line by the board, and the players it touched
+    // pulse. A turn that ends the round is left to the round-end card.
+    const turnOf = before.pending ? before.pending.player : null;
+    const passed = turnOf != null && before.round >= 1 && !(state.pending && state.pending.player === turnOf && state.round === before.round);
+    if (passed && turnStart.current && turnStart.current.actor === turnOf && state.round === before.round) {
+      const story = turnStory(turnStart.current.state, state, turnOf, mySeats.length === 1 ? mySeats[0] : null);
+      if (story) {
+        clearTimeout(captionTimer.current);
+        setCaption({ text: story.text, pid: turnOf, n: Date.now(), story: true });
+        captionTimer.current = setTimeout(() => setCaption(null), 6000);
+        if (story.touched.length) {
+          const n = Date.now();
+          setRobbed(r => ({ ...(r || {}), pids: story.touched, n }));
+          setTimeout(() => setRobbed(r => (r && r.n === n ? null : r)), 1800);
+        }
+      }
+    }
+    if (state.pending && (!before.pending || state.pending.player !== before.pending.player || state.round !== before.round)) turnStart.current = { actor: state.pending.player, state };
     // Getting robbed is never silent: a rival's move that took your resources says so.
     if (actor != null && !mySeats.includes(actor)) {
       for (const id of mySeats) {
@@ -530,7 +550,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       <header className="bar">
         <div className="bar-row">
           <h1>{GAME_NAME}</h1>
-          <span className="round">{roundText}{state.round && !state.over ? <small> · <span className="num">{WORKERS[state.round - 1]}</span> workers each</small> : null}</span>
+          <span className="round">{roundText}{state.round && !state.over ? <small title="Workers this round: one per turn. Extra Hand and similar members add one."> · <span className="num">{workersNote(state)}</span></small> : null}</span>
           <button type="button" className="btn ghost rules-btn" onClick={() => setRules(true)} aria-label="How to play"><span className="lbl">How to play</span><span className="ico" aria-hidden="true">?</span></button>
           {onHome && <button type="button" className="btn ghost leave-btn" onClick={() => (state.over ? onHome() : setLeaving(true))}>Leave</button>}
         </div>
@@ -618,6 +638,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </div>
       )}
       {toast && <div key={toast.n} className="toast" role="status">{toast.text}</div>}
+      <TouchTips />
       {cardDetail && state.cards[cardDetail.uid] && (
         <Popover anchor={cardDetail.el} onClose={() => setCardDetail(null)}>
           <CardFace state={state} uid={cardDetail.uid} />

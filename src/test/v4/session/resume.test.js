@@ -1,9 +1,13 @@
 // Reload-proofing: a hot-seat game saved the way the app saves it (every change) can be resumed at every single
 // step, including bot turns in round III, the final prompts and the finished game before its results are shown.
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createLocalSession } from '../../../v4/session/index.js';
 import { loadLocal, saveLocal, clearLocal, finishLocal, ROUND_START } from '../../../v4/saved.js';
 import { until, autoPlay } from './helpers.js';
+
+// No wall clock: bots and the host run on fake timers, and until() advances them (helpers.js).
+beforeEach(() => { vi.useFakeTimers(); });
+afterEach(() => { vi.useRealTimers(); });
 
 const seats = [{ name: 'Ana', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
 
@@ -45,7 +49,7 @@ describe('resume after a reload', () => {
       finishLocal(); // the results screen rendered
       expect(loadLocal()).toBe(null);
       s.destroy();
-    }, 30000);
+    });
   }
 
   it('falls back to the round-start snapshot when the save is missing', async () => {

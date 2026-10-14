@@ -6,8 +6,9 @@
 //   (Cory, 2026-10-14). So nobody can drop below 1 follower, and nobody sells in round I unless they bought first.
 // - "Sell" is White's own verb: White members can react to it (onSell), which only White's actions and
 //   members call. Paying for a member with followers (Barter) isn't a sale: no white changes hands.
-// - One sale price (2026-10-14 rework, Claude under Cory's go-with-your-gut): every sale pays 2 white per
-//   follower. A follower costs 1 to 1.33 resources to buy back (10→10, 4→3), so a higher price was a pump.
+// - No white→followers at par in ring II (2026-10-14 rework, Claude under Cory's go-with-your-gut): Cash In's
+//   "trade any white for followers 1 for 1" turned "sell for 3, buy back for 1" into a loop. Sales stay at 3
+//   (Sell High, Pawnbroker): measured, a scripted seller doesn't win more, and sellers out-win non-sellers.
 //
 // Engine note (see design/spheres/trading.md):
 // - Actions can't leave anything due later (a loan repaid at game end) because only members have

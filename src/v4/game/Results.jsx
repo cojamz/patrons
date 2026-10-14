@@ -1,6 +1,7 @@
 // Final results: ranking with the followers breakdown, then Play again.
 import { followers, memberCount, TIERS } from '../../engine/v4/index.js';
-import { breakdown, playerColor, winSentence, plural } from '../format.js';
+import { breakdown, playerColor, winSentence, plural, contestLines } from '../format.js';
+import { Tip, NamedText } from './Info.jsx';
 
 export default function Results({ state, onPlayAgain, onHome }) {
   const ranked = (state.ranking || state.players.map(p => p.id)).map(id => state.players[id]);
@@ -29,13 +30,29 @@ export default function Results({ state, onPlayAgain, onHome }) {
                 <tr key={p.id} className={k === 0 ? 'first' : ''}>
                   <td className="rank" data-label="#">{rankOf[k]}{shared(rankOf[k]) ? '=' : ''}</td>
                   <td className="who" style={{ color: playerColor(p.id) }}>{p.name}{p.kind === 'bot' ? ' · bot' : ''}<small>{plural(memberCount(state, p), 'member')}</small></td>
-                  <td className="tot" data-label="Followers">{followers(state, p)}</td>
-                  <td data-label="From members ★">{b.members}</td>
-                  <td data-label="Bought">{b.bought}</td>
-                  <td data-label="Effects">{b.effects}</td>
-                  <td data-label="Contests">{b.contests}</td>
-                  <td data-label="End-game bonuses" title={b.parts.join(', ')}>{b.endGame}</td>
-                  <td data-label="Self">1</td>
+                  <td className="tot" data-label="Followers" title={`${followers(state, p)} = 1 (yourself) + ${b.members} from members + ${b.bought} bought + ${b.effects} effects + ${b.contests} contests + ${b.endGame} end-game`}>{followers(state, p)}</td>
+                  <td data-label="From members ★" title={`The ★ on ${p.name}'s ${plural(p.members.length, 'member')} at the end`}>{b.members}</td>
+                  <td data-label="Bought" title={`Follower buys: ${b.bought} followers bought with resources`}>{b.bought}</td>
+                  <td data-label="Effects" title="Followers from members' abilities during play">{b.effects}</td>
+                  <td data-label="Contests" data-contests={p.id}>
+                    {/* each contest won, with its own followers (never the contests' total under one name) */}
+                    <Tip label={`${p.name}'s contests`} content={() => {
+                      const lines = contestLines(state, p);
+                      return (
+                        <div className="pop-card contest-sum">
+                          <b>{p.name}’s contests: +{b.contests}</b>
+                          {lines.length ? lines.map(l => <span key={l.rule} style={{ '--c': `var(--${l.qid})` }} data-contest-line={l.qid}>{l.text}</span>) : <span>No contests won.</span>}
+                        </div>
+                      );
+                    }}>{b.contests}</Tip>
+                  </td>
+                  <td data-label="End-game bonuses">
+                    <Tip label={`${p.name}'s end-game bonuses`} content={() => (
+                      <div className="pop-card"><b>{p.name}’s end-game bonuses: {b.endGame >= 0 ? '+' : ''}{b.endGame}</b>
+                        {b.parts.length ? <span><NamedText state={state} text={b.parts.join(', ')} /></span> : <span>No member scored at game end.</span>}</div>
+                    )}>{b.endGame}</Tip>
+                  </td>
+                  <td data-label="Self" title="You count as 1 follower yourself">1</td>
                 </tr>
               );
             })}
@@ -47,7 +64,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
       {ranked.some(p => p.final && p.final.parts.length) && (
         <ul className="parts">
           {ranked.filter(p => p.final && p.final.parts.length).map(p => (
-            <li key={p.id}><b style={{ color: playerColor(p.id) }}>{p.name}</b> {p.final.parts.join(' · ')}</li>
+            <li key={p.id}><b style={{ color: playerColor(p.id) }}>{p.name}</b> <NamedText state={state} text={p.final.parts.join(' · ')} /></li>
           ))}
         </ul>
       )}

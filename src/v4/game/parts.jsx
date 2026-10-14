@@ -1,8 +1,9 @@
 // Small game-screen pieces: the choice prompt, the log, the hot-seat handoff, a confirm dialog and a popover.
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { quadrant, cardDef } from '../../engine/v4/index.js';
 import { logSections, playerColor, costParts, plainLine } from '../format.js';
 import { Rich, CostPips } from './Rich.jsx';
+import { MemberCard, NamedText, BadgeMark, CardText, cardColor } from './Info.jsx';
 
 /** Escape closes; focus moves in on open and back to where it was on close. */
 export function useDialog(onClose) {
@@ -38,7 +39,9 @@ function optionDetail(state, o) {
     const d = cardOf(o.value);
     if (d) {
       const cost = costParts(d, state.resources).map(c => `${c.n} ${c.color}`).join(' + ') || 'free';
-      return { name: d.name, text: d.text, f: d.f, color: d.quadrant, id: d.id, cost: o.kind === 'card' ? cost : null };
+      // whose it is (Ransom, Heist, Trade pick a rival's member) and what it costs, on every member option
+      const owner = state.players.find(p => p.members.includes(o.value)) || null;
+      return { name: d.name, text: d.text, f: d.f, color: d.quadrant, id: d.id, def: d, cost, owner: owner ? owner.id : null };
     }
   }
   if (o.kind === 'trade' && Array.isArray(o.value)) {
@@ -116,10 +119,10 @@ function ForSale({ state }) {
           const d = cardDef(state, uid);
           const parts = costParts(d, state.resources);
           return (
-            <button key={uid} type="button" className="fs-card" data-sale={uid} style={{ '--c': `var(--${d.quadrant})` }}
+            <button key={uid} type="button" className="fs-card" data-sale={uid} style={{ '--c': cardColor(state, d) }}
               aria-label={`${d.name}, ${d.f} followers, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}. Show the card.`}
               onClick={e => setOpen({ uid, el: e.currentTarget })}>
-              <span className="row"><b>{d.name}</b><span className="num">{d.f}★</span></span>
+              <span className="row"><b>{d.name}<BadgeMark state={state} def={d} /></b><span className="num">{d.f}★</span></span>
               <span className="fs-cost"><CostPips parts={parts} /></span>
             </button>
           );
@@ -167,14 +170,14 @@ function MergedOptions({ state, pend, onPick, busy }) {
         return (
           <button
             key={key} type="button" className={`btn${color ? ' color' : ''}${det ? ' rich' : ''}`} data-option={o.id} disabled={busy}
-            style={color ? { '--c': `var(--${color})` } : det && det.color ? { '--c': `var(--${det.color})` } : undefined}
+            style={color ? { '--c': `var(--${color})` } : det && det.def ? { '--c': cardColor(state, det.def) } : det && det.color ? { '--c': `var(--${det.color})` } : undefined}
             onClick={() => onPick(o.id)}
           >
             {color && <i />}
             {det ? (
               <span className="rich-body">
-                <b>{det.name}{n > 1 && <span className="num copies"> {state.shop && state.shop.includes(o.value) ? `· ${n} in the shop` : `· ${n} of them`}</span>}{det.f != null && <span className="num star"> {det.f}★</span>}</b>
-                <small><Rich text={det.text} /></small>
+                <b>{det.owner != null && <span className="from" style={{ color: playerColor(det.owner) }}>{state.players[det.owner].name}’s </span>}{det.name}{det.def && <BadgeMark state={state} def={det.def} />}{n > 1 && <span className="num copies"> {state.shop && state.shop.includes(o.value) ? `· ${n} in the shop` : `· ${n} of them`}</span>}{det.f != null && <span className="num star"> {det.f}★</span>}</b>
+                <small>{det.def ? <CardText text={det.text} /> : <Rich text={det.text} />}</small>
                 {det.cost && <small className="cost-line">Costs <span className="num">{det.cost}</span></small>}
               </span>
             ) : (q ? q.name : withUnits(o.label, pend.prompt, state.resources))}
@@ -208,10 +211,10 @@ function TradePicker({ state, pend, onPick, busy }) {
     if (opt) onPick(opt.id);
   };
   const Card = ({ g, onClick, extra }) => (
-    <button type="button" className="btn rich" style={{ '--c': `var(--${g.d.quadrant})` }} disabled={busy} onClick={onClick} data-option={extra}>
+    <button type="button" className="btn rich" style={{ '--c': cardColor(state, g.d) }} disabled={busy} onClick={onClick} data-option={extra}>
       <span className="rich-body">
-        <b>{g.d.name}{g.uids.length > 1 && <span className="num"> ×{g.uids.length}</span>}<span className="num star"> {g.d.f}★</span>{g.o && <span className="from"> · {g.o.name}</span>}</b>
-        <small><Rich text={g.d.text} /></small>
+        <b>{g.d.name}<BadgeMark state={state} def={g.d} />{g.uids.length > 1 && <span className="num"> ×{g.uids.length}</span>}<span className="num star"> {g.d.f}★</span>{g.o && <span className="from"> · {g.o.name}</span>}</b>
+        <small><CardText text={g.d.text} /></small>
       </span>
     </button>
   );
@@ -236,14 +239,18 @@ function TradePicker({ state, pend, onPick, busy }) {
   );
 }
 
+// One log line; member names in it open their cards. `table` stays the same object for a whole game (names, colors,
+// costs don't change), so a line re-renders only when its text does.
+const LogLine = memo(function LogLine({ table, text }) { return <div><NamedText state={table} text={text} /></div>; });
 export function Log({ state }) {
   const sections = logSections(state);
+  const table = useMemo(() => ({ seed: state.seed, quadrants: state.quadrants, resources: state.resources, cards: state.cards, players: state.players, shop: [] }), [state.seed, state.quadrants.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="log" aria-label="Game log">
       {sections.slice().reverse().map((s, k) => (
         <details key={s.title} open={k === 0}>
           <summary>{s.title}<small> · {s.lines.length}</small></summary>
-          <div className="lines">{s.lines.map((l, j) => <div key={j}>{plainLine(state.log, s.start + j)}</div>)}</div>
+          <div className="lines">{s.lines.map((l, j) => <LogLine key={j} table={table} text={plainLine(state.log, s.start + j)} />)}</div>
         </details>
       ))}
     </div>
@@ -283,10 +290,11 @@ export function Confirm({ title, text, yes, no = 'Stay', onYes, onNo }) {
 /** A small card anchored to an element (member chips on touch). */
 export const sheetMode = () => typeof matchMedia === 'function' && (matchMedia('(pointer: coarse)').matches || matchMedia('(max-width: 520px)').matches);
 
-export function Popover({ anchor, onClose, children }) {
+export function Popover({ anchor, onClose, children, float = false }) {
   const box = useRef(null);
   const [pos, setPos] = useState(null);
-  const sheet = sheetMode();
+  // float: a hover card stays beside what it explains, even on a narrow window (a sheet is for taps)
+  const sheet = !float && sheetMode();
   useLayoutEffect(() => {
     if (!anchor) return;
     if (sheet) { setPos({}); return; }
@@ -323,13 +331,6 @@ export function Popover({ anchor, onClose, children }) {
 
 /** A member card face: color band, sphere glyph, name, ★, ability and list cost. */
 export function CardFace({ state, uid }) {
-  const d = cardDef(state, uid);
-  const cost = costParts(d, state.resources).map(c => `${c.n} ${c.color}`).join(' + ') || 'free';
-  return (
-    <div className="card-face" style={{ '--c': `var(--${d.quadrant})` }}>
-      <div className="row"><span className="glyph" aria-hidden="true" /><b>{d.name}</b><span className="num star">{d.f}★</span></div>
-      <p><Rich text={d.text} /></p>
-      <small>Costs {cost}{d.n > 1 ? ` · counts as ${d.n} members` : ''}</small>
-    </div>
-  );
+  // one card face everywhere: badge, color (or colorless), keywords, cost and owner (Info.jsx)
+  return <MemberCard state={state} uid={uid} />;
 }

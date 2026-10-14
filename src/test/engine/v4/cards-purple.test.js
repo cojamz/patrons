@@ -20,24 +20,23 @@ describe('Purple actions', () => {
     expect(P(take(sc({ n: 3, slots: { '0-0': 1, '0-1': 1, '0-2': 2 } }), 'Catch Up'))).toBe(1 + 2);
     expect(P(take(sc({ slots: { '0-0': 0, '0-1': 0 } }), 'Wind-up'))).toBe(3);
   });
-  it('Linger: moves a worker from another color’s outer/middle space to an open space and does it', () => {
-    let s = sc({ round: 2, slots: { '0-0': 0 } });
-    s = take(s, 'Linger');
-    expect(s.pending.options.map(o => o.id)).toEqual(['from:0-0']);
-    s = move(s, 'from:0-0');
-    s = move(s, 'to:0-1'); // Rush
-    expect(s.slots['0-0']).toBeUndefined();
-    expect(s.slots['0-1']).toBe(0);
-    expect(s.players[0].res.gold).toBe(4);
+  it('Plan Ahead: +2 purple per worker you have left to place this round', () => {
+    expect(P(take(sc({ round: 2 }), 'Plan Ahead'))).toBe(2 * 2); // 3 workers, this one placed: 2 left
+    expect(P(take(sc({ round: 3, left: 5 }), 'Plan Ahead'))).toBe(2 * 4);
   });
-  it('Overtime / Rally: pay 6 / 5 purple for an extra turn right after this one; else +2 / +3 purple', () => {
-    let s = take(sc({ round: 2, res: [{ purple: 6 }] }), 'Overtime');
+  it('Overtime: pay 8 purple for 2 extra turns right after this one, else +3; Rally: spend all, 1 per 4 plus 1 (up to 3), else +4', () => {
+    let s = take(sc({ round: 2, res: [{ purple: 8 }] }), 'Overtime');
     expect(P(s)).toBe(0);
-    expect(turnsQueued(s, 0)).toBe(1);
-    s = take(sc({ round: 2, res: [{ purple: 5 }] }), 'Overtime');
-    expect(P(s)).toBe(7);
+    expect(turnsQueued(s, 0)).toBe(2);
+    s = take(sc({ round: 2, res: [{ purple: 7 }] }), 'Overtime');
+    expect(P(s)).toBe(10);
+    expect(turnsQueued(s, 0)).toBe(0);
     s = take(sc({ round: 3, res: [{ purple: 4 }] }), 'Rally');
+    expect(P(s)).toBe(0);
+    expect(turnsQueued(s, 0)).toBe(2);
+    s = take(sc({ round: 3, res: [{ purple: 3 }] }), 'Rally');
     expect(P(s)).toBe(7);
+    expect(turnsQueued(s, 0)).toBe(0);
   });
 });
 
@@ -95,37 +94,39 @@ describe('Purple members', () => {
     expect(s.players[0].left).toBe(5);
   });
 
-  it('Foreman: +1 purple per worker on the board whenever you take an extra turn (Overtime), named', () => {
-    const s = take(sc({ round: 2, res: [{ purple: 6 }], members: [['purple.foreman']], slots: { '0-0': 0 } }), 'Overtime');
-    expect(P(s)).toBe(2);
-    expect(named(s, 'Foreman')).toHaveLength(1);
+  it('Foreman: +1 purple per worker on the board whenever you take an extra turn (Overtime: 2 turns), named', () => {
+    const s = take(sc({ round: 2, res: [{ purple: 8 }], members: [['purple.foreman']], slots: { '0-0': 0 } }), 'Overtime');
+    expect(P(s)).toBe(2 + 2);
+    expect(named(s, 'Foreman')).toHaveLength(2);
   });
   it('Courier: +1 of each other color per extra turn, named; Midas leaves member income alone', () => {
-    const s = take(sc({ round: 2, res: [{ purple: 6 }], members: [['purple.courier', 'gold.midas']] }), 'Overtime');
-    expect(s.players[0].res).toEqual({ gold: 1, red: 1, purple: 0, green: 1 });
+    const s = take(sc({ round: 2, res: [{ purple: 8 }], members: [['purple.courier', 'gold.midas']] }), 'Overtime');
+    expect(s.players[0].res).toEqual({ gold: 2, red: 2, purple: 0, green: 2 });
     expect(named(s, 'Courier')[0]).toMatch(/P1's Courier: \+1 gold, \+1 red, \+1 green/);
   });
-  it('Apprentice: an extra turn makes your next member 4 cheaper, named', () => {
-    const s = take(sc({ round: 2, res: [{ purple: 6 }], members: [['purple.apprentice']] }), 'Overtime');
-    expect(s.players[0].discount).toBe(4);
+  it('Apprentice: each extra turn makes your next member 4 cheaper, named', () => {
+    const s = take(sc({ round: 2, res: [{ purple: 8 }], members: [['purple.apprentice']] }), 'Overtime');
+    expect(s.players[0].discount).toBe(8);
     expect(named(s, 'Apprentice')[0]).toMatch(/next member costs 4 less/);
   });
   it('Overseer: half your purple, up to 4, when a rival takes an extra turn (capped), named', () => {
-    const s = take(sc({ round: 2, res: [{ purple: 6 }, { purple: 11 }], members: [[], ['purple.overseer']] }), 'Overtime');
-    expect(P(s, 1)).toBe(15);
-    expect(named(s, 'Overseer')).toHaveLength(1);
+    const s = take(sc({ round: 2, res: [{ purple: 8 }, { purple: 11 }], members: [[], ['purple.overseer']] }), 'Overtime');
+    expect(P(s, 1)).toBe(11 + 4 + 4);
+    expect(named(s, 'Overseer')).toHaveLength(2);
   });
-  it('Double Time: Overtime costs 3; the log names Double Time; a Doppelganger copy does not halve again', () => {
-    let s = take(sc({ round: 2, res: [{ purple: 6 }], members: [['purple.doubletime']] }), 'Overtime');
-    expect(P(s)).toBe(3);
+  it('Double Time: Overtime costs 4; the log names Double Time; a Doppelganger copy does not halve again', () => {
+    let s = take(sc({ round: 2, res: [{ purple: 8 }], members: [['purple.doubletime']] }), 'Overtime');
+    expect(P(s)).toBe(4);
     expect(named(s, 'Double Time')).toHaveLength(1);
-    s = sc({ round: 2, res: [{ purple: 6 }], members: [['purple.doubletime', 'red.doppel']] });
+    s = sc({ round: 2, res: [{ purple: 8 }], members: [['purple.doubletime', 'red.doppel']] });
     s.cards[uidOf(s, 'red.doppel', 0)].copy = 'purple.doubletime';
-    expect(P(take(s, 'Overtime'))).toBe(3);
+    expect(P(take(s, 'Overtime'))).toBe(4);
   });
-  it('Bookkeeper at round end; Clockmaker and Lamplighter at round start; all named', () => {
+  it('Bookkeeper on your last placement of the round (before its buy), not at round end; Clockmaker and Lamplighter at round start; all named', () => {
     let s = sc({ res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 }, queue: [{ t: 'endRound' }] });
-    expect(P(s)).toBe(6); // 3 workers on the board → +1
+    expect(P(s)).toBe(5);
+    s = take(sc({ left: 1, res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0 } }), 'Scout');
+    expect(P(s)).toBe(5 + 3); // its last worker: 3 workers on the board
     expect(named(s, 'Bookkeeper')).toHaveLength(1);
     s = sc({ res: [{ purple: 7 }], members: [['purple.clockmaker']], queue: [{ t: 'round', r: 2 }] });
     expect(P(s)).toBe(7 + 3); // +1 per 2 purple held

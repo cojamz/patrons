@@ -8,6 +8,10 @@ import { registerQuadrant } from '../../../../engine/v4/content/index.js';
 import silver from '../../../../engine/v4/content/silver.js';
 import { take, move, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
+import { games } from '../budget.js';
+
+// seeded games in the table block below: a game count, not a time budget (the fast gate plays 20; budget.js)
+const GAMES = games(200);
 
 registerQuadrant(silver);
 const Q = ['gold', 'red', 'blue', 'silver'];
@@ -233,10 +237,10 @@ describe('Silver members', () => {
   });
 });
 
-describe('Silver on the table: 200 seeded bot games', () => {
+describe(`Silver on the table: ${GAMES} seeded bot games`, () => {
   it('every game finishes with no errors and every invariant holds', () => {
     let silverTakes = 0;
-    for (let g = 1; g <= 200; g++) {
+    for (let g = 1; g <= GAMES; g++) {
       const n = 2 + (g % 3);
       const rand = seededRandom(g * 31 + 5);
       let s = createGame({ seats: Array.from({ length: n }, () => ({ kind: 'bot' })), seed: g, quadrants: Q });
@@ -251,6 +255,6 @@ describe('Silver on the table: 200 seeded bot games', () => {
       }
       expect(s.ranking).toHaveLength(n);
     }
-    expect(silverTakes).toBeGreaterThan(200 * 6);
-  }, 180000);
+    expect(silverTakes).toBeGreaterThan(GAMES * 6);
+  });
 });

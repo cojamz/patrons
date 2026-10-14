@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel Icons in Context</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="pix.css">
+<style>
+/* Two in-context mocks: the wheel (action spaces) and the shop (member cards), on the live game's table look.
+   The wheel SVG is drawn 1:1 (612px for 612 units) and icons sit on whole pixels, so 24/48px icons stay crisp. */
+.app{max-width:1240px;margin:0 auto;padding:12px 16px 20px;display:flex;flex-direction:column;gap:10px}
+.bar{display:flex;align-items:center;gap:14px;min-height:40px;padding-bottom:6px;border-bottom:1px solid color-mix(in srgb,var(--rim) 60%,transparent)}
+.bar .round{font-family:var(--display);font-size:var(--fs-4);white-space:nowrap}
+.say{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 14px;border-radius:999px;border:1px solid var(--ink);background:var(--table-2);font-weight:600;white-space:nowrap}
+.say i{width:10px;height:10px;border-radius:50%;background:#f4efe2}
+.bar .last{font-size:var(--fs-2);color:var(--muted);display:flex;align-items:center;gap:8px;min-width:0;white-space:nowrap;overflow:hidden}
+.bar .last b{color:var(--ink);font-weight:600}
+.ev{display:inline-flex;align-items:center;gap:5px}
+.main{display:grid;grid-template-columns:612px minmax(0,1fr);gap:22px;align-items:start}
+.stage svg.wheel{width:612px;height:612px;display:block;overflow:visible}
+.caption{font-size:var(--fs-1);color:var(--muted);text-align:center;margin-top:4px;letter-spacing:.04em}
+
+/* wheel */
+.cell .bg{fill:var(--c);fill-opacity:.12;stroke:var(--c);stroke-opacity:.5;stroke-width:1.2}
+.cell.can .bg{fill-opacity:.16;stroke-opacity:1;stroke-width:2.2;filter:drop-shadow(0 0 5px color-mix(in srgb,var(--c) 60%,transparent))}
+.cell.sel .bg{stroke:var(--ink);stroke-width:3;fill-opacity:.28}
+.cell .nm{fill:var(--c);font-weight:700;letter-spacing:.03em;font-size:14.5px}
+.cell .mn{fill:var(--ink);font-weight:700;font-size:19px}
+.cell .todo{fill:none;stroke:var(--c);stroke-opacity:.35;stroke-dasharray:3 3}
+.band{fill:var(--c);fill-opacity:.4}
+.hub .ring{fill:var(--c);fill-opacity:.05;stroke:var(--c);stroke-opacity:.2}
+.hub .ghost{fill:none;stroke:var(--c);stroke-opacity:.4;stroke-dasharray:2.5 2.5}
+.hub .core{fill:var(--table-2);stroke:var(--rim)}
+.hub .t1{fill:var(--muted);font-family:var(--display);font-size:17px}
+.hub .t2{fill:var(--muted);font-size:11.5px}
+
+/* side */
+.side{display:flex;flex-direction:column;gap:12px;min-width:0;padding-top:4px}
+.detail{display:flex;gap:16px;align-items:center;border:1px solid var(--c);border-left-width:4px;border-radius:12px;background:var(--table-2);padding:12px 14px}
+.detail .tx{display:flex;flex-direction:column;gap:3px;min-width:0}
+.detail b{font-family:var(--display);font-weight:400;font-size:var(--fs-5);color:var(--c)}
+.detail small{font-size:var(--fs-1);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.detail p{margin:2px 0;font-size:var(--fs-3);line-height:1.35}
+.place{align-self:flex-start;border:1px solid var(--ink);background:var(--ink);color:var(--table);border-radius:999px;padding:6px 16px;font-weight:600;margin-top:4px}
+.shop-h{font-family:var(--display);font-size:var(--fs-4);margin:0;display:flex;align-items:baseline;gap:8px}
+.shop-h small{font-family:var(--body);font-size:var(--fs-2);color:var(--muted)}
+.shop{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.card{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--rim);border-top:3px solid var(--c);background:var(--table-2);border-radius:8px;padding:8px 10px;min-width:0}
+.card .tx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.card .t{display:flex;justify-content:space-between;gap:6px;font-weight:600;font-size:var(--fs-3)}
+.card .eff{font-size:var(--fs-2);color:var(--muted);line-height:1.3}
+.card .cost{font-size:var(--fs-2);margin-top:2px}
+.mine{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.mine > span{font-size:var(--fs-2);color:var(--muted);margin-right:4px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rim);border-left:3px solid var(--c);border-radius:6px;background:var(--table-3);padding:3px 9px 3px 5px;font-size:var(--fs-2);font-weight:600}
+.note{font-size:var(--fs-1);color:var(--muted);border-top:1px dashed var(--rim);padding-top:8px;line-height:1.5}
+@media (max-width:1100px){ .main{grid-template-columns:minmax(0,1fr)} .stage svg.wheel{width:100%;height:auto} }
+@media (max-width:600px){ .bar{flex-wrap:wrap} .bar .last{flex-basis:100%} .shop{grid-template-columns:minmax(0,1fr)} .detail{flex-direction:column;align-items:flex-start} }
+</style>
+<script src="icons.js"></script>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <span class="round">Round I</span>
+    <span class="say"><i></i>Your turn: tap a lit space</span>
+    <span class="last" id="last"></span>
+  </div>
+  <div class="main">
+    <div class="stage">
+      <svg class="wheel" id="wheel" viewBox="-306 -306 612 612" role="group" aria-label="Board"></svg>
+      <div class="caption">Ring I spaces carry 48px icons · ring III (faded hub, not open yet) at 24px · dashed = not drawn yet</div>
+    </div>
+    <div class="side">
+      <div class="detail" id="detail"></div>
+      <h2 class="shop-h">Shop <small>6 face up · 61 in the pile</small></h2>
+      <div class="shop" id="shop"></div>
+      <div class="mine" id="mine"></div>
+      <div class="note">Icons sit left of the words they illustrate and never replace them: the name and the rules text stay the source of truth. Resource pips stay flat circles; inside an icon, a resource is drawn as the same flat disc.</div>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  const P = window.CultIcons;
+  const byId = Object.fromEntries(P.ICONS.map(i => [i.id, i]));
+  const COLORS = ['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', 'purple', 'white'];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const pip = c => c === 'any' ? '<span class="pip wild" title="any"></span>' : `<span class="pip" style="--c:var(--${c})" title="${c}"></span>`;
+  const rich = t => esc(t).replace(new RegExp(`\\b(${COLORS.join('|')})\\b`, 'g'), m => pip(m)).replace(/(\d )any\b/g, '$1' + pip('any'));
+  const icon = (id, n) => P.toSVG(byId[id], n);
+  // An icon placed inside the wheel SVG on whole units (= whole pixels, since the wheel is drawn 1:1).
+  const at = (id, n, cx, cy, op) => P.toSVG(byId[id], n).replace('<svg ', `<svg x="${Math.round(cx - n / 2)}" y="${Math.round(cy - n / 2)}"${op ? ` opacity="${op}"` : ''} `);
+
+  // ---- wheel: round I ring, four quadrants (Gold bottom, Magenta left, Green top, Silver right, as in the live game)
+  const Q = [
+    { c: 'var(--gold)', id: 'gold', center: 180, cells: [
+      { name: 'Joint Venture', icon: 'joint-venture', main: `+3${pip('gold')}`, sel: true },
+      { name: 'Rush', main: `+2${pip('gold')}` }, { name: 'Discount', main: '−4 cost' }], r3: 'strike' },
+    { c: 'var(--magenta)', id: 'magenta', center: 270, cells: [
+      { name: 'Pickpocket', icon: 'pickpocket', main: 'steal 2' }, { name: 'Tip-off', main: 'steal 1' }, { name: 'Hideout', main: 'steal 1' }], r3: 'heist' },
+    { c: 'var(--green)', id: 'green', center: 0, cells: [
+      { name: 'Echo', icon: 'echo', main: 'copy ↻' }, { name: 'Chant', main: `+2${pip('green')}` }, { name: 'Hum', main: `+3${pip('green')}` }] },
+    { c: 'var(--silver)', id: 'silver', center: 90, cells: [
+      { name: 'Alms', main: `+4${pip('silver')}` }, { name: 'Gift', main: `+2${pip('silver')}` }, { name: 'Toast', icon: 'toast', main: `+3${pip('silver')}` }] },
+  ];
+  const rad = a => (a - 90) * Math.PI / 180;            // 0° = up, clockwise
+  const polar = (a, r) => [r * Math.cos(rad(a)), r * Math.sin(rad(a))];
+  const sector = (a0, a1, r0, r1) => {
+    const [x0, y0] = polar(a0, r1), [x1, y1] = polar(a1, r1), [x2, y2] = polar(a1, r0), [x3, y3] = polar(a0, r0);
+    const L = a1 - a0 > 180 ? 1 : 0;
+    return `M${x0} ${y0}A${r1} ${r1} 0 ${L} 1 ${x1} ${y1}L${x2} ${y2}A${r0} ${r0} 0 ${L} 0 ${x3} ${y3}Z`;
+  };
+  // SVG text can't hold HTML pips, so "main" lines get their pips as circles.
+  const mainLine = (html, x, y) => {
+    const parts = html.split(/(<span class="pip[^>]*><\/span>)/).filter(Boolean);
+    const text = parts.map(p => p.startsWith('<span') ? '' : p).join('');
+    const pc = (parts.find(p => p.startsWith('<span')) || '').match(/--(\w+)\)/);
+    const w = text.length * 10.5 + (pc ? 16 : 0);
+    let s = `<text class="mn" x="${x - (pc ? 8 : 0)}" y="${y}" text-anchor="middle" dominant-baseline="central">${esc(text)}</text>`;
+    if (pc) s += `<circle cx="${x - 8 + w / 2 - 4}" cy="${y}" r="6.5" fill="var(--${pc[1]})" stroke="rgba(0,0,0,.35)"/>`;
+    return s;
+  };
+  const R0 = 114, R1 = 300, out = [];
+  out.push(`<circle r="304" fill="var(--table-2)" stroke="var(--rim)" stroke-width="2"/>`);
+  out.push('<g class="hub">');
+  Q.forEach(q => {
+    out.push(`<path class="ring" style="--c:${q.c}" d="${sector(q.center - 44.3, q.center + 44.3, 86, 110)}"/>`);
+    out.push(`<path class="ring" style="--c:${q.c}" d="${sector(q.center - 44.3, q.center + 44.3, 58, 84)}"/>`);
+    [-22, 22].forEach(d => { const [x, y] = polar(q.center + d, 98); out.push(`<circle class="ghost" style="--c:${q.c}" cx="${x}" cy="${y}" r="6"/>`); });
+    const [x, y] = polar(q.center, 71);
+    out.push(q.r3 ? at(q.r3, 24, x, y, 0.6) : `<circle class="ghost" style="--c:${q.c}" cx="${x}" cy="${y}" r="6"/>`);
+  });
+  out.push(`<circle class="core" r="52"/><text class="t1" y="-7" text-anchor="middle" dominant-baseline="central">II · III</text><text class="t2" y="13" text-anchor="middle" dominant-baseline="central">open later</text></g>`);
+  Q.forEach(q => {
+    out.push(`<path class="band" style="--c:${q.c}" d="${sector(q.center - 44.4, q.center + 44.4, R1 - 5, R1 - 1)}"/>`);
+    q.cells.forEach((c, k) => {
+      const a = q.center + (k - 1) * 30;
+      const cls = ['cell', 'can', c.sel ? 'sel' : ''].join(' ');
+      out.push(`<g class="${cls}" style="--c:${q.c}"><path class="bg" d="${sector(a - 14.4, a + 14.4, R0, R1)}"/>`);
+      // one upright stack at the cell's middle: icon, name, number (works for side cells as well as top/bottom)
+      const [cx, cy] = polar(a, 212);
+      out.push(c.icon ? at(c.icon, 48, cx, cy - 26) : `<rect class="todo" x="${Math.round(cx - 20)}" y="${Math.round(cy - 46)}" width="40" height="40" rx="6"/>`);
+      out.push(`<text class="nm" x="${cx}" y="${cy + 13}" text-anchor="middle" dominant-baseline="central">${esc(c.name)}</text>`);
+      out.push(mainLine(c.main, cx, cy + 37));
+      out.push('</g>');
+    });
+  });
+  document.getElementById('wheel').innerHTML = out.join('');
+
+  // ---- selected space, docked
+  const jv = byId['joint-venture'];
+  document.getElementById('detail').style.setProperty('--c', 'var(--gold)');
+  document.getElementById('detail').innerHTML = `${icon('joint-venture', 96)}<div class="tx"><small>Gold · round I</small><b>${jv.name}</b><p>${rich(jv.text)}</p><button class="place">Place here</button></div>`;
+
+  // ---- shop: member cards with 48px icons; costs as pips
+  const shop = [
+    ['banker', 1, [[2, 'gold'], [2, 'any']]], ['tycoon', 1, [[8, 'gold'], [4, 'any']]],
+    ['cutpurse', 1, [[2, 'magenta'], [2, 'any']]], ['doppelganger', 1, [[4, 'red'], [2, 'any']]],
+  ];
+  document.getElementById('shop').innerHTML = shop.map(([id, stars, cost]) => {
+    const i = byId[id];
+    return `<div class="card" style="--c:var(--${i.sphere})">${icon(id, 48)}<div class="tx">
+      <div class="t"><span>${i.name}</span><span class="num">${stars}★</span></div>
+      <div class="eff">${rich(i.text)}</div>
+      <div class="cost num">${cost.map(([n, c]) => `${n}${pip(c)}`).join(' + ')}</div></div></div>`;
+  }).join('');
+
+  // ---- your members as chips, 24px
+  document.getElementById('mine').innerHTML = '<span>Your members</span>' +
+    ['banker', 'cutpurse', 'doppelganger'].map(id => `<span class="chip" style="--c:var(--${byId[id].sphere})">${icon(id, 24)}${byId[id].name}</span>`).join('');
+
+  // ---- log line with 24px action icons
+  document.getElementById('last').innerHTML = `Since your turn:
+    <span class="ev">${icon('toast', 24)}<b>P2</b> Toast</span>
+    <span class="ev">${icon('pickpocket', 24)}<b>P4</b> Pickpocket: 1${pip('gold')} from you</span>
+    <span class="ev">${icon('echo', 24)}<b>P3</b> Echo</span>`;
+})();
+</script>
+</body>
+</html>

@@ -1,7 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createLocalSession } from '../../../v4/session/index.js';
 import { chooseBotMove } from '../../../engine/v4/index.js';
 import { until, autoPlay } from './helpers.js';
+
+// No wall clock: bots and the host run on fake timers, and until() advances them (helpers.js).
+beforeEach(() => { vi.useFakeTimers(); });
+afterEach(() => { vi.useRealTimers(); });
 
 describe('local session', () => {
   it('runs a full all-bot game to the end', async () => {

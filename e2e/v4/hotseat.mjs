@@ -90,6 +90,7 @@ try {
   const seen = new Set();
   let facingSeen = null;
   let lastClipCheck = null;
+  const stories = new Set(); // the one-line turn stories seen by the board
   const t0 = Date.now();
   let clicks = 0;
   while (!(await page.$('.results'))) {
@@ -120,6 +121,8 @@ try {
       lastClipCheck = movesNow;
       for (const x of await page.evaluate(TEXT_CLIP)) { const m = `text cut: ${x}`; if (!errors.includes(m)) { errors.push(m); await shot(`zz-text-cut-${errors.length}`); } }
     }
+    const cap = await page.$eval('.caption', e => e.textContent).catch(() => null);
+    if (cap) stories.add(cap);
     const facingNow = await page.$eval('.qtab.on', e => e.textContent).catch(() => null);
     if (facingNow && !facingSeen) facingSeen = facingNow;
     if (facingNow && facingSeen && facingNow !== facingSeen) { errors.push(`the board turned by itself (${facingSeen} -> ${facingNow})`); facingSeen = facingNow; }
@@ -285,6 +288,11 @@ try {
   console.log(`motion: ${flights} flights (cards and workers), ${ticks} number count-ups`);
   if (!ticks) errors.push('no numbers counted up');
   if (!flights) errors.push('no card or worker flights ran');
+  // every turn is told by the board in plain words: rivals' and your own
+  const told = [...stories].filter(t => / took .+ · /.test(t));
+  console.log(`turn stories: ${told.length} (e.g. "${told[0] || ''}")`);
+  if (told.length < 8) errors.push(`only ${told.length} turn stories by the board`);
+  if (!told.some(t => t.startsWith('You took'))) errors.push('your own turns were never told ("You took …")');
   for (const why of ['undo', 'undo-pick', 'reload', 'reload-end', 'reload-final']) if (!seen.has(why)) errors.push(`never exercised ${why}`);
   console.log(`finished after ${clicks} clicks: ${winner}`);
   // Play again returns to a fresh game.
