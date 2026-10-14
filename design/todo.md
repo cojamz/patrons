@@ -3,6 +3,7 @@
 Cory's rule (2026-10-14): anything that makes the game playable by humans comes first. Bots and agent tooling only as far as they serve that; no rabbit holes.
 
 ## 1. Playable by humans (always first)
+- [ ] Show the six members for sale during setup (Cory: key to the starting pick) (UI agent, top)
 - [ ] Reload near game end erases a hot-seat game (UI agent, priority bug)
 - [ ] Undo pill stuck on "Placement undone" (UI agent)
 - [ ] Panel 7 fixes: choice panel over the buy row, shop text while placing, bot pacing, phone motion (UI agent)

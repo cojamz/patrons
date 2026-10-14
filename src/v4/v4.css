@@ -1239,3 +1239,9 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 .fbuy .rel-list{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 4px}
 .fbuy .btn.rel{min-height:44px;padding:0 12px;font-size:var(--fs-2);border-color:color-mix(in srgb,var(--c,var(--rim)) 70%,transparent)}
 .from-pile{font-size:var(--fs-1);color:var(--gold);letter-spacing:.04em}
+/* ring numerals I / II / III (panel 7): readable at a glance, with a dark halo so they sit clear of the rings */
+.ring-nums text{fill:var(--ink);fill-opacity:.55;paint-order:stroke;stroke:var(--table-2);stroke-width:3px;stroke-linejoin:round}
+.ring-nums text.on{fill-opacity:.95}
+/* the toast (e.g. "the game ends after this round") centers with `translate` too: its `rise` animation owns
+   `transform`, so it used to appear half off the right edge of a phone */
+.toast{transform:none;translate:-50% 0}

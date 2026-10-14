@@ -388,7 +388,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
           <g transform={`rotate(${rot} ${CX} ${CY})`} className="wheel">{parts}</g>
           {/* ring numerals, upright on the top-left seam between quadrants (no space sits on a seam) */}
           <g className="ring-nums" aria-hidden="true">
-            {[1, 2, 3].map(t => { const [x, y] = polar(-45, RING[t].r - (t === 3 ? 6 : 0)); return <text key={t} x={x} y={y} fontSize={Math.max(8, 9.5 / scale)} textAnchor="middle" dominantBaseline="central" className={t <= round ? 'on' : ''}>{roman(t)}</text>; })}
+            {[1, 2, 3].map(t => { const [x, y] = polar(-45, RING[t].r - (t === 3 ? 6 : 0)); return <text key={t} x={x} y={y} fontSize={Math.max(11, 13 / scale)} fontWeight="700" textAnchor="middle" dominantBaseline="central" className={t <= round ? 'on' : ''}>{roman(t)}</text>; })}
           </g>
           <path d={`M${CX - 9},${CY + 214} L${CX},${CY + 203} L${CX + 9},${CY + 214}Z`} fill="var(--ink)" opacity=".8" />
         </svg>

@@ -236,3 +236,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Releasing (or trading in) an Investor: its set-aside gold comes back, not doubled.
 - ✅ (Cory) Hideout protects resources only, not members: "Take 1 resource from a rival. Then no one can steal resources from you this round." (So it doesn't block Trade, Heist or Ransom.)
 - ✅ (Cory) Priority: anything that makes the game playable by humans comes first. Improve the thinking bots, but no rabbit holes with bots or agent prompting. To-do list: design/todo.md.
+- ✅ (Cory) The face-up members for sale must be visible while picking starting resources: what's for sale informs the pick.
