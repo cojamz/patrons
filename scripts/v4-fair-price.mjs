@@ -23,6 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { writeFileSync, readFileSync } from 'node:fs';
 import { createGame, applyMove, followers, memberCount, paymentChoices } from '../src/engine/v4/core.js';
 import { chooseNormalMove } from '../src/engine/v4/bots.js';
+import { chooseThinkerMove } from '../src/engine/v4/thinker.js';
 import { seededRandom } from '../src/engine/v4/rng.js';
 import { allQuadrantIds, quadrant, guestMembers, registerQuadrant, DEFAULT_QUADRANTS } from '../src/engine/v4/content/index.js';
 
@@ -50,31 +51,35 @@ function findDefs(names) {
 }
 
 // ======================= screen =======================
-function screenGame(g, { jitter, tables }) {
+function screenGame(g, { jitter, tables, hardFrac = 0, hardBudget = 60 }) {
   const defs = allDefs();
   const orig = defs.map(d => [d.s, d.w]);
   const jr = seededRandom(g * 104729 + 3);
   for (const d of defs) {
     const T = priceOf(d);
     if (!T) continue;
-    const P = Math.max(0, Math.round(T * (1 - jitter + 2 * jitter * jr())));
+    // round to even (the printed grid), never below 0; a 1-cost plain member jitters 0 or 2
+    const P = Math.max(0, 2 * Math.round((T * (1 - jitter + 2 * jitter * jr())) / 2));
     Object.assign(d, split(d, P));
   }
   try {
     const quadrants = tables[g % tables.length];
     const rand = seededRandom(g * 7919 + 17);
     let s = createGame({ seats: bots(), seed: 50000 + g, quadrants });
-    const events = []; // [defId, price, round, bought]
+    // some games put one Hard (thinker) seat at the table; its decisions are logged and controlled for
+    const hard = jr() < hardFrac ? Math.floor(jr() * SEATS) : -1;
+    const move = st => (st.pending.player === hard ? chooseThinkerMove(st, rand, { budget: hardBudget }) : chooseNormalMove(st, rand));
+    const events = []; // [defId, price, round, bought, hard]
     const got = s.players.map(() => new Map()); // uid -> [defId, round, paid]
     let buying = null; // uid being bought this turn
     let early = null; // each player's standing when round II starts: followers + 0.75 per resource, vs the table mean
     while (!s.over) {
       const pend = s.pending;
-      const mv = chooseNormalMove(s, rand);
+      const mv = move(s);
       if (pend.kind === 'buy') {
         for (const o of pend.options) if (o.kind === 'card') {
           const d = s.cards[o.uid] && defs.find(x => x.id === s.cards[o.uid].def);
-          events.push([d.id, priceOf(d), s.round, o.id === mv.option ? 1 : 0]);
+          events.push([d.id, priceOf(d), s.round, o.id === mv.option ? 1 : 0, pend.player === hard ? 1 : 0]);
         }
         buying = mv.option.startsWith('card:') ? Number(mv.option.slice(5)) : null;
       }
@@ -94,7 +99,7 @@ function screenGame(g, { jitter, tables }) {
     }
     const fs = s.players.map(p => followers(s, p)), avg = mean(fs);
     const players = s.players.map((p, i) => ({
-      y: fs[i] - avg, early: early ? early[i] : 0,
+      y: fs[i] - avg, early: early ? early[i] : 0, hard: i === hard ? 1 : 0,
       own: p.members.map(u => got[i].get(u) || [s.cards[u].def, 1, 0]),
       members: memberCount(s, p),
     }));
@@ -134,13 +139,13 @@ function analyseScreen(games, { boot = 200, printed = {} } = {}) {
   // y = margin vs the table mean. Columns: one per card (its net worth at its printed price), const,
   // surcharge (price paid − printed, summed over owned cards; the jitter makes it exogenous), got in round I / III.
   // also the player's standing at the start of round II (a control for luck: lucky players buy more and win more)
-  const C = ids.length, K = C + 5;
+  const C = ids.length, K = C + 6;
   const printedOf = Object.fromEntries(defs.map(d => [d.id, printed[d.id] ?? priceOf(d)]));
   const rows = [];
   games.forEach((G, gi) => G.players.forEach(p => {
     const x = new Map();
     const add = (j, v) => x.set(j, (x.get(j) || 0) + v);
-    add(C, 1); add(C + 4, p.early || 0);
+    add(C, 1); add(C + 4, p.early || 0); if (p.hard) add(C + 5, 1);
     for (const [id, r, paid] of p.own) { if (col[id] === undefined) continue; add(col[id], 1); add(C + 1, paid - printedOf[id]); if (r === 1) add(C + 2, 1); if (r === 3) add(C + 3, 1); }
     rows.push({ gi, y: p.y, x: [...x] });
   }));
@@ -202,7 +207,7 @@ function analyseScreen(games, { boot = 200, printed = {} } = {}) {
     const P = Math.max(0, Math.round(c.fair));
     c.proposed = c.outside ? { P, ...split(d, P) } : null;
   }
-  return { slope, slopeFit, slopeCI, vMed, early: beta[C + 4], r1: beta[C + 2], r3: beta[C + 3], cards };
+  return { slope, slopeFit, slopeCI, vMed, early: beta[C + 4], hardSeat: beta[C + 5], r1: beta[C + 2], r3: beta[C + 3], cards };
 }
 
 // ======================= sweep =======================
@@ -395,10 +400,10 @@ if (!isMainThread) {
   const t0 = Date.now();
   const f1 = x => (Number.isFinite(x) ? x.toFixed(1) : '–');
   if (mode === 'screen') {
-    const games = Number(flags.games || 3000), jitter = Number(flags.jitter || 0.4);
+    const games = Number(flags.games || 3000), jitter = Number(flags.jitter || 0.4), hardFrac = Number(flags.hard || 0);
     let res, printed = Object.fromEntries(allDefs().map(d => [d.id, priceOf(d)]));
     if (flags.from) { const R = JSON.parse(readFileSync(flags.from, 'utf8')); res = R.results; printed = R.params.printed || printed; }
-    else res = await runPool('screen', games, { jitter, printed }, workers, flags.raw);
+    else res = await runPool('screen', games, { jitter, printed, hardFrac }, workers, flags.raw);
     const A = analyseScreen(res, { printed });
     const out = { mode, games, jitter, secs: (Date.now() - t0) / 1000, ...A };
     if (flags.out) writeFileSync(flags.out, JSON.stringify(out, null, 1));
