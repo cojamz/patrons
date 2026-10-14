@@ -1,12 +1,12 @@
 // Black (thieves) balance sim: greedy bots, 4 seats, gold/red/blue + Black, one run per scoring mode.
-// Usage: node scripts/spheres/thieves-sim.mjs [games=400] [modes=loot,others,black,fewest,trophies] [policy=rich|leader|random]
-import { install, setScoring } from '../../src/engine/v4/content/thieves.js';
+// Usage: node scripts/spheres/thieves-sim.mjs [games=400] [modes=loot,others,black,fewest] [policy=rich|leader|random]
+import { install, setScoring, releaseLoot } from '../../src/engine/v4/content/thieves.js';
 import { createGame, applyMove, chooseBotMove, followers, memberCount, actionAt } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 
 install();
 const N = Number(process.argv[2] || 400);
-const MODES = (process.argv[3] || 'loot,others,black,fewest,trophies').split(',');
+const MODES = (process.argv[3] || 'loot,others,black,fewest').split(',');
 const POLICY = process.argv[4] || 'rich';
 const QUADS = ['gold', 'red', 'blue', 'thieves'];
 const avg = a => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
@@ -57,20 +57,13 @@ function run(mode, control = false) {
           s = applyMove(s, mv);
         } else s = applyMove(s, botMove(s, rand));
         if (!r1 && s.order.length) r1 = s.order.slice(0, 4);
-        // round-end bookkeeping: detect the round-end log line
-        const endLine = s.log.slice(-6).find(l => /^Round (I|II|III) ends/.test(l));
-        const roundNow = s.round + (s.over ? 1 : 0);
-        if (endLine && lastRound !== s.round && (s.queue[0]?.t !== 'endRound')) {
-          // only once per round
-          if (!s._seen) s._seen = {};
-        }
-        if (prevContest && s.players.some((p, i) => p.contest !== prevContest[i]) || (s.over && prevContest && s.players.some((p, i) => p.contest !== prevContest[i]))) {
+        // loot mode: piles join supplies at round start (stands in for a quadrant round-start hook)
+        if (!control && mode === 'loot' && s.round !== lastRound && lastRound) { s = structuredClone(s); releaseLoot(s); }
+        if (prevContest && s.players.some((p, i) => p.contest !== prevContest[i])) {
           // a round just ended: find Black's winners from the log line
           const line = [...s.log].reverse().find(l => /^Round (I|II|III) ends/.test(l));
-          const label = s.quadrants.includes('thieves') ? undefined : null;
-          void label; void roundNow;
           if (!control && line) {
-            const lab = { loot: 'Most loot', others: 'Most members of other colors', black: 'Most black', fewest: 'Fewest resources', trophies: 'Most taken members' }[mode];
+            const lab = { loot: 'Most loot', others: 'Most members of other colors', black: 'Most black', fewest: 'Fewest resources' }[mode];
             const seg = line.split(' · ').find(x => x.includes(lab));
             st.contestRounds++;
             const before = s.players.map((p, i) => followers(s, p) - (p.contest - prevContest[i]));

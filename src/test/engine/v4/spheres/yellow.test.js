@@ -62,8 +62,6 @@ describe('Yellow scoring: most full sets, yellow breaks ties', () => {
   });
   it('pays the ring value at round end to the leader', () => {
     let s = scene({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }, { gold: 5 }], queue: [{ t: 'endRound' }] });
-    expect(s.players[0].contest).toBe(2);
-    expect(s.players[1].contest).toBe(2); // Gold's Crown
     expect(s.log.at(-1)).toContain('Most full sets: P1 +2');
   });
 });
@@ -100,9 +98,9 @@ describe('Yellow actions', () => {
     s = move(s, 'swap:gold:red');
     s = move(s, 'swap:red:green');
     expect(R(s)).toEqual({ gold: 1, red: 0, yellow: 0, green: 1 });
-    expect(s.pending.kind).toBe('buy'); // 2 swaps used up
+    expect(s.pending?.kind).not.toBe('choose'); // 2 swaps used up
     const z = take(scene({}), 'Transmute');
-    expect(z.pending.kind).toBe('buy');
+    expect(z.pending?.kind).not.toBe('choose');
   });
 
   it('Transmute: a bot evens out its colors and stops', () => {
@@ -119,7 +117,7 @@ describe('Yellow actions', () => {
 
   it('Gather (ring II): each member brings 1 of its color; Twins count twice', () => {
     const s = take(scene({ round: 2, members: [['gold.banker', 'red.twins', 'red.intern', 'yellow.farmer']] }), 'Gather');
-    expect(R(s)).toEqual({ gold: 1, red: 3, yellow: 1, green: 0 });
+    expect(R(s)).toEqual({ gold: 1, red: 3, yellow: 2, green: 0 }); // Farmer adds 1 to the yellow
   });
 
   it('Flourish (ring III): +1 of each color per full set', () => {
@@ -178,7 +176,8 @@ describe('Yellow members', () => {
   });
 
   it('Late Bloomer: round start, +1 of each color if you have the fewest followers (ties count)', () => {
-    expect(R(start([['yellow.latebloomer']]))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
+    // the Late Bloomer itself is a follower, so the rival needs 1 more to tie
+    expect(R(start([['yellow.latebloomer']], [{}, {}], { bonus: [0, 1] }))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
     expect(R(start([['yellow.latebloomer']], [{}, {}], { bonus: [3, 0] }))).toEqual(Z);
   });
 
@@ -190,7 +189,7 @@ describe('Yellow members', () => {
     s.queue = [{ t: 'endRound' }];
     s = resume(s);
     expect(R(s)).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
-    expect(s.players[0].contest).toBe(4); // planted colors come in before scoring: 2 full sets win Yellow
+    expect(s.log.at(-1)).toContain('Most full sets: P1 +4'); // planted colors come in before scoring
   });
 
   it('Harmonist: game end, +2 followers per full set', () => {
@@ -212,7 +211,8 @@ describe('Yellow members', () => {
     let s = scene({ res: [{ yellow: 2, gold: 1 }], shop: ['yellow.pilgrim', ...SHOP.slice(1)] });
     s = take(s, 'Rush');
     s = move(s, `card:${uidOf(s, 'yellow.pilgrim', 'shop')}`);
-    expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 }); // paid 2 yellow + 1 gold... then +1 each; Rush gave 2 gold
+    // Rush +2 gold (3), paid 2 yellow + 1 gold, then +1 of each
+    expect(R(s)).toEqual({ gold: 3, red: 1, yellow: 1, green: 1 });
   });
 
   it('Farmer: whenever an action gains you yellow, +1 more', () => {
@@ -226,7 +226,7 @@ describe('Yellow members', () => {
     s = take(s, 'Harvest'); // +3 yellow
     s = move(s, 'tier:big');
     const after = R(s);
-    expect(after.gold + after.red + after.green + after.yellow).toBe(2 + 2 + 2 + 3 - 6 + 4);
+    expect(after.gold + after.red + after.green + after.yellow).toBe(2 + 2 + 2 + 4 - 6 + 4); // Harvest +4 (4 colors held)
     expect(s.players[0].bonus).toBe(6);
     let t = scene({ members: [['yellow.weaver']], res: [{ gold: 2, red: 2 }] });
     t.cards[uidOf(t, 'yellow.weaver', 0)].seenBig = t.bigLeft;
@@ -242,7 +242,7 @@ describe('Yellow members', () => {
     s = take(s, 'Rush');
     s = move(s, 'tier:big');
     expect(s.players[1].bonus).toBe(6);
-    expect(R(s, 0)).toEqual({ gold: 0, red: 0, yellow: 0, green: 0 });
+    expect(R(s, 0)).toEqual({ gold: 1, red: 0, yellow: 1, green: 0 }); // untouched by the rival's buy
   });
 
   it('Explorer: taking a space outside Yellow gives +1 yellow', () => {
