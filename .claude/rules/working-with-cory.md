@@ -35,6 +35,16 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - **Status = what's running / what's next / rough ETA**, in 3 lines. Give an ETA whenever work will take longer than a few minutes.
 - **Show, don't describe.** He responds well to things he can see or open: diagrams, transcripts, links.
 
+## How I approach problems (lessons from what went wrong, 2026-10-14)
+- **Calibrate on one item with Cory before scaling.** The quadrant forge ran dozens of agents on my rubric before I knew his taste, and produced hours of rejected work. Now: one tiny example → his reaction → then fan out. The Gold card lists worked because he graded 30 and I learned from the yes/no pattern.
+- **Measure before proposing numbers.** I guessed costs and power by feel and was wrong three times. Now any number goes through the value model or a quick sim first (member-value sim, variant sims), and I say which.
+- **Know the instrument's limits before raising an alarm.** I flagged the Turnout "edge" from greedy bots that can't deny. Now I state who produced a finding (greedy bot / thinking bot / AI tester) and check it with a stronger one before calling it a problem.
+- **Verify through the user's eyes before saying "done".** The UI agent reported card flights the testers never saw, and a stale server had been answering the tests. Now "done" means a fresh build, seen in a screenshot or by a blind tester, not an agent's report.
+- **Keep decisions traceable to code.** The audit found drift (Investor automatic, placeholder text). After each design session, diff decisions.md against the card texts and fix the drift in the same turn.
+- **His principles are his defaults, not my constraints.** I kept "enforcing" harm-points-up on his own calls. He overrides freely; I flag in one line, never block.
+- **Re-derive what the game is about from his words, not mine.** I once framed it as "reading people". It's recruiting members and escalating resources into followers. When unsure, quote decisions.md.
+- **Decide the tactics, parallelize by default.** Run independent work at once, triage as results land, and never wait idle on something that isn't a dependency.
+
 ## Changelog of this doc
 - 2026-10-09 — first version, from Cory's kickoff voice note.
 - 2026-10-09 — first reply was way too long and too deep in the current game. Added 8-line cap, no dumps, stay at his altitude.
@@ -59,3 +69,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-14 — Cory: the final output must convey how the game FEELS to play, as real players would say it, not just numbers. Testers now write "table talk", and the final report synthesizes it.
 - 2026-10-14 — Cory: replies were creeping long again (second time). Made it a hard rule: 5-line cap unless he asks for detail, and no tables unless he asks for data.
 - 2026-10-14 — Self-review at Cory's request: added "What works with Cory" (numbered decisions, his words only, do it his way, label my fill-ins, sanity-check balance direction, 3-line status with ETA, show don't describe).
+- 2026-10-14 — Cory: the self-review was too vague and too comms-only. Added "How I approach problems": concrete lessons (calibrate before scaling, measure before numbers, know the instrument, verify through his eyes, decisions↔code traceability, principles are defaults, parallelize).
