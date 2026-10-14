@@ -227,7 +227,7 @@
 .lt-deck{position:relative;flex:0 0 60px;height:96px;padding:0;border:0;background:none;font:inherit;color:inherit;cursor:help;border-radius:6px}
 .lt-deck .back,.lt-deck .edge{position:absolute;left:0;top:0;width:calc(100% - 6px);height:calc(100% - 6px);border-radius:6px}
 .lt-deck .edge{transform:translate(calc(var(--k) * 2px),calc(var(--k) * 2px));background:linear-gradient(180deg,#3a2333,#2a1822);box-shadow:0 0 0 1px #120c0a,inset 0 0 0 1px rgba(217,166,58,.32)}
-.lt-deck .edge:last-of-type{box-shadow:0 0 0 1px #120c0a,inset 0 0 0 1px rgba(217,166,58,.32),0 6px 12px -6px rgba(0,0,0,.7)}
+.lt-deck .edge:first-child{box-shadow:0 0 0 1px #120c0a,inset 0 0 0 1px rgba(217,166,58,.32),0 6px 12px -6px rgba(0,0,0,.7)}
 .lt-deck .back{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
   background:radial-gradient(circle at 50% 36%,rgba(255,217,120,.12),transparent 62%),repeating-linear-gradient(45deg,rgba(0,0,0,.16) 0 2px,transparent 2px 6px),linear-gradient(180deg,#4b2e41,#36202f);
   box-shadow:0 0 0 1px #120c0a,inset 0 0 0 2px #36202f,inset 0 0 0 3px rgba(217,166,58,.72),0 6px 14px -6px rgba(0,0,0,.7);transition:transform .12s ease}

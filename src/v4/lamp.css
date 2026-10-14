@@ -276,3 +276,8 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage svg.wheel-paper .rim-emoji.wait{opacity:.5}
 .lt .stage svg.wheel-paper .rim-rule.lit{filter:drop-shadow(0 0 3px rgba(var(--lamp),.95))}
 .lt .stage svg.wheel-paper .rim.lit{fill-opacity:1;filter:drop-shadow(0 0 6px rgba(var(--lamp),.9))}
+/* Release opens as a small list under its button, so the question never gets squeezed */
+.lt-prompt .pr-actions .release-row{position:relative}
+.lt-prompt .pr-actions .rel-list{position:absolute;top:calc(100% + 6px);left:0;z-index:35;display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px;width:max-content;max-width:320px;
+  border-radius:12px;background:var(--walnut-2);box-shadow:0 0 0 1px rgba(243,230,200,.14),0 14px 30px rgba(0,0,0,.6)}
+.lt-prompt .pr-actions .rel-list .rel{justify-content:flex-start;gap:6px;min-height:40px;color:var(--cream)}

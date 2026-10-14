@@ -52,7 +52,7 @@ Status key:
 - Doppelganger: **OK.** See Q1 and the dead-by-design entry below.
 
 ## Purple
-Relay was cut by Cory (2026-10-14), so it's not in this ledger. Purple has 14 members.
+Relay was cut by Cory (2026-10-14), so it's not in this ledger. Night Owl took its slot later that day, so Purple has 15 members again.
 
 - Hourly, Catch Up, Wind-up, Linger, Overtime, Rally: **OK.**
 - Reworked later on 2026-10-14 (Purple agent, design/spheres/purple.md v4):
@@ -66,6 +66,7 @@ Relay was cut by Cory (2026-10-14), so it's not in this ledger. Purple has 14 me
 - Foreman, Courier, Apprentice, Overseer: **FIXED (F4).**
 - Double Time: **FIXED.** Prices now read "(Double Time: 6 → 3)" on Overtime, Rally and Taskmaster. A Doppelganger copy doesn't halve again.
 - Bookkeeper, Patience: **OK.**
+- Night Owl (new, 2026-10-14): **OK.** Logs "P1's Night Owl: P1 takes an extra turn.", or "No space to spare: P1 gets no extra turn from Night Owl."; once per round (night-owl.test.js). The fire audit sees it named in 10 of the 13 games it was recruited.
 - Clockmaker: **OK.** Checked against the new text "At round start, +1 purple per 2 purple you have", which another agent changed on 2026-10-14. The Clockmaker test in `spheres/purple.test.js` still expects round end, and its owner needs to update it.
 - Lamplighter: **OK.** See Q4.
 

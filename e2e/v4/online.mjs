@@ -47,6 +47,9 @@ const params = `${RTDB ? `rtdb=${RTDB}` : 'transport=broadcast'}&botDelay=30&sub
 const url = `${base}/?${params}`;
 const pages = { hana: watch(await ctxs.hana.newPage(), 'hana'), gus: watch(await ctxs.gus.newPage(), 'gus'), pia: null };
 
+// Clicks the first legal option (choice panels first). The same option id can show in two places (a choice panel and
+// the shop row), and the UI keeps changing, so if a click leaves the page where it was, the next try starts further down.
+const stuck = new Map(); // page -> { key, tries }
 async function stepFirstOption(page) {
   if (!page || page.isClosed()) return false;
   const next = await page.$('[data-next-round]');
@@ -54,18 +57,30 @@ async function stepFirstOption(page) {
   // touch (and online) placement asks to confirm: "Place here"
   const place = await page.$('[data-place]');
   if (place) { try { await place.click({ timeout: 1500 }); return true; } catch { /* fall through */ } }
-  const els = await page.$$('[data-option]:not([disabled])');
-  for (const el of els) {
-    const id = await el.getAttribute('data-option').catch(() => null);
-    if (!id || id.startsWith('toggle:') || id === 'back') continue;
+  const usable = async els => {
+    const out = [];
+    for (const el of els) {
+      const id = await el.getAttribute('data-option').catch(() => null);
+      if (id && !id.startsWith('toggle:') && id !== 'back') out.push(el);
+    }
+    return out;
+  };
+  const inPanel = await usable(await page.$$('.prompt.choice [data-option]:not([disabled]), [role="dialog"] [data-option]:not([disabled])'));
+  const all = await usable(await page.$$('[data-option]:not([disabled])'));
+  const cands = [...inPanel, ...all.filter(e => !inPanel.includes(e))];
+  if (!cands.length) return false;
+  const key = await page.evaluate(() => `${document.querySelector('.app.game')?.dataset.moves}|${document.querySelector('[data-prompt]')?.textContent}`).catch(() => '');
+  const st = stuck.get(page);
+  const skip = st && st.key === key ? st.tries : 0;
+  stuck.set(page, { key, tries: skip + 1 });
+  const order = cands.map((_, i) => cands[(i + skip) % cands.length]);
+  for (const el of order) {
     try { await el.click({ timeout: 1500 }); return true; } catch { /* try the next */ }
   }
   // Everything refused a real click: usually a hover card left open under the pointer. This e2e tests the online flow
-  // (the UI e2e test hit-testing), so park the pointer and press the first option directly.
-  for (const el of els) {
-    const id = await el.getAttribute('data-option').catch(() => null);
-    if (!id || id.startsWith('toggle:') || id === 'back') continue;
-    await page.mouse.move(1, 1).catch(() => {});
+  // (the UI e2e test hit-testing), so park the pointer and press the option directly.
+  await page.mouse.move(1, 1).catch(() => {});
+  for (const el of order) {
     if (await el.evaluate(e => { if (!e.isConnected) return false; e.click(); return true; }).catch(() => false)) return true;
   }
   return false;

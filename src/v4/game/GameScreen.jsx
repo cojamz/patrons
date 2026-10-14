@@ -261,8 +261,6 @@ function PromptActions({ state, optionFor, onPick }) {
           )}
         </span>
       )}
-        </span>
-      )}
       <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title="End your turn without buying" data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>Pass</button>
     </span>
   );

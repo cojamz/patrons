@@ -64,13 +64,9 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] Later, only if bot prices keep disagreeing with Cory's feel in play: a bot that learns from its own games
 
 ## Waiting on Cory
-- [ ] Barter (White, replaced Cash In): "Recruit a face-up member for half its cost (round up), paid in loose followers." You once rejected a cousin (Gold's 'recruit paying the whole cost in gold'). Keep it? [yes; it's one space, used about once a game]
-- [ ] The 10-follower buy limited to once per player per round, so one player can't rush the game-end clock (built under go-with-your-gut). [yes]
-- [ ] The 18 action names (design/eval/action-names-calibration.md): grade by number or "all good"
-- [ ] Member renames, people or groups only (design/eval/member-names.md, 28 lines): grade by number or "all good"
-- [ ] Swap space: one of your members for a rival's of equal cost, +1 red, round I? [yes]
 - [ ] What the ~25% big-followers target is measured against [an in-between bot level, then a check with people]
 - [ ] Default table for the friends build: the real Blue (shop sphere) and Green (copy sphere) instead of the plain stand-ins, which only say "+N color" [yes]
-- [ ] Night Owl replaces Relay at 10, and five Purple members get cheaper (gut call from the Purple sim; overturn any) [yes]
+
+- [ ] Action names batch 2 (Blue, Green, Purple, Silver, Yellow, White): grade by number or "all good" once drafted
 
 Settled 2026-10-14 (Cory's calls or Claude's logged gut calls, see decisions.md): Lamplit Table look; spinning wheel kept; pay by coins; Watchdog blocks Trade; loot stays magenta; Release on, refunds the colored part only, not in the round recruited; Late Riser; doubled discounts; 10→10 is the clock; Investor/Sower set-asides return undoubled; only loose followers sell (White rework fixes Pawn); shop of 10; pixel art good enough for now.

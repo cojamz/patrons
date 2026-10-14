@@ -73,4 +73,14 @@ describe('every member reads as its sphere', () => {
     // no member anywhere has art with no sphere color at all and no ground (the share is measured for every one)
     for (const id of allQuadrantIds()) for (const d of quadrant(id).members) expect(sphereShare([d.id, spriteId(d.name)])).toBeGreaterThanOrEqual(0);
   });
+
+  it('every member of a real sphere (and every guest) has its own drawing, not the hooded template', async () => {
+    // a new or renamed member without art fails here (Night Owl and Revelers were caught missing, 2026-10-14)
+    const { iconFor, spriteId } = await import('../../../v4/art/index.js');
+    const { allQuadrantIds } = await import('../../../engine/v4/index.js');
+    const { guestMembers } = await import('../../../engine/v4/content/index.js');
+    const defs = [...allQuadrantIds().filter(id => !quadrant(id).standIn).flatMap(id => quadrant(id).members), ...guestMembers()];
+    expect(defs.length).toBeGreaterThan(100);
+    expect(defs.filter(d => !iconFor([d.id, spriteId(d.name)], 'member').drawn).map(d => d.id)).toEqual([]);
+  });
 });

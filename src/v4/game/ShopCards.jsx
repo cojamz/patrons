@@ -1,5 +1,5 @@
 // The Lamplit shop: ten cream cards (5×2 on a laptop, a swipe row on a phone) and one quiet follower-rate line.
-// A card: timing tag, pixel figure, name (◆ when badged), cost as shapes, worth. While placing, cards you can't
+// The member deck (face down, its count) heads the strip (MemberDeck.jsx). A card: timing tag, pixel figure, name (◆ when badged), cost as shapes, worth. While placing, cards you can't
 // afford are dim and a "✓ after X" tick marks the ones the space under your pointer would unlock (engine dry run).
 // While buying, the figure gives way to the card's text; hover shows what you'd pay. On touch a tap opens the card
 // as a sheet with Recruit (reading a card never recruits it); with a mouse a click on an affordable card recruits.
@@ -14,6 +14,7 @@ import { ResourceGlyph, FollowerGlyph } from './Glyphs.jsx';
 import { timingOf, payBreakdown, unlockedBy, surely } from './cards.js';
 void timingOf;
 import { useHoverSpace } from './HoverCards.jsx';
+import { MemberDeck, useDeal } from './MemberDeck.jsx';
 import './lamp-b.css';
 
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
@@ -37,6 +38,8 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
   const buying = mine && pend.kind === 'buy';
   const placing = mine && pend.kind === 'place';
   const pointer = useRef('mouse');
+  const rowRef = useRef(null), deckRef = useRef(null);
+  useDeal(rowRef, deckRef, state); // a refill comes off the deck
   const space = useHoverSpace(hover); // only the space under the pointer re-renders the shop (for its ticks)
   // the space under the pointer, and the cards its sure gains would unlock (no tick a choice might not give)
   let after = null, unlocked = [];
@@ -54,10 +57,12 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
     <section className="lt-shop-cards" data-phase={phase} aria-label="Shop">
       {/* one header line: the shop's title, then the follower rates (the strip's height is all cards) */}
       <div className="lt-shop-head">
-        <h3 className="lt-h">Shop<small>{buying ? `${affordable} you can afford · hover to see the cost` : `${state.shop.length} face up · ${state.pile.length} in the pile`}</small></h3>
+        <h3 className="lt-h">Shop<small>{buying ? `${affordable} you can afford · hover to see the cost` : `${state.shop.length} face up`}</small></h3>
         <FollowerRates state={state} optionFor={optionFor} onPick={onPick} onDenied={onDenied} />
       </div>
-      <div className="lt-cards">
+      <div className="lt-shop-body">
+      <MemberDeck state={state} hover={hover} deckRef={deckRef} />
+      <div className="lt-cards" ref={rowRef}>
         {uids.map(uid => {
           const d = cardDef(state, uid);
           const opt = optionFor(`card:${uid}`);
@@ -103,6 +108,7 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
             </button>
           );
         })}
+      </div>
       </div>
     </section>
   );

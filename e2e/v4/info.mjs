@@ -10,7 +10,9 @@
 //  (d) hover cards open within 100ms (p95) and never flicker while sweeping a ring of spaces;
 //  (e) a cult member hops when its own trace line appears in the log;
 //  (f) no seat sigil shapes anywhere (identity is the leader's emoji and the name);
-//  (g) every member in a cult stands on a ground in its sphere's color, so it reads as that sphere.
+//  (g) every member in a cult stands on a ground in its sphere's color, so it reads as that sphere;
+//  (h) the member deck heads the shop strip: after a refill its count is the engine's pile length (the saved game's
+//      state.pile), a refill deals the new card off it, and hovering it shows its card (count, colors adding up).
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -25,7 +27,7 @@ const fail = (msg, step) => fails.push(`[${step}] ${msg}`);
 const GAME = [
   '[data-region] [data-uid]', '.shop [data-uid]', '.lt-rs', '[data-cult] .cs-head', '.lt-stack', '.res > .r', '.you-strip .r', '.lt-member .fig', '.chip[data-g]',
   '[data-leader-ring]', '.workers', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
-  '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term',
+  '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term', '[data-deck]',
 ].join(',');
 
 async function audit(page, step) {
@@ -63,6 +65,28 @@ async function audit(page, step) {
   return r.n;
 }
 
+// (h) the deck's number against the engine: read the screen and the saved game in one go, when both show the same move
+async function deckCheck(page) {
+  let last = null;
+  for (let t = 0; t < 60; t++) {
+    const r = await page.evaluate(() => {
+      const g = document.querySelector('.app.game'), d = document.querySelector('[data-deck]');
+      let save = null;
+      try { save = JSON.parse(localStorage.getItem('patrons.v4.local')); } catch { /* none */ }
+      if (!g || !d || !save || !save.state) return null;
+      const tv = d.querySelector('.n .tv') || d.querySelector('.n');
+      return { moves: Number(g.dataset.moves), saved: save.state.moves, pile: save.state.pile.length, left: Number(d.dataset.left), shown: tv.textContent.trim() };
+    });
+    last = r;
+    if (r && r.moves === r.saved) {
+      if (r.left !== r.pile) { fail(`(h) the deck says ${r.left}, the engine's pile has ${r.pile}`, 'deck'); return; }
+      if (r.shown === String(r.pile)) return;
+    }
+    await page.waitForTimeout(100);
+  }
+  fail(`(h) after a refill the deck's number never settled on the engine's pile length (last: ${JSON.stringify(last)})`, 'deck');
+}
+
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 const errors = [];
 try {
@@ -80,7 +104,12 @@ try {
 
   // play: the first legal option each time; audit at my first placement, my first buy and a round-II placement
   const seen = new Set();
+  let lastShop = null, refills = 0;
   for (let k = 0; k < 400 && seen.size < 3; k++) {
+    // (h) the row refilled (a new face-up card): the deck's count must be the engine's pile
+    const shopNow = await page.$$eval('.lt-shop .lt-cards .card[data-uid]', els => els.map(e => e.dataset.uid)).catch(() => []);
+    if (lastShop && shopNow.some(u => !lastShop.includes(u)) && refills < 3) { refills++; await deckCheck(page); }
+    lastShop = shopNow;
     const next = page.locator('[data-next-round]');
     if (await next.count()) { await next.first().click().catch(() => {}); await page.waitForTimeout(150); continue; }
     const hand = page.locator('[data-handoff]');
@@ -115,6 +144,26 @@ try {
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
         }
+        // (h) the deck heads the strip, and hovering it shows what's in it
+        const deck = page.locator('[data-deck]');
+        if (!(await deck.count())) fail('(h) no member deck at the head of the shop strip', step);
+        else {
+          const placed = await page.evaluate(() => { const d = document.querySelector('[data-deck]').getBoundingClientRect(), c = document.querySelector('.lt-shop .lt-cards .card').getBoundingClientRect(); return d.right <= c.left + 1 && Math.abs(d.top - c.top) < 2; });
+          if (!placed) fail('(h) the deck is not before the first shop card', step);
+          await deck.hover();
+          await page.waitForTimeout(400);
+          const dc = await page.evaluate(() => {
+            const c = document.querySelector('[data-hover-layer] [data-hover-card="deck"]'), d = document.querySelector('[data-deck]');
+            if (!c || !(c.getBoundingClientRect().width > 0)) return null;
+            const body = c.querySelector('[data-deck-card]');
+            return { left: Number(d.dataset.left), card: Number(body && body.dataset.left), sum: [...c.querySelectorAll('[data-color]')].reduce((t, e) => t + Number(e.dataset.n), 0), colorless: !!c.querySelector('[data-color="colorless"]'), bottom: /bottom/.test(c.textContent) };
+          });
+          if (!dc) fail('(h) hovering the deck shows no card', step);
+          else if (dc.card !== dc.left || dc.sum !== dc.left || !dc.colorless || !dc.bottom) fail(`(h) deck card: ${dc.card} left, colors add to ${dc.sum}, the deck shows ${dc.left}${dc.colorless ? '' : ', no colorless count'}${dc.bottom ? '' : ', no word on where released members go'}`, step);
+          await page.screenshot({ path: `${SHOTS}/02d-hover-deck.png` });
+          await page.mouse.move(5, 5);
+          await page.waitForTimeout(300);
+        }
       }
     }
     const opt = page.locator('.slot.can, [data-option]:not([aria-disabled="true"])').first();
@@ -122,6 +171,9 @@ try {
     await page.waitForTimeout(80);
   }
   if (seen.size < 3) fail(`only reached ${[...seen].join(', ') || 'no'} steps`, 'play');
+  if (!refills) fail('(h) the shop row never refilled during the game', 'deck');
+  else if (!(await page.evaluate(() => window.__patronsDeals || 0))) fail(`(h) ${refills} refill(s), but no card came off the deck`, 'deck');
+  else console.log(`info.mjs: deck matched the engine's pile after ${refills} refill(s); ${await page.evaluate(() => window.__patronsDeals)} card(s) dealt off it`);
 
   // (d) hover speed (Cory: instant and seamless): p95 from the pointer arriving to a visible card < 100ms, and no
   // close/reopen flicker while sweeping across a ring of spaces. Measured on the Lamplit hover layer with the real
