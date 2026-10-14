@@ -37,7 +37,7 @@ export function chooseBotMove(state, rand = Math.random) {
       if (last && tiers.length) return move(best(tiers, o => tierOf(o).get));
       const cards = pend.options.filter(o => o.kind === 'card').map(o => {
         const d = cardDef(state, o.uid), c = d.s + d.w;
-        const v = d.f * 1.4 + (d.text.startsWith('Stand-in') ? 0 : 1.6) + c * 0.3 - (state.round === 3 ? c * 0.5 : 0) + rand() * 0.5;
+        const v = d.f * 1.4 + (d.vanilla ? 0 : 1.6) + c * 0.3 - (state.round === 3 ? c * 0.5 : 0) + rand() * 0.5;
         return { o, v };
       });
       const top = cards.length ? cards.reduce((a, b) => (b.v > a.v ? b : a)) : null;

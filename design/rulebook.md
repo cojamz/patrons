@@ -14,13 +14,13 @@ In seat order, each player picks 2 starting resources. Everyone can see what you
 The round board is split into four colored quadrants. Each quadrant has its own actions and its own way to score.
 - The **outer ring** opens in round I. The **middle ring** opens in round II. The **center** opens in round III. Rings stay open once opened.
 - Each space holds one worker per round. All spaces empty out between rounds.
-- Spin the board to read a quadrant up close. The quadrant facing you is shown in full beside the board.
+- Spin the board to read a quadrant up close. The quadrant facing you is shown in full beside the board, and you can point at any space to read it.
 
 ## A turn
-Players take turns in a snake order (1-2-3-4, then 4-3-2-1, and so on). Whoever has the fewest followers goes first each round.
+Players take turns in a snake order (1-2-3-4, then 4-3-2-1, and so on). Whoever has the fewest followers goes first each round. If tied, whoever went later last round goes first (at the start, the last seat).
 
 On your turn:
-1. **Place a worker** on an open space and do what it says.
+1. **Place a worker** on an open space and do what it says. Some spaces recruit a member for free; that doesn't use up your buy.
 2. **Buy one thing**, or pass:
    - **Recruit a member** from the shop, which always shows 6 face up. Costs show a colored part (that color only) plus "any" (any resources).
    - Or **buy followers**: 2 of anything for 1 follower; 4 (at least 2 colors) for 3; 6 (at least 3 colors) for 6. The 6-follower buy is limited. When the last one is bought, the game ends after that round.
@@ -28,7 +28,7 @@ On your turn:
 Members keep working for you: some pay out each round, some react to what other players do, and some you use once.
 
 ## Round end
-Each quadrant scores: the player who leads in what it measures (for example "most gold") gains followers. That's +2 in round I, +4 in round II and +6 in round III. Tied leaders all score.
+Each quadrant scores: the player who leads in what it measures (for example "most gold") gains followers. That's +2 in round I, +4 in round II and +6 in round III. Tied leaders all score. You need at least 1 of what's measured to score. It's counted at the moment the round ends, so anything you spend before then doesn't count.
 
 ## Game end
 After round III, end-of-game member bonuses are added. The most followers wins. If players tie, the one with more members wins.

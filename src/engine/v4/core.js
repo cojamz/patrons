@@ -561,5 +561,5 @@ function log(state, text) {
   state.log.push(text);
   if (state.log.length > LOG_MAX) state.log.splice(0, state.log.length - LOG_MAX);
 }
-const payString = s => Object.entries(s).filter(([, v]) => v).map(([c, v]) => `${v} ${c}`).join(', ') || 'nothing';
+const payString = s => Object.entries(s).filter(([, v]) => v).map(([c, v]) => `${v} ${c}`).join(', ') || 'free';
 export const roman = r => ['I', 'II', 'III'][r - 1] || String(r);

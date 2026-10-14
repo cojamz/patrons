@@ -98,35 +98,36 @@ export default {
     m('proselytizer', 'Proselytizer', 3, 3, 'Whenever you recruit, +1 follower.', {
       onAnyRecruit(ctx, owner, card, by, recruited) { if (by === owner && recruited.uid !== card.uid) owner.bonus += 1; },
     }),
-    m('mob', 'Mob', 2, 1, 'Game end: +1 follower per red member.', {
+    m('mob', 'Mob', 2, 2, 'Game end: +1 follower per red member.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'red'),
     }),
-    m('recruiter', 'Recruiter', 1, 1, 'Whenever you recruit, +1 red.', {
+    m('recruiter', 'Recruiter', 2, 2, 'Whenever you recruit, +1 red.', {
       onAnyRecruit(ctx, owner, card, by, recruited) { if (by === owner && recruited.uid !== card.uid) ctx.gain(owner, 'red', 1); },
     }),
     m('drive', 'Recruiting Drive', 1, 1, 'Recruit 2+ members in one turn: +2 red.', {
-      onTurnEnd(ctx, owner, card, current) {
-        if (current === owner && owner.turnRecruits >= 2) { ctx.gain(owner, 'red', 2); ctx.log(`${owner.name}'s Recruiting Drive: +2 red.`); }
+      // pays the moment your second recruit of the turn lands, so the red can still be spent this turn
+      onAnyRecruit(ctx, owner, card, by) {
+        if (by === owner && owner.turnRecruits === 2) { ctx.gain(owner, 'red', 2); ctx.log(`${owner.name}'s Recruiting Drive: +2 red.`); }
       },
     }),
-    m('host', 'Host', 1, 1, 'At round start, +1 red per 2 members.', {
+    m('host', 'Host', 2, 1, 'At round start, +1 red per 2 members.', {
       onRoundStart(ctx, owner) { ctx.gain(owner, 'red', Math.floor(ctx.memberCount(owner) / 2)); },
     }),
-    m('sponsor', 'Sponsor', 2, 1, 'Your members cost 1 less.', { costReduction: 1 }),
+    m('sponsor', 'Sponsor', 3, 2, 'Your members cost 1 less.', { costReduction: 1 }),
     m('crowd', 'Crowd-Pleaser', 1, 0, 'Whenever you buy followers, +1 red.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer === owner) ctx.gain(owner, 'red', 1); },
     }),
-    m('doppel', 'Doppelganger', 2, 2, 'When recruited: copies the effect of one of your members.', {
+    m('doppel', 'Doppelganger', 2, 1, 'When recruited: copies the effect of one of your members.', {
       onRecruited(ctx, owner, card) {
         const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid && c.def.key !== 'doppel');
         if (!own.length) return;
         ctx.choose(owner, 'Doppelganger: copy which of your members?', own.map(c => ({
           id: `card:${c.uid}`, label: c.def.name, kind: 'member', value: c.uid,
-          hint: ['banker', 'prospector', 'recruiter', 'proselytizer', 'host'].includes(c.def.key) ? 2 : (c.def.text.startsWith('Stand-in') ? 0 : 1),
+          hint: ['banker', 'prospector', 'recruiter', 'proselytizer', 'host'].includes(c.def.key) ? 2 : (c.def.vanilla ? 0 : 1),
         })), 'red.doppelCopy', { uid: card.uid });
       },
     }),
-    m('patriarch', 'Patriarch', 3, 1, 'Game end: +1 follower per 2 members.', {
+    m('patriarch', 'Patriarch', 3, 2, 'Game end: +1 follower per 2 members.', {
       onGameEnd: (ctx, owner) => Math.floor(ctx.memberCount(owner) / 2),
     }),
     m('reserve', 'Reserve', 1, 0, 'No effect.'), // placeholder until Cory designs Reserve
