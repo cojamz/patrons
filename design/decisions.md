@@ -226,3 +226,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ❌ (Cory) Rank: no, win-more. Titles: maybe, but he doesn't like the mechanism. Devotion: second favorite after Omens.
 - 💡 (Cory) Maybe members need more types that overlap across spheres (think Wingspan).
 - ✅ (Cory) Tabled for later, in priority order: 1) role tags across spheres (Wingspan-style; e.g. round goals by role), 2) Omens (three revealed up front), 3) Devotion.
+- ✅ (Cory) Put all five drafts (Green/Echo, Silver, Purple, Blue/Market, White/Trading) on the table as drafts with their critic-approved defaults; judge them by playing, not by reading lists.
