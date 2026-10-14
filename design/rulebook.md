@@ -25,7 +25,7 @@ On your turn:
    - **Recruit a member** from the shop, which always shows 6 face up. Costs show a colored part (that color only) plus "any" (any resources).
    - Or **buy followers**: 2 of anything for 1 follower; 4 (at least 2 colors) for 3; 6 (at least 3 colors) for 6. Gold counts as any color here. The 6-follower buy is limited. When the last one is bought, the game ends after that round.
 
-Members keep working for you: some pay out each round, some react to what other players do, and some you use once.
+Members keep working for you: some pay out each round, some react to what other players do, and some you use once. Some members come in more than one copy; a "×2" on a card means you hold two of them.
 
 ## Round end
 Each quadrant scores by the rule printed on its rings (for example Gold: "most gold"; Red: "most members"). The leader gains followers. That's +2 in round I, +4 in round II and +6 in round III. Tied leaders all score, unless the rule names a tiebreak (Red: more red members wins the tie). You need at least 1 of what's measured to score. It's counted at the moment the round ends, so anything you spend before then doesn't count.

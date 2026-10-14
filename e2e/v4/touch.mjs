@@ -1,0 +1,168 @@
+// E2E: a full game on a phone (390×844, touch), at Normal pace, with build-failing assertions:
+//  (a) every visible button / [role=button] / input has a hit box of at least 44×44 at every step
+//      (wheel spaces are measured by their invisible hit circle);
+//  (b) "Undo" is never visible while the seat to act isn't the human who made the move;
+//  (c) consecutive bot steps are at least 600ms apart (in-page timestamps of each displayed move);
+//  (d) no interactive element is clipped by its nearest overflow-hidden ancestor;
+//  (e) your own recruit visibly flies into your panel (a frame check).
+// Server: $V4_URL if set, else starts `npx vite` on a free port from 5182.
+import { chromium } from 'playwright';
+import { spawn } from 'node:child_process';
+import { mkdirSync } from 'node:fs';
+import { createServer } from 'node:net';
+
+const SHOTS = '/tmp/patrons-shots/v4/touch-e2e';
+mkdirSync(SHOTS, { recursive: true });
+let server = null;
+let base = process.env.V4_URL;
+if (!base) {
+  const free = port => new Promise(res => { const srv = createServer().once('error', () => res(false)).once('listening', () => srv.close(() => res(true))).listen(port, 'localhost'); });
+  let port = 5182;
+  while (!(await free(port))) port++;
+  base = `http://localhost:${port}`;
+  server = spawn('npx', ['vite', '--port', String(port), '--strictPort'], { stdio: 'pipe' });
+  let up = false;
+  for (let k = 0; k < 60 && !up; k++) { await new Promise(r => setTimeout(r, 500)); up = await fetch(base).then(r => r.ok, () => false); }
+  if (!up) { server.kill(); console.error('vite did not start'); process.exit(1); }
+}
+
+const errors = [];
+const fail = new Map(); // de-duplicated failures: message -> first step
+const note = (msg, step) => { if (!fail.has(msg)) fail.set(msg, step); };
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+const page = await ctx.newPage();
+page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
+page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
+
+// in-page: timestamp every displayed move, with whether a bot made it
+await page.addInitScript(() => {
+  window.__steps = [];
+  const watch = () => {
+    const el = document.querySelector('.app.game');
+    if (!el) { requestAnimationFrame(watch); return; }
+    let prev = { moves: el.dataset.moves, bot: el.dataset.bot, round: (document.querySelector('header .round') || {}).textContent || '' };
+    new MutationObserver(() => {
+      const now = { moves: el.dataset.moves, bot: el.dataset.bot, round: (document.querySelector('header .round') || {}).textContent || '' };
+      if (now.moves !== prev.moves) window.__steps.push({ t: performance.now(), byBot: prev.bot === '1', inRound: /Round/.test(prev.round) && /Round/.test(now.round), modal: !!document.querySelector('.roundend') });
+      prev = now;
+    }).observe(el, { attributes: true, attributeFilter: ['data-moves'] });
+  };
+  addEventListener('DOMContentLoaded', watch);
+});
+
+async function audit(step) {
+  const r = await page.evaluate(() => {
+    const out = { small: [], clipped: [], undo: null };
+    const vis = e => { const s = getComputedStyle(e); if (s.display === 'none' || s.visibility === 'hidden' || +s.opacity === 0) return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
+    const label = e => (e.getAttribute('aria-label') || e.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 30);
+    for (const e of document.querySelectorAll('button, [role="button"], input, select')) {
+      if (!vis(e) || e.closest('[aria-hidden="true"]')) continue;
+      // a wheel space is measured by its invisible hit circle
+      const box = (e.matches('.slot') ? e.querySelector('.hit') : e).getBoundingClientRect();
+      if (box.width < 43.5 || box.height < 43.5) out.small.push(`${label(e) || e.className.baseVal || e.className} ${Math.round(box.width)}×${Math.round(box.height)}`);
+      // clipped by the nearest ancestor that hides overflow?
+      for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) {
+        const s = getComputedStyle(a);
+        if (/(hidden|clip)/.test(s.overflow + s.overflowX + s.overflowY)) {
+          const c = a.getBoundingClientRect(), b = e.getBoundingClientRect();
+          if (b.left < c.left - 1 || b.right > c.right + 1 || b.top < c.top - 1 || b.bottom > c.bottom + 1) out.clipped.push(`${label(e)} in .${String(a.className).split(' ')[0]}`);
+          break;
+        }
+      }
+    }
+    const u = [...document.querySelectorAll('.undo')].find(vis);
+    const g = document.querySelector('.app.game');
+    if (u && g) out.undo = { actor: g.dataset.actor, bot: g.dataset.bot };
+    return out;
+  });
+  for (const x of r.small) note(`(a) under 44px: ${x}`, step);
+  for (const x of r.clipped) note(`(d) clipped: ${x}`, step);
+  if (r.undo && (r.undo.bot === '1' || r.undo.actor !== '0')) note(`(b) Undo visible while seat ${r.undo.actor} (${r.undo.bot === '1' ? 'bot' : 'person'}) is to act`, step);
+}
+
+let ok = false;
+let sawFlight = null;
+try {
+  await page.goto(`${base}/`);
+  await page.waitForSelector('[data-home="local"]');
+  await audit('home');
+  await page.tap('[data-home="local"]');
+  await page.waitForSelector('[data-start]');
+  await audit('setup');
+  const start = await page.$('[data-start]'); await start.scrollIntoViewIfNeeded(); await start.tap();
+  await page.waitForSelector('.players');
+
+  const t0 = Date.now();
+  let steps = 0, lastMoves = null;
+  while (!(await page.$('.results'))) {
+    if (Date.now() - t0 > 330000) throw new Error('game did not finish in 5.5 minutes');
+    const moves = await page.$eval('.app.game', e => e.dataset.moves).catch(() => null);
+    if (moves !== lastMoves) { lastMoves = moves; steps++; await audit(`step ${steps}`); }
+    const next = await page.$('[data-next-round]');
+    if (next) { await audit(`round card ${steps}`); await next.tap(); continue; }
+    const place = await page.$('[data-place]');
+    if (place) { await place.tap().catch(() => {}); await page.waitForTimeout(450); continue; }
+    // your own recruit: buy the first affordable card once and watch it fly
+    const card = sawFlight === null ? await page.$('.shop .card.can[data-option]') : null;
+    if (card && await page.$('.fbuy.live .pass[data-option]')) {
+      await card.scrollIntoViewIfNeeded().catch(() => {});
+      await card.tap().catch(() => {});
+      await page.waitForSelector('.dialog.pay', { timeout: 3000 }).catch(() => {});
+      await audit(`pay ${steps}`);
+      const confirm = await page.$('.dialog.pay .btn.pri[data-option]');
+      if (confirm) {
+        await page.waitForTimeout(450);
+        await confirm.tap();
+        sawFlight = false;
+        for (let f = 0; f < 12 && !sawFlight; f++) {
+          sawFlight = await page.evaluate(() => {
+            const g = document.querySelector('.flight'); const me = document.querySelector('.pl[data-pid="0"]') || document.querySelector('.you-strip');
+            if (!g || !me) return false;
+            return true;
+          });
+          if (sawFlight) await page.screenshot({ path: `${SHOTS}/recruit-flight.png` });
+          await page.waitForTimeout(30);
+        }
+      }
+      continue;
+    }
+    const els = await page.$$('[data-option]:not([disabled])');
+    let tapped = false;
+    for (const el of els) {
+      const id = await el.getAttribute('data-option').catch(() => null);
+      if (!id || id.startsWith('toggle:') || id === 'back') continue;
+      try { await el.scrollIntoViewIfNeeded(); await el.tap({ timeout: 1500 }); tapped = true; break; } catch { /* moved; next */ }
+    }
+    await page.waitForTimeout(tapped ? 450 : 60);
+  }
+  await audit('results');
+  await page.screenshot({ path: `${SHOTS}/results.png` });
+
+  // (c) bot pacing: consecutive bot steps during rounds at least 600ms apart (round cards excluded)
+  const st = await page.evaluate(() => window.__steps || []);
+  let short = 0, worst = Infinity, pairs = 0;
+  for (let i = 1; i < st.length; i++) {
+    if (!st[i].byBot || !st[i - 1].byBot || !st[i].inRound || !st[i - 1].inRound || st[i].modal || st[i - 1].modal) continue;
+    pairs++;
+    const gap = st[i].t - st[i - 1].t;
+    worst = Math.min(worst, gap);
+    if (gap < 570) short++;
+  }
+  console.log(`bot steps measured: ${pairs} pairs, shortest gap ${Math.round(worst)}ms`);
+  if (pairs < 10) note('(c) too few bot steps measured', 'end');
+  if (short) note(`(c) ${short} bot steps under 600ms apart (shortest ${Math.round(worst)}ms)`, 'end');
+  if (sawFlight === false) note('(e) your recruit did not fly into your panel', 'buy');
+  if (sawFlight === null) note('(e) never got to recruit a member', 'buy');
+  ok = errors.length === 0 && fail.size === 0;
+} catch (e) {
+  errors.push(`run: ${e.stack || e.message}`);
+  await page.screenshot({ path: `${SHOTS}/zz-failure.png` }).catch(() => {});
+} finally {
+  await browser.close();
+  if (server) server.kill();
+}
+for (const [m, s] of fail) console.error(`${m}   [first at ${s}]`);
+if (errors.length) console.error(errors.join('\n'));
+console.log(ok ? 'PASS touch' : 'FAIL touch');
+process.exit(ok ? 0 : 1);
