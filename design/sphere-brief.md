@@ -19,6 +19,7 @@ Handed to every sphere-design agent, together with design-principles.md, decisio
 - Mechanic first, theme second. It must play differently from Gold (hoard money) and Red (many cheap members).
 
 ## Power anchors (Cory's calls are the ruler)
+- **Show the arithmetic for every action**: its value in resources early (round I, typical holdings) and late (round III), next to the anchor for its ring. Cory read Yellow's first actions (Bloom +6, Flourish) and Black's (free +black) as "not well considered". Scale is the first thing he checks.
 - Ring I is about Joint Venture (+3 gold, +1 to a player you choose) or Rush (+2 per round).
 - Ring II is about Steal 3 or Windfall (+1 per member).
 - Ring III is a burst like Strike (double your gold) or Take (any face-up member free).
