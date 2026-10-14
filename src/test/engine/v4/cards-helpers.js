@@ -64,3 +64,5 @@ export function namesCard(line, name) {
 }
 /** All log lines that name `name` as acting. */
 export const linesNaming = (log, name) => log.filter(l => namesCard(l, name));
+/** Answer every pending follow-up choice with its first option. */
+export function settle(s) { while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id); return s; }

@@ -133,20 +133,22 @@ export function targets(ctx, p, which) {
   return pool.filter(e => copyable(e) && (which === 'outer' ? e.ring === 1 : which === 'own' ? e.p === p.id : true));
 }
 const bestValue = (ctx, list, p) => Math.max(0, ...list.map(e => entryValue(ctx, e, p)));
-function offer(ctx, p, list, prompt, from) {
-  if (!list.length) { ctx.log(`${p.name} had nothing to copy.`); return; }
+// by: the member making the copy (Keepsake, Afterimage…), so the log names it
+function offer(ctx, p, list, prompt, from, by = null) {
+  if (!list.length) { ctx.log(`${p.name}${by ? `'s ${by}` : ''} had nothing to copy.`); return; }
   ctx.choose(p, prompt, list.map(e => ({
     id: `space:${from}:${e.key}`, label: `${e.name} (${ctx.player(e.p).name}): ${describe(ctx, e)}`, kind: 'space',
     value: e.key, hint: entryValue(ctx, e, p),
-  })), 'echo.pick', { from });
+  })), 'echo.pick', by ? { from, by } : { from });
 }
 
 /** p copies entry e: same resources, same discount, and a free face-up member (cost ≤ theirs) per member. */
-export function copy(ctx, p, e, { later = null } = {}) {
+export function copy(ctx, p, e, { later = null, by = null } = {}) {
   const taker = ctx.player(e.p);
+  const who = by ? `${p.name}'s ${by}: ${p.name}` : p.name;
   if (e.redo) {
     // a space that took or traded: the copy does the action itself
-    ctx.log(`${p.name} copies ${e.name}${taker !== p ? ` (${taker.name}'s)` : ''}: doing it again.`);
+    ctx.log(`${who} copies ${e.name}${taker !== p ? ` (${taker.name}'s)` : ''}: doing it again.`);
     heard(ctx, p, e, taker);
     actionOf(e).resolve.__orig.call(actionOf(e), ctx, p);
     return;
@@ -156,24 +158,26 @@ export function copy(ctx, p, e, { later = null } = {}) {
   const asGreen = ctx.membersOf(p).some(c => (c.def.id === 'echo.translator' || c.copy === 'echo.translator') && c.on !== false);
   for (const [c, n] of Object.entries(e.res)) ctx.gain(p, asGreen ? 'green' : c, n * mult, { fromAction: true });
   if (e.discount) p.discount += e.discount;
-  ctx.log(`${p.name} copied ${e.name}${e.p !== p.id ? ` (${ctx.player(e.p).name}'s)` : ''}: ${describe(ctx, e)}${mult > 1 ? ', doubled' : ''}.`);
+  const notes = [mult > 1 ? `doubled by ${p.name}'s Wallflower` : '', asGreen && Object.keys(e.res).length ? `as green by ${p.name}'s Translator` : ''].filter(Boolean);
+  ctx.log(`${who} copied ${e.name}${e.p !== p.id ? ` (${ctx.player(e.p).name}'s)` : ''}: ${describe(ctx, e)}${notes.length ? `, ${notes.join(', ')}` : ''}.`);
   heard(ctx, p, e, taker);
   if (later) later.push(...e.members);
   else if (e.members.length) freeStep(ctx, p, { left: [...e.members] });
 }
 // members that react to a copy
 function heard(ctx, p, e, taker) {
+  // each runs as its member, so the log names it ("P1's Choir: +1 green.")
   const fork = has(ctx, p, 'tuningfork');
-  if (fork) ctx.gain(p, ctx.quadrant(e.color).resource, fork);
+  if (fork) ctx.asMember(p, 'Tuning Fork', () => ctx.gain(p, ctx.quadrant(e.color).resource, fork));
   const choir = has(ctx, p, 'choir');
-  if (choir) ctx.gain(p, 'green', choir);
-  if (taker !== p) { const muse = has(ctx, taker, 'muse'); if (muse) ctx.gain(taker, 'green', 2 * muse); }
-  for (const o of ctx.rivals(p)) { const cm = has(ctx, o, 'choirmaster'); if (cm) ctx.gain(o, 'green', cm); }
+  if (choir) ctx.asMember(p, 'Choir', () => ctx.gain(p, 'green', choir));
+  if (taker !== p) { const muse = has(ctx, taker, 'muse'); if (muse) ctx.asMember(taker, 'Muse', () => ctx.gain(taker, 'green', 2 * muse)); }
+  for (const o of ctx.rivals(p)) { const cm = has(ctx, o, 'choirmaster'); if (cm) ctx.asMember(o, 'Choirmaster', () => ctx.gain(o, 'green', cm)); }
 }
 /** Copy several spaces; free members are picked one after another at the end. */
-export function copyAll(ctx, p, list) {
+export function copyAll(ctx, p, list, by = null) {
   const later = [];
-  for (const e of list) copy(ctx, p, e, { later });
+  for (const e of list) copy(ctx, p, e, { later, by });
   if (later.length) freeStep(ctx, p, { left: later.sort((a, b) => b - a) });
 }
 function freeStep(ctx, p, data) {
@@ -235,7 +239,7 @@ const echoQ = {
     pick(ctx, p, key, data) {
       const L = ledger(ctx.state);
       const e = (data.from === 'last' ? L.last : L.now)[key];
-      if (e) copy(ctx, p, e);
+      if (e) copy(ctx, p, e, { by: data.by || null });
     },
     free(ctx, p, uid, data) {
       if (!ctx.state.shop.includes(uid)) { freeStep(ctx, p, { left: [data.cost, ...data.left] }); return; }
@@ -271,7 +275,7 @@ const echoQ = {
     m('tuningfork', 'Tuning Fork', 2, 2, 'Whenever you copy a space, also gain 1 of that space’s color.'),
     m('wallflower', 'Wallflower', 2, 2, 'While no one has fewer followers than you, the resources you copy are doubled.'),
     m('keepsake', 'Keepsake', 4, 2, 'When recruited: copy one of your spaces from this round.', {
-      onRecruited(ctx, owner) { offer(ctx, owner, targets(ctx, owner, 'own'), 'Keepsake: copy which of your spaces?', 'now'); },
+      onRecruited(ctx, owner) { offer(ctx, owner, targets(ctx, owner, 'own'), 'Keepsake: copy which of your spaces?', 'now', 'Keepsake'); },
     }),
     m('mirror', 'Mirror', 4, 2, 'When recruited: gain as much green as the rival with the most green.', {
       onRecruited(ctx, owner) {
@@ -284,7 +288,7 @@ const echoQ = {
       onRoundStart(ctx, owner) {
         const L = ledger(ctx.state);
         const list = Object.values(L.last).filter(e => copyable(e) && e.p === owner.id);
-        offer(ctx, owner, list, 'Afterimage: copy which of your spaces from last round?', 'last');
+        offer(ctx, owner, list, 'Afterimage: copy which of your spaces from last round?', 'last', 'Afterimage');
       },
     }),
     m('hourglass', 'Hourglass', 6, 4, 'Once per round: copy the space you just took.', {
@@ -293,7 +297,7 @@ const echoQ = {
       onActivate(ctx, owner, card) {
         const e = justTook(ctx, owner);
         if (!e) { card.used = false; ctx.log(`${owner.name}'s Hourglass has nothing to copy.`); return; }
-        copy(ctx, owner, e);
+        copy(ctx, owner, e, { by: 'Hourglass' });
       },
       botActivate: (ctx, owner) => { const e = justTook(ctx, owner); return !!e && entryValue(ctx, e, owner) >= 3; },
     }),
@@ -302,7 +306,7 @@ const echoQ = {
       onActivate(ctx, owner) {
         const list = targets(ctx, owner, 'own');
         if (!list.length) ctx.log(`${owner.name}'s Déjà Vu has nothing to copy.`);
-        copyAll(ctx, owner, list);
+        copyAll(ctx, owner, list, 'Déjà Vu');
       },
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e, owner), 0) >= (ctx.state.round === 3 ? 6 : 10),
