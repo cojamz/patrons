@@ -227,3 +227,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - 💡 (Cory) Maybe members need more types that overlap across spheres (think Wingspan).
 - ✅ (Cory) Tabled for later, in priority order: 1) role tags across spheres (Wingspan-style; e.g. round goals by role), 2) Omens (three revealed up front), 3) Devotion.
 - ✅ (Cory) Put all five drafts (Green/Echo, Silver, Purple, Blue/Market, White/Trading) on the table as drafts with their critic-approved defaults; judge them by playing, not by reading lists.
+- ✅ (Cory) Claude may adjust and rework the unconfirmed spheres (Green, Silver, Purple, Blue, White, Yellow, Magenta details) as playtest feedback comes in. Log each change here; Cory's earlier calls on them still stand.
