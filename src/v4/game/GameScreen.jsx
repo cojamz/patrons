@@ -573,7 +573,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           </span>
         </div>
         <div className="bar-row steps-row">
-          <span className="round">{roundText}{state.round && !state.over ? <small title="Workers this round: one per turn. Extra Hand and similar members add one."> · <span className="num">{workersNote(state)}</span></small> : null}</span>
+          <span className="round">{roundText}{state.round && !state.over ? <small title="Minions this round: one per turn. Extra Hand and similar members add one."> · <span className="num">{workersNote(state)}</span></small> : null}</span>
           {state.round > 0 && !state.over && (
             <span className="steps" aria-hidden="true">
               <span className={phase === 'place' || phase === 'choose' ? 'on' : ''}>Place</span>

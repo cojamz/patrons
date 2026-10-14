@@ -287,3 +287,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
   - Sizes: cult leader > members > minions > followers (Claude's reading of where minions sit; Cory said leader > members > followers).
   - About 20 random emojis to pick from (Santa, unicorn, surfer, bug…), as pixels. Each emoji is taken by one player per table. The emoji replaces the seat sigil as player identity.
 - Purple rework landed (Claude, under go-with-your-gut; details in design/spheres/purple.md): Most purple; Plan Ahead replaces Linger; Overtime pays 8 for 2 extra turns; Rally spends all purple for turns; Bookkeeper pays at your last placement. Watch: one player now places 4+ times in a row in 57% of games, which may add to the chaos Cory felt.
+- ✅ (Cory) Minions you haven't placed yet float around your cult leader (or another simple visible way), so minions left is seen, not counted.

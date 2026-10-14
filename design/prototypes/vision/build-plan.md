@@ -39,3 +39,4 @@ Cory's adjustments win over the frames:
 - Size order everywhere: leader > members > minions > followers.
 - Say "minion(s)" everywhere a player reads "worker(s)": rulebook, screen, card texts, log, intro.
 
+- Unplaced minions float around their cult leader (seat rail and your table): minions left is seen, not read as a number. Placing one flies it from the leader to the space; at round end they fly home. (Cory, 2026-10-14)

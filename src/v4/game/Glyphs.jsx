@@ -1,7 +1,6 @@
 // Small shapes for the Lamplit table. A resource is a shape AND a color (coin, drop, gem…), so color is never
 // the only cue; a seat is a hooded figure in its color carrying its sigil; followers are a mark that grows in
 // clusters of 10 and 5. Every one says what it is on hover (title) and long-press (TouchTips).
-import { Sprite } from '../art/Sprite.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { playerColor, seatSigil, seatEmoji } from '../format.js';
 import { Leader, Minion } from '../art/Leader.jsx';

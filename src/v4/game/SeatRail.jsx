@@ -1,4 +1,4 @@
-// The seat rail: the scoreboard in this round's turn order. Each seat: its sigil figure, name, followers, workers
+// The seat rail: the scoreboard in this round's turn order. Each seat: its leader (the player's emoji), name, followers, minions
 // left, the space it took last, and a mini crowd of its members in their sphere colors. The seat whose turn it is
 // is lit. Hover (or tap) a seat for its card: resources, members, last three moves (HoverCards SeatCard).
 import { followers, quadrant, cardDef, roundWorkers } from '../../engine/v4/index.js';
@@ -31,20 +31,20 @@ export default function SeatRail({ state, me = null, mySeats = [], hover = null 
             {k > 0 && <span className="arrow" aria-hidden="true">◂</span>}
             <span
               className={`lt-seat${now === pid ? ' now' : ''}${you ? ' you' : ''}`} data-seat={pid} role="button" tabIndex={0} aria-haspopup="dialog"
-              style={{ '--pc': playerColor(pid) }} title={`${p.name}: ${f} followers, ${p.left} worker${p.left === 1 ? '' : 's'} left${now === pid ? ' — their turn' : ''}`}
-              aria-label={`${you ? 'You' : p.name}, ${f} followers, ${p.left} workers left${now === pid ? ', to play' : ''}. Show their seat.`}
+              style={{ '--pc': playerColor(pid) }} title={`${p.name}: ${f} followers, ${p.left} minion${p.left === 1 ? '' : 's'} left${now === pid ? ' — their turn' : ''}`}
+              aria-label={`${you ? 'You' : p.name}, ${f} followers, ${p.left} minions left${now === pid ? ', to play' : ''}. Show their seat.`}
               onPointerEnter={e => { if (hover && realHover(e)) hover.onSeatHover(pid, e.currentTarget); }}
               onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onSeatHover(pid, null); }}
               onClick={e => hover && hover.onSeatHover(pid, e.currentTarget, { pinned: true })}
               onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && hover) { e.preventDefault(); hover.onSeatHover(pid, e.currentTarget, { pinned: true }); } }}
             >
-              <SeatFigure id={pid} size={36} />
+              <SeatFigure id={pid} state={state} size={32} />
               <span className="who">{you ? 'You' : p.name}
                 <small>{last ? <>last: <Sprite id={spriteId(last.name)} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /></> : p.kind === 'bot' ? 'bot' : ' '}</small>
               </span>
               <span className="score"><b className="num">{f}</b><FollowerGlyph size={14} title={`${f} followers`} /></span>
               {total > 0 && (
-                <span className="wk" title={`${p.left} of ${total} workers left this round`} aria-hidden="true">
+                <span className="wk" title={`${p.left} of ${total} minions left this round`} aria-hidden="true">
                   {Array.from({ length: total }, (_, w) => <span key={w} className={w < p.left ? '' : 'used'} />)}
                 </span>
               )}

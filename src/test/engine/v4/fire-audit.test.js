@@ -57,8 +57,11 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
   const GROUP = ['market', 'thieves', 'trading', 'echo'];
   // Watchdog changes no number (it only refuses a steal). Social Climber: bots never trade a member in (their hint
   // only likes plain cheap members), so it can't fire in bot games; cards-market.test.js covers it.
+  // Magnate pays only from white left at game end (1 follower per 3); normal bots spend white down because any
+  // follower buy beats that rate, so it fires about 1 hold in 13 (ledger) and 4 holds can all miss. Since the
+  // 2026-10-14 White rework changed these seeds' games it does; cards-trading.test.js (Magnate) covers its line.
   // See design/eval/card-ledger-b.md.
-  const EXEMPT = new Set(['thieves.watchdog', 'market.climber']);
+  const EXEMPT = new Set(['thieves.watchdog', 'market.climber', 'trading.magnate']);
   const TABLES = [
     ['thieves', 'market', 'trading', 'echo'], ['gold', 'thieves', 'trading', 'echo'], ['red', 'market', 'thieves', 'echo'],
     ['gold', 'market', 'trading', 'echo'], ['red', 'thieves', 'market', 'trading'],

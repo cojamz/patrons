@@ -1,4 +1,4 @@
-// Your table: your resources as stacks (one shape per color), your workers left as figures, and your cult: each
+// Your table: your resources as stacks (one shape per color), your leader and minions left, and your cult: each
 // member standing as its pixel figure in its sphere's color, beside a follower mark that grows. Hover or tap a
 // figure for its card; members you can use (or switch) this step carry a small button.
 import { followers, quadrant, roundWorkers } from '../../engine/v4/index.js';
@@ -6,7 +6,7 @@ import { memberChips } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
-import { ResourceGlyph, FollowerMark, SeatFigure } from './Glyphs.jsx';
+import { ResourceGlyph, FollowerMark, SeatFigure, SeatMinion } from './Glyphs.jsx';
 import './lamp-b.css';
 
 const STACK = 6; // coins drawn per stack before the number carries the rest
@@ -35,9 +35,9 @@ export default function YourTable({ state, me = null, mySeats = [], optionFor = 
             );
           })}
         </div>
-        <div className="lt-workers" title={`${p.left} worker${p.left === 1 ? '' : 's'} left this round${total ? ` (of ${total})` : ''}`}>
-          <span className="figs">{Array.from({ length: Math.max(total, p.left) }, (_, k) => <SeatFigure key={k} id={me} size={36} dim={k >= p.left} />)}</span>
-          <small>{p.left} {p.left === 1 ? 'worker' : 'workers'} left</small>
+        <div className="lt-workers" title={`Your leader and ${p.left} minion${p.left === 1 ? '' : 's'} left this round${total ? ` (of ${total})` : ''}`}>
+          <span className="figs"><SeatFigure id={me} state={state} size={32} title={`${p.name}, your leader`} />{Array.from({ length: Math.max(total, p.left) }, (_, k) => <SeatMinion key={k} id={me} size={16} dim={k >= p.left} />)}</span>
+          <small>{p.left} {p.left === 1 ? 'minion' : 'minions'} left</small>
         </div>
         <div className="lt-cult" role="group" aria-label="Your cult">
           <span className="crowd">
@@ -48,7 +48,7 @@ export default function YourTable({ state, me = null, mySeats = [], optionFor = 
               return (
                 <span key={g.key} className={`lt-member${g.card.used ? ' used' : ''}`} style={{ '--q': cardColor(state, d) }} data-member={d.id}>
                   <Tip className="fig" label={`${d.name}: show the card`} content={() => <MemberCard state={state} uid={g.uids[0]} />}>
-                    <Sprite id={spriteId(d.name)} kind="member" sphere={sphereOf(state, d)} size={36} />
+                    <Sprite id={spriteId(d.name)} kind="member" sphere={sphereOf(state, d)} size={24} />
                     {g.count > 1 && <b className="x num">×{g.count}</b>}
                   </Tip>
                   {use && <button type="button" className="lt-btn mini" data-option={use.id} onClick={() => onPick(use.id)} title={`Use ${d.name} now`}>Use</button>}

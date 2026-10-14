@@ -370,12 +370,12 @@ export function tiebreakNote(st, row) {
   return tied ? `${row.tiebreak} ${st.tiebreak.unit}` : null;
 }
 
-/** "5 workers each", or "5 workers each · Bo 6" when someone's members change their count this round (Extra Hand). */
+/** "5 minions each", or "5 minions each · Bo 6" when someone's members change their count this round (Extra Hand). */
 export function workersNote(state) {
   if (!state.round) return '';
   const base = WORKERS[state.round - 1];
   const odd = state.players.filter(p => roundWorkers(state, p) !== base);
-  return `${base} workers each${odd.length ? ` · ${odd.map(p => `${p.name} ${roundWorkers(state, p)}`).join(', ')}` : ''}`;
+  return `${base} minions each${odd.length ? ` · ${odd.map(p => `${p.name} ${roundWorkers(state, p)}`).join(', ')}` : ''}`;
 }
 
 /** The latest placement by someone other than `mine`, read from the log and the board (survives a reload). */
