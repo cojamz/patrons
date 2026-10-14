@@ -20,7 +20,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
       <div className="table-scroll">
         <table className="res-t">
           <thead>
-            <tr><th>#</th><th>Player</th><th>Followers</th><th title="Followers printed on your members (the ★ on each card)">From members ★</th><th title="The +1 / +3 / +6 follower buys">Bought</th><th title="Followers members' effects gave during play (e.g. Proselytizer)">Effects in play</th><th title="Ring contests won at round end">Contests</th><th title="End-game member bonuses (e.g. Patriarch, Tycoon)">End-game bonuses</th><th title="You count as 1 follower">Self (1)</th></tr>
+            <tr><th>#</th><th>Player</th><th>Followers</th><th title="Followers printed on your members (the ★ on each card)">From members ★</th><th title="The +1 / +3 / +6 follower buys">Bought</th><th title="Effects: followers from members' abilities during play (e.g. Proselytizer)">Effects</th><th title="Ring contests won at round end">Contests</th><th title="End-game member bonuses (e.g. Patriarch, Tycoon)">End-game bonuses</th><th title="You count as 1 follower">Self (1)</th></tr>
           </thead>
           <tbody>
             {ranked.map((p, k) => {
@@ -32,7 +32,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
                   <td className="tot" data-label="Followers">{followers(state, p)}</td>
                   <td data-label="From members ★">{b.members}</td>
                   <td data-label="Bought">{b.bought}</td>
-                  <td data-label="Effects in play">{b.effects}</td>
+                  <td data-label="Effects">{b.effects}</td>
                   <td data-label="Contests">{b.contests}</td>
                   <td data-label="End-game bonuses" title={b.parts.join(', ')}>{b.endGame}</td>
                   <td data-label="Self">1</td>
@@ -42,6 +42,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
           </tbody>
         </table>
       </div>
+      <p className="hint">Effects: followers from members’ abilities during play. End-game bonuses: members that score when the game ends.</p>
       {brokeTie && <p className="hint">Tied on followers: more members breaks the tie.</p>}
       {ranked.some(p => p.final && p.final.parts.length) && (
         <ul className="parts">

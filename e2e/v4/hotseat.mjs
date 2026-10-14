@@ -119,6 +119,18 @@ try {
         if (!(await page.$('.popover'))) errors.push('member chip did not open its card');
         await page.keyboard.press('Escape');
       }
+      // tapping a taken space explains itself on the space, and leaves the turn prompt alone
+      const takenHit = await page.$('.slot:has(.worker):not(.can) .hit');
+      const tb = takenHit && await takenHit.boundingBox();
+      if (tb) {
+        const before = await page.$eval('[data-prompt]', e => e.textContent);
+        await page.mouse.click(tb.x + tb.width / 2, tb.y + tb.height / 2);
+        await page.waitForTimeout(200);
+        const after = await page.$eval('[data-prompt]', e => e.textContent);
+        if (before !== after) errors.push(`clicking a taken space changed the prompt ("${before}" -> "${after}")`);
+        if (!(await page.$('.peek'))) errors.push('clicking a taken space showed no space card');
+        await page.keyboard.press('Escape');
+      }
       await page.mouse.move(5, 5);
       continue;
     }

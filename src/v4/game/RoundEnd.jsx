@@ -49,7 +49,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
           ))}
         </ul>
         <div className="re-totals" role="table" aria-label="Followers after this round">
-          <div className="re-head" role="row"><span role="columnheader">Player</span><span role="columnheader">Contests</span><span role="columnheader">Other</span><span role="columnheader">Followers</span></div>
+          <div className="re-head" role="row"><span role="columnheader">Player</span><span role="columnheader">Contests</span><span role="columnheader" title="Followers gained this round: new members' ★, followers bought, and effects (followers from members' abilities during play)">Other</span><span role="columnheader">Followers</span></div>
           {ranked.map(p => {
             const now = followers(at, at.players[p.id]);
             const was = start && start.players[p.id] ? followers(start, start.players[p.id]) : now;
@@ -67,6 +67,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
             );
           })}
         </div>
+        <p className="hint re-legend">Effects: followers from members’ abilities during play.</p>
         {after.over && (
           <p className="hint re-next">
             End-game bonuses come next{finalParts.length ? ': ' : '.'}

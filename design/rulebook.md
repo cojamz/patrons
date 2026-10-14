@@ -3,7 +3,7 @@
 You lead a growing following. Recruit **members**, gather resources, and win **followers**. Whoever has the most followers after three rounds wins.
 
 ## What you have
-- **Followers** are your score. You start with 1 (yourself). Every member you recruit is worth followers too: usually 1, sometimes more (shown as ★ on the card).
+- **Followers** are your score. You start with 1 (yourself). Every member you recruit is worth followers too: usually 1, sometimes more (shown as ★ on the card). Some members' abilities also give you followers during play; these are called **effects**.
 - **Resources** come in four colors: gold, red, blue and green.
 - **Workers** are your turns. You get 3 in round I, 4 in round II and 5 in round III.
 

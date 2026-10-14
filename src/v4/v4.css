@@ -700,6 +700,49 @@ header.bar .ticker .cue{flex:none;color:var(--ink);opacity:.8}
   .ring text{display:none}
 }
 
+/* ---------- round 5, tester I ---------- */
+/* gains and losses have their own lane under the resources; nothing floats over the chips */
+.lane{height:18px;display:flex;align-items:center;gap:6px;overflow:hidden;flex:none}
+.lane .gift{position:static;bottom:auto;right:auto;font-size:11.5px;padding:0 8px;line-height:16px;white-space:nowrap}
+.pl{height:140px}
+@media (min-width:861px) and (max-height:760px){ .pl{height:114px} }
+.mcount{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;white-space:nowrap}
+.mcount:hover{color:var(--ink);text-decoration:underline}
+/* the worker reaches its space in ~260ms */
+.slot.flash .worker{animation-delay:.24s}
+/* double-clicks don't select the game; the log and inputs still can be */
+.app,.overlay,.popover,button{-webkit-user-select:none;user-select:none}
+.log,.log *,input,textarea,.rules-body,.rules-body *{-webkit-user-select:text;user-select:text}
+/* names as typed, everywhere */
+.pl .nm,.you-strip b,.re-p .nm{text-transform:none;letter-spacing:.02em}
+.re-legend{margin-top:-4px}
+/* phones under 500px: one compact row per player (name, resources, members, followers) */
+@media (max-width:500px){
+  .app.game > .players{grid-template-columns:minmax(0,1fr);gap:4px}
+  .app.game > .players .pl{height:auto;min-height:0;display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto;grid-template-areas:"nm res fol";align-items:center;column-gap:8px;padding:5px 10px}
+  .app.game > .players .pl .top{display:contents}
+  .app.game > .players .pl .nm{grid-area:nm;font-size:12.5px}
+  .app.game > .players .pl .nm em{display:none}
+  .app.game > .players .pl .fol{grid-area:fol}
+  .app.game > .players .pl .fol .num{font-size:17px}
+  .app.game > .players .pl .fol small{display:none}
+  .app.game > .players .pl .res{grid-area:res;flex-wrap:nowrap;gap:5px;font-size:12.5px;overflow:hidden}
+  .app.game > .players .pl .res .meta{flex-basis:auto}
+  .app.game > .players .pl .workers{display:none}
+  .app.game > .players .pl .chips,.app.game > .players .pl .lane{display:none}
+}
+
+/* short laptop screens: the whole side column scrolls (actions stay readable); during your buy, the follower
+   buys and Pass stay docked at its bottom */
+@media (min-width:861px) and (max-height:640px){
+  .app.game .main:not(.over) .side{overflow-y:auto;overscroll-behavior:contain;padding-right:6px}
+  .app.game .scroller{flex:none}
+  .app.game .side-scroll{flex:none;overflow:visible}
+  .app.game .scroller.more::after,.app.game .more-hint{display:none}
+  .app.game .dock{flex:none;border-top:0}
+  .app.game.buying .dock .fbuy{position:sticky;bottom:0;z-index:2;background:var(--table);padding:6px 0;box-shadow:0 -10px 16px var(--table)}
+}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }

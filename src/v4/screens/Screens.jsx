@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { PLAYER_COLORS } from '../format.js';
 import HowToPlay from '../HowToPlay.jsx';
+import { friendlyError } from '../errors.js';
 
 const KINDS = [['human', 'Person'], ['bot', 'Bot'], ['empty', 'Empty']];
 const NAME_MAX = 14;
@@ -22,7 +23,7 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, er
   const [rules, setRules] = useState(false);
   const [working, setWorking] = useState(false);
   const [retry, setRetry] = useState(null);
-  const go = fn => { setErr(''); setRetry(null); setWorking(true); Promise.resolve(fn()).then(e => { if (e) { setErr(e); setRetry(() => fn); } }).finally(() => setWorking(false)); };
+  const go = fn => { setErr(''); setRetry(null); setWorking(true); Promise.resolve().then(fn).then(e => { if (e) { setErr(friendlyError(e)); setRetry(() => fn); } }, e => { setErr(friendlyError(e)); setRetry(() => fn); }).finally(() => setWorking(false)); };
   const [name, setName] = useState(() => { try { return localStorage.getItem('patrons.name') || ''; } catch { return ''; } });
   const saveName = v => { setName(v); try { localStorage.setItem('patrons.name', v); } catch { /* ignore */ } };
   return (
@@ -124,7 +125,7 @@ export function Lobby({ lobby, myId, onLeave }) {
     const url = `${location.origin}${location.pathname}?join=${view.code}`;
     Promise.resolve(navigator.clipboard?.writeText(url)).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {});
   };
-  const act = fn => Promise.resolve().then(fn).catch(e => setErr(e.message || String(e)));
+  const act = fn => Promise.resolve().then(fn).catch(e => setErr(friendlyError(e)));
   return (
     <div className="app narrow">
       <div className="dialog page lobby">

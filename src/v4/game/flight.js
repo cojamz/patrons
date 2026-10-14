@@ -85,6 +85,6 @@ export function flyWorker(root, pid, slotKey, color) {
   const size = Math.max(14, t.width * 0.72);
   const a = { left: f.left + f.width / 2 - size / 2, top: f.top + f.height / 2 - size / 2, width: size, height: size };
   const b = { left: t.left + t.width / 2 - size / 2, top: t.top + t.height / 2 - size / 2, width: size, height: size };
-  ghostFly(`<i style="background:${color}"></i>`, 'worker-flight', a, b, { duration: 400, scaleTo: 1, fadeTo: 1, arc: 40 });
+  ghostFly(`<i style="background:${color}"></i>`, 'worker-flight', a, b, { duration: 260, scaleTo: 1, fadeTo: 1, arc: 30 });
   return true;
 }

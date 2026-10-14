@@ -9,10 +9,10 @@ import { Popover } from './parts.jsx';
 
 export const memberTip = d => `${d.name} · ${d.f}★ · ${d.text}`;
 
-export function Resources({ state, p, float = true }) {
+export function Resources({ state, p, float = true, dur = 600 }) {
   return state.resources.map(r => (
     <span key={r} className="r" title={`${p.res[r]} ${r}`} aria-label={`${p.res[r]} ${r}`}>
-      <i style={{ background: `var(--${r})` }} /><Tick value={p.res[r]} color={`var(--${r})`} className="num" float={float} />
+      <i style={{ background: `var(--${r})` }} /><Tick value={p.res[r]} color={`var(--${r})`} className="num" float={float} dur={dur} />
     </span>
   ));
 }
@@ -119,25 +119,32 @@ export default function Players({ state, active, mySeats, gifts = [] }) {
           <section key={p.id} data-pid={p.id} className={`pl${isActive ? ' active' : ''}`} style={{ '--pc': playerColor(p.id) }} aria-label={`${p.name}${isActive ? ', to act' : ''}`}>
             <div className="top">
               <span className="nm"><i />{p.name}{p.kind === 'bot' ? <em> · bot</em> : isYou ? <em> · you</em> : null}</span>
-              <span className="fol"><Tick value={f} color={playerColor(p.id)} className="num" dur={650} /><small>{f === 1 ? 'follower' : 'followers'}</small></span>
+              <span className="fol"><Tick value={f} color={playerColor(p.id)} className="num" dur={650} float={false} /><small>{f === 1 ? 'follower' : 'followers'}</small></span>
             </div>
             <div className="res">
-              <Resources state={state} p={p} float={false} />
-              <span className="meta"><Workers p={p} caption={false} /><span className="mcount">{plural(n, 'member')}</span>{p.discount ? <span className="disc"> −{p.discount} next</span> : null}</span>
+              <Resources state={state} p={p} float={false} dur={600} />
+              <span className="meta">
+                <Workers p={p} caption={false} />
+                <button type="button" className="mcount" aria-haspopup="dialog" title="Show members" onClick={e => setPop({ el: e.currentTarget, all: true, pid: p.id })}>{plural(n, 'member')}</button>
+                {p.discount ? <span className="disc"> −{p.discount} next</span> : null}
+              </span>
+            </div>
+            {/* gains and losses get their own lane under the resources, never over the chips */}
+            <div className="lane" aria-live="polite">
+              {gifts.filter(g => g.pid === p.id).map(g => (
+                <span key={g.n} className="gift" style={{ '--c': `var(--${g.color}, var(--ink))` }}>{g.text}</span>
+              ))}
+              {changes[p.id] && !gifts.some(g => g.pid === p.id) && (
+                <span key={changes[p.id].n} className="gift change" aria-hidden="true">
+                  {changes[p.id].parts.map(([r, d]) => <span key={r} style={{ color: `var(--${r})` }}>{d > 0 ? '+' : '−'}{Math.abs(d)} {r} </span>)}
+                </span>
+              )}
             </div>
             <ChipRow
               state={state} p={p} own={mySeats.includes(p.id)}
               onOpen={(el, g) => setPop(pp => (pp && pp.group && pp.group.key === g.key && pp.pid === p.id ? null : { el, group: g, pid: p.id }))}
               onAll={el => setPop({ el, all: true, pid: p.id })}
             />
-            {changes[p.id] && !gifts.some(g => g.pid === p.id) && (
-              <span key={changes[p.id].n} className="gift change" aria-hidden="true">
-                {changes[p.id].parts.map(([r, d]) => <span key={r} style={{ color: `var(--${r})` }}>{d > 0 ? '+' : '−'}{Math.abs(d)} {r} </span>)}
-              </span>
-            )}
-            {gifts.filter(g => g.pid === p.id).map(g => (
-              <span key={g.n} className="gift" style={{ '--c': `var(--${g.color}, var(--ink))` }} role="status">{g.text}</span>
-            ))}
           </section>
         );
       })}

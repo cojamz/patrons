@@ -8,7 +8,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
   const [pop, setPop] = useState(null); // touch: { el, key, a, opt }
   // Collapsible to a one-line summary (remembered); short screens start collapsed.
   // Until you choose, it follows the window: short laptop screens start folded so the shop stays in view.
-  const autoFold = () => typeof innerHeight === 'number' && typeof innerWidth === 'number' && innerWidth > 860 && innerHeight < 640;
+  const autoFold = () => false; // the action list stays visible at every height (it scrolls); folding is your choice
   const [chosen, setChosen] = useState(() => { try { const v = localStorage.getItem('patrons.v4.quadFolded'); return v == null ? null : v === '1'; } catch { return null; } });
   const [auto, setAuto] = useState(autoFold);
   useEffect(() => {

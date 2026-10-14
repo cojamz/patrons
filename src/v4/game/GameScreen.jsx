@@ -14,6 +14,7 @@ import PayPicker from './PayPicker.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import Tick from './Tick.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop } from './flight.js';
+import { friendlyError, isNetworkError } from '../errors.js';
 
 const STEP_MS = 320;      // pace when catching up on moves that happened behind the round-end card
 const RIVAL_DWELL_MS = 620; // a rival's placement holds this long before the next thing is shown
@@ -268,7 +269,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // Don't lock the table forever if an answer never comes (online): give up waiting after a while.
     const timer = setTimeout(() => { if (sendToken.current === token) { setBusy(false); setError('No answer yet. Try again.'); } }, 8000);
     Promise.resolve(sent)
-      .catch(e => { if (sendToken.current === token) setError(e && e.message ? e.message : String(e)); })
+      .catch(e => { if (sendToken.current === token) setError(friendlyError(e)); })
       .finally(() => { clearTimeout(timer); if (sendToken.current === token) setBusy(false); });
   }, [mine, busy, needHandoff, options, session, pend]);
   useEffect(() => {
@@ -291,16 +292,15 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     else if (needHandoff) text = `Hand the device to ${who.name}`;
     else if (pend.kind === 'choose' || pend.kind === 'setup' || pend.kind === 'pay') text = 'Answer the question first';
     else if (info.type === 'slot') {
+      // A taken or unopened space explains itself on its own card (wheel) or row (panel); the prompt stays put.
       const owner = state.slots[info.key];
-      const ring = Number(info.key.split('-')[1]);
-      if (owner !== undefined) text = `Taken by ${state.players[owner].name}`;
-      else if (pend.kind === 'buy') text = 'You’ve placed this turn — recruit, buy followers or pass';
-      else text = ring >= 0 ? 'That space isn’t open yet' : 'Not available';
+      if (owner === undefined && pend.kind === 'buy') text = 'You’ve placed this turn — recruit, buy followers or pass';
+      else text = null;
     } else if (pend.kind === 'place') text = 'Place a worker first';
     else if (info.type === 'card') text = `You can’t afford ${info.name} yet`;
     else if (info.type === 'tier') text = info.tier.limited && state.bigLeft <= 0 ? 'No +6 buys left' : `+${info.tier.get} needs ${tierCostText(info.tier)}`;
     else text = 'Not right now';
-    say(text);
+    if (text) say(text);
     if (el && el.animate && motionOK()) el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(-2px)' }, { transform: 'translateX(0)' }], { duration: 260, easing: 'ease-out' });
   }, [state, pend, moment, mySeats, needHandoff, say]);
 
@@ -352,7 +352,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           {meP && !state.over && (
             <span className="you-strip" data-pid={meP.id} style={{ '--pc': playerColor(meP.id) }} aria-label={`You, ${meP.name}`}>
               <i className="dot" /><b>{meP.name}</b>
-              <span className="yf"><Tick value={followers(state, meP)} color={playerColor(meP.id)} className="num" /> {followers(state, meP) === 1 ? 'follower' : 'followers'}</span>
+              <span className="yf"><Tick value={followers(state, meP)} color={playerColor(meP.id)} className="num" float={false} /> {followers(state, meP) === 1 ? 'follower' : 'followers'}</span>
               <Resources state={state} p={meP} float={false} />
               <Workers p={meP} caption={false} />
             </span>
@@ -364,7 +364,13 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <div className="hint room">Room {session.info.roomCode}</div>
       )}
       {!(state.over && !moment) && players}
-      {error && <div className="error" role="alert">{error} <button type="button" className="btn ghost" onClick={() => setError('')}>OK</button></div>}
+      {error && (
+        <div className="error" role="alert">{error}{' '}
+          {isNetworkError(error) || /Check your connection/.test(error)
+            ? <button type="button" className="btn ghost" onClick={() => location.reload()}>Retry</button>
+            : <button type="button" className="btn ghost" onClick={() => setError('')}>OK</button>}
+        </div>
+      )}
       {state.over && !moment ? (
         <div className="main over">
           <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} />

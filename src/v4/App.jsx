@@ -6,6 +6,7 @@ import { createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineR
 import { createLocalSession } from './session/local.js';
 import { loadLocal, saveLocal, clearLocal, loadOnline, saveOnline, clearOnline } from './saved.js';
 import GameScreen from './game/GameScreen.jsx';
+import { friendlyError } from './errors.js';
 import { Home, LocalSetup, Lobby } from './screens/Screens.jsx';
 
 const BOT_DELAY = { slow: 1100, normal: 650, fast: 180 };
@@ -103,10 +104,7 @@ export default function App() {
       lobby.onStart(s => { setSession(s); setGameKey(k => k + 1); setScreen({ name: 'game', lobby }); });
       return null;
     } catch (e) {
-      const m = e && e.message ? e.message : String(e);
-      if (m === 'TIMEOUT') return 'Can’t reach the server. Check your connection.';
-      if (/room not found/i.test(m)) return 'No room with that code.';
-      return m;
+      return friendlyError(e);
     }
   }, []);
 
