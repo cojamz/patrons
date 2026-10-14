@@ -1,5 +1,7 @@
 # Value Model v2
 
+> Stale rates (2026-10-14): follower buys are now 2→1, 4→3, 8→6 and 10→10, and member costs doubled, so a unit here is worth about half a member-cost point. Re-anchor before pricing new cards; Cory's anchors still rule.
+
 These are rough, shared numbers so prices and yields can be argued with arithmetic instead of vibes. They'll be refined when a simulator exists. Until then they're a ruler, not the truth.
 
 ## Cory's anchors (these override everything below)

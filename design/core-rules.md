@@ -1,5 +1,7 @@
 # Core Rules v0.2 (shared by every sphere)
 
+> Superseded in places (2026-10-14): follower buys are now 2→1, 4→3, 8→6 (limited, the clock) and 10→10 (limited); member costs were doubled; Release is a base rule on trial. design/decisions.md and design/rulebook.md win where this file disagrees.
+
 These are defaults, decided so that playtests stop tripping on the same ambiguities. They're marked for Cory to confirm.
 Every sphere spec assumes these. Anything a sphere changes, it states explicitly.
 
