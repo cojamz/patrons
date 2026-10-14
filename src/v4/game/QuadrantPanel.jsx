@@ -71,17 +71,17 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
           <span> · {openCount ? `${openCount} open for you` : `${Q.actions.filter((a, i) => a.ring <= round && state.slots[`${facing}-${i}`] === undefined).length} open`}</span>
         </button>
       )}
-      <div className="score">
-        <span><b>{Q.scoring.label}</b> at round end wins <b className="num">+{RING_VALUE[round - 1]}</b> this round <small className="num">({RING_VALUE.map(v => `+${v}`).join(' / ')} by round; ties all score)</small></span>
-        {standing && standing.top > 0 ? (
-          <span className="lead-line">
-            Now: {standing.rows.slice(0, 4).map((r, k) => (
+      <div className="score" title={`${Q.scoring.label} at round end wins ${RING_VALUE.map(v => `+${v}`).join(' / ')} in rounds I / II / III. Ties all score.`}>
+        <span className="score-line">
+          <b>{Q.scoring.label} <span className="num">+{RING_VALUE[round - 1]}</span></b> this round
+          {standing && standing.top > 0 ? (
+            <> · now {standing.rows.slice(0, 4).map((r, k) => (
               <span key={r.id} className={standing.leaders.includes(r.id) ? 'leads' : ''} style={{ '--pc': playerColor(r.id) }}>
-                {k ? ' · ' : ''}<i />{r.id === meId ? 'you' : state.players[r.id].name} <b className="num">{r.shown}</b>
+                {k ? ', ' : ''}<i />{r.id === meId ? 'you' : state.players[r.id].name} <b className="num">{r.shown}</b>
               </span>
-            ))}
-          </span>
-        ) : state.round >= 1 && <span className="lead-line">Now: nobody has any yet.</span>}
+            ))}</>
+          ) : state.round >= 1 ? <> · nobody has any yet</> : null}
+        </span>
       </div>
       <div className="acts">
         {Q.actions.map((a, i) => {

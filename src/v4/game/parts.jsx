@@ -70,6 +70,11 @@ export function ChoicePrompt({ state, onPick, busy }) {
       {setup ? <SetupTokens state={state} pend={pend} onPick={onPick} busy={busy} />
         : trade ? <TradePicker state={state} pend={pend} onPick={onPick} busy={busy} />
           : <MergedOptions state={state} pend={pend} onPick={onPick} busy={busy} />}
+      {!setup && !trade && pend.options.length === 1 && /\((\d+) left\)/.test(pend.prompt) && (
+        <button type="button" className="btn pri take-all" onClick={() => onPick(pend.options[0].id, 'all')}>
+          {`Take all ${pend.prompt.match(/\((\d+) left\)/)[1]} from ${withUnits(pend.options[0].label, pend.prompt).split(' · ')[0]}`}
+        </button>
+      )}
     </section>
   );
 }

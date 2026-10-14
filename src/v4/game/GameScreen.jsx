@@ -97,6 +97,28 @@ function useTable(session) {
   return [table.shown, table.moment, dismiss];
 }
 
+/** A scroll box that fades its bottom edge and says so while more is hidden below. */
+function Scroller({ className, hint, children }) {
+  const box = useRef(null);
+  const [more, setMore] = useState(false);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return undefined;
+    const check = () => setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 6 && getComputedStyle(el).overflowY !== 'visible');
+    check();
+    el.addEventListener('scroll', check, { passive: true });
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(check) : null;
+    if (ro) { ro.observe(el); if (el.firstElementChild) ro.observe(el.firstElementChild); }
+    return () => { el.removeEventListener('scroll', check); if (ro) ro.disconnect(); };
+  });
+  return (
+    <div className={`scroller${more ? ' more' : ''}`}>
+      <div className={className} ref={box}>{children}</div>
+      {more && <button type="button" className="more-hint" onClick={() => box.current && box.current.scrollBy({ top: box.current.clientHeight * 0.7, behavior: 'smooth' })}>{hint} ▾</button>}
+    </div>
+  );
+}
+
 const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing a worker', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
 
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) {
@@ -218,8 +240,14 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
     if (pick) pick.focus({ preventScroll: true });
   }, [pend, mine, needHandoff]);
 
-  const onPick = useCallback(optionId => {
-    if (!mine || busy || needHandoff || !options.has(optionId)) return;
+  // Clicks during an in-flight move are kept and replayed if they're still legal next; "take all" repeats a
+  // counted pick (Steal: 1 gold at a time) while that's still the only choice.
+  const queuedClick = useRef(null);
+  const repeat = useRef(null);
+  const onPick = useCallback((optionId, mode) => {
+    if (mode === 'all') repeat.current = optionId;
+    if (busy && mine) { queuedClick.current = optionId; return; }
+    if (!mine || needHandoff || !options.has(optionId)) return;
     setBusy(true);
     setError('');
     const token = ++sendToken.current;
@@ -231,6 +259,15 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
       .catch(e => { if (sendToken.current === token) setError(e && e.message ? e.message : String(e)); })
       .finally(() => { clearTimeout(timer); if (sendToken.current === token) setBusy(false); });
   }, [mine, busy, needHandoff, options, session, pend]);
+  useEffect(() => {
+    if (busy) return;
+    const q = queuedClick.current;
+    queuedClick.current = null;
+    if (q && mine && options.has(q)) { onPick(q); return; }
+    const r = repeat.current;
+    if (r && mine && pend.kind === 'choose' && pend.options.length === 1 && options.has(r)) { onPick(r); return; }
+    if (r && !(mine && pend.kind === 'choose' && options.has(r))) repeat.current = null;
+  }, [busy, state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A tap on something you can't use right now gets a short answer and a small shake, never silence.
   const onDenied = useCallback((info, el) => {
@@ -319,10 +356,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
           <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
           <div className="side">
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} />}
-            <div className="side-scroll">
+            <Scroller className="side-scroll" hint="More below (rounds II / III, log)">
               <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} />
               <Log state={state} />
-            </div>
+            </Scroller>
             <div className="dock">
               <Shop state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />
               <BuyTray state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />

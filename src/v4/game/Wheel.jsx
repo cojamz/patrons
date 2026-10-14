@@ -252,6 +252,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
       const [ax, ay] = polar(sp.ang, 203), [bx, by] = polar(sp.ang - 3.2, 214), [cx2, cy2] = polar(sp.ang + 3.2, 214);
       parts.push(
         <g key={`last${lastMove.key}${lastMove.n}`} className="lastmove" aria-hidden="true">
+          <title>{`Last move by ${state.players[lastMove.pid].name}`}</title>
           <circle cx={x} cy={y} r={(sp.ring === 3 ? 15 : 16) + 6} fill="none" stroke={pc} strokeWidth="2" strokeDasharray="4 3" />
           <path d={`M${ax},${ay} L${bx},${by} L${cx2},${cy2}Z`} fill={pc} />
         </g>,
@@ -307,6 +308,12 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
         <button type="button" className="spin l" aria-label="Turn the board left" title="Turn the board left" onClick={() => nudge(-90)}>‹</button>
         <button type="button" className="spin r" aria-label="Turn the board right" title="Turn the board right" onClick={() => nudge(90)}>›</button>
       </div>
+      {lastMove && state.slots[lastMove.key] !== undefined && (
+        <div className="lm-legend" style={{ '--pc': playerColor(lastMove.pid) }}>
+          <i aria-hidden="true" />Dashed ring and arrow: last move by {state.players[lastMove.pid].name}
+          {(() => { const sp = spaces.find(x => x.key === lastMove.key); return sp ? ` (${sp.a.name})` : ''; })()}
+        </div>
+      )}
       <div className="pointer">▲ facing you<span className="kbd-hint"> · drag, arrows or ← → to spin</span><span className="touch-hint"> · swipe sideways to spin</span></div>
     </div>
   );

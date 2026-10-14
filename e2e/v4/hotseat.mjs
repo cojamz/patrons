@@ -72,6 +72,7 @@ try {
   await page.waitForSelector('.rules-body', { state: 'detached' });
 
   const seen = new Set();
+  let facingSeen = null;
   const t0 = Date.now();
   let clicks = 0;
   while (!(await page.$('.results'))) {
@@ -85,6 +86,9 @@ try {
       await next.click();
       continue;
     }
+    const facingNow = await page.$eval('.qtab.on', e => e.textContent).catch(() => null);
+    if (facingNow && !facingSeen) facingSeen = facingNow;
+    if (facingNow && facingSeen && facingNow !== facingSeen) { errors.push(`the board turned by itself (${facingSeen} -> ${facingNow})`); facingSeen = facingNow; }
     const kind = await page.evaluate(() => {
       const el = document.querySelector('[data-option]:not([disabled])');
       return el ? el.getAttribute('data-option').split(':')[0] : null;
@@ -142,16 +146,16 @@ try {
       seen.add('reload');
       const f0 = await page.$eval('.pl[data-pid="0"] .fol .num', e => e.childNodes[0].textContent);
       await page.reload();
-      await page.waitForSelector('[data-home="resume"]');
-      await shot('06-resume-offered');
-      await page.click('[data-home="resume"]');
-      await page.waitForSelector('.players');
+      // a reload mid-game goes straight back into it
+      await page.waitForSelector('.players', { timeout: 8000 }).catch(() => errors.push('reload did not reopen the game'));
+      await shot('06-after-reload');
       const f1 = await page.$eval('.pl[data-pid="0"] .fol .num', e => e.childNodes[0].textContent);
       if (f0 !== f1) errors.push(`resume changed P1's followers (${f0} -> ${f1})`);
       await page.goBack();
       await page.waitForSelector('[data-home="resume"]', { timeout: 5000 }).catch(() => errors.push('browser Back did not return home'));
       await page.click('[data-home="resume"]');
       await page.waitForSelector('.players');
+      facingSeen = null; // a reopened game starts facing its default quadrant
       continue;
     }
     // the first legal option in page order (skip on/off toggles, which would loop)

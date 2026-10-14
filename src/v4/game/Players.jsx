@@ -119,7 +119,7 @@ export default function Players({ state, active, mySeats, gifts = [] }) {
           <section key={p.id} data-pid={p.id} className={`pl${isActive ? ' active' : ''}`} style={{ '--pc': playerColor(p.id) }} aria-label={`${p.name}${isActive ? ', to act' : ''}`}>
             <div className="top">
               <span className="nm"><i />{p.name}{p.kind === 'bot' ? <em> · bot</em> : isYou ? <em> · you</em> : null}</span>
-              <span className="fol"><Tick value={f} color={playerColor(p.id)} className="num" dur={420} /><small>{f === 1 ? 'follower' : 'followers'}</small></span>
+              <span className="fol"><Tick value={f} color={playerColor(p.id)} className="num" dur={650} /><small>{f === 1 ? 'follower' : 'followers'}</small></span>
             </div>
             <div className="res">
               <Resources state={state} p={p} float={false} />

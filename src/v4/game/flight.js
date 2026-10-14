@@ -32,7 +32,7 @@ export function snapshotShop(root) {
   return snap;
 }
 
-function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 0 }) {
+function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 0, hold = false }) {
   const ghost = document.createElement('div');
   ghost.className = className;
   ghost.innerHTML = html;
@@ -40,11 +40,17 @@ function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 
   document.body.appendChild(ghost);
   const dx = b.left + b.width / 2 - (a.left + a.width / 2);
   const dy = b.top + b.height / 2 - (a.top + a.height / 2);
-  const anim = ghost.animate([
+  const frames = hold ? [
+    { transform: 'translate(0,0) scale(1)', opacity: 1, boxShadow: '0 0 0 0 rgba(0,0,0,0)' },
+    { transform: 'translate(0,-10px) scale(1.06)', opacity: 1, offset: 0.25 },
+    { transform: `translate(${dx * 0.5}px,${dy * 0.5 - 30}px) scale(${(1 + scaleTo) / 2})`, opacity: 1, offset: 0.62 },
+    { transform: `translate(${dx}px,${dy}px) scale(${scaleTo})`, opacity: fadeTo },
+  ] : [
     { transform: 'translate(0,0) scale(1)', opacity: 1 },
     { transform: `translate(${dx * 0.5}px,${dy * 0.5 - arc}px) scale(${(1 + scaleTo) / 2})`, opacity: 1, offset: 0.55 },
     { transform: `translate(${dx}px,${dy}px) scale(${scaleTo})`, opacity: fadeTo },
-  ], { duration, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+  ];
+  const anim = ghost.animate(frames, { duration, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
   const done = () => ghost.remove();
   anim.onfinish = done;
   anim.oncancel = done;
@@ -62,7 +68,9 @@ export function flyCards(root, snap, moves) {
     if (!s || !cell || !target) continue;
     const a = cell.getBoundingClientRect(), b = target.getBoundingClientRect();
     if (!a.width || !b.width) continue;
-    ghostFly(s.html, 'flight', a, b, { duration: 460, scaleTo: 0.25 });
+    // the card lifts off the shop, holds a beat so you see which one, then travels to its new owner
+    ghostFly(s.html, 'flight', a, b, { duration: 760, scaleTo: 0.28, hold: true });
+    target.animate && target.animate([{ boxShadow: '0 0 0 0 rgba(236,230,214,0)' }, { boxShadow: '0 0 0 3px rgba(236,230,214,.7)' }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)' }], { duration: 700, delay: 640 });
   }
 }
 
@@ -77,6 +85,6 @@ export function flyWorker(root, pid, slotKey, color) {
   const size = Math.max(14, t.width * 0.72);
   const a = { left: f.left + f.width / 2 - size / 2, top: f.top + f.height / 2 - size / 2, width: size, height: size };
   const b = { left: t.left + t.width / 2 - size / 2, top: t.top + t.height / 2 - size / 2, width: size, height: size };
-  ghostFly(`<i style="background:${color}"></i>`, 'worker-flight', a, b, { duration: 280, scaleTo: 1, fadeTo: 1, arc: 30 });
+  ghostFly(`<i style="background:${color}"></i>`, 'worker-flight', a, b, { duration: 400, scaleTo: 1, fadeTo: 1, arc: 40 });
   return true;
 }

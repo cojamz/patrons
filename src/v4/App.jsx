@@ -19,6 +19,8 @@ export default function App() {
   const [saved, setSaved] = useState(() => loadLocal());
   const [homeError, setHomeError] = useState('');
   const configRef = useRef(null);
+  // read before anything clears it: was this tab in a local game when it reloaded?
+  const wasInGame = useRef((() => { try { return sessionStorage.getItem('patrons.v4.inGame') === '1'; } catch { return false; } })());
   const screenRef = useRef(screen);
   screenRef.current = screen;
 
@@ -40,6 +42,16 @@ export default function App() {
   const goHomeRef = useRef(null);
 
   useEffect(() => () => { if (session) session.destroy(); }, [session]);
+
+  // A reload during a local game goes straight back into it (this tab remembers it was playing).
+  useEffect(() => {
+    const local = screen.name === 'game' && session && session.info?.mode !== 'online';
+    try { if (local) sessionStorage.setItem('patrons.v4.inGame', '1'); else if (screen.name !== 'rejoining') sessionStorage.removeItem('patrons.v4.inGame'); } catch { /* ignore */ }
+  }, [screen.name, session]);
+  useEffect(() => {
+    if (wasInGame.current && screen.name === 'home' && loadLocal()) resumeRef.current();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const resumeRef = useRef(null);
 
   // Save local games on every change.
   useEffect(() => {
@@ -69,6 +81,7 @@ export default function App() {
     const botDelayMs = urlBotDelay() || BOT_DELAY[v.config?.speed] || 650;
     begin(createLocalSession({ state: v.state, undo: v.undo, botDelayMs }), v.config);
   }, [begin]);
+  resumeRef.current = resume;
 
   const goHome = useCallback(() => {
     setSession(null); setSaved(loadLocal()); setScreen({ name: 'home' });
