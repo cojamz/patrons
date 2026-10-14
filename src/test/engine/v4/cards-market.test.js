@@ -3,7 +3,7 @@
 // member costs (badge cutoff 8), through real legal moves, plus one cross-sphere case each. Every number a
 // card changes must show up in a log line that names the card.
 import { describe, it, expect } from 'vitest';
-import { applyMove, followers } from '../../../engine/v4/core.js';
+import { applyMove, followers, SHOP_SIZE } from '../../../engine/v4/core.js';
 import { BADGE } from '../../../engine/v4/content/market.js';
 import { take, move, play, ids } from './helpers.js';
 import { table, useCosts, named, uidIn, owns } from './cards-helpers-b.js';
@@ -51,12 +51,12 @@ describe('Blue actions', () => {
     expect(s.log.some(l => /P2 copies Bargain \(P1's\): doing it again/.test(l))).toBe(true);
   });
 
-  it('Restock: +2 blue and a whole new row of 6', () => {
+  it('Restock: +2 blue and a whole fresh row (SHOP_SIZE cards, none of the old ones)', () => {
     let s = table(Q, { shop: ROW });
     const old = [...s.shop];
     s = take(s, 'Restock');
     expect(R(s).blue).toBe(2);
-    expect(s.shop).toHaveLength(6);
+    expect(s.shop).toHaveLength(SHOP_SIZE);
     expect(s.shop.filter(u => old.includes(u))).toEqual([]);
     expect(s.log).toContain('P1 restocked the row.');
   });
