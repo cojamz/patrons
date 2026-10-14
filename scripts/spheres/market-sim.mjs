@@ -1,12 +1,13 @@
 // Blue (market) balance sim: greedy bots, Blue in place of the blue stand-in.
-// Usage: node scripts/spheres/market-sim.mjs [games=400] [quadrants=gold,red,market,green] [scoring=pricey|value]
+// Usage: node scripts/spheres/market-sim.mjs [games=400] [quadrants=gold,red,market,green] [scoring=pricey|value] [lean]
 import { createGame, applyMove, chooseBotMove, followers, memberCount, actionAt } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { registerQuadrant, quadrant } from '../../src/engine/v4/content/index.js';
-import market, { memberValue, priceyCount, install, setScoring } from '../../src/engine/v4/content/market.js';
+import market, { memberValue, priceyCount, install, setScoring, setLean } from '../../src/engine/v4/content/market.js';
 import { contextFor } from '../../src/engine/v4/core.js';
 install();
 setScoring(process.argv[4] || 'pricey');
+setLean(process.argv[5] === 'lean');
 
 const games = Number(process.argv[2] || 400), n = 4;
 const quadrants = (process.argv[3] || 'gold,red,market,green').split(',');
@@ -58,7 +59,7 @@ for (let g = 1; g <= games; g++) {
 }
 const avg = a => (a.reduce((x, y) => x + y, 0) / a.length).toFixed(1);
 const pct = x => (100 * x / games).toFixed(0) + '%';
-console.log(`${games} games, 4 greedy bots, ${quadrants.join('/')}, Blue scoring: ${market.scoring.label}`);
+console.log(`${games} games, 4 greedy bots, ${quadrants.join('/')}, Blue scoring: ${market.scoring.label}${process.argv[5] === 'lean' ? ', lean (Bargain/Clearance use your buy)' : ''}`);
 console.log(`wins by seat: ${st.wins.map(pct).join(' / ')}`);
 console.log(`avg followers ${avg(st.fol)} · members ${avg(st.mem)} · member value ${avg(st.val)} · members costing 4+ ${avg(st.pricey)} · leftover resources ${avg(st.left)} · buys/game: members ${(st.buys.member / games).toFixed(1)}, follower buys ${(st.buys.tier / games).toFixed(1)}`);
 console.log('takes per game (rounds I/II/III):');

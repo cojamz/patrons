@@ -23,6 +23,9 @@ const colorOf = (ctx, c) => ctx.quadrant(c.def.quadrant).resource;
 const botWorth = c => c.def.f * 1.4 + (c.def.vanilla ? 0 : 1.6) + priceOf(c) * 0.3;
 
 let MODE = 'pricey';
+// Measuring knob: with lean on, Bargain and Clearance use up your buy this turn instead of adding a recruit.
+let LEAN = false;
+export function setLean(on) { LEAN = !!on; }
 /** Switch Blue's scoring rule (for measuring): 'pricey' or 'value'. */
 export function setScoring(mode) { MODE = mode; market.scoring.label = LABELS[mode]; }
 const LABELS = { pricey: `Most members costing ${PRICEY}+`, value: 'Most member value' };
@@ -80,6 +83,10 @@ function payAndRecruit(ctx, p, v, { uid, why, fromPile }) {
   if (!ctx.state.shop.includes(uid)) { ctx.log(`${why}: ${card.def.name} is gone.`); return; }
   for (const r in v) p.res[r] -= v[r];
   ctx.log(`${why}: ${p.name} pays ${payLabel(v)} for ${card.def.name}.`);
+  if (LEAN && !fromPile) {
+    const q = ctx.state.queue, k = q.findIndex(t => t.t === 'buy' && t.p === p.id);
+    if (k >= 0) q.splice(k, 1);
+  }
   ctx.recruit(p, uid, { free: true });
 }
 

@@ -73,9 +73,10 @@ Scoring (all visible state)
 - Most-silver contest: nobody scored 1%, shared 18%, one player swept all three rounds 18%. It's about 4.5 of a winner's 58 followers.
 - Glut: stock at game end is 58 per player (64 before, 25 baseline). Silver itself fell from 18.6 to 13.8. Most of the rest is gold (about 33 per player): bots pay "any" costs with other colors first and hold gold for the Crown, so Silver's crumbs end up paying bills while gold piles up. The outlet isn't missing; the one-buy-a-turn limit is the cap. A human table may feel it less, but Silver adds resources to the table.
 - Member value (handed over at round II start, 160 games each, noise about ±1.5): Grand Host 9.3, Patron Saint 8.4, Heir 7.2, Toastmaster 6.8, Majordomo 6.4, Guest 6.3, Feast Hall 6.0, Dowager 5.8, Gala 5.5, Silver Spoon 4.9, Silversmith 4.8, Benefactor 4.4, Caterer 4.4, Steward 4.0, Retinue 3.6. Same harness: Tycoon 11.6 (cost 6), Big Family 5.5 (4), Merchant 4.0 (3), Speculator 3.7 (4), Banker 1.2 (2). Prices above follow these.
-- Thinking bot: THINKER_LINE
+- Thinking bot (1 thinker vs 3 greedy, 24 games, 4 rollouts): the thinker won 21 of 24 (88%), by about 15 followers on average, and put 21.5% of its workers on Silver (14% before the revision; greedy bots 31%). Control on the green table, same harness (12 games): it won 6 of 12 (50%) and put 15% on the stand-in quadrant. So hosting is no longer a sucker's play for the planner, but planning pays far more on a Silver table than on the baseline, and the bots can't show why. My guess: greedy bots hand out crumbs without reading the contests, and a planner reads them.
 
 ## What to watch
+- A planner beats greedy bots 88% of the time on this table vs 50% on the baseline. Before Cory's playtest, check that it isn't one degenerate line (for example, sit as a guest and take Jubilee).
 - Toast pays 9 in round III, more than Rush's 6. That's on purpose, to lift the host's share, but it's the first thing to trim (3 / 5 / 7) if the host runs away.
 - Jubilee plus Gala (double, then 1 follower per 2) and Grand Host plus Toast (18 silver in round III) are the big combos.
 - Bots can't judge the crumb choice: which color to hand out and whom to give alms to run on a simple rule, so the sphere's core decision isn't measured.
