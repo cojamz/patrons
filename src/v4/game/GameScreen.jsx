@@ -71,8 +71,9 @@ export default function GameScreen({ session, onPlayAgain, onHome }) {
     if (!mine || busy || needHandoff || !options.has(optionId)) return;
     setBusy(true);
     setError('');
-    Promise.resolve()
-      .then(() => session.submit({ player: pend.player, option: optionId }))
+    let sent;
+    try { sent = session.submit({ player: pend.player, option: optionId }); } catch (e) { sent = Promise.reject(e); }
+    Promise.resolve(sent)
       .catch(e => setError(e && e.message ? e.message : String(e)))
       .finally(() => setBusy(false));
   }, [mine, busy, needHandoff, options, session, pend]);

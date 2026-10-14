@@ -15,7 +15,10 @@ function Seg({ value, options, onChange, label }) {
 }
 
 export function Home({ onLocal, onHost, onJoin, onlineReady }) {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(() => (new URLSearchParams(location.search).get('join') || '').toUpperCase().slice(0, 8));
+  const [err, setErr] = useState('');
+  const [working, setWorking] = useState(false);
+  const go = fn => { setErr(''); setWorking(true); Promise.resolve(fn()).then(e => { if (e) setErr(e); }).finally(() => setWorking(false)); };
   const [name, setName] = useState(() => { try { return localStorage.getItem('patrons.name') || ''; } catch { return ''; } });
   const saveName = v => { setName(v); try { localStorage.setItem('patrons.name', v); } catch { /* ignore */ } };
   return (
@@ -34,11 +37,13 @@ export function Home({ onLocal, onHost, onJoin, onlineReady }) {
         <button type="button" className="btn pri big" onClick={onLocal} data-home="local">Play on this device</button>
         <div className="online-box">
           <label className="field"><span>Your name</span><input value={name} maxLength={16} onChange={e => saveName(e.target.value)} placeholder="Name" /></label>
-          <button type="button" className="btn big" disabled={!onlineReady} onClick={() => onHost(name || 'Host')}>Host online game</button>
-          <form className="join" onSubmit={e => { e.preventDefault(); if (code.trim()) onJoin(code.trim().toUpperCase(), name || 'Guest'); }}>
+          <button type="button" className="btn big" disabled={!onlineReady || working} onClick={() => go(() => onHost(name.trim() || 'Host'))}>Host online game</button>
+          <form className="join" onSubmit={e => { e.preventDefault(); if (code.trim()) go(() => onJoin(code.trim().toUpperCase(), name.trim() || 'Guest')); }}>
             <input aria-label="Room code" value={code} maxLength={8} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="CODE" disabled={!onlineReady} />
-            <button type="submit" className="btn" disabled={!onlineReady || !code.trim()}>Join with code</button>
+            <button type="submit" className="btn" disabled={!onlineReady || working || !code.trim()}>Join with code</button>
           </form>
+          {working && <p className="hint">Connecting…</p>}
+          {err && <p className="error" role="alert">{err}</p>}
           {!onlineReady && <p className="hint">Online play is being wired up. Hot-seat works now.</p>}
         </div>
       </div>
@@ -84,12 +89,13 @@ export function LocalSetup({ initial, onStart, onBack }) {
 
 /** Online lobby, built against the lobby contract: subscribe(fn) -> {code, hostId, status, players}; host: addBot, removeSeat, start. */
 export function Lobby({ lobby, myId, onLeave }) {
-  const [view, setView] = useState(null);
+  const [view, setView] = useState(() => (lobby && lobby.getView ? lobby.getView() : null));
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState('');
   useEffect(() => (lobby ? lobby.subscribe(setView) : undefined), [lobby]);
   if (!lobby || !view) return <div className="app narrow"><div className="dialog page"><h2>Connecting…</h2><button type="button" className="btn" onClick={onLeave}>Back</button></div></div>;
-  const isHost = view.hostId === myId;
+  const me = view.me?.playerId ?? myId;
+  const isHost = view.isHost ?? view.hostId === me;
   const players = [...view.players].sort((a, b) => a.seat - b.seat);
   const copy = () => {
     const url = `${location.origin}${location.pathname}?join=${view.code}`;
@@ -100,6 +106,7 @@ export function Lobby({ lobby, myId, onLeave }) {
     <div className="app narrow">
       <div className="dialog page lobby">
         <h2>Room</h2>
+        {view.status === 'closed' && <p className="error">This room is closed.</p>}
         <button type="button" className="code" onClick={copy} title="Copy invite link" aria-label={`Room code ${view.code}, copy invite link`}>
           {view.code}<small>{copied ? 'link copied' : 'tap to copy invite link'}</small>
         </button>
@@ -107,9 +114,9 @@ export function Lobby({ lobby, myId, onLeave }) {
           {players.map(p => (
             <li key={p.id} className="seat" style={{ '--pc': PLAYER_COLORS[p.seat % 4] }}>
               <i className="dot" />
-              <span className="nm">{p.name}{p.id === myId ? ' (you)' : ''}</span>
+              <span className="nm">{p.name}{p.id === me ? ' (you)' : ''}</span>
               <span className="hint">{p.kind === 'bot' ? 'bot' : p.connected === false ? 'offline' : p.id === view.hostId ? 'host' : 'ready'}</span>
-              {isHost && p.id !== myId && <button type="button" className="btn ghost" onClick={() => act(() => lobby.removeSeat(p.seat))}>Remove</button>}
+              {isHost && p.id !== me && <button type="button" className="btn ghost" onClick={() => act(() => lobby.removeSeat(p.seat))}>Remove</button>}
             </li>
           ))}
         </ul>
@@ -117,7 +124,7 @@ export function Lobby({ lobby, myId, onLeave }) {
         {isHost ? (
           <div className="row-btns">
             <button type="button" className="btn" disabled={players.length >= 4} onClick={() => act(() => lobby.addBot())}>Add bot</button>
-            <button type="button" className="btn pri" disabled={players.length < 2} onClick={() => act(() => lobby.start())}>Start game</button>
+            <button type="button" className="btn pri" disabled={view.canStart === false || players.length < 2} onClick={() => act(() => lobby.start())}>Start game</button>
           </div>
         ) : <p className="hint">Waiting for the host to start…</p>}
         <button type="button" className="btn ghost" onClick={onLeave}>Leave</button>

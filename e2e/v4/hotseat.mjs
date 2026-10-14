@@ -5,9 +5,10 @@
 // `npx vite --port 5180` itself and stops it at the end.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, rmSync } from 'node:fs';
 
 const SHOTS = '/tmp/patrons-shots/v4';
+rmSync(SHOTS, { recursive: true, force: true });
 mkdirSync(SHOTS, { recursive: true });
 const DESKTOP = { width: 1270, height: 700 };
 const PHONE = { width: 400, height: 820 };
@@ -74,7 +75,7 @@ try {
       seen.add(tag);
       const name = `03-${String(seen.size).padStart(2, '0')}-${tag.replace(/[^a-z0-9@]+/gi, '_')}`;
       await shot(name);
-      if (seen.size === 2 || /III/.test(round) && kind === 'card') await shot(`${name}-phone`, PHONE);
+      if (seen.size === 2 || (/III/.test(round) && !seen.has('phone3') && seen.add('phone3'))) await shot(`${name}-phone`, PHONE);
     }
     // the first legal option in page order (skip on/off toggles, which would loop)
     const els = await page.$$('[data-option]:not([disabled])');

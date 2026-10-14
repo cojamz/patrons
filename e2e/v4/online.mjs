@@ -1,0 +1,85 @@
+// E2E: online play across two tabs over BroadcastChannel (?transport=broadcast).
+// Host creates a room, a guest joins by code, the host adds a bot and starts; both people click the first
+// legal option whenever it's their turn, through to final results. Fails on any console or page error.
+// Server: $V4_URL if set, else starts `npx vite --port 5181` itself.
+import { chromium } from 'playwright';
+import { spawn } from 'node:child_process';
+import { mkdirSync } from 'node:fs';
+
+const SHOTS = '/tmp/patrons-shots/v4';
+mkdirSync(SHOTS, { recursive: true });
+let server = null;
+let base = process.env.V4_URL;
+if (!base) {
+  base = 'http://localhost:5181';
+  server = spawn('npx', ['vite', '--port', '5181', '--strictPort'], { stdio: 'pipe' });
+  let up = false;
+  for (let k = 0; k < 60 && !up; k++) { await new Promise(r => setTimeout(r, 500)); up = await fetch(base).then(r => r.ok, () => false); }
+  if (!up) { server.kill(); console.error('vite did not start'); process.exit(1); }
+}
+
+const errors = [];
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
+const watch = (page, who) => {
+  page.on('console', m => { if (m.type() === 'error') errors.push(`${who} console: ${m.text()}`); });
+  page.on('pageerror', e => errors.push(`${who} pageerror: ${e.message}`));
+};
+const host = await ctx.newPage(); watch(host, 'host');
+const guest = await ctx.newPage(); watch(guest, 'guest');
+const url = `${base}/?transport=broadcast&botDelay=30`;
+
+async function stepFirstOption(page) {
+  const els = await page.$$('[data-option]:not([disabled])');
+  for (const el of els) {
+    const id = await el.getAttribute('data-option').catch(() => null);
+    if (!id || id.startsWith('toggle:')) continue;
+    try { await el.click({ timeout: 1500 }); return true; } catch { /* try the next */ }
+  }
+  return false;
+}
+
+let ok = false;
+try {
+  await host.goto(url);
+  await host.fill('input[placeholder="Name"]', 'Hana');
+  await host.click('text=Host online game');
+  await host.waitForSelector('.code');
+  const code = (await host.$eval('.code', e => e.firstChild.textContent)).trim();
+  await guest.goto(url);
+  await guest.fill('input[placeholder="Name"]', 'Gus');
+  await guest.fill('input[aria-label="Room code"]', code);
+  await guest.click('text=Join with code');
+  await guest.waitForSelector('.code');
+  await host.waitForFunction(() => document.querySelectorAll('.seats li').length === 2);
+  await host.click('text=Add bot');
+  await host.waitForFunction(() => document.querySelectorAll('.seats li').length === 3);
+  await host.screenshot({ path: `${SHOTS}/online-lobby.png` });
+  await host.click('text=Start game');
+  await Promise.all([host.waitForSelector('.players'), guest.waitForSelector('.players')]);
+  const t0 = Date.now();
+  let shot = false;
+  while (!(await host.$('.results')) || !(await guest.$('.results'))) {
+    if (Date.now() - t0 > 240000) throw new Error('online game did not finish in 4 minutes');
+    const a = await stepFirstOption(host);
+    const b = await stepFirstOption(guest);
+    if (!shot && (a || b)) { shot = true; await guest.screenshot({ path: `${SHOTS}/online-guest.png` }); }
+    if (!a && !b) await host.waitForTimeout(40);
+  }
+  const hw = await host.$eval('.results .win', e => e.textContent);
+  const gw = await guest.$eval('.results .win', e => e.textContent);
+  if (hw !== gw) throw new Error(`host and guest disagree: "${hw}" vs "${gw}"`);
+  await guest.screenshot({ path: `${SHOTS}/online-results.png` });
+  console.log(`online game finished: ${hw}`);
+  ok = errors.length === 0;
+} catch (e) {
+  errors.push(`run: ${e.stack || e.message}`);
+  await host.screenshot({ path: `${SHOTS}/zz-online-host-failure.png` }).catch(() => {});
+  await guest.screenshot({ path: `${SHOTS}/zz-online-guest-failure.png` }).catch(() => {});
+} finally {
+  await browser.close();
+  if (server) server.kill();
+}
+if (errors.length) console.error(errors.join('\n'));
+console.log(ok ? 'PASS online' : 'FAIL online');
+process.exit(ok ? 0 : 1);
