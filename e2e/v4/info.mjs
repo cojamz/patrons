@@ -1,0 +1,150 @@
+// E2E: every game-meaningful element explains itself (Cory, 2026-10-14: every UI element has a hover with more info,
+// long-press/tap on phone), and followers are never a star. Build-failing assertions, at several steps of a real
+// hot-seat game (1 person + 3 bots):
+//  (a) every visible game element (seats, shop cards, resources, members, leaders/minions, follower marks, badges,
+//      follower buys, spaces, contest rules, resource symbols) carries hover info: a title, a hover/tap card
+//      (data-tip / aria-haspopup), or (spaces) the board's own space card;
+//  (b) hovering a shop card and a board space shows a card; on a touch screen a long-press on a titled element
+//      shows its title (the hover's touch twin);
+//  (c) no "★" anywhere in the rendered game (followers are the little-person mark).
+// Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
+import { chromium } from 'playwright';
+import { mkdirSync } from 'node:fs';
+
+const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/info`;
+mkdirSync(SHOTS, { recursive: true });
+const base = process.env.V4_URL || 'http://localhost:5180';
+const fails = [];
+const fail = (msg, step) => fails.push(`[${step}] ${msg}`);
+
+// game-meaningful elements, old and new screen (whatever is on screen is audited)
+const GAME = [
+  '[data-region] [data-uid]', '.shop [data-uid]', '.lt-seat', '.lt-stack', '.r', '.lt-member .fig', '.chip[data-g]',
+  '[data-leader-ring]', '.workers', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
+  '[data-plaque]', '.contest-tip', '.res-glyph', '.pip', '.card-name', '.term',
+].join(',');
+
+async function audit(page, step) {
+  const r = await page.evaluate(sel => {
+    const vis = e => { const s = getComputedStyle(e); if (s.display === 'none' || s.visibility === 'hidden' || +s.opacity === 0) return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
+    const explains = e => {
+      if ((e.getAttribute('title') || '').trim()) return true;
+      if (e.matches('[data-tip], [aria-haspopup]')) return true;
+      if (e.querySelector(':scope > title')) return true; // an SVG symbol with its own <title>
+      if (e.matches('.slot')) return true; // the board's space card (checked by hovering below)
+      // a symbol inside something that explains itself (a pip in a titled cost) is covered by its parent
+      const up = e.parentElement && e.parentElement.closest('[title], [data-tip], [aria-haspopup]');
+      return !!(up && up.contains(e) && e.matches('.pip, .res-glyph, .follower, .fol-mark, .badge-mark'));
+    };
+    const miss = [];
+    let n = 0;
+    for (const e of document.querySelectorAll(sel)) {
+      if (!vis(e) || e.closest('[aria-hidden="true"]')) continue;
+      n++;
+      if (!explains(e)) miss.push(`${e.tagName.toLowerCase()}.${String(e.className && (e.className.baseVal ?? e.className)).split(' ').filter(Boolean).join('.')} "${(e.textContent || '').trim().slice(0, 24)}"`);
+    }
+    return { n, miss: [...new Set(miss)].slice(0, 12), star: document.body.innerText.includes('★') };
+  }, GAME);
+  if (r.n < 5) fail(`only ${r.n} game elements found (the selectors no longer match the screen?)`, step);
+  for (const m of r.miss) fail(`(a) no hover info: ${m}`, step);
+  if (r.star) fail('(c) a "★" is on screen', step);
+  return r.n;
+}
+
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const errors = [];
+try {
+  const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+  page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
+  page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
+  await page.goto(`${base}/?botDelay=20`);
+  await page.waitForSelector('[data-home="local"]');
+  await page.click('[data-home="local"]');
+  await page.waitForSelector('[data-start]');
+  await page.click('[data-start]');
+  await page.waitForSelector('[data-option]', { timeout: 20000 });
+  await audit(page, 'setup');
+  await page.screenshot({ path: `${SHOTS}/01-setup.png` });
+
+  // play: the first legal option each time; audit at my first placement, my first buy and a round-II placement
+  const seen = new Set();
+  for (let k = 0; k < 400 && seen.size < 3; k++) {
+    const next = page.locator('[data-next-round]');
+    if (await next.count()) { await next.first().click().catch(() => {}); await page.waitForTimeout(150); continue; }
+    const hand = page.locator('[data-handoff]');
+    if (await hand.count()) { await hand.first().click().catch(() => {}); continue; }
+    const kind = await page.evaluate(() => {
+      const g = document.querySelector('.app.game');
+      const round = (document.querySelector('header .round, .lt-prompt .round') || {}).textContent || '';
+      const place = !!document.querySelector('.slot.can, .slot[data-option]');
+      const buy = !!document.querySelector('[data-option^="card:"], [data-option^="tier:"], [data-option="pass"]');
+      return { place, buy, r2: /Round II\b/.test(round), moves: g && g.dataset.moves };
+    });
+    const step = kind.place ? (kind.r2 ? 'place-r2' : 'place') : kind.buy ? 'buy' : null;
+    if (step && !seen.has(step) && (step !== 'place-r2' || seen.has('place'))) {
+      seen.add(step);
+      await audit(page, step);
+      await page.screenshot({ path: `${SHOTS}/0${seen.size + 1}-${step}.png` });
+      if (step === 'place') {
+        // (b) hover a board space and a shop card: each shows a card
+        const slot = page.locator('.slot.can').first();
+        await slot.hover();
+        await page.waitForTimeout(500);
+        if (!(await page.locator('.peek, [data-hover-card="space"], [data-space-card]').count())) fail('(b) hovering a space shows no card', step);
+        await page.screenshot({ path: `${SHOTS}/02b-hover-space.png` });
+        await page.mouse.move(5, 5);
+        const card = page.locator('[data-region] [data-uid], .shop [data-uid]').first();
+        if (await card.count()) {
+          await card.hover();
+          await page.waitForTimeout(600);
+          const shown = await page.evaluate(() => [...document.querySelectorAll('.popover, [data-hover-card]')].some(e => e.getBoundingClientRect().width > 0) || !!document.querySelector('.card-face'));
+          if (!shown) fail('(b) hovering a shop card shows no card', step);
+          await page.screenshot({ path: `${SHOTS}/02c-hover-card.png` });
+          await page.mouse.move(5, 5);
+          await page.waitForTimeout(300);
+        }
+      }
+    }
+    const opt = page.locator('.slot.can, [data-option]:not([aria-disabled="true"])').first();
+    if (await opt.count()) { await opt.click({ timeout: 2000 }).catch(() => {}); }
+    await page.waitForTimeout(80);
+  }
+  if (seen.size < 3) fail(`only reached ${[...seen].join(', ') || 'no'} steps`, 'play');
+
+  // (b) touch: a long-press on a titled element shows its title
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const phone = await ctx.newPage();
+  phone.on('pageerror', e => errors.push(`phone pageerror: ${e.message}`));
+  await phone.goto(`${base}/?botDelay=20`);
+  await phone.waitForSelector('[data-home="local"]');
+  await phone.tap('[data-home="local"]');
+  await phone.waitForSelector('[data-start]');
+  await phone.tap('[data-start]');
+  await phone.waitForSelector('[data-option]', { timeout: 20000 });
+  await audit(phone, 'phone-setup');
+  const target = await phone.evaluate(() => {
+    const e = [...document.querySelectorAll('.app.game [title]')].find(x => { const b = x.getBoundingClientRect(); return b.width > 8 && b.height > 8 && b.top > 0 && b.bottom < innerHeight && !x.closest('button, [role="button"], [data-option]'); });
+    if (!e) return null;
+    const b = e.getBoundingClientRect();
+    return { x: b.left + b.width / 2, y: b.top + b.height / 2, title: e.getAttribute('title') };
+  });
+  if (!target) fail('(b) no titled element to long-press on the phone', 'phone');
+  else {
+    const cdp = await ctx.newCDPSession(phone);
+    const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts });
+    await touch('touchStart', [{ x: target.x, y: target.y }]);
+    await phone.waitForTimeout(700);
+    const bubble = await phone.locator('[data-touch-tip]').textContent().catch(() => null);
+    await touch('touchEnd', []);
+    if (!bubble || !bubble.includes(target.title.slice(0, 10))) fail(`(b) long-press showed ${JSON.stringify(bubble)}, not the title ${JSON.stringify(target.title)}`, 'phone');
+    await phone.screenshot({ path: `${SHOTS}/05-phone-longpress.png` });
+  }
+  await ctx.close();
+} catch (e) {
+  fails.push(`crashed: ${e && e.stack || e}`);
+} finally {
+  await browser.close();
+}
+for (const e of errors) fails.push(e);
+if (fails.length) { console.error(`info.mjs: ${fails.length} problem(s)\n  ${fails.join('\n  ')}`); process.exit(1); }
+console.log('info.mjs: every game element explains itself; no stars');
