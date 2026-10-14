@@ -1226,3 +1226,6 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 @media (min-width:861px) and (min-height:500px){
   .app.game.choosing .side.framed .frame > .shop-panel.compact{display:none}
 }
+/* the rival-move caption centers with `translate` (its `rise` animation owns `transform`): it once slid half its
+   width off to the right while appearing, widening the phone page sideways. Gated by touch.mjs (h). */
+.caption{transform:none;translate:-50% 0}
