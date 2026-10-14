@@ -471,7 +471,7 @@ function buyFollowers(state, p, tier, chosen) {
   }
   log(state, `${p.name} bought ${tier.get} follower${tier.get > 1 ? 's' : ''} (${payString(spend)}).`);
   const ctx = ctxFor(state);
-  eachMember(state, (owner, card, def) => { if (def.onBuyFollowers) def.onBuyFollowers(ctx, owner, card, p); });
+  eachMember(state, (owner, card, def) => { if (def.onBuyFollowers) def.onBuyFollowers(ctx, owner, card, p, tier); });
 }
 
 function gain(state, p, color, n, { fromAction = false } = {}) {
