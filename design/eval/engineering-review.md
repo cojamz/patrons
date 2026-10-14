@@ -1,19 +1,16 @@
 # Patrons v4 engineering review
 
-Branch `claude/gifted-newton-3lcy3i` at `e28806a` (working tree as of 2026-10-14 ~18:00 UTC). Scope: `src/engine/v4`, `src/v4`, the v4 tests and e2e, `scripts/v4-*`, and repo hygiene. I read only `design/architecture.md` from `design/`. Everything marked *measured* was run on this box. The box was heavily loaded the whole time (load average 15–24 on 4 cores), so absolute times are pessimistic, but the ratios hold.
+Branch `claude/gifted-newton-3lcy3i`. I reviewed the working tree at `e28806a` on 2026-10-14 around 18:00 UTC; HEAD moved to `5aec4b1` while I worked, and line numbers refer to what I read. Scope: `src/engine/v4`, `src/v4`, the v4 tests and e2e, `scripts/v4-*`, and repo hygiene. I read only `design/architecture.md` from `design/`. Everything marked *measured* was run on this box. The box was heavily loaded the whole time (load average 15–24 on 4 cores), so absolute times are pessimistic, but the ratios hold.
 
 ## Executive summary
 
-The core bet is right and well executed. The engine is pure and seeded, a move is just an option id, and the same engine serves the UI, bots, sims and the network. The fuzzing, with invariants checked after every move, a JSON round trip at every step and replay determinism, is better than most shipped games have. Keep all of that.
-
-The headaches ahead come from the edges of that core:
-1. **The gate (`check:v4`) is not trustworthy on this box.** It also runs the tests of a frozen worktree (39 stale files next to the 32 current ones). It skips the unit tests of 7 spheres that players can already pick. Its session tests fail under load.
-2. **Nothing is versioned.** Saves, online rooms and states carry no build or content stamp, there is no React error boundary, and a reload auto-resumes. The first card that gets killed or renamed will white-screen every saved game in a crash loop.
-3. **Game facts live in English log text.** The UI regex-parses ~36 patterns out of the engine's sentences, and the trace-every-number check works by substring matching on card names. Rewording a log line silently breaks the UI.
-4. **Sphere code bypasses the shared verbs.** Doppelganger copy handling is reimplemented in 9+ places, rule knobs live in module globals outside `state`, and Echo monkey-patches every action at import time.
-5. **Online play is authoritative by convention only.** The DB rules let any signed-in client write anything, mixed builds are never detected, and a dropped player stalls the room forever.
-
-Top 5 "do now" items: make the gate honest, version-stamp and protect saves and rooms, record the move list (one-click repro), move rule knobs into `state.rules`, and isolate parallel agents in their own worktrees. All five are S/M effort.
+1. The core is sound and worth keeping: a pure, seeded engine where a move is an option id, plus fuzzing that checks invariants every move and proves replay determinism.
+2. The gate can't be trusted. My `check:v4 --fast` took 14 minutes and went red with zero real failures (11 timeouts, 28 suites from a frozen worktree deleted mid-run), while the 7 ungated playable spheres hide 2 real failures.
+3. Nothing is versioned (saves, rooms, state) and there is no error boundary, so the first killed or renamed card white-screens saved games in a reload crash loop. Until then, saves resume under silently changed rules.
+4. Game facts live in English log text: the UI regex-parses ~36 patterns, and one ungated test is already red only because a sentence was reworded.
+5. Spheres bypass the shared verbs: Doppelganger handling is copied into 9+ places, rule knobs sit in module globals, and Echo monkey-patches every action.
+6. Online play is authoritative by convention only: the DB rules allow any write, mixed builds go undetected, and a dropped player stalls the room forever.
+7. Do now, all S/M: make the gate honest, version-stamp saves and rooms behind an error boundary, record moves for one-click repro, move knobs into `state.rules`, and give each agent its own worktree.
 
 ---
 
@@ -141,7 +138,7 @@ Tests and sims flip them per process (`market.test.js:25-26, 55, 74`; `scripts/s
 
 On the engine side, "every number traces to a line" is enforced by snapshot-diffing around each hook and then `fresh.some(l => l.includes(name))` (`core.js:669-696`). *Measured:* 4 card-name pairs are substrings of each other (Host ⊂ Grand Host, Heir ⊂ Heiress, Crew ⊂ Shift Crew, Choir ⊂ Choirmaster), and a player named like a card also defeats the check. The log is capped at 300 lines (`core.js:20, 895`), and the trace fallback after trimming searches for the last line by equality (`core.js:693`). Today's games generate ~190 lines on average and 230 at most (*measured*, 60 random-table 4-player games), so the cap is latent but close.
 
-**Why it bites later.** Every wording polish, every new sphere and every Cory rename is a potential silent UI regression. Tests mostly assert on the same strings, so they won't catch it.
+**Why it bites later.** Every wording polish, every new sphere and every Cory rename is a potential silent UI regression. Tests mostly assert on the same strings, so they won't catch it. It has already happened once: the ungated `spheres/trading.test.js:130` is red only because a log sentence was reworded.
 
 **Change.**
 - Add `state.events` (capped per round, or not at all, since they are small) with typed entries: `{t:'placed', p, q, a}`, `{t:'gain', p, color, n, src:{uid, def}|{action}}`, `{t:'recruit', p, uid, paid}`, `{t:'followers', p, n, src}`, `{t:'roundEnd', round, rows:[{qid, winners, v}]}`, `{t:'clock'}`, `{t:'steal', …}`.
@@ -263,4 +260,5 @@ On the engine side, "every number traces to a line" is enforced by snapshot-diff
 | Log lines per game | avg ~190, max 230 (cap 300) |
 | Test files the gate picks up | 32 current + 39 from `.v4-wt/49c94c3`; 7 current sphere files excluded |
 | tsc `--checkJs` on the engine | 18 errors (loose mode) |
-| `check:v4 --fast` | GATE_RESULT |
+| `check:v4 --fast` | 14 m 01 s wall (tests 809.6 s, build 30.7 s). FAIL: 71 files, 36 failed, 11 failed tests (all timeouts), 28 suites "Cannot find module" from a worktree removed mid-run. jsdom setup alone was 112 s. |
+| Excluded sphere tests (7 files) | 15 m 39 s. 8 failed: 2 genuine assertion failures (`trading.test.js:130` log wording, `yellow.test.js:115` bot behaviour) and 6 timeouts. |
