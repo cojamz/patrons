@@ -38,4 +38,5 @@ Never present agent output to Cory unvetted.
 
 ## Fresh eyes at every milestone (Cory, 2026-10-14)
 At each frozen milestone, run three NEW blind reviewers in parallel, never reused: `ui-critic` (picky designer: information access, polish), `boardgame-enthusiast` (the game: decisions, tension, arc, balance feel, fun), and an engineering reviewer (repo access, no prior context; design/eval/engineering-review.md is round 1). Save each report to design/eval/<role>-round<N>.md, verify single-reviewer claims before fixing, and track grades round over round.
+- Then a synthesis (Cory, 2026-10-14): one agent reads the three reports together (plus Cory's latest notes and the panel's "felt unfair or unfun") and writes design/eval/meta-round<N>.md: the cross-cutting themes, where reviewers agree (confirmed) and disagree, root causes behind clusters of symptoms, and one ranked action list. Act on each report individually AND on the meta list; the meta list sets priority.
 
