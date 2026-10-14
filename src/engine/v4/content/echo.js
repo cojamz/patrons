@@ -62,7 +62,9 @@ function wrapAction(qid, a, idx) {
   const orig = a.resolve;
   const wrapped = function (ctx, p) {
     const L = ledger(ctx.state);
-    const key = `${ctx.state.quadrants.indexOf(qid)}-${idx}`;
+    let key = `${ctx.state.quadrants.indexOf(qid)}-${idx}`;
+    // a second worker on a taken space (Squatter) gets its own chip, so the first taker's stays copyable
+    if (L.now[key] && L.now[key].p !== p.id && ctx.state.squats?.[key]?.includes(p.id)) key = `${key}+${p.id}`;
     const e = { key, p: p.id, ring: a.ring, name: a.name, color: qid, idx, echo: !!a.echo, before: snapAll(ctx.state, p), res: {}, discount: 0, members: [] };
     L.seq = (L.seq || 0) + 1; e.seq = L.seq;
     L.now[key] = e; L.open = key; L.lastBy = key;

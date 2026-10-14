@@ -355,6 +355,25 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (pick) pick.focus({ preventScroll: true });
   }, [pend, mine, needHandoff]);
 
+  // Hot-seat: a choice or payment that opens a turn takes the hand-over into its own header ("Ana's turn"),
+  // instead of a hand-over screen and then the choice: one step, not two.
+  const [handedIn, setHandedIn] = useState(null); // seat whose choice header says it's their turn
+  useEffect(() => {
+    if (needHandoff && !moment && pend && ['choose', 'setup', 'pay'].includes(pend.kind)) { setReady(pend.player); setHandedIn(pend.player); }
+    else if (pend && handedIn != null && pend.player !== handedIn) setHandedIn(null);
+  }, [needHandoff, moment, pend]); // eslint-disable-line react-hooks/exhaustive-deps
+  // After a hand-over, focus lands on the first thing to do: a glowing space, the first choice, or the buy row.
+  useEffect(() => {
+    if (ready == null || !root.current) return undefined;
+    const t = setTimeout(() => {
+      const r = root.current;
+      if (!r) return;
+      const pick = r.querySelector('.prompt.choice button:not([disabled])') || r.querySelector('.dialog.pay .btn.pri') || r.querySelector('.slot.can') || r.querySelector('.act.can') || r.querySelector('.card.can') || r.querySelector('.fb.can') || r.querySelector('.fbuy .pass[data-option]');
+      if (pick) pick.focus({ preventScroll: true });
+    }, 80);
+    return () => clearTimeout(t);
+  }, [ready]);
+
   // Clicks during an in-flight move are kept and replayed if they're still legal next; "take all" repeats a
   // counted pick (Steal: 1 gold at a time) while that's still the only choice.
   const queuedClick = useRef([]); // clicks made while a move is in flight, replayed in order if still legal
@@ -515,7 +534,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               <Workers p={meP} />
             </span>
           )}
-          {canUndo && <button type="button" className="btn ghost undo undo-row" onClick={undo}>↶ Undo {undoWord}</button>}
+          {canUndo ? <button type="button" className="btn ghost undo undo-row" onClick={undo}>↶ Undo {undoWord}</button>
+            : state.round > 0 || state.pending?.kind === 'setup' ? <span className="undo-row undo-hold" aria-hidden="true" /> : null /* phones: Undo's row is kept, so nothing jumps */}
           <button type="button" className="ticker" title={`${lastLine} — open the log`} onClick={openLog} aria-label={`Last: ${lastLine}. Open the log.`}><span className="tk">{lastLine}</span><span className="cue">Log ↓</span></button>
         </div>
       </header>
@@ -542,7 +562,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             {shopUnderWheel && <Shop variant="compact" hidden={buyingNow} state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />}
           </div>
           <div className={`side${wide ? ' framed' : ''}`}>
-            {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} />}
+            {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
             {wide ? (
               // A constant frame: the board panel and a compact shop row; your buy view slides over both,
               // so nothing reflows between placing and buying.
@@ -578,7 +598,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           <CardFace state={state} uid={cardDetail.uid} />
         </Popover>
       )}
-      {mine && !needHandoff && pend.kind === 'pay' && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} />}
+      {mine && !needHandoff && pend.kind === 'pay' && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
       {moment && <RoundEnd info={moment} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
       {logOpen && <LogDrawer state={state} onClose={() => setLogOpen(false)} />}

@@ -96,7 +96,8 @@ describe('Squatter: once per round, place on a space a rival already took', () =
     expect(R(s, 0).gold).toBe(2);
     s = move(s, 'slot:2-2'); // P2 takes Echo
     expect(s.pending.kind).toBe('choose');
-    expect(s.pending.options.some(o => o.label.startsWith('Rush'))).toBe(true);
+    // both workers on Rush leave a chip: the first taker's and the joiner's
+    expect(s.pending.options.filter(o => o.label.startsWith('Rush')).length).toBe(2);
     s = choose(s, o => o.label.startsWith('Rush'));
     expect(R(s, 1).gold).toBe(4);
   });

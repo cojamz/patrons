@@ -1,6 +1,6 @@
 // The shop (6 face-up members) and the buy tray (follower buys, member activations, Pass).
 import { cardDef, paymentPlan, followerChoices, TIERS, tierLeft } from '../../engine/v4/index.js';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { costParts, tierCostText } from '../format.js';
 
 // long words get a soft hyphen in the middle: it shows only when the word must break ("Doppel-ganger")
@@ -35,7 +35,7 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
   const compact = variant === 'compact';
   return (
     <section className={`panel shop-panel ${compact ? 'compact' : 'open'}`} aria-hidden={hidden || undefined} style={hidden ? { visibility: 'hidden' } : undefined}>
-      <h2>Shop<small><span className="num">{state.pile.length}</span> in the pile{buying && !compact ? ' · tap a member to recruit' : ''}</small></h2>
+      <h2>Shop<small><span className="num">{state.pile.length}</span> in the pile{buying && !compact ? ` · ${coarse() ? 'tap' : 'click'} a member to recruit` : ''}</small></h2>
       <div className="shop">
         {state.shop.map(uid => {
           const d = cardDef(state, uid);
@@ -79,10 +79,28 @@ function ShopStrip({ state, me, optionFor, onPick, onDenied }) {
   const box = useRef(null);
   const turn = state.pending ? `${state.round}:${state.pending.player}` : '';
   useEffect(() => { if (box.current) box.current.scrollLeft = 0; }, [turn]);
+  // a strip wider than the screen says so: page dots under it and a fade on the side with more
+  const [pager, setPager] = useState({ over: false, at: 0, end: true });
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return undefined;
+    const check = () => {
+      const over = el.scrollWidth - el.clientWidth > 4;
+      const kids = [...el.children];
+      const at = Math.max(0, kids.findIndex(k => k.offsetLeft + k.offsetWidth / 2 >= el.scrollLeft + 4));
+      setPager(p => { const n = { over, at, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 }; return p.over === n.over && p.at === n.at && p.end === n.end ? p : n; });
+    };
+    check();
+    el.addEventListener('scroll', check, { passive: true });
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(check) : null;
+    if (ro) ro.observe(el);
+    return () => { el.removeEventListener('scroll', check); if (ro) ro.disconnect(); };
+  }, []);
   const cards = state.shop.map(uid => ({ uid, d: cardDef(state, uid), opt: optionFor(`card:${uid}`) }))
     .sort((a, b) => (!!b.opt - !!a.opt));
   return (
-    <div className="strip" role="group" aria-label="Shop" ref={box}>
+    <>
+    <div className={`strip${pager.over && !pager.end ? ' more-r' : ''}${pager.over && pager.at > 0 ? ' more-l' : ''}`} role="group" aria-label={`Shop, ${cards.length} cards${pager.over ? ', swipe for more' : ''}`} ref={box}>
       {cards.map(({ uid, d, opt }) => {
         const plan = viewer ? paymentPlan(state, viewer, uid) : null;
         return (
@@ -98,9 +116,17 @@ function ShopStrip({ state, me, optionFor, onPick, onDenied }) {
         );
       })}
     </div>
+    {pager.over && (
+      <div className="strip-dots" aria-hidden="true">
+        <span className="strip-hint">{cards.length} cards · swipe</span>
+        {cards.map((c, k) => <i key={c.uid} className={k === pager.at ? 'on' : ''} />)}
+      </div>
+    )}
+    </>
   );
 }
 
+const coarse = () => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 const spendText = v => Object.entries(v).filter(([, n]) => n).map(([c, n]) => `${n} ${c}`).join(', ');
 
 export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {

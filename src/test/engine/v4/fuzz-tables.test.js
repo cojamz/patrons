@@ -48,9 +48,10 @@ export function makeTables(seed = 4242, minPairs = 2) {
 const CLEAN_KEYS = new Set(['uid', 'def']);
 const total = res => Object.values(res).reduce((a, b) => a + b, 0);
 
-function fail(msg, s, ctx) { throw new Error(`${ctx}: ${msg} (round ${s.round}, move ${s.moves})`); }
+function failHard(msg, s, ctx) { throw new Error(`${ctx}: ${msg} (round ${s.round}, move ${s.moves})`); }
+const fail = failHard;
 
-function checkSphereInvariants(s, prev, ctx, verified) {
+function checkSphereInvariants(s, prev, ctx, verified, fail = failHard) {
   // limited follower stock never negative
   for (const t of TIERS) if (t.limited && (s.stock?.[t.key] ?? 0) < 0) fail(`stock ${t.key} ${s.stock[t.key]}`, s, ctx);
   // per-card state never negative
@@ -114,7 +115,7 @@ const pickers = {
 };
 
 /** Play one game on a table, checking everything after every move. Returns { state, moves, stats }. */
-export function runTable({ quadrants, n, seed, kind, deep = false }) {
+export function runTable({ quadrants, n, seed, kind, deep = false, soft = null }) {
   const ctx = `[${quadrants.join(',')}] ${kind} n=${n} seed=${seed}`;
   const rand = seededRandom(seed * 7919 + n * 31 + kind.length);
   const pick = pickers[kind](rand);
@@ -123,7 +124,7 @@ export function runTable({ quadrants, n, seed, kind, deep = false }) {
   const verified = new Set();
   const stats = { kinds: new Set(), optionKinds: new Set(), extraTurns: 0, copies: 0, thefts: 0 };
   checkInvariants(s, ctx);
-  checkSphereInvariants(s, null, ctx, verified);
+  checkSphereInvariants(s, null, ctx, verified, soft || failHard);
   while (s.pending) {
     if (moves.length >= MOVE_CAP) fail(`no end after ${moves.length} moves`, s, ctx);
     const m = pick(s);
@@ -142,7 +143,7 @@ export function runTable({ quadrants, n, seed, kind, deep = false }) {
     try { next = applyMove(s, m); } catch (err) { fail(`applyMove threw on ${JSON.stringify(m)}: ${err.stack}`, s, ctx); }
     if (deep && JSON.stringify(s) !== before) fail(`applyMove mutated its input on ${JSON.stringify(m)}`, s, ctx);
     checkInvariants(next, ctx);
-    checkSphereInvariants(next, s, ctx, verified);
+    checkSphereInvariants(next, s, ctx, verified, soft || failHard);
     moves.push(m);
     s = next;
   }

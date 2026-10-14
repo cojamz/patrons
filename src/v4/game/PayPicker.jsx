@@ -4,9 +4,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { cardDef, TIERS } from '../../engine/v4/index.js';
 import { costParts, tierCostText } from '../format.js';
-import { useDialog } from './parts.jsx';
+import { useDialog, TurnOf } from './parts.jsx';
 
-export default function PayPicker({ state, onPick, busy }) {
+export default function PayPicker({ state, onPick, busy, turnOf = null }) {
   const pend = state.pending;
   const p = state.players[pend.player];
   const res = state.resources;
@@ -33,6 +33,7 @@ export default function PayPicker({ state, onPick, busy }) {
     <div className="overlay sheet" role="dialog" aria-modal="true" aria-label={title}>
       <div className="dialog pay" ref={box} onKeyDown={e => { if (e.key === 'Enter' && match && !busy) { e.preventDefault(); onPick(match.id); } }} style={def ? { '--c': `var(--${def.quadrant})` } : undefined}>
         <div className="pay-head">
+          {turnOf && <TurnOf player={turnOf} />}
           <h2>{title}</h2>
           {def && <span className="ability">{def.text} <span className="num star">{def.f}★</span></span>}
           <span className="hint">Costs {costLine}</span>

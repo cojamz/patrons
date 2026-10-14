@@ -55,7 +55,12 @@ function withUnits(label, prompt, colors = ['gold', 'red', 'blue', 'green']) {
   return `${m[1]} · ${m[2]}${unit ? ` ${unit.toLowerCase()}` : ''}`;
 }
 
-export function ChoicePrompt({ state, onPick, busy }) {
+/** "Ana's turn": the hand-over, folded into the header of the choice that opens the turn. */
+export function TurnOf({ player }) {
+  return <p className="turn-of" style={{ '--pc': playerColor(player.id) }}><i />{player.name}’s turn<span> · pass the device</span></p>;
+}
+
+export function ChoicePrompt({ state, onPick, busy, turnOf = null }) {
   const pend = state.pending;
   const setup = pend.kind === 'setup';
   const box = useRef(null);
@@ -72,6 +77,7 @@ export function ChoicePrompt({ state, onPick, busy }) {
   const pick = (id, mode) => onPick(id, mode); // step changes are guarded by the table's input lock
   return (
     <section className={`prompt choice${setup ? ' setup' : ''}`} aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}>
+      {turnOf && <TurnOf player={turnOf} />}
       <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `Pick a starting resource${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] ? ` (${pend.prompt.match(/\((\d) of 2\)/)[1]} of 2)` : ''}` : pend.prompt}</p>
       {setup ? <SetupTokens state={state} pend={pend} onPick={pick} busy={busy} />
         : trade ? <TradePicker state={state} pend={pend} onPick={pick} busy={busy} />

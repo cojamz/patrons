@@ -1168,6 +1168,22 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 .no-members{font-size:12px;color:var(--muted);font-style:italic;opacity:.75}
 .app.game .players .pl:has(.chips.none) .lane:empty{display:none}
 
+/* shop strip on phones: page dots + "N cards · swipe", and a fade on whichever side has more */
+.strip-dots{grid-column:1 / -1;display:flex;align-items:center;justify-content:center;gap:5px;margin-top:-2px;min-height:12px}
+.strip-dots i{width:6px;height:6px;border-radius:50%;background:var(--rim)}
+.strip-dots i.on{background:var(--ink)}
+.strip-dots .strip-hint{font-size:11px;color:var(--muted);margin-right:6px}
+.strip.more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent)}
+.strip.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 36px),transparent)}
+.strip.more-l:not(.more-r){-webkit-mask-image:linear-gradient(90deg,transparent,#000 24px);mask-image:linear-gradient(90deg,transparent,#000 24px)}
+@media (max-width:520px){ .app.game.buying .fbuy.live .strip-dots{order:-1} }
+
+@media (max-width:520px){ .undo-row.undo-hold{min-height:44px;margin:2px 0;width:0;padding:0} }
+
+.turn-of{display:flex;align-items:center;gap:7px;margin:0 0 4px;font-weight:700;color:var(--pc);font-size:15px}
+.turn-of i{width:12px;height:12px;border-radius:50%;background:var(--pc);box-shadow:0 0 10px var(--pc)}
+.turn-of span{color:var(--muted);font-weight:400;font-size:13px}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
