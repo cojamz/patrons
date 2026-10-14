@@ -5,10 +5,11 @@
 // fresh placement wears a dashed ring. Each quadrant's contest sits on a rim plaque (rule, prize, leader), with the
 // standings on hover/tap. Hover or focus (mouse) or a first tap (touch) shows a space's card; on touch, placing takes
 // a second tap.
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { quadrant, roman, RING_VALUE } from '../../engine/v4/index.js';
 import { playerColor, standings, seatEmoji } from '../format.js';
-import { Minion, Leader } from '../art/Leader.jsx';
+import { Minion } from '../art/Leader.jsx';
+import { emojiArt } from '../art/emojis.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { sheetMode } from './parts.jsx';
@@ -269,6 +270,14 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     return { text, half, top: Math.abs(norm(qCenter(q) + rot)) < 90 };
   };
   const rimAnchor = qid => stage.current && stage.current.querySelector(`[data-plaque="${qid}"]`);
+  // the engraved text's real length, so text + emoji sit centred on the rim (measured once it's drawn)
+  const [rimW, setRimW] = useState({});
+  useLayoutEffect(() => {
+    if (!stage.current) return;
+    const next = {};
+    stage.current.querySelectorAll('[data-rim-text]').forEach(t => { try { const tp = t.querySelector('textPath'); next[t.dataset.rimText] = (tp && tp.getComputedTextLength ? tp.getComputedTextLength() : 0) || 0; } catch { /* jsdom */ } });
+    if (Object.keys(next).some(k => next[k] && Math.abs((rimW[k] || 0) - next[k]) > 0.5)) setRimW(next);
+  });
   // the printed paper wheel: quadrant inks, ring bands (closed rings carved and dim), seams, the dark hub
   const paper = [];
   state.quadrants.forEach((qid, q) => {
@@ -279,20 +288,52 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
       paper.push(<path key={`b${q}${t}`} className={`band${open ? ' open' : ''}${t === paying ? ' pays' : ''}`} d={arc(a0, a1, R.r0, R.r1)} fill={col} fillOpacity={open ? (t === 1 ? 0.26 : 0.2) : 0.05} />);
     });
     paper.push(<path key={`rim${q}`} className={`rim${lampQid === qid ? ' lit' : lampQid ? ' wait' : ''}`} d={arc(a0, a1, RIM.r0, RIM.r1)} fill={col} fillOpacity=".88" />);
-    // the quadrant's rule, engraved along its rim, upright wherever the wheel is turned
+    // the quadrant's rule, engraved along its rim, upright wherever the wheel is turned, with whoever leads it as
+    // their pixel emoji inline at the end of the line, on the same arc and baseline: "MOST BLUE · +2 · 🐱"
     const lab = rimLabel(qid, q);
-    paper.push(<path key={`ra${q}`} id={`rim-arc-${q}`} d={textArc(c, lab.half, lab.top ? RIM.r - 3.4 : RIM.r + 3.4, rot)} fill="none" />);
+    const st = stdById[qid];
+    const leaders = st && st.leaders.length ? st.leaders : [];
+    const arcHalf = 44; // the path the text runs on (wider than any label)
+    const rr = lab.top ? RIM.r - 3.6 : RIM.r + 3.6;
+    const arcLen = (2 * arcHalf * Math.PI / 180) * rr;
+    const textW = rimW[q] || lab.text.length * RIM_FONT * 0.66;
+    const EM = RIM_FONT * 1.55; // one emoji's room on the line
+    const tail = leaders.length ? RIM_FONT * 0.9 + leaders.length * EM : 0;
+    const startS = Math.max(0, (arcLen - textW - tail) / 2);
+    paper.push(<path key={`ra${q}`} id={`rim-arc-${q}`} d={textArc(c, arcHalf, rr, rot)} fill="none" />);
+    const lit = lampQid === qid ? ' lit' : lampQid ? ' wait' : '';
     paper.push(
-      <text key={`rt${q}`} className={`rim-rule${lampQid === qid ? ' lit' : lampQid ? ' wait' : ''}`} fontSize={RIM_FONT}>
-        <textPath href={`#rim-arc-${q}`} startOffset="50%" textAnchor="middle">{lab.text}</textPath>
+      <text key={`rt${q}`} className={`rim-rule${lit}`} fontSize={RIM_FONT} data-plaque={qid} data-rim-text={q}>
+        <textPath href={`#rim-arc-${q}`} startOffset={startS.toFixed(1)}>{lab.text}{leaders.length ? '  ·' : ''}</textPath>
       </text>,
     );
+    // each leader's emoji, placed along the same arc right after the text, upright like the letters
+    leaders.forEach((id, k) => {
+      const art = emojiArt(seatEmoji(state, id));
+      if (!art) return;
+      const sAt = startS + textW + RIM_FONT * 0.9 + k * EM + EM / 2;
+      const deg = (sAt / rr) * 180 / Math.PI;
+      const a = lab.top ? c - arcHalf + deg : c + arcHalf - deg;
+      const [ex, ey] = polar(a, rr);
+      const cap = RIM_FONT * 1.7; // the emoji art has a margin: this reads at cap height
+      paper.push(
+        <g key={`re${q}-${id}`} className={`rim-emoji${lit}`} data-rim-leader={id} transform={`translate(${ex.toFixed(2)} ${ey.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap * 0.82).toFixed(2)}) scale(${(cap / art.size).toFixed(4)})`}>
+          <title>{`${state.players[id].name} leads`}</title>
+          {art.rects.map((r, j) => <rect key={j} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
+        </g>,
+      );
+    });
     // the whole rim of a quadrant is its hover target: the standings
     paper.push(
       <path key={`rh${q}`} className="rim-hit" d={arc(a0 + 1, a1 - 1, RIM.r0 - 2, RIM.r1 + 4)} data-rim={qid}
+        role="button" tabIndex={0} aria-haspopup="dialog"
+        aria-label={`${st ? st.label : quadrant(qid).scoring.label}: +${RING_VALUE[paying - 1]} at round end${leaders.length ? `; ${leaders.map(id => (id === meId ? 'you' : state.players[id].name)).join(' & ')} ${leaders.length > 1 ? 'lead' : 'leads'}` : '; no one yet'}. Show the standings.`}
         onPointerEnter={e => { if (hover && realHover(e)) hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget); }}
         onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onPlaqueHover(qid, null); }}
-        onClick={e => { e.stopPropagation(); if (hover) hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget, { pinned: true }); }} />,
+        onClick={e => { e.stopPropagation(); if (hover) hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget, { pinned: true }); }}
+        onKeyDown={e => { if (hover && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget, { pinned: true }); } }}>
+        <title>{`${st ? st.label : quadrant(qid).scoring.label}: +${RING_VALUE[paying - 1]} at round end. Show the standings.`}</title>
+      </path>,
     );
   });
   for (const r of [RIM.r0, RING[1].r0, RING[2].r0, RING[3].r0]) paper.push(<circle key={`c${r}`} cx={CX} cy={CY} r={r} fill="none" className="ring-line" />);
@@ -355,31 +396,6 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     );
   }), [state, rot, legalKey, flashKey, recentKey, pinnedKey, round]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // beside each engraved rule, the cult leader(s) who'd take it if the round ended now (none: a faint dash); this is
-  // also the anchor the standings card and the Reckoning's prize fly from
-  const plaques = state.quadrants.map((qid, q) => {
-    const lab = rimLabel(qid, q);
-    const ang = qCenter(q) + (lab.top ? 1 : -1) * (lab.half + 6);
-    const [X, Y] = turned(...polar(ang, RIM.r));
-    const st = stdById[qid];
-    const leaders = st ? st.leaders : [];
-    return (
-      <span key={`pl${qid}`} className={`plaque rim-lead${lampQid === qid ? ' lit' : lampQid ? ' wait' : ''}`} data-plaque={qid} style={{ ...at(X, Y), '--c': `var(--${qid})` }}
-        role="button" tabIndex={0} aria-haspopup="dialog"
-        title={`${st ? st.label : quadrant(qid).scoring.label}: +${RING_VALUE[paying - 1]} at round end${leaders.length ? `; ${leaders.map(id => (id === meId ? 'you' : state.players[id].name)).join(' & ')} ${leaders.length > 1 ? 'lead' : 'leads'}` : '; no one yet'}. Show the standings.`}
-        onPointerEnter={e => { if (hover && realHover(e)) hover.onPlaqueHover(qid, e.currentTarget); }}
-        onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onPlaqueHover(qid, null); }}
-        onClick={e => { if (hover) hover.onPlaqueHover(qid, e.currentTarget, { pinned: true }); }}
-        onKeyDown={e => { if (hover && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); hover.onPlaqueHover(qid, e.currentTarget, { pinned: true }); } }}>
-        {leaders.length
-          ? leaders.slice(0, 2).map(id => (
-            <span key={id} className="who"><Leader color={playerColor(id)} emoji={seatEmoji(state, id)} size={20} /><small>{id === meId ? 'You' : state.players[id].name}</small></span>
-          ))
-          : <i className="none" aria-hidden="true" />}
-      </span>
-    );
-  });
-
   return (
     <div className="wheel-wrap">
       <div className="stage" ref={stage} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ '--wheel-px': `${Math.round(boardPx)}px` }}>
@@ -397,7 +413,6 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
           <span className="pips" aria-hidden="true">{[1, 2, 3].map(i => <i key={i} className={i <= state.round ? 'on' : ''} />)}</span>
         </div>
         {sockets}
-        {plaques}
         {caption && <div key={caption.n} className="caption" style={{ '--pc': playerColor(caption.pid) }} role="status"><i />{caption.text}</div>}
       </div>
     </div>

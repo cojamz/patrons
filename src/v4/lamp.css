@@ -195,16 +195,19 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-prompt .pr-actions .rel-list{display:inline-flex;flex-wrap:wrap;gap:6px}
 .lt-prompt .pr-actions .rel{min-height:36px;border-color:color-mix(in srgb,var(--c,var(--rim)) 70%,transparent)}
 /* placed minions stand on the space's rim (the space still reads); a joiner beside the owner */
-.lt .stage .slot .worker-fig{position:absolute;left:auto;right:-14%;top:-14%;width:auto;transform:none;display:flex;gap:1px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));pointer-events:none;z-index:3}
+.lt .stage .slot .worker-fig{position:absolute;left:50%;right:auto;top:8%;width:auto;transform:translateX(-50%);display:flex;gap:1px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45));pointer-events:none;z-index:3}
 .lt .stage .slot .worker-fig .worker{display:block;line-height:0}
-.lt .stage .slot .worker-fig svg{width:clamp(16px, calc(var(--wheel-px) * .04), 24px);height:auto;image-rendering:pixelated}
-.lt .stage .slot.taken .face{opacity:.62}
+.lt .stage .slot .worker-fig svg{width:clamp(18px, calc(var(--wheel-px) * .05), 26px);height:auto;image-rendering:pixelated}
+/* a placed minion stands ON the space, over its picture; the name and effect still read beneath it */
+.lt .stage .slot.taken .face{opacity:1}
+.lt .stage .slot.taken .face .ico{visibility:hidden}
+.lt .stage .slot.r2.taken .worker-fig,.lt .stage .slot.r3.taken .worker-fig{top:4%}
 .lt .stage .slot .hit{width:max(140%, 46px)}
 
 .lt-prompt .status .say{font-size:clamp(18px, 1.75vw, 24px)}
 
 /* the question's first letter keeps its overhang (the line clamp clips at the box edge) */
-.lt-prompt .status .say .say-text{padding-left:6px;margin-left:-6px;padding-right:2px}
+.lt-prompt .status .say .say-text{padding-left:5px;padding-right:2px}
 .lt-menu .record-text{width:100%;min-height:110px;background:var(--walnut);color:var(--cream);border:1px solid rgba(243,230,200,.2);border-radius:8px;font:12px ui-monospace,monospace}
 /* a minion in flight: its own sprite, crisp, with a shadow that says it's in the air */
 .minion-flight svg{display:block;width:100%;height:100%;image-rendering:pixelated;filter:drop-shadow(0 8px 6px rgba(0,0,0,.45))}
@@ -235,10 +238,6 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage svg.wheel-paper .rim-rule.wait{opacity:.5}
 .lt .stage svg.wheel-paper .rim-rule.lit{fill:#fffdf6}
 .lt .stage svg.wheel-paper .rim-hit{fill:transparent;cursor:help;pointer-events:all}
-.lt .stage .rim-lead{position:absolute;transform:translate(-50%,-50%);z-index:5;display:inline-flex;gap:1px;align-items:center;justify-content:center;min-width:22px;min-height:22px;border-radius:50%;cursor:help;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
-.lt .stage .rim-lead .none{width:6px;height:6px;border-radius:50%;background:rgba(255,249,236,.6)}
-.lt .stage .rim-lead svg{image-rendering:pixelated}
-.lt .stage .rim-lead.lit{filter:drop-shadow(0 0 6px var(--lamp-ink)) drop-shadow(0 0 14px rgba(var(--lamp),.8));transform:translate(-50%,-50%) scale(1.25);transition:transform .25s}
 /* spaces: the action's picture first, then its name and effect */
 .lt .stage .slot .face{gap:0}
 .lt .stage .slot .face .ico{line-height:0;margin-top:-2px}
@@ -249,9 +248,6 @@ h1,h2,h3{font-family:var(--serif)}
 /* the chairs: yours only a little larger than the rivals' (same layout) */
 @media (min-width:861px) and (min-height:500px){ .lt > .lt-seat-0 > .lt-cult-seat{zoom:1.15} }
 
-.lt .stage .rim-lead{border-radius:12px;gap:4px}
-.lt .stage .rim-lead .who{display:inline-flex;align-items:center;gap:3px}
-.lt .stage .rim-lead .who small{font-family:var(--serif);font-weight:700;font-size:12px;color:var(--cream);text-shadow:0 1px 2px rgba(0,0,0,.7);white-space:nowrap}
 /* the chairs carry no box of their own: the cult sits on the walnut (yours a little larger) */
 @media (min-width:861px) and (min-height:500px){
   .lt > .lt-seat{background:none;box-shadow:none;padding:0;overflow:visible}
@@ -274,3 +270,9 @@ h1,h2,h3{font-family:var(--serif)}
 @keyframes tcline{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .turn-card.folding{transform:scale(.15);opacity:0}
 @media (max-width:860px), (max-height:499px){ .turn-card{max-width:calc(100vw - 24px)} }
+
+/* the leader's emoji inline on the engraved rim line; lit with the label during the Reckoning */
+.lt .stage svg.wheel-paper .rim-emoji{pointer-events:none;filter:drop-shadow(0 .4px .4px rgba(42,31,23,.35))}
+.lt .stage svg.wheel-paper .rim-emoji.wait{opacity:.5}
+.lt .stage svg.wheel-paper .rim-rule.lit{filter:drop-shadow(0 0 3px rgba(var(--lamp),.95))}
+.lt .stage svg.wheel-paper .rim.lit{fill-opacity:1;filter:drop-shadow(0 0 6px rgba(var(--lamp),.9))}
