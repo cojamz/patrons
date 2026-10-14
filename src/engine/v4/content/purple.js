@@ -102,6 +102,8 @@ function contestWorth(ctx, p, n) {
   const v = (RING_FOLLOWERS[ctx.state.round - 1] || 2) * 1.5;
   return n > top ? v * 0.8 : n === top ? v * 0.5 : 0;
 }
+// EXPLORE (remove): PURPLE_REST=flat:N or round:N
+const restGain = ctx => { const v = (globalThis.process?.env?.PURPLE_REST || 'flat:3').split(':'); return v[0] === 'round' ? Number(v[1]) * ctx.state.round : Number(v[1]); };
 const restSwing = (ctx, p) => (hasNextTurn(ctx, p)
   ? contestWorth(ctx, p, restingOf(ctx, p) + 1) - contestWorth(ctx, p, restingOf(ctx, p)) - turnValue(ctx)
   : 0);
@@ -115,8 +117,8 @@ export default {
   actions: [
     {
       key: 'rest', ring: 1, name: 'Rest', text: '+3 purple. Skip your next turn this round; that worker rests.',
-      estimate: (ctx, p) => 3 + restSwing(ctx, p),
-      resolve(ctx, p) { ctx.gain(p, P, 3, { fromAction: true }); restNext(ctx, p); },
+      estimate: (ctx, p) => restGain(ctx) + restSwing(ctx, p),
+      resolve(ctx, p) { ctx.gain(p, P, restGain(ctx), { fromAction: true }); restNext(ctx, p); },
     },
     {
       key: 'doze', ring: 1, name: 'Doze', text: '+2 purple, and +2 more per resting worker you have.',

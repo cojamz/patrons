@@ -72,34 +72,37 @@ describe('Blue scoring: most member value (printed cost), blue members break tie
 });
 
 describe('Blue actions', () => {
-  it('Bargain: recruit a face-up member now, its whole cost in any colors; your buy is still to come', () => {
+  it('Bargain: recruit a face-up member now for 2 less, in any colors; your buy is still to come', () => {
     let s = take(scene({ res: [{ red: 5, blue: 2 }], shop: SHOP }), 'Bargain');
     expect(s.pending.kind).toBe('choose');
-    expect(ids(s)).toContain(card(s, 'gold.midas')); // 5, no gold needed
-    s = move(s, card(s, 'gold.midas'));
-    s = move(s, 'pay:0-5-0-0');
+    s = move(s, card(s, 'gold.midas')); // 5 → 3, no gold needed
+    expect(s.pending.prompt).toContain('how do you pay 3');
+    s = move(s, 'pay:0-3-0-0');
     expect(has(s, 'gold.midas')).toBe(true);
-    expect(R(s)).toEqual({ ...Z, blue: 2 });
+    expect(R(s)).toEqual({ ...Z, red: 2, blue: 2 });
     expect(s.pending.kind).toBe('buy'); // the normal buy is still to come
-    const t = take(scene({ res: [{ red: 5 }], shop: SHOP }), 'Bargain');
-    expect(ids(t)).not.toContain(card(t, 'gold.jackpot')); // 6 is too much
+    const t = take(scene({ res: [{ red: 3 }], shop: SHOP }), 'Bargain');
+    expect(ids(t)).toContain(card(t, 'gold.midas'));
+    expect(ids(t)).not.toContain(card(t, 'gold.jackpot')); // 6 → 4 is too much
   });
-  it('Bargain: you choose how to pay when there is a choice, and may recruit nothing', () => {
+  it('Bargain: you choose how to pay, may recruit nothing, and a 2-cost member is free', () => {
     let s = take(scene({ res: [{ red: 3, gold: 3 }], shop: SHOP }), 'Bargain');
-    s = move(s, card(s, 'gold.tycoon')); // 4
-    expect(s.pending.prompt).toContain('how do you pay 4');
-    expect(s.pending.options[0].id).toBe('pay:1-3-0-0'); // default spends red before gold
-    s = move(s, 'pay:3-1-0-0');
-    expect(R(s)).toEqual({ ...Z, red: 2 });
+    s = move(s, card(s, 'gold.tycoon')); // 4 → 2
+    expect(s.pending.options[0].id).toBe('pay:0-2-0-0'); // default spends red before gold
+    s = move(s, 'pay:2-0-0-0');
+    expect(R(s)).toEqual({ ...Z, red: 3, gold: 1 });
     let t = take(scene({ res: [{ red: 5 }], shop: SHOP }), 'Bargain');
     t = move(t, 'none');
     expect(t.players[0].members).toEqual([]);
     expect(R(t).red).toBe(5);
+    let u = take(scene({ shop: CHEAP }), 'Bargain');
+    u = move(u, card(u, 'red.twins'));
+    expect(has(u, 'red.twins')).toBe(true);
   });
-  it('Bargain: with nothing affordable, it just passes to your buy', () => {
-    const s = take(scene({ res: [{ red: 2 }], shop: SHOP }), 'Bargain');
-    expect(s.pending.kind).toBe('buy');
-    expect(ids(s)).toContain('tier:small');
+  it('Bargain: with nothing affordable, nothing happens', () => {
+    const s = take(scene({ res: [{ red: 1 }], shop: SHOP }), 'Bargain');
+    expect(s.players[0].members).toEqual([]);
+    expect(s.log.join('\n')).toContain("Bargain: P1 can't pay for anything.");
   });
   it('Restock: +2 blue and six new members; the old row goes to the bottom of the pile', () => {
     const s0 = scene({ shop: SHOP });
@@ -143,7 +146,7 @@ describe('Blue actions', () => {
     expect(s.players[0].bonus).toBe(6);
   });
   it('Free recruits from Bargain trigger recruit hooks (Recruiter pays)', () => {
-    let s = take(scene({ res: [{ green: 5 }], members: [['red.recruiter']], shop: SHOP }), 'Bargain');
+    let s = take(scene({ res: [{ green: 3 }], members: [['red.recruiter']], shop: SHOP }), 'Bargain');
     s = move(s, card(s, 'gold.midas'));
     expect(R(s).red).toBe(1);
   });
