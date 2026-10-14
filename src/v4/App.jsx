@@ -1,8 +1,7 @@
 // Patrons v4 app shell: Home → Local setup / Online lobby → Game → Results.
 // Local games save on every change and can be resumed; online seats are rejoined after a reload.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import './v4.css';
-import './lamp.css';
+import './app.css'; // v4.css then lamp.css, inlined in that order (see app.css)
 import { createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineReady } from './sessionApi.js';
 import { createLocalSession } from './session/local.js';
 import { loadLocal, saveLocal, clearLocal, finishLocal, loadOnline, saveOnline, clearOnline, rememberRoom, roomIds, lastRoomCode } from './saved.js';

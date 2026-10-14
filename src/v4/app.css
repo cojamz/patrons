@@ -1,0 +1,6 @@
+/* The game's stylesheet, in its one order: the base (v4.css), then the Lamplit Table (lamp.css) over it.
+   One file on purpose: when lamp.css is also imported elsewhere (the intro lab), the bundler moves it into a shared
+   chunk that loads before App's own CSS, and v4.css then wins over it (the walnut and the wheel's layout vanish).
+   Inlined here, App's copy always comes after v4.css. */
+@import './v4.css';
+@import './lamp.css';
