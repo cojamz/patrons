@@ -202,3 +202,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Black scoring is 'most Black members' for now (not most black, which copied Gold's contest).
 - ✅ (Cory) The thieves sphere's color is magenta, not black (black was hard to see on the table).
 - 💡 (Cory) Many spheres feel same-y; we're missing something in the design space. The atoms are spaces/workers, currencies, members, followers. Claude's read: almost everything pays out in currency, colors have no distinct job, and each atom has one fixed rule. Levers pitched: give each color a job (Claude's pick), members that bend your rules, workers/spaces with more than one rule. Awaiting Cory.
+- ✅ (Cory) Design direction: members that bend the rules (not new income). Calibrate on a handful of example members with Cory before scaling.

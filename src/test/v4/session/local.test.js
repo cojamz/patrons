@@ -65,8 +65,10 @@ const expectUndo = (before, move, after, humans) => {
   // a placement: while it's still the placer's decision
   if (k === 'place') return !!(after.pending && after.pending.player === move.player && after.pending.kind !== 'place');
   // a completed purchase: until anyone moves next (paid at once, or after choosing how to pay)
-  if (k === 'buy') return /^(card|tier):/.test(move.option) && !(after.pending && after.pending.kind === 'pay');
-  if (k === 'pay') return move.option !== 'back';
+  // ...but never once the device passes to another person
+  const handedOff = !!(after.pending && after.pending.player !== move.player && humans.includes(after.pending.player));
+  if (k === 'buy') return /^(card|tier):/.test(move.option) && !(after.pending && after.pending.kind === 'pay') && !handedOff;
+  if (k === 'pay') return move.option !== 'back' && !handedOff;
   return false;
 };
 
@@ -130,8 +132,9 @@ describe('local session: undo', () => {
           if (s.getState().pending?.kind === 'pay') await s.submit({ option: s.getState().pending.options.find(o => o.default).id });
           bought = true;
           const after = s.getState();
-          if (after.over || after.round !== st.round) {
-            // a buy that ends the round (or game) can't be taken back
+          const handedOff = after.pending && after.pending.player !== pre.pending.player; // both seats are people here
+          if (after.over || after.round !== st.round || handedOff) {
+            // a buy that ends the round (or game), or that hands the device on, can't be taken back
             expect(s.undoKind).toBe(null);
           } else {
             expect(s.undoKind).toBe('buy');
@@ -289,5 +292,29 @@ describe('local session: resume', () => {
     b.undo();
     expect(b.getState()).toEqual(saved);
     b.destroy();
+  });
+});
+
+describe('local session: undo never crosses a hand-off', () => {
+  it("after P1 buys and the device passes to another person, nobody can undo P1's buy", async () => {
+    let checked = 0;
+    for (let seed = 1; seed < 80 && checked < 3; seed++) {
+      const s = createLocalSession({ seats: [{ name: 'P1' }, { name: 'Ana' }], seed, botDelayMs: 0 });
+      for (let i = 0; i < 400 && !s.getState().over; i++) {
+        const st = s.getState();
+        const m = chooseBotMove(st);
+        await s.submit(m);
+        const now = s.getState();
+        const boughtThenHandedOff = (st.pending.kind === 'buy' || st.pending.kind === 'pay') && /^(card|tier|pay):/.test(m.option)
+          && now.pending && now.pending.player !== m.player && !(now.pending.kind === 'pay');
+        if (boughtThenHandedOff) {
+          checked++;
+          expect(s.canUndo()).toBe(false);
+          expect(s.undo()).toBe(false);
+        }
+      }
+      s.destroy();
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 });

@@ -17,19 +17,23 @@ function Cost({ d, plan }) {
   return (
     <span className="cost-box">
       <span>{parts.length ? dots(parts) : 'free'}</span>
-      {differs && <span className="youd">you’d pay {payText}</span>}
+      {differs && <span className="youd">{payText === 'free' ? 'free for you' : `you’d pay ${payText}`}</span>}
     </span>
   );
 }
 
-export default function Shop({ state, me, mine, optionFor, onPick, onDenied }) {
+/**
+ * The shop. variant 'compact': a fixed row under the board (full names on two lines, ★ and list cost; the ability
+ * on hover). 'full': the readable buy view (abilities in full, what you'd pay, an afford tag).
+ */
+export default function Shop({ state, me, mine, optionFor, onPick, onDenied, variant = 'full', hidden = false }) {
   const pend = state.pending;
   const buying = mine && pend && pend.kind === 'buy';
   const viewer = me != null ? state.players[me] : null;
-  // Outside your buy the shop is one compact row (name, ★, cost; ability on hover), so the board's actions fit.
+  const compact = variant === 'compact';
   return (
-    <section className={`panel shop-panel${buying ? ' open' : ' compact'}`}>
-      <h2>Shop<small><span className="num">{state.pile.length}</span> in the pile{buying ? ' · tap a member to recruit' : ''}</small></h2>
+    <section className={`panel shop-panel ${compact ? 'compact' : 'open'}`} aria-hidden={hidden || undefined} style={hidden ? { visibility: 'hidden' } : undefined}>
+      <h2>Shop<small><span className="num">{state.pile.length}</span> in the pile{buying && !compact ? ' · tap a member to recruit' : ''}</small></h2>
       <div className="shop">
         {state.shop.map(uid => {
           const d = cardDef(state, uid);
@@ -38,22 +42,23 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied }) {
           return (
             <button
               key={uid} data-uid={uid} type="button" className={`card${opt ? ' can' : ''}${buying && !opt ? ' cant' : ''}`}
-              style={{ '--c': `var(--${d.quadrant})` }} data-option={opt ? opt.id : undefined}
+              style={{ '--c': `var(--${d.quadrant})` }} data-option={opt && !hidden ? opt.id : undefined}
+              tabIndex={hidden ? -1 : undefined}
               aria-disabled={!opt} title={`${d.name} · ${d.f}★ · ${d.text}`}
               onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'card', uid, name: d.name }, e.currentTarget))}
             >
-              <div className="row"><b>{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
-              <span className="eff">{d.text}</span>
+              <div className="row"><b className="nm">{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
+              {!compact && <span className="eff">{d.text}</span>}
               <div className="row cost">
-                <Cost d={d} plan={plan} />
-                {d.n > 1 && <span><span className="num">{d.n}</span> members</span>}
+                <Cost d={d} plan={compact ? null : plan} />
+                {d.n > 1 && !compact && <span><span className="num">{d.n}</span> members</span>}
               </div>
-              <span className={`afford${opt ? '' : ' none'}`} aria-hidden={!opt}>You can afford</span>
+              {!compact && <span className={`afford${opt ? '' : ' none'}`} aria-hidden={!opt}>You can afford</span>}
             </button>
           );
         })}
       </div>
-      {state.endEarly && !state.over && <p className="hint warn">The last +6 is gone — the game ends after this round.</p>}
+      {state.endEarly && !state.over && !compact && <p className="hint warn">The last +6 is gone — the game ends after this round.</p>}
     </section>
   );
 }
@@ -106,14 +111,11 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
             title={`Buy ${t.get} follower${t.get > 1 ? 's' : ''} for ${tierCostText(t)}`}
           >
             <b><span className="num">+{t.get}</span> follower{t.get > 1 ? 's' : ''}</b>
-            <span>{(() => {
-              // Say how it would be paid: one way pays at once; several ways opens the picker.
-              const ways = opt && viewer ? followerChoices(state, viewer, t) : [];
-              if (ways.length === 1) return `pays ${spendText(ways[0])}`;
-              if (ways.length > 1) return `${t.cost} · you choose how`;
-              return t.colors === 1 ? `${t.cost} of anything` : `${t.cost} · ${t.colors}+ colors`;
-            })()}</span>
-            {t.limited && <em className="left-badge num" title={`${state.bigLeft} of these left; the last one ends the game after that round`}>{state.bigLeft} left</em>}
+            <span className="sub">
+              Pay <span className="num">{t.cost}</span> · {t.colors === 1 ? 'any' : `${t.colors}+ colors`}
+              {(() => { const ways = opt && viewer ? followerChoices(state, viewer, t) : []; return ways.length > 1 ? <em className="picks" title="You'll choose how to pay"> ▸</em> : null; })()}
+            </span>
+            {t.limited && <span className="left-line num" title={`${state.bigLeft} of these left; the last one ends the game after that round`}>{state.bigLeft} left</span>}
           </button>
         );
       })}

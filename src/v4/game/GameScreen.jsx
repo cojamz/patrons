@@ -19,6 +19,21 @@ import { friendlyError, isNetworkError } from '../errors.js';
 const STEP_MS = 320;      // pace when catching up on moves that happened behind the round-end card
 const RIVAL_DWELL_MS = 700; // each visible bot step (placing, recruiting, buying) holds this long; a pass doesn't wait
 
+/** Desktop and laptop frame (the side column is a fixed frame) vs phones and tablets (stacked). */
+function useWide() {
+  const q = '(min-width: 861px) and (min-height: 500px)';
+  const get = () => typeof matchMedia === 'function' && matchMedia(q).matches;
+  const [wide, setWide] = useState(get);
+  useEffect(() => {
+    if (typeof matchMedia !== 'function') return undefined;
+    const m = matchMedia(q);
+    const on = () => setWide(m.matches);
+    m.addEventListener ? m.addEventListener('change', on) : m.addListener(on);
+    return () => (m.removeEventListener ? m.removeEventListener('change', on) : m.removeListener(on));
+  }, []);
+  return wide;
+}
+
 export function useSessionState(session) {
   const [state, setState] = useState(() => session.getState());
   useEffect(() => {
@@ -33,6 +48,21 @@ export function useSessionState(session) {
  * (the round-end card) and queues whatever happens next; dismissing it replays the queue at a readable pace,
  * so the first move of the new round happens in front of you.
  */
+// The table at the start of the current round (the round card's "Other" column measures from it). Kept with the game
+// so a reload mid-round doesn't move the baseline to the reload moment.
+const RS_KEY = 'patrons.v4.roundStart';
+export function saveRoundStart(st) {
+  try { localStorage.setItem(RS_KEY, JSON.stringify({ seed: st.seed, round: st.round, names: st.players.map(p => p.name).join('|'), state: st })); } catch { /* ignore */ }
+}
+export function loadRoundStart(st) {
+  try {
+    const v = JSON.parse(localStorage.getItem(RS_KEY) || 'null');
+    if (v && v.seed === st.seed && v.round === st.round && v.names === st.players.map(p => p.name).join('|') && v.state.moves <= st.moves) return v.state;
+  } catch { /* ignore */ }
+  saveRoundStart(st);
+  return null;
+}
+
 function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
   const first = session.getState();
   const [table, setTable] = useState(() => ({ shown: first, moment: null }));
@@ -41,7 +71,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
   const held = useRef(false);
   const timer = useRef(null);
   const shownRef = useRef(first);
-  const roundStart = useRef(first);
+  const roundStart = useRef(loadRoundStart(first) || first);
 
   const show = useCallback(next => {
     const prev = shownRef.current;
@@ -52,11 +82,12 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
       held.current = true;
       const start = roundStart.current;
       roundStart.current = next;
+      saveRoundStart(next);
       // Keep the board as it was when the round was scored until the card is dismissed.
       const board = scoringSnapshot(prev, next);
       setTable({ shown: next, moment: { result: parseRoundEnd(next, end), start, after: next, board } });
     } else {
-      if (next.round !== prev.round) roundStart.current = next;
+      if (next.round !== prev.round) { roundStart.current = next; saveRoundStart(next); }
       setTable(t => ({ ...t, shown: next }));
     }
   }, []);
@@ -156,6 +187,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const [flash, setFlash] = useState(() => new Set());
   const [ready, setReady] = useState(null); // hot-seat: which human seat has been handed the device
   const [rules, setRules] = useState(false);
+  const wide = useWide();
   const [logOpen, setLogOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [note, setNote] = useState(null); // { text, tone, n } — a gentle answer in the status pill
@@ -327,7 +359,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (moment) text = 'Start the round first';
     else if (!mySeats.includes(pend.player)) text = `${who.name} is ${verbFor(pend.kind)} — your turn comes`;
     else if (needHandoff) text = `Hand the device to ${who.name}`;
-    else if (pend.kind === 'choose' || pend.kind === 'setup' || pend.kind === 'pay') text = 'Answer the question first';
+    else if (pend.kind === 'setup') text = 'Pick your starting resources first';
+    else if (pend.kind === 'choose' || pend.kind === 'pay') text = 'Answer the question first';
     else if (info.type === 'slot') {
       // A taken or unopened space explains itself on its own card (wheel) or row (panel); the prompt stays put.
       const owner = state.slots[info.key];
@@ -371,7 +404,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   };
   const meP = me != null ? state.players[me] : null;
   const buyingNow = mine && !needHandoff && pend.kind === 'buy';
-  const undoKind = !needHandoff && !busy && typeof session.canUndo === 'function' && session.canUndo() ? (session.undoKind || 'place') : null;
+  // Undo is offered only to the seat that made the move (in hot-seat, the person holding the device)
+  const holder = humansHere ? (needHandoff ? null : ready) : mySeats[0];
+  const undoKind = !needHandoff && !busy && typeof session.canUndo === 'function' && session.canUndo()
+    && (session.undoSeat == null || session.undoSeat === holder || (!humansHere && mySeats.includes(session.undoSeat))) ? (session.undoKind || 'place') : null;
   const canUndo = !!undoKind && !state.over;
   const undo = () => { const k = undoKind; noLock.current = true; lockUntil.current = 0; if (session.undo && session.undo()) say(k === 'buy' ? 'Buy undone — choose again' : 'Placement undone — place again', 'info', 1800); };
 
@@ -432,16 +468,34 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       ) : (
         <div className="main">
           <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
-          <div className="side">
+          <div className={`side${wide ? ' framed' : ''}`}>
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} />}
-            <Scroller className="side-scroll" hint="More below">
-              <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} />
-              <Log state={state} />
-            </Scroller>
-            <div className="dock">
-              <Shop state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />
-              <BuyTray state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />
-            </div>
+            {wide ? (
+              // A constant frame: the board panel and a compact shop row; your buy view slides over both,
+              // so nothing reflows between placing and buying.
+              <div className="frame">
+                <Scroller className="side-scroll" hint="More below">
+                  <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} />
+                </Scroller>
+                <Shop variant="compact" hidden={buyingNow} state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />
+                {buyingNow && (
+                  <div className="buy-view" role="region" aria-label="Recruit a member">
+                    <Shop variant="full" state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Scroller className="side-scroll" hint="More below">
+                  <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} />
+                  <Log state={state} />
+                </Scroller>
+                <div className="dock">
+                  <Shop variant="full" state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />
+                </div>
+              </>
+            )}
+            <BuyTray state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />
           </div>
         </div>
       )}
