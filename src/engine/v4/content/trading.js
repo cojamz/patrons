@@ -1,11 +1,13 @@
-// White: the exchange. Your followers are liquid: sell them for white when you need fuel, buy them back cheap.
-// Most white at round end takes the ring's followers.
+// White: the exchange. Your followers are liquid: sell them for white when you need fuel, pay for members with
+// them (Barter), buy them back cheap. Most white at round end takes the ring's followers.
 //
 // Rules this module adds:
-// - You can only sell followers you've won or bought (p.bonus). Never yourself, never your members.
-//   So nobody can drop below 1 follower, and nobody sells in round I unless they bought followers first.
+// - You can only sell or spend followers you've won or bought (p.bonus). Never yourself, never your members
+//   (Cory, 2026-10-14). So nobody can drop below 1 follower, and nobody sells in round I unless they bought first.
 // - "Sell" is White's own verb: White members can react to it (onSell), which only White's actions and
-//   members call.
+//   members call. Paying for a member with followers (Barter) isn't a sale: no white changes hands.
+// - One sale price (2026-10-14 rework, Claude under Cory's go-with-your-gut): every sale pays 2 white per
+//   follower. A follower costs 1 to 1.33 resources to buy back (10→10, 4→3), so a higher price was a pump.
 //
 // Engine note (see design/spheres/trading.md):
 // - Actions can't leave anything due later (a loan repaid at game end) because only members have
@@ -23,7 +25,7 @@ const fv = ctx => [1.6, 1.3, 1.2][ctx.state.round - 1] ?? 1.2;
 const lastTurn = (ctx, p) => ctx.state.round === 3 && p.left === 0;
 
 export const SELL_HIGH = { most: 2, each: 3 };
-export const PAWN = { base: 2, each: 2 };
+export const PAWN = { each: 2 }; // Pawn: per round number, +1 follower or this much white
 export const BUY_LOW = { per: 2 }; // up to this many resources per round number, 1 for 1
 export const LIQUIDATE = { most: 5, each: 2 };
 // Boom pays this many followers per resource (experiments try 0.5: 2 resources per follower)
@@ -62,16 +64,14 @@ function sellChoice(ctx, p, prompt, most, each, why) {
   ctx.choose(p, prompt, opts, 'trading.sell', { each, why });
 }
 
-function cashInChoice(ctx, p) {
-  const w = p.res[W];
-  if (!w) { ctx.log(`Cash In: ${p.name} has no white to trade for followers.`); return; }
-  const amounts = [...new Set([0, Math.floor(w / 4), Math.floor(w / 2), Math.floor((3 * w) / 4), w])];
-  ctx.choose(p, `Cash In: trade how much white for followers, 1 for 1? (you have ${w})`, amounts.map(x => ({
-    id: `amount:${x}`, label: x === 0 ? 'None' : x === w ? `All ${x}` : `${x}`, kind: 'amount', value: x,
-    // bots keep white early (it buys members) and cash it late
-    hint: ctx.state.round === 3 ? x : x === Math.floor(w / 2) ? 1 : 0,
-  })), 'trading.cashIn');
-}
+// Barter's price: 1 follower per 2 of the member's printed cost, rounded up (discounts don't apply: no resources
+// are paid).
+const cardCost = c => c.def.s + c.def.w;
+export const barterPrice = c => Math.ceil(cardCost(c) / 2);
+const barterable = (ctx, p) => ctx.shopCards().filter(c => barterPrice(c) <= sellable(p));
+// what a member is worth to a bot by round (its follower, plus an ability that has less time to pay late)
+const memberWorth = (ctx, c) => c.def.f + cardCost(c) * ([1.2, 0.8, 0.3][ctx.state.round - 1] ?? 0.3);
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 const trading = {
   id: 'trading',
@@ -94,11 +94,19 @@ const trading = {
       },
     },
     {
-      key: 'pawn', ring: 1, name: 'Pawn', text: '+2 white, and sell up to 1 follower per round number for 2 white each.',
-      estimate: (ctx, p) => PAWN.base + Math.min(ctx.state.round, sellable(p)) * Math.max(0, PAWN.each - fv(ctx)),
+      // 2026-10-14 rework: was "+2 white, and sell up to 1 follower per round number for 2 white each", whose sale was
+      // dead in round I (only won or bought followers sell). Now an either/or per unit, always live, no sale.
+      key: 'pawn', ring: 1, name: 'Pawn', text: `Per round number: +1 follower or +${PAWN.each} white.`,
+      estimate: ctx => ctx.state.round * Math.max(fv(ctx), PAWN.each),
       resolve(ctx, p) {
-        ctx.gain(p, W, PAWN.base, { fromAction: true });
-        sellChoice(ctx, p, `Pawn: sell how many followers for ${PAWN.each} white each?`, ctx.state.round, PAWN.each, 'pawned');
+        const r = ctx.state.round, v = fv(ctx), late = lastTurn(ctx, p);
+        // amount:k = take k of them as white, the rest as followers
+        ctx.choose(p, `Pawn: ${plural(r, 'follower')}, or ${PAWN.each} white instead of each?`, Array.from({ length: r + 1 }, (_, k) => ({
+          id: `amount:${k}`, kind: 'amount', value: k,
+          label: [r - k ? `+${plural(r - k, 'follower')}` : '', k ? `+${PAWN.each * k} white` : ''].filter(Boolean).join(', '),
+          // bots take white while it still builds, and followers on their last turn
+          hint: late ? -k : k * (PAWN.each - v),
+        })), 'trading.pawn');
       },
     },
     {
@@ -110,12 +118,23 @@ const trading = {
       },
     },
     {
-      key: 'cashin', ring: 2, name: 'Cash In', text: '+1 follower, then trade any of your white for followers, 1 for 1.',
-      estimate: (ctx, p) => fv(ctx) + p.res[W] * (ctx.state.round === 3 ? 0.4 : 0.2),
+      // 2026-10-14 rework: replaces Cash In ("+1 follower, then trade any of your white for followers, 1 for 1"),
+      // which did Magnate's job three times better and closed a sell-high, cash-in-at-par loop.
+      key: 'barter', ring: 2, name: 'Barter', text: 'Recruit a face-up member, paying 1 follower per 2 of its cost, rounded up (only followers you’ve won or bought).',
+      estimate: (ctx, p) => Math.max(0, ...barterable(ctx, p).map(c => memberWorth(ctx, c) - barterPrice(c))),
       resolve(ctx, p) {
-        actionFollowers(ctx, p, 1);
-        ctx.log(`${p.name} cashes in: +1 follower.`);
-        cashInChoice(ctx, p);
+        const ok = barterable(ctx, p);
+        if (!ok.length) {
+          ctx.log(`Barter: ${p.name} has too few followers to pay for any face-up member (only followers you bought or won can be paid).`);
+          return;
+        }
+        ctx.choose(p, `Barter: recruit which member, paid in followers? (you can pay ${sellable(p)})`, [
+          ...ok.map(c => ({
+            id: `card:${c.uid}`, label: `${c.def.name} for ${plural(barterPrice(c), 'follower')}`, kind: 'card', value: c.uid,
+            hint: memberWorth(ctx, c) - barterPrice(c),
+          })),
+          { id: 'none', label: 'Recruit nobody', kind: 'none', value: 'none', hint: 0 },
+        ], 'trading.barter');
       },
     },
     {
@@ -144,13 +163,22 @@ const trading = {
     sell(ctx, p, k, data) { sell(ctx, p, k, data.each, { fromAction: true, why: data.why }); },
     buyLow(ctx, p, value, data) {
       if (value === 'done') return;
-      buyLow(ctx, p, value);
+      buyLow(ctx, p, value, data.done === 0);
       buyLowStep(ctx, p, { left: data.left - 1, done: data.done + 1 });
     },
-    cashIn(ctx, p, x) {
-      if (!x) return;
-      p.res[W] -= x; p.bonus += x;
-      ctx.log(`${p.name} traded ${x} white for ${x} followers.`);
+    pawn(ctx, p, k) {
+      const r = ctx.state.round, white = PAWN.each * k;
+      if (white) ctx.gain(p, W, white, { fromAction: true });
+      actionFollowers(ctx, p, r - k);
+      ctx.log(`${p.name}'s Pawn: ${[r - k ? `+${plural(r - k, 'follower')}` : '', white ? `+${white} white` : ''].filter(Boolean).join(', ')}.`);
+    },
+    barter(ctx, p, uid) {
+      if (uid === 'none') { ctx.log(`Barter: ${p.name} recruited nobody.`); return; }
+      const c = ctx.card(uid), k = barterPrice(c);
+      if (k > sellable(p)) { ctx.log(`Barter: ${p.name} can no longer pay ${plural(k, 'follower')} for ${c.def.name}.`); return; }
+      p.bonus -= k;
+      ctx.log(`${p.name} bartered ${plural(k, 'follower')} for ${c.def.name}.`);
+      ctx.recruit(p, uid, { free: true });
     },
   },
 

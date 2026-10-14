@@ -65,7 +65,7 @@ for (const [label, make] of backends) {
       await be.wait(() => host.lobby.getView().players.length === 1 + names.length + bots, 'everyone seated');
       if (!start) return { host: { t: ht, ...host }, guests };
       const all = [host, ...guests];
-      const [hs, ...gss] = await Promise.all([...all.map(x => started(x.lobby)), host.lobby.start()]);
+      const [hs, ...gss] = (await Promise.all([...all.map(x => started(x.lobby)), host.lobby.start()])).slice(0, all.length);
       guests.forEach((g, i) => { g.s = gss[i]; });
       await be.wait(() => [hs, ...gss].every(s => s.getState()), 'first state everywhere');
       return { host: { t: ht, s: hs, ...host }, guests };
@@ -169,7 +169,7 @@ for (const [label, make] of backends) {
       await host.s.letBotPlay(2);
       await be.wait(() => host.s.info.seats[2].sub && g1.s.info.seats[2].sub, 'everyone sees a bot standing in');
       // the game moves past G2's turns
-      await be.wait(() => host.s.info.version > 1 + v0.moves + 12 && host.s.getState().moves > v0.moves + 12, 'play continues');
+      await be.wait(() => host.s.getState().history.length > v0.history.length + 12 || host.s.getState().over, 'play continues');
       expect(host.s.getState().history.slice(v0.history.length).some(([p]) => p === 2)).toBe(true);
       // G2 is back (same device): the seat is theirs again and the bot stops
       const back = await reopen(host.code, { name: 'G2', knownIds: [g2.playerId] });
@@ -192,7 +192,7 @@ for (const [label, make] of backends) {
       await g2.lobby.leave(); // the in-game Leave button
       await be.wait(() => host.s.info.seats[2].sub === true, 'G2 seat played by a bot');
       // now the host's phone dies: no Leave, the socket just goes
-      await be.wait(() => host.s.getState().moves > 6, 'some moves in');
+      await be.wait(() => host.s.getState().history.length > 6, 'some moves in');
       stops[0]();
       closeTab(host);
       await be.wait(() => g1.lobby.getView().isHost, 'G1 is the new host');
