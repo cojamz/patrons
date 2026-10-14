@@ -182,7 +182,7 @@ export default {
   },
 
   members: [
-    m('lamplighter', 'Lamplighter', 1, 0, 'At round start, +1 purple per worker you get this round (3 / 4 / 5).', {
+    m('lamplighter', 'Lamplighter', 1, 1, 'At round start, +1 purple per worker you get this round (3 / 4 / 5).', {
       onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
     m('dreamer', 'Dreamer', 1, 1, 'At round end, +2 purple per resting worker you have.', {

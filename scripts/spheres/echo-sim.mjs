@@ -6,6 +6,7 @@ import { install, VARIANT } from '../../src/engine/v4/content/echo.js';
 install();
 if (process.env.ECHO) VARIANT.echo = process.env.ECHO;
 if (process.env.RELIVE) VARIANT.relive = process.env.RELIVE;
+if (process.env.PLUS) VARIANT.plus = Number(process.env.PLUS);
 
 const games = Number(process.argv[2] || 400), n = Number(process.argv[3] || 4);
 const quadrants = (process.argv[4] || 'gold,red,blue,echo').split(',');

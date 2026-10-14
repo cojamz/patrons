@@ -30,7 +30,7 @@ function play(seed, giveDef, seat) {
   return s;
 }
 const only = process.argv[3] && process.argv[3] !== 'all' ? process.argv[3].split(',') : null;
-const ids0 = [...quadrant('trading').members, ...quadrant('gold').members, ...quadrant('red').members].map(d => d.id);
+const ids0 = [...quadrant('trading').members, ...quadrant('gold').members, ...quadrant('red').members, ...quadrant('blue').members].map(d => d.id);
 const ids = only ? ids0.filter(i => only.some(o => i === o || i.endsWith('.' + o))) : ids0.filter(i => i.startsWith('trading.'));
 const control = [];
 for (let g = 0; g < N; g++) control.push(play(1000 + g));

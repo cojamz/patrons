@@ -5,8 +5,9 @@ import { createGame, applyMove, chooseBotMove, followers } from '../../src/engin
 import { resume, contextFor } from '../../src/engine/v4/core.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { defById } from '../../src/engine/v4/content/index.js';
-import echo, { install } from '../../src/engine/v4/content/echo.js';
+import echo, { install, VARIANT } from '../../src/engine/v4/content/echo.js';
 install();
+if (process.env.PLUS) VARIANT.plus = Number(process.env.PLUS);
 
 const N = Number(process.argv[2] || 120), SEATS = 4, QUADS = ['gold', 'red', 'blue', 'echo'];
 function play(seed, giveDef, seat) {
