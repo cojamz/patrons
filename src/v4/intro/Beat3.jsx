@@ -1,51 +1,57 @@
 // Beat 3 — "Take actions granted by the mysterious powers to add to your resources, recruit new members, and become
 // more powerful." It opens where beat 2 rests (leader, minions on their ring, three followers, the violet glow) and
-// tells it one thing at a time (design/prototypes/intro2/storyboard.md, beat 3):
-//   actions   the wheel rises in at the left; the minions hop onto three round-I spaces, one by one; each space glows
-//             and pays two of the real resource glyphs, which hop back to the pile beside the leader;
-//   recruit   the wheel dims, the camera moves to the cult, and <Initiation/> plays (card, beckon, bow, mark, slot);
-//             the followers step back a row to make room for the new member;
+// tells it one thing at a time (design/prototypes/intro2/storyboard.md, beat 3; Cory: a first-timer must see
+// "minion on a space → that space's resources come to me"):
+//   actions   the camera comes to the wheel; ONE minion floats from the leader onto ONE space (Kickback, gold); the
+//             space lights and says what it gives, big: "+3 [gold]"; exactly those three glyphs lift off the space,
+//             one after another, into the cult's pile, which counts up. A second minion does it again, faster, on a
+//             green space (Hum, +3 green), so the pattern is learned;
+//   recruit   the wheel dims, the camera pulls back to the cult, and <Initiation/> plays (card, beckon, bow, mark,
+//             slot), paid with two of the gold; the followers step back a row to make room for the new member;
 //   followers the four other glyphs rise into a small arcane glow, circle once and dissolve; three followers appear
 //             there and hop into the crowd: "+3";
 //   power     a warm aura blooms behind the leader as it rises two units (LEAD → LEAD_UP).
 import {
-  Act, At, LEAD, LEAD_UP, LeadFrames, Mini, Fol, Res, Aura, ArcaneFloor, ArcaneColumn,
-  FSLOT, PILE, SWIRL, WHEEL, QUAD, YOU_MEMBERS, ringTL, space, onSpace, Z, useCast,
+  Act, At, LEAD, LEAD_UP, LeadFrames, Mini, Fol, Res, Aura, ArcaneFloor, ArcaneColumn, Count, CAM,
+  FSLOT, PILE, SWIRL, WHEEL, QUAD, YOU_MEMBERS, ringTL, space, onSpace, useCast,
 } from './shared.jsx';
 import Initiation, { BECKON, SETTLE, WALK_MS, T as IT } from './Initiation.jsx';
 
-/** How long this beat plays before the next (ms). */
-export const DURATION = 9300;
-export const shots = [
-  { t: 0, cam: [-44, 10, Z.one], d: 1100, lamp: [-46, 10, 240, 160] },
-  { t: 3000, cam: [4, 11, Z.mid], d: 1000, lamp: [6, 6, 200, 150] },
-];
-export const stillShot = shots[0];
-
 // ---------- timing (ms into the beat) ----------
-const WHEEL_IN = 0; // the wheel rises in (700)
-const HOP = [900, 1150, 1400]; // each minion's hop to its space (650)
-const HOP_MS = 650;
-const PAY = 50; // after a landing, the space's two glyphs start up (110 apart, 600 each)
-const DIM = 3000; // the wheel dims; the camera moves to the cult
-const INIT = 3100; // <Initiation/> starts (the card rises)
-const GOLD_OUT = n => INIT + IT.pay + 100 * n; // Initiation takes the two gold glyphs from the pile here
+const A1 = 400; // the first action: a minion lifts off the leader (floats 900), lands, the space pays (~2.5 s)
+const A2 = 3000; // the second, faster (~1.3 s)
+const DIM = 4600; // the wheel dims; the camera pulls back to the cult
+const INIT = 4700; // <Initiation/> starts (the card rises)
 const STEP_BACK = INIT + SETTLE; // the followers step back a row as the member walks to its slot (WALK_MS)
-const BUY = 6900; // the green and blue glyphs rise into the glow (as the initiation's "+1" fades)
-const SPAWN = 7700; // three followers appear in the glow
-const PLUS = 8350; // "+3 follower"
-const POWER = 8550; // the aura blooms, the leader rises
+const BUY = INIT + 3800; // the four other glyphs rise into the glow (as the initiation's "+1" fades)
+const SPAWN = BUY + 800; // three followers appear in the glow
+const PLUS = BUY + 1450; // "+3 follower"
+const POWER = BUY + 1650; // the aura blooms, the leader rises
+/** How long this beat plays before the next (ms). */
+export const DURATION = POWER + 1150;
 
-// ---------- the actions: which minion goes where, what each space pays ----------
-const rnd = ([x, y]) => [Math.round(x), Math.round(y)];
-const ACTS = [
-  { q: 'green', k: 0, arc: 10 }, // left minion → green, centre space
-  { q: 'blue', k: 1, arc: 13 }, // top minion → blue, right of centre
-  { q: 'gold', k: -1, arc: 20 }, // right minion → gold, right of centre (the long hop, behind the leader)
+export const shots = [
+  { t: 0, d: 1500, ...CAM.wheelNear }, // to the wheel, following the first minion
+  { t: DIM, d: 1100, ...CAM.cult }, // back to the cult for the recruit
 ];
+export const stillShot = { ...CAM.wheelAndCult };
+
+// ---------- the actions: which minion, which space, what it pays, and when ----------
+// a minion floats (f ms), lands; the space lights; the plaque pops; the glyphs lift off one by one (gap apart)
+const ACTS = [
+  { m: 0, q: 'gold', k: -1, r: 'gold', n: 3, name: 'Kickback', at: A1, float: 900, arc: 14, gap: 230, pop: 150, fly: 520, pile: [0, 1, 2] },
+  { m: 2, q: 'green', k: 0, r: 'green', n: 3, name: 'Hum', at: A2, float: 450, arc: 10, gap: 100, pop: 80, fly: 400, pile: [3, 4, 5] },
+].map(a => {
+  const land = a.at + a.float;
+  const plaque = land + (a.m ? 30 : 100);
+  const lift = plaque + (a.m ? 70 : 250); // the first glyph pops up out of the space
+  const lands = [0, 1, 2].map(g => lift + g * a.gap + a.pop + a.fly);
+  return { ...a, land, plaque, lift, lands, done: lands[2] + (a.m ? 0 : 70) };
+});
+const rnd = ([x, y]) => [Math.round(x), Math.round(y)];
 const INK = { green: '#3d8c66', blue: '#4f7ea8', gold: '#c99327', red: '#b4533e' };
-// the pile fills in landing order: green 0–1, blue 2–3, gold 4–5 (the gold pays for the member)
-const pileOf = (a, n) => 2 * a + n;
+const PAID = [0, 1]; // the PILE slots the initiation pays from (two gold)
+const SPENT = [2, 3, 4, 5]; // what's left: one gold and three green buy the followers
 
 // ---------- the wheel: a small printed paper disc (the game's look), drawn in world units ----------
 const R = { rim0: 36.6, rim1: 40, i0: 22.6, ii0: 13.4, hub: 6.5 };
