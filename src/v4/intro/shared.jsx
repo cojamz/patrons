@@ -207,8 +207,7 @@ export function Count({ steps, className = '' }) {
 export function useAfter(ms) {
   const { still, at: frozen } = useClock();
   const [on, setOn] = useState(still || ms <= 0 || (frozen != null && ms <= frozen));
-  if (frozen != null && !on) return false;
-  useEffect(() => { if (on) return undefined; const id = setTimeout(() => setOn(true), ms); return () => clearTimeout(id); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (on || frozen != null) return undefined; const id = setTimeout(() => setOn(true), ms); return () => clearTimeout(id); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return on;
 }
 
