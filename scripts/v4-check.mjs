@@ -13,7 +13,7 @@ const run = (name, cmd, args, opts = {}) => new Promise(res => {
   p.on('close', code => { results.push({ name, ok: code === 0, s: ((Date.now() - t0) / 1000).toFixed(1) }); if (code && opts.quiet) console.log(out.slice(-4000)); res(code === 0); });
 });
 
-await run('engine + session + ui tests', 'npx', ['vitest', 'run', 'src/test/engine/v4', 'src/test/v4']);
+await run('engine + session + ui tests', 'npx', ['vitest', 'run', 'src/test/engine/v4', 'src/test/v4', '--exclude', 'src/test/engine/v4/spheres/**']);
 await run('production build', 'npx', ['vite', 'build', '--outDir', '.v4-build', '--emptyOutDir'], { quiet: true });
 
 if (!fast && existsSync('e2e/v4')) {

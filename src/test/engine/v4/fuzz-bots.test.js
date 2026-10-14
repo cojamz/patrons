@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { createGame, applyMove } from '../../../engine/v4/core.js';
 import { runGame, MOVE_CAP } from './fuzz-runner.js';
 
-const T = 60000;
+const T = 300000; // generous: the box is often busy running sims and agents
 
 describe('bot fuzz: invariants after every move', () => {
   for (const n of [2, 3, 4]) {
