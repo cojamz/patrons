@@ -1,6 +1,6 @@
-import { guestMembers } from '../../../engine/v4/content/index.js';
 // @vitest-environment node
 // Table rules: setup, turn order, workers, rings, shop, follower buys, contests, payment, followers, endgame.
+import { guestMembers } from '../../../engine/v4/content/index.js';
 import { describe, it, expect } from 'vitest';
 import {
   createGame, applyMove, legalMoves, isLegal, resume, followers, paymentPlan, followerPlan, openSlots, TIERS,
