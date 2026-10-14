@@ -51,6 +51,7 @@ function wrapAction(qid, a, idx) {
     const L = ledger(ctx.state);
     const key = `${ctx.state.quadrants.indexOf(qid)}-${idx}`;
     const e = { key, p: p.id, ring: a.ring, name: a.name, color: qid, echo: !!a.echo, before: snap(p), res: {}, discount: 0, members: [] };
+    L.seq = (L.seq || 0) + 1; e.seq = L.seq;
     L.now[key] = e; L.open = key; L.lastBy = key;
     orig.call(this, ctx, p);
     settle(ctx.state, e);
@@ -92,9 +93,14 @@ const describe = (ctx, e) => {
   return bits.join(', ') || 'nothing';
 };
 /** Spaces p could copy: which = 'rivalOuter' | 'ownOuter' | 'any' | 'last' | 'own'. */
+export const VARIANT = { echo: 'rivalOuter', relive: 'ownOuter' };
 export function targets(ctx, p, which) {
   const L = ledger(ctx.state);
   const pool = which === 'last' ? Object.values(L.last) : Object.values(L.now);
+  if (which === 'rivalLast' || which === 'ownLast' || which === 'rivalLastOuter') {
+    const list = pool.filter(e => copyable(e) && (which === 'ownLast' ? e.p === p.id : e.p !== p.id) && (which !== 'rivalLastOuter' || e.ring === 1));
+    return list.length ? [list.reduce((a, b) => (b.seq > a.seq ? b : a))] : [];
+  }
   return pool.filter(e => copyable(e) && (
     which === 'rivalOuter' ? e.p !== p.id && e.ring === 1
       : which === 'ownOuter' ? e.p === p.id && e.ring === 1
@@ -158,13 +164,13 @@ const echoQ = {
     },
     {
       key: 'echo', ring: 1, name: 'Echo', echo: true, text: 'Copy what a rival got from an outer-ring space this round.',
-      estimate: (ctx, p) => bestValue(ctx, targets(ctx, p, 'rivalOuter')),
-      resolve(ctx, p) { offer(ctx, p, targets(ctx, p, 'rivalOuter'), 'Echo: copy which rival space?', 'now'); },
+      estimate: (ctx, p) => bestValue(ctx, targets(ctx, p, VARIANT.echo)),
+      resolve(ctx, p) { offer(ctx, p, targets(ctx, p, VARIANT.echo), 'Echo: copy which rival space?', 'now'); },
     },
     {
       key: 'relive', ring: 1, name: 'Relive', echo: true, text: 'Copy what you got from one of your outer-ring spaces this round.',
-      estimate: (ctx, p) => bestValue(ctx, targets(ctx, p, 'ownOuter')),
-      resolve(ctx, p) { offer(ctx, p, targets(ctx, p, 'ownOuter'), 'Relive: copy which of your spaces?', 'now'); },
+      estimate: (ctx, p) => bestValue(ctx, targets(ctx, p, VARIANT.relive)),
+      resolve(ctx, p) { offer(ctx, p, targets(ctx, p, VARIANT.relive), 'Relive: copy which of your spaces?', 'now'); },
     },
     {
       key: 'encore', ring: 2, name: 'Encore', echo: true, text: 'Copy what anyone got from any space this round (not the center).',

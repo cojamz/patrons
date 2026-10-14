@@ -4,6 +4,7 @@
 import { createGame, applyMove, chooseBotMove, followers } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { defById, registerQuadrant, quadrant } from '../../src/engine/v4/content/index.js';
+import { contextFor } from '../../src/engine/v4/core.js';
 import market, { install } from '../../src/engine/v4/content/market.js';
 install();
 
@@ -21,9 +22,9 @@ function play(seed, giveDef, seat) {
       s.shop = s.shop.filter(u => u !== uid); s.pile = s.pile.filter(u => u !== uid);
       while (s.shop.length < 6 && s.pile.length) s.shop.push(s.pile.shift());
       s.players[seat].members.push(uid);
-      // round-start members missed their round-II start; pay it the way the engine would have
+      // round-start members missed their round-II start: run it once, as the engine would have
       const d = defById(giveDef);
-      if (d.key === 'regular') s.players[seat].discount += 2;
+      if (d.onRoundStart && !d.activate) d.onRoundStart(contextFor(s), s.players[seat], s.cards[uid]);
       given = true;
     }
     s = applyMove(s, chooseBotMove(s, rand));

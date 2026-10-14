@@ -64,7 +64,7 @@ Scoring alternatives
 - Sets contest: spread evenly over seats; round I is almost never won (no one holds 4 colors yet, ~34% of rounds unscored); shared 4%.
 - Member value (200 games each, card handed over at round II start): Feastmaker 6.8, Gleaner 6.1, Go-Between 6.1, Harmonist 5.8, Dyer 5.1, Admirer 5.0, Farmer 4.7, Explorer 4.3, Pilgrim 3.8, Peddler 3.6, Weaver 3.4, Sower 3.3, Rainmaker 2.9, Late Bloomer 2.9, Gardener 2.7. Same table, same method: Banker 4.4, Coin Purse 5.5, Speculator 5.6, Recruiter 7.0, Tycoon 13.6. Costs above set from these.
 - Cut by the numbers on the way: Admirer on every rival recruit (18.6), Harmonist at +2 per set (18.3), Rainmaker "match your largest" (17.0, Gold piles made it absurd).
-- Thinking bot (24 games, see THINKER line in the report).
+- Thinking bot (24 games, 4 rollouts, one thinker vs 3 greedy): wins 58%, margin +2.3 on the Yellow table vs 63%, +7.0 on the blue table. Planning still pays, a little less. The thinker put only 22% of its workers on Yellow (greedy 28%) and recruited 1.2 yellow members (greedy 2.9): greedy bots overrate Yellow's raw resource piles. Small sample.
 
 ## What to watch / can't measure
 - Round I's +2 for sets mostly goes unclaimed with bots. A human aiming at it (Bloom with 2 colors in hand) takes it; worth one live test.

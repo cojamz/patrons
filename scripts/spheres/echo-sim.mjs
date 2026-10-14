@@ -2,8 +2,10 @@
 // Usage: node scripts/spheres/echo-sim.mjs [games=400] [players=4] [quadrants=gold,red,blue,echo]
 import { createGame, applyMove, chooseBotMove, followers, memberCount, actionAt } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
-import { install } from '../../src/engine/v4/content/echo.js';
+import { install, VARIANT } from '../../src/engine/v4/content/echo.js';
 install();
+if (process.env.ECHO) VARIANT.echo = process.env.ECHO;
+if (process.env.RELIVE) VARIANT.relive = process.env.RELIVE;
 
 const games = Number(process.argv[2] || 400), n = Number(process.argv[3] || 4);
 const quadrants = (process.argv[4] || 'gold,red,blue,echo').split(',');
