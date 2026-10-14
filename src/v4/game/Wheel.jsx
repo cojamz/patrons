@@ -26,7 +26,8 @@ import { shortEffect } from '../shorts.js';
 // sockets: discs toward the outer edge of their ring, so a name never runs into a neighbour at any board size
 const RING_S = { 1: { r0: 128, r1: 180, r: 151, n: 3, span: 66 }, 2: { r0: 82, r1: 128, r: 104, n: 2, span: 40 }, 3: { r0: 36, r1: 82, r: 58, n: 1, span: 0 } };
 // engraved: the cells tile each quadrant (ring I: three 30° cells, ring II: two 45° cells, ring III: one 90° cell)
-const RING_E = { 1: { r0: 122, r1: 180, r: 151, n: 3, span: 60 }, 2: { r0: 72, r1: 122, r: 97, n: 2, span: 45 }, 3: { r0: 27, r1: 72, r: 51, n: 1, span: 0 } };
+// (the hub shrinks so the one wide ring-III cell can hold its name, stamp and yield at 12px or more)
+const RING_E = { 1: { r0: 126, r1: 180, r: 153, n: 3, span: 60 }, 2: { r0: 78, r1: 126, r: 102, n: 2, span: 45 }, 3: { r0: 22, r1: 78, r: 51, n: 1, span: 0 } };
 const ringsOf = look => (look === 'engraved' ? RING_E : RING_S);
 const RIM = { r0: 180, r1: 200, r: 190 }; // the rim band: each quadrant's rule, engraved
 const CX = 200, CY = 200, VB0 = -26, VBS = 452;
@@ -517,9 +518,11 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     const selected = pinnedKey === key;
     const fresh = freshOf(key);
     // engraved: does the cell lie on its side once the wheel is turned (tall and narrow on screen)?
+    // a flat cell in the lower half prints its name below the stamp: names always hug the rim side, where the cell is wide
     const sa = (norm(s.ang + rot) * Math.PI) / 180;
     const side = engraved && Math.abs(Math.sin(sa)) > Math.abs(Math.cos(sa));
-    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', side ? 'side' : ''].filter(Boolean).join(' ');
+    const low = engraved && !side && Math.cos(sa) < 0;
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', side ? 'side' : '', low ? 'low' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>
@@ -531,7 +534,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     if (engraved) {
       // the words get the cell's width on screen: its chord when it lies flat, its depth when it stands on its side
       const R = rings[t];
-      const fw = side ? (R.r1 - R.r0) * 0.9 : 2 * R.r * Math.sin((s.half * Math.PI) / 180) * 0.9;
+      const fw = side ? (R.r1 - R.r0) * 0.96 : t === 3 ? 2 * (R.r1 - 12) * Math.SQRT1_2 * 0.9 : 2 * R.r * Math.sin((s.half * Math.PI) / 180) * 0.92;
       style = { ...style, '--fw': `${((fw / BOX) * 100).toFixed(1)}%` };
     }
     return (
@@ -553,7 +556,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
             <span className="nm">{a.name}</span>
             <span className="row">
               {minions || <span className="ico"><Stamp id={[`${qid}.${a.key}`, spriteId(a.name)]} /></span>}
-              <span className="yl" data-yield><Rich text={shortEffect(qid, a, round)} /></span>
+              {open && <span className="yl" data-yield><Rich text={shortEffect(qid, a, round)} /></span>}
             </span>
           </span>
         ) : (

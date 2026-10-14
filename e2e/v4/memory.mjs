@@ -50,9 +50,17 @@ try {
   await page.click('[data-start]');
   await page.waitForSelector('header .round', { timeout: 15000 });
   await sample('start');
-  let next = EVERY;
+  let next = EVERY, lastMoves = -1, movedAt = Date.now();
   const seenEnds = new Set();
   while (!(await page.$('.results')) && Date.now() - t0 < 420000) {
+    // a stall fails fast with what was on screen, instead of running out the clock
+    if (Date.now() - movedAt > 45000) {
+      const prompt = await page.$eval('.lt-prompt', e => e.textContent.slice(0, 120)).catch(() => '?');
+      const ids = await page.$$eval('[data-option]:not([disabled])', els => els.map(e => e.getAttribute('data-option'))).catch(() => []);
+      await page.screenshot({ path: `${SHOTS}/stalled.png` }).catch(() => {});
+      fails.push(`no move for 45s at move ${lastMoves}: "${prompt}" options [${ids.join(' ')}] (${SHOTS}/stalled.png)`);
+      break;
+    }
     const hand = await page.$('[data-handoff]'); if (hand) { await hand.click().catch(() => {}); continue; }
     const end = await page.$('[data-next-round]');
     if (end) {
@@ -65,12 +73,14 @@ try {
     const ids = [];
     for (const o of opts) ids.push([o, await o.getAttribute('data-option').catch(() => '')]);
     // prefer recruiting (cults with members are the heavier screen), then followers; never back/undo
-    const rank = id => (/^(card|pay):/.test(id) ? 0 : /^tier:/.test(id) ? 1 : /^(back|undo|pass)/.test(id) ? 9 : 2);
+    // (a member's on/off switch is a free toggle: flipping it forever would stall the game)
+    const rank = id => (/^(card|pay):/.test(id) ? 0 : /^tier:/.test(id) ? 1 : /^toggle:/.test(id) ? 8 : /^(back|undo|pass)/.test(id) ? 9 : 2);
     ids.sort((x, y) => rank(x[1]) - rank(y[1]));
     const pick = ids.find(([, id]) => !/^(back|undo)/.test(id));
     if (!pick) { await page.waitForTimeout(40); }
     else await pick[0].click({ timeout: 2000 }).catch(() => pick[0].evaluate(e => e.click()).catch(() => {}));
     const n = await moves();
+    if (n !== lastMoves) { lastMoves = n; movedAt = Date.now(); }
     if (n >= next) { await sample(`move ${n}`); next = n - (n % EVERY) + EVERY; }
   }
   if (!(await page.$('.results'))) fails.push(`no results screen after ${((Date.now() - t0) / 1000).toFixed(0)}s`);

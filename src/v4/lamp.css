@@ -183,14 +183,17 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage svg.wheel-paper .cell.taken.lit .wash{fill-opacity:.3}
 .lt .stage svg.wheel-paper .cell.locked .wash{fill-opacity:.04}
 .lt .stage svg.wheel-paper .cell .hatch{fill:url(#ltHatch)}
-.lt .stage svg.wheel-paper .cell .glow{fill:none;stroke:rgba(255,196,110,1);stroke-width:5;filter:url(#ltGlow);animation:litbreath 2.4s ease-in-out infinite}
-.lt .stage svg.wheel-paper .cell .edge-lit{fill:none;stroke:#fff4da;stroke-width:1.8}
+.lt .stage svg.wheel-paper .cell .glow{fill:none;stroke:rgba(255,190,96,1);stroke-width:6;filter:url(#ltGlow);animation:litbreath 2.4s ease-in-out infinite}
+.lt .stage svg.wheel-paper .cell .edge-lit{fill:none;stroke:#ffe7b0;stroke-width:2.2}
 .lt .stage svg.wheel-paper .cell .edge-in{fill:none;stroke:rgba(255,250,238,.5);stroke-width:1}
 .lt .stage svg.wheel-paper .cell.locked .edge-in{stroke:none}
 .lt .stage svg.wheel-paper .cell .fresh{fill:none;stroke-width:2.2;stroke-dasharray:.1 4.4;stroke-linecap:round}
 .lt .stage svg.wheel-paper .cell .line{fill:none;stroke:rgba(42,31,23,.42);stroke-width:1.1}
 @media (prefers-reduced-motion:reduce){ .lt .stage svg.wheel-paper .cell .glow{animation:none;opacity:.85} }
 .lt [data-spaces="engraved"] .stage .hub-label small{display:none}
+.lt [data-spaces="engraved"] .stage .hub-label b{font-size:22px}
+.lt [data-spaces="engraved"] .stage .hub-label .pips{gap:3px;margin-top:2px}
+.lt [data-spaces="engraved"] .stage .hub-label .pips i{width:5px;height:5px}
 .lt [data-spaces="engraved"] .stage .slot{width:8.85%;border-radius:8px}
 .lt [data-spaces="engraved"] .stage .slot .hit{width:100%;border-radius:8px}
 .lt [data-spaces="engraved"] .stage .slot .base,.lt [data-spaces="engraved"] .stage .slot.lit .base,.lt [data-spaces="engraved"] .stage .slot.locked .base{background:none;box-shadow:none;border-radius:8px;opacity:1}
@@ -199,12 +202,14 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="engraved"] .stage .slot:focus-visible .base{box-shadow:0 0 0 2.5px var(--lamp-ink)}
 .lt [data-spaces="engraved"] .stage .slot.flash .base{animation:none}
 .lt [data-spaces="engraved"] .stage .slot .face{inset:auto;left:50%;top:50%;width:var(--fw);transform:translate(-50%,-50%);gap:2px;padding:0;color:color-mix(in srgb,var(--c) 40%,#2a1f17)}
-.lt [data-spaces="engraved"] .stage .slot .face .nm{font-family:var(--sans);font-weight:800;font-size:12px;letter-spacing:.05em;text-transform:uppercase;line-height:1.02;margin:0;color:inherit;text-shadow:0 1px 0 rgba(255,250,238,.55)}
+/* the name: bold sans at 12px (small capitals don't fit the narrow cells at 12px; this keeps the floor) */
+.lt [data-spaces="engraved"] .stage .slot .face .nm{font-family:var(--sans);font-weight:800;font-size:12px;letter-spacing:.015em;line-height:1.02;margin:0;color:inherit;text-shadow:0 1px 0 rgba(255,250,238,.55)}
+.lt [data-spaces="engraved"] .stage .slot.low .face{flex-direction:column-reverse}
 .lt [data-spaces="engraved"] .stage .slot .face .row{display:flex;align-items:center;justify-content:center;gap:4px}
 .lt [data-spaces="engraved"] .stage .slot.side .face .row{flex-direction:column;gap:1px}
 .lt [data-spaces="engraved"] .stage .slot .face .ico{line-height:0;margin:0}
 .lt [data-spaces="engraved"] .stage .slot .face .ico svg{width:24px;height:24px;image-rendering:pixelated}
-.lt [data-spaces="engraved"] .stage .slot .face .yl{font-family:var(--serif);font-weight:800;font-size:13px;line-height:1.05;color:inherit;max-width:none;white-space:nowrap;text-shadow:0 1px 0 rgba(255,250,238,.6)}
+.lt [data-spaces="engraved"] .stage .slot .face .yl{font-family:var(--serif);font-weight:800;font-size:12.5px;line-height:1.05;color:inherit;max-width:none;white-space:nowrap;text-shadow:0 1px 0 rgba(255,250,238,.6)}
 .lt [data-spaces="engraved"] .stage .slot.side .face .yl{white-space:normal}
 .lt [data-spaces="engraved"] .stage .stamp .d{fill:color-mix(in srgb,var(--c) 45%,#2a1f17)}
 .lt [data-spaces="engraved"] .stage .stamp .m{fill:var(--c)}
