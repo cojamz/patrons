@@ -9,7 +9,8 @@ const NODE_BUDGET = 36; // states explored per preview (a counted pick branches 
 /**
  * previewSpace(state, pid, q, i) → null when it can't be run, else
  * { exact, partial, leaves, you: { res:{color:[min,max]}, followers:[min,max], members:[min,max], turns:[min,max], discount:[min,max] },
- *   others: { res:{color:[min,max]}, followers:[min,max], members:[min,max] }, asks:[prompt], theirAsks:[prompt], sample }.
+ *   others: { res:{color:[min,max]}, followers:[min,max], members:[min,max] }, asks:[prompt], theirAsks:[prompt],
+ *   swept: [uid] (face-up members it surely sends under the pile), sample }.
  * exact: every branch gives the same to you. others: the rivals' summed change.
  */
 export function previewSpace(state, pid, q, i) {
@@ -64,8 +65,12 @@ export function previewSpace(state, pid, q, i) {
     put(others.followers, rivals.reduce((t, o) => t + followers(s, o) - followers(state, state.players[o.id]), 0));
     put(others.members, rivals.reduce((t, o) => t + o.members.length - state.players[o.id].members.length, 0));
   }
+  // face-up members this space sends back under the pile (Restock's sweep; a bury), whatever you choose: so nobody
+  // sweeps away the card they meant to recruit by surprise. Not counting cards someone recruits.
+  const sweptIn = s => state.shop.filter(u => !s.shop.includes(u) && !s.players.some(o => o.members.includes(u)));
+  const swept = leaves.map(sweptIn).reduce((a, b) => a.filter(u => b.includes(u)));
   const same = r => r[0] === r[1];
   const exact = Object.values(you.res).every(same) && same(you.followers) && same(you.members) && same(you.turns) && same(you.discount);
   // sample: the table after the first branch (for the screen to recount a contest on); exact when `exact`
-  return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, sample: leaves[0] };
+  return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, sample: leaves[0] };
 }

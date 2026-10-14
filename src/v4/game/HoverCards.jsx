@@ -191,6 +191,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {pv && pv.copies ? <Row k="Can copy">{pv.copies.length ? pv.copies.map(k => spaceName(state, k)).join(', ') : 'nothing yet'}</Row> : null}
         {open && viewer != null && !state.over ? <Row k="You get"><YoudGet state={state} pid={viewer} q={q} i={i} /></Row> : null}
         {race && <Row k={race.rule}>{race.text}</Row>}
+        {pv && pv.swept && pv.swept.length ? <Row k="Sweeps away">{pv.swept.map((u, k) => <span key={u} data-swept={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}<small className="lt-swept-note"> back under the deck</small></Row> : null}
         {unlocks.length ? <Row k="Unlocks">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
         {owner !== undefined && <Row k="Taken">{state.players[owner].name}{opt ? ' — you can join it' : ''}</Row>}
         {a.ring > round && <Row k="Opens">round {roman(a.ring)}</Row>}

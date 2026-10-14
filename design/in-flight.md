@@ -40,5 +40,6 @@ Limits hit four times on 2026-10-14 (06:30, 11:40, 16:40, 18:55 UTC). The forema
 ## Remote sessions (own machines, started 20:48 UTC): heavy simulation offloaded from this 4-CPU box
 - Fair-price screen for every card → branch claude/cults-fair-price (session_01SAnMH5dXApptnHJqsFTvdV)
 - Bot levels + 4-thinker balance tables → branch claude/cults-bots (session_012LrFkfKC8GG3gLHPuLK2jF)
+- Balance bench (triangulated: cards, spaces, archetypes, fairness, health, anchors, human records) → branch claude/cults-bench (session_011mMXsYcXHM7NPhc8g63Ki6), started 22:35.
 - Purple member replacements + per-turn repricing → branch claude/cults-purple-members (session_01KzNtqok74Xvo1pxX1pqWkS). Done 21:09; report brought in by roster 11.
 The foreman merges each branch after reviewing it (proposals only: no content price changes land without review; design changes go to Cory).

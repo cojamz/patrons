@@ -1,7 +1,8 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
-import { parseRoundEnd, newLogLines, winSentence, breakdown, costParts, turnStory } from '../../../v4/format.js';
+import { parseRoundEnd, newLogLines, winSentence, breakdown, costParts, turnStory, explainLine } from '../../../v4/format.js';
+import { contextFor } from '../../../engine/v4/core.js';
 
 const seats = [{ name: 'Ana', kind: 'bot' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }];
 const play = seed => { let s = createGame({ seats, seed }); while (!s.over) s = applyMove(s, chooseBotMove(s, () => 0.4)); return s; };
@@ -77,5 +78,14 @@ describe('v4 format helpers', () => {
     expect(told).toBeGreaterThan(20);
     expect(recruits).toBeGreaterThan(0);
     expect(touched).toBeGreaterThan(0);
+  });
+  it('a Goody Bags line reads as two gains, never as a gift from "P4 took 2 magenta and"', () => {
+    const s = createGame({ seats, seed: 3, quadrants: ['gold', 'red', 'silver', 'thieves'] });
+    s.log = [];
+    quadrant('silver').handlers.gift(contextFor(s), s.players[0], 'magenta', { mine: 2 });
+    const i = s.log.findIndex(l => /and gave everyone else/.test(l));
+    expect(s.log[i]).toBe('Ana took 2 magenta and gave everyone else 1 magenta.');
+    expect(explainLine(s.log, i).text).toBe('Ana gains 2 magenta; everyone else gains 1 magenta.');
+    expect(explainLine(s.log, i).gift).toBeUndefined();
   });
 });

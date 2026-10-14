@@ -322,7 +322,10 @@ function lastAction(log, i, actor) {
  */
 export function explainLine(log, i) {
   const line = log[i];
-  let m = line.match(/^(.+?) gave (\d+) (\w+) to (.+?)\.$/) || null;
+  // first: "P4 took 2 magenta and gave everyone else 1 magenta." (Goody Bags), which the "gave" forms below would misread
+  let m = line.match(/^(.+?) took (\d+) (\w+) and gave everyone else (\d+) (\w+)\.$/);
+  if (m) return { text: `${m[1]} gains ${m[2]} ${m[3]}; everyone else gains ${m[4]} ${m[5]}.` };
+  m = line.match(/^(.+?) gave (\d+) (\w+) to (.+?)\.$/) || null;
   if (m) {
     const [, from, n, color, to] = m;
     const why = lastAction(log, i, from);
@@ -341,8 +344,6 @@ export function explainLine(log, i) {
     const [, from, card, to, n, color] = m;
     return { text: `${to} gains ${n} ${color} (${from}'s ${card}).`, gift: { to, n: Number(n), color, text: `+${n} ${color} (${from}'s ${card})` } };
   }
-  m = line.match(/^(.+?) took (\d+) (\w+) and gave everyone else (\d+) (\w+)\.$/);
-  if (m) return { text: `${m[1]} gains ${m[2]} ${m[3]}; everyone else gains ${m[4]} ${m[5]}.` };
   m = line.match(/^(.+?)'s (.+?): (\w+) gain (\d+) → (\d+)\.$/);
   if (m) {
     const [, who, card, color, a, b2] = m;
