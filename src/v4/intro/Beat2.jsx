@@ -39,9 +39,9 @@ export default function Beat2() {
   const { you } = useCast();
   return (
     <>
-      {/* the mysterious powers: a soft column rising behind the cult, a violet pool spreading on the floor */}
-      <Act track={[{ x: -32, y: -42, o: 0, sy: 0.15 }, [1420, 1100, { o: 1, sy: 1 }, 'out']]}><ArcaneColumn w={64} h={58} /></Act>
-      <Act track={[{ x: -44, y: 11, o: 0, sx: 0.55 }, [1300, 900, { o: 1, sx: 1 }, 'sine']]} origin="50% 50%"><ArcaneFloor w={88} h={10} /></Act>
+      {/* the mysterious powers: a violet pool spreads on the floor, and soft light rises behind each minion */}
+      <Act track={[{ x: -50, y: 7, o: 0, sx: 0.5 }, [1300, 1000, { o: 1, sx: 1 }, 'sine']]} origin="50% 50%"><ArcaneFloor w={100} h={16} /></Act>
+      {[0, 1, 2].map(i => <Act key={`c${i}`} track={[{ x: RING[i][0] - 14, y: RING[i][1] + 9 - 34, o: 0, sy: 0.2 }, [1500 + 90 * i, 1100, { o: 1, sy: 1 }, 'out']]}><ArcaneColumn w={28} h={34} /></Act>)}
       {/* beat 1's floor shadow, carried over as it rests */}
       <At x={-20} y={12} className="in-shadow"><span className="in-floor" style={{ width: 40, height: 6 }} /></At>
       {/* the minions come out from behind the leader (drawn before it, so it covers them as they emerge) */}
