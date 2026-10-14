@@ -86,7 +86,7 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
               <span className="band" aria-hidden="true" />
               <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
                 {short && <span className="need" title={`You need ${short.total} more`}>need {short.total}</span>}
-                {fromPile && <span className="need" title="From the top of the pile (Insider)">pile</span>}
+                {fromPile && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
                 {tick && <span className="tick" title={`You could afford it after ${after}`}>✓ {after}</span>}
               </span>
               <span className="nm">{d.name}<BadgeMark state={state} def={d} /></span>

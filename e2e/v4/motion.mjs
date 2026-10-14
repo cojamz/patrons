@@ -29,8 +29,8 @@ if (!base) {
 const errors = [];
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 const PROFILES = [
-  { tag: 'laptop', ctx: { viewport: { width: 1270, height: 700 } }, fol: '.pl[data-pid="0"] .fol .tv' },
-  { tag: 'phone', ctx: { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 }, fol: '.you-strip .yf .tv' },
+  { tag: 'laptop', ctx: { viewport: { width: 1270, height: 700 } }, fol: '.lt-seat.mine .tv' },
+  { tag: 'phone', ctx: { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 }, fol: '.lt-seat.mine .tv' },
 ];
 
 // every distinct value the follower number shows, frame by frame, plus every flight ghost's geometry
@@ -61,7 +61,7 @@ async function resumeRich(prof) {
   await page.waitForSelector('[data-home="resume"]');
   const go = el => (prof.ctx.hasTouch ? el.tap() : el.click());
   await go(await page.$('[data-home="resume"]'));
-  await page.waitForSelector('.players');
+  await page.waitForSelector('.lt-seat[data-pid]');
   await page.evaluate(INSTRUMENT, prof.fol);
   return { ctx, page, go };
 }
@@ -75,7 +75,7 @@ async function place(page, go, prof) {
   const conf = await page.$('[data-place]');
   if (conf) await go(conf);
   // a space may ask something first: answer with the first choice until the buy step comes up
-  for (let k = 0; k < 10 && !(await page.$('.fbuy.live')); k++) {
+  for (let k = 0; k < 10 && !(await page.$('.lt[data-phase="buy"][data-yours="1"]')); k++) {
     const opt = await page.$('.prompt.choice button[data-option]:not([disabled])');
     if (opt) await go(opt).catch(() => {});
     await page.waitForTimeout(250);
@@ -114,10 +114,14 @@ for (const prof of PROFILES) {
     const { ctx, page, go } = await resumeRich(prof);
     try {
       await place(page, go, prof);
-      const card = await page.waitForSelector('.fbuy.live .mini.can, .lt-shop .card.can, .shop .card.can[data-option]', { timeout: 8000 });
+      const card = await page.waitForSelector('.lt-shop .card.can[data-option]', { timeout: 8000 });
       await card.scrollIntoViewIfNeeded();
       await page.evaluate(() => { window.__ghosts = []; });
       await go(card);
+      // on touch a tap reads the card (a sheet); its Recruit button recruits
+      const recruit = prof.ctx.hasTouch ? await page.waitForSelector('[data-recruit]', { timeout: 2500 }).catch(() => null) : null;
+      if (prof.ctx.hasTouch && !recruit) errors.push(`[${prof.tag}] (m3) tapping an affordable card showed no Recruit button`);
+      if (recruit) await go(recruit);
       const pay = await page.waitForSelector('.dialog.pay .btn.pri[data-option]', { timeout: 2500 }).catch(() => null);
       if (pay) { await page.waitForTimeout(450); await go(pay); }
       await page.waitForTimeout(250);
@@ -156,7 +160,7 @@ for (const prof of PROFILES) {
     await page.goto(`${base}/?intro=0`); // intro=0: no first-game intro over the table (src/v4/Intro.jsx; hotseat.mjs gates the intro)
     await page.click('[data-home="local"]');
     await page.click('[data-start]');
-    await page.waitForSelector('.players');
+    await page.waitForSelector('.lt-seat[data-pid]');
     const t0 = Date.now();
     while (!(await page.$('[data-next-round]')) && Date.now() - t0 < 120000) {
       const els = await page.$$('[data-option]:not([disabled])');

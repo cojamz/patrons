@@ -71,7 +71,7 @@ try {
   await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
   await page.reload();
   await page.click('[data-home="resume"]');
-  await page.waitForSelector('.players');
+  await page.waitForSelector('.lt-seat[data-pid]');
   await page.waitForTimeout(400);
 
   const t0 = Date.now();
@@ -101,7 +101,7 @@ try {
       continue;
     }
 
-    if (await page.$('.fbuy.live')) {
+    if (await page.$('.lt[data-phase="buy"][data-yours="1"]')) {
       // (b2) Insider: pile cards in the shop
       if (!seen.has('pile')) {
         const pile = await page.$$('.lt-shop .card .from-pile');
@@ -110,12 +110,12 @@ try {
           await shot('b2-pile-cards');
           const card = await page.$('.lt-shop .card.can:has(.from-pile)');
           if (card) {
-            const n0 = await page.$eval('.pl[data-pid="0"]', e => e.textContent);
+            const n0 = await page.$eval('.lt-seat[data-pid="0"]', e => e.textContent);
             await card.click();
             const pay = await page.waitForSelector('.dialog.pay .btn.pri[data-option]', { timeout: 2500 }).catch(() => null);
             if (pay) { await page.waitForTimeout(300); await pay.click(); }
             await page.waitForTimeout(500);
-            const n1 = await page.$eval('.pl[data-pid="0"]', e => e.textContent);
+            const n1 = await page.$eval('.lt-seat[data-pid="0"]', e => e.textContent);
             if (n0 === n1) errors.push('(b2) recruiting from the pile changed nothing on P1');
             seen.add('pile-bought');
             continue;
@@ -123,9 +123,9 @@ try {
         }
       }
       // (b3) Release
-      const fold = !seen.has('release') && await page.$('.fbuy.live .release-row:not(.open) .rel-toggle');
+      const fold = !seen.has('release') && await page.$('.lt-prompt .release-row:not(.open) .rel-toggle');
       if (fold) { await fold.click(); await page.waitForTimeout(150); }
-      const rel = await page.$('.fbuy.live [data-option^="release:"]');
+      const rel = await page.$('.lt-prompt [data-option^="release:"]');
       if (rel && !seen.has('release')) {
         seen.add('release');
         if (!(await rel.isVisible())) errors.push('(b3) the Release buttons did not open from their row');

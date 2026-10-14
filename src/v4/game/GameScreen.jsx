@@ -14,11 +14,12 @@ import { LeaderRing, ResourceGlyph, FollowerMark } from './Glyphs.jsx';
 import { cardDef } from '../../engine/v4/index.js';
 import Results from './Results.jsx';
 import RoundEnd from './RoundEnd.jsx';
+import Reckoning from './Reckoning.jsx';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker from './PayPicker.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import Tick from './Tick.jsx';
-import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop } from './flight.js';
+import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome } from './flight.js';
 import { friendlyError, isNetworkError } from '../errors.js';
 import { ROUND_START } from '../saved.js';
 import { gameRecord, recordText } from '../session/record.js';
@@ -270,6 +271,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, []);
   useEffect(() => () => clearTimeout(hoverTimer.current), []);
   const hover = useHoverCards(); // UI-B's one hover layer: spaces, plaques, seats, shop cards
+  const [reckoned, setReckoned] = useState(null); // the round-end moment whose Reckoning has played (then: the summary)
+  const [lampQid, setLampQid] = useState(null); // the quadrant the Reckoning is paying right now
   const [spacePeek, setSpacePeek] = useState(null); // a space selected from the panel list (one sheet, shared with the wheel)
   // re-render on every session change, so Undo disappears the moment control passes even while the table catches up
   const [, setTick] = useState(0);
@@ -298,6 +301,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const sendToken = useRef(0);
   const root = useRef(null);
   const shopSnap = useRef(new Map());
+  const minionSnap = useRef([]);
   const noteTimer = useRef(null);
   const toastTimer = useRef(null);
   const showToast = useCallback((text, ms = 2200) => {
@@ -343,7 +347,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const before = prevState.current;
     prevState.current = state;
     clearFlights(1200); // nothing from earlier moves lingers
+    // the minions on the wheel a moment ago: when a new round clears the wheel, they fly home to their leaders
+    const wasOnWheel = minionSnap.current;
+    minionSnap.current = snapshotMinions(root.current);
     if (before === state) { shopSnap.current = snapshotShop(root.current); return undefined; }
+    if (state.round !== before.round && before.round >= 1) flyMinionsHome(root.current, wasOnWheel);
     const flights = before.shop.filter(u => !state.shop.includes(u))
       .map(uid => ({ uid, to: state.players.findIndex(p => p.members.includes(uid)) }))
       .filter(m => m.to >= 0);
@@ -412,8 +420,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       setTimeout(() => showToast(msg, 2000), flights.length && motionOK() ? 650 : 0);
     }
 
-    // A new worker travels from its owner to the space. The board never turns itself: a rival's move is marked
-    // where it happened (ring + rim arrow) and named in the header.
+    // A new minion travels from its leader to the space. The board never turns itself: a rival's move is marked
+    // where it happened (a dashed ring) and told in the turn's story.
     const fresh = state.round !== before.round ? Object.keys(state.slots) : Object.keys(state.slots).filter(k => before.slots[k] === undefined);
     if (!fresh.length) return undefined;
     const key = fresh[fresh.length - 1];
@@ -664,7 +672,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       ) : (
         <>
           <section className="lt-wheel" data-region="wheel">
-            <Wheel state={state} hover={hover} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+            <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
@@ -689,7 +697,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </Popover>
       )}
       {mine && !needHandoff && pend.kind === 'pay' && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
-      {moment && <RoundEnd info={moment} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
+      {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={root.current} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onDone={() => setReckoned(moment)} />}
+      {moment && reckoned === moment && <RoundEnd info={moment} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
       {logOpen && <Chronicle state={state} onClose={() => setLogOpen(false)} />}
       <HoverCardLayer hover={hover} state={state} me={me} optionFor={live} onPick={onPick} />

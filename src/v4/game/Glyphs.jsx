@@ -4,6 +4,7 @@
 import { Follower } from '../art/Follower.jsx';
 import { playerColor, seatSigil, seatEmoji } from '../format.js';
 import { Leader, Minion } from '../art/Leader.jsx';
+import Tick from './Tick.jsx';
 
 // 16×16 outlines, one per resource; anything else is a disc.
 const SHAPES = {
@@ -43,7 +44,7 @@ export function FollowerMark({ n, size = 6, label = true }) {
   const title = `${n} follower${n === 1 ? '' : 's'}${n >= 5 ? ` (${[tens && `${tens}×10`, fives && '5', ones && `${ones}×1`].filter(Boolean).join(' + ')})` : ''}`;
   return (
     <span className="fol-mark" title={title} aria-label={title} role="img" data-followers={n}>
-      {label && <b className="num">{n}</b>}
+      {label && <b className="num"><Tick value={n} className="num" float={false} /></b>}
       <span className="dots" aria-hidden="true">
         {Array.from({ length: tens }, (_, k) => <i key={`t${k}`} className="d10" style={{ width: size * 2, height: size * 2 }} />)}
         {Array.from({ length: fives }, (_, k) => <i key={`f${k}`} className="d5" style={{ width: size * 1.5, height: size * 1.5 }} />)}

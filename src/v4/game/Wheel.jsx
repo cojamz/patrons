@@ -63,7 +63,7 @@ export function spaceGeometry(state) {
  * @param {{ state:any, legal:Map<string,string>, onPick:(id:string)=>void, onDenied?:(info:object, el:Element)=>void,
  *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void }} props
  */
-export default function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null }) {
+export default function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null }) {
   const [rot, setRot] = useState(() => -90 * facing);
   const [peek, setPeek] = useState(null); // { key, pinned }
   // the space card itself is UI-B's hover layer: the wheel only says which space is under the pointer (or pinned)
@@ -336,7 +336,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     const st = stand.find(x => x.qid === qid);
     const leaders = st ? st.leaders : [];
     return (
-      <div key={`pl${qid}`} className={`plaque${Math.abs(ax) > 0.7 ? ' side' : ''}`} data-plaque={qid} style={{ ...at(X, Y), '--c': `var(--${qid})`, '--ax': ax.toFixed(2), '--ay': ay.toFixed(2) }}>
+      <div key={`pl${qid}`} className={`plaque${Math.abs(ax) > 0.7 ? ' side' : ''}${lampQid === qid ? ' lit' : lampQid ? ' wait' : ''}`} data-plaque={qid} style={{ ...at(X, Y), '--c': `var(--${qid})`, '--ax': ax.toFixed(2), '--ay': ay.toFixed(2) }}>
         <span
           className="plaque-face" role="button" tabIndex={0} aria-haspopup="dialog"
           title={`${st ? st.label : quadrant(qid).scoring.label}: +${RING_VALUE[paying - 1]} at round end${leaders.length ? `; ${leaders.map(id => (id === meId ? 'you' : state.players[id].name)).join(' & ')} ${leaders.length > 1 ? 'lead' : 'leads'}` : '; no one yet'}. Show the standings.`}

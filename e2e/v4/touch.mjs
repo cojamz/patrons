@@ -12,6 +12,7 @@
 //  (i) no hover card ever opens from a touch (or a synthetic hover after a tap);
 //  (j) setup: the starting-resource chips are fully on screen without scrolling (iPhone 13, taps and clicks);
 //  (l) paying: the suggested coins sit in the cost, a tap takes one back, a tap on your resource puts it in;
+//  (m) reading a shop card never recruits it: a tap opens the card, and its Recruit button recruits;
 //  (k) setup: the face-up members for sale are in the setup tray (its strip on screen, each card a swipe away at
 //      most), and each opens its card on a tap.
 // Server: $V4_URL if set, else starts `npx vite` on a free port from 5182.
@@ -83,7 +84,7 @@ async function audit(step) {
       }
     }
     // header rows never overlap each other
-    const hdr = [...document.querySelectorAll('header.bar h1, header.bar .round, header.bar .rules-btn, header.bar .leave-btn, header.bar [data-prompt], header.bar .you-strip, header.bar .undo-row, header.bar .undo-slot .undo, header.bar .ticker')].filter(vis);
+    const hdr = [...document.querySelectorAll('.lt-prompt .round, .lt-prompt [data-prompt], .lt-prompt .undo, .lt-prompt .menu-glyph, .lt-prompt .pr-actions')].filter(vis);
     for (let i = 0; i < hdr.length; i++) for (let j = i + 1; j < hdr.length; j++) {
       const a = hdr[i].getBoundingClientRect(), b = hdr[j].getBoundingClientRect();
       const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
@@ -99,7 +100,7 @@ async function audit(step) {
         const m = cs.backgroundColor.match(/rgba?\(([^)]+)\)/); const alpha = m ? (m[1].split(',')[3] ?? '1') : '0';
         if (Number(alpha) < 0.98) (out.choice = out.choice || []).push(`choice sheet is see-through (${cs.backgroundColor})`);
       } else {
-        const others = ['.shop-panel.compact', '.fbuy', '.more-hint'].map(s => document.querySelector(s)).filter(e => e && vis(e) && !e.closest('[aria-hidden="true"]'));
+        const others = ['.lt-shop .lt-cards', '.lt-shop .lt-rates', '.lt-seat-0', '.lt-seat-1', '.lt-seat-2', '.lt-seat-3'].map(s => document.querySelector(s)).filter(e => e && vis(e) && !e.closest('[aria-hidden="true"]'));
         const a = ch.getBoundingClientRect();
         for (const o of others) {
           const b = o.getBoundingClientRect();
@@ -117,7 +118,7 @@ async function audit(step) {
       const pseudo = [...document.querySelectorAll('body *')].filter(e => ['::before', '::after'].some(ps => { const st = getComputedStyle(e, ps); return st.content !== 'none' && st.position !== 'static'; })).length;
       out.side.who = wide.slice(-4).map(cls).join(' < ') + ` [sw ${out.side.sw} cw ${out.side.cw} iw ${innerWidth} vv ${visualViewport && visualViewport.width}x${visualViewport && visualViewport.scale} body ${document.body.scrollWidth}]`;
     }
-    out.peek = [...document.querySelectorAll('.peek:not(.pinned), .popover.hover')].some(vis);
+    out.peek = [...document.querySelectorAll('[data-hover-layer][data-open="1"], .popover.hover')].some(vis);
     const u = [...document.querySelectorAll('.undo')].find(vis);
     const g = document.querySelector('.app.game');
     if (u && g) out.undo = { actor: g.dataset.actor, bot: g.dataset.bot };
@@ -146,7 +147,7 @@ async function setupPhase() {
       const chips = [...document.querySelectorAll('.prompt.choice.setup [data-option]')].filter(vis).map(e => e.getBoundingClientRect());
       return {
         sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, sx: scrollX,
-        peek: [...document.querySelectorAll('.peek:not(.pinned)')].some(vis),
+        peek: [...document.querySelectorAll('[data-hover-layer][data-open="1"]')].some(vis),
         chips: chips.length, off: chips.filter(b => b.left < -0.5 || b.right > innerWidth + 0.5 || b.top < -0.5 || b.bottom > innerHeight + 0.5).length,
       };
     });
@@ -224,7 +225,7 @@ try {
   await page.waitForSelector('[data-start]');
   await audit('setup');
   const start = await page.$('[data-start]'); await start.scrollIntoViewIfNeeded(); await start.tap();
-  await page.waitForSelector('.players');
+  await page.waitForSelector('.lt-seat[data-pid]');
 
   const t0 = Date.now();
   let steps = 0, lastMoves = null;
@@ -237,10 +238,15 @@ try {
     const place = await page.$('[data-place]');
     if (place) { await place.tap().catch(() => {}); await page.waitForTimeout(450); continue; }
     // your own recruit: buy the first affordable card once and watch it fly
-    const card = sawFlight === null ? await page.$('.shop .card.can[data-option]') : null;
-    if (card && await page.$('.fbuy.live .pass[data-option]')) {
+    const card = sawFlight === null ? await page.$('.lt-shop .card.can[data-option]') : null;
+    if (card && await page.$('.lt-prompt .pass[data-option]')) {
       await card.scrollIntoViewIfNeeded().catch(() => {});
       await card.tap().catch(() => {});
+      // (m) reading a card never recruits it: the tap opens the card, its Recruit button recruits
+      const recruit = await page.waitForSelector('[data-recruit]', { timeout: 3000 }).catch(() => null);
+      if (!recruit) note('(m) tapping an affordable shop card showed no Recruit button', 'buy');
+      if (await page.$('.dialog.pay')) note('(m) tapping a shop card went straight to paying (reading a card must not recruit it)', 'buy');
+      if (recruit) await recruit.tap().catch(() => {});
       await page.waitForSelector('.dialog.pay', { timeout: 3000 }).catch(() => {});
       await audit(`pay ${steps}`);
       // (l) paying is tactile: the suggested coins sit in the cost ("Paid in full"); tapping one takes it back,
@@ -268,7 +274,7 @@ try {
         sawFlight = false;
         for (let f = 0; f < 12 && !sawFlight; f++) {
           sawFlight = await page.evaluate(() => {
-            const g = document.querySelector('.flight'); const me = document.querySelector('.pl[data-pid="0"]') || document.querySelector('.you-strip');
+            const g = document.querySelector('.flight'); const me = document.querySelector('.lt-seat[data-pid="0"]');
             if (!g || !me) return false;
             return true;
           });
@@ -282,7 +288,8 @@ try {
     let tapped = false;
     for (const el of els) {
       const id = await el.getAttribute('data-option').catch(() => null);
-      if (!id || id.startsWith('toggle:') || id === 'back') continue;
+      // shop cards open a sheet on touch (recruiting is the path above), so the plain tapper leaves them be
+      if (!id || id.startsWith('toggle:') || id === 'back' || id.startsWith('card:')) continue;
       try { await el.scrollIntoViewIfNeeded(); await el.tap({ timeout: 1500 }); tapped = true; break; } catch { /* moved; next */ }
     }
     await page.waitForTimeout(tapped ? 450 : 60);

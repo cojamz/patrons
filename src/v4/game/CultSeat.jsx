@@ -13,6 +13,7 @@ import { realHover } from '../hover.js';
 import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
 import { ResourceGlyph, FollowerMark, LeaderRing } from './Glyphs.jsx';
 import { lastSpace } from './seats.js';
+import Tick from './Tick.jsx';
 import './lamp-b.css';
 
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
@@ -46,7 +47,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           <b>{mine ? 'You' : p.name}</b>
           <small>{last ? <>last: <Sprite id={[`${last.qid}.${actionKey(last)}`, spriteId(last.name)]} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /></> : p.kind === 'bot' ? 'bot' : ' '}</small>
         </span>
-        <span className="cs-total" title={`${f} followers`}><b className="num">{f}</b><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
+        <span className="cs-total" title={`${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
       </header>
       <div className="cs-crowd" role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members`}>
         {shown.map(g => {

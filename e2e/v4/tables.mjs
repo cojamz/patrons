@@ -69,12 +69,12 @@ async function play(t) {
     if (picked !== t.ids.join(',')) err(`picker shows ${picked}, wanted ${t.ids.join(',')}`);
     await shot('setup');
     await page.click('[data-start]');
-    await page.waitForSelector('.players');
+    await page.waitForSelector('.lt-seat[data-pid]');
 
-    // every resource renders: 4 distinct, visible colors on P1's row
-    const cols = await page.$$eval('.pl[data-pid="0"] .r i', els => els.map(e => getComputedStyle(e).backgroundColor));
+    // every resource renders: 4 distinct, visible colors on P1's cult (each resource's shape, filled in its color)
+    const cols = await page.$$eval('.lt-seat[data-pid="0"] [data-res] .res-glyph path:first-of-type', els => els.map(e => getComputedStyle(e).fill));
     if (cols.length !== 4 || new Set(cols).size !== 4 || cols.some(c => !c || c === 'rgba(0, 0, 0, 0)' || c === 'transparent')) err(`resource colors: ${cols.join(' | ')}`);
-    const tabs = await page.$$eval('.qtab', els => els.map(e => getComputedStyle(e).getPropertyValue('--c').trim()));
+    const tabs = await page.$$eval('.lt-wheel .plaque', els => els.map(e => getComputedStyle(e).getPropertyValue('--c').trim()));
     const unresolved = await page.evaluate(ids => ids.filter(id => !getComputedStyle(document.documentElement).getPropertyValue(`--${id}`).trim()), t.ids);
     if (unresolved.length) err(`no color for ${unresolved.join(', ')}`);
 
@@ -98,7 +98,7 @@ async function play(t) {
     await page.waitForTimeout(300);
     await shot('results');
     const winner = await page.$eval('.results .win', e => e.textContent).catch(() => '?');
-    console.log(`${t.tag}: ${clicks} clicks, ${tabs.length} quadrant tabs, ${winner}`);
+    console.log(`${t.tag}: ${clicks} clicks, ${tabs.length} rim plaques, ${winner}`);
   } catch (e) {
     err(`run: ${e.stack || e.message}`);
     await shot('zz-failure');

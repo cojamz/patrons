@@ -231,3 +231,26 @@ h1,h2,h3{font-family:var(--serif)}
 /* the question's first letter keeps its overhang (the line clamp clips at the box edge) */
 .lt-prompt .status .say .say-text{padding-left:6px;margin-left:-6px;padding-right:2px}
 .lt-menu .record-text{width:100%;min-height:110px;background:var(--walnut);color:var(--cream);border:1px solid rgba(243,230,200,.2);border-radius:8px;font:12px ui-monospace,monospace}
+/* a minion in flight: its own sprite, crisp, with a shadow that says it's in the air */
+.minion-flight svg{display:block;width:100%;height:100%;image-rendering:pixelated;filter:drop-shadow(0 8px 6px rgba(0,0,0,.45))}
+
+/* ---------- the Reckoning: the room dims, the lamp walks the rim, prizes arc to the winners ---------- */
+.lt-reckon{position:fixed;inset:0;z-index:40;background:radial-gradient(ellipse at 50% 45%, rgba(10,7,5,.15), rgba(10,7,5,.55));cursor:pointer;animation:fade .25s ease-out}
+.lt-reckon .reckon-head{position:absolute;left:50%;top:14px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 22px 10px;border-radius:14px;
+  background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);box-shadow:0 0 0 2px var(--c,var(--paper-edge)),0 14px 30px rgba(0,0,0,.55);min-width:min(420px, 92vw);text-align:center}
+.lt-reckon .reckon-head small{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper-ink-3)}
+.lt-reckon .reckon-head b{font-family:var(--serif);font-size:22px;line-height:1.15}
+.lt-reckon .reckon-dots{display:flex;gap:6px}
+.lt-reckon .reckon-dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--c);opacity:.6}
+.lt-reckon .reckon-dots i.done{background:var(--c);opacity:.55}
+.lt-reckon .reckon-dots i.on{background:var(--c);opacity:1;box-shadow:0 0 8px var(--c)}
+.lt-reckon .reckon-count{position:fixed;transform:translate(-50%,-110%);display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;
+  background:var(--paper);color:var(--paper-ink);font-family:var(--serif);font-weight:700;font-size:22px;box-shadow:0 0 0 2px var(--c),0 8px 18px rgba(0,0,0,.5);pointer-events:none;animation:rise .25s ease-out}
+.lt-reckon .reckon-count.won{box-shadow:0 0 0 3px var(--lamp-ink),0 0 22px 6px rgba(var(--lamp),.6);animation:rise .25s ease-out, reckonwin .5s .6s ease-out 2}
+@keyframes reckonwin{50%{transform:translate(-50%,-110%) scale(1.18)}}
+.lt-reckon .reckon-skip{position:absolute;right:18px;bottom:18px;min-height:44px;padding:0 18px;color:var(--cream);border-color:rgba(243,230,200,.4);background:rgba(29,22,17,.7)}
+.lt .stage .plaque.lit{z-index:41}
+.lt .stage .plaque.lit > span{box-shadow:0 0 0 2.5px var(--paper-ink),0 0 0 6px var(--lamp-ink),0 0 26px 8px rgba(var(--lamp),.55);transform:scale(1.12);transition:transform .25s}
+.lt .stage .plaque.wait > span{opacity:.6}
+.token-flight{position:fixed;z-index:45;pointer-events:none;display:grid;place-items:center;will-change:transform}
+.token-flight .reckon-token{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--lamp-ink);color:var(--paper-ink);font-family:var(--serif);font-weight:700;font-size:15px;box-shadow:0 0 0 2px var(--pc),0 6px 14px rgba(0,0,0,.5)}
