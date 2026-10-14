@@ -279,7 +279,7 @@ function evaluate(s, buysLeft, incomeLeft, roundLeft, extraAbility = {}, future)
 }
 const marginOf = (vals, me, spite = 1) => vals[me] - spite * Math.max(...vals.filter((_, i) => i !== me));
 
-// Resolve follow-up choices a hypothetical move queued (Take, Hire ties, Joint Venture's gift…) by their hints.
+// Resolve follow-up choices a hypothetical move queued (Hand-pick, Open Door ties, Kickback's gift…) by their hints.
 function settle(s, ctx) {
   for (let k = 0; k < 40 && s.queue.length; k++) {
     const t = s.queue.shift();
@@ -306,7 +306,7 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
   };
   // extra: placements still ahead for the decider that this move adds (extra turns), each worth a placement's income
   const incomeAt = (s, extra = 0) => { const li = laterTurns(s).income * (opts.income ?? INCOME_SCALE); return turns.map((t, i) => (t + (i === me ? extra : 0)) * nowIncome + li); };
-  // extra turns a move queued for the decider (Overtime, Rally, Errand Runner…): each is a placement and a buy
+  // extra turns a move queued for the decider (Overtime, Crunch Time, Errand Runner…): each is a placement and a buy
   const turnsQueued = s => s.queue.filter(t => t.t === 'turn' && t.p === me).length;
   const placesLeft = turns[me] + laterTurns(state).turns;
   const out = [];
@@ -329,7 +329,7 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
         const moreBuys = s.queue.filter(t => t.t === 'buy' && t.p === me && !t.extra).length;
         const moreTurns = Math.max(0, turnsQueued(s) - turns0);
         settle(s, ctx);
-        // members the action brought in (Hire, Take…) bring their abilities too
+        // members the action brought in (Open Door, Hand-pick…) bring their abilities too
         const gained = p.members.filter(u => !had.has(u)).reduce((a, u) => a + abilityValue(cardDef(s, u), placesLeft, opts.k), 0);
         v = marginOf(evaluate(s, buysAt(s, 1 + moreBuys + moreTurns), incomeAt(s, moreTurns), roundLeft, { [me]: gained }, opts.future), me, opts.spite);
         if (opts.noMembers && memberCount(s, p) > before) v -= 100;

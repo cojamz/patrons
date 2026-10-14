@@ -15,42 +15,42 @@ const rich = { gold: 30, red: 30, purple: 30, green: 30 };
 const turnsQueued = (s, id, placed = id === s.current || id === 0 ? 1 : 0) => s.players[id].left - (3 - placed);
 
 describe('Purple actions', () => {
-  it('Hourly 4 / 5 / 6; Catch Up +1 and +2 per rival ahead on the board; Wind-up +1 per worker on the board', () => {
-    for (const r of [1, 2, 3]) expect(P(take(sc({ round: r }), 'Hourly'))).toBe(3 + r);
+  it('Clock In 4 / 5 / 6; Catch Up +1 and +2 per rival ahead on the board; Roll Call +1 per worker on the board', () => {
+    for (const r of [1, 2, 3]) expect(P(take(sc({ round: r }), 'Clock In'))).toBe(3 + r);
     expect(P(take(sc({ n: 3, slots: { '0-0': 1, '0-1': 1, '0-2': 2 } }), 'Catch Up'))).toBe(1 + 2);
-    expect(P(take(sc({ slots: { '0-0': 0, '0-1': 0 } }), 'Wind-up'))).toBe(3);
+    expect(P(take(sc({ slots: { '0-0': 0, '0-1': 0 } }), 'Roll Call'))).toBe(3);
   });
   it('Plan Ahead: +2 purple per worker you have left to place this round', () => {
     expect(P(take(sc({ round: 2 }), 'Plan Ahead'))).toBe(2 * 2); // 3 workers, this one placed: 2 left
     expect(P(take(sc({ round: 3, left: 5 }), 'Plan Ahead'))).toBe(2 * 4);
   });
-  it('Overtime: pay 8 purple for 2 extra turns right after this one, else +3; Rally: spend all, 1 per 4 plus 1 (up to 3), else +4', () => {
+  it('Overtime: pay 8 purple for 2 extra turns right after this one, else +3; Crunch Time: spend all, 1 per 4 plus 1 (up to 3), else +4', () => {
     let s = take(sc({ round: 2, res: [{ purple: 8 }] }), 'Overtime');
     expect(P(s)).toBe(0);
     expect(turnsQueued(s, 0)).toBe(2);
     s = take(sc({ round: 2, res: [{ purple: 7 }] }), 'Overtime');
     expect(P(s)).toBe(10);
     expect(turnsQueued(s, 0)).toBe(0);
-    s = take(sc({ round: 3, res: [{ purple: 4 }] }), 'Rally');
+    s = take(sc({ round: 3, res: [{ purple: 4 }] }), 'Crunch Time');
     expect(P(s)).toBe(0);
     expect(turnsQueued(s, 0)).toBe(2);
-    s = take(sc({ round: 3, res: [{ purple: 3 }] }), 'Rally');
+    s = take(sc({ round: 3, res: [{ purple: 3 }] }), 'Crunch Time');
     expect(P(s)).toBe(7);
     expect(turnsQueued(s, 0)).toBe(0);
   });
 });
 
 describe('Purple members', () => {
-  it('Second Wind: once per game, an extra turn right after this one; the log names Second Wind', () => {
+  it('Go-Getter: once per game, an extra turn right after this one; the log names Go-Getter', () => {
     let s = sc({ members: [['purple.secondwind']] });
-    s = take(s, 'Hourly');
+    s = take(s, 'Clock In');
     s = move(s, `use:${uidOf(s, 'purple.secondwind', 0)}`);
     expect(turnsQueued(s, 0)).toBe(1);
-    expect(named(s, 'Second Wind')).toHaveLength(1);
+    expect(named(s, 'Go-Getter')).toHaveLength(1);
   });
-  it('Second Wind × Foreman: the extra turn pays Foreman, named', () => {
+  it('Go-Getter × Foreman: the extra turn pays Foreman, named', () => {
     let s = sc({ members: [['purple.secondwind', 'purple.foreman']] });
-    s = take(s, 'Hourly');
+    s = take(s, 'Clock In');
     s = move(s, `use:${uidOf(s, 'purple.secondwind', 0)}`);
     expect(P(s)).toBe(4 + 1);
     expect(named(s, 'Foreman')[0]).toMatch(/P1's Foreman: \+1 purple/);
@@ -58,32 +58,32 @@ describe('Purple members', () => {
 
   it('Errand Runner: when recruited, an extra turn right after this one; named', () => {
     let s = sc({ res: [rich], shop: ['purple.errand'] });
-    s = take(s, 'Hourly'); s = buy(s, 'purple.errand');
+    s = take(s, 'Clock In'); s = buy(s, 'purple.errand');
     expect(turnsQueued(s, 0)).toBe(1);
     expect(named(s, 'Errand Runner')).toHaveLength(1);
   });
   it('Errand Runner × a rival’s Overseer: it reacts to the extra turn, named', () => {
     let s = sc({ res: [rich, { purple: 6 }], members: [[], ['purple.overseer']], shop: ['purple.errand'] });
-    s = take(s, 'Hourly'); s = buy(s, 'purple.errand');
+    s = take(s, 'Clock In'); s = buy(s, 'purple.errand');
     expect(P(s, 1)).toBe(6 + 3);
     expect(named(s, 'Overseer')[0]).toMatch(/P2's Overseer: \+3 purple/);
   });
 
   it('Taskmaster: once per round, pay 5 purple for an extra turn; named', () => {
     let s = sc({ round: 2, res: [{ purple: 7 }], members: [['purple.taskmaster']] });
-    s = take(s, 'Rush');
+    s = take(s, 'Golden Years');
     s = move(s, `use:${uidOf(s, 'purple.taskmaster', 0)}`);
     expect(P(s)).toBe(2);
     expect(turnsQueued(s, 0)).toBe(1);
     expect(named(s, 'Taskmaster')).toHaveLength(1);
     expect(s.pending.options.some(o => o.id.startsWith('use:'))).toBe(false);
   });
-  it('Taskmaster × Double Time: costs 3, and the log says Double Time halved it', () => {
+  it('Taskmaster × Corner-Cutter: costs 3, and the log says Corner-Cutter halved it', () => {
     let s = sc({ round: 2, res: [{ purple: 7 }], members: [['purple.taskmaster', 'purple.doubletime']] });
-    s = take(s, 'Rush');
+    s = take(s, 'Golden Years');
     s = move(s, `use:${uidOf(s, 'purple.taskmaster', 0)}`);
     expect(P(s)).toBe(4);
-    expect(named(s, 'Double Time')).toHaveLength(1);
+    expect(named(s, 'Corner-Cutter')).toHaveLength(1);
   });
 
   it('Late Riser: from round II, the trailing player (ties count) takes a turn before anyone, even a Front-runner', () => {
@@ -114,10 +114,10 @@ describe('Purple members', () => {
     expect(P(s, 1)).toBe(11 + 4 + 4);
     expect(named(s, 'Overseer')).toHaveLength(2);
   });
-  it('Double Time: Overtime costs 4; the log names Double Time; a Doppelganger copy does not halve again', () => {
+  it('Corner-Cutter: Overtime costs 4; the log names Corner-Cutter; a Doppelganger copy does not halve again', () => {
     let s = take(sc({ round: 2, res: [{ purple: 8 }], members: [['purple.doubletime']] }), 'Overtime');
     expect(P(s)).toBe(4);
-    expect(named(s, 'Double Time')).toHaveLength(1);
+    expect(named(s, 'Corner-Cutter')).toHaveLength(1);
     s = sc({ round: 2, res: [{ purple: 8 }], members: [['purple.doubletime', 'red.doppel']] });
     s.cards[uidOf(s, 'red.doppel', 0)].copy = 'purple.doubletime';
     expect(P(take(s, 'Overtime'))).toBe(4);
@@ -125,7 +125,7 @@ describe('Purple members', () => {
   it('Bookkeeper on your last placement of the round (before its buy), not at round end; Clockmaker and Lamplighter at round start; all named', () => {
     let s = sc({ res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 }, queue: [{ t: 'endRound' }] });
     expect(P(s)).toBe(5);
-    s = take(sc({ left: 1, res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 } }), 'Scout');
+    s = take(sc({ left: 1, res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 } }), 'Bandwagon');
     expect(P(s)).toBe(5 + 2); // its last worker: 4 workers on the board → +1 per 2
     expect(named(s, 'Bookkeeper')).toHaveLength(1);
     s = sc({ res: [{ purple: 7 }], members: [['purple.clockmaker']], queue: [{ t: 'round', r: 2 }] });
@@ -140,9 +140,9 @@ describe('Purple members', () => {
     expect(s.players[0].left).toBe(6);
     expect(P(s)).toBe(5);
   });
-  it('Patience: game end +1 follower per 3 purple, in the final parts', () => {
+  it('Timekeeper: game end +1 follower per 3 purple, in the final parts', () => {
     const s = sc({ res: [{ purple: 7 }], members: [['purple.patience']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.parts).toEqual(['Patience +2']);
+    expect(s.players[0].final.parts).toEqual(['Timekeeper +2']);
     expect(followers(s, s.players[0])).toBe(1 + 1 + 2);
   });
 });

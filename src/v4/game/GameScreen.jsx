@@ -275,7 +275,7 @@ function PromptActions({ state, optionFor, onPick }) {
 
 const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing a minion', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
 
-export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults }) {
+export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults, askLeave = 0 }) {
   const [live0, moment, dismissMoment] = useTable(session, pace ?? RIVAL_DWELL_MS);
   const state = moment && moment.board ? moment.board : live0;
   const mySeats = session.mySeats || NO_SEATS;
@@ -328,6 +328,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   void short;
   const [logOpen, setLogOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  // the browser's Back (an edge swipe on a phone) asks first, like the Leave button (App re-pushes the history entry)
+  const askSeen = useRef(askLeave);
+  useEffect(() => { if (askLeave !== askSeen.current) { askSeen.current = askLeave; setLeaving(true); } }, [askLeave]);
   const [note, setNote] = useState(null); // { text, tone, n } — a gentle answer in the status pill
   const prevState = useRef(state);
   const facingRef = useRef(facing);

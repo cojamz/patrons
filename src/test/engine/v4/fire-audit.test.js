@@ -56,7 +56,7 @@ export function audit(tables, games, { seed = 3100, hand = [], perSeat = 0, rule
 
 describe('fire audit: Blue, Magenta, White, Green', () => {
   const GROUP = ['market', 'thieves', 'trading', 'echo'];
-  // Watchdog changes no number (it only refuses a steal). Social Climber pays only on a Release, and this audit plays
+  // Bodyguard changes no number (it only refuses a steal). Social Climber pays only on a Release, and this audit plays
   // with Release off; cards-market.test.js covers it.
   // Magnate pays only from white left at game end (1 follower per 3); normal bots spend white down because any
   // follower buy beats that rate, so it fires about 1 hold in 13 (ledger) and 4 holds can all miss. Since the
@@ -93,8 +93,8 @@ describe('namesCard: what counts as a line naming a card', () => {
   it('counts the engine’s and content’s trace forms', () => {
     for (const [l, n] of [
       ["P1's Banker: +3 gold.", 'Banker'], ['P2 +1 silver (P1\'s Retinue).', 'Retinue'], ['P1 uses Big Spender.', 'Big Spender'],
-      ['P1 used Jackpot: +7 gold.', 'Jackpot'], ['Tycoon +3', 'Tycoon'], ['P1 recruited Banker (1 gold; Sponsor saves 2).', 'Sponsor'],
-      ['P1 recruited Banker (2 gold; Thrift: gold counts double).', 'Thrift'], ['P1 pays 3 purple for Overtime (Double Time: 6 → 3).', 'Double Time'],
+      ['P1 used Lottery Winner: +7 gold.', 'Lottery Winner'], ['Tycoon +3', 'Tycoon'], ['P1 recruited Banker (1 gold; Sponsor saves 2).', 'Sponsor'],
+      ['P1 recruited Banker (2 gold; Penny Pincher: gold counts double).', 'Penny Pincher'], ['P1 pays 3 purple for Overtime (Corner-Cutter: 6 → 3).', 'Corner-Cutter'],
       ['Round II begins. P1 picks first. (P1\'s Front-runner: always picks first.)', 'Front-runner'],
     ]) expect(namesCard(l, n), l).toBe(true);
   });

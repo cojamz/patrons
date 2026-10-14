@@ -126,12 +126,12 @@
     return `M${x0},${y0} A${r1},${r1} 0 0 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 0 0 ${x3},${y3}Z`;
   }
   /** Each space's angle and centre (units, relative to the wheel centre). ringR overrides ring radii. */
-  function spaces(ringR = null) {
+  function spaces(ringR = null, spans = null) {
     const out = [];
     Q.forEach((q, qi) => q.actions.forEach(a => {
       const t = a.ring, R = RING[t];
       const idx = q.actions.filter(x => x.ring === t && q.actions.indexOf(x) < q.actions.indexOf(a)).length;
-      const span = t === 1 ? 66 : t === 2 ? 40 : 0;
+      const span = spans ? spans[t] || 0 : t === 1 ? 66 : t === 2 ? 40 : 0;
       const c = qCenter(qi);
       const ang = R.n === 1 ? c : (c + span / 2) - idx * (span / (R.n - 1));
       const r = ringR ? ringR[t] : R.r;

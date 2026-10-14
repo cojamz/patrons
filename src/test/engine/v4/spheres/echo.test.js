@@ -50,15 +50,15 @@ describe('Green actions', () => {
     expect(R(s)[0]).toEqual({ ...Z, green: 3 });
   });
 
-  it('Chant: +2 green per round number', () => {
-    expect(R(go(scene(), 'Chant'))[0].green).toBe(2);
-    expect(R(go(scene({ round: 3 }), 'Chant'))[0].green).toBe(6);
+  it('Crescendo: +2 green per round number', () => {
+    expect(R(go(scene(), 'Crescendo'))[0].green).toBe(2);
+    expect(R(go(scene({ round: 3 }), 'Crescendo'))[0].green).toBe(6);
   });
 
   it('Echo: copies exactly what the space gave, never recomputed', () => {
-    // P2 takes Rush in round II (+4 gold). P1 copies exactly +4.
+    // P2 takes Golden Years in round II (+4 gold). P1 copies exactly +4.
     let s = scene({ round: 2, turns: [1, 0], members: [['red.intern', 'red.twins'], []] });
-    s = go(s, 'Rush');
+    s = go(s, 'Golden Years');
     expect(R(s)[1].gold).toBe(4);
     s = take(s, 'Echo');
     expect(ids(s)).toEqual([`space:now:0-1`]);
@@ -69,22 +69,22 @@ describe('Green actions', () => {
 
   it('Echo: a rival’s space taken since your last turn; never your own, an echo or the center', () => {
     let s = scene({ round: 3, turns: [1, 0, 1, 1, 0, 0], res: [{}, { gold: 2 }], members: [[], ['red.intern']] });
-    s = go(s, 'Windfall');            // P2 ring II: +1 gold (before P1's last turn)
-    s = go(s, 'Rush');                // P1 ring I: +6 gold
-    s = go(s, 'Strike');              // P2 center
+    s = go(s, 'Tithe');            // P2 ring II: +1 gold (before P1's last turn)
+    s = go(s, 'Golden Years');                // P1 ring I: +6 gold
+    s = go(s, 'Double Down');              // P2 center
     s = go(s, 'Hum');                 // P2 ring I: +3 green
     s = take(s, 'Echo');
     expect(s.pending.options.map(o => o.label)).toEqual(['Hum (P2): +3 green']);
     s = pass(play(s, spaceOpt(s, 'Hum')));
     expect(R(s)[0]).toEqual({ ...Z, gold: 6, green: 3 });
     s = take(s, 'Encore');
-    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Hum (P2): +3 green', 'Rush (P1): +6 gold', 'Windfall (P2): +1 gold']);
+    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Hum (P2): +3 green', 'Golden Years (P1): +6 gold', 'Tithe (P2): +1 gold']);
   });
 
   it('Echo: on your second pick in a row (the snake’s turn), no rival has placed since: nothing to copy', () => {
     let s = scene({ turns: [1, 0, 0] });
     s = go(s, 'Hum');                 // P2
-    s = go(s, 'Rush');                // P1
+    s = go(s, 'Golden Years');                // P1
     s = go(s, 'Echo');                // P1 again: P2's Hum was before P1's last turn
     expect(R(s)[0]).toEqual({ ...Z, gold: 2 });
     expect(s.log.some(l => /P1 had nothing to copy/.test(l))).toBe(true);
@@ -96,35 +96,35 @@ describe('Green actions', () => {
   });
 
   it('Exact copy: the taker’s member bonuses are not copied (Prospector, Underdog)', () => {
-    // P2 has Prospector (+1 on action gold) and Underdog (doubles while someone has more gold): Rush gives P2 2*2+1 = 5
+    // P2 has Prospector (+1 on action gold) and Underdog (doubles while someone has more gold): Golden Years gives P2 2*2+1 = 5
     let s = scene({ turns: [1, 0], res: [{ gold: 9 }, {}], members: [[], ['gold.prospector', 'gold.underdog']] });
-    s = go(s, 'Rush');
+    s = go(s, 'Golden Years');
     expect(R(s)[1].gold).toBe(5);
     s = take(s, 'Echo');
-    expect(s.pending.options[0].label).toBe('Rush (P2): +2 gold'); // the chip shows the printed gain
+    expect(s.pending.options[0].label).toBe('Golden Years (P2): +2 gold'); // the chip shows the printed gain
     s = pass(move(s, s.pending.options[0].id));
     expect(R(s)[0].gold).toBe(11);
   });
 
-  it('Exact copy: Joint Venture copies the +3, not the gift', () => {
+  it('Exact copy: Kickback copies the +3, not the gift', () => {
     let s = scene({ turns: [1, 0] });
-    s = go(s, 'Joint Venture', 'player:0');
-    s = go(s, 'Echo', spaceOpt(s, 'Joint Venture'));
+    s = go(s, 'Kickback', 'player:0');
+    s = go(s, 'Echo', spaceOpt(s, 'Kickback'));
     expect(R(s)[0].gold).toBe(4); // the gift's 1, then the copied 3 (no second gift)
     expect(R(s)[1].gold).toBe(3);
   });
 
   it('Exact copy: a space that took or traded is copied by doing it yourself', () => {
     let s = scene({ round: 2, turns: [1, 0, 0], res: [{ gold: 1 }, {}, { gold: 4 }], n: 3 });
-    s = go(s, 'Steal', 'player:0'); // P2 steals P1's only gold, then P3's
+    s = go(s, 'Collect Debts', 'player:0'); // P2 steals P1's only gold, then P3's
     expect(s.pending.kind).toBe('choose');
     s = pass(play(s, 'player:2', 'player:2'));
     expect(R(s)[1].gold).toBe(3);
     s = take(s, 'Encore');
-    expect(s.pending.options.map(o => o.label)).toEqual(['Steal (P2): do Steal yourself']);
+    expect(s.pending.options.map(o => o.label)).toEqual(['Collect Debts (P2): do Collect Debts yourself']);
     s = move(s, s.pending.options[0].id);
     // P1 now steals: from P2 or P3
-    expect(s.pending.prompt).toMatch(/Steal/);
+    expect(s.pending.prompt).toMatch(/Collect Debts/);
     s = pass(play(s, 'player:1', 'player:1', 'player:1'));
     expect(R(s)[0].gold).toBe(3);
     expect(R(s)[1].gold).toBe(0);
@@ -132,59 +132,59 @@ describe('Green actions', () => {
 
   it('Encore: any space this round, anyone’s, rings I and II (not the center, not an echo)', () => {
     let s = scene({ round: 3, turns: [1, 1, 0, 0], res: [{}, { gold: 5 }], members: [[], ['red.intern', 'red.twins', 'red.volunteer']] });
-    s = go(s, 'Windfall'); // P2 +3 gold (3 members); P1 has none and still copies +3
-    s = go(s, 'Strike');   // P2 center
+    s = go(s, 'Tithe'); // P2 +3 gold (3 members); P1 has none and still copies +3
+    s = go(s, 'Double Down');   // P2 center
     s = go(s, 'Hum');      // P1 +3 green
     s = take(s, 'Encore');
-    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Hum (P1): +3 green', 'Windfall (P2): +3 gold']);
-    s = pass(play(s, spaceOpt(s, 'Windfall')));
+    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Hum (P1): +3 green', 'Tithe (P2): +3 gold']);
+    s = pass(play(s, spaceOpt(s, 'Tithe')));
     expect(R(s)[0]).toEqual({ ...Z, gold: 3, green: 3 });
   });
 
-  it('Refrain: +2 green, then copy one of your own spaces from this round (never a rival’s)', () => {
+  it('Reprise: +2 green, then copy one of your own spaces from this round (never a rival’s)', () => {
     let s = scene({ round: 2, turns: [0, 1, 0] });
-    s = go(s, 'Rush');                // P1 +4 gold
+    s = go(s, 'Golden Years');                // P1 +4 gold
     s = go(s, 'Hum');                 // P2 +3 green
-    s = take(s, 'Refrain');
-    expect(s.pending.options.map(o => o.label)).toEqual(['Rush (P1): +4 gold']);
-    s = pass(play(s, spaceOpt(s, 'Rush')));
+    s = take(s, 'Reprise');
+    expect(s.pending.options.map(o => o.label)).toEqual(['Golden Years (P1): +4 gold']);
+    s = pass(play(s, spaceOpt(s, 'Golden Years')));
     expect(R(s)[0]).toEqual({ ...Z, gold: 8, green: 2 });
   });
 
-  it('Refrain with none of your spaces to copy: just the +2 green', () => {
+  it('Reprise with none of your spaces to copy: just the +2 green', () => {
     let s = scene({ round: 2, turns: [1, 0] });
     s = go(s, 'Hum');                 // P2
-    s = go(s, 'Refrain');
+    s = go(s, 'Reprise');
     expect(R(s)[0]).toEqual({ ...Z, green: 2 });
     expect(s.log.some(l => /P1 had nothing to copy/.test(l))).toBe(true);
   });
 
-  it('The ledger keeps last round’s spaces (Afterimage reads them)', () => {
+  it('The ledger keeps last round’s spaces (Sleepwalker reads them)', () => {
     let s = scene({ round: 1, turns: [1], queue: [{ t: 'turn', p: 1 }] });
     s = go(s, 'Hum');
     s.round = 2; s.slots = {}; s.queue = [{ t: 'turn', p: 0 }]; s = resume(s);
-    s = go(s, 'Rush');
+    s = go(s, 'Golden Years');
     expect(Object.keys(ledger(s).now)).toEqual(['0-1']);
     expect(Object.values(ledger(s).last).map(e => [e.name, e.res])).toEqual([['Hum', { green: 3 }]]);
   });
 
-  it('Eternity: copies every space you took this round, skipping echoes', () => {
+  it('Greatest Hits: copies every space you took this round, skipping echoes', () => {
     let s = scene({ round: 3, turns: [0, 0, 0, 0], members: [['red.intern'], []] });
-    s = go(s, 'Rush');                 // +6 gold
+    s = go(s, 'Golden Years');                 // +6 gold
     s = go(s, 'Hum');                  // +3 green
-    s = go(s, 'Refrain', spaceOpt(s, 'Rush')); // an echo: +2 green, +6 gold; it can't be copied again
+    s = go(s, 'Reprise', spaceOpt(s, 'Golden Years')); // an echo: +2 green, +6 gold; it can't be copied again
     expect(R(s)[0]).toEqual({ ...Z, gold: 12, green: 5 });
-    s = go(s, 'Eternity');
+    s = go(s, 'Greatest Hits');
     expect(R(s)[0]).toEqual({ ...Z, gold: 18, green: 8 });
   });
 
   it('Copying a free member: take a face-up member costing no more, free', () => {
     // P2 Hires the cheapest (Intern, cost 1). P1 echoes: any face-up member costing 1 or less.
     let s = scene({ round: 1, turns: [1, 0], shop: ['red.intern', 'red.volunteer', 'gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor'] });
-    s = go(s, 'Hire');
+    s = go(s, 'Open Door');
     expect(defs(s, 1)).toEqual(['red.volunteer']);
     s = take(s, 'Echo');
-    expect(s.pending.options[0].label).toBe('Hire (P2): a member (≤0; none face up)'); // the chip says so
+    expect(s.pending.options[0].label).toBe('Open Door (P2): a member (≤0; none face up)'); // the chip says so
     s = move(s, s.pending.options[0].id);
     // Volunteer costs 0; nothing face up costs 0 any more
     expect(defs(s, 0)).toEqual([]);
@@ -192,23 +192,23 @@ describe('Green actions', () => {
 
   it('Copying a free member: picks among those costing no more', () => {
     let s = scene({ round: 1, turns: [1, 0], shop: ['red.intern', 'gold.seed', 'gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor'] });
-    s = go(s, 'Hire'); // Intern, cost 1
+    s = go(s, 'Open Door'); // Intern, cost 1
     s = take(s, 'Echo');
-    expect(s.pending.options[0].label).toBe('Hire (P2): a member (≤1; none face up)');
+    expect(s.pending.options[0].label).toBe('Open Door (P2): a member (≤1; none face up)');
     s = move(s, s.pending.options[0].id);
-    // nothing else face up costs 1 or less: Seed Money is 2 (pinned), so the copy finds nothing
+    // nothing else face up costs 1 or less: Treasurer is 2 (pinned), so the copy finds nothing
     expect(defs(s, 0)).toEqual([]);
   });
 
   it('Copying a free member: you pick among the face-up members costing no more', () => {
     let s = scene({ round: 1, turns: [1, 0], shop: ['gold.taxman', 'red.twins', 'gold.seed', 'gold.jackpot', 'gold.tycoon', 'red.mentor'] });
-    s = take(s, 'Hire'); // three cost 2: P2 picks Tax Collector
+    s = take(s, 'Open Door'); // three cost 2: P2 picks Tax Collector
     s = pass(move(s, `card:${uidOf(s, 'gold.taxman', 'shop')}`));
     s = take(s, 'Echo');
-    expect(s.pending.options[0].label).toBe('Hire (P2): a member (≤2)');
+    expect(s.pending.options[0].label).toBe('Open Door (P2): a member (≤2)');
     s = move(s, s.pending.options[0].id);
     const labels = s.pending.options.map(o => o.label);
-    expect(labels).toEqual(expect.arrayContaining(['Twins (2)', 'Seed Money (2)']));
+    expect(labels).toEqual(expect.arrayContaining(['Twins (2)', 'Treasurer (2)']));
     expect(labels.every(l => Number(l.match(/\((\d+)\)$/)[1]) <= 2)).toBe(true);
     s = pass(move(s, `card:${uidOf(s, 'red.twins', 'shop')}`));
     expect(defs(s, 0)).toEqual(['red.twins']);
@@ -217,14 +217,14 @@ describe('Green actions', () => {
 
   it('Copying a discount', () => {
     let s = scene({ round: 2, turns: [1, 1, 0, 0], res: [{ gold: 1 }, {}] });
-    s = go(s, 'Discount');
-    s = go(s, 'Steal', 'player:0'); // P2 steals P1's only gold: +1
+    s = go(s, 'Intro Offer');
+    s = go(s, 'Collect Debts', 'player:0'); // P2 steals P1's only gold: +1
     expect(R(s)[0].gold).toBe(0);
     s = take(s, 'Encore');
-    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Discount (P2): 4 off', 'Steal (P2): do Steal yourself']);
-    s = pass(play(s, spaceOpt(s, 'Discount')));
+    expect(s.pending.options.map(o => o.label).sort()).toEqual(['Intro Offer (P2): 4 off', 'Collect Debts (P2): do Collect Debts yourself']);
+    s = pass(play(s, spaceOpt(s, 'Intro Offer')));
     expect(s.players[0].discount).toBe(4);
-    s = go(s, 'Refrain'); // nothing of P1's to copy (Encore is an echo): just +2 green
+    s = go(s, 'Reprise'); // nothing of P1's to copy (Encore is an echo): just +2 green
     expect(R(s)[0]).toEqual({ ...Z, green: 2 });
   });
 });
@@ -237,7 +237,7 @@ describe('Green scoring', () => {
 });
 
 describe('Green members', () => {
-  it('Evergreen: +3 green at round start', () => {
+  it('Busker: +3 green at round start', () => {
     const s = scene({ members: [['echo.evergreen'], []], queue: [{ t: 'round', r: 2 }] });
     expect(R(s)[0].green).toBe(3);
   });
@@ -260,21 +260,22 @@ describe('Green members', () => {
 
   it('Understudy: when recruited, copy a space a rival took since your last turn', () => {
     let s = scene({ round: 2, turns: [1, 0], res: [{ green: 6 }, {}], shop: ['echo.understudy', ...SHOP.slice(1)] });
-    s = go(s, 'Rush');                // P2 +4 gold
+    s = go(s, 'Golden Years');                // P2 +4 gold
     s = take(s, 'Hum');               // P1 +3 green, then recruits Understudy (paid 2 green: pinned 1+1)
     s = play(s, `card:${uidOf(s, 'echo.understudy', 'shop')}`);
-    expect(s.pending.options.map(o => o.label)).toEqual(['Rush (P2): +4 gold']); // not P1's own Hum
+    expect(s.pending.options.map(o => o.label)).toEqual(['Golden Years (P2): +4 gold']); // not P1's own Hum
     s = move(s, s.pending.options[0].id);
     expect(R(s)[0]).toEqual({ ...Z, gold: 4, green: 7 });
   });
 
   it('Ensemble: +1 follower whenever you copy a rival’s space, at once; your own space pays nothing', () => {
+    const N = k => echo.actions.find(a => a.key === k).name; // by key: space names get renamed
     let s = scene({ round: 2, turns: [1, 0, 0, 0], members: [['echo.ensemble'], []] });
-    s = go(s, 'Rush');                       // P2 +4 gold
-    s = go(s, 'Echo', spaceOpt(s, 'Rush'));  // a rival's space: +1 follower now
+    s = go(s, N('hum'));                                 // P2 +3 green
+    s = go(s, N('echo'), spaceOpt(s, N('hum')));         // a rival's space: +1 follower now
     expect([s.players[0].bonus, followers(s, s.players[0])]).toEqual([1, 3]);
-    s = go(s, 'Hum');
-    s = go(s, 'Encore', spaceOpt(s, 'Hum'));  // your own: nothing
+    s = go(s, N('chant'));
+    s = go(s, N('encore'), spaceOpt(s, N('chant')));     // your own: nothing
     expect(s.players[0].bonus).toBe(1);
     const f = scene({ members: [['echo.ensemble', 'echo.choir', 'echo.muse', 'red.twins'], []], queue: [{ t: 'finish' }] });
     expect(f.players[0].final.total).toBe(0); // no game-end bonus any more
@@ -290,20 +291,20 @@ describe('Green members', () => {
   it('Translator: what you copy comes as green; it can be switched off', () => {
     let s = scene({ round: 2, turns: [1, 0, 0], members: [['echo.translator'], []] });
     s.cards[s.players[0].members[0]].on = true;
-    s = go(s, 'Rush');                       // P2: +4 gold
-    s = go(s, 'Echo', spaceOpt(s, 'Rush')); // +4 as green
+    s = go(s, 'Golden Years');                       // P2: +4 gold
+    s = go(s, 'Echo', spaceOpt(s, 'Golden Years')); // +4 as green
     expect(R(s)[0]).toEqual({ ...Z, green: 4 });
     s = take(s, 'Encore');
-    s = play(s, spaceOpt(s, 'Rush'));
+    s = play(s, spaceOpt(s, 'Golden Years'));
     expect(R(s)[0]).toEqual({ ...Z, green: 8 });
     s = move(s, `toggle:${s.players[0].members[0]}`);
     expect(s.cards[s.players[0].members[0]].on).toBe(false);
   });
 
-  it('Tuning Fork: whenever you copy a space, +1 of that space’s color', () => {
+  it('Impressionist: whenever you copy a space, +1 of that space’s color', () => {
     let s = scene({ round: 2, turns: [1, 0, 0, 0], members: [['echo.tuningfork'], []] });
-    s = go(s, 'Rush');                       // P2: +4 gold
-    s = go(s, 'Echo', spaceOpt(s, 'Rush')); // +4 gold, +1 gold
+    s = go(s, 'Golden Years');                       // P2: +4 gold
+    s = go(s, 'Echo', spaceOpt(s, 'Golden Years')); // +4 gold, +1 gold
     expect(R(s)[0]).toEqual({ ...Z, gold: 5 });
     s = go(s, 'Hum');
     s = go(s, 'Encore', spaceOpt(s, 'Hum'));  // +3 green, +1 green
@@ -324,28 +325,28 @@ describe('Green members', () => {
     expect(R(s)[0].green).toBe(3); // P1 2 followers, P2 1
   });
 
-  it('Mirror: when recruited, gain as much green as the rival with the most', () => {
+  it('Mime: when recruited, gain as much green as the rival with the most', () => {
     let s = scene({ n: 3, turns: [0], res: [{ green: 2 }, { green: 5 }, { green: 3 }], shop: ['echo.mirror', ...SHOP.slice(1)] });
-    s = take(s, 'Rush');
+    s = take(s, 'Golden Years');
     s = play(s, `card:${uidOf(s, 'echo.mirror', 'shop')}`);
     expect(R(s)[0].green).toBe(5);
   });
 
-  it('Afterimage: at round start, copy one of your spaces from last round', () => {
+  it('Sleepwalker: at round start, copy one of your spaces from last round', () => {
     let s = scene({ turns: [0, 1], members: [['echo.afterimage'], []] });
-    s = go(s, 'Rush');                       // +2 gold
+    s = go(s, 'Golden Years');                       // +2 gold
     s = go(s, 'Hum');                        // P2
     s.queue = [{ t: 'round', r: 2 }]; s = resume(s);
-    expect(s.pending.prompt).toMatch(/Afterimage/);
-    expect(s.pending.options.map(o => o.label)).toEqual(['Rush (P1): +2 gold']);
+    expect(s.pending.prompt).toMatch(/Sleepwalker/);
+    expect(s.pending.options.map(o => o.label)).toEqual(['Golden Years (P1): +2 gold']);
     s = move(s, s.pending.options[0].id);
     expect(R(s)[0].gold).toBe(4);
   });
 
-  it('Hourglass: once per round, copy the space you just took', () => {
+  it('Stunt Double: once per round, copy the space you just took', () => {
     let s = scene({ round: 2, turns: [0, 0], members: [['echo.hourglass'], []] });
     const u = s.players[0].members[0];
-    s = take(s, 'Rush');
+    s = take(s, 'Golden Years');
     s = move(s, `use:${u}`);
     expect(R(s)[0].gold).toBe(8);
     expect(ids(s)).not.toContain(`use:${u}`);
@@ -354,7 +355,7 @@ describe('Green members', () => {
     expect(ids(s)).not.toContain(`use:${u}`); // once per round
   });
 
-  it('Hourglass: ready again next round', () => {
+  it('Stunt Double: ready again next round', () => {
     let s = scene({ round: 2, members: [['echo.hourglass'], []], queue: [{ t: 'round', r: 3 }] });
     const u = s.players[0].members[0];
     s.cards[u].used = true;
@@ -362,7 +363,7 @@ describe('Green members', () => {
     expect(s.cards[u].used).toBe(false);
   });
 
-  it('Hourglass: with nothing to copy it stays ready', () => {
+  it('Stunt Double: with nothing to copy it stays ready', () => {
     let s = scene({ round: 2, turns: [0], members: [['echo.hourglass'], []] });
     const u = s.players[0].members[0];
     s = take(s, 'Echo'); // an echo can't be copied
@@ -370,10 +371,10 @@ describe('Green members', () => {
     expect(ids(s)).toContain(`use:${u}`);
   });
 
-  it('Déjà Vu: once per game, copy every space you took this round', () => {
+  it('Tribute Band: once per game, copy every space you took this round', () => {
     let s = scene({ round: 2, turns: [0, 0], members: [['echo.dejavu'], []] });
     const u = s.players[0].members[0];
-    s = go(s, 'Rush');
+    s = go(s, 'Golden Years');
     s = take(s, 'Hum');
     s = move(s, `use:${u}`);
     expect(R(s)[0]).toEqual({ ...Z, gold: 8, green: 6 });

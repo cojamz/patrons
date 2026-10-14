@@ -13,26 +13,26 @@ const R = (s, i = 0) => s.players[i].res;
 const rich = { gold: 30, red: 30, yellow: 30, green: 30 };
 
 describe('Yellow actions', () => {
-  it('Harvest: +1 yellow plus 1 per other color held; Bloom: +1 of each color you lack', () => {
+  it('Harvest: +1 yellow plus 1 per other color held; Top Up: +1 of each color you lack', () => {
     expect(R(take(sc({ res: [{ gold: 1, red: 2 }] }), 'Harvest')).yellow).toBe(3);
-    expect(R(take(sc({ res: [{ gold: 1 }] }), 'Bloom'))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
+    expect(R(take(sc({ res: [{ gold: 1 }] }), 'Top Up'))).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
   });
   // the fewest, not "none of" (dead-window audit, 2026-10-14): it was dead whenever you held every color
-  it('Bloom: +1 of each color you hold the fewest of (ties: all), named; holding every color still pays', () => {
-    let s = take(sc({ res: [{ gold: 2, red: 1, yellow: 1, green: 3 }] }), 'Bloom');
+  it('Top Up: +1 of each color you hold the fewest of (ties: all), named; holding every color still pays', () => {
+    let s = take(sc({ res: [{ gold: 2, red: 1, yellow: 1, green: 3 }] }), 'Top Up');
     expect(R(s)).toEqual({ gold: 2, red: 2, yellow: 2, green: 3 });
-    expect(named(s, 'Bloom')).toEqual(["P1's Bloom: +1 red, +1 yellow."]);
-    expect(R(take(sc({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'Bloom'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
+    expect(named(s, 'Top Up')).toEqual(["P1's Top Up: +1 red, +1 yellow."]);
+    expect(R(take(sc({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'Top Up'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
   });
-  it('Transmute: up to 3 one-for-one swaps, then +1 yellow', () => {
-    let s = take(sc({ res: [{ gold: 4 }] }), 'Transmute');
+  it('Mix It Up: up to 3 one-for-one swaps, then +1 yellow', () => {
+    let s = take(sc({ res: [{ gold: 4 }] }), 'Mix It Up');
     s = move(s, 'swap:gold:red'); s = move(s, 'swap:gold:green'); s = move(s, 'swap:gold:red');
     expect(R(s)).toEqual({ gold: 1, red: 2, yellow: 1, green: 1 });
   });
-  it('Prism: +1 of each other color per 3 yellow (yellow kept); Gather: 1 per member of its color; Flourish: per full set', () => {
-    expect(R(take(sc({ round: 2, res: [{ yellow: 7 }] }), 'Prism'))).toEqual({ gold: 2, red: 2, yellow: 7, green: 2 });
-    expect(R(take(sc({ round: 2, members: [['gold.banker', 'red.twins', 'red.intern']] }), 'Gather'))).toMatchObject({ gold: 1, red: 2 });
-    expect(R(take(sc({ round: 3, res: [{ gold: 2, red: 2, yellow: 3, green: 2 }] }), 'Flourish'))).toEqual({ gold: 4, red: 4, yellow: 3, green: 4 });
+  it('Branch Out: +1 of each other color per 3 yellow (yellow kept); Potluck: 1 per member of its color; Bumper Crop: per full set', () => {
+    expect(R(take(sc({ round: 2, res: [{ yellow: 7 }] }), 'Branch Out'))).toEqual({ gold: 2, red: 2, yellow: 7, green: 2 });
+    expect(R(take(sc({ round: 2, members: [['gold.banker', 'red.twins', 'red.intern']] }), 'Potluck'))).toMatchObject({ gold: 1, red: 2 });
+    expect(R(take(sc({ round: 3, res: [{ gold: 2, red: 2, yellow: 3, green: 2 }] }), 'Bumper Crop'))).toEqual({ gold: 4, red: 4, yellow: 3, green: 4 });
   });
 });
 
@@ -48,26 +48,26 @@ describe('Yellow members', () => {
     expect(named(s, 'Peddler')).toHaveLength(1);
   });
   it('Gleaner: an action gaining 2+ of another color at once gives +1 yellow, named; Midas’s converted gain counts', () => {
-    let s = take(sc({ members: [['yellow.gleaner']] }), 'Scout');
+    let s = take(sc({ members: [['yellow.gleaner']] }), 'Sprout');
     expect(R(s).yellow).toBe(1);
     expect(named(s, 'Gleaner')).toHaveLength(1);
     s = sc({ members: [['yellow.gleaner', 'gold.midas']] });
     s.cards[uidOf(s, 'gold.midas', 0)].on = true;
-    s = take(s, 'Scout');
-    expect(R(s)).toMatchObject({ gold: 2, red: 0, yellow: 1 });
+    s = take(s, 'Sprout');
+    expect(R(s)).toMatchObject({ gold: 3, green: 0, yellow: 1 });
   });
   it('Admirer: a rival recruiting a member of a color you lack gives +1 of it, named; a gold-leaning guest is gold', () => {
     let s = sc({ res: [{}, rich], members: [['yellow.admirer']], shop: ['benders.bigspender'], queue: [{ t: 'turn', p: 1 }] });
-    s = take(s, 'Rush'); s = buy(s, 'benders.bigspender');
+    s = take(s, 'Golden Years'); s = buy(s, 'benders.bigspender');
     expect(R(s).gold).toBe(1);
     expect(named(s, 'Admirer')).toHaveLength(1);
   });
   it('Go-Between: your non-yellow recruit gives +1 of its color, named; a guest leaning to an absent sphere gives nothing', () => {
-    let s = take(sc({ members: [['yellow.gobetween']], shop: ['red.volunteer'] }), 'Hire');
+    let s = take(sc({ members: [['yellow.gobetween']], shop: ['red.volunteer'] }), 'Open Door');
     expect(R(s).red).toBe(1);
     expect(named(s, 'Go-Between')).toHaveLength(1);
     s = sc({ round: 3, members: [['yellow.gobetween']], shop: ['benders.squatter'] }); // leans to Thieves, not on this table
-    s = move(take(s, 'Take'), `card:${uidOf(s, 'benders.squatter', 'shop')}`);
+    s = move(take(s, 'Hand-pick'), `card:${uidOf(s, 'benders.squatter', 'shop')}`);
     expect(Object.values(R(s)).reduce((a, b) => a + b, 0)).toBe(0);
   });
   it('Dyer: round end +1 yellow per color held, named', () => {
@@ -112,7 +112,7 @@ describe('Yellow members', () => {
   });
   it('Rainmaker: once per game, each color up to your yellow, named', () => {
     let s = sc({ res: [{ gold: 1, red: 5, yellow: 4 }], members: [['yellow.rainmaker']] });
-    s = take(s, 'Rush');
+    s = take(s, 'Golden Years');
     s = move(s, `use:${uidOf(s, 'yellow.rainmaker', 0)}`);
     expect(R(s)).toEqual({ gold: 3 + 1, red: 5, yellow: 4, green: 4 });
     expect(named(s, 'Rainmaker')).toHaveLength(1);
@@ -135,7 +135,7 @@ describe('Yellow members', () => {
   });
   it('Pilgrim: when recruited +1 of each color, named', () => {
     let s = sc({ round: 3, shop: ['yellow.pilgrim'] });
-    s = move(take(s, 'Take'), `card:${uidOf(s, 'yellow.pilgrim', 'shop')}`);
+    s = move(take(s, 'Hand-pick'), `card:${uidOf(s, 'yellow.pilgrim', 'shop')}`);
     expect(R(s)).toEqual({ gold: 1, red: 1, yellow: 1, green: 1 });
     expect(named(s, 'Pilgrim')[0]).toMatch(/P1's Pilgrim: \+1 gold, \+1 red, \+1 yellow, \+1 green/);
   });
@@ -149,15 +149,15 @@ describe('Yellow members', () => {
   });
   it('Weaver: buying 6+ followers gives +1 of each color, named; a 3-buy does not', () => {
     let s = sc({ res: [{ gold: 3, red: 3, yellow: 3, green: 3 }], members: [['yellow.weaver']] });
-    s = take(s, 'Rush');
+    s = take(s, 'Golden Years');
     s = move(s, 'tier:big');
     expect(named(s, 'Weaver')).toHaveLength(1);
-    s = take(sc({ res: [{ gold: 3, red: 3 }], members: [['yellow.weaver']] }), 'Rush');
+    s = take(sc({ res: [{ gold: 3, red: 3 }], members: [['yellow.weaver']] }), 'Golden Years');
     s = move(s, 'tier:mid');
     expect(named(s, 'Weaver')).toHaveLength(0);
   });
   it('Explorer: +1 yellow for a space outside Yellow, named; Straggler’s move counts', () => {
-    let s = take(sc({ members: [['yellow.explorer']] }), 'Rush');
+    let s = take(sc({ members: [['yellow.explorer']] }), 'Golden Years');
     expect(R(s).yellow).toBe(1);
     expect(named(s, 'Explorer')).toHaveLength(1);
     s = sc({ round: 2, members: [['yellow.explorer', 'benders.straggler']], slots: { '2-0': 0 }, queue: [{ t: 'allPlaced' }] });
@@ -166,7 +166,7 @@ describe('Yellow members', () => {
   });
   it('Feastmaker: once per game, +1 of each color per round number, named', () => {
     let s = sc({ round: 2, members: [['yellow.feastmaker']] });
-    s = take(s, 'Rush');
+    s = take(s, 'Golden Years');
     s = move(s, `use:${uidOf(s, 'yellow.feastmaker', 0)}`);
     expect(R(s)).toEqual({ gold: 6, red: 2, yellow: 2, green: 2 });
     expect(named(s, 'Feastmaker')).toHaveLength(1);

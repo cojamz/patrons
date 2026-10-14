@@ -80,10 +80,10 @@ describe('card names open the card everywhere', () => {
     expect(container.querySelectorAll('.card-name')).toHaveLength(2);
   });
 
-  it('a picker of rivals\' members shows each one\'s owner and cost (Ransom)', () => {
+  it('a picker of rivals\' members shows each one\'s owner and cost (Shake Down)', () => {
     const { s, badged } = marketState();
     const d = cardDef(s, badged[1]);
-    s.pending = { player: 0, kind: 'choose', prompt: 'Ransom: which member?', options: [{ id: `card:${badged[1]}`, label: `Bo's ${d.name} (${price(d)})`, kind: 'member', value: badged[1] }] };
+    s.pending = { player: 0, kind: 'choose', prompt: 'Shake Down: which member?', options: [{ id: `card:${badged[1]}`, label: `Bo's ${d.name} (${price(d)})`, kind: 'member', value: badged[1] }] };
     const { container } = render(<ChoicePrompt state={s} onPick={() => {}} busy={false} />);
     const btn = container.querySelector('[data-option]');
     expect(btn.textContent).toContain('Bo’s');
@@ -141,7 +141,7 @@ describe('"You\'d get" on a space (the engine\'s dry run)', () => {
     const gold = s.quadrants.indexOf('gold'), jv = quadrant('gold').actions.findIndex(a => a.key === 'jv');
     const two = render(<YoudGet state={s} pid={pid} q={gold} i={jv} />);
     await waitFor(() => expect(two.container.querySelector('[data-youd-get]').dataset.youdGet).toBe('+3 gold'));
-    // the rival's +1 gold (Joint Venture's gift) shows too, as a gold pip
+    // the rival's +1 gold (Kickback's gift) shows too, as a gold pip
     expect(two.container.querySelector('.youd-others').textContent).toMatch(/rivals \+1/);
     expect(two.container.querySelector('.youd-others .pip').getAttribute('aria-label')).toBe('gold');
     expect(two.container.textContent).toMatch(/you choose how/);

@@ -38,7 +38,7 @@
     });
     if (O.paperExtra) paper += O.paperExtra(S);
     paper += `<circle cx="0" cy="0" r="${199.5 * S}" fill="none" stroke="#7a6244" stroke-width="1.5"/>`;
-    paper += `<circle cx="0" cy="0" r="${ring[3].r0 * S}" fill="#2a1f17" stroke="rgba(243,230,200,.18)"/>`;
+    paper += `<circle cx="0" cy="0" r="${(O.hubR || ring[3].r0) * S}" fill="#2a1f17" stroke="rgba(243,230,200,.18)"/>`;
     // the rim rules: text on the arc, measured and centred with the leaders' emojis after it (filled in by layoutRim)
     Q.forEach((q, qi) => {
       const lead = STATE.leaders[q.id];
@@ -49,7 +49,7 @@
     });
     let html = `<svg class="paper" viewBox="${-HALF} ${-HALF} ${2 * HALF} ${2 * HALF}" width="${2 * HALF}" height="${2 * HALF}">${paper}</svg>`;
     // spaces
-    for (const sp of spaces(O.ringR || null)) {
+    for (const sp of spaces(O.ringR || null, O.spans || null)) {
       const { a } = sp;
       const [x, y] = [sp.xy[0] * S, sp.xy[1] * S];
       const open = sp.ring <= round;

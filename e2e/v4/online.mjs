@@ -1,19 +1,59 @@
 // E2E: a 3-person online game, with the things friends actually do.
-//   Hana hosts on a laptop. Gus joins by typing the code. Pia opens the invite link (a phone, when contexts allow).
-//   Mid-game: Gus reloads; Pia closes her tab, so Hana gets "Pia left — let a bot play for them" and taps it; Pia
-//   reopens the link and has her seat back; Hana reloads, so the host role moves to Gus and back she comes as a guest.
-//   Everyone clicks the first legal option on their turn, through to final results, and all three must agree.
-// Transport: BroadcastChannel tabs of one browser (default, the gate), or a Firebase RTDB emulator with V4_RTDB=host:port
-// (separate browser contexts, so each person has their own storage; Pia is an iPhone 13). Fails on any console error.
+//   Hana hosts on a laptop. Gus joins by typing the code. Pia opens the invite link (an iPhone 13 over Firebase).
+//   Mid-game: Gus reloads, then swipes Back (it must ask, not leave); Pia closes her tab, so Hana gets "Pia left — let a
+//   bot play for them" and taps it; Pia reopens the link and has her seat back; Hana reloads, so the host role moves
+//   to Gus and back she comes as a guest. Everyone clicks the first legal option on their turn, through to final
+//   results, and all three must agree. Fails on any console error.
+// Transport: a Firebase RTDB emulator whenever this box can run one (java + the emulator jar, cached in
+//   ~/.cache/patrons; or V4_RTDB=host:port for one already running). Each person then has their own browser context,
+//   so their own storage, which is where rejoin ids live. Otherwise (V4_NO_EMU=1, or no java) BroadcastChannel tabs
+//   of one browser context, which share localStorage: the rejoin is weaker there, and the run says so.
 // Server: $V4_URL if set, else starts `npx vite --port 5181` itself.
 import { chromium, devices } from 'playwright';
-import { spawn } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import { mkdirSync, existsSync, readFileSync, renameSync } from 'node:fs';
+import { createServer } from 'node:net';
+import { homedir } from 'node:os';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '';
 mkdirSync(SHOTS, { recursive: true });
-const RTDB = process.env.V4_RTDB || '';
+
+// ---- the RTDB emulator (real Firebase SDK and the repo's database rules, on localhost) ----
+const EMU_VERSION = '4.11.2';
+const EMU_NS = 'cornycolonies-default-rtdb';
+const freePort = () => new Promise((res, rej) => { const s = createServer(); s.listen(0, '127.0.0.1', () => { const { port } = s.address(); s.close(() => res(port)); }); s.on('error', rej); });
+async function startEmulator() {
+  if (process.env.V4_RTDB) return { host: process.env.V4_RTDB, stop() {} };
+  if (process.env.V4_NO_EMU) return null;
+  if (spawnSync('java', ['-version'], { stdio: 'ignore' }).status !== 0) return null;
+  const jar = process.env.V4_RTDB_JAR || `${homedir()}/.cache/patrons/firebase-database-emulator-v${EMU_VERSION}.jar`;
+  if (!existsSync(jar)) {
+    mkdirSync(jar.slice(0, jar.lastIndexOf('/')), { recursive: true });
+    const url = `https://storage.googleapis.com/firebase-preview-drop/emulator/firebase-database-emulator-v${EMU_VERSION}.jar`;
+    const r = spawnSync('curl', ['-sSfL', '--max-time', '180', '-o', `${jar}.part`, url], { stdio: 'ignore' });
+    if (r.status !== 0) return null;
+    renameSync(`${jar}.part`, jar);
+  }
+  const port = await freePort();
+  const proc = spawn('java', ['-jar', jar, '--host', '127.0.0.1', '--port', String(port)], { stdio: 'ignore' });
+  const stop = () => { try { proc.kill('SIGKILL'); } catch { /* gone */ } };
+  const at = `http://127.0.0.1:${port}`;
+  for (let k = 0; k < 120; k++) {
+    await new Promise(r => setTimeout(r, 500));
+    if (await fetch(`${at}/.json?ns=${EMU_NS}`).then(r => r.status < 500, () => false)) {
+      const rules = readFileSync(new URL('../../database.rules.json', import.meta.url), 'utf8');
+      const put = await fetch(`${at}/.settings/rules.json?ns=${EMU_NS}`, { method: 'PUT', headers: { Authorization: 'Bearer owner' }, body: rules }).then(r => r.ok, () => false);
+      if (put) return { host: `127.0.0.1:${port}`, stop };
+    }
+  }
+  stop();
+  return null;
+}
+const emu = await startEmulator();
+const RTDB = emu ? emu.host : '';
 const tag = RTDB ? 'firebase-emulator' : 'broadcast';
+if (!RTDB) console.log('[online broadcast] no RTDB emulator here: three tabs of one browser share storage, so the rejoin check is weaker');
+
 let server = null;
 let base = process.env.V4_URL;
 if (!base) {
@@ -21,7 +61,7 @@ if (!base) {
   server = spawn('npx', ['vite', '--port', '5181', '--strictPort'], { stdio: 'pipe' });
   let up = false;
   for (let k = 0; k < 60 && !up; k++) { await new Promise(r => setTimeout(r, 500)); up = await fetch(base).then(r => r.ok, () => false); }
-  if (!up) { server.kill(); console.error('vite did not start'); process.exit(1); }
+  if (!up) { server.kill(); emu?.stop(); console.error('vite did not start'); process.exit(1); }
 }
 
 const errors = [];
@@ -52,6 +92,8 @@ const pages = { hana: watch(await ctxs.hana.newPage(), 'hana'), gus: watch(await
 const stuck = new Map(); // page -> { key, tries }
 async function stepFirstOption(page) {
   if (!page || page.isClosed()) return false;
+  // tabs of one context: only the front tab is "visible" (its animations and pacing run); bring each to the front
+  if (shared) await page.bringToFront().catch(() => {});
   const next = await page.$('[data-next-round]');
   if (next) { await next.click().catch(() => {}); return true; }
   // touch (and online) placement asks to confirm: "Place here"
@@ -143,6 +185,14 @@ try {
   await pages.gus.reload();
   await pages.gus.waitForSelector(GAME, { timeout: 20000 });
   log('gus reloaded');
+  // Back (an iPhone edge swipe) mid-game must ask, not leave: still in the game, seat still his, the confirm is up
+  await pages.gus.evaluate(() => history.back());
+  await pages.gus.waitForSelector('[role="alertdialog"][aria-label="Leave this game?"]', { timeout: 10000 });
+  if (!(await pages.gus.$(GAME))) throw new Error('Back left the game');
+  if (!(await pages.gus.evaluate(() => sessionStorage.getItem('patrons.v4.online')))) throw new Error('Back dropped the saved seat');
+  await pages.gus.click('[role="alertdialog"] >> text=Keep playing');
+  await pages.gus.waitForSelector('[role="alertdialog"][aria-label="Leave this game?"]', { state: 'detached', timeout: 10000 });
+  log('gus pressed Back: asked, kept his seat');
   await pages.gus.screenshot({ path: `${SHOTS}/online-guest.png` });
 
   // Pia closes her tab. After a moment Hana is offered a bot for her, and taps it
@@ -214,6 +264,7 @@ try {
 } finally {
   await browser.close();
   if (server) server.kill();
+  emu?.stop();
 }
 if (errors.length) console.error(errors.join('\n'));
 console.log(ok ? `PASS online (${tag})` : `FAIL online (${tag})`);

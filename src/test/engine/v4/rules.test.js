@@ -1,6 +1,6 @@
 // @vitest-environment node
 // Table rules: setup, turn order, workers, rings, shop, follower buys, contests, payment, followers, endgame.
-import { guestMembers } from '../../../engine/v4/content/index.js';
+import { guestMembers, quadrant } from '../../../engine/v4/content/index.js';
 import { describe, it, expect } from 'vitest';
 import {
   createGame, applyMove, legalMoves, isLegal, resume, followers, paymentPlan, followerPlan, openSlots, TIERS,
@@ -129,9 +129,9 @@ describe('rings', () => {
 
   it('a taken space is closed for the rest of the round, open again next round', () => {
     let s = scene({ queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'endRound' }, { t: 'afterRound' }] });
-    s = take(s, 'Rush');
+    s = take(s, 'Golden Years');
     s = move(s, 'pass');
-    expect(() => take(s, 'Rush')).toThrow(/not open/);
+    expect(() => take(s, 'Golden Years')).toThrow(/not open/);
     s = move(take(s, 'Tide'), 'pass');
     expect(s.round).toBe(2);
     expect(openSlots(s)).toHaveLength(20);
@@ -144,14 +144,14 @@ describe('shop', () => {
     s.pile = s.pile.slice(0, 1);
     s.queue = [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }];
     resume(s);
-    s = take(s, 'Hire');
+    s = take(s, 'Open Door');
     expect(s.shop).toHaveLength(6) // only 1 card left in the pile to refill with;
     expect(s.pile).toHaveLength(0);
     const t = scene({ shop: ['red.volunteer', 'gold.midas'], queue: [] });
     t.pile = [];
     t.queue = [{ t: 'turn', p: 0 }];
     resume(t);
-    expect(take(t, 'Hire').shop).toHaveLength(1);
+    expect(take(t, 'Open Door').shop).toHaveLength(1);
   });
 });
 
@@ -188,7 +188,9 @@ describe('follower buys', () => {
     let s = scene({ res: [{ gold: 10, red: 10, blue: 10, green: 10 }, { gold: 10, red: 10 }], queue: [] });
     s.queue = [0, 1, 0, 1, 0].map(p => ({ t: 'turn', p })).concat([{ t: 'endRound' }, { t: 'afterRound' }]);
     resume(s);
-    for (const name of ['Sprout', 'Tide', 'Rush', 'Graft', 'Root']) {
+    // plain gains, looked up by key (space names get renamed)
+    const names = [['green', 'a1'], ['blue', 'a1'], ['gold', 'rush'], ['green', 'a2'], ['green', 'a3']].map(([q, k]) => quadrant(q).actions.find(a => a.key === k).name);
+    for (const name of names) {
       s = take(s, name);
       expect(hasOpt(s, 'tier:top'), name).toBe(true);
       s = move(s, 'tier:top');
@@ -275,7 +277,7 @@ describe('payment', () => {
     expect(paymentPlan(s, p, uidOf(s, 'red.intern', 'shop'))).toEqual({ gold: 0, red: 0, blue: 0, green: 0 });
   });
 
-  it('Thrift halves the gold color part (rounded up) and gold pays 2 wild', () => {
+  it('Penny Pincher halves the gold color part (rounded up) and gold pays 2 wild', () => {
     const [s, p] = setup({ gold: 3 }, ['gold.thrift']);
     // Midas 3 gold + 2 wild: 2 gold for the color part, 1 gold for 2 wild
     expect(paymentPlan(s, p, uidOf(s, 'gold.midas', 'shop'))).toEqual({ gold: 3, red: 0, blue: 0, green: 0 });
@@ -288,7 +290,7 @@ describe('payment', () => {
 
   it('only affordable members are offered at the buy', () => {
     let s = scene({ res: [{ gold: 2 }], shop: ['gold.midas', 'red.mentor', 'gold.banker', 'red.intern', 'red.volunteer', 'gold.seed'] });
-    s = take(s, 'Turnout');
+    s = take(s, 'Bandwagon');
     const offered = s.pending.options.filter(o => o.kind === 'card').map(o => s.cards[o.uid].def).sort();
     expect(offered).toEqual(['gold.seed', 'red.volunteer']);
     expect(hasOpt(s, 'tier:small')).toBe(true);

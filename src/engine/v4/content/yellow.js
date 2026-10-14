@@ -39,30 +39,30 @@ export default {
     {
       // the fewest, not "none of" (Claude under Cory's go-with-your-gut, from the dead-window audit): it printed Gardener's
       // text. Raising every lowest color always adds one full set.
-      key: 'bloom', ring: 1, name: 'Bloom', text: '+1 of each color you hold the fewest of (ties: all of them).',
+      key: 'bloom', ring: 1, name: 'Top Up', text: '+1 of each color you hold the fewest of (ties: all of them).',
       estimate: (ctx, p) => fewest(ctx, p).length + 0.5,
       resolve(ctx, p) {
         const list = fewest(ctx, p);
         for (const c of list) ctx.gain(p, c, 1, { fromAction: true });
-        ctx.log(`${p.name}'s Bloom: +1 ${list.join(', +1 ')}.`);
+        ctx.log(`${p.name}'s Top Up: +1 ${list.join(', +1 ')}.`);
       },
     },
     {
-      key: 'transmute', ring: 1, name: 'Transmute', text: 'Swap up to 3 of your resources for other colors, then +1 yellow.',
+      key: 'transmute', ring: 1, name: 'Mix It Up', text: 'Swap up to 3 of your resources for other colors, then +1 yellow.',
       estimate: (ctx, p) => 1 + Math.min(3, Math.max(0, Math.floor(total(ctx, p) / colors(ctx).length) - setsOf(ctx, p))) * 0.8,
       resolve(ctx, p) { transmuteStep(ctx, p, { left: Math.min(3, total(ctx, p)), done: 0 }); },
     },
     {
-      key: 'prism', ring: 2, name: 'Prism', text: '+1 of each other color per 3 yellow you have (you keep the yellow).',
+      key: 'prism', ring: 2, name: 'Branch Out', text: '+1 of each other color per 3 yellow you have (you keep the yellow).',
       estimate: (ctx, p) => 3 * Math.floor(p.res[Y] / 3),
       resolve(ctx, p) {
         const k = Math.floor(p.res[Y] / 3);
         for (const c of others(ctx)) ctx.gain(p, c, k, { fromAction: true });
-        ctx.log(k ? `${p.name}'s Prism: +${k} of each other color.` : `${p.name}'s Prism had too little yellow.`);
+        ctx.log(k ? `${p.name}'s Branch Out: +${k} of each other color.` : `${p.name}'s Branch Out had too little yellow.`);
       },
     },
     {
-      key: 'gather', ring: 2, name: 'Gather', text: 'Each of your members brings you 1 of its color.',
+      key: 'gather', ring: 2, name: 'Potluck', text: 'Each of your members brings you 1 of its color.',
       estimate: (ctx, p) => ctx.memberCount(p),
       resolve(ctx, p) {
         for (const qid of ctx.state.quadrants) {
@@ -72,7 +72,7 @@ export default {
       },
     },
     {
-      key: 'flourish', ring: 3, name: 'Flourish', text: '+1 of each other color per full set you hold.',
+      key: 'flourish', ring: 3, name: 'Bumper Crop', text: '+1 of each other color per full set you hold.',
       estimate: (ctx, p) => 3 * setsOf(ctx, p),
       resolve(ctx, p) {
         const k = setsOf(ctx, p);
@@ -200,7 +200,7 @@ function harvestAmount(ctx, p) {
   return 1 + others(ctx).filter(c => p.res[c] > 0).length;
 }
 
-// Transmute is up to 3 one-for-one swaps, with Done at any time, then +1 yellow.
+// Mix It Up is up to 3 one-for-one swaps, with Done at any time, then +1 yellow.
 function transmuteStep(ctx, p, data) {
   const cs = colors(ctx);
   const opts = [];
@@ -215,7 +215,7 @@ function transmuteStep(ctx, p, data) {
   }
   if (!opts.length) { finishTransmute(ctx, p, data); return; }
   opts.push({ id: 'done', label: data.done ? 'Done' : 'Swap nothing', kind: 'done', value: 'done', hint: 0.5 });
-  ctx.choose(p, `Transmute: swap one for one, or stop (${data.done} swapped so far)`, opts, 'yellow.swap', data);
+  ctx.choose(p, `Mix It Up: swap one for one, or stop (${data.done} swapped so far)`, opts, 'yellow.swap', data);
 }
 function finishTransmute(ctx, p, data) {
   ctx.gain(p, Y, 1, { fromAction: true });

@@ -40,7 +40,9 @@ function App() {
   const screenRef = useRef(screen);
   screenRef.current = screen;
 
-  // Browser Back from a game, setup or lobby returns home (a local game stays saved to resume).
+  // Browser Back from setup or the lobby returns home. Mid-game it never leaves on its own: an edge swipe on a phone is
+  // Back, and leaving an online game hands your seat to a bot. It stays put and asks, like the Leave button.
+  const [askLeave, setAskLeave] = useState(0);
   useEffect(() => {
     if (screen.name === 'home' || screen.name === 'rejoining') return;
     if (!history.state || history.state.patrons !== screen.name) history.pushState({ patrons: screen.name }, '');
@@ -49,6 +51,12 @@ function App() {
     const onPop = () => {
       const cur = screenRef.current;
       if (cur.name === 'home') return;
+      const st = cur.name === 'game' && sessionRef.current && sessionRef.current.getState();
+      if (st && !st.over) {
+        history.pushState({ patrons: 'game' }, '');
+        setAskLeave(n => n + 1);
+        return;
+      }
       if (cur.lobby) leaveRef.current(cur.lobby); else goHomeRef.current();
     };
     addEventListener('popstate', onPop);
@@ -58,6 +66,8 @@ function App() {
   const goHomeRef = useRef(null);
 
   useEffect(() => () => { if (session) session.destroy(); }, [session]);
+  const sessionRef = useRef(null);
+  sessionRef.current = session;
 
   // A reload during a local game goes straight back into it (this tab remembers it was playing).
   useEffect(() => {
@@ -107,6 +117,7 @@ function App() {
 
   const goHome = useCallback(() => {
     setSession(null); setSaved(loadLocal()); setScreen({ name: 'home' });
+    screenRef.current = { name: 'home' }; // the history.back() below must not read as "Back pressed mid-game"
     if (history.state && history.state.patrons) history.back();
   }, []);
   goHomeRef.current = () => { setSession(null); setSaved(loadLocal()); setScreen({ name: 'home' }); };
@@ -174,6 +185,7 @@ function App() {
         leaveText={online ? 'A bot will play your seat. Open the invite link again to take it back.' : 'You can resume it from the home screen.'}
         onPlayAgain={config && !online ? () => { clearLocal(); startLocal(config); } : null}
         onResults={online ? null : onResultsShown}
+        askLeave={askLeave}
       />
       </>
     );
