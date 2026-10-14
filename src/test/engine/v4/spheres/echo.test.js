@@ -84,8 +84,8 @@ describe('Green actions', () => {
   });
 
   it('Encore: any space this round, anyone’s, rings I and II (not the center, not an echo)', () => {
-    let s = scene({ round: 3, turns: [1, 1, 0, 0], res: [{}, { gold: 5 }], members: [[], ['red.intern', 'red.twins']] });
-    s = go(s, 'Windfall'); // P2 +3 gold (Intern + Twins count 3)
+    let s = scene({ round: 3, turns: [1, 1, 0, 0], res: [{}, { gold: 5 }], members: [[], ['red.intern', 'red.twins', 'red.volunteer']] });
+    s = go(s, 'Windfall'); // P2 +3 gold (3 members); P1 has none and still copies +3
     s = go(s, 'Strike');   // P2 center
     s = go(s, 'Hum');      // P1 +3 green
     s = take(s, 'Encore');
@@ -175,9 +175,9 @@ describe('Green scoring', () => {
 });
 
 describe('Green members', () => {
-  it('Evergreen: +2 green at round start', () => {
+  it('Evergreen: +3 green at round start', () => {
     const s = scene({ members: [['echo.evergreen'], []], queue: [{ t: 'round', r: 2 }] });
-    expect(R(s)[0].green).toBe(2);
+    expect(R(s)[0].green).toBe(3);
   });
 
   it('Choir: +1 green whenever you copy', () => {
@@ -203,12 +203,14 @@ describe('Green members', () => {
     expect(R(s)[1].green).toBe(1);
   });
 
-  it('Fan: +1 green whenever a rival takes a space that gives them 5 or more', () => {
-    let s = scene({ round: 3, turns: [1, 1], members: [['echo.fan'], []] });
-    s = go(s, 'Rush');               // 6 gold
-    expect(R(s)[0].green).toBe(1);
-    s = go(s, 'Hum');                // 3 green
-    expect(R(s)[0].green).toBe(1);
+  it('Fan: +2 green whenever a rival takes a center space', () => {
+    let s = scene({ round: 3, turns: [1, 1, 0], members: [['echo.fan'], []] });
+    s = go(s, 'Rush');               // ring I: nothing
+    expect(R(s)[0].green).toBe(0);
+    s = go(s, 'Strike');             // center
+    expect(R(s)[0].green).toBe(2);
+    s = go(s, 'Eternity');           // your own center: nothing
+    expect(R(s)[0].green).toBe(2);
   });
 
   it('Groupie: +1 green whenever anyone recruits a green member', () => {
@@ -231,10 +233,14 @@ describe('Green members', () => {
     expect(s.cards[s.players[0].members[0]].on).toBe(false);
   });
 
-  it('Straggler: +1 green per player with more followers, at round start', () => {
-    const s = scene({ n: 3, members: [['echo.straggler'], [], []], bonus: [0, 2, 1], queue: [{ t: 'round', r: 2 }] });
-    // P1 has 2 followers (self + Straggler); P2 has 3, P3 has 2
-    expect(R(s)[0].green).toBe(1);
+  it('Tuning Fork: whenever you copy a space, +1 of that space’s color', () => {
+    let s = scene({ round: 2, turns: [0, 0, 0, 0], members: [['echo.tuningfork'], []] });
+    s = go(s, 'Rush');                       // +4 gold
+    s = go(s, 'Relive', spaceOpt(s, 'Rush')); // +4 gold, +1 gold
+    expect(R(s)[0]).toEqual({ ...Z, gold: 9 });
+    s = go(s, 'Hum');
+    s = go(s, 'Encore', spaceOpt(s, 'Hum'));  // +3 green, +1 green
+    expect(R(s)[0]).toEqual({ ...Z, gold: 9, green: 7 });
   });
 
   it('Wallflower: what you copy is doubled while no one has fewer followers than you', () => {
@@ -315,10 +321,10 @@ describe('Green members', () => {
     expect(ids(s)).not.toContain(`use:${u}`);
   });
 
-  it('Chronicler: game end, +1 follower per 3 green', () => {
+  it('Chronicler: game end, +1 follower per 2 green', () => {
     let s = scene({ members: [['echo.chronicler'], []], res: [{ green: 8 }, {}], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.total).toBe(2);
-    expect(followers(s, s.players[0])).toBe(4);
+    expect(s.players[0].final.total).toBe(4);
+    expect(followers(s, s.players[0])).toBe(6);
   });
 
   it('A copied member’s cost is paid in green', () => {

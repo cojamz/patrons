@@ -93,7 +93,7 @@ const describe = (ctx, e) => {
   return bits.join(', ') || 'nothing';
 };
 /** Spaces p could copy: which = 'rivalOuter' | 'ownOuter' | 'any' | 'last' | 'own'. */
-export const VARIANT = { echo: 'rivalOuter', relive: 'ownOuter', plus: 0 };
+export const VARIANT = { echo: 'rivalOuter', relive: 'ownOuter', plus: 0 }; // sim switches; the defaults are the pitched rules
 const plus = (ctx, p) => { if (VARIANT.plus) ctx.gain(p, 'green', VARIANT.plus, { fromAction: true }); };
 export function targets(ctx, p, which) {
   const L = ledger(ctx.state);
@@ -126,6 +126,8 @@ export function copy(ctx, p, e, { later = null } = {}) {
   if (e.discount) p.discount += e.discount;
   ctx.log(`${p.name} copied ${e.name}${e.p !== p.id ? ` (${ctx.player(e.p).name}'s)` : ''}: ${describe(ctx, e)}${mult > 1 ? ', doubled' : ''}.`);
   // who hears it
+  const fork = has(ctx, p, 'tuningfork');
+  if (fork) ctx.gain(p, ctx.quadrant(e.color).resource, fork);
   const choir = has(ctx, p, 'choir');
   if (choir) ctx.gain(p, 'green', choir);
   const taker = ctx.player(e.p);
@@ -214,7 +216,7 @@ const echoQ = {
     }),
     m('choir', 'Choir', 1, 1, 'Whenever you copy a space, +1 green.'),
     m('muse', 'Muse', 1, 0, 'Whenever a rival copies one of your spaces, +2 green.'),
-    m('choirmaster', 'Choirmaster', 1, 1, 'Whenever a rival copies a space, +1 green.'),
+    m('choirmaster', 'Choirmaster', 2, 1, 'Whenever a rival copies a space, +1 green.'),
     m('fan', 'Fan', 1, 1, 'Whenever a rival takes a center space, +2 green.', {
       onTurnEnd(ctx, owner, card, p) {
         if (p === owner) return;
@@ -223,7 +225,7 @@ const echoQ = {
         if (e && e.p === p.id && e.ring === 3) ctx.gain(owner, 'green', 2);
       },
     }),
-    m('groupie', 'Groupie', 1, 1, 'Whenever anyone recruits a green member, +1 green.', {
+    m('groupie', 'Groupie', 2, 1, 'Whenever anyone recruits a green member, +1 green.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (recruited.uid !== card.uid && recruited.def.id.startsWith('echo.')) ctx.gain(owner, 'green', 1);
       },
@@ -232,24 +234,19 @@ const echoQ = {
       toggle: true,
       onRecruited(ctx, owner, card) { card.on = true; },
     }),
-    m('straggler', 'Straggler', 1, 0, 'At round start, +2 green per player with more followers than you.', {
-      onRoundStart(ctx, owner) {
-        const n = ctx.rivals(owner).filter(o => ctx.followers(o) > ctx.followers(owner)).length;
-        if (n) ctx.gain(owner, 'green', 2 * n);
-      },
-    }),
+    m('tuningfork', 'Tuning Fork', 1, 1, 'Whenever you copy a space, also gain 1 of that space’s color.'),
     m('wallflower', 'Wallflower', 1, 1, 'While no one has fewer followers than you, the resources you copy are doubled.'),
-    m('keepsake', 'Keepsake', 1, 1, 'When recruited: copy one of your spaces from this round.', {
+    m('keepsake', 'Keepsake', 2, 1, 'When recruited: copy one of your spaces from this round.', {
       onRecruited(ctx, owner) { offer(ctx, owner, targets(ctx, owner, 'own'), 'Keepsake: copy which of your spaces?', 'now'); },
     }),
-    m('mirror', 'Mirror', 2, 2, 'When recruited: gain as much green as the rival with the most green.', {
+    m('mirror', 'Mirror', 2, 1, 'When recruited: gain as much green as the rival with the most green.', {
       onRecruited(ctx, owner) {
         const g = Math.max(0, ...ctx.rivals(owner).map(o => o.res.green || 0));
         if (g) ctx.gain(owner, 'green', g);
         ctx.log(`${owner.name}'s Mirror: +${g} green.`);
       },
     }),
-    m('afterimage', 'Afterimage', 2, 2, 'At round start: copy one of your spaces from last round.', {
+    m('afterimage', 'Afterimage', 2, 1, 'At round start: copy one of your spaces from last round.', {
       onRoundStart(ctx, owner) {
         const L = ledger(ctx.state);
         const list = Object.values(L.last).filter(e => copyable(e) && e.p === owner.id);
@@ -276,7 +273,7 @@ const echoQ = {
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e), 0) >= (ctx.state.round === 3 ? 6 : 10),
     }),
-    m('chronicler', 'Chronicler', 4, 2, 'Game end: +1 follower per 2 green.', {
+    m('chronicler', 'Chronicler', 2, 1, 'Game end: +1 follower per 2 green.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res.green || 0) / 2),
     }),
   ],

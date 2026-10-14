@@ -72,10 +72,10 @@ describe('Blue scoring: most member value (printed cost), blue members break tie
 });
 
 describe('Blue actions', () => {
-  it('Bargain: recruit a face-up member now for 2 less, in any colors; your buy is still to come', () => {
+  it('Bargain: recruit a face-up member now for a third off (rounded up), in any colors; your buy is still to come', () => {
     let s = take(scene({ res: [{ red: 5, blue: 2 }], shop: SHOP }), 'Bargain');
     expect(s.pending.kind).toBe('choose');
-    s = move(s, card(s, 'gold.midas')); // 5 → 3, no gold needed
+    s = move(s, card(s, 'gold.midas')); // 5 → 3 (2 off), no gold needed
     expect(s.pending.prompt).toContain('how do you pay 3');
     s = move(s, 'pay:0-3-0-0');
     expect(has(s, 'gold.midas')).toBe(true);
@@ -85,7 +85,7 @@ describe('Blue actions', () => {
     expect(ids(t)).toContain(card(t, 'gold.midas'));
     expect(ids(t)).not.toContain(card(t, 'gold.jackpot')); // 6 → 4 is too much
   });
-  it('Bargain: you choose how to pay, may recruit nothing, and a 2-cost member is free', () => {
+  it('Bargain: you choose how to pay, may recruit nothing; a 2-cost member costs 1', () => {
     let s = take(scene({ res: [{ red: 3, gold: 3 }], shop: SHOP }), 'Bargain');
     s = move(s, card(s, 'gold.tycoon')); // 4 → 2
     expect(s.pending.options[0].id).toBe('pay:0-2-0-0'); // default spends red before gold
@@ -95,9 +95,10 @@ describe('Blue actions', () => {
     t = move(t, 'none');
     expect(t.players[0].members).toEqual([]);
     expect(R(t).red).toBe(5);
-    let u = take(scene({ shop: CHEAP }), 'Bargain');
+    let u = take(scene({ res: [{ green: 1 }], shop: CHEAP }), 'Bargain');
     u = move(u, card(u, 'red.twins'));
     expect(has(u, 'red.twins')).toBe(true);
+    expect(R(u).green).toBe(0);
   });
   it('Bargain: with nothing affordable, nothing happens', () => {
     const s = take(scene({ res: [{ red: 1 }], shop: SHOP }), 'Bargain');
@@ -134,15 +135,13 @@ describe('Blue actions', () => {
     expect(R(take(scene({ round: 2, members: [['gold.tycoon', 'red.intern']] }), 'Appraise')).blue).toBe(4);
     expect(R(take(scene({ round: 2 }), 'Appraise')).blue).toBe(0);
   });
-  it('Spree (ring III): three buys this turn', () => {
+  it('Spree (ring III): two buys this turn', () => {
     let s = take(scene({ round: 3, res: [{ red: 6, gold: 6, green: 6 }], shop: CHEAP }), 'Spree');
     s = move(s, card(s, 'red.intern'));
     expect(s.pending.kind).toBe('buy');
     s = move(s, 'tier:big');
-    expect(s.pending.kind).toBe('buy');
-    s = move(s, card(s, 'red.twins'));
     expect(s.pending?.kind).not.toBe('buy');
-    expect(s.players[0].members).toHaveLength(2);
+    expect(s.players[0].members).toHaveLength(1);
     expect(s.players[0].bonus).toBe(6);
   });
   it('Free recruits from Bargain trigger recruit hooks (Recruiter pays)', () => {
@@ -203,9 +202,9 @@ describe('Blue members', () => {
     expect(s.players[0].discount).toBe(1);
   });
   it('Underbidder: round start, next member 1 less per rival with more members', () => {
-    const s = scene({ n: 3, members: [['market.underbidder'], ['red.intern', 'red.volunteer'], ['red.twins']], queue: [{ t: 'round', r: 2 }] });
-    expect(s.players[0].discount).toBe(2); // P3's Twins count as 2
-    const t = scene({ n: 3, members: [['market.underbidder', 'red.twins'], ['red.intern'], []], queue: [{ t: 'round', r: 2 }] });
+    const s = scene({ n: 3, members: [['market.underbidder'], ['red.intern', 'red.volunteer'], ['red.twins', 'red.drive']], queue: [{ t: 'round', r: 2 }] });
+    expect(s.players[0].discount).toBe(2);
+    const t = scene({ n: 3, members: [['market.underbidder', 'red.twins'], ['red.intern', 'red.drive'], []], queue: [{ t: 'round', r: 2 }] });
     expect(t.players[0].discount).toBe(0);
   });
   it('Window Shopper: once per round, sweep the row before buying; resets next round', () => {

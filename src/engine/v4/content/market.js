@@ -86,7 +86,8 @@ function offerRow(ctx, p, price, why) {
   ctx.choose(p, `${why}: recruit which member?`, opts, `${Q}.pickRow`, { why });
 }
 const half = c => Math.floor(priceOf(c) / 2);
-const less2 = c => Math.max(0, priceOf(c) - 2);
+// a third off, rounded up: what you pay is the cost minus ceil(cost / 3)
+const third = c => priceOf(c) - Math.ceil(priceOf(c) / 3);
 function bestRowValue(ctx, p, price) {
   const ok = ctx.shopCards().filter(c => canPay(p, price(c)));
   return ok.length ? Math.max(...ok.map(c => botWorth(c) + (priceOf(c) - price(c)) * 0.6)) : 0;
@@ -113,9 +114,9 @@ const market = {
 
   actions: [
     {
-      key: 'bargain', ring: 1, name: 'Bargain', text: 'Recruit a face-up member now for 2 less, in any colors.',
-      estimate: (ctx, p) => bestRowValue(ctx, p, less2) * 0.8,
-      resolve(ctx, p) { offerRow(ctx, p, less2, 'Bargain'); },
+      key: 'bargain', ring: 1, name: 'Bargain', text: 'Recruit a face-up member now for a third off (rounded up), in any colors.',
+      estimate: (ctx, p) => bestRowValue(ctx, p, third) * 0.8,
+      resolve(ctx, p) { offerRow(ctx, p, third, 'Bargain'); },
     },
     {
       key: 'restock', ring: 1, name: 'Restock', text: '+2 blue, and sweep the face-up row: 6 new members come out.',
@@ -142,9 +143,9 @@ const market = {
       resolve(ctx, p) { ctx.gain(p, B, priciest(ctx, p), { fromAction: true }); },
     },
     {
-      key: 'spree', ring: 3, name: 'Spree', text: 'This turn you buy 3 times instead of once.',
-      estimate: (ctx, p) => Math.min(12, Math.max(0, totalRes(p) - 3)) * 0.7,
-      resolve(ctx, p) { extraBuys(ctx, p, 2); ctx.log(`${p.name} goes on a spree: 3 buys this turn.`); },
+      key: 'spree', ring: 3, name: 'Spree', text: 'This turn you buy twice.',
+      estimate: (ctx, p) => Math.min(6, Math.max(0, totalRes(p) - 3)) * 0.9,
+      resolve(ctx, p) { extraBuys(ctx, p, 1); ctx.log(`${p.name} goes on a spree: 2 buys this turn.`); },
     },
   ],
 
@@ -152,7 +153,7 @@ const market = {
     pickRow(ctx, p, uid, data) {
       if (uid === null) { ctx.log(`${data.why}: ${p.name} recruits nothing.`); return; }
       const c = ctx.card(uid);
-      buyAt(ctx, p, uid, 0, data.why === 'Clearance' ? half(c) : less2(c), data.why);
+      buyAt(ctx, p, uid, 0, data.why === 'Clearance' ? half(c) : third(c), data.why);
     },
     pay(ctx, p, v, data) { payAndRecruit(ctx, p, v, data); },
     blackMarket(ctx, p, uid) {
@@ -169,7 +170,7 @@ const market = {
   },
 
   members: [
-    m('dealer', 'Dealer', 1, 1, 'Whenever anyone recruits a blue member, +1 blue.', {
+    m('dealer', 'Dealer', 2, 1, 'Whenever anyone recruits a blue member, +1 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) {
         if (rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 1);
       },
@@ -235,7 +236,7 @@ const market = {
       botActivate: (ctx, owner) => ctx.state.round >= 2 && totalRes(owner) >= 8,
     }),
     m('heirloom', 'Heirloom', 3, 1, 'No effect. Worth 3 followers.', { f: 3, vanilla: true }),
-    m('appraiser', 'Appraiser', 3, 2, 'Game end: +1 follower per member you have costing 4 or more.', {
+    m('appraiser', 'Appraiser', 2, 2, 'Game end: +1 follower per member you have costing 4 or more.', {
       onGameEnd: (ctx, owner) => ctx.membersOf(owner).filter(c => priceOf(c) >= 4).length,
     }),
   ],
