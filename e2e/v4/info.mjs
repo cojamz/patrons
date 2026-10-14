@@ -8,7 +8,9 @@
 //      shows its title (the hover's touch twin);
 //  (c) no "★" anywhere in the rendered game (followers are the little-person mark);
 //  (d) hover cards open within 100ms (p95) and never flicker while sweeping a ring of spaces;
-//  (e) a cult member hops when its own trace line appears in the log.
+//  (e) a cult member hops when its own trace line appears in the log;
+//  (f) no seat sigil shapes anywhere (identity is the leader's emoji and the name);
+//  (g) every member in a cult stands on a ground in its sphere's color, so it reads as that sphere.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -45,11 +47,19 @@ async function audit(page, step) {
       n++;
       if (!explains(e)) miss.push(`${e.tagName.toLowerCase()}.${String(e.className && (e.className.baseVal ?? e.className)).split(' ').filter(Boolean).join('.')} "${(e.textContent || '').trim().slice(0, 24)}"`);
     }
-    return { n, miss: [...new Set(miss)].slice(0, 12), star: document.body.innerText.includes('★') };
+    // (f) identity is a leader's emoji and a name: no seat sigils (circle/triangle/square/star) a player can see
+    const sigils = [...document.querySelectorAll('.sigil, [class*="sigil"]')].filter(e => vis(e) && !e.closest('[aria-hidden="true"]')).length;
+    // (g) every member in a cult reads as its sphere: it carries its sphere and a ground in that color
+    const crowd = [...document.querySelectorAll('[data-cult] .cs-member')].filter(vis);
+    const pale = crowd.filter(m => { const a = m.querySelector('.aura'); return !a || !/gradient/.test(getComputedStyle(a).backgroundImage) || !m.dataset.sphere; })
+      .map(m => m.dataset.member);
+    return { n, miss: [...new Set(miss)].slice(0, 12), star: document.body.innerText.includes('★'), sigils, pale };
   }, GAME);
   if (r.n < 5) fail(`only ${r.n} game elements found (the selectors no longer match the screen?)`, step);
   for (const m of r.miss) fail(`(a) no hover info: ${m}`, step);
   if (r.star) fail('(c) a "★" is on screen', step);
+  if (r.sigils) fail(`(f) ${r.sigils} seat sigil(s) on screen`, step);
+  for (const m of r.pale) fail(`(g) ${m} has no ground in its sphere's color`, step);
   return r.n;
 }
 

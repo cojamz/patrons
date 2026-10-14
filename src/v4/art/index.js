@@ -86,3 +86,15 @@ export function rectsFor(icon, sphere) {
   rectCache.set(k, out);
   return out;
 }
+
+/** How much of an icon is its sphere's color (keys 1/2/3) among its filled cells: 0..1. */
+const shareCache = new Map();
+export function sphereShare(id, kind = 'member') {
+  const { icon } = iconFor(id, kind);
+  if (shareCache.has(icon.id)) return shareCache.get(icon.id);
+  let sphere = 0, filled = 0;
+  for (const row of icon.px) for (const ch of row) { if (ch === '.' || ch === 'k') continue; filled++; if (ch === '1' || ch === '2' || ch === '3') sphere++; }
+  const v = filled ? sphere / filled : 0;
+  shareCache.set(icon.id, v);
+  return v;
+}

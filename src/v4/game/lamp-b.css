@@ -209,3 +209,14 @@
 
 /* a copy space (or Understudy) under the pointer lights what it could copy */
 .copy-target .base{box-shadow:0 0 0 3px #ffd99a,0 0 14px 2px rgba(255,217,154,.8) !important}
+
+/* a player as players see them: their emoji and name */
+.who-tag{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;min-width:0}
+.who-tag .minion{flex:none}
+.who-tag .who-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.contest-rows li .who-tag{flex:1}
+/* a member's sphere at a glance: a soft ground in its color under the figure (stronger when its clothes are neutral) */
+.cs-member{isolation:isolate}
+.cs-member .aura{position:absolute;left:50%;bottom:-2px;width:30px;height:12px;transform:translateX(-50%);border-radius:50%;z-index:-1;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--q) 55%,transparent),transparent);pointer-events:none}
+.cs-member .aura.strong{width:32px;height:30px;bottom:0;background:radial-gradient(closest-side,color-mix(in srgb,var(--q) 70%,transparent),color-mix(in srgb,var(--q) 18%,transparent) 70%,transparent)}

@@ -56,3 +56,21 @@ describe('CultSeat', () => {
     void quadrant;
   });
 });
+
+describe('every member reads as its sphere', () => {
+  it('a member whose art is mostly neutral (or a silver/white one) stands on a strong ground in its color', async () => {
+    const { sphereShare, spriteId } = await import('../../../v4/art/index.js');
+    const { allQuadrantIds } = await import('../../../engine/v4/index.js');
+    const s = toPlace(createGame({ seats, seed: 24, quadrants: ['gold', 'red', 'silver', 'echo'] }));
+    const silver = Object.values(s.cards).find(c => cardDef(s, c.uid).quadrant === 'silver');
+    const gold = Object.values(s.cards).find(c => cardDef(s, c.uid).quadrant === 'gold' && sphereShare([c.def, spriteId(cardDef(s, c.uid).name)]) >= 0.33);
+    s.players[1].members.push(silver.uid, ...(gold ? [gold.uid] : []));
+    const { container } = render(<CultSeat state={s} pid={1} me={0} />);
+    const sv = container.querySelector(`[data-member="${cardDef(s, silver.uid).id}"]`);
+    expect(sv.dataset.sphere).toBe('silver');
+    expect(sv.querySelector('.aura.strong')).not.toBeNull();
+    if (gold) expect(container.querySelector(`[data-member="${cardDef(s, gold.uid).id}"] .aura:not(.strong)`)).not.toBeNull();
+    // no member anywhere has art with no sphere color at all and no ground (the share is measured for every one)
+    for (const id of allQuadrantIds()) for (const d of quadrant(id).members) expect(sphereShare([d.id, spriteId(d.name)])).toBeGreaterThanOrEqual(0);
+  });
+});

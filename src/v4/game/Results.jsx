@@ -2,6 +2,7 @@
 import { followers, memberCount, TIERS } from '../../engine/v4/index.js';
 import { breakdown, playerColor, winSentence, plural, contestLines } from '../format.js';
 import { Tip, NamedText } from './Info.jsx';
+import { Who } from './Glyphs.jsx';
 import { Follower } from '../art/Follower.jsx';
 
 export default function Results({ state, onPlayAgain, onHome }) {
@@ -30,7 +31,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
               return (
                 <tr key={p.id} className={k === 0 ? 'first' : ''}>
                   <td className="rank" data-label="#">{rankOf[k]}{shared(rankOf[k]) ? '=' : ''}</td>
-                  <td className="who" style={{ color: playerColor(p.id) }}>{p.name}{p.kind === 'bot' ? ' · bot' : ''}<small>{plural(memberCount(state, p), 'member')}</small></td>
+                  <td className="who"><Who state={state} id={p.id} />{p.kind === 'bot' ? ' · bot' : ''}<small>{plural(memberCount(state, p), 'member')}</small></td>
                   <td className="tot" data-label="Followers" title={`${followers(state, p)} = 1 (yourself) + ${b.members} from members + ${b.bought} bought + ${b.effects} effects + ${b.contests} contests + ${b.endGame} end-game`}>{followers(state, p)}</td>
                   <td data-label="From members" title={`What ${p.name}'s ${plural(p.members.length, 'member')} are worth at the end`}>{b.members}</td>
                   <td data-label="Bought" title={`Follower buys: ${b.bought} followers bought with resources`}>{b.bought}</td>

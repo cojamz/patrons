@@ -11,7 +11,8 @@ import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews } from './Info.jsx';
 import { CostPips } from './Rich.jsx';
-import { ResourceGlyph, FollowerMark, SeatFigure } from './Glyphs.jsx';
+import { ResourceGlyph, SeatFigure } from './Glyphs.jsx';
+import { Follower } from '../art/Follower.jsx';
 import { payBreakdown, contestEffect, unlockedBy, surely } from './cards.js';
 import { lastMoves } from './seats.js';
 import { memberCopyTargets } from './cards.js';
@@ -222,7 +223,7 @@ export function SeatCard({ state, pid, meId = null }) {
     <div className="lt-card-body seat-card" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}>
       <div className="t"><SeatFigure id={pid} state={state} size={32} /><h4>{p.name}{pid === meId ? ' (you)' : ''}<small>{p.kind === 'bot' ? 'bot' : 'player'} · {p.left} minion{p.left === 1 ? '' : 's'} left</small></h4></div>
       <div className="lt-yd">
-        <Row k="Followers"><FollowerMark n={followersOf(state, p)} /></Row>
+        <Row k="Followers"><span className="follower"><b className="num">{followersOf(state, p)}</b><Follower size={12} /></span></Row>
         <Row k="Has">{state.resources.map(r => <span key={r} className="lt-res"><ResourceGlyph r={r} n={p.res[r] || 0} size={14} /><b className="num">{p.res[r] || 0}</b></span>)}</Row>
         <Row k="Members">{p.members.length ? p.members.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>) : 'none yet'}</Row>
         {moves.length ? <Row k="Last moves">{moves.join(' · ')}</Row> : null}

@@ -7,11 +7,11 @@ import { useEffect, useRef, useState } from 'react';
 import { followers, quadrant, cardDef } from '../../engine/v4/index.js';
 import { memberChips, playerColor, newLogLines } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
-import { spriteId } from '../art/index.js';
+import { spriteId, sphereShare } from '../art/index.js';
 import { Follower } from '../art/Follower.jsx';
 import { realHover } from '../hover.js';
 import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
-import { ResourceGlyph, FollowerMark, LeaderRing } from './Glyphs.jsx';
+import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { lastSpace } from './seats.js';
 import Tick from './Tick.jsx';
 import './lamp-b.css';
@@ -55,8 +55,12 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           const use = mine ? g.uids.map(u => optionFor(`use:${u}`)).find(Boolean) : null;
           const toggle = mine ? g.uids.map(u => optionFor(`toggle:${u}`)).find(Boolean) : null;
           const hop = react && react.members && react.members[d.id];
+          // its sphere at a glance: a soft ground in the sphere's color, stronger when the clothes alone don't carry it
+          const sphere = sphereOf(state, d);
+          const weak = ['silver', 'white', 'colorless'].includes(sphere) || sphereShare([d.id, spriteId(d.name)]) < 0.33;
           return (
-            <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${hop ? ' react-hop' : ''}`} data-member={d.id} data-uids={g.uids.join(' ')} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
+            <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${hop ? ' react-hop' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
+              <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
               <Tip className="fig" label={`${d.name}: show the card`} content={() => <MemberCard state={state} uid={g.uids[0]} />}>
                 <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
@@ -69,7 +73,6 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         {rest > 0 && <span className="cs-more" title={`${rest} more member${rest === 1 ? '' : 's'}`}>+{rest}</span>}
       </div>
       <footer className="cs-foot">
-        <FollowerMark n={f} size={mine ? 6 : 5} label={false} />
         <span className="cs-res" role="group" aria-label="Resources">
           {state.resources.map(r => (
             <span key={r} className={`cs-stack${p.res[r] ? '' : ' zero'}`} data-res={r} title={`${p.res[r] || 0} ${r}`}>

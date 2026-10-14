@@ -6,6 +6,7 @@ import { playerColor, roman, standings, scoredStandings, roundGains, tiebreakNot
 import Tick from './Tick.jsx';
 import { useDialog } from './parts.jsx';
 import { Tip, ContestStandings, NamedText } from './Info.jsx';
+import { Who } from './Glyphs.jsx';
 
 export default function RoundEnd({ info, onNext, autoMs }) {
   const { result, start, after, board } = info;
@@ -62,7 +63,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
               <span className="re-w">
                 <span className="re-win">
                   {r.winners.length
-                    ? r.winners.map((id, k) => <b key={id} style={{ color: playerColor(id) }}>{k ? ' & ' : ''}{name(id)}</b>)
+                    ? r.winners.map((id, k) => <b key={id}>{k ? ' & ' : ''}<Who state={after} id={id} /></b>)
                     : <em>no one scored</em>}
                 </span>
                 <small className="re-counts num">
@@ -87,7 +88,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
             const why = g ? [g.members && `${g.members > 0 ? '+' : ''}${g.members} from members`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : ''}${g.effects} effects`].filter(Boolean).join(' · ') : '';
             return (
               <div key={p.id} className="re-p" role="row" style={{ '--pc': playerColor(p.id) }}>
-                <span className="nm" role="cell"><i />{p.name}</span>
+                <span className="nm" role="cell"><Who state={after} id={p.id} /></span>
                 <span className="re-d num" role="cell">{c ? `+${c}` : '—'}</span>
                 <span className="re-d num" role="cell">{other ? (why || `${other > 0 ? '+' : ''}${other}`) : '—'}</span>
                 <Tick value={now} from={was} color="var(--ink)" className="re-f num" dur={700} float={false} />

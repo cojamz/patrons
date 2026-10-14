@@ -106,3 +106,14 @@ export function LeaderRing({ state, id, size = 32, minion = 16, compact = false 
     </span>
   );
 }
+
+/** A player, as players see them: their emoji (a minion) and their name. No shapes, no color-only dots. */
+export function Who({ state, id, name = null, size = 16 }) {
+  const p = state.players[id];
+  return (
+    <span className="who-tag" data-pid={id}>
+      <Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={size} title={`${p.name}'s emoji`} />
+      <span className="who-name">{name ?? p.name}</span>
+    </span>
+  );
+}
