@@ -55,12 +55,13 @@ const TOKEN = (() => {
 })();
 const TEMPLATES = { member: { id: '_member', name: 'Member', kind: 'member', px: HOOD }, action: { id: '_action', name: 'Action', kind: 'action', px: TOKEN } };
 
-const BY_ID = new Map(SETS.map(i => [i.id, i]));
+// ids: engine ids for the batches ("gold.banker", "gold.rush"), kebab names for the calibration set ("banker")
+const BY_ID = new Map(SETS.filter(i => i.kind !== 'emoji' && i.kind !== 'leader').map(i => [i.id, i]));
 /** An icon id from a card or space name: "Mentor & Protégé" → "mentor-protege". */
 export const spriteId = name => String(name).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/&/g, ' ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-/** The icon for an id, or the template for its kind. `drawn` says whether it's a real drawing. */
+/** The icon for an id (or the first of several candidate ids), or the template for its kind. */
 export function iconFor(id, kind = 'member') {
-  const hit = BY_ID.get(id);
+  const hit = (Array.isArray(id) ? id : [id]).map(x => BY_ID.get(x)).find(Boolean);
   return hit ? { icon: hit, drawn: true } : { icon: TEMPLATES[kind] || TEMPLATES.member, drawn: false };
 }
 export const drawnIds = () => [...BY_ID.keys()];
@@ -70,7 +71,7 @@ const rectCache = new Map();
 export function rectsFor(icon, sphere) {
   const k = `${icon.id}|${sphere}`;
   if (rectCache.has(k)) return rectCache.get(k);
-  const pal = palette(sphere);
+  const pal = icon.palette ? { ...NEUTRALS, ...icon.palette } : palette(sphere);
   const out = [];
   withOutline(icon.px).forEach((r, y) => {
     let x = 0;

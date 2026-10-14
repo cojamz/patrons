@@ -1,6 +1,7 @@
 // Display helpers. No rules here: everything is read off engine state.
 import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds } from '../engine/v4/index.js';
 import { contextFor } from '../engine/v4/core.js';
+import { defaultEmoji } from './art/emojis.js';
 
 // Seat colors are an accent now (identity is the player's emoji on their leader, Cory 2026-10-14): ochre, teal,
 // terracotta-rose, lavender-plum, each ΔE ≥ 30 (CIE76) from every resource color on screen (the Lamplit inks) and
@@ -8,8 +9,8 @@ import { contextFor } from '../engine/v4/core.js';
 export const PLAYER_COLORS = ['#9c845a', '#48c8d4', '#fca2a8', '#eac0fc'];
 export const SEAT_SIGILS = ['circle', 'triangle', 'square', 'star'];
 export const seatSigil = id => SEAT_SIGILS[id % SEAT_SIGILS.length];
-/** The emoji a player picked (shown on their leader's robe), or null: then the seat's sigil stands in. */
-export const seatEmoji = (state, id) => (state && state.players[id] && state.players[id].emoji) || null;
+/** The emoji a player picked (their minions, and the emblem on their leader), or the seat's default. */
+export const seatEmoji = (state, id) => (state && state.players[id] && state.players[id].emoji) || defaultEmoji(id);
 export const playerColor = id => PLAYER_COLORS[id % PLAYER_COLORS.length];
 export const resColor = r => `var(--${r})`;
 export { roman };

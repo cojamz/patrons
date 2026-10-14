@@ -1,5 +1,6 @@
 // <Sprite id sphere size>: a 24×24 pixel icon as crisp SVG, recolored for a sphere. Shown at 24/48/96px (or any
-// multiple of 12) so pixels stay square. An id that isn't drawn yet shows the member or action template.
+// multiple of 12) so pixels stay square. id may list candidates ([engine id, kebab name]); an id that isn't drawn
+// yet shows the member or action template.
 import { memo } from 'react';
 import { iconFor, rectsFor } from './index.js';
 

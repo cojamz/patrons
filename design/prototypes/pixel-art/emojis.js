@@ -7,8 +7,10 @@
 //   w  cream   c  cream shade   s  skin   t  skin shade   o  candle glow   x  soft black   b  blush
 //   1..9  this emoji's own colors, from its `pal` list (pal[0] is key 1). Usually triples: shade, base, highlight.
 // Letters are shared by every emoji so the set reads as one family; digits are each emoji's natural colors.
-// `em` is the same emoji as an 8×8 emblem for the cult leader's medallion (leaders.js). Its four corner
-// pixels sit under the medallion ring, so they stay empty; `.` there shows the medallion's dark ground.
+// `em` is the same emoji redrawn as an 8×8 emblem for the cult leader's chest medallion (leaders.js), shown 1:1 on
+// the medallion's dark ground (`.` shows that ground). Never shrink `px` to make an emblem: 16→8 smears it.
+// Data shape matches icons.js plus per-emoji colours: { id, name, kind: 'emoji', emoji, idea, pal, px, em } and,
+// filled in at load, `palette` = { key: '#hex' } for every key the drawing can use (shared letters + digits).
 // Classic script (works from file:// and in node): sets globalThis.CultMinions.
 (function (g) {
   const INK = '#1c1410';
@@ -679,6 +681,7 @@
   ];
 
   const KEYS = new Set(['.', ...Object.keys(SHARED)]);
+  MINIONS.forEach(m => { m.kind = 'emoji'; });
 
   function palette(m) {
     const p = { ...SHARED };
@@ -711,8 +714,8 @@
       pal.forEach((_, i) => { if (!used.has(String(i + 1))) errs.push(`${id}: pal[${i}] (key ${i + 1}) is never used`); });
     }
     if (grid(m.em, 8, 'em')) {
-      const corners = m.em[0][0] + m.em[0][7] + m.em[7][0] + m.em[7][7];
-      if (/[^.]/.test(corners)) errs.push(`${id}: emblem corners must stay empty (the medallion ring covers them)`);
+      const filled = m.em.join('').replace(/[.]/g, '').length;
+      if (filled < 26) errs.push(`${id}: emblem has only ${filled} filled pixels; too thin to read on the robe`);
     }
     return errs;
   }
@@ -748,6 +751,7 @@
   }
 
   const byId = id => MINIONS.find(m => m.id === id);
+  MINIONS.forEach(m => { m.palette = palette(m); });
 
   function toSVG(m, size = 32, opts) {
     if (typeof m === 'string') m = byId(m);
@@ -757,7 +761,8 @@
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="${size}" height="${size}" shape-rendering="crispEdges" role="img" aria-label="${m.name}">${t}${rects(px, palette(m))}</svg>`;
   }
 
-  const api = { MINIONS, SHARED, FAMILIES: F, INK, palette, validate, validateAll, withOutline, rects, toSVG, byId };
+  // ICONS: the same list under the name icons.js uses, so an importer can treat this file like an icon set.
+  const api = { MINIONS, ICONS: MINIONS, SHARED, FAMILIES: F, INK, palette, validate, validateAll, withOutline, rects, toSVG, byId };
   g.CultMinions = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

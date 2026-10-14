@@ -190,8 +190,8 @@ function App() {
       error={homeError}
       lastCode={lastRoomCode()}
       onLocal={() => setScreen({ name: 'setup' })}
-      onHost={name => enterLobby(() => createRoom({ name, table: initialTable(config?.table), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
-      onJoin={(code, name) => enterLobby(() => joinRoom({ code, name, knownIds: roomIds(code), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
+      onHost={(name, emoji) => enterLobby(() => createRoom({ name, emoji, table: initialTable(config?.table), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
+      onJoin={(code, name, emoji) => enterLobby(() => joinRoom({ code, name, emoji, knownIds: roomIds(code), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
     />
   );
 }

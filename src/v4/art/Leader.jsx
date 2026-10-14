@@ -4,7 +4,7 @@
 import { memo } from 'react';
 import { palette, withOutline } from './index.js';
 import { LEADER, LEADER_PANEL, MINION } from './figures.js';
-import { emojiArt } from './emojis.js';
+import { emojiArt, minionArt } from './emojis.js';
 
 const runs = (px, pal) => {
   const out = [];
@@ -40,18 +40,19 @@ export const Leader = memo(function Leader({ color, emoji = null, sigil = 'circl
       {title ? <title>{title}</title> : null}
       {body.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
       {art
-        ? <g transform={`translate(${P.x} ${P.y}) scale(${P.size / art.size})`}>{art.rects.map((r, k) => <rect key={`e${k}`} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}</g>
+        ? <g transform={`translate(${P.x + 2} ${P.y + 2})`}><circle cx="4" cy="4" r="4.6" fill="#2e2430" />{art.rects.map((r, k) => <rect key={`e${k}`} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}</g>
         : <path transform={`translate(${P.x} ${P.y})`} d={SIGILS[sigil] || SIGILS.circle} fill={pal[1]} />}
     </svg>
   );
 });
 
-/** <Minion color size>: a small hooded worker in the seat's accent color (16px). */
-export const Minion = memo(function Minion({ color, size = 16, title = null, dim = false }) {
-  const body = cached(`M|${color}`, () => runs(MINION, palette(color)));
+/** <Minion color emoji size>: one of the player's minions: their emoji (16px), or a small hooded worker in the seat's color. */
+export const Minion = memo(function Minion({ color, emoji = null, size = 16, title = null, dim = false }) {
+  const art = emoji ? minionArt(emoji) : null;
+  const body = art ? art.rects : cached(`M|${color}`, () => runs(MINION, palette(color)));
   return (
     <svg className={`minion${dim ? ' dim' : ''}`} viewBox="0 0 16 16" width={size} height={size} shapeRendering="crispEdges"
-      role={title ? 'img' : undefined} aria-label={title || undefined} aria-hidden={title ? undefined : 'true'}>
+      role={title ? 'img' : undefined} aria-label={title || undefined} aria-hidden={title ? undefined : 'true'} data-emoji={art ? emoji : undefined}>
       {title ? <title>{title}</title> : null}
       {body.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
     </svg>

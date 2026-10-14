@@ -245,30 +245,46 @@ describe('Straggler: after the last worker is placed, move one of yours to an un
   });
 });
 
-describe('Release (base rule): once per round, release a member for its cost in any colors', () => {
-  it('is offered in the buy step; the card goes to the bottom of the pile and you take its cost in colors you pick', () => {
+// Release gives back only the member's colored part, in its own color (in any colors when its color isn't on the
+// table) (Cory, 2026-10-14). A member can't be released in the round you recruited it (Claude under Cory's
+// go-with-your-gut, from the dead-window audit, 2026-10-14): it stops buy-collect-release loops such as Lender's +5.
+describe('Release (base rule): once per round, release a member for its colored part', () => {
+  const colored = id => defById(id).s;
+  it('is offered in the buy step; the card goes to the bottom of the pile and you take its colored part in its color', () => {
     const id = 'red.bigfamily';
     let s = scene({ members: [[id]], queue: [{ t: 'turn', p: 0 }] });
     s = move(s, `slot:${RUSH}`);
     const uid = uidOf(s, id, 0);
-    const before = followers(s, s.players[0]);
+    const before = followers(s, s.players[0]), red = R(s).red;
+    expect(s.pending.options.find(o => o.id === `release:${uid}`).label).toBe(`Release ${defById(id).name} for ${colored(id)} red`);
     s = move(s, `release:${uid}`);
     expect(s.pile.at(-1)).toBe(uid);
     expect(s.players[0].members).not.toContain(uid);
     expect(followers(s, s.players[0])).toBe(before - defById(id).f);
+    expect(R(s).red).toBe(red + colored(id)); // the "any" part doesn't come back
+    expect(s.log).toContain(`P1 released ${defById(id).name} to the bottom of the pile, for ${colored(id)} red.`);
+    // straight back to the buy, without a second release
+    expect(s.pending.kind).toBe('buy');
+    expect(ids(s).some(i => i.startsWith('release:'))).toBe(false);
+  });
+  it('a member whose color is not on the table gives its colored part back in any colors you pick', () => {
+    // Squatter leans Magenta; the default table has no magenta
+    let s = scene({ members: [['benders.squatter']], queue: [{ t: 'buy', p: 0 }] });
+    s.current = 0; s = resume(s);
+    const u = uidOf(s, 'benders.squatter', 0), n = colored('benders.squatter');
+    expect(s.pending.options.find(o => o.id === `release:${u}`).label).toBe(`Release Squatter for ${n} in any colors`);
+    s = move(s, `release:${u}`);
     expect(s.pending.kind).toBe('choose');
     s = move(s, 'one:blue');
     s = move(s, 'all:green');
     expect(R(s).blue).toBe(1);
-    expect(R(s).green).toBe(cost(id) - 1);
-    // back to the buy, without a second release
+    expect(R(s).green).toBe(n - 1);
     expect(s.pending.kind).toBe('buy');
-    expect(ids(s).some(i => i.startsWith('release:'))).toBe(false);
   });
   it('once per round: a later turn in the same round has no release; next round does', () => {
     let s = scene({ members: [['red.twins', 'red.bigfamily']], queue: [{ t: 'turn', p: 0 }] });
     s = move(s, `slot:${RUSH}`);
-    s = move(s, `release:${uidOf(s, 'red.twins', 0)}`); s = move(s, 'all:red'); s = move(s, 'pass');
+    s = move(s, `release:${uidOf(s, 'red.twins', 0)}`); s = move(s, 'pass');
     s.queue = [{ t: 'turn', p: 0 }]; s = resume(s);
     s = move(s, `slot:${JV}`); s = pickAny(s);
     expect(ids(s).some(i => i.startsWith('release:'))).toBe(false);
@@ -281,27 +297,31 @@ describe('Release (base rule): once per round, release a member for its cost in 
     expect(s.pending).toBe(null); // nothing to buy, nothing to release
   });
   it('the refund is not a gain (gold gain doublers like Underdog don’t touch it)', () => {
-    let s = scene({ members: [['gold.underdog', 'red.bigfamily']], res: [{}, { gold: 9 }], queue: [{ t: 'buy', p: 0 }] });
+    let s = scene({ members: [['gold.underdog', 'gold.banker']], res: [{}, { gold: 9 }], queue: [{ t: 'buy', p: 0 }] });
     s.current = 0; s = resume(s);
-    s = move(s, `release:${uidOf(s, 'red.bigfamily', 0)}`);
-    s = move(s, 'all:gold');
-    expect(R(s).gold).toBe(cost('red.bigfamily'));
+    s = move(s, `release:${uidOf(s, 'gold.banker', 0)}`);
+    expect(R(s).gold).toBe(colored('gold.banker'));
   });
   it('a released Doppelganger forgets its copy; a released Squatter comes back unspent', () => {
     let s = scene({ members: [['red.doppel', 'benders.squatter']], queue: [{ t: 'buy', p: 0 }] });
     const d = uidOf(s, 'red.doppel', 0), q = uidOf(s, 'benders.squatter', 0);
     s.cards[d].copy = 'benders.squatter'; s.cards[q].spent = { squat: 1 };
     s.current = 0; s = resume(s);
-    s = move(s, `release:${d}`); s = move(s, 'all:red');
+    s = move(s, `release:${d}`);
     expect(s.cards[d]).toEqual({ uid: d, def: 'red.doppel' });
   });
   it('can fund this turn’s buy (release comes before buying)', () => {
-    let s = scene({ members: [['red.bigfamily']], res: [{ red: 1 }], queue: [{ t: 'buy', p: 0 }] });
+    let s = scene({ members: [['red.bigfamily']], res: [{ red: 4 - colored('red.bigfamily') }], queue: [{ t: 'buy', p: 0 }] });
     s.current = 0; s = resume(s);
     expect(ids(s)).not.toContain('tier:mid');
     s = move(s, `release:${uidOf(s, 'red.bigfamily', 0)}`);
-    s = move(s, 'all:blue');
     expect(ids(s)).toContain('tier:mid');
+  });
+  it('a member with no colored part gives nothing back, so it is not offered', () => {
+    let s = scene({ members: [['red.volunteer', 'red.twins']], queue: [{ t: 'buy', p: 0 }] });
+    s.current = 0; s = resume(s);
+    expect(ids(s)).not.toContain(`release:${uidOf(s, 'red.volunteer', 0)}`);
+    expect(ids(s)).toContain(`release:${uidOf(s, 'red.twins', 0)}`);
   });
 });
 
@@ -314,8 +334,8 @@ describe('Release with once-per-game members, just-bought members and Echo copie
     s = move(s, `use:${u}`);
     expect(R(s).gold).toBe(10);
     expect(ids(s)).not.toContain(`use:${u}`);
-    s = move(s, `release:${u}`); s = move(s, 'all:red');
-    expect(R(s).red).toBe(cost('gold.speculator'));
+    s = move(s, `release:${u}`);
+    expect(R(s).gold).toBe(10 + defById('gold.speculator').s);
     expect(s.cards[u]).toEqual({ uid: u, def: 'gold.speculator' });
     expect(s.pile.at(-1)).toBe(u);
     // a rival who later gets the card can use it once more
@@ -323,7 +343,9 @@ describe('Release with once-per-game members, just-bought members and Echo copie
     s.queue = [{ t: 'buy', p: 1 }]; s.current = 1; s.pending = null; s = resume(s);
     expect(ids(s)).toContain(`use:${u}`);
   });
-  it('a just-bought member can be released in a Big Spender second buy step: its when-recruited effect stays, its cost comes back in any colors', () => {
+  // Rewritten for "not in the round you recruited it" (dead-window audit, 2026-10-14). These two used to show a
+  // just-bought member released in the same turn (Big Spender's second buy) or the same round (a later buy step).
+  it('a just-bought member can’t be released in a Big Spender second buy step; next round it can', () => {
     const Q = ['gold', 'red', 'echo', 'purple'];
     let s = scene({ quadrants: Q, members: [['benders.bigspender']], shop: ['echo.mirror'], res: [{ green: 10 }, { green: 5 }], queue: [{ t: 'buy', p: 0 }, { t: 'buy', p: 0, extra: true }, { t: 'endTurn', p: 0 }] });
     s.current = 0; s = resume(s);
@@ -331,21 +353,29 @@ describe('Release with once-per-game members, just-bought members and Echo copie
     s = payFirst(move(s, `card:${u}`));
     expect(R(s).green).toBe(10 - cost('echo.mirror') + 5); // Mirror: as much green as the rival with the most
     expect(s.pending.extra).toBe(true);
+    expect(ids(s)).not.toContain(`release:${u}`);
+    expect(s.cards[u]).toMatchObject({ recruitedRound: 1, recruitedBy: 0 });
+    s.round = 2; s.queue = [{ t: 'buy', p: 0 }]; s.current = 0; s.pending = null; s = resume(s);
     expect(ids(s)).toContain(`release:${u}`);
-    s = move(s, `release:${u}`); s = move(s, 'all:gold');
-    expect(R(s).gold).toBe(cost('echo.mirror'));
-    expect(R(s).green).toBe(15 - cost('echo.mirror'));
-    expect(s.players[0].members).not.toContain(u);
-    // the second buy is still there (releasing isn't a buy)
-    expect(s.pending?.kind).toBe('buy');
-    expect(s.pending.extra).toBe(true);
   });
-  it('without Big Spender, a just-bought member waits for your next buy step this round', () => {
+  it('without Big Spender, a just-bought member waits for next round (not a later buy step this round)', () => {
     let s = scene({ shop: ['red.bigfamily'], res: [{ red: 20 }], queue: [{ t: 'buy', p: 0 }, { t: 'endTurn', p: 0 }] });
     s.current = 0; s = resume(s);
     const u = uidOf(s, 'red.bigfamily', 'shop');
     s = payFirst(move(s, `card:${u}`));
     expect(s.pending?.kind).not.toBe('buy');
+    s.queue = [{ t: 'buy', p: 0 }]; s.current = 0; s.pending = null; s = resume(s);
+    expect(ids(s)).not.toContain(`release:${u}`);
+    s.round = 2; s.queue = [{ t: 'buy', p: 0 }]; s.current = 0; s.pending = null; s = resume(s);
+    expect(ids(s)).toContain(`release:${u}`);
+  });
+  it('a member you didn’t recruit this round (stolen this round) can be released', () => {
+    const Q = ['gold', 'red', 'thieves', 'green'];
+    let s = scene({ quadrants: Q, shop: ['red.bigfamily'], res: [{}, { red: 20 }], queue: [{ t: 'buy', p: 1 }] });
+    s.current = 1; s = resume(s);
+    const u = uidOf(s, 'red.bigfamily', 'shop');
+    s = payFirst(move(s, `card:${u}`));
+    contextFor(s).steal(s.players[0], s.players[1], { uid: u });
     s.queue = [{ t: 'buy', p: 0 }]; s.current = 0; s.pending = null; s = resume(s);
     expect(ids(s)).toContain(`release:${u}`);
   });
@@ -357,9 +387,9 @@ describe('Release with once-per-game members, just-bought members and Echo copie
     s = move(s, `use:${u}`); s = pickAny(s);
     const copied = R(s).gold - g;
     expect(copied).toBeGreaterThan(0);
-    s = move(s, `release:${u}`); s = move(s, 'all:green');
+    s = move(s, `release:${u}`);
     expect(R(s).gold).toBe(g + copied);
-    expect(R(s).green).toBe(cost('echo.hourglass'));
+    expect(R(s).green).toBe(defById('echo.hourglass').s);
     expect(s.cards[u]).toEqual({ uid: u, def: 'echo.hourglass' });
   });
 });
