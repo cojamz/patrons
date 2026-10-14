@@ -186,3 +186,5 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Add a Thieves sphere (stealing resources and members). Scoring is open; the agent is testing 'most loot' (a visible stolen pile), 'most members from other colors', 'most black' and 'fewest resources'.
 - ❌ (Cory) Tempo, Territory and Patronage are bad ideas. Their designers were stopped and deleted. Yellow and Thieves continue.
 - ✅ (Cory) The sphere design principles (8 points) are approved. They're in design/sphere-brief.md.
+- ✅ (Cory) Scoring rules must measure visible state (resources, members, a visible pile), never counts of events during turns. Anyone glancing at the other players can see who's winning each contest.
+- ✅ (Cory) He likes all five older-game ideas: Echo (old green), Market (old blue), Trading (old white), Purple (extra turns; a rough fit, needs rethinking) and Silver (gifts for everyone). Once Yellow and Thieves look solid and pass critic agents, launch designers on all five, with win conditions rethought under the visible-state rule.

@@ -11,6 +11,7 @@ Handed to every sphere-design agent, together with design-principles.md, decisio
 6. No members tied to one specific contest, nothing that only helps whoever's already winning, no fiddly timing.
 7. Interaction, including harm, is fine when it's fun on both sides.
 8. Every card is measured by simulation before Cory sees it.
+9. **Win conditions are visible state, never event counts** (Cory, 2026-10-14). A sphere's round-end rule must measure something you can SEE on the players right now: resources held, members held, a visible pile. Never count things that happened during turns (steals made, actions taken, repeats). Anyone glancing at the other players should know who's winning each contest.
 
 ## What a sphere is
 - One resource (its color) and one scoring rule, measured at round end. You need at least 1 to score, ties all score, and it pays +2/+4/+6.

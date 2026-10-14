@@ -25,6 +25,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 ## How you win
 - The game is about recruiting lots of members (items) and escalating your resources to win followers in bulk (the fixtures). Ring contests are seasoning, not the meal.
 - Each quadrant has exactly one scoring rule, printed on each of its rings, visually distinct from the actions.
+- Scoring rules measure visible state (what players hold right now), never counts of events during turns. Anyone looking at the other players can tell who's winning each contest. (Cory, 2026-10-14)
 - Favor can go down, but only rarely, a little at a time, and only from the leader.
 - Round-end bonuses (ring contests, per-round counts) pay out only at round end. Followers that come straight from a purchase or a member trigger (e.g. Proselytizer) count the moment they happen. (Cory, 2026-10-14)
 - The round-III action only has to be powerful. It doesn't have to gain or convert followers.
