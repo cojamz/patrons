@@ -6,7 +6,7 @@
 .emoji-face{border-bottom:3px solid var(--pc,transparent);border-radius:10px}
 .emoji-face.blank{border-color:transparent}
 .emoji-btn svg,.emoji-face svg,.emoji-cell svg{display:block}
-.emoji-grid{flex-basis:100%;display:grid;grid-template-columns:repeat(5,44px);gap:6px;justify-content:start;padding:10px 12px 12px;background:var(--table);border:1px solid var(--rim);border-radius:12px;animation:emoji-in .14s ease-out both}
+.emoji-grid{order:9;flex-basis:100%;display:grid;grid-template-columns:repeat(5,44px);gap:6px;justify-content:start;padding:10px 12px 12px;background:var(--table);border:1px solid var(--rim);border-radius:12px;animation:emoji-in .14s ease-out both}
 .emoji-cap{grid-column:1/-1;margin:0 0 2px;font-size:var(--fs-2);color:var(--muted)}
 .emoji-cell{width:44px;height:44px;display:grid;place-items:center;padding:0;border-radius:8px;border:1px solid transparent;background:none;cursor:pointer}
 .emoji-cell:hover:not(:disabled),.emoji-cell:focus-visible{background:var(--table-2);border-color:var(--rim)}

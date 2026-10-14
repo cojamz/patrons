@@ -49,7 +49,7 @@ export function EmojiButton({ value, taken = new Map(), bots = new Map(), onPick
       </button>
       {open && (
         <div className="emoji-grid" id={gridId} ref={grid} role="radiogroup" aria-label={`${label}: pick one`} data-emoji-grid>
-          <p className="emoji-cap">Your minions are this emoji; your leader wears it. One each.</p>
+          <p className="emoji-cap">Your minions are this emoji, and your leader wears it. One each.</p>
           {emojiIds().map(id => {
             const nm = emojiName(id);
             const by = taken.get(id);

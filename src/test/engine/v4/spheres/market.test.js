@@ -286,6 +286,8 @@ describe(`Blue table: ${GAMES} seeded bot games`, () => {
       expect(s.ranking).toHaveLength(4);
       for (const p of s.players) expect(followers(s, p)).toBeGreaterThan(0);
     }
-    expect(usedSpree).toBeGreaterThan(GAMES * 0.75);
+    // Bots still take Spree in most games. The bar was 0.75 under the old 10→10 clock (166/200 then); with 10→10
+    // unlimited one buy absorbs 10 resources, so Spree's extra buys matter less (134/200 measured, Normal bots).
+    expect(usedSpree).toBeGreaterThan(GAMES * 0.6);
   });
 });

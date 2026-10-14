@@ -543,7 +543,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     if (engraved) {
       // the words get the cell's width on screen: its chord when it lies flat, its depth when it stands on its side
       const R = rings[t];
-      const fw = side ? (R.r1 - R.r0) * 0.96 : t === 3 ? 2 * (R.r1 - 12) * Math.SQRT1_2 * 0.9 : 2 * R.r * Math.sin((s.half * Math.PI) / 180) * 0.92;
+      const fw = side ? (R.r1 - R.r0) * 1.02 : t === 3 ? 2 * (R.r1 - 12) * Math.SQRT1_2 * 0.9 : 2 * R.r * Math.sin((s.half * Math.PI) / 180) * 0.92;
       style = { ...style, '--fw': `${((fw / BOX) * 100).toFixed(1)}%` };
     }
     return (
@@ -567,7 +567,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
               {minions || <span className="ico"><Stamp id={[`${qid}.${a.key}`, spriteId(a.name)]} /></span>}
               {open && (
                 <span className="yl" data-yield>
-                  {clauses(shortEffect(qid, a, round)).map((c, k) => <span key={k} className="cl"><Rich text={c} /></span>)}
+                  {clauses(shortEffect(qid, a, round)).map((c, k) => <span key={k} className="cl">{k ? <span className="sep"> </span> : null}<Rich text={c} /></span>)}
                 </span>
               )}
             </span>
