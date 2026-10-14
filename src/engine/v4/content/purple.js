@@ -2,6 +2,8 @@
 // Most purple at round end takes the ring's followers.
 // Rework (Claude, 2026-10-14, under Cory's go-with-your-gut, after his first play): every extra turn a Purple space
 // gives is a net gain (one worker in, two or more out); Linger became Plan Ahead; the ring counts purple honestly.
+// Reprice (Claude, 2026-10-14, go-with-your-gut, from the member-value sim in design/eval/purple-members.md): Double Time,
+// Taskmaster, Late Riser 4+2; Overseer 2+2; Second Wind 6+2. Night Owl takes Relay's slot.
 //
 // Engine notes (content-only, no core change):
 // - An extra turn is an ordinary { t: 'turn' } task put right after the current turn ends (p.left += 1).
@@ -154,7 +156,7 @@ export default {
   ],
 
   members: [
-    m('secondwind', 'Second Wind', 8, 4, 'Once per game: take an extra turn right after this one.', {
+    m('secondwind', 'Second Wind', 6, 2, 'Once per game: take an extra turn right after this one.', {
       activate: 'game',
       onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Second Wind')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
@@ -162,7 +164,7 @@ export default {
     m('errand', 'Errand Runner', 4, 4, 'When recruited: take an extra turn right after this one.', {
       onRecruited(ctx, owner) { extraTurns(ctx, owner, 1, 'Errand Runner'); },
     }),
-    m('taskmaster', 'Taskmaster', 6, 2, 'Once per round: pay 5 purple to take an extra turn right after this one.', {
+    m('taskmaster', 'Taskmaster', 4, 2, 'Once per round: pay 5 purple to take an extra turn right after this one.', {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
@@ -170,7 +172,7 @@ export default {
       },
       botActivate: (ctx, owner) => canBuyTurn(ctx, owner, 5) && ctx.state.round >= 2,
     }),
-    m('lateriser', 'Late Riser', 6, 2, 'At round start, if you have the fewest followers (ties count), take an extra turn before anyone else.', {
+    m('lateriser', 'Late Riser', 4, 2, 'At round start, if you have the fewest followers (ties count), take an extra turn before anyone else.', {
       // the round's turns are queued after round-start hooks, so this one goes first
       onRoundStart(ctx, owner) {
         const me = ctx.followers(owner);
@@ -191,11 +193,11 @@ export default {
     m('apprentice', 'Apprentice', 2, 2, 'Whenever you take an extra turn, your next member costs 4 less.', {
       onExtraTurn(ctx, owner) { owner.discount += 4; },
     }),
-    m('overseer', 'Overseer', 4, 2, 'Whenever a rival takes an extra turn, gain half your purple (up to 4).', {
+    m('overseer', 'Overseer', 2, 2, 'Whenever a rival takes an extra turn, gain half your purple (up to 4).', {
       onRivalExtraTurn(ctx, owner) { ctx.gain(owner, P, Math.min(4, Math.floor((owner.res[P] || 0) / 2))); },
     }),
     // fill-in (critic): replaces Timekeeper
-    m('doubletime', 'Double Time', 6, 2, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
+    m('doubletime', 'Double Time', 4, 2, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
     // pays on your last placement of the round, before that turn's buy (at round end, round III's purple came too late).
     // +1 per worker measured 8.4 followers (57% win, easy bots): late purple decides the ring. Half that is the card.
     m('bookkeeper', 'Bookkeeper', 4, 2, 'When you place your last minion of a round, +1 purple per 2 minions you have on the board.', {
@@ -213,7 +215,16 @@ export default {
     m('lamplighter', 'Lamplighter', 6, 2, 'Now and at round start, +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
-    // Relay was cut by Cory (2026-10-14); Purple has 14 members until a replacement is priced.
+    // Relay's slot (Cory cut Relay, 2026-10-14). Member-value sim, handed over at round II: 6.9 followers, 53% win
+    // (Normal bots, n=320), so 8+2 (design/eval/purple-members.md). At 4 players round I has no space to spare, so it
+    // pays from round II. Fires once per round (owlRound), whether or not the board had room.
+    m('nightowl', 'Night Owl', 8, 2, 'When you place your last minion of a round, take an extra turn right after this one.', {
+      afterAction(ctx, owner, card) {
+        if (owner.left !== 0 || card.owlRound === ctx.state.round) return;
+        card.owlRound = ctx.state.round;
+        extraTurns(ctx, owner, 1, 'Night Owl');
+      },
+    }),
     m('patience', 'Patience', 6, 2, 'Game end: +1 follower per 3 purple.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res[P] || 0) / 3),
     }),

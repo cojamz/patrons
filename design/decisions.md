@@ -336,3 +336,6 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Floating minions or a minion count, not both: keep the floating minions, drop the count dots.
 - ✅ (Cory) No geometric seat shapes (circle/triangle/square/star) anywhere players see: identity is the leader's emoji.
 - ✅ (Cory) A member's sphere color must be obvious from its clothes/color, with an aura if needed.
+- (Cory) "We're definitely on the right track" with the Lamplit build (rim labels, Reckoning). Still doesn't like the action spaces: three distinct visual directions are being mocked (design/prototypes/actions/) for him to pick by number.
+- (Cory) Show the member deck and how many cards are left: a face-down pile at the head of the shop strip with its count, hover for what's in it, refills come off it.
+- (Cory) A picky game player does a pass too (game-design and fun critic): the boardgame-enthusiast, blind, on the frozen build.

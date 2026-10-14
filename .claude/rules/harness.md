@@ -65,6 +65,7 @@ How Claude works on Cults (the repo is still called patrons). Claude owns this f
   - `playtester`, `ux-reviewer`: quick checks while iterating.
   - The engineering reviewer has no agent file: a fresh general agent with repo access and no prior context (design/eval/engineering-review.md is round 1).
   - Blind means: only a URL and the player rulebook, never the repo; new instances every time.
+  - Ask testers for "a move log with a short note on why", never "write your reasoning": that wording tripped the API's safeguards and killed a tester (2026-10-14).
 - **Hooks** (`.claude/settings.json`): only for things that must happen no matter what. Session start installs deps; a safety hook blocks force-push, `rm -rf` and edits to secrets.
 - **Workflows** (`.claude/workflows/*.js`, run by name): `quadrant-forge` is the evaluator team. It runs inventors, then per sphere a lint/value check, 2 lens judges, a mind-play tester holding a ledger, a red team and a synthesizer (revise up to twice or kill), then combo-table playtests and a meta-critic that proposes rubric changes. Edit it as the process evolves. Speed: this container has 4 CPUs, so each workflow runs only 2 agents at once. For throughput, run several workflows in parallel over slices (args: pool, from, to, stage:'forge'). Pass a light pool whose spec fields point to per-sphere files in design/eval/runs/<batch>/. A single agent can't echo back a 60KB pool.
 - **/doctor**: audits rules, skills and agents for conflicts. Run it when the setup feels off.

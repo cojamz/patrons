@@ -15,6 +15,7 @@ import RoundEnd from './RoundEnd.jsx';
 import Reckoning from './Reckoning.jsx';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker from './PayPicker.jsx';
+import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome } from './flight.js';
 import { friendlyError, isNetworkError } from '../errors.js';
@@ -191,6 +192,39 @@ function Menu({ onRules, onLog, onLeave, getState }) {
   );
 }
 
+/**
+ * The turn card: one turn, told where its cult sits, a line per beat (placed, gained, bought). It folds into the
+ * chair when the turn has passed and had its moment.
+ */
+function TurnCard({ card, root, state }) {
+  const [pos, setPos] = useState(null);
+  useLayoutEffect(() => {
+    const seat = root && (root.querySelector(`.lt-seat[data-pid="${card.pid}"]`));
+    if (!seat) { setPos(null); return; }
+    const r = seat.getBoundingClientRect();
+    const lead = seat.querySelector(`[data-leader="${card.pid}"]`);
+    const a = lead ? lead.getBoundingClientRect() : r;
+    const left = r.left + r.width / 2 < innerWidth / 2;
+    const top = r.top + r.height / 2 < innerHeight / 2;
+    setPos({
+      left: left ? Math.min(innerWidth - 300, r.right + 10) : undefined,
+      right: left ? undefined : Math.max(10, innerWidth - r.left + 10),
+      top: top ? Math.max(8, a.top) : undefined,
+      bottom: top ? undefined : Math.max(8, innerHeight - (a.bottom + 12)),
+      ox: left ? '0%' : '100%', oy: top ? '0%' : '100%',
+    });
+  }, [card.pid, card.n, root]);
+  if (!pos) return null;
+  const [head, ...rest] = card.text.split(' · ');
+  return (
+    <div className={`turn-card${card.live ? ' live' : ''}${card.folding ? ' folding' : ''}`} data-turn-story={card.text} role="status" aria-live="polite"
+      style={{ left: pos.left, right: pos.right, top: pos.top, bottom: pos.bottom, transformOrigin: `${pos.ox} ${pos.oy}`, '--pc': playerColor(card.pid) }}>
+      <b className="tc-head">{head}</b>
+      {rest.map((l, k) => <span key={`${k}:${l}`} className="tc-line"><Rich text={l} /></span>)}
+    </div>
+  );
+}
+
 /** Which player sits in each corner chair: you bottom left (0), then clockwise from you (1 top left, 2 top right,
  *  3 bottom right). Empty chairs (2–3 players) stay empty. */
 function seatCorners(state, me) {
@@ -262,9 +296,19 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // The results are on screen: only now may the app forget the saved game.
   useEffect(() => { if (live0.over && !moment && onResults) onResults(); }, [live0.over, moment]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (live0.over && !moment && typeof window !== 'undefined' && window.scrollTo) { try { window.scrollTo(0, 0); } catch { /* jsdom */ } } }, [live0.over, moment]);
-  const [caption, setCaption] = useState(null); // "P3 took Swell (+5 blue)", pinned over the wheel for a beat
+  const [turnCard, setTurnCard] = useState(null); // { pid, text, live, n, folding }: the current turn, told by its cult
+  const turnTimer = useRef([]);
+  const showTurnCard = useCallback(card => {
+    turnTimer.current.forEach(clearTimeout);
+    turnTimer.current = [];
+    setTurnCard(card);
+    if (!card.live) {
+      turnTimer.current.push(setTimeout(() => setTurnCard(c => (c && c.n === card.n ? { ...c, folding: true } : c)), 2600));
+      turnTimer.current.push(setTimeout(() => setTurnCard(c => (c && c.n === card.n ? null : c)), 3100));
+    }
+  }, []);
+  useEffect(() => () => turnTimer.current.forEach(clearTimeout), []);
   const turnStart = useRef(null); // { actor, state }: where the current turn began (its story is told when it passes)
-  const captionTimer = useRef(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [flash, setFlash] = useState(() => new Set());
@@ -363,16 +407,16 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         setTimeout(() => setGifts(gg => gg.filter(x => x !== g)), 2400);
       }
     }
-    // Each finished turn (anyone's, yours too) is told in one plain line by the board, and the players it touched
-    // pulse. A turn that ends the round is left to the round-end card.
+    // Every turn is told in one place (Cory): a turn card by the acting cult builds line by line as the turn goes
+    // (placed → gained → bought), the players it touched pulse, and when the turn passes the card holds a beat,
+    // then folds into that cult's chair. Your own turns too. A turn that ends the round is left to the Reckoning.
+    const me1 = mySeats.length === 1 ? mySeats[0] : null;
     const turnOf = before.pending ? before.pending.player : null;
     const passed = turnOf != null && before.round >= 1 && !(state.pending && state.pending.player === turnOf && state.round === before.round);
     if (passed && turnStart.current && turnStart.current.actor === turnOf && state.round === before.round) {
-      const story = turnStory(turnStart.current.state, state, turnOf, mySeats.length === 1 ? mySeats[0] : null, turnStart.current.mid);
+      const story = turnStory(turnStart.current.state, state, turnOf, me1, turnStart.current.mid);
       if (story) {
-        clearTimeout(captionTimer.current);
-        setCaption({ text: story.text, pid: turnOf, n: Date.now(), story: true });
-        captionTimer.current = setTimeout(() => setCaption(null), 6000);
+        showTurnCard({ pid: turnOf, text: story.text, live: false, n: turnStart.current.n });
         if (story.touched.length) {
           const n = Date.now();
           setRobbed(r => ({ ...(r || {}), pids: story.touched, n }));
@@ -380,9 +424,14 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         }
       }
     }
-    if (state.pending && (!before.pending || state.pending.player !== before.pending.player || state.round !== before.round)) turnStart.current = { actor: state.pending.player, state, mid: null };
+    if (state.pending && (!before.pending || state.pending.player !== before.pending.player || state.round !== before.round)) turnStart.current = { actor: state.pending.player, state, mid: null, n: Date.now() };
     // the turn reached its buy: what the action gave is settled (the buy's cost is told apart)
     if (state.pending && state.pending.kind === 'buy' && turnStart.current && turnStart.current.actor === state.pending.player && !turnStart.current.mid) turnStart.current.mid = state;
+    // mid-turn: the card grows as the turn does
+    if (state.round >= 1 && state.pending && turnStart.current && turnStart.current.actor === state.pending.player && turnStart.current.state !== state) {
+      const story = turnStory(turnStart.current.state, state, state.pending.player, me1, turnStart.current.mid);
+      if (story) showTurnCard({ pid: state.pending.player, text: story.text, live: true, n: turnStart.current.n });
+    }
     // Getting robbed is never silent: a rival's move that took your resources says so.
     if (actor != null && !mySeats.includes(actor)) {
       for (const id of mySeats) {
@@ -407,16 +456,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (!fresh.length) return undefined;
     const key = fresh[fresh.length - 1];
     const owner = state.slots[key];
-    if (!mySeats.includes(owner)) {
-      const took = lines.map(l => l.match(new RegExp(`^${state.players[owner].name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} took (.+) \\((\\w+)\\)\\.$`))).find(Boolean);
-      const b0 = before.players[owner], p1 = state.players[owner];
-      const delta = state.resources.map(r => [r, p1.res[r] - b0.res[r]]).filter(([, d]) => d).map(([r, d]) => `${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`).join(', ');
-      if (took) {
-        clearTimeout(captionTimer.current);
-        setCaption({ text: `${p1.name} took ${took[1]}${delta ? ` (${delta})` : ''}`, pid: owner, n: Date.now() });
-        captionTimer.current = setTimeout(() => setCaption(null), 6000);
-      }
-    }
     setFlash(new Set(fresh));
     flyWorker(root.current, owner, key, playerColor(owner));
     const t = setTimeout(() => setFlash(new Set()), 2000);
@@ -468,7 +507,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // counted pick (Steal: 1 gold at a time) while that's still the only choice.
   const queuedClick = useRef([]); // clicks made while a move is in flight, replayed in order if still legal
   const repeat = useRef(null);
-  useEffect(() => { if (mine && pend && pend.kind === 'place') setCaption(null); }, [mine, pend]);
   const lastPick = useRef({ id: null, t: 0, x: null, y: null });
   // where the last press landed: the step lock below only eats a second press near the first one (a double tap),
   // never a deliberate press somewhere else (testers felt those as dropped clicks)
@@ -665,7 +703,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       ) : (
         <>
           <section className="lt-wheel" data-region="wheel">
-            <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+            <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
@@ -682,6 +720,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           </section>
         </>
       )}
+      {turnCard && !moment && !(state.over && !moment) && <TurnCard card={turnCard} root={root.current} state={state} />}
       {toast && <div key={toast.n} className="toast" role="status">{toast.text}</div>}
       <TouchTips />
       {cardDetail && state.cards[cardDetail.uid] && (
