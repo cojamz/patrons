@@ -134,3 +134,18 @@ Full log: `design/decisions.md`. Player rulebook: `design/rulebook.md` (imported
 - Harness diagram: https://claude.ai/artifact/PTmPKj5kjBaJX9xpW5Ng3t
 - First prototype: https://claude.ai/artifact/D32uNuYuSq3pUEn4VrQ8YN
 - Black/Magenta card sheet (now outdated): https://claude.ai/artifact/N8uzJK6ANX7Z183PA4aKgi
+
+## 8. Open design questions and ideas (bring to Cory when relevant; don't decide them yourself)
+
+- **Watch items on spheres:**
+  - Magenta's "most Magenta members" ring is sticky: the same winner two rounds running 85% of the time. If it plays stale, change the scoring rule, not the cards.
+  - Purple: when nobody takes extra turns, everyone ties on workers (56% of rounds), so it plays as "most purple". The option of "ties score nothing" is unmeasured.
+  - Silver: a resource glut (~58 left per player vs 25 baseline).
+  - White: Lender nets −1 follower, breaking "every member worth ≥1". Cory hasn't ruled; the recommendation is to keep it as the one exception.
+  - Echo: the recommended scoring is the copy pile ("what you copy goes on a pile; biggest pile wins") over plain "most green". Cory hasn't ruled.
+- **Follower ladder:** if the 8→6 pack stops feeling like a bulk deal, measure 7→6. The novelty check says the ladder echoes Dominion's 1/3/6 + Province clock; Cory might want it made more our own later.
+- **Making the game more distinctive** (design/novelty.md): today the wheel is just navigation. A mechanic that uses rotation or neighboring quadrants would make the board the signature. Raise this as an idea, don't build it.
+- **Tabled overlays, in Cory's order:** role tags (Wingspan-like: round goals by role, members counting roles) → Omens (three revealed up front, neutral, no lucky color) → Devotion (sets). Rejected: Relics, Rank. Titles: maybe, but he dislikes the mechanism.
+- **Design-space direction:** members that bend the rules. Cory loves pile interaction (Insider). More of these will come in calibrated small batches he grades by number.
+- **Release:** on trial as a base rule. Cory: "maybe this should just be a rule straight up." Report how it plays.
+- **Big-followers target:** ~25% (15–30%). Report this number with every balance change.
