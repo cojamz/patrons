@@ -190,7 +190,14 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const [gifts, setGifts] = useState([]); // short-lived "+1 gold from P2" floaters on player cards
   const [toast, setToast] = useState(null);
   const [robbed, setRobbed] = useState(null); // { pid, n }: flash that player's resources
-  const [cardDetail, setCardDetail] = useState(null); // phones: { el, uid } for a shop card's details
+  const [cardDetail, setCardDetail] = useState(null); // { el, uid, hover? } a shop card's details (tap on phones, hover on desktop)
+  const hoverTimer = useRef(null);
+  const onHoverCard = useCallback((uid, el) => {
+    clearTimeout(hoverTimer.current);
+    if (uid == null) { hoverTimer.current = setTimeout(() => setCardDetail(c => (c && c.hover ? null : c)), 120); return; }
+    hoverTimer.current = setTimeout(() => setCardDetail(c => (c && !c.hover ? c : { uid, el, hover: true })), 160);
+  }, []);
+  useEffect(() => () => clearTimeout(hoverTimer.current), []);
   const [spacePeek, setSpacePeek] = useState(null); // a space selected from the panel list (one sheet, shared with the wheel)
   // re-render on every session change, so Undo disappears the moment control passes even while the table catches up
   const [, setTick] = useState(0);
@@ -438,7 +445,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (state.over || !pend) return;
     const who = state.players[pend.player];
     // phones: a shop card you can't buy right now opens its details instead (you can't hover there)
-    if (info.type === 'card' && !wide && el && !(pend.kind === 'buy' && mySeats.includes(pend.player) && !needHandoff)) {
+    if (info.type === 'card' && (!wide || (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches)) && el && !(pend.kind === 'buy' && mySeats.includes(pend.player) && !needHandoff)) {
       setCardDetail({ el, uid: info.uid });
       return;
     }
@@ -559,7 +566,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <div className="main">
           <div className={`left${shopUnderWheel ? ' with-shop' : ''}`}>
             <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} caption={caption} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
-            {shopUnderWheel && <Shop variant="compact" hidden={buyingNow} state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />}
+            {shopUnderWheel && <Shop variant="compact" hidden={buyingNow} state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} onHoverCard={onHoverCard} />}
           </div>
           <div className={`side${wide ? ' framed' : ''}`}>
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
@@ -570,7 +577,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
                 <Scroller className="side-scroll" hint="More below">
                   <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} meId={mySeats.length === 1 ? mySeats[0] : null} confirmPlace={session.info?.mode === 'online'} onPeek={setSpacePeek} />
                 </Scroller>
-                {!shopUnderWheel && <Shop variant="compact" hidden={buyingNow} state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />}
+                {!shopUnderWheel && <Shop variant="compact" hidden={buyingNow} state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} onHoverCard={onHoverCard} />}
                 {buyingNow && (
                   <div className="buy-view" role="region" aria-label="Recruit a member">
                     <Shop variant="full" state={state} me={me} mine={mine && !needHandoff} optionFor={live} onPick={onPick} onDenied={onDenied} />

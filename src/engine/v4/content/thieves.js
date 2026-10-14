@@ -29,11 +29,12 @@ function piles(ctx, thief, o, picked = {}) {
 const stealable = (ctx, thief, o, picked) => piles(ctx, thief, o, picked).reduce((s, [, n]) => s + n, 0);
 
 // Stolen goods turn magenta in the thief's supply.
-const stash = (ctx, p, n) => { if (n) ctx.gain(p, 'magenta', n, { fromAction: true }); };
+// Only an action's steal is a gain from an action (Midas, Prospector…); a member's steal isn't.
+const stash = (ctx, p, n, fromAction = true) => { if (n) ctx.gain(p, 'magenta', n, { fromAction }); };
 // Take `pick` ({ pile: n }) from one victim through the shared steal, and stash it. Returns units taken.
-function commit(ctx, thief, victim, pick, reaction = false) {
+function commit(ctx, thief, victim, pick, reaction = false, fromAction = true) {
   if (!ctx.canSteal(thief, victim)) return 0;
-  return ctx.steal(thief, victim, { take: pick, reaction, give: n => stash(ctx, thief, n) });
+  return ctx.steal(thief, victim, { take: pick, reaction, give: n => stash(ctx, thief, n, fromAction) });
 }
 // Automatic small steal used by members: from the victim's biggest pile, one at a time.
 function autoSteal(ctx, thief, victim, why, n = 1, reaction = false) {
@@ -44,7 +45,7 @@ function autoSteal(ctx, thief, victim, why, n = 1, reaction = false) {
     if (!top) break;
     pick[top[0]] = (pick[top[0]] || 0) + 1;
   }
-  const got = commit(ctx, thief, victim, pick, reaction);
+  const got = commit(ctx, thief, victim, pick, reaction, false);
   if (got) ctx.log(`${why}: ${thief.name} took ${got} from ${victim.name}.`);
   return got;
 }
@@ -283,7 +284,7 @@ const thieves = {
         const list = ctx.rivals(owner).filter(o => ctx.canSteal(owner, o) && (o.res.magenta || 0) >= 2);
         if (!list.length) { ctx.log(`${owner.name}'s Big Score found no magenta worth taking.`); return; }
         const o = list.reduce((a, b) => (b.res.magenta > a.res.magenta ? b : a));
-        const got = commit(ctx, owner, o, { magenta: Math.floor(o.res.magenta / 2) });
+        const got = commit(ctx, owner, o, { magenta: Math.floor(o.res.magenta / 2) }, false, false);
         ctx.log(`${owner.name}'s Big Score: ${got} magenta from ${o.name}.`);
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => ctx.canSteal(owner, o) && (o.res.magenta || 0) >= 4),

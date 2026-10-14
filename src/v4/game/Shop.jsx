@@ -28,7 +28,7 @@ function Cost({ d, plan, disc = false }) {
  * The shop. variant 'compact': a fixed row under the board (full names on two lines, ★ and list cost; the ability
  * on hover). 'full': the readable buy view (abilities in full, what you'd pay, an afford tag).
  */
-export default function Shop({ state, me, mine, optionFor, onPick, onDenied, variant = 'full', hidden = false }) {
+export default function Shop({ state, me, mine, optionFor, onPick, onDenied, variant = 'full', hidden = false, onHoverCard = null }) {
   const pend = state.pending;
   const buying = mine && pend && pend.kind === 'buy';
   const viewer = me != null ? state.players[me] : null;
@@ -46,8 +46,11 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
               key={uid} data-uid={uid} type="button" className={`card${opt ? ' can' : ''}${buying && !opt ? ' cant' : ''}`}
               style={{ '--c': `var(--${d.quadrant})` }} data-option={opt && !hidden ? opt.id : undefined}
               tabIndex={hidden ? -1 : undefined}
-              aria-disabled={!opt} title={`${d.name} · ${d.f}★ · ${d.text}`}
+              aria-disabled={!opt} title={compact && onHoverCard ? undefined : `${d.name} · ${d.f}★ · ${d.text}`}
               onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'card', uid, name: d.name }, e.currentTarget))}
+              // the compact row is too small to read: hovering a card shows it in full (touch: a tap does)
+              onPointerEnter={compact && onHoverCard ? e => { if (e.pointerType === 'mouse') onHoverCard(uid, e.currentTarget); } : undefined}
+              onPointerLeave={compact && onHoverCard ? e => { if (e.pointerType === 'mouse') onHoverCard(null); } : undefined}
             >
               {compact ? (
                 <>

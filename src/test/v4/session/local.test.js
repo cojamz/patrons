@@ -195,16 +195,17 @@ describe('local session: undo', () => {
     expect(botMovesSeen).toBeGreaterThan(10);
   });
 
-  it('a placement that ends the round is never undoable', async () => {
+  it('a move that ends the round is never undoable', async () => {
+    // (the engine now always follows a placement with its buy step, so the round ends on a buy or a pass)
     let found = 0;
-    for (let seed = 1; seed < 80 && found < 2; seed++) {
+    for (let seed = 1; seed < 30 && found < 4; seed++) {
       const s = createLocalSession({ seats: humans2, seed, botDelayMs: 0 });
       while (!s.getState().over) {
         const st = s.getState();
         const move = st.pending.kind === 'place' ? { option: st.pending.options[0].id } : chooseBotMove(st);
         await s.submit(move);
         const after = s.getState();
-        if (st.pending.kind === 'place' && (after.round !== st.round || after.over)) {
+        if (after.round !== st.round || after.over) {
           found++;
           expect(s.canUndo()).toBe(false);
           expect(s.undo()).toBe(false);

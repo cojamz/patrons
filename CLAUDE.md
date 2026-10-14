@@ -4,6 +4,8 @@ A digital worker-placement board game for friends playing online (2–4 players)
 We're in the middle of a big rework ("v4"). Cory is the designer; Claude is the builder.
 
 ## Read first, every session
+- `design/HANDOFF.md` — full state of the project, working style and the anti-hallucination harness. Start here after any break.
+- `design/in-flight.md` — what was running; resume dead work from its briefs.
 - `.claude/rules/working-with-cory.md` — how to talk to Cory and how much to do on your own. **Follow it strictly.**
 - `.claude/rules/harness.md` — how we work: tools, agents, where things live, how the system improves itself.
 - `design/decisions.md` — every design call Cory has made. The game is whatever this says, not whatever the old code does.

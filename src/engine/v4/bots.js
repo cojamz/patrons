@@ -109,9 +109,11 @@ function useOption(state, pend, ctx, p) {
 
 // Rough resources one placement brings in, by round (the ring budget, plus what members add).
 const INCOME = [3.5, 5.5, 8];
+// Bots plan as if only part of that income will need its own buy (measured: planning on all of it hoards).
+const INCOME_SCALE = 0.4;
 // How much a member's ability is worth, in followers per resource of its cost, if it has the whole game ahead.
 // A member bought with 9 of 12 placements left is worth K × cost × 0.75 on top of its stars.
-const K_ABILITY = 0.42;
+const K_ABILITY = 1;
 // How many ways to pay a buy are compared (the engine lists the contest-safe ones first).
 const PAY_WAYS = 10;
 // Weight of later rounds' contests in a lead held now.
@@ -265,13 +267,13 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
   const me = pend.player;
   const { turns, roundLeft } = horizon(state);
-  const nowIncome = INCOME[state.round - 1] * (opts.income ?? 1);
+  const nowIncome = INCOME[state.round - 1] * (opts.income ?? INCOME_SCALE);
   // buys and income still ahead; extraNow: this turn's buy is still ahead for the deciding player
   const buysAt = (s, extraNow) => {
     const lt = laterTurns(s).turns;
     return state.players.map((_, i) => turns[i] + lt + (i === me ? extraNow : 0));
   };
-  const incomeAt = s => { const li = laterTurns(s).income * (opts.income ?? 1); return turns.map(t => t * nowIncome + li); };
+  const incomeAt = s => { const li = laterTurns(s).income * (opts.income ?? INCOME_SCALE); return turns.map(t => t * nowIncome + li); };
   const placesLeft = turns[me] + laterTurns(state).turns;
   const out = [];
   if (pend.kind === 'place') {
@@ -282,13 +284,16 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
         const ctx = contextFor(s);
         const p = s.players[me];
         const before = memberCount(s, p);
+        const had = new Set(p.members);
         s.slots[`${o.q}-${o.i}`] = me;
         p.left -= 1;
         const qid = s.quadrants[o.q];
         for (const c of ctx.membersOf(p)) for (const id of [c.def.id, c.copy].filter(Boolean)) defById(id).afterAction?.(ctx, p, c, qid);
         actionAt(s, o.q, o.i).resolve(ctx, p);
         settle(s, ctx);
-        v = marginOf(evaluate(s, buysAt(s, 1), incomeAt(s), roundLeft, {}, opts.future), me, opts.spite);
+        // members the action brought in (Hire, Take…) bring their abilities too
+        const gained = p.members.filter(u => !had.has(u)).reduce((a, u) => a + abilityValue(cardDef(s, u), placesLeft, opts.k), 0);
+        v = marginOf(evaluate(s, buysAt(s, 1), incomeAt(s), roundLeft, { [me]: gained }, opts.future), me, opts.spite);
         if (opts.noMembers && memberCount(s, p) > before) v -= 100;
       } catch {
         v = -50 + actionAt(state, o.q, o.i).estimate(contextFor(state), state.players[me]);
@@ -346,7 +351,7 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
       for (const o of pend.options) if (o.kind === 'pay') out.push({ o, v: valueOf(what, o.spend) + (o.default ? 0.01 : 0) });
     } else {
       for (const o of pend.options) {
-        if (o.kind === 'toggle' || o.kind === 'use') continue;
+        if (!['card', 'tier', 'pass'].includes(o.kind)) continue;
         if (opts.noMembers && o.kind === 'card') continue;
         if (o.kind === 'release') { out.push({ o, v: releaseValue(o.uid) + rand() * (opts.noise ?? 0.05) }); continue; }
         if (o.kind !== 'pass' && o.kind !== 'card' && o.kind !== 'tier') continue;
@@ -358,6 +363,40 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
     }
   }
   return out.sort((a, b) => b.v - a.v);
+}
+
+/**
+ * Release (when the table plays it): a free move before the buy that turns a member back into its cost in any
+ * colors. Worth it when the resources buy more than the member is still worth, mostly on the last turns.
+ */
+function releaseOption(state, opts) {
+  const pend = state.pending;
+  const rels = pend.options.filter(o => o.kind === 'release');
+  if (!rels.length) return null;
+  const me = pend.player;
+  const { turns, roundLeft } = horizon(state);
+  const lt = laterTurns(state);
+  const buys = state.players.map((_, i) => turns[i] + lt.turns + (i === me ? 1 : 0));
+  const income = turns.map(t => t * INCOME[state.round - 1] * (opts.income ?? INCOME_SCALE) + lt.income * (opts.income ?? INCOME_SCALE));
+  const placesLeft = turns[me] + lt.turns;
+  const base = marginOf(evaluate(lightClone(state), buys, income, roundLeft, {}, opts.future), me, opts.spite);
+  let best = null, bestV = base + 1; // only for a clear gain
+  for (const o of rels) {
+    try {
+      const s = lightClone(state);
+      const p = s.players[me];
+      const def = cardDef(s, o.uid);
+      p.members = p.members.filter(u => u !== o.uid);
+      // the resources come in whatever colors help most: spread over the colors held least
+      for (let k = 0; k < def.s + def.w; k++) {
+        const c = s.resources.reduce((a, b) => ((p.res[b] || 0) < (p.res[a] || 0) ? b : a));
+        p.res[c] = (p.res[c] || 0) + 1;
+      }
+      const v = marginOf(evaluate(s, buys, income, roundLeft, { [me]: -abilityValue(def, placesLeft, opts.k) }, opts.future), me, opts.spite);
+      if (v > bestV) { bestV = v; best = o; }
+    } catch { /* skip */ }
+  }
+  return best;
 }
 
 /** The fixed greedy bot. */
@@ -372,6 +411,8 @@ export function chooseNormalMove(state, rand = Math.random, opts = {}) {
       const p = state.players[pend.player];
       const use = useOption(state, pend, contextFor(state), p);
       if (use) return move(use);
+      const rel = releaseOption(state, opts);
+      if (rel) return move(rel);
       const ranked = scoreOptions(state, rand, opts);
       return move(ranked.length ? ranked[0].o : pend.options.find(o => o.kind === 'pass'));
     }

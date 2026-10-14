@@ -49,6 +49,7 @@ function failHard(msg, s, ctx) { throw new Error(`${ctx}: ${msg} (round ${s.roun
 const fail = failHard;
 
 function checkSphereInvariants(s, prev, ctx, verified, fail = failHard) {
+  void failHard;
   // limited follower stock never negative
   for (const t of TIERS) if (t.limited && (s.stock?.[t.key] ?? 0) < 0) fail(`stock ${t.key} ${s.stock[t.key]}`, s, ctx);
   // per-card state never negative

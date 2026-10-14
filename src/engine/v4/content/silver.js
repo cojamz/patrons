@@ -40,7 +40,8 @@ function afterGive(ctx, giver) {
 /** Silver a Silver space pays its taker: Grand Host doubles it (each copy doubles again). */
 function hostGain(ctx, p, n) {
   const k = hooks(ctx, p, 'hostDouble').length;
-  ctx.gain(p, S, n * 2 ** k, { fromAction: true });
+  // printed: the space's own gain, which is what a copy (Green) gets
+  ctx.gain(p, S, n * 2 ** k, { fromAction: true, printed: n });
 }
 
 // Bots: how much I lead (or trail) a color's count by. Handing everyone +1 of a color I lead by 1 or less hurts.

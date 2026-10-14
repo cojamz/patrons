@@ -19,7 +19,7 @@ const parse = s => {
 const policies = spec.map(parse);
 const n = policies.length;
 const stat = {};
-for (const p of policies) stat[p.key] ??= { seats: 0, wins: 0, members: 0, left: 0, held: 0, followers: 0, maxMs: 0, ms: 0, moves: 0 };
+for (const p of policies) stat[p.key] ??= { seats: 0, wins: 0, members: 0, left: 0, held: 0, followers: 0, maxMs: 0, ms: 0, moves: 0, bought: 0, contest: 0 };
 
 for (let g = first; g < first + games; g++) {
   const rand = seededRandom(g * 7717 + 3);
@@ -49,11 +49,13 @@ for (let g = first; g < first + games; g++) {
       if (q.resource && p.res[q.resource] > 0 && p.res[q.resource] >= Math.max(...s.players.map(o => o.res[q.resource] || 0))) st.held += p.res[q.resource];
     }
     st.followers += followers(s, p);
+    st.bought += p.bought || 0;
+    st.contest += p.contest || 0;
   }
   if (g % 10 === 0) process.stderr.write(`${g - first + 1}/${games}\n`);
 }
 console.log(`${games} games, seats ${spec.join(' / ')} (rotating)${quads ? `, quadrants ${quads.join(',')}` : ''}`);
 for (const [k, st] of Object.entries(stat)) {
   const per = x => (x / st.seats).toFixed(1);
-  console.log(`${k.padEnd(18)} win ${(100 * st.wins / st.seats).toFixed(1)}% (parity ${(100 / n).toFixed(0)}%) · members ${per(st.members)} · left ${per(st.left)} (of it holding a lead ${per(st.held)}) · followers ${per(st.followers)} · ms/move ${(st.ms / st.moves).toFixed(1)} max ${st.maxMs.toFixed(0)}`);
+  console.log(`${k.padEnd(18)} win ${(100 * st.wins / st.seats).toFixed(1)}% (parity ${(100 / n).toFixed(0)}%) · members ${per(st.members)} · left ${per(st.left)} (of it holding a lead ${per(st.held)}) · followers ${per(st.followers)} (bought ${per(st.bought)}, contests ${per(st.contest)}) · ms/move ${(st.ms / st.moves).toFixed(1)} max ${st.maxMs.toFixed(0)}`);
 }

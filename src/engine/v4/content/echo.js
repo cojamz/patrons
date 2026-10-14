@@ -11,8 +11,8 @@
 //   and records the gains/free recruits made through that content's own ctx (members run on a fresh ctx, so
 //   their bonuses never land on a chip). The real fix in core.js: an 'act'-scoped ctx that tags gains and free
 //   recruits with the space, kept per round on state (this round and last round, for the board's chips).
-// - core.js pays a member's colored part from p.res[def.quadrant]; here id 'echo' ≠ resource 'green', so
-//   install() relabels the member defs' quadrant as 'green' (same one-line fix as thieves.js).
+// - Member defs keep quadrant 'echo' (core pays the colored part in quadrant('echo').resource = green), so
+//   color counts (Gather, countMembersOfColor) see Green members.
 import { registerQuadrant, allQuadrantIds, quadrant, defById } from './index.js';
 
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
@@ -34,12 +34,14 @@ export function ledger(state) {
   }
   return L;
 }
-const snapAll = (state, p) => ({ res: state.players.map(o => ({ ...o.res })), members: state.players.map(o => [...o.members]), discount: p.discount });
+const snapAll = (state, p) => ({ res: state.players.map(o => ({ ...o.res })), members: state.players.map(o => [...o.members]), bonus: state.players.map(o => o.bonus), discount: p.discount });
 function settle(state, e) {
   const p = state.players[e.p];
   e.discount = Math.max(0, p.discount - e.before.discount);
   const lost = state.players.some((o, i) => Object.keys(e.before.res[i]).some(r => (o.res[r] || 0) < e.before.res[i][r])
-    || e.before.members[i].some(u => !o.members.includes(u)));
+    || e.before.members[i].some(u => !o.members.includes(u))
+    // selling followers (White) is a trade too: a copy must sell its own
+    || o.bonus < (e.before.bonus?.[i] ?? o.bonus));
   if (lost) e.redo = true;
 }
 const quadrantDef = (state, uid) => defById(state.cards[uid].def);
@@ -51,9 +53,16 @@ function windowOpen(state, e) {
 // Record what this context hands the taker (the content code's own calls only).
 function track(ctx, e) {
   const gain = ctx.gain, recruit = ctx.recruit;
-  ctx.gain = (t, c, n, o) => { if (t.id === e.p && n > 0) e.res[c] = (e.res[c] || 0) + n; return gain(t, c, n, o); };
+  // Only the action's own printed gains (fromAction) land on the chip; member hooks the action sets off through
+  // this same ctx (Caterer, Foreman, Dealer…) don't. `printed` is the gain before a member doubled it (Grand Host).
+  ctx.gain = (t, c, n, o) => {
+    if (t.id === e.p && n > 0 && o?.fromAction) { const k = o.printed ?? n; if (k > 0) e.res[c] = (e.res[c] || 0) + k; }
+    return gain(t, c, n, o);
+  };
   ctx.recruit = (t, uid, o) => {
-    if (t.id === e.p && o?.free) { e.members.push(costOf(quadrantDef(ctx.state, uid))); e.members.sort((x, y) => x - y); }
+    // a member the taker paid for (Bargain, Clearance) is a trade: a copy does the action itself
+    if (t.id === e.p && o?.free && o.paid) e.redo = true;
+    else if (t.id === e.p && o?.free) { e.members.push(costOf(quadrantDef(ctx.state, uid))); e.members.sort((x, y) => x - y); }
     return recruit(t, uid, o);
   };
 }
@@ -325,8 +334,6 @@ export function install() {
     registerQuadrant(q);
     q.members.forEach((d, i) => { if (labels[i]) d.quadrant = labels[i]; });
   }
-  // member costs are paid in green (see the note at the top)
-  for (const d of echoQ.members) d.quadrant = 'green';
   installed = true;
   return echoQ;
 }

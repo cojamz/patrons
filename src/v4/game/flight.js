@@ -36,7 +36,12 @@ export function snapshotShop(root) {
   root.querySelectorAll('.shop .card[data-uid]').forEach((el, index) => {
     const r = el.getBoundingClientRect();
     if (!r.width || el.closest('[aria-hidden="true"]')) return;
-    snap.set(Number(el.dataset.uid), { html: inert(el.outerHTML), index, full: !!el.closest('.buy-view'), rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
+    // the card's own styles hang off its shop panel (compact or full): keep that context, so the flying copy
+    // is the same picture at the same size, never reflowed text
+    const panel = el.closest('.shop-panel');
+    const ctx = panel ? panel.className.replace(/[^\w\s-]/g, '') : 'shop-panel';
+    const html = `<div class="${ctx} ghost-ctx"><div class="shop ghost-ctx">${inert(el.outerHTML)}</div></div>`;
+    snap.set(Number(el.dataset.uid), { html, index, full: !!el.closest('.buy-view'), rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
   });
   return snap;
 }

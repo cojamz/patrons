@@ -93,7 +93,8 @@ function payAndRecruit(ctx, p, v, { uid, why, fromPile }) {
     const q = ctx.state.queue, k = q.findIndex(t => t.t === 'buy' && t.p === p.id);
     if (k >= 0) q.splice(k, 1);
   }
-  ctx.recruit(p, uid, { free: true });
+  // paid for here, so the engine takes no payment; `paid` tells a copy (Green) this wasn't a free member
+  ctx.recruit(p, uid, { free: true, paid: Object.values(v).some(n => n > 0) });
 }
 
 /** Offer face-up members the player can pay for at price(card) in any colors. */
@@ -194,6 +195,8 @@ const market = {
       const c = ctx.card(uid);
       p.members.splice(p.members.indexOf(uid), 1);
       ctx.state.pile.push(uid);
+      // back in the pile it's a fresh card: no copy, used flag, switch or gold set aside from its old owner
+      ctx.state.cards[uid] = { uid, def: c.def.id };
       p.discount += priceOf(c);
       ctx.log(`${p.name}'s Social Climber trades in ${c.def.name}: next member costs ${priceOf(c)} less.`);
     },

@@ -107,7 +107,8 @@ export default {
     m('drive', 'Recruiting Drive', 2, 2, 'Recruit 2+ members in one turn: +2 red.', {
       // pays the moment your second recruit of the turn lands, so the red can still be spent this turn
       onAnyRecruit(ctx, owner, card, by) {
-        if (by === owner && owner.turnRecruits === 2) { ctx.gain(owner, 'red', 2); ctx.log(`${owner.name}'s Recruiting Drive: +2 red.`); }
+        // your own turn only: a recruit on someone else's turn (Heist's free recruit) doesn't count toward it
+        if (by === owner && ctx.state.current === owner.id && owner.turnRecruits === 2) { ctx.gain(owner, 'red', 2); ctx.log(`${owner.name}'s Recruiting Drive: +2 red.`); }
       },
     }),
     m('host', 'Host', 4, 2, 'At round start, +1 red per 2 members.', {

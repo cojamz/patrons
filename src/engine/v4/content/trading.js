@@ -195,10 +195,8 @@ const trading = {
       botActivate: (ctx, owner) => ctx.state.round === 3 || (ctx.state.round === 2 && ctx.memberCount(owner) >= 6),
     }),
     m('bulkbuyer', 'Bulk Buyer', 4, 2, 'Whenever you buy 3 or more followers, +1 more.', {
-      onBuyFollowers(ctx, owner, card, buyer) {
-        // the engine logs the buy just before this hook runs: read its size from there
-        const got = Number((ctx.state.log.at(-1) || '').match(/bought (\d+) follower/)?.[1] || 0);
-        if (buyer === owner && got >= 3) { owner.bonus += 1; ctx.log(`${owner.name}'s Bulk Buyer: +1 follower.`); }
+      onBuyFollowers(ctx, owner, card, buyer, tier) {
+        if (buyer === owner && tier?.get >= 3) { owner.bonus += 1; ctx.log(`${owner.name}'s Bulk Buyer: +1 follower.`); }
       },
     }),
     m('broker', 'Broker', 2, 2, 'Whenever a White action gives you followers, +1 more.', { brokerBonus: 1 }),
