@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="vision.css">
 <script src="px.js"></script>
 <script src="board.js"></script>
+<script src="scene.js"></script>
 <style>
 .note.up::before{left:calc(50% - 7px);bottom:-7px;box-shadow:1px 1px 0 rgba(80,60,30,.25)}
 .meadow{position:absolute;left:664px;top:96px;display:grid;grid-template-columns:repeat(5,108px);gap:12px}
@@ -104,8 +105,7 @@ document.getElementById('meadow').innerHTML = cards.map(([n, q, p, tm, [s, c], w
   </div>`).join('');
 // your resources as physical stacks (shape + colour), workers as figures, members as a small fan
 const res = [['gold', 3], ['silver', 0], ['magenta', 1], ['green', 1]];
-document.getElementById('stacks').innerHTML = res.map(([c, n]) => `
-  <div class="stack ${n ? '' : 'zero'}"><div class="coins">${Array.from({ length: Math.max(n, 1) }, () => sprite(c, 3)).join('')}</div><div class="n">${n}</div></div>`).join('');
+document.getElementById('stacks').innerHTML = Scene.stacks(res);
 document.getElementById('workers').innerHTML = sprite('acolyte', 3, seat.you) + sprite('acolyte', 3, seat.you) + `<span class="used">${sprite('acolyte', 3, seat.you)}</span>`;
 document.getElementById('hand').innerHTML = `<div class="mini paper" style="--q:${Q.gold};position:relative"><div class="band"></div>${sprite('acolyte', 3, { robe: 'gold', prop: 'coin' })}<div class="nm">Banker</div><div style="font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-top:2px">Round start</div></div>`;
 // a hostile move stays marked on what it touched until your turn ends

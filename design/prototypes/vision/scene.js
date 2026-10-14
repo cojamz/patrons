@@ -76,8 +76,8 @@
   .card.ok{box-shadow:0 0 0 1px rgba(80,60,30,.25),0 0 16px 1px rgba(255,200,120,.35),0 6px 14px -6px rgba(0,0,0,.7)}
   .rz.miss b{color:#9a3b2a}
   .stack .coins .lift{transform:translateY(-10px);filter:drop-shadow(0 0 3px #ffd99a) drop-shadow(0 6px 3px rgba(0,0,0,.5))}
-  .stack .coins span{display:block;line-height:0;margin-top:-14px}
-  .stack .coins span:first-child{margin-top:0}
+  .stack .coins span{display:block;line-height:0;margin-bottom:-15px}
+  .stack .coins span:first-child{margin-bottom:0}
   .seat .dl{font-family:var(--sans);font-size:11px;font-weight:700;color:#1d1611;background:#ffd99a;border-radius:8px;padding:0 5px;margin-left:3px}
   `;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
