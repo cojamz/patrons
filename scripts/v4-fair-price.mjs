@@ -388,7 +388,12 @@ function runPool(kind, n, params, workers, raw) {
       w.on('message', r => {
         results.push(r); done++;
         if (done % Math.max(1, Math.floor(n / 20)) === 0) { process.stderr.write(`  ${done}/${n} (${((Date.now() - t0) / 1000).toFixed(0)}s)\n`); save(results); }
-        if (done === n) { pool.forEach(x => x.postMessage(-1)); save(results); resolve(results.sort((a, b) => a.g - b.g)); } else feed(w);
+        if (done === n) {
+          pool.forEach(x => x.postMessage(-1)); save(results);
+          const bad = results.filter(r => r.error);
+          if (bad.length) { process.stderr.write(`  ${bad.length} games crashed (skipped):\n`); bad.slice(0, 10).forEach(r => process.stderr.write(`   g=${r.g}: ${r.error}\n`)); }
+          resolve(results.filter(r => !r.error).sort((a, b) => a.g - b.g));
+        } else feed(w);
       });
       w.on('error', reject);
       feed(w);
@@ -402,7 +407,9 @@ if (!isMainThread) {
   if (kind === 'screen') params.tables = makeTables(4242, 2).tables; else TABLES = makeTables(4242, 2).tables;
   parentPort.on('message', g => {
     if (g < 0) { process.exit(0); }
-    parentPort.postMessage(kind === 'screen' ? screenGame(g, params) : sweepSeed(g, params));
+    // an engine crash loses one game, not the run; crashed games are listed for the engine owner
+    try { parentPort.postMessage(kind === 'screen' ? screenGame(g, params) : sweepSeed(g, params)); }
+    catch (e) { parentPort.postMessage({ g, error: String(e.stack || e).split('\n').slice(0, 4).join(' | ') }); }
   });
 } else {
   const argv = process.argv.slice(2);
