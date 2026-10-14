@@ -1,7 +1,10 @@
 // Resources as colored symbols inside any rules text or cost (Cory, 2026-10-14): "+3 gold" reads as "+3 ●" in gold,
 // "2 any" as "2 ◍" (the wild token). Each symbol says what it is on hover (every element explains itself).
+import { Follower } from '../art/Follower.jsx';
+
 const COLORS = ['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', 'purple', 'white'];
-const WORD = new RegExp(`\\b(${COLORS.join('|')}|any)\\b`, 'g');
+// "follower(s)" after a number is the follower mark too (Cory: followers aren't a star); other uses stay words
+const WORD = new RegExp(`\\b(${COLORS.join('|')}|any|followers?)\\b`, 'g');
 
 /** One resource symbol. color: a resource name or 'any'. */
 export function Pip({ color, n }) {
@@ -23,6 +26,13 @@ export function Rich({ text }) {
   let last = 0;
   for (const m of text.matchAll(WORD)) {
     const w = m[1], at = m.index;
+    if (w.startsWith('follower')) {
+      if (!/\d\s$/.test(text.slice(Math.max(0, at - 4), at))) continue;
+      if (at > last) out.push(text.slice(last, at));
+      out.push(<Follower key={at} size={11} title={w} />);
+      last = at + w.length;
+      continue;
+    }
     if (w === 'any') {
       const before = text.slice(Math.max(0, at - 6), at), after = text.slice(at + 3, at + 12);
       const meansResources = /\d\s$/.test(before) || /^\s+(colou?rs?|resources?)\b/.test(after) || /^\s*[).,;]|^$/.test(after) && /\d\s$/.test(before);

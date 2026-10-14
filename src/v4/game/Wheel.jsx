@@ -298,11 +298,13 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
   // rim plaques: each quadrant's contest (its rule, the prize, who leads), upright; standings on hover/tap
   const stand = standings(state);
   const plaques = state.quadrants.map((qid, q) => {
-    const [X, Y] = turned(...polar(qCenter(q), 194));
+    const [X, Y] = turned(...polar(qCenter(q), 196));
+    // anchored on the rim and leaning outward, so a plaque never covers a space
+    const ax = Math.max(-1, Math.min(1, (X - CX) / 120)), ay = Math.max(-1, Math.min(1, (Y - CY) / 120));
     const st = stand.find(x => x.qid === qid);
     const leaders = st ? st.leaders : [];
     return (
-      <div key={`pl${qid}`} className="plaque" data-plaque={qid} style={{ ...at(X, Y), '--c': `var(--${qid})` }}>
+      <div key={`pl${qid}`} className="plaque" data-plaque={qid} style={{ ...at(X, Y), '--c': `var(--${qid})`, '--ax': ax.toFixed(2), '--ay': ay.toFixed(2) }}>
         <ContestTip state={state} qid={qid} meId={meId}>
           <i className="dot" aria-hidden="true" /><span className="r">{st ? st.rule : quadrant(qid).scoring.label}</span>
           <b className="num rw">+{RING_VALUE[paying - 1]}</b>

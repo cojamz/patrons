@@ -10,6 +10,7 @@ import { cardDef, TIERS } from '../../engine/v4/index.js';
 import { costParts, tierCostText } from '../format.js';
 import { useDialog, TurnOf } from './parts.jsx';
 import { Rich, CostPips } from './Rich.jsx';
+import { Follower } from '../art/Follower.jsx';
 
 const sum = v => Object.values(v).reduce((a, b) => a + (b || 0), 0);
 const idOf = (res, v) => `pay:${res.map(r => v[r] || 0).join('-')}`;
@@ -63,7 +64,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
         <div className="pay-head">
           {turnOf && <TurnOf player={turnOf} />}
           <h2>{title}</h2>
-          {def && <span className="ability"><Rich text={def.text} /> <span className="num star">{def.f}★</span></span>}
+          {def && <span className="ability"><Rich text={def.text} /> <Follower n={def.f} className="star" /></span>}
           <span className="hint">Costs {def ? <CostPips parts={parts} /> : tierCostText(tier)}{def && p.discount ? ' · your discount applies' : ''}</span>
         </div>
 

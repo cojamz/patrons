@@ -5,7 +5,7 @@ import './v4.css';
 import './lamp.css';
 import { createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineReady } from './sessionApi.js';
 import { createLocalSession } from './session/local.js';
-import { loadLocal, saveLocal, clearLocal, finishLocal, loadOnline, saveOnline, clearOnline, rememberRoom, roomIds } from './saved.js';
+import { loadLocal, saveLocal, clearLocal, finishLocal, loadOnline, saveOnline, clearOnline, rememberRoom, roomIds, lastRoomCode } from './saved.js';
 import GameScreen from './game/GameScreen.jsx';
 import { friendlyError, OFFLINE } from './errors.js';
 import { Home, LocalSetup, Lobby, initialTable } from './screens/Screens.jsx';
@@ -110,12 +110,15 @@ function App() {
   goHomeRef.current = () => { setSession(null); setSaved(loadLocal()); setScreen({ name: 'home' }); };
 
   const enterLobby = useCallback(async (make, kind) => {
+    // No network means no answer: give up after 15 seconds instead of "Connecting…" forever (a phone on a weak
+    // signal can need several seconds to sign in and connect). If the answer comes after we gave up, let that seat go.
+    const attempt = Promise.resolve().then(make);
+    let gaveUp = false;
     try {
-      // No network means no answer: give up after 8 seconds instead of "Connecting…" forever.
       let timer;
       const res = await Promise.race([
-        Promise.resolve().then(make),
-        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('TIMEOUT')), 8000); }),
+        attempt,
+        new Promise((_, reject) => { timer = setTimeout(() => { gaveUp = true; reject(new Error('TIMEOUT')); }, 15000); }),
       ]).finally(() => clearTimeout(timer));
       const lobby = res.lobby;
       saveOnline({ code: res.code || lobby.code, playerId: res.playerId, transport: kind });
@@ -124,6 +127,8 @@ function App() {
       lobby.onStart(s => { setSession(s); setGameKey(k => k + 1); setScreen({ name: 'game', lobby }); });
       return null;
     } catch (e) {
+      // a late new seat is freed (the retry takes one); a late rejoin just stops listening (the seat stays yours)
+      if (gaveUp) attempt.then(r => (r && r.lobby ? (r.rejoined ? r.lobby.destroy() : r.lobby.leave()) : null)).catch(() => {});
       return friendlyError(e);
     }
   }, []);
@@ -181,6 +186,7 @@ function App() {
       saved={saved}
       onResume={resume}
       error={homeError}
+      lastCode={lastRoomCode()}
       onLocal={() => setScreen({ name: 'setup' })}
       onHost={name => enterLobby(() => createRoom({ name, table: initialTable(config?.table), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}
       onJoin={(code, name) => enterLobby(() => joinRoom({ code, name, knownIds: roomIds(code), transport: makeTransport(kind), botDelayMs: urlBotDelay() || BOT_DELAY.normal }), kind)}

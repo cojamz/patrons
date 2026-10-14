@@ -2,6 +2,7 @@
 import { followers, memberCount, TIERS } from '../../engine/v4/index.js';
 import { breakdown, playerColor, winSentence, plural, contestLines } from '../format.js';
 import { Tip, NamedText } from './Info.jsx';
+import { Follower } from '../art/Follower.jsx';
 
 export default function Results({ state, onPlayAgain, onHome }) {
   const ranked = (state.ranking || state.players.map(p => p.id)).map(id => state.players[id]);
@@ -21,7 +22,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
       <div className="table-scroll">
         <table className="res-t">
           <thead>
-            <tr><th>#</th><th>Player</th><th>Followers</th><th title="Followers printed on your members (the ★ on each card)">From members ★</th><th title={`The ${TIERS.map(t => `+${t.get}`).join(' / ')} follower buys`}>Bought</th><th title="Effects: followers from members' abilities during play (e.g. Proselytizer)">Effects</th><th title="Ring contests won at round end">Contests</th><th title="End-game member bonuses (e.g. Patriarch, Tycoon)">End-game bonuses</th><th title="You count as 1 follower">Yourself</th></tr>
+            <tr><th>#</th><th>Player</th><th>Followers</th><th title="Followers your members are worth (the follower mark on each card)">From members <Follower /></th><th title={`The ${TIERS.map(t => `+${t.get}`).join(' / ')} follower buys`}>Bought</th><th title="Effects: followers from members' abilities during play (e.g. Proselytizer)">Effects</th><th title="Ring contests won at round end">Contests</th><th title="End-game member bonuses (e.g. Patriarch, Tycoon)">End-game bonuses</th><th title="You count as 1 follower">Yourself</th></tr>
           </thead>
           <tbody>
             {ranked.map((p, k) => {
@@ -31,7 +32,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
                   <td className="rank" data-label="#">{rankOf[k]}{shared(rankOf[k]) ? '=' : ''}</td>
                   <td className="who" style={{ color: playerColor(p.id) }}>{p.name}{p.kind === 'bot' ? ' · bot' : ''}<small>{plural(memberCount(state, p), 'member')}</small></td>
                   <td className="tot" data-label="Followers" title={`${followers(state, p)} = 1 (yourself) + ${b.members} from members + ${b.bought} bought + ${b.effects} effects + ${b.contests} contests + ${b.endGame} end-game`}>{followers(state, p)}</td>
-                  <td data-label="From members ★" title={`The ★ on ${p.name}'s ${plural(p.members.length, 'member')} at the end`}>{b.members}</td>
+                  <td data-label="From members" title={`What ${p.name}'s ${plural(p.members.length, 'member')} are worth at the end`}>{b.members}</td>
                   <td data-label="Bought" title={`Follower buys: ${b.bought} followers bought with resources`}>{b.bought}</td>
                   <td data-label="Effects" title="Followers from members' abilities during play">{b.effects}</td>
                   <td data-label="Contests" data-contests={p.id}>

@@ -1,6 +1,6 @@
 // Players strip: followers, resources, workers left, member chips. The active player is highlighted.
 // Cards keep one height: chips that don't fit fold into a "+N" chip that opens the full list. Chips open a small
-// card on tap (touch-safe) with the member's effect, ★, and Use / switch when it's yours to use.
+// card on tap (touch-safe) with the member's effect, worth, and Use / switch when it's yours to use.
 import { useState, useCallback, useLayoutEffect, useRef } from 'react';
 import { followers, memberCount } from '../../engine/v4/index.js';
 import { memberChips, playerColor, plural, projectedEndGame } from '../format.js';
@@ -9,8 +9,9 @@ import { Popover } from './parts.jsx';
 import { Rich, CostPips } from './Rich.jsx';
 import { BadgeMark, CardText, MemberCard, cardColor } from './Info.jsx';
 import { realHover } from '../hover.js';
+import { Follower } from '../art/Follower.jsx';
 
-export const memberTip = d => `${d.name} · ${d.f}★ · ${d.text}`;
+export const memberTip = d => `${d.name} · worth ${d.f} follower${d.f === 1 ? '' : 's'} · ${d.text}`;
 
 export function Resources({ state, p, float = true, dur = 0 }) {
   return state.resources.map(r => (
@@ -104,7 +105,7 @@ function ChipRow({ state, p, own, onOpen, onAll, onHover }) {
             onPointerEnter={e => { if (onHover && realHover(e)) onHover(e.currentTarget, g); }}
             onPointerLeave={e => { if (onHover && e.pointerType === 'mouse') onHover(null, null); }}
           >
-            <span className="glyph" aria-hidden="true" />{g.label}<BadgeMark state={state} def={g.def} />{g.def.f > 1 ? <em className="stars"> {g.def.f}★</em> : null}{g.count > 1 ? <em className="copies"> ×{g.count} copies</em> : ''}{g.card.used ? <em className="used"> · used</em> : null}
+            <span className="glyph" aria-hidden="true" />{g.label}<BadgeMark state={state} def={g.def} />{g.def.f > 1 ? <em className="stars"> <Follower n={g.def.f} /></em> : null}{g.count > 1 ? <em className="copies"> ×{g.count} copies</em> : ''}{g.card.used ? <em className="used"> · used</em> : null}
             {sw && <i className={`sw${g.card.on === false ? '' : ' on'}`} aria-label={g.card.on === false ? 'off' : 'on'} />}
           </button>
         );
@@ -185,7 +186,7 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
             <b>{state.players[pop.pid].name}’s members</b>
             {memberChips(state, state.players[pop.pid]).map(g => (
               <div key={g.key} className="pop-row" style={{ '--c': cardColor(state, g.def) }}>
-                <span><i />{g.label}<BadgeMark state={state} def={g.def} /> <span className="num star">{g.count > 1 ? `${g.count} copies · ${g.def.f}★ each` : `${g.def.f}★`}</span></span>
+                <span><i />{g.label}<BadgeMark state={state} def={g.def} /> <span className="num star">{g.count > 1 ? <>{g.count} copies · <Follower n={g.def.f} /> each</> : <Follower n={g.def.f} />}</span></span>
                 <small><CardText text={g.def.text} /></small>
               </div>
             ))}
@@ -196,7 +197,7 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
         <Popover anchor={pop.el} onClose={close} float={!!pop.hover}>
           {/* the full card (badge, keywords, cost, owner), the same one a member name opens anywhere */}
           <MemberCard state={state} uid={pop.group.uids[0]} />
-          {pop.group.count > 1 && <small className="copies-note">{pop.group.count} copies · {pop.group.def.f}★ each</small>}
+          {pop.group.count > 1 && <small className="copies-note">{pop.group.count} copies · <Follower n={pop.group.def.f} /> each</small>}
         </Popover>
       )}
     </div>

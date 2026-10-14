@@ -83,6 +83,11 @@ export const rememberRoom = (code, playerId) => {
   const keep = Object.entries(all).filter(([, v]) => v && Date.now() - (v.at || 0) < ROOM_TTL).sort((a, b) => b[1].at - a[1].at).slice(0, 12);
   write(ROOMS, Object.fromEntries(keep));
 };
+/** The room this device sat in most recently, if within `ms` (default 3 h): its code, else ''. */
+export const lastRoomCode = (ms = 3 * 3600e3) => {
+  const [best] = Object.entries(rooms()).filter(([, v]) => v && Date.now() - (v.at || 0) < ms).sort((a, b) => b[1].at - a[1].at);
+  return best ? best[0] : '';
+};
 /** Player ids this device used in room `code` (most recent last); [] if none. */
 export const roomIds = code => {
   const v = rooms()[String(code || '').toUpperCase()];

@@ -2,6 +2,7 @@
 // the only cue; a seat is a hooded figure in its color carrying its sigil; followers are a mark that grows in
 // clusters of 10 and 5. Every one says what it is on hover (title) and long-press (TouchTips).
 import { Sprite } from '../art/Sprite.jsx';
+import { Follower } from '../art/Follower.jsx';
 import { playerColor, seatSigil } from '../format.js';
 import { sigilPath } from './Info.jsx';
 
@@ -31,16 +32,8 @@ export function ResourceGlyph({ r, size = 16, n = null }) {
   );
 }
 
-/** A follower: a small person. */
-export function FollowerGlyph({ size = 14, title = 'followers' }) {
-  return (
-    <svg className="fol-glyph" viewBox="0 0 14 14" width={size} height={size} role="img" aria-label={title}>
-      <title>{title}</title>
-      <circle cx="7" cy="4" r="2.6" fill="currentColor" />
-      <path d="M2 13.2C2 9.4 4.2 7.6 7 7.6S12 9.4 12 13.2Z" fill="currentColor" />
-    </svg>
-  );
-}
+/** A follower: the pixel person mark (art/Follower.jsx), never a star. */
+export function FollowerGlyph({ size = 12, title = 'followers' }) { return <Follower size={size} title={title} />; }
 
 /**
  * Followers as a mark that grows: a big disc per 10, a mid disc per 5, a dot per 1 (n up to ~40 stays compact),

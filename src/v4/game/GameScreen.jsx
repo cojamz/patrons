@@ -564,7 +564,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               {pr.who && <i style={{ background: playerColor(pr.who.id) }} />}
               <span className="say-text">
                 {mine && humansHere && pr.who ? <b style={{ color: playerColor(pr.who.id) }}>{pr.who.name}: </b> : null}
-                {mine ? <><span className="lead">Your turn — </span><em>{pr.text}</em></> : state.over ? pr.text : <>{pr.text}<span className="dots" aria-hidden="true"> ···</span></>}
+                {mine ? <><span className="lead">Your turn — </span><em>{pr.text ? pr.text[0].toLowerCase() + pr.text.slice(1) : pr.text}</em></> : state.over ? pr.text : <>{pr.text}<span className="dots" aria-hidden="true"> ···</span></>}
               </span>
             </span>
           ) : <span className="say" data-prompt tabIndex={-1} />}

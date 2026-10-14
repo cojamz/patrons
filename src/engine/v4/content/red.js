@@ -85,9 +85,14 @@ export default {
       const target = ctx.card(uid);
       const self = ctx.card(data.uid);
       self.copy = target.def.id;
-      // a copied Hustler works the same color
+      // a copied Hustler works the same color (until its own when-recruited pick below sets one)
       if (target.color !== undefined) self.color = target.color;
       ctx.log(`${p.name}'s Doppelganger copies ${target.def.name}.`);
+      // Doppelganger becomes a copy of the member card (Cory): the copied "when recruited" effect fires once, for the
+      // copy, and so does a "Now and at round start" member's now part. Named under the copied member, like its other hooks.
+      const d = target.def;
+      if (d.onRecruited) ctx.asMember(p, d.name, () => d.onRecruited(ctx, p, self));
+      if (d.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (d[hook]) ctx.asMember(p, d.name, () => d[hook](ctx, p, self));
     },
   },
 

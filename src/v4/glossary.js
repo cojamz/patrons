@@ -9,11 +9,11 @@ const rings = RING_VALUE.map(v => `+${v}`).join(' / ');
 
 export const GLOSSARY = [
   { key: 'follower', word: 'Followers', link: false, match: /\bfollowers?\b/,
-    def: 'Your score. You start with 1 (yourself); members add their ★, and you gain more from contests, follower buys and abilities. Most followers after round III wins.' },
+    def: 'Your score. You start with 1 (yourself); members add what they are worth, and you gain more from contests, follower buys and abilities. Most followers after round III wins.' },
   { key: 'member', word: 'Member', link: false, match: /\bmembers?\b/,
-    def: 'A card you recruit. It is worth its ★ in followers and most have an ability that keeps working for you.' },
-  { key: 'worth', word: 'Worth (★)', match: /\bworth \d+ followers?\b/i,
-    def: 'How many followers a member counts for while you hold it: the ★ on the card.' },
+    def: 'A card you recruit. It is worth the followers shown on it (the little person) and most have an ability that keeps working for you.' },
+  { key: 'worth', word: 'Worth', match: /\bworth \d+ followers?\b/i,
+    def: 'How many followers a member counts for while you hold it: the number beside the little person on the card.' },
   { key: 'badged', word: 'Badged', match: /\bbadged\b/,
     get def() { return `A member whose printed cost is ${BADGE} or more, marked ◆ on the card. Blue scores the most badged members.`; } },
   { key: 'unbadged', word: 'Unbadged', match: /\bunbadged\b/,
@@ -69,7 +69,7 @@ export const GLOSSARY = [
   { key: 'snake order', word: 'Snake order', match: /\bsnake order\b/,
     def: `Turns go first to last, then last to first, and so on, one worker each turn (${WORKERS.join(' / ')} workers in rounds I / II / III). Fewest followers picks first from round II.` },
   { key: 'effect', word: 'Effects', link: false, match: /\beffects?\b/,
-    def: 'Followers gained from members’ abilities during play (not their ★, not buys, not contests).' },
+    def: 'Followers gained from members’ abilities during play (not what members are worth, not buys, not contests).' },
 ];
 
 const BY_KEY = Object.fromEntries(GLOSSARY.map(t => [t.key, t]));

@@ -1402,3 +1402,6 @@ svg.sigil{display:inline-block;vertical-align:-1px;flex:none}
 /* an inline hover/tap word keeps its size; its tap area is a 44×44 (or larger) invisible box centred on it */
 .tip{position:relative}
 .tip > .hitbox{position:absolute;left:50%;top:50%;width:max(44px,100%);height:max(44px,100%);transform:translate(-50%,-50%);pointer-events:auto;background:transparent}
+/* the follower mark (src/v4/art/Follower.jsx): a tiny pixel person, never a star */
+.follower{display:inline-flex;align-items:center;gap:2px;white-space:nowrap}
+.follower-mark{display:inline-block;vertical-align:-1px;flex:none;image-rendering:pixelated}

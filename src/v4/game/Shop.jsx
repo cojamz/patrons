@@ -5,6 +5,7 @@ import { costParts, tierCostText } from '../format.js';
 import { realHover } from '../hover.js';
 import { BadgeMark, cardColor } from './Info.jsx';
 import { Rich, CostPips } from './Rich.jsx';
+import { Follower } from '../art/Follower.jsx';
 
 // long words get a soft hyphen in the middle: it shows only when the word must break ("Doppel-ganger")
 const softBreak = name => name.replace(/[A-Za-z]{9,}/g, w => `${w.slice(0, Math.ceil(w.length / 2))}\u00AD${w.slice(Math.ceil(w.length / 2))}`);
@@ -26,7 +27,7 @@ function Cost({ d, plan, disc = false, res = null }) {
 }
 
 /**
- * The shop. variant 'compact': a fixed row under the board (full names on two lines, ★ and list cost; the ability
+ * The shop. variant 'compact': a fixed row under the board (full names on two lines, worth and list cost; the ability
  * on hover). 'full': the readable buy view (abilities in full, what you'd pay, an afford tag).
  */
 export default function Shop({ state, me, mine, optionFor, onPick, onDenied, variant = 'full', hidden = false, onHoverCard = null }) {
@@ -48,7 +49,7 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
               key={uid} data-uid={uid} type="button" className={`card${opt ? ' can' : ''}${buying && !opt ? ' cant' : ''}`}
               style={{ '--c': cardColor(state, d) }} data-option={opt && !hidden ? opt.id : undefined}
               tabIndex={hidden ? -1 : undefined}
-              aria-disabled={!opt} title={compact && onHoverCard ? undefined : `${d.name} · ${d.f}★ · ${d.text}`}
+              aria-disabled={!opt} title={compact && onHoverCard ? undefined : `${d.name} · worth ${d.f} · ${d.text}`}
               onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'card', uid, name: d.name }, e.currentTarget))}
               // the compact row is too small to read: hovering a card shows it in full (touch: a tap does)
               onPointerEnter={compact && onHoverCard ? e => { if (realHover(e)) onHoverCard(uid, e.currentTarget); } : undefined}
@@ -56,12 +57,12 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
             >
               {compact ? (
                 <>
-                  <div className="row top"><b className="nm">{d.name}<BadgeMark state={state} def={d} /></b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
+                  <div className="row top"><b className="nm">{d.name}<BadgeMark state={state} def={d} /></b><Follower n={d.f} className="fv" /></div>
                   <span className="eff1"><Rich text={d.text} /></span>
                   <div className="row cost"><Cost d={d} plan={null} res={state.resources} /></div>
                 </>
               ) : (
-                <div className="row"><b className="nm">{d.name}<BadgeMark state={state} def={d} /></b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
+                <div className="row"><b className="nm">{d.name}<BadgeMark state={state} def={d} /></b><Follower n={d.f} className="fv" /></div>
               )}
               {fromPile && !compact && (
                 <span className="from-pile">From the pile (Insider)</span>
@@ -118,10 +119,10 @@ function ShopStrip({ state, me, mine = false, optionFor, onPick, onDenied }) {
         return (
           <button
             key={uid} type="button" className={`mini${opt ? ' can' : ''}`} style={{ '--c': cardColor(state, d) }}
-            aria-disabled={!opt} title={`${d.name} · ${d.f}★ · ${d.text}`}
+            aria-disabled={!opt} title={`${d.name} · worth ${d.f} · ${d.text}`}
             onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'card', uid, name: d.name }, e.currentTarget))}
           >
-            <span className="row"><b>{d.name}<BadgeMark state={state} def={d} /></b><span className="num">{d.f}★</span></span>
+            <span className="row"><b>{d.name}<BadgeMark state={state} def={d} /></b><Follower n={d.f} /></span>
             {fromPile && <span className="from-pile">From the pile (Insider)</span>}
             <small><Rich text={d.text} /></small>
             <span className="row cost"><Cost d={d} plan={plan} res={state.resources} />{opt && <span className="afford" aria-label="you can afford this" title="You can afford this" />}</span>

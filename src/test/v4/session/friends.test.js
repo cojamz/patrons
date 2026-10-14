@@ -208,3 +208,27 @@ for (const [label, make] of backends) {
     }, TIMEOUT);
   });
 }
+
+describe('device memory of rooms (saved.js)', () => {
+  it('remembers every id this device used per room, newest last; forgets after 12 h; offers the latest code for 3 h', async () => {
+    const { rememberRoom, roomIds, lastRoomCode } = await import('../../../v4/saved.js');
+    localStorage.clear();
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-10-14T10:00:00Z'));
+      rememberRoom('ABCDE', 'p1');
+      rememberRoom('ABCDE', 'p2');
+      rememberRoom('ABCDE', 'p1'); // seen again: moves to the end, no duplicate
+      expect(roomIds('abcde')).toEqual(['p2', 'p1']);
+      vi.setSystemTime(new Date('2026-10-14T11:00:00Z'));
+      rememberRoom('FGHJK', 'p9');
+      expect(lastRoomCode()).toBe('FGHJK');
+      expect(roomIds('ZZZZZ')).toEqual([]);
+      vi.setSystemTime(new Date('2026-10-14T15:00:00Z'));
+      expect(lastRoomCode()).toBe(''); // older than 3 h: not offered on the home screen any more
+      expect(roomIds('FGHJK')).toEqual(['p9']); // but a reopened link still finds the seat
+      vi.setSystemTime(new Date('2026-10-15T00:00:00Z'));
+      expect(roomIds('ABCDE')).toEqual([]); // 14 h: forgotten
+    } finally { vi.useRealTimers(); localStorage.clear(); }
+  });
+});

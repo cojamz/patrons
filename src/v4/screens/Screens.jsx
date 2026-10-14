@@ -24,8 +24,9 @@ function Seg({ value, options, onChange, label }) {
   );
 }
 
-export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, error }) {
-  const [code, setCode] = useState(() => (new URLSearchParams(location.search).get('join') || '').toUpperCase().slice(0, 8));
+export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, error, lastCode = '' }) {
+  // an invite link's code; else the room this device was just in (Join takes your seat back)
+  const [code, setCode] = useState(() => (new URLSearchParams(location.search).get('join') || lastCode || '').toUpperCase().slice(0, 8));
   const [err, setErr] = useState('');
   const [rules, setRules] = useState(false);
   const [working, setWorking] = useState(false);

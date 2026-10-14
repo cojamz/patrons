@@ -12,6 +12,7 @@ import { costParts, playerColor, seatSigil, standings, toStanding, tiebreakNote 
 import { realHover } from '../hover.js';
 import { Popover } from './parts.jsx';
 import { Rich, CostPips } from './Rich.jsx';
+import { Follower } from '../art/Follower.jsx';
 
 /**
  * An element that explains itself. content: a node or a function returning one (built only when shown).
@@ -84,7 +85,7 @@ export function Colorless({ state, def }) {
   return <Term k="colorless" className="colorless-tag">colorless</Term>;
 }
 
-/** The full card: color frame, name, ★, badge, ability (keywords linked), cost, and its owner when it has one. */
+/** The full card: color frame, name, worth, badge, ability (keywords linked), cost, and its owner when it has one. */
 export function MemberCard({ state, uid, def: d0 = null }) {
   const d = d0 || cardDef(state, uid);
   const owner = uid != null ? state.players.find(p => p.members.includes(uid)) : null;
@@ -92,7 +93,7 @@ export function MemberCard({ state, uid, def: d0 = null }) {
   const where = uid == null ? null : owner ? null : state.shop.includes(uid) ? 'In the shop' : 'In the pile';
   return (
     <div className="card-face" style={{ '--c': cardColor(state, d) }} data-card={d.id}>
-      <div className="row"><span className="glyph" aria-hidden="true" /><b>{d.name}</b><BadgeMark state={state} def={d} /><span className="num star" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`}>{d.f}★</span></div>
+      <div className="row"><span className="glyph" aria-hidden="true" /><b>{d.name}</b><BadgeMark state={state} def={d} /><Follower n={d.f} className="star" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></div>
       <p><CardText text={d.text} /></p>
       {card && card.copy && <small>Copying <CardName state={state} def={defById(card.copy)} /></small>}
       <small>Costs <CostPips parts={costParts(d, state.resources)} />{d.n > 1 ? ` · counts as ${d.n} members` : ''}{onTable(state, d) ? '' : ' · '}<Colorless state={state} def={d} /></small>
