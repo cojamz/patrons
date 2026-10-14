@@ -242,7 +242,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
         <div className="bar-row">
           <h1>Patrons</h1>
           <span className="round">{roundText}{state.round && !state.over ? <small> · <span className="num">{WORKERS[state.round - 1]}</span> workers each</small> : null}</span>
-          <button type="button" className="btn ghost rules-btn" onClick={() => setRules(true)}>How to play</button>
+          <button type="button" className="btn ghost rules-btn" onClick={() => setRules(true)} aria-label="How to play"><span className="long">How to play</span><span className="short">Rules</span></button>
           {onHome && <button type="button" className="btn ghost leave-btn" onClick={() => (state.over ? onHome() : setLeaving(true))}>Leave</button>}
         </div>
         <div className="bar-row status" aria-live="polite">
@@ -257,7 +257,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
               </span>
             </span>
           ) : <span className="say" data-prompt />}
-          {canUndo && <button type="button" className="btn ghost undo" onClick={undo} title="Take back your worker until you buy or pass">↶ Undo placement</button>}
+          {canUndo && <button type="button" className="btn ghost undo" onClick={undo} title="Take back your worker until you buy or pass">↶ Undo<span className="long"> placement</span></button>}
         </div>
         <div className="bar-row you-row">
           {meP && !state.over && (

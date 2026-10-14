@@ -59,6 +59,9 @@ try {
   await host.screenshot({ path: `${SHOTS}/online-lobby.png` });
   await host.click('text=Start game');
   await Promise.all([host.waitForSelector('.players'), guest.waitForSelector('.players')]);
+  // A reload rejoins your seat (sessionStorage remembers the room and your player id).
+  await guest.reload();
+  await guest.waitForSelector('.players', { timeout: 15000 });
   const t0 = Date.now();
   let shot = false;
   while (!(await host.$('.results')) || !(await guest.$('.results'))) {

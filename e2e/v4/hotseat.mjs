@@ -99,6 +99,25 @@ try {
       if (kind === 'card' && /II/.test(round) && !seen.has('short')) { seen.add('short'); await shot(`${name}-short`, SHORT); await shot(`${name}-landscape`, LANDSCAPE); }
       if (seen.size === 2 || kind === 'pay' || (kind === 'color' && /Setup/.test(round)) || (/III/.test(round) && !seen.has('phone3') && seen.add('phone3'))) await shot(`${name}-phone`, PHONE);
     }
+    // Once: the space card on hover and a member chip's popover.
+    if (kind === 'slot' && /II/.test(round) && !seen.has('peek')) {
+      seen.add('peek');
+      const base = await page.$('.slot.can .base');
+      const bb = base && await base.boundingBox();
+      if (bb) {
+        await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2); await page.waitForTimeout(250);
+        if (!(await page.$('.peek'))) errors.push('hovering a space did not show its card');
+        await shot('07-space-card');
+      }
+      const chip = await page.$('.pl .chip');
+      if (chip) {
+        await chip.click(); await page.waitForTimeout(250); await shot('07-chip-popover');
+        if (!(await page.$('.popover'))) errors.push('member chip did not open its card');
+        await page.keyboard.press('Escape');
+      }
+      await page.mouse.move(5, 5);
+      continue;
+    }
     // Once: undo a placement, then reload mid-game and resume, then browser Back and resume again.
     if (!seen.has('undo') && await page.$('.undo')) {
       seen.add('undo');
@@ -112,13 +131,13 @@ try {
     }
     if (seen.has('undo') && !seen.has('reload') && /II/.test(round)) {
       seen.add('reload');
-      const f0 = await page.$eval('.pl[data-pid="0"] .fol .num', e => e.textContent);
+      const f0 = await page.$eval('.pl[data-pid="0"] .fol .num', e => e.childNodes[0].textContent);
       await page.reload();
       await page.waitForSelector('[data-home="resume"]');
       await shot('06-resume-offered');
       await page.click('[data-home="resume"]');
       await page.waitForSelector('.players');
-      const f1 = await page.$eval('.pl[data-pid="0"] .fol .num', e => e.textContent);
+      const f1 = await page.$eval('.pl[data-pid="0"] .fol .num', e => e.childNodes[0].textContent);
       if (f0 !== f1) errors.push(`resume changed P1's followers (${f0} -> ${f1})`);
       await page.goBack();
       await page.waitForSelector('[data-home="resume"]', { timeout: 5000 }).catch(() => errors.push('browser Back did not return home'));

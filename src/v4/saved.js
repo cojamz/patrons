@@ -3,8 +3,11 @@
 const LOCAL = 'patrons.v4.local';
 const ONLINE = 'patrons.v4.online';
 
-const read = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } };
-const write = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } };
+// Local games live in localStorage (resume from any later visit). Online seats live in sessionStorage: a reload of
+// this tab rejoins, but a second tab is a second person, not a copy of you.
+const store = k => (k === ONLINE ? globalThis.sessionStorage : globalThis.localStorage);
+const read = k => { try { return JSON.parse(store(k).getItem(k) || 'null'); } catch { return null; } };
+const write = (k, v) => { try { if (v == null) store(k).removeItem(k); else store(k).setItem(k, JSON.stringify(v)); } catch { /* ignore */ } };
 
 /** { config, state, savedAt } or null. Finished games aren't kept. */
 export const loadLocal = () => { const v = read(LOCAL); return v && v.state && !v.state.over ? v : null; };

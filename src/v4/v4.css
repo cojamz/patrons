@@ -12,6 +12,7 @@ html,body{min-height:100%}
 body{background:radial-gradient(120% 80% at 40% 30%, var(--table-2), var(--table) 70%);background-color:var(--table);background-attachment:fixed;color:var(--ink);font-family:var(--body);font-size:15px;margin:0;overflow-x:hidden}
 #root{padding:14px 16px;box-sizing:border-box;min-height:100dvh}
 *,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
 button,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 :focus:not(:focus-visible){outline:none}
@@ -378,6 +379,15 @@ table.res-t tr.first td{background:color-mix(in srgb,var(--ink) 5%,transparent)}
 .field .count{position:absolute;right:10px;bottom:9px}
 .undo{margin-left:8px;white-space:nowrap;align-self:center}
 td.rank{font-weight:700}
+
+/* short labels where the header is tight */
+.short{display:none}
+@media (max-width:520px),(max-height:480px) and (orientation:landscape){
+  header.bar .long{display:none}
+  header.bar .short{display:inline}
+  .app.game.buying .side .dock{order:-1}
+}
+@media (min-width:861px) and (max-height:800px){ .shop .card .eff{-webkit-line-clamp:1} }
 
 /* ---------- touch: 44px targets ---------- */
 @media (pointer:coarse){

@@ -6,7 +6,7 @@ import { quadrant, roman } from '../../engine/v4/index.js';
 import { bannerText, playerColor } from '../format.js';
 
 const RING = { 1: { r0: 142, r1: 198, r: 170, n: 3 }, 2: { r0: 90, r1: 142, r: 116, n: 2 }, 3: { r0: 34, r1: 90, r: 62, n: 1 } };
-const LABEL = { 1: { r: 147.5, h: 15 }, 2: { r: 95, h: 21 }, 3: { r: 40.5, h: 42 } }; // name arcs, toward the center
+const LABEL = { 1: { r: 147.5, h: 16, f: 9.2 }, 2: { r: 95, h: 22, f: 8.6 }, 3: { r: 40.5, h: 44, f: 8.6 } }; // name arcs, toward the center
 const CX = 200, CY = 200, VB0 = -26, VBS = 452;
 const qCenter = q => 180 + q * 90;
 const norm = a => ((a % 360) + 540) % 360 - 180;
@@ -217,7 +217,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
           : open ? <circle cx={x} cy={y} r="3" fill={col} fillOpacity=".55" /> : <circle cx={x} cy={y} r="2.5" fill={col} fillOpacity=".3" />}
         {flash.has(key) && <circle className="ping" cx={x} cy={y} r={rad} fill="none" stroke={playerColor(owner ?? 0)} />}
         <path id={lid} d={textArc(ang, L.h, L.r, rot)} fill="none" />
-        <text className="name" fontSize="7.4" fontWeight="700" fill={col} fillOpacity={open ? 1 : 0.4} dominantBaseline="central">
+        <text className="name" fontSize={L.f} fontWeight="700" fill={col} fillOpacity={open ? 1 : 0.4} dominantBaseline="central">
           <textPath href={`#${lid}`} startOffset="50%" textAnchor="middle">{a.name}</textPath>
         </text>
       </g>,
