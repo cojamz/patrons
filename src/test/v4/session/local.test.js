@@ -69,6 +69,8 @@ const expectUndo = (before, move, after, humans) => {
   const handedOff = !!(after.pending && after.pending.player !== move.player && humans.includes(after.pending.player));
   if (k === 'buy') return /^(card|tier):/.test(move.option) && !(after.pending && after.pending.kind === 'pay') && !handedOff;
   if (k === 'pay') return move.option !== 'back' && !handedOff;
+  // a first starting pick: while the same person's second pick is open
+  if (k === 'setup') return !!(after.pending && after.pending.kind === 'setup' && after.pending.player === move.player);
   return false;
 };
 
