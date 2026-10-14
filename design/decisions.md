@@ -386,3 +386,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - (Cory) Never mind the intro emoji: the ghost on the example leader is fine.
 - ✅ (Cory) The example cult in the intro wears pizza or cactus (he likes them "a lot"), if easy: one line in the intro's cast.
 - (Cory) Intro beat 3: the taking-action part isn't clear. Rework: the camera comes to the wheel, one minion lands on one space, the space shows its gain big ("+3 gold"), those glyphs fly one by one into the cult's pile, a second quicker action repeats the pattern, then back to the leader.
+- ✅ (Cory) The intro flows as one continuous shot: no cuts, fades or crossfades between beats; what's on stage carries forward and the camera glides; only the caption changes.
