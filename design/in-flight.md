@@ -15,6 +15,7 @@ Updated 2026-10-14 ~21:40 UTC. Agents never commit; the foreman verifies and che
 10. **Intro.** Brief: build-plan.md "Intro and follower symbol"; `src/v4/Intro.jsx`. Built: per player and local, skippable, a still storyboard under reduced motion, `?intro=0` / `?intro=1`, replay from the menu. Build dir `.v4-build-intro` (port 5298).
 11. **Purple: Night Owl + reprice.** Brief: design/eval/purple-members.md (from the remote Purple session). Night Owl (8+2, "When you place your last minion of a round, take an extra turn right after this one.") takes Relay's slot; Double Time 6, Overseer 4, Taskmaster 6, Second Wind 8, Late Riser 6. Build dir `.v4-build-purple` (port 5310).
 13. **Game and fun critic, round 2 (blind).** boardgame-enthusiast on the frozen build 4fa162a (`.v4-panel/d9`, port 5202), two full games, with a Vision section. Report → design/eval/boardgame-enthusiast-round2.md.
+15. **Engineering review, round 2.** Fresh general agent on the worktree `.v4-wt/4fa162a` (don't remove it until the review lands). Report → design/eval/engineering-review-round2.md.
 14. **Action spaces: three directions.** Static mocks in design/prototypes/actions/ (Cory: "I still don't like the actions"), for Cory to pick by number; then UI-A builds the pick in Wheel.jsx.
 12. **Design critic, round 2 (blind).** On the frozen build 4da59a3 (`.v4-panel/d8`, port 5201), with a Vision section (visual actions, elegant round scoring, cults at a glance) and a mocked frame. Report → design/eval/ui-critic-round2.md.
 
