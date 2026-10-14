@@ -1,22 +1,25 @@
 // Blue (the market): bend the shop. Recruit outside your buy, ignore colors, pay half, churn the row.
-// Scoring is switchable while Cory decides (setScoring): 'pricey' = most members costing 4 or more (default),
+// Scoring is switchable while Cory decides (setScoring): 'pricey' = most badged members (default),
 // 'value' = most member value (total printed cost). Blue members break ties either way.
+// A member is badged when it costs BADGE or more; the UI marks badged members so nobody adds up prices.
 // Gold hoards money and Red piles up cheap members; Blue holds a few expensive ones, bought cheap.
 import { registerQuadrant } from './index.js';
 
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const B = 'blue';
 const Q = 'market';
-// Cost thresholds. If member costs double, PRICEY becomes 8, MID 6 and CHEAP 4.
-export const PRICEY = 4, MID = 3, CHEAP = 2, LUXURY = 5;
+// One cutoff. If member costs double, BADGE becomes 8.
+export const BADGE = 4;
 const isBlue = def => def.quadrant === Q;
 
 /** Printed cost of a member (before any discount). */
 export const priceOf = c => c.def.s + c.def.w;
 /** Total printed cost of a player's members. */
 export const memberValue = (ctx, p) => ctx.membersOf(p).reduce((s, c) => s + priceOf(c), 0);
-/** How many of a player's members cost PRICEY or more. */
-export const priceyCount = (ctx, p) => ctx.membersOf(p).filter(c => priceOf(c) >= PRICEY).length;
+/** Badged: costs BADGE or more. */
+export const badged = c => priceOf(c) >= BADGE;
+/** How many badged members a player holds. */
+export const priceyCount = (ctx, p) => ctx.membersOf(p).filter(badged).length;
 const totalRes = p => Object.values(p.res).reduce((a, b) => a + b, 0);
 const colorOf = (ctx, c) => ctx.quadrant(c.def.quadrant).resource;
 // what a bot thinks a member is worth to it (mirrors the greedy buy score)
@@ -24,11 +27,12 @@ const botWorth = c => c.def.f * 1.4 + (c.def.vanilla ? 0 : 1.6) + priceOf(c) * 0
 
 let MODE = 'pricey';
 // Measuring knob: with lean on, Bargain and Clearance use up your buy this turn instead of adding a recruit.
+// Clearance always uses your buy; this knob makes Bargain's recruit use it too.
 let LEAN = false;
 export function setLean(on) { LEAN = !!on; }
 /** Switch Blue's scoring rule (for measuring): 'pricey' or 'value'. */
 export function setScoring(mode) { MODE = mode; market.scoring.label = LABELS[mode]; }
-const LABELS = { pricey: `Most members costing ${PRICEY}+`, value: 'Most member value' };
+const LABELS = { pricey: 'Most badged members', value: 'Most member value' };
 const blueCount = (ctx, p) => ctx.membersOf(p).filter(c => isBlue(c.def)).length;
 
 // ---------- paying outside the normal buy ----------
@@ -83,7 +87,7 @@ function payAndRecruit(ctx, p, v, { uid, why, fromPile }) {
   if (!ctx.state.shop.includes(uid)) { ctx.log(`${why}: ${card.def.name} is gone.`); return; }
   for (const r in v) p.res[r] -= v[r];
   ctx.log(`${why}: ${p.name} pays ${payLabel(v)} for ${card.def.name}.`);
-  if (LEAN && !fromPile) {
+  if ((why === 'Clearance' || (LEAN && why === 'Bargain')) && !fromPile) {
     const q = ctx.state.queue, k = q.findIndex(t => t.t === 'buy' && t.p === p.id);
     if (k >= 0) q.splice(k, 1);
   }
@@ -129,9 +133,9 @@ const market = {
 
   actions: [
     {
-      key: 'bargain', ring: 1, name: 'Bargain', text: 'Recruit a face-up member now, in any colors.',
-      estimate: (ctx, p) => bestRowValue(ctx, p, priceOf) * 0.5,
-      resolve(ctx, p) { offerRow(ctx, p, priceOf, 'Bargain'); },
+      key: 'bargain', ring: 1, name: 'Bargain', text: '+2 blue, then you may recruit a face-up member now, in any colors.',
+      estimate: (ctx, p) => 2 + bestRowValue(ctx, p, priceOf) * 0.3,
+      resolve(ctx, p) { ctx.gain(p, B, 2, { fromAction: true }); offerRow(ctx, p, priceOf, 'Bargain'); },
     },
     {
       key: 'restock', ring: 1, name: 'Restock', text: '+2 blue, and sweep the face-up row: 6 new members come out.',
@@ -143,12 +147,12 @@ const market = {
       },
     },
     {
-      key: 'showroom', ring: 1, name: 'Showroom', text: `+1 blue per face-up member costing ${PRICEY} or more.`,
+      key: 'showroom', ring: 1, name: 'Showroom', text: '+1 blue per badged face-up member.',
       estimate: ctx => showroomCount(ctx),
       resolve(ctx, p) { ctx.gain(p, B, showroomCount(ctx), { fromAction: true }); },
     },
     {
-      key: 'clearance', ring: 2, name: 'Clearance', text: 'Recruit a face-up member now for half its cost (rounded down), in any colors.',
+      key: 'clearance', ring: 2, name: 'Clearance', text: 'As your buy this turn: a face-up member for half its cost (rounded down), in any colors.',
       estimate: (ctx, p) => bestRowValue(ctx, p, half),
       resolve(ctx, p) { offerRow(ctx, p, half, 'Clearance'); },
     },
@@ -182,8 +186,9 @@ const market = {
         id: `pay:${ctx.state.resources.map(r => v[r] || 0).join('-')}`, label: payLabel(v), kind: 'pay', value: v, hint: i === 0 ? 1 : 0,
       })), `${Q}.pay`, data);
     },
-    tradeIn(ctx, p, uid) {
+    tradeIn(ctx, p, uid, data) {
       if (uid === null) return;
+      ctx.card(data.uid).used = true;
       const c = ctx.card(uid);
       p.members.splice(p.members.indexOf(uid), 1);
       ctx.state.pile.push(uid);
@@ -193,37 +198,35 @@ const market = {
   },
 
   members: [
-    m('dealer', 'Dealer', 2, 1, 'Whenever anyone recruits a blue member, +1 blue.', {
+    m('stylist', 'Stylist', 2, 1, 'Whenever anyone recruits a blue member, +1 blue.', {
       onAnyRecruit(ctx, owner, card, by, rec) {
         if (rec.uid !== card.uid && isBlue(ctx.defOf(rec))) ctx.gain(owner, B, 1);
       },
     }),
-    m('broker', 'Broker', 2, 2, `Whenever a rival recruits a member costing ${PRICEY} or more, +1 blue.`, {
-      onAnyRecruit(ctx, owner, card, by, rec) { if (by !== owner && priceOf(rec) >= PRICEY) ctx.gain(owner, B, 1); },
+    m('onlooker', 'Onlooker', 2, 2, 'Whenever a rival recruits a badged member, +1 blue.', {
+      onAnyRecruit(ctx, owner, card, by, rec) { if (by !== owner && badged(rec)) ctx.gain(owner, B, 1); },
     }),
-    m('connoisseur', 'Connoisseur', 2, 1, `Whenever you recruit a member costing ${PRICEY} or more, +2 blue.`, {
-      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && priceOf(rec) >= PRICEY) ctx.gain(owner, B, 2); },
+    m('connoisseur', 'Connoisseur', 2, 1, 'Whenever you recruit a badged member, +2 blue.', {
+      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && badged(rec)) ctx.gain(owner, B, 2); },
     }),
     m('reseller', 'Reseller', 3, 2, 'Whenever you recruit, +1 of that member’s color.', {
       onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid) ctx.gain(owner, colorOf(ctx, rec), 1); },
     }),
-    m('curator', 'Curator', 2, 1, `At round start, +1 blue per member you have costing ${MID} or more.`, {
-      onRoundStart(ctx, owner) { ctx.gain(owner, B, ctx.membersOf(owner).filter(c => priceOf(c) >= MID).length); },
+    m('curator', 'Curator', 2, 1, 'At round start, +1 blue per badged member you have.', {
+      onRoundStart(ctx, owner) { ctx.gain(owner, B, priceyCount(ctx, owner)); },
     }),
-    m('regular', 'Regular', 1, 1, 'At round start, your next member costs 1 less per round number.', {
+    m('planner', 'Planner', 1, 1, 'At round start, your next member costs 1 less per round number.', {
       onRoundStart(ctx, owner) { owner.discount += ctx.state.round; },
     }),
     m('underbidder', 'Underbidder', 1, 0, 'At round start, your next member costs 1 less per rival with more members than you.', {
       onRoundStart(ctx, owner) { owner.discount += rivalsBigger(ctx, owner); },
     }),
-    m('minimalist', 'Minimalist', 1, 0, 'At round start, +1 blue per member fewer than the rival with the most.', {
-      onRoundStart(ctx, owner) {
-        const gap = Math.max(0, ...ctx.rivals(owner).map(o => ctx.memberCount(o))) - ctx.memberCount(owner);
-        if (gap > 0) ctx.gain(owner, B, gap);
-      },
+    m('minimalist', 'Minimalist', 1, 0, 'At round start, +1 blue per rival with more members than you.', {
+      onRoundStart(ctx, owner) { const k = rivalsBigger(ctx, owner); if (k) ctx.gain(owner, B, k); },
     }),
-    m('climber', 'Social Climber', 1, 0, 'At round start, you may send one of your members to the bottom of the pile; your next member costs that much less.', {
+    m('climber', 'Social Climber', 1, 0, 'Once per game, at a round start: you may send one of your members to the bottom of the pile; your next member costs that much less.', {
       onRoundStart(ctx, owner, card) {
+        if (card.used) return;
         const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid);
         if (!own.length) return;
         const top = Math.max(0, ...ctx.shopCards().map(priceOf));
@@ -234,17 +237,17 @@ const market = {
             // bots trade a plain cheap member up when the row has something pricier
             hint: c.def.vanilla && priceOf(c) >= 1 && top >= priceOf(c) + 3 ? 1 + priceOf(c) * 0.1 : -1,
           })),
-        ], `${Q}.tradeIn`);
+        ], `${Q}.tradeIn`, { uid: card.uid });
       },
     }),
-    m('auctioneer', 'Auctioneer', 1, 1, `Whenever a rival recruits a member costing ${CHEAP} or less, +1 blue.`, {
-      onAnyRecruit(ctx, owner, card, by, rec) { if (by !== owner && priceOf(rec) <= CHEAP) ctx.gain(owner, B, 1); },
+    m('auctioneer', 'Auctioneer', 1, 1, 'Whenever a rival recruits an unbadged member, +1 blue.', {
+      onAnyRecruit(ctx, owner, card, by, rec) { if (by !== owner && !badged(rec)) ctx.gain(owner, B, 1); },
     }),
-    m('sommelier', 'Sommelier', 1, 1, `Whenever you recruit a member costing ${PRICEY} or more, your next member costs 1 less.`, {
-      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && priceOf(rec) >= PRICEY) owner.discount += 1; },
+    m('sommelier', 'Sommelier', 1, 1, 'Whenever you recruit a badged member, your next member costs 1 less.', {
+      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && badged(rec)) owner.discount += 1; },
     }),
-    m('patroness', 'Patroness', 2, 2, `Whenever you recruit a member costing ${LUXURY} or more, +1 follower.`, {
-      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && priceOf(rec) >= LUXURY) owner.bonus += 1; },
+    m('patroness', 'Patroness', 2, 2, 'Whenever you recruit a badged member, +1 follower.', {
+      onAnyRecruit(ctx, owner, card, by, rec) { if (by === owner && rec.uid !== card.uid && badged(rec)) owner.bonus += 1; },
     }),
     m('blackmarket', 'Black Market', 1, 1, 'Once per game, on your turn: also look at the top 5 of the pile and recruit one at its cost.', {
       activate: 'game',
@@ -258,7 +261,7 @@ const market = {
       },
       botActivate: (ctx, owner) => ctx.state.round >= 2 && totalRes(owner) >= 8,
     }),
-    m('snob', 'Snob', 2, 2, `Game end: +1 follower per member you have costing ${PRICEY} or more.`, {
+    m('snob', 'Snob', 2, 2, 'Game end: +1 follower per badged member you have.', {
       onGameEnd: (ctx, owner) => priceyCount(ctx, owner),
     }),
     m('recluse', 'Recluse', 1, 1, 'Game end: +2 followers per rival with more members than you.', {
@@ -266,6 +269,10 @@ const market = {
     }),
   ],
 };
+
+// Badge flag for the UI, derived from cost so repricing keeps it right. (Engine-wide, the same getter
+// belongs in content/index.js index() for every member def.)
+for (const d of market.members) Object.defineProperty(d, 'badge', { get() { return this.s + this.w >= BADGE; }, enumerable: true });
 
 export default market;
 
@@ -279,5 +286,5 @@ export function install() {
 }
 
 function rivalsBigger(ctx, p) { const mine = ctx.memberCount(p); return ctx.rivals(p).filter(o => ctx.memberCount(o) > mine).length; }
-function showroomCount(ctx) { return ctx.shopCards().filter(c => priceOf(c) >= PRICEY).length; }
+function showroomCount(ctx) { return ctx.shopCards().filter(badged).length; }
 function priciest(ctx, p) { return Math.max(0, ...ctx.membersOf(p).map(priceOf)); }
