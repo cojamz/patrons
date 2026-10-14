@@ -9,18 +9,18 @@ import { seededRandom } from '../../src/engine/v4/rng.js';
 
 install();
 const N = Number(process.argv[2] || 24), MODE = process.argv[3] || 'loot', R = Number(process.argv[4] || 6);
-setScoring(MODE);
+if (MODE !== 'control') setScoring(MODE);
 let wins = 0, blackPlace = 0, places = 0, contestWins = 0, botBlack = 0, botPlaces = 0, stole = 0, botStole = 0;
 for (let g = 1; g <= N; g++) {
   const rand = seededRandom(g * 7 + 3);
   const me = g % 4;
-  let s = createGame({ seats: [0, 1, 2, 3].map(() => ({ kind: 'bot' })), seed: 7000 + g, quadrants: ['gold', 'red', 'blue', 'thieves'] });
+  let s = createGame({ seats: [0, 1, 2, 3].map(() => ({ kind: 'bot' })), seed: 7000 + g, quadrants: ['gold', 'red', 'blue', MODE === 'control' ? 'green' : 'thieves'] });
   let last = s.round;
   while (!s.over) {
     const mv = s.pending.player === me ? chooseThinkerMove(s, rand, { rollouts: R }) : chooseBotMove(s, rand);
     const o = s.pending.options.find(x => x.id === mv.option);
     if (s.pending.kind === 'place') {
-      const black = s.quadrants[o.q] === 'thieves';
+      const black = o.q === 3;
       if (s.pending.player === me) { places++; blackPlace += black; } else { botPlaces++; botBlack += black; }
     }
     s = applyMove(s, mv);

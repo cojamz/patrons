@@ -61,26 +61,25 @@ function useTable(session) {
   }, []);
 
   const pump = useCallback(() => {
-    if (held.current || timer.current || !queue.current.length) return;
-    const next = queue.current.shift();
-    const prev = shownRef.current;
-    show(next);
-    // A rival's placement stays on screen long enough to read (the worker travels, the card shows its delta);
-    // after the round-end card, the backlog replays at that pace too.
-    const mine = session.mySeats || [];
-    const rivalPlaced = Object.keys(next.slots).some(k => prev.slots[k] === undefined && !mine.includes(next.slots[k]));
-    const dwell = rivalPlaced ? RIVAL_DWELL_MS : paced.current ? STEP_MS : 0;
-    if (!dwell) return;
-    timer.current = setTimeout(() => {
-      timer.current = null;
+    // Show queued states in order. A rival's placement holds on screen long enough to read (the worker travels,
+    // the card shows its delta); after the round-end card, the backlog replays at a readable pace too.
+    while (!held.current && !timer.current && queue.current.length) {
+      const next = queue.current.shift();
+      const prev = shownRef.current;
+      show(next);
+      const mine = session.mySeats || [];
+      const rivalPlaced = Object.keys(next.slots).some(k => prev.slots[k] === undefined && !mine.includes(next.slots[k]));
+      const dwell = rivalPlaced ? RIVAL_DWELL_MS : paced.current && queue.current.length ? STEP_MS : 0;
       if (!queue.current.length) paced.current = false;
-      pump();
-    }, dwell);
+      if (dwell) {
+        timer.current = setTimeout(() => { timer.current = null; pump(); }, dwell);
+        return;
+      }
+    }
   }, [show, session]);
 
   useEffect(() => {
     const off = session.subscribe(s => {
-      console.log('DBG sub', s.moves, s.pending && s.pending.player, s.pending && s.pending.kind, 'q', queue.current.length, 'timer', !!timer.current, 'held', held.current);
       if (s === shownRef.current || queue.current.includes(s)) return;
       queue.current.push(s);
       pump();
