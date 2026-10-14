@@ -356,7 +356,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
     } else if (!hosting && beatTimer) { clearInterval(beatTimer); beatTimer = null; }
     if (!watchTimer && !destroyed) watchTimer = setInterval(() => { if (!destroyed) elect(); }, BEAT_MS / 2);
   }
-  const hostStale = () => false && !!room && !!room.hostId && room.hostId !== playerId && Date.now() - beatSeen.at > STALE_MS;
+  const hostStale = () => !!room && !!room.hostId && room.hostId !== playerId && Date.now() - beatSeen.at > STALE_MS;
 
   // If the host has dropped, the lowest-seat connected human claims the role.
   // ...or has stopped beating (a phone asleep still reads as connected for a while).
