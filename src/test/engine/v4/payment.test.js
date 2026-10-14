@@ -44,11 +44,20 @@ describe('choosing how to pay', () => {
     expect(s.players[0].res).toEqual(before);
   });
 
-  it('only one way to pay: no payment question', () => {
+  it('only one way to pay: still one payment step, with that way preselected (one tap confirms)', () => {
     let s = buyPhase({ res: [{ gold: 2, red: 1 }], shop: ['gold.banker'] });
     s = move(s, `card:${uidOf(s, 'gold.banker', 'shop')}`, { manualPay: true });
-    expect(s.pending?.kind).not.toBe('pay');
+    expect(s.pending?.kind).toBe('pay');
+    const ways = s.pending.options.filter(o => o.kind === 'pay');
+    expect(ways).toHaveLength(1);
+    expect(ways[0].default).toBe(true);
+    s = move(s, ways[0].id);
     expect(s.players[0].res).toMatchObject({ gold: 0, red: 0 });
+  });
+  it('a member that costs nothing is recruited at once (nothing to pay)', () => {
+    let s = buyPhase({ res: [{ gold: 0 }], shop: ['red.volunteer'] });
+    s = move(s, `card:${uidOf(s, 'red.volunteer', 'shop')}`, { manualPay: true });
+    expect(s.pending?.kind).not.toBe('pay');
   });
 
   it('follower buys let you pick the colors', () => {

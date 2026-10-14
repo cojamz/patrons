@@ -110,7 +110,9 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
       const meActed = prev.pending && mine.includes(prev.pending.player) ? prev.pending.player : null;
       const myRecruitThenGone = meActed != null && next.players[meActed].members.length > prev.players[meActed].members.length
         && !(next.pending && next.pending.player === meActed);
-      const dwell = myRecruitThenGone ? 1500 : rivalPlaced || rivalBought ? rivalDwell : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
+      // every bot step during a round holds the pace (≥600ms at Normal): placing, buying, choosing, passing
+      const rivalStep = actor != null && next.round >= 1 && !rivalSetup;
+      const dwell = myRecruitThenGone ? 1500 : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
       if (!queue.current.length) paced.current = false;
       if (dwell) {
         timer.current = setTimeout(() => { timer.current = null; pump(); }, dwell);
@@ -452,14 +454,15 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const meP = me != null ? state.players[me] : null;
   const buyingNow = mine && !needHandoff && pend.kind === 'buy';
   // Undo is offered only to the seat that made the move (in hot-seat, the person holding the device)
-  const holder = humansHere ? (needHandoff ? null : ready) : mySeats[0];
+  const holder = humansHere ? (needHandoff ? null : ready ?? (pend && mySeats.includes(pend.player) ? pend.player : null)) : mySeats[0];
   const undoKind = !needHandoff && !busy && typeof session.canUndo === 'function' && session.canUndo()
-    && (session.undoSeat == null || session.undoSeat === holder || (!humansHere && mySeats.includes(session.undoSeat))) ? (session.undoKind || 'place') : null;
+    // only while the seat to act (on screen) is the person who made the move
+    && pend && session.undoSeat != null && pend.player === session.undoSeat && session.undoSeat === holder ? (session.undoKind || 'place') : null;
   const canUndo = !!undoKind && !state.over;
   const undo = () => { const k = undoKind; noLock.current = true; lockUntil.current = 0; if (session.undo && session.undo()) say(k === 'buy' ? 'Buy undone — choose again' : 'Placement undone — place again', 'info', 1800); };
 
   return (
-    <div className={`app game${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}`} ref={root}>
+    <div className={`app game${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}`} ref={root} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar">
         <div className="bar-row">
           <h1>Patrons</h1>

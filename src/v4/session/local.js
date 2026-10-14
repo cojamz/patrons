@@ -109,7 +109,7 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     timer = null;
     const p = state.pending;
     if (destroyed || state.over || !p || state.players[p.player].kind !== 'bot') return;
-    const hold = checkpoint && checkpoint.kind === 'buy' && botDelayMs > 0 ? Math.max(botDelayMs, UNDO_BUY_HOLD_MS) : botDelayMs;
+    const hold = botDelayMs; // (no hold after a buy: the payment step, with Back, is the safety net)
     timer = setTimeout(() => {
       timer = null;
       if (destroyed) return;

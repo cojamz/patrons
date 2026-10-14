@@ -319,15 +319,16 @@ function resolveTask(state, task, optionId) {
       if (optionId === 'pass') { log(state, `${p.name} passed.`); return; }
       const [kind, rest] = optionId.split(':');
       if (kind === 'card') {
+        // One way to buy: always the payment step (the suggestion preselected), unless there's nothing to pay.
         const uid = Number(rest), list = paymentChoices(state, p, uid);
-        if (list.length === 1) recruit(state, p, uid, { free: false, spend: list[0] });
+        const nothing = list.length === 1 && Object.values(list[0]).every(v => !v);
+        if (nothing) recruit(state, p, uid, { free: false, spend: list[0] });
         else state.queue.unshift({ t: 'pay', p: p.id, uid });
         return;
       }
       if (kind === 'tier') {
-        const tier = TIERS.find(t => t.key === rest), list = followerChoices(state, p, tier);
-        if (list.length === 1) buyFollowers(state, p, tier, list[0]);
-        else state.queue.unshift({ t: 'pay', p: p.id, tier: tier.key });
+        const tier = TIERS.find(t => t.key === rest);
+        state.queue.unshift({ t: 'pay', p: p.id, tier: tier.key });
         return;
       }
       if (kind === 'use') {
@@ -480,7 +481,7 @@ function recruit(state, p, uid, { free, spend: chosen }) {
       for (const u of p.members) for (const d of effectiveDefs(state.cards[u])) {
         if (!d[flag]) continue;
         if (flag === 'goldPaysDouble' && !spend.gold) continue;
-        notes.push(flag === 'costReduction' ? `${d.name} −${d[flag] === true ? 1 : d[flag]}` : `${d.name}: gold counts double`);
+        notes.push(flag === 'costReduction' ? `${d.name} saves ${d[flag] === true ? 1 : d[flag]}` : `${d.name}: gold counts double`);
       }
     }
     if (notes.length) paid += `; ${notes.join(', ')}`;
