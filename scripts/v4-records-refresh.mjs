@@ -10,6 +10,7 @@
 // - its seed can't be set up on this build (a sphere gone from the table): left as is (records.test.js skips it);
 // - a move throws: left as is, and the exit code is 1 (a crash is a bug to fix, not to re-record away).
 // --check reports what would change and writes nothing (exit 1 if anything is stale).
+import './v4-node-stamp.mjs'; // first: record.js must see the rules-source hash, as in the built app
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { replayRecord, parseRecord, gameRecord, recordText, step, CONTENT_HASH } from '../src/v4/session/record.js';

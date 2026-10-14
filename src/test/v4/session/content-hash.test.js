@@ -28,3 +28,21 @@ describe('content hash sees effects', () => {
     for (const p of ['bots.js', 'thinker.js', 'preview.js']) expect(paths).not.toContain(p);
   });
 });
+
+describe('node-made stamps agree with the app', () => {
+  it('the build defines the same rules-source hash the tests use', async () => {
+    // (in a child node: loading vite.config.js under jsdom trips esbuild)
+    const { spawnSync } = await import('node:child_process');
+    const r = spawnSync(process.execPath, ['--input-type=module', '-e', "const c = (await import('./vite.config.js')).default; console.log(c.define.__V4_SRC__);"], { cwd: process.cwd(), encoding: 'utf8' });
+    expect(r.stdout.trim().split('\n').pop()).toBe(JSON.stringify(engineSourceHash()));
+  });
+
+  it('scripts and e2e helpers (plain node, no Vite define) stamp exactly like the app for the same tree', async () => {
+    const { spawnSync } = await import('node:child_process');
+    const code = "await import('./scripts/v4-node-stamp.mjs'); const m = await import('./src/v4/session/record.js'); const s = await import('./e2e/v4/lib/stamp.mjs'); console.log(JSON.stringify({ content: m.CONTENT_HASH, game: m.newGame({ seats: [{ name: 'A' }, { name: 'B' }], seed: 1 }).build.content, e2e: s.buildStamp().content }));";
+    const r = spawnSync(process.execPath, ['--input-type=module', '-e', code], { cwd: process.cwd(), encoding: 'utf8' });
+    expect(r.stderr || '').not.toMatch(/Error/);
+    const out = JSON.parse(r.stdout.trim().split('\n').pop());
+    expect(out).toEqual({ content: CONTENT_HASH, game: CONTENT_HASH, e2e: CONTENT_HASH });
+  });
+});
