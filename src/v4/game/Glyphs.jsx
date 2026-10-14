@@ -3,8 +3,8 @@
 // clusters of 10 and 5. Every one says what it is on hover (title) and long-press (TouchTips).
 import { Sprite } from '../art/Sprite.jsx';
 import { Follower } from '../art/Follower.jsx';
-import { playerColor, seatSigil } from '../format.js';
-import { sigilPath } from './Info.jsx';
+import { playerColor, seatSigil, seatEmoji } from '../format.js';
+import { Leader, Minion } from '../art/Leader.jsx';
 
 // 16×16 outlines, one per resource; anything else is a disc.
 const SHAPES = {
@@ -54,14 +54,15 @@ export function FollowerMark({ n, size = 6, label = true }) {
   );
 }
 
-/** A seat's figure: a hooded acolyte in the seat's color with its sigil on the chest. */
-export function SeatFigure({ id, size = 24, title = null, dim = false }) {
+/** A seat's cult leader (32px): the robed figure in the seat's accent color with the player's emoji (or sigil). */
+export function SeatFigure({ id, state = null, size = 32, title = null, dim = false }) {
   return (
     <span className={`seat-fig${dim ? ' dim' : ''}`} data-seat={id} title={title || undefined} style={{ width: size, height: size }}>
-      <Sprite id="_seat" kind="member" sphere={playerColor(id)} size={size} />
-      <svg className="sig" viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
-        <path d={sigilPath(seatSigil(id), 12, 17.5, 2.6)} fill="var(--paper-ink, #1c1410)" fillOpacity=".8" />
-      </svg>
+      <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} />
     </span>
   );
+}
+/** A minion (16px): one of a seat's workers. */
+export function SeatMinion({ id, size = 16, dim = false, title = null }) {
+  return <span className={`seat-min${dim ? ' dim' : ''}`} data-seat={id} title={title || undefined}><Minion color={playerColor(id)} size={size} /></span>;
 }

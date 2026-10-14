@@ -8,6 +8,8 @@ import { contextFor } from '../engine/v4/core.js';
 export const PLAYER_COLORS = ['#c9b48a', '#1b9393', '#ba7330', '#b88fc7'];
 export const SEAT_SIGILS = ['circle', 'triangle', 'square', 'star'];
 export const seatSigil = id => SEAT_SIGILS[id % SEAT_SIGILS.length];
+/** The emoji a player picked (shown on their leader's robe), or null: then the seat's sigil stands in. */
+export const seatEmoji = (state, id) => (state && state.players[id] && state.players[id].emoji) || null;
 export const playerColor = id => PLAYER_COLORS[id % PLAYER_COLORS.length];
 export const resColor = r => `var(--${r})`;
 export { roman };

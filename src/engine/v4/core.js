@@ -42,7 +42,7 @@ export function createGame({ seats, seed = 1, quadrants = DEFAULT_QUADRANTS, rul
   const state = {
     v: 4, seed: seed >>> 0, rng: seed >>> 0, quadrants: [...quadrants], resources, rules: table,
     players: seats.map((s, i) => ({
-      id: i, name: s.name || `P${i + 1}`, kind: s.kind || 'human',
+      id: i, name: s.name || `P${i + 1}`, kind: s.kind || 'human', ...(s.emoji ? { emoji: String(s.emoji) } : {}), // emoji: the player's pick (display only)
       res: { ...zero }, bonus: 0, contest: 0, bought: 0, members: [], discount: 0, left: 0, turnRecruits: 0, final: null,
     })),
     cards, pile: Object.keys(cards).map(Number), shop: [],
