@@ -6,7 +6,7 @@
 //  (d) no interactive element is clipped by its nearest overflow-hidden ancestor, and no text anywhere is cut off
 //      (wider than its box, or sticking out of a clipping ancestor; lib/textclip.mjs);
 //  (e) your own recruit visibly flies into your panel (a frame check);
-//  (f) no two header items overlap (the header's rows stack cleanly);
+//  (f) no two header items overlap (the header's rows stack cleanly); (f2) the game header is at most 96px tall;
 //  (g) a choice panel never overlaps the compact shop, the buy row or the "More below" pill (a sheet must be opaque);
 //  (h) the page never scrolls sideways: scrollWidth <= clientWidth and scrollX stays 0 after every tap;
 //  (i) no hover card ever opens from a touch (or a synthetic hover after a tap);
@@ -83,7 +83,7 @@ async function audit(step) {
       }
     }
     // header rows never overlap each other
-    const hdr = [...document.querySelectorAll('header.bar h1, header.bar .round, header.bar .rules-btn, header.bar .leave-btn, header.bar [data-prompt], header.bar .you-strip, header.bar .undo-row, header.bar .ticker')].filter(vis);
+    const hdr = [...document.querySelectorAll('header.bar h1, header.bar .round, header.bar .rules-btn, header.bar .leave-btn, header.bar [data-prompt], header.bar .you-strip, header.bar .undo-row, header.bar .undo-slot .undo, header.bar .ticker')].filter(vis);
     for (let i = 0; i < hdr.length; i++) for (let j = i + 1; j < hdr.length; j++) {
       const a = hdr[i].getBoundingClientRect(), b = hdr[j].getBoundingClientRect();
       const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
@@ -108,6 +108,8 @@ async function audit(step) {
         }
       }
     }
+    const hb = document.querySelector('.app.game header.bar');
+    out.hdrH = hb ? Math.round(hb.getBoundingClientRect().height) : 0;
     out.side = { sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, sx: scrollX };
     if (out.side.sw > out.side.cw) {
       const cls = e => (e.tagName.toLowerCase() + '.' + String(e.className && (e.className.baseVal ?? e.className)).split(' ')[0]);
@@ -128,6 +130,7 @@ async function audit(step) {
   for (const x of r.choice || []) note(`(g) ${x}`, step);
   if (r.side.sw > r.side.cw) note(`(h) the page is wider than the screen (${r.side.who})`, step);
   if (r.side.sx !== 0) note(`(h) the page scrolled sideways (scrollX ${r.side.sx})`, step);
+  if (r.hdrH > 96) note(`(f2) the phone header is ${r.hdrH}px tall (max 96)`, step);
   if (r.peek) note('(i) a hover card opened on a touch screen', step);
   if (r.undo && (r.undo.bot === '1' || r.undo.actor !== '0')) note(`(b) Undo visible while seat ${r.undo.actor} (${r.undo.bot === '1' ? 'bot' : 'person'}) is to act`, step);
 }
