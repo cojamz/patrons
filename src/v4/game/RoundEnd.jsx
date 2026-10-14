@@ -2,12 +2,14 @@
 // everything else gained this round), then the button that starts the next round.
 import { useEffect } from 'react';
 import { followers, WORKERS } from '../../engine/v4/index.js';
-import { playerColor, roman } from '../format.js';
+import { playerColor, roman, standings, roundGains } from '../format.js';
 import Tick from './Tick.jsx';
 import { useDialog } from './parts.jsx';
 
 export default function RoundEnd({ info, onNext, autoMs }) {
-  const { result, start, after } = info;
+  const { result, start, after, board } = info;
+  const at = board || after; // the table at the moment of scoring
+  const counts = standings(at);
   const box = useDialog(onNext);
   useEffect(() => {
     if (!autoMs) return undefined;
@@ -31,23 +33,30 @@ export default function RoundEnd({ info, onNext, autoMs }) {
                 {r.winners.length
                   ? r.winners.map((id, k) => <b key={id} style={{ color: playerColor(id) }}>{k ? ' & ' : ''}{name(id)}</b>)
                   : <em>no one</em>}
+                <small className="re-counts num">
+                  {(counts.find(c => c.qid === r.qid)?.rows || []).map((row, k) => (
+                    <span key={row.id} className={r.winners.includes(row.id) ? 'won' : ''}>{k ? ' · ' : ''}{name(row.id)} {row.shown}</span>
+                  ))}
+                </small>
               </span>
               <span className="re-chip num" aria-label={`plus ${r.v} followers`}>+{r.v}</span>
             </li>
           ))}
         </ul>
         <div className="re-totals" role="table" aria-label="Followers after this round">
-          <div className="re-head" role="row"><span role="columnheader">Player</span><span role="columnheader">Contests</span><span role="columnheader">Other gains</span><span role="columnheader">Followers</span></div>
+          <div className="re-head" role="row"><span role="columnheader">Player</span><span role="columnheader">Contests</span><span role="columnheader">This round, besides contests</span><span role="columnheader">Followers</span></div>
           {ranked.map(p => {
             const now = followers(after, p);
             const was = start && start.players[p.id] ? followers(start, start.players[p.id]) : now;
             const c = contest(p.id);
+            const g = start ? roundGains(start, at, p, c) : null;
             const other = now - was - c;
+            const why = g ? [g.members && `${g.members > 0 ? '+' : ''}${g.members} members`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : ''}${g.effects} effects`].filter(Boolean).join(' · ') : '';
             return (
               <div key={p.id} className="re-p" role="row" style={{ '--pc': playerColor(p.id) }}>
                 <span className="nm" role="cell"><i />{p.name}</span>
                 <span className="re-d num" role="cell">{c ? `+${c}` : '—'}</span>
-                <span className="re-d num" role="cell" title="Members, buys and member effects this round">{other ? `${other > 0 ? '+' : ''}${other}` : '—'}</span>
+                <span className="re-d num" role="cell">{other ? (why || `${other > 0 ? '+' : ''}${other}`) : '—'}</span>
                 <Tick value={now} from={was} color="var(--ink)" className="re-f num" dur={700} float={false} />
               </div>
             );
