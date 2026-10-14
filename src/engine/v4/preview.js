@@ -26,11 +26,15 @@ export function previewSpace(state, pid, q, i) {
   } catch { return null; }
   const leaves = [];
   const asks = new Set(), theirAsks = new Set();
+  let copies = null; // the spaces a copy action could take (its first "which space?" choice), as board keys
   let nodes = 0, partial = false;
   const walk = s => {
     nodes++;
     if (!s.pending || s.pending.kind !== 'choose') { leaves.push(s); return; }
     (s.pending.player === pid ? asks : theirAsks).add(s.pending.prompt.replace(/\s*\(\d+ left\)/, ''));
+    if (!copies && s.pending.player === pid && s.pending.options.some(o => o.kind === 'space')) {
+      copies = [...new Set(s.pending.options.filter(o => o.kind === 'space' && typeof o.value === 'string').map(o => o.value.split('+')[0]))];
+    }
     const opts = s.pending.options;
     // out of budget: follow only the first and last option (the extremes a list is usually ordered by)
     const list = nodes + opts.length > NODE_BUDGET ? (partial = true, [opts[0], opts[opts.length - 1]].filter((o, k, a) => a.indexOf(o) === k)) : opts;
@@ -63,5 +67,5 @@ export function previewSpace(state, pid, q, i) {
   const same = r => r[0] === r[1];
   const exact = Object.values(you.res).every(same) && same(you.followers) && same(you.members) && same(you.turns) && same(you.discount);
   // sample: the table after the first branch (for the screen to recount a contest on); exact when `exact`
-  return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], sample: leaves[0] };
+  return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, sample: leaves[0] };
 }
