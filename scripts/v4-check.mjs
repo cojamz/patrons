@@ -14,11 +14,11 @@ const run = (name, cmd, args, opts = {}) => new Promise(res => {
 });
 
 await run('engine + session + ui tests', 'npx', ['vitest', 'run', 'src/test/engine/v4', 'src/test/v4']);
-await run('production build', 'npx', ['vite', 'build'], { quiet: true });
+await run('production build', 'npx', ['vite', 'build', '--outDir', '.v4-build', '--emptyOutDir'], { quiet: true });
 
 if (!fast && existsSync('e2e/v4')) {
   const port = 5180;
-  const server = spawn('npx', ['vite', 'preview', '--port', String(port), '--strictPort'], { stdio: 'pipe' });
+  const server = spawn('npx', ['vite', 'preview', '--outDir', '.v4-build', '--port', String(port), '--strictPort'], { stdio: 'pipe' });
   await new Promise(r => setTimeout(r, 2500));
   for (const f of readdirSync('e2e/v4').filter(f => f.endsWith('.mjs')).sort())
     await run(`e2e ${f}`, 'node', [`e2e/v4/${f}`], { env: { V4_URL: `http://localhost:${port}` } });
