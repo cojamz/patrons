@@ -1,0 +1,204 @@
+  1 games crashed (skipped):
+   g=1823: Error: Card 40 is not in the shop |     at recruit (file:///home/user/patrons/src/engine/v4/core.js:631:75) |     at recruit (file:///home/user/patrons/src/engine/v4/core.js:891:32) |     at ctx.recruit (file:///home/user/patrons/src/engine/v4/content/echo.js:66:12)
+screen: 13999 games, random 4-sphere tables, 4 normal bots, every price ×U[0.6,1.4]. 4407s on 3 workers.
+price slope: each resource over printed costs -0.05 followers of margin (90% -0.06–-0.04); used 0.75. Median card nets 0.84 at printed. Got in round I 0.44, round III -0.88 vs round II. Standing at round II carries 0.38.
+
+REPRICE (well sampled, 90% CI misses printed, gap ≥ 1.5). Instrument: jitter screen, normal bots, 13999 games.
+card                           printed → proposed (colored+any)  evidence: net followers at printed ±SE, fair 90% CI, buy%, mean round got, n owners
+gold.midas                     8 (4+4) → 4 (2+2)                -2.99±0.19, 3.6–4.4, 6%, R2.2, n=1861 
+benders.frontrunner            2 (2+0) → 0 (0+0)                -1.54±0.11, -0.3–0.2, 26%, R1.9, n=5422   NEEDS AN ABILITY CHANGE, NOT A PRICE
+gold.investor                  6 (4+2) → 4 (3+1)                -1.52±0.21, 3.6–4.4, 7%, R2.3, n=1661 
+market.blackmarket             4 (2+2) → 2 (1+1)                -1.40±0.17, 1.7–2.5, 14%, R1.9, n=2141 
+trading.exporter               8 (4+4) → 6 (3+3)                -1.39±0.25, 5.6–6.7, 6%, R2.3, n=1020 
+yellow.farmer                  6 (4+2) → 4 (3+1)                -1.37±0.31, 3.5–4.9, 5%, R2.2, n=644 
+trading.pawnbroker             4 (2+2) → 2 (1+1)                -1.33±0.21, 1.8–2.7, 13%, R2.0, n=1500 
+market.onlooker                10 (6+4) → 8 (5+3)               -1.27±0.19, 7.9–8.7, 15%, R2.5, n=1660 
+echo.groupie                   8 (4+4) → 6 (3+3)                -1.18±0.26, 5.9–6.9, 6%, R2.3, n=948 
+market.patroness               8 (4+4) → 6 (3+3)                -1.16±0.17, 6.1–6.9, 16%, R2.3, n=1809 
+silver.retinue                 4 (2+2) → 2 (1+1)                -1.15±0.20, 2.0–2.9, 1%, R2.5, n=1455 
+echo.afterimage                6 (4+2) → 8 (5+3)                +1.15±0.23, 7.1–8.1, 26%, R2.3, n=1308 
+thieves.accomplice             8 (4+4) → 10 (5+5)               +1.16±0.19, 9.2–10.0, 12%, R2.7, n=1054 
+benders.extrahand              10 (6+4) → 12 (7+5)              +1.27±0.14, 11.4–12.0, 7%, R2.3, n=3636 
+thieves.desperado              4 (2+2) → 6 (3+3)                +1.42±0.17, 5.5–6.2, 40%, R1.9, n=2111 
+echo.chronicler                8 (4+4) → 10 (5+5)               +1.44±0.32, 9.1–10.6, 2%, R2.9, n=650 
+market.auctioneer              6 (4+2) → 8 (5+3)                +1.69±0.23, 7.7–8.8, 12%, R2.1, n=1512 
+gold.hustler                   2 (2+0) → 4 (4+0)                +1.71±0.18, 3.9–4.7, 14%, R2.1, n=2324 
+purple.patience                8 (6+2) → 10 (8+2)               +1.73±0.44, 9.3–11.3, 1%, R2.9, n=375 
+gold.tinker                    6 (4+2) → 8 (5+3)                +1.78±0.20, 7.9–8.8, 6%, R2.2, n=1751 
+market.planner                 4 (2+2) → 6 (3+3)                +1.79±0.19, 6.0–6.8, 14%, R1.9, n=2136 
+purple.secondwind              12 (8+4) → 14 (9+5)              +1.82±0.28, 13.9–15.1, 4%, R2.7, n=705 
+market.snob                    10 (6+4) → 13 (8+5)              +1.89±0.24, 12.0–13.1, 7%, R2.9, n=1345 
+red.mob                        8 (4+4) → 11 (6+5)               +1.92±0.18, 10.2–11.0, 6%, R2.7, n=1817 
+red.sponsor                    10 (6+4) → 13 (8+5)              +2.01±0.21, 12.3–13.2, 14%, R2.3, n=1908 
+yellow.feastmaker              10 (6+4) → 13 (8+5)              +2.02±0.36, 11.9–13.4, 4%, R2.5, n=459 
+gold.taxman                    4 (2+2) → 7 (4+3)                +2.06±0.17, 6.4–7.2, 13%, R1.9, n=2242 
+gold.tycoon                    12 (8+4) → 15 (10+5)             +2.34±0.26, 14.5–15.6, 2%, R2.9, n=1163 
+thieves.grifter                6 (4+2) → 9 (6+3)                +2.52±0.19, 8.9–9.8, 31%, R2.6, n=1413 
+echo.dejavu                    12 (8+4) → 16 (11+5)             +2.78±0.35, 15.0–16.6, 4%, R2.7, n=697 
+red.patriarch                  10 (6+4) → 14 (8+6)              +3.08±0.23, 13.6–14.6, 8%, R2.9, n=1808 
+thieves.extortionist           6 (4+2) → 10 (7+3)               +3.27±0.17, 10.0–10.7, 26%, R2.3, n=1481 
+trading.tipster                6 (4+2) → 11 (7+4)               +3.65±0.29, 10.2–11.5, 7%, R2.2, n=1005 
+purple.errand                  8 (4+4) → 13 (7+6)               +3.73±0.46, 11.9–14.1, 1%, R2.9, n=316 
+also worth ~nothing even free: red.volunteer (printed 0, fair -0.5, n=4257); red.intern (printed 1, fair 0.5, n=3861); red.reserve (printed 1, fair 0.4, n=3805); blue.recruit (printed 1, fair 0.3, n=2608); green.recruit (printed 1, fair 0.4, n=3891)
+low sample (<40 owners): 
+
+most bought gold: Banker 3087, Seed Money 2597, Prospector 2425, Tax Collector 2414, Coin Purse 2412
+most bought red: Volunteer 3718, Recruiting Drive 3027, Host 2853, Reserve 2728, Intern 2699
+card                   print  fair   90% CI      owners offers buy% demand  net@printed
+thieves.extortionist       6  10.4 10.0–10.7       1481   5250   26   -1.7   4.12±0.17 
+gold.midas                 8   4.0 3.6–4.4         1861  26180    6   -1.0  -2.15±0.19 
+benders.frontrunner        2  -0.1 -0.3–0.2        5422  24426   26      –  -0.70±0.11 
+red.patriarch             10  14.1 13.6–14.6       1808  12179    8   -1.8   3.92±0.23 
+thieves.grifter            6   9.4 8.9–9.8         1413   4949   31   -2.0   3.36±0.19 
+trading.tipster            6  10.9 10.2–11.5       1005  17563    7   -1.3   4.49±0.29 
+gold.taxman                4   6.7 6.4–7.2         2242  19129   13   -1.2   2.90±0.17 
+red.mob                    8  10.6 10.2–11.0       1817  20414    6   -2.0   2.76±0.18 
+gold.hustler               2   4.3 3.9–4.7         2324  16779   14      –   2.55±0.18 
+red.sponsor               10  12.7 12.3–13.2       1908   7580   14   -0.6   2.85±0.21 
+market.planner             4   6.4 6.0–6.8         2136  12467   14   -0.8   2.63±0.19 
+gold.tycoon               12  15.1 14.5–15.6       1163  23142    2   -0.4   3.18±0.26 
+gold.tinker                6   8.4 7.9–8.8         1751  27923    6   -0.7   2.62±0.20 
+benders.extrahand         10  11.7 11.4–12.0       3636  50313    7   -1.5   2.11±0.14 
+thieves.desperado          4   5.9 5.5–6.2         2111   4969   40   -1.3   2.26±0.17 
+benders.insider            6   4.6 4.4–4.9         3848  38744   11   -0.9  -0.18±0.13 
+purple.errand              8  13.0 11.9–14.1        316  36570    1   -3.0   4.57±0.46 
+market.blackmarket         4   2.1 1.7–2.5         2141  12859   14   -1.0  -0.56±0.17 
+benders.straggler          8   6.5 6.2–6.8         3514  54113    8   -1.0  -0.27±0.14 
+echo.dejavu               12  15.7 15.0–16.6        697   9132    4   -0.1   3.62±0.35 
+market.snob               10  12.5 12.0–13.1       1345   7309    7   -1.1   2.73±0.24 
+silver.steward             4   2.5 2.3–2.9         2527  11827   24   -0.7  -0.25±0.14 
+benders.freelancer         4   2.8 2.6–3.1         5970  33590   18   -1.1  -0.04±0.12 
+market.auctioneer          6   8.3 7.7–8.8         1512  10348   12    1.2   2.53±0.23 
+gold.investor              6   4.0 3.6–4.4         1661  27415    7   -0.6  -0.67±0.21 
+thieves.robinhood          4   5.4 5.1–5.7         2139   4844   41   -0.9   1.91±0.16 
+market.onlooker           10   8.3 7.9–8.7         1660   4932   15    0.6  -0.43±0.19 
+market.patroness           8   6.5 6.1–6.9         1809   8268   16    1.0  -0.31±0.17 
+purple.secondwind         12  14.4 13.9–15.1        705  10925    4   -0.4   2.66±0.28 
+trading.pawnbroker         4   2.2 1.8–2.7         1500  13350   13   -1.1  -0.49±0.21 
+gold.prospector            4   2.6 2.2–3.0         2305  20233   12   -1.2  -0.24±0.17 
+silver.dowager             4   2.8 2.4–3.1         2557  37283    5   -3.3  -0.07±0.15 
+thieves.accomplice         8   9.6 9.2–10.0        1054   7644   12   -3.5   2.01±0.19 
+benders.bigspender         4   3.1 2.8–3.3         5417  38479   15   -1.1   0.13±0.12 
+silver.retinue             4   2.5 2.0–2.9         1455  61400    1   -3.7  -0.31±0.20 
+thieves.kingpin            2   3.1 2.8–3.5         2236   6130   32      –   1.69±0.15 
+trading.exporter           8   6.2 5.6–6.7         1020  16749    6   -1.3  -0.55±0.25 
+red.bigfamily              4   2.9 2.6–3.2         3759  14486   13   -2.7  -0.01±0.15 
+yellow.feastmaker         10  12.7 11.9–13.4        459   5985    4   -0.3   2.86±0.36 
+purple.apprentice          4   2.6 2.1–3.0         1438   9362   18   -1.2  -0.23±0.20 
+purple.overseer            6   4.5 4.0–5.0         1012  15110    8   -1.7  -0.28±0.21 
+red.proselytizer          12  13.4 13.0–13.9       2011   6275   14   -1.4   1.89±0.20 
+thieves.lookout            6   7.3 6.9–7.8         1501   5326   26   -1.9   1.85±0.19 
+benders.squatter           8   7.2 6.9–7.4         3862  36213   12   -1.1   0.20±0.12 
+market.curator             4   2.7 2.3–3.1         2441   9590   22   -0.6  -0.12±0.19 
+trading.dealer             2   0.7 0.3–1.1         1435  11943   14      –  -0.13±0.19 
+echo.afterimage            6   7.5 7.1–8.1         1308   6530   26   -0.1   1.99±0.23 
+trading.reinvestor         4   2.6 2.1–3.1         1509  13182   13   -1.2  -0.23±0.21 
+silver.spoon               6   7.3 6.9–7.7         1677  12752   23   -1.4   1.80±0.19 
+gold.underdog              6   7.3 6.9–7.7         1750  27411    6   -0.7   1.80±0.19 
+green.pillar               6   6.7 6.5–7.0         4170  50967    5   -3.5   1.37±0.11 
+blue.patron                6   7.1 6.7–7.4         1272  19090    5   -3.9   1.66±0.17 
+market.minimalist          2   1.1 0.7–1.4         2637   8671   22      –   0.13±0.15 
+echo.groupie               8   6.4 5.9–6.9          948  16639    6   -1.7  -0.34±0.26 
+market.sommelier           4   3.0 2.7–3.4         2203  12554   14   -0.9   0.10±0.16 
+red.mentor                10  11.5 10.9–11.9       1502  11066    8   -1.9   1.94±0.24 
+silver.toastmaster         8   6.9 6.6–7.4         1948  24091    8   -0.7   0.05±0.17 
+echo.chronicler            8   9.9 9.1–10.6         650  28575    2   -2.1   2.28±0.32 
+trading.liquidator         6   4.5 4.0–5.0          987  18171    7   -1.3  -0.27±0.25 
+yellow.farmer              6   4.2 3.5–4.9          644  11706    5   -0.9  -0.53±0.31 
+red.twins                  2   1.2 0.8–1.5         4154   9358   26      –   0.22±0.14 
+blue.pillar                6   6.8 6.5–7.1         2732  44754    5   -4.3   1.43±0.14 
+gold.merchant              6   4.9 4.5–5.4         1626  27488    6   -0.8   0.03±0.19 
+market.connoisseur         4   2.9 2.5–3.3         2168  12925   14   -0.7   0.04±0.19 
+green.regular              3   2.3 2.1–2.6         2869  74177    4   -5.0   0.34±0.12 
+market.climber             2   1.0 0.7–1.4         2480  10469   16      –   0.11±0.18 
+purple.patience            8  10.3 9.3–11.3         375  27020    1   -2.0   2.57±0.44 
+thieves.doubleagent        6   4.7 4.1–5.3          760  10230    8   -2.5  -0.15±0.25 
+green.recruit              1   0.4 0.2–0.7         3891  56706    7   -1.8   0.40±0.11 
+thieves.mole               4   4.7 4.4–5.1         2324   3634   61   -0.7   1.40±0.15 
+red.crowd                  2   2.7 2.4–3.0         3856   8704   30      –   1.39±0.15 
+echo.keepsake              6   7.4 6.8–8.0          891  15568    9   -2.5   1.87±0.27 
+purple.lateriser           8   6.7 6.1–7.3          711  17408    4   -0.8  -0.16±0.27 
+blue.recruit               1   0.3 0.1–0.6         2608  37776    7   -1.9   0.34±0.13 
+gold.seed                  4   5.0 4.6–5.4         1685  14542   18   -1.4   1.59±0.20 
+silver.caterer             4   3.2 2.9–3.6         2279  18390   14   -0.8   0.25±0.16 
+gold.banker                4   3.2 2.8–3.6         2719   5667   54   -0.1   0.24±0.16 
+yellow.latebloomer         4   3.1 2.7–3.6         1434   6339   25   -0.8   0.13±0.20 
+thieves.cutpurse           4   4.7 4.4–5.1         2240   3490   61   -0.7   1.40±0.16 
+green.hand                 2   1.4 1.1–1.7         3055  97175    3      –   0.38±0.13 
+thieves.watchdog           6   6.8 6.4–7.2         1558   5272   27   -1.6   1.46±0.18 
+blue.helper                2   1.3 1.0–1.6         1547  70762    2      –   0.29±0.16 
+market.reseller           12  11.1 10.6–11.5       1642   2784   17   -2.5   0.15±0.20 
+gold.coinpurse             4   3.3 2.9–3.7         2271  19252   13   -1.1   0.29±0.17 
+trading.shareholder        3   2.1 1.7–2.6         1923  16189    8   -3.3   0.20±0.19 
+yellow.admirer             6   4.5 3.8–5.3          594  11992    5   -1.0  -0.25±0.33 
+red.reserve                1   0.4 0.1–0.7         3805  13597   20   -0.9   0.39±0.14 
+thieves.sticky             8   8.9 8.4–9.3         1299   5438   20   -2.4   1.48±0.20 
+silver.guest               8   7.2 6.8–7.6         1889  23510    8   -0.5   0.26±0.18 
+blue.hand                  2   1.4 1.1–1.7         2232  66372    3      –   0.40±0.14 
+yellow.gobetween           8   6.8 6.1–7.3          681  11336    5   -0.5  -0.09±0.30 
+yellow.sower               4   3.2 2.8–3.7         1161  11199   11   -1.3   0.26±0.19 
+silver.heir                8   8.7 8.3–9.1         2171   6175   44   -1.0   1.34±0.17 
+silver.benefactor          6   5.4 5.0–5.7         2236   6858   43   -0.7   0.35±0.17 
+red.volunteer              0  -0.5 -0.8–-0.2       4257   9359   40      –   0.46±0.14 
+green.elder                4   3.6 3.4–3.9         3317  67497    4   -3.3   0.55±0.12 
+red.doppel                 6   7.0 6.4–7.7          890  23227    3   -1.8   1.58±0.30 
+red.drive                  4   3.5 3.2–3.8         3532  10349   29   -0.9   0.49±0.14 
+red.intern                 1   0.5 0.1–0.8         3861  12912   21   -0.8   0.45±0.16 
+yellow.pilgrim             4   4.8 4.3–5.4         1111   6084   27   -2.3   1.45±0.25 
+market.underbidder         2   1.4 1.0–1.8         2461  10376   16      –   0.42±0.18 
+echo.ensemble              4   4.9 4.3–5.5         1196  28579    4   -3.1   1.49±0.27 
+purple.lamplighter         8   8.7 8.2–9.1         1253   3446   49   -2.1   1.33±0.21 
+blue.devotee               4   3.5 3.1–3.9         1479  77769    1   -6.0   0.45±0.17 
+echo.hourglass            10  10.9 10.3–11.6        741  13267    4   -0.7   1.55±0.31 
+purple.courier             6   6.8 6.1–7.3         1040  15773    8   -1.6   1.43±0.26 
+thieves.crew               2   2.4 2.1–2.7         2495   4130   48      –   1.14±0.14 
+green.helper               2   1.6 1.3–1.9         2105  98325    2      –   0.53±0.15 
+yellow.explorer            8   7.3 6.7–7.7          744  11461    6   -0.8   0.29±0.27 
+echo.mirror                6   6.7 6.2–7.3         1020  10171   16   -1.7   1.37±0.25 
+green.patron               6   6.4 6.0–6.7         2084  22874    5   -3.5   1.14±0.15 
+purple.crew                2   1.6 1.2–1.9         1646  10472   16      –   0.51±0.17 
+blue.regular               3   2.6 2.3–2.9         2029  49048    4   -5.3   0.56±0.15 
+echo.understudy            6   6.7 6.1–7.3          903  16198    8   -2.2   1.37±0.29 
+gold.jackpot              10  10.6 10.0–11.1       1525  21136    5   -0.2   1.27±0.25 
+thieves.bigscore           4   4.3 4.0–4.7         2101   4760   42   -1.1   1.10±0.15 
+echo.muse                  4   3.2 2.3–4.0          548  38683    1   -4.3   0.22±0.37 
+yellow.peddler             4   4.5 4.0–4.9         1448   3871   43   -0.4   1.19±0.21 
+yellow.weaver              6   6.7 5.9–7.3          587  12203    5   -1.0   1.33±0.31 
+silver.grandhost          12  11.4 10.7–12.0        719  30799    0   -3.4   0.37±0.30 
+purple.bookkeeper          6   6.5 6.0–7.0         1057  15176    9   -1.4   1.19±0.23 
+trading.shopkeeper         4   3.6 3.2–4.0         1790   4536   47   -0.8   0.54±0.20 
+green.devotee              4   3.7 3.4–4.0         1863 106677    1   -5.6   0.61±0.15 
+purple.taskmaster          8   7.4 6.8–8.1          649  17005    5   -1.2   0.43±0.30 
+gold.thrift                4   3.6 3.2–4.1         1594  26500    6   -1.8   0.58±0.20 
+yellow.harmonist           8   8.7 7.9–9.7          305   8088    2   -0.9   1.39±0.41 
+red.host                   6   6.3 5.9–6.7         3148   7326   39   -0.2   1.06±0.17 
+silver.revelers            6   5.6 5.0–6.1          958  52459    2   -0.3   0.51±0.26 
+yellow.dyer                6   6.5 5.7–7.2          597  12115    5   -1.1   1.24±0.33 
+trading.heiress           10  10.4 9.8–11.0         843  14250    4   -1.4   1.18±0.29 
+trading.broker             2   1.6 1.0–2.2         1019  33454    2      –   0.54±0.26 
+trading.lender             2   1.7 1.2–2.2          945   4081   49      –   0.59±0.24 
+echo.tuningfork            4   4.5 3.6–5.3          556  38599    1   -4.2   1.18±0.35 
+thieves.lightfingers       8   8.2 7.8–8.7         1403   5399   21   -2.1   1.02±0.19 
+silver.saint              12  12.3 11.7–12.9       1136  29320    2   -1.5   1.06±0.25 
+silver.majordomo           6   5.8 5.4–6.1         1788  26491    8   -0.3   0.69±0.17 
+red.recruiter              8   8.2 7.9–8.7         2373  11432   17   -0.4   0.99±0.17 
+blue.elder                 4   4.1 3.9–4.5         2261  50757    4   -3.4   0.95±0.13 
+purple.foreman             6   6.3 5.7–6.9          985  15482    8   -1.8   1.05±0.27 
+purple.clockmaker          4   3.8 3.5–4.3         1521   5231   35   -0.8   0.71±0.20 
+yellow.gardener            2   1.8 1.3–2.3         1203   6354   21      –   0.69±0.24 
+gold.speculator            8   8.2 7.7–8.6         1741  25863    6   -0.8   0.97±0.21 
+trading.safetynet          2   1.8 1.4–2.3         1414   7534   24      –   0.71±0.21 
+silver.gala                8   8.1 7.7–8.6         1946  23367    8   -0.9   0.95±0.19 
+echo.choir                 6   6.4 5.0–7.7          254  31263    0   -1.1   1.15±0.59 
+echo.wallflower            4   4.2 3.6–5.1          563  39078    1   -4.2   1.02±0.35 
+echo.evergreen             4   4.1 3.6–4.6         1521   3268   59   -0.4   0.94±0.23 
+trading.magnate            8   7.8 7.0–8.7          499  34594    1   -2.0   0.70±0.36 
+market.stylist             4   4.1 3.7–4.5         2096  13232   13   -1.0   0.91±0.20 
+purple.doubletime          8   8.3 6.7–9.7          132  28311    0   -3.9   1.06±0.67 
+silver.silversmith         6   6.1 5.7–6.4         1767  25014    8   -0.7   0.88±0.18 
+market.recluse             4   4.0 3.7–4.4         2112  15660   11   -1.3   0.88±0.17 
+echo.translator            6   5.8 4.6–7.3          212  32884    0   -1.8   0.73±0.61 
+yellow.rainmaker           6   6.1 5.3–6.8          583  11690    5   -1.0   0.90±0.31 
+yellow.gleaner            10  10.0 9.1–10.9         490   6464    4    0.3   0.85±0.40 
+trading.raider             2   2.0 1.5–2.5         1399  11336   14      –   0.84±0.23 
+trading.bulkbuyer          6   6.0 5.4–6.5         1002  17671    7   -1.1   0.84±0.25 
