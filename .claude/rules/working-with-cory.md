@@ -45,3 +45,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-12 — Cory: my balance intuition is off again (priced 4 resources → 2 followers as fair; he says too expensive). Calibrate from his anchors (Cash Out 2:1), not my model.
 - 2026-10-14 — Cory: builds get graded by an AI skeptic hunting for slop before he sees them. Added the game-skeptic agent as the loop's final gate (SHIP at A- or better).
 - 2026-10-14 — Cory: the skeptic must be super picky and precise, judging a human, elegant, tactile feel; and phone means real touch emulation. Updated game-skeptic.
+- 2026-10-14 — Cory: testers go in blind. No knowledge of the game, only the rulebook a real player would get plus the screen. The skeptic never reads the repo, and the lead hands it a URL and the rulebook.

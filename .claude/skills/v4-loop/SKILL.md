@@ -16,7 +16,7 @@ Each iteration:
    Fix what they find (verify before trusting; no blind fixes).
 5. Commit with a clear message and push; the PR's Netlify preview redeploys.
 
-6. Final gate: the `game-skeptic` agent plays the real build adversarially and grades it. Loop until its verdict is SHIP with overall A- or better; fix its issues worst-first and re-run it fresh (no memory of the last run).
+6. Final gate: start the build yourself and give the `game-skeptic` agent only the URL and the player rulebook text (design/rulebook.md); it must never see the repo. The agent plays the real build adversarially and grades it. Loop until its verdict is SHIP with overall A- or better; fix its issues worst-first and re-run it fresh (no memory of the last run).
 
 Done = check:v4 green, game-skeptic says SHIP (A- or better), and Cory has a link.
 Never present agent output to Cory unvetted.
