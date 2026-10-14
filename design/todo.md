@@ -31,6 +31,7 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] Later, only if bot prices keep disagreeing with Cory's feel in play: a bot that learns from its own games
 
 ## Waiting on Cory
+- [ ] What followers can be sold (Pawn, Sell High…)? Today only bought or contest-won ones, so Pawn is dead in round I. [any follower, down to 1]
 - [ ] Watchdog ("Rivals can't take your members"): does it stop Red's Trade? [yes]
 - [ ] Stolen loot stays magenta (Midas/Underdog don't touch it)? [yes]
 - [ ] Use-then-release / buy-then-release in the same turn? [yes]
