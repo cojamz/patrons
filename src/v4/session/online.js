@@ -368,6 +368,7 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, lobby }
   const subs = createEmitter();
   const waiting = new Map(); // mid -> { resolve, reject }
   const inflight = new Map(); // signature -> promise (same move twice = one submission)
+  let seenNotice = getRoom()?.notice?.id ?? null; // a notice from before this session (a rejoin) isn't news
 
   const mySeats = () => seatList(getRoom()).filter(s => s.kind === 'human' && s.id === playerId).map(s => s.seat);
   const info = () => {
@@ -435,7 +436,11 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, lobby }
     get lobby() { return lobby; },
     /** Tears down the whole online connection (lobby, host loop, listeners). */
     destroy() { lobby.destroy(); },
-    roomChanged() { if (state && !destroyed) subs.emit(state, info()); },
+    roomChanged() {
+      const n = !destroyed && getRoom()?.notice;
+      if (n && n.id && n.id !== seenNotice) { seenNotice = n.id; reportProblem({ kind: n.kind, seat: n.seat, message: n.message, detail: n.detail }); }
+      if (state && !destroyed) subs.emit(state, info());
+    },
     _teardown() {
       if (destroyed) return;
       destroyed = true;
@@ -458,7 +463,15 @@ function startHost({ transport, base, getRoom, botDelayMs }) {
   let stopped = false;
   let botTimer = null;
   let chain = Promise.resolve();
-  const enqueue = fn => { chain = chain.then(() => (stopped ? undefined : fn())).catch(err => console.error('[v4 host]', err)); };
+  const enqueue = fn => {
+    chain = chain.then(() => (stopped ? undefined : fn())).catch(err => {
+      console.error('[v4 host]', err);
+      reportProblem({ kind: 'host', message: 'The host hit a problem running the game.', detail: String(err?.message || err) });
+    });
+  };
+  // Problems the whole table should see go on the room (every client's session reports them); local if that fails.
+  const notify = p => transport.set(`${base}/notice`, { id: randomId(8), kind: p.kind, seat: p.seat ?? -1, message: p.message, detail: p.detail || '', at: Date.now() })
+    .catch(() => reportProblem(p));
 
   function adopt(node) {
     if (!node || typeof node.version !== 'number' || (cur && node.version <= ver)) return false;
@@ -518,7 +531,7 @@ function startHost({ transport, base, getRoom, botDelayMs }) {
     if (reason) return refuse(key, rec, reason);
 
     let next;
-    try { next = applyMove(cur, move); } catch (err) { return refuse(key, rec, err.message || 'Illegal move.'); }
+    try { next = step(cur, move); } catch (err) { return refuse(key, rec, err.message || 'Illegal move.'); }
     if (await commit(next, { mid: rec.mid || key, seat: rec.seat, option: move.option, by: rec.by })) return drop(key);
     if (!stopped && attempt < 2) return handle(key, rec, attempt + 1); // someone else wrote; re-check against fresh state
   }
@@ -530,14 +543,18 @@ function startHost({ transport, base, getRoom, botDelayMs }) {
     const seat = cur.pending.player;
     if (getRoom()?.seats?.[`s${seat}`]?.kind !== 'bot') return;
     const V = ver;
-    botTimer = setTimeout(() => enqueue(async () => {
-      if (stopped || ver !== V || !cur.pending || cur.pending.player !== seat) return;
-      const rand = seededRandom(((cur.seed ?? 1) ^ Math.imul(V, 2654435761)) >>> 0);
-      const move = chooseBotMove(cur, rand);
-      const next = applyMove(cur, move);
-      const ok = await commit(next, { mid: `bot-${V}`, seat, option: move.option, by: 'bot' });
-      if (!ok && !stopped && ver === V) setTimeout(scheduleBot, Math.max(50, botDelayMs)); // e.g. offline: try again
-    }), botDelayMs);
+    botTimer = setTimeout(() => {
+      botTimer = null; // fired: a stale id here would stop roomChanged() from ever rescheduling
+      enqueue(async () => {
+        if (stopped || ver !== V || !cur.pending || cur.pending.player !== seat) return;
+        const rand = seededRandom(((cur.seed ?? 1) ^ Math.imul(V, 2654435761)) >>> 0);
+        // a bot move that throws is logged and replaced by the first option that applies cleanly; the table is told
+        const r = botStep(cur, st => chooseBotMove(st, rand), { tag: 'v4 host', seat, report: notify });
+        if (!r.state) return; // no option applies at all: the 'stuck' notice says the game can't continue
+        const ok = await commit(r.state, { mid: `bot-${V}`, seat, option: r.move.option, by: 'bot' });
+        if (!ok && !stopped && ver === V) setTimeout(scheduleBot, Math.max(50, botDelayMs)); // e.g. offline: try again
+      });
+    }, botDelayMs);
   }
 
   return {
