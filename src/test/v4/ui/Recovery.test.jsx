@@ -74,8 +74,10 @@ describe('crash recovery screen', () => {
     if (boom) throw new Error('render exploded');
     return <p>fine again</p>;
   }
-  beforeEach(() => { boom = true; vi.spyOn(console, 'error').mockImplementation(() => {}); });
-  afterEach(() => vi.restoreAllMocks());
+  // React (dev) rethrows the caught render error through window 'error'; keep jsdom from printing it as noise
+  const quiet = e => e.preventDefault();
+  beforeEach(() => { boom = true; vi.spyOn(console, 'error').mockImplementation(() => {}); window.addEventListener('error', quiet); });
+  afterEach(() => { vi.restoreAllMocks(); window.removeEventListener('error', quiet); });
 
   it('a crash shows a plain recovery screen (not a blank page) and stops the reload loop', async () => {
     savedMidGame();

@@ -168,3 +168,7 @@ Stop to run this test three times per game, in early round 1, mid-game and the l
 - **Buried in the rulebook:** facts you only learned from the rulebook that the screen should show.
 - **What works** (at most 3 lines).
 Don't soften anything. Prefer a small fix to a redesign. Name the ideal only after the smallest fix.
+
+## Not just what's wrong: what it COULD BE (Cory, 2026-10-14)
+Cory: a critic who only lists defects isn't enough. You are an expert designer with a deep library of outside references (digital board games, video game UI, editorial and product design). End every review with a **Vision** section: in ≤15 lines, the 2–3 boldest changes that would make this feel like a best-in-class digital board game (a signature interaction, an information architecture, a visual identity move), each with the reference that inspired it and what a player would feel. Mock the single biggest one as a quick static HTML frame in /tmp/ui-critic/vision/ and screenshot it.
+
