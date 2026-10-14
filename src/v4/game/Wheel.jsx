@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { quadrant, roman } from '../../engine/v4/index.js';
 import { playerColor, seatSigil } from '../format.js';
-import { sigilPath } from './Info.jsx';
+import { sigilPath, YoudGet } from './Info.jsx';
 import { sheetMode } from './parts.jsx';
 import { realHover } from '../hover.js';
 import { Rich, CostPips } from './Rich.jsx';
@@ -348,6 +348,10 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
           <b>{s.a.name}</b>
           <small>{quadrant(s.qid).name} · round {roman(s.ring)}</small>
           <span><Rich text={s.a.text} /></span>
+          {/* exactly what you'd get, from the engine's dry run (hover / tap layer) */}
+          {open && (owner === undefined || opt) && !state.over && (meId != null || (legal.size && state.pending)) && (
+            <YoudGet state={state} pid={meId != null ? meId : state.pending.player} q={s.q} i={s.i} />
+          )}
           <em>
             {owner !== undefined ? <><i style={{ background: playerColor(owner) }} />Taken by {state.players[owner].name}{opt ? ' — you can join it (Squatter)' : ''}</>
               : open ? (opt ? 'Open — yours to take' : 'Open') : `Opens in round ${roman(s.ring)}`}

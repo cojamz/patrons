@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { quadrant, RING_VALUE } from '../../engine/v4/index.js';
 import { playerColor, roman, standings, shortLabel, tiebreakNote } from '../format.js';
-import { ContestTip } from './Info.jsx';
+import { ContestTip, YoudGet } from './Info.jsx';
 import { Popover } from './parts.jsx';
 import { Rich, CostPips } from './Rich.jsx';
 
@@ -120,6 +120,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
         <Popover anchor={pop.el} onClose={close}>
           <div className="pop-card" style={{ '--c': col }}>
             <b>{pop.a.name}</b>
+            {meId != null || state.pending ? <YoudGet state={state} pid={meId != null ? meId : state.pending.player} q={facing} i={Number(pop.key.split('-')[1])} /> : null}
             <span><Rich text={pop.a.text} /></span>
             <button type="button" className="btn pri" data-autofocus data-place={pop.opt} onClick={() => { const id = pop.opt; setPop(null); onPick(id); }}>Place here</button>
           </div>
