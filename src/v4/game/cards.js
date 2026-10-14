@@ -1,6 +1,8 @@
 // Card facts for the Lamplit shop and hover cards: timing tags, what paying leaves, how a buy moves the contests,
 // and which face-up cards a space would make affordable. All read off the engine; nothing here is a rule.
 import { cardDef, paymentPlan, contestTable, quadrant } from '../../engine/v4/index.js';
+import { contextFor } from '../../engine/v4/core.js';
+import { targets as echoTargets } from '../../engine/v4/content/echo.js';
 
 // The card's timing, from how its text opens (the tag above the name).
 const TIMINGS = [
@@ -86,3 +88,12 @@ export function unlockedBy(state, p, gain) {
 }
 /** The guaranteed gains of a preview (the low end of each color's range). */
 export const surely = pv => (pv ? Object.fromEntries(Object.entries(pv.you.res).map(([r, [lo]]) => [r, lo])) : {});
+
+/**
+ * The spaces a copying member would copy if recruited now (Understudy: a rival's space since your last turn), as
+ * board keys, from Green's own target rule; null for any other member or when Green isn't on the table.
+ */
+export function memberCopyTargets(state, pid, def) {
+  if (!state.quadrants.includes('echo') || !/copy a space a rival took since your last turn/i.test(def.text || '')) return null;
+  try { return [...new Set(echoTargets(contextFor(state), state.players[pid], 'since').map(e => String(e.key).split('+')[0]))]; } catch { return null; }
+}

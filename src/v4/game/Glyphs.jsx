@@ -67,35 +67,27 @@ export function SeatMinion({ id, size = 16, dim = false, title = null }) {
 }
 
 /**
- * A leader with its unplaced minions floating around it (Cory, 2026-10-14): how many are left is seen, not read.
- * The leader is the anchor a placed minion flies from (data-leader={id}); each floating minion is data-minion.
- * size: the leader (32 on your table); minion: each minion (16). compact packs the ring for the seat rail.
+ * A leader with the minions it still has to place in a quiet row beneath it (beside it when compact): how many are
+ * left is seen at a glance, and each one leaves the row when it's placed (Cory: no floating, no bobbing).
+ * The leader is the anchor a placed minion flies from (data-leader={id}); each waiting minion is data-minion.
  */
 export function LeaderRing({ state, id, size = 32, minion = 16, compact = false }) {
   const p = state.players[id];
   const n = Math.max(0, p.left || 0);
-  const W = compact ? size + minion * 1.6 : size + minion * 2.2;
-  const H = compact ? Math.max(size, 44) : size + minion * 1.6;
-  const cx = W / 2, cy = H / 2 + (compact ? 0 : minion * 0.15);
-  const R = size / 2 + minion * (compact ? 0.42 : 0.62);
-  // spread over the arc above and beside the leader, widening as more are left
-  const span = Math.min(300, 70 + n * 38);
-  const at = k => {
-    const a = (n === 1 ? 0 : -span / 2 + (span * k) / (n - 1)) * (Math.PI / 180);
-    return { left: cx + R * Math.sin(a) - minion / 2, top: cy - R * Math.cos(a) - minion / 2 };
-  };
-  const name = state.players[id].name;
+  const name = p.name;
   const label = `${name}'s leader${n ? ` and ${n} minion${n === 1 ? '' : 's'} still to place` : ', every minion placed'}`;
   return (
-    <span className={`lt-ring${compact ? ' compact' : ''}`} style={{ width: W, height: H }} title={label} aria-label={label} role="img" data-leader-ring={id} data-left={n}>
-      <span className="lead" data-leader={id} style={{ left: cx - size / 2, top: cy - size / 2 }}>
+    <span className={`lt-ring${compact ? ' compact' : ''}`} title={label} aria-label={label} role="img" data-leader-ring={id} data-left={n}>
+      <span className="lead" data-leader={id}>
         <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} />
       </span>
-      {Array.from({ length: n }, (_, k) => (
-        <span key={k} className="orbit" data-minion={id} data-k={k} style={{ ...at(k), width: minion, height: minion, animationDelay: `${-(k * 0.37).toFixed(2)}s` }}>
-          <Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={minion} />
+      {n > 0 && (
+        <span className="row" style={{ '--m': `${minion}px` }}>
+          {Array.from({ length: n }, (_, k) => (
+            <span key={k} className="min" data-minion={id} data-k={k}><Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={minion} /></span>
+          ))}
         </span>
-      ))}
+      )}
     </span>
   );
 }

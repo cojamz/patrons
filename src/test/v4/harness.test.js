@@ -16,7 +16,7 @@ describe('v4 harness', () => {
 
   it('CI runs check:v4 --fast with node 22 and npm ci on pushes to the v4 branch, and deploys nothing', () => {
     const wf = read('.github/workflows/v4.yml');
-    expect(wf).toMatch(/branches: \[claude\/gifted-newton-3lcy3i\]/);
+    expect(wf).toMatch(/tags: \['v\*'\]/); // release tags and manual runs only, not every WIP push
     expect(wf).toMatch(/node-version: 22/);
     expect(wf).toMatch(/run: npm ci/);
     expect(wf).toMatch(/run: npm run check:v4 -- --fast/);

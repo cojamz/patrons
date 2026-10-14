@@ -136,12 +136,13 @@
 .lt-chron ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13.5px;line-height:1.35;color:var(--paper-ink)}
 .lt-chron li{padding:3px 0;border-bottom:1px solid rgba(42,31,23,.08)}
 
-/* ---------- leaders and their floating minions ---------- */
-.lt-ring{position:relative;display:inline-block;flex:none}
-.lt-ring .lead,.lt-ring .orbit{position:absolute;display:block;line-height:0}
-.lt-ring .orbit{animation:minion-bob 2.6s ease-in-out infinite}
-@keyframes minion-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
-@media (prefers-reduced-motion: reduce){.lt-ring .orbit{animation:none}}
+/* ---------- leaders and the minions they still have to place (a quiet row, no motion) ---------- */
+.lt-ring{display:inline-flex;flex-direction:column;align-items:center;gap:2px;flex:none;line-height:0}
+.lt-ring.compact{flex-direction:row;align-items:flex-end;gap:3px}
+.lt-ring .lead{display:block;line-height:0}
+.lt-ring .row{display:flex;align-items:flex-end;line-height:0}
+.lt-ring .row .min{display:block;margin-left:calc(var(--m) * -0.25)}
+.lt-ring .row .min:first-child{margin-left:0}
 .leader,.minion{display:block;image-rendering:pixelated}
 .leader.dim,.minion.dim{opacity:.32}
 
@@ -183,7 +184,7 @@
 .cs-member:nth-child(3n+1) .fig .sprite{animation-name:cult-shift}
 @keyframes cult-breathe{0%,100%{transform:translateY(0)}55%{transform:translateY(-1px)}}
 @keyframes cult-shift{0%,100%{transform:translateX(0)}40%{transform:translateX(1px)}70%{transform:translateX(-1px)}}
-.lt-ring .lead .leader{animation:cult-breathe 3.1s steps(1,end) infinite;animation-delay:calc(var(--lph,0) * -3s)}
+.lt-ring .lead .leader{animation:cult-breathe 3.1s steps(1,end) infinite}
 .leader .blink{opacity:0;animation:cult-blink 4.7s steps(1,end) infinite}
 @keyframes cult-blink{0%,93%,100%{opacity:0}94%,97%{opacity:1}}
 .cs-member.react-hop .fig{animation:cult-hop .5s steps(5,end) 1}
@@ -197,3 +198,6 @@
 @media (prefers-reduced-motion: reduce){
   .cs-member .fig .sprite,.lt-ring .lead .leader,.leader .blink,.cs-member.react-hop .fig,.cs-leader[class*="react-"] .lead{animation:none}
 }
+
+/* a copy space (or Understudy) under the pointer lights what it could copy */
+.copy-target .base{box-shadow:0 0 0 3px #ffd99a,0 0 14px 2px rgba(255,217,154,.8) !important}

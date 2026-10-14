@@ -14,6 +14,7 @@ import { CostPips } from './Rich.jsx';
 import { ResourceGlyph, FollowerMark, SeatFigure } from './Glyphs.jsx';
 import { payBreakdown, contestEffect, unlockedBy, surely } from './cards.js';
 import { lastMoves } from './seats.js';
+import { memberCopyTargets } from './cards.js';
 import './lamp-b.css';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
@@ -90,6 +91,7 @@ export function usePreviewWarmup(state, pid) {
  */
 export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPick }) {
   const c = useHoverCard(hover);
+  useCopyTargets(c, state, me);
   const box = useRef(null);
   const [pos, setPos] = useState(null);
   useEffect(() => { if (c && !c.pinned) hover.close(); }, [state.moves]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -133,6 +135,25 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
     </div>
   );
 }
+/**
+ * While a copy space (Echo, Encore, Refrain…) or a copying member (Understudy) is under the pointer, the spaces it
+ * could copy light up on the wheel ("since your turn" targets), straight from the engine. Classes are toggled on the
+ * board's [data-slot] elements, so the wheel never re-renders for it.
+ */
+function useCopyTargets(c, state, me) {
+  const viewer = me != null ? me : state.pending ? state.pending.player : null;
+  const space = c && c.kind === 'space' ? c.key.split('-').map(Number) : null;
+  const pv = usePreview(state, space && viewer != null && !state.over ? viewer : null, space ? space[0] : 0, space ? space[1] : 0);
+  let keys = pv && pv.copies ? pv.copies : null;
+  if (!keys && c && c.kind === 'card' && viewer != null && state.cards[c.uid]) keys = memberCopyTargets(state, viewer, cardDef(state, c.uid));
+  const sig = keys ? keys.join(',') : '';
+  useEffect(() => {
+    if (!sig) return undefined;
+    const els = sig.split(',').flatMap(k => [...document.querySelectorAll(`[data-slot="${k}"]`)]);
+    for (const el of els) el.classList.add('copy-target');
+    return () => { for (const el of els) el.classList.remove('copy-target'); };
+  }, [sig]);
+}
 function cardBody(c, state, me, optionFor, pick) {
   if (c.kind === 'space') return <SpaceCard state={state} me={me} spaceKey={c.key} optionFor={optionFor} onPick={pick} pinned={c.pinned} />;
   if (c.kind === 'plaque') return <StandingsCard state={state} qid={c.qid} meId={me} />;
@@ -163,6 +184,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
       <div className="t"><Sprite id={[a.id, spriteId(a.name)]} kind="action" sphere={sphereOf(qid)} size={48} /><h4>{a.name}<small>{Q.name} · {RINGS[a.ring - 1]}</small></h4></div>
       <p><CardText text={a.text} /></p>
       <div className="lt-yd">
+        {pv && pv.copies ? <Row k="Can copy">{pv.copies.length ? pv.copies.map(k => spaceName(state, k)).join(', ') : 'nothing yet'}</Row> : null}
         {open && viewer != null && !state.over ? <Row k="You get"><YoudGet state={state} pid={viewer} q={q} i={i} /></Row> : null}
         {race && <Row k={race.rule}>{race.text}</Row>}
         {unlocks.length ? <Row k="Unlocks">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
@@ -182,6 +204,9 @@ function raceAfter(state, race, qid, pid) {
   const lead = c.winners.includes(pid) ? ` · you’d lead, +${c.prize}` : '';
   return { rule: c.rule.replace(/^Most /, '').replace(/^\w/, ch => ch.toUpperCase()), text: `${top}${lead}` };
 }
+
+/** "Rush (Bo)" for a board key. */
+const spaceName = (state, key) => { const [q, i] = key.split('-').map(Number); const a = quadrant(state.quadrants[q]).actions[i]; const o = state.slots[key]; return `${a.name}${o !== undefined ? ` (${state.players[o].name})` : ''}`; };
 
 /** A rim plaque: the contest's standings, straight from the engine. */
 export function StandingsCard({ state, qid, meId = null }) {

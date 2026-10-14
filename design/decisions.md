@@ -324,3 +324,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - (Cory) Release gives back only the member's colored part, in its own color, or in any colors when that color isn't on the table. A member with no colored part can't be released (Volunteer). Bots value a release the same way.
 - (Cory) The floating minions around the leader are too much visual noise: a quiet static row of small minions beside the leader instead; only leaders and members get idle motion.
 - Watch items from the reworks: Green's last round-I seat wins 31% (±2.6) after the Echo change (was 28%); in one White game a single seat took 3 of the four 10-follower buys in round II and the game ended after round II (the clock can be rushed by one player).
+- (Cory) GitHub's automatic test runs emailed a failure on every work-in-progress push. They now run only by hand or on a release tag (v0.2…).
