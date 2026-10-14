@@ -64,6 +64,20 @@ describe('Magenta actions', () => {
     expect(ids(s).every(id => id.startsWith('take:2:'))).toBe(true);
   });
 
+  // floor (dead-window audit, 2026-10-14): it used to take nothing when no one held more than you
+  it('Tip-off: at least 2 in total, the rest from the richest rival (named)', () => {
+    let s = table(Q, { n: 3, res: [{ red: 5 }, { gold: 3 }, { red: 1 }], shop: ROW });
+    s = take(s, 'Tip-off');
+    expect(ids(s).every(id => id.startsWith('take:1:'))).toBe(true); // only the richest
+    s = play(s, 'take:1:gold', 'take:1:gold');
+    expect([R(s).magenta, R(s, 1).gold, R(s, 2).red]).toEqual([2, 1, 1]);
+    expect(named(s, 'Tip-off')).toEqual(["P1's Tip-off: at least 2 in total, so the rest comes from P2 (the richest rival)."]);
+    // one player holds more: 1 from them, and the second from the richest (the same player here)
+    let t = table(Q, { n: 3, res: [{ red: 2 }, { gold: 4 }, { red: 1 }], shop: ROW });
+    t = play(take(t, 'Tip-off'), 'take:1:gold', 'take:1:gold');
+    expect([R(t).magenta, R(t, 1).gold, R(t, 2).red]).toEqual([2, 2, 1]);
+  });
+
   it('Hideout: take 1 from a rival; then no one can steal resources from you this round', () => {
     let s = table(Q, { res: [{ gold: 4 }, { red: 1 }], shop: ROW, queue: turns(0, 1) });
     s = pass(play(take(s, 'Hideout'), 'take:1:red'));
@@ -169,6 +183,17 @@ describe('Magenta members', () => {
     expect([R(s).magenta, R(s, 1).gold, R(s, 2).red]).toEqual([1, 1, 3]);
     expect(named(s, 'Mole').length).toBe(1);
   });
+  // "now" (dead-window audit, 2026-10-14): recruited in round III they used to give nothing
+  it('Cutpurse and Mole recruited: their steal happens right away too (named)', () => {
+    let s = table(Q, { n: 3, round: 3, left: 5, res: [{ magenta: 4 }, { gold: 2 }, { red: 3 }], shop: ['thieves.cutpurse', ...ROW] });
+    s = move(take(s, 'Rush'), cardOpt(s, 'thieves.cutpurse', 'shop'));
+    expect([R(s).magenta, R(s, 2).red]).toEqual([1, 2]);
+    expect(named(s, 'Cutpurse')).toEqual(["P1's Cutpurse: took 1 from P3."]);
+    let t = table(Q, { n: 3, round: 3, left: 5, res: [{ magenta: 4 }, { gold: 2 }, { red: 3 }], bonus: [0, 2, 0], shop: ['thieves.mole', ...ROW] });
+    t = move(take(t, 'Rush'), cardOpt(t, 'thieves.mole', 'shop'));
+    expect([R(t).magenta, R(t, 1).gold, R(t, 2).red]).toEqual([1, 1, 3]);
+    expect(named(t, 'Mole')).toEqual(["P1's Mole: took 1 from P2."]);
+  });
   it('× Sticky Fingers: a member\'s steal (Mole) takes 1 only today (see the ledger question)', () => {
     const s = roundStart({ res: [{}, { gold: 5 }], bonus: [0, 5], members: [['thieves.mole', 'thieves.sticky']] });
     expect(R(s).magenta).toBe(1);
@@ -176,7 +201,7 @@ describe('Magenta members', () => {
 
   it('Accomplice: when recruited, take 1 from each rival (named)', () => {
     let s = table(Q, { n: 3, res: [{ magenta: 8 }, { gold: 1 }, { red: 2 }], shop: ['thieves.accomplice', ...ROW] });
-    s = move(take(s, 'Tip-off'), cardOpt(s, 'thieves.accomplice', 'shop'));
+    s = move(take(s, 'Rush'), cardOpt(s, 'thieves.accomplice', 'shop')); // Rush, not Tip-off: Tip-off now always takes 2
     s = s.pending?.kind === 'pay' ? move(s, s.pending.options[0].id) : s;
     expect([R(s).magenta, R(s, 1).gold, R(s, 2).red]).toEqual([2, 0, 1]);
     expect(named(s, 'Accomplice').length).toBe(2);
@@ -187,13 +212,19 @@ describe('Magenta members', () => {
     expect(R(s, 1).gold).toBe(3);
   });
 
-  it('Grifter: when recruited, take 1 per 2 members you have, from the rivals holding the most', () => {
+  // 1 per member, at least 2 (dead-window audit, 2026-10-14): it was 1 per 2 members, so 0 as your first member
+  it('Grifter: when recruited, take 1 per member you have (at least 2), from the rivals holding the most', () => {
     let s = table(Q, { n: 3, res: [{ magenta: 6 }, { gold: 3 }, { red: 2 }], members: [['red.twins', 'red.intern', 'red.volunteer']], shop: ['thieves.grifter', ...ROW] });
-    s = move(take(s, 'Tip-off'), cardOpt(s, 'thieves.grifter', 'shop'));
-    // 4 members: take 2, one at a time from whoever holds the most then
-    expect(R(s).magenta).toBe(2);
-    expect(R(s, 1).gold + R(s, 2).red).toBe(3);
-    expect(named(s, 'Grifter').length).toBe(2);
+    s = move(take(s, 'Rush'), cardOpt(s, 'thieves.grifter', 'shop'));
+    // 4 members: take 4, one at a time from whoever holds the most then
+    expect(R(s).magenta).toBe(4);
+    expect(R(s, 1).gold + R(s, 2).red).toBe(1);
+    expect(named(s, 'Grifter').length).toBe(4);
+    // as your first member: still 2
+    let t = table(Q, { n: 3, res: [{ magenta: 6 }, { gold: 3 }, { red: 2 }], shop: ['thieves.grifter', ...ROW] });
+    t = move(take(t, 'Rush'), cardOpt(t, 'thieves.grifter', 'shop'));
+    expect(R(t).magenta).toBe(2);
+    expect(named(t, 'Grifter').length).toBe(2);
   });
 
   it('Robin Hood: whenever you steal from the player with the most followers, +1 follower (named)', () => {
@@ -257,7 +288,7 @@ describe('Magenta members', () => {
 
   it('Big Score: once per game, half (rounded down) of the magenta of the rival holding the most (named)', () => {
     let s = table(Q, { n: 3, res: [{ gold: 20 }, { magenta: 7 }, { magenta: 3 }], members: [['thieves.bigscore']], shop: ROW });
-    s = take(s, 'Tip-off');
+    s = take(s, 'Rush'); // not Tip-off: it now always takes 2
     s = move(s, `use:${uidIn(s, 'thieves.bigscore', 0)}`);
     expect([R(s).magenta, R(s, 1).magenta, R(s, 2).magenta]).toEqual([3, 4, 3]);
     expect(named(s, 'Big Score').length).toBe(1);
@@ -266,7 +297,7 @@ describe('Magenta members', () => {
   it('× Doppelganger copying Big Score: a second use (the copy\'s own once-per-game)', () => {
     let s = table(Q, { res: [{ gold: 20 }, { magenta: 8 }], members: [['thieves.bigscore', 'red.doppel']], shop: ROW });
     s.cards[uidIn(s, 'red.doppel', 0)].copy = 'thieves.bigscore';
-    s = take(s, 'Tip-off');
+    s = take(s, 'Rush'); // not Tip-off: it now always takes 2
     s = move(s, `use:${uidIn(s, 'thieves.bigscore', 0)}`);
     s = move(s, `use:${uidIn(s, 'red.doppel', 0)}`);
     expect([R(s).magenta, R(s, 1).magenta]).toEqual([6, 2]);

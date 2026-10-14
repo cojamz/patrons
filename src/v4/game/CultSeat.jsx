@@ -38,7 +38,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         onPointerLeave={e => { if (e.pointerType === 'mouse' && hover) hover.onSeatHover(pid, null); }}
         onClick={e => openSeat(e, true)}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSeat(e, true); } }}>
-        <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 48 : 32} minion={16} /></span>
+        <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={32} minion={16} /></span>
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
           <small>{last ? <>last: <Sprite id={[`${last.qid}.${actionKey(last)}`, spriteId(last.name)]} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /></> : p.kind === 'bot' ? 'bot' : ' '}</small>

@@ -1,7 +1,8 @@
 /* The Lamplit Table (approved by Cory, 2026-10-14; design/prototypes/vision/). Loaded after v4.css.
    Theme tokens for every screen, then the game screen's fixed regions, the paper wheel, the prompt and the overlays.
-   Region contract (shared with UI-B): .lt > .lt-prompt | .lt-rail | .lt-wheel | .lt-shop | .lt-table, each with
-   data-region; .lt[data-phase] moves the lamp, never the furniture. */
+   Region contract (shared with UI-B): .lt > .lt-prompt | .lt-wheel | .lt-seat-0..3 (the four chairs: 0 is you,
+   bottom left; then clockwise) | .lt-shop (a slim strip), each with data-region; .lt[data-phase] moves the lamp, never
+   the furniture. */
 
 /* ---------- tokens: walnut, cream paper, muted inks, Alegreya ---------- */
 :root{
@@ -34,28 +35,36 @@ h1,h2,h3{font-family:var(--serif)}
 /* ---------- the game screen: fixed regions ---------- */
 .app.game.lt{max-width:none;margin:0;gap:0}
 .lt .lt-wheel{position:relative;min-width:0}
-.lt .lt-shop,.lt .lt-table,.lt .lt-rail{min-width:0}
+.lt .lt-shop,.lt .lt-seat{min-width:0}
 
 @media (min-width:861px) and (min-height:500px){
   #root:has(> .app.game.lt){padding:0}
+  /* the wheel in the middle; four chairs at the corners (yours bottom left); the shop a slim strip along the bottom */
   .app.game.lt{
     height:100dvh;display:grid;
-    grid-template-columns:minmax(0,47fr) minmax(0,53fr);
-    grid-template-rows:minmax(68px,auto) minmax(0,1fr) minmax(150px,26%);
-    grid-template-areas:"prompt rail" "wheel shop" "wheel table";
-    column-gap:26px;row-gap:10px;padding:14px 22px 14px 26px;overflow:hidden
+    grid-template-columns:minmax(210px,1fr) minmax(0,1.85fr) minmax(210px,1fr);
+    grid-template-rows:64px minmax(0,1fr) minmax(0,1fr) 124px;
+    grid-template-areas:"s1 prompt s2" "s1 wheel s2" "s0 wheel s3" "shop shop shop";
+    column-gap:18px;row-gap:8px;padding:12px 18px;overflow:hidden
   }
   .lt > .lt-prompt{grid-area:prompt}
-  .lt > .lt-rail{grid-area:rail;align-self:center;overflow:hidden}
   .lt > .lt-wheel{grid-area:wheel;container-type:size;min-height:0;display:flex;align-items:center;justify-content:center}
-  .lt > .lt-shop{grid-area:shop;min-height:0;display:flex;flex-direction:column;gap:8px;overflow:hidden}
-  .lt > .lt-table{grid-area:table;min-height:0;border-radius:14px;padding:12px 16px;background:rgba(243,230,200,.035);box-shadow:inset 0 0 0 1px rgba(243,230,200,.08);overflow:hidden}
+  .lt > .lt-seat-0{grid-area:s0}
+  .lt > .lt-seat-1{grid-area:s1}
+  .lt > .lt-seat-2{grid-area:s2}
+  .lt > .lt-seat-3{grid-area:s3}
+  .lt > .lt-seat{min-height:0;min-width:0;overflow:hidden;border-radius:14px;padding:10px 12px;background:rgba(243,230,200,.03);box-shadow:inset 0 0 0 1px rgba(243,230,200,.07);transition:box-shadow .3s,background .3s}
+  .lt > .lt-seat-1,.lt > .lt-seat-2{align-self:start}
+  .lt > .lt-seat-0,.lt > .lt-seat-3{align-self:end}
+  .lt > .lt-seat.now{background:rgba(var(--lamp),.07);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.35)}
+  .lt > .lt-seat:empty{visibility:hidden}
+  .lt > .lt-shop{grid-area:shop;min-height:0;overflow:hidden}
   .lt > .room,.lt > .error{position:fixed;left:26px;bottom:10px;z-index:20}
   .app.game.lt > .main.over{grid-column:1 / -1;grid-row:2 / -1;min-height:0;overflow:auto}
 }
 
 /* the lamp: whichever region holds the decision is lit; the rest sit a little in shadow */
-.lt .lt-wheel,.lt .lt-shop,.lt .lt-table{transition:filter .35s ease}
+.lt .lt-wheel,.lt .lt-shop{transition:filter .35s ease}
 .lt[data-yours="1"][data-phase="buy"] .lt-wheel,.lt[data-yours="1"][data-phase="pay"] .lt-wheel{filter:brightness(.82) saturate(.85)}
 .lt[data-yours="1"][data-phase="place"] .lt-shop{filter:brightness(.86) saturate(.9)}
 
@@ -165,24 +174,6 @@ h1,h2,h3{font-family:var(--serif)}
   .lt .lt-wheel > .prompt.choice .turn-of{color:var(--pc)}
 }
 
-/* ---------- shop region (UI-B restyles the cards; the region's size is fixed here) ---------- */
-@media (min-width:861px) and (min-height:500px){
-  .lt .lt-shop > .shop-panel{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
-  .lt .lt-shop .shop-panel h2{font-size:16px;color:var(--cream-2);margin:0}
-  .lt .lt-shop .shop-panel.compact .shop{flex:1;min-height:0;grid-template-rows:repeat(2,minmax(0,1fr))}
-  .lt .lt-shop .shop-panel.compact .card{height:100%;overflow:hidden;background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);border:0;border-top:5px solid var(--c);border-radius:7px;box-shadow:0 0 0 1px rgba(80,60,30,.25),0 6px 14px -6px rgba(0,0,0,.7)}
-  .lt .lt-shop .shop-panel.compact .card .nm{font-family:var(--serif);font-size:14px;color:var(--paper-ink)}
-  .lt .lt-shop .shop-panel.compact .card .fv,.lt .lt-shop .shop-panel.compact .card .row{color:var(--paper-ink)}
-  .lt .lt-shop .shop-panel.compact .eff1{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;color:var(--paper-ink-2);font-size:12px;line-height:1.25;min-height:0}
-  .lt .lt-shop .shop-panel.compact .card.can{box-shadow:0 0 0 2px var(--lamp-ink),0 6px 14px -6px rgba(0,0,0,.7)}
-  .lt .lt-shop .fbuy{flex:none}
-}
-
-/* ---------- your table (UI-B builds the stacks and the cult; this is the region) ---------- */
-.lt .lt-table .you-strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:16px}
-.lt .lt-table .you-strip b{font-family:var(--serif);font-size:18px}
-.lt .lt-table .you-strip .yf{font-family:var(--serif);font-size:18px}
-
 /* ---------- phones and narrow screens: one column; the prompt sticks to the top ---------- */
 @media (max-width:860px), (max-height:499px){
   .app.game.lt{display:flex;flex-direction:column;gap:10px}
@@ -193,25 +184,41 @@ h1,h2,h3{font-family:var(--serif)}
   .lt-prompt .undo{min-height:44px}
   .lt-menu{right:6px}
   .lt .lt-wheel .stage{width:min(100%, 520px)}
-  .lt .lt-table{position:sticky;bottom:0;z-index:14;margin:0 -12px -10px;padding:8px 12px 10px;background:color-mix(in srgb,var(--walnut-2) 96%,transparent);border-top:1px solid rgba(243,230,200,.1)}
-  .lt .lt-table .you-strip{font-size:14px}
-}
-
-/* ---------- the seat rail (interim: UI-B's SeatRail replaces this; same region) ---------- */
-@media (min-width:861px) and (min-height:500px){
-  .lt .lt-rail .players{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0}
-  .lt .lt-rail .pl-summary{display:none}
-  .lt .lt-rail .pl{height:auto;min-height:0;padding:5px 9px;gap:2px;border-radius:12px;background:rgba(243,230,200,.04);box-shadow:inset 0 0 0 1px rgba(243,230,200,.08);border:0}
-  .lt .lt-rail .pl.active{background:rgba(var(--lamp),.12);box-shadow:0 0 0 1px rgba(var(--lamp),.4)}
-  .lt .lt-rail .pl .top{font-size:14px}
-  .lt .lt-rail .pl .top .nm{font-family:var(--serif)}
-  .lt .lt-rail .pl .fol{font-family:var(--serif);font-size:18px}
-  .lt .lt-rail .pl .fol small,.lt .lt-rail .pl .lane,.lt .lt-rail .pl .disc,.lt .lt-rail .pl .meta .sep{display:none}
-  .lt .lt-rail .pl .res{font-size:12.5px;gap:6px}
-  .lt .lt-rail .pl .chips{height:auto;max-height:24px;overflow:hidden}
-  .lt .lt-rail .pl .chips.none{display:none}
+  /* phones: rivals' chairs in a row up top, the wheel, the shop strip, and your chair docked at the bottom */
+  .app.game.lt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"prompt prompt prompt" "s1 s2 s3" "wheel wheel wheel" "shop shop shop" "s0 s0 s0";gap:8px}
+  .lt > .lt-prompt{grid-area:prompt}
+  .lt > .lt-wheel{grid-area:wheel}
+  .lt > .lt-shop{grid-area:shop;min-width:0;overflow:hidden}
+  .lt > .lt-seat-0{grid-area:s0;position:sticky;bottom:0;z-index:14;margin:0 -12px -10px;padding:8px 12px 10px;background:color-mix(in srgb,var(--walnut-2) 96%,transparent);border-top:1px solid rgba(243,230,200,.1)}
+  .lt > .lt-seat-1{grid-area:s1}.lt > .lt-seat-2{grid-area:s2}.lt > .lt-seat-3{grid-area:s3}
+  .lt > .lt-seat:not(.lt-seat-0){min-width:0;overflow:hidden;font-size:12px}
+  .lt .lt-seat:not(.lt-seat-0) .lt-cult{grid-template-columns:1fr;grid-template-areas:"ring" "who"}
+  .lt .lt-seat:not(.lt-seat-0) .lt-cult .res,.lt .lt-seat:not(.lt-seat-0) .lt-cult .mem{display:none}
 }
 
 /* plaques on the left and right of the wheel stand narrow (two lines), so they lean only a little past the rim */
 .lt .stage .plaque.side .contest-tip,.lt .stage .plaque.side > span{white-space:normal;flex-wrap:wrap;justify-content:center;max-width:92px;text-align:center;line-height:1.1;padding:4px 7px;border-radius:10px}
-@media (min-width:861px) and (min-height:500px){ .app.game.lt .lt-wheel .stage{width:min(100cqw - 90px, 100cqh - 16px)} }
+@media (min-width:861px) and (min-height:500px){ .app.game.lt .lt-wheel .stage{width:min(100cqw - 110px, 100cqh - 20px)} }
+
+/* a rival's chair (interim until UI-B's CultSeat): leader with unplaced minions, name, followers, resources */
+.lt .lt-cult{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"ring who" "ring res" "mem mem";gap:4px 10px;align-items:center;color:var(--cream)}
+.lt .lt-cult .lt-ring{grid-area:ring}
+.lt .lt-cult .who{grid-area:who;display:flex;flex-direction:column;line-height:1.1}
+.lt .lt-cult .who b{font-family:var(--serif);font-size:17px}
+.lt .lt-cult .who .f{font-size:13px;color:var(--cream-2)}
+.lt .lt-cult .who .f b{font-size:18px;color:var(--cream)}
+.lt .lt-cult .res{grid-area:res;display:flex;flex-wrap:wrap;gap:4px 8px;font-size:13px}
+.lt .lt-cult .res .rs{display:inline-flex;align-items:center;gap:2px}
+.lt .lt-cult .mem{grid-area:mem;display:flex;align-items:center;gap:8px;color:var(--cream-3);font-size:12px}
+/* the buy step's other answers, beside the question */
+.lt-prompt .pr-actions{display:inline-flex;align-items:center;gap:8px;flex:none}
+.lt-prompt .pr-actions .pass{min-height:36px;padding:0 16px;border-color:rgba(243,230,200,.4)}
+.lt-prompt .pr-actions .rel-toggle{min-height:36px}
+.lt-prompt .pr-actions .rel-list{display:inline-flex;flex-wrap:wrap;gap:6px}
+.lt-prompt .pr-actions .rel{min-height:36px;border-color:color-mix(in srgb,var(--c,var(--rim)) 70%,transparent)}
+/* placed minions stand on the space's rim (the space still reads); a joiner beside the owner */
+.lt .stage .slot .worker-fig{position:absolute;left:auto;right:-14%;top:-14%;width:auto;transform:none;display:flex;gap:1px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));pointer-events:none;z-index:3}
+.lt .stage .slot .worker-fig .worker{display:block;line-height:0}
+.lt .stage .slot .worker-fig svg{width:clamp(16px, calc(var(--wheel-px) * .04), 24px);height:auto;image-rendering:pixelated}
+.lt .stage .slot.taken .face{opacity:.62}
+.lt .stage .slot .hit{width:max(140%, 46px)}
