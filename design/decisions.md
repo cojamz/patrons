@@ -267,3 +267,9 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Some members are better as "now and at round start". Claude's pick (gut, prices to be re-checked by the fair-price screen): Banker, Host, Clockmaker, Lamplighter, Benefactor, Steward, Gardener, Peddler, Curator, Minimalist, Shopkeeper, Evergreen. Left as round-start only: set-asides (Investor, Sower), catch-up conditions (Late Bloomer, Safety Net, Late Riser), discounts (Planner, Underbidder), theft (Cutpurse, Mole), Social Climber, Afterimage.
 - (Cory) After playing: loves how smoothly it runs; the UI is rough: SO much info, no clear hierarchy, maximalist. Direction for the redesign: radical hierarchy and restraint; most info one hover/tap away.
 - ✅ (Cory) Pixel art approved (can be even more basic). Members are drawn in the color of their card (their sphere), so anyone's cult reads at a glance: your members on the table form a colored crowd.
+- ✅ (Cory) The look is the **Lamplit Table** (design/prototypes/vision/). Adjustments:
+  - Actions must be clearer on what they do without hovering: each space shows its icon plus a short readable effect.
+  - Member pixel figures are distinct characters (not one silhouette), so players learn them over time; tinted in their sphere's color.
+  - A visual of each player's cult: members as figures, plus something for followers so the cult looks bigger as it grows, without taking much space.
+  - Keep the spinning wheel, but nothing elsewhere changes with the wheel's orientation (no "facing quadrant" panel).
+  - Yes: pay by dropping coins into cost slots; the hierarchy rule (≤7 groups on screen, the rest one hover away); round end as "the Reckoning"; seat rail with sigils.
