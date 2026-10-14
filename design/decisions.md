@@ -205,3 +205,5 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Design direction: members that bend the rules (not new income). Calibrate on a handful of example members with Cory before scaling.
 - Finding (thinking bot, 50 games, plain table): thinker wins 78% (39/50). So its 65–90% on new-sphere tables is the instrument, not the spheres.
 - Finding (panel 6, tester S): buying followers dominates recruiting (won with 3 members, 39/48 from buys). Claude withdraws the cost-doubling recommendation (it would worsen this). Variant sims running: gold not wild on 6-buy, 6-buy costs 8, both, members +1★.
+- ✅ (Cory) Member costs ×2, and the 6-follower buy costs 8 (still gives 6). Sims: ~5.8 members/player (winner ~6.8), pure follower-buying 31% vs 25% parity. Gold-wild question dropped (no effect).
+- 💡 (Cory) Maybe a higher tier of follower buy above 8→6. Measuring.
