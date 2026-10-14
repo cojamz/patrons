@@ -10,9 +10,10 @@ import { seededRandom } from '../../../engine/v4/rng.js';
 import { namesCard } from './cards-helpers.js';
 import { runFireAudit, silentMembers } from './fire-audit-runner.js';
 
-/** A plain member ("Worth 2 followers.", "No effect.") has nothing to fire. Goes by the printed text: some members
- *  with effects have no hooks of their own (their sphere reads them by key, like Green's Choir, Muse, Wallflower). */
-export const plain = def => /^(Free\. )?(No effect\.|Worth \d+ followers\.)$/.test(def.text.trim());
+/** A plain member ("Worth 2 followers.", "No effect.", "Counts as 3 members.") has nothing to fire: its number is a
+ *  count the contests read, not a payout. Goes by the printed text: some members with effects have no hooks of their
+ *  own (their sphere reads them by key, like Green's Choir, Muse, Wallflower). */
+export const plain = def => /^(Free\. )?(No effect\.|Worth \d+ followers\.|Counts as \d+ members\.)$/.test(def.text.trim());
 
 /**
  * Play `games` seeded 4-bot games over `tables`; per member id: games it was held (recruited, or dealt), games a

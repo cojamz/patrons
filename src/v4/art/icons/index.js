@@ -4,4 +4,5 @@ import set_batch_blue_white_green_purple from './batch-blue-white-green-purple.j
 import set_batch_gold_red_guests from './batch-gold-red-guests.js';
 import set_batch_magenta_silver_yellow from './batch-magenta-silver-yellow.js';
 import set_emojis from './emojis.js';
-export default [set_calibration, set_batch_blue_white_green_purple, set_batch_gold_red_guests, set_batch_magenta_silver_yellow, set_emojis].flat();
+import set_leaders from './leaders.js';
+export default [set_calibration, set_batch_blue_white_green_purple, set_batch_gold_red_guests, set_batch_magenta_silver_yellow, set_emojis, set_leaders].flat();

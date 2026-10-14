@@ -149,9 +149,12 @@ try {
     if (lat.length < 10) fail(`(d) only ${lat.length} hover cards opened out of 14 arrivals`, 'hover');
     if (!(p95 < 100)) fail(`(d) hover card p95 ${Math.round(p95)}ms (want < 100ms; samples ${lat.map(Math.round).join(',')})`, 'hover');
     // sweep: across the outer ring's spaces in order, never leaving the ring; the card must never close in between
-    const ring = await lab.$$eval('[data-slot] .base', els => els.map(e => { const b = e.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2, r: Number(e.getAttribute('r')) }; }).filter(o => o.r === 16));
-    const cx = 300 + 280, cy = 10 + 280;
-    ring.sort((a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx));
+    // the outer ring: the spaces farthest from the wheel's centre, in angle order
+    const all = await lab.$$eval('[data-slot] .base', els => els.map(e => { const b = e.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; }));
+    const cx = all.reduce((t, o) => t + o.x, 0) / all.length, cy = all.reduce((t, o) => t + o.y, 0) / all.length;
+    const far = Math.max(...all.map(o => Math.hypot(o.x - cx, o.y - cy)));
+    const ring = all.filter(o => Math.hypot(o.x - cx, o.y - cy) > far * 0.85).sort((a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx));
+    if (ring.length < 6) fail(`(d) found only ${ring.length} outer spaces to sweep`, 'hover');
     await lab.mouse.move(ring[0].x, ring[0].y);
     await lab.waitForTimeout(200);
     await lab.evaluate(() => { window.__hov.sweeping = true; window.__hov.flips = 0; });

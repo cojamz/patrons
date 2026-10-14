@@ -27,7 +27,7 @@ export const GLOSSARY = [
   { key: 'in play', word: 'In play', match: /\bin play\b/,
     def: 'Held by any player. Members in the shop or the pile are not in play.' },
   { key: 'release', word: 'Release', match: /\breleas(e|ed|es)\b/,
-    def: 'Once per round, in your buy step: put one of your members at the bottom of the pile and take its printed cost back in resources of any colors. You keep your buy.' },
+    def: 'Once per round, in your buy step: put one of your members (not one you recruited this round) at the bottom of the pile and take back the colored part of its cost, in its own color. You keep your buy.' },
   { key: 'extra turn', word: 'Extra turn', match: /\bextra turns?\b/,
     def: 'Another turn right after this one: you place one more minion and may buy again. It only happens while the board has a space to spare.' },
   { key: 'copy', word: 'Copy', match: /\bcop(y|ies|ied)\b(?= (?:any|every|one|the|it|that|what|a)\b)|\bwhat you copy\b|\bcopy a space\b/,

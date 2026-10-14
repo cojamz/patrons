@@ -126,7 +126,7 @@ describe('Silver members', () => {
     const red = contestTable(s).find(c => c.qid === 'red');
     expect(red.rows.find(r => r.player === 0).count).toBe(3);
     expect(red.winners).toEqual([0]);
-    expect(R(take(sc({ round: 2, members: [['silver.revelers']] }), 'Windfall')).gold).toBe(3);
+    expect(take(sc({ round: 2, members: [['silver.revelers']] }), 'Windfall').players[0].res.gold).toBe(3);
     s = sc({ members: [['silver.revelers', 'red.patriarch']], queue: [{ t: 'finish' }] });
     expect(s.players[0].final.parts).toContain('Patriarch +2');
     s = sc({ members: [['silver.heir', 'silver.revelers']], queue: [{ t: 'round', r: 3 }] });

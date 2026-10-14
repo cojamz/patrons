@@ -43,7 +43,7 @@ if (existsSync(`${SRC}/emojis.js`)) {
   const errs = M.validateAll ? M.validateAll() : [];
   // an unused palette slot is untidy, not broken; anything else (bad keys, sizes) leaves the emoji out
   const bad = new Set(errs.filter(e => !/never used/.test(e)).map(e => e.split(/[ :]/)[0]));
-  const list = M.MINIONS.filter(m => !bad.has(m.id)).map(m => ({ id: m.id, name: m.name, emoji: m.emoji, kind: 'emoji', px: m.px, em: m.em, palette: M.palette(m) }));
+  const list = (M.ICONS || M.MINIONS).filter(m => !bad.has(m.id)).map(m => ({ id: m.id, name: m.name, emoji: m.emoji, kind: 'emoji', px: m.px, em: m.em, palette: M.palette(m) }));
   if (errs.length) console.warn(`emojis.js: ${errs.length} notes, ${bad.size} left out (${[...bad].join(', ')}):\n  ${errs.slice(0, 6).join('\n  ')}`);
   write('emojis', list, 'emojis.js');
   names.push('emojis');
@@ -53,10 +53,15 @@ if (existsSync(`${SRC}/leaders.js`)) {
   try {
     run('leaders.js');
     const L = box.CultLeaders;
-    const list = (L && (L.LEADERS || L.ICONS || L)) || [];
-    write('leaders', (Array.isArray(list) ? list : []).map(x => ({ ...x, kind: 'leader', px: x.px || x.rows })), 'leaders.js');
+    const errs = L.validate ? L.validate().filter(e => !/never used|alien/.test(e)) : [];
+    if (errs.length) console.warn(`leaders.js: ${errs.length} problems:\n  ${errs.slice(0, 4).join('\n  ')}`);
+    // the neutral keys of the leader palette (digits are the seat accent, filled in by the screen)
+    const pal = L.accentPalette('#808080');
+    const base = Object.fromEntries(Object.entries(pal).filter(([k]) => !/[123]/.test(k)));
+    write('leaders', [{ id: '_leader', kind: 'leader', px: L.LEADER, base, panel: L.PANEL, emblem: L.EMBLEM, accents: L.SEAT_ACCENTS },
+      { id: '_follower', kind: 'follower', px: L.FOLLOWER, base: { k: base.k, w: '#f6eedb', c: '#cbbd9c' } }], 'leaders.js');
     names.push('leaders');
-    console.log(`leaders.js → leaders (${Array.isArray(list) ? list.length : 0})`);
+    console.log('leaders.js → leaders (leader 32×32, follower 10×10)');
   } catch (e) { console.warn(`leaders.js: ${e.message}, skipped`); }
 }
 const v = n => `set_${n.replace(/\W/g, '_')}`;

@@ -13,6 +13,7 @@ import { BadgeMark, cardColor, onTable, peekPreview } from './Info.jsx';
 import { ResourceGlyph, FollowerGlyph } from './Glyphs.jsx';
 import { timingOf, payBreakdown, unlockedBy, surely } from './cards.js';
 void timingOf;
+import { useHoverSpace } from './HoverCards.jsx';
 import './lamp-b.css';
 
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
@@ -36,10 +37,11 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
   const buying = mine && pend.kind === 'buy';
   const placing = mine && pend.kind === 'place';
   const pointer = useRef('mouse');
+  const space = useHoverSpace(hover); // only the space under the pointer re-renders the shop (for its ticks)
   // the space under the pointer, and the cards its sure gains would unlock (no tick a choice might not give)
   let after = null, unlocked = [];
-  if (placing && hover && hover.space && viewer) {
-    const [q, i] = hover.space.split('-').map(Number);
+  if (placing && space && viewer) {
+    const [q, i] = space.split('-').map(Number);
     const a = quadrant(state.quadrants[q]).actions[i];
     let pv = null;
     pv = peekPreview(state, viewer.id, q, i) || null; // cached (warmed in idle time); a hover never computes

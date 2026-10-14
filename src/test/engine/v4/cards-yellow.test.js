@@ -108,8 +108,8 @@ describe('Yellow members', () => {
     const u = uidOf(s, 'yellow.sower', 0);
     s.cards[u].sown = 3;
     s = move(s, `release:${u}`);
-    while (s.pending?.kind === 'choose') s = move(s, 'all:red');
-    expect(R(s).yellow).toBe(1 + 3);
+    // plus Sower's colored part, 2 yellow: Release gives back only that, in its color (Cory, 2026-10-14)
+    expect(R(s).yellow).toBe(1 + 3 + 2);
     expect(named(s, 'Sower')).toHaveLength(1);
   });
   it('Harmonist: game end +1 follower per full set', () => {

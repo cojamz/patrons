@@ -4,6 +4,8 @@
 // <Follower /> is the mark alone; <Follower n={3} /> is "3" and the mark, labeled "3 followers" for screen readers
 // and on hover. Shared by the game and the intro.
 import { memo } from 'react';
+import SETS from './icons/index.js';
+import { withOutline } from './index.js';
 
 // 9×9, from the vision frames' person mark: k = outline, b = body (currentColor)
 const PX = [
@@ -17,9 +19,12 @@ const PX = [
   'kbbbbbbbk',
   'kkkkkkkkk',
 ];
+// the drawn mark (leaders.js FOLLOWER, 10×10 cream with its ink outline) when imported; else the 9×9 above
+const DRAWN = SETS.find(i => i.kind === 'follower') || null;
+const GRID = DRAWN ? withOutline(DRAWN.px) : PX;
 const RUNS = (() => {
   const out = [];
-  PX.forEach((row, y) => {
+  GRID.forEach((row, y) => {
     let x = 0;
     while (x < row.length) {
       const ch = row[x];
@@ -31,14 +36,16 @@ const RUNS = (() => {
   });
   return out;
 })();
+const FILL = ch => (DRAWN ? DRAWN.base[ch] || 'currentColor' : ch === 'k' ? 'var(--follower-ink, rgba(20,14,10,.85))' : 'currentColor');
+const VB = GRID.length;
 
 /** The follower mark; with n, the count before it. size: the mark's height in px (9, 18 keep pixels square). */
-export const Follower = memo(function Follower({ n = null, size = 12, className = '', title = null }) {
+export const Follower = memo(function Follower({ n = null, size = 10, className = '', title = null }) {
   const label = title || (n == null ? 'followers' : `${n} follower${n === 1 ? '' : 's'}`);
   const mark = (
-    <svg className="follower-mark" viewBox="0 0 9 9" width={size} height={size} shapeRendering="crispEdges" role="img" aria-label={label}>
+    <svg className="follower-mark" viewBox={`0 0 ${VB} ${VB}`} width={size} height={size} shapeRendering="crispEdges" role="img" aria-label={label}>
       <title>{label}</title>
-      {RUNS.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={r.ch === 'k' ? 'var(--follower-ink, rgba(20,14,10,.85))' : 'currentColor'} />)}
+      {RUNS.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={FILL(r.ch)} />)}
     </svg>
   );
   if (n == null) return mark;

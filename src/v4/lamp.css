@@ -189,7 +189,10 @@ h1,h2,h3{font-family:var(--serif)}
   .lt > .lt-prompt{grid-area:prompt}
   .lt > .lt-wheel{grid-area:wheel}
   .lt > .lt-shop{grid-area:shop;min-width:0;overflow:hidden}
-  .lt > .lt-seat-0{grid-area:s0;position:sticky;bottom:0;z-index:14;margin:0 -12px -10px;padding:8px 12px 10px;background:color-mix(in srgb,var(--walnut-2) 96%,transparent);border-top:1px solid rgba(243,230,200,.1)}
+  .lt > .lt-seat-0{grid-area:s0;margin:0 -12px -10px;padding:8px 12px 10px;background:color-mix(in srgb,var(--walnut-2) 96%,transparent);border-top:1px solid rgba(243,230,200,.1)}
+  .lt .lt-wheel .stage{width:min(100% - 64px, 480px)}
+  .lt .stage .plaque.side .r{display:none}
+  .lt .stage .plaque.side .contest-tip,.lt .stage .plaque.side > span{max-width:56px;padding:3px 5px}
   .lt > .lt-seat-1{grid-area:s1}.lt > .lt-seat-2{grid-area:s2}.lt > .lt-seat-3{grid-area:s3}
   .lt > .lt-seat:not(.lt-seat-0){min-width:0;overflow:hidden;font-size:12px}
   .lt .lt-seat:not(.lt-seat-0) .lt-cult{grid-template-columns:1fr;grid-template-areas:"ring" "who"}
@@ -224,3 +227,6 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage .slot .hit{width:max(140%, 46px)}
 
 .lt-prompt .status .say{font-size:clamp(18px, 1.75vw, 24px)}
+
+/* the question's first letter keeps its overhang (the line clamp clips at the box edge) */
+.lt-prompt .status .say .say-text{padding-left:3px;padding-right:2px}

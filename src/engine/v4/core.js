@@ -19,7 +19,7 @@ export const TIERS = [
 export const tierLeft = (state, tier) => (tier.limited ? state.stock?.[tier.key] ?? 0 : Infinity);
 const LOG_MAX = 300;
 // Rule flags a table can toggle (sims flip them). release: once per round, on your turn, release one of your
-// members (it goes to the bottom of the pile) for its printed cost in any colors. guests: rule-bending guest
+// members (it goes to the bottom of the pile) for its colored part in its own color (not one recruited this round). guests: rule-bending guest
 // members join the deck.
 export const DEFAULT_RULES = { release: true, guests: true };
 
