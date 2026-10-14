@@ -70,8 +70,9 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, er
   );
 }
 
-function savedLine({ state, savedAt }) {
-  const round = state.round ? `Round ${['I', 'II', 'III'][state.round - 1]}` : 'Setup';
+function savedLine({ state, savedAt, fromRoundStart }) {
+  const r = state.round ? `Round ${['I', 'II', 'III'][state.round - 1]}` : 'Setup';
+  const round = state.over ? 'Final scores' : fromRoundStart ? `${r}, from its start` : r;
   const names = state.players.map(p => p.name).join(', ');
   const mins = Math.round((Date.now() - (savedAt || Date.now())) / 60000);
   return `${round} · ${names}${mins > 0 ? ` · ${mins < 60 ? `${mins} min` : `${Math.round(mins / 60)} h`} ago` : ''}`;

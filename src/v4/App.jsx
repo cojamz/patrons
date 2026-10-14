@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import './v4.css';
 import { createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineReady } from './sessionApi.js';
 import { createLocalSession } from './session/local.js';
-import { loadLocal, saveLocal, clearLocal, loadOnline, saveOnline, clearOnline } from './saved.js';
+import { loadLocal, saveLocal, clearLocal, finishLocal, loadOnline, saveOnline, clearOnline } from './saved.js';
 import GameScreen from './game/GameScreen.jsx';
 import { friendlyError } from './errors.js';
 import { Home, LocalSetup, Lobby, initialTable } from './screens/Screens.jsx';
@@ -135,6 +135,7 @@ export default function App() {
         onHome={screen.lobby ? () => leaveLobby(screen.lobby) : goHome}
         leaveText={online ? 'You’ll give up your seat in this room.' : 'You can resume it from the home screen.'}
         onPlayAgain={config && !online ? () => { clearLocal(); startLocal(config); } : null}
+        onResults={online ? null : finishLocal}
       />
     );
   }

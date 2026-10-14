@@ -15,6 +15,7 @@ import HowToPlay from '../HowToPlay.jsx';
 import Tick from './Tick.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop } from './flight.js';
 import { friendlyError, isNetworkError } from '../errors.js';
+import { ROUND_START } from '../saved.js';
 
 const STEP_MS = 320;      // pace when catching up on moves that happened behind the round-end card
 const RIVAL_DWELL_MS = 700; // each visible bot step (placing, recruiting, buying) holds this long; a pass doesn't wait
@@ -51,16 +52,17 @@ export function useSessionState(session) {
  */
 // The table at the start of the current round (the round card's "Other" column measures from it). Kept with the game
 // so a reload mid-round doesn't move the baseline to the reload moment.
-const RS_KEY = 'patrons.v4.roundStart';
-export function saveRoundStart(st) {
-  try { localStorage.setItem(RS_KEY, JSON.stringify({ seed: st.seed, round: st.round, names: st.players.map(p => p.name).join('|'), state: st })); } catch { /* ignore */ }
+// Local games keep it under ROUND_START (also the fallback Resume); online games under their own key.
+const rsKey = online => (online ? `${ROUND_START}.online` : ROUND_START);
+export function saveRoundStart(st, online = false) {
+  try { localStorage.setItem(rsKey(online), JSON.stringify({ seed: st.seed, round: st.round, names: st.players.map(p => p.name).join('|'), state: st })); } catch { /* ignore */ }
 }
-export function loadRoundStart(st) {
+export function loadRoundStart(st, online = false) {
   try {
-    const v = JSON.parse(localStorage.getItem(RS_KEY) || 'null');
+    const v = JSON.parse(localStorage.getItem(rsKey(online)) || 'null');
     if (v && v.seed === st.seed && v.round === st.round && v.names === st.players.map(p => p.name).join('|') && v.state.moves <= st.moves) return v.state;
   } catch { /* ignore */ }
-  saveRoundStart(st);
+  saveRoundStart(st, online);
   return null;
 }
 
@@ -72,7 +74,8 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
   const held = useRef(false);
   const timer = useRef(null);
   const shownRef = useRef(first);
-  const roundStart = useRef(loadRoundStart(first) || first);
+  const online = session.info?.mode === 'online';
+  const roundStart = useRef(loadRoundStart(first, online) || first);
 
   const show = useCallback(next => {
     const prev = shownRef.current;
@@ -83,12 +86,12 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
       held.current = true;
       const start = roundStart.current;
       roundStart.current = next;
-      saveRoundStart(next);
+      saveRoundStart(next, online);
       // Keep the board as it was when the round was scored until the card is dismissed.
       const board = scoringSnapshot(prev, next);
       setTable({ shown: next, moment: { result: parseRoundEnd(next, end), start, after: next, board } });
     } else {
-      if (next.round !== prev.round) { roundStart.current = next; saveRoundStart(next); }
+      if (next.round !== prev.round) { roundStart.current = next; saveRoundStart(next, online); }
       setTable(t => ({ ...t, shown: next }));
     }
   }, []);
@@ -176,7 +179,7 @@ function LogDrawer({ state, onClose }) {
 
 const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing a worker', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
 
-export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace }) {
+export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults }) {
   const [live0, moment, dismissMoment] = useTable(session, pace ?? RIVAL_DWELL_MS);
   const state = moment && moment.board ? moment.board : live0;
   const mySeats = session.mySeats || [];
@@ -193,6 +196,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const [, setTick] = useState(0);
   useEffect(() => session.subscribe(() => setTick(t => t + 1)), [session]);
   // results open at the top, on the winner
+  // The results are on screen: only now may the app forget the saved game.
+  useEffect(() => { if (live0.over && !moment && onResults) onResults(); }, [live0.over, moment]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (live0.over && !moment && typeof window !== 'undefined' && window.scrollTo) { try { window.scrollTo(0, 0); } catch { /* jsdom */ } } }, [live0.over, moment]);
   const [caption, setCaption] = useState(null); // "P3 took Swell (+5 blue)", pinned over the wheel for a beat
   const captionTimer = useRef(null);
