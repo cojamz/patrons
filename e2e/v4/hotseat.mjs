@@ -66,6 +66,20 @@ try {
   await page.waitForSelector('[data-start]');
   await shot('02-setup');
   await page.click('[data-start]');
+  // The intro (src/v4/Intro.jsx): this browser's first game shows it once, over the table; one tap on Skip ends it
+  {
+    const shown = await page.waitForSelector('[data-intro]', { timeout: 4000 }).catch(() => null);
+    if (!shown) errors.push('the intro did not appear on the first game start');
+    else {
+      await page.waitForTimeout(700);
+      await shot('02a-intro');
+      const t = Date.now();
+      await page.click('[data-intro-skip]');
+      const gone = await page.waitForSelector('[data-intro]', { state: 'detached', timeout: 1500 }).then(() => true, () => false);
+      if (!gone) errors.push('one tap on Skip did not dismiss the intro');
+      else if (Date.now() - t > 1000) errors.push(`the intro took ${Date.now() - t}ms to go after Skip`);
+    }
+  }
   await page.waitForSelector('.players');
   // How to play lives behind the one menu glyph
   await page.click('.lt-menu .menu-glyph');
@@ -98,6 +112,7 @@ try {
   let clicks = 0;
   while (!(await page.$('.results'))) {
     if (Date.now() - t0 > 240000) throw new Error('game did not finish in 4 minutes');
+    if (await page.$('[data-intro]')) { errors.push('the intro showed again mid-game (resume or reload)'); await page.click('[data-intro-skip]').catch(() => {}); }
     const hand = await page.$('[data-handoff]');
     if (hand) { await hand.click(); continue; }
     const next = await page.$('[data-next-round]');
@@ -329,6 +344,8 @@ try {
   await page.click('[data-play-again]');
   await page.waitForSelector('.players');
   if (await page.$('.results')) throw new Error('Play again did not start a new game');
+  await page.waitForTimeout(500);
+  if (await page.$('[data-intro]')) errors.push('the intro showed again on a second game');
   ok = errors.length === 0;
 } catch (e) {
   errors.push(`run: ${e.stack || e.message}`);

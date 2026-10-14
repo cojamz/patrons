@@ -57,14 +57,17 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
           const opt = optionFor(`card:${uid}`);
           const can = viewer ? !!paymentPlan(state, viewer, uid) : false;
           const tick = unlocked.includes(uid);
+          // buying: the lamp lights only what you can recruit, the rest recede (Cory); placing: what you can't
+          // afford yet is quieter, except a card the space under your pointer would unlock
           const dim = viewer && ((buying && !opt) || (!buying && !can && !tick));
+          const lit = buying && !!opt;
           const short = buying && !opt && viewer ? payBreakdown(state, viewer, uid).short : null;
           const parts = costParts(d, state.resources);
           const fromPile = !state.shop.includes(uid);
           return (
             <button
               key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined}
-              className={`card lt-card paper${opt ? ' can' : ''}${dim ? ' dim' : ''}`}
+              className={`card lt-card paper${opt ? ' can' : ''}${dim ? (buying ? ' recede' : ' dim') : ''}${lit ? ' lit' : ''}`}
               style={{ '--q': cardColor(state, d) }} aria-disabled={!opt}
               aria-label={`${d.name}, ${timingOf(d)}, worth ${d.f}, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}`}
               title={`${d.name} · worth ${d.f} · ${d.text}`}
@@ -87,7 +90,9 @@ export default function ShopCards({ state, me, mySeats = [], optionFor = () => n
               <span className="nm">{d.name}<BadgeMark state={state} def={d} /></span>
               <span className="ft">
                 <CostShapes parts={parts} />
-                <span className="val" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}><b className="num">{d.f}</b><FollowerGlyph size={13} title={`worth ${d.f}`} /></span>
+                <span className="val" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>
+                  {d.f <= 3 ? Array.from({ length: d.f }, (_, k) => <FollowerGlyph key={k} size={11} title={`worth ${d.f}`} />) : <><FollowerGlyph size={11} title={`worth ${d.f}`} /><b className="num">×{d.f}</b></>}
+                </span>
               </span>
             </button>
           );
