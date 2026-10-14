@@ -17,7 +17,7 @@ import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights } from './fli
 import { friendlyError, isNetworkError } from '../errors.js';
 
 const STEP_MS = 320;      // pace when catching up on moves that happened behind the round-end card
-const RIVAL_DWELL_MS = 620; // a rival's placement holds this long before the next thing is shown
+const RIVAL_DWELL_MS = 700; // each visible bot step (placing, recruiting, buying) holds this long; a pass doesn't wait
 
 export function useSessionState(session) {
   const [state, setState] = useState(() => session.getState());
@@ -70,7 +70,12 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
       show(next);
       const mine = session.mySeats || [];
       const rivalPlaced = Object.keys(next.slots).some(k => prev.slots[k] === undefined && !mine.includes(next.slots[k]));
-      const dwell = rivalPlaced ? rivalDwell : paced.current && queue.current.length ? STEP_MS : 0;
+      // a rival's recruit or follower buy is a visible step too; a pass or a hidden bookkeeping step isn't
+      const actor = prev.pending && !mine.includes(prev.pending.player) ? prev.pending.player : null;
+      const pa = actor != null ? prev.players[actor] : null, na = actor != null ? next.players[actor] : null;
+      const rivalBought = !!(pa && na && (na.members.length !== pa.members.length || na.bonus !== pa.bonus));
+      const rivalSetup = !!(prev.pending && prev.pending.kind === 'setup' && actor != null);
+      const dwell = rivalPlaced || rivalBought ? rivalDwell : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
       if (!queue.current.length) paced.current = false;
       if (dwell) {
         timer.current = setTimeout(() => { timer.current = null; pump(); }, dwell);
@@ -236,7 +241,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       if (took) {
         clearTimeout(captionTimer.current);
         setCaption({ text: `${p1.name} took ${took[1]}${delta ? ` (${delta})` : ''}`, pid: owner, n: Date.now() });
-        captionTimer.current = setTimeout(() => setCaption(null), 1800);
+        captionTimer.current = setTimeout(() => setCaption(null), 6000);
       }
     }
     setFlash(new Set(fresh));
@@ -271,11 +276,24 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // counted pick (Steal: 1 gold at a time) while that's still the only choice.
   const queuedClick = useRef(null);
   const repeat = useRef(null);
+  useEffect(() => { if (mine && pend && pend.kind === 'place') setCaption(null); }, [mine, pend]);
   const lastPick = useRef({ id: null, t: 0 });
+  // A new kind of step (place → buy, choose → buy…) ignores taps for 400ms, so a double tap on one step's
+  // button can't land on the next step's button in the same spot. Repeated steps (setup picks) don't lock.
+  const lockUntil = useRef(0);
+  const noLock = useRef(false); // an undo is deliberate: the step it returns to isn't locked
+  const lastStep = useRef(null);
+  useEffect(() => {
+    const step = pend && mine ? `${pend.player}:${pend.kind}` : null;
+    if (step && lastStep.current && step !== lastStep.current && !noLock.current) lockUntil.current = Date.now() + 400;
+    noLock.current = false;
+    lastStep.current = step;
+  }, [pend, mine]);
   const onPick = useCallback((optionId, mode) => {
     // a double-click is one choice: the same option again within 350ms is ignored (replays are exempt)
     const now = Date.now();
     if (mode !== 'replay' && lastPick.current.id === optionId && now - lastPick.current.t < 350) return;
+    if (mode !== 'replay' && now < lockUntil.current) return;
     lastPick.current = { id: optionId, t: now };
     if (mode === 'all') repeat.current = optionId;
     if (busy && mine) { queuedClick.current = optionId; return; }
@@ -355,7 +373,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const buyingNow = mine && !needHandoff && pend.kind === 'buy';
   const undoKind = !needHandoff && !busy && typeof session.canUndo === 'function' && session.canUndo() ? (session.undoKind || 'place') : null;
   const canUndo = !!undoKind && !state.over;
-  const undo = () => { const k = undoKind; if (session.undo && session.undo()) say(k === 'buy' ? 'Buy undone — choose again' : 'Placement undone — place again', 'info', 1800); };
+  const undo = () => { const k = undoKind; noLock.current = true; lockUntil.current = 0; if (session.undo && session.undo()) say(k === 'buy' ? 'Buy undone — choose again' : 'Placement undone — place again', 'info', 1800); };
 
   return (
     <div className={`app game${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}`} ref={root}>
@@ -374,7 +392,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               {pr.who && <i style={{ background: playerColor(pr.who.id) }} />}
               <span className="say-text">
                 {mine && humansHere && pr.who ? <b style={{ color: playerColor(pr.who.id) }}>{pr.who.name}: </b> : null}
-                {mine ? <b>{pr.text}</b> : state.over ? pr.text : <>{pr.text}<span className="dots" aria-hidden="true">…</span></>}
+                {mine ? <b>{pr.text}</b> : state.over ? pr.text : <>{pr.text}<span className="dots" aria-hidden="true"> ···</span></>}
               </span>
             </span>
           ) : <span className="say" data-prompt tabIndex={-1} />}
@@ -391,6 +409,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               <Workers p={meP} caption={false} />
             </span>
           )}
+          {canUndo && <button type="button" className="btn ghost undo undo-row" onClick={undo}>↶ Undo {undoKind === 'buy' ? 'buy' : 'placement'}</button>}
           <button type="button" className="ticker" title={`${lastLine} — open the log`} onClick={openLog} aria-label={`Last: ${lastLine}. Open the log.`}><span className="tk">{lastLine}</span><span className="cue">Log ↓</span></button>
         </div>
       </header>

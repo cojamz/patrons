@@ -1,21 +1,23 @@
 // The shop (6 face-up members) and the buy tray (follower buys, member activations, Pass).
 import { cardDef, paymentPlan, followerChoices, TIERS } from '../../engine/v4/index.js';
+import { useEffect, useRef } from 'react';
 import { costParts, tierCostText } from '../format.js';
 
 const total = spend => Object.values(spend).reduce((a, b) => a + b, 0);
 
 function Cost({ d, plan }) {
+  // the list cost, as printed on every card; what you'd pay right now goes on a second line when it differs
   const parts = costParts(d);
-  const full = d.s + d.w;
-  const cheaper = plan && total(plan) < full;
   const dots = list => list.map((c, k) => (
     <span key={k} className="cp">{k ? ' + ' : ''}{c.color !== 'any' && <i style={{ background: `var(--${c.color})` }} />}<span className="num">{c.n}</span> {c.color}</span>
   ));
-  if (!cheaper) return <span>{parts.length ? dots(parts) : 'free'}</span>;
-  const now = Object.entries(plan).filter(([, v]) => v).map(([color, n]) => ({ color, n }));
+  const listText = parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'free';
+  const payText = plan ? (Object.entries(plan).filter(([, v]) => v).map(([c, v]) => `${v} ${c}`).join(', ') || 'free') : null;
+  const differs = plan && (total(plan) < d.s + d.w || payText !== listText);
   return (
-    <span className="cheaper" aria-label={`Costs ${full}, ${total(plan)} for you now`}>
-      <s className="num">{full}</s> {now.length ? dots(now) : <b>free</b>}
+    <span className="cost-box">
+      <span>{parts.length ? dots(parts) : 'free'}</span>
+      {differs && <span className="youd">you’d pay {payText}</span>}
     </span>
   );
 }
@@ -59,10 +61,13 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied }) {
 /** The shop as a compact strip, affordable first (phone buy sheet and landscape). */
 function ShopStrip({ state, me, optionFor, onPick, onDenied }) {
   const viewer = me != null ? state.players[me] : null;
+  const box = useRef(null);
+  const turn = state.pending ? `${state.round}:${state.pending.player}` : '';
+  useEffect(() => { if (box.current) box.current.scrollLeft = 0; }, [turn]);
   const cards = state.shop.map(uid => ({ uid, d: cardDef(state, uid), opt: optionFor(`card:${uid}`) }))
     .sort((a, b) => (!!b.opt - !!a.opt));
   return (
-    <div className="strip" role="group" aria-label="Shop">
+    <div className="strip" role="group" aria-label="Shop" ref={box}>
       {cards.map(({ uid, d, opt }) => {
         const plan = viewer ? paymentPlan(state, viewer, uid) : null;
         return (

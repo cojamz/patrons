@@ -33,6 +33,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
     <div className="overlay moment" role="dialog" aria-modal="true" aria-label={`Round ${result.round} scoring`}>
       <div className="dialog roundend" ref={box}>
         <h2>Round {result.round} scored</h2>
+        <div className="re-body">
         <ul className="re-rows">
           {result.rows.map(r => (
             <li key={r.qid} style={{ '--c': `var(--${r.qid})` }} className={r.winners.length ? '' : 'none'}>
@@ -73,7 +74,6 @@ export default function RoundEnd({ info, onNext, autoMs }) {
             );
           })}
         </div>
-        <p className="hint re-legend">Effects: followers from members’ abilities during play.</p>
         {after.over && (
           <p className="hint re-next">
             End-game bonuses come next{finalParts.length ? ': ' : '.'}
@@ -81,6 +81,7 @@ export default function RoundEnd({ info, onNext, autoMs }) {
           </p>
         )}
         {first && <p className="hint">Round {roman(after.round)} · <span className="num">{WORKERS[after.round - 1]}</span> workers each · {first.name} picks first</p>}
+        </div>
         <button type="button" className="btn pri" data-next-round data-autofocus onClick={onNext}>
           {after.over ? 'See results' : `Start round ${roman(after.round)}`}
         </button>

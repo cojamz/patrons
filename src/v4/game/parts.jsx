@@ -64,10 +64,7 @@ export function ChoicePrompt({ state, onPick, busy }) {
     if (b) b.focus({ preventScroll: true });
   }, [pend]);
   const trade = pend.options.length > 0 && pend.options.every(o => o.kind === 'trade');
-  const [settled, setSettled] = useState(false);
-  useEffect(() => { setSettled(false); const t = setTimeout(() => setSettled(true), 320); return () => clearTimeout(t); }, [pend]);
-  // On touch the sheet slides up; a tap that lands mid-slide could hit the wrong row, so wait until it has settled.
-  const pick = (id, mode) => { if (settled || !sheetMode()) onPick(id, mode); };
+  const pick = (id, mode) => onPick(id, mode); // step changes are guarded by the table's input lock
   return (
     <section className={`prompt choice${setup ? ' setup' : ''}`} aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}>
       <p>{setup ? `Pick a starting resource${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] ? ` (${pend.prompt.match(/\((\d) of 2\)/)[1]} of 2)` : ''}` : pend.prompt}</p>

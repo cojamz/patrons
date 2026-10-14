@@ -6,6 +6,9 @@ import { friendlyError } from '../errors.js';
 
 const KINDS = [['human', 'Person'], ['bot', 'Bot'], ['empty', 'Empty']];
 const NAME_MAX = 14;
+// count what a person sees as characters (an emoji or accented letter is one), not UTF-16 units
+const graphemes = str => (typeof Intl !== 'undefined' && Intl.Segmenter ? [...new Intl.Segmenter().segment(str)].length : [...str].length);
+const clip = (str, max) => (typeof Intl !== 'undefined' && Intl.Segmenter ? [...new Intl.Segmenter().segment(str)].slice(0, max).map(x => x.segment).join('') : [...str].slice(0, max).join(''));
 
 function Seg({ value, options, onChange, label }) {
   return (
@@ -47,11 +50,11 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, er
         )}
         <button type="button" className={`btn big${saved ? '' : ' pri'}`} onClick={onLocal} data-home="local">{saved ? 'New game on this device' : 'Play on this device'}</button>
         <div className="online-box">
-          <label className="field"><span>Your name</span><input value={name} maxLength={NAME_MAX} onChange={e => saveName(e.target.value)} placeholder="Name" /><small className="count num">{name.length}/{NAME_MAX}</small></label>
-          <button type="button" className="btn big" disabled={!onlineReady || working || !name.trim()} onClick={() => go(() => onHost(name.trim()))}>Host online game</button>
-          <form className="join" onSubmit={e => { e.preventDefault(); if (code.trim() && name.trim()) go(() => onJoin(code.trim().toUpperCase(), name.trim())); }}>
+          <label className="field"><span>Your name</span><input value={name} onChange={e => saveName(clip(e.target.value, NAME_MAX))} placeholder="Name" /><small className="count num">{graphemes(name)}/{NAME_MAX}</small></label>
+          <button type="button" className="btn big" disabled={!onlineReady || working} onClick={() => (name.trim() ? go(() => onHost(name.trim())) : setErr('Enter a name.'))}>Host online game</button>
+          <form className="join" onSubmit={e => { e.preventDefault(); if (!name.trim()) { setErr('Enter a name.'); return; } if (code.trim()) go(() => onJoin(code.trim().toUpperCase(), name.trim())); }}>
             <input aria-label="Room code" value={code} maxLength={8} onChange={e => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="CODE" disabled={!onlineReady} />
-            <button type="submit" className="btn" disabled={!onlineReady || working || !code.trim() || !name.trim()}>Join with code</button>
+            <button type="submit" className="btn" disabled={!onlineReady || working || !code.trim()}>Join with code</button>
           </form>
           {working && <p className="hint">Connecting…</p>}
           {!name.trim() && onlineReady && <p className="hint">Enter your name to host or join.</p>}
@@ -94,8 +97,8 @@ export function LocalSetup({ initial, onStart, onBack }) {
           <div className="seat" key={i} style={{ '--pc': PLAYER_COLORS[i] }}>
             <i className="dot" />
             <label className="namebox">
-              <input aria-label={`Seat ${i + 1} name`} value={s.name} maxLength={NAME_MAX} disabled={s.kind === 'empty'} onChange={e => set(i, { name: e.target.value })} />
-              <small className={`count num${s.name.length >= NAME_MAX ? ' full' : ''}`} aria-hidden="true">{s.name.length}/{NAME_MAX}</small>
+              <input aria-label={`Seat ${i + 1} name`} value={s.name} disabled={s.kind === 'empty'} onChange={e => set(i, { name: clip(e.target.value, NAME_MAX) })} />
+              <small className={`count num${graphemes(s.name) >= NAME_MAX ? ' full' : ''}`} aria-hidden="true">{graphemes(s.name)}/{NAME_MAX}</small>
             </label>
             <Seg label={`Seat ${i + 1}`} value={s.kind} options={KINDS} onChange={v => set(i, { kind: v })} />
           </div>

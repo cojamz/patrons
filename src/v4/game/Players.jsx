@@ -41,9 +41,15 @@ function useChanges(state) {
 }
 
 export function Workers({ p, caption = true }) {
+  // little worker pawns, one per worker left this round
+  const n = Math.max(0, p.left);
   return (
     <span className="workers" title={`${plural(p.left, 'worker')} left this round`} aria-label={`${plural(p.left, 'worker')} left this round`}>
-      <span className="dots" aria-hidden="true">{'●'.repeat(Math.max(0, p.left)) || '○'}</span>
+      <span className="pawns" aria-hidden="true">
+        {n ? Array.from({ length: n }, (_, k) => (
+          <svg key={k} viewBox="0 0 10 12" width="9" height="11"><circle cx="5" cy="3" r="2.4" /><path d="M1 12 Q1 6.2 5 6.2 Q9 6.2 9 12 Z" /></svg>
+        )) : <span className="none">no workers</span>}
+      </span>
       {caption && <small>{p.left === 1 ? 'worker' : 'workers'}</small>}
     </span>
   );

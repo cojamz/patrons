@@ -9,7 +9,9 @@ import GameScreen from './game/GameScreen.jsx';
 import { friendlyError } from './errors.js';
 import { Home, LocalSetup, Lobby } from './screens/Screens.jsx';
 
-const BOT_DELAY = { slow: 1100, normal: 650, fast: 180 };
+// Bots decide quickly; the table paces what you see (each visible bot step holds PACE ms, a pass doesn't wait).
+const BOT_DELAY = { slow: 400, normal: 250, fast: 120 };
+const PACE = { slow: 1100, normal: 700, fast: 350 };
 const urlBotDelay = () => Number(new URLSearchParams(location.search).get('botDelay')) || 0;
 
 export default function App() {
@@ -127,7 +129,7 @@ export default function App() {
     const online = session.info?.mode === 'online';
     return (
       <GameScreen
-        key={gameKey} session={session}
+        key={gameKey} session={session} pace={urlBotDelay() ? Math.min(urlBotDelay() * 2, PACE.normal) : PACE[config?.speed] ?? PACE.normal}
         onHome={screen.lobby ? () => leaveLobby(screen.lobby) : goHome}
         leaveText={online ? 'You’ll give up your seat in this room.' : 'You can resume it from the home screen.'}
         onPlayAgain={config && !online ? () => { clearLocal(); startLocal(config); } : null}

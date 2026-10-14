@@ -147,11 +147,13 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
     if (!moved.current) {
       const dx = Math.abs(e.clientX - dr.x), dy = Math.abs(e.clientY - dr.y);
       if (Math.max(dx, dy) < 6) return;
-      // on touch, a mostly-vertical swipe is a page scroll, not a spin
+      // on touch, a mostly-vertical swipe is a page scroll, not a spin; a sideways swipe turns one notch on release
       if (dr.touch && dy > dx) { drag.current = null; return; }
       moved.current = true;
+      if (dr.touch) { dr.swipe = true; return; }
       try { stage.current.setPointerCapture(e.pointerId); } catch { /* ignore */ }
     }
+    if (dr.swipe) { dr.lastX = e.clientX; return; }
     const a = local(e).a;
     const d = norm(a - dr.a);
     dr.a = a;
@@ -171,8 +173,11 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
       return;
     }
     if (!drag.current) return;
+    const dr = drag.current;
     drag.current = null;
     if (!moved.current) return;
+    // swipe right moves the facing quadrant right (the wheel turns counter-clockwise), and the other way round
+    if (dr.swipe) { const dx = (dr.lastX ?? dr.x) - dr.x; if (Math.abs(dx) > 24) nudge(dx > 0 ? -90 : 90); setTimeout(() => { moved.current = false; }, 0); return; }
     animateTo(Math.round(rotRef.current / 90) * 90);
     setTimeout(() => { moved.current = false; }, 0);
   };
@@ -242,7 +247,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
         onFocus={e => { if (e.currentTarget.matches(':focus-visible')) setPeek({ key, pinned: false }); }}
         onBlur={() => setPeek(p => (p && !p.pinned && p.key === key ? null : p))}
       >
-        <circle className="hit" cx={x} cy={y} r={t === 3 ? 24 : 26} fill="transparent" />
+        <circle className="hit" cx={x} cy={y} r={t === 3 ? 30 : t === 2 ? 28 : 26} fill="transparent" />
         {opt && <circle className="halo" cx={x} cy={y} r={rad + 4} fill="none" stroke={col} />}
         <circle className="base" cx={x} cy={y} r={rad} fill="var(--table)" stroke={col} strokeOpacity={open ? 1 : 0.3} strokeWidth={opt || selected ? 2.5 : 1.5} />
         {owner !== undefined

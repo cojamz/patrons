@@ -68,7 +68,7 @@ export function promptFor(state, mine) {
     case 'pay':
       return mine ? { who: p, text: 'Choose how to pay' } : { who: p, text: `${name} is paying` };
     case 'choose':
-      return mine ? { who: p, text: pend.prompt } : { who: p, text: `${name} is deciding: ${pend.prompt}` };
+      return mine ? { who: p, text: pend.prompt } : { who: p, text: `${name} is choosing` };
     default:
       return { who: p, text: pend.prompt };
   }
@@ -155,33 +155,23 @@ export function winSentence(state) {
   if (tied.length > 1) return `${tied.map(p => p.name).join(' and ')} tie on ${f(w)} followers.`;
   const b = breakdown(state, w);
   const lead = ranked[1] ? `${w.name} won by ${f(w) - f(ranked[1])}` : `${w.name} won`;
-  const sources = [['members', b.members], ['contests', b.contests], ['bought', b.bought], ['effects', b.effects], ['endGame', b.endGame]];
-  const [top] = sources.reduce((a, c) => (c[1] > a[1] ? c : a));
-  // A contest won round after round is usually the real story.
-  const swept = Object.entries(contestRounds(state)[w.id] || {}).sort((a, c) => c[1].rounds - a[1].rounds || c[1].v - a[1].v)[0];
-  if (swept && swept[1].rounds >= 2 && b.contests >= Math.max(b.members, b.bought, b.effects, b.endGame) * 0.6) {
-    const [full, { rounds, v }] = swept;
-    const label = shortLabel(full);
-    const res = (label.match(/^Most (gold|red|blue|green)$/i) || [])[1];
-    const lead2 = res ? `hoarded ${res.toLowerCase()}` : `led ${label.toLowerCase()}`;
-    const when = rounds === 3 ? 'all three rounds' : `${rounds} of 3 rounds`;
-    return `${lead}: ${lead2}, winning ${label} ${when} (+${v}).`;
-  }
-  if (top === 'endGame' && b.parts.length) {
-    const best = b.parts.map(s => { const m = s.match(/^(.*) \+(\d+)$/); return m ? { name: m[1], n: Number(m[2]) } : null; }).filter(Boolean).sort((a, c) => c.n - a.n)[0];
-    return `${lead}: ${best.name} turned the endgame into ${best.n} followers.`;
-  }
-  if (top === 'contests') {
-    const per = contestWins(state)[w.id];
-    const most = Object.entries(per).sort((a, c) => c[1] - a[1])[0];
-    return most
-      ? `${lead}: ${b.contests} followers from ring contests, ${most[1]} of them for ${shortLabel(most[0]).toLowerCase()}.`
-      : `${lead}: ${b.contests} followers from ring contests.`;
-  }
-  if (top === 'bought') return `${lead}: ${b.bought} followers bought outright.`;
-  if (top === 'effects') return `${lead}: members' effects added ${b.effects} followers during play.`;
-  const n = w.members.reduce((s, u) => s + cardDef(state, u).n, 0);
-  return `${lead}: ${n} members worth ${b.members} followers.`;
+  // Name the biggest real sources, in the words the results table uses.
+  const n = w.members.reduce((s2, u) => s2 + cardDef(state, u).n, 0);
+  const best = b.parts.map(x => { const m = x.match(/^(.*) \+(\d+)$/); return m ? { name: m[1], n: Number(m[2]) } : null; }).filter(Boolean).sort((a2, c) => c.n - a2.n)[0];
+  const swept = Object.entries(contestRounds(state)[w.id] || {}).sort((a2, c) => c[1].rounds - a2[1].rounds || c[1].v - a2[1].v)[0];
+  const say = {
+    members: v => `${v} from ${n} members' ★`,
+    bought: v => `${v} bought`,
+    effects: v => `${v} from members' effects`,
+    endGame: v => (best ? `${v} in end-game bonuses (${best.name} +${best.n})` : `${v} in end-game bonuses`),
+    contests: v => (swept && swept[1].rounds >= 2
+      ? `${v} from contests (${shortLabel(swept[0])} ${swept[1].rounds === 3 ? 'all three rounds' : `${swept[1].rounds} of 3 rounds`})`
+      : `${v} from contests`),
+  };
+  const top = [['members', b.members], ['bought', b.bought], ['effects', b.effects], ['endGame', b.endGame], ['contests', b.contests]]
+    .filter(([, v]) => v > 0).sort((x, y) => y[1] - x[1]).slice(0, 2);
+  if (!top.length) return `${lead}.`;
+  return `${lead}: ${top.map(([k, v]) => say[k](v)).join(' and ')}.`;
 }
 
 /** Lines added to the log between two states. The log only appends (and trims its front past a cap). */

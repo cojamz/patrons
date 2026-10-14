@@ -121,7 +121,7 @@ describe('local session: undo', () => {
       for (let turn = 0; turn < 12 && !s.getState().over; turn++) {
         const pre = await placeOnce(s);
         const st = s.getState();
-        if (!st.pending || st.pending.player !== pre.pending.player) continue;
+        if (!st.pending || st.pending.player !== pre.pending.player || st.round !== pre.round) continue;
         expect(s.canUndo()).toBe(true);
         const buy = st.pending.kind === 'buy' && st.pending.options.find(o => o.kind === 'card' || o.kind === 'tier');
         if (buy) {

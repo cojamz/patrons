@@ -26,7 +26,7 @@ function standIn(id, name, other1, other2) {
     ],
     handlers: {},
     members: vanilla.map(([key, nm, s, w, f, copies]) => ({
-      key, name: `${name} ${nm}`, s, w, f, n: 1, copies, text: f > 1 ? `A pillar of the community: worth ${f} followers.` : 'A loyal member.', vanilla: true,
+      key, name: `${name} ${nm}`, s, w, f, n: 1, copies, text: f > 1 ? `Worth ${f} followers.` : 'Worth 1 follower.', vanilla: true,
     })),
   };
 }

@@ -102,7 +102,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
                 if (opt) onPick(opt.id); else if (onDenied) onDenied({ type: 'slot', key, q: facing, i }, e.currentTarget);
               }}
             >
-              <span className="rn" aria-label={`round ${roman(t)}`}>{roman(t)}</span>
+              <span className="rn">Round {roman(t)}</span>
               <b>{a.name}</b><span className="act-text">{a.text}</span>
               {owner !== undefined
                 ? <span className="by" style={{ '--pc': playerColor(owner) }}><i />{state.players[owner].name}</span>
