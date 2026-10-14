@@ -1119,3 +1119,5 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 /* Player cards: workers and member count get their own line so neither is clipped. */
 .pl .res{flex-wrap:wrap;row-gap:2px}
 .pl .res .meta{flex-basis:100%}
+/* Compact shop names: break long names with a proper hyphen, never mid-word without one. */
+.shop-panel.compact .card .nm{overflow-wrap:normal;word-break:normal;-webkit-hyphens:auto;hyphens:auto}
