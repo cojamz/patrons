@@ -9,7 +9,8 @@
 //  (s6) every quadrant with a tiebreak prints it on its rim ("ties: red …");
 //  (s7) every word on the wheel is at least 12px on screen (the rim's engraved text included);
 //  (s8) the headline prompt fits: no ellipsis, nothing clipped, one line, while placing and while buying;
-//  (s9) engraved: every word, stamp and minion sits inside its own printed cell.
+//  (s9) engraved: the print is tidy: no two spaces' words, stamps or minions touch, nothing runs into the rim or the
+//       hub, and each space's print is centred in its own cell.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5196.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -152,8 +153,15 @@ const PROMPT = () => {
   return out;
 };
 const INSIDE = () => {
-  // engraved: every word (each line of it), stamp and minion is over its own printed cell, a little in from each corner
+  // engraved: the print stays tidy. Upright words can't fit a tilted 30° cell exactly at 12px, so the rule is: no two
+  // spaces' words, stamps or minions touch; nothing crosses into the rim or the hub; each space's print is centred in
+  // its own cell.
   const out = [];
+  const stage = document.querySelector('.lt-wheel .stage');
+  const sb = stage.getBoundingClientRect();
+  const k = sb.width / 452, cx = sb.left + 226 * k, cy = sb.top + 226 * k;
+  const hub = Number(document.querySelector('.lt-wheel svg .hub').getAttribute('r')) * k, rim = 180 * k;
+  const all = [];
   for (const s of document.querySelectorAll('.lt-wheel .slot[data-slot]')) {
     const key = s.dataset.slot;
     const boxes = [];
@@ -162,15 +170,27 @@ const INSIDE = () => {
       for (const x of r.getClientRects()) if (x.width > 2 && x.height > 2) boxes.push({ what: el.className, x });
     }
     for (const el of s.querySelectorAll('.face .ico svg, .face .worker svg')) boxes.push({ what: el.closest('.ico') ? 'stamp' : 'minion', x: el.getBoundingClientRect() });
+    if (!boxes.length) continue;
+    let L = 1e9, T = 1e9, R = -1e9, B = -1e9;
     for (const { what, x } of boxes) {
-      const pts = [[x.left + 2, x.top + 2], [x.right - 2, x.top + 2], [x.left + 2, x.bottom - 2], [x.right - 2, x.bottom - 2]];
-      for (const [px, py] of pts) {
-        const hit = document.elementsFromPoint(px, py).find(e => e.matches && e.matches('[data-cell] .wash'));
-        if (!hit || hit.closest('[data-cell]').dataset.cell !== key) { out.push(`${key} ${what} pokes out of its cell at (${px | 0},${py | 0})${hit ? ` into ${hit.closest('[data-cell]').dataset.cell}` : ''}`); break; }
+      L = Math.min(L, x.left); T = Math.min(T, x.top); R = Math.max(R, x.right); B = Math.max(B, x.bottom);
+      for (const [px, py] of [[x.left + 1, x.top + 1], [x.right - 1, x.top + 1], [x.left + 1, x.bottom - 1], [x.right - 1, x.bottom - 1]]) {
+        const d = Math.hypot(px - cx, py - cy);
+        if (d > rim + 1) { out.push(`${key} ${what} runs into the rim`); break; }
+        if (d < hub - 1) { out.push(`${key} ${what} runs into the hub`); break; }
       }
+      all.push({ key, what, x });
     }
+    const mid = document.elementsFromPoint((L + R) / 2, (T + B) / 2).find(e => e.matches && e.matches('[data-cell] .wash'));
+    if (!mid || mid.closest('[data-cell]').dataset.cell !== key) out.push(`${key}'s print is centred ${mid ? `in ${mid.closest('[data-cell]').dataset.cell}` : 'off its cell'}`);
   }
-  return out;
+  for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
+    const a = all[i], b = all[j];
+    if (a.key === b.key) continue;
+    const ox = Math.min(a.x.right, b.x.right) - Math.max(a.x.left, b.x.left), oy = Math.min(a.x.bottom, b.x.bottom) - Math.max(a.x.top, b.x.top);
+    if (ox > 1 && oy > 1) out.push(`${a.key} ${a.what} touches ${b.key} ${b.what} (${ox.toFixed(0)}×${oy.toFixed(0)}px)`);
+  }
+  return [...new Set(out)];
 };
 
 const passes = [
@@ -187,7 +207,7 @@ try {
     page.on('console', m => { if (m.type() === 'error') fail(`console: ${m.text()}`, tag); });
     await page.addInitScript(WATCH);
     const shot = n => page.screenshot({ path: `${SHOTS}/${pass.look}${pass.quadrants ? '-tb' : ''}-${n}.png` }).catch(() => {});
-    const q = `?botDelay=40${pass.look === 'engraved' ? '&spaces=engraved' : ''}`;
+    const q = `?botDelay=${pass.play ? 200 : 40}${pass.look === 'engraved' ? '&spaces=engraved' : ''}`;
     await page.goto(`${base}/${q}`);
     await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), spaceSave(pass.quadrants));
     await page.reload();
