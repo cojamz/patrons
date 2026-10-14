@@ -529,7 +529,9 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     const sa = (norm(s.ang + rot) * Math.PI) / 180;
     const side = engraved && Math.abs(Math.sin(sa)) > Math.abs(Math.cos(sa));
     const low = engraved && !side && Math.cos(sa) < 0;
-    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', side ? 'side' : '', low ? 'low' : ''].filter(Boolean).join(' ');
+    // on its side, a short yield runs as one line ("+1 red · swap"); a longer one keeps a clause a line
+    const flow = side && shortEffect(qid, a, round).replace(/ · /g, ' ').length <= 12;
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', side ? 'side' : '', low ? 'low' : '', flow ? 'flow' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>
@@ -538,7 +540,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     );
     const minions = owner !== undefined ? <span className="worker-fig" data-seat={owner}>{[owner, ...joiners].map(minion)}</span> : null;
     // a tall stack on its side sits a little in from the rim (ring I), and ring II's a little in from ring I's
-    if (side && t < 3) [X, Y] = turned(...polar(s.ang, rings[t].r - (t === 1 ? 5 : 9)));
+    if (side && t < 3) [X, Y] = turned(...polar(s.ang, rings[t].r - (t === 1 ? 5 : 3)));
     let style = { ...at(X, Y), '--c': `var(--${qid})` };
     if (engraved) {
       // the words get the cell's width on screen: its chord when it lies flat, its depth when it stands on its side

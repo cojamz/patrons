@@ -209,15 +209,20 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="engraved"] .stage .slot .face .row{display:flex;align-items:center;justify-content:center;gap:4px}
 .lt [data-spaces="engraved"] .stage .slot .face .ico{line-height:0;margin:0}
 .lt [data-spaces="engraved"] .stage .slot .face .ico svg{width:24px;height:24px;image-rendering:pixelated}
-.lt [data-spaces="engraved"] .stage .slot .face .yl{font-family:var(--serif);font-weight:800;font-size:12.5px;line-height:1.05;color:inherit;max-width:none;white-space:nowrap;text-shadow:0 1px 0 rgba(255,250,238,.6)}
+/* rings II and III are narrower: their stamps and minions print at 20px */
+.lt [data-spaces="engraved"] .stage .slot:not(.r1) .face .ico svg{width:20px;height:20px}
+.lt [data-spaces="engraved"] .stage .slot:not(.r1) .face .worker-fig svg{width:20px;height:auto}
+.lt [data-spaces="engraved"] .stage .slot .face .yl{font-family:var(--serif);font-weight:800;font-size:12px;line-height:1.05;color:inherit;max-width:none;white-space:nowrap;text-shadow:0 1px 0 rgba(255,250,238,.6)}
 .lt [data-spaces="engraved"] .stage .slot .face .yl{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
 /* a cell standing on its side is narrow: the name, the stamp and the yield stack, centred */
 .lt [data-spaces="engraved"] .stage .slot.side .face .row{flex-direction:column;gap:1px}
 /* on its side the yield flows as one line when it fits, wrapping between clauses */
 .lt [data-spaces="engraved"] .stage .slot .face .yl .sep{display:none}
-.lt [data-spaces="engraved"] .stage .slot.side .face .yl{display:block;text-align:center;white-space:normal;max-width:100%}
-.lt [data-spaces="engraved"] .stage .slot.side .face .yl .cl{display:inline;white-space:normal}
-.lt [data-spaces="engraved"] .stage .slot.side .face .yl .sep{display:inline}
+.lt [data-spaces="engraved"] .stage .slot.side .face .yl{align-items:center}
+.lt [data-spaces="engraved"] .stage .slot.side .face .yl .cl{white-space:normal;text-align:center}
+.lt [data-spaces="engraved"] .stage .slot.flow .face .yl{display:block;text-align:center;white-space:normal;max-width:100%}
+.lt [data-spaces="engraved"] .stage .slot.flow .face .yl .cl{display:inline}
+.lt [data-spaces="engraved"] .stage .slot.flow .face .yl .sep{display:inline}
 .lt [data-spaces="engraved"] .stage .slot .face .yl .cl{white-space:nowrap;display:block}
 .lt [data-spaces="engraved"] .stage .stamp .d{fill:color-mix(in srgb,var(--c) 45%,#2a1f17)}
 .lt [data-spaces="engraved"] .stage .stamp .m{fill:var(--c)}
