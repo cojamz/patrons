@@ -210,6 +210,10 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="engraved"] .stage .slot .face .ico svg{width:24px;height:24px;image-rendering:pixelated}
 .lt [data-spaces="engraved"] .stage .slot .face .yl{font-family:var(--serif);font-weight:800;font-size:12.5px;line-height:1.05;color:inherit;max-width:none;white-space:nowrap;text-shadow:0 1px 0 rgba(255,250,238,.6)}
 .lt [data-spaces="engraved"] .stage .slot .face .yl{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
+/* a cell standing on its side is narrow: the name, the stamp and the yield stack, centred */
+.lt [data-spaces="engraved"] .stage .slot.side .face .row{flex-direction:column;gap:1px}
+.lt [data-spaces="engraved"] .stage .slot.side .face .yl{align-items:center}
+.lt [data-spaces="engraved"] .stage .slot.low.side .face .row{flex-direction:column-reverse}
 .lt [data-spaces="engraved"] .stage .slot .face .yl .cl{white-space:nowrap;display:block}
 .lt [data-spaces="engraved"] .stage .stamp .d{fill:color-mix(in srgb,var(--c) 45%,#2a1f17)}
 .lt [data-spaces="engraved"] .stage .stamp .m{fill:var(--c)}
