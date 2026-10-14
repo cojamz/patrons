@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import './v4.css';
 import { createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineReady } from './sessionApi.js';
-import { createLocalTable } from './localTable.js';
+import { createLocalSession } from './session/local.js';
 import { loadLocal, saveLocal, clearLocal, loadOnline, saveOnline, clearOnline } from './saved.js';
 import GameScreen from './game/GameScreen.jsx';
 import { Home, LocalSetup, Lobby } from './screens/Screens.jsx';
@@ -60,14 +60,14 @@ export default function App() {
   const startLocal = useCallback(cfg => {
     const seats = cfg.seats.filter(s => s.kind !== 'empty').map((s, i) => ({ name: s.name.trim() || `P${i + 1}`, kind: s.kind }));
     const botDelayMs = urlBotDelay() || BOT_DELAY[cfg.speed] || 650;
-    begin(createLocalTable({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs }), cfg);
+    begin(createLocalSession({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs }), cfg);
   }, [begin]);
 
   const resume = useCallback(() => {
     const v = loadLocal();
     if (!v) { setSaved(null); return; }
     const botDelayMs = urlBotDelay() || BOT_DELAY[v.config?.speed] || 650;
-    begin(createLocalTable({ state: v.state, botDelayMs }), v.config);
+    begin(createLocalSession({ state: v.state, botDelayMs }), v.config);
   }, [begin]);
 
   const goHome = useCallback(() => {

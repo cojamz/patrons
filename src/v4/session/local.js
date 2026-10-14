@@ -34,16 +34,33 @@ export function normalizeMove(state, move) {
 }
 
 /**
- * @param {{ seats: { name?: string, kind?: 'human'|'bot' }[], seed?: number, botDelayMs?: number, quadrants?: string[] }} opts
- * @returns {Session}
+ * True when `move`, made from `before` (leaving `after`), commits the checkpointed player's turn:
+ * a recruit, follower buy, activation or pass, or a payment (anything but Back).
  */
-export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 ** 31), botDelayMs = 450, quadrants }) {
-  let state = createGame({ seats: seats.map(s => ({ name: s.name, kind: s.kind || 'human' })), seed, ...(quadrants ? { quadrants } : {}) });
+function commits(before, move, after) {
+  const kind = before.pending && before.pending.kind;
+  if (kind === 'buy') return /^(card|tier|pass|use)/.test(move.option) && !(after.pending && after.pending.kind === 'pay');
+  if (kind === 'pay') return move.option !== 'back';
+  return false;
+}
+
+/**
+ * Local sessions add undo for the acting human's last placement: `undo()` restores the state from just
+ * before their last 'place' move, offered until they commit anything else (buy, pass, pay, use) or the
+ * turn moves on. Bots never undo.
+ * @param {{ seats?: { name?: string, kind?: 'human'|'bot' }[], seed?: number, botDelayMs?: number, quadrants?: string[], state?: object }} opts
+ *   Pass `state` (a saved engine state) to resume instead of starting a new game; `seats`, `seed` and `quadrants` are then ignored.
+ * @returns {Session & { canUndo(): boolean, undo(): boolean }}
+ */
+export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 ** 31), botDelayMs = 450, quadrants, state: saved }) {
+  let state = saved || createGame({ seats: seats.map(s => ({ name: s.name, kind: s.kind || 'human' })), seed, ...(quadrants ? { quadrants } : {}) });
   let version = 1;
   let timer = null;
   let destroyed = false;
+  let checkpoint = null; // { state, player }: the state from just before a human's placement
   const subs = createEmitter();
-  const rand = seededRandom((seed ^ 0x9e3779b9) >>> 0);
+  // Bot tie-breaks: seeded from the game seed, or (on resume) from the engine's current rng so it varies by position.
+  const rand = seededRandom(((saved ? saved.rng ^ saved.seed : seed) ^ 0x9e3779b9) >>> 0);
   const mySeats = state.players.filter(p => p.kind !== 'bot').map(p => p.id);
 
   const info = () => ({
@@ -52,12 +69,25 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     version,
   });
 
-  function apply(move) {
-    state = applyMove(state, move);
+  function emit() {
     version += 1;
     subs.emit(state, info());
+  }
+
+  function apply(move) {
+    const before = state;
+    state = applyMove(state, move);
+    if (before.pending && before.pending.kind === 'place' && mySeats.includes(move.player)) {
+      checkpoint = { state: before, player: move.player };
+    } else if (checkpoint) {
+      const turnOver = !state.pending || state.pending.player !== checkpoint.player || state.pending.kind === 'place';
+      if (turnOver || (move.player === checkpoint.player && commits(before, move, state))) checkpoint = null;
+    }
+    emit();
     schedule();
   }
+
+  const canUndo = () => !!(!destroyed && checkpoint && state.pending && state.pending.player === checkpoint.player);
 
   function schedule() {
     clearTimeout(timer);
@@ -86,6 +116,15 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
       if (problem) return Promise.reject(new Error(problem));
       try { apply(move); } catch (err) { return Promise.reject(err instanceof Error ? err : new Error(String(err))); }
       return Promise.resolve(state);
+    },
+    canUndo,
+    undo() {
+      if (!canUndo()) return false;
+      state = checkpoint.state;
+      checkpoint = null;
+      emit();
+      schedule();
+      return true;
     },
     get mySeats() { return [...mySeats]; },
     get info() { return info(); },
