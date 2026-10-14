@@ -1,3 +1,4 @@
+// @vitest-environment node
 // A bot move that throws must never stall a game silently. The session logs it, plays the first option that applies
 // cleanly instead, and reports a small notice (record.js reportProblem; online, through the room to every client).
 // Only when no option applies at all does the game stop, and then it says so.

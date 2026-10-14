@@ -1,3 +1,4 @@
+// @vitest-environment node
 // Game records: sessions keep the seed, table, rules and every move (option ids), so any game, local or online, can be
 // copied as JSON and replayed exactly; a replay reports the first illegal move or exception with the state there.
 import { describe, it, expect, afterEach, vi } from 'vitest';

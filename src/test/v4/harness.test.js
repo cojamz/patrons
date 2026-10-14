@@ -20,7 +20,8 @@ describe('v4 harness', () => {
     expect(wf).toMatch(/node-version: 22/);
     expect(wf).toMatch(/run: npm ci/);
     expect(wf).toMatch(/run: npm run check:v4 -- --fast/);
-    expect(wf).not.toMatch(/netlify|deploy\b|--prod|secrets\./i);
+    const steps = wf.split('\n').filter(l => !l.trim().startsWith('#')).join('\n'); // the comments may say "deploy"
+    expect(steps).not.toMatch(/netlify|deploy\b|--prod|secrets\./i);
   });
 
   it('protect.sh blocks tree-wide discards and advises a WIP commit, never a stash', () => {
