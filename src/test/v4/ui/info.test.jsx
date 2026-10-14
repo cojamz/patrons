@@ -141,7 +141,10 @@ describe('"You\'d get" on a space (the engine\'s dry run)', () => {
     const gold = s.quadrants.indexOf('gold'), jv = quadrant('gold').actions.findIndex(a => a.key === 'jv');
     const two = render(<YoudGet state={s} pid={pid} q={gold} i={jv} />);
     await waitFor(() => expect(two.container.querySelector('[data-youd-get]').dataset.youdGet).toBe('+3 gold'));
-    expect(two.container.textContent).toMatch(/rivals \+1 gold/);
+    // the rival's +1 gold (Joint Venture's gift) shows too, as a gold pip
+    expect(two.container.querySelector('.youd-others').textContent).toMatch(/rivals \+1/);
+    expect(two.container.querySelector('.youd-others .pip').getAttribute('aria-label')).toBe('gold');
+    expect(two.container.textContent).toMatch(/you choose how/);
   });
 
   it('worker figures carry their seat sigil', async () => {
