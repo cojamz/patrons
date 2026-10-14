@@ -35,7 +35,7 @@ function optionDetail(state, o) {
   const cardOf = uid => (state.cards && state.cards[uid] ? cardDef(state, uid) : null);
   if ((o.kind === 'card' || o.kind === 'member') && typeof o.value === 'number') {
     const d = cardOf(o.value);
-    if (d) return { name: d.name, text: d.text, f: d.f, color: d.quadrant };
+    if (d) return { name: d.name, text: d.text, f: d.f, color: d.quadrant, id: d.id };
   }
   if (o.kind === 'trade' && Array.isArray(o.value)) {
     const [a, b] = o.value.map(cardOf);
@@ -60,32 +60,119 @@ export function ChoicePrompt({ state, onPick, busy }) {
     const b = box.current && box.current.querySelector('button:not([disabled])');
     if (b) b.focus({ preventScroll: true });
   }, [pend]);
+  const trade = pend.options.length > 0 && pend.options.every(o => o.kind === 'trade');
   return (
-    <section className="prompt choice" aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}>
-      <p>{setup ? 'Pick a starting resource' : pend.prompt}</p>
+    <section className={`prompt choice${setup ? ' setup' : ''}`} aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}>
+      <p>{setup ? `Pick a starting resource${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] ? ` (${pend.prompt.match(/\((\d) of 2\)/)[1]} of 2)` : ''}` : pend.prompt}</p>
+      {setup ? <SetupTokens state={state} pend={pend} onPick={onPick} busy={busy} />
+        : trade ? <TradePicker state={state} pend={pend} onPick={onPick} busy={busy} />
+          : <MergedOptions state={state} pend={pend} onPick={onPick} busy={busy} />}
+    </section>
+  );
+}
+
+function SetupTokens({ state, pend, onPick, busy }) {
+  return (
+    <div className="tokens">
+      {pend.options.map(o => {
+        const q = state.quadrants.includes(o.value) ? quadrant(o.value) : null;
+        const res = q ? q.resource : o.value;
+        return (
+          <button key={o.id} type="button" className="token" data-option={o.id} disabled={busy} style={{ '--c': `var(--${o.value})` }} onClick={() => onPick(o.id)} aria-label={`Take 1 ${res}`}>
+            <i className="coin-big"><span className="num">+1</span></i>
+            <span>{res}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Options that name the same card merge into one button with ×N (any of them is the same pick). */
+function MergedOptions({ state, pend, onPick, busy }) {
+  const groups = [];
+  const byKey = new Map();
+  for (const o of pend.options) {
+    const det = optionDetail(state, o);
+    const key = det ? `${o.kind}|${det.name}|${det.owner ?? ''}` : o.id;
+    if (byKey.has(key)) { byKey.get(key).n += 1; continue; }
+    const g = { key, o, det, n: 1 };
+    byKey.set(key, g);
+    groups.push(g);
+  }
+  return (
+    <div className="opts">
+      {groups.map(({ key, o, det, n }) => {
+        const color = o.kind === 'color' ? o.value : null;
+        const q = color && state.quadrants.includes(color) ? quadrant(color) : null;
+        return (
+          <button
+            key={key} type="button" className={`btn${color ? ' color' : ''}${det ? ' rich' : ''}`} data-option={o.id} disabled={busy}
+            style={color ? { '--c': `var(--${color})` } : det && det.color ? { '--c': `var(--${det.color})` } : undefined}
+            onClick={() => onPick(o.id)}
+          >
+            {color && <i />}
+            {det ? (
+              <span className="rich-body">
+                <b>{det.name}{n > 1 && <span className="num"> ×{n}</span>}{det.f != null && <span className="num star"> {det.f}★</span>}</b>
+                <small>{det.text}</small>
+              </span>
+            ) : (q ? q.name : withUnits(o.label, pend.prompt))}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Trade in two steps: give one of yours, then take one of theirs that's legal for it. */
+function TradePicker({ state, pend, onPick, busy }) {
+  const [give, setGive] = useState(null);
+  const owner = uid => state.players.find(p => p.members.includes(uid));
+  const group = (uids, withOwner) => {
+    const out = new Map();
+    for (const u of uids) {
+      const d = cardDef(state, u);
+      const o = withOwner ? owner(u) : null;
+      const k = `${d.id}|${o ? o.id : ''}`;
+      if (!out.has(k)) out.set(k, { k, d, o, uids: [] });
+      out.get(k).uids.push(u);
+    }
+    return [...out.values()];
+  };
+  const mine = group([...new Set(pend.options.map(o => o.value[0]))], false);
+  const chosen = give && mine.find(g => g.k === give);
+  const theirs = chosen ? group([...new Set(pend.options.filter(o => chosen.uids.includes(o.value[0])).map(o => o.value[1]))], true) : [];
+  const take = g => {
+    const opt = pend.options.find(o => chosen.uids.includes(o.value[0]) && g.uids.includes(o.value[1]));
+    if (opt) onPick(opt.id);
+  };
+  const Card = ({ g, onClick, extra }) => (
+    <button type="button" className="btn rich" style={{ '--c': `var(--${g.d.quadrant})` }} disabled={busy} onClick={onClick} data-option={extra}>
+      <span className="rich-body">
+        <b>{g.d.name}{g.uids.length > 1 && <span className="num"> ×{g.uids.length}</span>}<span className="num star"> {g.d.f}★</span>{g.o && <span className="from"> · {g.o.name}</span>}</b>
+        <small>{g.d.text}</small>
+      </span>
+    </button>
+  );
+  if (!chosen) {
+    return (
+      <div className="trade">
+        <span className="step">1 · Give one of yours</span>
+        <div className="opts">{mine.map(g => <Card key={g.k} g={g} onClick={() => setGive(g.k)} extra={pend.options.find(o => g.uids.includes(o.value[0]))?.id} />)}</div>
+      </div>
+    );
+  }
+  return (
+    <div className="trade">
+      <span className="step">2 · Take one of theirs for your {chosen.d.name} <button type="button" className="btn ghost" onClick={() => setGive(null)}>Change</button></span>
       <div className="opts">
-        {pend.options.map(o => {
-          const color = setup || o.kind === 'color' ? o.value : null;
-          const q = color && state.quadrants.includes(color) ? quadrant(color) : null;
-          const det = optionDetail(state, o);
-          return (
-            <button
-              key={o.id} type="button" className={`btn${color ? ' color' : ''}${det ? ' rich' : ''}`} data-option={o.id} disabled={busy}
-              style={color ? { '--c': `var(--${color})` } : det && det.color ? { '--c': `var(--${det.color})` } : undefined}
-              onClick={() => onPick(o.id)}
-            >
-              {color && <i />}
-              {det ? (
-                <span className="rich-body">
-                  <b>{det.name}{det.f != null && <span className="num star"> {det.f}★</span>}</b>
-                  <small>{det.text}</small>
-                </span>
-              ) : (q ? q.name : withUnits(o.label, pend.prompt))}
-            </button>
-          );
+        {theirs.map(g => {
+          const opt = pend.options.find(o => chosen.uids.includes(o.value[0]) && g.uids.includes(o.value[1]));
+          return <Card key={g.k} g={g} onClick={() => take(g)} extra={opt && opt.id} />;
         })}
       </div>
-    </section>
+    </div>
   );
 }
 

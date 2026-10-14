@@ -115,6 +115,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
   const root = useRef(null);
   const shopSnap = useRef(new Map());
   const noteTimer = useRef(null);
+  const wheelTouched = useRef(0); // the person just handled the wheel: don't yank it to a rival's move
+  const touchWheel = useCallback(() => { wheelTouched.current = Date.now(); }, []);
 
   const say = useCallback((text, tone = 'nudge', ms = 1900) => {
     clearTimeout(noteTimer.current);
@@ -163,7 +165,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
     const q = Number(key.split('-')[0]);
     const owner = state.slots[key];
     const rival = !mySeats.includes(owner);
-    const turn = rival && q !== facingRef.current;
+    const turn = rival && q !== facingRef.current && Date.now() - wheelTouched.current > 4000;
     if (turn) setFacing(q);
     setLate(turn);
     setFlash(new Set(fresh));
@@ -231,6 +233,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
   const lastLine = state.log[state.log.length - 1] || '';
   const meP = me != null ? state.players[me] : null;
   const buyingNow = mine && !needHandoff && pend.kind === 'buy';
+  const canUndo = mine && !needHandoff && !busy && typeof session.canUndo === 'function' && session.canUndo();
+  const undo = () => { if (session.undo && session.undo()) say('Placement undone — place again', 'info', 1800); };
 
   return (
     <div className={`app game${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}`} ref={root}>
@@ -253,6 +257,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
               </span>
             </span>
           ) : <span className="say" data-prompt />}
+          {canUndo && <button type="button" className="btn ghost undo" onClick={undo} title="Take back your worker until you buy or pass">↶ Undo placement</button>}
         </div>
         <div className="bar-row you-row">
           {meP && !state.over && (
@@ -278,11 +283,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
         </div>
       ) : (
         <div className="main">
-          <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} flash={flash} late={late} facing={facing} onFacing={setFacing} />
+          <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} onDenied={onDenied} onTouched={touchWheel} confirmPlace={session.info?.mode === 'online'} flash={flash} late={late} facing={facing} onFacing={setFacing} />
           <div className="side">
             <div className="side-scroll">
               {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} />}
-              <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} onDenied={onDenied} />
+              <QuadrantPanel state={state} facing={facing} onFacing={q => { touchWheel(); setFacing(q); }} optionFor={live} onPick={onPick} onDenied={onDenied} />
               <Log state={state} />
             </div>
             <div className="dock">

@@ -36,7 +36,7 @@ describe('v4 game screen', () => {
     const { container } = render(<GameScreen session={session} />);
     const ids = new Set(clickable(container));
     expect(ids).toEqual(new Set(state.pending.options.map(o => o.id)));
-    fireEvent.click(within(container.querySelector('.prompt')).getByRole('button', { name: 'Gold' }));
+    fireEvent.click(within(container.querySelector('.prompt')).getByRole('button', { name: 'Take 1 gold' }));
     expect(session.submit).toHaveBeenCalledWith({ player: 0, option: 'color:gold' });
     expect(screen.getByText(/pick a starting resource/i, { selector: '[data-prompt] *' })).toBeTruthy();
   });
@@ -62,8 +62,9 @@ describe('v4 game screen', () => {
     }
     // round II cards are locked in round I
     const q = quadrant(state.quadrants[0]);
-    const locked = q.actions.filter(a => a.ring > state.round).map(a => screen.getByText(a.name).closest('button'));
-    for (const b of locked) expect(b.disabled).toBe(true);
+    const panel = container.querySelector('.quad');
+    const locked = q.actions.filter(a => a.ring > state.round).map(a => within(panel).getByText(a.name).closest('button'));
+    for (const b of locked) { expect(b.getAttribute('aria-disabled')).toBe('true'); expect(b.getAttribute('data-option')).toBeNull(); }
     // clicking a wheel space submits it
     const first = state.pending.options[0];
     fireEvent.click(container.querySelector(`[data-slot="${first.q}-${first.i}"]`));
@@ -92,7 +93,7 @@ describe('v4 game screen', () => {
       const el = container.querySelector(`.shop .card[data-option="card:${uid}"]`);
       expect(!!el).toBe(legal.has(`card:${uid}`));
     }
-    const pass = within(container.querySelector('.shop-panel')).getByRole('button', { name: 'Pass' });
+    const pass = within(container.querySelector('.fbuy')).getByRole('button', { name: 'Pass' });
     fireEvent.click(pass);
     expect(session.submit).toHaveBeenCalledWith({ player: me, option: 'pass' });
   });

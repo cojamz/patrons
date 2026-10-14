@@ -26,7 +26,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
 
   return (
     <section className="panel quad" style={{ '--c': col }}>
-      <div className="qtabs" role="tablist" aria-label="Quadrants" ref={tabs} onKeyDown={onTabKey}>
+      <div className="qtabs" role="tablist" aria-label="Quadrants" ref={tabs} onKeyDown={onTabKey} hidden={state.round === 0}>
         {state.quadrants.map((id, q) => {
           const free = state.pending && state.pending.kind === 'place'
             ? quadrant(id).actions.some((a, i) => optionFor(`slot:${q}-${i}`)) : false;

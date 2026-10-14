@@ -2,8 +2,8 @@
 // Local games save on every change and can be resumed; online seats are rejoined after a reload.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import './v4.css';
-import { createLocalSession, createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineReady } from './sessionApi.js';
-import { resumeLocalSession } from './resumeSession.js';
+import { createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineReady } from './sessionApi.js';
+import { createLocalTable } from './localTable.js';
 import { loadLocal, saveLocal, clearLocal, loadOnline, saveOnline, clearOnline } from './saved.js';
 import GameScreen from './game/GameScreen.jsx';
 import { Home, LocalSetup, Lobby } from './screens/Screens.jsx';
@@ -19,6 +19,25 @@ export default function App() {
   const [saved, setSaved] = useState(() => loadLocal());
   const [homeError, setHomeError] = useState('');
   const configRef = useRef(null);
+  const screenRef = useRef(screen);
+  screenRef.current = screen;
+
+  // Browser Back from a game, setup or lobby returns home (a local game stays saved to resume).
+  useEffect(() => {
+    if (screen.name === 'home' || screen.name === 'rejoining') return;
+    if (!history.state || history.state.patrons !== screen.name) history.pushState({ patrons: screen.name }, '');
+  }, [screen.name]);
+  useEffect(() => {
+    const onPop = () => {
+      const cur = screenRef.current;
+      if (cur.name === 'home') return;
+      if (cur.lobby) leaveRef.current(cur.lobby); else goHomeRef.current();
+    };
+    addEventListener('popstate', onPop);
+    return () => removeEventListener('popstate', onPop);
+  }, []);
+  const leaveRef = useRef(null);
+  const goHomeRef = useRef(null);
 
   useEffect(() => () => { if (session) session.destroy(); }, [session]);
 
@@ -41,28 +60,40 @@ export default function App() {
   const startLocal = useCallback(cfg => {
     const seats = cfg.seats.filter(s => s.kind !== 'empty').map((s, i) => ({ name: s.name.trim() || `P${i + 1}`, kind: s.kind }));
     const botDelayMs = urlBotDelay() || BOT_DELAY[cfg.speed] || 650;
-    begin(createLocalSession({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs }), cfg);
+    begin(createLocalTable({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs }), cfg);
   }, [begin]);
 
   const resume = useCallback(() => {
     const v = loadLocal();
     if (!v) { setSaved(null); return; }
     const botDelayMs = urlBotDelay() || BOT_DELAY[v.config?.speed] || 650;
-    begin(resumeLocalSession({ state: v.state, botDelayMs }), v.config);
+    begin(createLocalTable({ state: v.state, botDelayMs }), v.config);
   }, [begin]);
 
-  const goHome = useCallback(() => { setSession(null); setSaved(loadLocal()); setScreen({ name: 'home' }); }, []);
+  const goHome = useCallback(() => {
+    setSession(null); setSaved(loadLocal()); setScreen({ name: 'home' });
+    if (history.state && history.state.patrons) history.back();
+  }, []);
+  goHomeRef.current = () => { setSession(null); setSaved(loadLocal()); setScreen({ name: 'home' }); };
 
   const enterLobby = useCallback(async (make, kind) => {
     try {
-      const res = await make();
+      // No network means no answer: give up after 8 seconds instead of "Connecting…" forever.
+      let timer;
+      const res = await Promise.race([
+        Promise.resolve().then(make),
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('TIMEOUT')), 8000); }),
+      ]).finally(() => clearTimeout(timer));
       const lobby = res.lobby;
       saveOnline({ code: res.code || lobby.code, playerId: res.playerId, transport: kind });
       setScreen({ name: 'lobby', lobby, myId: res.playerId });
       lobby.onStart(s => { setSession(s); setGameKey(k => k + 1); setScreen({ name: 'game', lobby }); });
       return null;
     } catch (e) {
-      return e && e.message ? e.message : String(e);
+      const m = e && e.message ? e.message : String(e);
+      if (m === 'TIMEOUT') return 'Can’t reach the server. Check your connection.';
+      if (/room not found/i.test(m)) return 'No room with that code.';
+      return m;
     }
   }, []);
 
@@ -74,11 +105,12 @@ export default function App() {
       .then(err => { if (err) { clearOnline(); setHomeError(`Couldn't rejoin room ${v.code}: ${err}`); setScreen({ name: 'home' }); } });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const leaveLobby = useCallback(lobby => {
+  const dropLobby = lobby => {
     clearOnline();
     Promise.resolve(lobby && lobby.leave ? lobby.leave() : null).catch(() => {}).finally(() => { if (lobby && lobby.destroy) lobby.destroy(); });
-    goHome();
-  }, [goHome]);
+  };
+  const leaveLobby = useCallback(lobby => { dropLobby(lobby); goHome(); }, [goHome]);
+  leaveRef.current = lobby => { dropLobby(lobby); goHomeRef.current(); };
 
   if (screen.name === 'game' && session) {
     const online = session.info?.mode === 'online';

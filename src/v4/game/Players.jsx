@@ -36,7 +36,7 @@ export default function Players({ state, active, mySeats, optionFor, onPick }) {
         return (
           <section key={p.id} data-pid={p.id} className={`pl${isActive ? ' active' : ''}`} style={{ '--pc': playerColor(p.id) }} aria-label={`${p.name}${isActive ? ', to act' : ''}`}>
             <div className="top">
-              <span className="nm"><i />{p.name}{p.kind === 'bot' ? <em> · bot</em> : mySeats.includes(p.id) && mySeats.length < state.players.length ? <em> · you</em> : null}</span>
+              <span className="nm"><i />{p.name}{p.kind === 'bot' ? <em> · bot</em> : (mySeats.length === 1 ? mySeats[0] === p.id : mySeats.length > 1 && active === p.id && mySeats.includes(p.id)) ? <em> · you</em> : null}</span>
               <span className="fol"><Tick value={f} color={playerColor(p.id)} className="num" /><small>{f === 1 ? 'follower' : 'followers'}</small></span>
             </div>
             <div className="res">

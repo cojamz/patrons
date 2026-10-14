@@ -1,9 +1,10 @@
 // App flow: Home → Play on this device → setup → game, with the real local session.
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import App from '../../../v4/App.jsx';
 
 afterEach(cleanup);
+beforeEach(() => localStorage.clear());
 
 describe('v4 app', () => {
   it('goes from Home through local setup into a game', () => {

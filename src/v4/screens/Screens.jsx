@@ -4,6 +4,7 @@ import { PLAYER_COLORS } from '../format.js';
 import HowToPlay from '../HowToPlay.jsx';
 
 const KINDS = [['human', 'Person'], ['bot', 'Bot'], ['empty', 'Empty']];
+const NAME_MAX = 14;
 
 function Seg({ value, options, onChange, label }) {
   return (
@@ -20,7 +21,8 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, er
   const [err, setErr] = useState('');
   const [rules, setRules] = useState(false);
   const [working, setWorking] = useState(false);
-  const go = fn => { setErr(''); setWorking(true); Promise.resolve(fn()).then(e => { if (e) setErr(e); }).finally(() => setWorking(false)); };
+  const [retry, setRetry] = useState(null);
+  const go = fn => { setErr(''); setRetry(null); setWorking(true); Promise.resolve(fn()).then(e => { if (e) { setErr(e); setRetry(() => fn); } }).finally(() => setWorking(false)); };
   const [name, setName] = useState(() => { try { return localStorage.getItem('patrons.name') || ''; } catch { return ''; } });
   const saveName = v => { setName(v); try { localStorage.setItem('patrons.name', v); } catch { /* ignore */ } };
   return (
@@ -44,14 +46,15 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, er
         )}
         <button type="button" className={`btn big${saved ? '' : ' pri'}`} onClick={onLocal} data-home="local">{saved ? 'New game on this device' : 'Play on this device'}</button>
         <div className="online-box">
-          <label className="field"><span>Your name</span><input value={name} maxLength={16} onChange={e => saveName(e.target.value)} placeholder="Name" /></label>
-          <button type="button" className="btn big" disabled={!onlineReady || working} onClick={() => go(() => onHost(name.trim() || 'Host'))}>Host online game</button>
-          <form className="join" onSubmit={e => { e.preventDefault(); if (code.trim()) go(() => onJoin(code.trim().toUpperCase(), name.trim() || 'Guest')); }}>
+          <label className="field"><span>Your name</span><input value={name} maxLength={NAME_MAX} onChange={e => saveName(e.target.value)} placeholder="Name" /><small className="count num">{name.length}/{NAME_MAX}</small></label>
+          <button type="button" className="btn big" disabled={!onlineReady || working || !name.trim()} onClick={() => go(() => onHost(name.trim()))}>Host online game</button>
+          <form className="join" onSubmit={e => { e.preventDefault(); if (code.trim() && name.trim()) go(() => onJoin(code.trim().toUpperCase(), name.trim())); }}>
             <input aria-label="Room code" value={code} maxLength={8} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="CODE" disabled={!onlineReady} />
-            <button type="submit" className="btn" disabled={!onlineReady || working || !code.trim()}>Join with code</button>
+            <button type="submit" className="btn" disabled={!onlineReady || working || !code.trim() || !name.trim()}>Join with code</button>
           </form>
           {working && <p className="hint">Connecting…</p>}
-          {err && <p className="error" role="alert">{err}</p>}
+          {!name.trim() && onlineReady && <p className="hint">Enter your name to host or join.</p>}
+          {err && <p className="error" role="alert">{err}{retry && <> <button type="button" className="btn ghost" onClick={() => go(retry)}>Retry</button></>}</p>}
           {!onlineReady && <p className="hint">Online play is being wired up. Hot-seat works now.</p>}
         </div>
         <button type="button" className="btn ghost rules-link" onClick={() => setRules(true)}>How to play</button>
@@ -89,7 +92,10 @@ export function LocalSetup({ initial, onStart, onBack }) {
         {seats.map((s, i) => (
           <div className="seat" key={i} style={{ '--pc': PLAYER_COLORS[i] }}>
             <i className="dot" />
-            <input aria-label={`Seat ${i + 1} name`} value={s.name} maxLength={14} disabled={s.kind === 'empty'} onChange={e => set(i, { name: e.target.value })} />
+            <label className="namebox">
+              <input aria-label={`Seat ${i + 1} name`} value={s.name} maxLength={NAME_MAX} disabled={s.kind === 'empty'} onChange={e => set(i, { name: e.target.value })} />
+              <small className={`count num${s.name.length >= NAME_MAX ? ' full' : ''}`} aria-hidden="true">{s.name.length}/{NAME_MAX}</small>
+            </label>
             <Seg label={`Seat ${i + 1}`} value={s.kind} options={KINDS} onChange={v => set(i, { kind: v })} />
           </div>
         ))}

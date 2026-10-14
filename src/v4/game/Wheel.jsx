@@ -50,7 +50,7 @@ export function spaceGeometry(state) {
  * @param {{ state:any, legal:Map<string,string>, onPick:(id:string)=>void, onDenied?:(info:object, el:Element)=>void,
  *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void }} props
  */
-export default function Wheel({ state, legal, onPick, onDenied, flash, late = false, facing, onFacing }) {
+export default function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, facing, onFacing }) {
   const [rot, setRot] = useState(() => -90 * facing);
   const [peek, setPeek] = useState(null); // { key, pinned }
   const rotRef = useRef(rot);
@@ -78,7 +78,9 @@ export default function Wheel({ state, legal, onPick, onDenied, flash, late = fa
     };
     anim.current = requestAnimationFrame(step);
   }, [applyRot]);
-  const nudge = useCallback(deg => animateTo(Math.round((rotRef.current + deg) / 90) * 90), [animateTo]);
+  const touched = useRef(onTouched);
+  touched.current = onTouched;
+  const nudge = useCallback(deg => { if (touched.current) touched.current(); animateTo(Math.round((rotRef.current + deg) / 90) * 90); }, [animateTo]);
 
   // Parent asked to face a quadrant (a tab, or a rival's move): spin there the short way.
   useEffect(() => {
@@ -115,6 +117,7 @@ export default function Wheel({ state, legal, onPick, onDenied, flash, late = fa
   };
   const onDown = e => {
     lastPointer.current = e.pointerType || 'mouse';
+    if (onTouched) onTouched();
     if (e.target.closest('button')) return;
     const p = local(e);
     if (p.d > 205 || p.d < 30) return; // only drags that start on the ring
@@ -152,7 +155,7 @@ export default function Wheel({ state, legal, onPick, onDenied, flash, late = fa
   const tap = (s, el) => {
     if (moved.current) return;
     const opt = legal.get(s.key);
-    const touch = lastPointer.current === 'touch';
+    const touch = confirmPlace || lastPointer.current === 'touch';
     if (opt && !touch) { setPeek(null); onPick(opt); return; }
     if (opt && touch) {
       if (peek && peek.key === s.key && peek.pinned) { setPeek(null); onPick(opt); return; }

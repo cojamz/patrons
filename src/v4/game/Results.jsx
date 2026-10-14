@@ -5,10 +5,16 @@ import { breakdown, playerColor, winSentence } from '../format.js';
 export default function Results({ state, onPlayAgain, onHome }) {
   const ranked = (state.ranking || state.players.map(p => p.id)).map(id => state.players[id]);
   const top = followers(state, ranked[0]);
+  // Ranks with ties: same followers and members share a rank ("1="); members break follower ties.
+  const key = p => `${followers(state, p)}|${memberCount(state, p)}`;
+  const rankOf = ranked.map((p, k) => ranked.findIndex(o => key(o) === key(p)) + 1);
+  const shared = r => rankOf.filter(x => x === r).length > 1;
+  const winners = ranked.filter((p, k) => rankOf[k] === 1);
+  const brokeTie = ranked.some((p, k) => k > 0 && followers(state, p) === followers(state, ranked[k - 1]) && key(p) !== key(ranked[k - 1]));
   return (
     <section className="results" aria-label="Final results">
       <h2 className="win" style={{ '--pc': playerColor(ranked[0].id) }}>
-        <span>{ranked.filter(p => followers(state, p) === top).map(p => p.name).join(' & ')}</span> wins with <span className="num big">{top}</span> followers
+        <span>{winners.map(p => p.name).join(' & ')}</span> {winners.length > 1 ? 'tie' : 'wins'} with <span className="num big">{top}</span> followers
       </h2>
       <p className="why" data-why>{winSentence(state)}</p>
       <div className="table-scroll">
@@ -21,7 +27,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
               const b = breakdown(state, p);
               return (
                 <tr key={p.id} className={k === 0 ? 'first' : ''}>
-                  <td>{k + 1}</td>
+                  <td className="rank">{rankOf[k]}{shared(rankOf[k]) ? '=' : ''}</td>
                   <td style={{ color: playerColor(p.id) }}>{p.name}{p.kind === 'bot' ? ' · bot' : ''}<small>{memberCount(state, p)} members</small></td>
                   <td className="tot">{followers(state, p)}</td>
                   <td>{b.members}</td>
@@ -36,6 +42,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
           </tbody>
         </table>
       </div>
+      {brokeTie && <p className="hint">Tied on followers: more members breaks the tie.</p>}
       {ranked.some(p => p.final && p.final.parts.length) && (
         <ul className="parts">
           {ranked.filter(p => p.final && p.final.parts.length).map(p => (

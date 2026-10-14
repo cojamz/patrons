@@ -14,7 +14,7 @@ describe('round end card', () => {
     const dlg = await waitFor(() => screen.getByRole('dialog', { name: /Round I scoring/ }), { timeout: 8000 });
     expect(within(dlg).getAllByRole('listitem')).toHaveLength(4);
     const held = session.getState().moves;
-    expect(container.querySelector('.status .round').textContent).toMatch(/Round II/);
+    expect(container.querySelector('header .round').textContent).toMatch(/Round II/);
     fireEvent.click(within(dlg).getByRole('button', { name: /Start round II/ }));
     expect(screen.queryByRole('dialog', { name: /Round I scoring/ })).toBeNull();
     session.destroy();
