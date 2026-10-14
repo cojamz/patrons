@@ -91,10 +91,12 @@ function payAndRecruit(ctx, p, v, { uid, why, fromPile }) {
   }
   if (!ctx.state.shop.includes(uid)) { ctx.log(`${why}: ${card.def.name} is gone.`); return; }
   for (const r in v) p.res[r] -= v[r];
-  ctx.log(`${why}: ${p.name} pays ${payLabel(v)} for ${card.def.name}.`);
+  // a member's own recruit names the member ("P1's Black Market: pays …"); an action's names the action
+  ctx.log(fromPile ? `${p.name}'s ${why}: pays ${payLabel(v)} for ${card.def.name}.` : `${why}: ${p.name} pays ${payLabel(v)} for ${card.def.name}.`);
   if ((why === 'Clearance' || (LEAN && why === 'Bargain')) && !fromPile) {
-    const q = ctx.state.queue, k = q.findIndex(t => t.t === 'buy' && t.p === p.id);
-    if (k >= 0) q.splice(k, 1);
+    const q = ctx.state.queue, k = q.findIndex(t => t.t === 'buy' && !t.extra && t.p === p.id);
+    // it is this turn's buy: it counts as a real first buy, so a second buy (Big Spender) still follows
+    if (k >= 0) { q.splice(k, 1); p.turnBuys = (p.turnBuys || 0) + 1; }
   }
   // paid for here, so the engine takes no payment; `paid` tells a copy (Green) this wasn't a free member
   ctx.recruit(p, uid, { free: true, paid: Object.values(v).some(n => n > 0) });
