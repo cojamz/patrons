@@ -24,7 +24,7 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - Everything else (code, tooling, harness, process, sequencing): decide and do it. Report briefly afterward.
 - Never send Cory a menu of tactical options. Pick one.
 - **Price every card before showing it.** Use `design/eval/value-model.md`: a ring-I space is worth about 2.5u, ring II about 4u, ring III about 7u, and a member is worth about its cost plus 1.5u. A free swap or an extra recruit already uses up a whole space's budget, so never stack a resource gain on top of a strong verb. Anything outside its band gets cut before Cory sees it. Cory's own anchors at the top of the value model beat the model's numbers.
-- Resource use is not a constraint. Use parallel agents, simulations, screenshots freely.
+- Resource use is not a constraint (no token or cost limits, per Cory 2026-10-14). Always push for the most effective harness and organization: max useful parallelism, the strongest tool for each job, and nothing idle that isn't a dependency.
 
 ## What works with Cory (self-review, 2026-10-14)
 - **Numbered lists he can answer by number.** He replies "1 yes, 2 no, 3 …". That's the fastest loop we have. Use it for every set of decisions or ideas, one line each, with the default stated.
@@ -70,3 +70,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-14 — Cory: replies were creeping long again (second time). Made it a hard rule: 5-line cap unless he asks for detail, and no tables unless he asks for data.
 - 2026-10-14 — Self-review at Cory's request: added "What works with Cory" (numbered decisions, his words only, do it his way, label my fill-ins, sanity-check balance direction, 3-line status with ETA, show don't describe).
 - 2026-10-14 — Cory: the self-review was too vague and too comms-only. Added "How I approach problems": concrete lessons (calibrate before scaling, measure before numbers, know the instrument, verify through his eyes, decisions↔code traceability, principles are defaults, parallelize).
+- 2026-10-14 — Cory: always push for the most effective harness and use of resources to reach the goal fast; ignore token caps.
