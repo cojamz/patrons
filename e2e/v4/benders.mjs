@@ -13,6 +13,7 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { createGame, applyMove, chooseBotMove } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
+import { BUILD } from '../../src/v4/session/record.js';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/benders';
 mkdirSync(SHOTS, { recursive: true });
@@ -33,6 +34,7 @@ if (!base) {
 function benderSave(seed) {
   const seats = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
   let s = createGame({ seats, seed });
+  s.build = { ...BUILD }; // this build's stamp, or the app sets the save aside as "older version"
   const rand = seededRandom(seed);
   for (let n = 0; n < 800 && !(s.round === 1 && s.pending && s.pending.player === 0 && s.pending.kind === 'place' && Object.keys(s.slots).length > 0); n++) {
     s = applyMove(s, s.pending.player === 0 ? chooseBotMove(s, rand) : chooseBotMove(s, rand));
