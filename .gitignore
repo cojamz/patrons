@@ -6,3 +6,4 @@ node_modules
 .v4-build*/
 .v4-panel/
 .v4-wt/
+vite.config.js.timestamp-*
