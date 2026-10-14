@@ -33,11 +33,13 @@ const RALLY = 5; // Rally's price (measured taker win rate: 3 → 45%, 4 → 42%
 const priceFor = (ctx, p, base) => (ctx.membersOf(p).some(c => c.def.halfTurns || (c.copy && c.copy.endsWith('.doubletime'))) ? Math.ceil(base / 2) : base);
 const canBuyTurn = (ctx, p, base) => (p.res[P] || 0) >= priceFor(ctx, p, base) && spareSpace(ctx);
 /** Pay for an extra turn; without the purple (or a spare space), take the fallback gain instead. */
-function buyTurn(ctx, p, base, what, fallback) {
+/** "(Double Time: 6 → 3)" when Double Time made it cheaper, so the price traces to the card. */
+const halfNote = (base, c) => (c < base ? ` (Double Time: ${base} → ${c})` : '');
+function buyTurn(ctx, p, base, what, fallback, member = false) {
   if (canBuyTurn(ctx, p, base)) {
     const c = priceFor(ctx, p, base);
     p.res[P] -= c;
-    ctx.log(`${p.name} pays ${c} purple for ${what}.`);
+    ctx.log(member ? `${p.name}'s ${what}: pays ${c} purple for an extra turn${halfNote(base, c)}.` : `${p.name} pays ${c} purple for ${what}${halfNote(base, c)}.`);
     extraTurns(ctx, p, 1);
     return true;
   }
@@ -54,7 +56,8 @@ function fire(ctx, p, hook, ...args) {
     const defs = [c.def];
     // the copied member's def by id: it may be a guest member with no quadrant of its own
     if (c.copy) defs.push(defById(c.copy));
-    for (const d of defs) if (d && d[hook]) d[hook](ctx, p, c, ...args);
+    // run as the member, so what it changes is logged under its name (Foreman, Courier, Apprentice, Overseer)
+    for (const d of defs) if (d && d[hook]) ctx.asMember(p, d.name, () => d[hook](ctx, p, c, ...args));
   }
 }
 function extraHooks(ctx, p) {
@@ -63,7 +66,7 @@ function extraHooks(ctx, p) {
 }
 
 /** Give p up to n extra turns right after the current one. Returns how many it got. */
-export function extraTurns(ctx, p, n = 1) {
+export function extraTurns(ctx, p, n = 1, why = null) {
   let k = 0;
   for (; k < n && spareSpace(ctx); k++) {
     const q = ctx.state.queue;
@@ -72,9 +75,10 @@ export function extraTurns(ctx, p, n = 1) {
     p.left += 1;
   }
   if (k) {
-    ctx.log(`${p.name} takes ${k === 1 ? 'an extra turn' : `${k} extra turns`}.`);
+    // why: the member that gave it (Errand Runner, Second Wind), so the turn traces to the card
+    ctx.log(`${why ? `${p.name}'s ${why}: ${p.name}` : p.name} takes ${k === 1 ? 'an extra turn' : `${k} extra turns`}.`);
     for (let i = 0; i < k; i++) extraHooks(ctx, p);
-  } else ctx.log(`No space to spare: ${p.name} gets no extra turn.`);
+  } else ctx.log(`No space to spare: ${p.name} gets no extra turn${why ? ` from ${why}` : ''}.`);
   return k;
 }
 
@@ -162,7 +166,7 @@ export default {
       while (q[at] && q[at].t === 'turn' && q[at].p === rivalId) at++;
       q.splice(at, 0, { t: 'turn', p: p.id });
       p.left += 1;
-      ctx.log(`${p.name} pays ${c} purple to Relay: a turn right after ${ctx.player(rivalId).name}.`);
+      ctx.log(`${p.name}'s Relay: pays ${c} purple for a turn right after ${ctx.player(rivalId).name}${halfNote(3, c)}.`);
       extraHooks(ctx, p);
     },
     lingerFrom(ctx, p, from) {
@@ -188,17 +192,17 @@ export default {
   members: [
     m('secondwind', 'Second Wind', 8, 4, 'Once per game: take an extra turn right after this one.', {
       activate: 'game',
-      onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1)) card.used = false; },
+      onActivate(ctx, owner, card) { if (!extraTurns(ctx, owner, 1, 'Second Wind')) card.used = false; },
       botActivate: ctx => ctx.state.round === 3 && spareSpace(ctx),
     }),
     m('errand', 'Errand Runner', 4, 4, 'When recruited: take an extra turn right after this one.', {
-      onRecruited(ctx, owner) { extraTurns(ctx, owner, 1); },
+      onRecruited(ctx, owner) { extraTurns(ctx, owner, 1, 'Errand Runner'); },
     }),
     m('taskmaster', 'Taskmaster', 6, 2, 'Once per round: pay 5 purple to take an extra turn right after this one.', {
       activate: 'round',
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
-        if (!buyTurn(ctx, owner, 5, 'Taskmaster', 0)) { card.used = false; ctx.log(`${owner.name} can't pay for Taskmaster now.`); }
+        if (!buyTurn(ctx, owner, 5, 'Taskmaster', 0, true)) { card.used = false; ctx.log(`${owner.name} can't pay for Taskmaster now.`); }
       },
       botActivate: (ctx, owner) => canBuyTurn(ctx, owner, 5) && ctx.state.round >= 2,
     }),

@@ -75,7 +75,10 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
   const timer = useRef(null);
   const shownRef = useRef(first);
   const online = session.info?.mode === 'online';
-  const roundStart = useRef(loadRoundStart(first, online) || first);
+  // read (and, if missing, written) once: as a plain useRef argument this ran on every render, re-saving the
+  // round-start snapshot after the results had cleared it (a finished game kept a "Resume")
+  const [rs0] = useState(() => loadRoundStart(first, online) || first);
+  const roundStart = useRef(rs0);
 
   const show = useCallback(next => {
     const prev = shownRef.current;
