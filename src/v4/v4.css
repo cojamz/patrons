@@ -1224,7 +1224,7 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 /* a question takes the side column: the compact shop steps aside (you can't buy mid-question, and a choice that
    names shop cards shows them itself), so the board panel, the question and the buy row never overlap */
 @media (min-width:861px) and (min-height:500px){
-  .app.game.choosing .side.framed .frame > .shop-panel.compact{display:none}
+  .app.game.choosing:not(.in-setup) .side.framed .frame > .shop-panel.compact{display:none}
 }
 /* the rival-move caption centers with `translate` (its `rise` animation owns `transform`): it once slid half its
    width off to the right while appearing, widening the phone page sideways. Gated by touch.mjs (h). */
@@ -1245,3 +1245,42 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 /* the toast (e.g. "the game ends after this round") centers with `translate` too: its `rise` animation owns
    `transform`, so it used to appear half off the right edge of a phone */
 .toast{transform:none;translate:-50% 0}
+
+/* setup: the face-up members stay on screen (picking starting resources depends on them). Laptops keep the compact
+   shop in view (the follower-buy row steps aside: nothing to buy yet); phones get a read-only strip in the setup tray. */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.in-setup .side.framed .fbuy{display:none}
+  .for-sale{display:none}
+}
+.for-sale{margin-top:10px}
+.for-sale .fs-lbl{display:block;font-size:var(--fs-2);font-weight:600;color:var(--ink);margin-bottom:4px}
+.for-sale .fs-lbl small{font-weight:400;color:var(--muted);font-size:var(--fs-1);margin-left:6px}
+.for-sale .fs-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.for-sale .fs-card{display:flex;flex-direction:column;gap:2px;min-height:44px;padding:5px 8px;text-align:left;border-radius:8px;border:1px solid var(--rim);border-top:3px solid var(--c);background:var(--table);color:var(--ink);font:inherit;cursor:pointer;min-width:0}
+.for-sale .fs-card .row{display:flex;justify-content:space-between;gap:6px;font-size:var(--fs-2)}
+.for-sale .fs-card .row b{font-weight:600;overflow-wrap:anywhere}
+.for-sale .fs-cost{font-size:var(--fs-1);color:var(--muted)}
+.for-sale .fs-cost i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px}
+/* the round-end standings strip reads as scoring: a label, each rule as printed on its ring ("Most white"), and the
+   prize never clipped (the rule wraps instead) */
+/* the label sits in its own narrow first column, so the strip stays one row on laptops */
+.contests{grid-template-columns:auto repeat(4,minmax(0,1fr))}
+.contests .contests-head{display:flex;flex-direction:column;justify-content:center;font-size:var(--fs-1);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);line-height:1.2;padding-right:2px;max-width:64px}
+.contests .contests-head small{text-transform:none;letter-spacing:0;font-size:var(--fs-1)}
+@container board (max-width:440px){ .contests .contests-head{grid-column:1 / -1;flex-direction:row;gap:6px;max-width:none} }
+.contest{height:auto;min-height:38px;white-space:normal;overflow:visible}
+.contest .c1{display:flex;align-items:flex-start;gap:4px;overflow:visible;white-space:normal;line-height:1.25}
+.contest .c1 i{margin-top:4px}
+.contest .c1 .rule{min-width:0;overflow-wrap:anywhere}
+.contest .c1 .prize{flex:none;margin-left:auto;color:var(--ink)}
+.contest .c2{overflow:visible;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
+@media (min-width:861px) and (max-height:640px){ .contests .contests-head{flex:none;flex-basis:auto;align-self:center;margin-right:4px} .contests .contests-head small{display:none} }
+@media (max-height:480px) and (orientation:landscape){ .contests .contests-head{flex:none;flex-basis:auto;align-self:center;margin-right:4px} .contests .contests-head small{display:none} }
+/* laptops: two lines for the rule at most, the standing on one line (your own count and the tiebreak are in the
+   chip's tooltip and in the panel's "now" line); the board leaves room for the taller chips */
+@media (min-width:861px) and (min-height:500px){
+  .contest .c1{font-size:var(--fs-1)}
+  .contest .c2 small{display:none}
+  .contest .c2{white-space:nowrap;overflow:visible}
+  .app.game .stage{width:min(100cqw, 100cqh - 84px)}
+}

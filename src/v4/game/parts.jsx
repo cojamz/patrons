@@ -79,7 +79,7 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null }) {
     <section className={`prompt choice${setup ? ' setup' : ''}`} aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}>
       {turnOf && <TurnOf player={turnOf} />}
       <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `Pick a starting resource${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] ? ` (${pend.prompt.match(/\((\d) of 2\)/)[1]} of 2)` : ''}` : pend.prompt}</p>
-      {setup ? <SetupTokens state={state} pend={pend} onPick={pick} busy={busy} />
+      {setup ? <><SetupTokens state={state} pend={pend} onPick={pick} busy={busy} /><ForSale state={state} /></>
         : trade ? <TradePicker state={state} pend={pend} onPick={pick} busy={busy} />
           : <MergedOptions state={state} pend={pend} onPick={pick} busy={busy} />}
       {!setup && !trade && left != null && Number(left) > 1 && (
@@ -98,6 +98,36 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null }) {
 
 // how many a counted-pick target holds: "P3 · 5 gold" or "P3 (5)"
 const holds = o => Number((String(o.label).match(/· (\d+)\b/) || String(o.label).match(/\((\d+)\)$/) || [])[1] || 0);
+
+/**
+ * Setup: what's for sale decides what to pick, so the six face-up members ride along in the setup tray, read-only.
+ * Phones show it here (the shop is far down the page); laptops hide it and keep the compact shop on screen instead.
+ * A tap opens the card in full.
+ */
+function ForSale({ state }) {
+  const [open, setOpen] = useState(null); // { uid, el }
+  if (!state.shop || !state.shop.length) return null;
+  return (
+    <div className="for-sale" role="group" aria-label="For sale: the face-up members">
+      <span className="fs-lbl">For sale <small>tap a card to read it</small></span>
+      <div className="fs-strip">
+        {state.shop.map(uid => {
+          const d = cardDef(state, uid);
+          const parts = costParts(d, state.resources);
+          return (
+            <button key={uid} type="button" className="fs-card" data-sale={uid} style={{ '--c': `var(--${d.quadrant})` }}
+              aria-label={`${d.name}, ${d.f} followers, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}. Show the card.`}
+              onClick={e => setOpen({ uid, el: e.currentTarget })}>
+              <span className="row"><b>{d.name}</b><span className="num">{d.f}★</span></span>
+              <span className="fs-cost">{parts.length ? parts.map((c, k) => <span key={k}>{k ? ' + ' : ''}{c.color !== 'any' && <i style={{ background: `var(--${c.color})` }} />}<span className="num">{c.n}</span> {c.color}</span>) : 'free'}</span>
+            </button>
+          );
+        })}
+      </div>
+      {open && <Popover anchor={open.el} onClose={() => setOpen(null)}><CardFace state={state} uid={open.uid} /></Popover>}
+    </div>
+  );
+}
 
 function SetupTokens({ state, pend, onPick, busy }) {
   return (

@@ -238,3 +238,15 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Priority: anything that makes the game playable by humans comes first. Improve the thinking bots, but no rabbit holes with bots or agent prompting. To-do list: design/todo.md.
 - ✅ (Cory) The face-up members for sale must be visible while picking starting resources: what's for sale informs the pick.
 - ❌ (Cory) Relay (Purple: pay 3 purple to answer a rival's extra turn with one of your own) is cut: it doesn't make sense. Claude brings 2–3 priced replacements.
+
+## 2026-10-14 — Cory's first play of the v4 build (notes)
+- ✅ (Cory) "The game works great." For fixes for now, Claude goes with his gut (defaults on open questions), logged here so Cory can overturn any.
+- ✅ (Cory) Follower buys don't require multiple colors: 2→1, 4→3, 8→6 and 10→10 take any resources.
+- ✅ (Cory) You can't sell followers attached to members without getting rid of the member. (So only loose followers sell; Pawn's sale is dead in round I and Pawn needs rework.)
+- ❌ (Cory) Shift Crew too expensive; Clockmaker too expensive, and purple is worth nothing at the end of round III. Claude: plain-follower members back to their pre-doubling cost (they don't pay for an ability); Clockmaker 4 and pays at round start.
+- (Cory) Feast Hall should be better or worth more; many members are miscosted, so pricing needs a more robust exercise (the fair-price screen over every card).
+- (Cory) Linger is just bad; Rally makes no sense (a worker spent to get a worker). Purple's ring II/III need rework. Most workers on the board is almost always a tie (Claude's gut: ties score nothing).
+- (Cory) Cash In and Magnate seem redundant, and Cash In maybe too strong. White needs a pass.
+- (Cory) Green needs tweaking as a whole.
+- (Cory) UI: animations are good but it's still too hard to tell what's going on; choosing how to pay is overcomplicated and not tactile; the board is overwhelming (too many spaces, hover to read).
+- Claude's gut calls under "go with your gut": Watchdog blocks Red's Trade; stolen loot stays magenta (Midas/Underdog don't apply); use/buy-then-release allowed; Release on; Late Riser name; discounts doubled with costs; 10→10 is the game-end clock; Investor's or Sower's set-aside comes back undoubled whenever the card leaves; Doppelganger doesn't re-fire a copied "when recruited"; Prospector/Tinker/Hustler bonuses and Investor's return aren't "gold gains" for Underdog; Underdog doubles Rainmaker and Speculator; Lamplighter pays the printed 3/4/5; a copied Underdog doubles once; Linger's text says it counts as an extra turn (moot if Linger is reworked).

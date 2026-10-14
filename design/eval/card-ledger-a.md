@@ -52,15 +52,17 @@ Status key:
 - Doppelganger: **OK.** See Q1 and the dead-by-design entry below.
 
 ## Purple
+Relay was cut by Cory (2026-10-14), so it's not in this ledger. Purple has 14 members.
+
 - Hourly, Catch Up, Wind-up, Linger, Overtime, Rally: **OK.**
 - Second Wind: **FIXED.** It now logs "P1's Second Wind: P1 takes an extra turn".
-- Errand Runner: **FIXED (same).** A rival's Overseer and Relay react to its turn, and both are named.
+- Errand Runner: **FIXED (same).** A rival's Overseer reacts to its turn and is named.
 - Taskmaster: **FIXED.** It now logs "P1's Taskmaster: pays 5 purple …".
 - Late Riser: **OK.** It goes before a rival's Front-runner.
 - Foreman, Courier, Apprentice, Overseer: **FIXED (F4).**
-- Double Time: **FIXED.** Prices now read "(Double Time: 6 → 3)" on Overtime, Rally, Taskmaster and Relay. A Doppelganger copy doesn't halve again.
-- Relay: **FIXED.** It now logs "P2's Relay: pays 3 purple for a turn right after P1".
-- Bookkeeper, Clockmaker, Patience: **OK.**
+- Double Time: **FIXED.** Prices now read "(Double Time: 6 → 3)" on Overtime, Rally and Taskmaster. A Doppelganger copy doesn't halve again.
+- Bookkeeper, Patience: **OK.**
+- Clockmaker: **OK.** Checked against the new text "At round start, +1 purple per 2 purple you have", which another agent changed on 2026-10-14. The Clockmaker test in `spheres/purple.test.js` still expects round end, and its owner needs to update it.
 - Lamplighter: **OK.** See Q4.
 
 ## Silver
@@ -101,4 +103,4 @@ Status key:
 4. **Lamplighter.** It says "+1 purple per worker you get this round (3 / 4 / 5)". Does Extra Hand's extra worker count? [No: it pays the printed 3 / 4 / 5.]
 5. **Sower leaving mid-round.** Planted yellow now comes back unharvested, mirroring your Investor call. Is that right? [Yes, it comes back.]
 6. **Two Underdogs.** A Doppelganger copying Underdog doubles only once (no ×4), while a copied Grand Host gives ×4. [Once.]
-7. **Linger and extra turns.** Linger counts as "an extra turn" for Foreman, Courier, Apprentice, Overseer and Relay. That's a house rule in purple.md, but no card says so. Should Linger's card text print it? [Yes, print it on Linger.]
+7. **Linger and extra turns.** Linger counts as "an extra turn" for Foreman, Courier, Apprentice and Overseer. That's a house rule in purple.md, but no card says so. Should Linger's card text print it? [Yes, print it on Linger.]

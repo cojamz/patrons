@@ -127,7 +127,7 @@ describe('White actions', () => {
     expect(ids(s)).toEqual(['amount:0', 'amount:1']);
     s = take(scene({ round: 2 }), 'Sell High');
     expect(s.pending?.kind).not.toBe('choose');
-    expect(s.log.join('\n')).toContain('P1 had no followers to sell.');
+    expect(s.log.join('\n')).toContain('Sell High: P1 has no followers to sell yet');
   });
 
   it('Cash In (ring II): +1 follower, then trade white for followers 1 for 1', () => {

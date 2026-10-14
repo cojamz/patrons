@@ -226,7 +226,7 @@ const silver = {
       },
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res[S] >= 6,
     }),
-    m('dowager', 'Dowager', 4, 4, 'Worth 3 followers.', { f: 3 }),
+    m('dowager', 'Dowager', 2, 2, 'Worth 3 followers.', { f: 3 }),
     m('grandhost', 'Grand Host', 8, 4, 'Silver spaces give you twice the silver.', { hostDouble: true }),
     m('saint', 'Patron Saint', 8, 4, 'Game end: +1 follower per 2 silver members in play, anyone’s.', {
       onGameEnd: ctx => Math.floor(ctx.state.players.reduce((s, o) => s + ctx.countMembersOfColor(o, S), 0) / 2),

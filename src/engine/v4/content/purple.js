@@ -153,22 +153,6 @@ export default {
   ],
 
   handlers: {
-    relay(ctx, p, rivalId, data) {
-      if (rivalId < 0 || !canBuyTurn(ctx, p, 3)) return;
-      const card = ctx.card(data.uid);
-      card.relayRound = ctx.state.round;
-      const c = priceFor(ctx, p, 3);
-      p.res[P] -= c;
-      // right after the rival's extra turn(s), which sit just after the current turn's end
-      const q = ctx.state.queue;
-      let at = q.findIndex(t => t.t === 'endTurn');
-      at = at < 0 ? 0 : at + 1;
-      while (q[at] && q[at].t === 'turn' && q[at].p === rivalId) at++;
-      q.splice(at, 0, { t: 'turn', p: p.id });
-      p.left += 1;
-      ctx.log(`${p.name}'s Relay: pays ${c} purple for a turn right after ${ctx.player(rivalId).name}${halfNote(3, c)}.`);
-      extraHooks(ctx, p);
-    },
     lingerFrom(ctx, p, from) {
       const opts = targets(ctx, p).map(({ key, q, a }) => ({
         id: `to:${key}`, label: `${a.name} (${ctx.quadrant(ctx.state.quadrants[q]).name})`, kind: 'slot', value: key,
@@ -235,25 +219,17 @@ export default {
     m('bookkeeper', 'Bookkeeper', 4, 2, 'At round end, +1 purple per 2 workers you have on the board.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2)); },
     }),
-    m('clockmaker', 'Clockmaker', 4, 2, 'At round end, +1 purple per 2 purple you have.', {
-      onRoundEnd(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
+    m('clockmaker', 'Clockmaker', 2, 2, 'At round start, +1 purple per 2 purple you have.', {
+      // round start, not end (Claude, 2026-10-14, after Cory: purple left at the end of round III is worth nothing)
+      onRoundStart(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
     }),
     m('lamplighter', 'Lamplighter', 6, 2, 'At round start, +1 purple per worker you get this round (3 / 4 / 5).', {
       onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
-    // fill-in (critic): replaces Marathoner
-    m('relay', 'Relay', 4, 4, 'Once per round, when a rival takes an extra turn, you may pay 3 purple to take one right after it.', {
-      onRivalExtraTurn(ctx, owner, card, rival) {
-        if (card.relayRound === ctx.state.round || !canBuyTurn(ctx, owner, 3)) return;
-        ctx.choose(owner, `Relay: pay ${priceFor(ctx, owner, 3)} purple to take a turn right after ${rival.name}'s?`, [
-          { id: 'yes', label: 'Yes', kind: 'yes', value: rival.id, hint: ctx.state.round >= 2 ? 1 : 0 },
-          { id: 'no', label: 'No', kind: 'no', value: -1, hint: ctx.state.round >= 2 ? 0 : 1 },
-        ], 'purple.relay', { uid: card.uid });
-      },
-    }),
+    // Relay was cut by Cory (2026-10-14); Purple has 14 members until a replacement is priced.
     m('patience', 'Patience', 6, 2, 'Game end: +1 follower per 3 purple.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res[P] || 0) / 3),
     }),
-    m('crew', 'Shift Crew', 2, 2, 'Worth 2 followers. No effect.', { f: 2, vanilla: true }),
+    m('crew', 'Shift Crew', 1, 1, 'Worth 2 followers. No effect.', { f: 2, vanilla: true }),
   ],
 };

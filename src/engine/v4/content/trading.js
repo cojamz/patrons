@@ -46,9 +46,11 @@ export function sell(ctx, p, k, each, { fromAction = false, why = 'sold', by = n
   return k;
 }
 
+// Why a sale finds nothing to sell (Cory: a skipped printed part says so in the log).
+const NOTHING_TO_SELL = 'no followers to sell yet (only followers you bought or won can be sold)';
 function sellChoice(ctx, p, prompt, most, each, why) {
   const max = Math.min(most, sellable(p));
-  if (max <= 0) return;
+  if (max <= 0) { ctx.log(`${prompt.split(':')[0]}: ${p.name} has ${NOTHING_TO_SELL}.`); return; }
   const v = fv(ctx), late = lastTurn(ctx, p);
   const opts = [];
   for (let k = 0; k <= max; k++) {
@@ -62,7 +64,7 @@ function sellChoice(ctx, p, prompt, most, each, why) {
 
 function cashInChoice(ctx, p) {
   const w = p.res[W];
-  if (!w) return;
+  if (!w) { ctx.log(`Cash In: ${p.name} has no white to trade for followers.`); return; }
   const amounts = [...new Set([0, Math.floor(w / 4), Math.floor(w / 2), Math.floor((3 * w) / 4), w])];
   ctx.choose(p, `Cash In: trade how much white for followers, 1 for 1? (you have ${w})`, amounts.map(x => ({
     id: `amount:${x}`, label: x === 0 ? 'None' : x === w ? `All ${x}` : `${x}`, kind: 'amount', value: x,
@@ -103,7 +105,7 @@ const trading = {
       key: 'sellhigh', ring: 2, name: 'Sell High', text: 'Sell up to 2 followers for 3 white each.',
       estimate: (ctx, p) => Math.min(SELL_HIGH.most, sellable(p)) * (SELL_HIGH.each - fv(ctx)) * (lastTurn(ctx, p) ? 0 : 1),
       resolve(ctx, p) {
-        if (!sellable(p)) { ctx.log(`${p.name} had no followers to sell.`); return; }
+        if (!sellable(p)) { ctx.log(`Sell High: ${p.name} has ${NOTHING_TO_SELL}.`); return; }
         sellChoice(ctx, p, `Sell High: sell how many followers for ${SELL_HIGH.each} white each?`, SELL_HIGH.most, SELL_HIGH.each, 'sold');
       },
     },
@@ -164,7 +166,7 @@ const trading = {
       onRoundStart(ctx, owner, card) { card.used = false; },
       onActivate(ctx, owner, card) {
         // nothing to sell: the use doesn't count
-        if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name} has no followers to sell.`); return; }
+        if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name}'s Pawnbroker: ${NOTHING_TO_SELL}.`); return; }
         sell(ctx, owner, 1, 3, { by: 'Pawnbroker' });
       },
       botActivate: (ctx, owner) => sellable(owner) > 0 && ctx.state.round < 3,
@@ -186,7 +188,7 @@ const trading = {
     m('magnate', 'Magnate', 4, 4, 'Game end: +1 follower per 3 white.', {
       onGameEnd: (ctx, owner) => Math.floor(owner.res[W] / 3),
     }),
-    m('shareholder', 'Shareholder', 4, 2, 'Worth 3 followers.', { f: 3 }),
+    m('shareholder', 'Shareholder', 2, 1, 'Worth 3 followers.', { f: 3 }),
     m('heiress', 'Heiress', 6, 4, 'Once per game: +1 white per member you have.', {
       activate: 'game',
       onActivate(ctx, owner) {
@@ -210,7 +212,7 @@ const trading = {
     m('liquidator', 'Liquidator', 4, 2, `Once per game: sell up to ${LIQUIDATE.most} followers for ${LIQUIDATE.each} white each.`, {
       activate: 'game',
       onActivate(ctx, owner, card) {
-        if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name} has no followers to sell.`); return; }
+        if (!sellable(owner)) { card.used = false; ctx.log(`${owner.name}'s Liquidator: ${NOTHING_TO_SELL}.`); return; }
         // sells as many as it can (up to the cap) the moment you use it, so the white is there for this buy
         sell(ctx, owner, LIQUIDATE.most, LIQUIDATE.each, { why: 'liquidated', by: 'Liquidator' });
       },

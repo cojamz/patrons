@@ -3,15 +3,18 @@
 //      (wheel spaces are measured by their invisible hit circle);
 //  (b) "Undo" is never visible while the seat to act isn't the human who made the move;
 //  (c) consecutive bot steps are at least 600ms apart (in-page timestamps of each displayed move);
-//  (d) no interactive element is clipped by its nearest overflow-hidden ancestor;
+//  (d) no interactive element is clipped by its nearest overflow-hidden ancestor, and no text anywhere is cut off
+//      (wider than its box, or sticking out of a clipping ancestor; lib/textclip.mjs);
 //  (e) your own recruit visibly flies into your panel (a frame check);
 //  (f) no two header items overlap (the header's rows stack cleanly);
 //  (g) a choice panel never overlaps the compact shop, the buy row or the "More below" pill (a sheet must be opaque);
 //  (h) the page never scrolls sideways: scrollWidth <= clientWidth and scrollX stays 0 after every tap;
 //  (i) no hover card ever opens from a touch (or a synthetic hover after a tap);
-//  (j) setup: the starting-resource chips are fully on screen without scrolling (iPhone 13, taps and clicks).
+//  (j) setup: the starting-resource chips are fully on screen without scrolling (iPhone 13, taps and clicks);
+//  (k) setup: the 6 face-up members for sale are on screen in the setup tray, and each opens its card on a tap.
 // Server: $V4_URL if set, else starts `npx vite` on a free port from 5182.
 import { chromium, devices } from 'playwright';
+import { TEXT_CLIP } from './lib/textclip.mjs';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -115,6 +118,7 @@ async function audit(step) {
     if (u && g) out.undo = { actor: g.dataset.actor, bot: g.dataset.bot };
     return out;
   });
+  for (const x of await page.evaluate(TEXT_CLIP)) note(`(d) text cut: ${x}`, step);
   for (const x of r.small) note(`(a) under 44px: ${x}`, step);
   for (const x of r.clipped) note(`(d) clipped: ${x}`, step);
   for (const x of r.overlap || []) note(`(f) header rows overlap: ${x}`, step);
@@ -143,6 +147,7 @@ async function setupPhase() {
     if (r.sw > r.cw) note(`(h) iPhone 13: the page is ${r.sw - r.cw}px wider than the screen`, step);
     if (r.sx !== 0) note(`(h) iPhone 13: the page scrolled sideways (scrollX ${r.sx})`, step);
     if (r.peek) note('(i) iPhone 13: a hover card opened after a tap', step);
+    for (const x of await p2.evaluate(TEXT_CLIP)) note(`(d) iPhone 13 text cut: ${x}`, step);
     return r;
   };
   try {
@@ -155,6 +160,27 @@ async function setupPhase() {
       await go('[data-start]');
       await p2.waitForSelector('.prompt.choice.setup [data-option]');
       await p2.waitForTimeout(500); // the tray's slide-up
+      // the 6 face-up members ride in the setup tray: all on screen, and each opens in full on a tap
+      {
+        const sale = await p2.evaluate(() => [...document.querySelectorAll('.for-sale .fs-card')].map(e => { const b = e.getBoundingClientRect(); return { on: b.top >= -0.5 && b.bottom <= innerHeight + 0.5 && b.left >= -0.5 && b.right <= innerWidth + 0.5, h: b.height, w: b.width }; }));
+        if (sale.length !== 6) note(`(k) iPhone 13 (${how}): ${sale.length} members for sale in the setup tray (want 6)`, 'setup');
+        const off = sale.filter(x => !x.on).length;
+        if (off) note(`(k) iPhone 13 (${how}): ${off} of the members for sale are off screen during setup`, 'setup');
+        if (how === 'tap') {
+          for (let c = 0; c < sale.length; c++) {
+            const el = (await p2.$$('.for-sale .fs-card'))[c];
+            const name = await el.$eval('b', e => e.textContent);
+            await el.tap();
+            await p2.waitForTimeout(350);
+            const pop = await p2.$eval('.popover', e => e.textContent).catch(() => '');
+            if (!pop.includes(name) || pop.length < name.length + 6) note(`(k) iPhone 13: tapping "${name}" for sale did not open its card ("${pop.slice(0, 40)}")`, 'setup');
+            if (c === 0) await p2.screenshot({ path: `${SHOTS}/setup-sale-card.png` });
+            const close = await p2.$('.popover .sheet-close');
+            if (close) await close.tap(); else await p2.keyboard.press('Escape');
+            await p2.waitForTimeout(250);
+          }
+        }
+      }
       for (let k = 0; k < 2; k++) {
         const r = await look(`setup ${how} pick ${k + 1}`);
         if (!r.chips) note(`(j) iPhone 13 (${how}): no starting-resource chips showing`, `pick ${k + 1}`);

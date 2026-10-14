@@ -7,13 +7,13 @@ import { shuffleInPlace } from './rng.js';
 export const RING_VALUE = [2, 4, 6];
 export const WORKERS = [3, 4, 5];
 export const SHOP_SIZE = 6;
-// Follower buys. A limited tier has a stock per game (stock: seats -> count). The clock tier ends the game:
+// Follower buys take any resources (Cory, 2026-10-14: no color requirements). A limited tier has a stock per game (stock: seats -> count). The clock tier ends the game:
 // when its last buy is gone, the game ends after that round.
 export const TIERS = [
   { key: 'small', cost: 2, get: 1, colors: 1, label: '2 of anything' },
-  { key: 'mid', cost: 4, get: 3, colors: 2, label: '4, at least 2 colors' },
-  { key: 'big', cost: 8, get: 6, colors: 3, label: '8, at least 3 colors', limited: true, stock: n => 2 * n, clock: true },
-  { key: 'top', cost: 10, get: 10, colors: 4, label: '10, at least 4 colors', limited: true, stock: () => 4 },
+  { key: 'mid', cost: 4, get: 3, colors: 1, label: '4 of anything' },
+  { key: 'big', cost: 8, get: 6, colors: 1, label: '8 of anything', limited: true, stock: n => 2 * n },
+  { key: 'top', cost: 10, get: 10, colors: 1, label: '10 of anything', limited: true, stock: () => 4, clock: true },
 ];
 /** How many buys of a limited tier are left (Infinity for unlimited tiers). */
 export const tierLeft = (state, tier) => (tier.limited ? state.stock?.[tier.key] ?? 0 : Infinity);

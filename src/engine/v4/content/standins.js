@@ -27,7 +27,8 @@ function standIn(id, name, other1, other2) {
     ],
     handlers: {},
     members: vanilla.map(([key, nm, s, w, f, copies]) => ({
-      key, name: `${name} ${nm}`, s, w, f, n: 1, copies, text: f > 1 ? `Worth ${f} followers.` : 'Worth 1 follower.', vanilla: true,
+      // plain members keep their pre-doubling cost: they don't pay for an ability they lack (Claude, 2026-10-14)
+      key, name: `${name} ${nm}`, s: s / 2, w: w / 2, f, n: 1, copies, text: f > 1 ? `Worth ${f} followers.` : 'Worth 1 follower.', vanilla: true,
     })),
   };
 }

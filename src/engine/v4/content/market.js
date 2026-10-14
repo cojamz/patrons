@@ -157,7 +157,11 @@ const market = {
     {
       key: 'showroom', ring: 1, name: 'Showroom', text: '+1 blue per badged face-up member.',
       estimate: ctx => showroomCount(ctx),
-      resolve(ctx, p) { ctx.gain(p, B, showroomCount(ctx), { fromAction: true }); },
+      resolve(ctx, p) {
+        const k = showroomCount(ctx);
+        if (!k) ctx.log(`Showroom: no badged member is face up, so ${p.name} gains nothing.`);
+        ctx.gain(p, B, k, { fromAction: true });
+      },
     },
     {
       key: 'clearance', ring: 2, name: 'Clearance', text: 'As your buy this turn: a face-up member for half its cost (rounded down), in any colors.',
@@ -167,7 +171,11 @@ const market = {
     {
       key: 'pricecheck', ring: 2, name: 'Price Check', text: 'Gain blue equal to half the cost of your priciest member.',
       estimate: (ctx, p) => Math.floor(priciest(ctx, p) / 2),
-      resolve(ctx, p) { ctx.gain(p, B, Math.floor(priciest(ctx, p) / 2), { fromAction: true }); },
+      resolve(ctx, p) {
+        const k = Math.floor(priciest(ctx, p) / 2);
+        if (!k) ctx.log(`Price Check: ${p.name} has no member costing 2 or more, so gains nothing.`);
+        ctx.gain(p, B, k, { fromAction: true });
+      },
     },
     {
       key: 'spree', ring: 3, name: 'Spree', text: 'This turn you buy 3 times.',

@@ -16,7 +16,7 @@ const PURPLE_TEST_COSTS = {
   'purple.secondwind': [4, 2], 'purple.errand': [2, 2], 'purple.taskmaster': [2, 1], 'purple.lateriser': [3, 2],
   'purple.foreman': [1, 1], 'purple.courier': [1, 1], 'purple.apprentice': [1, 1], 'purple.overseer': [1, 1],
   'purple.doubletime': [2, 1], 'purple.bookkeeper': [1, 1], 'purple.clockmaker': [2, 1], 'purple.lamplighter': [1, 0],
-  'purple.relay': [2, 2], 'purple.patience': [3, 2], 'purple.crew': [1, 1],
+  'purple.patience': [3, 2], 'purple.crew': [1, 1],
 };
 let restore;
 beforeEach(() => {
@@ -191,23 +191,6 @@ describe('Purple members', () => {
   it('Lamplighter: round start, +1 purple per worker you get this round', () => {
     expect(R(start([['purple.lamplighter']])).purple).toBe(4);
     expect(R(scene({ members: [['purple.lamplighter']], queue: [{ t: 'round', r: 3 }] })).purple).toBe(5);
-  });
-  it('Relay: once per round, pay 3 purple to take a turn right after a rival\'s extra turn', () => {
-    let s = take(scene({ round: 2, res: [{ purple: 6 }, { purple: 7 }], members: [[], ['purple.relay']], queue: turns(0, 1, 0) }), 'Overtime');
-    expect(s.pending.kind).toBe('choose');
-    expect(s.pending.player).toBe(1);
-    s = move(s, 'yes');
-    expect(R(s, 1).purple).toBe(4);
-    // P1's extra turn is running now; the relay turn comes right after it, before P2's own turn
-    expect(s.pending).toMatchObject({ kind: 'place', player: 0 });
-    expect(s.queue.filter(t => t.t === 'turn').map(t => t.p)).toEqual([1, 1, 0]);
-    // once per round: a second extra turn this round doesn't ask again
-    expect(s.cards[uidOf(s, 'purple.relay', 1)].relayRound).toBe(2);
-  });
-  it('Relay: saying no keeps your purple', () => {
-    let s = take(scene({ round: 2, res: [{ purple: 6 }, { purple: 7 }], members: [[], ['purple.relay']], queue: turns(0, 1) }), 'Overtime');
-    s = move(s, 'no');
-    expect(R(s, 1).purple).toBe(7);
   });
   it('Patience: game end, +1 follower per 3 purple', () => {
     const s = scene({ round: 3, members: [['purple.patience']], res: [{ purple: 10 }], queue: [{ t: 'finish' }] });

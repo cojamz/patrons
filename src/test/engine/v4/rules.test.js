@@ -198,33 +198,31 @@ describe('follower buys', () => {
     expect(followerPlan(s, p, tier('top'))).toEqual({ gold: 1, red: 4, blue: 3, green: 2 });
   });
 
-  it('a 10-follower buy uses up its own stock and does not end the game', () => {
+  it('a 10-follower buy uses up one of 4; the last one ends the game after that round (the clock, 2026-10-14)', () => {
     let s = scene({ res: [{ gold: 2, red: 3, blue: 3, green: 2 }], queue: [] });
     s.stock.top = 1;
-    s.queue = [{ t: 'turn', p: 0 }];
+    s.queue = [{ t: 'turn', p: 0 }, { t: 'endRound' }, { t: 'afterRound' }];
     resume(s);
     s = take(s, 'Sprout');
     s = move(s, 'tier:top');
     expect(s.stock).toEqual({ big: 4, top: 0 });
-    expect(s.endEarly).toBe(false);
-    expect(s.players[0].bonus).toBe(10);
+    expect(s.endEarly).toBe(true);
+    expect(s.over).toBe(true);
+    expect(s.round).toBe(1);
     expect(hasOpt(s, 'tier:top')).toBe(false);
   });
 
-  it('a 6-follower buy uses up one of 2 per player; the last one ends the game after that round', () => {
+  it('a 6-follower buy uses up one of 2 per player and does not end the game', () => {
     let s = scene({ res: [{ gold: 2, red: 3, blue: 3 }], queue: [] });
     s.stock.big = 1;
-    s.queue = [{ t: 'turn', p: 0 }, { t: 'endRound' }, { t: 'afterRound' }];
+    s.queue = [{ t: 'turn', p: 0 }];
     resume(s);
     s = take(s, 'Sprout');
     expect(hasOpt(s, 'tier:big')).toBe(true);
     s = move(s, 'tier:big');
     expect(s.stock.big).toBe(0);
-    expect(s.endEarly).toBe(true);
-    expect(s.over).toBe(true);
-    expect(s.pending).toBe(null);
-    expect(s.round).toBe(1);
-    expect(s.players[0].bonus).toBe(6 + 2 + 2); // 6 bought + gold and green contests
+    expect(s.endEarly).toBe(false);
+    expect(s.players[0].bonus).toBe(6);
   });
 
   it('no 6-follower buy once they are gone', () => {

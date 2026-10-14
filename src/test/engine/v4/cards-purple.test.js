@@ -2,9 +2,9 @@
 // Card-by-card: every Purple action and member, through real moves, against the printed text, with a log line naming
 // the card whenever it changes a number (an extra turn is a number too: workers this round). Plus a cross-sphere case each.
 import { describe, it, expect } from 'vitest';
-import { followers, resume } from '../../../engine/v4/core.js';
+import { followers } from '../../../engine/v4/core.js';
 import { take, move, uidOf } from './helpers.js';
-import { sceneQ, buy, passBuys, linesNaming, settle } from './cards-helpers.js';
+import { sceneQ, buy, linesNaming } from './cards-helpers.js';
 
 const Q = ['gold', 'red', 'purple', 'green'];
 const sc = o => sceneQ({ quadrants: Q, ...o });
@@ -63,16 +63,11 @@ describe('Purple members', () => {
     expect(turnsQueued(s, 0)).toBe(1);
     expect(named(s, 'Errand Runner')).toHaveLength(1);
   });
-  it('Errand Runner × a rival’s Overseer and Relay: they react to the extra turn, named', () => {
-    let s = sc({ res: [rich, { purple: 6 }], members: [[], ['purple.overseer', 'purple.relay']], shop: ['purple.errand'] });
+  it('Errand Runner × a rival’s Overseer: it reacts to the extra turn, named', () => {
+    let s = sc({ res: [rich, { purple: 6 }], members: [[], ['purple.overseer']], shop: ['purple.errand'] });
     s = take(s, 'Hourly'); s = buy(s, 'purple.errand');
     expect(P(s, 1)).toBe(6 + 3);
     expect(named(s, 'Overseer')[0]).toMatch(/P2's Overseer: \+3 purple/);
-    expect(s.pending.player).toBe(1); // Relay asks
-    s = move(s, 'yes');
-    expect(P(s, 1)).toBe(9 - 3);
-    expect(named(s, 'Relay')).toHaveLength(1);
-    expect(turnsQueued(s, 1)).toBe(1);
   });
 
   it('Taskmaster: once per round, pay 5 purple for an extra turn; named', () => {
@@ -128,11 +123,12 @@ describe('Purple members', () => {
     s.cards[uidOf(s, 'red.doppel', 0)].copy = 'purple.doubletime';
     expect(P(take(s, 'Overtime'))).toBe(3);
   });
-  it('Bookkeeper / Clockmaker at round end; Lamplighter at round start; all named', () => {
-    let s = sc({ res: [{ purple: 5 }], members: [['purple.bookkeeper', 'purple.clockmaker']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 }, queue: [{ t: 'endRound' }] });
-    // Bookkeeper +1 (3 workers), then Clockmaker on 6 → +3
-    expect(P(s)).toBe(9);
+  it('Bookkeeper at round end; Clockmaker and Lamplighter at round start; all named', () => {
+    let s = sc({ res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 }, queue: [{ t: 'endRound' }] });
+    expect(P(s)).toBe(6); // 3 workers on the board → +1
     expect(named(s, 'Bookkeeper')).toHaveLength(1);
+    s = sc({ res: [{ purple: 7 }], members: [['purple.clockmaker']], queue: [{ t: 'round', r: 2 }] });
+    expect(P(s)).toBe(7 + 3); // +1 per 2 purple held
     expect(named(s, 'Clockmaker')).toHaveLength(1);
     s = sc({ members: [['purple.lamplighter']], queue: [{ t: 'round', r: 3 }] });
     expect(P(s)).toBe(5);
@@ -147,12 +143,5 @@ describe('Purple members', () => {
     const s = sc({ res: [{ purple: 7 }], members: [['purple.patience']], queue: [{ t: 'finish' }] });
     expect(s.players[0].final.parts).toEqual(['Patience +2']);
     expect(followers(s, s.players[0])).toBe(1 + 1 + 2);
-  });
-  it('Relay: saying no spends nothing; once per round', () => {
-    let s = take(sc({ round: 2, res: [{ purple: 12 }, { purple: 9 }], members: [[], ['purple.relay']] }), 'Overtime');
-    s = move(s, 'no');
-    expect(P(s, 1)).toBe(9);
-    expect(turnsQueued(s, 1)).toBe(0);
-    void resume; void passBuys; void settle;
   });
 });

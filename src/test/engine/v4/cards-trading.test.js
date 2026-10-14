@@ -52,6 +52,11 @@ describe('White actions', () => {
     s = move(s, 'amount:2');
     expect([R(s).white, s.players[0].bonus]).toEqual([6, 1]);
   });
+  it('Pawn in round I with nothing bought or won: +2 white, and the log says why it can\'t sell (Cory\'s play)', () => {
+    const s = take(table(Q, { members: [['red.twins']], shop: ROW }), 'Pawn');
+    expect([R(s).white, s.players[0].bonus]).toEqual([2, 0]);
+    expect(s.log).toContain('Pawn: P1 has no followers to sell yet (only followers you bought or won can be sold).');
+  });
   it('× Echo: copying a Pawn (it sold followers) does Pawn again for the copier', () => {
     let s = table(QE, { round: 2, bonus: [3, 2], shop: ROW, queue: turns(0, 1) });
     s = pass(move(take(s, 'Pawn'), 'amount:1'));
@@ -67,7 +72,7 @@ describe('White actions', () => {
     s = move(s, 'amount:2');
     expect([R(s).white, s.players[0].bonus]).toEqual([6, 3]);
     s = take(table(Q, { round: 2, members: [['red.twins']], shop: ROW }), 'Sell High');
-    expect(s.log).toContain('P1 had no followers to sell.');
+    expect(s.log).toContain('Sell High: P1 has no followers to sell yet (only followers you bought or won can be sold).');
   });
 
   it('Cash In: +1 follower, then trade any of your white for followers 1 for 1', () => {

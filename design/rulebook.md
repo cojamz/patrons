@@ -23,7 +23,7 @@ On your turn:
 1. **Place a worker** on an open space and do what it says. Some spaces recruit a member for free; that doesn't use up your buy.
 2. **Buy one thing**, or pass:
    - **Recruit a member** from the shop, which always shows 6 face up. Costs show a colored part (that color only) plus "any" (any resources).
-   - Or **buy followers**: 2 of anything for 1 follower; 4 (at least 2 colors) for 3; 8 (at least 3 colors) for 6; 10 (at least 4 colors) for 10. Gold counts as any color here. The two big buys are limited: 2 per player of the 6-follower buy (8 in a 4-player game) and 4 of the 10-follower buy. When the last 6-follower buy is gone, the game ends after that round.
+   - Or **buy followers**: any resources: 2 for 1 follower, 4 for 3, 8 for 6, 10 for 10. The two big buys are limited: 2 per player of the 6-follower buy (8 in a 4-player game) and 4 of the 10-follower buy. When the last 10-follower buy is gone, the game ends after that round.
    - Once per round, before you buy, you may **release** one of your members: it goes to the bottom of the pile, and you take its cost in resources of any colors.
 
 Members keep working for you: some pay out each round, some react to what other players do, and some you use once. Some members come in more than one copy; a "×2" on a card means you hold two of them.

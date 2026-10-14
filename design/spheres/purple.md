@@ -24,7 +24,7 @@ Gold hoards money and Red stacks cheap members. Purple multiplies turns. Its con
 17. Bookkeeper (2+1): at round end, +1 purple per 2 workers you have on the board.
 18. Clockmaker (2+1): at round end, +1 purple per 2 purple you have. (A close cousin of Gold's interest/Investor ideas.)
 19. Lamplighter (3+1): at round start, +1 purple per worker you get this round (3 / 4 / 5).
-20. Relay (2+2, fill-in): once per round, when a rival takes an extra turn, you may pay 3 purple to take one right after it.
+20. ~~Relay (2+2, fill-in): once per round, when a rival takes an extra turn, you may pay 3 purple to take one right after it.~~ Cut by Cory 2026-10-14. Purple has 14 members until a replacement is priced.
 21. Patience (3+1): at game end, +1 follower per 3 purple. (A close cousin of Gold's Tycoon.)
 22. Shift Crew (1+1): worth 2 followers. No effect.
 House rule: every extra turn needs a space to spare (more open spaces than turns still to come), so nobody ever loses the last space. Linger counts as an extra turn for the members.
@@ -56,5 +56,5 @@ Cut: 23. Lend a Hand (a copy of Joint Venture). 24. Timekeeper. 25. Marathoner (
 - Clockmaker and Patience are close cousins of Gold cards.
 
 ## Engine notes (no core edits)
-- Extra turns are queued turn tasks right after the current turn (Relay's goes after the rival's extra turn). Linger queues the engine's own act task. It all goes through ctx.state.queue. A ctx.addTurn(p, after) helper in core.js would be cleaner.
+- Extra turns are queued turn tasks right after the current turn (Relay's went after the rival's extra turn, before Relay was cut). Linger queues the engine's own act task. It all goes through ctx.state.queue. A ctx.addTurn(p, after) helper in core.js would be cleaner.
 - Files: src/engine/v4/content/purple.js, src/test/engine/v4/spheres/purple.test.js, scripts/spheres/purple-{sim,value,thinker}.mjs.

@@ -283,7 +283,7 @@ const thieves = {
     m('watchdog', 'Watchdog', 4, 2, 'Rivals can’t take your members.', {
       guardSteal: (ctx, owner, card, thief, kind) => kind === 'member',
     }),
-    m('crew', 'Crew', 2, 2, 'Worth 2 followers.', { f: 2 }),
+    m('crew', 'Crew', 1, 1, 'Worth 2 followers.', { f: 2 }),
     m('doubleagent', 'Double Agent', 4, 2, 'When recruited: swap it for any rival’s member.', {
       onRecruited(ctx, owner, card) {
         const list = takeable(ctx, owner).filter(([, c]) => c.uid !== card.uid);

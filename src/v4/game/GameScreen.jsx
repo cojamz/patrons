@@ -513,7 +513,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const undoWord = undoKind === 'buy' ? 'buy' : undoKind === 'setup' ? 'pick' : 'placement';
 
   return (
-    <div className={`app game${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}`} ref={root} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
+    <div className={`app game${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${pend && pend.kind === 'setup' && !state.over ? ' in-setup' : ''}`} ref={root} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar">
         <div className="bar-row">
           <h1>Patrons</h1>
@@ -548,7 +548,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           )}
           {canUndo ? <button type="button" className="btn ghost undo undo-row" onClick={undo}>↶ Undo {undoWord}</button>
             : state.round > 0 || state.pending?.kind === 'setup' ? <span className="undo-row undo-hold" aria-hidden="true" /> : null /* phones: Undo's row is kept, so nothing jumps */}
-          <button type="button" className="ticker" title={`${lastLine} — open the log`} onClick={openLog} aria-label={`Last: ${lastLine}. Open the log.`}><span className="tk">{lastLine}</span><span className="cue">Log ↓</span></button>
+          <button type="button" className="ticker" title={`${lastLine} — open the log`} onClick={openLog} aria-label={`Last: ${lastLine}. Open the log.`}><span className="tk" data-clip-ok>{lastLine}</span><span className="cue">Log ↓</span></button>
         </div>
       </header>
       {session.info && session.info.mode === 'online' && session.info.roomCode && (

@@ -4,6 +4,7 @@
 // Server: uses $V4_URL if set (npm run check:v4 sets it to a `vite preview`). Otherwise it starts
 // `npx vite` itself on the first free port from 5180 and stops it at the end.
 import { chromium } from 'playwright';
+import { TEXT_CLIP } from './lib/textclip.mjs';
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -73,8 +74,21 @@ try {
   await page.keyboard.press('Escape');
   await page.waitForSelector('.rules-body', { state: 'detached' });
 
+  // Setup: what's for sale decides the starting picks, so the 6 face-up members are on screen (no scrolling)
+  {
+    await page.waitForSelector('.prompt.choice.setup');
+    await page.waitForTimeout(300);
+    const r = await page.evaluate(() => {
+      const cards = [...document.querySelectorAll('.shop-panel.compact .card')];
+      const vis = e => { const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden' || e.closest('[aria-hidden="true"]')) return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0 && b.left >= -0.5 && b.top >= -0.5 && b.right <= innerWidth + 0.5 && b.bottom <= innerHeight + 0.5; };
+      return { n: cards.length, shown: cards.filter(vis).length, named: cards.filter(c => (c.querySelector('.nm') || {}).textContent).length };
+    });
+    if (r.n !== 6 || r.shown !== 6 || r.named !== 6) { errors.push(`setup: ${r.shown} of ${r.n} shop members fully on screen at 1270×700 (want 6)`); await shot('zz-setup-shop'); }
+    await shot('02b-setup-shop');
+  }
   const seen = new Set();
   let facingSeen = null;
+  let lastClipCheck = null;
   const t0 = Date.now();
   let clicks = 0;
   while (!(await page.$('.results'))) {
@@ -98,6 +112,12 @@ try {
       if (!seen.has(r)) { seen.add(r); await page.waitForTimeout(800); await shot(`04-${r.replace(/\W+/g, '_')}`); if (/II /.test(r + ' ')) await shot(`04-${r.replace(/\W+/g, '_')}-phone`, PHONE); }
       await next.click();
       continue;
+    }
+    // no text anywhere is cut off (1270×700), checked once per step
+    const movesNow = await page.$eval('.app.game', e => e.dataset.moves).catch(() => null);
+    if (movesNow !== lastClipCheck) {
+      lastClipCheck = movesNow;
+      for (const x of await page.evaluate(TEXT_CLIP)) { const m = `text cut: ${x}`; if (!errors.includes(m)) { errors.push(m); await shot(`zz-text-cut-${errors.length}`); } }
     }
     const facingNow = await page.$eval('.qtab.on', e => e.textContent).catch(() => null);
     if (facingNow && !facingSeen) facingSeen = facingNow;

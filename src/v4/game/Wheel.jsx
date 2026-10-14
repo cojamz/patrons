@@ -363,7 +363,8 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
   return (
     <div className="wheel-wrap">
       {state.round >= 1 && !state.over && (
-        <div className="contests" aria-label={`Contests this round, +${RING_VALUE[paying - 1]} each`}>
+        <div className="contests" role="group" aria-label={`Round end scoring: the leader of each rule gets +${RING_VALUE[paying - 1]}`}>
+          <span className="contests-head" title={`At round end, the leader of each rule scores +${RING_VALUE[paying - 1]} followers`}>Round end <small>leaders +{RING_VALUE[paying - 1]}</small></span>
           {standings(state).map(st => {
             const nm = r => (r.id === meId ? 'you' : state.players[r.id].name);
             const leaders = st.top > 0 ? st.rows.filter(r => st.leaders.includes(r.id)) : [];
@@ -371,10 +372,10 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
             const me = meId != null ? st.rows.find(r => r.id === meId) : null;
             const tb = tiebreakWord(st.label);
             return (
-              <span key={st.qid} className="contest" style={{ '--c': `var(--${st.qid})` }} title={`${st.label}: +${RING_VALUE[paying - 1]} at round end`}>
-                <span className="c1"><i />{shortLabel(st.label).replace(/^Most /, '')} <b className="num">+{RING_VALUE[paying - 1]}</b></span>
+              <span key={st.qid} className="contest" style={{ '--c': `var(--${st.qid})` }} title={`${st.label}: +${RING_VALUE[paying - 1]} at round end. Now: ${st.rows.map(r => `${nm(r)} ${r.shown}`).join(', ')}`}>
+                <span className="c1"><i /><span className="rule">{shortLabel(st.label)}</span> <b className="num prize">+{RING_VALUE[paying - 1]}</b></span>
                 <span className="c2">
-                  {leaders.length ? <>{leaders.map(nm).join(' & ')} <b className="num">{leaders[0].shown}</b>{shownTie && tb ? <small> tie→{tb}</small> : null}</> : 'no one yet'}
+                  {leaders.length ? <>{leaders.length > 2 ? `${nm(leaders.find(r => r.id === meId) || leaders[0])} & ${leaders.length - 1} more` : leaders.map(nm).join(' & ')} <b className="num">{leaders[0].shown}</b>{shownTie && tb ? <small> tie→{tb}</small> : null}</> : 'no one yet'}
                   {me && leaders.length && !st.leaders.includes(me.id) ? <small className="you"> · you {me.shown}</small> : null}
                 </span>
               </span>

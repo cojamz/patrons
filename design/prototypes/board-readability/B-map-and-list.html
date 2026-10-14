@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Board B · Map and list</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="mock.css">
+<style>
+/* B — "Wheel as map, list to act": the wheel only shows where things are (taken / open / locked, colors, short names).
+   You read and act in the list: every space open this round, grouped by quadrant under its scoring rule. */
+.main{display:grid;grid-template-columns:350px minmax(0,1fr);gap:22px;min-height:0}
+.map{display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}
+.stage{width:100%;aspect-ratio:1;position:relative}
+.stage svg{width:100%;height:100%;display:block;overflow:visible}
+.map .stage{width:94%;margin:0 auto}
+.map .shop{grid-template-columns:repeat(3,minmax(0,1fr))}
+.map .shop .card{padding:4px 7px}
+.map .fb .lg{display:none}
+.map .buy{grid-template-columns:repeat(4,minmax(0,1fr)) 50px;gap:4px}
+.map .shop-h{margin-top:2px}
+
+/* the map */
+.ringbg{fill:var(--c);stroke:var(--c)}
+.slot .base{fill:var(--table);stroke:var(--c);stroke-width:1.5}
+.slot.locked .base{fill:none;stroke-opacity:.4;stroke-dasharray:3 3.2}
+.slot.can{cursor:pointer}
+.slot.can .halo{fill:none;stroke:var(--c);stroke-width:2;opacity:.75}
+.slot .pip{fill:var(--c);fill-opacity:.55}
+.slot.hl .base{stroke:var(--ink);stroke-width:3.5}
+.slot.hl .halo{opacity:0}
+.slot .lbl{font-weight:700;letter-spacing:.02em;font-size:13.5px}
+.slot.taken .lbl{opacity:.6}
+.rnum{fill:var(--muted);font-weight:700;font-size:12px}
+.rnum.on{fill:var(--ink)}
+
+/* the list */
+.list{display:flex;flex-direction:column;gap:7px;min-width:0;min-height:0;overflow:auto;padding-right:4px}
+.grp{display:flex;flex-direction:column;gap:2px;min-width:0}
+.gh{display:flex;align-items:baseline;gap:10px;min-width:0;white-space:nowrap;height:24px;border-bottom:1px solid color-mix(in srgb,var(--c) 40%,var(--rim));margin-bottom:2px}
+.gh h2{font-family:var(--display);font-weight:400;font-size:var(--fs-4);margin:0;color:var(--c)}
+.gh .rule{font-size:var(--fs-2);color:var(--ink);font-weight:600}
+.gh .now{font-size:var(--fs-2);color:var(--muted);overflow:hidden;text-overflow:ellipsis;min-width:0}
+.gh .now b{color:var(--ink)}
+.gh .open{margin-left:auto;font-size:var(--fs-1);color:var(--c);letter-spacing:.08em;text-transform:uppercase;flex:none}
+.row{display:grid;grid-template-columns:18px 112px minmax(0,1fr) 92px;align-items:center;gap:10px;min-height:27px;padding:2px 10px;border-radius:8px;border:1px solid transparent;background:none;text-align:left;width:100%;cursor:default}
+.row .sk{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--c);background:var(--table)}
+.row .sk.on{background:var(--pc);border-color:var(--pc)}
+.row b{font-weight:700;font-size:var(--fs-2);white-space:nowrap}
+.row .tx{font-size:var(--fs-2);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .st{font-size:var(--fs-2);text-align:right;white-space:nowrap;display:flex;justify-content:flex-end;align-items:center;gap:6px}
+.row .st i{width:10px;height:10px;border-radius:50%;background:var(--pc)}
+.row.can{cursor:pointer;border-color:color-mix(in srgb,var(--c) 45%,var(--rim));background:var(--table-2)}
+.row.can .st{color:var(--c);font-weight:700;letter-spacing:.04em}
+.row.can:hover,.row.hl{border-color:var(--c);background:color-mix(in srgb,var(--c) 16%,var(--table-2))}
+.row.taken b,.row.taken .tx{color:var(--muted)}
+.row.mine{border-color:var(--ink);background:var(--table-3)}
+.row.mine .st{color:var(--ink)}
+.later{font-size:var(--fs-1);color:var(--muted);padding:1px 10px}
+.later summary{cursor:pointer;list-style:none;display:flex;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.later summary::-webkit-details-marker{display:none}
+.later summary::before{content:"▸";color:var(--c)}
+.later[open] summary::before{content:"▾"}
+.later summary b{color:var(--ink);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:10px}
+.later .row{opacity:.55;min-height:24px}
+
+@media (max-width:860px){
+  .main{display:flex;flex-direction:column;gap:10px}
+  .map{display:contents}
+  .map .stage{width:262px;margin:0 auto;order:0}
+  .legend{order:1}
+  .list{order:2;overflow:visible;padding:0;gap:12px}
+  .shop-h{order:3}.shop{order:4}.buy-note{order:5}.buy{order:6}
+  .slot .lbl{font-size:16.5px}
+  .rnum{font-size:15px}
+  .gh{height:auto;flex-wrap:wrap;row-gap:0;padding-bottom:3px}
+  .gh .now{flex-basis:100%;order:3;font-size:var(--fs-1)}
+  .row{grid-template-columns:16px minmax(0,1fr) auto;grid-template-areas:"s n t" "s x x";column-gap:8px;row-gap:1px;padding:6px 10px;align-items:start}
+  .row .sk{grid-area:s;margin-top:2px}
+  .row b{grid-area:n;font-size:var(--fs-3)}
+  .row .st{grid-area:t}
+  .row .tx{grid-area:x;white-space:normal;line-height:1.3}
+  .later summary{white-space:normal}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar" id="bar"></header>
+  <div class="strip" id="strip"></div>
+  <div class="main">
+    <section class="map">
+      <div class="stage"><svg id="wheel" viewBox="-26 -26 452 452" role="img" aria-label="Board overview"></svg></div>
+      <div class="legend" id="legend"></div>
+      <h3 class="shop-h">Shop <small>61 in the pile</small></h3>
+      <div class="shop" id="shop"></div>
+      <div class="buy" id="buy"></div>
+    </section>
+    <section class="list" id="list" aria-label="Spaces open this round"></section>
+  </div>
+</div>
+<div class="tag">Sketch B · map + list</div>
+<script src="mock.js"></script>
+<script>
+(function () {
+  const svg = document.getElementById('wheel');
+  const list = document.getElementById('list');
+  const CX = 200, CY = 200;
+  const RING = { 1: { r0: 142, r1: 198, r: 175 }, 2: { r0: 90, r1: 142, r: 122 }, 3: { r0: 34, r1: 90, r: 66 } };
+  const SPANS = { 1: 66, 2: 44, 3: 0 };
+  let placed = null;
+  const at = (a, r) => { const [x, y] = M.polar(a, r); return [CX + x, CY + y]; };
+  const sector = (a0, a1, r0, r1) => {
+    const [x0, y0] = at(a0, r1), [x1, y1] = at(a1, r1), [x2, y2] = at(a1, r0), [x3, y3] = at(a0, r0);
+    return `M${x0},${y0} A${r1},${r1} 0 0 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 0 0 ${x3},${y3}Z`;
+  };
+  const norm = a => ((a % 360) + 540) % 360 - 180;
+  const textArc = (c, half, r) => {
+    const top = Math.abs(norm(c)) < 90;
+    const [ax, ay] = at(top ? c - half : c + half, r), [bx, by] = at(top ? c + half : c - half, r);
+    return `M${ax},${ay} A${r},${r} 0 0 ${top ? 1 : 0} ${bx},${by}`;
+  };
+  const owner = key => (placed === key ? 0 : M.slots[key]);
+
+  function renderMap() {
+    const out = [`<circle cx="${CX}" cy="${CY}" r="200" fill="var(--table-2)" stroke="var(--rim)" stroke-width="2"/>`];
+    M.quadrants.forEach(Q => {
+      [1, 2, 3].forEach(t => {
+        const R = RING[t], open = t <= M.round;
+        out.push(`<path class="ringbg" style="--c:${Q.c}" d="${sector(Q.center - 44.2, Q.center + 44.2, R.r0 + 1, R.r1 - 1)}" fill-opacity="${open ? 0.16 : 0.035}" stroke-opacity="${open ? 0.55 : 0.15}"/>`);
+      });
+    });
+    M.quadrants.forEach((Q, q) => {
+      Q.actions.forEach((a, i) => {
+        const key = M.key(q, i), t = a.ring, open = t <= M.round;
+        const ang = M.angleOf(q, a, i, SPANS);
+        const [x, y] = at(ang, RING[t].r);
+        const o = owner(key);
+        const can = open && o === undefined && placed === null;
+        const g = [`<g class="slot${can ? ' can' : ''}${open ? '' : ' locked'}${o !== undefined ? ' taken' : ''}" data-key="${key}" style="--c:${Q.c}">`];
+        if (can) g.push(`<circle class="halo" cx="${x}" cy="${y}" r="20"/>`);
+        g.push(`<circle class="base" cx="${x}" cy="${y}" r="${t === 3 ? 13 : 15}"/>`);
+        if (o !== undefined) {
+          const p = M.player(o);
+          if (M.recent.some(r => r[0] === key)) g.push(`<circle cx="${x}" cy="${y}" r="20" fill="none" stroke="${p.pc}" stroke-width="2"/>`);
+          g.push(`<circle cx="${x}" cy="${y}" r="10.5" fill="${p.pc}"/>`);
+        } else if (open) g.push(`<circle class="pip" cx="${x}" cy="${y}" r="3"/>`);
+        if (open) {
+          const id = `lb${key}`;
+          g.push(`<path id="${id}" d="${textArc(ang, 24, 212)}" fill="none"/><text class="lbl" fill="${Q.c}" dominant-baseline="central"><textPath href="#${id}" startOffset="50%" text-anchor="middle">${a.short || a.name}</textPath></text>`);
+        }
+        g.push('</g>');
+        out.push(g.join(''));
+      });
+    });
+    [1, 2, 3].forEach(t => { const [x, y] = at(-45, RING[t].r - (t === 3 ? 6 : 0)); out.push(`<text class="rnum${t <= M.round ? ' on' : ''}" x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central">${M.roman(t)}</text>`); });
+    svg.innerHTML = out.join('');
+  }
+
+  function rowHTML(Q, q, a, i, isLater) {
+    const key = M.key(q, i);
+    const o = owner(key);
+    const can = !isLater && o === undefined && placed === null;
+    const p = o !== undefined ? M.player(o) : null;
+    const cls = ['row', can ? 'can' : '', p && !p.me ? 'taken' : '', p && p.me ? 'mine' : ''].join(' ');
+    const st = isLater ? `round ${M.roman(a.ring)}` : p ? (p.me ? '<i style="--pc:#f4efe2"></i>you · undo' : `<i style="--pc:${p.pc}"></i>${p.name}`) : can ? 'Place ›' : 'open';
+    return `<button type="button" class="${cls}" data-key="${key}" style="--c:${Q.c}" ${can || (p && p.me) ? '' : 'tabindex="-1"'}>
+      <span class="sk${p ? ' on' : ''}" style="--pc:${p ? p.pc : 'none'}"></span><b style="color:${p && !p.me ? '' : Q.c}">${a.name}</b><span class="tx">${a.text}</span><span class="st">${st}</span></button>`;
+  }
+
+  function renderList() {
+    list.innerHTML = M.quadrants.map((Q, q) => {
+      const c = M.contestHTML(Q);
+      const live = Q.actions.map((a, i) => [a, i]).filter(([a]) => a.ring <= M.round);
+      const later = Q.actions.map((a, i) => [a, i]).filter(([a]) => a.ring > M.round);
+      const openN = live.filter(([a, i]) => owner(M.key(q, i)) === undefined).length;
+      const byRing = t => later.filter(([a]) => a.ring === t).map(([a]) => a.name).join(' · ');
+      return `<section class="grp" style="--c:${Q.c}">
+        <div class="gh"><h2>${Q.name}</h2><span class="rule">${c.rule} this round</span><span class="now">· now ${c.lead}</span><span class="open">${openN} open</span></div>
+        ${live.map(([a, i]) => rowHTML(Q, q, a, i, false)).join('')}
+        <details class="later"><summary><b>Opens round II</b> ${byRing(2)} &nbsp;<b>round III</b> ${byRing(3)}</summary>
+          ${later.map(([a, i]) => rowHTML(Q, q, a, i, true)).join('')}</details>
+      </section>`;
+    }).join('');
+  }
+
+  function render() { renderMap(); renderList(); }
+  const hl = (key, on) => document.querySelectorAll(`[data-key="${key}"]`).forEach(el => el.classList.toggle('hl', on));
+  list.addEventListener('pointerover', e => { const r = e.target.closest('.row'); if (r) hl(r.dataset.key, true); });
+  list.addEventListener('pointerout', e => { const r = e.target.closest('.row'); if (r) hl(r.dataset.key, false); });
+  list.addEventListener('click', e => {
+    const r = e.target.closest('.row'); if (!r) return;
+    const k = r.dataset.key;
+    if (r.classList.contains('can')) { placed = k; setSay('Placed. Buy one thing, or pass'); render(); }
+    else if (r.classList.contains('mine')) { placed = null; setSay('Your turn: pick a line to place'); render(); }
+  });
+  // map → list: tapping a space jumps to its line
+  svg.addEventListener('click', e => {
+    const s = e.target.closest('.slot'); if (!s) return;
+    const row = list.querySelector(`.row[data-key="${s.dataset.key}"]`);
+    if (!row) return;
+    const d = row.closest('details'); if (d) d.open = true;
+    row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    hl(s.dataset.key, true); setTimeout(() => hl(s.dataset.key, false), 1200);
+  });
+  const setSay = t => { document.querySelector('.say').lastChild.textContent = t; };
+
+  M.renderBar(document.getElementById('bar'), 'Your turn: pick a line to place');
+  M.renderStrip(document.getElementById('strip'));
+  M.renderLegend(document.getElementById('legend'));
+  M.renderShop(document.getElementById('shop'), { effect: false, compact: true });
+  M.renderBuy(document.getElementById('buy'));
+  render();
+})();
+</script>
+</body>
+</html>
