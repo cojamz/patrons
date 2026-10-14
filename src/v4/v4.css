@@ -4,6 +4,7 @@
 :root{
   --table:#141d1c; --table-2:#1d2928; --table-3:#24322f; --rim:#2d3b39; --ink:#ece6d6; --muted:#97a49f;
   --gold:#e3b23c; --red:#e0645a; --blue:#6aa6dc; --green:#5fb37c; --any:#97a49f;
+  --magenta:#d4508f; --thieves:#d4508f;
   --display:"Marcellus", Georgia, serif; --body:"Figtree", system-ui, sans-serif;
   --tap:36px;
   color-scheme:dark;
@@ -865,7 +866,7 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
   .contests{display:none}
   .app.game .main:not(.over){grid-template-columns:min(46vw, calc(100dvh - 40px)) minmax(0,1fr)}
   .app.game .stage{width:100%}
-  .app.game .qtabs .qtab{min-height:36px;padding:0 12px}
+  .app.game .qtabs .qtab{min-height:44px;padding:0 12px}
 }
 
 /* ---------- round 7, testers P, Q, R ---------- */
@@ -998,6 +999,16 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 }
 @media (pointer:coarse) and (min-width:521px){ header.bar{grid-template-rows:minmax(44px,auto) 44px} }
 @media (pointer:coarse) and (max-height:480px) and (orientation:landscape){ header.bar{grid-template-rows:44px auto 44px} }
+
+/* landscape phones: the wheel fits the height that's left under the header and player rows */
+@media (max-height:480px) and (orientation:landscape){
+  .app.game .main:not(.over){grid-template-columns:min(44vw, calc(100dvh - 150px)) minmax(0,1fr)}
+  .app.game .stage{width:min(100%, calc(100dvh - 150px))}
+}
+/* Hideout: no one can steal from this player this round */
+.hideout{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--magenta);border:1px solid color-mix(in srgb,var(--magenta) 60%,transparent);border-radius:999px;padding:0 7px;line-height:16px;white-space:nowrap}
+
+@media (max-width:860px){ .contest{white-space:normal;overflow:visible;text-overflow:clip} }
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}

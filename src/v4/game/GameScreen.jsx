@@ -383,6 +383,16 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (r && !(mine && pend.kind === 'choose' && options.has(r))) repeat.current = null;
   }, [busy, state]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // A question whose answers are all the same member (Hire with two identical cheapest cards) isn't a question:
+  // take it, and the recruit gets its moment in the toast.
+  useEffect(() => {
+    if (!mine || needHandoff || busy || !pend || pend.kind !== 'choose' || pend.options.length < 2) return;
+    const defs = pend.options.map(o => (o.kind === 'card' && typeof o.value === 'number' && state.cards[o.value] ? state.cards[o.value].def : null));
+    if (defs.some(d => !d) || new Set(defs).size !== 1) return;
+    const t = setTimeout(() => onPick(pend.options[0].id, 'replay'), 0);
+    return () => clearTimeout(t);
+  }, [pend, mine, needHandoff, busy]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // A tap on something you can't use right now gets a short answer and a small shake, never silence.
   const onDenied = useCallback((info, el) => {
     if (state.over || !pend) return;

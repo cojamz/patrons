@@ -7,7 +7,7 @@ import { costParts, tierCostText } from '../format.js';
 const softBreak = name => name.replace(/[A-Za-z]{9,}/g, w => `${w.slice(0, Math.ceil(w.length / 2))}\u00AD${w.slice(Math.ceil(w.length / 2))}`);
 const total = spend => Object.values(spend).reduce((a, b) => a + b, 0);
 
-function Cost({ d, plan }) {
+function Cost({ d, plan, disc = false }) {
   // the list cost, as printed on every card; what you'd pay right now goes on a second line when it differs
   const parts = costParts(d);
   const dots = list => list.map((c, k) => (
@@ -19,7 +19,7 @@ function Cost({ d, plan }) {
   return (
     <span className="cost-box">
       <span>{parts.length ? dots(parts) : 'free'}</span>
-      {differs && <span className="youd">{payText === 'free' ? 'free for you' : `you’d pay ${payText}`}</span>}
+      {differs && <span className="youd">{payText === 'free' ? (disc ? 'free with Discount' : 'free for you') : `you’d pay ${payText}`}</span>}
     </span>
   );
 }
@@ -59,7 +59,7 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
               )}
               {!compact && <span className="eff">{d.text}</span>}
               {!compact && <div className="row cost">
-                <Cost d={d} plan={plan} />
+                <Cost d={d} plan={plan} disc={!!(viewer && viewer.discount)} />
                 {d.n > 1 && <span><span className="num">{d.n}</span> members</span>}
               </div>}
               {!compact && <span className={`afford${opt ? '' : ' none'}`} aria-hidden={!opt}>You can afford</span>}
