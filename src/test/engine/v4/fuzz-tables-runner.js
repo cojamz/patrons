@@ -50,6 +50,11 @@ const fail = failHard;
 
 function checkSphereInvariants(s, prev, ctx, verified, fail = failHard) {
   void failHard;
+  // nobody holds a resource that isn't on the table (a member leaning to an absent sphere pays in table colors)
+  for (const p of s.players) {
+    const odd = Object.keys(p.res).filter(r => !s.resources.includes(r));
+    if (odd.length) fail(`${p.name} holds ${odd.map(r => `${p.res[r]} ${r}`).join(', ')}, not on this table`, s, ctx);
+  }
   // limited follower stock never negative
   for (const t of TIERS) if (t.limited && (s.stock?.[t.key] ?? 0) < 0) fail(`stock ${t.key} ${s.stock[t.key]}`, s, ctx);
   // per-card state never negative

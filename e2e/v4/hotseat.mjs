@@ -89,6 +89,22 @@ try {
     const facingNow = await page.$eval('.qtab.on', e => e.textContent).catch(() => null);
     if (facingNow && !facingSeen) facingSeen = facingNow;
     if (facingNow && facingSeen && facingNow !== facingSeen) { errors.push(`the board turned by itself (${facingSeen} -> ${facingNow})`); facingSeen = facingNow; }
+    // a choice panel has its own space: never over the compact shop, the buy row or the "More below" pill
+    if (await page.$('.prompt.choice:not(.setup)')) {
+      const bad = await page.evaluate(() => {
+        const vis = e => { const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden') return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
+        const ch = document.querySelector('.prompt.choice:not(.setup)'); if (!ch || !vis(ch)) return [];
+        const a = ch.getBoundingClientRect(); const out = [];
+        for (const sel of ['.shop-panel.compact', '.fbuy', '.more-hint']) {
+          const o = document.querySelector(sel); if (!o || !vis(o) || o.closest('[aria-hidden="true"]')) continue;
+          const b = o.getBoundingClientRect();
+          const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+          if (w > 1 && h > 1) out.push(`choice panel overlaps ${sel} by ${Math.round(h)}px`);
+        }
+        return out;
+      });
+      for (const b of bad) if (!errors.includes(b)) { errors.push(b); await shot('zz-choice-overlap'); }
+    }
     const kind = await page.evaluate(() => {
       const el = document.querySelector('[data-option]:not([disabled])');
       return el ? el.getAttribute('data-option').split(':')[0] : null;

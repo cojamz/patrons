@@ -33,7 +33,10 @@ export function memberChips(state, p) {
 
 export function costParts(def) {
   const parts = [];
-  if (def.s) parts.push({ color: def.quadrant, n: def.s });
+  // the colored part is paid in the sphere's resource (module id 'thieves' pays in magenta)
+  let color = def.quadrant;
+  try { color = quadrant(def.quadrant).resource; } catch { /* a bare color */ }
+  if (def.s) parts.push({ color, n: def.s });
   if (def.w) parts.push({ color: 'any', n: def.w });
   return parts;
 }

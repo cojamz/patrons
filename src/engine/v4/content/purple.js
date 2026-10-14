@@ -7,6 +7,8 @@
 //   so they never squeeze anyone out of the last space (round I fills every space).
 // - Linger moves a worker: it queues the engine's own 'act' task for the new space.
 // - onExtraTurn / onRivalExtraTurn are purple-only member hooks, fired by the helpers below.
+import { defById } from './index.js';
+
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const P = 'purple';
 const TURN_VALUE = [3, 5, 7]; // a placement plus its buy, by round
@@ -50,7 +52,8 @@ const turnValue = ctx => TURN_VALUE[ctx.state.round - 1] || 3;
 function fire(ctx, p, hook, ...args) {
   for (const c of ctx.membersOf(p)) {
     const defs = [c.def];
-    if (c.copy) defs.push(ctx.quadrant(c.copy.split('.')[0]).members.find(x => x.id === c.copy));
+    // the copied member's def by id: it may be a guest member with no quadrant of its own
+    if (c.copy) defs.push(defById(c.copy));
     for (const d of defs) if (d && d[hook]) d[hook](ctx, p, c, ...args);
   }
 }

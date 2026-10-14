@@ -112,8 +112,10 @@ const INCOME = [3.5, 5.5, 8];
 // Bots plan as if only part of that income will need its own buy (measured: planning on all of it hoards).
 const INCOME_SCALE = 0.4;
 // How much a member's ability is worth, in followers per resource of its cost, if it has the whole game ahead.
-// A member bought with 9 of 12 placements left is worth K × cost × 0.75 on top of its stars.
-const K_ABILITY = 1;
+// A member bought with 9 of 12 placements left is worth K × cost × 0.75 on top of its stars. Set by head-to-head
+// sims (normal with K = 2 or 3 beat K = 1 and recruited more; 200 games each); it also covers the contests and
+// member counts a member keeps paying into.
+const K_ABILITY = 2;
 // How many ways to pay a buy are compared (the engine lists the contest-safe ones first).
 const PAY_WAYS = 10;
 // Weight of later rounds' contests in a lead held now.

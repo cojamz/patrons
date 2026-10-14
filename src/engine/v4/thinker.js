@@ -10,7 +10,7 @@ const margin = (state, id) =>
   followers(state, state.players[id]) - Math.max(...state.players.filter(p => p.id !== id).map(p => followers(state, p)));
 
 /**
- * opts.budget: simulated moves to spend on this decision (default 160).
+ * opts.budget: simulated moves to spend on this decision (default 100).
  * opts.candidates: how many of normal's top options to look at (default 3).
  * opts.full: play every rollout to game end (slow; for offline balance checks).
  */
@@ -25,13 +25,15 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   if (chosen?.kind === 'use') return first;
   const ranked = scoreOptions(state, rand);
   if (ranked.length <= 1) return first;
-  const { candidates = 3, budget = 160, full = false } = opts;
+  const { candidates = 3, budget = 100, full = false } = opts;
   // only weigh options normal rates close to its best
   const pool = ranked.slice(0, candidates).filter((r, i) => i === 0 || r.v >= ranked[0].v - 4);
   if (pool.length === 1) return { player: me, option: pool[0].o.id };
   const round = state.round;
   const totals = pool.map(() => 0), counts = pool.map(() => 0);
   let spent = 0;
+  // a rollout stops at the round end, or when its share of the budget is used up (then it's scored statically)
+  const cap = Math.max(8, Math.floor(budget / pool.length));
   // round-robin rollouts until the budget is gone; every candidate gets at least one
   for (let k = 0; spent < budget || counts.some(c => c === 0); k++) {
     const i = k % pool.length;
@@ -39,8 +41,8 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
     const r = seededRandom(Math.floor(rand() * 2 ** 31));
     let s = applyMove(state, { player: me, option: pool[i].o.id });
     let steps = 1;
-    while (!s.over && (full || s.round === round) && steps < 800) {
-      s = applyMove(s, chooseNormalMove(s, r, { noise: 0.6 }));
+    while (!s.over && (full || (s.round === round && steps < cap)) && steps < 800) {
+      s = applyMove(s, chooseNormalMove(s, r, { noise: 0.6, payWays: 2 }));
       steps++;
     }
     spent += steps;
