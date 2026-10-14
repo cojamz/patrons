@@ -94,3 +94,6 @@ Greedy bots unless noted, 4 seats, gold/red/blue + Magenta, current engine. Gold
 - Quadrants and members can refuse a steal with `guardSteal`, react with `onSteal`, and boost steals with `stealMore` or `stealDouble`.
 - Gold's Steal goes through it.
 - The quadrant-level `onRoundStart` was removed with the loot piles.
+
+## Thinking bot
+A seat that plans ahead (rollouts) against greedy bots won 75% of 20 games on the Magenta table, against 85% on the stand-in table in the same run (the coordinator's baseline is 78%). Magenta slightly blunts planning: there's more swing, and the thinker plays Magenta less than the greedy bots do (19% of placements vs 30%). It stole about as much as each greedy bot (12.8 vs 12.5 a game). This run started just before Lookout became once per round.
