@@ -156,3 +156,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Trade is a little too strong. "They pick" is rejected; alternatives are pending.
 - ✅ (Cory) Trade: swap one of your members for another player's costing no more than yours +1.
 - ✅ (Cory) Red members: 13 keepers plus 3 maybes (see red-members-pool.md). Proselytizer is now 'whenever you recruit a member, gain a follower'. Founder becomes Mentor & Protégé (cost 5).
+- ✅ Playable hot-seat prototype: design/prototypes/play.html (https://claude.ai/artifact/D32uNuYuSq3pUEn4VrQ8YN). Gold and Red as designed; Blue and Green are plain stand-ins. Working calls: rings pay +2/+4/+6 and ties all score; wild costs are paid from blue/green/red before gold; Investor sets aside half automatically. First bot finding: gold piles up at game end (20–60 left), because the follower buys need 2–3 colors.
