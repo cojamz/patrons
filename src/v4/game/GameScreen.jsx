@@ -301,7 +301,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (actor != null && mySeats.includes(actor) && !(state.pending && state.pending.player === actor)) {
       const rec = lines.map(l => l.match(new RegExp(`^${state.players[actor].name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} recruited (.+?) \\((.*)\\)\\.$`))).filter(Boolean).pop();
       if (rec) {
-        const g = { pid: actor, text: `Recruited ${rec[1]} (${rec[2].split(';')[0]})`, color: null, n: Date.now() + 7 };
+        // just the name: the cost is in the log (a long line here ran out of the card's one-line lane)
+        const g = { pid: actor, text: `Recruited ${rec[1].replace(/ from the pile$/, '')}`, color: null, n: Date.now() + 7 };
         setGifts(gg => [...gg, g]);
         setTimeout(() => setGifts(gg => gg.filter(x => x !== g)), 2400);
       }
@@ -392,7 +393,15 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const queuedClick = useRef([]); // clicks made while a move is in flight, replayed in order if still legal
   const repeat = useRef(null);
   useEffect(() => { if (mine && pend && pend.kind === 'place') setCaption(null); }, [mine, pend]);
-  const lastPick = useRef({ id: null, t: 0 });
+  const lastPick = useRef({ id: null, t: 0, x: null, y: null });
+  // where the last press landed: the step lock below only eats a second press near the first one (a double tap),
+  // never a deliberate press somewhere else (testers felt those as dropped clicks)
+  const lastDown = useRef({ x: null, y: null, t: 0 });
+  useEffect(() => {
+    const down = e => { lastDown.current = { x: e.clientX, y: e.clientY, t: Date.now() }; };
+    addEventListener('pointerdown', down, true);
+    return () => removeEventListener('pointerdown', down, true);
+  }, []);
   // A new kind of step (place → buy, choose → buy…) ignores taps for 400ms, so a double tap on one step's
   // button can't land on the next step's button in the same spot. Repeated steps (setup picks) don't lock.
   const lockUntil = useRef(0);
@@ -410,8 +419,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     // counted picks ("take 1 gold… (2 left)") are meant to be clicked fast and repeatedly: every click counts
     const counted = !!(pend && /\(\d+ left\)/.test(pend.prompt || ''));
     if (mode !== 'replay' && !counted && lastPick.current.id === optionId && now - lastPick.current.t < 350) return;
-    if (mode !== 'replay' && !counted && now < lockUntil.current) return;
-    lastPick.current = { id: optionId, t: now };
+    const d = lastDown.current, p0 = lastPick.current;
+    // a fresh pointer press far from the last pick is deliberate; anything else (near it, or a key) waits out the lock
+    const farFromLast = d.x != null && p0.x != null && now - d.t < 600 && Math.hypot(d.x - p0.x, d.y - p0.y) >= 48;
+    if (mode !== 'replay' && !counted && now < lockUntil.current && !farFromLast) return;
+    lastPick.current = { id: optionId, t: now, x: now - d.t < 600 ? d.x : null, y: now - d.t < 600 ? d.y : null };
     if (mode === 'all') repeat.current = optionId;
     if (busy && mine) { queuedClick.current = counted ? [...queuedClick.current, optionId].slice(-4) : [optionId]; return; }
     if (!mine || needHandoff || !options.has(optionId)) return;

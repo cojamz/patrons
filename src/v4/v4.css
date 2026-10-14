@@ -1318,3 +1318,12 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 .pip.wild { background: conic-gradient(var(--gold), var(--red), var(--magenta), var(--purple), var(--blue), var(--green), var(--yellow), var(--gold));
   -webkit-mask: radial-gradient(circle, transparent 32%, #000 34%); mask: radial-gradient(circle, transparent 32%, #000 34%); }
 .cp .pip { margin-left: .18em; }
+/* a passing note on a player card is one line: if it's ever too long it fades out at the edge (full text on hover) */
+.lane .gift{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+/* laptops: a long question (Scout over a 10-card shop) scrolls inside its own panel instead of running over the
+   board panel and the buy row; with many answers it goes three across */
+@media (min-width:861px) and (min-height:500px){
+  .side.framed > .prompt.choice{flex:0 1 auto;min-height:120px;max-height:64%;overflow-y:auto;overscroll-behavior:contain}
+  .side.framed > .prompt.choice .opts:has(.btn.rich):has(> :nth-child(7)){grid-template-columns:repeat(3,minmax(0,1fr))}
+  .side.framed .frame{min-height:90px}
+}

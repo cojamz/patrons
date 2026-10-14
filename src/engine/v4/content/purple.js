@@ -122,13 +122,19 @@ export default {
   resource: P,
   scoring: {
     get label() {
-      return { today: 'Most workers on the board (purple breaks ties)', ties: 'Most workers on the board (ties score nothing)', behind: 'Most workers on the board (fewer followers break ties)' }[VARIANT.score];
+      return { today: 'Most workers on the board (purple breaks ties)', ties: 'Most workers on the board (ties score nothing)', behind: 'Most workers on the board (fewer followers break ties)', space: 'Most workers on Purple spaces (ties score nothing)' }[VARIANT.score];
     },
     score(ctx, p) {
       const mine = onBoard(ctx, p);
       if (VARIANT.score === 'today') return mine * 1000 + (p.res[P] || 0);
       const best = Math.max(0, ...ctx.state.players.filter(o => o.id !== p.id).map(o => onBoard(ctx, o)));
       if (VARIANT.score === 'behind') return mine * 1000 + (999 - ctx.followers(p));
+      if (VARIANT.score === 'space') {
+        const pq = ctx.state.quadrants.indexOf('purple');
+        const here = o => Object.entries(ctx.state.slots).filter(([k, v]) => v === o.id && Number(k.split('-')[0]) === pq).length;
+        const m2 = here(p), b2 = Math.max(0, ...ctx.state.players.filter(o => o.id !== p.id).map(here));
+        return m2 > b2 ? m2 : 0;
+      }
       return mine > best ? mine : 0;
     },
     // display: what the score is made of, for each variant (every screen shows these numbers)

@@ -156,7 +156,7 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
             {/* gains and losses get their own lane under the resources, never over the chips */}
             <div className="lane" aria-live="polite">
               {gifts.filter(g => g.pid === p.id).map(g => (
-                <span key={g.n} className="gift" style={{ '--c': `var(--${g.color}, var(--ink))` }}>{g.text}</span>
+                <span key={g.n} className="gift" title={g.text} data-clip-ok style={{ '--c': `var(--${g.color}, var(--ink))` }}>{g.text}</span>
               ))}
               {changes[p.id] && !gifts.some(g => g.pid === p.id) && (
                 <span key={changes[p.id].n} className="gift change" aria-hidden="true">

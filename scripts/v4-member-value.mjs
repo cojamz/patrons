@@ -1,6 +1,6 @@
 // Causal member value: hand one member to one seat at the start of round II, compare against games where nobody got it.
 // Usage: node scripts/v4-member-value.mjs [gamesPerMember=160] [names,comma,separated] [--level=normal] [--no-release] [--quadrants=gold,red,blue,green]
-// Names match member keys in Gold, Red and the rule-benders (guest members), e.g. "banker,squatter".
+// Names match member keys in Gold, Red, the rule-benders (guest members) and, with --quadrants, that table's spheres, e.g. "banker,squatter".
 import { createGame, applyMove, chooseBotMove, followers } from '../src/engine/v4/index.js';
 import { seededRandom } from '../src/engine/v4/rng.js';
 import { defById, quadrant, guestMembers } from '../src/engine/v4/content/index.js';
@@ -32,7 +32,8 @@ function play(seed, giveDef, seat) {
   return s;
 }
 const only = args[1] ? args[1].split(',') : null;
-const ids0 = quadrant('gold').members.map(d => d.id).concat(quadrant('red').members.map(d => d.id), guestMembers().map(d => d.id));
+// Gold, Red and the guests; with --quadrants, every member of the spheres on that table too (e.g. Purple's).
+const ids0 = [...new Set((quadrants ? ['gold', 'red', ...quadrants] : ['gold', 'red']).flatMap(q => quadrant(q).members.map(d => d.id)).concat(guestMembers().map(d => d.id)))];
 const ids = only ? ids0.filter(i => only.some(o => i.endsWith('.' + o))) : ids0;
 // control: same seeds, nobody gets anything
 const control = [];

@@ -5,7 +5,8 @@
 //   build:        { schema, content, id }  // the rules content hash + build id that made the room (record.js);
 //                                          // a client with other content can't join, rejoin or host it
 //   notice:       { id, kind, seat, message, detail, at } // host-reported problem (a bot move threw), shown to all
-//   seats/s<i>:   { kind: 'human'|'bot', name, id? }   // id = playerId for humans. Compacted to s0..sN-1 at start.
+//   seats/s<i>:   { kind: 'human'|'bot', name, id?, sub? } // id = playerId for humans. Compacted to s0..sN-1 at start.
+//                 sub: 'bot' = the player left and the host let a bot play for them; cleared the moment they're back
 //   players/<id>: { name, connected, lastSeen }
 //   state:        { stateJson, version, lastMove, recent, at } // engine state as a STRING (RTDB mangles arrays/nulls)
 //   moves/<key>:  { by, seat, move:{player, option}, n, mid } // guests (and the host) push; host consumes
@@ -27,6 +28,12 @@ export const MAX_SEATS = 4;
 export const MIN_SEATS = 2;
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1
 const RECENT_KEEP = 24;
+/** How long a player has to be gone before the host is offered "let a bot play for them". */
+export const SUB_AFTER_MS = 15000;
+// Test hooks on the page URL (?subAfter=ms), like ?botDelay: e2e can't wait 15 s per scenario.
+const urlNumber = key => { try { return Number(new URLSearchParams(globalThis.location?.search || '').get(key)) || 0; } catch { return 0; } };
+const defaultSubAfter = () => urlNumber('subAfter') || SUB_AFTER_MS;
+const sameName = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 
 export const newRoomCode = () => randomId(5, CODE_CHARS);
 export const newPlayerId = () => 'p' + randomId(11);
@@ -36,7 +43,7 @@ const normCode = code => String(code || '').trim().toUpperCase();
 /** Seats as a sorted list: [{ seat, kind, name, id? }]. */
 export function seatList(room) {
   return Object.entries(room?.seats || {})
-    .map(([k, v]) => ({ seat: Number(String(k).replace(/^s/, '')), kind: v?.kind || 'human', name: v?.name || '', ...(v?.id ? { id: v.id } : {}) }))
+    .map(([k, v]) => ({ seat: Number(String(k).replace(/^s/, '')), kind: v?.kind || 'human', name: v?.name || '', ...(v?.id ? { id: v.id } : {}), ...(v?.sub ? { sub: v.sub } : {}) }))
     .filter(s => Number.isInteger(s.seat))
     .sort((a, b) => a.seat - b.seat);
 }
@@ -44,28 +51,44 @@ export function seatList(room) {
 const isConnected = (room, s) => s.kind === 'bot' || room?.players?.[s.id]?.connected === true;
 
 /**
- * @typedef {{ id: string, name: string, seat: number, connected: boolean, kind: 'human'|'bot' }} LobbyPlayer
- * @typedef {{ code: string, hostId: string|null, status: 'lobby'|'playing'|'over'|'closed', seed: number|null,
- *   players: LobbyPlayer[], seats: number, maxSeats: number, canStart: boolean,
- *   me: { playerId: string, seat: number|null }, isHost: boolean }} LobbyView
+ * @typedef {{ id: string, name: string, seat: number, connected: boolean, kind: 'human'|'bot',
+ *   host: boolean, away: boolean, awayMs: number, sub: boolean, canSub: boolean }} LobbyPlayer
+ *   away: a person who isn't connected; sub: a bot is playing for them until they're back;
+ *   canSub: (host's view) gone long enough that the host may let a bot play for them.
+ * @typedef {{ code: string, hostId: string|null, hostName: string, status: 'lobby'|'playing'|'over'|'closed', seed: number|null,
+ *   players: LobbyPlayer[], seats: number, maxSeats: number, canStart: boolean, startHint: string,
+ *   me: { playerId: string, seat: number|null }, isHost: boolean, subAfterMs: number }} LobbyView
  */
 
-function lobbyView(room, code, playerId) {
+function lobbyView(room, code, playerId, { awaySince = new Map(), subAfterMs = SUB_AFTER_MS, now = Date.now() } = {}) {
   if (!room) {
-    return { code, hostId: null, status: 'closed', seed: null, players: [], seats: 0, maxSeats: MAX_SEATS, canStart: false, me: { playerId, seat: null }, isHost: false };
+    return { code, hostId: null, hostName: '', status: 'closed', seed: null, players: [], seats: 0, maxSeats: MAX_SEATS, canStart: false, startHint: 'This room is closed.', me: { playerId, seat: null }, isHost: false, subAfterMs };
   }
   const list = seatList(room);
-  const players = list.map(s => ({
-    id: s.kind === 'bot' ? `bot:${s.seat}` : s.id, name: s.name, seat: s.seat, connected: isConnected(room, s), kind: s.kind,
-  }));
-  const mine = list.find(s => s.kind === 'human' && s.id === playerId);
+  const status = room.status || 'lobby';
   const isHost = room.hostId === playerId;
+  const players = list.map(s => {
+    const connected = isConnected(room, s);
+    const away = s.kind === 'human' && !connected;
+    const awayMs = away && awaySince.has(s.id) ? Math.max(0, now - awaySince.get(s.id)) : 0;
+    const sub = s.kind === 'human' && s.sub === 'bot';
+    return {
+      id: s.kind === 'bot' ? `bot:${s.seat}` : s.id, name: s.name, seat: s.seat, connected, kind: s.kind,
+      host: s.kind === 'human' && s.id === room.hostId, away, awayMs, sub,
+      canSub: isHost && status === 'playing' && away && !sub && s.id !== playerId && awayMs >= subAfterMs,
+    };
+  });
+  const mine = list.find(s => s.kind === 'human' && s.id === playerId);
+  const startHint = status !== 'lobby' ? 'The game has started.'
+    : players.length < MIN_SEATS ? `Need at least ${MIN_SEATS} players: invite a friend or add a bot.`
+      : players.some(p => p.away) ? `Waiting for ${players.filter(p => p.away).map(p => p.name).join(' and ')} to reconnect (or remove them).`
+        : '';
   return {
-    code, hostId: room.hostId ?? null, status: room.status || 'lobby', seed: room.seed ?? null,
+    code, hostId: room.hostId ?? null, hostName: list.find(s => s.id === room.hostId)?.name || '', status, seed: room.seed ?? null,
     table: parseTable(room.table) ? { mode: room.tableMode || 'custom', quadrants: parseTable(room.table) } : null,
     players, seats: players.length, maxSeats: MAX_SEATS,
-    canStart: isHost && (room.status || 'lobby') === 'lobby' && players.length >= MIN_SEATS,
-    me: { playerId, seat: mine ? mine.seat : null }, isHost,
+    canStart: isHost && status === 'lobby' && players.length >= MIN_SEATS, startHint,
+    me: { playerId, seat: mine ? mine.seat : null }, isHost, subAfterMs,
   };
 }
 
@@ -80,10 +103,10 @@ function roomTable(t) {
 
 /**
  * Create a room; the creator is host and takes seat 0.
- * @param {{ name: string, transport: import('./transport/tree.js').Transport, playerId?: string, seed?: number, botDelayMs?: number }} opts
+ * @param {{ name: string, transport: import('./transport/tree.js').Transport, playerId?: string, seed?: number, botDelayMs?: number, subAfterMs?: number }} opts
  * @returns {Promise<{ code: string, playerId: string, lobby: Lobby }>}
  */
-export async function createRoom({ name, transport, playerId = newPlayerId(), seed, table = null, botDelayMs = 450 }) {
+export async function createRoom({ name, transport, playerId = newPlayerId(), seed, table = null, botDelayMs = 450, subAfterMs }) {
   if (!transport) throw new Error('createRoom needs a transport.');
   await transport.ready;
   const now = Date.now();
@@ -99,7 +122,7 @@ export async function createRoom({ name, transport, playerId = newPlayerId(), se
     // Creates only if the code is free. (A cold-cache null pass returns the room; RTDB retries with the real value.)
     const res = await transport.transaction(roomPath(code), cur => (cur === null || cur === undefined ? room : undefined));
     if (res.committed && res.value?.hostId === playerId && res.value?.createdAt === now) {
-      const lobby = openLobby({ transport, code, playerId, botDelayMs });
+      const lobby = openLobby({ transport, code, playerId, botDelayMs, subAfterMs });
       await lobby.ready;
       return { code, playerId, lobby };
     }
@@ -108,11 +131,19 @@ export async function createRoom({ name, transport, playerId = newPlayerId(), se
 }
 
 /**
- * Join a room by code. Pass a stored playerId to reclaim your seat after a reload or drop.
- * @param {{ code: string, name?: string, transport: import('./transport/tree.js').Transport, playerId?: string, botDelayMs?: number }} opts
- * @returns {Promise<{ code: string, playerId: string, lobby: Lobby, rejoined: boolean }>}
+ * Join a room by code, or take your seat back. Who you are, in this order:
+ * 1. `playerId`: this tab's own seat (a reload).
+ * 2. `knownIds`: ids this device held in the room before (a closed tab, reopened from the invite link). The first one
+ *    whose player isn't connected; once the game has started, also the only one this device held even if it still
+ *    looks connected (a phone killed mid-game can take the server a minute to notice).
+ * 3. Once the game has started: a seat whose player has left, with your name; or the one seat a bot is playing for
+ *    someone who left. Taking it back clears the bot.
+ * Otherwise a new seat, in the lobby only.
+ * @param {{ code: string, name?: string, transport: import('./transport/tree.js').Transport, playerId?: string,
+ *   knownIds?: string[], botDelayMs?: number, subAfterMs?: number }} opts
+ * @returns {Promise<{ code: string, playerId: string, lobby: Lobby, rejoined: boolean, tookSeat?: string }>}
  */
-export async function joinRoom({ code, name, transport, playerId, botDelayMs = 450 }) {
+export async function joinRoom({ code, name, transport, playerId, knownIds = [], botDelayMs = 450, subAfterMs }) {
   if (!transport) throw new Error('joinRoom needs a transport.');
   await transport.ready;
   code = normCode(code);
@@ -122,16 +153,34 @@ export async function joinRoom({ code, name, transport, playerId, botDelayMs = 4
   // Mixed builds would apply different rules to one state (or crash on an unknown card): refuse, rejoins included.
   if (!sameBuild(room)) throw new Error(VERSION_MISMATCH);
 
-  // Reconnect: same playerId, still seated.
-  if (playerId && seatList(room).some(s => s.kind === 'human' && s.id === playerId)) {
-    await transport.update(`${roomPath(code)}/players/${playerId}`, {
-      connected: true, lastSeen: transport.serverTime(), ...(name ? { name } : {}),
-    });
-    const lobby = openLobby({ transport, code, playerId, botDelayMs });
-    await lobby.ready;
-    return { code, playerId, lobby, rejoined: true };
+  const status = room.status || 'lobby';
+  const humans = seatList(room).filter(s => s.kind === 'human' && s.id);
+  const gone = s => room.players?.[s.id]?.connected !== true;
+  const known = humans.filter(s => (knownIds || []).includes(s.id));
+  let back = (playerId && humans.find(s => s.id === playerId)) || known.find(gone)
+    || (status !== 'lobby' && known.length === 1 ? known[0] : null);
+  let tookSeat = null;
+  if (!back && status !== 'lobby') {
+    const left = humans.filter(gone);
+    const subbed = left.filter(s => s.sub === 'bot');
+    back = left.find(s => name && sameName(s.name, name)) || (subbed.length === 1 ? subbed[0] : null);
+    if (back) tookSeat = back.name;
+    else if (left.length) {
+      const names = left.map(s => s.name).join(' or ');
+      throw Object.assign(new Error(`That game has started. To take the seat of a player who left, join with their name: ${names}.`), { openSeats: left.map(s => ({ seat: s.seat, name: s.name })) });
+    } else throw new Error('That game has already started and every seat is taken. If it was your seat, wait a moment and try again.');
   }
-  if ((room.status || 'lobby') !== 'lobby') throw new Error('That game has already started.');
+
+  // Reconnect: mark this player here, and take the seat back from a bot playing for them.
+  if (back) {
+    const patch = { [`players/${back.id}/connected`]: true, [`players/${back.id}/lastSeen`]: transport.serverTime() };
+    if (name && !tookSeat) patch[`players/${back.id}/name`] = name;
+    for (const s of humans) if (s.id === back.id && s.sub) patch[`seats/s${s.seat}/sub`] = null;
+    await transport.update(roomPath(code), patch);
+    const lobby = openLobby({ transport, code, playerId: back.id, botDelayMs, subAfterMs });
+    await lobby.ready;
+    return { code, playerId: back.id, lobby, rejoined: true, ...(tookSeat ? { tookSeat } : {}) };
+  }
 
   const id = playerId || newPlayerId();
   const nick = name || 'Player';
@@ -153,18 +202,18 @@ export async function joinRoom({ code, name, transport, playerId, botDelayMs = 4
   });
   if (!res.committed || !res.value) throw new Error(res.value ? why : 'Room not found.');
   if (!seatList(res.value).some(s => s.id === id)) throw new Error(why);
-  const lobby = openLobby({ transport, code, playerId: id, botDelayMs });
+  const lobby = openLobby({ transport, code, playerId: id, botDelayMs, subAfterMs });
   await lobby.ready;
   return { code, playerId: id, lobby, rejoined: false };
 }
 
 /** Reclaim a seat with a stored playerId. Same as joinRoom with playerId, but fails rather than taking a new seat. */
-export async function rejoinRoom({ code, playerId, transport, botDelayMs = 450 }) {
+export async function rejoinRoom({ code, playerId, transport, botDelayMs = 450, subAfterMs }) {
   await transport.ready;
   const room = await transport.get(roomPath(normCode(code)));
   if (!room || room.game !== 'v4') throw new Error('Room not found.');
   if (!seatList(room).some(s => s.kind === 'human' && s.id === playerId)) throw new Error('You are no longer seated in that room.');
-  return joinRoom({ code, playerId, transport, botDelayMs });
+  return joinRoom({ code, playerId, transport, botDelayMs, subAfterMs });
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -187,7 +236,7 @@ export async function rejoinRoom({ code, playerId, transport, botDelayMs = 450 }
  * }} Lobby
  */
 
-function openLobby({ transport, code, playerId, botDelayMs }) {
+function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = defaultSubAfter() }) {
   const base = roomPath(code);
   const myConnPath = `${base}/players/${playerId}/connected`;
   let room = null;
@@ -196,16 +245,21 @@ function openLobby({ transport, code, playerId, botDelayMs }) {
   let electing = false;
   let session = null;
   let host = null;
+  let up = false; // this client's own connection
+  let leaving = false;
+  let healedAt = 0;
+  const awaySince = new Map(); // playerId -> when this client first saw them gone (local clock)
+  let awayTimer = null;
   const views = createEmitter();
   const starts = createEmitter();
   let resolveReady;
   const ready = new Promise(r => { resolveReady = r; });
+  const view = () => lobbyView(room, code, playerId, { awaySince, subAfterMs });
 
   transport.onDisconnectSet(myConnPath, false).catch(() => {});
-  const offConn = transport.onConnectedChange?.(up => {
-    if (up && !destroyed && room && seatList(room).some(s => s.id === playerId)) {
-      transport.update(`${base}/players/${playerId}`, { connected: true, lastSeen: transport.serverTime() }).catch(() => {});
-    }
+  const offConn = transport.onConnectedChange?.(u => {
+    up = !!u;
+    if (up) imHere(true);
   }) || (() => {});
 
   const offRoom = transport.subscribe(base, value => {
@@ -215,10 +269,47 @@ function openLobby({ transport, code, playerId, botDelayMs }) {
     if (!gotFirst) { gotFirst = true; resolveReady(); }
   });
 
+  const mySeatsIn = r => seatList(r).filter(s => s.kind === 'human' && s.id === playerId);
+
+  // While this client is connected, the room should say so, and no bot should be playing its seat. Fixes the late
+  // onDisconnect of an old tab or socket (a reload, a phone waking up) and takes the seat back from a bot on return.
+  function imHere(force = false) {
+    if (destroyed || leaving || !room || !up) return;
+    const mine = mySeatsIn(room);
+    if (!mine.length) return;
+    const subbed = mine.filter(s => s.sub);
+    if (!force && room.players?.[playerId]?.connected === true && !subbed.length) return;
+    const now = Date.now();
+    if (!force && now - healedAt < 1000) return; // one write per change; the room echo settles it
+    healedAt = now;
+    const patch = { [`players/${playerId}/connected`]: true, [`players/${playerId}/lastSeen`]: transport.serverTime() };
+    for (const s of subbed) patch[`seats/s${s.seat}/sub`] = null;
+    transport.update(base, patch).catch(() => {});
+  }
+
+  // Track who's gone (and since when) so the host can be offered a bot for them once they've been gone long enough.
+  function trackAway() {
+    const now = Date.now();
+    const humans = room ? seatList(room).filter(s => s.kind === 'human' && s.id) : [];
+    for (const id of [...awaySince.keys()]) if (!humans.some(s => s.id === id)) awaySince.delete(id);
+    let next = Infinity;
+    for (const s of humans) {
+      if (room.players?.[s.id]?.connected === true) { awaySince.delete(s.id); continue; }
+      if (!awaySince.has(s.id)) awaySince.set(s.id, now);
+      const left = awaySince.get(s.id) + subAfterMs - now;
+      if (left > 0) next = Math.min(next, left);
+    }
+    clearTimeout(awayTimer);
+    awayTimer = null;
+    // re-announce when someone crosses the line, so "let a bot play for them" appears without another room change
+    if (next < Infinity && !destroyed) awayTimer = setTimeout(() => { awayTimer = null; if (!destroyed) { trackAway(); views.emit(view()); session?.roomChanged(); } }, next + 5);
+  }
+
   function onRoom() {
     const status = room?.status;
+    trackAway();
     if ((status === 'playing' || status === 'over') && room.state && !session) {
-      session = createOnlineSession({ transport, base, code, playerId, getRoom: () => room, lobby: api });
+      session = createOnlineSession({ transport, base, code, playerId, getRoom: () => room, getView: view, lobby: api });
       starts.emit(session);
     }
     // never host a room made by other rules content (joinRoom already refuses; this is the backstop)
@@ -227,7 +318,8 @@ function openLobby({ transport, code, playerId, botDelayMs }) {
     if (!shouldHost && host) { host.stop(); host = null; }
     host?.roomChanged();
     session?.roomChanged();
-    views.emit(lobbyView(room, code, playerId));
+    views.emit(view());
+    imHere();
     elect();
   }
 
@@ -255,11 +347,31 @@ function openLobby({ transport, code, playerId, botDelayMs }) {
 
   const api = {
     code, playerId, transport, ready,
-    getView: () => lobbyView(room, code, playerId),
+    getView: view,
     subscribe(fn) {
       const off = views.on(fn);
-      if (gotFirst) fn(lobbyView(room, code, playerId));
+      if (gotFirst) fn(view());
       return off;
+    },
+    /**
+     * Host, mid-game: a bot plays this seat until its player is back (they take it back just by rejoining).
+     * Only for a person who isn't connected; the button shows once they've been gone `subAfterMs` (view.canSub).
+     */
+    async letBotPlay(seat) {
+      await ready;
+      if (!room) throw new Error('The room is gone.');
+      if (room.hostId !== playerId) throw new Error('Only the host can hand a seat to a bot.');
+      if ((room.status || 'lobby') !== 'playing') throw new Error('The game isn’t running.');
+      const s = seatList(room).find(x => x.seat === seat);
+      if (!s || s.kind !== 'human' || !s.id) throw new Error('That seat has no player to stand in for.');
+      if (s.id === playerId) throw new Error('You can’t hand your own seat to a bot.');
+      if (room.players?.[s.id]?.connected === true) throw new Error(`${s.name} is back.`);
+      const res = await transport.transaction(`${base}/seats/s${seat}`, cur => {
+        if (cur === null || cur === undefined) return null; // cold-cache pass
+        if (cur.kind !== 'human' || cur.id !== s.id) return undefined;
+        return { ...cur, sub: 'bot' };
+      });
+      if (!res.committed || res.value?.sub !== 'bot') throw new Error('Couldn’t hand that seat to a bot. Try again.');
     },
     async addBot(name) {
       await hostOnly('add bots');
@@ -332,7 +444,11 @@ function openLobby({ transport, code, playerId, botDelayMs }) {
           return { ...r, seats, players, hostId };
         }).catch(() => {});
       } else if (room) {
-        await transport.update(`${base}/players/${playerId}`, { connected: false, lastSeen: transport.serverTime() }).catch(() => {});
+        // Leaving a running game gives the seat to a bot at once, so nobody waits; rejoining takes it back.
+        leaving = true;
+        const patch = { [`players/${playerId}/connected`]: false, [`players/${playerId}/lastSeen`]: transport.serverTime() };
+        if (room.status === 'playing') for (const s of mySeatsIn(room)) patch[`seats/s${s.seat}/sub`] = 'bot';
+        await transport.update(base, patch).catch(() => {});
       }
       api.destroy();
     },
@@ -345,6 +461,7 @@ function openLobby({ transport, code, playerId, botDelayMs }) {
     destroy() {
       if (destroyed) return;
       destroyed = true;
+      clearTimeout(awayTimer);
       offRoom();
       offConn();
       host?.stop();
@@ -361,7 +478,7 @@ function openLobby({ transport, code, playerId, botDelayMs }) {
 // Online session: the same contract as the local one. Guests never run the rules; they show the
 // host's snapshots and push moves.
 
-function createOnlineSession({ transport, base, code, playerId, getRoom, lobby }) {
+function createOnlineSession({ transport, base, code, playerId, getRoom, getView, lobby }) {
   let state = null;
   let version = 0;
   let destroyed = false;
@@ -371,11 +488,14 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, lobby }
   let seenNotice = getRoom()?.notice?.id ?? null; // a notice from before this session (a rejoin) isn't news
 
   const mySeats = () => seatList(getRoom()).filter(s => s.kind === 'human' && s.id === playerId).map(s => s.seat);
+  // seats[i] lines up with state.players[i] (seats are compacted at start): who's here, who's gone, who a bot plays for
   const info = () => {
     const room = getRoom();
+    const v = getView();
     return {
       mode: 'online', roomCode: code, isHost: room?.hostId === playerId, playerId,
-      seats: seatList(room).map(s => ({ name: s.name, kind: s.kind, connected: isConnected(room, s) })),
+      seats: v.players.map(p => ({ seat: p.seat, name: p.name, kind: p.kind, connected: p.connected, host: p.host, away: p.away, awayMs: p.awayMs, sub: p.sub, canSub: p.canSub, me: p.id === playerId })),
+      subAfterMs: v.subAfterMs,
       version,
     };
   };
@@ -434,6 +554,8 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, lobby }
     get mySeats() { return mySeats(); },
     get info() { return info(); },
     get lobby() { return lobby; },
+    /** Host: a bot plays this seat until its player is back (see lobby.letBotPlay). */
+    letBotPlay: seat => lobby.letBotPlay(seat),
     /** Tears down the whole online connection (lobby, host loop, listeners). */
     destroy() { lobby.destroy(); },
     roomChanged() {
@@ -536,17 +658,20 @@ function startHost({ transport, base, getRoom, botDelayMs }) {
     if (!stopped && attempt < 2) return handle(key, rec, attempt + 1); // someone else wrote; re-check against fresh state
   }
 
+  // a bot seat, or a person's seat a bot is standing in for (sub) until they're back
+  const botPlays = seat => { const s = getRoom()?.seats?.[`s${seat}`]; return s?.kind === 'bot' || (s?.kind === 'human' && s.sub === 'bot'); };
+
   function scheduleBot() {
     clearTimeout(botTimer);
     botTimer = null;
     if (stopped || !cur || cur.over || !cur.pending) return;
     const seat = cur.pending.player;
-    if (getRoom()?.seats?.[`s${seat}`]?.kind !== 'bot') return;
+    if (!botPlays(seat)) return;
     const V = ver;
     botTimer = setTimeout(() => {
       botTimer = null; // fired: a stale id here would stop roomChanged() from ever rescheduling
       enqueue(async () => {
-        if (stopped || ver !== V || !cur.pending || cur.pending.player !== seat) return;
+        if (stopped || ver !== V || !cur.pending || cur.pending.player !== seat || !botPlays(seat)) return;
         const rand = seededRandom(((cur.seed ?? 1) ^ Math.imul(V, 2654435761)) >>> 0);
         // a bot move that throws is logged and replaced by the first option that applies cleanly; the table is told
         const r = botStep(cur, st => chooseBotMove(st, rand), { tag: 'v4 host', seat, report: notify });

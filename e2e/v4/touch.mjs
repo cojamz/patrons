@@ -175,8 +175,9 @@ async function setupPhase() {
         if (how === 'tap') {
           for (let c = 0; c < r.n; c++) {
             const el = (await p2.$$('.for-sale .fs-card'))[c];
-            await el.evaluate(e => e.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
-            await p2.waitForTimeout(120);
+            // swipe the strip to the card (the strip scrolls sideways; the sheet itself doesn't move)
+            await el.evaluate(e => { const strip = e.closest('.fs-strip'); const sb = strip.getBoundingClientRect(), b = e.getBoundingClientRect(); strip.scrollBy({ left: b.left < sb.left ? b.left - sb.left : b.right > sb.right ? b.right - sb.right : 0, behavior: 'instant' }); });
+            await p2.waitForTimeout(200);
             const box = await el.boundingBox();
             if (!box || box.x < -0.5 || box.x + box.width > 390.5) { note(`(k) iPhone 13: member ${c + 1} for sale can't be scrolled into view`, 'setup'); continue; }
             const name = await el.$eval('b', e => e.textContent);
