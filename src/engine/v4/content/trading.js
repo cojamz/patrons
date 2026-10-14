@@ -213,8 +213,8 @@ const trading = {
     }),
     m('lender', 'Lender', 2, 0, 'When it joins you: +5 white. Game end: lose 2 followers.', {
       onRecruited(ctx, owner, card) { payLoan(ctx, owner, card); },
-      // a Doppelganger copying Lender is a full copy (Cory): it gets the +5 too. Copies don't run
-      // onRecruited, so the loan pays out at the end of the turn the copy was made.
+      // a Doppelganger copying Lender is a full copy (Cory): it gets the +5 too, at once (the copy runs onRecruited).
+      // This turn-end check is a fallback for a copy made some other way (loanPaid unset).
       onTurnEnd(ctx, owner, card) { if (!card.loanPaid) payLoan(ctx, owner, card); },
       // can't take you below the followers you've won or bought (never yourself or a member)
       onGameEnd: (ctx, owner) => -Math.min(2, owner.bonus),

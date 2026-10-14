@@ -11,7 +11,7 @@ const QT = ['gold', 'thieves', 'market', 'echo'];
 useCosts({
   'gold.tycoon': [8, 4], 'gold.taxman': [2, 2], 'gold.midas': [4, 4], 'red.bigfamily': [4, 4], 'red.twins': [2, 2],
   'red.intern': [2, 0], 'red.volunteer': [0, 0], 'red.doppel': [4, 2],
-  'echo.evergreen': [2, 2], 'echo.choir': [4, 2], 'echo.muse': [2, 2], 'echo.understudy': [4, 2], 'echo.ensemble': [4, 4],
+  'echo.evergreen': [2, 2], 'echo.choir': [4, 2], 'echo.muse': [2, 2], 'echo.understudy': [4, 2], 'echo.ensemble': [2, 2],
   'echo.groupie': [4, 4], 'echo.translator': [4, 2], 'echo.tuningfork': [2, 2], 'echo.wallflower': [2, 2],
   'echo.keepsake': [4, 2], 'echo.mirror': [4, 2], 'echo.afterimage': [4, 2], 'echo.hourglass': [6, 4],
   'echo.dejavu': [8, 4], 'echo.chronicler': [4, 4], 'thieves.watchdog': [4, 2],

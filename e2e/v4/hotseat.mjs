@@ -93,6 +93,7 @@ try {
   let facingSeen = null;
   let lastClipCheck = null;
   const stories = new Set(); // the one-line turn stories seen by the board
+  let regionBoxes = null; const phasesSeen = new Set(); // fixed regions, compared across phases
   const t0 = Date.now();
   let clicks = 0;
   while (!(await page.$('.results'))) {
@@ -116,6 +117,29 @@ try {
       if (!seen.has(r)) { seen.add(r); await page.waitForTimeout(800); await shot(`04-${r.replace(/\W+/g, '_')}`); if (/II /.test(r + ' ')) await shot(`04-${r.replace(/\W+/g, '_')}-phone`, PHONE); }
       await next.click();
       continue;
+    }
+    // the furniture never moves: every region keeps its box from phase to phase (only the lamp moves), and every
+    // open space prints its effect, readable without hovering (≥11px)
+    {
+      const r = await page.evaluate(() => {
+        const vp = innerWidth + 'x' + innerHeight;
+        const regions = Object.fromEntries(['prompt', 'rail', 'wheel', 'shop', 'table'].map(k => { const e = document.querySelector(`.lt [data-region="${k}"]`); if (!e) return [k, null]; const b = e.getBoundingClientRect(); return [k, [b.left, b.top, b.width, b.height].map(Math.round).join(',')]; }));
+        const phase = (document.querySelector('.app.game') || {}).dataset?.phase;
+        const bad = [];
+        for (const sl of document.querySelectorAll('.lt .slot.open')) {
+          const y = sl.querySelector('[data-yield]');
+          const fs = y ? parseFloat(getComputedStyle(y).fontSize) : 0;
+          if (!y || !y.textContent.trim() && !y.querySelector('.pip')) bad.push(`${sl.dataset.slot}: no effect printed`);
+          else if (fs < 11) bad.push(`${sl.dataset.slot}: effect at ${fs}px`);
+        }
+        return { vp, regions, phase, bad };
+      });
+      if (r.vp === '1270x700' && r.phase && !['over', 'reckon'].includes(r.phase)) {
+        if (!regionBoxes) regionBoxes = { ...r.regions, phase: r.phase };
+        for (const k of Object.keys(r.regions)) if (r.regions[k] !== regionBoxes[k]) { const m = `the ${k} region moved between ${regionBoxes.phase} and ${r.phase} (${regionBoxes[k]} -> ${r.regions[k]})`; if (!errors.includes(m)) { errors.push(m); await shot('zz-region-moved'); } }
+        phasesSeen.add(r.phase);
+      }
+      for (const b of r.bad) { const m = `space not readable without hover: ${b}`; if (!errors.includes(m)) errors.push(m); }
     }
     // no text anywhere is cut off (1270×700), checked once per step
     const movesNow = await page.$eval('.app.game', e => e.dataset.moves).catch(() => null);
@@ -293,6 +317,7 @@ try {
   console.log(`motion: ${flights} flights (cards and workers), ${ticks} number count-ups`);
   if (!ticks) errors.push('no numbers counted up');
   if (!flights) errors.push('no card or worker flights ran');
+  for (const ph of ['place', 'buy']) if (!phasesSeen.has(ph)) errors.push(`never compared regions in the ${ph} phase`);
   // every turn is told by the board in plain words: rivals' and your own
   const told = [...stories].filter(t => / took .+ · /.test(t));
   console.log(`turn stories: ${told.length} (e.g. "${told[0] || ''}")`);

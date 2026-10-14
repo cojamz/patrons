@@ -60,11 +60,12 @@ describe('v4 game screen', () => {
       expect(g.getAttribute('data-option')).toBeNull();
       expect(g.querySelector('.worker')).not.toBeNull();
     }
-    // round II cards are locked in round I
-    const q = quadrant(state.quadrants[0]);
-    const panel = container.querySelector('.quad');
-    const locked = q.actions.filter(a => a.ring > state.round).map(a => within(panel).getByText(a.name).closest('button'));
-    for (const b of locked) { expect(b.getAttribute('aria-disabled')).toBe('true'); expect(b.getAttribute('data-option')).toBeNull(); }
+    // round II and III spaces are locked in round I: printed but not clickable
+    const locked = [...container.querySelectorAll('.slot.locked')];
+    expect(locked.length).toBe(state.quadrants.reduce((n, id) => n + quadrant(id).actions.filter(a => a.ring > state.round).length, 0));
+    for (const b of locked) expect(b.getAttribute('data-option')).toBeNull();
+    // every open space prints its effect (the board reads without hovering)
+    for (const sl of container.querySelectorAll('.slot.open')) expect(sl.querySelector('[data-yield]').textContent.trim() || sl.querySelector('[data-yield] .pip')).toBeTruthy();
     // clicking a wheel space submits it
     const first = state.pending.options[0];
     fireEvent.click(container.querySelector(`[data-slot="${first.q}-${first.i}"]`));

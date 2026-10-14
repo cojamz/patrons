@@ -174,12 +174,14 @@ describe('White members', () => {
     while (s.pending && s.pending.player === 1) s = move(s, s.pending.options[0].id);
     expect(R(s).white).toBe(0);
   });
-  it('× Doppelganger copying Lender: the copy gets +5 at the end of that turn (Cory: a full copy)', () => {
+  it('× Doppelganger copying Lender: the copy gets +5 at once (Cory: a full copy; its when-recruited fires)', () => {
     let s = table(Q, { members: [['trading.lender', 'red.twins']], shop: ['red.doppel', ...ROW], res: [{ red: 4, gold: 2 }] });
     s.cards[uidIn(s, 'trading.lender', 0)].loanPaid = true;
     s = payDefault(move(take(s, 'Haggle'), cardOpt(s, 'red.doppel', 'shop')));
     expect(R(s).white).toBe(0); // Haggle's 2 went on the Doppelganger
-    s = pass(move(s, `card:${uidIn(s, 'trading.lender', 0)}`)); // the copy, then the turn ends
+    s = move(s, `card:${uidIn(s, 'trading.lender', 0)}`); // the copy
+    expect(R(s).white).toBe(5);
+    s = pass(s); // the turn ends: no second payout
     expect(R(s).white).toBe(5);
     expect(named(s, 'Lender').length).toBe(1);
   });

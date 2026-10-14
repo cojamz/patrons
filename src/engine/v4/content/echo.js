@@ -272,7 +272,7 @@ const echoQ = {
     m('understudy', 'Understudy', 4, 2, 'When recruited: copy a space a rival took since your last turn.', {
       onRecruited(ctx, owner) { offer(ctx, owner, sinceNow(ctx, owner), 'Understudy: copy which rival’s space (taken since your last turn)?', 'now', 'Understudy'); },
     }),
-    m('ensemble', 'Ensemble', 4, 4, 'Game end: +1 follower per green member.', {
+    m('ensemble', 'Ensemble', 2, 2, 'Game end: +1 follower per green member.', {
       onGameEnd: (ctx, owner) => ctx.countMembersOfColor(owner, 'echo'),
     }),
     m('groupie', 'Groupie', 4, 4, 'Whenever anyone recruits a green member, +1 green.', {

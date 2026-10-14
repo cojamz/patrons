@@ -42,6 +42,15 @@ describe('Magenta actions', () => {
     expect(named(s, 'Sticky Fingers').length).toBe(1);
     expect(named(s, 'Desperado').length).toBe(1);
   });
+  it('× Sticky Fingers and Desperado on Gold\'s Steal: (3+1)×2 = 8, and the log names both', () => {
+    let s = table(Q, { round: 2, left: 4, res: [{}, { gold: 9 }], members: [['thieves.sticky', 'thieves.desperado']], bonus: [0, 3], shop: ROW });
+    s = take(s, 'Steal');
+    for (let k = 0; k < 8; k++) s = move(s, 'player:1');
+    expect(R(s).gold).toBe(8);
+    expect(R(s, 1).gold).toBe(1);
+    expect(named(s, 'Sticky Fingers').length).toBe(1);
+    expect(named(s, 'Desperado').length).toBe(1);
+  });
 
   it('Tip-off: take 1 from each player holding more than you', () => {
     let s = table(Q, { n: 4, res: [{ red: 2 }, { gold: 3 }, { red: 1 }, { gold: 1, red: 2 }], shop: ROW });

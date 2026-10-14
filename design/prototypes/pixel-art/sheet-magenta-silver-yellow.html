@@ -62,11 +62,7 @@ h3{margin:4px 0 0;font:600 var(--fs-1)/1 var(--body);letter-spacing:.1em;text-tr
   // Calibration icons from icons.js that belong to these spheres, mapped to their card ids.
   const OLD_IDS = { pickpocket: 'thieves.pickpocket', heist: 'thieves.heist', cutpurse: 'thieves.cutpurse', toast: 'silver.toast' };
   const OLD = P.ICONS.filter(i => OLD_IDS[i.id]).map(i => ({ ...i, id: OLD_IDS[i.id], old: true }));
-  const ORDER = ['thieves.pickpocket', 'thieves.tipoff', 'thieves.hideout', 'thieves.rob', 'thieves.ransom', 'thieves.heist', 'thieves.cutpurse',
-    'silver.toast', 'silver.gift'];
-  const ALL = [...OLD, ...NEW].sort((a, b) => rank(a) - rank(b));
-  function rank(i) { const k = ORDER.indexOf(i.id); return k >= 0 ? k * 1000 : 1e6; }
-  // Keep the batch file's own order, slotting the calibration icons where their cards sit.
+  // The batch file's own (card) order, with each calibration icon slotted where its card sits.
   const seq = []; NEW.forEach(i => seq.push(i));
   const slot = { 'thieves.pickpocket': 'thieves.tipoff', 'thieves.heist': 'thieves.mole', 'thieves.cutpurse': 'thieves.mole', 'silver.toast': 'silver.gift' };
   OLD.forEach(o => { const at = seq.findIndex(i => i.id === slot[o.id]); seq.splice(at, 0, o); });
