@@ -4,6 +4,8 @@ import { spawn } from 'node:child_process';
 import { readdirSync, existsSync } from 'node:fs';
 
 const fast = process.argv.includes('--fast');
+// Parallel agents: give each its own build dir and port (V4_OUTDIR, V4_PORT) so they never serve each other's builds.
+const outDir = process.env.V4_OUTDIR || '.v4-build';
 const results = [];
 const run = (name, cmd, args, opts = {}) => new Promise(res => {
   const t0 = Date.now();
@@ -14,11 +16,11 @@ const run = (name, cmd, args, opts = {}) => new Promise(res => {
 });
 
 await run('engine + session + ui tests', 'npx', ['vitest', 'run', 'src/test/engine/v4', 'src/test/v4', '--exclude', 'src/test/engine/v4/spheres/**']);
-await run('production build', 'npx', ['vite', 'build', '--outDir', '.v4-build', '--emptyOutDir'], { quiet: true });
+await run('production build', 'npx', ['vite', 'build', '--outDir', outDir, '--emptyOutDir'], { quiet: true });
 
 if (!fast && existsSync('e2e/v4')) {
-  const port = 5180;
-  const server = spawn('npx', ['vite', 'preview', '--outDir', '.v4-build', '--port', String(port), '--strictPort'], { stdio: 'pipe' });
+  const port = Number(process.env.V4_PORT || 5180);
+  const server = spawn('npx', ['vite', 'preview', '--outDir', outDir, '--port', String(port), '--strictPort'], { stdio: 'pipe' });
   // wait until the preview server answers (up to 30s)
   for (let i = 0; i < 60; i++) { try { if ((await fetch(`http://localhost:${port}/`)).ok) break; } catch {} await new Promise(r => setTimeout(r, 500)); }
   for (const f of readdirSync('e2e/v4').filter(f => f.endsWith('.mjs')).sort())

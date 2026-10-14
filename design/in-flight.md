@@ -1,5 +1,7 @@
 # In flight — catalogue at handoff (2026-10-14, ~17:00 UTC)
 
+Resumed 2026-10-14 ~17:10 UTC in a new session: items 1–5 relaunched as fresh agents from these briefs, each told to read git log and continue. Agents never commit; the foreman checkpoints. Each agent runs check:v4 on its own V4_OUTDIR/V4_PORT (a1 5281, ui 5282, a3 5283, a4 5284, a5 5285). Baseline at resume: one failing UI test (GameScreen.test.jsx handoff dialog), build green.
+
 Five agents were running in the old session. They don't carry over, but their work lands in git through frequent WIP checkpoints. A new session should check `git log` and the files below, then restart whatever isn't finished.
 
 1. **Cost change + top tier + tuning.**

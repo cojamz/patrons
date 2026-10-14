@@ -3,5 +3,5 @@ node_modules
 # Local Netlify folder
 .netlify
 .DS_Store
-.v4-build/
+.v4-build*/
 .v4-panel/
