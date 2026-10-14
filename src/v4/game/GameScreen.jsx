@@ -16,6 +16,7 @@ import Tick from './Tick.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop } from './flight.js';
 import { friendlyError, isNetworkError } from '../errors.js';
 import { ROUND_START } from '../saved.js';
+import { GAME_NAME } from '../version.js';
 
 const STEP_MS = 320;      // pace when catching up on moves that happened behind the round-end card
 const RIVAL_DWELL_MS = 700; // each visible bot step (placing, recruiting, buying) holds this long; a pass doesn't wait
@@ -516,7 +517,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     <div className={`app game${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${pend && pend.kind === 'setup' && !state.over ? ' in-setup' : ''}`} ref={root} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar">
         <div className="bar-row">
-          <h1>Patrons</h1>
+          <h1>{GAME_NAME}</h1>
           <span className="round">{roundText}{state.round && !state.over ? <small> · <span className="num">{WORKERS[state.round - 1]}</span> workers each</small> : null}</span>
           <button type="button" className="btn ghost rules-btn" onClick={() => setRules(true)} aria-label="How to play"><span className="lbl">How to play</span><span className="ico" aria-hidden="true">?</span></button>
           {onHome && <button type="button" className="btn ghost leave-btn" onClick={() => (state.over ? onHome() : setLeaving(true))}>Leave</button>}

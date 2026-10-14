@@ -19,7 +19,7 @@ import { moveProblem, normalizeMove } from './local.js';
 import { BUILD, CONTENT_HASH, newGame, step, trackState, botStep, reportProblem } from './record.js';
 
 /** Shown when a room was made by a build with different rules content (a deploy happened in between). */
-export const VERSION_MISMATCH = 'That room is on a different version of Patrons. Refresh this page and try again; if it still won’t join, the host should refresh and make a new room.';
+export const VERSION_MISMATCH = 'That room is on a different version of Cults. Refresh this page and try again; if it still won’t join, the host should refresh and make a new room.';
 const sameBuild = room => !!(room && room.build && room.build.content === CONTENT_HASH);
 
 export const ROOM_ROOT = 'v3rooms';

@@ -5,6 +5,7 @@ import HowToPlay from '../HowToPlay.jsx';
 import { friendlyError } from '../errors.js';
 import { quadrant } from '../../engine/v4/index.js';
 import { CLASSIC, spheres, sphereName, tableProblem, randomTable, urlTable } from '../tables.js';
+import { GAME_NAME, VERSION } from '../version.js';
 
 const KINDS = [['human', 'Person'], ['bot', 'Bot'], ['empty', 'Empty']];
 const NAME_MAX = 14;
@@ -40,7 +41,8 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, er
           ))}
           <circle cx="50" cy="50" r="14" fill="var(--table)" />
         </svg>
-        <h1>Patrons</h1>
+        <h1>{GAME_NAME}</h1>
+        <p className="version" data-version>{VERSION}</p>
         <p className="tag">Draft the wheel. Recruit members. Win followers.</p>
       </div>
       <div className="menu">
@@ -172,7 +174,7 @@ export function LocalSetup({ initial, onStart, onBack }) {
         ))}
         <div className="seat"><span>Bot speed</span><Seg label="Bot speed" value={speed} options={[['slow', 'Slow'], ['normal', 'Normal'], ['fast', 'Fast']]} onChange={setSpeed} /></div>
         <TablePicker value={table} onChange={setTable} />
-        {filled.length < 2 && <p className="hint warn">Patrons needs at least 2 seats.</p>}
+        {filled.length < 2 && <p className="hint warn">{GAME_NAME} needs at least 2 seats.</p>}
         <div className="row-btns">
           <button type="button" className="btn" onClick={onBack}>Back</button>
           <button type="button" className="btn pri" data-start disabled={filled.length < 2 || !tableOk} onClick={() => onStart({ seats, speed, table })}>Start</button>

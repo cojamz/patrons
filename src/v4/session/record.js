@@ -94,7 +94,7 @@ export const sameContent = state => !!(state && state.build && state.build.conte
  */
 export function stateProblem(state) {
   if (!state || !Array.isArray(state.players)) return { kind: 'broken', message: 'No game in this save.' };
-  if (!sameContent(state)) return { kind: 'version', message: 'This game was saved on an older version of Patrons.' };
+  if (!sameContent(state)) return { kind: 'version', message: 'This game was saved on an older version of Cults.' };
   try {
     for (const q of state.quadrants) quadrant(q);
     for (const c of Object.values(state.cards || {})) { defById(c.def); if (c.copy) defById(c.copy); }
@@ -134,7 +134,7 @@ export const recordText = rec => JSON.stringify(rec, null, 1);
 /** Accepts a record object or its JSON text. Throws a plain message on anything else. */
 export function parseRecord(input) {
   const rec = typeof input === 'string' ? JSON.parse(input) : input;
-  if (!rec || rec.kind !== RECORD_KIND) throw new Error('Not a Patrons v4 game record.');
+  if (!rec || rec.kind !== RECORD_KIND) throw new Error('Not a Cults game record.');
   if (!Array.isArray(rec.seats) || !Array.isArray(rec.quadrants)) throw new Error('The record has no seats or table.');
   if (!Array.isArray(rec.moves)) throw new Error('The record has no move list (saved before moves were recorded).');
   return rec;

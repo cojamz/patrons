@@ -123,8 +123,8 @@ export function Notices({ botNoticeMs = 10000 }) {
 
   if (stale) {
     const text = stale.reason === 'version'
-      ? 'This game was saved on an older version of Patrons, so it can’t continue. Start a fresh game.'
-      : 'Your saved game couldn’t be opened by this version of Patrons. Start a fresh game.';
+      ? 'This game was saved on an older version of Cults, so it can’t continue. Start a fresh game.'
+      : 'Your saved game couldn’t be opened by this version of Cults. Start a fresh game.';
     return (
       <div role="status" data-notice="stale" style={notice}>
         <span style={{ flex: '1 1 220px' }}>{text}</span>

@@ -2,6 +2,7 @@
 import { Fragment } from 'react';
 import { useDialog } from './game/parts.jsx';
 import { RULEBOOK } from './rulebook.js';
+import { GAME_NAME, VERSION } from './version.js';
 
 function inline(text) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, k) =>
@@ -42,6 +43,7 @@ export default function HowToPlay({ onClose }) {
       <div className="dialog rules" ref={box}>
         <button type="button" className="btn ghost close" onClick={onClose} data-autofocus aria-label="Close how to play">Close</button>
         <div className="rules-body">{renderRules(RULEBOOK)}</div>
+        <p className="version" data-version>{GAME_NAME} {VERSION}</p>
       </div>
     </div>
   );
