@@ -40,3 +40,9 @@ Cory's adjustments win over the frames:
 - Say "minion(s)" everywhere a player reads "worker(s)": rulebook, screen, card texts, log, intro.
 
 - Unplaced minions float around their cult leader (seat rail and your table): minions left is seen, not read as a number. Placing one flies it from the leader to the space; at round end they fly home. (Cory, 2026-10-14)
+
+## Layout revision (Cory, 2026-10-14, after seeing the in-progress build)
+- **The wheel is the focus**: bigger and centred; the table is the board.
+- **Every player's cult sits around the wheel**, one per corner, like chairs at a table: their cult leader (emoji robe) with unplaced minions floating around it, their member figures as a small crowd, their follower mark, followers total, resources as small stacks. Yours is the bottom corner nearest you and slightly larger; rivals take the other three. This replaces the separate seat rail and the big "your table" panel (hover a cult for detail).
+- **The shop is condensed**: a slim strip of 10 small cards (figure + name + cost + worth; text on hover/tap), plus one quiet follower-rate line, along one side or the bottom. No big text blocks on cards by default.
+- Seen in the in-progress build, fix as part of this: minions placed on a space hide its text (offset the minion onto the space's rim); "place a worker" still in the prompt (say minion); shop cards are mostly empty paper (art not in yet, text floats mid-card).

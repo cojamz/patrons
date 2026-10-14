@@ -49,13 +49,13 @@ Value math: what a space gave its taker in 300 Normal-bot games (150 each on gol
 15. Keepsake (4+2): when recruited, copy one of your spaces from this round. +0.0 in this run (80 games; noisy).
 16. Understudy (4+2, new): when recruited, copy a space a rival took since your last turn. +3.1.
 17. Mirror (4+2): when recruited, gain as much green as the rival with the most green.
-18. Afterimage (4+2): at round start, copy one of your spaces from last round.
+18. Afterimage (4+2): now and at round start, copy one of your spaces from last round.
 19. Groupie (4+4): whenever anyone recruits a green member, +1 green.
 20. Chronicler (4+4): at game end, +1 follower per 2 green.
 21. Hourglass (6+4): once per round, copy the space you just took.
 22. Déjà Vu (8+4): once per game, copy every space you took this round.
 
-Watch items: Understudy, Keepsake and Mirror are one-shot "when recruited" cards, so Release (refund at full printed cost) makes them nearly free; that's a Release question for the fair-price screen, not a Green one. Chronicler turned 24 unspent green into +12 followers in a hand-played game: it's the only green sink, and copies pile up green faster than one buy a turn can spend.
+Watch items: Understudy, Keepsake and Mirror are one-shot "when recruited" cards; since Cory's Release ruling (refund the colored part only) a buy, copy, release costs them the "any" part, so they're no longer free. Chronicler turned 24 unspent green into +12 followers in a hand-played game: it's the only green sink, and copies pile up green faster than one buy a turn can spend.
 
 ## Extra ideas (one line each)
 **Ring I**

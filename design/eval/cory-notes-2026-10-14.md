@@ -184,7 +184,7 @@ Before → after, on the same seeds (Normal bots, 300 games, half on gold/red/bl
 - **Tension:** every juicy pick now feeds the next seat. This is Puerto Rico's role choice: you pick what helps you more than the follower.
 - **Cost to learn:** "since your last turn" is a time window, and it's empty on the snake's second pick. New players will misread it unless the UI lights Echo's eligible spaces (they are mock A's rings).
 - **Analysis paralysis:** gone from Echo and Refrain. It stays on Encore, which can offer about 9 spaces late.
-- **Release exploit:** Understudy joins Keepsake and Mirror as one-shot cards that Release refunds at full price (buy, copy, release). That's a question for Release, not for Green.
+- **Release exploit:** Understudy joins Keepsake and Mirror as one-shot cards. Under Cory's later ruling (Release refunds the colored part only), buy, copy, release now costs the "any" part, so it's no longer free.
 - **Simplest version that keeps the good part:** a single target ("the last space a rival took"). I kept up to 3 because a single target goes dead whenever the last rival took an echo or the center.
 
 **Watch when Cory plays.**

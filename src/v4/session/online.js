@@ -34,16 +34,19 @@ export const SUB_AFTER_MS = 15000;
 const urlNumber = key => { try { return Number(new URLSearchParams(globalThis.location?.search || '').get(key)) || 0; } catch { return 0; } };
 const defaultSubAfter = () => urlNumber('subAfter') || SUB_AFTER_MS;
 const sameName = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+// A player's emoji (display only): kept short, so a pasted paragraph can't ride along in every snapshot.
+const cleanEmoji = e => (typeof e === 'string' ? e.trim().slice(0, 16) : '');
+const withEmoji = e => (cleanEmoji(e) ? { emoji: cleanEmoji(e) } : {});
 
 export const newRoomCode = () => randomId(5, CODE_CHARS);
 export const newPlayerId = () => 'p' + randomId(11);
 const roomPath = code => `${ROOM_ROOT}/${code}`;
 const normCode = code => String(code || '').trim().toUpperCase();
 
-/** Seats as a sorted list: [{ seat, kind, name, id? }]. */
+/** Seats as a sorted list: [{ seat, kind, name, id?, emoji?, sub? }]. */
 export function seatList(room) {
   return Object.entries(room?.seats || {})
-    .map(([k, v]) => ({ seat: Number(String(k).replace(/^s/, '')), kind: v?.kind || 'human', name: v?.name || '', ...(v?.id ? { id: v.id } : {}), ...(v?.sub ? { sub: v.sub } : {}) }))
+    .map(([k, v]) => ({ seat: Number(String(k).replace(/^s/, '')), kind: v?.kind || 'human', name: v?.name || '', ...(v?.id ? { id: v.id } : {}), ...withEmoji(v?.emoji), ...(v?.sub ? { sub: v.sub } : {}) }))
     .filter(s => Number.isInteger(s.seat))
     .sort((a, b) => a.seat - b.seat);
 }
@@ -74,7 +77,7 @@ function lobbyView(room, code, playerId, { awaySince = new Map(), subAfterMs = S
     const awayMs = away && awaySince.has(s.id) ? Math.max(0, now - awaySince.get(s.id)) : 0;
     const sub = s.kind === 'human' && s.sub === 'bot';
     return {
-      id: s.kind === 'bot' ? `bot:${s.seat}` : s.id, name: s.name, seat: s.seat, connected, kind: s.kind,
+      id: s.kind === 'bot' ? `bot:${s.seat}` : s.id, name: s.name, ...withEmoji(s.emoji), seat: s.seat, connected, kind: s.kind,
       host: s.kind === 'human' && s.id === room.hostId, away, awayMs, sub,
       canSub: isHost && status === 'playing' && away && !sub && s.id !== playerId && awayMs >= subAfterMs,
     };
@@ -107,7 +110,7 @@ function roomTable(t) {
  * @param {{ name: string, transport: import('./transport/tree.js').Transport, playerId?: string, seed?: number, botDelayMs?: number, subAfterMs?: number }} opts
  * @returns {Promise<{ code: string, playerId: string, lobby: Lobby }>}
  */
-export async function createRoom({ name, transport, playerId = newPlayerId(), seed, table = null, botDelayMs = 450, subAfterMs }) {
+export async function createRoom({ name, emoji, transport, playerId = newPlayerId(), seed, table = null, botDelayMs = 450, subAfterMs }) {
   if (!transport) throw new Error('createRoom needs a transport.');
   await transport.ready;
   const now = Date.now();
@@ -116,7 +119,7 @@ export async function createRoom({ name, transport, playerId = newPlayerId(), se
     const room = {
       game: 'v4', code, hostId: playerId, status: 'lobby', createdAt: now, build: { ...BUILD },
       seed: Number.isFinite(seed) ? seed >>> 0 : Math.floor(Math.random() * 2 ** 31),
-      seats: { s0: { kind: 'human', name: name || 'Host', id: playerId } },
+      seats: { s0: { kind: 'human', name: name || 'Host', id: playerId, ...withEmoji(emoji) } },
       ...roomTable(table),
       players: { [playerId]: { name: name || 'Host', connected: true, lastSeen: now } },
     };
@@ -145,7 +148,7 @@ export async function createRoom({ name, transport, playerId = newPlayerId(), se
  *   knownIds?: string[], onlyRejoin?: boolean, botDelayMs?: number, subAfterMs?: number }} opts
  * @returns {Promise<{ code: string, playerId: string, lobby: Lobby, rejoined: boolean, tookSeat?: string }>}
  */
-export async function joinRoom({ code, name, transport, playerId, knownIds = [], onlyRejoin = false, botDelayMs = 450, subAfterMs }) {
+export async function joinRoom({ code, name, emoji, transport, playerId, knownIds = [], onlyRejoin = false, botDelayMs = 450, subAfterMs }) {
   if (!transport) throw new Error('joinRoom needs a transport.');
   await transport.ready;
   code = normCode(code);
@@ -199,7 +202,7 @@ export async function joinRoom({ code, name, transport, playerId, knownIds = [],
     if (seat >= MAX_SEATS) { why = 'Room is full.'; return undefined; }
     return {
       ...r,
-      seats: { ...(r.seats || {}), [`s${seat}`]: { kind: 'human', name: nick, id } },
+      seats: { ...(r.seats || {}), [`s${seat}`]: { kind: 'human', name: nick, id, ...withEmoji(emoji) } },
       players: { ...(r.players || {}), [id]: { name: nick, connected: true, lastSeen: Date.now() } },
     };
   });
@@ -420,10 +423,10 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
         const list = seatList(r);
         if (list.length < MIN_SEATS || list.length > MAX_SEATS) return undefined;
         const seats = {};
-        list.forEach((s, i) => { seats[`s${i}`] = { kind: s.kind, name: s.name, ...(s.id ? { id: s.id } : {}) }; });
+        list.forEach((s, i) => { seats[`s${i}`] = { kind: s.kind, name: s.name, ...(s.id ? { id: s.id } : {}), ...withEmoji(s.emoji) }; });
         const seed = Number.isFinite(r.seed) ? r.seed : Math.floor(Math.random() * 2 ** 31);
         const quadrants = parseTable(r.table);
-        const game = newGame({ seats: list.map(s => ({ name: s.name, kind: s.kind })), seed, ...(quadrants ? { quadrants } : {}) });
+        const game = newGame({ seats: list.map(s => ({ name: s.name, kind: s.kind, ...withEmoji(s.emoji) })), seed, ...(quadrants ? { quadrants } : {}) });
         return {
           ...r, seats, seed, status: 'playing', startedAt: Date.now(), build: { ...BUILD },
           state: { stateJson: JSON.stringify(game), version: 1, lastMove: null, recent: '', at: Date.now() },
@@ -442,7 +445,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
           const humans = list.filter(s => s.kind === 'human');
           if (!humans.length) return null; // last human out closes the room
           const seats = {};
-          for (const s of list) seats[`s${s.seat}`] = { kind: s.kind, name: s.name, ...(s.id ? { id: s.id } : {}) };
+          for (const s of list) seats[`s${s.seat}`] = { kind: s.kind, name: s.name, ...(s.id ? { id: s.id } : {}), ...withEmoji(s.emoji) };
           const players = { ...(r.players || {}) };
           delete players[playerId];
           const hostId = r.hostId === playerId ? humans[0].id : r.hostId;
@@ -499,7 +502,7 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
     const v = getView();
     return {
       mode: 'online', roomCode: code, isHost: room?.hostId === playerId, playerId,
-      seats: v.players.map(p => ({ seat: p.seat, name: p.name, kind: p.kind, connected: p.connected, host: p.host, away: p.away, awayMs: p.awayMs, sub: p.sub, canSub: p.canSub, me: p.id === playerId })),
+      seats: v.players.map(p => ({ seat: p.seat, name: p.name, ...withEmoji(p.emoji), kind: p.kind, connected: p.connected, host: p.host, away: p.away, awayMs: p.awayMs, sub: p.sub, canSub: p.canSub, me: p.id === playerId })),
       subAfterMs: v.subAfterMs, selfOnline: v.selfOnline,
       version,
     };
