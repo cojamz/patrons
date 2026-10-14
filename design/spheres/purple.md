@@ -49,7 +49,7 @@ Cut (from v1): 23. Rest. 24. Doze. 25. Wake. 26. Slumber. 27. Dreamer. 28. Insom
 - Contest: somebody always scores. Shared 14%. Wins even by seat (375/363/402/394). The winner gets 7.3 followers from it, about 16% of their total. No single move wins it, so v1's "one rest wins 97% of the time" is gone.
 - Dead air: one player rarely takes more than 3 turns in a row. Per game, the longest such run averages 3.0 (the snake alone gives 2). Runs of 4 happen about once in 6 games, and runs of 5 about once in 60. 97 extra turns in 400 games were refused because there was no spare space, mostly in round I.
 - Member value (handed over at round II start, 120 games each, about ±1.5 noise): Timekeeper 9.3 at +3, Bookkeeper 7.8 at +1 per worker and Overseer 6.1 at +2 were all too strong, so I cut their effects. Second Wind 8.8, Marathoner 7.2, Taskmaster 5.4, Patience 4.9, Foreman 4.5, Courier 4.5, Straggler 4.1, Clockmaker 3.9, Shift Crew 3.8, Lamplighter 3.6, Apprentice 2.3 (Banker reads 3.4 in the same run). Errand Runner can't be measured by handing it over, because its effect fires on recruit; it's priced by math. Re-measured after the trims: Overseer 4.8 (priced 4), Bookkeeper 4.5 (3), Timekeeper 3.5 (2), Lamplighter 2.3 (2).
-- Thinking bot (20 games): see the report.
+- Thinking bot (20 games, 4 rollouts): wins 70% (14/20, average margin +7.7) against 55% on the stand-in table. It doesn't hog Purple (22% of its placements against 27% for greedy bots), but it saves Overtime and Rally for round III and Linger for round II–III.
 
 ## Watch
 - Rally and Overtime are the strong pair. That's the meal, but a round-III player with both plus Second Wind takes 3–4 turns in a row.
