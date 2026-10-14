@@ -22,7 +22,8 @@ describe('resume after a reload', () => {
         seen.steps++;
         if (st.round === 3 && st.pending && st.players[st.pending.player].kind === 'bot') seen.botR3++;
         if (st.over) seen.over++;
-        if (st.round === 3 && st.pending && st.queue.length <= 3) seen.lastPrompts++;
+        if (st.round === 3 && st.pending && st.players[st.pending.player].kind !== 'bot') seen.lastPrompts++;
+        if (st.pending) seen.lastPending = seen.steps;
         const v = loadLocal();
         if (!v || v.fromRoundStart) { problems.push(`step ${seen.steps}: nothing to resume (round ${st.round}, over ${!!st.over})`); return; }
         if (JSON.stringify(v.state) !== JSON.stringify(st)) { problems.push(`step ${seen.steps}: saved state differs`); return; }
@@ -36,7 +37,8 @@ describe('resume after a reload', () => {
       stop();
       expect(problems.slice(0, 5)).toEqual([]);
       expect(seen.botR3).toBeGreaterThan(5);
-      expect(seen.lastPrompts).toBeGreaterThan(0);
+      expect(seen.lastPrompts).toBeGreaterThan(0); // Ana's own round III prompts
+      expect(seen.lastPending).toBe(seen.steps - 1); // the very last prompt before the end was checked too
       expect(seen.over).toBeGreaterThan(0);
       // finished but results not yet shown: still resumable, straight to the final scores
       expect(loadLocal()?.state.over).toBeTruthy();

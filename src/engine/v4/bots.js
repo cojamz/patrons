@@ -112,6 +112,8 @@ const INCOME = [3.5, 5.5, 8];
 // How much a member's ability is worth, in followers per resource of its cost, if it has the whole game ahead.
 // A member bought with 9 of 12 placements left is worth K × cost × 0.75 on top of its stars.
 const K_ABILITY = 0.42;
+// How many ways to pay a buy are compared (the engine lists the contest-safe ones first).
+const PAY_WAYS = 10;
 const lightClone = s => {
   const { log, queue, pending, ...rest } = s; void log; void queue; void pending;
   const c = structuredClone(rest);
@@ -154,8 +156,8 @@ function liquidate(s, res, extra, buys, wild) {
   for (let b = 0; b < buys; b++) {
     let bought = false;
     for (const t of tiers) {
-      // a fair share of a limited stock: the rest is likely gone to rivals
-      if (t.limited && (used[t.key] || 0) >= Math.ceil((tierLeft(s, t) * 1.5) / n)) continue;
+      // a fair share of a limited stock: the rest will likely go to rivals (so a scarce buy is worth taking now)
+      if (t.limited && (used[t.key] || 0) >= Math.floor(tierLeft(s, t) / n)) continue;
       if (sum(pool) < t.cost - 1e-9) continue;
       const plain = keys.filter(k => !wild.has(k) && pool[k] >= 1).sort((x, y) => pool[y] - pool[x]);
       const wilds = keys.filter(k => wild.has(k));
@@ -208,12 +210,12 @@ function gameEndPay(s, ctx, p) {
 }
 
 /** A member's ability, in followers, for the turns left (its stars are counted separately). */
-export function abilityValue(def, placementsLeft) {
+export function abilityValue(def, placementsLeft, k = K_ABILITY) {
   if (def.vanilla) return 0;
   const hooks = Object.keys(def).filter(k => typeof def[k] === 'function' || ['activate', 'costReduction', 'goldPaysDouble', 'stealMore'].includes(k));
   const engine = hooks.filter(k => !['onGameEnd', 'onRecruited', 'botActivate', 'estimate'].includes(k));
   if (!engine.length) return 0; // pays on recruit or at game end: measured directly
-  return K_ABILITY * (def.s + def.w) * Math.min(1, placementsLeft / 12);
+  return k * (def.s + def.w) * Math.min(1, placementsLeft / 12);
 }
 
 /**
@@ -280,36 +282,47 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
       }
       out.push({ o, v: v + rand() * (opts.noise ?? 0.3) });
     }
-  } else if (pend.kind === 'buy') {
-        for (const o of pend.options) {
-      if (o.kind === 'toggle' || o.kind === 'use') continue;
-      if (opts.noMembers && o.kind === 'card') continue;
-      let v;
+  } else if (pend.kind === 'buy' || pend.kind === 'pay') {
+    // One buy, paid one way, valued on a copy of the game.
+    const valueOf = (what, spend) => {
       try {
         const s = lightClone(state);
         const ctx = contextFor(s);
         const p = s.players[me];
         const extraAbility = {};
-        if (o.kind === 'card') {
-          const spend = paymentChoices(s, p, o.uid)[0];
-          ctx.recruit(p, o.uid, { free: false, spend: Object.fromEntries(s.resources.map(r => [r, spend[r] || 0])) });
+        const full = Object.fromEntries(s.resources.map(r => [r, spend[r] || 0]));
+        if (what.uid !== undefined) {
+          ctx.recruit(p, what.uid, { free: false, spend: full });
           settle(s, ctx);
-          extraAbility[me] = abilityValue(cardDef(s, o.uid), placesLeft);
-        } else if (o.kind === 'tier') {
-          const tier = TIERS.find(t => t.key === o.tier);
-          const spend = followerChoices(s, p, tier)[0];
-          for (const r of s.resources) p.res[r] -= spend[r] || 0;
+          extraAbility[me] = abilityValue(cardDef(s, what.uid), placesLeft, opts.k);
+        } else if (what.tier) {
+          const tier = TIERS.find(t => t.key === what.tier);
+          for (const r of s.resources) p.res[r] -= full[r];
           p.bonus += tier.get;
           if (tier.limited) {
             s.stock[tier.key] -= 1;
             if (tier.clock && s.stock[tier.key] <= 0) s.endEarly = true;
           }
         }
-        v = marginOf(evaluate(s, buysAt(s, 0), incomeAt(s), roundLeft, extraAbility), me);
+        return marginOf(evaluate(s, buysAt(s, 0), incomeAt(s), roundLeft, extraAbility), me);
       } catch {
-        v = -1e6;
+        return -1e6;
       }
-      out.push({ o, v: v + rand() * (opts.noise ?? 0.05) });
+    };
+    // the ways to pay worth comparing (they differ in which contests they give up)
+    const ways = what => (what.uid !== undefined ? paymentChoices(state, state.players[me], what.uid) : followerChoices(state, state.players[me], TIERS.find(t => t.key === what.tier))).slice(0, PAY_WAYS);
+    if (pend.kind === 'pay') {
+      const what = pend.uid !== undefined ? { uid: pend.uid } : { tier: pend.tier };
+      for (const o of pend.options) if (o.kind === 'pay') out.push({ o, v: valueOf(what, o.spend) + (o.default ? 0.01 : 0) });
+    } else {
+      for (const o of pend.options) {
+        if (o.kind === 'toggle' || o.kind === 'use') continue;
+        if (opts.noMembers && o.kind === 'card') continue;
+        let v;
+        if (o.kind === 'pass') v = valueOf({}, {});
+        else v = Math.max(-1e6, ...ways(o.kind === 'card' ? { uid: o.uid } : { tier: o.tier }).map(w => valueOf(o.kind === 'card' ? { uid: o.uid } : { tier: o.tier }, w)));
+        out.push({ o, v: v + rand() * (opts.noise ?? 0.05) });
+      }
     }
   }
   return out.sort((a, b) => b.v - a.v);
@@ -329,6 +342,10 @@ export function chooseNormalMove(state, rand = Math.random, opts = {}) {
       if (use) return move(use);
       const ranked = scoreOptions(state, rand, opts);
       return move(ranked.length ? ranked[0].o : pend.options.find(o => o.kind === 'pass'));
+    }
+    case 'pay': {
+      const ranked = scoreOptions(state, rand, opts);
+      return ranked.length ? move(ranked[0].o) : followUp(pend, rand);
     }
     default: return followUp(pend, rand);
   }
