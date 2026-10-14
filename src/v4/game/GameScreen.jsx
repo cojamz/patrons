@@ -30,6 +30,9 @@ export default function GameScreen({ session, onPlayAgain, onHome }) {
   const [flash, setFlash] = useState(() => new Set());
   const [ready, setReady] = useState(null); // hot-seat: which human seat has been handed the device
   const prevSlots = useRef(state.slots);
+  const sendToken = useRef(0);
+  // A fresh state means our move (or someone's) landed: the table is live again.
+  useEffect(() => { sendToken.current += 1; setBusy(false); }, [state]);
   const prevLog = useRef(state.log[state.log.length - 1]);
   const [toast, setToast] = useState('');
 
@@ -71,11 +74,14 @@ export default function GameScreen({ session, onPlayAgain, onHome }) {
     if (!mine || busy || needHandoff || !options.has(optionId)) return;
     setBusy(true);
     setError('');
+    const token = ++sendToken.current;
     let sent;
     try { sent = session.submit({ player: pend.player, option: optionId }); } catch (e) { sent = Promise.reject(e); }
+    // Don't lock the table forever if an answer never comes (online): give up waiting after a while.
+    const timer = setTimeout(() => { if (sendToken.current === token) { setBusy(false); setError('No answer yet. Try again.'); } }, 8000);
     Promise.resolve(sent)
-      .catch(e => setError(e && e.message ? e.message : String(e)))
-      .finally(() => setBusy(false));
+      .catch(e => { if (sendToken.current === token) setError(e && e.message ? e.message : String(e)); })
+      .finally(() => { clearTimeout(timer); if (sendToken.current === token) setBusy(false); });
   }, [mine, busy, needHandoff, options, session, pend]);
 
   const pr = promptFor(state, mine);
