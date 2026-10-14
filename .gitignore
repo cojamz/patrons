@@ -5,3 +5,4 @@ node_modules
 .DS_Store
 .v4-build*/
 .v4-panel/
+.v4-wt/
