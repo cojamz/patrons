@@ -198,3 +198,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ❓ (open, Claude's recommendation: yes) Gold counts as any color for the 2-for-1 and 4-for-3 follower buys, but not the 6-for-6.
 - ✅ (Cory) Red's tiebreak (red members) is now printed in Red's scoring label and the rulebook, after a blind tester read "ties all score" and saw one tied leader paid.
 - Finding (thinking bot): on every new-sphere table the thinker wins 65–90% (stand-in table ~55%) and places far less on the new sphere than greedy bots do (Echo 15% vs 33%). The greedy bots likely overvalue new spaces, so greedy-bot action values for new spheres are suspect. Check with 2 thinkers before quoting balance.
+- ✅ (Cory) Loot must be spendable. Black change: stolen goods become black in your supply at once; no loot piles; scoring is most black at round end.
