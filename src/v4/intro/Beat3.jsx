@@ -40,7 +40,7 @@ export const stillShot = { ...CAM.wheelAndCult };
 // a minion floats (f ms), lands; the space lights; the plaque pops; the glyphs lift off one by one (gap apart)
 const ACTS = [
   { m: 0, q: 'gold', k: -1, r: 'gold', n: 3, name: 'Kickback', at: A1, float: 900, arc: 14, gap: 230, pop: 150, fly: 520, pile: [0, 1, 2] },
-  { m: 2, q: 'green', k: 0, r: 'green', n: 3, name: 'Hum', at: A2, float: 450, arc: 10, gap: 100, pop: 80, fly: 400, pile: [3, 4, 5] },
+  { m: 2, q: 'green', k: 1, r: 'green', n: 3, name: 'Hum', at: A2, float: 450, arc: 10, gap: 100, pop: 80, fly: 400, pile: [3, 4, 5] },
 ].map(a => {
   const land = a.at + a.float;
   const plaque = land + (a.m ? 30 : 100);
@@ -123,8 +123,9 @@ function floatTrack(a) {
     [a.land + 60, 220, { sx: 1, sy: 1 }, 'out'],
     [DIM, 600, { o: 0.22 }, 'sine']];
 }
-/** The minion that stays home (beside the leader, out of the pile's and the card's way). */
+/** The minion that stays home: as the camera pulls back it slips down behind its leader (out of the card's way). */
 const HOME = 1;
+const homeTrack = [{ x: ringTL(HOME)[0], y: ringTL(HOME)[1] }, [DIM + 100, 700, { y: ringTL(HOME)[1] + 18, o: 0 }, 'in']];
 /** The plaque over the space: pops in above the minion's head, holds while the glyphs leave, then goes. */
 function plaqueTrack(a) {
   const [sx, sy] = space(a.q, a.k);
@@ -193,7 +194,7 @@ export default function Beat3() {
 
       {/* the minions: two float to their spaces, one stays home (behind the leader, so the long float passes behind it) */}
       {ACTS.map(a => <Act key={`m${a.m}`} track={floatTrack(a)} stillAs={{ o: 1 }}><Mini emoji={you} /></Act>)}
-      <At x={ringTL(HOME)[0]} y={ringTL(HOME)[1]}><Mini emoji={you} /></At>
+      <Act track={homeTrack} stillAs={{ o: 0 }}><Mini emoji={you} /></Act>
 
       {/* the warm aura of power (behind the leader), blooming at the end */}
       <Act track={[{ x: -28, y: -28, o: 0, s: 0.8 }, [POWER, 700, { o: 1, s: 1, y: -30 }, 'sine']]} origin="50% 50%"><Aura w={56} h={56} /></Act>

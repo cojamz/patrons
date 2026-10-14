@@ -20,13 +20,21 @@ import { iconFor, rectsFor } from '../art/index.js';
 /** still: the reduced-motion storyboard (nothing animates; everything shows its rest). t0: the beat's start.
  * at: a frozen moment (ms into the beat; the lab's &at=MS), else null. run: false while the beat is mounted ahead
  * of time, hidden (so a heavy beat never hitches on its cue); its clock starts when run turns true. */
-export const Clock = createContext({ still: false, t0: null, at: null, run: true });
+export const Clock = createContext({ still: false, t0: null, at: null, run: true, base: 0 });
+// base: where this beat starts on the intro's one timeline (ms). The whole intro is one continuous shot: every beat's
+// things play on the same clock (startTime t0), each delayed by its beat's base, so the recorder and the arrow keys
+// can set one time for everything.
 export const useClock = () => useContext(Clock);
 /** The cast: emoji ids for you and the three rivals ({ you, a, b, c }). */
 export const Cast = createContext({ you: null, a: null, b: null, c: null });
 export const useCast = () => useContext(Cast);
 /** The beat's start on the document timeline (call once per beat, in its root). */
 export const nowT0 = () => (typeof document !== 'undefined' && document.timeline && document.timeline.currentTime != null ? document.timeline.currentTime : null);
+/** Puts an animation on the intro's clock: frozen at `at` ms (the lab, the recorder), else started at t0. */
+export function clockIn(a, t0, at) {
+  if (at != null) { a.pause(); a.currentTime = at; } else if (t0 != null) a.startTime = t0;
+  return a;
+}
 
 // ---------- layout (world units) ----------
 export const STAGE = { w: 176, h: 100 };
@@ -131,7 +139,7 @@ const tf = (v, rest) => `translate(${v.x - rest.x}px, ${v.y - rest.y}px) ${geo(v
  */
 export function Act({ track, origin = '50% 100%', stillT = null, stillAs = null, className = '', style = null, children }) {
   const ref = useRef(null);
-  const { still, t0, at: frozen, run } = useClock();
+  const { still, t0, at: frozen, run, base = 0 } = useClock();
   const tl = useMemo(() => compile(track), []); // eslint-disable-line react-hooks/exhaustive-deps
   const rest = still ? { ...tl.at(stillT ?? tl.end), ...(stillAs || {}) } : tl.at(tl.end);
   useLayoutEffect(() => {
@@ -147,11 +155,11 @@ export function Act({ track, origin = '50% 100%', stillT = null, stillAs = null,
       if (tl.moved.has('f')) k.filter = `brightness(${v.f})`;
       return k;
     });
-    const a = el.animate(frames, { duration: tl.end, fill: 'both', easing: 'linear' });
-    if (frozen != null) { a.pause(); a.currentTime = Math.min(frozen, tl.end); } else if (t0 != null) a.startTime = t0;
+    const a = el.animate(frames, { duration: tl.end, delay: base, fill: 'both', easing: 'linear' });
+    clockIn(a, t0, frozen);
     return () => a.cancel();
-  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
-  const st = { left: rest.x, top: rest.y, transformOrigin: origin, ...style };
+  }, [run, t0, frozen]); // eslint-disable-line react-hooks/exhaustive-deps
+  const st = { left: rest.x, top: rest.y, transformOrigin: origin, ...(!still && tl.steps.length ? { willChange: 'transform, opacity' } : null), ...style };
   if (rest.o !== 1) st.opacity = rest.o;
   if (rest.r || rest.s !== 1 || rest.sx !== 1 || rest.sy !== 1) st.transform = geo(rest);
   if (rest.f !== 1) st.filter = `brightness(${rest.f})`;
@@ -167,7 +175,7 @@ export const At = ({ x, y, at = null, d = 400, className, style, children, still
  * stacked; one shows at a time, switched on the beat's clock (no tweening: frames step, like a sprite sheet).
  */
 export function Frames({ seq, stillAs = null, children }) {
-  const { still, t0, at: frozen, run } = useClock();
+  const { still, t0, at: frozen, run, base = 0 } = useClock();
   const last = seq[seq.length - 1][1];
   const keys = useMemo(() => [...new Set(seq.map(s => s[1]))], []); // eslint-disable-line react-hooks/exhaustive-deps
   const refs = useRef({});
@@ -179,12 +187,12 @@ export function Frames({ seq, stillAs = null, children }) {
       if (!el || typeof el.animate !== 'function') return null;
       const kf = seq.map(([t, key]) => ({ offset: Math.min(1, t / end), opacity: key === k ? 1 : 0, easing: 'step-end' }));
       kf.push({ offset: 1, opacity: last === k ? 1 : 0 });
-      const a = el.animate(kf, { duration: end, fill: 'both' });
-      if (frozen != null) { a.pause(); a.currentTime = Math.min(frozen, end); } else if (t0 != null) a.startTime = t0;
+      const a = el.animate(kf, { duration: end, delay: base, fill: 'both' });
+      clockIn(a, t0, frozen);
       return a;
     });
     return () => anims.forEach(a => a && a.cancel());
-  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run, t0, frozen]); // eslint-disable-line react-hooks/exhaustive-deps
   if (still) return <span className="in-frames">{children(stillAs ?? last)}</span>;
   return (
     <span className="in-frames">
@@ -195,14 +203,11 @@ export function Frames({ seq, stillAs = null, children }) {
 
 /** A number that steps through [[ms, value], …] on the beat's clock (the storyboard shows the last). */
 export function Count({ steps, className = '' }) {
-  const { still, at: frozen, run } = useClock();
-  const [v, setV] = useState(() => (still ? steps[steps.length - 1][1] : frozen != null ? steps.filter(([ms]) => ms <= frozen).pop()[1] : steps[0][1]));
-  useEffect(() => {
-    if (still || frozen != null || !run) return undefined;
-    const ids = steps.slice(1).map(([ms, val]) => setTimeout(() => setV(val), ms));
-    return () => ids.forEach(clearTimeout);
-  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
-  return <b className={`in-num ${className}`} key={v}>{v}</b>;
+  return (
+    <span className={`in-count ${className}`}>
+      <Frames seq={steps}>{v => <b className="in-num">{v}</b>}</Frames>
+    </span>
+  );
 }
 /** true once `ms` of the beat have passed (at once in the storyboard): for state that flips mid-beat. */
 export function useAfter(ms) {
