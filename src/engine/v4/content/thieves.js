@@ -60,7 +60,7 @@ function record(ctx, thief, victim, kind, n) {
   const s = ctx.state;
   s.thefts = s.thefts || [];
   s.thefts.push({
-    r: s.round, by: thief.id, from: victim.id, kind, n,
+    r: s.round, m: s.moves, by: thief.id, from: victim.id, kind, n,
     rank: rankOf(ctx, victim), last: fewestFollowers(ctx, victim) && !isLeader(ctx, victim), lead: isLeader(ctx, victim),
   });
 }

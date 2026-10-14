@@ -10,7 +10,7 @@ export function useDialog(onClose) {
   close.current = onClose;
   useEffect(() => {
     const back = document.activeElement;
-    const first = box.current && box.current.querySelector('[autofocus], [data-autofocus], button:not([disabled]), [href], input');
+    const first = box.current && (box.current.querySelector('[autofocus]:not([disabled]), [data-autofocus]:not([disabled])') || box.current.querySelector('button:not([disabled]), [href], input'));
     if (first) first.focus({ preventScroll: true });
     const onKey = e => {
       if (e.key === 'Escape' && close.current) { e.preventDefault(); e.stopPropagation(); close.current(); }

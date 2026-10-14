@@ -284,13 +284,15 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText }) 
               </span>
             </span>
           ) : <span className="say" data-prompt tabIndex={-1} />}
-          {canUndo && <button type="button" className="btn ghost undo" onClick={undo} title="Take back your worker until you buy or pass">↶ Undo<span className="long"> placement</span></button>}
+          <span className="undo-slot">
+            {canUndo && <button type="button" className="btn ghost undo" onClick={undo} title="Take back your worker until you buy or pass">↶ Undo<span className="long"> placement</span></button>}
+          </span>
         </div>
         <div className="bar-row you-row">
           {meP && !state.over && (
             <span className="you-strip" data-pid={meP.id} style={{ '--pc': playerColor(meP.id) }} aria-label={`You, ${meP.name}`}>
               <i className="dot" /><b>{meP.name}</b>
-              <span className="yf"><Tick value={followers(state, meP)} color={playerColor(meP.id)} className="num" />★</span>
+              <span className="yf"><Tick value={followers(state, meP)} color={playerColor(meP.id)} className="num" /> {followers(state, meP) === 1 ? 'follower' : 'followers'}</span>
               <Resources state={state} p={meP} />
               <Workers p={meP} />
             </span>

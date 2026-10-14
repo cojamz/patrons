@@ -102,7 +102,10 @@ function run(mode, control = false) {
       if (t.kind === 'ransom') st.ransomPaid++;
       robbed[t.from] += t.n;
     }
-    void perAction;
+    for (const t of th) if (t.kind !== 'member') { const k = `${t.m}:${t.from}`; perAction[k] = (perAction[k] || 0) + t.n; }
+    st.perVictimMax.push(...Object.values(perAction));
+    // thief stats: who robs (by follower rank at the end)
+    for (const t of th) st.thiefRank[s.ranking.indexOf(t.by)] += t.n;
     st.robbedPerPlayer.push(...robbed);
     // game winner's share of the Black contest
     if (!control) {
@@ -126,6 +129,8 @@ function report(mode, st, base) {
     out.push(`Black contest: rounds with no winner ${pct(st.contestNone, st.contestRounds)}, ties ${pct(st.contestTies, st.contestRounds)}, avg winners ${(st.contestWinners.length / Math.max(1, st.contestRounds - st.contestNone)).toFixed(2)}; went to the follower leader ${pct(st.leaderWonContest, st.contestRounds - st.contestNone)}, to last place ${pct(st.lastWonContest, st.contestRounds - st.contestNone)}; same winner as last round ${pct(st.repeatWinner, st.repeatChances)}; game winner won it at least once ${pct(st.contestWinnerWonGame, games)}`);
     out.push(`Thefts per game ${(st.thefts / games).toFixed(1)} (${(st.units / games).toFixed(1)} units; members taken ${(st.memberThefts / games).toFixed(2)}, ransoms paid ${(st.ransomPaid / games).toFixed(2)}). Units taken from: leader ${pct(st.unitsByRank[0], st.units)}, 2nd ${pct(st.unitsByRank[1], st.units)}, 3rd ${pct(st.unitsByRank[2], st.units)}, 4th ${pct(st.unitsByRank[3], st.units)} · from last place ${pct(st.lastHit, st.units)}`);
     const rp = st.robbedPerPlayer;
+    const b = st.perVictimMax;
+    out.push(`Bite per victim per move: avg ${avg(b).toFixed(2)}, 1 ${pct(b.filter(x => x === 1).length, b.length)}, 2 ${pct(b.filter(x => x === 2).length, b.length)}, 3+ ${pct(b.filter(x => x >= 3).length, b.length)} · units stolen BY final 1st/2nd/3rd/4th ${st.thiefRank.map(x => pct(x, st.units)).join(' / ')}`);
     out.push(`Robbed per player per game: avg ${avg(rp).toFixed(1)}, never robbed ${pct(rp.filter(x => x === 0).length, rp.length)}, robbed 8+ ${pct(rp.filter(x => x >= 8).length, rp.length)}`);
   }
   console.log(out.join('\n'));

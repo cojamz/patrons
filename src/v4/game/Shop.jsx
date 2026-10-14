@@ -97,7 +97,7 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
             title={`Buy ${t.get} follower${t.get > 1 ? 's' : ''} for ${tierCostText(t)}`}
           >
             <b><span className="num">+{t.get}</span> follower{t.get > 1 ? 's' : ''}</b>
-            <span>{tierCostText(t)}{t.limited ? <> · <span className="num">{state.bigLeft}</span> left</> : ''}</span>
+            <span>{t.colors === 1 ? `${t.cost} of anything` : `${t.cost} · ${t.colors}+ colors`}{t.limited ? <> · <span className="num">{state.bigLeft}</span> left</> : ''}</span>
           </button>
         );
       })}
@@ -105,9 +105,10 @@ export function BuyTray({ state, me, mine, optionFor, onPick, onDenied }) {
         <button key={o.id} type="button" className="btn" data-option={o.id} onClick={() => onPick(o.id)}>{o.label}</button>
       ))}
       <button
-        type="button" className={`btn pass${pass ? '' : ' idle'}`} data-option={pass ? 'pass' : undefined} aria-disabled={!pass}
+        type="button" className={`btn pass${pass ? '' : ' idle'}`} title="End your turn without buying" data-option={pass ? 'pass' : undefined} aria-disabled={!pass}
         onClick={e => (pass ? onPick('pass') : onDenied && onDenied({ type: 'pass' }, e.currentTarget))}
       >Pass</button>
+      <small className="tray-note">Follower buys: gold counts as any color.</small>
     </div>
   );
 }

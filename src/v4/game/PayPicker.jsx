@@ -31,7 +31,7 @@ export default function PayPicker({ state, onPick, busy }) {
 
   return (
     <div className="overlay sheet" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="dialog pay" ref={box} style={def ? { '--c': `var(--${def.quadrant})` } : undefined}>
+      <div className="dialog pay" ref={box} onKeyDown={e => { if (e.key === 'Enter' && match && !busy) { e.preventDefault(); onPick(match.id); } }} style={def ? { '--c': `var(--${def.quadrant})` } : undefined}>
         <div className="pay-head">
           <h2>{title}</h2>
           <span className="hint">Costs {costLine}</span>
