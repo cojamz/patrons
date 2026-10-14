@@ -29,7 +29,7 @@ describe('player colors', () => {
     for (const [r, h] of res) expect(h, `--${r} in v4.css`).toMatch(/^#/);
     for (const p of PLAYER_COLORS) {
       for (const [r, h] of res) expect(dE(p, h), `${p} vs ${r} ${h}`).toBeGreaterThanOrEqual(30);
-      for (const t of [varOf('table'), WALNUT]) expect(contrast(p, t), `${p} on ${t}`).toBeGreaterThanOrEqual(4.5);
+      for (const t of [WALNUT, '#271d16']) expect(contrast(p, t), `${p} on ${t}`).toBeGreaterThanOrEqual(4.5);
     }
     PLAYER_COLORS.forEach((a, i) => PLAYER_COLORS.slice(i + 1).forEach(b => expect(dE(a, b), `${a} vs ${b}`).toBeGreaterThanOrEqual(30)));
     // and a distinct sigil per seat, so color is never the only cue

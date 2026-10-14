@@ -2,10 +2,10 @@
 import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds } from '../engine/v4/index.js';
 import { contextFor } from '../engine/v4/core.js';
 
-// Seat colors: muted (bone, slate teal, ochre-terracotta, dusty plum) for a warm table, each ΔE ≥ 30 (CIE76) from all nine
-// resource colors and readable on dark wood (measured in src/test/v4/ui/colors.test.js). Identity never rests on
-// color alone: every seat also has a sigil (circle, triangle, square, star) on its figures and name dots.
-export const PLAYER_COLORS = ['#c9b48a', '#1b9393', '#ba7330', '#b88fc7'];
+// Seat colors are an accent now (identity is the player's emoji on their leader, Cory 2026-10-14): ochre, teal,
+// terracotta-rose, lavender-plum, each ΔE ≥ 30 (CIE76) from every resource color on screen (the Lamplit inks) and
+// readable on walnut, measured in src/test/v4/ui/colors.test.js.
+export const PLAYER_COLORS = ['#9c845a', '#48c8d4', '#fca2a8', '#eac0fc'];
 export const SEAT_SIGILS = ['circle', 'triangle', 'square', 'star'];
 export const seatSigil = id => SEAT_SIGILS[id % SEAT_SIGILS.length];
 /** The emoji a player picked (shown on their leader's robe), or null: then the seat's sigil stands in. */
