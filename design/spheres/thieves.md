@@ -102,3 +102,6 @@ Greedy bots, 4 seats, gold/red/blue + Black, current engine. Gold's Steal now co
 - A quadrant-level `onRoundStart(ctx)` runs before members' round-start hooks. Black uses it to move loot piles into supplies.
 - The relabel workaround is gone (core.js now pays a member's colored part in its quadrant's resource).
 - Still open: the UI needs to show each player's loot pile and the Hideout marker. The bribe doesn't exist yet; when it's built, it should use `ctx.steal({ uid })`.
+
+## Thinking bot
+A seat that plans ahead (rollouts) against greedy bots won 85% of 20 games on the Black table. That's the same as the 85% it wins on the stand-in table, so Black neither rewards planning more nor breaks it. The thinker placed on Black 19% of the time, against 32% for the greedy bots, and it stole a bit less (12.7 vs 14.1 a game). Planners lean on Black less than greedy bots do.
