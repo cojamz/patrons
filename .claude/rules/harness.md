@@ -30,6 +30,11 @@ How Claude works on Patrons. Claude owns this file and updates it when something
 - **Browser (Playwright):** to see and screenshot the real UI before telling Cory something works.
 - **Preview link:** every push to the PR redeploys a playable link. Prefer sending that over describing a change.
 
+## Building v4 (code)
+- Architecture lives in `design/architecture.md`: pure engine → sessions (local / online host-authoritative) → React UI. Rules live only in the engine.
+- The loop is the `/v4-loop` skill: change → `npm run check:v4` → look at screenshots → review agents → fix → commit/push.
+- `npm run sim:v4 -- 300 4` gives a quick bot-vs-bot balance read. It's a reading, not a design verdict.
+
 ## Self-improvement
 - When Cory corrects how Claude works, fix the rule file in the same turn and add a changelog line. Don't wait to be asked.
 - If the same kind of correction comes up twice, make it stronger: turn it into a hook, a skill, or a hard rule.
