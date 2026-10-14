@@ -674,9 +674,7 @@ function traceSnapshot(state) {
 function traceChanges(state, before, owner, def) {
   const name = def && def.name;
   if (!name) return;
-  // the hook said so itself: a new line names it. A nested line that doesn't (Underdog doubling Banker's gold) doesn't count.
-  const fresh = state.log.length < LOG_MAX ? state.log.slice(before.len) : state.log.slice(state.log.lastIndexOf(before.last) + 1);
-  if (fresh.some(l => l.includes(name))) return;
+  const out = [];
   state.players.forEach((o, i) => {
     const b = before.players[i];
     if (!b) return;
@@ -688,8 +686,13 @@ function traceChanges(state, before, owner, def) {
     const d = (o.discount || 0) - (b.discount || 0);
     if (d > 0) parts.push(`next member costs ${d} less`);
     if (!parts.length) return;
-    log(state, o === owner ? `${owner.name}'s ${name}: ${parts.join(', ')}.` : `${o.name} ${parts.join(', ')} (${owner.name}'s ${name}).`);
+    out.push(o === owner ? `${owner.name}'s ${name}: ${parts.join(', ')}.` : `${o.name} ${parts.join(', ')} (${owner.name}'s ${name}).`);
   });
+  if (!out.length) return;
+  // the hook said so itself: a new line names it. A nested line that doesn't (Underdog doubling Banker's gold) doesn't count.
+  const fresh = state.log.length < LOG_MAX ? state.log.slice(before.len) : state.log.slice(state.log.lastIndexOf(before.last) + 1);
+  if (fresh.some(l => l.includes(name))) return;
+  for (const line of out) log(state, line);
 }
 function eachMember(state, fn) {
   for (const owner of state.players) eachMemberOf(state, owner, (card, def) => fn(owner, card, def));

@@ -14,6 +14,9 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] Blind panel on mixed tables with "felt unfair or unfun" notes, then fixes
 - [ ] A link where Cory picks any 4 spheres and plays
 
+- [ ] Design pod: research best design skills/references, write a ui-critic agent; blind expert UI critic round 1 on the frozen build
+- [ ] Engineering expert review (blind): what saves headaches long-term
+
 ## 2. Balance (serves play)
 - [ ] Big followers at ~25% with the final bots; members ~6–7 a player (cost agent)
 - [ ] Fair-price test: screen every card, then a careful check on outliers
@@ -33,3 +36,7 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] Release on by default? [yes]
 - [ ] Late Riser as the new name for Purple's old Straggler? [yes]
 - [ ] Card discounts doubled with costs (Discount 4 off, Trade +2…)? [yes]
+- [ ] Which opponents define the ~25% big-followers target? Normal bots read ~10%, easy ~80%. [an in-between bot level, then a check with people]
+- [ ] Make the 10→10 buy the game-end clock instead of 8→6 (8→6 almost never sells out)? [yes]
+- [ ] Swap space: any two members at the table, or one of yours? [one of yours] And +1 red in round I? [yes]
+- [ ] Investor moved by Ransom or Trade: set-aside gold stays with the old owner, like Heist (Claude's extension of your ruling)? [yes]

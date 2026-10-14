@@ -80,6 +80,8 @@ async function place(page, go, prof) {
     if (opt) await go(opt).catch(() => {});
     await page.waitForTimeout(250);
   }
+  // a new step ignores taps for 400ms (the double-tap guard); a person's next tap comes later than that
+  await page.waitForTimeout(450);
   const g = await page.evaluate(() => window.__ghosts);
   if (!g.some(x => x.kind === 'worker')) errors.push(`[${prof.tag}] (m2) your placement sent no worker flying`);
 }
@@ -95,7 +97,7 @@ for (const prof of PROFILES) {
       await big.scrollIntoViewIfNeeded();
       await go(big);
       const pay = await page.waitForSelector('.dialog.pay .btn.pri[data-option]', { timeout: 2500 }).catch(() => null);
-      if (pay) { await page.waitForTimeout(300); await go(pay); }
+      if (pay) { await page.waitForTimeout(450); await go(pay); }
       await page.waitForTimeout(1600);
       const seq = await page.evaluate(() => window.__fol);
       const from = Number(seq[0]), to = Number(seq[seq.length - 1]);
@@ -117,7 +119,7 @@ for (const prof of PROFILES) {
       await page.evaluate(() => { window.__ghosts = []; });
       await go(card);
       const pay = await page.waitForSelector('.dialog.pay .btn.pri[data-option]', { timeout: 2500 }).catch(() => null);
-      if (pay) { await page.waitForTimeout(300); await go(pay); }
+      if (pay) { await page.waitForTimeout(450); await go(pay); }
       await page.waitForTimeout(250);
       await page.screenshot({ path: `${SHOTS}/${prof.tag}-recruit-flight.png` });
       await page.waitForTimeout(900);
