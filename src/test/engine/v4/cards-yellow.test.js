@@ -123,6 +123,15 @@ describe('Yellow members', () => {
     expect(R(s)).toEqual({ gold: 3 + 1, red: 5, yellow: 4, green: 4 });
     expect(named(s, 'Rainmaker')).toHaveLength(1);
   });
+  // bots left it unused (dead-window audit, 2026-10-14): they now use it on their last buy of the game if it gives anything
+  it('Rainmaker: a bot uses it on its last buy of the game for a small catch-up; not earlier in round III', async () => {
+    const { chooseEasyMove } = await import('../../../engine/v4/bots.js');
+    const res = [{ yellow: 3, gold: 2, red: 2, green: 2 }];
+    const s = sc({ round: 3, left: 0, res, members: [['yellow.rainmaker']], queue: [{ t: 'buy', p: 0 }] });
+    expect(chooseEasyMove(s, () => 0.5).option).toBe(`use:${uidOf(s, 'yellow.rainmaker', 0)}`);
+    const t = sc({ round: 3, left: 2, res, members: [['yellow.rainmaker']], queue: [{ t: 'buy', p: 0 }] });
+    expect(chooseEasyMove(t, () => 0.5).option).not.toMatch(/^use:/);
+  });
   it('Rainmaker × Underdog: the gold part is a gold gain, so it doubles past the match (see ledger question)', () => {
     let s = sc({ res: [{ gold: 1, yellow: 5 }, { gold: 20 }], members: [['yellow.rainmaker', 'gold.underdog']] });
     s = take(s, 'Harvest');

@@ -163,8 +163,13 @@ export default {
         for (const c of others(ctx)) { const d = Math.max(0, top - owner.res[c]); got += d; ctx.gain(owner, c, d); }
         ctx.log(`${owner.name} used Rainmaker: every color up to ${top} (+${got}).`);
       },
-      botActivate: (ctx, owner) => ctx.state.round === 3
-        && others(ctx).reduce((s, c) => s + Math.max(0, owner.res[Y] - owner.res[c]), 0) >= 6,
+      // bots: a big catch-up in round III, or anything at all on their last buy of the game (they left it unused
+      // in 4 of 6 holdings, dead-window audit 2026-10-14)
+      botActivate: (ctx, owner) => {
+        const gain = others(ctx).reduce((s, c) => s + Math.max(0, owner.res[Y] - owner.res[c]), 0);
+        const last = (ctx.state.round === 3 || ctx.state.endEarly) && owner.left === 0;
+        return (ctx.state.round === 3 && gain >= 6) || (last && gain > 0);
+      },
     }),
     m('pilgrim', 'Pilgrim', 2, 2, 'When recruited: +1 of each color.', {
       onRecruited(ctx, owner) { eachColor(ctx, owner, 1); },

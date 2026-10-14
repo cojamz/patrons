@@ -289,7 +289,7 @@ function inputFor(state, task) {
       };
     case 'place':
       return {
-        kind: 'place', prompt: `${p.name}: place a worker`,
+        kind: 'place', prompt: `${p.name}: place a minion`,
         options: [
           ...openSlots(state).filter(([q, i]) => !task.ring || actionAt(state, q, i).ring <= task.ring)
             .map(([q, i]) => ({ id: `slot:${q}-${i}`, label: actionAt(state, q, i).name, kind: 'slot', q, i })),
@@ -540,7 +540,7 @@ function startRound(state, r) {
     snake.push({ t: 'turn', p: id, ...(extras[id][k] ? { ring: extras[id][k] } : {}) });
   }
   // the cards that bend this round's order and workers are named, so the order and the extra worker trace to them
-  const hands = base.filter(id => extras[id].length).map(id => `${state.players[id].name}'s ${flagName(state, state.players[id], 'extraWorkers')}: +${extras[id].length} worker${extras[id].length > 1 ? 's' : ''}.`);
+  const hands = base.filter(id => extras[id].length).map(id => `${state.players[id].name}'s ${flagName(state, state.players[id], 'extraWorkers')}: +${extras[id].length} minion${extras[id].length > 1 ? 's' : ''}.`);
   log(state, `Round ${roman(r)} begins. ${state.players[base[0]].name} picks first.${lead.length ? ` (${lead.map(id => `${state.players[id].name}'s ${flagName(state, state.players[id], 'pickFirst')}`).join(', ')}: always pick${lead.length === 1 ? 's' : ''} first.)` : ''}${hands.length ? ` ${hands.join(' ')}` : ''}`);
   state.queue.push(...snake, { t: 'allPlaced' }, { t: 'endRound' }, { t: 'afterRound' });
 }

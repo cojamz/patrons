@@ -154,7 +154,7 @@ try {
       seen.add('straggler');
       await shot(`b4-straggler-${seen.size}`);
       const btns = await page.$$eval('.prompt.choice button[data-option]', els => els.map(e => [e.getAttribute('data-option'), e.textContent.trim()]));
-      if (btns.length < (/move one of your workers/.test(prompt) ? 2 : 1)) errors.push(`(b4) Straggler choice shows ${btns.length} buttons`);
+      if (btns.length < (/move one of your minions/.test(prompt) ? 2 : 1)) errors.push(`(b4) Straggler choice shows ${btns.length} buttons`);
       for (const [id, t] of btns) if (!t || /undefined/.test(t)) errors.push(`(b4) Straggler option ${id} has label "${t}"`);
       const onBoard = await page.$$eval('.slot[data-option]', els => els.map(e => e.getAttribute('data-option')).filter(id => /^(from|to):/.test(id)));
       if (onBoard.length) errors.push(`(b4) Straggler options mapped onto the board: ${onBoard.join(', ')}`);

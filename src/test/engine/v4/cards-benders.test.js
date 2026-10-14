@@ -73,12 +73,12 @@ describe('Guest members (rule-benders)', () => {
   it('Extra Hand: +1 worker in round III, named in the round’s opening line; a Doppelganger copy adds another', () => {
     let s = sceneQ({ members: [['benders.extrahand']], queue: [{ t: 'round', r: 3 }] });
     expect(s.players[0].left).toBe(6);
-    expect(named(s, 'Extra Hand')[0]).toMatch(/P1's Extra Hand: \+1 worker/);
+    expect(named(s, 'Extra Hand')[0]).toMatch(/P1's Extra Hand: \+1 minion/);
     s = sceneQ({ members: [['benders.extrahand', 'red.doppel']], queue: [] });
     s.cards[uidOf(s, 'red.doppel', 0)].copy = 'benders.extrahand';
     s.queue = [{ t: 'round', r: 3 }]; s = resume(s);
     expect(s.players[0].left).toBe(7);
-    expect(named(s, 'Extra Hand')[0]).toMatch(/\+2 workers/);
+    expect(named(s, 'Extra Hand')[0]).toMatch(/\+2 minions/);
     s = sceneQ({ members: [['benders.extrahand']], queue: [{ t: 'round', r: 2 }] });
     expect(named(s, 'Extra Hand')).toHaveLength(0);
   });

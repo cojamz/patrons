@@ -42,7 +42,7 @@ function offerFrom(ctx, owner, uid) {
   const from = myWorkers(ctx, owner), to = openSpaces(ctx);
   if (!from.length || !to.length) return;
   const best = Math.max(...to.map(t => t.a.estimate(ctx, owner)));
-  ctx.choose(owner, 'Straggler: move one of your workers to an unused space?', [
+  ctx.choose(owner, 'Straggler: move one of your minions to an unused space?', [
     ...from.map(w => ({ id: `from:${w.key}${w.joined ? ':j' : ''}`, label: spaceLabel(ctx, w.key), kind: 'slot', value: w, hint: best - actionOf(ctx, w.key).ring * 0.1 })),
     { id: 'no', label: 'Stay put', kind: 'no', value: null, hint: 0.5 },
   ], 'benders.stragglerFrom', { uid });
@@ -50,18 +50,18 @@ function offerFrom(ctx, owner, uid) {
 const stillMine = (ctx, p, w) => (w.joined ? (ctx.state.squats?.[w.key] || []).includes(p.id) : ctx.state.slots[w.key] === p.id);
 
 const members = [
-  m('squatter', 'Squatter', 'thieves', 6, 2, 'Once per round: place a worker on a space a rival already took.', { squat: true }),
+  m('squatter', 'Squatter', 'thieves', 6, 2, 'Once per round: place a minion on a space a rival already took.', { squat: true }),
   m('bigspender', 'Big Spender', 'gold', 2, 2, 'Once per round: buy twice in one turn.', { extraBuy: true }),
   m('freelancer', 'Freelancer', 'yellow', 2, 2, 'You may pay any member’s colored part in any colors.', { anyColorPart: true }),
   m('insider', 'Insider', 'market', 4, 2, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
   // recruited in round III its worker had already been counted, so it gave nothing: it brings an extra turn instead
   // (Claude under Cory's go-with-your-gut, from the dead-window audit). Purple's extra turn: only with a space to spare.
-  m('extrahand', 'Extra Hand', 'purple', 6, 4, '+1 worker in round III. If you recruit it in round III, take an extra turn right after this one.', {
+  m('extrahand', 'Extra Hand', 'purple', 6, 4, '+1 minion in round III. If you recruit it in round III, take an extra turn right after this one.', {
     extraWorkers: [0, 0, 1],
     onRecruited(ctx, owner) { if (ctx.state.round === 3) extraTurns(ctx, owner, 1, 'Extra Hand'); },
   }),
   m('frontrunner', 'Front-runner', 'purple', 2, 0, 'You always pick first in a round.', { pickFirst: true }),
-  m('straggler', 'Straggler', 'purple', 6, 2, 'Once per round, after the last worker is placed: move one of your workers to an unused space and do that action.', {
+  m('straggler', 'Straggler', 'purple', 6, 2, 'Once per round, after the last minion is placed: move one of your minions to an unused space and do that action.', {
     onAllPlaced(ctx, owner, card) {
       if (card.usedRound === ctx.state.round) return;
       offerFrom(ctx, owner, card.uid);
@@ -92,7 +92,7 @@ export const handlers = {
     } else delete ctx.state.slots[key];
     ctx.state.slots[to] = p.id;
     const [q, i] = to.split('-').map(Number);
-    ctx.log(`${p.name}'s Straggler moves a worker from ${actionOf(ctx, key).name} to ${actionOf(ctx, to).name}.`);
+    ctx.log(`${p.name}'s Straggler moves a minion from ${actionOf(ctx, key).name} to ${actionOf(ctx, to).name}.`);
     // the engine's own act task: the new space resolves as usual (no buy)
     ctx.state.queue.unshift({ t: 'act', p: p.id, q, i });
   },

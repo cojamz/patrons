@@ -111,18 +111,18 @@ export default {
     },
     {
       // fill-in (critic): replaces Lend a Hand
-      key: 'catchup', ring: 1, name: 'Catch Up', text: '+1 purple, and +2 per rival with more workers on the board than you.',
+      key: 'catchup', ring: 1, name: 'Catch Up', text: '+1 purple, and +2 per rival with more minions on the board than you.',
       estimate: (ctx, p) => 1 + 2 * behind(ctx, p, 1),
       resolve(ctx, p) { ctx.gain(p, P, 1 + 2 * behind(ctx, p), { fromAction: true }); },
     },
     {
-      key: 'windup', ring: 1, name: 'Wind-up', text: '+1 purple per worker you have on the board, this one included.',
+      key: 'windup', ring: 1, name: 'Wind-up', text: '+1 purple per minion you have on the board, this one included.',
       estimate: (ctx, p) => onBoard(ctx, p) + 1,
       resolve(ctx, p) { ctx.gain(p, P, onBoard(ctx, p), { fromAction: true }); },
     },
     {
       // replaces Linger (Cory: "just bad"): the time you have left this round, banked as purple
-      key: 'planahead', ring: 2, name: 'Plan Ahead', text: '+2 purple per worker you have left to place this round.',
+      key: 'planahead', ring: 2, name: 'Plan Ahead', text: '+2 purple per minion you have left to place this round.',
       estimate: (ctx, p) => 2 * Math.max(0, p.left - 1),
       resolve(ctx, p) { ctx.gain(p, P, 2 * p.left, { fromAction: true }); },
     },
@@ -182,7 +182,7 @@ export default {
         }
       },
     }),
-    m('foreman', 'Foreman', 4, 2, 'Whenever you take an extra turn, +1 purple per worker you have on the board.', {
+    m('foreman', 'Foreman', 4, 2, 'Whenever you take an extra turn, +1 purple per minion you have on the board.', {
       onExtraTurn(ctx, owner) { ctx.gain(owner, P, onBoard(ctx, owner)); },
     }),
     m('courier', 'Courier', 4, 2, 'Whenever you take an extra turn, +1 of each other color.', {
@@ -198,7 +198,7 @@ export default {
     m('doubletime', 'Double Time', 6, 2, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
     // pays on your last placement of the round, before that turn's buy (at round end, round III's purple came too late).
     // +1 per worker measured 8.4 followers (57% win, easy bots): late purple decides the ring. Half that is the card.
-    m('bookkeeper', 'Bookkeeper', 4, 2, 'When you place your last worker of a round, +1 purple per 2 workers you have on the board.', {
+    m('bookkeeper', 'Bookkeeper', 4, 2, 'When you place your last minion of a round, +1 purple per 2 minions you have on the board.', {
       afterAction(ctx, owner, card) {
         if (owner.left !== 0 || card.paidRound === ctx.state.round) return;
         card.paidRound = ctx.state.round;
@@ -210,7 +210,7 @@ export default {
       // counts after other round-start income (Lamplighter…), like Steward
       onRoundStartLate(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
     }),
-    m('lamplighter', 'Lamplighter', 6, 2, 'Now and at round start, +1 purple per worker you get this round (3 / 4 / 5).', { now: true,
+    m('lamplighter', 'Lamplighter', 6, 2, 'Now and at round start, +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
     // Relay was cut by Cory (2026-10-14); Purple has 14 members until a replacement is priced.
