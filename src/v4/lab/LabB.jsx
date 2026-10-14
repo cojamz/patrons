@@ -6,9 +6,9 @@ import '../lamp.css';
 import { createGame, applyMove, chooseBotMove } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import ShopCards from '../game/ShopCards.jsx';
-import SeatRail from '../game/SeatRail.jsx';
-import YourTable from '../game/YourTable.jsx';
-import { SpaceCard, StandingsCard, SeatCard, ShopCardHover, useHoverCards, HoverCardLayer } from '../game/HoverCards.jsx';
+import CultSeat from '../game/CultSeat.jsx';
+import Wheel from '../game/Wheel.jsx';
+import { useHoverCards, HoverCardLayer, usePreviewWarmup } from '../game/HoverCards.jsx';
 import { TouchTips } from '../game/Info.jsx';
 
 function labState(seed, phase) {
@@ -28,28 +28,28 @@ export default function LabB() {
   const phase = q.get('phase') || 'place';
   const state = useMemo(() => labState(seed, phase), [seed, phase]);
   const hover = useHoverCards();
+  usePreviewWarmup(state, 0);
   const opts = new Map((state.pending && state.pending.player === 0 ? state.pending.options : []).map(o => [o.id, o]));
   const optionFor = id => opts.get(id) || null;
+  const legal = new Map([...opts.values()].filter(o => o.kind === 'slot' && o.q != null).map(o => [`${o.q}-${o.i}`, o.id]));
   const pick = id => console.log('pick', id); // eslint-disable-line no-console
-  const firstSlot = state.pending && state.pending.options.find(o => o.kind === 'slot');
-  const firstCard = state.shop[0];
   const props = { state, me: 0, mySeats: [0], optionFor, onPick: pick, onDenied: () => {}, phase, hover };
+  const now = state.pending ? state.pending.player : null;
+  // the wheel's spaces report hover to the layer (what UI-A's wheel does through onSpaceHover)
+  const onOver = e => { const g = e.target.closest && e.target.closest('[data-slot]'); if (g && e.pointerType === 'mouse') hover.onSpaceHover(g.dataset.slot, g); };
+  const onOut = e => { const g = e.target.closest && e.target.closest('[data-slot]'); if (g && e.pointerType === 'mouse' && !(e.relatedTarget && g.contains(e.relatedTarget))) hover.onSpaceHover(g.dataset.slot, null); };
+  const seat = (pid, style) => <div style={{ position: 'absolute', ...style }}><CultSeat state={state} pid={pid} me={0} mine={pid === 0} now={now === pid} hover={hover} optionFor={optionFor} onPick={pick} /></div>;
   return (
-    <div className="app game lt lab-b" data-phase={phase} style={{ padding: 18 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '600px 600px', gap: 24 }}>
-        <section className="lt-rail" data-region="rail" style={{ gridColumn: '1 / -1' }}><SeatRail {...props} /></section>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div className="popover lab-note" style={{ position: 'static', width: 280 }}><div className="lt-note pinned">{firstSlot && <SpaceCard state={state} me={0} spaceKey={`${firstSlot.q}-${firstSlot.i}`} optionFor={optionFor} onPick={pick} pinned />}</div></div>
-          <div style={{ display: 'flex', gap: 14 }}>
-            <div className="popover lab-note" style={{ position: 'static', width: 280 }}><div className="lt-note"><StandingsCard state={state} qid="gold" meId={0} /></div></div>
-            <div className="popover lab-note" style={{ position: 'static', width: 280 }}><div className="lt-note"><SeatCard state={state} pid={1} meId={0} /></div></div>
-          </div>
-          <div className="popover lab-note" style={{ position: 'static', width: 280 }}><div className="lt-note pinned"><ShopCardHover state={state} me={0} uid={firstCard} optionFor={optionFor} onPick={pick} pinned /></div></div>
+    <div className="app game lt lab-b" data-phase={phase} style={{ padding: 0 }}>
+      <div style={{ position: 'relative', width: 1270, height: 700 }}>
+        <div style={{ position: 'absolute', left: 300, top: 10, width: 560, height: 560 }} onPointerOver={onOver} onPointerOut={onOut}>
+          <Wheel state={state} legal={legal} onPick={pick} flash={new Set()} facing={0} onFacing={() => {}} meId={0} />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <section className="lt-shop" data-region="shop"><ShopCards {...props} /></section>
-          <section className="lt-table" data-region="table"><YourTable {...props} /></section>
-        </div>
+        {seat(1, { left: 12, top: 12 })}
+        {seat(2, { right: 12, top: 12 })}
+        {seat(3, { left: 12, bottom: 150 })}
+        {seat(0, { right: 12, bottom: 150 })}
+        <section className="lt-shop" data-region="shop" style={{ position: 'absolute', left: 12, right: 12, bottom: 8 }}><ShopCards {...props} /></section>
       </div>
       <HoverCardLayer hover={hover} state={state} me={0} optionFor={optionFor} onPick={pick} />
       <TouchTips />
