@@ -98,17 +98,17 @@ describe('Gold members', () => {
   });
 
   it('Thrift: gold spent on members counts double, and the recruit line says so', () => {
-    const restore = pinCosts({ 'gold.banker': [4, 2] });
+    const restore = pinCosts({ 'gold.prospector': [4, 2] });
     try {
-      let s = sceneQ({ res: [{ gold: 3 }], members: [['gold.thrift']], shop: ['gold.banker'] });
+      let s = sceneQ({ res: [{ gold: 3 }], members: [['gold.thrift']], shop: ['gold.prospector'] });
       s = take(s, 'Discount'); // Discount 4 off: cost 4+2 → 0+2, paid with 1 gold
       expect(s.players[0].discount).toBe(4);
-      s = buy(s, 'gold.banker');
+      s = buy(s, 'gold.prospector');
       expect(s.players[0].res.gold).toBe(2);
       expect(named(s, 'Thrift')[0]).toMatch(/Thrift: gold counts double/);
-      s = sceneQ({ res: [{ gold: 3 }], members: [['gold.thrift']], shop: ['gold.banker'] });
+      s = sceneQ({ res: [{ gold: 3 }], members: [['gold.thrift']], shop: ['gold.prospector'] });
       s = take(s, 'Joint Venture'); s = move(s, 'player:1'); // 6 gold
-      s = buy(s, 'gold.banker'); // 4 colored → 2 gold, 2 wild → 1 gold
+      s = buy(s, 'gold.prospector'); // 4 colored → 2 gold, 2 wild → 1 gold
       expect(s.players[0].res.gold).toBe(3);
     } finally { restore(); }
   });

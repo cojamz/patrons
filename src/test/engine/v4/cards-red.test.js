@@ -6,6 +6,7 @@ import { followers, memberCount, resume } from '../../../engine/v4/core.js';
 import { defById } from '../../../engine/v4/content/index.js';
 import { take, move, uidOf, pinCosts } from './helpers.js';
 import { sceneQ, buy, linesNaming, settle } from './cards-helpers.js';
+import { SHOP_SIZE } from '../../../engine/v4/core.js';
 
 const named = (s, name) => linesNaming(s.log, name);
 const R = (s, i = 0) => s.players[i].res;
@@ -19,7 +20,7 @@ describe('Red actions', () => {
     s = move(s, `card:${u}`);
     expect(R(s).red).toBe(2);
     expect(s.pile.at(-1)).toBe(u);
-    expect(s.shop).toHaveLength(6);
+    expect(s.shop).toHaveLength(SHOP_SIZE);
   });
   it('Turnout: +1 red per member recruited this round by anyone', () => {
     const s = sceneQ({});

@@ -9,6 +9,7 @@ import market, { memberValue, priceyCount, install, setScoring, setBadge } from 
 import { contextFor } from '../../../../engine/v4/core.js';
 import { take, move, uidOf, ids, fol, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
+import { SHOP_SIZE } from '../../../../engine/v4/core.js';
 
 install();
 const Q = ['gold', 'red', 'market', 'green'];
@@ -118,7 +119,7 @@ describe('Blue actions', () => {
     const old = [...s0.shop];
     const s = take(s0, 'Restock');
     expect(R(s).blue).toBe(2);
-    expect(s.shop).toHaveLength(6);
+    expect(s.shop).toHaveLength(SHOP_SIZE);
     expect(s.shop.some(u => old.includes(u))).toBe(false);
     expect(s.pile.slice(-6)).toEqual(old);
   });
@@ -145,7 +146,7 @@ describe('Blue actions', () => {
     expect(R(take(scene({ round: 2 }), 'Price Check')).blue).toBe(0);
   });
   it('Spree (ring III): three buys this turn', () => {
-    let s = take(scene({ round: 3, res: [{ red: 8, gold: 8, green: 8 }], shop: CHEAP }), 'Spree');
+    let s = take(scene({ round: 3, res: [{ red: 10, gold: 8, green: 8 }], shop: CHEAP }), 'Spree');
     s = move(s, card(s, 'red.intern'));
     expect(s.pending.kind).toBe('buy');
     s = move(s, 'tier:big');
@@ -258,7 +259,7 @@ describe('Blue members', () => {
     s = move(s, `card:${j}`); // 3 gold + 3 any → all gold, one way to pay
     expect(has(s, 'gold.jackpot')).toBe(true);
     expect(R(s).gold).toBe(3);
-    expect(s.shop).toHaveLength(6);
+    expect(s.shop).toHaveLength(SHOP_SIZE);
     expect(s.pile.includes(j)).toBe(false);
   });
   it('Snob: game end, +1 follower per badged member (itself included)', () => {

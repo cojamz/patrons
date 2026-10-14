@@ -8,6 +8,7 @@ import { seededRandom } from '../../../../engine/v4/rng.js';
 import thieves, { install } from '../../../../engine/v4/content/thieves.js';
 import { take, move, play, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
+import { SHOP_SIZE } from '../../../../engine/v4/core.js';
 
 install();
 const QUADS = ['gold', 'red', 'blue', 'thieves'];
@@ -161,7 +162,7 @@ describe('Magenta actions', () => {
     expect(defs(s, 0)).toEqual(['red.proselytizer']);
     expect(s.pending.player).toBe(1);
     // Proselytizer costs 6 (3+3): every face-up card costs 6 or less
-    expect(s.pending.options).toHaveLength(6);
+    expect(s.pending.options).toHaveLength(6); // the hand-made scene has 6 face up
     s = move(s, `card:${uidOf(s, 'red.patriarch', 'shop')}`);
     expect(defs(s, 1)).toEqual(['red.patriarch']);
   });

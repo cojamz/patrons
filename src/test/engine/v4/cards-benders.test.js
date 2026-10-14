@@ -52,10 +52,10 @@ describe('Guest members (rule-benders)', () => {
     } finally { restore(); }
   });
   it('Freelancer is not named when the colored part was paid in its own color', () => {
-    const restore = pinCosts({ 'gold.banker': [2, 0] });
+    const restore = pinCosts({ 'gold.prospector': [2, 0] });
     try {
-      let s = sceneQ({ res: [{ gold: 2 }], members: [['benders.freelancer']], shop: ['gold.banker'] });
-      s = buy(move(take(s, 'Joint Venture'), 'player:1'), 'gold.banker');
+      let s = sceneQ({ res: [{ gold: 2 }], members: [['benders.freelancer']], shop: ['gold.prospector'] });
+      s = buy(move(take(s, 'Joint Venture'), 'player:1'), 'gold.prospector');
       expect(s.players[0].res.gold).toBe(3);
       expect(named(s, 'Freelancer')).toHaveLength(0);
     } finally { restore(); }

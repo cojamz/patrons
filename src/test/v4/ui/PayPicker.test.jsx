@@ -83,7 +83,7 @@ describe('how to play', () => {
   it('renders the rulebook text and closes', () => {
     const onClose = vi.fn();
     render(<HowToPlay onClose={onClose} />);
-    expect(screen.getByRole('heading', { name: 'Patrons — How to play' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Cults — How to play' })).toBeTruthy();
     expect(screen.getAllByRole('heading').length).toBeGreaterThan(3);
     expect(RULEBOOK).toBe(readFileSync('design/rulebook.md', 'utf8'));
     fireEvent.click(screen.getByRole('button', { name: /close/i }));

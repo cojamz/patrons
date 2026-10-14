@@ -2,6 +2,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { quadrant, cardDef } from '../../engine/v4/index.js';
 import { logSections, playerColor, costParts, plainLine } from '../format.js';
+import { Rich, CostPips } from './Rich.jsx';
 
 /** Escape closes; focus moves in on open and back to where it was on close. */
 export function useDialog(onClose) {
@@ -119,7 +120,7 @@ function ForSale({ state }) {
               aria-label={`${d.name}, ${d.f} followers, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}. Show the card.`}
               onClick={e => setOpen({ uid, el: e.currentTarget })}>
               <span className="row"><b>{d.name}</b><span className="num">{d.f}★</span></span>
-              <span className="fs-cost">{parts.length ? parts.map((c, k) => <span key={k}>{k ? ' + ' : ''}{c.color !== 'any' && <i style={{ background: `var(--${c.color})` }} />}<span className="num">{c.n}</span> {c.color}</span>) : 'free'}</span>
+              <span className="fs-cost"><CostPips parts={parts} /></span>
             </button>
           );
         })}
@@ -173,7 +174,7 @@ function MergedOptions({ state, pend, onPick, busy }) {
             {det ? (
               <span className="rich-body">
                 <b>{det.name}{n > 1 && <span className="num copies"> {state.shop && state.shop.includes(o.value) ? `· ${n} in the shop` : `· ${n} of them`}</span>}{det.f != null && <span className="num star"> {det.f}★</span>}</b>
-                <small>{det.text}</small>
+                <small><Rich text={det.text} /></small>
                 {det.cost && <small className="cost-line">Costs <span className="num">{det.cost}</span></small>}
               </span>
             ) : (q ? q.name : withUnits(o.label, pend.prompt, state.resources))}
@@ -210,7 +211,7 @@ function TradePicker({ state, pend, onPick, busy }) {
     <button type="button" className="btn rich" style={{ '--c': `var(--${g.d.quadrant})` }} disabled={busy} onClick={onClick} data-option={extra}>
       <span className="rich-body">
         <b>{g.d.name}{g.uids.length > 1 && <span className="num"> ×{g.uids.length}</span>}<span className="num star"> {g.d.f}★</span>{g.o && <span className="from"> · {g.o.name}</span>}</b>
-        <small>{g.d.text}</small>
+        <small><Rich text={g.d.text} /></small>
       </span>
     </button>
   );
@@ -327,7 +328,7 @@ export function CardFace({ state, uid }) {
   return (
     <div className="card-face" style={{ '--c': `var(--${d.quadrant})` }}>
       <div className="row"><span className="glyph" aria-hidden="true" /><b>{d.name}</b><span className="num star">{d.f}★</span></div>
-      <p>{d.text}</p>
+      <p><Rich text={d.text} /></p>
       <small>Costs {cost}{d.n > 1 ? ` · counts as ${d.n} members` : ''}</small>
     </div>
   );

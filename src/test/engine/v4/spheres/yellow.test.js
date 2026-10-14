@@ -109,10 +109,14 @@ describe('Yellow actions', () => {
     expect(R(take(scene({}), 'Transmute'))).toEqual({ ...Z, yellow: 1 });
   });
 
-  it('Transmute: a bot evens out its colors', () => {
+  it('Transmute: swap up to 3 resources for other colors, then +1 yellow (the rule, whatever a bot picks)', () => {
     let s = take(scene({ res: [{ gold: 7, red: 1 }] }), 'Transmute');
     while (s.pending?.kind === 'choose') s = applyMove(s, chooseBotMove(s, () => 0.5));
-    expect(R(s)).toEqual({ gold: 4, red: 2, yellow: 2, green: 1 }); // 3 swaps off the big pile, then +1 yellow
+    const r = R(s), total = Object.values(r).reduce((a, b) => a + b, 0);
+    expect(total).toBe(8 + 1); // swaps keep the count; then +1 yellow
+    const moved = (7 - r.gold) + Math.max(0, 1 - r.red);
+    expect(moved).toBeLessThanOrEqual(3);
+    expect(r.yellow).toBeGreaterThanOrEqual(1);
   });
 
   it('Prism (ring II): +1 of each other color per 3 yellow you have, and keeps the yellow', () => {

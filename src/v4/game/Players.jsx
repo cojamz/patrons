@@ -6,6 +6,7 @@ import { followers, memberCount } from '../../engine/v4/index.js';
 import { memberChips, playerColor, plural, projectedEndGame } from '../format.js';
 import Tick from './Tick.jsx';
 import { Popover } from './parts.jsx';
+import { Rich, CostPips } from './Rich.jsx';
 
 export const memberTip = d => `${d.name} · ${d.f}★ · ${d.text}`;
 
@@ -178,7 +179,7 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
             {memberChips(state, state.players[pop.pid]).map(g => (
               <div key={g.key} className="pop-row" style={{ '--c': `var(--${g.def.quadrant})` }}>
                 <span><i />{g.label} <span className="num star">{g.count > 1 ? `${g.count} copies · ${g.def.f}★ each` : `${g.def.f}★`}</span></span>
-                <small>{g.def.text}</small>
+                <small><Rich text={g.def.text} /></small>
               </div>
             ))}
           </div>
@@ -188,7 +189,7 @@ export default function Players({ state, active, mySeats, gifts = [], robbed = n
         <Popover anchor={pop.el} onClose={close}>
           <div className="pop-card" style={{ '--c': `var(--${pop.group.def.quadrant})` }}>
             <div className="row"><b>{pop.group.label}</b><span className="num star">{pop.group.count > 1 ? `${pop.group.count} copies · ${pop.group.def.f}★ each` : `${pop.group.def.f}★`}</span></div>
-            <span>{pop.group.def.text}</span>
+            <span><Rich text={pop.group.def.text} /></span>
             {pop.group.card.used && <small>Used</small>}
           </div>
         </Popover>

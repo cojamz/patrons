@@ -6,6 +6,7 @@ import { quadrant, roman } from '../../engine/v4/index.js';
 import { playerColor } from '../format.js';
 import { sheetMode } from './parts.jsx';
 import { realHover } from '../hover.js';
+import { Rich, CostPips } from './Rich.jsx';
 
 // Discs sit toward the outer edge of their ring and names on a fixed radius along the inner edge, so a name
 // never runs into its disc, the disc's glow or a recent-move ring at any board size.
@@ -345,7 +346,7 @@ export default function Wheel({ state, legal, onPick, onDenied, onTouched, confi
         >
           <b>{s.a.name}</b>
           <small>{quadrant(s.qid).name} · round {roman(s.ring)}</small>
-          <span>{s.a.text}</span>
+          <span><Rich text={s.a.text} /></span>
           <em>
             {owner !== undefined ? <><i style={{ background: playerColor(owner) }} />Taken by {state.players[owner].name}{opt ? ' — you can join it (Squatter)' : ''}</>
               : open ? (opt ? 'Open — yours to take' : 'Open') : `Opens in round ${roman(s.ring)}`}

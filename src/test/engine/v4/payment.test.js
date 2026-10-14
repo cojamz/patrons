@@ -9,9 +9,9 @@ const buyPhase = opts => scene({ ...opts, queue: [{ t: 'buy', p: 0 }] });
 
 describe('choosing how to pay', () => {
   it('offers every no-waste way to pay "any", default first, and charges exactly that', () => {
-    // Banker: 2 gold + 1 any. Holding 3 gold, 1 red, 1 blue: any can be gold, red or blue.
-    let s = buyPhase({ res: [{ gold: 3, red: 1, blue: 1 }], shop: ['gold.banker'] });
-    const uid = uidOf(s, 'gold.banker', 'shop');
+    // Prospector (no recruit effect). Holding 3 gold, 1 red, 1 blue: any can be gold, red or blue.
+    let s = buyPhase({ res: [{ gold: 3, red: 1, blue: 1 }], shop: ['gold.prospector'] });
+    const uid = uidOf(s, 'gold.prospector', 'shop');
     s = move(s, `card:${uid}`, { manualPay: true });
     expect(s.pending.kind).toBe('pay');
     const pays = s.pending.options.filter(o => o.kind === 'pay').map(o => o.id).sort();
@@ -36,17 +36,17 @@ describe('choosing how to pay', () => {
   });
 
   it('Back returns to the buy choice without spending anything', () => {
-    let s = buyPhase({ res: [{ gold: 3, red: 1, blue: 1 }], shop: ['gold.banker'] });
+    let s = buyPhase({ res: [{ gold: 3, red: 1, blue: 1 }], shop: ['gold.prospector'] });
     const before = structuredClone(s.players[0].res);
-    s = move(s, `card:${uidOf(s, 'gold.banker', 'shop')}`, { manualPay: true });
+    s = move(s, `card:${uidOf(s, 'gold.prospector', 'shop')}`, { manualPay: true });
     s = move(s, 'back');
     expect(s.pending.kind).toBe('buy');
     expect(s.players[0].res).toEqual(before);
   });
 
   it('only one way to pay: still one payment step, with that way preselected (one tap confirms)', () => {
-    let s = buyPhase({ res: [{ gold: 2, red: 1 }], shop: ['gold.banker'] });
-    s = move(s, `card:${uidOf(s, 'gold.banker', 'shop')}`, { manualPay: true });
+    let s = buyPhase({ res: [{ gold: 2, red: 1 }], shop: ['gold.prospector'] });
+    s = move(s, `card:${uidOf(s, 'gold.prospector', 'shop')}`, { manualPay: true });
     expect(s.pending?.kind).toBe('pay');
     const ways = s.pending.options.filter(o => o.kind === 'pay');
     expect(ways).toHaveLength(1);

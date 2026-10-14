@@ -464,7 +464,8 @@ describe('member colors across spheres', () => {
     s = take(s, 'Rush');
     s = move(s, `card:${uidOf(s, 'echo.evergreen', 'shop')}`);
     expect(defs(s, 0)).toEqual(['echo.evergreen']);
-    expect(R(s, 0).green).toBe(0);
+    // paid its 1 green, then Evergreen pays "now and at round start": +3 green
+    expect(R(s, 0).green).toBe(3);
   });
 });
 

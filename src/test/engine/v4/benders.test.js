@@ -6,6 +6,7 @@ import { createGame, applyMove, resume, followers, contextFor, cardDef } from '.
 import { defById } from '../../../engine/v4/content/index.js';
 import { extraTurns, onBoard } from '../../../engine/v4/content/purple.js';
 import { move, uidOf, ids, hasOpt } from './helpers.js';
+import { SHOP_SIZE } from '../../../engine/v4/core.js';
 
 const DEFAULT = ['gold', 'red', 'blue', 'green'];
 function scene({ n = 2, seed = 7, round = 1, res = [], members = [], shop = null, bonus = [], queue = null, slots = {}, quadrants = DEFAULT, rules = {}, order = null } = {}) {
@@ -163,7 +164,7 @@ describe('Insider: also recruit from the top 3 of the pile', () => {
     s = move(s, `card:${top[1]}`);
     expect(s.players[0].members).toContain(top[1]);
     expect(s.pile).not.toContain(top[1]);
-    expect(s.shop.length).toBe(6);
+    expect(s.shop.length).toBe(SHOP_SIZE);
   });
   it('a Doppelganger copying Insider does not reach deeper', () => {
     let s = scene({ members: [['benders.insider', 'red.doppel']], res: [{ gold: 30, red: 30, blue: 30, green: 30 }], rules: { release: false }, queue: [{ t: 'buy', p: 0 }] });

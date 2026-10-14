@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { memberCount } from '../../../engine/v4/core.js';
 import { scene, take, move, uidOf, ids, hasOpt, fol, useTestCosts } from './helpers.js';
+import { SHOP_SIZE } from '../../../engine/v4/core.js';
 
 useTestCosts();
 
@@ -16,10 +17,10 @@ describe('Red actions', () => {
     s = take(s, 'Scout');
     expect(R(s)[0].red).toBe(2);
     expect(s.pending.kind).toBe('choose');
-    expect(s.pending.options).toHaveLength(6);
+    expect(s.pending.options).toHaveLength(6); // the hand-made scene has 6 face up
     const midas = uidOf(s, 'gold.midas', 'shop');
     s = move(s, `card:${midas}`);
-    expect(s.shop).toHaveLength(6);
+    expect(s.shop).toHaveLength(SHOP_SIZE);
     expect(s.shop.includes(midas)).toBe(false);
     expect(s.pile[s.pile.length - 1]).toBe(midas);
     expect(s.cards[s.shop[5]].def).toBe('red.intern');
@@ -40,7 +41,7 @@ describe('Red actions', () => {
     s = take(s, 'Hire');
     expect(defs(s, 0)).toEqual(['red.volunteer']);
     expect(R(s)[0].gold).toBe(9);
-    expect(s.shop).toHaveLength(6);
+    expect(s.shop).toHaveLength(SHOP_SIZE);
   });
 
   it('Hire: a tie for cheapest asks which', () => {
@@ -81,7 +82,7 @@ describe('Red actions', () => {
   it('Take: any face-up member free (round III)', () => {
     let s = scene({ round: 3, shop: SHOP });
     s = take(s, 'Take');
-    expect(ids(s)).toHaveLength(6);
+    expect(ids(s)).toHaveLength(6); // the hand-made scene has 6 face up
     s = move(s, `card:${uidOf(s, 'gold.jackpot', 'shop')}`);
     expect(defs(s, 0)).toEqual(['gold.jackpot']);
     expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 0, green: 0 });
@@ -124,7 +125,7 @@ describe('Red members', () => {
     // the Volunteer refilled into the shop and is now the cheapest
     expect(defs(s, 0)).toEqual(['red.mentor', 'red.volunteer']);
     expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 0, green: 0 });
-    expect(s.shop).toHaveLength(6);
+    expect(s.shop).toHaveLength(SHOP_SIZE);
   });
 
   it('Proselytizer: +1 follower whenever you recruit (not for itself)', () => {
@@ -169,13 +170,13 @@ describe('Red members', () => {
   });
 
   it('Sponsor: members cost 2 less, and stacks with Discount', () => {
-    let s = scene({ members: [['red.sponsor']], res: [{ blue: 1 }], shop: ['gold.banker', ...SHOP.slice(1)] });
+    let s = scene({ members: [['red.sponsor']], res: [{ blue: 1 }], shop: ['gold.prospector', ...SHOP.slice(1)] });
     s = take(s, 'Turnout');
-    s = move(s, `card:${uidOf(s, 'gold.banker', 'shop')}`);
+    s = move(s, `card:${uidOf(s, 'gold.prospector', 'shop')}`);
     expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 0, green: 0 });
-    let t = scene({ members: [['red.sponsor']], shop: ['gold.banker', ...SHOP.slice(1)] });
+    let t = scene({ members: [['red.sponsor']], shop: ['gold.prospector', ...SHOP.slice(1)] });
     t = take(t, 'Discount');
-    expect(hasOpt(t, `card:${uidOf(t, 'gold.banker', 'shop')}`)).toBe(true);
+    expect(hasOpt(t, `card:${uidOf(t, 'gold.prospector', 'shop')}`)).toBe(true);
   });
 
   it('Crowd-Pleaser: +1 red whenever you buy followers', () => {

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { quadrant, RING_VALUE } from '../../engine/v4/index.js';
 import { playerColor, roman, standings, shortLabel, tiebreakNote, tiebreakWord } from '../format.js';
 import { Popover } from './parts.jsx';
+import { Rich, CostPips } from './Rich.jsx';
 
 export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPick, onDenied, meId = null, confirmPlace = false, onPeek }) {
   const [pop, setPop] = useState(null); // touch: { el, key, a, opt }
@@ -105,7 +106,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
               }}
             >
               <span className="rn">Round {roman(t)}</span>
-              <b>{a.name}</b><span className="act-text">{a.text}</span>
+              <b>{a.name}</b><span className="act-text"><Rich text={a.text} /></span>
               {owner !== undefined
                 ? <span className="by" style={{ '--pc': playerColor(owner) }}><i />{state.players[owner].name}{opt && opt.squat ? ' · you can join' : ''}</span>
                 : locked ? <span className="by lockt">opens round {roman(t)}</span> : null}
@@ -117,7 +118,7 @@ export default function QuadrantPanel({ state, facing, onFacing, optionFor, onPi
         <Popover anchor={pop.el} onClose={close}>
           <div className="pop-card" style={{ '--c': col }}>
             <b>{pop.a.name}</b>
-            <span>{pop.a.text}</span>
+            <span><Rich text={pop.a.text} /></span>
             <button type="button" className="btn pri" data-autofocus data-place={pop.opt} onClick={() => { const id = pop.opt; setPop(null); onPick(id); }}>Place here</button>
           </div>
         </Popover>

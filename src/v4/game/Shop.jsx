@@ -3,6 +3,7 @@ import { cardDef, paymentPlan, followerChoices, TIERS, tierLeft } from '../../en
 import { useEffect, useRef, useState } from 'react';
 import { costParts, tierCostText } from '../format.js';
 import { realHover } from '../hover.js';
+import { Rich, CostPips } from './Rich.jsx';
 
 // long words get a soft hyphen in the middle: it shows only when the word must break ("Doppel-ganger")
 const softBreak = name => name.replace(/[A-Za-z]{9,}/g, w => `${w.slice(0, Math.ceil(w.length / 2))}\u00AD${w.slice(Math.ceil(w.length / 2))}`);
@@ -11,9 +12,7 @@ const total = spend => Object.values(spend).reduce((a, b) => a + b, 0);
 function Cost({ d, plan, disc = false, res = null }) {
   // the list cost, as printed on every card; what you'd pay right now goes on a second line when it differs
   const parts = costParts(d, res);
-  const dots = list => list.map((c, k) => (
-    <span key={k} className="cp">{k ? ' + ' : ''}{c.color !== 'any' && <i style={{ background: `var(--${c.color})` }} />}<span className="num">{c.n}</span> {c.color}</span>
-  ));
+  const dots = list => <CostPips parts={list} />;
   const listText = parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'free';
   const payText = plan ? (Object.entries(plan).filter(([, v]) => v).map(([c, v]) => `${v} ${c}`).join(', ') || 'free') : null;
   const differs = plan && (total(plan) < d.s + d.w || payText !== listText);
@@ -57,7 +56,7 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
               {compact ? (
                 <>
                   <div className="row top"><b className="nm">{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
-                  <span className="eff1">{d.text}</span>
+                  <span className="eff1"><Rich text={d.text} /></span>
                   <div className="row cost"><Cost d={d} plan={null} res={state.resources} /></div>
                 </>
               ) : (
@@ -66,7 +65,7 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
               {fromPile && !compact && (
                 <span className="from-pile">From the pile (Insider)</span>
               )}
-              {!compact && <span className="eff">{d.text}</span>}
+              {!compact && <span className="eff"><Rich text={d.text} /></span>}
               {!compact && <div className="row cost">
                 <Cost d={d} plan={plan} disc={!!(viewer && viewer.discount)} res={state.resources} />
                 {d.n > 1 && <span><span className="num">{d.n}</span> members</span>}
@@ -123,7 +122,7 @@ function ShopStrip({ state, me, mine = false, optionFor, onPick, onDenied }) {
           >
             <span className="row"><b>{d.name}</b><span className="num">{d.f}★</span></span>
             {fromPile && <span className="from-pile">From the pile (Insider)</span>}
-            <small>{d.text}</small>
+            <small><Rich text={d.text} /></small>
             <span className="row cost"><Cost d={d} plan={plan} res={state.resources} />{opt && <span className="afford" aria-label="you can afford this" title="You can afford this" />}</span>
           </button>
         );

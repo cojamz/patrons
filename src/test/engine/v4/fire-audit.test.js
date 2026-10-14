@@ -79,7 +79,11 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
 // easy bots (fast), via fire-audit-runner.js (also scripts/v4-fire-audit.mjs). Ledger: design/eval/card-ledger-a.md.
 const SPHERES = ['gold', 'red', 'purple', 'silver', 'yellow'];
 // Members that may stay unnamed on bot tables, with why (see design/eval/card-ledger-a.md). Empty today.
-const ALLOW = {};
+// Conditional cards that can go a whole bot game without their condition; each has a named test of its own.
+const ALLOW = {
+  'purple.lateriser': 'needs the fewest followers at a round start, bought before it (cards-purple: Late Riser)',
+  'yellow.harmonist': 'pays only with a full set at game end (cards-yellow: Harmonist)',
+};
 
 describe('namesCard: what counts as a line naming a card', () => {
   it('counts the engine’s and content’s trace forms', () => {

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { cardDef, TIERS } from '../../engine/v4/index.js';
 import { costParts, tierCostText } from '../format.js';
 import { useDialog, TurnOf } from './parts.jsx';
+import { Rich, CostPips } from './Rich.jsx';
 
 export default function PayPicker({ state, onPick, busy, turnOf = null }) {
   const pend = state.pending;
@@ -35,7 +36,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
         <div className="pay-head">
           {turnOf && <TurnOf player={turnOf} />}
           <h2>{title}</h2>
-          {def && <span className="ability">{def.text} <span className="num star">{def.f}★</span></span>}
+          {def && <span className="ability"><Rich text={def.text} /> <span className="num star">{def.f}★</span></span>}
           <span className="hint">Costs {costLine}</span>
         </div>
         <div className="coins" aria-label={`Paying ${match ? match.label : 'nothing yet'}`}>

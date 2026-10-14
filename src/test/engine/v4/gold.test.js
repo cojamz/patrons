@@ -153,11 +153,11 @@ describe('Gold members', () => {
   });
 
   it('Merchant: +1 gold whenever anyone recruits a gold member', () => {
-    const shop = ['gold.banker', 'red.intern', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'];
+    const shop = ['gold.prospector', 'red.intern', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'];
     // (red: 2 so P0 can still pay Intern after the default spends red rather than blue, which P0 leads)
     let s = scene({ members: [[], ['gold.merchant']], res: [{ gold: 3, red: 2 }, { gold: 3 }], shop, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
     s = take(s, 'Tide');
-    s = move(s, `card:${uidOf(s, 'gold.banker', 'shop')}`);
+    s = move(s, `card:${uidOf(s, 'gold.prospector', 'shop')}`);
     expect(R(s)[1].gold).toBe(4);
     s = take(s, 'Sprout');
     s = move(s, `card:${uidOf(s, 'red.intern', 'shop')}`);
@@ -187,13 +187,13 @@ describe('Gold members', () => {
   });
 
   it('Coin Purse: +1 gold when you recruit a non-gold member', () => {
-    const shop = ['red.intern', 'gold.banker', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'];
+    const shop = ['red.intern', 'gold.prospector', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'];
     let s = scene({ members: [['gold.coinpurse']], res: [{ red: 1, gold: 3 }], shop, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }] });
     s = take(s, 'Tide');
     s = move(s, `card:${uidOf(s, 'red.intern', 'shop')}`);
     expect(R(s)[0]).toMatchObject({ red: 0, gold: 4 });
     s = take(s, 'Sprout');
-    s = move(s, `card:${uidOf(s, 'gold.banker', 'shop')}`); // 2 gold + 1 wild (blue)
+    s = move(s, `card:${uidOf(s, 'gold.prospector', 'shop')}`); // 2 gold + 1 wild (blue)
     expect(R(s)[0]).toMatchObject({ gold: 2 });
   });
 
@@ -304,9 +304,9 @@ describe('Gold members', () => {
 describe('default payment protects contests you lead', () => {
   it('pays "any" from a color nobody contests rather than one you lead', () => {
     // P0 leads blue after Tide; Banker's 1 "any" should come from red, not blue
-    let s = scene({ members: [[], []], res: [{ gold: 2, red: 1 }, { gold: 0 }], shop: ['gold.banker', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'] });
+    let s = scene({ members: [[], []], res: [{ gold: 2, red: 1 }, { gold: 0 }], shop: ['gold.prospector', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'] });
     s = take(s, 'Tide');
-    s = move(s, `card:${uidOf(s, 'gold.banker', 'shop')}`);
+    s = move(s, `card:${uidOf(s, 'gold.prospector', 'shop')}`);
     expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 3, green: 0 });
   });
 });
