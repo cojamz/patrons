@@ -131,14 +131,14 @@ const thieves = {
     {
       key: 'pickpocket', ring: 1, name: 'Pickpocket', text: 'Take 2 / 3 / 4 resources (by round) from rivals, split as you like.',
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, ctx.state.round + 1)),
-      resolve(ctx, p) { startSteal(ctx, p, 'Pickpocket', ctx.stealCount(p, ctx.state.round + 1)); },
+      resolve(ctx, p) { startSteal(ctx, p, 'Pickpocket', ctx.stealCount(p, ctx.state.round + 1, { say: true })); },
     },
     {
       key: 'tipoff', ring: 1, name: 'Tip-off', text: 'Take 1 resource from each player holding more than you.',
       estimate: (ctx, p) => estimateSteal(ctx, p, richer(ctx, p).length, richer(ctx, p)),
       resolve(ctx, p) {
         const ids = richer(ctx, p).map(o => o.id);
-        const n = ctx.stealCount(p, ids.length);
+        const n = ctx.stealCount(p, ids.length, { say: true });
         startSteal(ctx, p, 'Tip-off', n, { each: ids, only: ids });
       },
     },
@@ -148,13 +148,13 @@ const thieves = {
       resolve(ctx, p) {
         p.hideout = ctx.state.round;
         ctx.log(`${p.name} lies low: safe from thieves until round end.`);
-        startSteal(ctx, p, 'Hideout', ctx.stealCount(p, 1));
+        startSteal(ctx, p, 'Hideout', ctx.stealCount(p, 1, { say: true }));
       },
     },
     {
       key: 'rob', ring: 2, name: 'Rob', text: 'Take 3 resources from rivals, at least 1 from each.',
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, 3)),
-      resolve(ctx, p) { startSteal(ctx, p, 'Rob', ctx.stealCount(p, 3), { each: ctx.rivals(p).map(o => o.id) }); },
+      resolve(ctx, p) { startSteal(ctx, p, 'Rob', ctx.stealCount(p, 3, { say: true }), { each: ctx.rivals(p).map(o => o.id) }); },
     },
     {
       key: 'ransom', ring: 2, name: 'Ransom', text: 'Pick a rival’s member costing 6 or less. They pay you its cost to keep it, or it’s yours.',

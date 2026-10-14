@@ -27,11 +27,12 @@ describe('Red actions', () => {
     expect(R(take(s, 'Turnout')).red).toBe(3);
   });
   it('Hire / Hire Up / Take: free recruits (cheapest, cheapest +2 red, any)', () => {
-    let s = settle(take(sceneQ({}), 'Hire'));
+    let s = sceneQ({});
+    const min = Math.min(...s.shop.map(u => cost(s.cards[u].def)));
+    s = settle(take(s, 'Hire'));
     expect(s.players[0].members).toHaveLength(1);
-    const min = Math.min(...s.shop.map(u => cost(s.cards[u].def)), cost(s.cards[s.players[0].members[0]].def));
     expect(cost(s.cards[s.players[0].members[0]].def)).toBe(min);
-    s = take(sceneQ({ round: 2 }), 'Hire Up');
+    s = take(sceneQ({ round: 2, shop: ['red.volunteer'] }), 'Hire Up');
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     expect(R(s).red).toBe(2);
     expect(s.players[0].members).toHaveLength(1);

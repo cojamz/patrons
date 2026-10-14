@@ -824,13 +824,17 @@ function ctxFor(state) {
       return !blocked;
     },
     /** How many a steal of `base` takes for this thief (members: stealMore adds, stealDouble(ctx, owner) doubles). */
-    stealCount(thief, base) {
+    stealCount(thief, base, { say = false } = {}) {
       let n = base, double = false;
+      const who = [];
       eachMemberOf(state, thief, (card, def) => {
-        if (typeof def.stealMore === 'number') n += def.stealMore;
-        if (def.stealDouble && def.stealDouble(ctx, thief)) double = true;
+        if (typeof def.stealMore === 'number') { n += def.stealMore; if (def.stealMore) who.push(`${thief.name}'s ${def.name}: +${def.stealMore}`); }
+        if (def.stealDouble && def.stealDouble(ctx, thief)) { double = true; who.push(`${thief.name}'s ${def.name}: doubled`); }
       });
-      return double ? n * 2 : n;
+      const out = double ? n * 2 : n;
+      // say: a real steal (not an estimate) names the members that changed its size
+      if (say && base > 0 && out !== base) log(state, `${thief.name}'s steal takes ${out}, not ${base} (${who.join('; ')}).`);
+      return out;
     },
     /** One steal event from one victim. what: { take: {color: n} } moves resources (clamped to what they hold),
      *  { uid } moves a member, { other: n } reports units the caller already moved (e.g. a loot pile).

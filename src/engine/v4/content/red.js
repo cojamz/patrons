@@ -93,7 +93,7 @@ export default {
     m('volunteer', 'Volunteer', 0, 0, 'Free. No effect.'),
     m('intern', 'Intern', 2, 0, 'No effect.'),
     m('mentor', 'Mentor & Protégé', 6, 4, 'When recruited: also take the cheapest face-up member free.', {
-      onRecruited(ctx, owner) { hireCheapest(ctx, owner); },
+      onRecruited(ctx, owner) { if (ctx.shopCards().length) ctx.log(`${owner.name}'s Mentor & Protégé: the cheapest face-up member comes along free.`); hireCheapest(ctx, owner); },
     }),
     m('proselytizer', 'Proselytizer', 6, 6, 'Whenever you recruit, +1 follower.', {
       onAnyRecruit(ctx, owner, card, by, recruited) { if (by === owner && recruited.uid !== card.uid) owner.bonus += 1; },

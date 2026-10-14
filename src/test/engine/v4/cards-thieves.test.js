@@ -39,6 +39,8 @@ describe('Magenta actions', () => {
     for (let k = 0; k < 6; k++) s = move(s, 'take:1:gold');
     expect(R(s).magenta).toBe(6);
     expect(R(s, 1).gold).toBe(3);
+    expect(named(s, 'Sticky Fingers').length).toBe(1);
+    expect(named(s, 'Desperado').length).toBe(1);
   });
 
   it('Tip-off: take 1 from each player holding more than you', () => {
