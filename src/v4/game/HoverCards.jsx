@@ -4,7 +4,7 @@
 // UI-A's wheel calls onSpaceHover(key, el|null, { pinned }), plaques onPlaqueHover(qid, el|null); seats and shop
 // cards are mine. GameScreen mounts <HoverCardLayer> once.
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { quadrant, roman, contestTable, cardDef, followers as followersOf } from '../../engine/v4/index.js';
+import { quadrant, roman, contestTable, cardDef, followers as followersOf, botLevel, BOT_LEVEL_INFO } from '../../engine/v4/index.js';
 import { playerColor, standings, costParts } from '../format.js';
 import { Popover } from './parts.jsx';
 import { Sprite } from '../art/Sprite.jsx';
@@ -254,7 +254,7 @@ export function SeatCard({ state, pid, meId = null }) {
   const moves = lastMoves(state, pid, 3);
   return (
     <div className="lt-card-body seat-card" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}>
-      <div className="t"><SeatFigure id={pid} state={state} size={32} /><h4>{p.name}{pid === meId ? ' (you)' : ''}<small>{p.kind === 'bot' ? 'bot' : 'player'} · {p.left} minion{p.left === 1 ? '' : 's'} left</small></h4></div>
+      <div className="t"><SeatFigure id={pid} state={state} size={32} /><h4>{p.name}{pid === meId ? ' (you)' : ''}<small>{p.kind === 'bot' ? <span data-bot-level={botLevel(state, pid)} title={BOT_LEVEL_INFO.find(l => l.level === botLevel(state, pid))?.blurb}>{BOT_LEVEL_INFO.find(l => l.level === botLevel(state, pid))?.name} bot</span> : 'player'} · {p.left} minion{p.left === 1 ? '' : 's'} left</small></h4></div>
       <div className="lt-yd">
         <Row k="Followers"><span className="follower"><b className="num">{followersOf(state, p)}</b><Follower size={12} /></span></Row>
         <Row k="Has">{state.resources.map(r => <span key={r} className="lt-res"><ResourceGlyph r={r} n={p.res[r] || 0} size={14} /><b className="num">{p.res[r] || 0}</b></span>)}</Row>

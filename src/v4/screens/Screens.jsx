@@ -7,6 +7,8 @@ import { quadrant, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL } from '../../engine/v4/ind
 import { CLASSIC, spheres, sphereName, tableProblem, randomTable, urlTable } from '../tables.js';
 import { GAME_NAME, VERSION } from '../version.js';
 import { copyText } from '../Recovery.jsx';
+import { EmojiButton, EmojiFace, emojiName } from './EmojiPicker.jsx';
+import { settleEmojis, takeEmoji, lastEmoji, rememberEmoji } from '../emojiPick.js';
 
 const KINDS = [['human', 'Person'], ['bot', 'Bot'], ['empty', 'Empty']];
 const NAME_MAX = 14;
@@ -57,8 +59,8 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, er
         <button type="button" className={`btn big${saved ? '' : ' pri'}`} onClick={onLocal} data-home="local">{saved ? 'New game on this device' : 'Play on this device'}</button>
         <div className="online-box">
           <label className="field"><span>Your name</span><input value={name} onChange={e => saveName(clip(e.target.value, NAME_MAX))} placeholder="Name" /><small className="count num">{graphemes(name)}/{NAME_MAX}</small></label>
-          <button type="button" className="btn big" disabled={!onlineReady || working} onClick={() => (name.trim() ? go(() => onHost(name.trim())) : setErr('Enter a name.'))}>Host online game</button>
-          <form className="join" onSubmit={e => { e.preventDefault(); if (!name.trim()) { setErr('Enter a name.'); return; } if (code.trim()) go(() => onJoin(code.trim().toUpperCase(), name.trim())); }}>
+          <button type="button" className="btn big" disabled={!onlineReady || working} onClick={() => (name.trim() ? go(() => onHost(name.trim(), lastEmoji() || undefined)) : setErr('Enter a name.'))}>Host online game</button>
+          <form className="join" onSubmit={e => { e.preventDefault(); if (!name.trim()) { setErr('Enter a name.'); return; } if (code.trim()) go(() => onJoin(code.trim().toUpperCase(), name.trim(), lastEmoji() || undefined)); }}>
             <input aria-label="Room code" value={code} maxLength={8} onChange={e => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="CODE" disabled={!onlineReady} />
             <button type="submit" className="btn" disabled={!onlineReady || working || !code.trim()}>Join with code</button>
           </form>
@@ -150,24 +152,43 @@ function TableChip({ id }) {
   return <span className="table-chip" style={{ '--c': `var(--${id})` }} title={quadrant(id).scoring.label}><i className="dot" />{sphereName(id)}</span>;
 }
 
+// Every seat wears an emoji, none twice: the first person starts with the one this browser picked last, everyone
+// else (bots too) with a random free one. People outrank bots: picking a bot's emoji makes the bot take another.
+function dressSeats(seats) {
+  const first = seats.findIndex(s => s.kind === 'human');
+  const wish = lastEmoji();
+  const with1 = first >= 0 && !seats[first].emoji && wish && !seats.some(s => s.kind === 'human' && s.emoji === wish)
+    ? seats.map((s, i) => (i === first ? { ...s, emoji: wish } : s)) : seats;
+  return settleEmojis(with1);
+}
+
 export function LocalSetup({ initial, onStart, onBack }) {
-  const [seats, setSeats] = useState(initial?.seats || [
+  const [seats, setSeats] = useState(() => dressSeats(initial?.seats || [
     { kind: 'human', name: 'P1' }, { kind: 'bot', name: 'P2' }, { kind: 'bot', name: 'P3' }, { kind: 'bot', name: 'P4' },
-  ]);
+  ]));
   const [speed, setSpeed] = useState(initial?.speed || 'normal');
   const [level, setLevel] = useState(initial?.level || DEFAULT_BOT_LEVEL);
   const [table, setTable] = useState(() => initialTable(initial?.table));
   const tableOk = !tableProblem(table.quadrants);
   const filled = seats.filter(s => s.kind !== 'empty');
-  const set = (i, patch) => setSeats(seats.map((s, k) => (k === i ? { ...s, ...patch } : s)));
+  const set = (i, patch) => setSeats(settleEmojis(seats.map((s, k) => (k === i ? { ...s, ...patch } : s))));
+  const pickEmoji = (i, id) => {
+    const next = takeEmoji(seats, i, id);
+    if (!next) return;
+    setSeats(settleEmojis(next));
+    if (i === seats.findIndex(s => s.kind === 'human')) rememberEmoji(id);
+  };
+  const holders = (i, kind) => new Map(seats.map((s, k) => [s, k]).filter(([s, k]) => k !== i && s.kind === kind && s.emoji).map(([s, k]) => [s.emoji, s.name.trim() || `Seat ${k + 1}`]));
   return (
     <div className="app narrow">
       <div className="dialog page">
         <h2>Play on this device</h2>
         <p className="hint">Everyone plays on this screen. Bots fill the other seats.</p>
         {seats.map((s, i) => (
-          <div className="seat" key={i} style={{ '--pc': PLAYER_COLORS[i] }}>
-            <i className="dot" />
+          <div className="seat" key={i} style={{ '--pc': PLAYER_COLORS[i] }} data-seat-row={i}>
+            {s.kind === 'human'
+              ? <EmojiButton value={s.emoji} label={`${s.name.trim() || `Seat ${i + 1}`}’s emoji`} taken={holders(i, 'human')} bots={holders(i, 'bot')} onPick={id => pickEmoji(i, id)} />
+              : <EmojiFace id={s.kind === 'bot' ? s.emoji : null} title={s.kind === 'bot' ? `${emojiName(s.emoji)}: a random one for this bot. Pick it for a person and the bot takes another.` : null} />}
             <label className="namebox">
               <input aria-label={`Seat ${i + 1} name`} value={s.name} disabled={s.kind === 'empty'} onChange={e => set(i, { name: clip(e.target.value, NAME_MAX) })} />
               <small className={`count num${graphemes(s.name) >= NAME_MAX ? ' full' : ''}`} aria-hidden="true">{graphemes(s.name)}/{NAME_MAX}</small>
@@ -203,6 +224,7 @@ export function Lobby({ lobby, myId, onLeave }) {
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState('');
   const [draft, setDraft] = useState(null);
+  const [botLevel, setBotLevel] = useState(DEFAULT_BOT_LEVEL);
   useEffect(() => (lobby ? lobby.subscribe(setView) : undefined), [lobby]);
   if (!lobby || !view) return <div className="app narrow"><div className="dialog page"><h2>Connecting…</h2><button type="button" className="btn" onClick={onLeave}>Back</button></div></div>;
   const me = view.me?.playerId ?? myId;
@@ -217,6 +239,10 @@ export function Lobby({ lobby, myId, onLeave }) {
   const roomTable = view.table && view.table.quadrants ? view.table : { mode: 'classic', quadrants: [...CLASSIC] };
   const shownTable = isHost && draft ? draft : roomTable;
   const pickTable = t => { setDraft(t); if (!tableProblem(t.quadrants) && lobby.setTable) act(() => lobby.setTable(t)); };
+  // one emoji per table: another person's is dimmed; a bot's can be taken (the bot picks another)
+  const held = kind => new Map(players.filter(p => p.id !== me && p.kind === kind && p.emoji).map(p => [p.emoji, p.name]));
+  const pickEmoji = id => act(async () => { setErr(''); await lobby.setEmoji(id); rememberEmoji(id); });
+  const levelInfo = l => BOT_LEVEL_INFO.find(x => x.level === l) || BOT_LEVEL_INFO.find(x => x.level === DEFAULT_BOT_LEVEL);
   return (
     <div className="app narrow">
       <div className="dialog page lobby">
@@ -232,19 +258,29 @@ export function Lobby({ lobby, myId, onLeave }) {
         </div>
         <ul className="seats">
           {players.map(p => (
-            <li key={p.id} className="seat" style={{ '--pc': PLAYER_COLORS[p.seat % 4] }}>
-              <i className="dot" />
+            <li key={p.id} className="seat" style={{ '--pc': PLAYER_COLORS[p.seat % 4] }} data-lobby-seat={p.seat}>
+              {p.id === me && lobby.setEmoji && view.status === 'lobby'
+                ? <EmojiButton value={p.emoji} label="Your emoji" taken={held('human')} bots={held('bot')} onPick={pickEmoji} />
+                : <EmojiFace id={p.emoji} title={p.emoji ? `${p.name}: ${emojiName(p.emoji)}` : null} />}
               <span className="nm">{p.name}{p.id === me ? ' (you)' : ''}</span>
-              <span className="hint" data-presence={p.kind === 'bot' ? 'bot' : p.connected === false ? 'offline' : 'here'}>{p.kind === 'bot' ? 'bot' : `${p.id === view.hostId ? 'host · ' : ''}${p.connected === false ? 'offline' : 'connected'}`}</span>
+              <span className="hint" data-presence={p.kind === 'bot' ? 'bot' : p.connected === false ? 'offline' : 'here'} data-bot-level={p.kind === 'bot' ? levelInfo(p.bot).level : undefined}
+                title={p.kind === 'bot' ? `${levelInfo(p.bot).name} bot: ${levelInfo(p.bot).blurb}` : undefined}>
+                {p.kind === 'bot' ? `bot · ${levelInfo(p.bot).name}` : `${p.id === view.hostId ? 'host · ' : ''}${p.connected === false ? 'offline' : 'connected'}`}
+              </span>
               {isHost && p.id !== me && <button type="button" className="btn ghost" onClick={() => act(() => lobby.removeSeat(p.seat))}>Remove</button>}
             </li>
           ))}
         </ul>
+        {isHost && (
+          <div className="seat add-bot">
+            <button type="button" className="btn" data-add-bot disabled={players.length >= 4} title={`Add a ${levelInfo(botLevel).name} bot: ${levelInfo(botLevel).blurb}`} onClick={() => act(() => lobby.addBot(undefined, undefined, botLevel))}>Add bot</button>
+            <Seg label="Bot level" value={botLevel} options={BOT_LEVEL_INFO.map(l => [l.level, l.name, l.blurb])} onChange={setBotLevel} />
+          </div>
+        )}
         <TablePicker value={shownTable} onChange={pickTable} readOnly={!isHost || !lobby.setTable} />
         {err && <p className="error">{err}</p>}
         {isHost ? (
           <div className="row-btns">
-            <button type="button" className="btn" disabled={players.length >= 4} onClick={() => act(() => lobby.addBot())}>Add bot</button>
             <button type="button" className="btn pri" disabled={view.canStart === false || players.length < 2 || !!tableProblem(shownTable.quadrants)} onClick={() => act(() => lobby.start())}>Start game</button>
           </div>
         ) : <p className="hint">Waiting for {view.hostName || 'the host'} to start…</p>}
