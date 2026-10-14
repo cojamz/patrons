@@ -79,3 +79,84 @@ export function breakdown(state, p) {
   const bought = p.bonus - p.contest - endGame;
   return { self: 1, members, contests: p.contest, bought, endGame, parts: p.final ? p.final.parts : [] };
 }
+
+// ---------- round end, read back from the engine's log line ----------
+const ROUND_END = /^Round (\S+) ends\.\s*/;
+export const isRoundEnd = line => ROUND_END.test(line);
+
+/**
+ * "Round II ends. Most gold: P1 & P2 +4 · Most members: P3 +4" -> { round: 'II', rows: [{ qid, label, winners:[ids], v }] }.
+ * Every quadrant gets a row; quadrants nobody led have no winners.
+ */
+export function parseRoundEnd(state, line) {
+  const m = line.match(ROUND_END);
+  if (!m) return null;
+  const body = line.slice(m[0].length);
+  const scored = {};
+  if (!/^No one scored/.test(body)) {
+    for (const seg of body.split(' · ')) {
+      const s = seg.match(/^(.*): (.*) \+(\d+)$/);
+      if (!s) continue;
+      const qid = state.quadrants.find(q => quadrant(q).scoring.label === s[1]);
+      if (!qid) continue;
+      const winners = s[2].split(' & ').map(n => state.players.find(p => p.name === n)).filter(Boolean).map(p => p.id);
+      scored[qid] = { winners, v: Number(s[3]) };
+    }
+  }
+  const ringValue = RING_VALUE[['I', 'II', 'III'].indexOf(m[1])] ?? 0;
+  return {
+    round: m[1],
+    rows: state.quadrants.map(qid => ({ qid, label: quadrant(qid).scoring.label, winners: scored[qid]?.winners || [], v: scored[qid]?.v ?? ringValue })),
+  };
+}
+
+/** Contest wins per player per quadrant label, from every round-end line still in the log. */
+export function contestWins(state) {
+  const wins = state.players.map(() => ({}));
+  for (const line of state.log) {
+    const r = isRoundEnd(line) ? parseRoundEnd(state, line) : null;
+    if (!r) continue;
+    for (const row of r.rows) for (const id of row.winners) wins[id][row.label] = (wins[id][row.label] || 0) + row.v;
+  }
+  return wins;
+}
+
+/** One sentence on why the winner won, built from the followers breakdown. */
+export function winSentence(state) {
+  const ranked = (state.ranking || state.players.map(p => p.id)).map(id => state.players[id]);
+  const f = p => 1 + p.bonus + p.members.reduce((s, u) => s + cardDef(state, u).f, 0);
+  const w = ranked[0];
+  const tied = ranked.filter(p => f(p) === f(w));
+  if (tied.length > 1) return `${tied.map(p => p.name).join(' and ')} tie on ${f(w)} followers.`;
+  const b = breakdown(state, w);
+  const lead = ranked[1] ? `${w.name} won by ${f(w) - f(ranked[1])}` : `${w.name} won`;
+  const sources = [['members', b.members], ['contests', b.contests], ['bought', b.bought], ['endGame', b.endGame]];
+  const [top] = sources.reduce((a, c) => (c[1] > a[1] ? c : a));
+  if (top === 'endGame' && b.parts.length) {
+    const best = b.parts.map(s => { const m = s.match(/^(.*) \+(\d+)$/); return m ? { name: m[1], n: Number(m[2]) } : null; }).filter(Boolean).sort((a, c) => c.n - a.n)[0];
+    return `${lead}: ${best.name} turned the endgame into ${best.n} followers.`;
+  }
+  if (top === 'contests') {
+    const per = contestWins(state)[w.id];
+    const most = Object.entries(per).sort((a, c) => c[1] - a[1])[0];
+    return most
+      ? `${lead}: ${b.contests} followers from ring contests, ${most[1]} of them for ${most[0].toLowerCase()}.`
+      : `${lead}: ${b.contests} followers from ring contests.`;
+  }
+  if (top === 'bought') return `${lead}: ${b.bought} followers bought outright.`;
+  const n = w.members.reduce((s, u) => s + cardDef(state, u).n, 0);
+  return `${lead}: ${n} members worth ${b.members} followers.`;
+}
+
+/** Lines added to the log between two states. The log only appends (and trims its front past a cap). */
+export function newLogLines(prev, next) {
+  const a = prev.log, b = next.log;
+  if (a === b) return [];
+  if (b.length >= a.length && (a.length === 0 || b[a.length - 1] === a[a.length - 1])) return b.slice(a.length);
+  // trimmed at the front: find where prev's tail (last 4 lines) ends in next
+  const tail = a.slice(-4);
+  for (let j = b.length; j >= tail.length; j--) {
+    if (tail.every((l, k) => b[j - tail.length + k] === l)) return b.slice(j);
+  }
+  return b.slice(-1);
+}

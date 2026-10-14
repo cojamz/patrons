@@ -1,5 +1,3 @@
-// PARKED (named .wip so npm run check:v4 skips it): fails because tabs miss each other's updates over the
-// broadcast transport (the store is right, the other tab never re-renders). Rename to online.mjs once fixed.
 // E2E: online play across two tabs over BroadcastChannel (?transport=broadcast).
 // Host creates a room, a guest joins by code, the host adds a bot and starts; both people click the first
 // legal option whenever it's their turn, through to final results. Fails on any console or page error.

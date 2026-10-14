@@ -2,10 +2,11 @@
 // Fails on any console error or page error. Screenshots go to /tmp/patrons-shots/v4/.
 //
 // Server: uses $V4_URL if set (npm run check:v4 sets it to a `vite preview`). Otherwise it starts
-// `npx vite --port 5180` itself and stops it at the end.
+// `npx vite` itself on the first free port from 5180 and stops it at the end.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
+import { createServer } from 'node:net';
 
 const SHOTS = '/tmp/patrons-shots/v4';
 rmSync(SHOTS, { recursive: true, force: true });
@@ -16,8 +17,12 @@ const PHONE = { width: 400, height: 820 };
 let server = null;
 let base = process.env.V4_URL;
 if (!base) {
-  base = 'http://localhost:5180';
-  server = spawn('npx', ['vite', '--port', '5180', '--strictPort'], { stdio: 'pipe' });
+  // Our own dev server on a free port (never reuse whatever else is listening: it may be a stale build).
+  const free = port => new Promise(res => { const srv = createServer().once('error', () => res(false)).once('listening', () => srv.close(() => res(true))).listen(port, 'localhost'); });
+  let port = 5180;
+  while (!(await free(port))) port++;
+  base = `http://localhost:${port}`;
+  server = spawn('npx', ['vite', '--port', String(port), '--strictPort'], { stdio: 'pipe' });
   let up = false;
   for (let k = 0; k < 60 && !up; k++) {
     await new Promise(r => setTimeout(r, 500));
@@ -71,6 +76,13 @@ try {
     if (Date.now() - t0 > 240000) throw new Error('game did not finish in 4 minutes');
     const hand = await page.$('[data-handoff]');
     if (hand) { await hand.click(); continue; }
+    const next = await page.$('[data-next-round]');
+    if (next) {
+      const r = await page.$eval('.roundend h2', e => e.textContent).catch(() => 'x');
+      if (!seen.has(r)) { seen.add(r); await page.waitForTimeout(800); await shot(`04-${r.replace(/\W+/g, '_')}`); if (/II /.test(r + ' ')) await shot(`04-${r.replace(/\W+/g, '_')}-phone`, PHONE); }
+      await next.click();
+      continue;
+    }
     const kind = await page.evaluate(() => {
       const el = document.querySelector('[data-option]:not([disabled])');
       return el ? el.getAttribute('data-option').split(':')[0] : null;
@@ -82,7 +94,7 @@ try {
       seen.add(tag);
       const name = `03-${String(seen.size).padStart(2, '0')}-${tag.replace(/[^a-z0-9@]+/gi, '_')}`;
       await shot(name);
-      if (seen.size === 2 || kind === 'pay' || (/III/.test(round) && !seen.has('phone3') && seen.add('phone3'))) await shot(`${name}-phone`, PHONE);
+      if (seen.size === 2 || kind === 'pay' || (kind === 'color' && /Setup/.test(round)) || (/III/.test(round) && !seen.has('phone3') && seen.add('phone3'))) await shot(`${name}-phone`, PHONE);
     }
     // the first legal option in page order (skip on/off toggles, which would loop)
     const els = await page.$$('[data-option]:not([disabled])');

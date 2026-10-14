@@ -24,7 +24,7 @@ const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-r
 /**
  * @param {{ state:any, legal:Map<string,string>, onPick:(id:string)=>void, flash:Set<string>, facing:number, onFacing:(q:number)=>void }} props
  */
-export default function Wheel({ state, legal, onPick, flash, facing, onFacing }) {
+export default function Wheel({ state, legal, onPick, flash, late = false, facing, onFacing }) {
   const [rot, setRot] = useState(() => -90 * facing);
   const rotRef = useRef(rot);
   const anim = useRef(null);
@@ -43,7 +43,7 @@ export default function Wheel({ state, legal, onPick, flash, facing, onFacing })
   const stop = () => { if (anim.current) cancelAnimationFrame(anim.current); anim.current = null; };
   const animateTo = useCallback(to => {
     stop();
-    const from = rotRef.current, t0 = performance.now(), dur = reduced() ? 1 : 600;
+    const from = rotRef.current, t0 = performance.now(), dur = reduced() ? 1 : 420;
     const step = now => {
       const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
       applyRot(from + (to - from) * e);
@@ -154,7 +154,7 @@ export default function Wheel({ state, legal, onPick, flash, facing, onFacing })
   return (
     <div className="wheel-wrap">
       <div className="stage" ref={stage} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
-        <svg viewBox="-26 -26 452 452" role="img" aria-label="Board">
+        <svg viewBox="-26 -26 452 452" role="img" aria-label="Board" className={late ? 'late' : undefined}>
           <circle cx={CX} cy={CY} r="200" fill="var(--table-2)" stroke="var(--rim)" strokeWidth="2" />
           <g transform={`rotate(${rot} ${CX} ${CY})`} className="wheel">{parts}</g>
           <path d={`M${CX - 9},${CY + 214} L${CX},${CY + 203} L${CX + 9},${CY + 214}Z`} fill="var(--ink)" opacity=".8" />

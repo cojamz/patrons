@@ -66,7 +66,6 @@ h1{font-family:var(--display);font-weight:400;font-size:28px;margin:0;letter-spa
 @keyframes glow{0%,100%{opacity:.25;stroke-width:1.5}50%{opacity:1;stroke-width:3.5}}
 .slot .ping{stroke-width:3;transform-box:fill-box;transform-origin:center;animation:ping 1.4s ease-out forwards}
 @keyframes ping{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(2.2)}}
-.slot.flash .worker{animation:pop .5s ease-out;transform-box:fill-box;transform-origin:center}
 @keyframes pop{0%{transform:scale(.2)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
 .spin{position:absolute;bottom:4%;width:40px;height:40px;border-radius:50%;border:1px solid var(--rim);background:var(--table);color:var(--ink);font-size:20px;cursor:pointer;line-height:1}
 .spin:hover{border-color:var(--ink)}
@@ -129,8 +128,6 @@ h1{font-family:var(--display);font-weight:400;font-size:28px;margin:0;letter-spa
 
 [data-option]{scroll-margin-top:84px;scroll-margin-bottom:80px}
 
-/* round-end toast */
-.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:6;max-width:min(640px,calc(100vw - 32px));background:var(--table-2);border:1px solid var(--gold);border-radius:12px;padding:10px 16px;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);cursor:pointer;animation:rise .3s ease-out}
 
 /* overlays and dialogs */
 .overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--table) 85%,transparent);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5;animation:fade .2s}
@@ -247,3 +244,84 @@ table.res-t tr.first td{background:color-mix(in srgb,var(--ink) 5%,transparent)}
 .rules-body p{margin:6px 0}
 .rules-body ul,.rules-body ol{margin:4px 0;padding-left:22px}
 .rules-body b{color:#fff}
+
+/* ---------- polish round 1 ---------- */
+
+/* Desktop: the table fits the window. The page never scrolls under the header; the side column scrolls itself. */
+@media (min-width:861px) and (min-height:560px){
+  #root{height:100dvh;padding-bottom:10px}
+  .app.game{height:100%;min-height:0}
+  .app.game header.bar{position:static;margin:-14px -16px 0}
+  .app.game .main:not(.over){flex:1;min-height:0;align-items:stretch}
+  .app.game .main:not(.over) .side{overflow-y:auto;overscroll-behavior:contain;padding-right:6px;scroll-padding:12px}
+  .app.game .wheel-wrap{position:static;height:100%;min-height:0;container-type:size;display:flex;flex-direction:column;justify-content:center}
+  .app.game .stage{width:min(100cqw, 100cqh - 26px);max-width:none;min-width:0}
+  .app.game .main.over{overflow:auto;min-height:0;flex:1}
+}
+/* Phones and short screens: the page scrolls; programmatic scrolls stop below the sticky header. */
+html{scroll-padding-top:110px}
+header.bar{z-index:6}
+
+/* Side column order: your buy puts the shop first; a choice is always on top. */
+.side .prompt{order:-2}
+.side.shop-first .shop-panel{order:-1}
+
+/* Press state: things give a little under the finger. */
+.btn,.card,.act,.fb,.chip,.qtab,.way,.seg button,.stepper button,.spin{transition:transform .12s ease, background-color .15s, border-color .15s, box-shadow .15s}
+.btn:active:not(:disabled),.fb.can:active,.chip.use:active,.qtab:active,.way:active,.seg button:active,.stepper button:active:not(:disabled),.spin:active{transform:translateY(1px) scale(.97)}
+.card.can:active{transform:translateY(0) scale(.98)}
+.act.can:active{transform:scale(.98)}
+.slot.can:active circle:not(.halo):not(.ping){fill:var(--table)}
+
+/* A worker drops onto its space and settles; after the wheel turns to a rival's move, it waits for the turn. */
+.slot.flash .worker{transform-box:fill-box;transform-origin:center;animation:drop .3s cubic-bezier(.3,.7,.4,1) both}
+@keyframes drop{0%{transform:scale(1.6);opacity:0}65%{transform:scale(.92);opacity:1}100%{transform:scale(1)}}
+svg.late .slot.flash .worker{animation-delay:.42s}
+svg.late .slot.flash .ping{animation-delay:.5s;opacity:0}
+.slot .ping{animation-fill-mode:both}
+
+/* Ticking numbers and their +N / −N floaters */
+.tick{position:relative;display:inline-block;font-variant-numeric:tabular-nums}
+.floater{position:absolute;left:50%;bottom:78%;transform:translateX(-50%);font-family:var(--body);font-size:11px;font-weight:700;white-space:nowrap;pointer-events:none;animation:floatup .9s ease-out forwards}
+.floater.down{color:var(--muted)!important}
+@keyframes floatup{0%{opacity:0;transform:translate(-50%,4px)}20%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-9px)}}
+.pl .fol .floater{font-size:13px;bottom:70%}
+.floater{text-shadow:0 1px 3px var(--table),0 0 6px var(--table)}
+
+/* New cards slide into the shop; recruited cards fly to their owner. */
+.shop .card{animation:deal .28s ease-out both}
+@keyframes deal{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.flight{position:fixed;z-index:8;pointer-events:none;will-change:transform,opacity}
+.flight .card{width:100%;height:100%;animation:none;box-shadow:0 12px 30px rgba(0,0,0,.55);border-color:var(--c)}
+
+/* Round end: a centered, opaque scoring card */
+.overlay.moment{background:color-mix(in srgb,var(--table) 78%,transparent);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:7}
+.dialog.roundend{background:var(--table-2);border-color:var(--gold);box-shadow:0 20px 60px rgba(0,0,0,.6);max-width:430px;gap:14px;animation:settle .32s cubic-bezier(.3,.7,.4,1) both}
+@keyframes settle{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.roundend h2{text-align:center;font-size:26px}
+.re-rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.re-rows li{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;background:var(--table);border-left:3px solid var(--c)}
+.re-rows li.none{opacity:.6}
+.re-q{display:flex;align-items:center;gap:7px;color:var(--c);font-weight:600;font-size:14px;min-width:0}
+.re-q i{width:9px;height:9px;border-radius:50%;background:var(--c);flex:none}
+.re-w{font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.re-w em{font-style:normal;color:var(--muted)}
+.re-chip{background:var(--c);color:var(--table);font-weight:700;font-size:13px;border-radius:999px;padding:2px 9px;font-variant-numeric:tabular-nums}
+.re-rows li.none .re-chip{background:none;color:var(--muted);border:1px solid var(--rim)}
+.re-totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px}
+.re-p{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.re-p .nm{display:flex;align-items:center;gap:6px;color:var(--pc);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;min-width:0;overflow:hidden}
+.re-p .nm i{width:9px;height:9px;border-radius:50%;background:var(--pc);flex:none}
+.re-f{font-family:var(--display);font-size:24px}
+.roundend .hint{text-align:center}
+.roundend .btn.pri{align-self:center;padding:9px 22px}
+
+.results .why{margin:-4px 0 0;font-size:16px;color:var(--ink)}
+
+/* Phones: choices and setup picks come up as a bottom sheet, like paying. */
+@media (max-width:520px){
+  .side .prompt.choice{position:fixed;left:0;right:0;bottom:0;z-index:5;margin:0;border-radius:16px 16px 0 0;border-width:1px 0 0;padding:16px 16px 22px;box-shadow:0 -12px 30px rgba(0,0,0,.5);animation:sheet .26s ease-out both}
+  .app.game.choosing{padding-bottom:200px}
+  .prompt.choice .btn{padding:9px 14px}
+}
+@keyframes sheet{from{transform:translateY(100%)}to{transform:none}}

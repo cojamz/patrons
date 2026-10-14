@@ -1,16 +1,20 @@
 // The game table. Renders engine state from a session and turns clicks into { player, option } moves.
 // What's clickable is exactly state.pending.options, and only for seats this client controls.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { WORKERS } from '../../engine/v4/index.js';
-import { playerColor, promptFor, roman } from '../format.js';
+import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman } from '../format.js';
 import Wheel from './Wheel.jsx';
 import Players from './Players.jsx';
 import QuadrantPanel from './QuadrantPanel.jsx';
 import Shop from './Shop.jsx';
 import Results from './Results.jsx';
+import RoundEnd from './RoundEnd.jsx';
 import { ChoicePrompt, Handoff, Log } from './parts.jsx';
 import PayPicker from './PayPicker.jsx';
 import HowToPlay from '../HowToPlay.jsx';
+import { flyCards, snapshotShop } from './flight.js';
+
+const STEP_MS = 260; // pace when catching up on moves that happened behind the round-end card
 
 export function useSessionState(session) {
   const [state, setState] = useState(() => session.getState());
@@ -21,23 +25,79 @@ export function useSessionState(session) {
   return state;
 }
 
+/**
+ * What the table shows. Normally the latest state. When a round ends, the table holds on that moment
+ * (the round-end card) and queues whatever happens next; dismissing it replays the queue at a readable pace.
+ */
+function useTable(session) {
+  const [table, setTable] = useState(() => ({ shown: session.getState(), moment: null }));
+  const queue = useRef([]);
+  const held = useRef(false);
+  const timer = useRef(null);
+  const shownRef = useRef(table.shown);
+
+  const show = useCallback(next => {
+    const prev = shownRef.current;
+    shownRef.current = next;
+    const fresh = prev === next ? [] : newLogLines(prev, next);
+    const end = fresh.filter(isRoundEnd).pop();
+    if (end) {
+      held.current = true;
+      setTable({ shown: next, moment: { result: parseRoundEnd(next, end), before: prev, after: next } });
+    } else {
+      setTable(t => ({ ...t, shown: next }));
+    }
+  }, []);
+
+  const pump = useCallback(() => {
+    if (held.current || timer.current || !queue.current.length) return;
+    const paced = queue.current.length > 1 || queue.current.paced;
+    const next = queue.current.shift();
+    if (!paced) { show(next); return; }
+    show(next);
+    timer.current = setTimeout(() => { timer.current = null; if (!queue.current.length) queue.current.paced = false; pump(); }, STEP_MS);
+  }, [show]);
+
+  useEffect(() => {
+    const off = session.subscribe(s => {
+      if (s === shownRef.current) return;
+      queue.current.push(s);
+      pump();
+    });
+    return () => { off(); clearTimeout(timer.current); };
+  }, [session, pump]);
+
+  const dismiss = useCallback(() => {
+    held.current = false;
+    queue.current.paced = true;
+    setTable(t => ({ ...t, moment: null }));
+    pump();
+  }, [pump]);
+
+  return [table.shown, table.moment, dismiss];
+}
+
 export default function GameScreen({ session, onPlayAgain, onHome }) {
-  const state = useSessionState(session);
+  const [state, moment, dismissMoment] = useTable(session);
   const mySeats = session.mySeats || [];
   const pend = state.pending;
-  const mine = !!(pend && !state.over && mySeats.includes(pend.player));
+  const mine = !!(pend && !state.over && !moment && mySeats.includes(pend.player));
   const [facing, setFacing] = useState(0);
+  const [late, setLate] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [flash, setFlash] = useState(() => new Set());
   const [ready, setReady] = useState(null); // hot-seat: which human seat has been handed the device
-  const prevSlots = useRef(state.slots);
+  const [rules, setRules] = useState(false);
+  const prevState = useRef(state);
+  const facingRef = useRef(facing);
+  facingRef.current = facing;
   const sendToken = useRef(0);
+  const root = useRef(null);
+  const shopSnap = useRef(new Map());
+
   // A fresh state means our move (or someone's) landed: the table is live again.
   useEffect(() => { sendToken.current += 1; setBusy(false); }, [state]);
-  const prevLog = useRef(state.log[state.log.length - 1]);
-  const [toast, setToast] = useState('');
-  const [rules, setRules] = useState(false);
 
   const options = useMemo(() => (mine ? new Map(pend.options.map(o => [o.id, o])) : new Map()), [mine, pend]);
   const optionFor = useCallback(id => options.get(id) || null, [options]);
@@ -51,27 +111,30 @@ export default function GameScreen({ session, onPlayAgain, onHome }) {
   const humansHere = mySeats.length > 1;
   const needHandoff = humansHere && mine && ready !== pend.player;
 
-  // Briefly highlight spaces that were just taken (bots' moves especially).
-  useEffect(() => {
-    const before = prevSlots.current || {};
-    const fresh = Object.keys(state.slots).filter(k => before[k] === undefined);
-    prevSlots.current = state.slots;
-    if (!fresh.length) return;
-    setFlash(new Set(fresh));
-    const t = setTimeout(() => setFlash(new Set()), 1400);
-    return () => clearTimeout(t);
-  }, [state.slots]);
+  // What just happened, made physical: a new worker drops (the wheel turns to face a rival's move first),
+  // and a recruited card flies from the shop to its new owner.
+  useLayoutEffect(() => {
+    const before = prevState.current;
+    prevState.current = state;
+    if (before === state) { shopSnap.current = snapshotShop(root.current); return undefined; }
+    const flights = before.shop.filter(u => !state.shop.includes(u))
+      .map(uid => ({ uid, to: state.players.findIndex(p => p.members.includes(uid)) }))
+      .filter(m => m.to >= 0);
+    if (flights.length) flyCards(root.current, shopSnap.current, flights);
+    shopSnap.current = snapshotShop(root.current);
 
-  // Round-end scoring is the big moment: surface it as a toast, not just a log line.
-  useEffect(() => {
-    const fresh = state.log.slice(state.log.lastIndexOf(prevLog.current) + 1);
-    prevLog.current = state.log[state.log.length - 1];
-    const end = fresh.filter(l => /^Round .* ends\./.test(l)).pop();
-    if (!end) return;
-    setToast(end);
-    const t = setTimeout(() => setToast(''), 5000);
+    const fresh = Object.keys(state.slots).filter(k => before.slots[k] === undefined || state.round !== before.round);
+    if (!fresh.length) return undefined;
+    const key = fresh[fresh.length - 1];
+    const q = Number(key.split('-')[0]);
+    const rival = !mySeats.includes(state.slots[key]);
+    const turn = rival && q !== facingRef.current;
+    if (turn) setFacing(q);
+    setLate(turn);
+    setFlash(new Set(fresh));
+    const t = setTimeout(() => setFlash(new Set()), 1700);
     return () => clearTimeout(t);
-  }, [state.log]);
+  }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onPick = useCallback(optionId => {
     if (!mine || busy || needHandoff || !options.has(optionId)) return;
@@ -87,16 +150,16 @@ export default function GameScreen({ session, onPlayAgain, onHome }) {
       .finally(() => { clearTimeout(timer); if (sendToken.current === token) setBusy(false); });
   }, [mine, busy, needHandoff, options, session, pend]);
 
-  const pr = promptFor(state, mine);
+  const live = needHandoff ? () => null : optionFor;
+  const pr = promptFor(state, mine || (pend && mySeats.includes(pend.player) && !state.over));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
-  // When it's your buy, the shop comes first; otherwise the board's actions do.
   const shopFirst = mine && !needHandoff && pend.kind === 'buy';
-  const shop = <Shop state={state} mine={mine && !needHandoff} optionFor={needHandoff ? () => null : optionFor} onPick={onPick} />;
-  const players = <Players state={state} active={pend ? pend.player : null} mySeats={mySeats} optionFor={needHandoff ? () => null : optionFor} onPick={onPick} />;
+  const players = <Players state={state} active={pend ? pend.player : null} mySeats={mySeats} optionFor={live} onPick={onPick} />;
   const roundText = state.round ? `Round ${roman(state.round)}` : 'Setup';
+  const someoneHere = mySeats.length > 0;
 
   return (
-    <div className="app game">
+    <div className={`app game${showChoice ? ' choosing' : ''}`} ref={root}>
       <header className="bar">
         <h1>Patrons</h1>
         <div className="status" aria-live="polite">
@@ -117,29 +180,28 @@ export default function GameScreen({ session, onPlayAgain, onHome }) {
       {session.info && session.info.mode === 'online' && session.info.roomCode && (
         <div className="hint">Room {session.info.roomCode}</div>
       )}
-      {!state.over && players}
+      {!(state.over && !moment) && players}
       {error && <div className="error" role="alert">{error} <button type="button" className="btn ghost" onClick={() => setError('')}>OK</button></div>}
-      {state.over ? (
+      {state.over && !moment ? (
         <div className="main over">
           <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} />
           <div className="side">{players}<Log state={state} /></div>
         </div>
       ) : (
         <div className="main">
-          <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} flash={flash} facing={facing} onFacing={setFacing} />
-          <div className="side">
+          <Wheel state={state} legal={needHandoff ? new Map() : legalSlots} onPick={onPick} flash={flash} late={late} facing={facing} onFacing={setFacing} />
+          <div className={`side${shopFirst ? ' shop-first' : ''}`}>
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} />}
-            {shopFirst && shop}
-            <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={needHandoff ? () => null : optionFor} onPick={onPick} />
-            {!shopFirst && shop}
+            <QuadrantPanel state={state} facing={facing} onFacing={setFacing} optionFor={live} onPick={onPick} />
+            <Shop state={state} mine={mine && !needHandoff} optionFor={live} onPick={onPick} />
             <Log state={state} />
           </div>
         </div>
       )}
-      {toast && !state.over && !rules && !needHandoff && !(mine && pend.kind === 'pay') && <div className="toast" role="status" onClick={() => setToast('')}>{toast}</div>}
       {mine && !needHandoff && pend.kind === 'pay' && <PayPicker state={state} onPick={onPick} busy={busy} />}
+      {moment && <RoundEnd info={moment} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
-      {needHandoff && <Handoff player={state.players[pend.player]} onReady={() => setReady(pend.player)} />}
+      {needHandoff && !moment && <Handoff player={state.players[pend.player]} onReady={() => setReady(pend.player)} />}
     </div>
   );
 }

@@ -21,7 +21,7 @@ export default function Shop({ state, mine, optionFor, onPick }) {
           const tip = `${d.name}: ${d.text}${opt && plan ? ` — you'd pay ${payText(plan)}` : buying ? ' — can’t afford yet' : ''}`;
           return (
             <button
-              key={uid} type="button" className={`card${opt ? ' can' : ''}${buying && !opt ? ' cant' : ''}`}
+              key={uid} data-uid={uid} type="button" className={`card${opt ? ' can' : ''}${buying && !opt ? ' cant' : ''}`}
               style={{ '--c': `var(--${d.quadrant})` }} data-option={opt ? opt.id : undefined}
               aria-disabled={!opt} tabIndex={opt ? 0 : -1} title={tip}
               onClick={() => opt && onPick(opt.id)}

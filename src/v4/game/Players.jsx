@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { followers, memberCount } from '../../engine/v4/index.js';
 import { memberChips, playerColor, plural } from '../format.js';
+import Tick from './Tick.jsx';
 
 export default function Players({ state, active, mySeats, optionFor, onPick }) {
   const [open, setOpen] = useState(() => new Set());
@@ -12,14 +13,14 @@ export default function Players({ state, active, mySeats, optionFor, onPick }) {
         const f = followers(state, p);
         const isActive = active === p.id && !state.over;
         return (
-          <section key={p.id} className={`pl${isActive ? ' active' : ''}${open.has(p.id) ? ' open' : ''}`} style={{ '--pc': playerColor(p.id) }} aria-label={`${p.name}${isActive ? ', to act' : ''}`}>
+          <section key={p.id} data-pid={p.id} className={`pl${isActive ? ' active' : ''}${open.has(p.id) ? ' open' : ''}`} style={{ '--pc': playerColor(p.id) }} aria-label={`${p.name}${isActive ? ', to act' : ''}`}>
             <div className="top">
               <span className="nm"><i />{p.name}{p.kind === 'bot' ? <em> · bot</em> : mySeats.includes(p.id) && mySeats.length < state.players.length ? <em> · you</em> : null}</span>
-              <span className="fol">{f}<small>{f === 1 ? 'follower' : 'followers'}</small></span>
+              <span className="fol"><Tick value={f} color={playerColor(p.id)} /><small>{f === 1 ? 'follower' : 'followers'}</small></span>
             </div>
             <div className="res">
               {state.resources.map(r => (
-                <span key={r} title={`${p.res[r]} ${r}`}><i style={{ background: `var(--${r})` }} />{p.res[r]}</span>
+                <span key={r} title={`${p.res[r]} ${r}`}><i style={{ background: `var(--${r})` }} /><Tick value={p.res[r]} color={`var(--${r})`} /></span>
               ))}
               <span className="meta">
                 <span className="workers" title={`${plural(p.left, 'worker')} left this round`} aria-label={`${plural(p.left, 'worker')} left`}>{'●'.repeat(Math.max(0, p.left)) || '○'}</span>

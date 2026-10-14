@@ -1,6 +1,6 @@
 // Final results: ranking with the followers breakdown, then Play again.
 import { followers, memberCount } from '../../engine/v4/index.js';
-import { breakdown, playerColor } from '../format.js';
+import { breakdown, playerColor, winSentence } from '../format.js';
 
 export default function Results({ state, onPlayAgain, onHome }) {
   const ranked = (state.ranking || state.players.map(p => p.id)).map(id => state.players[id]);
@@ -10,6 +10,7 @@ export default function Results({ state, onPlayAgain, onHome }) {
       <h2 className="win" style={{ '--pc': playerColor(ranked[0].id) }}>
         <span>{ranked.filter(p => followers(state, p) === top).map(p => p.name).join(' & ')}</span> wins with {top} followers
       </h2>
+      <p className="why" data-why>{winSentence(state)}</p>
       <div className="table-scroll">
         <table className="res-t">
           <thead>

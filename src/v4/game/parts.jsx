@@ -6,7 +6,7 @@ export function ChoicePrompt({ state, onPick, busy }) {
   const pend = state.pending;
   const setup = pend.kind === 'setup';
   return (
-    <section className="prompt" aria-live="polite">
+    <section className="prompt choice" aria-live="polite">
       <p>{setup ? 'Pick a starting resource' : pend.prompt}</p>
       <div className="opts">
         {pend.options.map(o => {
