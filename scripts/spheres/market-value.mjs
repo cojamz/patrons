@@ -1,6 +1,6 @@
 // Causal member value for Blue (market): hand one member to one seat at the start of round II,
 // compare with the same games without it.
-// Usage: node scripts/spheres/market-value.mjs [gamesPerMember=120] [only=key1,key2|all] [quadrants=gold,red,market,green]
+// Usage: node scripts/spheres/market-value.mjs [gamesPerMember=120] [only=key1,key2|all] [quadrants=gold,red,market,green] [scoring=pricey|value]
 import { createGame, applyMove, chooseBotMove, followers } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { defById, registerQuadrant, quadrant } from '../../src/engine/v4/content/index.js';

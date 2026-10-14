@@ -1,5 +1,5 @@
 // One thinking seat vs greedy bots on a Blue table. Does planning pay with Blue on the wheel?
-// Usage: node scripts/spheres/market-thinker.mjs [games=24] [rollouts=4] [quadrants=gold,red,market,green]
+// Usage: node scripts/spheres/market-thinker.mjs [games=24] [rollouts=4] [quadrants=gold,red,market,green] [scoring=pricey|value]
 import { createGame, applyMove, chooseBotMove, followers, actionAt } from '../../src/engine/v4/index.js';
 import { chooseThinkerMove } from '../../src/engine/v4/thinker.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
