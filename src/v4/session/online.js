@@ -10,6 +10,7 @@
 // Codes are 5 characters, so they can't collide with v3's 4-character rooms.
 import { createGame, applyMove, isLegal, chooseBotMove } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
+import { parseTable } from '../tables.js';
 import { createEmitter, randomId } from './emitter.js';
 import { moveProblem, normalizeMove } from './local.js';
 
@@ -53,10 +54,17 @@ function lobbyView(room, code, playerId) {
   const isHost = room.hostId === playerId;
   return {
     code, hostId: room.hostId ?? null, status: room.status || 'lobby', seed: room.seed ?? null,
+    table: parseTable(room.table) ? { mode: room.tableMode || 'custom', quadrants: parseTable(room.table) } : null,
     players, seats: players.length, maxSeats: MAX_SEATS,
     canStart: isHost && (room.status || 'lobby') === 'lobby' && players.length >= MIN_SEATS,
     me: { playerId, seat: mine ? mine.seat : null }, isHost,
   };
+}
+
+/** The room's table fields: `table` as "gold,red,blue,green" (RTDB keeps strings as-is), plus how it was picked. */
+function roomTable(t) {
+  const q = t && parseTable((t.quadrants || []).join(','));
+  return q ? { table: q.join(','), tableMode: t.mode || 'custom' } : {};
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -67,7 +75,7 @@ function lobbyView(room, code, playerId) {
  * @param {{ name: string, transport: import('./transport/tree.js').Transport, playerId?: string, seed?: number, botDelayMs?: number }} opts
  * @returns {Promise<{ code: string, playerId: string, lobby: Lobby }>}
  */
-export async function createRoom({ name, transport, playerId = newPlayerId(), seed, botDelayMs = 450 }) {
+export async function createRoom({ name, transport, playerId = newPlayerId(), seed, table = null, botDelayMs = 450 }) {
   if (!transport) throw new Error('createRoom needs a transport.');
   await transport.ready;
   const now = Date.now();
@@ -77,6 +85,7 @@ export async function createRoom({ name, transport, playerId = newPlayerId(), se
       game: 'v4', code, hostId: playerId, status: 'lobby', createdAt: now,
       seed: Number.isFinite(seed) ? seed >>> 0 : Math.floor(Math.random() * 2 ** 31),
       seats: { s0: { kind: 'human', name: name || 'Host', id: playerId } },
+      ...roomTable(table),
       players: { [playerId]: { name: name || 'Host', connected: true, lastSeen: now } },
     };
     // Creates only if the code is free. (A cold-cache null pass returns the room; RTDB retries with the real value.)
@@ -159,6 +168,7 @@ export async function rejoinRoom({ code, playerId, transport, botDelayMs = 450 }
  *   addBot(name?: string): Promise<number>,
  *   removeSeat(seat: number): Promise<void>,
  *   setSeed(seed: number): Promise<void>,
+ *   setTable(table: { mode: string, quadrants: string[] }): Promise<void>,
  *   start(): Promise<void>,
  *   leave(): Promise<void>,
  *   onStart(cb: (session: any) => void): () => void,
@@ -267,6 +277,13 @@ function openLobby({ transport, code, playerId, botDelayMs }) {
       await hostOnly('set the seed');
       await transport.update(base, { seed: Number(seed) >>> 0 });
     },
+    /** Host: which 4 spheres the game uses ({ mode, quadrants }). Guests see it in the lobby view. */
+    async setTable(table) {
+      await hostOnly('pick the table');
+      const t = roomTable(table);
+      if (!t.table) throw new Error('That table can’t be played.');
+      await transport.update(base, t);
+    },
     async start() {
       await hostOnly('start');
       const res = await transport.transaction(base, r => {
@@ -277,7 +294,8 @@ function openLobby({ transport, code, playerId, botDelayMs }) {
         const seats = {};
         list.forEach((s, i) => { seats[`s${i}`] = { kind: s.kind, name: s.name, ...(s.id ? { id: s.id } : {}) }; });
         const seed = Number.isFinite(r.seed) ? r.seed : Math.floor(Math.random() * 2 ** 31);
-        const game = createGame({ seats: list.map(s => ({ name: s.name, kind: s.kind })), seed });
+        const quadrants = parseTable(r.table);
+        const game = createGame({ seats: list.map(s => ({ name: s.name, kind: s.kind })), seed, ...(quadrants ? { quadrants } : {}) });
         return {
           ...r, seats, seed, status: 'playing', startedAt: Date.now(),
           state: { stateJson: JSON.stringify(game), version: 1, lastMove: null, recent: '', at: Date.now() },
