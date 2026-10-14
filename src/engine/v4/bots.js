@@ -114,6 +114,8 @@ const INCOME = [3.5, 5.5, 8];
 const K_ABILITY = 0.42;
 // How many ways to pay a buy are compared (the engine lists the contest-safe ones first).
 const PAY_WAYS = 10;
+// Weight of later rounds' contests in a lead held now.
+const FUTURE_CONTESTS = 0.4;
 // A copy of the game for trying a move: everything but the log, queue and pending decision (state is plain JSON,
 // and a hand copy is several times faster than structuredClone).
 const copy = v => {
@@ -188,8 +190,10 @@ function liquidate(s, res, extra, buys, wild) {
 }
 
 // Expected followers from this round's ring contests, given who leads each one now.
-function contests(s, ctx, p, roundLeft) {
+function contests(s, ctx, p, roundLeft, future = FUTURE_CONTESTS) {
   if (s.over || !s.round) return 0;
+  // later rounds' rings count too, discounted: a lead in members lasts, a pile of resources mostly gets spent
+  const later = s.endEarly ? 0 : RING_VALUE.slice(s.round).reduce((a, b) => a + b, 0) * future;
   const v = RING_VALUE[s.round - 1];
   let out = 0;
   for (const qid of s.quadrants) {
@@ -202,7 +206,7 @@ function contests(s, ctx, p, roundLeft) {
     if (!(mine > 0)) continue;
     const certain = mine >= other ? 1 : 0;
     const rough = mine > other ? 0.75 : mine === other ? 0.55 : 0.15;
-    out += v * (certain * (1 - roundLeft) + rough * roundLeft);
+    out += v * (certain * (1 - roundLeft) + rough * roundLeft) + later * rough;
   }
   return out;
 }
@@ -231,13 +235,13 @@ export function abilityValue(def, placementsLeft, k = K_ABILITY) {
  * Expected final followers of every player in state s, as seen from a decision point.
  * buysLeft[i]: buys each player still has; incomeLeft[i]: resources they can still expect from placements.
  */
-function evaluate(s, buysLeft, incomeLeft, roundLeft, extraAbility = {}) {
+function evaluate(s, buysLeft, incomeLeft, roundLeft, extraAbility = {}, future) {
   const ctx = contextFor(s);
   const wild = new Set(s.quadrants.map(quadrant).filter(q => q.wildInFollowerBuys).map(q => q.resource));
   return s.players.map(p => {
     const extra = incomeLeft[p.id];
     return followers(s, p) + gameEndPay(s, ctx, p) + (extraAbility[p.id] || 0)
-      + liquidate(s, p.res, extra, buysLeft[p.id], wild) + contests(s, ctx, p, roundLeft);
+      + liquidate(s, p.res, extra, buysLeft[p.id], wild) + contests(s, ctx, p, roundLeft, future);
   });
 }
 const marginOf = (vals, me, spite = 1) => vals[me] - spite * Math.max(...vals.filter((_, i) => i !== me));
@@ -284,7 +288,7 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
         for (const c of ctx.membersOf(p)) for (const id of [c.def.id, c.copy].filter(Boolean)) defById(id).afterAction?.(ctx, p, c, qid);
         actionAt(s, o.q, o.i).resolve(ctx, p);
         settle(s, ctx);
-        v = marginOf(evaluate(s, buysAt(s, 1), incomeAt(s), roundLeft), me, opts.spite);
+        v = marginOf(evaluate(s, buysAt(s, 1), incomeAt(s), roundLeft, {}, opts.future), me, opts.spite);
         if (opts.noMembers && memberCount(s, p) > before) v -= 100;
       } catch {
         v = -50 + actionAt(state, o.q, o.i).estimate(contextFor(state), state.players[me]);
@@ -313,7 +317,7 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
             if (tier.clock && s.stock[tier.key] <= 0) s.endEarly = true;
           }
         }
-        return marginOf(evaluate(s, buysAt(s, 0), incomeAt(s), roundLeft, extraAbility), me, opts.spite);
+        return marginOf(evaluate(s, buysAt(s, 0), incomeAt(s), roundLeft, extraAbility, opts.future), me, opts.spite);
       } catch {
         return -1e6;
       }
