@@ -76,23 +76,29 @@ const BEATS = [
 ];
 const LAST = BEATS.length - 1;
 
-/** One beat's world, on its own clock (t0 = when it mounted). */
-function Scene({ b, still, leaving }) {
+/** One beat's world, on its own clock (t0 = when it mounted; at = a frozen moment, for the lab). */
+function Scene({ b, still, leaving, at = null }) {
   const [t0] = useState(nowT0);
   const { Beat } = BEATS[b];
   return (
-    <Clock.Provider value={{ still, t0 }}>
+    <Clock.Provider value={{ still, t0, at }}>
       <div className={`intro-scene${leaving ? ' leaving' : ''}`} aria-hidden="true" data-scene={b + 1}><Beat /></div>
     </Clock.Provider>
   );
 }
 
-/** The intro itself. onClose runs once it's gone. still: a storyboard (defaults to prefers-reduced-motion). */
-export default function Intro({ onClose, still: stillProp }) {
+const durationOf = b => BEATS[b].mod.DURATION ?? BEAT_MS[b];
+
+/**
+ * The intro itself. onClose runs once it's gone. still: a storyboard (defaults to prefers-reduced-motion).
+ * The lab (?lab=intro): only = N loops beat N alone; at = MS freezes it MS into the beat.
+ */
+export default function Intro({ onClose, still: stillProp, only = null, at = null }) {
   const [still] = useState(() => (stillProp ?? reducedMotion()));
   const [c] = useState(cast);
-  const [beat, setBeat] = useState(0);
-  const [shot, setShot] = useState({ b: 0, i: 0 }); // the camera: shot i of beat b
+  const [beat, setBeat] = useState(only ? only - 1 : 0);
+  const [shot, setShot] = useState({ b: only ? only - 1 : 0, i: 0 }); // the camera: shot i of beat b
+  const [loop, setLoop] = useState(0); // the lab replays its one beat
   const [prev, setPrev] = useState(null); // the beat fading out under this one
   const [closing, setClosing] = useState(false);
   const [uk, setUk] = useState(null); // CSS px per stage unit
@@ -116,12 +122,13 @@ export default function Intro({ onClose, still: stillProp }) {
 
   // the clock: each beat plays, holds, and hands over (the last one waits for Begin); its camera shots on cue
   useEffect(() => {
-    if (still || closing) return undefined;
+    if (still || closing || at != null) return undefined;
     const shots = BEATS[beat].mod.shots || [];
     const ids = shots.map((s, i) => (i ? setTimeout(() => setShot({ b: beat, i }), s.t) : null));
-    if (beat < LAST) ids.push(setTimeout(() => go(beat + 1), BEAT_MS[beat]));
+    if (only) ids.push(setTimeout(() => { setShot({ b: beat, i: 0 }); setLoop(k => k + 1); }, (durationOf(beat) || 7000) + 1500));
+    else if (beat < LAST) ids.push(setTimeout(() => go(beat + 1), durationOf(beat)));
     return () => ids.forEach(id => id && clearTimeout(id));
-  }, [beat, still, closing, go]);
+  }, [beat, still, closing, go, only, at, loop]);
   useEffect(() => {
     if (prev == null) return undefined;
     const id = setTimeout(() => setPrev(null), 380);
@@ -171,10 +178,12 @@ export default function Intro({ onClose, still: stillProp }) {
   };
   const { mod } = BEATS[beat];
   const shots = mod.shots || [{ t: 0, cam: [0, 0, 1] }];
-  const cur = still ? (mod.stillShot || shots[shots.length - 1]) : shots[shot.b === beat ? Math.min(shot.i, shots.length - 1) : 0];
+  const cur = still ? (mod.stillShot || shots[shots.length - 1])
+    : at != null ? shots.filter(s => s.t <= at).pop() || shots[0]
+      : shots[shot.b === beat ? Math.min(shot.i, shots.length - 1) : 0];
   const shown = prev != null ? [prev, beat] : [beat];
   return (
-    <div ref={root} className={`intro${still ? ' still' : ''}${closing ? ' out' : ''}`} role="dialog" aria-modal="true" aria-label="Cults in twenty seconds"
+    <div ref={root} className={`intro${still ? ' still' : ''}${closing ? ' out' : ''}${at != null ? ' frozen' : ''}`} role="dialog" aria-modal="true" aria-label="Cults in twenty seconds"
       data-intro={still ? 'still' : 'motion'} data-beat={beat + 1} onClick={onBackdrop} onKeyDown={e => e.stopPropagation()}>
       <p className="intro-kicker" aria-hidden="true">Cults <i>in twenty seconds</i></p>
       <button type="button" className="intro-skip" data-intro-skip onClick={close}>Skip intro</button>
@@ -184,7 +193,7 @@ export default function Intro({ onClose, still: stillProp }) {
           <div className="in-view">
             <Cast.Provider value={c}>
               <Camera shot={cur}>
-                {shown.map(b => <Scene key={b} b={b} still={still} leaving={b !== beat} />)}
+                {shown.map(b => <Scene key={`${b}.${loop}`} b={b} still={still} at={at} leaving={b !== beat} />)}
               </Camera>
             </Cast.Provider>
           </div>
@@ -207,7 +216,7 @@ export default function Intro({ onClose, still: stillProp }) {
           </div>
         ) : (
           <div className="intro-nav">
-            {beat === LAST && <button type="button" className="intro-btn in-cta" style={{ animationDelay: `${BEGIN_AT}ms` }} onClick={close} data-intro-begin>Begin</button>}
+            {beat === LAST && <button type="button" className="intro-btn in-cta" style={{ animationDelay: `${durationOf(LAST) ?? BEGIN_AT}ms` }} onClick={close} data-intro-begin>Begin</button>}
           </div>
         )}
       </div>

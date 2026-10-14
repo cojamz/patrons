@@ -2,7 +2,9 @@
 // together, narrows its eyes, rubs its hands, and laughs without a sound (pixel frames, Leader.jsx poses).
 import { Act, LEAD, LeadFrames, Z, useCast } from './shared.jsx';
 
-export const shots = [{ t: 0, cam: [0, 2, Z.near], d: 900, lamp: [0, -2, 190, 140] }];
+/** How long this beat plays before the next (ms). */
+export const DURATION = 3800;
+export const shots = [{ t: 0, cam: [0, 2, Z.near], d: 900, lamp: [0, -1, 150, 120] }];
 
 /** The scheming laugh: [ms, pose]. Hands up, eyes narrow, a rub, then the shoulders shake. */
 export const SCHEME = [

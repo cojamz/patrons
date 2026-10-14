@@ -1,5 +1,15 @@
-// ?lab=intro[&beat=N][&at=MS]: the intro's beats in isolation, for building and recording them (scripts/v4-gif.mjs).
-// The intro lead wires this to the kit in shared.jsx: beat=N plays only beat N on a loop; at=MS freezes it at MS.
+// ?lab=intro[&beat=N][&at=MS][&still=1]: the intro's beats in isolation, for building and recording them
+// (scripts/v4-gif.mjs). beat=N plays only beat N, on a loop; at=MS freezes it MS into the beat; still=1 shows the
+// reduced-motion storyboard. No beat: the whole intro, replayed when it closes.
+import { useState } from 'react';
+import '../lamp.css';
+import Intro from '../Intro.jsx';
+
 export default function IntroLab() {
-  return <div style={{ position: 'fixed', inset: 0, background: '#1d1611', color: '#f3e6c8', display: 'grid', placeItems: 'center', fontFamily: 'Alegreya, serif' }} data-intro-lab>Intro lab: waiting for the intro lead to wire beats.</div>;
+  const q = new URLSearchParams(location.search);
+  const beat = Number(q.get('beat')) || null;
+  const at = q.get('at') != null ? Number(q.get('at')) : null;
+  const still = q.get('still') === '1';
+  const [k, setK] = useState(0);
+  return <div data-intro-lab><Intro key={k} onClose={() => setK(n => n + 1)} only={beat} at={at} still={still} /></div>;
 }

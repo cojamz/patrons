@@ -2,6 +2,8 @@
 // STUB (end state only): the beat-4 agent replaces this file. Spec: design/prototypes/intro2/storyboard.md.
 import { At, LEAD, LEAD_UP, Lead, Crowd, Crown, COLS, RIVALS, YOU_MEMBERS, Z, useCast } from './shared.jsx';
 
+/** How long this beat plays before the next (the last beat: when Begin shows; it then waits) (ms). */
+export const DURATION = 6300;
 export const shots = [{ t: 0, cam: [31, 13, Z.far], d: 1300, lamp: [31, 14, 260, 150] }];
 
 export default function Beat4() {
