@@ -44,11 +44,11 @@ Cut (from v1): 23. Rest. 24. Doze. 25. Wake. 26. Slumber. 27. Dreamer. 28. Insom
 
 ## Measurements (greedy bots, gold/red/purple/green)
 - 400 games at 4 players: wins by seat 27/22/26/26%. Average followers 46.7 (stand-in table 47.8). About 12.9 placements per player against 12 base.
-- 300 games at 3 players (with Overtime at 4 purple): wins by seat 31/33/36%.
+- 300 games at 3 players: wins by seat 36/33/31%. Average followers 51.7. No extra turn was ever refused for lack of space.
 - Takes per game: Hourly, Lend a Hand and Wind-up 3.0 each (all full every round), Linger 2.0, Rally 1.0, Overtime 1.2 (0.3 in round II, 0.9 in round III).
 - Contest: somebody always scores. Shared 14%. Wins even by seat (375/363/402/394). The winner gets 7.3 followers from it, about 16% of their total. No single move wins it, so v1's "one rest wins 97% of the time" is gone.
 - Dead air: one player rarely takes more than 3 turns in a row. Per game, the longest such run averages 3.0 (the snake alone gives 2). Runs of 4 happen about once in 6 games, and runs of 5 about once in 60. 97 extra turns in 400 games were refused because there was no spare space, mostly in round I.
-- Member value (handed over at round II start, 120 games each, about ±1.5 noise): Timekeeper 9.3 at +3, Bookkeeper 7.8 at +1 per worker and Overseer 6.1 at +2 were all too strong, so I cut their effects. Second Wind 8.8, Marathoner 7.2, Taskmaster 5.4, Patience 4.9, Foreman 4.5, Courier 4.5, Straggler 4.1, Clockmaker 3.9, Shift Crew 3.8, Lamplighter 3.6, Apprentice 2.3 (Banker reads 3.4 in the same run). Errand Runner can't be measured by handing it over, because its effect fires on recruit; it's priced by math. Re-measured after the trims: see the report.
+- Member value (handed over at round II start, 120 games each, about ±1.5 noise): Timekeeper 9.3 at +3, Bookkeeper 7.8 at +1 per worker and Overseer 6.1 at +2 were all too strong, so I cut their effects. Second Wind 8.8, Marathoner 7.2, Taskmaster 5.4, Patience 4.9, Foreman 4.5, Courier 4.5, Straggler 4.1, Clockmaker 3.9, Shift Crew 3.8, Lamplighter 3.6, Apprentice 2.3 (Banker reads 3.4 in the same run). Errand Runner can't be measured by handing it over, because its effect fires on recruit; it's priced by math. Re-measured after the trims: Overseer 4.8 (priced 4), Bookkeeper 4.5 (3), Timekeeper 3.5 (2), Lamplighter 2.3 (2).
 - Thinking bot (20 games): see the report.
 
 ## Watch
