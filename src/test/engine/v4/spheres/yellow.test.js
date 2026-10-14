@@ -150,17 +150,21 @@ describe('Yellow members', () => {
     expect(R(take(scene({ members: [['yellow.gleaner']], res: [{ gold: 1 }] }), 'Harvest')).yellow).toBe(2);
   });
 
-  it('Admirer: whenever a rival recruits, +1 of that member’s color', () => {
+  it('Admirer: a rival recruiting a member of a color you have none of gives +1 of that color', () => {
     let s = scene({ members: [['yellow.admirer']], res: [{}, { gold: 9, red: 9 }], shop: SHOP, turn: 1 });
     s = take(s, 'Rush');
     s = move(s, `card:${uidOf(s, 'gold.midas', 'shop')}`);
     expect(R(s).gold).toBe(1);
+    // already holding that color: nothing
+    let h = scene({ members: [['yellow.admirer']], res: [{ gold: 2 }, { gold: 9, red: 9 }], shop: SHOP, turn: 1 });
+    h = take(h, 'Rush');
+    h = move(h, `card:${uidOf(h, 'gold.midas', 'shop')}`);
+    expect(R(h).gold).toBe(2);
     // its owner recruiting doesn't count
-    let t = scene({ members: [['yellow.admirer']], res: [{ red: 9, gold: 9 }], shop: SHOP });
+    let t = scene({ members: [['yellow.admirer']], res: [{ red: 3, gold: 2 }], shop: SHOP });
     t = take(t, 'Rush');
     t = move(t, `card:${uidOf(t, 'red.mentor', 'shop')}`);
-    expect(R(t).red).toBeLessThan(9);
-    expect(t.players[0].members.length).toBe(3); // Admirer, Mentor, + Mentor's free pick
+    expect(R(t).red).toBe(0);
   });
 
   it('Go-Between: your non-yellow recruit gives +1 of its color', () => {
@@ -192,18 +196,18 @@ describe('Yellow members', () => {
     expect(s.log.at(-1)).toContain('Most full sets: P1 +4'); // planted colors come in before scoring
   });
 
-  it('Harmonist: game end, +2 followers per full set', () => {
+  it('Harmonist: game end, +1 follower per full set', () => {
     const s = scene({ round: 3, members: [['yellow.harmonist']], res: [{ gold: 3, red: 3, yellow: 4, green: 3 }], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.total).toBe(6);
-    expect(fol(s, 0)).toBe(1 + 1 + 6);
+    expect(s.players[0].final.total).toBe(3);
+    expect(fol(s, 0)).toBe(1 + 1 + 3);
   });
 
-  it('Rainmaker: once per game, every color rises to your largest', () => {
-    let s = scene({ members: [['yellow.rainmaker']], res: [{ gold: 5, red: 1 }] });
-    s = take(s, 'Harvest'); // +3 yellow
+  it('Rainmaker: once per game, every color rises to match your yellow (never lowers one)', () => {
+    let s = scene({ members: [['yellow.rainmaker']], res: [{ gold: 7, red: 1, yellow: 2 }] });
+    s = take(s, 'Harvest'); // +3 yellow → 5
     const use = `use:${uidOf(s, 'yellow.rainmaker', 0)}`;
     s = move(s, use);
-    expect(R(s)).toEqual({ gold: 5, red: 5, yellow: 5, green: 5 });
+    expect(R(s)).toEqual({ gold: 7, red: 5, yellow: 5, green: 5 });
     expect(ids(s)).not.toContain(use);
   });
 

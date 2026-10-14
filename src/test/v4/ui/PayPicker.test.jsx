@@ -15,7 +15,12 @@ const session = (state, mySeats) => ({
 });
 
 /** Play bot games until some buy option leads to a 'pay' question with 2+ ways. */
+let payCache = null;
 function findPayState() {
+  if (payCache) return payCache;
+  return (payCache = searchPayState());
+}
+function searchPayState() {
   for (let seed = 1; seed < 60; seed++) {
     let s = createGame({ seats: [{ kind: 'bot' }, { kind: 'bot' }, { kind: 'bot' }], seed });
     for (let k = 0; k < 400 && !s.over; k++) {
@@ -31,7 +36,7 @@ function findPayState() {
   throw new Error('no pay state found');
 }
 
-describe('v4 payment picker', () => {
+describe('v4 payment picker', { timeout: 30000 }, () => {
   it('preselects the default so one tap confirms; another way can be picked', () => {
     const state = findPayState();
     const me = state.pending.player;

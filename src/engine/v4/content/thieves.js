@@ -178,15 +178,9 @@ const thieves = {
       },
     },
     {
-      key: 'lure', ring: 1, name: 'Lure', text: 'Take a rival’s member costing 2 or less. They gain 2 black.',
-      estimate: (ctx, p) => bestTakeValue(ctx, p, 2) + 0.3,
-      resolve(ctx, p) {
-        const list = takeable(ctx, p, 2);
-        if (!list.length) { ctx.log(`${p.name} found no one to lure.`); return; }
-        ctx.choose(p, 'Lure: take which member?', list.map(([o, c]) => ({
-          id: `card:${c.uid}`, label: `${o.name}'s ${c.def.name} (${cost(c)})`, kind: 'member', value: c.uid, hint: memberHint(c),
-        })), 'thieves.lure');
-      },
+      key: 'fence', ring: 1, name: 'Fence', text: '+2 black, and +1 more for each rival holding more resources than you.',
+      estimate: (ctx, p) => 2 + ctx.rivals(p).filter(o => total(o) > total(p)).length,
+      resolve(ctx, p) { ctx.gain(p, 'black', 2 + ctx.rivals(p).filter(o => total(o) > total(p)).length, { fromAction: true }); },
     },
     {
       key: 'rob', ring: 2, name: 'Rob', text: 'Take 3 resources from players, split however you like. They turn black.',
@@ -228,20 +222,13 @@ const thieves = {
         from: { ...(data.from || {}), [v.name]: ((data.from || {})[v.name] || 0) + 1 },
       });
     },
-    lure(ctx, p, uid) {
-      const v = ctx.ownerOf(uid);
-      moveTaken(ctx, p, v, uid);
-      ctx.gain(v, 'black', 2);
-      ctx.log(`${p.name} lured ${v.name}'s ${ctx.card(uid).def.name} away; ${v.name} gains 2 black.`);
-      afterSteal(ctx, p, [v]);
-    },
     ransomPick(ctx, p, uid) {
       const v = ctx.ownerOf(uid), c = ctx.card(uid), n = cost(c);
       const opts = [{ id: 'let', label: `Let ${c.def.name} go`, kind: 'ransom', value: 'let', hint: 0 }];
       if (total(v) >= n) opts.unshift({
         id: 'pay', label: `Pay ${p.name} ${n} to keep ${c.def.name}`, kind: 'ransom', value: 'pay',
         // bots keep members whose worth beats the price
-        hint: c.def.f * 2 + (c.def.vanilla ? 0 : 2) - n + 0.5,
+        hint: c.def.f * 2 + (c.def.vanilla || c.used ? 0 : 2) - n + 0.5,
       });
       ctx.choose(v, `${p.name} holds your ${c.def.name} to ransom: pay ${n} to keep it?`, opts, 'thieves.ransomAnswer', { uid, thief: p.id });
     },
@@ -315,11 +302,8 @@ const thieves = {
     m('understudy', 'Understudy', 0, 1, 'Whenever a member is taken from you, recruit the cheapest face-up member, free.', {
       onLoseMember(ctx, owner) { cheapestFree(ctx, owner, 'Understudy'); },
     }),
-    m('tipster', 'Tipster', 1, 1, 'At round start, +1 black per rival holding more resources than you.', {
-      onRoundStart(ctx, owner) {
-        const k = ctx.rivals(owner).filter(o => total(o) > total(owner)).length;
-        if (k) ctx.gain(owner, 'black', k);
-      },
+    m('fixer', 'Fixer', 1, 0, 'Whenever you take a Black space, +1 black.', {
+      afterAction(ctx, owner, card, quadrant) { if (quadrant === 'thieves') ctx.gain(owner, 'black', 1); },
     }),
     m('extortionist', 'Extortionist', 1, 1, 'Whenever a rival buys followers, take 1 resource from them.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer !== owner) autoSteal(ctx, owner, buyer, 'Extortionist'); },

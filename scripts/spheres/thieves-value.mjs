@@ -2,6 +2,7 @@
 // Usage: node scripts/spheres/thieves-value.mjs [gamesPerMember=120] [mode=loot] [only=key,key]
 import { install, setScoring, releaseLoot } from '../../src/engine/v4/content/thieves.js';
 import { createGame, applyMove, chooseBotMove, followers, quadrant, defById } from '../../src/engine/v4/index.js';
+import { contextFor, resume } from '../../src/engine/v4/core.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 
 install();
@@ -19,7 +20,11 @@ function play(seed, giveDef, seat) {
       for (const p of s.players) p.members = p.members.filter(u => u !== uid);
       s.shop = s.shop.filter(u => u !== uid); s.pile = s.pile.filter(u => u !== uid);
       while (s.shop.length < 6 && s.pile.length) s.shop.push(s.pile.shift());
-      s.players[seat].members.push(uid);
+      // recruit it for free so "when recruited" effects fire (Accomplice, Double Agent)
+      s.shop.push(uid);
+      contextFor(s).recruit(s.players[seat], uid, { free: true });
+      for (const t of s.queue) delete t._fresh;
+      resume(s);
       given = true;
     }
     s = applyMove(s, chooseBotMove(s, rand));

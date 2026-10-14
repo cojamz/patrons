@@ -35,7 +35,7 @@ function run(mode, control = false) {
     leaderWonContest: 0, lastWonContest: 0, repeatWinner: 0, repeatChances: 0, contestWinnerWonGame: 0, contestFolShareOfWinner: [],
     thefts: 0, units: 0, byRank: [0, 0, 0, 0], unitsByRank: [0, 0, 0, 0], lastHit: 0, leadHit: 0, memberThefts: 0, ransomPaid: 0,
     robbedPerPlayer: [], biggestBite: [], perVictimMax: [], gameLeaderShare: [], thiefRank: [0, 0, 0, 0],
-    blackLeft: [], blackHeld: [],
+    blackLeft: [], blackHeld: [], pickPos: {},
   };
   for (let g = 1; g <= N; g++) {
     const rand = seededRandom(g * 9973 + 1);
@@ -50,6 +50,10 @@ function run(mode, control = false) {
           const mv = botMove(s, rand);
           const o = pre.options.find(x => x.id === mv.option);
           const a = actionAt(s, o.q, o.i);
+          // how early in the round this action went (0 = first placement, 1 = last)
+          const placed = Object.keys(s.slots).length, totalP = 4 * [3, 4, 5][s.round - 1];
+          const key = `${a.name} R${s.round}`;
+          (st.pickPos[key] = st.pickPos[key] || []).push(placed / (totalP - 1));
           if (QUADS[o.q] === 'thieves' && !control) {
             st.takes[a.name] = (st.takes[a.name] || 0) + 1;
             const k = `${a.name} R${s.round}`; st.takesByRound[k] = (st.takesByRound[k] || 0) + 1;
@@ -125,6 +129,8 @@ function report(mode, st, base) {
   out.push(`avg followers ${avg(st.fol).toFixed(1)}${base ? ` (green stand-in table ${avg(base.fol).toFixed(1)})` : ''} · winner ${avg(st.winFol).toFixed(1)} · first-to-last gap ${avg(st.spread).toFixed(1)}${base ? ` (stand-in ${avg(base.spread).toFixed(1)})` : ''} · black left at end ${avg(st.blackLeft).toFixed(1)}`);
   if (mode !== 'control') {
     out.push(`Black action takes per game: ${Object.entries(st.takesByRound).sort().map(([k, v]) => `${k} ${(v / games).toFixed(2)}`).join(', ')}`);
+    const pp = Object.entries(st.pickPos).filter(([k]) => / R(1|2|3)$/.test(k)).map(([k, v]) => [k, avg(v), v.length / games]);
+    for (const r of [1, 2, 3]) out.push(`R${r} avg pick position, all actions (0 = picked first): ` + pp.filter(([k]) => k.endsWith(`R${r}`)).sort((a, b) => a[1] - b[1]).map(([k, v, n]) => `${k.replace(/ R\d$/, '')} ${v.toFixed(2)}${n < 0.95 ? ` (taken ${(n * 100).toFixed(0)}%)` : ''}`).join(', '));
     const cw = [0, 0, 0, 0]; for (const id of st.contestWinners) cw[id]++;
     out.push(`Black contest: rounds with no winner ${pct(st.contestNone, st.contestRounds)}, ties ${pct(st.contestTies, st.contestRounds)}, avg winners ${(st.contestWinners.length / Math.max(1, st.contestRounds - st.contestNone)).toFixed(2)}; went to the follower leader ${pct(st.leaderWonContest, st.contestRounds - st.contestNone)}, to last place ${pct(st.lastWonContest, st.contestRounds - st.contestNone)}; same winner as last round ${pct(st.repeatWinner, st.repeatChances)}; game winner won it at least once ${pct(st.contestWinnerWonGame, games)}`);
     out.push(`Thefts per game ${(st.thefts / games).toFixed(1)} (${(st.units / games).toFixed(1)} units; members taken ${(st.memberThefts / games).toFixed(2)}, ransoms paid ${(st.ransomPaid / games).toFixed(2)}). Units taken from: leader ${pct(st.unitsByRank[0], st.units)}, 2nd ${pct(st.unitsByRank[1], st.units)}, 3rd ${pct(st.unitsByRank[2], st.units)}, 4th ${pct(st.unitsByRank[3], st.units)} · from last place ${pct(st.lastHit, st.units)}`);

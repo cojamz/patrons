@@ -89,19 +89,22 @@ export default {
   },
 
   members: [
-    m('gardener', 'Gardener', 1, 1, 'At round start, +1 of each color you have none of.', {
+    m('gardener', 'Gardener', 1, 0, 'At round start, +1 of each color you have none of.', {
       onRoundStart(ctx, owner) { for (const c of missing(ctx, owner)) ctx.gain(owner, c, 1); },
     }),
-    m('peddler', 'Peddler', 2, 1, 'At round start, +1 of each other color.', {
+    m('peddler', 'Peddler', 1, 1, 'At round start, +1 of each other color.', {
       onRoundStart(ctx, owner) { for (const c of others(ctx)) ctx.gain(owner, c, 1); },
     }),
-    m('gleaner', 'Gleaner', 1, 1, 'Whenever an action gains you 2+ of another color at once, +1 yellow.', {
+    m('gleaner', 'Gleaner', 3, 2, 'Whenever an action gains you 2+ of another color at once, +1 yellow.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== Y && g.n >= 2) owner.res[Y] += 1; },
     }),
-    m('admirer', 'Admirer', 2, 1, 'Whenever a rival recruits, +1 of that member’s color.', {
-      onAnyRecruit(ctx, owner, card, by, recruited) { if (by !== owner) ctx.gain(owner, colorOf(ctx, recruited), 1); },
+    m('admirer', 'Admirer', 2, 1, 'Whenever a rival recruits a member of a color you have none of, +1 of that color.', {
+      onAnyRecruit(ctx, owner, card, by, recruited) {
+        const c = colorOf(ctx, recruited);
+        if (by !== owner && !(owner.res[c] > 0)) ctx.gain(owner, c, 1);
+      },
     }),
-    m('gobetween', 'Go-Between', 1, 0, 'Whenever you recruit a non-yellow member, +1 of its color.', {
+    m('gobetween', 'Go-Between', 2, 2, 'Whenever you recruit a non-yellow member, +1 of its color.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'yellow') ctx.gain(owner, colorOf(ctx, recruited), 1);
       },
@@ -109,13 +112,13 @@ export default {
     m('dyer', 'Dyer', 1, 1, 'At round end, +1 yellow per color you hold.', {
       onRoundEnd(ctx, owner) { ctx.gain(owner, Y, held(ctx, owner).length); },
     }),
-    m('latebloomer', 'Late Bloomer', 1, 0, 'At round start, if you have the fewest followers (ties count), +1 of each color.', {
+    m('latebloomer', 'Late Bloomer', 1, 1, 'At round start, if you have the fewest followers (ties count), +1 of each color.', {
       onRoundStart(ctx, owner) {
         const mine = ctx.followers(owner);
         if (ctx.rivals(owner).every(o => ctx.followers(o) >= mine)) eachColor(ctx, owner, 1);
       },
     }),
-    m('sower', 'Sower', 2, 1, 'Round start: plant any of your yellow. Round end: gain that many of each other color.', {
+    m('sower', 'Sower', 1, 1, 'Round start: plant any of your yellow. Round end: gain that many of each other color.', {
       onRoundStartLate(ctx, owner, card) {
         const y = owner.res[Y];
         if (!y) return;
@@ -132,29 +135,27 @@ export default {
         ctx.log(`${owner.name}'s Sower harvests +${x} of each other color.`);
       },
     }),
-    m('harmonist', 'Harmonist', 4, 2, 'Game end: +2 followers per full set you hold.', {
-      onGameEnd: (ctx, owner) => 2 * setsOf(ctx, owner),
+    m('harmonist', 'Harmonist', 3, 1, 'Game end: +1 follower per full set you hold.', {
+      onGameEnd: (ctx, owner) => setsOf(ctx, owner),
     }),
-    m('rainmaker', 'Rainmaker', 3, 2, 'Once per game: raise each of your colors to match your largest.', {
+    m('rainmaker', 'Rainmaker', 2, 2, 'Once per game: raise each of your colors to match your yellow.', {
       activate: 'game',
       onActivate(ctx, owner) {
-        const top = Math.max(...colors(ctx).map(c => owner.res[c]));
+        const top = owner.res[Y];
         let got = 0;
-        for (const c of colors(ctx)) { got += top - owner.res[c]; ctx.gain(owner, c, top - owner.res[c]); }
+        for (const c of others(ctx)) { const d = Math.max(0, top - owner.res[c]); got += d; ctx.gain(owner, c, d); }
         ctx.log(`${owner.name} used Rainmaker: every color up to ${top} (+${got}).`);
       },
-      botActivate: (ctx, owner) => {
-        const top = Math.max(...colors(ctx).map(c => owner.res[c]));
-        return ctx.state.round === 3 && colors(ctx).reduce((s, c) => s + top - owner.res[c], 0) >= 6;
-      },
+      botActivate: (ctx, owner) => ctx.state.round === 3
+        && others(ctx).reduce((s, c) => s + Math.max(0, owner.res[Y] - owner.res[c]), 0) >= 6,
     }),
-    m('pilgrim', 'Pilgrim', 2, 1, 'When recruited: +1 of each color.', {
+    m('pilgrim', 'Pilgrim', 1, 1, 'When recruited: +1 of each color.', {
       onRecruited(ctx, owner) { eachColor(ctx, owner, 1); },
     }),
-    m('farmer', 'Farmer', 1, 1, 'Whenever an action gains you yellow, +1 more.', {
+    m('farmer', 'Farmer', 2, 1, 'Whenever an action gains you yellow, +1 more.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === Y && g.n > 0) owner.res[Y] += 1; },
     }),
-    m('weaver', 'Weaver', 1, 1, 'Whenever you buy 6 followers, +1 of each color.', {
+    m('weaver', 'Weaver', 2, 1, 'Whenever you buy 6 followers, +1 of each color.', {
       onRecruited(ctx, owner, card) { card.seenBig = ctx.state.bigLeft; },
       onBuyFollowers(ctx, owner, card, buyer) {
         // the 6-follower buy is the only one that uses up a limited pile; that's how we tell it apart
@@ -163,10 +164,10 @@ export default {
         if (big && buyer === owner) eachColor(ctx, owner, 1);
       },
     }),
-    m('explorer', 'Explorer', 1, 1, 'Whenever you take a space outside Yellow, +1 yellow.', {
+    m('explorer', 'Explorer', 2, 2, 'Whenever you take a space outside Yellow, +1 yellow.', {
       afterAction(ctx, owner, card, qid) { if (qid !== 'yellow') ctx.gain(owner, Y, 1); },
     }),
-    m('feastmaker', 'Feastmaker', 2, 2, 'Once per game: +1 of each color per round number.', {
+    m('feastmaker', 'Feastmaker', 3, 2, 'Once per game: +1 of each color per round number.', {
       activate: 'game',
       onActivate(ctx, owner) {
         const r = ctx.state.round;

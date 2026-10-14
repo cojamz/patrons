@@ -127,6 +127,15 @@ try {
       await page.waitForTimeout(150);
       const after = await page.$$eval('.slot .worker', e => e.length);
       if (after !== before - 1) errors.push(`undo did not take the worker back (${before} -> ${after})`);
+      // a click on the exact center of a glowing space places there (the dot and label never eat it)
+      const base = await page.$('.slot.can .base');
+      const bb = base && await base.boundingBox();
+      if (bb) {
+        await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
+        await page.waitForTimeout(250);
+        const again = await page.$$eval('.slot .worker', e => e.length);
+        if (again !== after + 1) errors.push(`center click after undo did not place (${after} -> ${again})`);
+      }
       continue;
     }
     if (seen.has('undo') && !seen.has('reload') && /II/.test(round)) {
