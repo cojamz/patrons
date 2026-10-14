@@ -1,12 +1,11 @@
 // @vitest-environment node
 // Black (thieves): every action and every member, with exact numbers. Plus 200 seeded bot games.
-// Most tests run with 'most black' scoring, where stolen goods go straight to the supply as black;
-// the loot pile has its own block.
+// Stolen goods turn black in the thief's supply right away; the ring goes to most black.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createGame, applyMove, resume, followers, contextFor } from '../../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../../engine/v4/bots.js';
 import { seededRandom } from '../../../../engine/v4/rng.js';
-import thieves, { install, setScoring, SCORING } from '../../../../engine/v4/content/thieves.js';
+import thieves, { install, SCORING } from '../../../../engine/v4/content/thieves.js';
 import { take, move, play, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
 
@@ -24,8 +23,8 @@ const PINNED = {
 delete PINNED['green.recruit'];
 for (const k of Object.keys(PINNED)) if (k.startsWith('green.')) delete PINNED[k];
 let restore;
-beforeEach(() => { restore = pinCosts(PINNED); setScoring('black'); });
-afterEach(() => { restore(); setScoring('loot'); });
+beforeEach(() => { restore = pinCosts(PINNED); });
+afterEach(() => { restore(); });
 
 const Z = { gold: 0, red: 0, blue: 0, black: 0 };
 const R = s => s.players.map(p => p.res);
@@ -164,32 +163,24 @@ describe('Black actions', () => {
   });
 });
 
-describe('Loot pile scoring', () => {
-  beforeEach(() => setScoring('loot'));
-  it('stolen goods go on the loot pile; a pile can be robbed; it joins the supply at the next round start', () => {
-    let s = scene({ round: 2, res: [{}, { gold: 3 }, {}], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 2 }] });
-    s = pass(play(take(s, 'Pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold'));
-    expect(s.players[0].loot).toBe(3);
-    expect(R(s)[0].black).toBe(0);
-    s = take(s, 'Rob');
-    expect(ids(s)).toEqual(['take:0:loot']);
-    s = play(s, 'take:0:loot', 'take:0:loot', 'take:0:loot');
-    expect([s.players[0].loot, s.players[2].loot]).toEqual([0, 3]);
-    // the quadrant's round-start hook releases piles
-    s = pass(s);
-    s.queue = [{ t: 'round', r: 3 }];
-    s = resume(s);
-    expect([R(s)[2].black, s.players[2].loot]).toEqual([3, 0]);
+describe('Scoring and stolen goods', () => {
+  it('stolen goods are black in your supply at once, spendable on the same turn', () => {
+    let s = scene({ round: 2, res: [{}, { gold: 3 }], shop: ['red.intern', ...SHOP.slice(1)] });
+    s = play(take(s, 'Pickpocket'), 'take:1:gold', 'take:1:gold', 'take:1:gold');
+    expect(R(s)[0].black).toBe(3);
+    s = move(s, `card:${uidOf(s, 'red.intern', 'shop')}`);
+    expect(defs(s, 0)).toEqual(['red.intern']);
+    expect(R(s)[0].black).toBe(2);
   });
-  it('Gold’s Steal still takes gold as gold (not loot)', () => {
+  it('Gold’s Steal still takes gold as gold', () => {
     let s = scene({ round: 2, res: [{}, { gold: 3 }] });
     s = play(take(s, 'Steal'), 'player:1', 'player:1', 'player:1');
-    expect([R(s)[0].gold, s.players[0].loot || 0]).toEqual([3, 0]);
+    expect([R(s)[0].gold, R(s)[0].black]).toEqual([3, 0]);
   });
-  it('scores the visible pile', () => {
-    const s = scene({});
-    s.players[1].loot = 3;
-    expect(SCORING.loot.score(null, s.players[1])).toBe(3);
+  it('scores most black', () => {
+    const s = scene({ res: [{}, { black: 3, gold: 9 }] });
+    expect(thieves.scoring.label).toBe('Most black');
+    expect(SCORING.black.score(null, s.players[1])).toBe(3);
   });
 });
 
@@ -290,36 +281,33 @@ describe('Black members', () => {
     expect(defs(s, 1)).toEqual(['thieves.doubleagent']);
   });
 
-  it('Big Score: once per game, take half of the biggest pile any rival holds', () => {
-    let s = scene({ res: [{}, { gold: 7, red: 2 }, { blue: 5 }], members: [['thieves.bigscore']] });
+  it('Big Score: once per game, take half the black of the rival with the most black', () => {
+    let s = scene({ res: [{}, { black: 7, gold: 9 }, { black: 5 }], members: [['thieves.bigscore']] });
     s = take(s, 'Rush');
     const b = uidOf(s, 'thieves.bigscore', 0);
     s = move(s, `use:${b}`);
-    expect(R(s)[1].gold).toBe(4);
-    expect(R(s)[0].black).toBe(3);
+    expect(R(s).map(r => r.black)).toEqual([3, 4, 5]);
+    expect(R(s)[1].gold).toBe(9);
     expect(s.cards[b].used).toBe(true);
   });
 
-  it('Kingpin: game end, +1 follower per 2 black, loot included', () => {
-    const s = scene({ res: [{ black: 4 }] });
-    s.players[0].loot = 3;
+  it('Kingpin: game end, +1 follower per 2 black', () => {
+    const s = scene({ res: [{ black: 7 }] });
     const km = thieves.members.find(d => d.key === 'kingpin');
     expect(km.onGameEnd(contextFor(s), s.players[0])).toBe(3);
   });
 });
 
 describe('Black on the table: 200 seeded bot games', () => {
-  for (const mode of ['loot', 'black']) it(`${mode}: 100 games finish cleanly with every invariant`, () => {
-    setScoring(mode);
+  it('200 games finish cleanly with every invariant', () => {
     restore(); restore = () => {};
-    for (let g = 1; g <= 100; g++) {
+    for (let g = 1; g <= 200; g++) {
       const rand = seededRandom(g * 31);
       let s = createGame({ seats: [0, 1, 2, 3].map(() => ({ kind: 'bot' })), seed: g, quadrants: QUADS });
       let guard = 0;
       while (!s.over && guard++ < 1500) {
         s = applyMove(s, chooseBotMove(s, rand));
-        checkInvariants(s, `${mode} game ${g}`);
-        for (const p of s.players) expect(p.loot || 0).toBeGreaterThanOrEqual(0);
+        checkInvariants(s, `game ${g}`);
       }
       expect(s.over).toBe(true);
     }

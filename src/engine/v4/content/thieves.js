@@ -1,6 +1,6 @@
 // Black: the thieves. Black makes nothing of its own: it takes from the table, resources and members.
-// Black IS loot. Stolen goods become black loot on a pile in front of you; the biggest pile at round end wins;
-// piles can be robbed; at the next round start your pile joins your supply as black.
+// Black IS stolen goods: whatever you steal turns black in your supply right away, spendable on your next buy.
+// Most black at round end wins the ring.
 // Every steal (Black's, Gold's Steal, anyone's) goes through the engine's shared ctx.steal(), so Hideout,
 // Watchdog, Lookout and Robin Hood apply to all of them.
 import { registerQuadrant } from './index.js';
@@ -8,25 +8,10 @@ import { registerQuadrant } from './index.js';
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const cost = c => c.def.s + c.def.w;
 const total = p => Object.values(p.res).reduce((a, b) => a + b, 0);
-const holding = p => total(p) + (p.loot || 0);
+const holding = p => total(p);
 
-// ---------- scoring (most loot; 'black' kept as the measured runner-up) ----------
-export const SCORING = {
-  loot: { label: 'Most loot', score: (ctx, p) => p.loot || 0 },
-  black: { label: 'Most black', score: (ctx, p) => p.res.black || 0 },
-};
-let MODE = 'loot';
-/** Prototype switch for the sims. In 'black' mode stolen goods go straight to the supply as black. */
-export function setScoring(mode) {
-  if (!SCORING[mode]) throw new Error(`unknown scoring ${mode}`);
-  MODE = mode;
-  thieves.scoring = { label: SCORING[mode].label, score: SCORING[mode].score };
-}
-
-/** Loot piles join their owners' supplies as black (run by the quadrant's round-start hook). */
-export function releaseLoot(state) {
-  for (const p of state.players) if (p.loot) { p.res.black = (p.res.black || 0) + p.loot; p.loot = 0; }
-}
+// ---------- scoring: most black (what you hold right now) ----------
+export const SCORING = { black: { label: 'Most black', score: (ctx, p) => p.res.black || 0 } };
 
 // ---------- helpers ----------
 const fewestFollowers = (ctx, p) => ctx.state.players.every(o => ctx.followers(o) >= ctx.followers(p));
@@ -38,26 +23,16 @@ function piles(ctx, thief, o, picked = {}) {
   if (!ctx.canSteal(thief, o)) return [];
   const out = [];
   for (const c of Object.keys(o.res)) { const n = o.res[c] - (picked[c] || 0); if (n > 0) out.push([c, n]); }
-  const l = (o.loot || 0) - (picked.loot || 0);
-  if (l > 0) out.push(['loot', l]);
   return out;
 }
 const stealable = (ctx, thief, o, picked) => piles(ctx, thief, o, picked).reduce((s, [, n]) => s + n, 0);
 
-// Stolen goods: the loot pile (loot scoring) or the supply as black.
-function stash(ctx, p, n) {
-  if (!n) return;
-  if (MODE === 'loot') p.loot = (p.loot || 0) + n;
-  else ctx.gain(p, 'black', n, { fromAction: true });
-}
+// Stolen goods turn black in the thief's supply.
+const stash = (ctx, p, n) => { if (n) ctx.gain(p, 'black', n, { fromAction: true }); };
 // Take `pick` ({ pile: n }) from one victim through the shared steal, and stash it. Returns units taken.
 function commit(ctx, thief, victim, pick, reaction = false) {
   if (!ctx.canSteal(thief, victim)) return 0;
-  const take = { ...pick };
-  const fromLoot = Math.min(take.loot || 0, victim.loot || 0);
-  delete take.loot;
-  if (fromLoot) victim.loot -= fromLoot;
-  return ctx.steal(thief, victim, { take, other: fromLoot, reaction, give: n => stash(ctx, thief, n) });
+  return ctx.steal(thief, victim, { take: pick, reaction, give: n => stash(ctx, thief, n) });
 }
 // Automatic small steal used by members: from the victim's biggest pile, one at a time.
 function autoSteal(ctx, thief, victim, why, n = 1, reaction = false) {
@@ -83,8 +58,8 @@ function stealStep(ctx, p, data) {
   if (pool.length) {
     const opts = [];
     for (const o of pool) for (const [c, n] of piles(ctx, p, o, picked(o.id))) opts.push({
-      id: `take:${o.id}:${c}`, label: `${o.name}'s ${c === 'loot' ? 'loot pile' : c} (${n})`, kind: 'take', value: [o.id, c],
-      hint: n + (c === 'loot' ? 0.5 : 0) + 0.05 * ctx.followers(o) + (owed.includes(o) ? 5 : 0),
+      id: `take:${o.id}:${c}`, label: `${o.name}'s ${c} (${n})`, kind: 'take', value: [o.id, c],
+      hint: n + 0.05 * ctx.followers(o) + (owed.includes(o) ? 5 : 0),
     });
     const owing = owed.length ? `, at least 1 from ${owed.map(o => o.name).join(', ')}` : '';
     ctx.choose(p, `${data.name}: take 1 resource (${data.left} left${owing})`, opts, 'thieves.take', data);
@@ -128,11 +103,10 @@ const thieves = {
   id: 'thieves',
   name: 'Black',
   resource: 'black',
-  rule: 'Stolen goods become black loot on a pile in front of you. The biggest pile at round end wins; piles can be robbed; next round your pile joins your supply.',
-  scoring: { label: SCORING.loot.label, score: SCORING.loot.score },
+  rule: 'Whatever you steal turns black in your supply, ready to spend. Most black at round end wins.',
+  scoring: SCORING.black,
 
-  // quadrant-level hooks (engine): loot joins supplies at round start; Hideout refuses steals; thefts are recorded
-  onRoundStart(ctx) { releaseLoot(ctx.state); },
+  // quadrant-level hooks (engine): Hideout refuses steals; thefts are recorded
   guardSteal: (ctx, thief, victim) => victim.hideout === ctx.state.round,
   onSteal(ctx, info) {
     // measurement only: who robbed whom, and where the victim stood
@@ -217,7 +191,7 @@ const thieves = {
     ransomAnswer(ctx, v, answer, data) {
       const p = ctx.player(data.thief), c = ctx.card(data.uid), n = cost(c);
       if (answer === 'pay') {
-        // paid from their biggest piles; it counts as a steal (the ransom is loot)
+        // paid from their biggest piles; it counts as a steal
         const take = {}, left = { ...v.res };
         for (let k = 0; k < n; k++) {
           const col = Object.keys(left).filter(x => left[x] > 0).sort((a, b) => left[b] - left[a])[0];
@@ -301,20 +275,19 @@ const thieves = {
         if (list.length) pickMember(ctx, owner, list, 'Double Agent: swap for which member?', 'thieves.doubleAgent', { uid: card.uid });
       },
     }),
-    m('bigscore', 'Big Score', 3, 1, 'Once per game: take half (rounded down) of the biggest pile any rival holds.', {
+    m('bigscore', 'Big Score', 3, 1, 'Once per game: take half (rounded down) of the black held by the rival with the most black.', {
       activate: 'game',
       onActivate(ctx, owner) {
-        let best = null;
-        for (const o of ctx.rivals(owner)) for (const [c, n] of piles(ctx, owner, o)) if (!best || n > best[2]) best = [o, c, n];
-        if (!best || best[2] < 2) { ctx.log(`${owner.name}'s Big Score found nothing big enough.`); return; }
-        const [o, c, n] = best;
-        const got = commit(ctx, owner, o, { [c]: Math.floor(n / 2) });
-        ctx.log(`${owner.name}'s Big Score: ${got} ${c === 'loot' ? 'loot' : c} from ${o.name}.`);
+        const list = ctx.rivals(owner).filter(o => ctx.canSteal(owner, o) && (o.res.black || 0) >= 2);
+        if (!list.length) { ctx.log(`${owner.name}'s Big Score found no black worth taking.`); return; }
+        const o = list.reduce((a, b) => (b.res.black > a.res.black ? b : a));
+        const got = commit(ctx, owner, o, { black: Math.floor(o.res.black / 2) });
+        ctx.log(`${owner.name}'s Big Score: ${got} black from ${o.name}.`);
       },
-      botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => piles(ctx, owner, o).some(([, n]) => n >= 6)),
+      botActivate: (ctx, owner) => ctx.state.round === 3 && ctx.rivals(owner).some(o => ctx.canSteal(owner, o) && (o.res.black || 0) >= 4),
     }),
-    m('kingpin', 'Kingpin', 2, 1, 'Game end: +1 follower per 2 black (loot counts).', {
-      onGameEnd: (ctx, owner) => Math.floor(((owner.res.black || 0) + (owner.loot || 0)) / 2),
+    m('kingpin', 'Kingpin', 2, 1, 'Game end: +1 follower per 2 black.', {
+      onGameEnd: (ctx, owner) => Math.floor((owner.res.black || 0) / 2),
     }),
   ],
 };

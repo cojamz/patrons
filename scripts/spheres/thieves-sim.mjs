@@ -1,12 +1,12 @@
 // Black (thieves) balance sim: greedy bots, 4 seats, gold/red/blue + Black, one run per scoring mode.
-// Usage: node scripts/spheres/thieves-sim.mjs [games=400] [modes=loot,others,black,fewest] [policy=rich|leader|random]
-import { install, setScoring, releaseLoot } from '../../src/engine/v4/content/thieves.js';
+// Usage: node scripts/spheres/thieves-sim.mjs [games=400] [modes=black] [policy=rich|leader|random]
+import { install } from '../../src/engine/v4/content/thieves.js';
 import { createGame, applyMove, chooseBotMove, followers, memberCount, actionAt } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 
 install();
 const N = Number(process.argv[2] || 400);
-const MODES = (process.argv[3] || 'loot,black').split(',');
+const MODES = (process.argv[3] || 'black').split(',');
 const POLICY = process.argv[4] || 'rich';
 const QUADS = ['gold', 'red', 'blue', 'thieves'];
 const avg = a => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
@@ -28,7 +28,6 @@ function botMove(s, rand) {
 }
 
 function run(mode, control = false) {
-  if (!control) setScoring(mode);
   const st = {
     wins: [0, 0, 0, 0], posWins: [0, 0, 0, 0], fol: [], winFol: [], spread: [], members: [], errors: 0,
     takes: {}, takesByRound: {}, contestWinners: [], contestTies: 0, contestNone: 0, contestRounds: 0,
@@ -61,8 +60,6 @@ function run(mode, control = false) {
           s = applyMove(s, mv);
         } else s = applyMove(s, botMove(s, rand));
         if (!r1 && s.order.length) r1 = s.order.slice(0, 4);
-        // loot mode: piles join supplies at round start (stands in for a quadrant round-start hook)
-        if (!control && mode === 'loot' && s.round !== lastRound && lastRound) { s = structuredClone(s); releaseLoot(s); }
         if (prevContest && s.players.some((p, i) => p.contest !== prevContest[i])) {
           // a round just ended: find Black's winners from the log line
           const line = [...s.log].reverse().find(l => /^Round (I|II|III) ends/.test(l));

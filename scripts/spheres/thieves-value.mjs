@@ -1,13 +1,12 @@
 // Black member value: hand one member to one seat at the start of round II, compare against the same games without it.
-// Usage: node scripts/spheres/thieves-value.mjs [gamesPerMember=120] [mode=loot] [only=key,key]
-import { install, setScoring, releaseLoot } from '../../src/engine/v4/content/thieves.js';
+// Usage: node scripts/spheres/thieves-value.mjs [gamesPerMember=120] [mode=black|control] [only=key,key]
+import { install } from '../../src/engine/v4/content/thieves.js';
 import { createGame, applyMove, chooseBotMove, followers, quadrant, defById } from '../../src/engine/v4/index.js';
 import { contextFor, resume } from '../../src/engine/v4/core.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 
 install();
-const N = Number(process.argv[2] || 120), SEATS = 4, MODE = process.argv[3] || 'loot';
-setScoring(MODE);
+const N = Number(process.argv[2] || 120), SEATS = 4, MODE = process.argv[3] || 'black';
 const QUADS = ['gold', 'red', 'blue', 'thieves'];
 function play(seed, giveDef, seat) {
   const rand = seededRandom(seed * 7919 + 13);
@@ -28,7 +27,6 @@ function play(seed, giveDef, seat) {
       given = true;
     }
     s = applyMove(s, chooseBotMove(s, rand));
-    if (MODE === 'loot' && s.round !== last) { s = structuredClone(s); releaseLoot(s); last = s.round; }
   }
   return s;
 }

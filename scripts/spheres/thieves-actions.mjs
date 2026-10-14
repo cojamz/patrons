@@ -1,13 +1,12 @@
 // Action value on the Black table: force one seat's first placement of a round onto an action, compare against
 // the same games where the bot chose freely. Black's actions are read against Cory's anchors on the same ring.
-// Usage: node scripts/spheres/thieves-actions.mjs [games=120] [mode=loot]
-import { install, setScoring, releaseLoot } from '../../src/engine/v4/content/thieves.js';
+// Usage: node scripts/spheres/thieves-actions.mjs [games=120] [mode=black|control]
+import { install } from '../../src/engine/v4/content/thieves.js';
 import { createGame, applyMove, chooseBotMove, followers, actionAt } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 
 install();
-const N = Number(process.argv[2] || 120), MODE = process.argv[3] || 'loot';
-setScoring(MODE);
+const N = Number(process.argv[2] || 120), MODE = process.argv[3] || 'black';
 const QUADS = ['gold', 'red', 'blue', 'thieves'];
 const LIST = [
   ['Joint Venture', 1], ['Rush', 1], ['Hire', 1], ['Pickpocket', 1], ['Tip-off', 1], ['Hideout', 1],
@@ -30,7 +29,6 @@ function play(seed, force) {
       if (o) { mv = { player: seat, option: o.id }; ok = true; }
     }
     s = applyMove(s, mv);
-    if (MODE === 'loot' && s.round !== last) { s = structuredClone(s); releaseLoot(s); last = s.round; }
   }
   return ok ? followers(s, s.players[seat]) : null;
 }

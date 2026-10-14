@@ -1,16 +1,13 @@
 // One thinking seat (rollouts) vs greedy bots on the Black table. Does Black reward planning?
-// Usage: node scripts/spheres/thieves-thinker.mjs [games=24] [mode=loot] [rollouts=6]
-// Note: in loot mode the rollouts can't release loot piles at round start (that needs the engine hook),
-// so the thinker's rollouts see loot as stuck; the real game loop below does release it.
-import { install, setScoring, releaseLoot } from '../../src/engine/v4/content/thieves.js';
+// Usage: node scripts/spheres/thieves-thinker.mjs [games=24] [mode=black|control] [rollouts=6]
+import { install } from '../../src/engine/v4/content/thieves.js';
 import { createGame, applyMove, chooseBotMove, actionAt } from '../../src/engine/v4/index.js';
 import { chooseThinkerMove } from '../../src/engine/v4/thinker.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 
 install();
-const N = Number(process.argv[2] || 24), MODE = process.argv[3] || 'loot', R = Number(process.argv[4] || 6);
-if (MODE !== 'control') setScoring(MODE);
-let wins = 0, blackPlace = 0, places = 0, contestWins = 0, botBlack = 0, botPlaces = 0, stole = 0, botStole = 0;
+const N = Number(process.argv[2] || 24), MODE = process.argv[3] || 'black', R = Number(process.argv[4] || 6);
+if (MODE !== 'control') let wins = 0, blackPlace = 0, places = 0, contestWins = 0, botBlack = 0, botPlaces = 0, stole = 0, botStole = 0;
 for (let g = 1; g <= N; g++) {
   const rand = seededRandom(g * 7 + 3);
   const me = g % 4;
@@ -24,7 +21,6 @@ for (let g = 1; g <= N; g++) {
       if (s.pending.player === me) { places++; blackPlace += black; } else { botPlaces++; botBlack += black; }
     }
     s = applyMove(s, mv);
-    if (MODE === 'loot' && s.round !== last) { s = structuredClone(s); releaseLoot(s); last = s.round; }
   }
   if (s.ranking[0] === me) wins++;
   for (const t of s.thefts || []) { if (t.by === me) stole += t.n; else botStole += t.n; }

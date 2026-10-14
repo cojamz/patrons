@@ -408,8 +408,6 @@ function startRound(state, r) {
   const n = WORKERS[r - 1];
   for (const p of state.players) p.left = n;
   const ctx = ctxFor(state);
-  // quadrant-level round start (Black: loot piles join their owners' supplies) runs before member income
-  for (const qid of state.quadrants) { const q = quadrant(qid); if (q.onRoundStart) q.onRoundStart(ctx); }
   eachMember(state, (owner, card, def) => { if (def.onRoundStart) def.onRoundStart(ctx, owner, card); });
   // late hooks see everything the round-start income gave (Investor sets aside after Banker pays)
   eachMember(state, (owner, card, def) => { if (def.onRoundStartLate) def.onRoundStartLate(ctx, owner, card); });
