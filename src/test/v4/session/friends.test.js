@@ -188,10 +188,9 @@ for (const [label, make] of backends) {
       const { host, guests } = await table(['G1', 'G2'], { seed: 51, subAfterMs: 400 });
       const [g1, g2] = guests;
       const errors = [];
-      const stops = [autoPlay(host.s, { seed: 1, errors }), autoPlay(g1.s, { seed: 2, errors }), autoPlay(g2.s, { seed: 3, errors })];
-      await be.wait(() => host.s.getState().history.length > 4, 'some moves');
-      // the host's phone locks: its code stops running, its socket still reads as connected
-      stops[0]();
+      // the host's phone locks the moment the table waits on the host: its code stops, its socket still reads as connected
+      const stops = [autoPlay(g1.s, { seed: 2, errors }), autoPlay(g2.s, { seed: 3, errors })];
+      await be.wait(() => host.s.getState().pending?.player === 0, 'the host to move');
       host.lobby.destroy();
       await be.pause(8000);
       let room = await roomAt(host.code);
@@ -205,8 +204,6 @@ for (const [label, make] of backends) {
       expect((await roomAt(host.code)).hostBeat).not.toBe(beat); // the new host beats
       // later the server notices the dead socket; the new host lets a bot play the old host's seat; the game ends
       host.t.close();
-      await be.pause(1000);
-      if (!g1.s.info.seats[0].canSub) console.log('DEBUG', JSON.stringify((await roomAt(host.code)).players), JSON.stringify(g1.s.info.seats[0]), g1.s.info.isHost, g1.lobby.getView().status);
       await be.wait(() => g1.s.info.seats[0].canSub, 'offered a bot for the old host');
       await g1.s.letBotPlay(0);
       await be.wait(() => g1.s.getState()?.over && g2.s.getState()?.over, 'game over');
