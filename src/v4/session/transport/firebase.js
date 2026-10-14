@@ -2,14 +2,45 @@
 // loaded lazily so importing the session layer never signs in or opens a socket by itself.
 // RTDB quirks handled here: values are JSON-cleaned (RTDB rejects `undefined`), every call waits for
 // anonymous auth (rules need auth != null), and onDisconnect writes are re-armed after each reconnect.
+//
+// Emulator: `createFirebaseTransport({ emulator: '127.0.0.1:9000' })` (or `?rtdb=127.0.0.1:9000` on the page) talks
+// to a local RTDB emulator instead, with a mock signed-in user, through the same SDK calls. Each emulator transport
+// is its own app and its own socket, like a separate browser, so tests can drop one (goOffline) and the server runs
+// its onDisconnect writes. Only localhost hosts are accepted, so a link can't point players at someone's server.
 import { serverTimestamp } from 'firebase/database';
 
 const cleanJson = v => (v === undefined ? null : JSON.parse(JSON.stringify(v)));
+const NAMESPACE = 'cornycolonies-default-rtdb';
 
-/** @returns {import('./tree.js').Transport} */
-export function createFirebaseTransport() {
+/** 'host:port' if it names a local emulator, else null. */
+export function emulatorHost(spec) {
+  const m = /^(localhost|127\.0\.0\.1|\[::1\]):(\d{2,5})$/.exec(String(spec || '').trim());
+  return m ? `${m[1]}:${m[2]}` : null;
+}
+/** The emulator named by `?rtdb=` on this page, if any. */
+export const urlEmulator = () => {
+  try { return emulatorHost(new URLSearchParams(globalThis.location?.search || '').get('rtdb')); } catch { return null; }
+};
+
+let emuCount = 0;
+async function loadEmulator(spec) {
+  const [{ initializeApp, deleteApp }, dbm] = await Promise.all([import('firebase/app'), import('firebase/database')]);
+  const [host, port] = [spec.slice(0, spec.lastIndexOf(':')), Number(spec.slice(spec.lastIndexOf(':') + 1))];
+  const uid = `emu${Date.now().toString(36)}${(emuCount++).toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+  const app = initializeApp({ projectId: 'cornycolonies', databaseURL: `http://${host}:${port}?ns=${NAMESPACE}` }, uid);
+  const db = dbm.getDatabase(app);
+  dbm.connectDatabaseEmulator(db, host, port, { mockUserToken: { sub: uid, user_id: uid } });
+  return { ...dbm, db, app, auth: { currentUser: { uid } }, authReady: Promise.resolve(), dispose: () => { dbm.goOffline(db); return deleteApp(app); } };
+}
+
+/**
+ * @param {{ emulator?: string|null }} [opts]
+ * @returns {import('./tree.js').Transport & { goOffline(): void, goOnline(): void }}
+ */
+export function createFirebaseTransport({ emulator = urlEmulator() } = {}) {
+  const emu = emulatorHost(emulator);
   let modPromise = null;
-  const load = () => (modPromise ??= import('../../../v3/firebase/config.js').then(async m => {
+  const load = () => (modPromise ??= (emu ? loadEmulator(emu) : import('../../../v3/firebase/config.js')).then(async m => {
     await m.authReady;
     if (!m.auth?.currentUser) console.warn('[firebase] anonymous auth not ready; writes may be refused by rules');
     return m;
@@ -46,7 +77,7 @@ export function createFirebaseTransport() {
   }
 
   return {
-    kind: 'firebase',
+    kind: emu ? 'firebase-emulator' : 'firebase',
     ready: load().then(() => {}),
     async get(path) { const m = await load(); return (await m.get(at(m, path))).val(); },
     async set(path, value) { const m = await load(); await m.set(at(m, path), cleanJson(value)); },
@@ -81,11 +112,17 @@ export function createFirebaseTransport() {
     },
     onConnectedChange(cb) { connCbs.add(cb); watchConnection(); return () => connCbs.delete(cb); },
     serverTime: () => serverTimestamp(),
+    /** Drops this client's socket (the server runs its onDisconnect writes); goOnline() reconnects. */
+    goOffline() { load().then(m => m.goOffline(m.db)); },
+    goOnline() { load().then(m => m.goOnline(m.db)); },
     close() {
+      if (closed) return;
       closed = true;
       for (const stop of [...unsubs]) stop();
       connCbs.clear();
       connUnsub?.();
+      // an emulator client is its own app: close its socket too, like a closed tab
+      if (emu && modPromise) modPromise.then(m => m.dispose?.()).catch(() => {});
     },
   };
 }

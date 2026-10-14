@@ -1,6 +1,16 @@
 // Shared helpers for session tests.
+import { vi } from 'vitest';
 import { chooseBotMove } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
+
+/**
+ * Fake-timer wait: advances vi's fake clock in `step` ms slices until cond() is truthy. Bounded by a slice count, not
+ * the wall clock, so a loaded box can't time it out. Call vi.useFakeTimers() first.
+ */
+export async function untilFake(cond, { step = 50, maxSteps = 20000, label = 'condition' } = {}) {
+  for (let i = 0; i < maxSteps && !cond(); i++) await vi.advanceTimersByTimeAsync(step);
+  if (!cond()) throw new Error(`Never reached ${label} within ${maxSteps} fake-timer steps of ${step} ms`);
+}
 
 /** Polls until cond() is truthy (real timers). */
 export async function until(cond, { timeout = 8000, label = 'condition' } = {}) {

@@ -29,27 +29,40 @@ const scheduled = ctx => ctx.state.queue.filter(t => t.t === 'turn').length;
 export const spareSpace = ctx => openSpaces(ctx).length > scheduled(ctx);
 const OT = 6; // Overtime's price (measured: 4 → 47% taker win rate, 5 → 43%, 6 → 37%)
 const RALLY = 5; // Rally's price (measured taker win rate: 3 → 45%, 4 → 42%, 5 → 36%; Strike 34%)
+// LAB (Claude, 2026-10-14 rework): sim switches; the shipped rules are whatever these default to at the end.
+export const VARIANT = { score: 'today', overtime: 'today', otPrice: 6, slot4: 'linger', rally: 'today', rallyMin: 6, rallyCap: 3, rallyDiv: 4, bookkeeper: 'end', hurry: 3 };
 /** What an extra turn that costs `base` purple costs p (Double Time halves it, rounded up). */
 const priceFor = (ctx, p, base) => (ctx.membersOf(p).some(c => c.def.halfTurns || (c.copy && c.copy.endsWith('.doubletime'))) ? Math.ceil(base / 2) : base);
-const canBuyTurn = (ctx, p, base) => (p.res[P] || 0) >= priceFor(ctx, p, base) && spareSpace(ctx);
+/** How many more turns the board has room for (open spaces beyond the turns still to come). */
+const room = ctx => openSpaces(ctx).length - scheduled(ctx);
+const canBuyTurn = (ctx, p, base, n = 1) => (p.res[P] || 0) >= priceFor(ctx, p, base) && room(ctx) >= n;
 /** Pay for an extra turn; without the purple (or a spare space), take the fallback gain instead. */
 /** "(Double Time: 6 → 3)" when Double Time made it cheaper, so the price traces to the card. */
 const halfNote = (base, c) => (c < base ? ` (Double Time: ${base} → ${c})` : '');
-function buyTurn(ctx, p, base, what, fallback, member = false) {
-  if (canBuyTurn(ctx, p, base)) {
+function buyTurn(ctx, p, base, what, fallback, member = false, n = 1) {
+  if (canBuyTurn(ctx, p, base, n)) {
     const c = priceFor(ctx, p, base);
     p.res[P] -= c;
     ctx.log(member ? `${p.name}'s ${what}: pays ${c} purple for an extra turn${halfNote(base, c)}.` : `${p.name} pays ${c} purple for ${what}${halfNote(base, c)}.`);
-    extraTurns(ctx, p, 1);
+    extraTurns(ctx, p, n);
     return true;
   }
   if (fallback) ctx.gain(p, P, fallback, { fromAction: true });
   return false;
 }
-const buyEstimate = (ctx, p, base, fallback) => (canBuyTurn(ctx, p, base) ? turnValue(ctx) - priceFor(ctx, p, base) * 0.8 + 1 : fallback);
+const buyEstimate = (ctx, p, base, fallback, n = 1) => (canBuyTurn(ctx, p, base, n) ? n * turnValue(ctx) - priceFor(ctx, p, base) * 0.8 + 1 : fallback);
 /** Rivals with more workers on the board than p (+extra for the worker p is about to place). */
 const behind = (ctx, p, extra = 0) => ctx.rivals(p).filter(o => onBoard(ctx, o) > onBoard(ctx, p) + extra).length;
 const turnValue = ctx => TURN_VALUE[ctx.state.round - 1] || 3;
+/** Rally (hold): extra turns from purple banked, not spent. */
+const rallyTurns = (ctx, p) => {
+  const v = p.res[P] || 0;
+  if (VARIANT.rally === 'hold') return v >= 2 * VARIANT.rallyMin ? 3 : v >= VARIANT.rallyMin ? 2 : 0;
+  return Math.min(VARIANT.rallyCap, Math.floor(v / VARIANT.rallyDiv));
+};
+/** p's turns still queued this round (not the one being played). */
+const laterTurns = (ctx, p) => ctx.state.queue.filter(t => t.t === 'turn' && t.p === p.id);
+const endOfTurn = ctx => ctx.state.queue.findIndex(t => t.t === 'endTurn');
 
 function fire(ctx, p, hook, ...args) {
   for (const c of ctx.membersOf(p)) {
@@ -108,8 +121,16 @@ export default {
   name: 'Purple',
   resource: P,
   scoring: {
-    label: 'Most workers on the board (purple breaks ties)',
-    score: (ctx, p) => onBoard(ctx, p) * 1000 + (p.res[P] || 0),
+    get label() {
+      return { today: 'Most workers on the board (purple breaks ties)', ties: 'Most workers on the board (ties score nothing)', behind: 'Most workers on the board (fewer followers break ties)' }[VARIANT.score];
+    },
+    score(ctx, p) {
+      const mine = onBoard(ctx, p);
+      if (VARIANT.score === 'today') return mine * 1000 + (p.res[P] || 0);
+      const best = Math.max(0, ...ctx.state.players.filter(o => o.id !== p.id).map(o => onBoard(ctx, o)));
+      if (VARIANT.score === 'behind') return mine * 1000 + (999 - ctx.followers(p));
+      return mine > best ? mine : 0;
+    },
   },
 
   actions: [
@@ -130,9 +151,43 @@ export default {
       resolve(ctx, p) { ctx.gain(p, P, onBoard(ctx, p), { fromAction: true }); },
     },
     {
-      key: 'linger', ring: 2, name: 'Linger', text: 'Move one of your workers from an outer or middle space of another color to a different open space, and do that action.',
-      estimate: (ctx, p) => (movable(ctx, p).length ? bestTarget(ctx, p) : 0),
+      key: 'linger', ring: 2,
+      get name() { return { linger: 'Linger', sleepin: 'Sleep In', hurry: 'Hurry' }[VARIANT.slot4]; },
+      get text() {
+        return {
+          linger: 'Move one of your workers from an outer or middle space of another color to a different open space, and do that action.',
+          sleepin: '+2 purple per worker you have left to place this round. Those turns come after everyone else’s.',
+          hurry: `+${VARIANT.hurry} purple. Then place your next worker right away.`,
+        }[VARIANT.slot4];
+      },
+      estimate(ctx, p) {
+        if (VARIANT.slot4 === 'sleepin') { const left = Math.max(0, p.left - 1); return left * (2 - [0, 1, 1.5][ctx.state.round - 1]); }
+        if (VARIANT.slot4 === 'hurry') return VARIANT.hurry + (p.left > 1 ? 1 : 0);
+        return movable(ctx, p).length ? bestTarget(ctx, p) : 0;
+      },
       resolve(ctx, p) {
+        if (VARIANT.slot4 === 'sleepin') {
+          ctx.gain(p, P, 2 * p.left, { fromAction: true });
+          const mine = laterTurns(ctx, p);
+          if (!mine.length) return;
+          const q = ctx.state.queue;
+          for (const t of mine) q.splice(q.indexOf(t), 1);
+          const at = q.findIndex(t => t.t === 'allPlaced' || t.t === 'endRound');
+          q.splice(at < 0 ? q.length : at, 0, ...mine);
+          ctx.log(`${p.name} sleeps in: ${mine.length === 1 ? 'their last turn comes' : `their ${mine.length} turns come`} after everyone else's.`);
+          return;
+        }
+        if (VARIANT.slot4 === 'hurry') {
+          ctx.gain(p, P, VARIANT.hurry, { fromAction: true });
+          const next = laterTurns(ctx, p)[0];
+          if (!next) return;
+          const q = ctx.state.queue;
+          q.splice(q.indexOf(next), 1);
+          const end = endOfTurn(ctx);
+          q.splice(end < 0 ? 0 : end + 1, 0, next);
+          ctx.log(`${p.name} hurries: places the next worker right away.`);
+          return;
+        }
         const from = movable(ctx, p);
         if (!from.length) { ctx.log(`${p.name} has no worker to move.`); return; }
         ctx.choose(p, 'Linger: move which worker?', from.map(({ key, a, q }) => ({
@@ -141,14 +196,52 @@ export default {
       },
     },
     {
-      key: 'overtime', ring: 2, name: 'Overtime', text: `Pay ${OT} purple: take an extra turn right after this one. If you can’t, +2 purple.`,
-      estimate: (ctx, p) => buyEstimate(ctx, p, OT, 2),
-      resolve(ctx, p) { buyTurn(ctx, p, OT, 'Overtime', 2); },
+      key: 'overtime', ring: 2, name: 'Overtime',
+      get text() {
+        if (VARIANT.overtime === 'two') return `Pay ${VARIANT.otPrice} purple: take 2 extra turns right after this one. If you can’t, +3 purple.`;
+        if (VARIANT.overtime === 'paid') return '+2 purple. Then, if you can, pay 6 purple: take an extra turn right after this one.';
+        return `Pay ${OT} purple: take an extra turn right after this one. If you can’t, +2 purple.`;
+      },
+      estimate(ctx, p) {
+        if (VARIANT.overtime === 'two') return buyEstimate(ctx, p, VARIANT.otPrice, 3, 2);
+        if (VARIANT.overtime === 'paid') { const h = (p.res[P] || 0) + 2; return 2 + (h >= priceFor(ctx, p, 6) && room(ctx) >= 1 ? turnValue(ctx) - priceFor(ctx, p, 6) * 0.8 + 1 : 0); }
+        return buyEstimate(ctx, p, OT, 2);
+      },
+      resolve(ctx, p) {
+        if (VARIANT.overtime === 'two') { buyTurn(ctx, p, VARIANT.otPrice, 'Overtime', 3, false, 2); return; }
+        if (VARIANT.overtime === 'paid') { ctx.gain(p, P, 2, { fromAction: true }); buyTurn(ctx, p, 6, 'Overtime', 0); return; }
+        buyTurn(ctx, p, OT, 'Overtime', 2);
+      },
     },
     {
-      key: 'rally', ring: 3, name: 'Rally', text: `Pay ${RALLY} purple: take an extra turn right after this one. If you can’t, +3 purple.`,
-      estimate: (ctx, p) => buyEstimate(ctx, p, RALLY, 3),
-      resolve(ctx, p) { buyTurn(ctx, p, RALLY, 'Rally', 3); },
+      key: 'rally', ring: 3, name: 'Rally',
+      get text() {
+        if (VARIANT.rally === 'hold') return `With ${VARIANT.rallyMin}+ purple, take 2 extra turns right after this one (3 with ${2 * VARIANT.rallyMin}+). If you can’t, +4 purple.`;
+        if (VARIANT.rally === 'pay') return `Pay ${VARIANT.rallyDiv} purple per extra turn right after this one (up to ${VARIANT.rallyCap}). If you take none, +3 purple.`;
+        return `Pay ${RALLY} purple: take an extra turn right after this one. If you can’t, +3 purple.`;
+      },
+      estimate(ctx, p) {
+        if (VARIANT.rally === 'hold') { const k = Math.min(rallyTurns(ctx, p), room(ctx)); return k >= 2 ? k * turnValue(ctx) : 4; }
+        if (VARIANT.rally === 'pay') { const k = Math.min(rallyTurns(ctx, p), room(ctx)); return k ? k * (turnValue(ctx) - VARIANT.rallyDiv * 0.8) + 1 : 3; }
+        return buyEstimate(ctx, p, RALLY, 3);
+      },
+      resolve(ctx, p) {
+        if (VARIANT.rally === 'hold') {
+          const k = Math.min(rallyTurns(ctx, p), room(ctx));
+          if (k >= 2) extraTurns(ctx, p, k, null);
+          else ctx.gain(p, P, 4, { fromAction: true });
+          return;
+        }
+        if (VARIANT.rally === 'pay') {
+          const k = Math.min(rallyTurns(ctx, p), room(ctx));
+          if (!k) { ctx.gain(p, P, 3, { fromAction: true }); return; }
+          p.res[P] -= k * VARIANT.rallyDiv;
+          ctx.log(`${p.name} pays ${k * VARIANT.rallyDiv} purple for Rally.`);
+          extraTurns(ctx, p, k);
+          return;
+        }
+        buyTurn(ctx, p, RALLY, 'Rally', 3);
+      },
     },
   ],
 
@@ -217,7 +310,12 @@ export default {
     // fill-in (critic): replaces Timekeeper
     m('doubletime', 'Double Time', 6, 2, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
     m('bookkeeper', 'Bookkeeper', 4, 2, 'At round end, +1 purple per 2 workers you have on the board.', {
-      onRoundEnd(ctx, owner) { ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2)); },
+      onRoundEnd(ctx, owner) { if (VARIANT.bookkeeper === 'end') ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2)); },
+      afterAction(ctx, owner, card) {
+        if (VARIANT.bookkeeper !== 'last' || owner.left !== 0 || card.paidRound === ctx.state.round) return;
+        card.paidRound = ctx.state.round;
+        ctx.gain(owner, P, Math.floor(onBoard(ctx, owner) / 2));
+      },
     }),
     m('clockmaker', 'Clockmaker', 2, 2, 'At round start, +1 purple per 2 purple you have.', {
       // round start, not end (Claude, 2026-10-14, after Cory: purple left at the end of round III is worth nothing)
