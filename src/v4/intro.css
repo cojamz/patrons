@@ -44,7 +44,10 @@
 .intro .in-view{position:absolute;inset:0;overflow:hidden;pointer-events:none;
   -webkit-mask-image:linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent), linear-gradient(180deg, transparent, #000 3%, #000 97%, transparent);
   -webkit-mask-composite:source-in;mask-image:linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent), linear-gradient(180deg, transparent, #000 3%, #000 97%, transparent);mask-composite:intersect}
-/* the camera: world (cx, cy) at the stage centre, zoom z; one world unit = one art pixel */
+/* the camera: world (cx, cy) at the stage centre, zoom z; one world unit = one art pixel. In motion it runs on the
+   intro's clock (.timed: Web Animations, sub-pixel and smooth); the storyboard sets it with the variables below. */
+.intro .in-cam.timed{transition:none;will-change:transform}
+.intro .intro-lamp.timed{transition:none}
 .intro .in-cam{position:absolute;left:50%;top:50%;width:0;height:0;
   transform:scale(calc(var(--uk) * var(--z))) translate(calc(var(--cx) * -1px), calc(var(--cy) * -1px));
   transition:transform var(--cd) cubic-bezier(.45,.05,.25,1)}
@@ -54,8 +57,8 @@
 /* Cory's line: every line sits in the same cell, so the box is always as tall as the longest (no jump) */
 .intro-lines{display:grid;margin-top:calc(7 * var(--u));max-width:min(36ch, 100%)}
 .intro-line{grid-area:1/1;margin:0;align-self:start;font-family:var(--i-serif);font-weight:500;font-size:20px;line-height:1.25;color:var(--i-cream);text-wrap:balance}
-.intro-line.sizer{visibility:hidden}
-.intro-line.now{animation:in-line 700ms cubic-bezier(.2,.8,.3,1) 150ms both}
+.intro-group{display:inline-block}
+.intro-line:not(.now) .intro-group:not([style]){pointer-events:none}
 .intro-line em{font-style:italic;color:var(--i-lamp-ink)}
 @media (min-width:700px) and (min-height:560px){ .intro-lines{max-width:40ch} .intro-line{font-size:26px} }
 .intro-dots{display:flex;gap:9px;margin-top:10px}

@@ -245,7 +245,15 @@ const spaceName = (state, key) => { const [q, i] = key.split('-').map(Number); c
 /** A rim plaque: the contest's standings, straight from the engine. */
 export function StandingsCard({ state, qid, meId = null }) {
   const st = standings(state).find(x => x.qid === qid);
-  return st ? <ContestStandings state={state} st={st} meId={meId} /> : null;
+  if (!st) return null;
+  // the sphere's own rule, when it has one ("Whatever you steal turns magenta…"), under its standings (UI-A, meta #3)
+  const rule = quadrant(qid).rule;
+  return (
+    <>
+      <ContestStandings state={state} st={st} meId={meId} />
+      {rule ? <p className="lt-sphere-rule" data-sphere-rule={qid}>{rule}</p> : null}
+    </>
+  );
 }
 
 /** A seat: that player's resources, followers, workers, members, and last three moves. */

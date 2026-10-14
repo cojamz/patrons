@@ -23,7 +23,7 @@ Updated 2026-10-14 ~21:40 UTC. Agents never commit; the foreman verifies and che
 12. **Design critic, round 2 (blind).** On the frozen build 4da59a3 (`.v4-panel/d8`, port 5201), with a Vision section (visual actions, elegant round scoring, cults at a glance) and a mocked frame. Report → design/eval/ui-critic-round2.md.
 
 19. **Two-device online check.** QA agent over the RTDB emulator (real SDK) on a frozen HEAD: laptop host + iPhone 13 guest, reload mid-turn, 30s offline, Back swipe, host offline, to results. Port 5320, emulator 9124. Production Firebase/Netlify blocked (proxy 403) until Cory allows the hosts.
-20. **Emoji pick + online bot level.** Setup and lobby emoji picker (unique per table, bots random), host picks bot level for online bots. Port 5322.
+20. **Emoji pick + online bot level.** Done (EmojiPicker.jsx, emojiPick.js, lobby.setEmoji, bot level in the lobby; tests on the in-memory transport and the emulator).
 21. **Friends docs.** Done: rulebook to tonight's rules (glossary text fixes: Release, tiebreak example, steal), design/friends-guide.md, design/release-notes-v0.2.md.
 22. **Intro v2 + plain robes.** Parallel since 23:40 (Cory: faster): the lead owns shared.jsx, the storyboard, Beat1, the shell and integration; builders on Beat2, Beat3, Initiation and Beat4; shared dev server :5330, GIFs via scripts/v4-gif.mjs. Was: Cory's 4-beat script, animated (scheming laugh, minions appear, actions → resources/members/power, three rounds → most followers wins); every leader in the same brown or gray robe. Port 5324.
 - Release-candidate panel briefs are ready: design/eval/panel-rc-briefs.md.

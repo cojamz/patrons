@@ -6,7 +6,8 @@
 //  (s4) after every placement, each space shows exactly its minions (the owner and anyone squatting there), and an
 //       empty space shows none (the saved state at the same move count is the truth);
 //  (s5) no flying ghost (a minion, a card, a "+N" of followers) outlives its flight;
-//  (s6) every quadrant with a tiebreak prints it on its rim ("ties: red …");
+//  (s6) every quadrant with a tiebreak prints it on its rim ("ties: red …"); a sphere with its own rule ("Whatever
+//       you steal turns magenta…") gives it in its rim's hover card;
 //  (s7) every word on the wheel is at least 12px on screen (the rim's engraved text included);
 //  (s8) the headline prompt fits: no ellipsis, nothing clipped, one line, while placing and while buying;
 //  (s9) engraved: the print is tidy: no two spaces' words, stamps or minions touch, nothing runs into the rim or the
@@ -202,7 +203,7 @@ const INSIDE = () => {
 const passes = [
   { look: 'sockets', quadrants: null, play: true },
   { look: 'engraved', quadrants: null, play: true },
-  { look: 'engraved', quadrants: ['red', 'yellow', 'market', 'gold'], play: false },
+  { look: 'engraved', quadrants: ['red', 'yellow', 'market', 'thieves'], play: false },
   // round III: every ring open, the busiest the wheel gets
   { look: 'engraved', quadrants: null, play: false, round: 3 },
   { look: 'sockets', quadrants: null, play: false, round: 3 },
@@ -236,6 +237,21 @@ try {
     for (const r of await page.evaluate(RIM)) {
       const tb = quadrant(r.qid).scoring.tiebreak;
       if (tb && !r.text.includes(`ties: ${tb.unit.split(' ')[0]}`)) fail(`(s6) ${r.qid}'s rim doesn't print its tiebreak ("${tb.text}"): "${r.text}"`, tag);
+    }
+    // (s6) a sphere with its own rule says it in the rim's hover card
+    for (const qid of pass.quadrants || []) {
+      const rule = quadrant(qid).rule;
+      if (!rule) continue;
+      const at = await page.evaluate(q => {
+        const t = document.querySelector(`.lt-wheel [data-plaque="${q}"]`);
+        const p = t.getStartPositionOfChar(3), m = t.getScreenCTM();
+        return { x: m.a * p.x + m.c * p.y + m.e, y: m.b * p.x + m.d * p.y + m.f };
+      }, qid);
+      await page.mouse.move(at.x, at.y);
+      const said = await page.waitForSelector(`[data-sphere-rule="${qid}"]`, { timeout: 2500 }).then(e => e.textContent(), () => '');
+      if (said !== rule) fail(`(s6) ${qid}'s rim hover doesn't give its rule ("${rule}"): "${said}"`, tag);
+      await page.mouse.move(4, 4);
+      await page.waitForTimeout(300);
     }
     (await page.evaluate(FLOOR)).forEach(m => fail(`(s7) ${m}`, tag));
     (await page.evaluate(PROMPT)).forEach(m => fail(`(s8) placing: ${m}`, tag));

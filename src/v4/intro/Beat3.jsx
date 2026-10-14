@@ -39,7 +39,7 @@ export const stillShot = { ...CAM.wheelAndCult };
 // ---------- the actions: which minion, which space, what it pays, and when ----------
 // a minion floats (f ms), lands; the space lights; the plaque pops; the glyphs lift off one by one (gap apart)
 const ACTS = [
-  { m: 0, q: 'gold', k: -1, r: 'gold', n: 3, name: 'Kickback', at: A1, float: 900, arc: 14, gap: 230, pop: 150, fly: 520, pile: [0, 1, 2] },
+  { m: 0, q: 'gold', k: 0, r: 'gold', n: 3, name: 'Kickback', at: A1, float: 900, arc: 14, gap: 230, pop: 150, fly: 520, pile: [0, 1, 2] },
   { m: 2, q: 'green', k: 1, r: 'green', n: 3, name: 'Hum', at: A2, float: 450, arc: 10, gap: 100, pop: 80, fly: 400, pile: [3, 4, 5] },
 ].map(a => {
   const land = a.at + a.float;
@@ -125,7 +125,7 @@ function floatTrack(a) {
 }
 /** The minion that stays home: as the camera pulls back it slips down behind its leader (out of the card's way). */
 const HOME = 1;
-const homeTrack = [{ x: ringTL(HOME)[0], y: ringTL(HOME)[1] }, [DIM + 100, 700, { y: ringTL(HOME)[1] + 18, o: 0 }, 'in']];
+const homeTrack = [{ x: ringTL(HOME)[0], y: ringTL(HOME)[1] }, [DIM + 100, 600, { y: ringTL(HOME)[1] + 18 }, 'io'], [DIM + 200, 350, { o: 0 }, 'sine']];
 /** The plaque over the space: pops in above the minion's head, holds while the glyphs leave, then goes. */
 function plaqueTrack(a) {
   const [sx, sy] = space(a.q, a.k);
