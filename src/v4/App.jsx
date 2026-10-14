@@ -169,7 +169,7 @@ function App() {
       <GameScreen
         key={gameKey} session={session} pace={urlBotDelay() ? Math.min(urlBotDelay() * 2, PACE.normal) : PACE[config?.speed] ?? PACE.normal}
         onHome={screen.lobby ? () => leaveLobby(screen.lobby) : goHome}
-        leaveText={online ? 'You’ll give up your seat in this room.' : 'You can resume it from the home screen.'}
+        leaveText={online ? 'A bot will play your seat. Open the invite link again to take it back.' : 'You can resume it from the home screen.'}
         onPlayAgain={config && !online ? () => { clearLocal(); startLocal(config); } : null}
         onResults={online ? null : onResultsShown}
       />

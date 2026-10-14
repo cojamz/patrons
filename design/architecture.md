@@ -14,7 +14,14 @@ How the v4 build is put together, and why. Claude owns this file.
 3. **Sessions** (`src/v4/session/`): connect the engine to a screen. They all share one interface: `subscribe(fn)`, `submit(move)`, `getState()`.
    - `LocalSession`: hot-seat play on one device, with bots.
    - Online play is **host-authoritative**. Every client sends moves. The host checks each move against the engine and publishes the new state with a version number. Guests never run the rules. If the host drops, any client can take over, because the full state lives in the database.
-   - Transport is pluggable: Firebase Realtime Database in production; in memory and BroadcastChannel (two browser tabs) for tests.
+   - People come and go:
+     - A seat belongs to a player id. A reload keeps the id (sessionStorage).
+     - A closed tab or a reopened invite link finds it again through the ids this device remembers per room (localStorage `patrons.v4.rooms`, passed to `joinRoom` as `knownIds`).
+     - After the start, someone without their id can take a left seat by its name.
+     - A connected client always re-marks itself here, which heals a late onDisconnect.
+     - When a person has been gone N seconds, the host can set `sub: 'bot'` on their seat ("let a bot play for them"), and the host loop plays it.
+     - Leaving mid-game does the same at once. Coming back clears it.
+   - Transport is pluggable: Firebase Realtime Database in production; in memory, BroadcastChannel (tabs of one browser) and the RTDB emulator (`?rtdb=127.0.0.1:<port>`, localhost only) for tests.
    - Firebase details:
      - State is stored as a JSON string, because RTDB silently drops empty arrays and nulls.
      - Rooms live under the already-deployed `v3rooms/` path with a `v4` marker, so no database rule change is needed.
