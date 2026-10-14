@@ -5,4 +5,4 @@ export {
   paymentPlan, followerPlan, paymentChoices, followerChoices, RING_VALUE, WORKERS, SHOP_SIZE, TIERS, tierLeft, roman,
 } from './core.js';
 export { quadrant, defById, DEFAULT_QUADRANTS, allQuadrantIds } from './content/index.js';
-export { chooseBotMove } from './bots.js';
+export { chooseBotMove, BOT_LEVELS, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL, botLevel, setBotLevels } from './bots.js';

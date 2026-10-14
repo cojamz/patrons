@@ -42,6 +42,23 @@ describe('online session over the memory transport', () => {
     host.lobby.destroy(); guests[0].lobby.destroy();
   });
 
+  it('table: the host picks any 4 spheres; the guest sees it in the lobby and every client plays on it', async () => {
+    const store = createMemoryStore();
+    const host = await createRoom({ name: 'Host', transport: createMemoryTransport(store), seed: 5, botDelayMs: DELAY, table: { mode: 'custom', quadrants: ['gold', 'red', 'thieves', 'echo'] } });
+    const guest = await joinRoom({ code: host.code, name: 'G1', transport: createMemoryTransport(store), botDelayMs: DELAY });
+    await until(() => guest.lobby.getView().table, { label: 'guest sees table' });
+    expect(guest.lobby.getView().table.quadrants).toEqual(['gold', 'red', 'thieves', 'echo']);
+    await host.lobby.setTable({ mode: 'random', quadrants: ['yellow', 'market', 'thieves', 'trading'] });
+    await until(() => guest.lobby.getView().table?.quadrants[0] === 'yellow', { label: 'guest sees new table' });
+    await expect(guest.lobby.setTable({ mode: 'custom', quadrants: ['gold', 'red', 'blue', 'green'] })).rejects.toThrow(/host/);
+    await expect(host.lobby.setTable({ mode: 'custom', quadrants: ['gold', 'red', 'blue', 'market'] })).rejects.toThrow();
+    const [hs, gs] = await Promise.all([started(host.lobby), started(guest.lobby), host.lobby.start()]);
+    await until(() => hs.getState() && gs.getState(), { label: 'first state' });
+    expect(hs.getState().quadrants).toEqual(['yellow', 'market', 'thieves', 'trading']);
+    expect(gs.getState().quadrants).toEqual(['yellow', 'market', 'thieves', 'trading']);
+    host.lobby.destroy(); guest.lobby.destroy();
+  });
+
   it('host + 2 guests (+1 bot) play a full game; all clients end identical', async () => {
     const { host, guests } = await table(2, { bots: 1 });
     const sessions = await Promise.all([started(host.lobby), ...guests.map(g => started(g.lobby)), host.lobby.start()].slice(0, 3));

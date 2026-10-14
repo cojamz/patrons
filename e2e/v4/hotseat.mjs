@@ -53,6 +53,8 @@ const shot = async (name, size) => {
 };
 
 let ok = false;
+const carried = { flights: 0, ticks: 0 }; // motion counters live in the page: keep them across reloads
+const carry = async () => { const c = await page.evaluate(() => [window.__patronsFlights || 0, window.__patronsTicks || 0]).catch(() => [0, 0]); carried.flights += c[0]; carried.ticks += c[1]; };
 try {
   await page.goto(`${base}/?botDelay=30`);
   await page.waitForSelector('[data-home="local"]');
@@ -80,6 +82,17 @@ try {
     const hand = await page.$('[data-handoff]');
     if (hand) { await hand.click(); continue; }
     const next = await page.$('[data-next-round]');
+    // Once: a reload on the final scoring card (the game is over, its results not yet shown) reopens it, and the
+    // save is kept until the results are on screen.
+    if (next && !seen.has('reload-final') && await page.$eval('.roundend', e => /End-game bonuses come next/.test(e.textContent)).catch(() => false)) {
+      seen.add('reload-final');
+      const keys0 = await page.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith('patrons.v4.')).sort());
+      if (!keys0.includes('patrons.v4.local')) errors.push(`final scoring card: the save is gone before the results (${keys0.join(', ')})`);
+      await carry(); await page.reload();
+      await page.waitForSelector('.results', { timeout: 8000 }).catch(() => errors.push('reload on the final scoring card did not reopen the finished game'));
+      await shot('08-after-reload-final');
+      continue;
+    }
     if (next) {
       const r = await page.$eval('.roundend h2', e => e.textContent).catch(() => 'x');
       if (!seen.has(r)) { seen.add(r); await page.waitForTimeout(800); await shot(`04-${r.replace(/\W+/g, '_')}`); if (/II /.test(r + ' ')) await shot(`04-${r.replace(/\W+/g, '_')}-phone`, PHONE); }
@@ -104,6 +117,21 @@ try {
         return out;
       });
       for (const b of bad) if (!errors.includes(b)) { errors.push(b); await shot('zz-choice-overlap'); }
+    }
+    // the side column's parts never overlap each other (the compact shop once slid under the buy row)
+    {
+      const bad = await page.evaluate(() => {
+        const vis = e => { const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden') return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
+        const els = ['.side .side-scroll', '.side .shop-panel.compact', '.side .fbuy', '.side .prompt.choice'].map(s => [s, document.querySelector(s)]).filter(([, e]) => e && vis(e) && !e.closest('[aria-hidden="true"]') && !e.closest('.buy-view'));
+        const out = [];
+        for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) {
+          const a = els[i][1].getBoundingClientRect(), b = els[j][1].getBoundingClientRect();
+          const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+          if (w > 1 && h > 1) out.push(`${els[i][0]} overlaps ${els[j][0]} by ${Math.round(h)}px`);
+        }
+        return out;
+      });
+      for (const b of bad) if (!errors.includes(b)) { errors.push(b); await shot('zz-side-overlap'); }
     }
     const kind = await page.evaluate(() => {
       const el = document.querySelector('[data-option]:not([disabled])');
@@ -186,7 +214,7 @@ try {
     if (seen.has('undo') && !seen.has('reload') && /II/.test(round)) {
       seen.add('reload');
       const f0 = await page.$eval('.pl[data-pid="0"] .fol .num', e => e.childNodes[0].textContent);
-      await page.reload();
+      await carry(); await page.reload();
       // a reload mid-game goes straight back into it
       await page.waitForSelector('.players', { timeout: 8000 }).catch(() => errors.push('reload did not reopen the game'));
       await shot('06-after-reload');
@@ -197,6 +225,19 @@ try {
       await page.click('[data-home="resume"]');
       await page.waitForSelector('.players');
       facingSeen = null; // a reopened game starts facing its default quadrant
+      continue;
+    }
+    // Once, near the end: a reload in round III (bots and you mid-round) must reopen the same game, and the
+    // save must still be there (a reload once erased a hot-seat game, leaving only the round-start snapshot).
+    if (seen.has('reload') && !seen.has('reload-end') && /III|\(last\)/.test(round) && kind === 'slot') {
+      seen.add('reload-end');
+      const keys0 = await page.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith('patrons.v4.')).sort());
+      if (!keys0.includes('patrons.v4.local')) errors.push(`round III: no main save in storage (${keys0.join(', ')})`);
+      await carry(); await page.reload();
+      await page.waitForSelector('.players, .results', { timeout: 8000 }).catch(() => errors.push('reload in round III did not reopen the game'));
+      const r3 = await page.$eval('header .round', e => e.textContent).catch(() => '');
+      if (!/III|Final/.test(r3)) errors.push(`reload in round III reopened at "${r3}"`);
+      await shot('06-after-reload-round3');
       continue;
     }
     // the first legal option in page order (skip on/off toggles, which would loop)
@@ -214,12 +255,16 @@ try {
   await shot('09-results');
   await shot('09-results-phone', PHONE);
   const winner = await page.$eval('.results .win', e => e.textContent);
-  const flights = await page.evaluate(() => window.__patronsFlights || 0);
-  const ticks = await page.evaluate(() => window.__patronsTicks || 0);
+  // the results are on screen: now (and only now) the save is gone
+  await page.waitForTimeout(300);
+  const left = await page.evaluate(() => Object.keys(localStorage).filter(k => k === 'patrons.v4.local' || k === 'patrons.v4.roundStart'));
+  if (left.length) errors.push(`results shown but the finished game is still saved (${left.join(', ')})`);
+  const flights = carried.flights + await page.evaluate(() => window.__patronsFlights || 0);
+  const ticks = carried.ticks + await page.evaluate(() => window.__patronsTicks || 0);
   console.log(`motion: ${flights} flights (cards and workers), ${ticks} number count-ups`);
   if (!ticks) errors.push('no numbers counted up');
   if (!flights) errors.push('no card or worker flights ran');
-  for (const why of ['undo', 'undo-pick', 'reload']) if (!seen.has(why)) errors.push(`never exercised ${why}`);
+  for (const why of ['undo', 'undo-pick', 'reload', 'reload-end', 'reload-final']) if (!seen.has(why)) errors.push(`never exercised ${why}`);
   console.log(`finished after ${clicks} clicks: ${winner}`);
   // Play again returns to a fresh game.
   await page.click('[data-play-again]');

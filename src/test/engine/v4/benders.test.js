@@ -301,6 +301,65 @@ describe('Release (base rule): once per round, release a member for its cost in 
   });
 });
 
+describe('Release with once-per-game members, just-bought members and Echo copies', () => {
+  const payFirst = s => { while (s.pending?.kind === 'pay') s = move(s, s.pending.options.find(o => o.id !== 'back').id); return s; };
+  it('a once-per-game member can be used and then released in the same buy step; it comes back fresh for the next owner', () => {
+    let s = scene({ members: [['gold.speculator']], res: [{ gold: 5 }], queue: [{ t: 'buy', p: 0 }] });
+    s.current = 0; s = resume(s);
+    const u = uidOf(s, 'gold.speculator', 0);
+    s = move(s, `use:${u}`);
+    expect(R(s).gold).toBe(10);
+    expect(ids(s)).not.toContain(`use:${u}`);
+    s = move(s, `release:${u}`); s = move(s, 'all:red');
+    expect(R(s).red).toBe(cost('gold.speculator'));
+    expect(s.cards[u]).toEqual({ uid: u, def: 'gold.speculator' });
+    expect(s.pile.at(-1)).toBe(u);
+    // a rival who later gets the card can use it once more
+    s.pile.pop(); s.players[1].members.push(u);
+    s.queue = [{ t: 'buy', p: 1 }]; s.current = 1; s.pending = null; s = resume(s);
+    expect(ids(s)).toContain(`use:${u}`);
+  });
+  it('a just-bought member can be released in a Big Spender second buy step: its when-recruited effect stays, its cost comes back in any colors', () => {
+    const Q = ['gold', 'red', 'echo', 'purple'];
+    let s = scene({ quadrants: Q, members: [['benders.bigspender']], shop: ['echo.mirror'], res: [{ green: 10 }, { green: 5 }], queue: [{ t: 'buy', p: 0 }, { t: 'buy', p: 0, extra: true }, { t: 'endTurn', p: 0 }] });
+    s.current = 0; s = resume(s);
+    const u = uidOf(s, 'echo.mirror', 'shop');
+    s = payFirst(move(s, `card:${u}`));
+    expect(R(s).green).toBe(10 - cost('echo.mirror') + 5); // Mirror: as much green as the rival with the most
+    expect(s.pending.extra).toBe(true);
+    expect(ids(s)).toContain(`release:${u}`);
+    s = move(s, `release:${u}`); s = move(s, 'all:gold');
+    expect(R(s).gold).toBe(cost('echo.mirror'));
+    expect(R(s).green).toBe(15 - cost('echo.mirror'));
+    expect(s.players[0].members).not.toContain(u);
+    // the second buy is still there (releasing isn't a buy)
+    expect(s.pending?.kind).toBe('buy');
+    expect(s.pending.extra).toBe(true);
+  });
+  it('without Big Spender, a just-bought member waits for your next buy step this round', () => {
+    let s = scene({ shop: ['red.bigfamily'], res: [{ red: 20 }], queue: [{ t: 'buy', p: 0 }, { t: 'endTurn', p: 0 }] });
+    s.current = 0; s = resume(s);
+    const u = uidOf(s, 'red.bigfamily', 'shop');
+    s = payFirst(move(s, `card:${u}`));
+    expect(s.pending?.kind).not.toBe('buy');
+    s.queue = [{ t: 'buy', p: 0 }]; s.current = 0; s.pending = null; s = resume(s);
+    expect(ids(s)).toContain(`release:${u}`);
+  });
+  it('an Echo copy made with Hourglass keeps its gains after Hourglass is released', () => {
+    const Q = ['gold', 'red', 'echo', 'purple'];
+    let s = scene({ quadrants: Q, members: [['echo.hourglass']] });
+    s = move(s, `slot:${RUSH}`); s = pickAny(s);
+    const g = R(s).gold, u = uidOf(s, 'echo.hourglass', 0);
+    s = move(s, `use:${u}`); s = pickAny(s);
+    const copied = R(s).gold - g;
+    expect(copied).toBeGreaterThan(0);
+    s = move(s, `release:${u}`); s = move(s, 'all:green');
+    expect(R(s).gold).toBe(g + copied);
+    expect(R(s).green).toBe(cost('echo.hourglass'));
+    expect(s.cards[u]).toEqual({ uid: u, def: 'echo.hourglass' });
+  });
+});
+
 describe('Doppelganger and Magenta theft with once-per-round benders', () => {
   it('a Doppelganger copying Squatter is a second squat in the round', () => {
     let s = scene({ members: [['benders.squatter', 'red.doppel']], slots: { [JV]: 1, [RUSH]: 1 }, rules: { release: false } });

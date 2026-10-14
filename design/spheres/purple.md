@@ -15,7 +15,7 @@ Gold hoards money and Red stacks cheap members. Purple multiplies turns. Its con
 8. Second Wind (4+2): once per game, take an extra turn right after this one.
 9. Errand Runner (2+2): when you recruit it, take an extra turn right after this one.
 10. Taskmaster (3+1): once per round, pay 5 purple to take an extra turn right after this one.
-11. Late Riser (3+1): from round II on, if you have the fewest followers at round start, you take an extra turn before anyone else.
+11. Late Riser (3+1; the name is a fill-in, it was Straggler until that name went to the new rule-bender): from round II on, if you have the fewest followers at round start, you take an extra turn before anyone else.
 12. Foreman (2+1): whenever you take an extra turn, +1 purple per worker you have on the board.
 13. Courier (2+1): whenever you take an extra turn, +1 of each other color.
 14. Apprentice (1+1): whenever you take an extra turn, your next member costs 2 less.

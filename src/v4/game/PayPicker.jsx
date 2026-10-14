@@ -24,7 +24,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
   const tier = pend.tier ? TIERS.find(t => t.key === pend.tier) : null;
   const title = def ? `Recruit ${def.name}` : `Buy ${tier.get} follower${tier.get > 1 ? 's' : ''}`;
   const costLine = def
-    ? (costParts(def).map(c => `${c.n} ${c.color}`).join(' + ') || 'free') + (p.discount ? ` · your discount applies` : '')
+    ? (costParts(def, state.resources).map(c => `${c.n} ${c.color}`).join(' + ') || 'free') + (p.discount ? ` · your discount applies` : '')
     : tierCostText(tier);
   const box = useDialog(back ? () => onPick('back') : null);
   const step = (r, d) => setSpend(s => ({ ...s, [r]: Math.max(0, Math.min(p.res[r], (s[r] || 0) + d)) }));

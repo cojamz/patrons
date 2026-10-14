@@ -36,7 +36,7 @@ function optionDetail(state, o) {
   if ((o.kind === 'card' || o.kind === 'member') && typeof o.value === 'number') {
     const d = cardOf(o.value);
     if (d) {
-      const cost = costParts(d).map(c => `${c.n} ${c.color}`).join(' + ') || 'free';
+      const cost = costParts(d, state.resources).map(c => `${c.n} ${c.color}`).join(' + ') || 'free';
       return { name: d.name, text: d.text, f: d.f, color: d.quadrant, id: d.id, cost: o.kind === 'card' ? cost : null };
     }
   }
@@ -293,7 +293,7 @@ export function Popover({ anchor, onClose, children }) {
 /** A member card face: color band, sphere glyph, name, ★, ability and list cost. */
 export function CardFace({ state, uid }) {
   const d = cardDef(state, uid);
-  const cost = costParts(d).map(c => `${c.n} ${c.color}`).join(' + ') || 'free';
+  const cost = costParts(d, state.resources).map(c => `${c.n} ${c.color}`).join(' + ') || 'free';
   return (
     <div className="card-face" style={{ '--c': `var(--${d.quadrant})` }}>
       <div className="row"><span className="glyph" aria-hidden="true" /><b>{d.name}</b><span className="num star">{d.f}★</span></div>

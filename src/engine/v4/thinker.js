@@ -3,7 +3,7 @@
 // best average result. Work is counted in simulated moves, not wall time, so a seed always gives the same move;
 // the default budget keeps a move well under ~150ms in a browser.
 import { applyMove, followers } from './core.js';
-import { chooseNormalMove, scoreOptions } from './bots.js';
+import { chooseNormalMove, chooseEasyMove, scoreOptions } from './bots.js';
 import { seededRandom } from './rng.js';
 
 const margin = (state, id) =>
@@ -13,6 +13,7 @@ const margin = (state, id) =>
  * opts.budget: simulated moves to spend on this decision (default 100).
  * opts.candidates: how many of normal's top options to look at (default 3).
  * opts.full: play every rollout to game end (slow; for offline balance checks).
+ * opts.rollout: 'normal' (default) or 'easy' — the policy the rollouts play (easy is ~20× cheaper per move).
  */
 export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
@@ -42,7 +43,7 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
     let s = applyMove(state, { player: me, option: pool[i].o.id });
     let steps = 1;
     while (!s.over && (full || (s.round === round && steps < cap)) && steps < 800) {
-      s = applyMove(s, chooseNormalMove(s, r, { noise: 0.6, payWays: 2 }));
+      s = applyMove(s, opts.rollout === 'easy' ? chooseEasyMove(s, r, { noise: 1 }) : chooseNormalMove(s, r, { noise: 0.6, payWays: 2 }));
       steps++;
     }
     spent += steps;

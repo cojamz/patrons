@@ -2,7 +2,7 @@
 // with greedy bots, random legal movers, and mixed seats. Every engine invariant after every move, plus
 // sphere invariants (turn accounting, extra turns never squeeze a space, honest copy chips, clean cards
 // in the pile, steals that move exactly what they report) and replay determinism.
-import { createGame, applyMove, legalMoves, openSlots, TIERS } from '../../../engine/v4/core.js';
+import { createGame, applyMove, legalMoves, openSlots, followers, TIERS } from '../../../engine/v4/core.js';
 import { allQuadrantIds, quadrant } from '../../../engine/v4/content/index.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
@@ -109,6 +109,53 @@ function checkSphereInvariants(s, prev, ctx, verified, fail = failHard) {
   }
 }
 
+// ---------- the follower ledger, kept by hand from the log ----------
+// The log keeps its last 300 lines, so the runner diffs each move's new lines and keeps its own books:
+// contest wins from the "Round … ends." lines, follower buys from "X bought N followers". At the end they must
+// match each player's contest and bought totals, and every move that changes a player's followers names them.
+export function newLines(prev, next) {
+  const a = prev.log, b = next.log;
+  for (let off = 0; off <= a.length; off++) {
+    let ok = true;
+    for (let k = 0; off + k < a.length; k++) if (a[off + k] !== b[k]) { ok = false; break; }
+    if (ok) return b.slice(a.length - off);
+  }
+  return b;
+}
+function bookLines(books, s, lines) {
+  for (const line of lines) {
+    const m = line.match(/^Round [IV]+ ends\. (.*)$/);
+    if (m) for (const part of m[1].split(' · ')) {
+      const w = part.match(/: (.+) \+(\d+)$/);
+      if (w) for (const name of w[1].split(' & ')) {
+        const p = s.players.find(o => o.name === name);
+        if (p) books[p.id].contest += Number(w[2]);
+      }
+    }
+    for (const p of s.players) {
+      const b = line.match(new RegExp(`^${p.name} bought (\\d+) followers?`));
+      if (b) books[p.id].bought += Number(b[1]);
+    }
+  }
+}
+function checkLedger(books, s, prev, lines, ctx, fail) {
+  bookLines(books, s, lines);
+  for (const p of s.players) {
+    const before = prev.players[p.id];
+    if (p.bonus !== before.bonus && !lines.some(l => l.includes(p.name)))
+      fail(`${p.name}'s followers went ${before.bonus} → ${p.bonus} with no log line naming them: ${JSON.stringify(lines)}`, s, ctx);
+  }
+  if (s.over) for (const p of s.players) {
+    if (books[p.id].contest !== p.contest) fail(`${p.name} has ${p.contest} contest followers, the log adds up to ${books[p.id].contest}`, s, ctx);
+    if (books[p.id].bought !== (p.bought || 0)) fail(`${p.name} bought ${p.bought} followers, the log adds up to ${books[p.id].bought}`, s, ctx);
+    if (p.final && p.final.total !== p.final.parts.reduce((a, x) => a + Number(x.slice(x.lastIndexOf('+') + 1)), 0)) fail(`${p.name}'s game-end parts don't add up`, s, ctx);
+  }
+  if (s.over) {
+    const f = s.ranking.map(id => followers(s, s.players[id]));
+    if (f.some((x, i) => i && x > f[i - 1])) fail(`ranking not by followers: ${f}`, s, ctx);
+  }
+}
+
 // ---------- the runner ----------
 export const pickers = {
   bot: rand => s => chooseBotMove(s, rand),
@@ -118,7 +165,8 @@ export const pickers = {
 };
 
 /** Play one game on a table, checking everything after every move. Returns { state, moves, stats }. */
-export function runTable({ quadrants, n, seed, kind, deep = false, soft = null }) {
+// allOptions: at every decision, also apply every other legal option once and check the result.
+export function runTable({ quadrants, n, seed, kind, deep = false, allOptions = false, soft = null }) {
   const ctx = `[${quadrants.join(',')}] ${kind} n=${n} seed=${seed}`;
   const rand = seededRandom(seed * 7919 + n * 31 + kind.length);
   const pick = pickers[kind](rand);
@@ -128,6 +176,9 @@ export function runTable({ quadrants, n, seed, kind, deep = false, soft = null }
   const stats = { kinds: new Set(), optionKinds: new Set(), extraTurns: 0, copies: 0, thefts: 0 };
   checkInvariants(s, ctx);
   checkSphereInvariants(s, null, ctx, verified, soft || failHard);
+  if (s.players.length !== n) fail(`${s.players.length} seats, asked for ${n}`, s, ctx);
+  const books = s.players.map(() => ({ contest: 0, bought: 0 }));
+  bookLines(books, s, s.log);
   while (s.pending) {
     if (moves.length >= MOVE_CAP) fail(`no end after ${moves.length} moves`, s, ctx);
     const m = pick(s);
@@ -142,11 +193,19 @@ export function runTable({ quadrants, n, seed, kind, deep = false, soft = null }
         if (!threw) fail(`illegal move accepted: ${JSON.stringify(bad)}`, s, ctx);
       }
     }
+    if (allOptions) for (const o of legalMoves(s)) {
+      if (o.option === m.option) continue;
+      let alt;
+      try { alt = applyMove(s, o); } catch (err) { fail(`legal option ${o.option} threw: ${err.stack}`, s, ctx); }
+      checkInvariants(alt, `${ctx} (option ${o.option})`);
+      checkSphereInvariants(alt, s, `${ctx} (option ${o.option})`, new Set(verified), soft || failHard);
+    }
     let next;
     try { next = applyMove(s, m); } catch (err) { fail(`applyMove threw on ${JSON.stringify(m)}: ${err.stack}`, s, ctx); }
     if (deep && JSON.stringify(s) !== before) fail(`applyMove mutated its input on ${JSON.stringify(m)}`, s, ctx);
     checkInvariants(next, ctx);
     checkSphereInvariants(next, s, ctx, verified, soft || failHard);
+    checkLedger(books, next, s, newLines(s, next), ctx, soft || failHard);
     moves.push(m);
     s = next;
   }

@@ -7,9 +7,9 @@ import { costParts, tierCostText } from '../format.js';
 const softBreak = name => name.replace(/[A-Za-z]{9,}/g, w => `${w.slice(0, Math.ceil(w.length / 2))}\u00AD${w.slice(Math.ceil(w.length / 2))}`);
 const total = spend => Object.values(spend).reduce((a, b) => a + b, 0);
 
-function Cost({ d, plan, disc = false }) {
+function Cost({ d, plan, disc = false, res = null }) {
   // the list cost, as printed on every card; what you'd pay right now goes on a second line when it differs
-  const parts = costParts(d);
+  const parts = costParts(d, res);
   const dots = list => list.map((c, k) => (
     <span key={k} className="cp">{k ? ' + ' : ''}{c.color !== 'any' && <i style={{ background: `var(--${c.color})` }} />}<span className="num">{c.n}</span> {c.color}</span>
   ));
@@ -56,14 +56,14 @@ export default function Shop({ state, me, mine, optionFor, onPick, onDenied, var
                 <>
                   <div className="row top"><b className="nm">{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
                   <span className="eff1">{d.text}</span>
-                  <div className="row cost"><Cost d={d} plan={null} /></div>
+                  <div className="row cost"><Cost d={d} plan={null} res={state.resources} /></div>
                 </>
               ) : (
                 <div className="row"><b className="nm">{d.name}</b><span className="fv num" aria-label={`${d.f} followers`}>{d.f}★</span></div>
               )}
               {!compact && <span className="eff">{d.text}</span>}
               {!compact && <div className="row cost">
-                <Cost d={d} plan={plan} disc={!!(viewer && viewer.discount)} />
+                <Cost d={d} plan={plan} disc={!!(viewer && viewer.discount)} res={state.resources} />
                 {d.n > 1 && <span><span className="num">{d.n}</span> members</span>}
               </div>}
               {!compact && <span className={`afford${opt ? '' : ' none'}`} aria-hidden={!opt}>You can afford</span>}
@@ -114,7 +114,7 @@ function ShopStrip({ state, me, optionFor, onPick, onDenied }) {
           >
             <span className="row"><b>{d.name}</b><span className="num">{d.f}★</span></span>
             <small>{d.text}</small>
-            <span className="row cost"><Cost d={d} plan={plan} />{opt && <span className="afford" aria-label="you can afford this" title="You can afford this" />}</span>
+            <span className="row cost"><Cost d={d} plan={plan} res={state.resources} />{opt && <span className="afford" aria-label="you can afford this" title="You can afford this" />}</span>
           </button>
         );
       })}

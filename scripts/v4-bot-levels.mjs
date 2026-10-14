@@ -13,13 +13,13 @@ const quads = process.env.QUADRANTS ? process.env.QUADRANTS.split(',') : undefin
 
 const parse = s => {
   const [name, ...kv] = s.split(':');
-  const opts = Object.fromEntries(kv.map(x => x.split('=')).map(([k, v]) => [k, Number(v)]));
+  const opts = Object.fromEntries(kv.map(x => x.split('=')).map(([k, v]) => [k, Number.isNaN(Number(v)) ? v : Number(v)]));
   return { name, key: s, opts };
 };
 const policies = spec.map(parse);
 const n = policies.length;
 const stat = {};
-for (const p of policies) stat[p.key] ??= { seats: 0, wins: 0, members: 0, left: 0, held: 0, followers: 0, maxMs: 0, ms: 0, moves: 0, bought: 0, contest: 0 };
+for (const p of policies) stat[p.key] ??= { seats: 0, wins: 0, members: 0, left: 0, held: 0, followers: 0, maxMs: 0, ms: 0, moves: 0, bought: 0, contest: 0, leftMax: 0, membersMax: 0 };
 
 for (let g = first; g < first + games; g++) {
   const rand = seededRandom(g * 7717 + 3);
@@ -42,11 +42,15 @@ for (let g = first; g < first + games; g++) {
     st.seats += 1;
     if (winners.includes(p)) st.wins += 1 / winners.length;
     st.members += memberCount(s, p);
-    st.left += Object.values(p.res).reduce((a, b) => a + b, 0);
-    // resources that were holding a contest they lead at the end
+    const left = Object.values(p.res).reduce((a, b) => a + b, 0);
+    st.left += left; st.leftMax = Math.max(st.leftMax, left);
+    st.membersMax = Math.max(st.membersMax, memberCount(s, p));
+    // resources that were holding a contest lead at the end: only what the lead needed (runner-up + 1, or a tie)
     for (const qid of s.quadrants) {
       const q = quadrant(qid);
-      if (q.resource && p.res[q.resource] > 0 && p.res[q.resource] >= Math.max(...s.players.map(o => o.res[q.resource] || 0))) st.held += p.res[q.resource];
+      const r = q.resource, mine = p.res[r] || 0;
+      const next = Math.max(0, ...s.players.filter(o => o !== p).map(o => o.res[r] || 0));
+      if (r && mine > 0 && mine >= next) st.held += Math.min(mine, next + 1);
     }
     st.followers += followers(s, p);
     st.bought += p.bought || 0;
@@ -57,5 +61,8 @@ for (let g = first; g < first + games; g++) {
 console.log(`${games} games, seats ${spec.join(' / ')} (rotating)${quads ? `, quadrants ${quads.join(',')}` : ''}`);
 for (const [k, st] of Object.entries(stat)) {
   const per = x => (x / st.seats).toFixed(1);
-  console.log(`${k.padEnd(18)} win ${(100 * st.wins / st.seats).toFixed(1)}% (parity ${(100 / n).toFixed(0)}%) · members ${per(st.members)} · left ${per(st.left)} (of it holding a lead ${per(st.held)}) · followers ${per(st.followers)} (bought ${per(st.bought)}, contests ${per(st.contest)}) · ms/move ${(st.ms / st.moves).toFixed(1)} max ${st.maxMs.toFixed(0)}`);
+  // 95% interval on the win share (normal approximation; seats of one policy in the same game aren't independent,
+  // so read it for a policy that holds one seat)
+  const w = st.wins / st.seats, ci = 1.96 * Math.sqrt(Math.max(w * (1 - w), 1e-9) / st.seats);
+  console.log(`${k.padEnd(18)} win ${(100 * w).toFixed(1)}% ±${(100 * ci).toFixed(1)} (n=${st.seats} seats, parity ${(100 / n).toFixed(0)}%) · members ${per(st.members)} (max ${st.membersMax}) · left ${per(st.left)} (max ${st.leftMax}; needed to hold a lead ${per(st.held)}, spare ${per(st.left - st.held)}) · followers ${per(st.followers)} (bought ${per(st.bought)}, contests ${per(st.contest)}) · ms/move ${(st.ms / st.moves).toFixed(1)} max ${st.maxMs.toFixed(0)}`);
 }

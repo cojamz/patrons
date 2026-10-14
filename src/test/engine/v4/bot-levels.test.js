@@ -2,7 +2,8 @@
 // Bot difficulty levels: legal, deterministic, picked from the seat, and the normal bot doesn't waste its last buy.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, isLegal, quadrant } from '../../../engine/v4/index.js';
-import { chooseBotMove, botLevel, horizon, BOT_LEVELS } from '../../../engine/v4/bots.js';
+import { chooseBotMove, botLevel, horizon, BOT_LEVELS, setBotLevels } from '../../../engine/v4/bots.js';
+import * as engine from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 
 const T = 300000;
@@ -31,6 +32,16 @@ describe('bot levels', () => {
     s.players[1].bot = 'nonsense';
     expect(botLevel(s, 1)).toBe('normal');
     expect(BOT_LEVELS).toEqual(['easy', 'normal', 'hard']);
+    s.players[1].bot = { level: 'hard' };
+    expect(botLevel(s, 1)).toBe('hard');
+  });
+
+  it('setBotLevels marks seats, survives JSON, and is exported from the engine', () => {
+    const s = setBotLevels(createGame({ seats: [{}, {}, {}], seed: 2 }), ['easy', undefined, 'hard']);
+    const t = JSON.parse(JSON.stringify(s));
+    expect([0, 1, 2].map(i => botLevel(t, i))).toEqual(['easy', 'normal', 'hard']);
+    expect(engine.BOT_LEVELS).toEqual(BOT_LEVELS);
+    expect(engine.BOT_LEVEL_INFO.map(x => x.level)).toEqual(BOT_LEVELS);
   });
 
   it('easy and normal play whole games legally at 2, 3 and 4 players', { timeout: T }, () => {

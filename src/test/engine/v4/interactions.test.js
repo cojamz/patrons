@@ -448,3 +448,32 @@ describe('member colors across spheres', () => {
     expect(R(s, 0).green).toBe(0);
   });
 });
+
+// ---------------------------------------------------------------------------------------------------------
+describe('Release on members that carry state', () => {
+  const Q = ['gold', 'red', 'thieves', 'market'];
+  const buyStep = p => [{ t: 'buy', p }, { t: 'endRound' }];
+  it('DESIGN QUESTION: releasing an Investor forfeits the gold set aside (nothing comes back at round end)', () => {
+    let s = scene({ quads: Q, round: 2, queue: buyStep(0), members: [['gold.investor']] });
+    const u = uidOf(s, 'gold.investor', 0);
+    s.cards[u].invested = 4;
+    s = move(s, `release:${u}`);
+    while (s.pending?.kind === 'choose') s = move(s, s.pending.options.find(o => o.id === 'all:red')?.id ?? s.pending.options[0].id);
+    s = pass(s);
+    expect(s.cards[u]).toEqual({ uid: u, def: 'gold.investor' }); // clean in the pile
+    expect(R(s, 0).gold).toBe(0);
+  });
+  it('a released Doppelganger goes back clean and stops copying', () => {
+    let s = scene({ quads: Q, round: 2, queue: buyStep(0), members: [['red.doppel', 'gold.midas']], copies: { 0: { 'red.doppel': 'gold.midas' } } });
+    const u = uidOf(s, 'red.doppel', 0);
+    s = move(s, `release:${u}`);
+    expect(s.cards[u]).toEqual({ uid: u, def: 'red.doppel' });
+    expect(s.pile.at(-1)).toBe(u);
+  });
+  it('one release per round: no second release after the first', () => {
+    let s = scene({ quads: Q, round: 2, queue: buyStep(0), members: [['red.twins', 'red.intern']] });
+    s = move(s, `release:${uidOf(s, 'red.twins', 0)}`);
+    while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
+    expect(ids(s).some(id => id.startsWith('release:'))).toBe(false);
+  });
+});

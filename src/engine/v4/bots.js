@@ -19,10 +19,25 @@ import { chooseThinkerMove } from './thinker.js';
 export const BOT_LEVELS = ['easy', 'normal', 'hard'];
 const SETUP_WEIGHTS = { gold: 3, red: 3, blue: 1, green: 1 };
 
-/** The level a seat plays at: opts.level, else the seat's `bot` field, else 'normal'. */
+/** For a setup screen: the levels in order, with a name and a one-line blurb. */
+export const BOT_LEVEL_INFO = [
+  { level: 'easy', name: 'Easy', blurb: 'Greedy and a little careless.' },
+  { level: 'normal', name: 'Normal', blurb: 'Plays for the end: spends down, stops recruiting when it no longer pays.' },
+  { level: 'hard', name: 'Hard', blurb: 'Normal, plus it plays its best few moves ahead before choosing.' },
+];
+export const DEFAULT_BOT_LEVEL = 'normal';
+
+/** The level a seat plays at: opts.level, else the seat's `bot` field ('hard' or { level: 'hard' }), else 'normal'. */
 export function botLevel(state, player, opts = {}) {
-  const l = opts.level ?? state.players[player]?.bot;
-  return BOT_LEVELS.includes(l) ? l : 'normal';
+  const b = state.players[player]?.bot;
+  const l = opts.level ?? (b && typeof b === 'object' ? b.level : b);
+  return BOT_LEVELS.includes(l) ? l : DEFAULT_BOT_LEVEL;
+}
+
+/** Sets seat levels on a fresh game (levels[i] for player i; missing or unknown entries are left alone). */
+export function setBotLevels(state, levels = []) {
+  levels.forEach((l, i) => { if (BOT_LEVELS.includes(l) && state.players[i]) state.players[i].bot = l; });
+  return state;
 }
 
 /**
@@ -118,6 +133,21 @@ const INCOME_SCALE = 0.4;
 const K_ABILITY = 2;
 // How many ways to pay a buy are compared (the engine lists the contest-safe ones first).
 const PAY_WAYS = 10;
+// Extra ways to pay compared: the ones that spend only what's over a contest lead.
+const SURPLUS_WAYS = 3;
+/** Per color, what a player can spend without giving up a lead in a contest that counts it: all of it where they
+ * don't lead, and what's over the runner-up (+1) where they do. */
+export function surplus(state, me) {
+  const p = state.players[me];
+  const out = {};
+  for (const r of state.resources) {
+    const mine = p.res[r] || 0;
+    const counted = state.quadrants.some(q => quadrant(q).resource === r);
+    const next = Math.max(0, ...state.players.filter(o => o !== p).map(o => o.res[r] || 0));
+    out[r] = counted && mine > next ? Math.max(0, mine - next - 1) : mine;
+  }
+  return out;
+}
 // Weight of later rounds' contests in a lead held now.
 const FUTURE_CONTESTS = 0.4;
 // A copy of the game for trying a move: everything but the log, queue and pending decision (state is plain JSON,
@@ -347,7 +377,17 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
       }
     };
     // the ways to pay worth comparing (they differ in which contests they give up)
-    const ways = what => (what.uid !== undefined ? paymentChoices(state, state.players[me], what.uid) : followerChoices(state, state.players[me], TIERS.find(t => t.key === what.tier))).slice(0, opts.payWays ?? PAY_WAYS);
+    // The engine lists first the ways that spare every color you lead, so a big lead (30 gold against 10) never
+    // got spent and piled up. Also try the ways that spend only the surplus over what a lead needs.
+    const ways = what => {
+      const all = what.uid !== undefined ? paymentChoices(state, state.players[me], what.uid) : followerChoices(state, state.players[me], TIERS.find(t => t.key === what.tier));
+      const first = all.slice(0, opts.payWays ?? PAY_WAYS);
+      if (all.length <= first.length) return first;
+      const spare = surplus(state, me);
+      const over = v => state.resources.reduce((a, r) => a + Math.max(0, (v[r] || 0) - spare[r]), 0);
+      const extra = [...all.slice(first.length)].sort((a, b) => over(a) - over(b)).slice(0, SURPLUS_WAYS);
+      return [...first, ...extra];
+    };
     if (pend.kind === 'pay') {
       const what = pend.uid !== undefined ? { uid: pend.uid } : { tier: pend.tier };
       for (const o of pend.options) if (o.kind === 'pay') out.push({ o, v: valueOf(what, o.spend) + (o.default ? 0.01 : 0) });

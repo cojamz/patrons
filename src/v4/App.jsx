@@ -58,9 +58,13 @@ export default function App() {
   const resumeRef = useRef(null);
 
   // Save local games on every change.
+  // Once its results have been on screen a finished game is done: nothing saves it again (a late save would
+  // offer to "resume" a game that's over).
+  const finished = useRef(null);
+  const onResultsShown = useCallback(() => { finished.current = session; finishLocal(); }, [session]);
   useEffect(() => {
     if (!session || session.info?.mode === 'online') return undefined;
-    const save = s => saveLocal(configRef.current, s, session.undoCheckpoint);
+    const save = s => { if (!(s && s.over && finished.current === session)) saveLocal(configRef.current, s, session.undoCheckpoint); };
     save(session.getState());
     return session.subscribe(save);
   }, [session]);
@@ -135,7 +139,7 @@ export default function App() {
         onHome={screen.lobby ? () => leaveLobby(screen.lobby) : goHome}
         leaveText={online ? 'You’ll give up your seat in this room.' : 'You can resume it from the home screen.'}
         onPlayAgain={config && !online ? () => { clearLocal(); startLocal(config); } : null}
-        onResults={online ? null : finishLocal}
+        onResults={online ? null : onResultsShown}
       />
     );
   }

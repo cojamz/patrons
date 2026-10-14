@@ -1,7 +1,7 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
-import { parseRoundEnd, newLogLines, winSentence, breakdown } from '../../../v4/format.js';
+import { parseRoundEnd, newLogLines, winSentence, breakdown, costParts } from '../../../v4/format.js';
 
 const seats = [{ name: 'Ana', kind: 'bot' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }];
 const play = seed => { let s = createGame({ seats, seed }); while (!s.over) s = applyMove(s, chooseBotMove(s, () => 0.4)); return s; };
@@ -37,5 +37,13 @@ describe('v4 format helpers', () => {
       const b = breakdown(s, w);
       expect(b.self + b.members + b.contests + b.bought + b.effects + b.endGame).toBe(followers(s, w));
     }
+  });
+
+  it('a member whose color is not on the table costs "any" (no color nobody can hold)', () => {
+    const s = createGame({ seats, seed: 1 }); // classic table: no magenta
+    const def = { quadrant: 'thieves', s: 6, w: 2 };
+    expect(costParts(def)).toEqual([{ color: 'magenta', n: 6 }, { color: 'any', n: 2 }]);
+    expect(costParts(def, s.resources)).toEqual([{ color: 'any', n: 8 }]);
+    expect(costParts({ quadrant: 'gold', s: 2, w: 2 }, s.resources)).toEqual([{ color: 'gold', n: 2 }, { color: 'any', n: 2 }]);
   });
 });

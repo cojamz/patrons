@@ -98,7 +98,7 @@ describe('v4 game screen', { timeout: 30000 }, () => {
     expect(session.submit).toHaveBeenCalledWith({ player: me, option: 'pass' });
   });
 
-  it('hot-seat: a second person gets a handoff screen before their options appear', () => {
+  it('hot-seat: a choice that opens a turn carries the hand-over in its own header (no extra screen)', () => {
     const two = [{ name: 'Ana', kind: 'human' }, { name: 'Bea', kind: 'human' }];
     let state = createGame({ seats: two, seed: 2 });
     state = applyMove(state, { player: 0, option: 'color:gold' });
@@ -106,10 +106,27 @@ describe('v4 game screen', { timeout: 30000 }, () => {
     expect(state.pending.player).toBe(1);
     const session = fakeSession(state, [0, 1]);
     const { container } = render(<GameScreen session={session} />);
-    expect(screen.getByRole('dialog', { name: /Bea.s turn/ })).toBeTruthy();
+    // setup is a choice: the hand-over is folded into it ("Bea's turn · pass the device"), one step not two
+    expect(screen.queryByRole('dialog', { name: /Bea.s turn/ })).toBeNull();
+    expect(container.querySelector('.prompt.choice .turn-of').textContent).toMatch(/Bea.s turn/);
+    expect(clickable(container).length).toBe(state.pending.options.length);
+  });
+
+  it('hot-seat: a second person gets a handoff screen before placing', () => {
+    const two = [{ name: 'Ana', kind: 'human' }, { name: 'Bea', kind: 'human' }];
+    let state = createGame({ seats: two, seed: 2 });
+    state = advanceTo(state, 'place');
+    // play until the other person is to place (the first placer hands over after buying)
+    const first = state.pending.player;
+    for (let k = 0; k < 50 && !(state.pending.kind === 'place' && state.pending.player !== first); k++) state = applyMove(state, chooseBotMove(state, () => 0.3));
+    const who = state.players[state.pending.player].name;
+    // the device was last with the first placer
+    const session = fakeSession(state, [0, 1]);
+    const { container } = render(<GameScreen session={session} />);
+    expect(screen.getByRole('dialog', { name: new RegExp(`${who}.s turn`) })).toBeTruthy();
     expect(clickable(container)).toEqual([]);
     fireEvent.click(container.querySelector('[data-handoff]'));
-    expect(clickable(container).length).toBe(state.pending.options.length);
+    expect(new Set(clickable(container))).toEqual(new Set(state.pending.options.map(o => o.id)));
   });
 
   it('game over: shows the ranking with a followers breakdown', () => {

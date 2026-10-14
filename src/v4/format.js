@@ -31,11 +31,14 @@ export function memberChips(state, p) {
   return [...out.values()];
 }
 
-export function costParts(def) {
+/** A member's printed cost as parts. Pass the table's resources: a colored part whose color isn't on the table
+ *  is paid in any colors (the engine's rule), so it reads as "any" instead of a color nobody can hold. */
+export function costParts(def, resources = null) {
   const parts = [];
   // the colored part is paid in the sphere's resource (module id 'thieves' pays in magenta)
   let color = def.quadrant;
   try { color = quadrant(def.quadrant).resource; } catch { /* a bare color */ }
+  if (resources && !resources.includes(color)) return (def.s || 0) + (def.w || 0) ? [{ color: 'any', n: (def.s || 0) + (def.w || 0) }] : [];
   if (def.s) parts.push({ color, n: def.s });
   if (def.w) parts.push({ color: 'any', n: def.w });
   return parts;
