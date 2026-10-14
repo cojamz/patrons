@@ -130,7 +130,7 @@ export function gameRecord(state, extra = {}) {
     build: state.build || null, // the build that played it
     made: BUILD, // the build that wrote this record
     seed: state.seed, quadrants: [...state.quadrants], rules: { ...state.rules },
-    seats: state.players.map(p => ({ name: p.name, kind: p.kind, ...(p.bot ? { bot: p.bot } : {}) })),
+    seats: state.players.map(p => ({ name: p.name, kind: p.kind, ...(p.bot ? { bot: p.bot } : {}), ...(p.emoji ? { emoji: p.emoji } : {}) })),
     moves: Array.isArray(state.history) ? state.history.map(m => [...m]) : null,
     at: { round: state.round, moves: state.moves, over: !!state.over },
     ...extra,
@@ -163,7 +163,7 @@ export function replayRecord(input, { upTo = Infinity, onMove } = {}) {
   const same = !!(rec.build && rec.build.content === CONTENT_HASH);
   let state;
   try {
-    state = newGame({ seats: rec.seats.map(s => ({ name: s.name, kind: s.kind })), seed: rec.seed, quadrants: rec.quadrants, rules: rec.rules || {} });
+    state = newGame({ seats: rec.seats.map(s => ({ name: s.name, kind: s.kind, ...(s.emoji ? { emoji: s.emoji } : {}) })), seed: rec.seed, quadrants: rec.quadrants, rules: rec.rules || {} });
     setBotLevels(state, rec.seats.map(s => s.bot));
   } catch (err) {
     return { ok: false, state: null, played: 0, total, sameContent: same, failure: { index: -1, move: null, reason: 'exception', message: `Couldn't set up the game: ${err?.message || err}`, stack: err?.stack, state: null } };
