@@ -3,14 +3,14 @@
 // is found with the same engine dry run and unlock rule the screen uses (previewSpace, src/v4/game/cards.js).
 import { createGame, applyMove, chooseBotMove, previewSpace } from '../../../src/engine/v4/index.js';
 import { seededRandom } from '../../../src/engine/v4/rng.js';
-import { BUILD } from '../../../src/v4/session/record.js';
+import { buildStamp } from './stamp.mjs';
 import { unlockedBy, surely } from '../../../src/v4/game/cards.js';
 
 /** { state, key: "q-i" of the space, uids: the cards it unlocks } or null. P1 holds `level` of every color. */
 export function tickScene(seed = 4) {
   const seats = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
   let s = createGame({ seats, seed });
-  s.build = { ...BUILD }; // this build's stamp, or the app sets the save aside as "older version"
+  s.build = buildStamp(); // this build's stamp, or the app sets the save aside as "older version"
   const rand = seededRandom(seed);
   for (let n = 0; n < 500 && !(s.round === 1 && s.pending && s.pending.player === 0 && s.pending.kind === 'place'); n++) s = applyMove(s, chooseBotMove(s, rand));
   if (!(s.pending && s.pending.player === 0 && s.pending.kind === 'place')) return null;

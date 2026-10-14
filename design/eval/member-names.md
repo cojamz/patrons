@@ -35,3 +35,5 @@ Cory's rule (2026-10-14) is that a member is always a person or a group of peopl
 28. Blue / Green Pillar (stand-ins, worth 5 followers): Blue Stalwart / Green Stalwart. Pick: **keep**. These are stand-in decks, and "pillar of the community" is a person.
 
 Every other member already passes. That includes the idioms Underdog, Mole and Crowd-Pleaser, the groups Twins, Big Family, Mob, Crew, Retinue, Choir and Ensemble, and the guests (Extra Hand reads as a hired hand).
+
+Applied 2026-10-14 (Cory: "I trust you on this for now"): every pick above is in the game. Keepsake (15) was already cut, and Revelers (7) was already in. Line 10 is Talent Scout, since Red's Scout is gone.

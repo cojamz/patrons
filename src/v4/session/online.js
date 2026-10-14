@@ -274,13 +274,23 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
   let resolveReady;
   const ready = new Promise(r => { resolveReady = r; });
   const view = () => ({ ...lobbyView(room, code, playerId, { awaySince, subAfterMs }), selfOnline: up });
+  // Screens re-render on every emit. Most room writes (heartbeats, the move queue, lastSeen) change nothing they
+  // show, so a view goes out only when it differs from the last one (awayMs ticks by itself and isn't news).
+  let lastViewKey = '';
+  const emitView = () => {
+    const v = view();
+    const key = JSON.stringify({ ...v, players: v.players.map(({ awayMs, ...p }) => p) }); // eslint-disable-line no-unused-vars
+    if (key === lastViewKey) return;
+    lastViewKey = key;
+    views.emit(v);
+  };
 
   transport.onDisconnectSet(myConnPath, false).catch(() => {});
   const offConn = transport.onConnectedChange?.(u => {
     const was = up;
     up = !!u;
     if (up) imHere(true);
-    if (was !== up && gotFirst && !destroyed) { views.emit(view()); session?.roomChanged(); }
+    if (was !== up && gotFirst && !destroyed) { emitView(); session?.roomChanged(); }
   }) || (() => {});
 
   const offRoom = transport.subscribe(base, value => {
@@ -323,7 +333,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
     clearTimeout(awayTimer);
     awayTimer = null;
     // re-announce when someone crosses the line, so "let a bot play for them" appears without another room change
-    if (next < Infinity && !destroyed) awayTimer = setTimeout(() => { awayTimer = null; if (!destroyed) { trackAway(); views.emit(view()); session?.roomChanged(); } }, next + 5);
+    if (next < Infinity && !destroyed) awayTimer = setTimeout(() => { awayTimer = null; if (!destroyed) { trackAway(); emitView(); session?.roomChanged(); } }, next + 5);
   }
 
   function onRoom() {
@@ -339,7 +349,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
     if (!shouldHost && host) { host.stop(); host = null; }
     host?.roomChanged();
     session?.roomChanged();
-    views.emit(view());
+    emitView();
     imHere();
     heartbeat();
     elect();
@@ -527,6 +537,7 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
   const subs = createEmitter();
   const waiting = new Map(); // mid -> { resolve, reject }
   const inflight = new Map(); // signature -> { p, mid, rec, at } (same move twice = one submission; a late retry re-sends)
+  let lastInfoKey = '';
   let seenNotice = getRoom()?.notice?.id ?? null; // a notice from before this session (a rejoin) isn't news
 
   const mySeats = () => seatList(getRoom()).filter(s => s.kind === 'human' && s.id === playerId).map(s => s.seat);
@@ -536,7 +547,7 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
     const v = getView();
     return {
       mode: 'online', roomCode: code, isHost: room?.hostId === playerId, playerId,
-      seats: v.players.map(p => ({ seat: p.seat, name: p.name, ...withEmoji(p.emoji), kind: p.kind, connected: p.connected, host: p.host, away: p.away, awayMs: p.awayMs, sub: p.sub, canSub: p.canSub, me: p.id === playerId })),
+      seats: v.players.map(p => ({ seat: p.seat, name: p.name, ...withEmoji(p.emoji), kind: p.kind, connected: p.connected, host: p.host, away: p.away, sub: p.sub, canSub: p.canSub, me: p.id === playerId })),
       subAfterMs: v.subAfterMs, selfOnline: v.selfOnline,
       version,
     };
@@ -553,7 +564,9 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
     const done = new Set(String(node.recent || '').split(',').filter(Boolean));
     if (node.lastMove?.mid) done.add(node.lastMove.mid);
     for (const [mid, w] of [...waiting]) if (done.has(mid)) { waiting.delete(mid); w.resolve(state); }
-    subs.emit(state, info());
+    const i = info();
+    lastInfoKey = JSON.stringify(i);
+    subs.emit(state, i);
   });
 
   const rejectsPath = `${base}/rejects/${playerId}`;
@@ -611,7 +624,12 @@ function createOnlineSession({ transport, base, code, playerId, getRoom, getView
     roomChanged() {
       const n = !destroyed && getRoom()?.notice;
       if (n && n.id && n.id !== seenNotice) { seenNotice = n.id; reportProblem({ kind: n.kind, seat: n.seat, message: n.message, detail: n.detail }); }
-      if (state && !destroyed) subs.emit(state, info());
+      // the room changes far more often than anything the game screen shows (heartbeats, the move queue): only news
+      if (state && !destroyed) {
+        const i = info();
+        const key = JSON.stringify(i);
+        if (key !== lastInfoKey) { lastInfoKey = key; subs.emit(state, i); }
+      }
     },
     _teardown() {
       if (destroyed) return;

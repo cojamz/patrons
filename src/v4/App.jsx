@@ -103,7 +103,7 @@ function App() {
     const seats = cfg.seats.filter(s => s.kind !== 'empty').map((s, i) => ({ name: s.name.trim() || `P${i + 1}`, kind: s.kind }));
     const botDelayMs = urlBotDelay() || BOT_DELAY[cfg.speed] || 650;
     const quadrants = cfg.table && !tableProblem(cfg.table.quadrants) ? cfg.table.quadrants : undefined;
-    begin(createLocalSession({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs, quadrants }), cfg);
+    begin(createLocalSession({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs, quadrants, botLevel: cfg.level }), cfg);
     introOnGameStart(); // this browser's first game: the intro, on this screen only (Intro.jsx)
   }, [begin]);
 

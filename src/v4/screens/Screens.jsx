@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { PLAYER_COLORS } from '../format.js';
 import HowToPlay from '../HowToPlay.jsx';
 import { friendlyError } from '../errors.js';
-import { quadrant } from '../../engine/v4/index.js';
+import { quadrant, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL } from '../../engine/v4/index.js';
 import { CLASSIC, spheres, sphereName, tableProblem, randomTable, urlTable } from '../tables.js';
 import { GAME_NAME, VERSION } from '../version.js';
 import { copyText } from '../Recovery.jsx';
@@ -17,8 +17,8 @@ const clip = (str, max) => (typeof Intl !== 'undefined' && Intl.Segmenter ? [...
 function Seg({ value, options, onChange, label }) {
   return (
     <div className="seg" role="radiogroup" aria-label={label}>
-      {options.map(([v, text]) => (
-        <button key={v} type="button" role="radio" aria-checked={value === v} className={value === v ? 'on' : ''} onClick={() => onChange(v)}>{text}</button>
+      {options.map(([v, text, title]) => (
+        <button key={v} type="button" role="radio" aria-checked={value === v} className={value === v ? 'on' : ''} title={title} onClick={() => onChange(v)}>{text}</button>
       ))}
     </div>
   );
@@ -155,6 +155,7 @@ export function LocalSetup({ initial, onStart, onBack }) {
     { kind: 'human', name: 'P1' }, { kind: 'bot', name: 'P2' }, { kind: 'bot', name: 'P3' }, { kind: 'bot', name: 'P4' },
   ]);
   const [speed, setSpeed] = useState(initial?.speed || 'normal');
+  const [level, setLevel] = useState(initial?.level || DEFAULT_BOT_LEVEL);
   const [table, setTable] = useState(() => initialTable(initial?.table));
   const tableOk = !tableProblem(table.quadrants);
   const filled = seats.filter(s => s.kind !== 'empty');
@@ -174,12 +175,13 @@ export function LocalSetup({ initial, onStart, onBack }) {
             <Seg label={`Seat ${i + 1}`} value={s.kind} options={KINDS} onChange={v => set(i, { kind: v })} />
           </div>
         ))}
+        <div className="seat"><span>Bots</span><Seg label="Bot level" value={level} options={BOT_LEVEL_INFO.map(l => [l.level, l.name, l.blurb])} onChange={setLevel} /></div>
         <div className="seat"><span>Bot speed</span><Seg label="Bot speed" value={speed} options={[['slow', 'Slow'], ['normal', 'Normal'], ['fast', 'Fast']]} onChange={setSpeed} /></div>
         <TablePicker value={table} onChange={setTable} />
         {filled.length < 2 && <p className="hint warn">{GAME_NAME} needs at least 2 seats.</p>}
         <div className="row-btns">
           <button type="button" className="btn" onClick={onBack}>Back</button>
-          <button type="button" className="btn pri" data-start disabled={filled.length < 2 || !tableOk} onClick={() => onStart({ seats, speed, table })}>Start</button>
+          <button type="button" className="btn pri" data-start disabled={filled.length < 2 || !tableOk} onClick={() => onStart({ seats, speed, level, table })}>Start</button>
         </div>
       </div>
     </div>

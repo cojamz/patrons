@@ -245,6 +245,33 @@ for (const [label, make] of backends) {
       admin.close();
     }, TIMEOUT);
 
+    it('screens re-render only when something they show changes: heartbeats and queue traffic don’t count', async () => {
+      setup();
+      const { host, guests } = await table(['G1', 'G2'], { seed: 71 });
+      const g1 = guests[0];
+      await be.pause(500);
+      let renders = 0, lobbyRenders = 0;
+      const off = g1.s.subscribe(() => { renders++; });
+      const offL = g1.lobby.subscribe(() => { lobbyRenders++; });
+      renders = 0; lobbyRenders = 0; // (subscribe calls back once with the current state)
+      await be.pause(31000); // six host heartbeats, nothing else
+      expect(renders).toBe(0);
+      expect(lobbyRenders).toBe(0);
+      // one move: one new state (plus at most one for the queue settling), not one per room write
+      const v = host.s.info.version;
+      const pend = host.s.getState().pending;
+      const mover = [host.s, ...guests.map(g => g.s)].find(x => x.mySeats.includes(pend.player));
+      await mover.submit({ player: pend.player, option: pend.options[0].id });
+      await be.wait(() => g1.s.info.version > v, 'the move arrives');
+      await be.pause(500);
+      expect(renders).toBeLessThanOrEqual(2);
+      // a presence change is news
+      renders = 0;
+      closeTab(guests[1]);
+      await be.wait(() => renders > 0 && g1.s.info.seats[2].away, 'G2 shown gone');
+      off(); offL();
+    }, TIMEOUT);
+
     it('Leave mid-game hands your seat to a bot at once; the host closing the tab migrates host, and the new host can bot the old host’s seat', async () => {
       setup();
       const { host, guests } = await table(['G1', 'G2'], { seed: 44, subAfterMs: 400 });
