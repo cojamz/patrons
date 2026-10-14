@@ -5,6 +5,8 @@ export default {
   id: 'gold',
   name: 'Gold',
   resource: 'gold',
+  // gold is money: each gold counts as any color when buying followers
+  wildInFollowerBuys: true,
   scoring: { label: 'Most gold', score: (ctx, p) => p.res.gold },
 
   actions: [
@@ -98,15 +100,15 @@ export default {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'gold') ctx.gain(owner, 'gold', 1);
       },
     }),
-    m('underdog', 'Underdog', 1, 0, 'While you have the least gold, your gold gains are doubled.', {
+    m('underdog', 'Underdog', 2, 1, 'While anyone has more gold than you, your gold gains are doubled.', {
       modifyGain(ctx, owner, card, g) {
-        if (g.color === 'gold' && !g.doubled && ctx.state.players.every(o => o === owner || owner.res.gold <= o.res.gold)) {
+        if (g.color === 'gold' && !g.doubled && ctx.state.players.some(o => o !== owner && o.res.gold > owner.res.gold)) {
           g.n *= 2; g.doubled = true;
         }
       },
     }),
-    m('tinker', 'Tinker', 1, 0, 'Whenever an action gains you 2+ of another resource, +1 gold.', {
-      afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n >= 2) owner.res.gold += 1; },
+    m('tinker', 'Tinker', 2, 1, 'Whenever an action gains you another resource, also gain half as much gold (rounded up).', {
+      afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n > 0) owner.res.gold += Math.ceil(g.n / 2); },
     }),
     m('investor', 'Investor', 2, 1, 'Round start: set aside any of your gold. Round end: it comes back doubled.', {
       onRoundStartLate(ctx, owner, card) {
@@ -141,13 +143,13 @@ export default {
     m('seed', 'Seed Money', 2, 0, 'When recruited: gain gold equal to your member count.', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'gold', ctx.memberCount(owner)); },
     }),
-    m('hustler', 'Hustler', 1, 0, 'When recruited, pick a color. Actions there give you +1 gold.', {
+    m('hustler', 'Hustler', 1, 0, 'When recruited, pick a color. Actions there give you +1 gold per round number.', {
       onRecruited(ctx, owner, card) {
-        ctx.choose(owner, 'Hustler: actions in which color give you +1 gold?', ctx.state.quadrants.map(q => ({
+        ctx.choose(owner, 'Hustler: actions in which color give you extra gold?', ctx.state.quadrants.map(q => ({
           id: `color:${q}`, label: ctx.quadrant(q).name, kind: 'color', value: q, hint: q === 'gold' ? 1 : 0,
         })), 'gold.hustlerColor', { uid: card.uid });
       },
-      afterAction(ctx, owner, card, quadrant) { if (card.color === quadrant) owner.res.gold += 1; },
+      afterAction(ctx, owner, card, quadrant) { if (card.color === quadrant) owner.res.gold += ctx.state.round; },
     }),
   ],
 };

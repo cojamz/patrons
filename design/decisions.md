@@ -173,3 +173,9 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - Blind panel 1 (laptop newcomer, phone, saboteur): all three said NOT YET, overall C / C- / C+. The common problems: reload and Leave lose the game; developer copy on screen; 4-letter codes on the wheel; hover-only information on touch; the "1" glyph reads as "I"; unlabeled worker dots; no answer to illegal clicks; layout jumps. All of it was sent to the UI fix round.
 - Rule fixes from the panel: Recruiting Drive pays on your 2nd recruit (so it's spendable); Steal names who it took from; the rulebook now explains free recruits, contest timing, the turn-order tiebreak and that each quadrant prints its own rule.
 - ❓ Balance (bots, 2000 games): the seat that picks last in round I wins ~32% vs ~23%. Picking last in a round lets you snipe the round-end contests. For Cory.
+- ✅ (Cory) Ring contests stay as big as they are for now (37% of a winner's followers).
+- ✅ (Cory) Round I turn order is random.
+- ✅ (Claude, per Cory "make some gold changes") Gold is money: each gold counts as any color when buying followers. Gold quadrant flag, in the rulebook.
+- ✅ (Cory: buff/rework the weak Gold cards) Underdog: doubled while anyone has more gold than you. Tinker: an action gaining another resource also gives half as much gold. Hustler: +1 gold per round number in your color. Re-measured: Underdog 6.7, Tinker 4.9 (both repriced to 3), Hustler 1.3 (still weak), Investor 1.9.
+- ❓ Even with random round I, whoever picks LAST in round I wins ~33% (2000 games). It's the position, not the seat.
+- Note: gold left at game end is still ~22 per player even with the gold sink. Mostly that's held for the Crown and freshly Struck in round III with no buys left. That may be fine.

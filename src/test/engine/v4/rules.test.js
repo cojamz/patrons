@@ -14,6 +14,12 @@ const R = s => s.players.map(p => p.res);
 const tier = key => TIERS.find(t => t.key === key);
 const seats = n => Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' }));
 
+function orderOf(seed) {
+  let s = createGame({ seats: [{}, {}, {}, {}], seed });
+  while (s.pending?.kind === 'setup') s = applyMove(s, { player: s.pending.player, option: s.pending.options[0].id });
+  return s.order[0];
+}
+
 describe('setup', () => {
   it('each player picks 2 starting resources, first seat to last, then round I starts', () => {
     let s = createGame({ seats: seats(3), seed: 3 });
@@ -56,9 +62,19 @@ describe('turn order and workers', () => {
     expect(s.players.map(p => p.left)).toEqual([3, 3, 3]);
   });
 
-  it('fewest followers picks first', () => {
-    const s = scene({ n: 3, bonus: [0, 2, 1], queue: [{ t: 'round', r: 1 }] });
+  it('fewest followers picks first (after round I)', () => {
+    const s = scene({ n: 3, bonus: [0, 2, 1], queue: [] });
+    s.order = [0, 1, 2, 2, 1, 0, 0, 1, 2];
+    s.queue = [{ t: 'round', r: 2 }];
+    resume(s);
     expect(s.order.slice(0, 3)).toEqual([0, 2, 1]);
+  });
+
+  it('round I order is random and seeded', () => {
+    const firsts = new Set();
+    for (let seed = 1; seed <= 40; seed++) firsts.add(createGame({ seats: [{}, {}, {}, {}], seed }).players.length && orderOf(seed));
+    expect(firsts.size).toBe(4);
+    expect(orderOf(9)).toBe(orderOf(9));
   });
 
   it('round II: 4 workers; ties go to whoever was later in last round\'s order', () => {

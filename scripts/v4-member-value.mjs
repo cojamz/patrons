@@ -24,8 +24,10 @@ function play(seed, giveDef, seat) {
   }
   return s;
 }
-const ids = Object.values((await import('../src/engine/v4/content/index.js')).quadrant('gold').members).map(d => d.id)
+const only = process.argv[3] ? process.argv[3].split(',') : null;
+const ids0 = Object.values((await import('../src/engine/v4/content/index.js')).quadrant('gold').members).map(d => d.id)
   .concat((await import('../src/engine/v4/content/index.js')).quadrant('red').members.map(d => d.id));
+const ids = only ? ids0.filter(i => only.some(o => i.endsWith('.' + o))) : ids0;
 // control: same seeds, nobody gets anything
 const control = [];
 for (let g = 0; g < N; g++) control.push(play(1000 + g));

@@ -202,10 +202,11 @@ describe('Gold members', () => {
     expect(R(s)[1].gold).toBe(0);
   });
 
-  it('Underdog: gold gains doubled while you have the least gold (ties count)', () => {
+  it('Underdog: gold gains doubled while anyone has more gold than you (ties do not count)', () => {
     expect(R(take(scene({ members: [['gold.underdog']], res: [{}, { gold: 1 }] }), 'Rush'))[0].gold).toBe(4);
-    expect(R(take(scene({ members: [['gold.underdog']], res: [{}, {}] }), 'Rush'))[0].gold).toBe(4);
+    expect(R(take(scene({ members: [['gold.underdog']], res: [{}, {}] }), 'Rush'))[0].gold).toBe(2);
     expect(R(take(scene({ members: [['gold.underdog']], res: [{ gold: 2 }, { gold: 1 }] }), 'Rush'))[0].gold).toBe(4);
+    expect(R(take(scene({ n: 3, members: [['gold.underdog']], res: [{ gold: 2 }, { gold: 1 }, { gold: 5 }] }), 'Rush'))[0].gold).toBe(6);
     // two Underdogs don't stack: there is only one copy, but the guard still holds with a Doppelganger copy
     const s = scene({ members: [['gold.underdog', 'red.doppel']], res: [{}, { gold: 1 }] });
     s.cards[uidOf(s, 'red.doppel', 0)].copy = 'gold.underdog';
@@ -219,13 +220,13 @@ describe('Gold members', () => {
     }
   });
 
-  it('Tinker: +1 gold when an action gains you 2+ of another resource at once', () => {
-    expect(R(take(scene({ members: [['gold.tinker']] }), 'Tide'))[0]).toMatchObject({ blue: 3, gold: 1 });
-    expect(R(take(scene({ members: [['gold.tinker']] }), 'Current'))[0]).toMatchObject({ blue: 2, red: 1, gold: 1 });
+  it('Tinker: an action gaining another resource also gains half as much gold, rounded up', () => {
+    expect(R(take(scene({ members: [['gold.tinker']] }), 'Tide'))[0]).toMatchObject({ blue: 3, gold: 2 });
+    expect(R(take(scene({ members: [['gold.tinker']] }), 'Current'))[0]).toMatchObject({ blue: 2, red: 1, gold: 2 });
     expect(R(take(scene({ members: [['gold.tinker']] }), 'Rush'))[0]).toMatchObject({ gold: 2 });
     const s = scene({ members: [['gold.tinker']] });
     s.recruits = 1;
-    expect(R(take(s, 'Turnout'))[0]).toMatchObject({ red: 1, gold: 0 });
+    expect(R(take(s, 'Turnout'))[0]).toMatchObject({ red: 1, gold: 1 });
   });
 
   it('Investor: you choose how much gold to set aside at round start; it comes back doubled at round end', () => {

@@ -160,10 +160,18 @@ export function paymentChoices(state, p, uid) {
   const minimal = all.filter(v => keys.every(c => !v[c] || !memberPayOk(state, p, def, { ...v, [c]: v[c] - 1 })));
   return orderChoices(state, minimal, paymentPlan(state, p, uid));
 }
+// Resources that count as any color when buying followers (Gold: "gold is money").
+const wildColors = state => state.quadrants.map(quadrant).filter(q => q.wildInFollowerBuys).map(q => q.resource);
+const colorsCovered = (state, v) => {
+  const wild = wildColors(state);
+  let n = 0;
+  for (const c of state.resources) if (v[c] > 0) n += wild.includes(c) ? v[c] : 1;
+  return n;
+};
 export function followerChoices(state, p, tier) {
   if (tier.limited && state.bigLeft <= 0) return [];
   const keys = state.resources;
-  const all = vectors(p.res, keys, tier.cost, tier.cost).filter(v => keys.filter(c => v[c] > 0).length >= tier.colors);
+  const all = vectors(p.res, keys, tier.cost, tier.cost).filter(v => colorsCovered(state, v) >= tier.colors);
   return orderChoices(state, all, followerPlan(state, p, tier));
 }
 function orderChoices(state, list, preferred) {
@@ -171,7 +179,8 @@ function orderChoices(state, list, preferred) {
   const seen = new Set();
   const out = [];
   for (const v of list) { const k = vecKey(state, v); if (!seen.has(k)) { seen.add(k); out.push(v); } }
-  out.sort((a, b) => (vecKey(state, b) === pk) - (vecKey(state, a) === pk));
+  // the default way to pay comes first; without one, spend as little gold as possible
+  out.sort((a, b) => (vecKey(state, b) === pk) - (vecKey(state, a) === pk) || (a.gold || 0) - (b.gold || 0));
   return out;
 }
 function payOption(state, v, i) {
@@ -373,11 +382,14 @@ function startRound(state, r) {
   eachMember(state, (owner, card, def) => { if (def.onRoundStart) def.onRoundStart(ctx, owner, card); });
   // late hooks see everything the round-start income gave (Investor sets aside after Banker pays)
   eachMember(state, (owner, card, def) => { if (def.onRoundStartLate) def.onRoundStartLate(ctx, owner, card); });
-  // Fewest followers picks first. Ties: whoever was later in last round's turn order (round I: later seat).
+  // Fewest followers picks first. Ties: whoever was later in last round's turn order.
   // The first pass of last round's snake is its turn order (the last pass is reversed in even rounds).
   const prev = state.order.length ? state.order.slice(0, state.players.length) : [...state.players.map(p => p.id)];
   const lastPos = id => prev.indexOf(id);
-  const base = [...state.players].sort((a, b) => followers(state, a) - followers(state, b) || lastPos(b.id) - lastPos(a.id)).map(p => p.id);
+  // Round I: everyone is tied, so the order is random (Cory, 2026-10-14).
+  const base = r === 1 && state.order.length === 0
+    ? shuffleInPlace(state, state.players.map(p => p.id))
+    : [...state.players].sort((a, b) => followers(state, a) - followers(state, b) || lastPos(b.id) - lastPos(a.id)).map(p => p.id);
   state.order = [];
   for (let k = 0; k < n; k++) state.order.push(...(k % 2 ? [...base].reverse() : base));
   log(state, `Round ${roman(r)} begins. ${state.players[base[0]].name} picks first.`);

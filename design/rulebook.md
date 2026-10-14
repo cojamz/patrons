@@ -17,13 +17,13 @@ The round board is split into four colored quadrants. Each quadrant has its own 
 - Spin the board to read a quadrant up close. The quadrant facing you is shown in full beside the board, and you can point at any space to read it.
 
 ## A turn
-Players take turns in a snake order (1-2-3-4, then 4-3-2-1, and so on). Whoever has the fewest followers goes first each round. If tied, whoever went later last round goes first (at the start, the last seat).
+Players take turns in a snake order (1-2-3-4, then 4-3-2-1, and so on). Round I's order is random. After that, whoever has the fewest followers goes first; if tied, whoever went later last round goes first.
 
 On your turn:
 1. **Place a worker** on an open space and do what it says. Some spaces recruit a member for free; that doesn't use up your buy.
 2. **Buy one thing**, or pass:
    - **Recruit a member** from the shop, which always shows 6 face up. Costs show a colored part (that color only) plus "any" (any resources).
-   - Or **buy followers**: 2 of anything for 1 follower; 4 (at least 2 colors) for 3; 6 (at least 3 colors) for 6. The 6-follower buy is limited. When the last one is bought, the game ends after that round.
+   - Or **buy followers**: 2 of anything for 1 follower; 4 (at least 2 colors) for 3; 6 (at least 3 colors) for 6. Gold counts as any color here. The 6-follower buy is limited. When the last one is bought, the game ends after that round.
 
 Members keep working for you: some pay out each round, some react to what other players do, and some you use once.
 
