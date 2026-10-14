@@ -186,8 +186,11 @@ export default function Beat3() {
         <Act key={`g${ai}${n}`} track={glyphTrack(ai, n)} origin="50% 50%"><Res r={a.q} /></Act>
       )))}
       {BOUGHT.map((b, n) => <Act key={`b${b.j}`} track={boughtTrack(b, n)}><Fol /></Act>)}
-      <Act track={[{ x: 33, y: 37, o: 0 }, [PLUS, 420, { y: 33, o: 1 }, 'out']]}>
-        <span className="in-num" style={{ display: 'inline-flex', alignItems: 'center', gap: 1.5, fontSize: 9, whiteSpace: 'nowrap' }}>+3<Fol /></span>
+      {/* "+3 [follower]": rises beside the new followers, holds, and is gone before the hand-over */}
+      <Act track={[{ x: 32, y: 26, o: 0 }, [PLUS, 420, { y: 22, o: 1 }, 'out'], [DURATION - 650, 450, { o: 0 }, 'sine']]} stillAs={{ o: 0 }}>
+        <span className="in-num" style={{ display: 'inline-flex', alignItems: 'center', gap: 1, fontSize: 8, whiteSpace: 'nowrap', color: '#ffd99a' }}>
+          +3<span style={{ display: 'block', transform: 'scale(.7)', transformOrigin: '0 50%' }}><Fol /></span>
+        </span>
       </Act>
     </>
   );

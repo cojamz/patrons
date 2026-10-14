@@ -10,7 +10,7 @@
 <body>
 <div id="root"></div>
 <!-- Scratch page (dev server only): beat 3's initiation alone, on the kit's clock and camera, looping.
-     ?at=MS freezes it MS into beat 3 (the piece starts at 3100, as in Beat3). The leader, pile and followers here are
+     ?at=MS freezes it MS in (the piece starts at ?start=MS, default 300). The leader, pile and followers here are
      stand-ins for Beat3's, only so the moment can be judged in place. -->
 <script type="module">
 import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
@@ -24,7 +24,7 @@ import Initiation, { BECKON, DURATION, SETTLE, WALK_MS, T } from '/src/v4/intro/
 const h = React.createElement;
 const q = new URLSearchParams(location.search);
 const frozen = q.get('at') != null ? Number(q.get('at')) : null;
-const AT = 3100;
+const AT = q.get('start') != null ? Number(q.get('start')) : 300; // Beat3 starts it at 3100
 const shot = { t: 0, cam: [4, 11, Z.mid], d: 1, lamp: [6, 6, 200, 150] };
 const ids = emojiIds();
 const cast = { you: ids.includes('ghost') ? 'ghost' : ids[0], a: null, b: null, c: null };
