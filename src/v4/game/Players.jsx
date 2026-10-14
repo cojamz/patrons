@@ -48,9 +48,9 @@ export function Workers({ p, caption = true }) {
       <span className="pawns" aria-hidden="true">
         {n ? Array.from({ length: n }, (_, k) => (
           <svg key={k} viewBox="0 0 10 12" width="9" height="11"><circle cx="5" cy="3" r="2.4" /><path d="M1 12 Q1 6.2 5 6.2 Q9 6.2 9 12 Z" /></svg>
-        )) : <span className="none">no workers</span>}
+        )) : null}
       </span>
-      {caption && <small><span className="num">{n}</span> {n === 1 ? 'worker' : 'workers'}</small>}
+      {n === 0 ? <small>no workers</small> : caption && <small><span className="num">{n}</span> {n === 1 ? 'worker' : 'workers'}</small>}
     </span>
   );
 }
@@ -84,7 +84,7 @@ function ChipRow({ state, p, own, onOpen, onAll }) {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  if (!groups.length) return <div className="chips" ref={box}><em>no members yet</em></div>;
+  if (!groups.length) return <div className="chips" ref={box} />;
   const shown = groups.slice(0, fit === Infinity ? groups.length : fit);
   const hidden = groups.length - shown.length;
   return (
