@@ -82,6 +82,7 @@ export default function GameScreen({ session, onPlayAgain, onHome }) {
   // When it's your buy, the shop comes first; otherwise the board's actions do.
   const shopFirst = mine && !needHandoff && pend.kind === 'buy';
   const shop = <Shop state={state} mine={mine && !needHandoff} optionFor={needHandoff ? () => null : optionFor} onPick={onPick} />;
+  const players = <Players state={state} active={pend ? pend.player : null} mySeats={mySeats} optionFor={needHandoff ? () => null : optionFor} onPick={onPick} />;
   const roundText = state.round ? `Round ${roman(state.round)}` : 'Setup';
 
   return (
@@ -103,12 +104,12 @@ export default function GameScreen({ session, onPlayAgain, onHome }) {
       {session.info && session.info.mode === 'online' && session.info.roomCode && (
         <div className="hint">Room {session.info.roomCode}</div>
       )}
-      <Players state={state} active={pend ? pend.player : null} mySeats={mySeats} optionFor={needHandoff ? () => null : optionFor} onPick={onPick} />
+      {!state.over && players}
       {error && <div className="error" role="alert">{error} <button type="button" className="btn ghost" onClick={() => setError('')}>OK</button></div>}
       {state.over ? (
         <div className="main over">
           <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} />
-          <div className="side"><Log state={state} /></div>
+          <div className="side">{players}<Log state={state} /></div>
         </div>
       ) : (
         <div className="main">
@@ -122,7 +123,7 @@ export default function GameScreen({ session, onPlayAgain, onHome }) {
           </div>
         </div>
       )}
-      {toast && <div className="toast" role="status" onClick={() => setToast('')}>{toast}</div>}
+      {toast && !state.over && <div className="toast" role="status" onClick={() => setToast('')}>{toast}</div>}
       {needHandoff && <Handoff player={state.players[pend.player]} onReady={() => setReady(pend.player)} />}
     </div>
   );
