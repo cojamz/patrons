@@ -183,6 +183,37 @@ for (const [label, make] of backends) {
       stops.forEach(f => f());
     }, TIMEOUT);
 
+    it('a host whose phone sleeps (still reads as connected, but stops its heartbeat) is replaced after 15 s', async () => {
+      setup();
+      const { host, guests } = await table(['G1', 'G2'], { seed: 51, subAfterMs: 400 });
+      const [g1, g2] = guests;
+      const errors = [];
+      const stops = [autoPlay(host.s, { seed: 1, errors }), autoPlay(g1.s, { seed: 2, errors }), autoPlay(g2.s, { seed: 3, errors })];
+      await be.wait(() => host.s.getState().history.length > 4, 'some moves');
+      // the host's phone locks: its code stops running, its socket still reads as connected
+      stops[0]();
+      host.lobby.destroy();
+      await be.pause(8000);
+      let room = await roomAt(host.code);
+      expect(room.hostId).toBe(host.playerId); // a few seconds of silence isn't enough
+      expect(room.players[host.playerId].connected).toBe(true);
+      await be.wait(() => g1.lobby.getView().isHost, 'G1 takes over once the heartbeat is 15 s old');
+      room = await roomAt(host.code);
+      expect(room.players[host.playerId].connected).toBe(true); // Firebase still hadn't noticed: the heartbeat did
+      const beat = room.hostBeat;
+      await be.pause(6000);
+      expect((await roomAt(host.code)).hostBeat).not.toBe(beat); // the new host beats
+      // later the server notices the dead socket; the new host lets a bot play the old host's seat; the game ends
+      host.t.close();
+      await be.pause(1000);
+      if (!g1.s.info.seats[0].canSub) console.log('DEBUG', JSON.stringify((await roomAt(host.code)).players), JSON.stringify(g1.s.info.seats[0]), g1.s.info.isHost, g1.lobby.getView().status);
+      await be.wait(() => g1.s.info.seats[0].canSub, 'offered a bot for the old host');
+      await g1.s.letBotPlay(0);
+      await be.wait(() => g1.s.getState()?.over && g2.s.getState()?.over, 'game over');
+      expect(errors).toEqual([]);
+      stops.forEach(f => f());
+    }, TIMEOUT);
+
     it('Leave mid-game hands your seat to a bot at once; the host closing the tab migrates host, and the new host can bot the old host’s seat', async () => {
       setup();
       const { host, guests } = await table(['G1', 'G2'], { seed: 44, subAfterMs: 400 });
