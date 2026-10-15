@@ -76,7 +76,9 @@ try {
     // (a member's on/off switch is a free toggle: flipping it forever would stall the game)
     const rank = id => (/^(card|pay):/.test(id) ? 0 : /^tier:/.test(id) ? 1 : /^toggle:/.test(id) ? 8 : /^(back|undo|pass)/.test(id) ? 9 : 2);
     ids.sort((x, y) => rank(x[1]) - rank(y[1]));
-    const pick = ids.find(([, id]) => !/^(back|undo)/.test(id));
+    // a pair is picked in two steps (boardPick.js comboStep): yours (@pick:x), then theirs, never back and forth
+    const second = ids.some(([, id]) => id === '@unpick');
+    const pick = ids.find(([, id]) => !/^(back|undo)/.test(id) && id !== '@unpick' && !(second && id.startsWith('@pick:')));
     if (!pick) { await page.waitForTimeout(40); }
     else {
       // a hover card can cover the target: then a plain DOM click on a fresh lookup

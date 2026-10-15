@@ -78,7 +78,11 @@ function placeOf(cause) {
     case 'contest': return { kind: 'rim', qid: cause.qid };
     case 'setup': return { kind: 'quadrant', qid: cause.qid };
     case 'release': return { kind: 'member', pid: cause.pid, uid: cause.uid };
-    case 'move': return cause.slot ? { kind: 'space', key: cause.slot } : { kind: 'bank' };
+    case 'move': {
+      // a follow-up choice of the space you took (Collect Debts' picks): from that space
+      const last = rec.state.players[cause.pid] && rec.state.players[cause.pid].lastSlot;
+      return last && last.key ? { kind: 'space', key: last.key } : { kind: 'bank' };
+    }
     default: return { kind: 'bank' };
   }
 }

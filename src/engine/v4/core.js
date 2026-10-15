@@ -3,6 +3,7 @@
 // state.pending = { player, kind, prompt, options:[{ id, label, kind, ... }] }. A move is { player, option }.
 import { quadrant, defById, handlerById, DEFAULT_QUADRANTS, guestMembers } from './content/index.js';
 import { shuffleInPlace } from './rng.js';
+import { startEffects, stopEffects, abandonEffects, underCause } from './effects.js';
 
 export const RING_VALUE = [2, 4, 6];
 export const WORKERS = [3, 4, 5];
@@ -74,16 +75,27 @@ export function isLegal(state, move) {
 }
 
 /** Returns a new state. Throws on an illegal move. */
-export function applyMove(prev, move) {
+export function applyMove(prev, move, { effects = false } = {}) {
   if (!isLegal(prev, move)) throw new Error(`Illegal move: ${JSON.stringify(move)}`);
   const state = structuredClone(prev);
   const task = state.queue.shift();
   state.pending = null;
   state.moves += 1;
-  resolveTask(state, task, move.option);
-  clearFresh(state);
-  advance(state);
+  // effects (effects.js): what moved and why, for the table to play back; recorded only when asked (the play session)
+  if (effects) startEffects(state, moveCause(state, task, move), { followers, worth: valueOf });
+  try {
+    resolveTask(state, task, move.option);
+    clearFresh(state);
+    advance(state);
+  } catch (err) { if (effects) abandonEffects(); throw err; }
+  if (effects) Object.defineProperty(state, 'effects', { value: stopEffects(), enumerable: false, configurable: true, writable: true });
   return state;
+}
+function moveCause(state, task, move) {
+  const o = String(move.option);
+  if (task.t === 'setupPick' && o.startsWith('color:')) return { kind: 'setup', pid: task.p, qid: o.slice(6) };
+  if (o.startsWith('use:')) { const uid = Number(o.slice(4)); return { kind: 'member', pid: task.p, uid, def: state.cards[uid] ? state.cards[uid].def : null }; }
+  return { kind: 'move', pid: task.p, option: o };
 }
 
 /**
@@ -493,7 +505,7 @@ function resolveTask(state, task, optionId) {
 function runTask(state, task) {
   const p = task.p !== undefined ? state.players[task.p] : null;
   switch (task.t) {
-    case 'round': return startRound(state, task.r);
+    case 'round': return underCause({ kind: 'round', round: task.r }, () => startRound(state, task.r));
     case 'turn': {
       state.current = p.id;
       (state.turns = state.turns || []).push(p.id);
@@ -507,14 +519,15 @@ function runTask(state, task) {
       const qid = state.quadrants[task.q];
       const a = actionAt(state, task.q, task.i);
       const ctx = ctxFor(state);
-      // hooks that react to taking a space (Hustler) fire first so follow-up choices keep their order;
-      // afterRivalAction: a member reacting to a rival taking a space (Silversmith)
-      eachMember(state, (owner, card, def) => {
-        if (owner === p && def.afterAction) def.afterAction(ctx, owner, card, qid);
-        if (owner !== p && def.afterRivalAction) def.afterRivalAction(ctx, owner, card, qid, p);
+      return underCause({ kind: 'space', key: `${task.q}-${task.i}`, qid, pid: p.id }, () => {
+        // hooks that react to taking a space (Hustler) fire first so follow-up choices keep their order;
+        // afterRivalAction: a member reacting to a rival taking a space (Silversmith)
+        eachMember(state, (owner, card, def) => {
+          if (owner === p && def.afterAction) def.afterAction(ctx, owner, card, qid);
+          if (owner !== p && def.afterRivalAction) def.afterRivalAction(ctx, owner, card, qid, p);
+        });
+        a.resolve(ctx, p);
       });
-      a.resolve(ctx, p);
-      return;
     }
     case 'endTurn': {
       const ctx = ctxFor(state);
@@ -539,7 +552,7 @@ function runTask(state, task) {
       if (state.round < 3) state.queue.push({ t: 'round', r: state.round + 1 });
       else state.queue.push({ t: 'finish' });
       return;
-    case 'finish': return finish(state);
+    case 'finish': return underCause({ kind: 'final' }, () => finish(state));
     default:
       throw new Error(`Unknown task ${task.t}`);
   }
@@ -604,7 +617,7 @@ function endRound(state) {
   for (const c of table) {
     if (!c.winners.length) continue;
     const winners = c.winners.map(id => state.players[id]);
-    for (const w of winners) { w.bonus += v; w.contest += v; }
+    underCause({ kind: 'contest', qid: c.qid, round: state.round }, () => { for (const w of winners) { w.bonus += v; w.contest += v; } });
     msg.push(`${c.label}: ${winners.map(w => w.name).join(' & ')} +${v}`);
   }
   // the round's scoring, kept as decided: the round-end card and the results read it back (never re-derived)
@@ -676,7 +689,10 @@ function refill(state) {
 }
 
 // how: a recruit priced by a space's own rule (Snap Up: { anyColors }, Half Price: { anyColors, half }), as memberPrice
-function recruit(state, p, uid, { free, spend: chosen, how = {} }) {
+function recruit(state, p, uid, opts) {
+  return underCause(() => ({ kind: 'recruit', pid: p.id, uid, index: state.shop.indexOf(uid) }), () => recruitNow(state, p, uid, opts));
+}
+function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
   const idx = state.shop.indexOf(uid);
   const fromPile = idx < 0 ? state.pile.indexOf(uid) : -1;
   if (idx < 0 && (fromPile < 0 || fromPile >= pileReach(state, p))) throw new Error(`Card ${uid} is not in the shop`);
@@ -730,6 +746,9 @@ function recruit(state, p, uid, { free, spend: chosen, how = {} }) {
 }
 
 function buyFollowers(state, p, tier, chosen) {
+  return underCause({ kind: 'buy', pid: p.id, tier: tier.key, get: tier.get }, () => buyFollowersNow(state, p, tier, chosen));
+}
+function buyFollowersNow(state, p, tier, chosen) {
   const spend = chosen || followerPlan(state, p, tier);
   if (!spend) throw new Error('Cannot afford');
   for (const r in spend) p.res[r] -= spend[r];
@@ -778,7 +797,7 @@ function eachMemberOf(state, p, fn) {
     const card = state.cards[uid];
     for (const def of effectiveDefs(card)) {
       const before = traceSnapshot(state);
-      fn(wrap(state, card), def);
+      underCause({ kind: 'member', pid: p.id, uid, def: card.def }, () => fn(wrap(state, card), def));
       traceChanges(state, before, p, def);
     }
   }
@@ -898,6 +917,9 @@ export function releaseRefund(state, uid) {
 // The card goes to the bottom of the pile, wiped clean (a released Doppelganger forgets what it copied).
 // A refund in its own color is paid here; one in any colors is picked in the release task. Returns the refund.
 function release(state, p, uid) {
+  return underCause({ kind: 'release', pid: p.id, uid }, () => releaseNow(state, p, uid));
+}
+function releaseNow(state, p, uid) {
   const def = cardDef(state, uid), back = releaseRefund(state, uid);
   cardLeaves(state, p, uid);
   p.members.splice(p.members.indexOf(uid), 1);
@@ -955,7 +977,8 @@ function ctxFor(state) {
      *  whatever it changes and doesn't log is logged under that name, like the engine's own member hooks. */
     asMember(owner, name, fn) {
       const before = traceSnapshot(state);
-      const out = fn();
+      const uid = owner.members.find(u => { try { return cardDef(state, u).name === name; } catch { return false; } });
+      const out = underCause({ kind: 'member', pid: owner.id, uid: uid ?? null, def: uid != null ? state.cards[uid].def : null }, fn);
       traceChanges(state, before, owner, { name });
       return out;
     },

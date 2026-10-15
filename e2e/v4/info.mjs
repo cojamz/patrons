@@ -76,7 +76,7 @@ async function audit(page, step) {
       .map(m => m.dataset.member);
     // (k) every pip and every coin (setup, pay) draws the dot glyph; no old shaped coin survives
     const bare = [...document.querySelectorAll('.pip:not(.wild)')].filter(e => vis(e) && !e.closest('[aria-hidden="true"]') && !e.querySelector('svg.res-glyph')).length;
-    const blank = [...document.querySelectorAll('.prompt.choice.setup .token, .slot-coin, .tray-coin i')].filter(e => vis(e) && !e.querySelector('svg.res-glyph')).length
+    const blank = [...document.querySelectorAll('.prompt.choice.setup .token, .pay-coin, .ps-coin, .slot-coin, .tray-coin i')].filter(e => vis(e) && !e.querySelector('svg.res-glyph')).length
       + [...document.querySelectorAll('.coin-big, [data-coin-mark]')].filter(vis).length;
     // and the setup picker's labels read on their paper (contrast ≥ 4.5)
     const rgb = c => (String(c).match(/[\d.]+/g) || []).map(Number);
@@ -327,7 +327,9 @@ try {
         if (tops.order.length !== tops.seats || !tops.order.includes('now')) fail(`(l) turn-order places: ${JSON.stringify(tops.order)}`, step);
       }
     }
-    const opt = page.locator('.slot.can, [data-option]:not([aria-disabled="true"])').first();
+    // a pair is picked in two steps (boardPick.js comboStep): yours (@pick:x), then theirs, never back and forth
+    const second = !!(await page.$('[data-option="@unpick"]'));
+    const opt = page.locator(`.slot.can, [data-option]:not([aria-disabled="true"]):not([data-option="@unpick"])${second ? ':not([data-option^="@pick:"])' : ''}`).first();
     if (await opt.count()) { await opt.click({ timeout: 2000 }).catch(() => {}); }
     await page.waitForTimeout(80);
   }

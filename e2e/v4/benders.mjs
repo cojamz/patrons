@@ -166,11 +166,14 @@ try {
 
     // otherwise: first legal option (skip toggles, back, and releases after the first)
     const els = await page.$$('[data-option]:not([disabled])');
+    const ids = await Promise.all(els.map(el => el.getAttribute('data-option').catch(() => null)));
+    // a pair is picked in two steps (boardPick.js comboStep): yours (@pick:x), then theirs, never back and forth
+    const second = ids.includes('@unpick');
     let clicked = false;
-    for (const el of els) {
-      const id = await el.getAttribute('data-option').catch(() => null);
-      if (!id || id.startsWith('toggle:') || id === 'back' || id.startsWith('release:')) continue;
-      try { await el.click({ timeout: 1500 }); clicked = true; break; } catch { /* moved */ }
+    for (let k = 0; k < els.length; k++) {
+      const id = ids[k];
+      if (!id || id.startsWith('toggle:') || id === 'back' || id.startsWith('release:') || id === '@unpick' || (second && id.startsWith('@pick:'))) continue;
+      try { await els[k].click({ timeout: 1500 }); clicked = true; break; } catch { /* moved */ }
     }
     await page.waitForTimeout(clicked ? 60 : 80);
   }

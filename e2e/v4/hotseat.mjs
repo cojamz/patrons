@@ -355,11 +355,15 @@ try {
     }
     // the first legal option in page order (skip on/off toggles, which would loop)
     const els = await page.$$('[data-option]:not([disabled])');
+    const ids = await Promise.all(els.map(el => el.getAttribute('data-option').catch(() => null)));
+    // a pair is picked in two steps (boardPick.js comboStep): yours (@pick:x), then theirs; once one is lifted
+    // (@unpick on screen), putting it back or switching yours would go round in circles
+    const second = ids.includes('@unpick');
     let clicked = false;
-    for (const el of els) {
-      const id = await el.getAttribute('data-option').catch(() => null);
-      if (!id || id.startsWith('toggle:') || id === 'back') continue; // pay: confirm the default
-      try { await el.click({ timeout: 1500 }); clicked = true; clicks++; break; } catch { /* covered, moved or detached; try the next */ }
+    for (let k = 0; k < els.length; k++) {
+      const id = ids[k];
+      if (!id || id.startsWith('toggle:') || id === 'back' || id === '@unpick' || (second && id.startsWith('@pick:'))) continue; // pay: confirm the default
+      try { await els[k].click({ timeout: 1500 }); clicked = true; clicks++; break; } catch { /* covered, moved or detached; try the next */ }
     }
     if (!clicked) await page.waitForTimeout(30);
     else await page.waitForTimeout(20);
