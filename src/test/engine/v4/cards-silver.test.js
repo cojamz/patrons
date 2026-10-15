@@ -75,7 +75,7 @@ describe('Silver members', () => {
   });
   it('Majordomo × Straggler: moving onto a Silver space is taking it', () => {
     let s = sc({ round: 2, members: [['silver.majordomo', 'benders.straggler']], slots: { '0-0': 0 }, queue: [{ t: 'allPlaced' }] });
-    s = move(move(s, 'from:0-0'), 'to:2-0');
+    s = move(s, 'to:2-0');
     expect(S(s)).toBe(6 + 2);
     expect(named(s, 'Majordomo')).toHaveLength(1);
     expect(named(s, 'Straggler')).toHaveLength(1);
@@ -160,7 +160,7 @@ describe('Silver members', () => {
     expect(s.players[0].bonus).toBe(1);
     expect(named(s, 'Toastmaster')[0]).toMatch(/P1's Toastmaster: \+1 follower/);
     s = sc({ round: 2, members: [['silver.toastmaster', 'benders.straggler']], slots: { '0-0': 0 }, queue: [{ t: 'allPlaced' }] });
-    s = move(move(s, 'from:0-0'), 'to:2-0');
+    s = move(s, 'to:2-0');
     expect(s.players[0].bonus).toBe(1);
   });
 

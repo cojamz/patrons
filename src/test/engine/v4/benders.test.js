@@ -213,12 +213,11 @@ describe('Front-runner: always pick first in a round', () => {
   });
 });
 
-describe('Straggler: after the last worker is placed, move one of yours to an unused space and do it', () => {
+describe('Straggler: after the last worker is placed, your last minion may move to an unused space and do it', () => {
   it('moves a worker, resolves the new space, keeps the old effect, and frees the old space', () => {
     let s = scene({ round: 2, members: [['benders.straggler']], res: [{ gold: 3 }], slots: { [JV]: 0 }, queue: [{ t: 'allPlaced' }] });
     expect(s.pending.kind).toBe('choose');
-    s = choose(s, o => o.id === `from:${JV}`);
-    s = choose(s, o => o.value === RUSH);
+    s = choose(s, o => o.value === RUSH); // only where to: the minion is your last one (Cory, 2026-10-15)
     expect(R(s).gold).toBe(3 + 4); // Golden Years in round II
     expect(s.slots[JV]).toBeUndefined();
     expect(s.slots[RUSH]).toBe(0);
@@ -229,7 +228,7 @@ describe('Straggler: after the last worker is placed, move one of yours to an un
     s = choose(s, o => o.id === 'no');
     expect(s.slots[JV]).toBe(0);
     let t = scene({ round: 2, members: [['benders.straggler']], slots: { [JV]: 0 }, queue: [{ t: 'allPlaced' }] });
-    t = choose(t, o => o.id === `from:${JV}`); t = choose(t, o => o.value === RUSH);
+    t = choose(t, o => o.value === RUSH);
     t.queue = [{ t: 'allPlaced' }]; t = resume(t);
     expect(t.pending).toBe(null);
   });

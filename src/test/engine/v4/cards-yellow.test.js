@@ -161,7 +161,7 @@ describe('Yellow members', () => {
     expect(R(s).yellow).toBe(1);
     expect(named(s, 'Explorer')).toHaveLength(1);
     s = sc({ round: 2, members: [['yellow.explorer', 'benders.straggler']], slots: { '2-0': 0 }, queue: [{ t: 'allPlaced' }] });
-    s = move(move(s, 'from:2-0'), 'to:0-1');
+    s = move(s, 'to:0-1');
     expect(R(s).yellow).toBe(1);
   });
   it('Feastmaker: once per game, +1 of each color per round number, named', () => {
