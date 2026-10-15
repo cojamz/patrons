@@ -5,6 +5,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, cleanup, act } from '@testing-library/react';
 import ShopCards from '../../../v4/game/ShopCards.jsx';
 import { createHover, whyLine, raceAfter, SpaceCard } from '../../../v4/game/HoverCards.jsx';
+import { HOVER_DELAY_MS } from '../../../v4/game/hoverDelay.js';
 import { YoudGet, requestPreviews, peekPreview, _setPreviewWorker, previewWords, cachedPreview, youdWords } from '../../../v4/game/Info.jsx';
 import { createGame, applyMove, chooseBotMove, quadrant } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
@@ -25,8 +26,9 @@ describe('previews reach the screen', () => {
     const hover = createHover();
     const { container } = render(<ShopCards state={s} me={0} mySeats={[0]} hover={hover} />);
     const el = document.createElement('div');
-    act(() => { hover.onSpaceHover(scene.key, el); });
-    expect(peekPreview(s, 0, ...scene.key.split('-').map(Number))).toBeTruthy(); // worked out at once, no timer ran
+    // the card opens after the hover delay (hoverDelay.js); the shop brightens with it, its dry run worked out in that render
+    act(() => { hover.onSpaceHover(scene.key, el); vi.advanceTimersByTime(HOVER_DELAY_MS); });
+    expect(peekPreview(s, 0, ...scene.key.split('-').map(Number))).toBeTruthy(); // worked out at once, no worker answer waited for
     const lit = [...container.querySelectorAll('.lt-card[data-after]')];
     expect(lit.map(c => Number(c.dataset.uid))).toEqual(expect.arrayContaining(scene.uids));
     expect(lit.every(c => !c.classList.contains('dim'))).toBe(true);

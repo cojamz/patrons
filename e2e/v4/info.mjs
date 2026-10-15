@@ -7,7 +7,10 @@
 //  (b) hovering a shop card and a board space shows a card; on a touch screen a long-press on a titled element
 //      shows its title (the hover's touch twin);
 //  (c) no "★" anywhere in the rendered game (followers are the little-person mark);
-//  (d) hover cards open within 100ms (p95) and never flicker while sweeping a ring of spaces;
+//  (d) hover cards open within 100ms (p95) of the end of the hover delay (Cory, 2026-10-15: they wait HOVER_DELAY_MS,
+//      src/v4/game/hoverDelay.js, so a mouse moving across the screen doesn't fire them nonstop), a quick sweep across
+//      the spaces (moving on within the delay) opens none, and once one is up it never flickers while sweeping a ring
+//      of spaces (it swaps in place);
 //  (e) a cult member hops when its own trace line appears in the log;
 //  (f) no seat sigil shapes anywhere (identity is the leader's emoji and the name);
 //  (g) every member in a cult stands on a ground in its sphere's color, so it reads as that sphere;
@@ -28,7 +31,9 @@
 //  (o) the rim: pointing at a quadrant's rule or a leader's emoji opens that quadrant's standings, never a space;
 //  (p) a space's card lists every player in its contest line (the 4th never drops off);
 //  (q) every shop card and every member in every chair opens its card, whole on screen and on top (Kingpin had
-//      none; bottom-seat member cards ran under the shop strip); the pay dialog takes focus (Enter pays) and names
+//      none; bottom-seat member cards ran under the shop strip), and so does every rival's seat, each whole at once:
+//      what it says and its height 400ms later are what it first painted (speed squad 2026-10-15: testers saw hover
+//      cards fill in late, in bursts); the pay dialog takes focus (Enter pays) and names
 //      each rule-changer bending the price (Penny Pincher, a discount);
 //  (n) you are "You": the round summary and the Chronicle never use your seat's name; the summary keeps the type scale (caps labels 11, words 14 at least);
 //  (r) every hover card opened in (m) reads whole (lib/textclip.mjs) and keeps to the two marks (lib/legacy.mjs).
@@ -42,6 +47,7 @@ import { TEXT_CLIP } from './lib/textclip.mjs';
 import { LEGACY } from './lib/legacy.mjs';
 import { TYPE_SCALE } from './lib/typescale.mjs';
 import { seedSave } from './lib/seed.mjs';
+import { HOVER_DELAY_MS } from '../../src/v4/game/hoverDelay.js';
 
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/info`;
 mkdirSync(SHOTS, { recursive: true });
@@ -233,7 +239,7 @@ async function rimCheck(page, step) {
     if (p.qid && top !== p.qid) { fail(`(o) pointing at ${p.what} reaches ${top}, not its standings`, step); continue; }
     if (!p.qid && !/^[a-z]+$/.test(top || '')) { fail(`(o) pointing at ${p.what} reaches ${top}, not the standings`, step); continue; }
     await page.mouse.move(4, 690); await page.waitForTimeout(200);
-    await page.mouse.move(p.x, p.y); await page.waitForTimeout(150);
+    await page.mouse.move(p.x, p.y); await page.waitForTimeout(150 + HOVER_DELAY_MS);
     const kind = await page.evaluate(() => { const c = document.querySelector('[data-hover-layer][data-open="1"] [data-hover-card]'); return c ? c.dataset.hoverCard : null; });
     if (kind !== 'plaque') fail(`(o) hovering ${p.what} opened ${kind || 'nothing'}, not the standings`, step);
     else if (!(await page.evaluate(() => /Round end: whoever has the .+ gets \d+ followers?/.test(document.querySelector('[data-hover-layer][data-open="1"]').innerText)))) fail(`(o) the standings for ${p.what} never say the prize is followers ("Round end: whoever has … gets N followers")`, step);
@@ -390,7 +396,7 @@ try {
         }
         // (m) your own seat's card opens beside it; (l) the ranked line and the turn-order places
         const head = page.locator('.lt > .lt-seat-0 .cs-head').first();
-        if (await head.count()) { await head.hover(); await page.waitForTimeout(300); await anchorCheck(page, 'your seat', step, await head.evaluate(e => e.getBoundingClientRect().toJSON())); await page.mouse.move(5, 5); await page.waitForTimeout(200); }
+        if (await head.count()) { await head.hover(); await page.waitForTimeout(300 + HOVER_DELAY_MS); await anchorCheck(page, 'your seat', step, await head.evaluate(e => e.getBoundingClientRect().toJSON())); await page.mouse.move(5, 5); await page.waitForTimeout(200); }
         // (m) w2a #14/#28/#29: a seat's turn words, the "each round" line, a name in the strip and your member figure
         // each open their own card right by them, never the seat's list or a card across the screen
         if (!near14.has(step)) { near14.add(step); await nearChecks(page, step); }
@@ -454,8 +460,9 @@ try {
   // the box while the hover timing below is measured
   await page.close();
 
-  // (d) hover speed (Cory: instant and seamless): p95 from the pointer arriving to a visible card < 100ms, and no
-  // close/reopen flicker while sweeping across a ring of spaces. Measured on the Lamplit hover layer with the real
+  // (d) hover speed (Cory: seamless, and no nonstop hovers as the mouse moves): p95 from the end of the hover delay
+  // (the pointer arriving + HOVER_DELAY_MS) to a visible card < 100ms, a quick sweep opens nothing, and no
+  // close/reopen flicker while sweeping across a ring of spaces once a card is up. Measured on the Lamplit hover layer with the real
   // wheel and shop (the ?lab=b page of this build) until the game screen mounts it.
   {
     const lab = await browser.newPage({ viewport: { width: 1270, height: 700 } });
@@ -463,25 +470,26 @@ try {
     await lab.goto(`${base}/?lab=b&phase=place`);
     await lab.waitForSelector('[data-hover-layer]');
     await lab.waitForTimeout(800); // idle warm-up of the dry runs
-    await lab.evaluate(() => {
+    await lab.evaluate(delay => {
       const visible = () => [...document.querySelectorAll('[data-hover-layer][data-open="1"], .peek')].some(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left > -1000 && getComputedStyle(e).opacity !== '0'; });
-      window.__hov = { lat: [], flips: 0, was: false, sweeping: false };
+      window.__hov = { lat: [], flips: 0, was: false, sweeping: false, delay, quick: false, quickOpened: false, at: [] };
       let t0 = null;
       // the clock starts at the move's first boundary event: React fires onPointerEnter from the native pointerout (it
       // comes before pointerover, at the new position), and a card that opens whole in that one event is already up by
       // pointerover. Timed from pointerover alone, those fastest arrivals went uncounted (17 of 30 on 7373244).
       const onto = el => el && el.closest && el.closest('[data-slot], [data-uid]');
       addEventListener('pointerout', e => { if (onto(e.relatedTarget) && !visible()) t0 = performance.now(); }, true);
-      addEventListener('pointerover', e => { if (onto(e.target) && !visible()) t0 = performance.now(); }, true);
+      addEventListener('pointerover', e => { if (onto(e.target) && !visible()) t0 = performance.now(); if (window.__hov.quick && onto(e.target)) window.__hov.at.push(performance.now()); }, true);
       const tick = () => {
         const v = visible();
-        if (v && t0 != null) { window.__hov.lat.push(performance.now() - t0); t0 = null; }
+        if (v && t0 != null) { window.__hov.lat.push(performance.now() - t0 - window.__hov.delay); t0 = null; }
         if (window.__hov.sweeping && window.__hov.was && !v) window.__hov.flips++;
+        if (window.__hov.quick && v) window.__hov.quickOpened = true;
         window.__hov.was = v;
         requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
-    });
+    }, HOVER_DELAY_MS);
     const centers = async sel => lab.$$eval(sel, els => els.map(e => { const b = e.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; }));
     const spaces = await centers('[data-slot] .base');
     const cards = await centers('[data-region="shop"] [data-uid]');
@@ -495,7 +503,7 @@ try {
         // each arrival is timed from no card on screen: let the last one finish closing (its close pause and its fade)
         await lab.waitForFunction(() => ![...document.querySelectorAll('[data-hover-layer][data-open="1"], .peek')].some(e => getComputedStyle(e).opacity !== '0'), null, { timeout: 1000 }).catch(() => {});
         await lab.mouse.move(x, y, { steps: 2 });
-        await lab.waitForTimeout(160);
+        await lab.waitForTimeout(160 + HOVER_DELAY_MS);
       }
       const lat = (await lab.evaluate(() => window.__hov.lat)).sort((a, b) => a - b);
       return { lat, p95: lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : Infinity };
@@ -513,8 +521,25 @@ try {
     const far = Math.max(...all.map(o => Math.hypot(o.x - cx, o.y - cy)));
     const ring = all.filter(o => Math.hypot(o.x - cx, o.y - cy) > far * 0.85).sort((a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx));
     if (ring.length < 6) fail(`(d) found only ${ring.length} outer spaces to sweep`, 'hover');
+    // a quick sweep from nothing up: across the ring, each space left within the delay, then off the board: no card
+    // (a sweep the box slowed past the delay proves nothing, so it's tried again, up to 3 times)
+    let quick = null;
+    for (let k = 0; k < 3 && !quick; k++) {
+      await lab.mouse.move(4, 690);
+      await lab.waitForFunction(() => ![...document.querySelectorAll('[data-hover-layer][data-open="1"]')].length, null, { timeout: 1500 }).catch(() => {});
+      await lab.waitForTimeout(300);
+      await lab.evaluate(() => { Object.assign(window.__hov, { quick: true, quickOpened: false, at: [] }); });
+      for (const o of ring.slice(0, 6)) { await lab.mouse.move(o.x, o.y); await lab.waitForTimeout(Math.round(HOVER_DELAY_MS / 4)); }
+      await lab.mouse.move(4, 690);
+      const t1 = await lab.evaluate(() => performance.now());
+      await lab.waitForTimeout(HOVER_DELAY_MS + 300);
+      const r = await lab.evaluate(t => { const h = window.__hov; h.quick = false; const at = [...h.at, t]; return { opened: h.quickOpened, step: Math.max(...at.slice(1).map((v, i) => v - at[i])), n: h.at.length }; }, t1);
+      if (r.step < HOVER_DELAY_MS - 20) quick = r;
+    }
+    if (!quick) console.log(`info.mjs: the box never swept faster than the ${HOVER_DELAY_MS}ms delay in 3 tries: the quick sweep is not judged`);
+    else if (quick.opened) fail(`(d) a quick sweep across 6 spaces (each left within ${Math.round(quick.step)}ms, the delay is ${HOVER_DELAY_MS}ms) opened a hover card`, 'hover');
     await lab.mouse.move(ring[0].x, ring[0].y);
-    await lab.waitForTimeout(200);
+    await lab.waitForTimeout(200 + HOVER_DELAY_MS);
     await lab.evaluate(() => { window.__hov.sweeping = true; window.__hov.flips = 0; });
     for (const o of ring.slice(1, 9)) { await lab.mouse.move(o.x, o.y, { steps: 6 }); await lab.waitForTimeout(90); }
     const flips = await lab.evaluate(() => { window.__hov.sweeping = false; return window.__hov.flips; });
@@ -587,12 +612,26 @@ try {
     if (await pg.$('[data-home="resume"]')) await pg.click('[data-home="resume"]');
     await pg.waitForSelector('.lt-shop .card[data-uid]');
     await pg.waitForTimeout(400);
+    // a card that opened is already whole: 400ms on, the same words at the same height (no "You'd get", member list or
+    // price filling in after the first paint)
+    const settled = async (what, find) => {
+      // the same card element both times (a card that closed in between, or another one, isn't a fill)
+      const sig = first => pg.evaluate(([f, first]) => {
+        const e = first ? (window.__settle = new Function(`return (${f})()`)()) : window.__settle;
+        if (!e || !e.isConnected) return null; const b = e.getBoundingClientRect(); return `${Math.round(b.left)},${Math.round(b.top)} ${Math.round(b.height)}|${e.innerText}`; // its place too: one that slides after it shows isn't whole
+      }, [find.toString(), first]);
+      const a = await sig(true);
+      await pg.waitForTimeout(400);
+      const b = await sig(false);
+      if (a && b && a !== b) fail(`(q) ${what}: its card filled in after it opened ("${a.slice(0, 80).replace(/\s+/g, ' ')}" → "${b.slice(0, 80).replace(/\s+/g, ' ')}")`, 'cards');
+    };
     const shop = await pg.$$eval('.lt-shop .lt-cards .card[data-uid]', els => els.map(e => e.dataset.uid));
     for (const uid of shop) {
       await pg.mouse.move(4, 690); await pg.waitForTimeout(170);
       await pg.locator(`.lt-shop .card[data-uid="${uid}"]`).hover();
-      const ok = await pg.waitForFunction(u => { const c = document.querySelector(`[data-hover-layer][data-open="1"] [data-card-hover="${u}"] .card-face`); return !!c && c.getBoundingClientRect().width > 0; }, uid, { timeout: 1500 }).then(() => true, () => false);
+      const ok = await pg.waitForFunction(u => { const c = document.querySelector(`[data-hover-layer][data-open="1"] [data-card-hover="${u}"] .card-face`); return !!c && c.getBoundingClientRect().width > 0; }, uid, { timeout: 1500 + HOVER_DELAY_MS }).then(() => true, () => false);
       if (!ok) { fail(`(q) shop card ${uid} (${st.cards[uid].def}) opens no card`, 'cards'); continue; }
+      await settled(`shop card ${st.cards[uid].def}`, () => document.querySelector('[data-hover-layer][data-open="1"]'));
       await anchorCheck(pg, `shop card ${st.cards[uid].def}`, 'cards', `.lt-shop .card[data-uid="${uid}"]`);
       const extra = await pg.evaluate(() => (document.querySelector('[data-hover-layer][data-open="1"]').innerText.match(/You pay|Choose how to pay|Leaves|you'd lead|you’d lead|Click the card/i) || [])[0]);
       if (extra) fail(`(q) the shop card's hover still says "${extra}" (Cory: the cost and nothing else about payment)`, 'cards');
@@ -605,7 +644,8 @@ try {
         await pg.mouse.move(4, 690); await pg.waitForTimeout(170);
         await figs.nth(k).hover();
         const r = await pg.waitForFunction(() => {
-          const c = [...document.querySelectorAll('.popover .card-face')].find(e => e.getBoundingClientRect().width > 0);
+          // (one waiting out the hover delay is drawn off screen, hidden: data-prep)
+          const c = [...document.querySelectorAll('.popover:not([data-prep]) .card-face')].find(e => e.getBoundingClientRect().width > 0);
           if (!c) return null;
           const p = c.closest('.popover'), b = p.getBoundingClientRect();
           // your member's hover card is see-through to clicks (only its buttons take them), so the hit test asks with
@@ -615,14 +655,23 @@ try {
           const hit = document.elementFromPoint(b.left + b.width / 2, b.top + Math.min(20, b.height / 2));
           thru.forEach(e => e.classList.add('see-through'));
           return { name: c.dataset.card, inView: b.top >= 0 && b.left >= 0 && b.bottom <= innerHeight + 0.5 && b.right <= innerWidth + 0.5, onTop: !!hit && p.contains(hit), y: [Math.round(b.top), Math.round(b.bottom)] };
-        }, null, { timeout: 1500 }).then(h => h.jsonValue(), () => null);
+        }, null, { timeout: 1500 + HOVER_DELAY_MS }).then(h => h.jsonValue(), () => null);
         members++;
         if (!r) { fail(`(q) a member in chair ${seat} opens no card`, 'cards'); continue; }
+        await settled(`${r.name} (chair ${seat})`, () => { const c = [...document.querySelectorAll('.popover:not([data-prep]) .card-face')].find(e => e.getBoundingClientRect().width > 0); return c && c.closest('.popover'); });
         if (!r.inView) fail(`(q) ${r.name} (chair ${seat}) opens a card off the window (y ${r.y.join('–')})`, 'cards');
         if (!r.onTop) fail(`(q) ${r.name} (chair ${seat}) opens a card under something else`, 'cards');
       }
     }
     if (members < 6) fail(`(q) only ${members} chair members to check`, 'cards');
+    // every rival's seat: its card opens and is whole at once
+    for (const seat of [1, 2, 3]) {
+      await pg.mouse.move(4, 690); await pg.waitForTimeout(170);
+      await pg.locator(`[data-cult="${seat}"] .cs-leader`).first().hover();
+      const ok = await pg.waitForFunction(p => { const c = document.querySelector(`[data-hover-layer][data-open="1"] [data-seat-card="${p}"]`); return !!c && c.getBoundingClientRect().width > 0; }, seat, { timeout: 1500 + HOVER_DELAY_MS }).then(() => true, () => false);
+      if (!ok) { fail(`(q) chair ${seat}'s seat opens no card`, 'cards'); continue; }
+      await settled(`chair ${seat}'s seat`, () => document.querySelector('[data-hover-layer][data-open="1"]'));
+    }
     await pg.screenshot({ path: `${SHOTS}/10-member-card.png` });
     // the pay dialog: place, then recruit a gold member; the dialog holds focus and names the rule-changers
     await pg.mouse.move(4, 690);

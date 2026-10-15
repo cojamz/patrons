@@ -12,6 +12,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, existsSync, statSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { homedir, loadavg, cpus } from 'node:os';
+import { HOVER_DELAY_MS } from '../src/v4/game/hoverDelay.js';
 
 const argv = process.argv.slice(2);
 const pos = argv.filter(a => !a.startsWith('--'));
@@ -91,11 +92,13 @@ const readTable = page => page.evaluate(() => {
   return { phase: g.dataset.phase, yours: g.dataset.yours === '1', moves: Number(g.dataset.moves), round, reckoning: !!document.querySelector('.reckoning, [data-reckoning]') };
 });
 const center = async el => { const b = await el.boundingBox().catch(() => null); return b && b.width ? { x: b.x + b.width / 2, y: b.y + b.height / 2 } : null; };
+// dwell: how long the card is read once it's open (the hover delay comes on top: a card opens HOVER_DELAY_MS after the
+// pointer rests)
 async function hoverEl(p, el, dwell = 420) {
   const c = el && await center(el);
   if (!c) return false;
   await p.page.mouse.move(c.x, c.y, { steps: 5 });
-  await sleep(dwell);
+  await sleep(dwell + HOVER_DELAY_MS);
   return true;
 }
 async function hoverSel(p, sel, n, dwell) {
@@ -189,7 +192,10 @@ async function takeTurn(p, tab) {
     await hoverSel(p, '.lt-seat-1 .cs-head, .lt-seat-2 .cs-head', 1, 420);
     await hoverSel(p, '.lt-shop .card[data-uid]', 2, 380);
     const rim = await page.$('.rim-layer [data-rim]');
-    if (rim) { try { await rim.hover({ timeout: 800, force: true }); await sleep(420); } catch { /* fine */ } }
+    if (rim) { try { await rim.hover({ timeout: 800, force: true }); await sleep(420 + HOVER_DELAY_MS); } catch { /* fine */ } }
+    // a member in a chair and a keyword's tip (Tip cards)
+    await hoverSel(p, '.cs-member .fig', 1, 420);
+    await hoverSel(p, '.lt [data-tip][role="button"]:not(.fig)', 1, 380);
     await spinWheel(p, tab.round);
     const legal = await page.$$('.lt-wheel [data-slot][data-option]');
     if (!legal.length) return;
@@ -323,7 +329,7 @@ for (const r of results) {
   for (const [w, xs] of Object.entries(byWhat)) { const ok = xs.filter(x => x != null).sort((a, b) => a - b); L.push(`| ${w} | ${xs.length} | ${f(ok[Math.floor((ok.length - 1) / 2)])} | ${f(ok[ok.length - 1])} | ${xs.length - ok.length} |`); }
   void hc;
   L.push('', `Clicks on a live option that changed nothing (tracer, 1.2s): ${s.clicks.eaten} of ${s.clicks.count}${s.clicks.eatenList.length ? ` (${s.clicks.eatenList.map(c => c.option || c.kind).join(', ')})` : ''}.`);
-  L.push('', '### Hover open delay (pointer over → card in the DOM; content = "You\'d get" filled; complete = its last change landed)', '', '| target | n | p50 | p95 | max | content p95 | complete p95 | pointerover handler p95 |', '|---|---|---|---|---|---|---|---|');
+  L.push('', `### Hover open (from the end of the ${HOVER_DELAY_MS}ms hover delay → card on screen; content = "You'd get" filled; complete = its last change landed while it was still the card up; ·swap = a card already up swapping in place, no delay, timed from the arrival)`, '', '| target | n | p50 | p95 | max | content p95 | complete p95 | pointerover handler p95 |', '|---|---|---|---|---|---|---|---|');
   for (const x of s.hover.byKind) L.push(`| ${x.kind} | ${x.n} | ${f(x.p50)} | ${f(x.p95)} | ${f(x.max)} | ${f(x.content)} | ${f(x.settled)} | ${f(x.handler)} |`);
   L.push('', `Hovers whose card never showed (moved on first, or no card): ${s.hover.missed}.`);
   L.push('', '### Long animation frames', '', `LoAF: ${s.loaf.count} frames ≥50ms, ${s.loaf.over100} over 100ms, total blocking ${f(s.loaf.totalBlocking)}ms. Long tasks: ${s.longtasks.count}, ${f(s.longtasks.total)}ms total, max ${f(s.longtasks.max)}ms.`, '');
