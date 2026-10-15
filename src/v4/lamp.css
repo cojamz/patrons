@@ -9,6 +9,22 @@
 @font-face{font-family:'Alegreya Sans';src:url(./fonts/as-700.woff2) format('woff2');font-weight:700;font-display:swap}
 @font-face{font-family:'Alegreya Sans';src:url(./fonts/as-800.woff2) format('woff2');font-weight:800;font-display:swap}
 
+/* ---------- tokens: walnut, cream paper, muted inks, Alegreya ---------- */
+:root{
+  --walnut:#1d1611; --walnut-2:#271d16; --walnut-3:#33271e;
+  --table:var(--walnut); --table-2:var(--walnut-2); --table-3:var(--walnut-3);
+  --rim:#4a3b2d; --ink:#f3e6c8; --muted:#b09f82;
+  --cream:#f3e6c8; --cream-2:#cbb894; --cream-3:#8f7f66;
+  --paper:#f4ebd7; --paper-2:#eadfc4; --paper-3:#d9caa8; --paper-edge:#c2ae86;
+  --paper-ink:#2a1f17; --paper-ink-2:#5f4e3d; --paper-ink-3:#8a7760;
+  --lamp:255,206,140; --lamp-ink:#ffd99a;
+  /* quadrant inks: muted, printed */
+  --gold:#d49b27; --red:#c4533f; --blue:#4a80b8; --green:#3f9467; --magenta:#b2386c; --thieves:var(--magenta);
+  --silver:#8794a2; --yellow:#c4a93a; --purple:#7d5ba6; --white:#e6dcc6; --any:#a8977a;
+  --serif:'Alegreya', Georgia, serif; --sans:'Alegreya Sans', system-ui, sans-serif;
+  --display:var(--serif); --body:var(--sans);
+}
+
 /* ---------- the visual language (plate 1b, Cory 2026-10-15; design/prototypes/language/ kit.css + grammar.md) ----------
    The plate's own names. Four already meant something else here, so they carry "pl-": --pl-table, --pl-paper,
    --pl-ink* (here --ink is cream type on the table; the plate's ink is type on paper) and --pl-cream*.
@@ -34,22 +50,12 @@
   /* "any": the wheel in miniature, each color where its quadrant sits (GameScreen sets the live table's) */
   --any-top:var(--gold); --any-right:var(--blue); --any-bottom:var(--green); --any-left:var(--red);
 }
-
-/* ---------- tokens: walnut, cream paper, muted inks, Alegreya ---------- */
-:root{
-  --walnut:#1d1611; --walnut-2:#271d16; --walnut-3:#33271e;
-  --table:var(--walnut); --table-2:var(--walnut-2); --table-3:var(--walnut-3);
-  --rim:#4a3b2d; --ink:#f3e6c8; --muted:#b09f82;
-  --cream:#f3e6c8; --cream-2:#cbb894; --cream-3:#8f7f66;
-  --paper:#f4ebd7; --paper-2:#eadfc4; --paper-3:#d9caa8; --paper-edge:#c2ae86;
-  --paper-ink:#2a1f17; --paper-ink-2:#5f4e3d; --paper-ink-3:#8a7760;
-  --lamp:255,206,140; --lamp-ink:#ffd99a;
-  /* quadrant inks: muted, printed */
-  --gold:#d49b27; --red:#c4533f; --blue:#4a80b8; --green:#3f9467; --magenta:#b2386c; --thieves:var(--magenta);
-  --silver:#8794a2; --yellow:#c4a93a; --purple:#7d5ba6; --white:#e6dcc6; --any:#a8977a;
-  --serif:'Alegreya', Georgia, serif; --sans:'Alegreya Sans', system-ui, sans-serif;
-  --display:var(--serif); --body:var(--sans);
-}
+/* the dot and the marks in running text: .8em of the type they sit in, flat, no ring or shadow (plate 1b) */
+.pip.glyph,.pip.wild{background:none;box-shadow:none;border-radius:0;-webkit-mask:none;mask:none;width:var(--glyph);height:var(--glyph);vertical-align:-.1em;margin:0 .06em}
+.pip.glyph > svg,.pip.wild > svg{display:block;width:100%;height:100%;overflow:visible}
+.mk{display:inline-block;width:var(--glyph);height:var(--glyph);vertical-align:-.1em;overflow:visible;flex:none;margin:0 .06em}
+.op{font-weight:500;margin:0 .12em;opacity:.62}
+.rich-f{width:round(nearest, var(--glyph), 4.5px);height:round(nearest, var(--glyph), 4.5px);vertical-align:-.1em;margin:0 .06em}
 body{
   background:
     radial-gradient(ellipse 70% 80% at 28% 52%, rgba(var(--lamp),.13), rgba(var(--lamp),.03) 55%, transparent 75%),

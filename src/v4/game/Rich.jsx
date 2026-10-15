@@ -1,11 +1,17 @@
 // Resources as colored symbols inside any rules text or cost (Cory, 2026-10-14): "+3 gold" reads as "+3 ●" in gold,
 // "2 any" as "2 ◍" (the wild token). Each symbol says what it is on hover (every element explains itself).
 import { Follower } from '../art/Follower.jsx';
-import { ResourceGlyph } from './Glyphs.jsx';
+import { ResourceGlyph, Mark, Op } from './Glyphs.jsx';
 
 const COLORS = ['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', 'purple', 'white'];
-// "follower(s)" after a number is the follower mark too (Cory: followers aren't a star); other uses stay words
-const WORD = new RegExp(`\\b(${COLORS.join('|')}|any|followers?)\\b`, 'g');
+// "follower(s)" after a number is the follower mark too (Cory: followers aren't a star); other uses stay words.
+// The plate's marks (visual language, 2026-10-15): @m member, @r rival, @f follower, @n minion, @t extra turn;
+// → becomes, ⇄ swap, ↻ extra turn; × times and a "/" joined to what follows (per) are typed, quieter.
+// A spaced " / " ("2 / 4 / 6", by round) stays text: "/" only ever means per.
+const WORD = new RegExp(`\\b(${COLORS.join('|')}|any|followers?)\\b|(@[mrfnt])|([→⇄↻×])|(?<=\\S)(\\/)(?=[^\\s\\d])`, 'g');
+const TOKEN_MARK = { '@m': 'member', '@r': 'rival', '@n': 'minion', '@t': 'turn', '→': 'arrow', '⇄': 'swap', '↻': 'turn' };
+/** The follower mark in running text: Cory's pixel person at the plate's .8em (rounded to whole pixels by CSS). */
+export const TextFollower = ({ title = 'followers' }) => <Follower size={11} title={title} markClass="rich-f" />;
 
 /** One resource symbol. color: a resource name or 'any'. */
 export function Pip({ color, n }) {
@@ -31,11 +37,21 @@ export function Rich({ text }) {
   const out = [];
   let last = 0;
   for (const m of text.matchAll(WORD)) {
-    const w = m[1], at = m.index;
+    const at = m.index;
+    const sym = m[2] || m[3] || m[4];
+    if (sym) {
+      if (at > last) out.push(text.slice(last, at));
+      if (sym === '@f') out.push(<TextFollower key={at} title="follower" />);
+      else if (TOKEN_MARK[sym]) out.push(<Mark key={at} k={TOKEN_MARK[sym]} />);
+      else out.push(<Op key={at} t={sym} />);
+      last = at + sym.length;
+      continue;
+    }
+    const w = m[1];
     if (w.startsWith('follower')) {
       if (!/\d\s$/.test(text.slice(Math.max(0, at - 4), at))) continue;
       if (at > last) out.push(text.slice(last, at));
-      out.push(<Follower key={at} size={11} title={w} />);
+      out.push(<TextFollower key={at} title={w} />);
       last = at + w.length;
       continue;
     }

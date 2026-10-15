@@ -8,8 +8,6 @@ import { createPortal } from 'react-dom';
 import { quadrant, roman, contestTable, cardDef, followers as followersOf, botLevel, BOT_LEVEL_INFO } from '../../engine/v4/index.js';
 import { playerColor, standings } from '../format.js';
 import { Popover } from './parts.jsx';
-import { Sprite } from '../art/Sprite.jsx';
-import { spriteId } from '../art/index.js';
 import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews } from './Info.jsx';
 import { ResourceGlyph, SeatFigure } from './Glyphs.jsx';
 import { Follower } from '../art/Follower.jsx';
@@ -230,11 +228,12 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
   const unlocks = pv && viewer != null ? unlockedBy(state, state.players[viewer], surely(pv)) : [];
   return (
     <div className="lt-card-body" data-space-card={spaceKey} style={{ '--q': `var(--q-${sphereOf(qid)}, var(--${qid}))` }}>
-      <div className="t"><Sprite id={[a.id, spriteId(a.name)]} kind="action" sphere={sphereOf(qid)} size={48} /><h4>{a.name}<small>{Q.name} · {RINGS[a.ring - 1]}</small></h4></div>
-      <p><CardText text={a.text} /></p>
+      {/* plate 1b: the name, its one-sentence rule, then "You'd get" (the picture lives on the space itself) */}
+      <h4 className="sc-name" title={`${Q.name} · ${RINGS[a.ring - 1]}`}>{a.name}</h4>
+      <p className="sc-rule"><CardText text={a.text} /></p>
       <div className="lt-yd">
         {pv && pv.copies ? <Row k="Can copy">{pv.copies.length ? pv.copies.map(k => spaceName(state, k)).join(', ') : 'nothing yet'}</Row> : null}
-        {open && viewer != null && !state.over ? <Row k="You get"><YoudGet state={state} pid={viewer} q={q} i={i} /></Row> : null}
+        {open && viewer != null && !state.over ? <div className="lt-yd-row youd"><span className="k">You’d get</span><span className="v"><YoudGet state={state} pid={viewer} q={q} i={i} /></span></div> : null}
         {/* why a member changed the number, or stayed off ("Underdog: no ×2 (Hustler’s +3 lands first)"), from the dry run */}
         {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons>{pv.reasons.join(' · ')}</span></Row> : null}
         {race && <Row k={race.rule}>{race.text}</Row>}
@@ -309,11 +308,11 @@ export function SeatCard({ state, pid, meId = null }) {
 
 /** A shop card under the pointer: the card itself (its cost, clearly), and Recruit when it's pinned on touch.
  *  Cory (2026-10-15): nothing else about payment here: no "You pay", no "Leaves", no contest lines, no click hint. */
-export function ShopCardHover({ state, uid, optionFor = () => null, onPick, pinned = false }) {
+export function ShopCardHover({ state, me = null, uid, optionFor = () => null, onPick, pinned = false }) {
   const opt = optionFor(`card:${uid}`);
   return (
     <div className="lt-card-body" data-card-hover={uid}>
-      <MemberCard state={state} uid={uid} />
+      <MemberCard state={state} uid={uid} me={me} />
       {opt && onPick && pinned && <button type="button" className="lt-btn pri" data-recruit={uid} onClick={() => onPick(opt.id)}>Recruit</button>}
     </div>
   );

@@ -148,21 +148,10 @@ export function rimWidth(text, weight = 700, ls = 0) {
  *  "+1 gold/member" → ["+1 gold", "/member"]. */
 export const clauses = text => String(text || '').split(/ · |, (?=\S)| (?=[+−-]\d)|(?=\/[a-z]{4,})/).filter(Boolean);
 
-// the marks a pips-first yield uses (shorts.js pipEffect): a member card, a rival's hood, a follower
-const MemberMark = () => (
-  <svg className="mark member" viewBox="0 0 10 12" width="9" height="11" role="img" aria-label="member"><title>member</title>
-    <rect x=".6" y=".6" width="8.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" strokeWidth="1.2" /><circle cx="5" cy="4.4" r="1.7" fill="currentColor" /><path d="M2.4 9.6c.4-1.9 1.4-2.8 2.6-2.8s2.2.9 2.6 2.8z" fill="currentColor" />
-  </svg>
-);
-const RivalMark = () => (
-  <svg className="mark rival" viewBox="0 0 10 12" width="9" height="11" role="img" aria-label="a rival"><title>a rival</title>
-    <path d="M5 .8C2.6.8 1.2 3 1.2 5.6v5.6h7.6V5.6C8.8 3 7.4.8 5 .8z" fill="currentColor" /><path d="M3.4 5.4h3.2v1.8H3.4z" fill="#f4ebd7" opacity=".9" />
-  </svg>
-);
-/** Text with resource pips (Rich) and the marks @m (member), @r (rival), @f (follower). */
+/** Text with resource pips and the plate's marks (Rich): @m member, @r rival, @f follower, @n minion, @t extra turn,
+ *  → ⇄ ↻ × and a joined "/" (per). Every mark is drawn once, in Glyphs.jsx, and shared with every other text. */
 export function Marked({ text }) {
-  const parts = String(text || '').split(/(@[mrf])/);
-  return <>{parts.map((p, k) => (p === '@m' ? <MemberMark key={k} /> : p === '@r' ? <RivalMark key={k} /> : p === '@f' ? <Follower key={k} size={11} title="follower" /> : p ? <Rich key={k} text={p} /> : null))}</>;
+  return <Rich text={String(text || '')} />;
 }
 
 // Is the person driving with the keyboard? Focus moved to a space on its own (your turn begins) opens its card only

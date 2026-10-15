@@ -5,14 +5,16 @@
 // - ContestStandings / ContestTip: a quadrant's contest straight from the engine's contestTable (who'd score now).
 // - TouchTips: on touch screens a long-press on anything with a title shows that title (hover's touch twin).
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { cardDef, defById, quadrant, previewSpace, contestTable } from '../../engine/v4/index.js';
+import { cardDef, defById, quadrant, previewSpace, contestTable, memberPrice } from '../../engine/v4/index.js';
 import { term, splitTerms } from '../glossary.js';
 import { costParts, playerColor, standings, toStanding, tiebreakNote } from '../format.js';
 import { realHover } from '../hover.js';
 import { Popover } from './parts.jsx';
 import { Who } from './Glyphs.jsx';
-import { Rich, CostPips } from './Rich.jsx';
+import { Rich, Pip } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
+import { Sprite } from '../art/Sprite.jsx';
+import { spriteId } from '../art/index.js';
 import { MO } from '../motion.js';
 
 /**
@@ -91,22 +93,79 @@ export function Colorless({ state, def }) {
   return <Term k="colorless" className="colorless-tag">colorless</Term>;
 }
 
-/** The full card: color frame, name, worth, ability (keywords linked), cost, and its owner when it has one. */
-export function MemberCard({ state, uid, def: d0 = null }) {
+// ---------- the marks (plate 1b, design/prototypes/language/kit.js): drawn on a 16 grid, sized by the type they sit in ----------
+const MARK = {
+  m: { label: 'member', d: <><rect x="3" y="1.5" width="10" height="13" rx="2" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="8" cy="6.2" r="1.9" fill="currentColor" /><path d="M5 12C5 10 6.3 9 8 9S11 10 11 12Z" fill="currentColor" /></> },
+  r: { label: 'a rival', d: <path fillRule="evenodd" fill="currentColor" d="M8 1C11.7 1 13.4 4.4 13.4 8.6L14.4 15H1.6L2.6 8.6C2.6 4.4 4.3 1 8 1ZM8 5.4C6.5 5.4 5.6 6.8 5.6 8.6S6.5 11.6 8 11.6 10.4 10.4 10.4 8.6 9.5 5.4 8 5.4Z" /> },
+  t: { label: 'an extra turn', d: <><path d="M13 8A5 5 0 1 1 10.5 3.67" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /><path d="M8.6 1.6L11.4 3.4 9.6 6.2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></> },
+  a: { label: 'becomes', d: <path d="M2 8H13M9 4L13 8 9 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /> },
+};
+export function Mark({ k }) {
+  const m = MARK[k];
+  return <svg className={`mk mk-${k}`} viewBox="0 0 16 16" role="img" aria-label={m.label}><title>{m.label}</title>{m.d}</svg>;
+}
+const NUM = /([+−-]?\d+\+?|×\d*|½|≤\d+)/;
+/** Numbers heavy, the rest through Rich (resource words as their dots). */
+function Numbered({ text }) {
+  return <>{String(text).split(NUM).map((p, k) => (!p ? null : k % 2 ? <b key={k} className="n">{p}</b> : p === ' / ' || p === '/ ' || p === ' /' ? <span key={k} className="op"> / </span> : <Rich key={k} text={p} />))}</>;
+}
+/**
+ * A printed line in the grammar's form (src/v4/cardText.js): the number first and heavy, resource words as their dots,
+ * and the marks: @m a member, @r a rival, @f a follower, @t an extra turn, -> becomes, " / " per.
+ */
+export function Marks({ text }) {
+  if (!text) return null;
+  return <>{String(text).split(/(@[mrft]|->| \/ )/).map((p, k) => (
+    p === '@f' ? <Follower key={k} size={11} title="follower" />
+      : p === '->' ? <Mark key={k} k="a" />
+        : p === ' / ' ? <span key={k} className="op">/</span>
+          : /^@[mrt]$/.test(p) ? <Mark key={k} k={p[1]} />
+            : p ? <Numbered key={k} text={p} /> : null))}</>;
+}
+/** A cost as the plate prints it: "2● 2◐" (the number before its dot, colored part first, then any; no color names). */
+export function CostDots({ parts }) {
+  if (!parts || !parts.length) return <span className="cost-dots free">free</span>;
+  return <span className="cost-dots" aria-label={parts.map(c => `${c.n} ${c.color}`).join(' + ')}>{parts.map((c, k) => <span key={k} className="cd"><b className="n">{c.n}</b><Pip color={c.color} n={c.n} /></span>)}</span>;
+}
+
+/**
+ * The full card (plate 1b): the picture, name and worth, "costs 2● 2◐", the sentence big with its marks inline, then
+ * one quiet line tying it to the table (whose it is, or what you're short of to recruit it). Nothing about paying.
+ */
+export function MemberCard({ state, uid, def: d0 = null, me = null }) {
   const d = d0 || cardDef(state, uid);
   const owner = uid != null ? state.players.find(p => p.members.includes(uid)) : null;
   const card = uid != null ? state.cards[uid] : null;
   const where = uid == null ? null : owner ? null : state.shop.includes(uid) ? 'In the shop' : 'In the pile';
+  const sphere = onTable(state, d) ? (() => { try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } })() : 'colorless';
+  // the quiet live line: what you're short of, in dots (Cory: "need N" never shouts), from the engine's one price rule
+  let short = null;
+  if (where === 'In the shop' && me != null && state.players[me] && !state.over) {
+    try { const pr = memberPrice(state, state.players[me], uid); if (!pr.afford && pr.short) short = pr; } catch { /* no price: say nothing */ }
+  }
   return (
-    <div className="card-face" style={{ '--c': cardColor(state, d) }} data-card={d.id}>
-      <div className="row"><span className="glyph" aria-hidden="true" /><b>{d.name}</b><Follower n={d.f} className="star" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></div>
-      <p><CardText text={d.text} /></p>
-      {card && card.copy && <small>Copying <CardName state={state} def={defById(card.copy)} /></small>}
-      <small>Costs <CostPips parts={costParts(d, state.resources)} />{d.n > 1 ? ` · counts as ${d.n} members` : ''}{onTable(state, d) ? '' : ' · '}<Colorless state={state} def={d} /></small>
-      {owner && <small className="owner" style={{ '--pc': playerColor(owner.id) }}><i />{owner.name}’s{card && card.used ? ' · used' : ''}</small>}
-      {where && <small>{where}</small>}
+    <div className="card-face mc" style={{ '--c': cardColor(state, d) }} data-card={d.id}>
+      <div className="mc-head">
+        <span className="mc-art" aria-hidden="true"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={48} /></span>
+        <span className="mc-id">
+          <span className="mc-row"><b className="mc-name">{d.name}</b><span className="mc-worth" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`}><b className="n">{d.f}</b><Follower size={14} title={`worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></span></span>
+          <small className="mc-cost">costs <CostDots parts={costParts(d, state.resources)} />{d.n > 1 ? ` · counts as ${d.n} members` : ''}{onTable(state, d) ? '' : ' · '}<Colorless state={state} def={d} /></small>
+        </span>
+      </div>
+      <p className="mc-text"><CardText text={d.text} /></p>
+      {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
+      {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><i />{owner.id === me ? 'Yours' : `${owner.name}’s`}{card && card.used ? ' · used' : ''}</small>}
+      {short ? <small className="mc-live" data-short={short.short.total}>You’re short {shortDots(state, short)} to recruit it.</small>
+        : where && <small className="mc-live">{where}</small>}
     </div>
   );
+}
+/** "4● 1◐": what's missing, colored part first, as dots. */
+function shortDots(state, pr) {
+  const parts = [];
+  if (pr.color && pr.short[pr.color]) parts.push({ color: pr.color, n: pr.short[pr.color] });
+  if (pr.short.any) parts.push({ color: 'any', n: pr.short.any });
+  return <CostDots parts={parts} />;
 }
 
 /** A member's name anywhere (log, pickers, bonuses, rival chips): hover or tap opens the full card. */

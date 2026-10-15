@@ -63,6 +63,34 @@ export function ResourceGlyph({ r, size = 16, n = null, decorative = false }) {
   );
 }
 
+// ---------- the marks (plate 1b's closed alphabet): every one on a 16-unit grid, strokes 2 units, round ends ----------
+// member (a card with a person) · minion (the worker) · rival (a hood) · becomes (→) · swap (⇄, same stroke) ·
+// extra turn (↻). The follower stays Cory's pixel person (art/Follower.jsx); per (/) and times (×) are typed.
+const ST = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+const MARKS = {
+  member: <><rect x="3" y="1.5" width="10" height="13" rx="2" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="8" cy="6.2" r="1.9" fill="currentColor" /><path d="M5 12C5 10 6.3 9 8 9C9.7 9 11 10 11 12Z" fill="currentColor" /></>,
+  minion: <path fill="currentColor" d="M8 1A2.9 2.9 0 0 1 10.6 5.2C12.6 5.6 14.6 6.3 14.6 7.9C14.6 9 13.6 9.4 12 9.6L13.6 13.6C13.9 14.4 13.5 15 12.7 15H9.8L8 12.2L6.2 15H3.3C2.5 15 2.1 14.4 2.4 13.6L4 9.6C2.4 9.4 1.4 9 1.4 7.9C1.4 6.3 3.4 5.6 5.4 5.2A2.9 2.9 0 0 1 8 1Z" />,
+  rival: <path fillRule="evenodd" fill="currentColor" d="M8 1C11.7 1 13.4 4.4 13.4 8.6L14.4 15H1.6L2.6 8.6C2.6 4.4 4.3 1 8 1ZM8 5.4C6.5 5.4 5.6 6.8 5.6 8.6C5.6 10.4 6.5 11.6 8 11.6C9.5 11.6 10.4 10.4 10.4 8.6C10.4 6.8 9.5 5.4 8 5.4Z" />,
+  arrow: <path d="M2 8H13M9 4L13 8L9 12" {...ST} />,
+  swap: <path d="M2.5 5H13M10.5 2.5L13 5L10.5 7.5M13.5 11H3M5.5 8.5L3 11L5.5 13.5" {...ST} strokeWidth="1.8" />,
+  turn: <><path d="M13 8A5 5 0 1 1 10.5 3.67" {...ST} /><path d="M8.6 1.6L11.4 3.4L9.6 6.2" {...ST} /></>,
+};
+const MARK_SAY = { member: 'member', minion: 'minion', rival: 'a rival', arrow: 'becomes', swap: 'swap', turn: 'an extra turn' };
+/** One mark of the alphabet, .8em of the type it sits in (class mk); it says what it is on hover. */
+export function Mark({ k, title = null, className = '' }) {
+  const say = title || MARK_SAY[k] || k;
+  return (
+    <svg className={`mk mk-${k}${className ? ` ${className}` : ''}`} data-mark={k} viewBox="0 0 16 16" width="16" height="16" role="img" aria-label={say}>
+      <title>{say}</title>{MARKS[k] || null}
+    </svg>
+  );
+}
+/** per (/) and times (×): typed in the numeral face, quieter than the numbers around them. */
+export function Op({ t, title = null }) {
+  const say = title || (t === '/' ? 'per' : t === '×' ? 'times' : t);
+  return <span className="op" data-op={t} title={say}>{t}</span>;
+}
+
 /** The live table's colors in the "any" dot: quadrant q sits at 180 + 90q degrees on the wheel (0 = top, clockwise),
  *  so q0 is the bottom, q1 the left, q2 the top, q3 the right. Pass resource colors in quadrant order. */
 export function anyDotVars(colors) {

@@ -9,8 +9,10 @@ import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { cardColor, onTable, usePreview, Tip } from './Info.jsx';
-import { ResourceGlyph, FollowerGlyph } from './Glyphs.jsx';
+import { cardColor, onTable, usePreview, Tip, Marks, Mark } from './Info.jsx';
+import { FollowerGlyph } from './Glyphs.jsx';
+import { Pip } from './Rich.jsx';
+import { cardLines, effSize } from '../cardText.js';
 import { timingOf, payBreakdown, unlockedBy, surely } from './cards.js';
 void timingOf;
 import { useHoverSpace } from './HoverCards.jsx';
@@ -37,16 +39,21 @@ export function sortShop(state, uids, by = 'cost') {
   return rows.sort(by === 'color' ? byColor : byCost).map(r => r.uid);
 }
 
-/** A cost as shapes: "4 ● 2 ◍". */
-export function CostShapes({ parts, size = 14 }) {
+/** A cost as the plate prints it: "4● 2◐", the number before its dot, colored part first, then any (no color names). */
+export function CostShapes({ parts }) {
   if (!parts.length) return <span className="lt-cost free">free</span>;
   return (
     <span className="lt-cost" aria-label={parts.map(c => `${c.n} ${c.color === 'any' ? 'any' : c.color}`).join(' + ')}>
       {parts.map((c, k) => (
-        <span key={k} className="lt-res"><b className="num">{c.n}</b>{c.color === 'any' ? <span className="pip wild" title={`${c.n} of any resources`} role="img" aria-label="any" /> : <ResourceGlyph r={c.color} n={c.n} size={size} />}</span>
+        <span key={k} className="lt-res"><b className="num">{c.n}</b><Pip color={c.color} n={c.n} /></span>
       ))}
     </span>
   );
+}
+/** What recruiting it still needs, quietly, in dots ("need 4● 1◐"): the engine's one price rule (payBreakdown). */
+function ShortDots({ short }) {
+  const parts = [short.colorN ? { color: short.color, n: short.colorN } : null, short.any ? { color: 'any', n: short.any } : null].filter(Boolean);
+  return <>{parts.map((c, k) => <span key={k} className="nd"><b>{c.n}</b><Pip color={c.color} n={c.n} /></span>)}</>;
 }
 
 function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, onDenied, phase, hover = null }) {
@@ -104,6 +111,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
           const short = buying && !opt && viewer ? payBreakdown(state, viewer, uid).short : null;
           const parts = costParts(d, state.resources);
           const fromPile = !state.shop.includes(uid);
+          const lines = cardLines(d);
           return (
             <button
               key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined}
@@ -120,18 +128,21 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                 if (opt) onPick(opt.id); else if (onDenied) onDenied({ type: 'card', uid, name: d.name }, e.currentTarget);
               }}
             >
-              {/* condensed (Cory): figure, name, cost, worth; the text and timing are on hover / tap */}
+              {/* plate 1b (Cory, 2026-10-15): the picture on its tinted field, the name in small caps, a plain "when", the
+                  effect big (number first, marks inline), then the cost in dots and the worth; the sentence is on hover / tap */}
               <span className="band" aria-hidden="true" />
-              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
-                {short && <span className="need" title={`You need ${short.text} more (after your discounts)`}>need {short.text}</span>}
+              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={32} />
+                {short && <span className="need" title={`You need ${short.text} more (after your discounts)`}>need <ShortDots short={short} /></span>}
                 {fromPile && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
                 {tick && <span className="tick" title={`You could afford it after ${after}`}>✓ {after}</span>}
               </span>
               <span className="nm">{d.name}</span>
+              <span className="wh" data-when={lines.when || undefined}><span><Marks text={lines.when} /></span></span>
+              <span className={`ef ef-${effSize(lines.eff)}`}><Marks text={lines.eff} /></span>
               <span className="ft">
                 <CostShapes parts={parts} />
                 <span className="val" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>
-                  {d.f <= 3 ? Array.from({ length: d.f }, (_, k) => <FollowerGlyph key={k} size={11} title={`worth ${d.f}`} />) : <><FollowerGlyph size={11} title={`worth ${d.f}`} /><b className="num">×{d.f}</b></>}
+                  <b className="num">{d.f}</b><FollowerGlyph size={11} title={`worth ${d.f}`} />
                 </span>
               </span>
             </button>
@@ -185,7 +196,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
                 {t.limited ? <span>{left} left at this table (2 per player at the start).</span> : <span>Unlimited.</span>}
                 <small>{when(t, opt)}</small>
               </div>
-            )}><span className="rt-trade"><b className="num">{t.cost}</b><span className="pip wild" aria-hidden="true" /> → <b className="num">{t.get}</b><FollowerGlyph size={13} /></span>{t.limited && <small className="rt-left num">{left} left</small>}<span className="hitbox" aria-hidden="true" /></Tip>
+            )}><span className="rt-trade"><b className="num">{t.cost}</b><Pip color="any" n={t.cost} /><Mark k="a" /><b className="num">{t.get}</b><FollowerGlyph size={14} /></span>{t.limited && <small className="rt-left num">{left} left</small>}<span className="hitbox" aria-hidden="true" /></Tip>
           </button>
         );
       })}

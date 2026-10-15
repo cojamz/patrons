@@ -39,11 +39,12 @@ const RUNS = (() => {
 const FILL = ch => (DRAWN ? DRAWN.base[ch] || 'currentColor' : ch === 'k' ? 'var(--follower-ink, rgba(20,14,10,.85))' : 'currentColor');
 const VB = GRID.length;
 
-/** The follower mark; with n, the count before it. size: the mark's height in px (9, 18 keep pixels square). */
-export const Follower = memo(function Follower({ n = null, size = 10, className = '', title = null }) {
+/** The follower mark; with n, the count before it. size: the mark's height in px (9, 18 keep pixels square).
+ *  markClass: extra classes on the mark itself (Rich's .rich-f sizes it to the plate's .8em of its text). */
+export const Follower = memo(function Follower({ n = null, size = 10, className = '', title = null, markClass = '' }) {
   const label = title || (n == null ? 'followers' : `${n} follower${n === 1 ? '' : 's'}`);
   const mark = (
-    <svg className="follower-mark" viewBox={`0 0 ${VB} ${VB}`} width={size} height={size} shapeRendering="crispEdges" role="img" aria-label={label}>
+    <svg className={`follower-mark${markClass ? ` ${markClass}` : ''}`} viewBox={`0 0 ${VB} ${VB}`} width={size} height={size} shapeRendering="crispEdges" role="img" aria-label={label}>
       <title>{label}</title>
       {RUNS.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={FILL(r.ch)} />)}
     </svg>

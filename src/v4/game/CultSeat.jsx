@@ -63,7 +63,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             <span className="cs-colors" data-colors={colors.map(c => `${c.key}:${c.n}`).join(' ')} title={`Members by color: ${colors.map(c => `${c.n} ${c.res || 'colorless'}`).join(', ')}`}>
               {colors.map(c => <i key={c.key} style={{ '--c': c.res ? `var(--${c.res})` : 'var(--cream-3)', '--n': c.n }} data-n={c.n} />)}
             </span>
-          )}{last ? <>last: <Sprite id={[`${last.qid}.${actionKey(last)}`, spriteId(last.name)]} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /></> : p.kind === 'bot' ? 'bot' : ' '}</small>
+          )}{p.kind === 'bot' ? 'bot' : ' '}</small>
         </span>
         <span className={`cs-total${rank && rank.lead ? ' lead' : ''}`} data-followers={f} data-rank={rank ? rank.place : undefined} title={rank ? rank.title : `${f} followers`}>{rank && rank.text && <span className="cs-rank rk" title={rank.title}>{rank.text}</span>}<Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
       </header>
@@ -100,6 +100,23 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         })}
         {rest > 0 && <span className="cs-more" title={`${rest} more member${rest === 1 ? '' : 's'}`}>+{rest}</span>}
       </div>
+      {/* what its members make each round, and what it just did (the approved plate's rival panel) */}
+      {(incomeWords.length > 0 || last) && (
+        <div className="cs-build">
+          {incomeWords.length > 0 && (
+            <span className="cs-income" data-income={incomeWords.join(', ')} title={`Each round its members make ${incomeWords.join(', ')} (at the round's start)`}>
+              <small>each round</small>
+              {incomeParts.map(([r, n]) => <span key={r} className="cs-inc"><b className="num">+{n}</b><ResourceGlyph r={r} size={mine ? 13 : 11} n={n} /></span>)}
+              {income.followers > 0 && <span className="cs-inc"><b className="num">+{income.followers}</b><Follower size={11} title="followers" /></span>}
+            </span>
+          )}
+          {last && (
+            <span className="cs-took" data-took={last.name} title={`${mine ? 'You' : p.name} last took ${last.name} (${quadrant(last.qid).name})`}>
+              <small>{mine ? 'you took' : 'just took'}</small><Sprite id={[`${last.qid}.${actionKey(last)}`, spriteId(last.name)]} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /><b>{last.name}</b>
+            </span>
+          )}
+        </div>
+      )}
       <footer className="cs-foot">
         <span className="cs-res" role="group" aria-label="Resources">
           {state.resources.map(r => {
@@ -117,13 +134,6 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             );
           })}
         </span>
-        {incomeWords.length > 0 && (
-          <span className="cs-income" data-income={incomeWords.join(', ')} title={`Each round its members make ${incomeWords.join(', ')} (at the round's start)`}>
-            <small>each round</small>
-            {incomeParts.map(([r, n]) => <span key={r} className="cs-inc"><b className="num">+{n}</b><ResourceGlyph r={r} size={mine ? 13 : 11} n={n} /></span>)}
-            {income.followers > 0 && <span className="cs-inc"><b className="num">+{income.followers}</b><Follower size={11} title="followers" /></span>}
-          </span>
-        )}
       </footer>
       {/* a choice that picks a player: the whole seat is the button (or says why it isn't) */}
       {pick && pick.seatMode && (pick.seat
