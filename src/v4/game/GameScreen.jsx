@@ -36,6 +36,7 @@ import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
 import { playChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
 import { gainsBetween } from './gains.js';
+import { soundOn, onSound, setSound } from '../sound.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed, speedScale, slowed } from '../motion.js';
 import { PERF_ON } from '../perf.js';
 import { boardPicker, giftPick, seatPart, shopLookup, pickCaption } from './boardPick.js';
@@ -296,6 +297,18 @@ function SpeedSetting() {
   );
 }
 
+/** Sound on or off (sound.js), kept in this browser. */
+function SoundSetting() {
+  const [on, setOn] = useState(soundOn);
+  useEffect(() => onSound(setOn), []);
+  return (
+    <button type="button" role="menuitemcheckbox" aria-checked={on} className="btn ghost sound-btn" data-sound={on ? 'on' : 'off'}
+      onClick={() => setSound(!on)} title="The click of a minion, coins landing, the winner's fanfare and the followers' chatter">
+      {on ? 'Sound on' : 'Sound off'}
+    </button>
+  );
+}
+
 /** One glyph for the rest (How to play, the log, Leave): the table carries no header buttons. */
 function Menu({ onRules, onLog, onLeave, getState }) {
   const [open, setOpen] = useState(false);
@@ -325,6 +338,7 @@ function Menu({ onRules, onLog, onLeave, getState }) {
           <button type="button" role="menuitem" className="btn ghost intro-btn" onClick={pick(replayIntro)}>How it works (20s)</button>
           <button type="button" role="menuitem" className="btn ghost log-btn" onClick={pick(onLog)}>The log</button>
           <SpeedSetting />
+          <SoundSetting />
           <button type="button" role="menuitem" className="btn ghost record-btn" data-copy-record onClick={copyRecord}
             title="Copies this game, move by move, so a problem can be replayed exactly">{copied === 'copied' ? 'Copied' : 'Copy game record'}</button>
           {copied && copied !== 'copied' && (

@@ -18,6 +18,7 @@
 // back to gains.js, which reads the change of state.
 import { MO, flightMs, nextBeatAt, speedScale } from '../motion.js';
 import { playerColor } from '../format.js';
+import { play } from '../sound.js';
 import { gainsBetween } from './gains.js';
 import { seatOrder } from './seats.js';
 import { motionOK, flyPath, pulse, tug, settle, flyMinionsHome, slideShop, holdStack, bump, track, landAll, expectArrival, clearArrivals, clearFlights, arcFrames, bezier, onScreenBow, relative } from './flight.js';
@@ -609,6 +610,8 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
       if (a.bundle && !skip) setTimeout(() => release(B), MO.roll); else release(B);
     }
     if (a.to.kind === 'count' && B && !B.rectOnly) { try { B.dispatchEvent(new CustomEvent('patrons:land')); } catch { /* old browser */ } }
+    // the sound of it (sound.js): a coin for a resource gained, the little voice for followers joining
+    if (!skip && !a.pay) { if (a.fol) play('follower'); else if (a.to.kind === 'stack') play('coin'); }
     // a big follower buy lands with weight (wave 4 #13): the count lifts and rolls, not only settles
     if (!skip && B && a.fol && a.bundle && !a.pay && a.to.kind === 'count' && (a.by ?? a.n) >= 6 && B.animate && !B.rectOnly) track(B.animate([{ translate: '0 0', scale: '1' }, { translate: '0 -6px', scale: '1.3', offset: 0.3 }, { translate: '0 0', scale: '1' }], { duration: MO.roll + MO.settle, easing: 'cubic-bezier(.3,1.5,.5,1)' }));
     else if (!skip && B) settle(B, MO.settle, a.bundle ? 1.24 : a.light ? 1.1 : a.pay ? 1.06 : 1.18);
@@ -626,13 +629,14 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           const html = a.landed ? a.landed.innerHTML : `<i style="background:${playerColor(a.pid)}"></i>`;
           if (a.own) {
             // yours stands in the door at once (the stamp); the trail from your column fades onto it
+            play('place');
             if (a.landed && a.landed.animate) track(a.landed.animate([{ transform: 'scale(1.25)', opacity: 0.6 }, { transform: 'scale(1)', opacity: 1 }], { duration: MO.ownStamp, easing: 'cubic-bezier(.3,1.5,.5,1)' }));
             flyPath(html, 'worker-flight minion-flight trail', square(F, size), square(a.toRect, size), { path: 'arc', duration: a.dur, fade: true });
           } else {
             chain.flying++;
             const anim = flyPath(html, 'worker-flight minion-flight', square(F, size), square(a.toRect, size), { path: 'arc', duration: a.dur });
             if (a.landed && a.landed.animate) track(a.landed.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: a.dur + 30 }));
-            onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); if (a.landed) settle(a.landed, MO.settle); });
+            onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); if (a.landed) settle(a.landed, MO.settle); play('place'); });
           }
           return;
         }
