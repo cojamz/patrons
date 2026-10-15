@@ -42,7 +42,7 @@ const RING_S = { 1: { r0: 128, r1: 180, r: 151, n: 3, span: 66 }, 2: { r0: 82, r
 const RING_E = { 1: { r0: 126, r1: 180, r: 153, n: 3, span: 60 }, 2: { r0: 78, r1: 126, r: 102, n: 2, span: 45 }, 3: { r0: 22, r1: 78, r: 51, n: 1, span: 0 } };
 // panels: the cells tile each quadrant like engraved's, on a dark board with gutters between them; r is where each
 // panel's print is centred (ring III's a little out from the middle of its wedge, where the wedge is wide)
-const RING_P = { 1: { r0: 131, r1: 179, r: 155, n: 3, span: 60 }, 2: { r0: 78, r1: 128, r: 103, n: 2, span: 45 }, 3: { r0: 23, r1: 75, r: 54, n: 1, span: 0 } };
+const RING_P = { 1: { r0: 123, r1: 179, r: 151, n: 3, span: 60 }, 2: { r0: 65, r1: 120, r: 92, n: 2, span: 45 }, 3: { r0: 21, r1: 62, r: 42, n: 1, span: 0 } };
 const ringsOf = look => (look === 'engraved' ? RING_E : look === 'panels' ? RING_P : RING_S);
 const RIM = { r0: 180, r1: 200, r: 190 }; // the rim band: each quadrant's rule, engraved
 // the rim's hover/tap target: from just outside ring I's sockets to well past the paper's edge (it wins over any space)
@@ -788,7 +788,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       </path>,
     );
   });
-  const hubR = panels ? rings[3].r0 - 2 : rings[3].r0;
+  const hubR = panels ? rings[3].r0 - 3 : rings[3].r0;
   if (!panels) for (const r of [RIM.r0, rings[1].r0, rings[2].r0, hubR]) paper.push(<circle key={`c${r}`} cx={CX} cy={CY} r={r} fill="none" className="ring-line" />);
   state.quadrants.forEach((qid, q) => {
     const [x0, y0] = polar(qCenter(q) - 45, panels ? RIM.r0 : hubR), [x1, y1] = polar(qCenter(q) - 45, panels ? 202 : 200);
@@ -798,6 +798,30 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   // spaces: one per space, upright wherever the wheel is turned, with its effect printed on it
   // Sockets are memoized: hovering never re-renders the wheel (the hover card lives in UI-B's layer, told directly on
   // pointerenter, no timers here). Handlers reach the latest closures through refs.
+  // panels: each one's print laid out for where it sits now. Rhythm (design/taste.md): a quadrant's ring shows its
+  // small print only when every panel there has room for it (else it's all in the hover), and every number on the
+  // wheel is one size, the smallest any panel needs
+  const panelLays = useMemo(() => {
+    if (!panels) return null;
+    const k = scale || 1;
+    const first = new Map(), ok = {};
+    for (const s of spaces) {
+      const said = panelText(s.qid, s.a, round);
+      const fine = s.ring <= round ? fineText(said.fine) || null : null;
+      const lay = panelLayout({ s, R: rings[s.ring], rot, k, big: said.big, fine });
+      first.set(s.key, { said, fine, lay });
+      const g = `${s.q}-${s.ring}`;
+      ok[g] = ok[g] !== false && !(fine && !lay.fineLines);
+    }
+    const out = new Map();
+    for (const s of spaces) {
+      const f = first.get(s.key);
+      out.set(s.key, { ...f, lay: !f.fine || ok[`${s.q}-${s.ring}`] ? f.lay : panelLayout({ s, R: rings[s.ring], rot, k, big: f.said.big, fine: null }) });
+    }
+    const big = Math.min(...[...out.values()].map(v => v.lay.big));
+    for (const v of out.values()) v.lay = { ...v.lay, big };
+    return out;
+  }, [panels, state.quadrants, round, rot, scale]); // eslint-disable-line react-hooks/exhaustive-deps
   live.current = { tap, onPick, hover, anchorOf };
   const pinnedKey = peek && peek.pinned ? peek.key : null;
   const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');
@@ -820,9 +844,8 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     // on its side, a short yield runs as one line ("+1 red · swap"); a longer one keeps a clause a line
     const flow = side && (t === 1 ? shortEffect(qid, a, round) : pipEffect(qid, a, round)).replace(/ · /g, ' ').replace(/@[mrf]/g, 'x').length <= 12;
     // panels: the grammar's big line and small print, laid out in the room this panel has where it sits now
-    const said = panels ? panelText(qid, a, round) : null;
-    const fineSaid = panels ? (open ? said.fine : `opens in round ${roman(t)}`) : null;
-    const lay = panels ? panelLayout({ s, R: rings[t], rot, k: scale || 1, big: said.big, fine: fineText(fineSaid) || null }) : null;
+    const pl = panels ? panelLays.get(key) : null;
+    const said = pl && pl.said, lay = pl && pl.lay, fineSaid = pl && open ? said.fine : null;
     const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', side ? 'side' : '', low ? 'low' : '', flow ? 'flow' : '', lay && !lay.fineLines ? 'nofine' : '', lay && lay.fineLines > 1 ? 'fine2' : '', lay && lay.bigLines > 1 ? 'big2' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
@@ -871,7 +894,8 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
         {custom ? face : panels ? (
           // the picture (or the minions standing where it was), the big line, then the small print when there's room
           <span className="face" aria-hidden="true">
-            <span className="ico">{minions || <Sprite id={[`${qid}.${a.key}`, spriteId(a.name)]} kind="action" sphere={quadrant(qid).resource} size={20} />}</span>
+            {/* the picture's slot: the action's picture, the minions standing on it, or (not open yet) its round */}
+            <span className="ico">{minions || (open ? <Sprite id={[`${qid}.${a.key}`, spriteId(a.name)]} kind="action" sphere={quadrant(qid).resource} size={18} /> : <span className="seal">{roman(t)}</span>)}</span>
             <span className="yl big" data-yield>
               {lay.bigLines > 1 ? clauses(said.big).map((c, k) => <span key={k} className="cl"><Said text={c} /></span>) : <Said text={said.big} />}
             </span>

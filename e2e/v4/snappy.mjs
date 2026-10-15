@@ -140,30 +140,34 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
   const spaces = await centers('[data-slot] .base');
   const cards = await centers('.lt-shop [data-uid]');
   const tips = await centers('.lt [data-tip][role="button"]'); // a tip of its own (one inside a control shows its title)
-  const targets = [...spaces.slice(0, 8), ...cards.slice(0, 6), ...tips.slice(0, 4)];
+  const targets = [...spaces.slice(0, 8).map(c => [...c, 'space']), ...cards.slice(0, 6).map(c => [...c, 'card']), ...tips.slice(0, 4).map(c => [...c, 'tip'])];
   // each arrival: away (the card closes), then onto the target, and wait for its card (up to 1.5s on a loaded box)
   const measure = async () => {
     const F = await idleFrame();
     await page.evaluate(() => { window.__snap.hov.lat = []; window.__snap.hov.t0 = null; });
     let n = 0;
-    for (const [x, y] of targets) {
+    const misses = [];
+    for (const [x, y, kind] of targets) {
       await page.mouse.move(4, 696);
       await page.waitForFunction(() => !document.querySelector('[data-hover-layer][data-open="1"], .popover:not([data-hover-layer])'), null, { timeout: 1500 }).catch(() => {});
       await page.waitForTimeout(60);
       await page.evaluate(() => { window.__snap.hov.t0 = null; });
       const had = await page.evaluate(() => window.__snap.hov.lat.length);
       await page.mouse.move(x, y, { steps: 2 });
-      await page.waitForFunction(h => window.__snap.hov.lat.length > h, had, { timeout: 1500 }).catch(() => {});
+      const hit = await page.waitForFunction(h => window.__snap.hov.lat.length > h, had, { timeout: 1500 }).then(() => true, () => false);
+      // a miss names what was under the pointer and whether a card was already up, so a flaky target can be found
+      if (!hit) misses.push(`${kind} at ${Math.round(x)},${Math.round(y)}: ${await page.evaluate(([px, py]) => { const e = document.elementFromPoint(px, py); const t = e && e.closest('[data-slot], [data-uid], [data-tip]'); const up = document.querySelector('[data-hover-layer][data-open="1"]'); return `${e ? `${e.tagName.toLowerCase()}.${String(e.className && e.className.baseVal != null ? e.className.baseVal : e.className).split(' ').join('.')}` : 'nothing'}${t ? ` in ${t.getAttribute('data-slot') ? `slot ${t.getAttribute('data-slot')}` : t.getAttribute('data-uid') ? `card ${t.getAttribute('data-uid')}` : 'tip'}` : ' (no target)'}${up ? `, card up: ${(up.querySelector('[data-hover-card]') || {}).dataset?.hoverCard}` : ''}`; }, [x, y])}`);
       n++;
     }
     const lat = (await page.evaluate(() => window.__snap.hov.lat)).sort((a, b) => a - b);
-    return { n, F, lat, p95: lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : Infinity };
+    return { n, F, lat, misses, p95: lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : Infinity };
   };
   let run = await measure();
   const first = run;
   if (!(run.p95 <= LIMIT.hover + run.F)) { const again = await measure(); if (again.p95 - again.F < run.p95 - run.F) run = again; }
   report.push(`hover: p95 ${Math.round(run.p95)}ms over ${run.lat.length}/${run.n} arrivals, box frame ${Math.round(run.F)}ms (${spaces.length} spaces, ${cards.length} cards, ${tips.length} tips on screen)${first !== run ? `; first run p95 ${Math.round(first.p95)}ms` : ''}`);
-  if (run.lat.length < run.n - 2) errors.push(`(s2) only ${run.lat.length} of ${run.n} hover arrivals opened a card within 1.5s`);
+  if (run.misses.length) report.push(`hover misses: ${run.misses.join('; ')}`);
+  if (run.lat.length < run.n - 2) errors.push(`(s2) only ${run.lat.length} of ${run.n} hover arrivals opened a card within 1.5s (missed: ${run.misses.join('; ')})`);
   if (!(run.p95 <= LIMIT.hover + run.F)) errors.push(`(s2) hover cards open in p95 ${Math.round(run.p95)}ms (want ≤ ${LIMIT.hover}ms + one ${Math.round(run.F)}ms frame; samples ${run.lat.map(Math.round).join(',')})`);
   await page.mouse.move(4, 696);
   await page.waitForTimeout(300);
