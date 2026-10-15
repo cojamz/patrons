@@ -245,10 +245,10 @@ describe('Magenta members', () => {
     expect(R(s, 1).magenta).toBe(0); // Twins costs 4
   });
 
-  it('Extortionist: whenever a rival buys 6 followers, take 2 from them (not for 3) (named)', () => {
+  it('Extortionist: whenever a rival buys 8 followers, take 2 from them (not for 4) (named)', () => {
     let s = table(Q, { res: [{ gold: 4, red: 3, magenta: 3 }], members: [[], ['thieves.extortionist']], shop: ROW });
     s = move(take(s, 'thieves.tipoff'), 'tier:big');
-    expect(s.players[0].bonus).toBe(6);
+    expect(s.players[0].bonus).toBe(8);
     expect(R(s, 1).magenta).toBe(2);
     expect(sum(R(s))).toBe(0);
     expect(named(s, 'Extortionist').length).toBe(1);

@@ -115,7 +115,7 @@ describe('Big Spender: once per round, buy twice in one turn', () => {
     expect(s.pending.kind).toBe('buy');
     expect(s.pending.extra).toBe(true);
     s = move(s, 'tier:mid');
-    expect(s.players[0].bonus).toBe(6);
+    expect(s.players[0].bonus).toBe(8);
     expect(s.pending).toBe(null);
     expect(s.cards[uidOf(s, 'benders.bigspender', 0)].spent.extraBuy).toBe(1);
     // another turn this round: one buy only
@@ -135,13 +135,13 @@ describe('Big Spender: once per round, buy twice in one turn', () => {
     extraTurns(contextFor(s), s.players[0], 1);
     s = move(s, `slot:${RUSH}`);
     s = move(s, 'tier:mid'); s = move(s, 'tier:mid'); // the double buy
-    expect(s.players[0].bonus).toBe(6);
+    expect(s.players[0].bonus).toBe(8);
     expect(s.pending.kind).toBe('place'); // the extra turn
     expect(s.pending.player).toBe(0);
     s = move(s, `slot:${JV}`); s = pickAny(s);
     s = move(s, 'tier:mid');
     expect(s.pending?.kind).not.toBe('buy');
-    expect(s.players[0].bonus).toBe(9);
+    expect(s.players[0].bonus).toBe(12);
   });
 });
 
