@@ -50,7 +50,7 @@
 /* the sort: two quiet words in the members' header line (Cory: "a little sort button") */
 .lt-sort{display:inline-flex;align-items:center;gap:2px;margin-left:auto;font-size:12px;color:var(--cream-3)}
 .lt-sort .lbl{margin-right:3px;letter-spacing:.04em}
-.lt-sort-btn{position:relative;font:inherit;font-size:12px;color:var(--cream-3);background:none;border:0;border-radius:10px;padding:0 8px;min-height:20px;cursor:pointer}
+.lt-sort-btn{position:relative;font:inherit;font-size:11px;color:var(--cream-3);background:none;border:0;border-radius:10px;padding:0 8px;min-height:20px;cursor:pointer}
 .lt-sort-btn:hover{color:var(--cream-2)}
 .lt-sort-btn.on{color:var(--cream);box-shadow:inset 0 0 0 1px rgba(243,230,200,.28)}
 .lt-sort-btn:focus-visible{outline:2px solid rgba(var(--lamp,255,206,140),.7);outline-offset:1px}
@@ -290,6 +290,9 @@
 .lt-cult-seat .cs-crowd:empty{display:none}
 /* a seat's place in this round's turn order */
 .cs-order{display:inline-block;margin-left:6px;padding:0 5px;border-radius:7px;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:14px;color:var(--cream-3);box-shadow:inset 0 0 0 1px rgba(243,230,200,.16);vertical-align:2px;cursor:help}
+/* phones: the seat's name row has no room for a second word; a chip whose seat places twice keeps its lit outline
+   (since.css) and says "then again right after" in its hover; the laptop's rail spells "twice" */
+@media (max-width:860px), (max-height:499px){ .cs-order .co-x{display:none} .cs-order{white-space:nowrap} }
 .cs-order.now,.cs-order.first{color:var(--paper-ink);background:var(--lamp-ink);box-shadow:none}
 .cs-order.next{color:var(--lamp-ink);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.55)}
 .cs-order.done{opacity:.55}
@@ -362,6 +365,8 @@
 .lt-card .nm{font-family:var(--sans);font-size:11px;line-height:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pl-ink-2,#6e5c49);margin:6px 2px 0;white-space:nowrap;overflow-wrap:normal;hyphens:none}
 .lt-card .ft{height:20px;margin:auto 6px 0;padding:0;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-family:var(--sans);font-size:12px;font-weight:500;color:var(--pl-ink,#2b2018)}
 .lt-card .ft .num,.lt-card .val b{font-weight:800}
+/* the type scale (14 / 18 / 36, labels 11): a card's numbers are 14 (an old v4.css .card b made them 15) */
+.lt-card .ft b{font-size:var(--s)}
 .lt-card .val{font-family:var(--sans);gap:1px}
 /* glyphs are .8em of the type they sit in; a number sits right on its glyph */
 .lt-card .pip.glyph,.lt-card .pip.wild,.mc .pip.glyph,.mc .pip.wild,.lt-rate .pip.glyph,.lt-rate .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 0 0 .06em}
@@ -386,8 +391,8 @@
 .lt-rates .lt-rate.can:hover{background:var(--paper-lit,#fbf6ea)}
 .lt-rates .lt-rate.dim{filter:none;opacity:.55}
 .lt-rates .lt-rate.recede{filter:saturate(.6);opacity:.42}
-.lt-rates .rt-trade{font-family:var(--sans);font-size:17px;gap:0;color:var(--pl-ink,#2b2018)}
-.lt-rates .rt-trade b{font-weight:800;font-size:17px;color:var(--pl-ink,#2b2018)}
+.lt-rates .rt-trade{font-family:var(--sans);font-size:var(--m);gap:0;color:var(--pl-ink,#2b2018)}
+.lt-rates .rt-trade b{font-weight:800;font-size:var(--m);color:var(--pl-ink,#2b2018)}
 .lt-rates .rt-trade .follower-mark{color:var(--pl-ink,#2b2018)}
 .lt-rates .rt-left{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--pl-ink-3,#a39078);margin-top:3px}
 

@@ -182,8 +182,14 @@ try {
         // the chairs stand in the round's turn order (Cory, 2026-10-15: "position IS order"): a new round may re-sort
         // them, so their boxes are re-read at each round start; within a round, and for every other region, never
         if (r.round !== regionBoxes.round) {
-          // let the re-sort finish (a short slide), then take the chairs' new places as this round's baseline
-          await page.waitForTimeout(900);
+          // let the re-sort finish (a .35s slide), then take the chairs' new places as this round's baseline. Waiting a
+          // fixed 900ms measured mid-slide on a loaded box (the slide's frames lag), which read as chairs moving 3–9px
+          // within the round: wait until every chair stands where the column put it (its transform reached --y)
+          await page.waitForTimeout(400);
+          await page.waitForFunction(() => [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].every(e => {
+            const y = parseFloat(e.style.getPropertyValue('--y'));
+            return Number.isNaN(y) || Math.abs(new DOMMatrixReadOnly(getComputedStyle(e).transform).m42 - y) < 0.5;
+          }), null, { timeout: 6000, polling: 100 }).catch(() => {});
           const now = await page.evaluate(() => Object.fromEntries(['seat-0', 'seat-1', 'seat-2', 'seat-3'].map(k => { const e = document.querySelector(`.lt [data-region="${k}"]`); if (!e) return [k, null]; const b = e.getBoundingClientRect(); return [k, [b.left, b.top, b.width, b.height].map(Math.round).join(',')]; })));
           for (const k of Object.keys(now)) { regionBoxes[k] = now[k]; r.regions[k] = now[k]; }
           regionBoxes.round = r.round;
@@ -231,9 +237,11 @@ try {
         // the fixed regions never overlap each other, and a question note never covers the shop or the buy row
         const els = ['.lt-prompt', '.lt-wheel', '.lt-shop', '.lt-seat-0', '.lt-seat-1', '.lt-seat-2', '.lt-seat-3', '.lt-wheel > .prompt.choice', '.lt-shop .lt-rates'].map(s => [s, document.querySelector(s)]).filter(([, e]) => e && vis(e) && !e.closest('[aria-hidden="true"]'));
         const nested = (a, b) => a.contains(b) || b.contains(a);
+        // chairs mid-slide (a new round's re-sort passes them through each other) are measured once they stand
+        const sliding = e => { if (!e.matches('.lt-seat')) return false; const y = parseFloat(e.style.getPropertyValue('--y')); return !Number.isNaN(y) && Math.abs(new DOMMatrixReadOnly(getComputedStyle(e).transform).m42 - y) >= 0.5; };
         const out = [];
         for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) {
-          if (nested(els[i][1], els[j][1])) continue;
+          if (nested(els[i][1], els[j][1]) || sliding(els[i][1]) || sliding(els[j][1])) continue;
           const a = els[i][1].getBoundingClientRect(), b = els[j][1].getBoundingClientRect();
           const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
           if (w > 1 && h > 1) out.push(`${els[i][0]} overlaps ${els[j][0]} by ${Math.round(h)}px`);

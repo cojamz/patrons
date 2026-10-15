@@ -100,3 +100,9 @@
   .lt-cult-seat .cs-stack.pick-on,.lt-cult-seat .cs-member.pick-on .fig{animation:none}
   .lt-cult-seat .cs-stack.pick-on:hover{transform:none}
 }
+
+/* picking among many of your members (Release lights every one you can let go): they stay on one row in your seat,
+   a little smaller, with the "each round" line stepping aside, instead of wrapping over what you hold (design pod) */
+.lt > .lt-seat .lt-cult-seat.picking:has(.cs-member.pick-on) .cs-build{display:none}
+.lt > .lt-seat .lt-cult-seat.picking:has(.cs-member.pick-on) .cs-crowd{flex-wrap:nowrap;gap:1px;overflow:visible}
+.lt > .lt-seat .lt-cult-seat.picking:has(.cs-member.pick-on:nth-of-type(8)) .cs-member .fig svg{width:19px;height:19px}

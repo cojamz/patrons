@@ -188,13 +188,13 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-prompt .status .say .say-text{font-size:inherit;-webkit-line-clamp:2}
 .lt-prompt .status .say em{font-style:italic;color:var(--lamp-ink)}
 .lt-prompt .status .say .lead{color:var(--cream)}
-.lt-prompt .status .say:not(.mine){color:var(--cream-2);font-size:20px}
+.lt-prompt .status .say:not(.mine){color:var(--cream-2);font-size:var(--m)}
 .lt-prompt .status .say.nudge,.lt-prompt .status .say.info{font-size:18px;color:var(--lamp-ink)}
 .lt-prompt .undo-slot{display:flex;width:auto;flex:none}
-.lt-prompt .undo{border:1px solid rgba(243,230,200,.22);color:var(--cream-2);font-family:var(--sans);font-size:13px;min-height:26px;height:26px;padding:0 12px}
-.lt-prompt .steps-row{gap:16px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--cream-3)}
-.lt-prompt .round{font-family:var(--sans) !important;font-size:13px !important;color:var(--cream-3) !important;letter-spacing:.06em}
-.lt-prompt .round small{font-size:inherit;color:inherit}
+.lt-prompt .undo{border:1px solid rgba(243,230,200,.22);color:var(--cream-2);font-family:var(--sans);font-size:var(--s);min-height:26px;height:26px;padding:0 12px}
+.lt-prompt .steps-row{gap:16px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
+.lt-prompt .round{font-family:var(--sans) !important;font-size:11px !important;color:var(--cream-3) !important;letter-spacing:.08em}
+.lt header.bar.lt-prompt .round small{font-size:inherit;color:inherit} /* beats v4.css's header.bar .round small (13px) */
 .lt-prompt .steps{display:flex;gap:14px}
 /* the turn's two steps are words: the one you're on is bright and underlined (no dots: a dot only ever means a
    resource; no glow: nothing here is clickable) */
@@ -439,11 +439,13 @@ h1,h2,h3{font-family:var(--serif)}
 /* the buy step's other answers, beside the question */
 .lt-prompt .pr-actions{display:inline-flex;align-items:center;gap:8px;flex:none}
 .lt-prompt .pr-actions .pass{min-height:26px;height:26px;padding:0 16px;border-color:rgba(243,230,200,.4)}
+.lt-prompt .pr-actions .btn{font-size:var(--s)} /* the scale's 14, like Undo */
 .lt-prompt .pr-actions .rel-toggle{min-height:26px;height:26px}
 .lt-prompt .pr-actions .rel-list{display:inline-flex;flex-wrap:wrap;gap:6px}
 .lt-prompt .pr-actions .rel{min-height:36px;border-color:color-mix(in srgb,var(--c,var(--rim)) 70%,transparent)}
 
-.lt-prompt .status .say{font-size:clamp(18px, 1.75vw, 24px)}
+/* the question is a sentence: the scale's 18 (grammar: 14 / 18 / 36), its emphasis in the lamp's italic */
+.lt-prompt .status .say{font-size:var(--m)}
 
 /* the question's first letter keeps its overhang (the line clamp clips at the box edge) */
 .lt-prompt .status .say .say-text{padding-left:5px;padding-right:2px}
@@ -518,8 +520,8 @@ h1,h2,h3{font-family:var(--serif)}
 .turn-card{position:fixed;z-index:30;max-width:280px;width:max-content;display:flex;flex-direction:column;gap:2px;padding:9px 13px 10px;border-radius:12px;
   background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);box-shadow:0 0 0 1.5px var(--pc),0 12px 26px rgba(0,0,0,.5);
   pointer-events:none;animation:rise .2s ease-out;transition:transform .45s cubic-bezier(.5,0,.7,.4),opacity .45s}
-.turn-card .tc-head{font-family:var(--serif);font-size:16px;line-height:1.15}
-.turn-card .tc-line{font-size:13px;line-height:1.3;color:var(--paper-ink-2);animation:tcline .3s ease-out}
+.turn-card .tc-head{font-family:var(--serif);font-size:var(--m);line-height:1.15}
+.turn-card .tc-line{font-size:var(--s);line-height:1.3;color:var(--paper-ink-2);animation:tcline .3s ease-out}
 .turn-card .tc-line .pip{width:.95em;height:.95em}
 @keyframes tcline{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .turn-card.folding{transform:scale(.15);opacity:0}
@@ -535,6 +537,8 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-prompt .pr-actions .rel-list{position:absolute;top:calc(100% + 6px);left:0;z-index:35;display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px;width:max-content;max-width:320px;
   border-radius:12px;background:var(--walnut-2);box-shadow:0 0 0 1px rgba(243,230,200,.14),0 14px 30px rgba(0,0,0,.6)}
 .lt-prompt .pr-actions .rel-list .rel{justify-content:flex-start;gap:6px;min-height:40px;color:var(--cream)}
+/* Release is picked in your seat now; the list is the keyboard's way in only: hidden until a key brings focus into it */
+.lt-prompt .pr-actions .rel-list.keys:not(:focus-within){clip-path:inset(50%);width:1px;height:1px;padding:0;overflow:hidden;box-shadow:none}
 /* a sphere's own rule, under its standings in the rim's hover card ("Whatever you steal turns magenta…") */
 .lt-sphere-rule{margin:8px 0 0;padding-top:7px;border-top:1px solid rgba(42,31,23,.15);font-size:13px;line-height:1.3;color:var(--paper-ink-2);max-width:260px}
 

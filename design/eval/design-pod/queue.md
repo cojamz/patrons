@@ -22,7 +22,7 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 - [x] 06:10 1100px laptops (old grid): the member strip switches to 5 columns and hides the second row (5 of 10 members visible). lamp-b.css's 1100px rule.
 - [x] 06:10 First full capture pass (every state, 1270×700) → log.md.
 - [x] 06:30 Order rail "×2" → "twice" (CultSeat.jsx, seats.js; turnstory.mjs t1 follows).
-- [ ] 06:35 Type scale on the game screen (detail designer's 06:20 note): take the screen to the grammar's three sizes, region by region.
+- [x] 06:35 Type scale on the game screen (detail designer's 06:20 note): 14 / 18 / 36 plus 11px caps labels (log.md 06:35). Detail designer: wheel faces and hover cards are yours to fit to the same scale.
 
 ## For the art director (composition / layout)
 - 05:40 Since-strip rows end in an ellipsis that cuts the member's name ("P4 Half Price: −1● −1● −3● · recruited Stunt Dou…") in the narrow left column. Let a row wrap to two lines (hanging indent under the name), or give the strip the width. I haven't touched since.css's box.
@@ -42,3 +42,7 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 ## For the foreman (needs a call or another agent's files)
 - 06:05 RC1 #29: Undo disappears as soon as you pick the first stolen resource, so a mis-steal can't be taken back. A session/rules question, not a detail.
 - 06:05 Dialogs pod: in the pay dialog, a resource you hold none of shows "0" with no dot under it (the others show a faded dot), so one column reads as a bare number; and the coin "×2" (PayPicker `.x`) is a typed × the grammar retired. The keyboard-only "Pick from a list" button, when focused, lands on top of the "ROUND I OF 3" line.
+
+## For the art director (from QA, 06:45): layout stability
+- Chairs "moving 3–9px between steps" (hotseat gate) was the gate, not the layout: chair heights hold all round (fixed rows), and the only move is the round-start re-sort (the .35s slide to the new turn order). The gate re-read the chairs a fixed 900ms after the round changed and, on a loaded box, caught the slide mid-way. hotseat.mjs now waits until every chair's transform reaches its --y. Nothing in the layout changed.
+- The shop strip grew about 1.5% from its centre during a choice (hotseat: 973,8,279,684 -> 971,3,283,694): a scale on the strip itself. Most likely source (read from the code, not caught in the act): the motion chain hops or pops its target (scale 1.08 / 1.1), and when a card's own slot or the deck isn't on screen it falls back to the whole `.lt-shop`. director.js now never hops or pops an element that is a region (`[data-region]`): the furniture never scales; the thing inside it still moves.

@@ -318,7 +318,10 @@ const dotHtml = (root, r, pid) => {
   return g ? g.outerHTML : `<i class="piece-dot" style="background:var(--${r || 'lamp-ink'})"></i>`;
 };
 const folHtml = (root, pid) => { const g = root.querySelector(`.lt-cult-seat[data-seat="${pid}"] .cs-total svg`) || root.querySelector('.cs-total svg'); return g ? g.outerHTML : '<i class="piece-dot" style="background:var(--cream,#f3e6c8)"></i>'; };
-const hopEl = (el, ms) => { if (el && el.animate && !el.rectOnly) track(el.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px) scale(1.08)', offset: 0.4 }, { transform: 'translateY(0)' }], { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' })); };
+// a whole region (the shop strip, a chair: a fallback target) never hops or pops: its box is the furniture, which never
+// moves (hotseat region gate); only the thing inside it does
+const region = el => !!(el && el.matches && el.matches('[data-region]'));
+const hopEl = (el, ms) => { if (el && el.animate && !el.rectOnly && !region(el)) track(el.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px) scale(1.08)', offset: 0.4 }, { transform: 'translateY(0)' }], { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' })); };
 const square = (r, size) => ({ left: r.left + r.width / 2 - size / 2, top: r.top + r.height / 2 - size / 2, width: size, height: size });
 const onFinish = (anim, fn) => { if (anim && anim.finished) anim.finished.then(() => fn(), () => fn()); else fn(); };
 
@@ -463,7 +466,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           onFinish(anim, () => {
             g.remove();
             chain.flying = Math.max(0, chain.flying - 1);
-            if (chip && chip.animate && chip.isConnected) track(chip.animate([{ boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }, { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.1)', offset: 0.35 }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }], { duration: MO.ring, easing: 'ease-out' }));
+            if (chip && chip.animate && chip.isConnected && !region(chip)) track(chip.animate([{ boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }, { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.1)', offset: 0.35 }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }], { duration: MO.ring, easing: 'ease-out' }));
           });
           return;
         }

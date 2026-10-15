@@ -128,13 +128,14 @@ try {
       // (b3) Release
       const fold = !seen.has('release') && await page.$('.lt-prompt .release-row:not(.open) .rel-toggle');
       if (fold) { await fold.click(); await page.waitForTimeout(150); }
-      const rel = await page.$('.lt-prompt [data-option^="release:"]');
+      // picked on the board (design pod, 2026-10-15: no chip list): Release… lights your releasable members in your seat
+      const rel = await page.$('.lt-seat.mine [data-option^="release:"]');
       if (rel && !seen.has('release')) {
         seen.add('release');
-        if (!(await rel.isVisible())) errors.push('(b3) the Release buttons did not open from their row');
+        if (!(await rel.isVisible())) errors.push('(b3) Release did not light a member in your seat');
         await shot('b3-release-offered');
-        const txt = (await rel.textContent()).trim();
-        if (!txt || /undefined/.test(txt)) errors.push(`(b3) release button label is "${txt}"`);
+        const txt = ((await rel.getAttribute('aria-label')) || '').trim();
+        if (!/^Release .+: get back \d+ \w+/.test(txt) || /undefined/.test(txt)) errors.push(`(b3) the release pick says "${txt}"`);
         await rel.click();
         await page.waitForTimeout(400);
         // the color pick(s) come next as a normal choice

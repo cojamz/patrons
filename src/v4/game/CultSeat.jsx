@@ -107,7 +107,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
                 <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
               </Tip>
-              {pickM && <button type="button" className="cs-pick-member" tabIndex={-1} data-option={pickM.id} aria-label={`${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} title={`${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} onClick={e => pick.onPick(pickM.id, e.currentTarget)}><span className="hitbox" aria-hidden="true" /></button>}
+              {pickM && <button type="button" className="cs-pick-member" tabIndex={-1} data-option={pickM.id} aria-label={pickM.say || `${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} title={pickM.say || `${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} onClick={e => pick.onPick(pickM.id, e.currentTarget)}><span className="hitbox" aria-hidden="true" /></button>}
               {/* a switch shows its state, small under its figure; a click flips it in your buy step (its card says so) */}
               {mine && d.toggle && <MemberSwitch name={d.name} on={g.card.on !== false} option={toggle} onPick={onPick} />}
             </span>

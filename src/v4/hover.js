@@ -18,4 +18,7 @@ if (typeof window !== 'undefined' && window.addEventListener) {
   }, { capture: true, passive: true });
 }
 const hoverless = () => typeof matchMedia === 'function' && matchMedia('(hover: none)').matches;
-export const realHover = e => !!e && e.pointerType === 'mouse' && !hoverless() && Date.now() - lastTouch > 1000 && Date.now() - lastMove < 400;
+// A real arrival's enter comes before the move that carries it, at the new position; an enter the table caused (a card
+// dealt under a resting pointer) comes at the position the pointer already rested at.
+export const realHover = e => !!e && e.pointerType === 'mouse' && !hoverless() && Date.now() - lastTouch > 1000
+  && (e.clientX !== mx || e.clientY !== my || Date.now() - lastMove < 60 || mx === null);

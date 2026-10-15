@@ -63,6 +63,9 @@ Cory's rule (2026-10-14): anything that makes the game playable by humans comes 
 - [ ] Improve the thinking bot: better rollouts and card valuation, fast enough for 4 at a table
 - [ ] Later, only if bot prices keep disagreeing with Cory's feel in play: a bot that learns from its own games
 
+## Phone (out of scope for v0.2: laptops only, Cory)
+- [ ] Online, phone guest stuck on "Place here" (QA, 2026-10-15). online.mjs with Pia on an iPhone 13 (now opt-in, V4_PHONE=1) stopped twice in round III on "Your turn again (snake order): place a minion" with the space sheet pinned and Place here showing; the run before the shared answer helper stopped the same way, so it isn't the driver. Screenshot: design/eval/qa/online-phone-place-stall.png. Laptop-only online: one pass, one timeout with Gus on a pinned Place here sheet at load ~28 (design/eval/qa/online-laptop-place-timeout.png); not shown to be a stall (the play budget is 90s). Next: on a quiet box, tap Place here and check whether the move reaches the host.
+
 ## Waiting on Cory
 - [ ] The action spaces' redesign: point at the references you like (design/prototypes/actions/refs/board.png, being built)
 - [ ] Allow *.firebaseio.com, identitytoolkit.googleapis.com, securetoken.googleapis.com, *.netlify.app (or do the two-laptop check yourself)

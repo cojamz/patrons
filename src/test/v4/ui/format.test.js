@@ -120,8 +120,8 @@ describe('v4 format helpers', () => {
     expect(`${again.lead}${again.text}`).toBe('Your turn again (snake order) — place a minion');
     expect(JSON.stringify(again)).not.toMatch(/extra/i);
     expect(other.pr.text).toBe(`${other.name} again (snake order)`);
-    expect(buy.text).toBe('Recruit a member or buy followers'); // said once, whole (design pod)
-    expect(buy.sub || '').not.toMatch(/Recruit a member or buy followers/);
+    expect(buy.text).toBe('Recruit or buy');
+    expect(buy.sub).toMatch(/^A member from the shop, or followers/); // finishes the headline, never repeats it (design pod)
     // nobody else's turn ever reads as yours
     expect(promptFor(s, false).text).not.toMatch(/^Your|^Extra/);
   });

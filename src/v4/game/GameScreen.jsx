@@ -164,9 +164,11 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       const sameNext = !!(next.pending && prev.pending && next.pending.player === prev.pending.player);
       // (a rival's step that shows something stays on screen at least 400ms before the same bot's next step: motion.mjs m4)
       const dwellOf = pl => (pl.total ? (sameNext ? Math.max(pl.handoff, rivalStep ? Math.min(rivalDwell, 400) : 0) : pl.total) : rivalStep ? (sameNext ? 0 : MO.passHold) : base);
-      const dwell = dwellOf(plan);
+      // reduced motion (grammar §6, H14): nothing travels, so a step shows its end state and the next follows a beat later
+      const still = !motionOK();
+      const dwell = still ? (plan.total || rivalStep ? (sameNext && !plan.total ? 0 : Math.min(150, plan.total || 150)) : base) : dwellOf(plan);
       // the screen measures the real distances once this step is drawn: the pace follows that plan (retime below)
-      remeasure.current = dwellOf;
+      remeasure.current = still ? null : dwellOf;
       if (typeof window !== 'undefined') window.__patronsDwellSum = (window.__patronsDwellSum || 0) + dwell; // (the pacing gate reads it)
       if (!queue.current.length) paced.current = false;
       // every step gets its own commit, even one that doesn't wait, so each chain plays from the step right before it
@@ -222,6 +224,20 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
   }, [pump]);
 
   return [table.shown, table.moment, dismiss, rs0, retime];
+}
+
+/**
+ * Shows `value` as it was before the chain now playing, and the new one when the chain has landed (or was skipped):
+ * a move's summary is its closing beat (motion review #7, #27). Re-renders only itself when the chain ends.
+ */
+function AfterChain({ value, hold, children }) {
+  const shown = useRef(value);
+  const latest = useRef(value);
+  latest.current = value;
+  const [, bump] = useState(0);
+  if (!hold) shown.current = value;
+  useEffect(() => onChainEnd(() => { if (shown.current !== latest.current) { shown.current = latest.current; bump(n => n + 1); } }), []);
+  return children(shown.current);
 }
 
 /** The viewer's animation speed (Cory: a setting in the menu; Steady by default), kept in this browser. */
@@ -339,18 +355,23 @@ function seatCorners(state, me) {
 
 const RELEASE_TEXT = 'Once per round: put one of your members at the bottom of the pile and take back the colored part of its cost, in its own color.';
 /** The buy step's other answers live with the question: Pass, and (once a round) Release a member. */
-function PromptActions({ state, optionFor, onPick }) {
+/** Release, picked on the board (Cory: every choice is picked on the board, never from a list of chips): "Release…"
+ *  lights your releasable members in your seat and you click one (its button says what comes back); Esc, a click
+ *  elsewhere or Cancel closes it. The list of buttons is only the keyboard's way in (shown when it has focus). */
+function PromptActions({ state, optionFor, onPick, open, setOpen }) {
   const pend = state.pending;
   const releases = pend.options.filter(o => o.kind === 'release');
-  const [open, setOpen] = useState(false);
   const turn = `${state.round}:${pend.player}`;
-  useEffect(() => { setOpen(false); }, [turn]);
-  // an open list closes on Escape or a click anywhere else (RC1 sweep 71: Esc left it open)
+  useEffect(() => { setOpen(false); }, [turn]); // eslint-disable-line react-hooks/exhaustive-deps
+  // open, it closes on Escape or a click anywhere but your seat (RC1 sweep 71: Esc left it open)
   const rowRef = useRef(null);
+  const keysRef = useRef(null);
+  const byKeys = useRef(false);
   useEffect(() => {
     if (!open) return undefined;
+    if (byKeys.current && keysRef.current) { const b = keysRef.current.querySelector('button'); if (b) b.focus(); }
     const key = e => { if (e.key === 'Escape') setOpen(false); };
-    const away = e => { if (rowRef.current && !rowRef.current.contains(e.target)) setOpen(false); };
+    const away = e => { if (rowRef.current && !rowRef.current.contains(e.target) && !(e.target.closest && e.target.closest('.lt-seat.mine'))) setOpen(false); };
     addEventListener('keydown', key);
     addEventListener('pointerdown', away, true);
     return () => { removeEventListener('keydown', key); removeEventListener('pointerdown', away, true); };
@@ -360,10 +381,10 @@ function PromptActions({ state, optionFor, onPick }) {
     <span className="pr-actions">
       {releases.length > 0 && (
         <span ref={rowRef} className={`release-row${open ? ' open' : ''}`}>
-          <button type="button" className="btn ghost rel-toggle" aria-expanded={open} onClick={() => setOpen(o => !o)}
-            title={RELEASE_TEXT}>Release…</button>
+          <button type="button" className="btn ghost rel-toggle" aria-expanded={open} onClick={e => { byKeys.current = e.detail === 0; setOpen(o => !o); }}
+            title={RELEASE_TEXT}>{open ? 'Cancel' : 'Release…'}</button>
           {open && (
-            <span className="rel-list" role="group" aria-label={`Release which member? ${RELEASE_TEXT}`}>
+            <span ref={keysRef} className="rel-list keys" role="group" aria-label={`Release which member? ${RELEASE_TEXT}`}>
               {releases.map(o => {
                 const d = state.cards[o.uid] ? cardDef(state, o.uid) : null;
                 const n = o.refund ?? 0, color = o.color || 'any';
@@ -488,18 +509,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // the card on screen: this turn's, as it builds; else the one that just passed, until it has held and folded
   const toldShown = story.live ? null : story.told || lastTold.current;
   const toldCard = !toldShown ? null : turnCard && turnCard.n === toldShown.n ? (turnCard.gone ? null : turnCard) : toldShown;
-  // the summary comes last (motion review #7, #27): while a move's chain plays, the turn card and a rival's headline
-  // keep telling what was already on the table; they change when the chain has landed (or is skipped)
-  const [settled, setSettled] = useState(live0);
-  const latest = useRef(live0);
-  latest.current = live0;
-  useEffect(() => onChainEnd(() => startTransition(() => setSettled(latest.current))), []);
-  useEffect(() => { if (!chainRunning()) setSettled(live0); }, [live0]);
-  const lagging = settled !== live0 && settled.seed === live0.seed && !live0.over;
-  const shownCard = useRef(null);
-  const cardLive = story.live || toldCard;
-  if (!lagging) shownCard.current = cardLive;
-  const cardNow = lagging ? shownCard.current : cardLive;
+  const cardNow = story.live || toldCard;
   const since = story.since;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -854,10 +864,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = prev; };
   }, [modalOpen]);
-  const prLive = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
-  const prShown = useRef(prLive);
-  if (!lagging || mine) prShown.current = prLive;
-  const pr = mine ? prLive : prShown.current;
+  const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
+  // the summary comes last (motion review #7, #27): while a move's chain plays (or this state is about to play one),
+  // the turn card and a rival's headline keep telling what was already on the table, and change when the chain has
+  // landed or is skipped (AfterChain re-renders only itself then)
+  const holdStory = !state.over && motionOK() && (chainRunning() || (prevState.current !== state && prevState.current.seed === state.seed && planChain(prevState.current, state, { mine: mySeats }).total > 0));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
   // The board picker: a choice whose options name things on the board (spaces, members, cults, resource stacks) is
   // answered there (boardPick.js); the choice panel shrinks to a caption docked under the headline, the leftover
@@ -920,8 +931,21 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (why) say(why);
     if (el && el.animate && motionOK()) el.animate([{ translate: '0 0' }, { translate: '-3px 0' }, { translate: '3px 0' }, { translate: '0 0' }], { duration: 220, easing: 'ease-out' });
   }, [say]);
+  // Release picked on the board: your releasable members light up in your seat while it's open (PromptActions)
+  const [relOpen, setRelOpen] = useState(false);
+  const relPart = useMemo(() => {
+    if (!relOpen || !state.pending || state.pending.kind !== 'buy' || !options.size) return null;
+    const rel = [...options.values()].filter(o => o.kind === 'release');
+    if (!rel.length) return null;
+    const members = Object.fromEntries(rel.map(o => {
+      const d = state.cards[o.uid] ? cardDef(state, o.uid) : null;
+      return [o.uid, { ...o, say: `Release ${d ? d.name : 'this member'}: get back ${o.refund ?? 0} ${o.color || 'any'}` }];
+    }));
+    return { lit: true, dim: false, seat: null, seatMode: false, why: null, stacks: null, members, picked: {}, title: 'Release',
+      onPick: id => { setRelOpen(false); onPick(id); }, onDenied: null };
+  }, [relOpen, options, state, onPick]);
   const pickParts = useMemo(() => {
-    if (!picker) return {};
+    if (!picker) return relPart && me != null ? { [me]: relPart } : {};
     // the "−1"s show only while they add up to the engine's own count (a reload mid-steal starts them over)
     const picked = seatPicks.key === pickKey && picker.count
       && Object.values(seatPicks.map).reduce((t, m) => t + Object.values(m).reduce((a, b) => a + b, 0), 0) === picker.count.of - picker.count.left ? seatPicks.map : {};
@@ -931,7 +955,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       if (part) out[p.id] = { ...part, title: picker.title, onPick: onSeatPick, onDenied: onSeatDenied };
     }
     return out;
-  }, [picker, seatPicks, pickKey, state, onSeatPick, onSeatDenied]);
+  }, [picker, seatPicks, pickKey, state, onSeatPick, onSeatDenied, relPart, me]);
   const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)} of 3</> : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
@@ -961,6 +985,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // The lamp follows the decision; the furniture never moves (fixed regions, phase only re-lights them).
   const phase = state.over && !moment ? 'over' : moment ? 'reckon' : !pend ? 'wait' : pend.kind === 'pay' ? 'pay' : pend.kind === 'buy' ? 'buy' : pend.kind === 'place' ? 'place' : pend.kind === 'setup' ? 'setup' : 'choose';
   const yours = mine && !needHandoff;
+  // which of the turn's two steps a choice belongs to: the one before it (a recruit's or a release's choice is the buy
+  // step, a space's is the placement; RC1 sweep 93: a buy-step choice lit "Place")
+  const stepRef = useRef('place');
+  if (phase === 'place') stepRef.current = 'place'; else if (phase === 'buy' || phase === 'pay') stepRef.current = 'buy';
+  const step = phase === 'choose' ? stepRef.current : phase === 'pay' ? 'buy' : phase;
   return (
     <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${pend && pend.kind === 'setup' && !state.over ? ' in-setup' : ''}`} ref={root} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar lt-prompt" data-region="prompt">
@@ -971,15 +1000,17 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           ) : note ? (
             <span key={note.n} className={`say ${note.tone}`} data-prompt tabIndex={-1} role="status">{note.text}</span>
           ) : pr.text ? (
-            <span className={`say${mine ? ' mine' : ''}`} data-prompt tabIndex={-1}>
-              {pr.who && <i style={{ background: playerColor(pr.who.id) }} />}
-              <span className="say-text">
-                {mine && humansHere && pr.who ? <b style={{ color: playerColor(pr.who.id) }}>{pr.who.name}: </b> : null}
-                {mine ? <><span className="lead">{pr.lead ?? 'Your turn — '}</span><em>{pr.text && !pr.keepCase ? pr.text[0].toLowerCase() + pr.text.slice(1) : pr.text}</em></> : state.over ? pr.text : <>{pr.text}<span className="dots" aria-hidden="true"> ···</span></>}
+            <AfterChain value={pr} hold={holdStory && !mine}>{p => (
+              <span className={`say${mine ? ' mine' : ''}`} data-prompt tabIndex={-1}>
+                {p.who && <i style={{ background: playerColor(p.who.id) }} />}
+                <span className="say-text">
+                  {mine && humansHere && p.who ? <b style={{ color: playerColor(p.who.id) }}>{p.who.name}: </b> : null}
+                  {mine ? <><span className="lead">{p.lead ?? 'Your turn — '}</span><em>{p.text && !p.keepCase ? p.text[0].toLowerCase() + p.text.slice(1) : p.text}</em></> : state.over ? p.text : <>{p.text}<span className="dots" aria-hidden="true"> ···</span></>}
+                </span>
               </span>
-            </span>
+            )}</AfterChain>
           ) : <span className="say" data-prompt tabIndex={-1} />}
-          {buyingNow && <PromptActions state={state} optionFor={live} onPick={onPick} />}
+          {buyingNow && <PromptActions state={state} optionFor={live} onPick={onPick} open={relOpen} setOpen={setRelOpen} />}
           <span className="undo-slot">
             {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your first pick' : 'Take back your minion until you buy or pass'}>Undo<span className="undo-word"> {undoWord}</span></button>}
           </span>
@@ -989,10 +1020,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           {/* your turn's details sit under the headline (it stays one short line); otherwise the turn's two steps */}
           {picker ? <span className="say-sub pick-how" data-prompt-sub>{note ? note.text : pickCaption(state, picker).how}</span>
             : pickDone ? <span className="say-sub seat-pick-done" aria-hidden="true"><span className="pick-cap">{pickDone.title}: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</span></span>
+              : mine && !needHandoff && relOpen && !note ? <span className="say-sub" data-prompt-sub>Click a lit member in your cult to release it</span>
               : mine && !needHandoff && pr.sub && !note ? <span className="say-sub" data-prompt-sub>{pr.sub}</span> : state.round > 0 && !state.over && (
             <span className="steps" aria-hidden="true">
-              <span className={phase === 'place' || phase === 'choose' ? 'on' : ''}>Place</span>
-              <span className={phase === 'buy' || phase === 'pay' ? 'on' : ''}>Recruit or buy</span>
+              <span className={step === 'place' ? 'on' : ''}>Place</span>
+              <span className={step === 'buy' ? 'on' : ''}>Recruit or buy</span>
             </span>
           )}
         </div>
@@ -1057,7 +1089,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           {state.round >= 1 && <SinceStrip state={state} entries={since} me={mySeats.length === 1 ? mySeats[0] : null} yours={yours} hover={hover} onLog={openLog} />}
         </>
       )}
-      {cardNow && !moment && !(state.over && !moment) && <TurnCard card={cardNow} root={root.current} state={state} />}
+      <AfterChain value={cardNow} hold={holdStory}>{c => (c && !moment && !(state.over && !moment) ? <TurnCard card={c} root={root.current} state={state} /> : null)}</AfterChain>
       {toast && <div key={toast.n} className="toast" role="status">{toast.text}</div>}
       <TouchTips />
       {cardDetail && state.cards[cardDetail.uid] && (

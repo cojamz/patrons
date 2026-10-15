@@ -255,7 +255,7 @@ const plainSpace = pg => pg.evaluateHandle(() => [...document.querySelectorAll('
   const pg = await freshPage('speed=steady');
   const gaps = [];
   if (pg) {
-    for (let turn = 0; turn < 3 && gaps.length < 1; turn++) {
+    for (let turn = 0; turn < 3 && gaps.length < 2; turn++) {
       const el = (await plainSpace(pg)).asElement();
       if (!el) break;
       await (await el.$('.base')).click();
@@ -280,7 +280,13 @@ const plainSpace = pg => pg.evaluateHandle(() => [...document.querySelectorAll('
   // controls; the wall time beside it adds whatever the box spent drawing
   report.push(`turns: gap between your turns at Steady, scheduled ${gaps.map(g => `${(g.planned / 1000).toFixed(1)}s (wall ${(g.wall / 1000).toFixed(1)}s, ${g.steps} steps)`).join(', ') || 'not measured'}`);
   if (!gaps.length) errors.push('(s5) could not measure the gap between your turns');
-  else if (Math.min(...gaps.map(g => g.planned)) > 8000) errors.push(`(s5) your next turn is scheduled ${(Math.min(...gaps.map(g => g.planned)) / 1000).toFixed(1)}s after your last (want ≤ 8s at Steady)`);
+  // the grammar's H2: a usual gap (three rivals' turns) ≤ 8s here (6.5s p50 on a quiet box); the snake's long gap
+  // (up to six rival turns in a row, many more steps) ≤ 13s
+  else {
+    const usual = gaps.filter(g => g.steps <= 12), long = gaps.filter(g => g.steps > 12);
+    if (usual.length && Math.min(...usual.map(g => g.planned)) > 8000) errors.push(`(s5) your next turn is scheduled ${(Math.min(...usual.map(g => g.planned)) / 1000).toFixed(1)}s after your last (want ≤ 8s at Steady)`);
+    if (long.length && Math.min(...long.map(g => g.planned)) > 13000) errors.push(`(s5) the snake's long gap is scheduled ${(Math.min(...long.map(g => g.planned)) / 1000).toFixed(1)}s (want ≤ 13s at Steady)`);
+  }
 }
 
 for (const line of report) console.log(`snappy: ${line}`);
