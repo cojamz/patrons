@@ -5,6 +5,10 @@
 //  (t2) the "since your last turn" strip accounts for the rivals' moves (one line per placement, each naming its player,
 //       or folded into "N earlier" when the turn card takes the room; whole lines only),
 //       sits in the open, clear of the wheel and the shop, and a line opens that placement's card on hover;
+//       whole lines only is watched every frame of the run: no line (or the "N earlier" line) may show in part, cut by
+//       the strip's top or foot, for 3 frames running (a fold lands within a frame; a sliver that stays is the bug);
+//  (t2b) the same on a full strip over a tall pinned card: a ring-II resume on a table of long, two-line stories
+//       (silver, trading, thieves, red), at 1270×700 and 1100×700, with the turn card up under the strip;
 //  (t3) after a placement, the turn card names the space actually taken (the engine's log is the truth);
 //  (t4) the snake turnaround reads "Your turn again (snake order)", never "Extra turn";
 //  (t5) the second placement gets its own card: its space, and nothing from the first;
@@ -19,6 +23,7 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { snakeSave } from './lib/snake-save.mjs';
 import { seedSave } from './lib/seed.mjs';
+import { stripSave } from './lib/strip-save.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/turnstory';
 mkdirSync(SHOTS, { recursive: true });
@@ -38,8 +43,39 @@ if (!base) {
 const errors = [];
 const fail = (msg, tag) => errors.push(`[${tag}] ${msg}`);
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+// (t2) whole lines, every frame: a line of the strip (a story or the "N earlier" line) that is drawn and cut by the
+// list's top or foot is a part-line; the longest run of frames one stays is kept, with what it was
+async function watchStrip(page) {
+  await page.addInitScript(() => {
+    const W = window.__strip = { run: 0, worst: 0, what: '', frames: 0, cardFrames: 0, foldFrames: 0 };
+    const tick = () => {
+      const l = document.querySelector('[data-since] .since-list');
+      let part = null;
+      if (l) {
+        W.frames++;
+        if (document.querySelector('.lt > .turn-card')) W.cardFrames++;
+        if (l.querySelector('.since-more')) W.foldFrames++;
+        const b = l.getBoundingClientRect();
+        for (const x of l.children) {
+          const a = x.getBoundingClientRect();
+          if (!a.height || getComputedStyle(x).visibility === 'hidden') continue;
+          if (a.top < b.top - 1 || a.bottom > b.bottom + 1) { part = `"${x.textContent.slice(0, 50)}" at ${Math.round(a.top)}–${Math.round(a.bottom)}, list ${Math.round(b.top)}–${Math.round(b.bottom)}, ${innerWidth}px${document.querySelector('.lt > .turn-card') ? ', card up' : ''}`; break; }
+        }
+      }
+      W.run = part ? W.run + 1 : 0;
+      if (W.run > W.worst) { W.worst = W.run; W.what = part; }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+const stripFrames = (page, tag) => page.evaluate(() => window.__strip).then(W => {
+  if (W && W.worst >= 3) fail(`a strip line showed only in part for ${W.worst} frames running: ${W.what}`, tag);
+  return W;
+}).catch(() => null);
 try {
   const page = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+  await watchStrip(page);
   page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
   page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
   const { save, roundStart } = snakeSave();
@@ -199,8 +235,44 @@ try {
   v = await view();
   if (!v.strip.length) fail('back on P1 after the rivals moved, the strip is empty', 't2');
   await page.screenshot({ path: `${SHOTS}/6-back.png` });
-  console.log(`turnstory: chips ${JSON.stringify(me && me.text)}, strip ${v.strip.length} lines, placed ${first} then ${second}`);
+  const W = await stripFrames(page, 't2');
+  console.log(`turnstory: chips ${JSON.stringify(me && me.text)}, strip ${v.strip.length} lines, placed ${first} then ${second}; strip watched ${W ? W.frames : 0} frames (${W ? W.cardFrames : 0} with a card up, ${W ? W.foldFrames : 0} folded)`);
   await page.close();
+  // (t2b) a full strip over a tall pinned card, at two laptop widths
+  const full = stripSave();
+  full.save.state.build = stamp; full.roundStart.state.build = stamp;
+  for (const width of [1270, 1100]) {
+    const tag = `t2b ${width}`;
+    const p2 = await browser.newPage({ viewport: { width, height: 700 } });
+    p2.on('pageerror', e => errors.push(`[${tag}] pageerror: ${e.message}`));
+    await watchStrip(p2);
+    await seedSave(p2, full.save, { roundStart: full.roundStart });
+    await p2.goto(`${base}/?botDelay=300&intro=0`);
+    await p2.click('[data-home="resume"]', { timeout: 30000 });
+    await p2.waitForSelector('.lt-wheel .slot.can');
+    // the resumed turn's card comes up under the strip; then the strip has settled with it
+    if (!(await p2.waitForSelector('.lt > .turn-card', { timeout: 6000 }).catch(() => null))) fail('no turn card came up on the resumed round-II turn', tag);
+    await p2.waitForTimeout(800);
+    const s2 = await p2.evaluate(() => {
+      const l = document.querySelector('[data-since] .since-list'), card = document.querySelector('.lt > .turn-card');
+      if (!l) return null;
+      const b = l.getBoundingClientRect();
+      return { lines: l.querySelectorAll('[data-since-line]').length, folded: Number((l.querySelector('.since-more')?.textContent.match(/\d+/) || [0])[0]),
+        part: [...l.children].filter(x => { const a = x.getBoundingClientRect(); return a.height && getComputedStyle(x).visibility !== 'hidden' && (a.top < b.top - 1 || a.bottom > b.bottom + 1); }).map(x => x.textContent.slice(0, 50)),
+        cover: card ? Math.max(0, b.bottom - card.getBoundingClientRect().top) : 0 };
+    });
+    await p2.screenshot({ path: `${SHOTS}/7-full-strip-${width}.png` });
+    if (!s2) fail('the resumed round-II turn shows no strip', tag);
+    else {
+      if (s2.part.length) fail(`with the turn card up, the strip shows ${s2.part.length} line(s) only in part: ${JSON.stringify(s2.part)}`, tag);
+      if (s2.lines < 1) fail('the full strip shows no whole line at all', tag);
+      if (s2.cover > 1) fail(`the turn card covers the strip's foot by ${Math.round(s2.cover)}px`, tag);
+      if (!s2.folded) console.log(`turnstory ${tag}: note, the strip fit without folding (${s2.lines} lines), so the fold went unexercised here`);
+    }
+    const W2 = await stripFrames(p2, tag);
+    console.log(`turnstory ${tag}: ${s2 ? s2.lines : 0} whole lines + ${s2 ? s2.folded : 0} folded with the card up; strip watched ${W2 ? W2.frames : 0} frames, longest part-line run ${W2 ? W2.worst : '?'}`);
+    await p2.close();
+  }
 } catch (e) {
   errors.push(`run: ${e.stack || e.message}`);
 }

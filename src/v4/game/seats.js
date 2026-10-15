@@ -26,7 +26,13 @@ export function turnPlaces(state, me = null) {
   for (const t of seq) order.push(t.pid);
   const name = id => (id === me ? 'You' : state.players[id].name);
   const list = order.map(name);
-  const ahead = k => (k ? ` after ${list.slice(0, k).join(', ')}` : '');
+  // "after you twice, P2" (a3: "after You, You" read as a stutter): a run of one seat is said once, and you is lowercase mid-sentence
+  const ahead = k => {
+    if (!k) return '';
+    const runs = [];
+    for (const id of order.slice(0, k)) { const r = runs[runs.length - 1]; if (r && r.id === id) r.n++; else runs.push({ id, n: 1 }); }
+    return ` after ${runs.map(r => `${r.id === me ? 'you' : state.players[r.id].name}${r.n === 2 ? ' twice' : r.n > 2 ? ` ${r.n} times` : ''}`).join(', ')}`;
+  };
   for (const p of state.players) {
     const k = order.indexOf(p.id);
     if (k < 0) { out[p.id] = { place: null, label: 'done', twice: false, text: 'done', title: `${name(p.id)} ${p.id === me ? 'have' : 'has'} no placements left this round` }; continue; }

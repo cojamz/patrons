@@ -328,8 +328,8 @@ try {
     if (!/^Click one of your lit stacks/.test(got.how) || got.cut) errors.push(`(h1) the line under it reads "${got.how}"${got.cut ? ' (cut)' : ''}`);
     await ctx.close();
   }
-  // (a1) Wave-2 tester A: a member's hover says what a click will do ("You pay 2● 2●" at once, or "Choose how to pay"),
-  //      and an instant buy flies its coins and closes the hover
+  // (a1) Wave-2 tester A: an instant buy flies its coins and closes the hover. The hover says the cost and nothing else
+  //      about paying (Cory, 03:40: cut "You pay"; info.mjs (q) holds it too)
   {
     const save = paySave({ res: { gold: 2, red: 0, blue: 0, green: 2 } });
     const st = save.state;
@@ -339,8 +339,9 @@ try {
     const uid = st.shop.find(u => st.cards[u].def === 'gold.prospector');
     const { ctx, page } = await open('a1', save, `.lt-shop .card[data-uid="${uid}"]`);
     await page.hover(`.lt-shop .card[data-uid="${uid}"]`);
-    const line = await page.waitForSelector('[data-pays]', { timeout: 3000 }).then(e => e.innerText(), () => '');
-    if (!/^You pay\s/.test(line)) errors.push(`(a1) the hover of a one-way card says "${line}", not "You pay …" (w3b #27: "Pays" read as income)`);
+    await page.waitForSelector(`[data-hover-layer][data-open="1"] [data-card-hover="${uid}"]`, { timeout: 3000 }).catch(() => errors.push('(a1) the card opened no hover'));
+    const said = await page.evaluate(() => (document.querySelector('[data-hover-layer][data-open="1"]')?.innerText.match(/You pay|^Pays |Choose how to pay/m) || [])[0]);
+    if (said) errors.push(`(a1) the hover says "${said}" (Cory: the cost and nothing else about payment)`);
     await page.evaluate(() => { window.__a1 = 0; const t = () => { for (const g of document.querySelectorAll('.piece-flight.pay')) if (!g.dataset.a1) { g.dataset.a1 = '1'; window.__a1++; } requestAnimationFrame(t); }; requestAnimationFrame(t); });
     const box = await (await page.$(`.lt-shop .card[data-uid="${uid}"]`)).boundingBox();
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);

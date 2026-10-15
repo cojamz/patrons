@@ -5,7 +5,7 @@
 // - ContestStandings / ContestTip: a quadrant's contest straight from the engine's contestTable (who'd score now).
 // - TouchTips: on touch screens a long-press on anything with a title shows that title (hover's touch twin).
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { cardDef, defById, quadrant, previewSpace, memberPrice, paymentChoices } from '../../engine/v4/index.js';
+import { cardDef, defById, quadrant, previewSpace, memberPrice } from '../../engine/v4/index.js';
 import { term, splitTerms } from '../glossary.js';
 import { costParts, playerColor, standings, toStanding, tiebreakNote } from '../format.js';
 import { realHover } from '../hover.js';
@@ -164,6 +164,7 @@ export function paidParts(state, p, uid, d = cardDef(state, uid)) {
   return [...(pr.color && pr.colored ? [{ color: pr.color, n: pr.colored }] : []), ...(any > 0 ? [{ color: 'any', n: any }] : [])];
 }
 /** Why p pays less: "your next member costs 4 less", "Sponsor takes 2 off". */
+const upFirst = t => (t ? t[0].toUpperCase() + t.slice(1) : t);
 const discountWhy = (state, p) => [
   ...(p.discount ? [`your next member costs ${p.discount} less`] : []),
   ...p.members.map(u => { try { return cardDef(state, u); } catch { return null; } }).filter(x => x && x.costReduction).map(x => `${x.name} takes ${x.costReduction} off`),
@@ -186,17 +187,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
   if (where === 'In the shop' && me != null && state.players[me] && !state.over && !(state.pending && state.pending.kind === 'choose')) {
     try { const pr = memberPrice(state, state.players[me], uid); if (!pr.afford && pr.short) short = pr; } catch { /* no price: say nothing */ }
   }
-  // in your buy step, what a click will do (wave-2 tester A: sometimes it bought at once, sometimes the pay sheet opened):
-  // one way to pay buys at once and says what it pays; several open the pay sheet
-  let pays = null;
-  const pend = state.pending;
-  if (where === 'In the shop' && !short && me != null && pend && pend.kind === 'buy' && pend.player === me && pend.options.some(o => o.id === `card:${uid}`)) {
-    try {
-      const ways = paymentChoices(state, state.players[me], uid);
-      pays = ways.length === 1 ? Object.entries(ways[0]).filter(([, n]) => n > 0).map(([color, n]) => ({ color, n })) : ways.length > 1 ? 'choose' : null;
-    } catch { /* say nothing */ }
-  }
-  // a discount on you: what you'd pay and why (the shop face shows the price, struck list beside it)
+  // a discount on you (the shop face shows the price, the list price struck beside it): its reason
   const paid = where === 'In the shop' && me != null && state.players[me] ? paidParts(state, state.players[me], uid, d) : null;
   return (
     <div className="card-face mc" style={{ '--c': cardColor(state, d) }} data-card={d.id}>
@@ -215,10 +206,10 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
       {!onTable(state, d) && <small className="mc-live" data-colorless=""><Colorless state={state} def={d} /> here: it counts as a member of no color.</small>}
       {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
       {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used ? ' · used' : ''}</small>}
-      {/* one line about paying: "You pay 2● 1●" (w3b #27: "Pays 6●" read as income), with a discount's reason after it */}
-      {paid && !pays && <small className="mc-live" data-discount>You pay {paid.length ? <CostDots parts={paid} /> : 'nothing'}: {discountWhy(state, state.players[me])}.</small>}
-      {pays ? <small className="mc-live" data-pays={pays === 'choose' ? 'choose' : 'once'} data-discount={paid ? '' : undefined}>{pays === 'choose' ? 'Choose how to pay' : <>You pay <CostDots parts={pays} /></>}{paid ? `: ${discountWhy(state, state.players[me])}` : ''}{pays === 'choose' ? '' : '.'}</small>
-        : short ? <small className="mc-live" data-short={short.short.total}>You’re short {shortDots(state, short)} to recruit it.</small>
+      {/* the cost and nothing else about paying (Cory, 03:40: cut "You pay"); a discount on you says only why the face's
+          price is struck ("Your next member costs 4 less.") */}
+      {paid && <small className="mc-live" data-discount>{upFirst(discountWhy(state, state.players[me]))}.</small>}
+      {short ? <small className="mc-live" data-short={short.short.total}>You’re short {shortDots(state, short)} to recruit it.</small>
         : where === 'In the pile' && <small className="mc-live">{where}</small>}
     </div>
   );

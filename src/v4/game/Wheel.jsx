@@ -308,6 +308,9 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const [rot, setRot] = useState(() => -90 * facing);
   const [peek, setPeek] = useState(null); // { key, pinned }
   const [deny, setDeny] = useState(null); // { text, x, y, n }: the note at the pointer after a click on a space you can't take
+  // online: the space just picked, lit as chosen while its move crosses to the host and back (until the table moves on),
+  // so the click answers at once; locally the move lands in the same frame
+  const [sent, setSent] = useState(null);
   // the space card itself is UI-B's hover layer: the wheel only says which space is under the pointer (or pinned)
   const hoverRef = useRef(hover);
   hoverRef.current = hover;
@@ -440,7 +443,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const rotSeen = useRef(rot);
   useEffect(() => { if (Math.abs(rot - rotSeen.current) > 2) { rotSeen.current = rot; setPeek(p => (p && !p.pinned ? null : p)); } }, [rot]);
   // A new decision clears a stale selection and any note.
-  useEffect(() => { setPeek(null); setDeny(null); }, [state]);
+  useEffect(() => { setPeek(null); setDeny(null); setSent(null); }, [state]);
   // the note at the pointer fades on its own
   useEffect(() => {
     if (!deny) return undefined;
@@ -533,10 +536,14 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const tap = (s, el, pt = null) => {
     if (moved.current) return;
     const opt = legal.get(s.key);
-    const touch = confirmPlace || lastPointer.current === 'touch';
-    if (opt && !touch) { setPeek(null); setDeny(null); onPick(opt); return; }
+    // online, a placement asks to confirm on its card ("Place here": no Undo online). A choice answered on a space (a
+    // copy's target, boardPick.js) has no confirm on that card, so it picks at once, as it does locally: pinning it
+    // left the click doing nothing, and the online e2e circled the lit spaces forever (2026-10-15)
+    const confirmHere = confirmPlace && (!opt || /^(slot|squat):/.test(opt));
+    const touch = confirmHere || lastPointer.current === 'touch';
+    if (opt && !touch) { setPeek(null); setDeny(null); if (confirmPlace) setSent(s.key); onPick(opt); return; }
     if (opt && touch) {
-      if (peek && peek.key === s.key && peek.pinned) { setPeek(null); onPick(opt); return; }
+      if (peek && peek.key === s.key && peek.pinned) { setPeek(null); if (confirmPlace) setSent(s.key); onPick(opt); return; }
       setPeek({ key: s.key, pinned: true });
       return;
     }
@@ -691,7 +698,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       const fresh = freshOf(s.key);
       const a0 = s.ang - s.half, a1 = s.ang + s.half;
       const d = panelPath(a0, a1, R.r0, R.r1);
-      const cls = ['pcell', open ? 'open' : 'locked', lit ? 'lit' : '', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', peek && peek.pinned && peek.key === s.key ? 'sel' : ''].filter(Boolean).join(' ');
+      const cls = ['pcell', open ? 'open' : 'locked', lit ? 'lit' : '', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', (peek && peek.pinned && peek.key === s.key) || sent === s.key ? 'sel' : ''].filter(Boolean).join(' ');
       paper.push(
         <g key={`pc${s.key}`} className={cls} data-cell={s.key} style={{ '--c': `var(--${s.qid})` }}
           onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, stage.current && stage.current.querySelector(`[data-slot="${s.key}"]`), { x: e.clientX, y: e.clientY }); }}
@@ -858,7 +865,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const joiners = (state.squats && state.squats[key]) || [];
     const open = t <= round;
     const opt = legal.get(key);
-    const selected = pinnedKey === key;
+    const selected = pinnedKey === key || sent === key;
     const fresh = freshOf(key);
     // panels: the gain, the effect, the clarification, laid out in the room this panel has where it sits now
     const pl = panels ? panelLays.get(key) : null;
@@ -946,7 +953,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     );
     built.current.set(key, { sig, el });
     return <Space key={key} el={el} />;
-  }), [state, rot, legalKey, flashKey, recentKey, pinnedKey, round, look, Face, custom || panels ? scale : 0]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), [state, rot, legalKey, flashKey, recentKey, pinnedKey, sent, round, look, Face, custom || panels ? scale : 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="wheel-wrap" data-spaces={look} data-face={custom ? look : undefined}>

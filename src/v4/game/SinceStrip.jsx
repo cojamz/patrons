@@ -72,13 +72,18 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
   const ro = useRef(null), watched = useRef(new Set());
   // the list and each line on it are watched (observing is not a layout read; a newly watched line reports once)
   useLayoutEffect(() => {
+    const was = committed.current.sig;
     committed.current = { sig, cut, len: base.length };
-    // the fold asked for is drawn (or these are new lines): lines hidden while it was on its way show again
+    // the fold asked for is drawn (or these are new lines, or a new room): lines hidden while it was on its way show again
     const l = listRef.current;
     if (asked.current && (asked.current.sig !== sig || cut >= asked.current.n)) {
       asked.current = null;
       if (l) for (const el of l.querySelectorAll(':scope > [data-fold-hide]')) { el.removeAttribute('data-fold-hide'); el.style.visibility = ''; }
     }
+    // new lines or a new room: measure again before this frame paints, even when nothing the observer watches changed
+    // size (the same lines in a room that moved: a fold asked for the old room was dropped above). A list watched anew
+    // reports once.
+    if (was !== sig && l && ro.current && watched.current.has(l)) { ro.current.unobserve(l); ro.current.observe(l); }
     if (typeof ResizeObserver !== 'function') return;
     if (!ro.current) {
       ro.current = new ResizeObserver(() => {

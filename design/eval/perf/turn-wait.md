@@ -118,3 +118,29 @@ The lead stays in, behind one number (`lead` in useTable's layout effect). The p
    - The Wheel rebuilds all its sockets when anything in the state changes.
    - Fix: memoise sockets per space on what each one shows (its owner, legality, flash, recent), not on `state`.
 3. **The round end:** about 90 commits and about 11 s of the Reckoning. That's its own budget (H10).
+
+**Same harness, at a lower load** (before 6→8, after 8→15; 4× CPU, frozen production builds, seed 20261015):
+
+| | before c5eda4d | after dbfee09 |
+|---|---|---|
+| input→paint, all clicks (p50 / p95) | 200 / 1411 ms | 234 / 1661 ms |
+| click on a space (p50 / p95) | 166 / 339 ms | 100 / 219 ms |
+| wait between your turns (p50) | 11.5 s | 10.95 s |
+| commit forced layout per step | 191 ms | 180 ms |
+| commits per step | 3.5 | 3.8 |
+| timer late after the hold (p50) | 175 ms | 138 ms |
+
+So the reads removed this round were not the expensive ones.
+
+**What still costs each step is style, not layout.** I timed every layout-reading call site in the page: a dev server from dbfee09, 4× CPU, about 2 minutes of play. Each `getBoundingClientRect` was split into a forced style pass (`getComputedStyle(el).display`, run first) and the rect read.
+- **The commit's first read pays almost everything, and it's style.** That read is director.js `shown()`, called by playChain's `placeEl`. Style before the read: 1.9 s over 36 calls, max 344 ms. The layout after it: about 0.
+- **CSS containment on the regions changed nothing:** `contain: layout style` on the chairs, shop, strip, prompt and wheel gave 619 ms against 661 ms.
+- **The style recalcs are the step's own invalidations.** The root's `data-phase` changes almost every step, and 27 rules key on it. `data-yours` has 19 rules. Every class a commit changes adds to it.
+- **Other sites in the same run:** MemberDeck's deal paid 1.7 s of style in 12 reads (max 596 ms), and the Wheel's local rect 525 ms. The chair column's order-change read is 200–260 ms, once per new order; the ResizeObserver reads are free. The your-move focus calls are 40–80 ms each.
+
+**Next levers (style recalc per step at 4×):**
+1. Keep phase styling off the root. Put `data-phase` and `data-yours` on the few regions that use them, so a step invalidates those, not the page.
+2. Trace one step's style recalc (CDP `UpdateLayoutTree` element counts) and cut the widest invalidations.
+3. Make MemberDeck's deal read its rects before the commit's writes, or from the shop snapshot.
+
+The targets of no long frame over 200 ms at 4× and hover p95 under 150 ms at 4× aren't met yet.

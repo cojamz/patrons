@@ -10,8 +10,9 @@
 import { pipEffect } from '../shorts.js';
 
 // A value that grows by round prints this round's number, and says it grows in plain words (w3b #12/#13, w3a #54: the
-// "2 · 4 · 6 by round" run under "+4●" said the number twice, and "+2●" alone read as flat). The run itself is the
-// hover's rule sentence. Round III has nothing left to grow into, so it says nothing.
+// "2 · 4 · 6 by round" run under "+4●" said the number twice, and "+2●" alone read as flat). It takes line 2 when the
+// panel has nothing else to say there, else line 3 (joined onto line 2 it made the line too long, and a line 2 that
+// doesn't fit drops whole). The run itself is the hover's rule sentence. Round III has nothing left to grow into.
 const grows = r => (r < 3 ? 'more each round' : null);
 // Line 2 stays within about 16 letters a line: at 1270×700 a narrow panel holds two short lines of it (Cory: "cut words
 // or step the size down. Never clip and never abbreviate into code"). A condition that decides the gain never sits only
@@ -33,7 +34,8 @@ const P = {
     hire: { verb: 'Free recruit', second: 'the cheapest' },
     hireup: { verb: 'Free recruit', second: 'cost 4 or less' },
     trade: { verb: 'Swap a member', second: 'with a rival', note: 'theirs can cost 2 more' },
-    take: { verb: 'Free recruit', second: 'any member' },
+    // the center drops line 2: "Free recruit" alone hid that it's any member
+    take: { verb: 'Any member, free' },
   },
   market: {
     // "then recruit" read as a normal recruit (w3a #21): its perk, paying in any colors, is on the panel
@@ -53,27 +55,30 @@ const P = {
     planahead: { main: '+1 purple', second: 'per minion to place' },
     // "2 extra turns for 8" read as 8 a turn (w3b #17): the price first, as the card says it
     overtime: { verb: 'Pay 8 purple', second: 'for 2 extra turns', note: 'can’t pay? +3 purple' },
-    // "Extra turns for all purple" read as a gift to everyone with purple (w3b #18): yours, spent, said like Overtime.
-    // With 4 or more the card always gives 2 (1 per 4, plus 1, up to 2)
-    rally: { verb: 'Pay all your purple', second: 'for 2 extra turns', note: 'less than 4? +4 purple' },
+    // "Extra turns for all purple" read as a gift to everyone with purple (w3b #18): yours, spent. The center drops
+    // line 2, so the trade is whole in line 1. With 4 or more the card always gives 2 (1 per 4, plus 1, up to 2)
+    rally: { verb: 'All your purple for 2 extra turns', note: 'less than 4? +4 purple' },
   },
   silver: {
     toast: r => ({ main: `+${3 * r} silver`, second: 'others get 1', note: grows(r) }),
     // "+2 of a color": which one? (w3a #56) yours to pick
     gift: { main: '+2 silver', second: '+2 of a color you pick', note: 'others get 1 of it' },
     alms: { main: '+4 silver', second: 'a rival gets 2' },
-    // "trade silver" (w3a #57): with whom? it's a swap into one other color
-    tongue: { main: '+4 silver', second: 'swap silver for a color', note: 'others get 1 silver' },
-    tide: { verb: 'Gain half the silver', second: 'of the rival with most', note: 'others get 1' },
-    // on the center line 2 can drop: the rate is in line 1, and you keep the silver
-    jubilee: { verb: '+1 @f per 2 silver', second: 'you keep the silver', note: 'others get 2 silver' },
+    // "trade silver" (w3a #57): with whom? it's a swap of your silver into one other color. Line 2 within 16 letters
+    // ("swap silver for a color" didn't fit ring II, and dropped whole)
+    tongue: { main: '+4 silver', second: 'swap for a color', note: 'others get 1 silver' },
+    // the richest in silver: the hover says "the rival with the most" ("Gain half the silver" left no room for line 2)
+    tide: { verb: 'Gain silver', second: 'half the richest', note: 'others get 1' },
+    // on the center line 2 drops: the rate is in line 1, and "held" says the silver stays
+    jubilee: { verb: '+1 @f per 2 silver held', second: 'others get 2 silver' },
   },
   yellow: {
     harvest: { main: '+1 yellow', second: '+1 per other color', note: 'you hold' },
     bloom: { verb: 'Top up', second: '+1 of your fewest' },
     transmute: { main: '+1 yellow', second: 'swap up to 3', note: 'for other colors' },
     prism: { verb: '+1 each other color', second: 'per 3 yellow', note: 'you keep the yellow' },
-    gather: { verb: 'Members pay out', second: '1 of their color' },
+    // "Members pay out" was all a tight ring II showed: the gain first, whole in line 1
+    gather: { verb: '+1 per member', second: 'in its own color' },
     flourish: { verb: '+1 each per full set', second: 'other colors' },
   },
   thieves: {
@@ -83,8 +88,9 @@ const P = {
     // "safe" from what? (w3a: guessed swaps) steals
     hideout: { verb: 'Steal 1', second: 'then safe from steals', note: 'this round' },
     rob: { main: '+3 magenta', second: 'from rivals', note: 'at least 1 each' },
-    // "Ransom a member" read as paying to get a member back (w3b #19, w3a #57): the rival pays you, or loses it
-    ransom: { verb: 'Take a rival’s member', second: 'unless they pay you its cost', note: 'costing 4 or less' },
+    // "Ransom a member" read as paying to get a member back (w3b #19, w3a #57): what you get, whole in line 1 (ring II
+    // drops line 2 when tight), and who decides
+    ransom: { verb: 'A rival’s member or its cost', second: 'they choose', note: 'costing 4 or less' },
     heist: { verb: 'Take a rival’s member', second: 'they recruit one free' },
   },
   trading: {
@@ -92,10 +98,11 @@ const P = {
     haggle: { main: '+2 white', second: '+1 per rival with more @f' },
     buylow: r => ({ verb: 'Trade for followers', second: `1 for 1, up to ${2 * r}`, note: grows(r) }),
     pawn: r => ({ main: `+${r} @f`, second: `or +${2 * r} white`, note: grows(r) }),
-    sellhigh: { verb: 'Sell followers', second: '3 white each', note: 'up to 2' },
+    // the gain first: "Sell followers" lost its "3 white each" on ring II whenever the panel was tight (w3 words pass)
+    sellhigh: { main: '+3 white', second: 'per follower sold', note: 'up to 2' },
     // "loose" is a rulebook word a newcomer won't remember (w3a #57): what it means, in the glossary's own words
     dividend: { main: '+1 white', second: 'per @f bought or won' },
-    boom: { verb: 'All for followers', second: '1 for 1' },
+    boom: { verb: 'All for followers, 1 for 1' },
   },
   echo: {
     chant: r => ({ main: `+${2 * r} green`, second: grows(r) }),

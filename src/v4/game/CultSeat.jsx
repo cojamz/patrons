@@ -3,7 +3,7 @@
 // members as a small crowd of figures, its follower mark and total, and its resources as small stacks. Yours sits
 // nearest you and is a little larger, with Use/switch on members you can use now. Hover or tap the cult for its
 // card (resources, members, last moves); hover or tap a member for that member's card.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { followers, quadrant, cardDef } from '../../engine/v4/index.js';
 import { memberChips, playerColor, newLogLines, seatEmoji } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
@@ -64,7 +64,12 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // a steal pick that pays the thief's Robin Hood here (boardPick.js seatPart): the second row says so, in place of the
   // "each round" line, so the figures fold early to leave it room
   const bonus = pick && pick.bonus ? pick.bonus : null;
-  const MAX = bonus ? 3 : incomeWords.length ? Math.max(1, 4 - incomeWords.length) : 6;
+  // On a laptop the row shows as many figures as fit (w3a A16: yours folded to three and a "+1" beside "each round",
+  // w3b: a rival's seventh member folded with room to spare), measured from the row's own width, the "each round" block
+  // beside it and a figure's width. None of these changes with how many are shown, so measuring can't feed back (the
+  // TurnCard lesson, 2026-10-15). Phones keep fixed counts: their crowd wraps.
+  const fit = useFigureFit(rootEl);
+  const MAX = fit ? (fit.all >= groups.length ? groups.length : fit.withMore) : bonus ? 3 : incomeWords.length ? Math.max(1, 4 - incomeWords.length) : 6;
   // what's never folded into "+N", most needed first: one you can use now or the board picker lights (folded, it could
   // only be picked from the keyboard list), then a use still in hand (a rival's loaded Raider is a threat to see
   // coming, w2b #21); each takes the place of the last one shown that's needed less
@@ -177,7 +182,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
       {/* what its members make each round, and what it just did (the approved plate's rival panel) */}
       {bonus ? (
         <div className="cs-build cs-bonus" data-pick-bonus={bonus.n} title={bonus.why}>
-          <span className="cs-inc"><small>Robin Hood</small><b className="num">+{bonus.n}</b><Follower size={12} title="follower" /></span>
+          <span className="cs-income"><small>Robin Hood</small><span className="cs-gains"><span className="cs-inc"><b className="num">+{bonus.n}</b><Follower size={12} title="follower" /></span></span></span>
         </div>
       ) : incomeWords.length > 0 && (
         <div className="cs-build" {...bodyHover}>
@@ -185,8 +190,10 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             <Tip className="cs-income" data-income={incomeWords.join(', ')} label={`Each round its members make ${incomeWords.join(', ')}`}
               content={() => <div className="pop-card gloss"><b>Each round</b><span>At the start of each round, {mine ? 'your' : `${p.name}’s`} members make <Rich text={incomeWords.join(' ')} />{incomeFrom.length ? ` (${incomeFrom.join(', ')})` : ''}.</span></div>}>
               <small>each round</small>
-              {incomeParts.map(([r, n]) => <span key={r} className="cs-inc"><b className="num">+{n}</b><ResourceGlyph r={r} size={mine ? 13 : 11} n={n} /></span>)}
-              {income.followers > 0 && <span className="cs-inc"><b className="num">+{income.followers}</b><Follower size={11} title="followers" /></span>}
+              <span className="cs-gains">
+                {incomeParts.map(([r, n]) => <span key={r} className="cs-inc"><b className="num">+{n}</b><ResourceGlyph r={r} size={mine ? 13 : 11} n={n} /></span>)}
+                {income.followers > 0 && <span className="cs-inc"><b className="num">+{income.followers}</b><Follower size={11} title="followers" /></span>}
+              </span>
             </Tip>
           )}
         </div>
@@ -287,4 +294,46 @@ export function reactionsBetween(before, state, pid) {
   const h0 = (before.contests || []).length, h1 = (state.contests || []).length;
   if (h1 > h0 && state.contests[h1 - 1].results.some(c => c.winners.includes(pid))) leader = 'celebrate';
   return leader || Object.keys(members).length ? { leader, members } : null;
+}
+
+/**
+ * How many member figures fit a laptop chair's row: { all, withMore } (all of them, or with room kept for "+N"), or null
+ * on a phone (fixed counts there). Read in a ResizeObserver (after layout, so the reads are free) from the row's width,
+ * the "each round" block when it shares the row, "safe this round", and one figure's width; a block that comes or goes,
+ * and the first figure, are watched as they appear. Set only when the numbers change.
+ */
+function useFigureFit(rootEl) {
+  const [fit, setFit] = useState(null);
+  const ro = useRef(null), watched = useRef(new Set());
+  useLayoutEffect(() => {
+    const el = rootEl.current;
+    if (!el || typeof ResizeObserver !== 'function') return;
+    if (!ro.current) {
+      ro.current = new ResizeObserver(() => {
+        const seat = rootEl.current;
+        if (!seat) return;
+        const wide = typeof matchMedia === 'function' && matchMedia('(min-width:861px) and (min-height:500px)').matches;
+        const crowd = seat.querySelector(':scope > .cs-crowd'), build = seat.querySelector(':scope > .cs-build');
+        const figs = crowd ? [...crowd.querySelectorAll(':scope > .cs-member')] : [];
+        if (!wide || !crowd || !figs.length) { setFit(f => (f === null ? f : null)); return; }
+        const c = crowd.getBoundingClientRect();
+        if (!c.width) return;
+        const gap = parseFloat(getComputedStyle(crowd).columnGap) || 0;
+        const per = Math.max(...figs.map(x => x.getBoundingClientRect().width)) + gap;
+        const b = build && build.getBoundingClientRect();
+        const beside = b && b.width && b.top < c.bottom - 1 && b.bottom > c.top + 1 ? b.width + 12 : 0;
+        const safe = crowd.querySelector(':scope > .cs-safe');
+        const more = crowd.querySelector(':scope > .cs-more');
+        const room = c.width - beside - (safe ? safe.getBoundingClientRect().width + gap : 0);
+        const all = Math.max(1, Math.floor((room + gap) / per));
+        const withMore = Math.max(1, Math.floor((room - (more ? more.getBoundingClientRect().width : 18)) / per));
+        setFit(f => (f && f.all === all && f.withMore === withMore ? f : { all, withMore }));
+      });
+    }
+    const r = ro.current, w = watched.current;
+    for (const x of [...w]) if (!x.isConnected) { r.unobserve(x); w.delete(x); }
+    for (const x of [el, el.querySelector(':scope > .cs-crowd'), el.querySelector(':scope > .cs-crowd > .cs-member'), el.querySelector(':scope > .cs-build')]) if (x && !w.has(x)) { r.observe(x); w.add(x); }
+  });
+  useEffect(() => () => { if (ro.current) ro.current.disconnect(); ro.current = null; watched.current.clear(); }, []);
+  return fit;
 }

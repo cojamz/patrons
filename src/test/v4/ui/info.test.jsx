@@ -96,11 +96,25 @@ describe('colorless members', () => {
     const squatter = guestMembers().find(g => g.lean === 'thieves');
     const { container } = render(<MemberCard state={s} def={squatter} />);
     expect(container.querySelector('.card-face').getAttribute('style')).toContain('var(--colorless)');
-    expect(container.textContent).toMatch(/colorless/);
+    // on its own line, never beside the cost, where it read as the cost's color (w3a #23)
+    expect(container.querySelector('[data-colorless]').textContent).toMatch(/^Colorless here/);
+    expect(container.querySelector('.mc-cost').textContent).not.toMatch(/colorless/i);
     cleanup();
     const ok = render(<MemberCard state={s} def={quadrant('gold').members[0]} />);
     expect(ok.container.querySelector('.card-face').getAttribute('style')).toContain('var(--gold)');
-    expect(ok.container.textContent).not.toMatch(/colorless/);
+    expect(ok.container.textContent).not.toMatch(/colorless/i);
+  });
+
+  it('a shop card\'s hover doesn\'t repeat the cost and worth printed on its face (w3a #24)', () => {
+    const s = createGame({ seats, seed: 5 });
+    const uid = s.shop.find(u => (s.cards[u] && cardDef(s, u).n || 1) === 1);
+    const face = render(<MemberCard state={s} uid={uid} onFace />);
+    expect(face.container.querySelector('.mc-cost')).toBeNull();
+    expect(face.container.querySelector('.mc-worth')).toBeNull();
+    cleanup();
+    const away = render(<MemberCard state={s} uid={uid} />); // a name in the log, a seat: the card says it all
+    expect(away.container.querySelector('.mc-cost').textContent).toMatch(/^costs/);
+    expect(away.container.querySelector('.mc-worth')).not.toBeNull();
   });
 });
 

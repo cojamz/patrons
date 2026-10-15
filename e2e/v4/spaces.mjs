@@ -281,7 +281,8 @@ try {
       }, qid);
       await page.mouse.move(at.x, at.y);
       const said = await page.waitForSelector(`[data-sphere-rule="${qid}"]`, { timeout: 2500 }).then(e => e.textContent(), () => '');
-      if (said !== rule) fail(`(s6) ${qid}'s rim hover doesn't give its rule ("${rule}"): "${said}"`, tag);
+      // named as the color's own rule, apart from the prize (w3a #29)
+      if (said !== `${quadrant(qid).name}’s own rule: ${rule}`) fail(`(s6) ${qid}'s rim hover doesn't give its rule ("${rule}"): "${said}"`, tag);
       await page.mouse.move(4, 4);
       await page.waitForTimeout(300);
     }

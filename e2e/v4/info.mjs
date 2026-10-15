@@ -121,7 +121,8 @@ async function nearChecks(page, step) {
   const card = () => page.evaluate(() => {
     const vis = e => { const r = e.getBoundingClientRect(); return r.width > 4 && r.left > -1000 ? r : null; };
     const L = document.querySelector('[data-hover-layer][data-open="1"]');
-    const P = [...document.querySelectorAll('body > .popover')].find(vis);
+    // another card than the hover layer (the layer is a .popover at the page's top level too: it never stacks on itself)
+    const P = [...document.querySelectorAll('body > .popover:not([data-hover-layer])')].find(vis);
     const e = P || (L && vis(L) ? L : null);
     const lr = L && vis(L) ? L.getBoundingClientRect() : null, pr = P ? P.getBoundingClientRect() : null;
     // two cards open at once is fine side by side (a pinned card and a name read in it); stacked is not
@@ -584,7 +585,7 @@ try {
       const ok = await pg.waitForFunction(u => { const c = document.querySelector(`[data-hover-layer][data-open="1"] [data-card-hover="${u}"] .card-face`); return !!c && c.getBoundingClientRect().width > 0; }, uid, { timeout: 1500 }).then(() => true, () => false);
       if (!ok) { fail(`(q) shop card ${uid} (${st.cards[uid].def}) opens no card`, 'cards'); continue; }
       await anchorCheck(pg, `shop card ${st.cards[uid].def}`, 'cards', `.lt-shop .card[data-uid="${uid}"]`);
-      const extra = await pg.evaluate(() => (document.querySelector('[data-hover-layer][data-open="1"]').innerText.match(/You pay|Leaves|you'd lead|you’d lead|Click the card/i) || [])[0]);
+      const extra = await pg.evaluate(() => (document.querySelector('[data-hover-layer][data-open="1"]').innerText.match(/You pay|Choose how to pay|Leaves|you'd lead|you’d lead|Click the card/i) || [])[0]);
       if (extra) fail(`(q) the shop card's hover still says "${extra}" (Cory: the cost and nothing else about payment)`, 'cards');
     }
     let members = 0;

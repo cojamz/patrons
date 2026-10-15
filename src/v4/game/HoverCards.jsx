@@ -172,7 +172,8 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
     const seatBox = null;
     // a name inside a card (a pinned strip card, the turn card, the log): its card opens beside that whole card, level
     // with the name, never stacked on top of the card it was read in (motion engineer's info.mjs run)
-    const holder = !seatBox && el.closest ? el.closest('.popover:not([data-hover-layer]), .turn-card, .lt-drawer') : null;
+    // (the log is a wide panel, not a card: a name in it opens its card right next to the name, w3 quiet t8-log)
+    const holder = !seatBox && el.closest ? el.closest('.popover:not([data-hover-layer]), .turn-card') : null;
     let a = c.kind === 'space' ? spaceRect(el, c.key) : (seatBox || el).getBoundingClientRect();
     if (holder) {
       const hb = holder.getBoundingClientRect(), nb = el.getBoundingClientRect();
@@ -470,7 +471,8 @@ export function StandingsCard({ state, qid, meId = null }) {
     <>
       <p className="lt-prize-line" data-prize-line={qid}>Round end: whoever has the {st.rule.replace(/^Most /i, 'most ')} gets {st.prize} follower{st.prize === 1 ? '' : 's'}.</p>
       <ContestStandings state={state} st={st} meId={meId} brief />
-      {rule ? <p className="lt-sphere-rule" data-sphere-rule={qid}>{rule}</p> : null}
+      {/* named as the color's own rule, apart from the prize (w3a #29: "Copies never reach the center…" read as a scoring rule) */}
+      {rule ? <p className="lt-sphere-rule" data-sphere-rule={qid}><b>{quadrant(qid).name}’s own rule:</b> {rule}</p> : null}
     </>
   );
 }

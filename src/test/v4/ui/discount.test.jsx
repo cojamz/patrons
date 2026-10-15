@@ -34,6 +34,8 @@ describe('discounts on the shop faces', () => {
     s.players[0].discount = 4;
     const uid = s.shop[0];
     const { container } = render(<MemberCard state={s} uid={uid} me={0} />);
-    expect(container.querySelector('[data-discount]').textContent).toMatch(/your next member costs 4 less/);
+    expect(container.querySelector('[data-discount]').textContent).toBe('Your next member costs 4 less.');
+    // the cost and nothing else about paying (Cory, 03:40: cut "You pay")
+    expect(container.textContent).not.toMatch(/You pay|Pays|Choose how to pay/);
   });
 });

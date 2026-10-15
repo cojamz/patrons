@@ -270,13 +270,22 @@ function install() {
     E.inputs.push(rec);
     pendingIn.set(Math.round(e.timeStamp), rec);
     afterPaint(t => { rec.fallback = t - rec.t; if (rec.dur == null) rec.dur = rec.fallback; setTimeout(() => pendingIn.delete(Math.round(rec.t)), 3000); });
-    if (e.type === 'click' && lab.option) {
-      const c = { t: e.timeStamp, kind: lab.kind, option: lab.option, moves: document.querySelector('.app.game')?.dataset.moves, eaten: false };
+    // the confirm on a space's card ("Place here", online and touch) is a click on that option too
+    const option = lab.option || (lab.kind === 'place-confirm' ? lab.key : '');
+    if (e.type === 'click' && option) {
+      const c = { t: e.timeStamp, kind: lab.kind, option, moves: document.querySelector('.app.game')?.dataset.moves, eaten: false };
       E.clicks.push(c);
       setTimeout(() => {
         const m = document.querySelector('.app.game')?.dataset.moves;
-        // a click on a live option that changed nothing on screen: eaten (step lock, busy, double-click guard)
-        if (m === c.moves && !document.querySelector('[data-place], .dialog.pay, .prompt.choice')) c.eaten = true;
+        // a click on a live option that changed nothing on screen: eaten (step lock, busy, double-click guard). Not
+        // eaten: the move went out (online: it's on the wire, its round trip is timed in `online`), or the click opened
+        // its confirm and the confirm was pressed (that click closes the card at once: a two-step placement read as
+        // eaten whenever the confirm came within this window, quiet-w3-44e22bd.md)
+        const sent = E.net.some(n => n.ev === 'sent' && n.option === option && n.t >= c.t);
+        const confirmed = E.clicks.some(x => x !== c && x.kind === 'place-confirm' && x.option === option && x.t > c.t);
+        // (a confirm still up after its own click is no answer to that click)
+        const up = document.querySelector(c.kind === 'place-confirm' ? '.dialog.pay, .prompt.choice' : '[data-place], .dialog.pay, .prompt.choice');
+        if (m === c.moves && !sent && !confirmed && !up) c.eaten = true;
       }, 1200);
     }
   };
