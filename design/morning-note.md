@@ -31,6 +31,7 @@
 6. Resources are color-only dots now. Add faint inner marks for colorblind players? [no, unless a friend needs them]
 7. Round-III rims decide the winner in about a third of games, and a quarter of them are won uncontested while everyone else spends out (bots, 336 games). Leave the hoard-or-spend tension as it is? [yes]
 8. Members look alike at seat size (both blind testers couldn't tell Curator from Minimalist, or the yellow men with props apart). A pixel pass to give each a distinct silhouette or prop, keeping the style? [yes]
+9. Balance pass 3, from the bench with both bots agreeing: lower 20 members that read too dear (Midas 8→4, Snob 10→5, Patroness 8→4, Extra Hand 10→6…), raise 5 too cheap (Tinker 6→10, Kingpin 2→4…), at most ×2 or ÷2 each, prices only. It's the most direct price lever on "members feel weak". Full list: design/eval/balance-pass-3.md. Apply it? [yes]
 
 ## What the game-feel tester said, checked against the bots
 A blind hobby gamer played two full games on a quiet machine and graded it B− ("a lively, readable worker-placement with a gorgeous wheel and real snake-draft tension"). Its worry was that members lose to buying 10→10. The bots disagree on Classic: the top quarter of recruiters win 44% of games, the bottom quarter 16%; on random tables it's flat (design/eval/bench/economy-claims.md). Its other claims (ties at 1 in round I, Rising Tide +10 in round II) were rare in 336 bot games.
@@ -40,5 +41,5 @@ A blind hobby gamer played two full games on a quiet machine and graded it B− 
 - Rival seats show their emoji face; the Steady timings were trimmed below the motion designer's table; the shortest gap between two players' moves is 400ms.
 
 ## Still open
-- The Hard bot had weakened after Blue's change (a planning bug, now fixed: back to 43% against three Normal bots). The bench's pooled balance run on the fixed bots is still going; no prices changed overnight.
+- The Hard bot had weakened after Blue's change (a planning bug, now fixed: back to 43% against three Normal bots). The bench's pooled run on the fixed bots passed its checks; its price list is call 9, and no prices changed overnight.
 - Phone stays out of scope. An online "Place here" pause on a slow machine is logged for a quiet-box check.

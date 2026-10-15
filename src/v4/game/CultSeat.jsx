@@ -92,7 +92,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
     else hover.onSeatHover(pid, el, { pinned });
   };
   // the seat's body and resource row open its card too (w3b #47), but a member figure opens its own card
-  const onFig = e => !!(e.target && e.target.closest && e.target.closest('.cs-member, .cs-more, .cs-pick-seat, button'));
+  // (a stack in a pick says its own thing: why it's dim, or nothing while lit; the seat card over it hid the reason, w4b #8)
+  const onFig = e => !!(e.target && e.target.closest && e.target.closest('.cs-member, .cs-more, .cs-pick-seat, button, .cs-stack[data-why], .cs-stack.pick-on'));
   const bodyHover = {
     onPointerEnter: e => { if (realHover(e) && !onFig(e)) openSeat(e, false); },
     onPointerMove: e => { if (realHover(e) && hover && !onFig(e)) openSeat(e, false); },

@@ -3,7 +3,9 @@
 //  (s2) a hover card opens within 100ms of the pointer arriving: wheel spaces, shop cards and keyword tips;
 //  (s3) a click on a lit space shows your minion standing on it (painted, opacity ≥ .5) within 150ms;
 //  (s4) the animation speed setting changes a chain's length (Relaxed ≥ 1.8 × Quick);
-//  (s5) the gap between your turns at Steady (bots at Normal) is under 8s.
+//  (s5) the gap between your turns at Steady (bots at Normal) is under 8s;
+//  (s6) with only the table's idle loops running on your turn, the page draws at least 30 frames a second;
+//  (s7) a press on a lit space reaches the screen (the next frame) within 100ms.
 // s1–s3 measure input → first response, never a chain's length: a chain plays after your move has shown.
 // Frame-honest: times are taken in the page (performance.now at the input event, rAF for what's painted). A loaded box
 // paints less often, so each limit allows one of the box's own frames on top (the median rAF interval with nothing
@@ -73,6 +75,11 @@ await page.evaluate(() => {
     if (e.target.closest && e.target.closest('[data-slot], [data-uid], [data-tip]') && W.hov.t0 == null) W.hov.t0 = performance.now();
   }, true);
   // the minion check: from the click on a lit space to the first frame it stands there, painted
+  // the press: from the pointer going down on a lit space to the next frame (the one that paints it)
+  addEventListener('pointerdown', e => {
+    const s = e.target.closest && e.target.closest('.slot.can[data-slot]');
+    if (s && W.minion && W.minion.armed) { const t = performance.now(); requestAnimationFrame(() => { W.press = performance.now() - t; }); }
+  }, true);
   addEventListener('click', e => {
     const s = e.target.closest && e.target.closest('.slot.can[data-slot]');
     if (s && W.minion && W.minion.armed) Object.assign(W.minion, { armed: false, key: s.dataset.slot, t0: performance.now(), t1: null });
@@ -138,6 +145,17 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
   await page.waitForTimeout(900);
 }
 
+// (s6) the page's own frames on your turn, with only the idle loops running (the minions' bob, the leaders' breath): at
+// least 30 a second. A per-frame effect over a big region dropped them to 15 (2026-10-15: the wheel's drop-shadow filter,
+// re-blurred on every frame of any animation in a software compositor), and every hover and press waited for one. The
+// other limits allow one of these frames on top, so this is what keeps them honest. The better of three reads counts.
+{
+  const reads = [await idleFrame(), await idleFrame(), await idleFrame()];
+  const F = Math.min(...reads);
+  report.push(`idle frame on your turn: ${reads.map(Math.round).join(', ')}ms`);
+  if (F > 34) errors.push(`(s6) with nothing happening on your turn the page draws a frame every ${Math.round(F)}ms (want ≤ 34ms, 30 a second): something re-renders an expensive effect on every frame`);
+}
+
 // (s2) hover: separate arrivals onto spaces, shop cards and keyword tips; the better of two runs counts
 {
   const centers = sel => page.$$eval(sel, els => els.filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.top > 0 && b.bottom < innerHeight; })
@@ -190,11 +208,11 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
     if (!slot) break;
     const bb = await slot.boundingBox();
     const F = await idleFrame();
-    await page.evaluate(() => { window.__snap.minion = { armed: true }; });
+    await page.evaluate(() => { window.__snap.minion = { armed: true }; window.__snap.press = null; });
     await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
     await page.waitForFunction(() => window.__snap.minion && window.__snap.minion.t1 != null, null, { timeout: 2000 }).catch(() => {});
-    const m = await page.evaluate(() => window.__snap.minion);
-    if (m && m.t0 != null) tries.push({ ms: m.t1 == null ? Infinity : m.t1 - m.t0, gap: await longestGap(m.t0, m.t1 ?? m.t0 + 2000), F });
+    const m = await page.evaluate(() => ({ ...window.__snap.minion, press: window.__snap.press }));
+    if (m && m.t0 != null) tries.push({ ms: m.t1 == null ? Infinity : m.t1 - m.t0, gap: await longestGap(m.t0, m.t1 ?? m.t0 + 2000), F, press: m.press });
     if (k === 0) await page.screenshot({ path: `${SHOTS}/after-place.png` });
     if (tries.length && tries[tries.length - 1].ms <= LIMIT.minion + F) break;
     // take it back (a space may have asked a question first: Undo is there either way) and try another space
@@ -205,7 +223,12 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
     await page.waitForTimeout(500);
   }
   const best = tries.slice().sort((a, b) => (a.ms - a.F) - (b.ms - b.F))[0];
-  report.push(`minion: ${tries.map(t => `${Number.isFinite(t.ms) ? Math.round(t.ms) : 'never'}ms (longest frame ${Math.round(t.gap)}ms, box frame ${Math.round(t.F)}ms)`).join('; ')}`);
+  report.push(`minion: ${tries.map(t => `${Number.isFinite(t.ms) ? Math.round(t.ms) : 'never'}ms (press ${t.press == null ? '?' : Math.round(t.press)}ms, longest frame ${Math.round(t.gap)}ms, box frame ${Math.round(t.F)}ms)`).join('; ')}`);
+  // (s7) the press itself: the frame after the pointer goes down, within 100ms (no frame allowance: s6 holds frames at
+  // 30 a second or better)
+  const presses = tries.map(t => t.press).filter(x => x != null);
+  if (!presses.length) errors.push('(s7) no press on a lit space was timed');
+  else if (Math.min(...presses) > 100) errors.push(`(s7) a press on a lit space reached the screen ${Math.round(Math.min(...presses))}ms after the pointer went down (want ≤ 100ms)`);
   if (!best) errors.push('(s3) could not click a lit space');
   else if (!(best.ms <= LIMIT.minion + best.F)) errors.push(`(s3) your minion showed on the space ${Number.isFinite(best.ms) ? `${Math.round(best.ms)}ms` : 'never (2s+)'} after the click (want ≤ ${LIMIT.minion}ms + one ${Math.round(best.F)}ms frame)`);
 }
