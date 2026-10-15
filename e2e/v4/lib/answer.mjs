@@ -20,19 +20,21 @@
 //   domFallback  when every real click is refused (a hover card over the target), park the pointer and press the
 //            element directly (online.mjs tests the online flow, not hit-testing)
 //   timeout  per real click, ms (default 1500)
+//   press    (el) => truthy when it pressed el: the driver's own way to press a candidate instead of Playwright's click
+//            (online.mjs: a person's press, which doesn't wait for a starved page to show two still frames)
 
 const SKIP = id => !id || id.startsWith('toggle:') || id === 'back' || id === '@unpick';
 const matches = (id, p) => (p instanceof RegExp ? p.test(id) : typeof p === 'function' ? p(id) : id.startsWith(p));
 const rank = (id, list) => { const k = list.findIndex(p => matches(id, p)); return k < 0 ? list.length : k; };
 
-export async function answerChoice(page, { prefer = [], last = [], avoid = [], panelFirst = false, skip = 0, domFallback = false, timeout = 1500 } = {}) {
+export async function answerChoice(page, { prefer = [], last = [], avoid = [], panelFirst = false, skip = 0, domFallback = false, timeout = 1500, press = null } = {}) {
   // Every element handle this takes is let go before it returns: a handle pins its element, and a detached one pins its
   // whole old tree, for as long as the page lives (memory.mjs read 27k DOM nodes on results: old shops, wheels, seats).
   const held = [];
-  try { return await answer(page, held, { prefer, last, avoid, panelFirst, skip, domFallback, timeout }); } finally { for (const h of held) h.dispose().catch(() => {}); }
+  try { return await answer(page, held, { prefer, last, avoid, panelFirst, skip, domFallback, timeout, press }); } finally { for (const h of held) h.dispose().catch(() => {}); }
 }
 
-async function answer(page, held, { prefer, last, avoid, panelFirst, skip, domFallback, timeout }) {
+async function answer(page, held, { prefer, last, avoid, panelFirst, skip, domFallback, timeout, press }) {
   const keep = h => { if (h) held.push(h); return h; };
   // the pay sheet holds the keyboard: Pay (the suggested way is already in the cost), else Enter
   const sheet = keep(await page.$('.dialog.pay'));
@@ -56,7 +58,10 @@ async function answer(page, held, { prefer, last, avoid, panelFirst, skip, domFa
   if (skip) cands = cands.map((_, k) => cands[(k + skip) % cands.length]);
   const kindOf = id => (id.startsWith('@pick:') ? 'pick' : 'option');
   for (const c of cands) {
-    try { await c.el.click({ timeout }); return { id: c.id, kind: kindOf(c.id) }; } catch { /* covered, moved or gone: the next */ }
+    try {
+      if (press) { if (await press(c.el)) return { id: c.id, kind: kindOf(c.id) }; continue; }
+      await c.el.click({ timeout }); return { id: c.id, kind: kindOf(c.id) };
+    } catch { /* covered, moved or gone: the next */ }
   }
   if (domFallback) {
     await page.mouse.move(1, 1).catch(() => {});

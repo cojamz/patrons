@@ -270,7 +270,7 @@
    (it read as the card's quietest element); a long single word sets with no tracking, so "DOPPELGANGER" fits its line
    whole on a laptop and breaks at its seam only on the narrowest cards; the worth stands apart from the price behind a
    hairline, so "4● 2◐ │ 1👤" never reads as one price */
-.lt-card .nm{color:#4a3a2b}
+.lt-card .nm{color:color-mix(in srgb,var(--pl-ink,#2b2018) 80%,var(--pl-ink-2,#6e5c49))}
 .lt-card .nm[data-long]{letter-spacing:0}
 .lt-card .ft .val{display:inline-flex;align-items:center;gap:2px;padding-left:5px;margin-left:auto;box-shadow:inset 1px 0 0 var(--hair-ink,rgba(43,32,24,.16))}
 
@@ -308,4 +308,8 @@
   .app.game.lt > .lt-seat.mine .cs-stack{font-size:14px}
   .app.game.lt > .lt-seat.mine .cs-stack .res-glyph{width:13px;height:13px}
 }
+
+/* a member with no sphere (a guest from no quadrant on the table) stands on no colored ground: its grey halo read as a
+   state nobody explained (w3b #53, "an unexplained gray halo") */
+.cs-member[data-sphere="colorless"] .aura{display:none}
 

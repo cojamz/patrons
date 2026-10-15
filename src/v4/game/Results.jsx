@@ -17,6 +17,7 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
   // the winners are the rule's (format.js finalWinners), the same call the game-over cults use, so the two never disagree
   const winners = finalWinners(state).map(id => state.players[id]);
   const endCol = ranked.some(p => breakdown(state, p).endGame !== 0);
+  const playCol = ranked.some(p => breakdown(state, p).effects !== 0); // a column of 0s folds away too
   const brokeTie = ranked.some((p, k) => k > 0 && followers(state, p) === followers(state, ranked[k - 1]) && key(p) !== key(ranked[k - 1]));
   return (
     <section className="results" aria-label="Final results">
@@ -29,7 +30,7 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
             (1 each) joins the members, and End-game shows only when some member scored at game end (w3a #40) */}
         <table className="res-t">
           <thead>
-            <tr><th>#</th><th>Player</th><th>Followers</th><th>You &amp; members</th><th>Bought</th><th>During play</th><th>Prizes</th>{endCol && <th>End-game</th>}</tr>
+            <tr><th>#</th><th>Player</th><th>Followers</th><th>You &amp; members</th><th>Bought</th>{playCol && <th>During play</th>}<th>Prizes</th>{endCol && <th>End-game</th>}</tr>
           </thead>
           <tbody>
             {ranked.map((p, k) => {
@@ -43,7 +44,7 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
                   <td className="tot" data-label="Followers">
                     <Tip label={`${poss(p)} followers`} content={() => (
                       <div className="pop-card"><b>{poss(p)} {followers(state, p)} followers</b>
-                        <span>{b.self} for {p.id === meId ? 'yourself' : 'their leader'}, {b.members} from members, {b.bought} bought, {sign(b.effects)} during play, {b.contests} from prizes{endCol ? `, ${sign(b.endGame)} at game end` : ''}</span></div>
+                        <span>{b.self} for {p.id === meId ? 'yourself' : 'their leader'}, {b.members} from members, {b.bought} bought{playCol ? `, ${sign(b.effects)} during play` : ''}, {b.contests} from prizes{endCol ? `, ${sign(b.endGame)} at game end` : ''}</span></div>
                     )}>{followers(state, p)}</Tip>
                   </td>
                   <td data-label="You & members" data-cult={p.id}>
@@ -58,13 +59,13 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
                         <span>{b.bought ? `${b.bought} followers bought with resources (the ${TIERS.map(t => `${t.cost}→${t.get}`).join(', ')} trades)` : 'No followers bought.'}</span></div>
                     )}>{b.bought}</Tip>
                   </td>
-                  <td data-label="During play" data-play={p.id}>
+                  {playCol && <td data-label="During play" data-play={p.id}>
                     {/* each cause on its own line, losses negative: "Robin Hood +2 · P2's Raider −3 · Your Call +4" */}
                     <Tip label={`${poss(p)} followers during play`} content={() => (
                       <div className="pop-card"><b>{poss(p)} followers during play: {sign(b.effects)}</b>
                         {b.play.length ? b.play.map(l => <span key={l.label} data-play-line>{l.label} {l.n > 0 ? '+' : '−'}{Math.abs(l.n)}</span>) : <span>None won or lost during play.</span>}</div>
                     )}>{sign(b.effects)}</Tip>
-                  </td>
+                  </td>}
                   <td data-label="Prizes" data-contests={p.id}>
                     {/* each contest won, with its own followers (never the contests' total under one name) */}
                     <Tip label={`${poss(p)} prizes`} content={() => {
@@ -90,7 +91,7 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
         </table>
       </div>
       {/* the columns add up to the total; a word the rulebook doesn't use never explains one ("raids", w3a #40) */}
-      <p className="hint">Each number opens what it’s made of. During play: followers won or lost through members’ abilities and spaces. Prizes: the rims’ round-end prizes.{endCol ? ' End-game: members that score when the game ends.' : ''}</p>
+      <p className="hint">Each number opens what it’s made of.{playCol ? ' During play: followers won or lost through members’ abilities and spaces.' : ''} Prizes: the rims’ round-end prizes.{endCol ? ' End-game: members that score when the game ends.' : ''}</p>
       {brokeTie && <p className="hint">Tied on followers: more members breaks the tie.</p>}
       {ranked.some(p => p.final && p.final.parts.length) && (
         <ul className="parts">

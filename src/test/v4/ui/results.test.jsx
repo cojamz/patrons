@@ -34,6 +34,7 @@ describe('Results winners', () => {
       const heads = [...container.querySelectorAll('.res-t th')].map(e => e.textContent);
       expect(heads).not.toContain('Yourself');
       expect(heads.includes('End-game')).toBe(s.players.some(p => breakdown(s, p).endGame !== 0));
+      expect(heads.includes('During play')).toBe(s.players.some(p => breakdown(s, p).effects !== 0));
       // the columns still add up: leader and members, bought, during play, prizes (and end-game)
       for (const row of container.querySelectorAll('.res-t tbody tr')) {
         const cells = [...row.querySelectorAll('td')].slice(2).map(td => Number(td.textContent.replace('−', '-').replace('+', '')));

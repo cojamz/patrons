@@ -62,6 +62,13 @@ Old layout, for comparison: setup ![](before/setup.png) · round III ![](before/
   - Below 1200px the follower buys sit in the right column under the since-strip, so all ten members show in the strip.
 - 05:55: the follower buys moved to the top of the shop column (the foreman, relaying R3). At the foot of the column, lit tiles looked cut off: the column clipped their glow and shadow at its edge. The column no longer clips at this size, because its grid shrinks to fit. Checked at 1270×700 and 1270×620: `layout/final/buy.png`, `layout/final-620/buy.png`.
 
+## Wave 3 (09:40–11:00, design-pod/log.md has every entry)
+- The starting pick stands at the wheel's centre, over the locked inner rings (gate l6 was rewritten to that intent). The Reckoning's banner stays still at the centre.
+- A chair's row shows as many member figures as fit, measured, with "EACH ROUND" stacked over its gains. Yours moves up beside your name from 1200px. From 861 to 1049px a rival's stacks take their own row under the name.
+- The since-strip folds whole lines in one step, before the frame paints. When only the newest line fits, "N earlier" moves into its header. turnstory watches part-lines every frame, and t2b is a full strip over a tall pinned card.
+- The turn card finds its table on the first render after a resume, so the strip leaves it room at once.
+- The rim's leaders are 24px, whole pixels. On a rival's turn and during the Reckoning the shop steps back.
+
 ## Files
 - `src/v4/game/layout.css`: the composition from 1200px up (new; imported by GameScreen.jsx).
 - `src/v4/game/GameScreen.jsx`: the turn card docks under the since-strip when the layout sets `--turn-dock: since`. The seats stack from the column's top when it sets `--seats-align: start`, and they write `--seats-end` (their foot) for whatever sits under them. The old grid keeps both old behaviours.

@@ -1,7 +1,7 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
-import { effectStory, turnGroups, membersWhy, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
+import { effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
 import { createTrail, feed } from '../../../v4/game/trail.js';
 import { contextFor } from '../../../engine/v4/core.js';
 
@@ -24,8 +24,11 @@ describe('v4 format helpers', () => {
   it('says what moved a player\'s member followers: new members, a swap, members lost (w3a #19)', () => {
     expect(membersWhy({ joined: 2, left: 0, swapped: false })).toBe('from new members');
     expect(membersWhy({ joined: 1, left: 1, swapped: true })).toBe('from a swap');
-    expect(membersWhy({ joined: 0, left: 1, swapped: false })).toBe('from members lost');
-    expect(membersWhy({ joined: 2, left: 1, swapped: true })).toBe('from members in and out');
+    expect(membersWhy({ joined: 0, left: 1, swapped: false })).toBe('from members that left');
+    // new members and losses said apart, never one "in and out" sum
+    expect(membersParts({ joined: 4, left: 1, swapped: false, members: 10, lost: 1, gained: 11 })).toEqual(['+11 from new members', '−1 from members that left']);
+    expect(membersParts({ joined: 1, left: 1, swapped: true, members: -1, lost: 3, gained: 2 })).toEqual(['−1 from a swap']);
+    expect(membersParts({ joined: 2, left: 0, swapped: false, members: 2, lost: 0, gained: 2 })).toEqual(['+2 from new members']);
     // a real swap, from both sides: the one who traded and the one traded with
     let found = 0;
     for (let seed = 1; seed < 40 && !found; seed++) {

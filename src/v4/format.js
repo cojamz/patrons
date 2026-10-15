@@ -470,19 +470,33 @@ export function roundGains(start, end, p, contests) {
   // which members came and went, so the words say what moved the count (w3a #19: a swap that lost a follower read
   // "−1 from new members")
   const had = new Set(was.members), has = new Set(end.players[p.id].members);
-  const joined = [...has].filter(u => !had.has(u)).length, left = [...had].filter(u => !has.has(u)).length;
+  const ins = [...has].filter(u => !had.has(u)), outs = [...had].filter(u => !has.has(u));
+  const joined = ins.length, left = outs.length;
+  // what the members that left were worth (their printed followers), so new members and losses are said apart
+  const worth = (st, u) => { try { return cardDef(st, u).f ?? 1; } catch { return 1; } };
+  const lost = outs.reduce((t, u) => t + worth(start, u), 0);
   const who = esc(p.name);
   const swap = new RegExp(`^${who} traded |^.+? traded .+ for ${who}'s |swaps sides: .+ gets ${who}'s |^${who}'s Double Agent swaps sides`);
   const swapped = roundLines.some(l => swap.test(l));
-  return { contests, members, bought, effects: total - contests - members - bought, total, joined, left, swapped };
+  return { contests, members, bought, effects: total - contests - members - bought, total, joined, left, swapped, lost, gained: members + lost };
 }
 
 /** What moved a player's member followers this round, in words: "from new members", "from a swap"… */
 export function membersWhy(g) {
   if (!g.left) return 'from new members';
   if (g.swapped && g.joined === g.left) return g.left > 1 ? 'from swaps' : 'from a swap';
-  if (!g.joined) return 'from members lost';
+  if (!g.joined) return 'from members that left';
   return 'from members in and out';
+}
+const sgn = n => `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
+/**
+ * The round's member followers as the summary says them: one part, or new members and losses apart ("+11 from new
+ * members · −1 from members that left"); a swap and nothing else is one part, "−1 from a swap" (w3a #19).
+ */
+export function membersParts(g) {
+  if (!g || !g.members && !g.lost) return [];
+  if (!g.left || (g.swapped && g.joined === g.left) || !g.joined) return g.members ? [`${sgn(g.members)} ${membersWhy(g)}`] : [];
+  return [g.gained ? `${sgn(g.gained)} from new members` : null, g.lost ? `−${g.lost} from members that left` : null].filter(Boolean);
 }
 
 // ---------- log lines, said plainly ----------

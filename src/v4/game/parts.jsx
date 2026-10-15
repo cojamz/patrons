@@ -2,7 +2,7 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { quadrant, cardDef } from '../../engine/v4/index.js';
-import { logSections, playerColor, costParts, plainLine } from '../format.js';
+import { logSections, playerColor, costParts, plainLine, turnGroups, plural } from '../format.js';
 import { Rich, CostPips, Pip } from './Rich.jsx';
 import { MemberCard, NamedText, CardText, cardColor, asYou, CostDots } from './Info.jsx';
 import { Follower } from '../art/Follower.jsx';
@@ -322,7 +322,7 @@ function TradePicker({ state, pend, onPick, busy }) {
 
 // One log line; member names in it open their cards. `table` stays the same object for a whole game (names, colors,
 // costs don't change), so a line re-renders only when its text does.
-const LogLine = memo(function LogLine({ table, text }) { return <div><NamedText state={table} text={text} /></div>; });
+const LogLine = memo(function LogLine({ table, text, more = false }) { return <div className={more ? 'turn-more' : undefined}><NamedText state={table} text={text} /></div>; });
 /** The game log (results; phones). meId: your lines read "You took…", as in the Chronicle (RC1 sweep 109). */
 export function Log({ state, meId = null }) {
   const sections = logSections(state);
@@ -332,8 +332,9 @@ export function Log({ state, meId = null }) {
     <div className="log" aria-label="Game log">
       {sections.slice().reverse().map((s, k) => (
         <details key={s.title} open={k === 0}>
-          <summary>{s.title}<small> · {s.lines.length} {s.lines.length === 1 ? 'line' : 'lines'}</small></summary>
-          <div className="lines">{s.lines.map((l, j) => <LogLine key={j} table={table} text={asYou(plainLine(state.log, s.start + j), me)} />)}</div>
+          <summary>{s.title}<small> · {plural(s.lines.filter(l => / took .+ \([A-Z][a-z]+\)\.$/.test(l)).length, 'turn')}</small></summary>
+          {/* as the log drawer reads: newest turn first, each turn top-down, no bare passes (w3b #49, w3a #34) */}
+          <div className="lines">{turnGroups(state, s.lines).flatMap(g => g.map((j, n) => <LogLine key={j} table={table} more={n > 0} text={asYou(plainLine(state.log, s.start + j), me)} />))}</div>
         </details>
       ))}
     </div>
