@@ -9,7 +9,7 @@ node scripts/v4-bench.mjs --only=cards,spaces   # sections: anchors, cards, spac
 node scripts/v4-bench.mjs --records=<dir>  # friends' games ("Copy game record" JSON files) vs the bench
 ```
 
-Writes `latest.md` (read this) and `latest.json` here, keeps `history/<date>-<sha>[-quick].json`, and opens the report with what moved since the newest earlier run of the same mode. `--records` writes `records.md` / `records.json` and puts the people's numbers next to the latest bench's Normal and Hard-20 columns. Same commit, same flags, same numbers: every game is a pure function of its seed, whatever the worker count. Any size can be overridden (`--normalSeeds=`, `--hardSeedsB=`, `--Kc=`, `--Ks=`, `--KcB=`, `--KsB=`, `--calib=`, `--archN=`, `--archH=`, `--hardBase=`, `--boot=`, `--workers=`); changing them changes the numbers.
+A full run of every section writes `latest.md` (read this) and `latest.json` here; `--quick` and `--only` runs write `latest-quick.md` / `latest-full-<sections>.md` so they never overwrite it. Every run keeps `history/<date>-<sha>[-quick].json`, and opens the report with what moved since the newest earlier run of the same mode. `--records` writes `records.md` / `records.json` and puts the people's numbers next to the latest bench's Normal and Hard-20 columns. Same commit, same flags, same numbers: every game is a pure function of its seed, whatever the worker count. Any size can be overridden (`--normalSeeds=`, `--hardSeedsB=`, `--Kc=`, `--Ks=`, `--KcB=`, `--KsB=`, `--calib=`, `--archN=`, `--archH=`, `--hardBase=`, `--boot=`, `--workers=`); changing them changes the numbers.
 
 ## Instruments
 
@@ -43,10 +43,12 @@ The probe's effect on a seat is its follower margin (own followers minus the riv
 
 ## Run times on this box (4 cores)
 
-| mode | stage A | stage B | total |
+| mode | stage A (Normal, archetypes, calibration) | stage B (Hard-20 re-measures) | total |
 |---|---|---|---|
-| `--quick` | (filled in by the first runs) | | |
-| full | | | |
+| `--quick` (Classic: 60 Normal seeds, 4 Hard-20 seeds, 6+6 targets) | 5.8 min | 2.5 min | 8.2 min |
+| full (38 tables: 440 Normal seeds, 44 Hard-20 seeds, 26 cards + 24 spaces + anchors) | 50 min | 21 min | 72 min |
+
+Quick's Hard-20 column is a smoke check (13–22 probes an anchor): read cards and spaces from the full run. In the full run Hard-20 re-measures at most 26 cards and 24 spaces beyond the anchors, so Normal's longer tail of flags is listed as "too thin or unsure"; `--only=cards --cardsB=60 --hardSeedsB=90` widens it at about 1.5 min a seed.
 
 ## Known limits
 

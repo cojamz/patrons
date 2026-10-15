@@ -69,7 +69,8 @@ let STEALS = [];
 for (const qid of ALL_Q) {
   const q = quadrant(qid);
   const orig = q.onSteal;
-  q.onSteal = function (ctx, info) { if (REAL) STEALS.push(info.n); return orig ? orig.call(this, ctx, info) : undefined; };
+  // the engine calls every table quadrant's onSteal for each steal: count it once, at the table's first quadrant
+  q.onSteal = function (ctx, info) { if (REAL && ctx.state.quadrants[0] === qid) STEALS.push(info.n); return orig ? orig.call(this, ctx, info) : undefined; };
   for (const a of q.actions) {
     const res = a.resolve;
     // keep the markers other wrappers read (echo's __orig: a copy redoes the unwrapped action)
@@ -809,9 +810,11 @@ async function main() {
   const diff = prev ? diffRuns(prev, result) : null;
   const stamp = `${result.date.slice(0, 10)}-${sha}${dirty ? '-dirty' : ''}${quick ? '-quick' : ''}${flags.only ? `-${only.join('+')}` : ''}`;
   writeFileSync(path.join(OUT, 'history', `${stamp}.json`), JSON.stringify(result));
-  writeFileSync(path.join(OUT, 'latest.json'), JSON.stringify(result, null, 1));
-  writeFileSync(path.join(OUT, 'latest.md'), report(result, diff, prev));
-  process.stderr.write(`done in ${(result.secs / 60).toFixed(1)} min (${(result.coreSecs / 60).toFixed(0)} core-min). design/eval/bench/latest.md\n`);
+  // a full run of every section is "latest"; a quick or partial run never overwrites it
+  const name = !quick && !flags.only ? 'latest' : `latest-${quick ? 'quick' : 'full'}${flags.only ? `-${only.join('+')}` : ''}`;
+  writeFileSync(path.join(OUT, `${name}.json`), JSON.stringify(result, null, 1));
+  writeFileSync(path.join(OUT, `${name}.md`), report(result, diff, prev));
+  process.stderr.write(`done in ${(result.secs / 60).toFixed(1)} min (${(result.coreSecs / 60).toFixed(0)} core-min). design/eval/bench/${name}.md\n`);
 }
 
 // ======================= history =======================
