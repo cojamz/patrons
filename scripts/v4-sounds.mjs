@@ -1,6 +1,6 @@
 // Render the game's sounds (src/v4/sound.js) to .wav files, offline in Chromium, with the same code the game plays.
 //   node scripts/v4-sounds.mjs [outDir] [--loud]       (default design/eval/sounds)
-// Writes place, coin (and a handful of coins), fanfare, and several follower lines, and prints each one's peak.
+// Writes place, coins (1, 3, a handful at once), fanfare, followers (1, 3, many at once) and a whole turn; prints peaks.
 import { chromium } from 'playwright';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -19,14 +19,15 @@ const JOBS = [
   ['place', [['place', 0.02, 3]], 0.25],
   ['place-x3', [['place', 0.02, 3], ['place', 0.5, 4], ['place', 1.0, 5]], 1.3],
   ['coin', [['coin', 0.02, 11]], 0.5],
-  ['coins-handful', [0, 1, 2, 3].map(k => ['coin', 0.02 + k * 0.083, 20 + k]), 0.85],
+  ['coins-3', [0, 1, 2].map(k => ['coin', 0.02 + k * 0.083, 20 + k]), 0.6],
+  ['coins-8-at-once', [['coin', 0.02, 25, 8]], 0.7],
   ['fanfare', [['fanfare', 0.02, 1]], 1.0],
-  ...[101, 202, 303, 404, 505, 606].map((s, i) => [`follower-${i + 1}`, [['follower', 0.02, s]], 0.9]),
   // a haul of followers at once: a crowd as big as the haul, never one clip stacked
+  ['followers-1', [['follower', 0.02, 30, 1]], 0.8],
   ['followers-3', [['follower', 0.02, 31, 3]], 1.0],
-  ['followers-6', [['follower', 0.02, 32, 6]], 1.1],
-  ['followers-12', [['follower', 0.02, 33, 12]], 1.3],
-  ['all-in-a-turn', [['place', 0.05, 3], ['coin', 0.55, 11], ['coin', 0.633, 12], ['coin', 0.716, 13], ['follower', 1.25, 202, 6], ['fanfare', 2.1, 1], ['follower', 2.9, 404]], 3.8],
+  ['followers-6-at-once', [['follower', 0.02, 32, 6]], 0.6],
+  ['followers-10-at-once', [['follower', 0.02, 33, 10]], 0.6],
+  ['all-in-a-turn', [['place', 0.05, 3], ['coin', 0.55, 11], ['coin', 0.633, 12], ['coin', 0.716, 13], ['coin', 1.0, 14, 6], ['follower', 1.35, 202, 2], ['fanfare', 2.1, 1], ['follower', 2.9, 404, 8]], 3.8],
 ];
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
