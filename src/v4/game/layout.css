@@ -340,3 +340,6 @@
 /* the wheel's print waits for its font (Wheel.jsx fonts-wait, wave-4 B #32): laid out once, in the font it's set in */
 .lt .stage.fonts-wait .slot .face,.lt .stage.fonts-wait svg .rim-rule,.lt .stage.fonts-wait svg .rim-mark,.lt .stage.fonts-wait svg .rim-dot{visibility:hidden}
 
+/* the story's newest line on one line, when two don't fit (SinceStrip level 1) */
+.lt-since .since-row.one{-webkit-line-clamp:1}
+

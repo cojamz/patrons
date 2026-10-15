@@ -1244,7 +1244,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
                 </div>
               );
             })}
-            <Log state={state} meId={mySeats.length === 1 ? mySeats[0] : null} />
+            <Log state={state} meId={mySeats.length === 1 ? mySeats[0] : null} hover={hover} />
           </div>
         </div>
       ) : (

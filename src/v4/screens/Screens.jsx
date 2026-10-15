@@ -8,6 +8,7 @@ import { CLASSIC, spheres, sphereName, sphereLine, tableProblem, randomTable, ur
 import { panelWords } from '../game/panelText.js';
 import { GAME_NAME, VERSION } from '../version.js';
 import { copyText } from '../Recovery.jsx';
+import { Tip } from '../game/Info.jsx';
 import { EmojiButton, EmojiFace, emojiName } from './EmojiPicker.jsx';
 import { settleEmojis, takeEmoji, lastEmoji, rememberEmoji } from '../emojiPick.js';
 import { SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed } from '../motion.js';
@@ -177,8 +178,16 @@ export function sphereHint(id) {
   const lines = q.actions.filter(a => a.ring === 1).map(a => panelWords(id, a, 1).replace(/(^|[^\d])1 @f/g, '$11 follower').replace(/@f/g, 'followers'));
   return `${sphereLine(id)} ${lowColor(q.scoring.label)} at round end. Its round I spaces: ${lines.join(' · ')}.`;
 }
+// a chip opens what its sphere does, like any hover in the game (w4b #24: its native title showed nothing to a pointer
+// that paused, and nothing at all on touch)
 function TableChip({ id }) {
-  return <span className="table-chip" style={{ '--c': `var(--${id})` }} title={sphereHint(id)}><i className="dot" />{sphereName(id)}</span>;
+  const q = quadrant(id);
+  return (
+    <Tip className="table-chip" style={{ '--c': `var(--${id})` }} label={`${sphereName(id)}: what it does`} content={() => (
+      <div className="pop-card" data-chip-card={id}><b>{sphereName(id)}</b><span>{sphereLine(id)}</span><span>{lowColor(q.scoring.label)} at round end.</span>
+        <span>Its round I spaces: {q.actions.filter(a => a.ring === 1).map(a => panelWords(id, a, 1).replace(/(^|[^\d])1 @f/g, '$11 follower').replace(/@f/g, 'followers')).join(' · ')}.</span></div>
+    )}><i className="dot" />{sphereName(id)}</Tip>
+  );
 }
 
 // Every seat wears an emoji, none twice: the first person starts with the one this browser picked last, everyone

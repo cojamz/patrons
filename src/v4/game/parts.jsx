@@ -8,6 +8,7 @@ import { MemberCard, NamedText, CardText, cardColor, asYou, CostDots } from './I
 import { Follower } from '../art/Follower.jsx';
 import { ResourceGlyph } from './Glyphs.jsx';
 import { pickCaption, pickName } from './boardPick.js';
+import { HoverNames } from './HoverNames.jsx';
 import './boardpick.css';
 
 /** Escape closes; focus moves in on open and back to where it was on close. */
@@ -322,9 +323,10 @@ function TradePicker({ state, pend, onPick, busy }) {
 
 // One log line; member names in it open their cards. `table` stays the same object for a whole game (names, colors,
 // costs don't change), so a line re-renders only when its text does.
-const LogLine = memo(function LogLine({ table, text, more = false }) { return <div className={more ? 'turn-more' : undefined}><NamedText state={table} text={text} /></div>; });
+// with the board's hover layer, space names open too, as in the log drawer (w4b #27: only member names did)
+const LogLine = memo(function LogLine({ table, text, more = false, hover = null }) { return <div className={more ? 'turn-more' : undefined}>{hover ? <HoverNames state={table} hover={hover} text={text} /> : <NamedText state={table} text={text} />}</div>; });
 /** The game log (results; phones). meId: your lines read "You took…", as in the Chronicle (RC1 sweep 109). */
-export function Log({ state, meId = null }) {
+export function Log({ state, meId = null, hover = null }) {
   const sections = logSections(state);
   const me = meId != null && state.players[meId] ? state.players[meId].name : null;
   const table = useMemo(() => ({ seed: state.seed, quadrants: state.quadrants, resources: state.resources, cards: state.cards, players: state.players, shop: [] }), [state.seed, state.quadrants.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -334,7 +336,7 @@ export function Log({ state, meId = null }) {
         <details key={s.title} open={k === 0}>
           <summary>{s.title}<small> · {plural(s.lines.filter(l => / (took|joined) .+ \([A-Z][a-z]+\)\.$/.test(l)).length, 'turn')}</small></summary>
           {/* as the log drawer reads: newest turn first, each turn top-down, no bare passes (w3b #49, w3a #34) */}
-          <div className="lines">{(f => f.groups.flatMap(g => g.map((j, n) => <LogLine key={j} table={table} more={n > 0} text={asYou(plainLine(state.log, s.start + j), me) + (f.times.get(j) ? ` (${f.times.get(j)} times this round)` : '')} />)))(foldRepeats(s.lines, turnGroups(state, s.lines)))}</div>
+          <div className="lines">{(f => f.groups.flatMap(g => g.map((j, n) => <LogLine key={j} table={table} hover={hover} more={n > 0} text={asYou(plainLine(state.log, s.start + j), me) + (f.times.get(j) ? ` (${f.times.get(j)} times this round)` : '')} />)))(foldRepeats(s.lines, turnGroups(state, s.lines)))}</div>
         </details>
       ))}
     </div>

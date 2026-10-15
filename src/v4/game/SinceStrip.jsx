@@ -72,21 +72,24 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
   // too little room for even the newest line and the "N earlier" line: the newest shows alone, whole (the Log button
   // above still opens the rest)
   const bare = dropState.sig === sig && dropState.bare;
+  // and when even the newest line doesn't fit whole on its two lines, it sets on one (1); if not even that, the strip
+  // shows only its header and the count (2): a cut line never shows (wave 4: the chairs' figures grew to 40px)
+  const lvl = dropState.sig === sig ? (dropState.lvl || 0) : 0;
   const base = entries.slice(-MAX);
   const cut = Math.min(drop, Math.max(0, base.length - 1));
   // Checked when the layout has settled, from a ResizeObserver on the list and its own lines (perf, 2026-10-15: reading
   // the computed style and scrollHeight in a layout effect forced a page layout every step). A ResizeObserver runs after
   // layout and before paint, so the lines it hides are never drawn in part.
-  const committed = useRef({ sig, cut, len: base.length });
+  const committed = useRef({ sig, cut, len: base.length, lvl });
   const asked = useRef(null); // the fold the observer asked for and hid lines for, until React draws it
   const ro = useRef(null), watched = useRef(new Set());
   // the list and each line on it are watched (observing is not a layout read; a newly watched line reports once)
   useLayoutEffect(() => {
     const was = committed.current.sig;
-    committed.current = { sig, cut, len: base.length };
+    committed.current = { sig, cut, len: base.length, lvl };
     // the fold asked for is drawn (or these are new lines, or a new room): lines hidden while it was on its way show again
     const l = listRef.current;
-    if (asked.current && (asked.current.sig !== sig || (cut >= asked.current.n && (bare || !asked.current.bare)))) {
+    if (asked.current && (asked.current.sig !== sig || (cut >= asked.current.n && (bare || !asked.current.bare) && lvl >= (asked.current.lvl || 0)))) {
       asked.current = null;
       if (l) for (const el of l.querySelectorAll(':scope > [data-fold-hide]')) { el.removeAttribute('data-fold-hide'); el.style.visibility = ''; }
     }
@@ -99,7 +102,8 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
       ro.current = new ResizeObserver(() => {
         const list = listRef.current;
         if (!list) return;
-        const { sig: s0, cut: c0, len } = committed.current;
+        const { sig: s0, cut: c0, len, lvl: l0 } = committed.current;
+        if (l0 >= 2) return;
         const kids = [...list.children];
         const moreEl = kids[0] && kids[0].classList.contains('since-more') ? kids[0] : null;
         const rows = moreEl ? kids.slice(1) : kids;
@@ -112,14 +116,17 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
         const fits = k => rows[k].getBoundingClientRect().top - (c0 + k > 0 ? moreH : 0) >= top - 1;
         let k = 0;
         while (k < rows.length - 1 && !fits(k)) k++;
-        // the newest line fits, but not with the "earlier" line above it
-        const bareNow = c0 + k > 0 && !fits(k) && rows[k].getBoundingClientRect().top >= top - 1;
-        if ((!k && !bareNow) || c0 + k > len - 1) return;
+        // the newest line fits, but not with the "earlier" line above it; or it doesn't fit even alone (a level down)
+        const alone = rows[k].getBoundingClientRect().top >= top - 1;
+        const bareNow = c0 + k > 0 && !fits(k);
+        const lvlNow = !fits(k) && !alone ? l0 + 1 : l0;
+        if ((!k && !bareNow && lvlNow === l0) || c0 + k > len - 1) return;
         const n = c0 + k;
-        // hide what goes (and the "earlier" line, which moves down when React draws the fold) before this frame paints
-        for (const el of [...(moreEl ? [moreEl] : []), ...rows.slice(0, k)]) { el.setAttribute('data-fold-hide', ''); el.style.visibility = 'hidden'; }
-        asked.current = { sig: s0, n, bare: bareNow };
-        setDrop(d => (d.sig === s0 && d.n >= n && (d.bare || !bareNow) ? d : { sig: s0, n, bare: bareNow }));
+        // hide what goes (and the "earlier" line, which moves down when React draws the fold; and the newest, when it
+        // sets smaller) before this frame paints
+        for (const el of [...(moreEl ? [moreEl] : []), ...rows.slice(0, lvlNow > l0 ? k + 1 : k)]) { el.setAttribute('data-fold-hide', ''); el.style.visibility = 'hidden'; }
+        asked.current = { sig: s0, n, bare: bareNow, lvl: lvlNow };
+        setDrop(d => (d.sig === s0 && d.n >= n && (d.bare || !bareNow) && (d.lvl || 0) >= lvlNow ? d : { sig: s0, n, bare: bareNow || (d.sig === s0 && d.bare), lvl: lvlNow }));
       });
     }
     const r = ro.current, w = watched.current;
@@ -138,14 +145,16 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
       <header className="since-head">
         <span className="since-title">Since your last turn</span>
         {/* the newest line alone: the earlier ones are counted up here, beside the Log, taking no line of their own */}
-        {bare && more > 0 && <button type="button" className="since-more in-head" onClick={onLog} title="Open the log">{more} earlier</button>}
+        {(bare || lvl >= 2) && more + (lvl >= 2 ? shown.length : 0) > 0 && (
+          <button type="button" className="since-more in-head" onClick={onLog} title="Open the log">{lvl >= 2 ? `${more + shown.length} ${more + shown.length === 1 ? 'move' : 'moves'}` : `${more} earlier`}</button>
+        )}
         <button type="button" className="since-log" data-open-log onClick={onLog} title="The whole game, move by move">Log</button>
       </header>
       {shown.length ? (
         <ol className="since-list" ref={listRef}>
           {more > 0 && !bare && <li className="since-more"><button type="button" onClick={onLog}>{more} earlier… open the log</button></li>}
           {shown.map(e => (
-            <li key={e.n} className={`since-row${e.hit ? ' hit' : ''}`} style={{ '--pc': playerColor(e.actor) }} onClick={pinLine}>
+            <li key={e.n} className={`since-row${e.hit ? ' hit' : ''}${lvl === 1 ? ' one' : ''}`} hidden={lvl >= 2 || undefined} style={{ '--pc': playerColor(e.actor) }} onClick={pinLine}>
               <Tip className="since-line" data-since-line={e.n} label={`${e.head}: show what happened`}
                 content={() => <StoryCard story={e} color={playerColor(e.actor)} state={state} hover={hover} />}>
                 <Minion color={playerColor(e.actor)} emoji={seatEmoji(state, e.actor)} size={14} /><b className="who">{name(e.actor)}</b>
