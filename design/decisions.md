@@ -437,3 +437,25 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - (Claude, under Cory's go-with-your-gut) Patroness (Blue, 8): "Whenever you recruit a badged member, +1 follower." → "Whenever you recruit a blue member, +1 follower." Old fair 5.6 at 8.
 - (Claude, under Cory's go-with-your-gut) Snob (Blue, 10): "Game end: +1 follower per badged member you have." → "Game end: +1 follower per blue member you have." It counts itself, as it did (it cost 10). Old fair 6.7 at 10.
 - (Claude) The ◆ mark, the glossary's "badged" and "unbadged", and the tests that only checked the ◆ are gone. Flag: Blue's ring now counts blue, so every Blue card that gives blue also feeds the ring; the bench should re-read Blue.
+
+## 2026-10-15 — Cory plays the live build (voice note, ~03:40)
+- (Cory) Snappiness is the headline: "it just doesn't feel snappy at all"; the wheel spin "needs to be way snappier". He wants an engineering pod plus animation and network logging to find out why. Running: a `?trace=1` tracer and scripts/v4-perf.mjs with a measured baseline, and a motion audit with fixes, durations turned into tokens and a snappiness gate.
+- (Cory) Hovers must open where you're hovering, not docked under or over P3. Every hover becomes an anchored popover that stays on screen.
+- (Cory) Setup: "pick a resource" has no visual cue. It needs an obvious call to action.
+- (Cory) The member card needs "much, much better visual hierarchy". What it does should read first, the cost should be clear with no color name ("implied by the little dot"), and the shouting "need N" goes. Cut the "You pay", "Leaves …", "Members: you'd lead N" and "Click the card to recruit it" lines. A card design pod mocks three directions for him to pick.
+- (Cory, leaning) Resources as plain colored dots and "any" as one simple wild dot, instead of different shapes and the ring ("so many little symbols"). Mocked next to today's shapes for his call.
+- (Cory) The steal selector (Help Yourself, Lie Low, Redistribute) is "a crazy selector". Picking should be much easier. Building: click the rival's resource stack on their seat.
+- (Cory) The pay screen "needs some design as well … something more intuitive". Queued after the hover work in the pay dialog lands.
+- (Cory) The follower shop is "too hidden". The follower buys get the same prominence as the member shop.
+- (Claude, under Cory's go-with-your-gut) The top score row goes ("Do we really need a little scoreboard? You can see the score on people's cards"). Its information stays on the seats and in their hovers.
+- (Cory) Seats should be more condensed and make better use of space.
+- (Cory) The shop is sorted by cost, cheapest first, with a small sort toggle (cost / color).
+- (Cory) The deck needs no hover.
+- (Cory, idea, not now) A discard pile beside the deck for released members, "kind of like a graveyard, but we don't want to call it that … not imply that they're dying".
+- (Cory) The round-end scoring animation is "way too fast and confusing". Go one quadrant at a time, readable, with totals climbing as each prize lands.
+- (Cory) Redistribute's "each player holding more than you" begs "more what?". Reword to say what's counted.
+- (Cory) Kingpin had no hover, and neither did his own member after recruiting it. Every member must open a card.
+- (Cory) The pixel art needs to be more distinctive. "Maybe it doesn't have to all be people. It could be items and stuff … items wouldn't count as a follower." Idea for later: non-person members (items) that aren't worth a follower.
+- (Cory) Blue "needs a complete rework" (he didn't like it; much of it hung on badges, now dropped).
+- (Cory) The action spaces "don't look so bad" in play, but they overlap the rim's victory conditions. The action redesign picks this up; three looks went to him as pictures.
+- (Cory) "The pixel animations aren't very good." Noted for the art pass.
