@@ -77,9 +77,14 @@ try {
   await page.waitForFunction(() => { try { return !!JSON.parse(localStorage.getItem('patrons.v4.local')).state.build; } catch { return false; } });
   const stamp = await page.evaluate(() => JSON.parse(localStorage.getItem('patrons.v4.local')).state.build);
   save.state.build = stamp; roundStart.state.build = stamp;
+  // seeded before the app's own scripts run: leaving the running game saves it on the way out (saved.js, pagehide), so
+  // a save written from the old page would be overwritten; once only (a flag in this tab's sessionStorage)
+  await page.addInitScript(([v, rs]) => {
+    if (sessionStorage.getItem('members-seeded')) return;
+    localStorage.setItem('patrons.v4.local', JSON.stringify(v)); localStorage.setItem('patrons.v4.roundStart', JSON.stringify(rs));
+    sessionStorage.setItem('members-seeded', '1');
+  }, [save, roundStart]);
   await page.goto(`${base}/?botDelay=300&intro=0`);
-  await page.evaluate(([v, rs]) => { localStorage.setItem('patrons.v4.local', JSON.stringify(v)); localStorage.setItem('patrons.v4.roundStart', JSON.stringify(rs)); }, [save, roundStart]);
-  await page.reload();
   await page.waitForSelector('.lt-wheel, [data-home="resume"]');
   if (!(await page.$('.lt-wheel'))) await page.click('[data-home="resume"]');
   await page.waitForSelector('.lt-wheel .slot.can');
