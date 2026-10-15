@@ -37,6 +37,12 @@ describe('two symbols only, words for the rest (Cory, 2026-10-15: simplify)', ()
     expect([...container.querySelectorAll('.rich-n')].map(e => e.textContent)).toEqual(['2', '4', '6', '3']);
     expect(container.textContent).toContain('6, or 3followers.'); // the mark's own title, right after its number
   });
+  it('a symbol with no number keeps the punctuation after it on its line (w3a #15: an orphan ")")', () => {
+    const { container } = render(<Rich text="Take 1 resource (it arrives as magenta). Then rest." />);
+    const amts = [...container.querySelectorAll('.amt')];
+    expect(amts.some(a => a.querySelector('[data-pip="magenta"]') && a.textContent.endsWith(').'))).toBe(true);
+  });
+
   it('the "any" dot puts each table color where its quadrant sits (q0 bottom, q1 left, q2 top, q3 right)', () => {
     expect(anyDotVars(['gold', 'red', 'blue', 'green'])).toEqual({ '--any-top': 'var(--blue)', '--any-right': 'var(--green)', '--any-bottom': 'var(--gold)', '--any-left': 'var(--red)' });
   });
