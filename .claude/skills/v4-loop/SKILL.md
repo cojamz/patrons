@@ -8,7 +8,7 @@ Architecture: design/architecture.md. Engine is the only place rules live; UI an
 
 Each iteration:
 1. Change the smallest thing that moves the build forward (engine change → add or adjust its unit test in src/test/engine/v4).
-2. `npm run check:v4` — unit + fuzz + session tests, production build, browser e2e (hot-seat and two-tab online). Must be all PASS. `--fast` skips e2e while iterating. The live tree is never a verdict (others' edits land mid-run): the verdict is `npm run check:v4 -- --commit HEAD` (or a sha) on a commit, which gates an exported copy nobody can touch. `-- --help` lists the options. At most 2 runs share the box; a third waits its turn.
+2. `npm run check:v4:quick` while iterating (~2 min: unit tests on fast slices, build, the hot-seat e2e). The verdict is `npm run check:v4 -- --commit HEAD` (or a sha): every test, the build and every e2e on an exported copy nobody can touch (<10 min on a quiet box). Must be all PASS. The live tree is never a verdict (others' edits land mid-run). `-- --help` lists the options. At most 3 runs share the box; the next waits with an ETA. Don't run whole suites with bare `npx vitest run` while gates run: use a file path, or the quick check.
 3. Look at the real screens: e2e saves screenshots to /tmp/patrons-shots/v4/. Read them at ~1270×700 and ~400px.
 4. Every few iterations, run review agents in parallel and pass on only their conclusions:
    - `playtester` — plays the hot-seat game in a browser as a first-timer.
@@ -27,7 +27,7 @@ Never present agent output to Cory unvetted.
 ## Speed without cutting corners
 - Run independent work side by side: audits, fixers split by file area, and testers.
 - Triage each tester's report as soon as it lands; don't wait for the whole panel.
-- `check:v4 --fast` while fixing; the full gate on a commit (`check:v4 -- --commit <sha>`) before every panel. After a rules change, `npm run records:refresh` re-records the kept game records from their seeds (the records test says when).
+- `check:v4:quick` while fixing; the full gate on a commit (`check:v4 -- --commit <sha>`) before every panel. The verdict plays half of the biggest seeded blocks (strength in src/test/engine/v4/budget.js); `npm run check:v4:full` plays them all (nightly, or on a remote machine before a release). After a rules change, `npm run records:refresh` re-records the kept game records from their seeds (the records test says when).
 - Reuse agents that already know the code (SendMessage) for fixes. Testers are never reused.
 - One fresh tester between milestones; the full panel of 3 for the verdict.
 - Testers get a FROZEN snapshot. Before each panel: build, copy to `.v4-panel/<n>/`, and serve that folder on port 5190 (`node scripts/v4-peek.mjs freeze <n> 5190`, never a bare `npx vite preview`, which leaks servers). Never point testers at .v4-build: check:v4 rebuilds it mid-panel, and panel 2's saboteur ended up grading half-finished UI work.
@@ -40,3 +40,5 @@ Never present agent output to Cory unvetted.
 At each frozen milestone, run three NEW blind reviewers in parallel, never reused: `ui-critic` (picky designer: information access, polish), `boardgame-enthusiast` (the game: decisions, tension, arc, balance feel, fun), and an engineering reviewer (repo access, no prior context; design/eval/engineering-review.md is round 1). Save each report to design/eval/<role>-round<N>.md, verify single-reviewer claims before fixing, and track grades round over round.
 - Then a synthesis (Cory, 2026-10-14): one agent reads the three reports together (plus Cory's latest notes and the panel's "felt unfair or unfun") and writes design/eval/meta-round<N>.md: the cross-cutting themes, where reviewers agree (confirmed) and disagree, root causes behind clusters of symptoms, and one ranked action list. Act on each report individually AND on the meta list; the meta list sets priority.
 
+## Close every milestone with the harness retro
+Last step of a milestone, after the meta synthesis: `node scripts/v4-retro.mjs` appends one dated row to design/eval/harness-metrics.md from the gates run since the last row (verdict wall time, unit and e2e stages, quick pre-checks, slot waits, failures by stage, slowest unit files). Read it against the previous rows: a stage that grew, a script that keeps failing, or waits over a few minutes is the next harness fix, with its before/after in the same file.

@@ -365,7 +365,7 @@ function drawTerm(t, x, U, F, r, key) {
   }
 }
 
-/** Lay a sum out on one line no wider than maxW: drop the optional tail, then the grows marks, then shrink to the floor. */
+/** Lay a sum out on one line no wider than maxW: drop the optional tail (after CUT), then shrink, never under 12px. */
 function layout(terms, maxW, U, F, minScale) {
   const measure = list => list.reduce((w, t, i) => w + widthOf(t, U, F) + (i ? U * GAP : 0), 0);
   const cut = terms.findIndex(t => t.k === 'cut');

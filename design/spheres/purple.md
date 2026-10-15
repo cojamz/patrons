@@ -13,9 +13,9 @@ Night Owl and the five reprices (marked) come from the member-value sim in desig
 2. Ring I, Hourly: +4 / +5 / +6 purple, by round.
 3. Ring I, Catch Up: +1 purple, and +2 per rival with more workers on the board than you.
 4. Ring I, Wind-up: +1 purple per worker you have on the board, this one included.
-5. Ring II, Plan Ahead (fill-in, replaces Linger): +2 purple per worker you have left to place this round.
+5. Ring II, Plan Ahead (fill-in, replaces Linger): +1 purple per minion you have left to place this round (was +2; Cory, balance pass 1, 2026-10-15).
 6. Ring II, Overtime (changed): pay 8 purple to take 2 extra turns right after this one. If you can't, +3 purple.
-7. Ring III, Rally (changed): spend all your purple. You take 1 extra turn right after this one per 4 spent, plus 1, up to 3. With less than 4 purple, +4 purple. Double Time makes it 1 per 2.
+7. Ring III, Rally (changed): spend all your purple. You take 1 extra turn right after this one per 4 spent, plus 1, up to 2 (was 3; Cory, balance pass 1, 2026-10-15). With less than 4 purple, +4 purple. Double Time makes it 1 per 2.
 8. Second Wind (6+2, repriced): once per game, take an extra turn right after this one.
 9. Errand Runner (4+4): when you recruit it, take an extra turn right after this one.
 10. Taskmaster (4+2, repriced): once per round, pay 5 purple to take an extra turn right after this one.

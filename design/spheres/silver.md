@@ -23,7 +23,7 @@ Gold takes from the table and sits on it; Red grabs many cheap members; Silver g
 12. Majordomo (2+1): whenever you take a Silver space, +2 silver.
 13. Silversmith (2+1): whenever an action gains you silver, +1 more.
 14. Feast Hall (2+1): when recruited, +2 silver per round number.
-15. Silver Spoon (2+1): when recruited, gain silver equal to the most silver any rival has.
+15. Silver Spoon [Upstart] (2+1): when recruited, gain half the silver of the richest rival, rounded up (was all of it; Cory, balance pass 1, 2026-10-15).
 16. Guest (2+2): whenever another player gives you something, +1 more of it.
 17. Toastmaster (2+2): whenever you take a Silver space, +1 follower.
 18. Gala (2+2): once per game, double your silver, and everyone else +2 silver.

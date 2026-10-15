@@ -387,11 +387,9 @@ h1,h2,h3{font-family:var(--serif)}
 /* setup (RC1 panel: the starting-resource note covered the wheel's lower half, so a newcomer only found out by accident
    that it spins): the wheel steps back a little and the picker docks as one row beneath it, never over it */
 @media (min-width:861px) and (min-height:500px){
-  .app.game.lt.in-setup > .lt-wheel{flex-direction:column;justify-content:center;gap:8px}
-  .app.game.lt.in-setup > .lt-wheel .wheel-wrap{flex:1 1 auto;min-height:0;height:auto;width:100%}
-  .app.game.lt.in-setup > .lt-wheel .stage{width:min(100cqw, calc(100cqh - 86px))}
-  .app.game.lt .lt-wheel .stage{transition:width .45s cubic-bezier(.3,.7,.4,1)}
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{position:static;flex:none;width:min(100%,540px);max-height:none;overflow:visible;
+  .app.game.lt.in-setup > .lt-wheel .stage{width:min(100cqw, calc(100cqh - 82px));margin-bottom:82px}
+  .app.game.lt .lt-wheel .stage{transition:width .45s cubic-bezier(.3,.7,.4,1),margin .45s cubic-bezier(.3,.7,.4,1)}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{left:50%;right:auto;transform:translateX(-50%);width:min(100%,540px);max-height:none;overflow:visible;
     display:flex;flex-direction:row;align-items:center;gap:12px;padding:7px 14px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .for-sale{display:none}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{margin:0;flex:0 0 118px;font-weight:700;line-height:1.2}

@@ -24,7 +24,7 @@ The game was called Patrons; since 2026-10-14 it's **Cults** (v0.2). Code ids an
 - Old code (`src/engine/v3`, `src/v3`, v0 files, `archive/`) — raw material only; ignore.
 
 ## Commands
-- `npm run check:v4` — the gate: all v4 tests, a production build, every browser e2e. `-- --fast` skips e2e. Parallel agents set their own `V4_OUTDIR=.v4-build-<name>` and `V4_PORT=<port>`.
+- `npm run check:v4` — the gate: all v4 tests, a production build, every browser e2e (`-- --commit HEAD` for a verdict). `npm run check:v4:quick` (~2 min) while iterating; `-- --fast` skips e2e; `check:v4:full` plays every seeded game (nightly). Parallel agents set their own `V4_OUTDIR=.v4-build-<name>` and `V4_PORT=<port>`.
 - `npx vitest run src/test/engine/v4` · `npm run sim:v4 -- 300 4` · `npm run dev` (v4 by default).
 - This box has 4 CPUs: throttle heavy sims.
 
