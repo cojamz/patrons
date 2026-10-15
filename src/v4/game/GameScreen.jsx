@@ -635,6 +635,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   facingRef.current = facing;
   const sendToken = useRef(0);
   const root = useRef(null);
+  // the table element as state too, so children that need it (the turn card, the Reckoning) get it on the render after
+  // it mounts; root.current read during render is null on the first render after a resume (2026-10-15)
+  const [rootEl, setRootEl] = useState(null);
+  const rootRef = useCallback(el => { root.current = el; setRootEl(el); }, []);
   const shopSnap = useRef(new Map());
   const chipSnap = useRef(new Map()); // member chips as they stood before a member left its cult (snapshotChips)
   const lastSetupMoves = useRef(null); // the last step of the starting picks (its row stays up until that pick has landed)
@@ -1121,7 +1125,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   if (phase === 'place') stepRef.current = 'place'; else if (phase === 'buy' || phase === 'pay') stepRef.current = 'buy';
   const step = phase === 'choose' ? stepRef.current : phase === 'pay' ? 'buy' : phase;
   return (
-    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={root} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
+    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={rootRef} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar lt-prompt" data-region="prompt">
         <div className="bar-row status" aria-live="polite">
           {/* a choice picked on the board: its caption takes the headline's place (never over the wheel) */}
@@ -1231,7 +1235,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           {state.round >= 1 && <SinceStrip state={state} entries={since} me={mySeats.length === 1 ? mySeats[0] : null} yours={yours} hover={hover} onLog={openLog} />}
         </>
       )}
-      <AfterChain value={cardNow} hold={holdStory}>{c => (c && !moment && !(state.over && !moment) ? <TurnCard card={c} root={root.current} state={state} /> : null)}</AfterChain>
+      <AfterChain value={cardNow} hold={holdStory}>{c => (c && !moment && !(state.over && !moment) ? <TurnCard card={c} root={rootEl} state={state} /> : null)}</AfterChain>
       {toast && <div key={toast.n} className="toast" role="status">{toast.text}</div>}
       <TouchTips />
       {cardDetail && state.cards[cardDetail.uid] && (
@@ -1240,7 +1244,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </Popover>
       )}
       {mine && !needHandoff && ((pend.kind === 'pay' && !onlyPay) || payChoice(pend)) && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
-      {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={root.current} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onPaid={n => setPaid({ moment, n })} onDone={() => setReckoned(moment)} />}
+      {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={rootEl} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onPaid={n => setPaid({ moment, n })} onDone={() => setReckoned(moment)} />}
       {moment && reckoned === moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
       {logOpen && <Chronicle state={state} meId={mySeats.length === 1 ? mySeats[0] : null} hover={hover} onClose={() => setLogOpen(false)} />}

@@ -196,3 +196,16 @@ Verified fixed:
 - **29:** the Reckoning's card now sits on the far side of the wheel from the rim it scores. Most Gold (bottom) gets the card at the top; Most Members (left) and Most Blue (top) get it at the bottom; Most Green (right) at the top. Every scored rim is in plain view.
 - **30:** no more still "counting…". The seats' counts stamp in one by one (0–300ms), and the winner line follows at about 900.
 - **32 / H10:** the rims start at 0, 1800, 3300 and 4800ms, about 1.5–1.8s each, and all four are done by about 6.3s. That's inside H10 (≤ 7s) and one quadrant at a time, as Cory asked.
+
+## Round 16 (10:55, motion gaps from wave 3; the motion engineer)
+Instruments: filmstrips under the fake clock (a scenario harness that loads a real game state and clicks P1's options; strips in design/eval/motion-gaps/), a real-time probe at load 25–31, and the new travel gate (e2e/v4/travel.mjs).
+- **Setup picks (1):** the pick row stays up, read-only, while the bots pick (and until the last pick lands); each bot's coin lights (S3's point, 160ms) and its dot flies from that coin to the bot's stack; the next pick lights when this one has landed, with a 160ms rest between players. The bots' six picks now take about 4.0s instead of 2.7s, once a game.
+- **Gives (3):** a payment that reaches a rival (a ransom paid) arcs from the payer's stacks to the receiver's, turning colour on the way; it used to drop into the payer's own last space and fly out of it.
+- **Members changing hands (3, M10):** a two-way swap crosses at once on mirrored arcs; a one-way take tugs the victim's crowd and flies on a line; each lands on its own new chip, hidden until the ghost arrives.
+- **Flights above hover cards:** flights were at z 12–14 under hover cards (60), so a member Used from its hover card sent its gain underneath it. They now ride at 61–62.
+- **A rival's run of follower buys (5):** folded into one beat (director.js foldBuys): one coin drop per colour, one accept, one bundle with the total, one roll. The table holds at most foldWait (400ms Steady) for the bot's next buy to arrive. Measured on Normal-bot games: 2.65s → 1.88s and 2.94s → 2.06s per such turn.
+- **Round-III steals (4):** they travel (fake clock and real time). What testers saw is commit latency on a loaded box: at load 25 your last pick committed 2.8s after the click and its piece left 1.3s later, while the board picker's own coin flew at once.
+- **New Faces (A47):** the old row drops away toward the pile, left to right, then the new row deals (B4).
+- **Colour turn (A10):** the crossfade is the grammar's 80ms at the midpoint, however short the flight (it was 10% of the flight: 26ms on a short take).
+- **Wheel drag (7):** the release always settled in MO.spin (300ms); the "coast" was the drag trailing the pointer because every move re-rasterized the rotated wheel (trace: 1.0s of raster for one 12-step drag). A drag now turns composited layers (stage.turning); key spins paint as before (the snappy gate reads them).
+- Still open: the board picker's own coin (GameScreen onSeatPick) flies the old colour to the middle of your row while the chain's piece turns colour into the right stack (two flights for one take); the hover card stays over the member you Used.

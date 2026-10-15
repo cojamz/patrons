@@ -294,3 +294,18 @@
 /* the story's "N earlier" in its header, when the room holds only the newest line (SinceStrip `bare`) */
 .lt-since .since-head .since-more.in-head{margin-left:auto;font:inherit;font-size:11px;letter-spacing:.06em;color:var(--cream-3);background:none;border:0;padding:2px 4px;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
 
+/* the narrowest laptops (861–1049px): a rival's chair is ~225px inside, and its four stacks ran under its total and its
+   minions in the name row (shots/1200-900/buy.png: "5●" under "3👤"). There the stacks take a row of their own under the
+   name (the column has the height: the story sits on the right at this width); yours keeps clear of its minions. */
+@media (min-width:861px) and (max-width:1049px) and (min-height:500px){
+  .app.game.lt > .lt-seat:not(.mine) > .lt-cult-seat{grid-template-rows:32px 20px 34px}
+  .app.game.lt > .lt-seat:not(.mine) .cs-foot{grid-column:1 / 5;grid-row:2;justify-self:start}
+  .app.game.lt > .lt-seat:not(.mine) .cs-res{justify-content:flex-start;gap:10px}
+  .app.game.lt > .lt-seat:not(.mine) .cs-crowd,.app.game.lt > .lt-seat:not(.mine) .cs-build{grid-row:3}
+  .app.game.lt > .lt-seat.mine .cs-head,.app.game.lt > .lt-seat.mine .cs-head .cs-leader{grid-row:1}
+  .app.game.lt > .lt-seat.mine .cs-foot{grid-column:1 / 5;grid-row:2;justify-self:start}
+  .app.game.lt > .lt-seat.mine .cs-res{justify-content:flex-start;gap:10px}
+  .app.game.lt > .lt-seat.mine .cs-stack{font-size:14px}
+  .app.game.lt > .lt-seat.mine .cs-stack .res-glyph{width:13px;height:13px}
+}
+
