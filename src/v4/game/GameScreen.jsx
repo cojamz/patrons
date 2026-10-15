@@ -161,6 +161,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       const plan = planChain(prev, next, { mine });
       const sameNext = !!(next.pending && prev.pending && next.pending.player === prev.pending.player);
       const dwell = plan.total ? (sameNext ? plan.handoff : plan.total) : rivalStep ? (sameNext ? 0 : MO.passHold) : base;
+      if (typeof window !== 'undefined') window.__patronsDwellSum = (window.__patronsDwellSum || 0) + dwell; // (the pacing gate reads it)
       if (!queue.current.length) paced.current = false;
       // every step gets its own commit, even one that doesn't wait, so each chain plays from the step right before it
       // (the engine's effect stream is per step: two steps drawn in one render would lose the first one's)

@@ -259,16 +259,19 @@ export function holdStack(stackEl, from) {
   const b = stackEl && stackEl.querySelector('b.num');
   if (!b) return null;
   let v = from, raf = 0, dead = false;
-  b.dataset.hold = String(v);
+  // a held number never shows below 0, whatever arrives out of order
+  const show = x => { b.dataset.hold = String(Math.max(0, x)); };
+  show(v);
   return {
-    step(by) { if (dead) return; cancelAnimationFrame(raf); v += by; b.dataset.hold = String(v); },
+    step(by) { if (dead) return; cancelAnimationFrame(raf); v += by; show(v); },
     /** a bundle lands: the number rolls from what it shows to v + by over ms */
     roll(by, ms) {
       if (dead) return;
       cancelAnimationFrame(raf);
       const from0 = v, to = v + by, t0 = performance.now();
       v = to;
-      const tick = now => { const k = Math.min(1, (now - t0) / Math.max(1, ms)); b.dataset.hold = String(Math.round(from0 + (to - from0) * k)); if (k < 1) raf = requestAnimationFrame(tick); };
+      // (a frame's timestamp can be earlier than the call: k never goes below 0, or the number ran negative)
+      const tick = now => { const k = Math.max(0, Math.min(1, (now - t0) / Math.max(1, ms))); show(Math.round(from0 + (to - from0) * k)); if (k < 1) raf = requestAnimationFrame(tick); };
       raf = requestAnimationFrame(tick);
     },
     done() { dead = true; cancelAnimationFrame(raf); delete b.dataset.hold; },

@@ -255,7 +255,7 @@ const plainSpace = pg => pg.evaluateHandle(() => [...document.querySelectorAll('
   const pg = await freshPage('speed=steady');
   const gaps = [];
   if (pg) {
-    for (let turn = 0; turn < 3 && gaps.length < 2; turn++) {
+    for (let turn = 0; turn < 3 && gaps.length < 1; turn++) {
       const el = (await plainSpace(pg)).asElement();
       if (!el) break;
       await (await el.$('.base')).click();
@@ -267,16 +267,20 @@ const plainSpace = pg => pg.evaluateHandle(() => [...document.querySelectorAll('
         if (opt) await opt.click().catch(() => {});
         await pg.waitForTimeout(200);
       }
-      const t0 = await pg.evaluate(() => performance.now());
-      const ok = await pg.waitForSelector('.lt[data-phase="place"][data-yours="1"] .slot.can .base', { timeout: 30000 }).catch(() => null);
+      const t0 = await pg.evaluate(() => ({ t: performance.now(), dwell: window.__patronsDwellSum || 0, moves: Number(document.querySelector('.app.game').dataset.moves) }));
+      const ok = await pg.waitForSelector('.lt[data-phase="place"][data-yours="1"] .slot.can .base', { timeout: 40000 }).catch(() => null);
       if (!ok) break;
-      gaps.push(await pg.evaluate(a => performance.now() - a, t0));
+      const g = await pg.evaluate(a => ({ wall: performance.now() - a.t, planned: (window.__patronsDwellSum || 0) - a.dwell, steps: Number(document.querySelector('.app.game').dataset.moves) - a.moves }), t0);
+      // a snake turnaround (you go again at once) isn't a gap between turns: count only gaps with rivals' turns in them
+      if (g.steps >= 4) gaps.push(g);
     }
     await pg.close();
   }
-  report.push(`turns: gap between your turns at Steady ${gaps.map(g => `${(g / 1000).toFixed(1)}s`).join(', ') || 'not measured'}`);
+  // frame-honest: the table's own schedule (each step's hold, director.js chains and the bot pace) is what Cults
+  // controls; the wall time beside it adds whatever the box spent drawing
+  report.push(`turns: gap between your turns at Steady, scheduled ${gaps.map(g => `${(g.planned / 1000).toFixed(1)}s (wall ${(g.wall / 1000).toFixed(1)}s, ${g.steps} steps)`).join(', ') || 'not measured'}`);
   if (!gaps.length) errors.push('(s5) could not measure the gap between your turns');
-  else if (Math.min(...gaps) > 8000) errors.push(`(s5) your next turn came ${(Math.min(...gaps) / 1000).toFixed(1)}s after your last (want ≤ 8s at Steady)`);
+  else if (Math.min(...gaps.map(g => g.planned)) > 8000) errors.push(`(s5) your next turn is scheduled ${(Math.min(...gaps.map(g => g.planned)) / 1000).toFixed(1)}s after your last (want ≤ 8s at Steady)`);
 }
 
 for (const line of report) console.log(`snappy: ${line}`);

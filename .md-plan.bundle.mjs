@@ -4864,8 +4864,10 @@ var TABLE = {
   roll: [160, 240, 360],
   // a bundle's number rolling on landing
   cardLift: [80, 120, 160],
-  rivalBuyHold: [100, 200, 360],
-  // a rival's buy: the card held lifted before paying
+  rivalBuyHold: [0, 0, 160],
+  // a rival's buy: the card stays lifted while its coins fly in (the telegraph)
+  passHold: [150, 300, 500],
+  // a turn-ending pass with nothing to show
   cardFly: [260, 380, 560],
   ring: [200, 260, 340],
   worthHop: [180, 240, 340],
@@ -5133,8 +5135,8 @@ function planChain(before, state, { mine: mine2 = [], measure = null } = {}) {
     } else {
       at(0, { op: "minion", pid, key, own: false, dur: MO.minionFly });
       const landed = ends(MO.minionFly);
-      at(landed + MO.readHold, { op: "pulse", place: { kind: "space", key }, dur: MO.pulse });
-      t = ends(landed + MO.readHold + MO.lead);
+      at(landed + Math.max(0, MO.readHold - MO.pulse), { op: "pulse", place: { kind: "space", key }, dur: MO.pulse });
+      t = ends(landed + MO.readHold);
     }
     pulsed = key;
   }
@@ -5151,8 +5153,10 @@ function planChain(before, state, { mine: mine2 = [], measure = null } = {}) {
     if (!beats.length || beats[beats.length - 1].key !== k) beats.push({ key: k, cause: e.cause, effects: [] });
     beats[beats.length - 1].effects.push(e);
   }
+  let hand = 0;
   const pieces = (time, from, to, n, opt = {}) => {
-    const d = fly(from, to);
+    const d = opt.dur || fly(from, to);
+    hand = Math.max(hand, (n >= 4 ? time : time + (n - 1) * MO.pieceStagger) + d * (2 / 3));
     if (n >= 4) {
       at(time, { op: "piece", from, to, n, bundle: true, dur: d, ...opt });
       at(time + d, { op: "land", to, by: n, bundle: true, ...opt });
@@ -5186,9 +5190,10 @@ function planChain(before, state, { mine: mine2 = [], measure = null } = {}) {
       let paid = s + MO.cardLift + hold;
       for (const [i, p] of m11.pays.entries()) {
         const r = pieces(s + MO.cardLift + hold + i * MO.fan, p.from, { kind: "shop", index: c.index, uid: c.uid }, p.what.n, { pay: true, r: p.what.r, owner: p.from.pid });
-        paid = Math.max(paid, r.last + r.d);
+        paid = Math.max(paid, r.last + r.d * (2 / 3));
       }
       const d = fly(card.from, card.to);
+      hand = Math.max(hand, paid + d * (2 / 3));
       at(s, { op: "card", uid: card.what.uid, to: card.to.pid, from: card.from, lift: MO.cardLift, wait: paid - s - MO.cardLift, dur: d });
       const landed = ends(paid + d);
       if (card.what.worth > 0) {
@@ -5251,7 +5256,7 @@ function planChain(before, state, { mine: mine2 = [], measure = null } = {}) {
     t = Math.max(t, cur);
   }
   const turnPasses = !!(state.pending && before.pending && state.pending.player !== before.pending.player);
-  return { atoms: atoms.sort((a, b) => a.at - b.at), total: end ? end + (turnPasses ? MO.breath : 0) : 0 };
+  return { atoms: atoms.sort((a, b) => a.at - b.at), total: end ? end + (turnPasses ? MO.breath : 0) : 0, handoff: end ? Math.round(Math.max(hand, t)) : 0, turnPasses };
 }
 
 // ../../../tmp/claude-0/-home-user-patrons/5ebe88de-0e49-593c-823a-8e25da0176c7/scratchpad/md/plan-entry.mjs
@@ -5284,10 +5289,9 @@ for (let g = 0; g < Number(gamesArg); g++) {
       continue;
     }
     const plan = planChain(s, next, { mine: [0] });
-    const FLOOR = Number(process.env.FLOOR ?? 600);
-    const ends = !(next.pending && next.pending.player === actor);
-    const floorHere = process.env.FLOORMODE === "end" ? ends ? FLOOR : 0 : FLOOR;
-    const ms = plan.total || (actor !== 0 ? floorHere : 0);
+    const sameNext = !!(next.pending && pend && next.pending.player === pend.player);
+    const PASS = { quick: 150, steady: 300, relaxed: 500 }[speed2];
+    const ms = process.env.OLD ? plan.total || (actor !== 0 ? 600 : 0) : plan.total ? sameNext ? plan.handoff ?? plan.total : plan.total : actor !== 0 ? sameNext ? 0 : PASS : 0;
     const kinds = [...new Set((next.effects || []).map((e) => e.cause && e.cause.kind))].join(",");
     chains.push({ ms, actor, kind: pend && pend.kind, kinds, atoms: plan.atoms.length });
     const ck = `${pend && pend.kind}`;
