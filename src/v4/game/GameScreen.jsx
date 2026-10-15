@@ -250,7 +250,7 @@ function Menu({ onRules, onLog, onLeave, getState }) {
           <button type="button" role="menuitem" className="btn ghost log-btn" onClick={pick(onLog)}>The log</button>
           <SpeedSetting />
           <button type="button" role="menuitem" className="btn ghost record-btn" data-copy-record onClick={copyRecord}
-            title="Copies this game, move by move, so a problem can be replayed exactly">{copied === 'copied' ? 'Copied ✓' : 'Copy game record'}</button>
+            title="Copies this game, move by move, so a problem can be replayed exactly">{copied === 'copied' ? 'Copied' : 'Copy game record'}</button>
           {copied && copied !== 'copied' && (
             <textarea className="record-text" readOnly value={copied} aria-label="Game record (copy it by hand)" onFocus={e => e.target.select()} autoFocus />
           )}

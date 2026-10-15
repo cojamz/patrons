@@ -189,9 +189,11 @@ export function Said({ text }) {
       if (!(prev && isNum(prev) && next && (PANEL_RES.has(next) || next === '@f'))) out.push(' ');
       return;
     }
+    // a number and its dot (or follower) are one unit, never split across a line (span.amt, lamp.css)
+    const mark = t === '@f' ? <Follower key={k} size={12} title="followers" /> : PANEL_RES.has(t) && prev && isNum(prev) ? <Pip key={k} color={t} /> : null;
     if (isNum(t)) out.push(<b key={k} className="n">{t}</b>);
-    else if (t === '@f') out.push(<Follower key={k} size={12} title="followers" />);
-    else if (PANEL_RES.has(t) && prev && isNum(prev)) out.push(<Pip key={k} color={t} />);
+    else if (mark && prev && isNum(prev) && out.length && out[out.length - 1] && out[out.length - 1].type === 'b') out.push(<span key={`a${k}`} className="amt">{out.pop()}{mark}</span>);
+    else if (mark) out.push(mark);
     else out.push(t);
     prev = t;
   });

@@ -202,7 +202,9 @@ export function slideShop(root, snap) {
     const r = el.getBoundingClientRect();
     const dx = s.rect.left - r.left, dy = s.rect.top - r.top;
     if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
-    el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: MO.shopSlide, easing: 'cubic-bezier(.3,.7,.4,1)' });
+    // a card staying in its row slides along it; one that changes rows fades in at its new cell (never crossing the grid)
+    if (Math.abs(dy) > 4) { el.animate([{ opacity: 0 }, { opacity: 0, offset: 0.33 }, { opacity: 1 }], { duration: 240, easing: 'ease-out' }); return; }
+    el.animate([{ transform: `translate(${dx}px,0)` }, { transform: 'none' }], { duration: MO.shopSlide, easing: 'cubic-bezier(.3,.7,.4,1)' });
   });
 }
 
@@ -260,23 +262,34 @@ export function pieceHtml(root, m) {
 export function holdStack(stackEl, from) {
   const b = stackEl && stackEl.querySelector('b.num');
   if (!b) return null;
-  let v = from, raf = 0, dead = false;
+  // v: where the number is going (what has landed); cur: what it shows. A roll moves cur toward v; an arrival mid-roll
+  // retargets it (never a jump); done() while rolling lets go only when the roll has finished
+  let v = from, cur = from, raf = 0, dead = false, rolling = false, ending = false, rate = 0;
   // a held number never shows below 0, whatever arrives out of order
-  const show = x => { b.dataset.hold = String(Math.max(0, x)); };
-  show(v);
+  const show = x => { b.dataset.hold = String(Math.max(0, Math.round(x))); };
+  const end = () => { dead = true; cancelAnimationFrame(raf); delete b.dataset.hold; };
+  show(cur);
+  let last = 0;
+  const tick = now => {
+    const dt = last ? Math.min(34, Math.max(0, now - last)) : 16;
+    last = now;
+    const d = v - cur;
+    cur = Math.abs(d) <= rate * dt ? v : cur + Math.sign(d) * rate * dt;
+    show(cur);
+    if (cur !== v) { raf = requestAnimationFrame(tick); return; }
+    rolling = false; last = 0;
+    if (ending) end();
+  };
   return {
-    step(by) { if (dead) return; cancelAnimationFrame(raf); v += by; show(v); },
-    /** a bundle lands: the number rolls from what it shows to v + by over ms */
+    step(by) { if (dead) return; v += by; if (!rolling) { cur = v; show(cur); } },
+    /** a bundle lands: the number rolls to v + by over ms (steps per ms), retargeted by whatever lands meanwhile */
     roll(by, ms) {
       if (dead) return;
-      cancelAnimationFrame(raf);
-      const from0 = v, to = v + by, t0 = performance.now();
-      v = to;
-      // (a frame's timestamp can be earlier than the call: k never goes below 0, or the number ran negative)
-      const tick = now => { const k = Math.max(0, Math.min(1, (now - t0) / Math.max(1, ms))); show(Math.round(from0 + (to - from0) * k)); if (k < 1) raf = requestAnimationFrame(tick); };
-      raf = requestAnimationFrame(tick);
+      v += by;
+      rate = Math.max(rate, Math.abs(v - cur) / Math.max(1, ms));
+      if (!rolling) { rolling = true; last = 0; raf = requestAnimationFrame(tick); }
     },
-    done() { dead = true; cancelAnimationFrame(raf); delete b.dataset.hold; },
+    done() { if (dead) return; if (rolling) ending = true; else end(); },
   };
 }
 export const bump = (el, down = false) => {

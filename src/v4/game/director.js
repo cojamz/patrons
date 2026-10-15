@@ -89,9 +89,13 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   let pulsed = null; // the space already lit by the selection
 
   // 1. the selection
-  const placed = sameRound ? Object.keys(state.slots).filter(k => before.slots[k] === undefined) : [];
-  for (const key of placed) {
-    const pid = state.slots[key];
+  const placed = sameRound ? Object.keys(state.slots).filter(k => before.slots[k] === undefined).map(k => [k, state.slots[k]]) : [];
+  // a minion joining a taken space (a squat) is a placement too
+  if (sameRound && state.squats) for (const k of Object.keys(state.squats)) {
+    const was = (before.squats && before.squats[k]) || [];
+    for (const pid of state.squats[k]) if (!was.includes(pid)) placed.push([k, pid]);
+  }
+  for (const [key, pid] of placed) {
     if (mine.includes(pid)) {
       at(0, { op: 'minion', pid, key, own: true, dur: MO.trail });
       at(0, { op: 'pulse', place: { kind: 'space', key }, dur: MO.ownStamp });
@@ -364,8 +368,10 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   };
   const release = el => { const n = (chain.pending.get(el) || 1) - 1; chain.pending.set(el, n); if (n <= 0) { const x = chain.holds.get(el); if (x && x.h) x.h.done(); chain.holds.delete(el); chain.pending.delete(el); } };
   chain.root = root;
-  // the first frame: the chain is on, and every stack it touches holds what it showed before
-  schedule(base, () => { root.dataset.chain = '1'; for (const [el, w] of toHold) holdOf(el, w.pid, w.r); });
+  // now (before this commit paints, after every read above): the chain is on, and every stack it touches holds what
+  // it showed before, so no number flashes its new value first
+  root.dataset.chain = '1';
+  for (const [el, w] of toHold) holdOf(el, w.pid, w.r);
   const land = (a, B, skip) => {
     if (a.to.kind === 'stack' && !a.pay && B) {
       const h = holdOf(B, a.to.pid, a.to.r);

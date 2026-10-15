@@ -14,6 +14,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, existsSync, readFileSync, renameSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { homedir } from 'node:os';
+import { answerChoice } from './lib/answer.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '';
 mkdirSync(SHOTS, { recursive: true });
@@ -99,32 +100,16 @@ async function stepFirstOption(page) {
   // touch (and online) placement asks to confirm: "Place here"
   const place = await page.$('[data-place]');
   if (place) { try { await place.click({ timeout: 1500 }); return true; } catch { /* fall through */ } }
-  // Every option on the page in one $$ and one evaluate (a getAttribute per handle was a round trip each: dozens per
-  // step, three pages per loop, and slow on a loaded box). The choice panel's (or dialog's) own options come first.
-  const els = await page.$$('[data-option]:not([disabled])');
-  const meta = els.length ? await page.evaluate(es => es.map(e => [e.getAttribute('data-option'), !!e.parentElement?.closest('.prompt.choice, [role="dialog"]')]), els).catch(() => []) : [];
-  // a pair is picked in two steps (boardPick.js comboStep, the trade picker): yours (@pick:x), then theirs, never back
-  const second = meta.some(m => m[0] === '@unpick');
-  const usable = i => { const id = meta[i]?.[0]; return !!id && !id.startsWith('toggle:') && id !== 'back' && id !== '@unpick' && !(second && id.startsWith('@pick:')); };
-  const inPanel = els.filter((_, i) => usable(i) && meta[i][1]);
-  const all = els.filter((_, i) => usable(i));
-  const cands = [...inPanel, ...all.filter(e => !inPanel.includes(e))];
-  if (!cands.length) return false;
+  // The answer a person would give (lib/answer.mjs: board picks, pairs, the pay sheet), the choice panel's (or
+  // dialog's) own answers first. A step whose last click changed nothing tries the next answer (skip), and when every
+  // real click is refused (usually a hover card left open under the pointer) the option is pressed directly: this e2e
+  // tests the online flow; the UI e2e test hit-testing.
+  if (!(await page.$('[data-option]:not([disabled])'))) return false;
   const key = await page.evaluate(() => `${document.querySelector('.app.game')?.dataset.moves}|${document.querySelector('[data-prompt]')?.textContent}`).catch(() => '');
   const st = stuck.get(page);
   const skip = st && st.key === key ? st.tries : 0;
   stuck.set(page, { key, tries: skip + 1 });
-  const order = cands.map((_, i) => cands[(i + skip) % cands.length]);
-  for (const el of order) {
-    try { await el.click({ timeout: 1500 }); return true; } catch { /* try the next */ }
-  }
-  // Everything refused a real click: usually a hover card left open under the pointer. This e2e tests the online flow
-  // (the UI e2e test hit-testing), so park the pointer and press the option directly.
-  await page.mouse.move(1, 1).catch(() => {});
-  for (const el of order) {
-    if (await el.evaluate(e => { if (!e.isConnected) return false; e.click(); return true; }).catch(() => false)) return true;
-  }
-  return false;
+  return !!(await answerChoice(page, { panelFirst: true, skip, domFallback: true }));
 }
 const moves = page => page.evaluate(() => { try { return JSON.parse(window.patronsRecord()).moves?.length ?? 0; } catch { return 0; } }).catch(() => 0);
 // plays every open page until `done()` (or the results), at most `ms`

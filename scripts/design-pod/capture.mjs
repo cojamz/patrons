@@ -65,7 +65,11 @@ async function restyle() {
   }, { strip, css: extraCss ? readFileSync(extraCss, 'utf8') : '' });
   await page.waitForTimeout(300);
 }
-const shot = async name => { await restyle(); await page.screenshot({ path: `${out}/${name}.png` }); console.log(`${out}/${name}.png`); };
+const boxes = bool('boxes');
+const shot = async name => {
+  await restyle(); await page.screenshot({ path: `${out}/${name}.png` }); console.log(`${out}/${name}.png`);
+  if (boxes) console.log(await page.evaluate(() => ['.lt > .lt-shop', '.lt-rates', '.lt-shop-main', '.lt-shop-head', '.lt-shop-body', '.lt-deck', '.lt-shop .lt-card:last-child', '.lt > .lt-prompt'].map(sel => { const e = document.querySelector(sel); if (!e) return `${sel}: none`; const b = e.getBoundingClientRect(); return `${sel} y${Math.round(b.top)}–${Math.round(b.bottom)} x${Math.round(b.left)} w${Math.round(b.width)}`; }).join('\n')));
+};
 const settle = (ms = 600) => page.waitForTimeout(ms);
 async function load(pack, tries = 3) {
   try { await load1(pack); } catch (e) { if (tries <= 1) throw e; await settle(1500); await load(pack, tries - 1); }

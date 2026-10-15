@@ -13,6 +13,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { richSave } from './lib/rich-save.mjs';
+import { answerChoice } from './lib/answer.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/layout';
 mkdirSync(SHOTS, { recursive: true });
@@ -95,9 +96,8 @@ for (const size of [{ width: 1270, height: 700 }, { width: 900, height: 700 }, {
     await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
     await page.waitForTimeout(300);
     for (let k = 0; k < 8 && !(await page.$('.lt[data-phase="buy"][data-yours="1"]')); k++) {
-      // a choice is answered where it's asked: a button, or on the board (a rival's seat or stack: pick-on-board)
-      const o = await page.$('.prompt.choice button[data-option]:not([disabled]), .lt-seat [data-option]:not(.pass)');
-      if (o) await o.click().catch(() => {});
+      // a choice is answered where it's asked: a button, or on the board (a rival's seat or stack: lib/answer.mjs)
+      await answerChoice(page);
       await page.waitForTimeout(250);
     }
     await page.waitForSelector('.lt[data-phase="buy"][data-yours="1"]', { timeout: 5000 });

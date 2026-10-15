@@ -71,8 +71,34 @@ export function Rich({ text }) {
     last = at + w.length;
   }
   if (last < text.length) out.push(text.slice(last));
-  // numbers are always heavy (the grammar): every standalone number in the text, never one inside a word ("P2", "4th")
-  return <>{out.flatMap((o, k) => (typeof o === 'string' ? o.split(NUM).map((t, i) => (i % 2 ? <span key={`n${k}.${i}`} className="rich-n">{t}</span> : t)) : [o]))}</>;
+  return <>{amounts(out)}</>;
+}
+
+/**
+ * A number and the dot or follower it counts are one unit ("+3●", "2👤"): tight, and never split across a line, with
+ * any punctuation right after it ("+3●,") kept on the same line (span.amt). Every other standalone number is heavy too
+ * (the grammar), never one inside a word ("P2", "4th").
+ */
+const AMOUNT_TAIL = /([+−-]?\d+)$/u;
+function amounts(out) {
+  const res = [];
+  const heavy = (str, k) => str.split(NUM).map((t, i) => (i % 2 ? <span key={`n${k}.${i}`} className="rich-n">{t}</span> : t));
+  for (let k = 0; k < out.length; k++) {
+    const o = out[k];
+    if (typeof o === 'string') { res.push(...heavy(o, k)); continue; }
+    const prev = res.length && typeof out[k - 1] === 'string' ? out[k - 1] : null;
+    const m = prev && prev.match(AMOUNT_TAIL);
+    if (!m) { res.push(o); continue; }
+    // take the number back off the text before it (it was pushed as that string's heavy parts)
+    const headParts = heavy(prev.slice(0, prev.length - m[1].length), `${k - 1}h`);
+    const n = heavy(prev, k - 1).length; // what heavy(prev) pushed
+    res.splice(res.length - n, n, ...headParts);
+    const next = typeof out[k + 1] === 'string' ? out[k + 1] : '';
+    const punct = (next.match(/^[,.;:!?)]+/) || [''])[0];
+    if (punct) out[k + 1] = next.slice(punct.length);
+    res.push(<span key={`a${k}`} className="amt"><span className="rich-n">{m[1]}</span>{o}{punct}</span>);
+  }
+  return res;
 }
 
 /** A cost as symbols: [{ color, n }] → "4 ● + 2 ◍", or "free". */

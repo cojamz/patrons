@@ -7,6 +7,7 @@
 // Server: $V4_URL (check:v4 sets it), else a vite dev server inside this process (dies with it).
 import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { answerChoice } from './lib/answer.mjs';
 
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/memory`;
 mkdirSync(SHOTS, { recursive: true });
@@ -70,21 +71,10 @@ try {
       await end.click().catch(() => {});
       continue;
     }
-    // ids, clicked by selector: some pickers re-create their buttons on every render, so a held handle goes stale
-    const ids = (await page.$$eval('[data-option]:not([disabled])', els => els.map(e => e.getAttribute('data-option'))).catch(() => [])).map(id => [id, id]);
-    // prefer recruiting (cults with members are the heavier screen), then followers; never back/undo
-    // (a member's on/off switch is a free toggle: flipping it forever would stall the game)
-    const rank = id => (/^(card|pay):/.test(id) ? 0 : /^tier:/.test(id) ? 1 : /^toggle:/.test(id) ? 8 : /^(back|undo|pass)/.test(id) ? 9 : 2);
-    ids.sort((x, y) => rank(x[1]) - rank(y[1]));
-    // a pair is picked in two steps (boardPick.js comboStep): yours (@pick:x), then theirs, never back and forth
-    const second = ids.some(([, id]) => id === '@unpick');
-    const pick = ids.find(([, id]) => !/^(back|undo)/.test(id) && id !== '@unpick' && !(second && id.startsWith('@pick:')));
-    if (!pick) { await page.waitForTimeout(40); }
-    else {
-      // a hover card can cover the target: then a plain DOM click on a fresh lookup
-      const sel = `[data-option="${pick[0]}"]:not([disabled])`;
-      await page.click(sel, { timeout: 1500 }).catch(() => page.$eval(sel, e => e.click()).catch(() => {}));
-    }
+    // prefer recruiting (cults with members are the heavier screen), then followers, Pass last; never back/undo or a
+    // member's on/off switch (a free toggle: flipping it forever would stall the game). lib/answer.mjs answers board
+    // picks, pairs and the pay sheet; a hover card over the target gets a plain DOM click.
+    await answerChoice(page, { prefer: [/^(card|pay):/, /^tier:/], last: [/^pass$/], avoid: [/^undo/], domFallback: true }).then(did => (did ? null : page.waitForTimeout(40)));
     const n = await moves();
     if (n !== lastMoves) { lastMoves = n; movedAt = Date.now(); }
     if (n >= next) { await sample(`move ${n}`); next = n - (n % EVERY) + EVERY; }

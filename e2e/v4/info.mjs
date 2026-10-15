@@ -34,6 +34,7 @@ import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { tickSave } from './lib/tick-save.mjs';
 import { richSave } from './lib/rich-save.mjs';
+import { answerChoice } from './lib/answer.mjs';
 
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/info`;
 mkdirSync(SHOTS, { recursive: true });
@@ -329,10 +330,8 @@ try {
         if (tops.order.length !== tops.seats || !tops.order.includes('now')) fail(`(l) turn-order places: ${JSON.stringify(tops.order)}`, step);
       }
     }
-    // a pair is picked in two steps (boardPick.js comboStep): yours (@pick:x), then theirs, never back and forth
-    const second = !!(await page.$('[data-option="@unpick"]'));
-    const opt = page.locator(`.slot.can, [data-option]:not([aria-disabled="true"]):not([data-option="@unpick"])${second ? ':not([data-option^="@pick:"])' : ''}`).first();
-    if (await opt.count()) { await opt.click({ timeout: 2000 }).catch(() => {}); }
+    // the first answer in page order, as a person would give it (lib/answer.mjs: board picks, pairs, the pay sheet)
+    await answerChoice(page, { timeout: 2000 });
     await page.waitForTimeout(80);
   }
   if (seen.size < 3) fail(`only reached ${[...seen].join(', ') || 'no'} steps`, 'play');
@@ -525,7 +524,8 @@ try {
     const sp = await pg.$('.slot.can .base');
     const bb = await sp.boundingBox();
     await pg.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
-    for (let k = 0; k < 8 && !(await pg.$('.lt[data-phase="buy"][data-yours="1"]')); k++) { const o = await pg.$('.prompt.choice button[data-option]:not([disabled])'); if (o) await o.click().catch(() => {}); await pg.waitForTimeout(250); }
+    // the space's question, answered where it's asked (Kickback: a rival's seat; lib/answer.mjs)
+    for (let k = 0; k < 8 && !(await pg.$('.lt[data-phase="buy"][data-yours="1"]')); k++) { await answerChoice(pg); await pg.waitForTimeout(250); }
     const uid = await pg.evaluate(() => { const s = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return s.shop.find(u => s.cards[u].def.startsWith('gold.') && s.cards[u].def !== 'gold.thrift'); });
     if (uid == null) fail('(q) no gold member in the shop to pay for', 'pay');
     else {
