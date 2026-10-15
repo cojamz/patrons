@@ -116,7 +116,7 @@ export function LeaderRing({ state, id, size = 32, minion = 16, compact = false,
   const left = Math.max(0, p.left || 0);
   const label = `${name}'s leader${left ? ` and ${left} minion${left === 1 ? '' : 's'} still to place` : ', every minion placed'}`;
   return (
-    <span className={`lt-ring${compact ? ' compact' : ''}`} style={{ width: W, height: H }} title={label} aria-label={label} role="img" data-leader-ring={id} data-left={left}>
+    <span className={`lt-ring${compact ? ' compact' : ''}`} style={{ width: W, height: H }} data-hint={label} aria-label={label} role="img" data-leader-ring={id} data-left={left}>
       <span className="lead" data-leader={id} style={{ left: cx - size / 2, top: cy - size / 2 }}>
         <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} />
       </span>

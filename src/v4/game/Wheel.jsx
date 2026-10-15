@@ -779,7 +779,6 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
         onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onPlaqueHover(qid, null); }}
         onClick={e => { e.stopPropagation(); if (moved.current) return; if (hover) hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget, { pinned: true }); }}
         onKeyDown={e => { if (hover && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget, { pinned: true }); } }}>
-        <title>{`${shortLabel(label)}: +${RING_VALUE[paying - 1]} followers at round end.${tieLine}${ruleLine} Show the standings.`}</title>
       </path>,
     );
   });

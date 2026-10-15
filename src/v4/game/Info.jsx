@@ -46,7 +46,7 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
       <As
         ref={ref} className={`tip${className ? ` ${className}` : ''}`} data-tip="" role={nested ? undefined : 'button'} tabIndex={nested ? undefined : 0}
         aria-haspopup={nested ? undefined : 'dialog'} aria-expanded={nested ? undefined : !!open} aria-label={label}
-        title={nested ? hint || label || undefined : undefined}
+        data-hint={nested ? hint || label || undefined : undefined}
         onPointerEnter={e => { if (!realHover(e)) return; clearTimeout(timer.current); timer.current = setTimeout(() => setOpen(o => o || { el: ref.current, pinned: false }), TIP_MS); }}
         onPointerLeave={e => { clearTimeout(timer.current); if (e.pointerType === 'mouse') { if (sticky) timer.current = setTimeout(letGo, 150); else letGo(); } }}
         onClick={pin}
@@ -263,12 +263,15 @@ export function TouchTips() {
     let timer = null, start = null, fired = false;
     const down = e => {
       if (e.pointerType !== 'touch') return;
-      const el = e.target.closest && e.target.closest('[title]');
-      if (!el || !el.getAttribute('title')) return;
+      // a title, or data-hint: the long-press words of something that has its own hover card on a desktop (a native
+      // tooltip there would sit on top of that card, saying it twice)
+      const el = e.target.closest && e.target.closest('[title], [data-hint]');
+      const say = el && (el.getAttribute('title') || el.getAttribute('data-hint'));
+      if (!say) return;
       start = { x: e.clientX, y: e.clientY };
       fired = false;
       clearTimeout(timer);
-      timer = setTimeout(() => { fired = true; setBubble({ text: el.getAttribute('title'), x: start.x, y: start.y, n: Date.now() }); }, 450);
+      timer = setTimeout(() => { fired = true; setBubble({ text: say, x: start.x, y: start.y, n: Date.now() }); }, 450);
     };
     const move = e => { if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 10) { clearTimeout(timer); start = null; } };
     const up = () => { clearTimeout(timer); start = null; };

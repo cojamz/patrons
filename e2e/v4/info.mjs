@@ -54,11 +54,12 @@ async function audit(page, step) {
     const vis = e => { const s = getComputedStyle(e); if (s.display === 'none' || s.visibility === 'hidden' || +s.opacity === 0) return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
     const explains = e => {
       if ((e.getAttribute('title') || '').trim()) return true;
+      if ((e.getAttribute('data-hint') || '').trim()) return true; // its words on long-press; its hover card on a desktop
       if (e.matches('[data-tip], [aria-haspopup]')) return true;
       if (e.querySelector(':scope > title')) return true; // an SVG symbol with its own <title>
       if (e.matches('.slot')) return true; // the board's space card (checked by hovering below)
       // a symbol inside something that explains itself (a pip in a titled cost) is covered by its parent
-      const up = e.parentElement && e.parentElement.closest('[title], [data-tip], [aria-haspopup]');
+      const up = e.parentElement && e.parentElement.closest('[title], [data-hint], [data-tip], [aria-haspopup]');
       return !!(up && up.contains(e) && e.matches('.pip, .res-glyph, .follower, .fol-mark'));
     };
     const miss = [];
