@@ -1,6 +1,6 @@
 # In flight
 
-Updated 2026-10-14 ~21:40 UTC. Agents never commit; the foreman verifies and checkpoints. Each agent runs check:v4 on its own `V4_OUTDIR`/`V4_PORT` (build dirs seen on disk are noted). If a session dies, relaunch each workstream from its brief below and tell it to read `git log` first. Done items are ticked in design/todo.md.
+Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source after dist/ was untracked (d7bdd3e, 01:24). Agents never commit; the foreman verifies and checkpoints. Each agent runs check:v4 on its own `V4_OUTDIR`/`V4_PORT` (build dirs seen on disk are noted). If a session dies, relaunch each workstream from its brief below and tell it to read `git log` first. Done items are ticked in design/todo.md.
 
 ## Current roster
 1. **UI-A: wheel, shell, pay, the Reckoning.** Done: frozen verdict on 8f4d76e green on every gate but touch (out of v0.2). Engraved behind ?spaces=engraved (default stays sockets until Cory picks). Was: Brief: design/prototypes/vision/build-plan.md (Split: UI-A; Making it clear; Layout revision). Owns `lamp.css`, the GameScreen shell, `Wheel.jsx`, `PayPicker.jsx`, `RoundEnd.jsx` and the phone layout. Now: the layout revision (the wheel centred and bigger, a cult at each corner, minions on a space's rim so its text stays readable, "minion" in the prompt), then the animated Reckoning. Build dir `.v4-build-ui` (port 5282).
