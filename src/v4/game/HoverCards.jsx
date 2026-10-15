@@ -409,7 +409,8 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
           : pv.swept.map((u, k) => <span key={u} data-swept={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}<small className="lt-swept-note"> back under the deck</small></Row> : null}
         {/* on a desktop the shop's own cards say it ("after Kickback" on each): only a pinned sheet (touch) lists them */}
         {unlocks.length && pinned ? <Row k="Then affordable">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
-        {owner !== undefined && <Row k="Taken">{owner === viewer ? 'You' : state.players[owner].name}{fresh ? ', since your last turn' : ''}{opt ? ' — you can join it' : ''}</Row>}
+        {/* a second minion on it says why (w4 skeptic #13: two minions on one space, no reason): Squatter's join */}
+        {owner !== undefined && <Row k="Taken">{owner === viewer ? 'You' : state.players[owner].name}{fresh ? ', since your last turn' : ''}{((state.squats && state.squats[spaceKey]) || []).map(j => `; ${j === viewer ? 'you' : state.players[j].name} joined (Squatter)`).join('')}{opt ? ' — you can join it' : ''}</Row>}
         {/* a value that grows by round: its run is the rule sentence's ("+2● in round I, +4 in round II…"), said once
             (w3b #12: a "By round" row beside "per round number" was two descriptions of one thing); the panel prints this
             round's number and "more each round" */}

@@ -167,17 +167,25 @@ export function CostDots({ parts }) {
  * What a member costs p while a discount applies (Intro Offer's "next member costs 4 less", Sponsor's 2 off…), as cost
  * parts ([] = free), or null at its list price. The engine's own price rule (memberPrice); the shop face shows it.
  */
+// how: a space's own price rule while it asks which member (Half Price: half, in any colors), so the faces show it
+// (w4 A#42: with Half Price up, the shop still showed list prices)
+export function recruitHow(state, pid) {
+  const pend = state.pending;
+  if (!pend || pend.kind !== 'choose' || pend.player !== pid) return null;
+  const m = String(pend.prompt || '').match(/^(Half Price|Snap Up): recruit which member\?$/);
+  return m ? (m[1] === 'Half Price' ? { anyColors: true, half: true } : { anyColors: true }) : null;
+}
 export function paidParts(state, p, uid, d = cardDef(state, uid)) {
   if (!p || state.over) return null;
   let pr;
-  try { pr = memberPrice(state, p, uid); } catch { return null; }
+  try { pr = memberPrice(state, p, uid, recruitHow(state, p.id) || {}); } catch { return null; }
   if (pr.total >= d.s + d.w) return null;
   const any = pr.total - pr.colored;
   return [...(pr.color && pr.colored ? [{ color: pr.color, n: pr.colored }] : []), ...(any > 0 ? [{ color: 'any', n: any }] : [])];
 }
 /** Why p pays less: "your next member costs 4 less", "Sponsor takes 2 off". */
 const upFirst = t => (t ? t[0].toUpperCase() + t.slice(1) : t);
-const discountWhy = (state, p) => [
+export const discountWhy = (state, p) => [
   ...(p.discount ? [`your next member costs ${p.discount} less`] : []),
   ...p.members.map(u => { try { return cardDef(state, u); } catch { return null; } }).filter(x => x && x.costReduction).map(x => `${x.name} takes ${x.costReduction} off`),
 ].join(', ');
@@ -224,7 +232,8 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
       {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used && !state.over ? ' · used' : ''}</small>}
       {/* the cost and nothing else about paying (Cory, 03:40: cut "You pay"); a discount on you says only why the face's
           price is struck ("Your next member costs 4 less.") */}
-      {paid && <small className="mc-live" data-discount>{upFirst(discountWhy(state, state.players[me]))}.</small>}
+      {/* the shop's header says a discount once; a face beside its hover shows the price (w4 A#23: the sentence on all 10) */}
+      {paid && !onFace && discountWhy(state, state.players[me]) && <small className="mc-live" data-discount>{upFirst(discountWhy(state, state.players[me]))}.</small>}
       {short ? <small className="mc-live" data-short={short.short.total}>You’re short {shortDots(state, short)} to recruit it.</small>
         : where === 'In the pile' && <small className="mc-live">{where}</small>}
     </div>
