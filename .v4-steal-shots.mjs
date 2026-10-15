@@ -5,10 +5,10 @@ import { mkdirSync } from 'node:fs';
 import { stealSave } from './e2e/v4/lib/steal-save.mjs';
 const tag = process.argv[2] || 'before';
 const spaces = process.argv.slice(3).length ? process.argv.slice(3) : ['help', 'redistribute', 'lielow', 'debts'];
-const port = 5377, base = `http://localhost:${port}`;
-const server = spawn('npx', ['vite', '--port', String(port), '--strictPort'], { stdio: 'pipe', cwd: '/home/user/patrons' });
+const port = 5377, base = `http://127.0.0.1:${port}`;
+const server = { kill() {} }; // the dev server runs on its own (scratchpad/vite5377.pid)
 let up = false;
-for (let k = 0; k < 60 && !up; k++) { await new Promise(r => setTimeout(r, 500)); up = await fetch(base).then(r => r.ok, () => false); }
+for (let k = 0; k < 120 && !up; k++) { await new Promise(r => setTimeout(r, 500)); up = await fetch(base).then(r => r.ok, () => false); }
 if (!up) { server.kill(); console.error('vite did not start'); process.exit(1); }
 const out = '/home/user/patrons/design/eval/rc2-ui';
 mkdirSync(out, { recursive: true });
@@ -19,12 +19,12 @@ try {
     const ctx = await browser.newContext(phone ? { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 } : { viewport: { width: 1270, height: 700 } });
     const page = await ctx.newPage();
     page.on('pageerror', e => console.log('pageerror', e.message));
-    await page.goto(`${base}/?intro=0`);
+    console.log(sp, 'goto'); await page.goto(`${base}/?intro=0`, { timeout: 90000 });
     await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), stealSave(sp));
-    await page.reload();
-    await page.waitForSelector('[data-home="resume"]', { timeout: 20000 });
+    await page.reload({ timeout: 90000 }); console.log(sp, 'reloaded');
+    await page.waitForSelector('[data-home="resume"]', { timeout: 60000 });
     await page.click('[data-home="resume"]');
-    await page.waitForSelector('.prompt.choice', { timeout: 20000 });
+    await page.waitForSelector('.prompt.choice', { timeout: 60000 }).catch(async e => { await page.screenshot({ path: '/tmp/claude-0/-home-user-patrons/5ebe88de-0e49-593c-823a-8e25da0176c7/scratchpad/stuck.png' }); throw e; });
     await page.waitForTimeout(900);
     await page.mouse.move(2, 2);
     const f = `${out}/steal-${sp}-${tag}${phone ? '-phone' : ''}.png`;

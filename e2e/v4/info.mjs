@@ -19,12 +19,19 @@
 //      setup picker's labels read on its paper (contrast ≥ 4.5);
 //  (l) who's winning and who's next: a ranked line of every player under the prompt, and each cult's place in the
 //      turn order;
-//  (m) on a laptop the hover card docks in one spot that never overlaps the wheel, the shop or your seat;
+//  (m) the hover card opens right next to what it explains (Cory, 2026-10-15: never a docked spot elsewhere): whole
+//      on screen, at the page's top level above every strip, beside or above its target and not over it;
+//  (o) the rim: pointing at a quadrant's rule or a leader's emoji opens that quadrant's standings, never a space;
+//  (p) a space's card lists every player in its contest line (the 4th never drops off);
+//  (q) every shop card and every member in every chair opens its card, whole on screen and on top (Kingpin had
+//      none; bottom-seat member cards ran under the shop strip); the pay dialog takes focus (Enter pays) and names
+//      each rule-changer bending the price (Penny Pincher, a discount);
 //  (n) you are "You": the round summary and the Chronicle never use your seat's name; the summary has no text under 12px.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { tickSave } from './lib/tick-save.mjs';
+import { richSave } from './lib/rich-save.mjs';
 
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/info`;
 mkdirSync(SHOTS, { recursive: true });
@@ -98,18 +105,52 @@ async function audit(page, step) {
 }
 
 // (h) the deck's number against the engine: read the screen and the saved game in one go, when both show the same move
-// (m) the open hover card is docked and clear of the wheel, the shop and your seat
-async function dockCheck(page, what, step) {
-  const r = await page.evaluate(() => {
+// (m) the open hover card sits next to its target (a selector, or a rect), whole on screen, above every strip
+async function anchorCheck(page, what, step, target) {
+  const r = await page.evaluate(sel => {
     const L = document.querySelector('[data-hover-layer][data-open="1"]');
+    const T = typeof sel === 'string' ? document.querySelector(sel) : null;
     if (!L) return null;
-    const a = L.getBoundingClientRect();
-    const hit = sel => { const e = document.querySelector(sel); if (!e) return 0; const b = e.getBoundingClientRect(); const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top); return w > 1 && h > 1 ? Math.round(w * h) : 0; };
-    return { dock: L.dataset.dock || null, wheel: hit('.lt > [data-region="wheel"]'), shop: hit('.lt > [data-region="shop"]'), seat: hit('.lt > .lt-seat-0') };
-  });
+    const a = L.getBoundingClientRect(), t = T ? T.getBoundingClientRect() : sel;
+    const ow = Math.min(a.right, t.right ?? t.x + t.width) - Math.max(a.left, t.left ?? t.x), oh = Math.min(a.bottom, t.bottom ?? t.y + t.height) - Math.max(a.top, t.top ?? t.y);
+    const tl = t.left ?? t.x, tt = t.top ?? t.y, tr = t.right ?? t.x + t.width, tb = t.bottom ?? t.y + t.height;
+    return {
+      inView: a.left >= 0 && a.top >= 0 && a.right <= innerWidth + 0.5 && a.bottom <= innerHeight + 0.5,
+      over: ow > 1 && oh > 1 ? Math.round(ow * oh) : 0, area: Math.round((tr - tl) * (tb - tt)),
+      gap: Math.round(Math.max(tl - a.right, a.left - tr, tt - a.bottom, a.top - tb, 0)),
+      top: L.parentElement === document.body && Number(getComputedStyle(L).zIndex) >= 35,
+    };
+  }, target);
   if (!r) { fail(`(m) hovering ${what} opened no hover card`, step); return; }
-  if (!r.dock) fail(`(m) the hover card for ${what} isn't docked`, step);
-  for (const k of ['wheel', 'shop', 'seat']) if (r[k]) fail(`(m) the hover card for ${what} overlaps the ${k === 'seat' ? 'your seat' : k} (${r[k]}px²)`, step);
+  if (!r.inView) fail(`(m) the hover card for ${what} runs off the window`, step);
+  if (r.over > r.area * 0.2) fail(`(m) the hover card for ${what} covers it (${r.over}px² of ${r.area})`, step);
+  if (r.gap > 24) fail(`(m) the hover card for ${what} opens ${r.gap}px away from it, not next to it`, step);
+  if (!r.top) fail(`(m) the hover card for ${what} isn't drawn above the table's strips`, step);
+}
+
+// (o) every rim label (its first, middle and last letter) and every leader's emoji opens its quadrant's standings
+async function rimCheck(page, step) {
+  const pts = await page.evaluate(() => {
+    const out = [];
+    const scr = (el, x, y) => { const m = el.getScreenCTM(); return { x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f }; };
+    for (const t of document.querySelectorAll('[data-rim-text]')) {
+      const n = t.getNumberOfChars();
+      for (const i of [0, Math.floor(n / 2), n - 1]) { const r = t.getExtentOfChar(i); out.push({ what: `the ${t.dataset.plaque} rule (letter ${i})`, qid: t.dataset.plaque, ...scr(t, r.x + r.width / 2, r.y + r.height / 2) }); }
+    }
+    for (const g of document.querySelectorAll('[data-rim-leader]')) { const b = g.getBBox(); const t = g.parentNode.querySelector(`[data-rim-text]`); out.push({ what: `a leader's emoji (${g.dataset.rimLeader})`, qid: null, ...scr(g, b.x + b.width / 2, b.y + b.height / 2) }); void t; }
+    return out;
+  });
+  if (pts.length < 8) fail(`(o) found only ${pts.length} rim points to check`, step);
+  for (const p of pts) {
+    const top = await page.evaluate(({ x, y }) => { const e = document.elementFromPoint(x, y); return e && e.closest('[data-rim]') ? e.closest('[data-rim]').dataset.rim : e ? `${e.tagName.toLowerCase()}.${String(e.className.baseVal ?? e.className).split(' ')[0]}` : null; }, p);
+    if (p.qid && top !== p.qid) { fail(`(o) pointing at ${p.what} reaches ${top}, not its standings`, step); continue; }
+    if (!p.qid && !/^[a-z]+$/.test(top || '')) { fail(`(o) pointing at ${p.what} reaches ${top}, not the standings`, step); continue; }
+    await page.mouse.move(4, 690); await page.waitForTimeout(200);
+    await page.mouse.move(p.x, p.y); await page.waitForTimeout(150);
+    const kind = await page.evaluate(() => { const c = document.querySelector('[data-hover-layer][data-open="1"] [data-hover-card]'); return c ? c.dataset.hoverCard : null; });
+    if (kind !== 'plaque') fail(`(o) hovering ${p.what} opened ${kind || 'nothing'}, not the standings`, step);
+  }
+  await page.mouse.move(4, 690); await page.waitForTimeout(200);
 }
 
 async function deckCheck(page) {
@@ -207,7 +248,22 @@ try {
         await slot.hover();
         await page.waitForTimeout(500);
         if (!(await page.locator('.peek, [data-hover-card="space"], [data-space-card]').count())) fail('(b) hovering a space shows no card', step);
-        await dockCheck(page, 'a space', step);
+        await anchorCheck(page, 'a space', step, await slot.evaluate(e => e.getBoundingClientRect().toJSON()));
+        // (p) the space's contest line names every player
+        {
+          const names = await page.evaluate(() => { try { const st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return st.players.map((p, i) => (i === 0 ? 'You' : p.name)); } catch { return null; } });
+          let line = null;
+          const lit = page.locator('.slot.can');
+          for (let k = 0; k < Math.min(6, await lit.count()) && !line; k++) {
+            await page.mouse.move(4, 690); await page.waitForTimeout(160);
+            await lit.nth(k).hover(); await page.waitForTimeout(700);
+            line = await page.evaluate(ns => [...document.querySelectorAll('[data-hover-layer] .lt-yd-row .v')].map(e => e.textContent).find(t => ns.filter(n => new RegExp(`(^|· )${n} \\d`).test(t)).length >= 2) || null, names);
+          }
+          if (!names) fail('(p) no saved game to read the players from', step);
+          else if (!line) fail('(p) no space card showed its contest line', step);
+          else { const missing = names.filter(n => !new RegExp(`(^|· )${n} \\d`).test(line)); if (missing.length) fail(`(p) a space's contest line leaves out ${missing.join(', ')}: "${line}"`, step); }
+        }
+        await rimCheck(page, step);
         await page.screenshot({ path: `${SHOTS}/02b-hover-space.png` });
         await page.mouse.move(5, 5);
         const card = page.locator('[data-region] [data-uid]').first();
@@ -216,7 +272,7 @@ try {
           await page.waitForTimeout(600);
           const shown = await page.evaluate(() => [...document.querySelectorAll('.popover, [data-hover-card]')].some(e => e.getBoundingClientRect().width > 0) || !!document.querySelector('.card-face'));
           if (!shown) fail('(b) hovering a shop card shows no card', step);
-          await dockCheck(page, 'a shop card', step);
+          await anchorCheck(page, 'a shop card', step, await card.evaluate(e => e.getBoundingClientRect().toJSON()));
           await page.screenshot({ path: `${SHOTS}/02c-hover-card.png` });
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
@@ -237,14 +293,14 @@ try {
           });
           if (!dc) fail('(h) hovering the deck shows no card', step);
           else if (dc.card !== dc.left || dc.sum !== dc.left || !dc.colorless || !dc.bottom) fail(`(h) deck card: ${dc.card} left, colors add to ${dc.sum}, the deck shows ${dc.left}${dc.colorless ? '' : ', no colorless count'}${dc.bottom ? '' : ', no word on where released members go'}`, step);
-          await dockCheck(page, 'the deck', step);
+          await anchorCheck(page, 'the deck', step, '[data-deck]');
           await page.screenshot({ path: `${SHOTS}/02d-hover-deck.png` });
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
         }
-        // (m) your own seat's card docks clear of your seat; (l) the ranked line and the turn-order places
+        // (m) your own seat's card opens beside it; (l) the ranked line and the turn-order places
         const head = page.locator('.lt > .lt-seat-0 .cs-head').first();
-        if (await head.count()) { await head.hover(); await page.waitForTimeout(300); await dockCheck(page, 'your seat', step); await page.mouse.move(5, 5); await page.waitForTimeout(200); }
+        if (await head.count()) { await head.hover(); await page.waitForTimeout(300); await anchorCheck(page, 'your seat', step, await head.evaluate(e => e.getBoundingClientRect().toJSON())); await page.mouse.move(5, 5); await page.waitForTimeout(200); }
         const tops = await page.evaluate(() => ({ seats: document.querySelectorAll('.lt > .lt-seat [data-cult]').length, rank: [...document.querySelectorAll('[data-rank] .rk')].map(e => e.textContent.trim()), order: [...document.querySelectorAll('.lt > .lt-seat .cs-order')].map(e => e.dataset.order) }));
         if (tops.rank.length !== tops.seats) fail(`(l) the ranked line shows ${tops.rank.length} players for ${tops.seats} cults`, step);
         if (tops.order.length !== tops.seats || !tops.order.includes('now')) fail(`(l) turn-order places: ${JSON.stringify(tops.order)}`, step);
