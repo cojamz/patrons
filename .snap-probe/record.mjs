@@ -45,7 +45,7 @@ async function clip(name, save, act) {
   const src = join(vdir, webm);
   // the clip: from 1.2s before the first action (the page's load trimmed) to the end
   const dur = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', src]).toString().trim();
-  const start = Math.max(0, Number(dur) - ms / 1000 - 0.6);
+  const start = 0; void dur; // a loaded box records fewer seconds than it plays: keep the whole clip
   const mp4 = join(OUT, `${name}-${tag}.mp4`), gif = join(OUT, `${name}-${tag}.gif`);
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', String(start), '-i', src, '-vf', 'scale=1270:-2:flags=neighbor', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', mp4]);
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', String(start), '-i', src, '-vf', 'fps=15,scale=960:-1:flags=neighbor,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=none', '-loop', '0', gif]);
