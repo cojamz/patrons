@@ -194,6 +194,9 @@
 /* (ring I only: the inner rings' panels are too shallow for a minion above two lines, spaces.mjs s9) */
 .lt [data-spaces="panels"] .stage .slot.r1.taken:not(.lit):not([data-panel^="1.0.0"]) .face .worker-fig{top:0;transform:translate(-50%,calc(-100% + 2px))}
 .lt [data-spaces="panels"] .stage .slot.r1.taken:not(.lit):not([data-panel^="1.0.0"]) .face .worker-fig svg{height:16px}
+/* the inner rings (w3b #30: "Free recruit" and "Any member, free" sat under their minion's middle): the minion stands
+   over the panel's last line, as Cory placed it ("over line 2"), so the first words still read above it */
+.lt [data-spaces="panels"] .stage .slot.taken:is(.r2,.r3):not(.lit):not([data-panel^="1.0.0"]) .face .worker-fig{top:auto;bottom:-3px;transform:translate(-50%,0)}
 /* a steal that pays the thief's Robin Hood on this seat: its second row says so in the lamp's ink */
 .lt > .lt-seat .cs-bonus,.lt > .lt-seat .cs-bonus small{color:var(--lamp-ink)}
 .lt > .lt-seat .cs-bonus .cs-inc{display:inline-flex;align-items:center;gap:4px}
@@ -270,4 +273,9 @@
    as a disabled panel); the label counts what you can afford only when there is something ("0 you can afford" said what
    the fade already says) */
 .lt-shop .lt-card.dim{opacity:.74;filter:saturate(.72)}
+
+/* a miss beside a chair's lit picks: they pulse once (CultSeat .pick-nudge) */
+.lt-cult-seat.pick-nudge .cs-stack.pick-on,.lt-cult-seat.pick-nudge .cs-member.pick-on{animation:pick-nudge .6s ease-out}
+@keyframes pick-nudge{0%{transform:none}35%{transform:scale(1.18);box-shadow:0 0 0 2px #fffaf0,0 0 18px 6px rgba(var(--lamp),.9)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){ .lt-cult-seat.pick-nudge .cs-stack.pick-on,.lt-cult-seat.pick-nudge .cs-member.pick-on{animation:none;box-shadow:0 0 0 2px #fffaf0,0 0 18px 6px rgba(var(--lamp),.9)} }
 

@@ -11,8 +11,14 @@
 /* the head: the hover card's own (lamp-b.css .mc); a follower buy shows the follower mark in the picture box */
 .pay-card .pay-id{padding-bottom:16px;border-bottom:1px solid var(--hair-ink,rgba(43,32,24,.12))}
 .pay-card .pay-id h2.mc-name{margin:0;font-family:var(--sans)}
-.pay-card .pay-id .mc-art.fol .follower-mark{width:27px;height:27px}
-.pay-card .pay-id .mc-art.fol{background:color-mix(in srgb,var(--pl-ink,#2b2018) 7%,var(--pl-paper,#f2e8d2));color:var(--pl-ink,#2b2018)}
+/* followers: a small crowd on the paper (the front one whole, two behind it, fainter), no grey box (w3a #50) */
+.pay-card .pay-id .mc-art.fol{background:none;color:var(--pl-ink,#2b2018)}
+.pay-card .fol-crowd{position:relative;display:block;width:48px;height:48px}
+.pay-card .fol-crowd .follower-mark{position:absolute;top:3px;width:18px;height:18px;opacity:.5}
+.pay-card .fol-crowd .follower-mark:first-child{top:auto;bottom:1px;left:50%;transform:translateX(-50%);z-index:1;width:27px;height:27px;opacity:1}
+.pay-card .fol-crowd .follower-mark:nth-child(2){left:3px}
+.pay-card .fol-crowd .follower-mark:nth-child(3){right:3px}
+.pay-card .fol-crowd[data-n="1"] .follower-mark:first-child{bottom:10px}
 
 /* your resources: a stack of dots per color, bottoms on one line. The coins that pay are lifted off the top and
    faded (they still read as their color); the number under a stack is what you keep. The stack is one button (pay

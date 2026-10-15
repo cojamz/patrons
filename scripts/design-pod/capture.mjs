@@ -77,9 +77,10 @@ async function restyle() {
   }, { strip, css: extraCss ? readFileSync(extraCss, 'utf8') : '' });
   await page.waitForTimeout(300);
 }
-const boxes = bool('boxes'), probe = bool('probe');
+const boxes = bool('boxes'), probe = bool('probe'), js = flag('js', '');
 const shot = async name => {
   await restyle(); await page.screenshot({ path: `${out}/${name}.png` }); console.log(`${out}/${name}.png`);
+  if (js) console.log(name, JSON.stringify(await page.evaluate(js).catch(e => String(e))));
   if (probe) console.log(name, JSON.stringify(await page.evaluate(() => {
     const sec = document.querySelector('.lt > .lt-since'), l = sec && sec.querySelector('.since-list');
     if (!l) return null;

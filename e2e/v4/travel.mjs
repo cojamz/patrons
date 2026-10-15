@@ -101,17 +101,18 @@ async function check(kind, label) {
         await page.evaluate(() => { window.__fl = []; window.__clickAt = window.__t(); });
         await page.evaluate(([to, want]) => {
           window.__landed = null;
-          const seat = document.querySelector(`.lt-cult-seat[data-seat="${to.pid}"]`);
+          // (the seat is found fresh each time: seats re-order, and React may replace one)
+          const seatOf = () => document.querySelector(`.lt-cult-seat[data-seat="${to.pid}"]`) || document.createElement('div');
           // a gain lands when the number first rises above what it showed before the click (a bot may spend it again
           // at once, so its final value can come and go between two frames)
-          const shown = () => { const b = seat.querySelector(`.cs-stack[data-res="${to.r}"] b.num`); return b ? Number(b.dataset.hold ?? b.textContent.trim()) : NaN; };
+          const shown = () => { const b = seatOf().querySelector(`.cs-stack[data-res="${to.r}"] b.num`); return b ? Number(b.dataset.hold ?? b.textContent.trim()) : NaN; };
           const was = to.kind === 'member' ? null : shown();
           const look = () => {
             if (window.__landed != null) return;
-            if (to.kind === 'member') { const c = seat.querySelector(`.cs-member[data-uids~="${to.uid}"]`); if (c && getComputedStyle(c).opacity === '1') window.__landed = window.__t(); return; }
+            if (to.kind === 'member') { const c = seatOf().querySelector(`.cs-member[data-uids~="${to.uid}"]`); if (c && getComputedStyle(c).opacity === '1') window.__landed = window.__t(); return; }
             if (shown() > was) window.__landed = window.__t();
           };
-          new MutationObserver(look).observe(seat, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['data-hold'] });
+          new MutationObserver(look).observe(document.querySelector('.app.game') || document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['data-hold'] });
           const raf = () => { look(); if (window.__landed == null) requestAnimationFrame(raf); };
           requestAnimationFrame(raf);
         }, [to, want]);

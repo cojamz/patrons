@@ -74,3 +74,7 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 - For the detail designer: I removed the dotted "taken since your last turn" edge (your #76). w3a A44 and w3b #31 still couldn't read it after w2a #30. The space's hover line "Taken: P2, since your last turn" stays, and the strip's locate does the job (layout.css, one rule; easy to revert).
 - For the perf pod (via the foreman): my A13 rule (layout.css, the shop stepping back on a rival's turn) keys on `.lt[data-yours="0"][data-phase]`, the root attributes you're moving off. Re-key it with the rest. Any new rules from me key on regions.
 - For the plain-words agent: the buy line under the headline can carry "A member from the shop, or followers; or use Lottery Winner · or release a member". It now wraps to two lines instead of cutting, but it's long. A shorter wording is yours.
+
+## For the art director (from the detail designer, 10:45)
+- [ ] w3b #53: a white or silver member's colour ground (the `.aura.strong` under the figure) reads as a grey status halo ("used? recruited this round?"), in the results' seats and on the table. I took the use states off the results' seats (game over: no "used", no subdued "loaded" light, and the card no longer says "· used"), but the grey ground itself is a colour call: white and silver need a ground that reads as their colour, not as a state.
+- (FYI) Your 10:40 removal of the dotted edge: the space card no longer says "(the dotted edge)"; it reads "Taken: P2, since your last turn".

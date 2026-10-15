@@ -15,10 +15,14 @@ if (typeof addEventListener === 'function') {
 
 export const AIM_MS = 700; // how long the pointer may rest on the way (outside the card) before the card lets go
 const PAD = 12;
+// right after leaving, the way may wander (w3b #47: down out of the member first, then over to its card): for this long
+// the card holds whatever route is taken, and the way is then measured from wherever the pointer has got to
+const GRACE_MS = 300;
 
 /** The pointer just left toward `el` (the open card), from `from` (default: its last spot inside what it left). */
 export function aimAt(el, from = prev || pt) {
-  if (el && from) aim = { el, x: from.x, y: from.y, until: (typeof performance !== 'undefined' ? performance.now() : Date.now()) + AIM_MS };
+  const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  if (el && from) aim = { el, x: from.x, y: from.y, until: now + AIM_MS, grace: now + GRACE_MS };
 }
 /** The pointer reached the card (or the card closed): the crossing is over. */
 export function arrived(el = null) { if (!el || (aim && aim.el === el)) aim = null; }
@@ -44,18 +48,18 @@ export function heading(p = pt) {
   // they often stand over a neighbour's name)
   const r = controlsRect(aim.el);
   if (!r) return false;
+  if (now < aim.grace) { aim.x = p.x; aim.y = p.y; return true; }
   if (p.x >= r.left - PAD && p.x <= r.right + PAD && p.y >= r.top - PAD && p.y <= r.bottom + PAD) return true;
   if (Math.hypot(p.x - aim.x, p.y - aim.y) <= PAD) return true; // still where it left
-  // the card's near edge, as seen from where the pointer left (widened a little)
+  // the hull of where the pointer left and the buttons' box (widened a little): every straight way there, whichever
+  // edge it comes in by (from above-left, a path enters the box through its top as well as its left side)
   const from = { x: aim.x, y: aim.y };
-  let a, b;
-  if (from.x <= r.left) { a = { x: r.left, y: r.top - PAD }; b = { x: r.left, y: r.bottom + PAD }; }
-  else if (from.x >= r.right) { a = { x: r.right, y: r.top - PAD }; b = { x: r.right, y: r.bottom + PAD }; }
-  else if (from.y <= r.top) { a = { x: r.left - PAD, y: r.top }; b = { x: r.right + PAD, y: r.top }; }
-  else { a = { x: r.left - PAD, y: r.bottom }; b = { x: r.right + PAD, y: r.bottom }; }
+  const L = r.left - PAD, T = r.top - PAD, R = r.right + PAD, B = r.bottom + PAD;
+  const corners = [{ x: L, y: T }, { x: R, y: T }, { x: R, y: B }, { x: L, y: B }];
   // a few px of slack behind the start, so a slightly backward first step still counts
-  const back = { x: from.x - Math.sign(a.x + b.x - 2 * from.x) * PAD, y: from.y - Math.sign(a.y + b.y - 2 * from.y) * PAD };
-  const on = inTriangle(p, back, a, b);
+  const cx = (L + R) / 2, cy = (T + B) / 2, d = Math.hypot(cx - from.x, cy - from.y) || 1;
+  const back = { x: from.x - ((cx - from.x) / d) * PAD, y: from.y - ((cy - from.y) / d) * PAD };
+  const on = corners.some((c, n) => inTriangle(p, back, c, corners[(n + 1) % 4]));
   // still making its way there: the clock runs from the last step, so a slow hand (or a busy machine) isn't cut off;
   // a pointer resting on the way lets go after AIM_MS
   if (on && (aim.lx !== p.x || aim.ly !== p.y)) { aim.until = now + AIM_MS; aim.lx = p.x; aim.ly = p.y; }

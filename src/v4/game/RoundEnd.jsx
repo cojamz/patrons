@@ -56,9 +56,10 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
         <div className={`re-body${more ? ' more' : ''}`} ref={body}>
         {/* the last round: the end-game bonuses lead, so the lines that can decide a close game are never below the fold
             (RC1 panel: "More below ↓" hid them in a one-point game) */}
-        {after.over && (
+        {/* …and with none, a quiet line at the foot says the totals are final (w3a #49: "none this game" led the summary) */}
+        {after.over && finalParts.length > 0 && (
           <p className="re-next re-final" data-final-bonuses={finalParts.length}>
-            <b>End-game bonuses</b>{finalParts.length ? ', still to add to these totals: ' : ': none this game.'}
+            <b>End-game bonuses</b>, still to add to these totals:{' '}
             {finalParts.map((p, k) => <span key={p.id} data-final-bonus={p.id}>{k ? ' · ' : ''}<b>{name(p.id)}</b> <NamedText state={after} text={p.final.parts.join(', ')} /></span>)}
           </p>
         )}
@@ -107,6 +108,7 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
             );
           })}
         </div>
+        {after.over && !finalParts.length && <p className="hint re-final" data-final-bonuses="0">No end-game bonuses: these totals are final.</p>}
         {first && <p className="hint">Round {roman(after.round)} · <span className="num">{workersNote(after)}</span> · {first.id === meId ? 'You pick' : `${first.name} picks`} first{firstPickWhy(after, first.id) ? `: ${firstPickWhy(after, first.id)}` : ''}</p>}
         </div>
         {more && <span className="re-more" aria-hidden="true">More below</span>}

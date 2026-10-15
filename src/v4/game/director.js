@@ -474,6 +474,9 @@ const onFinish = (anim, fn) => { if (anim && anim.finished) anim.finished.then((
  */
 export function dealAfter(state) {
   const fx = state && Array.isArray(state.effects) ? state.effects : null;
+  // a whole fresh row (New Faces): the new cards deal once the old row has dropped away (playChain, grammar B4)
+  const outs = fx ? fx.filter(e => e.type === 'shop-out').length : 0;
+  if (outs) return Math.round(MO.rowOut + (outs - 1) * MO.rowOutStagger);
   const rec = fx && fx.find(e => e.type === 'recruit' && e.from && e.from.kind === 'shop');
   if (!rec) return 0;
   const paid = fx.filter(e => e.type === 'pay' && e.cause === rec.cause).reduce((t, e) => t + Math.min(3, e.what.n), 0);
@@ -658,6 +661,23 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
         }
         default:
       }
+    });
+  }
+  // a whole fresh row (New Faces, motion gaps A47: "blanks all 10 cards at once, then refills"): the old row drops away
+  // toward the pile, left to right, from where each card stood; the new row deals after it (dealAfter). Bookkeeping: it
+  // never holds the chain, and a skip lands it.
+  const outs = Array.isArray(state.effects) && state.moves === before.moves + 1 && snap ? state.effects.filter(e => e.type === 'shop-out') : [];
+  if (outs.length) {
+    const cards = outs.map(e => snap.get(e.what.uid)).filter(sn => sn && sn.rect && sn.html).sort((a, b) => a.rect.top - b.rect.top || a.rect.left - b.rect.left);
+    cards.forEach((sn, k) => {
+      const g = document.createElement('div');
+      g.className = 'flight shop-out ghost-layer';
+      g.dataset.born = String(Date.now());
+      g.innerHTML = sn.html;
+      Object.assign(g.style, { left: `${sn.rect.left}px`, top: `${sn.rect.top}px`, width: `${sn.rect.width}px`, height: `${sn.rect.height}px` });
+      document.body.appendChild(g);
+      const anim = track(g.animate([{ transform: 'translateY(0)', opacity: 1 }, { transform: 'translateY(12px)', opacity: 0 }], { duration: MO.rowOut, delay: k * MO.rowOutStagger, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'both' }));
+      onFinish(anim, () => g.remove());
     });
   }
   // what starts at once plays now, before this commit's first paint (the lifted card, the hidden chip, your minion's

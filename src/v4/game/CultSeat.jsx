@@ -104,6 +104,14 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const railIn = useRef(false);
   return (
     <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
+      // a click beside the lit picks in this chair (w3a A53: "a click 30px off did nothing, and no 'pick a lit stack'")
+      // makes them pulse once, so the miss says where to click
+      onClick={pick && pick.lit && !pick.seatMode ? e => {
+        if (e.target.closest && e.target.closest('[data-option], .cs-pick-member, .cs-stack.pick-on')) return;
+        const el = e.currentTarget;
+        el.classList.remove('pick-nudge'); void el.offsetWidth; el.classList.add('pick-nudge');
+        setTimeout(() => el.classList.remove('pick-nudge'), 700);
+      } : undefined}
       aria-label={`${mine ? 'Your cult' : `${p.name}'s cult`}: ${f} follower${f === 1 ? '' : 's'}, ${p.members.length} member${p.members.length === 1 ? '' : 's'}, ${p.left} minion${p.left === 1 ? '' : 's'} to place${now ? ', their turn' : ''}`}>
       <header className="cs-head" role="button" tabIndex={0} aria-haspopup="dialog" data-hint={`${p.name}: ${f} follower${f === 1 ? '' : 's'}. Show their cult.`}
         onPointerEnter={e => { railIn.current = onRail(e); if (realHover(e) && !railIn.current) openSeat(e, false); }}

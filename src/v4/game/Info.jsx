@@ -202,7 +202,10 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
       </div>
       {/* the worth is already up top: the sentence is what it does, and a card that only counts has none */}
       {/* a member with no ability says so, never an empty card (w2a #36: Twins and Intern showed only a header) */}
-      {ability ? <p className="mc-text"><CardText text={ability} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
+      {/* a member you use (once a game, once a round) says so first (w3a #5: "you can't find out which members you use");
+          in the shop, also how: on your turn, from your seat */}
+      {ability ? <p className="mc-text">{d.activate && <span className="mc-use-tag" data-use-tag="">Use</span>}<CardText text={ability} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
+      {d.activate && where && !state.over && <small className="mc-live" data-use-how="">Once it’s yours, use it on your turn: it lights up in your seat.</small>}
       {!onTable(state, d) && <small className="mc-live" data-colorless=""><Colorless state={state} def={d} /> here: it counts as a member of no color.</small>}
       {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
       {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used && !state.over ? ' · used' : ''}</small>}

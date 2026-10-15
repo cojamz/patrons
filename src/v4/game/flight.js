@@ -404,7 +404,10 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
       tint.className = 'path-turn';
       tint.innerHTML = turnTo;
       inner.appendChild(tint);
-      track(tint.animate([{ opacity: 0 }, { opacity: 0, offset: 0.45 }, { opacity: 1, offset: 0.55 }, { opacity: 1 }], { duration, delay, fill: 'both' }));
+      // the turn is a crossfade at the midpoint as long as the grammar's colour turn (80ms at Steady), however short the
+      // flight: a 10% window was 26ms on a short take, and the colour seemed to change in the stack (motion gaps A10)
+      const half = Math.min(0.3, MO.colorTurn / 2 / Math.max(1, duration));
+      track(tint.animate([{ opacity: 0 }, { opacity: 0, offset: 0.5 - half }, { opacity: 1, offset: 0.5 + half }, { opacity: 1 }], { duration, delay, fill: 'both' }));
     }
     const done = () => outer.remove();
     anim.addEventListener('finish', done);

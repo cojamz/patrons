@@ -341,7 +341,7 @@ function useCopyTargets(c, state, me) {
   }, [sig]);
 }
 function cardBody(c, state, me, optionFor, pick) {
-  // a rival's move since your last turn wears a dotted edge on the wheel: its card says what that edge means (w2a #30)
+  // a rival's move since your last turn: its card says so (the wheel's dotted edge was removed, art director 10:40)
   if (c.kind === 'space') {
     const fresh = typeof document !== 'undefined' && !!document.querySelector(`[data-slot="${c.key}"].fresh`);
     return <SpaceCard state={state} me={me} spaceKey={c.key} optionFor={optionFor} onPick={pick} pinned={c.pinned} past={c.past} fresh={fresh} />;
@@ -392,7 +392,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
           : pv.swept.map((u, k) => <span key={u} data-swept={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}<small className="lt-swept-note"> back under the deck</small></Row> : null}
         {/* on a desktop the shop's own cards say it ("after Kickback" on each): only a pinned sheet (touch) lists them */}
         {unlocks.length && pinned ? <Row k="Then affordable">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
-        {owner !== undefined && <Row k="Taken">{owner === viewer ? 'You' : state.players[owner].name}{fresh ? ', since your last turn (the dotted edge)' : ''}{opt ? ' — you can join it' : ''}</Row>}
+        {owner !== undefined && <Row k="Taken">{owner === viewer ? 'You' : state.players[owner].name}{fresh ? ', since your last turn' : ''}{opt ? ' — you can join it' : ''}</Row>}
         {/* a value that grows by round: its run is the rule sentence's ("+2● in round I, +4 in round II…"), said once
             (w3b #12: a "By round" row beside "per round number" was two descriptions of one thing); the panel prints this
             round's number and "more each round" */}

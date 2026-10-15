@@ -132,6 +132,9 @@ const TABLE = {
   swap:        [280,   420,    620],
   shopSlide:   [180,   240,    320],
   deal:        [220,   300,    420],
+  colorTurn:   [60,    80,     120],  // a piece that changes colour on its way turns at its midpoint (grammar §2)
+  rowOut:      [100,   160,    240],  // a whole fresh row: each old card drops away toward the pile (grammar B4)
+  rowOutStagger: [15,  25,     40],
   dealStagger: [30,    40,     60],
   breath:      [60,    70,     300],  // between one player's turn and the next
   minionsHome: [260,   340,    480],

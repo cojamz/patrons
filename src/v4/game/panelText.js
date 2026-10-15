@@ -63,7 +63,8 @@ const P = {
     toast: r => ({ main: `+${3 * r} silver`, second: 'others get 1', note: grows(r) }),
     // "+2 of a color": which one? (w3a #56) yours to pick
     gift: { main: '+2 silver', second: '+2 of a color you pick', note: 'others get 1 of it' },
-    alms: { main: '+4 silver', second: 'a rival gets 2' },
+    // said like Kickback's gift ("a rival gets 2" ran on as "+4 silver a rival gets 2" off the wheel)
+    alms: { main: '+4 silver', second: '+2 to a rival' },
     // "trade silver" (w3a #57): with whom? it's a swap of your silver into one other color. Line 2 within 16 letters
     // ("swap silver for a color" didn't fit ring II, and dropped whole)
     tongue: { main: '+4 silver', second: 'swap for a color', note: 'others get 1 silver' },

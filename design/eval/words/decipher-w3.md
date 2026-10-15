@@ -30,6 +30,7 @@ Values are round II. ● is the resource dot, 👤 the follower mark. "Line 3" i
 | Purple | Crunch Time (center) | Extra turns for all purple / 1 per 4, plus 1 | All your purple for 2 extra turns / (line 3) less than 4? +4● | spend all my purple, get 2 extra turns | 4 or more: spend all, 2 extra turns; under 4: +4 purple | B18: read as a group effect. At a cap of 2 the formula is always 2, so it's said as 2. Center drops line 2: whole in line 1 |
 | Silver | Toast | +6● / others get 1 | +6● / others get 1 / more each round | 6 silver, everyone else 1 | +3 / +6 / +9 by round, others +1 | growth in line 3 (line 2 is full) |
 | Silver | Goody Bags | +2● / +2 of a color, others get 1 / of that color | +2● / +2 of a color you pick / others get 1 of it | 2 silver, and 2 of a color I choose | +2 silver, +2 of another color you choose; others 1 of it | A56: which color? |
+| Silver | Good Deed | +4● / a rival gets 2 | +4● / +2 to a rival | 4 silver, and a rival gets 2 | +4 silver; a rival you choose gets 2 of a color you choose | said like Kickback; off the wheel it ran on as "+4 silver a rival gets 2" |
 | Silver | Sweet Talk | +4● / trade silver / others get 1 silver | +4● / swap for a color / others get 1 silver | 4 silver, then I can swap silver into a color | +4, then swap any silver for one other color 1:1 | A57: "trade silver" undecipherable; "swap silver for a color" was too long and dropped |
 | Silver | Rising Tide | Gain silver / half the richest / others get 1 | (same) | silver: half of what the richest rival has | half the silver of the rival with the most | kept: tried "Gain half the silver" and "half the most a rival has"; both made line 2 drop. The hover now says "the rival with the most" |
 | Silver | Hold Court (center) | +1👤 per 2● / you keep the silver | +1👤 per 2● held / others get 2 silver | 1 follower per 2 silver I hold (I keep it) | 1 follower per 2 silver held, keep it; others +2 | center drops line 2: "held" carries "keep" in line 1 |
@@ -58,7 +59,7 @@ Values are round II. ● is the resource dot, 👤 the follower mark. "Line 3" i
 Gold: Intro Offer (Save 4 / on next member), Collect Debts (+3● / from rivals), Tithe (+1● / per member), Double Down.
 Red: Even Swap (+1● / swap, equal cost), Bandwagon (+1● / per recruit by all), Open Door, Open House, Swap Sides
 ("Swap a member": line 2 drops at some turns; "with a rival" is implied). Blue: New Faces, Show Off, Spree. Purple:
-Catch Up, Plan Ahead (B16 fix kept), Overtime (B17 fix kept: "Pay 8● / for 2 extra turns"). Silver: Good Deed.
+Catch Up, Plan Ahead (B16 fix kept), Overtime (B17 fix kept: "Pay 8● / for 2 extra turns").
 Yellow: Harvest, Top Up, Trade Seeds, Bumper Crop. Magenta: Crime Wave. Green: Hum, Echo, Encore. The plain Blue and
 Green.
 

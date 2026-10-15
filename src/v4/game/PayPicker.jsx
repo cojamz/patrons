@@ -157,7 +157,10 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
         <div className="mc pay-id" style={def ? { '--c': cardColor(state, def) } : undefined}>
           <div className="mc-head">
             <span className={`mc-art${def ? '' : ' fol'}`} aria-hidden="true">
-              {def ? <Sprite id={[def.id, spriteId(def.name)]} kind="member" sphere={sphere} size={48} /> : <Follower size={27} title="followers" />}
+              {/* followers: a small crowd of them (as many as you get, up to three), never one mark in a grey box,
+                  which read as a missing picture (w3a #50) */}
+              {def ? <Sprite id={[def.id, spriteId(def.name)]} kind="member" sphere={sphere} size={48} />
+                : <span className="fol-crowd" data-n={Math.min(3, tier.get)}>{Array.from({ length: Math.min(3, tier.get) }, (_, k) => <Follower key={k} size={k === 0 ? 27 : 18} />)}</span>}
             </span>
             <span className="mc-id">
               <span className="mc-row">

@@ -1111,13 +1111,16 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             <AfterChain value={pr} hold={holdStory && !mine} step={state.moves}>{held => {
               // a held line addressed to someone else is never shown in this one's voice (w3b: your "Choose how to
               // pay" stayed up, dotted like a rival's, while the bots moved): it gives way to the current line
-              const p = held.forMe === pr.forMe ? held : pr;
+              // …except your own turn ending: while its last moves play out, the header says it's over (w3b #58: after
+              // the second Pass the next frame was already a bot's line)
+              const p = held.forMe === pr.forMe ? held
+                : held.forMe && !pr.forMe && held.who ? { who: held.who, text: humansHere ? `${held.who.name}’s turn is over` : 'Your turn is over', over: true } : pr;
               return (
               <span className={`say${mine ? ' mine' : ''}`} data-prompt tabIndex={-1}>
                 {p.who && <i style={{ background: playerColor(p.who.id) }} />}
                 <span className="say-text">
                   {mine && humansHere && p.who ? <b>{p.who.name}: </b> : null}
-                  {mine ? <><span className="lead">{p.lead ?? 'Your turn — '}</span><em>{p.text && !p.keepCase ? p.text[0].toLowerCase() + p.text.slice(1) : p.text}</em></> : state.over ? p.text : <>{p.text}<span className="dots" aria-hidden="true"> ···</span></>}
+                  {mine ? <><span className="lead">{p.lead ?? 'Your turn — '}</span><em>{p.text && !p.keepCase ? p.text[0].toLowerCase() + p.text.slice(1) : p.text}</em></> : state.over || p.over ? <span data-turn-over={p.over ? '' : undefined}>{p.text}</span> : <>{p.text}<span className="dots" aria-hidden="true"> ···</span></>}
                 </span>
               </span>
               );

@@ -105,6 +105,20 @@ describe('colorless members', () => {
     expect(ok.container.textContent).not.toMatch(/colorless/i);
   });
 
+  it('a member you use says so first, and in the shop how (w3a #5)', () => {
+    const s = createGame({ seats, seed: 5 });
+    const use = render(<MemberCard state={s} def={defById('gold.speculator')} />);
+    expect(use.container.querySelector('.mc-text').textContent).toMatch(/^UseOnce per game/);
+    cleanup();
+    const plain = render(<MemberCard state={s} def={defById('gold.banker')} />);
+    expect(plain.container.querySelector('[data-use-tag]')).toBeNull();
+    cleanup();
+    const uid = Object.values(s.cards).find(c => c.def === 'gold.speculator').uid;
+    if (!s.shop.includes(uid)) { s.pile = s.pile.filter(u => u !== uid); s.shop[0] = uid; }
+    const shop = render(<MemberCard state={s} uid={uid} me={0} onFace />);
+    expect(shop.container.querySelector('[data-use-how]').textContent).toMatch(/use it on your turn/);
+  });
+
   it('a shop card\'s hover doesn\'t repeat the cost and worth printed on its face (w3a #24)', () => {
     const s = createGame({ seats, seed: 5 });
     const uid = s.shop.find(u => (s.cards[u] && cardDef(s, u).n || 1) === 1);
