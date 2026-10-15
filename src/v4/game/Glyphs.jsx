@@ -1,6 +1,7 @@
-// Small shapes for the Lamplit table. A resource is a shape AND a color (coin, drop, gem…), so color is never
-// the only cue; a seat is a hooded figure in its color carrying its sigil; followers are a mark that grows in
+// Small shapes for the Lamplit table. A resource is a flat dot in its color carrying a quiet inner mark (the visual
+// language, plate 1b), so color is never the only cue; a seat is a hooded figure in its color carrying its sigil; followers are a mark that grows in
 // clusters of 10 and 5. Every one says what it is on hover (title) and long-press (TouchTips).
+import { useEffect } from 'react';
 import { Follower } from '../art/Follower.jsx';
 import { playerColor, seatSigil, seatEmoji } from '../format.js';
 import { Leader, Minion } from '../art/Leader.jsx';
@@ -20,16 +21,65 @@ const SHAPES = {
 };
 const NAMES = { gold: 'gold', red: 'red', blue: 'blue', green: 'green', magenta: 'magenta', silver: 'silver', yellow: 'yellow', purple: 'purple', white: 'white' };
 
-/** One resource as its shape in its color. decorative: no title / role (inside something that already says it). */
+// ---------- the resource dot (visual language, plate 1b): a flat disc in its color with a quiet darker edge ----------
+// Color is never the only cue: each dot carries one quiet inner mark, drawn small enough to stay calm at 12px.
+// gold solid · red a fine ring · blue a centre dot · green split by a line · yellow a cross · magenta a shaded half ·
+// purple a bar · silver a small ring · white solid with a firm hairline edge (a cream dot on cream paper).
+const DISC = 'M8 1.75a6.25 6.25 0 1 1 0 12.5a6.25 6.25 0 1 1 0-12.5Z';
+const EDGE = 'rgba(30,18,8,.28)';
+const MARK = 'rgba(30,18,8,.44)';
+const DOT_MARKS = {
+  red: <circle cx="8" cy="8" r="3.4" fill="none" stroke={MARK} strokeWidth="1.15" />,
+  blue: <circle cx="8" cy="8" r="1.75" fill={MARK} />,
+  green: <path d="M4.2 11.8L11.8 4.2" stroke={MARK} strokeWidth="1.15" strokeLinecap="round" />,
+  yellow: <path d="M8 5.2V10.8M5.2 8H10.8" stroke={MARK} strokeWidth="1.15" strokeLinecap="round" />,
+  magenta: <path d="M1.75 8a6.25 6.25 0 0 0 12.5 0Z" fill="rgba(30,18,8,.24)" />,
+  purple: <path d="M5 8H11" stroke={MARK} strokeWidth="1.3" strokeLinecap="round" />,
+  silver: <circle cx="8" cy="8" r="2" fill="none" stroke={MARK} strokeWidth="1.1" />,
+};
+// "any": the wheel in miniature, four quarters in the table's colors, each where its quadrant sits (--any-top… are
+// the plate's gold/blue/green/red until the live table sets its own: useAnyDot below)
+const ANY_WEDGES = [
+  ['top', 'M8 8L3.58 3.58A6.25 6.25 0 0 1 12.42 3.58Z'],
+  ['right', 'M8 8L12.42 3.58A6.25 6.25 0 0 1 12.42 12.42Z'],
+  ['bottom', 'M8 8L12.42 12.42A6.25 6.25 0 0 1 3.58 12.42Z'],
+  ['left', 'M8 8L3.58 12.42A6.25 6.25 0 0 1 3.58 3.58Z'],
+];
+
+/** One resource as a flat dot in its color with its quiet mark; r="any" is the split dot. decorative: no title / role
+ *  (inside something that already says it). */
 export function ResourceGlyph({ r, size = 16, n = null, decorative = false }) {
-  const label = n == null ? NAMES[r] || r : `${n} ${NAMES[r] || r}`;
+  const name = r === 'any' ? 'any resource' : NAMES[r] || r;
+  const label = n == null ? name : `${n} ${name}`;
   return (
-    <svg className="res-glyph" data-res-glyph={r} viewBox="0 0 16 16" width={size} height={size} role={decorative ? undefined : 'img'} aria-label={decorative ? undefined : label} aria-hidden={decorative ? 'true' : undefined}>
+    <svg className={`res-glyph${r === 'any' ? ' any' : ''}`} data-res-glyph={r} viewBox="0 0 16 16" width={size} height={size} role={decorative ? undefined : 'img'} aria-label={decorative ? undefined : label} aria-hidden={decorative ? 'true' : undefined}>
       {decorative ? null : <title>{label}</title>}
-      <path d={SHAPES[r] || SHAPES.gold} fill={`var(--q-${r}, var(--${r}))`} stroke="var(--paper-ink, #1c1410)" strokeWidth="1.1" strokeLinejoin="round" />
-      {r === 'gold' && <path d="M8 4.4a3.6 3.6 0 1 1 0 7.2a3.6 3.6 0 1 1 0-7.2Z" fill="none" stroke="rgba(0,0,0,.48)" strokeWidth="1.3" />}
+      {r === 'any'
+        ? ANY_WEDGES.map(([k, d]) => <path key={k} d={d} fill={`var(--any-${k})`} />)
+        : <path d={DISC} fill={`var(--q-${r}, var(--${r}))`} />}
+      {DOT_MARKS[r] || null}
+      <circle cx="8" cy="8" r={r === 'white' ? 5.65 : 5.75} fill="none" stroke={r === 'white' ? 'rgba(30,18,8,.6)' : EDGE} strokeWidth={r === 'white' ? 1.2 : 1} />
     </svg>
   );
+}
+
+/** The live table's colors in the "any" dot: quadrant q sits at 180 + 90q degrees on the wheel (0 = top, clockwise),
+ *  so q0 is the bottom, q1 the left, q2 the top, q3 the right. Pass resource colors in quadrant order. */
+export function anyDotVars(colors) {
+  if (!colors || colors.length !== 4) return null;
+  const [bottom, left, top, right] = colors.map(c => `var(--${c})`);
+  return { '--any-top': top, '--any-right': right, '--any-bottom': bottom, '--any-left': left };
+}
+/** Puts the table's colors on the page (hover cards and dialogs live outside the board), and takes them off after. */
+export function useAnyDot(colors) {
+  const key = (colors || []).join(',');
+  useEffect(() => {
+    const vars = anyDotVars(key ? key.split(',') : null);
+    if (!vars || typeof document === 'undefined') return undefined;
+    const st = document.documentElement.style;
+    for (const [k, v] of Object.entries(vars)) st.setProperty(k, v);
+    return () => { for (const k of Object.keys(vars)) st.removeProperty(k); };
+  }, [key]);
 }
 
 // ---------- coins: a disc in the resource's color with its glyph inside (setup picker, pay) ----------

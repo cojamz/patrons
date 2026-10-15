@@ -1,7 +1,8 @@
 // The game table. Renders engine state from a session and turns clicks into { player, option } moves.
 // What's clickable is exactly state.pending.options, and only for seats this client controls.
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { followers, tierLeft } from '../../engine/v4/index.js';
+import { followers, tierLeft, quadrant } from '../../engine/v4/index.js';
+import { useAnyDot } from './Glyphs.jsx';
 import { finalWinners, isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote } from '../format.js';
 import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
@@ -307,6 +308,7 @@ const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults, askLeave = 0 }) {
   const [live0, moment, dismissMoment, roundStart0] = useTable(session, pace ?? RIVAL_DWELL_MS);
   const state = moment && moment.board ? moment.board : live0;
+  useAnyDot((state.quadrants || []).map(q => quadrant(q).resource)); // the "any" dot's four colors, where their quadrants sit
   const mySeats = session.mySeats || NO_SEATS;
   const pend = state.pending;
   const mine = !!(pend && !state.over && !moment && mySeats.includes(pend.player));

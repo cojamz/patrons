@@ -11,9 +11,9 @@ const WORD = new RegExp(`\\b(${COLORS.join('|')}|any|followers?)\\b`, 'g');
 export function Pip({ color, n }) {
   const label = color === 'any' ? 'any resources' : color;
   const say = n != null ? `${n} ${label}` : label;
-  if (color === 'any') return <span className="pip wild" title={say} aria-label={say} role="img" />;
-  // a resource is its shape in its color (gold a ringed coin, yellow a sun…), never a plain disc: color alone
-  // doesn't tell gold from yellow
+  // "any" is the split dot: the table's four colors, each where its quadrant sits
+  if (color === 'any') return <span className="pip wild" title={say} aria-label={say} role="img"><ResourceGlyph r="any" decorative /></span>;
+  // a resource is a flat dot in its color with its quiet inner mark (Glyphs.jsx), so color is never the only cue
   return (
     <span className="pip glyph" data-pip={color} style={{ '--c': `var(--${color})` }} title={say} aria-label={say} role="img">
       <ResourceGlyph r={color} decorative />
