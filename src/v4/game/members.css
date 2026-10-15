@@ -18,8 +18,8 @@
 .mu-text .pip.glyph,.mu-text .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
 
 /* the quiet state: "pays at round start", "scores at game end", "not used yet"; "ready to use" is the one in full ink */
-/* the type scale: 11 small print, 14 text and buttons, 18 names (design pod) */
-.mu-tag{flex:none;font-family:var(--sans);font-size:11px;line-height:18px;font-weight:500;color:var(--pl-ink-3,#a39078);white-space:nowrap}
+/* the type scale (art director's rule): 14 text, buttons and small print, 18 names; 11 only for caps labels */
+.mu-tag{flex:none;font-family:var(--sans);font-size:14px;line-height:18px;font-weight:500;color:var(--pl-ink-3,#a39078);white-space:nowrap}
 .mu-tag.lit{color:var(--pl-ink,#2b2018);font-weight:700}
 .mu-tag.dim{color:var(--pl-ink-3,#a39078)}
 /* used: the row steps back, its words stay readable */
@@ -43,10 +43,10 @@
 .mu-actions .mu-use.big{margin-top:0}
 .mu-sw-line{display:flex;justify-content:space-between;align-items:center;font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018)}
 .mu-sw-line + .mu-use{margin-top:10px}
-.mu-why{font-size:11px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
+.mu-why{font-size:14px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
 
 /* the switch: a small track and knob, its word beside it */
-.mu-switch{flex:none;display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:11px;line-height:18px;font-weight:700;color:var(--pl-ink-2,#6e5c49);
+.mu-switch{flex:none;display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:14px;line-height:18px;font-weight:700;color:var(--pl-ink-2,#6e5c49);
   background:none;border:0;padding:0;cursor:default}
 button.mu-switch{cursor:pointer}
 .mu-track{position:relative;width:24px;height:14px;border-radius:7px;background:rgba(43,32,24,.18);transition:background .15s}
@@ -93,7 +93,7 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 /* a seat no one can steal resources from this round (Lie Low): said in words beside its resources */
 .lt-cult-seat .cs-safe{font-family:var(--sans);font-size:11px;line-height:16px;color:var(--cream-2,#b9a98c);white-space:nowrap;align-self:center;margin-left:4px}
 .lt-cult-seat .cs-crowd > .cs-safe:first-child{margin-left:0}
-.seat-card .seat-safe{display:block;font-family:var(--sans);font-size:11px;color:var(--pl-ink-2,#6e5c49);font-weight:500;letter-spacing:0;text-transform:none}
+.seat-card .seat-safe{display:block;font-family:var(--sans);font-size:14px;color:var(--pl-ink-2,#6e5c49);font-weight:500;letter-spacing:0;text-transform:none}
 
 /* what a use just did, rising off the member for a moment ("+7 ●", or a quiet "+0") */
 .lt-cult-seat .cs-member .mu-result{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);z-index:4;pointer-events:none;white-space:nowrap;

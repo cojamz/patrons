@@ -151,7 +151,7 @@
 /* hover cards keep the type scale (11/14/18): "You'd get" read 13px inside a 14px card, a glossary card 13px, its small print 11.7px */
 .lt-yd .youd-get{font-size:inherit}
 .popover .pop-card,.popover .pop-card.gloss span{font-size:14px;line-height:20px}
-.popover .pop-card small{font-size:11px;line-height:14px}
+.popover .pop-card small{font-size:14px;line-height:20px}
 .lt-why{display:block;font-size:11.5px;color:var(--paper-ink-3);margin-top:4px}
 .lt-warn{color:#9b2c25;font-weight:700}
 .lt-good{color:#3e7a2c;font-weight:700}
@@ -503,10 +503,12 @@
 /* a seat member's card opens beside the whole seat: its nub points back at the member (w2a #14) */
 .popover.beside > .pop-nub{position:absolute;left:0;width:12px;height:12px;background:var(--paper-lit,#fbf6ea);border-radius:2px;clip-path:polygon(0 0,100% 0,0 100%);transform:translate(-50%,-50%) rotate(-45deg);pointer-events:none}
 .popover.beside > .pop-nub.left{left:100%;transform:translate(-50%,-50%) rotate(135deg)}
-/* the round summary on the table's type scale (design pod): 11 small print, 14 text, 18 the title and totals. It
-   carried six sizes (12, 13, 15, 22, 24 and the totals) from the old dialog scale */
+/* the round summary on the table's type scale (design pod; the art director's rule: 11 only for caps labels): 14 text
+   and small print, 11 the caps column heads, 18 the title and totals. It carried six sizes (12, 13, 15, 22, 24 and the
+   totals) from the old dialog scale */
 .dialog.roundend{--fs-1:11px;--fs-2:14px;--fs-3:14px}
 .dialog.roundend h2{font-size:18px}
-.roundend .re-head,.roundend .re-tb,.roundend small{font-size:11px}
+.roundend .re-tb,.roundend small{font-size:14px}
+.roundend .re-head{font-size:11px}
 .roundend .re-final,.dialog.roundend .hint,.dialog.roundend .btn{font-size:14px}
 .dialog.roundend .re-f{font-size:18px}

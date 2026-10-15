@@ -34,13 +34,14 @@ export function StoryCard({ story, color, state, hover }) {
  * props: state, entries (stories, oldest first: { actor, head, space, spaceKey, short, lines, uids, hit, n }), me (your
  * id or null), yours (it's your move now), hover (the board's hover layer), onLog (opens the full log).
  */
-export default function SinceStrip({ state, entries, me, yours, hover = null, onLog }) {
+export default function SinceStrip({ state, entries, me, yours, hover = null, onLog, cardUp = false }) {
   // whole lines only (design pod): when the strip's room can't hold every line, the oldest go into "N earlier…" instead
   // of showing half a line at the top. `drop` only grows while the list overflows; it starts over when the lines change or
   // the strip's room (its max-height, set by the layout from the chairs and the turn card, never by these lines) grows.
   // Nothing here sizes the strip, so measuring it can't feed back (the TurnCard lesson, 2026-10-15).
   const listRef = useRef(null), secRef = useRef(null), roomRef = useRef(0);
-  const sig = entries.map(e => e.n).join(',');
+  // (the turn card coming or going changes the strip's room without resizing anything watched here: start over then too)
+  const sig = entries.map(e => e.n).join(',') + (cardUp ? '|card' : '');
   // how many of the oldest lines are folded, for these lines: new lines start it over at 0 (worked out here, not by a
   // second commit)
   const [dropState, setDrop] = useState({ sig: '', n: 0 });
@@ -68,7 +69,9 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
         // (the list stacks from its foot: lines that don't fit spill above its top, where scrollHeight can't see them;
         // design pod 08:50) — in a ResizeObserver callback the layout is settled, so these reads are free
         const first = l.firstElementChild;
-        if (first && first.getBoundingClientRect().top < l.getBoundingClientRect().top - 1) setDrop(d => { const n = d.sig === s0 ? d.n : 0; return n < len - 1 ? { sig: s0, n: n + 1 } : d; });
+        // one more line at a time, and only once the last fold is on screen (several callbacks can land before React
+        // commits a fold: each would fold another line and leave the strip half empty)
+        if (first && first.getBoundingClientRect().top < l.getBoundingClientRect().top - 1) setDrop(d => { const n = d.sig === s0 ? d.n : 0; return n < len - 1 && n === onScreen.current ? { sig: s0, n: n + 1 } : d; });
       });
     }
     const r = ro.current, l = listRef.current, w = watched.current;
@@ -77,6 +80,8 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
     for (const el of [l, ...l.children]) if (!w.has(el)) { r.observe(el); w.add(el); }
   });
   useEffect(() => () => { if (ro.current) ro.current.disconnect(); ro.current = null; watched.current.clear(); }, []);
+  const onScreen = useRef(0); // the fold the DOM shows now
+  useLayoutEffect(() => { onScreen.current = cut; });
   const shown = base.slice(cut);
   const more = entries.length - shown.length;
   const name = id => (id === me ? 'You' : state.players[id].name);

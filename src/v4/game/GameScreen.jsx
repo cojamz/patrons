@@ -1145,7 +1145,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             <ShopCards state={state} me={me} mySeats={yours ? mySeats : NO_SEATS} optionFor={shopFor || live} onPick={shopPick} onDenied={shopDenied} phase={phase} hover={hover} />
           </section>
           {/* what the rivals did since your own last placement, one line each, always on the board (RC1 panel) */}
-          {state.round >= 1 && <SinceStrip state={state} entries={since} me={mySeats.length === 1 ? mySeats[0] : null} yours={yours} hover={hover} onLog={openLog} />}
+          {state.round >= 1 && <SinceStrip cardUp={!!turnCard} state={state} entries={since} me={mySeats.length === 1 ? mySeats[0] : null} yours={yours} hover={hover} onLog={openLog} />}
         </>
       )}
       <AfterChain value={cardNow} hold={holdStory}>{c => (c && !moment && !(state.over && !moment) ? <TurnCard card={c} root={root.current} state={state} /> : null)}</AfterChain>
