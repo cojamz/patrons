@@ -63,7 +63,7 @@ Rules: `design/rulebook.md` (in the game as How to play). Every call: `design/de
 - **Quiet machine on 0c1cd51** (`design/eval/perf/quiet-final-0c1cd51.md`, branch `claude/cults-perf-final`; nobody read it until this afternoon):
   - All 6 gate failures passed when re-run alone. They were load flakes.
   - At 1× it's the quickest build yet: hovers open in 30–40 ms p95. snappy alone: spin 396 ms, hover p95 61 ms.
-  - At 4× CPU it **regressed** against 8ea3e24: wait for your turn 12.0 s (was 9.5 s), main-thread blocking 23–24 s (was 8–9 s), first click 2.1–2.6 s (was 1.1–1.3 s), a placement shows in about 0.9 s (was 0.4–0.5 s). Look at forced layout in the first click and the React scheduler frames. The morning note's "9.5 s / 8 s" is out of date.
+  - At 4× CPU it **regressed** against 8ea3e24: wait for your turn 12.0 s (was 9.5 s), main-thread blocking 23–24 s (was 8–9 s), first click 2.1–2.6 s (was 1.1–1.3 s), a placement shows in about 0.9 s (was 0.4–0.5 s). Look at forced layout in the first click and the React scheduler frames. On a normal laptop (1×) the wait is 9.5 s, the fix Cory saw; this is the slowed-down test only.
 
 ### Cory's seven notes this morning, and the plan for each
 1. **Hovers feel laggy.** Likely the card opens before its "You'd get" line is ready. Precompute every open space's forecast at turn start, keep the card's size fixed, and gate on "card complete" in a real headed browser.
