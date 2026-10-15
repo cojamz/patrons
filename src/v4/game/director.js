@@ -215,6 +215,9 @@ const chain = { queue: [], clock: 0, wall: 0, last: null, raf: 0, flying: 0, hol
 const skipSubs = new Set();
 /** Something that should jump to its end state when a chain is skipped (the table's pacing). */
 export const onChainSkip = fn => { skipSubs.add(fn); return () => skipSubs.delete(fn); };
+const endSubs = new Set();
+/** Called whenever the table's chains have all played out (or were skipped): the summary may show. */
+export const onChainEnd = fn => { endSubs.add(fn); return () => endSubs.delete(fn); };
 export const chainRunning = () => chain.queue.length > 0 || chain.flying > 0;
 
 function tick(now) {
@@ -246,6 +249,7 @@ function endChain(now = false) {
   chain.counts.clear();
   if (chain.root) delete chain.root.dataset.chain;
   chain.last = null;
+  for (const fn of endSubs) fn();
 }
 /** Skip the rest of the chain on screen: every step jumps to its end state at once (a click, Space). */
 export function skipChain() {

@@ -30,7 +30,7 @@ import PayPicker from './PayPicker.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains } from './flight.js';
-import { playChain, planChain, installChainSkip, onChainSkip, noteTable } from './director.js';
+import { playChain, planChain, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed } from '../motion.js';
 import { boardPicker, seatPart, shopLookup, pickCaption } from './boardPick.js';
@@ -471,7 +471,18 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // the card on screen: this turn's, as it builds; else the one that just passed, until it has held and folded
   const toldShown = story.live ? null : story.told || lastTold.current;
   const toldCard = !toldShown ? null : turnCard && turnCard.n === toldShown.n ? (turnCard.gone ? null : turnCard) : toldShown;
-  const cardNow = story.live || toldCard;
+  // the summary comes last (motion review #7, #27): while a move's chain plays, the turn card and a rival's headline
+  // keep telling what was already on the table; they change when the chain has landed (or is skipped)
+  const [settled, setSettled] = useState(live0);
+  const latest = useRef(live0);
+  latest.current = live0;
+  useEffect(() => onChainEnd(() => startTransition(() => setSettled(latest.current))), []);
+  useEffect(() => { if (!chainRunning()) setSettled(live0); }, [live0]);
+  const lagging = settled !== live0 && settled.seed === live0.seed && !live0.over;
+  const shownCard = useRef(null);
+  const cardLive = story.live || toldCard;
+  if (!lagging) shownCard.current = cardLive;
+  const cardNow = lagging ? shownCard.current : cardLive;
   const since = story.since;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -822,7 +833,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = prev; };
   }, [modalOpen]);
-  const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
+  const prLive = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
+  const prShown = useRef(prLive);
+  if (!lagging || mine) prShown.current = prLive;
+  const pr = mine ? prLive : prShown.current;
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
   // The board picker: a choice whose options name things on the board (spaces, members, cults, resource stacks) is
   // answered there (boardPick.js); the choice panel shrinks to a caption docked under the headline, the leftover
