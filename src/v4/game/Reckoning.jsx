@@ -120,11 +120,11 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
     // the verdict: the leader's count and its emoji on the rim hop
     timers.push(setTimeout(() => {
       setBeat(1);
-      if (won) play('fanfare'); // the winner's little flourish (sound.js)
       for (const id of row.winners) {
         const e = root && root.querySelector(`[data-rim-leader="${id}"]`);
         if (e && e.animate) track(e.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-5px)', offset: 0.4 }, { transform: 'translateY(0)' }], { duration: MO.hop, easing: 'cubic-bezier(.3,1.4,.5,1)', composite: 'add' }));
       }
+      if (won) play('fanfare'); // the winner's little flourish (sound.js)
       if (!won) timers.push(setTimeout(() => setStep(s => s + 1), MO.hop + MO.reckonRest));
     }, counted));
     if (won) timers.push(setTimeout(() => {
