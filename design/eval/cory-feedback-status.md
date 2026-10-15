@@ -23,7 +23,7 @@ Done means seen on screen and tests passing. The next batch ships to the preview
 16. Shop sorted by cost, with a sort toggle. (layout)
 17. No hover on the deck. (layout)
 18. Round-end scoring slowed down and made clear: one quadrant at a time, totals climbing as each prize lands. (layout)
-19. Stealing by clicking the rival's resource pile on their seat. (steal flow)
+19. Every choice picked on the board: steal by clicking the rival's pile, copy by clicking the space on the wheel, members by clicking the card, players by clicking the seat. (pick-on-board)
 20. Redistribute says what "more" means. (engine)
 21. A visual language first (few symbols, one type scale, a grid, plain-dot currency), then one polished sample page for you. It covers the member card's hierarchy, the currency symbols and how actions look. (language lead)
 22. Testers rebuilt to look only at the screen, calibrated against your notes as the answer key. (calibration)
