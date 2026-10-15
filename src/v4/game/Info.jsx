@@ -108,6 +108,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null }) {
   const owner = uid != null ? state.players.find(p => p.members.includes(uid)) : null;
   const card = uid != null ? state.cards[uid] : null;
   const where = uid == null ? null : owner ? null : state.shop.includes(uid) ? 'In the shop' : 'In the pile';
+  const ability = String(d.text || '').replace(/^Worth \d+ followers?\.\s*/i, '').replace(/^No effect\.?$/i, '').trim();
   const sphere = onTable(state, d) ? (() => { try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } })() : 'colorless';
   // the quiet live line: what you're short of, in dots (Cory: "need N" never shouts), from the engine's one price rule
   let short = null;
@@ -123,7 +124,8 @@ export function MemberCard({ state, uid, def: d0 = null, me = null }) {
           <small className="mc-cost">costs <CostDots parts={costParts(d, state.resources)} />{d.n > 1 ? ` · counts as ${d.n} members` : ''}{onTable(state, d) ? '' : ' · '}<Colorless state={state} def={d} /></small>
         </span>
       </div>
-      <p className="mc-text"><CardText text={d.text} /></p>
+      {/* the worth is already up top: the sentence is what it does, and a card that only counts has none */}
+      {ability ? <p className="mc-text"><CardText text={ability} /></p> : null}
       {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
       {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><i />{owner.id === me ? 'Yours' : `${owner.name}’s`}{card && card.used ? ' · used' : ''}</small>}
       {short ? <small className="mc-live" data-short={short.short.total}>You’re short {shortDots(state, short)} to recruit it.</small>
@@ -358,8 +360,9 @@ function getWorker() {
   } catch { worker = false; }
   return worker || null;
 }
-/** Ask for previews of these spaces ("q-i" keys) for pid on this state; results arrive in the cache. */
-export function requestPreviews(state, pid, keys) {
+/** Ask for previews of these spaces ("q-i" keys) for pid on this state; results arrive in the cache. `front`: a space
+ *  under the pointer, worked out ahead of the warmup batch. */
+export function requestPreviews(state, pid, keys, { front = false } = {}) {
   const m = mapFor(state);
   const todo = keys.filter(k => !m.has(`${pid}|${k}`));
   if (!todo.length) return;
@@ -367,7 +370,7 @@ export function requestPreviews(state, pid, keys) {
   if (w) {
     if (workerState !== state) { workerState = state; workerGen++; pending.clear(); pending.set(workerGen, state); inflight.clear(); }
     try {
-      w.postMessage({ gen: workerGen, state: stripped(state), pid, keys: todo });
+      w.postMessage({ gen: workerGen, state: stripped(state), pid, keys: todo, front });
       const r = { state, pid, keys: todo, t: Date.now() };
       inflight.add(r);
       watch(r);
@@ -391,7 +394,7 @@ export function usePreview(state, pid, q, i) {
     const key = `${q}-${i}`;
     const fn = (st, p, k) => { if (st === state && p === pid && k === key) bump(n => n + 1); };
     listeners.add(fn);
-    if (peekPreview(state, pid, q, i) === undefined) requestPreviews(state, pid, [key]);
+    if (peekPreview(state, pid, q, i) === undefined) requestPreviews(state, pid, [key], { front: true });
     return () => { listeners.delete(fn); };
   }, [state, pid, q, i]);
   return pid == null ? null : peekPreview(state, pid, q, i);

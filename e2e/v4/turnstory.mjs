@@ -72,7 +72,7 @@ try {
   const settle = async () => {
     for (let k = 0; k < 12; k++) {
       await page.waitForTimeout(300);
-      const c = page.locator('.prompt.choice button:not([disabled])').first();
+      const c = page.locator('.prompt.choice button:not([disabled]), .pick-key:not([disabled]), .pick-rest-btn:not([disabled])').first();
       if (await c.count()) { await c.click().catch(() => {}); continue; }
       const pay = page.locator('.dialog.pay .btn.pri');
       if (await pay.count()) { await pay.click().catch(() => {}); continue; }

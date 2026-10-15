@@ -80,5 +80,26 @@ export function swapSave(space = 'evenswap') {
   throw new Error(`dialog-save: never reached P1 on ${space}`);
 }
 
+// Choices whose answers are combinations, picked in two steps on the board: Good Deed (a color × a rival), Trade
+// Seeds (a color you give × a color you get), Sweet Talk (a color × how many).
+export const COMBO_TABLE = ['silver', 'red', 'yellow', 'echo'];
+const COMBOS = { gooddeed: ['silver', 'alms'], seeds: ['yellow', 'transmute'], sweettalk: ['silver', 'tongue'] };
+export function comboSave(space = 'gooddeed') {
+  const [qid, key] = COMBOS[space];
+  const q = COMBO_TABLE.indexOf(qid), i = quadrant(qid).actions.findIndex(a => a.key === key), ring = quadrant(qid).actions[i].ring;
+  for (let seed = 1; seed < 300; seed++) {
+    let s = createGame({ seats: SEATS, seed, quadrants: COMBO_TABLE });
+    const rand = seededRandom(seed);
+    const ready = st => st.round === ring && st.pending && st.pending.player === 0 && st.pending.kind === 'place' && st.pending.options.some(o => o.id === `slot:${q}-${i}`);
+    for (let n = 0; n < 2000 && !ready(s) && !s.over; n++) s = applyMove(s, chooseBotMove(s, rand));
+    if (!ready(s)) continue;
+    s.players[0].res = { silver: 3, red: 2, yellow: 1, green: 2 };
+    const t = applyMove(s, { player: 0, option: `slot:${q}-${i}` });
+    if (!(t.pending && t.pending.player === 0 && t.pending.kind === 'choose' && t.pending.options.length >= 4)) continue;
+    return wrap(t);
+  }
+  throw new Error(`dialog-save: never reached P1 on ${space}`);
+}
+
 /** The member a pay save is for, by name (for messages). */
 export const payName = save => (save.state.pending.uid != null ? cardDef(save.state, save.state.pending.uid).name : `${TIERS.find(t => t.key === save.state.pending.tier).get} followers`);

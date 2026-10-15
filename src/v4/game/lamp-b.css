@@ -459,6 +459,9 @@
 /* every follower tile keeps its trade on the same line; "8 left" sits quietly under it */
 .lt-rates .lt-rate .fb-tip{position:relative}
 .lt-rates .rt-left{position:absolute;left:0;right:0;bottom:4px;margin:0;text-align:center}
-.lt-rates .rt-trade .to{margin:0 .25em;font-weight:500;color:var(--pl-ink-3,#a39078)}
+.lt-rates .rt-trade .to{margin:0 .3em;font-weight:700;color:var(--pl-ink-2,#6e5c49)}
 /* the name gets two short lines' room, centred, so a long name wraps whole instead of shrinking */
 .lt-card .nm{height:26px;margin:3px 4px 0;display:flex;align-items:center;justify-content:center;text-align:center;white-space:normal;line-height:11px;overflow-wrap:normal}
+.mc .mc-live .cost-dots{margin:0 .2em}
+/* a card that only counts: its head is the whole card, so its live line sits right under it */
+.mc .mc-head + .mc-live{margin-top:12px}

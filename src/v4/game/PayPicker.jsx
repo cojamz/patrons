@@ -157,7 +157,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
         <div className="mc pay-id" style={def ? { '--c': cardColor(state, def) } : undefined}>
           <div className="mc-head">
             <span className={`mc-art${def ? '' : ' fol'}`} aria-hidden="true">
-              {def ? <Sprite id={[def.id, spriteId(def.name)]} kind="member" sphere={sphere} size={48} /> : <Follower size={28} title="followers" />}
+              {def ? <Sprite id={[def.id, spriteId(def.name)]} kind="member" sphere={sphere} size={48} /> : <Follower size={30} title="followers" />}
             </span>
             <span className="mc-id">
               <span className="mc-row">
@@ -193,11 +193,10 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
               <button key={r} type="button" className={`pay-stack${have ? '' : ' none'}`} data-pay-add={r} data-keep={keep} disabled={busy || !have}
                 title={say2} aria-label={say2} onClick={() => add(r)}>
                 <span className="ps-coins" aria-hidden="true">
-                  {!have && <i className="ps-empty" />}
                   {Array.from({ length: drawn }, (_, k) => {
                     const leaving = k >= drawn - Math.min(out, drawn);
                     return leaving
-                      ? <i key={k} className="ps-ghost" style={{ '--k': k }} />
+                      ? <i key={k} className="ps-ghost" style={{ '--k': k }}><ResourceGlyph r={r} size={24} decorative /></i>
                       : <i key={k} className="ps-coin" data-coin={`${r}-${k + (have - drawn)}`} style={{ '--k': k }}><ResourceGlyph r={r} size={24} decorative /></i>;
                   })}
                 </span>

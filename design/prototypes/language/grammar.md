@@ -3,10 +3,10 @@
 Plates: `plate.png` (plate 1) and `plate2.png` (plate 2: the doorway, a full quadrant, decompressed), with the place candidates in `plate2-candidates.png`. Shared glyphs and tokens: `kit.js`, `kit.css`. Nothing here is wired into the game.
 
 ## Ten rules, taken from the games that read in one glance
-1. **A closed alphabet.** About ten drawn marks, reused everywhere, never a one-off icon. (Race for the Galaxy, Dune: Imperium)
+1. **A closed alphabet.** Two drawn symbols, the dot and the follower, reused everywhere, never a one-off icon; everything else is a word (Cory, 2026-10-15: simplify). (Race for the Galaxy, Dune: Imperium)
 2. **The amount first, and loudest.** "+3●": the number is the biggest thing, the noun follows it. (Slay the Spire's intents, Into the Breach's damage)
 3. **Left to right, give → get.** One arrow means "becomes"; what you give is on its left. (Everdell, Lords of Waterdeep, Dune: Imperium)
-4. **One mark per idea.** "/" only ever means per, "×" only ever means times. A separator never borrows an operator's shape. (Wingspan)
+4. **One mark per idea.** The dot only ever means a resource, the follower only ever means followers; "per", "for" and "becomes" are written out. (Wingspan)
 5. **Yours big, the rest small, the name in the hover.** The big line is what you get. One line of fine print appears only when the big line can't say it (where it comes from, how it scales). A place's name lives in its hover. (Lords of Waterdeep)
 6. **Light means "you can act here".** One warm-white glow for the one thing under your hand. Color only ever means a resource or its quadrant. (Into the Breach, Balatro)
 7. **Silhouette says what kind of thing; pixels say who; glyphs say what.** A disc is a resource, a card is a person, a doorway is a place. Pixel art is identity (members, leaders, minions), and rules are never drawn into it. (Wingspan, Spirit Island, Inscryption)
@@ -14,11 +14,12 @@ Plates: `plate.png` (plate 1) and `plate2.png` (plate 2: the doorway, a full qua
 9. **Glyphs for nouns, words for the rest.** Rare verbs and conditions are plain words. The full sentence is always one hover away. (Root digital, Slay the Spire's keywords)
 10. **One grid, three sizes, one stroke, one corner, and air.** Polish is consistency plus room: at least 24px between objects. (Balatro, Into the Breach)
 
-## The alphabet (10)
-Objects: **disc** (resource), **card** (member), **doorway** (place). Proposed but not drawn yet: a small arch glyph for "a place" in card text, e.g. Echo as "copy ⌂".
-Drawn: **● resource dot** (a flat disc in its color) · **any** (the wheel in miniature: four quarters in the table's colors, each where its quadrant sits) · **follower** (head and shoulders) · **member** (a card with a person on it) · **minion** (the worker) · **rival** (a hood, like every leader's) · **→ becomes** (⇄ for swap, same stroke) · **↻ extra turn**.
-Typed in the numeral face: **/ per** · **× times**. Plus and minus belong to the number ("+3", "−4"); they aren't marks of their own.
-Retired: the ring for "any", per-color shapes, the badge, every space's pixel icon on its face.
+## The alphabet (2) (Cory, 2026-10-15: simplify)
+Cory: "why are there still symbols here. just simplify visual language everywhere."
+Objects: **disc** (resource), **card** (member), **doorway** (place).
+Drawn: **● resource dot** (a plain flat disc in its color, no inner mark; the cream/white dot has a hairline edge) · **any** (the same dot split into the table's four colors, each where its quadrant sits) · **follower** (Cory's pixel person, one flat silhouette in the text's color). Nothing else is drawn.
+Words for the rest: "member", "rival", "minion", "extra turn", "swap", "per", "for", "becomes", "times". The one arrow left is the follower buy's ("2● → 1👤"). Plus and minus belong to the number ("+3", "−4"); numbers are heavy and sit right against the dot or follower they count.
+Retired: the member, minion, rival, arrow, swap and extra-turn marks; the typed "/" and "×" operators; the ring for "any", per-color shapes and coin marks, the badge, every space's pixel icon on its face.
 
 ## The three objects
 A **disc** is money (the dot). A **card with a person** is a member. A **doorway** is a place, where you send a minion. Each one's silhouette is unique, so the kind of thing reads before anything on it does.
@@ -59,5 +60,5 @@ Poach, Shake Down and Crunch Time need two clauses; they get the same big line p
 Their seat answers four questions in one row each, the same alphabet throughout: **what they hold** (dots, zeros faded), **who they've recruited** (portraits, grouped by color: the color mix is their lean), **what that makes each round** ("each round +3● +2●", the sum of their round-start members), and **what they just did** ("just took Kickback", kept for one turn). **What they're going for** is on the board: their minion stands on every rim they lead. Hovering their portraits opens each member in the same card grammar.
 
 ## Open risks
-- The dots differ by color alone (Cory's lean). Colorblind players and a White table (a cream dot on cream paper) need a fix: an inner mark per color, or darker paper.
+- The dots differ by color alone (Cory's call, 2026-10-15: plain dots, no inner marks). The White table's cream dot has a hairline edge; every dot still says its color name on hover, and the setup picker prints it beside the dot. Colorblind play is the open risk.
 - Long when-clauses ("Whenever the rival with the most followers buys followers") won't fit two lines on a 140px card. They'd need a shorter set of clause words, and that's untested across the 157 members.
