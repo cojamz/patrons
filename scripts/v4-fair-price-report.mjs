@@ -24,7 +24,10 @@ function split(d, P) {
 const sw = {};
 for (const R of sweeps) for (const r of R.rows) (sw[r.id] ||= []).push({ ...r, n: r.per[0]?.n ?? 0, hard: R.hard || 0 });
 
-const MIN_N = 150;
+const MIN_N = 150, GAP = 2;
+// the ability's worth floor: a plain 1-follower member (Volunteer) in the same instrument
+const VOL = P.cards.find(x => x.id === 'red.volunteer')?.fair ?? 2;
+const roman = r => ['I', 'II', 'III'][r - 1];
 const lines = [], proposal = [], tally = { fair: 0, under: 0, over: 0, thin: 0, ability: 0 };
 for (const q of [...allQuadrantIds(), 'guests']) {
   const ds = defs.filter(d => (d.guest ? 'guests' : d.quadrant) === q);
@@ -37,24 +40,29 @@ for (const q of [...allQuadrantIds(), 'guests']) {
     const covers = c.lo <= T && T <= c.hi, gap = c.fair - T;
     let verdict;
     if (thin) { verdict = 'too few probes to call'; tally.thin++; }
-    else if (covers || Math.abs(gap) < 1.5) { verdict = 'fair as printed'; tally.fair++; }
+    else if (covers || Math.abs(gap) < GAP) { verdict = 'fair as printed'; tally.fair++; }
     else if (gap > 0) { verdict = `underpriced, raise to ${even(c.fair)}`; tally.under++; }
     else { verdict = `overpriced, cut to ${even(c.fair)}`; tally.over++; }
     const fl = [];
-    // worth nothing even free: the fit says ≤ 0.5 and its CI stays under 1.5, at a printed price above 0
-    if (!thin && c.fair <= 0.5 && c.hi < 1.5 && T > 0) fl.push('NEEDS AN ABILITY CHANGE, NOT A PRICE: worth ~nothing even free');
+    if (d.vanilla) fl.push('plain member: a yardstick, priced by Cory’s rule (old price)');
+    // the ability adds nothing: worth no more than a plain 1-follower member, with the CI agreeing
+    if (!thin && !d.vanilla && T > 0 && c.hi < VOL + 1.5 && c.fair <= VOL) fl.push(`NEEDS AN ABILITY CHANGE, NOT A PRICE: worth no more than a Volunteer (~${h(VOL)}) in its best round`);
+    // nobody wants it: under 3% of affordable offers recruited even at jittered prices, and the price is already above its worth
+    else if (!thin && !d.vanilla && !covers && sc && sc.buyRate < 0.03 && gap <= -GAP) fl.push('NEEDS AN ABILITY CHANGE, NOT A PRICE: bots recruit it under 3% of the time even when cheap; a cut alone leaves a dead card');
     // so strong a price can't hold it: it would have to more than double
     if (!thin && c.lo > Math.max(2 * T, T + 6)) fl.push('NEEDS AN ABILITY CHANGE, NOT A PRICE: it would have to cost more than double');
-    if (fl.length) tally.ability++;
+    if (!thin && sc && sc.buyRate < 0.1 && gap >= GAP) fl.push(`bots under-recruit it (${Math.round(sc.buyRate * 100)}% of affordable offers): a bot-valuation gap too`);
+    if (fl.some(f => f.startsWith('NEEDS'))) tally.ability++;
+    const prof = Object.entries(c.byRound || {}).map(([r, b]) => `${roman(+r)} ${h(b.fair)}`).join(' / ');
     const extra = (sw[d.id] || []).map(r => `${r.hard ? `Hard seat` : 'single-card sweep'} ~${h(r.fair)} (${h(r.lo)}–${h(r.hi)}, ${r.n} seeds)`);
     const demand = sc && Number.isFinite(sc.buyRate) ? `recruited at ${Math.round(sc.buyRate * 100)}% of affordable offers (screen)` : '';
-    lines.push(`- ${d.name} (${d.s}+${d.w}=${T}): fair ~${h(c.fair)} (90% ${h(c.lo)}–${h(c.hi)}, panel n=${c.n}${extra.length ? '; ' + extra.join('; ') : ''}); ${demand}; ${verdict}${fl.length ? '. ' + fl.join('; ') : ''}`);
-    if (!thin && !covers && Math.abs(gap) >= 1.5) {
+    lines.push(`- ${d.name} (${d.s}+${d.w}=${T}): fair ~${h(c.fair)} (90% ${h(c.lo)}–${h(c.hi)}, panel n=${c.n}; by round recruited ${prof}${extra.length ? '; ' + extra.join('; ') : ''}); ${demand}; ${verdict}${fl.length ? '. ' + fl.join('; ') : ''}`);
+    if (!thin && !covers && Math.abs(gap) >= GAP && !d.vanilla) {
       const Pp = even(c.fair), [ps, pw] = split(d, Pp);
-      proposal.push({ id: d.id, name: d.name, printed: [d.s, d.w], proposed: fl.length ? [d.s, d.w] : [ps, pw], fair: +c.fair.toFixed(1), ci90: [+c.lo.toFixed(1), +c.hi.toFixed(1)],
-        evidence: `panel (paired forced-recruit, normal bots, random real tables): n=${c.n}, net margin at printed ${c.net.toFixed(2)}, ${Math.round((c.boughtShare || 0) * 100)}% of probes recruited, round ~${h(c.meanRound)}${demand ? '; ' + demand : ''}${extra.length ? '; ' + extra.join('; ') : ''}`,
-        ...(fl.length ? { flags: fl, note: 'price left as printed: fix the ability first' } : {}),
-        ...(d.vanilla ? { note: 'plain member: Cory set plain members at their old price; review before applying' } : {}) });
+      proposal.push({ id: d.id, name: d.name, printed: [d.s, d.w], proposed: fl.some(f => f.startsWith('NEEDS')) ? [d.s, d.w] : [ps, pw], fair: +c.fair.toFixed(1), ci90: [+c.lo.toFixed(1), +c.hi.toFixed(1)],
+        evidence: `panel (paired forced recruit, normal bots, random real tables): n=${c.n}, best recruited from round ${roman(c.bestRound)} (net ${c.net >= 0 ? '+' : ''}${c.net.toFixed(1)} followers of margin at printed), by round ${prof}${demand ? '; ' + demand : ''}${extra.length ? '; ' + extra.join('; ') : ''}`,
+        bestRound: c.bestRound, byRound: Object.fromEntries(Object.entries(c.byRound || {}).map(([r, b]) => [r, +b.fair.toFixed(1)])),
+        ...(fl.some(f => f.startsWith('NEEDS')) ? { flags: fl, note: 'proposed = printed: fix the ability first, then re-price' } : fl.length ? { flags: fl } : {}) });
     }
   }
 }

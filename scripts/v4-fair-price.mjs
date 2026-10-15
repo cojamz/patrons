@@ -582,6 +582,8 @@ if (!isMainThread) {
     const params = { K: Number(flags.k || 12), deltas: (flags.deltas || '-4,0,4').split(',').map(Number), fromSeed: Number(flags['from-seed'] || 0), rounds: String(flags.rounds || '1').split(',').map(Number),
       only: names ? findDefs(names.split(',')).map(d => d.id) : null };
     params.printed = Object.fromEntries(allDefs().map(d => [d.id, priceOf(d)]));
+    // --center=proposal.json: price grid centred on each listed card's proposed price (a confirmation run)
+    if (flags.center) for (const x of JSON.parse(readFileSync(flags.center, 'utf8'))) params.printed[x.id] = x.proposed[0] + x.proposed[1];
     let res = [];
     if (flags.from) for (const f of String(flags.from).split(',')) { const R = JSON.parse(readFileSync(f, 'utf8')); res.push(...R.results.filter(r => !r.error)); params.printed = R.params.printed; }
     else res = await runPool('panel', Number(flags.games || 200), params, workers, flags.raw);
