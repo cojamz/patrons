@@ -65,6 +65,7 @@ Walk this list on every screen state, by sight, through `scripts/v4-eyes.mjs`. E
 11. **Speed ladder:** setting × moment → motion ms, beats, stutters, and your by-eye verdict.
 12. **Outcome ledger:** placements checked, expected vs got, mismatches.
 13. **Eye distance:** each decision point, where the eye was, where the answer sat, px.
+14. **Turn read (Cory, 2026-10-15: "very easy to intuitively grasp what's happening on turns, without having to hover over anything or retrace the log"):** after at least 8 rival turns, before hovering or opening the log, write who did what, who gained or lost what, and why (the space, a member, a gift), from the board alone. Then check the log. Each wrong or missing part is a finding (major at least); score it as parts right / parts total.
 
 ## Severity
 - **Blocker:** you misread the game state, can't find how to act, or a common move fails.
