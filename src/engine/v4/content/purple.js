@@ -31,7 +31,9 @@ function openSpaces(ctx) {
   }));
   return out;
 }
-const scheduled = ctx => ctx.state.queue.filter(t => t.t === 'turn').length;
+// a minion still to land this turn counts too (a queued place, or one held while a member is used beside the spaces):
+// Go-Getter used before placing at a full round I took a rival's last space, and the rival's minion sat out
+const scheduled = ctx => ctx.state.queue.filter(t => t.t === 'turn' || t.t === 'place').length + (ctx.state.unplaced || 0);
 /** True when one more turn can't squeeze anyone out of a space. */
 export const spareSpace = ctx => openSpaces(ctx).length > scheduled(ctx);
 /** What extra turns that cost `base` purple cost p (Corner-Cutter halves it, rounded up). Only Taskmaster pays now:
@@ -230,6 +232,10 @@ export default {
       onRoundStart(ctx, owner) {
         const me = ctx.followers(owner);
         if (ctx.state.round > 1 && ctx.rivals(owner).every(o => ctx.followers(o) >= me)) {
+          // the round's minions aren't queued yet, so count them from what each player has left: with one sphere per
+          // player and Extra Hand twice (a Doppelganger), round III at 2 players can be full before this turn
+          const due = ctx.state.players.reduce((n, o) => n + o.left, 0);
+          if (openSpaces(ctx).length <= due) { ctx.log(`No space to spare: ${owner.name} gets no extra turn from Late Riser.`); return; }
           ctx.state.queue.unshift({ t: 'turn', p: owner.id });
           owner.left += 1;
           ctx.log(`${owner.name}'s Late Riser: an extra turn first.`);
