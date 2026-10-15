@@ -28,7 +28,8 @@ if (process.env.STEP) {
   await pg.waitForTimeout(800);
   const n = Math.round((ms / 1000) * fpsS);
   for (let i = 0; i < n; i++) {
-    await pg.evaluate(t => { for (const a of document.getAnimations()) { a.pause(); a.currentTime = t; } }, (i * 1000) / fpsS);
+    // a page can expose window.__introSeek(ms) to seek a multi-part timeline (the whole intro); else step every animation
+    await pg.evaluate(t => { if (window.__introSeek) return window.__introSeek(t); for (const a of document.getAnimations()) { a.pause(); a.currentTime = t; } }, (i * 1000) / fpsS);
     await pg.screenshot({ path: join(fdir, `f${String(i).padStart(4, '0')}.png`) });
   }
   await b.close();
