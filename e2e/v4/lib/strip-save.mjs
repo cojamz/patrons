@@ -5,6 +5,7 @@
 import { createGame, applyMove, chooseBotMove } from '../../../src/engine/v4/index.js';
 import { seededRandom } from '../../../src/engine/v4/rng.js';
 import { buildStamp } from './stamp.mjs';
+import { freeCard } from './deal.mjs';
 
 const SEATS = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
 const play = (s, move) => { const next = applyMove(s, move); next.history = [...(s.history || []), [move.player, move.option]]; return next; };
@@ -39,14 +40,12 @@ export function giftSave({ quadrants = ['silver', 'trading', 'thieves', 'red'], 
     for (let n = 0; n < 400 && s.round < 1 && !s.over; n++) s = play(s, chooseBotMove(s, rand));
     if (s.round < 1) continue;
     // P1's members, handed over before round I's first placement (the replay starts at round II, after this)
-    let ok = true;
+    // (a member the cull leaves out of the deck, e.g. Silversmith, is minted: lib/deal.mjs)
     for (const d of members) {
-      const c = Object.values(s.cards).find(x => x.def === d && !s.players.some(p => p.members.includes(x.uid)));
-      if (!c) { ok = false; break; }
+      const c = s.cards[freeCard(s, d)];
       s.shop = s.shop.filter(u => u !== c.uid); s.pile = s.pile.filter(u => u !== c.uid);
       s.players[0].members.push(c.uid); c.recruitedRound = 0; c.recruitedBy = 0;
     }
-    if (!ok) continue;
     // the rivals' turns after one of P1's moves, as the table plays them on resume (local.js seeds its bots from the
     // saved state's rng): the first such run that gives P1 something before P1 places again
     const branch = h => {

@@ -5,12 +5,14 @@
 import { createGame, applyMove, chooseBotMove } from '../../../src/engine/v4/index.js';
 import { seededRandom } from '../../../src/engine/v4/rng.js';
 import { buildStamp } from './stamp.mjs';
+import { freeCard } from './deal.mjs';
 
 const SEATS = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
 const play = (s, move) => { const next = applyMove(s, move); next.history = [...(s.history || []), [move.player, move.option]]; return next; };
 
 export function snakeSave(from = 1) {
-  for (let seed = from; seed < from + 200; seed++) {
+  // P1 sits last in about a quarter of seeds; search widely so a deck change can't leave the gate with none
+  for (let seed = from; seed < from + 2000; seed++) {
     let s = createGame({ seats: SEATS, seed });
     s.build = buildStamp();
     s.history = [];
@@ -18,9 +20,8 @@ export function snakeSave(from = 1) {
     for (let n = 0; n < 200 && !(s.round === 1); n++) s = play(s, chooseBotMove(s, rand));
     if (s.round !== 1 || s.order[SEATS.length - 1] !== 0) continue;
     // P1 holds Midas (on) and 6 of every color; set before any placement, so the round-start snapshot agrees
-    const midas = Object.keys(s.cards).map(Number).find(u => s.cards[u].def === 'gold.midas');
-    if (midas == null) continue;
     s = structuredClone(s);
+    const midas = freeCard(s, 'gold.midas'); // the cull leaves Midas out of the deck: minted if so
     s.shop = s.shop.filter(u => u !== midas);
     s.pile = s.pile.filter(u => u !== midas);
     while (s.shop.length < 10 && s.pile.length) s.shop.push(s.pile.shift());

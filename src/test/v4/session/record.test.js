@@ -12,6 +12,7 @@ import { registerQuadrant } from '../../../engine/v4/content/index.js';
 import { chooseBotMove } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { checkRecord } from '../replay.js';
+import { FULL_DECK } from '../../../engine/v4/content/cull.js';
 import { untilFake, autoPlay } from './helpers.js';
 
 afterEach(() => { vi.useRealTimers(); });
@@ -134,7 +135,11 @@ describe('replayRecord', () => {
   });
 
   it('scripts/v4-replay.mjs replays a record file and reports the first illegal move with where the game stood', ctx => {
-    const { rec } = botRecord(7, 40);
+    // the script runs outside vitest, so it deals the culled deck the game ships with (src/test/setup.js deals the
+    // full deck in here): record the game on that same deck, or the two deal different cards from move 1
+    const was = FULL_DECK.tests;
+    let rec;
+    try { FULL_DECK.tests = false; ({ rec } = botRecord(7, 40)); } finally { FULL_DECK.tests = was; }
     const dir = mkdtempSync(join(tmpdir(), 'v4rec-'));
     const replay = (f, ...more) => spawnSync('node', ['scripts/v4-replay.mjs', join(dir, f), ...more], { encoding: 'utf8' });
     writeFileSync(join(dir, 'ok.json'), recordText(rec));
