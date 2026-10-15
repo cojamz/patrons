@@ -63,8 +63,10 @@ try {
       fails.push(`no move for 45s at move ${lastMoves}: "${prompt}" options [${ids.join(' ')}] (${SHOTS}/stalled.png)`);
       break;
     }
-    const hand = await page.$('[data-handoff]'); if (hand) { await hand.click().catch(() => {}); continue; }
-    const end = await page.$('[data-next-round]');
+    // no element handles held across steps (a handle pins its element, and a removed one its whole old tree: this gate
+    // measures DOM nodes): locators here, and the answer helper lets its handles go
+    if (await page.locator('[data-handoff]').count()) { await page.locator('[data-handoff]').first().click().catch(() => {}); continue; }
+    const end = (await page.locator('[data-next-round]').count()) ? page.locator('[data-next-round]').first() : null;
     if (end) {
       const r = await page.$eval('.roundend h2', e => e.textContent).catch(() => 'round end');
       if (!seenEnds.has(r)) { seenEnds.add(r); await sample(`end of ${r}`); }

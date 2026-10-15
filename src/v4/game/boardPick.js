@@ -24,7 +24,8 @@ export function boardPicker(state, pend, first = null) {
     const t = o.target;
     let key = null;
     if (t && typeof t.space === 'string') key = `space:${t.space}`;
-    else if (t && Number.isInteger(t.uid)) key = state.shop.includes(t.uid) ? `shop:${t.uid}` : holder(t.uid) ? `member:${t.uid}` : null;
+    // a member from the top of the pile (Talent Scout) is laid out in the shop strip for the pick (ShopCards' tray)
+    else if (t && Number.isInteger(t.uid)) key = state.shop.includes(t.uid) || state.pile.slice(0, 5).includes(t.uid) ? `shop:${t.uid}` : holder(t.uid) ? `member:${t.uid}` : null;
     else if (t && Number.isInteger(t.pid) && state.players[t.pid]) key = t.res ? `stack:${t.pid}:${t.res}` : `seat:${t.pid}`;
     else if (t && t.res) key = `stack:${pend.player}:${t.res}`;
     if (!key) { rest.push(o); continue; }
@@ -38,7 +39,7 @@ export function boardPicker(state, pend, first = null) {
   for (const [key, o] of where) {
     const [kind, a, b] = key.split(':');
     if (kind === 'space') { spaces.set(a, o.id); kinds.add('space'); }
-    else if (kind === 'shop') { cards.set(Number(a), o); kinds.add('shop'); }
+    else if (kind === 'shop') { cards.set(Number(a), o); kinds.add(state.shop.includes(Number(a)) ? 'shop' : 'pile'); }
     else if (kind === 'member') { const h = holder(Number(a)); seat(h.id).members[a] = o; kinds.add(h.id === pend.player ? 'own-member' : 'member'); }
     else if (kind === 'stack') { seat(Number(a)).res[b] = o; kinds.add(Number(a) === pend.player ? 'own-stack' : 'stack'); if (o.target.give) give = true; }
     else if (kind === 'seat') { seat(Number(a)).seat = o; kinds.add('seat'); }
@@ -119,8 +120,19 @@ export function pickCaption(state, pk) {
   }
   if (pk.kinds.has('stack') && !pk.give && pk.count && pk.title) return { title: pk.title, what: [`take ${pk.count.of}${pk.only ? ` ${pk.only}` : ''}`], left: pk.count.left, how: pickHow(pk) };
   const q = pk.title ? pk.question : state.pending.prompt;
+  // a member of yours asking (Double Agent just recruited): its rule goes under the headline, so you see why
+  const asker = askerOf(state, pk);
+  if (asker) return { title: pk.title, what: q.length > 30 ? null : [q], left: pk.count ? pk.count.left : null, how: asker.text };
   if (q.length > 30) return { title: pk.title, what: null, left: pk.count ? pk.count.left : null, how: q[0].toUpperCase() + q.slice(1) };
   return { title: pk.title, what: [q], left: pk.count ? pk.count.left : null, how: pickHow(pk) };
+}
+
+/** The member of the actor's that asks this question (its name is the prompt's title), else null: { uid, text }. */
+export function askerOf(state, pk) {
+  if (!pk || !pk.title || pk.combo) return null;
+  const p = state.players[pk.actor];
+  const uid = p && p.members.find(u => state.cards[u] && defById(state.cards[u].def).name === pk.title);
+  return uid == null ? null : { uid, text: defById(state.cards[uid].def).text };
 }
 
 /** How to answer, in a few words: where the lit things are. */
@@ -128,6 +140,7 @@ export function pickHow(pk) {
   const k = pk.kinds, say = [];
   if (k.has('space')) say.push('a lit space on the wheel');
   if (k.has('shop')) say.push('a lit member in the shop');
+  if (k.has('pile')) say.push('one of the lit members from the top of the pile');
   if (k.has('member') || k.has('own-member')) say.push(k.has('own-member') && !k.has('member') ? 'one of your lit members' : 'a lit member on a cult');
   if (k.has('stack')) say.push(pk.give ? 'a color on a rival’s cult' : 'a lit stack on a rival’s cult');
   if (k.has('own-stack')) say.push('one of your lit stacks');
@@ -198,7 +211,8 @@ export function seatPart(state, pk, pid, picked = {}) {
   // a seat dims only when it's one of the things being picked between (a rival with nothing to take, a player not offered)
   const dims = !own && !lit && (seatPick || stackPick);
   const chosenUid = pk.combo && pk.combo.kind === 'trade' && own ? pk.combo.chosen : null;
-  return { lit, dim: dims, seat: seatPick ? here.seat : null, seatMode: seatPick, why: seatWhy, stacks, members, picked, give: pk.give, chosenUid };
+  const asker = own ? askerOf(state, pk) : null;
+  return { lit, dim: dims, seat: seatPick ? here.seat : null, seatMode: seatPick, why: seatWhy, stacks, members, picked, give: pk.give, chosenUid, askerUid: asker ? asker.uid : null };
 }
 
 /** The shop's lookup while a picker is up: a face-up member is a pick when the engine names its uid. */

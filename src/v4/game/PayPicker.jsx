@@ -30,12 +30,12 @@ const STEP = 6; // px between stacked coins
  * What the sockets are: one per unit owed, the colored part first ({ c: color }), then the any part ({ c: 'any' }),
  * and what one coin of each color pays (a Penny Pincher gold pays 2 toward a member). From the engine's price rule.
  */
-function costShape(state, p, pend) {
-  if (pend.uid === undefined) {
+function costShape(state, p, pend, uid, how) {
+  if (uid === undefined) {
     const tier = TIERS.find(t => t.key === pend.tier);
     return { units: Array.from({ length: tier.cost }, () => 'any'), worth: () => 1 };
   }
-  const pr = memberPrice(state, p, pend.uid);
+  const pr = memberPrice(state, p, uid, how);
   const pp = p.members.some(u => defsOf(state.cards[u]).some(d => d.goldPaysDouble));
   const units = [...Array.from({ length: pr.colored }, () => pr.color), ...Array.from({ length: Math.max(0, pr.total - pr.colored) }, () => 'any')];
   return { units, worth: c => (c === 'gold' && pp ? 2 : 1) };
@@ -58,11 +58,22 @@ function seat(res, units, spend, worth, have) {
   return out;
 }
 
+/**
+ * A choice that is a way to pay for a member outside the buy step (Snap Up, Half Price, Talent Scout): every answer is
+ * a pay option naming its member (uid) and the price rule it's paid under (how). It gets the same sheet.
+ */
+export const payChoice = pend => !!(pend && pend.kind === 'choose' && pend.options.length > 1
+  && pend.options.every(o => o.kind === 'pay' && Number.isInteger(o.uid) && o.value && typeof o.value === 'object'));
+
 export default function PayPicker({ state, onPick, busy, turnOf = null }) {
   const pend = state.pending;
   const p = state.players[pend.player];
   const res = state.resources;
-  const ways = useMemo(() => pend.options.filter(o => o.kind === 'pay'), [pend]);
+  // the buy step's pay options carry spend; a pay choice (Snap Up…) carries the same vector as its value
+  const ways = useMemo(() => pend.options.filter(o => o.kind === 'pay').map(o => (o.spend ? o : { ...o, spend: o.value })), [pend]);
+  const asChoice = pend.kind === 'choose';
+  const uid = asChoice ? ways[0].uid : pend.uid;
+  const how = asChoice ? ways[0].how || {} : {};
   const back = pend.options.find(o => o.kind === 'back');
   const suggested = vecOf(res, (ways.find(o => o.default) || ways[0])?.spend);
   const [spend, setSpend] = useState(suggested);
@@ -71,13 +82,19 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
   const id = `pay:${res.map(r => spend[r] || 0).join('-')}`;
   const match = ways.find(o => o.id === id) || null;
 
-  const def = pend.uid !== undefined ? cardDef(state, pend.uid) : null;
+  const def = uid !== undefined ? cardDef(state, uid) : null;
   const tier = pend.tier ? TIERS.find(t => t.key === pend.tier) : null;
   const title = def ? `Recruit ${def.name}` : `Buy ${tier.get} follower${tier.get > 1 ? 's' : ''}`;
-  const shape = useMemo(() => costShape(state, p, pend), [pend]); // eslint-disable-line react-hooks/exhaustive-deps
+  const shape = useMemo(() => costShape(state, p, pend, uid, how), [pend]); // eslint-disable-line react-hooks/exhaustive-deps
   const printed = def ? costParts(def, res) : [{ color: 'any', n: tier.cost }];
-  // every rule-changer bending this price, one quiet line each (the sockets already show what it comes to)
-  const notes = useMemo(() => (def ? priceNotes(state, p, pend.uid).filter(n => n.key !== 'total') : []), [pend]); // eslint-disable-line react-hooks/exhaustive-deps
+  // every rule-changer bending this price, one quiet line each (the sockets already show what it comes to); a pay
+  // choice says first what it's paid under ("Half Price: half its cost, in any colors")
+  const asker = asChoice ? (String(pend.prompt || '').match(/^([^:]{2,40}):/) || [])[1] : null;
+  const rule = asChoice ? (how.half ? 'half its cost, in any colors' : how.anyColors ? 'in any colors' : 'at its cost') : null;
+  const notes = useMemo(() => [
+    ...(asChoice && asker ? [{ key: 'how', text: `${asker}: ${rule}` }] : []),
+    ...(def ? priceNotes(state, p, uid).filter(n => n.key !== 'total') : []),
+  ], [pend]); // eslint-disable-line react-hooks/exhaustive-deps
   const pay = () => { if (match && !busy) onPick(match.id); };
   const box = useDialog(back ? () => { if (!busy) onPick('back'); } : null);
 

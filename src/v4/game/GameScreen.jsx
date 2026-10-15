@@ -26,7 +26,7 @@ import RoundEnd from './RoundEnd.jsx';
 import Reckoning, { reckonRows } from './Reckoning.jsx';
 import { snakeOrder } from './order.js';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
-import PayPicker from './PayPicker.jsx';
+import PayPicker, { payChoice } from './PayPicker.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
@@ -855,7 +855,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const shopPick = useCallback((...a) => handlers.current.onPick(...a), []);
   const shopDenied = useCallback((...a) => handlers.current.onDenied(...a), []);
   // A modal takes the stage: sweep any flying ghosts so nothing floats over it.
-  const modalOpen = !!(moment || rules || leaving || logOpen || (needHandoff && !moment) || (mine && pend && pend.kind === 'pay' && !onlyPay));
+  const modalOpen = !!(moment || rules || leaving || logOpen || (needHandoff && !moment) || (mine && pend && pend.kind === 'pay' && !onlyPay) || (mine && !needHandoff && payChoice(pend)));
   useEffect(() => { if (modalOpen) clearFlights(0); }, [modalOpen]);
   // and the page behind a modal doesn't scroll
   useEffect(() => {
@@ -1062,7 +1062,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <>
           <section className="lt-wheel" data-region="wheel">
             <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
-            {showChoice && !picker && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+            {showChoice && !picker && !payChoice(pend) && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
               others clockwise. UI-B fills each chair (CultSeat); the chairs never move. */}
@@ -1097,7 +1097,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           <CardFace state={state} uid={cardDetail.uid} />
         </Popover>
       )}
-      {mine && !needHandoff && pend.kind === 'pay' && !onlyPay && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+      {mine && !needHandoff && ((pend.kind === 'pay' && !onlyPay) || payChoice(pend)) && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
       {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={root.current} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onPaid={n => setPaid({ moment, n })} onDone={() => setReckoned(moment)} />}
       {moment && reckoned === moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}

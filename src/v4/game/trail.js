@@ -3,7 +3,7 @@
 // update that skipped steps, a reload) are replayed from the game's own move list, so every placement keeps its own
 // start, buy and end states: amounts are never netted across two placements.
 import { applyMove } from '../../engine/v4/index.js';
-import { turnStory, scoringSnapshot as snapshotAtScoring } from '../format.js';
+import { turnStory, effectStory, scoringSnapshot as snapshotAtScoring } from '../format.js';
 
 const MAX_STORIES = 80;
 /** One turn = one placement: the round and how many turns have started in it (the engine's turn record). */
@@ -21,7 +21,7 @@ function finish(trail, prev, s) {
   // the round's last turn: tell it as the table stood when the round was scored, not after the next round began
   const end = s.round !== c.round || s.over ? (snapshotAtScoring(prev, s) || prev) : s;
   if (c.partial) return;
-  const story = turnStory(c.start, end, c.actor, trail.me, c.mid);
+  const story = tell(trail, c, end, s);
   if (!story) return;
   trail.n += 1;
   trail.stories.push({ ...story, key: c.key, round: c.round, n: trail.n, endMoves: s.moves, acc: c });
@@ -30,12 +30,29 @@ function finish(trail, prev, s) {
   for (const st of trail.stories.slice(0, -3)) st.acc = null;
 }
 
+/**
+ * A turn's story: from the engine's effect stream when every move of the turn carried one (one source of truth, each
+ * cause summed once), else from the log and the states. `last`: the state that ended the turn (its move's effects
+ * after the round was scored belong to the round, not the turn).
+ */
+function tell(trail, c, end, last = null) {
+  let fx = c.fx;
+  if (fx && last && last.round !== c.round) {
+    const cut = fx.findIndex(e => e.cause && ['contest', 'round', 'final'].includes(e.cause.kind));
+    fx = cut >= 0 ? fx.slice(0, cut) : fx.filter(e => !(e.cause && e.cause.kind === 'member' && e.cause.pid !== c.actor));
+  }
+  return fx ? effectStory(c.start, end, c.actor, trail.me, fx) : turnStory(c.start, end, c.actor, trail.me, c.mid);
+}
+
 function step(trail, s) {
   const prev = trail.last;
   trail.last = s;
   const k = turnKey(s);
+  // the move's effects (effects.js) go to the turn it belongs to: the one running before it, or the one it ends
+  const fx = prev && Array.isArray(s.effects) && s.moves === prev.moves + 1 ? s.effects : null;
+  if (trail.cur && trail.cur.fx && s !== trail.cur.start) { if (fx) trail.cur.fx.push(...fx); else trail.cur.fx = null; }
   if (trail.cur && k !== trail.cur.key) finish(trail, prev, s);
-  if (k && !trail.cur) trail.cur = { key: k, actor: s.current, round: s.round, start: s, mid: null };
+  if (k && !trail.cur) trail.cur = { key: k, actor: s.current, round: s.round, start: s, mid: null, fx: [] };
   const c = trail.cur;
   if (c && !c.mid && s.pending && s.pending.kind === 'buy' && s.pending.player === c.actor) c.mid = s;
 }
@@ -49,6 +66,7 @@ function rewind(trail, s) {
   const c = trail.cur;
   if (c && c.start.moves > s.moves) trail.cur = null;
   else if (c && c.mid && c.mid.moves > s.moves) c.mid = null;
+  if (trail.cur) trail.cur.fx = null; // an undo: the effects since can't be taken back one by one, so the log tells this turn
   trail.last = s;
   if (!trail.cur && turnKey(s)) trail.cur = { key: turnKey(s), actor: s.current, round: s.round, start: s, mid: null, partial: true };
 }
@@ -60,8 +78,8 @@ function bridge(from, to) {
   const out = [];
   let s = from;
   try {
-    for (let m = from.moves; m < to.moves - 1; m++) { s = applyMove(s, { player: h[m][0], option: h[m][1] }); out.push(s); }
-    const last = applyMove(s, { player: h[to.moves - 1][0], option: h[to.moves - 1][1] });
+    for (let m = from.moves; m < to.moves - 1; m++) { s = applyMove(s, { player: h[m][0], option: h[m][1] }, { effects: true }); out.push(s); }
+    const last = applyMove(s, { player: h[to.moves - 1][0], option: h[to.moves - 1][1] }, { effects: true });
     // the replay must land where the game is
     if (last.log.length !== to.log.length || last.log[last.log.length - 1] !== to.log[to.log.length - 1]) return null;
   } catch { return null; }
@@ -98,7 +116,7 @@ export function feed(trail, next, base = null) {
 export function liveStory(trail) {
   const c = trail.cur, s = trail.last;
   if (!c || !s || c.start === s || c.partial) return null;
-  return turnStory(c.start, s, c.actor, trail.me, c.mid);
+  return tell(trail, c, s);
 }
 
 /**

@@ -700,6 +700,108 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   return { text: [head, ...out].join(' · '), head, lines: out, space, spaceKey, uids, actor, touched: [...touched], short, hit };
 }
 
+/**
+ * One placement told from the engine's effect stream (effects.js): every change, grouped by what caused it and summed,
+ * so nothing repeats and nothing is netted across causes (wave-2 tester: "traded 1 blue for 1 follower" ×3, Robin
+ * Hood's follower twice, and P2's Raider taking 3 followers that the strip never mentioned).
+ *   "P2 took Shoal · +2 blue +1 green · Raider: +3 followers −3 white · you −3 followers +3 white · recruited Banker (paid 4 gold)"
+ * `fx`: the turn's effects in order. Same shape as turnStory; `hit` names what cost you and its cause
+ * ("Raider took 3 of your followers"). Returns null if nothing happened.
+ */
+export function effectStory(start, end, actor, me = null, fx = []) {
+  const base = turnStory(start, end, actor, me, null);
+  const P = end.players;
+  const nm = id => (id === me ? 'you' : P[id].name);
+  const whose = id => (id === me ? 'your' : `${P[id].name}'s`);
+  const fword = n => `${Math.abs(n)} follower${Math.abs(n) === 1 ? '' : 's'}`;
+  const cardName = u => (end.cards[u] ? cardDef(end, u).name : start.cards[u] ? cardDef(start, u).name : 'a member');
+  const groups = new Map();
+  const groupOf = c => {
+    const key = !c ? 'space' : c.kind === 'space' || c.kind === 'move' ? 'space' : c.kind === 'member' ? `member:${c.uid}:${c.def || ''}` : c.kind === 'recruit' ? `recruit:${c.uid}` : c.kind === 'buy' ? `buy:${c.tier}` : c.kind === 'release' ? `release:${c.uid}` : null;
+    if (!key) return null;
+    if (!groups.has(key)) groups.set(key, { key, cause: c, res: P.map(() => ({})), fol: P.map(() => 0), moved: [], disc: 0 });
+    return groups.get(key);
+  };
+  for (const e of fx) {
+    const g = groupOf(e.cause);
+    if (!g) continue;
+    const add = (pid, r, n) => { g.res[pid][r] = (g.res[pid][r] || 0) + n; };
+    if (e.type === 'gain') add(e.to.pid, e.what.r, e.what.n);
+    else if (e.type === 'pay') add(e.from.pid, e.what.r, -e.what.n);
+    else if (e.type === 'transfer') { add(e.from.pid, e.what.r, -e.what.n); add(e.to.pid, e.what.r, e.what.n); }
+    else if (e.type === 'followers') g.fol[e.to.kind === 'count' ? e.to.pid : e.from.pid] += e.what.n;
+    else if (e.type === 'member-move') g.moved.push({ uid: e.what.uid, from: e.from.pid, to: e.to.pid });
+    else if (e.type === 'discount' && e.to.pid === actor) g.disc += e.what.n;
+  }
+  const signedOf = (g, pid) => {
+    const list = Object.entries(g.res[pid]).filter(([, d]) => d).map(([r, d]) => `${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`);
+    if (g.fol[pid]) list.push(`${g.fol[pid] > 0 ? '+' : '−'}${fword(g.fol[pid])}`);
+    return list.join(' ');
+  };
+  const paidOf = (g, pid) => Object.entries(g.res[pid]).filter(([, d]) => d < 0).map(([r, d]) => `${-d} ${r}`).join(', ');
+  const out = [], hits = [];
+  let gain = '';
+  const others = (g, owner) => {
+    const bits = [];
+    for (const p of P) {
+      if (p.id === owner) continue;
+      const lost = Object.entries(g.res[p.id]).filter(([, d]) => d < 0), got = Object.entries(g.res[p.id]).filter(([, d]) => d > 0);
+      // the actor's own doing reads "from you 3 gold"; a member's reads as its changes ("Raider: you −3 followers")
+      if (lost.length && owner === actor && g.cause && g.cause.kind !== 'member' && !got.length && !g.fol[p.id]) bits.push(`from ${nm(p.id)} ${lost.map(([r, d]) => `${-d} ${r}`).join(', ')}`);
+      else if (lost.length || got.length || g.fol[p.id]) bits.push(`${nm(p.id)} ${signedOf(g, p.id)}`);
+      if (p.id === me) {
+        const c = g.cause || {};
+        const who = c.kind === 'member' && c.def ? defById(c.def)?.name : (c.kind === 'recruit' || c.kind === 'release') ? cardName(c.uid) : null;
+        const why = who ? `${owner === actor || c.kind !== 'member' ? '' : `${P[owner].name}'s `}${who} took` : 'took';
+        const what = [...lost.map(([r, d]) => `${-d} of your ${r}`), ...(g.fol[p.id] < 0 ? [`${-g.fol[p.id]} of your followers`] : [])];
+        if (what.length) hits.push(`${why} ${what.join(', ')}`);
+      }
+    }
+    for (const m of g.moved) {
+      bits.push(m.to === owner ? `took ${whose(m.from)} ${cardName(m.uid)}` : m.from === owner ? `gave ${cardName(m.uid)} to ${nm(m.to)}` : `${cardName(m.uid)}: ${nm(m.from)} → ${nm(m.to)}`);
+      if (m.from === me && m.to !== me) hits.push(`took your ${cardName(m.uid)}`);
+    }
+    return bits;
+  };
+  for (const g of groups.values()) {
+    const c = g.cause || {};
+    if (g.key === 'space') {
+      const mine = signedOf(g, actor);
+      if (mine) { gain = mine; out.push(mine); }
+      out.push(...others(g, actor));
+      if (g.disc) out.push(`next member costs ${g.disc} less`);
+    } else if (c.kind === 'member') {
+      const owner = c.pid ?? actor;
+      const def = c.def ? defById(c.def) : null;
+      const label = `${owner === actor ? '' : `${whose(owner)} `}${def ? def.name : cardName(c.uid)}`;
+      const bits = [signedOf(g, owner), ...others(g, owner)].filter(Boolean);
+      if (g.disc) bits.push(`next member costs ${g.disc} less`);
+      // one line per member (its parts joined with commas: the card splits lines on " · ")
+      if (bits.length) out.push(`${label[0].toUpperCase()}${label.slice(1)}: ${bits.join(', ')}`);
+    } else if (c.kind === 'recruit') {
+      const paid = paidOf(g, actor);
+      out.push(`recruited ${cardName(c.uid)} (${paid ? `paid ${paid}` : 'free'})`);
+      out.push(...others(g, actor));
+    } else if (c.kind === 'buy') {
+      const n = g.fol[actor];
+      out.push(`bought ${fword(n)} (paid ${paidOf(g, actor) || 'nothing'})`);
+      out.push(...others(g, actor));
+    } else if (c.kind === 'release') {
+      const back = Object.entries(g.res[actor]).filter(([, d]) => d > 0).map(([r, d]) => `${d} ${r}`).join(', ');
+      out.push(`released ${cardName(c.uid)}${back ? ` for ${back}` : ''}`);
+    }
+  }
+  // what only the log says (an extra turn, a member used, a switch): kept from the log's story
+  for (const l of (base ? base.lines : [])) if (/^(used |an extra turn$|\d+ extra turns$|switched )/.test(l) && !out.includes(l)) out.push(l);
+  if (!base && !out.length) return null;
+  const hit = hits.join(', ');
+  const big = out.find(l => /^(recruited|bought|traded|released) |^(an extra turn|\d+ extra turns)$/.test(l));
+  const short = [hit, gain, big && big.replace(/ \((paid .*|free)\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
+  const head = base ? base.head : (actor === me ? 'You' : P[actor].name);
+  const touched = base ? base.touched : [];
+  return { ...(base || {}), text: [head, ...out].join(' · '), head, lines: out, actor, touched, short, hit, fx: true };
+}
+
 /** Who won a finished game: most followers, members breaking a follower tie (the rule; Results ranks the same way). */
 export function finalWinners(state) {
   const ids = state.ranking || state.players.map(p => p.id);

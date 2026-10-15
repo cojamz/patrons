@@ -26,16 +26,25 @@ const matches = (id, p) => (p instanceof RegExp ? p.test(id) : typeof p === 'fun
 const rank = (id, list) => { const k = list.findIndex(p => matches(id, p)); return k < 0 ? list.length : k; };
 
 export async function answerChoice(page, { prefer = [], last = [], avoid = [], panelFirst = false, skip = 0, domFallback = false, timeout = 1500 } = {}) {
+  // Every element handle this takes is let go before it returns: a handle pins its element, and a detached one pins its
+  // whole old tree, for as long as the page lives (memory.mjs read 27k DOM nodes on results: old shops, wheels, seats).
+  const held = [];
+  try { return await answer(page, held, { prefer, last, avoid, panelFirst, skip, domFallback, timeout }); } finally { for (const h of held) h.dispose().catch(() => {}); }
+}
+
+async function answer(page, held, { prefer, last, avoid, panelFirst, skip, domFallback, timeout }) {
+  const keep = h => { if (h) held.push(h); return h; };
   // the pay sheet holds the keyboard: Pay (the suggested way is already in the cost), else Enter
-  const sheet = await page.$('.dialog.pay');
+  const sheet = keep(await page.$('.dialog.pay'));
   if (sheet) {
-    const go = await page.$('.dialog.pay [data-option]:not([data-option="back"]):not([disabled])');
+    const go = keep(await page.$('.dialog.pay [data-option]:not([data-option="back"]):not([disabled])'));
     const id = go ? await go.getAttribute('data-option').catch(() => null) : null;
     if (go) { try { await go.click({ timeout }); return { id, kind: 'pay' }; } catch { /* covered: Enter below */ } }
     await sheet.press('Enter').catch(() => {});
     return { id: id || 'Enter', kind: 'pay' };
   }
   const els = await page.$$('[data-option]:not([disabled]):not([aria-disabled="true"])');
+  held.push(...els);
   if (!els.length) return null;
   const meta = await page.evaluate(es => es.map(e => [e.getAttribute('data-option'), !!e.parentElement?.closest('.prompt.choice, [role="dialog"]')]), els).catch(() => []);
   const second = meta.some(m => m[0] === '@unpick');

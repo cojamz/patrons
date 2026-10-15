@@ -70,3 +70,11 @@
   .lt[data-yours="1"][data-phase="place"] .lt-shop-main,.lt[data-yours="1"][data-phase="place"] .lt-rates{filter:brightness(.86) saturate(.9)}
   .lt[data-phase="reckon"] .lt-shop-main,.lt[data-phase="reckon"] .lt-rates{filter:brightness(.55) saturate(.7)}
 }
+/* the narrowest laptops (861–1049px): ten cards of ~76px; their footers take the room the margins had */
+@media (min-width:861px) and (max-width:1049px) and (min-height:500px){
+  .app.game.lt .lt-shop-body{gap:5px}
+  .app.game.lt .lt-shop-body .lt-deck{flex-basis:48px}
+  .app.game.lt .lt-cards{gap:5px}
+  .app.game.lt .lt-card .ft{margin:auto 3px 0}
+  .app.game.lt .lt-card .lt-res{margin-right:3px}
+}

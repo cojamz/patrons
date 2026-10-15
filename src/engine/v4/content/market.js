@@ -39,8 +39,9 @@ function buyAt(ctx, p, uid, how, why) {
   if (!list.length) return;
   const data = { uid, why, how };
   if (list.length === 1) { payAndRecruit(ctx, p, list[0], data); return; }
+  // uid and how ride on each way to pay, so a screen can show the member and its price (the pay sheet); ids unchanged
   ctx.choose(p, `${why}: how do you pay ${ctx.price(p, uid, how).total} for ${card.def.name}?`, list.map((v, i) => ({
-    id: `pay:${ctx.state.resources.map(r => v[r] || 0).join('-')}`, label: payLabel(v), kind: 'pay', value: v, hint: i === 0 ? 1 : 0,
+    id: `pay:${ctx.state.resources.map(r => v[r] || 0).join('-')}`, label: payLabel(v), kind: 'pay', value: v, hint: i === 0 ? 1 : 0, uid, how,
   })), `${Q}.pay`, data);
 }
 function payAndRecruit(ctx, p, v, { uid, why, fromPile, how = howFor(why) }) {
@@ -149,7 +150,7 @@ const market = {
       const data = { uid, why: 'Talent Scout', fromPile: true, how: {} };
       if (list.length === 1) { payAndRecruit(ctx, p, list[0], data); return; }
       ctx.choose(p, `Talent Scout: how do you pay for ${c.def.name}?`, list.map((v, i) => ({
-        id: `pay:${ctx.state.resources.map(r => v[r] || 0).join('-')}`, label: payLabel(v), kind: 'pay', value: v, hint: i === 0 ? 1 : 0,
+        id: `pay:${ctx.state.resources.map(r => v[r] || 0).join('-')}`, label: payLabel(v), kind: 'pay', value: v, hint: i === 0 ? 1 : 0, uid, how: {},
       })), `${Q}.pay`, data);
     },
     climb(ctx, p, color) {
