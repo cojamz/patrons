@@ -390,3 +390,4 @@ One line per decision or idea. Newest at the bottom. Status: ✅ decided · 💡
 - ✅ (Cory) Intro motion must be smooth, not jagged: sprites keep crisp pixels but move with sub-pixel transforms; motion videos are recorded at 30 fps.
 - (Claude, under Cory's go-with-your-gut) Emoji pick built for setup and the online lobby: a 5×4 grid of the 20 sprites, one per table, taken ones dimmed. People outrank bots (taking a bot's emoji moves the bot to a random free one); anyone who doesn't pick gets a random free one; the browser remembers your last pick. The host adds online bots at Easy/Normal/Hard.
 - Finding (emoji agent, frozen builds): the Wheel's rim-text measuring effect sometimes loops into React error #185 and crashes the game (2 of 5 hotseat runs). Ship blocker, routed to the wheel agent.
+- ✅ (Cory) The reworked intro (one continuous shot, his four-line script, pizza leader, initiation, follower buy, crowned finale): "amazing".
