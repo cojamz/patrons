@@ -21,7 +21,7 @@ const wheel = (s, legal, look) => <Wheel state={s} legal={legal} onPick={() => {
 
 describe('faces', () => {
   it('registers the built-ins and the face files by name', () => {
-    expect(faceNames().slice(0, 2)).toEqual(['sockets', 'engraved']);
+    expect(faceNames().slice(0, 2)).toEqual(['panels', 'sockets']); // engraved retired (Cory, 2026-10-15)
     expect(faceNames()).toContain('demo');
     expect(faceNames()).not.toContain('kit');
   });

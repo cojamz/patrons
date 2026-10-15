@@ -40,10 +40,15 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
     if (!root) return;
     const out = {};
     for (const p of info.after.players) {
+      // beside the chair, in the gap between the column and the wheel (the column of chairs, laptop), else beside
+      // the leader; never over the chair's own name or numbers
+      const seat = root.querySelector(`.lt > .lt-seat[data-pid="${p.id}"]`);
+      const sr = seat && seat.getBoundingClientRect();
+      if (sr && sr.width && root.querySelector('.lt > .lt-snake')) { out[p.id] = { left: sr.right + 8, top: sr.top + 24 }; continue; }
       const a = playerAnchor(root, p.id);
       if (!a) continue;
       const r = a.getBoundingClientRect();
-      out[p.id] = { left: r.right + 6, top: r.top + r.height / 2 }; // beside the leader, never over it
+      out[p.id] = { left: r.right + 6, top: r.top + r.height / 2 };
     }
     setSpots(out);
   }, [root, info]);

@@ -464,3 +464,9 @@
 .lt-note .term,.tip-body .mc .term{text-decoration-color:rgba(43,32,24,.22);border-bottom-color:rgba(43,32,24,.22)}
 /* the extra rows under "You'd get" (why, the race, what it unlocks) step down to small print */
 .lt-yd-row:not(.youd){font-size:12px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
+/* "you choose how" follows "You'd get" inline as " · …", or on its own small line under the amount */
+.youd-get em.yd-note::before{content:" · "}
+.lt-yd-row.youd .youd-get em.yd-note::before{content:none}
+/* every follower tile keeps its trade on the same line; "8 left" sits quietly under it */
+.lt-rates .lt-rate .fb-tip{position:relative}
+.lt-rates .rt-left{position:absolute;left:0;right:0;bottom:7px;margin:0;text-align:center}

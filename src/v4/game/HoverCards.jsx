@@ -10,6 +10,7 @@ import { playerColor, standings } from '../format.js';
 import { Popover } from './parts.jsx';
 import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews } from './Info.jsx';
 import { ResourceGlyph, SeatFigure } from './Glyphs.jsx';
+import { Rich } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { unlockedBy, surely } from './cards.js';
 import { lastMoves } from './seats.js';
@@ -235,7 +236,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {pv && pv.copies ? <Row k="Can copy">{pv.copies.length ? pv.copies.map(k => spaceName(state, k)).join(', ') : 'nothing yet'}</Row> : null}
         {open && viewer != null && !state.over ? <div className="lt-yd-row youd"><span className="k">You’d get</span><span className="v"><YoudGet state={state} pid={viewer} q={q} i={i} /></span></div> : null}
         {/* why a member changed the number, or stayed off ("Underdog: no ×2 (Hustler’s +3 lands first)"), from the dry run */}
-        {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons>{pv.reasons.join(' · ')}</span></Row> : null}
+        {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons><Rich text={pv.reasons.join(' · ')} /></span></Row> : null}
         {race && <Row k={race.rule}>{race.text}</Row>}
         {pv && pv.swept && pv.swept.length ? <Row k="Sweeps away">{pv.swept.map((u, k) => <span key={u} data-swept={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}<small className="lt-swept-note"> back under the deck</small></Row> : null}
         {unlocks.length ? <Row k="Unlocks">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}

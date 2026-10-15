@@ -25,7 +25,7 @@ describe('Wheel', () => {
     const errors = [];
     vi.spyOn(console, 'error').mockImplementation((...a) => { errors.push(a.map(String).join(' ')); });
     try {
-      for (const look of ['sockets', 'engraved']) {
+      for (const look of ['panels', 'sockets']) {
         let s = createGame({ seats, seed: 7, quadrants: ['red', 'yellow', 'market', 'thieves'] });
         const rand = seededRandom(7);
         const props = st => ({ state: st, legal: new Map(), onPick: () => {}, flash: new Set(), facing: 0, onFacing: () => {}, look });

@@ -70,14 +70,14 @@
 //                 degrees (0 = top, clockwise), radii from the wheel's centre (200,200), in WHEEL coordinates, not
 //                 the box's, unturned (the wheel turns it). For cells, cups, washes, hatching. No text: it turns.
 //
-// Built-in looks, drawn by the Wheel itself: 'panels' (the default since 2026-10-15: plate 1b's flat wedge panels),
-// 'sockets' (the old look, kept until Cory has played the new one) and 'engraved'.
+// Built-in looks, drawn by the Wheel itself: 'panels' (the default since 2026-10-15: plate 1b's flat wedge panels) and
+// 'sockets' (the old look, kept until Cory has played the new one). 'engraved' is retired (Cory, 2026-10-15).
 // ============================================================================================================
 
 import { createElement, useEffect, useState } from 'react';
 
 /** The looks the Wheel draws itself. */
-export const BUILT_IN = ['sockets', 'engraved', 'panels'];
+export const BUILT_IN = ['panels', 'sockets'];
 /** The look a table wears when `?spaces=` names none. */
 export const DEFAULT_LOOK = 'panels';
 

@@ -4,13 +4,12 @@
 //  - panels (default; the visual language, plate 1b, design/prototypes/language/): a dark board where each ring's
 //    spaces tile their quadrant as flat paper wedges, each with the action's small picture above its effect (the
 //    number first and biggest) and one line of small print where the big line can't say it all. No names. Taken: the
-//    panel dims and the minion stands where the picture was. Locked: a faint outline, "opens in round N".
+//    panel dims and the minion stands where the picture was. Locked: faint on the board, its round where the picture
+//    was. The small print shows only where every panel of a quadrant's ring has room for it; it's always in the hover.
 //  - sockets (`?spaces=sockets`, the old look until Cory has played the new one): a cream socket per space;
-//  - engraved (design/prototypes/actions option 3): each space is a cell of its ring printed into the paper, washed
-//    in the quadrant's ink, with a one-ink stamp of its picture, its name in small capitals and its yield beneath.
 //  - any face in ./faces/ (`?spaces=<name>`, lab: `?lab=faces&face=<name>`): the face draws inside each space's box;
 //    the Wheel keeps positions, rotation, hover, clicks, aria, shake and notes. Contract: top of ./faces/index.js.
-// In both, a space has three states you can read at a glance: lit (yours to take: a lamp-lit edge, full strength),
+// In each look, a space has three states you can read at a glance: lit (yours to take: a lamp-lit edge, full strength),
 // taken (dimmed to ~40% with the owner's minion standing in it), and not open yet (hatched / hollow). A rival's
 // fresh move wears a dotted ring in that player's color, never the lamp's. A click on a space you can't take
 // shakes it and says why at the pointer ("Taken by P3", "Opens in round II"), never silence.
@@ -23,7 +22,7 @@ import { playerColor, standings, seatEmoji, shortLabel } from '../format.js';
 import { Minion } from '../art/Leader.jsx';
 import { emojiArt } from '../art/emojis.js';
 import { Sprite } from '../art/Sprite.jsx';
-import { spriteId, iconFor, withOutline } from '../art/index.js';
+import { spriteId } from '../art/index.js';
 import { sheetMode } from './parts.jsx';
 import { realHover } from '../hover.js';
 import { Rich } from './Rich.jsx';
@@ -37,18 +36,15 @@ import { MO, spinEase } from '../motion.js';
 
 // sockets: discs toward the outer edge of their ring, so a name never runs into a neighbour at any board size
 const RING_S = { 1: { r0: 128, r1: 180, r: 151, n: 3, span: 66 }, 2: { r0: 82, r1: 128, r: 104, n: 2, span: 40 }, 3: { r0: 36, r1: 82, r: 58, n: 1, span: 0 } };
-// engraved: the cells tile each quadrant (ring I: three 30° cells, ring II: two 45° cells, ring III: one 90° cell)
-// (the hub shrinks so the one wide ring-III cell can hold its name, stamp and yield at 12px or more)
-const RING_E = { 1: { r0: 126, r1: 180, r: 153, n: 3, span: 60 }, 2: { r0: 78, r1: 126, r: 102, n: 2, span: 45 }, 3: { r0: 22, r1: 78, r: 51, n: 1, span: 0 } };
-// panels: the cells tile each quadrant like engraved's, on a dark board with gutters between them; r is where each
+// panels: the cells tile each quadrant (ring I: three 30° cells, ring II: two 45°, ring III: one 90°) on a dark
+// board with gutters between them; the hub is small so the rings get the room; r is where each
 // panel's print is centred (ring III's a little out from the middle of its wedge, where the wedge is wide)
 const RING_P = { 1: { r0: 123, r1: 179, r: 151, n: 3, span: 60 }, 2: { r0: 65, r1: 120, r: 92, n: 2, span: 45 }, 3: { r0: 21, r1: 62, r: 42, n: 1, span: 0 } };
-const ringsOf = look => (look === 'engraved' ? RING_E : look === 'panels' ? RING_P : RING_S);
+const ringsOf = look => (look === 'panels' ? RING_P : RING_S);
 const RIM = { r0: 180, r1: 200, r: 190 }; // the rim band: each quadrant's rule, engraved
 // the rim's hover/tap target: from just outside ring I's sockets to well past the paper's edge (it wins over any space)
 const RIM_HIT = { r0: 181, r1: 216 };
 const CX = 200, CY = 200, VB0 = -26, VBS = 452;
-const BOX = 40; // engraved: the space's own box (its click and hover target, in board units); the cell takes the rest
 const qCenter = q => 180 + q * 90;
 const norm = a => ((a % 360) + 540) % 360 - 180;
 function polar(a, r) { const t = (a - 90) * Math.PI / 180; return [CX + r * Math.cos(t), CY + r * Math.sin(t)]; }
@@ -80,7 +76,7 @@ export const facingOf = (rot, count) => {
 };
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** Which look the spaces wear: `?spaces=engraved`, `?spaces=<a face in ./faces/>` (until Cory picks), else 'sockets'. */
+/** Which look the spaces wear: `?spaces=sockets` (the old look), `?spaces=<a face in ./faces/>`, else 'panels'. */
 export function spacesLook() {
   return lookFromUrl();
 }
@@ -102,35 +98,7 @@ export function spaceGeometry(state, look = 'sockets') {
   return out;
 }
 
-// ---------- the engraved stamp: today's 24×24 action icon printed in one ink (dark, the ink, a light tint) ----------
-const STAMP_TONE = { k: 'd', d: 'd', 1: 'd', 2: 'm', m: 'm', 3: 'l', l: 'l', o: 'l' };
-const stampCache = new Map();
-function stampRects(id) {
-  const { icon } = iconFor(id, 'action');
-  if (stampCache.has(icon.id)) return stampCache.get(icon.id);
-  const out = [];
-  withOutline(icon.px).forEach((r, y) => {
-    let x = 0;
-    while (x < r.length) {
-      const ch = r[x];
-      let w = 1;
-      while (r[x + w] === ch) w++;
-      if (ch !== '.') out.push({ x, y, w, t: STAMP_TONE[ch] || 'm' });
-      x += w;
-    }
-  });
-  stampCache.set(icon.id, out);
-  return out;
-}
-const Stamp = memo(function Stamp({ id, size = 24 }) {
-  return (
-    <svg className="stamp" viewBox="0 0 24 24" width={size} height={size} shapeRendering="crispEdges" aria-hidden="true">
-      {stampRects(id).map((r, k) => <rect key={k} className={r.t} x={r.x} y={r.y} width={r.w} height="1" />)}
-    </svg>
-  );
-});
-
-// ---------- the rim's engraved text: its width from the font itself (a canvas measure, cached), never from the page ----------
+// ---------- the rim's text: its width from the font itself (a canvas measure, cached), never from the page ----------
 const collapse = t => String(t).replace(/\s+/g, ' ');
 const rimWidths = new Map();
 let rimCtx, rimEarly = false; // rimEarly: something was measured before the web font arrived
@@ -317,11 +285,10 @@ export function deniedText(state, key, meId = null) {
 /**
  * @param {{ state:any, legal:Map<string,string>, onPick:(id:string)=>void, onDenied?:(info:object, el:Element)=>void,
  *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void, look?:string }} props
- *   (look: 'sockets' | 'engraved' | the name of a face in ./faces/, whose contract is at the top of faces/index.js)
+ *   (look: 'panels' | 'sockets' | the name of a face in ./faces/, whose contract is at the top of faces/index.js)
  */
 function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null, look: lookProp = null }) {
   const look = useMemo(() => lookProp || spacesLook(), [lookProp]);
-  const engraved = look === 'engraved';
   const panels = look === 'panels';
   // a face from ./faces/ (null for the built-in looks, and for a moment while its chunk loads)
   const custom = !BUILT_IN.includes(look);
@@ -334,10 +301,10 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const hoverRef = useRef(hover);
   hoverRef.current = hover;
   const stage = useRef(null);
-  // what a space's hover card sits beside: the whole cell (engraved), or the socket
+  // what a space's hover card sits beside: the whole panel, or the socket
   const anchorOf = (key, el = null) => {
     const root = stage.current;
-    if ((engraved || panels) && root) { const c = root.querySelector(`[data-cell="${key}"] .wash`); if (c) return c; }
+    if (panels && root) { const c = root.querySelector(`[data-cell="${key}"] .wash`); if (c) return c; }
     return el || (root && root.querySelector(`[data-slot="${key}"]`));
   };
   useEffect(() => {
@@ -642,7 +609,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   state.quadrants.forEach((qid, q) => {
     const c = qCenter(q), a0 = c - 45, a1 = c + 45;
     const col = `var(--${qid})`;
-    if (!engraved && !panels && !(Face && Face.bands === false)) {
+    if (!panels && !(Face && Face.bands === false)) {
       [1, 2, 3].forEach(t => {
         const R = rings[t], open = t <= round;
         paper.push(<path key={`b${q}${t}`} className={`band${open ? ' open' : ''}${t === paying ? ' pays' : ''}`} d={arc(a0, a1, R.r0, R.r1)} fill={col} fillOpacity={open ? (t === 1 ? 0.26 : 0.2) : 0.05} />);
@@ -664,30 +631,6 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
         <g key={`fc${s.key}`} className={`face-cell ${status}`} data-cell={s.key} style={{ '--c': `var(--${s.qid})`, pointerEvents: 'none' }}>
           <Cell key={s.key} q={s.qid} action={s.a} ring={s.ring} round={round} status={status} ang={s.ang} a0={a0} a1={a1} r0={R.r0} r1={R.r1}
             d={cellPath(a0, a1, R.r0, R.r1)} inset={cellPath(a0, a1, R.r0, R.r1, 2.6)} />
-        </g>,
-      );
-    }
-  }
-  // engraved: one printed cell per space, its state in the print (wash, lamp edge, hatch, a mover's dotted ring)
-  if (engraved) {
-    for (const s of spaces) {
-      const R = rings[s.ring], open = s.ring <= round, owner = state.slots[s.key];
-      const lit = legal.has(s.key);
-      const fresh = freshOf(s.key);
-      const d = cellPath(s.ang - s.half, s.ang + s.half, R.r0, R.r1);
-      const inset = cellPath(s.ang - s.half, s.ang + s.half, R.r0, R.r1, 2.6);
-      const cls = ['cell', open ? 'open' : 'locked', lit ? 'lit' : '', owner !== undefined ? 'taken' : '', peek && peek.pinned && peek.key === s.key ? 'sel' : ''].filter(Boolean).join(' ');
-      paper.push(
-        <g key={`cell${s.key}`} className={cls} data-cell={s.key} style={{ '--c': `var(--${s.qid})` }}
-          onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, stage.current && stage.current.querySelector(`[data-slot="${s.key}"]`), { x: e.clientX, y: e.clientY }); }}
-          onPointerEnter={e => { const h = live.current.hover; e.currentTarget.classList.add('hot'); if (h && realHover(e)) h.onSpaceHover(s.key, e.currentTarget.querySelector('.wash')); }}
-          onPointerLeave={e => { const h = live.current.hover; e.currentTarget.classList.remove('hot'); if (h && e.pointerType === 'mouse') h.onSpaceHover(s.key, null); }}>
-          <path className="wash" d={d} />
-          {!open && <path className="hatch" d={d} />}
-          {lit && <path className="glow" d={inset} />}
-          <path className={lit ? 'edge-lit' : 'edge-in'} d={inset} />
-          {fresh && <path className={`fresh${fresh.newest ? ' newest' : ''}`} d={inset} style={{ stroke: playerColor(fresh.pid) }}><title>{`${state.players[fresh.pid].name} took ${fresh.action}`}</title></path>}
-          <path className="line" d={d} />
         </g>,
       );
     }
@@ -829,24 +772,17 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const legalKey = [...legal.entries()].map(([k, v]) => `${k}=${v}`).join('|');
   const sockets = useMemo(() => spaces.map(s => {
     const { key, q, a, ring: t, qid } = s;
-    let [X, Y] = turned(s.xy[0], s.xy[1]);
+    const [X, Y] = turned(s.xy[0], s.xy[1]);
     const owner = state.slots[key];
     const joiners = (state.squats && state.squats[key]) || [];
     const open = t <= round;
     const opt = legal.get(key);
     const selected = pinnedKey === key;
     const fresh = freshOf(key);
-    // engraved: does the cell lie on its side once the wheel is turned (tall and narrow on screen)?
-    // a flat cell in the lower half prints its name below the stamp: names always hug the rim side, where the cell is wide
-    const sa = (norm(s.ang + rot) * Math.PI) / 180;
-    const side = engraved && Math.abs(Math.sin(sa)) > Math.abs(Math.cos(sa));
-    const low = engraved && !side && Math.cos(sa) < 0;
-    // on its side, a short yield runs as one line ("+1 red · swap"); a longer one keeps a clause a line
-    const flow = side && (t === 1 ? shortEffect(qid, a, round) : pipEffect(qid, a, round)).replace(/ · /g, ' ').replace(/@[mrf]/g, 'x').length <= 12;
     // panels: the grammar's big line and small print, laid out in the room this panel has where it sits now
     const pl = panels ? panelLays.get(key) : null;
     const said = pl && pl.said, lay = pl && pl.lay, fineSaid = pl && open ? said.fine : null;
-    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', side ? 'side' : '', low ? 'low' : '', flow ? 'flow' : '', lay && !lay.fineLines ? 'nofine' : '', lay && lay.fineLines > 1 ? 'fine2' : '', lay && lay.bigLines > 1 ? 'big2' : ''].filter(Boolean).join(' ');
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && !lay.fineLines ? 'nofine' : '', lay && lay.fineLines > 1 ? 'fine2' : '', lay && lay.bigLines > 1 ? 'big2' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>
@@ -854,15 +790,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       </span>
     );
     const minions = owner !== undefined ? <span className="worker-fig" data-seat={owner}>{[owner, ...joiners].map(minion)}</span> : null;
-    // a tall stack on its side sits a little in from the rim (ring I), and ring II's a little in from ring I's
-    if (side && t < 3) [X, Y] = turned(...polar(s.ang, rings[t].r - (t === 1 ? 5 : 5)));
     let style = { ...at(X, Y), '--c': `var(--${qid})` };
-    if (engraved) {
-      // the words get the cell's width on screen: its chord when it lies flat, its depth when it stands on its side
-      const R = rings[t];
-      const fw = side ? (R.r1 - R.r0) * (t === 1 ? 1.02 : 0.9) : t === 3 ? 2 * (R.r1 - 12) * Math.SQRT1_2 * 0.9 : 2 * R.r * Math.sin((s.half * Math.PI) / 180) * 0.92;
-      style = { ...style, '--fw': `${((fw / BOX) * 100).toFixed(1)}%` };
-    }
     if (panels) style = { ...style, ...at(...turned(...polar(s.ang, lay.rc))), width: `${((lay.w / VBS) * 100).toFixed(2)}%`, '--big': `${lay.big}px` };
     // a face from ./faces/: the box is the face's own size (board units), and the face draws everything inside it
     let face = null;
@@ -884,8 +812,8 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
         role="button" tabIndex={opt ? 0 : -1} aria-label={`${a.name}, ${quadrant(qid).name} round ${roman(t)}: ${a.text} ${status}.`}
         onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, e.currentTarget, { x: e.clientX, y: e.clientY }); }}
         onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.onPick(opt); } }}
-        onPointerEnter={e => { const h = live.current.hover; if (engraved || panels) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.add('hot'); } if (h && realHover(e)) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
-        onPointerLeave={e => { const h = live.current.hover; if (engraved || panels) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.remove('hot'); } if (h && e.pointerType === 'mouse') h.onSpaceHover(key, null); }}
+        onPointerEnter={e => { const h = live.current.hover; if (panels) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.add('hot'); } if (h && realHover(e)) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
+        onPointerLeave={e => { const h = live.current.hover; if (panels) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.remove('hot'); } if (h && e.pointerType === 'mouse') h.onSpaceHover(key, null); }}
         onFocus={e => { const h = live.current.hover; if (h && keyboardLed() && e.currentTarget.matches(':focus-visible')) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
         onBlur={() => { const h = live.current.hover; if (h) h.onSpaceHover(key, null); }}
       >
@@ -906,19 +834,6 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
                   : <Said text={fineSaid} />}
               </span>
             )}
-          </span>
-        ) : engraved ? (
-          // the name; beneath it the stamp (or the minion standing on it) with the yield beside it, one clause a line
-          <span className="face" aria-hidden="true">
-            {open && <span className="nm">{a.name}</span>}
-            <span className="row">
-              {minions || <span className="ico"><Stamp id={[`${qid}.${a.key}`, spriteId(a.name)]} /></span>}
-              {open && (
-                <span className="yl" data-yield>
-                  {clauses(t === 1 ? shortEffect(qid, a, round) : pipEffect(qid, a, round)).map((c, k) => <span key={k} className="cl">{k ? <span className="sep"> </span> : null}<Marked text={c} /></span>)}
-                </span>
-              )}
-            </span>
           </span>
         ) : (
           <>

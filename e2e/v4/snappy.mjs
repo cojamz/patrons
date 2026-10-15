@@ -149,14 +149,15 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
     const misses = [];
     for (const [x, y, kind] of targets) {
       await page.mouse.move(4, 696);
-      await page.waitForFunction(() => !document.querySelector('[data-hover-layer][data-open="1"], .popover:not([data-hover-layer])'), null, { timeout: 1500 }).catch(() => {});
+      const closed = await page.waitForFunction(() => !document.querySelector('[data-hover-layer][data-open="1"], .popover:not([data-hover-layer])'), null, { timeout: 1500 }).then(() => true, () => false);
+      const stuck = closed ? '' : await page.evaluate(() => { const up = document.querySelector('[data-hover-layer][data-open="1"] [data-hover-card], .popover:not([data-hover-layer])'); return up ? ` (the last card never closed: ${up.dataset.hoverCard || up.className}${up.querySelector('[data-space-card]') ? ` ${up.querySelector('[data-space-card]').dataset.spaceCard}` : ''})` : ''; });
       await page.waitForTimeout(60);
       await page.evaluate(() => { window.__snap.hov.t0 = null; });
       const had = await page.evaluate(() => window.__snap.hov.lat.length);
       await page.mouse.move(x, y, { steps: 2 });
       const hit = await page.waitForFunction(h => window.__snap.hov.lat.length > h, had, { timeout: 1500 }).then(() => true, () => false);
       // a miss names what was under the pointer and whether a card was already up, so a flaky target can be found
-      if (!hit) misses.push(`${kind} at ${Math.round(x)},${Math.round(y)}: ${await page.evaluate(([px, py]) => { const e = document.elementFromPoint(px, py); const t = e && e.closest('[data-slot], [data-uid], [data-tip]'); const up = document.querySelector('[data-hover-layer][data-open="1"]'); return `${e ? `${e.tagName.toLowerCase()}.${String(e.className && e.className.baseVal != null ? e.className.baseVal : e.className).split(' ').join('.')}` : 'nothing'}${t ? ` in ${t.getAttribute('data-slot') ? `slot ${t.getAttribute('data-slot')}` : t.getAttribute('data-uid') ? `card ${t.getAttribute('data-uid')}` : 'tip'}` : ' (no target)'}${up ? `, card up: ${(up.querySelector('[data-hover-card]') || {}).dataset?.hoverCard}` : ''}`; }, [x, y])}`);
+      if (!hit) misses.push(`${kind} at ${Math.round(x)},${Math.round(y)}: ${await page.evaluate(([px, py]) => { const e = document.elementFromPoint(px, py); const t = e && e.closest('[data-slot], [data-uid], [data-tip]'); const up = document.querySelector('[data-hover-layer][data-open="1"]'); return `${e ? `${e.tagName.toLowerCase()}.${String(e.className && e.className.baseVal != null ? e.className.baseVal : e.className).split(' ').join('.')}` : 'nothing'}${t ? ` in ${t.getAttribute('data-slot') ? `slot ${t.getAttribute('data-slot')}` : t.getAttribute('data-uid') ? `card ${t.getAttribute('data-uid')}` : 'tip'}` : ' (no target)'}${up ? `, card up: ${(up.querySelector('[data-hover-card]') || {}).dataset?.hoverCard} ${(up.querySelector('[data-space-card]') || up.querySelector('[data-card-hover]') || { dataset: {} }).dataset.spaceCard || (up.querySelector('[data-card-hover]') || { dataset: {} }).dataset.cardHover || ''}` : ''}`; }, [x, y])}${stuck}`);
       n++;
     }
     const lat = (await page.evaluate(() => window.__snap.hov.lat)).sort((a, b) => a - b);

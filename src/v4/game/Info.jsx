@@ -461,8 +461,8 @@ export function YoudGet({ state, pid, q, i }) {
   const w = previewWords(pv, state);
   return (
     <span className="youd-get" data-youd-get={w.you} title="Worked out by playing this space on a copy of the table, right now">
-      <b>You’d get:</b> {w.partial ? 'about ' : ''}<Rich text={w.you} />{w.choose ? <em> · {pv.exact ? 'you choose how' : 'depends on your choice'}</em> : null}
-      {w.theyChoose ? <em> · a rival decides part of it</em> : null}
+      <b>You’d get:</b> {w.partial ? 'about ' : ''}<Rich text={w.you} />{w.choose ? <em className="yd-note">{pv.exact ? 'you choose how' : 'depends on your choice'}</em> : null}
+      {w.theyChoose ? <em className="yd-note">a rival decides part of it</em> : null}
       {w.others ? <small className="youd-others"><Rich text={w.others} /></small> : null}
     </span>
   );

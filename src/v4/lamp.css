@@ -107,7 +107,7 @@ h1,h2,h3{font-family:var(--serif)}
   .lt > .lt-seat .cs-head{grid-column:1 / -1;grid-row:1 / 3;display:grid;grid-template-columns:subgrid;grid-template-rows:subgrid;align-items:center;min-height:0}
   .lt > .lt-seat .cs-head .cs-leader{grid-column:1;grid-row:1 / 3}
   .lt > .lt-seat .cs-head .cs-who{grid-column:2;grid-row:1;flex-direction:row;align-items:baseline;gap:8px}
-  .lt > .lt-seat .cs-head .cs-total{grid-column:3;grid-row:1 / 3;align-self:center}
+  .lt > .lt-seat .cs-head .cs-total{grid-column:3;grid-row:1;align-self:center}
   .lt > .lt-seat .cs-foot{grid-column:2 / 4;grid-row:2;z-index:1;justify-self:start;pointer-events:auto}
   .lt > .lt-seat .cs-crowd{grid-column:1 / -1;grid-row:3}
   .lt > .lt-seat .cs-build{grid-column:1 / -1;grid-row:4}
@@ -279,70 +279,6 @@ h1,h2,h3{font-family:var(--serif)}
 @keyframes denyin{from{opacity:0;translate:0 4px}to{opacity:1;translate:0 0}}
 @keyframes denyout{to{opacity:0}}
 
-/* ---------- engraved spaces (?spaces=engraved, design/prototypes/actions option 3): cells printed into the paper ---------- */
-.lt .stage svg.wheel-paper .cell path{pointer-events:none}
-.lt .stage svg.wheel-paper .cell .wash{pointer-events:all;fill:var(--c);fill-opacity:.2;transition:fill-opacity .25s}
-.lt .stage svg.wheel-paper .cell.lit{cursor:pointer}
-.lt .stage svg.wheel-paper .cell.lit .wash{fill-opacity:.36}
-.lt .stage svg.wheel-paper .cell.lit.hot .wash,.lt .stage svg.wheel-paper .cell.lit.sel .wash{fill-opacity:.52}
-.lt .stage svg.wheel-paper .cell.taken .wash{fill-opacity:.09}
-.lt .stage svg.wheel-paper .cell.taken.lit .wash{fill-opacity:.3}
-.lt .stage svg.wheel-paper .cell.locked .wash{fill-opacity:.04}
-.lt .stage svg.wheel-paper .cell .hatch{fill:url(#ltHatch)}
-.lt .stage svg.wheel-paper .cell .glow{fill:none;stroke:rgba(255,190,96,1);stroke-width:6;filter:url(#ltGlow);animation:litbreath 2.4s ease-in-out infinite}
-.lt .stage svg.wheel-paper .cell .edge-lit{fill:none;stroke:#ffe7b0;stroke-width:2.2}
-.lt .stage svg.wheel-paper .cell .edge-in{fill:none;stroke:rgba(255,250,238,.5);stroke-width:1}
-.lt .stage svg.wheel-paper .cell.locked .edge-in{stroke:none}
-.lt .stage svg.wheel-paper .cell .fresh{fill:none;stroke-width:2.2;stroke-dasharray:.1 4.4;stroke-linecap:round}
-.lt .stage svg.wheel-paper .cell .line{fill:none;stroke:rgba(42,31,23,.42);stroke-width:1.1}
-@media (prefers-reduced-motion:reduce){ .lt .stage svg.wheel-paper .cell .glow{animation:none;opacity:.85} }
-.lt [data-spaces="engraved"] .stage .hub-label small{display:none}
-.lt [data-spaces="engraved"] .stage .hub-label b{font-size:22px}
-.lt [data-spaces="engraved"] .stage .hub-label .pips{gap:3px;margin-top:2px}
-.lt [data-spaces="engraved"] .stage .hub-label .pips i{width:5px;height:5px}
-.lt [data-spaces="engraved"] .stage .slot{width:8.85%;border-radius:8px}
-.lt [data-spaces="engraved"] .stage .slot .hit{width:100%;border-radius:8px}
-.lt [data-spaces="engraved"] .stage .slot .base,.lt [data-spaces="engraved"] .stage .slot.lit .base,.lt [data-spaces="engraved"] .stage .slot.locked .base{background:none;box-shadow:none;border-radius:8px;opacity:1}
-.lt [data-spaces="engraved"] .stage .slot.lit .base::after{display:none}
-.lt [data-spaces="engraved"] .stage .slot.can:hover .base,.lt [data-spaces="engraved"] .stage .slot.sel .base{transform:none;box-shadow:none}
-.lt [data-spaces="engraved"] .stage .slot:focus-visible .base{box-shadow:0 0 0 2.5px var(--lamp-ink)}
-.lt [data-spaces="engraved"] .stage .slot.flash .base{animation:none}
-.lt [data-spaces="engraved"] .stage .slot .face{inset:auto;left:50%;top:50%;width:var(--fw);transform:translate(-50%,-50%);gap:2px;padding:0;color:color-mix(in srgb,var(--c) 40%,#2a1f17)}
-/* the name: bold sans at 12px (small capitals don't fit the narrow cells at 12px; this keeps the floor) */
-.lt [data-spaces="engraved"] .stage .slot .face .nm{font-family:var(--sans);font-weight:800;font-size:12px;letter-spacing:0;line-height:1.02;margin:0;color:inherit;text-shadow:0 1px 0 rgba(255,250,238,.55)}
-.lt [data-spaces="engraved"] .stage .slot.low .face{flex-direction:column-reverse}
-/* the inner rings are narrow: their names print at 11px (never smaller) and wrap to two lines rather than shrink */
-.lt [data-spaces="engraved"] .stage .slot:not(.r1) .face .nm{font-size:11px;line-height:1.05}
-.lt [data-spaces="engraved"] .stage .slot .face .yl svg.mark{display:inline-block;width:9px;height:11px;vertical-align:-1px;margin:0 1px}
-.lt [data-spaces="engraved"] .stage .slot .face .row{display:flex;align-items:center;justify-content:center;gap:4px}
-.lt [data-spaces="engraved"] .stage .slot .face .ico{line-height:0;margin:0}
-.lt [data-spaces="engraved"] .stage .slot .face .ico svg{width:24px;height:24px;image-rendering:pixelated}
-/* rings II and III are narrower: their stamps and minions print at 20px */
-.lt [data-spaces="engraved"] .stage .slot:not(.r1) .face .ico svg{width:20px;height:20px}
-.lt [data-spaces="engraved"] .stage .slot:not(.r1) .face .worker-fig svg{width:20px;height:auto}
-.lt [data-spaces="engraved"] .stage .slot .face .yl{font-family:var(--serif);font-weight:800;font-size:12px;line-height:1.05;color:inherit;max-width:none;white-space:nowrap;text-shadow:0 1px 0 rgba(255,250,238,.6)}
-.lt [data-spaces="engraved"] .stage .slot .face .yl{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
-/* a cell standing on its side is narrow: the name, the stamp and the yield stack, centred */
-.lt [data-spaces="engraved"] .stage .slot.side .face .row{flex-direction:column;gap:1px}
-/* on its side the yield flows as one line when it fits, wrapping between clauses */
-.lt [data-spaces="engraved"] .stage .slot .face .yl .sep{display:none}
-.lt [data-spaces="engraved"] .stage .slot.side .face .yl{align-items:center}
-.lt [data-spaces="engraved"] .stage .slot.side .face .yl .cl{white-space:normal;text-align:center}
-.lt [data-spaces="engraved"] .stage .slot.flow .face .yl{display:block;text-align:center;white-space:normal;max-width:100%}
-.lt [data-spaces="engraved"] .stage .slot.flow .face .yl .cl{display:inline}
-.lt [data-spaces="engraved"] .stage .slot.flow .face .yl .sep{display:inline}
-.lt [data-spaces="engraved"] .stage .slot .face .yl .cl{white-space:nowrap;display:block}
-.lt [data-spaces="engraved"] .stage .stamp .d{fill:color-mix(in srgb,var(--c) 45%,#2a1f17)}
-.lt [data-spaces="engraved"] .stage .stamp .m{fill:var(--c)}
-.lt [data-spaces="engraved"] .stage .stamp .l{fill:color-mix(in srgb,var(--c) 38%,#f4ebd7)}
-/* taken: the print at 40%, the minion at full strength standing on the stamp; not open yet: faint and grey */
-.lt [data-spaces="engraved"] .stage .slot.taken .face,.lt [data-spaces="engraved"] .stage .slot.taken .base{opacity:1}
-.lt [data-spaces="engraved"] .stage .slot.taken:not(.lit) .face .nm,.lt [data-spaces="engraved"] .stage .slot.taken:not(.lit) .face .yl{opacity:.4}
-.lt [data-spaces="engraved"] .stage .slot .face .worker-fig{position:static;transform:none;filter:drop-shadow(0 2px 1px rgba(0,0,0,.45))}
-.lt [data-spaces="engraved"] .stage .slot .face .worker-fig svg{width:24px}
-.lt [data-spaces="engraved"] .stage .slot.locked .face{opacity:.34;filter:grayscale(.85)}
-.lt[data-yours="1"][data-phase="place"] [data-spaces="engraved"] .stage .slot.open:not(.lit):not(.taken) .face{opacity:.6}
-
 /* ---------- panels (the default look; the visual language, plate 1b): flat paper wedges on a dark board ----------
    Each space is a wedge of paper (Wheel.jsx panelPath) with its print upright above it: the action's small picture,
    the big line (the number first and biggest), one line of small print when there's room. Lit: a warm-white edge,
@@ -477,17 +413,19 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-reckon .reckon-head small{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper-ink-3)}
 .lt-reckon .reckon-head b{font-family:var(--serif);font-size:22px;line-height:1.15}
 /* the caption over the dimmed shop (clear of the wheel's plaques): what is scored, what it counts, then who wins */
-.lt-reckon .reckon-head .reckon-rule{font-size:24px;color:color-mix(in srgb,var(--c) 70%,var(--paper-ink))}
-.lt-reckon .reckon-head .reckon-counts{font-size:13.5px;line-height:1.3;color:var(--paper-ink-2);max-width:520px}
-.lt-reckon .reckon-head .reckon-verdict{font-size:20px;min-height:1.2em;color:var(--paper-ink-3);font-style:italic;font-weight:500;transition:color .25s}
-.lt-reckon .reckon-head .reckon-verdict.on{color:var(--paper-ink);font-style:normal;font-weight:700;animation:rise .3s ease-out}
+.lt-reckon .reckon-head{font-family:var(--sans)}
+.lt-reckon .reckon-head small{font-size:14px;letter-spacing:.08em}
+.lt-reckon .reckon-head .reckon-rule{font-family:var(--sans);font-size:18px;font-weight:800;color:color-mix(in srgb,var(--c) 70%,var(--paper-ink))}
+.lt-reckon .reckon-head .reckon-counts{font-size:14px;line-height:20px;color:var(--paper-ink-2);max-width:520px}
+.lt-reckon .reckon-head .reckon-verdict{font-family:var(--sans);font-size:18px;line-height:24px;min-height:24px;color:var(--paper-ink-3);font-weight:500;transition:color .25s}
+.lt-reckon .reckon-head .reckon-verdict.on{color:var(--paper-ink);font-weight:800;animation:rise .3s ease-out}
 .lt-reckon .reckon-head .reckon-verdict.none{color:var(--paper-ink-3);font-weight:500}
 .lt-reckon .reckon-dots{display:flex;gap:6px}
 .lt-reckon .reckon-dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--c);opacity:.6}
 .lt-reckon .reckon-dots i.done{background:var(--c);opacity:.55}
 .lt-reckon .reckon-dots i.on{background:var(--c);opacity:1;box-shadow:0 0 8px var(--c)}
 .lt-reckon .reckon-count{position:fixed;transform:translate(0,-50%);display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;
-  background:var(--paper);color:var(--paper-ink);font-family:var(--serif);font-weight:700;font-size:22px;box-shadow:0 0 0 2px var(--c),0 8px 18px rgba(0,0,0,.5);pointer-events:none;animation:rise .25s ease-out}
+  background:var(--paper);color:var(--paper-ink);font-family:var(--sans);font-weight:800;font-size:18px;box-shadow:0 0 0 2px var(--c),0 8px 18px rgba(0,0,0,.5);pointer-events:none;animation:rise .25s ease-out}
 .lt-reckon .reckon-count.won{box-shadow:0 0 0 3px var(--lamp-ink),0 0 22px 6px rgba(var(--lamp),.6);animation:reckonwin .5s ease-out 2}
 @keyframes reckonwin{50%{transform:translate(0,-50%) scale(1.18)}}
 .lt-reckon .reckon-skip{position:absolute;right:18px;bottom:18px;min-height:44px;padding:0 18px;color:var(--cream);border-color:rgba(243,230,200,.4);background:rgba(29,22,17,.7)}

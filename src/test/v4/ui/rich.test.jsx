@@ -34,7 +34,7 @@ describe('the plate\'s marks in text (visual language, 2026-10-15)', () => {
     const { container } = render(<Rich text="Gain 2 / 4 / 6 gold, or 3 followers." />);
     expect(container.querySelectorAll('[data-op]').length).toBe(0);
     expect([...container.querySelectorAll('.rich-n')].map(e => e.textContent)).toEqual(['2', '4', '6', '3']);
-    expect(container.textContent).toContain('6, or 3.');
+    expect(container.textContent).toContain('6, or 3followers.'); // the mark's own title, right after its number
   });
   it('the "any" dot puts each table color where its quadrant sits (q0 bottom, q1 left, q2 top, q3 right)', () => {
     expect(anyDotVars(['gold', 'red', 'blue', 'green'])).toEqual({ '--any-top': 'var(--blue)', '--any-right': 'var(--green)', '--any-bottom': 'var(--gold)', '--any-left': 'var(--red)' });
