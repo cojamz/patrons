@@ -359,8 +359,9 @@ function inputFor(state, task) {
     case 'release': {
       const opts = [];
       for (const c of state.resources) {
-        opts.push({ id: `all:${c}`, label: `All ${task.left} as ${c}`, kind: 'color', value: c, hint: -(p.res[c] || 0) });
-        if (task.left > 1) opts.push({ id: `one:${c}`, label: `1 ${c}`, kind: 'color', value: c, hint: -(p.res[c] || 0) - 0.5 });
+        // target: your own stack of that color takes one (the board picker); "all" keeps its button while more are left
+        opts.push({ id: `all:${c}`, label: `All ${task.left} as ${c}`, kind: 'color', value: c, hint: -(p.res[c] || 0), ...(task.left === 1 ? { target: { res: c } } : {}) });
+        if (task.left > 1) opts.push({ id: `one:${c}`, label: `1 ${c}`, kind: 'color', value: c, hint: -(p.res[c] || 0) - 0.5, target: { res: c } });
       }
       return { kind: 'choose', prompt: `${p.name}: take ${task.left} more from the release, in any colors`, options: opts };
     }
@@ -1019,7 +1020,7 @@ function ctxFor(state) {
       if (!options.length) return;
       // follow-up choices queued during one resolution keep their call order
       const at = state.queue.findIndex(t => !t._fresh);
-      const task = { t: 'choose', p: p.id, prompt, options: options.map(o => pinCards(state, withTarget(o))), h: handler, data, ...(extra.count ? { count: extra.count } : {}), _fresh: true };
+      const task = { t: 'choose', p: p.id, prompt, options: withTargets(state, options).map(o => pinCards(state, o)), h: handler, data, ...(extra.count ? { count: extra.count } : {}), _fresh: true };
       state.queue.splice(at < 0 ? state.queue.length : at, 0, task);
     },
   };
@@ -1043,16 +1044,34 @@ function pinCards(state, o) {
   const uids = CARD_KINDS.has(o.kind) ? [].concat(o.value).filter(u => Number.isInteger(u) && state.cards[u]) : [];
   return uids.length ? { ...o, at: Object.fromEntries(uids.map(u => [u, whereIs(state, u)])) } : o;
 }
-// An option that points at a seat says so in one structured field, so a screen never reads it off the label:
-// target { pid } (a player: Kickback, Benefactor), { pid, res } (one of their resource stacks: a steal's take:pid:color),
-// { pid, res, give: true } (Good Deed's give:pid:color). An option that sets its own target keeps it. Ids never change.
-function withTarget(o) {
-  if (o.target) return o;
-  if ((o.kind === 'take' || o.kind === 'give') && Array.isArray(o.value) && Number.isInteger(o.value[0]) && typeof o.value[1] === 'string') {
-    return { ...o, target: { pid: o.value[0], res: o.value[1], ...(o.kind === 'give' ? { give: true } : {}) } };
-  }
-  if (o.kind === 'player' && Number.isInteger(o.value)) return { ...o, target: { pid: o.value } };
-  return o;
+// An option that points at something on the board says so in one structured field, so a screen lights that thing
+// and never reads the label (the board picker, src/v4/game/boardPick.js). Ids never change.
+//   { space: 'q-i' }      a space on the wheel (Echo's and Encore's copies, Straggler's moves)
+//   { uid }               a member: face up in the shop, or on someone's seat (Hand-pick, Shake Down, Poach)
+//   { pid }               a player (Kickback, Benefactor)
+//   { pid, res }          one of a player's resource stacks (a steal's take:pid:color; give: true for Good Deed's gift)
+//   { res }               a color, shown as your own stack of it (a gift's color, a release's colors)
+// An option that sets its own target keeps it.
+function withTargets(state, options) {
+  const colors = options.filter(o => o.kind === 'color' && !o.target).map(o => o.value);
+  // a color pick names resources, or quadrants (Hustler): a quadrant is shown as its resource
+  const asQuadrant = colors.length > 0 && colors.every(v => state.quadrants.includes(v)) && !colors.every(v => state.resources.includes(v));
+  return options.map(o => {
+    if (o.target) return o;
+    const v = o.value;
+    let target = null;
+    if ((o.kind === 'take' || o.kind === 'give') && Array.isArray(v) && Number.isInteger(v[0]) && typeof v[1] === 'string') target = { pid: v[0], res: v[1], ...(o.kind === 'give' ? { give: true } : {}) };
+    else if (o.kind === 'player' && Number.isInteger(v)) target = { pid: v };
+    else if ((o.kind === 'card' || o.kind === 'member') && Number.isInteger(v) && state.cards[v]) target = { uid: v };
+    else if ((o.kind === 'space' || o.kind === 'slot') && (typeof v === 'string' || (v && typeof v.key === 'string'))) {
+      const key = String(typeof v === 'string' ? v : v.key).split('+')[0];
+      if (/^\d+-\d+$/.test(key)) target = { space: key };
+    } else if (o.kind === 'color' && typeof v === 'string') {
+      if (asQuadrant) target = { res: quadrant(v).resource };
+      else if (state.resources.includes(v)) target = { res: v };
+    }
+    return target ? { ...o, target } : o;
+  });
 }
 /** A queued choice's options that are still good: every card an option names is where it was when it was queued. */
 export function liveOptions(state, task) {

@@ -15,6 +15,8 @@ import { ResourceGlyph, SeatFigure } from './Glyphs.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { unlockedBy, surely } from './cards.js';
 import { lastMoves } from './seats.js';
+import { memberGroups, incomeOf } from './build.js';
+import { seatRanks } from './RankRow.jsx';
 import { memberCopyTargets } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
 import './lamp-b.css';
@@ -276,13 +278,25 @@ export function SeatCard({ state, pid, meId = null }) {
   const p = state.players[pid];
   const moves = lastMoves(state, pid, 3);
   const lvl = p.kind === 'bot' ? BOT_LEVEL_INFO.find(l => l.level === botLevel(state, pid)) : null; // Easy / Normal / Hard
+  const groups = memberGroups(state, p);
+  const income = incomeOf(state, pid);
+  const rank = seatRanks(state, meId)[pid] || null;
   return (
     <div className="lt-card-body seat-card" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}>
       <div className="t"><SeatFigure id={pid} state={state} size={32} /><h4>{p.name}{pid === meId ? ' (you)' : ''}<small>{lvl ? <span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span> : 'player'} · {p.left} minion{p.left === 1 ? '' : 's'} left</small></h4></div>
       <div className="lt-yd">
-        <Row k="Followers"><span className="follower"><b className="num">{followersOf(state, p)}</b><Follower size={12} /></span></Row>
+        <Row k="Followers"><span className="follower"><b className="num">{followersOf(state, p)}</b><Follower size={12} /></span>{rank && rank.text ? <small className="seat-rank" data-seat-rank={rank.place}> {rank.text} · {rank.title}</small> : null}</Row>
         <Row k="Has">{state.resources.map(r => <span key={r} className="lt-res"><ResourceGlyph r={r} n={p.res[r] || 0} size={14} /><b className="num">{p.res[r] || 0}</b></span>)}</Row>
-        <Row k="Members">{p.members.length ? p.members.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>) : 'none yet'}</Row>
+        {income && Object.values(income.res).some(n => n > 0) ? <Row k="Income">{Object.entries(income.res).filter(([, n]) => n > 0).map(([r, n]) => <span key={r} className="lt-res"><b className="num">+{n}</b><ResourceGlyph r={r} n={n} size={14} /></span>)}<small> each round</small></Row> : null}
+        {/* the build, grouped by what each member does (Cory, 2026-10-15: "I have no idea what the bots' builds are") */}
+        {groups.length ? groups.map(g => (
+          <div key={g.label} className="lt-yd-row seat-group" data-group={g.label}>
+            <span className="k" title={g.hint}>{g.label}</span>
+            <span className="v">{g.items.map(it => (
+              <span key={it.uid} className="seat-member" data-member-line={it.name}><CardName state={state} uid={it.uid} />{it.n > 1 ? <b className="num"> ×{it.n}</b> : null}<span className="seat-effect">{it.text}</span></span>
+            ))}</span>
+          </div>
+        )) : <Row k="Members">none yet</Row>}
         {moves.length ? <Row k="Last moves">{moves.join(' · ')}</Row> : null}
       </div>
     </div>

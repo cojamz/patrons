@@ -35,3 +35,23 @@ Still failing at 2×:
 - The hover sentence wraps to a one-word last line ("more."); sentences need balanced lines.
 - Intro Offer: a full word space between the member glyph and "−4" splits one idea into two.
 - Shop cards: the one-line triggers leave a 32px hole under the name. The art band can take 8px of it.
+
+## v4
+Fixed: no separator on the rim, only space; Double Down's block is centered in its ring; sentences wrap balanced ("Whenever a space gives / you ●, you get 1 more."); the member glyph and "−4" read as one unit.
+
+Still failing at 1× and 2×:
+- R8: moving the name down 8px made Prospector's two-line trigger touch the name (0px gap). The card needs 8px more height, not a squeeze.
+- R10: the alphabet strip's last item ("extra turn") runs into the seat's left edge at x=784.
+
+## v5 → v8
+- v5: cards are 8px taller (trigger slot 104–136, 8px clear of the name); the alphabet strip ends at x≈750, clear of the seat.
+- v6: Intro Offer's fine print "your next member" could read as "lose 4 members". Changed to "next member costs 4 less", but at 2× that grazed the narrowing cell edge.
+- v7: "off your next member" fits, and with the big line it reads "−4 off your next member".
+- v8: your unplaced cacti were unlabeled. Added "to place". Final: `plate.png`, with 2× crops in `plate-detail-board.png` and `plate-detail-cards.png`.
+
+## Blind check (v8, read as a stranger with only the rulebook)
+**Could a newcomer say what each action does in one glance?** Yes for five of six. Golden Years ("+4●, 2·4·6 by round"), Collect Debts ("+3●, up to 3, from rivals"), Tithe ("+1● / member"), Kickback ("+3●, a rival gets 1●") and Double Down ("×2●, opens in round III") read from the big line plus the fine print. Intro Offer needs its fine print: "▯−4" alone is ambiguous, but "off your next member" settles it. Two things need the rulebook once: the frog on the rim means "P3 leads this" (nothing says so), and the four-color dot means "any" (a stranger guesses it, the alphabet confirms it). The members read without a hover: "When recruited +1● / ▯", "When a space gives you ● +1●", "When you recruit +1●".
+
+**Does anything look unaligned, cramped or inconsistent?** Nothing is off the 4px grid at 2×. Every container has an 8px corner, the three type sizes hold, and taken spaces put their minion in one spot. Remaining nits: the board's lower left is a large dark mass (on purpose, out of focus, but heavy); taken paper is a flat gray-beige; there's a hair of space between a dot and a following comma ("you ● ,").
+
+**Would this pass for a shipped game?** The cards, seats and hovers would. The wheel slice is close but not there: the rim band is a flat fill, where a shipped board would give it material (a printed edge, pressed type). That's a material pass, not a grammar change, so I stopped here at the time box.

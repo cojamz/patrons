@@ -93,7 +93,7 @@ const box = (() => {
       if (!/^\d+$/.test(pid) || Number(pid) === process.pid) continue;
       let cmd = '';
       try { cmd = readFileSync(`/proc/${pid}/cmdline`, 'utf8').split('\0').join(' '); } catch { continue; }
-      if (/vitest(\.mjs)? run\b/.test(cmd)) vitest++;
+      if (/^\S*node \S*vitest(\.mjs)? (run|related)\b/.test(cmd)) vitest++; // the node process, not its npx/sh wrappers
       else if (/chrom(e|ium)\b/.test(cmd) && /--remote-debugging-pipe/.test(cmd) && !/--type=/.test(cmd)) browsers++;
     }
   } catch { /* no /proc */ }

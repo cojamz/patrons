@@ -150,8 +150,9 @@ header.bar .ticker::before{content:"Last: ";color:color-mix(in srgb,var(--muted)
 /* ---------- wheel ---------- */
 .wheel-wrap{min-width:0}
 .stage{position:relative;width:min(100%, calc(100dvh - 240px), 540px);min-width:min(260px,100%);aspect-ratio:1;margin:0 auto;touch-action:pan-y;user-select:none;-webkit-user-select:none}
-.stage svg{width:100%;height:100%;display:block;overflow:visible;cursor:grab}
-.stage svg:active{cursor:grabbing}
+/* the wheel's own drawing only: inline marks in a space's text (the follower in Your Call) kept their size until this was scoped */
+.stage > svg{width:100%;height:100%;display:block;overflow:visible;cursor:grab}
+.stage > svg:active{cursor:grabbing}
 .slot{cursor:pointer}
 .slot .name{pointer-events:none;letter-spacing:.02em}
 .slot.locked .name{font-weight:600}
@@ -169,6 +170,13 @@ svg.late .slot.flash .worker{animation-delay:.7s}
 /* your minion stands on the space from the first frame and settles: a drop, a squash, still (a rival's shows as its flight lands) */
 @keyframes land{0%{transform:translateY(-5px) scale(1.18);opacity:.75}55%{transform:translateY(1px) scale(.93);opacity:1}100%{transform:none;opacity:1}}
 .worker-flight{position:fixed;z-index:12;pointer-events:none;will-change:transform}
+/* flying pieces (flight.js flyGains): one per unit, wearing the stack's own glyph or the follower mark */
+.piece-flight{position:fixed;z-index:14;pointer-events:none;will-change:transform;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 3px rgba(0,0,0,.55))}
+.piece-flight svg{width:100%;height:100%;image-rendering:pixelated}
+.piece-flight .piece-dot{width:70%;height:70%;border-radius:50%;box-shadow:inset 0 -2px 0 rgba(0,0,0,.3)}
+/* a stack counts what has landed so far (flight.js), then shows its own number again */
+b.num[data-hold]{position:relative;visibility:hidden}
+b.num[data-hold]::after{content:attr(data-hold);visibility:visible;position:absolute;left:0;top:0;right:0;text-align:inherit}
 .worker-flight i{display:block;width:100%;height:100%;border-radius:50%;box-shadow:0 6px 14px rgba(0,0,0,.5),inset 0 -2px 0 rgba(0,0,0,.25)}
 .spin{position:absolute;bottom:3%;width:var(--tap);height:var(--tap);min-width:40px;min-height:40px;border-radius:50%;border:1px solid var(--rim);background:var(--table);color:var(--ink);font-size:var(--fs-5);cursor:pointer;line-height:1}
 .spin:hover{border-color:var(--ink)}

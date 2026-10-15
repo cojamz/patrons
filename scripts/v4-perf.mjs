@@ -24,6 +24,7 @@ const LAG = Number(flag('lag', 0));
 const SEED = Number(flag('seed', 20261015));
 const THINK = Number(flag('think', 650)); // a person's beat before acting (the same every run)
 const TURNS_R2 = Number(flag('turns', 2)); // turns played into round II after the round end
+const MAX_TURNS = Number(flag('max-turns', 0)); // a smoke run: stop after this many placements each (0: play to round II)
 const EXTRA = String(flag('query', '') || '');
 const OUT = String(flag('out', 'design/eval/perf'));
 const VITE_LOG = flag('vitelog', '');
@@ -117,6 +118,13 @@ async function clickAndWait(p, el, what) {
     ms = Date.now() - t;
   } catch { /* nothing changed: an eaten click, or a step that opens a dialog */ }
   p.clicks.push({ what, ms });
+  if (ms == null) {
+    // say why on the page (the error line, the prompt) and stop after three dead clicks in a row: never a silent loop
+    const why = await p.page.evaluate(() => [document.querySelector('.error')?.textContent, document.querySelector('[data-prompt]')?.textContent].filter(Boolean).join(' / ')).catch(() => '');
+    p.dead = (p.dead || 0) + 1;
+    errors.push(`${p.name}: ${what} click changed nothing${why ? ` (${why.slice(0, 120)})` : ''}`);
+    if (p.dead >= 3) { await p.page.screenshot({ path: `${OUT}/${label}-${p.name}-stuck.png` }).catch(() => {}); p.done = true; errors.push(`${p.name}: three dead clicks in a row, stopped (screenshot ${label}-${p.name}-stuck.png)`); }
+  } else p.dead = 0;
   return true;
 }
 
@@ -212,6 +220,7 @@ async function play(p) {
     if (tab.phase === 'handoff') { const h = await p.page.$('[data-handoff]'); if (h) await h.click().catch(() => {}); continue; }
     if (!tab.yours) { await sleep(40); lastNotMine = Date.now(); continue; }
     if (tab.round === 'II' && p.r2turns >= TURNS_R2 && tab.phase === 'place') { p.done = true; break; }
+    if (MAX_TURNS && p.turns >= MAX_TURNS && tab.phase === 'place') { p.done = true; break; }
     await takeTurn(p, tab);
     void lastNotMine;
   }
@@ -268,7 +277,7 @@ for (const p of people) {
 }
 await browser.close();
 if (emu) emu.stop();
-const viteHmr = VITE_LOG && existsSync(VITE_LOG) ? readFileSync(VITE_LOG, 'utf8').split('\n').slice(viteLines0).filter(l => /hmr update|page reload/.test(l)).length : null;
+const viteHmr = VITE_LOG && existsSync(VITE_LOG) ? readFileSync(VITE_LOG, 'utf8').split('\n').slice(viteLines0).filter(l => /hmr update \/src|page reload src\//.test(l)).length : null;
 
 const meta = { label, url: base, cpu: CPU, online: ONLINE, lag: LAG, seed: SEED, think: THINK, boxCpus: cpus().length, loadBefore: load0.map(x => +x.toFixed(2)), loadAfter: load1.map(x => +x.toFixed(2)), wallSec: Math.round((Date.now() - t0wall) / 1000), viteHmrDuringRun: viteHmr, errors: errors.slice(0, 20), at: new Date().toISOString() };
 writeFileSync(`${OUT}/${label}.json`, JSON.stringify({ meta, results }, null, 1));

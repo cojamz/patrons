@@ -18,6 +18,11 @@ export const MO = {
   /** a recruited card lifts off the shop and flies to its new owner's chip, which then glows */
   cardFly: 340,
   chipGlow: 500,
+  /** every gain and payment: one piece per unit flies from its source to where it lands, this far apart (flight.js) */
+  pieceFly: 260,
+  pieceStagger: 40,
+  pieceMax: 10,
+  pieceBump: 220,
   /** the cards left in the shop slide to their new places */
   shopSlide: 240,
   /** a new card is dealt off the deck into its slot (per card, plus a stagger) */

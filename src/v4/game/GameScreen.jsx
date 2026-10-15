@@ -25,7 +25,8 @@ import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } fro
 import PayPicker from './PayPicker.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
-import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken } from './flight.js';
+import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains } from './flight.js';
+import { gainsBetween } from './gains.js';
 import { MO, BOT } from '../motion.js';
 import { seatPicker, seatPart } from './seatPick.js';
 import { friendlyError, isNetworkError } from '../errors.js';
@@ -430,6 +431,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       .map(uid => ({ uid, to: state.players.findIndex(p => p.members.includes(uid)) }))
       .filter(m => m.to >= 0);
     if (flights.length) { flyCards(root.current, shopSnap.current, flights); slideShop(root.current, shopSnap.current); }
+    // every gain and payment travels from its source to where it lands (gains.js reads the engine's diff and log)
+    flyGains(root.current, gainsBetween(before, state), { snap: shopSnap.current, before });
     shopSnap.current = snapshotShop(root.current);
 
     const lines = newLogLines(before, state);

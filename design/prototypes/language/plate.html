@@ -78,13 +78,13 @@ body{width:1270px;height:700px;overflow:hidden;font-family:'AS',system-ui,sans-s
 .px{image-rendering:pixelated;display:block}
 
 /* ---------- member cards ---------- */
-.card{position:absolute;width:140px;height:192px;border-radius:8px;background:var(--paper);color:var(--ink);overflow:hidden;
+.card{position:absolute;width:140px;height:200px;border-radius:8px;background:var(--paper);color:var(--ink);overflow:hidden;
   box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
 .card .art{height:72px;display:grid;place-items:center}
 .card .nm{position:absolute;left:0;right:0;top:80px;text-align:center;color:var(--ink-3)}
-.card .when{position:absolute;left:12px;right:12px;top:96px;height:32px;display:flex;align-items:flex-end;justify-content:center;text-align:center;
+.card .when{position:absolute;left:12px;right:12px;top:104px;height:32px;display:flex;align-items:flex-end;justify-content:center;text-align:center;
   font-size:var(--s);line-height:16px;font-weight:700;color:var(--ink-2)}
-.card .eff{position:absolute;left:0;right:0;top:128px;text-align:center}
+.card .eff{position:absolute;left:0;right:0;top:136px;text-align:center}
 .card .foot{position:absolute;left:12px;right:12px;bottom:0;height:32px;display:flex;justify-content:space-between;align-items:center;
   box-shadow:inset 0 1px 0 rgba(43,32,24,.12)}
 .card.lit{box-shadow:0 0 0 2px var(--light),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
@@ -92,7 +92,7 @@ body{width:1270px;height:700px;overflow:hidden;font-family:'AS',system-ui,sans-s
 /* ---------- plate captions (not game UI) ---------- */
 .note{position:absolute;color:var(--cream-3)}
 .lead{position:absolute;background:var(--cream-3);opacity:.6}
-.key{position:absolute;display:flex;gap:20px;align-items:center;color:var(--cream-2)}
+.key{position:absolute;display:flex;gap:16px;align-items:center;color:var(--cream-2)}
 .key span{display:inline-flex;align-items:center;gap:6px}
 .key .g{width:14px;height:14px;vertical-align:0}
 </style>
@@ -225,7 +225,7 @@ const spaces = [
   { ring: 'i', j: 1, k: 3, state: 'open', name: 'Golden Years',
     big: `${n('+4')}${dot('gold')}`, fine: `<span class="dim">2</span>${op('·')}<span class="now">4</span>${op('·')}<span class="dim">6</span>${sp}by round` },
   { ring: 'i', j: 2, k: 3, state: 'taken', who: 'cactus', name: 'Intro Offer',
-    big: `${g('mem')}${n('−4')}`, fine: 'your next member' },
+    big: `${g('mem')}${n('−4')}`, fine: 'off your next member' },
   // ring II (middle): round II on
   { ring: 'ii', j: 0, k: 2, state: 'lit', name: 'Collect Debts',
     big: `${n('+3')}${dot('gold')}`, fine: 'up to 3, from rivals' },
@@ -323,7 +323,7 @@ el(`
       <div class="row m" style="margin-top:8px;gap:20px">
         <span>${n('7')}${dot('gold')}</span><span>${n('2')}${dot('red')}</span><span style="opacity:.4">${n('0')}${dot('blue')}</span><span>${n('3')}${dot('green')}</span>
         <span style="flex:1"></span>
-        <span class="row" style="gap:4px">${minion('cactus', 32)}${minion('cactus', 32)}</span>
+        <span class="row" style="gap:4px"><span class="s" style="color:var(--cream-3);margin-right:4px">to place</span>${minion('cactus', 32)}${minion('cactus', 32)}</span>
       </div>
     </div>
   </div>`,
