@@ -659,7 +659,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
     }
     if (a.to.kind === 'count' && B && !B.rectOnly) { try { B.dispatchEvent(new CustomEvent('patrons:land')); } catch { /* old browser */ } }
     // the sound of it (sound.js): a coin for a resource gained, the little voice for followers joining
-    if (!skip && !a.pay) { if (a.fol) play('follower'); else if (a.to.kind === 'stack') play('coin'); }
+    if (!skip && !a.pay) { if (a.fol) play('follower', { n: a.by ?? a.n ?? 1 }); else if (a.to.kind === 'stack') play('coin'); }
     // a big follower buy lands with weight (wave 4 #13): the count lifts and rolls, not only settles
     if (!skip && B && a.fol && a.bundle && !a.pay && a.to.kind === 'count' && (a.by ?? a.n) >= 6 && B.animate && !B.rectOnly) track(B.animate([{ translate: '0 0', scale: '1' }, { translate: '0 -6px', scale: '1.3', offset: 0.3 }, { translate: '0 0', scale: '1' }], { duration: MO.roll + MO.settle, easing: 'cubic-bezier(.3,1.5,.5,1)' }));
     else if (!skip && B) settle(B, MO.settle, a.bundle ? 1.24 : a.light ? 1.1 : a.pay ? 1.06 : 1.18);

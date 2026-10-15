@@ -141,7 +141,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
       let landed = 0, longest = 0;
       const land = () => {
         if (cancelled || ++landed < row.winners.length) return;
-        play('follower');
+        play('follower', { n: row.prize });
         for (const id of row.winners) {
           const home = root && root.querySelector(`.lt-cult-seat[data-seat="${id}"] .cs-total`);
           if (home) expectArrival(home, performance.now(), 0, true);
