@@ -1,18 +1,23 @@
-# Morning note for Cory, 2026-10-15 (draft; final at ~13:50 UTC)
+# Morning note for Cory, 2026-10-15
 
-**Link:** https://deploy-preview-1--cornycolonies.netlify.app (the PR's preview, rebuilt from the last push)
+**Link:** https://deploy-preview-1--cornycolonies.netlify.app (the PR's preview, built from the final commit 0c1cd51)
+
+Three pictures of the final build at 1270×700: [the starting pick](morning/1-start.png) · [a round III turn](morning/2-round-three.png) · [the results](morning/3-results.png)
+
+## Where it stands
+Four fresh blind players graded the 11:20 build: two screen-only testers gave C+ each, a hobby gamer B−, and the final skeptic B− ("a friend would play it tonight… it isn't a product yet: too slow to the touch, and a few screens tell small lies"). Their lists were fixed by 12:40: input lag (the wheel's shadow was redrawn every frame; now 60fps, hovers ~0.05s), copy choices picked on the board, the turn card naming every action, forecasts that no longer overpromise, a still-pace round end, and seat hovers that always open. The final build passed every test locally (1,031 unit tests and a full game); a quiet-machine verdict on it is in design/eval/perf/quiet-final-0c1cd51.md. It hasn't been re-graded by a fresh panel since those fixes.
 
 ## What changed overnight, in your words
 - **"Way snappier."** Measured on a quiet machine, production build, slowed to a mid laptop (4× CPU), last night's build vs this morning's: the wait for your turn went from 18–20s to 9.5s; a hover on a space opens in about 0.06s (0.09–0.12s at worst; it was 0.55–0.7s); the main thread was blocked 182s over a game, now 8s. On a normal laptop hovers answer in under 0.1s and the wheel runs at 60 frames a second. What did it: the page no longer restyles itself whole on every move, a rival's move redraws only what changed, and the wheel's shadow stopped being redrawn every frame.
 - **"A little show across the board."** Every move plays as a chain from cause to effect: your minion leaves its column, the space pulses, pieces fly from where they came from to where they land (steals go straight, gains arc, payments drop, four or more fly as one bundle), members hop when they fire, and numbers tick as pieces arrive. The speed setting in ☰ offers Quick, **Steady** (the default) and Relaxed. A click skips ahead. A rival's turn takes about 1.9s, and the wait between your turns about 6.4s (it was 12.5s).
 - **"Simplify visual language everywhere."** The only symbols are the colored dot (with a split dot for "any") and the follower mark; everything else is words. Action spaces have no names or pictures: the gain first, then a plain phrase, with the name in the hover. Rims read "MOST BLUE · +2 👤".
-- **"Hovers in a strange spot."** Every hover opens next to what you point at. Your own members are always readable.
+- **"Hovers in a strange spot."** Every hover opens next to what you point at, one at a time, and an open card never swallows a click. Your follower number opens where your followers came from.
 - **"Those selector screens were awful."** Every choice is made on the board. Steal by clicking the rival's pile; copy by clicking the space; pick members, players and swaps by clicking them; gifts take two clicks (your color, then their seat). Paying is a clean sheet: the cost in dots, the coins that leave lifted. It's skipped when there's only one way to pay.
 - **"The follower shop is too hidden" / "too much prime real estate for the log."** The screen is now who | where | what to buy: seats on the left in turn order, the wheel big in the middle, and on the right the follower buys first, then the members.
 - **"Players positioned in turn order" / "minions in a column."** The seats sit in snake order with a rail ("now", "next", "twice"), and re-sort at round start. Unplaced minions bob in a column on each seat.
 - **"What my members do / how to activate."** Hover a seat to see each member's full ability and state (ready, used, on/off, round start, game end). A member you can use now glows, and its card has "Use: +7 ●".
-- **"Hard to tell what other players are doing."** The "since your last turn" strip is built from the engine's own record of every effect, so anything that hit you leads its line ("Raider took 2 of your followers"). Hover a name to light that space on the wheel. Each seat shows "each round +3●".
-- **Round end** plays one quadrant at a time; totals climb as each prize lands, then minions walk home. The scoring banner stays still at the wheel's centre.
+- **"Hard to tell what other players are doing."** The "since your last turn" strip is built from the engine's own record of every effect, so anything that hit you leads its line ("Raider took 2 of your followers"). Hover a name to light that space on the wheel. Each seat shows "each round +3●", and a rival's card says what they could buy right now ("Holding 23● · could buy about 20 👤"). A rival's big round-III buy lands with weight.
+- **Round end** waits for the last move to land, says "Round II ends", then plays one quadrant at a time at a steady pace; totals climb as each prize lands, then minions walk home. Skip sits on the scoring card.
 - **"Starting pick not highlighted."** The starting pick now sits in the middle of the wheel, the one lit row on screen.
 - **Quality of life.** One Speed setting (Quick / Steady / Relaxed) in setup and the menu. A card's face shows the price you'd actually pay when a discount applies. Colors read on every table (white, silver and "any" no longer look alike or empty). In rivals' turns the shop dims, so only what you can act on is bright. The "since your last turn" strip only ever shows whole lines. Space texts were rewritten wherever a newcomer misread them.
 
@@ -43,4 +48,6 @@ A blind hobby gamer played two full games on a quiet machine and graded it B− 
 
 ## Still open
 - The Hard bot had weakened after Blue's change (a planning bug, now fixed: back to 43% against three Normal bots). The bench's pooled run on the fixed bots passed its checks; its price list is call 9, and no prices changed overnight.
-- Phone stays out of scope. An online "Place here" pause on a slow machine is logged for a quiet-box check.
+- Online: a board pick (Sleepwalker's copy) stalled a game online; fixed, with guards. The online test passes.
+- Phone stays out of scope tonight; the design pod's phone notes are in design/eval/design-pod/queue.md.
+- Everything the panels said, and who fixed what: design/eval/overnight-wave3.md, the wave 4 reports in design/eval/wave4/ and design/eval/game-skeptic-w4.md.
