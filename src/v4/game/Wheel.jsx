@@ -189,7 +189,7 @@ export function deniedText(state, key, meId = null) {
  *   flash:Set<string>, late?:boolean, facing:number, onFacing:(q:number)=>void, look?:string }} props
  *   (look: 'sockets' | 'engraved' | the name of a face in ./faces/, whose contract is at the top of faces/index.js)
  */
-function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null, look: lookProp = null }) {
+function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null, look: lookProp = null }) {
   const look = useMemo(() => lookProp || spacesLook(), [lookProp]);
   const engraved = look === 'engraved';
   // a face from ./faces/ (null for the built-in looks, and for a moment while its chunk loads)
@@ -678,7 +678,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     }
     return (
       <div
-        key={key} className={cls} data-slot={key} data-option={opt || undefined} style={style}
+        key={key} className={cls} data-slot={key} data-option={opt || undefined} data-pick-note={(opt && pickNotes && pickNotes.get(key)) || undefined} style={style}
         role="button" tabIndex={opt ? 0 : -1} aria-label={`${a.name}, ${quadrant(qid).name} round ${roman(t)}: ${a.text} ${status}.`}
         onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, e.currentTarget, { x: e.clientX, y: e.clientY }); }}
         onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.onPick(opt); } }}

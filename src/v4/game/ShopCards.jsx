@@ -55,6 +55,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const mine = !!(pend && mySeats.includes(pend.player));
   const buying = mine && pend.kind === 'buy';
   const placing = mine && pend.kind === 'place';
+  // the board picker (boardPick.js): a choice that names face-up members lights them like a buy, the rest recede
+  const picking = mine && pend.kind === 'choose' && state.shop.some(u => optionFor(`card:${u}`));
   const pointer = useRef('mouse');
   const rowRef = useRef(null), deckRef = useRef(null);
   const [sort, setSortState] = useState(readSort);
@@ -97,15 +99,15 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
           const tick = unlocked.includes(uid);
           // buying: the lamp lights only what you can recruit, the rest recede (Cory); placing: what you can't
           // afford yet is quieter, except a card the space under your pointer would unlock
-          const dim = viewer && ((buying && !opt) || (!buying && !can && !tick));
-          const lit = buying && !!opt;
+          const dim = viewer && (((buying || picking) && !opt) || (!buying && !picking && !can && !tick));
+          const lit = (buying || picking) && !!opt;
           const short = buying && !opt && viewer ? payBreakdown(state, viewer, uid).short : null;
           const parts = costParts(d, state.resources);
           const fromPile = !state.shop.includes(uid);
           return (
             <button
               key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined}
-              className={`card lt-card paper${opt ? ' can' : ''}${dim ? (buying ? ' recede' : ' dim') : ''}${lit ? ' lit' : ''}`}
+              className={`card lt-card paper${opt ? ' can' : ''}${dim ? (buying || picking ? ' recede' : ' dim') : ''}${lit ? ' lit' : ''}`}
               style={{ '--q': cardColor(state, d) }} aria-disabled={!opt}
               aria-label={`${d.name}, ${timingOf(d)}, worth ${d.f}, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}`}
               title={`${d.name} · worth ${d.f} · ${d.text}`}

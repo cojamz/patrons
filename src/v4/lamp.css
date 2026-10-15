@@ -104,7 +104,13 @@ h1,h2,h3{font-family:var(--serif)}
 /* ---------- the wheel: printed paper on the walnut ---------- */
 .lt .lt-wheel .wheel-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;min-height:0}
 .lt .lt-wheel .stage{position:relative;aspect-ratio:1;margin:0 auto;touch-action:pan-y;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 18px 22px rgba(0,0,0,.55)) drop-shadow(0 2px 2px rgba(0,0,0,.5))}
-@media (min-width:861px) and (min-height:500px){ .app.game.lt .lt-wheel .stage{width:min(100cqw, 100cqh)} }
+/* the board as large as the table allows (Cory, 2026-10-15: "way better use of the space"): the stage's square is the
+   disc plus a margin for the rim's leaders and glow, so it may overhang the prompt and shop rows by that margin (the
+   paper disc itself stays inside its cell); those rows sit above it, so the overhang never takes their clicks */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt .lt-wheel .stage{width:min(100cqw, calc(100cqh + 48px))}
+  .lt > .lt-prompt,.lt > .lt-shop{position:relative;z-index:3}
+}
 .lt .stage svg.wheel-paper{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .lt .stage svg.wheel-paper .disk{stroke:none}
 .lt .stage svg.wheel-paper .band{transition:fill-opacity .3s}

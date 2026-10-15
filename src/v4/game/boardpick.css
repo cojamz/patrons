@@ -1,5 +1,5 @@
-/* The seat selector (seatPick.js): while a steal or a pick-a-player choice is up, the rivals' cults are the selector.
-   Lit stacks glow and lift; dim stacks fade and say why on hover; the choice panel shrinks to a caption. */
+/* The board picker (boardPick.js): a choice is answered on the board. Lit spaces, members, cults and resource stacks
+   glow and take the click; what can't be picked recedes and says why on hover; the choice panel shrinks to a caption. */
 
 /* ---- the seats ---- */
 .lt-cult-seat.picking{position:relative;transition:opacity .18s ease-out}
@@ -31,6 +31,20 @@
 .lt-cult-seat .cs-pick-seat:hover{background:rgba(var(--lamp),.12);box-shadow:inset 0 0 0 2px rgba(var(--lamp),.9)}
 .lt-cult-seat .cs-pick-seat.off{cursor:help}
 
+/* members a choice offers (Shake Down, Poach, Doppelganger…): the figure glows and is the button */
+.lt-cult-seat .cs-member.pick-on{position:relative;z-index:2}
+.lt-cult-seat .cs-member.pick-on .fig{filter:drop-shadow(0 0 3px rgba(var(--lamp),1)) drop-shadow(0 0 7px rgba(var(--lamp),.8));animation:pick-hop 1.6s ease-in-out infinite}
+.lt-cult-seat .cs-member.pick-off{opacity:.35}
+.lt-cult-seat .cs-pick-member{position:absolute;inset:-3px;z-index:4;border:0;padding:0;border-radius:8px;background:transparent;cursor:pointer}
+.lt-cult-seat .cs-pick-member:hover{background:rgba(var(--lamp),.18);box-shadow:0 0 0 2px rgba(var(--lamp),.95)}
+.lt-cult-seat .cs-pick-member > .hitbox{position:absolute;left:50%;top:50%;width:max(44px,100%);height:max(44px,100%);transform:translate(-50%,-50%)}
+@keyframes pick-hop{50%{transform:translateY(-2px)}}
+
+/* spaces a choice offers (Echo, Encore, Reprise, Straggler): lit by the wheel itself; hover says what you'd get */
+.lt-wheel .slot[data-pick-note]:hover::after{content:attr(data-pick-note);position:absolute;z-index:40;left:50%;top:calc(100% + 6px);transform:translateX(-50%);
+  width:max-content;max-width:220px;padding:6px 9px;border-radius:8px;font:600 12px/1.3 var(--sans,inherit);text-align:left;white-space:normal;
+  color:var(--paper-ink);background:var(--paper);box-shadow:0 0 0 1px rgba(42,31,23,.25),0 8px 20px rgba(0,0,0,.5);pointer-events:none}
+
 /* ---- the caption at the decision point ---- */
 .lt .lt-wheel > .prompt.choice.seat-pick{left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:min(92%,520px);
   padding:8px 14px 9px;max-height:none;overflow:visible;text-align:center}
@@ -38,6 +52,9 @@
 .prompt.choice.seat-pick .pick-cap b{font-weight:700}
 .prompt.choice.seat-pick .pick-left{font-weight:700;color:#8c2f39}
 .prompt.choice.seat-pick .pick-how{margin:2px 0 0;font-size:12px;opacity:.75}
+/* what has no place on the board (Pass, "All 3 as green") */
+.prompt.choice.seat-pick .pick-rest{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:6px}
+.prompt.choice.seat-pick .pick-rest-btn{min-height:32px;padding:4px 12px;font-size:13px}
 /* the keyboard list: small, quiet, one line that wraps */
 .prompt.choice.seat-pick .pick-keys{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:6px}
 .prompt.choice.seat-pick .pick-key{font:inherit;font-size:11px;line-height:1;padding:4px 8px;border-radius:999px;cursor:pointer;
@@ -64,6 +81,6 @@
 .token-flight.pick-flight .pick-coin.dot{background:rgba(var(--lamp),1)}
 
 @media (prefers-reduced-motion:reduce){
-  .lt-cult-seat .cs-stack.pick-on{animation:none}
+  .lt-cult-seat .cs-stack.pick-on,.lt-cult-seat .cs-member.pick-on .fig{animation:none}
   .lt-cult-seat .cs-stack.pick-on:hover{transform:none}
 }

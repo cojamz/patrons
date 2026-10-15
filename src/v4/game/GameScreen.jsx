@@ -28,7 +28,7 @@ import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains } from './flight.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT } from '../motion.js';
-import { boardPicker, seatPart } from './boardPick.js';
+import { boardPicker, seatPart, shopLookup } from './boardPick.js';
 import { friendlyError, isNetworkError } from '../errors.js';
 import { ROUND_START, ownsLocal } from '../saved.js';
 import { restoredMoment } from '../session/moment.js';
@@ -668,9 +668,13 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, [modalOpen]);
   const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
-  // The seat selector: a choice whose options all point at seats (a steal's resource stacks, a player) is answered on
-  // the cults themselves (seatPick.js); the choice panel shrinks to a caption and a keyboard list.
-  const picker = useMemo(() => (showChoice && pend.kind === 'choose' ? seatPicker(state, pend) : null), [showChoice, state, pend]);
+  // The board picker: a choice whose options name things on the board (spaces, members, cults, resource stacks) is
+  // answered there (boardPick.js); the choice panel shrinks to a caption, the leftover buttons and a keyboard list.
+  const picker = useMemo(() => (showChoice && pend.kind === 'choose' ? boardPicker(state, pend) : null), [showChoice, state, pend]);
+  const pickSpaces = picker && picker.spaces.size ? picker.spaces : null;
+  // what a copy would give, on the space itself while you hover it (the engine's own words for the option)
+  const pickNotes = useMemo(() => (pickSpaces ? new Map([...picker.where].filter(([k]) => k.startsWith('space:')).map(([k, o]) => [k.slice(6), o.label])) : null), [picker, pickSpaces]);
+  const shopFor = useMemo(() => (picker ? shopLookup(picker) : null), [picker]);
   const pickerRef = useRef(null);
   pickerRef.current = picker;
   const [seatPicks, setSeatPicks] = useState({ key: null, map: {} }); // this steal's picks so far, for the "−1" on each stack
@@ -681,15 +685,17 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const pk = pickerRef.current;
     const o = pk && pk.options.find(x => x.id === id);
     if (!o || !options.has(id)) return;
-    if (pk.count && pk.count.left === 1 && pk.title) setPickDone({ title: pk.title, what: `take ${pk.count.of}${pk.only ? ` ${pk.only}` : ''}`, n: Date.now() });
+    const t = o.target || {};
+    const take = Number.isInteger(t.pid) && t.res && !t.give && t.pid !== pk.actor;
+    if (take && pk.count && pk.count.left === 1 && pk.title) setPickDone({ title: pk.title, what: `take ${pk.count.of}${pk.only ? ` ${pk.only}` : ''}`, n: Date.now() });
     const root0 = root.current;
     const home = root0 && (root0.querySelector(`.lt-seat[data-pid="${pk.actor}"] .cs-res`) || root0.querySelector(`.lt-seat[data-pid="${pk.actor}"]`));
     const coin = el && el.querySelector('svg') ? `<span class="pick-coin">${el.querySelector('svg').outerHTML}</span>` : '<span class="pick-coin dot"></span>';
     // each pick moves: a resource from their seat to yours (a gift: from yours to theirs); a picked seat nods
-    if (pk.mode === 'take') flyToken(el, home, coin, { tag: 'pick-flight', duration: 560 });
-    else if (pk.mode === 'give') flyToken(home, el, coin, { tag: 'pick-flight', duration: 560 });
+    if (take) flyToken(el, home, coin, { tag: 'pick-flight', duration: 560 });
+    else if (t.give) flyToken(home, el, coin, { tag: 'pick-flight', duration: 560 });
     else if (el && el.animate && motionOK()) el.animate([{ boxShadow: '0 0 0 0 rgba(255,220,140,.9)' }, { boxShadow: '0 0 0 10px rgba(255,220,140,0)' }], { duration: 520, easing: 'ease-out' });
-    if (o.target && o.target.res && pickKey) {
+    if (take && pickKey) {
       setSeatPicks(sp => {
         const map = sp.key === pickKey ? { ...sp.map } : {};
         const t = o.target;
@@ -807,7 +813,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       ) : (
         <>
           <section className="lt-wheel" data-region="wheel">
-            <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+            <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
             {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} seatPick={picker} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
             {!showChoice && pickDone && <section className="seat-pick-done" aria-hidden="true"><p className="pick-cap"><b>{pickDone.title}</b>: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</p></section>}
           </section>
@@ -821,7 +827,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             </section>
           ))}
           <section className="lt-shop" data-region="shop" aria-label="Shop">
-            <ShopCards state={state} me={me} mySeats={yours ? mySeats : NO_SEATS} optionFor={live} onPick={shopPick} onDenied={shopDenied} phase={phase} hover={hover} />
+            <ShopCards state={state} me={me} mySeats={yours ? mySeats : NO_SEATS} optionFor={shopFor || live} onPick={shopPick} onDenied={shopDenied} phase={phase} hover={hover} />
           </section>
           {/* what the rivals did since your own last placement, one line each, always on the board (RC1 panel) */}
           {state.round >= 1 && <SinceStrip state={state} entries={since} me={mySeats.length === 1 ? mySeats[0] : null} yours={yours} onLog={openLog} />}
