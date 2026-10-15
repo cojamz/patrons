@@ -169,6 +169,7 @@ const TABLE = {
   // the round's end as its own beat before the first rim lights: "Round II ends" stamps in at the wheel's centre and is
   // read (wave 4 #6: the scoring began while the player looked away)
   reckonLead:  [450,   800],
+  reckonGap:   [300,   450],  // the round's last move at rest before "Round I ends" comes up (panel r1)
   // a passed turn's card holds its moment, then folds into its chair (GameScreen's TurnCard; lamp.css's fold is
   // --mo-slow scaled to match)
   turnCardHold: [2600, 2600],

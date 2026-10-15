@@ -889,7 +889,12 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   const gift = giftBits.length ? `you ${giftBits.join(' ')}${giftWhy.length ? ` (${giftWhy.join(', ')})` : ''}` : '';
   // it leads, right after the space's own result (the turn card shows its first lines; the rest fold)
   if (gift) out.splice(gain ? 1 : 0, 0, gift);
-  const short = [hit && !(big && big.includes(hit)) ? hit : null, gift || null, gainSaid, big && big.replace(/ \(paid .*\)$/, '').replace(/ \(free\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
+  // who paid for it and who else got something (panel r1: the strip never named a steal's victims or a gift's
+  // recipients, so "+3 gold" read as found money): "2 gold from P4, 1 gold from P2", "P2 +1 gold"
+  const names = P.filter(p => p.id !== actor).map(p => esc(nm(p.id))).join('|');
+  const flowRe = names ? new RegExp(`^(?:\\d+ \\w+(?:, \\d+ \\w+)* from (?:${names})|(?:${names}) [+−]\\d)`) : null;
+  const flows = flowRe ? out.filter(l => flowRe.test(l) && l !== gift).join(', ') : '';
+  const short = [hit && !flows.includes('from you') && !(big && big.includes(hit)) ? hit : null, gift || null, gainSaid, flows || null, big && big.replace(/ \(paid .*\)$/, '').replace(/ \(free\)$/, '')].filter(Boolean).slice(0, 3).join(' · ');
   // what the card names, from the table itself: the space's key, and the uid of each member recruited (hover targets)
   let spaceKey = null;
   if (place) {

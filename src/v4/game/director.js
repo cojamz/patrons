@@ -260,10 +260,12 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     // a release (M8): the member drops to the pile first; its refund leaves when the card is 40% along
     if (c.kind === 'release') {
       for (const card of m.cards.filter(e => e.type === 'release')) {
-        const d = fly(card.from, card.to);
-        at(cur, { op: 'chip', from: card.from, to: card.to, uid: card.what.uid, path: 'drop', dur: d });
-        ends(cur + d);
-        cur += d * 0.4;
+        // it stops on the stage on its way, big and named, so a release reads as letting go to the pile, never as a
+        // theft (panel r1 skeptic)
+        const d = fly(card.from, card.to), via = MO.stageIn + Math.round(MO.stageHold / 2);
+        at(cur, { op: 'chip', from: card.from, to: card.to, uid: card.what.uid, path: 'drop', dur: via + d, via: 0, hide: true });
+        ends(cur + via + d);
+        cur += via + d * 0.4;
       }
       m.cards = m.cards.filter(e => e.type !== 'release');
     }
@@ -416,6 +418,10 @@ export function holdAfter(plan, { sameNext, rivalStep, floor = 400, base = 0, ne
   // between the same player's own sub-steps (a setup pick, the buy after a choice): those flow at their hand-off
   const floored = rivalStep && (!sameNext || nextPlaces) ? floor : 0;
   // a rival's placement hands on at its hand-off (its last piece two-thirds along), even when its turn ends there
+  // the turn passing to another player (panel r1: rival turns overlapped your own coins still flying, and each other):
+  // this turn plays out whole, closing breath and all, so every turn is its own beat (a gap on top of that broke the
+  // longest-wait budget, pacing.test.js)
+  if (plan.total && !sameNext) return Math.max(plan.total, floored);
   if (plan.total) return Math.max(sameNext || (placing && rivalStep) ? plan.handoff : passes, floored);
   return rivalStep ? (sameNext ? 0 : MO.passHold) : base;
 }
