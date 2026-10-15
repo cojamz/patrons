@@ -218,15 +218,38 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     };
     phase(m.pays.map(p => ({ from: p.from, to: p.to.kind === 'bank' && pulsed ? { kind: 'space', key: pulsed } : p.to, n: p.what.n, opt: { pay: true, r: p.what.r, owner: p.from.pid } })));
     phase(m.takes.map(x => ({ from: x.from, to: x.to, n: x.n, tug: true, opt: { take: true, r: x.r, turn: x.turn, owner: x.to.pid } })));
-    phase(m.gives.map(x => ({ from: x.from, to: x.to, n: x.n, opt: { r: x.r, owner: x.to.pid } })));
+    phase(m.gives.map(x => ({ from: x.from, to: x.to, n: x.n, opt: { r: x.r, turn: x.turn, owner: x.to.pid } })));
     // the owner's gains, then the spill fan, which starts when the owner's are two-thirds along (the same beat)
     const own = m.gains.filter(g => g.to.pid === owner || owner == null), spill = m.gains.filter(g => !(g.to.pid === owner || owner == null));
     const before0 = cur;
     phase(own.map(g => ({ from: g.from, to: g.to, n: g.what.n, opt: { r: g.what.r, owner: g.to.pid } })));
     if (spill.length) { cur = own.length ? cur : before0; phase(spill.map(g => ({ from: g.from, to: g.to, n: g.what.n, opt: { r: g.what.r, owner: g.to.pid, light: true } }))); }
+    // members changing hands (grammar M10; motion gaps 3: "P3 traded Broker for P4's Retinue" showed no travel): a swap's
+    // two members cross at once on mirrored arcs; a member taken (Poach, a ransom let go) is a take, the victim's crowd
+    // tugs and it flies straight. Each lands on its own new chip, which shows when it lands.
+    const moves = m.cards.filter(e => e.type === 'member-move');
     for (const card of m.cards) {
-      const d = card.type === 'member-move' ? MO.swap : fly(card.from, card.to);
-      at(cur, { op: 'chip', from: card.from, to: card.to, uid: card.what.uid, path: card.type === 'release' ? 'drop' : card.type === 'member-move' ? 'line' : 'arc', dur: d });
+      if (card.done) continue;
+      const to = card.type === 'member-move' || card.type === 'recruit' ? { ...card.to, uid: card.what.uid } : card.to;
+      if (card.type === 'member-move') {
+        const back = moves.find(o => o !== card && !o.done && o.from.pid === card.to.pid && o.to.pid === card.from.pid);
+        if (back) {
+          back.done = true;
+          at(cur, { op: 'chip', from: card.from, to, uid: card.what.uid, path: 'arc', dur: MO.swap, hide: true });
+          at(cur, { op: 'chip', from: back.from, to: { ...back.to, uid: back.what.uid }, uid: back.what.uid, path: 'cross', dur: MO.swap, hide: true });
+          ends(cur + MO.swap);
+          cur += nextBeatAt(MO.swap);
+          continue;
+        }
+        at(cur, { op: 'tug', place: { kind: 'crowd', pid: card.from.pid }, toward: { kind: 'crowd', pid: card.to.pid }, dur: MO.tug });
+        const d = fly(card.from, card.to);
+        at(cur + MO.tug, { op: 'chip', from: card.from, to, uid: card.what.uid, path: 'line', dur: d, hide: true });
+        ends(cur + MO.tug + d);
+        cur += MO.tug + nextBeatAt(d);
+        continue;
+      }
+      const d = fly(card.from, card.to);
+      at(cur, { op: 'chip', from: card.from, to, uid: card.what.uid, path: card.type === 'release' ? 'drop' : 'arc', dur: d });
       ends(cur + d);
       cur += nextBeatAt(d);
     }
