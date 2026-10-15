@@ -36,64 +36,81 @@ export function StoryCard({ story, color, state, hover }) {
  */
 export default function SinceStrip({ state, entries, me, yours, hover = null, onLog }) {
   // whole lines only (design pod): when the strip's room can't hold every line, the oldest go into "N earlier…" instead
-  // of showing half a line at the top. `drop` only grows while the list overflows; it starts over when the lines change or
-  // the strip's room (its max-height, set by the layout from the chairs and the turn card, never by these lines) grows.
-  // Nothing here sizes the strip, so measuring it can't feed back (the TurnCard lesson, 2026-10-15).
-  const listRef = useRef(null), secRef = useRef(null), roomRef = useRef(0);
-  // The turn card coming or going changes the strip's room (layout.css :has(> .turn-card)) without resizing anything the
-  // ResizeObserver watches: when a card is drawn or leaves the table, the fold starts over. Watched on the DOM, where the
-  // layout reads it (the card is drawn after the animation chain, not when its state changes). The strip never adds or
-  // removes a card, so this can't feed back.
-  const [cardKey, setCardKey] = useState(0);
+  // of showing part of a line at the top. The fold is worked out in one step from where the lines stand (the list stacks
+  // from its foot, so dropping the oldest leaves the rest where they are), and lines that won't stay are hidden before the
+  // frame paints, so no part of a line is ever drawn. Nothing here sizes the strip: its room is set by the layout from the
+  // chairs and the turn card, never by these lines, so measuring can't feed back (the TurnCard lesson, 2026-10-15).
+  const listRef = useRef(null), secRef = useRef(null);
+  // The strip's room changes without resizing anything the ResizeObserver watches when the turn card comes or goes
+  // (layout.css :has(> .turn-card)), when the card's height or the chairs' end moves (--turn-h, --seats-end on the table)
+  // or the window resizes. Any of these starts the fold over, so a strip with more room shows more lines again. Watched on
+  // the DOM, where the layout reads them; the strip writes none of them, so this can't feed back.
+  const [roomKey, setRoomKey] = useState(0);
   useEffect(() => {
     const host = secRef.current && secRef.current.parentElement;
     if (!host || typeof MutationObserver !== 'function') return undefined;
-    let had = !!host.querySelector(':scope > .turn-card');
-    const mo = new MutationObserver(() => { const has = !!host.querySelector(':scope > .turn-card'); if (has !== had) { had = has; setCardKey(k => k + 1); } });
-    mo.observe(host, { childList: true });
-    return () => mo.disconnect();
+    const room = () => `${!!host.querySelector(':scope > .turn-card')}|${host.style.getPropertyValue('--turn-h')}|${host.style.getPropertyValue('--seats-end')}|${innerWidth}x${innerHeight}`;
+    let was = room();
+    const check = () => { const now = room(); if (now !== was) { was = now; setRoomKey(k => k + 1); } };
+    const mo = new MutationObserver(check);
+    mo.observe(host, { childList: true, attributes: true, attributeFilter: ['style'] });
+    addEventListener('resize', check);
+    return () => { mo.disconnect(); removeEventListener('resize', check); };
   }, []);
-  const sig = `${entries.map(e => e.n).join(',')}|${cardKey}`;
-  // how many of the oldest lines are folded, for these lines: new lines start it over at 0 (worked out here, not by a
-  // second commit)
+  const sig = `${entries.map(e => e.n).join(',')}|${roomKey}`;
+  // how many of the oldest lines are folded, for these lines in this room: anything new starts it over at 0 (worked out
+  // here, not by a second commit)
   const [dropState, setDrop] = useState({ sig: '', n: 0 });
   const drop = dropState.sig === sig ? dropState.n : 0;
   const base = entries.slice(-MAX);
   const cut = Math.min(drop, Math.max(0, base.length - 1));
-  // Overflow is checked when the layout has settled, from a ResizeObserver on the list and its own lines (perf,
-  // 2026-10-15: reading the computed style and scrollHeight in a layout effect forced a page layout every step). The
-  // check only folds lines: it never sets anything the strip's room depends on, and the room's growth is read from its
-  // max-height (set by the layout), never from a size this changes.
-  const live = useRef({ sig, len: base.length });
-  live.current = { sig, len: base.length };
+  // Checked when the layout has settled, from a ResizeObserver on the list and its own lines (perf, 2026-10-15: reading
+  // the computed style and scrollHeight in a layout effect forced a page layout every step). A ResizeObserver runs after
+  // layout and before paint, so the lines it hides are never drawn in part.
+  const committed = useRef({ sig, cut, len: base.length });
+  const asked = useRef(null); // the fold the observer asked for and hid lines for, until React draws it
   const ro = useRef(null), watched = useRef(new Set());
   // the list and each line on it are watched (observing is not a layout read; a newly watched line reports once)
   useLayoutEffect(() => {
+    committed.current = { sig, cut, len: base.length };
+    // the fold asked for is drawn (or these are new lines): lines hidden while it was on its way show again
+    const l = listRef.current;
+    if (asked.current && (asked.current.sig !== sig || cut >= asked.current.n)) {
+      asked.current = null;
+      if (l) for (const el of l.querySelectorAll(':scope > [data-fold-hide]')) { el.removeAttribute('data-fold-hide'); el.style.visibility = ''; }
+    }
     if (typeof ResizeObserver !== 'function') return;
     if (!ro.current) {
       ro.current = new ResizeObserver(() => {
-        const sec = secRef.current, l = listRef.current;
-        if (!sec || !l) return;
-        const { sig: s0, len } = live.current;
-        const room = parseFloat(getComputedStyle(sec).maxHeight) || 1e6;
-        if (room > roomRef.current + 1 && roomRef.current) { roomRef.current = room; setDrop(d => (d.sig === s0 && d.n ? { sig: s0, n: 0 } : d)); return; }
-        roomRef.current = room;
-        // (the list stacks from its foot: lines that don't fit spill above its top, where scrollHeight can't see them;
-        // design pod 08:50) — in a ResizeObserver callback the layout is settled, so these reads are free
-        const first = l.firstElementChild;
-        // one more line at a time, and only once the last fold is on screen (several callbacks can land before React
-        // commits a fold: each would fold another line and leave the strip half empty)
-        if (first && first.getBoundingClientRect().top < l.getBoundingClientRect().top - 1) setDrop(d => { const n = d.sig === s0 ? d.n : 0; return n < len - 1 && n === onScreen.current ? { sig: s0, n: n + 1 } : d; });
+        const list = listRef.current;
+        if (!list) return;
+        const { sig: s0, cut: c0, len } = committed.current;
+        const kids = [...list.children];
+        const moreEl = kids[0] && kids[0].classList.contains('since-more') ? kids[0] : null;
+        const rows = moreEl ? kids.slice(1) : kids;
+        if (!rows.length) return;
+        // in a ResizeObserver callback the layout is settled, so these reads are free
+        const top = list.getBoundingClientRect().top;
+        const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
+        // the "N earlier" line's height when it stands above the kept lines (its own, or a one-line guess before it exists)
+        const moreH = (moreEl ? moreEl.getBoundingClientRect().height : 18) + gap;
+        const fits = k => rows[k].getBoundingClientRect().top - (c0 + k > 0 ? moreH : 0) >= top - 1;
+        let k = 0;
+        while (k < rows.length - 1 && !fits(k)) k++;
+        if (!k || c0 + k > len - 1) return;
+        const n = c0 + k;
+        // hide what goes (and the "earlier" line, which moves down when React draws the fold) before this frame paints
+        for (const el of [...(moreEl ? [moreEl] : []), ...rows.slice(0, k)]) { el.setAttribute('data-fold-hide', ''); el.style.visibility = 'hidden'; }
+        asked.current = { sig: s0, n };
+        setDrop(d => (d.sig === s0 && d.n >= n ? d : { sig: s0, n }));
       });
     }
-    const r = ro.current, l = listRef.current, w = watched.current;
+    const r = ro.current, w = watched.current;
     for (const el of [...w]) if (!el.isConnected) { r.unobserve(el); w.delete(el); }
     if (!l) return;
     for (const el of [l, ...l.children]) if (!w.has(el)) { r.observe(el); w.add(el); }
   });
   useEffect(() => () => { if (ro.current) ro.current.disconnect(); ro.current = null; watched.current.clear(); }, []);
-  const onScreen = useRef(0); // the fold the DOM shows now
-  useLayoutEffect(() => { onScreen.current = cut; });
   const shown = base.slice(cut);
   const more = entries.length - shown.length;
   const name = id => (id === me ? 'You' : state.players[id].name);

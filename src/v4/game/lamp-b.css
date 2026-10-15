@@ -512,3 +512,6 @@
 .roundend .re-head{font-size:11px}
 .roundend .re-final,.dialog.roundend .hint,.dialog.roundend .btn{font-size:14px}
 .dialog.roundend .re-f{font-size:18px}
+/* a space's contest line: your part as a sentence, the rivals on the line under it in plain words (w3a #28) */
+.lt-race .race-you{display:block;color:var(--pl-ink,#2b2018)}
+.lt-race .race-them{display:block}

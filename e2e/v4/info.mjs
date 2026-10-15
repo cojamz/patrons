@@ -337,19 +337,26 @@ try {
         if (!(await page.locator('.peek, [data-hover-card="space"], [data-space-card]').count())) fail('(b) hovering a space shows no card', step);
         // the space is what the player sees: its panel when the wheel draws panels (R2), else the slot itself
         await anchorCheck(page, 'a space', step, await slot.evaluate(e => { const w = e.closest('.stage') && e.closest('.stage').querySelector(`[data-cell="${e.dataset.slot}"] .wash`); return (w || e).getBoundingClientRect().toJSON(); }));
-        // (p) the space's contest line names every player
+        // (p) the space's contest line names every player: you as a sentence ("You’d have 4 and lead it"), each rival
+        //     in plain words ("P2 has 3"), never a run of middots (w3a #28)
         {
-          const names = await page.evaluate(() => { try { const st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return st.players.map((p, i) => (i === 0 ? 'You' : p.name)); } catch { return null; } });
+          const names = await page.evaluate(() => { try { const st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return st.players.map(p => p.name); } catch { return null; } });
           let line = null;
           const lit = page.locator('.slot.can');
           for (let k = 0; k < Math.min(12, await lit.count()) && !line; k++) { // a space that moves no contest has no line (w3b)
             await page.mouse.move(4, 690); await page.waitForTimeout(160);
             await lit.nth(k).hover(); await page.waitForTimeout(700);
-            line = await page.evaluate(ns => [...document.querySelectorAll('[data-hover-layer] .lt-yd-row .v')].map(e => e.textContent).find(t => ns.filter(n => new RegExp(`(^|· |: )${n} \\d`).test(t)).length >= 2) || null, names);
+            line = await page.evaluate(() => { const r = document.querySelector('[data-hover-layer] [data-race]'); return r ? { text: r.textContent, parts: [...r.querySelectorAll('[data-race-p]')].map(e => e.textContent) } : null; });
           }
           if (!names) fail('(p) no saved game to read the players from', step);
           else if (!line) fail('(p) no space card showed its contest line', step);
-          else { const missing = names.filter(n => !new RegExp(`(^|· |: )${n} \\d`).test(line)); if (missing.length) fail(`(p) a space's contest line leaves out ${missing.join(', ')}: "${line}"`, step); }
+          else {
+            if (line.parts.length !== names.length) fail(`(p) a space's contest line names ${line.parts.length} of ${names.length} players: "${line.text}"`, step);
+            if (!/^You’d have \d/.test(line.parts[0] || '')) fail(`(p) the contest line doesn't start with you: "${line.text}"`, step);
+            const missing = names.slice(1).filter(n => !line.parts.some(t => new RegExp(`(^|, )${n} has \\d`).test(t)));
+            if (missing.length) fail(`(p) a space's contest line leaves out ${missing.join(', ')}: "${line.text}"`, step);
+            if (/·.*·.*·/.test(line.text)) fail(`(p) the contest line is a run of middots: "${line.text}"`, step);
+          }
         }
         await rimCheck(page, step);
         await page.screenshot({ path: `${SHOTS}/02b-hover-space.png` });

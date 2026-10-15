@@ -164,7 +164,7 @@ export function FollowersCard({ state, pid, meId = null }) {
   const b = breakdown(state, p);
   const rows = [
     [pid === meId ? 'You' : p.name, b.self],
-    ['Members they’re worth', b.members],
+    ['Members', b.members],
     ['Bought', b.bought],
     ['Round-end prizes', b.contests],
     ...b.play.map(l => [l.label, l.n]),

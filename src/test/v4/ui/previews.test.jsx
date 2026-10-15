@@ -4,8 +4,10 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, cleanup, act } from '@testing-library/react';
 import ShopCards from '../../../v4/game/ShopCards.jsx';
-import { createHover, whyLine } from '../../../v4/game/HoverCards.jsx';
-import { YoudGet, requestPreviews, peekPreview, _setPreviewWorker, previewWords } from '../../../v4/game/Info.jsx';
+import { createHover, whyLine, raceAfter } from '../../../v4/game/HoverCards.jsx';
+import { YoudGet, requestPreviews, peekPreview, _setPreviewWorker, previewWords, cachedPreview } from '../../../v4/game/Info.jsx';
+import { createGame, applyMove, chooseBotMove, quadrant } from '../../../engine/v4/index.js';
+import { seededRandom } from '../../../engine/v4/rng.js';
 import { tickScene } from '../../../../e2e/v4/lib/tick-save.mjs';
 
 afterEach(() => { cleanup(); vi.useRealTimers(); _setPreviewWorker(null); });
@@ -71,6 +73,24 @@ describe('previews reach the screen', () => {
     expect(previewWords(pv, st).others).toBeNull();
     const gift = { ...pv, others: { res: { gold: [1, 1], red: z, blue: z, green: z }, followers: z, members: z } };
     expect(previewWords(gift, st).others).toBe('rivals +1 gold in all');
+  });
+
+  it('a contest line never reads a pick off its first branch: Kickback\'s +1 goes to the one you pick (w3b #10), in plain words (w3a #28)', () => {
+    const T = ['gold', 'red', 'market', 'echo'];
+    const q = T.indexOf('gold'), i = quadrant('gold').actions.findIndex(a => a.key === 'jv');
+    const seats = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
+    let s = createGame({ seats, seed: 4, quadrants: T });
+    const rand = seededRandom(4);
+    const ready = st => st.pending && st.pending.player === 0 && st.pending.kind === 'place' && st.pending.options.some(o => o.id === `slot:${q}-${i}`);
+    for (let n = 0; n < 400 && !ready(s); n++) s = applyMove(s, chooseBotMove(s, rand));
+    expect(ready(s)).toBe(true);
+    const pv = cachedPreview(s, 0, q, i);
+    const r = raceAfter(s, pv.race, 'gold', 0, true);
+    expect(r.you).toMatch(new RegExp(`^You’d have ${s.players[0].res.gold + 3}\\b`));
+    // every rival at what they hold now (the gift isn't theirs yet), and the gift said once
+    for (const o of s.players.slice(1)) expect(r.them.some(t => t.text === `${o.name} has ${o.res.gold}`)).toBe(true);
+    expect(r.tail).toBe(', and +1 goes to the one you pick');
+    expect([r.you, ...r.them.map(t => t.text), r.tail].join(' ')).not.toMatch(/·/);
   });
 });
 

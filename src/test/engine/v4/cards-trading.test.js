@@ -201,11 +201,12 @@ describe('White members', () => {
     let s = table(Q, { members: [['trading.lender', 'red.twins']], shop: ['red.doppel', ...ROW], res: [{ red: 4, gold: 2 }] });
     s.cards[uidIn(s, 'trading.lender', 0)].loanPaid = true;
     s = payDefault(move(take(s, 'trading.haggle'), cardOpt(s, 'red.doppel', 'shop')));
-    expect(R(s).white).toBe(0); // Sob Story's 2 went on the Doppelganger
+    // whatever the suggested payment left (it keeps your rim leads, 2026-10-15), the copy adds exactly Lender's 5
+    const w0 = R(s).white;
     s = move(s, `card:${uidIn(s, 'trading.lender', 0)}`); // the copy
-    expect(R(s).white).toBe(5);
+    expect(R(s).white).toBe(w0 + 5);
     s = pass(s); // the turn ends: no second payout
-    expect(R(s).white).toBe(5);
+    expect(R(s).white).toBe(w0 + 5);
     expect(named(s, 'Lender').length).toBe(1);
   });
   it('Magnate: game end +1 follower per 3 white', () => {

@@ -76,9 +76,15 @@ async function restyle() {
   }, { strip, css: extraCss ? readFileSync(extraCss, 'utf8') : '' });
   await page.waitForTimeout(300);
 }
-const boxes = bool('boxes');
+const boxes = bool('boxes'), probe = bool('probe');
 const shot = async name => {
   await restyle(); await page.screenshot({ path: `${out}/${name}.png` }); console.log(`${out}/${name}.png`);
+  if (probe) console.log(name, JSON.stringify(await page.evaluate(() => {
+    const sec = document.querySelector('.lt > .lt-since'), l = sec && sec.querySelector('.since-list');
+    if (!l) return null;
+    const r = e => { const b = e.getBoundingClientRect(); return [Math.round(b.top), Math.round(b.bottom)]; };
+    return { sec: r(sec), max: getComputedStyle(sec).maxHeight, list: r(l), folded: sec.dataset.folded || 0, card: !!document.querySelector('.lt > .turn-card'), rows: [...l.children].map(e => [...r(e), e.style.visibility || "", e.className]) };
+  })));
   if (boxes) console.log(await page.evaluate(() => ['.lt > .lt-shop', '.lt-rates', '.lt-shop-main', '.lt-shop-head', '.lt-shop-body', '.lt-deck', '.lt-shop .lt-card:last-child', '.lt > .lt-prompt'].map(sel => { const e = document.querySelector(sel); if (!e) return `${sel}: none`; const b = e.getBoundingClientRect(); return `${sel} y${Math.round(b.top)}–${Math.round(b.bottom)} x${Math.round(b.left)} w${Math.round(b.width)}`; }).join('\n')));
 };
 const settle = (ms = 600) => page.waitForTimeout(ms);

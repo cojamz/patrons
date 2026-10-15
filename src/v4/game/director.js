@@ -521,6 +521,12 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   // hand-off: the beats already playing finish first (grammar S3, §5)
   const base = chainRunning() ? Math.max(chain.clock, chain.handoffAt || 0) : chain.clock;
   chain.handoffAt = base + (plan.handoff || plan.total);
+  // a member arriving in a crowd (a swap, a member taken) shows when its ghost lands, never before it leaves
+  for (const a of plan.atoms) {
+    if (a.op !== 'chip' || !a.hide) continue;
+    const B = where(a.to);
+    if (B && !B.rectOnly && B.animate && B.dataset && B.dataset.uids === String(a.uid)) track(B.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: Math.max(0, base - chain.clock) + a.at + a.dur + 30 }));
+  }
   const firstLand = new Map();
   for (const a of plan.atoms) if (a.op === 'land' && a.fol && a.to.kind === 'count' && !a.pay) {
     const el = where(a.to);

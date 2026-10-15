@@ -31,9 +31,6 @@
     max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px)}
   /* while a turn is being told, its card docks under the story: the story gives it room (oldest lines go first) */
   .app.game.lt:has(> .turn-card) > .lt-since{max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px - var(--turn-h, 112px))}
-  /* the story clips its oldest lines first, never the newest (the whole log is one tap away) */
-  .app.game.lt > .lt-since .since-list{min-height:0;overflow:hidden;justify-content:flex-end}
-  .app.game.lt > .lt-since .since-list > li{flex:none}
 
   /* the shop column: the follower buys first (four fixed offers, always whole: Cory, "too hidden"), then the members,
      the deck heading them like a card, three to a row; the member grid takes whatever height is left, so nothing in
@@ -68,6 +65,10 @@
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{padding:4px 0;row-gap:2px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .res-glyph{height:22px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .tk-plus{display:none}
+  /* the story clips its oldest lines first, never the newest (the whole log is one tap away), and SinceStrip folds
+     them into "N earlier" whole: at every laptop width, wherever the story stands (the narrow band clipped the newest) */
+  .app.game.lt > .lt-since .since-list{min-height:0;overflow:hidden;justify-content:flex-end}
+  .app.game.lt > .lt-since .since-list > li{flex:none}
 }
 
 /* Narrower laptops (861–1199px) keep lamp.css's grid, with two fixes: the follower buys move to the right column (it

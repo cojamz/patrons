@@ -11,12 +11,13 @@ const NODE_BUDGET = 36; // states explored per preview (a counted pick branches 
  * { exact, partial, leaves, you: { res:{color:[min,max]}, followers:[min,max], members:[min,max], turns:[min,max], discount:[min,max] },
  *   others: { res:{color:[min,max]}, followers:[min,max], members:[min,max] }, asks:[prompt], theirAsks:[prompt],
  *   swept: [uid] (face-up members it surely sends under the pile), reasons: [line] (why a member changed it, or didn't), sample,
- *   best, likely: { res:{color:n}, followers, members, turns, discount } (one branch's change for you), tied }.
+ *   best, likely: { res:{color:n}, followers, members, turns, discount } (one branch's change for you), tied, mix }.
  * exact: every branch gives the same to you. others: the rivals' summed change.
  * best: the branch worth most to you; likely: you pick what's worth most to you and each rival picks what's worth most
  * to them (a ransom paid rather than a member lost); tied: every branch is worth the same to you (only the mix differs:
- * which color, whom). Worth is a rough ruler for ordering branches, never shown: a resource 1, a follower 2 (Cory's
- * anchor, design/eval/value-model.md), a member 4 besides its followers, an extra turn 3, a discount 1 a point.
+ * which color, how many of each), and mix lists those outcomes. Worth is a rough ruler for ordering branches, never
+ * shown: a resource 1, a follower 2 (Cory's anchor, design/eval/value-model.md), a member 4 besides its followers, an
+ * extra turn 3, a discount 1 a point. Display only, like the rest: the "You'd get" line (Info.jsx youdWords).
  */
 export function previewSpace(state, pid, q, i) {
   const key = `${q}-${i}`;
@@ -113,14 +114,18 @@ export function previewSpace(state, pid, q, i) {
       res: Object.fromEntries(state.resources.map(r => [r, (me.res[r] || 0) - (me0.res[r] || 0)])),
       followers: followers(s, me) - followers(state, me0), members: me.members.length - me0.members.length,
       turns: Math.max(0, me.left - (me0.left - 1)), discount: (me.discount || 0) - (me0.discount || 0),
+      // members that came in while the count didn't rise by as many: traded for (a swap)
+      swapped: Math.max(0, me.members.filter(u => !me0.members.includes(u)).length - Math.max(0, me.members.length - me0.members.length)),
     };
   };
   const worths = leaves.map(s => worth(s, pid));
   const tied = Math.max(...worths) - Math.min(...worths) < 1e-9;
+  // every pick worth the same: the distinct outcomes, in the engine's option order (the screen says which color or mix)
+  const mix = tied && !exact ? [...new Map(leaves.map(s => { const c = change(s); return [JSON.stringify(c), c]; })).values()].slice(0, 12) : null;
   // sample: the table after the first branch (for the screen to recount a contest on); exact when `exact`
   // samples: the tables after the first branches (up to 16), so a contest line can tell what depends on a pick
   return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, reasons: reasons.slice(0, 6), sample: leaves[0], samples: leaves.slice(0, 16),
-    best: change(top.best), likely: change(top.likely), tied };
+    best: change(top.best), likely: change(top.likely), tied, mix };
 }
 
 /**

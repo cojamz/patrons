@@ -341,6 +341,8 @@ export function winSentence(state) {
   const top = [['members', b.members], ['bought', b.bought], ['effects', b.effects], ['endGame', b.endGame], ['contests', b.contests]]
     .filter(([, v]) => v > 0).sort((x, y) => y[1] - x[1]).slice(0, 2);
   if (!top.length) return `${lead}.`;
+  // two equal sources are said as equal (w3a #19: "mostly by buying followers (+32), then from the rims' prizes (+32)")
+  if (top[1] && top[1][1] === top[0][1]) return `${lead}, as much ${say[top[0][0]](top[0][1])} as ${say[top[1][0]](top[1][1])}.`;
   return `${lead}, mostly ${say[top[0][0]](top[0][1])}${top[1] ? `, then ${say[top[1][0]](top[1][1])}` : ''}.`;
 }
 
@@ -437,7 +439,22 @@ export function roundGains(start, end, p, contests) {
   const re = new RegExp(`^${p.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} bought (\\d+) followers?\\b`);
   const bought = roundLines.reduce((s, l) => { const m = l.match(re); return s + (m ? Number(m[1]) : 0); }, 0);
   const total = engineFollowers(end, end.players[p.id]) - engineFollowers(start, was);
-  return { contests, members, bought, effects: total - contests - members - bought, total };
+  // which members came and went, so the words say what moved the count (w3a #19: a swap that lost a follower read
+  // "−1 from new members")
+  const had = new Set(was.members), has = new Set(end.players[p.id].members);
+  const joined = [...has].filter(u => !had.has(u)).length, left = [...had].filter(u => !has.has(u)).length;
+  const who = esc(p.name);
+  const swap = new RegExp(`^${who} traded |^.+? traded .+ for ${who}'s |swaps sides: .+ gets ${who}'s |^${who}'s Double Agent swaps sides`);
+  const swapped = roundLines.some(l => swap.test(l));
+  return { contests, members, bought, effects: total - contests - members - bought, total, joined, left, swapped };
+}
+
+/** What moved a player's member followers this round, in words: "from new members", "from a swap"… */
+export function membersWhy(g) {
+  if (!g.left) return 'from new members';
+  if (g.swapped && g.joined === g.left) return g.left > 1 ? 'from swaps' : 'from a swap';
+  if (!g.joined) return 'from members lost';
+  return 'from members in and out';
 }
 
 // ---------- log lines, said plainly ----------

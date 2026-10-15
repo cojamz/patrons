@@ -1,7 +1,7 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
-import { firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
+import { membersWhy, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
 import { createTrail, feed } from '../../../v4/game/trail.js';
 import { contextFor } from '../../../engine/v4/core.js';
 
@@ -19,6 +19,33 @@ describe('v4 format helpers', () => {
     expect(r.rows.find(x => x.qid === 'red').winners).toEqual([2]);
     expect(r.rows.find(x => x.qid === 'blue').winners).toEqual([]);
     expect(parseRoundEnd(s, 'Round I ends. No one scored.').rows.every(x => !x.winners.length)).toBe(true);
+  });
+
+  it('says what moved a player\'s member followers: new members, a swap, members lost (w3a #19)', () => {
+    expect(membersWhy({ joined: 2, left: 0, swapped: false })).toBe('from new members');
+    expect(membersWhy({ joined: 1, left: 1, swapped: true })).toBe('from a swap');
+    expect(membersWhy({ joined: 0, left: 1, swapped: false })).toBe('from members lost');
+    expect(membersWhy({ joined: 2, left: 1, swapped: true })).toBe('from members in and out');
+    // a real swap, from both sides: the one who traded and the one traded with
+    let found = 0;
+    for (let seed = 1; seed < 40 && !found; seed++) {
+      let s = createGame({ seats, seed, quadrants: ['red', 'gold', 'market', 'echo'] });
+      let start = s;
+      while (!s.over && !found) {
+        const before = s;
+        s = applyMove(s, chooseBotMove(s, () => 0.4));
+        if (s.round !== before.round) start = s;
+        const line = newLogLines(before, s).find(l => / traded .+ for .+'s /.test(l));
+        if (!line) continue;
+        const [, a, b] = line.match(/^(.+?) traded .+ for (.+?)'s /);
+        for (const n of [a, b]) {
+          const g = roundGains(start, s, s.players.find(p => p.name === n), 0);
+          expect(g.swapped).toBe(true);
+        }
+        found++;
+      }
+    }
+    expect(found).toBe(1);
   });
 
   it('finds new log lines even when lines repeat', () => {

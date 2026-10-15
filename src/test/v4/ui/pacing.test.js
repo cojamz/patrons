@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
-import { planChain, holdAfter } from '../../../v4/game/director.js';
+import { planChain, holdAfter, foldBuys } from '../../../v4/game/director.js';
 import { motionSpeed } from '../../../v4/motion.js';
 
 const pct = (xs, p) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.min(s.length - 1, Math.floor(s.length * p))] : NaN; };
@@ -16,10 +16,16 @@ function paceGame(seed, mine = [0]) {
   const seats = Array.from({ length: 4 }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' }));
   let s = createGame({ seats, seed });
   const rand = seededRandom(seed);
-  const rivalTurns = [], waits = [];
+  const rivalTurns = [], waits = [], byRound = { 1: [], 2: [], 3: [] };
   let turn = null, wait = null, between = 0;
-  for (let k = 0; k < 800 && !s.over; k++) {
-    const next = applyMove(s, chooseBotMove(s, rand), { effects: true });
+  const states = [s];
+  for (let k = 0; k < 800 && !s.over; k++) { s = applyMove(s, chooseBotMove(s, rand), { effects: true }); states.push(s); }
+  s = states[0];
+  for (let i = 0; i + 1 < states.length;) {
+    // the table shows a rival's run of follower buys as one step (director.js foldBuys; here the whole run is known)
+    const fold = foldBuys(s, states[i + 1], states.slice(i + 2, i + 40), mine, true);
+    i += 1 + fold.used;
+    const next = states[i];
     const actor = s.pending ? s.pending.player : null;
     // round ends are the Reckoning's (its own budget, H10): a turn or wait that spans one isn't counted
     if (next.round !== s.round) { turn = null; wait = null; s = next; continue; }
@@ -30,9 +36,9 @@ function paceGame(seed, mine = [0]) {
       const hold = holdAfter(plan, { sameNext, rivalStep, floor: 400, base: 0, nextPlaces: !!(next.pending && next.pending.kind === 'place'), placing: s.pending.kind === 'place' });
       if (rivalStep) {
         // a snake turnaround (the same bot places again right away) is a second turn, not a longer one
-        if (turn != null && s.pending.kind === 'place') { rivalTurns.push(turn); turn = null; if (wait != null) between++; }
+        if (turn != null && s.pending.kind === 'place') { rivalTurns.push(turn); byRound[s.round].push(turn); turn = null; if (wait != null) between++; }
         turn = (turn || 0) + hold;
-        if (!sameNext) { rivalTurns.push(turn); turn = null; if (wait != null) between++; }
+        if (!sameNext) { rivalTurns.push(turn); byRound[s.round].push(turn); turn = null; if (wait != null) between++; }
         if (wait != null) wait += hold;
       } else if (!sameNext) {
         // your turn ends here (your own chain has played): the wait runs until your next turn starts
@@ -43,15 +49,15 @@ function paceGame(seed, mine = [0]) {
     }
     s = next;
   }
-  return { rivalTurns, waits };
+  return { rivalTurns, waits, byRound };
 }
 
 describe('the table\'s pace at Steady (H2, H3)', () => {
   it('a rival\'s turn and the wait between your turns stay inside the motion budget', () => {
     expect(motionSpeed()).toBe('steady');
-    const turns = [], waits = [];
+    const turns = [], waits = [], r1 = [], r3 = [];
     // you sit in every seat in turn (the snake gives an end seat long and short gaps, a middle seat even ones)
-    for (const seed of [2, 7, 13, 21]) for (const seat of [0, 1, 2, 3]) { const g = paceGame(seed, [seat]); if (seat === 0) turns.push(...g.rivalTurns); waits.push(...g.waits); }
+    for (const seed of [2, 7, 13, 21]) for (const seat of [0, 1, 2, 3]) { const g = paceGame(seed, [seat]); if (seat === 0) { turns.push(...g.rivalTurns); r1.push(...g.byRound[1]); r3.push(...g.byRound[3]); } waits.push(...g.waits); }
     // H2 judges the wait at p50 over every seat and every turn (the snake's gaps run 2/4 rival turns for a middle seat,
     // 6/0 for an end seat: three on average), and caps every wait (the snake's run of six) at 13s
     const usual = waits.map(w => w.ms);
@@ -59,6 +65,7 @@ describe('the table\'s pace at Steady (H2, H3)', () => {
     const h3p50 = pct(turns, 0.5), h3p95 = pct(turns, 0.95), h2p50 = pct(usual, 0.5), h2max = Math.max(...waits.filter(w => w.turns <= 6).map(w => w.ms));
     const over = waits.filter(w => w.turns > 6).map(w => `${w.ms}ms/${w.turns} turns`);
     if (over.length) console.log(`[pacing] runs of more than six rival turns (extra turns): ${over.join(', ')}`);
+    console.log(`[pacing] round I rival turn p50 ${pct(r1, 0.5)}ms p95 ${pct(r1, 0.95)}ms; round III p50 ${pct(r3, 0.5)}ms p95 ${pct(r3, 0.95)}ms`);
     console.log(`[pacing] rival turn p50 ${h3p50}ms p95 ${h3p95}ms (${turns.length} turns); the usual wait for your turn p50 ${h2p50}ms (${usual.length}), longest ${h2max}ms (${waits.length} waits)`);
     expect(turns.length).toBeGreaterThan(40);
     expect(usual.length).toBeGreaterThan(10);

@@ -2,7 +2,7 @@
 // everything else gained this round), then the button that starts the next round.
 import { useEffect, useRef, useState } from 'react';
 import { followers } from '../../engine/v4/index.js';
-import { playerColor, roman, standings, scoredStandings, roundGains, tiebreakNote, workersNote, firstPickWhy } from '../format.js';
+import { playerColor, roman, standings, scoredStandings, roundGains, membersWhy, tiebreakNote, workersNote, firstPickWhy } from '../format.js';
 import Tick from './Tick.jsx';
 import { useDialog } from './parts.jsx';
 import { Tip, ContestStandings, NamedText } from './Info.jsx';
@@ -96,12 +96,12 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
             const g = start ? roundGains(start, at, p, c) : null;
             const other = now - was - c;
             // RC1 sweep 84: "+2 from members" (they hold 4) meant the members recruited this round; "+1 effects" had no source
-            const why = g ? [g.members && `${g.members > 0 ? '+' : ''}${g.members} from new members`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : ''}${g.effects} during play`].filter(Boolean).join(' · ') : '';
+            const why = g ? [g.members && `${g.members > 0 ? '+' : '−'}${Math.abs(g.members)} ${membersWhy(g)}`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : '−'}${Math.abs(g.effects)} during play`].filter(Boolean).join(' · ') : '';
             return (
               <div key={p.id} className="re-p" role="row" style={{ '--pc': playerColor(p.id) }}>
                 <span className="nm" role="cell"><Who state={after} id={p.id} meId={meId} /></span>
                 <span className="re-d num" role="cell">{c ? `+${c}` : '—'}</span>
-                <span className="re-d num" role="cell">{other ? (why || `${other > 0 ? '+' : ''}${other}`) : '—'}</span>
+                <span className="re-d num" role="cell">{other ? (why || `${other > 0 ? '+' : '−'}${Math.abs(other)}`) : '—'}</span>
                 <Tick value={now} from={was} color="var(--ink)" className="re-f num" dur={700} float={false} />
               </div>
             );

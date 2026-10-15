@@ -369,7 +369,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
   const viewer = me != null ? me : state.pending && state.pending.player;
   // the dry run is read from the cache (warmed in idle time); if it isn't there yet it fills in a moment later
   const pv = usePreview(state, open && viewer != null && !state.over ? viewer : null, q, i) || null;
-  const race = pv && pv.race ? raceAfter(state, pv.race, qid, viewer) : null;
+  const race = pv && pv.race ? raceAfter(state, pv.race, qid, viewer, !(pv.theirAsks && pv.theirAsks.length)) : null;
   const unlocks = pv && viewer != null ? unlockedBy(state, state.players[viewer], surely(pv)) : [];
   return (
     <div className="lt-card-body" data-space-card={spaceKey} style={{ '--q': `var(--q-${sphereOf(qid)}, var(--${qid}))` }}>
@@ -381,7 +381,10 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {open && viewer != null && !state.over ? <div className="lt-yd-row youd"><span className="k">You’d get</span><span className="v"><YoudGet state={state} pid={viewer} q={q} i={i} /></span></div> : null}
         {/* why a member changed the number, or stayed off ("Underdog: no ×2 (Hustler’s +3 lands first)"), from the dry run */}
         {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons><Rich text={whyLine(pv.reasons)} /></span></Row> : null}
-        {race && <Row k={race.rule}><Rich text={race.text} /></Row>}
+        {race && <Row k={race.rule}><span className="lt-race" data-race={qid}>
+          <span className="race-you" data-race-p={viewer}><Rich text={race.you} /></span>
+          <span className="race-them">{race.them.map((t, k) => <span key={t.pid} data-race-p={t.pid}>{k ? ', ' : ''}{t.text}</span>)}{race.tail}</span>
+        </span></Row>}
         {/* a few by name; the whole row is said as one (it listed all ten names, the row you can already see) */}
         {pv && pv.swept && pv.swept.length ? <Row k="Sweeps away">{pv.swept.length > 3
           ? <span data-swept={pv.swept.join(' ')}>{pv.swept.length === state.shop.length ? `the whole row (${pv.swept.length})` : `${pv.swept.length} face-up members`}</span>
@@ -413,21 +416,43 @@ export function whyLine(reasons) {
   return [...by].map(([k, v]) => (v.size > 1 ? `${k}: depends on your pick` : [...v][0] ? `${k}: ${[...v][0]}` : k)).join(' · ');
 }
 /** "You 5 · Ossian 2 · Bo 1 · Kay 0 · you'd lead it (+2 followers)": the space's own contest after taking it, every player (the dry run's first branch). */
-function raceAfter(state, race, qid, pid) {
+export function raceAfter(state, race, qid, pid, yours = true) {
   const c = race.find(x => x.qid === qid);
   if (!c) return null;
   // a space that doesn't move its contest says nothing about it (w3b: Intro Offer and Cheap Seats printed a "Most gold"
-  // line they never touch)
+  // line they never touch): every branch is checked, not just the first
   let now = null;
   try { now = contestTable(state).find(x => x.qid === qid); } catch { /* say it */ }
-  if (now && now.rows.every(r => { const a = c.rows.find(x => x.player === r.player); return a && a.score === r.score; })) return null;
-  const nm = id => (id === pid ? 'You' : state.players[id].name);
-  // every player, never just the top three (RC1 panel: the 4th silently dropped off "You 0 · P2 0 · P3 0")
-  const top = c.rows.map(r => `${nm(r.player)} ${r.count}`).join(' · ');
-  // plain words (design pod): "Most gold: You 4 · P2 2 … · you'd lead it (+2 followers)", never "Gold … you'd lead, +2"
-  const lead = c.winners.includes(pid) ? ` · you’d lead it (+${c.prize} follower${c.prize === 1 ? '' : 's'})` : '';
-  // the counts are after you'd take it, and say so (w2b #4: "You 2" read as now, while they held 0)
-  return { rule: c.rule.replace(/^\w/, ch => ch.toUpperCase()), text: `If you take it: ${top}${lead}` };
+  const scores = c.scores || Object.fromEntries(c.rows.map(r => [r.player, [r.score]]));
+  const counts = c.counts || Object.fromEntries(c.rows.map(r => [r.player, [r.count]]));
+  if (now && now.rows.every(r => (scores[r.player] || []).every(v => v === r.score))) return null;
+  const n = (counts[pid] || [0]).length;
+  const uniq = v => [...new Set(v)].sort((a, b) => a - b);
+  const amount = v => { const u = uniq(v); return u.length === 1 ? `${u[0]}` : u.length === 2 ? `${u[0]} or ${u[1]}` : `${u[0]} to ${u[u.length - 1]}`; };
+  // you first, as a sentence (w3a #28: "If you take it: You 2 · P2 2 · P3 1 · P4 0 · you'd lead it" took three reads);
+  // the counts are after you'd take it, and say so (w2b #4: "You 2" read as now)
+  const wins = (c.wins && c.wins[pid]) || [c.winners.includes(pid)];
+  const sole = c.sole || [c.winners.length === 1];
+  const prize = `(+${c.prize} follower${c.prize === 1 ? '' : 's'})`;
+  const pick = yours ? 'your pick' : 'the pick';
+  const lead = wins.every(Boolean) ? (wins.every((w, b) => !sole[b]) ? ` and share the lead ${prize}` : ` and lead it ${prize}`)
+    : wins.some(Boolean) ? `, and could lead it ${prize}: it depends on ${pick}` : '';
+  const you = `You’d have ${amount(counts[pid] || [0])}${lead}`;
+  // every rival, never just the top three (RC1 panel: the 4th dropped off), in plain words ("P2 has 3"); a count a
+  // pick decides isn't read off one branch (w3b #10): when the pick hands one of them the same amount, that's said once
+  const low = r => Math.min(...counts[r]);
+  // best first by what's sure (the first branch's order put whoever got the gift on top)
+  const rivals = c.rows.filter(r => r.player !== pid).map(r => r.player).sort((a, b) => low(b) - low(a) || Math.max(...counts[b]) - Math.max(...counts[a]) || a - b);
+  const unsure = rivals.filter(r => uniq(counts[r]).length > 1);
+  let one = null;
+  if (unsure.length > 1) {
+    const ups = Array.from({ length: n }, (_, b) => unsure.filter(r => counts[r][b] > low(r)).map(r => counts[r][b] - low(r)));
+    const k = ups.flat();
+    if (ups.every(u => u.length <= 1) && k.length && k.every(x => x === k[0])) one = k[0];
+  }
+  const them = rivals.map(r => ({ pid: r, text: `${state.players[r].name} has ${one != null ? low(r) : amount(counts[r])}` }));
+  const tail = one != null ? `, and +${one} goes to the one ${yours ? 'you pick' : 'picked'}` : '';
+  return { rule: c.rule.replace(/^\w/, ch => ch.toUpperCase()), you, them, tail };
 }
 
 /** "Rush (Bo)" for a board key. */

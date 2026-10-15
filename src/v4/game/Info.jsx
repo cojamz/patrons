@@ -502,7 +502,8 @@ export function previewWords(pv, state) {
   const you = [
     ...state.resources.map(r => span(pv.you.res[r], r, r)),
     span(pv.you.followers, 'follower'), span(pv.you.members, 'member'), span(pv.you.turns, 'extra turn'),
-    pv.you.discount && (pv.you.discount[0] || pv.you.discount[1]) ? `next member −${pv.you.discount[0] === pv.you.discount[1] ? pv.you.discount[0] : `${pv.you.discount[0]}–${pv.you.discount[1]}`}` : null,
+    // a discount gained ("next member −4"); one used up isn't a gain, and printed "next member −-6" (w3 words pass)
+    pv.you.discount && pv.you.discount[1] > 0 ? `next member −${Math.max(0, pv.you.discount[0]) === pv.you.discount[1] ? pv.you.discount[1] : `${Math.max(0, pv.you.discount[0])}–${pv.you.discount[1]}`}` : null,
   ].filter(Boolean);
   // the rivals' line is their summed change: "in all" says so ("rivals +3 silver" read as +3 each, when it was +1 each);
   // only its sure parts: a part that varies (a steal's "−1 to 0, −2 to 0…" per color) read as algebra, whether your
@@ -516,38 +517,70 @@ export function previewWords(pv, state) {
 function sureWords(pv, state) {
   const fixed = (r, unit, plural = unit + 's') => (r[0] === r[1] ? span(r, unit, plural) : null);
   return [...state.resources.map(r => fixed(pv.you.res[r], r, r)), fixed(pv.you.followers, 'follower'), fixed(pv.you.members, 'member'), fixed(pv.you.turns, 'extra turn'),
-    pv.you.discount && pv.you.discount[0] && pv.you.discount[0] === pv.you.discount[1] ? `next member −${pv.you.discount[0]}` : null]
+    pv.you.discount && pv.you.discount[0] > 0 && pv.you.discount[0] === pv.you.discount[1] ? `next member −${pv.you.discount[0]}` : null]
     .filter(Boolean).join(', ');
 }
-/** One branch's change for you in words: "+6 white, −2 followers"; what leaves you in several colors is one "−5 resources". */
+/**
+ * One branch's change for you in words, gains first: "+6 white, −2 followers"; what leaves you in several colors is one
+ * "−5 resources" (Echo copying a recruit: "+1 member, +3 followers, −2 resources").
+ */
 export function changeWords(d, state) {
   if (!d) return '';
-  const out = [];
-  for (const r of state.resources) if (d.res[r] > 0) out.push(`+${d.res[r]} ${r}`);
-  const lost = state.resources.filter(r => d.res[r] < 0);
-  if (lost.length === 1) out.push(`−${-d.res[lost[0]]} ${lost[0]}`);
-  else if (lost.length > 1) out.push(`−${lost.reduce((t, r) => t - d.res[r], 0)} resources`);
   const n = (v, unit) => `${signed(v)} ${unit}${Math.abs(v) === 1 ? '' : 's'}`;
-  if (d.members) out.push(n(d.members, 'member'));
-  if (d.followers) out.push(n(d.followers, 'follower'));
-  if (d.turns) out.push(n(d.turns, 'extra turn'));
-  if (d.discount > 0) out.push(`next member −${d.discount}`);
-  return out.join(', ') || 'nothing';
+  const gain = [], loss = [];
+  for (const r of state.resources) if (d.res[r] > 0) gain.push(`+${d.res[r]} ${r}`);
+  if (d.members > 0) gain.push(n(d.members, 'member'));
+  if (d.followers > 0) gain.push(n(d.followers, 'follower'));
+  if (d.turns > 0) gain.push(n(d.turns, 'extra turn'));
+  if (d.discount > 0) gain.push(`next member −${d.discount}`);
+  // a member traded for another (Swap Sides, Even Swap): the count stays, so say it, never "nothing"
+  if (d.swapped > 0) gain.push(`${d.swapped} member${d.swapped === 1 ? '' : 's'} swapped`);
+  const lost = state.resources.filter(r => d.res[r] < 0);
+  if (lost.length === 1) loss.push(`−${-d.res[lost[0]]} ${lost[0]}`);
+  else if (lost.length > 1) loss.push(`−${lost.reduce((t, r) => t - d.res[r], 0)} resources`);
+  if (d.members < 0) loss.push(n(d.members, 'member'));
+  if (d.followers < 0) loss.push(n(d.followers, 'follower'));
+  return [...gain, ...loss].join(', ') || 'nothing';
+}
+/** Every pick worth the same, only the mix differs: say which mix in numbers (Goody Bags, Your Call, Sweet Talk). */
+function mixWords(pv, state, own) {
+  const mix = pv.mix || [];
+  if (mix.length < 2) return null;
+  const sure = sureWords(pv, state);
+  const loose = state.resources.filter(r => pv.you.res[r][0] !== pv.you.res[r][1]);
+  const same = (f, a, b) => a[f] === b[f];
+  // one color of your choosing on top of the sure part: "+2 silver, +2 of a color you pick"
+  const one = mix.map(d => loose.filter(r => d.res[r]).map(r => d.res[r]));
+  if (one.every(v => v.length === 1 && v[0] === one[0][0] && v[0] > 0) && mix.every(d => same('followers', d, mix[0]) && same('members', d, mix[0])))
+    return { text: `${sure ? `${sure}, ` : ''}+${one[0][0]} of a color you pick`, note: null };
+  // the same amount, only recolored (swaps): the plain outcome, then "swaps are your pick" (Sweet Talk, Trade Seeds)
+  const total = d => state.resources.reduce((t, r) => t + d.res[r], 0);
+  if (mix.every(d => total(d) === total(mix[0]) && same('followers', d, mix[0]) && same('members', d, mix[0]))) {
+    // the fewest colors moved, nothing lost, and the space's own color kept (Trade Seeds: "+1 yellow", not "+1 magenta")
+    const size = d => state.resources.filter(r => d.res[r]).length + (state.resources.some(r => d.res[r] < 0) ? 9 : 0) + (own && !(d.res[own] > 0) ? 0.5 : 0);
+    const plain = mix.reduce((a, d) => (size(d) < size(a) ? d : a));
+    const t = total(plain);
+    if (own && !(plain.res[own] > 0) && t > 0 && !plain.followers && !plain.members) return { text: `+${t} in colors you pick`, note: null };
+    return { text: changeWords(plain, state), note: 'swaps are your pick' };
+  }
+  // different kinds: the two ends of the choice, "+2 followers or +4 white" (Your Call)
+  return { text: `${changeWords(mix[0], state)} or ${changeWords(mix[mix.length - 1], state)}`, note: 'your pick' };
 }
 /**
- * What the "You'd get" line says: { text, note, likely?, best? } (strings for Rich). A pick that changes what you get
- * gives numbers, never only "it depends" (w3b #20: "it depends on your pick / a rival decides part of it" was honest but
- * empty): when a rival's answer decides it, the likely case and the best case ("+4 magenta likely · +1 member, +1
- * follower at best"); when it's your pick, your best pick's numbers; when every pick is worth the same and only the mix
- * changes (which color, whom), the sure part and "the rest is your pick". Ranges stay out (RC1 sweep 17/62/89: "0 to
- * +2 ■, −2 to 0 ◆…" read as algebra).
+ * What the "You'd get" line says: { text, note } or { likely, best } (strings for Rich). A pick that changes what you
+ * get gives numbers, never only "it depends" (w3b #20: "it depends on your pick / a rival decides part of it" was honest
+ * but empty): when a rival's answer decides it, the likely case and the best case ("+4 magenta likely · +1 member, +1
+ * follower at best"); when it's your pick, your best pick's numbers; when every pick is worth the same, which mix
+ * ("+2 followers or +4 white"). Ranges stay out (RC1 sweep 17/62/89: "0 to +2 ■, −2 to 0 ◆…" read as algebra).
  */
-export function youdWords(pv, state) {
+export function youdWords(pv, state, own = null) {
   const w = previewWords(pv, state);
   if (pv.exact) return { text: w.you, note: null };
   const best = changeWords(pv.best, state), likely = changeWords(pv.likely, state);
   if (pv.best && pv.likely && likely !== best) return { text: null, likely, best };
   if (pv.best && !pv.tied) return { text: best, note: 'your best pick' };
+  const mixed = pv.tied ? mixWords(pv, state, own) : null;
+  if (mixed) return mixed;
   const sure = sureWords(pv, state);
   return { text: sure || null, note: sure ? 'the rest is your pick' : 'it depends on your pick' };
 }
@@ -558,7 +591,9 @@ export function YoudGet({ state, pid, q, i }) {
   if (pv === undefined) return <span className="youd-get pending" data-youd-get="">You’d get: …</span>;
   if (!pv) return null;
   const w = previewWords(pv, state);
-  const y = youdWords(pv, state);
+  let own = null;
+  try { own = quadrant(state.quadrants[q]).resource; } catch { /* none */ }
+  const y = youdWords(pv, state, own);
   return (
     <span className="youd-get" data-youd-get={w.you} title="Worked out by playing this space on a copy of the table, right now">
       <b>You’d get:</b> {w.partial ? 'about ' : ''}
