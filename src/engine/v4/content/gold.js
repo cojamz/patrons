@@ -87,8 +87,14 @@ export default {
     m('prospector', 'Prospector', 2, 2, 'Whenever an action gains you gold, +1 more.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === 'gold' && g.n > 0) owner.res.gold += 1; },
     }),
-    m('taxman', 'Tax Collector', 2, 2, 'Whenever a rival buys followers, +1 gold.', {
-      onBuyFollowers(ctx, owner, card, buyer) { if (buyer !== owner) ctx.gain(owner, 'gold', 1); },
+    // Cory, 2026-10-15 (balance pass 1, #1): only the top rival pays it, about a third of what any rival paid
+    // (both bots read the old card at 8.7 for 4). Ties for the most all count; it's measured before the buy lands.
+    m('taxman', 'Tax Collector', 2, 2, 'Whenever the rival with the most followers buys followers, +1 gold.', {
+      onBuyFollowers(ctx, owner, card, buyer, tier) {
+        if (buyer === owner) return;
+        const before = o => ctx.followers(o) - (o === buyer ? (tier && tier.get) || 0 : 0);
+        if (ctx.rivals(owner).every(o => before(o) <= before(buyer))) ctx.gain(owner, 'gold', 1);
+      },
     }),
     m('merchant', 'Merchant', 4, 2, 'Whenever anyone recruits a gold member, +1 gold.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {

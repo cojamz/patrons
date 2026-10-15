@@ -24,10 +24,10 @@ Night Owl and the five reprices (marked) come from the member-value sim in desig
 13. Courier (4+2): whenever you take an extra turn, +1 of each other color.
 14. Apprentice (2+2): whenever you take an extra turn, your next member costs 4 less.
 15. Overseer (2+2, repriced): whenever a rival takes an extra turn, gain half your purple (up to 4).
-16. Double Time [Corner-Cutter] (4+0; repriced 6+2 → 4+2 → 4+0, the last in balance pass 1): extra turns you pay purple for cost you half (rounded up).
+16. Double Time [Corner-Cutter] (2+0; repriced 6+2 → 4+2 → 4+0 → 2+0, the last two in balance passes 1 and 2): extra turns you pay purple for cost you half (rounded up).
 17. Bookkeeper (4+2, changed): when you place your last worker of a round, +1 purple per 2 workers you have on the board.
 18. Clockmaker (2+2): now and at round start, +1 purple per 2 purple you have.
-19. Lamplighter (6+2): now and at round start, +1 purple per worker you get this round (3 / 4 / 5).
+19. Lamplighter (10+2, was 6+2; balance pass 2): now and at round start, +1 purple per worker you get this round (3 / 4 / 5).
 20. Night Owl (8+2, replaces Relay): each round, after your last minion, place one more and buy again. It counts as an extra turn (Foreman, Overseer…), and needs a space to spare.
 21. Patience (6+2): at game end, +1 follower per 3 purple.
 22. Shift Crew (1+1): worth 2 followers. No effect.

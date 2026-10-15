@@ -3,7 +3,7 @@ import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'rea
 import { quadrant, cardDef } from '../../engine/v4/index.js';
 import { logSections, playerColor, costParts, plainLine } from '../format.js';
 import { Rich, CostPips } from './Rich.jsx';
-import { MemberCard, NamedText, BadgeMark, CardText, cardColor } from './Info.jsx';
+import { MemberCard, NamedText, CardText, cardColor } from './Info.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { CoinMark } from './Glyphs.jsx';
 
@@ -124,7 +124,7 @@ function ForSale({ state }) {
             <button key={uid} type="button" className="fs-card" data-sale={uid} style={{ '--c': cardColor(state, d) }}
               aria-label={`${d.name}, ${d.f} followers, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}. Show the card.`}
               onClick={e => setOpen({ uid, el: e.currentTarget })}>
-              <span className="row"><b>{d.name}<BadgeMark state={state} def={d} /></b><Follower n={d.f} /></span>
+              <span className="row"><b>{d.name}</b><Follower n={d.f} /></span>
               <span className="fs-cost"><CostPips parts={parts} /></span>
             </button>
           );
@@ -178,7 +178,7 @@ function MergedOptions({ state, pend, onPick, busy }) {
             {color && <i />}
             {det ? (
               <span className="rich-body">
-                <b>{det.owner != null && <span className="from" style={{ color: playerColor(det.owner) }}>{state.players[det.owner].name}’s </span>}{det.name}{det.def && <BadgeMark state={state} def={det.def} />}{n > 1 && <span className="num copies"> {state.shop && state.shop.includes(o.value) ? `· ${n} in the shop` : `· ${n} of them`}</span>}{det.f != null && <> <Follower n={det.f} className="star" /></>}</b>
+                <b>{det.owner != null && <span className="from" style={{ color: playerColor(det.owner) }}>{state.players[det.owner].name}’s </span>}{det.name}{n > 1 && <span className="num copies"> {state.shop && state.shop.includes(o.value) ? `· ${n} in the shop` : `· ${n} of them`}</span>}{det.f != null && <> <Follower n={det.f} className="star" /></>}</b>
                 <small>{det.def ? <CardText text={det.text} /> : <Rich text={det.text} />}</small>
                 {det.cost && <small className="cost-line">Costs <span className="num">{det.cost}</span></small>}
               </span>
@@ -198,7 +198,7 @@ const TradeCard = memo(function TradeCard({ state, g, busy, onClick, extra }) {
   return (
     <button type="button" className="btn rich" style={{ '--c': cardColor(state, g.d) }} disabled={busy} onClick={onClick} data-option={extra}>
       <span className="rich-body">
-        <b>{g.d.name}<BadgeMark state={state} def={g.d} />{g.uids.length > 1 && <span className="num"> ×{g.uids.length}</span>}{' '}<Follower n={g.d.f} className="star" />{g.o && <span className="from"> · {g.o.name}</span>}</b>
+        <b>{g.d.name}{g.uids.length > 1 && <span className="num"> ×{g.uids.length}</span>}{' '}<Follower n={g.d.f} className="star" />{g.o && <span className="from"> · {g.o.name}</span>}</b>
         <small><CardText text={g.d.text} /></small>
       </span>
     </button>
@@ -339,6 +339,6 @@ export function Popover({ anchor, onClose, children, float = false }) {
 
 /** A member card face: color band, sphere glyph, name, worth, ability and list cost. */
 export function CardFace({ state, uid }) {
-  // one card face everywhere: badge, color (or colorless), keywords, cost and owner (Info.jsx)
+  // one card face everywhere: color (or colorless), keywords, cost and owner (Info.jsx)
   return <MemberCard state={state} uid={uid} />;
 }

@@ -44,7 +44,6 @@
 .lt-card .tick,.lt-card .need{position:absolute;top:2px;right:2px;font-size:9px;font-weight:700;border-radius:6px;padding:0 4px;line-height:13px;white-space:nowrap;max-width:calc(100% - 4px);overflow:hidden;text-overflow:ellipsis}
 .lt-card .tick{color:#3e7a2c;background:#eef6d9;box-shadow:0 0 0 1px rgba(62,122,44,.35)}
 .lt-card .need{color:var(--paper-ink);background:rgba(244,235,215,.92);box-shadow:0 0 0 1px rgba(42,31,23,.2)}
-.lt-card .badge-mark{color:color-mix(in srgb,var(--blue,#6aa6dc) 80%,#000)}
 .lt-shop-head{display:flex;align-items:center;gap:14px;margin:0 0 5px;min-width:0}
 .lt-shop-head .lt-h{margin:0}
 .lt-rates{display:flex;align-items:center;gap:6px;color:var(--cream-3);font-size:12px;flex-wrap:wrap;margin-left:auto}
@@ -267,8 +266,7 @@
 .cs-order.done{opacity:.55}
 /* the docked hover card (laptop): a fixed spot in the right-hand column, clipped to it so it never reaches the shop */
 .lt-hover.popover.docked{box-sizing:border-box;overflow:hidden}
-/* a badged member at the table: ◆ on its figure's corner (its title says what badged means; the figure opens the card) */
+/* a member's figure at the table (the ×N count sits on its corner) */
 .cs-member .fig{position:relative}
-.cs-member .fig .badge-mark{position:absolute;top:-4px;right:-5px;font-size:10px;line-height:1;color:color-mix(in srgb,var(--blue,#4f7ea8) 70%,#fff);text-shadow:0 1px 1px rgba(0,0,0,.8);pointer-events:auto}
 /* the round summary: no text under 12px (meta round 2: its small print measured 10.8–11px) */
 .roundend .re-head,.roundend .re-tb,.roundend small{font-size:12px}

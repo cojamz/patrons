@@ -1,0 +1,6 @@
+/* sum face (./sum.jsx): numbers are lining figures in Alegreya Sans, so a "+3" lines up with its glyph. */
+[data-spaces="sum"] .sum-n,
+.sum-face .sum-n { font-family: var(--sans, 'Alegreya Sans', system-ui, sans-serif); font-variant-numeric: lining-nums tabular-nums; paint-order: stroke; }
+.sum-face .sum-line { transition: opacity .2s; }
+.sum-face.locked .sum-line { filter: saturate(0); }
+.sum-face .sprite { image-rendering: pixelated; }

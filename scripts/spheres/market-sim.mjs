@@ -1,12 +1,11 @@
 // Blue (market) balance sim: greedy bots, Blue in place of the blue stand-in.
-// Usage: node scripts/spheres/market-sim.mjs [games=400] [quadrants=gold,red,market,green] [scoring=pricey|value] [lean]
+// Usage: node scripts/spheres/market-sim.mjs [games=400] [quadrants=gold,red,market,green] [unused] [lean]
 import { createGame, applyMove, chooseBotMove, followers, memberCount, actionAt } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { registerQuadrant, quadrant } from '../../src/engine/v4/content/index.js';
-import market, { memberValue, priceyCount, install, setScoring, setLean } from '../../src/engine/v4/content/market.js';
+import market, { memberValue, install, setLean } from '../../src/engine/v4/content/market.js';
 import { contextFor } from '../../src/engine/v4/core.js';
 install();
-setScoring(process.argv[4] || 'pricey');
 setLean(process.argv[5] === 'lean');
 
 const games = Number(process.argv[2] || 400), n = 4;
@@ -53,7 +52,7 @@ for (let g = 1; g <= games; g++) {
   st.winContest.push(fromContest[w]);
   const ctx = contextFor(s);
   for (const p of s.players) {
-    st.fol.push(followers(s, p)); st.mem.push(memberCount(s, p)); st.val.push(memberValue(ctx, p)); (st.pricey ??= []).push(priceyCount(ctx, p));
+    st.fol.push(followers(s, p)); st.mem.push(memberCount(s, p)); st.val.push(memberValue(ctx, p)); (st.pricey ??= []).push(ctx.membersOf(p).filter(c => c.def.s + c.def.w >= 8).length);
     st.left.push(Object.values(p.res).reduce((a, b) => a + b, 0));
   }
 }
@@ -61,7 +60,7 @@ const avg = a => (a.reduce((x, y) => x + y, 0) / a.length).toFixed(1);
 const pct = x => (100 * x / games).toFixed(0) + '%';
 console.log(`${games} games, 4 greedy bots, ${quadrants.join('/')}, Blue scoring: ${market.scoring.label}${process.argv[5] === 'lean' ? ', lean (Snap Up/Half Price use your buy)' : ''}`);
 console.log(`wins by seat: ${st.wins.map(pct).join(' / ')}`);
-console.log(`avg followers ${avg(st.fol)} · members ${avg(st.mem)} · member value ${avg(st.val)} · members costing 4+ ${avg(st.pricey)} · leftover resources ${avg(st.left)} · buys/game: members ${(st.buys.member / games).toFixed(1)}, follower buys ${(st.buys.tier / games).toFixed(1)}`);
+console.log(`avg followers ${avg(st.fol)} · members ${avg(st.mem)} · member value ${avg(st.val)} · members costing 8+ ${avg(st.pricey)} · leftover resources ${avg(st.left)} · buys/game: members ${(st.buys.member / games).toFixed(1)}, follower buys ${(st.buys.tier / games).toFixed(1)}`);
 console.log('takes per game (rounds I/II/III):');
 for (const [k, v] of Object.entries(st.takes)) console.log(`  ${k.padEnd(10)} ${v.map(x => (x / games).toFixed(2)).join(' / ')}`);
 console.log('contests (share of rounds nobody scored / shared; wins by seat):');

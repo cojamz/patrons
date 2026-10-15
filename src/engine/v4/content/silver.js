@@ -216,8 +216,9 @@ const silver = {
       onRecruited(ctx, owner) { ctx.gain(owner, S, ctx.memberCount(owner)); },
       onRoundStart(ctx, owner) { if (ctx.state.round === 3) ctx.gain(owner, S, ctx.memberCount(owner)); },
     }),
-    m('spoon', 'Upstart', 4, 2, 'When recruited, gain silver equal to the most silver any rival has.', {
-      onRecruited(ctx, owner) { ctx.gain(owner, S, Math.max(0, ...others(ctx, owner).map(o => o.res[S]))); },
+    // Cory, 2026-10-15 (balance pass 1, #2): half of it, Rising Tide's rule (both bots read the old card at 12+ for 6)
+    m('spoon', 'Upstart', 4, 2, 'When recruited, gain half the silver of the richest rival (rounded up).', {
+      onRecruited(ctx, owner) { ctx.gain(owner, S, Math.ceil(Math.max(0, ...others(ctx, owner).map(o => o.res[S] || 0)) / 2)); },
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 8 → 4
     m('toastmaster', 'Toastmaster', 2, 2, 'Whenever you take a Silver space, +1 follower.', {

@@ -22,6 +22,8 @@ if (v3) {
   if (lab === 'b') import('./v4/lab/LabB.jsx').then(({ default: Lab }) => root.render(<Lab />)).catch(offline)
   // ?lab=intro[&beat=N][&at=MS]: the intro's beats in isolation (building and recording them)
   else if (lab === 'intro') import('./v4/intro/IntroLab.jsx').then(({ default: Lab }) => root.render(<Lab />)).catch(offline)
+  // ?lab=faces&face=<name>: one action-space face (src/v4/game/faces/) on every action, in each state, and on the live wheel
+  else if (lab === 'faces') import('./v4/lab/FacesLab.jsx').then(({ default: Lab }) => root.render(<Lab />)).catch(offline)
   else import('./v4/App.jsx').then(({ default: App }) => root.render(<App />)).catch(offline)
   // Later chunk failures (e.g. the online code) reach their caller, which shows the same friendly message.
 }

@@ -168,6 +168,14 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage .shake{animation:spaceshake .34s ease-out}
 @keyframes spaceshake{0%,100%{translate:0 0}20%{translate:-4px 0}40%{translate:4px 0}60%{translate:-3px 0}80%{translate:2px 0}}
 @media (prefers-reduced-motion:reduce){ .lt .stage .slot.lit .base::after{animation:none;opacity:.8} .lt .stage .slot.newest .fresh-ring{animation:none} }
+/* a face from src/v4/game/faces/ (?spaces=<name>): the box is the face's size; the face draws everything in it */
+.lt [data-face] .stage .slot{border-radius:0}
+.lt [data-face] .stage .slot .base,.lt [data-face] .stage .slot.lit .base,.lt [data-face] .stage .slot.locked .base{background:none;box-shadow:none;opacity:1;transform:none}
+.lt [data-face] .stage .slot .base::after{display:none}
+.lt [data-face] .stage .slot.can:hover .base,.lt [data-face] .stage .slot.sel .base{transform:none;box-shadow:none}
+.lt [data-face] .stage .slot.flash .base{animation:none}
+.lt [data-face] .stage .slot:focus-visible .base{box-shadow:0 0 0 2.5px var(--lamp-ink);border-radius:6px}
+.lt .slot .face-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
 /* ...and why, at the pointer: "Taken by P3", "Opens in round II" */
 .deny-note{position:fixed;z-index:60;transform:translate(14px,-135%);padding:5px 10px;border-radius:8px;background:var(--walnut-2);color:var(--cream);font-family:var(--sans);font-size:14px;font-weight:600;white-space:nowrap;pointer-events:none;
   box-shadow:0 0 0 1px rgba(243,230,200,.24),0 8px 18px rgba(0,0,0,.5);animation:denyin .16s ease-out,denyout .3s ease-in 1.35s forwards}
@@ -327,6 +335,12 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage svg.wheel-paper .rim-rule.wait{opacity:.5}
 .lt .stage svg.wheel-paper .rim-rule.lit{fill:#fffdf6}
 .lt .stage svg.wheel-paper .rim-hit{fill:transparent;cursor:help;pointer-events:all}
+/* the rim's hover target sits in its own layer above the spaces (Wheel.jsx rimHits): the rule and the leaders' emojis
+   always open the standings; a faint wash says the band is one target */
+.lt .stage svg.rim-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:5}
+.lt .stage svg.rim-layer .rim-hit{fill:rgba(255,250,238,0);cursor:help;pointer-events:all;outline:none;transition:fill .15s}
+.lt .stage svg.rim-layer .rim-hit:hover{fill:rgba(255,250,238,.1)}
+.lt .stage svg.rim-layer .rim-hit:focus-visible{stroke:var(--lamp-ink);stroke-width:2;fill:rgba(255,250,238,.1)}
 /* the tiebreak, quieter than the rule: "· ties: red members" */
 .lt .stage svg.wheel-paper .rim-rule .rim-tie{letter-spacing:.04em;font-weight:600;fill-opacity:.9}
 /* the chairs: yours only a little larger than the rivals' (same layout) */

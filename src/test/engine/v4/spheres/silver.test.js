@@ -195,10 +195,10 @@ describe('Silver members', () => {
     expect(R(s).silver).toBe(0);
   });
 
-  it('Upstart: when recruited, gain silver equal to the most silver any rival has', () => {
+  it('Upstart: when recruited, gain half the silver of the richest rival (rounded up)', () => {
     let s = scene({ res: [{ silver: 2 }, { silver: 5 }, { silver: 3 }], shop: ['silver.spoon'], queue: [{ t: 'buy', p: 0 }] });
     s = move(s, `card:${uidOf(s, 'silver.spoon', 'shop')}`);
-    expect(R(s).silver).toBe(5);
+    expect(R(s).silver).toBe(2 - 2 + 3); // paid 2 silver, then half of 5, rounded up
   });
 
   it('Toastmaster: whenever you take a Silver space, +1 follower', () => {

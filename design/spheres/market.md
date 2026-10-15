@@ -1,5 +1,7 @@
 # Blue: the market (Claude's proposal; third pass after two critics, 2026-10-14)
 
+> **2026-10-15: badges are gone (Cory: "Drop badged, I hate that").** Blue now scores **most blue** (the blue you hold at round end, no tiebreak), and every card below that said "badged" or "unbadged" counts blue members instead: Name Drop (was Showroom) "+1 blue, and +1 per blue face-up member"; Onlooker "whenever a rival recruits a blue member, +2 blue"; Connoisseur "+2 blue", Sommelier "next member costs 2 less" and Patroness "+1 follower", each "whenever you recruit a blue member"; Curator "now and at round start, +1 blue per other blue member you have"; Auctioneer "whenever a rival recruits a non-blue member, +1 blue"; Snob "game end: +1 follower per blue member you have". Prices unchanged; the value reasoning is in design/decisions.md. The rest of this page is the history it came from; the code is the truth.
+
 Built and measured: `src/engine/v4/content/market.js` (id `market`, resource blue), tests in `src/test/engine/v4/spheres/market.test.js`, sims in `scripts/spheres/market-*.mjs`. Answer by number. Lines marked (fill-in) are a critic's wording, not Claude's.
 
 ## The idea

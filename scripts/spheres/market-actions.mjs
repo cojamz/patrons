@@ -1,11 +1,10 @@
 // Action value on the Blue table: force one seat's first placement of a round onto an action, compare with
 // the same games where the bot chose freely. Blue's actions are read against Cory's anchors on the same ring.
-// Usage: node scripts/spheres/market-actions.mjs [games=160] [scoring=pricey|value]
-import { install, setScoring } from '../../src/engine/v4/content/market.js';
+// Usage: node scripts/spheres/market-actions.mjs [games=160]
+import { install } from '../../src/engine/v4/content/market.js';
 import { createGame, applyMove, chooseBotMove, followers, actionAt } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 install();
-setScoring(process.argv[3] || 'pricey');
 const N = Number(process.argv[2] || 160);
 const QUADS = ['gold', 'red', 'market', 'green'];
 const LIST = [

@@ -157,13 +157,14 @@ const thieves = {
       resolve(ctx, p) { startSteal(ctx, p, 'Crime Wave', ctx.stealCount(p, 3, { say: true }), { each: ctx.rivals(p).map(o => o.id) }); },
     },
     {
-      key: 'ransom', ring: 2, name: 'Shake Down', text: 'Pick a rival’s member costing 6 or less. They pay you its cost to keep it (the payment arrives as magenta), or it’s yours.',
+      // Cory, 2026-10-15 (balance pass 1, #3): costing 4 or less, was 6 (both bots read it at 10–12u in round II)
+      key: 'ransom', ring: 2, name: 'Shake Down', text: 'Pick a rival’s member costing 4 or less. They pay you its cost to keep it (the payment arrives as magenta), or it’s yours.',
       estimate: (ctx, p) => {
-        const l = takeable(ctx, p, 6).filter(([, c]) => cost(c) > 0);
+        const l = takeable(ctx, p, 4).filter(([, c]) => cost(c) > 0);
         return l.length ? Math.max(...l.map(([, c]) => cost(c) * 1.33 + 0.5)) : 0;
       },
       resolve(ctx, p) {
-        const list = takeable(ctx, p, 6).filter(([, c]) => cost(c) > 0);
+        const list = takeable(ctx, p, 4).filter(([, c]) => cost(c) > 0);
         if (!list.length) { ctx.log(`${p.name} found no one to hold to ransom.`); return; }
         ctx.choose(p, 'Shake Down: which member?', list.map(([o, c]) => ({
           id: `card:${c.uid}`, label: `${o.name}'s ${c.def.name} (${cost(c)})`, kind: 'member', value: c.uid,

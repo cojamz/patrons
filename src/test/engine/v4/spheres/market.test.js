@@ -5,7 +5,7 @@ import { createGame, applyMove, resume, followers } from '../../../../engine/v4/
 import { chooseBotMove } from '../../../../engine/v4/bots.js';
 import { seededRandom } from '../../../../engine/v4/rng.js';
 import { registerQuadrant } from '../../../../engine/v4/content/index.js';
-import market, { memberValue, priceyCount, install, setScoring, setBadge } from '../../../../engine/v4/content/market.js';
+import market, { memberValue, install } from '../../../../engine/v4/content/market.js';
 import { contextFor } from '../../../../engine/v4/core.js';
 import { take, move, uidOf, ids, fol, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
@@ -26,9 +26,8 @@ const MARKET_TEST_COSTS = {
   'market.blackmarket': [2, 2], 'market.snob': [3, 2], 'market.recluse': [2, 1],
 };
 let restore;
-// These costs are the pre-doubling scale, so the badge cutoff goes back to 4 with them.
-beforeEach(() => { restore = pinCosts({ ...TEST_COSTS, ...MARKET_TEST_COSTS }); setBadge(4); });
-afterEach(() => { restore(); setBadge(8); });
+beforeEach(() => { restore = pinCosts({ ...TEST_COSTS, ...MARKET_TEST_COSTS }); });
+afterEach(() => { restore(); });
 
 function scene({ n = 2, seed = 7, round = 1, res = [], members = [], shop = null, bonus = [], turn = 0, queue = null, pileFirst = null } = {}) {
   const s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants: Q });
@@ -56,35 +55,23 @@ const SHOP = ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.pr
 const CHEAP = ['red.intern', 'red.volunteer', 'red.twins', 'gold.taxman', 'red.drive', 'gold.thrift'];
 const card = (s, def) => `card:${uidOf(s, def, 'shop')}`;
 
-describe('Blue scoring (switchable): most badged members (cost 4+), or most member value', () => {
-  afterEach(() => setScoring('pricey'));
-  it('member value counts printed cost, not what was paid', () => {
+describe('Blue scoring: most blue (Cory, 2026-10-15)', () => {
+  it('member value (a helper the sims use) counts printed cost, not what was paid', () => {
     const s = scene({ members: [['gold.midas', 'red.volunteer', 'red.twins'], ['red.intern']] });
     const ctx = contextFor(s);
     expect(memberValue(ctx, s.players[0])).toBe(5 + 0 + 2);
     expect(memberValue(ctx, s.players[1])).toBe(1);
   });
-  it('badged (default): counts members costing 4 or more; blue members break ties; defs carry the badge', () => {
-    const s = scene({ members: [['gold.midas', 'gold.tycoon', 'red.twins'], ['red.bigfamily', 'market.snob']] });
+  it('counts the blue you hold; members, blue or pricey, count for nothing', () => {
+    const s = scene({ res: [{ blue: 3 }, { blue: 5 }], members: [['gold.midas', 'gold.tycoon', 'market.snob', 'market.stylist'], []] });
     const ctx = contextFor(s);
-    expect(priceyCount(ctx, s.players[0])).toBe(2);
-    expect(priceyCount(ctx, s.players[1])).toBe(2);
-    expect(market.scoring.score(ctx, s.players[1])).toBeGreaterThan(market.scoring.score(ctx, s.players[0]));
-    expect(market.members.find(d => d.key === 'snob').badge).toBe(true);
-    expect(market.members.find(d => d.key === 'planner').badge).toBe(false);
-    const t = scene({ members: [['red.twins', 'red.intern'], []] });
-    expect(market.scoring.score(contextFor(t), t.players[0])).toBe(0); // nothing pricey scores nothing
-  });
-  it('value: total printed cost; no value scores nothing', () => {
-    setScoring('value');
-    const s = scene({ members: [['red.volunteer'], ['gold.taxman'], ['market.stylist']], n: 3 });
-    const ctx = contextFor(s);
-    expect(market.scoring.score(ctx, s.players[0])).toBe(0);
-    expect(market.scoring.score(ctx, s.players[2])).toBeGreaterThan(market.scoring.score(ctx, s.players[1])); // both 2, blue breaks it
+    expect(market.scoring.label).toBe('Most blue');
+    expect(market.scoring.score(ctx, s.players[0])).toBe(3);
+    expect(market.scoring.score(ctx, s.players[1])).toBe(5);
   });
   it('pays the ring value at round end', () => {
-    const s = scene({ members: [['gold.midas'], ['gold.taxman']], queue: [{ t: 'endRound' }] });
-    expect(s.log.at(-1)).toContain('Most badged members: P1 +2');
+    const s = scene({ res: [{ blue: 2 }, { blue: 1 }], members: [[], ['gold.midas', 'market.snob']], queue: [{ t: 'endRound' }] });
+    expect(s.log.at(-1)).toContain('Most blue: P1 +2');
   });
 });
 
@@ -127,10 +114,10 @@ describe('Blue actions', () => {
     expect(s.shop.some(u => old.includes(u))).toBe(false);
     expect(s.pile.slice(-6)).toEqual(old);
   });
-  it('Name Drop: +1 blue per face-up member costing 4 or more', () => {
-    expect(R(take(scene({ shop: SHOP }), 'market.showroom')).blue).toBe(6);
-    expect(R(take(scene({ shop: CHEAP }), 'market.showroom')).blue).toBe(0);
-    expect(R(take(scene({ shop: ['gold.midas', 'gold.tycoon', ...CHEAP.slice(0, 4)] }), 'market.showroom')).blue).toBe(2);
+  it('Name Drop: +1 blue, and +1 per blue face-up member', () => {
+    expect(R(take(scene({ shop: SHOP }), 'market.showroom')).blue).toBe(1);
+    expect(R(take(scene({ shop: CHEAP }), 'market.showroom')).blue).toBe(1);
+    expect(R(take(scene({ shop: ['market.stylist', 'market.planner', ...CHEAP.slice(0, 4)] }), 'market.showroom')).blue).toBe(3);
   });
   it('Half Price (ring II): recruit a face-up member for half its cost, rounded down, any colors', () => {
     expect(() => take(scene({ round: 1, res: [{ red: 9 }], shop: SHOP }), 'market.clearance')).toThrow();
@@ -181,26 +168,26 @@ describe('Blue members', () => {
     expect(R(rivalBuys([['market.stylist']], 'market.underbidder')).blue).toBe(1);
     expect(R(rivalBuys([['market.stylist']], 'red.intern')).blue).toBe(0);
   });
-  it('Onlooker: whenever a rival recruits a badged member, +1 blue', () => {
-    expect(R(rivalBuys([['market.onlooker']], 'gold.tycoon')).blue).toBe(1);
-    expect(R(rivalBuys([['market.onlooker']], 'gold.taxman')).blue).toBe(0);
+  it('Onlooker: whenever a rival recruits a blue member, +2 blue', () => {
+    expect(R(rivalBuys([['market.onlooker']], 'market.recluse')).blue).toBe(2);
+    expect(R(rivalBuys([['market.onlooker']], 'gold.tycoon')).blue).toBe(0);
   });
-  it('Connoisseur: whenever you recruit a member costing 4 or more, +2 blue', () => {
-    let s = take(scene({ res: [{ gold: 9 }], members: [['market.connoisseur']], shop: SHOP }), 'market.showroom');
-    s = move(s, card(s, 'gold.tycoon'));
-    expect(R(s).gold).toBe(6); // 3 gold + 1 any (paid in blue)
-    expect(R(s).blue).toBe(6 - 1 + 2);
+  it('Connoisseur: whenever you recruit a blue member, +2 blue', () => {
+    let s = take(scene({ res: [{ gold: 9 }], members: [['market.connoisseur']], shop: ['market.recluse', ...SHOP.slice(0, 5)] }), 'market.showroom');
+    s = move(s, card(s, 'market.recluse'));
+    expect(R(s).gold).toBe(8); // Name Drop's 2 blue pay Recluse's blue part, 1 gold the rest
+    expect(R(s).blue).toBe(2 - 2 + 2);
     let t = take(scene({ res: [{ red: 9 }], members: [['market.connoisseur']], shop: CHEAP }), 'market.showroom');
     t = move(t, card(t, 'red.twins'));
-    expect(R(t).blue).toBe(0);
+    expect(R(t).blue).toBe(1); // Name Drop's 1 only
   });
   it('Reseller: whenever you recruit, +1 of that member’s color', () => {
     let s = take(scene({ res: [{ gold: 9 }], members: [['market.reseller']], shop: SHOP }), 'market.showroom');
     s = move(s, card(s, 'gold.tycoon'));
-    expect(R(s)).toEqual({ gold: 9 - 3 + 1, red: 0, blue: 6 - 1, green: 0 });
+    expect(R(s)).toEqual({ gold: 9 - 3 + 1, red: 0, blue: 1 - 1, green: 0 });
   });
-  it('Curator: round start, +1 blue per badged member', () => {
-    expect(R(start([['market.curator', 'gold.midas', 'gold.tycoon', 'red.intern']])).blue).toBe(2); // Midas 5, Tycoon 4
+  it('Curator: round start, +1 blue per other blue member', () => {
+    expect(R(start([['market.curator', 'market.stylist', 'market.planner', 'gold.midas']])).blue).toBe(2); // Stylist, Planner
   });
   it('Planner: round start, your next member costs 2 less per round number', () => {
     expect(start([['market.planner']]).players[0].discount).toBe(4);
@@ -228,18 +215,21 @@ describe('Blue members', () => {
     k = move(k, `release:${uidOf(k, 'market.climber', 0)}`);
     expect(k.pending?.prompt || '').not.toContain('Social Climber');
   });
-  it('Auctioneer: whenever a rival recruits an unbadged member, +1 blue', () => {
-    expect(R(rivalBuys([['market.auctioneer']], 'red.twins')).blue).toBe(1);
-    expect(R(rivalBuys([['market.auctioneer']], 'gold.tycoon')).blue).toBe(0);
+  it('Auctioneer: whenever a rival recruits a non-blue member, +1 blue', () => {
+    expect(R(rivalBuys([['market.auctioneer']], 'gold.tycoon')).blue).toBe(1);
+    expect(R(rivalBuys([['market.auctioneer']], 'market.recluse')).blue).toBe(0);
   });
-  it('Sommelier: whenever you recruit a badged member, your next costs 2 less', () => {
-    let s = take(scene({ res: [{ gold: 9 }], members: [['market.sommelier']], shop: SHOP }), 'market.showroom');
-    s = move(s, card(s, 'gold.tycoon'));
+  it('Sommelier: whenever you recruit a blue member, your next costs 2 less', () => {
+    let s = take(scene({ res: [{ gold: 9 }], members: [['market.sommelier']], shop: ['market.recluse', ...SHOP.slice(0, 5)] }), 'market.showroom');
+    s = move(s, card(s, 'market.recluse'));
     expect(s.players[0].discount).toBe(2);
+    let t = take(scene({ res: [{ gold: 9 }], members: [['market.sommelier']], shop: SHOP }), 'market.showroom');
+    t = move(t, card(t, 'gold.tycoon'));
+    expect(t.players[0].discount).toBe(0);
   });
-  it('Patroness: whenever you recruit a badged member, +1 follower', () => {
-    let s = take(scene({ res: [{ gold: 9 }], members: [['market.patroness']], shop: SHOP }), 'market.showroom');
-    s = move(s, card(s, 'gold.tycoon'));
+  it('Patroness: whenever you recruit a blue member, +1 follower', () => {
+    let s = take(scene({ res: [{ gold: 9 }], members: [['market.patroness']], shop: ['market.recluse', ...SHOP.slice(0, 5)] }), 'market.showroom');
+    s = move(s, card(s, 'market.recluse'));
     expect(s.players[0].bonus).toBe(1);
     let t = take(scene({ res: [{ red: 9 }], members: [['market.patroness']], shop: CHEAP }), 'market.showroom');
     t = move(t, card(t, 'red.twins'));
@@ -247,7 +237,7 @@ describe('Blue members', () => {
   });
   it('Talent Scout: once per game, also recruit one of the top 5 of the pile at its cost', () => {
     let s = scene({ res: [{ gold: 9 }], members: [['market.blackmarket']], shop: CHEAP, pileFirst: ['red.mob', 'red.host', 'gold.jackpot', 'red.sponsor', 'red.patriarch', 'gold.midas'] });
-    s = take(s, 'market.showroom');
+    s = take(s, 'red.turnout'); // nobody has recruited this round: Bandwagon gives nothing, so only gold is held
     const use = `use:${uidOf(s, 'market.blackmarket', 0)}`;
     s = move(s, use); // its question comes at once (gut call, 2026-10-15); your normal buy follows
     expect(s.pending.prompt).toContain('top 5');
@@ -261,9 +251,9 @@ describe('Blue members', () => {
     expect(s.pending.kind).toBe('buy'); // then the buy step, fresh: used, so no second use
     expect(ids(s)).not.toContain(use);
   });
-  it('Snob: game end, +1 follower per badged member (itself included)', () => {
-    const s = scene({ members: [['market.snob', 'gold.midas', 'gold.tycoon', 'red.intern']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.total).toBe(3);
+  it('Snob: game end, +1 follower per blue member (itself included)', () => {
+    const s = scene({ members: [['market.snob', 'market.stylist', 'gold.midas', 'gold.tycoon', 'red.intern']], queue: [{ t: 'finish' }] });
+    expect(s.players[0].final.total).toBe(2);
   });
   it('Recluse: game end, +2 followers per rival with more members', () => {
     const s = scene({ n: 3, members: [['market.recluse'], ['red.intern', 'red.drive'], ['red.twins']], queue: [{ t: 'finish' }] });
@@ -273,7 +263,7 @@ describe('Blue members', () => {
 
 describe(`Blue table: ${GAMES} seeded bot games`, () => {
   it('finish cleanly with invariants holding', () => {
-    const restoreReal = restore; restoreReal(); setBadge(8); restore = () => {};
+    const restoreReal = restore; restoreReal(); restore = () => {};
     let usedSpree = 0;
     for (let g = 1; g <= GAMES; g++) {
       const rand = seededRandom(g * 131);

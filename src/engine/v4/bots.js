@@ -281,7 +281,7 @@ function gameEndPay(s, ctx, p) {
 }
 
 // A member's own data, not an ability. Every other key is a hook or a rule flag (halfTurns, brokerBonus, toggle…).
-const DATA_KEYS = new Set(['key', 'name', 's', 'w', 'text', 'f', 'n', 'id', 'quadrant', 'copies', 'vanilla', 'badge', 'lean', 'guest']);
+const DATA_KEYS = new Set(['key', 'name', 's', 'w', 'text', 'f', 'n', 'id', 'quadrant', 'copies', 'vanilla', 'lean', 'guest']);
 // Hooks whose payout the evaluation already sees (the recruit itself, game-end pay) or that only steer bots.
 const MEASURED = new Set(['onGameEnd', 'onRecruited', 'botActivate', 'estimate']);
 const PLAIN_TEXT = /^(Free\. )?((Worth \d+ followers?\.|No effect\.|Counts as \d+ members\.)\s*)+$/;

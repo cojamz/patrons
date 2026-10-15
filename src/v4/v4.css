@@ -1332,8 +1332,6 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 .tip:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
 .term{text-decoration:underline dotted color-mix(in srgb,currentColor 60%,transparent);text-underline-offset:3px;text-decoration-thickness:1px}
 .card-name{text-decoration:underline dotted color-mix(in srgb,var(--c,currentColor) 70%,transparent);text-underline-offset:3px;cursor:pointer}
-.badge-mark{color:var(--blue);font-size:.85em;margin-left:3px;text-decoration:none;cursor:help}
-.badge-mark.inline{margin-left:2px}
 .colorless-tag{color:var(--muted);font-style:italic}
 .tip-body{font-size:var(--fs-2);line-height:1.4}
 .pop-card.gloss span{font-size:var(--fs-2);line-height:1.45;color:var(--ink)}

@@ -2,7 +2,6 @@
 // Card text, the How-to-play page and every underlined keyword read these definitions; nothing else defines them.
 // `match` finds the word in rules text (lowercase as printed on cards); `link: false` keeps a very common word
 // (member, follower) out of the underlining while it stays in the glossary.
-import { BADGE } from '../engine/v4/content/market.js';
 import { RING_VALUE, WORKERS } from '../engine/v4/index.js';
 
 const rings = RING_VALUE.map(v => `+${v}`).join(' / ');
@@ -16,10 +15,6 @@ export const GLOSSARY = [
     def: 'A card you recruit. It is worth the followers shown on it (the little person) and most have an ability that keeps working for you.' },
   { key: 'worth', word: 'Worth', match: /\bworth \d+ followers?\b/i,
     def: 'How many followers a member counts for while you hold it: the number beside the little person on the card.' },
-  { key: 'badged', word: 'Badged', match: /\bbadged\b/,
-    get def() { return `A member whose printed cost is ${BADGE} or more, marked ◆ on the card. Blue scores the most badged members.`; } },
-  { key: 'unbadged', word: 'Unbadged', match: /\bunbadged\b/,
-    get def() { return `A member whose printed cost is under ${BADGE} (no ◆).`; } },
   { key: 'full set', word: 'Full set', match: /\bfull sets?\b/,
     def: 'One of each color on the table. Two of each color is 2 full sets. Yellow scores the most full sets.' },
   { key: 'plant', word: 'Plant', match: /\bplants?\b/,
@@ -75,7 +70,7 @@ export const GLOSSARY = [
 ];
 
 const BY_KEY = Object.fromEntries(GLOSSARY.map(t => [t.key, t]));
-/** The glossary entry for a key ('badged', 'full set'…), or null. */
+/** The glossary entry for a key ('full set', 'plant'…), or null. */
 export const term = key => BY_KEY[key] || null;
 
 /**

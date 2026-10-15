@@ -1,6 +1,9 @@
 // Red: quantity over quality. Most members at round end takes the ring's followers; red members break ties.
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const cost = c => c.def.s + c.def.w;
+/** Open House: the face-up members it can recruit. */
+const OPEN_HOUSE_MAX = 4;
+const openHouseRow = ctx => ctx.shopCards().filter(c => cost(c) <= OPEN_HOUSE_MAX);
 
 export default {
   id: 'red',
@@ -37,9 +40,18 @@ export default {
       resolve(ctx, p) { hireCheapest(ctx, p); },
     },
     {
-      key: 'hireup', ring: 2, name: 'Open House', text: '+2 red, and recruit the cheapest face-up member, free.',
-      estimate: ctx => 2 + cheapValue(ctx),
-      resolve(ctx, p) { ctx.gain(p, 'red', 2, { fromAction: true }); hireCheapest(ctx, p); },
+      // Cory, 2026-10-15 (balance pass 1, #6): no +2 red, and you choose (was "+2 red, and recruit the cheapest
+      // face-up member, free", his own "too strong" anchor: an extra recruit plus +2)
+      key: 'hireup', ring: 2, name: 'Open House', text: `Recruit a face-up member costing ${OPEN_HOUSE_MAX} or less, free.`,
+      estimate: ctx => Math.max(0, ...openHouseRow(ctx).map(c => c.def.f + cost(c) * 0.8)),
+      resolve(ctx, p) {
+        const row = openHouseRow(ctx);
+        if (!row.length) { ctx.log(`Open House: no face-up member costs ${OPEN_HOUSE_MAX} or less, so ${p.name} recruits nothing.`); return; }
+        if (row.length === 1) { ctx.recruit(p, row[0].uid, { free: true }); return; }
+        ctx.choose(p, 'Open House: recruit which member?', row.map(c => ({
+          id: `card:${c.uid}`, label: `${c.def.name} (${cost(c)})`, kind: 'card', value: c.uid, hint: c.def.f * 1.5 + cost(c),
+        })), 'red.takeFree');
+      },
     },
     {
       key: 'trade', ring: 2, name: 'Swap Sides', text: 'Swap one of your members for another player’s costing no more than yours +2.',

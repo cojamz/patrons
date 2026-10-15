@@ -10,7 +10,7 @@ import { Sprite } from '../art/Sprite.jsx';
 import { spriteId, sphereShare } from '../art/index.js';
 import { Follower } from '../art/Follower.jsx';
 import { realHover } from '../hover.js';
-import { Tip, MemberCard, cardColor, onTable, BadgeMark } from './Info.jsx';
+import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
 import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { lastSpace, turnPlaces } from './seats.js';
 import Tick from './Tick.jsx';
@@ -69,7 +69,6 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
               <Tip className="fig" label={`${d.name}: show the card`} content={() => <MemberCard state={state} uid={g.uids[0]} />}>
                 <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
-                <BadgeMark state={state} def={d} />
               </Tip>
               {use && <button type="button" className="lt-btn mini" data-option={use.id} onClick={() => onPick(use.id)} title={`Use ${d.name} now`}>Use<span className="hitbox" aria-hidden="true" /></button>}
               {toggle && <button type="button" className="lt-btn mini" data-option={toggle.id} onClick={() => onPick(toggle.id)} title={toggle.label}>{g.card.on === false ? 'On' : 'Off'}<span className="hitbox" aria-hidden="true" /></button>}

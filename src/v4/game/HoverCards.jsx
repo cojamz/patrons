@@ -229,12 +229,13 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
     </div>
   );
 }
-/** "You 5 · Ossian 2 · you'd lead, +2": the space's own contest after taking it (the dry run's first branch). */
+/** "You 5 · Ossian 2 · Bo 1 · Kay 0 · you'd lead, +2": the space's own contest after taking it, every player (the dry run's first branch). */
 function raceAfter(state, race, qid, pid) {
   const c = race.find(x => x.qid === qid);
   if (!c) return null;
   const nm = id => (id === pid ? 'You' : state.players[id].name);
-  const top = c.rows.slice(0, 3).map(r => `${nm(r.player)} ${r.count}`).join(' · ');
+  // every player, never just the top three (RC1 panel: the 4th silently dropped off "You 0 · P2 0 · P3 0")
+  const top = c.rows.map(r => `${nm(r.player)} ${r.count}`).join(' · ');
   const lead = c.winners.includes(pid) ? ` · you’d lead, +${c.prize}` : '';
   return { rule: c.rule.replace(/^Most /, '').replace(/^\w/, ch => ch.toUpperCase()), text: `${top}${lead}` };
 }

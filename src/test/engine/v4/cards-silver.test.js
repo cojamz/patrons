@@ -148,10 +148,10 @@ describe('Silver members', () => {
     expect(named(s, 'Heir')).toHaveLength(1);
   });
 
-  it('Upstart: when recruited, silver equal to the richest rival’s, named', () => {
+  it('Upstart: when recruited, half the silver of the richest rival (rounded up), named', () => {
     let s = sc({ n: 3, round: 3, res: [{}, { silver: 4 }, { silver: 9 }], shop: ['silver.spoon'] });
     s = move(take(s, 'red.take'), `card:${uidOf(s, 'silver.spoon', 'shop')}`);
-    expect(S(s)).toBe(9);
+    expect(S(s)).toBe(5); // half of 9, rounded up
     expect(named(s, 'Upstart')).toHaveLength(1);
   });
 

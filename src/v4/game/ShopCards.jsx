@@ -1,5 +1,5 @@
 // The Lamplit shop: ten cream cards (5×2 on a laptop, a swipe row on a phone) and one quiet follower-rate line.
-// The member deck (face down, its count) heads the strip (MemberDeck.jsx). A card: timing tag, pixel figure, name (◆ when badged), cost as shapes, worth. While placing, cards you can't
+// The member deck (face down, its count) heads the strip (MemberDeck.jsx). A card: timing tag, pixel figure, name, cost as shapes, worth. While placing, cards you can't
 // afford are dim and a "✓ after X" tick marks the ones the space under your pointer would unlock (engine dry run).
 // While buying, the figure gives way to the card's text; hover shows what you'd pay. On touch a tap opens the card
 // as a sheet with Recruit (reading a card never recruits it); with a mouse a click on an affordable card recruits.
@@ -9,7 +9,7 @@ import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { BadgeMark, cardColor, onTable, usePreview } from './Info.jsx';
+import { cardColor, onTable, usePreview } from './Info.jsx';
 import { ResourceGlyph, FollowerGlyph } from './Glyphs.jsx';
 import { timingOf, payBreakdown, unlockedBy, surely } from './cards.js';
 void timingOf;
@@ -99,7 +99,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                 {fromPile && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
                 {tick && <span className="tick" title={`You could afford it after ${after}`}>✓ {after}</span>}
               </span>
-              <span className="nm">{d.name}<BadgeMark state={state} def={d} /></span>
+              <span className="nm">{d.name}</span>
               <span className="ft">
                 <CostShapes parts={parts} />
                 <span className="val" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>

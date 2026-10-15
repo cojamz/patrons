@@ -141,7 +141,7 @@ describe('Gold members', () => {
     expect(R(s).map(r => r.gold)).toEqual([4, 0]);
   });
 
-  it('Tax Collector: +1 gold when a rival buys followers, not for its owner', () => {
+  it('Tax Collector: +1 gold when the rival with the most followers (two players: the rival) buys followers, not for its owner', () => {
     let s = scene({ members: [[], ['gold.taxman']], res: [{ blue: 2 }, { blue: 2 }], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }] });
     s = take(s, 'blue.a1');
     s = move(s, 'tier:small');
