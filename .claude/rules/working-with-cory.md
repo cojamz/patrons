@@ -104,3 +104,4 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-15 — Seven leftover check-ins flooded him, and after a restart I kept saying "next session" while missing tools. At most one check-in pending; tools missing gets said once, with the one thing he can do.
 - 2026-10-15 — Hover lag passed our gate because it timed "card present". Measure what he feels: "card complete", filmstrips by eye, a headed browser.
 - 2026-10-15 — Reconciled with the brief Cory approved today (project-instructions.md): defaults in brackets, five lines max, no AI tics, tokens are not a constraint.
+- 2026-10-15 — Cory: don't hold back iterations. Send him each fix with a screenshot, and what blind testers find, as it lands, before the full check passes. A− is still the bar for calling a build finished, and only gate-green builds go to the play link.
