@@ -40,6 +40,8 @@ import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpee
 import { PERF_ON } from '../perf.js';
 import { boardPicker, giftPick, seatPart, shopLookup, pickCaption } from './boardPick.js';
 import GiftCard from './GiftCard.jsx';
+import ActionStage from './ActionStage.jsx';
+import { stageClear } from './stage.js';
 import { sameSeat } from './seatMemo.js';
 import { holdFlag } from './bodyFlag.js';
 import { friendlyError, isNetworkError } from '../errors.js';
@@ -508,6 +510,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const hover = useHoverCards(); // UI-B's one hover layer: spaces, plaques, seats, shop cards
   // a press anywhere, or Space, lands the chain of animations playing on the table (director.js)
   useEffect(() => installChainSkip(), []);
+  useEffect(() => stageClear, []);
   const [reckoned, setReckoned] = useState(null); // the round-end moment whose Reckoning has played (then: the summary)
   const [lampQid, setLampQid] = useState(null); // the quadrant the Reckoning is paying right now
   // how many of the Reckoning's quadrants have landed: until a prize reaches its chair, that chair's total leaves it
@@ -1316,6 +1319,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       {moment && reckoned === moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
       {logOpen && <Chronicle state={state} meId={mySeats.length === 1 ? mySeats[0] : null} hover={hover} onClose={() => setLogOpen(false)} />}
+      {!state.over && <ActionStage />}
       <HoverCardLayer hover={hover} state={state} me={me} optionFor={live} onPick={onPick} />
       {leaving && (
         <Confirm

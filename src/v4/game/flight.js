@@ -480,8 +480,10 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
 }
 
 /** A place pulses (a source about to give: a space, a rim, a rate) or presses (a payment taken in). */
+// a whole region (the shop strip, a chair) is furniture and never moves, only what's inside it (hotseat region gate)
+const furniture = el => !!(el.matches && el.matches('[data-region]'));
 export function pulse(el, ms, { press = false } = {}) {
-  if (!el || !el.animate || el.rectOnly) return;
+  if (!el || !el.animate || el.rectOnly || furniture(el)) return;
   relative(el, press
     ? [{ transform: 'scale(1)' }, { transform: 'scale(.96)', offset: 0.5 }, { transform: 'scale(1)' }]
     : [{ transform: 'scale(1)', filter: 'brightness(1)' }, { transform: 'scale(1.04)', filter: 'brightness(1.25)', offset: 0.45 }, { transform: 'scale(1)', filter: 'brightness(1)' }],
@@ -496,6 +498,6 @@ export function tug(el, toward, ms) {
 }
 /** The destination settles as a piece lands (lighter between two rivals, fuller for a bundle). */
 export function settle(el, ms, k = 1.18) {
-  if (!el || !el.animate || el.rectOnly) return;
+  if (!el || !el.animate || el.rectOnly || furniture(el)) return;
   relative(el, [{ transform: 'scale(1)' }, { transform: `scale(${k})`, offset: 0.35 }, { transform: 'scale(1)' }], { duration: ms, easing: 'cubic-bezier(.3,1.5,.5,1)' });
 }

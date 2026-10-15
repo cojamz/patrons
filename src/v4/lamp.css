@@ -600,3 +600,14 @@ h1,h2,h3{font-family:var(--serif)}
   .app.game.lt > .main.over .over-seat .cs-stack b{font-size:11px}
 }
 .prompt.choice.setup .token .tk-label{white-space:nowrap}
+/* the Reckoning's scoreboard: every player's count side by side on the card; the winner's column cheers */
+.lt-reckon .reckon-board{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:8px;width:100%;margin:8px 0 4px}
+.lt-reckon .reckon-board .rc{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px 6px;border-radius:10px;opacity:.25;transition:opacity calc(.2s * var(--mo-slow)),background-color calc(.2s * var(--mo-slow))}
+.lt-reckon .reckon-board .rc.in{opacity:1;animation:reckonstamp var(--mo-land) cubic-bezier(.3,1.5,.5,1) both}
+.lt-reckon .reckon-board .rc-who{display:flex;align-items:center;gap:5px;font:600 14px/1 var(--sans);color:var(--paper-ink-2);max-width:100%;white-space:nowrap;overflow:hidden}
+.lt-reckon .reckon-board .rc-who svg{flex:none}
+.lt-reckon .reckon-board .rc-n{font:800 36px/1 var(--sans)!important;color:var(--paper-ink)}
+.lt-reckon .reckon-board .rc.lost{opacity:.45}
+.lt-reckon .reckon-board .rc.won{background:color-mix(in srgb,var(--c) 18%,transparent);box-shadow:inset 0 0 0 2px var(--c);animation:reckoncheer calc(.7s * var(--mo-slow)) cubic-bezier(.3,1.4,.5,1) 2}
+@keyframes reckoncheer{0%,100%{transform:translateY(0) rotate(0)}15%{transform:translateY(-8px) rotate(-4deg)}30%{transform:translateY(-2px) rotate(3deg)}45%{transform:translateY(-6px) rotate(-2deg)}65%{transform:translateY(0) rotate(1deg)}}
+@media (prefers-reduced-motion: reduce){.lt-reckon .reckon-board .rc.won,.lt-reckon .reckon-board .rc.in{animation:none}}

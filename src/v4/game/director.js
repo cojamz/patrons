@@ -20,6 +20,11 @@ import { MO, flightMs, nextBeatAt, speedScale } from '../motion.js';
 import { playerColor } from '../format.js';
 import { gainsBetween } from './gains.js';
 import { seatOrder } from './seats.js';
+import { stageRect, stageShow, stageRelease, stageClear } from './stage.js';
+import { panelText } from './panelText.js';
+import { quadrant, defById } from '../../engine/v4/index.js';
+import { seatEmoji } from '../format.js';
+import { spriteId } from '../art/index.js';
 import { motionOK, flyPath, pulse, tug, settle, flyMinionsHome, slideShop, holdStack, bump, track, landAll, expectArrival, clearArrivals, clearFlights, arcFrames, bezier, onScreenBow, relative } from './flight.js';
 
 const CARD_EASE = bezier(0.3, 0.7, 0.2, 1); // a recruited card's flight to its crowd (grammar M7)
@@ -106,6 +111,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   const ends = x => { end = Math.max(end, x); return x; };
   const sameRound = state.round === before.round;
   let pulsed = null; // the space already lit by the selection
+  let selectedAt = null; // when a rival's minion landed on it
 
   // 1. the selection
   const placed = sameRound ? Object.keys(state.slots).filter(k => before.slots[k] === undefined).map(k => [k, state.slots[k]]) : [];
@@ -122,6 +128,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     } else {
       at(0, { op: 'minion', pid, key, own: false, dur: MO.minionFly });
       const landed = ends(MO.minionFly);
+      selectedAt = landed;
       at(landed + Math.max(0, MO.readHold - MO.pulse), { op: 'pulse', place: { kind: 'space', key }, dur: MO.pulse });
       t = ends(landed + MO.readHold);
     }
@@ -141,7 +148,13 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     beats[beats.length - 1].effects.push(e);
   }
   let hand = 0; // when the last piece is two-thirds along: the same player's next step may show then
-  const pieces = (time, from, to, n, opt = {}) => {
+  // the action stage (stage.js): a space or member out on the hub gives and takes from there
+  let stagedKey = null;
+  const stagedUids = new Map(); // a staged member's uid → its spot
+  const onStage = w => (!w ? w : w.kind === 'space' && w.key === stagedKey ? { kind: 'stage', slot: 'card' }
+    : w.kind === 'member' && w.uid != null && stagedUids.has(w.uid) && w.pid === stagedUids.get(w.uid).pid ? { kind: 'stage', slot: stagedUids.get(w.uid).spot } : w);
+  const pieces = (time, from0, to0, n, opt = {}) => {
+    const from = onStage(from0), to = onStage(to0);
     // 1–3 single pieces, 60ms apart (Steady); 4 or more one bundle carrying its count
     const d = opt.dur || fly(from, to);
     hand = Math.max(hand, (n >= 4 ? time : time + (n - 1) * MO.pieceStagger) + d * (2 / 3));
@@ -157,19 +170,45 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   // "nothing travels from my buy to P4's seat")
   const mover = before.pending ? before.pending.player : null;
   let movePlace = null;
+  let lastStart = null; // when the last beat that wasn't a rival's reaction began
   for (const beat of beats) {
     const c = beat.cause, owner = owner0(c);
     const m = movesOf(c, beat.effects, owner);
     let s = t;
+    if (!(c.kind === 'member' && mover != null && c.pid !== mover)) lastStart = s;
     if (!movePlace && c.kind !== 'member') {
       const f0 = beat.effects[0] && beat.effects[0].from;
       movePlace = c.kind === 'space' ? { kind: 'space', key: c.key } : c.kind === 'buy' ? { kind: 'rate', tier: c.tier, n: c.get }
         : c.kind === 'recruit' ? { kind: 'shop', index: c.index, uid: c.uid } : f0 && f0.kind === 'space' ? f0 : null;
     }
-    const fromMove = c.kind === 'member' && mover != null && c.pid !== mover && movePlace ? movePlace : null;
-    // the source acts first: a member hops, a space pulses (unless the selection just lit it)
-    if (c.kind === 'member' && c.uid != null) { at(s, { op: 'hop', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def } }); s += MO.lead; }
-    else if (c.kind === 'space' && c.key !== pulsed) { at(s, { op: 'pulse', place: { kind: 'space', key: c.key }, dur: MO.pulse }); s += MO.lead; pulsed = c.key; }
+    // a rival's member that pays out because of the mover's move (Tax Collector on your follower buy) is part of that
+    // move's beat: it hops in its seat as the move plays, and what it gets flies from where the move happened, at once
+    const reactive = c.kind === 'member' && mover != null && c.pid !== mover && !!movePlace && lastStart != null;
+    if (reactive) s = lastStart + MO.lead;
+    const fromMove = reactive ? movePlace : null;
+    // the source acts first: it flies out of its place onto the stage (a space as a card at the hub, a member beside
+    // it), and gives from there (Cory, 2026-10-15: "a card shows up showing the action, and resources flow to/from that
+    // action to players. same with members as they are contributing"). A member already out hops again.
+    if (reactive) { if (c.uid != null) { at(s, { op: 'hop', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def } }); s += MO.lead; } }
+    else if (c.kind === 'member' && c.uid != null) {
+      const was = stagedUids.get(c.uid);
+      if (was && was.pid === c.pid) { at(s, { op: 'stage', kind: 'member', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def }, spot: was.spot, dur: MO.hop }); s += MO.lead; }
+      else {
+        const spot = stagedUids.size;
+        stagedUids.set(c.uid, { pid: c.pid, spot });
+        at(s, { op: 'stage', kind: 'member', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def }, spot, dur: MO.stageIn });
+        s += MO.stageIn * 0.5;
+      }
+    } else if (c.kind === 'space' && c.key !== stagedKey) {
+      // a space just taken: the card leaving it is the read of which space it was, so it leaves as the minion lands;
+      // its gains start out as the card settles
+      let s0 = s;
+      if (c.key !== pulsed) { at(s, { op: 'pulse', place: { kind: 'space', key: c.key }, dur: MO.pulse }); s0 += MO.lead; pulsed = c.key; }
+      else if (selectedAt != null) s0 = Math.max(0, selectedAt - MO.minionFly * 0.25);
+      at(s0, { op: 'stage', kind: 'space', place: { kind: 'space', key: c.key }, pid: c.pid, dur: MO.stageIn });
+      s = Math.max(selectedAt != null ? selectedAt : s, s0 + MO.stageIn * 0.6);
+      stagedKey = c.key;
+    }
     else if (c.kind === 'setup') {
       // a starting pick (wave 3: nobody saw what the bots picked): a rival's coin in the pick row lights (grammar S3, the
       // point at what they chose), and stays lit while its dot flies from it to their seat; your own pick answered your press
@@ -254,19 +293,22 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
       const to = card.type === 'member-move' || card.type === 'recruit' ? { ...card.to, uid: card.what.uid } : card.to;
       if (card.type === 'member-move') {
         const back = moves.find(o => o !== card && !o.done && o.from.pid === card.to.pid && o.to.pid === card.from.pid);
+        // (tester B, w5: "a bot's Even Swap took my Tax Collector and nothing showed it"): a member changing hands
+        // stops on the stage on its way, big, so everyone sees who it is before it lands in its new chair
+        const via = MO.stageIn + Math.round(MO.stageHold / 2);
         if (back) {
           back.done = true;
-          at(cur, { op: 'chip', from: card.from, to, uid: card.what.uid, path: 'arc', dur: MO.swap, hide: true });
-          at(cur, { op: 'chip', from: back.from, to: { ...back.to, uid: back.what.uid }, uid: back.what.uid, path: 'cross', dur: MO.swap, hide: true });
-          ends(cur + MO.swap);
-          cur += nextBeatAt(MO.swap);
+          at(cur, { op: 'chip', from: card.from, to, uid: card.what.uid, path: 'arc', dur: via + MO.swap, via: 0, hide: true });
+          at(cur, { op: 'chip', from: back.from, to: { ...back.to, uid: back.what.uid }, uid: back.what.uid, path: 'cross', dur: via + MO.swap, via: 1, hide: true });
+          ends(cur + via + MO.swap);
+          cur += via + nextBeatAt(MO.swap);
           continue;
         }
         at(cur, { op: 'tug', place: { kind: 'crowd', pid: card.from.pid }, toward: { kind: 'crowd', pid: card.to.pid }, dur: MO.tug });
         const d = fly(card.from, card.to);
-        at(cur + MO.tug, { op: 'chip', from: card.from, to, uid: card.what.uid, path: 'line', dur: d, hide: true });
-        ends(cur + MO.tug + d);
-        cur += MO.tug + nextBeatAt(d);
+        at(cur + MO.tug, { op: 'chip', from: card.from, to, uid: card.what.uid, path: 'line', dur: via + d, via: 0, hide: true });
+        ends(cur + MO.tug + via + d);
+        cur += MO.tug + via + nextBeatAt(d);
         continue;
       }
       const d = fly(card.from, card.to);
@@ -443,6 +485,7 @@ function endChain(now = false) {
   chain.counts.clear();
   if (chain.root) delete chain.root.dataset.chain;
   chain.last = null;
+  if (now) stageClear(); else stageRelease();
   for (const fn of endSubs) fn();
 }
 /** Skip the rest of the chain on screen: every step jumps to its end state at once (a click, Space). */
@@ -497,6 +540,7 @@ function placeEl(root, w, ctx) {
     }
     case 'rate': return (w.tier && shown(root.querySelector(`.lt-rate[data-rate="${w.tier}"]`))) || (w.n && shown(root.querySelector(`.lt-rate[aria-label*="+${w.n} follower"]`))) || shown(root.querySelector('.lt-rates'));
     case 'pile': return shown(root.querySelector('.lt-deck')) || shown(root.querySelector('.lt-shop'));
+    case 'stage': { const r = stageRect(w.slot); return r ? { getBoundingClientRect: () => r, rectOnly: true } : null; }
     default: return shown(root.querySelector('.stage .hub-label'));
   }
 }
@@ -539,6 +583,7 @@ export const noteTable = root => { void root; };
 export function playChain(root, before, state, { snap = null, minionsBefore = null, mine = [], chips = null } = {}) {
   if (!root || before === state) return { atoms: [], total: 0, handoff: 0 };
   const ctx = { state, before, snap, chips };
+  const chainId = (chain.n = (chain.n || 0) + 1);
   // read everything first; every write waits for the clock's next frame (before it paints): a write here made the
   // next layout effect lay the whole page out again
   const found = new Map(), rects = new Map();
@@ -651,6 +696,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           return;
         }
         case 'hop': if (!skip) hopEl(where(a.place), MO.hop); return;
+        case 'stage': if (!skip) stageOut(root, a, ctx, where, chainId, mine); return;
         case 'tug': if (!skip) tug(where(a.place), where(a.toward), a.dur); return;
         case 'card': {
           // the recruited card: a picture of it lifts in its old slot, takes its coins, then flies to its new chip
@@ -695,6 +741,33 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           if (!A || !B) return;
           chain.flying++;
           const pic = was && was.html ? `<span class="piece-member-pic">${was.html}</span>` : '<i class="piece-dot member"></i>';
+          const R = a.via != null ? stageRect(a.via) : null;
+          if (R) {
+            // out of its old chair onto the stage, a beat there, then on to its new chair
+            const leg1 = Math.round(MO.stageIn), hold = Math.round(MO.stageHold / 2), leg2 = Math.max(120, a.dur - leg1 - hold);
+            const big = square(R, 52);
+            chain.flying++;
+            const one = flyPath(pic, 'piece-flight piece-member staged', square(rectOf(A), 52), big, { path: 'arc', duration: leg1 });
+            const g = document.createElement('div');
+            g.className = 'piece-flight piece-member staged ghost-layer';
+            g.dataset.born = String(Date.now());
+            Object.assign(g.style, { left: `${big.left}px`, top: `${big.top}px`, width: `${big.width}px`, height: `${big.height}px`, opacity: '0' });
+            g.innerHTML = `<div class="path-inner">${pic}</div>`;
+            document.body.appendChild(g);
+            const ep = chain.epoch || 0;
+            onFinish(one, () => {
+              if ((chain.epoch || 0) !== ep) { g.remove(); return; } // skipped: it's already home
+              g.style.opacity = '1';
+              if (g.animate) track(g.animate([{ transform: 'none' }, { transform: 'translateY(-6px) scale(1.08)', offset: 0.35 }, { transform: 'none' }], { duration: hold, easing: 'cubic-bezier(.3,1.4,.5,1)' }));
+              setTimeout(() => {
+                g.remove();
+                if ((chain.epoch || 0) !== ep) return;
+                const two = flyPath(pic, 'piece-flight piece-member staged', big, square(rectOf(B), 52), { path: a.path === 'cross' ? 'cross' : 'arc', duration: leg2, fade: true });
+                onFinish(two, () => { chain.flying = Math.max(0, chain.flying - 1); settle(B, MO.settle); });
+              }, hold);
+            });
+            return;
+          }
           const anim = flyPath(pic, 'piece-flight piece-member', square(rectOf(A), 28), square(rectOf(B), 28), { path: a.path, duration: a.dur, fade: true });
           onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); settle(B, MO.settle); });
           return;
@@ -749,6 +822,40 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   run();
   if (typeof window !== 'undefined') { window.__patronsChains = (window.__patronsChains || 0) + 1; window.__patronsChainMs = plan.total; }
   return plan;
+}
+
+/** A space or member flies out of its place onto the stage (stage.js; ActionStage.jsx draws it). */
+function stageOut(root, a, ctx, where, chainId, mine = []) {
+  const st = ctx.state;
+  const el = where(a.place);
+  const from = el && !el.rectOnly ? el.getBoundingClientRect() : null;
+  if (a.kind === 'space') {
+    const key = a.place.key;
+    const [q, i] = String(key).split('-').map(Number);
+    const qid = st.quadrants[q];
+    let said = null;
+    try { said = panelText(qid, quadrant(qid).actions[i], Math.max(1, st.round)); } catch { return; }
+    const pid = a.pid ?? (st.slots && st.slots[key]);
+    const p = st.players[pid];
+    const at = stageRect('card');
+    if (!at) return;
+    const slotEl = root.querySelector(`[data-slot="${key}"]`);
+    stageShow({ id: `space:${key}`, chain: chainId, kind: 'space', key, at, from, homeEl: slotEl, dur: a.dur, color: `var(--${qid})`,
+      pc: playerColor(pid), emoji: p ? seatEmoji(st, pid) : null, who: !p ? '' : mine.length === 1 && mine[0] === pid ? 'You' : p.name,
+      main: said.main || said.verb || '', second: said.second || '', note: typeof said.note === 'string' ? said.note : '' });
+    return;
+  }
+  const { pid, uid, def } = a.place;
+  const card = st.cards && st.cards[uid];
+  let d = null;
+  try { d = defById(card ? card.def : def); } catch { d = null; }
+  if (!d) return;
+  const at = stageRect(a.spot);
+  if (!at) return;
+  let sphere = 'colorless', color = 'var(--colorless)';
+  try { if (st.quadrants.includes(d.quadrant)) { sphere = quadrant(d.quadrant).resource; color = `var(--${d.quadrant})`; } } catch { /* colorless */ }
+  stageShow({ id: `member:${pid}:${uid}`, chain: chainId, kind: 'member', uid, at, from, homeEl: el && !el.rectOnly ? el : null, dur: a.dur, color, pc: playerColor(pid),
+    name: d.name, sprite: [d.id, spriteId(d.name)], sphere });
 }
 
 /** Install the skip: a press anywhere, or Space (when it isn't pressing a button), lands the chain on screen. */

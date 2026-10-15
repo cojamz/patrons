@@ -14,8 +14,9 @@
  * motion language's first Steady table, design/prototypes/motion/grammar.md §4). Cory's play note (morning fixes,
  * 2026-10-16): "Animations are too fast even on Relaxed". So Steady plays a little slower than that table (×1.2), and
  * Relaxed is twice Steady (×2.4). Quick keeps its own numbers. What answers your hand never reads this.
+ * Cory, 2026-10-15 evening: "still just a touch slower on animations": Steady ×1.38 and Relaxed ×3.2, 15% slower each.
  */
-export const SPEEDS = { quick: 0.5, steady: 1.2, relaxed: 2.8 };
+export const SPEEDS = { quick: 0.5, steady: 1.38, relaxed: 3.2 };
 export const SPEED_NAMES = { quick: 'Quick', steady: 'Steady', relaxed: 'Relaxed' };
 export const DEFAULT_SPEED = 'steady';
 const KEY = 'patrons.v4.motionSpeed';
@@ -172,6 +173,11 @@ const TABLE = {
   // --mo-slow scaled to match)
   turnCardHold: [2600, 2600],
   turnCardFold: [500,  500],
+  // the action stage (stage.js): the space taken flies out to the hub as a card, a member steps off its seat beside it,
+  // what they give flows from there; when the chain ends the stage holds a moment, then each flies home
+  stageIn:     [160,   260],
+  stageHold:   [220,   420],
+  stageOut:    [160,   240],
 };
 /** A budget at the viewer's speed: Quick's own number, else the base times the speed. */
 const atSpeed = ([quick, base]) => (speed === 'quick' ? quick : Math.round(base * speedScale()));
