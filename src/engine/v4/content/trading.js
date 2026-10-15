@@ -68,11 +68,29 @@ function sellChoice(ctx, p, prompt, most, each, why) {
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
+// bench knob (White rework, 2026-10-15): which round-end rule White scores. 'white' is today's Most white.
+export const SCORING = { mode: (typeof process !== 'undefined' && process.env?.WHITE_SCORING) || 'white', gate: Number((typeof process !== 'undefined' && process.env?.WHITE_GATE) || 1) };
+const SCORINGS = {
+  white: { label: 'Most white', counts: 'the white you hold when the round ends', score: (ctx, p) => p.res[W] },
+  // fewest followers wins; you need white to enter (so the player furthest behind doesn't score it for free)
+  fewest: {
+    label: 'Fewest followers (you need white)', counts: 'your followers, if you hold any white',
+    score: (ctx, p) => (p.res[W] >= SCORING.gate ? 1000 - ctx.followers(p) : 0),
+    show: (ctx, p) => ({ count: ctx.followers(p) }),
+  },
+  // most white, but whoever leads in followers can't take it
+  noleader: {
+    label: 'Most white (not the follower leader)', counts: 'the white you hold, unless you have the most followers',
+    score: (ctx, p) => (ctx.followers(p) >= Math.max(...ctx.state.players.map(o => ctx.followers(o))) ? 0 : p.res[W]),
+    show: (ctx, p) => ({ count: p.res[W] }),
+  },
+  most: { label: 'Most followers', counts: 'your followers', score: (ctx, p) => ctx.followers(p) },
+};
 const trading = {
   id: 'trading',
   name: 'White',
   resource: W,
-  scoring: { label: 'Most white', counts: 'the white you hold when the round ends', score: (ctx, p) => p.res[W] },
+  get scoring() { return SCORINGS[SCORING.mode]; },
 
   actions: [
     {
