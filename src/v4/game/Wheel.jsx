@@ -855,29 +855,17 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   // spaces: one per space, upright wherever the wheel is turned, with its effect printed on it
   // Sockets are memoized: hovering never re-renders the wheel (the hover card lives in UI-B's layer, told directly on
   // pointerenter, no timers here). Handlers reach the latest closures through refs.
-  // panels: each one's print laid out for where it sits now. Rhythm (design/taste.md): a quadrant's ring shows its
-  // small print only when every panel there has room for it (else it's all in the hover), and every number on the
-  // wheel is one size, the smallest any panel needs
+  // panels: each one's print laid out for where it sits now. A panel shows its small print (line 3) whenever it has room
+  // for it (the plain-words pass, 2026-10-15: all-or-nothing per ring kept "more each round" off the board at 1270×700
+  // on Toast, Help Yourself, Cheap Seats and Your Call); every number on the wheel is one size, the smallest any panel
+  // needs
   const panelLays = useMemo(() => {
     if (!panels) return null;
     const k = scale || 1;
     // a taken panel keeps its lines (faded) and its minion stands over them, so taking a space never reflows the wheel
     const lay = (s, need) => panelLayout({ s, R: rings[s.ring], rot, k, said: panelText(s.qid, s.a, round), taken: false, need });
-    const first = new Map(), group = {};
-    for (const s of spaces) {
-      const said = panelText(s.qid, s.a, round);
-      const l = lay(s);
-      first.set(s.key, { said, lay: l });
-      // a quadrant's ring shows its clarifications only when every panel there that has one can show it
-      const g = `${s.q}-${s.ring}`;
-      if (group[g] === undefined) group[g] = true;
-      if (state.slots[s.key] === undefined && said.note && !l.noteLines) group[g] = false;
-    }
     const out = new Map();
-    for (const s of spaces) {
-      const f = first.get(s.key);
-      out.set(s.key, { said: f.said, lay: !group[`${s.q}-${s.ring}`] && f.lay.noteLines ? lay(s, { noNote: true }) : f.lay });
-    }
+    for (const s of spaces) out.set(s.key, { said: panelText(s.qid, s.a, round), lay: lay(s) });
     // every gain on the wheel is one size, and every verb in a ring: the smallest any of those panels needs
     const sizeTo = all => { const px = Math.min(...all.map(v => v.lay.one)); for (const v of all) v.lay = { ...v.lay, one: px }; };
     sizeTo([...out.values()].filter(v => v.said.main));
