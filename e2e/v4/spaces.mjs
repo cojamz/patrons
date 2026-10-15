@@ -13,7 +13,7 @@
 //       ring's name at least 11px (Cory's call for the narrow cells);
 //  (s8) the headline prompt fits: no ellipsis, nothing clipped, one line, while placing and while buying;
 //  (s9) engraved: the print is tidy: no two spaces' words, stamps or minions touch, nothing runs into the rim or the
-//       hub, and each space's print is centred in its own cell (round I gated; round III printed as known).
+//       hub, and each space's print is centred in its own cell (rounds I, II and III).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5196.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -208,8 +208,10 @@ const passes = [
   { look: 'sockets', quadrants: null, play: true },
   { look: 'engraved', quadrants: null, play: true },
   { look: 'engraved', quadrants: ['red', 'yellow', 'market', 'thieves'], play: false },
-  // round III: every ring open, the busiest the wheel gets
+  // rounds II and III: more rings open, the busiest the wheel gets
+  { look: 'engraved', quadrants: null, play: false, round: 2 },
   { look: 'engraved', quadrants: null, play: false, round: 3 },
+  { look: 'engraved', quadrants: ['red', 'yellow', 'market', 'thieves'], play: false, round: 3 },
   { look: 'sockets', quadrants: null, play: false, round: 3 },
 ];
 const totals = {};
@@ -263,9 +265,7 @@ try {
     }
     (await page.evaluate(FLOOR)).forEach(m => fail(`(s7) ${m}`, tag));
     (await page.evaluate(PROMPT)).forEach(m => fail(`(s8) placing: ${m}`, tag));
-    // round III (every ring open) is reported, not gated: at 12px the tilted ring-II cells on the side quadrants can't
-    // hold a name, a stamp and a yield without touching ring I's print (known; see the report)
-    if (pass.look === 'engraved') (await page.evaluate(INSIDE)).forEach(m => (pass.round === 3 ? notes.push(`${tag} (s9) ${m}`) : fail(`(s9) ${m}`, tag)));
+    if (pass.look === 'engraved') (await page.evaluate(INSIDE)).forEach(m => fail(`(s9) ${m}`, tag));
 
     // (s2) a taken space: shake + "Taken by …" at the pointer
     const taken = await page.$('.lt-wheel .slot.taken:not([data-option])');

@@ -174,15 +174,19 @@ try {
   await pages.pia.waitForSelector('.code');
 
   await pages.hana.waitForFunction(() => document.querySelectorAll('.seats li').length === 3 && document.querySelectorAll('.seats [data-presence="here"]').length === 3, null, { timeout: 15000 });
-  // Pick your emoji in the lobby, one per table: Hana takes the Pizza; Gus sees it taken and takes the Crab
+  // Pick your emoji in the lobby, one per table: Hana takes a free one; Gus sees it taken and takes another.
+  // (Everyone already got a random free one on joining, so which are free changes run to run.)
+  const FREE = '[data-emoji-grid] [data-pick]:not([disabled]):not([aria-checked="true"])';
   await pages.hana.click('.seats [data-emoji-btn]');
-  await pages.hana.click('[data-emoji-grid] [data-pick="pizza"]');
-  await pages.gus.waitForFunction(() => document.querySelector('.seats [data-emoji-face="pizza"]'), null, { timeout: 15000 });
+  const hanaPick = await pages.hana.$eval(FREE, e => e.getAttribute('data-pick'));
+  await pages.hana.click(`[data-emoji-grid] [data-pick="${hanaPick}"]`);
+  await pages.gus.waitForFunction(p => document.querySelector(`.seats [data-emoji-face="${p}"]`), hanaPick, { timeout: 15000 });
   await pages.gus.click('.seats [data-emoji-btn]');
-  if (!(await pages.gus.$('[data-emoji-grid] [data-pick="pizza"][disabled]'))) throw new Error('Gus could pick the Pizza Hana holds');
-  await pages.gus.click('[data-emoji-grid] [data-pick="crab"]');
-  await pages.hana.waitForFunction(() => document.querySelector('.seats [data-emoji-face="crab"]'), null, { timeout: 15000 });
-  log('emojis picked');
+  if (!(await pages.gus.$(`[data-emoji-grid] [data-pick="${hanaPick}"][disabled]`))) throw new Error(`Gus could pick the ${hanaPick} Hana holds`);
+  const gusPick = await pages.gus.$eval(FREE, e => e.getAttribute('data-pick'));
+  await pages.gus.click(`[data-emoji-grid] [data-pick="${gusPick}"]`);
+  await pages.hana.waitForFunction(p => document.querySelector(`.seats [data-emoji-face="${p}"]`), gusPick, { timeout: 15000 });
+  log('emojis picked', hanaPick, gusPick);
   await pages.hana.screenshot({ path: `${SHOTS}/online-lobby.png` });
   await pages.pia.screenshot({ path: `${SHOTS}/online-lobby-guest.png` });
   await pages.hana.click('text=Start game');
@@ -192,7 +196,7 @@ try {
   for (const [who, pg] of Object.entries(pages)) {
     await pg.waitForSelector('.lt-seat[data-pid] [data-leader] svg.leader', { timeout: 20000 });
     const worn = await pg.$$eval('.lt-seat[data-pid] [data-leader] svg.leader', els => Object.fromEntries(els.map(e => [e.closest('.lt-seat').getAttribute('data-pid'), e.getAttribute('data-emoji')])));
-    if (worn['0'] !== 'pizza' || worn['1'] !== 'crab' || !worn['2'] || new Set(Object.values(worn)).size !== 3) throw new Error(`${who} sees the leaders wearing ${JSON.stringify(worn)} (want Hana pizza, Gus crab, Pia her own)`);
+    if (worn['0'] !== hanaPick || worn['1'] !== gusPick || !worn['2'] || new Set(Object.values(worn)).size !== 3) throw new Error(`${who} sees the leaders wearing ${JSON.stringify(worn)} (want Hana ${hanaPick}, Gus ${gusPick}, Pia her own)`);
   }
 
   // Gus reloads mid-game: same tab, same seat

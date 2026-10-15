@@ -30,9 +30,14 @@ export const Cast = createContext({ you: null, a: null, b: null, c: null });
 export const useCast = () => useContext(Cast);
 /** The beat's start on the document timeline (call once per beat, in its root). */
 export const nowT0 = () => (typeof document !== 'undefined' && document.timeline && document.timeline.currentTime != null ? document.timeline.currentTime : null);
-/** Puts an animation on the intro's clock: frozen at `at` ms (the lab, the recorder), else started at t0. */
+/**
+ * Puts an animation on the intro's clock: frozen at `at` ms (the lab, the recorder), else started at t0. t0 may be a
+ * ref ({ current }): while it's unset the animation starts on the next frame with everything else created before
+ * that frame (so a heavy first mount never eats the opening); the shell then records that frame's time for later mounts.
+ */
 export function clockIn(a, t0, at) {
-  if (at != null) { a.pause(); a.currentTime = at; } else if (t0 != null) a.startTime = t0;
+  const start = t0 && typeof t0 === 'object' ? t0.current : t0;
+  if (at != null) { a.pause(); a.currentTime = at; } else if (start != null) a.startTime = start;
   return a;
 }
 

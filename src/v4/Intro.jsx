@@ -8,7 +8,7 @@
 // always on screen; after the first beat Esc or a tap anywhere also closes it. prefers-reduced-motion gets a still
 // storyboard with Back/Next instead. replayIntro() opens it again from a menu. ?intro=0 never shows it on a game
 // start (the e2e suites), ?intro=1 shows it on every one (review).
-import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import './intro.css';
 import { emojiIds } from './art/emojis.js';
 import { Cast, Clock, Camera, Lamp, BEAT_MS, BEGIN_AT, STAGE, nowT0, clockIn, toStage } from './intro/shared.jsx';
@@ -109,8 +109,9 @@ function useClocked(ref, build, deps, { t0, at, on }) {
   }, deps); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
-/** One beat's world on the intro's clock. In the one-shot world (window), it shows only during its own beat. */
-function Scene({ b, still, at = null, t0 = null, base = 0, window: win = null }) {
+/** One beat's world on the intro's clock. In the one-shot world (window), it shows only during its own beat. Memoized:
+ * the shell's own re-renders (a beat tick, the clock settling) never re-render the thousands of things in a beat. */
+const Scene = memo(function Scene({ b, still, at = null, t0 = null, base = 0, window: win = null }) {
   const ref = useRef(null);
   const clock = useMemo(() => ({ still, t0, at, run: true, base }), [still, t0, at, base]);
   useClocked(ref, () => {
@@ -129,7 +130,8 @@ function Scene({ b, still, at = null, t0 = null, base = 0, window: win = null })
       <div ref={ref} className="intro-scene" aria-hidden="true" data-scene={b + 1} style={wait ? { visibility: 'hidden' } : undefined}><Beat /></div>
     </Clock.Provider>
   );
-}
+});
+const WINDOWS = BEATS.map((_, b) => [STARTS[b], b < LAST ? STARTS[b + 1] : null]);
 
 /**
  * The intro itself. onClose runs once it's gone. still: a storyboard (defaults to prefers-reduced-motion).
@@ -143,8 +145,9 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
   const [c] = useState(cast);
   const one = !still && !only; // the one-shot world
   const [beat, setBeat] = useState(only ? only - 1 : 0);
-  const [t0, setT0] = useState(nowT0); // the timeline's 0 on the document clock
+  const t0 = useRef(null); // the timeline's 0 on the document clock: the first frame's time (set once it has run)
   const [loop, setLoop] = useState(0); // the lab replays its one beat
+  const [kick, setKick] = useState(0); // the clock moved (its first frame, a seek): reschedule the beat timers
   const [closing, setClosing] = useState(false);
   const [uk, setUk] = useState(null); // CSS px per stage unit
   // the heavy later beats join the world a moment after it opens (on the same clock, long before they show), so the
@@ -168,17 +171,39 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
     const b = state.current.beat;
     if (n < 0 || n > LAST || n === b || state.current.closing) return;
     setBeat(n);
-    if (!one) return;
+    if (!one || at != null) return;
+    // seek the one timeline: everything on it starts STARTS[n] ms ago
     const now = nowT0();
-    origin.current = performance.now() - STARTS[n];
-    if (now != null) setT0(now - STARTS[n]);
-  }, [one]);
+    if (now == null) { origin.current = performance.now() - STARTS[n]; return; }
+    t0.current = now - STARTS[n];
+    origin.current = t0.current;
+    if (root.current && root.current.getAnimations) for (const a of root.current.getAnimations({ subtree: true })) a.startTime = t0.current;
+    setKick(k => k + 1);
+  }, [one, at]);
+  // once the first frame has run, the clock's 0 is that frame's time (later mounts and the beat timers use it)
+  useEffect(() => {
+    if (still || at != null || typeof requestAnimationFrame !== 'function') return undefined;
+    t0.current = null;
+    let id = requestAnimationFrame(() => {
+      id = requestAnimationFrame(() => {
+        const a = cam.current && cam.current.getAnimations ? cam.current.getAnimations()[0] : null;
+        const start = a && a.startTime != null ? a.startTime : nowT0();
+        if (start != null) {
+          t0.current = start;
+          // composited and main-thread animations can resolve a frame apart: put every one on the same 0
+          if (root.current && root.current.getAnimations) for (const x of root.current.getAnimations({ subtree: true })) if (x.constructor === Animation && x.startTime != null) x.startTime = start;
+          if (Math.abs(origin.current - start) > 40) { origin.current = start; setKick(k => k + 1); }
+        }
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [still, at, loop]);
 
   // the beat (for the caption's live region, Esc, the dots): follows the timeline; the lab loops its one beat
   useEffect(() => {
     if (still || closing || at != null) return undefined;
     if (only) {
-      const id = setTimeout(() => { setT0(nowT0()); origin.current = performance.now(); setLoop(k => k + 1); }, (durationOf(only - 1) || 7000) + 1500);
+      const id = setTimeout(() => { t0.current = null; origin.current = performance.now(); setLoop(k => k + 1); }, (durationOf(only - 1) || 7000) + 1500);
       return () => clearTimeout(id);
     }
     const ids = [];
@@ -187,7 +212,7 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
       ids.push(setTimeout(() => setBeat(b), Math.max(0, wait)));
     }
     return () => ids.forEach(clearTimeout);
-  }, [beat, still, closing, only, at, loop, t0]);
+  }, [beat, still, closing, only, at, loop, kick]);
   useEffect(() => () => clearTimeout(state.current.timer), []);
   useEffect(() => {
     if (mounted >= BEATS.length) return undefined;
@@ -210,12 +235,12 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
   const span = only ? (durationOf(only - 1) || 7000) + 1500 : END;
   const motion = !still && uk != null;
   useClocked(cam, () => [holds(shotList.map(s => ({ t: s.t, d: s.d, v: s.cam })), span, ([cx, cy, z]) => ({ transform: `scale(${uk * z}) translate(${-cx}px, ${-cy}px)` })), { duration: span }],
-    [uk, t0, at, loop, shotList], { t0, at, on: motion });
+    [uk, at, loop, shotList], { t0, at, on: motion });
   useClocked(lamp, () => [holds(shotList.map(s => ({ t: s.t, d: s.d, v: s })), span, s => {
     const [wx, wy, w = 230, h = 170] = s.lamp || [0, 0];
     const [lx, ly] = toStage(s.cam, [wx, wy]);
     return { left: `${lx * uk}px`, top: `${ly * uk}px`, width: `${w * uk}px`, height: `${h * uk}px` };
-  }), { duration: span }], [uk, t0, at, loop, shotList], { t0, at, on: motion });
+  }), { duration: span }], [uk, at, loop, shotList], { t0, at, on: motion });
 
   // the recorder's seek (scripts/v4-gif.mjs STEP=1): the whole intro is one timeline, so one time sets everything
   useEffect(() => {
@@ -282,7 +307,7 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
                   {only
                     ? <Scene key={`${only}.${loop}`} b={only - 1} still={false} t0={t0} at={at} />
                     : BEATS.map((_, b) => (b < Math.max(mounted, beat + 1)
-                      ? <Scene key={b} b={b} still={false} t0={t0} at={at} base={STARTS[b]} window={[STARTS[b], b < LAST ? STARTS[b + 1] : null]} />
+                      ? <Scene key={b} b={b} still={false} t0={t0} at={at} base={STARTS[b]} window={WINDOWS[b]} />
                       : null))}
                 </div>
               )}
