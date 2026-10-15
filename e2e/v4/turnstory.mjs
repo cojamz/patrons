@@ -7,7 +7,9 @@
 //  (t4) the snake turnaround reads "Your turn again (snake order)", never "Extra turn";
 //  (t5) the second placement gets its own card: its space, and nothing from the first;
 //  (t6) the Midas switch shows its state ("Midas: on"), and its hover says what a click does;
-//  (t7) the full log opens from the strip in one tap.
+//  (t7) the full log opens from the strip in one tap;
+//  (t8) a space or member named in the strip, or in the log, opens its card on the board's hover layer (the space card,
+//       the member card), beside the name, whole on screen, above the log drawer.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5310.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -106,6 +108,28 @@ try {
     await page.mouse.move(5, 5);
     await page.waitForTimeout(300);
   }
+  // (t8) names in the strip open their cards
+  const nameCard = async (sel, kind, tag) => {
+    const n = page.locator(sel).first();
+    if (!(await n.count())) { fail(`no ${kind} name to hover (${sel})`, tag); return; }
+    await n.hover();
+    const ok = await page.waitForFunction(k => { const c = document.querySelector(`[data-hover-layer][data-open="1"] [data-hover-card="${k}"]`); return !!c && c.getBoundingClientRect().width > 0; }, kind, { timeout: 2500 }).catch(() => null);
+    if (!ok) { fail(`hovering the ${kind} name "${await n.innerText()}" opened no ${kind} card`, tag); return; }
+    const r = await page.evaluate(([s2]) => {
+      const L = document.querySelector('[data-hover-layer]'), b = L.getBoundingClientRect(), a = document.querySelector(s2).getBoundingClientRect();
+      const back = document.querySelector('.lt-drawer-back');
+      return { on: b.left >= 0 && b.top >= 0 && b.right <= innerWidth && b.bottom <= innerHeight, near: Math.hypot((b.left + b.right) / 2 - (a.left + a.right) / 2, (b.top + b.bottom) / 2 - (a.top + a.bottom) / 2), z: Number(getComputedStyle(L).zIndex) || 0, under: back ? Number(getComputedStyle(back).zIndex) || 0 : -1 };
+    }, [sel]);
+    if (!r.on) fail(`the ${kind} card from the name runs off the screen`, tag);
+    if (r.near > 420) fail(`the ${kind} card opened ${Math.round(r.near)}px from its name`, tag);
+    if (r.under >= 0 && r.z <= r.under) fail(`the ${kind} card (z ${r.z}) sits under the log drawer (z ${r.under})`, tag);
+    await page.screenshot({ path: `${SHOTS}/name-${tag}-${kind}.png` });
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(300);
+  };
+  await nameCard('[data-since] [data-hover-name="space"]', 'space', 't8');
+  await nameCard('[data-since] [data-hover-name="member"]', 'card', 't8');
+
   // (t3) the first placement of the double
   await page.locator('.lt-wheel .slot.can').first().click();
   await settle();
@@ -144,6 +168,11 @@ try {
   // (t7)
   await page.click('[data-since] [data-open-log]');
   if (!(await page.waitForSelector('.lt-chron', { timeout: 3000 }).catch(() => null))) fail('the strip\'s Log button opened no log', 't7');
+  else {
+    await page.waitForTimeout(400);
+    await nameCard('.lt-chron [data-hover-name="space"]', 'space', 't8-log');
+    await nameCard('.lt-chron [data-hover-name="member"]', 'card', 't8-log');
+  }
   console.log(`turnstory: chips ${JSON.stringify(me && me.text)}, strip ${v.strip.length} lines, placed ${first} then ${second}`);
   await page.close();
 } catch (e) {

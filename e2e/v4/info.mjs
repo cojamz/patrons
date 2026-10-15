@@ -15,8 +15,8 @@
 //      state.pile), a refill deals the new card off it, and hovering it shows its card (count, colors adding up);
 //  (i) while you place, the space under the pointer ticks "✓ after <space>" on the shop cards it would make
 //      affordable (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands;
-//  (k) a resource is never color alone: every pip is its shape, every coin (setup, pay) carries its mark, and the
-//      setup picker's labels read on its paper (contrast ≥ 4.5);
+//  (k) a resource is the plain dot (Cory, 2026-10-15: simplify): every pip and every coin (setup, pay) draws the dot
+//      glyph, never a bare colored disc or an old shaped coin, and the setup picker's labels read on its paper (≥ 4.5);
 //  (l) who's winning and who's next, on the chairs (no score row, Cory 2026-10-15): every chair's total carries its
 //      place (data-rank), the places follow the totals, the leader's total is lit, a trailing total's hover says the
 //      margin; the chairs stand in
@@ -74,9 +74,10 @@ async function audit(page, step) {
     const crowd = [...document.querySelectorAll('[data-cult] .cs-member')].filter(vis);
     const pale = crowd.filter(m => { const a = m.querySelector('.aura'); return !a || !/gradient/.test(getComputedStyle(a).backgroundImage) || !m.dataset.sphere; })
       .map(m => m.dataset.member);
-    // (k) a resource is never color alone: every pip shows its shape, every coin (setup, pay) its mark inside
+    // (k) every pip and every coin (setup, pay) draws the dot glyph; no old shaped coin survives
     const bare = [...document.querySelectorAll('.pip:not(.wild)')].filter(e => vis(e) && !e.closest('[aria-hidden="true"]') && !e.querySelector('svg.res-glyph')).length;
-    const blank = [...document.querySelectorAll('.coin-big, .slot-coin, .tray-coin i')].filter(e => vis(e) && !e.querySelector('[data-coin-mark]')).length;
+    const blank = [...document.querySelectorAll('.prompt.choice.setup .token, .slot-coin, .tray-coin i')].filter(e => vis(e) && !e.querySelector('svg.res-glyph')).length
+      + [...document.querySelectorAll('.coin-big, [data-coin-mark]')].filter(vis).length;
     // and the setup picker's labels read on their paper (contrast ≥ 4.5)
     const rgb = c => (String(c).match(/[\d.]+/g) || []).map(Number);
     const L = c => { const f = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
@@ -100,8 +101,8 @@ async function audit(page, step) {
   if (r.star) fail('(c) a "★" is on screen', step);
   if (r.sigils) fail(`(f) ${r.sigils} seat sigil(s) on screen`, step);
   for (const m of r.pale) fail(`(g) ${m} has no ground in its sphere's color`, step);
-  if (r.bare) fail(`(k) ${r.bare} resource pip(s) drawn as a plain color disc (no shape)`, step);
-  if (r.blank) fail(`(k) ${r.blank} coin(s) without the resource's mark inside`, step);
+  if (r.bare) fail(`(k) ${r.bare} resource pip(s) drawn as a bare color disc (not the dot glyph)`, step);
+  if (r.blank) fail(`(k) ${r.blank} coin(s) not drawn as the plain dot`, step);
   for (const f of r.faint) fail(`(k) setup label "${f.t}" is hard to read (contrast ${f.c.toFixed(2)})`, step);
   return r.n;
 }

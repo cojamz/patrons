@@ -1,0 +1,74 @@
+/* Paying (PayPicker.jsx): a paper card in the plate's grammar. What you buy and its printed cost; the cost as sockets
+   with the coins that pay it; your resources as stacks of dots (leaving coins are empty rings, the number is what you
+   keep); one quiet line per price changer; Cancel and Pay. Paper on the table by value alone: no border. */
+.overlay.pay-overlay{background:color-mix(in srgb,var(--pl-table,#191310) 72%,transparent)}
+.dialog.pay.pay-card{width:400px;max-width:calc(100vw - 32px);padding:20px;gap:0;border:0;border-radius:var(--corner,8px);
+  background:var(--pl-paper,#f2e8d2);color:var(--pl-ink,#2b2018);font-family:var(--sans);
+  box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 24px 60px rgba(0,0,0,.55);animation:pay-in .16s cubic-bezier(.25,.6,.3,1)}
+@keyframes pay-in{from{opacity:0;transform:translateY(6px) scale(.985)}}
+.pay-card .turn-of{margin:0 0 12px}
+
+/* the head: the hover card's own (lamp-b.css .mc); a follower buy shows the follower mark in the picture box */
+.pay-card .pay-id{padding-bottom:16px;border-bottom:1px solid var(--hair-ink,rgba(43,32,24,.12))}
+.pay-card .pay-id h2.mc-name{margin:0;font-family:var(--sans)}
+.pay-card .pay-id .mc-art.fol{background:color-mix(in srgb,var(--pl-ink,#2b2018) 7%,var(--pl-paper,#f2e8d2));color:var(--pl-ink,#2b2018)}
+
+/* the cost: one socket per unit owed (a ring in the color it needs, or the four-color ring for "any"); the coins
+   paying it sit in them */
+.pay-sockets{display:grid;grid-template-columns:repeat(var(--units),32px);grid-auto-rows:32px;gap:4px;justify-content:center;margin:20px 0 0}
+.pay-socket{grid-row:1;width:32px;height:32px;border-radius:50%;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 80%,transparent)}
+.pay-socket.any{box-shadow:none;opacity:.8;
+  background:conic-gradient(from -45deg,var(--any-top) 0 90deg,var(--any-right) 0 180deg,var(--any-bottom) 0 270deg,var(--any-left) 0 360deg);
+  -webkit-mask:radial-gradient(circle,transparent 13.5px,#000 14px);mask:radial-gradient(circle,transparent 13.5px,#000 14px)}
+.pay-coin{grid-row:1;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:100%;height:32px;padding:0;border:0;
+  border-radius:16px;background:transparent;cursor:pointer;color:var(--pl-ink,#2b2018);transition:transform .12s ease-out}
+.pay-coin > svg{display:block;filter:drop-shadow(0 1.5px 0 rgba(43,32,24,.32))}
+.pay-coin.wide{justify-content:flex-start;padding-left:4px}
+.pay-coin.wide .x{width:32px;margin-left:8px;text-align:center;font-size:14px;line-height:1;font-weight:700;color:var(--pl-ink-2,#6e5c49)}
+.pay-coin:hover:not(:disabled){transform:translateY(-2px)}
+.pay-coin:active:not(:disabled){transform:translateY(0) scale(.94)}
+.pay-coin:focus-visible{outline:2px solid var(--pl-ink,#2b2018);outline-offset:1px}
+
+/* your resources: a stack of dots per color, bottoms on one line; the coins paying are empty rings at the top */
+.pay-stacks{display:flex;justify-content:center;gap:16px;margin:20px 0 0;padding-top:16px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12))}
+.pay-stack{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:56px;padding:8px 8px 4px;border:0;border-radius:var(--corner,8px);
+  background:transparent;color:var(--pl-ink,#2b2018);font:inherit;cursor:pointer;transition:background-color .12s ease-out}
+.pay-stack:hover:not(:disabled){background:color-mix(in srgb,var(--pl-ink,#2b2018) 6%,transparent)}
+.pay-stack:active:not(:disabled) .ps-coins{transform:translateY(1px)}
+.pay-stack:focus-visible{outline:2px solid var(--pl-ink,#2b2018);outline-offset:0}
+.pay-stack:disabled{cursor:default}
+.ps-coins{position:relative;width:24px;height:calc(24px + (var(--tall) - 1) * 6px);transition:transform .08s ease-out}
+.ps-coins > i{position:absolute;left:0;bottom:calc(var(--k) * 6px);width:24px;height:24px;border-radius:50%}
+.ps-coin > svg{display:block;filter:drop-shadow(0 1.5px 0 rgba(43,32,24,.32))}
+.ps-ghost{box-shadow:inset 0 0 0 1.5px var(--pl-ink-3,#a39078);background:var(--pl-paper,#f2e8d2)}
+.pay-stack:hover:not(:disabled) .ps-coin:has(+ .ps-ghost),.pay-stack:hover:not(:disabled) .ps-coin:last-child{transform:translateY(-3px);transition:transform .12s ease-out}
+.ps-empty{box-shadow:inset 0 0 0 1.5px var(--hair-ink,rgba(43,32,24,.18))}
+.ps-n{font-size:18px;line-height:24px;font-weight:700;font-variant-numeric:tabular-nums lining-nums}
+.pay-stack.none .ps-n{color:var(--pl-ink-3,#a39078)}
+
+/* what bends the price, one quiet line each; a click that changed nothing says why here */
+.pay-notes{margin:16px 0 0;display:flex;flex-direction:column;gap:4px}
+.pay-card .pay-rules{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:20px}
+.pay-card .pay-rules li{padding:0;border:0;color:var(--pl-ink-2,#6e5c49)}
+.pay-nudge{margin:0;font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018);animation:pay-nudge .26s ease-out}
+@keyframes pay-nudge{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+
+/* Cancel, and the one lit thing: Pay, with the coins it pays */
+.pay-foot{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:20px 0 0}
+.pay-cancel{height:44px;padding:0 16px;border:0;border-radius:var(--corner,8px);background:transparent;color:var(--pl-ink-2,#6e5c49);font:500 16px/1 var(--sans);cursor:pointer}
+.pay-cancel:hover:not(:disabled){color:var(--pl-ink,#2b2018);background:color-mix(in srgb,var(--pl-ink,#2b2018) 6%,transparent)}
+.pay-go{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 20px;border:0;border-radius:var(--corner,8px);cursor:pointer;
+  background:var(--pl-ink,#2b2018);color:var(--pl-paper,#f2e8d2);font:700 16px/1 var(--sans);
+  box-shadow:0 2px 0 rgba(0,0,0,.35);transition:transform .08s ease-out,box-shadow .08s ease-out}
+.pay-go:hover:not(:disabled){background:#3a2b20}
+.pay-go:active:not(:disabled){transform:translateY(2px);box-shadow:0 0 0 rgba(0,0,0,.35)}
+.pay-go:focus-visible{outline:2px solid var(--pl-ink,#2b2018);outline-offset:2px}
+.pay-go:disabled{opacity:.5;cursor:default}
+.pay-go .cost-dots{display:inline-flex;gap:8px}
+.pay-go .cost-dots .cd{display:inline-flex;align-items:center;gap:2px}
+.pay-go .cost-dots .pip.glyph{width:16px;height:16px;vertical-align:0;margin:0}
+
+@media (prefers-reduced-motion:reduce){
+  .dialog.pay.pay-card,.pay-nudge{animation:none}
+  .pay-coin,.pay-stack .ps-coin{transition:none}
+}

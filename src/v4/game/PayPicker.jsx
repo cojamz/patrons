@@ -172,10 +172,10 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
         {/* the cost as sockets, the coins that pay it sitting in them; a click sends one home */}
         <div className="pay-sockets" role="group" aria-label={`The cost: ${shape.units.length} to pay. Click a coin to pay that part another way.`}
           data-units={shape.units.length} style={{ '--units': shape.units.length }}>
-          {shape.units.map((u, k) => <span key={k} className={`pay-socket${u === 'any' ? ' any' : ''}`} data-socket={u} style={u === 'any' ? undefined : { '--c': `var(--${u})` }} aria-hidden="true" />)}
+          {shape.units.map((u, k) => <span key={k} className={`pay-socket${u === 'any' ? ' any' : ''}`} data-socket={u} style={{ gridColumn: k + 1, ...(u === 'any' ? {} : { '--c': `var(--${u})` }) }} aria-hidden="true" />)}
           {coins.map(c => (
             <button key={c.key} type="button" className={`pay-coin${c.span > 1 ? ' wide' : ''}`} data-pay-coin={c.r} data-coin={c.key}
-              style={{ '--at': c.at, '--span': c.span }} disabled={busy}
+              style={{ gridColumn: `${c.at + 1} / span ${c.span}` }} disabled={busy}
               aria-label={`${c.r}${c.span > 1 ? ` (pays ${c.span})` : ''}: pay this part another way`} title={`${c.r[0].toUpperCase()}${c.r.slice(1)}${c.span > 1 ? `, worth ${c.span} here` : ''}. Click to pay this part another way.`}
               onClick={() => remove(c.r)}>
               <ResourceGlyph r={c.r} size={24} decorative />{c.span > 1 && <span className="x num">×{c.span}</span>}

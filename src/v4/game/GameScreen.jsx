@@ -1,6 +1,6 @@
 // The game table. Renders engine state from a session and turns clicks into { player, option } moves.
 // What's clickable is exactly state.pending.options, and only for seats this client controls.
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { followers, tierLeft, quadrant } from '../../engine/v4/index.js';
 import { useAnyDot } from './Glyphs.jsx';
 import { finalWinners, isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote } from '../format.js';
@@ -8,8 +8,9 @@ import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
 import ShopCards from './ShopCards.jsx';
 import CultSeatRaw from './CultSeat.jsx';
-// online room updates that don't touch the table don't re-render the chairs
-const CultSeat = memo(CultSeatRaw);
+// a chair re-renders only when something it shows changed (seatMemo.js): a rival's step no longer redraws all four
+const CultSeat = memo(CultSeatRaw, sameSeat);
+const NO_OPTS = new Map();
 const NO_SLOTS = new Map();
 const NO_SEATS = [];
 const NO_OPTIONS = () => null;
@@ -31,6 +32,7 @@ import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, s
 import { gainsBetween } from './gains.js';
 import { MO, BOT } from '../motion.js';
 import { boardPicker, seatPart, shopLookup } from './boardPick.js';
+import { sameSeat } from './seatMemo.js';
 import { friendlyError, isNetworkError } from '../errors.js';
 import { ROUND_START, ownsLocal } from '../saved.js';
 import { restoredMoment } from '../session/moment.js';
@@ -88,7 +90,7 @@ export function loadRoundStart(st, online = false) {
   return null;
 }
 
-function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
+function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
   const first = session.getState();
   // a local game reloaded while its round summary was up reopens it (session/moment.js; the session holds its bots)
   const [table, setTable] = useState(() => ({ shown: first, moment: restoredMoment(session, first) }));
@@ -109,6 +111,10 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
     shownRef.current = next;
     const fresh = prev === next ? [] : newLogLines(prev, next);
     const end = fresh.filter(isRoundEnd).pop();
+    // the DOM still shows `prev` here: whatever must be measured before it changes is measured now (a card leaving)
+    if (beforeShow && beforeShow.current && prev !== next) beforeShow.current(prev, next);
+    // The table's update is a transition (perf fix 1): a click's own frame (the press, the focus) paints first, and the
+    // re-render of the table follows without blocking input. The engine has already run; only the picture waits.
     if (end) {
       held.current = true;
       const start = roundStart.current;
@@ -116,10 +122,10 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
       saveRoundStart(next, online);
       // Keep the board as it was when the round was scored until the card is dismissed.
       const board = scoringSnapshot(prev, next);
-      setTable({ shown: next, moment: { result: parseRoundEnd(next, end), start, after: next, board } });
+      startTransition(() => setTable({ shown: next, moment: { result: parseRoundEnd(next, end), start, after: next, board } }));
     } else {
       if (next.round !== prev.round) { roundStart.current = next; saveRoundStart(next, online); }
-      setTable(t => ({ ...t, shown: next }));
+      startTransition(() => setTable(t => ({ ...t, shown: next })));
     }
   }, []);
 
@@ -306,7 +312,8 @@ function PromptActions({ state, optionFor, onPick }) {
 const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing a minion', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
 
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults, askLeave = 0 }) {
-  const [live0, moment, dismissMoment, roundStart0] = useTable(session, pace ?? RIVAL_DWELL_MS);
+  const beforeShow = useRef(null);
+  const [live0, moment, dismissMoment, roundStart0] = useTable(session, pace ?? RIVAL_DWELL_MS, beforeShow);
   const state = moment && moment.board ? moment.board : live0;
   useAnyDot((state.quadrants || []).map(q => quadrant(q).resource)); // the "any" dot's four colors, where their quadrants sit
   const mySeats = session.mySeats || NO_SEATS;
@@ -361,9 +368,12 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     return { ...state, players: state.players.map(p => (owed(p.id) ? { ...p, bonus: p.bonus - owed(p.id), contest: (p.contest || 0) - owed(p.id) } : p)) };
   }, [state, moment, reckoned, paid]);
   const [spacePeek, setSpacePeek] = useState(null); // a space selected from the panel list (one sheet, shared with the wheel)
-  // re-render on every session change, so Undo disappears the moment control passes even while the table catches up
-  const [, setTick] = useState(0);
-  useEffect(() => session.subscribe(() => setTick(t => t + 1)), [session]);
+  // re-render when undo comes or goes, so Undo disappears the moment control passes even while the table catches up
+  // (perf fix 2: only then, not on every session change, a held bot step included)
+  const undoSig = () => (typeof session.canUndo === 'function' && session.canUndo() ? `${session.undoKind}:${session.undoSeat}` : '');
+  const [, setUndoSeen] = useState(undoSig);
+  const undoSeen = useRef(null);
+  useEffect(() => session.subscribe(() => { const u = undoSig(); if (u !== undoSeen.current) { undoSeen.current = u; startTransition(() => setUndoSeen(u)); } }), [session]); // eslint-disable-line react-hooks/exhaustive-deps
   // A local game's bots wait at a round end (session roundHold) until its summary is gone; they go on once the table
   // shows that state with no summary up (dismissed, or never detected: never a stalled table).
   useEffect(() => { if (!moment && session.roundHold && live0 === session.getState() && session.continueRound) session.continueRound(); }, [moment, live0, session]);
@@ -430,9 +440,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   useEffect(() => { setNote(n => { if (n && n.at !== (state.pending ? state.moves : null) && n.at !== state.moves) { clearTimeout(noteTimer.current); return null; } return n; }); }, [stepKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A fresh state means our move (or someone's) landed: the table is live again.
-  useEffect(() => { sendToken.current += 1; setBusy(false); }, [state]);
+  useEffect(() => { sendToken.current += 1; busyNow.current = false; setBusy(false); }, [state]);
 
-  const options = useMemo(() => (mine ? new Map(pend.options.map(o => [o.id, o])) : new Map()), [mine, pend]);
+  // not yours: one shared empty map, so your chair's optionFor holds through rivals' steps
+  const options = useMemo(() => (mine ? new Map(pend.options.map(o => [o.id, o])) : NO_OPTS), [mine, pend]);
   const optionFor = useCallback(id => options.get(id) || null, [options]);
   const legalSlots = useMemo(() => {
     const m = new Map();
@@ -451,14 +462,23 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
 
   // What just happened, made physical: a rival's move turns the wheel to face it, a worker travels from its
   // owner to the space, a recruited card flies from the shop to its new owner.
+  // The shop is measured only when a card is about to leave it (perf fix 2: it measured every card, every state), with
+  // the DOM still showing the table before the step; your own recruit was measured in onPick already.
+  beforeShow.current = (prev, next) => {
+    if (!prev.shop || !next.shop || !prev.shop.some(u => !next.shop.includes(u))) return;
+    const snap = snapshotShop(root.current);
+    if (snap.size) shopSnap.current = snap;
+  };
   useLayoutEffect(() => {
     const before = prevState.current;
     prevState.current = state;
     clearFlights(1200); // nothing from earlier moves lingers
-    // the minions on the wheel a moment ago: when a new round clears the wheel, they fly home to their leaders
+    // the minions on the wheel a moment ago: when a new round clears the wheel, they fly home to their leaders. Measured
+    // only once every minion is out (the round can end next), not on every state.
     const wasOnWheel = minionSnap.current;
-    minionSnap.current = snapshotMinions(root.current);
-    if (before === state) { shopSnap.current = snapshotShop(root.current); return undefined; }
+    if (state.round >= 1 && state.players.every(p => !p.left)) minionSnap.current = snapshotMinions(root.current);
+    else if (state.round !== before.round) minionSnap.current = [];
+    if (before === state) { if (!shopSnap.current.size) shopSnap.current = snapshotShop(root.current); return undefined; }
     if (state.round !== before.round && before.round >= 1) flyMinionsHome(root.current, wasOnWheel);
     const flights = before.shop.filter(u => !state.shop.includes(u))
       .map(uid => ({ uid, to: state.players.findIndex(p => p.members.includes(uid)) }))
@@ -466,7 +486,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (flights.length) { flyCards(root.current, shopSnap.current, flights); slideShop(root.current, shopSnap.current); }
     // every gain and payment travels from its source to where it lands (gains.js reads the engine's diff and log)
     flyGains(root.current, gainsBetween(before, state), { snap: shopSnap.current, before });
-    shopSnap.current = snapshotShop(root.current);
 
     const lines = newLogLines(before, state);
     // Gifts float onto the receiver's card, worded as what they are: the receiver gains (nobody loses).
@@ -587,6 +606,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // Clicks during an in-flight move are kept and replayed if they're still legal next; "take all" repeats a
   // counted pick (Steal: 1 gold at a time) while that's still the only choice.
   const queuedClick = useRef([]); // clicks made while a move is in flight, replayed in order if still legal
+  const busyNow = useRef(false); // in flight since the click itself (busy, the state, lands with the table's transition)
   const repeat = useRef(null);
   const lastPick = useRef({ id: null, t: 0, x: null, y: null });
   // where the last press landed: the step lock below only eats a second press near the first one (a double tap),
@@ -620,9 +640,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (mode !== 'replay' && !counted && now < lockUntil.current && !farFromLast) return;
     lastPick.current = { id: optionId, t: now, x: now - d.t < 600 ? d.x : null, y: now - d.t < 600 ? d.y : null };
     if (mode === 'all') repeat.current = optionId;
-    if (busy && mine) { queuedClick.current = counted ? [...queuedClick.current, optionId].slice(-4) : [optionId]; return; }
+    if ((busy || busyNow.current) && mine) { queuedClick.current = counted ? [...queuedClick.current, optionId].slice(-4) : [optionId]; return; }
     if (!mine || needHandoff || !options.has(optionId)) return;
-    setBusy(true);
+    busyNow.current = true;
+    startTransition(() => setBusy(true));
     // the shop as you see it right now (a row you may have scrolled, on a phone): a recruit flies from where you saw it
     { const snap = snapshotShop(root.current); if (snap.size) shopSnap.current = snap; }
     setError('');
@@ -630,10 +651,18 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     let sent;
     try { sent = session.submit({ player: pend.player, option: optionId }); } catch (e) { sent = Promise.reject(e); }
     // Don't lock the table forever if an answer never comes (online): give up waiting after a while.
-    const timer = setTimeout(() => { if (sendToken.current === token) { setBusy(false); setError('No answer yet. Try again.'); } }, 8000);
+    const timer = setTimeout(() => { if (sendToken.current === token) { busyNow.current = false; setBusy(false); setError('No answer yet. Try again.'); } }, 8000);
     Promise.resolve(sent)
       .catch(e => { if (sendToken.current === token) setError(friendlyError(e)); })
-      .finally(() => { clearTimeout(timer); if (sendToken.current === token) setBusy(false); });
+      // a move whose new state the table hasn't drawn yet stays in flight until it has (the [state] effect below): a
+      // second click on the old picture can't send a stale move; otherwise settle with the table's transition
+      .finally(() => {
+        clearTimeout(timer);
+        if (sendToken.current !== token) return;
+        if (session.getState() !== prevState.current) return;
+        busyNow.current = false;
+        startTransition(() => setBusy(false));
+      });
   }, [mine, busy, needHandoff, options, session, pend]);
   useEffect(() => {
     if (busy) return;
@@ -654,6 +683,16 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const t = setTimeout(() => onPick(pend.options[0].id, 'replay'), 0);
     return () => clearTimeout(t);
   }, [pend, mine, needHandoff, busy]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Only one way to pay isn't a question (dialogs pod, gut call 2026-10-15): pay it at once. The coins still fly from
+  // your stacks to what you bought (flyGains), and Undo takes the buy back.
+  const onlyPay = mine && !needHandoff && pend && pend.kind === 'pay' && pend.options.filter(o => o.kind === 'pay').length === 1
+    ? pend.options.find(o => o.kind === 'pay').id : null;
+  useEffect(() => {
+    if (!onlyPay || busy) return undefined;
+    const t = setTimeout(() => onPick(onlyPay, 'replay'), 0);
+    return () => clearTimeout(t);
+  }, [onlyPay, pend, busy]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A tap on something you can't use right now gets a short answer and a small shake, never silence.
   const onDenied = useCallback((info, el) => {
@@ -690,7 +729,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const shopPick = useCallback((...a) => handlers.current.onPick(...a), []);
   const shopDenied = useCallback((...a) => handlers.current.onDenied(...a), []);
   // A modal takes the stage: sweep any flying ghosts so nothing floats over it.
-  const modalOpen = !!(moment || rules || leaving || logOpen || (needHandoff && !moment) || (mine && pend && pend.kind === 'pay'));
+  const modalOpen = !!(moment || rules || leaving || logOpen || (needHandoff && !moment) || (mine && pend && pend.kind === 'pay' && !onlyPay));
   useEffect(() => { if (modalOpen) clearFlights(0); }, [modalOpen]);
   // and the page behind a modal doesn't scroll
   useEffect(() => {
@@ -881,7 +920,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             <section key={k} className={`lt-seat lt-seat-${k}${pid === me ? ' mine' : ''}${pid != null && pend && pend.player === pid && !state.over ? ' now' : ''}`} data-region={`seat-${k}`} data-pid={pid ?? undefined} data-slot={pid == null ? undefined : snake.slot[pid]}
               style={{ '--slot': pid == null ? k : snake.slot[pid] ?? k }} aria-label={pid == null ? undefined : pid === me ? 'Your cult' : `${state.players[pid].name}’s cult`}>
               {pid == null ? null : (
-                <CultSeat state={seatState} pid={pid} me={me} mine={pid === me} now={pend && pend.player === pid && !state.over} hover={hover} optionFor={pid === me ? live : undefined} onPick={onPick} pick={pickParts[pid] || null} />
+                <CultSeat state={seatState} pid={pid} me={me} mine={pid === me} now={!!(pend && pend.player === pid && !state.over)} hover={hover} optionFor={pid === me ? live : undefined} onPick={shopPick} pick={pickParts[pid] || null} />
               )}
             </section>
           ))}
@@ -900,7 +939,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           <CardFace state={state} uid={cardDetail.uid} />
         </Popover>
       )}
-      {mine && !needHandoff && pend.kind === 'pay' && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+      {mine && !needHandoff && pend.kind === 'pay' && !onlyPay && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
       {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={root.current} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onPaid={n => setPaid({ moment, n })} onDone={() => setReckoned(moment)} />}
       {moment && reckoned === moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}

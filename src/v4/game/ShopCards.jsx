@@ -3,7 +3,7 @@
 // afford are dim and a "✓ after X" tick marks the ones the space under your pointer would unlock (engine dry run).
 // While buying, the figure gives way to the card's text; hover shows what you'd pay. On touch a tap opens the card
 // as a sheet with Recruit (reading a card never recruits it); with a mouse a click on an affordable card recruits.
-import { memo, useRef, useState } from 'react';
+import { memo, useLayoutEffect, useRef, useState } from 'react';
 import { cardDef, paymentPlan, TIERS, tierLeft, quadrant } from '../../engine/v4/index.js';
 import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
@@ -68,17 +68,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const [sort, setSortState] = useState(readSort);
   const setSort = v => { setSortState(v); try { localStorage.setItem(SORT_KEY, v); } catch { /* private window: this visit only */ } };
   useDeal(rowRef, deckRef, state); // a refill comes off the deck
-  const space = useHoverSpace(hover); // only the space under the pointer re-renders the shop (for its ticks)
-  // the space under the pointer, and the cards its sure gains would unlock (no tick a choice might not give)
-  // the preview comes from the cache (warmed in idle time, or the worker's answer): subscribed, so the ticks appear
-  // the moment it lands, never computed on a hover
-  const sp = placing && space && viewer ? space.split('-').map(Number) : null;
-  const pv = usePreview(state, sp ? viewer.id : null, sp ? sp[0] : 0, sp ? sp[1] : 0);
-  let after = null, unlocked = [];
-  if (sp && pv) {
-    after = quadrant(state.quadrants[sp[0]]).actions[sp[1]].name;
-    unlocked = unlockedBy(state, viewer, surely(pv));
-  }
+  // the "✓ after X" ticks for the space under the pointer are ShopTicks' (below): a hover never re-renders the shop
+  const after = null, unlocked = [];
   const pileOpts = buying ? pend.options.filter(o => o.kind === 'card' && o.fromPile).map(o => o.uid) : [];
   const uids = [...sortShop(state, state.shop, sort), ...pileOpts];
   const affordable = viewer ? uids.filter(u => paymentPlan(state, viewer, u)).length : 0;
@@ -148,12 +139,52 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
       </div>
       </div>
       <FollowerRates state={state} me={me} optionFor={optionFor} onPick={onPick} onDenied={onDenied} buying={buying} />
+      <ShopTicks state={state} viewer={viewer} placing={placing} hover={hover} rowRef={rowRef} />
     </section>
   );
 }
 
-/** Memoized on its props: GameScreen passes the state and stable handlers, so the shop re-renders when the table
- *  changes, the space under the pointer changes (useHoverSpace) or that space's preview lands (usePreview). */
+/**
+ * "✓ after X" on the cards the space under the pointer would unlock (no tick a choice might not give). It subscribes to
+ * the hover and that space's preview (the cache, or the worker's answer the moment it lands) and marks those cards in
+ * the DOM, as useCopyTargets lights spaces: a hover renders this alone, never the shop (perf, 2026-10-15). The tag is
+ * the tick the card itself used to render, and a card it would unlock isn't quiet.
+ */
+function ShopTicks({ state, viewer, placing, hover, rowRef }) {
+  const space = useHoverSpace(hover);
+  const sp = placing && space && viewer ? space.split('-').map(Number) : null;
+  const pv = usePreview(state, sp ? viewer.id : null, sp ? sp[0] : 0, sp ? sp[1] : 0);
+  const after = sp && pv ? quadrant(state.quadrants[sp[0]]).actions[sp[1]].name : null;
+  const unlocked = after ? unlockedBy(state, viewer, surely(pv)) : [];
+  const sig = after && unlocked.length ? `${after}|${unlocked.join(',')}` : '';
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    if (!sig || !row) return undefined;
+    const done = [];
+    for (const uid of unlocked) {
+      const el = row.querySelector(`[data-uid="${uid}"]`);
+      if (!el) continue;
+      const was = el.className;
+      el.classList.remove('dim');
+      const art = el.querySelector('.art');
+      let tag = null;
+      if (art) {
+        tag = document.createElement('span');
+        tag.className = 'tick';
+        tag.title = `You could afford it after ${after}`;
+        tag.textContent = `✓ ${after}`;
+        art.appendChild(tag);
+      }
+      done.push({ el, was, now: el.className, tag });
+    }
+    // put back only what React hasn't redrawn since (a card it re-rendered keeps React's own class)
+    return () => { for (const d of done) { if (d.tag) d.tag.remove(); if (d.el.className === d.now) d.el.className = d.was; } };
+  }, [sig, state]); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
+}
+
+/** Memoized on its props: GameScreen passes the state and stable handlers, so the shop re-renders only when the table
+ *  changes (a hover renders ShopTicks alone). */
 export default memo(ShopCards);
 
 /** Followers for any resources (Cory, 2026-10-15: "too hidden"): four tiles beside the member cards, read like them

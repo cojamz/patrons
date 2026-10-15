@@ -24,6 +24,8 @@
 .hn:focus-visible{box-shadow:0 0 0 2px rgba(var(--lamp),.5)}
 /* the log is a drawer above the board: a name's card opens above it too */
 body:has(.lt-drawer-back) .lt-hover.popover,body:has(.lt-drawer-back) .popover{z-index:45}
+/* a name inside an open turn card: its card opens over that one */
+body:has(.tip-body [data-since-card]) .lt-hover.popover{z-index:46}
 
 /* the card a line opens (it sits on the dark popover) */
 .since-card{display:flex;flex-direction:column;gap:2px;max-width:280px;color:var(--cream)}

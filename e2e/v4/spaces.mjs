@@ -333,7 +333,9 @@ try {
           l.out.forEach(x => fail(`(s1) ${x}`, tag));
           (await page.evaluate(PROMPT)).forEach(x => fail(`(s8) placing: ${x}`, tag));
           const slot = await page.$('.lt-wheel .slot.lit .base');
-          if (slot) { const bb = await slot.boundingBox(); await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2); placed++; await page.mouse.move(4, 4); }
+          // (the wheel may redraw between the query and the measure: then the next pass of the loop tries again)
+          const bb = slot && (await slot.boundingBox().catch(() => null));
+          if (bb) { await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2); placed++; await page.mouse.move(4, 4); }
           await page.waitForTimeout(300);
         } else if (phase === 'choose' || phase === 'setup') {
           const o = await page.$('.prompt.choice button[data-option]:not([disabled])');
