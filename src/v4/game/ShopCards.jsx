@@ -251,7 +251,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
             aria-label={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}${t.limited ? ` (${left} left in this game)` : ''}`}
             onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'tier', tier: t }, e.currentTarget))}>
             {/* a move closes it (keyed by the move): after a buy it stayed open and flipped to "You hold 0: 10 short" (w2b #47) */}
-            <Tip key={state.moves} className="fb-tip" hint={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}`} content={() => (
+            <Tip key={state.moves} className="fb-tip" beside=".lt-rates" hint={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}`} content={() => (
               <div className="pop-card rate-card" data-rate-card={t.key}>
                 <b>{t.cost} resources → {t.get} follower{t.get > 1 ? 's' : ''}</b>
                 <span>Any colors, any mix, as your one buy.</span>

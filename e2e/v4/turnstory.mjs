@@ -243,9 +243,26 @@ try {
       if (d.others) fail(`(t9) ${d.others} other pass button(s) on screen beside the shop's "Done, no buy"`, 't9');
     }
     if (d.rail) fail(`(t9) the turn-order rail still draws ${d.rail} thing(s)`, 't9');
+    // (t9b) Cory, 2026-10-15: a follower buy's hover never covers "Done, no buy"
+    for (const key of ['small', 'mid', 'big', 'top']) {
+      const rate = page.locator(`.lt-shop .lt-rate[data-rate="${key}"]`);
+      if (!(await rate.count())) continue;
+      await rate.hover(); await page.waitForTimeout(450);
+      const hit = await page.evaluate(() => {
+        const b = document.querySelector('.lt-shop .lt-rates .lt-done')?.getBoundingClientRect(), c = document.querySelector('.popover')?.getBoundingClientRect();
+        return b && c && c.width > 0 && !(c.right <= b.left || c.left >= b.right || c.bottom <= b.top || c.top >= b.bottom) ? { b: b.toJSON(), c: c.toJSON() } : null;
+      });
+      if (hit) fail(`(t9b) the ${key} follower buy's hover covers "Done, no buy": ${JSON.stringify(hit)}`, 't9');
+    }
+    await page.mouse.move(5, 5); await page.waitForTimeout(250);
   }
   await page.locator('.lt-shop [data-option="pass"]').click();
   await page.waitForTimeout(700);
+  // (t9c) Cory, 2026-10-15: "Done, no buy" is there only in the buy step
+  {
+    const shown = await page.evaluate(() => { const e = document.querySelector('.lt-shop .lt-rates .lt-done'); const l = document.querySelector('.lt'); return { phase: l?.dataset.phase, vis: !!e && getComputedStyle(e).visibility !== 'hidden' && getComputedStyle(e).display !== 'none' }; });
+    if (shown.phase !== 'buy' && shown.vis) fail(`(t9c) "Done, no buy" shows outside the buy step (${shown.phase})`, 't9');
+  }
   v = await view();
   // (t4)
   if (!/^Your turn again \(snake order\)/.test(v.prompt) || /Extra turn/i.test(v.prompt)) fail(`the snake turnaround reads "${v.prompt}"`, 't4');
