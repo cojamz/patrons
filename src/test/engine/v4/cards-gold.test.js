@@ -213,7 +213,6 @@ describe('Gold members', () => {
     let s = sceneQ({ round: 2, members: [['gold.hustler', 'benders.straggler']], slots: { '1-0': 0 }, queue: [{ t: 'allPlaced' }] });
     s.cards[uidOf(s, 'gold.hustler', 0)].color = 'red';
     s = resume(s);
-    s = move(s, 'from:1-0');
     s = move(s, 'to:1-1');
     expect(G(s)[0]).toBe(2);
     expect(named(s, 'Hustler')).toHaveLength(1);

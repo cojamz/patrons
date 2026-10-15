@@ -422,6 +422,7 @@ function resolveTask(state, task, optionId) {
         spendAllowance(state, p, 'squat');
         (state.squats[key] = state.squats[key] || []).push(p.id);
       } else state.slots[key] = p.id;
+      p.lastSlot = { key, joined: squat }; // the minion Straggler moves (Cory, 2026-10-15: it's always the last one)
       p.left -= 1;
       const a = actionAt(state, q, i);
       log(state, squat ? `${p.name} joined ${state.players[state.slots[key]].name} on ${a.name} (${quadrant(state.quadrants[q]).name}).`
