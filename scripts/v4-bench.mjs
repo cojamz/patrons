@@ -938,7 +938,8 @@ function finalize(cfg, flags, As, Bs, a, { stamp, secs, workers, shards }) {
   const prev = previousRun(result.mode, only);
   const diff = prev ? diffRuns(prev, result) : null;
   const tagOnly = flags.only ? `-${only.join('+')}` : '';
-  writeFileSync(path.join(OUT, 'history', `${result.date.slice(0, 10)}-${sha}${dirty ? '-dirty' : ''}${quick ? '-quick' : ''}${tagOnly}.json`), JSON.stringify(result));
+  const tagSeed = flags.seedBase ? `-s${P.seedBase}` : '';
+  writeFileSync(path.join(OUT, 'history', `${result.date.slice(0, 10)}-${sha}${dirty ? '-dirty' : ''}${quick ? '-quick' : ''}${tagOnly}${tagSeed}.json`), JSON.stringify(result));
   // a full run of every section is "latest"; a quick or partial run never overwrites it
   const name = !quick && !flags.only ? 'latest' : `latest-${quick ? 'quick' : 'full'}${tagOnly}`;
   writeFileSync(path.join(OUT, `${name}.json`), JSON.stringify(result, null, 1));
@@ -1028,7 +1029,8 @@ export function trend(mode, only) {
   // Pooled: every kept run on the latest rules content, combined by inverse variance. One run's flags churn at the
   // edges (each run is an independent sample and many cards sit near the line); the pooled reading is the one to act on.
   const latest = runs[runs.length - 1];
-  const same = runs.filter(r => r.content === latest.content);
+  // independent samples only: a rerun with the same seeds replays the same games, so keep the newest of each seed base
+  const same = runs.filter(r => r.content === latest.content).filter((r, i, xs) => !xs.slice(i + 1).some(o => o.params?.seedBase === r.params?.seedBase && o.scale === r.scale));
   const pool = (xs, val, lo, hi) => {
     const w = xs.filter(x => x && Number.isFinite(x[val]) && Number.isFinite(x[lo]) && x[hi] > x[lo]).map(x => ({ v: x[val], w: 1 / (((x[hi] - x[lo]) / (2 * Z90)) ** 2) }));
     if (!w.length) return null;
