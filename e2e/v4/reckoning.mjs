@@ -4,7 +4,8 @@
 //  (r2) the counts tick up: some player's count shows at least 3 values on its way up;
 //  (r3) a "+N" token flies to every winner (one flight per winner per quadrant);
 //  (r4) then the summary (Start round II) appears; Skip goes straight there on the next round end;
-//  (r5) your placement sends a minion flying from your leader; when round II begins, the wheel's minions fly home.
+//  (r5) your placement sends a minion flying from your leader; when round II begins, the wheel's minions fly home;
+//  (r6) no flying ghost (a minion, a "+N" of followers, a card) outlives its flight: each is gone within 2.5s.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5196.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -35,7 +36,8 @@ const shot = n => page.screenshot({ path: `${SHOTS}/${n}.png` }).catch(() => {})
 
 // in-page: every header line, every count value per quadrant and player, and every flying ghost
 await page.addInitScript(() => {
-  window.__rk = { heads: [], counts: {}, tokens: 0, out: 0, home: 0 };
+  window.__rk = { heads: [], counts: {}, tokens: 0, out: 0, home: 0, longest: 0, stuck: [] };
+  const alive = new Map(); // every flying ghost (a minion, a "+N" of followers, a card) and when it took off
   const tick = () => {
     const h = document.querySelector('[data-reckon-head]');
     const rk = window.__rk;
@@ -46,6 +48,14 @@ await page.addInitScript(() => {
       const v = (c.querySelector('.tv') || c).textContent.trim();
       const seq = rk.counts[k] || (rk.counts[k] = []);
       if (seq[seq.length - 1] !== v) seq.push(v);
+    }
+    // (r6) no ghost outlives its flight: each is gone within 2.5s of taking off
+    const now = performance.now();
+    for (const g of document.querySelectorAll('.ghost-layer')) if (!alive.has(g)) alive.set(g, now);
+    for (const [g, t0] of alive) {
+      const life = now - t0;
+      if (!g.isConnected) { rk.longest = Math.max(rk.longest, life); alive.delete(g); }
+      else if (life > 2500 && !g.dataset.stuck) { g.dataset.stuck = '1'; rk.stuck.push(`${g.className.replace(' ghost-layer', '')} still flying after ${Math.round(life)}ms`); }
     }
     for (const g of document.querySelectorAll('.token-flight, .minion-flight')) {
       if (g.dataset.seen) continue;
@@ -114,7 +124,9 @@ try {
     await page.waitForSelector('[data-next-round]', { timeout: 3000 }).catch(() => errors.push('(r4) Skip did not go straight to the summary'));
     if (Date.now() - t2 > 2000) errors.push('(r4) the summary took over 2s after Skip');
   }
-  console.log(`reckoning: ${told.length} quadrants told, best count run ${best}, ${rk.tokens} prize flights for ${winners} winners, ${rk.out} minions out, ${home} home`);
+  const rk2 = await page.evaluate(() => window.__rk);
+  rk2.stuck.forEach(m => errors.push(`(r6) a ghost outlived its flight: ${m}`));
+  console.log(`reckoning: ${told.length} quadrants told, best count run ${best}, ${rk.tokens} prize flights for ${winners} winners, ${rk.out} minions out, ${home} home, longest flight ${Math.round(rk2.longest)}ms`);
   ok = errors.length === 0;
 } catch (e) {
   errors.push(`run: ${e.stack || e.message}`);
