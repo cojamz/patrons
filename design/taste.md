@@ -58,3 +58,9 @@ Critics and designers can't guess these, so they're written down here. Each trac
 - Every action plays a clear, steady chain from source to destination. The default speed is Steady (not slow), set in the menu.
 - The starting-resource pick must be an obvious call to action.
 - Snappy above all: your input answers at once.
+- (2026-10-15) Choices come to where you act: a picker beside the space, so your eye stays on the wheel. This is Cory's note; the exact card design is pending.
+- (2026-10-15) No board action charges you to use it. Which spaces change is pending.
+- (2026-10-15) Pass sits where you decide the buy.
+- (2026-10-15) Emojis on the wheel are small, upright, and sit in line with the rim lettering. They never cover words.
+- (2026-10-15) Relaxed is clearly slow. Steady is readable, never rushed.
+- (2026-10-15) Hovers open complete, with no fill-in.

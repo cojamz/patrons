@@ -41,6 +41,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - Concise and easy to understand. One line per action. Not too strong. Each action contributes or sets up an engine.
 - Weak versions of strong actions are welcome: the draft makes them matter (consolation, denial).
 - Price scaling actions by when they'll really be drafted, not by their theoretical max.
+- No board action should require spending: a space never charges you to use it. Which spaces change is pending Cory. (Cory, 2026-10-15)
 - No penalties tied to a space in round I. Every space fills, so a penalty only punishes whoever picks last. Use lures, not tolls.
 
 ## Interaction
@@ -53,7 +54,9 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 ## Process
 - Start basic. Each sphere gets a plain first layer (simple gains, simple members); complexity comes in later layers.
 - The tracking burden is the UI's job. Only cut a rule if it can't be shown clearly.
-- No simulator until the rules settle.
+- Price every card by measurement before Cory sees it, and name the instrument behind every number (Easy/Normal/Hard bot, thinking bots, AI tester). Sims run daily: `scripts/v4-sim.mjs`, `v4-big-followers`, `v4-member-value`, `v4-fair-price`, `v4-bot-levels`, `v4-thinker-tables`. (Replaces "no simulator until the rules settle", 2026-10-15.)
+- Bot statistics are not design flaws. A bot taking a dead option says nothing about a person; fix only what can never pay, duplicates and dominated cards.
+- Report the buy-followers-only win rate (target about 25%) with every balance change, and check which way each fix points.
 
 ## Screen
 - Every UI element has a hover that gives more info (long-press/tap on phone). Numbers explain where they came from; card names open the card; icons say what they are. (Cory, 2026-10-14)

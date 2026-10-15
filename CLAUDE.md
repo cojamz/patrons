@@ -8,13 +8,17 @@ The game was called Patrons; since 2026-10-14 it's **Cults** (v0.2). Code ids an
 - `design/in-flight.md` — what's running, each workstream's brief and port; resume dead work from it.
 - `design/todo.md` — the ordered to-do list (human playability first).
 - `.claude/rules/working-with-cory.md` — how to talk to Cory and how much to do on your own. **Follow it strictly.**
+- `.claude/output-styles/foreman.md` — the voice for every message to Cory.
+- `design/taste.md` — how the screen should look and feel, and Cory's own calls. Read it before touching the UI.
 - `.claude/rules/harness.md` — how we work: tools, agents, ports, freezes, where things live.
 - `design/decisions.md` — every design call Cory has made (append-only). The game is whatever this says, not whatever old code or docs say.
 - `design/prototypes/vision/build-plan.md` — the UI being built (the Lamplit Table).
 
 ## Branches
 - `main` = the old game (v3), frozen. It's the restore point; `?v=3` opens it. Don't build on it.
-- Cults (v4) lives on `claude/gifted-newton-3lcy3i`. PR #1's Netlify preview is the working link. No new PR unless asked.
+- Cults (v4) lives on `claude/gifted-newton-3lcy3i`. PR #1's Netlify preview is the working link. No new PR unless asked. main's CLAUDE.md still describes v3; this file replaces it when PR #1 merges.
+- `claude/cults-wip` = checkpoints. `claude/cults-final` = the last frozen build (0c1cd51). `claude/cults-freeze-<wave>` = frozen builds for remote testers. `claude/cults-perf-final` = quiet-machine reports.
+- **Deploy rule:** only gate-green commits go to the PR branch. Every push there redeploys the preview and spends deploy credits; checkpoints go to `claude/cults-wip`.
 
 ## Code map (v4)
 - `src/engine/v4/` — the rules, nothing else: `core.js` (task queue, options, buys, Release, contests), `content/*.js` (one file per sphere, `benders.js` for the guest members, `index.js` registers them), `bots.js` (Easy/Normal/Hard), `thinker.js` (rollouts), `preview.js` ("you'd get").
@@ -29,4 +33,4 @@ The game was called Patrons; since 2026-10-14 it's **Cults** (v0.2). Code ids an
 - This box has 4 CPUs: throttle heavy sims.
 
 ## Stack
-React 18, Vite 5, plain CSS for v4, Firebase Realtime DB, Vitest, Playwright. Deployed on Netlify.
+React 18, Vite 5, plain CSS for v4, Firebase Realtime DB, Vitest, Playwright. Deployed on Netlify (a move to Cloudflare Pages is pending Cory).
