@@ -19,6 +19,11 @@
   /* the chairs stack from the column's top (GameScreen reads --seats-align and writes --seats-end, their foot) */
   .app.game.lt > .lt-snake{grid-area:seats;--seats-align:start;margin-top:var(--col-top)}
   .app.game.lt > .lt-seat{margin-top:var(--col-top)}
+  /* members you can tell apart (w2b #22: "16px sprites, packed 6–11 to a row"): figures at 32px in a 34px row; the
+     chair folds the rest into "+N" (CultSeat MAX) and its card lists them all */
+  .app.game.lt > .lt-seat > .lt-cult-seat{grid-template-rows:32px 34px}
+  .app.game.lt > .lt-seat.mine > .lt-cult-seat{grid-template-rows:40px 24px 34px}
+  .app.game.lt > .lt-seat .cs-member .sprite{width:32px;height:32px}
   /* the rail starts just under the first chair's order chip ("next / twice" is two lines): its arrowhead, when the turns
      walk up, never lands between the chip's words */
   .app.game.lt > .lt-snake .sn-line{top:calc(var(--rail-top, 12%) + 14px)}

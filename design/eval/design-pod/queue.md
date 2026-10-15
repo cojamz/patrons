@@ -39,6 +39,9 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 
 - 06:15 info.mjs (h) now fails on the live tree: "the deck is not before the first shop card" (the Followers block moved above Members). Either the layout or the gate should change, your call.
 
+## For the turn-story agent
+- 07:05 w2b #49: a placement that gives nothing tells only "You took Bumper Crop". Say it: "nothing this time (no full sets)". w2b #46: "recruited Gardener (paid 2)" repeats the payment line; Robin Hood's "+1 follower" shows twice.
+
 ## For the foreman (needs a call or another agent's files)
 - 06:05 RC1 #29: Undo disappears as soon as you pick the first stolen resource, so a mis-steal can't be taken back. A session/rules question, not a detail.
 - 06:05 Dialogs pod: in the pay dialog, a resource you hold none of shows "0" with no dot under it (the others show a faded dot), so one column reads as a bare number; and the coin "×2" (PayPicker `.x`) is a typed × the grammar retired. The keyboard-only "Pick from a list" button, when focused, lands on top of the "ROUND I OF 3" line.

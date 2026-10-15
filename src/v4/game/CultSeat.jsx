@@ -51,7 +51,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const incomeWords = incomeParts.map(([r, n]) => `+${n} ${r}`).concat(income && income.followers > 0 ? [`+${income.followers} follower${income.followers === 1 ? '' : 's'}`] : []);
   // member figures shown before "+N": one row beside the "each round" line, so every chair keeps one fixed height
   // (the seat column is narrower now: six figures ran under "each round +3●"; each income part takes a figure's room)
-  const MAX = incomeWords.length ? Math.max(3, 5 - incomeWords.length) : 10;
+  // (design pod, w2b #22: figures are 32px on the laptop so a rival's members can be told apart: seven to a row, and
+  // the "each round" line takes about one figure per part plus its label)
+  const MAX = incomeWords.length ? Math.max(1, 4 - incomeWords.length) : 7;
   // a member you can use now, or one the board picker lights (folded, it could only be picked from the keyboard list),
   // is never folded into "+N": it takes the place of the last one that's only shown
   const isReady = g => g.uids.some(u => ready.has(u) || !!(pick && pick.members && pick.members[u]));
