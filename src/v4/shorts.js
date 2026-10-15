@@ -4,46 +4,45 @@
 // Keys are "<sphere id>.<action key>". A space with no entry here falls back to its first clause (shortEffect).
 const S = {
   gold: {
-    jv: '+3 gold · gift 1', rush: r => `+${2 * r} gold`, discount: '−4 cost', steal: 'steal 3 gold', windfall: '+1 gold/@m', strike: '×2 gold',
+    jv: '+3 gold · gift 1', rush: r => `+${2 * r} gold`, discount: '−4 cost', steal: 'steal 3 gold', windfall: '+1 gold per member', strike: 'double gold',
   },
   red: {
-    evenswap: '+1 red · @m ⇄ @m', turnout: '+1 red/recruit', hire: 'cheapest, free', hireup: '@m ≤4, free', trade: '@m ⇄ @r', take: 'any @m, free',
+    evenswap: '+1 red · swap', turnout: '+1 red per recruit', hire: 'cheapest, free', hireup: 'member up to 4, free', trade: 'swap a member', take: 'any member, free',
   },
   blue: { a1: '+3 blue', a2: '+2 blue +1 red', a3: '+2 blue +1 green', a4: '+5 blue', a5: '+4 blue +1 gold', a6: '+8 blue' },
   green: { a1: '+3 green', a2: '+2 green +1 gold', a3: '+2 green +1 blue', a4: '+5 green', a5: '+4 green +1 red', a6: '+8 green' },
   purple: {
-    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +2/@r', windup: '+1 purple/@n', planahead: '+1 purple/left', overtime: '8 purple → @t@t', rally: 'purple → @t',
+    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +2 per rival', windup: '+1 purple per minion', planahead: '+1 purple per minion left', overtime: 'pay 8 for 2 turns', rally: 'purple for turns',
   },
   silver: {
-    toast: r => `+${3 * r} silver · all +1`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the richest', jubilee: 'silver → @f',
+    toast: r => `+${3 * r} silver · all +1`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the richest', jubilee: 'silver for followers',
   },
   yellow: {
-    harvest: '+1 yellow/color', bloom: '+1 each missing', transmute: 'swap 3 · +1 yellow', prism: '+1 each/3 yellow', gather: '1 per member', flourish: '+1 each/set',
+    harvest: '+1 yellow per color', bloom: '+1 each missing', transmute: 'swap 3 · +1 yellow', prism: '+1 each per 3 yellow', gather: '1 per member', flourish: '+1 each per set',
   },
   market: {
-    bargain: '+2 blue · recruit', restock: '+2 blue · new row', showroom: '+1 blue, +1/face-up blue', clearance: 'half-price buy', pricecheck: 'blue = ½ priciest', spree: 'buy ×3',
+    bargain: '+2 blue · recruit', restock: '+2 blue · new row', showroom: '+1 blue, +1 per face-up blue', clearance: 'half-price buy', pricecheck: 'half your priciest', spree: 'buy 3 times',
   },
   thieves: {
     pickpocket: r => `steal ${r + 1}`, tipoff: 'steal 1 each richer', hideout: 'steal 1 · safe', rob: 'steal 3', ransom: 'ransom a member', heist: 'steal a member',
   },
   trading: {
-    haggle: '+2 white +1/leader', buylow: r => `${2 * r} → @f`, pawn: r => `${r} follower or +${2 * r} white`, sellhigh: 'sell 2 for 6 white', dividend: '+1 white/loose follower', boom: 'all → @f',
+    haggle: '+2 white, +1 per leader', buylow: r => `${2 * r} for followers`, pawn: r => `${r} follower or +${2 * r} white`, sellhigh: 'sell 2 for 6 white', dividend: '+1 white per loose follower', boom: 'all for followers',
   },
   echo: { hum: '+3 green', chant: r => `+${2 * r} green`, echo: 'copy a rival', encore: 'copy any', refrain: '+2 green · copy yours', eternity: 'copy all yours' },
 };
 
-// The shortest form, for the engraved look's narrow inner rings: pips and marks instead of words wherever a glyph
-// will do. @m is a member, @r a rival, @f a follower, @n a minion, @t an extra turn; → ⇄ × and a joined / (per)
-// are the plate's marks too (Rich draws them all); resource words still become pips.
+// The shortest form, for the inner rings. Two symbols only (Cory, 2026-10-15: "just simplify visual language
+// everywhere"): resource words become dots and "N followers" the follower mark; everything else is a plain word.
 const PIPS = {
-  gold: { steal: '@r → 3 gold', windfall: '+1 gold/@m', strike: '×2 gold' },
-  red: { hireup: '@m ≤4 free', trade: '@m ⇄ @r', take: 'any @m free' },
-  purple: { overtime: '8 purple → @t@t' },
-  silver: { tide: '½ richest', jubilee: 'silver → @f' },
-  yellow: { gather: '+1/@m' },
-  market: { clearance: '½ price', spree: 'buy ×3' },
-  thieves: { rob: '@r → 3 any', ransom: 'ransom @m', heist: 'take @r @m' },
-  trading: { sellhigh: '2 @f → 6 white', dividend: '+1 white/@f', boom: 'all → @f' },
+  gold: { steal: 'steal 3 gold', windfall: '+1 gold per member', strike: 'double gold' },
+  red: { hireup: 'member up to 4, free', trade: 'swap a member', take: 'any member, free' },
+  purple: { overtime: 'pay 8 for 2 turns' },
+  silver: { tide: 'half the richest', jubilee: 'silver for followers' },
+  yellow: { gather: '+1 per member' },
+  market: { clearance: 'half price', spree: 'buy 3 times' },
+  thieves: { rob: 'take 3 any', ransom: 'ransom a member', heist: 'take a rival’s member' },
+  trading: { sellhigh: 'sell 2 for 6 white', dividend: '+1 white per follower', boom: 'all for followers' },
   echo: { refrain: '+2 green · copy', eternity: 'copy all' },
 };
 /** The pips-first form of a space's yield (falls back to the few words). */

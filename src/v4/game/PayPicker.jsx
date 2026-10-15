@@ -11,7 +11,7 @@ import { costParts, tierCostText } from '../format.js';
 import { useDialog, TurnOf } from './parts.jsx';
 import { Rich, CostPips } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
-import { CoinMark } from './Glyphs.jsx';
+import { ResourceGlyph } from './Glyphs.jsx';
 import { priceNotes } from './priceNotes.js';
 
 const sum = v => Object.values(v).reduce((a, b) => a + (b || 0), 0);
@@ -88,7 +88,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
         <div className={`pay-slots${match ? ' done' : ''}`} role="group" aria-label={`The cost: ${total} of ${need} paid. Tap a coin to take it back.`}>
           {coins.map(({ r, k }) => (
             <button key={`${r}${k}`} type="button" className="slot-coin" data-pay-coin={r} style={{ '--c': `var(--${r})` }}
-              aria-label={`${r} in the cost: take it back`} title={`${r}: tap to take it back`} onClick={() => remove(r)}><CoinMark r={r} size={20} /></button>
+              aria-label={`${r} in the cost: take it back`} title={`${r}: tap to take it back`} onClick={() => remove(r)}><ResourceGlyph r={r} size={36} decorative /></button>
           ))}
           {Array.from({ length: empty }, (_, k) => (
             <span key={`e${k}`} className={`slot-empty${k < coloredLeft ? ' colored' : ''}`} style={k < coloredLeft ? { '--c': `var(--${colored.color})` } : undefined} aria-hidden="true" />
@@ -102,7 +102,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
             return (
               <button key={r} type="button" className="tray-coin" data-pay-add={r} style={{ '--c': `var(--${r})` }} disabled={busy || p.res[r] === 0}
                 aria-label={`${r}: you have ${left} left. Put one into the cost`} onClick={() => add(r)}>
-                <i><CoinMark r={r} size={12} /></i><span className="num">{left}</span>
+                <i><ResourceGlyph r={r} size={18} decorative /></i><span className="num">{left}</span>
               </button>
             );
           })}

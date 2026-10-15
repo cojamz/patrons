@@ -6,7 +6,7 @@ import { logSections, playerColor, costParts, plainLine } from '../format.js';
 import { Rich, CostPips } from './Rich.jsx';
 import { MemberCard, NamedText, CardText, cardColor } from './Info.jsx';
 import { Follower } from '../art/Follower.jsx';
-import { CoinMark } from './Glyphs.jsx';
+import { ResourceGlyph } from './Glyphs.jsx';
 import { pickCaption, pickHow, pickName } from './boardPick.js';
 import './boardpick.css';
 
@@ -182,8 +182,10 @@ function SetupTokens({ state, pend, onPick, busy }) {
         const res = q ? q.resource : o.value;
         return (
           <button key={o.id} type="button" className="token" data-option={o.id} disabled={busy} style={{ '--c': `var(--${o.value})` }} onClick={() => onPick(o.id)} aria-label={`Take 1 ${res}`}>
-            <i className="coin-big"><CoinMark r={res} size={18} /><span className="num">+1</span></i>
-            <span>{res}</span>
+            {/* a plain dot, its color's name, "+1" quiet beside it (Cory, 2026-10-15: simplify) */}
+            <ResourceGlyph r={res} size={28} decorative />
+            <span className="tk-name">{res}</span>
+            <small className="tk-plus num">+1</small>
           </button>
         );
       })}

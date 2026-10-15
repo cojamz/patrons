@@ -144,7 +144,11 @@ async function rimCheck(page, step) {
   });
   if (pts.length < 8) fail(`(o) found only ${pts.length} rim points to check`, step);
   // the prize says what it pays: "+2 FOLLOWERS", not a bare "+2"
-  for (const t of await page.$$eval('[data-rim-text]', els => els.map(e => e.textContent))) if (!/\+\d+ FOLLOWERS?/i.test(t)) fail(`(o) the rim "${t}" doesn't say its prize is followers`, step);
+  // the prize is "+N" followed by the follower mark (Cory, 2026-10-15: the symbol, not the word), or "+N FOLLOWERS"
+  for (const r of await page.$$eval('[data-rim-text]', els => els.map(e => ({ t: e.textContent.trim(), mark: !!document.querySelector(`[data-rim-prize="${e.getAttribute('data-plaque')}"] svg`) })))) {
+    const ok = /\+\d+ FOLLOWERS?/i.test(r.t) || (/\+\d+$/.test(r.t) && r.mark);
+    if (!ok) fail(`(o) the rim "${r.t}" doesn't show its prize as followers (+N and the follower mark)`, step);
+  }
   for (const p of pts) {
     const top = await page.evaluate(({ x, y }) => { const e = document.elementFromPoint(x, y); return e && e.closest('[data-rim]') ? e.closest('[data-rim]').dataset.rim : e ? `${e.tagName.toLowerCase()}.${String(e.className.baseVal ?? e.className).split(' ')[0]}` : null; }, p);
     if (p.qid && top !== p.qid) { fail(`(o) pointing at ${p.what} reaches ${top}, not its standings`, step); continue; }
