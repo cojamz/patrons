@@ -62,7 +62,7 @@
 /* an amount: the number alone */
 .gift-card .gc-amt{min-width:56px;font-size:18px}
 /* a member: its picture over its name */
-.gift-card .gc-member{flex-direction:column;gap:0;width:72px;padding:4px 4px 2px}
+.gift-card .gc-member{flex-direction:column;gap:0;width:80px;padding:4px 3px 2px}
 /* a long name ("Mentor & Protégé") breaks over two lines at its seam, as on the shop's cards, never cut with an ellipsis */
 .gift-card .gc-member{justify-content:flex-start}
 .gift-card .gc-member .gc-name{display:block;max-width:100%;font:700 11px/13px var(--sans);white-space:normal;text-align:center;text-wrap:balance;padding:1px 0}
