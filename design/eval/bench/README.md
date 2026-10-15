@@ -7,6 +7,7 @@ node scripts/v4-bench.mjs --quick          # Classic table, ~9 min on this box (
 node scripts/v4-bench.mjs                  # every card, space and sphere, ~75 min on this box
 node scripts/v4-bench.mjs --only=cards,spaces   # sections: anchors, cards, spaces, archetypes, fairness, health
 node scripts/v4-bench.mjs --records=<dir>  # friends' games ("Copy game record" JSON files) vs the bench
+node scripts/v4-bench.mjs --stage=A --shard=i/n ; node scripts/v4-bench-merge.mjs …   # across machines (below)
 ```
 
 A full run of every section writes `latest.md` (read this) and `latest.json` here; `--quick` and `--only` runs write `latest-quick.md` / `latest-full-<sections>.md` so they never overwrite it. Every run keeps `history/<date>-<sha>[-quick].json`, and opens the report with what moved since the newest earlier run of the same mode. `--records` writes `records.md` / `records.json` and puts the people's numbers next to the latest bench's Normal and Hard-20 columns. Same commit, same flags, same numbers: every game is a pure function of its seed, whatever the worker count. Any size can be overridden (`--normalSeeds=`, `--hardSeedsB=`, `--Kc=`, `--Ks=`, `--KcB=`, `--KsB=`, `--calib=`, `--archN=`, `--archH=`, `--hardBase=`, `--boot=`, `--workers=`); changing them changes the numbers.
@@ -50,10 +51,41 @@ The probe's effect on a seat is its follower margin (own followers minus the riv
 
 Quick's Hard-20 column is a smoke check (13–22 probes an anchor): read cards and spaces from the full run. In the full run Hard-20 re-measures at most 26 cards and 24 spaces beyond the anchors, so Normal's longer tail of flags is listed as "too thin or unsure"; `--only=cards --cardsB=60 --hardSeedsB=90` widens it at about 1.5 min a seed.
 
+## Running at scale (shards)
+
+Measured on this box (4 cores): **Normal plays 62 full-game equivalents per core-minute; Hard-20 (all four seats) 9.7.** A probe game forks mid-game and counts as the part it plays. Every report prints both numbers, so the sizing below stays honest as the engine changes.
+
+Games per unit (full-game equivalents):
+- a Normal seed: one base game, the round II and III continuations, 12 card-probe and 12 space-probe games ≈ 19.5 games, 0.31 core-min.
+- an archetype or calibration game: 1 (Normal tables) to ~4.5 (Hard-20 tables) Normal-game costs.
+- a Hard-20 stage-B seed: base continuations plus 12 card and 10 space probe games ≈ 18 games, 1.9 core-min.
+
+One machine, default full run: 440 Normal seeds ≈ 8,600 games plus 3,700 archetype and calibration games, then 44 Hard-20 seeds ≈ 800 Hard games, about 12,000 game equivalents in 72 min. Tables are dealt round-robin over the 38 tables (seed g plays table g mod 38), so every card and space meets each sphere it can share a table with in proportion, at any seed count.
+
+Bigger runs fan out over machines (each its own clone at the same commit; results are bit-identical to a one-machine run of the same settings, whatever the shard count):
+
+```
+# stage A on machine i of n (same flags everywhere; --scale=k multiplies every game count)
+node scripts/v4-bench.mjs --scale=4 --stage=A --shard=i/n          # writes design/eval/bench/partial-A-*.json
+node scripts/v4-bench-merge.mjs partial-A-*.json                    # fits stage A, writes the stage-B plan, prints the commands
+# stage B: Hard-20 on stage A's outliers and the anchors; --perTarget=N in stage A's flags sizes it to N probes a target
+node scripts/v4-bench.mjs --stage=B --plan=<plan> --shard=i/n       # writes partial-B-*.json
+node scripts/v4-bench-merge.mjs partial-A-*.json partial-B-*.json  # the report, history and trend
+```
+
+Sizing: `--scale=4` is about 35,000 Normal games for stage A, about 200 core-min, so 50 min a shard over 4 four-core machines. "A few hundred paired games each" in stage B: `--perTarget=300` with the usual ~50 targets is about 690 Hard-20 seeds, 1,300 core-min: about 55 min a shard over 6 four-core machines. Partials hold raw results (about 2 KB a Normal seed) and stay out of git; only the merged result goes in history.
+
+## Trend, power and interactions
+
+- `trend.md` (`trend-quick.md` for quick runs) shows every card's Normal fair price, every space's scaled u and every archetype's win rate across the last 8 runs of that mode, with what changed between runs (rules content hash, repriced, new and cut cards). History keeps every merged run.
+- Power: every unflagged item shows "detectable", the smallest gap its interval could have caught with 80% power (1.51 × its 90% half-width; at least 1.5 cost points for cards), with the median and 90th percentile in the section text. Flagged items show n and interval for both instruments.
+- Section 2b lists card × sphere and space × sphere outliers: Normal's residuals where the seat held the item, grouped by each other sphere at the table, at |deviation| ≥ 3 and |z| ≥ 3.5, with Hard-20's reading where its targets covered the pair.
+
 ## Known limits
 
 - **It is a bot's-eye reading.** Both instruments share Normal's valuation (Hard-20 is Normal plus look-ahead), so a blind spot in that valuation can survive both. The archetypes and the people's records are the check from outside.
 - **Forced, not chosen.** A card probe is recruited at the first affordable chance, so a card that pays only at the right moment reads low. A space probe is the seat's first minion of the round.
-- **Probe copies** are private clones of the member. Code that checks a member by its own id (Translator, Hustler's hint, Doppelganger's hint) doesn't see the copy as that card, so those read a little off.
+- **Probe copies** are a second copy of the real member (rivals never see it; the probe price applies only at the moment of recruiting), so rules that check a member by its id work. Two copies of one member can then be in play at once, which no real game allows.
+- **Interactions** are read from the main fit's residuals, not fitted per pair, and the within-fork demeaning shrinks them a little: they err small. With ~1,500 pairs, |z| ≥ 3.5 still lets about one false alarm through a run.
 - **Ring bands are in u**, converted with each instrument's measured price slope; a slope off by 20% moves every space by 20%.
 - Engine crashes skip the game and are listed at the end of the report with their error, for the engine owner.

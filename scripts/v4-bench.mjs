@@ -80,7 +80,8 @@ for (const qid of ALL_Q) {
     }, res);
   }
 }
-const realApply = (s, mv) => { REAL = true; try { return applyMove(s, mv); } finally { REAL = false; } };
+let MOVES = 0; // real moves this job played (throughput)
+const realApply = (s, mv) => { REAL = true; MOVES++; try { return applyMove(s, mv); } finally { REAL = false; } };
 
 // ---------- movers ----------
 const normalMove = (s, r) => chooseNormalMove(s, r);
@@ -189,7 +190,7 @@ function finishTracker(T, s) {
     };
   });
   return {
-    winner: winners[0], fs, players, ties, longestRun: best, steals: STEALS.length, stealUnits: STEALS.reduce((a, b) => a + b, 0),
+    winner: winners[0], fs, players, ties, moves: s.moves, longestRun: best, steals: STEALS.length, stealUnits: STEALS.reduce((a, b) => a + b, 0),
     r1order: T.orders[1] || null, r3first: T.orders[3]?.[0] ?? null, r3order: T.orders[3] || null, rich: T.rich,
   };
 }
@@ -387,9 +388,10 @@ if (!isMainThread) {
   parentPort.on('message', job => {
     if (!job) process.exit(0);
     const t0 = Date.now();
+    MOVES = 0;
     try {
       const r = job.type === 'seed' ? seedJob(job) : job.type === 'arch' ? archJob(job) : job.type === 'calib' ? calibJob(job) : recordJob(job);
-      parentPort.postMessage({ id: job.id, ok: true, r, ms: Date.now() - t0 });
+      parentPort.postMessage({ id: job.id, ok: true, r, ms: Date.now() - t0, moves: MOVES, type: job.type });
     } catch (e) {
       parentPort.postMessage({ id: job.id, ok: false, error: String(e.stack || e).split('\n').slice(0, 4).join(' | '), job: { type: job.type, inst: job.inst, g: job.g, arch: job.arch, table: job.table, file: job.file }, ms: Date.now() - t0 });
     }
@@ -458,7 +460,7 @@ function fitBoot(rows, K, ridge, nSeeds, boot) {
       const x = new Map(r.x);
       for (const [j, v] of mx) x.set(j, (x.get(j) || 0) - v);
       const xs = [...x].filter(([, v]) => Math.abs(v) > 1e-12);
-      if (xs.length) dm.push({ gi: r.gi, y: r.y - my, x: xs });
+      if (xs.length) dm.push({ gi: r.gi, y: r.y - my, x: xs, tag: r.tag });
     }
   }
   const bySeed = Array.from({ length: nSeeds }, () => []);
@@ -487,7 +489,21 @@ function fitBoot(rows, K, ridge, nSeeds, boot) {
   const rng = seededRandom(17);
   const bs = [];
   for (let k = 0; k < boot; k++) bs.push(fit(Array.from({ length: nSeeds }, () => poisson(rng))));
-  return { beta, bs, rows: dm.length };
+  return { beta, bs, rows: dm.length, dm };
+}
+
+// Card × sphere (and space × sphere) interactions: a thing that is fine overall but off on tables with one sphere.
+// The fit's residuals on rows where the seat holds the item, grouped by each other sphere on the table: mean ± SE, in
+// followers (the within-fork demeaning shrinks a row's residual a little, so this errs small).
+function interactions(dm, beta, ownOf) {
+  const g = new Map();
+  for (const r of dm) {
+    if (!r.tag) continue;
+    let fit = 0; for (const [j, v] of r.x) fit += v * beta[j];
+    const res = r.y - fit, own = ownOf(r.tag.id);
+    for (const q of r.tag.table) if (q !== own) { const k = `${r.tag.id}|${q}`; if (!g.has(k)) g.set(k, []); g.get(k).push(res); }
+  }
+  return [...g].filter(([, v]) => v.length >= 15).map(([k, v]) => { const [id, sphere] = k.split('|'); return { id, sphere, n: v.length, dev: mean(v), se: sd(v) / Math.sqrt(v.length) }; });
 }
 
 // cards: Δmargin_i = a_c + b_r·(P_i − printed) − ⅓ Σ rivals' (a + b_r·ΔP), seat × fork fixed effects; b_r is the price
@@ -507,11 +523,11 @@ function fitCards(seedResults, boot) {
     const put = (f, w) => { if (f[6] !== 1) return; add(col[f[0]], w); add(C + r - 1, w * (f[1] - priceOf(DEF[f[0]]))); };
     put(e, 1);
     game.forEach((f, k) => { if (f && k !== i) put(f, -1 / 3); });
-    rows.push({ gi, grp, y: e[3], x });
+    rows.push({ gi, grp, y: e[3], x, tag: e[6] === 1 ? { id: e[0], table: R.table } : null });
     if (!bases.has(grp)) { bases.add(grp); rows.push({ gi, grp, y: 0, x: new Map() }); }
   })));
   const ridge = [...Array(C).fill(1), 0, 0, 0];
-  const { beta, bs, rows: nRows } = fitBoot(rows, K, ridge, seedResults.length, boot);
+  const { beta, bs, rows: nRows, dm } = fitBoot(rows, K, ridge, seedResults.length, boot);
   const stats = Object.fromEntries(ids.map(id => [id, { n: 0, tried: 0, round: 0, win: 0, rounds: [0, 0, 0], byRound: { 1: [], 2: [], 3: [] } }]));
   seedResults.forEach(R => R.cards.forEach(game => game.forEach(e => {
     if (!e || !stats[e[0]]) return;
@@ -533,7 +549,9 @@ function fitCards(seedResults, boot) {
   });
   const byRound = [0, 1, 2].map(r => ({ v: -beta[C + r], lo: qtl(bs.map(bb => -bb[C + r]), 0.05), hi: qtl(bs.map(bb => -bb[C + r]), 0.95) }));
   const all = bs.map(avgSlope);
-  return { slope: avgSlope(beta), slopeLo: qtl(all, 0.05), slopeHi: qtl(all, 0.95), slopeByRound: byRound, probes: nRows, seeds: seedResults.length, cards };
+  const sl = Math.max(0.1, avgSlope(beta));
+  const inter = interactions(dm, beta, id => DEF[id].quadrant).map(x => ({ ...x, name: DEF[x.id].name, pts: x.dev / sl, ptsSe: x.se / sl }));
+  return { slope: avgSlope(beta), slopeLo: qtl(all, 0.05), slopeHi: qtl(all, 0.95), slopeByRound: byRound, probes: nRows, seeds: seedResults.length, cards, inter };
 }
 
 // spaces: Δmargin_i = v_cell_i − ⅓ Σ rivals' v_cell, seat × fork fixed effects; a blocked probe is the bot's own choice
@@ -551,10 +569,10 @@ function fitSpaces(seedResults, boot, slopes, scaleFrom = null) {
     const x = new Map(), add = (j, v) => x.set(j, (x.get(j) || 0) + v);
     if (done(e)) add(col[e[0]], 1);
     game.forEach((f, k) => { if (k !== i && done(f)) add(col[f[0]], -1 / 3); });
-    rows.push({ gi, grp, y: e[2], x });
+    rows.push({ gi, grp, y: e[2], x, tag: done(e) && !e[0].startsWith('null@') ? { id: e[0], table: R.table } : null });
     if (!bases.has(grp)) { bases.add(grp); rows.push({ gi, grp, y: 0, x: new Map() }); }
   })));
-  const { beta, bs, rows: nRows } = fitBoot(rows, K, Array(K).fill(0.5), seedResults.length, boot);
+  const { beta, bs, rows: nRows, dm } = fitBoot(rows, K, Array(K).fill(0.5), seedResults.length, boot);
   const stats = Object.fromEntries(cells.map(c => [c, { n: 0, tried: 0, win: 0 }]));
   seedResults.forEach(R => R.spaces.forEach(game => game.forEach(e => { const st = stats[e[0]]; if (!st) return; st.tried++; if (done(e)) { st.n++; st.win += e[4]; } })));
   const nul = r => col[`null@${r}`];
@@ -579,7 +597,11 @@ function fitSpaces(seedResults, boot, slopes, scaleFrom = null) {
   });
   for (const x of out) { const k = scale[x.round - 1]; x.su = x.u * k; x.suLo = x.uLo * k; x.suHi = x.uHi * k; }
   const nulls = [1, 2, 3].filter(r => nul(r) !== undefined).map(r => ({ round: r, v: beta[nul(r)], lo: qtl(bs.map(bb => bb[nul(r)]), 0.05), hi: qtl(bs.map(bb => bb[nul(r)]), 0.95), n: stats[`null@${r}`].n }));
-  return { slopes, scale, probes: nRows, seeds: seedResults.length, spaces: out, nulls };
+  const inter = interactions(dm, beta, cell => cell.split('.')[0]).map(x => {
+    const r = Number(x.id.split('@')[1]), k = scale[r - 1] / slopes[r - 1];
+    return { ...x, name: `${SPACES[x.id.split('@')[0]].name} r${r}`, su: x.dev * k, suSe: x.se * k };
+  });
+  return { slopes, scale, probes: nRows, seeds: seedResults.length, spaces: out, nulls, inter };
 }
 
 // verdicts per instrument
@@ -644,69 +666,76 @@ function fairnessOf(games) {
 }
 
 // ======================= main =======================
-async function main() {
-  const argv = process.argv.slice(2);
-  const flags = Object.fromEntries(argv.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
-  const workers = Number(flags.workers || cpus().length);
-  const t0 = Date.now();
+// ---------- run configuration ----------
+export function parseFlags(argv) {
+  return Object.fromEntries(argv.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
+}
+function gitStamp() {
   let sha = 'nosha', dirty = '';
   try { sha = execSync('git rev-parse --short HEAD', { cwd: ROOT }).toString().trim(); dirty = execSync('git status --porcelain -- src', { cwd: ROOT }).toString().trim() ? '+dirty' : ''; } catch { /* not a repo */ }
-
-  if (flags.records) return recordsMode(String(flags.records), workers, sha + dirty);
-
+  return { sha, dirty };
+}
+async function configure(flags) {
   const quick = !!flags.quick;
   const only = flags.only ? String(flags.only).split(',') : ['anchors', 'cards', 'spaces', 'archetypes', 'fairness', 'health'];
-  const want = k => only.includes(k);
   const { makeTables } = await import('../src/test/engine/v4/fuzz-tables-runner.js');
   const TABLES = quick ? [CLASSIC] : makeTables(4242, 2).tables;
-  // sizes: quick ≈ 8 min, full ≈ 75 min on 4 cores (README)
+  // sizes: quick ≈ 8 min, full ≈ 75 min on 4 cores (README). --scale=k multiplies every game count (for shards).
   const P = quick
-    ? { normalSeeds: 60, Kc: 12, Ks: 12, hardSeedsB: 4, KcB: 14, KsB: 8, cardsB: 6, cellsB: 6, hardBase: 0, calib: 32, archN: 40, archH: 0, boot: 120, minN: 20, minNH: 12, seedBase: 700000 }
-    : { normalSeeds: 440, Kc: 12, Ks: 12, hardSeedsB: 44, KcB: 12, KsB: 10, cardsB: 26, cellsB: 24, hardBase: 24, calib: 96, archN: 240, archH: 64, boot: 200, minN: 30, minNH: 20, seedBase: 500000 };
+    ? { normalSeeds: 60, Kc: 12, Ks: 12, hardSeedsB: 4, KcB: 14, KsB: 8, cardsB: 6, cellsB: 6, hardBase: 0, calib: 32, archN: 40, archH: 0, boot: 120, minN: 20, minNH: 12, seedBase: 700000, perTarget: 0 }
+    : { normalSeeds: 440, Kc: 12, Ks: 12, hardSeedsB: 44, KcB: 12, KsB: 10, cardsB: 26, cellsB: 24, hardBase: 24, calib: 96, archN: 240, archH: 64, boot: 200, minN: 30, minNH: 20, seedBase: 500000, perTarget: 0 };
+  const scale = Number(flags.scale || 1);
+  if (scale !== 1) for (const k of ['normalSeeds', 'hardSeedsB', 'hardBase', 'calib', 'archN', 'archH']) P[k] = Math.round(P[k] * scale);
   for (const k of Object.keys(P)) if (flags[k] !== undefined) P[k] = Number(flags[k]);
-  const deltas = [-4, 0, 4];
+  return { quick, only, TABLES, P, scale, tablesDesc: quick ? 'Classic (gold, red, market, echo)' : `${TABLES.length} random 4-sphere tables (makeTables 4242, every compatible pair at least twice), dealt round-robin` };
+}
+const DELTAS = [-4, 0, 4];
+const NORMAL_GAME = 1, HARD_GAME = 8; // relative costs, for scheduling and the eta
+
+function planA({ only, TABLES, P }) {
+  const want = k => only.includes(k);
   const needSeeds = want('cards') || want('spaces') || want('anchors') || want('fairness') || want('health');
-  const doCards = want('cards') || want('anchors');
-  const doSpaces = want('spaces');
-  const tableOf = g => TABLES[(g * 2654435761 >>> 0) % TABLES.length];
-  // stage A: Normal seeds, Hard calibration, archetypes, Hard base games; all at once
+  const doCards = want('cards') || want('anchors'), doSpaces = want('spaces');
+  // stratified: seed g plays table g mod 38, so every card and space meets each sphere it can share a table with
+  // in proportion, whatever the seed count
+  const tableOf = g => TABLES[g % TABLES.length];
   const jobs = [];
-  const NORMAL_GAME = 1, HARD_GAME = 8; // relative costs, for scheduling and the eta
-  if (needSeeds) for (let g = 0; g < P.normalSeeds; g++) {
-    jobs.push({ type: 'seed', inst: 'normal', g, seedBase: P.seedBase, table: tableOf(g), Kc: doCards ? P.Kc : 0, Ks: doSpaces ? P.Ks : 0, cardPool: !want('cards') ? ANCHOR_IDS : null, cellPool: null, deltas, anchorBoost: 3, cost: NORMAL_GAME * (2.2 + 0.72 * ((doCards ? P.Kc : 0) + (doSpaces ? P.Ks : 0))) });
-  }
+  if (needSeeds) for (let g = 0; g < P.normalSeeds; g++) jobs.push({ type: 'seed', inst: 'normal', g, seedBase: P.seedBase, table: tableOf(g), Kc: doCards ? P.Kc : 0, Ks: doSpaces ? P.Ks : 0, cardPool: !want('cards') ? ANCHOR_IDS : null, cellPool: null, deltas: DELTAS, anchorBoost: 3, cost: NORMAL_GAME * (2.2 + 0.72 * ((doCards ? P.Kc : 0) + (doSpaces ? P.Ks : 0))) });
   if (want('anchors') || doCards || doSpaces) for (let g = 0; g < P.calib; g++) jobs.push({ type: 'calib', g, seedBase: P.seedBase + 90000, cost: 2.2 });
   if (want('archetypes')) for (const arch of Object.keys(ARCHETYPES)) {
     for (let g = 0; g < P.archN; g++) jobs.push({ type: 'arch', inst: 'normal', arch, g, seedBase: P.seedBase + 50000, cost: arch === 'chaser' ? 2 : 1 });
     for (let g = 0; g < P.archH; g++) jobs.push({ type: 'arch', inst: 'hard', arch, g, seedBase: P.seedBase + 60000, cost: 6.5 });
   }
-  if ((want('fairness') || want('health')) && P.hardBase) for (let g = 0; g < P.hardBase; g++) jobs.push({ type: 'seed', inst: 'hard', g: 10000 + g, seedBase: P.seedBase, table: tableOf(10000 + g), Kc: 0, Ks: 0, cardPool: null, cellPool: null, deltas, anchorBoost: 1, cost: HARD_GAME * 2.2 });
-  process.stderr.write(`bench ${quick ? 'quick' : 'full'} on ${workers} workers, ${sha}${dirty}: stage A, ${jobs.length} jobs\n`);
-  const A = await runPool(jobs, workers, 'stage A');
-  const crashes = A.filter(x => !x.ok).map(x => ({ ...x.job, error: x.error }));
-  const okA = A.filter(x => x.ok).map(x => x.r);
-  const normalSeeds = okA.filter(r => r.inst === 'normal' && r.cards);
-  const msA = A.reduce((a, x) => a + x.ms, 0);
+  if ((want('fairness') || want('health')) && P.hardBase) for (let g = 0; g < P.hardBase; g++) jobs.push({ type: 'seed', inst: 'hard', g: 10000 + g, seedBase: P.seedBase, table: tableOf(10000 + g), Kc: 0, Ks: 0, cardPool: null, cellPool: null, deltas: DELTAS, anchorBoost: 1, cost: HARD_GAME * 2.2 });
+  return jobs;
+}
+const shardOf = (jobs, shard) => { if (!shard) return jobs; const [i, n] = String(shard).split('/').map(Number); return jobs.filter((_, k) => k % n === i); };
 
-  const boot = P.boot;
-  const cardsN = doCards ? fitCards(normalSeeds, boot) : null;
+// the per-round price slopes convert a space's worth into resources; a missing or unclear one falls back
+const slopesOf = (fit, fallback) => [0, 1, 2].map(r => (fit && fit.slopeByRound[r].lo > 0.05 ? fit.slopeByRound[r].v : fallback[r]));
+
+/** Fits stage A and picks stage B's targets and seeds. */
+function analyseA(cfg, okA) {
+  const { only, TABLES, P } = cfg;
+  const want = k => only.includes(k);
+  const doCards = want('cards') || want('anchors'), doSpaces = want('spaces');
+  // seed order, whatever order shards and workers finished in: the same numbers to the last bit
+  const normalSeeds = okA.filter(r => r.inst === 'normal' && r.cards).sort((x, y) => x.g - y.g);
+  const cardsN = doCards ? fitCards(normalSeeds, P.boot) : null;
   let last = null;
   try { last = JSON.parse(readFileSync(path.join(OUT, 'latest.json'), 'utf8')).instruments?.normal; } catch { /* first run */ }
-  // the per-round price slopes convert a space's worth into resources; a missing or unclear one falls back
-  const slopesOf = (fit, fallback) => [0, 1, 2].map(r => (fit && fit.slopeByRound[r].lo > 0.05 ? fit.slopeByRound[r].v : fallback[r]));
   const slopesN = slopesOf(cardsN, last?.slopes || [0.75, 0.75, 0.75]);
   const slopeN = cardsN && cardsN.slope > 0.1 ? cardsN.slope : last?.slope || 0.75;
-  const spacesN = doSpaces ? fitSpaces(normalSeeds, boot, slopesN) : null;
-
-  // stage B: Hard-20 re-measures the anchors and what Normal flags or reads far off, the clearest first (capped, so
-  // its probes aren't spread too thin to say anything)
+  const spacesN = doSpaces ? fitSpaces(normalSeeds, P.boot, slopesN) : null;
+  // Hard-20 re-measures the anchors and what Normal flags or reads far off, the clearest first (capped, so its probes
+  // aren't spread too thin to say anything)
   const halfW = c => Math.max(0.5, (c.hi - c.lo) / 2);
   const cardCands = !(want('cards') && cardsN) ? [] : cardsN.cards.filter(c => !ANCHOR_IDS.includes(c.id) && Number.isFinite(c.fair)).map(c => {
     const v = cardVerdict(c, P.minN);
     const hit = v.state === 'cheap' || v.state === 'dear' || v.ability || Math.abs(c.fair - c.printed) >= 2.5;
     return { id: c.id, hit, flagged: v.state === 'cheap' || v.state === 'dear' || !!v.ability, z: Math.abs(c.fair - c.printed) / halfW(c) };
   }).filter(x => x.hit).sort((a, b) => b.flagged - a.flagged || b.z - a.z);
-  const cardTargets = new Set([...(doCards ? ANCHOR_IDS : []), ...cardCands.slice(0, P.cardsB).map(x => x.id)]);
+  const cardList = [...new Set([...(doCards ? ANCHOR_IDS : []), ...cardCands.slice(0, P.cardsB).map(x => x.id)])];
   const cellCands = !spacesN ? [] : spacesN.spaces.map(s => {
     const v = spaceVerdict(s, P.minN), [lo, hi] = BANDS[s.round];
     const flagged = v.state !== 'in' && v.state !== 'thin';
@@ -714,45 +743,136 @@ async function main() {
     const hw = Math.max(0.5, (s.suHi - s.suLo) / 2);
     return { cell: s.cell, hit: flagged || off, flagged, z: (s.su > hi ? s.su - hi : lo - s.su) / hw };
   }).filter(x => x.hit).sort((a, b) => b.flagged - a.flagged || b.z - a.z);
-  const cellTargets = new Set(cellCands.slice(0, P.cellsB).map(x => x.cell));
-  const cardList = [...cardTargets], cellList = [...cellTargets];
+  const cellList = cellCands.slice(0, P.cellsB).map(x => x.cell);
+  // --perTarget=N sizes stage B so each target gets about N paired Hard-20 probes
+  let seedsB = P.hardSeedsB;
+  if (P.perTarget) seedsB = Math.max(cardList.length ? Math.ceil((cardList.length * P.perTarget) / (P.KcB * 4 * 0.5)) : 0, cellList.length ? Math.ceil((cellList.length * P.perTarget) / (P.KsB * 3 * 0.35)) : 0);
   const jobsB = [];
-  if (P.hardSeedsB && (cardList.length || cellList.length)) {
+  if (seedsB && (cardList.length || cellList.length)) {
     // tables that hold the targets: each seed takes the table holding the most targets not yet well covered
     const holds = (t, id) => { const d = DEF[id]; return d.guest || t.includes(d.quadrant); };
     const cover = new Map();
-    for (let g = 0; g < P.hardSeedsB; g++) {
+    for (let g = 0; g < seedsB; g++) {
       const cand = TABLES.map(t => [t, cardList.filter(id => holds(t, id)).reduce((a, id) => a + 1 / (1 + (cover.get(id) || 0)), 0) + cellList.filter(c => t.includes(c.split('.')[0])).reduce((a, c) => a + 1 / (1 + (cover.get(c) || 0)), 0)]);
       cand.sort((a, b) => b[1] - a[1]);
       const table = cand[g % Math.min(3, cand.length)][0];
       cardList.filter(id => holds(table, id)).forEach(id => cover.set(id, (cover.get(id) || 0) + 1));
       cellList.filter(c => table.includes(c.split('.')[0])).forEach(c => cover.set(c, (cover.get(c) || 0) + 1));
       const hasCells = cellList.some(c => table.includes(c.split('.')[0]));
-      jobsB.push({ type: 'seed', inst: 'hard', g, seedBase: P.seedBase + 20000, table, Kc: cardList.length ? P.KcB : 0, Ks: hasCells ? P.KsB : 0, cardPool: cardList, cellPool: cellList, deltas, anchorBoost: 1, cost: HARD_GAME * (2.2 + 0.72 * (P.KcB + P.KsB)) });
+      jobsB.push({ type: 'seed', inst: 'hard', g, seedBase: P.seedBase + 20000, table, Kc: cardList.length ? P.KcB : 0, Ks: hasCells ? P.KsB : 0, cardPool: cardList, cellPool: cellList, deltas: DELTAS, anchorBoost: 1, cost: HARD_GAME * (2.2 + 0.72 * (P.KcB + P.KsB)) });
     }
   }
-  process.stderr.write(`stage B: Hard-20 re-measures ${cardList.length} cards and ${cellList.length} spaces, ${jobsB.length} seeds\n`);
-  const B = await runPool(jobsB, workers, 'stage B');
-  crashes.push(...B.filter(x => !x.ok).map(x => ({ ...x.job, error: x.error })));
-  const hardSeeds = B.filter(x => x.ok).map(x => x.r);
-  const msB = B.reduce((a, x) => a + x.ms, 0);
-  const cardsH = cardList.length ? fitCards(hardSeeds, boot) : null;
+  return { normalSeeds, cardsN, spacesN, slopesN, slopeN, cardList, cellList, jobsB };
+}
+
+const partialOf = (stage, cfg, flags, res, stamp) => ({
+  kind: 'patrons.v4.bench.partial', stage, shard: flags.shard || '0/1', sha: stamp.sha + stamp.dirty, content: CONTENT_HASH, date: new Date().toISOString(),
+  config: { quick: cfg.quick, only: cfg.only, scale: cfg.scale, P: cfg.P, flags: Object.fromEntries(Object.entries(flags).filter(([k]) => !['shard', 'out', 'stage', 'plan', 'workers'].includes(k))) },
+  results: res.filter(x => x.ok).map(x => ({ r: x.r, ms: x.ms, moves: x.moves, type: x.type })), crashes: res.filter(x => !x.ok).map(x => ({ ...x.job, error: x.error })),
+  ms: res.reduce((a, x) => a + x.ms, 0),
+});
+
+async function main() {
+  const flags = parseFlags(process.argv.slice(2));
+  const workers = Number(flags.workers || cpus().length);
+  const t0 = Date.now();
+  const stamp = gitStamp();
+  if (flags.records) return recordsMode(String(flags.records), workers, stamp.sha + stamp.dirty);
+  const cfg = await configure(flags);
+  const stage = String(flags.stage || 'all');
+  const tag = `${cfg.quick ? 'quick' : 'full'}${stamp.sha}`;
+  if (stage === 'A') {
+    // one shard of stage A: a partial for scripts/v4-bench-merge.mjs
+    const jobs = shardOf(planA(cfg), flags.shard);
+    process.stderr.write(`bench stage A shard ${flags.shard || '0/1'}: ${jobs.length} jobs on ${workers} workers\n`);
+    const res = await runPool(jobs, workers, 'stage A');
+    const out = flags.out || path.join(OUT, `partial-A-${tag}-${String(flags.shard || '0/1').replace('/', 'of')}.json`);
+    writeFileSync(out, JSON.stringify(partialOf('A', cfg, flags, res, stamp)));
+    process.stderr.write(`wrote ${out}\n`);
+    return;
+  }
+  if (stage === 'B') {
+    // one shard of stage B, from the plan the merge of stage A wrote
+    const plan = JSON.parse(readFileSync(String(flags.plan), 'utf8'));
+    const jobs = shardOf(plan.jobsB, flags.shard);
+    process.stderr.write(`bench stage B shard ${flags.shard || '0/1'}: ${jobs.length} Hard-20 jobs on ${workers} workers\n`);
+    const res = await runPool(jobs, workers, 'stage B');
+    const out = flags.out || path.join(OUT, `partial-B-${tag}-${String(flags.shard || '0/1').replace('/', 'of')}.json`);
+    writeFileSync(out, JSON.stringify(partialOf('B', { ...cfg, ...plan.config }, flags, res, stamp)));
+    process.stderr.write(`wrote ${out}\n`);
+    return;
+  }
+  // stage all: both stages on this machine
+  process.stderr.write(`bench ${cfg.quick ? 'quick' : 'full'} on ${workers} workers, ${stamp.sha}${stamp.dirty}: stage A\n`);
+  const A = await runPool(planA(cfg), workers, 'stage A');
+  const pA = partialOf('A', cfg, flags, A, stamp);
+  const a = analyseA(cfg, pA.results.map(x => x.r));
+  process.stderr.write(`stage B: Hard-20 re-measures ${a.cardList.length} cards and ${a.cellList.length} spaces, ${a.jobsB.length} seeds\n`);
+  const B = await runPool(a.jobsB, workers, 'stage B');
+  const pB = partialOf('B', cfg, flags, B, stamp);
+  finalize(cfg, flags, [pA], [pB], a, { stamp, secs: (Date.now() - t0) / 1000, workers, shards: 1 });
+}
+
+/** Merge entry (scripts/v4-bench-merge.mjs): stage-A partials alone → stage B plan; A and B partials → the report. */
+export async function mergeMain(files, flags) {
+  const parts = files.map(f => JSON.parse(readFileSync(f, 'utf8')));
+  const bad = parts.find(p => p.kind !== 'patrons.v4.bench.partial');
+  if (bad) throw new Error('Not a bench partial.');
+  const As = parts.filter(p => p.stage === 'A'), Bs = parts.filter(p => p.stage === 'B');
+  if (!As.length) throw new Error('No stage-A partials.');
+  const key = p => JSON.stringify([p.content, p.config.quick, p.config.only, p.config.P]);
+  if (new Set(As.map(key)).size > 1) throw new Error('Stage-A partials come from different rules content or settings: they cannot be merged.');
+  const shards = new Set(As.map(p => p.shard));
+  const n = Number(As[0].shard.split('/')[1]);
+  if (shards.size !== n) process.stderr.write(`warning: ${shards.size} of ${n} stage-A shards present (${[...shards].sort().join(', ')})\n`);
+  const cfg = await configure({ ...As[0].config.flags, ...(As[0].config.quick ? { quick: true } : {}) });
+  Object.assign(cfg.P, As[0].config.P);
+  if (As[0].content !== CONTENT_HASH) process.stderr.write(`warning: partials were made on content ${As[0].content}, this tree is ${CONTENT_HASH}\n`);
+  const a = analyseA(cfg, As.flatMap(p => p.results.map(x => x.r)));
+  if (!Bs.length) {
+    const out = flags.plan || path.join(OUT, `plan-B-${As[0].sha}.json`);
+    writeFileSync(out, JSON.stringify({ config: { quick: cfg.quick, only: cfg.only, P: cfg.P }, cardList: a.cardList, cellList: a.cellList, jobsB: a.jobsB }));
+    console.log(`Stage A merged (${As.reduce((s, p) => s + p.results.length, 0)} jobs from ${As.length} shards). Stage B: ${a.jobsB.length} Hard-20 seeds for ${a.cardList.length} cards and ${a.cellList.length} spaces.`);
+    console.log(`Plan: ${out}\nRun on each machine i of n:  node scripts/v4-bench.mjs ${cfg.quick ? '--quick ' : ''}--stage=B --plan=${out} --shard=i/n\nThen:  node scripts/v4-bench-merge.mjs <every partial-A and partial-B file>`);
+    return;
+  }
+  const stamp = { sha: As[0].sha.replace('+dirty', ''), dirty: As[0].sha.includes('+dirty') ? '+dirty' : '' };
+  const secs = Math.max(0, (Date.parse(Bs.reduce((m, p) => (p.date > m ? p.date : m), '')) - Date.parse(As.reduce((m, p) => (p.date < m ? p.date : m), As[0].date))) / 1000);
+  finalize(cfg, flags, As, Bs, a, { stamp, secs, workers: null, shards: n });
+}
+
+function finalize(cfg, flags, As, Bs, a, { stamp, secs, workers, shards }) {
+  const { quick, only, P, tablesDesc } = cfg;
+  const doCards = only.includes('cards') || only.includes('anchors');
+  const byKey = r => `${r.arch || ''}|${r.inst || ''}|${String(r.g).padStart(8, '0')}`;
+  const okA = As.flatMap(p => p.results.map(x => x.r)).sort((x, y) => (byKey(x) < byKey(y) ? -1 : 1));
+  const crashes = [...As, ...Bs].flatMap(p => p.crashes);
+  const msA = As.reduce((s, p) => s + p.ms, 0), msB = Bs.reduce((s, p) => s + p.ms, 0);
+  const { normalSeeds, cardsN, spacesN, slopesN, slopeN, cardList, cellList } = a;
+  const hardSeeds = Bs.flatMap(p => p.results.map(x => x.r)).sort((x, y) => x.g - y.g);
+  const cardsH = cardList.length ? fitCards(hardSeeds, P.boot) : null;
   const slopeH = cardsH && cardsH.slope > 0.1 ? cardsH.slope : slopeN;
   const slopesH = slopesOf(cardsH, slopesN);
-  const spacesH = cellList.length ? fitSpaces(hardSeeds, boot, slopesH, spacesN?.scale) : null;
+  const spacesH = cellList.length ? fitSpaces(hardSeeds, P.boot, slopesH, spacesN?.scale) : null;
+
+  // ---------- throughput: real moves played, in full-game equivalents, per core-minute ----------
+  const all = [...As, ...Bs].flatMap(p => p.results);
+  const perGame = inst => mean(all.filter(x => x.r.inst === inst && x.r.metrics).map(x => x.r.metrics.moves)) || 190;
+  const thr = inst => { const xs = all.filter(x => x.type === 'seed' && x.r.inst === inst); const mv = xs.reduce((s, x) => s + (x.moves || 0), 0), ms = xs.reduce((s, x) => s + x.ms, 0); return { games: mv / perGame(inst), coreMin: ms / 60000, perCoreMin: ms ? (mv / perGame(inst)) / (ms / 60000) : NaN }; };
+  const throughput = { normal: thr('normal'), hard: thr('hard'), all: { games: all.reduce((s, x) => s + (x.moves || 0), 0) / perGame('normal') } };
 
   // ---------- anchors ----------
   const calib = okA.filter(r => r.win !== undefined && r.arch === undefined);
-  const calibW = wilson(calib.reduce((a, r) => a + r.win, 0), calib.length);
+  const calibW = wilson(calib.reduce((s, r) => s + r.win, 0), calib.length);
   const anchorRows = [];
   for (const inst of ['normal', 'hard']) {
     const fit = inst === 'normal' ? cardsN : cardsH;
-    for (const a of ANCHORS) {
+    for (const an of ANCHORS) {
       if (!doCards) continue;
-      const c = fit?.cards.find(x => x.id === a.id);
+      const c = fit?.cards.find(x => x.id === an.id);
       // off = the instrument confidently disagrees: its 90% interval misses the expected range (or it has too few probes to say)
-      const ok = !!c && c.n >= (inst === 'normal' ? P.minN : P.minNH) && c.hi >= a.lo && c.lo <= a.hi;
-      anchorRows.push({ inst, id: a.id, name: DEF[a.id].name, printed: priceOf(DEF[a.id]), fair: c?.fair, lo: c?.lo, hi: c?.hi, n: c?.n || 0, want: [a.lo, a.hi], ok, why: a.why });
+      const ok = !!c && c.n >= (inst === 'normal' ? P.minN : P.minNH) && c.hi >= an.lo && c.lo <= an.hi;
+      anchorRows.push({ inst, id: an.id, name: DEF[an.id].name, printed: priceOf(DEF[an.id]), fair: c?.fair, lo: c?.lo, hi: c?.hi, n: c?.n || 0, want: [an.lo, an.hi], ok, why: an.why });
     }
   }
   const instOk = {
@@ -761,7 +881,8 @@ async function main() {
   };
   const trusted = instOk.normal && instOk.hard;
 
-  // ---------- verdicts ----------
+  // ---------- verdicts, with power: the smallest gap each item's interval could have caught (80% power) ----------
+  const mde = hw => 1.51 * hw; // (z.95 + z.80) / z.95 × the 90% half-width
   const cardRows = (cardsN?.cards || []).map(cN => {
     const cH = cardsH?.cards.find(x => x.id === cN.id);
     const vN = cardVerdict(cN, P.minN), vH = cardVerdict(cH, P.minNH);
@@ -769,15 +890,21 @@ async function main() {
     const ability = !!(vN.ability && vH.ability);
     // Hard-20 confidently disagrees: it reads the card in band and its interval excludes Normal's reading
     const normalOnly = (vN.state === 'cheap' || vN.state === 'dear') && vH.state === 'in' && (cN.fair < cH.lo || cN.fair > cH.hi);
-    return { id: cN.id, name: cN.name, printed: cN.printed, N: cN, H: cH || null, vN, vH, both, ability, normalOnly };
+    return { id: cN.id, name: cN.name, printed: cN.printed, N: { ...cN, mde: Math.max(1.5, mde((cN.hi - cN.lo) / 2)) }, H: cH ? { ...cH, mde: Math.max(1.5, mde((cH.hi - cH.lo) / 2)) } : null, vN, vH, both, ability, normalOnly };
   });
   const spaceRows = (spacesN?.spaces || []).map(sN => {
     const sH = spacesH?.spaces.find(x => x.cell === sN.cell);
     const vN = spaceVerdict(sN, P.minN), vH = spaceVerdict(sH, P.minNH);
     const both = vN.state !== 'in' && vN.state !== 'thin' && vN.state === vH.state;
     const normalOnly = vN.state !== 'in' && vN.state !== 'thin' && vH.state === 'in' && (sN.su < sH.suLo || sN.su > sH.suHi);
-    return { cell: sN.cell, id: sN.id, name: sN.name, round: sN.round, ring: sN.ring, N: sN, H: sH || null, vN, vH, both, normalOnly };
+    return { cell: sN.cell, id: sN.id, name: sN.name, round: sN.round, ring: sN.ring, N: { ...sN, mde: mde((sN.suHi - sN.suLo) / 2) }, H: sH ? { ...sH, mde: mde((sH.suHi - sH.suLo) / 2) } : null, vN, vH, both, normalOnly };
   });
+  // interactions: Normal's screen, |deviation| ≥ 3 cost points (spaces: 3 scaled u) and |z| ≥ 3.5 (about one false
+  // alarm in a full run's ~1,500 card × sphere pairs); Hard-20's reading beside it where it measured the pair
+  const pickInter = (fit, hard, val, se) => (fit?.inter || []).filter(x => Math.abs(x[val]) >= 3 && Math.abs(x[val] / x[se]) >= 3.5)
+    .sort((p, q) => Math.abs(q[val] / q[se]) - Math.abs(p[val] / p[se])).slice(0, 15)
+    .map(x => ({ ...x, hard: (hard?.inter || []).find(y => y.id === x.id && y.sphere === x.sphere) || null }));
+  const interCards = pickInter(cardsN, cardsH, 'pts', 'ptsSe'), interSpaces = pickInter(spacesN, spacesH, 'su', 'suSe');
 
   // ---------- archetypes ----------
   const archRes = okA.filter(r => r.arch);
@@ -785,7 +912,7 @@ async function main() {
   for (const arch of Object.keys(ARCHETYPES)) for (const inst of ['normal', 'hard']) {
     const rs = archRes.filter(r => r.arch === arch && r.inst === inst);
     if (!rs.length) continue;
-    archetypes.push({ arch, name: ARCHETYPES[arch].name, inst, n: rs.length, win: wilson(rs.reduce((a, r) => a + r.win, 0), rs.length), f: mean(rs.map(r => r.f)), fRival: mean(rs.map(r => r.fRival)), members: mean(rs.map(r => r.members)), membersRival: mean(rs.map(r => r.membersRival)) });
+    archetypes.push({ arch, name: ARCHETYPES[arch].name, inst, n: rs.length, win: wilson(rs.reduce((s, r) => s + r.win, 0), rs.length), f: mean(rs.map(r => r.f)), fRival: mean(rs.map(r => r.fRival)), members: mean(rs.map(r => r.members)), membersRival: mean(rs.map(r => r.membersRival)) });
   }
 
   // ---------- fairness and health (base games: Normal seeds, Hard bases and Hard stage-B seeds) ----------
@@ -794,27 +921,30 @@ async function main() {
   const fairness = { normal: fairnessOf(metricsN), hard: fairnessOf(metricsH) };
   const health = { normal: healthOf(metricsN), hard: healthOf(metricsH) };
 
+  const { sha, dirty } = stamp;
   const result = {
-    kind: 'patrons.v4.bench', mode: quick ? 'quick' : 'full', only, sha: sha + dirty, content: CONTENT_HASH, date: new Date().toISOString(), secs: (Date.now() - t0) / 1000, coreSecs: (msA + msB) / 1000, workers, params: P,
-    tables: quick ? 'Classic (gold, red, market, echo)' : `${TABLES.length} random 4-sphere tables (makeTables 4242), every compatible pair at least twice`,
+    kind: 'patrons.v4.bench', mode: quick ? 'quick' : 'full', only, sha: sha + dirty, content: CONTENT_HASH, date: new Date().toISOString(), secs, coreSecs: (msA + msB) / 1000, workers, shards, params: P, scale: cfg.scale,
+    tables: tablesDesc, throughput,
     printed: Object.fromEntries(ALL_DEFS.map(d => [d.id, priceOf(d)])),
     instruments: {
       normal: { name: 'Normal', slope: slopeN, slopes: slopesN, slopeByRound: cardsN?.slopeByRound, slopeLo: cardsN?.slopeLo, slopeHi: cardsN?.slopeHi, cardProbes: cardsN?.probes || 0, spaceProbes: spacesN?.probes || 0, seeds: normalSeeds.length },
       hard: { name: `Hard-${HARD_BUDGET}`, slope: slopeH, slopes: slopesH, slopeByRound: cardsH?.slopeByRound, slopeLo: cardsH?.slopeLo, slopeHi: cardsH?.slopeHi, cardProbes: cardsH?.probes || 0, spaceProbes: spacesH?.probes || 0, seeds: hardSeeds.length, calib: { n: calib.length, win: calibW } },
     },
     anchors: { rows: anchorRows, instOk, trusted }, cards: cardRows, spaces: spaceRows, nulls: { normal: spacesN?.nulls, hard: spacesH?.nulls }, spaceScale: spacesN?.scale,
+    interactions: { cards: interCards, spaces: interSpaces, pairs: { cards: cardsN?.inter?.length || 0, spaces: spacesN?.inter?.length || 0 } },
     archetypes, fairness, health, crashes,
   };
   mkdirSync(path.join(OUT, 'history'), { recursive: true });
   const prev = previousRun(result.mode, only);
   const diff = prev ? diffRuns(prev, result) : null;
-  const stamp = `${result.date.slice(0, 10)}-${sha}${dirty ? '-dirty' : ''}${quick ? '-quick' : ''}${flags.only ? `-${only.join('+')}` : ''}`;
-  writeFileSync(path.join(OUT, 'history', `${stamp}.json`), JSON.stringify(result));
+  const tagOnly = flags.only ? `-${only.join('+')}` : '';
+  writeFileSync(path.join(OUT, 'history', `${result.date.slice(0, 10)}-${sha}${dirty ? '-dirty' : ''}${quick ? '-quick' : ''}${tagOnly}.json`), JSON.stringify(result));
   // a full run of every section is "latest"; a quick or partial run never overwrites it
-  const name = !quick && !flags.only ? 'latest' : `latest-${quick ? 'quick' : 'full'}${flags.only ? `-${only.join('+')}` : ''}`;
+  const name = !quick && !flags.only ? 'latest' : `latest-${quick ? 'quick' : 'full'}${tagOnly}`;
   writeFileSync(path.join(OUT, `${name}.json`), JSON.stringify(result, null, 1));
   writeFileSync(path.join(OUT, `${name}.md`), report(result, diff, prev));
-  process.stderr.write(`done in ${(result.secs / 60).toFixed(1)} min (${(result.coreSecs / 60).toFixed(0)} core-min). design/eval/bench/${name}.md\n`);
+  writeFileSync(path.join(OUT, quick ? 'trend-quick.md' : 'trend.md'), trend(result.mode, only));
+  process.stderr.write(`done in ${(secs / 60).toFixed(1)} min (${(result.coreSecs / 60).toFixed(0)} core-min, ${throughput.all.games.toFixed(0)} game-equivalents). design/eval/bench/${name}.md\n`);
 }
 
 // ======================= history =======================
@@ -873,6 +1003,53 @@ function diffRuns(a, b) {
   return lines;
 }
 
+// ======================= trend =======================
+/** Each card's, space's and archetype's reading across this mode's runs (newest last), with what changed between. */
+export function trend(mode, only) {
+  const dir = path.join(OUT, 'history');
+  const runs = readdirSync(dir).filter(f => f.endsWith('.json')).map(f => { try { return JSON.parse(readFileSync(path.join(dir, f), 'utf8')); } catch { return null; } })
+    .filter(r => r && r.kind === 'patrons.v4.bench' && r.mode === mode && JSON.stringify(r.only) === JSON.stringify(only)).sort((a, b) => (a.date < b.date ? -1 : 1)).slice(-8);
+  const L = [`# Bench trend (${mode})`, '', `The last ${runs.length} ${mode} runs, oldest first. Cards: Normal's fair price (✱ = both instruments flag it). Spaces: Normal's scaled u. Archetypes: win %.`, ''];
+  const head = runs.map(r => `${r.date.slice(5, 10)} ${r.sha}`);
+  L.push('## Runs and what changed between them');
+  runs.forEach((r, i) => {
+    const p = runs[i - 1];
+    let what = 'first run kept';
+    if (p) {
+      const rep = Object.keys(r.printed).filter(id => p.printed[id] !== undefined && p.printed[id] !== r.printed[id]).map(id => `${DEF[id]?.name || id} ${p.printed[id]}→${r.printed[id]}`);
+      const added = Object.keys(r.printed).filter(id => p.printed[id] === undefined).map(id => DEF[id]?.name || id);
+      const gone = Object.keys(p.printed).filter(id => r.printed[id] === undefined);
+      what = [p.content === r.content ? 'same rules content' : `rules content ${p.content} → ${r.content}`, rep.length ? `repriced ${rep.join(', ')}` : '', added.length ? `new ${added.join(', ')}` : '', gone.length ? `gone ${gone.join(', ')}` : ''].filter(Boolean).join('; ');
+    }
+    L.push(`- ${head[i]}: ${r.anchors.trusted ? 'anchors pass' : 'ANCHORS FAIL'}; ${what}.`);
+  });
+  L.push('');
+  if (!runs.length) return L.join('\n') + '\n';
+  const cards = [...new Set(runs.flatMap(r => r.cards.map(c => c.id)))];
+  L.push('## Cards', '', `| card | printed now | ${head.join(' | ')} |`, `|---|---|${head.map(() => '---').join('|')}|`);
+  for (const id of cards.sort((a, b) => (DEF[a]?.name || a).localeCompare(DEF[b]?.name || b))) {
+    const cells = runs.map(r => { const c = r.cards.find(x => x.id === id); return c ? `${f1(c.N.fair)}${c.both ? '✱' : ''}${r.printed[id] !== runs[runs.length - 1].printed[id] ? ` (@${r.printed[id]})` : ''}` : '–'; });
+    L.push(`| ${DEF[id]?.name || id} | ${runs[runs.length - 1].printed[id] ?? '–'} | ${cells.join(' | ')} |`);
+  }
+  const cellsAll = [...new Set(runs.flatMap(r => r.spaces.map(s => s.cell)))];
+  if (cellsAll.length) {
+    L.push('', '## Spaces (scaled u)', '', `| space | round | ${head.join(' | ')} |`, `|---|---|${head.map(() => '---').join('|')}|`);
+    for (const cell of cellsAll.sort()) {
+      const [id, r] = cell.split('@');
+      L.push(`| ${SPACES[id]?.name || id} (${id.split('.')[0]}) | ${r} | ${runs.map(x => { const s = x.spaces.find(y => y.cell === cell); return s ? `${f1(s.N.su ?? s.N.u)}${s.both ? '✱' : ''}` : '–'; }).join(' | ')} |`);
+    }
+  }
+  const arch = [...new Set(runs.flatMap(r => r.archetypes.map(a => `${a.arch}|${a.inst}`)))];
+  if (arch.length) {
+    L.push('', '## Archetypes (win %)', '', `| archetype | vs | ${head.join(' | ')} |`, `|---|---|${head.map(() => '---').join('|')}|`);
+    for (const k of arch) {
+      const [a, inst] = k.split('|');
+      L.push(`| ${ARCHETYPES[a]?.name || a} | 3 ${inst === 'hard' ? `Hard-${HARD_BUDGET}` : 'Normal'} | ${runs.map(r => { const x = r.archetypes.find(y => y.arch === a && y.inst === inst); return x ? pct(x.win[0]) : '–'; }).join(' | ')} |`);
+    }
+  }
+  return L.join('\n') + '\n';
+}
+
 // ======================= report =======================
 function report(R, diff, prev) {
   const L = [];
@@ -882,7 +1059,9 @@ function report(R, diff, prev) {
   const mark = T ? '' : ' — UNTRUSTED (anchor check failed)';
   L.push(`# Balance bench (${R.mode})`);
   L.push('');
-  L.push(`${R.date.slice(0, 16).replace('T', ' ')} UTC · commit ${R.sha} · content ${R.content} · ${(R.secs / 60).toFixed(1)} min on ${R.workers} workers (${(R.coreSecs / 60).toFixed(0)} core-min) · ${R.tables}.`);
+  const tp = R.throughput;
+  L.push(`${R.date.slice(0, 16).replace('T', ' ')} UTC · commit ${R.sha} · content ${R.content} · ${(R.secs / 60).toFixed(1)} min ${R.shards > 1 ? `over ${R.shards} shards` : `on ${R.workers} workers`} (${(R.coreSecs / 60).toFixed(0)} core-min) · ${R.tables}.`);
+  if (tp) L.push(`Games played: ${tp.all.games.toFixed(0)} full-game equivalents (probe games fork mid-game and count as the part they play). Throughput: Normal ${f1(tp.normal.perCoreMin)} games per core-minute, ${H} ${f1(tp.hard.perCoreMin)} (all four seats that level).`);
   L.push(`Instruments: **Normal** (all four seats) and **${H}** (Hard = Normal plus rollouts, at budget ${HARD_BUDGET}, uncapped, deterministic). Intervals are 90% (bootstrap over seeds for fits, Wilson for win rates). Method and limits: design/eval/bench/README.md.`);
   L.push('');
   L.push('## What moved since last run');
@@ -930,12 +1109,25 @@ function report(R, diff, prev) {
     L.push('');
     L.push('<details><summary>Every card (Normal; Hard-20 where measured)</summary>');
     L.push('');
-    L.push('| card | printed | Normal fair [90%] | n | net at printed by round I/II/III | Hard-20 fair [90%] | n |');
-    L.push('|---|---|---|---|---|---|---|');
-    for (const c of [...R.cards].sort((a, b) => (b.N.fair - b.printed) - (a.N.fair - a.printed))) L.push(`| ${c.name} (${c.id}) | ${c.printed} | ${f1(c.N.fair)} [${f1(c.N.lo)}–${f1(c.N.hi)}] | ${c.N.n} | ${[1, 2, 3].map(r => f1(c.N.atPrintedByRound[r])).join(' / ')} | ${c.H ? `${f1(c.H.fair)} [${f1(c.H.lo)}–${f1(c.H.hi)}]` : '–'} | ${c.H?.n || ''} |`);
+    L.push('| card | printed | Normal fair [90%] | n | detectable | net at printed by round I/II/III | Hard-20 fair [90%] | n |');
+    L.push('|---|---|---|---|---|---|---|---|');
+    for (const c of [...R.cards].sort((a, b) => (b.N.fair - b.printed) - (a.N.fair - a.printed))) L.push(`| ${c.name} (${c.id}) | ${c.printed} | ${f1(c.N.fair)} [${f1(c.N.lo)}–${f1(c.N.hi)}] | ${c.N.n} | ±${f1(c.N.mde)} | ${[1, 2, 3].map(r => f1(c.N.atPrintedByRound[r])).join(' / ')} | ${c.H ? `${f1(c.H.fair)} [${f1(c.H.lo)}–${f1(c.H.hi)}]` : '–'} | ${c.H?.n || ''} |`);
     L.push('');
     L.push('</details>');
     L.push('');
+  }
+  if (R.cards.length) {
+    const un = R.cards.filter(c => !c.both && c.vN.state === 'in').map(c => c.N.mde).filter(Number.isFinite);
+    if (un.length) L.push(`Power: for the ${un.length} cards Normal reads in band, the smallest gap this run could have caught (80% power, 90% interval) is ${f1(qtl(un, 0.5))} cost points at the median card, ${f1(qtl(un, 0.9))} at the 90th percentile (column "detectable" in the full table). More seeds narrow it as 1/√n.`);
+    L.push('');
+  }
+  if (R.interactions?.cards?.length || R.interactions?.spaces?.length || R.interactions?.pairs?.cards) {
+    L.push(`## 2b. Card × sphere and space × sphere outliers${mark}`);
+    L.push(`Normal's residuals on the tables where the seat held the item, grouped by each other sphere at the table: a card fine overall but off beside one sphere. Listed at |deviation| ≥ 3 cost points (spaces: 3 scaled u) and |z| ≥ 3.5 among ${R.interactions.pairs.cards} card × sphere and ${R.interactions.pairs.spaces} space × sphere pairs with n ≥ 15 (about one false alarm expected). ${H} beside it where its targets covered the pair.`);
+    L.push('');
+    const ir = (x, unit, val, se) => `| ${x.name} | ${quadrant(x.sphere).name} (${x.sphere}) | ${x[val] >= 0 ? '+' : ''}${f1(x[val])} ±${f1(Z90 * x[se])} ${unit} | ${x.n} | ${x.hard ? `${x.hard[val] >= 0 ? '+' : ''}${f1(x.hard[val])} ±${f1(Z90 * x.hard[se])} (n ${x.hard.n})` : '–'} |`;
+    if (R.interactions.cards.length) { L.push('| card | beside | deviation [90%] | n | Hard-20 |', '|---|---|---|---|---|'); R.interactions.cards.forEach(x => L.push(ir(x, 'pts', 'pts', 'ptsSe'))); L.push(''); } else L.push('Cards: none.', '');
+    if (R.interactions.spaces.length) { L.push('| space | beside | deviation [90%] | n | Hard-20 |', '|---|---|---|---|---|'); R.interactions.spaces.forEach(x => L.push(ir(x, 'u', 'su', 'suSe'))); L.push(''); } else L.push('Spaces: none.', '');
   }
   // 3. spaces
   if (R.spaces.length) {
@@ -959,11 +1151,13 @@ function report(R, diff, prev) {
     const unconfS = R.spaces.filter(s => s.vN.state !== 'in' && s.vN.state !== 'thin' && !s.both && !s.normalOnly);
     if (unconfS.length) { L.push(''); L.push(`Normal flags, ${H} too thin or unsure to say: ${unconfS.map(s => `${s.name} r${s.round} ${s.vN.state} (${f1(s.N.su)}u${s.H ? `; Hard-20 ${f1(s.H.su)}u, n ${s.H.n}` : ''})`).join('; ')}.`); }
     L.push('');
+    const unS = R.spaces.filter(x => !x.both && x.vN.state === 'in').map(x => x.N.mde).filter(Number.isFinite);
+    if (unS.length) { L.push(`Power: for the ${unS.length} space-rounds Normal reads in band, the smallest miss this run could have caught is ${f1(qtl(unS, 0.5))} scaled u at the median, ${f1(qtl(unS, 0.9))} at the 90th percentile (column "detectable").`); L.push(''); }
     L.push('<details><summary>Every space and round (Normal; Hard-20 where measured)</summary>');
     L.push('');
-    L.push('| space | sphere | ring | round | worth (followers) [90%] | raw u | scaled u [90%] | vs choice | blocked | n | Hard-20 scaled u [90%] |');
-    L.push('|---|---|---|---|---|---|---|---|---|---|---|');
-    for (const s of [...R.spaces].sort((a, b) => a.round - b.round || b.N.u - a.N.u)) L.push(`| ${s.name} | ${s.id.split('.')[0]} | ${s.ring} | ${s.round} | ${f1(s.N.worth)} [${f1(s.N.lo)}–${f1(s.N.hi)}] | ${f1(s.N.u)} | ${f1(s.N.su)} [${f1(s.N.suLo)}–${f1(s.N.suHi)}] | ${f1(s.N.vsChoice)} | ${pct(s.N.blocked)} | ${s.N.n} | ${s.H ? `${f1(s.H.su)} [${f1(s.H.suLo)}–${f1(s.H.suHi)}]` : '–'} |`);
+    L.push('| space | sphere | ring | round | worth (followers) [90%] | raw u | scaled u [90%] | detectable | vs choice | blocked | n | Hard-20 scaled u [90%] |');
+    L.push('|---|---|---|---|---|---|---|---|---|---|---|---|');
+    for (const s of [...R.spaces].sort((a, b) => a.round - b.round || b.N.u - a.N.u)) L.push(`| ${s.name} | ${s.id.split('.')[0]} | ${s.ring} | ${s.round} | ${f1(s.N.worth)} [${f1(s.N.lo)}–${f1(s.N.hi)}] | ${f1(s.N.u)} | ${f1(s.N.su)} [${f1(s.N.suLo)}–${f1(s.N.suHi)}] | ±${f1(s.N.mde)} | ${f1(s.N.vsChoice)} | ${pct(s.N.blocked)} | ${s.N.n} | ${s.H ? `${f1(s.H.su)} [${f1(s.H.suLo)}–${f1(s.H.suHi)}]` : '–'} |`);
     L.push('');
     L.push('</details>');
     L.push('');
@@ -1053,4 +1247,4 @@ async function recordsMode(dir, workers, sha) {
   console.log(L.join('\n'));
 }
 
-if (isMainThread) main().catch(e => { console.error(e); process.exit(1); });
+if (isMainThread && process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(e => { console.error(e); process.exit(1); });

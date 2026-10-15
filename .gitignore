@@ -9,3 +9,7 @@ dist/
 .v4-panel/
 .v4-wt/
 vite.config.js.timestamp-*
+
+# balance bench shards (raw, large); merged results live in design/eval/bench/history
+design/eval/bench/partial-*.json
+design/eval/bench/plan-B-*.json
