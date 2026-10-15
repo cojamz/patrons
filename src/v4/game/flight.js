@@ -81,7 +81,9 @@ export function bezier(x1, y1, x2, y2) {
     return at(y1, y2, s);
   };
 }
-const TRAVEL = bezier(0.45, 0, 0.2, 1); // the arc's travel (grammar §2): leaves briskly, lands soft
+// the arc's travel (grammar §2). Cory, 2026-10-15 22:48: "ending of animations are real real slow": the old curve
+// (.45,0,.2,1) spent its last third creeping in. Now the time goes to the travel and the landing is short and sure.
+const TRAVEL = bezier(0.4, 0, 0.6, 1);
 /**
  * A true arc as keyframes on one element (composited: transform only): the piece moves along the straight line with
  * `ease` and bows `h` px off it as a parabola of how far along it is, so the path has no corner (the three-keyframe
@@ -446,7 +448,7 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
     if (k > 0) Object.assign(inner.style, { transform: `scale(${scale})`, opacity: String(opacity) });
     outer.appendChild(inner);
     document.body.appendChild(outer);
-    const travel = path === 'line' ? 'cubic-bezier(.55,0,.1,1)' : path === 'drop' ? 'cubic-bezier(.5,0,.75,0)' : 'cubic-bezier(.45,0,.2,1)';
+    const travel = path === 'line' ? 'cubic-bezier(.45,0,.6,1)' : path === 'drop' ? 'cubic-bezier(.5,0,.75,0)' : 'cubic-bezier(.4,0,.6,1)';
     const frames = path === 'drop'
       ? [{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(0,-6px) scale(1)', opacity: 1, offset: 0.2, easing: travel },
         { transform: `translate(${dx * 0.85}px,${dy * 0.85}px) scale(.85)`, opacity: 1, offset: 0.85 }, { transform: `translate(${dx}px,${dy}px) scale(.6)`, opacity: 0 }]

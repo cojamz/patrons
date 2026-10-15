@@ -28,7 +28,7 @@ import { seatEmoji } from '../format.js';
 import { spriteId } from '../art/index.js';
 import { motionOK, flyPath, pulse, tug, settle, flyMinionsHome, slideShop, holdStack, bump, track, landAll, expectArrival, clearArrivals, clearFlights, arcFrames, bezier, onScreenBow, relative } from './flight.js';
 
-const CARD_EASE = bezier(0.3, 0.7, 0.2, 1); // a recruited card's flight to its crowd (grammar M7)
+const CARD_EASE = bezier(0.4, 0.1, 0.6, 1); // a recruited card's flight to its crowd (grammar M7); no long creep at the end (Cory, 22:48)
 
 // ---------- the plan ----------
 
@@ -736,7 +736,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
             { transform: 'translate(0px,-10px) scale(1.06)', offset: k1 },
             ...arcFrames(dx, dy, bow, { from: k2, s0: 1.06, s1: sc, y0: -10, ease: CARD_EASE }),
           ], { duration: total, fill: 'forwards' }));
-          track(g.animate([{ opacity: 1 }, { opacity: 1, offset: k2 + (1 - k2) * 0.6 }, { opacity: 0.2 }], { duration: total, fill: 'forwards' }));
+          track(g.animate([{ opacity: 1 }, { opacity: 1, offset: k2 + (1 - k2) * 0.88 }, { opacity: 0.2 }], { duration: total, fill: 'forwards' }));
           slideShop(root, snap);
           if (chip && chip.animate) track(chip.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: total }));
           onFinish(anim, () => {

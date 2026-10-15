@@ -385,7 +385,7 @@
 .lt-card.card{box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
 .lt-card.card.lit{background:var(--paper-lit,#fbf6ea);box-shadow:0 0 0 2px var(--light,#fff3d4),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
 .lt-card.card.can:hover{background:var(--paper-lit,#fbf6ea);transform:translateY(-2px)}
-.lt-card .art{height:54px;margin:0;border-radius:0;box-shadow:none;background:color-mix(in srgb,var(--q) 16%,var(--pl-paper,#f2e8d2))}
+.lt-card .art{height:54px;margin:0;border-radius:0;box-shadow:none;background:color-mix(in srgb,var(--q) 24%,var(--pl-paper,#f2e8d2))}
 .lt-card .nm{font-family:var(--sans);font-size:11px;line-height:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pl-ink-2,#6e5c49);margin:6px 2px 0;white-space:nowrap;overflow-wrap:normal;hyphens:none}
 .lt-card .ft{height:20px;margin:auto 6px 0;padding:0;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-family:var(--sans);font-size:12px;font-weight:500;color:var(--pl-ink,#2b2018)}
 .lt-card .ft .num,.lt-card .val b{font-weight:800}

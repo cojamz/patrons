@@ -11,7 +11,7 @@ import { MO } from '../motion.js';
 import './stage.css';
 
 const EASE_OUT = 'cubic-bezier(.2,.9,.25,1.15)'; // lands with a little give, like a card slapped on the table
-const EASE_HOME = 'cubic-bezier(.5,0,.3,1)';
+const EASE_HOME = 'cubic-bezier(.45,0,.65,1)';
 
 /** The transform that puts a box of `size` (left/top at `at`) over the rect `r`. */
 const over = (at, size, r) => {
