@@ -43,6 +43,7 @@ Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source a
 35. **Rollout R2: wheel panels and rims.** Flat wedge panels with the action's picture above the number; the rim reads "MOST ● +4 👤 🐸". `?spaces=sockets` keeps the old look. Port 5392.
 36. **Rollout R3: cards, hovers, shop.** Member hover and shop card per the plate, short when-lines in src/v4/cardText.js, follower tiles. Port 5394.
 37. **Quiet-box verdicts (remote sessions).** session_01VJqrdWX2vcyJZSs11Zziem (ce03bc3, gate timing), session_01N9mAWieSTB1FSiquGzsvAe (b7a2b76), session_0125uXV2UHp3YSBXphubMoad (002e00a = batch 1: clarity, turn story, session, motion). Batch 1 ships to the PR when 002e00a passes.
+38. **Bench pooled runs on today's content** (remote session_011mMXsYcXHM7NPhc8g63Ki6): merges cults-wip 618a8f5 into claude/cults-bench, runs two full runs back to back (about 3 h), then reports the pooled list. It covers Blue, the buyer win rate and Front-runner. ×1.25 is on hold pending Cory.
 
 ## Held
 - **Fair-price screen, bot levels + 4-thinker tables:** offloaded to the remote sessions below. The Purple session is done (roster 11).
