@@ -30,7 +30,7 @@
   .app.game.lt > .lt-since{grid-area:seats;align-self:start;margin:calc(var(--col-top) + var(--seats-end, 0px) + 20px) 0 0 44px;
     max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px)}
   /* while a turn is being told, its card docks under the story: the story gives it room (oldest lines go first) */
-  .app.game.lt:has(> .turn-card) > .lt-since{max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px - 112px)}
+  .app.game.lt:has(> .turn-card) > .lt-since{max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px - var(--turn-h, 112px))}
   /* the story clips its oldest lines first, never the newest (the whole log is one tap away) */
   .app.game.lt > .lt-since .since-list{min-height:0;overflow:hidden;justify-content:flex-end}
   .app.game.lt > .lt-since .since-list > li{flex:none}
@@ -65,7 +65,7 @@
 @media (min-width:861px) and (max-width:1199px) and (min-height:500px){
   .app.game.lt{--turn-dock:since;grid-template-rows:68px minmax(0,1fr) minmax(0,1fr) var(--shop-h,128px)}
   .app.game.lt > .lt-since{align-self:start;margin-top:8px;max-height:calc(100% - 140px)}
-  .app.game.lt:has(> .turn-card) > .lt-since{max-height:calc(100% - 252px)}
+  .app.game.lt:has(> .turn-card) > .lt-since{max-height:calc(100% - 140px - var(--turn-h, 112px))}
   /* the shop's wrappers give up their boxes (and, having none, never claim to clip) */
   .app.game.lt > .lt-shop,.app.game.lt > .lt-shop > .lt-shop-cards{display:contents;overflow:visible}
   .app.game.lt .lt-shop-main{grid-area:shop;position:relative;z-index:3;min-width:0}

@@ -29,11 +29,11 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 - [x] 07:10 Wave-2 tester A: #15, #17, #52, #42/E5, E9; and the snappy spin landing (log.md 07:10–07:30).
 
 ## For the art director (composition / layout)
-- 05:40 Since-strip rows end in an ellipsis that cuts the member's name ("P4 Half Price: −1● −1● −3● · recruited Stunt Dou…") in the narrow left column. Let a row wrap to two lines (hanging indent under the name), or give the strip the width. I haven't touched since.css's box.
-- 05:40 The turn-order rail's "in 3 ×2": "×" is a retired operator (grammar) and "in 3" is shorthand. Suggest words: "next", "3rd", and "twice" on its own line. turnstory.mjs pins /×2/, so it needs updating with it. (seats.js turnPlaces, lamp.css .cs-order)
-- 05:40 Rim leaders: when 2–4 players tie for a rim, their minions stack at the rim's end and spill over the next quadrant's rim (MOST BLUE's frogs sit on the green band). Wheel.jsx rim leaders.
-- 05:40 Results show each score three times (table, the seat card's "39", the big number beside it) with the seat cards spanning ~1230px (RC1 #107, #111). The over-cults column.
-- 05:40 The Reckoning banner's "1 OF 4" is followed by four progress dots (●○○○): dots that aren't resources, and the count already says it. Reckoning.jsx (the layout agent's).
+- [x] (06:10) 05:40 Since-strip rows end in an ellipsis that cuts the member's name ("P4 Half Price: −1● −1● −3● · recruited Stunt Dou…") in the narrow left column. Let a row wrap to two lines (hanging indent under the name), or give the strip the width. I haven't touched since.css's box.
+- [x] (06:30: "twice") 05:40 The turn-order rail's "in 3 ×2": "×" is a retired operator (grammar) and "in 3" is shorthand. Suggest words: "next", "3rd", and "twice" on its own line. turnstory.mjs pins /×2/, so it needs updating with it. (seats.js turnPlaces, lamp.css .cs-order)
+- [x] (07:25: leaders at the band's height, 4 more units from each divider) 05:40 Rim leaders: when 2–4 players tie for a rim, their minions stack at the rim's end and spill over the next quadrant's rim (MOST BLUE's frogs sit on the green band). Wheel.jsx rim leaders.
+- [x] (06:10) 05:40 Results show each score three times (table, the seat card's "39", the big number beside it) with the seat cards spanning ~1230px (RC1 #107, #111). The over-cults column.
+- [x] (07:47, art director: hidden; "2 of 4" says it) 05:40 The Reckoning banner's "1 OF 4" is followed by four progress dots (●○○○): dots that aren't resources, and the count already says it. Reckoning.jsx (the layout agent's).
 
 
 - 06:05 Type sizes: the game screen still shows about ten sizes (11, 12, 13, 14, 15, 16, 18, 22, 36 plus the wheel's fitted ones). I removed the half sizes and the 10px; getting to the grammar's three needs the strips re-composed (shop numbers 15 vs rate numbers 17→18, seat stacks 14 vs 18, the prompt's 22). Yours if you take it; I'll follow your scale.
@@ -53,3 +53,8 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 ## For the art director (from QA, 06:45): layout stability
 - Chairs "moving 3–9px between steps" (hotseat gate) was the gate, not the layout: chair heights hold all round (fixed rows), and the only move is the round-start re-sort (the .35s slide to the new turn order). The gate re-read the chairs a fixed 900ms after the round changed and, on a loaded box, caught the slide mid-way. hotseat.mjs now waits until every chair's transform reaches its --y. Nothing in the layout changed.
 - The shop strip grew about 1.5% from its centre during a choice (hotseat: 973,8,279,684 -> 971,3,283,694): a scale on the strip itself. Most likely source (read from the code, not caught in the act): the motion chain hops or pops its target (scale 1.08 / 1.1), and when a card's own slot or the deck isn't on screen it falls back to the whole `.lt-shop`. director.js now never hops or pops an element that is a region (`[data-region]`): the furniture never scales; the thing inside it still moves.
+
+## For the art director (from the detail designer, 08:05): phone (iPhone 13) seats and wheel
+- [ ] P4's "NEXT" pill sits on top of its follower total ("14"): the rail label is inline after the name and the total doesn't make room. shots/phone-wheel-fit-after.png (top right).
+- [ ] A rival's "each round +3● +2◐" runs off the right edge on phone (the third seat's column).
+- [ ] The phone wheel's panels are short of room: I made a tight panel's line 1 shrink to fit on a wheel under 416 units (down to 9px) so words no longer overlap their neighbours (before/after in shots/phone-wheel-overlap-before.png, phone-wheel-fit-after.png), but 2–4 verbs per table still spill 2–9px at 9px ("Swap a member", "Members pay out"). More wheel on phone, or fewer words there, is a composition call.

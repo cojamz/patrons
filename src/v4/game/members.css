@@ -18,14 +18,15 @@
 .mu-text .pip.glyph,.mu-text .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
 
 /* the quiet state: "pays at round start", "scores at game end", "not used yet"; "ready to use" is the one in full ink */
-.mu-tag{flex:none;font-family:var(--sans);font-size:12px;line-height:18px;font-weight:500;color:var(--pl-ink-3,#a39078);white-space:nowrap}
+/* the type scale: 11 small print, 14 text and buttons, 18 names (design pod) */
+.mu-tag{flex:none;font-family:var(--sans);font-size:11px;line-height:18px;font-weight:500;color:var(--pl-ink-3,#a39078);white-space:nowrap}
 .mu-tag.lit{color:var(--pl-ink,#2b2018);font-weight:700}
 .mu-tag.dim{color:var(--pl-ink-3,#a39078)}
 /* used: the row steps back, its words stay readable */
 .mu-row.s-used .mu-art,.mu-row.s-used .mu-name,.mu-row.s-used .mu-text{opacity:.5}
 
 /* "Use: +7 ●": dark ink on paper, the brightest thing in the card; it presses down */
-.mu-use{flex:none;margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:4px;font-family:var(--sans);font-size:12px;line-height:16px;font-weight:700;
+.mu-use{flex:none;margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:4px;font-family:var(--sans);font-size:14px;line-height:18px;font-weight:700;
   padding:2px 10px;min-height:20px;position:relative;border-radius:var(--corner,8px);border:0;background:var(--pl-ink,#2b2018);color:var(--paper-lit,#fbf6ea);cursor:pointer;
   box-shadow:0 1px 0 rgba(0,0,0,.25);transition:transform .08s ease-out,background .12s}
 .mu-use:hover{background:#3d2f23}
@@ -33,7 +34,7 @@
 .mu-use:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline-offset:2px}
 .mu-use .pip.glyph,.mu-use .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
 .mu-use .rich-f,.mu-use .follower-mark{color:inherit}
-.mu-use.big{width:100%;justify-content:center;margin:12px 0 0;min-height:36px;font-size:16px;line-height:20px;padding:6px 12px}
+.mu-use.big{width:100%;justify-content:center;margin:12px 0 0;min-height:36px;font-size:14px;line-height:20px;padding:6px 12px} /* the card's 14 (type scale 11/14/18) */
 /* the small one still takes a finger: a 44px hit area around it */
 .mu-use:not(.big)::after{content:"";position:absolute;left:50%;top:50%;width:max(44px,100%);height:44px;transform:translate(-50%,-50%)}
 
@@ -42,10 +43,10 @@
 .mu-actions .mu-use.big{margin-top:0}
 .mu-sw-line{display:flex;justify-content:space-between;align-items:center;font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018)}
 .mu-sw-line + .mu-use{margin-top:10px}
-.mu-why{font-size:12px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
+.mu-why{font-size:11px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
 
 /* the switch: a small track and knob, its word beside it */
-.mu-switch{flex:none;display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:12px;line-height:18px;font-weight:700;color:var(--pl-ink-2,#6e5c49);
+.mu-switch{flex:none;display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:11px;line-height:18px;font-weight:700;color:var(--pl-ink-2,#6e5c49);
   background:none;border:0;padding:0;cursor:default}
 button.mu-switch{cursor:pointer}
 .mu-track{position:relative;width:24px;height:14px;border-radius:7px;background:rgba(43,32,24,.18);transition:background .15s}
@@ -90,9 +91,9 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 /* a use still in hand, anyone's, on the table: the same light as "yours to use now", subdued (w2b #21: see threats coming) */
 .lt-cult-seat .cs-member.loaded:not(.ready) .fig .sprite{filter:drop-shadow(1px 0 0 rgba(255,243,212,.38)) drop-shadow(-1px 0 0 rgba(255,243,212,.38)) drop-shadow(0 1px 0 rgba(255,243,212,.38)) drop-shadow(0 -1px 0 rgba(255,243,212,.38))}
 /* a seat no one can steal resources from this round (Lie Low): said in words beside its resources */
-.lt-cult-seat .cs-safe{font-family:var(--sans);font-size:12px;line-height:16px;color:var(--cream-2,#b9a98c);white-space:nowrap;align-self:center;margin-left:4px}
+.lt-cult-seat .cs-safe{font-family:var(--sans);font-size:11px;line-height:16px;color:var(--cream-2,#b9a98c);white-space:nowrap;align-self:center;margin-left:4px}
 .lt-cult-seat .cs-crowd > .cs-safe:first-child{margin-left:0}
-.seat-card .seat-safe{display:block;font-family:var(--sans);font-size:12px;color:var(--pl-ink-2,#6e5c49);font-weight:500;letter-spacing:0;text-transform:none}
+.seat-card .seat-safe{display:block;font-family:var(--sans);font-size:11px;color:var(--pl-ink-2,#6e5c49);font-weight:500;letter-spacing:0;text-transform:none}
 
 /* what a use just did, rising off the member for a moment ("+7 ●", or a quiet "+0") */
 .lt-cult-seat .cs-member .mu-result{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);z-index:4;pointer-events:none;white-space:nowrap;

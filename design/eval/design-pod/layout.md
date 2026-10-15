@@ -28,7 +28,7 @@ All variants are CSS only and keep the same elements, with nothing added.
 |---|---|---|---|
 | ![](layout/final/setup.png) | ![](layout/final/place.png) | ![](layout/final/rival.png) | ![](layout/final/round3.png) |
 
-Your buy step: ![](layout/final/buy.png) · At 1440×860 the wheel grows to ~640px: ![](layout/final-1440/place.png)
+Your buy step: ![](layout/final/buy.png) · At 1440×860 the wheel grows to 684px: ![](layout/final-1440/place.png) · At 1100×700 (the narrow-laptop band): ![](layout/final-1100/place.png)
 
 **B: the followers get the right column.** The bottom strip keeps the deck and members, so each card gets wider (111px). The right column holds the since-strip at the top, the turn card, and the four follower buys at the foot. The rules are kept for the record in `layout/variant-b.css`. They aren't in the game.
 
@@ -40,7 +40,7 @@ Old layout, for comparison: setup ![](before/setup.png) · round III ![](before/
 
 ## Why A
 - **One job per column, and all three are full.** Who's at the table, where you go, what you buy. The eye goes left to right through a turn: the seats (what happened), the wheel (place), the shop (buy). B still leaves a hole in the right column between the since-strip and the follower buys whenever no turn card is up, which is most of your own turn.
-- **The wheel gets bigger.** It goes from 478px to about 512px at 1270×700, because nothing runs under it any more, and to about 640px at 1440×860. In B it stays at 478px, because the strip still takes its height.
+- **The wheel gets bigger.** It went from 478px to about 512px at 1270×700, because nothing runs under it any more. Later that night (w2a E9) the board's margin was trimmed and it reached 556px. In B it stays at 478px, because the strip still takes its height.
 - **The shop reads as one market.** The members and the follower buys sit in one column, at the same weight, and are lit the same way when you can buy. The follower buys lead the column because they're the four fixed offers you can always make (Cory: "too hidden"). The members are what you browse, so their grid takes whatever height is left and shrinks on a short screen; the follower buys are never cut. The deck is the first cell of the member grid (top left, card-sized). The cards grow toward the plate's portrait shape (88×122px, from 92×104px).
 - **The since-strip sits next to the rivals it describes**, at the size it needs, which is a few short lines. The turn card docks right under it in a fixed place, so the story runs top to bottom: older moves, then the turn happening now. It no longer floats.
 - **Alignment.** All three columns run from the top edge to the bottom edge, and the first seat, the prompt and the follower buys share the top line.
@@ -52,6 +52,14 @@ Old layout, for comparison: setup ![](before/setup.png) · round III ![](before/
 - At setup the starting-resource picker moves under the seats, where the since-strip will later be. That column is empty until the turns begin. The picker never covers the wheel or the members you're picking toward. The layout gate (l6) passes.
 
 ## Follow-up the same night
+- 07:00–07:45, from the two blind wave-2 testers (log.md w2a/w2b):
+  - The seat column starts level with the follower buys (y=28).
+  - Seat members are 32px, grouped by color, with "+N".
+  - Rivals show their emoji as the face.
+  - The board's margin went from 26 to 8 units, so the disc is 556px at 1270×700.
+  - The log opens as a drawer out of the left column.
+  - The shop row holds still within a round.
+  - Below 1200px the follower buys sit in the right column under the since-strip, so all ten members show in the strip.
 - 05:55: the follower buys moved to the top of the shop column (the foreman, relaying R3). At the foot of the column, lit tiles looked cut off: the column clipped their glow and shadow at its edge. The column no longer clips at this size, because its grid shrinks to fit. Checked at 1270×700 and 1270×620: `layout/final/buy.png`, `layout/final-620/buy.png`.
 
 ## Files

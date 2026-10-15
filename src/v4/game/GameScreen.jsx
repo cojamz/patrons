@@ -12,6 +12,8 @@ import CultSeatRaw from './CultSeat.jsx';
 const CultSeat = memo(CultSeatRaw, sameSeat);
 const NO_OPTS = new Map();
 const NO_FLASH = new Set();
+// ?trace=1 only: one record per table step, kept on the page for the perf harness (design/eval/perf/turn-wait.md)
+const tracePace = r => { if (typeof window === 'undefined') return null; (window.__patronsPace || (window.__patronsPace = [])).push(r); return r; };
 let userMove = false; // set while your own click is being submitted (useTable.show reads it)
 const NO_SLOTS = new Map();
 const NO_SEATS = [];
@@ -34,6 +36,7 @@ import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, s
 import { playChain, planChain, holdAfter, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed } from '../motion.js';
+import { PERF_ON } from '../perf.js';
 import { boardPicker, seatPart, shopLookup, pickCaption } from './boardPick.js';
 import { sameSeat } from './seatMemo.js';
 import { friendlyError, isNetworkError } from '../errors.js';
@@ -105,6 +108,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
   const dwellNext = useRef(0); // the hold the step being committed asks for (started once it's on screen)
   const remeasure = useRef(null); // how this step's hold follows from its chain's plan (retime: the measured plan)
   const timerAt = useRef(null);
+  const pace = useRef(null); // ?trace=1: this step's pacing record (perf.js summary().pace)
   const shownRef = useRef(first);
   const online = session.info?.mode === 'online';
   // read (and, if missing, written) once: as a plain useRef argument this ran on every render, re-saving the
@@ -173,6 +177,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       // the screen measures the real distances once this step is drawn: the pace follows that plan (retime below)
       remeasure.current = still ? null : dwellOf;
       if (typeof window !== 'undefined') window.__patronsDwellSum = (window.__patronsDwellSum || 0) + dwell; // (the pacing gate reads it)
+      if (PERF_ON) pace.current = tracePace({ moves: next.moves, actor: prev.pending ? prev.pending.player : null, kind: prev.pending ? prev.pending.kind : null, plan: plan.total, handoff: plan.handoff, dwell, handed: performance.now() });
       if (!queue.current.length) paced.current = false;
       // every step gets its own commit, even one that doesn't wait, so each chain plays from the step right before it
       // (the engine's effect stream is per step: two steps drawn in one render would lose the first one's)
@@ -189,8 +194,9 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     if (timer.current !== 'commit') return;
     const d = dwellNext.current;
     dwellNext.current = 0;
-    timer.current = setTimeout(() => { timer.current = null; pump(); }, d);
+    timer.current = setTimeout(() => { timer.current = null; if (pace.current) pace.current.fired = performance.now(); pump(); }, d);
     timerAt.current = { t0: performance.now(), d };
+    if (pace.current) pace.current.committed = timerAt.current.t0;
   }, [table.shown, pump]);
   // the director measured this step's chain on screen (real distances): hold the next step for that, not the estimate
   const retime = useCallback(played => {
@@ -200,8 +206,9 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     const d = f(played), left = d - (performance.now() - timerAt.current.t0);
     if (d <= timerAt.current.d) return; // never sooner than planned
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => { timer.current = null; pump(); }, Math.max(0, left));
+    timer.current = setTimeout(() => { timer.current = null; if (pace.current) pace.current.fired = performance.now(); pump(); }, Math.max(0, left));
     timerAt.current = { t0: timerAt.current.t0, d };
+    if (pace.current) pace.current.retimed = d;
   }, [pump]);
 
   // a skipped chain (a click, Space) lets the next step show at once
@@ -313,9 +320,16 @@ function TurnCard({ card, root, state }) {
     const dock = root && getComputedStyle(root).getPropertyValue('--turn-dock').trim();
     const since = dock === 'since' && root.querySelector('.lt > .lt-since');
     if (since && since.getBoundingClientRect().width) {
-      const b = since.getBoundingClientRect();
-      setPos({ left: b.left, right: undefined, top: b.bottom + 8, bottom: undefined, width: b.width, ox: '0%', oy: '0%' });
-      return;
+      const place = () => {
+        const b = since.getBoundingClientRect();
+        setPos(p => (p && p.top === b.bottom + 8 && p.left === b.left && p.width === b.width ? p
+          : { left: b.left, right: undefined, top: b.bottom + 8, bottom: undefined, width: b.width, ox: '0%', oy: '0%' }));
+      };
+      place();
+      // the story grows a line when a move lands while the card is up: the card keeps to its foot, never over it
+      const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(place) : null;
+      if (ro) ro.observe(since);
+      return () => { if (ro) ro.disconnect(); };
     }
     if (column && column.getBoundingClientRect().width) {
       const shop = root.querySelector('.lt > .lt-shop');
@@ -344,6 +358,8 @@ function TurnCard({ card, root, state }) {
   const [lift, setLift] = useState(0);
   useLayoutEffect(() => {
     setLift(0);
+    // the story above leaves the card exactly its own height (layout.css --turn-h), not a guess
+    if (root && box.current) root.style.setProperty('--turn-h', `${Math.ceil(box.current.offsetHeight) + 8}px`);
     const b = box.current && box.current.getBoundingClientRect();
     if (b && b.bottom > innerHeight - 8) setLift(Math.min(b.top - 8, b.bottom - (innerHeight - 8)));
   }, [pos, card.text]);

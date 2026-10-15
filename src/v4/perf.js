@@ -249,6 +249,8 @@ function summary() {
     online: { trips, received: stats(trips.map(t => t.received)), painted: stats(trips.map(t => t.painted)), hostApplied: stats(trips.map(t => t.hostApplied)), states: E.net.filter(n => n.ev === 'state').length },
     clicks: { count: E.clicks.length, eaten: eaten.length, eatenList: eaten.map(c => ({ kind: c.kind, option: c.option, at: r1(c.t) })) },
     marks: E.marks,
+    // the table's pacing, per step (GameScreen useTable): handed to React, committed, its hold (planned, retimed), fired
+    pace: (typeof window !== 'undefined' && window.__patronsPace) || [],
   };
 }
 

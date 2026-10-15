@@ -436,6 +436,8 @@ h1,h2,h3{font-family:var(--serif)}
   .lt > .lt-seat-0{grid-area:s0;margin:0 -12px -10px;padding:8px 12px 10px;background:color-mix(in srgb,var(--walnut-2) 96%,transparent);border-top:1px solid rgba(243,230,200,.1)}
   .lt .lt-wheel .stage{width:min(100% - 64px, 480px)}
   .lt > .lt-seat-1{grid-area:s1}.lt > .lt-seat-2{grid-area:s2}.lt > .lt-seat-3{grid-area:s3}
+  /* the strip and its turn card span the page (they fell into one 117px column: "SINCE YOU…") */
+  .app.game.lt > .lt-since,.app.game.lt > .turn-card{grid-column:1 / -1}
   .lt > .lt-seat:not(.lt-seat-0){min-width:0;overflow:hidden;font-size:12px}
 
 }
@@ -479,7 +481,9 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-reckon .reckon-head .reckon-verdict{font-family:var(--sans);font-size:18px;line-height:24px;min-height:24px;color:var(--paper-ink-3);font-weight:500;transition:color .25s}
 .lt-reckon .reckon-head .reckon-verdict.on{color:var(--paper-ink);font-weight:800;animation:rise .3s ease-out}
 .lt-reckon .reckon-head .reckon-verdict.none{color:var(--paper-ink-3);font-weight:500}
-.lt-reckon .reckon-dots{display:flex;gap:6px}
+/* "2 of 4" already says where the scoring is: the four dots after it were a second telling, in dots that aren't
+   resources (design pod, from the detail designer) */
+.lt-reckon .reckon-dots{display:none}
 .lt-reckon .reckon-dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--c);opacity:.6}
 .lt-reckon .reckon-dots i.done{background:var(--c);opacity:.55}
 .lt-reckon .reckon-dots i.on{background:var(--c);opacity:1;box-shadow:0 0 8px var(--c)}

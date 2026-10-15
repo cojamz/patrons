@@ -107,29 +107,29 @@ const TABLE = {
   //            quick  steady  relaxed
   ownStamp:    [100,   140,    180],  // your minion stands in the door at once, then settles
   trail:       [140,   180,    240],  // your minion's trail from the column
-  minionFly:   [220,   340,    520],  // a rival's minion flight
-  readHold:    [60,    130,    280],  // after a rival places: which space, before anything flies
+  minionFly:   [220,   280,    520],  // a rival's minion flight
+  readHold:    [60,    90,     280],  // after a rival places: which space, before anything flies
   pulse:       [50,    90,     140],  // a source about to give
   hop:         [120,   180,    260],  // a member acts
-  lead:        [40,    80,     120],  // hop or pulse → first piece leaves
+  lead:        [40,    60,     120],  // hop or pulse → first piece leaves
   tug:         [60,    90,     140],  // a stack being taken from
-  pieceStagger:[35,    60,     90],
+  pieceStagger:[35,    50,     90],
   bundleTrail: [20,    30,     45],
   fan:         [25,    40,     60],   // groups, colors, seats in one beat
   settle:      [140,   180,    240],
   roll:        [160,   240,    360],  // a bundle's number rolling on landing
-  cardLift:    [80,    120,    160],
+  cardLift:    [80,    100,    160],
   rivalBuyHold:[0,     0,      160],  // a rival's buy: the card stays lifted while its coins fly in (the telegraph)
-  passHold:    [150,   300,    500],  // a turn-ending pass with nothing to show
-  cardFly:     [260,   380,    560],
+  passHold:    [120,   150,    500],  // a turn-ending pass with nothing to show
+  cardFly:     [260,   340,    560],
   ring:        [200,   260,    340],
-  worthHop:    [180,   240,    340],  // a new member's worth, chip → follower count
+  worthHop:    [180,   200,    340],  // a new member's worth, chip → follower count
   accept:      [100,   160,    240],  // a rate or space's press-pop in an exchange
   swap:        [280,   420,    620],
   shopSlide:   [180,   240,    320],
   deal:        [220,   300,    420],
   dealStagger: [30,    40,     60],
-  breath:      [60,    120,    300],  // between one player's turn and the next
+  breath:      [60,    70,     300],  // between one player's turn and the next
   minionsHome: [260,   340,    480],
   minionsHomeStagger: [20, 30,   45],
   incomeSeat:  [120,   200,    320],

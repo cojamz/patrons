@@ -32,7 +32,8 @@ const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try
  */
 export default function CultSeat({ state, pid, me = null, mine = false, now = false, react: given = null, hover = null, optionFor = () => null, onPick = () => {}, pick = null }) {
   const p = state.players[pid];
-  const own = useCultReactions(state, pid);
+  const rootEl = useRef(null);
+  const own = useCultReactions(state, pid, rootEl);
   const react = given || own;
   const f = followers(state, p);
   // grouped by color (the approved plate: "the color mix is their lean"), table order, colorless last
@@ -79,7 +80,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const onRail = e => !!(e.target && e.target.closest && e.target.closest('.cs-order'));
   const railIn = useRef(false);
   return (
-    <section className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
+    <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
       aria-label={`${mine ? 'Your cult' : `${p.name}'s cult`}: ${f} follower${f === 1 ? '' : 's'}, ${p.members.length} member${p.members.length === 1 ? '' : 's'}, ${p.left} minion${p.left === 1 ? '' : 's'} to place${now ? ', their turn' : ''}`}>
       <header className="cs-head" role="button" tabIndex={0} aria-haspopup="dialog" data-hint={`${p.name}: ${f} follower${f === 1 ? '' : 's'}. Show their cult.`}
         onPointerEnter={e => { railIn.current = onRail(e); if (realHover(e) && !railIn.current) openSeat(e, false); }}
@@ -189,21 +190,40 @@ const REACT_MS = MO.react; // src/v4/motion.js
  * ("Ana's Banker: +3 gold.", "Bo +1 silver (Ana's Retinue)."), the leader gestures when one of its minions is placed,
  * celebrates when it wins a round-end prize, and schemes when it recruits. { leader, members:{ defId: n } } or null.
  */
-export function useCultReactions(state, pid) {
+export function useCultReactions(state, pid, rootRef = null) {
   const prev = useRef(state);
   const [react, setReact] = useState(null);
   const timer = useRef(null);
-  useEffect(() => () => clearTimeout(timer.current), []);
+  const lit = useRef([]); // [el, class] the reaction put on the chair (DOM path)
+  const unlight = () => { for (const [el, c] of lit.current) { el.classList.remove(c); if (c === 'react-hop' && el.dataset.reactDom) { delete el.dataset.reactDom; delete el.dataset.react; } } lit.current = []; };
+  useEffect(() => () => { clearTimeout(timer.current); unlight(); }, []);
   useEffect(() => {
     const before = prev.current;
     prev.current = state;
     if (before === state || !before || before.seed !== state.seed) return;
     const out = reactionsBetween(before, state, pid);
     if (!out) return;
-    setReact(r => ({ leader: out.leader || (r && r.leader) || null, members: { ...(r && r.members), ...out.members }, n: Date.now() }));
+    const root = rootRef && rootRef.current;
     clearTimeout(timer.current);
+    if (root) {
+      // on the chair's own elements, never through React state (perf, 2026-10-15: a reaction cost the chair two renders
+      // mid-chain, on and off)
+      // (a class React already drew stays React's: only what this adds is taken off again)
+      if (out.leader) { const l = root.querySelector('.cs-leader'), c = `react-${out.leader}`; if (l && !l.classList.contains(c)) { l.classList.add(c); lit.current.push([l, c]); } }
+      for (const id of Object.keys(out.members)) {
+        for (const m of root.querySelectorAll('.cs-member')) {
+          if (m.dataset.member !== id || m.classList.contains('react-hop')) continue;
+          m.classList.add('react-hop');
+          if (!m.dataset.react) { m.dataset.react = String(out.members[id]); m.dataset.reactDom = '1'; }
+          lit.current.push([m, 'react-hop']);
+        }
+      }
+      timer.current = setTimeout(unlight, REACT_MS);
+      return;
+    }
+    setReact(r => ({ leader: out.leader || (r && r.leader) || null, members: { ...(r && r.members), ...out.members }, n: Date.now() }));
     timer.current = setTimeout(() => setReact(null), REACT_MS);
-  }, [state, pid]);
+  }, [state, pid]); // eslint-disable-line react-hooks/exhaustive-deps
   return react;
 }
 const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

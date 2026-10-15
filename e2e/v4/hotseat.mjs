@@ -175,10 +175,12 @@ try {
           if (!y || !y.textContent.trim() && !y.querySelector('.pip')) bad.push(`${sl.dataset.slot}: no effect printed`);
           else if (fs < 11) bad.push(`${sl.dataset.slot}: effect at ${fs}px`);
         }
-        return { vp, regions, phase, round, bad };
+        // how the column stood: each chair's --y, its transform, height and fractional top, and the column's height
+        const column = [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].map(e => `${e.dataset.region} y${e.style.getPropertyValue('--y')} t${new DOMMatrixReadOnly(getComputedStyle(e).transform).m42} h${e.getBoundingClientRect().height.toFixed(1)} top${e.getBoundingClientRect().top.toFixed(1)}`).join(', ') + ` | column ${document.querySelector('.lt > .lt-snake')?.getBoundingClientRect().height.toFixed(1)}`;
+        return { vp, regions, phase, round, bad, column };
       });
       if (r.vp === '1270x700' && r.phase && !['over', 'reckon'].includes(r.phase)) {
-        if (!regionBoxes) regionBoxes = { ...r.regions, phase: r.phase, round: r.round };
+        if (!regionBoxes) regionBoxes = { ...r.regions, phase: r.phase, round: r.round, column: r.column };
         // the chairs stand in the round's turn order (Cory, 2026-10-15: "position IS order"): a new round may re-sort
         // them, so their boxes are re-read at each round start; within a round, and for every other region, never
         if (r.round !== regionBoxes.round) {
@@ -193,8 +195,9 @@ try {
           const now = await page.evaluate(() => Object.fromEntries(['seat-0', 'seat-1', 'seat-2', 'seat-3'].map(k => { const e = document.querySelector(`.lt [data-region="${k}"]`); if (!e) return [k, null]; const b = e.getBoundingClientRect(); return [k, [b.left, b.top, b.width, b.height].map(Math.round).join(',')]; })));
           for (const k of Object.keys(now)) { regionBoxes[k] = now[k]; r.regions[k] = now[k]; }
           regionBoxes.round = r.round;
+          regionBoxes.column = await page.evaluate(() => [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].map(e => `${e.dataset.region} y${e.style.getPropertyValue('--y')} t${new DOMMatrixReadOnly(getComputedStyle(e).transform).m42} h${e.getBoundingClientRect().height.toFixed(1)} top${e.getBoundingClientRect().top.toFixed(1)}`).join(', ') + ` | column ${document.querySelector('.lt > .lt-snake')?.getBoundingClientRect().height.toFixed(1)}`);
         }
-        for (const k of Object.keys(r.regions)) if (r.regions[k] !== regionBoxes[k]) { const m = `the ${k} region moved between ${regionBoxes.phase} and ${r.phase} (${regionBoxes[k]} -> ${r.regions[k]})`; if (!errors.includes(m)) { errors.push(m); await shot('zz-region-moved'); } }
+        for (const k of Object.keys(r.regions)) if (r.regions[k] !== regionBoxes[k]) { const m = `the ${k} region moved between ${regionBoxes.phase} and ${r.phase} (${regionBoxes[k]} -> ${r.regions[k]})${/^seat/.test(k) ? ` [was ${regionBoxes.column}; now ${r.column}]` : ''}`; if (!errors.includes(m)) { errors.push(m); await shot('zz-region-moved'); } }
         phasesSeen.add(r.phase);
       }
       for (const b of r.bad) { const m = `space not readable without hover: ${b}`; if (!errors.includes(m)) errors.push(m); }

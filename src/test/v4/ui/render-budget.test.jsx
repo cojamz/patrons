@@ -96,13 +96,15 @@ describe('render budget', () => {
   it('a rival\'s step re-renders only the chairs whose view changed', async () => {
     let state = advanceTo(createGame({ seats: SEATS, seed: 33 }), 'place', 1); // Bo is about to place
     const session = drivenSession(state, [0]);
-    render(<GameScreen session={session} pace={0} />);
+    const { container } = render(<GameScreen session={session} pace={0} />);
     await settle();
     const perStep = [];
     for (let k = 0; k < 6 && state.pending && state.pending.player !== 0; k++) {
       const next = applyMove(state, chooseBotMove(state, () => 0.3));
       R.reset();
       act(() => { session.publish(next); });
+      // the table holds each step for its chain (director.js): wait until it shows this one, then a beat more
+      for (let w = 0; w < 200 && container.querySelector('.lt').getAttribute('data-moves') !== String(next.moves); w++) await act(() => new Promise(r => setTimeout(r, 10)));
       await settle(3);
       perStep.push({ kind: state.pending.kind, actor: state.pending.player, turnEnds: !(next.pending && next.pending.player === state.pending.player), CultSeat: R.n('CultSeat'), GameScreen: R.n('GameScreen'), ShopCards: R.n('ShopCards'), components: R.total() });
       state = next;
@@ -193,12 +195,16 @@ describe('render budget', () => {
   });
 
   it('a number counting renders at its start and end, never once per frame (the frames write the text node)', async () => {
+    // frames on a timer (jsdom's own don't run the count here)
+    const raf0 = globalThis.requestAnimationFrame, caf0 = globalThis.cancelAnimationFrame;
+    globalThis.requestAnimationFrame = cb => setTimeout(() => cb(performance.now()), 16);
+    globalThis.cancelAnimationFrame = id => clearTimeout(id);
     const { container, rerender } = render(<Tick value={3} float={false} />);
     await settle(2);
     R.reset();
     const seen = new Set();
     act(() => { rerender(<Tick value={15} float={false} />); });
-    for (let k = 0; k < 50; k++) { await act(() => new Promise(r => setTimeout(r, 16))); seen.add(container.querySelector('.tv').textContent); }
+    try { for (let k = 0; k < 50; k++) { await act(() => new Promise(r => setTimeout(r, 20))); seen.add(container.querySelector('.tv').textContent); } } finally { globalThis.requestAnimationFrame = raf0; globalThis.cancelAnimationFrame = caf0; }
     const report = { Tick: R.n('Tick'), commits: R.commits, values: seen.size };
     console.log('[render-budget] one count 3 → 15:', JSON.stringify(report));
     expect(container.querySelector('.tv').textContent).toBe('15');

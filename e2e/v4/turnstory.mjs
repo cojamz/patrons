@@ -1,6 +1,7 @@
 // E2E: "what just happened" at 1270×700 (RC1 panel items 1–4). A resumed hot-seat game where P1 (the only person)
 // ends round I's first pass, so the snake turns round on P1, and P1 holds Midas (on).
-//  (t1) the order chips count the snake's double: P1 reads "now twice" and no other seat reads NEXT;
+//  (t1) the order chips count the snake's double: P1 reads "now twice" and no other seat reads NEXT (its explanation
+//       is its hover card's label now, not a native title);
 //  (t2) the "since your last turn" strip lists the rivals' moves (one line per placement, each naming its player),
 //       sits in the open, clear of the wheel and the shop, and a line opens that placement's card on hover;
 //  (t3) after a placement, the turn card names the space actually taken (the engine's log is the truth);
@@ -63,7 +64,7 @@ try {
     const r = sel => { const e = document.querySelector(sel); if (!e) return null; const b = e.getBoundingClientRect(); return { x: b.left, y: b.top, r: b.right, b: b.bottom }; };
     return {
       prompt: document.querySelector('[data-prompt]')?.innerText || '',
-      chips: Object.fromEntries([...document.querySelectorAll('.lt > .lt-seat')].filter(s => s.dataset.pid != null).map(s => { const c = s.querySelector('.cs-order'); return [s.dataset.pid, c ? { order: c.dataset.order, twice: c.dataset.twice === '1', text: c.textContent, title: c.title } : null]; })),
+      chips: Object.fromEntries([...document.querySelectorAll('.lt > .lt-seat')].filter(s => s.dataset.pid != null).map(s => { const c = s.querySelector('.cs-order'); return [s.dataset.pid, c ? { order: c.dataset.order, twice: c.dataset.twice === '1', text: c.textContent, title: c.title || c.getAttribute('aria-label') || '' } : null]; })),
       card: document.querySelector('.turn-card')?.dataset.turnStory || null,
       cardBox: r('.turn-card'),
       strip: [...document.querySelectorAll('[data-since] [data-since-line]')].map(e => e.textContent),

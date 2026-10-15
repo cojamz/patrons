@@ -146,6 +146,16 @@ for (const st of want) {
       await page.waitForSelector('.lt[data-phase="reckon"]', { timeout: 30000 });
       if (st === 'reckon') { await settle(2600); await shot('reckon'); }
       else { await page.waitForSelector('.dialog.roundend', { timeout: 40000 }).catch(() => {}); await settle(800); await shot('summary'); }
+    } else if (st === 'overlap') {
+      // the turn card never covers the story of the turns, through a run of rivals' turns (sampled every 150ms)
+      await load(SAVES.place2()); await placeAndAnswer(); await passBuy();
+      let worst = 0, n = 0;
+      for (let k = 0; k < 60; k++) {
+        await page.waitForTimeout(150);
+        const o = await page.evaluate(() => { const c = document.querySelector('.turn-card'), s = document.querySelector('.lt > .lt-since'); if (!c || !s) return null; const a = c.getBoundingClientRect(), b = s.getBoundingClientRect(); return Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)) * (Math.min(a.right, b.right) > Math.max(a.left, b.left) ? 1 : 0); });
+        if (o != null) { n++; if (o > worst) { worst = o; await shot('overlap'); } }
+      }
+      console.log(`overlap: ${n} samples with a turn card, worst overlap ${Math.round(worst)}px`);
     } else if (st === 'buy3') {
       await load(SAVES.place3()); await placeAndAnswer(); await park(); await settle(500); await shot('buy3');
     } else if (st === 'round3') {
