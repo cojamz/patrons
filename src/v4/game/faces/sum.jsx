@@ -18,7 +18,8 @@
 //   =        worked out from    ⇄    swap                ⧉   copy a space
 //   ↻        an extra turn      ⛨    no one steals from you
 //   tag      a buy, with its price written on it: −4, ½, free. A blank tag is one buy.
-//   ▮▮▮      grows each round (this round's step filled)
+//   A yield that grows by round shows this round's number (+2 / +4 / +6 gold reads +4● in round II); the hover
+//   card gives the whole ladder.
 //   all · any · or   the only words
 //
 // STATES  lit: full ink, a lamp edge round the icon · open: full ink · taken: 40%, the minion standing on the icon ·
@@ -47,7 +48,7 @@ const TAGT = (t = '') => ({ k: 'tag', t });
 const X = n => ({ k: 'x', t: `×${n}` });
 const AGAIN = (n = '') => ({ k: 'again', n: String(n) });
 const PER = { k: 'per' }, ARROW = { k: 'arrow' }, EQ = { k: 'eq' }, SWAP = { k: 'swap' }, COPY = { k: 'copy' }, SAFE = { k: 'safe' };
-const DOT = { k: 'dot' }, CUT = { k: 'cut' }, GROWS = { k: 'grows', opt: true };
+const DOT = { k: 'dot' }, CUT = { k: 'cut' };
 const plus = v => `+${v}`;
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -57,7 +58,7 @@ const plus = v => `+${v}`;
 const SUMS = {
   // gold: coins
   'gold.jv': ({ n }) => [R('gold', plus(n(0, 3))), DOT, HOOD(), R('gold', plus(n(1, 1)))], //   +3● · ☗+1●   (a gift to a player you pick)
-  'gold.rush': ({ n, r }) => [R('gold', plus(n(0, 2) * r))], //                            +4● ▮▮▯
+  'gold.rush': ({ n, r }) => [R('gold', plus(n(0, 2) * r))], //                            +4●
   'gold.discount': ({ n }) => [TAGT(`−${n(0, 4)}`), MEM()], //                                    [−4] ▢        (your next member)
   'gold.steal': ({ n }) => [HOOD(), ARROW, R('gold', n(0, 3))], //                                ☗ → 3●        (split as you like)
   'gold.windfall': ({ n }) => [R('gold', plus(n(0, 1))), PER, MEM()], //                          +1● / ▢
@@ -72,14 +73,14 @@ const SUMS = {
   'red.trade': () => [MEM(), SWAP, MEM({ rival: true })], //                                       ▢ ⇄ ☗▢        (up to +2 cost: hover)
   'red.take': () => [MEM(), TAGT('free')], //                                                      ▢ [free]      (any face-up member)
   // purple: tempo
-  'purple.hourly': ({ n, r }) => [R('purple', plus(n(r - 1, 3 + r)))], //                   +5⧗ ▮▮▯
+  'purple.hourly': ({ n, r }) => [R('purple', plus(n(r - 1, 3 + r)))], //                   +5⧗
   'purple.catchup': ({ n }) => [R('purple', plus(n(0, 1))), NUM(plus(n(1, 2))), PER, HOOD({ mod: 'high' })], // +1⧗ +2/▴☗
   'purple.windup': ({ n }) => [R('purple', plus(n(0, 1))), PER, MIN()], //                         +1⧗ / ♟       (on the board)
   'purple.planahead': ({ n }) => [R('purple', plus(n(0, 2))), PER, MIN({ left: true })], //         +2⧗ / ♙       (still to place)
   'purple.overtime': ({ n }) => [R('purple', n(0, 8)), ARROW, AGAIN(n(1, 2))], //                   8⧗ → 2↻      (else +3⧗: hover)
   'purple.rally': () => [WORD('all'), R('purple'), ARROW, AGAIN(), PER, R('purple', 4)], //        all⧗ → ↻/4⧗  (+1, cap: hover)
   // silver: generous gains that spill on everyone
-  'silver.toast': ({ n, r }) => [R('silver', plus(n(0, 3) * r)), GROWS, DOT, HOOD({ all: true }), R('silver', '+1')], // +6🔔 · ☗☗+1🔔
+  'silver.toast': ({ n, r }) => [R('silver', plus(n(0, 3) * r)), DOT, HOOD({ all: true }), R('silver', '+1')], // +6🔔 · ☗☗+1🔔
   'silver.gift': () => [R('silver', '+2'), R('any', '+2'), CUT, DOT, HOOD({ all: true }), R('any', '+1')], //  +2🔔 +2◌ · ☗☗+1◌
   'silver.alms': ({ n }) => [R('silver', plus(n(0, 4))), DOT, HOOD(), R('any', plus(n(1, 2)))], //   +4🔔 · ☗+2◌
   'silver.tongue': ({ n }) => [R('silver', plus(n(0, 4))), DOT, R('silver'), SWAP, R('any'), CUT, DOT, HOOD({ all: true }), R('silver', '+1')],
@@ -102,7 +103,7 @@ const SUMS = {
   'market.pricecheck': () => [R('blue', '+'), EQ, NUM('½'), MEM({ mod: 'high' })], //              +■ = ½▴▢
   'market.spree': ({ n }) => [TAGT(), X(n(0, 3))], //                                              [ ] ×3
   // thieves (magenta): take
-  'thieves.pickpocket': ({ r }) => [HOOD(), ARROW, R('magenta', r + 1)], //                 ☗ → 3◆ ▮▮▯
+  'thieves.pickpocket': ({ r }) => [HOOD(), ARROW, R('magenta', r + 1)], //                 ☗ → 3◆
   'thieves.tipoff': () => [R('magenta', '+1'), PER, HOOD({ mod: 'high' })], //                     +1◆ / ▴☗      (each richer player)
   'thieves.hideout': () => [HOOD(), ARROW, R('magenta', 1), DOT, SAFE], //                         ☗ → 1◆ · ⛨
   'thieves.rob': ({ n }) => [HOOD({ all: true }), ARROW, R('magenta', n(0, 3))], //                ☗☗ → 3◆      (at least 1 from each)
@@ -117,7 +118,7 @@ const SUMS = {
   'trading.boom': () => [WORD('all'), R('any'), ARROW, FOL()], //                                  all◌ → ☺      (keep white if you like)
   // echo (green): copies
   'echo.hum': ({ n }) => [R('green', plus(n(0, 3)))], //                                           +3🍃
-  'echo.chant': ({ n, r }) => [R('green', plus(n(0, 2) * r))], //                           +4🍃 ▮▮▯
+  'echo.chant': ({ n, r }) => [R('green', plus(n(0, 2) * r))], //                           +4🍃
   'echo.echo': () => [COPY, HOOD()], //                                                            ⧉☗            (since your last turn)
   'echo.encore': () => [COPY, WORD('any')], //                                                     ⧉ any         (this round)
   'echo.refrain': ({ n }) => [R('green', plus(n(0, 2))), DOT, COPY, MIN()], //                     +2🍃 · ⧉♟
@@ -275,15 +276,6 @@ function Safe({ x, U }) {
     </g>
   );
 }
-function Grows({ x, U, r }) {
-  const w = U * 0.17, g = U * 0.07;
-  return (
-    <g>{[0.38, 0.66, 0.94].map((h, i) => (
-      <rect key={i} x={x + i * (w + g)} y={U * 0.47 - U * h} width={w} height={U * h} rx={U * 0.03}
-        fill={i < r ? INK2 : 'none'} stroke={INK2} strokeWidth={U * 0.06} opacity={i < r ? 1 : 0.7} />
-    ))}</g>
-  );
-}
 function Tag({ x, U, F, t }) {
   const h = Math.max(U * 1.12, F * 1.22), notch = h * 0.42, w = t ? notch + textW(t, F) + F * 0.42 : h * 1.15;
   return (
@@ -315,7 +307,6 @@ function widthOf(t, U, F) {
     case 'copy': return U * 1.0;
     case 'again': return num(t.n) + U * 0.98;
     case 'safe': return U * 0.84;
-    case 'grows': return U * 0.66;
     case 'dot': return U * 0.36;
     case 'tag': { const h = Math.max(U * 1.12, F * 1.22); return t.t ? h * 0.42 + textW(t.t, F) + F * 0.42 : h * 1.15; }
     default: return 0;
@@ -368,7 +359,6 @@ function drawTerm(t, x, U, F, r, key) {
     case 'copy': return <Copy key={key} x={x} U={U} />;
     case 'again': return <g key={key}>{num(t.n, x)}<Again x={x + nw(t.n)} U={U} /></g>;
     case 'safe': return <Safe key={key} x={x} U={U} />;
-    case 'grows': return <Grows key={key} x={x} U={U} r={r} />;
     case 'dot': return <circle key={key} cx={x + U * 0.18} cy={0} r={U * 0.08} fill={INK2} />;
     case 'tag': return <Tag key={key} x={x} U={U} F={F} t={t.t} />;
     default: return null;
