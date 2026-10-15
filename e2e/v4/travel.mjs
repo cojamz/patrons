@@ -7,6 +7,8 @@
 //  (t4) a member taken (Poach): the member flies from the rival's seat to its new chip in yours;
 //  (t5) a ransom paid: from your seat to the rival's stack;
 //  (t6) a member's Use: from the member to your stack.
+// Since the action stage (decisions 2026-10-15 20:30) a path may relay through the wheel's hub: the member steps off
+// its seat (or the piece flies) to the stage, and what it gives flies on from there; both legs are checked.
 // Every flight ghost is recorded as it's added to the page (a MutationObserver, so a loaded box that paints rarely can't
 // hide one), with where it starts and where its path ends. Saves: e2e/v4/lib/travel-save.mjs.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5430.
@@ -50,9 +52,26 @@ const INSTRUMENT = () => {
     }
     return { cls: el.className, t: performance.now() - t0, x0, y0, x1: x0 + dx, y1: y0 + dy };
   };
+  // a card or member stepping onto the action stage (ActionStage.jsx): it rests at its own left/top and flies in from
+  // its first keyframe's translate (the place on the board it left), so that's where its path starts
+  const readStage = el => {
+    const r = el.getBoundingClientRect();
+    const x1 = el.offsetLeft + el.offsetWidth / 2, y1 = el.offsetTop + el.offsetHeight / 2;
+    let dx = 0, dy = 0;
+    for (const a of el.getAnimations()) {
+      const ks = a.effect && a.effect.getKeyframes ? a.effect.getKeyframes() : [];
+      const m = ks.length && /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(ks[0].transform || '');
+      if (m) { dx = Number(m[1]); dy = Number(m[2]); break; }
+    }
+    return { cls: 'stage ' + el.dataset.stage, t: performance.now() - t0, x0: x1 + dx, y0: y1 + dy, x1, y1, w: r.width };
+  };
   new MutationObserver(list => {
-    for (const m of list) for (const el of m.addedNodes) if (el.nodeType === 1 && el.classList.contains('ghost-layer') && /piece-flight|card-flight/.test(el.className)) window.__fl.push(read(el));
-  }).observe(document.body, { childList: true });
+    for (const m of list) for (const el of m.addedNodes) {
+      if (el.nodeType !== 1) continue;
+      if (el.classList.contains('ghost-layer') && /piece-flight|card-flight/.test(el.className)) window.__fl.push(read(el));
+      for (const s of el.matches('[data-stage]') ? [el] : el.querySelectorAll('[data-stage]')) window.__fl.push(readStage(s));
+    }
+  }).observe(document.body, { childList: true, subtree: true });
   window.__t = () => performance.now() - t0;
 };
 
@@ -132,7 +151,12 @@ async function check(kind, label) {
     await page.screenshot({ path: `${SHOTS}/${label}.png` });
     if (landedAt == null) { errors.push(`(${label}) the move didn't land on screen within 12s (${to.kind}${to.r ? ' ' + to.r : ''}, want ${want ?? 'the chip'}, shows ${await page.evaluate(numAt, to)})`); return; }
     const toBox = to.kind === 'member' ? toR : toR;
-    const ok = fl.filter(f => near(f.x0, f.y0, fromR) && near(f.x1, f.y1, toBox) && f.t <= landedAt + 5);
+    // straight from the source to the destination, or relayed through the action stage (Cory, 2026-10-15; decisions
+    // 2026-10-15 20:30): one leg leaves the source for the hub, a later leg leaves the hub where it landed for the
+    // destination, and that last leg is in the air before the destination's number changes
+    const meet = (a, b) => Math.hypot(a.x1 - b.x0, a.y1 - b.y0) <= 48;
+    const ok = fl.filter(f => near(f.x1, f.y1, toBox) && f.t <= landedAt + 5 &&
+      (near(f.x0, f.y0, fromR) || fl.some(a => a !== f && near(a.x0, a.y0, fromR) && !near(a.x0, a.y0, toBox, 0) && a.t <= f.t + 5 && meet(a, f))));
     console.log(`${label}: ${fl.length} flight(s) after the click, ${ok.length} from the source to the destination; landed ${Math.round(landedAt - clickAt)}ms after the click`);
     if (!fl.length) errors.push(`(${label}) nothing flew: the ${to.kind === 'member' ? 'member' : 'number'} changed with no flight in the air`);
     else if (!ok.length) errors.push(`(${label}) no flight went from ${from.kind} to ${to.kind} (flights: ${fl.map(f => `${f.cls.split(' ')[1] || f.cls} ${Math.round(f.x0)},${Math.round(f.y0)}→${Math.round(f.x1)},${Math.round(f.y1)} at ${Math.round(f.t - clickAt)}ms`).join('; ')}; source ${JSON.stringify(fromR)}, destination ${JSON.stringify(toBox)})`);

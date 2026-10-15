@@ -1,7 +1,7 @@
 // E2E: the end-game scoring on the results' cults, at 1270×700 (Cory, 2026-10-15; taste rule 11: "points arrive where
 // they come from: followers on their own, then a +x over each member's head for its people, then pop-ups for the
 // followers it grants. Never a total that just appears."). From a saved game at P1's last placement of round III
-// (lib/late-save.mjs: seed 21 ends with Mob and Tycoon bonuses), played to the results:
+// (lib/late-save.mjs, seed 21, with Mob and Tycoon handed to P1 so the end-game bonuses never hang on the cull's deal), played to the results:
 //  (s1) every seat's total starts below its final count and counts up (never the total at once);
 //  (s2) a "+x" pops over each member figure of every seat with members, after the leader's followers and before
 //       what members grant;
@@ -17,6 +17,22 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { lateSave } from './lib/late-save.mjs';
 import { seedSave } from './lib/seed.mjs';
+import { freeCard } from './lib/deal.mjs';
+
+/** Seed 21 at P1's last placement of round III, with Mob (+1 per red member; P1 holds two more) and Tycoon (+1 per 2
+ *  gold; P1 gets 10) in P1's cult, minted if the cull leaves them out of the deck (lib/deal.mjs). */
+function scoringSave() {
+  const save = lateSave(21, 3);
+  const s = save.state;
+  for (const def of ['red.mob', 'gold.tycoon']) {
+    const uid = freeCard(s, def);
+    s.shop = s.shop.filter(u => u !== uid); s.pile = s.pile.filter(u => u !== uid);
+    s.players[0].members.push(uid); s.cards[uid].recruitedRound = 0; s.cards[uid].recruitedBy = 0;
+  }
+  while (s.shop.length < 10 && s.pile.length) s.shop.push(s.pile.shift()); // a shop copy taken is refilled
+  s.players[0].res.gold = 10;
+  return save;
+}
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/scoring';
 mkdirSync(SHOTS, { recursive: true });
@@ -69,7 +85,7 @@ async function toResults() {
   page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
   page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
   await page.addInitScript(WATCH);
-  await seedSave(page, lateSave(21, 3));
+  await seedSave(page, scoringSave());
   // Steady, the default speed (botDelay alone would make it Quick)
   await page.goto(`${base}/?botDelay=20&intro=0&speed=steady`);
   await page.click('[data-home="resume"]');
@@ -133,7 +149,7 @@ try {
     if (sum !== f.table || f.seat !== f.table || f.final !== f.table) errors.push(`(s4) P${+pid + 1}: pops add to ${sum}, table ${f.table}, seat ${f.seat}, engine ${f.final}`);
   }
   const granted = fs.pops.filter(p => p.beat === 'grants').length;
-  if (!granted) errors.push('(s3) no member popped an end-game bonus (seed 21 ends with Mob and Tycoon)');
+  if (!granted) errors.push('(s3) no member popped an end-game bonus (P1 ends holding Mob and Tycoon)');
   // (s5) Play again stood ready all along
   if (fs.pops.some(p => !p.canPlay)) errors.push('(s5) Play again was missing or disabled during the scoring');
   console.log(`scoring: ${fs.pops.length} pops (${fs.pops.filter(p => p.beat === 'members').length} members, ${granted} end-game) in ${took}ms; totals ${Object.entries(end).map(([pid, f]) => `P${+pid + 1} ${f.table}`).join(', ')}`);

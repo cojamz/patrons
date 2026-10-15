@@ -17,6 +17,7 @@ import { createGame, applyMove, chooseBotMove } from '../../src/engine/v4/index.
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { buildStamp } from './lib/stamp.mjs';
 import { seedSave } from './lib/seed.mjs';
+import { freeCard } from './lib/deal.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/benders';
 mkdirSync(SHOTS, { recursive: true });
@@ -44,8 +45,7 @@ function benderSave(seed) {
   }
   if (!(s.round === 1 && s.pending && s.pending.player === 0 && s.pending.kind === 'place' && Object.keys(s.slots).length)) return null;
   const take = def => {
-    const uid = Object.values(s.cards).find(c => c.def === def && !s.players.some(p => p.members.includes(c.uid)))?.uid;
-    if (uid == null) return false;
+    const uid = freeCard(s, def); // a member the cull leaves out of the deck (Insider) is minted (lib/deal.mjs)
     s.pile = s.pile.filter(u => u !== uid);
     if (s.shop.includes(uid)) return false; // keep the shop at 6: only take cards still in the pile
     s.players[0].members.push(uid);
