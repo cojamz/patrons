@@ -68,3 +68,15 @@ Four objects, each in open / lit / taken / locked, with the same effects in each
 - **D · Banner.** It reads as a flag rather than a place. The minion stands outside the object, so "taken" is weak and "locked" has nothing to shut.
 
 **Pick: B, the doorway.** It's the only candidate whose four states need no extra mark, and "send a minion through a door" is what placing is.
+
+## Plate 2 renders (renders/p2-v*-plate.png)
+- p2-v1: the `.door svg` rule also caught the glyphs and minion sprites, so the dots fell out of the text and the minions dropped below their doors. The lit door's light spill was a pale trapezoid that read as a shadow.
+- p2-v2: selector scoped to `.door > svg`, the minion's feet anchored to the door's sill, spill removed. The ring numerals floated on the wedge's edge with no baseline.
+- p2-v3: numerals moved beside each ring's last door, on its baseline. A rule I inserted split the shared `.door .big, .door .fine` selector and threw every big line out of its arch. Caught on the render.
+- p2-v4 (final): selector restored. The member hover is anchored at its bottom (it had a fixed-height empty band). At 2×, "+1● / ▯" keeps 16px or more to the arch wall.
+
+## Blind check, plate 2 (read as a stranger with only the rulebook)
+**Does a place read as "a place you send a minion"?** Yes. Two doors have minions standing in them, one door glows, and one is shut and marked III. The doorway shares no shape with the coin or the member card.
+**Can a newcomer say what each place does at a glance?** Yes for all six, with no names on them: +4● (2·4·6 by round), +3● from rivals, +1● per member, a member −4 off your next one, +3● with a rival getting 1●, and ×2● later. The hover carries the name and the plain sentence.
+**Anything cramped or off?** Effects are 36px with 24px or more between doors; nothing touches. Nits: the wedge's left edge is cropped by the screen while the right edge ends cleanly; the gap between the seat and the hover (30px) differs from the gap between the hover and the cards (20px); the rim band is still a flat fill.
+**Shipped game?** The doors, cards and seat would pass. The wedge's flat brown ground and plain rim still need the material pass.
