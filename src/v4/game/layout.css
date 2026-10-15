@@ -94,3 +94,7 @@
   .lt-drawer-back{background:rgba(10,7,5,.22)}
   .lt-drawer{left:0;right:auto;width:min(var(--col-l, 340px), 100vw);border-radius:0 12px 12px 0;box-shadow:12px 0 32px rgba(0,0,0,.45)}
 }
+
+/* the wheel turns (w2a #42): its knurled edge (Wheel.jsx), and a hand that grabs it */
+.lt .stage svg.wheel-paper .knurl circle{stroke:var(--cream,#f2e8d2);stroke-opacity:.22;stroke-width:4;stroke-dasharray:1.2 3.2}
+@media (pointer:fine){ .lt .lt-wheel .stage{cursor:grab} .lt .lt-wheel .stage:active{cursor:grabbing} }

@@ -78,9 +78,15 @@ describe('card names open the card everywhere', () => {
     const d = cardDef(s, held);
     s.pending = { player: 0, kind: 'choose', prompt: 'Shake Down: which member?', options: [{ id: `card:${held}`, label: `Bo's ${d.name} (${price(d)})`, kind: 'member', value: held }] };
     const { container } = render(<ChoicePrompt state={s} onPick={() => {}} busy={false} />);
-    const btn = container.querySelector('[data-option]');
+    // the member is picked on the board now; the keyboard list (opened from "Pick from a list") still names owner and cost
+    const open = container.querySelector('.pick-keys-open');
+    if (open) fireEvent.click(open);
+    const btn = container.querySelector('.pick-keys [data-option]') || container.querySelector('[data-option]');
     expect(btn.textContent).toContain('Bo’s');
-    expect(btn.textContent).toMatch(/Costs \d/);
+    // the cost in dots, as the card prints it, never color words (wave-2 tester B #54)
+    expect(btn.querySelector('.cost-line').textContent).toMatch(/^costs \d/);
+    expect(btn.querySelector('.cost-line .pip')).not.toBeNull();
+    expect(btn.querySelector('.cost-line').textContent).not.toMatch(/gold|red|blue|green|magenta|any/);
   });
 });
 

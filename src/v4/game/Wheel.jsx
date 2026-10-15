@@ -929,6 +929,9 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
             <pattern id="ltHatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(42,31,23,.2)" strokeWidth="1" /></pattern>
           </defs>
           <circle cx={CX} cy={CY} r="200" fill="url(#ltPaper)" className="disk" />
+          {/* a knurled edge, like a dial's: fine ticks just outside the rim that turn with the board, so it reads as
+              something you can turn (w2a #42: "nothing says the wheel can spin") */}
+          <g transform={`rotate(${rot} ${CX} ${CY})`} className="knurl" aria-hidden="true"><circle cx={CX} cy={CY} r="203" fill="none" /></g>
           <g transform={`rotate(${rot} ${CX} ${CY})`} className="wheel">{paper}</g>
           <circle cx={CX} cy={CY} r="199.5" fill="none" className="edge" />
           <circle cx={CX} cy={CY} r={hubR} className="hub" />
