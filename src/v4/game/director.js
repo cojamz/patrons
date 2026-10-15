@@ -164,6 +164,21 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     return { last: time + (n - 1) * MO.pieceStagger, d };
   };
   const after = r => r.last + nextBeatAt(r.d); // when the next beat may start
+  // what a member's beat did, in plain words with the real numbers, for its caption on the stage (Cory, 22:48: "a member
+  // will fly out and something will happen, but its not clear why without hover"): "you +1 gold", "+2 blue from P3"
+  const who = id => (mine.length === 1 && mine[0] === id ? 'you' : state.players[id] ? state.players[id].name : '');
+  const did = (m, pid) => {
+    const out = [];
+    const sum = (list, key) => { const g = new Map(); for (const e of list) { const k = `${key(e)}|${e.r ?? e.what.r}`; g.set(k, (g.get(k) || 0) + (e.n ?? e.what.n)); } for (const [k, n] of g) if (!n) g.delete(k); return g; };
+    for (const [k, n] of sum(m.gains, e => e.to.pid)) { const [to, r] = k.split('|'); out.push(`${Number(to) === pid ? '' : `${who(Number(to))} `}+${n} ${r}`); }
+    for (const [k, n] of sum(m.takes, e => e.from.pid)) { const [from, r] = k.split('|'); out.push(`+${n} ${r} from ${who(Number(from))}`); }
+    for (const [k, n] of sum(m.gives, e => e.to.pid)) { const [to, r] = k.split('|'); out.push(`${who(Number(to))} +${n} ${r}`); }
+    for (const [k, n] of sum(m.pays, e => e.from.pid)) { const [, r] = k.split('|'); out.push(`paid ${n} ${r}`); }
+    const f = m.fols.reduce((t, e) => t + (e.to && e.to.pid === pid ? e.what.n : 0), 0);
+    if (f) out.push(`${f > 0 ? '+' : '−'}${Math.abs(f)} follower${Math.abs(f) === 1 ? '' : 's'}`);
+    const lead = who(pid);
+    return out.length ? `${lead === 'you' ? 'You' : lead}: ${out.join(', ')}` : '';
+  };
   const owner0 = c => (c.kind === 'recruit' || c.kind === 'buy' || c.kind === 'space' || c.kind === 'move' || c.kind === 'release' || c.kind === 'member' || c.kind === 'setup' ? c.pid : null);
   let setup = false;
   // where the mover's move happened (the space taken, the rate bought at, the card recruited): a rival's member that pays
@@ -194,11 +209,11 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     // number changing"): it steps onto the stage too, in the same beat, and gives from there
     if (c.kind === 'member' && c.uid != null) {
       const was = stagedUids.get(c.uid);
-      if (was && was.pid === c.pid) { at(s, { op: 'stage', kind: 'member', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def }, spot: was.spot, dur: MO.hop }); s += MO.lead; }
+      if (was && was.pid === c.pid) { at(s, { op: 'stage', kind: 'member', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def }, spot: was.spot, dur: MO.hop, got: did(m, c.pid) }); s += MO.lead; }
       else {
         const spot = stagedUids.size;
         stagedUids.set(c.uid, { pid: c.pid, spot });
-        at(s, { op: 'stage', kind: 'member', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def }, spot, dur: MO.stageIn });
+        at(s, { op: 'stage', kind: 'member', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def }, spot, dur: MO.stageIn, got: did(m, c.pid) });
         s += reactive ? MO.stageIn * 0.35 : MO.stageIn * 0.5;
       }
     } else if (c.kind === 'space' && !stagedKeys.has(c.key)) {
@@ -833,6 +848,12 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   // the stage holds a moment after this chain's own end, then flies home, even when the next chain follows at once
   // (a blind tester, w5: "a recruited Stylist parked over the wheel centre … into the next player's turn")
   if (plan.atoms.some(a => a.op === 'stage')) schedule(base + plan.total, skip => { if (!skip) stageRelease(MO.stageHold, chainId); });
+  // what each seat's follower count just did stays readable beside it for a while (panel r3: "P2 went 16→38 and only
+  // the strip said why"): "+22" under the count, never over it, gone before long
+  const fdelta = new Map();
+  for (const a of plan.atoms) if (a.op === 'land' && a.fol && a.to.kind === 'count') fdelta.set(a.to.pid, (fdelta.get(a.to.pid) || 0) + (a.pay ? -a.by : a.by));
+  for (const a of plan.atoms) if (a.op === 'land' && a.fol && a.pay && a.to.kind !== 'count' && a.from && a.from.kind === 'count') fdelta.set(a.from.pid, (fdelta.get(a.from.pid) || 0) - a.by);
+  if ([...fdelta.values()].some(Boolean)) schedule(base + plan.total, skip => { for (const [pid, n] of fdelta) if (n) linger(where({ kind: 'count', pid }), n); });
   // what starts at once plays now, before this commit's first paint (the lifted card, the hidden chip, your minion's
   // stamp): never a frame of the end state first
   while (chain.queue.length && chain.queue[0].at <= chain.clock) chain.queue.shift().fn(false);
@@ -842,6 +863,25 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
 }
 
 /** A space or member flies out of its place onto the stage (stage.js; ActionStage.jsx draws it). */
+// a seat's follower change, lingering under its count
+const lingering = new Map();
+function linger(el, n) {
+  if (!el || el.rectOnly || typeof document === 'undefined') return;
+  const r = el.getBoundingClientRect();
+  if (!r.width) return;
+  const was = lingering.get(el);
+  if (was) { clearTimeout(was.t); was.b.remove(); n += was.n; }
+  if (!n) { lingering.delete(el); return; }
+  const b = document.createElement('b');
+  b.className = `seat-delta ${n > 0 ? 'up' : 'down'}`;
+  b.textContent = `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
+  Object.assign(b.style, { left: `${Math.round(r.right)}px`, top: `${Math.round(r.bottom + 1)}px` });
+  b.style.setProperty('--ld', `${MO.lingerDelta}ms`);
+  document.body.appendChild(b);
+  const t = setTimeout(() => { b.remove(); lingering.delete(el); }, MO.lingerDelta);
+  lingering.set(el, { b, n, t });
+}
+
 function stageOut(root, a, ctx, where, chainId, mine = []) {
   const st = ctx.state;
   const el = where(a.place);
@@ -874,7 +914,7 @@ function stageOut(root, a, ctx, where, chainId, mine = []) {
   let sphere = 'colorless', color = 'var(--colorless)';
   try { if (st.quadrants.includes(d.quadrant)) { sphere = quadrant(d.quadrant).resource; color = `var(--${d.quadrant})`; } } catch { /* colorless */ }
   stageShow({ id: `member:${pid}:${uid}`, chain: chainId, kind: 'member', uid, at, from, homeEl: el && !el.rectOnly ? el : null, dur: a.dur, color, pc: playerColor(pid),
-    name: d.name, sprite: [d.id, spriteId(d.name)], sphere });
+    name: d.name, sprite: [d.id, spriteId(d.name)], sphere, text: d.text || '', got: a.got || '' });
 }
 
 /** Install the skip: a press anywhere, or Space (when it isn't pressing a button), lands the chain on screen. */
