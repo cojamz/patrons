@@ -840,7 +840,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       const fw = side ? (R.r1 - R.r0) * (t === 1 ? 1.02 : 0.9) : t === 3 ? 2 * (R.r1 - 12) * Math.SQRT1_2 * 0.9 : 2 * R.r * Math.sin((s.half * Math.PI) / 180) * 0.92;
       style = { ...style, '--fw': `${((fw / BOX) * 100).toFixed(1)}%` };
     }
-    if (panels) style = { ...style, width: `${((lay.w / VBS) * 100).toFixed(2)}%`, '--big': `${lay.big}px` };
+    if (panels) style = { ...style, ...at(...turned(...polar(s.ang, lay.rc))), width: `${((lay.w / VBS) * 100).toFixed(2)}%`, '--big': `${lay.big}px` };
     // a face from ./faces/: the box is the face's own size (board units), and the face draws everything inside it
     let face = null;
     if (custom) {

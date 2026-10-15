@@ -1,5 +1,7 @@
 # In flight
 
+Overnight plan: design/overnight-plan.md. Taste brief: design/taste.md.
+
 Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source after dist/ was untracked (d7bdd3e, 01:24). Agents never commit; the foreman verifies and checkpoints. Each agent runs check:v4 on its own `V4_OUTDIR`/`V4_PORT` (build dirs seen on disk are noted). If a session dies, relaunch each workstream from its brief below and tell it to read `git log` first. Done items are ticked in design/todo.md.
 
 ## Current roster
@@ -44,6 +46,8 @@ Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source a
 36. **Rollout R3: cards, hovers, shop.** Member hover and shop card per the plate, short when-lines in src/v4/cardText.js, follower tiles. Port 5394.
 37. **Quiet-box verdicts (remote sessions).** session_01VJqrdWX2vcyJZSs11Zziem (ce03bc3, gate timing), session_01N9mAWieSTB1FSiquGzsvAe (b7a2b76), session_0125uXV2UHp3YSBXphubMoad (002e00a = batch 1: clarity, turn story, session, motion). Batch 1 ships to the PR when 002e00a passes.
 38. **Bench pooled runs on today's content** (remote session_011mMXsYcXHM7NPhc8g63Ki6): merges cults-wip 618a8f5 into claude/cults-bench, runs two full runs back to back (about 3 h), then reports the pooled list. It covers Blue, the buyer win rate and Front-runner. ×1.25 is on hold pending Cory.
+39. **Perf pod: render cost** (from design/eval/perf/baseline.md): click → paint in the same frame, table and chairs re-render only on change, shop not re-rendered by a space hover, wheel spin without per-frame renders, "You'd get" ready sooner; render-count guard. Port 5396.
+40. **Perf baseline, quiet box** (remote session_011LUHaXuhne4zoPugyRhm6K on b3ac40c): two runs each at local 4×, local 1× and online with 80ms lag. It becomes the "before" for the perf pod.
 
 ## Held
 - **Fair-price screen, bot levels + 4-thinker tables:** offloaded to the remote sessions below. The Purple session is done (roster 11).

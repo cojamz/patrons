@@ -438,3 +438,8 @@
 .mc .mc-live .cost-dots{display:inline-flex;gap:4px;color:var(--pl-ink,#2b2018)}
 .mc .owner i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pc);margin-right:5px;vertical-align:0}
 .lt-card-body[data-card-hover]{display:block}
+/* the deck and the follower tiles stand as tall as the cards; the strip's labels are the plate's quiet small caps */
+.lt-deck{height:122px}
+.lt-rates-grid{grid-auto-rows:58px}
+.lt-shop-head .lt-h,.lt-rates-head .lbl{font-family:var(--sans);font-size:11px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-cream-2,#b9a98c)}
+.lt-shop-head .lt-h small,.lt-rates-head small{font-family:var(--sans);font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--pl-cream-3,#7d6e5a)}

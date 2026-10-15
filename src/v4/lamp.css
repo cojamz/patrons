@@ -349,12 +349,13 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell path{pointer-events:none}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .wash{pointer-events:all;fill:var(--pl-paper,#f2e8d2);transition:fill var(--mo-fade,.2s)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit{cursor:pointer}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .glow{fill:none;stroke:#ffe9b8;stroke-width:7;filter:url(#ltGlow);opacity:.3;transition:opacity var(--mo-fade,.2s)}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .edge-lit{fill:none;stroke:var(--light,#fff3d4);stroke-width:1.5;opacity:.8}
-/* the light follows your pointer: the panel under it is lit paper with the full glow */
+/* one glow on the table (design/taste.md): the panel under your pointer (or pinned by a tap) is lit paper with the
+   plate's warm-white glow; the others you can take stay plain paper, and the ones you can't recede */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .glow{fill:none;stroke:#ffe9b8;stroke-width:7;filter:url(#ltGlow);opacity:0;transition:opacity var(--mo-fade,.2s)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .edge-lit{fill:none;stroke:var(--light,#fff3d4);stroke-width:2;opacity:0;transition:opacity var(--mo-fade,.2s)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .wash,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .wash{fill:var(--paper-lit,#fbf6ea)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .glow,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .glow{opacity:.95}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .edge-lit,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .edge-lit{opacity:1;stroke-width:2}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .edge-lit,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .edge-lit{opacity:1}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken .wash{fill:var(--paper-taken,#cfc2a6)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken.lit .wash{fill:var(--pl-paper,#f2e8d2)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.locked .wash{fill:rgba(242,232,210,.035);stroke:rgba(242,232,210,.22);stroke-width:1}
@@ -374,14 +375,14 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage .slot.can:hover .base,.lt [data-spaces="panels"] .stage .slot.sel .base,.lt [data-spaces="panels"] .stage .slot.can:active .base{transform:none;box-shadow:none}
 .lt [data-spaces="panels"] .stage .slot:focus-visible .base{box-shadow:0 0 0 2px var(--lamp-ink)}
 .lt [data-spaces="panels"] .stage .slot.flash .base{animation:none}
-.lt [data-spaces="panels"] .stage .slot .face{position:relative;inset:auto;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0;text-align:center;white-space:nowrap;color:var(--pl-ink,#2b2018);opacity:1}
-.lt [data-spaces="panels"] .stage .slot .face .ico{height:20px;margin:0;line-height:0;display:flex;align-items:flex-end;justify-content:center;visibility:visible}
-.lt [data-spaces="panels"] .stage .slot .face .ico svg.sprite{width:20px;height:20px;image-rendering:pixelated}
+.lt [data-spaces="panels"] .stage .slot .face{position:relative;inset:auto;display:flex;flex-direction:column;align-items:center;gap:1px;padding:0;text-align:center;white-space:nowrap;color:var(--pl-ink,#2b2018);opacity:1}
+.lt [data-spaces="panels"] .stage .slot .face .ico{height:18px;margin:0;line-height:0;display:flex;align-items:flex-end;justify-content:center;visibility:visible}
+.lt [data-spaces="panels"] .stage .slot .face .ico svg.sprite{width:18px;height:18px;image-rendering:pixelated}
 .lt [data-spaces="panels"] .stage .slot .face .worker-fig{position:static;transform:none;display:flex;gap:1px;filter:drop-shadow(0 1.5px 0 rgba(43,32,24,.3))}
-.lt [data-spaces="panels"] .stage .slot .face .worker-fig svg{width:auto;height:22px;margin-bottom:-2px}
+.lt [data-spaces="panels"] .stage .slot .face .worker-fig svg{width:auto;height:21px;margin-bottom:-1px}
 .lt [data-spaces="panels"] .stage .slot.flash .face .worker-fig{animation:panelland .45s ease-out}
 @keyframes panelland{0%{transform:translateY(-6px) scale(1.12)}60%{transform:translateY(1px) scale(.97)}100%{transform:none}}
-.lt [data-spaces="panels"] .stage .slot .face .big{display:flex;flex-direction:column;align-items:center;max-width:none;font-family:var(--sans);font-weight:500;font-size:var(--big,20px);line-height:1;letter-spacing:-.01em;color:inherit;white-space:nowrap}
+.lt [data-spaces="panels"] .stage .slot .face .big{display:block;max-width:none;font-family:var(--sans);font-weight:500;font-size:var(--big,18px);line-height:1;letter-spacing:-.01em;color:inherit;white-space:nowrap}
 .lt [data-spaces="panels"] .stage .slot .face .big .cl{display:block}
 .lt [data-spaces="panels"] .stage .slot .face .n{font-weight:800}
 .lt [data-spaces="panels"] .stage .slot .face .pip{width:.8em;height:.8em;margin:0 0 0 .06em;vertical-align:-.06em}
