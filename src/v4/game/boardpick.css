@@ -46,9 +46,11 @@
   color:var(--paper-ink);background:var(--paper);box-shadow:0 0 0 1px rgba(42,31,23,.25),0 8px 20px rgba(0,0,0,.5);pointer-events:none}
 
 /* ---- the caption at the decision point ---- */
-.lt .lt-wheel > .prompt.choice.seat-pick{left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:min(92%,520px);
+.lt .lt-wheel > .prompt.choice.seat-pick{left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:min(92%,440px);
   padding:8px 14px 9px;max-height:none;overflow:visible;text-align:center}
 .lt .lt-wheel > .prompt.choice.seat-pick.at-top{top:0;bottom:auto}
+.lt .lt-wheel > .prompt.choice.seat-pick.at-left{left:0;transform:none}
+.lt .lt-wheel > .prompt.choice.seat-pick.at-right{left:auto;right:0;transform:none}
 .prompt.choice.seat-pick .pick-cap{margin:0;font-family:var(--serif);font-size:17px;line-height:1.25}
 .prompt.choice.seat-pick .pick-cap b{font-weight:700}
 .prompt.choice.seat-pick .pick-left{font-weight:700;color:#8c2f39}

@@ -69,7 +69,7 @@ export function TurnOf({ player }) {
   return <p className="turn-of" style={{ '--pc': playerColor(player.id) }}><i />{player.name}’s turn<span> · pass the device</span></p>;
 }
 
-export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = null, pickTop = false }) {
+export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = null, pickAt = '' }) {
   const pend = state.pending;
   const setup = pend.kind === 'setup';
   const box = useRef(null);
@@ -83,7 +83,7 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
   const left = (pend.prompt.match(/\((\d+) left\)/) || [])[1];
   if (left == null) total.current = null; else if (total.current == null || Number(left) > total.current) total.current = Number(left);
   // the seats are the selector (seatPick.js): the panel shrinks to a caption (after every hook above)
-  if (seatPick) return <SeatPickCaption state={state} pk={seatPick} onPick={onPick} busy={busy} turnOf={turnOf} box={box} top={pickTop} />;
+  if (seatPick) return <SeatPickCaption state={state} pk={seatPick} onPick={onPick} busy={busy} turnOf={turnOf} box={box} at={pickAt} />;
   // the engine's own count when the choice carries one (it survives a reload); else counted from the first prompt seen
   const tally = pend.count ? `${pend.count.of - pend.count.left} of ${pend.count.of} taken`
     : left != null && total.current ? `${total.current - Number(left)} of ${total.current} taken` : null;
@@ -116,11 +116,11 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
  * The seat selector's caption (the seats are the selector, seatPick.js): what's asking, how many, how many left, and
  * a compact list of the same picks for the keyboard (Tab, Enter), named from each option's target.
  */
-function SeatPickCaption({ state, pk, onPick, busy, turnOf, box, top = false }) {
+function SeatPickCaption({ state, pk, onPick, busy, turnOf, box, at = '' }) {
   const pend = state.pending;
   const cap = pickCaption(state, pk);
   return (
-    <section className={`prompt choice seat-pick${top ? ' at-top' : ''}`} aria-live="polite" ref={box} role="group" aria-label={pend.prompt} data-board-pick={[...pk.kinds].join(' ')}>
+    <section className={`prompt choice seat-pick${at ? ` ${at}` : ''}`} aria-live="polite" ref={box} role="group" aria-label={pend.prompt} data-board-pick={[...pk.kinds].join(' ')}>
       {turnOf && <TurnOf player={turnOf} />}
       <p className="pick-cap" title={pend.prompt}>
         {cap.title ? <><b>{cap.title}</b>: {cap.what}{cap.left != null && <> · <span className="num pick-left" data-left={cap.left}>{cap.left}</span> left</>}</> : cap.what}
