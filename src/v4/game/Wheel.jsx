@@ -462,7 +462,8 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
   const rimLabel = (qid, q, leaders) => {
     const st = stdById[qid];
     const sc = quadrant(qid).scoring;
-    const rule = `${(st ? st.rule : shortLabel(sc.label)).toUpperCase()}  ·  +${RING_VALUE[paying - 1]}`;
+    // the prize says what it pays (Cory, 2026-10-15: "+2" alone didn't say followers)
+    const rule = `${(st ? st.rule : shortLabel(sc.label)).toUpperCase()}  ·  +${RING_VALUE[paying - 1]} FOLLOWERS`;
     const tb = (st && st.tiebreak) || sc.tiebreak || null;
     const top = Math.abs(norm(qCenter(q) + rot)) < 90;
     const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;
@@ -604,12 +605,12 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     rimHits.push(
       <path key={`rh${q}`} className="rim-hit" d={arc(a0 + 1, a1 - 1, RIM_HIT.r0, RIM_HIT.r1)} data-rim={qid}
         role="button" tabIndex={0} aria-haspopup="dialog"
-        aria-label={`${shortLabel(label)}: +${RING_VALUE[paying - 1]} at round end.${tieLine}${leaders.length ? ` ${leaders.map(id => (id === meId ? 'You' : state.players[id].name)).join(' & ')} ${leaders.length > 1 || leaders[0] === meId ? 'lead' : 'leads'}.` : ' No one leads yet.'}${ruleLine} Show the standings.`}
+        aria-label={`${shortLabel(label)}: +${RING_VALUE[paying - 1]} followers at round end.${tieLine}${leaders.length ? ` ${leaders.map(id => (id === meId ? 'You' : state.players[id].name)).join(' & ')} ${leaders.length > 1 || leaders[0] === meId ? 'lead' : 'leads'}.` : ' No one leads yet.'}${ruleLine} Show the standings.`}
         onPointerEnter={e => { if (hover && realHover(e)) hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget); }}
         onPointerLeave={e => { if (hover && e.pointerType === 'mouse') hover.onPlaqueHover(qid, null); }}
         onClick={e => { e.stopPropagation(); if (moved.current) return; if (hover) hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget, { pinned: true }); }}
         onKeyDown={e => { if (hover && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); hover.onPlaqueHover(qid, rimAnchor(qid) || e.currentTarget, { pinned: true }); } }}>
-        <title>{`${shortLabel(label)}: +${RING_VALUE[paying - 1]} at round end.${tieLine}${ruleLine} Show the standings.`}</title>
+        <title>{`${shortLabel(label)}: +${RING_VALUE[paying - 1]} followers at round end.${tieLine}${ruleLine} Show the standings.`}</title>
       </path>,
     );
   });
@@ -706,7 +707,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
             {open && (
               <span className="face" aria-hidden="true">
                 <span className="ico"><Sprite id={[`${qid}.${a.key}`, spriteId(a.name)]} kind="action" sphere={quadrant(qid).resource} size={24} /></span>
-                <span className="nm">{a.name}</span>
+                {/* no name on the space (Cory, 2026-10-15: "do away with the names of the actions for now"); it's in the hover */}
                 <span className="yl" data-yield><Rich text={shortEffect(qid, a, round)} /></span>
               </span>
             )}

@@ -141,6 +141,8 @@ async function rimCheck(page, step) {
     return out;
   });
   if (pts.length < 8) fail(`(o) found only ${pts.length} rim points to check`, step);
+  // the prize says what it pays: "+2 FOLLOWERS", not a bare "+2"
+  for (const t of await page.$$eval('[data-rim-text]', els => els.map(e => e.textContent))) if (!/\+\d+ FOLLOWERS?/i.test(t)) fail(`(o) the rim "${t}" doesn't say its prize is followers`, step);
   for (const p of pts) {
     const top = await page.evaluate(({ x, y }) => { const e = document.elementFromPoint(x, y); return e && e.closest('[data-rim]') ? e.closest('[data-rim]').dataset.rim : e ? `${e.tagName.toLowerCase()}.${String(e.className.baseVal ?? e.className).split(' ')[0]}` : null; }, p);
     if (p.qid && top !== p.qid) { fail(`(o) pointing at ${p.what} reaches ${top}, not its standings`, step); continue; }
@@ -149,6 +151,7 @@ async function rimCheck(page, step) {
     await page.mouse.move(p.x, p.y); await page.waitForTimeout(150);
     const kind = await page.evaluate(() => { const c = document.querySelector('[data-hover-layer][data-open="1"] [data-hover-card]'); return c ? c.dataset.hoverCard : null; });
     if (kind !== 'plaque') fail(`(o) hovering ${p.what} opened ${kind || 'nothing'}, not the standings`, step);
+    else if (!(await page.evaluate(() => /Round end: whoever has the .+ gets \d+ followers?/.test(document.querySelector('[data-hover-layer][data-open="1"]').innerText)))) fail(`(o) the standings for ${p.what} never say the prize is followers ("Round end: whoever has … gets N followers")`, step);
   }
   await page.mouse.move(4, 690); await page.waitForTimeout(200);
 }

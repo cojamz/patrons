@@ -7,8 +7,8 @@ import { Rich, CostPips } from './Rich.jsx';
 import { MemberCard, NamedText, CardText, cardColor } from './Info.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { CoinMark } from './Glyphs.jsx';
-import { pickCaption, pickHow, pickName } from './seatPick.js';
-import './seatpick.css';
+import { pickCaption, pickHow, pickName } from './boardPick.js';
+import './boardpick.css';
 
 /** Escape closes; focus moves in on open and back to where it was on close. */
 export function useDialog(onClose) {
@@ -120,14 +120,20 @@ function SeatPickCaption({ state, pk, onPick, busy, turnOf, box }) {
   const pend = state.pending;
   const cap = pickCaption(state, pk);
   return (
-    <section className={`prompt choice seat-pick pick-${pk.mode}`} aria-live="polite" ref={box} role="group" aria-label={pend.prompt} data-seat-pick={pk.mode}>
+    <section className="prompt choice seat-pick" aria-live="polite" ref={box} role="group" aria-label={pend.prompt} data-board-pick={[...pk.kinds].join(' ')}>
       {turnOf && <TurnOf player={turnOf} />}
       <p className="pick-cap" title={pend.prompt}>
         {cap.title ? <><b>{cap.title}</b>: {cap.what}{cap.left != null && <> · <span className="num pick-left" data-left={cap.left}>{cap.left}</span> left</>}</> : cap.what}
       </p>
-      <p className="pick-how">{pickHow(pk)} <span className="pick-keys-hint">· or Tab to a list</span></p>
+      <p className="pick-how">{pickHow(pk)}{pk.rest.length ? ', or' : ''} <span className="pick-keys-hint">· Tab for a list</span></p>
+      {/* what has no place on the board (Pass, "All 3 as green") stays a button here */}
+      {pk.rest.length > 0 && (
+        <div className="pick-rest">
+          {pk.rest.map(o => <button key={o.id} type="button" className="btn pick-rest-btn" data-option={o.id} disabled={busy} onClick={() => onPick(o.id)}>{o.label}</button>)}
+        </div>
+      )}
       <div className="pick-keys" role="group" aria-label="Or pick from a list">
-        {pend.options.map(o => (
+        {[...pk.where.values()].map(o => (
           <button key={o.id} type="button" className="pick-key" data-option={o.id} disabled={busy} onClick={() => onPick(o.id)}>{pickName(state, o)}</button>
         ))}
       </div>

@@ -47,7 +47,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const rest = groups.slice(MAX).reduce((s, g) => s + g.count, 0);
   const openSeat = (e, pinned) => hover && hover.onSeatHover(pid, e.currentTarget, { pinned });
   return (
-    <section className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking pick-${pick.mode} ${pick.lit ? 'pick-lit' : 'pick-dim'}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : 'off') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
+    <section className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
       aria-label={`${mine ? 'Your cult' : `${p.name}'s cult`}: ${f} followers, ${p.members.length} members, ${p.left} minions to place${now ? ', their turn' : ''}`}>
       <header className="cs-head" role="button" tabIndex={0} aria-haspopup="dialog" title={`${p.name}: ${f} followers. Show their cult.`}
         onPointerEnter={e => { if (realHover(e)) openSeat(e, false); }}
@@ -75,13 +75,16 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           // its sphere at a glance: a soft ground in the sphere's color, stronger when the clothes alone don't carry it
           const sphere = sphereOf(state, d);
           const weak = ['silver', 'white', 'colorless'].includes(sphere) || sphereShare([d.id, spriteId(d.name)]) < 0.33;
+          // the board picker: a member the choice offers is clicked right here (seat figure)
+          const pickM = pick && pick.members ? g.uids.map(u => pick.members[u]).find(Boolean) : null;
           return (
-            <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${hop ? ' react-hop' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
+            <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
               <Tip className="fig" label={`${d.name}: show the card`} content={() => <MemberCard state={state} uid={g.uids[0]} />}>
                 <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
               </Tip>
+              {pickM && <button type="button" className="cs-pick-member" tabIndex={-1} data-option={pickM.id} aria-label={`${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} title={`${pick.title ? `${pick.title}: ` : ''}${mine ? 'your' : `${p.name}’s`} ${d.name}`} onClick={e => pick.onPick(pickM.id, e.currentTarget)}><span className="hitbox" aria-hidden="true" /></button>}
               {use && <button type="button" className="lt-btn mini" data-option={use.id} onClick={() => onPick(use.id)} title={`Use ${d.name} now`}>Use<span className="hitbox" aria-hidden="true" /></button>}
               {/* a switch shows its state, not the action (RC1: Midas read "Off" while on); a click flips it in your buy step */}
               {(toggle || (mine && d.toggle)) && (() => {
@@ -100,9 +103,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         <span className="cs-res" role="group" aria-label="Resources">
           {state.resources.map(r => {
             // the seat selector (seatPick.js): a stack you can take lights up and a click takes one; one you can't says why
-            const sp = pick && pick.mode !== 'player' ? pick.stacks[r] : null;
+            const sp = pick && pick.stacks ? pick.stacks[r] : null;
             const o = sp && sp.option, took = (pick && pick.picked[r]) || 0;
-            const say = o ? (pick.mode === 'give' ? `${pick.title ? `${pick.title}: ` : ''}${o.label}` : `Take 1 ${r} from ${p.name} (${p.res[r] || 0}${took ? `, ${took} picked` : ''})`) : sp ? sp.why : `${p.res[r] || 0} ${r}`;
+            const say = o ? (pick.give || mine ? `${pick.title ? `${pick.title}: ` : ''}${o.label}` : `Take 1 ${r} from ${p.name} (${p.res[r] || 0}${took ? `, ${took} picked` : ''})`) : sp ? sp.why : `${p.res[r] || 0} ${r}`;
             return (
               <span key={r} className={`cs-stack${p.res[r] ? '' : ' zero'}${sp ? (o ? ' pick-on' : ' pick-off') : ''}`} data-res={r} title={say}
                 {...(o ? { role: 'button', tabIndex: -1, 'data-option': o.id, 'aria-label': say, onClick: e => pick.onPick(o.id, e.currentTarget) } : sp ? { 'data-why': sp.why, onClick: e => pick.onDenied && pick.onDenied(sp.why, e.currentTarget) } : {})}>
@@ -122,7 +125,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         )}
       </footer>
       {/* a choice that picks a player: the whole seat is the button (or says why it isn't) */}
-      {pick && pick.mode === 'player' && (pick.seat
+      {pick && pick.seatMode && (pick.seat
         ? <button type="button" className="cs-pick-seat" tabIndex={-1} data-option={pick.seat.id} aria-label={`${pick.title ? `${pick.title}: ` : ''}${p.name}`} title={`${pick.title ? `${pick.title}: ` : ''}${p.name}`} onClick={e => pick.onPick(pick.seat.id, e.currentTarget)} />
         : <span className="cs-pick-seat off" title={pick.why} aria-hidden="true" />)}
     </section>

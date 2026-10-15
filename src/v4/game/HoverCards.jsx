@@ -265,8 +265,10 @@ export function StandingsCard({ state, qid, meId = null }) {
   if (!st) return null;
   // the sphere's own rule, when it has one ("Whatever you steal turns magenta…"), under its standings (UI-A, meta #3)
   const rule = quadrant(qid).rule;
+  // what the rim's prize pays, in words (Cory, 2026-10-15): "Round end: whoever has the most white gets 2 followers"
   return (
     <>
+      <p className="lt-prize-line" data-prize-line={qid}>Round end: whoever has the {st.rule.replace(/^Most /i, 'most ')} gets {st.prize} follower{st.prize === 1 ? '' : 's'}.</p>
       <ContestStandings state={state} st={st} meId={meId} />
       {rule ? <p className="lt-sphere-rule" data-sphere-rule={qid}>{rule}</p> : null}
     </>

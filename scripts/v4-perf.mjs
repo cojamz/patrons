@@ -254,7 +254,7 @@ try {
     await hana.page.fill('input[placeholder="Name"]', 'Hana');
     await hana.page.click('text=Host online game');
     await hana.page.waitForSelector('.code', { timeout: 30000 });
-    const code = (await hana.page.$eval('.code', e => e.textContent)).replace(/[^A-Z0-9]/gi, '').slice(-4).toUpperCase();
+    const code = await hana.page.$eval('.code', e => (/Room code (\S+?),/.exec(e.getAttribute('aria-label') || '') || [])[1] || e.textContent.trim());
     await gus.page.goto(`${base}/?${params}`);
     await gus.page.fill('input[placeholder="Name"]', 'Gus');
     await gus.page.fill('input[aria-label="Room code"]', code);

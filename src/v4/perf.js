@@ -402,7 +402,8 @@ function install() {
         afterPaint(p => { rec.painted = p; });
       } else if (m.attributeName === 'transform' && el.classList && el.classList.contains('wheel')) {
         const rot = Number((/rotate\(([-\d.e]+)/.exec(el.getAttribute('transform') || '') || [])[1]);
-        if (!spin || t - spin.end > 150) { spin = { start: t, end: t, from: rot, to: rot, frames: [t] }; E.spins.push(spin); }
+        // one spin = changes less than 1s apart (a starved frame can take longer than the whole 300ms spin)
+        if (!spin || t - spin.end > 1000) { spin = { start: t, end: t, from: rot, to: rot, frames: [t] }; E.spins.push(spin); }
         else { spin.end = t; spin.to = rot; spin.frames.push(t); }
       }
     }

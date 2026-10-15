@@ -28,7 +28,7 @@ import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains } from './flight.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT } from '../motion.js';
-import { seatPicker, seatPart } from './seatPick.js';
+import { boardPicker, seatPart } from './boardPick.js';
 import { friendlyError, isNetworkError } from '../errors.js';
 import { ROUND_START, ownsLocal } from '../saved.js';
 import { restoredMoment } from '../session/moment.js';
