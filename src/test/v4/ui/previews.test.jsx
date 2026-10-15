@@ -5,7 +5,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, cleanup, act } from '@testing-library/react';
 import ShopCards from '../../../v4/game/ShopCards.jsx';
 import { createHover, whyLine, raceAfter } from '../../../v4/game/HoverCards.jsx';
-import { YoudGet, requestPreviews, peekPreview, _setPreviewWorker, previewWords, cachedPreview } from '../../../v4/game/Info.jsx';
+import { YoudGet, requestPreviews, peekPreview, _setPreviewWorker, previewWords, cachedPreview, youdWords } from '../../../v4/game/Info.jsx';
 import { createGame, applyMove, chooseBotMove, quadrant } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { tickScene } from '../../../../e2e/v4/lib/tick-save.mjs';
@@ -92,5 +92,18 @@ describe('previews reach the screen', () => {
     expect(r.tail).toBe(', and +1 goes to the one you pick');
     expect([r.you, ...r.them.map(t => t.text), r.tail].join(' ')).not.toMatch(/·/);
   });
-});
 
+  it('a forecast never promises what only your best pick gives, and a swap is never "nothing" (w4 skeptic #10, A#35)', () => {
+    const st = { resources: ['gold', 'red', 'blue', 'green'], players: [{}, {}, {}, {}], cards: {} };
+    const z = [0, 0];
+    const res = (red, f = 0, m = 0) => ({ res: { gold: 0, red, blue: 0, green: 0 }, followers: f, members: m, turns: 0, discount: 0, swapped: 1, joined: [] });
+    // Even Swap: +1 red sure; a follower only if you swap for a member worth more
+    const even = { exact: false, tied: false, partial: false, asks: ['x'], theirAsks: [], you: { res: { gold: z, red: [1, 1], blue: z, green: z }, followers: [0, 1], members: z, turns: z, discount: z },
+      others: { res: { gold: z, red: z, blue: z, green: z }, followers: [-1, 0], members: z }, best: res(1, 1), likely: res(1, 1) };
+    expect(youdWords(even, st).text).toBe('+1 red, up to +1 follower, 1 member swapped');
+    // Swap Sides: the counts don't move, but a member does
+    const sides = { exact: true, tied: true, partial: false, asks: ['x'], theirAsks: [], you: { res: { gold: z, red: z, blue: z, green: z }, followers: z, members: z, turns: z, discount: z },
+      others: { res: { gold: z, red: z, blue: z, green: z }, followers: z, members: z }, best: res(0), likely: res(0) };
+    expect(youdWords(sides, st).text).toBe('1 member swapped');
+  });
+});

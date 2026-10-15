@@ -59,7 +59,8 @@ describe('panel words (w3)', () => {
     // every pick worth the same: the two ends of the mix
     expect(seen.pawn.text).toMatch(/^\+\d+ followers? or \+\d+ white$/);
     // your pick: your best pick's numbers
-    expect(seen.sellhigh).toEqual({ text: expect.stringMatching(/^\+\d+ white, −\d+ followers?$/), note: 'your best pick' });
+    // your pick: the best pick's gains as "up to", never a promise (w4 skeptic #10)
+    expect(seen.sellhigh).toEqual({ text: expect.stringMatching(/^up to \+\d+ white, −\d+ followers?$/), note: 'your pick' });
     // one color of your choosing
     expect(seen.gift.text).toMatch(/\+2 of a color you pick$/);
     for (const y of Object.values(seen)) expect(JSON.stringify(y)).not.toMatch(/depends on|−-/);

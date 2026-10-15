@@ -597,10 +597,18 @@ function mixWords(pv, state, own) {
  */
 export function youdWords(pv, state, own = null) {
   const w = previewWords(pv, state);
-  if (pv.exact) return { text: w.you, note: null };
+  // a swap changes who you hold, not how many: never "nothing right now" when it offers one (w4 A#35: Swap Sides)
+  if (pv.exact) return { text: !/^nothing/.test(w.you) || !(pv.best && pv.best.swapped > 0) ? w.you : changeWords(pv.best, state), note: null };
   const best = changeWords(pv.best, state), likely = changeWords(pv.likely, state);
   if (pv.best && pv.likely && likely !== best) return { text: null, likely, best };
-  if (pv.best && !pv.tied) return { text: best, note: 'your best pick' };
+  // your pick decides: what's sure as it is, and the best pick's gains as "up to", never as a promise (w4 skeptic #10:
+  // Even Swap's "+1 follower" read as promised, and a different swap gave none)
+  if (pv.best && !pv.tied) {
+    const sure = sureWords(pv, state), sureParts = sure ? sure.split(', ') : [];
+    const rest = best.split(', ').filter(x => !sureParts.includes(x));
+    const up = rest.filter(x => /^\+/.test(x)), other = rest.filter(x => !/^\+/.test(x));
+    return { text: [sure, up.length ? `up to ${up.join(', ')}` : null, ...other].filter(Boolean).join(', ') || best, note: 'your pick' };
+  }
   const mixed = pv.tied ? mixWords(pv, state, own) : null;
   if (mixed) return mixed;
   const sure = sureWords(pv, state);

@@ -840,11 +840,26 @@ export function turnStory(start, end, actor, me = null, mid = null) {
     const g = fp(end) - fp(start) - tracedF[p.id];
     if (g) out.push(`${nm(p.id)} ${g > 0 ? '+' : '−'}${fword(g)}`);
   }
-  if (!place && !out.length) return null;
-  const head = place ? (joined ? `${who} joined ${nm(joined.id)} on ${space} (Squatter)` : `${who} took ${space}`) : who;
+  // members used before the placement, in order, lead the head (w4 skeptic #6: "You took Spree / +3● / 3● from P2 /
+  // Tribute Band: +6●" put a Use's gains under a space that gives nothing): "You used Tribute Band, then took Spree"; a
+  // turn so far holding only a Use is "You used Tribute Band", never a bare "You"
+  const useRe = new RegExp(`^${an} (?:uses|used) (.+?)(?::|\\.$)`);
+  const placeAt = seg[0].findIndex(l => placeRe.test(l));
+  const usedFirst = (placeAt < 0 ? seg[0] : seg[0].slice(0, placeAt)).map(l => (l.match(useRe) || [])[1]).filter(Boolean);
+  for (const n of usedFirst) { const k = out.indexOf(`used ${n}`); if (k >= 0) out.splice(k, 1); } // said once, in the head
+  if (!place && !out.length && !usedFirst.length) return null;
+  const did = place ? (joined ? `joined ${nm(joined.id)} on ${space} (Squatter)` : `took ${space}`) : null;
+  const head = usedFirst.length ? `${who} used ${usedFirst.join(', ')}${did ? `, then ${did}` : ''}` : did ? `${who} ${did}` : who;
   // the strip's one line: what hit you first, then the biggest thing the turn did
-  const big = out.find(l => /^(recruited|bought|traded|released) |^(an extra turn|\d+ extra turns)$/.test(l));
-  const short = [hit, gain, big && big.replace(/ \(paid .*\)$/, '').replace(/ \(free\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
+  // a member changing hands names both and whose it was first ("took your Retinue, gave Broker"; w4 A#62: the strip said
+  // "Swap Sides · bought 10" with no word of the swap)
+  const swapLine = out.filter(l => /^(took (your|\S+['’]s) |gave .+ to )/.test(l)).join(', ');
+  const big = swapLine || out.find(l => /^(recruited|bought|traded|released) |^(an extra turn|\d+ extra turns)$/.test(l));
+  // a gain that came in another color names the member that changed it (w4 skeptic #18: "Bandwagon (+1 red …): +6 gold")
+  const convRe = new RegExp(`^${an}'s (.+?): \\d+ \\w+ comes as \\d+ \\w+\\.$`);
+  const conv = [...new Set(lines.map(l => (l.match(convRe) || [])[1]).filter(Boolean))];
+  const gainSaid = gain && conv.length ? `${gain} (${conv.join(', ')})` : gain;
+  const short = [hit && !(big && big.includes(hit)) ? hit : null, gainSaid, big && big.replace(/ \(paid .*\)$/, '').replace(/ \(free\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
   // what the card names, from the table itself: the space's key, and the uid of each member recruited (hover targets)
   let spaceKey = null;
   if (place) {
@@ -854,7 +869,7 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   }
   const uids = {};
   for (const u of end.players[actor].members) if (!start.players[actor].members.includes(u) && end.cards[u]) uids[cardDef(end, u).name] = u;
-  return { text: [head, ...out].join(' · '), head, lines: out, space, spaceKey, uids, actor, touched: [...touched], short, hit };
+  return { text: [head, ...out].join(' · '), head, lines: out, space, spaceKey, uids, actor, touched: [...touched], short, hit, conv };
 }
 
 /**
@@ -952,11 +967,15 @@ export function effectStory(start, end, actor, me = null, fx = []) {
     }
   }
   // what only the log says (an extra turn, a member used, a switch): kept from the log's story
-  for (const l of (base ? base.lines : [])) if (/^(used |an extra turn$|\d+ extra turns$|switched )/.test(l) && !out.includes(l)) out.push(l);
+  for (const l of (base ? base.lines : [])) if (/^(used |an extra turn$|\d+ extra turns$|switched )/.test(l) && !out.includes(l) && !(base.head && l.startsWith('used ') && base.head.includes(` ${l}`))) out.push(l);
   if (!base && !out.length) return null;
   const hit = hits.join(', ');
-  const big = out.find(l => /^(recruited|bought|traded|released) |^(an extra turn|\d+ extra turns)$/.test(l));
-  const short = [hit, gain, big && big.replace(/ \((paid .*|free)\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
+  // a member changing hands names both and whose it was first ("took your Retinue, gave Broker"; w4 A#62: the strip said
+  // "Swap Sides · bought 10" with no word of the swap)
+  const swapLine = out.filter(l => /^(took (your|\S+['’]s) |gave .+ to )/.test(l)).join(', ');
+  const big = swapLine || out.find(l => /^(recruited|bought|traded|released) |^(an extra turn|\d+ extra turns)$/.test(l));
+  const conv = base && base.conv && base.conv.length ? base.conv : [];
+  const short = [hit && !(big && big.includes(hit)) ? hit : null, gain && conv.length ? `${gain} (${conv.join(', ')})` : gain, big && big.replace(/ \((paid .*|free)\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
   const head = base ? base.head : (actor === me ? 'You' : P[actor].name);
   const touched = base ? base.touched : [];
   return { ...(base || {}), text: [head, ...out].join(' · '), head, lines: out, actor, touched, short, hit, fx: true };

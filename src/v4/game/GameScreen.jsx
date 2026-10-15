@@ -1130,6 +1130,18 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (why) say(why);
     if (el && el.animate && motionOK()) el.animate([{ translate: '0 0' }, { translate: '-3px 0' }, { translate: '3px 0' }, { translate: '0 0' }], { duration: 220, easing: 'ease-out' });
   }, [say]);
+  // a copy with one space to copy answers itself: the outlined space is the only answer (w4 skeptic #30: Echo with one
+  // target still asked for a second click); once per question, a beat after it's asked
+  const autoCopied = useRef(null);
+  useEffect(() => {
+    if (!picker || !mine || needHandoff || !pend || pend.kind !== 'choose' || autoCopied.current === pend) return undefined;
+    const only = pend.options.length === 1 ? pend.options[0] : null;
+    if (!only || only.kind !== 'space' || !(only.target && only.target.space) || picker.rest.length) return undefined;
+    autoCopied.current = pend;
+    // not cleared on a re-render (the guard above would then never fire it): it checks the question is still up instead
+    setTimeout(() => { if (session.getState().pending === pend) handlers.current.onPick(only.id); }, 350);
+    return undefined;
+  }, [picker, pend, mine, needHandoff]); // eslint-disable-line react-hooks/exhaustive-deps
   const pickParts = useMemo(() => {
     if (!picker) return {};
     // the "−1"s show only while they add up to the engine's own count (a reload mid-steal starts them over)

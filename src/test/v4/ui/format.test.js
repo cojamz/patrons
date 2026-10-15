@@ -1,7 +1,7 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
-import { foldRepeats, effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
+import { turnStory, foldRepeats, effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
 import { createTrail, feed } from '../../../v4/game/trail.js';
 import { contextFor } from '../../../engine/v4/core.js';
 
@@ -81,6 +81,59 @@ describe('v4 format helpers', () => {
     ];
     const st = effectStory(s, s, 0, null, fx);
     expect(st.lines.slice(0, 2)).toEqual(['+3 gold', 'Hustler: +3 gold']);
+  });
+
+  it('a member used before placing leads the turn card\'s head, in order (w4 skeptic #6)', () => {
+    let found = 0;
+    for (let seed = 1; seed < 80 && !found; seed++) {
+      let s = createGame({ seats: [{ name: 'Ana', kind: 'bot' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }, { name: 'Di', kind: 'bot' }], seed, quadrants: ['gold', 'red', 'echo', 'yellow'] });
+      for (let k = 0; k < 1500 && !s.over && !found; k++) {
+        const pend = s.pending;
+        const use = pend && pend.kind === 'place' && pend.options.find(o => String(o.id).startsWith('use:'));
+        if (use) {
+          const start = s, pid = pend.player, name = s.players[pid].name;
+          let t = applyMove(s, { player: pid, option: use.id });
+          // only the Use so far: "Ana used X", never a bare "Ana"
+          const mid = turnStory(start, t, pid);
+          if (mid) expect(mid.head).toMatch(new RegExp(`^${name} used \\S`));
+          for (let j = 0; j < 20 && t.pending && t.pending.player === pid && t.pending.kind !== 'place'; j++) t = applyMove(t, chooseBotMove(t, () => 0.4));
+          if (t.pending && t.pending.kind === 'place' && t.pending.player === pid) {
+            const slot = t.pending.options.find(o => String(o.id).startsWith('slot:'));
+            if (slot) {
+              t = applyMove(t, { player: pid, option: slot.id });
+              const st = turnStory(start, t, pid);
+              expect(st.head).toMatch(new RegExp(`^${name} used .+, then took .+`));
+              expect(st.lines.some(l => /^used /.test(l))).toBe(false); // said once, in the head
+              found++;
+            }
+          }
+        }
+        s = applyMove(s, chooseBotMove(s, () => 0.4));
+      }
+    }
+    expect(found).toBe(1);
+  });
+
+  it('the strip names a swap and whose member it was (w4 A#62: "Swap Sides · bought 10")', () => {
+    const s = createGame({ seats, seed: 1 });
+    const [u1, u2] = Object.keys(s.cards).map(Number);
+    const fx = [
+      { type: 'member-move', what: { uid: u1 }, from: { pid: 0 }, to: { pid: 1 }, cause: { kind: 'space' } },
+      { type: 'member-move', what: { uid: u2 }, from: { pid: 1 }, to: { pid: 0 }, cause: { kind: 'space' } },
+      { type: 'followers', what: { n: 10 }, to: { kind: 'count', pid: 1 }, cause: { kind: 'buy', tier: 'top' } },
+    ];
+    const st = effectStory(s, s, 1, 0, fx);
+    expect(st.short).toMatch(/took your .+, gave .+ to you/);
+    expect(st.short).not.toMatch(/bought/);
+  });
+
+  it('a gain that came in another color names the member that changed it (w4 skeptic #18)', () => {
+    const s = createGame({ seats, seed: 1 });
+    const end = structuredClone(s);
+    end.log = [...s.log, 'Ana took Bandwagon (Red).', "Ana's Midas: 6 red comes as 6 gold."];
+    end.players[0].res.gold = (end.players[0].res.gold || 0) + 6;
+    const st = turnStory(s, end, 0);
+    expect(st.short).toMatch(/^\+6 gold \(Midas\)/);
   });
 
   it('finds new log lines even when lines repeat', () => {

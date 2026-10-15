@@ -1,6 +1,6 @@
 // Your turn ending says so (w3b #58: after the second Pass the next frame was already a bot's line): when the table
 // moves from a step of yours to someone else's, the header says "Your turn is over" for a beat, then the next line.
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, act, cleanup } from '@testing-library/react';
 import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.js';
 import { createEmitter } from '../../../v4/session/emitter.js';
@@ -24,7 +24,7 @@ function drivenSession(state, mySeats) {
   return {
     getState: () => cur,
     subscribe(fn) { const off = subs.on(fn); fn(cur, info); return off; },
-    submit: () => Promise.resolve(cur),
+    submit: vi.fn(() => Promise.resolve(cur)),
     publish(next) { cur = next; subs.emit(cur, info); },
     mySeats, info, destroy() {},
   };
@@ -51,5 +51,22 @@ describe('the header when your turn ends', () => {
     act(() => { session.publish(then); });
     await wait(30);
     expect(container.querySelector('[data-turn-over]')).toBeNull();
+  });
+
+  it('a copy with one space to copy answers itself (w4 skeptic #30)', async () => {
+    let state = null;
+    for (let seed = 1; seed < 80 && !state; seed++) {
+      let s = createGame({ seats: SEATS, seed, quadrants: ['gold', 'echo', 'red', 'trading'] });
+      for (let k = 0; k < 1500 && !s.over; k++) {
+        const p = s.pending;
+        if (p && p.player === 0 && p.kind === 'choose' && p.options.length === 1 && p.options[0].kind === 'space' && p.options[0].target && p.options[0].target.space) { state = s; break; }
+        s = applyMove(s, chooseBotMove(s, () => 0.3));
+      }
+    }
+    expect(state).not.toBeNull();
+    const session = drivenSession(state, [0]);
+    render(<GameScreen session={session} pace={0} />);
+    await wait(700);
+    expect(session.submit).toHaveBeenCalledWith({ player: 0, option: state.pending.options[0].id });
   });
 });
