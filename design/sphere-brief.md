@@ -42,6 +42,7 @@ Handed to every sphere-design agent, together with design-principles.md, decisio
 
 # Rework principles (Cory, 2026-10-15; full wording in decisions.md 17:39–18:20)
 
+0b. Simpler but more strategic members and actions (Cory, 19:48).
 0. The heart of the game: members feel good and fun to have in your cult. Different combinations feel radically different and push radically different play styles; members from different spheres, with the actions, make a wide variety of competitive engines.
 
 Spheres and spaces

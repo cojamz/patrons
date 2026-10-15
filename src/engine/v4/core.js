@@ -3,6 +3,7 @@
 // state.pending = { player, kind, prompt, options:[{ id, label, kind, ... }] }. A move is { player, option }.
 import { quadrant, defById, handlerById, DEFAULT_QUADRANTS, guestMembers } from './content/index.js';
 import { shuffleInPlace } from './rng.js';
+import { CUT, FULL_DECK } from './content/cull.js';
 import { startEffects, stopEffects, abandonEffects, underCause } from './effects.js';
 
 export const RING_VALUE = [2, 4, 6];
@@ -23,7 +24,7 @@ const LOG_MAX = 300;
 // Rule flags a table can toggle (sims flip them). release: once per round, on your turn, release one of your
 // members (it goes to the bottom of the pile) for its colored part in its own color (not one recruited this round). guests: rule-bending guest
 // members join the deck.
-export const DEFAULT_RULES = { release: true, guests: true };
+export const DEFAULT_RULES = { release: true, guests: true, cull: true };
 
 // ---------- creation ----------
 
@@ -36,10 +37,11 @@ export function createGame({ seats, seed = 1, quadrants = DEFAULT_QUADRANTS, rul
   const zero = Object.fromEntries(resources.map(r => [r, 0]));
   const cards = {};
   let uid = 0;
-  for (const q of quadrants) for (const def of quadrant(q).members)
-    for (let k = 0; k < def.copies; k++) { cards[uid] = { uid, def: def.id }; uid++; }
   const table = { ...DEFAULT_RULES, ...rules };
-  if (table.guests) for (const def of guestMembers())
+  const dealt = def => !(table.cull && !FULL_DECK.tests && CUT.has(def.id)); // the cull (content/cull.js)
+  for (const q of quadrants) for (const def of quadrant(q).members.filter(dealt))
+    for (let k = 0; k < def.copies; k++) { cards[uid] = { uid, def: def.id }; uid++; }
+  if (table.guests) for (const def of guestMembers().filter(dealt))
     for (let k = 0; k < def.copies; k++) { cards[uid] = { uid, def: def.id }; uid++; }
   const state = {
     v: 4, seed: seed >>> 0, rng: seed >>> 0, quadrants: [...quadrants], resources, rules: table,
