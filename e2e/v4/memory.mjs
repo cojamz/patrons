@@ -57,6 +57,7 @@ try {
     if (Date.now() - movedAt > 45000) {
       const prompt = await page.$eval('.lt-prompt', e => e.textContent.slice(0, 120)).catch(() => '?');
       const ids = await page.$$eval('[data-option]:not([disabled])', els => els.map(e => e.getAttribute('data-option'))).catch(() => []);
+      mkdirSync(SHOTS, { recursive: true });
       await page.screenshot({ path: `${SHOTS}/stalled.png` }).catch(() => {});
       fails.push(`no move for 45s at move ${lastMoves}: "${prompt}" options [${ids.join(' ')}] (${SHOTS}/stalled.png)`);
       break;
@@ -97,7 +98,8 @@ try {
 console.log('memory over a full hot-seat game (after GC):');
 console.log('  tag                 round      moves   heap MB  nodes  listeners  docs');
 for (const r of curve) console.log(`  ${r.tag.padEnd(19)} ${String(r.round).padEnd(10)} ${String(r.moves).padStart(5)}  ${String(r.heapMB).padStart(7)}  ${String(r.nodes).padStart(5)}  ${String(r.listeners).padStart(9)}  ${String(r.documents).padStart(4)}`);
-writeFileSync(`${SHOTS}/memory.json`, JSON.stringify(curve, null, 1));
+// (another run's hotseat e2e may have wiped the shared shots folder meanwhile)
+try { mkdirSync(SHOTS, { recursive: true }); writeFileSync(`${SHOTS}/memory.json`, JSON.stringify(curve, null, 1)); } catch (err) { console.log(`couldn't save the curve: ${err.message}`); }
 const r1 = curve.filter(r => r.round === 1);
 const base1 = r1.length ? r1 : curve.slice(0, 2);
 const top = k => Math.max(...base1.map(r => r[k]));

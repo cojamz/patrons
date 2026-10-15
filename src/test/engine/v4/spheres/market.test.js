@@ -248,8 +248,8 @@ describe('Blue members', () => {
   it('Talent Scout: once per game, also recruit one of the top 5 of the pile at its cost', () => {
     let s = scene({ res: [{ gold: 9 }], members: [['market.blackmarket']], shop: CHEAP, pileFirst: ['red.mob', 'red.host', 'gold.jackpot', 'red.sponsor', 'red.patriarch', 'gold.midas'] });
     s = take(s, 'market.showroom');
-    s = move(s, `use:${uidOf(s, 'market.blackmarket', 0)}`);
-    s = move(s, 'pass'); // your normal buy comes first
+    const use = `use:${uidOf(s, 'market.blackmarket', 0)}`;
+    s = move(s, use); // its question comes at once (gut call, 2026-10-15); your normal buy follows
     expect(s.pending.prompt).toContain('top 5');
     expect(ids(s)).not.toContain(`card:${uidOf(s, 'gold.midas', 'pile')}`); // 6th card is out of reach
     const j = uidOf(s, 'gold.jackpot', 'pile');
@@ -258,6 +258,8 @@ describe('Blue members', () => {
     expect(R(s).gold).toBe(3);
     expect(s.shop).toHaveLength(SHOP_SIZE);
     expect(s.pile.includes(j)).toBe(false);
+    expect(s.pending.kind).toBe('buy'); // then the buy step, fresh: used, so no second use
+    expect(ids(s)).not.toContain(use);
   });
   it('Snob: game end, +1 follower per badged member (itself included)', () => {
     const s = scene({ members: [['market.snob', 'gold.midas', 'gold.tycoon', 'red.intern']], queue: [{ t: 'finish' }] });
