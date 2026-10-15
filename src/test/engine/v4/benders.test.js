@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, resume, followers, contextFor, cardDef } from '../../../engine/v4/core.js';
 import { defById } from '../../../engine/v4/content/index.js';
 import { extraTurns, onBoard } from '../../../engine/v4/content/purple.js';
-import { move, uidOf, ids, hasOpt, actionName } from './helpers.js';
+import { move, uidOf, ids, hasOpt, actionName, pinCosts } from './helpers.js';
 import { SHOP_SIZE } from '../../../engine/v4/core.js';
 
 const DEFAULT = ['gold', 'red', 'blue', 'green'];
@@ -317,10 +317,12 @@ describe('Release (base rule): once per round, release a member for its colored 
     expect(ids(s)).toContain('tier:mid');
   });
   it('a member with no colored part gives nothing back, so it is not offered', () => {
+    const restore = pinCosts({ 'red.volunteer': [0, 0] });
     let s = scene({ members: [['red.volunteer', 'red.twins']], queue: [{ t: 'buy', p: 0 }] });
     s.current = 0; s = resume(s);
     expect(ids(s)).not.toContain(`release:${uidOf(s, 'red.volunteer', 0)}`);
     expect(ids(s)).toContain(`release:${uidOf(s, 'red.twins', 0)}`);
+    restore();
   });
 });
 

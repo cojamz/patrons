@@ -3,7 +3,7 @@
 // the card whenever it changes a number. Plus one cross-sphere case per member.
 import { describe, it, expect } from 'vitest';
 import { resume } from '../../../engine/v4/core.js';
-import { take, move, uidOf } from './helpers.js';
+import { take, move, uidOf, pinCosts } from './helpers.js';
 import { sceneQ, buy, linesNaming } from './cards-helpers.js';
 
 const Q = ['gold', 'red', 'yellow', 'green'];
@@ -63,7 +63,9 @@ describe('Yellow members', () => {
     expect(named(s, 'Admirer')).toHaveLength(1);
   });
   it('Go-Between: your non-yellow recruit gives +1 of its color, named; a guest leaning to an absent sphere gives nothing', () => {
+    const restore = pinCosts({ 'red.volunteer': [0, 0] });
     let s = take(sc({ members: [['yellow.gobetween']], shop: ['red.volunteer'] }), 'red.hire');
+    restore();
     expect(R(s).red).toBe(1);
     expect(named(s, 'Go-Between')).toHaveLength(1);
     s = sc({ round: 3, members: [['yellow.gobetween']], shop: ['benders.squatter'] }); // leans to Thieves, not on this table
@@ -98,10 +100,12 @@ describe('Yellow members', () => {
     expect(named(s, 'Sower')).toHaveLength(2);
   });
   it('Sower × Release: planted yellow comes back when the Sower leaves (as Cory ruled for Investor)', () => {
+    const restore = pinCosts({ 'yellow.sower': [2, 2] });
     let s = sc({ round: 2, res: [{ yellow: 1 }], members: [['yellow.sower']], queue: [{ t: 'buy', p: 0 }] });
     const u = uidOf(s, 'yellow.sower', 0);
     s.cards[u].sown = 3;
     s = move(s, `release:${u}`);
+    restore();
     // plus Sower's colored part, 2 yellow: Release gives back only that, in its color (Cory, 2026-10-14)
     expect(R(s).yellow).toBe(1 + 3 + 2);
     expect(named(s, 'Sower')).toHaveLength(1);

@@ -72,7 +72,7 @@ export default {
   },
 
   members: [
-    m('midas', 'Midas', 4, 4, 'Gains from actions come as gold instead. You can switch it off or on when you buy.', {
+    m('midas', 'Midas', 2, 2, 'Gains from actions come as gold instead. You can switch it off or on when you buy.', {
       toggle: true,
       onRecruited(ctx, owner, card) { card.on = true; },
       // a conversion: runs before every other gain modifier, so "gold gains" sees the converted gain
@@ -125,7 +125,7 @@ export default {
         return `no ×2 (no one has more gold than your ${owner.res.gold})`;
       },
     }),
-    m('tinker', 'Tinker', 4, 2, 'Whenever an action gains you another resource, also gain half as much gold (rounded up).', {
+    m('tinker', 'Tinker', 6, 4, 'Whenever an action gains you another resource, also gain half as much gold (rounded up).', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n > 0) owner.res.gold += Math.ceil(g.n / 2); },
     }),
     m('investor', 'Investor', 4, 2, 'Round start: set aside any of your gold. Round end: it comes back doubled.', {
@@ -161,13 +161,13 @@ export default {
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res.gold >= 6,
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 12 → 6
-    m('tycoon', 'Tycoon', 4, 2, 'Game end: +1 follower per 3 gold.', {
+    m('tycoon', 'Tycoon', 3, 1, 'Game end: +1 follower per 3 gold.', {
       onGameEnd: (ctx, owner) => Math.floor(owner.res.gold / 3),
     }),
     m('seed', 'Treasurer', 4, 0, 'When recruited: gain gold equal to your member count.', {
       onRecruited(ctx, owner) { ctx.gain(owner, 'gold', ctx.memberCount(owner)); },
     }),
-    m('hustler', 'Hustler', 2, 0, 'When recruited, pick a color. Actions there give you +1 gold per round number.', {
+    m('hustler', 'Hustler', 4, 0, 'When recruited, pick a color. Actions there give you +1 gold per round number.', {
       onRecruited(ctx, owner, card) {
         ctx.choose(owner, 'Hustler: actions in which color give you extra gold?', ctx.state.quadrants.map(q => ({
           id: `color:${q}`, label: ctx.quadrant(q).name, kind: 'color', value: q, hint: q === 'gold' ? 1 : 0,

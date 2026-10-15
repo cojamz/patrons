@@ -98,7 +98,8 @@ describe('turn order and workers', () => {
   });
 
   it('a full game gives 3, 4, 5 turns per player per round', () => {
-    let s = createGame({ seats: seats(3), seed: 42 });
+    // guests off: Extra Hand (a guest) adds a round-III minion, and with cheaper members the bots now buy it here
+    let s = createGame({ seats: seats(3), seed: 42, rules: { guests: false } });
     const rand = seededRandom(42);
     const turns = {};
     let lastSlots = null;
