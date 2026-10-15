@@ -189,7 +189,8 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
       </div>
       {row && step < rows.length && row.rows.map((r, k) => {
         const at = spots[r.id];
-        if (!at || k >= seen) return null;
+        // a chair that counts nothing gets no chip: a lone "0" in the gutter read as a stray bubble (blind panel)
+        if (!at || k >= seen || (!r.shown && !row.winners.includes(r.id))) return null;
         const won = shownBeat > 0 && row.winners.includes(r.id);
         return (
           <span key={`${row.qid}-${r.id}`} className={`reckon-count${won ? ' won' : ''}`} data-reckon-count={r.id} style={{ left: at.left, top: at.top, '--pc': playerColor(r.id), '--c': `var(--${row.qid})` }}>

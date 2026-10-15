@@ -8,9 +8,9 @@ import { Follower } from '../art/Follower.jsx';
 import { spriteId } from '../art/index.js';
 import { quadrant, followers } from '../../engine/v4/index.js';
 import { breakdown } from '../format.js';
-import { CardName, onTable } from './Info.jsx';
+import { CardName, onTable, Tip } from './Info.jsx';
 import { Rich, Pip } from './Rich.jsx';
-import { memberRows, useNow, spendingPower } from './memberUse.js';
+import { memberRows, useNow, spendingPower, memberAsks } from './memberUse.js';
 import './members.css';
 
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
@@ -41,17 +41,39 @@ export function ReleaseButton({ option, name, onPick }) {
   );
 }
 
-/** A member's on/off switch: a button in your buy step (it flips it), else its state alone. */
-export function MemberSwitch({ name, on, option = null, onPick = null }) {
+/**
+ * A member's on/off switch: a button in your buy step (it flips it), else its state alone. about: the member's rule;
+ * given (the switch small under its figure in your seat), pointing at the switch opens a card saying what it is (blind
+ * testers, 2026-10-15: Translator's pill under it said nothing and its hover opened nothing).
+ */
+export function MemberSwitch({ name, on, option = null, onPick = null, about = null }) {
   const say = `${name} is ${on ? 'on' : 'off'}.${option ? ` Click to switch it ${on ? 'off' : 'on'}.` : ' You can switch it when you buy.'}`;
   const face = <><i className="mu-track" aria-hidden="true"><i className="mu-knob" /></i><span className="mu-sw-word">{on ? 'on' : 'off'}</span></>;
-  return option && onPick
-    ? <button type="button" role="switch" aria-checked={on} className={`mu-switch${on ? ' on' : ''}`} data-switch={on ? 'on' : 'off'} data-option={option.id} title={say} aria-label={say}
+  const sw = option && onPick
+    ? <button type="button" role="switch" aria-checked={on} className={`mu-switch${on ? ' on' : ''}`} data-switch={on ? 'on' : 'off'} data-option={option.id} title={about == null ? say : undefined} aria-label={say}
         onClick={e => { e.stopPropagation(); onPick(option.id); }}>{face}</button>
-    : <span className={`mu-switch idle${on ? ' on' : ''}`} data-switch={on ? 'on' : 'off'} title={say} aria-label={say} role="img">{face}</span>;
+    : <span className={`mu-switch idle${on ? ' on' : ''}`} data-switch={on ? 'on' : 'off'} title={about == null ? say : undefined} aria-label={say} role="img">{face}</span>;
+  if (about == null) return sw;
+  // the rule without its "you can switch it…" sentence: the last line says that, for now
+  const rule = String(about).replace(/\s*You can switch it[^.]*\./i, '').trim();
+  return (
+    <Tip className={`mu-sw-tip${on ? ' on' : ''}`} label={say} data-switch-tip={on ? 'on' : 'off'}
+      content={() => <div className="pop-card gloss mu-sw-card" data-switch-card={name}><b>{name} is {on ? 'on' : 'off'}</b>{rule ? <span><Rich text={rule} /></span> : null}<span className="mu-sw-how">{option ? `Click to switch it ${on ? 'off' : 'on'}.` : 'You can switch it when you buy.'}</span></div>}>
+      {sw}
+    </Tip>
+  );
 }
 
-const stateOf = row => (row.toggle ? (row.toggle.on ? 'on' : 'off') : row.used ? 'used' : row.tag && row.tag.tone === 'lit' ? 'ready' : row.use && row.use.blocked ? 'blocked' : row.use && row.use.idle ? 'idle' : row.kind === 'use' ? 'unused' : '');
+/** "Skip" / "Stay put": the quiet way out of what a member is asking (Big Spender's second buy, Straggler's move). */
+export function SkipButton({ ask, onPick, big = false }) {
+  if (!ask || !ask.skip || !onPick) return null;
+  return (
+    <button type="button" className={`mu-use mu-skip${big ? ' big' : ''}`} data-skip={ask.uid} data-option={ask.skip.option} title={ask.skip.title} aria-label={ask.skip.title}
+      onClick={e => { e.stopPropagation(); onPick(ask.skip.option); }}>{ask.skip.label}</button>
+  );
+}
+
+const stateOf = row => (row.ask ? 'ready' : row.toggle ? (row.toggle.on ? 'on' : 'off') : row.used ? 'used' : row.tag && row.tag.tone === 'lit' ? 'ready' : row.use && row.use.blocked ? 'blocked' : row.use && row.use.idle ? 'idle' : row.kind === 'use' ? 'unused' : '');
 
 /**
  * The seat card's body (Cory, 2026-10-15): the player's members, one row each: picture, name, the ability as one
@@ -73,7 +95,8 @@ export function SeatMembers({ state, pid, me = null, optionFor = () => null, onP
               <span className="mu-head">
                 <b className="mu-name"><CardName state={state} uid={row.uid} />{row.n > 1 ? <span className="num"> ×{row.n}</span> : null}</b>
                 {/* its state on the right: a switch, the Use button when it's yours to use now, else a quiet word */}
-                {row.toggle ? <MemberSwitch name={row.name} on={row.toggle.on} option={row.toggle.option} onPick={onPick} />
+                {row.ask && row.ask.skip && onPick ? <SkipButton ask={row.ask} onPick={onPick} />
+                  : row.toggle ? <MemberSwitch name={row.name} on={row.toggle.on} option={row.toggle.option} onPick={onPick} />
                   : onPick && row.use && !row.use.blocked && !row.use.idle ? <UseButton use={row.use} uid={row.uid} name={row.name} onPick={onPick} />
                     : row.tag ? <span className={`mu-tag ${row.tag.tone}`} title={row.tag.title || undefined}>{row.tag.text}</span> : null}
               </span>
@@ -98,12 +121,16 @@ export function MemberActions({ state, uid, me = null, optionFor = () => null, o
   const row = memberRows(state, me, me, optionFor).find(r => r.uids.includes(uid));
   if (!row) return null;
   const use = row.kind === 'use' && !c.used ? useNow(state, me, uid) : null;
+  // a member asking you something now (Big Spender's second buy, Straggler's move): what to do, and its way out
+  const ask = memberAsks(state, me).get(uid) || null;
   // in your buy step, a member you can release says what comes back, in dots (dialogs pod: Release lives on the seat)
   const rel = row.uids.map(u => optionFor(`release:${u}`)).find(Boolean) || null;
-  if (!use && !row.toggle && !rel) return null;
+  if (!use && !row.toggle && !rel && !ask) return null;
   return (
     <div className="mu-actions" data-member-actions={uid}>
       {row.toggle ? <span className="mu-sw-line"><span>{row.name} is {row.toggle.on ? 'on' : 'off'}</span><MemberSwitch name={row.name} on={row.toggle.on} option={row.toggle.option} onPick={onPick} /></span> : null}
+      {ask ? <small className="mu-ask" data-ask={ask.kind}>{ask.say}</small> : null}
+      {ask ? <SkipButton ask={ask} onPick={onPick} big /> : null}
       {use && use.blocked ? <small className="mu-why">Can’t use it now: {use.why || 'nothing would happen'}.</small> : null}
       {use && use.idle ? <small className="mu-why" data-idle-why>Nothing to gain now: {use.why}.</small> : null}
       {use && !use.blocked && onPick ? <UseButton use={use} uid={uid} name={row.name} onPick={onPick} big /> : null}

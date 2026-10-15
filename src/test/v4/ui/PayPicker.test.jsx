@@ -73,10 +73,12 @@ describe('v4 payment picker', () => {
     expect(ids.has(chosen)).toBe(true);
     expect(vec(state, chosen)[r]).toBe(def.spend[r] + 1);
     // the number under each stack is what you keep
-    for (const c of res) expect(Number(dlg.querySelector(`[data-pay-add="${c}"]`).dataset.keep)).toBe(p.res[c] - vec(state, chosen)[c]);
-    // ...and the sheet says so in words (w3b #25), and a color you hold none of still shows its dot, faint
+    for (const c of res.filter(c => p.res[c] > 0)) expect(Number(dlg.querySelector(`[data-pay-add="${c}"]`).dataset.keep)).toBe(p.res[c] - vec(state, chosen)[c]);
+    // ...and the sheet says so in words (w3b #25); a color you hold none of has no stack at all (blind tester B, aminus
+    // r1: its faint coin read as "this pays")
     expect(dlg.querySelector('[data-pay-legend]').textContent).toMatch(/what you keep/);
-    for (const c of res) expect(!!dlg.querySelector(`[data-stack="${c}"] .ps-none`)).toBe(!(p.res[c] > 0));
+    for (const c of res) expect(!!dlg.querySelector(`[data-stack="${c}"]`)).toBe(p.res[c] > 0);
+    expect(dlg.querySelector('.ps-none')).toBeNull();
     fireEvent.click(dlg.querySelector('.pay-go'));
     expect(ss.submit).toHaveBeenCalledWith({ player: me, option: chosen });
   });

@@ -1,5 +1,5 @@
 // Home, local setup and the online lobby.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PLAYER_COLORS, lowColor } from '../format.js';
 import HowToPlay from '../HowToPlay.jsx';
 import { friendlyError } from '../errors.js';
@@ -128,14 +128,19 @@ export function TablePicker({ value, onChange, readOnly = false }) {
     else if (m === 'random') onChange({ mode: m, quadrants: randomTable() });
     else onChange({ mode: m, quadrants: [...quadrants] });
   };
+  // a fifth sphere with four picked: the tile stays clickable and says, quietly beside the count, what to do (blind
+  // panel: the click did nothing and said nothing)
+  const [full, setFull] = useState(null);
   const toggle = id => {
+    setFull(null);
     if (quadrants.includes(id)) onChange({ mode, quadrants: quadrants.filter(x => x !== id) });
     else if (quadrants.length < 4) onChange({ mode, quadrants: [...quadrants, id] });
+    else setFull(id);
   };
   const usedRes = quadrants.map(id => quadrant(id).resource);
   const problem = quadrants.length === 4 ? tableProblem(quadrants) : '';
   return (
-    <div className="table-pick" data-table={quadrants.join(',')}>
+    <div className={`table-pick${readOnly ? '' : ' editable'}`} data-table={quadrants.join(',')}>
       <div className="seat">
         <span>Table</span>
         {readOnly ? <span className="hint">{mode === 'random' ? 'Random 4' : mode === 'custom' ? 'Custom' : 'Classic'}</span>
@@ -149,15 +154,17 @@ export function TablePicker({ value, onChange, readOnly = false }) {
         </div>
       ) : (
         <>
-          <p className="hint">Pick 4: they go round the wheel in the order you pick them (the corner number). <span className="nowrap"><span className="num">{quadrants.length}</span> of 4</span></p>
+          <p className="hint">Pick 4: they go round the wheel in the order you pick them (the corner number). <span className="nowrap"><span className="num">{quadrants.length}</span> of 4</span>
+            {full && quadrants.length >= 4 && <span className="full-note" data-full-note role="status"> · take one off to add {sphereName(full)}</span>}</p>
           <div className="sphere-grid">
             {spheres().map(id => {
               const on = quadrants.includes(id);
               const clash = !on && usedRes.includes(quadrant(id).resource);
+              const over = !on && !clash && quadrants.length >= 4;
               return (
-                <button key={id} type="button" className={`sphere${on ? ' on' : ''}`} aria-pressed={on} data-sphere={id}
-                  disabled={!on && (quadrants.length >= 4 || clash)} style={{ '--c': `var(--${id})` }} onClick={() => toggle(id)}
-                  title={clash ? `Another sphere on this table already uses ${quadrant(id).resource}.` : sphereHint(id)}>
+                <button key={id} type="button" className={`sphere${on ? ' on' : ''}${over ? ' over' : ''}`} aria-pressed={on} data-sphere={id}
+                  disabled={clash} aria-disabled={over || undefined} style={{ '--c': `var(--${id})` }} onClick={() => toggle(id)}
+                  title={clash ? `Another sphere on this table already uses ${quadrant(id).resource}.` : over ? `Four are picked: take one off to add ${sphereName(id)}.` : sphereHint(id)}>
                   <i className="dot" />{on && <span className="ord num">{quadrants.indexOf(id) + 1}</span>}
                   <b>{sphereName(id)}</b><small>{lowColor(quadrant(id).scoring.label)}</small><small className="sphere-line">{sphereLine(id)}</small>
                 </button>
@@ -186,7 +193,7 @@ function TableChip({ id }) {
     <Tip className="table-chip" style={{ '--c': `var(--${id})` }} label={`${sphereName(id)}: what it does`} content={() => (
       <div className="pop-card" data-chip-card={id}><b>{sphereName(id)}</b><span>{sphereLine(id)}</span><span>{lowColor(q.scoring.label)} at round end.</span>
         <span>Its round I spaces: {q.actions.filter(a => a.ring === 1).map(a => panelWords(id, a, 1).replace(/(^|[^\d])1 @f/g, '$11 follower').replace(/@f/g, 'followers')).join(' · ')}.</span></div>
-    )}><i className="dot" />{sphereName(id)}</Tip>
+    )}><i className="dot" />{sphereName(id)}<small className="chip-line">{sphereLine(id)}</small></Tip>
   );
 }
 
@@ -223,9 +230,13 @@ export function LocalSetup({ initial, onStart, onBack }) {
   // the seat's default name is a placeholder, never text in the box (w2a #48: typing gave "P1Wren"); left empty, it plays
   // as that default
   const named = () => seats.map((s, k) => ({ ...s, name: s.name.trim() || `P${k + 1}` }));
+  // the press that opened this page (a double click on "Play on this device") never lands on what now stands under the
+  // pointer: P4's name box sat right under Play and took the focus (blind panel)
+  const born = useRef(typeof performance !== 'undefined' ? performance.now() : 0);
+  const carried = e => { if (performance.now() - born.current < 400 && e.target.closest && e.target.closest('input')) e.preventDefault(); };
   return (
     <div className="app narrow">
-      <div className="dialog page">
+      <div className="dialog page" onMouseDownCapture={carried}>
         <h2>Play on this device</h2>
         <p className="hint">Everyone plays on this screen. Bots fill the other seats.</p>
         {seats.map((s, i) => (

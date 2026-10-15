@@ -118,12 +118,13 @@ const spentThisRound = (state, card) => !!card.spent && Object.values(card.spent
 /**
  * One row per member (identical cards in identical states share a row, ×n), in reading order:
  * [{ key, uids, uid, def, name, n, text, kind, tag: { text, tone: 'lit'|'quiet'|'dim', title } | null,
- *    use: useNow(...) | null, toggle: { on, option } | null, used }]
+ *    use: useNow(...) | null, ask: memberAsks(...) entry | null, toggle: { on, option } | null, used }]
  * viewer: who's looking (their own members get "ready to use" and the Use button); optionFor: the live options.
  */
 export function memberRows(state, pid, viewer = null, optionFor = () => null) {
   const p = state.players[pid];
   const rows = new Map();
+  const asks = viewer === pid ? memberAsks(state, pid) : new Map();
   for (const uid of p.members) {
     const c = state.cards[uid];
     let d;
@@ -137,7 +138,9 @@ export function memberRows(state, pid, viewer = null, optionFor = () => null) {
     const toggleOpt = mine ? optionFor(`toggle:${uid}`) : null;
     const on = c.on !== false;
     let tag = null;
-    if (kind === 'use') {
+    const ask = asks.get(uid) || null;
+    if (ask) tag = { text: ask.kind === 'again' ? 'buying again now' : 'asking now', tone: 'lit', title: ask.say };
+    else if (kind === 'use') {
       const once = (eff.activate === 'round') ? 'this round' : '';
       if (c.used) tag = { text: once ? 'used this round' : 'used', tone: 'dim' };
       else if (use && use.idle) tag = { text: 'nothing to gain now', tone: 'quiet', title: use.why };
@@ -152,11 +155,11 @@ export function memberRows(state, pid, viewer = null, optionFor = () => null) {
     let text = (d.text || '').trim();
     if (copy) text = `${text} Copying ${copy.name}: ${copy.text}`;
     if (c.color) { try { text = `${text} Picked: ${quadrant(c.color).name}.`; } catch { /* no such quadrant */ } }
-    const key = [d.id, c.used ? 'u' : '', c.on === false ? 'off' : '', c.copy || '', c.color || '', spentThisRound(state, c) ? 's' : ''].join('|');
+    const key = [d.id, c.used ? 'u' : '', c.on === false ? 'off' : '', c.copy || '', c.color || '', spentThisRound(state, c) ? 's' : '', ask ? 'ask' : ''].join('|');
     const row = rows.get(key);
     if (row) { row.uids.push(uid); row.n++; if (!row.use && use) row.use = use; continue; }
     rows.set(key, {
-      key, uids: [uid], uid, def: d, name: d.name, n: 1, text, kind, tag, use,
+      key, uids: [uid], uid, def: d, name: d.name, n: 1, text, kind, tag, use, ask,
       toggle: eff.toggle ? { on, option: toggleOpt } : null,
       used: kind === 'use' ? !!c.used : spentThisRound(state, c),
       loaded: kind === 'use' && !c.used, // a use still in hand: a rival's is a threat to watch (w2b #21)
@@ -175,6 +178,46 @@ export function usableNow(state, pid) {
     const u = useNow(state, pid, o.uid);
     if (u && !u.blocked && !u.idle) out.push({ uid: o.uid, name: cardDef(state, o.uid).name, use: u });
   }
+  return out;
+}
+
+const askCache = new WeakMap();
+/**
+ * Your members that are asking you something right now, besides a Use (blind testers, 2026-10-15: Straggler's question
+ * and Big Spender's second buy showed only in the header): Map uid -> { uid, name, kind, say, skip }.
+ *  kind 'again': the second buy of the turn, from the member that gives it (Big Spender, or a Doppelganger copying it);
+ *    skip is the pass, which keeps it for a later turn this round.
+ *  kind 'ask': a choice whose prompt is titled with one of your members' names ("Straggler: move your last minion…");
+ *    skip is the choice's own "no" (Straggler's "Stay put"), when it has one.
+ * say: what to do now, in a few plain words. Read off the engine's pending step only, so it never drifts from the rules.
+ */
+export function memberAsks(state, pid) {
+  const out = new Map();
+  const pend = state && state.pending;
+  if (!pend || pend.player !== pid || state.over || !state.players[pid]) return out;
+  const memo = askCache.get(state);
+  if (memo && memo.pid === pid) return memo.out;
+  const p = state.players[pid];
+  const defsOf = c => [c.def, c.copy].filter(Boolean).map(id => { try { return defById(id); } catch { return null; } }).filter(Boolean);
+  if (pend.kind === 'buy' && pend.extra) {
+    const uid = p.members.find(u => { const c = state.cards[u]; return c && !(c.spent && c.spent.extraBuy === state.round) && defsOf(c).some(d => d.extraBuy); });
+    if (uid != null) {
+      const name = cardDef(state, uid).name;
+      const pass = pend.options.find(o => o.kind === 'pass') || null;
+      out.set(uid, { uid, name, kind: 'again', say: 'Buying again now: a member or followers.', skip: pass ? { option: pass.id, label: 'Skip, keep it for later', title: `Skip the second buy: ${name} keeps it for a later turn this round.` } : null });
+    }
+  } else if (pend.kind === 'choose') {
+    const title = (String(pend.prompt || '').match(/^([^:]{2,28}):\s*(.*)$/) || []);
+    const uid = title[1] ? p.members.find(u => { const c = state.cards[u]; try { return c && !c.used && cardDef(state, u).name === title[1]; } catch { return false; } }) : undefined;
+    if (uid != null) {
+      const no = pend.options.find(o => o.kind === 'no' || o.kind === 'pass') || null;
+      const onBoard = pend.options.some(o => o.kind === 'slot');
+      const ask = (title[2] || '').replace(/\?$/, '');
+      const say = onBoard ? 'Pick a lit space on the wheel.' : ask.length && ask.length <= 60 ? `${ask[0].toUpperCase()}${ask.slice(1)}.` : 'Choose above.';
+      out.set(uid, { uid, name: title[1], kind: 'ask', say, skip: no ? { option: no.id, label: no.label || 'Skip', title: `${title[1]}: ${no.label || 'skip'}.` } : null });
+    }
+  }
+  askCache.set(state, { pid, out });
   return out;
 }
 

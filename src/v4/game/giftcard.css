@@ -2,8 +2,20 @@
    (.prompt.choice.plain: paper, its place beside the space, the phone's bottom sheet) and lays out two rows: a label on
    the left, the things to pick on the right. The row to act on is lit; the other waits, quiet, in its place. */
 .lt .lt-wheel > .prompt.choice.gift-card{display:flex;flex-direction:column;gap:12px;padding:12px 16px 16px}
-/* on the laptop it sits beside the space and is never cut (a hover card opens off a member in it) */
-@media (min-width:861px) and (min-height:500px){ .lt .lt-wheel > .prompt.choice.gift-card{overflow:visible;max-height:none} }
+/* on the laptop it sits beside the space, and everything it holds stays inside it (blind panel, round III: a swap's
+   "Theirs" ran off the card's right edge over the shop): never wider or taller than the wheel's region, its rows wrap,
+   and when the rivals' members still don't fit, that row scrolls inside the card. (A member's card opens in the hover
+   layer, outside this box, so nothing here can cut it.) */
+@media (min-width:861px) and (min-height:500px){
+  .lt .lt-wheel > .prompt.choice.gift-card{overflow:hidden;max-width:min(460px,calc(100% - 16px));max-height:min(calc(100% - 16px),480px);box-sizing:border-box}
+  .gift-card .gc-row[data-row="2"]{min-height:0;flex:0 1 auto}
+  .gift-card .gc-row[data-row="2"] > .gc-items{max-height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+    /* the lamp ring and the lift of a tile stay inside the scroller's edge */
+    padding:4px 4px 4px 2px;margin:-4px -4px -4px -2px}
+  .gift-card .gc-items[data-more="down"]{-webkit-mask-image:linear-gradient(#000 calc(100% - 28px),transparent);mask-image:linear-gradient(#000 calc(100% - 28px),transparent)}
+  .gift-card .gc-items[data-more="up"]{-webkit-mask-image:linear-gradient(transparent,#000 28px);mask-image:linear-gradient(transparent,#000 28px)}
+  .gift-card .gc-items[data-more="both"]{-webkit-mask-image:linear-gradient(transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(transparent,#000 28px,#000 calc(100% - 28px),transparent)}
+}
 .gift-card .turn-of{margin:0}
 .gift-card .gc-head{display:flex;flex-direction:column;gap:0;margin:0}
 .gift-card .gc-title{font:700 11px/16px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--paper-ink-2,#5f4e3d)}
@@ -11,8 +23,8 @@
 .gift-card .gc-what .num{font-family:var(--sans);font-weight:700;margin-left:.05em}
 .gift-card .gc-what .pip.glyph{width:.8em;height:.8em;vertical-align:-.06em;margin:0 .12em 0 .06em}
 
-.gift-card .gc-row{display:grid;grid-template-columns:64px auto;align-items:center;column-gap:12px;transition:opacity .15s ease-out}
-.gift-card .gc-lbl{font:500 14px/20px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
+.gift-card .gc-row{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:start;column-gap:12px;transition:opacity .15s ease-out}
+.gift-card .gc-lbl{padding-top:12px;font:500 14px/20px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
 .gift-card .gc-row[data-live] .gc-lbl{font-weight:700;color:var(--paper-ink,#2a1f17)}
 .gift-card .gc-items{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px}
 
@@ -49,12 +61,20 @@
 .gift-card .gc-amt{min-width:56px;font-size:18px}
 /* a member: its picture over its name */
 .gift-card .gc-member{flex-direction:column;gap:0;width:72px;padding:4px 4px 2px}
-.gift-card .gc-member .gc-name{display:block;max-width:100%;font:700 11px/16px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gift-card .gc-group{display:inline-flex;align-items:center;gap:4px;padding-right:8px}
-.gift-card .gc-group + .gc-group{padding-left:8px;border-left:1px solid rgba(42,31,23,.15)}
-.gift-card .gc-who{display:inline-flex;align-items:center}
+/* a long name ("Mentor & Protégé") breaks over two lines at its seam, as on the shop's cards, never cut with an ellipsis */
+.gift-card .gc-member{justify-content:flex-start}
+.gift-card .gc-member .gc-name{display:block;max-width:100%;font:700 11px/13px var(--sans);white-space:normal;text-align:center;text-wrap:balance;padding:1px 0}
+.gift-card .gc-row[data-row="1"] .gc-items,.gift-card .gc-group-items{align-items:stretch}
+/* a swap's "Theirs": one line per rival, their face first, their members wrapping under each other beside it (never
+   one long row past the card's edge) */
+.gift-card .gc-items.gc-theirs{flex-direction:column;flex-wrap:nowrap;gap:8px}
+.gift-card .gc-group{display:flex;align-items:flex-start;gap:8px;min-width:0}
+.gift-card .gc-group + .gc-group{padding-top:8px;border-top:1px solid rgba(42,31,23,.15)}
+.gift-card .gc-who{flex:none;display:inline-flex;align-items:center;height:44px}
+.gift-card .gc-group-items{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
 
 .gift-card .gc-rest{display:flex;justify-content:flex-end;gap:8px}
+.gift-card .gc-lead{margin:0;font:500 12px/16px var(--sans);color:var(--ink-2,#5a4a3c)}
 .lt .lt-wheel > .prompt.choice.gift-card .gc-rest-btn{min-height:32px;padding:0 14px;border-radius:999px;font:500 14px/1 var(--sans)}
 
 @media (prefers-reduced-motion:reduce){ .gift-card .gc-item{transition:none} .gift-card .gc-item:not(:disabled):hover{transform:none} }

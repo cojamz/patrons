@@ -15,6 +15,7 @@ import { spriteId } from '../art/index.js';
 import { cardColor, onTable } from './Info.jsx';
 import { realHover } from '../hover.js';
 import { TurnOf } from './parts.jsx';
+import { leadWarning } from './boardPick.js';
 import './giftcard.css';
 
 const LABELS = { give: ['Color', 'To'], gift: [null, 'To'], colors: ['Give', 'Get'], amount: ['Get', 'How many'], trade: ['Yours', 'Theirs'] };
@@ -34,6 +35,17 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
     const b = box.current && box.current.querySelector(`.gc-row[data-row="${step}"] button:not([disabled])`);
     if (b) b.focus({ preventScroll: true });
   }, [pend, step]);
+  // a second row that scrolls inside the card (a swap in round III: many rivals' members) fades at the edge that has
+  // more, so it never reads as cut off
+  const more = useRef(null);
+  const edge = () => {
+    const el = more.current;
+    if (!el) return;
+    const up = el.scrollTop > 1, down = el.scrollTop + el.clientHeight < el.scrollHeight - 1;
+    const v = up && down ? 'both' : up ? 'up' : down ? 'down' : '';
+    if ((el.dataset.more || '') !== v) { if (v) el.dataset.more = v; else delete el.dataset.more; }
+  };
+  useEffect(edge);
   const [l1, l2] = LABELS[g.kind];
   const card = uid => cardDef(state, uid);
   const owner = uid => state.players.find(p => p.members.includes(uid));
@@ -116,7 +128,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
     return [...groups].map(([pid, uids]) => (
       <span key={pid} className="gc-group" data-pid={pid}>
         <span className="gc-who" title={state.players[pid].name}><Minion color={playerColor(pid)} emoji={seatEmoji(state, pid)} size={20} /></span>
-        {uids.map(u => {
+        <span className="gc-group-items">{uids.map(u => {
           const o = live.get(u) || null, d = card(u);
           return (
             <button key={u} type="button" className="gc-item gc-member" data-uid={u} data-option={o ? o.id : undefined} disabled={busy || !o} style={{ '--q': cardColor(state, d) }}
@@ -126,7 +138,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
               <span className="gc-name">{d.name}</span>
             </button>
           );
-        })}
+        })}</span>
       </span>
     ));
   };
@@ -147,8 +159,9 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
       )}
       <div className="gc-row" data-row="2" data-live={step === 2 ? '1' : undefined}>
         <span className="gc-lbl">{l2}</span>
-        <div className="gc-items">{g.kind === 'trade' ? theirs() : g.others.map(secondItem)}</div>
+        <div ref={more} onScroll={edge} className={`gc-items${g.kind === 'trade' ? ' gc-theirs' : ''}`}>{g.kind === 'trade' ? theirs() : g.others.map(secondItem)}</div>
       </div>
+      {leadWarning(pend.options) && <p className="pay-lead gc-lead" data-pay-lead>{leadWarning(pend.options)}</p>}
       {g.rest.length > 0 && (
         <div className="gc-rest">
           {g.rest.map(o => <button key={o.id} type="button" className="btn gc-rest-btn" data-option={o.id} disabled={busy} onClick={e => onAnswer(o.id, e.currentTarget, null)}>{o.label}</button>)}

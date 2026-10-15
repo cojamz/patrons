@@ -119,7 +119,11 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
         // the newest line fits, but not with the "earlier" line above it; or it doesn't fit even alone (a level down)
         const alone = rows[k].getBoundingClientRect().top >= top - 1;
         const bareNow = c0 + k > 0 && !fits(k);
-        const lvlNow = !fits(k) && !alone ? l0 + 1 : l0;
+        // a line shows whole or not at all, never cut mid-word (blind panel: "took your Tax…"): a newest line too tall
+        // for the room first drops the space's board words in brackets (its name still opens its card), which changes
+        // its size so this runs again; if it still doesn't fit, or had none to drop, the strip shows only the count
+        const brief = l0 === 0 && !!rows[k].querySelector('.sp-words');
+        const lvlNow = !fits(k) && !alone ? (brief ? 1 : 2) : l0;
         if ((!k && !bareNow && lvlNow === l0) || c0 + k > len - 1) return;
         const n = c0 + k;
         // hide what goes (and the "earlier" line, which moves down when React draws the fold; and the newest, when it
@@ -140,10 +144,13 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
   const name = id => (id === me ? 'You' : state.players[id].name);
   // a tap anywhere on a line that isn't a name pins its card (the name's own tap opens the name's card)
   const pinLine = e => { const t = e.currentTarget.querySelector('[data-since-line]'); if (t && !e.target.closest('[data-hover-name], [data-since-line]')) t.click(); };
+  // nothing to tell (before your first turn, or your second turn in a row): the strip says nothing at all, only the Log
+  // stays (blind panel: "No moves since yours yet." narrated nothing)
+  const empty = !entries.length;
   return (
-    <section ref={secRef} className={`lt-since${yours ? ' yours' : ''}`} data-since data-folded={cut || undefined} aria-label="Since your last turn">
+    <section ref={secRef} className={`lt-since${yours ? ' yours' : ''}${empty ? ' empty' : ''}`} data-since data-empty={empty || undefined} data-folded={cut || undefined} aria-label="Since your last turn">
       <header className="since-head">
-        <span className="since-title">Since your last turn</span>
+        {!empty && <span className="since-title">Since your last turn</span>}
         {/* the newest line alone: the earlier ones are counted up here, beside the Log, taking no line of their own */}
         {(bare || lvl >= 2) && more + (lvl >= 2 ? shown.length : 0) > 0 && (
           <button type="button" className="since-more in-head" onClick={onLog} title="Open the log">{lvl >= 2 ? `${more + shown.length} ${more + shown.length === 1 ? 'move' : 'moves'}` : `${more} earlier`}</button>
@@ -154,7 +161,7 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
         <ol className="since-list" ref={listRef}>
           {more > 0 && !bare && <li className="since-more"><button type="button" onClick={onLog}>{more} earlier… open the log</button></li>}
           {shown.map(e => (
-            <li key={e.n} className={`since-row${e.hit ? ' hit' : ''}${lvl === 1 ? ' one' : ''}`} hidden={lvl >= 2 || undefined} style={{ '--pc': playerColor(e.actor) }} onClick={pinLine}>
+            <li key={e.n} className={`since-row${e.hit ? ' hit' : ''}${lvl === 1 ? ' brief' : ''}`} hidden={lvl >= 2 || undefined} style={{ '--pc': playerColor(e.actor) }} onClick={pinLine}>
               <Tip className="since-line" data-since-line={e.n} label={`${e.head}: show what happened`}
                 content={() => <StoryCard story={e} color={playerColor(e.actor)} state={state} hover={hover} />}>
                 <Minion color={playerColor(e.actor)} emoji={seatEmoji(state, e.actor)} size={14} /><b className="who">{name(e.actor)}</b>
@@ -167,7 +174,7 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
             </li>
           ))}
         </ol>
-      ) : <p className="since-none">{state.round >= 1 ? 'No moves since yours yet.' : 'Moves will show here.'}</p>}
+      ) : null}
     </section>
   );
 }

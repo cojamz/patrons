@@ -821,9 +821,23 @@ export function turnStory(start, end, actor, me = null, mid = null) {
         said.push(`${cap(card)}: ${m[3] ? `${m[3]} ${m[4]} → ${m[5]}` : `${m[6]} ${m[7]} came as ${m[8]} ${m[9]}`}`);
         continue;
       }
+      // a rival's answer to this turn (Shake Down's ransom, Poach's replacement): whose call, what they gave and why
+      // that much, so the card never shows a bare "+2 magenta" against a "+4" hover (blind tester, aminus r1 #3, #4)
+      const rival = P.find(p => p.id !== actor && l.startsWith(`${p.name} `));
+      if (rival) {
+        const rest = l.slice(rival.name.length + 1), who2 = cap(nm(rival.id));
+        if ((m = rest.match(/^chose to pay (\d+) \((.+)\) to keep (.+): its cost is \d+\.$/))) { said.push(`${who2} paid ${m[1]} to keep ${m[3]} (its cost)`); continue; }
+        if ((m = rest.match(/^chose to let (.+) go to .+ rather than pay (\d+)\.$/))) { said.push(`${who2} let ${m[1]} go rather than pay ${m[2]}`); continue; }
+        if ((m = rest.match(/^couldn't pay (\d+) \(held (\d+)\), so lost (.+) to .+\.$/))) { said.push(`${who2} couldn’t pay ${m[1]}, so lost ${m[3]}`); continue; }
+        if ((m = rest.match(/^gets no replacement: (.+)\.$/))) { said.push(`${who2} gets no replacement: ${m[1]}`); continue; }
+      }
       if (!l.startsWith(`${A.name} `) && !l.startsWith(`${A.name}'s `)) continue;
       const own = l.slice(A.name.length);
-      if ((m = own.match(/^ uses (.+?)\.$/))) said.push(`used ${m[1]}`);
+      if ((m = own.match(/^'s Top Up: (.+ tie for your fewest .+)\.$/))) said.push(youName(`Top Up: ${m[1]}`).replace(/\byour fewest\b/, actor === me ? 'your fewest' : 'the fewest'));
+      else if ((m = own.match(/^ uses (.+?)\.$/))) said.push(`used ${m[1]}`);
+      // a buy step skipped because nothing was affordable is said on the card (blind tester B: after Lie Low it passed
+      // silently, straight into the round's scoring, where the toast never showed)
+      else if (/^ couldn't buy anything\.$/.test(own)) said.push('nothing affordable to buy');
       else if ((m = own.match(/^ traded (.+)\.$/))) said.push(youName(`traded ${m[1]}`));
       else if ((m = own.match(/takes (an extra turn|(\d+) extra turns)\.$/))) said.push(m[2] ? `${m[2]} extra turns` : 'an extra turn');
       else if ((m = own.match(/^'s next member costs (\d+) less\.$/))) said.push(`next member costs ${m[1]} less`);

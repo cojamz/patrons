@@ -13,6 +13,11 @@
 //       another switches it, then the faces light and a face click gives (the engine's id), the coins flying there.
 //  (w1) Even Swap on the same card: your members are the first row; one picked, the rivals' members it pairs with light
 //       (each opens its own card when pointed at: w3a A3); a click swaps.
+//  (w2) Swap Sides in round III with a crowd (blind panel: "Theirs" ran off the card over the shop cards): the card
+//       stays inside the wheel's region and clear of the shop, nothing in it draws outside it (its rivals' row wraps,
+//       and scrolls inside the card when it must), and a rival's member scrolled into view still swaps.
+//  (s0) Wave f4: the "since your last turn" strip with nothing to tell says nothing ("No moves since yours yet." went),
+//       and no strip line is ever clamped with an ellipsis ("took your Tax…").
 //  (k1) The keyboard list: absent for the mouse; Tab from the caption opens it with every pick.
 //  Wave-2 tester B: (s8) Snap Up pays through the sheet; (t1) Talent Scout's top 5 as cards; (y1) Your Call in marks at
 //  the space; (r1) Release from your member's card, no header dropdown; (d1) Double Agent's forced swap explained.
@@ -21,7 +26,7 @@ import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
-import { paySave, swapSave, comboSave, momentSave } from './lib/dialog-save.mjs';
+import { paySave, swapSave, swapCrowdSave, comboSave, momentSave } from './lib/dialog-save.mjs';
 import { stealSave } from './lib/steal-save.mjs';
 import { memberPrice, TIERS, cardDef } from '../../src/engine/v4/index.js';
 import { costParts } from '../../src/v4/format.js';
@@ -213,6 +218,60 @@ try {
     if (got !== before + 2) errors.push(`(g1) P3 holds ${got} red, want ${before + 2}`);
     if (await page.$('.gift-card')) errors.push('(g1) the gift card stays up after the gift');
     await page.screenshot({ path: `${SHOTS}/g1-given.png` });
+    await ctx.close();
+  }
+  // (w2) a crowded round-III Swap Sides: everything stays on the card
+  {
+    const save = swapCrowdSave();
+    const st = save.state;
+    const { ctx, page } = await open('w2', save, '.lt-wheel .gift-card[data-gift="trade"]');
+    const contained = () => page.evaluate(() => {
+      const card = document.querySelector('.gift-card'), c = card.getBoundingClientRect();
+      const w = document.querySelector('.lt-wheel').getBoundingClientRect();
+      const shop = [...document.querySelectorAll('.lt-card.card, .lt-deck, .lt-rates')].map(e => e.getBoundingClientRect()).filter(b => b.width);
+      const hitShop = shop.filter(b => Math.min(b.right, c.right) - Math.max(b.left, c.left) > 1 && Math.min(b.bottom, c.bottom) - Math.max(b.top, c.top) > 1).length;
+      // what the eye sees just outside the card's edges is never part of the card
+      const probes = [];
+      for (let y = c.top + 8; y < c.bottom; y += 24) probes.push([c.right + 3, y], [c.left - 3, y]);
+      for (let x = c.left + 8; x < c.right; x += 24) probes.push([x, c.bottom + 3]);
+      const leak = probes.filter(([x, y]) => x >= 0 && y >= 0 && x < innerWidth && y < innerHeight).filter(([x, y]) => { const e = document.elementFromPoint(x, y); return e && e.closest('.gift-card'); }).length;
+      const sc = card.querySelector('.gc-row[data-row="2"] > .gc-items');
+      return { inWheel: c.left >= w.left - 1 && c.right <= w.right + 1 && c.top >= w.top - 1 && c.bottom <= w.bottom + 1, hitShop, leak,
+        wide: card.scrollWidth > card.clientWidth + 1 || (sc && sc.scrollWidth > sc.clientWidth + 1), box: [c.left, c.top, c.right, c.bottom].map(Math.round) };
+    });
+    const a = await contained();
+    if (!a.inWheel) errors.push(`(w2) the crowded swap card leaves the wheel's region ${JSON.stringify(a.box)}`);
+    if (a.hitShop) errors.push(`(w2) the crowded swap card covers ${a.hitShop} shop card(s)`);
+    if (a.leak) errors.push(`(w2) the crowded swap card draws outside its own edges at ${a.leak} point(s)`);
+    if (a.wide) errors.push('(w2) the crowded swap card runs wider than itself (a row that doesn\'t wrap)');
+    const mine = await page.$$eval('.gift-card .gc-row[data-row="1"] .gc-member:not([disabled])', els => els.map(e => Number(e.dataset.uid)));
+    await click(page, `.gift-card .gc-row[data-row="1"] .gc-member[data-uid="${mine[0]}"]`);
+    await page.mouse.move(4, 690); await page.waitForTimeout(300);
+    const b = await contained();
+    if (b.leak || b.wide || !b.inWheel || b.hitShop) errors.push(`(w2) once yours is picked, the card spills: ${JSON.stringify(b)}`);
+    await page.screenshot({ path: `${SHOTS}/w2-crowd.png` });
+    // the last live rival member, scrolled into view inside the card, swaps
+    const last = page.locator('.gift-card .gc-row[data-row="2"] .gc-member:not([disabled])').last();
+    const want = await last.getAttribute('data-option');
+    await last.scrollIntoViewIfNeeded();
+    const lb = await last.boundingBox();
+    const cb = await page.locator('.gift-card').boundingBox();
+    if (!lb || lb.y < cb.y || lb.y + lb.height > cb.y + cb.height + 1) errors.push('(w2) the last rival member can\'t be brought into view inside the card');
+    else {
+      await page.mouse.click(lb.x + lb.width / 2, lb.y + lb.height / 2);
+      await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 6000 }).catch(() => errors.push('(w2) clicking a scrolled-to rival member did not swap'));
+      const rec = await lastMove(page);
+      if (rec && rec !== want) errors.push(`(w2) recorded ${rec}, clicked ${want}`);
+    }
+    // (s0) the strip: nothing to tell says nothing; no line clamped
+    const strip = await page.evaluate(() => {
+      const s = document.querySelector('[data-since]');
+      if (!s) return null;
+      const rows = [...s.querySelectorAll('.since-row')];
+      return { rows: rows.length, text: s.textContent, clamped: rows.filter(r => { const cs = getComputedStyle(r); return (cs.webkitLineClamp && cs.webkitLineClamp !== 'none') || cs.textOverflow === 'ellipsis'; }).length };
+    });
+    if (strip && !strip.rows && /No moves|Since your last turn/i.test(strip.text)) errors.push(`(s0) the strip with nothing to tell still reads "${strip.text.trim()}"`);
+    if (strip && strip.clamped) errors.push(`(s0) ${strip.clamped} strip line(s) clamped with an ellipsis`);
     await ctx.close();
   }
   // (w1) Even Swap: yours, then theirs, on the same card

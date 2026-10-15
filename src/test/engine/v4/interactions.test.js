@@ -125,7 +125,10 @@ describe('Green copies the risky spaces', () => {
     const B = ['gold', 'red', 'market', 'echo'];
     let s = scene({ quads: B, turns: [1, 0] });
     s = take(s, 'market.bargain');
-    s = pass(play(s, opt('Intern'))); // +2 blue, then pays those 2 blue for the Intern
+    // +2 blue, then pays those 2 blue for the Intern (its one way gives up P2's blue lead, so the sheet asks first)
+    s = play(s, opt('Intern'));
+    if (s.pending?.kind === 'choose' && s.pending.options.some(o => o.kind === 'pay')) s = move(s, s.pending.options.find(o => o.kind === 'pay').id);
+    s = pass(s);
     expect(defs(s, 1)).toEqual(['red.intern']);
     expect(R(s, 1).blue).toBe(0);
     s = take(s, 'echo.echo');

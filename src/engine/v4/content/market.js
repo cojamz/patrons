@@ -34,15 +34,26 @@ const payLabel = v => Object.entries(v).filter(([, n]) => n).map(([c, n]) => `${
 
 /** Recruit `uid` from the face-up row at the price `how` sets (the player picks how to pay). */
 function buyAt(ctx, p, uid, how, why) {
-  const card = ctx.card(uid);
-  const list = ctx.payChoices(p, uid, how);
+  if (!ctx.payChoices(p, uid, how).length) return;
+  askPay(ctx, p, `${why}: how do you pay ${ctx.price(p, uid, how).total} for ${ctx.card(uid).def.name}?`, { uid, why, how });
+}
+/**
+ * The buy step's pay rule, for every recruit outside it (Snap Up, Half Price, Talent Scout): one way to pay pays at
+ * once, unless that way gives up a lead or tie you hold (then the pay sheet asks, saying so, with Cancel); more than
+ * one way, the player picks (decisions.md, 2026-10-15 17:55; panel tester C: a member-ability buy paid silently).
+ */
+function askPay(ctx, p, prompt, data) {
+  const list = ctx.payChoices(p, data.uid, data.how || {});
   if (!list.length) return;
-  const data = { uid, why, how };
-  if (list.length === 1) { payAndRecruit(ctx, p, list[0], data); return; }
+  const asks = list.length > 1 || ctx.leadsLost(p, list[0]).length > 0;
+  if (!asks) { payAndRecruit(ctx, p, list[0], data); return; }
   // uid and how ride on each way to pay, so a screen can show the member and its price (the pay sheet); ids unchanged
-  ctx.choose(p, `${why}: how do you pay ${ctx.price(p, uid, how).total} for ${card.def.name}?`, list.map((v, i) => ({
-    id: `pay:${ctx.state.resources.map(r => v[r] || 0).join('-')}`, label: payLabel(v), kind: 'pay', value: v, hint: i === 0 ? 1 : 0, uid, how,
-  })), `${Q}.pay`, data);
+  const opts = list.map((v, i) => ({
+    id: `pay:${ctx.state.resources.map(r => v[r] || 0).join('-')}`, label: payLabel(v), kind: 'pay', value: v, hint: i === 0 ? 1 : 0, uid: data.uid, how: data.how || {},
+  }));
+  // the one way gives up a lead: the sheet's Cancel recruits nothing
+  if (list.length === 1) opts.push({ id: 'back', label: 'Cancel', kind: 'back', value: null, hint: -1 });
+  ctx.choose(p, prompt, opts, `${Q}.pay`, data);
 }
 function payAndRecruit(ctx, p, v, { uid, why, fromPile, how = howFor(why) }) {
   const card = ctx.card(uid);
@@ -141,17 +152,15 @@ const market = {
       if (uid === null) { ctx.log(`${data.why}: ${p.name} recruits nothing.`); return; }
       buyAt(ctx, p, uid, howFor(data.why), data.why);
     },
-    pay(ctx, p, v, data) { payAndRecruit(ctx, p, v, data); },
+    pay(ctx, p, v, data) {
+      if (!v) { ctx.log(`${data.why}: ${p.name} recruits nothing.`); return; }
+      payAndRecruit(ctx, p, v, data);
+    },
     blackMarket(ctx, p, uid) {
       if (uid === null) return;
       const c = ctx.card(uid);
-      const list = scoutChoices(ctx, p, uid);
-      if (!list.length) return;
-      const data = { uid, why: 'Talent Scout', fromPile: true, how: {} };
-      if (list.length === 1) { payAndRecruit(ctx, p, list[0], data); return; }
-      ctx.choose(p, `Talent Scout: how do you pay for ${c.def.name}?`, list.map((v, i) => ({
-        id: `pay:${ctx.state.resources.map(r => v[r] || 0).join('-')}`, label: payLabel(v), kind: 'pay', value: v, hint: i === 0 ? 1 : 0, uid, how: {},
-      })), `${Q}.pay`, data);
+      if (!scoutChoices(ctx, p, uid).length) return;
+      askPay(ctx, p, `Talent Scout: how do you pay for ${c.def.name}?`, { uid, why: 'Talent Scout', fromPile: true, how: {} });
     },
     climb(ctx, p, color) {
       ctx.gain(p, color, 2);

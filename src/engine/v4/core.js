@@ -275,23 +275,23 @@ function rimCost(state, p) {
     try {
       const mine = q.scoring.score(ctx, p);
       const best = Math.max(0, ...state.players.filter(o => o !== p).map(o => q.scoring.score(ctx, o)));
-      rims.push({ q, r: q.resource, best, held: mine > 0 && mine >= best, near: !(mine > 0 && mine >= best) && best > 0 });
+      rims.push({ q, r: q.resource, best, held: mine > 0 && mine >= best, tie: mine > 0 && mine === best, near: !(mine > 0 && mine >= best) && best > 0 });
     } catch { /* a scoring rule that can't be read here */ }
   }
   return v => {
     let lost = 0, near = 0;
-    const colors = [];
+    const colors = [], ties = [];
     const saved = { ...p.res };
     try {
       for (const c in v) p.res[c] = (p.res[c] || 0) - (v[c] || 0);
       for (const x of rims) {
         if (!(v[x.r] > 0)) continue;
         const now = x.q.scoring.score(ctx, p);
-        if (x.held && !(now > 0 && now >= x.best)) { lost++; colors.push(x.r); }
+        if (x.held && !(now > 0 && now >= x.best)) { lost++; colors.push(x.r); if (x.tie) ties.push(x.r); }
         if (x.near && x.best - now <= 3 + (v[x.r] || 0)) near += v[x.r];
       }
     } catch { /* leave it unranked */ } finally { Object.assign(p.res, saved); }
-    return { lost, near, colors };
+    return { lost, near, colors, ties };
   };
 }
 
@@ -317,8 +317,11 @@ function orderChoices(state, list, preferred, p) {
  * paying this way, so the screen can say so and never pays it without asking (wave-2 testers A#4, B#2).
  */
 function payOption(state, v, i, lost = null) {
-  const breaks = lost ? lost(v).colors : [];
-  return { id: `pay:${vecKey(state, v)}`, label: payString(v), kind: 'pay', spend: Object.fromEntries(state.resources.map(r => [r, v[r] || 0])), default: i === 0, ...(breaks.length ? { breaks } : {}) };
+  const got = lost ? lost(v) : { colors: [], ties: [] };
+  const breaks = got.colors, ties = got.ties || [];
+  // ties: the broken ones that were a share of the lead, so the sheet says "your tie for most gold", never "your lead"
+  // when you only tied (blind tester B read the warning as wrong: they didn't lead)
+  return { id: `pay:${vecKey(state, v)}`, label: payString(v), kind: 'pay', spend: Object.fromEntries(state.resources.map(r => [r, v[r] || 0])), default: i === 0, ...(breaks.length ? { breaks } : {}), ...(ties.length ? { ties } : {}) };
 }
 
 /** Paying for a follower buy: needs `colors` different resources; each wild one (gold) covers a color. Gold is spent last. */
@@ -408,7 +411,9 @@ function inputFor(state, task) {
     }
     case 'choose': {
       // only the options whose cards are still where they were when the choice was queued (see liveOptions)
-      const options = liveOptions(state, task);
+      // an answer that spends your coins (option.spend, or a pay option's value) says which leads it gives up (breaks),
+      // worked out when it's shown, so a space's payment warns like the pay sheet does (panel tester C #1)
+      const options = withBreaks(state, p, liveOptions(state, task));
       // count: a counted pick's progress; blocked: { [player id]: why you can't pick them now } (a steal's limit)
       if (options.length || !task.options.length) return { kind: 'choose', prompt: task.prompt, options, ...(task.count ? { count: task.count } : {}), ...(task.blocked ? { blocked: task.blocked } : {}) };
       return {
@@ -732,7 +737,9 @@ export function contestTable(state, ctx = ctxFor(state)) {
 function finish(state) {
   const ctx = ctxFor(state);
   // final.cards: each bonus with the member that scored it (the results' scoring pops it over that member's head)
-  for (const p of state.players) p.final = { total: 0, parts: [], cards: [] };
+  // final.zero: members that score at game end and scored nothing this time, so the summary never says "no end-game
+  // bonuses" over a Kingpin that came to +0 (blind tester, aminus r1 #5)
+  for (const p of state.players) p.final = { total: 0, parts: [], cards: [], zero: [] };
   eachMember(state, (owner, card, def) => {
     if (!def.onGameEnd) return;
     const got = def.onGameEnd(ctx, owner, card) || 0;
@@ -740,7 +747,7 @@ function finish(state) {
       owner.bonus += got; fBump(state, owner, got); owner.final.total += got;
       owner.final.parts.push(`${def.name} ${got > 0 ? '+' : '−'}${Math.abs(got)}`);
       owner.final.cards.push({ uid: card.uid, name: def.name, n: got });
-    }
+    } else owner.final.zero.push({ uid: card.uid, name: def.name });
   });
   const ranked = [...state.players].sort((a, b) => followers(state, b) - followers(state, a) || memberCount(state, b) - memberCount(state, a));
   state.ranking = ranked.map(p => p.id);
@@ -1090,7 +1097,12 @@ function ctxFor(state) {
     /** The one price rule (memberPrice) and the ways to pay it (paymentChoices), for recruits outside the buy step. */
     price: (p, uid, how) => memberPrice(state, p, uid, how),
     payChoices: (p, uid, how) => paymentChoices(state, p, uid, how),
+    /** The colors whose contest lead or tie p holds now and would give up by spending `v` ({ color: n }; a negative n
+     *  is a gain, for a swap). Display and asking only: a one-way payment that gives up a lead asks first. */
+    leadsLost: (p, v) => rimCost(state, p)(v).colors,
     log: text => log(state, text),
+    /** A preview's reason for a member's effect content applies itself (Grand Host's double): the "Why" row. */
+    note: (p, member, text, res = null) => note(state, p, member, text, res),
     /** This round's order with turns taken early moved up (roundOrder). */
     roundOrder: () => roundOrder(state),
     cardLeaves: (p, uid) => cardLeaves(state, p, uid),
@@ -1220,6 +1232,19 @@ function withTargets(state, options) {
   });
 }
 /** A queued choice's options that are still good: every card an option names is where it was when it was queued. */
+/** Options that spend p's coins (o.spend, or a pay option's vector value) get breaks: the leads that spend gives up. */
+function withBreaks(state, p, options) {
+  const spendOf = o => (o.spend && typeof o.spend === 'object' ? o.spend : o.kind === 'pay' && o.value && typeof o.value === 'object' ? o.value : null);
+  if (!p || !options.some(spendOf)) return options;
+  const cost = rimCost(state, p);
+  return options.map(o => {
+    const v = spendOf(o);
+    if (!v) return o;
+    const got = cost(v);
+    return got.colors.length ? { ...o, breaks: got.colors, ...(got.ties.length ? { ties: got.ties } : {}) } : o;
+  });
+}
+
 export function liveOptions(state, task) {
   return task.options.filter(o => !o.at || Object.entries(o.at).every(([u, w]) => whereIs(state, Number(u)) === w));
 }

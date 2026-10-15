@@ -4,9 +4,11 @@
 //  (l3) nothing makes the page scroll sideways;
 //  (l4) a member whose color isn't on the table never prints that color as its cost;
 //  (l5) no color rule for follower buys anywhere (they take anything);
-//  (l6) at setup the starting-resource pick stands at the wheel's centre, where the eye lands (w3b #5, Cory: "an obvious
-//       call to action"), on the inner rings only, which are locked then: never over a ring-I space or a rim (RC1: a
-//       note over the lower half hid that the wheel spins), and the whole disc is on screen.
+//  (l6) at setup the starting-resource pick never covers a ring-I space or a rim (RC1: a note over the lower half hid
+//       that the wheel spins), and the whole disc is on screen. Narrow laptops (<1200px): it stands at the wheel's
+//       centre, on the inner rings (w3b #5). From 1200px it stands at the foot of the chairs' column and covers no space
+//       at all, no chair and no shop card (blind panel, f4: at the centre it hid the 8 middle and 4 inner spaces and the
+//       shop's hover cards, just when the rulebook says to pick toward a member), all of it on screen.
 // Checked at 1270×700, 900×700 (the "900px clipping") and 1100×700, from a saved game (e2e/v4/lib/rich-save.mjs).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5186.
 import { chromium } from 'playwright';
@@ -137,11 +139,20 @@ for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }])
         .filter(b => b.width && Math.min(b.right, pk.right) - Math.max(b.left, pk.left) > 1 && Math.min(b.bottom, pk.bottom) - Math.max(b.top, pk.top) > 1).length;
       const far = Math.max(...[[pk.left, pk.top], [pk.right, pk.top], [pk.left, pk.bottom], [pk.right, pk.bottom]].map(([x, y]) => Math.hypot(x - cx, y - cy)));
       const off = Math.hypot((pk.left + pk.right) / 2 - cx, (pk.top + pk.bottom) / 2 - cy);
-      return { over, rim: far > rad * 0.9, off: Math.round(off), disc: [cy - rad, cy + rad].map(Math.round), h: innerHeight, size: Math.round(rad * 2) };
+      const hits = sel => [...document.querySelectorAll(sel)].map(e => e.getBoundingClientRect())
+        .filter(b => b.width && Math.min(b.right, pk.right) - Math.max(b.left, pk.left) > 1 && Math.min(b.bottom, pk.bottom) - Math.max(b.top, pk.top) > 1).length;
+      // (from 1200px the pick stands off the wheel: none of it may reach the disc at all)
+      const near = Math.hypot(Math.max(pk.left - cx, 0, cx - pk.right), Math.max(pk.top - cy, 0, cy - pk.bottom));
+      return { over, rim: innerWidth >= 1200 ? near < rad : far > rad * 0.9, off: Math.round(off), disc: [cy - rad, cy + rad].map(Math.round), h: innerHeight, size: Math.round(rad * 2),
+        wide: innerWidth >= 1200, anySlot: hits('.lt-wheel .slot'), seats: hits('.lt > .lt-seat'), shop: hits('.lt-card.card, .lt-deck'),
+        onScreen: pk.left >= 0 && pk.top >= 0 && pk.right <= innerWidth && pk.bottom <= innerHeight };
     });
     if (r.over) errors.push(`[${tag} setup] (l6) the starting-resource picker covers ${r.over} ring-I space(s)`);
     if (r.rim) errors.push(`[${tag} setup] (l6) the starting-resource picker reaches the rim`);
-    if (r.off > 40) errors.push(`[${tag} setup] (l6) the starting-resource picker isn't at the wheel's centre (${r.off}px off): the pick is where the eye lands (w3b #5)`);
+    if (!r.wide && r.off > 40) errors.push(`[${tag} setup] (l6) the starting-resource picker isn't at the wheel's centre (${r.off}px off): the pick is where the eye lands (w3b #5)`);
+    if (r.wide && r.anySlot) errors.push(`[${tag} setup] (l6) the starting-resource picker covers ${r.anySlot} wheel space(s): the inner rings are what you pick toward`);
+    if (r.wide && (r.seats || r.shop)) errors.push(`[${tag} setup] (l6) the starting-resource picker covers ${r.seats} chair(s) and ${r.shop} shop card(s)`);
+    if (!r.onScreen) errors.push(`[${tag} setup] (l6) the starting-resource picker runs off the window`);
     if (r.disc[0] < 0 || r.disc[1] > r.h) errors.push(`[${tag} setup] (l6) the wheel runs off the window at setup (${r.disc.join('–')})`);
     if (r.size < 300) errors.push(`[${tag} setup] (l6) the wheel shrank to ${r.size}px at setup`);
     await page.screenshot({ path: `${SHOTS}/${tag}-setup.png` });

@@ -46,7 +46,11 @@ function afterGive(ctx, giver) {
 /** Silver a Silver space pays its taker: Grand Host doubles it (each copy doubles again). */
 function hostGain(ctx, p, n) {
   const k = hooks(ctx, p, 'hostDouble').length;
-  if (k) ctx.log(`${p.name}'s Grand Host: the space's ${n} silver comes as ${n * 2 ** k}.`);
+  if (k) {
+    ctx.log(`${p.name}'s Grand Host: the space's ${n} silver comes as ${n * 2 ** k}.`);
+    // the hover's Why names it, the biggest part of the payout (panel tester C: only Caterer +1 was listed)
+    ctx.note(p, 'Grand Host', `silver gain ${n} → ${n * 2 ** k}`);
+  }
   // printed: the space's own gain, which is what a copy (Green) gets
   ctx.gain(p, S, n * 2 ** k, { fromAction: true, printed: n });
   return n * 2 ** k;
@@ -114,7 +118,7 @@ export const silverActions = [
       const have = p.res[S];
       const opts = [{ id: 'keep', label: 'Keep it all', kind: 'swap', value: null, hint: 0 }];
       for (const c of otherColors(ctx)) for (const x of [...new Set([Math.floor(have / 2), have])].filter(v => v > 0)) {
-        opts.push({ id: `swap:${c}:${x}`, label: `${x} silver → ${x} ${c}`, kind: 'swap', value: [c, x],
+        opts.push({ id: `swap:${c}:${x}`, label: `${x} silver → ${x} ${c}`, kind: 'swap', value: [c, x], spend: { silver: x, [c]: -x },
           // bots: turn half into the color they're shortest of
           hint: x === Math.floor(have / 2) ? 1 - 0.2 * (p.res[c] || 0) : -1 });
       }
@@ -169,6 +173,8 @@ const silver = {
         ctx.log(`${p.name} turned ${x} silver into ${x} ${c}.`);
       }
       giveAll(ctx, p, S, 1);
+      // each gift names the space (panel tester C: a copied Sweet Talk on an Echo turn gave P3 +1 silver, unexplained)
+      for (const o of others(ctx, p)) ctx.log(`${o.name} +1 silver (${p.name}'s Sweet Talk).`);
     },
     benefactor(ctx, p, id) {
       const t = ctx.player(id);

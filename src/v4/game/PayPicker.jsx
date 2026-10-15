@@ -18,6 +18,7 @@ import { ResourceGlyph } from './Glyphs.jsx';
 import { CostDots, cardColor, onTable } from './Info.jsx';
 import { priceNotes } from './priceNotes.js';
 import { motionOK } from './flight.js';
+import { leadsLost } from './boardPick.js';
 import './pay.css';
 
 const vecOf = (res, v) => Object.fromEntries(res.map(r => [r, (v && v[r]) || 0]));
@@ -45,8 +46,13 @@ function costShape(state, p, pend, uid, how) {
  * A choice that is a way to pay for a member outside the buy step (Snap Up, Half Price, Talent Scout): every answer is
  * a pay option naming its member (uid) and the price rule it's paid under (how). It gets the same sheet.
  */
-export const payChoice = pend => !!(pend && pend.kind === 'choose' && pend.options.length > 1
-  && pend.options.every(o => o.kind === 'pay' && Number.isInteger(o.uid) && o.value && typeof o.value === 'object'));
+export const payChoice = pend => {
+  if (!(pend && pend.kind === 'choose')) return false;
+  const isPay = o => o.kind === 'pay' && Number.isInteger(o.uid) && o.value && typeof o.value === 'object';
+  const pays = pend.options.filter(isPay).length, back = pend.options.some(o => o.kind === 'back');
+  // several ways, or one way that gives up a lead (the engine asks then, with Cancel)
+  return pays > 0 && pend.options.every(o => isPay(o) || o.kind === 'back') && (pays > 1 || back);
+};
 
 export default function PayPicker({ state, onPick, busy, turnOf = null }) {
   const pend = state.pending;
@@ -179,7 +185,8 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
             and the number under a stack is what you keep. Click a stack to pay with one more of it; click a lifted coin
             to put it back (another color takes its place). */}
         <div className="pay-stacks" role="group" aria-label="Your resources" style={{ '--tall': tall }}>
-          {res.map(r => {
+          {/* only the colors you hold (blind tester B: a faint coin for a color you hold none of read as "this pays") */}
+          {res.filter(r => (p.res[r] || 0) > 0).map(r => {
             const have = p.res[r] || 0, out = spend[r] || 0, keep = have - out;
             const drawn = Math.min(have, STACK_MAX), lifted = Math.min(out, drawn), base = have - drawn;
             const sayAdd = have ? `${have} ${r}: ${out ? `${out} pay${out === 1 ? 's' : ''} this, ` : ''}you keep ${keep}. Click to pay with one more ${r}.` : `No ${r}`;
@@ -187,8 +194,6 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
               <div key={r} className={`pay-stack${have ? '' : ' none'}${out ? ' paying' : ''}`} data-stack={r} data-keep={keep} data-out={out}>
                 <button type="button" className="ps-add" data-pay-add={r} data-keep={keep} disabled={busy || !have} title={sayAdd} aria-label={sayAdd} onClick={() => add(r)} />
                 <span className="ps-coins">
-                  {/* a color you hold none of still shows its dot, faint (w3b #25: a bare "0" couldn't be told apart) */}
-                  {!have && <i className="ps-coin ps-none" style={{ '--k': 0 }} aria-hidden="true"><ResourceGlyph r={r} size={24} decorative /></i>}
                   {Array.from({ length: drawn - lifted }, (_, k) => (
                     <i key={k} className="ps-coin" data-coin={`${r}-${k + base}`} style={{ '--k': k }} aria-hidden="true"><ResourceGlyph r={r} size={24} decorative /></i>
                   ))}
@@ -215,7 +220,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
         {(notes.length > 0 || nudge || lostLead) && (
           <div className="pay-notes">
             {notes.length > 0 && <ul className="pay-rules" data-pay-rules={notes.length}>{notes.map(n => <li key={n.key} data-pay-rule={n.key}>{n.text}</li>)}</ul>}
-            {lostLead && <p className="pay-lead" data-pay-lead={lostLead.join(' ')}>Paying this gives up your lead in {lostLead.join(' and ')}.</p>}
+            {lostLead && <p className="pay-lead" data-pay-lead={lostLead.join(' ')}>Paying this gives up {leadsLost(lostLead, match.ties || [])}.</p>}
             {nudge && <p key={nudge.n} className="pay-nudge" role="status">{nudge.text}</p>}
           </div>
         )}

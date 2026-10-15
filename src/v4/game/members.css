@@ -68,6 +68,13 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 .lt-cult-seat .cs-member.used .fig .sprite{opacity:.4;filter:grayscale(.6)}
 .lt-cult-seat .cs-member.used .aura{opacity:.35}
 .lt-cult-seat .cs-member .mu-switch{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);gap:0;z-index:2}
+/* the switch's own hover (blind testers, 2026-10-15): the tip holds the switch where it always sat, says what it is */
+.lt-cult-seat .cs-member .mu-sw-tip{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);z-index:2;display:inline-flex;cursor:default}
+.lt-cult-seat .cs-member .mu-sw-tip > .hitbox{display:none} /* a 44px box would cover the figure above it */
+.lt-cult-seat .cs-member .mu-sw-tip::after{content:"";position:absolute;inset:-6px -8px -4px}
+.lt-cult-seat .cs-member .mu-sw-tip .mu-switch{position:static;transform:none}
+.lt-cult-seat .cs-member .mu-sw-tip:hover .mu-track{box-shadow:0 0 0 1px rgba(25,19,16,.9),0 0 0 2px rgba(var(--lamp,255,206,140),.55)}
+.mu-sw-card .mu-sw-how{color:var(--pl-ink-2,#6e5c49)}
 .lt-cult-seat .cs-member .mu-switch .mu-sw-word{display:none}
 .lt-cult-seat .cs-member .mu-track{width:16px;height:9px;border-radius:5px;background:rgba(243,230,200,.18);box-shadow:0 0 0 1px rgba(25,19,16,.9)}
 .lt-cult-seat .cs-member .mu-knob{width:5px;height:5px;left:2px;top:2px;background:var(--cream-2,#b9a98c);box-shadow:none}
@@ -92,6 +99,15 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 .mu-use.idle{background:transparent;color:var(--pl-ink-2,#6e5c49);box-shadow:inset 0 0 0 1px rgba(43,32,24,.25);font-weight:600}
 .mu-use.idle:hover{background:rgba(43,32,24,.05)}
 .mu-why + .mu-use.big{margin-top:8px}
+/* a member asking you now (Big Spender's second buy, Straggler's move): what to do, then its quiet way out */
+.mu-ask{font-size:14px;line-height:18px;font-weight:700;color:var(--pl-ink,#2b2018)}
+.mu-ask + .mu-use.big{margin-top:8px}
+.mu-use.mu-skip{background:transparent;color:var(--pl-ink,#2b2018);box-shadow:inset 0 0 0 1px rgba(43,32,24,.3)}
+.mu-use.mu-skip:hover{background:rgba(43,32,24,.06)}
+.mu-actions .mu-use.mu-skip + .mu-use.mu-release{margin-left:0;margin-top:8px;align-self:flex-end}
+/* one glow: a lit member asking now is already ringed, so the picker's own asker mark steps aside */
+.lt-cult-seat .cs-member.ready.pick-asker .fig{filter:none}
+.lt-cult-seat .cs-member.ready.pick-asker::after{display:none}
 /* a use still in hand, anyone's, on the table: the same light as "yours to use now", subdued (w2b #21: see threats coming) */
 .lt-cult-seat .cs-member.loaded:not(.ready) .fig .sprite{filter:drop-shadow(1px 0 0 rgba(255,243,212,.38)) drop-shadow(-1px 0 0 rgba(255,243,212,.38)) drop-shadow(0 1px 0 rgba(255,243,212,.38)) drop-shadow(0 -1px 0 rgba(255,243,212,.38))}
 /* a seat no one can steal resources from this round (Lie Low): said in words beside its resources */

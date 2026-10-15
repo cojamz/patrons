@@ -53,16 +53,33 @@ async function play(t) {
     await page.click('[data-home="local"]');
     await page.waitForSelector('[data-start]');
     if (t.how === 'click') {
+      // wave f4 (blind panel): the click that opened setup focused P4's name box under the pointer; the page held one
+      // width at 520px and jumped to 1000px on Custom, moving every control; a fifth sphere's click said nothing
+      if (await page.evaluate(() => document.activeElement && document.activeElement.tagName === 'INPUT')) err('opening setup put the focus in a name box');
+      const box = () => page.evaluate(() => { const d = document.querySelector('.dialog.page').getBoundingClientRect(), s = document.querySelector('[data-start]').getBoundingClientRect(); return { w: Math.round(d.width), left: Math.round(d.left), start: [Math.round(s.left), Math.round(s.top)] }; });
+      const sizes = [await box()];
       // Classic by default; Random 4 offers a fresh table on Reroll; Custom picks by clicks, in wheel order.
       const classic = await page.$eval('[data-table]', e => e.getAttribute('data-table'));
       if (classic !== 'gold,red,market,echo') err(`default table is ${classic}`);
       await page.click('.table-pick [role="radio"]:has-text("Random 4")');
+      sizes.push(await box());
       const r1 = await page.$eval('[data-table]', e => e.getAttribute('data-table'));
       await page.click('[data-reroll]');
       const r2 = await page.$eval('[data-table]', e => e.getAttribute('data-table'));
       if (r1 === r2 || r1.split(',').length !== 4 || r2.split(',').length !== 4) err(`random/reroll gave ${r1} then ${r2}`);
       await page.click('.table-pick [role="radio"]:has-text("Custom")');
+      sizes.push(await box());
+      if (new Set(sizes.map(z => `${z.w}|${z.left}`)).size > 1) err(`the setup page changes width with the table mode: ${JSON.stringify(sizes)}`);
+      if (new Set(sizes.map(z => z.start.join())).size > 1) err(`Start moves with the table mode: ${JSON.stringify(sizes.map(z => z.start))}`);
+      // four picked: a fifth says why it won't join, quietly, by the count
+      const fifth = await page.$('.sphere.over');
+      if (!fifth) err('with four picked, no fifth sphere shows as full');
+      else {
+        await fifth.click({ force: true });
+        if (!(await page.waitForSelector('[data-full-note]', { timeout: 2000 }).catch(() => null))) err('a fifth sphere\'s click with four picked says nothing');
+      }
       for (const id of r2.split(',')) await page.click(`[data-sphere="${id}"]`); // clear
+      if (await page.$('[data-full-note]')) err('the "take one off" note stays after one is taken off');
       if (!(await page.$('[data-start][disabled]'))) err('Start was enabled with fewer than 4 spheres');
       for (const id of t.ids) await page.click(`[data-sphere="${id}"]`);
       // the plain Blue can't join a table that already has a blue

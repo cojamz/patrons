@@ -1,7 +1,8 @@
 // E2E: the Reckoning and the minions, at 1270×700 (Cory: "a little animation showing which cult wins each round
 // prize"; "placing a minion animates it from the leader to the wheel space; at round end they fly home").
 //  (r1) at round end each quadrant pays in turn: the header names every quadrant's result;
-//  (r2) the counts tick up: some player's count shows at least 3 values on its way up;
+//  (r2) the counts tick up: some player's count shows at least 3 values on its way up; a chair that counts nothing
+//       gets no chip (blind panel: a lone "0" floated in the gutter by a chair);
 //  (r3) a "+N" token flies to every winner (one flight per winner per quadrant);
 //  (r4) then the summary (Start round II) appears; Skip goes straight there on the next round end;
 //  (r5) your placement sends a minion flying from your leader; when round II begins, the wheel's minions fly home;
@@ -124,6 +125,8 @@ try {
   const best = Math.max(0, ...Object.values(rk.counts).map(seq => new Set(seq).size));
   const top = Math.max(0, ...Object.values(rk.counts).map(seq => Number(seq[seq.length - 1]) || 0));
   if (top >= 2 && best < 3) errors.push(`(r2) no count ticked up through 3 values (best ${best}, highest count ${top})`);
+  const zeros = Object.entries(rk.counts).filter(([, seq]) => seq.length && seq.every(v => v === '0')).map(([k]) => k);
+  if (zeros.length) errors.push(`(r2) a count chip stood at 0 the whole time (${zeros.join(', ')}): a chair that counts nothing gets no chip`);
   // (r3) a prize flight per winner
   // "P4 wins +6 followers" is one winner, "You and P4 tie: +6 followers each" two
   const winners = told.reduce((n, h) => n + (/no one scores$/.test(h) ? 0 : h.replace(/ (wins?|tie:?) \+\d+.*$/, '').split(/ and | & /).length), 0);

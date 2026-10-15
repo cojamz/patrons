@@ -158,7 +158,10 @@ describe('a second buy is seen (w2a #6)', () => {
     const uid = uidIn(s, 'benders.bigspender', 0);
     const { container } = render(<CultSeat state={s} pid={0} me={0} mine optionFor={optionsOf(s)} onPick={() => {}} />);
     expect(container.querySelector('.cs-member[data-member="benders.bigspender"]').className).toContain('react-hop');
-    expect(memberRows(s, 0, 0).find(r => r.uids.includes(uid)).tag.text).toBe('once a round');
+    // during its second buy it's lit, like a member you can use now (blind testers, 2026-10-15), and its row says so
+    expect(container.querySelector('.cs-member[data-member="benders.bigspender"]').className).toContain('ready');
+    expect(memberRows(s, 0, 0).find(r => r.uids.includes(uid)).tag.text).toBe('buying again now');
+    expect(memberRows(s, 0, 1).find(r => r.uids.includes(uid)).tag.text).toBe('once a round'); // a rival sees its rule
     const t = structuredClone(s);
     t.cards[uid].spent = { extraBuy: t.round };
     expect(memberRows(t, 0, 0).find(r => r.uids.includes(uid)).tag.text).toBe('used this round');

@@ -12,7 +12,7 @@ import { Follower } from '../art/Follower.jsx';
 import { realHover } from '../hover.js';
 import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
 import { MemberActions, MemberSwitch, useUseResult, UseResult } from './MemberUse.jsx';
-import { usableNow, loadedUse, safeThisRound } from './memberUse.js';
+import { usableNow, loadedUse, safeThisRound, memberAsks } from './memberUse.js';
 import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { Minion } from '../art/Leader.jsx';
 import { seatTurns } from './seats.js';
@@ -48,7 +48,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const pend = state.pending;
   const extraBuyNow = !!(mine && pend && pend.player === pid && pend.kind === 'buy' && pend.extra && !state.over);
   const givesExtra = g => extraBuyNow && g.uids.some(u => { const c = state.cards[u]; return !(c.spent && c.spent.extraBuy === state.round) && !!cardDef(state, u).extraBuy; });
-  const ready = new Set(mine ? usableNow(state, pid).filter(x => optionFor(`use:${x.uid}`)).map(x => x.uid) : []);
+  const ready = new Set(mine ? [...usableNow(state, pid).filter(x => optionFor(`use:${x.uid}`)).map(x => x.uid), ...memberAsks(state, pid).keys()] : []); // + a member asking you now (memberUse.js)
   // the turns in plain words (Cory, 2026-10-16: the rail confused him): "next" on the seat that places after this turn,
   // and on yours "your turn in 3" (seats.js seatTurns, read off the engine's queue)
   const turn = seatTurns(state, me)[pid] || null;
@@ -185,7 +185,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
                   onClick={e => pick.onPick(pickM.id, e.currentTarget)}><span className="hitbox" aria-hidden="true" /></button>;
               })()}
               {/* a switch shows its state, small under its figure; a click flips it in your buy step (its card says so) */}
-              {mine && d.toggle && <MemberSwitch name={d.name} on={g.card.on !== false} option={toggle} onPick={onPick} />}
+              {mine && d.toggle && <MemberSwitch name={d.name} on={g.card.on !== false} option={toggle} onPick={onPick} about={d.text} />}
             </span>
           );
         })}

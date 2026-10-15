@@ -56,7 +56,8 @@ describe('panel words (w3)', () => {
       }
     }
     // a rival decides (pay, or lose the member): the likely case and the best case, both in numbers, and not the same
-    expect(seen.ransom.likely).toMatch(/^\+\d+ (magenta|member)/);
+    // ...the amount hangs on your own pick of member too, so it's "up to" (aminus r1 #3: "+4" read as promised, paid +2)
+    expect(seen.ransom.likely).toMatch(/^up to \+\d+ (magenta|member)/);
     expect(seen.ransom.best).toMatch(/^\+\d+ (magenta|member)/);
     expect(seen.ransom.best).not.toBe(seen.ransom.likely);
     // every pick worth the same: the two ends of the mix

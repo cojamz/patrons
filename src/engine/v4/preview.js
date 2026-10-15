@@ -61,7 +61,7 @@ export function previewSpace(state, pid, q, i) {
   // returns { best, likely } leaves under s (see above), or null when no branch could be followed
   const walk = s => {
     nodes++;
-    if (!s.pending || s.pending.kind !== 'choose') { leaves.push(s); return { best: s, likely: s }; }
+    if (!s.pending || s.pending.kind !== 'choose') { leaves.push(s); return { best: s, likely: s, worst: s }; }
     (s.pending.player === pid ? asks : theirAsks).add(s.pending.prompt.replace(/\s*\(\d+ left\)/, ''));
     if (s === base && s.pending.player === pid && s.pending.options.some(o => o.kind === 'space')) {
       copies = [...new Set(s.pending.options.filter(o => o.kind === 'space' && typeof o.value === 'string' && !String(o.id).startsWith('space:last:')).map(o => o.value.split('+')[0]))];
@@ -70,7 +70,7 @@ export function previewSpace(state, pid, q, i) {
     // out of budget: follow only the first and last option (the extremes a list is usually ordered by)
     const list = nodes + opts.length > NODE_BUDGET ? (partial = true, [opts[0], opts[opts.length - 1]].filter((o, k, a) => a.indexOf(o) === k)) : opts;
     const chooser = s.pending.player;
-    let best = null, likely = null;
+    let best = null, likely = null, worst = null;
     for (const o of list) {
       let next;
       try { next = applyMove(s, { player: chooser, option: o.id }); } catch { partial = true; continue; }
@@ -78,8 +78,9 @@ export function previewSpace(state, pid, q, i) {
       if (!got) continue;
       if (!best || worth(got.best, pid) > worth(best, pid)) best = got.best;
       if (!likely || worth(got.likely, chooser) > worth(likely, chooser)) likely = got.likely;
+      if (!worst || worth(got.worst, pid) < worth(worst, pid)) worst = got.worst;
     }
-    return best ? { best, likely } : null;
+    return best ? { best, likely, worst } : null;
   };
   let top;
   try { top = walk(base); } catch { return null; }
@@ -112,10 +113,25 @@ export function previewSpace(state, pid, q, i) {
   const exact = Object.values(you.res).every(same) && same(you.followers) && same(you.members) && same(you.turns) && same(you.early) && same(you.discount);
   // reasons: one short line per member effect on your numbers ("Hustler: +3 gold", "Underdog: gold gain 3 → 6"), or
   // a member that stayed off and why ("Underdog: no ×2 (Hustler’s +3 lands first)"), from every branch, for the hover
+  // A member that fires more than once in one branch (Greatest Hits copying two gold spaces: Prospector +1 each) says
+  // its sum ("Prospector: +2 gold"), never one firing's amount (blind tester B: the Why said +1 where each paid +2).
   const reasons = [];
-  for (const s of leaves) for (const n of s.notes || []) {
-    const line = `${n.member}: ${n.text}`;
-    if (n.p === pid && !reasons.includes(line)) reasons.push(line);
+  const resWords = res => Object.entries(res).filter(([, d]) => d).map(([r, d]) => `${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`).join(', ');
+  for (const s of leaves) {
+    const by = new Map();
+    for (const n of s.notes || []) {
+      if (n.p !== pid) continue;
+      const g = by.get(n.member) || { res: {}, texts: [], all: true };
+      if (n.res) for (const [r, d] of Object.entries(n.res)) g.res[r] = (g.res[r] || 0) + d;
+      else g.all = false;
+      g.texts.push(n.text);
+      by.set(n.member, g);
+    }
+    for (const [member, g] of by) {
+      const text = g.all && g.texts.length > 1 && resWords(g.res) ? resWords(g.res) : [...new Set(g.texts)].join('; ');
+      const line = `${member}: ${text}`;
+      if (!reasons.includes(line)) reasons.push(line);
+    }
   }
   // one branch's change for you, as the screen words it ("likely +4 magenta · at best +1 member")
   const change = s => {
@@ -137,7 +153,9 @@ export function previewSpace(state, pid, q, i) {
   // sample: the table after the first branch (for the screen to recount a contest on); exact when `exact`
   // samples: the tables after the first branches (up to 16), so a contest line can tell what depends on a pick
   return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, reasons: reasons.slice(0, 6), sample: leaves[0], samples: leaves.slice(0, 16),
-    best: change(top.best), likely: change(top.likely), tied, mix };
+    best: change(top.best), likely: change(top.likely), worst: change(top.worst), tied, mix,
+    // every member some branch brings you (Open Door's tied cheapest: all four, not the best one's name)
+    joins: [...new Set(leaves.flatMap(s => s.players[pid].members.filter(u => !me0.members.includes(u))))] };
 }
 
 /**

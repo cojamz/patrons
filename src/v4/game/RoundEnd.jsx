@@ -48,6 +48,9 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
   const shownTotal = p => followers(at, at.players[p.id]);
   const ranked = [...after.players].sort((a, b) => shownTotal(b) - shownTotal(a));
   const finalParts = after.over ? after.players.filter(p => p.final && p.final.parts.length) : [];
+  // members that score at game end and came to nothing ("Kingpin +0"): said, never "no end-game bonuses" over them
+  const zeroOf = p => (p.final && p.final.zero ? p.final.zero.map(z => `${z.name} +0`) : []);
+  const zeroParts = after.over && !finalParts.length ? after.players.filter(p => zeroOf(p).length) : [];
   const first = !after.over && after.order && after.order.length ? after.players[after.order[0]] : null;
   return (
     <div className="overlay moment" role="dialog" aria-modal="true" aria-label={`Round ${result.round} scoring`}>
@@ -60,7 +63,7 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
         {after.over && finalParts.length > 0 && (
           <p className="re-next re-final" data-final-bonuses={finalParts.length}>
             <b>End-game bonuses</b>, still to add to these totals:{' '}
-            {finalParts.map((p, k) => <span key={p.id} data-final-bonus={p.id}>{k ? ' · ' : ''}<b>{name(p.id)}</b> <NamedText state={after} text={p.final.parts.join(', ')} /></span>)}
+            {after.players.filter(p => p.final && (p.final.parts.length || zeroOf(p).length)).map((p, k) => <span key={p.id} data-final-bonus={p.id}>{k ? ' · ' : ''}<b>{name(p.id)}</b> <NamedText state={after} text={[...p.final.parts, ...zeroOf(p)].join(', ')} /></span>)}
           </p>
         )}
         <ul className="re-rows">
@@ -112,7 +115,10 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
             );
           })}
         </div>
-        {after.over && !finalParts.length && <p className="hint re-final" data-final-bonuses="0">No end-game bonuses: these totals are final.</p>}
+        {after.over && !finalParts.length && (zeroParts.length
+          ? <p className="hint re-final" data-final-bonuses="0">End-game bonuses came to nothing:{' '}
+            {zeroParts.map((p, k) => <span key={p.id} data-final-zero={p.id}>{k ? ' · ' : ''}<b>{name(p.id)}</b> <NamedText state={after} text={zeroOf(p).join(', ')} /></span>)}. These totals are final.</p>
+          : <p className="hint re-final" data-final-bonuses="0">No end-game bonuses: these totals are final.</p>)}
         {first && <p className="hint">Round {roman(after.round)} · <span className="num">{workersNote(after)}</span> · {first.id === meId ? 'You pick' : `${first.name} picks`} first{firstPickWhy(after, first.id) ? <>: <NamedText state={after} text={firstPickWhy(after, first.id)} /></> : ''}</p>}
         </div>
         {more && <span className="re-more" aria-hidden="true">More below</span>}

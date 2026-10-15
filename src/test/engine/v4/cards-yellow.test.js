@@ -21,7 +21,8 @@ describe('Yellow actions', () => {
   it('Top Up: +1 of each color you hold the fewest of (ties: all), named; holding every color still pays', () => {
     let s = take(sc({ res: [{ gold: 2, red: 1, yellow: 1, green: 3 }] }), 'yellow.bloom');
     expect(R(s)).toEqual({ gold: 2, red: 2, yellow: 2, green: 3 });
-    expect(named(s, 'Top Up')).toEqual(["P1's Top Up: +1 red, +1 yellow."]);
+    // a tie says why it pays each tied color (panel tester C: only the hover said so)
+    expect(named(s, 'Top Up')).toEqual(["P1's Top Up: red and yellow tie for your fewest (1 each), so +1 of each.", "P1's Top Up: +1 red, +1 yellow."]);
     expect(R(take(sc({ res: [{ gold: 1, red: 1, yellow: 1, green: 1 }] }), 'yellow.bloom'))).toEqual({ gold: 2, red: 2, yellow: 2, green: 2 });
   });
   it('Trade Seeds: up to 3 one-for-one swaps, then +1 yellow', () => {

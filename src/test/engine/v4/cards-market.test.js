@@ -319,6 +319,9 @@ describe('Blue members', () => {
     // step comes back ("also"), used, so no second use
     expect(s.pending.prompt).toMatch(/top 5/);
     s = move(s, `card:${uidIn(s, 'gold.jackpot', 'pile')}`);
+    // its one way to pay spends all the gold P1 leads with: the pay sheet asks first (one pay rule, aminus r1 #1)
+    expect(s.pending.options.filter(o => o.kind === 'pay').map(o => o.breaks)).toEqual([['gold']]);
+    s = move(s, s.pending.options.find(o => o.kind === 'pay').id);
     expect(owns(s, 0, 'gold.jackpot')).toBe(true);
     expect([R(s).gold, R(s).red]).toEqual([0, 0]);
     expect(named(s, 'Talent Scout').length).toBe(1);

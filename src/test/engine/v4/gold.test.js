@@ -272,7 +272,7 @@ describe('Gold members', () => {
     const s = scene({ members: [['gold.tycoon']], res: [{ gold: 11 }], queue: [{ t: 'finish' }] });
     expect(s.over).toBe(true);
     // (final.cards: the member behind each bonus, for the results' end-game scoring, FinalScore.jsx)
-    expect(s.players[0].final).toEqual({ total: 5, parts: ['Tycoon +5'], cards: [{ uid: s.players[0].members[0], name: 'Tycoon', n: 5 }] });
+    expect(s.players[0].final).toEqual({ total: 5, parts: ['Tycoon +5'], cards: [{ uid: s.players[0].members[0], name: 'Tycoon', n: 5 }], zero: [] });
     expect(fol(s, 0)).toBe(1 + 1 + 5);
   });
 

@@ -43,6 +43,8 @@ export default {
       estimate: (ctx, p) => fewest(ctx, p).length + 0.5,
       resolve(ctx, p) {
         const list = fewest(ctx, p);
+        // a tie pays each tied color: the result says so, not only the hover (panel tester C)
+        if (list.length > 1) ctx.log(`${p.name}'s Top Up: ${list.slice(0, -1).join(', ')} and ${list[list.length - 1]} tie for your fewest (${p.res[list[0]] || 0} each), so +1 of each.`);
         for (const c of list) ctx.gain(p, c, 1, { fromAction: true });
         ctx.log(`${p.name}'s Top Up: +1 ${list.join(', +1 ')}.`);
       },
@@ -137,7 +139,7 @@ export default {
         if (!y) return;
         const amounts = [...new Set([0, Math.floor(y / 4), Math.floor(y / 2), Math.floor((3 * y) / 4), y])];
         ctx.choose(owner, `Sower: plant how much yellow? (you have ${y})`, amounts.map(x => ({
-          id: `amount:${x}`, label: x === 0 ? 'None' : x === y ? `All ${x}` : `${x}`, kind: 'amount', value: x, hint: x === Math.floor(y / 2) ? 1 : 0,
+          id: `amount:${x}`, label: x === 0 ? 'None' : x === y ? `All ${x}` : `${x}`, kind: 'amount', value: x, ...(x ? { spend: { yellow: x } } : {}), hint: x === Math.floor(y / 2) ? 1 : 0,
         })), 'yellow.sow', { uid: card.uid });
       },
       onRoundEnd(ctx, owner, card) {
@@ -210,7 +212,7 @@ function transmuteStep(ctx, p, data) {
   if (data.left > 0) {
     for (const a of cs) if (p.res[a] > 0) for (const b of cs) if (b !== a) {
       opts.push({
-        id: `swap:${a}:${b}`, label: `1 ${a} → 1 ${b}`, kind: 'swap', value: [a, b],
+        id: `swap:${a}:${b}`, label: `1 ${a} → 1 ${b}`, kind: 'swap', value: [a, b], spend: { [a]: 1, [b]: -1 },
         // bots even out their colors: a swap helps when it moves from a pile 2+ bigger
         hint: p.res[a] - p.res[b] - 1,
       });

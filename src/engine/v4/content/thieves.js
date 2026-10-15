@@ -233,10 +233,12 @@ const thieves = {
           for (const [col, x] of Object.entries(take)) v.res[col] -= x;
           got = n; stash(ctx, p, n);
         }
-        ctx.log(`${v.name} paid ${got} (${Object.entries(take).map(([k, x]) => `${x} ${k}`).join(', ')}) to keep ${c.def.name}.`);
+        // whose call it was, what they gave and why that much (blind tester: "+4 or a member" paid +2, unexplained)
+        ctx.log(`${v.name} chose to pay ${got} (${Object.entries(take).map(([k, x]) => `${x} ${k}`).join(', ')}) to keep ${c.def.name}: its cost is ${n}.`);
       } else {
+        const short = total(v) < n;
         ctx.steal(p, v, { uid: data.uid });
-        ctx.log(`${v.name} let ${c.def.name} go to ${p.name}.`);
+        ctx.log(short ? `${v.name} couldn't pay ${n} (held ${total(v)}), so lost ${c.def.name} to ${p.name}.` : `${v.name} chose to let ${c.def.name} go to ${p.name} rather than pay ${n}.`);
       }
     },
     heist(ctx, p, uid) {
@@ -244,7 +246,8 @@ const thieves = {
       ctx.steal(p, v, { uid });
       ctx.log(`${p.name} pulled a heist: ${v.name}'s ${c.def.name}.`);
       const shop = ctx.shopCards().filter(x => cost(x) <= n);
-      if (!shop.length) { ctx.log(`${v.name} finds no face-up member costing ${n} or less.`); return; }
+      // nothing to replace it with: said plainly, on the log and the turn card (blind tester: no replacement, no reason)
+      if (!shop.length) { ctx.log(`${v.name} gets no replacement: nothing in the shop costs ${n} or less.`); return; }
       ctx.choose(v, `Poach: recruit any face-up member costing up to ${n}, free`, shop.map(x => ({
         id: `card:${x.uid}`, label: `${x.def.name} (${cost(x)})`, kind: 'card', value: x.uid, hint: x.def.f * 1.5 + cost(x) + (x.def.vanilla ? 0 : 1),
       })), 'thieves.recruitFree');

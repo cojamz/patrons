@@ -63,8 +63,10 @@ describe('cross-sphere tables', () => {
 
   it('random movers reach every kind of decision across the tables', () => {
     const kinds = new Set(), optionKinds = new Set();
-    tables.forEach((quadrants, ti) => {
-      const { stats } = runTable({ quadrants, n: 3, seed: 77 + ti, kind: 'random' });
+    // two random games per table: a rare decision (a Translator's toggle) hung on one game's path, and any engine
+    // change that shifts the random walk lost it (aminus r1 f1: the one-pay-rule's extra question did)
+    for (const seed0 of [77, 377]) tables.forEach((quadrants, ti) => {
+      const { stats } = runTable({ quadrants, n: 3, seed: seed0 + ti, kind: 'random' });
       stats.kinds.forEach(k => kinds.add(k));
       stats.optionKinds.forEach(k => optionKinds.add(k));
     });

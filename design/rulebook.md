@@ -16,7 +16,7 @@ The wheel is split into four colored quadrants. Each quadrant has its own action
 - The **outer ring** opens in round I. The **middle ring** opens in round II. The **inner ring** (the 4 spaces around the hub) opens in round III. Rings stay open once opened.
 - Each space holds one minion per round, and your minion sits on the space it took. All minions come home between rounds.
 - Every space says what it gives in a few words. Point at a space (long-press on a phone) to read it in full and see what you'd get. You can spin the wheel; nothing else changes when you do.
-- Some spaces and members **copy** a space someone took: you get what it gave its taker. Copies never reach the center (the inner ring) or another copy.
+- Some spaces and members **copy** a space someone took: you get the space's own gain, as printed for this round (what its chip shows). Bonuses from the taker's members (Grand Host's double, Caterer) and its gifts to others don't repeat. Copies never reach the center (the inner ring) or another copy.
 - Some spaces and members **steal** from rivals. Resources a Magenta card takes arrive as magenta, ready to spend.
 
 ## A turn

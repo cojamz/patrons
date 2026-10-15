@@ -584,6 +584,17 @@ export function changeWords(d, state) {
 function mixWords(pv, state, own) {
   const mix = pv.mix || [];
   if (mix.length < 2) return null;
+  // the same gain, only which member differs (Open Door's tied cheapest): one "+1 member" naming every one you could
+  // get, never "+1 member (A) or +1 member (B)" naming two of four (blind tester B)
+  const sameBut = (a, b) => state.resources.every(r => a.res[r] === b.res[r]) && ['followers', 'members', 'turns', 'discount', 'swapped'].every(f => a[f] === b[f]);
+  if (mix[0].members > 0 && mix.every(d => sameBut(d, mix[0]) && d.joined && d.joined.length === 1)) {
+    let names = [];
+    try { names = [...new Set(mix.map(d => cardDef(state, d.joined[0]).name))]; } catch { names = []; }
+    if (names.length > 1) {
+      const list = `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`;
+      return { text: changeWords({ ...mix[0], joined: [] }, state).replace(/^\+1 member\b/, `+1 member (${list})`), note: 'your pick' };
+    }
+  }
   const sure = sureWords(pv, state);
   const loose = state.resources.filter(r => pv.you.res[r][0] !== pv.you.res[r][1]);
   const same = (f, a, b) => a[f] === b[f];
@@ -613,15 +624,30 @@ function mixWords(pv, state, own) {
  */
 export function youdWords(pv, state, own = null) {
   const w = previewWords(pv, state);
+  // a member that could be any of several (Open Door's tied cheapest): named once, all of them (blind tester B: "+1
+  // member" twice, naming one of four)
+  const joins = (pv.joins || []).map(u => { try { return cardDef(state, u).name; } catch { return null; } }).filter(Boolean);
+  const named = t => (joins.length > 1 && joins.length <= 5 ? t.replace(/(^|, )\+1 member(?=,|$)/, `$1+1 member (${joins.slice(0, -1).join(', ')} or ${joins[joins.length - 1]})`) : t);
   // a swap changes who you hold, not how many: never "nothing right now" when it offers one (w4 A#35: Swap Sides)
+  if (pv.exact && joins.length > 1) return { text: named(w.you), note: 'your pick' };
   if (pv.exact) return { text: !/^nothing/.test(w.you) || !(pv.best && pv.best.swapped > 0) ? w.you : changeWords(pv.best, state), note: null };
   const best = changeWords(pv.best, state), likely = changeWords(pv.likely, state);
-  if (pv.best && pv.likely && likely !== best) return { text: null, likely, best };
+  // a rival decides, after your own pick (Shake Down: which member, then pay its cost or lose it): the amount depends
+  // on what you pick, so it's "up to", never a promise (blind tester: "+4 or +1 member" paid +2 for a cost-2 member)
+  if (pv.best && pv.likely && likely !== best) return { text: null, likely: pv.asks && pv.asks.length && /^\+/.test(likely) ? `up to ${likely}` : likely, best };
   // your pick decides: what's sure as it is, and the best pick's gains as "up to", never as a promise (w4 skeptic #10:
   // Even Swap's "+1 follower" read as promised, and a different swap gave none)
   if (pv.best && !pv.tied) {
-    const sure = sureWords(pv, state), sureParts = sure ? sure.split(', ') : [];
-    const rest = best.split(', ').filter(x => !sureParts.includes(x));
+    // your best pick spends what the space just gave (Snap Up: +2 blue, then pay for a member): the two ends, so the
+    // space's own gain is never dropped (blind tester B: Snap Up's hover left out its +2 blue)
+    const spends = d => state.resources.some(r => d.res[r] < 0);
+    const w0 = pv.worst, worst = w0 ? changeWords(w0, state) : '';
+    const spentGain = w0 && state.resources.some(r => w0.res[r] > 0 && pv.best.res[r] < w0.res[r]);
+    if (spentGain && !spends(w0) && worst !== 'nothing' && worst !== best) return { text: `${worst} or ${best}`, note: 'your pick' };
+    const sure = named(sureWords(pv, state));
+    const sureParts = sure ? sure.split(', ') : [];
+    const bare = x => x.replace(/ \(.*\)$/, '');
+    const rest = best.split(', ').filter(x => !sureParts.some(y => y === x || (/member/.test(x) && bare(y) === bare(x))));
     const up = rest.filter(x => /^\+/.test(x)), other = rest.filter(x => !/^\+/.test(x));
     return { text: [sure, up.length ? `up to ${up.join(', ')}` : null, ...other].filter(Boolean).join(', ') || best, note: 'your pick' };
   }

@@ -129,8 +129,8 @@ const trading = {
       resolve(ctx, p) {
         if (!totalRes(p)) { ctx.log(`${p.name} had nothing to turn into followers.`); return; }
         const all = totalRes(p), rest = all - p.res[W], last = p.left === 0;
-        const opts = [{ id: 'boom:all', label: `Everything: ${Math.floor(all * BOOM.per)} followers`, kind: 'boom', value: 'all', hint: last ? 2 : 0.5 }];
-        if (p.res[W] && rest) opts.push({ id: 'boom:keep', label: `Keep your white: ${Math.floor(rest * BOOM.per)} followers`, kind: 'boom', value: 'keep', hint: 1 });
+        const opts = [{ id: 'boom:all', label: `Everything: ${Math.floor(all * BOOM.per)} followers`, kind: 'boom', value: 'all', spend: { ...p.res }, hint: last ? 2 : 0.5 }];
+        if (p.res[W] && rest) opts.push({ id: 'boom:keep', label: `Keep your white: ${Math.floor(rest * BOOM.per)} followers`, kind: 'boom', value: 'keep', spend: { ...p.res, [W]: 0 }, hint: 1 });
         opts.push({ id: 'boom:none', label: 'Nothing', kind: 'boom', value: 'none', hint: 0 });
         ctx.choose(p, 'All In: trade which resources for followers, 1 for 1?', opts, 'trading.boom');
       },
@@ -262,7 +262,7 @@ function buyLowStep(ctx, p, data) {
   if (data.left <= 0 || !held.length) return;
   const v = fv(ctx);
   const opts = held.map(r => ({
-    id: `color:${r}`, label: `1 ${r} → 1 follower`, kind: 'color', value: r,
+    id: `color:${r}`, label: `1 ${r} → 1 follower`, kind: 'color', value: r, spend: { [r]: 1 },
     // bots pay from the biggest pile, white last (it scores here); they keep a little to recruit with until late
     hint: (v - 1) + 0.01 * (p.res[r] - (r === W ? 3 : 0) - (r === 'gold' ? 1 : 0)),
   }));

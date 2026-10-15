@@ -82,6 +82,22 @@ export function swapSave(space = 'evenswap') {
   throw new Error(`dialog-save: never reached P1 on ${space}`);
 }
 
+/** P1 on Swap Sides in round III with a crowd: every seat holds `extra` more members (blind panel: the rivals' row ran
+ *  off the card over the shop). */
+export function swapCrowdSave(extra = 7) {
+  const q = DIALOG_TABLE.indexOf('red'), i = quadrant('red').actions.findIndex(a => a.key === 'trade');
+  for (let seed = 1; seed < 300; seed++) {
+    const s = playTo(seed, st => st.round === 3 && st.pending && st.pending.player === 0 && st.pending.kind === 'place' && st.pending.options.some(o => o.id === `slot:${q}-${i}`));
+    if (!s) continue;
+    const free = Object.values(s.cards).filter(c => s.pile.includes(c.uid));
+    for (let p = 0; p < s.players.length; p++) for (const c of free.splice(0, extra)) give(s, p, c.def);
+    const t = applyMove(s, { player: 0, option: `slot:${q}-${i}` });
+    if (!(t.pending && t.pending.player === 0 && t.pending.kind === 'choose' && t.pending.options.every(o => o.kind === 'trade') && t.pending.options.length >= 20)) continue;
+    return wrap(t);
+  }
+  throw new Error('dialog-save: never reached P1 on a crowded round-III Swap Sides');
+}
+
 // Choices whose answers are combinations, picked in two steps on the board: Good Deed (a color × a rival), Trade
 // Seeds (a color you give × a color you get), Sweet Talk (a color × how many).
 export const COMBO_TABLE = ['silver', 'red', 'yellow', 'echo'];

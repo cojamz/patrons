@@ -57,9 +57,11 @@
 @keyframes pay-nudge{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 
 /* Cancel, and the one lit thing: Pay, with the coins it pays */
-.pay-foot{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:20px 0 0}
+/* Cancel holds the left edge and Pay the right, so a Pay that grows with its coins never moves Cancel (blind tester B) */
+.pay-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:20px 0 0}
 .pay-cancel{height:44px;padding:0 16px;border:0;border-radius:var(--corner,8px);background:transparent;color:var(--pl-ink-2,#6e5c49);font:500 14px/1 var(--sans);cursor:pointer}
 .pay-cancel:hover:not(:disabled){color:var(--pl-ink,#2b2018);background:color-mix(in srgb,var(--pl-ink,#2b2018) 6%,transparent)}
+.pay-foot .pay-go{margin-left:auto}
 .pay-go{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 20px;border:0;border-radius:var(--corner,8px);cursor:pointer;
   background:var(--pl-ink,#2b2018);color:var(--pl-paper,#f2e8d2);font:700 14px/1 var(--sans);
   box-shadow:0 2px 0 rgba(0,0,0,.35);transition:transform .08s ease-out,box-shadow .08s ease-out}

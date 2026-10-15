@@ -65,6 +65,19 @@
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{padding:4px 0;row-gap:2px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .res-glyph{height:22px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .tk-plus{display:none}
+}
+/* From 1200px the pick leaves the wheel for the foot of the chairs' column, empty until the turns begin (blind panel: at
+   the centre it hid the 8 middle and 4 inner spaces, and stood over the shop's member cards, just when the rulebook says
+   to pick toward a member). It sits under the chairs, where the resource goes, still lamp-lit; the wheel and the shop
+   stay whole and readable, and their hover cards open over it, never under it. */
+@media (min-width:1200px) and (min-height:500px){
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{left:auto;top:auto;right:calc(100% + var(--col-gap, 18px));bottom:12px;translate:none;
+    width:calc(var(--col-l, 340px) - 44px);max-width:none;padding:10px 12px 12px;gap:8px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{font-size:18px;line-height:24px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{padding:8px 0;row-gap:4px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .res-glyph{height:28px}
+}
+@media (min-width:861px) and (min-height:500px){
   /* the story clips its oldest lines first, never the newest (the whole log is one tap away), and SinceStrip folds
      them into "N earlier" whole: at every laptop width, wherever the story stands (the narrow band clipped the newest) */
   .app.game.lt > .lt-since .since-list{min-height:0;overflow:hidden;justify-content:flex-end}
@@ -129,18 +142,29 @@
 
 /* ---------- the screens before the game ---------- */
 /* Setup, Custom table (w2b #32: "Back and Start overlap the tile grid until you scroll"): the twelve spheres don't fit
-   under the seats at a laptop's height. Choosing Custom opens the table beside the seats instead: who plays on the left,
-   the table on the right, Back and Start under both; nothing scrolls. Classic and Random 4 keep the single column. */
+   under the seats at a laptop's height. The table stands beside the seats instead: who plays on the left, the table on
+   the right, Back and Start under both; nothing scrolls. Every table mode keeps this one width (blind panel: Custom
+   jumped the page from 520 to 1000px, moving every control under the pointer). */
 @media (min-width:1100px) and (min-height:500px){
-  .app.narrow:has(.dialog.page .sphere-grid){max-width:1000px}
-  .app.narrow > .dialog.page:has(.sphere-grid){max-width:1000px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-    grid-template-rows:repeat(9,auto) 1fr;column-gap:32px;row-gap:12px;align-items:center;align-content:start;overflow:visible;max-height:none}
-  .app.narrow > .dialog.page:has(.sphere-grid) > *{grid-column:1}
-  .app.narrow > .dialog.page:has(.sphere-grid) > .table-pick{grid-column:2;grid-row:1 / 11;align-self:start;padding-left:32px;margin-left:-16px;
+  .app.narrow:has(> .dialog.page > .table-pick.editable){max-width:1000px}
+  .app.narrow > .dialog.page:has(> .table-pick.editable){max-width:1000px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-rows:repeat(9,auto) 1fr;column-gap:32px;row-gap:12px;align-items:center;align-content:start;overflow:visible;max-height:none;
+    min-height:530px} /* Custom's height: Back and Start stay put too when the twelve spheres open */
+  .app.narrow > .dialog.page:has(> .table-pick.editable) > *{grid-column:1}
+  .app.narrow > .dialog.page:has(> .table-pick.editable) > .table-pick{grid-column:2;grid-row:1 / 11;align-self:start;padding-left:32px;margin-left:-16px;
     box-shadow:inset 1px 0 0 var(--hair, rgba(242,232,210,.10))}
-  .app.narrow > .dialog.page:has(.sphere-grid) > .row-btns:last-child{grid-column:1 / -1;grid-row:11;position:static;margin:4px 0 0;padding:0;background:none}
-  .app.narrow > .dialog.page:has(.sphere-grid) .sphere-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .app.narrow > .dialog.page:has(> .table-pick.editable) > .row-btns:last-child{grid-column:1 / -1;grid-row:11;position:static;margin:4px 0 0;padding:0;background:none}
+  .app.narrow > .dialog.page:has(> .table-pick.editable) .sphere-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  /* Classic and Random 4 fill the same column: each sphere on its own line, with what it does under its name */
+  .app.narrow > .dialog.page > .table-pick.editable .table-chips{flex-direction:column;align-items:stretch;gap:12px;margin-top:4px}
+  .app.narrow > .dialog.page > .table-pick.editable .table-chip{display:grid;grid-template-columns:10px minmax(0,1fr);column-gap:8px;row-gap:2px;padding:0}
+  .app.narrow > .dialog.page > .table-pick.editable .table-chip .chip-line{display:block;grid-column:2;font-weight:400;font-size:var(--fs-1);line-height:1.3;color:var(--muted)}
+  .app.narrow > .dialog.page > .table-pick.editable .table-chips > .btn{align-self:flex-start}
 }
+.table-chip .chip-line{display:none}
+/* a fifth sphere with four picked: dim like a tile you can't take, but it answers a click with a quiet note by the count */
+.sphere.over{opacity:.38;cursor:default}
+.table-pick .full-note{color:var(--muted)}
 
 /* Home (the first screen Cory sees): the brand, then the choices, each group with air (the brand sat 8px over its first
    button, everything 8 apart). One rhythm on the 4px grid: 32 between the brand and the choices, 16 between choices; the
@@ -339,13 +363,15 @@
 /* the wheel's print waits for its font (Wheel.jsx fonts-wait, wave-4 B #32): laid out once, in the font it's set in */
 .lt .stage.fonts-wait .slot .face,.lt .stage.fonts-wait svg .rim-rule,.lt .stage.fonts-wait svg .rim-mark,.lt .stage.fonts-wait svg .rim-dot{visibility:hidden}
 
-/* the story's newest line on one line, when two don't fit (SinceStrip level 1) */
-.lt-since .since-row.one{-webkit-line-clamp:1}
 
 /* the starting pick is the call to action: no hover card ever covers it (the final panel, S#11: a space's card opened
-   over "Pick 1 of 2"); a card that reaches it slides under it */
-@media (min-width:861px) and (min-height:500px){
+   over "Pick 1 of 2"); a card that reaches it slides under it. (From 1200px it stands off the wheel and the shop, so
+   their cards open over nothing of it.) */
+@media (min-width:861px) and (max-width:1199px) and (min-height:500px){
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{z-index:61}
+}
+@media (min-width:1200px) and (min-height:500px){
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{z-index:5}
 }
 
 /* your buy step: you've placed, so the wheel steps back and only the buys are bright (final panel S#27: "the spaces

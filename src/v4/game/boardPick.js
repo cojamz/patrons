@@ -127,11 +127,37 @@ export function giftPick(state, pend, first = null) {
 }
 
 /**
+ * The pay sheet's warning, for a choice that spends your coins (Cheap Seats, All In, Trade Seeds…): the engine marks
+ * each answer that gives up a contest lead or tie you hold (breaks), and one plain line says so before you click
+ * (panel tester C #1: Cheap Seats gave up a silver lead with no warning). Null when no answer does.
+ */
+export function leadWarning(options) {
+  const lost = [...new Set((options || []).flatMap(o => o.breaks || []))];
+  if (!lost.length) return null;
+  const ties = [...new Set((options || []).flatMap(o => o.ties || []))];
+  const or = l => (l.length > 1 ? `${l.slice(0, -1).join(', ')} or ${l[l.length - 1]}` : l[0]);
+  return `Spending ${or(lost)} gives up ${leadsLost(lost, ties, or)}.`;
+}
+/**
+ * What a payment gives up, in words: "your lead in gold", "your tie for most silver", or both joined. A tie is never
+ * called a lead (blind tester B: the pay sheet said "lead" where they only tied). `join` lists colors.
+ */
+export function leadsLost(breaks, ties = [], join = l => l.join(' and ')) {
+  const leads = breaks.filter(c => !ties.includes(c)), tied = breaks.filter(c => ties.includes(c));
+  return [leads.length ? `your lead in ${join(leads)}` : null, tied.length ? `your tie for most ${join(tied)}` : null].filter(Boolean).join(' and ');
+}
+
+/**
  * The caption, docked under the headline: { title, what, left, how }. "Help Yourself: take 2 · 1 left" (the count
  * rides on the engine's task); else the engine's question, which
  * moves to the line under it when it's too long to be a headline. what may hold { dot: color } parts.
  */
 export function pickCaption(state, pk) {
+  const cap = captionOf(state, pk);
+  const warn = leadWarning(pk.options);
+  return warn ? { ...cap, how: `${cap.how} · ${warn}`, warn } : cap;
+}
+function captionOf(state, pk) {
   if (pk.kinds.has('stack') && !pk.give && pk.count && pk.title) {
     // the steal's limit, in the engine's words ("1 each from P3, P4"), leads the how line
     const limit = (String(pk.question).match(/\(\d+ left, ([^)]+)\)/) || [])[1];
