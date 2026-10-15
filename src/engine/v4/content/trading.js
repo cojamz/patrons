@@ -75,12 +75,12 @@ const trading = {
 
   actions: [
     {
-      key: 'haggle', ring: 1, name: 'Sob Story', text: '+2 white, and +1 white per player with more followers than you.',
+      key: 'haggle', ring: 1, name: 'Sob Story', text: '+2 white, and +1 white per rival with more followers than you.',
       estimate: (ctx, p) => 2 + ahead(ctx, p),
       resolve(ctx, p) { ctx.gain(p, W, 2 + ahead(ctx, p), { fromAction: true }); },
     },
     {
-      key: 'buylow', ring: 1, name: 'Cheap Seats', text: 'Trade up to 2 resources per round number for followers, 1 for 1.',
+      key: 'buylow', ring: 1, name: 'Cheap Seats', text: `Trade resources for followers, 1 for 1: up to ${BUY_LOW.per} in round I, ${2 * BUY_LOW.per} in round II, ${3 * BUY_LOW.per} in round III.`,
       estimate: (ctx, p) => Math.min(BUY_LOW.per * ctx.state.round, totalRes(p)) * (fv(ctx) - 0.9) + 0.4,
       resolve(ctx, p) {
         if (!totalRes(p)) { ctx.log(`${p.name} had nothing to trade.`); return; }
@@ -90,7 +90,7 @@ const trading = {
     {
       // 2026-10-14 rework: was "+2 white, and sell up to 1 follower per round number for 2 white each", whose sale was
       // dead in round I (only won or bought followers sell). Now an either/or per unit, always live, no sale.
-      key: 'pawn', ring: 1, name: 'Your Call', text: `Per round number: +1 follower or +${PAWN.each} white.`,
+      key: 'pawn', ring: 1, name: 'Your Call', text: `+1 follower in round I, +2 in round II, +3 in round III; take ${PAWN.each} white in place of any of them.`,
       estimate: ctx => ctx.state.round * Math.max(fv(ctx), PAWN.each),
       resolve(ctx, p) {
         const r = ctx.state.round, v = fv(ctx), late = lastTurn(ctx, p);

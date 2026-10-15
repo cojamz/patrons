@@ -1,7 +1,7 @@
 // A player's members as a list a person reads (Cory, 2026-10-15: "cleanly show a list of member ability/passives, if
 // they've been activated if it's one of those"), and what using one would do right now. Pure: read off the engine,
 // the dry run is the engine's own move on a copy (applyMove), so "Use: +7 gold" can't drift from the rules.
-import { applyMove, cardDef, defById, followers, quadrant } from '../../engine/v4/index.js';
+import { applyMove, cardDef, defById, followers, quadrant, TIERS, tierLeft } from '../../engine/v4/index.js';
 import { contextFor } from '../../engine/v4/core.js';
 import { timingOf } from './cards.js';
 
@@ -157,3 +157,20 @@ export function safeThisRound(state, pid) {
   all[pid] = safe;
   return safe;
 }
+
+/**
+ * The most followers a player could buy right now with what they hold, from the follower buys still open to them
+ * (w3b: see a round-III burst coming): { held, get }. Any resources pay; the limited buy counts only what's left.
+ */
+export function spendingPower(state, p) {
+  const held = state.resources.reduce((t, r) => t + (p.res[r] || 0), 0);
+  // best followers for each budget 0..held (a small knapsack over the open buys; the limited one by its stock)
+  const tiers = TIERS.map(t => ({ cost: t.cost, get: t.get, left: Math.min(tierLeft(state, t), Math.floor(held / t.cost)) }));
+  let best = new Array(held + 1).fill(0);
+  for (const t of tiers) {
+    if (t.left === Infinity) { for (let b = t.cost; b <= held; b++) best[b] = Math.max(best[b], best[b - t.cost] + t.get); continue; }
+    for (let k = 0; k < t.left; k++) { const nx = best.slice(); for (let b = t.cost; b <= held; b++) nx[b] = Math.max(nx[b], best[b - t.cost] + t.get); best = nx; }
+  }
+  return { held, get: best[held] || 0 };
+}
+

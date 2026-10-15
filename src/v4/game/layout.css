@@ -194,3 +194,25 @@
 /* the Reckoning's card at the wheel's centre (Reckoning.jsx at-mid): narrow enough to stay inside every rim */
 .lt-reckon .reckon-head.at-mid{bottom:auto;transform:translate(-50%,-50%);width:max-content;max-width:min(var(--mid-w, 440px), 440px);box-sizing:border-box}
 .lt-reckon .reckon-head.at-mid .reckon-counts{max-width:100%}
+
+/* a zero is a hollow ring in its own color (w3a A4, w3b #40: a dimmed dot went grey, like silver or white): "hollow"
+   always means none; the number stays quiet */
+.cs-stack.zero .res-glyph path{fill:none}
+.cs-stack.zero .res-glyph .any-cross{display:none}
+.cs-stack.zero .res-glyph .res-ring{stroke:currentColor;stroke-width:1.5}
+.lt > .lt-seat .cs-stack.zero,.lt-cult-seat .cs-stack.zero{opacity:.6}
+.lt > .lt-seat .cs-stack.zero .num,.lt-cult-seat .cs-stack.zero .num{opacity:.6}
+/* the white rim is light: its words and prize mark are dark ink on it */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule[data-rim-res="white"]{fill:#2b2018}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .rim-mark[data-rim-res="white"]{color:#2b2018}
+
+/* A13 (w3a): on a rival's turn nothing in the shop is yours to act on, so it steps back (the follower tiles' cream was
+   the brightest thing on screen); what you could afford stays a step above the rest, quietly */
+.lt[data-yours="0"][data-phase]:not([data-phase="over"]):not([data-phase="reckon"]) .lt-shop-main,
+.lt[data-yours="0"][data-phase]:not([data-phase="over"]):not([data-phase="reckon"]) .lt-rates{filter:brightness(.78) saturate(.85)}
+
+/* A42 (w3a): Pass (final: it ends your turn) and Undo (forgiving) were twin ghost pills. Pass keeps the firm outlined
+   pill; Undo is a quiet text button with its arrow, a step back in color, so the two never read as a pair */
+.lt-prompt .undo{border:0;background:none;padding:0 6px;color:var(--cream-3);text-decoration:underline dotted;text-underline-offset:3px;text-decoration-color:rgba(243,230,200,.35)}
+.lt-prompt .undo:hover{color:var(--cream);text-decoration-color:currentColor}
+.lt-prompt .pr-actions .pass{border-color:rgba(243,230,200,.65);color:var(--cream)}

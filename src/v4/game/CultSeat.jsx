@@ -77,7 +77,22 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   }
   const shown = groups.filter(g => keep.includes(g));
   const rest = groups.filter(g => !shown.includes(g)).reduce((s, g) => s + g.count, 0);
-  const openSeat = (e, pinned) => hover && hover.onSeatHover(pid, e.currentTarget, { pinned });
+  // what the pointer is on decides the card, and the card opens right next to it (w3a A8): the follower total opens where
+  // its followers came from (w3b #39); anywhere else on the seat (name, leader, body, resources) the seat card
+  const pointed = e => (e.target && e.target.closest && e.target.closest('.cs-total, .cs-leader, .cs-who, .cs-stack, .cs-res, .cs-crowd, .cs-build, .cs-foot')) || e.currentTarget;
+  const openSeat = (e, pinned) => {
+    if (!hover) return;
+    const el = pointed(e);
+    if (el.classList && el.classList.contains('cs-total')) hover.onFollowersHover(pid, el, { pinned });
+    else hover.onSeatHover(pid, el, { pinned });
+  };
+  // the seat's body and resource row open its card too (w3b #47), but a member figure opens its own card
+  const onFig = e => !!(e.target && e.target.closest && e.target.closest('.cs-member, .cs-more, .cs-pick-seat, button'));
+  const bodyHover = {
+    onPointerEnter: e => { if (realHover(e) && !onFig(e)) openSeat(e, false); },
+    onPointerMove: e => { if (realHover(e) && hover && !onFig(e)) openSeat(e, false); },
+    onPointerLeave: e => { if (e.pointerType === 'mouse' && hover) hover.onSeatHover(pid, null); },
+  };
   // the turn-order rail sits in the head but outside the seat's box: pointing at it explains the turn order, not the
   // seat (w2a #28: it opened your seat list 296px away); crossing between the two swaps which one is open
   const onRail = e => !!(e.target && e.target.closest && e.target.closest('.cs-order'));
@@ -118,7 +133,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           </i>
         ))}
       </span>
-      <div className="cs-crowd" role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members`}>
+      <div className="cs-crowd" {...bodyHover} role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members`}>
         {shown.map(g => {
           const d = g.def;
           // yours to use now (Cory, 2026-10-15): the figure is lit, and its card carries the Use button (MemberUse.jsx)
@@ -135,7 +150,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           return (
             <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${readyUid != null ? ' ready' : ''}${loaded ? ' loaded' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.chosenUid != null && g.uids.includes(pick.chosenUid) ? ' pick-chosen' : ''}${pickM && pickM.alt ? ' pick-alt' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used ? 'used' : loaded ? 'loaded' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
-              <Tip className="fig" sticky={mine} beside=".lt-cult-seat" label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
+              <Tip className="fig" sticky={mine} beside=".fig" label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
                 content={() => <><MemberCard state={state} uid={readyUid ?? g.uids[0]} me={me} />{mine && <MemberActions state={state} uid={readyUid ?? g.uids[0]} me={me} optionFor={optionFor} onPick={onPick} />}</>}>
                 <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
@@ -165,7 +180,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           <span className="cs-inc"><small>Robin Hood</small><b className="num">+{bonus.n}</b><Follower size={12} title="follower" /></span>
         </div>
       ) : incomeWords.length > 0 && (
-        <div className="cs-build">
+        <div className="cs-build" {...bodyHover}>
           {incomeWords.length > 0 && (
             <Tip className="cs-income" data-income={incomeWords.join(', ')} label={`Each round its members make ${incomeWords.join(', ')}`}
               content={() => <div className="pop-card gloss"><b>Each round</b><span>At the start of each round, {mine ? 'your' : `${p.name}’s`} members make <Rich text={incomeWords.join(' ')} />{incomeFrom.length ? ` (${incomeFrom.join(', ')})` : ''}.</span></div>}>
@@ -176,7 +191,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           )}
         </div>
       )}
-      <footer className="cs-foot">
+      <footer className="cs-foot" {...bodyHover}>
         <span className="cs-res" role="group" aria-label="Resources">
           {state.resources.map(r => {
             // the seat selector (seatPick.js): a stack you can take lights up and a click takes one; one you can't says why

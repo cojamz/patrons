@@ -1,6 +1,6 @@
 // Seat facts read off the engine: this round's seats in turn order, each seat's last moves.
 import { turnRail, quadrant } from '../../engine/v4/index.js';
-import { turnSequence } from '../format.js';
+import { turnSequence, firstPickWhy } from '../format.js';
 
 /** This round's seats in their turn order (the first pass of the snake); before round I, seat order. */
 export function seatOrder(state) {
@@ -35,7 +35,10 @@ export function turnPlaces(state, me = null) {
     const label = now ? 'now' : k === 0 ? 'next' : k === 1 ? 'next' : `in ${k}`;
     const why = twice ? (seq[k + 1].kind === 'snake' ? ', then again right after (snake order: whoever ends a pass starts the next)' : `, then again right after (${seq[k + 1].kind === 'hand' ? 'an extra minion' : 'an extra turn'}${seq[k + 1].why ? ` from ${seq[k + 1].why}` : ''})`) : '';
     const what = now ? 'Placing now' : label === 'next' ? 'Places next' : `Places in ${k} turns`;
-    out[p.id] = { place: k, label, twice, text: twice ? `${label}, then again` : label, title: `${what}${ahead(now ? 0 : k)}${why}. Placements still to come: ${list.slice(0, 8).join(', ')}${list.length > 8 ? ', …' : ''}.` };
+    // whoever opened the round because a member says so says which (w3a A2: "P3 picks first" with no reason)
+    const firstBy = state.order && state.order[0] === p.id ? firstPickWhy(state, p.id) : null;
+    const opened = firstBy && firstBy !== 'fewest followers' ? ` (first this round: ${firstBy})` : '';
+    out[p.id] = { place: k, label, twice, text: twice ? `${label}, then again` : label, title: `${what}${ahead(now ? 0 : k)}${why}${opened}. Placements still to come: ${list.slice(0, 8).join(', ')}${list.length > 8 ? ', …' : ''}.` };
   }
   return { places: out, order };
 }

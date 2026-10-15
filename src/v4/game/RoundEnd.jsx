@@ -2,7 +2,7 @@
 // everything else gained this round), then the button that starts the next round.
 import { useEffect, useRef, useState } from 'react';
 import { followers } from '../../engine/v4/index.js';
-import { playerColor, roman, standings, scoredStandings, roundGains, tiebreakNote, workersNote } from '../format.js';
+import { playerColor, roman, standings, scoredStandings, roundGains, tiebreakNote, workersNote, firstPickWhy } from '../format.js';
 import Tick from './Tick.jsx';
 import { useDialog } from './parts.jsx';
 import { Tip, ContestStandings, NamedText } from './Info.jsx';
@@ -107,7 +107,7 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
             );
           })}
         </div>
-        {first && <p className="hint">Round {roman(after.round)} · <span className="num">{workersNote(after)}</span> · {first.id === meId ? 'You pick' : `${first.name} picks`} first</p>}
+        {first && <p className="hint">Round {roman(after.round)} · <span className="num">{workersNote(after)}</span> · {first.id === meId ? 'You pick' : `${first.name} picks`} first{firstPickWhy(after, first.id) ? `: ${firstPickWhy(after, first.id)}` : ''}</p>}
         </div>
         {more && <span className="re-more" aria-hidden="true">More below</span>}
         <div className="re-foot">

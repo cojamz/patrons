@@ -182,6 +182,8 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
               <div key={r} className={`pay-stack${have ? '' : ' none'}${out ? ' paying' : ''}`} data-stack={r} data-keep={keep} data-out={out}>
                 <button type="button" className="ps-add" data-pay-add={r} data-keep={keep} disabled={busy || !have} title={sayAdd} aria-label={sayAdd} onClick={() => add(r)} />
                 <span className="ps-coins">
+                  {/* a color you hold none of still shows its dot, faint (w3b #25: a bare "0" couldn't be told apart) */}
+                  {!have && <i className="ps-coin ps-none" style={{ '--k': 0 }} aria-hidden="true"><ResourceGlyph r={r} size={24} decorative /></i>}
                   {Array.from({ length: drawn - lifted }, (_, k) => (
                     <i key={k} className="ps-coin" data-coin={`${r}-${k + base}`} style={{ '--k': k }} aria-hidden="true"><ResourceGlyph r={r} size={24} decorative /></i>
                   ))}
@@ -200,6 +202,10 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
             );
           })}
         </div>
+
+        {/* the stacks' one legend (w3b #25: the numbers read as "cost per color", and the faded coins' meaning seemed to
+            swap after a tap): faded coins pay, the number under a stack is what you keep */}
+        <p className="pay-legend" data-pay-legend>Faded coins pay. The number under each stack is what you keep.</p>
 
         {(notes.length > 0 || nudge) && (
           <div className="pay-notes">

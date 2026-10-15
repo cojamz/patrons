@@ -15,7 +15,8 @@ export const LEGACY = () => {
   for (const e of document.querySelectorAll('[data-spaces="panels"] .slot .face .ico')) if (vis(e)) out.push(`a picture on panel ${e.closest('.slot').dataset.slot}`);
   for (const e of document.querySelectorAll('svg.res-glyph')) {
     if (!vis(e)) continue;
-    const shapes = [...e.children].filter(c => c.tagName !== 'title');
+    // (a white pearl's gradient <defs> and the "any" dot's hairline cross are part of the plain dot, not a shape)
+    const shapes = [...e.children].filter(c => c.tagName !== 'title' && c.tagName !== 'defs' && !(c.getAttribute('class') || '').includes('any-cross'));
     const ok = shapes.every(c => c.tagName === 'path' || c.tagName === 'circle') && shapes.filter(c => c.tagName === 'path').length <= 4;
     if (!ok) out.push(`resource glyph "${e.dataset.resGlyph}" is not the plain dot (${shapes.map(c => c.tagName).join(',')})`);
   }

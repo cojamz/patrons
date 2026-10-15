@@ -1,7 +1,7 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
-import { logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
+import { firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
 import { createTrail, feed } from '../../../v4/game/trail.js';
 import { contextFor } from '../../../engine/v4/core.js';
 
@@ -180,6 +180,15 @@ describe('v4 format helpers', () => {
     const at = prompt => ({ ...s, pending: { kind: 'choose', player: 1, prompt, options: [{ id: 'a', label: 'Pay 4' }, { id: 'b', label: 'Let it go' }] } });
     expect(promptFor(at('Cy holds your Magnate to ransom: pay 4 to keep it?'), true).text).toBe('Cy holds Magnate: keep it for 4?');
     expect(promptFor(at('Bo: take 6 more from the release, in any colors'), true).text).toBe('take 6 more from the release, in any colors');
+  });
+
+  it('who picks first says why: the member that makes them, else fewest followers; round I is drawn (w3a A2)', () => {
+    const s = createGame({ seats, seed: 5 });
+    const uid = Object.keys(s.cards).map(Number).find(u => s.cards[u].def === 'benders.frontrunner');
+    const at = (round, members) => ({ ...s, round, players: s.players.map((p, i) => (i === 1 ? { ...p, members } : p)) });
+    if (uid != null) expect(firstPickWhy(at(2, [uid]), 1)).toBe('Front-runner');
+    expect(firstPickWhy(at(2, []), 1)).toBe('fewest followers');
+    expect(firstPickWhy(at(1, []), 1)).toBeNull();
   });
 });
 

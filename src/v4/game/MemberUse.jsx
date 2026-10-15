@@ -4,11 +4,13 @@
 // Translator) are a small on/off switch. Everything here is read off the engine (memberUse.js).
 import { useEffect, useRef, useState } from 'react';
 import { Sprite } from '../art/Sprite.jsx';
+import { Follower } from '../art/Follower.jsx';
 import { spriteId } from '../art/index.js';
 import { quadrant, followers } from '../../engine/v4/index.js';
+import { breakdown } from '../format.js';
 import { CardName, onTable } from './Info.jsx';
 import { Rich, Pip } from './Rich.jsx';
-import { memberRows, useNow } from './memberUse.js';
+import { memberRows, useNow, spendingPower } from './memberUse.js';
 import './members.css';
 
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
@@ -142,4 +144,38 @@ export function useUseResult(state, pid) {
 export function UseResult({ result }) {
   if (!result) return null;
   return <span key={result.n} className={`mu-result${result.zero ? ' zero' : ''}`} data-use-result={result.text} aria-live="polite"><Rich text={result.text} /></span>;
+}
+
+/** A rival's seat card: "Holding 23 ◐ · could buy about 20 👤 now", one quiet line. */
+export function SpendingLine({ state, pid }) {
+  if (!(state.round >= 1) || state.over) return null;
+  const { held, get } = spendingPower(state, state.players[pid]);
+  return <small className="seat-spend" data-spend={get}><Rich text={`Holding ${held} any · could buy about ${get} follower${get === 1 ? '' : 's'} now`} /></small>;
+}
+
+/**
+ * Where a player's followers came from (w3b #39: the seat's follower number), adding up to the total: themselves,
+ * what their members are worth, follower buys, round-end prizes, what members, spaces and choices gave or took
+ * (the engine's ledger), and game-end bonuses.
+ */
+export function FollowersCard({ state, pid, meId = null }) {
+  const p = state.players[pid];
+  const total = followers(state, p);
+  const b = breakdown(state, p);
+  const rows = [
+    [pid === meId ? 'You' : p.name, b.self],
+    ['Members they’re worth', b.members],
+    ['Bought', b.bought],
+    ['Round-end prizes', b.contests],
+    ...b.play.map(l => [l.label, l.n]),
+    ['Game end', b.endGame],
+  ].filter(([, n], k) => k === 0 || n);
+  return (
+    <div className="lt-card-body fol-card" data-followers-card={pid}>
+      <h4>{pid === meId ? 'Your' : `${p.name}’s`} followers <b className="num" data-total={total}>{total}</b><Follower size={14} title={`${total} followers`} /></h4>
+      <ul className="fol-rows">
+        {rows.map(([label, n], k) => <li key={k} data-fol-row={label}><span>{label}</span><b className="num">{k && n > 0 ? '+' : ''}{n < 0 ? `−${-n}` : n}</b></li>)}
+      </ul>
+    </div>
+  );
 }

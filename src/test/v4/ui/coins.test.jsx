@@ -26,8 +26,16 @@ describe('a resource is a plain dot, and always says its name', () => {
       const g = container.querySelector(`.pip svg.res-glyph[data-res-glyph="${r}"]`);
       expect(g, r).not.toBeNull();
       expect(container.querySelector('.pip').getAttribute('title')).toBe(`2 ${r}`);
-      // white is a cream a step darker than paper, so it reads as a dot on a card (design pod, w2b #39)
-      expect(g.querySelector('path').getAttribute('fill')).toContain(r === 'white' ? 'var(--white-dot' : `var(--${r})`);
+      // white is a pearl: filled with its own gradient (defined in the same glyph), white at the centre, so on a card it
+      // reads as a white thing, never as an empty ring (design pod, w3a A4 blocker); every other dot is its color
+      if (r === 'white') {
+        const fill = g.querySelector('path').getAttribute('fill');
+        const id = (fill.match(/^url\(#(.+)\)$/) || [])[1];
+        expect(id, 'white fills with a gradient').toBeTruthy();
+        const grad = g.querySelector(`radialGradient[id="${id}"]`);
+        expect(grad, 'the gradient lives in the glyph').not.toBeNull();
+        expect(grad.querySelector('stop').getAttribute('stop-color')).toBe('#ffffff');
+      } else expect(g.querySelector('path').getAttribute('fill')).toContain(`var(--${r})`);
       fills.set(r, g.querySelector('path').getAttribute('fill'));
       cleanup();
     }

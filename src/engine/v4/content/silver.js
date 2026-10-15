@@ -67,7 +67,7 @@ const spillCost = (ctx, n) => 0.25 * n * (ctx.state.players.length - 1);
 
 export const silverActions = [
   {
-    key: 'toast', ring: 1, name: 'Toast', text: '+3 silver per round number (3 / 6 / 9), and everyone else +1 silver.',
+    key: 'toast', ring: 1, name: 'Toast', text: '+3 silver in round I, +6 in round II, +9 in round III, and everyone else +1 silver.',
     estimate: ctx => 3 * ctx.state.round - spillCost(ctx, 1),
     resolve(ctx, p) {
       const n = 3 * ctx.state.round;
@@ -77,7 +77,7 @@ export const silverActions = [
     },
   },
   {
-    key: 'gift', ring: 1, name: 'Goody Bags', text: '+2 silver and +2 of another color; everyone else gets 1 of that color.',
+    key: 'gift', ring: 1, name: 'Goody Bags', text: '+2 silver and +2 of another color you choose; everyone else gets 1 of that color.',
     estimate: ctx => 4 - spillCost(ctx, 1),
     resolve(ctx, p) {
       hostGain(ctx, p, 2);
@@ -120,7 +120,7 @@ export const silverActions = [
     },
   },
   {
-    key: 'tide', ring: 2, name: 'Rising Tide', text: 'Everyone else +1 silver. Then gain half the silver of the richest rival (rounded up).',
+    key: 'tide', ring: 2, name: 'Rising Tide', text: 'Everyone else +1 silver. Then gain half the silver of the rival with the most (rounded up).',
     estimate: (ctx, p) => tideAmount(ctx, p, 1) - spillCost(ctx, 1),
     resolve(ctx, p) {
       giveAll(ctx, p, S, 1);

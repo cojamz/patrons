@@ -108,7 +108,7 @@ export default {
 
   actions: [
     {
-      key: 'hourly', ring: 1, name: 'Clock In', text: '+4 / +5 / +6 purple, by round.',
+      key: 'hourly', ring: 1, name: 'Clock In', text: '+4 purple in round I, +5 in round II, +6 in round III.',
       estimate: ctx => [3, 4, 5][ctx.state.round - 1] + 1,
       resolve(ctx, p) { ctx.gain(p, P, [3, 4, 5][ctx.state.round - 1] + 1, { fromAction: true }); },
     },
@@ -139,7 +139,11 @@ export default {
     {
       // the burst: all the purple you've banked becomes turns (and leaves the ring's count)
       key: 'rally', ring: 3, name: 'Crunch Time',
-      text: `Spend all your purple: 1 extra turn right after this one per ${RALLY_PER} spent, plus 1 (up to ${RALLY_CAP}). With less than ${RALLY_PER}, +4 purple.`,
+      // at a cap of 2, "1 per 4 spent, plus 1 (up to 2)" is always 2 from the first 4: said as that (the words designer,
+      // w3b #18: the formula read as a group effect). The formula comes back if the cap rises.
+      text: RALLY_CAP === 2
+        ? `Pay all your purple (${RALLY_PER} or more): take 2 extra turns right after this one. With less than ${RALLY_PER}, +4 purple.`
+        : `Spend all your purple: 1 extra turn right after this one per ${RALLY_PER} spent, plus 1 (up to ${RALLY_CAP}). With less than ${RALLY_PER}, +4 purple.`,
       estimate(ctx, p) { const k = rallyTurns(ctx, p); return k ? k * turnValue(ctx) - (p.res[P] || 0) * 0.8 + 1 : 4; },
       resolve(ctx, p) {
         const want = rallyWant(ctx, p), k = rallyTurns(ctx, p), per = rallyPer(ctx, p);

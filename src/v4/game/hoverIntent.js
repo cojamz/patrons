@@ -79,3 +79,12 @@ export function busyWith(p = pt, mine = null) {
   if (h && h !== mine && !(mine && h.contains(mine)) && h.isConnected && over(h, p)) return h;
   return null;
 }
+
+// One card at a time (w3a A30: P4's seat card stayed up while the turn-order explainer opened beside it): whoever opens
+// a card claims the screen, and the card that held it closes. The hover layer and every Tip share this one claim.
+let current = null; // { id, close }
+export function claim(id, close) {
+  if (current && current.id !== id) { const was = current; current = null; try { was.close(); } catch { /* gone */ } }
+  current = { id, close };
+}
+export function unclaim(id) { if (current && current.id === id) current = null; }

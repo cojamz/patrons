@@ -2,7 +2,7 @@
 // everywhere"): two symbols only. A resource is a plain flat dot in its color ("any" is the dot split into the table's
 // four colors), and a follower is Cory's pixel person; everything else is a plain word. A seat is a hooded figure in its
 // color carrying its sigil. Every one says what it is on hover (title) and long-press (TouchTips).
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 import { Follower } from '../art/Follower.jsx';
 import { playerColor, seatSigil, seatEmoji } from '../format.js';
 import { Leader, Minion } from '../art/Leader.jsx';
@@ -26,14 +26,22 @@ const ANY_WEDGES = [
 export function ResourceGlyph({ r, size = 16, n = null, decorative = false }) {
   const name = r === 'any' ? 'any resource' : NAMES[r] || r;
   const label = n == null ? name : `${n} ${name}`;
+  // white is a pearl (design pod, w3a A4 blocker): a white disc lightly shaded toward its edge, so on cream paper it reads
+  // as a white thing, never as an empty ring or a zero; every other dot is flat. Its own gradient id (useId): a shared id
+  // would break wherever the first copy sits hidden.
+  const pearl = `pearl${useId().replace(/:/g, '')}`;
+  const fill = r === 'white' ? `url(#${pearl})` : `var(--q-${r}, var(--${r}))`;
   return (
-    <svg className={`res-glyph${r === 'any' ? ' any' : ''}`} data-res-glyph={r} viewBox="0 0 16 16" width={size} height={size} role={decorative ? undefined : 'img'} aria-label={decorative ? undefined : label} aria-hidden={decorative ? 'true' : undefined}>
+    <svg className={`res-glyph${r === 'any' ? ' any' : ''}`} data-res-glyph={r} viewBox="0 0 16 16" width={size} height={size} role={decorative ? undefined : 'img'} aria-label={decorative ? undefined : label} aria-hidden={decorative ? 'true' : undefined}
+      style={{ color: r === 'any' ? undefined : r === 'white' ? 'var(--white, #e6dcc6)' : `var(--q-${r}, var(--${r}))` }}>
       {decorative ? null : <title>{label}</title>}
+      {r === 'white' && <defs><radialGradient id={pearl} cx="40%" cy="35%" r="70%"><stop offset="0" stopColor="#ffffff" /><stop offset="1" stopColor="#cdc5b6" /></radialGradient></defs>}
       {r === 'any'
         ? ANY_WEDGES.map(([k, d]) => <path key={k} d={d} fill={`var(--any-${k})`} />)
-        // white: a cream a step darker than paper, so on a card it reads as a dot, not an empty ring (w2b #39)
-        : <path d={DISC} fill={r === 'white' ? 'var(--white-dot, #d5c8ab)' : `var(--q-${r}, var(--${r}))`} />}
-      <circle cx="8" cy="8" r={r === 'white' ? 5.65 : 5.75} fill="none" stroke={r === 'white' ? 'rgba(30,18,8,.55)' : 'rgba(30,18,8,.28)'} strokeWidth={r === 'white' ? 1.2 : 1} />
+        : <path d={DISC} fill={fill} />}
+      {/* "any": a hairline cross keeps its four colors apart at 10px (it read as one magenta blob, w3a A4) */}
+      {r === 'any' && <path className="any-cross" d="M3.58 3.58L12.42 12.42M12.42 3.58L3.58 12.42" stroke="rgba(30,18,8,.5)" strokeWidth=".8" fill="none" />}
+      <circle className="res-ring" cx="8" cy="8" r="5.75" fill="none" stroke={r === 'white' ? 'rgba(30,18,8,.45)' : r === 'silver' ? 'rgba(30,18,8,.55)' : 'rgba(30,18,8,.28)'} strokeWidth={r === 'silver' ? 1.3 : 1} />
     </svg>
   );
 }

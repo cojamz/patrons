@@ -12,8 +12,8 @@
 //  (m4) the seat card's own Use button works too (Heiress: +1 white per member);
 //  (m5) the prompt names what you can use once, quietly, and only what would do something;
 //  (m6) a rival's seat card lists their members with no Use buttons;
-//  (m7) w2b #20: every seat's card opens right beside its seat (pointing at its leader or its name), level with it,
-//       whole on screen; never docked away over the wheel;
+//  (m7) w2b #20, w3a A8: every seat's card opens right next to what's pointed at (its leader, its name), level with
+//       it, whole on screen; never docked away over the wheel;
 //  (m8) w2b #19: a use worth nothing now (Safecracker, no rival holds 2 magenta) is never lit or named in the prompt;
 //       its row and hover read a muted "Use: +0" with the reason;
 //  (m10) w2a #1, #44, #45, #16: a use's result shows at the member (even +0) and the prompt drops it at once; a usable
@@ -21,6 +21,9 @@
 //  (m11) a click always acts on what's under the pointer, at once: with your seat's or your member's card open, a
 //       click on a lit space (the one under the card, if any) reaches the space, the card is gone the next frame, and
 //       the minion lands.
+//  (m12) w3b #47: leaving the member downward on the way to its card doesn't close it;
+//  (m13) w3b #39/#47, A30: the follower total opens a breakdown adding up to it; a seat's body and resources open its card;
+//       a rival's card says what it could buy now; one card on screen at a time.
 //  (m9) w2b #21: a rival's use still in hand is marked on their seat (P2's Stunt Double, subdued); a seat no one can
 //       steal from this round says "safe this round" (P3 lies low), in its seat and its card.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/members/).
@@ -28,6 +31,7 @@ import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { membersSave, HAND } from './lib/members-save.mjs';
 import { cardDef } from '../../src/engine/v4/index.js';
+import { spendingPower } from '../../src/v4/game/memberUse.js';
 import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/members`;
@@ -161,9 +165,10 @@ try {
   if (!btn) fail('the lit member\'s hover has no Use button', 'm3');
   else {
     const label = (await btn.textContent()).trim();
-    // w2a #45: the member's card opens beside your seat, never over it
-    const over = await page.evaluate(() => { const t = document.querySelector('[data-tip-body]').closest('.popover').getBoundingClientRect(), s = document.querySelector('[data-cult="0"]').getBoundingClientRect(); return Math.max(0, Math.min(t.right, s.right) - Math.max(t.left, s.left)) * Math.max(0, Math.min(t.bottom, s.bottom) - Math.max(t.top, s.top)); });
-    if (over > 0) fail(`the member's card covers your seat (${Math.round(over)}px²)`, 'm3');
+    // w3a A8 (Cory: "hovers open right next to what you point at"): the member's card sits right next to the member,
+    // level with it, and doesn't cover the member itself
+    const near = await page.evaluate(() => { const t = document.querySelector('[data-tip-body]').closest('.popover').getBoundingClientRect(), f = document.querySelector('[data-cult="0"] .cs-member[data-member="gold.jackpot"] .fig').getBoundingClientRect(); return { gap: Math.round(Math.max(t.left - f.right, f.left - t.right, t.top - f.bottom, f.top - t.bottom)), over: Math.max(0, Math.min(t.right, f.right) - Math.max(t.left, f.left)) * Math.max(0, Math.min(t.bottom, f.bottom) - Math.max(t.top, f.top)) }; });
+    if (near.gap > 16 || near.over > 0) fail(`the member's card isn't right next to the member: ${JSON.stringify(near)}`, 'm3');
     if (!/^Use: \+7/.test(label)) fail(`the hover's button reads "${label}" (want "Use: +7 …")`, 'm3');
     await page.screenshot({ path: `${SHOTS}/2-member-hover.png` });
     const b = await btn.boundingBox();
@@ -233,19 +238,20 @@ try {
       if (!(await page.$(`[data-cult="${pid}"] ${part}`))) { fail(`seat ${pid} has no ${part}`, 'm7'); continue; }
       await pointAt(`[data-cult="${pid}"] ${part}`);
       await page.waitForTimeout(250);
-      const r = await page.evaluate(id => {
+      const r = await page.evaluate(([id, sel]) => {
         const L = document.querySelector('[data-hover-layer][data-open="1"]');
         if (!L || !L.querySelector(`[data-seat-card="${id}"]`)) return null;
-        const a = L.getBoundingClientRect(), s = document.querySelector(`[data-cult="${id}"]`).getBoundingClientRect();
+        // right next to the part pointed at (w3a A8), not the seat's far edge
+        const a = L.getBoundingClientRect(), s = document.querySelector(`[data-cult="${id}"] ${sel}`).getBoundingClientRect();
         const list = L.querySelector('.mu-list');
-        return { gap: Math.round(Math.max(a.left - s.right, s.left - a.right)), level: a.top <= s.bottom && a.bottom >= s.top, inView: a.top >= 0 && a.left >= 0 && a.bottom <= innerHeight + 0.5 && a.right <= innerWidth + 0.5,
+        return { gap: Math.round(Math.max(a.left - s.right, s.left - a.right)), level: a.top <= s.bottom + 24 && a.bottom >= s.top - 24, inView: a.top >= 0 && a.left >= 0 && a.bottom <= innerHeight + 0.5 && a.right <= innerWidth + 0.5,
           scroll: list && list.scrollHeight > list.clientHeight + 1 ? getComputedStyle(list).overflowY : 'fits', rows: L.querySelectorAll('[data-member-row]').length };
-      }, pid);
+      }, [pid, part]);
       if (!r) {
         const seen = await page.evaluate(([id, sel]) => { const L = document.querySelector('[data-hover-layer]'); const t = document.querySelector(`[data-cult="${id}"] ${sel}`).getBoundingClientRect(); const e = document.elementFromPoint(t.left + t.width / 2, t.top + t.height / 2); return `layer open=${L.dataset.open} card=${L.querySelector('[data-hover-card]')?.dataset.hoverCard || '-'}/${L.querySelector('[data-seat-card]')?.dataset.seatCard ?? '-'}; under=${e ? `${e.tagName}.${e.className?.baseVal ?? e.className}` : 'none'}`; }, [pid, part]);
         fail(`pointing at seat ${pid}'s ${part} opened no seat card (${seen})`, 'm7'); continue;
       }
-      if (r.gap < 0 || r.gap > 16 || !r.level) fail(`seat ${pid}'s card (from ${part}) isn't right beside the seat: ${JSON.stringify(r)}`, 'm7');
+      if (r.gap < 0 || r.gap > 16 || !r.level) fail(`seat ${pid}'s card (from ${part}) isn't right next to it: ${JSON.stringify(r)}`, 'm7');
       if (!r.inView) fail(`seat ${pid}'s card runs off the window`, 'm7');
       if (r.scroll !== 'fits' && !/auto|scroll/.test(r.scroll)) fail(`seat ${pid}'s long list overflows without scrolling`, 'm7');
       if (pid === 3 && part === '.cs-leader') await page.screenshot({ path: `${SHOTS}/8-thirteen-members.png` });
@@ -289,8 +295,11 @@ try {
       if (!card) return null;
       const r = card.getBoundingClientRect();
       const slots = [...document.querySelectorAll('.lt-wheel .slot.can .base')].map(e => { const b = e.getBoundingClientRect(); return { key: e.closest('[data-slot]').dataset.slot, x: b.left + b.width / 2, y: b.top + b.height / 2 }; });
-      const under = slots.filter(t => t.x > r.left + 4 && t.x < r.right - 4 && t.y > r.top + 4 && t.y < r.bottom - 4);
-      const near = slots.sort((a, b) => Math.hypot(a.x - r.right, a.y - r.top) - Math.hypot(b.x - r.right, b.y - r.top));
+      // a space under the card's surface, not under one of its buttons (a visible button takes its own click)
+      const ctrls = [...card.querySelectorAll('button, [role="switch"]')].map(e => e.getBoundingClientRect());
+      const onCtrl = t => ctrls.some(c => t.x >= c.left - 24 && t.x <= c.right + 24 && t.y >= c.top - 24 && t.y <= c.bottom + 24);
+      const under = slots.filter(t => t.x > r.left + 4 && t.x < r.right - 4 && t.y > r.top + 4 && t.y < r.bottom - 4 && !onCtrl(t));
+      const near = slots.filter(t => !onCtrl(t)).sort((a, b) => Math.hypot(a.x - r.right, a.y - r.top) - Math.hypot(b.x - r.right, b.y - r.top));
       window.__clicks = [];
       addEventListener('pointerdown', () => { requestAnimationFrame(() => { const open = k === 'seat' ? document.querySelector('[data-hover-layer][data-open="1"] [data-seat-card]') : document.querySelector('[data-tip-body]'); window.__clicks.push({ t: 'frame', open: !!open }); }); }, true);
       document.addEventListener('click', e => { window.__clicks.push({ t: 'click', slot: e.target.closest?.('[data-slot]')?.dataset.slot || null, on: (e.target.className?.baseVal ?? e.target.className ?? '').toString().slice(0, 40) }); });
@@ -307,6 +316,73 @@ try {
     const landed = await pg.waitForFunction(m => Number(document.querySelector('.lt[data-moves]')?.dataset.moves) > m, plan.moves, { timeout: 5000 }).then(() => true, () => false);
     if (!landed) fail(`with your ${kind} card open, the click on space ${plan.target.key} placed no minion`, 'm11');
     await ctx.close();
+  }
+
+  // (m12) w3b #47: leaving the member by the "wrong" route (down first, then over to its card) still finds it open
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
+    const pg = await ctx.newPage();
+    await pg.addInitScript(([v, rs]) => { localStorage.setItem('patrons.v4.local', JSON.stringify(v)); localStorage.setItem('patrons.v4.roundStart', JSON.stringify(rs)); }, [save, roundStart]);
+    await pg.goto(`${base}/?botDelay=300&intro=0`);
+    await pg.waitForSelector('.lt-wheel, [data-home="resume"]');
+    if (!(await pg.$('.lt-wheel'))) await pg.click('[data-home="resume"]');
+    await pg.waitForSelector('.lt-wheel .slot.can');
+    await pg.waitForTimeout(600);
+    const fb = await (await pg.$('[data-cult="0"] .cs-member[data-member="gold.jackpot"] .fig')).boundingBox();
+    await pg.mouse.move(fb.x + fb.width / 2, fb.y + fb.height / 2, { steps: 4 });
+    await pg.waitForTimeout(350);
+    const bb = await (await pg.$('[data-tip-body] [data-use]'))?.boundingBox();
+    if (!bb) fail('no Use button on the member\'s card to reach by a detour', 'm12');
+    else {
+      await pg.mouse.move(fb.x + fb.width / 2, fb.y + fb.height + 18, { steps: 2 }); // down, out of the figure, away from the card
+      await pg.waitForTimeout(90);
+      await pg.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2, { steps: 5 });
+      await pg.waitForTimeout(120);
+      if (!(await pg.$('[data-tip-body] [data-use]'))) fail('the member\'s card closed when the pointer left it downward on its way to "Use"', 'm12');
+    }
+    await ctx.close();
+  }
+
+  // (m13) w3b #39, #47, A30: the follower total opens where those followers came from, adding up to it; a seat's body and
+  // resource row open its card; a rival's card says what it could buy now; one card on screen at a time
+  await away();
+  await pointAt('[data-cult="0"] .cs-total');
+  await page.waitForTimeout(250);
+  const fc = await page.evaluate(() => {
+    const L = document.querySelector('[data-hover-layer][data-open="1"]');
+    const c = L && L.querySelector('[data-followers-card="0"]');
+    if (!c) return null;
+    const total = Number(c.querySelector('[data-total]').dataset.total);
+    const sum = [...c.querySelectorAll('[data-fol-row] b')].reduce((t, b) => t + Number(b.textContent.replace('−', '-').replace('+', '')), 0);
+    const a = L.getBoundingClientRect(), t = document.querySelector('[data-cult="0"] .cs-total').getBoundingClientRect();
+    return { total, sum, seat: Number(document.querySelector('[data-cult="0"] .cs-total').dataset.followers), gap: Math.round(Math.max(a.left - t.right, t.left - a.right, a.top - t.bottom, t.top - a.bottom)) };
+  });
+  if (!fc) fail('hovering your follower total opened no breakdown', 'm13');
+  else if (fc.total !== fc.seat || fc.sum !== fc.total || fc.gap > 16) fail(`the follower breakdown: ${JSON.stringify(fc)} (rows must add up to the seat's total, next to it)`, 'm13');
+  else await page.screenshot({ path: `${SHOTS}/9-followers.png` });
+  for (const part of ['.cs-foot', '.cs-crowd']) {
+    await away();
+    if (!(await page.$(`[data-cult="1"] ${part}`))) continue;
+    const pb = await (await page.$(`[data-cult="1"] ${part}`)).boundingBox();
+    // its empty edge, not a member figure (a figure opens its own card)
+    await page.mouse.move(pb.x + pb.width - 6, pb.y + pb.height / 2, { steps: 3 });
+    await page.waitForTimeout(250);
+    const sc2 = await seatCard(1);
+    if (!sc2) fail(`hovering P2's ${part} opened no seat card`, 'm13');
+    else if (part === '.cs-foot') {
+      const spend = await page.evaluate(() => document.querySelector('[data-hover-layer][data-open="1"] [data-spend]')?.textContent || '');
+      const want = spendingPower(s0, s0.players[1]);
+      if (!new RegExp(`Holding ${want.held}(?!\\d).*could buy about ${want.get}(?!\\d)`).test(spend.replace(/\s+/g, ' '))) fail(`P2's spending line reads "${spend}" (want holding ${want.held}, about ${want.get})`, 'm13');
+    }
+  }
+  await away();
+  await pointAt('[data-cult="3"] .cs-leader');
+  await page.waitForTimeout(250);
+  if (await page.$('[data-cult="3"] .cs-order')) {
+    await pointAt('[data-cult="3"] .cs-order');
+    await page.waitForTimeout(400);
+    const cards = await page.evaluate(() => [...document.querySelectorAll('.popover')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left > -1000 && getComputedStyle(e).opacity !== '0'; }).length);
+    if (cards !== 1) fail(`${cards} cards on screen at once after pointing from P4's seat to its turn-order note (want 1)`, 'm13');
   }
 
   if (errors.length) fail(`page errors: ${errors.slice(0, 3).join(' | ')}`, 'page');

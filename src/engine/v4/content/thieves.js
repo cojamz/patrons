@@ -145,7 +145,7 @@ const thieves = {
 
   actions: [
     {
-      key: 'pickpocket', ring: 1, name: 'Help Yourself', text: 'Take 2 / 3 / 4 resources (by round) from rivals, split as you like (they arrive as magenta).',
+      key: 'pickpocket', ring: 1, name: 'Help Yourself', text: 'Take 2 resources from rivals in round I, 3 in round II, 4 in round III, split as you like (they arrive as magenta).',
       estimate: (ctx, p) => estimateSteal(ctx, p, ctx.stealCount(p, ctx.state.round + 1)),
       resolve(ctx, p) { startSteal(ctx, p, 'Help Yourself', ctx.stealCount(p, ctx.state.round + 1, { say: true })); },
     },

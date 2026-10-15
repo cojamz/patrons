@@ -10,8 +10,13 @@ const NODE_BUDGET = 36; // states explored per preview (a counted pick branches 
  * previewSpace(state, pid, q, i) → null when it can't be run, else
  * { exact, partial, leaves, you: { res:{color:[min,max]}, followers:[min,max], members:[min,max], turns:[min,max], discount:[min,max] },
  *   others: { res:{color:[min,max]}, followers:[min,max], members:[min,max] }, asks:[prompt], theirAsks:[prompt],
- *   swept: [uid] (face-up members it surely sends under the pile), reasons: [line] (why a member changed it, or didn't), sample }.
+ *   swept: [uid] (face-up members it surely sends under the pile), reasons: [line] (why a member changed it, or didn't), sample,
+ *   best, likely: { res:{color:n}, followers, members, turns, discount } (one branch's change for you), tied }.
  * exact: every branch gives the same to you. others: the rivals' summed change.
+ * best: the branch worth most to you; likely: you pick what's worth most to you and each rival picks what's worth most
+ * to them (a ransom paid rather than a member lost); tied: every branch is worth the same to you (only the mix differs:
+ * which color, whom). Worth is a rough ruler for ordering branches, never shown: a resource 1, a follower 2 (Cory's
+ * anchor, design/eval/value-model.md), a member 4 besides its followers, an extra turn 3, a discount 1 a point.
  */
 export function previewSpace(state, pid, q, i) {
   const key = `${q}-${i}`;
@@ -32,9 +37,22 @@ export function previewSpace(state, pid, q, i) {
   // spaces. A member it might recruit (Hand-pick → Sleepwalker, copying last round) is a branch, not the space's copy.
   let copies = null;
   let nodes = 0, partial = false;
+  // worth of a branch to a player (see above); the extra turns only for pid (a rival's minions don't move here)
+  const worthOf = new Map();
+  const worth = (s, who) => {
+    const k = `${who}`, m = worthOf.get(s) || worthOf.set(s, {}).get(s);
+    if (m[k] !== undefined) return m[k];
+    const a = s.players[who], b = state.players[who];
+    let v = 0;
+    for (const r of state.resources) v += (a.res[r] || 0) - (b.res[r] || 0);
+    v += 2 * (followers(s, a) - followers(state, b)) + 4 * (a.members.length - b.members.length) + ((a.discount || 0) - (b.discount || 0));
+    if (who === pid) v += 3 * Math.max(0, a.left - (b.left - 1));
+    return (m[k] = v);
+  };
+  // returns { best, likely } leaves under s (see above), or null when no branch could be followed
   const walk = s => {
     nodes++;
-    if (!s.pending || s.pending.kind !== 'choose') { leaves.push(s); return; }
+    if (!s.pending || s.pending.kind !== 'choose') { leaves.push(s); return { best: s, likely: s }; }
     (s.pending.player === pid ? asks : theirAsks).add(s.pending.prompt.replace(/\s*\(\d+ left\)/, ''));
     if (s === base && s.pending.player === pid && s.pending.options.some(o => o.kind === 'space')) {
       copies = [...new Set(s.pending.options.filter(o => o.kind === 'space' && typeof o.value === 'string' && !String(o.id).startsWith('space:last:')).map(o => o.value.split('+')[0]))];
@@ -42,14 +60,21 @@ export function previewSpace(state, pid, q, i) {
     const opts = s.pending.options;
     // out of budget: follow only the first and last option (the extremes a list is usually ordered by)
     const list = nodes + opts.length > NODE_BUDGET ? (partial = true, [opts[0], opts[opts.length - 1]].filter((o, k, a) => a.indexOf(o) === k)) : opts;
+    const chooser = s.pending.player;
+    let best = null, likely = null;
     for (const o of list) {
       let next;
-      try { next = applyMove(s, { player: s.pending.player, option: o.id }); } catch { partial = true; continue; }
-      walk(next);
+      try { next = applyMove(s, { player: chooser, option: o.id }); } catch { partial = true; continue; }
+      const got = walk(next);
+      if (!got) continue;
+      if (!best || worth(got.best, pid) > worth(best, pid)) best = got.best;
+      if (!likely || worth(got.likely, chooser) > worth(likely, chooser)) likely = got.likely;
     }
+    return best ? { best, likely } : null;
   };
-  try { walk(base); } catch { return null; }
-  if (!leaves.length) return null;
+  let top;
+  try { top = walk(base); } catch { return null; }
+  if (!leaves.length || !top) return null;
   const range = () => [Infinity, -Infinity];
   const put = (r, v) => { r[0] = Math.min(r[0], v); r[1] = Math.max(r[1], v); };
   const you = { res: {}, followers: range(), members: range(), turns: range(), discount: range() };
@@ -81,8 +106,21 @@ export function previewSpace(state, pid, q, i) {
     const line = `${n.member}: ${n.text}`;
     if (n.p === pid && !reasons.includes(line)) reasons.push(line);
   }
+  // one branch's change for you, as the screen words it ("likely +4 magenta · at best +1 member")
+  const change = s => {
+    const me = s.players[pid];
+    return {
+      res: Object.fromEntries(state.resources.map(r => [r, (me.res[r] || 0) - (me0.res[r] || 0)])),
+      followers: followers(s, me) - followers(state, me0), members: me.members.length - me0.members.length,
+      turns: Math.max(0, me.left - (me0.left - 1)), discount: (me.discount || 0) - (me0.discount || 0),
+    };
+  };
+  const worths = leaves.map(s => worth(s, pid));
+  const tied = Math.max(...worths) - Math.min(...worths) < 1e-9;
   // sample: the table after the first branch (for the screen to recount a contest on); exact when `exact`
-  return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, reasons: reasons.slice(0, 6), sample: leaves[0] };
+  // samples: the tables after the first branches (up to 16), so a contest line can tell what depends on a pick
+  return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, reasons: reasons.slice(0, 6), sample: leaves[0], samples: leaves.slice(0, 16),
+    best: change(top.best), likely: change(top.likely), tied };
 }
 
 /**

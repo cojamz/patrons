@@ -33,6 +33,10 @@
 ## What the game-feel tester said, checked against the bots
 A blind hobby gamer played two full games on a quiet machine and graded it B− ("a lively, readable worker-placement with a gorgeous wheel and real snake-draft tension"). Its worry was that members lose to buying 10→10. The bots disagree on Classic: the top quarter of recruiters win 44% of games, the bottom quarter 16%; on random tables it's flat (design/eval/bench/economy-claims.md). Its other claims (ties at 1 in round I, Rising Tide +10 in round II) were rare in 336 bot games.
 
+## Flags (built, easy to undo)
+- White is a pearl: the one lightly shaded dot, because a flat cream dot read as "empty" on tables with white. Silver is steel blue-grey, a zero is a hollow ring in its color, and "any" has a thin diagonal line.
+- Rival seats show their emoji face; the Steady timings were trimmed below the motion designer's table; the shortest gap between two players' moves is 400ms.
+
 ## Still open
 - The bench's second bot (Hard-20) got weaker after the "use members any time" change, so last night's balance readings are provisional. The bench session is fixing the bot and rerunning.
 - Phone stays out of scope. An online "Place here" pause on a slow machine is logged for a quiet-box check.

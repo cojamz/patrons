@@ -17,6 +17,7 @@ const argv = process.argv.slice(2);
 const flag = (k, d) => { const i = argv.indexOf('--' + k); if (i < 0) return d; const v = argv[i + 1]; argv.splice(i, 2); return v; };
 const bool = k => { const i = argv.indexOf('--' + k); if (i < 0) return false; argv.splice(i, 1); return true; };
 const query = flag('q', '');
+const TABLE = (v => (v ? v.split(',') : undefined))(flag('table', ''));
 // --strip <name>: drop a dev stylesheet (e.g. layout.css, to photograph the old composition); --css <file>: add one
 const strip = flag('strip', ''), extraCss = flag('css', '');
 const base = flag('url', process.env.V4_URL || 'http://127.0.0.1:5410');
@@ -32,14 +33,14 @@ const SEATS = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { nam
 const play = (s, move) => { const next = applyMove(s, move); next.history = [...(s.history || []), [move.player, move.option]]; return next; };
 /** Bots play every seat until `ready`; returns the save and the round-start snapshot (so the since-strip has a story). */
 function playTo(seed, ready) {
-  let s = createGame({ seats: SEATS, seed });
+  let s = createGame({ seats: SEATS, seed, ...(TABLE ? { quadrants: TABLE } : {}) });
   s.build = buildStamp(); s.history = [];
   const rand = seededRandom(seed);
   let rs = s, r = s.round;
   for (let n = 0; n < 6000 && !ready(s) && !s.over; n++) { s = play(s, chooseBotMove(s, rand)); if (s.round !== r) { r = s.round; rs = s; } }
   if (!ready(s)) throw new Error(`seed ${seed}: never ready`);
   return {
-    save: { config: { seats: SEATS.map(x => ({ kind: x.kind, name: x.name })), speed: 'normal' }, state: s, undo: null, savedAt: Date.now() },
+    save: { config: { seats: SEATS.map(x => ({ kind: x.kind, name: x.name })), speed: 'normal', ...(TABLE ? { quadrants: TABLE } : {}) }, state: s, undo: null, savedAt: Date.now() },
     roundStart: { seed: s.seed, round: s.round, names: s.players.map(p => p.name).join('|'), state: rs },
   };
 }

@@ -171,3 +171,16 @@ In a real browser the column's read is 6 (the rail, 4 chairs and a computed styl
 | after | 21.3 s | 3.4 | 422 ms/step |
 
 At this load the CPU is sliced among about 7 runnable processes per core, so these times are noise. One example: React-task script time per step rose too, 563 → 847 ms, with the same code doing less. Judge this round by the counts above. The quiet box should confirm the wall time.
+
+**The header across back-to-back bot chains (detail designer's catch).** The header waited inside AfterChain for the end of the chain. A bot's next step shows at the previous chain's hand-off, so in a run of bot steps no chain ever ended, and the header stayed on the line from before the whole run.
+
+Now AfterChain takes `step`. When a new step is drawn, the step before it has handed over, so its line shows in that same commit. The new chain's own line still waits for the chain to end.
+
+A Playwright probe (100 s of a game each; frozen builds; load 13–21) measured from each bot step's commit to the header's next change:
+
+| | header stale after a bot step (p50 / p95) | header changes per step |
+|---|---|---|
+| before c5eda4d | 1520 / 3014 ms | 0.43 |
+| after dbfee09 | 0 ms (the same commit) / 566 ms (the end of a run, the closing beat) | 0.81 |
+
+**Your press during a chain.** A press anywhere skips the chain on screen, and the next queued step used to show inside that same pointerdown. That was a full table render before the press could paint. The skip's hand-off is now a transition (useTable `onChainSkip`), so the press paints first.

@@ -74,8 +74,9 @@ async function play(t) {
     await page.click('[data-start]');
     await page.waitForSelector('.lt-seat[data-pid]');
 
-    // every resource renders: 4 distinct, visible colors on P1's cult (each resource's shape, filled in its color)
-    const cols = await page.$$eval('.lt-seat[data-pid="0"] [data-res] .res-glyph path:first-of-type', els => els.map(e => getComputedStyle(e).fill));
+    // every resource renders: 4 distinct, visible colors on P1's cult (each dot carries its color, filled, or as a hollow
+    // ring when P1 holds none of it)
+    const cols = await page.$$eval('.lt-seat[data-pid="0"] [data-res] .res-glyph', els => els.map(e => getComputedStyle(e).color));
     if (cols.length !== 4 || new Set(cols).size !== 4 || cols.some(c => !c || c === 'rgba(0, 0, 0, 0)' || c === 'transparent')) err(`resource colors: ${cols.join(' | ')}`);
     const tabs = await page.$$eval('.lt-wheel .plaque', els => els.map(e => getComputedStyle(e).getPropertyValue('--c').trim()));
     const unresolved = await page.evaluate(ids => ids.filter(id => !getComputedStyle(document.documentElement).getPropertyValue(`--${id}`).trim()), t.ids);

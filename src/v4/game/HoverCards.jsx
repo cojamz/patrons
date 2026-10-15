@@ -11,15 +11,14 @@ import { Popover } from './parts.jsx';
 import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews } from './Info.jsx';
 import { SeatFigure } from './Glyphs.jsx';
 import { Rich } from './Rich.jsx';
-import { panelText } from './panelText.js';
 import { unlockedBy, surely } from './cards.js';
 import { memberCopyTargets } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
-import { SeatMembers } from './MemberUse.jsx';
+import { SeatMembers, FollowersCard, SpendingLine } from './MemberUse.jsx';
 import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
-import { aimAt, arrived, heading, aimedAt, over, busyWith } from './hoverIntent.js';
+import { aimAt, arrived, heading, aimedAt, over, busyWith, claim, unclaim } from './hoverIntent.js';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
@@ -48,14 +47,19 @@ export function useHoverCards() {
   useEffect(() => () => api.current.dispose(), []);
   return api.current;
 }
+const LAYER = Symbol('hover layer');
+const SEAT_OPEN_MS = 90; // a pointer passing over a seat doesn't open its card; one resting there does, at once to the eye
 export function createHover() {
-  let card = null, openT = null, closeT = null;
+  let card = null, openT = null, closeT = null, want = null;
   const subs = new Set();
   const set = next => {
     if (next === card) return;
     // a seat card that closes or gives way ends any crossing toward it (the layer itself stays mounted, off screen)
     if (card && card.kind === 'seat' && typeof document !== 'undefined') arrived(document.querySelector('[data-hover-layer]'));
     card = next;
+    // one card on screen at a time (w3a A30): the layer's card closes any Tip that was up, and gives way to one
+    if (card) claim(LAYER, () => { clearTimeout(openT); clearTimeout(closeT); if (card) { card = null; for (const fn of subs) fn(); } });
+    else unclaim(LAYER);
     for (const fn of subs) fn();
   };
   // a seat's card has buttons and a list to scroll: it stays while the pointer is on it or on its way to it, and what
@@ -72,7 +76,7 @@ export function createHover() {
     if (next.el && !next.pinned && card && !card.pinned && card.kind === 'seat' && ((heading() && aimedAt() === liveBox()) || over(liveBox()))) return;
     clearTimeout(closeT);
     if (!next.el) {
-      clearTimeout(openT);
+      clearTimeout(openT); want = null;
       if (card && !card.pinned && card.kind === 'seat' && liveBox()) { aimAt(liveBox()); closeSoon(CLOSE_MS); return; }
       // leaving a space for the wheel's gutter keeps the card a moment longer, so sweeping across the spaces hands it
       // from one to the next without a close/open flicker; leaving the wheel closes it at the usual pace
@@ -82,11 +86,22 @@ export function createHover() {
     }
     // crossing toward your member's open card (a Use button on it): the seat card doesn't open over it
     if (!next.pinned) { const b = busyWith(); if (b && b !== liveBox()) return; }
-    // the same card again (the pointer moving on its target): it stays, and a close on its way is called off
-    if (card && !card.pinned && !next.pinned && card.kind === next.kind && card.el === next.el && card.pid === next.pid && card.key === next.key && card.uid === next.uid && card.qid === next.qid) { clearTimeout(openT); return; }
-    clearTimeout(openT);
+    // the same card again (the pointer moving on its target, or on another part of the same seat): it stays where it
+    // opened, and a close on its way is called off
+    const sameSeat = (card && card.kind === next.kind && (next.kind === 'seat' || next.kind === 'followers') && card.pid === next.pid);
+    if (card && !card.pinned && !next.pinned && (sameSeat || (card.kind === next.kind && card.el === next.el && card.pid === next.pid && card.key === next.key && card.uid === next.uid && card.qid === next.qid))) { clearTimeout(openT); want = null; return; }
+    // a seat card already on its way to open for this same seat: let it come
+    if (!next.pinned && want && want.kind === next.kind && want.pid === next.pid) return;
+    clearTimeout(openT); want = null;
     if (next.pinned) { set(next); return; }
     if (card && card.pinned) return; // a pinned card stays until it's closed
+    // a seat's card opens once the pointer rests on the seat a moment (hover intent): a seat it only passes over on
+    // its way somewhere (another seat's name, the wheel) never pops a card over that place
+    if (next.kind === 'seat' || next.kind === 'followers') {
+      want = next;
+      openT = setTimeout(() => { want = null; if (!(card && card.pinned)) set(next); }, SEAT_OPEN_MS);
+      return;
+    }
     if (card) { set(next); return; } // a card is up: swap its content in place, no delay, no flicker
     if (!OPEN_MS) { set(next); return; } // at once: the layer only swaps, so crossing something can't flicker
     openT = setTimeout(() => { if (!(card && card.pinned)) set(next); }, OPEN_MS);
@@ -96,7 +111,7 @@ export function createHover() {
     /** the space under the pointer (the shop ticks "✓ after X" for it) */
     get space() { return card && card.kind === 'space' && !card.past ? card.key : null; },
     subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
-    close() { clearTimeout(openT); clearTimeout(closeT); set(null); },
+    close() { clearTimeout(openT); clearTimeout(closeT); want = null; set(null); },
     /** the pointer is on a card you can use (a seat's members: its Use button, its list scrolled): it stays */
     hold() { clearTimeout(closeT); arrived(); },
     /** the pointer left that card: it closes as if it had left the target */
@@ -104,6 +119,8 @@ export function createHover() {
     onSpaceHover: (key, el, o = {}) => show({ kind: 'space', key, el, pinned: !!o.pinned, past: !!o.past }),
     onPlaqueHover: (qid, el, o = {}) => show({ kind: 'plaque', qid, el, pinned: !!o.pinned }),
     onSeatHover: (pid, el, o = {}) => show({ kind: 'seat', pid, el, pinned: !!o.pinned }),
+    /** a seat's follower total: where its followers came from (w3b #39) */
+    onFollowersHover: (pid, el, o = {}) => show({ kind: 'followers', pid, el, pinned: !!o.pinned }),
     onCardHover: (uid, el, o = {}) => show({ kind: 'card', uid, el, pinned: !!o.pinned }),
     onDeckHover: (el, o = {}) => show({ kind: 'deck', el, pinned: !!o.pinned }),
     dispose() { clearTimeout(openT); clearTimeout(closeT); subs.clear(); },
@@ -150,9 +167,9 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   useEffect(() => { if (c && c.pinned && !el) hover.close(); });
   const place = () => {
     if (!c || c.pinned || !el || !box.current) { setPos(null); return; }
-    // a seat's card opens right beside the whole seat, level with its top (w2b #20: it was docked hundreds of px from
-    // the pointer, over the wheel); everything else beside the thing itself
-    const seatBox = c.kind === 'seat' ? el.closest('.lt-cult-seat') || el : null;
+    // a seat's card opens right next to the part of the seat pointed at (w3a A8, Cory: "hovers open right next to what
+    // you point at"; beside the whole seat it sat 136–488px from the pointer), level with it; so does everything else
+    const seatBox = null;
     // a name inside a card (a pinned strip card, the turn card, the log): its card opens beside that whole card, level
     // with the name, never stacked on top of the card it was read in (motion engineer's info.mjs run)
     const holder = !seatBox && el.closest ? el.closest('.popover:not([data-hover-layer]), .turn-card, .lt-drawer') : null;
@@ -161,9 +178,9 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
       const hb = holder.getBoundingClientRect(), nb = el.getBoundingClientRect();
       a = { left: hb.left, right: hb.right, width: hb.width, top: nb.top, bottom: nb.bottom, height: nb.height };
     }
-    const w = Math.min(c.kind === 'seat' ? 360 : 280, innerWidth - 16);
+    const w = Math.min(c.kind === 'seat' ? 360 : c.kind === 'followers' ? 260 : 280, innerWidth - 16);
     const h = box.current.offsetHeight || 160;
-    const p = ((seatBox || holder) && besideSeat(holder ? { ...a, top: a.top - 12 } : a, w, h)) || placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
+    const p = (holder && besideSeat({ ...a, top: a.top - 12 }, w, h)) || ((c.kind === 'seat' || c.kind === 'followers') && besideSeat({ ...a, top: a.top - 12 }, w, h)) || placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
     // the nub points at the middle of what the card explains (for a seat, the part pointed at), clear of the corners
     const t = seatBox || holder ? el.getBoundingClientRect() : a;
     const across = p.side === 'right' || p.side === 'left';
@@ -250,7 +267,7 @@ function anchorFor(c, held = false) {
     return again.find(e => under(e.getBoundingClientRect())) || (c.pinned || held ? again[again.length - 1] || null : null);
   }
   const sel = c.kind === 'space' ? `[data-slot="${c.key}"]` : c.kind === 'plaque' ? `[data-plaque="${c.qid}"]`
-    : c.kind === 'seat' ? `[data-cult="${c.pid}"] .cs-head` : c.kind === 'card' ? `[data-region="shop"] [data-uid="${c.uid}"]` : c.kind === 'deck' ? '[data-deck]' : null;
+    : c.kind === 'seat' ? `[data-cult="${c.pid}"] .cs-head` : c.kind === 'followers' ? `[data-cult="${c.pid}"] .cs-total` : c.kind === 'card' ? `[data-region="shop"] [data-uid="${c.uid}"]` : c.kind === 'deck' ? '[data-deck]' : null;
   const el = sel && document.querySelector(sel);
   if (!el) return null;
   if (c.pinned || held) return el;
@@ -330,6 +347,7 @@ function cardBody(c, state, me, optionFor, pick) {
   }
   if (c.kind === 'plaque') return <StandingsCard state={state} qid={c.qid} meId={me} />;
   if (c.kind === 'seat') return <SeatCard state={state} pid={c.pid} meId={me} optionFor={optionFor} onPick={pick} />;
+  if (c.kind === 'followers') return <FollowersCard state={state} pid={c.pid} meId={me} />;
   if (c.kind === 'deck') return <DeckCard state={state} />;
   if (c.kind === 'card') return state.cards[c.uid] ? <ShopCardHover state={state} me={me} uid={c.uid} optionFor={optionFor} onPick={pick} pinned={c.pinned} /> : null;
   return null;
@@ -353,13 +371,6 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
   const pv = usePreview(state, open && viewer != null && !state.over ? viewer : null, q, i) || null;
   const race = pv && pv.race ? raceAfter(state, pv.race, qid, viewer) : null;
   const unlocks = pv && viewer != null ? unlockedBy(state, state.players[viewer], surely(pv)) : [];
-  // each round's own amount, as its panel prints it then: "+2●", "+1☗ or +2○" (a verb's run stays numbers: "up to 2")
-  let byRounds = null;
-  try {
-    if (panelText(qid, a, round).rounds) {
-      byRounds = [1, 2, 3].map(k => { const t = panelText(qid, a, k); return t.main ? (t.second && /^or\b/.test(t.second) ? `${t.main} ${t.second}` : t.main) : String(t.rounds[k - 1]); });
-    }
-  } catch { /* none */ }
   return (
     <div className="lt-card-body" data-space-card={spaceKey} style={{ '--q': `var(--q-${sphereOf(qid)}, var(--${qid}))` }}>
       {/* plate 1b: the name, its one-sentence rule, then "You'd get" (the picture lives on the space itself) */}
@@ -378,8 +389,9 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {/* on a desktop the shop's own cards say it ("after Kickback" on each): only a pinned sheet (touch) lists them */}
         {unlocks.length && pinned ? <Row k="Then affordable">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
         {owner !== undefined && <Row k="Taken">{owner === viewer ? 'You' : state.players[owner].name}{fresh ? ', since your last turn (the dotted edge)' : ''}{opt ? ' — you can join it' : ''}</Row>}
-        {/* a value that grows by round: the whole run, this round's in bold (the panel prints this round's only) */}
-        {byRounds && <Row k="By round"><span data-by-round>{byRounds.map((v, k) => <span key={k}>{k ? ' · ' : ''}{roman(k + 1)} {k + 1 === round ? <b><Rich text={v} /></b> : <Rich text={v} />}</span>)}</span></Row>}
+        {/* a value that grows by round: its run is the rule sentence's ("+2● in round I, +4 in round II…"), said once
+            (w3b #12: a "By round" row beside "per round number" was two descriptions of one thing); the panel prints this
+            round's number and "more each round" */}
         {a.ring > round && <Row k="Opens">round {roman(a.ring)}</Row>}
       </div>
       {opt && pinned && onPick && !past && <button type="button" className="lt-btn pri" data-place={opt.id} onClick={() => onPick(opt.id)}>{opt.squat ? 'Join here' : 'Place here'}</button>}
@@ -449,7 +461,7 @@ export function SeatCard({ state, pid, meId = null, optionFor = () => null, onPi
   const lvl = p.kind === 'bot' ? BOT_LEVEL_INFO.find(l => l.level === botLevel(state, pid)) : null; // Easy / Normal / Hard
   return (
     <div className="lt-card-body seat-card" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}>
-      <div className="t"><SeatFigure id={pid} state={state} size={32} face={pid !== meId} /><h4>{pid === meId ? 'You' : p.name}{lvl ? <small><span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span></small> : null}{safeThisRound(state, pid) ? <small className="seat-safe" data-safe="1">No one can steal resources from {pid === meId ? 'you' : p.name} this round.</small> : null}</h4></div>
+      <div className="t"><SeatFigure id={pid} state={state} size={32} face={pid !== meId} /><h4>{pid === meId ? 'You' : p.name}{lvl ? <small><span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span></small> : null}{safeThisRound(state, pid) ? <small className="seat-safe" data-safe="1">No one can steal resources from {pid === meId ? 'you' : p.name} this round.</small> : null}{pid !== meId ? <SpendingLine state={state} pid={pid} /> : null}</h4></div>
       <SeatMembers state={state} pid={pid} me={meId} optionFor={pid === meId ? optionFor : undefined} onPick={pid === meId ? onPick : null} />
     </div>
   );

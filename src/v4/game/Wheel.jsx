@@ -658,7 +658,11 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       });
     }
     // panels: the rim is the quadrant's color, deep, on the dark board (plate 1b), with a fine light line at its foot
-    paper.push(<path key={`rim${q}`} className={`rim${lampQid === qid ? ' lit' : lampQid ? ' wait' : ''}`} d={arc(a0, a1, RIM.r0, RIM.r1)} fill={panels ? `color-mix(in srgb, ${col} 50%, #1a120c)` : col} fillOpacity={panels ? 1 : 0.88} />);
+    // white and silver read as themselves (w3a A4: both rims were grey): white is a light band with dark letters, silver a
+    // steel band; every other color is its own deep tone
+    const res = quadrant(qid).resource;
+    const deep = res === 'white' ? `color-mix(in srgb, ${col} 86%, #1a120c)` : res === 'silver' ? `color-mix(in srgb, ${col} 72%, #1a120c)` : `color-mix(in srgb, ${col} 50%, #1a120c)`;
+    paper.push(<path key={`rim${q}`} className={`rim${lampQid === qid ? ' lit' : lampQid ? ' wait' : ''}`} data-rim-res={res} d={arc(a0, a1, RIM.r0, RIM.r1)} fill={panels ? deep : col} fillOpacity={panels ? 1 : 0.88} />);
     if (panels) paper.push(<path key={`rimfoot${q}`} className="rim-foot" d={arc(a0 + 0.3, a1 - 0.3, RIM.r0, RIM.r0 + 0.8)} fill={`color-mix(in srgb, ${col} 80%, #fff)`} opacity=".35" />);
   });
   // a face's own print in the paper (Face.Cell, optional): one per space, tiling its quadrant's ring, turning with it
@@ -725,7 +729,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     if (lab.runs) {
       // panels: each run of words on its own stretch of the arc, the color as its dot between them, the prize a size up
       paper.push(
-        <text key={`rt${q}`} className={`rim-rule${lit}`} fontSize={F.toFixed(2)} style={{ letterSpacing: `${lab.ls.toFixed(3)}em` }} data-plaque={qid} data-rim-text={q}>
+        <text key={`rt${q}`} className={`rim-rule${lit}`} fontSize={F.toFixed(2)} style={{ letterSpacing: `${lab.ls.toFixed(3)}em` }} data-plaque={qid} data-rim-text={q} data-rim-res={quadrant(qid).resource}>
           {lab.runs.filter(r => r.kind !== 'dot').map((r, k) => (
             <textPath key={k} href={`#rim-arc-${q}`} startOffset={(startS + r.s).toFixed(1)}>
               {r.kind === 'prize' ? <tspan className="rim-prize" fontSize={(F * 1.3).toFixed(2)} style={{ letterSpacing: 0 }}>{r.text}</tspan> : r.text}
@@ -762,7 +766,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       const [mx, my] = polar(a, rr);
       const cap = F * 0.95;
       paper.push(
-        <g key={`rf${q}`} className={`rim-mark${lit}`} data-rim-prize={qid} transform={`translate(${mx.toFixed(2)} ${my.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap * 0.86).toFixed(2)})`}>
+        <g key={`rf${q}`} className={`rim-mark${lit}`} data-rim-prize={qid} data-rim-res={quadrant(qid).resource} transform={`translate(${mx.toFixed(2)} ${my.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap * 0.86).toFixed(2)})`}>
           <Follower size={cap} title={`${RING_VALUE[paying - 1]} followers`} />
         </g>,
       );

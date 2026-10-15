@@ -54,6 +54,15 @@ function movesOf(cause, effects, owner) {
     const g = effects.find(e => e.type === 'gain' && !used.has(e) && e.to.pid === owner && e.what.n === p.what.n);
     if (g) { used.add(p); used.add(g); takes.push({ from: p.from, to: g.to, n: p.what.n, r: p.what.r, turn: g.what.r !== p.what.r ? g.what.r : null }); }
   }
+  // a payment that reaches a rival (a ransom paid, "the payment arrives as magenta"): the owner's pays and another
+  // player's gain of the same total under one cause are a give, straight from the payer's stacks to theirs (grammar M4);
+  // otherwise the coins dropped into a space and flew out of it, and the eye lost who paid whom (motion gaps 3)
+  const ownPays = effects.filter(e => e.type === 'pay' && !used.has(e) && owner != null && e.from.pid === owner && e.from.kind === 'stack' && !['shop', 'rate'].includes(e.to && e.to.kind));
+  if (ownPays.length) {
+    const paid = ownPays.reduce((t, e) => t + e.what.n, 0);
+    const g = effects.find(e => e.type === 'gain' && !used.has(e) && e.to.kind === 'stack' && e.to.pid !== owner && e.what.n === paid);
+    if (g) { used.add(g); for (const p of ownPays) { used.add(p); gives.push({ from: p.from, to: g.to, n: p.what.n, r: p.what.r, turn: g.what.r !== p.what.r ? g.what.r : null }); } }
+  }
   for (const e of effects) {
     if (used.has(e)) continue;
     if (e.type === 'pay') pays.push(e);
@@ -110,8 +119,9 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   }
   if (!sameRound && before.round >= 1) { at(0, { op: 'home' }); t = ends(MO.minionsHome); }
 
-  // 2. the cascade
-  const fx = Array.isArray(state.effects) && state.moves === before.moves + 1 ? state.effects : fromGains(before, state);
+  // 2. the cascade (a rival's run of follower buys, folded by foldBuys, carries the whole run's effects)
+  const fx = Array.isArray(state.effects) && state.moves === before.moves + 1 ? state.effects
+    : state.foldedFrom === before.moves && Array.isArray(state.foldedEffects) ? state.foldedEffects : fromGains(before, state);
   const beats = [];
   for (const e of fx) {
     if (!e || !e.cause || e.cause.kind === 'contest') continue; // the Reckoning flies the prizes
@@ -130,7 +140,8 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     return { last: time + (n - 1) * MO.pieceStagger, d };
   };
   const after = r => r.last + nextBeatAt(r.d); // when the next beat may start
-  const owner0 = c => (c.kind === 'recruit' || c.kind === 'buy' || c.kind === 'space' || c.kind === 'move' || c.kind === 'release' || c.kind === 'member' ? c.pid : null);
+  const owner0 = c => (c.kind === 'recruit' || c.kind === 'buy' || c.kind === 'space' || c.kind === 'move' || c.kind === 'release' || c.kind === 'member' || c.kind === 'setup' ? c.pid : null);
+  let setup = false;
   for (const beat of beats) {
     const c = beat.cause, owner = owner0(c);
     const m = movesOf(c, beat.effects, owner);
@@ -138,6 +149,16 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     // the source acts first: a member hops, a space pulses (unless the selection just lit it)
     if (c.kind === 'member' && c.uid != null) { at(s, { op: 'hop', place: { kind: 'member', pid: c.pid, uid: c.uid, def: c.def } }); s += MO.lead; }
     else if (c.kind === 'space' && c.key !== pulsed) { at(s, { op: 'pulse', place: { kind: 'space', key: c.key }, dur: MO.pulse }); s += MO.lead; pulsed = c.key; }
+    else if (c.kind === 'setup') {
+      // a starting pick (wave 3: nobody saw what the bots picked): a rival's coin in the pick row lights (grammar S3, the
+      // point at what they chose), and stays lit while its dot flies from it to their seat; your own pick answered your press
+      setup = true;
+      if (!mine.includes(c.pid)) {
+        const g = m.gains[0], d = g ? fly(g.from, g.to) : 0;
+        at(s, { op: 'point', place: { kind: 'quadrant', qid: c.qid }, dur: MO.choicePoint + d });
+        s += MO.choicePoint;
+      }
+    }
     let next = s;
     const isRecruit = c.kind === 'recruit' && m.cards.some(e => e.type === 'recruit');
     // a recruit: the card lifts (a rival's holds a beat: which card), the coins drop into it, then it flies to the crowd
@@ -213,6 +234,9 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     t = Math.max(t, cur);
   }
   const turnPasses = !!(state.pending && before.pending && state.pending.player !== before.pending.player);
+  // starting picks read one at a time: the next pick lights only when this one has landed, and a short rest between two
+  // players' picks (the first placements follow the last one)
+  if (setup && end) { hand = end; if (turnPasses) end += MO.setupRest; }
   // a chain's cap (grammar §5: 3.0s at Steady; fitted from 2.8s so a run of six rival turns stays inside H2's 13s):
   // a longer plan plays faster to fit, never faster than Quick (half)
   const cap = Math.round(2800 * speedScale());
@@ -222,6 +246,69 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     end *= k; hand *= k; t *= k;
   }
   return { atoms: atoms.sort((a, b) => a.at - b.at), total: end ? Math.round(end + (turnPasses ? MO.breath : 0)) : 0, handoff: end ? Math.round(Math.max(hand, t)) : 0, turnPasses };
+}
+
+// ---------- a rival's run of follower buys, folded ----------
+// Wave 3: a rival's round-III run of buys (Spree and 10→10 three times) took about 13s to watch at Steady, "too long to
+// watch and too fast to follow". A rival's consecutive follower buys in one turn play as one beat: their coins drop into
+// the rate as one handful per color, the rate takes them once, and the followers fly to the count as one bundle that
+// rolls once to its total. Members that react to the buys (Tax Collector, Tipster) still play after it, each as itself.
+
+const BUY_STEP = new Set(['buy', 'pay']);
+/** The longest the table holds for a rival's next buy to arrive before it folds what has come. */
+export const foldWait = () => Math.round(400 * speedScale());
+/** prev → next is the actor's buy or pay step that shows nothing but a follower buy and what reacts to it. */
+function buyStep(prev, next, actor) {
+  if (!prev || !next || !prev.pending || prev.pending.player !== actor || !BUY_STEP.has(prev.pending.kind)) return false;
+  if (next.round !== prev.round || next.over || next.moves !== prev.moves + 1 || !Array.isArray(next.effects)) return false;
+  return next.effects.every(e => e.cause && (e.cause.kind === 'buy' || e.cause.kind === 'member') && !['recruit', 'release', 'member-move'].includes(e.type));
+}
+const boughtIn = st => st.effects.some(e => e.cause.kind === 'buy' && e.type === 'followers');
+
+/**
+ * Fold a rival's run of follower buys into one step. `prev` is on screen, `next` is about to show, `queue` holds the
+ * steps after it. Returns { used, wait }: `used` > 0 means the queue's first `used` steps fold into this one (show
+ * queue[used - 1] in place of `next`; it now carries the run's effects as `foldedEffects` from `foldedFrom`). `wait`:
+ * the run may go on (the bot is still buying and its next step hasn't arrived): the table may hold a moment for it.
+ * `force`: fold what has arrived, without waiting.
+ */
+export function foldBuys(prev, next, queue, mine = [], force = false) {
+  const none = { used: 0, wait: false };
+  const actor = prev && prev.pending ? prev.pending.player : null;
+  if (actor == null || mine.includes(actor) || prev.round < 1 || !buyStep(prev, next, actor)) return none;
+  const run = [next];
+  let k = 0;
+  while (k < queue.length && buyStep(run[run.length - 1], queue[k], actor)) run.push(queue[k++]);
+  const last = run[run.length - 1];
+  const open = k === queue.length && last.pending && last.pending.player === actor && BUY_STEP.has(last.pending.kind) && !last.over;
+  const buys = run.filter(boughtIn);
+  if (open && !force) return { used: 0, wait: true };
+  if (buys.length < 2) return none;
+  // the run ends at its last buy: what comes after it (a pass, a tier picked and not yet paid) shows on its own
+  let end = run.length - 1;
+  while (end > 0 && !boughtIn(run[end])) end--;
+  const steps = run.slice(0, end + 1);
+  const tail = steps[steps.length - 1];
+  if (tail.foldedFrom === prev.moves && Array.isArray(tail.foldedEffects)) return { used: end, wait: false };
+  // one buy: the coins per stack, summed; the followers per count, summed; through the rate of the biggest buy
+  const all = steps.flatMap(st => st.effects);
+  const fols = all.filter(e => e.cause.kind === 'buy' && e.type === 'followers');
+  const main = fols.reduce((a, b) => (b.what.n > a.what.n ? b : a)).cause;
+  const total = fols.reduce((t, e) => t + (e.cause.pid === actor ? e.what.n : 0), 0);
+  const cause = { ...main, get: total, folded: buys.length };
+  const pays = new Map(), gets = new Map();
+  for (const e of all) {
+    if (e.cause.kind !== 'buy') continue;
+    const into = e.type === 'pay' ? pays : e.type === 'followers' ? gets : null;
+    if (!into) continue;
+    const key = e.type === 'pay' ? `${e.from.pid}:${e.from.r}` : `${e.to.pid}`;
+    const had = into.get(key);
+    into.set(key, had ? { ...had, what: { ...had.what, n: had.what.n + e.what.n } } : { ...e, cause, ...(e.type === 'pay' ? { to: { kind: 'rate', tier: main.tier } } : { from: { kind: 'rate', tier: main.tier } }) });
+  }
+  const merged = [...pays.values(), ...gets.values(), ...all.filter(e => e.cause.kind !== 'buy')].map((e, n) => ({ ...e, n }));
+  Object.defineProperty(tail, 'foldedEffects', { value: merged, enumerable: false, configurable: true, writable: true });
+  Object.defineProperty(tail, 'foldedFrom', { value: prev.moves, enumerable: false, configurable: true, writable: true });
+  return { used: end, wait: false };
 }
 
 /**
@@ -468,6 +555,16 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
         }
         case 'home': if (!skip && minionsBefore) flyMinionsHome(root, minionsBefore); return;
         case 'pulse': if (!skip) pulse(where(a.place), a.dur, { press: !!a.press }); return;
+        case 'point': {
+          // a rival's choice (grammar S3): what they chose lights, then its effect leaves it; it stays lit until it lands
+          const el = where(a.place);
+          if (skip || !el || el.rectOnly || !el.classList) return;
+          pulse(el, MO.choicePoint);
+          el.classList.add('chain-point');
+          const off = () => el.classList.remove('chain-point');
+          schedule(base + a.at + a.dur, off); // (a skip runs it at once)
+          return;
+        }
         case 'hop': if (!skip) hopEl(where(a.place), MO.hop); return;
         case 'tug': if (!skip) tug(where(a.place), where(a.toward), a.dur); return;
         case 'card': {

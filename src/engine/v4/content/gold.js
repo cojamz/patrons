@@ -12,7 +12,7 @@ export default {
 
   actions: [
     {
-      key: 'jv', ring: 1, name: 'Kickback', text: '+3 gold, and +1 gold to a player you choose.',
+      key: 'jv', ring: 1, name: 'Kickback', text: '+3 gold, and +1 gold to a rival you choose.',
       estimate: () => 3.3,
       resolve(ctx, p) {
         ctx.gain(p, 'gold', 3, { fromAction: true });
@@ -23,7 +23,7 @@ export default {
       },
     },
     {
-      key: 'rush', ring: 1, name: 'Golden Years', text: '+2 gold per round number (2 / 4 / 6).',
+      key: 'rush', ring: 1, name: 'Golden Years', text: '+2 gold in round I, +4 in round II, +6 in round III.',
       estimate: ctx => 2 * ctx.state.round,
       resolve(ctx, p) { ctx.gain(p, 'gold', 2 * ctx.state.round, { fromAction: true }); },
     },

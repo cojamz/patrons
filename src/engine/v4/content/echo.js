@@ -218,7 +218,7 @@ const echoQ = {
       resolve(ctx, p) { ctx.gain(p, 'green', 3, { fromAction: true }); },
     },
     {
-      key: 'chant', ring: 1, name: 'Crescendo', text: '+2 green per round number (2 / 4 / 6).',
+      key: 'chant', ring: 1, name: 'Crescendo', text: '+2 green in round I, +4 in round II, +6 in round III.',
       estimate: ctx => 2 * ctx.state.round,
       resolve(ctx, p) { ctx.gain(p, 'green', 2 * ctx.state.round, { fromAction: true }); },
     },
@@ -235,7 +235,7 @@ const echoQ = {
     },
     {
       // your own spaces are on the board in your color: no memory of last round needed (it replaced Recall)
-      key: 'refrain', ring: 2, name: 'Reprise', echo: true, text: '+2 green, and copy one of your spaces from this round.',
+      key: 'refrain', ring: 2, name: 'Reprise', echo: true, text: '+2 green, and copy a space you took this round.',
       estimate: (ctx, p) => 2 + VARIANT.plus + bestValue(ctx, targets(ctx, p, 'own'), p),
       resolve(ctx, p) {
         plus(ctx, p);

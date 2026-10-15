@@ -593,11 +593,10 @@ try {
           const p = c.closest('.popover'), b = p.getBoundingClientRect();
           // your member's hover card is see-through to clicks (only its buttons take them), so the hit test asks with
           // its surface solid for a moment: is anything drawn over it?
-          const thru = [p, ...p.querySelectorAll('.see-through')];
-          const was = thru.map(e => e.style.pointerEvents);
-          thru.forEach(e => { e.style.pointerEvents = 'auto'; });
+          const thru = [...p.querySelectorAll('.see-through')];
+          thru.forEach(e => e.classList.remove('see-through'));
           const hit = document.elementFromPoint(b.left + b.width / 2, b.top + Math.min(20, b.height / 2));
-          thru.forEach((e, k) => { e.style.pointerEvents = was[k]; });
+          thru.forEach(e => e.classList.add('see-through'));
           return { name: c.dataset.card, inView: b.top >= 0 && b.left >= 0 && b.bottom <= innerHeight + 0.5 && b.right <= innerWidth + 0.5, onTop: !!hit && p.contains(hit), y: [Math.round(b.top), Math.round(b.bottom)] };
         }, null, { timeout: 1500 }).then(h => h.jsonValue(), () => null);
         members++;

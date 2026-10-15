@@ -7,7 +7,8 @@
 //  (p3) Only one way to pay: no sheet, it pays at once, and the coins fly from your stack.
 //  (g1) Good Deed, two steps on the board: your stacks light (no chips for the mouse), the caption sits under the
 //       headline, never over the wheel; a color lifts, the rivals' seats light; a seat click gives (the engine's id).
-//  (w1) Even Swap, two steps: your members light; one lifts and the rivals' members it pairs with light; a click swaps.
+//  (w1) Even Swap, two steps: your members light; one lifts and the rivals' members it pairs with light (each opens
+//       its own card when pointed at: w3a A3); a click swaps.
 //  (k1) The keyboard list: absent for the mouse; Tab from the caption opens it with every pick.
 //  Wave-2 tester B: (s8) Snap Up pays through the sheet; (t1) Talent Scout's top 5 as cards; (y1) Your Call in marks at
 //  the space; (r1) Release from your member's card, no header dropdown; (d1) Double Agent's forced swap explained.
@@ -188,6 +189,16 @@ try {
     const lit = await page.$$eval('.lt-seat:not([data-pid="0"]) .cs-member.pick-on .cs-pick-member', els => els.map(e => e.dataset.option).sort());
     if (lit.join() !== want.join()) errors.push(`(w1) lit rival members ${lit.join(' ')} ≠ the engine's pairs ${want.join(' ')}`);
     await page.screenshot({ path: `${SHOTS}/w1-step2.png` });
+    // w3a A3 (blocker): a lit member opens its own card when pointed at (name, cost, whose), at either step
+    {
+      const t = page.locator('.lt-seat:not([data-pid="0"]) .cs-member.pick-on .cs-pick-member').first();
+      const bb = await t.boundingBox();
+      await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2); await page.waitForTimeout(500);
+      const want1 = (await t.getAttribute('data-option')).split(':').pop();
+      const shown = await page.evaluate(() => document.querySelector('[data-hover-layer][data-open="1"] [data-card-hover]')?.dataset.cardHover || null);
+      if (shown !== want1) errors.push(`(w1) pointing at a lit rival member opens ${shown ? `card ${shown}` : 'no card'}, not its own (${want1}): a blind swap (w3a A3)`);
+      await page.mouse.move(4, 690); await page.waitForTimeout(200);
+    }
     await click(page, '.lt-seat:not([data-pid="0"]) .cs-member.pick-on .cs-pick-member');
     await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 6000 }).catch(() => errors.push('(w1) clicking their member did not swap'));
     const rec = await lastMove(page);
@@ -302,6 +313,21 @@ try {
     await page.screenshot({ path: `${SHOTS}/d1-double-agent.png` });
     await ctx.close();
   }
+  // (h1) w3a #14: Hustler's long question gives way to what to do ("Hustler: pick a color") and where to click, whole
+  {
+    const save = paySave({ def: 'gold.hustler' });
+    const { applyMove } = await import('../../src/engine/v4/index.js');
+    const way = save.state.pending.options.find(o => o.default) || save.state.pending.options.find(o => o.kind === 'pay');
+    save.state = applyMove(save.state, { player: 0, option: way.id });
+    const { ctx, page } = await open('h1', save, '.seat-pick.docked');
+    const got = await page.evaluate(() => {
+      const sub = document.querySelector('.lt-prompt .pick-how');
+      return { cap: document.querySelector('.seat-pick.docked .pick-cap').textContent.replace(/\s+/g, ' ').trim(), how: sub ? sub.textContent : '', cut: sub ? sub.scrollWidth > sub.clientWidth + 1 : true };
+    });
+    if (got.cap !== 'Hustler: pick a color') errors.push(`(h1) the caption reads "${got.cap}"`);
+    if (!/^Click one of your lit stacks/.test(got.how) || got.cut) errors.push(`(h1) the line under it reads "${got.how}"${got.cut ? ' (cut)' : ''}`);
+    await ctx.close();
+  }
   // (a1) Wave-2 tester A: a member's hover says what a click will do ("You pay 2● 2●" at once, or "Choose how to pay"),
   //      and an instant buy flies its coins and closes the hover
   {
@@ -331,4 +357,4 @@ try {
   if (server) server.kill();
 }
 if (errors.length) { console.error(`dialogs gate: ${errors.length} problem(s)\n - ${errors.join('\n - ')}`); process.exit(1); }
-console.log('dialogs gate: ok (pay sheet, follower buy, single way, Good Deed, Even Swap, keyboard list, Snap Up pay, Talent Scout tray, Your Call, Release, Double Agent)');
+console.log('dialogs gate: ok (pay sheet, follower buy, single way, Good Deed, Even Swap, keyboard list, Snap Up pay, Talent Scout tray, Your Call, Release, Double Agent, Hustler)');

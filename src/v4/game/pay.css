@@ -38,6 +38,9 @@
 .ps-out:focus-visible{outline:2px solid var(--pl-ink,#2b2018);outline-offset:0}
 .ps-n{position:relative;z-index:1;pointer-events:none;font-size:18px;line-height:24px;font-weight:700;font-variant-numeric:tabular-nums lining-nums}
 .pay-stack.none .ps-n{color:var(--pl-ink-3,#a39078)}
+.ps-coins > .ps-coin.ps-none{opacity:.28}
+.ps-coins > .ps-coin.ps-none > svg{filter:none}
+.pay-legend{margin:10px 0 0;font-family:var(--sans);font-size:14px;line-height:20px;color:var(--pl-ink-2,#6e5c49);text-align:center}
 
 /* what bends the price, one quiet line each; a click that changed nothing says why here */
 .pay-notes{margin:16px 0 0;display:flex;flex-direction:column;gap:4px}

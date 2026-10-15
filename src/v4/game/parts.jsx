@@ -69,7 +69,7 @@ export function TurnOf({ player }) {
   return <p className="turn-of" style={{ '--pc': playerColor(player.id) }}><i />{player.name}’s turn<span> · pass the device</span></p>;
 }
 
-export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = null, place = null }) {
+export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = null, place = null, watching = null }) {
   const pend = state.pending;
   const setup = pend.kind === 'setup';
   const box = useRef(null);
@@ -90,12 +90,12 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
     : left != null && total.current ? `${total.current - Number(left)} of ${total.current} taken` : null;
   const pick = (id, mode) => onPick(id, mode); // step changes are guarded by the table's input lock
   return (
-    <section className={`prompt choice${setup ? ' setup' : ' plain'}${place ? ` at-space ${place.up ? 'below' : 'above'}` : ''}`} aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}
+    <section className={`prompt choice${setup ? ' setup' : ' plain'}${watching ? ' watching' : ''}${place ? ` at-space ${place.up ? 'below' : 'above'}` : ''}`} aria-live="polite" ref={box} role="group" aria-label={watching ? `${watching.name} is picking a starting resource` : setup ? 'Pick a starting resource' : pend.prompt}
       style={place ? { left: place.left, top: place.top } : undefined}>
       {turnOf && <TurnOf player={turnOf} />}
       {/* setup: the headline says "pick a starting resource (1 of 2)"; the panel says only which pick this is, not the
           same sentence again (RC1 sweep 24) */}
-      <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `Pick ${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] || 1} of 2` : pend.prompt}</p>
+      <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `${watching ? `${watching.name} · pick` : 'Pick'} ${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] || 1} of 2` : pend.prompt}</p>
       {setup ? <><SetupTokens state={state} pend={pend} onPick={pick} busy={busy} /><ForSale state={state} /></>
         : trade ? <TradePicker state={state} pend={pend} onPick={pick} busy={busy} />
           : <MergedOptions state={state} pend={pend} onPick={pick} busy={busy} />}
@@ -383,7 +383,8 @@ export function Popover({ anchor, onClose, children, float = false, beside = nul
     if (sheet) { setPos({}); return; }
     const a = anchor.getBoundingClientRect();
     const w = Math.min(280, innerWidth - 24);
-    // beside: a member in a seat opens beside the whole seat, level with the member, never over the seat (w2a #45)
+    // beside: a member's card opens right next to the member pointed at, level with it (w3a A8: "right next to what
+    // you point at"; it once sat beside the whole seat, w2a #45)
     if (beside) {
       const b = beside.getBoundingClientRect();
       const left = b.right + 8 + w <= innerWidth - 8 ? b.right + 8 : b.left - 8 - w >= 8 ? b.left - 8 - w : null;

@@ -2,7 +2,8 @@
 // (previewSpace) and posts it back, so a hover never waits on the engine and nothing janks while it works.
 // One space per task, from a queue: a space you hover (`front`) jumps ahead of the warmup batch instead of waiting
 // for the whole batch to finish (perf, 2026-10-15: "You'd get" filled in at p95 412ms).
-import { previewSpace, contestTable } from '../../engine/v4/index.js';
+import { previewSpace } from '../../engine/v4/index.js';
+import { withRace } from './race.js';
 
 let gen = null, state = null, queue = [], done = new Set(), busy = false;
 const pump = () => {
@@ -16,7 +17,7 @@ const pump = () => {
     let pv = null;
     try {
       pv = previewSpace(state, job.pid, q, i);
-      if (pv) { pv.race = pv.sample ? contestTable(pv.sample).map(c => ({ qid: c.qid, rule: c.rule, prize: c.prize, winners: c.winners, rows: c.rows })) : null; delete pv.sample; }
+      withRace(pv);
     } catch { pv = null; }
     self.postMessage({ gen, pid: job.pid, key: job.key, pv });
   }

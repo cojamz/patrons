@@ -5,18 +5,19 @@
 // - ContestStandings / ContestTip: a quadrant's contest straight from the engine's contestTable (who'd score now).
 // - TouchTips: on touch screens a long-press on anything with a title shows that title (hover's touch twin).
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { cardDef, defById, quadrant, previewSpace, contestTable, memberPrice, paymentChoices } from '../../engine/v4/index.js';
+import { cardDef, defById, quadrant, previewSpace, memberPrice, paymentChoices } from '../../engine/v4/index.js';
 import { term, splitTerms } from '../glossary.js';
 import { costParts, playerColor, standings, toStanding, tiebreakNote } from '../format.js';
 import { realHover } from '../hover.js';
 import { Popover } from './parts.jsx';
-import { aimAt, arrived, heading, over, holdCard, dropCard, busyWith } from './hoverIntent.js';
+import { aimAt, arrived, heading, over, holdCard, dropCard, busyWith, claim, unclaim } from './hoverIntent.js';
 import { Who } from './Glyphs.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { MO } from '../motion.js';
+import { withRace } from './race.js';
 
 /**
  * An element that explains itself. content: a node or a function returning one (built only when shown).
@@ -47,6 +48,16 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
     const wait = () => { if (heading() || over(cardEl())) { timer.current = setTimeout(wait, 80); return; } letGo(); };
     timer.current = setTimeout(wait, 300);
   };
+  // one card on screen at a time (w3a A30): opening this one closes whatever card was up, the hover layer's included
+  const me = useRef(null);
+  if (!me.current) me.current = Symbol('tip');
+  const isOpen = !!open;
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const id = me.current;
+    claim(id, () => { clearTimeout(timer.current); setOpen(null); });
+    return () => unclaim(id);
+  }, [isOpen]);
   // while a sticky card is up (not pinned), it's the card the pointer may be on: what's under it doesn't open
   const seeThrough = !!(sticky && open && !open.pinned);
   useEffect(() => {
@@ -379,8 +390,7 @@ const mapFor = state => { let m = previews.get(state); if (!m) { m = new Map(); 
 const stripped = state => ({ ...state, log: [] });
 function computeHere(state, pid, q, i) {
   const pv = previewSpace(stripped(state), pid, q, i);
-  if (pv) { pv.race = pv.sample ? contestTable(pv.sample).map(c => ({ qid: c.qid, rule: c.rule, prize: c.prize, winners: c.winners, rows: c.rows })) : null; delete pv.sample; }
-  return pv;
+  return withRace(pv);
 }
 /** The preview for a space, computed now on this thread if it isn't cached (tests, tools). */
 export function cachedPreview(state, pid, q, i) {
@@ -509,22 +519,52 @@ function sureWords(pv, state) {
     pv.you.discount && pv.you.discount[0] && pv.you.discount[0] === pv.you.discount[1] ? `next member −${pv.you.discount[0]}` : null]
     .filter(Boolean).join(', ');
 }
-/** "You'd get: +3 ●, +1 member · you choose" for player pid on space (q, i), computed just after it shows. */
+/** One branch's change for you in words: "+6 white, −2 followers"; what leaves you in several colors is one "−5 resources". */
+export function changeWords(d, state) {
+  if (!d) return '';
+  const out = [];
+  for (const r of state.resources) if (d.res[r] > 0) out.push(`+${d.res[r]} ${r}`);
+  const lost = state.resources.filter(r => d.res[r] < 0);
+  if (lost.length === 1) out.push(`−${-d.res[lost[0]]} ${lost[0]}`);
+  else if (lost.length > 1) out.push(`−${lost.reduce((t, r) => t - d.res[r], 0)} resources`);
+  const n = (v, unit) => `${signed(v)} ${unit}${Math.abs(v) === 1 ? '' : 's'}`;
+  if (d.members) out.push(n(d.members, 'member'));
+  if (d.followers) out.push(n(d.followers, 'follower'));
+  if (d.turns) out.push(n(d.turns, 'extra turn'));
+  if (d.discount > 0) out.push(`next member −${d.discount}`);
+  return out.join(', ') || 'nothing';
+}
+/**
+ * What the "You'd get" line says: { text, note, likely?, best? } (strings for Rich). A pick that changes what you get
+ * gives numbers, never only "it depends" (w3b #20: "it depends on your pick / a rival decides part of it" was honest but
+ * empty): when a rival's answer decides it, the likely case and the best case ("+4 magenta likely · +1 member, +1
+ * follower at best"); when it's your pick, your best pick's numbers; when every pick is worth the same and only the mix
+ * changes (which color, whom), the sure part and "the rest is your pick". Ranges stay out (RC1 sweep 17/62/89: "0 to
+ * +2 ■, −2 to 0 ◆…" read as algebra).
+ */
+export function youdWords(pv, state) {
+  const w = previewWords(pv, state);
+  if (pv.exact) return { text: w.you, note: null };
+  const best = changeWords(pv.best, state), likely = changeWords(pv.likely, state);
+  if (pv.best && pv.likely && likely !== best) return { text: null, likely, best };
+  if (pv.best && !pv.tied) return { text: best, note: 'your best pick' };
+  const sure = sureWords(pv, state);
+  return { text: sure || null, note: sure ? 'the rest is your pick' : 'it depends on your pick' };
+}
+/** "You'd get: +3 ●, +1 member" for player pid on space (q, i), computed just after it shows. */
 export function YoudGet({ state, pid, q, i }) {
   const pv = usePreview(state, pid, q, i);
   if (pid == null) return null;
   if (pv === undefined) return <span className="youd-get pending" data-youd-get="">You’d get: …</span>;
   if (!pv) return null;
   const w = previewWords(pv, state);
-  // a pick that changes what you get: only the sure part is printed, then "the rest is your pick" (RC1 sweep 17/62/89:
-  // "0 to +2 ■, −2 to 0 ◆, 0 to +1 member…" read as algebra); a pick that doesn't (Kickback's who) needs no note: the
-  // rule above says it
-  const open = w.choose && !pv.exact;
-  const sure = open ? sureWords(pv, state) : w.you;
+  const y = youdWords(pv, state);
   return (
     <span className="youd-get" data-youd-get={w.you} title="Worked out by playing this space on a copy of the table, right now">
-      <b>You’d get:</b> {w.partial ? 'about ' : ''}{open && !sure ? null : <Rich text={sure} />}{open ? <em className="yd-note">{sure ? 'the rest is your pick' : 'it depends on your pick'}</em> : null}
-      {w.theyChoose ? <em className="yd-note">a rival decides part of it</em> : null}
+      <b>You’d get:</b> {w.partial ? 'about ' : ''}
+      {y.likely
+        ? <span data-youd-cases><Rich text={y.likely} /> <em className="yd-note">likely</em> · <Rich text={y.best} /> <em className="yd-note">at best</em></span>
+        : <>{y.text ? <Rich text={y.text} /> : null}{y.note ? <em className="yd-note">{y.note}</em> : null}</>}
       {w.others ? <small className="youd-others"><Rich text={w.others} /></small> : null}
     </span>
   );

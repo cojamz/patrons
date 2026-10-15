@@ -113,6 +113,8 @@ const TABLE = {
   readHold:    [60,    90,     280],  // after a rival places: which space, before anything flies
   pulse:       [50,    90,     140],  // a source about to give
   hop:         [120,   180,    260],  // a member acts
+  choicePoint: [100,   160,    240],  // a rival's choice: what they chose lights before its effect flies (grammar S3)
+  setupRest:   [60,    160,    300],  // between two players' starting picks: each pick lands and is read before the next lights
   lead:        [40,    60,     120],  // hop or pulse → first piece leaves
   tug:         [60,    90,     140],  // a stack being taken from
   pieceStagger:[35,    50,     90],

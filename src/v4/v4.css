@@ -174,9 +174,9 @@ svg.late .slot.flash .ping{animation-delay:.72s}
 svg.late .slot.flash .worker{animation-delay:.7s}
 /* your minion stands on the space from the first frame and settles: a drop, a squash, still (a rival's shows as its flight lands) */
 @keyframes land{0%{transform:translateY(-5px) scale(1.18);opacity:.75}55%{transform:translateY(1px) scale(.93);opacity:1}100%{transform:none;opacity:1}}
-.worker-flight{position:fixed;z-index:12;pointer-events:none;will-change:transform}
+.worker-flight{position:fixed;z-index:61;pointer-events:none;will-change:transform}
 /* flying pieces (flight.js flyGains): one per unit, wearing the stack's own glyph or the follower mark */
-.piece-flight{position:fixed;z-index:14;pointer-events:none;will-change:transform;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 3px rgba(0,0,0,.55))}
+.piece-flight{position:fixed;z-index:62;pointer-events:none;will-change:transform;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 3px rgba(0,0,0,.55))}
 .piece-flight svg{width:100%;height:100%;image-rendering:pixelated}
 .piece-flight .piece-dot{width:70%;height:70%;border-radius:50%;box-shadow:inset 0 -2px 0 rgba(0,0,0,.3)}
 /* paths (flight.js flyPath): an outer layer travels, an inner one rises and falls; a bundle carries its count on its left */
@@ -188,6 +188,14 @@ svg.late .slot.flash .worker{animation-delay:.7s}
 .piece-member .piece-member-pic{display:flex;width:100%;height:100%;align-items:center;justify-content:center;filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
 .piece-member .piece-member-pic > svg,.piece-member .piece-member-pic > img{width:100%;height:100%;image-rendering:pixelated}
 .piece-member .piece-dot.member{width:100%;height:100%;border-radius:4px;background:var(--paper,#f4ebd7);box-shadow:0 0 0 1px rgba(42,31,23,.5)}
+/* flights ride above hover cards (60) and the turn card (30): what moved is the news, and a member Used from its hover card
+   sends its gain from under that card (motion gaps 3) */
+/* the starting picks, watched (motion gaps 1): the row stays up while a rival picks, read-only and unlit (one glow: the thing
+   you can act on), and the coin they chose lights while its dot flies to their seat (director.js 'point') */
+.app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup.watching{box-shadow:0 14px 34px rgba(0,0,0,.6);animation:none}
+.prompt.choice.setup.watching .token:disabled{opacity:1;cursor:default}
+.prompt.choice.setup .token.chain-point{border-color:var(--c);background:color-mix(in srgb,var(--c) 22%,transparent)}
+.prompt.choice.setup .token.chain-point .res-glyph{transform:translateY(-2px)}
 .worker-flight.trail{opacity:.75}
 /* the chosen space lights before anything leaves it (director.js) */
 .lt .stage .slot.chosen .base{box-shadow:inset 0 0 0 2.5px var(--paper-ink,#2a1f17),0 0 0 4px var(--lamp-ink,#ffd99a),0 0 18px 6px rgba(255,217,154,.55)}
@@ -268,7 +276,7 @@ b.num[data-hold]::after{content:attr(data-hold);visibility:visible;position:abso
 .afford::before{content:"✓ "}
 .shop .card{animation:deal .28s ease-out both}
 @keyframes deal{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-.flight{position:fixed;z-index:12;pointer-events:none;will-change:transform,opacity}
+.flight{position:fixed;z-index:61;pointer-events:none;will-change:transform,opacity}
 .flight .card{width:100%;height:100%;animation:none;box-shadow:0 12px 30px rgba(0,0,0,.55);border-color:var(--c);margin:0;max-width:none;min-width:0}
 .flight{overflow:hidden;border-radius:10px;transform-origin:center}
 .flight .ghost-ctx{display:block!important;position:static;width:100%;height:100%;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;overflow:hidden;animation:none;visibility:visible!important}

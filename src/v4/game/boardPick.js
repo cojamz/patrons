@@ -128,7 +128,15 @@ export function pickCaption(state, pk) {
   const q = pk.title ? pk.question : state.pending.prompt;
   // a member of yours asking (Double Agent just recruited): its rule goes under the headline, so you see why
   const asker = askerOf(state, pk);
-  if (asker) return { title: pk.title, what: q.length > 30 ? null : [q], left: pk.count ? pk.count.left : null, how: asker.text };
+  // a long question ("Hustler: actions in which color give you extra gold?") says what to do in a few words instead,
+  // and the line under it says where to click, with the card's rule after it only when the whole line fits (w3a #14:
+  // the rule clipped to "…per ro…" and nothing said to click one of your colors); the rule is on the asker's card
+  if (asker && q.length > 30) {
+    const rest = asker.text.replace(/^When recruited[,:]\s*/i, '').replace(/^pick an? \w+\.\s*/i, '');
+    const how = `${pickHow(pk)}. ${rest[0].toUpperCase()}${rest.slice(1)}`;
+    return { title: pk.title, what: [shortAsk(pk)], left: pk.count ? pk.count.left : null, how: how.length <= 64 ? how : pickHow(pk), rule: asker.text };
+  }
+  if (asker) return { title: pk.title, what: [q], left: pk.count ? pk.count.left : null, how: asker.text };
   if (q.length > 30) return { title: pk.title, what: null, left: pk.count ? pk.count.left : null, how: q[0].toUpperCase() + q.slice(1) };
   return { title: pk.title, what: [q], left: pk.count ? pk.count.left : null, how: pickHow(pk) };
 }
@@ -140,6 +148,15 @@ export function askerOf(state, pk) {
   // only a member recruited this turn's round by them (Double Agent's "When recruited"): one they use says how instead
   const uid = p && p.members.find(u => state.cards[u] && defById(state.cards[u].def).name === pk.title && state.cards[u].recruitedRound === state.round && state.cards[u].recruitedBy === p.id && !state.cards[u].used);
   return uid == null ? null : { uid, text: defById(state.cards[uid].def).text };
+}
+
+/** What a choice wants, in two words, from what it lights ("pick a color"). */
+function shortAsk(pk) {
+  const k = pk.kinds;
+  if (k.has('space')) return 'pick a space';
+  if (k.has('own-stack') || k.has('stack')) return 'pick a color';
+  if (k.has('seat')) return 'pick a rival';
+  return 'pick a member';
 }
 
 /** How to answer, in a few words: where the lit things are. */

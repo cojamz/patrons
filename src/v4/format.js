@@ -121,7 +121,9 @@ export function promptFor(state, mine) {
         // the headline stays one short line beside Release and Pass; the line under it finishes it rather than saying it
         // again (it read "Recruit or buy" over "Recruit a member or buy followers, or pass")
         // a second buy (Big Spender) says so and names the card that gave it (w2a #6: it fired with no cue)
-        ? (pend.extra ? { who: p, text: `Buy again (${extraBuyer(state, p) || 'a second buy'})`, keepCase: false, sub: `A member from the shop, or followers, or pass${use ? `; or use ${use}` : ''}` }
+        // only a real second buy spends it (core.js boughtOnce): a pass keeps it for a later turn this round, and says so
+        // (w3: the game-feel tester thought Big Spender fired twice)
+        ? (pend.extra ? { who: p, text: `Buy again (${extraBuyer(state, p) || 'a second buy'})`, keepCase: false, sub: `Once a round: pass and ${extraBuyer(state, p) || 'it'} keeps it for a later turn${use ? `; or use ${use}` : ''}` }
           : { who: p, text: 'Recruit or buy', sub: `A member from the shop, or followers${use ? `; or use ${use}` : ''}` })
         : { who: p, text: pend.extra ? `${name} buys again (${extraBuyer(state, p) || 'a second buy'})` : `${name} is shopping` };
     case 'pay':
@@ -140,7 +142,14 @@ export function promptFor(state, mine) {
       // and your own name before the question goes ("P2: take 6 more from the release, in any colors")
       const pr = String(pend.prompt || '');
       const ransom = pr.match(/^(.+?) holds your (.+) to ransom: pay (\d+) to keep it\?$/);
-      if (ransom) return { who: p, text: `${ransom[1]} holds ${ransom[2]}: keep it for ${ransom[3]}?`, keepCase: true };
+      if (ransom) {
+        // it's the thief's turn and your call (w3b #37: "Your turn — …" during P4's turn); with too little to pay,
+        // say so, rather than leave "Let Middleman go" as the only button with no reason
+        const have = Object.values(p.res || {}).reduce((a, b) => a + b, 0);
+        const can = pend.options.some(o => o.value === 'pay');
+        return { who: p, lead: 'Your call — ', text: `${ransom[1]} holds ${ransom[2]}: keep it for ${ransom[3]}?`, keepCase: true,
+          ...(can ? {} : { sub: `You hold ${have}: not enough to pay ${ransom[3]}, so it goes` }) };
+      }
       const own = pr.startsWith(`${name}: `) ? pr.slice(name.length + 2) : pr;
       return { who: p, text: own.length <= 46 ? own : 'answer the question below' };
     }
@@ -502,11 +511,24 @@ export function tiebreakNote(st, row) {
 }
 
 /** "5 minions each", or "5 minions each · Bo 6" when someone's members change their count this round (Extra Hand). */
+/**
+ * Why a player picks first this round, in words (w3a A2, blocker: the summary said "P3 picks first" while P3 led, and
+ * the reason was nowhere): the member that always picks first ("Front-runner"), else "fewest followers" from round II
+ * on, else null (round I's order is drawn).
+ */
+export function firstPickWhy(state, pid) {
+  const p = state.players[pid];
+  if (!p) return null;
+  for (const u of p.members) { let d = null; try { d = cardDef(state, u); } catch { /* gone */ } if (d && d.pickFirst) return d.name; }
+  return state.round >= 2 ? 'fewest followers' : null;
+}
+
 export function workersNote(state) {
   if (!state.round) return '';
   const base = WORKERS[state.round - 1];
   const odd = state.players.filter(p => roundWorkers(state, p) !== base);
-  return `${base} minions each${odd.length ? ` · ${odd.map(p => `${p.name} ${roundWorkers(state, p)}`).join(', ')}` : ''}`;
+  // "P2 has 6", never "P2 6" (w3a A12: it read as P2's score)
+  return `${base} minions each${odd.length ? ` · ${odd.map(p => `${p.name} has ${roundWorkers(state, p)}`).join(', ')}` : ''}`;
 }
 
 /** The latest placement by someone other than `mine`, read from the log and the board (survives a reload). */

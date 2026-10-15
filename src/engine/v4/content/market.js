@@ -111,7 +111,7 @@ const market = {
     },
     {
       // was +1 blue per face-up member costing 8 or more (3.1 face up on average, Normal bots); now 1 + 2.3 blue face up
-      key: 'showroom', ring: 1, name: 'Name Drop', text: '+1 blue, and +1 per blue face-up member.',
+      key: 'showroom', ring: 1, name: 'Name Drop', text: '+1 blue, and +1 per blue member in the shop.',
       estimate: ctx => 1 + showroomCount(ctx),
       resolve(ctx, p) { ctx.gain(p, B, 1 + showroomCount(ctx), { fromAction: true }); },
     },

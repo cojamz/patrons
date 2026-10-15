@@ -16,6 +16,7 @@ const NO_FLASH = new Set();
 const tracePace = r => { if (typeof window === 'undefined') return null; (window.__patronsPace || (window.__patronsPace = [])).push(r); return r; };
 let userMove = false; // set while your own click is being submitted (useTable.show reads it)
 const NO_SLOTS = new Map();
+const NOOP = () => {};
 const NO_SEATS = [];
 const NO_OPTIONS = () => null;
 import { useHoverCards, HoverCardLayer, usePreviewWarmup } from './HoverCards.jsx';
@@ -33,7 +34,7 @@ import PayPicker, { payChoice } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
-import { playChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
+import { playChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable, foldBuys, foldWait } from './director.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed } from '../motion.js';
 import { PERF_ON } from '../perf.js';
@@ -105,6 +106,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
   const paced = useRef(false);
   const held = useRef(!!table.moment);
   const timer = useRef(null);
+  const foldSince = useRef(null); // when the table began holding for a rival's next buy (director.js foldBuys)
   const dwellNext = useRef(0); // the hold the step being committed asks for (started once it's on screen)
   const remeasure = useRef(null); // how this step's hold follows from its chain's plan (retime: the measured plan)
   const timerAt = useRef(null);
@@ -147,8 +149,19 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     // Show queued states in order. A rival's placement holds on screen long enough to read (the worker travels,
     // the card shows its delta); after the round-end card, the backlog replays at a readable pace too.
     while (!held.current && !timer.current && queue.current.length) {
-      const next = queue.current.shift();
+      let next = queue.current.shift();
       const prev = shownRef.current;
+      // a rival's run of follower buys plays as one beat (director.js foldBuys); when the bot's next buy is still on its
+      // way, the table holds a moment for it (never longer than foldWait), then folds what has come
+      const fold = foldBuys(prev, next, queue.current, session.mySeats || [], foldSince.current != null && performance.now() - foldSince.current >= foldWait());
+      if (fold.wait) {
+        if (foldSince.current == null) foldSince.current = performance.now();
+        queue.current.unshift(next);
+        timer.current = setTimeout(() => { timer.current = null; pump(); }, 40);
+        return;
+      }
+      foldSince.current = null;
+      if (fold.used) next = queue.current.splice(0, fold.used).pop();
       show(next);
       const mine = session.mySeats || [];
       const rivalPlaced = Object.keys(next.slots).some(k => prev.slots[k] === undefined && !mine.includes(next.slots[k]));
@@ -226,7 +239,8 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
   useEffect(() => onChainSkip(() => {
     if (typeof timer.current !== 'number' && typeof timer.current !== 'object') return;
     if (timer.current == null || timer.current === 'commit') return;
-    clearTimeout(timer.current); timer.current = null; pump();
+    // (a transition: the skip comes from your press, whose own frame paints first; the next step's table follows)
+    clearTimeout(timer.current); timer.current = null; startTransition(() => pump());
   }), [pump]);
   useEffect(() => {
     const off = session.subscribe(s => {
@@ -599,6 +613,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const root = useRef(null);
   const shopSnap = useRef(new Map());
   const chipSnap = useRef(new Map()); // member chips as they stood before a member left its cult (snapshotChips)
+  const lastSetupMoves = useRef(null); // the last step of the starting picks (its row stays up until that pick has landed)
   const minionSnap = useRef([]);
   const noteTimer = useRef(null);
   const toastTimer = useRef(null);
@@ -936,6 +951,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // landed or is skipped (AfterChain re-renders only itself then)
   const holdStory = !state.over && motionOK() && (chainRunning() || (prevState.current !== state && prevState.current.seed === state.seed && planChain(prevState.current, state, { mine: mySeats }).total > 0));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
+  // the starting picks' row (and the step right after the last pick, while its chain lands): see the AfterChain below
+  const setupNow = pend && pend.kind === 'setup' && !state.over ? state : null;
+  if (setupNow) lastSetupMoves.current = state.moves;
+  const setupHeld = !setupNow && holdStory && lastSetupMoves.current != null && state.moves === lastSetupMoves.current + 1;
   // The board picker: a choice whose options name things on the board (spaces, members, cults, resource stacks) is
   // answered there (boardPick.js); the choice panel shrinks to a caption docked under the headline, the leftover
   // buttons and a list for the keyboard. A choice of pairs (Good Deed, the swaps…) takes two steps: the first part
@@ -1061,7 +1080,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   if (phase === 'place') stepRef.current = 'place'; else if (phase === 'buy' || phase === 'pay') stepRef.current = 'buy';
   const step = phase === 'choose' ? stepRef.current : phase === 'pay' ? 'buy' : phase;
   return (
-    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${pend && pend.kind === 'setup' && !state.over ? ' in-setup' : ''}`} ref={root} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
+    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${setupNow || setupHeld ? ' in-setup' : ''}`} ref={root} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar lt-prompt" data-region="prompt">
         <div className="bar-row status" aria-live="polite">
           {/* a choice picked on the board: its caption takes the headline's place (never over the wheel) */}
@@ -1093,7 +1112,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <div className="bar-row steps-row">
           <span className="round">{roundText}{state.round && !state.over ? <small title="Minions this round: one per turn. Extra Hand and similar members add one."> · <span className="num">{workersNote(state)}</span></small> : null}</span>
           {/* your turn's details sit under the headline (it stays one short line); otherwise the turn's two steps */}
-          {picker ? <span className="say-sub pick-how" data-prompt-sub>{note ? note.text : pickCaption(state, picker).how}</span>
+          {picker ? <span className="say-sub pick-how" data-prompt-sub title={!note ? pickCaption(state, picker).rule : undefined}>{note ? note.text : pickCaption(state, picker).how}</span>
             : pickDone ? <span className="say-sub seat-pick-done" aria-hidden="true"><span className="pick-cap">{pickDone.title}: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</span></span>
               : mine && !needHandoff && pr.sub && !note ? <span className="say-sub" data-prompt-sub>{pr.sub}{buyingNow && pend.options.some(o => o.kind === 'release') ? ' · or release a member' : ''}</span> : state.round > 0 && !state.over && (
             <span className="steps" aria-hidden="true">
@@ -1136,7 +1155,12 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <>
           <section className="lt-wheel" data-region="wheel">
             <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
-            {showChoice && !picker && !payChoice(pend) && <ChoicePrompt state={state} onPick={onPick} busy={busy} place={plainAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+            {showChoice && !picker && !payChoice(pend) && pend.kind !== 'setup' && <ChoicePrompt state={state} onPick={onPick} busy={busy} place={plainAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+            {/* the starting picks (motion gaps 1): the row stays on the table while the others pick (read-only), and until the
+                last pick has landed, so each rival's pick lights its coin and flies from it to their seat (director.js) */}
+            <AfterChain value={setupNow} hold={holdStory && !setupNow}>{v => v && (
+              <ChoicePrompt state={v} onPick={v === state && showChoice ? onPick : NOOP} busy={busy || !(v === state && showChoice)} watching={v === state && showChoice ? null : v.players[v.pending.player]} turnOf={v === state && humansHere && handedIn === pend.player ? state.players[pend.player] : null} />
+            )}</AfterChain>
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
               others clockwise. UI-B fills each chair (CultSeat); the chairs never move. */}
