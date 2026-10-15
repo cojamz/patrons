@@ -236,10 +236,10 @@ function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
   const mainEm = main ? saidEm(main, 800) : 0, clauseEm = main ? Math.max(...mainClauses.map(c => saidEm(c, 800))) : 0;
   const words = t => Math.max(...String(t).split(/\s+/).map(x => saidEm(x, 700)));
   const secondEm = second ? saidEm(second, 700) : 0, noteEm = note ? saidEm(note, 500) : 0;
-  // the hero is the gain; with none, the effect is the hero and always shows (up to three lines)
+  // the gain and the effect always show (the effect may wrap to three lines); the clarification only with room
   const tries = [];
   for (const mp of main ? [X.main, X.mainMin] : [0]) for (const ml of mainClauses.length > 1 ? [1, 2] : main ? [1] : [0])
-    for (const sl of second ? (main && !need.second ? [1, 2, 0] : [1, 2, 3]) : [0]) for (const nl of note && !need.noNote ? [1, 0] : [0]) tries.push({ mp, ml, sl, nl });
+    for (const sl of second ? [1, 2, 3] : [0]) for (const nl of note && !need.noNote ? [1, 0] : [0]) tries.push({ mp, ml, sl, nl });
   tries.sort((x, y) => y.mp - x.mp || (y.sl > 0) - (x.sl > 0) || (y.nl > 0) - (x.nl > 0) || x.ml - y.ml || x.sl - y.sl);
   for (const t of tries) {
     const parts = [t.ml * t.mp, taken ? X.minion : 0, t.sl * X.secondLine, t.nl * X.noteLine].filter(Boolean);
@@ -253,10 +253,10 @@ function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
     const w = room(h) * k;
     if (w >= needW + 4) return { mainLines: t.ml, main: t.mp, secondLines: t.sl, noteLines: t.nl, w: w / k, rc };
   }
-  // nothing fits: the gain alone at its smallest, a clause a line (the effect and the clarification are in the hover)
-  const ml = mainClauses.length > 1 ? 2 : main ? 1 : 0;
-  const w = room(Math.max(ml * X.mainMin, X.secondLine * 2));
-  return { mainLines: ml, main: X.mainMin, secondLines: main ? 0 : 2, noteLines: 0, w: Math.max(w, 24 / k), rc: w ? rc : R.r, tight: true };
+  // nothing fits: everything at its smallest, a clause a line (the clarification is in the hover)
+  const ml = mainClauses.length > 1 ? 2 : main ? 1 : 0, sl = second ? 3 : 0;
+  const w = room(ml * X.mainMin + (taken ? X.minion : sl * X.secondLine) + X.gap);
+  return { mainLines: ml, main: X.mainMin, secondLines: sl, noteLines: 0, w: Math.max(w, 24 / k), rc: w ? rc : R.r, tight: true };
 }
 
 // Is the person driving with the keyboard? Focus moved to a space on its own (your turn begins) opens its card only
@@ -811,18 +811,15 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       const said = panelText(s.qid, s.a, round);
       const l = lay(s);
       first.set(s.key, { said, lay: l });
-      // a quadrant's ring shows a line only when every panel there that has one can show it
-      const g = group[`${s.q}-${s.ring}`] || (group[`${s.q}-${s.ring}`] = { second: true, note: true });
-      if (state.slots[s.key] === undefined) {
-        if (said.main && said.second && !l.secondLines) g.second = false;
-        if (said.note && !l.noteLines) g.note = false;
-      }
+      // a quadrant's ring shows its clarifications only when every panel there that has one can show it
+      const g = `${s.q}-${s.ring}`;
+      if (group[g] === undefined) group[g] = true;
+      if (state.slots[s.key] === undefined && said.note && !l.noteLines) group[g] = false;
     }
     const out = new Map();
     for (const s of spaces) {
-      const f = first.get(s.key), g = group[`${s.q}-${s.ring}`];
-      const fixed = (!g.note && f.lay.noteLines) || (!g.second && f.said.main && f.lay.secondLines) ? lay(s, { noNote: !g.note }) : f.lay;
-      out.set(s.key, { said: f.said, lay: { ...fixed, secondLines: !g.second && f.said.main ? 0 : fixed.secondLines } });
+      const f = first.get(s.key);
+      out.set(s.key, { said: f.said, lay: !group[`${s.q}-${s.ring}`] && f.lay.noteLines ? lay(s, { noNote: true }) : f.lay });
     }
     // every gain on the wheel is one size: the smallest any panel needs
     const main = Math.min(...[...out.values()].filter(v => v.said.main).map(v => v.lay.main));
