@@ -71,8 +71,8 @@ async function openPerson(name, seed) {
   }, seed);
   const page = await ctx.newPage();
   // a reload mid-run (Vite HMR on a tree someone is editing) wipes the tracer's buffer: count it and say so
-  let navs = 0;
-  page.on('framenavigated', fr => { if (fr === page.mainFrame() && ++navs > 1) errors.push(`${name}: the page reloaded mid-run (HMR?): numbers cover only what came after`); });
+  let loads = 0; // 'load' fires for full documents only (framenavigated also fires on App's history.pushState)
+  page.on('load', () => { if (++loads > 1) errors.push(`${name}: the page reloaded mid-run (HMR?): numbers cover only what came after`); });
   page.on('pageerror', e => errors.push(`${name} pageerror: ${e.message}`));
   page.on('console', m => { if (m.type() === 'error') errors.push(`${name} console: ${m.text().slice(0, 200)}`); });
   const cdp = await ctx.newCDPSession(page);
@@ -251,15 +251,15 @@ try {
     const hana = await openPerson('host', SEED), gus = await openPerson('guest', SEED + 7);
     people.push(hana, gus);
     await hana.page.goto(`${base}/?${params}`);
-    await hana.page.fill('input[placeholder="Name"]', 'Hana');
+    await hana.page.fill('input[placeholder="Name"]', 'Hana', { timeout: 90000 });
     await hana.page.click('text=Host online game');
-    await hana.page.waitForSelector('.code', { timeout: 30000 });
+    await hana.page.waitForSelector('.code', { timeout: 90000 });
     const code = await hana.page.$eval('.code', e => (/Room code (\S+?),/.exec(e.getAttribute('aria-label') || '') || [])[1] || e.textContent.trim());
     await gus.page.goto(`${base}/?${params}`);
-    await gus.page.fill('input[placeholder="Name"]', 'Gus');
+    await gus.page.fill('input[placeholder="Name"]', 'Gus', { timeout: 90000 });
     await gus.page.fill('input[aria-label="Room code"]', code);
     await gus.page.click('text=Join with code');
-    await gus.page.waitForSelector('.code', { timeout: 30000 });
+    await gus.page.waitForSelector('.code', { timeout: 90000 });
     await hana.page.waitForFunction(() => document.querySelectorAll('.seats li').length === 2, null, { timeout: 20000 });
     for (let k = 0; k < 2; k++) { await hana.page.click('[data-add-bot]'); await sleep(600); }
     await hana.page.waitForFunction(() => document.querySelectorAll('.seats li').length === 4, null, { timeout: 20000 });

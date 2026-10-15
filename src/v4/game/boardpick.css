@@ -64,6 +64,7 @@
 @media (pointer:coarse){
   .prompt.choice.seat-pick .pick-key{min-height:44px;min-width:44px;font-size:13px;padding:0 12px}
   .prompt.choice.seat-pick .pick-keys-hint{display:none}
+  .prompt.choice.seat-pick .pick-rest-btn{min-height:44px}
 }
 
 /* the last pick made: "· 0 left" while its resource flies, then it's gone */

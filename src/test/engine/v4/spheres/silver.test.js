@@ -10,9 +10,9 @@ import { take, move, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
 import { games } from '../budget.js';
 
-// seeded games in the table block below: a game count, not a time budget (budget.js). The verdict plays 100 (catches a
-// bug in ≥3% of this table's games with 95% confidence), the nightly full run (check:v4:full) all 200, the fast gate 20.
-const GAMES = games(200);
+// seeded games in the table block below: a game count, not a time budget (budget.js). The verdict plays all 200 here,
+// not half: the block asserts a rate (over 6 Silver takes a game), and a rate needs its whole sample. The fast gate 20.
+const GAMES = games(200, 20, 200);
 
 registerQuadrant(silver);
 const Q = ['gold', 'red', 'blue', 'silver'];

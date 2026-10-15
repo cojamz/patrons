@@ -26,7 +26,7 @@ What the gate costs, measured, so every change to the harness has a before and a
 
 | date | change | before | after | how measured |
 |---|---|---|---|---|
-| 10-15 | Verdict plays half of each 200-game sphere block (100) and 85 of the bot fuzz's 170 per seat; the full counts run in `check:v4:full` (nightly/remote). Strength stated in budget.js. | ~1,480 s unit CPU | ~1,080 s | per-game CPU × games |
+| 10-15 | Verdict plays half of five 200-game sphere blocks (100) and 85 of the bot fuzz's 170 per seat; Market and Silver keep 200 (their blocks assert a rate); the full counts run in `check:v4:full` (nightly/remote). Strength stated in budget.js; harness.test.js fails if a slice shrinks. | ~1,480 s unit CPU | ~1,170 s | per-game CPU × games |
 | 10-15 | Unit tests at nice 10 for every vitest run (vitest.config.js), all cores in the gate; browsers keep priority (Chromium renderers run at nice −8) | 3 workers, nice 0 | 4 workers, nice 10 | `ps -o nice` |
 | 10-15 | E2E start as soon as the build is served, not after the unit tests; a machine-wide e2e token pool (4) across all gates replaces 3-per-gate; info and motion take every token (alone on the box), memory joins the parallel set (it reads the heap after a forced GC) | e2e solo phase waited for the unit tests | e2e overlap the unit tests | gate log |
 | 10-15 | Check slots in units: a full gate 2, quick/fast 1, capacity 3 (one full gate at a time beside one quick: CPU-bound gates finish sooner in a row than shared); a quick may pass a waiting gate unless it has waited 10 min; ETA from the run history | 2 runs, "2 of 2 in use", no ETA | "ETA ~4m10s (from recent run times)" | scratch pool runs |
@@ -38,7 +38,7 @@ What the gate costs, measured, so every change to the harness has a before and a
 
 **After, on a quiet box: not measured yet.** This box sat at load 30–46 the whole session (eleven agents running suites
 and browsers), so any wall time taken here was the load's, not the gate's. Estimate from the CPU profile: unit tests
-~1,080 s of CPU at the verdict slice on ~3.7 free cores ≈ 5 min, overlapping the e2e (build 10 s + parallel set ~130 s
+~1,170 s of CPU at the verdict slice on ~3.7 free cores ≈ 5.3 min, overlapping the e2e (build 10 s + parallel set ~130 s
 bounded by online + info 45 s + motion 65 s ≈ 4.2 min), so a verdict ≈ 5–6 min and `--quick` ≈ 1.5 min. To measure on
 a quiet machine (4 CPUs; `taskset -c 0-3` on a bigger one), from a commit with these changes:
 `npm ci && taskset -c 0-3 npm run check:v4 -- --commit HEAD` and `taskset -c 0-3 npm run check:v4:quick`, then

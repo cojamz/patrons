@@ -238,7 +238,9 @@ describe('Green members', () => {
     expect(ids(s)).not.toContain(`use:${uidIn(s, 'echo.hourglass', 0)}`);
   });
   it('× Poach: an Stunt Double used this round stays used for the thief', () => {
-    let s = table(QT, { round: 3, left: 5, shop: ROW, members: [[], ['echo.hourglass']], queue: turns(1, 0, 0) });
+    // P1 holds 2 gold so its buy step has a follower buy to offer: a used member can't be released (Cory, 2026-10-15),
+    // so without it the buy step would have nothing in it and be skipped
+    let s = table(QT, { round: 3, left: 5, shop: ROW, res: [{ gold: 2 }], members: [[], ['echo.hourglass']], queue: turns(1, 0, 0) });
     s = take(s, 'echo.hum');
     s = pass(move(s, `use:${uidIn(s, 'echo.hourglass', 1)}`));
     s = play(take(s, 'thieves.heist'), cardOpt(s, 'echo.hourglass', 1));

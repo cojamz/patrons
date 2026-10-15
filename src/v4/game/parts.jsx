@@ -347,7 +347,8 @@ export function Popover({ anchor, onClose, children, float = false }) {
     const a = anchor.getBoundingClientRect();
     const w = Math.min(280, innerWidth - 24);
     const left = Math.max(12, Math.min(innerWidth - w - 12, a.left + a.width / 2 - w / 2));
-    const below = a.bottom + 8 + 120 < innerHeight;
+    // the side with more room: a member in a bottom chair opens above it, one up top opens below (then slid on screen)
+    const below = innerHeight - a.bottom >= a.top;
     fitted.current = false;
     setPos({ left, width: w, top: below ? a.bottom + 8 : undefined, bottom: below ? undefined : innerHeight - a.top + 8 });
   }, [anchor]);
