@@ -9,7 +9,8 @@
 //  (s5) no flying ghost (a minion, a card, a "+N" of followers) outlives its flight;
 //  (s6) every quadrant with a tiebreak prints it on its rim ("ties: red …"); a sphere with its own rule ("Whatever
 //       you steal turns magenta…") gives it in its rim's hover card;
-//  (s7) every word on the wheel is at least 12px on screen (the rim's engraved text included);
+//  (s7) every word on the wheel is at least 12px on screen (the rim's engraved text included); an engraved inner
+//       ring's name at least 11px (Cory's call for the narrow cells);
 //  (s8) the headline prompt fits: no ellipsis, nothing clipped, one line, while placing and while buying;
 //  (s9) engraved: the print is tidy: no two spaces' words, stamps or minions touch, nothing runs into the rim or the
 //       hub, and each space's print is centred in its own cell (round I gated; round III printed as known).
@@ -127,7 +128,9 @@ const FLOOR = () => {
     if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
     if (!visible(e)) continue;
     const fs = parseFloat(getComputedStyle(e).fontSize);
-    if (fs < 11.95) out.push(`"${e.textContent.trim().slice(0, 24)}" at ${fs}px`);
+    // engraved: an inner ring's name may print at 11px (the narrow cells; it wraps rather than shrink further)
+    const floor = e.matches('[data-spaces="engraved"] .slot:not(.r1) .face .nm') ? 10.95 : 11.95;
+    if (fs < floor) out.push(`"${e.textContent.trim().slice(0, 24)}" at ${fs}px`);
   }
   for (const t of stage.querySelectorAll('[data-rim-text]')) {
     const px = Number(t.getAttribute('font-size')) * k;

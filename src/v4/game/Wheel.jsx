@@ -21,7 +21,8 @@ import { spriteId, iconFor, withOutline } from '../art/index.js';
 import { sheetMode } from './parts.jsx';
 import { realHover } from '../hover.js';
 import { Rich } from './Rich.jsx';
-import { shortEffect } from '../shorts.js';
+import { shortEffect, pipEffect } from '../shorts.js';
+import { Follower } from '../art/Follower.jsx';
 
 // sockets: discs toward the outer edge of their ring, so a name never runs into a neighbour at any board size
 const RING_S = { 1: { r0: 128, r1: 180, r: 151, n: 3, span: 66 }, 2: { r0: 82, r1: 128, r: 104, n: 2, span: 40 }, 3: { r0: 36, r1: 82, r: 58, n: 1, span: 0 } };
@@ -140,6 +141,23 @@ export function rimWidth(text, weight = 700, ls = 0) {
 /** A yield in short clauses, one a line in a narrow cell: "+2 green +1 blue" → ["+2 green", "+1 blue"],
  *  "+1 gold/member" → ["+1 gold", "/member"]. */
 export const clauses = text => String(text || '').split(/ · |, (?=\S)| (?=[+−-]\d)|(?=\/[a-z]{4,})/).filter(Boolean);
+
+// the marks a pips-first yield uses (shorts.js pipEffect): a member card, a rival's hood, a follower
+const MemberMark = () => (
+  <svg className="mark member" viewBox="0 0 10 12" width="9" height="11" role="img" aria-label="member"><title>member</title>
+    <rect x=".6" y=".6" width="8.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" strokeWidth="1.2" /><circle cx="5" cy="4.4" r="1.7" fill="currentColor" /><path d="M2.4 9.6c.4-1.9 1.4-2.8 2.6-2.8s2.2.9 2.6 2.8z" fill="currentColor" />
+  </svg>
+);
+const RivalMark = () => (
+  <svg className="mark rival" viewBox="0 0 10 12" width="9" height="11" role="img" aria-label="a rival"><title>a rival</title>
+    <path d="M5 .8C2.6.8 1.2 3 1.2 5.6v5.6h7.6V5.6C8.8 3 7.4.8 5 .8z" fill="currentColor" /><path d="M3.4 5.4h3.2v1.8H3.4z" fill="#f4ebd7" opacity=".9" />
+  </svg>
+);
+/** Text with resource pips (Rich) and the marks @m (member), @r (rival), @f (follower). */
+export function Marked({ text }) {
+  const parts = String(text || '').split(/(@[mrf])/);
+  return <>{parts.map((p, k) => (p === '@m' ? <MemberMark key={k} /> : p === '@r' ? <RivalMark key={k} /> : p === '@f' ? <Follower key={k} size={11} title="follower" /> : p ? <Rich key={k} text={p} /> : null))}</>;
+}
 
 /** Why a space can't be taken, in a few words at the pointer (null when it's open: the turn itself explains). */
 export function deniedText(state, key, meId = null) {
@@ -559,7 +577,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     const side = engraved && Math.abs(Math.sin(sa)) > Math.abs(Math.cos(sa));
     const low = engraved && !side && Math.cos(sa) < 0;
     // on its side, a short yield runs as one line ("+1 red · swap"); a longer one keeps a clause a line
-    const flow = side && shortEffect(qid, a, round).replace(/ · /g, ' ').length <= 12;
+    const flow = side && (t === 1 ? shortEffect(qid, a, round) : pipEffect(qid, a, round)).replace(/ · /g, ' ').replace(/@[mrf]/g, 'x').length <= 12;
     const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', side ? 'side' : '', low ? 'low' : '', flow ? 'flow' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
@@ -598,7 +616,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
               {minions || <span className="ico"><Stamp id={[`${qid}.${a.key}`, spriteId(a.name)]} /></span>}
               {open && (
                 <span className="yl" data-yield>
-                  {clauses(shortEffect(qid, a, round)).map((c, k) => <span key={k} className="cl">{k ? <span className="sep"> </span> : null}<Rich text={c} /></span>)}
+                  {clauses(t === 1 ? shortEffect(qid, a, round) : pipEffect(qid, a, round)).map((c, k) => <span key={k} className="cl">{k ? <span className="sep"> </span> : null}<Marked text={c} /></span>)}
                 </span>
               )}
             </span>

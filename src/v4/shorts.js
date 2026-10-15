@@ -32,6 +32,26 @@ const S = {
   echo: { hum: '+3 green', chant: r => `+${2 * r} green`, echo: 'copy a rival', encore: 'copy any', refrain: '+2 green · copy yours', eternity: 'copy all yours' },
 };
 
+// The shortest form, for the engraved look's narrow inner rings: pips and marks instead of words wherever a glyph
+// will do. @m is a member, @r a rival, @f a follower (Wheel draws them); resource words still become pips.
+const PIPS = {
+  gold: { steal: '@r → 3 gold', windfall: '+1 gold/@m', strike: '×2 gold' },
+  red: { hireup: '+2 red · @m free', trade: '@m ⇄ @r', take: 'any @m free' },
+  purple: { overtime: '8 purple → 2 turns' },
+  silver: { tide: '½ richest', jubilee: 'silver → @f' },
+  yellow: { gather: '+1/@m' },
+  market: { clearance: '½ price', spree: '3 buys' },
+  thieves: { rob: '@r → 3 any', ransom: 'ransom @m', heist: 'take @r @m' },
+  trading: { sellhigh: '2 @f → 6 white', dividend: '+1 white/@f', boom: 'all → @f' },
+  echo: { refrain: '+2 green · copy', eternity: 'copy all' },
+};
+/** The pips-first form of a space's yield (falls back to the few words). */
+export function pipEffect(qid, action, round = 1) {
+  const v = PIPS[qid] && PIPS[qid][action.key];
+  if (typeof v === 'function') return v(Math.max(1, Math.min(3, round)));
+  return typeof v === 'string' ? v : shortEffect(qid, action, round);
+}
+
 /** The few words printed on a space. `round` is the current round (1–3). */
 export function shortEffect(qid, action, round = 1) {
   const v = S[qid] && S[qid][action.key];

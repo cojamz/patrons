@@ -206,6 +206,9 @@ h1,h2,h3{font-family:var(--serif)}
 /* the name: bold sans at 12px (small capitals don't fit the narrow cells at 12px; this keeps the floor) */
 .lt [data-spaces="engraved"] .stage .slot .face .nm{font-family:var(--sans);font-weight:800;font-size:12px;letter-spacing:0;line-height:1.02;margin:0;color:inherit;text-shadow:0 1px 0 rgba(255,250,238,.55)}
 .lt [data-spaces="engraved"] .stage .slot.low .face{flex-direction:column-reverse}
+/* the inner rings are narrow: their names print at 11px (never smaller) and wrap to two lines rather than shrink */
+.lt [data-spaces="engraved"] .stage .slot:not(.r1) .face .nm{font-size:11px;line-height:1.05}
+.lt [data-spaces="engraved"] .stage .slot .face .mark{display:inline-block;vertical-align:-1px;margin:0 1px}
 .lt [data-spaces="engraved"] .stage .slot .face .row{display:flex;align-items:center;justify-content:center;gap:4px}
 .lt [data-spaces="engraved"] .stage .slot .face .ico{line-height:0;margin:0}
 .lt [data-spaces="engraved"] .stage .slot .face .ico svg{width:24px;height:24px;image-rendering:pixelated}

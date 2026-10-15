@@ -147,11 +147,12 @@ describe('intro', () => {
     expect([...document.querySelectorAll('.intro-lines .intro-line')].map(l => l.textContent)).toEqual(LINES);
   });
 
-  it('in motion it is one continuous shot: all four beats live in one world from the start (no remount between beats)', () => {
+  it('in motion it is one continuous shot: all four beats live in one world (no remount between beats)', () => {
     render(<Intro onClose={() => {}} still={false} />);
     const scenes = () => [...document.querySelectorAll('.intro-scene')].map(e => e.dataset.scene);
     expect(scenes()).toEqual(['1', '2']); // the heavy later beats join a moment after it opens…
-    act(() => vi.advanceTimersByTime(2000));
+    act(() => vi.advanceTimersByTime(1000));
+    act(() => vi.advanceTimersByTime(1000));
     expect(scenes()).toEqual(['1', '2', '3', '4']); // …long before they show
     const first = document.querySelector('[data-scene="4"]');
     act(() => vi.advanceTimersByTime(7500));
