@@ -153,7 +153,8 @@ async function spinWheel(p, round) {
   const st = await page.$('.lt-wheel .stage');
   const b = st && await st.boundingBox();
   if (!b) return;
-  const px = (x, y) => ({ x: b.x + (x + 26) / 452 * b.width, y: b.y + (y + 26) / 452 * b.height });
+  const vb = await st.evaluate(e => { const v = e.querySelector('svg.wheel-paper').viewBox.baseVal; return { x: v.x, w: v.width }; });
+  const px = (x, y) => ({ x: b.x + (x - vb.x) / vb.w * b.width, y: b.y + (y - vb.x) / vb.w * b.height });
   const pt = deg => { const t = (deg - 90) * Math.PI / 180; return px(200 + 128 * Math.cos(t), 200 + 128 * Math.sin(t)); };
   const a0 = 225;
   const s = pt(a0);

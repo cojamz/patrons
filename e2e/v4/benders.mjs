@@ -16,6 +16,7 @@ import { answerChoice } from './lib/answer.mjs';
 import { createGame, applyMove, chooseBotMove } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { buildStamp } from './lib/stamp.mjs';
+import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/benders';
 mkdirSync(SHOTS, { recursive: true });
@@ -69,9 +70,8 @@ page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.te
 const shot = n => page.screenshot({ path: `${SHOTS}/${n}.png` }).catch(() => {});
 
 try {
+  await seedSave(page, save); // before the app runs (lib/seed.mjs): the page's own save-on-leave can't overwrite it
   await page.goto(`${base}/?botDelay=30`);
-  await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
-  await page.reload();
   await page.click('[data-home="resume"]');
   await page.waitForSelector('.lt-seat[data-pid]');
   await page.waitForTimeout(400);

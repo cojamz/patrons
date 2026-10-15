@@ -18,6 +18,7 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { stealSave } from './lib/steal-save.mjs';
 import { applyMove } from '../../src/engine/v4/index.js';
+import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/steal';
 mkdirSync(SHOTS, { recursive: true });
@@ -53,9 +54,8 @@ async function open(space) {
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(`[${space}] pageerror: ${e.message}`));
   const save = stealSave(space);
+  await seedSave(page, save); // before the app runs (lib/seed.mjs)
   await page.goto(`${base}/?intro=0`, { timeout: 90000 });
-  await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
-  await page.reload({ timeout: 90000 });
   await page.waitForSelector('[data-home="resume"]', { timeout: 60000 });
   await page.click('[data-home="resume"]');
   await page.waitForSelector('.prompt.choice.seat-pick', { timeout: 90000 });

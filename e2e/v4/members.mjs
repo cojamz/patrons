@@ -25,6 +25,7 @@ import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { membersSave, HAND } from './lib/members-save.mjs';
 import { cardDef } from '../../src/engine/v4/index.js';
+import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/members`;
 mkdirSync(SHOTS, { recursive: true });
@@ -83,11 +84,7 @@ try {
   save.state.build = stamp; roundStart.state.build = stamp;
   // seeded before the app's own scripts run: leaving the running game saves it on the way out (saved.js, pagehide), so
   // a save written from the old page would be overwritten; once only (a flag in this tab's sessionStorage)
-  await page.addInitScript(([v, rs]) => {
-    if (sessionStorage.getItem('members-seeded')) return;
-    localStorage.setItem('patrons.v4.local', JSON.stringify(v)); localStorage.setItem('patrons.v4.roundStart', JSON.stringify(rs));
-    sessionStorage.setItem('members-seeded', '1');
-  }, [save, roundStart]);
+  await seedSave(page, save, { roundStart }); // before the app runs, once per tab (lib/seed.mjs)
   await page.goto(`${base}/?botDelay=300&intro=0`);
   await page.waitForSelector('.lt-wheel, [data-home="resume"]');
   if (!(await page.$('.lt-wheel'))) await page.click('[data-home="resume"]');

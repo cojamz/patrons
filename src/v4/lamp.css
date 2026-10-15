@@ -216,7 +216,7 @@ h1,h2,h3{font-family:var(--serif)}
    disc plus a margin for the rim's leaders and glow, so it may overhang the prompt and shop rows by that margin (the
    paper disc itself stays inside its cell); those rows sit above it, so the overhang never takes their clicks */
 @media (min-width:861px) and (min-height:500px){
-  .app.game.lt .lt-wheel .stage{width:min(100cqw, calc(100cqh + 48px))}
+  .app.game.lt .lt-wheel .stage{width:min(100cqw, calc(100cqh + 20px))} /* the board's margin is thin now (Wheel.jsx VB0) */
   .lt > .lt-prompt,.lt > .lt-shop{position:relative;z-index:3}
 }
 .lt .stage svg.wheel-paper{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
@@ -327,8 +327,9 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken .wash{fill:color-mix(in srgb,var(--paper-taken,#cfc2a6) 52%,var(--board,#2b2119))}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken.lit .wash{fill:var(--paper-lit,#fbf6ea)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.locked .wash{fill:rgba(242,232,210,.03);stroke:rgba(242,232,210,.16);stroke-width:1}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh{fill:none;stroke-width:2;stroke-dasharray:.1 4.2;stroke-linecap:round}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh.newest{stroke-width:2.6}
+/* calm: a fine dotted edge that reads as "someone was here", never as the lit edge of a space you can take (w2a #30) */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh{fill:none;stroke-width:1.5;stroke-dasharray:.1 3.6;stroke-linecap:round;opacity:.7}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh.newest{stroke-width:2;opacity:.85}
 /* while you place, open panels you can't take (a pick that names a few) step back toward the taken ones */
 /* a choice made off the wheel (a stack, a seat, a member): open spaces step back like unlit ones, nothing there is yours to take */
 .lt[data-yours="1"][data-phase="choose"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash,.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,var(--pl-paper,#f2e8d2) 60%,var(--board,#2b2119))}

@@ -70,14 +70,14 @@ export function createHover() {
   return {
     get card() { return card; },
     /** the space under the pointer (the shop ticks "✓ after X" for it) */
-    get space() { return card && card.kind === 'space' ? card.key : null; },
+    get space() { return card && card.kind === 'space' && !card.past ? card.key : null; },
     subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
     close() { clearTimeout(openT); clearTimeout(closeT); set(null); },
     /** the pointer is on a card you can use (a seat's members: its Use button, its list scrolled): it stays */
     hold() { clearTimeout(closeT); },
     /** the pointer left that card: it closes as if it had left the target */
     letGo() { clearTimeout(closeT); closeT = setTimeout(() => { if (card && !card.pinned) set(null); }, CLOSE_MS); },
-    onSpaceHover: (key, el, o = {}) => show({ kind: 'space', key, el, pinned: !!o.pinned }),
+    onSpaceHover: (key, el, o = {}) => show({ kind: 'space', key, el, pinned: !!o.pinned, past: !!o.past }),
     onPlaqueHover: (qid, el, o = {}) => show({ kind: 'plaque', qid, el, pinned: !!o.pinned }),
     onSeatHover: (pid, el, o = {}) => show({ kind: 'seat', pid, el, pinned: !!o.pinned }),
     onCardHover: (uid, el, o = {}) => show({ kind: 'card', uid, el, pinned: !!o.pinned }),
@@ -122,6 +122,8 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   const live = !!(c && !c.pinned && c.kind === 'seat');
   const inside = useRef(false);
   const el = c ? anchorFor(c, live && inside.current) : null;
+  // a pinned card whose target is gone for good closes, so it can't hold the layer shut against every later hover
+  useEffect(() => { if (c && c.pinned && !el) hover.close(); });
   const place = () => {
     if (!c || c.pinned || !el || !box.current) { setPos(null); return; }
     // a seat's card opens right beside the whole seat, level with its top (w2b #20: it was docked hundreds of px from
@@ -185,13 +187,20 @@ if (typeof addEventListener === 'function') addEventListener('pointermove', e =>
 function anchorFor(c, held = false) {
   if (c.el && c.el.isConnected) return c.el;
   if (typeof document === 'undefined' || !c.el) return null;
+  const under = b => lastPt && lastPt.x >= b.left - 4 && lastPt.x <= b.right + 4 && lastPt.y >= b.top - 4 && lastPt.y <= b.bottom + 4;
+  // a name in the strip or the log re-drawn by a new move: that name again, never the wheel's space or the shop's card
+  // it names (w2a #14: a pinned name's card jumped 341px away, onto the wheel)
+  const named = c.el.getAttribute && c.el.getAttribute('data-name-target');
+  if (named != null) {
+    const again = [...document.querySelectorAll(`[data-hover-name][data-name-target="${named}"]`)];
+    return again.find(e => under(e.getBoundingClientRect())) || (c.pinned || held ? again[again.length - 1] || null : null);
+  }
   const sel = c.kind === 'space' ? `[data-slot="${c.key}"]` : c.kind === 'plaque' ? `[data-plaque="${c.qid}"]`
     : c.kind === 'seat' ? `[data-cult="${c.pid}"] .cs-head` : c.kind === 'card' ? `[data-region="shop"] [data-uid="${c.uid}"]` : c.kind === 'deck' ? '[data-deck]' : null;
   const el = sel && document.querySelector(sel);
   if (!el) return null;
   if (c.pinned || held) return el;
-  const b = el.getBoundingClientRect();
-  return lastPt && lastPt.x >= b.left - 4 && lastPt.x <= b.right + 4 && lastPt.y >= b.top - 4 && lastPt.y <= b.bottom + 4 ? el : null;
+  return under(el.getBoundingClientRect()) ? el : null;
 }
 
 /**
@@ -247,7 +256,7 @@ export function besideSeat(a, w, h) {
  */
 function useCopyTargets(c, state, me) {
   const viewer = me != null ? me : state.pending ? state.pending.player : null;
-  const space = c && c.kind === 'space' ? c.key.split('-').map(Number) : null;
+  const space = c && c.kind === 'space' && !c.past ? c.key.split('-').map(Number) : null;
   const pv = usePreview(state, space && viewer != null && !state.over ? viewer : null, space ? space[0] : 0, space ? space[1] : 0);
   let keys = pv && pv.copies ? pv.copies : null;
   if (!keys && c && c.kind === 'card' && viewer != null && state.cards[c.uid]) keys = memberCopyTargets(state, viewer, cardDef(state, c.uid));
@@ -260,7 +269,11 @@ function useCopyTargets(c, state, me) {
   }, [sig]);
 }
 function cardBody(c, state, me, optionFor, pick) {
-  if (c.kind === 'space') return <SpaceCard state={state} me={me} spaceKey={c.key} optionFor={optionFor} onPick={pick} pinned={c.pinned} />;
+  // a rival's move since your last turn wears a dotted edge on the wheel: its card says what that edge means (w2a #30)
+  if (c.kind === 'space') {
+    const fresh = typeof document !== 'undefined' && !!document.querySelector(`[data-slot="${c.key}"].fresh`);
+    return <SpaceCard state={state} me={me} spaceKey={c.key} optionFor={optionFor} onPick={pick} pinned={c.pinned} past={c.past} fresh={fresh} />;
+  }
   if (c.kind === 'plaque') return <StandingsCard state={state} qid={c.qid} meId={me} />;
   if (c.kind === 'seat') return <SeatCard state={state} pid={c.pid} meId={me} optionFor={optionFor} onPick={pick} />;
   if (c.kind === 'deck') return <DeckCard state={state} />;
@@ -272,14 +285,15 @@ function cardBody(c, state, me, optionFor, pick) {
 function Row({ k, children }) { return <div className="lt-yd-row"><span className="k">{k}</span><span className="v">{children}</span></div>; }
 
 /** A board space: full text, YOU GET (engine dry run), how it moves its contest, the cards it unlocks, Place here. */
-export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick, pinned = false }) {
+// past: named in the strip or the log (a move already made): the rule and who holds it, never today's "You'd get" (w2a #26)
+export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick, pinned = false, past = false, fresh = false }) {
   const [q, i] = spaceKey.split('-').map(Number);
   const qid = state.quadrants[q];
   const Q = quadrant(qid), a = Q.actions[i];
   const owner = state.slots[spaceKey];
   const opt = optionFor(`slot:${spaceKey}`) || optionFor(`squat:${spaceKey}`);
   const round = Math.max(1, state.round);
-  const open = a.ring <= round && (owner === undefined || opt);
+  const open = !past && a.ring <= round && (owner === undefined || opt);
   const viewer = me != null ? me : state.pending && state.pending.player;
   // the dry run is read from the cache (warmed in idle time); if it isn't there yet it fills in a moment later
   const pv = usePreview(state, open && viewer != null && !state.over ? viewer : null, q, i) || null;
@@ -302,10 +316,10 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
           : pv.swept.map((u, k) => <span key={u} data-swept={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}<small className="lt-swept-note"> back under the deck</small></Row> : null}
         {/* on a desktop the shop's own cards say it ("after Kickback" on each): only a pinned sheet (touch) lists them */}
         {unlocks.length && pinned ? <Row k="Then affordable">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
-        {owner !== undefined && <Row k="Taken">{state.players[owner].name}{opt ? ' — you can join it' : ''}</Row>}
+        {owner !== undefined && <Row k="Taken">{owner === viewer ? 'You' : state.players[owner].name}{fresh ? ', since your last turn (the dotted edge)' : ''}{opt ? ' — you can join it' : ''}</Row>}
         {a.ring > round && <Row k="Opens">round {roman(a.ring)}</Row>}
       </div>
-      {opt && pinned && onPick && <button type="button" className="lt-btn pri" data-place={opt.id} onClick={() => onPick(opt.id)}>{opt.squat ? 'Join here' : 'Place here'}</button>}
+      {opt && pinned && onPick && !past && <button type="button" className="lt-btn pri" data-place={opt.id} onClick={() => onPick(opt.id)}>{opt.squat ? 'Join here' : 'Place here'}</button>}
     </div>
   );
 }

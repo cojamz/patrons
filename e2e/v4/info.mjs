@@ -13,8 +13,8 @@
 //  (g) every member in a cult stands on a ground in its sphere's color, so it reads as that sphere;
 //  (h) the member deck heads the shop strip: after a refill its count is the engine's pile length (the saved game's
 //      state.pile), a refill deals the new card off it, and hovering it shows its card (count, colors adding up);
-//  (i) while you place, the space under the pointer ticks "✓ after <space>" on the shop cards it would make
-//      affordable (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands;
+//  (i) while you place, the space under the pointer brightens the shop cards it would make affordable, with no
+//      badge over their portraits (w2a #37) (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands;
 //  (k) a resource is the plain dot (Cory, 2026-10-15: simplify): every pip and every coin (setup, pay) draws the dot
 //      glyph, never a bare colored disc or an old shaped coin, and the setup picker's labels read on its paper (≥ 4.5);
 //  (l) who's winning and who's next, on the chairs (no score row, Cory 2026-10-15): every chair's total carries its
@@ -38,6 +38,7 @@ import { richSave } from './lib/rich-save.mjs';
 import { answerChoice } from './lib/answer.mjs';
 import { TEXT_CLIP } from './lib/textclip.mjs';
 import { LEGACY } from './lib/legacy.mjs';
+import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/info`;
 mkdirSync(SHOTS, { recursive: true });
@@ -450,22 +451,22 @@ try {
     await lab.close();
   }
 
-  // (i) the shop's "✓ after <space>" tick: hovering a space that makes a card affordable ticks that card
+  // (i) hovering a space that makes a card affordable brightens that card (no badge: w2a #37)
   {
     const { save, key, uids } = tickSave();
     const pg = await browser.newPage({ viewport: { width: 1270, height: 700 } });
     pg.on('pageerror', e => errors.push(`tick pageerror: ${e.message}`));
+    await seedSave(pg, save); // before the app runs (lib/seed.mjs)
     await pg.goto(`${base}/?botDelay=20&intro=0`);
-    await pg.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
-    await pg.reload();
     await pg.click('[data-home="resume"]');
     await pg.waitForSelector('.lt-shop .card[data-uid]');
     await pg.waitForTimeout(300);
     const spot = pg.locator(`[data-slot="${key}"] .base`).first();
     await ((await spot.count()) ? spot : pg.locator(`[data-slot="${key}"]`).first()).hover();
-    const ok = await pg.waitForFunction(us => us.some(u => { const t = document.querySelector(`.lt-shop .card[data-uid="${u}"] .tick`); return !!t && /^after /.test(t.textContent) && t.getBoundingClientRect().width > 0; }), uids, { timeout: 6000 }).then(() => true, () => false);
-    if (!ok) fail(`(i) hovering space ${key} never ticked "✓ after" on the card(s) it unlocks (${uids.join(', ')})`, 'tick');
-    else console.log(`info.mjs: space ${key} ticks card ${uids.join(', ')} "✓ after"`);
+    const ok = await pg.waitForFunction(us => us.some(u => { const c = document.querySelector(`.lt-shop .card[data-uid="${u}"]`); return !!c && c.hasAttribute('data-after') && !c.classList.contains('dim'); }), uids, { timeout: 6000 }).then(() => true, () => false);
+    if (!ok) fail(`(i) hovering space ${key} never brightened the card(s) it unlocks (${uids.join(', ')})`, 'tick');
+    else console.log(`info.mjs: space ${key} brightens card ${uids.join(', ')}`);
+    if (await pg.$('.lt-shop .card .tick')) fail('(i) an "after X" badge covers a shop portrait again (w2a #37)', 'tick');
     await pg.screenshot({ path: `${SHOTS}/07-shop-tick.png` });
     await pg.close();
   }
@@ -487,9 +488,8 @@ try {
     st.players[0].discount = 4;
     const pg = await browser.newPage({ viewport: { width: 1270, height: 700 } });
     pg.on('pageerror', e => errors.push(`cards pageerror: ${e.message}`));
+    await seedSave(pg, save); // before the app runs (lib/seed.mjs)
     await pg.goto(`${base}/?botDelay=20&intro=0`);
-    await pg.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
-    await pg.reload();
     await pg.waitForSelector('[data-home="resume"], .lt-shop .card[data-uid]');
     if (await pg.$('[data-home="resume"]')) await pg.click('[data-home="resume"]');
     await pg.waitForSelector('.lt-shop .card[data-uid]');

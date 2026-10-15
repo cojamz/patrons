@@ -16,6 +16,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { lateSave } from './lib/late-save.mjs';
+import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/reckoning';
 mkdirSync(SHOTS, { recursive: true });
@@ -159,9 +160,8 @@ try {
   {
     const p3 = await browser.newPage({ viewport: { width: 1270, height: 700 } });
     p3.on('pageerror', e => errors.push(`r7 pageerror: ${e.message}`));
+    await seedSave(p3, lateSave(21, 3)); // before the app runs (lib/seed.mjs)
     await p3.goto(`${base}/?botDelay=20&intro=0`);
-    await p3.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), lateSave(21, 3));
-    await p3.reload();
     await p3.click('[data-home="resume"]');
     await p3.waitForSelector('.lt-wheel .slot');
     const t3 = Date.now();

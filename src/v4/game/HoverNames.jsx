@@ -36,7 +36,7 @@ const locate = (key, on) => {
   for (const el of document.querySelectorAll(`[data-slot="${key}"], [data-cell="${key}"]`)) el.classList.toggle('hn-locate', on);
 };
 export function HoverName({ hover, target, children }) {
-  const show = (el, pinned) => (target.kind === 'space' ? hover.onSpaceHover(target.key, el, { pinned }) : hover.onCardHover(target.uid, el, { pinned }));
+  const show = (el, pinned) => (target.kind === 'space' ? hover.onSpaceHover(target.key, el, { pinned, past: true }) : hover.onCardHover(target.uid, el, { pinned }));
   const open = (el, pinned = false) => { if (target.kind === 'space') locate(target.key, !!el); show(el, pinned); };
   useEffect(() => () => { if (target.kind === 'space') locate(target.key, false); }, [target.kind, target.key]);
   const label = typeof children === 'string' ? children : undefined;

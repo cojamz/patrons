@@ -44,7 +44,9 @@ const ringsOf = look => (look === 'panels' ? RING_P : RING_S);
 const RIM = { r0: 180, r1: 200, r: 190 }; // the rim band: each quadrant's rule, engraved
 // the rim's hover/tap target: from just outside ring I's sockets to well past the paper's edge (it wins over any space)
 const RIM_HIT = { r0: 181, r1: 216 };
-const CX = 200, CY = 200, VB0 = -26, VBS = 452;
+// the board's square: the disc (r 200) and a thin margin for its knurled edge (w2a E9: the old 26-unit margin left dead
+// wood around the wheel while the seats were cramped; the rim's leaders now sit inside the band)
+const CX = 200, CY = 200, VB0 = -8, VBS = 416;
 const qCenter = q => 180 + q * 90;
 const norm = a => ((a % 360) + 540) % 360 - 180;
 function polar(a, r) { const t = (a - 90) * Math.PI / 180; return [CX + r * Math.cos(t), CY + r * Math.sin(t)]; }
@@ -571,9 +573,9 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const tb = (st && st.tiebreak) || sc.tiebreak || null;
     const top = Math.abs(norm(qCenter(q) + rot)) < 90;
     const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;
-    const room = (2 * arcHalf * Math.PI / 180) * rr - 18; // the arc, less a little air at each end
+    const room = (2 * arcHalf * Math.PI / 180) * rr - 26; // the arc, less air at each end: clear of the dividers (w2a #52)
     // the follower mark, then the leaders' emojis, per unit of font size
-    const tailK = RIM_MARK + (leaders.length ? 0.45 + 1.55 * leaders.length : 0);
+    const tailK = RIM_MARK + (leaders.length ? 0.45 + 1.35 * leaders.length : 0);
     const head = `${rule}${prize}`;
     const base = rimWidth(head, 700, 0), n = collapse(head).length;
     const tieW = t => (t ? rimWidth(`  ·  ties: ${t}`, 600, 0.04) : 0);
@@ -603,9 +605,9 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     }
     const top = Math.abs(norm(qCenter(q) + rot)) < 90;
     const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;
-    const room = (2 * arcHalf * Math.PI / 180) * rr - 18;
+    const room = (2 * arcHalf * Math.PI / 180) * rr - 26;
     const lineK = runs.reduce((a, r) => a + r.gap + r.w, 0);
-    const tailK = RIM_MARK + (leaders.length ? 0.45 + 1.55 * leaders.length : 0);
+    const tailK = RIM_MARK + (leaders.length ? 0.45 + 1.35 * leaders.length : 0);
     const font = Math.max(9, Math.min(rimFont, room / (lineK + tailK)));
     let at = 0;
     for (const r of runs) { at += r.gap * font; r.s = at; at += r.w * font; }
@@ -697,7 +699,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const lab = panels ? rimRuns(qid, q, leaders) : rimLabel(qid, q, leaders);
     const rr = lab.rr, F = lab.font, textW = lab.textW;
     const arcLen = (2 * arcHalf * Math.PI / 180) * rr;
-    const EM = F * 1.55; // one emoji's room on the line
+    const EM = F * 1.35; // one emoji's room on the line
     const tail = F * RIM_MARK + (leaders.length ? F * 0.45 + leaders.length * EM : 0);
     const startS = Math.max(0, (arcLen - textW - tail) / 2);
     paper.push(<path key={`ra${q}`} id={`rim-arc-${q}`} d={textArc(c, arcHalf, rr, rot)} fill="none" />);
@@ -761,7 +763,8 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       const deg = (sAt / rr) * 180 / Math.PI;
       const a = lab.top ? c - arcHalf + deg : c + arcHalf - deg;
       const [ex, ey] = polar(a, rr);
-      const cap = F * 1.7; // the emoji art has a margin: this reads at cap height
+      // the band's own height (w2a #52: at 1.7 the leader rose past the rim's edge and onto the divider)
+      const cap = F * 1.35;
       paper.push(
         <g key={`re${q}-${id}`} className={`rim-emoji${lit}`} data-rim-leader={id} transform={`translate(${ex.toFixed(2)} ${ey.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap * 0.82).toFixed(2)}) scale(${(cap / art.size).toFixed(4)})`}>
           <title>{`${state.players[id].name} leads`}</title>
@@ -922,7 +925,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   return (
     <div className="wheel-wrap" data-spaces={look} data-face={custom ? look : undefined}>
       <div className="stage" ref={stage} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ '--wheel-px': `${Math.round(boardPx)}px`, '--px': (1 / (scale || 1)).toFixed(4) }}>
-        <svg viewBox="-26 -26 452 452" role="group" aria-label="Board" className={`wheel-paper${late ? ' late' : ''}`}>
+        <svg viewBox={`${VB0} ${VB0} ${VBS} ${VBS}`} role="group" aria-label="Board" className={`wheel-paper${late ? ' late' : ''}`}>
           <defs>
             <radialGradient id="ltPaper" cx="50%" cy="45%" r="60%"><stop offset="0" stopColor="var(--paper)" /><stop offset=".8" stopColor="var(--paper-2)" /><stop offset="1" stopColor="var(--paper-3)" /></radialGradient>
             <filter id="ltGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4" /></filter>
@@ -941,7 +944,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
           <span className="pips" aria-hidden="true">{[1, 2, 3].map(i => <i key={i} className={i <= state.round ? 'on' : ''} />)}</span>
         </div>
         {sockets}
-        <svg viewBox="-26 -26 452 452" className="rim-layer" role="group" aria-label="Contest standings">
+        <svg viewBox={`${VB0} ${VB0} ${VBS} ${VBS}`} className="rim-layer" role="group" aria-label="Contest standings">
           <g transform={`rotate(${rot} ${CX} ${CY})`}>{rimHits}</g>
         </svg>
         {caption && <div key={caption.n} className="caption" style={{ '--pc': playerColor(caption.pid) }} role="status"><i />{caption.text}</div>}

@@ -16,6 +16,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { snakeSave } from './lib/snake-save.mjs';
+import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/turnstory';
 mkdirSync(SHOTS, { recursive: true });
@@ -49,12 +50,7 @@ try {
   save.state.build = stamp; roundStart.state.build = stamp;
   // the save goes in before the app's own scripts run (a running game saves itself as its page goes, which would
   // write over a save put in from the page), once: later reloads keep whatever the game has become
-  await page.addInitScript(([v, rs]) => {
-    if (sessionStorage.getItem('turnstory.injected')) return;
-    localStorage.setItem('patrons.v4.local', JSON.stringify(v));
-    localStorage.setItem('patrons.v4.roundStart', JSON.stringify(rs));
-    sessionStorage.setItem('turnstory.injected', '1');
-  }, [save, roundStart]);
+  await seedSave(page, save, { roundStart }); // before the app runs, once per tab (lib/seed.mjs)
   await page.goto(`${base}/?botDelay=300&intro=0`);
   await page.waitForSelector('.lt-wheel, [data-home="resume"]');
   if (!(await page.$('.lt-wheel'))) await page.click('[data-home="resume"]');

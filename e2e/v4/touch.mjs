@@ -22,6 +22,7 @@ import { SHOP_SIZE } from '../../src/engine/v4/index.js';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
+import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/touch-e2e';
 mkdirSync(SHOTS, { recursive: true });
@@ -160,7 +161,10 @@ async function setupPhase() {
   try {
     for (const how of ['click', 'tap']) {
       await p2.goto(`${base}/?botDelay=40&intro=0`); // intro=0: no first-game intro over the table (src/v4/Intro.jsx; hotseat.mjs gates the intro)
-      await p2.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
+      // a fresh tab: no saved game on the next load, written before the app runs (lib/seed.mjs), so the last game's
+      // save-on-leave can't bring it back
+      await p2.evaluate(() => sessionStorage.clear());
+      await seedSave(p2, null, { clear: true });
       await p2.goto(`${base}/?botDelay=40&intro=0`);
       const go = async sel => { const el = await p2.waitForSelector(sel); if (how === 'tap') { await el.scrollIntoViewIfNeeded(); await el.tap(); } else await el.click(); };
       await go('[data-home="local"]');

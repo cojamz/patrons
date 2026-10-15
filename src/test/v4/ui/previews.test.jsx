@@ -1,4 +1,4 @@
-// Previews on screen never stall: the shop's "✓ after <space>" tick appears when the space's dry run lands (the shop
+// Previews on screen never stall: the cards a hovered space would unlock brighten when the space's dry run lands (the shop
 // subscribes to the preview store), and a preview worker that fails or goes silent hands its work to the main thread
 // (never an endless "You'd get: …").
 import { describe, it, expect, afterEach, vi } from 'vitest';
@@ -13,7 +13,7 @@ const scene = (() => { for (let k = 4; k < 24; k++) { const sc = tickScene(k); i
 const fresh = () => ({ ...scene.state }); // a new state object: nothing cached for it yet
 
 describe('previews reach the screen', () => {
-  it('the shop ticks the card a hovered space unlocks once the preview lands', () => {
+  it('the card a hovered space unlocks brightens once the preview lands (no badge over its portrait: w2a #37)', () => {
     expect(scene).not.toBeNull();
     vi.useFakeTimers();
     const s = fresh();
@@ -22,11 +22,12 @@ describe('previews reach the screen', () => {
     const el = document.createElement('div');
     act(() => { hover.onSpaceHover(scene.key, el); });
     expect(peekPreview(s, 0, ...scene.key.split('-').map(Number))).toBeUndefined(); // not there yet: asked for, not computed
-    expect(container.querySelectorAll('.lt-card .tick').length).toBe(0);
+    expect(container.querySelectorAll('.lt-card[data-after]').length).toBe(0);
     act(() => { vi.advanceTimersByTime(50); });
-    const ticked = [...container.querySelectorAll('.lt-card')].filter(c => c.querySelector('.tick')).map(c => Number(c.dataset.uid));
-    expect(ticked).toEqual(expect.arrayContaining(scene.uids));
-    expect(container.querySelector('.lt-card .tick').textContent).toMatch(/^after /); // words, no ✓ (design pod)
+    const lit = [...container.querySelectorAll('.lt-card[data-after]')];
+    expect(lit.map(c => Number(c.dataset.uid))).toEqual(expect.arrayContaining(scene.uids));
+    expect(lit.every(c => !c.classList.contains('dim'))).toBe(true);
+    expect(container.querySelectorAll('.lt-card .tick').length).toBe(0); // brightened, never badged
     hover.dispose();
   });
 

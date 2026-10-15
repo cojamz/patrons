@@ -388,7 +388,8 @@ export function Popover({ anchor, onClose, children, float = false, beside = nul
     if (beside) {
       const b = beside.getBoundingClientRect();
       const left = b.right + 8 + w <= innerWidth - 8 ? b.right + 8 : b.left - 8 - w >= 8 ? b.left - 8 - w : null;
-      if (left != null) { fitted.current = false; setPos({ left, width: w, top: Math.max(8, a.top - 16) }); return; }
+      // its nub points back at the member across the seat (w2a #14: it read as opening far from the pointer)
+      if (left != null) { fitted.current = false; setPos({ left, width: w, top: Math.max(8, a.top - 16), nub: left > a.left ? 'right' : 'left', mid: a.top + a.height / 2 }); return; }
     }
     const left = Math.max(12, Math.min(innerWidth - w - 12, a.left + a.width / 2 - w / 2));
     // the side with more room: a member in a bottom chair opens above it, one up top opens below (then slid on screen)
@@ -431,7 +432,10 @@ export function Popover({ anchor, onClose, children, float = false, beside = nul
       </>,
     );
   }
-  return out(<div className="popover" ref={box} role="dialog" style={pos}>{children}</div>);
+  const { nub, mid, ...style } = pos;
+  const nubAt = nub && typeof style.top === 'number' ? Math.round(Math.max(14, mid - style.top)) : null;
+  return out(<div className={`popover${nub ? ' beside' : ''}`} ref={box} role="dialog" style={style}>
+    {nubAt != null && <span className={`pop-nub ${nub}`} aria-hidden="true" style={{ top: nubAt }} />}{children}</div>);
 }
 
 /** A member card face: color band, sphere glyph, name, worth, ability and list cost. */

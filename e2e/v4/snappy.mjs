@@ -16,6 +16,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { richSave } from './lib/rich-save.mjs';
+import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/snappy';
 mkdirSync(SHOTS, { recursive: true });
@@ -39,15 +40,14 @@ const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromi
 const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
 const page = await ctx.newPage();
 page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
+await seedSave(page, richSave()); // before the app runs (lib/seed.mjs)
 await page.goto(`${base}/?intro=0`);
-await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), richSave());
-await page.reload();
 // the saved game (P1 about to place); a dev server whose rules hash went stale sets it aside: then a fresh game,
 // picking the starting resources until a space lights
 const resume = await page.waitForSelector('[data-home="resume"]', { timeout: 8000 }).catch(() => null);
 if (resume) await resume.click();
 else {
-  await page.evaluate(() => localStorage.clear());
+  await seedSave(page, null, { clear: true }); // no saved game on the next load (lib/seed.mjs)
   await page.goto(`${base}/?intro=0`);
   await page.click('[data-home="local"]');
   await page.click('[data-start]');
@@ -218,9 +218,8 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
 async function freshPage(query) {
   const pg = await ctx.newPage();
   pg.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
+  await seedSave(pg, richSave()); // before the app runs (lib/seed.mjs)
   await pg.goto(`${base}/?intro=0&${query}`);
-  await pg.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), richSave());
-  await pg.reload();
   const r = await pg.waitForSelector('[data-home="resume"]', { timeout: 15000 }).catch(() => null);
   if (!r) { await pg.close(); return null; }
   await r.click();

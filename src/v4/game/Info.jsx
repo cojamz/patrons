@@ -114,7 +114,9 @@ export function MemberCard({ state, uid, def: d0 = null, me = null }) {
   const owner = uid != null ? state.players.find(p => p.members.includes(uid)) : null;
   const card = uid != null ? state.cards[uid] : null;
   const where = uid == null ? null : owner ? null : state.shop.includes(uid) ? 'In the shop' : 'In the pile';
-  const ability = String(d.text || '').replace(/^Worth \d+ followers?\.\s*/i, '').replace(/^No effect\.?$/i, '').trim();
+  // "Free. No effect." is no ability too (its cost line already says free)
+  const ability = String(d.text || '').replace(/^Worth \d+ followers?\.\s*/i, '').replace(/^(Free\.\s*)?No effect\.?$/i, '').trim();
+  const worth = d.f != null ? d.f : 1;
   const sphere = onTable(state, d) ? (() => { try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } })() : 'colorless';
   // the quiet live line: what you're short of, in dots (Cory: "need N" never shouts), from the engine's one price rule
   let short = null;
@@ -143,7 +145,8 @@ export function MemberCard({ state, uid, def: d0 = null, me = null }) {
         </span>
       </div>
       {/* the worth is already up top: the sentence is what it does, and a card that only counts has none */}
-      {ability ? <p className="mc-text"><CardText text={ability} /></p> : null}
+      {/* a member with no ability says so, never an empty card (w2a #36: Twins and Intern showed only a header) */}
+      {ability ? <p className="mc-text"><CardText text={ability} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
       {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
       {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used ? ' · used' : ''}</small>}
       {pays ? <small className="mc-live" data-pays={pays === 'choose' ? 'choose' : 'once'}>{pays === 'choose' ? 'Choose how to pay' : <>Pays <CostDots parts={pays} /></>}</small>

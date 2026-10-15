@@ -1,6 +1,6 @@
 // The Lamplit shop: ten cream cards (5×2 on a laptop, a swipe row on a phone) and one quiet follower-rate line.
 // The member deck (face down, its count) heads the strip (MemberDeck.jsx). A card: timing tag, pixel figure, name, cost as shapes, worth. While placing, cards you can't
-// afford are dim and a "✓ after X" tick marks the ones the space under your pointer would unlock (engine dry run).
+// afford are dim, and the ones the space under your pointer would unlock brighten (engine dry run).
 // While buying, the figure gives way to the card's text; hover shows what you'd pay. On touch a tap opens the card
 // as a sheet with Recruit (reading a card never recruits it); with a mouse a click on an affordable card recruits.
 import { memo, useLayoutEffect, useRef, useState } from 'react';
@@ -86,8 +86,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
     seenShop.current = new Set(state.shop);
   }, [state.shop]);
   const fresh = uid => performance.now() - (arrived.current.get(uid) ?? -1e9) < 500;
-  // the "✓ after X" ticks for the space under the pointer are ShopTicks' (below): a hover never re-renders the shop
-  const after = null, unlocked = [];
+  // the cards the space under the pointer would unlock brighten in ShopTicks (below): a hover never re-renders the shop
   const pileOpts = buying ? pend.options.filter(o => o.kind === 'card' && o.fromPile).map(o => o.uid) : [];
   // a pick from the top of the pile (Talent Scout): the strip becomes a tray of those 5, in pile order; what you can't
   // pay for recedes (dialogs pod, wave-2 tester: one text chip, the other four never shown)
@@ -118,10 +117,9 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
           const d = cardDef(state, uid);
           const opt = optionFor(`card:${uid}`);
           const can = viewer ? !!paymentPlan(state, viewer, uid) : false;
-          const tick = unlocked.includes(uid);
           // buying: the lamp lights only what you can recruit, the rest recede (Cory); placing: what you can't
           // afford yet is quieter, except a card the space under your pointer would unlock
-          const dim = viewer && (((buying || picking) && !opt) || (!buying && !picking && !can && !tick));
+          const dim = viewer && (((buying || picking) && !opt) || (!buying && !picking && !can));
           const lit = (buying || picking) && !!opt;
           const parts = costParts(d, state.resources);
           const fromPile = !state.shop.includes(uid);
@@ -150,7 +148,6 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                 {/* no "need N" on the face (Cory: "the shouting 'need N' goes"; grammar: what you can't afford is the card
                     fading, not text). What you're short of is the hover's one quiet line. */}
                 {fromPile && !tray && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
-                {tick && <span className="tick" title={`You could afford it after ${after}`}>after {after}</span>}
               </span>
               <span className="nm">{breakable(d.name)}</span>
               <span className="ft">
@@ -172,10 +169,9 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
 }
 
 /**
- * "✓ after X" on the cards the space under the pointer would unlock (no tick a choice might not give). It subscribes to
+ * The cards the space under the pointer would unlock brighten (none a choice might not give). It subscribes to
  * the hover and that space's preview (the cache, or the worker's answer the moment it lands) and marks those cards in
- * the DOM, as useCopyTargets lights spaces: a hover renders this alone, never the shop (perf, 2026-10-15). The tag is
- * the tick the card itself used to render, and a card it would unlock isn't quiet.
+ * the DOM, as useCopyTargets lights spaces: a hover renders this alone, never the shop (perf, 2026-10-15).
  */
 function ShopTicks({ state, viewer, placing, hover, rowRef }) {
   const space = useHoverSpace(hover);
@@ -192,20 +188,13 @@ function ShopTicks({ state, viewer, placing, hover, rowRef }) {
       const el = row.querySelector(`[data-uid="${uid}"]`);
       if (!el) continue;
       const was = el.className;
+      // the card brightens, nothing more: an "after X" badge over its portrait hid the picture (w2a #37)
       el.classList.remove('dim');
-      const art = el.querySelector('.art');
-      let tag = null;
-      if (art) {
-        tag = document.createElement('span');
-        tag.className = 'tick';
-        tag.title = `You could afford it after ${after}`;
-        tag.textContent = `after ${after}`; // words, not a ✓ (grammar: two marks only)
-        art.appendChild(tag);
-      }
-      done.push({ el, was, now: el.className, tag });
+      el.setAttribute('data-after', after);
+      done.push({ el, was, now: el.className });
     }
     // put back only what React hasn't redrawn since (a card it re-rendered keeps React's own class)
-    return () => { for (const d of done) { if (d.tag) d.tag.remove(); if (d.el.className === d.now) d.el.className = d.was; } };
+    return () => { for (const d of done) { d.el.removeAttribute('data-after'); if (d.el.className === d.now) d.el.className = d.was; } };
   }, [sig, state]); // eslint-disable-line react-hooks/exhaustive-deps
   return null;
 }

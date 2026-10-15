@@ -15,6 +15,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { richSave } from './lib/rich-save.mjs';
+import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/motion';
 mkdirSync(SHOTS, { recursive: true });
@@ -61,9 +62,8 @@ async function resumeRich(prof) {
   const ctx = await browser.newContext(prof.ctx);
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(`[${prof.tag}] pageerror: ${e.message}`));
+  await seedSave(page, richSave()); // before the app runs (lib/seed.mjs)
   await page.goto(`${base}/`);
-  await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), richSave());
-  await page.reload();
   await page.waitForSelector('[data-home="resume"]');
   const go = el => (prof.ctx.hasTouch ? el.tap() : el.click());
   await go(await page.$('[data-home="resume"]'));

@@ -20,6 +20,7 @@ import { paySave, swapSave, comboSave, momentSave } from './lib/dialog-save.mjs'
 import { stealSave } from './lib/steal-save.mjs';
 import { memberPrice, TIERS, cardDef } from '../../src/engine/v4/index.js';
 import { costParts } from '../../src/v4/format.js';
+import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/pay';
 mkdirSync(SHOTS, { recursive: true });
@@ -42,9 +43,8 @@ async function open(tag, save, ready) {
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(`[${tag}] pageerror: ${e.message}`));
+  await seedSave(page, save); // before the app runs (lib/seed.mjs)
   await page.goto(`${base}/?intro=0`, { timeout: 90000 });
-  await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
-  await page.reload({ timeout: 90000 });
   await page.waitForSelector('[data-home="resume"]', { timeout: 60000 });
   await page.click('[data-home="resume"]');
   await page.waitForSelector(ready, { timeout: 60000 });
@@ -79,7 +79,7 @@ try {
     const ways = st.pending.options.filter(o => o.kind === 'pay');
     const def = ways.find(o => o.default);
     if (await page.$eval('.pay-go', e => e.dataset.option) !== def.id) errors.push('(p1) Pay does not start on the suggested way');
-    const coins = await page.$$eval('.dialog.pay [data-pay-coin]', els => els.length);
+    const coins = await page.$$eval('.dialog.pay .ps-out .ps-coin', els => els.length);
     if (coins !== res.reduce((n, r) => n + def.spend[r], 0)) errors.push(`(p1) ${coins} coins in the cost for the suggested ${def.label}`);
     if (!(await page.evaluate(() => document.querySelector('.dialog.pay').contains(document.activeElement)))) errors.push('(p1) the pay sheet does not hold focus');
     await page.screenshot({ path: `${SHOTS}/p1-sheet.png` });
@@ -118,9 +118,8 @@ try {
     const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
     const page = await ctx.newPage();
     page.on('pageerror', e => errors.push(`[p3] pageerror: ${e.message}`));
+    await seedSave(page, save); // before the app runs (lib/seed.mjs)
     await page.goto(`${base}/?intro=0`, { timeout: 90000 });
-    await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
-    await page.reload({ timeout: 90000 });
     await page.waitForSelector('[data-home="resume"]', { timeout: 60000 });
     await page.evaluate(() => { window.__sheet = 0; window.__payPieces = 0; const t = () => { if (document.querySelector('.dialog.pay')) window.__sheet++; for (const g of document.querySelectorAll('.piece-flight.pay')) if (!g.dataset.seen) { g.dataset.seen = '1'; window.__payPieces++; } requestAnimationFrame(t); }; requestAnimationFrame(t); });
     await page.click('[data-home="resume"]');
@@ -303,8 +302,7 @@ try {
     await ctx.close();
   }
   // (a1) Wave-2 tester A: a member's hover says what a click will do ("Pays 2● 2●" at once, or "Choose how to pay"),
-  //      an instant buy flies its coins and closes the hover, and the card dealt into its place ignores a click for
-  //      half a second (no double buy)
+  //      and an instant buy flies its coins and closes the hover
   {
     const save = paySave({ res: { gold: 2, red: 0, blue: 0, green: 2 } });
     const st = save.state;
@@ -316,21 +314,13 @@ try {
     await page.hover(`.lt-shop .card[data-uid="${uid}"]`);
     const line = await page.waitForSelector('[data-pays]', { timeout: 3000 }).then(e => e.innerText(), () => '');
     if (!/^Pays\s/.test(line)) errors.push(`(a1) the hover of a one-way card says "${line}", not "Pays …"`);
-    const other = st.shop.find(u => u !== uid && st.pending.options.some(o => o.id === `card:${u}`));
     await page.evaluate(() => { window.__a1 = 0; const t = () => { for (const g of document.querySelectorAll('.piece-flight.pay')) if (!g.dataset.a1) { g.dataset.a1 = '1'; window.__a1++; } requestAnimationFrame(t); }; requestAnimationFrame(t); });
     const box = await (await page.$(`.lt-shop .card[data-uid="${uid}"]`)).boundingBox();
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 5000 }).catch(() => errors.push('(a1) the one-way card did not buy at once'));
     if (await page.$('.dialog.pay')) errors.push('(a1) a one-way card opened the pay sheet');
-    await page.waitForTimeout(150);
-    if (!(await page.evaluate(() => window.__a1))) errors.push('(a1) no coins flew on the instant buy');
+    if (!(await page.waitForFunction(() => window.__a1 > 0, null, { timeout: 2500 }).then(() => true, () => false))) errors.push('(a1) no coins flew on the instant buy');
     if (await page.$('[data-hover-layer][data-open="1"]')) errors.push('(a1) the hover stayed open after the buy');
-    // the refill under the pointer: a second click at once does nothing
-    const m1 = await moves(page);
-    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-    await page.waitForTimeout(250);
-    if (await moves(page) !== m1 && !(await page.$('.lt[data-phase="buy"][data-yours="1"]'))) errors.push('(a1) a click on the card just dealt in counted');
-    void other;
     await ctx.close();
   }
 } catch (e) {

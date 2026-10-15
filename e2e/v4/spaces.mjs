@@ -23,6 +23,7 @@ import { createServer } from 'node:net';
 import { createGame, applyMove, chooseBotMove, quadrant } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { buildStamp } from './lib/stamp.mjs';
+import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/spaces';
 mkdirSync(SHOTS, { recursive: true });
@@ -122,7 +123,7 @@ const RIM = () => {
 const FLOOR = () => {
   const out = [];
   const stage = document.querySelector('.lt-wheel .stage');
-  const k = stage.getBoundingClientRect().width / 452;
+  const k = stage.getBoundingClientRect().width / stage.querySelector('svg.wheel-paper').viewBox.baseVal.width;
   const visible = e => { for (let a = e; a && a !== stage; a = a.parentElement) { const s = getComputedStyle(a); if (s.display === 'none' || s.visibility === 'hidden') return false; } return true; };
   for (const e of stage.querySelectorAll('*')) {
     if (e instanceof SVGElement) continue;
@@ -172,7 +173,8 @@ const INSIDE = () => {
   const out = [];
   const stage = document.querySelector('.lt-wheel .stage');
   const sb = stage.getBoundingClientRect();
-  const k = sb.width / 452, cx = sb.left + 226 * k, cy = sb.top + 226 * k;
+  const vb = stage.querySelector('svg.wheel-paper').viewBox.baseVal; // the board's square: the disc's centre is (200, 200)
+  const k = sb.width / vb.width, cx = sb.left + (200 - vb.x) * k, cy = sb.top + (200 - vb.y) * k;
   const hub = Number(document.querySelector('.lt-wheel svg .hub').getAttribute('r')) * k, rim = 180 * k;
   const all = [];
   for (const s of document.querySelectorAll('.lt-wheel .slot[data-slot]')) {
@@ -244,9 +246,8 @@ try {
     await page.addInitScript(WATCH);
     const shot = n => page.screenshot({ path: `${SHOTS}/${pass.look}${pass.quadrants ? `-${pass.quadrants[0]}` : ''}${pass.round ? `-r${pass.round}` : ''}-${n}.png` }).catch(() => {});
     const q = `?botDelay=${pass.play ? 200 : 40}${pass.look === 'sockets' ? '&spaces=sockets' : ''}`;
+    await seedSave(page, spaceSave(pass.quadrants, pass.round || 1)); // before the app runs (lib/seed.mjs)
     await page.goto(`${base}/${q}`);
-    await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), spaceSave(pass.quadrants, pass.round || 1));
-    await page.reload();
     await page.click('[data-home="resume"]');
     await page.waitForTimeout(400);
     { const skip = await page.$('[data-intro-skip]'); if (skip) await skip.click(); }

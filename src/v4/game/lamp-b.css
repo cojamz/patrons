@@ -42,8 +42,7 @@
 .lt-cost{display:inline-flex;gap:3px;align-items:center}
 .lt-card .lt-res{margin-right:0;gap:1px}
 .lt-card.dim{filter:brightness(.72) saturate(.75)}
-.lt-card .tick,.lt-card .need{position:absolute;top:2px;right:2px;font-size:9px;font-weight:700;border-radius:6px;padding:0 4px;line-height:13px;white-space:nowrap;max-width:calc(100% - 4px);overflow:hidden;text-overflow:ellipsis}
-.lt-card .tick{color:#3e7a2c;background:#eef6d9;box-shadow:0 0 0 1px rgba(62,122,44,.35)}
+.lt-card .need{position:absolute;top:2px;right:2px;font-size:9px;font-weight:700;border-radius:6px;padding:0 4px;line-height:13px;white-space:nowrap;max-width:calc(100% - 4px);overflow:hidden;text-overflow:ellipsis}
 .lt-card .need{color:var(--paper-ink);background:rgba(244,235,215,.92);box-shadow:0 0 0 1px rgba(42,31,23,.2)}
 .lt-shop-head{display:flex;align-items:center;gap:14px;margin:0 0 5px;min-width:0}
 .lt-shop-head .lt-h{margin:0}
@@ -200,6 +199,7 @@
 .lt-cult-seat .cs-colors i{display:block;height:7px;width:calc(var(--n) * 7px);background:radial-gradient(circle at 3.5px 3.5px,var(--c) 2.6px,transparent 3.1px) 0 0/7px 7px repeat-x}
 /* what its members make each round, beside what it holds now */
 .lt-cult-seat .cs-income{display:inline-flex;align-items:center;gap:5px;margin-left:auto;font-size:12px;font-weight:700;color:var(--cream-2);white-space:nowrap;cursor:help}
+.lt-cult-seat .cs-income > .hitbox{display:none} /* its own line only: a 44px box would cover the figures above it */
 .lt-cult-seat .cs-income small{font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--cream-3)}
 .lt-cult-seat .cs-inc{display:inline-flex;align-items:center;gap:1px}
 .lt-cult-seat .cs-inc .follower-mark{color:var(--cream-2)}
@@ -383,7 +383,6 @@
 .lt-card .need .nd{display:inline-flex;align-items:center;margin-left:2px}
 .lt-card .need b{font-weight:800}
 .lt-card .need .pip{width:.9em;height:.9em}
-.lt-card .tick{font-size:9px;line-height:12px}
 
 /* follower buys: the same paper and grammar ("2◐ → 1👤"), "8 left" quiet */
 .lt-rates .lt-rate{border-radius:var(--corner,8px);background:var(--pl-paper,#f2e8d2);color:var(--pl-ink,#2b2018);box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
@@ -493,3 +492,6 @@
 .lt-hover .lt-nub.left{left:100%;transform:translate(-50%,-50%) rotate(135deg)}
 .lt-hover .lt-nub.above{top:100%;transform:translate(-50%,-50%) rotate(-135deg)}
 .lt-hover .lt-nub.below{top:0;transform:translate(-50%,-50%) rotate(45deg)}
+/* a seat member's card opens beside the whole seat: its nub points back at the member (w2a #14) */
+.popover.beside > .pop-nub{position:absolute;left:0;width:12px;height:12px;background:var(--paper-lit,#fbf6ea);border-radius:2px;clip-path:polygon(0 0,100% 0,0 100%);transform:translate(-50%,-50%) rotate(-45deg);pointer-events:none}
+.popover.beside > .pop-nub.left{left:100%;transform:translate(-50%,-50%) rotate(135deg)}

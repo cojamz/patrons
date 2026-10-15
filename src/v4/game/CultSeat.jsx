@@ -17,8 +17,9 @@ import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { Minion } from '../art/Leader.jsx';
 import { turnPlaces } from './seats.js';
 import { seatRanks } from './RankRow.jsx';
-import { incomeOf } from './build.js';
+import { incomeOf, memberGroups } from './build.js';
 import Tick from './Tick.jsx';
+import { Rich } from './Rich.jsx';
 import { MO } from '../motion.js';
 import './lamp-b.css';
 
@@ -53,6 +54,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // its build at one glance: its members (grouped by color) and what they hand it each round (the engine's round start)
   const income = incomeOf(state, pid);
   const incomeParts = income ? Object.entries(income.res).filter(([, n]) => n > 0) : [];
+  const incomeFrom = incomeParts.length ? (memberGroups(state, p).find(g => g.label === 'Each round') || { items: [] }).items.map(x => (x.n > 1 ? `${x.name} ×${x.n}` : x.name)) : [];
   const incomeWords = incomeParts.map(([r, n]) => `+${n} ${r}`).concat(income && income.followers > 0 ? [`+${income.followers} follower${income.followers === 1 ? '' : 's'}`] : []);
   // member figures shown before "+N": one row beside the "each round" line, so every chair keeps one fixed height
   // (the seat column is narrower now: six figures ran under "each round +3●"; each income part takes a figure's room)
@@ -72,21 +74,27 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const shown = groups.filter(g => keep.includes(g));
   const rest = groups.filter(g => !shown.includes(g)).reduce((s, g) => s + g.count, 0);
   const openSeat = (e, pinned) => hover && hover.onSeatHover(pid, e.currentTarget, { pinned });
+  // the turn-order rail sits in the head but outside the seat's box: pointing at it explains the turn order, not the
+  // seat (w2a #28: it opened your seat list 296px away); crossing between the two swaps which one is open
+  const onRail = e => !!(e.target && e.target.closest && e.target.closest('.cs-order'));
+  const railIn = useRef(false);
   return (
     <section className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
       aria-label={`${mine ? 'Your cult' : `${p.name}'s cult`}: ${f} follower${f === 1 ? '' : 's'}, ${p.members.length} member${p.members.length === 1 ? '' : 's'}, ${p.left} minion${p.left === 1 ? '' : 's'} to place${now ? ', their turn' : ''}`}>
       <header className="cs-head" role="button" tabIndex={0} aria-haspopup="dialog" data-hint={`${p.name}: ${f} follower${f === 1 ? '' : 's'}. Show their cult.`}
-        onPointerEnter={e => { if (realHover(e)) openSeat(e, false); }}
-        onPointerLeave={e => { if (e.pointerType === 'mouse' && hover) hover.onSeatHover(pid, null); }}
+        onPointerEnter={e => { railIn.current = onRail(e); if (realHover(e) && !railIn.current) openSeat(e, false); }}
+        onPointerMove={e => { const r = onRail(e); if (r === railIn.current || !realHover(e) || !hover) return; railIn.current = r; if (r) hover.onSeatHover(pid, null); else openSeat(e, false); }}
+        onPointerLeave={e => { railIn.current = false; if (e.pointerType === 'mouse' && hover) hover.onSeatHover(pid, null); }}
         onClick={e => openSeat(e, true)}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSeat(e, true); } }}>
         <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 40 : 32} orbit={false} face={!mine} /></span>
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
           {/* its place in the turns, said like the plate's "You  place a minion"; the rail beside the column marks it too */}
-          {place && <span className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined} title={place.title}>
+          {place && <Tip className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined}
+            label={place.title} content={() => <div className="pop-card gloss"><b>Turn order: {place.text}</b><span>{place.title}</span></div>}>
             <span className="co-t">{place.label}</span>{place.twice && <b className="co-x">twice</b>}
-          </span>}
+          </Tip>}
         </span>
         <span className={`cs-total${rank && rank.lead ? ' lead' : ''}`} data-followers={f} data-rank={rank ? rank.place : undefined} title={rank ? rank.title : `${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
       </header>
@@ -136,11 +144,12 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
       {incomeWords.length > 0 && (
         <div className="cs-build">
           {incomeWords.length > 0 && (
-            <span className="cs-income" data-income={incomeWords.join(', ')} title={`Each round its members make ${incomeWords.join(', ')} (at the round's start)`}>
+            <Tip className="cs-income" data-income={incomeWords.join(', ')} label={`Each round its members make ${incomeWords.join(', ')}`}
+              content={() => <div className="pop-card gloss"><b>Each round</b><span>At the start of each round, {mine ? 'your' : `${p.name}’s`} members make <Rich text={incomeWords.join(' ')} />{incomeFrom.length ? ` (${incomeFrom.join(', ')})` : ''}.</span></div>}>
               <small>each round</small>
               {incomeParts.map(([r, n]) => <span key={r} className="cs-inc"><b className="num">+{n}</b><ResourceGlyph r={r} size={mine ? 13 : 11} n={n} /></span>)}
               {income.followers > 0 && <span className="cs-inc"><b className="num">+{income.followers}</b><Follower size={11} title="followers" /></span>}
-            </span>
+            </Tip>
           )}
         </div>
       )}

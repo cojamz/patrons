@@ -14,6 +14,7 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { richSave } from './lib/rich-save.mjs';
 import { answerChoice } from './lib/answer.mjs';
+import { seedSave } from './lib/seed.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/layout';
 mkdirSync(SHOTS, { recursive: true });
@@ -77,9 +78,8 @@ for (const size of [{ width: 1270, height: 700 }, { width: 900, height: 700 }, {
     if (rule) errors.push(`[${tag} ${step}] (l5) the table still shows a color rule: "${rule}"`);
   };
   try {
+    await seedSave(page, richSave()); // before the app runs (lib/seed.mjs)
     await page.goto(`${base}/`);
-    await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), richSave());
-    await page.reload();
     await page.click('[data-home="resume"]');
     await page.waitForSelector('.lt-shop .card');
     await page.waitForTimeout(500);
@@ -128,8 +128,9 @@ for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }])
     const r = await page.evaluate(() => {
       const st = document.querySelector('.lt-wheel .stage').getBoundingClientRect();
       const pk = document.querySelector('.prompt.choice.setup').getBoundingClientRect();
-      // the paper disc: radius 200 of the 452-unit board, centred in the stage
-      const cx = st.left + st.width / 2, cy = st.top + st.height / 2, rad = st.width * 200 / 452;
+      // the paper disc: radius 200 of the board's square (its viewBox), centred in the stage
+      const vb = document.querySelector('.lt-wheel svg.wheel-paper').viewBox.baseVal;
+      const cx = st.left + st.width / 2, cy = st.top + st.height / 2, rad = st.width * 200 / vb.width;
       const nx = Math.max(pk.left, Math.min(cx, pk.right)), ny = Math.max(pk.top, Math.min(cy, pk.bottom));
       return { gap: Math.round(Math.hypot(nx - cx, ny - cy) - rad), disc: [cy - rad, cy + rad].map(Math.round), h: innerHeight, size: Math.round(rad * 2) };
     });

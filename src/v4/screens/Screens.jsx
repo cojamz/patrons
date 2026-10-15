@@ -64,7 +64,7 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, la
         )}
         <button type="button" className={`btn big${saved ? '' : ' pri'}`} onClick={onLocal} data-home="local">{saved ? 'New game on this device' : 'Play on this device'}</button>
         <div className="online-box">
-          <label className="field"><span>Your name</span><input value={name} onChange={e => saveName(clip(e.target.value, NAME_MAX))} placeholder="Name" /><small className="count num">{graphemes(name)}/{NAME_MAX}</small></label>
+          <label className="field"><span>Your name</span><input value={name} onChange={e => saveName(clip(e.target.value, NAME_MAX))} placeholder="Name" />{graphemes(name) >= NAME_MAX - 3 && <small className="count num">{graphemes(name)}/{NAME_MAX}</small>}</label>
           <button type="button" className="btn big" disabled={!onlineReady || working} onClick={() => (name.trim() ? go(() => onHost(name.trim(), lastEmoji() || undefined)) : setErr('Enter a name.'))}>Host online game</button>
           <form className="join" onSubmit={e => { e.preventDefault(); if (!name.trim()) { setErr('Enter a name.'); return; } if (code.trim()) go(() => onJoin(code.trim().toUpperCase(), name.trim(), lastEmoji() || undefined)); }}>
             <input aria-label="Room code" value={code} maxLength={8} onChange={e => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="CODE" disabled={!onlineReady} />
@@ -200,7 +200,10 @@ export function LocalSetup({ initial, onStart, onBack }) {
     setSeats(settleEmojis(next));
     if (i === seats.findIndex(s => s.kind === 'human')) rememberEmoji(id);
   };
-  const holders = (i, kind) => new Map(seats.map((s, k) => [s, k]).filter(([s, k]) => k !== i && s.kind === kind && s.emoji).map(([s, k]) => [s.emoji, s.name.trim() || `Seat ${k + 1}`]));
+  const holders = (i, kind) => new Map(seats.map((s, k) => [s, k]).filter(([s, k]) => k !== i && s.kind === kind && s.emoji).map(([s, k]) => [s.emoji, s.name.trim() || `P${k + 1}`]));
+  // the seat's default name is a placeholder, never text in the box (w2a #48: typing gave "P1Wren"); left empty, it plays
+  // as that default
+  const named = () => seats.map((s, k) => ({ ...s, name: s.name.trim() || `P${k + 1}` }));
   return (
     <div className="app narrow">
       <div className="dialog page">
@@ -209,11 +212,12 @@ export function LocalSetup({ initial, onStart, onBack }) {
         {seats.map((s, i) => (
           <div className="seat" key={i} style={{ '--pc': PLAYER_COLORS[i] }} data-seat-row={i}>
             {s.kind === 'human'
-              ? <EmojiButton value={s.emoji} label={`${s.name.trim() || `Seat ${i + 1}`}’s emoji`} taken={holders(i, 'human')} bots={holders(i, 'bot')} onPick={id => pickEmoji(i, id)} />
+              ? <EmojiButton value={s.emoji} label={`${s.name.trim() || `P${i + 1}`}’s emoji`} taken={holders(i, 'human')} bots={holders(i, 'bot')} onPick={id => pickEmoji(i, id)} />
               : <EmojiFace id={s.kind === 'bot' ? s.emoji : null} title={s.kind === 'bot' ? `${emojiName(s.emoji)}: a random one for this bot. Pick it for a person and the bot takes another.` : null} />}
             <label className="namebox">
-              <input aria-label={`Seat ${i + 1} name`} value={s.name} disabled={s.kind === 'empty'} onChange={e => set(i, { name: clip(e.target.value, NAME_MAX) })} />
-              <small className={`count num${graphemes(s.name) >= NAME_MAX ? ' full' : ''}`} aria-hidden="true">{graphemes(s.name)}/{NAME_MAX}</small>
+              <input aria-label={`Seat ${i + 1} name`} value={s.name === `P${i + 1}` ? '' : s.name} placeholder={`P${i + 1}`} disabled={s.kind === 'empty'} onChange={e => set(i, { name: clip(e.target.value, NAME_MAX) })} />
+              {/* the count only near the limit (w2a #48: "4/14" was noise) */}
+              {graphemes(s.name) >= NAME_MAX - 3 && <small className={`count num${graphemes(s.name) >= NAME_MAX ? ' full' : ''}`} aria-hidden="true">{graphemes(s.name)}/{NAME_MAX}</small>}
             </label>
             <Seg label={`Seat ${i + 1}`} value={s.kind} options={KINDS} onChange={v => set(i, { kind: v })} />
           </div>
@@ -224,7 +228,7 @@ export function LocalSetup({ initial, onStart, onBack }) {
         {filled.length < 2 && <p className="hint warn">{GAME_NAME} needs at least 2 seats.</p>}
         <div className="row-btns">
           <button type="button" className="btn" onClick={onBack}>Back</button>
-          <button type="button" className="btn pri" data-start disabled={filled.length < 2 || !tableOk} onClick={() => onStart({ seats, speed, level, table })}>Start</button>
+          <button type="button" className="btn pri" data-start disabled={filled.length < 2 || !tableOk} onClick={() => onStart({ seats: named(), speed, level, table })}>Start</button>
         </div>
       </div>
     </div>
