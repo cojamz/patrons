@@ -350,11 +350,16 @@ function TurnCard({ card, root, state }) {
   const turnH = useRef(null), turnHOn = useRef(null);
   // the table says a card is up (data-turn-card: layout.css gives the story room), in place of a
   // `.app.game.lt:has(> .turn-card)` that re-styled the whole page on every change of the table's children
-  useLayoutEffect(() => holdFlag(root, 'turnCard'), [root]);
+  // (the table is the card's own parent: the `root` prop is read at render time and can still be null on the first
+  // render after a resume, which left the flag and --turn-h unset until the next step, seconds later, so the story and
+  // the card overlapped; design pod, 2026-10-15)
+  const tableOf = () => root || (box.current && box.current.parentElement);
+  useLayoutEffect(() => holdFlag(tableOf(), 'turnCard'), [root]); // eslint-disable-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
     const el = box.current;
     if (!el) return;
-    const pos = turnCardDock(card, root);
+    const table = tableOf();
+    const pos = turnCardDock(card, table);
     if (!pos) { el.style.display = 'none'; return; }
     const px = v => (v == null ? '' : `${v}px`);
     Object.assign(el.style, { display: '', left: px(pos.left), right: px(pos.right), top: px(pos.top), bottom: px(pos.bottom), width: px(pos.width), maxWidth: px(pos.width), transformOrigin: `${pos.ox} ${pos.oy}` });
@@ -368,7 +373,7 @@ function TurnCard({ card, root, state }) {
     const h = Math.ceil(el.offsetHeight) + 8;
     // written on the story itself, its only reader (layout.css): on the table, an inherited custom property re-styled all
     // ~5,000 elements of the page every time it changed (perf, 2026-10-15)
-    const story = root && root.querySelector(':scope > .lt-since');
+    const story = table && table.querySelector(':scope > .lt-since');
     if (story && (h !== turnH.current || turnHOn.current !== story)) { turnH.current = h; turnHOn.current = story; story.style.setProperty('--turn-h', `${h}px`); }
   }, [card.pid, card.n, card.text, root]);
   // at most a few lines, the rest summed up (every line stays in the strip's card and the log)

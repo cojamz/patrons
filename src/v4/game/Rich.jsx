@@ -66,7 +66,8 @@ export function Rich({ text, after = '' }) {
     }
     // a color that describes a member is a word, like the rim's "MOST BLUE" (Cory: "a dot is no substitute for the
     // word"): "a blue member", "non-gold member", "per blue face-up member"; a resource amount is the dot ("+3 gold")
-    if (w !== 'any' && (/non-$/.test(text.slice(Math.max(0, at - 4), at)) || /^\s+(face-up\s+|other\s+)?members?\b/.test((text.slice(at + w.length) + after).slice(0, 22)))) continue;
+    // a contest's name stays words too ("Most gold: P2 +2" in the log read "Most ●")
+    if (w !== 'any' && (/non-$/.test(text.slice(Math.max(0, at - 4), at)) || /\bMost $/.test(text.slice(Math.max(0, at - 5), at)) || /^\s+(face-up\s+|other\s+)?members?\b/.test((text.slice(at + w.length) + after).slice(0, 22)))) continue;
     lead(at, true);
     out.push(<Pip key={at} color={w} />);
     last = at + w.length;

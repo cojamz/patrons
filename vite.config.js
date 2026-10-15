@@ -16,4 +16,8 @@ export default defineConfig({
   plugins: [react()],
   // __V4_SRC__: a hash of the rules source, part of the content stamp (record.js), so effect changes refuse old rooms/saves
   define: { __V4_BUILD__: JSON.stringify(buildId()), __V4_SRC__: JSON.stringify(engineSourceHashSafe()) },
+  // agents' worktrees, frozen builds, build dirs and design notes are not app source: watching and dep-scanning them made a
+  // cold `vite` crawl for minutes (2026-10-15)
+  server: { watch: { ignored: ['**/.v4-wt/**', '**/.v4-panel/**', '**/.v4-build*/**', '**/.v4-perf/**', '**/design/**', '**/archive/**'] } },
+  optimizeDeps: { entries: ['index.html'] },
 })

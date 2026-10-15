@@ -43,6 +43,12 @@ describe('two symbols only, words for the rest (Cory, 2026-10-15: simplify)', ()
     expect(amts.some(a => a.querySelector('[data-pip="magenta"]') && a.textContent.endsWith(').'))).toBe(true);
   });
 
+  it('a contest\'s name keeps its color as a word ("Most gold: P2 +2", never "Most ●")', () => {
+    const { container } = render(<Rich text="Round I ends. Most gold: P2 +2 · gain 2 gold" />);
+    expect(container.textContent).toMatch(/Most gold: P2/);
+    expect(container.querySelectorAll('[data-pip="gold"]').length).toBe(1);
+  });
+
   it('the "any" dot puts each table color where its quadrant sits (q0 bottom, q1 left, q2 top, q3 right)', () => {
     expect(anyDotVars(['gold', 'red', 'blue', 'green'])).toEqual({ '--any-top': 'var(--blue)', '--any-right': 'var(--green)', '--any-bottom': 'var(--gold)', '--any-left': 'var(--red)' });
   });

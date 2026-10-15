@@ -291,3 +291,6 @@
   .lt-shop-cards[data-phase="reckon"] .lt-shop-main,.lt-shop-cards[data-phase="reckon"] .lt-rates{filter:brightness(.55) saturate(.7)}
 }
 
+/* the story's "N earlier" in its header, when the room holds only the newest line (SinceStrip `bare`) */
+.lt-since .since-head .since-more.in-head{margin-left:auto;font:inherit;font-size:11px;letter-spacing:.06em;color:var(--cream-3);background:none;border:0;padding:2px 4px;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
+

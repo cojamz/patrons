@@ -168,7 +168,7 @@ async function checkLitClicks(page) {
 // A press where a person would press: Playwright's click, else (it waits for two frames with the element standing still,
 // which a page drawing 2–3 frames a second while a card rises in can miss for seconds) the mouse at the element's middle,
 // when that point hits it (a hit-test, as a person's click would). Returns how it pressed, or null.
-async function pressLikeAPerson(el, timeout = 2500) {
+async function pressLikeAPerson(page, el, timeout = 2500) {
   try { await el.click({ timeout }); return 'click'; } catch { /* not steady yet: press where it stands */ }
   const at = await el.evaluate(e => {
     if (!e.isConnected) return null;
@@ -177,31 +177,39 @@ async function pressLikeAPerson(el, timeout = 2500) {
     return hit && (hit === e || e.contains(hit)) ? { x, y } : null;
   }).catch(() => null);
   if (!at) return null;
-  await el.page().mouse.click(at.x, at.y).catch(() => {});
+  await page.mouse.click(at.x, at.y).catch(() => {});
   return 'pressed at its middle';
 }
 const seen = new Map(); // page -> { key, at, waiting }: when this step appeared, and since when a move of ours is on its way
+const lastSaid = new Map(); // who -> what the driver last decided for that page, and when (for the failure report)
 async function stepFirstOption(page) {
   if (!page || page.isClosed()) return false;
   const who = nameOf(page);
+  const t0 = Date.now();
+  const r = await stepOn(page, who);
+  lastSaid.set(who, `${r.why} (${Date.now() - t0}ms, at ${((Date.now() - T0) / 1000).toFixed(1)}s)`);
+  return r.acted;
+}
+async function stepOn(page, who) {
+  const no = why => ({ acted: false, why }), yes = why => ({ acted: true, why });
   await checkLitClicks(page);
   // tabs of one context: only the front tab is "visible" (its animations and pacing run); bring each to the front
   if (shared) await page.bringToFront().catch(() => {});
   const next = await page.$('[data-next-round]');
-  if (next) { await next.click().catch(() => {}); act(who, 'next round'); return true; }
+  if (next) { await next.click().catch(() => {}); act(who, 'next round'); return yes('next round'); }
   // touch (and online) placement asks to confirm: "Place here"
   const place = await page.$('[data-place]');
   if (place) {
     const id = await place.getAttribute('data-place').catch(() => '?');
-    const how = await pressLikeAPerson(place);
+    const how = await pressLikeAPerson(page, place);
     act(who, `Place here (${id})${how === 'click' ? '' : how ? ` (${how})` : ': nothing under the pointer would take it'}`);
-    if (how) return true;
+    if (how) return yes('Place here');
   }
   // The answer a person would give (lib/answer.mjs: board picks, pairs, the pay sheet), the choice panel's (or
   // dialog's) own answers first. A step whose last click changed nothing tries the next answer (skip), and when every
   // real click is refused (usually a hover card left open under the pointer) the option is pressed directly: this e2e
   // tests the online flow; the UI e2e test hit-testing.
-  if (!(await page.$('[data-option]:not([disabled])'))) return false;
+  if (!(await page.$('[data-option]:not([disabled])'))) return no('nothing to answer');
   const now = await page.evaluate(() => ({
     key: `${document.querySelector('.app.game')?.dataset.moves}|${document.querySelector('.app.game')?.dataset.phase}|${document.querySelector('[data-prompt]')?.textContent}`,
     // a space lit as chosen with no confirm up: our move is on its way to the host and back (Wheel: sent / Place here)
@@ -215,10 +223,10 @@ async function stepFirstOption(page) {
   // with nothing said is a confirm that never sent its move: an eaten click)
   if (now.flying) {
     sn.waiting ??= Date.now();
-    if (Date.now() - sn.waiting < 20000) return false;
+    if (Date.now() - sn.waiting < 20000) return no('waiting for our move to land');
     throw new Error(`${who}: a space has stood lit as chosen for 20s, with no move made and nothing said (a confirm that never went out)`);
   } else sn.waiting = null;
-  if (Date.now() - sn.at < 450) return false;
+  if (Date.now() - sn.at < 450) return no(`a new step (${now.key.slice(0, 60)})`);
   const words = await choiceWords(page);
   if (words && words.mine) {
     const shown = [words.head, words.caption, words.panel].filter(x => x != null);
@@ -233,18 +241,31 @@ async function stepFirstOption(page) {
   // that did land would be followed by a second one on the next answer)
   const res = await answerChoice(page, { panelFirst: true, skip, domFallback: true, timeout: 4000 });
   if (res) act(who, `${res.kind} ${res.id}${skip ? ` (skip ${skip})` : ''}`);
-  return !!res;
+  return res ? yes(`answered ${res.id}`) : no('no answer took the click');
 }
 const moves = page => page.evaluate(() => { try { return JSON.parse(window.patronsRecord()).moves?.length ?? 0; } catch { return 0; } }).catch(() => 0);
 // plays every open page until `done()` (or the results), at most `ms`
+// Each person plays at their own pace, side by side (one loop each), as people do: one slow page (a click Playwright waits
+// on for seconds while a starved page draws 2–3 frames a second) never holds up the others' turns.
 async function playUntil(done, ms, what) {
   const t0 = Date.now();
-  while (!(await done())) {
-    if (Date.now() - t0 > ms) throw new Error(`timed out playing until ${what}`);
-    let any = false;
-    for (const p of Object.values(pages)) any = (await stepFirstOption(p)) || any;
-    if (!any) await pages.hana.waitForTimeout(40);
-  }
+  let over = false, failure = null;
+  const nap = n => new Promise(r => setTimeout(r, n));
+  const loop = async who => {
+    while (!over) {
+      const p = pages[who];
+      const acted = p && !p.isClosed() ? await stepFirstOption(p).catch(e => { if (!p.isClosed()) { failure ||= e; over = true; } return false; }) : false;
+      if (!acted) await nap(60);
+    }
+  };
+  const loops = Object.keys(pages).map(loop);
+  try {
+    while (!failure && !(await done())) {
+      if (Date.now() - t0 > ms) throw new Error(`timed out playing until ${what}`);
+      await nap(100);
+    }
+  } finally { over = true; await Promise.all(loops); }
+  if (failure) throw failure;
   for (const p of Object.values(pages)) await checkLitClicks(p);
 }
 const atResults = async () => {
@@ -400,6 +421,6 @@ try {
   if (server) server.kill();
   emu?.stop();
 }
-if (errors.length) console.error([...errors, 'driver, last moves:', ...trail.map(l => `  ${l}`)].join('\n'));
+if (errors.length) console.error([...errors, 'driver, last decision per person:', ...[...lastSaid].map(([w, d]) => `  ${w}: ${d}`), 'driver, last moves:', ...trail.map(l => `  ${l}`)].join('\n'));
 console.log(ok ? `PASS online (${tag})` : `FAIL online (${tag})`);
 process.exit(ok ? 0 : 1);

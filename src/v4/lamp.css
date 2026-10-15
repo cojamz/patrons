@@ -440,6 +440,8 @@ h1,h2,h3{font-family:var(--serif)}
   .lt > .lt-seat-1{grid-area:s1}.lt > .lt-seat-2{grid-area:s2}.lt > .lt-seat-3{grid-area:s3}
   /* the strip and its turn card span the page (they fell into one 117px column: "SINCE YOU…") */
   .app.game.lt > .lt-since,.app.game.lt > .turn-card{grid-column:1 / -1}
+  /* …and so do the final results (they fell into the same 117px column: "P3 wins / with 76 / followers") */
+  .app.game.lt > .main.over{grid-column:1 / -1;min-width:0}
   .lt > .lt-seat:not(.lt-seat-0){min-width:0;overflow:hidden;font-size:12px}
 
 }

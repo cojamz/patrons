@@ -397,6 +397,11 @@ export function turnGroups(state, lines) {
     g.push(j);
     if (alone.test(l)) g = null;
   });
+  // a round's opening line heads its group: the members' round-start pay-outs are logged just before it
+  for (const grp of groups) {
+    const k = grp.findIndex(j => /^Round \S+ begins\./.test(lines[j]));
+    if (k > 0) grp.unshift(...grp.splice(k, 1));
+  }
   return groups.reverse();
 }
 

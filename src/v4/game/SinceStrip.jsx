@@ -67,8 +67,11 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
   const sig = `${entries.map(e => e.n).join(',')}|${roomKey}`;
   // how many of the oldest lines are folded, for these lines in this room: anything new starts it over at 0 (worked out
   // here, not by a second commit)
-  const [dropState, setDrop] = useState({ sig: '', n: 0 });
+  const [dropState, setDrop] = useState({ sig: '', n: 0, bare: false });
   const drop = dropState.sig === sig ? dropState.n : 0;
+  // too little room for even the newest line and the "N earlier" line: the newest shows alone, whole (the Log button
+  // above still opens the rest)
+  const bare = dropState.sig === sig && dropState.bare;
   const base = entries.slice(-MAX);
   const cut = Math.min(drop, Math.max(0, base.length - 1));
   // Checked when the layout has settled, from a ResizeObserver on the list and its own lines (perf, 2026-10-15: reading
@@ -83,7 +86,7 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
     committed.current = { sig, cut, len: base.length };
     // the fold asked for is drawn (or these are new lines, or a new room): lines hidden while it was on its way show again
     const l = listRef.current;
-    if (asked.current && (asked.current.sig !== sig || cut >= asked.current.n)) {
+    if (asked.current && (asked.current.sig !== sig || (cut >= asked.current.n && (bare || !asked.current.bare)))) {
       asked.current = null;
       if (l) for (const el of l.querySelectorAll(':scope > [data-fold-hide]')) { el.removeAttribute('data-fold-hide'); el.style.visibility = ''; }
     }
@@ -109,12 +112,14 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
         const fits = k => rows[k].getBoundingClientRect().top - (c0 + k > 0 ? moreH : 0) >= top - 1;
         let k = 0;
         while (k < rows.length - 1 && !fits(k)) k++;
-        if (!k || c0 + k > len - 1) return;
+        // the newest line fits, but not with the "earlier" line above it
+        const bareNow = c0 + k > 0 && !fits(k) && rows[k].getBoundingClientRect().top >= top - 1;
+        if ((!k && !bareNow) || c0 + k > len - 1) return;
         const n = c0 + k;
         // hide what goes (and the "earlier" line, which moves down when React draws the fold) before this frame paints
         for (const el of [...(moreEl ? [moreEl] : []), ...rows.slice(0, k)]) { el.setAttribute('data-fold-hide', ''); el.style.visibility = 'hidden'; }
-        asked.current = { sig: s0, n };
-        setDrop(d => (d.sig === s0 && d.n >= n ? d : { sig: s0, n }));
+        asked.current = { sig: s0, n, bare: bareNow };
+        setDrop(d => (d.sig === s0 && d.n >= n && (d.bare || !bareNow) ? d : { sig: s0, n, bare: bareNow }));
       });
     }
     const r = ro.current, w = watched.current;
@@ -132,11 +137,13 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
     <section ref={secRef} className={`lt-since${yours ? ' yours' : ''}`} data-since data-folded={cut || undefined} aria-label="Since your last turn">
       <header className="since-head">
         <span className="since-title">Since your last turn</span>
+        {/* the newest line alone: the earlier ones are counted up here, beside the Log, taking no line of their own */}
+        {bare && more > 0 && <button type="button" className="since-more in-head" onClick={onLog} title="Open the log">{more} earlier</button>}
         <button type="button" className="since-log" data-open-log onClick={onLog} title="The whole game, move by move">Log</button>
       </header>
       {shown.length ? (
         <ol className="since-list" ref={listRef}>
-          {more > 0 && <li className="since-more"><button type="button" onClick={onLog}>{more} earlier… open the log</button></li>}
+          {more > 0 && !bare && <li className="since-more"><button type="button" onClick={onLog}>{more} earlier… open the log</button></li>}
           {shown.map(e => (
             <li key={e.n} className={`since-row${e.hit ? ' hit' : ''}`} style={{ '--pc': playerColor(e.actor) }} onClick={pinLine}>
               <Tip className="since-line" data-since-line={e.n} label={`${e.head}: show what happened`}

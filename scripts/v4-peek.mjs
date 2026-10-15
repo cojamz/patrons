@@ -41,15 +41,16 @@ if (cmd === 'freeze') {
     while (!(await page.$('.results')) && Date.now() - t0 < 240000) {
       const hand = await page.$('[data-handoff]'); if (hand) { await hand.click(); continue; }
       const next = await page.$('[data-next-round]');
-      if (next) { const r = await page.$eval('.roundend h2', e => e.textContent).catch(() => 'end'); if (!seen.has(r)) { seen.add(r); await page.waitForTimeout(700); await snap(`r-${r.replace(/\W+/g, '_')}`); } await next.click(); continue; }
+      if (next) { const r = await page.$eval('.roundend h2', e => e.textContent).catch(() => 'end'); if (!seen.has(r)) { seen.add(r); await page.waitForTimeout(700); await snap(`r-${r.replace(/\W+/g, '_')}`); } await next.click().catch(() => {}); continue; }
       const opts = await page.$$('[data-option]:not([disabled])');
       let opt = null, optId = null;
       // prefer recruiting (cults with members make better screenshots), then followers, then anything but back/undo/pass
       const ids = []; for (const o of opts) ids.push([o, await o.getAttribute('data-option')]);
-      const rank = id => (/^card:/.test(id) ? 0 : /^pay:/.test(id) ? 0 : /^tier:/.test(id) ? 1 : /^(back|undo|pass)/.test(id) ? 9 : 2);
+      // a pair's "@unpick" puts the first pick back: taking it loops forever (Even Swap stalled the run)
+      const rank = id => (/^card:/.test(id) ? 0 : /^pay:/.test(id) ? 0 : /^tier:/.test(id) ? 1 : /^(back|undo|pass|@unpick)/.test(id) ? 9 : /^@pick/.test(id) ? 3 : 2);
       ids.sort((x, y) => rank(x[1]) - rank(y[1]));
       if (ids.length && rank(ids[0][1]) < 9) [opt, optId] = ids[0];
-      else for (const [o, id] of ids) if (id && !/^(back|undo)/.test(id)) { opt = o; optId = id; break; }
+      else for (const [o, id] of ids) if (id && !/^(back|undo|@unpick)/.test(id)) { opt = o; optId = id; break; }
       // the id as read (the element can re-render and lose its attribute before a second read)
       if (!opt || !optId) { await page.waitForTimeout(40); continue; }
       const kind = optId.split(':')[0];
