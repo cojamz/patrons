@@ -213,8 +213,9 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     t = Math.max(t, cur);
   }
   const turnPasses = !!(state.pending && before.pending && state.pending.player !== before.pending.player);
-  // a chain's cap (grammar §5: 3.0s at Steady): a longer plan plays faster to fit, never faster than Quick (half)
-  const cap = Math.round(3000 * speedScale());
+  // a chain's cap (grammar §5: 3.0s at Steady; fitted from 2.8s so a run of six rival turns stays inside H2's 13s):
+  // a longer plan plays faster to fit, never faster than Quick (half)
+  const cap = Math.round(2800 * speedScale());
   if (end > cap) {
     const k = Math.max(0.5, cap / end);
     for (const a of atoms) { a.at = Math.round(a.at * k); if (a.dur) a.dur = Math.round(a.dur * k); if (a.lift) a.lift = Math.round(a.lift * k); if (a.wait) a.wait = Math.round(a.wait * k); }

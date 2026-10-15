@@ -109,6 +109,8 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
   const remeasure = useRef(null); // how this step's hold follows from its chain's plan (retime: the measured plan)
   const timerAt = useRef(null);
   const pace = useRef(null); // ?trace=1: this step's pacing record (perf.js summary().pace)
+  const handedAt = useRef(null); // when the step now being drawn was handed to React
+  const renderEst = useRef(null); // how long the box has been taking to draw a step (a running average)
   const shownRef = useRef(first);
   const online = session.info?.mode === 'online';
   // read (and, if missing, written) once: as a plain useRef argument this ran on every render, re-saving the
@@ -177,6 +179,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       // the screen measures the real distances once this step is drawn: the pace follows that plan (retime below)
       remeasure.current = still ? null : dwellOf;
       if (typeof window !== 'undefined') window.__patronsDwellSum = (window.__patronsDwellSum || 0) + dwell; // (the pacing gate reads it)
+      handedAt.current = performance.now();
       if (PERF_ON) pace.current = tracePace({ moves: next.moves, actor: prev.pending ? prev.pending.player : null, kind: prev.pending ? prev.pending.kind : null, plan: plan.total, handoff: plan.handoff, dwell, handed: performance.now() });
       if (!queue.current.length) paced.current = false;
       // every step gets its own commit, even one that doesn't wait, so each chain plays from the step right before it
@@ -194,9 +197,16 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     if (timer.current !== 'commit') return;
     const d = dwellNext.current;
     dwellNext.current = 0;
-    timer.current = setTimeout(() => { timer.current = null; if (pace.current) pace.current.fired = performance.now(); pump(); }, d);
-    timerAt.current = { t0: performance.now(), d };
-    if (pace.current) pace.current.committed = timerAt.current.t0;
+    // Drawing a step costs the box time between handing it to React and its commit (the whole table renders, about
+    // 150–600ms at 4× CPU): with the hold counted from the commit, that cost came on top of every step's hold, a third of
+    // the wait between your turns (design/eval/perf/turn-wait.md). The next step is handed over that much early, so its
+    // commit lands about when the hold ends: a lead of the recent drawing time, never more than 40% of the hold.
+    const now = performance.now();
+    if (handedAt.current != null) { const took = now - handedAt.current; renderEst.current = renderEst.current == null ? took : renderEst.current * 0.6 + took * 0.4; handedAt.current = null; }
+    const lead = d > 0 ? Math.max(0, Math.min(renderEst.current || 0, d * 0.4, 500)) : 0;
+    timer.current = setTimeout(() => { timer.current = null; if (pace.current) pace.current.fired = performance.now(); pump(); }, d - lead);
+    timerAt.current = { t0: now - lead, d };
+    if (pace.current) { pace.current.committed = now; pace.current.lead = Math.round(lead); }
   }, [table.shown, pump]);
   // the director measured this step's chain on screen (real distances): hold the next step for that, not the estimate
   const retime = useCallback(played => {
