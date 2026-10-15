@@ -37,7 +37,9 @@ const q = (xs, p) => { const s = xs.filter(x => x != null).sort((a, b) => a - b)
 const m = s => (s == null ? '–' : s < 90 ? `${Math.round(s)}s` : `${(s / 60).toFixed(1)}m`);
 const byKind = k => runs.filter(r => r.kind === k);
 const green = rs => rs.filter(r => r.ok);
-const counts = ['verdict', 'live', 'quick', 'fast', 'full'].map(k => [k, byKind(k).length]).filter(([, n]) => n).map(([k, n]) => `${n} ${k}`).join(', ');
+const loads = runs.map(r => r.box?.load1).filter(x => x != null);
+const counts = ['verdict', 'live', 'quick', 'fast', 'full'].map(k => [k, byKind(k).length]).filter(([, n]) => n).map(([k, n]) => `${n} ${k}`).join(', ')
+  + (loads.length ? `; box load at start p50 ${q(loads, 0.5)}` : '');
 // every finished verdict counts for wall time (a red one still ran its whole length); greens are counted beside it
 const v = byKind('verdict'), vt = v.map(r => r.totalS);
 const stageS = (rs, re) => rs.map(r => { const ss = (r.stages || []).filter(s => re.test(s.name)); return ss.length ? Math.max(...ss.map(s => s.s)) : null; });

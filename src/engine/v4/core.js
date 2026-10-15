@@ -802,7 +802,7 @@ function traceChanges(state, before, owner, def) {
     const d = (o.discount || 0) - (b.discount || 0);
     if (d > 0) parts.push(`next member costs ${d} less`);
     if (!parts.length) return;
-    if (o === owner) note(state, owner, name, parts.join(', '), Object.fromEntries(Object.keys({ ...b.res, ...o.res }).map(r => [r, (o.res[r] || 0) - (b.res[r] || 0)]).filter(([, d]) => d)));
+    if (o === owner && state.notes) note(state, owner, name, parts.join(', '), Object.fromEntries(Object.keys({ ...b.res, ...o.res }).map(r => [r, (o.res[r] || 0) - (b.res[r] || 0)]).filter(([, d]) => d)));
     out.push(o === owner ? `${owner.name}'s ${name}: ${parts.join(', ')}.` : `${o.name} ${parts.join(', ')} (${owner.name}'s ${name}).`);
   });
   if (!out.length) return;
@@ -1018,7 +1018,7 @@ function ctxFor(state) {
       if (!options.length) return;
       // follow-up choices queued during one resolution keep their call order
       const at = state.queue.findIndex(t => !t._fresh);
-      const task = { t: 'choose', p: p.id, prompt, options: options.map(o => pinCards(state, o)), h: handler, data, ...(extra.count ? { count: extra.count } : {}), _fresh: true };
+      const task = { t: 'choose', p: p.id, prompt, options: options.map(o => pinCards(state, withTarget(o))), h: handler, data, ...(extra.count ? { count: extra.count } : {}), _fresh: true };
       state.queue.splice(at < 0 ? state.queue.length : at, 0, task);
     },
   };
@@ -1041,6 +1041,17 @@ function whereIs(state, uid) {
 function pinCards(state, o) {
   const uids = CARD_KINDS.has(o.kind) ? [].concat(o.value).filter(u => Number.isInteger(u) && state.cards[u]) : [];
   return uids.length ? { ...o, at: Object.fromEntries(uids.map(u => [u, whereIs(state, u)])) } : o;
+}
+// An option that points at a seat says so in one structured field, so a screen never reads it off the label:
+// target { pid } (a player: Kickback, Benefactor), { pid, res } (one of their resource stacks: a steal's take:pid:color),
+// { pid, res, give: true } (Good Deed's give:pid:color). An option that sets its own target keeps it. Ids never change.
+function withTarget(o) {
+  if (o.target) return o;
+  if ((o.kind === 'take' || o.kind === 'give') && Array.isArray(o.value) && Number.isInteger(o.value[0]) && typeof o.value[1] === 'string') {
+    return { ...o, target: { pid: o.value[0], res: o.value[1], ...(o.kind === 'give' ? { give: true } : {}) } };
+  }
+  if (o.kind === 'player' && Number.isInteger(o.value)) return { ...o, target: { pid: o.value } };
+  return o;
 }
 /** A queued choice's options that are still good: every card an option names is where it was when it was queued. */
 export function liveOptions(state, task) {

@@ -6,7 +6,6 @@ import { finalWinners, isRoundEnd, newLogLines, parseRoundEnd, playerColor, prom
 import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
 import ShopCards from './ShopCards.jsx';
-import RankRow from './RankRow.jsx';
 import CultSeatRaw from './CultSeat.jsx';
 // online room updates that don't touch the table don't re-render the chairs
 const CultSeat = memo(CultSeatRaw);
@@ -21,7 +20,7 @@ import { createTrail, feed, liveStory, sinceYourTurn } from './trail.js';
 import { cardDef } from '../../engine/v4/index.js';
 import Results from './Results.jsx';
 import RoundEnd from './RoundEnd.jsx';
-import Reckoning from './Reckoning.jsx';
+import Reckoning, { reckonRows } from './Reckoning.jsx';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker from './PayPicker.jsx';
 import { Rich, Pip } from './Rich.jsx';
@@ -314,6 +313,17 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const hover = useHoverCards(); // UI-B's one hover layer: spaces, plaques, seats, shop cards
   const [reckoned, setReckoned] = useState(null); // the round-end moment whose Reckoning has played (then: the summary)
   const [lampQid, setLampQid] = useState(null); // the quadrant the Reckoning is paying right now
+  // how many of the Reckoning's quadrants have landed: until a prize reaches its chair, that chair's total leaves it
+  // out, so the totals climb as each prize lands (RC1 saboteur: the seats showed the final numbers at step 1 of 4)
+  const [paid, setPaid] = useState({ moment: null, n: 0 });
+  const seatState = useMemo(() => {
+    if (!moment || reckoned === moment) return state;
+    let unpaid;
+    try { unpaid = reckonRows(moment).slice(paid.moment === moment ? paid.n : 0); } catch { return state; }
+    const owed = id => unpaid.reduce((n, r) => n + (r.winners.includes(id) ? r.prize : 0), 0);
+    if (!state.players.some(p => owed(p.id))) return state;
+    return { ...state, players: state.players.map(p => (owed(p.id) ? { ...p, bonus: p.bonus - owed(p.id), contest: (p.contest || 0) - owed(p.id) } : p)) };
+  }, [state, moment, reckoned, paid]);
   const [spacePeek, setSpacePeek] = useState(null); // a space selected from the panel list (one sheet, shared with the wheel)
   // re-render on every session change, so Undo disappears the moment control passes even while the table catches up
   const [, setTick] = useState(0);
@@ -712,8 +722,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             </span>
           )}
         </div>
-        {/* who's winning, one quiet line (UI-B RankRow): most followers first, the leader lit, the margin on hover */}
-        {state.round > 0 && !state.over && <div className="bar-row rank-row"><RankRow state={state} me={me} /></div>}
+        {/* who's winning lives on the chairs (each total, its place, the margin on hover): no score row (Cory, 2026-10-15) */}
         <Menu onRules={() => setRules(true)} onLog={openLog} getState={() => session.getState()} onLeave={onHome ? () => (state.over ? onHome() : setLeaving(true)) : null} />
       </header>
       {session.info && session.info.mode === 'online' && session.info.roomCode && (
@@ -754,7 +763,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           {seatCorners(state, me).map((pid, k) => (
             <section key={k} className={`lt-seat lt-seat-${k}${pid === me ? ' mine' : ''}${pid != null && pend && pend.player === pid && !state.over ? ' now' : ''}`} data-region={`seat-${k}`} data-pid={pid ?? undefined} aria-label={pid == null ? undefined : pid === me ? 'Your cult' : `${state.players[pid].name}’s cult`}>
               {pid == null ? null : (
-                <CultSeat state={state} pid={pid} me={me} mine={pid === me} now={pend && pend.player === pid && !state.over} hover={hover} optionFor={pid === me ? live : undefined} onPick={onPick} />
+                <CultSeat state={seatState} pid={pid} me={me} mine={pid === me} now={pend && pend.player === pid && !state.over} hover={hover} optionFor={pid === me ? live : undefined} onPick={onPick} />
               )}
             </section>
           ))}
@@ -774,7 +783,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </Popover>
       )}
       {mine && !needHandoff && pend.kind === 'pay' && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
-      {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={root.current} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onDone={() => setReckoned(moment)} />}
+      {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={root.current} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onPaid={n => setPaid({ moment, n })} onDone={() => setReckoned(moment)} />}
       {moment && reckoned === moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
       {logOpen && <Chronicle state={state} meId={mySeats.length === 1 ? mySeats[0] : null} onClose={() => setLogOpen(false)} />}

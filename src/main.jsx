@@ -1,3 +1,5 @@
+// first: the ?trace=1 tracer hooks React before react-dom loads (a no-op without the flag; src/v4/perf.js)
+import './v4/perf.js'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 

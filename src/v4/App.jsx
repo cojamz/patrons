@@ -12,6 +12,7 @@ import OnlineBar from './screens/OnlineBar.jsx';
 import { tableProblem } from './tables.js';
 import { Recovered } from './Recovery.jsx';
 import { IntroGate, introOnGameStart } from './Intro.jsx';
+import { PerfProfiler, traceSession } from './perf.js'; // ?trace=1 only (design/eval/perf/)
 
 // Bots decide quickly; the table paces what you see (each visible bot step holds PACE ms, a pass doesn't wait).
 const BOT_DELAY = { slow: 400, normal: 250, fast: 120 };
@@ -67,6 +68,7 @@ function App() {
   const goHomeRef = useRef(null);
 
   useEffect(() => () => { if (session) session.destroy(); }, [session]);
+  useEffect(() => traceSession(session), [session]); // the ?trace=1 tracer watches the session on screen (no-op off)
   const sessionRef = useRef(null);
   sessionRef.current = session;
 
@@ -217,6 +219,7 @@ function App() {
     return (
       <>
       {online && <OnlineBar session={session} />}
+      <PerfProfiler id="GameScreen">
       <GameScreen
         key={gameKey} session={session} pace={urlBotDelay() ? Math.min(urlBotDelay() * 2, PACE.normal) : PACE[config?.speed] ?? PACE.normal}
         onHome={screen.lobby ? () => leaveLobby(screen.lobby) : goHome}
@@ -225,6 +228,7 @@ function App() {
         onResults={online || screen.last ? null : onResultsShown}
         askLeave={askLeave}
       />
+      </PerfProfiler>
       {away && !online && (
         <div className="tab-away" role="dialog" aria-modal="true" aria-labelledby="tab-away-title" data-tab-away>
           <div className="tab-away-card">

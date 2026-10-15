@@ -107,11 +107,19 @@ const JUMP_LIMIT_MS = 10 * 60 * 1000;
 // ---------- acquiring ----------
 
 let seq = 0;
+// every lock file we hold or wait on, dropped when this process exits (one exit handler for all of them)
+const mine = new Set();
+let exitHooked = false;
+const dropOnExit = f => {
+  mine.add(f);
+  if (!exitHooked) { exitHooked = true; process.on('exit', () => { for (const x of mine) { try { unlinkSync(x); } catch { /* gone */ } } }); }
+};
 /**
  * Waits for `weight` units of `pool` and takes them, first come first served. `what` names us in others' waiting
- * messages. Resolves to { waitedMs, release }; whatever is still held is released when this process exits.
+ * messages; we say why we wait once we've waited `quietMs`. Resolves to { waitedMs, release }; whatever is still held
+ * is released when this process exits.
  */
-export async function acquire(pool, { weight = 1, what = 'check:v4', kind = 'live', log = msg => console.log(msg), quiet = false, backfill = false } = {}) {
+export async function acquire(pool, { weight = 1, what = 'check:v4', kind = 'live', log = msg => console.log(msg), quiet = false, quietMs = 0, backfill = false } = {}) {
   const cap = CAP[pool] ?? 1;
   weight = Math.min(Math.max(1, weight), cap);
   const dir = poolDir(pool);
@@ -119,10 +127,9 @@ export async function acquire(pool, { weight = 1, what = 'check:v4', kind = 'liv
   const n = ++seq;
   const me = { ...ME, seq: n, weight, what, kind, since: Date.now() };
   const waitF = join(dir, `wait-${process.pid}-${n}.json`), holdF = join(dir, `hold-${process.pid}-${n}.json`);
-  const drop = f => { try { unlinkSync(f); } catch { /* gone */ } };
+  const drop = f => { mine.delete(f); try { unlinkSync(f); } catch { /* gone */ } };
   writeFileSync(waitF, JSON.stringify(me));
-  const onExit = () => { drop(waitF); drop(holdF); };
-  process.on('exit', onExit);
+  dropOnExit(waitF);
   let said = '', saidAt = 0;
   for (;;) {
     const got = await withMutex(dir, () => {
@@ -135,16 +142,17 @@ export async function acquire(pool, { weight = 1, what = 'check:v4', kind = 'liv
       const ahead = q.slice(0, pos);
       if (ahead.length && !(backfill && ahead.every(o => used(hs) + (o.weight || 1) > cap && Date.now() - o.since < JUMP_LIMIT_MS))) return false;
       writeFileSync(holdF, JSON.stringify({ ...me, since: Date.now() }));
+      dropOnExit(holdF);
       drop(waitF);
       return true;
     });
     if (got) {
       const waitedMs = Date.now() - me.since;
       if (said) log(`${pool === 'check' ? 'check slot' : `${weight} e2e token(s)`} ours after ${age(waitedMs)}`);
-      return { waitedMs, release() { drop(holdF); process.off('exit', onExit); } };
+      return { waitedMs, release() { drop(holdF); } };
     }
-    if (!existsSync(waitF)) writeFileSync(waitF, JSON.stringify(me));
-    if (!quiet) {
+    if (!existsSync(waitF)) { writeFileSync(waitF, JSON.stringify(me)); dropOnExit(waitF); }
+    if (!quiet && Date.now() - me.since >= quietMs) {
       const hs = scan(pool, 'hold'), q = scan(pool, 'wait');
       const pos = q.findIndex(o => o.pid === process.pid && o.seq === n);
       const key = `${hs.map(o => `${o.pid}.${o.seq}`).join(',')}|${pos}`;

@@ -61,7 +61,7 @@ function payAndRecruit(ctx, p, v, { uid, why, fromPile, how = howFor(why) }) {
   }
   // the engine takes the payment (and spends a discount) by the same price rule; `paid` tells a copy (Green) this
   // wasn't a free member
-  ctx.recruit(p, uid, { spend: v, how, paid: Object.values(v).some(n => n > 0) });
+  ctx.recruit(p, uid, { spend: v, how, paid: true });
 }
 
 /** Offer face-up members the player can pay for at the price `how` sets, in any colors. */

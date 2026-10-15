@@ -99,16 +99,13 @@ async function stepFirstOption(page) {
   // touch (and online) placement asks to confirm: "Place here"
   const place = await page.$('[data-place]');
   if (place) { try { await place.click({ timeout: 1500 }); return true; } catch { /* fall through */ } }
-  const usable = async els => {
-    const out = [];
-    for (const el of els) {
-      const id = await el.getAttribute('data-option').catch(() => null);
-      if (id && !id.startsWith('toggle:') && id !== 'back') out.push(el);
-    }
-    return out;
-  };
-  const inPanel = await usable(await page.$$('.prompt.choice [data-option]:not([disabled]), [role="dialog"] [data-option]:not([disabled])'));
-  const all = await usable(await page.$$('[data-option]:not([disabled])'));
+  // Every option on the page in one $$ and one evaluate (a getAttribute per handle was a round trip each: dozens per
+  // step, three pages per loop, and slow on a loaded box). The choice panel's (or dialog's) own options come first.
+  const els = await page.$$('[data-option]:not([disabled])');
+  const meta = els.length ? await page.evaluate(es => es.map(e => [e.getAttribute('data-option'), !!e.parentElement?.closest('.prompt.choice, [role="dialog"]')]), els).catch(() => []) : [];
+  const usable = i => { const id = meta[i]?.[0]; return !!id && !id.startsWith('toggle:') && id !== 'back'; };
+  const inPanel = els.filter((_, i) => usable(i) && meta[i][1]);
+  const all = els.filter((_, i) => usable(i));
   const cands = [...inPanel, ...all.filter(e => !inPanel.includes(e))];
   if (!cands.length) return false;
   const key = await page.evaluate(() => `${document.querySelector('.app.game')?.dataset.moves}|${document.querySelector('[data-prompt]')?.textContent}`).catch(() => '');

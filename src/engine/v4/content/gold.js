@@ -187,6 +187,7 @@ function stealStep(ctx, p, data) {
     const taken = Object.values(data.picked).reduce((a, b) => a + b, 0);
     ctx.choose(p, `Collect Debts: take 1 gold from… (${data.left} left)`, targets.map(o => ({
       id: `player:${o.id}`, label: `${o.name} · ${left(o)} gold`, kind: 'player', value: o.id, hint: left(o),
+      target: { pid: o.id, res: 'gold' }, // their gold stack is what you click (the seat selector)
     })), 'gold.steal', data, { count: { of: data.left + taken, left: data.left } });
     return;
   }

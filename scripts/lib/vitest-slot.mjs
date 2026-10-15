@@ -12,6 +12,5 @@ export default async function vitestSlot() {
   const isDir = a => { try { return existsSync(a) && statSync(a).isDirectory(); } catch { return false; } };
   if (filters.length && !filters.some(isDir)) return; // named files (or name filters): a targeted run
   const { acquireSlot } = await import('./slots.mjs');
-  const { waitedMs } = await acquireSlot(`vitest run ${filters.join(' ') || '(everything)'} in ${process.cwd()}`, { kind: 'vitest', weight: 1 });
-  if (waitedMs > 2000) console.log(`check slot taken after ${Math.round(waitedMs / 1000)}s; running the tests`);
+  await acquireSlot(`vitest run ${filters.join(' ') || '(everything)'} in ${process.cwd()}`, { kind: 'vitest', weight: 1 });
 }

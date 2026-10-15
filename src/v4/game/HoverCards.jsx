@@ -142,13 +142,24 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   return typeof document !== 'undefined' ? createPortal(layer, document.body) : layer;
 }
 
-/** The element a hover card explains: the one it was opened on, or (re-drawn since) the same thing found again. */
+// where the pointer last was: a hover card whose target was re-drawn re-links only while the pointer is still on it
+let lastPt = null;
+if (typeof addEventListener === 'function') addEventListener('pointermove', e => { lastPt = { x: e.clientX, y: e.clientY }; }, { passive: true, capture: true });
+/**
+ * The element a hover card explains: the one it was opened on, or, when that node was re-drawn under the pointer
+ * (a shop refill, a chair re-rendering: RC1 "Kingpin had no hover"), the same thing found again. A card whose pointer
+ * has moved on never comes back.
+ */
 function anchorFor(c) {
   if (c.el && c.el.isConnected) return c.el;
-  if (typeof document === 'undefined') return null;
+  if (typeof document === 'undefined' || !c.el) return null;
   const sel = c.kind === 'space' ? `[data-slot="${c.key}"]` : c.kind === 'plaque' ? `[data-plaque="${c.qid}"]`
     : c.kind === 'seat' ? `[data-cult="${c.pid}"] .cs-head` : c.kind === 'card' ? `[data-region="shop"] [data-uid="${c.uid}"]` : c.kind === 'deck' ? '[data-deck]' : null;
-  return (sel && document.querySelector(sel)) || null;
+  const el = sel && document.querySelector(sel);
+  if (!el) return null;
+  if (c.pinned) return el;
+  const b = el.getBoundingClientRect();
+  return lastPt && lastPt.x >= b.left - 4 && lastPt.x <= b.right + 4 && lastPt.y >= b.top - 4 && lastPt.y <= b.bottom + 4 ? el : null;
 }
 
 /**

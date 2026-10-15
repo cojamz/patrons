@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+import { richSave } from '/home/user/patrons/e2e/v4/lib/rich-save.mjs';
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const p = await b.newPage({ viewport: { width: 1270, height: 700 } });
+p.on('console', m => console.log('console', m.text().slice(0, 200)));
+await p.goto('http://127.0.0.1:5371/?intro=0');
+await p.waitForTimeout(8000);
+await p.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), richSave());
+await p.reload();
+await p.waitForTimeout(8000);
+await p.screenshot({ path: '/tmp/claude-0/-home-user-patrons/5ebe88de-0e49-593c-823a-8e25da0176c7/scratchpad/dbg.png' });
+console.log(await p.evaluate(() => document.body.innerText.slice(0, 400)));
+await b.close();

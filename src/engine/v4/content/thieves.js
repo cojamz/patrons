@@ -71,7 +71,9 @@ function stealStep(ctx, p, data) {
       hint: n + 0.05 * ctx.followers(o) + (owed.includes(o) ? 5 : 0),
     });
     const owing = owed.length ? `, at least 1 from ${owed.map(o => o.name).join(', ')}` : '';
-    ctx.choose(p, `${data.name}: take 1 resource (${data.left} left${owing})`, opts, 'thieves.take', data);
+    // the count rides on the task, so a reload mid-steal keeps "1 of 3 taken"
+    const taken = Object.values(data.picked).reduce((t, pk) => t + Object.values(pk).reduce((a, b) => a + b, 0), 0);
+    ctx.choose(p, `${data.name}: take 1 resource (${data.left} left${owing})`, opts, 'thieves.take', data, { count: { of: data.left + taken, left: data.left } });
     return;
   }
   let got = 0;

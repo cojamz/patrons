@@ -13,7 +13,7 @@
 // (scripts/lib/procs.mjs); the preview server runs inside this process, on a port checked free before it starts, and
 // is confirmed to be serving this run's outDir before any e2e touches it. At most V4_CHECK_SLOTS (3) runs share the
 // box at once; the next waits, with an ETA, and says who holds the slots.
-import { readdirSync, existsSync, mkdirSync, symlinkSync, createWriteStream } from 'node:fs';
+import { readdirSync, readFileSync, existsSync, mkdirSync, symlinkSync, createWriteStream } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { availableParallelism, loadavg } from 'node:os';
@@ -31,6 +31,8 @@ const HELP = `npm run check:v4 [-- options]
   --quick              The pre-check while iterating (npm run check:v4:quick; ~2 min on a quiet box): unit tests with
                        every seeded block on its fast slice (V4_GAMES=fast) and the slowest coverage gates left out,
                        the build, and the hot-seat e2e. Not a verdict.
+  --related <f,f…>     With --quick: only the unit tests that import these files (vitest related; a UI file skips
+                       every engine and seeded block), e.g. --quick --related src/v4/game/Wheel.jsx,src/v4/lamp.css
   --fast               Unit tests (seeded blocks on their fast slice) and the build; no e2e. CI runs this.
   --full               Every seeded block at its full count (V4_GAMES=full): the nightly / remote job. The verdict
                        plays each block's verdict slice, whose strength is stated beside it (src/test/engine/v4/budget.js).
@@ -38,7 +40,7 @@ const HELP = `npm run check:v4 [-- options]
 
   V4_OUTDIR=.v4-build-<name>  build dir (default .v4-build; inside the export with --commit)
   V4_PORT=<5281+>             preview port for the e2e (default 5180); refused up front if anything answers there
-  V4_CHECK_SLOTS=${String(SLOTS).padEnd(13)}check:v4 runs allowed at once on this box (lock dir /tmp/v4-check-slots)
+  V4_CHECK_SLOTS=${String(SLOTS).padEnd(13)}capacity in units: a full gate takes 2, --quick/--fast or a bare whole-suite vitest 1 (/tmp/v4-check-slots)
   V4_E2E_TOKENS=${String(E2E_TOKENS).padEnd(14)}browser e2e in flight at once across every run on the box
   V4_UNIT_WORKERS=<n>         vitest workers (default: every core; they run at nice 10)
   V4_PHONE=1                  include touch.mjs (the phone gate; outside the v0.2 verdict)
@@ -51,7 +53,10 @@ if ([quick, fast, full].filter(Boolean).length > 1) { console.error('pick one of
 const ci = argv.indexOf('--commit');
 const ref = ci >= 0 ? argv[ci + 1] : null;
 if (ci >= 0 && (!ref || ref.startsWith('--'))) { console.error('--commit needs a commit: --commit HEAD, or a sha\n\n' + HELP); process.exit(2); }
-const known = new Set(['--quick', '--fast', '--full', '--commit', ref].filter(Boolean));
+const ri = argv.indexOf('--related');
+const related = ri >= 0 ? (argv[ri + 1] || '').split(',').map(f => f.trim()).filter(Boolean) : null;
+if (ri >= 0 && (!related.length || argv[ri + 1].startsWith('--') || !quick)) { console.error('--related goes with --quick and needs files: --quick --related src/v4/game/Wheel.jsx,src/v4/lamp.css\n\n' + HELP); process.exit(2); }
+const known = new Set(['--quick', '--fast', '--full', '--commit', ref, '--related', ri >= 0 ? argv[ri + 1] : null].filter(Boolean));
 const unknown = argv.filter(a => !known.has(a));
 if (unknown.length) { console.error(`unknown option ${unknown.join(' ')}\n\n${HELP}`); process.exit(2); }
 
@@ -80,6 +85,21 @@ if (wantE2E && (await portBusy(port))) { console.error(busyMessage(port)); proce
 // at most SLOTS gates on the box at once (the slot is held for the whole run)
 const what = `${sha ? `commit ${sha.slice(0, 7)}` : 'live tree'}${kind === 'verdict' || kind === 'live' ? '' : ` --${kind}`}, ${outDir}${wantE2E ? `, port ${port}` : ''}`;
 const { waitedMs } = await acquireSlot(what, { kind });
+// what else is loading the box, said up front so a slow run is explained in its own log (and the run history)
+const box = (() => {
+  let vitest = 0, browsers = 0;
+  try {
+    for (const pid of readdirSync('/proc')) {
+      if (!/^\d+$/.test(pid) || Number(pid) === process.pid) continue;
+      let cmd = '';
+      try { cmd = readFileSync(`/proc/${pid}/cmdline`, 'utf8').split('\0').join(' '); } catch { continue; }
+      if (/vitest(\.mjs)? run\b/.test(cmd)) vitest++;
+      else if (/chrom(e|ium)\b/.test(cmd) && /--remote-debugging-pipe/.test(cmd) && !/--type=/.test(cmd)) browsers++;
+    }
+  } catch { /* no /proc */ }
+  return { load1: +loadavg()[0].toFixed(1), vitest, browsers };
+})();
+console.log(`box at start: load ${box.load1} on ${availableParallelism()} CPUs, ${box.vitest} vitest run(s) and ${box.browsers} browser(s) already going`);
 process.env.V4_IN_CHECK = '1'; // our vitest (and anything else we start) runs under this slot (scripts/lib/vitest-slot.mjs)
 
 if (sha) {
@@ -132,7 +152,9 @@ const run = async (name, args, { env = {}, nice = 0, tail = Infinity, cmd = proc
 const workers = Number(process.env.V4_UNIT_WORKERS) || availableParallelism();
 // --quick leaves out the coverage gates that play their full sample even on the fast slice (they gate verdicts)
 const QUICK_SKIP = ['**/fire-audit.test.js', '**/truth/contest-truth-*.test.jsx', '**/records.test.js'];
-const unitArgs = [VITEST, 'run', 'src/test/engine/v4', 'src/test/v4', `--maxWorkers=${workers}`, ...(quick ? QUICK_SKIP.flatMap(g => ['--exclude', g]) : [])];
+const unitArgs = related
+  ? [VITEST, 'related', '--run', ...related, `--maxWorkers=${workers}`, '--passWithNoTests']
+  : [VITEST, 'run', 'src/test/engine/v4', 'src/test/v4', `--maxWorkers=${workers}`, ...(quick ? QUICK_SKIP.flatMap(g => ['--exclude', g]) : [])];
 const unit = run('unit tests', unitArgs, { nice: 10, env: games ? { V4_GAMES: games } : {}, tail: 2500 });
 // 2. the build (COMMIT_REF stamps it with the exported commit (vite.config.js), not whatever HEAD the live tree has)
 const built = await run('production build', [VITE, 'build', '--outDir', outDir, '--emptyOutDir'], { env: sha ? { COMMIT_REF: sha } : {}, tail: 300 });
@@ -154,7 +176,7 @@ if (wantE2E && existsSync(join(root, 'e2e/v4'))) {
     const LONG = { 'online.mjs': 130, 'touch.mjs': 120, 'hotseat.mjs': 75, 'tables.mjs': 62, 'spaces.mjs': 60, 'memory.mjs': 60, 'benders.mjs': 50, 'reckoning.mjs': 21, 'layout.mjs': 13 };
     const order = (a, b) => (LONG[b] || 30) - (LONG[a] || 30) || a.localeCompare(b);
     const one = async (f, weight) => {
-      const tok = await acquire('e2e', { weight, what: `${what}: ${f}`, kind, log: m => console.log(`[${f}] ${m}`) });
+      const tok = await acquire('e2e', { weight, what: `${what}: ${f}`, kind, quietMs: 60000, log: m => console.log(`[${f}] ${m}`) });
       try { return await run(`e2e ${f}`, [`e2e/v4/${f}`], { env: { V4_URL: server.url, V4_SHOTS: `${shotsRoot}/${f.replace(/\.mjs$/, '')}` } }); } finally { tok.release(); }
     };
     // the FIFO token queue runs them in this order: the parallel ones (one token each), then each solo one alone
@@ -176,7 +198,7 @@ const phase = re => { const rs = results.filter(r => re.test(r.name)); return rs
 recordRun({
   v: 1, kind, games: games || 'verdict', sha: sha || null, started: new Date(started).toISOString(), waitedS: +(waitedMs / 1000).toFixed(1), totalS, ok,
   stages: results.map(({ name, ok: k, s, start }) => ({ name, ok: k, s, start })), unitDoneS: phase(/^unit/), e2eDoneS: phase(/^e2e/),
-  slowFiles, load1: +loadavg()[0].toFixed(1), cpus: availableParallelism(), logs,
+  slowFiles, box, load1: +loadavg()[0].toFixed(1), cpus: availableParallelism(), logs,
 });
 console.log(`\n── v4 check (${kind}) ──`);
 if (waitedMs > 1000) console.log(`waited ${(waitedMs / 1000).toFixed(0)}s for a check slot`);

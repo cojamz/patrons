@@ -168,12 +168,13 @@ describe('Gold members', () => {
   });
 
   it('Penny Pincher: gold spent on members counts double', () => {
-    // Midas 3 gold + 2 wild: color part ceil(3/2)=2 gold, wild from non-gold first (2 red)
+    // Midas 3 gold + 2 wild: color part ceil(3/2)=2 gold, whose spare half pays 1 of the wild (gut call, 2026-10-15:
+    // "counts double" loses nothing), so 1 more from non-gold first (1 red)
     let s = scene({ members: [['gold.thrift']], res: [{ gold: 2, red: 2 }], shop: ['gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor', 'red.proselytizer', 'red.bigfamily'] });
     s = take(s, 'blue.a1');
     s = move(s, `card:${uidOf(s, 'gold.midas', 'shop')}`);
-    // wild 2 paid from red: P0 leads blue (3 from Tide), and the default never spends a color whose contest you lead
-    expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 3, green: 0 });
+    // the wild 1 paid from red: P0 leads blue (3 from Tide), and the default never spends a color whose contest you lead
+    expect(R(s)[0]).toEqual({ gold: 0, red: 1, blue: 3, green: 0 });
   });
 
   it('Penny Pincher: gold also pays the wild part double when nothing else is left', () => {
