@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant, defById } from '../../../engine/v4/index.js';
 import { turnStory, foldRepeats, effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
 import { createTrail, feed } from '../../../v4/game/trail.js';
-import { contextFor } from '../../../engine/v4/core.js';
+import { contextFor, useIdle } from '../../../engine/v4/core.js';
 
 const seats = [{ name: 'Ana', kind: 'bot' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }];
 const play = seed => { let s = createGame({ seats, seed }); while (!s.over) s = applyMove(s, chooseBotMove(s, () => 0.4)); return s; };
@@ -118,7 +118,8 @@ describe('v4 format helpers', () => {
       let s = createGame({ seats: [{ name: 'Ana', kind: 'bot' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }, { name: 'Di', kind: 'bot' }], seed, quadrants: ['gold', 'red', 'echo', 'yellow'] });
       for (let k = 0; k < 1500 && !s.over && !found; k++) {
         const pend = s.pending;
-        const use = pend && pend.kind === 'place' && pend.options.find(o => String(o.id).startsWith('use:'));
+        // a use that would change nothing (Stunt Double with nothing to copy) is muted on screen, not a story
+        const use = pend && pend.kind === 'place' && pend.options.find(o => String(o.id).startsWith('use:') && !useIdle(s, s.players[pend.player], o.uid));
         if (use) {
           const start = s, pid = pend.player, name = s.players[pid].name;
           let t = applyMove(s, { player: pid, option: use.id });
@@ -220,14 +221,14 @@ describe('v4 format helpers', () => {
     let s = createGame({ seats, seed: 5 });
     const trail = createTrail(0);
     for (let k = 0; k < 3000 && !s.over; k++) { s = applyMove(s, chooseBotMove(s, () => 0.4)); feed(trail, s); }
-    const all = s.log.join('\n');
     let n = 0;
     for (const st of trail.stories) for (const l of st.lines) {
       const m = l.match(/^recruited (.+?) \(paid (.+)\)$/);
       if (!m) continue;
       n++;
       // the paid amount is the price the engine logged, never a net of the turn's other gains
-      expect(all).toContain(`recruited ${m[1]} (${m[2]})`);
+      // (a recruit from the pile reads "recruited X from the pile with Insider (price)")
+      expect(s.log.some(l => l.includes(`recruited ${m[1]} `) && l.includes(`(${m[2]})`)), l).toBe(true);
     }
     expect(n).toBeGreaterThan(3);
   });
@@ -275,15 +276,17 @@ describe('v4 format helpers', () => {
   });
 
   it('prompts with a short verb phrase: the snake turnaround is "your turn again", not an extra turn', () => {
-    let s = createGame({ seats, seed: 3 });
-    // walk to a placement that follows the same player's own placement (the snake's turn)
-    let again = null, buy = null, other = null;
-    for (let n = 0; n < 400 && !(again && buy && other); n++) {
+    // walk to a placement that follows the same player's own placement (the snake's turn); seeded games, so try a few
+    let s = null, again = null, buy = null, other = null;
+    for (let seed = 3; seed < 20 && !(again && buy && other); seed++) {
+    s = createGame({ seats, seed });
+    for (let n = 0; n < 400 && !s.over && !(again && buy && other); n++) {
       const pr = s.pending && promptFor(s, s.pending.player === 0);
       if (pr && s.pending.kind === 'buy' && s.pending.player === 0 && !buy) buy = pr;
       if (pr && s.pending.kind === 'place' && s.pending.player === 0 && pr.lead) again = pr;
       if (pr && s.pending.kind === 'place' && s.pending.player !== 0 && /again/.test(pr.text)) other = { pr, name: s.players[s.pending.player].name };
       s = applyMove(s, chooseBotMove(s, () => 0.4));
+    }
     }
     expect(again).toBeTruthy();
     expect(`${again.lead}${again.text}`).toBe('Your turn again (snake order) — place a minion');

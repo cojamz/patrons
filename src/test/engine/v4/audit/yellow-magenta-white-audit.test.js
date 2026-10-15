@@ -11,7 +11,7 @@ const pass = s => (s.pending?.kind === 'buy' ? move(s, 'pass') : s);
 const ROW = ['gold.taxman', 'red.twins'];
 
 describe('base rules', () => {
-  it('8 for 6: the limit is a shared table stock, so one player can buy a third', () => {
+  it('8 for 8: the limit is a shared table stock, so one player can buy a third', () => {
     const Q = ['gold', 'red', 'yellow', 'trading'];
     let s = table(Q, { n: 4, res: [{ gold: 30 }], shop: ROW, queue: turns(0, 0, 0) });
     for (const sp of ['yellow.harvest', 'yellow.bloom', 'trading.haggle']) {
@@ -19,7 +19,7 @@ describe('base rules', () => {
       expect(ids(s)).toContain('tier:big');
       s = move(s, 'tier:big');
     }
-    expect(s.players[0].bonus).toBe(18); // 3 buys of 8-for-6 by one player in a 4-player game
+    expect(s.players[0].bonus).toBe(24); // 3 buys of 8-for-8 by one player in a 4-player game
     expect(s.stock.big).toBe(5);
   });
 });

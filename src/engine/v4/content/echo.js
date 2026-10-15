@@ -307,7 +307,7 @@ const echoQ = {
     }),
     // was "Game end: +1 follower per green member." (2+2) until the design critic's follow-ups (2026-10-14): now it
     // pays for the copy itself, a rival's space only, and the follower counts at once (heard() above).
-    m('ensemble', 'Ensemble', 4, 2, 'Whenever you copy a rival’s space, +1 follower.'),
+    m('ensemble', 'Ensemble', 2, 1, 'Whenever you copy a rival’s space, +1 follower.'),
     m('groupie', 'Groupie', 4, 4, 'Whenever anyone recruits a green member, +1 green.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (recruited.uid !== card.uid && recruited.def.id.startsWith('echo.')) ctx.gain(owner, 'green', 1);
@@ -355,8 +355,7 @@ const echoQ = {
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e, owner), 0) >= (ctx.state.round === 3 ? 6 : 10),
     }),
-    // Cory, 2026-10-15: moved here from Red (same card; its rename and recruit-time pick wait for his redesign)
-    m('doppel', 'Doppelganger', 4, 2, 'When recruited: copies the effect of one of your members.', {
+    m('doppel', 'Doppelganger', 3, 1, 'When recruited: copies the effect of one of your members.', {
       onRecruited(ctx, owner, card) {
         const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid && c.def.key !== 'doppel');
         if (!own.length) return;
@@ -366,7 +365,7 @@ const echoQ = {
         })), 'echo.doppelCopy', { uid: card.uid });
       },
     }),
-    m('chronicler', 'Chronicler', 4, 4, 'Game end: +1 follower per 2 green.', {
+    m('chronicler', 'Chronicler', 2, 2, 'Game end: +1 follower per 2 green.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res.green || 0) / 2),
     }),
   ],

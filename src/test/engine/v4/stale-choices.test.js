@@ -11,7 +11,7 @@ import { applyMove, isLegal, resume, createGame } from '../../../engine/v4/core.
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { quadrant } from '../../../engine/v4/content/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
-import { take, move } from './helpers.js';
+import { take, move, pinCosts } from './helpers.js';
 import { table } from './cards-helpers-b.js';
 import { checkInvariants } from './fuzz-runner.js';
 import { games } from './budget.js';
@@ -99,6 +99,8 @@ describe('a queued choice never offers a card that moved', () => {
   });
 
   it('Swap Sides: a pair whose rival member moved (stolen, released) is dropped', () => {
+    const restore = pinCosts({ 'gold.taxman': [2, 2] }); // the price this case was written at (Tax Collector is 8 since 2026-10-15)
+    try {
     let s = table(['gold', 'red', 'market', 'echo'], { n: 3, round: 2, members: [['red.twins'], ['red.intern'], ['gold.taxman']], shop: ['red.volunteer'] });
     s = take(s, N('red', 'trade'));
     const pairs = s.pending.options.map(o => o.value);
@@ -107,6 +109,7 @@ describe('a queued choice never offers a card that moved', () => {
     s.players[1].members = s.players[1].members.filter(u => u !== gone); s.players[2].members.push(gone); // moved to P3
     s = resume(s);
     expect(s.pending.options.map(o => o.value)).toEqual(pairs.slice(1).filter(([, b]) => b !== gone));
+    } finally { restore(); }
   });
 });
 

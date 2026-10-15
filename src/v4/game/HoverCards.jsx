@@ -5,7 +5,7 @@
 // cards are mine. GameScreen mounts <HoverCardLayer> once.
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { quadrant, roman, contestTable, cardDef, botLevel, BOT_LEVEL_INFO } from '../../engine/v4/index.js';
+import { quadrant, roman, spaceOpen, contestTable, cardDef, botLevel, BOT_LEVEL_INFO } from '../../engine/v4/index.js';
 import { playerColor, standings } from '../format.js';
 import { Popover } from './parts.jsx';
 import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews } from './Info.jsx';
@@ -160,7 +160,7 @@ export function usePreviewWarmup(state, pid) {
     if (pid == null || state.over || !state.players[pid]) return undefined;
     const round = Math.max(1, state.round || 0);
     const keys = new Set();
-    state.quadrants.forEach((qid, q) => quadrant(qid).actions.forEach((a, i) => { if (a.ring <= round && state.slots[`${q}-${i}`] === undefined) keys.add(`${q}-${i}`); }));
+    state.quadrants.forEach((qid, q) => quadrant(qid).actions.forEach((a, i) => { if (spaceOpen(a, round) && state.slots[`${q}-${i}`] === undefined) keys.add(`${q}-${i}`); }));
     const mine = state.pending && state.pending.player === pid;
     if (mine && state.pending.options) for (const o of state.pending.options) if (o.q != null && o.i != null) keys.add(`${o.q}-${o.i}`);
     if (!keys.size) return undefined;
@@ -394,7 +394,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
   const owner = state.slots[spaceKey];
   const opt = optionFor(`slot:${spaceKey}`) || optionFor(`squat:${spaceKey}`);
   const round = Math.max(1, state.round);
-  const open = !past && a.ring <= round && (owner === undefined || opt);
+  const open = !past && spaceOpen(a, round) && (owner === undefined || opt);
   const viewer = me != null ? me : state.pending && state.pending.player;
   // the dry run is read from the cache (warmed in idle time); if it isn't there yet it fills in a moment later
   const pv = usePreview(state, open && viewer != null && !state.over ? viewer : null, q, i, { now: !past }) || null;
@@ -426,6 +426,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
             (w3b #12: a "By round" row beside "per round number" was two descriptions of one thing); the panel prints this
             round's number and "more each round" */}
         {a.ring > round && <Row k="Opens">round {roman(a.ring)}</Row>}
+        {a.lastRound && round > a.lastRound && <Row k="Closed">after round {roman(a.lastRound)}</Row>}
       </div>
       {opt && pinned && onPick && !past && <button type="button" className="lt-btn pri" data-place={opt.id} onClick={() => onPick(opt.id)}>{opt.squat ? 'Join here' : 'Place here'}</button>}
     </div>

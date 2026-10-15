@@ -122,10 +122,12 @@ export const countMembersOfColor = (state, p, q) => p.members.reduce((s, u) => {
 }, 0);
 export const cardDef = (state, uid) => defById(state.cards[uid].def);
 export function actionAt(state, q, i) { return quadrant(state.quadrants[q]).actions[i]; }
+/** A space is open from its ring's round on, and shuts after its lastRound if it has one (Overtime: rounds I–II only, Cory 2026-10-15). */
+export const spaceOpen = (a, round) => a.ring <= round && !(a.lastRound && round > a.lastRound);
 export function openSlots(state) {
   const out = [];
   state.quadrants.forEach((qid, q) => quadrant(qid).actions.forEach((a, i) => {
-    if (a.ring <= state.round && state.slots[`${q}-${i}`] === undefined) out.push([q, i]);
+    if (spaceOpen(a, state.round) && state.slots[`${q}-${i}`] === undefined) out.push([q, i]);
   }));
   return out;
 }
@@ -1004,6 +1006,7 @@ export function squatSlots(state, p) {
   const out = [];
   for (const [key, owner] of Object.entries(state.slots)) {
     if (owner === p.id || state.squats?.[key]?.length) continue;
+    if (!spaceOpen(actionAt(state, ...key.split('-').map(Number)), state.round)) continue;
     out.push(key.split('-').map(Number));
   }
   return out;

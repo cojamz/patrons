@@ -25,7 +25,7 @@ export const onBoard = (ctx, p) => Object.values(ctx.state.slots).filter(o => o 
 function openSpaces(ctx) {
   const out = [];
   ctx.state.quadrants.forEach((qid, q) => ctx.quadrant(qid).actions.forEach((a, i) => {
-    if (a.ring <= ctx.state.round && ctx.state.slots[`${q}-${i}`] === undefined) out.push([q, i]);
+    if (!(a.ring > ctx.state.round || (a.lastRound && ctx.state.round > a.lastRound)) && ctx.state.slots[`${q}-${i}`] === undefined) out.push([q, i]);
   }));
   return out;
 }
@@ -182,7 +182,8 @@ export default {
     },
     {
       // free (Cory, 2026-10-15: "no board action should require spending"): was "pay 8 purple for 2 extra turns, else +3"
-      key: 'overtime', ring: 2, name: 'Overtime', text: 'Take 1 extra turn right after this one.',
+      key: 'overtime', ring: 2, name: 'Overtime', text: 'Take 1 extra turn right after this one. Closed in round III.',
+      lastRound: 2, // shut in round III (Cory, 2026-10-15: the bench read it ~20u there against a 5–9 band)
       copyDoesIt: true, // Echo: a copy takes the extra turn itself (there's no resource to copy)
       estimate: ctx => freeTurnsEstimate(ctx, 1),
       resolve(ctx, p) { freeTurns(ctx, p, 1, 'Overtime'); },
