@@ -10,6 +10,7 @@ import { createGame, applyMove, chooseBotMove } from '../../../src/engine/v4/ind
 import { resume } from '../../../src/engine/v4/core.js';
 import { seededRandom } from '../../../src/engine/v4/rng.js';
 import { buildStamp } from './stamp.mjs';
+import { freeCard } from './deal.mjs';
 
 const SEATS = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
 export const QUADS = ['gold', 'echo', 'trading', 'thieves'];
@@ -26,11 +27,10 @@ export function membersSave(from = 1) {
     const rand = seededRandom(seed);
     for (let n = 0; n < 200 && !(s.round === 1); n++) s = play(s, chooseBotMove(s, rand));
     if (s.round !== 1) continue;
-    const uidOf = id => Object.keys(s.cards).map(Number).find(u => s.cards[u].def === id && !s.players.some(p => p.members.includes(u)));
     s = structuredClone(s);
+    // a member the cull leaves out of the deck (Lottery Winner, Midas, Translator, Pawnbroker, Safecracker) is minted
     const give = (pid, id) => {
-      const u = uidOf(id);
-      if (u == null) return false;
+      const u = freeCard(s, id);
       s.shop = s.shop.filter(x => x !== u);
       s.pile = s.pile.filter(x => x !== u);
       s.players[pid].members.push(u);
@@ -39,7 +39,6 @@ export function membersSave(from = 1) {
     };
     const uids = HAND.map(id => give(0, id));
     const theirs = RIVAL.map(id => give(1, id));
-    if (uids.includes(false) || theirs.includes(false)) continue;
     // P4 holds a crowd (w2a #16: a 12+ member seat card ran off the screen): the first 13 members left in the pile
     for (const u of s.pile.filter(x => !s.players.some(p => p.members.includes(x))).slice(0, 13)) give(3, s.cards[u].def);
     while (s.shop.length < 10 && s.pile.length) s.shop.push(s.pile.shift());

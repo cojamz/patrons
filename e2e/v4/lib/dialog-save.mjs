@@ -7,15 +7,16 @@ import { createGame, applyMove, chooseBotMove, quadrant, cardDef, defById, TIERS
 import { resume } from '../../../src/engine/v4/core.js';
 import { seededRandom } from '../../../src/engine/v4/rng.js';
 import { buildStamp } from './stamp.mjs';
+import { freeCard } from './deal.mjs';
 
 export const DIALOG_TABLE = ['gold', 'red', 'market', 'echo'];
 const SEATS = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
 const wrap = s => { s.build = buildStamp(); return { config: { seats: SEATS.map(x => ({ kind: x.kind, name: x.name })), speed: 'normal' }, state: s, undo: null, savedAt: Date.now() }; };
 
-// hand a member (by def id) to a player, from wherever it waits (the pile or the shop)
+// hand a member (by def id) to a player, from wherever it waits (the pile or the shop); a member the cull leaves out
+// of the deck (Talent Scout, Hustler, Coin Purse…) is minted (lib/deal.mjs)
 function give(s, pid, defId) {
-  const c = Object.values(s.cards).find(x => x.def === defId && !s.players.some(p => p.members.includes(x.uid)));
-  if (!c) throw new Error(`dialog-save: no free ${defId}`);
+  const c = s.cards[freeCard(s, defId)];
   s.shop = s.shop.filter(u => u !== c.uid); s.pile = s.pile.filter(u => u !== c.uid);
   s.players[pid].members.push(c.uid); c.recruitedRound = 0; c.recruitedBy = pid;
   return c.uid;
@@ -23,8 +24,7 @@ function give(s, pid, defId) {
 // put a member (by def id) face up in the shop's first place
 function faceUp(s, defId) {
   if (s.shop.some(u => s.cards[u].def === defId)) return s.shop.find(u => s.cards[u].def === defId);
-  const c = Object.values(s.cards).find(x => x.def === defId && s.pile.includes(x.uid));
-  if (!c) throw new Error(`dialog-save: ${defId} is not in the pile`);
+  const c = s.cards[freeCard(s, defId)]; // (from the pile, or minted if the cull leaves it out)
   s.pile = s.pile.filter(u => u !== c.uid);
   s.pile.push(s.shop[0]);
   s.shop[0] = c.uid;

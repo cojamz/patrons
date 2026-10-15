@@ -384,7 +384,7 @@ try {
   }
   // (h1) w3a #14: Hustler's long question gives way to what to do ("Hustler: pick a color") and where to click, whole
   {
-    const save = paySave({ def: 'gold.hustler' });
+    const save = paySave({ def: 'gold.hustler', res: { gold: 4, red: 2, blue: 2, green: 3 } }); // (Hustler costs 4 gold; cut from the deck, so minted)
     const { applyMove } = await import('../../src/engine/v4/index.js');
     const way = save.state.pending.options.find(o => o.default) || save.state.pending.options.find(o => o.kind === 'pay');
     save.state = applyMove(save.state, { player: 0, option: way.id });
