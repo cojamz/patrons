@@ -73,7 +73,9 @@ describe('turn order on the cults', () => {
       const { container } = render(<CultSeat state={s} pid={p.id} me={0} mine={p.id === 0} />);
       const pill = container.querySelector('.cs-order');
       expect(pill.dataset.order).toBe(places[p.id].label);
-      expect(pill.getAttribute('title')).toBeTruthy();
+      // it explains itself: its own hover card (w2a #28), said to touch and screen readers too
+      expect(pill.getAttribute('aria-label')).toMatch(/Placing now|Places|no placements left/);
+      expect(pill.getAttribute('data-hint') || pill.getAttribute('aria-label')).toBeTruthy();
       cleanup();
     }
   });

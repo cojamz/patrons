@@ -345,7 +345,14 @@ export function logSections(state) {
   const out = [{ title: 'Setup', lines: [], start: 0 }];
   state.log.forEach((line, i) => {
     const m = line.match(/^Round (\S+) begins\./);
-    if (m) out.push({ title: `Round ${m[1]}`, lines: [], start: i });
+    if (m) {
+      // a round's start (members paying out) is logged after the last round's end and before its own "begins": those
+      // lines open the new round, never trail the old one (w2a #27: round II's income sat above "Round I ends")
+      const cur = out[out.length - 1];
+      const end = cur.lines.findLastIndex(l => /^Round \S+ ends\./.test(l));
+      const moved = end >= 0 ? cur.lines.splice(end + 1) : [];
+      out.push({ title: `Round ${m[1]}`, lines: moved, start: i - moved.length });
+    }
     out[out.length - 1].lines.push(line);
   });
   return out.filter(s => s.lines.length);

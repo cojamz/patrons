@@ -178,7 +178,13 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
 
 // where the pointer last was: a hover card whose target was re-drawn re-links only while the pointer is still on it
 let lastPt = null;
-if (typeof addEventListener === 'function') addEventListener('pointermove', e => { lastPt = { x: e.clientX, y: e.clientY }; }, { passive: true, capture: true });
+// where the pointer is: its moves, and its boundary events too. A move's pointerout/leave comes before the move itself,
+// at the NEW position: read from the move alone, a jump off the wheel looked like a step into its gutter and held the
+// card for the gutter's grace (the hover gate then found a card already up on most arrivals)
+if (typeof addEventListener === 'function') {
+  const at = e => { lastPt = { x: e.clientX, y: e.clientY }; };
+  for (const t of ['pointermove', 'pointerout', 'pointerover']) addEventListener(t, at, { passive: true, capture: true });
+}
 /**
  * The element a hover card explains: the one it was opened on, or, when that node was re-drawn under the pointer
  * (a shop refill, a chair re-rendering: RC1 "Kingpin had no hover"), the same thing found again. A card whose pointer

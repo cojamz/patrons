@@ -87,7 +87,7 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
           ))}
         </ul>
         <div className="re-totals" role="table" aria-label="Followers after this round">
-          <div className="re-head" role="row"><span role="columnheader">Player</span><span role="columnheader" title="The rims' prizes this round (above)">Prizes</span><span role="columnheader" title="Followers gained this round otherwise: what new members are worth, followers bought, and followers from members' abilities during play">This round</span><span role="columnheader">Followers</span></div>
+          <div className="re-head" role="row"><span role="columnheader">Player</span><span role="columnheader" title="The rims' prizes this round (above)">Prizes</span><span role="columnheader" title="Followers gained this round otherwise: what new members are worth, followers bought, and followers won or lost during play (members' abilities, spaces, sales and raids), as the results count them">This round</span><span role="columnheader">Followers</span></div>
           {ranked.map(p => {
             const now = followers(at, at.players[p.id]);
             const was = start && start.players[p.id] ? followers(start, start.players[p.id]) : now;
@@ -95,7 +95,7 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
             const g = start ? roundGains(start, at, p, c) : null;
             const other = now - was - c;
             // RC1 sweep 84: "+2 from members" (they hold 4) meant the members recruited this round; "+1 effects" had no source
-            const why = g ? [g.members && `${g.members > 0 ? '+' : ''}${g.members} from new members`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : ''}${g.effects} from abilities`].filter(Boolean).join(' · ') : '';
+            const why = g ? [g.members && `${g.members > 0 ? '+' : ''}${g.members} from new members`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : ''}${g.effects} during play`].filter(Boolean).join(' · ') : '';
             return (
               <div key={p.id} className="re-p" role="row" style={{ '--pc': playerColor(p.id) }}>
                 <span className="nm" role="cell"><Who state={after} id={p.id} meId={meId} /></span>

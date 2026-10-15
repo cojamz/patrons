@@ -114,6 +114,49 @@ async function audit(page, step) {
 }
 
 // (h) the deck's number against the engine: read the screen and the saved game in one go, when both show the same move
+// (m) w2a #14: what opens when you point at the small things around the seats, and how far from the pointer
+const near14 = new Set();
+async function nearChecks(page, step) {
+  const card = () => page.evaluate(() => {
+    const vis = e => { const r = e.getBoundingClientRect(); return r.width > 4 && r.left > -1000 ? r : null; };
+    const L = document.querySelector('[data-hover-layer][data-open="1"]');
+    const P = [...document.querySelectorAll('body > .popover')].find(vis);
+    const e = P || (L && vis(L) ? L : null);
+    return e ? { kind: P ? 'tip' : 'layer', r: e.getBoundingClientRect().toJSON(), nub: P && P.querySelector('.pop-nub') ? P.querySelector('.pop-nub').getBoundingClientRect().toJSON() : null } : null;
+  });
+  const gapOf = (a, x, y) => Math.round(Math.hypot(Math.max(a.left - x, 0, x - a.right), Math.max(a.top - y, 0, y - a.bottom)));
+  for (const [what, sel, kind] of [['the turn-order rail', '.lt > .lt-seat .cs-order', 'tip'], ['a seat\'s "each round" line', '.lt > .lt-seat .cs-income', 'tip'], ['a name in the strip', '[data-since] [data-hover-name]', 'layer']]) {
+    const t = page.locator(sel).first();
+    if (!(await t.count()) || !(await t.isVisible())) continue;
+    await page.mouse.move(5, 690); await page.waitForTimeout(250);
+    const b = await t.boundingBox();
+    const x = b.x + b.width / 2, y = b.y + b.height / 2;
+    await page.mouse.move(x, y); await page.waitForTimeout(450);
+    const c = await card();
+    if (!c) fail(`(m) pointing at ${what} opened nothing`, step);
+    else if (c.kind !== kind) fail(`(m) pointing at ${what} opened the ${c.kind === 'layer' ? 'seat\'s or board\'s card' : 'wrong card'}, not its own`, step);
+    else if (gapOf(c.r, x, y) > 40) fail(`(m) ${what}'s card opened ${gapOf(c.r, x, y)}px from the pointer`, step);
+  }
+  // your first member: its card beside the whole seat (w2a #45), its nub pointing back at the member
+  const fig = page.locator('.lt > .lt-seat-0 .cs-member .fig').first();
+  if ((await fig.count()) && (await fig.isVisible())) {
+    await page.mouse.move(5, 690); await page.waitForTimeout(250);
+    const b = await fig.boundingBox();
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2); await page.waitForTimeout(450);
+    const c = await card();
+    const seat = await page.locator('.lt > .lt-seat-0 .lt-cult-seat').first().boundingBox();
+    if (!c || c.kind !== 'tip') fail('(m) pointing at your member opened no member card', step);
+    else {
+      const sideGap = Math.max(c.r.left - (seat.x + seat.width), seat.x - c.r.right);
+      if (sideGap > 24) fail(`(m) your member's card opens ${Math.round(sideGap)}px from your seat`, step);
+      const my = b.y + b.height / 2;
+      if (!c.nub) fail('(m) your member\'s card has no nub pointing back at the member', step);
+      else if (Math.abs(c.nub.top + c.nub.height / 2 - my) > 14) fail(`(m) your member's card points ${Math.round(c.nub.top + c.nub.height / 2 - my)}px off the member`, step);
+    }
+  }
+  await page.mouse.move(5, 5); await page.waitForTimeout(200);
+}
+
 // (m) the open hover card sits next to its target (a selector, or a rect), whole on screen, above every strip
 async function anchorCheck(page, what, step, target) {
   const r = await page.evaluate(sel => {
@@ -314,6 +357,9 @@ try {
         // (m) your own seat's card opens beside it; (l) the ranked line and the turn-order places
         const head = page.locator('.lt > .lt-seat-0 .cs-head').first();
         if (await head.count()) { await head.hover(); await page.waitForTimeout(300); await anchorCheck(page, 'your seat', step, await head.evaluate(e => e.getBoundingClientRect().toJSON())); await page.mouse.move(5, 5); await page.waitForTimeout(200); }
+        // (m) w2a #14/#28/#29: the turn-order rail, the "each round" line, a name in the strip and your member figure
+        // each open their own card right by them, never the seat's list or a card across the screen
+        if (!near14.has(step)) { near14.add(step); await nearChecks(page, step); }
         const tops = await page.evaluate(() => {
           let st = null;
           try { st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; } catch { /* none */ }
@@ -368,6 +414,10 @@ try {
   else if (!(await page.evaluate(() => window.__patronsDeals || 0))) fail(`(h) ${refills} refill(s), but no card came off the deck`, 'deck');
   else console.log(`info.mjs: deck matched the engine's pile after ${refills} refill(s); ${await page.evaluate(() => window.__patronsDeals)} card(s) dealt off it`);
 
+  // the game page is done with: close it, so its bots (still playing, every move a chain of animations) don't load
+  // the box while the hover timing below is measured
+  await page.close();
+
   // (d) hover speed (Cory: instant and seamless): p95 from the pointer arriving to a visible card < 100ms, and no
   // close/reopen flicker while sweeping across a ring of spaces. Measured on the Lamplit hover layer with the real
   // wheel and shop (the ?lab=b page of this build) until the game screen mounts it.
@@ -401,6 +451,8 @@ try {
       for (const [x, y] of [...spaces.slice(0, 14), ...cards.slice(0, 10), ...spaces.slice(14, 20)]) {
         await lab.mouse.move(4, 690);
         await lab.waitForTimeout(220);
+        // each arrival is timed from no card on screen: let the last one finish closing (its close pause and its fade)
+        await lab.waitForFunction(() => ![...document.querySelectorAll('[data-hover-layer][data-open="1"], .peek')].some(e => getComputedStyle(e).opacity !== '0'), null, { timeout: 1000 }).catch(() => {});
         await lab.mouse.move(x, y, { steps: 2 });
         await lab.waitForTimeout(160);
       }

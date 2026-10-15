@@ -1,7 +1,7 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
-import { parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
+import { logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
 import { createTrail, feed } from '../../../v4/game/trail.js';
 import { contextFor } from '../../../engine/v4/core.js';
 
@@ -165,5 +165,13 @@ describe('v4 format helpers', () => {
     expect(found.t.why).toBeTruthy();
     expect(`${found.pr.lead}${found.pr.text}`).toBe(`Extra turn (${found.t.why}): place one more minion`);
   });
-});
 
+  it('the log: a round opens at the last round\'s end, so its round-start lines are in it (w2a #27)', () => {
+    const log = ['P1 picks gold.', 'Round I begins. P1 picks first.', 'P1 took Rush (Gold).', 'Round I ends. Most gold: P1 +2', 'P2\'s Minimalist: +1 blue.', 'Round II begins. P2 picks first.', 'P2 took Rush (Gold).'];
+    const secs = logSections({ log });
+    expect(secs.map(x => x.title)).toEqual(['Setup', 'Round I', 'Round II']);
+    expect(secs[1].lines[secs[1].lines.length - 1]).toMatch(/^Round I ends/);
+    expect(secs[2].lines[0]).toMatch(/Minimalist/);
+    for (const x of secs) x.lines.forEach((l, j) => expect(log[x.start + j]).toBe(l)); // start indexes the log
+  });
+});

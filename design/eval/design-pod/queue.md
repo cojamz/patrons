@@ -26,6 +26,8 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 
 - [x] 06:55 Wave-2 tester B, composition items #14, #15, #22, #25, #40, #48 and the space budget (log.md 06:50–07:10).
 
+- [x] 07:10 Wave-2 tester A: #15, #17, #52, #42/E5, E9; and the snappy spin landing (log.md 07:10–07:30).
+
 ## For the art director (composition / layout)
 - 05:40 Since-strip rows end in an ellipsis that cuts the member's name ("P4 Half Price: −1● −1● −3● · recruited Stunt Dou…") in the narrow left column. Let a row wrap to two lines (hanging indent under the name), or give the strip the width. I haven't touched since.css's box.
 - 05:40 The turn-order rail's "in 3 ×2": "×" is a retired operator (grammar) and "in 3" is shorthand. Suggest words: "next", "3rd", and "twice" on its own line. turnstory.mjs pins /×2/, so it needs updating with it. (seats.js turnPlaces, lamp.css .cs-order)

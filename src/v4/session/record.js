@@ -95,7 +95,13 @@ export function step(state, move) {
 }
 
 /** True when this state was made by a build with the same rules content as this one. */
-export const sameContent = state => !!(state && state.build && state.build.content === CONTENT_HASH);
+// On a Vite dev server only (mode 'development', never tests or builds), __V4_SRC__ is frozen when the server starts, so any
+// engine edit made a hand-made save look "older" until a restart (three restarts in one night, 2026-10-15). There, the
+// rules' shape is enough; builds and tests keep the full stamp.
+const DEV_SERVER = (() => { try { return import.meta.env?.MODE === 'development'; } catch { return false; } })();
+const shapeOf = c => String(c || '').split('.')[0];
+export const sameContent = state => !!(state && state.build && (state.build.content === CONTENT_HASH
+  || (DEV_SERVER && shapeOf(state.build.content) === SHAPE_HASH)));
 
 /**
  * Why this build can't safely resume `state`, or null if it can.
