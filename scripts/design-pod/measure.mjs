@@ -18,7 +18,7 @@ const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const page = await (await b.newContext({ viewport: { width: W, height: H } })).newPage();
 const url = `${base}/?intro=0${q ? '&' + q : ''}`;
 await page.goto(url);
-await page.evaluate(v => { localStorage.clear(); localStorage.setItem('patrons.v4.local', JSON.stringify(v)); localStorage.setItem('patrons.v4.introSeen', '1'); }, save);
+await page.evaluate(async v => { const m = await import('/src/v4/session/record.js'); v.state.build = { ...m.BUILD }; localStorage.clear(); localStorage.setItem('patrons.v4.local', JSON.stringify(v)); localStorage.setItem('patrons.v4.introSeen', '1'); }, save);
 await page.goto(url); await page.click('[data-home="resume"]', { timeout: 90000 }); await page.waitForSelector('.lt-shop .card'); await page.waitForTimeout(900);
 const r = await page.evaluate(() => {
   const box = sel => [...document.querySelectorAll(sel)].map(e => { const b = e.getBoundingClientRect(); return `${sel} x${Math.round(b.left)} y${Math.round(b.top)} w${Math.round(b.width)} h${Math.round(b.height)}`; });

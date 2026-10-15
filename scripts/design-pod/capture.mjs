@@ -62,7 +62,11 @@ async function load(pack, tries = 3) {
 }
 async function load1(pack) {
   await page.goto(url());
-  await page.evaluate(({ save, rs }) => {
+  await page.evaluate(async ({ save, rs }) => {
+    // the dev server's stamp was fixed when it started: stamp the save the way this page expects
+    const m = await import('/src/v4/session/record.js');
+    save.state.build = { ...m.BUILD };
+    if (rs) rs.state.build = { ...m.BUILD };
     localStorage.clear(); sessionStorage.clear();
     localStorage.setItem('patrons.v4.local', JSON.stringify(save));
     if (rs) localStorage.setItem('patrons.v4.roundStart', JSON.stringify(rs));

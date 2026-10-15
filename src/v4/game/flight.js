@@ -55,7 +55,7 @@ export function snapshotShop(root) {
   return snap;
 }
 
-function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 0, hold = false }) {
+export function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 0, hold = false }) {
   const ghost = document.createElement('div');
   ghost.className = className + ' ghost-layer';
   ghost.dataset.born = String(Date.now());
@@ -80,7 +80,15 @@ function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 
   anim.oncancel = done;
   setTimeout(done, duration + 400);
   if (typeof window !== 'undefined') window.__patronsFlights = (window.__patronsFlights || 0) + 1;
+  live.add(anim);
+  anim.addEventListener('finish', () => live.delete(anim));
+  anim.addEventListener('cancel', () => live.delete(anim));
+  return anim;
 }
+// every flight in the air, so a skip (a click or Space during a chain) can land them all at once
+const live = new Set();
+export const track = anim => { if (anim) { live.add(anim); anim.addEventListener('finish', () => live.delete(anim)); anim.addEventListener('cancel', () => live.delete(anim)); } return anim; };
+export function landAll() { for (const a of [...live]) { try { a.finish(); } catch { try { a.cancel(); } catch { /* gone */ } } } live.clear(); }
 
 export function flyCards(root, snap, moves) {
   if (!root || !motionOK()) return;
@@ -115,11 +123,12 @@ export function flyCards(root, snap, moves) {
  * A minion leaves its leader and lands on the space (Cory: "placing a minion animates it from the leader to the wheel
  * space"). The ghost is the minion's own sprite; the minion on the space shows once it has landed.
  */
-export function flyWorker(root, pid, slotKey, color, { own = false } = {}) {
+export function flyWorker(root, pid, slotKey, color, { fromRect = null, duration = MO.minionFly } = {}) {
   if (!root || !motionOK()) return false;
-  // from the chair's column of minions still to place (the one that left was at its foot), else the leader
+  // from its own slot in the chair's column of minions still to place (where it stood before it left: the director
+  // keeps that rect), else the column's foot, else the leader
   const col = root.querySelector(`.lt-seat[data-pid="${pid}"] .cs-minions`);
-  const from = (col && visible(col) && (col.lastElementChild || col)) || playerAnchor(root, pid, '.workers');
+  const from = (fromRect && fromRect.width ? { getBoundingClientRect: () => fromRect } : null) || (col && visible(col) && (col.lastElementChild || col)) || playerAnchor(root, pid, '.workers');
   const slot = root.querySelector(`[data-slot="${slotKey}"]`);
   const landed = slot && (slot.querySelector(`.worker[data-seat="${pid}"]`) || slot.querySelector('.worker'));
   const to = landed || (slot && slot.querySelector('.base'));
@@ -130,17 +139,14 @@ export function flyWorker(root, pid, slotKey, color, { own = false } = {}) {
   const a = { left: f.left + f.width / 2 - size / 2, top: f.top + f.height / 2 - size / 2, width: size, height: size };
   const b = { left: t.left + t.width / 2 - size / 2, top: t.top + t.height / 2 - size / 2, width: size, height: size };
   const html = landed ? landed.innerHTML : `<i style="background:${color}"></i>`;
-  // your own minion already stands on the space (you see your move at once): the ghost is a quick trail from your
-  // leader that fades onto it. A rival's minion travels, and shows on the space as it lands.
-  if (own) { ghostFly(html, 'worker-flight minion-flight trail', a, b, { duration: MO.minionTrail, scaleTo: 1, fadeTo: 0, arc: 30 }); return true; }
-  const duration = MO.minionFly;
+  // the minion leaves its slot at once (your click's first answer) and travels; it shows on the space as it lands
   ghostFly(html, 'worker-flight minion-flight', a, b, { duration, scaleTo: 1, fadeTo: 1, arc: 46 });
-  if (landed && landed.animate) landed.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: duration + 30 });
+  if (landed && landed.animate) track(landed.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: duration + 30 }));
   return true;
 }
 
 /** A small token (e.g. "+2" followers) arcs from one element to another. */
-export function flyToken(fromEl, toEl, html, { tag = '', duration = 640 } = {}) {
+export function flyToken(fromEl, toEl, html, { tag = '', duration = MO.reckonToken } = {}) {
   if (!motionOK() || !fromEl || !toEl) return false;
   const f = fromEl.getBoundingClientRect(), t = toEl.getBoundingClientRect();
   if (!f.width || !t.width) return false;
@@ -206,6 +212,9 @@ export function slideShop(root, snap) {
 // on a follower count). Decoration only: nothing waits on a piece, and input is never blocked.
 
 const arrivals = new WeakMap(); // destination element → { at, span }: when its first piece lands and how long the rest take
+/** Pieces will land on `el` from `at` (performance.now ms) for `span` ms: its number counts as they arrive (Tick). */
+export function expectArrival(el, at, span) { if (el && el.nodeType === 1) arrivals.set(el, { at, span }); }
+export function clearArrivals(els) { for (const el of els) arrivals.delete(el); }
 /** When pieces are flying to `el` (or an ancestor of it): { delay, span } in ms from now, else null. Tick reads it. */
 export function arrivalFor(el) {
   for (let e = el; e && e.nodeType === 1; e = e.parentElement) {
@@ -238,7 +247,7 @@ export function placeOf(root, where, snap = null) {
 }
 
 /** The picture a piece wears: the stack's own glyph, the follower mark, else a dot. */
-function pieceHtml(root, m) {
+export function pieceHtml(root, m) {
   const to = m.pay ? m.from : m.to;
   const seat = root.querySelector(`.lt-cult-seat[data-seat="${to.pid}"]`);
   const g = m.what === 'res' ? seat && seat.querySelector(`.cs-stack[data-res="${m.r}"] svg`) : seat && seat.querySelector('.cs-total svg');
@@ -246,7 +255,7 @@ function pieceHtml(root, m) {
 }
 
 /** A stack's number shows what has landed so far (data-hold), and settles to the real number with the last piece. */
-function holdStack(stackEl, from) {
+export function holdStack(stackEl, from) {
   const b = stackEl && stackEl.querySelector('b.num');
   if (!b) return null;
   let v = from;
@@ -256,7 +265,7 @@ function holdStack(stackEl, from) {
     done() { delete b.dataset.hold; },
   };
 }
-const bump = (el, down = false) => {
+export const bump = (el, down = false) => {
   if (!el || !el.animate || el.rectOnly) return;
   el.animate(down
     ? [{ transform: 'scale(1)' }, { transform: 'scale(.86)' }, { transform: 'scale(1)' }]

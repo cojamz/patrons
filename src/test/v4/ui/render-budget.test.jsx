@@ -39,6 +39,7 @@ import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.j
 import { createLocalSession } from '../../../v4/session/local.js';
 import { createEmitter } from '../../../v4/session/emitter.js';
 import GameScreen from '../../../v4/game/GameScreen.jsx';
+import { saveLocalSoon, flushLocalSave, clearLocal, claimLocal, loadLocal } from '../../../v4/saved.js';
 
 afterEach(() => { cleanup(); globalThis.IS_REACT_ACT_ENVIRONMENT = true; });
 
@@ -113,6 +114,8 @@ describe('render budget', () => {
     expect(inside.length).toBeGreaterThan(1);
     for (const s of inside) expect(s.CultSeat).toBeLessThan(4);
     for (const s of perStep) expect(s.ShopCards).toBeLessThanOrEqual(1); // the shop once per step, at most
+    // one commit of the table per step: the strip, the turn card and the new minion's flash are read while it renders
+    for (const s of perStep) expect(s.GameScreen).toBe(1);
   });
 
   it('a wheel spin paints its frames straight to the board: the wheel renders once, when it lands', async () => {
@@ -160,5 +163,31 @@ describe('render budget', () => {
     expect(container.querySelector('.lt').getAttribute('data-moves')).toBe(String(session.getState().moves));
     expect(container.querySelector(`[data-slot="${key}"] .worker`)).toBeTruthy();
     session.destroy();
+  });
+
+  it('a move never writes the save inside the click: it lands in idle time, and at once when the page goes away', async () => {
+    const state = advanceTo(createGame({ seats: SEATS, seed: 21 }), 'place', 0);
+    claimLocal();
+    localStorage.removeItem('patrons.v4.local');
+    const writes = [];
+    const real = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k, v) { if (k === 'patrons.v4.local') writes.push(JSON.parse(v).state.moves); return real.call(this, k, v); };
+    try {
+      const a = state, b = applyMove(a, chooseBotMove(a, () => 0.3)), c = applyMove(b, chooseBotMove(b, () => 0.3));
+      saveLocalSoon({ x: 1 }, a); saveLocalSoon({ x: 1 }, b); saveLocalSoon({ x: 1 }, c);
+      expect(writes).toEqual([]); // nothing on the input path
+      await new Promise(r => setTimeout(r, 600)); // idle time (or the timer where there's no requestIdleCallback)
+      expect(writes).toEqual([c.moves]); // coalesced: only the latest state, once
+      saveLocalSoon({ x: 1 }, b);
+      window.dispatchEvent(new Event('pagehide')); // leaving the page writes it at once
+      expect(writes).toEqual([c.moves, b.moves]);
+      saveLocalSoon({ x: 1 }, c);
+      loadLocal(); // a read writes the waiting save first, so it sees the latest move
+      expect(writes).toEqual([c.moves, b.moves, c.moves]);
+      saveLocalSoon({ x: 1 }, a);
+      clearLocal(); // starting over drops a waiting save
+      expect(flushLocalSave()).toBe(false);
+      expect(localStorage.getItem('patrons.v4.local')).toBe(null);
+    } finally { Storage.prototype.setItem = real; localStorage.removeItem('patrons.v4.local'); }
   });
 });

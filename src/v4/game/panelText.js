@@ -13,7 +13,7 @@ const byRound = (a, b, c) => ({ byRound: [a, b, c] });
 // step the size down. Never clip and never abbreviate into code").
 const P = {
   gold: {
-    jv: { main: '+3 gold', second: 'a rival gets 1' },
+    jv: { main: '+3 gold', second: 'pick who gets 1' },
     rush: r => ({ main: `+${2 * r} gold`, note: byRound(2, 4, 6) }),
     discount: { verb: 'Save 4', second: 'on next member' },
     steal: { main: '+3 gold', second: 'from rivals' },
@@ -22,7 +22,7 @@ const P = {
   },
   red: {
     evenswap: { main: '+1 red', second: 'swap a member', note: 'with a rival, equal cost' },
-    turnout: { main: '+1 red', second: 'per recruit', note: 'this round, by anyone' },
+    turnout: { main: '+1 red', second: 'per recruit by all', note: 'this round' },
     hire: { verb: 'Free recruit', second: 'the cheapest' },
     hireup: { verb: 'Free recruit', second: 'cost 4 or less' },
     trade: { verb: 'Swap a member', second: 'with a rival', note: 'theirs can cost 2 more' },
@@ -31,9 +31,9 @@ const P = {
   market: {
     bargain: { main: '+2 blue', second: 'then recruit', note: 'in any colors' },
     restock: { main: '+2 blue', second: 'refresh the shop' },
-    showroom: { main: '+1 blue', second: '+1 per blue', note: 'member in the shop' },
+    showroom: { main: '+1 blue', second: '+1 per blue on sale', note: 'members in the shop' },
     clearance: { verb: 'Half-price recruit', second: 'as your buy' },
-    pricecheck: { verb: 'Gain blue', second: 'half your top cost' },
+    pricecheck: { verb: 'Gain blue', second: 'half your priciest', note: 'member’s cost' },
     spree: { verb: 'Buy 3 times', second: 'this turn' },
   },
   purple: {
@@ -53,7 +53,7 @@ const P = {
     jubilee: { main: '+1 @f', second: 'per 2 silver', note: 'others get 2 silver' },
   },
   yellow: {
-    harvest: { main: '+1 yellow', second: '+1 per color', note: 'other colors you hold' },
+    harvest: { main: '+1 yellow', second: '+1 per color held', note: 'other colors' },
     bloom: { verb: 'Top up', second: '+1 of your fewest' },
     transmute: { main: '+1 yellow', second: 'swap up to 3', note: 'for other colors' },
     prism: { verb: 'Gain each color', second: 'per 3 yellow' },
@@ -80,8 +80,8 @@ const P = {
     chant: r => ({ main: `+${2 * r} green`, note: byRound(2, 4, 6) }),
     echo: { verb: 'Copy a space', second: 'a rival just took' },
     encore: { verb: 'Copy a space', second: 'taken this round' },
-    refrain: { main: '+2 green', second: 'and copy yours', note: 'a space you took this round' },
-    eternity: { verb: 'Copy all yours', second: 'from this round' },
+    refrain: { main: '+2 green', second: 'and redo a space', note: 'one you took this round' },
+    eternity: { verb: 'Redo every space', second: 'you took this round' },
   },
 };
 

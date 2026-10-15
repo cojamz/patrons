@@ -11,6 +11,7 @@ import CultSeatRaw from './CultSeat.jsx';
 // a chair re-renders only when something it shows changed (seatMemo.js): a rival's step no longer redraws all four
 const CultSeat = memo(CultSeatRaw, sameSeat);
 const NO_OPTS = new Map();
+const NO_FLASH = new Set();
 const NO_SLOTS = new Map();
 const NO_SEATS = [];
 const NO_OPTIONS = () => null;
@@ -321,9 +322,13 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const mine = !!(pend && !state.over && !moment && mySeats.includes(pend.player));
   const [facing, setFacing] = useState(0);
 
-  const [gifts, setGifts] = useState([]); // short-lived "+1 gold from P2" floaters on player cards
+  // nothing on screen reads these two any more (the chairs and the turn card tell gifts and thefts): refs, so setting
+  // them never costs the table a second render per step (perf, 2026-10-15)
+  const giftsRef = useRef([]); // short-lived "+1 gold from P2" floaters on player cards
+  const setGifts = useCallback(f => { giftsRef.current = typeof f === 'function' ? f(giftsRef.current) : f; }, []);
   const [toast, setToast] = useState(null);
-  const [robbed, setRobbed] = useState(null); // { pid, n }: flash that player's resources
+  const robbedRef = useRef(null); // { pid, n }: flash that player's resources
+  const setRobbed = useCallback(f => { robbedRef.current = typeof f === 'function' ? f(robbedRef.current) : f; }, []);
   const [cardDetail, setCardDetail] = useState(null); // { el, uid, hover? } a shop card's details (tap on phones, hover on desktop)
   const hoverTimer = useRef(null);
   const onHoverCard = useCallback((uid, el) => {
@@ -383,23 +388,46 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   useEffect(() => { if (live0.over && !moment && typeof window !== 'undefined' && window.scrollTo) { try { window.scrollTo(0, 0); } catch { /* jsdom */ } } }, [live0.over, moment]);
   const [turnCard, setTurnCard] = useState(null); // { pid, text, live, n, folding }: the current turn, told by its cult
   const turnTimer = useRef([]);
-  const showTurnCard = useCallback(card => {
-    turnTimer.current.forEach(clearTimeout);
-    turnTimer.current = [];
-    setTurnCard(card);
-    if (!card.live) {
-      turnTimer.current.push(setTimeout(() => setTurnCard(c => (c && c.n === card.n ? { ...c, folding: true } : c)), 2600));
-      turnTimer.current.push(setTimeout(() => setTurnCard(c => (c && c.n === card.n ? null : c)), 3100));
-    }
-  }, []);
   useEffect(() => () => turnTimer.current.forEach(clearTimeout), []);
   // every placement's story, one per turn (trail.js): the turn card tells the latest, the strip the rivals' since yours
   const trail = useRef(null);
   if (!trail.current) trail.current = createTrail(mySeats.length === 1 ? mySeats[0] : null);
-  const [since, setSince] = useState([]);
+  // the strip and the live turn card are read off the trail while the table renders (perf, 2026-10-15: set from a layout
+  // effect, they cost every step a second render); feed() is idempotent for a state it has seen
+  const toldUpTo = useRef(0); // the newest story the table has committed (told)
+  const lastTold = useRef(null); // the turn card of the turn that just passed, while it holds and folds
+  const story = useMemo(() => {
+    const t = trail.current;
+    feed(t, live0, roundStart0);
+    const now = live0.round >= 1 && !live0.over ? liveStory(t) : null;
+    const fresh = t.stories.filter(st => st.n > toldUpTo.current);
+    const tl = fresh[fresh.length - 1];
+    return {
+      since: sinceYourTurn(t, mySeats),
+      live: now ? { pid: now.actor, text: now.text, live: true, n: `c${t.cur.key}` } : null,
+      told: tl && tl.round === live0.round && !live0.over ? { pid: tl.actor, text: tl.text, live: false, n: `t${tl.n}` } : null,
+      touched: [...new Set(fresh.flatMap(st => st.touched))],
+    };
+  }, [live0]); // eslint-disable-line react-hooks/exhaustive-deps
+  // the card on screen: this turn's, as it builds; else the one that just passed, until it has held and folded
+  const toldShown = story.live ? null : story.told || lastTold.current;
+  const toldCard = !toldShown ? null : turnCard && turnCard.n === toldShown.n ? (turnCard.gone ? null : turnCard) : toldShown;
+  const cardNow = story.live || toldCard;
+  const since = story.since;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [flash, setFlash] = useState(() => new Set());
+  const prevState = useRef(state); // the state the table last committed (the flight effect moves it on)
+  // the spaces just taken (a new minion lands): worked out while rendering, kept until the next placement, faded after 2s
+  const lastFlash = useRef(NO_FLASH);
+  const [flashOff, setFlashOff] = useState(null);
+  const freshFlash = useMemo(() => {
+    const before = prevState.current;
+    if (!before || before === state) return null;
+    const fresh = state.round !== before.round ? Object.keys(state.slots) : Object.keys(state.slots).filter(k => before.slots[k] === undefined);
+    return fresh.length ? new Set(fresh) : null;
+  }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
+  const flashSet = freshFlash || lastFlash.current;
+  const flash = flashSet === flashOff ? NO_FLASH : flashSet;
   const [ready, setReady] = useState(null); // hot-seat: which human seat has been handed the device
   const [rules, setRules] = useState(false);
   const wide = useWide();
@@ -411,7 +439,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const askSeen = useRef(askLeave);
   useEffect(() => { if (askLeave !== askSeen.current) { askSeen.current = askLeave; setLeaving(true); } }, [askLeave]);
   const [note, setNote] = useState(null); // { text, tone, n } — a gentle answer in the status pill
-  const prevState = useRef(state);
   const facingRef = useRef(facing);
   facingRef.current = facing;
   const sendToken = useRef(0);
@@ -528,13 +555,13 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
 
     // A new minion travels from its leader to the space. The board never turns itself: a rival's move is marked
     // where it happened (a dashed ring) and told in the turn's story.
-    const fresh = state.round !== before.round ? Object.keys(state.slots) : Object.keys(state.slots).filter(k => before.slots[k] === undefined);
-    if (!fresh.length) return undefined;
+    if (!freshFlash) return undefined;
+    const fresh = [...freshFlash];
     const key = fresh[fresh.length - 1];
     const owner = state.slots[key];
-    setFlash(new Set(fresh));
+    lastFlash.current = freshFlash;
     flyWorker(root.current, owner, key, playerColor(owner), { own: mySeats.includes(owner) && state.round === before.round });
-    const t = setTimeout(() => setFlash(new Set()), 2000);
+    const t = setTimeout(() => setFlashOff(freshFlash), 2000);
     return () => clearTimeout(t);
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -542,24 +569,26 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // (placed → gained → bought), the players it touched pulse, and when the turn passes the card holds a beat, then
   // folds into that cult's chair. One card per placement: a snake turnaround or an extra turn is a turn of its own
   // (RC1 panel). A turn that ends the round is left to the Reckoning.
+  // The cards are worked out while rendering (story, above: one commit per step); this only starts the passed turn's
+  // hold-and-fold timers and moves the told mark on.
   useLayoutEffect(() => {
     const t = trail.current;
-    const was = t.stories.length ? t.stories[t.stories.length - 1].n : 0;
-    feed(t, live0, roundStart0);
-    const fresh = t.stories.filter(st => st.n > was);
-    const told = fresh[fresh.length - 1];
-    if (told && told.round === live0.round && !live0.over) {
-      showTurnCard({ pid: told.actor, text: told.text, live: false, n: `t${told.n}` });
-      const pids = [...new Set(fresh.flatMap(st => st.touched))];
+    toldUpTo.current = t.stories.length ? t.stories[t.stories.length - 1].n : 0;
+    if (story.live) { turnTimer.current.forEach(clearTimeout); turnTimer.current = []; lastTold.current = null; }
+    else if (story.told) {
+      const told = story.told;
+      lastTold.current = told;
+      turnTimer.current.forEach(clearTimeout);
+      turnTimer.current = [setTimeout(() => setTurnCard({ ...told, folding: true }), 2600), setTimeout(() => setTurnCard({ n: told.n, gone: true }), 3100)];
+    }
+    if (story.told) {
+      const pids = story.touched;
       if (pids.length) {
         const n = Date.now();
         setRobbed(r => ({ ...(r || {}), pids, n }));
         setTimeout(() => setRobbed(r => (r && r.n === n ? null : r)), 1800);
       }
     }
-    const now = live0.round >= 1 && !live0.over ? liveStory(t) : null;
-    if (now) showTurnCard({ pid: now.actor, text: now.text, live: true, n: `c${t.cur.key}` });
-    setSince(sinceYourTurn(t, mySeats));
   }, [live0]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When a choice prompt goes away, keep focus on the table (the status line) rather than the page body.
@@ -938,7 +967,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           {state.round >= 1 && <SinceStrip state={state} entries={since} me={mySeats.length === 1 ? mySeats[0] : null} yours={yours} hover={hover} onLog={openLog} />}
         </>
       )}
-      {turnCard && !moment && !(state.over && !moment) && <TurnCard card={turnCard} root={root.current} state={state} />}
+      {cardNow && !moment && !(state.over && !moment) && <TurnCard card={cardNow} root={root.current} state={state} />}
       {toast && <div key={toast.n} className="toast" role="status">{toast.text}</div>}
       <TouchTips />
       {cardDetail && state.cards[cardDetail.uid] && (
