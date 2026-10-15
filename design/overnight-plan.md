@@ -33,3 +33,6 @@ Every screen agent works from design/taste.md, with plate1b.png and grammar.md a
 
 ## Revised timing (07:45 UTC)
 Cory's morning is likely around 14:00 UTC, so the loop keeps going. Each wave: freeze a commit, run a quiet remote verdict and perf, have two blind screen-only testers (brief v3) play the frozen build, merge their findings, route them to owners, and let the design pod fix continuously. Wave 3 freezes about 08:00, wave 4 about 10:30. The bench's bot fix and rerun land around 10:00, and balance pass 3 follows only if the anchor check passes. The final freeze and the game-skeptic's grade come about 12:45, the final quiet verdict about 13:15, and the morning note is finished about 13:45.
+
+## Revised again (10:05 UTC)
+Wave 3 landed: both testers C+, game-feel B−, quiet verdict FAIL on 44e22bd (online stalls, 4×-CPU long frames, hover anchoring), all routed (design/eval/overnight-wave3.md). Seven agents are mid-fix with ~2h time boxes, so wave 4 becomes the final round: freeze ~12:00 (claude/cults-freeze-w4), then in parallel a quiet remote verdict + production perf, two blind testers here, and the game-skeptic on a quiet remote machine. Fix the blockers they find until ~13:30, a last quiet verdict on the final commit, and the morning note by ~13:50.
