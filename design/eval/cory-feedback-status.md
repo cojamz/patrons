@@ -1,48 +1,34 @@
-# Cory's play notes: where each one stands (2026-10-15, 04:13 UTC)
+# Cory's play notes: where each one stands (2026-10-15, 11:15 UTC)
 
-Done means seen on screen and tests passing. The next batch ships to the preview link after one combined test run.
+"Done" means seen on a frozen build or in a screenshot, with a test that fails if it comes back. Two blind testers and a blind hobby gamer played the build again at 08:20; their findings were fixed through the morning (design/eval/overnight-wave3.md).
 
 ## Done
-1. Straggler moves your last minion and asks only where. (engine, tests)
-2. One turn card per action, with the right name and the amounts actually paid. (turn story)
-3. The snake double turn reads "Your turn again (snake order)", and the turn-order chips count it.
-4. A "since your last turn" strip lists each rival move. Hover a line for its card; the log is one tap away on the strip.
-5. Midas shows its state ("Midas: on").
+1. Straggler moves your last minion and asks only where.
+2. The starting pick is an obvious call to action: one lit row in the middle of the wheel.
+3. Hovers open right next to what you point at, one card at a time, and an open card never eats a click.
+4. Snappier: a rival's move redraws only what changed; the page no longer restyles itself whole on every step (on a slow laptop, the wait for your turn fell from about 22s to 10s, hovers from 1.5s to under 0.4s); the header changes the moment the turn passes.
+5. The wheel spins faster by keys; the drag coast is being shortened.
+6. Member cards: picture, name, cost, worth; what it does lives in the hover as one plain sentence. No "need N", no color names by costs.
+7. Plain dots for resources, a split dot for "any", and the follower mark; everything else is words. White, silver and "any" read apart on every table.
+8. Every choice is picked on the board: steal by clicking the pile, copy by clicking the space, members, players and swaps by clicking them. No chip grids.
+9. The follower buys sit first in the right column; the top scoreboard is gone; seats are condensed; the shop sorts by cost; the deck has no hover.
+10. Round-end scoring plays one quadrant at a time, slowly, with the banner still at the wheel's centre.
+11. Rims read "MOST BLUE · +2 👤" with the follower mark.
+12. The giant follower is gone.
+13. Spaces have no names or pictures: the gain first, a plain phrase, then small print; every space passed a newcomer's decipher test (design/eval/words/decipher-w3.md).
+14. "Lit" spaces are unmistakable on your turn; in rivals' turns the shop dims.
+15. Seats sit in turn order with the snake visible, and unplaced minions bob in a column on each seat.
+16. The log is small; prime space goes to the wheel, your seat and the shop.
+17. Names in the log and the strip open their cards.
+18. A seat's hover lists each member with its ability and state; a usable member glows, and its card has "Use: …". The follower number shows where the followers came from.
+19. Every action plays a chain from source to destination, with one Speed setting (Quick / Steady / Relaxed, Steady by default).
+20. Opponents' builds: each seat shows "each round +3●", a rival's card says what they could buy right now, and the strip names anything that hit you.
 
-6. Hovers open right next to what you hover, fully on screen, never docked under P3. Your own members' cards open beside them. (Seen on screen.)
-7. The member hover is stripped: no "You pay", "Leaves …", "you'd lead N" or "Click to recruit". Just the card and its cost.
-8. The starting-resource pick sits under the wheel as one row that glows and pulses once.
-9. Every member opens a card. Kingpin wouldn't reproduce; a hover lost when its element was redrawn under the pointer is fixed.
-13. Follower buys are four tiles at the right end of the shop strip, lit when you can buy, each with a hover.
-14. The top score row is gone. Each seat shows its place ("2nd") and the leader is lit.
-15. Seats are condensed, each with a line on what the player makes each round, member color pips, and members grouped by what they do on hover.
-16. The shop is sorted by cost, with a cost/color toggle.
-17. The deck has no hover.
-28. Rims say "+2 followers", and the rim hover opens reliably.
-29. The giant follower in "Your Call" is fixed.
-30. Spaces have no names; the hover leads with the name.
-31. Pay dialog: one line for each price changer ("Penny Pincher: your gold counts double").
-32. Reloading on the results or the round summary brings it back, and two tabs no longer split a game.
+## In progress (lands in the final build)
+- The last effects that still jump without moving (gifts, ransoms, member trades, round-III steals, the bots' starting picks), and a shorter round-III burst.
+- Online play: a board pick (Sleepwalker) stalled a game online; fixed, with guards.
 
-## In progress (an agent on each)
-- Seats in turn order with the snake visible (layout). The round-end scoring made slow and clear (layout).
-10. Snappiness: a speed tracer (`?trace=1`) and a measured list of what's slow. (measurement)
-11. A faster wheel spin, instant hovers, and no waiting on animations. (motion)
-12. Every gain flies from its source to where it lands, and buttons and pieces feel tactile. (motion)
-18. Round-end scoring slowed down and made clear: one quadrant at a time, totals climbing as each prize lands. (layout)
-19. Every choice picked on the board: steal by clicking the rival's pile, copy by clicking the space on the wheel, members by clicking the card, players by clicking the seat. (pick-on-board)
-20. Redistribute says what "more" means. (engine)
-21. A visual language first (few symbols, one type scale, a grid, plain-dot currency), then one polished sample page for you. It covers the member card's hierarchy, the currency symbols and how actions look. (language lead)
-22. Testers rebuilt to look only at the screen, calibrated against your notes as the answer key. (calibration)
-
-## Queued
-23. The pay screen redesign, after the hover work in that dialog lands.
-
-## Ideas logged, not started (yours to call)
-24. A discard pile beside the deck, not called a graveyard.
-25. Members that are items rather than people, worth no follower.
-26. The Blue rework.
-27. Better pixel animations (the art pass).
-
-## Follow-ups seen on screen (foreman)
-- Pick-on-board: the choice caption sits over the bottom of the wheel, and the keyboard list shows as chips for everyone. Fold the list behind keyboard focus, and dock the caption off the wheel once the seat column lands.
+## Yours to call (in the morning note)
+- Members feel weak: relative payoffs (Reseller, Groupie) and Blue's direction.
+- A pixel pass so members tell apart at seat size.
+- A discard pile; members that are items; better pixel animations.
