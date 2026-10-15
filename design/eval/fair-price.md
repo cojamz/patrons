@@ -24,7 +24,7 @@ printed (colored+any) → fair ~Y (90% CI, panel n = probes; by round recruited 
 - Volunteer (free, 1 follower): panel ~2.5 (1.5–3); single-card sweep (600 seeds) ~2 (1.5–3). A free member is a free follower (2→1 rate) plus member count. Printed 0 stays (a deliberate lure; it's an anchor, not proposed).
 - Banker (2+2, "now and at round start +3 gold"): round I ~7, II ~5.5, III ~4 → ~5.5 (5–6.5) at the natural mix. Single-card sweep, forced from round I: 7.3 (6.3–8.3, 600 seeds).
 - Panel vs single-card sweep, same anchors, forced from round I: Volunteer 2.6 vs 2.1, Big Family 2.8 vs 2.4, Banker 7.0 vs 7.3. The 4-at-once design holds.
-- Hard seat, forked at round I (Banker, Volunteer, Lender, Revelers): still running; see design/eval/runs/fair-price/hard-round1.txt when it lands.
+- Hard seat (thinker, budget 60, 120 seeds), forked at round I: Banker ~7.7 (6.1–10.3), Volunteer ~2.6 (0.9–4.3), Revelers ~1.2 (−3.3–3.8), Lender ~5.3 (2.9–11.7). It agrees with the normal-bot panel's round-I numbers (Banker 7, Volunteer 2.5, Revelers 5 with a wide CI) except Lender, where Hard reads lower than 12. Lender's proposal of 8 sits inside both CIs. Forked at round III: Big Family ~4, Proselytizer ~8.6, Shift Crew ~2, Magnate ~2 (wide CIs; directions agree with the panel).
 
 ## Caveats (name the instrument)
 - Normal bots everywhere except the Hard checks. Turn order, denial and long plans are what bots value worst (Front-runner, Squatter, Straggler read low partly for that reason).
