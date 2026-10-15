@@ -4,7 +4,8 @@
 // already in: the coins leaving your stacks show as empty rings at the top of each stack, and the number under a
 // stack is what you keep. Click a stack to pay with that color instead; click a coin in the cost to send it home.
 // Either way the payment stays whole: the engine's nearest other legal way takes its place, and the coins fly between
-// stack and socket so you see the swap. Pay (Enter) pays; Cancel (Escape) goes back to the buy step.
+// stack and socket so you see the swap. Pay (Enter, wherever focus is) pays; Space works a focused stack or coin;
+// Cancel (Escape) goes back to the buy step.
 // The engine lists every legal spend (pending.options of kind 'pay'); this only ever moves between those options.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { cardDef, defById, quadrant, memberPrice, TIERS } from '../../engine/v4/index.js';
@@ -151,7 +152,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
   return (
     <div className="overlay sheet pay-overlay" role="dialog" aria-modal="true" aria-label={title}>
       <div className="dialog pay pay-card" ref={box}
-        onKeyDown={e => { if (e.key === 'Enter' && !e.target.closest('[data-pay-add],[data-pay-coin],[data-option="back"]')) { e.preventDefault(); pay(); } }}>
+        onKeyDown={e => { if (e.key === 'Enter' && !e.target.closest('[data-option="back"]')) { e.preventDefault(); pay(); } }}>
         {turnOf && <TurnOf player={turnOf} />}
         {/* what you're buying, as its card prints it (the hover card's head) */}
         <div className="mc pay-id" style={def ? { '--c': cardColor(state, def) } : undefined}>

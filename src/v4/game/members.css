@@ -59,10 +59,7 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 /* in your seat, on the dark table: a member you can use now is lit (the warm light that means "yours to act"),
    a used one steps back, a switch sits small under its figure */
 .lt-cult-seat .cs-member.ready .fig{cursor:pointer}
-.lt-cult-seat .cs-member.ready .fig::before{content:"";position:absolute;left:50%;top:50%;width:32px;height:32px;transform:translate(-50%,-52%);border-radius:50%;z-index:-1;
-  background:radial-gradient(closest-side,rgba(255,243,212,.16),rgba(255,243,212,.06) 70%,transparent);
-  box-shadow:0 0 0 1.5px rgba(255,243,212,.9),0 0 14px 2px rgba(255,236,190,.45);pointer-events:none}
-.lt-cult-seat .cs-member.ready .fig .sprite{filter:drop-shadow(0 0 3px rgba(255,243,212,.75)) brightness(1.08)}
+.lt-cult-seat .cs-member.ready .fig .sprite{filter:drop-shadow(1px 0 0 var(--light,#fff3d4)) drop-shadow(-1px 0 0 var(--light,#fff3d4)) drop-shadow(0 1px 0 var(--light,#fff3d4)) drop-shadow(0 -1px 0 var(--light,#fff3d4)) drop-shadow(0 0 6px rgba(255,236,190,.85))}
 .lt-cult-seat .cs-member.used .fig .sprite{opacity:.4;filter:grayscale(.6)}
 .lt-cult-seat .cs-member.used .aura{opacity:.35}
 .lt-cult-seat .cs-member .mu-switch{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);gap:0;z-index:2}
@@ -76,3 +73,4 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 .mu-name .card-name:hover{text-decoration:underline;text-decoration-color:rgba(43,32,24,.35);text-underline-offset:3px}
 /* a seat card is one you can use: the pointer may rest on it (its Use buttons, its list scrolls) */
 .lt-hover.popover.on[data-live="1"]{pointer-events:auto}
+.lt-cult-seat .cs-member button.mu-switch::after{content:"";position:absolute;inset:-10px -8px}

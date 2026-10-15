@@ -117,12 +117,13 @@ try {
     await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
     await page.reload({ timeout: 90000 });
     await page.waitForSelector('[data-home="resume"]', { timeout: 60000 });
-    await page.evaluate(() => { window.__sheet = 0; const t = () => { if (document.querySelector('.dialog.pay')) window.__sheet++; requestAnimationFrame(t); }; requestAnimationFrame(t); });
+    await page.evaluate(() => { window.__sheet = 0; window.__payPieces = 0; const t = () => { if (document.querySelector('.dialog.pay')) window.__sheet++; for (const g of document.querySelectorAll('.piece-flight.pay')) if (!g.dataset.seen) { g.dataset.seen = '1'; window.__payPieces++; } requestAnimationFrame(t); }; requestAnimationFrame(t); });
     await page.click('[data-home="resume"]');
     await page.waitForFunction(m => Number(document.querySelector('.app.game')?.dataset.moves) > m, save.state.moves, { timeout: 10000 }).catch(() => errors.push('(p3) a single way to pay was not paid'));
     await page.waitForTimeout(400);
     if (await page.evaluate(() => window.__sheet)) errors.push('(p3) the pay sheet showed for a single way to pay');
-    if (!(await page.evaluate(() => window.__patronsPieces || 0))) errors.push('(p3) no coins flew for the payment');
+    const flown = await page.evaluate(() => window.__payPieces);
+    if (flown < 4) errors.push(`(p3) ${flown} coins flew for a 4-coin payment`);
     await ctx.close();
   }
   // (g1) Good Deed: a color, then the rival who gets it

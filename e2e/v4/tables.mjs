@@ -2,7 +2,9 @@
 // One person + 3 bots; the person clicks the first legal option each time. The four games run side by side.
 // Checks: the picker (custom by clicks, random + reroll, ?table= in the URL), each game reaching results with no
 // console or page errors, the wheel using the picked spheres, and every resource color rendering (4 distinct,
-// none transparent). Screenshots go to /tmp/patrons-shots/v4/tables/.
+// none transparent), and no stall: every step put to the person has something on screen that moves the game on, a
+// rival's step never stands for a minute, and the Reckoning never freezes (each fails fast, naming the step and what's
+// on screen). Screenshots go to /tmp/patrons-shots/v4/tables/.
 //
 // Server: $V4_URL if set (npm run check:v4 sets it), else its own `npx vite` on a free port from 5180.
 import { chromium } from 'playwright';
@@ -82,7 +84,7 @@ async function play(t) {
     let clicks = 0, shotMid = false;
     // The stall guard: every step put to the person offers something on screen that moves the game on, and the round's
     // Reckoning tells its quadrants and ends by itself. Either standing still fails fast, naming the step and what's on
-    // screen, instead of a blind 5-minute timeout.
+    // screen, instead of running out a blind time budget.
     const where = () => page.evaluate(() => {
       const g = document.querySelector('.app.game');
       const rk = document.querySelector('.lt-reckon .reckon-head');
@@ -92,7 +94,8 @@ async function play(t) {
     }).catch(() => null);
     let step = { key: '', since: Date.now(), clicks: 0, tried: new Set() };
     while (!(await page.$('.results'))) {
-      if (Date.now() - t0 > 300000) throw new Error(`game did not finish in 5 minutes; at ${JSON.stringify(await where())}`);
+      // a time budget only: a game standing still fails within a minute (below), so a slow box isn't a stall
+      if (Date.now() - t0 > 480000) throw new Error(`game did not finish in 8 minutes; at ${JSON.stringify(await where())}`);
       const hand = await page.$('[data-handoff]');
       if (hand) { await hand.click().catch(() => {}); continue; }
       const next = await page.$('[data-next-round]');
@@ -108,8 +111,14 @@ async function play(t) {
         step.since = Date.now();
         continue;
       }
-      // your step: 30 clicks that moved nothing (over at least 15s) means nothing on screen answers it
-      if (at && at.yours && step.clicks >= 30 && Date.now() - step.since > 15000) {
+      // a rival's step (or anything not yours) that stands for a minute: the bots or the table stopped
+      if (at && !at.yours && !at.reckon && Date.now() - step.since > 60000) {
+        await shot('zz-stuck');
+        throw new Error(`the table stood still for 60s at move ${at.moves} (${at.phase}); on screen: ${at.ids.join(' ')}`);
+      }
+      // your step: 30 clicks that moved nothing (over at least 15s), or 45s with nothing clickable, means nothing on
+      // screen answers it
+      if (at && at.yours && ((step.clicks >= 30 && Date.now() - step.since > 15000) || Date.now() - step.since > 45000)) {
         await shot('zz-stuck');
         throw new Error(`stuck at move ${at.moves} (${at.phase}, "${at.prompt.trim().slice(0, 80)}"): ${step.clicks} clicks on [${[...step.tried].join(', ')}] moved nothing; on screen: ${at.ids.join(' ')}`);
       }

@@ -33,12 +33,12 @@ Visit each one, take its shot, and run the checklist on it:
 1. Home and the How to play screen.
 2. Game setup. Choose a table (Custom) that includes the quadrant that steals from rivals, so you meet a steal.
 3. The starting-resource picks.
-4. Your first turn, step by step: before placing, hovering spaces, placing, any choice the space asks, paying, the buy step (look at both kinds of buy), passing.
+4. Your first turn, step by step: before placing, hovering spaces, placing, any choice the space asks, paying, the buy step (look at both kinds of buy), passing. On this first turn, also try every interaction the rulebook says you can do with the board, and time each one.
 5. A bot's turn, watched (`wait`, then `frames 8 idle`).
 6. A steal (take a space that steals from rivals), and any gift, copy or swap choice you can reach.
-7. Paying for a member with a mix of resources.
+7. Paying for a member with a mix of resources. Recruit at least one member you activate yourself (the rulebook says some you use once) and use it.
 8. Round end: watch the whole scoring at normal speed with `frames`, then the summary.
-9. Rounds II and III: what changed on screen, what got crowded.
+9. Rounds II and III: what changed on screen, what got crowded. Open the game's history (log) once and hover the names in it.
 10. Results.
 At three moments (early round I, mid round II, round III) do a **hover sweep**: point at every element on screen, one by one (every shop card, every seat item including your own members, every symbol, every number, every ring and label), and note what each one opens, where it opens, and what's missing.
 

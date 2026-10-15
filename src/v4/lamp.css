@@ -95,7 +95,7 @@ h1,h2,h3{font-family:var(--serif)}
   .lt > .lt-wheel{grid-area:wheel;container-type:size;min-height:0;display:flex;align-items:center;justify-content:center}
   /* each chair is as tall as its content (the plate's panels) and stands at its place in the order: GameScreen stacks
      them (--y), centred in the column; a new round's order slides them there */
-  .lt > .lt-seat{grid-area:seats;align-self:start;margin-left:44px;transform:translateY(var(--y, 0px));
+  .lt > .lt-seat{grid-area:seats;align-self:start;margin-left:44px;transform:translateY(var(--y, calc(var(--slot, 0) * 108px)));
     transition:transform var(--mo-sort, .35s) cubic-bezier(.3,.7,.4,1),box-shadow var(--mo-dim, .3s),background var(--mo-dim, .3s);
     min-height:0;min-width:0;overflow:visible;border-radius:8px}
   .lt > .lt-seat:empty{visibility:hidden}

@@ -266,8 +266,10 @@ function TurnCard({ card, root, state }) {
     // the chairs in one ordered column (laptop): the card tells the turn in the right column, just above the shop,
     // under the story of the turns since yours (it would cover the next chair beside its own)
     const column = root && root.querySelector('.lt > .lt-snake');
-    // a layout that docks the turn under the story of the turns since yours (?layout=a|b): the newest turn reads last
-    const since = root && root.dataset.layout && root.querySelector('.lt > .lt-since');
+    // a layout that docks the turn under the story of the turns since yours (layout.css sets --turn-dock: since): the
+    // newest turn reads last, under the ones before it
+    const dock = root && getComputedStyle(root).getPropertyValue('--turn-dock').trim();
+    const since = dock === 'since' && root.querySelector('.lt > .lt-since');
     if (since && since.getBoundingClientRect().width) {
       const b = since.getBoundingClientRect();
       setPos({ left: b.left, right: undefined, top: b.bottom + 8, bottom: undefined, width: b.width, ox: '0%', oy: '0%' });
