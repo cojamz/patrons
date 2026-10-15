@@ -1025,6 +1025,40 @@ export function trend(mode, only) {
   });
   L.push('');
   if (!runs.length) return L.join('\n') + '\n';
+  // Pooled: every kept run on the latest rules content, combined by inverse variance. One run's flags churn at the
+  // edges (each run is an independent sample and many cards sit near the line); the pooled reading is the one to act on.
+  const latest = runs[runs.length - 1];
+  const same = runs.filter(r => r.content === latest.content);
+  const pool = (xs, val, lo, hi) => {
+    const w = xs.filter(x => x && Number.isFinite(x[val]) && Number.isFinite(x[lo]) && x[hi] > x[lo]).map(x => ({ v: x[val], w: 1 / (((x[hi] - x[lo]) / (2 * Z90)) ** 2) }));
+    if (!w.length) return null;
+    const W = w.reduce((s2, x) => s2 + x.w, 0), v = w.reduce((s2, x) => s2 + x.w * x.v, 0) / W, h = Z90 / Math.sqrt(W);
+    return { v, lo: v - h, hi: v + h, runs: w.length };
+  };
+  const pooledCards = [...new Set(same.flatMap(r => r.cards.map(c => c.id)))].map(id => {
+    const T = latest.printed[id], N = pool(same.map(r => r.cards.find(c => c.id === id)?.N), 'fair', 'lo', 'hi'), Hh = pool(same.map(r => r.cards.find(c => c.id === id)?.H), 'fair', 'lo', 'hi');
+    const dir = x => (!x ? null : x.lo > T && x.v - T >= 1.5 ? 'cheap' : x.hi < T && T - x.v >= 1.5 ? 'dear' : 'in');
+    return { id, T, N, H: Hh, flag: dir(N) !== 'in' && dir(N) && dir(N) === dir(Hh) ? dir(N) : null, nOnly: (dir(N) === 'cheap' || dir(N) === 'dear') && dir(Hh) !== dir(N) };
+  });
+  const pooledSpaces = [...new Set(same.flatMap(r => r.spaces.map(x => x.cell)))].map(cell => {
+    const r = Number(cell.split('@')[1]), [lo, hi] = BANDS[r], ring = SPACES[cell.split('@')[0]]?.ring;
+    const N = pool(same.map(x => x.spaces.find(y => y.cell === cell)?.N), 'su', 'suLo', 'suHi'), Hh = pool(same.map(x => x.spaces.find(y => y.cell === cell)?.H), 'su', 'suLo', 'suHi');
+    const dir = x => (!x ? null : x.lo > hi ? 'strong' : ring === r && x.hi < lo ? 'weak' : 'in');
+    return { cell, N, H: Hh, flag: dir(N) !== 'in' && dir(N) && dir(N) === dir(Hh) ? dir(N) : null };
+  });
+  L.push(`## Pooled over the ${same.length} run${same.length > 1 ? 's' : ''} on today's rules content (${latest.content})`, '');
+  L.push('Flagged when both pooled intervals miss printed by ≥ 1.5 cost points the same way (spaces: miss the band the same way). This is the list to act on.', '');
+  const pc = pooledCards.filter(x => x.flag).sort((x, y) => Math.abs(y.N.v - y.T) - Math.abs(x.N.v - x.T));
+  L.push(`| card | printed | Normal pooled [90%] | Hard-20 pooled [90%] | reads |`, '|---|---|---|---|---|');
+  pc.forEach(x => L.push(`| ${DEF[x.id]?.name || x.id} (${x.id.split('.')[0]}) | ${x.T} | ${f1(x.N.v)} [${f1(x.N.lo)}–${f1(x.N.hi)}] (${x.N.runs}) | ${f1(x.H.v)} [${f1(x.H.lo)}–${f1(x.H.hi)}] (${x.H.runs}) | too ${x.flag} |`));
+  if (!pc.length) L.push('| none | | | | |');
+  const ps = pooledSpaces.filter(x => x.flag);
+  L.push('', `| space | round | Normal pooled scaled u [90%] | Hard-20 pooled [90%] | reads |`, '|---|---|---|---|---|');
+  ps.forEach(x => { const [id, r] = x.cell.split('@'); L.push(`| ${SPACES[id]?.name || id} (${id.split('.')[0]}) | ${r} | ${f1(x.N.v)} [${f1(x.N.lo)}–${f1(x.N.hi)}] | ${f1(x.H.v)} [${f1(x.H.lo)}–${f1(x.H.hi)}] | ${x.flag} |`); });
+  if (!ps.length) L.push('| none | | | | |');
+  const nOnlyP = pooledCards.filter(x => x.nOnly && x.H);
+  if (nOnlyP.length) L.push('', `Normal flags on the pooled reading, Hard-20 doesn't agree: ${nOnlyP.map(x => `${DEF[x.id]?.name || x.id} ${x.T}→${f1(x.N.v)} (Hard-20 ${f1(x.H.v)})`).join('; ')}.`);
+  L.push('');
   const cards = [...new Set(runs.flatMap(r => r.cards.map(c => c.id)))];
   L.push('## Cards', '', `| card | printed now | ${head.join(' | ')} |`, `|---|---|${head.map(() => '---').join('|')}|`);
   for (const id of cards.sort((a, b) => (DEF[a]?.name || a).localeCompare(DEF[b]?.name || b))) {
@@ -1063,6 +1097,8 @@ function report(R, diff, prev) {
   L.push(`${R.date.slice(0, 16).replace('T', ' ')} UTC · commit ${R.sha} · content ${R.content} · ${(R.secs / 60).toFixed(1)} min ${R.shards > 1 ? `over ${R.shards} shards` : `on ${R.workers} workers`} (${(R.coreSecs / 60).toFixed(0)} core-min) · ${R.tables}.`);
   if (tp) L.push(`Games played: ${tp.all.games.toFixed(0)} full-game equivalents (probe games fork mid-game and count as the part they play). Throughput: Normal ${f1(tp.normal.perCoreMin)} games per core-minute, ${H} ${f1(tp.hard.perCoreMin)} (all four seats that level).`);
   L.push(`Instruments: **Normal** (all four seats) and **${H}** (Hard = Normal plus rollouts, at budget ${HARD_BUDGET}, uncapped, deterministic). Intervals are 90% (bootstrap over seeds for fits, Wilson for win rates). Method and limits: design/eval/bench/README.md.`);
+  L.push('');
+  L.push(`One run is one sample: flags near the line churn from run to run (two full runs on the same rules kept 5 of 14 card flags, while estimates moved only as far as their intervals predict). **Act on the pooled list in ${R.mode === 'quick' ? 'trend-quick.md' : 'trend.md'}**, which combines every run on the same rules content.`);
   L.push('');
   L.push('## What moved since last run');
   if (!prev) L.push('First run of this mode: nothing to compare.');

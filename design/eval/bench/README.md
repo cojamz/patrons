@@ -53,7 +53,7 @@ Quick's Hard-20 column is a smoke check (13–22 probes an anchor): read cards a
 
 ## Running at scale (shards)
 
-Measured on this box (4 cores): **Normal plays 62 full-game equivalents per core-minute; Hard-20 (all four seats) 9.7.** A probe game forks mid-game and counts as the part it plays. Every report prints both numbers, so the sizing below stays honest as the engine changes.
+Measured on this box (4 cores): **Normal plays 46–62 full-game equivalents per core-minute; Hard-20 (all four seats) 8.5–9.7** (the range is box load between runs). A probe game forks mid-game and counts as the part it plays. Every report prints both numbers, so the sizing below stays honest as the engine changes.
 
 Games per unit (full-game equivalents):
 - a Normal seed: one base game, the round II and III continuations, 12 card-probe and 12 space-probe games ≈ 19.5 games, 0.31 core-min.
@@ -76,6 +76,8 @@ node scripts/v4-bench-merge.mjs partial-A-*.json partial-B-*.json  # the report,
 Sizing: `--scale=4` is about 35,000 Normal games for stage A, about 200 core-min, so 50 min a shard over 4 four-core machines. "A few hundred paired games each" in stage B: `--perTarget=300` with the usual ~50 targets is about 690 Hard-20 seeds, 1,300 core-min: about 55 min a shard over 6 four-core machines. Partials hold raw results (about 2 KB a Normal seed) and stay out of git; only the merged result goes in history.
 
 ## Trend, power and interactions
+
+- **Act on the pooled list, not one run's flags.** Each run is an independent sample, and many cards sit near the flag line: two full runs on the same rules kept only 5 of 14 card flags, although every estimate moved just as far as its interval predicted (RMS z 0.99 for cards, 0.84 for spaces, so the intervals are honest). `trend.md` opens with every run on the latest rules content pooled by inverse variance, flagged when both instruments' pooled intervals agree. More runs tighten it; a rules change starts a new pool.
 
 - `trend.md` (`trend-quick.md` for quick runs) shows every card's Normal fair price, every space's scaled u and every archetype's win rate across the last 8 runs of that mode, with what changed between runs (rules content hash, repriced, new and cut cards). History keeps every merged run.
 - Power: every unflagged item shows "detectable", the smallest gap its interval could have caught with 80% power (1.51 × its 90% half-width; at least 1.5 cost points for cards), with the median and 90th percentile in the section text. Flagged items show n and interval for both instruments.
