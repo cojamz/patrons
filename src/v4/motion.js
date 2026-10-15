@@ -133,6 +133,7 @@ const TABLE = {
   shopSlide:   [180,   240,    320],
   deal:        [220,   300,    420],
   colorTurn:   [60,    80,     120],  // a piece that changes colour on its way turns at its midpoint (grammar §2)
+  sortBeat:    [350,   500,    700],  // a new round's chairs re-sort into its order (lamp.css slides them 350ms) and are read
   rowOut:      [100,   160,    240],  // a whole fresh row: each old card drops away toward the pile (grammar B4)
   rowOutStagger: [15,  25,     40],
   dealStagger: [30,    40,     60],
@@ -146,7 +147,9 @@ const TABLE = {
   reckonTick:  [200,   300,    450],
   reckonRest:  [60,    120,    200],
   reckonQuiet: [150,   250,    400],  // a rim nobody scores: it pulses once, dim, and the Reckoning moves on
-  reckonLead:  [250,   500,    800],  // a beat after the round's last move ("Turn passes.") before the first rim lights
+  // the round's end as its own beat before the first rim lights: "Round II ends" stamps in at the wheel's centre and is
+  // read (wave 4 #6: the scoring began while the player looked away)
+  reckonLead:  [450,   800,    1200],
 };
 const IDX = { quick: 0, steady: 1, relaxed: 2 };
 

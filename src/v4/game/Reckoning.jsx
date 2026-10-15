@@ -160,12 +160,18 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   const shownBeat = step < rows.length ? beat : 2;
   return (
     <div className="lt-reckon" role="dialog" aria-modal="true" aria-label={`Round ${info.result.round} reckoning`} data-reckon={row ? row.qid : ''} onClick={finish}>
-      <div className={`reckon-head${mid ? ' at-mid' : atTop ? ' at-top' : ''}`} style={{ '--c': row ? `var(--${row.qid})` : undefined, ...(mid ? { left: mid.left, top: mid.top, '--mid-w': `${mid.w}px` } : null) }} aria-live="polite">
-        <small>Round {info.result.round} scoring · {Math.min(step + 1, rows.length)} of {rows.length}</small>
-        {row && <b className="reckon-rule">{row.rule}</b>}
-        {row && row.counts && <span className="reckon-counts">Counts {row.counts}{row.tiebreak && row.tiebreak.text ? `; ${row.tiebreak.text}` : ''}.</span>}
-        <b data-reckon-head className={`reckon-verdict${shownBeat ? ' on' : ''}${row && !row.winners.length ? ' none' : ''}`}>{shownBeat ? verdict : '\u00a0'}</b>
-        <span className="reckon-dots" aria-hidden="true">{rows.map((r, k) => <i key={r.qid} className={k < step ? 'done' : k === step ? 'on' : ''} style={{ '--c': `var(--${r.qid})` }} />)}</span>
+      <div className={`reckon-head${mid ? ' at-mid' : atTop ? ' at-top' : ''}${!ready ? ' opening' : ''}`} style={{ '--c': row && ready ? `var(--${row.qid})` : undefined, ...(mid ? { left: mid.left, top: mid.top, '--mid-w': `${mid.w}px` } : null) }} aria-live="polite">
+        {/* the round's end, as a beat of its own before the first rim lights (wave 4 #6: the scoring began while the player
+            looked away): "Round II ends" stamps in at the wheel's centre, with the quadrants still to score */}
+        {!ready ? <b className="reckon-rule reckon-ends">Round {info.result.round} ends</b> : (
+          <>
+          <small>Round {info.result.round} scoring · {Math.min(step + 1, rows.length)} of {rows.length}</small>
+          {row && <b className="reckon-rule">{row.rule}</b>}
+          {row && row.counts && <span className="reckon-counts">Counts {row.counts}{row.tiebreak && row.tiebreak.text ? `; ${row.tiebreak.text}` : ''}.</span>}
+          <b data-reckon-head className={`reckon-verdict${shownBeat ? ' on' : ''}${row && !row.winners.length ? ' none' : ''}`}>{shownBeat ? verdict : '\u00a0'}</b>
+          </>
+        )}
+        <span className="reckon-dots" aria-hidden="true">{rows.map((r, k) => <i key={r.qid} className={k < step ? 'done' : ready && k === step ? 'on' : ''} style={{ '--c': `var(--${r.qid})` }} />)}</span>
       </div>
       {row && step < rows.length && row.rows.map((r, k) => {
         const at = spots[r.id];

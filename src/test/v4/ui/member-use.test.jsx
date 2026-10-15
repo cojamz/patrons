@@ -135,7 +135,7 @@ describe('threats you can see coming (w2b #19, #21)', () => {
     expect(u.why).toMatch(/Safecracker found no magenta/);
     expect(promptFor(s, true).sub || '').not.toMatch(/Safecracker/);
     const { container } = render(<MemberActions state={s} uid={uid} me={0} optionFor={optionsOf(s)} onPick={() => {}} />);
-    expect(container.querySelector('[data-use]').dataset.idle).toBe('1');
+    expect(container.querySelector('[data-use]')).toBeNull(); // no button that does nothing (w4b #20)
     expect(container.textContent).toMatch(/Nothing to gain now: Safecracker found no magenta/);
     cleanup();
     expect(safeThisRound(s, 1)).toBe(false);

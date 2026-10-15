@@ -161,7 +161,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                     <s className="cost-was num" title={`List price ${parts.map(c => `${c.n} ${c.color === 'any' ? 'any' : c.color}`).join(' + ')}`} aria-label={`list price ${parts.reduce((t, c) => t + c.n, 0)}`}>{parts.reduce((t, c) => t + c.n, 0)}</s>
                   </span>
                 ) : <CostShapes parts={parts} />}
-                <span className="val" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>
+                <span className="val" data-worth={d.f} title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>
                   <b className="num">{d.f}</b><FollowerGlyph size={11} title={`worth ${d.f}`} />
                 </span>
               </span>

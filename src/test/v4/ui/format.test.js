@@ -1,7 +1,7 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
-import { effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
+import { foldRepeats, effectStory, turnGroups, membersWhy, membersParts, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
 import { createTrail, feed } from '../../../v4/game/trail.js';
 import { contextFor } from '../../../engine/v4/core.js';
 
@@ -58,6 +58,11 @@ describe('v4 format helpers', () => {
     // a minion that joins a rival's space starts a turn too, and says whose doing it is (Squatter), never a copy
     expect(turnGroups(st, ['P1 took Kickback (Gold).', 'P2 joined P1 on Kickback (Gold).', 'P2 recruited Banker.'])).toEqual([[1, 2], [0]]);
     expect(explainLine(['P2 joined P1 on Kickback (Gold).'], 0).text).toBe('P2 joined P1 on Kickback (Squatter).');
+    // a member's trigger that repeats is said once, at its newest, with how many times (w4b #29: Tipster after every move)
+    const tip = ['P1 took Kickback (Gold).', "P3's Tipster: +1 white.", 'P2 took Rush (Gold).', "P3's Tipster: +1 white.", 'P1 took Haggle (White).', "P3's Tipster: +1 white."];
+    const f = foldRepeats(tip, turnGroups(st, tip));
+    expect(f.groups).toEqual([[4, 5], [2], [0]]);
+    expect(f.times.get(5)).toBe(3);
     // a round's opening line heads the pay-outs logged just before it
     expect(turnGroups(st, ["P2's Investor: +2 gold.", 'Round II begins. P1 picks first.', 'P1 took Kickback (Gold).'])).toEqual([[2], [1, 0]]);
     // a real game: every line but the passes, once each

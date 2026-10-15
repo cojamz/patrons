@@ -108,6 +108,12 @@ export function spaceGeometry(state, look = 'sockets') {
 const collapse = t => String(t).replace(/\s+/g, ' ');
 const rimWidths = new Map();
 let rimCtx, rimEarly = false; // rimEarly: something was measured before the web font arrived
+// The faces the wheel measures its print in, asked for at once (a face loads only when something first uses it, after
+// the wheel had measured with the fallback: wave-4 B #32, panel text reflowed ~1s after setup loaded). Until they're in,
+// the wheel's print stays hidden; then it's laid out once, in its own font.
+let wheelFontsIn = typeof document === 'undefined' || !document.fonts || typeof document.fonts.load !== 'function';
+const wheelFonts = wheelFontsIn ? Promise.resolve() : Promise.all(['500', '700', '800'].map(w => document.fonts.load(`${w} 16px "Alegreya Sans"`).catch(() => null)))
+  .then(() => { wheelFontsIn = true; if (rimEarly || rimWidths.size) { rimEarly = false; rimWidths.clear(); } });
 /** Width of `text` in the rim's face (Alegreya Sans at `weight`, letter-spacing `ls` em), per pixel of font size. */
 export function rimWidth(text, weight = 700, ls = 0) {
   const t = collapse(text);
@@ -344,7 +350,9 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const nq = state.quadrants.length;
   // On-screen scale of the board, so text is sized in real pixels.
   const [scale, setScale] = useState(1);
-  useEffect(() => {
+  // measured before the first paint (wave-4 B #32: measured after it, the first frame laid the panels out for a 416px
+  // board and they reflowed bigger a frame later); one layout read at mount, then the ResizeObserver
+  useLayoutEffect(() => {
     const el = stage.current;
     if (!el) return undefined;
     const measure = () => { const w = el.getBoundingClientRect().width; if (w) setScale(w / VBS); };
@@ -666,12 +674,16 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     return { runs, tie, tieText: tb ? tb.text : null, top, rr, font, ls: RIM_LS, textW: lineK * font };
   };
   const rimAnchor = qid => stage.current && stage.current.querySelector(`[data-plaque="${qid}"]`);
-  // once the web font has loaded, its widths replace the fallback's: one more render, once
-  const [, setFontsIn] = useState(0);
+  // once the web font has loaded, its widths replace the fallback's: one more render, once. Until then the wheel's print
+  // stays hidden (wave-4 B #32: about 1s after setup loaded, panel text laid out in the fallback font reflowed bigger):
+  // it appears once, laid out in its own font
+  const [fontsIn, setFontsIn] = useState(() => (wheelFontsIn ? 1 : 0));
   useEffect(() => {
     let on = true;
+    if (!wheelFontsIn) wheelFonts.then(() => { if (on) setFontsIn(1); });
+    // a face that still arrives later (another weight) re-measures once, as before
     const f = typeof document !== 'undefined' && document.fonts;
-    if (f && f.ready) f.ready.then(() => { if (on && rimEarly) { rimEarly = false; rimWidths.clear(); setFontsIn(1); } }, () => {});
+    if (f && f.ready) f.ready.then(() => { if (on && rimEarly) { rimEarly = false; rimWidths.clear(); setFontsIn(n => n + 1); } }, () => {});
     return () => { on = false; };
   }, []);
 
@@ -873,7 +885,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     sizeTo([...out.values()].filter(v => v.said.main));
     for (const t of [1, 2, 3]) sizeTo(spaces.filter(x => x.ring === t).map(x => out.get(x.key)).filter(v => v.said.verb));
     return out;
-  }, [panels, state.quadrants, state.slots, round, rot, scale]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [panels, state.quadrants, state.slots, round, rot, scale, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
   live.current = { tap, onPick, hover, anchorOf };
   const pinnedKey = peek && peek.pinned ? peek.key : null;
   const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');
@@ -896,7 +908,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const crewIds = owner !== undefined ? [owner, ...joiners] : [];
     const sig = [X.toFixed(2), Y.toFixed(2), owner ?? '', joiners.join(','), open ? 1 : 0, opt || '', selected ? 1 : 0, fresh ? `${fresh.pid}:${fresh.newest ? 1 : 0}:${fresh.action}` : '',
       flash.has(key) ? 1 : 0, lay ? JSON.stringify(lay) : '', (opt && pickNotes && pickNotes.get(key)) || '', crewIds.map(id => `${state.players[id].name}:${seatEmoji(state, id)}`).join(','),
-      fresh ? state.players[fresh.pid].name : '', meId ?? '', round, look, custom ? `${Face ? 1 : 0}:${scale}:${rot}` : '', panels ? scale : ''].join('|');
+      fresh ? state.players[fresh.pid].name : '', meId ?? '', round, look, custom ? `${Face ? 1 : 0}:${scale}:${rot}` : '', panels ? `${scale}:${fontsIn}` : ''].join('|');
     const had = built.current.get(key);
     if (had && had.sig === sig) return <Space key={key} el={had.el} />;
     const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && said.verb ? 'verb' : '', lay && lay.oneLines > 1 ? 'wrap1' : '', lay && lay.twoLines > 1 ? 'wrap' : '', lay && lay.tight ? 'tight' : '', lay && lay.two === PANEL_PX.small ? 'small' : ''].filter(Boolean).join(' ');
@@ -975,11 +987,11 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     );
     built.current.set(key, { sig, el });
     return <Space key={key} el={el} />;
-  }), [state, rot, legalKey, flashKey, recentKey, pinnedKey, sent, round, look, Face, custom || panels ? scale : 0]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), [state, rot, legalKey, flashKey, recentKey, pinnedKey, sent, round, look, Face, custom || panels ? scale : 0, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="wheel-wrap" data-spaces={look} data-face={custom ? look : undefined}>
-      <div className="stage" ref={stage} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ '--wheel-px': `${Math.round(boardPx)}px`, '--px': (1 / (scale || 1)).toFixed(4) }}>
+      <div className={`stage${fontsIn ? '' : ' fonts-wait'}`} ref={stage} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ '--wheel-px': `${Math.round(boardPx)}px`, '--px': (1 / (scale || 1)).toFixed(4) }}>
         <svg viewBox={`${VB0} ${VB0} ${VBS} ${VBS}`} role="group" aria-label="Board" className={`wheel-paper${late ? ' late' : ''}`}>
           <defs>
             <radialGradient id="ltPaper" cx="50%" cy="45%" r="60%"><stop offset="0" stopColor="var(--paper)" /><stop offset=".8" stopColor="var(--paper-2)" /><stop offset="1" stopColor="var(--paper-3)" /></radialGradient>

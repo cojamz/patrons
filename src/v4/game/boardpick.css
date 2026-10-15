@@ -119,6 +119,10 @@
   .lt .lt-wheel > .prompt.choice.plain.at-space{transform:none;bottom:auto}
 }
 .prompt.choice .opts.big{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:4px}
+/* four amounts (Your Call in round III) stay one row of tighter tiles, the dialogs pod's small card: they wrapped 3 + 1
+   into a grid that sat over the middle of the wheel (w4b #4) */
+.prompt.choice .opts.big:has(> :nth-child(4)){flex-wrap:nowrap;gap:8px}
+.prompt.choice .opts.big:has(> :nth-child(4)) .btn{min-width:0;padding:8px 12px}
 .prompt.choice .opts.big .btn{min-height:56px;min-width:96px;padding:8px 18px;border-radius:var(--corner,8px);font:700 18px/1 var(--sans);
   display:inline-flex;align-items:center;justify-content:center;gap:4px;transition:transform .1s ease-out}
 .prompt.choice .opts.big .btn:hover:not(:disabled){transform:translateY(-2px)}

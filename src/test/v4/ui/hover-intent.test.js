@@ -31,9 +31,10 @@ describe('hover intent', () => {
     const c = card(360, 100, 280, 300);
     move(100, 150); move(101, 150);
     aimAt(c);
-    expect(heading({ x: 100, y: 40 })).toBe(true); // right after leaving, any route still holds the card (w3b #47)
+    expect(heading({ x: 100, y: 170 })).toBe(true); // right after leaving, a detour near where it left still holds it (w3b #47)
+    expect(heading({ x: 100, y: 40 })).toBe(false); // but a pointer gone well away, the other way, is going elsewhere (w4b #2)
     now += 350;
-    expect(heading({ x: 90, y: 0 })).toBe(false); // then: up to the next seat, away from the card
+    expect(heading({ x: 90, y: 0 })).toBe(false); // and later, too
     expect(aimedAt()).toBe(c); // the aim stays until it ends; only the step is off course
     arrived(c);
     expect(heading({ x: 400, y: 250 })).toBe(false);

@@ -19,11 +19,14 @@
   /* the chairs stack from the column's top (GameScreen reads --seats-align and writes --seats-end, their foot) */
   .app.game.lt > .lt-snake{grid-area:seats;--seats-align:start;margin-top:var(--col-top)}
   .app.game.lt > .lt-seat{margin-top:var(--col-top)}
-  /* members you can tell apart (w2b #22: "16px sprites, packed 6–11 to a row"): figures at 32px in a 34px row; the
-     chair folds the rest into "+N" (CultSeat MAX) and its card lists them all */
-  .app.game.lt > .lt-seat > .lt-cult-seat{grid-template-rows:32px 34px}
-  .app.game.lt > .lt-seat.mine > .lt-cult-seat{grid-template-rows:40px 24px 34px}
-  .app.game.lt > .lt-seat .cs-member .sprite{width:32px;height:32px}
+  /* members you can tell apart (w2b #22: "16px sprites, packed 6–11 to a row"; wave-4 B #14: at ~30px they were still
+     smaller than the turn card's type, though they're the readout of a rival's plan): figures at 40px in a 42px row;
+     the chair shows as many as fit and folds the rest into "+N" (CultSeat), its card lists them all */
+  .app.game.lt > .lt-seat > .lt-cult-seat{grid-template-rows:32px 42px}
+  .app.game.lt > .lt-seat.mine > .lt-cult-seat{grid-template-rows:40px 24px 42px}
+  .app.game.lt > .lt-seat .cs-member .sprite{width:40px;height:40px}
+  .app.game.lt > .lt-seat .cs-member .aura{width:46px;height:16px}
+  .app.game.lt > .lt-seat .cs-member .aura.strong{width:50px;height:46px}
   /* the rail starts just under the first chair's order chip ("next / twice" is two lines): its arrowhead, when the turns
      walk up, never lands between the chip's words */
   .app.game.lt > .lt-snake .sn-line{top:calc(var(--rail-top, 12%) + 14px)}
@@ -101,7 +104,7 @@
 /* the lamp at the starting pick (w2b #25: "at a squint the eye lands on the wheel"): the pick holds the decision, so the
    wheel steps back like it does in your buy step, and the members you're choosing toward stay readable */
 /* (the stage only: the picker lives inside the wheel's region and keeps its light) */
-.lt.in-setup[data-yours="1"] .lt-wheel .stage{filter:brightness(.7) saturate(.8) drop-shadow(0 18px 22px rgba(0,0,0,.55)) drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+.lt.in-setup[data-yours="1"] .lt-wheel .stage{filter:brightness(.7) saturate(.8)}
 .lt.in-setup[data-yours="1"] .lt-shop{filter:brightness(.9) saturate(.95)}
 /* the log (w2b #48: "covers a third of the board"): a modest drawer out of the left column, where the story of the turns
    and its Log button live, as wide as that column; the wheel and the shop stay in view, under a light shade */
@@ -312,4 +315,28 @@
 /* a member with no sphere (a guest from no quadrant on the table) stands on no colored ground: its grey halo read as a
    state nobody explained (w3b #53, "an unexplained gray halo") */
 .cs-member[data-sphere="colorless"] .aura{display:none}
+
+/* a card's worth is quiet when it's the usual 1 (wave-4 B #39: "as loud as the cost; on the 12 cards worth 1 it's
+   noise"); worth 2 and up keeps the ink and weight, since there it's the point (Crew) */
+.lt-card .ft .val[data-worth="1"]{color:var(--pl-ink-3,#a39078)}
+.lt-card .ft .val[data-worth="1"] b{font-weight:600}
+.lt-card .ft .val[data-worth="1"] .follower-mark{opacity:.7}
+
+/* the turn card steps down to the body size (wave-4 B #14: "the toast is the biggest type in the left column"): its
+   head at 14 like the story's lines, so the members above are what the eye finds; it reads as a card by its paper */
+.app.game.lt > .turn-card{padding:7px 11px 8px;gap:1px}
+.app.game.lt > .turn-card .tc-head{font-size:var(--s);font-weight:700;line-height:1.25}
+/* "each round" with three or four gains (wave-4 B #35: "+1● +1● +1● +1○" pushed into the member row): two to a line
+   under the label, so the block stays a figure and a half wide */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt > .lt-seat .cs-build .cs-gains{flex-wrap:wrap;justify-content:flex-end;max-width:78px;row-gap:0;line-height:15px}
+  .app.game.lt > .lt-seat .cs-build .cs-income small{line-height:12px}
+}
+
+/* a rim with keyboard focus (wave-4 B #34: after an arrow-key spin the green rim kept a gold outline that "looks like a
+   highlight"): the focus ring is a cream dashed hairline, never the lamp's gold, which means "lit" on this table */
+.lt .stage svg.rim-layer .rim-hit:focus-visible{stroke:var(--cream,#f2e8d2);stroke-width:1.5;stroke-dasharray:4 4;stroke-opacity:.75;fill:transparent}
+
+/* the wheel's print waits for its font (Wheel.jsx fonts-wait, wave-4 B #32): laid out once, in the font it's set in */
+.lt .stage.fonts-wait .slot .face,.lt .stage.fonts-wait svg .rim-rule,.lt .stage.fonts-wait svg .rim-mark,.lt .stage.fonts-wait svg .rim-dot{visibility:hidden}
 

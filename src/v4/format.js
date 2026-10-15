@@ -405,6 +405,25 @@ export function turnGroups(state, lines) {
   return groups.reverse();
 }
 
+/**
+ * A member's trigger that fires the same way again and again (Tipster: "P3's Tipster: +1 white." after every move) is
+ * shown once per round, at its newest, with how many times it fired (w4b #29: it filled the log). Takes turnGroups'
+ * groups; returns { groups, times: Map(index → n) }. Only exact repeats, three or more, of a "Name's Member: …" line.
+ */
+export function foldRepeats(lines, groups) {
+  const n = new Map();
+  for (const l of lines) if (/^.+?'s [^:]+: /.test(l)) n.set(l, (n.get(l) || 0) + 1);
+  const seen = new Set(), times = new Map();
+  const out = groups.map(g => g.filter(j => {
+    const l = lines[j];
+    if (!(n.get(l) >= 3)) return true;
+    if (seen.has(l)) return false;
+    seen.add(l); times.set(j, n.get(l));
+    return true;
+  })).filter(g => g.length);
+  return { groups: out, times };
+}
+
 // ---------- contest standings: the engine's contestTable, the same function that scores the round ----------
 /**
  * One contest for display: { qid, label, rule, counts, tiebreak, prize, rows:[{ id, score, shown, tiebreak }],
@@ -493,10 +512,13 @@ const sgn = n => `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
  * The round's member followers as the summary says them: one part, or new members and losses apart ("+11 from new
  * members · −1 from members that left"); a swap and nothing else is one part, "−1 from a swap" (w3a #19).
  */
-export function membersParts(g) {
+export function membersParts(g, short = false) {
   if (!g || !g.members && !g.lost) return [];
-  if (!g.left || (g.swapped && g.joined === g.left) || !g.joined) return g.members ? [`${sgn(g.members)} ${membersWhy(g)}`] : [];
-  return [g.gained ? `${sgn(g.gained)} from new members` : null, g.lost ? `−${g.lost} from members that left` : null].filter(Boolean);
+  // short: the summary's cell, so it stays a line or two (w4b #30: it wrapped to three); the long words go in its hover
+  const W = short ? { 'from new members': 'new members', 'from a swap': 'swapped', 'from swaps': 'swapped', 'from members that left': 'members lost' } : null;
+  const say = t => (W && W[t]) || t;
+  if (!g.left || (g.swapped && g.joined === g.left) || !g.joined) return g.members ? [`${sgn(g.members)} ${say(membersWhy(g))}`] : [];
+  return [g.gained ? `${sgn(g.gained)} ${say('from new members')}` : null, g.lost ? `−${g.lost} ${say('from members that left')}` : null].filter(Boolean);
 }
 
 // ---------- log lines, said plainly ----------
@@ -521,6 +543,13 @@ export function explainLine(log, i) {
   // let it read as a copy (plain-words pass: "P3 joined P2 on Crescendo")
   m = line.match(/^(.+?) joined (.+?) on (.+?) \((\w+)\)\.$/);
   if (m) return { text: `${m[1]} joined ${m[2]} on ${m[3]} (Squatter).` };
+  // plain verbs, never flavor (w4b #28: "flourishes", "transmuted"), with the space that did it
+  m = line.match(/^(.+?) flourishes: \+(\d+) of each other color\.$/);
+  if (m) return { text: `${m[1]} gets +${m[2]} of each other color (Bumper Crop).` };
+  m = line.match(/^(.+?) had no full set to flourish\.$/);
+  if (m) return { text: `${m[1]} had no full set: nothing from Bumper Crop.` };
+  m = line.match(/^(.+?) transmuted (.+)\.$/);
+  if (m) return { text: `${m[1]} swapped ${m[2].replace(/ → /g, ' for ')} (Trade Seeds).` };
   m = line.match(/^(.+?) gave (\d+) (\w+) to (.+?)\.$/) || null;
   if (m) {
     const [, from, n, color, to] = m;

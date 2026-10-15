@@ -115,7 +115,8 @@ export function pickCaption(state, pk) {
     const steps = {
       give: [[`give${c.n ? ` ${c.n}` : ''}`], 'Pick a color, then who gets it', [`give${c.n ? ` ${c.n}` : ''} `, { dot: a }], 'Now pick who gets it'],
       trade: [['pick yours · then theirs'], 'Click one of your lit members', [`give ${c.chosenName} · pick theirs`], 'Click a lit member on a rival’s cult'],
-      colors: [['swap one for one'], 'Pick a color to give, then one to get', ['1 ', { dot: a }, ' for 1 of…'], 'Now pick the color you get'],
+      // "1 ● for 1 of…" read as a title cut off (w4b #18): said whole
+      colors: [['swap one for one'], 'Pick a color to give, then one to get', ['1 ', { dot: a }, ' for another color'], 'Now pick the color you get'],
       amount: [['swap for another color'], 'Pick a color, then how many', ['for ', { dot: a }], 'Now pick how many'],
     }[c.kind];
     return a == null ? { title: pk.title, what: steps[0], left: null, how: steps[1] } : { title: pk.title, what: steps[2], left: null, how: steps[3] };
@@ -123,7 +124,8 @@ export function pickCaption(state, pk) {
   if (pk.kinds.has('stack') && !pk.give && pk.count && pk.title) {
     // the steal's limit, in the engine's words ("1 each from P3, P4"), leads the how line
     const limit = (String(pk.question).match(/\(\d+ left, ([^)]+)\)/) || [])[1];
-    return { title: pk.title, what: [`take ${pk.count.of}${pk.only ? ` ${pk.only}` : ''}`], left: pk.count.left, how: `${limit ? `${limit[0].toUpperCase()}${limit.slice(1)}. ` : ''}${pickHow(pk)}` };
+    // "· N left" only once the first is taken: at the start it said the count twice ("take 3 · 3 left", w4b #17)
+    return { title: pk.title, what: [`take ${pk.count.of}${pk.only ? ` ${pk.only}` : ''}`], left: pk.count.left < pk.count.of ? pk.count.left : null, how: `${limit ? `${limit[0].toUpperCase()}${limit.slice(1)}. ` : ''}${pickHow(pk)}` };
   }
   const q = pk.title ? pk.question : state.pending.prompt;
   // a member of yours asking (Double Agent just recruited): its rule goes under the headline, so you see why

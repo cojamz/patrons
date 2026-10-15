@@ -20,7 +20,7 @@
   --lamp:255,206,140; --lamp-ink:#ffd99a;
   /* quadrant inks: muted, printed */
   --gold:#d49b27; --red:#c4533f; --blue:#4a80b8; --green:#3f9467; --magenta:#b2386c; --thieves:var(--magenta);
-  --silver:#94a3b2; /* steel with a coin edge, clearly not white, not a grey zero, not blue (w3a A4) */ --yellow:#c9c23f; /* lemon, not mustard: #c4a93a sat a step from gold #d49b27 (w2b #26) */ --purple:#7d5ba6; --white:#e6dcc6; --any:#a8977a;
+  --silver:#94a3b2; /* steel with a coin edge, clearly not white, not a grey zero, not blue (w3a A4) */ --yellow:#d2d23a; /* lemon, not mustard: #c4a93a, then #c9c23f, still sat near gold #d49b27 (w2b #26, wave-4 B #25): a clear lemon, lighter and greener than the amber gold */ --purple:#7d5ba6; --white:#e6dcc6; --any:#a8977a;
   --serif:'Alegreya', Georgia, serif; --sans:'Alegreya Sans', system-ui, sans-serif;
   --display:var(--serif); --body:var(--sans);
 }
@@ -211,7 +211,12 @@ h1,h2,h3{font-family:var(--serif)}
 
 /* ---------- the wheel: printed paper on the walnut ---------- */
 .lt .lt-wheel .wheel-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;min-height:0}
-.lt .lt-wheel .stage{position:relative;aspect-ratio:1;margin:0 auto;touch-action:pan-y;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 18px 22px rgba(0,0,0,.55)) drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+.lt .lt-wheel .stage{position:relative;aspect-ratio:1;margin:0 auto;touch-action:pan-y;user-select:none;-webkit-user-select:none;isolation:isolate}
+/* the wheel's shadow, painted once behind the disk (r 200 of the 416 board: inset 1.923%), the same two shadows the
+   stage's drop-shadow filter drew (a box-shadow blur is the same Gaussian, sigma = half the radius). As a filter on the
+   stage, every frame of any animation anywhere re-blurred the whole wheel in a software compositor: 15 frames a second
+   on your turn, hovers and presses up to 100ms late (perf, 2026-10-15) */
+.lt .lt-wheel .stage::before{content:'';position:absolute;inset:1.923%;border-radius:50%;box-shadow:0 18px 22px rgba(0,0,0,.55),0 2px 2px rgba(0,0,0,.5);pointer-events:none;z-index:-1}
 /* the board as large as the table allows (Cory, 2026-10-15: "way better use of the space"): the stage's square is the
    disc plus a margin for the rim's leaders and glow, so it may overhang the prompt and shop rows by that margin (the
    paper disc itself stays inside its cell); those rows sit above it, so the overhang never takes their clicks */

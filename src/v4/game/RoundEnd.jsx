@@ -84,7 +84,7 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
                   })}
                 </small>
               </span>
-              <span className="re-chip num" aria-label={`plus ${r.v} followers`} title={`${r.rule}: the leader gains +${r.v} followers in round ${result.round}`}>+{r.v}<Follower size={11} title="followers" /></span>
+              <Tip className="re-chip num" label={`plus ${r.v} followers`} content={() => <div className="pop-card"><b>{r.rule}: +{r.v} followers</b><span>{r.winners.length ? `Round ${result.round}'s prize, to ${r.winners.map(id => (id === meId ? 'you' : after.players[id].name)).join(' and ')} (ties all score).` : `Round ${result.round}'s prize: nobody scored it.`}</span></div>}>+{r.v}<Follower size={11} title="followers" /></Tip>
             </li>
           ))}
         </ul>
@@ -97,19 +97,22 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
             const g = start ? roundGains(start, at, p, c) : null;
             const other = now - was - c;
             // RC1 sweep 84: "+2 from members" (they hold 4) meant the members recruited this round; "+1 effects" had no source
-            const why = g ? [...membersParts(g), g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : '−'}${Math.abs(g.effects)} during play`].filter(Boolean).join(' · ') : '';
+            const play = g && g.effects ? `${g.effects > 0 ? '+' : '−'}${Math.abs(g.effects)}` : null;
+            // short in the cell (w4b #30: it wrapped to three lines), whole in its hover, as the results' numbers open (w4b #10)
+            const why = g ? [...membersParts(g, true), g.bought && `+${g.bought} bought`, play && `${play} in play`].filter(Boolean).join(' · ') : '';
+            const whyLong = g ? [...membersParts(g), g.bought && `+${g.bought} followers bought`, play && `${play} won or lost during play (members' abilities, spaces)`].filter(Boolean) : [];
             return (
               <div key={p.id} className="re-p" role="row" style={{ '--pc': playerColor(p.id) }}>
                 <span className="nm" role="cell"><Who state={after} id={p.id} meId={meId} /></span>
                 <span className="re-d num" role="cell">{c ? `+${c}` : '—'}</span>
-                <span className="re-d num" role="cell">{other ? (why || `${other > 0 ? '+' : '−'}${Math.abs(other)}`) : '—'}</span>
+                <span className="re-d num" role="cell">{other ? (whyLong.length ? <Tip label={`${p.id === meId ? 'Your' : `${p.name}’s`} followers this round`} content={() => <div className="pop-card"><b>{p.id === meId ? 'Your' : `${p.name}’s`} followers this round, besides prizes: {other > 0 ? '+' : '−'}{Math.abs(other)}</b>{whyLong.map(t => <span key={t}>{t}</span>)}</div>}>{why}</Tip> : `${other > 0 ? '+' : '−'}${Math.abs(other)}`) : '—'}</span>
                 <Tick value={now} from={was} color="var(--ink)" className="re-f num" dur={700} float={false} />
               </div>
             );
           })}
         </div>
         {after.over && !finalParts.length && <p className="hint re-final" data-final-bonuses="0">No end-game bonuses: these totals are final.</p>}
-        {first && <p className="hint">Round {roman(after.round)} · <span className="num">{workersNote(after)}</span> · {first.id === meId ? 'You pick' : `${first.name} picks`} first{firstPickWhy(after, first.id) ? `: ${firstPickWhy(after, first.id)}` : ''}</p>}
+        {first && <p className="hint">Round {roman(after.round)} · <span className="num">{workersNote(after)}</span> · {first.id === meId ? 'You pick' : `${first.name} picks`} first{firstPickWhy(after, first.id) ? <>: <NamedText state={after} text={firstPickWhy(after, first.id)} /></> : ''}</p>}
         </div>
         {more && <span className="re-more" aria-hidden="true">More below</span>}
         <div className="re-foot">

@@ -19,6 +19,7 @@ const kindOf = (def, t) => {
 
 const esc = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const usedCache = new WeakMap();
+const byMoment = new Map(); // "seed|moves|step|pid|uid" -> the same dry run, for another copy of the same moment
 /**
  * What using member uid would do for player pid right now, by playing the engine's own `use:` move on a copy:
  * null when it isn't offered now; else { option, label, words, blocked, idle, why, asks }. words: "+7 gold, −1 follower,
@@ -33,6 +34,11 @@ export function useNow(state, pid, uid) {
   if (!memo) { memo = new Map(); usedCache.set(state, memo); }
   const k = `${pid}:${uid}`;
   if (memo.has(k)) return memo.get(k);
+  // the same game moment drawn from another copy of the state (the seats and the hover card hold different objects):
+  // the dry run is shared, so a seat card opens without redoing it (w4b #2: open within 150ms)
+  const p0 = state.players[pid];
+  const gk = `${state.seed}|${state.moves}|${state.log.length}|${pend.kind}|${pid}|${uid}|${p0.members.join(',')}|${JSON.stringify(p0.res)}|${p0.bonus}|${p0.left}`;
+  if (byMoment.has(gk)) { const hit = byMoment.get(gk); memo.set(k, hit); return hit; }
   let out;
   try {
     const after = applyMove({ ...state, log: [...state.log] }, { player: pid, option: id });
@@ -63,6 +69,8 @@ export function useNow(state, pid, uid) {
     out = { option: id, words: '', blocked: false, asks: false, idle: false, why: '', label: 'Use now' };
   }
   memo.set(k, out);
+  byMoment.set(gk, out);
+  if (byMoment.size > 64) byMoment.delete(byMoment.keys().next().value);
   return out;
 }
 

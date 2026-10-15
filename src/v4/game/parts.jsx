@@ -2,7 +2,7 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { quadrant, cardDef } from '../../engine/v4/index.js';
-import { logSections, playerColor, costParts, plainLine, turnGroups, plural } from '../format.js';
+import { logSections, playerColor, costParts, plainLine, turnGroups, foldRepeats, plural } from '../format.js';
 import { Rich, CostPips, Pip } from './Rich.jsx';
 import { MemberCard, NamedText, CardText, cardColor, asYou, CostDots } from './Info.jsx';
 import { Follower } from '../art/Follower.jsx';
@@ -334,7 +334,7 @@ export function Log({ state, meId = null }) {
         <details key={s.title} open={k === 0}>
           <summary>{s.title}<small> · {plural(s.lines.filter(l => / (took|joined) .+ \([A-Z][a-z]+\)\.$/.test(l)).length, 'turn')}</small></summary>
           {/* as the log drawer reads: newest turn first, each turn top-down, no bare passes (w3b #49, w3a #34) */}
-          <div className="lines">{turnGroups(state, s.lines).flatMap(g => g.map((j, n) => <LogLine key={j} table={table} more={n > 0} text={asYou(plainLine(state.log, s.start + j), me)} />))}</div>
+          <div className="lines">{(f => f.groups.flatMap(g => g.map((j, n) => <LogLine key={j} table={table} more={n > 0} text={asYou(plainLine(state.log, s.start + j), me) + (f.times.get(j) ? ` (${f.times.get(j)} times this round)` : '')} />)))(foldRepeats(s.lines, turnGroups(state, s.lines)))}</div>
         </details>
       ))}
     </div>

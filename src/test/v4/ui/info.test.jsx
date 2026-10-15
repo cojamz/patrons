@@ -97,7 +97,7 @@ describe('colorless members', () => {
     const { container } = render(<MemberCard state={s} def={squatter} />);
     expect(container.querySelector('.card-face').getAttribute('style')).toContain('var(--colorless)');
     // on its own line, never beside the cost, where it read as the cost's color (w3a #23)
-    expect(container.querySelector('[data-colorless]').textContent).toMatch(/^Colorless here/);
+    expect(container.querySelector('[data-colorless]').textContent).toMatch(/^Its color isn’t on this table/);
     expect(container.querySelector('.mc-cost').textContent).not.toMatch(/colorless/i);
     cleanup();
     const ok = render(<MemberCard state={s} def={quadrant('gold').members[0]} />);

@@ -19,6 +19,7 @@
 import { MO, flightMs, nextBeatAt, speedScale } from '../motion.js';
 import { playerColor } from '../format.js';
 import { gainsBetween } from './gains.js';
+import { seatOrder } from './seats.js';
 import { motionOK, flyPath, pulse, tug, settle, flyMinionsHome, slideShop, holdStack, bump, track, landAll, expectArrival, clearArrivals, clearFlights } from './flight.js';
 
 // ---------- the plan ----------
@@ -85,8 +86,15 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   if (!before || !state || before === state || before.seed !== state.seed) return { atoms, total: 0, handoff: 0 };
   // a new round after the Reckoning (the table held the scored board, so no move separates the two): the minions walk
   // home to their seats' columns, the closing beat of the round
+  // a new round's order: the chairs re-sort as a beat of their own, after what lands on them and before the next player
+  // moves (wave 4 #3: the seats re-sorted under the player while the bots' first placements flew)
+  // (round I's start only: a later round's new order arrives with the Reckoning, which measures the chairs where they stand)
+  const resort = before.round === 0 && state.round === 1 && seatOrder(before).join() !== seatOrder(state).join();
   if (!(state.moves > before.moves)) {
-    if (state.round > before.round && before.round >= 1) { const d = MO.minionsHome; return { atoms: [{ at: 0, op: 'home' }], total: d, handoff: d }; }
+    if (state.round > before.round && before.round >= 1) {
+      const d = MO.minionsHome, s = resort ? MO.sortBeat : 0;
+      return { atoms: [{ at: 0, op: 'home' }, ...(resort ? [{ at: d, op: 'sort' }] : [])], total: d + s, handoff: d + s };
+    }
     return { atoms, total: 0, handoff: 0 };
   }
   const dist = (a, b) => (measure ? measure(a, b) : TYPICAL);
@@ -260,6 +268,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
   // starting picks read one at a time: the next pick lights only when this one has landed, and a short rest between two
   // players' picks (the first placements follow the last one)
   if (setup && end) { hand = end; if (turnPasses) end += MO.setupRest; }
+  if (resort) { at(end, { op: 'sort' }); end += MO.sortBeat; hand = end; }
   // a chain's cap (grammar §5: 3.0s at Steady; fitted from 2.8s so a run of six rival turns stays inside H2's 13s):
   // a longer plan plays faster to fit, never faster than Quick (half)
   const cap = Math.round(2800 * speedScale());
@@ -560,7 +569,9 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
       if (a.bundle && !skip) setTimeout(() => release(B), MO.roll); else release(B);
     }
     if (a.to.kind === 'count' && B && !B.rectOnly) { try { B.dispatchEvent(new CustomEvent('patrons:land')); } catch { /* old browser */ } }
-    if (!skip && B) settle(B, MO.settle, a.bundle ? 1.24 : a.light ? 1.1 : a.pay ? 1.06 : 1.18);
+    // a big follower buy lands with weight (wave 4 #13): the count lifts and rolls, not only settles
+    if (!skip && B && a.fol && a.bundle && !a.pay && a.to.kind === 'count' && (a.by ?? a.n) >= 6 && B.animate && !B.rectOnly) track(B.animate([{ translate: '0 0', scale: '1' }, { translate: '0 -6px', scale: '1.3', offset: 0.3 }, { translate: '0 0', scale: '1' }], { duration: MO.roll + MO.settle, easing: 'cubic-bezier(.3,1.5,.5,1)' }));
+    else if (!skip && B) settle(B, MO.settle, a.bundle ? 1.24 : a.light ? 1.1 : a.pay ? 1.06 : 1.18);
   };
   for (const a of plan.atoms) {
     if (a.op === 'land') continue; // a piece lands when its own flight finishes
@@ -586,6 +597,8 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           return;
         }
         case 'home': if (!skip && minionsBefore) flyMinionsHome(root, minionsBefore); return;
+        // the chairs re-sort into the new round's order now (GameScreen lays the column out; a skip sorts them too)
+        case 'sort': try { dispatchEvent(new Event('patrons:seat-sort')); } catch { /* no window */ } return;
         case 'pulse': if (!skip) pulse(where(a.place), a.dur, { press: !!a.press }); return;
         case 'point': {
           // a rival's choice (grammar S3): what they chose lights, then its effect leaves it; it stays lit until it lands

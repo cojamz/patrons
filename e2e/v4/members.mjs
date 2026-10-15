@@ -14,8 +14,8 @@
 //  (m6) a rival's seat card lists their members with no Use buttons;
 //  (m7) w2b #20, w3a A8: every seat's card opens right next to what's pointed at (its leader, its name), level with
 //       it, whole on screen; never docked away over the wheel;
-//  (m8) w2b #19: a use worth nothing now (Safecracker, no rival holds 2 magenta) is never lit or named in the prompt;
-//       its row and hover read a muted "Use: +0" with the reason;
+//  (m8) w2b #19, w4b #20: a use worth nothing now (Safecracker, no rival holds 2 magenta) is never lit or named in the
+//       prompt, and has no button anywhere: its row says "nothing to gain now", its hover says why;
 //  (m10) w2a #1, #44, #45, #16: a use's result shows at the member (even +0) and the prompt drops it at once; a usable
 //       member has a warm ring and a small lift; its card opens beside your seat; a 13-member seat card scrolls on screen.
 //  (m11) a click always acts on what's under the pointer, at once: with your seat's or your member's card open, a
@@ -24,6 +24,7 @@
 //  (m12) w3b #47: leaving the member downward on the way to its card doesn't close it;
 //  (m13) w3b #39/#47, A30: the follower total opens a breakdown adding up to it; a seat's body and resources open its card;
 //       a rival's card says what it could buy now; one card on screen at a time.
+//  (m14) w4b #2: one move onto a seat, its body or its follower number, and no more, opens its card within 150ms.
 //  (m9) w2b #21: a rival's use still in hand is marked on their seat (P2's Stunt Double, subdued); a seat no one can
 //       steal from this round says "safe this round" (P3 lies low), in its seat and its card.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/members/).
@@ -149,7 +150,8 @@ try {
     if (!/^Use: \+7/.test(row('gold.jackpot').use)) fail(`Lottery Winner's row has no "Use: +7" button: ${JSON.stringify(row('gold.jackpot'))}`, 'm1');
     if (row('trading.pawnbroker').use) fail('Pawnbroker offers a Use button that would do nothing', 'm1');
     const zero = row('thieves.bigscore');
-    if (zero.state !== 'idle' || zero.use !== 'Use: +0' || !zero.idle || !/magenta/.test(zero.why)) fail(`Safecracker (worth 0 now) in the seat card: ${JSON.stringify(zero)}`, 'm8');
+    // w4b #20: no button that does nothing; the quiet state says so, the reason in its hover
+    if (zero.state !== 'idle' || zero.use || zero.tag !== 'nothing to gain now') fail(`Safecracker (worth 0 now) in the seat card: ${JSON.stringify(zero)}`, 'm8');
     if (row('gold.midas').sw !== 'on' || row('echo.translator').sw !== 'off') fail(`switches in the seat card: Midas ${row('gold.midas').sw}, Translator ${row('echo.translator').sw}`, 'm1');
     if (row('gold.tycoon').tag !== 'scores at game end') fail(`Tycoon's tag: "${row('gold.tycoon').tag}"`, 'm1');
   }
@@ -227,8 +229,9 @@ try {
   // (m8) Safecracker's own hover: muted, with the reason
   await pointAt('[data-cult="0"] .cs-member[data-member="thieves.bigscore"] .fig');
   await page.waitForTimeout(300);
-  const sh = await page.evaluate(() => { const b = document.querySelector('[data-tip-body] [data-use]'); const w = document.querySelector('[data-tip-body] [data-idle-why]'); return b ? { text: b.textContent.trim(), idle: b.dataset.idle === '1', bg: getComputedStyle(b).backgroundColor, why: w ? w.textContent : '' } : null; });
-  if (!sh || !sh.idle || sh.text !== 'Use: +0' || !/rgba\(0, 0, 0, 0\)|transparent/.test(sh.bg) || !/Nothing to gain now: .*magenta/.test(sh.why)) fail(`Safecracker's hover (worth 0 now): ${JSON.stringify(sh)}`, 'm8');
+  await page.waitForFunction(() => !!document.querySelector('[data-tip-body] [data-card]'), null, { timeout: 1500 }).catch(() => {});
+  const sh = await page.evaluate(() => { const w = document.querySelector('[data-tip-body] [data-idle-why]'); return { card: !!document.querySelector('[data-tip-body] [data-card]'), button: !!document.querySelector('[data-tip-body] [data-use]'), why: w ? w.textContent : '' }; });
+  if (!sh.card || sh.button || !/Nothing to gain now: .*magenta/.test(sh.why)) fail(`Safecracker's hover (worth 0 now) must say why and offer no button: ${JSON.stringify(sh)}`, 'm8');
   else await page.screenshot({ path: `${SHOTS}/6-use-worth-nothing.png` });
   await away();
 
@@ -387,6 +390,49 @@ try {
     const cards = await page.evaluate(() => (document.querySelector('[data-hover-layer][data-open="1"]') ? 1 : 0)
       + [...document.querySelectorAll('body > .popover:not([data-hover-layer])')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left > -1000; }).length);
     if (cards !== 1) fail(`${cards} cards on screen at once after pointing from P4's seat to its turn-order note (want 1)`, 'm13');
+  }
+
+  // (m14) w4b #2: a seat's card always opens for a pointer that simply comes to rest on it: one move onto a seat (its
+  // name, its body) or onto its follower number, nothing after, opens its card within 150ms, even right after
+  // another seat's card (one with Use buttons) was up
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
+    const pg = await ctx.newPage();
+    await pg.addInitScript(([v, rs]) => { localStorage.setItem('patrons.v4.local', JSON.stringify(v)); localStorage.setItem('patrons.v4.roundStart', JSON.stringify(rs)); }, [save, roundStart]);
+    await pg.goto(`${base}/?botDelay=300&intro=0`);
+    await pg.waitForSelector('.lt-wheel, [data-home="resume"]');
+    if (!(await pg.$('.lt-wheel'))) await pg.click('[data-home="resume"]');
+    await pg.waitForSelector('.lt-wheel .slot.can');
+    await pg.waitForTimeout(600);
+    const centre = async sel => { const b = await (await pg.$(sel)).boundingBox(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };
+    const cases = [
+      ['your seat card first, then P3\'s name', '[data-cult="0"] .cs-leader', '[data-cult="2"] .cs-who', 'seat', 2],
+      ['P3\'s follower number', null, '[data-cult="2"] .cs-total', 'followers', 2],
+      ['P2\'s resource row', null, '[data-cult="1"] .cs-foot', 'seat', 1],
+      ['your own name', null, '[data-cult="0"] .cs-who', 'seat', 0],
+    ];
+    for (const [what, first, sel, kind, pid] of cases) {
+      await pg.mouse.move(640, 690); await pg.waitForTimeout(300);
+      if (first) { const f = await centre(first); await pg.mouse.move(f.x, f.y, { steps: 3 }); await pg.waitForTimeout(400); }
+      const t = await centre(sel);
+      // timed in the page, from the pointer's arrival to the card in the page (the test driver's round trips aside)
+      await pg.evaluate(([k, id]) => {
+        window.__m14 = { at: null, open: null };
+        addEventListener('pointerover', () => { if (window.__m14.at == null) window.__m14.at = performance.now(); }, { capture: true, once: true });
+        const L = document.querySelector('[data-hover-layer]');
+        const mo = new MutationObserver(() => {
+          if (window.__m14.open == null && L.dataset.open === '1' && L.querySelector(`[data-${k === 'seat' ? 'seat' : 'followers'}-card="${id}"]`)) { window.__m14.open = performance.now(); mo.disconnect(); }
+        });
+        mo.observe(L, { attributes: true, childList: true, subtree: true });
+      }, [kind, pid]);
+      await pg.mouse.move(t.x, t.y); // one move, then the pointer rests
+      await pg.waitForFunction(() => window.__m14.open != null, null, { timeout: 1500 }).catch(() => {});
+      const m = await pg.evaluate(() => window.__m14);
+      const dt = m.open != null && m.at != null ? Math.round(m.open - m.at) : null;
+      if (dt == null) fail(`a single move onto ${what} opened nothing`, 'm14');
+      else if (dt > 150) fail(`a single move onto ${what} took ${dt}ms to open its card (want ≤ 150ms)`, 'm14');
+    }
+    await ctx.close();
   }
 
   if (errors.length) fail(`page errors: ${errors.slice(0, 3).join(' | ')}`, 'page');

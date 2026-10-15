@@ -17,12 +17,12 @@ export const AIM_MS = 700; // how long the pointer may rest on the way (outside 
 const PAD = 12;
 // right after leaving, the way may wander (w3b #47: down out of the member first, then over to its card): for this long
 // the card holds whatever route is taken, and the way is then measured from wherever the pointer has got to
-const GRACE_MS = 300;
+const GRACE_MS = 300, GRACE_PX = 48; // (only near where it left: a pointer that has gone further is going elsewhere)
 
 /** The pointer just left toward `el` (the open card), from `from` (default: its last spot inside what it left). */
 export function aimAt(el, from = prev || pt) {
   const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-  if (el && from) aim = { el, x: from.x, y: from.y, until: now + AIM_MS, grace: now + GRACE_MS };
+  if (el && from) aim = { el, x: from.x, y: from.y, ox: from.x, oy: from.y, until: now + AIM_MS, grace: now + GRACE_MS };
 }
 /** The pointer reached the card (or the card closed): the crossing is over. */
 export function arrived(el = null) { if (!el || (aim && aim.el === el)) aim = null; }
@@ -48,7 +48,7 @@ export function heading(p = pt) {
   // they often stand over a neighbour's name)
   const r = controlsRect(aim.el);
   if (!r) return false;
-  if (now < aim.grace) { aim.x = p.x; aim.y = p.y; return true; }
+  if (now < aim.grace && Math.hypot(p.x - aim.ox, p.y - aim.oy) <= GRACE_PX) { aim.x = p.x; aim.y = p.y; return true; }
   if (p.x >= r.left - PAD && p.x <= r.right + PAD && p.y >= r.top - PAD && p.y <= r.bottom + PAD) return true;
   if (Math.hypot(p.x - aim.x, p.y - aim.y) <= PAD) return true; // still where it left
   // the hull of where the pointer left and the buttons' box (widened a little): every straight way there, whichever
@@ -114,3 +114,9 @@ export function claim(id, close) {
   current = { id, close };
 }
 export function unclaim(id) { if (current && current.id === id) current = null; }
+
+/** Where the pointer is now (null before it has moved). */
+export const pointer = () => pt;
+/** Is the pointer inside el's box right now? (A target held back while the pointer crossed toward a card opens once
+ *  that's over, if the pointer is still resting on it: a held-back hover never stays shut for good.) */
+export const stillOn = el => !!(el && el.isConnected && pt && over(el, pt));

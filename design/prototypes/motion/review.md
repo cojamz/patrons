@@ -209,3 +209,9 @@ Instruments: filmstrips under the fake clock (a scenario harness that loads a re
 - **Colour turn (A10):** the crossfade is the grammar's 80ms at the midpoint, however short the flight (it was 10% of the flight: 26ms on a short take).
 - **Wheel drag (7):** the release always settled in MO.spin (300ms); the "coast" was the drag trailing the pointer because every move re-rasterized the rotated wheel (trace: 1.0s of raster for one 12-step drag). A drag now turns composited layers (stage.turning); key spins paint as before (the snappy gate reads them).
 - Still open: the board picker's own coin (GameScreen onSeatPick) flies the old colour to the middle of your row while the chain's piece turns colour into the right stack (two flights for one take); the hover card stays over the member you Used.
+
+## Round 17 (12:00, wave 4 tester B on 8ea3e24; the motion engineer)
+- **#13 a rival's big follower buy:** the bundle flew along the top edge, half off screen, whenever the seat was near the top (the arc from the follower rates to a top seat's count bowed up out of the window). An arc that would leave the window now bows the other way (flight.js onScreenBow and ghostFly), so the "+6" crosses over the wheel's top into the count; a follower bundle of 6 or more lands with a lift (the count rises 6px at 1.3 and rolls). No extra time.
+- **#31 the Reckoning's "+N" marks clipped at the top:** the same bow rule (ghostFly).
+- **#6 the Reckoning began unseen:** its lead is now its own beat: "Round II ends" stamps in at the wheel's centre (0.8s at Steady, was a silent 0.5s), then the first rim lights. No click.
+- **#3 the chairs re-sorted under the player at round I's start:** the new order now waits for the last starting pick to land, then the chairs slide as a beat of their own (500ms at Steady) before the first placement (director 'sort', GameScreen holds the column meanwhile). Later rounds unchanged: their order arrives with the Reckoning.

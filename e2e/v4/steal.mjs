@@ -102,7 +102,8 @@ try {
     if (!/no magenta/.test(tip)) errors.push(`(s1) hovering P2's empty magenta says ${tip || 'nothing'}`);
     await page.screenshot({ path: `${SHOTS}/s1-lit.png` });
     const cap = await page.$eval('.prompt.choice.seat-pick .pick-cap', e => e.textContent.replace(/\s+/g, ' ').trim());
-    if (!/^Help Yourself: take 2 · 2 left$/.test(cap)) errors.push(`(s1) caption reads "${cap}"`);
+    // the count once, "· N left" only after the first take (w4b #17: "take 2 · 2 left")
+    if (!/^Help Yourself: take 2$/.test(cap)) errors.push(`(s1) caption reads "${cap}"`);
     const green0 = await count(page, 1, 'green');
     await click(page, stack(1, 'green'));
     await page.waitForSelector('.pick-left[data-left="1"]', { timeout: 8000 }).catch(() => errors.push('(s1) the counter never showed 1 left'));
@@ -114,7 +115,7 @@ try {
     await page.waitForFunction(() => !document.querySelector('.prompt.choice.seat-pick'), null, { timeout: 8000 }).catch(() => errors.push('(s1) the steal never closed'));
     await expectCounts(page, 's1', { '1:green': 3, '2:gold': 4, '0:magenta': 2 });
     const left = await seenLeft(page);
-    if (left.join(',') !== '2,1,0') errors.push(`(s1) the counter ran ${left.join(' → ')}, not 2 → 1 → 0`);
+    if (left.join(',') !== '1,0') errors.push(`(s1) the counter ran ${left.join(' → ')}, not 1 → 0 (shown from the first take)`);
     const flights = await page.evaluate(() => window.__picks);
     if (flights < 2) errors.push(`(s1) ${flights} resource flights for 2 picks`);
     // the record (when this save keeps one) holds the two picks as option ids
@@ -135,7 +136,7 @@ try {
     const g0 = save.state.players[0].res.gold;
     await expectCounts(page, 's2', { '1:gold': 2, '2:gold': 3, '0:gold': g0 + 3 });
     const left = await seenLeft(page);
-    if (left[0] !== '3' || left[left.length - 1] !== '0') errors.push(`(s2) the counter ran ${left.join(' → ')}`);
+    if (left[0] !== '2' || left[left.length - 1] !== '0') errors.push(`(s2) the counter ran ${left.join(' → ')}`);
     await ctx.close();
   }
   // (s3) Redistribute: P4 holds less than you

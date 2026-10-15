@@ -72,6 +72,16 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
   };
   // crossing toward another open card: this one stays shut (it opens on the next move once the crossing is over)
   const crossing = e => !!busyWith(e ? { x: e.clientX, y: e.clientY } : undefined, body.current);
+  // held back while the pointer crossed toward another open card: it opens once that's over, if the pointer is still
+  // on it (a held-back hover never stays shut for good: w4b #2)
+  const onIt = useRef(false);
+  const retry = useRef(null);
+  useEffect(() => () => clearTimeout(retry.current), []);
+  const heldBack = () => {
+    clearTimeout(retry.current);
+    const again = () => { if (!onIt.current) return; if (crossing()) { retry.current = setTimeout(again, 60); return; } opening(); };
+    retry.current = setTimeout(again, 60);
+  };
   const inControl = () => { const up = ref.current && ref.current.parentElement; return !!(up && up.closest(CONTROL)); };
   const pin = e => {
     // a keyword in an option's text never eats the option's click (a tap there picks the option)
@@ -84,10 +94,10 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
         ref={ref} className={`tip${className ? ` ${className}` : ''}`} data-tip="" role={nested ? undefined : 'button'} tabIndex={nested ? undefined : 0}
         aria-haspopup={nested ? undefined : 'dialog'} aria-expanded={nested ? undefined : !!open} aria-label={label}
         data-hint={nested ? hint || label || undefined : undefined}
-        onPointerEnter={e => { if (!realHover(e)) return; if (crossing(e)) return; opening(); }}
+        onPointerEnter={e => { if (!realHover(e)) return; onIt.current = true; if (crossing(e)) { heldBack(); return; } opening(); }}
         onPointerMove={e => { if (open || pending.current || !realHover(e) || crossing(e)) return; opening(); }}
         onPointerLeave={e => {
-          clearTimeout(timer.current); pending.current = false;
+          clearTimeout(timer.current); pending.current = false; onIt.current = false; clearTimeout(retry.current);
           if (e.pointerType !== 'mouse') return;
           if (sticky && open && !open.pinned && body.current) { aimAt(body.current.closest('.popover') || body.current); release(); } else letGo();
         }}
@@ -206,7 +216,8 @@ export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = fal
           in the shop, also how: on your turn, from your seat */}
       {ability ? <p className="mc-text">{d.activate && <span className="mc-use-tag" data-use-tag="">Use</span>}<CardText text={ability} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
       {d.activate && where && !state.over && <small className="mc-live" data-use-how="">Once it’s yours, use it on your turn: it lights up in your seat.</small>}
-      {!onTable(state, d) && <small className="mc-live" data-colorless=""><Colorless state={state} def={d} /> here: it counts as a member of no color.</small>}
+      {/* in plain words, no term to look up (w4b #26: "Colorless here" was a word the rulebook never defines) */}
+      {!onTable(state, d) && <small className="mc-live" data-colorless="">Its color isn’t on this table: it counts as a member of no color.</small>}
       {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
       {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used && !state.over ? ' · used' : ''}</small>}
       {/* the cost and nothing else about paying (Cory, 03:40: cut "You pay"); a discount on you says only why the face's
@@ -594,11 +605,13 @@ export function YoudGet({ state, pid, q, i }) {
   const y = youdWords(pv, state, own);
   return (
     <span className="youd-get" data-youd-get={w.you} title="Worked out by playing this space on a copy of the table, right now">
-      {/* "about": the dry run followed only some branches; never "about nothing" */}
-      <b>You’d get:</b> {w.partial && !/^nothing/.test(y.text || '') ? 'about ' : ''}
-      {/* the likely case, then the best: each number with its word under it (the space card stacks a note) */}
+      {/* "about": the dry run followed only some branches and they differ; never "about nothing", and never for an outcome
+          every branch agrees on (w4b #12: Redistribute's fixed take read "about +3") */}
+      <b>You’d get:</b> {w.partial && !pv.exact && !/^nothing/.test(y.text || '') ? 'about ' : ''}
+      {/* a rival decides (Shake Down: pay, or lose the member): one plain line, what they'd likely do first, the other
+          after "or", and whose call it is (w4b #12: "+4 likely / +1 member, +1 at best" read like an engine dump) */}
       {y.likely
-        ? <span data-youd-cases><Rich text={y.likely} /><em className="yd-note">likely</em><Rich text={y.best} /><em className="yd-note">at best</em></span>
+        ? <span data-youd-cases><Rich text={y.likely} />{', or '}<Rich text={y.best} /><em className="yd-note">their choice</em></span>
         : <>{y.text ? <Rich text={y.text} /> : null}{y.note ? <em className="yd-note">{y.note}</em> : null}</>}
       {w.others ? <small className="youd-others"><Rich text={w.others} /></small> : null}
     </span>

@@ -275,6 +275,26 @@ try {
     }, st.players[0].lastSlot.key);
     if (near > 40) errors.push(`(y1) the question sits ${near}px from the space you took`);
     await page.screenshot({ path: `${SHOTS}/y1-yourcall.png` });
+    // (y3) round III's four answers: one small card, its tiles in one row, beside the space, never over the wheel's middle
+    {
+      const save3 = momentSave('yourcall3');
+      const { ctx: c3, page: p3 } = await open('y3', save3, '.prompt.choice.plain .opts.big');
+      const g = await p3.evaluate(key => {
+        const c = document.querySelector('.prompt.choice.plain').getBoundingClientRect(), sl = document.querySelector(`.lt-wheel [data-slot="${key}"]`).getBoundingClientRect();
+        const w = (document.querySelector('.lt-wheel .stage') || document.querySelector('.lt-wheel')).getBoundingClientRect();
+        const tops = new Set([...document.querySelectorAll('.prompt.choice.plain .opts.big .btn')].map(b => Math.round(b.getBoundingClientRect().top)));
+        const dx = Math.max(0, sl.left - c.right, c.left - sl.right), dy = Math.max(0, sl.top - c.bottom, c.top - sl.bottom);
+        const cx = w.left + w.width / 2, cy = w.top + w.height / 2;
+        return { near: Math.round(Math.hypot(dx, dy)), rows: tops.size, n: document.querySelectorAll('.prompt.choice.plain .opts.big .btn').length, width: Math.round(c.width),
+          overCentre: c.left < cx && c.right > cx && c.top < cy && c.bottom > cy };
+      }, save3.state.players[0].lastSlot.key);
+      if (g.n !== 4) errors.push(`(y3) round III's Your Call shows ${g.n} tiles`);
+      if (g.rows > 1 || g.width > 470) errors.push(`(y3) the tiles make a ${g.width}px card in ${g.rows} rows, not one small row`);
+      if (g.near > 40) errors.push(`(y3) the question sits ${g.near}px from the space you took`);
+      if (g.overCentre) errors.push('(y3) the question covers the wheel\'s centre');
+      await p3.screenshot({ path: `${SHOTS}/y3-yourcall.png` });
+      await c3.close();
+    }
     await click(page, '.prompt.choice.plain .opts .btn[data-option="amount:2"]');
     await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 5000 }).catch(() => errors.push('(y1) a tile did nothing'));
     await ctx.close();

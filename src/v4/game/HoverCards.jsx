@@ -18,7 +18,7 @@ import { SeatMembers, FollowersCard, SpendingLine } from './MemberUse.jsx';
 import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
-import { aimAt, arrived, heading, aimedAt, over, overControls, busyWith, claim, unclaim } from './hoverIntent.js';
+import { aimAt, arrived, heading, aimedAt, over, overControls, busyWith, claim, unclaim, stillOn } from './hoverIntent.js';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
@@ -48,9 +48,9 @@ export function useHoverCards() {
   return api.current;
 }
 const LAYER = Symbol('hover layer');
-const SEAT_OPEN_MS = 90; // a pointer passing over a seat doesn't open its card; one resting there does, at once to the eye
+const SEAT_OPEN_MS = 60; // a pointer passing over a seat doesn't open its card; one resting there does, at once to the eye
 export function createHover() {
-  let card = null, openT = null, closeT = null, want = null;
+  let card = null, openT = null, closeT = null, want = null, heldBack = null, retryT = null;
   const subs = new Set();
   const set = next => {
     if (next === card) return;
@@ -70,10 +70,27 @@ export function createHover() {
     const wait = () => { if (heading() || over(liveBox())) { closeT = setTimeout(wait, 80); return; } if (card && !card.pinned) set(null); };
     closeT = setTimeout(wait, ms);
   };
+  // a hover held back while the pointer crossed toward an open card opens as soon as that's over, if the pointer still
+  // rests on it (w4b #2: a seat hovered with a single move opened nothing: nothing moved again to retry it)
+  const holdBack = next => {
+    heldBack = next;
+    clearTimeout(retryT);
+    const again = () => {
+      if (heldBack !== next) return;
+      if (!stillOn(next.el)) { heldBack = null; return; }
+      if (blocks(next)) { retryT = setTimeout(again, 60); return; }
+      heldBack = null;
+      show(next);
+    };
+    retryT = setTimeout(again, 60);
+  };
+  const blocks = next => !next.pinned && ((card && !card.pinned && card.kind === 'seat' && ((heading() && aimedAt() === liveBox()) || overControls(liveBox())))
+    || (() => { const b = busyWith(); return !!b && b !== liveBox(); })());
   const show = next => {
+    if (heldBack && heldBack !== next) { heldBack = null; clearTimeout(retryT); }
     // crossing toward the open seat card: nothing on the way opens over it, and its close isn't cancelled
     // (its surface is see-through to clicks, so "on it" is measured: the pointer over its box)
-    if (next.el && !next.pinned && card && !card.pinned && card.kind === 'seat' && ((heading() && aimedAt() === liveBox()) || overControls(liveBox()))) return;
+    if (next.el && !next.pinned && card && !card.pinned && card.kind === 'seat' && ((heading() && aimedAt() === liveBox()) || overControls(liveBox()))) { holdBack(next); return; }
     clearTimeout(closeT);
     if (!next.el) {
       clearTimeout(openT); want = null;
@@ -85,7 +102,7 @@ export function createHover() {
       return;
     }
     // crossing toward your member's open card (a Use button on it): the seat card doesn't open over it
-    if (!next.pinned) { const b = busyWith(); if (b && b !== liveBox()) return; }
+    if (!next.pinned) { const b = busyWith(); if (b && b !== liveBox()) { holdBack(next); return; } }
     // the same card again (the pointer moving on its target, or on another part of the same seat): it stays where it
     // opened, and a close on its way is called off
     const sameSeat = (card && card.kind === next.kind && (next.kind === 'seat' || next.kind === 'followers') && card.pid === next.pid);
@@ -111,7 +128,7 @@ export function createHover() {
     /** the space under the pointer (the shop ticks "✓ after X" for it) */
     get space() { return card && card.kind === 'space' && !card.past ? card.key : null; },
     subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
-    close() { clearTimeout(openT); clearTimeout(closeT); want = null; set(null); },
+    close() { clearTimeout(openT); clearTimeout(closeT); clearTimeout(retryT); want = null; heldBack = null; set(null); },
     /** the pointer is on a card you can use (a seat's members: its Use button, its list scrolled): it stays */
     hold() { clearTimeout(closeT); arrived(); },
     /** the pointer left that card: it closes as if it had left the target */
@@ -123,7 +140,7 @@ export function createHover() {
     onFollowersHover: (pid, el, o = {}) => show({ kind: 'followers', pid, el, pinned: !!o.pinned }),
     onCardHover: (uid, el, o = {}) => show({ kind: 'card', uid, el, pinned: !!o.pinned }),
     onDeckHover: (el, o = {}) => show({ kind: 'deck', el, pinned: !!o.pinned }),
-    dispose() { clearTimeout(openT); clearTimeout(closeT); subs.clear(); },
+    dispose() { clearTimeout(openT); clearTimeout(closeT); clearTimeout(retryT); subs.clear(); },
   };
 }
 const NONE = () => () => {};
@@ -435,9 +452,8 @@ export function raceAfter(state, race, qid, pid, yours = true) {
   const wins = (c.wins && c.wins[pid]) || [c.winners.includes(pid)];
   const sole = c.sole || [c.winners.length === 1];
   const prize = `(+${c.prize} follower${c.prize === 1 ? '' : 's'})`;
-  const pick = yours ? 'your pick' : 'the pick';
   const lead = wins.every(Boolean) ? (wins.every((w, b) => !sole[b]) ? ` and share the lead ${prize}` : ` and lead it ${prize}`)
-    : wins.some(Boolean) ? `, and could lead it ${prize}: it depends on ${pick}` : '';
+    : wins.some(Boolean) ? `, and could lead it ${prize}` : ''; // (whose pick it is: "You'd get" says so, w4b #12)
   const you = `You’d have ${amount(counts[pid] || [0])}${lead}`;
   // every rival, never just the top three (RC1 panel: the 4th dropped off), in plain words ("P2 has 3"); a count a
   // pick decides isn't read off one branch (w3b #10): when the pick hands one of them the same amount, that's said once
@@ -463,16 +479,13 @@ const spaceName = (state, key) => { const [q, i] = key.split('-').map(Number); c
 export function StandingsCard({ state, qid, meId = null }) {
   const st = standings(state).find(x => x.qid === qid);
   if (!st) return null;
-  // the sphere's own rule, when it has one ("Whatever you steal turns magenta…"), under its standings (UI-A, meta #3)
-  // (its closing "Most green at round end wins." is the prize line again: said once, up top)
-  const rule = (quadrant(qid).rule || '').replace(/\s*Most [^.]*\bat round end wins\.\s*$/i, '').trim();
+  // the rim is the contest only: a sphere's own rule ("Copies never reach the center…") read as a scoring rule there and
+  // is general besides (w4b #33, w3a #29); the rulebook says it, and a copy space's "Can copy" row lists only what's legal
   // what the rim's prize pays, in words (Cory, 2026-10-15): "Round end: whoever has the most white gets 2 followers"
   return (
     <>
       <p className="lt-prize-line" data-prize-line={qid}>Round end: whoever has the {st.rule.replace(/^Most /i, 'most ')} gets {st.prize} follower{st.prize === 1 ? '' : 's'}.</p>
       <ContestStandings state={state} st={st} meId={meId} brief />
-      {/* named as the color's own rule, apart from the prize (w3a #29: "Copies never reach the center…" read as a scoring rule) */}
-      {rule ? <p className="lt-sphere-rule" data-sphere-rule={qid}><b>{quadrant(qid).name}’s own rule:</b> {rule}</p> : null}
     </>
   );
 }

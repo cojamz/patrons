@@ -17,7 +17,8 @@ const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try
 
 /** "Use: +7 ●": the one button that uses a member. big: the primary button of a member's hover. */
 export function UseButton({ use, uid, name, onPick, big = false }) {
-  if (!use || use.blocked) return null;
+  // a use worth nothing now has no button at all (w4b #20: "Use: +0" beside "Nothing to gain now"); its line says why
+  if (!use || use.blocked || use.idle) return null;
   // worth nothing now: still there (it's your call), but muted and saying why, never inviting (w2b #19)
   const title = use.idle ? `${name} would give you nothing now: ${use.why}.` : `Ready to use: ${name}${use.words ? `, ${use.words}` : ''}`;
   return (
@@ -73,7 +74,7 @@ export function SeatMembers({ state, pid, me = null, optionFor = () => null, onP
                 <b className="mu-name"><CardName state={state} uid={row.uid} />{row.n > 1 ? <span className="num"> ×{row.n}</span> : null}</b>
                 {/* its state on the right: a switch, the Use button when it's yours to use now, else a quiet word */}
                 {row.toggle ? <MemberSwitch name={row.name} on={row.toggle.on} option={row.toggle.option} onPick={onPick} />
-                  : onPick && row.use && !row.use.blocked ? <UseButton use={row.use} uid={row.uid} name={row.name} onPick={onPick} />
+                  : onPick && row.use && !row.use.blocked && !row.use.idle ? <UseButton use={row.use} uid={row.uid} name={row.name} onPick={onPick} />
                     : row.tag ? <span className={`mu-tag ${row.tag.tone}`} title={row.tag.title || undefined}>{row.tag.text}</span> : null}
               </span>
               {/* the whole sentence, never cut; plain (the member's own card underlines its keywords) */}

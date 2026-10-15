@@ -142,9 +142,11 @@ export function momentSave(name) {
     if (!use) throw new Error('dialog-save: Talent Scout not usable');
     return wrap(applyMove(s, { player: 0, option: use.id }));
   }
-  if (name === 'yourcall') {
+  if (name === 'yourcall' || name === 'yourcall3') {
+    // round III's Your Call has four answers (w4b #4: they opened as a wide strip mid-wheel)
+    const round = name === 'yourcall3' ? 3 : 2;
     const slot = slotOf(CALL_TABLE, 'trading', 'pawn');
-    const s = at(CALL_TABLE, 'place', { round: 2, res: { gold: 1, red: 1, white: 1, green: 1 }, need: st => st.round === 2 && st.pending.options.some(o => o.id === slot) });
+    const s = at(CALL_TABLE, 'place', { round, res: { gold: 1, red: 1, white: 1, green: 1 }, need: st => st.round === round && st.pending.options.some(o => o.id === slot) });
     return wrap(applyMove(s, { player: 0, option: slot }));
   }
   if (name === 'release') {

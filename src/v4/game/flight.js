@@ -55,6 +55,21 @@ export function snapshotShop(root) {
   return snap;
 }
 
+/**
+ * An arc's bow, kept on screen (wave 4 #13, #31): an arc between two places near the top edge (the follower rates and a
+ * top seat's count, a rim's prize and a top seat) bowed up out of the window, so a rival's "+10" flew unseen along the
+ * edge. When the bow would leave the window it bows the other way, as far as fits.
+ */
+function onScreenBow(a, b, h) {
+  if (!h || typeof innerHeight !== 'number') return h;
+  const pad = 6;
+  // the bow peaks about halfway along: there, the piece's top is the two ends' mean top less the bow
+  const top = (a.top + b.top) / 2, bottom = (a.top + a.height + b.top + b.height) / 2;
+  if (h > 0 && top - h < pad) return -Math.min(h, Math.max(16, innerHeight - pad - bottom));
+  if (h < 0 && bottom - h > innerHeight - pad) return Math.min(-h, Math.max(16, top - pad));
+  return h;
+}
+
 export function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 0, hold = false }) {
   const ghost = document.createElement('div');
   ghost.className = className + ' ghost-layer';
@@ -64,6 +79,9 @@ export function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0,
   document.body.appendChild(ghost);
   const dx = b.left + b.width / 2 - (a.left + a.width / 2);
   const dy = b.top + b.height / 2 - (a.top + a.height / 2);
+  // the bow at the midpoint, kept on screen: a prize flying to a top seat bowed up out of the window (wave 4 #31)
+  const mid = Math.min(a.top, b.top) + Math.abs(dy) * 0.5;
+  if (arc > 0 && typeof innerHeight === 'number' && mid - arc < 6) arc = -Math.min(arc, 70);
   const frames = hold ? [
     { transform: 'translate(0,0) scale(1)', opacity: 1, boxShadow: '0 0 0 0 rgba(0,0,0,0)' },
     { transform: 'translate(0,-10px) scale(1.06)', opacity: 1, offset: 0.25 },
@@ -376,7 +394,8 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
   if (typeof document === 'undefined' || !document.body.animate) return null;
   const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
   const dist = Math.hypot(dx, dy);
-  const h = path === 'arc' || path === 'cross' ? Math.max(16, Math.min(70, dist * 0.18)) * (path === 'cross' ? -1 : 1) : 0;
+  let h = path === 'arc' || path === 'cross' ? Math.max(16, Math.min(70, dist * 0.18)) * (path === 'cross' ? -1 : 1) : 0;
+  h = onScreenBow(a, b, h);
   const one = (k, scale, opacity, delay) => {
     const outer = document.createElement('div');
     outer.className = `${className} ghost-layer path-${path}`;

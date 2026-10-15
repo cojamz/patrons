@@ -8,7 +8,7 @@
 //  (s4) after every placement, each space shows exactly its minions (the owner and anyone squatting there), and an
 //       empty space shows none (the saved state at the same move count is the truth);
 //  (s5) no flying ghost (a minion, a card, a "+N" of followers) outlives its flight;
-//  (s6) every quadrant with a tiebreak prints it on its rim ("ties: red …"); a sphere with its own rule ("Whatever
+//  (s6) every quadrant with a tiebreak prints it on its rim ("ties: red …"); the rim's hover is the contest only, never a sphere's own rule (w4b #33); was: a sphere with its own rule ("Whatever
 //       you steal turns magenta…") gives it in its rim's hover card;
 //  (s7) every word on the wheel is at least 12px on screen (the rim's text included), and a panel's gain at least 16px
 //       (a verb in its place may step down, Cory: "cut words or step the size down");
@@ -269,20 +269,18 @@ try {
       const tb = quadrant(r.qid).scoring.tiebreak;
       if (tb && !r.text.includes(`ties: ${tb.unit.split(' ')[0]}`)) fail(`(s6) ${r.qid}'s rim doesn't print its tiebreak ("${tb.text}"): "${r.text}"`, tag);
     }
-    // (s6) a sphere with its own rule says it in the rim's hover card
-    for (const qid of pass.quadrants || []) {
-      // its closing "Most … at round end wins." is the card's own prize line, said once at the top (design pod, 2026-10-15)
-      const rule = (quadrant(qid).rule || '').replace(/\s*Most [^.]*\bat round end wins\.\s*$/i, '').trim();
-      if (!rule) continue;
+    // (s6) the rim's hover card is the contest only: a sphere's own rule ("Copies never reach the center…") is not on it
+    //      (w4b #33: it read as a scoring rule, and it's general besides); a copy space's "Can copy" row lists what's legal
+    for (const qid of (pass.quadrants || []).filter(q => quadrant(q).rule)) {
       const at = await page.evaluate(q => {
         const t = document.querySelector(`.lt-wheel [data-plaque="${q}"]`);
         const p = t.getStartPositionOfChar(3), m = t.getScreenCTM();
         return { x: m.a * p.x + m.c * p.y + m.e, y: m.b * p.x + m.d * p.y + m.f };
       }, qid);
       await page.mouse.move(at.x, at.y);
-      const said = await page.waitForSelector(`[data-sphere-rule="${qid}"]`, { timeout: 2500 }).then(e => e.textContent(), () => '');
-      // named as the color's own rule, apart from the prize (w3a #29)
-      if (said !== `${quadrant(qid).name}’s own rule: ${rule}`) fail(`(s6) ${qid}'s rim hover doesn't give its rule ("${rule}"): "${said}"`, tag);
+      const shown = await page.waitForSelector(`[data-prize-line="${qid}"]`, { timeout: 2500 }).then(() => true, () => false);
+      if (!shown) fail(`(s6) ${qid}'s rim hover shows no prize line`, tag);
+      if (await page.$(`[data-sphere-rule="${qid}"]`)) fail(`(s6) ${qid}'s rim hover still carries the sphere's own rule`, tag);
       await page.mouse.move(4, 4);
       await page.waitForTimeout(300);
     }

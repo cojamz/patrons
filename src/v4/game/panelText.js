@@ -78,11 +78,13 @@ const P = {
   yellow: {
     harvest: { main: '+1 yellow', second: '+1 per other color', note: 'you hold' },
     bloom: { verb: 'Top up', second: '+1 of your fewest' },
-    transmute: { main: '+1 yellow', second: 'swap up to 3', note: 'for other colors' },
+    // in the rule's order, swap first, then the yellow (w4b #21: "+1● swap up to 3" read reversed against the hover)
+    transmute: { verb: 'Swap up to 3', second: 'then +1 yellow', note: 'for other colors' },
     prism: { verb: '+1 each other color', second: 'per 3 yellow', note: 'you keep the yellow' },
     // "Members pay out" was all a tight ring II showed: the gain first, whole in line 1
     gather: { verb: '+1 per member', second: 'in its own color' },
-    flourish: { verb: '+1 each per full set', second: 'other colors' },
+    // the center drops line 2: "other" belongs in line 1 (w4b #11: "+1 each per full set" lost it)
+    flourish: { verb: '+1 each other color, per full set' },
   },
   thieves: {
     pickpocket: r => ({ main: `+${r + 1} magenta`, second: 'from rivals', note: grows(r) }),
@@ -93,7 +95,8 @@ const P = {
     rob: { main: '+3 magenta', second: 'from rivals', note: 'at least 1 each' },
     // "Ransom a member" read as paying to get a member back (w3b #19, w3a #57): what you get, whole in line 1 (ring II
     // drops line 2 when tight), and who decides
-    ransom: { verb: 'A rival’s member or its cost', second: 'they choose', note: 'costing 4 or less' },
+    // "A rival's member or its cost" read as "I choose" (w4b #5): line 1 says who decides, line 2 what's picked
+    ransom: { verb: 'A rival pays, or loses a member', second: 'their choice', note: 'costing 4 or less' },
     heist: { verb: 'Take a rival’s member', second: 'they recruit one free' },
   },
   trading: {
@@ -109,7 +112,8 @@ const P = {
   },
   echo: {
     chant: r => ({ main: `+${2 * r} green`, second: grows(r) }),
-    echo: { verb: 'Copy a space', second: 'a rival just took' },
+    // the hover's own words, "since your last turn" (w4b #22: "a rival just took" said it two ways)
+    echo: { verb: 'Copy a space', second: 'taken since your last turn' },
     encore: { verb: 'Copy a space', second: 'taken this round' },
     // one word for it, the hover's (w3a #22: "redo" here, "copy" there)
     refrain: { main: '+2 green', second: 'copy a space you took', note: 'this round' },

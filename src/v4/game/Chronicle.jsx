@@ -2,7 +2,7 @@
 // first, every line in plain words, every space and member named in it opens its card on the board's hover layer.
 import { useLayoutEffect, useMemo } from 'react';
 import { holdFlag } from './bodyFlag.js';
-import { logSections, plainLine, turnGroups } from '../format.js';
+import { logSections, plainLine, turnGroups, foldRepeats } from '../format.js';
 import { useDialog } from './parts.jsx';
 import { NamedText, asYou } from './Info.jsx';
 import { HoverNames } from './HoverNames.jsx';
@@ -25,7 +25,11 @@ export default function Chronicle({ state, onClose, meId = null, hover = null })
             <section key={s.title}>
               <h4>{s.title}</h4>
               {/* newest turn first, each turn top-down: cause, then effect (w3b #49) */}
-              <ol>{turnGroups(state, s.lines).map((g, k) => g.map((j, n) => <li key={j} className={n ? 'turn-more' : k ? 'turn-start sep' : 'turn-start'}>{hover ? <HoverNames state={table} hover={hover} text={asYou(plainLine(state.log, s.start + j), me)} /> : <NamedText state={table} text={asYou(plainLine(state.log, s.start + j), me)} />}</li>))}</ol>
+              {/* …and a member's trigger that repeats is said once, with how many times (w4b #29) */}
+              <ol>{(f => f.groups.map((g, k) => g.map((j, n) => {
+                const text = asYou(plainLine(state.log, s.start + j), me) + (f.times.get(j) ? ` (${f.times.get(j)} times this round)` : '');
+                return <li key={j} className={n ? 'turn-more' : k ? 'turn-start sep' : 'turn-start'}>{hover ? <HoverNames state={table} hover={hover} text={text} /> : <NamedText state={table} text={text} />}</li>;
+              })))(foldRepeats(s.lines, turnGroups(state, s.lines)))}</ol>
             </section>
           ))}
         </div>

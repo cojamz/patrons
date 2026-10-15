@@ -341,7 +341,20 @@ function Menu({ onRules, onLog, onLeave, getState }) {
  * chair when the turn has passed and had its moment.
  */
 function TurnCard({ card, root, state }) {
-  void state;
+  // a card whose player isn't acting any more folds after its moment (wave-4 B #19: "You took X" stayed up ~10s through
+  // the bots' whole sequence, stale, under the strip that already lists it): 2.6s after its last line, it folds, and at
+  // 3.1s it's gone and gives the story its room back
+  const acting = !!(state && state.pending && state.pending.player === card.pid && !state.over);
+  // (kept per card: a new card, or new lines on this one, start it up again in the same render)
+  const lifeKey = `${card.n}|${card.text}|${acting ? 1 : 0}`;
+  const [lifeOf, setLife] = useState({ key: '', v: 'up' });
+  const life = lifeOf.key === lifeKey ? lifeOf.v : 'up'; // 'up' | 'folding' | 'gone'
+  useEffect(() => {
+    if (acting) return undefined;
+    const t = [setTimeout(() => setLife({ key: lifeKey, v: 'folding' }), 2600), setTimeout(() => setLife({ key: lifeKey, v: 'gone' }), 3100)];
+    return () => t.forEach(clearTimeout);
+  }, [lifeKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const gone = life === 'gone';
   // Where the card sits, written straight to its style in one layout effect (perf, 2026-10-15): as React state its place
   // and its lift cost every step one or two more commits of their own, each reading the layout again
   const box = useRef(null);
@@ -354,7 +367,7 @@ function TurnCard({ card, root, state }) {
   // render after a resume, which left the flag and --turn-h unset until the next step, seconds later, so the story and
   // the card overlapped; design pod, 2026-10-15)
   const tableOf = () => root || (box.current && box.current.parentElement);
-  useLayoutEffect(() => holdFlag(tableOf(), 'turnCard'), [root]); // eslint-disable-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => (gone ? undefined : holdFlag(tableOf(), 'turnCard')), [root, gone]); // eslint-disable-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
     const el = box.current;
     if (!el) return;
@@ -375,13 +388,14 @@ function TurnCard({ card, root, state }) {
     // ~5,000 elements of the page every time it changed (perf, 2026-10-15)
     const story = table && table.querySelector(':scope > .lt-since');
     if (story && (h !== turnH.current || turnHOn.current !== story)) { turnH.current = h; turnHOn.current = story; story.style.setProperty('--turn-h', `${h}px`); }
-  }, [card.pid, card.n, card.text, root]);
+  }, [card.pid, card.n, card.text, root, gone]);
+  if (gone) return null;
   // at most a few lines, the rest summed up (every line stays in the strip's card and the log)
   const [head, ...all] = card.text.split(' · ');
   const MAXL = 5;
   const rest = all.length > MAXL ? [...all.slice(0, MAXL - 1), `+${all.length - MAXL + 1} more`] : all;
   return (
-    <div ref={box} className={`turn-card${card.live ? ' live' : ''}${card.folding ? ' folding' : ''}`} data-turn-story={card.text} role="status" aria-live="polite"
+    <div ref={box} className={`turn-card${card.live ? ' live' : ''}${card.folding || life === 'folding' ? ' folding' : ''}`} data-turn-story={card.text} role="status" aria-live="polite"
       style={{ '--pc': playerColor(card.pid) }}>
       <b className="tc-head">{head}</b>
       {rest.map((l, k) => <span key={`${k}:${l}`} className="tc-line"><Rich text={l} /></span>)}
@@ -506,6 +520,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const layColumn = () => {
     const r = root.current;
     if (!r) return;
+    if (sortOwed.current) return; // (round I's order waits for its own beat: a chair resizing meanwhile keeps the old order)
     const rail = r.querySelector(':scope > .lt-snake');
     const seats = [...r.querySelectorAll(':scope > .lt-seat')].filter(e => e.dataset.pid != null);
     if (!rail || !rail.offsetHeight) { seats.forEach(e => e.style.removeProperty('--y')); return; }
@@ -538,7 +553,26 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // (it reports after layout, so its reads are free; the writes move the chairs by transform, never their size). Not
   // after every commit: reading every chair's height there forced a page layout every step (perf, 2026-10-15).
   const seatOrderKey = snake.order.join(',');
-  useLayoutEffect(layColumn, [seatOrderKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  // round I's order (wave 4 #3): the chairs re-sort as the chain's own beat (director.js 'sort'), once the last starting
+  // pick has landed on them and before the first placement; with no chain to play (reduced motion) they re-sort at once
+  const sortOwed = useRef(false);
+  useLayoutEffect(() => {
+    const before = prevState.current;
+    if (motionOK() && before && before !== state && before.seed === state.seed && before.round === 0 && state.round === 1) {
+      sortOwed.current = true;
+      const t = setTimeout(() => dispatchEvent(new Event('patrons:seat-sort')), 4000); // (a safety net: never left unsorted)
+      return () => clearTimeout(t);
+    }
+    sortOwed.current = false;
+    layColumn();
+    return undefined;
+  }, [seatOrderKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const sortNow = () => { if (sortOwed.current) { sortOwed.current = false; layColumnNow.current(); } };
+    addEventListener('patrons:seat-sort', sortNow);
+    const off = onChainEnd(sortNow); // (a chain that never sorted, as one cut short)
+    return () => { removeEventListener('patrons:seat-sort', sortNow); off(); };
+  }, []);
   const layColumnNow = useRef(layColumn);
   layColumnNow.current = layColumn;
   const colRO = useRef(null), colWatched = useRef(new Set());
@@ -1023,9 +1057,23 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const cap = w && w.querySelector('.prompt.choice.plain');
     if (!slot || !cap) { setPlainAt(null); return; }
     const W = w.getBoundingClientRect(), S = slot.getBoundingClientRect(), C = cap.getBoundingClientRect();
-    const up = S.top + S.height / 2 - W.top < W.height / 2;
-    const left = Math.round(Math.max(8, Math.min(W.width - C.width - 8, S.left + S.width / 2 - W.left - C.width / 2)));
-    const top = Math.round(Math.max(8, Math.min(W.height - C.height - 8, up ? S.bottom - W.top + 12 : S.top - W.top - C.height - 12)));
+    // beside the space just taken, on the rim's side of it, never centred on the wheel (w4b #4: a space on the wheel's
+    // right put the card mid-wheel). The wheel's centre is the stage's; a space left or right of it gets the card outside
+    // it when there's room, else just above or below it, flush with its outer edge; a space at the top or bottom, below or
+    // above it.
+    const st = w.querySelector('.stage') || w;
+    const R = st.getBoundingClientRect();
+    const sx = S.left + S.width / 2, sy = S.top + S.height / 2, dx = sx - (R.left + R.width / 2), dy = sy - (R.top + R.height / 2);
+    const clampX = x => Math.round(Math.max(8, Math.min(W.width - C.width - 8, x)));
+    const clampY = y => Math.round(Math.max(8, Math.min(W.height - C.height - 8, y)));
+    const up = sy - W.top < W.height / 2; // the card goes below a space in the top half, above one in the bottom half
+    const below = clampY(S.bottom - W.top + 12), above = clampY(S.top - W.top - C.height - 12);
+    let left, top;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      const out = dx > 0 ? S.right - W.left + 12 : S.left - W.left - C.width - 12;
+      if (out >= 8 && out + C.width <= W.width - 8) { left = Math.round(out); top = clampY(sy - W.top - C.height / 2); }
+      else { left = clampX(dx > 0 ? S.right - W.left - C.width : S.left - W.left); top = up ? below : above; }
+    } else { left = clampX(sx - W.left - C.width / 2); top = up ? below : above; }
     setPlainAt(at => (at && at.left === left && at.top === top && at.up === up ? at : { left, top, up }));
   }, [plainKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const pickerRef = useRef(null);
