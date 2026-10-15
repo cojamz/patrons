@@ -529,6 +529,8 @@ td.rank{font-weight:700}
 .pl .fol .floater{bottom:auto;top:50%}
 .tick.bump,.tick.dip{animation:bump .42s cubic-bezier(.3,.7,.4,1)}
 .tick.bump{color:var(--tc,inherit)}
+/* a follower count rolls at full brightness as its pieces land (motion review #28): never dimmed into a seat's color */
+.lt-cult-seat .cs-total .tick.bump{color:inherit;text-shadow:0 0 8px rgba(255,236,200,.65);animation-duration:var(--mo-bump)}
 @keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
 .gift.change{border-color:var(--rim);font-variant-numeric:tabular-nums}
 .gift{position:absolute;right:8px;bottom:6px;background:var(--table-2);border:1px solid var(--c);color:var(--ink);font-size:var(--fs-2);font-weight:700;border-radius:999px;padding:1px 8px;animation:giftin 2.2s ease-out forwards;pointer-events:none}

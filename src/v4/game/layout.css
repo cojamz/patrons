@@ -18,7 +18,9 @@
   /* the chairs stack from the column's top (GameScreen reads --seats-align and writes --seats-end, their foot) */
   .app.game.lt > .lt-snake{grid-area:seats;--seats-align:start}
   .app.game.lt > .lt-since{grid-area:seats;align-self:start;margin:calc(var(--seats-end, 0px) + 20px) 0 0 44px;
-    max-height:calc(100% - var(--seats-end, 0px) - 20px - 112px)} /* 112: room for the turn card under it */
+    max-height:calc(100% - var(--seats-end, 0px) - 20px)}
+  /* while a turn is being told, its card docks under the story: the story gives it room (oldest lines go first) */
+  .app.game.lt:has(> .turn-card) > .lt-since{max-height:calc(100% - var(--seats-end, 0px) - 20px - 112px)}
   /* the story clips its oldest lines first, never the newest (the whole log is one tap away) */
   .app.game.lt > .lt-since .since-list{min-height:0;overflow:hidden;justify-content:flex-end}
   .app.game.lt > .lt-since .since-list > li{flex:none}

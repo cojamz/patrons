@@ -58,7 +58,9 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   const buying = mine && pend.kind === 'buy';
   const placing = mine && pend.kind === 'place';
   // the board picker (boardPick.js): a choice that names face-up members lights them like a buy, the rest recede
-  const picking = mine && pend.kind === 'choose' && state.shop.some(u => optionFor(`card:${u}`));
+  // any choice (a steal, a gift, a copy, a recruit from the row): only what it offers here stays bright; the rest of the
+  // shop steps back, so the lit stacks or spaces you're choosing from are the brightest thing (design pod)
+  const picking = mine && pend.kind === 'choose';
   const pointer = useRef('mouse');
   const rowRef = useRef(null), deckRef = useRef(null);
   const [sort, setSortState] = useState(readSort);
@@ -134,7 +136,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
       </div>
       </div>
       </div>
-      <FollowerRates state={state} me={me} optionFor={optionFor} onPick={onPick} onDenied={onDenied} buying={buying} />
+      <FollowerRates state={state} me={me} optionFor={optionFor} onPick={onPick} onDenied={onDenied} buying={buying || picking} />
       <ShopTicks state={state} viewer={viewer} placing={placing} hover={hover} rowRef={rowRef} />
     </section>
   );

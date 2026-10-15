@@ -153,9 +153,8 @@ export function flyToken(fromEl, toEl, html, { tag = '', duration = MO.reckonTok
   const size = 34;
   const a = { left: f.left + f.width / 2 - size / 2, top: f.top + f.height / 2 - size / 2, width: size, height: size };
   const b = { left: t.left + t.width / 2 - size / 2, top: t.top + t.height / 2 - size / 2, width: size, height: size };
-  ghostFly(html, `token-flight ${tag}`.trim(), a, b, { duration, scaleTo: 0.9, fadeTo: 0.15, arc: 70 });
-  if (toEl.animate) toEl.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }, { transform: 'scale(1)' }], { duration: 420, delay: duration - 80, easing: 'ease-out' });
-  return true;
+  const anim = ghostFly(html, `token-flight ${tag}`.trim(), a, b, { duration, scaleTo: 0.9, fadeTo: 0.15, arc: 70 });
+  return anim || true;
 }
 
 /** Where every placed minion is right now (to send them home when the round clears the wheel). */
@@ -216,14 +215,15 @@ export function slideShop(root, snap) {
 // on a follower count). Decoration only: nothing waits on a piece, and input is never blocked.
 
 const arrivals = new WeakMap(); // destination element → { at, span }: when its first piece lands and how long the rest take
-/** Pieces will land on `el` from `at` (performance.now ms) for `span` ms: its number counts as they arrive (Tick). */
-export function expectArrival(el, at, span) { if (el && el.nodeType === 1) arrivals.set(el, { at, span }); }
+/** Pieces will land on `el` from `at` (performance.now ms) for `span` ms: its number counts as they arrive (Tick).
+ *  `landed`: they already have (the number rolls the moment it changes). */
+export function expectArrival(el, at, span, landed = false) { if (el && el.nodeType === 1) arrivals.set(el, { at, span, landed }); }
 export function clearArrivals(els) { for (const el of els) arrivals.delete(el); }
 /** When pieces are flying to `el` (or an ancestor of it): { delay, span } in ms from now, else null. Tick reads it. */
 export function arrivalFor(el) {
   for (let e = el; e && e.nodeType === 1; e = e.parentElement) {
     const a = arrivals.get(e);
-    if (a) { const now = performance.now(); return a.at + a.span + 1500 > now ? { delay: Math.max(0, a.at - now), span: a.span, el: e } : null; }
+    if (a) { const now = performance.now(); return a.at + a.span + 1500 > now ? { delay: Math.max(0, a.at - now), span: a.span, el: e, landed: !!a.landed } : null; }
   }
   return null;
 }

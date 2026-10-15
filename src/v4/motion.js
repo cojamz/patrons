@@ -133,6 +133,12 @@ const TABLE = {
   minionsHome: [260,   340,    480],
   minionsHomeStagger: [20, 30,   45],
   incomeSeat:  [120,   200,    320],
+  // the Reckoning (grammar B6, about 1.6s a rim at Steady): the counts stamp in seat by seat and tick up, the leader
+  // hops, the prize arcs from the rim to the winner's count, which rolls as it lands; a rest; the next rim
+  reckonStagger: [60,  100,    150],
+  reckonTick:  [200,   300,    450],
+  reckonRest:  [60,    120,    200],
+  reckonQuiet: [150,   250,    400],  // a rim nobody scores: it pulses once, dim, and the Reckoning moves on
 };
 const IDX = { quick: 0, steady: 1, relaxed: 2 };
 

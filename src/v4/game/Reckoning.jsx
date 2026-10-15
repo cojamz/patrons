@@ -9,13 +9,15 @@
 // the scoring snapshot for an old save.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { scoredStandings, standings, playerColor } from '../format.js';
-import { playerAnchor, motionOK, flyToken } from './flight.js';
+import { playerAnchor, motionOK, flyToken, expectArrival, pulse, track } from './flight.js';
+import { MO, flightMs } from '../motion.js';
 import Tick from './Tick.jsx';
 
-export const STEP_MS = 2900;   // one quadrant with a winner: the count, the verdict, the prize's flight, the climb
-export const QUIET_MS = 1700;  // one where no one scores
-export const VERDICT_MS = 1000; // the counts have ticked up: the caption names the winner
-export const FLY_MS = 900;     // the prize's flight from the rim plaque to the winner's total
+// The pace (the motion language's B6, grammar.md; Cory: "readable, one quadrant at a time"): about 1.6s a rim at
+// Steady, every step moving. The rim lights; the counts stamp in seat by seat and tick up (no still "counting…"); the
+// leader's count and its emoji on the rim hop; the prize arcs off the rim's engraving to the winner's count, which
+// rolls the moment it lands; a short rest; the next rim. A rim nobody scores pulses once, dim, and moves on.
+// Every duration scales with the viewer's animation speed (src/v4/motion.js).
 
 /** The round's contests as scored: [{ qid, rule, prize, rows:[{ id, shown }], winners:[ids] }]. */
 export function reckonRows(info) {
@@ -30,6 +32,8 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   const rows = useRef(reckonRows(info)).current;
   const [step, setStep] = useState(0); // which quadrant is paying (rows.length = finished)
   const [beat, setBeat] = useState(0); // within it: 0 counting, 1 the verdict (the prize in the air), 2 landed
+  const [seen, setSeen] = useState(0); // how many seats' counts have stamped in so far
+  const [atTop, setAtTop] = useState(false); // the card sits on the far side of the wheel from the rim it scores
   const [spots, setSpots] = useState({}); // pid -> { left, top } of that player's chair, for the count chips
   const done = useRef(false);
   const finish = () => { if (!done.current) { done.current = true; onLamp && onLamp(null); onDone(); } };
@@ -58,24 +62,71 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
     if (step >= rows.length) { const t = setTimeout(finish, reduced ? 0 : 400); return () => clearTimeout(t); }
     const row = rows[step];
     setBeat(0);
+    setSeen(0);
     if (onLamp) onLamp(row.qid);
     if (typeof window !== 'undefined') window.__patronsReckon = (window.__patronsReckon || 0) + 1;
     const won = row.winners.length > 0;
-    const at = reduced ? { verdict: 0, fly: 0, land: 0, next: 60 } : { verdict: VERDICT_MS, fly: VERDICT_MS + 200, land: VERDICT_MS + 200 + FLY_MS - 60, next: won ? STEP_MS : QUIET_MS };
-    const timers = [setTimeout(() => setBeat(1), at.verdict)];
-    if (won) timers.push(setTimeout(() => {
-      if (!root) return;
-      const plaque = root.querySelector(`[data-plaque="${row.qid}"]`);
+    const plaque = root && root.querySelector(`[data-plaque="${row.qid}"]`);
+    // the card never covers the rim it scores: a rim in the wheel's lower half sends it to the top
+    if (root && plaque) {
+      const stage = root.querySelector('.lt-wheel .stage') || root.querySelector('.stage');
+      const pr = plaque.getBoundingClientRect(), sr = stage ? stage.getBoundingClientRect() : null;
+      setAtTop(!!(sr && pr.top + pr.height / 2 > sr.top + sr.height / 2));
+    }
+    const timers = [];
+    let cancelled = false;
+    if (reduced) {
+      setSeen(row.rows.length); setBeat(1);
+      timers.push(setTimeout(() => { if (onPaid) onPaid(step + 1); setBeat(2); }, 200), setTimeout(() => setStep(s => s + 1), 400));
+      return () => timers.forEach(clearTimeout);
+    }
+    if (!won && !row.rows.some(r => r.shown > 0)) {
+      // nobody scores and nobody counts: the rim pulses once, dim, and the Reckoning moves on
+      if (plaque) pulse(plaque, MO.reckonQuiet);
+      timers.push(setTimeout(() => setBeat(1), 60), setTimeout(() => setStep(s => s + 1), MO.reckonQuiet));
+      return () => timers.forEach(clearTimeout);
+    }
+    // the counts stamp in seat by seat and tick up (the counting is the motion)
+    row.rows.forEach((r, k) => timers.push(setTimeout(() => setSeen(n => Math.max(n, k + 1)), k * MO.reckonStagger)));
+    const counted = (row.rows.length - 1) * MO.reckonStagger + MO.reckonTick;
+    // the verdict: the leader's count and its emoji on the rim hop
+    timers.push(setTimeout(() => {
+      setBeat(1);
       for (const id of row.winners) {
-        // the prize lands on the number it raises: the winner's total on their chair
-        const home = root.querySelector(`.lt-seat[data-pid="${id}"] .cs-total`) || playerAnchor(root, id);
-        if (plaque && home) flyToken(plaque, home, `<b class="reckon-token" style="--pc:${playerColor(id)}">+${row.prize}</b>`, { tag: 'reckon', duration: FLY_MS });
+        const e = root && root.querySelector(`[data-rim-leader="${id}"]`);
+        if (e && e.animate) track(e.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-5px)', offset: 0.4 }, { transform: 'translateY(0)' }], { duration: MO.hop, easing: 'cubic-bezier(.3,1.4,.5,1)', composite: 'add' }));
       }
-    }, at.fly));
-    // the prize reaches the chairs' totals as it lands
-    timers.push(setTimeout(() => { if (onPaid) onPaid(step + 1); setBeat(2); }, at.land));
-    timers.push(setTimeout(() => setStep(s => s + 1), at.next));
-    return () => timers.forEach(clearTimeout);
+      if (!won) timers.push(setTimeout(() => setStep(s => s + 1), MO.hop + MO.reckonRest));
+    }, counted));
+    if (won) timers.push(setTimeout(() => {
+      // the prize lifts off the rim's engraving and arcs to the number it raises: the winner's total on their chair,
+      // which rolls the moment it lands
+      let landed = 0, longest = 0;
+      const land = () => {
+        if (cancelled || ++landed < row.winners.length) return;
+        for (const id of row.winners) {
+          const home = root && root.querySelector(`.lt-cult-seat[data-seat="${id}"] .cs-total`);
+          if (home) expectArrival(home, performance.now(), 0, true);
+        }
+        if (onPaid) onPaid(step + 1);
+        setBeat(2);
+        timers.push(setTimeout(() => setStep(s => s + 1), MO.roll + MO.reckonRest));
+      };
+      row.winners.forEach((id, k) => {
+        const home = root && (root.querySelector(`.lt-cult-seat[data-seat="${id}"] .cs-total`) || playerAnchor(root, id));
+        if (!plaque || !home) { land(); return; }
+        const a = plaque.getBoundingClientRect(), b = home.getBoundingClientRect();
+        const d = flightMs(Math.hypot(b.left - a.left, b.top - a.top));
+        longest = Math.max(longest, d);
+        const go = () => {
+          const anim = flyToken(plaque, home, `<b class="reckon-token" style="--pc:${playerColor(id)}">+${row.prize}</b>`, { tag: 'reckon', duration: d });
+          if (anim && anim.finished) anim.finished.then(land, land); else land();
+        };
+        if (k) timers.push(setTimeout(go, k * MO.fan)); else go();
+      });
+      void longest;
+    }, counted + MO.hop));
+    return () => { cancelled = true; timers.forEach(clearTimeout); };
   }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -94,20 +145,20 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   const shownBeat = step < rows.length ? beat : 2;
   return (
     <div className="lt-reckon" role="dialog" aria-modal="true" aria-label={`Round ${info.result.round} reckoning`} data-reckon={row ? row.qid : ''} onClick={finish}>
-      <div className="reckon-head" style={{ '--c': row ? `var(--${row.qid})` : undefined }} aria-live="polite">
+      <div className={`reckon-head${atTop ? ' at-top' : ''}`} style={{ '--c': row ? `var(--${row.qid})` : undefined }} aria-live="polite">
         <small>Round {info.result.round} scoring · {Math.min(step + 1, rows.length)} of {rows.length}</small>
         {row && <b className="reckon-rule">{row.rule}</b>}
         {row && row.counts && <span className="reckon-counts">Counts {row.counts}{row.tiebreak && row.tiebreak.text ? `; ${row.tiebreak.text}` : ''}.</span>}
-        <b data-reckon-head className={`reckon-verdict${shownBeat ? ' on' : ''}${row && !row.winners.length ? ' none' : ''}`}>{shownBeat ? verdict : 'counting…'}</b>
+        <b data-reckon-head className={`reckon-verdict${shownBeat ? ' on' : ''}${row && !row.winners.length ? ' none' : ''}`}>{shownBeat ? verdict : '\u00a0'}</b>
         <span className="reckon-dots" aria-hidden="true">{rows.map((r, k) => <i key={r.qid} className={k < step ? 'done' : k === step ? 'on' : ''} style={{ '--c': `var(--${r.qid})` }} />)}</span>
       </div>
-      {row && step < rows.length && row.rows.map(r => {
+      {row && step < rows.length && row.rows.map((r, k) => {
         const at = spots[r.id];
-        if (!at) return null;
+        if (!at || k >= seen) return null;
         const won = shownBeat > 0 && row.winners.includes(r.id);
         return (
           <span key={`${row.qid}-${r.id}`} className={`reckon-count${won ? ' won' : ''}`} data-reckon-count={r.id} style={{ left: at.left, top: at.top, '--pc': playerColor(r.id), '--c': `var(--${row.qid})` }}>
-            <Tick value={r.shown} from={0} className="num" float={false} dur={reduced ? 0 : 700} />
+            <Tick value={r.shown} from={0} className="num" float={false} dur={reduced ? 0 : MO.reckonTick} />
           </span>
         );
       })}

@@ -146,3 +146,16 @@ The take reads right. P2's gold is lit, the pieces leave it and travel straight 
 
 ## Round 11 (06:11, filmstrip of a rival turn with reduced motion on)
 36. **Reduced motion: right that nothing travels, but slow, and nothing marks what changed.** No piece, minion or card flies ✓. Each step's end state appears at once: P3's squat at 600ms, then its release at about 1200. But the steps are about 600ms apart (the old bot pace), so a rival turn takes 1.2–1.8s, against H14's ≤ 0.8s. And no place that changed is marked, so a player who can't watch motion can't find what moved. §6: each beat's numbers crossfade (120ms), the changed place gets a 1px light outline for 400ms, and beats come about 150ms apart in order. Lower priority than 33, 23 and 35.
+
+## Round 12 (06:17, re-filmed on the 06:05–06:11 code)
+`review-r12-recruit-0-200.png`, `review-r12-skip-numbers.png`.
+
+Verified fixed (load-free filmstrips):
+- **23:** at 0ms the recruited chip isn't in your crowd yet (its gap is there), red reads 5, and the Intern is still in the shop. The coin leaves at about 150ms. No end state flashes any more.
+- **35:** a skip at 200ms shows the final 10 in the next frame (216ms). H11 is met.
+- **20 / 33:** the gain's roll counts every number (5 → 7 → 8 → 9 → 10, 600–850ms) and starts as the bundle's tail lands. There's no jump and no early number.
+
+New:
+37. **The 600ms bot floor on a step with a hand-off costs 0.34s per wait.** (GameScreen: `Math.max(plan.handoff, min(rivalDwell, 600))` when the same bot moves next.) Plan probe, Steady, 8 games: the wait between your turns goes from 6.44s to **6.77s p50**, over H2's 6.5s. A rival's turn goes 1.85 → 1.88s, and its p95 2.83 → 2.93s. A 400ms floor costs nothing (6.44s): hand-offs are rarely shorter than 400ms. Fix: a 400ms floor, and update `e2e/v4/motion.mjs` m4 from "≥600ms apart" to "≥400ms apart", saying so in the commit: it pinned the old fixed bot pace, and Cory's call now is "clear and steady, not slow", with the chain setting the pace.
+
+Still open (not the engineer's files): 24 (the release's blank chip and order), 25 (hovers under a resting pointer), 7 / 27 (the turn card and header timing, GameScreen's turn-story code), 29–31 (the Reckoning, Reckoning.jsx: passed to the foreman), 36 (reduced-motion pacing). 14, 21, 22 and 28 are reported fixed by the engineer; not yet re-filmed.

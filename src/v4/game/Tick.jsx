@@ -27,7 +27,8 @@ export default function Tick({ value, from, color, className = '', float = true,
     // pieces flying here (flight.js flyGains): the count starts as the first one lands and runs while the rest do
     const coming = dur ? null : arrivalFor(box.current);
     const wait = coming ? coming.delay : 0;
-    const ms = Math.max(countMs(d, dur), coming ? coming.span + 120 : 0);
+    // pieces landing here: the number rolls as they land (MO.roll, at full brightness), never on a slow count of its own
+    const ms = coming ? Math.max(MO.roll, coming.span + 120) : countMs(d, dur);
     const timers = [];
     // the number lights up as it starts to count (with flying pieces: as the first one lands, never before)
     if (!coming) { setBump(d > 0 ? 1 : -1); timers.push(setTimeout(() => setBump(0), ms + 220)); }
@@ -40,14 +41,15 @@ export default function Tick({ value, from, color, className = '', float = true,
     if (reducedMotion() || typeof requestAnimationFrame !== 'function') { setShown(value); return () => timers.forEach(clearTimeout); }
     // with pieces coming, the count starts when the first one lands (the director says so; the plan's time is the
     // fallback), however late a loaded box paints it
-    let t0 = coming ? Infinity : performance.now();
+    let t0 = coming && !coming.landed ? Infinity : performance.now();
     const go = () => {
       if (t0 !== Infinity) return;
       t0 = performance.now();
       setBump(d > 0 ? 1 : -1);
       timers.push(setTimeout(() => setBump(0), ms + 220));
     };
-    if (coming) {
+    if (coming && coming.landed) { setBump(d > 0 ? 1 : -1); timers.push(setTimeout(() => setBump(0), ms + 220)); }
+    if (coming && !coming.landed) {
       coming.el.addEventListener('patrons:land', go, { once: true });
       timers.push(setTimeout(go, wait + 600));
     }
