@@ -14,38 +14,29 @@
 .pay-card .pay-id .mc-art.fol .follower-mark{width:27px;height:27px}
 .pay-card .pay-id .mc-art.fol{background:color-mix(in srgb,var(--pl-ink,#2b2018) 7%,var(--pl-paper,#f2e8d2));color:var(--pl-ink,#2b2018)}
 
-/* the cost: one socket per unit owed (a ring in the color it needs, or the four-color ring for "any"); the coins
-   paying it sit in them */
-.pay-sockets{display:grid;grid-template-columns:repeat(var(--units),32px);grid-auto-rows:32px;gap:4px;justify-content:center;margin:20px 0 0}
-.pay-socket{grid-row:1;width:32px;height:32px;border-radius:50%;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 80%,transparent)}
-.pay-socket.any{box-shadow:none;opacity:.8;
-  background:conic-gradient(from -45deg,var(--any-top) 0 90deg,var(--any-right) 0 180deg,var(--any-bottom) 0 270deg,var(--any-left) 0 360deg);
-  -webkit-mask:radial-gradient(circle,transparent 13.5px,#000 14px);mask:radial-gradient(circle,transparent 13.5px,#000 14px)}
-.pay-coin{grid-row:1;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:100%;height:32px;padding:0;border:0;
-  border-radius:16px;background:transparent;cursor:pointer;color:var(--pl-ink,#2b2018);transition:transform .12s ease-out}
-.pay-coin > svg{display:block;filter:drop-shadow(0 1.5px 0 rgba(43,32,24,.32))}
-.pay-coin.wide{justify-content:flex-start;padding-left:4px}
-.pay-coin.wide .x{width:32px;margin-left:8px;text-align:center;font-size:14px;line-height:1;font-weight:700;color:var(--pl-ink-2,#6e5c49)}
-.pay-coin:hover:not(:disabled){transform:translateY(-2px)}
-.pay-coin:active:not(:disabled){transform:translateY(0) scale(.94)}
-.pay-coin:focus-visible{outline:2px solid var(--pl-ink,#2b2018);outline-offset:1px}
-
-/* your resources: a stack of dots per color, bottoms on one line; the coins paying are empty rings at the top */
-.pay-stacks{display:flex;justify-content:center;gap:24px;margin:20px 0 0;padding-top:16px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12))}
-.pay-stack{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:56px;padding:8px 8px 4px;border:0;border-radius:var(--corner,8px);
-  background:transparent;color:var(--pl-ink,#2b2018);font:inherit;cursor:pointer;transition:background-color .12s ease-out}
-.pay-stack:hover:not(:disabled){background:color-mix(in srgb,var(--pl-ink,#2b2018) 6%,transparent)}
-.pay-stack:active:not(:disabled) .ps-coins{transform:translateY(1px)}
-.pay-stack:focus-visible{outline:2px solid var(--pl-ink,#2b2018);outline-offset:0}
-.pay-stack:disabled{cursor:default}
-.ps-coins{position:relative;width:24px;height:calc(30px + (var(--tall) - 1) * 8px);transition:transform .08s ease-out}
-.ps-coins > i{position:absolute;left:0;bottom:calc(var(--k) * 8px);width:24px;height:24px;border-radius:50%}
+/* your resources: a stack of dots per color, bottoms on one line. The coins that pay are lifted off the top and
+   faded (they still read as their color); the number under a stack is what you keep. The stack is one button (pay
+   with one more of it); the lifted coins are another (put one back). */
+.pay-stacks{display:flex;justify-content:center;gap:24px;margin:20px 0 0}
+.pay-stack{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:56px;padding:8px 8px 4px;border-radius:var(--corner,8px);
+  color:var(--pl-ink,#2b2018);transition:background-color .12s ease-out}
+.ps-add{position:absolute;inset:0;z-index:0;padding:0;border:0;border-radius:inherit;background:transparent;cursor:pointer}
+.ps-add:disabled{cursor:default}
+.ps-add:focus-visible{outline:2px solid var(--pl-ink,#2b2018);outline-offset:0}
+.pay-stack:has(.ps-add:hover:not(:disabled)){background:color-mix(in srgb,var(--pl-ink,#2b2018) 6%,transparent)}
+.pay-stack:has(.ps-add:active:not(:disabled)) .ps-coins{transform:translateY(1px)}
+.ps-coins{position:relative;z-index:1;display:block;width:24px;height:calc(36px + (var(--tall) - 1) * 8px);pointer-events:none;transition:transform .08s ease-out}
+.ps-coins > .ps-coin{position:absolute;left:0;bottom:calc(var(--k) * 8px);width:24px;height:24px;border-radius:50%}
 .ps-coin > svg{display:block;filter:drop-shadow(0 1.5px 0 rgba(43,32,24,.32))}
-/* a coin that pays: lifted off its stack and faded, its color still there (it sits in the cost above) */
-.ps-coins > .ps-ghost{bottom:calc(var(--k) * 8px + 6px);opacity:.3}
-.ps-ghost > svg{display:block}
-.pay-stack:hover:not(:disabled) .ps-coin:has(+ .ps-ghost),.pay-stack:hover:not(:disabled) .ps-coin:last-child{transform:translateY(-3px);transition:transform .12s ease-out}
-.ps-n{font-size:18px;line-height:24px;font-weight:700;font-variant-numeric:tabular-nums lining-nums}
+/* the top coin rises a little under the pointer: it's the one a click would move */
+.pay-stack:has(.ps-add:hover:not(:disabled)) .ps-coins > .ps-coin:nth-last-child(1 of .ps-coin){transform:translateY(-3px);transition:transform .12s ease-out}
+/* the lifted coins: 12px above their stack, faded; a click puts one back */
+.ps-out{position:absolute;left:-4px;z-index:2;width:32px;bottom:calc(var(--k0) * 8px + 8px);height:calc(32px + (var(--n) - 1) * 8px);padding:0;border:0;
+  border-radius:16px;background:transparent;cursor:pointer;pointer-events:auto}
+.ps-out > .ps-coin{position:absolute;left:4px;bottom:calc(var(--j) * 8px + 4px);width:24px;height:24px;border-radius:50%;opacity:.38;transition:opacity .12s ease-out,transform .12s ease-out}
+.ps-out:hover:not(:disabled) > .ps-coin{opacity:.6;transform:translateY(2px)}
+.ps-out:focus-visible{outline:2px solid var(--pl-ink,#2b2018);outline-offset:0}
+.ps-n{position:relative;z-index:1;pointer-events:none;font-size:18px;line-height:24px;font-weight:700;font-variant-numeric:tabular-nums lining-nums}
 .pay-stack.none .ps-n{color:var(--pl-ink-3,#a39078)}
 
 /* what bends the price, one quiet line each; a click that changed nothing says why here */
@@ -72,5 +63,5 @@
 
 @media (prefers-reduced-motion:reduce){
   .dialog.pay.pay-card,.pay-nudge{animation:none}
-  .pay-coin,.pay-stack .ps-coin{transition:none}
+  .ps-coin{transition:none}
 }

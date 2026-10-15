@@ -26,7 +26,8 @@ export function priceNotes(state, p, uid) {
     }
   }
   const c = colorOf(def);
-  if (def.s && !state.resources.includes(c)) out.push({ key: 'colorless', text: `Colorless here: its ${def.s} ${c} is paid in any colors (${c} isn’t on this table)` });
+  // never name a color that isn't on this table (wave-2 tester A: "its 6 magenta", "purple")
+  if (def.s && !state.resources.includes(c)) out.push({ key: 'colorless', text: 'Paid in any colors here' });
   let total = null;
   try { total = memberPrice(state, p, uid).total; } catch { /* an older engine */ }
   if (out.length && total != null && total !== printed) out.push({ key: 'total', text: `Comes to ${total} instead of ${printed}${p.members.some(u => defsOf(state.cards[u]).some(d => d.goldPaysDouble)) ? ' (each gold pays 2)' : ''}` });

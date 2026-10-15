@@ -11,6 +11,7 @@ import { memberRows, useNow, usableNow, safeThisRound } from '../../../v4/game/m
 import { SeatMembers, MemberActions } from '../../../v4/game/MemberUse.jsx';
 import { promptFor } from '../../../v4/format.js';
 import { gainsBetween } from '../../../v4/game/gains.js';
+import CultSeat from '../../../v4/game/CultSeat.jsx';
 
 afterEach(cleanup);
 const optionsOf = s => { const m = new Map((s.pending ? s.pending.options : []).map(o => [o.id, o])); return id => m.get(id) || null; };
@@ -142,5 +143,24 @@ describe('threats you can see coming (w2b #19, #21)', () => {
     const t = structuredClone(s);
     expect(safeThisRound(t, 1)).toBe(true);
     expect(safeThisRound(t, 0)).toBe(false);
+  });
+});
+
+describe('a second buy is seen (w2a #6)', () => {
+  it('Big Spender: the headline says "Buy again (Big Spender)", the member hops, then reads "used this round"', () => {
+    const s = table(['gold', 'echo', 'trading', 'thieves'], { members: [['benders.bigspender']], res: [{ gold: 6, white: 6 }] });
+    s.players[0].turnBuys = 1;
+    s.queue = [{ t: 'buy', p: 0, extra: true }];
+    resume(s);
+    expect(s.pending.kind).toBe('buy');
+    expect(s.pending.extra).toBe(true);
+    expect(promptFor(s, true).text).toBe('Buy again (Big Spender)');
+    const uid = uidIn(s, 'benders.bigspender', 0);
+    const { container } = render(<CultSeat state={s} pid={0} me={0} mine optionFor={optionsOf(s)} onPick={() => {}} />);
+    expect(container.querySelector('.cs-member[data-member="benders.bigspender"]').className).toContain('react-hop');
+    expect(memberRows(s, 0, 0).find(r => r.uids.includes(uid)).tag.text).toBe('once a round');
+    const t = structuredClone(s);
+    t.cards[uid].spent = { extraBuy: t.round };
+    expect(memberRows(t, 0, 0).find(r => r.uids.includes(uid)).tag.text).toBe('used this round');
   });
 });
