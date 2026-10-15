@@ -65,6 +65,9 @@ export function promptFor(state, mine) {
   if (!pend) return { who: null, text: '' };
   const p = state.players[pend.player];
   const name = p.name;
+  // members you can use right now (any time on your turn, Cory 2026-10-15): named in the line under the headline
+  const usable = pend.options.filter(o => o.kind === 'use').map(o => o.label.replace(/^Use /, ''));
+  const use = usable.length > 1 ? `${usable.slice(0, -1).join(', ')} or ${usable.at(-1)}` : usable[0];
   switch (pend.kind) {
     case 'setup': {
       const k = (pend.prompt.match(/\((\d) of 2\)/) || [])[1] || '';
@@ -81,17 +84,17 @@ export function promptFor(state, mine) {
         const m = l.match(/^(.+?) took .+ \(\w+\)\.$/);
         if (m) { again = m[1] === name; break; }
       }
-      if (mine && again) return { who: p, lead: 'Extra turn: ', text: 'place one more minion' };
+      if (mine && again) return { who: p, lead: 'Extra turn: ', text: 'place one more minion', ...(use ? { sub: `…or use ${use} first` } : {}) };
     }
     // falls through
     case 'place-plain':
       return mine
-        ? { who: p, text: `Place a minion on a glowing space` }
+        ? { who: p, text: `Place a minion on a glowing space`, ...(use ? { sub: `…or use ${use} first` } : {}) }
         : { who: p, text: `${name} is placing a minion` };
     // the headline is a verb phrase that fits one line at 1270×700; the details go in the line under it (sub)
     case 'buy':
       return mine
-        ? { who: p, text: 'Recruit or buy', sub: 'Recruit a member or buy followers, or pass' }
+        ? { who: p, text: 'Recruit or buy', sub: `Recruit a member or buy followers, or pass${use ? `; or use ${use}` : ''}` }
         : { who: p, text: `${name} is shopping` };
     case 'pay':
       return mine ? { who: p, text: 'Choose how to pay' } : { who: p, text: `${name} is paying` };

@@ -90,7 +90,8 @@ export default {
     m('mentor', 'Mentor & Protégé', 6, 4, 'When recruited: also take the cheapest face-up member free.', {
       onRecruited(ctx, owner) { if (ctx.shopCards().length) ctx.log(`${owner.name}'s Mentor & Protégé: the cheapest face-up member comes along free.`); hireCheapest(ctx, owner); },
     }),
-    m('proselytizer', 'Proselytizer', 6, 6, 'Whenever you recruit, +1 follower.', {
+    // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 12 → 6
+    m('proselytizer', 'Proselytizer', 4, 2,'Whenever you recruit, +1 follower.', {
       onAnyRecruit(ctx, owner, card, by, recruited) { if (by === owner && recruited.uid !== card.uid) owner.bonus += 1; },
     }),
     m('mob', 'Mob', 4, 4, 'Game end: +1 follower per red member.', {

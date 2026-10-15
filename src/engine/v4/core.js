@@ -288,17 +288,17 @@ function inputFor(state, task) {
         kind: 'setup', prompt: `${p.name}: pick a starting resource (${task.k} of 2)`,
         options: state.quadrants.map(q => ({ id: `color:${q}`, label: quadrant(q).name, kind: 'color', value: q })),
       };
-    case 'place':
-      return {
-        kind: 'place', prompt: `${p.name}: place a minion`,
-        options: [
-          ...openSlots(state).filter(([q, i]) => !task.ring || actionAt(state, q, i).ring <= task.ring)
-            .map(([q, i]) => ({ id: `slot:${q}-${i}`, label: actionAt(state, q, i).name, kind: 'slot', q, i })),
-          ...squatSlots(state, p).filter(([q, i]) => !task.ring || actionAt(state, q, i).ring <= task.ring)
-            .map(([q, i]) => ({ id: `squat:${q}-${i}`, label: `${actionAt(state, q, i).name} (join ${state.players[state.slots[`${q}-${i}`]].name})`, kind: 'slot', squat: true, q, i })),
-        ],
-        onEmpty: () => { p.left -= 1; },
-      };
+    case 'place': {
+      const slots = [
+        ...openSlots(state).filter(([q, i]) => !task.ring || actionAt(state, q, i).ring <= task.ring)
+          .map(([q, i]) => ({ id: `slot:${q}-${i}`, label: actionAt(state, q, i).name, kind: 'slot', q, i })),
+        ...squatSlots(state, p).filter(([q, i]) => !task.ring || actionAt(state, q, i).ring <= task.ring)
+          .map(([q, i]) => ({ id: `squat:${q}-${i}`, label: `${actionAt(state, q, i).name} (join ${state.players[state.slots[`${q}-${i}`]].name})`, kind: 'slot', squat: true, q, i })),
+      ];
+      // a member's activation can be used any time on your own turn (Cory, 2026-10-15): here too, beside the spaces
+      // (only while there is a space to take, so a use is never forced on you)
+      return { kind: 'place', prompt: `${p.name}: place a minion`, options: slots.length ? [...slots, ...useOptions(state, p)] : [], onEmpty: () => { p.left -= 1; } };
+    }
     case 'buy': {
       // a second buy (Big Spender) is offered only after a real first buy, while an unspent one is held
       if (task.extra && !(p.turnBuys > 0 && allowance(state, p, 'extraBuy'))) return { kind: 'buy', prompt: '', options: [] };
@@ -313,7 +313,7 @@ function inputFor(state, task) {
         const c = state.cards[uid], d = defById(c.def);
         // a Doppelganger offers what it copies too
         const eff = effectiveDefs(c);
-        if (eff.some(e => e.activate) && !c.used) opts.push({ id: `use:${uid}`, label: `Use ${d.name}`, kind: 'use', uid });
+        opts.push(...useOptions(state, p, [uid]));
         if (eff.some(e => e.toggle)) opts.push({ id: `toggle:${uid}`, label: `${d.name}: switch ${c.on === false ? 'on' : 'off'}`, kind: 'toggle', uid });
       }
       if (canRelease(state, p)) for (const uid of p.members) {
@@ -356,6 +356,32 @@ function inputFor(state, task) {
   }
 }
 
+/** `use:` options: p's members (all, or `uids`) with an activation not used yet; a Doppelganger offers what it copies. */
+function useOptions(state, p, uids = p.members) {
+  const out = [];
+  for (const uid of uids) {
+    const c = state.cards[uid];
+    if (!c.used && effectiveDefs(c).some(e => e.activate)) out.push({ id: `use:${uid}`, label: `Use ${defById(c.def).name}`, kind: 'use', uid });
+  }
+  return out;
+}
+/**
+ * Use a member's activation now. Its whole effect resolves first, its choices included (a Stunt Double copying Open
+ * House asks "which of the cheapest?" right away), and then `resume` (the step the player was in: this placement or
+ * this buy) comes back with fresh options. Before the gut call of 2026-10-15 the buy step came back first, so the
+ * choice waited until after the player's next buy.
+ */
+function useMember(state, p, uid, resume) {
+  const c = state.cards[uid];
+  c.used = true;
+  const act = effectiveDefs(c).find(e => e.onActivate);
+  const before = traceSnapshot(state);
+  act.onActivate(ctxFor(state), p, wrap(state, c));
+  traceChanges(state, before, p, act);
+  const at = state.queue.findIndex(t => !t._fresh);
+  state.queue.splice(at < 0 ? state.queue.length : at, 0, resume);
+}
+
 function resolveTask(state, task, optionId) {
   const p = state.players[task.p];
   switch (task.t) {
@@ -366,6 +392,8 @@ function resolveTask(state, task, optionId) {
       return;
     }
     case 'place': {
+      // using a member first: its whole effect resolves, then this placement comes back with fresh options
+      if (optionId.startsWith('use:')) { useMember(state, p, Number(optionId.slice(4)), { ...task }); return; }
       const squat = optionId.startsWith('squat:');
       const [q, i] = optionId.slice(optionId.indexOf(':') + 1).split('-').map(Number);
       const key = `${q}-${i}`;
@@ -396,20 +424,7 @@ function resolveTask(state, task, optionId) {
         state.queue.unshift({ t: 'pay', p: p.id, tier: tier.key, ...extraOf(task) });
         return;
       }
-      if (kind === 'use') {
-        const c = state.cards[Number(rest)];
-        c.used = true;
-        const act = effectiveDefs(c).find(e => e.onActivate);
-        const before = traceSnapshot(state);
-        act.onActivate(ctxFor(state), p, wrap(state, c));
-        traceChanges(state, before, p, act);
-        // the member's whole effect resolves now, its choices included (a Stunt Double copying Open House asks
-        // "which of the cheapest?" right away), and then this buy step comes back with fresh options. It used to
-        // come back first, so the choice waited until after the player's next buy (gut call, 2026-10-15).
-        const at = state.queue.findIndex(t => !t._fresh);
-        state.queue.splice(at < 0 ? state.queue.length : at, 0, { t: 'buy', p: p.id, ...extraOf(task) });
-        return;
-      }
+      if (kind === 'use') { useMember(state, p, Number(rest), { t: 'buy', p: p.id, ...extraOf(task) }); return; }
       if (kind === 'toggle') {
         const c = state.cards[Number(rest)];
         c.on = c.on === false;

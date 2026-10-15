@@ -99,7 +99,8 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     // placement (or the game ending) leaves nothing to undo.
     const human = mySeats.includes(move.player);
     const kind = before.pending && before.pending.kind;
-    const placed = kind === 'place' && human;
+    // a member used in the place step isn't a placement: it closes the checkpoint (it may show hidden cards)
+    const placed = kind === 'place' && human && !move.option.startsWith('use:');
     // a purchase: from the buy step (one-way, paid at once) or from the pay step (after choosing how)
     if (kind === 'buy' && human && /^(card|tier):/.test(move.option)) buyStart = before;
     const bought = human && buyStart && ((kind === 'buy' && /^(card|tier):/.test(move.option) && !(state.pending && state.pending.kind === 'pay'))

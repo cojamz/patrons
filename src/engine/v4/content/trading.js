@@ -214,7 +214,8 @@ const trading = {
     // once per action use, and 2+0 (was 2+2), since the 2026-10-14 rework: Cheap Seats paid it per resource traded,
     // and Cash In, its main trigger, is gone. Member value 3.5 → 0.6 (160 games, normal bots, White table)
     m('broker', 'Broker', 2, 0, 'Whenever a White action gives you followers, +1 more (once per action).', { brokerBonus: 1 }),
-    m('exporter', 'Exporter', 4, 4, 'Whenever you recruit a non-white member, +1 white.', {
+    // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 4
+    m('exporter', 'Exporter', 2, 2,'Whenever you recruit a non-white member, +1 white.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'trading') ctx.gain(owner, W, 1);
       },

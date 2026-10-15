@@ -197,8 +197,9 @@ export default {
       onRivalExtraTurn(ctx, owner) { ctx.gain(owner, P, Math.min(4, Math.floor((owner.res[P] || 0) / 2))); },
     }),
     // fill-in (critic): took the slot of an earlier card called Timekeeper (the name now belongs to the game-end purple card)
-    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 4 (the most one pass moves)
-    m('doubletime', 'Corner-Cutter', 4, 0, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
+    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 4 (the most one pass moves);
+    // balance pass 2 (pooled bench, midpoint 2.1; design/eval/balance-pass-2.md): 4 → 2
+    m('doubletime', 'Corner-Cutter', 2, 0,'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
     // pays on your last placement of the round, before that turn's buy (at round end, round III's purple came too late).
     // +1 per worker measured 8.4 followers (57% win, easy bots): late purple decides the ring. Half that is the card.
     m('bookkeeper', 'Bookkeeper', 4, 2, 'When you place your last minion of a round, +1 purple per 2 minions you have on the board.', {
@@ -213,7 +214,8 @@ export default {
       // counts after other round-start income (Lamplighter…), like Steward
       onRoundStartLate(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
     }),
-    m('lamplighter', 'Lamplighter', 6, 2, 'Now and at round start, +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
+    // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 12
+    m('lamplighter', 'Lamplighter', 10, 2,'Now and at round start, +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
     // Relay's slot (Cory cut Relay, 2026-10-14). Member-value sim, handed over at round II: 6.9 followers, 53% win

@@ -96,7 +96,7 @@ export function chooseGreedyMove(state, rand = Math.random, { noise = 1.6 } = {}
   switch (pend.kind) {
     case 'setup': return setupPick(pend, rand);
     case 'place':
-      return move(best(pend.options, o => {
+      return move(best(pend.options.filter(o => o.kind === 'slot'), o => {
         const a = actionAt(state, o.q, o.i);
         const qid = state.quadrants[o.q];
         const hustle = p.members.filter(u => state.cards[u].def === 'gold.hustler' && state.cards[u].color === qid).length;
@@ -351,7 +351,10 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
   const memberBias = (opts.memberBias ?? MEMBER_BIAS) * (floor + (1 - floor) * Math.min(1, placesLeft / 12));
   const out = [];
   if (pend.kind === 'place') {
+    // spaces only: a member's activation is also offered here (Cory, 2026-10-15), but bots use members in the buy
+    // step, where their botActivate rules are tuned (buyShortcut), so they rate only where to place
     for (const o of pend.options) {
+      if (o.kind !== 'slot') continue;
       let v;
       try {
         const s = lightClone(state);
