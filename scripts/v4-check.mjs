@@ -168,7 +168,9 @@ if (wantE2E && existsSync(join(root, 'e2e/v4'))) {
     // Each script gets its own shots dir (hotseat wipes its root). touch.mjs (phone) is outside the v0.2 verdict
     // (Cory: no phone for a long time): V4_PHONE=1 brings it back. --quick plays the hot-seat game only.
     const shotsRoot = process.env.V4_SHOTS || `/tmp/patrons-shots/v4-${port}`;
-    const all = quick ? ['hotseat.mjs'] : readdirSync(join(root, 'e2e/v4')).filter(f => f.endsWith('.mjs')).filter(f => f !== 'touch.mjs' || process.env.V4_PHONE);
+    const all = quick ? ['hotseat.mjs'] : readdirSync(join(root, 'e2e/v4')).filter(f => f.endsWith('.mjs')).filter(f => f !== 'touch.mjs' || process.env.V4_PHONE)
+      // agents' scratch probes (qa-*, *probe*) are never gates, even if a checkpoint picks one up
+      .filter(f => !/^qa-|probe/.test(f));
     // timing-sensitive: hover p95 (info), count-ups and bot pacing (motion). They take every e2e token on the box.
     // memory.mjs is not: it reads the heap after a forced GC, which load doesn't change.
     const SOLO = new Set(['info.mjs', 'motion.mjs', 'snappy.mjs']); // snappy: spin, hover and click-to-minion budgets

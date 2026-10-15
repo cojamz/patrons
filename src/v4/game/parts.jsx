@@ -435,7 +435,7 @@ export function Popover({ anchor, onClose, children, float = false, beside = nul
   const { nub, mid, ...style } = pos;
   const nubAt = nub && typeof style.top === 'number' ? Math.round(Math.max(14, mid - style.top)) : null;
   return out(<div className={`popover${nub ? ' beside' : ''}`} ref={box} role="dialog" style={style}>
-    {nubAt != null && <span className={`pop-nub ${nub}`} aria-hidden="true" style={{ top: nubAt }} />}{children}</div>);
+    {nubAt != null && <span className={`pop-nub ${nub}`} aria-hidden="true" style={{ top: `min(${nubAt}px, calc(100% - 14px))` }} />}{children}</div>);
 }
 
 /** A member card face: color band, sphere glyph, name, worth, ability and list cost. */
