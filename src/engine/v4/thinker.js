@@ -54,8 +54,12 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
     try {
       s = applyMove(state, { player: me, option: pool[i].o.id });
       while (!s.over && (full || (s.round === round && steps < cap)) && steps < 800 && !late()) {
+        // the cap counts placements and buys only: a follow-up choice (who gets the gold, which member) is part of the
+        // same turn, and counting it ended rollouts mid-turn (Hard-20 fell from 41% to 33% against 3 Normal when Blue
+        // became a held-color contest, where those mid-turn endings misjudge the line; counting only turns: 43%)
+        const counted = s.pending && (s.pending.kind === 'place' || s.pending.kind === 'buy');
         s = applyMove(s, opts.rollout === 'greedy' ? chooseGreedyMove(s, r, { noise: 1 }) : chooseNormalMove(s, r, ROLLOUT));
-        steps++;
+        if (counted) steps++;
       }
       // at a round boundary, value what's left the way normal does (followers + resources' worth)
       value = s.over ? margin(s, me) : valueAtBoundary(s, me);
