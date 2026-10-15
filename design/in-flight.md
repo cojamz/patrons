@@ -39,6 +39,10 @@ Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source a
 31. **Layout (Cory's play notes).** Follower buys made prominent, top score row removed, seats condensed, shop sorted by cost with a toggle, no deck hover, the Reckoning slower and clearer. `.v4-build-layout`, port 5372.
 32. **Visual language** (replaces the card pod and the action-look pod, which Cory rejected as "variations on what exists"). A grammar in design/prototypes/language/grammar.md, then ONE polished plate (a quadrant with 3 actions, a rim rule, a member card, resources as dots) for Cory before anything scales.
 33. **Steal and pick-a-player flows.** Click the rival's resource stack or seat; a compact list only as the keyboard fallback. `.v4-build-steal`, port 5376.
+34. **Rollout R1: tokens, dots, marks** (plate 1b, approved). lamp.css :root variables, plain-dot currency with the split "any" dot, the mark set in Rich/shorts. Port 5390.
+35. **Rollout R2: wheel panels and rims.** Flat wedge panels with the action's picture above the number; the rim reads "MOST ● +4 👤 🐸". `?spaces=sockets` keeps the old look. Port 5392.
+36. **Rollout R3: cards, hovers, shop.** Member hover and shop card per the plate, short when-lines in src/v4/cardText.js, follower tiles. Port 5394.
+37. **Quiet-box verdicts (remote sessions).** session_01VJqrdWX2vcyJZSs11Zziem (ce03bc3, gate timing), session_01N9mAWieSTB1FSiquGzsvAe (b7a2b76), session_0125uXV2UHp3YSBXphubMoad (002e00a = batch 1: clarity, turn story, session, motion). Batch 1 ships to the PR when 002e00a passes.
 
 ## Held
 - **Fair-price screen, bot levels + 4-thinker tables:** offloaded to the remote sessions below. The Purple session is done (roster 11).

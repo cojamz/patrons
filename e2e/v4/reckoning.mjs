@@ -6,6 +6,8 @@
 //  (r4) then the summary (Start round II) appears; Skip goes straight there on the next round end;
 //  (r5) your placement sends a minion flying from your leader; when round II begins, the wheel's minions fly home;
 //  (r6) no flying ghost (a minion, a "+N" of followers, a card) outlives its flight: each is gone within 2.5s;
+//  (r8) the chairs' follower totals climb as each prize lands: as the Reckoning starts, a winner's chair shows less
+//       than once it has paid (RC1 saboteur: the totals showed the final numbers at step 1 of 4);
 //  (r7) the round-III summary at 1270×700: the end-game bonus line is on screen without scrolling, and the whole
 //       summary fits (no "More below"), from a saved game at P1's last placement (e2e/v4/lib/late-save.mjs).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5196.
@@ -39,12 +41,14 @@ const shot = n => page.screenshot({ path: `${SHOTS}/${n}.png` }).catch(() => {})
 
 // in-page: every header line, every count value per quadrant and player, and every flying ghost
 await page.addInitScript(() => {
-  window.__rk = { heads: [], counts: {}, tokens: 0, out: 0, home: 0, longest: 0, stuck: [] };
+  window.__rk = { heads: [], counts: {}, tokens: 0, out: 0, home: 0, longest: 0, stuck: [], seatsAtStart: null };
   const alive = new Map(); // every flying ghost (a minion, a "+N" of followers, a card) and when it took off
   const tick = () => {
     const h = document.querySelector('[data-reckon-head]');
     const rk = window.__rk;
     if (h && h.textContent && rk.heads[rk.heads.length - 1] !== h.textContent) rk.heads.push(h.textContent);
+    // (r8) the chairs' totals the moment the Reckoning starts
+    if (h && !rk.seatsAtStart) rk.seatsAtStart = Object.fromEntries([...document.querySelectorAll('.lt > .lt-seat[data-pid]')].map(e => [e.dataset.pid, Number((e.querySelector('[data-followers]') || {}).dataset?.followers)]));
     const q = (document.querySelector('.lt-reckon') || {}).dataset?.reckon || '';
     for (const c of document.querySelectorAll('[data-reckon-count]')) {
       const k = `${q}:${c.dataset.reckonCount}`;
@@ -94,22 +98,31 @@ try {
   while (!(await page.$('.lt-reckon')) && Date.now() - t0 < 150000) { if (!(await firstOption())) await page.waitForTimeout(60); else await page.waitForTimeout(40); }
   if (!(await page.$('.lt-reckon'))) throw new Error('round I never reached the Reckoning');
   await shot('r1-reckoning');
-  await page.waitForSelector('[data-next-round]', { timeout: 15000 });
+  // one quadrant at a time, slow enough to follow (Cory, 2026-10-15): ~3s each, so allow 25s for the four
+  await page.waitForSelector('[data-next-round]', { timeout: 25000 });
   await shot('r4-summary');
   const rk = await page.evaluate(() => window.__rk);
   const quads = await page.$$eval('[data-plaque]', els => els.length);
   // (r1) every quadrant told
-  const told = rk.heads.filter(h => / wins? \+\d+$| tie \+\d+$|no one scores$/.test(h));
+  // the verdict line: "P4 wins +6 followers", "You and P4 tie: +6 followers each", "no one scores"
+  const told = rk.heads.filter(h => / wins? \+\d+( followers?)?$| tie:? \+\d+( followers?)?( each)?$|no one scores$/.test(h));
   if (told.length < quads) errors.push(`(r1) the Reckoning told ${told.length} of ${quads} quadrants (${rk.heads.join(' | ')})`);
   // (r2) counts tick up
   const best = Math.max(0, ...Object.values(rk.counts).map(seq => new Set(seq).size));
   const top = Math.max(0, ...Object.values(rk.counts).map(seq => Number(seq[seq.length - 1]) || 0));
   if (top >= 2 && best < 3) errors.push(`(r2) no count ticked up through 3 values (best ${best}, highest count ${top})`);
   // (r3) a prize flight per winner
-  const winners = told.reduce((n, h) => n + (/no one scores$/.test(h) ? 0 : h.split(':').slice(1).join(':').replace(/ (wins?|tie) \+\d+$/, '').split(' & ').length), 0);
+  // "P4 wins +6 followers" is one winner, "You and P4 tie: +6 followers each" two
+  const winners = told.reduce((n, h) => n + (/no one scores$/.test(h) ? 0 : h.replace(/ (wins?|tie:?) \+\d+.*$/, '').split(/ and | & /).length), 0);
   if (rk.tokens < winners) errors.push(`(r3) ${rk.tokens} prize flights for ${winners} winners`);
   // (r5) your placements flew out
   if (rk.out < 1) errors.push('(r5) no minion flew from a leader to the wheel');
+  // (r8) a winner's chair climbed during the Reckoning (it didn't show the final total from step 1)
+  {
+    const after = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.lt > .lt-seat[data-pid]')].map(e => [e.dataset.pid, Number((e.querySelector('[data-followers]') || {}).dataset?.followers)])));
+    const climbed = Object.keys(after).filter(id => rk.seatsAtStart && rk.seatsAtStart[id] < after[id]);
+    if (winners > 0 && !climbed.length) errors.push(`(r8) no chair's total climbed during the Reckoning (at its start ${JSON.stringify(rk.seatsAtStart)}, after ${JSON.stringify(after)})`);
+  }
   const onWheel = await page.$$eval('.lt-wheel [data-slot] .worker', els => els.length);
   // start round II: the minions fly home
   await page.click('[data-next-round]');

@@ -330,6 +330,23 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // out, so the totals climb as each prize lands (RC1 saboteur: the seats showed the final numbers at step 1 of 4)
   const [paid, setPaid] = useState({ moment: null, n: 0 });
   const snake = useMemo(() => snakeOrder(state), [state]);
+  // a new round's order re-sorts the chairs: each slides from where it stood to its new place (FLIP, so it plays
+  // whatever else re-renders in the same moment)
+  const seatTops = useRef({});
+  const orderKey = snake.order.join(',');
+  useLayoutEffect(() => {
+    const r = root.current;
+    if (!r) return;
+    const seatsNow = [...r.querySelectorAll('.lt > .lt-seat[data-pid]')];
+    const now = Object.fromEntries(seatsNow.map(e => [e.dataset.pid, e.getBoundingClientRect().top]));
+    const was = seatTops.current;
+    seatTops.current = now;
+    if (!motionOK()) return;
+    for (const e of seatsNow) {
+      const d = was[e.dataset.pid] != null ? was[e.dataset.pid] - now[e.dataset.pid] : 0;
+      if (Math.abs(d) > 4 && e.animate) e.animate([{ translate: `0 ${Math.round(d)}px` }, { translate: '0 0' }], { duration: 650, easing: 'cubic-bezier(.3,.7,.4,1)' });
+    }
+  }, [orderKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const seatState = useMemo(() => {
     if (!moment || reckoned === moment) return state;
     let unpaid;
