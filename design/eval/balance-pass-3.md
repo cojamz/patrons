@@ -35,3 +35,8 @@ Strong: Rising Tide in round III, Your Call in round III, Toast in round III, Li
 
 ## Why it matters to Cory's notes
 "Members all kind of feel weak": in this pass, 20 members read as too dear and 5 as too cheap. Lowering the dear ones is the most direct price lever on that feeling. Pure follower buying wins 10.0% / 9.4% against Normal bots and 4.7% / 1.6% against Hard-20, below the 15–30% band. Cheaper members would push it lower still, so call 5 (leave buying as it is) should be decided together with this one.
+
+## Applied (2026-10-15, Cory's yes) and benched
+Applied at 17fb84a, plus Cory's follower buys 4 buys 4 and 8 buys 8 at 95d2a6e. Two full bench runs (bench scripts from claude/cults-bench, both trusted):
+- Pass 3 alone (17fb84a, seeds 700000): 23 of the 25 repriced members are no longer flagged by both bots. Still flagged: Hustler too cheap at 4 (7.3 / 8.6, held by the ×2 cap) and Extra Hand overshot to too cheap at 6 (8.4 / 9.5). Pure follower buyer on Classic: 11.5% vs Normal, 2.3% vs Hard-20 (n 64).
+- With the 4/8 follower buys (95d2a6e, seeds 800000): pure follower buyer 17.5% vs Normal (n 240, in band), 3.1% vs Hard-20 (n 64). big-followers on the default table, 200 games: 15.0% vs Hard-20. Members per player 5.2 (Normal), 4.2 (Hard-20). Newly flagged by both: Crowd-Pleaser cheap; Groupie, Ensemble, Timekeeper, Chronicler, Farmer dear (and others; full list in that run's latest.md). One run; act on the pool.
