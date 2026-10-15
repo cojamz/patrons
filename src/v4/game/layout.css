@@ -52,6 +52,10 @@
   .app.game.lt .lt-card .art{flex:1 1 auto;height:auto;min-height:36px}
   .app.game.lt .lt-deck{height:auto;min-height:0;flex:none}
 
+  /* the turn card now owns the column's foot: an error stands at the foot of the wheel instead (above everything), and an
+     online room's code at the top of the chairs' column */
+  .lt > .error{left:50%;right:auto;bottom:12px;translate:-50% 0;z-index:45}
+  .lt > .room{top:4px;bottom:auto;left:62px}
   /* setup: the starting-resource picker stands under the chairs (the column is empty until the turns begin), never
      over the wheel or the members you're choosing toward (layout gate l6) */
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{left:calc(-1 * var(--col-l) - var(--col-gap) + 44px);width:calc(var(--col-l) - 44px);

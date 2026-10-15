@@ -33,7 +33,7 @@ import PayPicker, { payChoice } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
-import { playChain, measureChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
+import { playChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed } from '../motion.js';
 import { PERF_ON } from '../perf.js';
@@ -617,8 +617,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       const snap = snapshotShop(root.current);
       if (snap.size) shopSnap.current = snap;
     }
-    // the step's chain geometry, while the layout is clean: its commit then reads none (director.js measureChain)
-    measureChain(root.current, prev, next, { snap: shopSnap.current, mine: mySeats, chips: chipSnap.current });
+    // (director.js measureChain can take the chain's geometry here, before the commit. Measured on the loaded box it
+    // moved the layout reads into this timer without saving any: mid-chain the layout is never clean. Not called;
+    // design/eval/perf/turn-wait.md.)
   };
   useLayoutEffect(() => {
     const before = prevState.current;

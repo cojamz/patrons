@@ -47,6 +47,8 @@ export function setMotionSpeed(s) {
   for (const fn of subs) fn(s);
 }
 export const onMotionSpeed = fn => { subs.add(fn); return () => subs.delete(fn); };
+/** A speed's name from the one setting or an old save's bot speed ("fast" / "normal" / "slow"). */
+export const speedName = s => ({ fast: 'quick', normal: 'steady', slow: 'relaxed' }[s] || (SPEEDS[s] ? s : DEFAULT_SPEED));
 
 // Each budget at Steady. Scaled ones (SHOW) are multiplied by the speed when read; the rest answer your hand.
 const BASE = {
@@ -166,8 +168,9 @@ export const nextBeatAt = flight => (speed === 'quick' ? flight * 0.5 : speed ==
  * bot speed, and how long the session lets a bot think. A step's own chain of animations can hold it longer.
  */
 export const BOT = {
-  pace: { slow: 1000, normal: 600, fast: 350 },
-  think: { slow: 400, normal: 250, fast: 120 },
+  // by the one speed setting (Quick / Steady / Relaxed); an old save's bot speed (fast / normal / slow) reads the same
+  pace: { quick: 350, steady: 600, relaxed: 1000, fast: 350, normal: 600, slow: 1000 },
+  think: { quick: 120, steady: 250, relaxed: 400, fast: 120, normal: 250, slow: 400 },
   recruitExtra: 150,
   /** your own recruit that ends your turn gets this long on screen before the next player's move shows */
   myRecruitHold: 500,

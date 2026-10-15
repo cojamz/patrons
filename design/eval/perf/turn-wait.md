@@ -118,3 +118,29 @@ The lead stays in, behind one number (`lead` in useTable's layout effect). The p
    - The Wheel rebuilds all its sockets when anything in the state changes.
    - Fix: memoise sockets per space on what each one shows (its owner, legality, flash, recent), not on `state`.
 3. **The round end:** about 90 commits and about 11 s of the Reckoning. That's its own budget (H10).
+
+## Round 2: post-commit work and the Wheel (after3, 44e22bd + working tree; load 21–23, so wall times are noise)
+**The Wheel now redraws only the spaces that changed.** Each space's element is kept with a signature of what it shows: owner, minions and their emojis, lit/option, taken, fresh ring and newest, flash, panel layout, pick note, position, round and look. A `WheelSpace` memo skips the space when the element is the same.
+- Per rival step, 24 spaces redrew before. Now: place 1–2, buy 0, pay 0.
+- Components per rival step: 200 / 190 / 267 / 219 / 206 / 287 → 127 / 111 / 175 / 150 / 125 / 208.
+- Guard: render-budget "a rival's step…" asserts at most 2 spaces per step.
+
+**TurnCard has no state.** Its place and its fit-on-screen lift are written to its style in one layout effect. Before, `setPos` and `setLift` each cost a commit of their own.
+- Small follow-up commits in the pure round-I wait: 33 → 26.
+- Commits per step: 3.6 → 3.1.
+
+**Flights read cached rects.** playChain's pieces and member chips use each place's rect once (`rectOf`), not a `getBoundingClientRect` per piece.
+
+**Tried and set aside: `measureChain`**, which measures the chain's geometry before the commit.
+- It moved the reads into the useTable timer, from 0.15 s to 0.76 s of forced layout there.
+- It didn't lower the forced layout in the commit task (3.4 s against 2.6 s, at higher load).
+- The reason: mid-chain the layout is never clean. The previous chain's tail writes every frame (held stacks, ghosts), so a read before the commit pays a layout too.
+- The function stays in director.js, not called.
+
+**Where the commit's forced layout comes from now.** It is about 250–320 ms a step at 4× on this box, and it isn't playChain. The first layout effect to read after the DOM changes forces the whole-page layout, and every later read after a write forces another:
+1. SinceStrip runs `getComputedStyle(sec).maxHeight` and `scrollHeight` on every new entry, which is every step, and may then call `setDrop`, a second commit.
+2. TurnCard reads the dock and the rates' rect.
+3. The focus effect runs `focus()` on every state when nothing has focus.
+4. The seat-order animation reads every seat's top at each turn change.
+
+Next: make SinceStrip's overflow check a ResizeObserver callback only, out of the commit. Read TurnCard's dock once per layout change, not per step.

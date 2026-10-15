@@ -58,7 +58,7 @@ export const UNDO_BUY_HOLD_MS = 1600;
  * Local sessions add undo for the acting human's last placement: `undo()` restores the state from just before it,
  * offered only while that placement is the last thing that happened. Any further move (by anyone, bots included)
  * or a round ending clears it. Bots never undo.
- * @param {{ seats?: { name?: string, kind?: 'human'|'bot' }[], seed?: number, botDelayMs?: number, quadrants?: string[], state?: object, undo?: UndoCheckpoint|null,
+ * @param {{ seats?: { name?: string, kind?: 'human'|'bot' }[], seed?: number, botDelayMs?: number|(() => number), quadrants?: string[], state?: object, undo?: UndoCheckpoint|null,
  *   holdRoundEnds?: boolean, hold?: { moves: number }|null, isOwner?: () => boolean }} opts
  *   Pass `state` (a saved engine state) to resume instead of starting a new game; `seats`, `seed` and `quadrants` are then ignored.
  *   Pass `undo` (a saved `undoCheckpoint`) with it to keep undo across a reload; it's dropped unless still valid for `state`.
@@ -137,7 +137,8 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     timer = null;
     const p = state.pending;
     if (destroyed || roundHold || state.over || !p || state.players[p.player].kind !== 'bot') return;
-    const hold = botDelayMs; // (no hold after a buy: the payment step, with Back, is the safety net)
+    // (no hold after a buy: the payment step, with Back, is the safety net); a function reads the speed setting live
+    const hold = typeof botDelayMs === 'function' ? botDelayMs() : botDelayMs;
     timer = setTimeout(() => {
       timer = null;
       if (destroyed || roundHold || !mayMove()) return;
