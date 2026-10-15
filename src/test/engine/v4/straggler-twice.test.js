@@ -6,8 +6,8 @@ import { move } from './helpers.js';
 
 describe('Straggler twice in one round', () => {
   it('a stale second move is offered again with fresh options instead of crashing', () => {
-    let s = sceneQ({ members: [['benders.straggler', 'red.doppel']], slots: { '0-0': 0, '0-1': 0 }, queue: [{ t: 'allPlaced' }] });
-    const dop = s.players[0].members.find(u => s.cards[u].def === 'red.doppel');
+    let s = sceneQ({ members: [['benders.straggler', 'echo.doppel']], slots: { '0-0': 0, '0-1': 0 }, queue: [{ t: 'allPlaced' }] });
+    const dop = s.players[0].members.find(u => s.cards[u].def === 'echo.doppel');
     s.cards[dop].copy = 'benders.straggler';
     s.queue = [{ t: 'allPlaced' }]; s.pending = null;
     return import('../../../engine/v4/core.js').then(({ resume: r }) => {

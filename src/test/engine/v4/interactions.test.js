@@ -7,11 +7,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createGame, resume, followers } from '../../../engine/v4/core.js';
 import { quadrant } from '../../../engine/v4/content/index.js';
 import { take, move, play, uidOf, ids, pinCosts } from './helpers.js';
+import { STRAYS, stray } from './stray.js';
 
 // Costs these scenes are written against (the real cards get repriced; these don't move).
 const PINNED = {
   'red.intern': [1, 1], 'red.twins': [1, 1], 'red.volunteer': [0, 0], 'red.mob': [2, 2], 'red.patriarch': [3, 1],
-  'red.bigfamily': [2, 2], 'red.doppel': [2, 2], 'red.drive': [1, 1], 'red.proselytizer': [3, 3],
+  'red.bigfamily': [2, 2], 'echo.doppel': [2, 2], 'red.drive': [1, 1], 'red.proselytizer': [3, 3],
   'gold.midas': [3, 2], 'gold.jackpot': [3, 3], 'gold.tycoon': [3, 1], 'gold.speculator': [3, 2], 'gold.investor': [2, 2],
   'thieves.crew': [1, 1], 'market.climber': [1, 0],
 };
@@ -35,7 +36,7 @@ function scene({ quads, n = 2, seed = 7, round = 1, res = [], members = [], shop
     p.bonus = bonus[i] || 0; p.discount = 0; p.left = left;
   });
   s.pile = [...s.shop, ...s.pile]; s.shop = [];
-  const grab = def => { const k = s.pile.findIndex(u => s.cards[u].def === def); if (k < 0) throw new Error(`no free ${def}`); return s.pile.splice(k, 1)[0]; };
+  const grab = def => { const k = s.pile.findIndex(u => s.cards[u].def === def); if (k < 0) { if (!STRAYS.has(def)) throw new Error(`no free ${def}`); return stray(s, def); } return s.pile.splice(k, 1)[0]; };
   members.forEach((list, i) => { for (const d of list || []) s.players[i].members.push(grab(d)); });
   for (const d of shop) if (s.pile.some(u => s.cards[u].def === d)) s.shop.push(grab(d)); // skip a card a player already holds
   if (pileFirst.length) s.pile.unshift(...pileFirst.map(grab));
@@ -187,36 +188,36 @@ describe('Green copies the risky spaces', () => {
 // ---------------------------------------------------------------------------------------------------------
 describe('Doppelganger copying Purple, Green and Silver members', () => {
   it('copying Grand Host doubles again (×4)', () => {
-    const s = go(scene({ quads: ['gold', 'red', 'silver', 'echo'], members: [['silver.grandhost', 'red.doppel']], copies: { 0: { 'red.doppel': 'silver.grandhost' } } }), 'silver.toast');
+    const s = go(scene({ quads: ['gold', 'red', 'silver', 'echo'], members: [['silver.grandhost', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'silver.grandhost' } } }), 'silver.toast');
     expect(R(s, 0).silver).toBe(12);
   });
   it('copying Guest adds 1 more to every gift', () => {
-    let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], members: [['silver.guest', 'red.doppel']], copies: { 0: { 'red.doppel': 'silver.guest' } } });
+    let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], members: [['silver.guest', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'silver.guest' } } });
     s = go(s, 'silver.toast');
     expect(R(s, 0).silver).toBe(3);
   });
   it('copying Foreman pays on every extra turn twice', () => {
-    let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 3, slots: { '0-0': 0 }, members: [['purple.foreman', 'red.doppel']], copies: { 0: { 'red.doppel': 'purple.foreman' } } });
+    let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 3, slots: { '0-0': 0 }, members: [['purple.foreman', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'purple.foreman' } } });
     s = take(s, 'purple.overtime');
     expect(R(s, 0).purple).toBe(4); // 2 workers on the board, two Foremen, Overtime's 1 turn (Crunch Time's turns aren't extra)
   });
   it('copying Choir pays on every copy twice', () => {
-    let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], members: [['echo.choir', 'red.doppel']], copies: { 0: { 'red.doppel': 'echo.choir' } } });
+    let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], members: [['echo.choir', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'echo.choir' } } });
     s = go(s, 'gold.rush');
     s = pass(move(take(s, 'echo.echo'), 'space:now:0-1'));
     expect(R(s, 0)).toMatchObject({ gold: 2, green: 2 });
   });
   it('copying Go-Getter gives a usable once-per-game extra turn of its own', () => {
-    let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 3, turns: [0, 1], members: [['purple.secondwind', 'red.doppel']], copies: { 0: { 'red.doppel': 'purple.secondwind' } } });
+    let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 3, turns: [0, 1], members: [['purple.secondwind', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'purple.secondwind' } } });
     s = take(s, 'gold.rush');
-    const d = uidOf(s, 'red.doppel', 0);
+    const d = uidOf(s, 'echo.doppel', 0);
     expect(ids(s)).toContain(`use:${d}`);
     s = pass(move(s, `use:${d}`));
     expect(s.pending.player).toBe(0);
     expect(s.cards[d].used).toBe(true);
   });
   it('copying Wallflower doesn’t double twice', () => {
-    let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], bonus: [0, 2], members: [['echo.wallflower', 'red.doppel']], copies: { 0: { 'red.doppel': 'echo.wallflower' } } });
+    let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], bonus: [0, 2], members: [['echo.wallflower', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'echo.wallflower' } } });
     s = go(s, 'gold.rush');
     s = pass(move(take(s, 'echo.echo'), 'space:now:0-1'));
     expect(R(s, 0).gold).toBe(4);
@@ -324,15 +325,16 @@ describe('Magenta takes members that carry state', () => {
   });
   // Social Climber now pays on Release (dead-window audit, 2026-10-14); these were its round-start trade-in
   it('a member released with Social Climber held goes back to the pile clean (no Doppelganger copy, used flag), and Climber pays +2', () => {
-    let s = scene({ quads: Q, round: 2, queue: [{ t: 'buy', p: 0 }], members: [['market.climber', 'red.doppel']], copies: { 0: { 'red.doppel': 'gold.midas' } } });
-    const d = uidOf(s, 'red.doppel', 0);
+    // a Green table: Doppelganger is green since 2026-10-15, so its release pays green
+    let s = scene({ quads: ['gold', 'red', 'market', 'echo'], round: 2, queue: [{ t: 'buy', p: 0 }], members: [['market.climber', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'gold.midas' } } });
+    const d = uidOf(s, 'echo.doppel', 0);
     s.cards[d].used = true;
     s = move(s, `release:${d}`);
     expect(s.pile).toContain(d);
-    expect(s.cards[d]).toEqual({ uid: d, def: 'red.doppel' });
+    expect(s.cards[d]).toEqual({ uid: d, def: 'echo.doppel' });
     expect(s.pending.prompt).toContain('Social Climber');
-    s = move(s, 'color:magenta');
-    expect(R(s, 0).magenta).toBe(2);
+    s = move(s, 'color:red');
+    expect(R(s, 0).red).toBe(2);
   });
   it('releasing an Investor with Social Climber gives back the gold set aside, not doubled, plus Climber’s +2', () => {
     let s = scene({ quads: Q, round: 2, queue: [{ t: 'buy', p: 0 }], members: [['market.climber', 'gold.investor']] });
@@ -470,10 +472,10 @@ describe('Release on members that carry state', () => {
     expect(R(s, 0).gold).toBe(4 + 2); // the 4 set aside, plus Investor's colored part (2 gold, pinned): Release gives back only that (Cory, 2026-10-14)
   });
   it('a released Doppelganger goes back clean and stops copying', () => {
-    let s = scene({ quads: Q, round: 2, queue: buyStep(0), members: [['red.doppel', 'gold.midas']], copies: { 0: { 'red.doppel': 'gold.midas' } } });
-    const u = uidOf(s, 'red.doppel', 0);
+    let s = scene({ quads: Q, round: 2, queue: buyStep(0), members: [['echo.doppel', 'gold.midas']], copies: { 0: { 'echo.doppel': 'gold.midas' } } });
+    const u = uidOf(s, 'echo.doppel', 0);
     s = move(s, `release:${u}`);
-    expect(s.cards[u]).toEqual({ uid: u, def: 'red.doppel' });
+    expect(s.cards[u]).toEqual({ uid: u, def: 'echo.doppel' });
     expect(s.pile.at(-1)).toBe(u);
   });
   it('one release per round: no second release after the first', () => {

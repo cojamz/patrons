@@ -37,8 +37,8 @@ export function createGame({ seats, seed = 1, quadrants = DEFAULT_QUADRANTS, rul
   const zero = Object.fromEntries(resources.map(r => [r, 0]));
   const cards = {};
   let uid = 0;
-  const table = { ...DEFAULT_RULES, ...rules };
-  const dealt = def => !(table.cull && !FULL_DECK.tests && CUT.has(def.id)); // the cull (content/cull.js)
+  const table = { ...DEFAULT_RULES, ...(FULL_DECK.tests ? { cull: false } : {}), ...rules }; // tests: content/cull.js
+  const dealt = def => !(table.cull && CUT.has(def.id)); // the cull (content/cull.js)
   for (const q of quadrants) for (const def of quadrant(q).members.filter(dealt))
     for (let k = 0; k < def.copies; k++) { cards[uid] = { uid, def: def.id }; uid++; }
   if (table.guests) for (const def of guestMembers().filter(dealt))
@@ -799,12 +799,17 @@ function recruitNow(state, p, uid, { free, spend: chosen, how = {} }) {
     // name what made it cheaper: a discount, cost reductions, gold paying double
     const notes = [];
     const def0 = cardDef(state, uid);
-    if (p.discount && def0.s + def0.w > 0) notes.push(`discount −${p.discount}`);
+    // each note says what it actually took off this price (a discount of 4 on a member costing 2 saves 2; Sponsor
+    // saves nothing on a member that costs nothing): the discount first, then the cost reductions, in member order
+    let room = how.half ? Math.floor((def0.s + def0.w) / 2) : def0.s + def0.w;
+    const off = n => { const x = Math.min(n, room); room -= x; return x; };
+    if (p.discount && def0.s + def0.w > 0) { const x = off(p.discount); if (x) notes.push(`discount −${x}`); }
     for (const flag of ['costReduction', 'goldPaysDouble']) {
       for (const u of p.members) for (const d of effectiveDefs(state.cards[u])) {
         if (!d[flag]) continue;
         if (flag === 'goldPaysDouble' && !spend.gold) continue;
-        notes.push(flag === 'costReduction' ? `${d.name} saves ${d[flag] === true ? 1 : d[flag]}` : `${d.name}: gold counts double`);
+        if (flag === 'costReduction') { const x = off(d[flag] === true ? 1 : d[flag]); if (x) notes.push(`${d.name} saves ${x}`); }
+        else notes.push(`${d.name}: gold counts double`);
       }
     }
     // Freelancer (anyColorPart): say so when the colored part was paid in other colors
@@ -1136,6 +1141,7 @@ function ctxFor(state) {
     /** One steal event from one victim. what: { take: {color: n} } moves resources (clamped to what they hold),
      *  { uid } moves a member, { other: n } reports units the caller already moved (e.g. a loot pile).
      *  what.give(n) hands the thief the proceeds before anyone reacts (so a reaction can take from the thief).
+     *  what.led: whether the victim led when a multi-victim steal began (reactions read it as info.led).
      *  Then fires onSteal on every quadrant and member. Returns units taken. */
     steal(thief, victim, what = {}) {
       if (!ctx.canSteal(thief, victim, what.uid !== undefined ? 'member' : 'res')) return 0;
@@ -1148,7 +1154,7 @@ function ctxFor(state) {
       if (what.uid !== undefined) { ctx.moveMember(what.uid, victim, thief); n += 1; }
       if (!n) return 0;
       if (what.give) what.give(n);
-      const info = { thief, victim, took, uid: what.uid, n, reaction: !!what.reaction };
+      const info = { thief, victim, took, uid: what.uid, n, reaction: !!what.reaction, ...(what.led !== undefined ? { led: !!what.led } : {}) };
       for (const qid of state.quadrants) { const q = quadrant(qid); if (q.onSteal) q.onSteal(ctx, info); }
       eachMember(state, (owner, card, def) => { if (def.onSteal) def.onSteal(ctx, owner, card, info); });
       return n;

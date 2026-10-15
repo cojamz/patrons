@@ -184,43 +184,43 @@ describe('Red members', () => {
   });
 
   it('Doppelganger: copies one of your members (Banker pays twice; the copy\'s "now" +3 comes at once)', () => {
-    let s = scene({ members: [['gold.banker']], res: [{ red: 2, gold: 2 }], shop: ['red.doppel', ...SHOP.slice(1)], queue: [{ t: 'turn', p: 0 }, { t: 'round', r: 2 }] });
+    let s = scene({ members: [['gold.banker']], res: [{ green: 2, gold: 2 }], shop: ['echo.doppel', ...SHOP.slice(1)], queue: [{ t: 'turn', p: 0 }, { t: 'round', r: 2 }] });
     s = take(s, 'red.turnout');
-    s = move(s, `card:${uidOf(s, 'red.doppel', 'shop')}`);
+    s = move(s, `card:${uidOf(s, 'echo.doppel', 'shop')}`);
     expect(s.pending.kind).toBe('choose');
     const banker = uidOf(s, 'gold.banker', 0);
     expect(ids(s)).toEqual([`card:${banker}`]);
     s = move(s, `card:${banker}`);
-    expect(s.cards[uidOf(s, 'red.doppel', 0)].copy).toBe('gold.banker');
+    expect(s.cards[uidOf(s, 'echo.doppel', 0)].copy).toBe('gold.banker');
     expect(R(s)[0].gold).toBe(9); // the copy's now part +3, then round II start: Banker +3, the copy +3
   });
 
   it('Doppelganger copying Hustler: Hustler\'s when-recruited fires for the copy, so it picks its own color', () => {
-    let s = scene({ members: [['gold.hustler']], res: [{ red: 2, gold: 2 }], shop: ['red.doppel', ...SHOP.slice(1)], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }] });
+    let s = scene({ members: [['gold.hustler']], res: [{ green: 2, gold: 2 }], shop: ['echo.doppel', ...SHOP.slice(1)], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }] });
     s.cards[uidOf(s, 'gold.hustler', 0)].color = 'blue';
     s = take(s, 'red.turnout');
-    s = move(s, `card:${uidOf(s, 'red.doppel', 'shop')}`);
+    s = move(s, `card:${uidOf(s, 'echo.doppel', 'shop')}`);
     s = move(s, `card:${uidOf(s, 'gold.hustler', 0)}`);
     expect(s.pending.kind).toBe('choose');
     expect(ids(s).every(id => id.startsWith('color:'))).toBe(true);
     s = move(s, 'color:blue');
-    expect(s.cards[uidOf(s, 'red.doppel', 0)].color).toBe('blue');
+    expect(s.cards[uidOf(s, 'echo.doppel', 0)].color).toBe('blue');
     expect(R(s)[0].gold).toBe(0);
     s = take(s, 'blue.a1');
     expect(R(s)[0]).toMatchObject({ blue: 3, gold: 2 });
   });
 
   it('Doppelganger with no one to copy asks nothing', () => {
-    let s = scene({ res: [{ red: 2, gold: 2 }], shop: ['red.doppel', ...SHOP.slice(1)] });
+    let s = scene({ res: [{ green: 2, gold: 2 }], shop: ['echo.doppel', ...SHOP.slice(1)] });
     s = take(s, 'red.turnout');
-    s = move(s, `card:${uidOf(s, 'red.doppel', 'shop')}`);
+    s = move(s, `card:${uidOf(s, 'echo.doppel', 'shop')}`);
     expect(s.pending).toBe(null);
-    expect(s.cards[uidOf(s, 'red.doppel', 0)].copy).toBeUndefined();
+    expect(s.cards[uidOf(s, 'echo.doppel', 0)].copy).toBeUndefined();
   });
 
   it('Doppelganger copying Lottery Winner can use it once, separately from the original', () => {
-    let s = scene({ members: [['gold.jackpot', 'red.doppel']], res: [{}, { gold: 4 }] });
-    const dop = uidOf(s, 'red.doppel', 0), jack = uidOf(s, 'gold.jackpot', 0);
+    let s = scene({ members: [['gold.jackpot', 'echo.doppel']], res: [{}, { gold: 4 }] });
+    const dop = uidOf(s, 'echo.doppel', 0), jack = uidOf(s, 'gold.jackpot', 0);
     s.cards[dop].copy = 'gold.jackpot';
     s = take(s, 'red.turnout');
     expect(hasOpt(s, `use:${dop}`)).toBe(true);
@@ -232,8 +232,8 @@ describe('Red members', () => {
   });
 
   it('Doppelganger copying Midas can be switched off', () => {
-    let s = scene({ members: [['red.doppel']], res: [{ blue: 2 }], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }] });
-    const dop = uidOf(s, 'red.doppel', 0);
+    let s = scene({ members: [['echo.doppel']], res: [{ blue: 2 }], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 0 }] });
+    const dop = uidOf(s, 'echo.doppel', 0);
     s.cards[dop].copy = 'gold.midas';
     s = take(s, 'blue.a1');
     expect(R(s)[0]).toMatchObject({ gold: 3, blue: 2 });

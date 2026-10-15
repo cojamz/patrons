@@ -24,7 +24,7 @@ describe('the cull: 10 members per sphere (Cory, 2026-10-15)', () => {
     for (const q of SPHERES) {
       const s = createGame({ seats: seats(4), quadrants: [q, ...SPHERES.filter(x => x !== q).slice(0, 3)] });
       const dealt = Object.values(s.cards).map(c => c.def);
-      expect(dealt.filter(d => d.startsWith(`${q}.`)).length, q).toBe(quadrant(q).id === 'red' ? 11 : q === 'echo' ? 9 : 10);
+      expect(dealt.filter(d => d.startsWith(`${q}.`)).length, q).toBe(10);
       expect(dealt.filter(d => CUT.has(d))).toEqual([]);
       expect(dealt.filter(d => d.startsWith('benders.')).length).toBe(5);
     }

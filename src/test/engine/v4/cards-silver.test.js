@@ -180,8 +180,8 @@ describe('Silver members', () => {
     expect(named(s, 'Grand Host')).toHaveLength(1);
   });
   it('Grand Host × Doppelganger: each copy doubles again (×4)', () => {
-    let s = sc({ members: [['silver.grandhost', 'red.doppel']] });
-    s.cards[uidOf(s, 'red.doppel', 0)].copy = 'silver.grandhost';
+    let s = sc({ members: [['silver.grandhost', 'echo.doppel']] });
+    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'silver.grandhost';
     s = take(s, 'silver.toast');
     expect(S(s)).toBe(12);
   });

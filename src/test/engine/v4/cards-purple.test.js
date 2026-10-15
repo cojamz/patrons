@@ -134,8 +134,8 @@ describe('Purple members', () => {
     expect(P(s)).toBe(8);
     expect(turnsQueued(s, 0)).toBe(1);
     expect(named(s, 'Corner-Cutter')).toHaveLength(0);
-    s = sc({ round: 3, res: [{ purple: 8 }], members: [['purple.doubletime', 'red.doppel']] });
-    s.cards[uidOf(s, 'red.doppel', 0)].copy = 'purple.doubletime';
+    s = sc({ round: 3, res: [{ purple: 8 }], members: [['purple.doubletime', 'echo.doppel']] });
+    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'purple.doubletime';
     s = take(s, 'purple.rally');
     expect(P(s)).toBe(8);
     expect(turnsQueued(s, 0)).toBe(0); // Crunch Time adds no turn (and here P1 has none left to bring forward)

@@ -2,6 +2,7 @@
 import { beforeEach, afterEach } from 'vitest';
 import { createGame, applyMove, resume, actionAt, followers } from '../../../engine/v4/core.js';
 import { defById, quadrant } from '../../../engine/v4/content/index.js';
+import { STRAYS, stray } from './stray.js';
 
 /**
  * Build a game and put it in a hand-made position.
@@ -33,7 +34,7 @@ export function scene({
   s.shop = [];
   const grab = def => {
     const k = s.pile.findIndex(u => s.cards[u].def === def);
-    if (k < 0) throw new Error(`no free card of ${def}`);
+    if (k < 0) { if (!STRAYS.has(def)) throw new Error(`no free card of ${def}`); return stray(s, def); }
     return s.pile.splice(k, 1)[0];
   };
   members.forEach((list, i) => { for (const d of list || []) s.players[i].members.push(grab(d)); });
@@ -109,7 +110,7 @@ export const TEST_COSTS = {
   'red.twins': [1, 1], 'red.bigfamily': [2, 2], 'red.volunteer': [0, 0], 'red.intern': [1, 0],
   'red.mentor': [3, 2], 'red.proselytizer': [3, 3], 'red.mob': [2, 1], 'red.recruiter': [1, 1],
   'red.drive': [1, 1], 'red.host': [1, 1], 'red.sponsor': [2, 1], 'red.crowd': [1, 0],
-  'red.doppel': [2, 2], 'red.patriarch': [3, 1], 'red.reserve': [1, 0],
+  'echo.doppel': [2, 2], 'red.patriarch': [3, 1], 'red.reserve': [1, 0],
   ...Object.fromEntries(['blue', 'green'].flatMap(q => [
     ['recruit', 1, 0], ['hand', 1, 1], ['helper', 2, 0], ['regular', 2, 1],
     ['devotee', 2, 2], ['elder', 3, 1], ['pillar', 3, 3], ['patron', 4, 2],

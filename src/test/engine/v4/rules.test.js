@@ -45,12 +45,14 @@ describe('setup', () => {
     expect(() => createGame({ seats: seats(5) })).toThrow();
   });
 
-  it('starts with a shuffled 60-card deck (plus the guest rule-benders) and a full row face up', () => {
+  it('starts with a shuffled deck of every table sphere\'s members (plus the guest rule-benders) and a full row face up', () => {
     const s = createGame({ seats: seats(2), seed: 9, rules: { guests: false } });
-    expect(Object.keys(s.cards)).toHaveLength(60);
+    // 59 on this table since Doppelganger left Red for Green (Cory, 2026-10-15); the deck is whatever the spheres hold
+    const deck = 59;
+    expect(Object.keys(s.cards)).toHaveLength(deck);
     expect(s.shop).toHaveLength(SHOP_SIZE);
-    expect(s.pile).toHaveLength(60 - SHOP_SIZE);
-    expect(Object.keys(createGame({ seats: seats(2), seed: 9 }).cards)).toHaveLength(60 + guestMembers().length);
+    expect(s.pile).toHaveLength(deck - SHOP_SIZE);
+    expect(Object.keys(createGame({ seats: seats(2), seed: 9 }).cards)).toHaveLength(deck + guestMembers().length);
     expect(s.stock).toEqual({ big: 4 }); // only the 8-follower buy is limited (10→10 is unlimited)
     const t = createGame({ seats: seats(2), seed: 10 });
     expect(t.shop).not.toEqual(s.shop);
@@ -58,10 +60,11 @@ describe('setup', () => {
 });
 
 describe('turn order and workers', () => {
-  it('round I, all tied: reverse seat order, snaking, 3 workers', () => {
+  it('round I, all tied: a seeded random order, snaking, 3 workers', () => {
     const s = scene({ n: 3, queue: [{ t: 'round', r: 1 }] });
-    expect(s.order).toEqual([2, 1, 0, 0, 1, 2, 2, 1, 0]);
-    expect(s.pending.player).toBe(2);
+    // random since 2026-10-14 (core.js startRound); pinned to this seed's draw
+    expect(s.order).toEqual([1, 0, 2, 2, 0, 1, 1, 0, 2]);
+    expect(s.pending.player).toBe(1);
     expect(s.players.map(p => p.left)).toEqual([3, 3, 3]);
   });
 

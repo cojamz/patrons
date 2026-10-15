@@ -4,6 +4,7 @@ import { beforeEach, afterEach } from 'vitest';
 import { createGame, resume } from '../../../engine/v4/core.js';
 import { pinCosts } from './helpers.js';
 import { linesNaming } from './cards-helpers.js';
+import { STRAYS, stray } from './stray.js';
 
 /**
  * A position on `quads`. res/members/bonus per player; shop: def ids face up in order (the row is left short
@@ -21,10 +22,10 @@ export function table(quads, {
     p.bonus = bonus[i] || 0; p.discount = discount[i] || 0; p.left = left;
   });
   s.pile = [...s.shop, ...s.pile]; s.shop = [];
-  const grab = def => { const k = s.pile.findIndex(u => s.cards[u].def === def); if (k < 0) throw new Error(`no free card of ${def}`); return s.pile.splice(k, 1)[0]; };
+  const grab = def => { const k = s.pile.findIndex(u => s.cards[u].def === def); if (k < 0) { if (!STRAYS.has(def)) throw new Error(`no free card of ${def}`); return stray(s, def); } return s.pile.splice(k, 1)[0]; };
   members.forEach((list, i) => { for (const d of list || []) s.players[i].members.push(grab(d)); });
   // a face-up card someone already holds is left out of the row (one copy of each member)
-  for (const d of shop) if (s.pile.some(u => s.cards[u].def === d)) s.shop.push(grab(d));
+  for (const d of shop) if (s.pile.some(u => s.cards[u].def === d) || (STRAYS.has(d) && !Object.values(s.cards).some(c => c.def === d))) s.shop.push(grab(d));
   if (pileFirst) s.pile.unshift(...pileFirst.map(grab));
   s.queue = queue || [{ t: 'turn', p: 0 }];
   return resume(s);

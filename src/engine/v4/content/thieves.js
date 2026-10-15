@@ -39,9 +39,9 @@ const stealable = (ctx, thief, o, picked) => piles(ctx, thief, o, picked).reduce
 // Only an action's steal is a gain from an action (Midas, Prospector…); a member's steal isn't.
 const stash = (ctx, p, n, fromAction = true) => { if (n) ctx.gain(p, 'magenta', n, { fromAction }); };
 // Take `pick` ({ pile: n }) from one victim through the shared steal, and stash it. Returns units taken.
-function commit(ctx, thief, victim, pick, reaction = false, fromAction = true) {
+function commit(ctx, thief, victim, pick, reaction = false, fromAction = true, led = undefined) {
   if (!ctx.canSteal(thief, victim)) return 0;
-  return ctx.steal(thief, victim, { take: pick, reaction, give: n => stash(ctx, thief, n, fromAction) });
+  return ctx.steal(thief, victim, { take: pick, reaction, give: n => stash(ctx, thief, n, fromAction), ...(led !== undefined ? { led } : {}) });
 }
 // Automatic small steal used by members: from the victim's biggest pile, one at a time.
 function autoSteal(ctx, thief, victim, why, n = 1, reaction = false) {
@@ -92,8 +92,10 @@ function stealStep(ctx, p, data) {
   }
   let got = 0;
   const from = [];
+  // who led when the steal began: a follower one victim's theft wins (Robin Hood) doesn't un-lead the next victim
+  const led = new Set(ctx.state.players.filter(o => isLeader(ctx, o)).map(o => o.id));
   for (const [id, pick] of Object.entries(data.picked)) {
-    const v = ctx.player(Number(id)), x = commit(ctx, p, v, pick);
+    const v = ctx.player(Number(id)), x = commit(ctx, p, v, pick, false, true, led.has(v.id));
     if (x) { got += x; from.push(`${x} from ${v.name}`); }
   }
   ctx.log(got ? `${p.name} stole ${got} (${from.join(', ')}).` : `${p.name} found nothing to steal.`);
@@ -280,7 +282,7 @@ const thieves = {
     }),
     m('robinhood', 'Robin Hood', 2, 2, 'Whenever you steal from the player with the most followers, +1 follower.', {
       onSteal(ctx, owner, card, info) {
-        if (info.thief === owner && ledBefore(ctx, info)) { owner.bonus += 1; ctx.log(`${owner.name}'s Robin Hood: +1 follower.`); }
+        if (info.thief === owner && (info.led ?? ledBefore(ctx, info))) { owner.bonus += 1; ctx.log(`${owner.name}'s Robin Hood: +1 follower.`); }
       },
     }),
     m('lookout', 'Lookout', 4, 2, 'Once per round, when a rival steals from someone else, take 1 resource from the thief (it arrives as magenta).', {

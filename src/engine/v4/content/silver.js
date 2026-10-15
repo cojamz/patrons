@@ -49,6 +49,7 @@ function hostGain(ctx, p, n) {
   if (k) ctx.log(`${p.name}'s Grand Host: the space's ${n} silver comes as ${n * 2 ** k}.`);
   // printed: the space's own gain, which is what a copy (Green) gets
   ctx.gain(p, S, n * 2 ** k, { fromAction: true, printed: n });
+  return n * 2 ** k;
 }
 
 // Bots: how much I lead (or trail) a color's count by. Handing everyone +1 of a color I lead by 1 or less hurts.
@@ -71,9 +72,10 @@ export const silverActions = [
     estimate: ctx => 3 * ctx.state.round - spillCost(ctx, 1),
     resolve(ctx, p) {
       const n = 3 * ctx.state.round;
-      hostGain(ctx, p, n);
+      const got = hostGain(ctx, p, n);
       giveAll(ctx, p, S, 1);
-      ctx.log(`${p.name} raised a toast: +${n} silver, +1 silver to everyone else.`);
+      // what the taker got (Grand Host's doubling included), so the line matches the count
+      ctx.log(`${p.name} raised a toast: +${got} silver, +1 silver to everyone else.`);
     },
   },
   {
@@ -125,8 +127,8 @@ export const silverActions = [
     resolve(ctx, p) {
       giveAll(ctx, p, S, 1);
       const k = tideAmount(ctx, p, 0);
-      hostGain(ctx, p, k);
-      ctx.log(`${p.name}'s Rising Tide: +1 silver to everyone else, then +${k} silver.`);
+      const got = hostGain(ctx, p, k);
+      ctx.log(`${p.name}'s Rising Tide: +1 silver to everyone else, then +${got} silver.`);
     },
   },
   {

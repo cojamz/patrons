@@ -46,10 +46,12 @@ function settle(state, e) {
   if (lost) e.redo = true;
 }
 const quadrantDef = (state, uid) => defById(state.cards[uid].def);
-// The window for a space stays open while its follow-up choices run, until the taker's buy step.
+// The window for a space stays open while its follow-up choices run, until the taker's buy step. The buy step that
+// follows the space carries the space's key (win, set in wrapAction); once that step has been taken off the queue,
+// choices made in the buy step (Understudy's copy, a Doppelganger's pick, a tied Mentor pick) never land on the chip.
 function windowOpen(state, e) {
   const next = state.queue.find(t => t.t !== 'choose');
-  return !!next && next.t === 'buy' && next.p === e.p;
+  return !!next && next.t === 'buy' && next.p === e.p && next.win === e.key;
 }
 // Record what this context hands the taker (the content code's own calls only).
 function track(ctx, e) {
@@ -84,6 +86,9 @@ function wrapAction(qid, a, idx) {
     track(ctx, e);
     orig.call(this, ctx, p);
     settle(ctx.state, e);
+    // mark the taker's buy step that follows: the window stays open until it starts (windowOpen)
+    const next = ctx.state.queue.find(t => t.t !== 'choose');
+    if (next && next.t === 'buy' && next.p === p.id) next.win = key;
   };
   wrapped.__echo = true;
   wrapped.__orig = orig;
@@ -273,6 +278,19 @@ const echoQ = {
       ctx.recruit(p, uid, { free: true });
       freeStep(ctx, p, data);
     },
+    doppelCopy(ctx, p, uid, data) {
+      const target = ctx.card(uid);
+      const self = ctx.card(data.uid);
+      self.copy = target.def.id;
+      // a copied Hustler works the same color (until its own when-recruited pick below sets one)
+      if (target.color !== undefined) self.color = target.color;
+      ctx.log(`${p.name}'s Doppelganger copies ${target.def.name}.`);
+      // Doppelganger becomes a copy of the member card (Cory): the copied "when recruited" effect fires once, for the
+      // copy, and so does a "Now and at round start" member's now part. Named under the copied member, like its other hooks.
+      const d = target.def;
+      if (d.onRecruited) ctx.asMember(p, d.name, () => d.onRecruited(ctx, p, self));
+      if (d.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (d[hook]) ctx.asMember(p, d.name, () => d[hook](ctx, p, self));
+    },
   },
 
   members: [
@@ -328,13 +346,25 @@ const echoQ = {
     }),
     m('dejavu', 'Tribute Band', 8, 4, 'Once per game: copy every space you took this round.', {
       activate: 'game',
-      onActivate(ctx, owner) {
+      onActivate(ctx, owner, card) {
         const list = targets(ctx, owner, 'own');
-        if (!list.length) ctx.log(`${owner.name}'s Tribute Band has nothing to copy.`);
+        // nothing to copy: the once-per-game use isn't spent (as Stunt Double's isn't)
+        if (!list.length) { card.used = false; ctx.log(`${owner.name}'s Tribute Band has nothing to copy.`); return; }
         copyAll(ctx, owner, list, 'Tribute Band');
       },
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e, owner), 0) >= (ctx.state.round === 3 ? 6 : 10),
+    }),
+    // Cory, 2026-10-15: moved here from Red (same card; its rename and recruit-time pick wait for his redesign)
+    m('doppel', 'Doppelganger', 4, 2, 'When recruited: copies the effect of one of your members.', {
+      onRecruited(ctx, owner, card) {
+        const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid && c.def.key !== 'doppel');
+        if (!own.length) return;
+        ctx.choose(owner, 'Doppelganger: copy which of your members?', own.map(c => ({
+          id: `card:${c.uid}`, label: c.def.name, kind: 'member', value: c.uid,
+          hint: ['banker', 'prospector', 'recruiter', 'proselytizer', 'host'].includes(c.def.key) ? 2 : (c.def.vanilla ? 0 : 1),
+        })), 'echo.doppelCopy', { uid: card.uid });
+      },
     }),
     m('chronicler', 'Chronicler', 4, 4, 'Game end: +1 follower per 2 green.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res.green || 0) / 2),

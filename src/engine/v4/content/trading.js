@@ -152,6 +152,11 @@ const trading = {
       buyLow(ctx, p, value, data.done === 0);
       buyLowStep(ctx, p, { left: data.left - 1, done: data.done + 1 });
     },
+    raid(ctx, p, k, data) {
+      const t = ctx.player(data.t);
+      // under the card's name, so the leader's loss reads "P1's Raider" in the results, as before
+      ctx.asMember(p, 'Raider', () => raid(ctx, p, t, Math.min(k, raidAmount(ctx, p, t))));
+    },
     pawn(ctx, p, k) {
       const r = ctx.state.round, white = PAWN.each * k;
       if (white) ctx.gain(p, W, white, { fromAction: true });
@@ -238,9 +243,12 @@ const trading = {
         const t = raidTarget(ctx, owner);
         const k = t ? raidAmount(ctx, owner, t) : 0;
         if (!k) { card.used = false; ctx.log(`${owner.name}'s Raider found no one to buy from.`); return; }
-        owner.res[W] -= k; t.res[W] += k;
-        t.bonus -= k; owner.bonus += k;
-        ctx.log(`${owner.name}'s Raider bought ${k} follower${k > 1 ? 's' : ''} from ${t.name} for ${k} white.`);
+        // "up to 3": the player picks how many (decisions.md, card verifier B: "Liquidator and Raider let the player
+        // choose how many"); white is Most white's measure, so fewer can be the right call
+        if (k === 1) { raid(ctx, owner, t, 1); return; }
+        ctx.choose(owner, `Raider: buy how many followers from ${t.name}, 1 white each?`, Array.from({ length: k }, (_, j) => ({
+          id: `amount:${j + 1}`, label: `${plural(j + 1, 'follower')} for ${j + 1} white`, kind: 'amount', value: j + 1, hint: j + 1,
+        })), 'trading.raid', { t: t.id });
       },
       botActivate: (ctx, owner) => { const t = raidTarget(ctx, owner); return !!t && raidAmount(ctx, owner, t) >= 2; },
     }),
@@ -286,6 +294,12 @@ function raidTarget(ctx, p) {
   const top = Math.max(...ctx.state.players.map(o => ctx.followers(o)));
   if (ctx.followers(p) >= top) return null;
   return ctx.rivals(p).filter(o => ctx.followers(o) === top).sort((a, b) => b.bonus - a.bonus)[0];
+}
+function raid(ctx, owner, t, k) {
+  if (!(k > 0)) return;
+  owner.res[W] -= k; t.res[W] += k;
+  t.bonus -= k; owner.bonus += k;
+  ctx.log(`${owner.name}'s Raider bought ${k} follower${k > 1 ? 's' : ''} from ${t.name} for ${k} white.`);
 }
 function raidAmount(ctx, p, t) {
   return Math.min(3, t.bonus, p.res[W]);

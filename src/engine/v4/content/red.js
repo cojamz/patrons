@@ -79,19 +79,6 @@ export default {
       ctx.moveMember(theirs, other, p);
       ctx.log(`${p.name} traded ${ctx.card(mine).def.name} for ${other.name}'s ${ctx.card(theirs).def.name}.`);
     },
-    doppelCopy(ctx, p, uid, data) {
-      const target = ctx.card(uid);
-      const self = ctx.card(data.uid);
-      self.copy = target.def.id;
-      // a copied Hustler works the same color (until its own when-recruited pick below sets one)
-      if (target.color !== undefined) self.color = target.color;
-      ctx.log(`${p.name}'s Doppelganger copies ${target.def.name}.`);
-      // Doppelganger becomes a copy of the member card (Cory): the copied "when recruited" effect fires once, for the
-      // copy, and so does a "Now and at round start" member's now part. Named under the copied member, like its other hooks.
-      const d = target.def;
-      if (d.onRecruited) ctx.asMember(p, d.name, () => d.onRecruited(ctx, p, self));
-      if (d.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (d[hook]) ctx.asMember(p, d.name, () => d[hook](ctx, p, self));
-    },
   },
 
   members: [
@@ -130,16 +117,6 @@ export default {
     m('sponsor', 'Sponsor', 6, 4, 'Your members cost 2 less.', { costReduction: 2 }),
     m('crowd', 'Crowd-Pleaser', 2, 0, 'Whenever you buy followers, +1 red.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer === owner) ctx.gain(owner, 'red', 1); },
-    }),
-    m('doppel', 'Doppelganger', 4, 2, 'When recruited: copies the effect of one of your members.', {
-      onRecruited(ctx, owner, card) {
-        const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid && c.def.key !== 'doppel');
-        if (!own.length) return;
-        ctx.choose(owner, 'Doppelganger: copy which of your members?', own.map(c => ({
-          id: `card:${c.uid}`, label: c.def.name, kind: 'member', value: c.uid,
-          hint: ['banker', 'prospector', 'recruiter', 'proselytizer', 'host'].includes(c.def.key) ? 2 : (c.def.vanilla ? 0 : 1),
-        })), 'red.doppelCopy', { uid: card.uid });
-      },
     }),
     m('patriarch', 'Patriarch', 3, 2, 'Game end: +1 follower per 2 members.', {
       onGameEnd: (ctx, owner) => Math.floor(ctx.memberCount(owner) / 2),
