@@ -6,7 +6,7 @@ You lead a cult. Send your minions to the wheel, gather resources, recruit **mem
 - **Your cult leader** is the robed figure that stands for you. It wears your emoji, and your **minions** are little copies of that emoji.
 - **Minions** are your workers. You get 3 in round I, 4 in round II and 5 in round III. The ones you haven't sent yet float by your leader.
 - **Followers** are your score, shown by a little-person mark. You start with 1 (yourself). Every member you recruit is worth followers too: usually 1, sometimes more (the number beside the mark on its card). Some members win you more followers during play. Followers you bought or won, not the ones your members are worth (and never yourself), are your **loose followers**: only they can be sold or taken away.
-- **Resources** come in four colors, one per quadrant on the table (for example gold, red, blue and green). In costs and card text each color is a small colored symbol; the ringed symbol means "any resources".
+- **Resources** come in four colors, one per quadrant on the table (for example gold, red, blue and green). In costs and card text each resource is a plain dot in its color; the dot split into the table's four colors means "any resources".
 
 ## Setup
 In seat order, each player picks 2 starting resources. Everyone can see what you pick, and the members for sale are already face up, so you can pick toward one. Bots play at Easy, Normal or Hard; you pick the level when you set up the game.
@@ -15,7 +15,7 @@ In seat order, each player picks 2 starting resources. Everyone can see what you
 The wheel is split into four colored quadrants. Each quadrant has its own actions and its own way to score, engraved on its rim.
 - The **outer ring** opens in round I. The **middle ring** opens in round II. The **inner ring** (the 4 spaces around the hub) opens in round III. Rings stay open once opened.
 - Each space holds one minion per round, and your minion sits on the space it took. All minions come home between rounds.
-- Every space shows an icon and a few words. Point at a space (long-press on a phone) to read it in full and see what you'd get. You can spin the wheel; nothing else changes when you do.
+- Every space says what it gives in a few words. Point at a space (long-press on a phone) to read it in full and see what you'd get. You can spin the wheel; nothing else changes when you do.
 - Some spaces and members **copy** a space someone took: you get what it gave its taker. Copies never reach the center (the inner ring) or another copy.
 - Some spaces and members **steal** from rivals. Resources a Magenta card takes arrive as magenta, ready to spend.
 

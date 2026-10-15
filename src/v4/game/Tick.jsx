@@ -30,8 +30,7 @@ export default function Tick({ value, from, color, className = '', float = true,
     const ms = Math.max(countMs(d, dur), coming ? coming.span + 120 : 0);
     const timers = [];
     // the number lights up as it starts to count (with flying pieces: as the first one lands, never before)
-    if (wait) timers.push(setTimeout(() => setBump(d > 0 ? 1 : -1), wait)); else setBump(d > 0 ? 1 : -1);
-    timers.push(setTimeout(() => setBump(0), wait + ms + 220));
+    if (!coming) { setBump(d > 0 ? 1 : -1); timers.push(setTimeout(() => setBump(0), ms + 220)); }
     if (typeof window !== 'undefined') window.__patronsTicks = (window.__patronsTicks || 0) + 1;
     if (float) {
       const id = ++floatId;
@@ -39,14 +38,26 @@ export default function Tick({ value, from, color, className = '', float = true,
       timers.push(setTimeout(() => setFloats(f => f.filter(x => x.id !== id)), 900));
     }
     if (reducedMotion() || typeof requestAnimationFrame !== 'function') { setShown(value); return () => timers.forEach(clearTimeout); }
-    const t0 = performance.now() + wait;
+    // with pieces coming, the count starts when the first one lands (the director says so; the plan's time is the
+    // fallback), however late a loaded box paints it
+    let t0 = coming ? Infinity : performance.now();
+    const go = () => {
+      if (t0 !== Infinity) return;
+      t0 = performance.now();
+      setBump(d > 0 ? 1 : -1);
+      timers.push(setTimeout(() => setBump(0), ms + 220));
+    };
+    if (coming) {
+      coming.el.addEventListener('patrons:land', go, { once: true });
+      timers.push(setTimeout(go, wait + 600));
+    }
     let raf = 0;
     const lo = Math.min(start, value), hi = Math.max(start, value);
     // a small change shows every whole number for at least one painted frame, however late the frames come (a loaded
     // box paints rarely: a pure clock would skip numbers); a big one keeps to the clock in even strides
     const stride = Math.max(1, Math.ceil(Math.abs(d) / 12));
     const step = now => {
-      const k = Math.max(0, Math.min(1, (now - t0) / ms));
+      const k = t0 === Infinity ? 0 : Math.max(0, Math.min(1, (now - t0) / ms));
       const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; // ease in-out: the middle numbers stay readable
       const aim = Math.max(lo, Math.min(hi, Math.round(start + d * e)));
       const was = shownRef.current;
@@ -56,9 +67,9 @@ export default function Tick({ value, from, color, className = '', float = true,
     };
     raf = requestAnimationFrame(step);
     // a skipped chain (a click, Space: director.js) lands the count at once
-    const skip = () => { cancelAnimationFrame(raf); setShown(value); };
+    const skip = () => { cancelAnimationFrame(raf); t0 = 0; setShown(value); if (coming) coming.el.removeEventListener('patrons:land', go); };
     addEventListener('patrons:chain-skip', skip);
-    return () => { cancelAnimationFrame(raf); timers.forEach(clearTimeout); removeEventListener('patrons:chain-skip', skip); };
+    return () => { cancelAnimationFrame(raf); timers.forEach(clearTimeout); removeEventListener('patrons:chain-skip', skip); if (coming) coming.el.removeEventListener('patrons:land', go); };
   }, [value, float, dur]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <span ref={box} className={`tick ${className}${bump > 0 ? ' bump' : bump < 0 ? ' dip' : ''}`} style={bump && color ? { '--tc': color } : undefined}>

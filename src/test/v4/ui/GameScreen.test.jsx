@@ -139,7 +139,7 @@ describe('v4 game screen', () => {
     render(<GameScreen session={fakeSession(state, [0])} onPlayAgain={onPlayAgain} />);
     const table = screen.getByRole('table');
     expect(within(table).getAllByRole('row')).toHaveLength(1 + seats.length);
-    expect(within(table).getByText('Contests')).toBeTruthy();
+    expect(within(table).getByText('Prizes')).toBeTruthy(); // the rims' prizes, in the rulebook's words (RC1 sweep 110)
     fireEvent.click(screen.getByRole('button', { name: 'Play again' }));
     expect(onPlayAgain).toHaveBeenCalled();
   });

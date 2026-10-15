@@ -93,8 +93,8 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     } else {
       at(0, { op: 'minion', pid, key, own: false, dur: MO.minionFly });
       const landed = ends(MO.minionFly);
-      at(landed + MO.readHold, { op: 'pulse', place: { kind: 'space', key }, dur: MO.pulse });
-      t = ends(landed + MO.readHold + MO.lead);
+      at(landed + Math.max(0, MO.readHold - MO.pulse), { op: 'pulse', place: { kind: 'space', key }, dur: MO.pulse });
+      t = ends(landed + MO.readHold);
     }
     pulsed = key;
   }
@@ -110,9 +110,11 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     if (!beats.length || beats[beats.length - 1].key !== k) beats.push({ key: k, cause: e.cause, effects: [] });
     beats[beats.length - 1].effects.push(e);
   }
+  let hand = 0; // when the last piece is two-thirds along: the same player's next step may show then
   const pieces = (time, from, to, n, opt = {}) => {
     // 1–3 single pieces, 60ms apart (Steady); 4 or more one bundle carrying its count
-    const d = fly(from, to);
+    const d = opt.dur || fly(from, to);
+    hand = Math.max(hand, (n >= 4 ? time : time + (n - 1) * MO.pieceStagger) + d * (2 / 3));
     if (n >= 4) { at(time, { op: 'piece', from, to, n, bundle: true, dur: d, ...opt }); at(time + d, { op: 'land', to, by: n, bundle: true, ...opt }); return { last: time, d }; }
     for (let k = 0; k < n; k++) { at(time + k * MO.pieceStagger, { op: 'piece', from, to, n: 1, dur: d, ...opt }); at(time + k * MO.pieceStagger + d, { op: 'land', to, by: 1, ...opt }); }
     return { last: time + (n - 1) * MO.pieceStagger, d };
@@ -133,8 +135,10 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
       const card = m.cards.find(e => e.type === 'recruit');
       const hold = mine.includes(card.to.pid) ? 0 : MO.rivalBuyHold;
       let paid = s + MO.cardLift + hold;
-      for (const [i, p] of m.pays.entries()) { const r = pieces(s + MO.cardLift + hold + i * MO.fan, p.from, { kind: 'shop', index: c.index, uid: c.uid }, p.what.n, { pay: true, r: p.what.r, owner: p.from.pid }); paid = Math.max(paid, r.last + r.d); }
+      // the coins fly in while the card is lifted; it leaves when the last one is two-thirds of the way there
+      for (const [i, p] of m.pays.entries()) { const r = pieces(s + MO.cardLift + hold + i * MO.fan, p.from, { kind: 'shop', index: c.index, uid: c.uid }, p.what.n, { pay: true, r: p.what.r, owner: p.from.pid }); paid = Math.max(paid, r.last + r.d * (2 / 3)); }
       const d = fly(card.from, card.to);
+      hand = Math.max(hand, paid + d * (2 / 3));
       at(s, { op: 'card', uid: card.what.uid, to: card.to.pid, from: card.from, lift: MO.cardLift, wait: paid - s - MO.cardLift, dur: d });
       const landed = ends(paid + d);
       if (card.what.worth > 0) {
@@ -189,38 +193,55 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     t = Math.max(t, cur);
   }
   const turnPasses = !!(state.pending && before.pending && state.pending.player !== before.pending.player);
-  return { atoms: atoms.sort((a, b) => a.at - b.at), total: end ? end + (turnPasses ? MO.breath : 0) : 0 };
+  return { atoms: atoms.sort((a, b) => a.at - b.at), total: end ? end + (turnPasses ? MO.breath : 0) : 0, handoff: end ? Math.round(Math.max(hand, t)) : 0, turnPasses };
 }
 
 // ---------- the screen ----------
+// One clock for every chain on the table, run by requestAnimationFrame. It advances by at most two frames' worth per
+// frame, so a late frame (a loaded box) stretches the show instead of bunching its pieces; and a piece's landing (its
+// count ticking, its stack settling) comes from that piece's own animation finishing, never from a separate timer.
 
-const chain = { timers: new Map(), holds: new Map(), counts: new Set(), root: null, until: 0, seq: 0 };
+const chain = { queue: [], clock: 0, last: null, raf: 0, flying: 0, holds: new Map(), pending: new Map(), counts: new Set(), root: null };
 const skipSubs = new Set();
-/** Something that should jump to its end state when a chain is skipped (Tick, the table's pacing). */
+/** Something that should jump to its end state when a chain is skipped (the table's pacing). */
 export const onChainSkip = fn => { skipSubs.add(fn); return () => skipSubs.delete(fn); };
-export const chainRunning = () => chain.timers.size > 0;
+export const chainRunning = () => chain.queue.length > 0 || chain.flying > 0;
 
-const later = (ms, fn) => {
-  if (!(ms > 0)) { fn(false); return; }
-  const id = setTimeout(() => { chain.timers.delete(id); fn(false); }, ms);
-  chain.timers.set(id, { fn, due: performance.now() + ms });
-};
+function tick(now) {
+  chain.raf = 0;
+  const dt = chain.last == null ? 0 : Math.min(34, Math.max(0, now - chain.last));
+  chain.last = now;
+  chain.clock += dt;
+  while (chain.queue.length && chain.queue[0].at <= chain.clock) chain.queue.shift().fn(false);
+  if (chain.queue.length || chain.flying > 0) chain.raf = requestAnimationFrame(tick);
+  else endChain();
+}
+const run = () => { if (!chain.raf && typeof requestAnimationFrame === 'function') chain.raf = requestAnimationFrame(tick); };
+function schedule(at, fn) {
+  const item = { at, fn };
+  let k = chain.queue.length;
+  while (k > 0 && chain.queue[k - 1].at > at) k--;
+  chain.queue.splice(k, 0, item);
+}
 function endChain() {
   for (const { h } of chain.holds.values()) if (h) h.done();
   chain.holds.clear();
+  chain.pending.clear();
   clearArrivals(chain.counts);
   chain.counts.clear();
   if (chain.root) delete chain.root.dataset.chain;
-  chain.until = 0;
+  chain.last = null;
 }
 /** Skip the rest of the chain on screen: every step jumps to its end state at once (a click, Space). */
 export function skipChain() {
-  if (!chain.timers.size) return false;
-  const pending = [...chain.timers.entries()].sort((a, b) => a[1].due - b[1].due);
-  chain.timers.clear();
-  for (const [id, { fn }] of pending) { clearTimeout(id); fn(true); }
+  if (!chainRunning()) return false;
+  const q = chain.queue;
+  chain.queue = [];
+  for (const item of q) item.fn(true);
   landAll();
   clearFlights(0);
+  chain.flying = 0;
+  if (chain.raf) { cancelAnimationFrame(chain.raf); chain.raf = 0; }
   endChain();
   for (const fn of skipSubs) fn();
   try { dispatchEvent(new Event('patrons:chain-skip')); } catch { /* no window */ }
@@ -252,7 +273,7 @@ function placeEl(root, w, ctx) {
     }
     case 'shop': {
       const sn = ctx.snap && w.uid != null ? ctx.snap.get(w.uid) : null;
-      if (sn && sn.rect) return ctx.lifted.get(w.uid) || { getBoundingClientRect: () => sn.rect, rectOnly: true };
+      if (sn && sn.rect) return { getBoundingClientRect: () => sn.rect, rectOnly: true };
       return shown(root.querySelector(`.lt-shop .card[data-uid="${w.uid}"]`)) || shown(root.querySelector('.lt-shop'));
     }
     case 'rate': return (w.tier && shown(root.querySelector(`.lt-rate[data-rate="${w.tier}"]`))) || (w.n && shown(root.querySelector(`.lt-rate[aria-label*="+${w.n} follower"]`))) || shown(root.querySelector('.lt-rates'));
@@ -260,7 +281,6 @@ function placeEl(root, w, ctx) {
     default: return shown(root.querySelector('.stage .hub-label'));
   }
 }
-const center = el => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
 const dotHtml = (root, r, pid) => {
   const seat = root.querySelector(`.lt-cult-seat[data-seat="${pid}"]`);
   const g = seat && seat.querySelector(`.cs-stack[data-res="${r}"] svg`);
@@ -268,47 +288,47 @@ const dotHtml = (root, r, pid) => {
 };
 const folHtml = (root, pid) => { const g = root.querySelector(`.lt-cult-seat[data-seat="${pid}"] .cs-total svg`) || root.querySelector('.cs-total svg'); return g ? g.outerHTML : '<i class="piece-dot" style="background:var(--cream,#f3e6c8)"></i>'; };
 const hopEl = (el, ms) => { if (el && el.animate && !el.rectOnly) track(el.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px) scale(1.08)', offset: 0.4 }, { transform: 'translateY(0)' }], { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' })); };
+const square = (r, size) => ({ left: r.left + r.width / 2 - size / 2, top: r.top + r.height / 2 - size / 2, width: size, height: size });
+const onFinish = (anim, fn) => { if (anim && anim.finished) anim.finished.then(() => fn(), () => fn()); else fn(); };
 
-/** The minions still to place, slot by slot, as they stand now (the next chain flies a placed one from its slot). */
-function minionColumn(root) {
-  const out = new Map();
-  if (!root) return out;
-  root.querySelectorAll('.cs-minions [data-minion][data-k]').forEach(el => {
-    const r = el.getBoundingClientRect();
-    if (r.width) out.set(`${el.dataset.minion}:${el.dataset.k}`, { left: r.left, top: r.top, width: r.width, height: r.height });
-  });
-  return out;
-}
-let column = new Map();
-/** Note the table as it stands (call after every commit that plays no chain, so the next one flies from the right slot). */
-export const noteTable = root => { void root; }; // (kept for callers: the slot is now read when the chain plays)
+/** (kept for callers: a placed minion's slot is read when its chain plays) */
+export const noteTable = root => { void root; };
 
 /**
  * Play the chain for a change of state on the table under `root`. `snap` is the shop as it was (snapshotShop),
  * `minionsBefore` the wheel's minions as they were (snapshotMinions), `mine` the viewer's seats. Returns the plan.
+ * A chain may start while the last one's tail is still landing (the same player's next step shows at its handoff).
  */
 export function playChain(root, before, state, { snap = null, minionsBefore = null, mine = [] } = {}) {
-  const col = column;
-  if (!root || before === state) return { atoms: [], total: 0 };
-  if (chain.timers.size) skipChain(); // a new move lands whatever was still playing
-  const ctx = { state, before, snap, lifted: new Map() };
-  // read everything first, write after (a read after a write forces a layout: done per piece, it cost whole frames)
+  if (!root || before === state) return { atoms: [], total: 0, handoff: 0 };
+  const ctx = { state, before, snap };
+  // read everything first; every write waits for the clock's next frame (before it paints): a write here made the
+  // next layout effect lay the whole page out again
   const found = new Map(), rects = new Map();
   const where = w => { if (!w) return null; const k = JSON.stringify(w); if (!found.has(k)) found.set(k, placeEl(root, w, ctx)); return found.get(k); };
   const rectOf = e => { if (!rects.has(e)) rects.set(e, e.getBoundingClientRect()); return rects.get(e); };
   const measure = (a, b) => { const A = where(a), B = where(b); if (!A || !B) return TYPICAL; const ra = rectOf(A), rb = rectOf(B); return Math.hypot(rb.left + rb.width / 2 - ra.left - ra.width / 2, rb.top + rb.height / 2 - ra.top - ra.height / 2); };
   const plan = planChain(before, state, { mine, measure });
   if (!plan.atoms.length || !motionOK()) return plan;
-  const t0 = performance.now();
-  const seq = ++chain.seq;
-  // every stack the chain touches shows what it held before, and counts each piece out and in
-  const pending = new Map();
-  const holdOf = (el, pid, r) => {
-    if (!el || el.rectOnly) return null;
-    if (!chain.holds.has(el)) { const p = before.players[pid]; chain.holds.set(el, { h: p ? holdStack(el, p.res[r] || 0) : null }); }
-    return chain.holds.get(el).h;
-  };
-  // counts: the Tick waits for the first follower to land, and counts while the rest do
+  // where each placed minion stood in its column: the slot past the last one still standing there
+  for (const a of plan.atoms) {
+    if (a.op !== 'minion') continue;
+    const left = [...root.querySelectorAll(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions [data-minion]`)];
+    const last = left[left.length - 1];
+    if (last) { const r = rectOf(last), prev = left.length > 1 ? rectOf(left[left.length - 2]) : null; const dx = prev ? r.left - prev.left : 0, dy = prev ? r.top - prev.top : r.height + 2; a.fromRect = { left: r.left + dx, top: r.top + dy, width: r.width, height: r.height }; }
+    else { const c = root.querySelector(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions`); if (c) a.fromRect = rectOf(c); }
+    const slot = root.querySelector(`[data-slot="${a.key}"]`);
+    a.landed = slot && (slot.querySelector(`.worker[data-seat="${a.pid}"]`) || slot.querySelector('.worker'));
+    a.slotEl = slot;
+    a.toRect = a.landed ? rectOf(a.landed) : slot ? rectOf(slot.querySelector('.base') || slot) : null;
+  }
+  const toHold = [];
+  for (const a of plan.atoms) {
+    if (a.op !== 'piece' || a.fol) continue;
+    for (const w of [a.from, a.to]) if (w.kind === 'stack') { const el = where(w); if (el) { toHold.push([el, w]); chain.pending.set(el, (chain.pending.get(el) || 0) + (a.bundle ? 1 : 1)); } }
+  }
+  // the follower count waits for its first piece to land (Tick listens for it), and counts while the rest do
+  const base = chain.clock + (chain.queue.length || chain.flying ? 0 : 0);
   const firstLand = new Map();
   for (const a of plan.atoms) if (a.op === 'land' && a.fol && a.to.kind === 'count' && !a.pay) {
     const el = where(a.to);
@@ -317,87 +337,70 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
     f.at = Math.min(f.at, a.at); f.last = Math.max(f.last, a.at);
     firstLand.set(el, f);
   }
-  for (const [el, f] of firstLand) { expectArrival(el, t0 + f.at, Math.max(0, f.last - f.at)); chain.counts.add(el); }
-  // pieces in flight per stack: every stack the chain touches holds what it showed before from the start, and lets
-  // go of its held number when its last piece has left or landed
-  const toHold = [];
-  for (const a of plan.atoms) {
-    if (a.op !== 'piece' || a.fol) continue;
-    for (const w of [a.from, a.to]) if (w.kind === 'stack') { const el = where(w); if (el) { toHold.push([el, w]); pending.set(el, (pending.get(el) || 0) + 1); } }
-  }
-  // where each placed minion stood in its column: the slot past the last one still standing there (read now, with the
-  // rest, before anything is written)
-  for (const a of plan.atoms) {
-    if (a.op !== 'minion') continue;
-    const left = [...root.querySelectorAll(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions [data-minion]`)];
-    const last = left[left.length - 1];
-    if (last) { const r = rectOf(last), prev = left.length > 1 ? rectOf(left[left.length - 2]) : null; const dx = prev ? r.left - prev.left : 0, dy = prev ? r.top - prev.top : r.height + 2; a.fromRect = { left: r.left + dx, top: r.top + dy, width: r.width, height: r.height }; }
-    else { const c = root.querySelector(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions`); if (c) a.fromRect = rectOf(c); }
-  }
-  // the writes wait for the frame (after every layout effect has read the page: a write here made the next reader
-  // lay the whole page out again), but land before it paints, so no number flickers
-  chain.root = root;
-  chain.until = t0 + plan.total;
-  void col;
-  const start = () => {
-    if (chain.seq !== seq) return;
-    root.dataset.chain = '1';
-    for (const [el, w] of toHold) holdOf(el, w.pid, w.r);
-    schedule(performance.now() - t0);
+  const now0 = performance.now();
+  for (const [el, f] of firstLand) { expectArrival(el, now0 + f.at, Math.max(0, f.last - f.at)); chain.counts.add(el); }
+  const holdOf = (el, pid, r) => {
+    if (!el || el.rectOnly) return null;
+    if (!chain.holds.has(el)) { const p = before.players[pid]; chain.holds.set(el, { h: p ? holdStack(el, p.res[r] || 0) : null }); }
+    return chain.holds.get(el).h;
   };
-  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(start); else start();
-  return plan;
-  function schedule(late) {
-  const release = el => { const n = (pending.get(el) || 1) - 1; pending.set(el, n); if (n <= 0) { const x = chain.holds.get(el); if (x && x.h) x.h.done(); chain.holds.delete(el); } };
+  const release = el => { const n = (chain.pending.get(el) || 1) - 1; chain.pending.set(el, n); if (n <= 0) { const x = chain.holds.get(el); if (x && x.h) x.h.done(); chain.holds.delete(el); chain.pending.delete(el); } };
+  chain.root = root;
+  // the first frame: the chain is on, and every stack it touches holds what it showed before
+  schedule(base, () => { root.dataset.chain = '1'; for (const [el, w] of toHold) holdOf(el, w.pid, w.r); });
+  const land = (a, B, skip) => {
+    if (a.to.kind === 'stack' && !a.pay && B) {
+      const h = holdOf(B, a.to.pid, a.to.r);
+      if (h) { if (a.bundle && !skip) h.roll(a.by ?? a.n, MO.roll); else h.step(a.by ?? a.n); }
+      if (a.bundle && !skip) setTimeout(() => release(B), MO.roll); else release(B);
+    }
+    if (a.to.kind === 'count' && B && !B.rectOnly) { try { B.dispatchEvent(new CustomEvent('patrons:land')); } catch { /* old browser */ } }
+    if (!skip && B) settle(B, MO.settle, a.bundle ? 1.24 : a.light ? 1.1 : a.pay ? 1.06 : 1.18);
+  };
   for (const a of plan.atoms) {
-    later(a.at - late, skip => {
+    if (a.op === 'land') continue; // a piece lands when its own flight finishes
+    schedule(base + a.at, skip => {
       switch (a.op) {
         case 'minion': {
-          const slot = root.querySelector(`[data-slot="${a.key}"]`);
-          if (skip || !slot) return;
-          slot.classList.add('chosen');
-          later(a.dur + MO.pulse, () => slot.classList.remove('chosen'));
-          const landed = slot.querySelector(`.worker[data-seat="${a.pid}"]`) || slot.querySelector('.worker');
-          const fr = a.fromRect;
-          const from = fr ? { getBoundingClientRect: () => fr } : (root.querySelector(`.lt-seat[data-pid="${a.pid}"] .cs-minions`) || root.querySelector(`[data-leader="${a.pid}"]`));
-          const to = landed || slot.querySelector('.base');
-          if (!from || !to) return;
-          const F = from.getBoundingClientRect(), T = to.getBoundingClientRect(), size = Math.max(16, landed ? T.width : 18);
-          const ra = { left: F.left + F.width / 2 - size / 2, top: F.top + F.height / 2 - size / 2, width: size, height: size };
-          const rb = { left: T.left + T.width / 2 - size / 2, top: T.top + T.height / 2 - size / 2, width: size, height: size };
-          const html = landed ? landed.innerHTML : `<i style="background:${playerColor(a.pid)}"></i>`;
+          if (skip || !a.slotEl || !a.toRect) return;
+          a.slotEl.classList.add('chosen');
+          setTimeout(() => a.slotEl.classList.remove('chosen'), a.dur + MO.pulse);
+          const F = a.fromRect || (root.querySelector(`[data-leader="${a.pid}"]`) || a.slotEl).getBoundingClientRect();
+          const size = Math.max(16, a.landed ? a.toRect.width : 18);
+          const html = a.landed ? a.landed.innerHTML : `<i style="background:${playerColor(a.pid)}"></i>`;
           if (a.own) {
             // yours stands in the door at once (the stamp); the trail from your column fades onto it
-            if (landed && landed.animate) track(landed.animate([{ transform: 'scale(1.25)', opacity: 0.6 }, { transform: 'scale(1)', opacity: 1 }], { duration: MO.ownStamp, easing: 'cubic-bezier(.3,1.5,.5,1)' }));
-            flyPath(html, 'worker-flight minion-flight trail', ra, rb, { path: 'arc', duration: a.dur });
+            if (a.landed && a.landed.animate) track(a.landed.animate([{ transform: 'scale(1.25)', opacity: 0.6 }, { transform: 'scale(1)', opacity: 1 }], { duration: MO.ownStamp, easing: 'cubic-bezier(.3,1.5,.5,1)' }));
+            flyPath(html, 'worker-flight minion-flight trail', square(F, size), square(a.toRect, size), { path: 'arc', duration: a.dur, fade: true });
           } else {
-            flyPath(html, 'worker-flight minion-flight', ra, rb, { path: 'arc', duration: a.dur });
-            if (landed && landed.animate) track(landed.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: a.dur + 30 }));
+            chain.flying++;
+            const anim = flyPath(html, 'worker-flight minion-flight', square(F, size), square(a.toRect, size), { path: 'arc', duration: a.dur });
+            if (a.landed && a.landed.animate) track(a.landed.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: a.dur + 30 }));
+            onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); if (a.landed) settle(a.landed, MO.settle); });
           }
           return;
         }
         case 'home': if (!skip && minionsBefore) flyMinionsHome(root, minionsBefore); return;
-        case 'pulse': if (!skip) pulse(placeEl(root, a.place, ctx), a.dur, { press: !!a.press }); return;
-        case 'hop': if (!skip) hopEl(placeEl(root, a.place, ctx), MO.hop); return;
-        case 'tug': if (!skip) tug(placeEl(root, a.place, ctx), placeEl(root, a.toward, ctx), a.dur); return;
+        case 'pulse': if (!skip) pulse(where(a.place), a.dur, { press: !!a.press }); return;
+        case 'hop': if (!skip) hopEl(where(a.place), MO.hop); return;
+        case 'tug': if (!skip) tug(where(a.place), where(a.toward), a.dur); return;
         case 'card': {
           // the recruited card: a picture of it lifts in its old slot, takes its coins, then flies to its new chip
-          const s = snap && snap.get(a.uid);
-          if (skip || !s || !s.rect) return;
+          const sn = snap && snap.get(a.uid);
+          if (skip || !sn || !sn.rect) return;
           const g = document.createElement('div');
           g.className = 'flight card-flight ghost-layer';
           g.dataset.born = String(Date.now());
-          g.innerHTML = s.html;
-          Object.assign(g.style, { left: `${s.rect.left}px`, top: `${s.rect.top}px`, width: `${s.rect.width}px`, height: `${s.rect.height}px` });
+          g.innerHTML = sn.html;
+          Object.assign(g.style, { left: `${sn.rect.left}px`, top: `${sn.rect.top}px`, width: `${sn.rect.width}px`, height: `${sn.rect.height}px` });
           document.body.appendChild(g);
           if (typeof window !== 'undefined') window.__patronsFlights = (window.__patronsFlights || 0) + 1;
-          ctx.lifted.set(a.uid, g);
           const chip = root.querySelector(`.lt-seat[data-pid="${a.to}"] [data-uids~="${a.uid}"]`) || placeEl(root, { kind: 'crowd', pid: a.to }, ctx);
-          const B = chip ? chip.getBoundingClientRect() : s.rect;
-          const dx = B.left + B.width / 2 - (s.rect.left + s.rect.width / 2), dy = B.top + B.height / 2 - (s.rect.top + s.rect.height / 2);
-          const total = a.lift + a.wait + a.dur;
-          const k1 = a.lift / total, k2 = (a.lift + a.wait) / total;
-          const sc = B.width ? Math.max(0.2, Math.min(0.5, B.width / s.rect.width)) : 0.3;
+          const B = chip ? chip.getBoundingClientRect() : sn.rect;
+          const dx = B.left + B.width / 2 - (sn.rect.left + sn.rect.width / 2), dy = B.top + B.height / 2 - (sn.rect.top + sn.rect.height / 2);
+          const total = a.lift + a.wait + a.dur, k1 = a.lift / total, k2 = (a.lift + a.wait) / total;
+          const sc = B.width ? Math.max(0.2, Math.min(0.5, B.width / sn.rect.width)) : 0.3;
+          chain.flying++;
           const anim = track(g.animate([
             { transform: 'translate(0,0) scale(1)', offset: 0 },
             { transform: 'translate(0,-10px) scale(1.06)', offset: k1 },
@@ -405,68 +408,53 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
             { transform: `translate(${dx * 0.5}px,${dy * 0.5 - 40}px) scale(${(1.06 + sc) / 2})`, offset: k2 + (1 - k2) * 0.5 },
             { transform: `translate(${dx}px,${dy}px) scale(${sc})`, opacity: 0.2, offset: 1 },
           ], { duration: total, fill: 'forwards' }));
-          const done = () => g.remove();
-          anim.addEventListener('finish', done); anim.addEventListener('cancel', done);
           slideShop(root, snap);
-          if (chip && chip.animate) {
-            track(chip.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: total }));
-            later(total, sk => { if (!sk) track(chip.animate([{ boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }, { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.1)', offset: 0.35 }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }], { duration: MO.ring, easing: 'ease-out' })); });
-          }
+          if (chip && chip.animate) track(chip.animate([{ opacity: 0 }, { opacity: 0, offset: 0.98 }, { opacity: 1 }], { duration: total }));
+          onFinish(anim, () => {
+            g.remove();
+            chain.flying = Math.max(0, chain.flying - 1);
+            if (chip && chip.animate && chip.isConnected) track(chip.animate([{ boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }, { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.1)', offset: 0.35 }, { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' }], { duration: MO.ring, easing: 'ease-out' }));
+          });
           return;
         }
         case 'chip': {
           if (skip) return;
-          const A = placeEl(root, a.from, ctx), B = placeEl(root, a.to, ctx);
+          const A = where(a.from), B = where(a.to);
           if (!A || !B) return;
-          const ra = A.getBoundingClientRect(), rb = B.getBoundingClientRect(), size = 26;
-          flyPath(`<i class="piece-dot member"></i>`, 'piece-flight piece-member', { left: ra.left + ra.width / 2 - size / 2, top: ra.top + ra.height / 2 - size / 2, width: size, height: size },
-            { left: rb.left + rb.width / 2 - size / 2, top: rb.top + rb.height / 2 - size / 2, width: size, height: size }, { path: a.path, duration: a.dur });
-          later(a.dur, sk => { if (!sk) settle(B, MO.settle); });
+          chain.flying++;
+          const anim = flyPath('<i class="piece-dot member"></i>', 'piece-flight piece-member', square(A.getBoundingClientRect(), 26), square(B.getBoundingClientRect(), 26), { path: a.path, duration: a.dur, fade: true });
+          onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); settle(B, MO.settle); });
           return;
         }
         case 'piece': {
           const A = where(a.from), B = where(a.to);
           // a piece leaving a stack: its number drops as it goes
-          if (a.from.kind === 'stack' && A) { const h = holdOf(A, a.from.pid, a.from.r); if (h) h.step(-(a.bundle ? a.n : 1)); if (!skip) bump(A, true); }
-          if (a.to.kind === 'stack' && B) holdOf(B, a.to.pid, a.to.r);
-          if (a.from.kind === 'stack' && A) release(A);
-          if (skip || !A || !B) return;
-          const ra = A.getBoundingClientRect(), rb = B.getBoundingClientRect(), size = a.fol ? 18 : 16;
+          if (a.from.kind === 'stack' && A) { const h = holdOf(A, a.from.pid, a.from.r); if (h) h.step(-(a.n || 1)); if (!skip) bump(A, true); release(A); }
+          if (skip || !A || !B) { land(a, B, true); return; }
+          const size = a.fol ? 18 : 16;
           const pid = a.to.kind === 'stack' || a.to.kind === 'count' ? a.to.pid : a.from.pid;
           const html = a.fol ? folHtml(root, pid) : dotHtml(root, a.r, a.owner ?? pid);
-          const path = a.pay ? 'drop' : a.take ? 'line' : 'arc';
-          flyPath(html, `piece-flight piece-${a.fol ? 'fol' : 'res'}${a.pay ? ' pay' : ''}`,
-            { left: ra.left + ra.width / 2 - size / 2, top: ra.top + ra.height / 2 - size / 2, width: size, height: size },
-            { left: rb.left + rb.width / 2 - size / 2, top: rb.top + rb.height / 2 - size / 2, width: size, height: size },
-            { path, duration: a.dur, label: a.bundle ? `+${a.n}` : '', trail: a.bundle ? 2 : 0, trailGap: MO.bundleTrail, turnTo: a.turn ? dotHtml(root, a.turn, pid) : null });
-          return;
-        }
-        case 'land': {
-          const B = where(a.to);
-          if (!B) return;
-          if (a.to.kind === 'stack' && !a.pay) {
-            const h = holdOf(B, a.to.pid, a.to.r);
-            if (h) { if (a.bundle && !skip) h.roll(a.by, MO.roll); else h.step(a.by); }
-            if (a.bundle && !skip) later(MO.roll, () => release(B)); else release(B);
-          }
-          if (!skip) settle(B, MO.settle, a.bundle ? 1.24 : a.light ? 1.1 : a.pay ? 1.06 : 1.18);
+          chain.flying++;
+          const anim = flyPath(html, `piece-flight piece-${a.fol ? 'fol' : 'res'}${a.pay ? ' pay' : ''}`, square(A.getBoundingClientRect(), size), square(B.getBoundingClientRect(), size),
+            { path: a.pay ? 'drop' : a.take ? 'line' : 'arc', duration: a.dur, label: a.bundle ? `+${a.n}` : '', trail: a.bundle ? 2 : 0, trailGap: MO.bundleTrail, turnTo: a.turn ? dotHtml(root, a.turn, pid) : null, fade: true });
+          onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); land({ ...a, by: a.n }, B, false); });
           return;
         }
         default:
       }
     });
   }
-  later(plan.total - late, () => { if (chain.seq === seq) endChain(); });
+  run();
   if (typeof window !== 'undefined') { window.__patronsChains = (window.__patronsChains || 0) + 1; window.__patronsChainMs = plan.total; }
-  }
+  return plan;
 }
 
 /** Install the skip: a press anywhere, or Space (when it isn't pressing a button), lands the chain on screen. */
 export function installChainSkip() {
   if (typeof addEventListener !== 'function') return () => {};
-  const down = () => { if (chain.timers.size) skipChain(); };
+  const down = () => { if (chainRunning()) skipChain(); };
   const key = e => {
-    if (e.key !== ' ' || !chain.timers.size) return;
+    if (e.key !== ' ' || !chainRunning()) return;
     const t = e.target;
     skipChain();
     if (!(t && t.closest && t.closest('input,textarea,select,button,[role="button"],[contenteditable]'))) e.preventDefault();

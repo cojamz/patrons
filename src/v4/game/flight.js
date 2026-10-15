@@ -219,7 +219,7 @@ export function clearArrivals(els) { for (const el of els) arrivals.delete(el); 
 export function arrivalFor(el) {
   for (let e = el; e && e.nodeType === 1; e = e.parentElement) {
     const a = arrivals.get(e);
-    if (a) { const now = performance.now(); return a.at + a.span > now ? { delay: Math.max(0, a.at - now), span: a.span } : null; }
+    if (a) { const now = performance.now(); return a.at + a.span + 1500 > now ? { delay: Math.max(0, a.at - now), span: a.span, el: e } : null; }
   }
   return null;
 }
@@ -258,19 +258,20 @@ export function pieceHtml(root, m) {
 export function holdStack(stackEl, from) {
   const b = stackEl && stackEl.querySelector('b.num');
   if (!b) return null;
-  let v = from, raf = 0;
+  let v = from, raf = 0, dead = false;
   b.dataset.hold = String(v);
   return {
-    step(by) { cancelAnimationFrame(raf); v += by; b.dataset.hold = String(v); },
+    step(by) { if (dead) return; cancelAnimationFrame(raf); v += by; b.dataset.hold = String(v); },
     /** a bundle lands: the number rolls from what it shows to v + by over ms */
     roll(by, ms) {
+      if (dead) return;
       cancelAnimationFrame(raf);
       const from0 = v, to = v + by, t0 = performance.now();
       v = to;
       const tick = now => { const k = Math.min(1, (now - t0) / Math.max(1, ms)); b.dataset.hold = String(Math.round(from0 + (to - from0) * k)); if (k < 1) raf = requestAnimationFrame(tick); };
       raf = requestAnimationFrame(tick);
     },
-    done() { cancelAnimationFrame(raf); delete b.dataset.hold; },
+    done() { dead = true; cancelAnimationFrame(raf); delete b.dataset.hold; },
   };
 }
 export const bump = (el, down = false) => {
@@ -338,7 +339,7 @@ export function flyGains(root, moves, { snap = null, before = null } = {}) {
 //      an inner one rises and falls) · line: a take (a steal), straight, a snatch · drop: a payment, lifts 6px then falls
 //      into what it pays, shrinking and fading (it's spent) · cross: a swap, the arc bowing the other way.
 // `turnTo`: a piece that changes color on its way (a steal that arrives as magenta) turns at its midpoint.
-export function flyPath(html, className, a, b, { path = 'arc', duration = 320, label = '', trail = 0, trailGap = 30, turnTo = null } = {}) {
+export function flyPath(html, className, a, b, { path = 'arc', duration = 320, label = '', trail = 0, trailGap = 30, turnTo = null, fade = false } = {}) {
   if (typeof document === 'undefined' || !document.body.animate) return null;
   const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
   const dist = Math.hypot(dx, dy);
@@ -361,6 +362,8 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
       : [{ transform: 'translate(0,0)' }, { transform: `translate(${dx}px,${dy}px)` }];
     const anim = outer.animate(frames, { duration, delay, easing: path === 'drop' ? 'linear' : travel, fill: 'both' });
     track(anim);
+    // it fades onto what it lands on in its last 15% (a payment fades in its own frames)
+    if (fade && path !== 'drop') track(outer.animate([{ opacity: 1 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], { duration, delay, fill: 'both' }));
     if (h) track(inner.animate([{ translate: '0 0' }, { translate: `0 ${-h}px`, offset: 0.5, easing: 'ease-in' }, { translate: '0 0' }], { duration, delay, easing: 'ease-out', fill: 'both' }));
     if (turnTo && k === 0) {
       const tint = document.createElement('div');

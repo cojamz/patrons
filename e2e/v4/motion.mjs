@@ -4,7 +4,9 @@
 //       rarely slows the count instead of skipping numbers);
 //  (m2) your placement sends a worker token flying to the space;
 //  (m3) your recruit flies from the shop as a fixed-size picture (no reflowed text spilling out), starting on screen;
-//  (m4) laptop, Normal speed: consecutive bot steps in round I are at least 600ms apart.
+//  (m4) laptop, Normal bots, Steady animations: after a bot step that shows something (it plays a chain of
+//       animations), the next step waits at least 600ms. Since Cory's 2026-10-15 call the chain sets the pace and a
+//       step with nothing to show (a bot's pass) no longer holds a fixed 600ms.
 // Starts from a saved game (e2e/v4/lib/rich-save.mjs) where P1 holds 6 of every color and is about to place.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5184.
 import { chromium } from 'playwright';
@@ -154,7 +156,9 @@ for (const prof of PROFILES) {
       let prev = { moves: el.dataset.moves, bot: el.dataset.bot, round: (document.querySelector('header .round') || {}).textContent || '' };
       new MutationObserver(() => {
         const now = { moves: el.dataset.moves, bot: el.dataset.bot, round: (document.querySelector('header .round') || {}).textContent || '' };
-        if (now.moves !== prev.moves) window.__steps.push({ t: performance.now(), byBot: prev.bot === '1', inRound: /Round/.test(prev.round) && /Round/.test(now.round), modal: !!document.querySelector('.roundend') });
+        // shows: the step played a chain of its own (director.js counts each one as the table shows it)
+        const chains = window.__patronsChains || 0;
+        if (now.moves !== prev.moves) { window.__steps.push({ t: performance.now(), byBot: prev.bot === '1', inRound: /Round/.test(prev.round) && /Round/.test(now.round), modal: !!document.querySelector('.roundend'), shows: chains > (window.__chainsSeen || 0) }); window.__chainsSeen = chains; }
         prev = now;
       }).observe(el, { attributes: true, attributeFilter: ['data-moves'] });
     };
@@ -174,10 +178,10 @@ for (const prof of PROFILES) {
     const st = await page.evaluate(() => window.__steps || []);
     let pairs = 0, worst = Infinity;
     for (let i = 1; i < st.length; i++) {
-      if (!st[i].byBot || !st[i - 1].byBot || !st[i].inRound || !st[i - 1].inRound || st[i].modal || st[i - 1].modal) continue;
+      if (!st[i].byBot || !st[i - 1].byBot || !st[i].inRound || !st[i - 1].inRound || st[i].modal || st[i - 1].modal || !st[i - 1].shows) continue;
       pairs++; worst = Math.min(worst, st[i].t - st[i - 1].t);
     }
-    console.log(`laptop pacing: ${pairs} bot step pairs in round I, shortest gap ${Math.round(worst)}ms`);
+    console.log(`laptop pacing: ${pairs} bot steps that show something in round I, shortest wait after one ${Math.round(worst)}ms`);
     if (pairs < 6) errors.push(`(m4) too few bot steps measured (${pairs})`);
     else if (worst < 570) errors.push(`(m4) bot steps ${Math.round(worst)}ms apart at 1270×700 (need ≥600)`);
   } catch (e) { errors.push(`m4 run: ${e.message}`); }

@@ -30,8 +30,8 @@ export function Pip({ color, n }) {
 
 /**
  * Rules text with resource words as symbols. Lowercase words only: "Gold" (the quadrant) stays a word,
- * "gold" (the resource) becomes a symbol. "any" becomes the wild symbol only where it means resources
- * ("2 any", "in any colors", "of anything" stays), so "any face-up member" keeps its word.
+ * "gold" (the resource) becomes a symbol. "any" becomes the wild symbol only where a number counts it ("2 any");
+ * "in any colors", "any face-up member" and "of anything" keep their words.
  */
 export function Rich({ text }) {
   if (!text) return null;
@@ -58,7 +58,9 @@ export function Rich({ text }) {
     }
     if (w === 'any') {
       const before = text.slice(Math.max(0, at - 6), at), after = text.slice(at + 3, at + 12);
-      const meansResources = /\d\s$/.test(before) || /^\s+(colou?rs?|resources?)\b/.test(after) || /^\s*[).,;]|^$/.test(after) && /\d\s$/.test(before);
+      // only a counted amount is the dot ("2 any" → "2◍"); "any" as a plain word stays a word ("+2 of any color you
+      // choose", "pay in any colors"): a dot there read "+2 of ◍ color you choose" (design pod, 2026-10-15)
+      const meansResources = /\d\s$/.test(before);
       if (!meansResources) continue;
     }
     lead(at, true);

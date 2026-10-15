@@ -340,7 +340,8 @@ try {
           if (bb) { await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2); placed++; await page.mouse.move(4, 4); }
           await page.waitForTimeout(300);
         } else if (phase === 'choose' || phase === 'setup') {
-          const o = await page.$('.prompt.choice button[data-option]:not([disabled])');
+          // a choice is a button, or (the board picker) a lit seat, stack, member or space on the board
+          const o = await page.$('.prompt.choice button[data-option]:not([disabled]), .lt-cult-seat .cs-pick-seat:not(.off), .lt-cult-seat .cs-stack.pick-on, .lt-cult-seat .cs-pick-member, .prompt.choice .pick-rest-btn');
           if (o) await o.click().catch(() => {});
           await page.waitForTimeout(250);
         } else if (phase === 'buy') {

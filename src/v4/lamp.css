@@ -475,7 +475,8 @@ h1,h2,h3{font-family:var(--serif)}
    always open the standings; a faint wash says the band is one target */
 .lt .stage svg.rim-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:5}
 .lt .stage svg.rim-layer .rim-hit{fill:rgba(255,250,238,0);cursor:help;pointer-events:all;outline:none;transition:fill .15s}
-.lt .stage svg.rim-layer .rim-hit:hover{fill:rgba(255,250,238,.1)}
+/* no fill on hover: the band reaches past the paper, so a fill drew a grey arc on the wood; the card is the answer */
+.lt .stage svg.rim-layer .rim-hit:hover{fill:transparent}
 .lt .stage svg.rim-layer .rim-hit:focus-visible{stroke:var(--lamp-ink);stroke-width:2;fill:rgba(255,250,238,.1)}
 /* the tiebreak, quieter than the rule: "· ties: red members" */
 .lt .stage svg.wheel-paper .rim-rule .rim-tie{letter-spacing:.04em;font-weight:600;fill-opacity:.9}

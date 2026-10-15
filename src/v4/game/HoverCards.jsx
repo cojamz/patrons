@@ -28,9 +28,9 @@ const sphereOf = qid => quadrant(qid).resource;
 export const OPEN_MS = MO.hoverOpen, CLOSE_MS = MO.hoverClose; // src/v4/motion.js
 /** Between two spaces: a pointer crossing the wheel's gutters keeps the card this long before it closes. */
 export const GRACE_MS = 450;
-const onWheel = () => {
-  if (!lastPt || typeof document === 'undefined') return false;
-  const st = document.querySelector('.lt-wheel .stage') || document.querySelector('.stage');
+const onWheel = from => {
+  // the wheel the space being left belongs to (never some other box that happens to be called a stage)
+  const st = lastPt && from && from.el && from.el.closest ? from.el.closest('.stage') : null;
   if (!st) return false;
   const b = st.getBoundingClientRect();
   return lastPt.x >= b.left && lastPt.x <= b.right && lastPt.y >= b.top && lastPt.y <= b.bottom;
@@ -55,7 +55,7 @@ export function createHover() {
       clearTimeout(openT);
       // leaving a space for the wheel's gutter keeps the card a moment longer, so sweeping across the spaces hands it
       // from one to the next without a close/open flicker; leaving the wheel closes it at the usual pace
-      const wait = next.kind === 'space' && onWheel() ? GRACE_MS : CLOSE_MS;
+      const wait = next.kind === 'space' && card && card.kind === 'space' && onWheel(card) ? GRACE_MS : CLOSE_MS;
       closeT = setTimeout(() => { if (card && !card.pinned) set(null); }, wait);
       return;
     }
@@ -284,7 +284,8 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons><Rich text={pv.reasons.join(' · ')} /></span></Row> : null}
         {race && <Row k={race.rule}><Rich text={race.text} /></Row>}
         {pv && pv.swept && pv.swept.length ? <Row k="Sweeps away">{pv.swept.map((u, k) => <span key={u} data-swept={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}<small className="lt-swept-note"> back under the deck</small></Row> : null}
-        {unlocks.length ? <Row k="Unlocks">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
+        {/* on a desktop the shop's own cards say it ("after Kickback" on each): only a pinned sheet (touch) lists them */}
+        {unlocks.length && pinned ? <Row k="Then affordable">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
         {owner !== undefined && <Row k="Taken">{state.players[owner].name}{opt ? ' — you can join it' : ''}</Row>}
         {a.ring > round && <Row k="Opens">round {roman(a.ring)}</Row>}
       </div>
@@ -299,9 +300,9 @@ function raceAfter(state, race, qid, pid) {
   const nm = id => (id === pid ? 'You' : state.players[id].name);
   // every player, never just the top three (RC1 panel: the 4th silently dropped off "You 0 · P2 0 · P3 0")
   const top = c.rows.map(r => `${nm(r.player)} ${r.count}`).join(' · ');
-  // plain words (design pod): "Most gold after: You 4 · P2 2 … · you'd lead it (+2 followers)", never "Gold … you'd lead, +2"
+  // plain words (design pod): "Most gold: You 4 · P2 2 … · you'd lead it (+2 followers)", never "Gold … you'd lead, +2"
   const lead = c.winners.includes(pid) ? ` · you’d lead it (+${c.prize} follower${c.prize === 1 ? '' : 's'})` : '';
-  return { rule: `${c.rule.replace(/^\w/, ch => ch.toUpperCase())} after`, text: `${top}${lead}` };
+  return { rule: c.rule.replace(/^\w/, ch => ch.toUpperCase()), text: `${top}${lead}` };
 }
 
 /** "Rush (Bo)" for a board key. */

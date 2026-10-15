@@ -155,10 +155,16 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       const base = myRecruitThenGone ? BOT.myRecruitHold : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(BOT.recruitExtra, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
       // the step's chain of animations sets the pace (director.js; grammar.md §4): the next step shows once it has
       // played (a click or Space skips it). The bot pace is the floor only for a step with nothing to show (a pass).
-      const chainMs = planChain(prev, next, { mine }).total;
-      const dwell = chainMs || base;
+      // the same player's next step shows when this chain's last piece is two-thirds along (its handoff); a turn that
+      // passes waits for the whole chain and a breath. A bot step with nothing to show doesn't wait, except a turn-ending
+      // pass, which holds a moment (MO.passHold).
+      const plan = planChain(prev, next, { mine });
+      const sameNext = !!(next.pending && prev.pending && next.pending.player === prev.pending.player);
+      const dwell = plan.total ? (sameNext ? plan.handoff : plan.total) : rivalStep ? (sameNext ? 0 : MO.passHold) : base;
       if (!queue.current.length) paced.current = false;
-      if (dwell) {
+      // every step gets its own commit, even one that doesn't wait, so each chain plays from the step right before it
+      // (the engine's effect stream is per step: two steps drawn in one render would lose the first one's)
+      if (dwell || queue.current.length) {
         // the hold counts from when this step is on screen (its commit), not from when it was handed to React: under
         // load a commit can land late, and a timer started here would shorten the next step's time on screen
         timer.current = 'commit';
@@ -320,11 +326,21 @@ function PromptActions({ state, optionFor, onPick }) {
   const [open, setOpen] = useState(false);
   const turn = `${state.round}:${pend.player}`;
   useEffect(() => { setOpen(false); }, [turn]);
+  // an open list closes on Escape or a click anywhere else (RC1 sweep 71: Esc left it open)
+  const rowRef = useRef(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const key = e => { if (e.key === 'Escape') setOpen(false); };
+    const away = e => { if (rowRef.current && !rowRef.current.contains(e.target)) setOpen(false); };
+    addEventListener('keydown', key);
+    addEventListener('pointerdown', away, true);
+    return () => { removeEventListener('keydown', key); removeEventListener('pointerdown', away, true); };
+  }, [open]);
   const pass = optionFor('pass');
   return (
     <span className="pr-actions">
       {releases.length > 0 && (
-        <span className={`release-row${open ? ' open' : ''}`}>
+        <span ref={rowRef} className={`release-row${open ? ' open' : ''}`}>
           <button type="button" className="btn ghost rel-toggle" aria-expanded={open} onClick={() => setOpen(o => !o)}
             title={RELEASE_TEXT}>Release…</button>
           {open && (
@@ -970,7 +986,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
                 </div>
               );
             })}
-            <Log state={state} />
+            <Log state={state} meId={mySeats.length === 1 ? mySeats[0] : null} />
           </div>
         </div>
       ) : (

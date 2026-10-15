@@ -123,7 +123,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
                 {short && <span className="need" title={`You need ${short.text} more (after your discounts)`}>need <ShortDots short={short} /></span>}
                 {fromPile && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
-                {tick && <span className="tick" title={`You could afford it after ${after}`}>✓ {after}</span>}
+                {tick && <span className="tick" title={`You could afford it after ${after}`}>after {after}</span>}
               </span>
               <span className="nm">{d.name}</span>
               <span className="ft">
@@ -172,7 +172,7 @@ function ShopTicks({ state, viewer, placing, hover, rowRef }) {
         tag = document.createElement('span');
         tag.className = 'tick';
         tag.title = `You could afford it after ${after}`;
-        tag.textContent = `✓ ${after}`;
+        tag.textContent = `after ${after}`; // words, not a ✓ (grammar: two marks only)
         art.appendChild(tag);
       }
       done.push({ el, was, now: el.className, tag });
@@ -195,7 +195,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
   const viewer = me != null ? state.players[me] : null;
   const held = viewer ? Object.values(viewer.res).reduce((a, b) => a + (b || 0), 0) : null;
   const when = (t, opt) => {
-    if (opt) return 'Yours to buy now: click it.';
+    if (opt) return 'You can buy it now.';
     if (viewer && held < t.cost) return `You hold ${held}: ${t.cost - held} short.`;
     if (state.pending && state.pending.kind === 'place' && viewer && state.pending.player === viewer.id) return 'You buy after you place a minion, in your buy step.';
     if (tierLeft(state, t) <= 0) return 'None left.';
@@ -219,7 +219,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
             <Tip className="fb-tip" hint={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}`} content={() => (
               <div className="pop-card rate-card" data-rate-card={t.key}>
                 <b>{t.cost} resources → {t.get} follower{t.get > 1 ? 's' : ''}</b>
-                <span>Any colors, any mix. It takes your one buy after a placement.</span>
+                <span>Any colors, any mix, as your one buy.</span>
                 {t.limited ? <span>{left} left at this table (2 per player at the start).</span> : <span>Unlimited.</span>}
                 <small>{when(t, opt)}</small>
               </div>

@@ -44,8 +44,10 @@ const savedHold = page => page.evaluate(() => { try { return JSON.parse(localSto
 async function act(page, { next = true } = {}) {
   const hand = await page.$('[data-handoff]');
   if (hand) { await hand.click().catch(() => {}); return true; }
+  // waiting for a round end (next: false) never skips the Reckoning it is waiting for: it now plays ~3s a quadrant
+  // (Cory, 2026-10-15), so a step taken in the gap between the wait's check and this one used to skip it unseen
   const skip = await page.$('[data-reckon-skip]');
-  if (skip) { await skip.click().catch(() => {}); return true; }
+  if (skip) { if (!next) return false; await skip.click().catch(() => {}); return true; }
   const nx = await page.$('[data-next-round]');
   if (nx) { if (next) await nx.click().catch(() => {}); return next; }
   for (const el of await page.$$('[data-option]:not([disabled])')) {

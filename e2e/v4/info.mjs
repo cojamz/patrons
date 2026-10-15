@@ -456,7 +456,7 @@ try {
     await pg.waitForTimeout(300);
     const spot = pg.locator(`[data-slot="${key}"] .base`).first();
     await ((await spot.count()) ? spot : pg.locator(`[data-slot="${key}"]`).first()).hover();
-    const ok = await pg.waitForFunction(us => us.some(u => { const t = document.querySelector(`.lt-shop .card[data-uid="${u}"] .tick`); return !!t && /✓/.test(t.textContent) && t.getBoundingClientRect().width > 0; }), uids, { timeout: 6000 }).then(() => true, () => false);
+    const ok = await pg.waitForFunction(us => us.some(u => { const t = document.querySelector(`.lt-shop .card[data-uid="${u}"] .tick`); return !!t && /^after /.test(t.textContent) && t.getBoundingClientRect().width > 0; }), uids, { timeout: 6000 }).then(() => true, () => false);
     if (!ok) fail(`(i) hovering space ${key} never ticked "✓ after" on the card(s) it unlocks (${uids.join(', ')})`, 'tick');
     else console.log(`info.mjs: space ${key} ticks card ${uids.join(', ')} "✓ after"`);
     await pg.screenshot({ path: `${SHOTS}/07-shop-tick.png` });

@@ -294,8 +294,8 @@ export function winSentence(state) {
     contests: v => (swept && swept[1].rounds >= 2
       ? (swept[1].v === v
         ? `by holding ${swept[1].rule} ${swept[1].rounds === 3 ? 'all three rounds' : 'two rounds of three'} (+${v})`
-        : `from contests (+${v}; ${swept[1].rule} ${swept[1].rounds === 3 ? 'all three rounds' : 'two rounds of three'}, +${swept[1].v})`)
-      : `from contests (+${v})`),
+        : `from the rims' prizes (+${v}; ${swept[1].rule} ${swept[1].rounds === 3 ? 'all three rounds' : 'two rounds of three'}, +${swept[1].v})`)
+      : `from the rims' prizes (+${v})`),
   };
   const top = [['members', b.members], ['bought', b.bought], ['effects', b.effects], ['endGame', b.endGame], ['contests', b.contests]]
     .filter(([, v]) => v > 0).sort((x, y) => y[1] - x[1]).slice(0, 2);
@@ -454,7 +454,8 @@ export function tiebreakWord(label) {
 export function tiebreakNote(st, row) {
   if (!st.tiebreak || row.tiebreak == null) return null;
   const tied = st.rows.some(r => r !== row && r.shown === row.shown);
-  return tied ? `${row.tiebreak} ${st.tiebreak.unit}` : null;
+  // "1 red member", "2 red members"
+  return tied ? `${row.tiebreak} ${row.tiebreak === 1 ? st.tiebreak.unit.replace(/members$/, 'member') : st.tiebreak.unit}` : null;
 }
 
 /** "5 minions each", or "5 minions each · Bo 6" when someone's members change their count this round (Extra Hand). */

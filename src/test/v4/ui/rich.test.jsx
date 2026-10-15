@@ -11,9 +11,10 @@ describe('resource symbols in text (Cory, 2026-10-14)', () => {
     expect(pips(container)).toEqual(['silver', 'gold']);
     expect(container.textContent).toContain('Silver spaces');
   });
-  it('"2 any" and "in any colors" become the wild symbol; "any face-up member" keeps its word', () => {
+  it('"2 any" becomes the wild symbol; "in any colors" and "any face-up member" keep their word', () => {
     const { container } = render(<Rich text="Pay 2 any, take it in any colors, or recruit any face-up member." />);
-    expect(pips(container)).toEqual(['any resources', 'any resources']);
+    expect(pips(container)).toEqual(['any resources']);
+    expect(container.textContent).toContain('in any colors');
     expect(container.textContent).toContain('any face-up member');
   });
   it('costs render as number + symbol, each symbol says what it is', () => {

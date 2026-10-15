@@ -26,7 +26,7 @@ describe('previews reach the screen', () => {
     act(() => { vi.advanceTimersByTime(50); });
     const ticked = [...container.querySelectorAll('.lt-card')].filter(c => c.querySelector('.tick')).map(c => Number(c.dataset.uid));
     expect(ticked).toEqual(expect.arrayContaining(scene.uids));
-    expect(container.querySelector('.lt-card .tick').textContent).toMatch(/^✓ /);
+    expect(container.querySelector('.lt-card .tick').textContent).toMatch(/^after /); // words, no ✓ (design pod)
     hover.dispose();
   });
 

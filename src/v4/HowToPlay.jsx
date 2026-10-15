@@ -4,10 +4,26 @@ import { useDialog } from './game/parts.jsx';
 import { RULEBOOK } from './rulebook.js';
 import { GAME_NAME, VERSION } from './version.js';
 import { GLOSSARY } from './glossary.js';
+import { Follower } from './art/Follower.jsx';
+import { ResourceGlyph } from './game/Glyphs.jsx';
 
+// the rulebook names the two marks in words; here each is drawn right after its name, so the page shows what it asks
+// you to learn (RC1 sweep 2: "describes the symbols with zero pictures of them")
+const MARKS = [
+  [/little-person mark/, () => <Follower size={14} title="followers" />],
+  [/plain dot in its color/, () => <>{['gold', 'red', 'blue', 'green'].map(r => <ResourceGlyph key={r} r={r} size={14} />)}</>],
+  [/split into the table's four colors/, () => <ResourceGlyph r="any" size={14} />],
+];
+function marked(text, key) {
+  for (const [re, draw] of MARKS) {
+    const m = text.match(re);
+    if (m) return <Fragment key={key}>{marked(text.slice(0, m.index + m[0].length), `${key}a`)}<span className="rules-mark"> {draw()}</span>{marked(text.slice(m.index + m[0].length), `${key}b`)}</Fragment>;
+  }
+  return <Fragment key={key}>{text}</Fragment>;
+}
 function inline(text) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, k) =>
-    part.startsWith('**') && part.endsWith('**') ? <b key={k}>{part.slice(2, -2)}</b> : <Fragment key={k}>{part}</Fragment>);
+    part.startsWith('**') && part.endsWith('**') ? <b key={k}>{part.slice(2, -2)}</b> : marked(part, k));
 }
 
 /** Tiny Markdown subset: #, ##, paragraphs, "- " lists (nested by indent) and "1. " lists. */

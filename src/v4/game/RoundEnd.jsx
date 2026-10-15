@@ -7,6 +7,7 @@ import Tick from './Tick.jsx';
 import { useDialog } from './parts.jsx';
 import { Tip, ContestStandings, NamedText } from './Info.jsx';
 import { Who } from './Glyphs.jsx';
+import { Follower } from '../art/Follower.jsx';
 
 export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
   const { result, start, after, board } = info;
@@ -81,19 +82,20 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
                   })}
                 </small>
               </span>
-              <span className="re-chip num" aria-label={`plus ${r.v} followers`} title={`${r.rule}: the leader gains +${r.v} followers in round ${result.round}`}>+{r.v}</span>
+              <span className="re-chip num" aria-label={`plus ${r.v} followers`} title={`${r.rule}: the leader gains +${r.v} followers in round ${result.round}`}>+{r.v}<Follower size={11} title="followers" /></span>
             </li>
           ))}
         </ul>
         <div className="re-totals" role="table" aria-label="Followers after this round">
-          <div className="re-head" role="row"><span role="columnheader">Player</span><span role="columnheader">Contests</span><span role="columnheader" title="Followers gained this round: what new members are worth, followers bought, and effects (followers from members' abilities during play)">Other</span><span role="columnheader">Followers</span></div>
+          <div className="re-head" role="row"><span role="columnheader">Player</span><span role="columnheader" title="The rims' prizes this round (above)">Prizes</span><span role="columnheader" title="Followers gained this round otherwise: what new members are worth, followers bought, and followers from members' abilities during play">This round</span><span role="columnheader">Followers</span></div>
           {ranked.map(p => {
             const now = followers(at, at.players[p.id]);
             const was = start && start.players[p.id] ? followers(start, start.players[p.id]) : now;
             const c = contest(p.id);
             const g = start ? roundGains(start, at, p, c) : null;
             const other = now - was - c;
-            const why = g ? [g.members && `${g.members > 0 ? '+' : ''}${g.members} from members`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : ''}${g.effects} effects`].filter(Boolean).join(' · ') : '';
+            // RC1 sweep 84: "+2 from members" (they hold 4) meant the members recruited this round; "+1 effects" had no source
+            const why = g ? [g.members && `${g.members > 0 ? '+' : ''}${g.members} from new members`, g.bought && `+${g.bought} bought`, g.effects && `${g.effects > 0 ? '+' : ''}${g.effects} from abilities`].filter(Boolean).join(' · ') : '';
             return (
               <div key={p.id} className="re-p" role="row" style={{ '--pc': playerColor(p.id) }}>
                 <span className="nm" role="cell"><Who state={after} id={p.id} meId={meId} /></span>
