@@ -62,12 +62,14 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, la
             Resume game<small>{savedLine(saved)}</small>
           </button>
         )}
+        <button type="button" className={`btn big${saved ? '' : ' pri'}`} onClick={onLocal} data-home="local">{saved ? 'New game on this device' : 'Play on this device'}</button>
+        {/* under the way to play, never above it: a finished game's results pushed "Play" down 66px and a click on its
+            old spot reopened the results (w3a #39) */}
         {last && onLast && (
-          <button type="button" className="btn big last-results" onClick={onLast} data-home="last">
+          <button type="button" className="btn ghost last-results" onClick={onLast} data-home="last">
             Last game's results<small>{lastLine(last)}</small>
           </button>
         )}
-        <button type="button" className={`btn big${saved ? '' : ' pri'}`} onClick={onLocal} data-home="local">{saved ? 'New game on this device' : 'Play on this device'}</button>
         <div className="online-box">
           <label className="field"><span>Your name{!name.trim() && onlineReady ? <small className="name-need"> · needed to host or join</small> : null}</span><input value={name} onChange={e => saveName(clip(e.target.value, NAME_MAX))} placeholder="Name" />{graphemes(name) >= NAME_MAX - 3 && <small className="count num">{graphemes(name)}/{NAME_MAX}</small>}</label>
           <button type="button" className="btn big" disabled={!onlineReady || working} onClick={() => (name.trim() ? go(() => onHost(name.trim(), lastEmoji() || undefined)) : setErr('Enter a name.'))}>Host online game</button>

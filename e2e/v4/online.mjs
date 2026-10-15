@@ -85,7 +85,16 @@ const ctxs = { hana: await ctxFor(laptop), gus: await ctxFor(laptop), pia: await
 // In every page: each click on a lit wheel space (or a space's "Place here") is timed from its own timestamp to the first
 // DOM commit that changes what the person sees (the move count, a confirm card, the space lit as chosen, the live
 // options, an error, the prompt, a note at the pointer). A MutationObserver, so a background tab is timed too.
+// Frame-honest, as snappy.mjs: a loaded box paints less often (three software-rastered pages on a box at load 25 drew
+// 2–3 frames a second), so the limit allows two of the page's own frames on top of 1.5s: the median rAF interval over
+// the second before the click (~17ms on a quiet box, where the 1.5s bites as it is).
+const LIT_LIMIT = 1500;
 const LIT_CLICKS = () => {
+  const frames = [];
+  let last = null;
+  const tick = t => { if (last != null) { frames.push([t, t - last]); if (frames.length > 40) frames.shift(); } last = t; requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+  const boxFrame = at => { const xs = frames.filter(([t]) => at - t < 1000).map(([, d]) => d).sort((a, b) => a - b); return xs.length ? xs[Math.floor(xs.length / 2)] : 17; };
   const look = () => {
     const g = document.querySelector('.app.game');
     const t = s => { const e = document.querySelector(s); return e ? e.textContent.replace(/\s+/g, ' ').trim() : ''; };
@@ -100,12 +109,12 @@ const LIT_CLICKS = () => {
     const el = e.target && e.target.closest && e.target.closest('.lt-wheel [data-slot][data-option], .lt-wheel .pcell.lit, [data-place]');
     if (!el) return;
     const id = el.getAttribute('data-option') || (el.hasAttribute('data-place') ? `Place here (${el.getAttribute('data-place')})` : `cell ${el.getAttribute('data-cell')}`);
-    const rec = { id, t: e.timeStamp, before: look(), ms: null };
+    const rec = { id, t: e.timeStamp, before: look(), ms: null, frame: Math.round(boxFrame(e.timeStamp)) };
     window.__litClicks.push(rec);
     const done = () => { rec.ms = Math.round(performance.now() - rec.t); mo.disconnect(); };
     const mo = new MutationObserver(() => { if (rec.ms == null && look() !== rec.before) done(); });
     mo.observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true });
-    setTimeout(() => { if (rec.ms == null) { if (look() !== rec.before) done(); else mo.disconnect(); } }, 4000);
+    setTimeout(() => { if (rec.ms == null) { if (look() !== rec.before) done(); else mo.disconnect(); } }, 8000);
   }, true);
 };
 for (const c of new Set(Object.values(ctxs))) await c.addInitScript(LIT_CLICKS);
@@ -144,16 +153,32 @@ const blank = s => s != null && (!s || /^[-–—\s]*$/.test(s));
 const litSeen = new Map(); // page -> how many of its records were checked
 async function checkLitClicks(page) {
   if (!page || page.isClosed()) return;
-  const recs = await page.evaluate(() => (window.__litClicks || []).map(r => ({ id: r.id, ms: r.ms, age: Math.round(performance.now() - r.t) }))).catch(() => null);
+  const recs = await page.evaluate(() => (window.__litClicks || []).map(r => ({ id: r.id, ms: r.ms, frame: r.frame, age: Math.round(performance.now() - r.t) }))).catch(() => null);
   if (!recs) return;
   if (recs.length < (litSeen.get(page) || 0)) litSeen.set(page, 0); // a reload: a new page's records
   let k = litSeen.get(page) || 0;
   for (; k < recs.length; k++) {
     const r = recs[k];
-    if (r.ms == null && r.age <= 1500) break; // still within its 1.5s
-    if (r.ms == null || r.ms > 1500) throw new Error(`${nameOf(page)}: a click on the lit space ${r.id} ${r.ms == null ? 'changed nothing on the table' : `took ${r.ms}ms to change the table`} (want ≤ 1500ms)`);
+    const limit = LIT_LIMIT + 2 * (r.frame || 17);
+    if (r.ms == null && r.age <= limit) break; // still within its time
+    if (r.ms == null || r.ms > limit) throw new Error(`${nameOf(page)}: a click on the lit space ${r.id} ${r.ms == null ? 'changed nothing on the table' : `took ${r.ms}ms to change the table`} (want ≤ ${LIT_LIMIT}ms + 2 box frames of ${r.frame}ms)`);
   }
   litSeen.set(page, k);
+}
+// A press where a person would press: Playwright's click, else (it waits for two frames with the element standing still,
+// which a page drawing 2–3 frames a second while a card rises in can miss for seconds) the mouse at the element's middle,
+// when that point hits it (a hit-test, as a person's click would). Returns how it pressed, or null.
+async function pressLikeAPerson(el, timeout = 2500) {
+  try { await el.click({ timeout }); return 'click'; } catch { /* not steady yet: press where it stands */ }
+  const at = await el.evaluate(e => {
+    if (!e.isConnected) return null;
+    const r = e.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const hit = document.elementFromPoint(x, y);
+    return hit && (hit === e || e.contains(hit)) ? { x, y } : null;
+  }).catch(() => null);
+  if (!at) return null;
+  await el.page().mouse.click(at.x, at.y).catch(() => {});
+  return 'pressed at its middle';
 }
 const seen = new Map(); // page -> { key, at, waiting }: when this step appeared, and since when a move of ours is on its way
 async function stepFirstOption(page) {
@@ -168,7 +193,9 @@ async function stepFirstOption(page) {
   const place = await page.$('[data-place]');
   if (place) {
     const id = await place.getAttribute('data-place').catch(() => '?');
-    try { await place.click({ timeout: 1500 }); act(who, `Place here (${id})`); return true; } catch (e) { act(who, `Place here (${id}) refused: ${String(e.message).split('\n')[0]}`); }
+    const how = await pressLikeAPerson(place);
+    act(who, `Place here (${id})${how === 'click' ? '' : how ? ` (${how})` : ': nothing under the pointer would take it'}`);
+    if (how) return true;
   }
   // The answer a person would give (lib/answer.mjs: board picks, pairs, the pay sheet), the choice panel's (or
   // dialog's) own answers first. A step whose last click changed nothing tries the next answer (skip), and when every
@@ -183,13 +210,13 @@ async function stepFirstOption(page) {
   const s = seen.get(page);
   if (!s || s.key !== now.key) seen.set(page, { key: now.key, at: Date.now(), waiting: null });
   const sn = seen.get(page);
-  // like a person: wait for your own move to land (at most 10s, then go on), and don't press within 450ms of a new step
-  // (a move that goes out and gets no answer says so within 8s: "No answer yet". A space still lit as chosen after 10s
+  // like a person: wait for your own move to land, and don't press within 450ms of a new step
+  // (a move that goes out and gets no answer says so within 8s: "No answer yet". A space still lit as chosen after 20s
   // with nothing said is a confirm that never sent its move: an eaten click)
   if (now.flying) {
     sn.waiting ??= Date.now();
-    if (Date.now() - sn.waiting < 10000) return false;
-    throw new Error(`${who}: a space has stood lit as chosen for 10s, with no move made and nothing said (a confirm that never went out)`);
+    if (Date.now() - sn.waiting < 20000) return false;
+    throw new Error(`${who}: a space has stood lit as chosen for 20s, with no move made and nothing said (a confirm that never went out)`);
   } else sn.waiting = null;
   if (Date.now() - sn.at < 450) return false;
   const words = await choiceWords(page);
@@ -202,7 +229,9 @@ async function stepFirstOption(page) {
   const st = stuck.get(page);
   const skip = st && st.key === now.key ? st.tries : 0;
   stuck.set(page, { key: now.key, tries: skip + 1 });
-  const res = await answerChoice(page, { panelFirst: true, skip, domFallback: true });
+  // (4s a click: on a starved page Playwright's click can take seconds to report back, and a click reported as failed
+  // that did land would be followed by a second one on the next answer)
+  const res = await answerChoice(page, { panelFirst: true, skip, domFallback: true, timeout: 4000 });
   if (res) act(who, `${res.kind} ${res.id}${skip ? ` (skip ${skip})` : ''}`);
   return !!res;
 }

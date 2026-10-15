@@ -1,9 +1,9 @@
-# Morning note for Cory, 2026-10-15 (draft; final at ~08:45 UTC)
+# Morning note for Cory, 2026-10-15 (draft; final at ~13:50 UTC)
 
 **Link:** https://deploy-preview-1--cornycolonies.netlify.app (the PR's preview, rebuilt from the last push)
 
 ## What changed overnight, in your words
-- **"Way snappier."** A click shows your minion in about 0.2s. The wheel spins in 0.3s. Hovers no longer redraw the shop, and a rival's move no longer redraws the whole table. Saving happens off the click. (Quiet-machine before/after numbers: TBD from the 79dee80 run.)
+- **"Way snappier."** A click shows your minion in about 0.2s. The wheel spins in 0.3s. Hovers no longer redraw the shop, and a rival's move no longer redraws the whole table. Saving happens off the click. On a slow laptop the page used to restyle itself whole on every move; now it restyles only what changed, so the wait for your turn fell from about 22s to 10s and hovers from 1.5s to under 0.4s there (final quiet-machine numbers: TBD).
 - **"A little show across the board."** Every move plays as a chain from cause to effect: your minion leaves its column, the space pulses, pieces fly from where they came from to where they land (steals go straight, gains arc, payments drop, four or more fly as one bundle), members hop when they fire, and numbers tick as pieces arrive. The speed setting in ☰ offers Quick, **Steady** (the default) and Relaxed. A click skips ahead. A rival's turn takes about 1.9s, and the wait between your turns about 6.4s (it was 12.5s).
 - **"Simplify visual language everywhere."** The only symbols are the colored dot (with a split dot for "any") and the follower mark; everything else is words. Action spaces have no names or pictures: the gain first, then a plain phrase, with the name in the hover. Rims read "MOST BLUE · +2 👤".
 - **"Hovers in a strange spot."** Every hover opens next to what you point at. Your own members are always readable.
@@ -12,7 +12,9 @@
 - **"Players positioned in turn order" / "minions in a column."** The seats sit in snake order with a rail ("now", "next", "twice"), and re-sort at round start. Unplaced minions bob in a column on each seat.
 - **"What my members do / how to activate."** Hover a seat to see each member's full ability and state (ready, used, on/off, round start, game end). A member you can use now glows, and its card has "Use: +7 ●".
 - **"Hard to tell what other players are doing."** The "since your last turn" strip is built from the engine's own record of every effect, so anything that hit you leads its line ("Raider took 2 of your followers"). Hover a name to light that space on the wheel. Each seat shows "each round +3●".
-- **Round end** plays one quadrant at a time; totals climb as each prize lands, then minions walk home.
+- **Round end** plays one quadrant at a time; totals climb as each prize lands, then minions walk home. The scoring banner stays still at the wheel's centre.
+- **"Starting pick not highlighted."** The starting pick now sits in the middle of the wheel, the one lit row on screen.
+- **Quality of life.** One Speed setting (Quick / Steady / Relaxed) in setup and the menu. A card's face shows the price you'd actually pay when a discount applies. Colors read on every table (white, silver and "any" no longer look alike or empty). In rivals' turns the shop dims, so only what you can act on is bright. The "since your last turn" strip only ever shows whole lines. Space texts were rewritten wherever a newcomer misread them.
 
 ## How the harness changed (so you don't need your keen eye)
 - **Testers judge by sight alone.** They see only screenshots and pointer positions. The old panel caught 8% of what you caught; two of the new testers, with their findings merged, catch 82%. Your notes are their answer key.
@@ -38,5 +40,5 @@ A blind hobby gamer played two full games on a quiet machine and graded it B− 
 - Rival seats show their emoji face; the Steady timings were trimmed below the motion designer's table; the shortest gap between two players' moves is 400ms.
 
 ## Still open
-- The bench's second bot (Hard-20) got weaker after the "use members any time" change, so last night's balance readings are provisional. The bench session is fixing the bot and rerunning.
+- The Hard bot had weakened after Blue's change (a planning bug, now fixed: back to 43% against three Normal bots). The bench's pooled balance run on the fixed bots is still going; no prices changed overnight.
 - Phone stays out of scope. An online "Place here" pause on a slow machine is logged for a quiet-box check.

@@ -161,7 +161,7 @@ try {
   const pieces0 = await flown();
   await pointAt('[data-cult="0"] .cs-member[data-member="gold.jackpot"] .fig');
   await page.waitForTimeout(300);
-  const btn = await page.$('[data-tip-body] [data-use]');
+  const btn = await page.waitForSelector('[data-tip-body] [data-use]', { timeout: 1500 }).catch(() => null);
   if (!btn) fail('the lit member\'s hover has no Use button', 'm3');
   else {
     const label = (await btn.textContent()).trim();

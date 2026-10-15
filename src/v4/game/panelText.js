@@ -15,9 +15,11 @@ import { pipEffect } from '../shorts.js';
 // doesn't fit drops whole). The run itself is the hover's rule sentence. Round III has nothing left to grow into.
 const grows = r => (r < 3 ? 'more each round' : null);
 // Line 2 stays within about 16 letters a line: at 1270×700 a narrow panel holds two short lines of it (Cory: "cut words
-// or step the size down. Never clip and never abbreviate into code"). A condition that decides the gain never sits only
-// in line 3 (it's dropped when the ring has no room), and on the center ring, where line 2 can drop too, it sits in
-// line 1 (w2b #2/#24: "Gain each color" gave nothing without its "per full set"; "Take a member" hid that it's a rival's).
+// or step the size down. Never clip and never abbreviate into code"); a line 2 that doesn't fit drops whole. A condition
+// that decides the gain never sits only in line 3 (at 1270×700 line 3 shows on few rings: measured on five tables, w3),
+// and where line 2 can drop too (the center ring always, a ring II verb at some turns of the wheel) the space is whole
+// in line 1 (w2b #2/#24: "Gain each color" gave nothing without its "per full set"; "Take a member" hid that it's a
+// rival's; w3: "Pay all your purple" without its "for 2 extra turns").
 const P = {
   gold: {
     // "+1 to anyone" (w3): the gift goes to a rival only, never to you
