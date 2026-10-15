@@ -42,7 +42,7 @@ const RING_S = { 1: { r0: 128, r1: 180, r: 151, n: 3, span: 66 }, 2: { r0: 82, r
 const RING_E = { 1: { r0: 126, r1: 180, r: 153, n: 3, span: 60 }, 2: { r0: 78, r1: 126, r: 102, n: 2, span: 45 }, 3: { r0: 22, r1: 78, r: 51, n: 1, span: 0 } };
 // panels: the cells tile each quadrant like engraved's, on a dark board with gutters between them; r is where each
 // panel's print is centred (ring III's a little out from the middle of its wedge, where the wedge is wide)
-const RING_P = { 1: { r0: 130, r1: 179, r: 154.5, n: 3, span: 60 }, 2: { r0: 79, r1: 127, r: 103, n: 2, span: 45 }, 3: { r0: 25, r1: 75, r: 53, n: 1, span: 0 } };
+const RING_P = { 1: { r0: 131, r1: 179, r: 155, n: 3, span: 60 }, 2: { r0: 78, r1: 128, r: 103, n: 2, span: 45 }, 3: { r0: 23, r1: 75, r: 54, n: 1, span: 0 } };
 const ringsOf = look => (look === 'engraved' ? RING_E : look === 'panels' ? RING_P : RING_S);
 const RIM = { r0: 180, r1: 200, r: 190 }; // the rim band: each quadrant's rule, engraved
 // the rim's hover/tap target: from just outside ring I's sockets to well past the paper's edge (it wins over any space)
@@ -184,13 +184,13 @@ function panelPath(a0, a1, r0, r1, gut = PANEL_GUT, rc = PANEL_RC) {
 }
 /** The widest upright box of height h centred at (cx, cy) that stays `pad` clear of a panel's edges (radii r0..r1,
  *  angles a0..a1 in degrees, 0 = top, clockwise, as it sits on screen). Board units; the half-width comes back. */
-export function fitHalfWidth(cx, cy, h, r0, r1, a0, a1, pad) {
+export function fitHalfWidth(cx, cy, h, r0, r1, a0, a1, pad, side = pad) {
   const t0 = ((a0 - 90) * Math.PI) / 180, t1 = ((a1 - 90) * Math.PI) / 180;
   const u0 = [Math.cos(t0), Math.sin(t0)], u1 = [Math.cos(t1), Math.sin(t1)];
   const ok = (x, y) => {
     const dx = x - CX, dy = y - CY, r = Math.hypot(dx, dy);
     if (r < r0 + pad || r > r1 - pad) return false;
-    return u0[0] * dy - u0[1] * dx >= pad && u1[0] * dy - u1[1] * dx <= -pad;
+    return u0[0] * dy - u0[1] * dx >= side && u1[0] * dy - u1[1] * dx <= -side;
   };
   const fits = w => {
     for (let k = 0; k <= 6; k++) {
@@ -249,19 +249,27 @@ function saidEm(text, weight = 700) {
   return w;
 }
 // the type and the picture on a panel, in screen pixels (the number at least 16, the small print at least 12)
-const PANEL_PX = { pic: 20, big: 20, bigMin: 16, fine: 12, fineLine: 13, gap: 2 };
+const PANEL_PX = { pic: 18, big: 18, bigMin: 16, fine: 12, fineLine: 13, gap: 1 };
 /**
  * How a panel's print lays out in the room it has: the big line on one line or a clause a line, the small print on
  * one or two lines or not at all (it's always in the hover). Returns { bigLines, fineLines, big (px), w (board
  * units: the box's width) }. `k` is screen pixels per board unit.
  */
 function panelLayout({ s, R, rot, k, big, fine }) {
-  const [x0, y0] = polar(s.ang, R.r);
-  const r = (rot * Math.PI) / 180;
-  const cx = CX + (x0 - CX) * Math.cos(r) - (y0 - CY) * Math.sin(r), cy = CY + (x0 - CX) * Math.sin(r) + (y0 - CY) * Math.cos(r);
   const a0 = s.ang - s.half + rot, a1 = s.ang + s.half + rot;
-  const pad = PANEL_GUT / 2 + 2.5;
-  const room = hPx => 2 * fitHalfWidth(cx, cy, hPx / k, R.r0, R.r1, a0, a1, pad);
+  // the print may sit a little in from the middle of its band, where an upright box has more room
+  const at = rc => polar(s.ang + rot, rc);
+  const centres = R.n === 1 ? [R.r - 6, R.r - 3, R.r, R.r + 3, R.r + 6] : [R.r - 4, R.r - 2, R.r, R.r + 2];
+  let rc = R.r;
+  const room = hPx => {
+    let best = 0;
+    for (const c of centres) {
+      const [cx, cy] = at(c);
+      const w = 2 * fitHalfWidth(cx, cy, hPx / k, R.r0, R.r1, a0, a1, 1.2, PANEL_GUT / 2 + 1.2);
+      if (w > best + 0.01) { best = w; rc = c; }
+    }
+    return best;
+  };
   const clauseList = clauses(big);
   const bigEm = saidEm(big, 500), clauseEm = Math.max(...clauseList.map(c => saidEm(c, 500)));
   const fineEm = fine ? saidEm(fine, 700) : 0;
@@ -279,11 +287,12 @@ function panelLayout({ s, R, rot, k, big, fine }) {
     const h = pic + gap + t.bl * t.bp + (t.fl ? gap + t.fl * fineLine : 0);
     const needBig = (t.bl === 1 ? bigEm : clauseEm) * t.bp;
     const needFine = t.fl === 0 ? 0 : t.fl === 1 ? fineEm * PANEL_PX.fine : Math.max(longestWord, fineEm * 0.62) * PANEL_PX.fine;
-    const w = room(h + 4) * k;
-    if (w >= Math.max(needBig, needFine, pic) + 2) return { bigLines: t.bl, fineLines: t.fl, big: t.bp, w: w / k };
+    const w = room(h) * k;
+    if (w >= Math.max(needBig, needFine, pic) + 2) return { bigLines: t.bl, fineLines: t.fl, big: t.bp, w: w / k, rc };
   }
   const bl = clauseList.length > 1 ? 2 : 1;
-  return { bigLines: bl, fineLines: 0, big: PANEL_PX.bigMin, w: Math.max(room(pic + gap + bl * PANEL_PX.bigMin), 24 / k) };
+  const w = room(pic + gap + bl * PANEL_PX.bigMin);
+  return { bigLines: bl, fineLines: 0, big: PANEL_PX.bigMin, w: Math.max(w, 24 / k), rc: w ? rc : R.r };
 }
 
 // Is the person driving with the keyboard? Focus moved to a space on its own (your turn begins) opens its card only
