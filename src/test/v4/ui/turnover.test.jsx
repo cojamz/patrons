@@ -1,5 +1,6 @@
 // Your turn ending says so (w3b #58: after the second Pass the next frame was already a bot's line): when the table
 // moves from a step of yours to someone else's, the header says "Your turn is over" for a beat, then the next line.
+import { SPEEDS } from '../../../v4/motion.js';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, act, cleanup } from '@testing-library/react';
 import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.js';
@@ -43,7 +44,7 @@ describe('the header when your turn ends', () => {
     act(() => { session.publish(next); });
     for (let w = 0; w < 100 && container.querySelector('.lt').getAttribute('data-moves') !== String(next.moves); w++) await wait(10);
     expect(container.querySelector('[data-prompt]').textContent).toBe('Your turn is over');
-    await wait(1000);
+    await wait(Math.round(800 * SPEEDS.steady) + 100);
     expect(container.querySelector('[data-prompt]').textContent).toMatch(new RegExp(`^${next.players[next.pending.player].name} `));
     // the next step lands before the beat runs out: it shows at once
     state = next;

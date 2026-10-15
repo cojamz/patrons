@@ -8,7 +8,10 @@
 // Every number is the engine's: the contests as scored (state.contests via scoredStandings), or the contest table on
 // the scoring snapshot for an old save.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { scoredStandings, standings, playerColor } from '../format.js';
+import { scoredStandings, standings, playerColor, seatEmoji } from '../format.js';
+import { Minion } from '../art/Leader.jsx';
+import { stageClear } from './stage.js';
+import { seatOrder } from './seats.js';
 import { playerAnchor, motionOK, flyToken, expectArrival, pulse, track } from './flight.js';
 import { MO, flightMs, slowed } from '../motion.js';
 import { chainRunning, onChainEnd } from './director.js';
@@ -58,6 +61,8 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
     const net = setTimeout(lead, 6000); // (a safety net: a chain that never reports its end)
     return () => { clearTimeout(t); clearTimeout(net); off(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // the action stage's last card leaves the hub to the scoring card
+  useLayoutEffect(() => { stageClear(); }, []);
   const [spots, setSpots] = useState({}); // pid -> { left, top } of that player's chair, for the count chips
   const done = useRef(false);
   const finish = () => { if (!done.current) { done.current = true; onLamp && onLamp(null); onDone(); } };
@@ -119,6 +124,9 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
     // the verdict: the leader's count and its emoji on the rim hop
     timers.push(setTimeout(() => {
       setBeat(1);
+      // the winner cheers (Cory, 2026-10-15: "have the winning one cheer/jiggle and get the followers added to them"):
+      // their column on the card jiggles (CSS), and in their chair the leader celebrates and the members hop
+      for (const id of row.winners) cheer(root, id);
       for (const id of row.winners) {
         const e = root && root.querySelector(`[data-rim-leader="${id}"]`);
         if (e && e.animate) track(e.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-5px)', offset: 0.4 }, { transform: 'translateY(0)' }], { duration: MO.hop, easing: 'cubic-bezier(.3,1.4,.5,1)', composite: 'add' }));
@@ -141,12 +149,15 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
       };
       row.winners.forEach((id, k) => {
         const home = root && (root.querySelector(`.lt-cult-seat[data-seat="${id}"] .cs-total`) || playerAnchor(root, id));
-        if (!plaque || !home) { land(); return; }
-        const a = plaque.getBoundingClientRect(), b = home.getBoundingClientRect();
+        // the followers leave the winner's column on the card (their score), else the rim's engraving
+        const col = document.querySelector(`.lt-reckon [data-reckon-col="${id}"] .rc-n`);
+        const src = col && col.getBoundingClientRect().width ? col : plaque;
+        if (!src || !home) { land(); return; }
+        const a = src.getBoundingClientRect(), b = home.getBoundingClientRect();
         const d = flightMs(Math.hypot(b.left - a.left, b.top - a.top));
         longest = Math.max(longest, d);
         const go = () => {
-          const anim = flyToken(plaque, home, `<b class="reckon-token" style="--pc:${playerColor(id)}">+${row.prize}</b>`, { tag: 'reckon', duration: d });
+          const anim = flyToken(src, home, `<b class="reckon-token" style="--pc:${playerColor(id)}">+${row.prize}</b>`, { tag: 'reckon', duration: d });
           if (anim && anim.finished) anim.finished.then(land, land); else land();
         };
         if (k) timers.push(setTimeout(go, k * MO.fan)); else go();
@@ -163,12 +174,19 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const row = rows[Math.min(step, rows.length - 1)];
+  const order = seatOrder(info.board || info.after);
   const name = id => (id === meId ? 'You' : info.after.players[id].name);
   const fol = n => `${n} follower${n === 1 ? '' : 's'}`;
   // the verdict, once the counts are up: who wins what
+  // a sole winner whose count someone else matched won on the tie-break; say so, or the verdict reads wrong (tester)
+  const broke = r => {
+    const w = r.rows.find(x => x.id === r.winners[0]);
+    const level = w && r.rows.some(x => x.id !== w.id && x.shown === w.shown);
+    return level && r.tiebreak && r.tiebreak.unit ? ` (more ${r.tiebreak.unit})` : '';
+  };
   const verdict = !row ? '' : !row.winners.length ? 'no one scores'
     : row.winners.length > 1 ? `${row.winners.map(name).join(' and ')} tie: +${fol(row.prize)} each`
-    : `${name(row.winners[0])} ${row.winners[0] === meId ? 'win' : 'wins'} +${fol(row.prize)}`;
+    : `${name(row.winners[0])} ${row.winners[0] === meId ? 'win' : 'wins'} +${fol(row.prize)}${broke(row)}`;
   const shownBeat = step < rows.length ? beat : 2;
   return (
     <div className="lt-reckon" role="dialog" aria-modal="true" aria-label={`Round ${info.result.round} reckoning`} data-reckon={row ? row.qid : ''} onClick={finish}>
@@ -180,6 +198,23 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
           <small>Round {info.result.round} scoring · {Math.min(step + 1, rows.length)} of {rows.length}</small>
           {row && <b className="reckon-rule">{row.rule}</b>}
           {row && row.counts && <span className="reckon-counts">Counts {row.counts}{row.tiebreak && row.tiebreak.text ? `; ${row.tiebreak.text}` : ''}.</span>}
+          {/* the four scores side by side (Cory, 2026-10-15: "show the 4 players' scores for the various competitions"):
+              each player's count stamps in and ticks up under their minion; the winner's column jiggles */}
+          {row && mid && step < rows.length && (
+            <span className="reckon-board" style={{ '--n': row.rows.length }}>
+              {/* (in the chairs' order, the same every rim, so each player's column stays put while the rims change) */}
+              {[...row.rows].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)).map(r => {
+                const k = row.rows.indexOf(r);
+                const won = shownBeat > 0 && row.winners.includes(r.id), lost = shownBeat > 0 && row.winners.length > 0 && !won;
+                return (
+                  <span key={`${row.qid}-${r.id}`} className={`rc${k < seen ? ' in' : ''}${won ? ' won' : ''}${lost ? ' lost' : ''}`} data-reckon-col={r.id} style={{ '--pc': playerColor(r.id) }}>
+                    <span className="rc-who"><Minion emoji={seatEmoji(info.after, r.id)} color={playerColor(r.id)} size={22} /><span>{name(r.id)}</span></span>
+                    <b className="rc-n">{k < seen ? <Tick value={r.shown} from={0} className="num" float={false} dur={reduced ? 0 : MO.reckonTick} /> : <span className="num">0</span>}</b>
+                  </span>
+                );
+              })}
+            </span>
+          )}
           <b data-reckon-head className={`reckon-verdict${shownBeat ? ' on' : ''}${row && !row.winners.length ? ' none' : ''}`}>{shownBeat ? verdict : '\u00a0'}</b>
           </>
         )}
@@ -187,7 +222,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
         {/* skip on the card the player is reading (the skeptic, w4 #16: the Skip pill sat far away, bottom right) */}
         <button type="button" className="btn ghost reckon-skip in-card" data-reckon-skip onClick={e => { e.stopPropagation(); finish(); }}>Skip</button>
       </div>
-      {row && step < rows.length && row.rows.map((r, k) => {
+      {row && !mid && step < rows.length && row.rows.map((r, k) => {
         const at = spots[r.id];
         // a chair that counts nothing gets no chip: a lone "0" in the gutter read as a stray bubble (blind panel)
         if (!at || k >= seen || (!r.shown && !row.winners.includes(r.id))) return null;
@@ -201,4 +236,15 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
 
     </div>
   );
+}
+
+/** A winner cheers in their chair: the leader celebrates, the members hop (CultSeat's reaction classes). */
+function cheer(root, id) {
+  const seat = root && root.querySelector(`.lt-cult-seat[data-seat="${id}"]`);
+  if (!seat) return;
+  const parts = [[seat.querySelector('.cs-leader'), 'react-celebrate'], ...[...seat.querySelectorAll('.cs-member')].slice(0, 6).map(m => [m, 'react-hop'])];
+  parts.forEach(([el, cls], k) => {
+    if (!el) return;
+    setTimeout(() => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), 900); }, k * 70);
+  });
 }

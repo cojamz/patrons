@@ -28,7 +28,8 @@
     return { ...NEUTRALS, 1: mix(base, TABLE, 0.48), 2: base, 3: mix(base, '#fff8ec', 0.5) };
   }
 
-  const KEYS = new Set(['.', 'k', 'd', 'm', 'l', '1', '2', '3']);
+  // s skin, h hair or hat, a accent cloth: a member's own colours (src/v4/art/index.js personPalette)
+  const KEYS = new Set(['.', 'k', 'd', 'm', 'l', '1', '2', '3', 's', 'h', 'a']);
 
   // Returns a list of problems (empty when the icon is well-formed).
   function validate(icon) {
