@@ -293,13 +293,14 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   if (!root || before === state) return { atoms: [], total: 0 };
   if (chain.timers.size) skipChain(); // a new move lands whatever was still playing
   const ctx = { state, before, snap, lifted: new Map() };
-  const measure = (a, b) => { const A = placeEl(root, a, ctx), B = placeEl(root, b, ctx); if (!A || !B) return TYPICAL; const [x1, y1] = center(A), [x2, y2] = center(B); return Math.hypot(x2 - x1, y2 - y1); };
+  // read everything first, write after (a read after a write forces a layout: done per piece, it cost whole frames)
+  const found = new Map(), rects = new Map();
+  const where = w => { if (!w) return null; const k = JSON.stringify(w); if (!found.has(k)) found.set(k, placeEl(root, w, ctx)); return found.get(k); };
+  const rectOf = e => { if (!rects.has(e)) rects.set(e, e.getBoundingClientRect()); return rects.get(e); };
+  const measure = (a, b) => { const A = where(a), B = where(b); if (!A || !B) return TYPICAL; const ra = rectOf(A), rb = rectOf(B); return Math.hypot(rb.left + rb.width / 2 - ra.left - ra.width / 2, rb.top + rb.height / 2 - ra.top - ra.height / 2); };
   const plan = planChain(before, state, { mine, measure });
   if (!plan.atoms.length || !motionOK()) return plan;
   const t0 = performance.now();
-  chain.root = root;
-  chain.until = t0 + plan.total;
-  root.dataset.chain = '1';
   const seq = ++chain.seq;
   // every stack the chain touches shows what it held before, and counts each piece out and in
   const pending = new Map();
@@ -311,7 +312,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   // counts: the Tick waits for the first follower to land, and counts while the rest do
   const firstLand = new Map();
   for (const a of plan.atoms) if (a.op === 'land' && a.fol && a.to.kind === 'count' && !a.pay) {
-    const el = placeEl(root, a.to, ctx);
+    const el = where(a.to);
     if (!el) continue;
     const f = firstLand.get(el) || { at: a.at, last: a.at };
     f.at = Math.min(f.at, a.at); f.last = Math.max(f.last, a.at);
@@ -320,10 +321,16 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   for (const [el, f] of firstLand) { expectArrival(el, t0 + f.at, Math.max(0, f.last - f.at)); chain.counts.add(el); }
   // pieces in flight per stack: every stack the chain touches holds what it showed before from the start, and lets
   // go of its held number when its last piece has left or landed
+  const toHold = [];
   for (const a of plan.atoms) {
     if (a.op !== 'piece' || a.fol) continue;
-    for (const w of [a.from, a.to]) if (w.kind === 'stack') { const el = placeEl(root, w, ctx); if (el) { holdOf(el, w.pid, w.r); pending.set(el, (pending.get(el) || 0) + 1); } }
+    for (const w of [a.from, a.to]) if (w.kind === 'stack') { const el = where(w); if (el) { toHold.push([el, w]); pending.set(el, (pending.get(el) || 0) + 1); } }
   }
+  // the writes: the chain is on, and every stack it touches holds its number
+  chain.root = root;
+  chain.until = t0 + plan.total;
+  root.dataset.chain = '1';
+  for (const [el, w] of toHold) holdOf(el, w.pid, w.r);
   const release = el => { const n = (pending.get(el) || 1) - 1; pending.set(el, n); if (n <= 0) { const x = chain.holds.get(el); if (x && x.h) x.h.done(); chain.holds.delete(el); } };
   for (const a of plan.atoms) {
     later(a.at, skip => {
@@ -402,7 +409,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           return;
         }
         case 'piece': {
-          const A = placeEl(root, a.from, ctx), B = placeEl(root, a.to, ctx);
+          const A = where(a.from), B = where(a.to);
           // a piece leaving a stack: its number drops as it goes
           if (a.from.kind === 'stack' && A) { const h = holdOf(A, a.from.pid, a.from.r); if (h) h.step(-(a.bundle ? a.n : 1)); if (!skip) bump(A, true); }
           if (a.to.kind === 'stack' && B) holdOf(B, a.to.pid, a.to.r);
@@ -419,7 +426,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           return;
         }
         case 'land': {
-          const B = placeEl(root, a.to, ctx);
+          const B = where(a.to);
           if (!B) return;
           if (a.to.kind === 'stack' && !a.pay) {
             const h = holdOf(B, a.to.pid, a.to.r);

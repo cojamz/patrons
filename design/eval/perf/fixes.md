@@ -12,7 +12,27 @@ The box ran at load 10–30 while this was done, so every number here is a deter
 | 5 | One arrow-key wheel spin | the motion pass already paints it to the DOM | confirmed: **37 painted angles, Wheel 1 render, GameScreen 1** (on landing) |
 | 6 | "You'd get" for a hovered space | queued behind the whole warmup batch in the worker | jumps the queue. The worker now runs one space per task and puts a hovered space (`front`) first. |
 
-## What changed
+### Round 2 (the two items left)
+| # | Interaction | Before | After |
+|---|---|---|---|
+| 7 | Saving a local game | one full-state `JSON.stringify` + `localStorage.setItem` on every session emit, inside the click | **0 writes in the click**. Only the latest state is written, once, in idle time (`requestIdleCallback`, at most 400ms; a timer where there's none). |
+| 8 | GameScreen renders per rival step (six steps) | 2, 2, 2, 2, 2, 2 | **1, 1, 1, 1, 1, 1** |
+| 8 | Components per rival step | 295, 198, 273, 341, 216, 297 | 196, 180, 255, 210, 206, 271 |
+| 8 | Components after a click on a space (the table catching up) | 404 (GameScreen 2) | 214 (GameScreen 1) |
+
+7. **saved.js `saveLocalSoon`, `flushLocalSave`, `dropLocalSave`; App.jsx**: the save is moved off the input path, and every guarantee still holds:
+   - `pagehide`, or the tab going hidden, writes the waiting save synchronously.
+   - `loadLocal` and `setAsideLocal` write it first, so a read always sees the latest move.
+   - The game screen going away (its effect cleanup) writes it.
+   - `clearLocal` and `finishLocal` drop it, so a finished game never comes back as a resume.
+   - `claimLocal` drops a save left from before another tab took the game. The write itself still goes through `saveLocal`, so a tab that has lost the lease by then never writes.
+   - `saveLocal` itself is unchanged, and synchronous.
+8. **GameScreen.jsx**: the rivals-since strip, the live turn card, the card of the turn that just passed, and the new minion's flash are now worked out during render.
+   - Before, layout effects set them as state, which cost a second render every step. `feed()` is idempotent for a state it has seen.
+   - The passed turn's hold-and-fold is still timed: two timers, 2.6s and 3.1s.
+   - `gifts` and `robbed` had no reader left on screen. They are refs now, so setting them never renders.
+
+## What changed (round 1)
 1. **GameScreen.jsx `useTable.show`**: the table's `setTable` runs inside `startTransition`, and so do `busy` and the undo tick. The click's own frame paints first. The engine call and the undo checkpoint are unchanged: `session.submit` still applies the move at once. A `busyNow` ref keeps a second click from sending a stale move while the transition renders.
 2. **GameScreen.jsx**:
    - `setTick` on every session emit became `setUndoSeen`, which updates only when undo's kind or seat changes.
@@ -32,6 +52,4 @@ The cards did open. In every miss, the target's own card was up, on screen, at o
 ## Left
 - **A transition restarts when a higher-priority update arrives**: a hover change, or a Tick counting.
   - A click followed by fast pointer movement could delay the minion. If the quiet-box s3 regresses, switch `show`'s hand-off to `requestAnimationFrame` (an unsliced render after the paint), and flush rAF in the UI tests.
-- **App.jsx saves the whole state to localStorage on every session emit, inside the click.** Defer it to idle, with a flush on `pagehide`.
-- **GameScreen still renders twice per rival step.** The second render comes from `setSince` (a new array every time) and the turn card.
 - **The reckoning and bot pacing (baseline items 6, 7) and the always-on CSS loops (item 9) are untouched.**

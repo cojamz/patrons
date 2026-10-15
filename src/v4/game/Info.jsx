@@ -214,12 +214,16 @@ function memberNames(state) {
  * One quadrant's contest, from the engine (st: a standing from format.standings / scoredStandings).
  * Says what it counts, its tiebreak, the prize, and every player's count, leaders marked.
  */
-export function ContestStandings({ state, st, meId = null, scored = false }) {
+export function ContestStandings({ state, st, meId = null, scored = false, brief = false }) {
   const nm = id => (id === meId ? 'You' : state.players[id].name);
+  // brief (under the rim card's own prize line): no second heading, and "Counts …" only when it adds something the
+  // prize line doesn't already say ("full sets: …", "a card that counts as 2 members counts 2")
+  const plainCount = !st.counts || /^the \w+ you hold when the round ends$/.test(st.counts);
+  const ties = st.tiebreak ? `${cap1(st.tiebreak.text)}.` : 'Tied leaders all score.';
   return (
     <div className="pop-card contest-card" style={{ '--c': `var(--${st.qid})` }} data-contest={st.qid}>
-      <div className="row"><b>{st.rule}</b><span className="num">+{st.prize}{scored ? '' : ' at round end'}</span></div>
-      <small>Counts {st.counts || st.rule.toLowerCase()}.{st.tiebreak ? ` ${cap1(st.tiebreak.text)}.` : ' Tied leaders all score.'}</small>
+      {!brief && <div className="row"><b>{st.rule}</b><span className="num">+{st.prize}{scored ? '' : ' at round end'}</span></div>}
+      <small>{brief && plainCount ? ties : `Counts ${st.counts || st.rule.toLowerCase()}. ${ties}`}</small>
       <ol className="contest-rows">
         {st.rows.map(r => {
           const tb = tiebreakNote(st, r);
@@ -418,6 +422,13 @@ export function previewWords(pv, state) {
   const others = [...state.resources.map(r => span(pv.others.res[r], r, r)), span(pv.others.followers, 'follower'), span(pv.others.members, 'member')].filter(Boolean);
   return { you: you.join(', ') || 'nothing right now', others: others.length ? `rivals ${others.join(', ')}` : null, choose: pv.asks.length > 0, theyChoose: pv.theirAsks.length > 0, partial: pv.partial };
 }
+/** Only what you'd surely get (the parts no pick changes), or '' when every part hangs on the pick. */
+function sureWords(pv, state) {
+  const fixed = (r, unit, plural = unit + 's') => (r[0] === r[1] ? span(r, unit, plural) : null);
+  return [...state.resources.map(r => fixed(pv.you.res[r], r, r)), fixed(pv.you.followers, 'follower'), fixed(pv.you.members, 'member'), fixed(pv.you.turns, 'extra turn'),
+    pv.you.discount && pv.you.discount[0] && pv.you.discount[0] === pv.you.discount[1] ? `next member −${pv.you.discount[0]}` : null]
+    .filter(Boolean).join(', ');
+}
 /** "You'd get: +3 ●, +1 member · you choose" for player pid on space (q, i), computed just after it shows. */
 export function YoudGet({ state, pid, q, i }) {
   const pv = usePreview(state, pid, q, i);
@@ -425,9 +436,14 @@ export function YoudGet({ state, pid, q, i }) {
   if (pv === undefined) return <span className="youd-get pending" data-youd-get="">You’d get: …</span>;
   if (!pv) return null;
   const w = previewWords(pv, state);
+  // a pick that changes what you get: only the sure part is printed, then "the rest is your pick" (RC1 sweep 17/62/89:
+  // "0 to +2 ■, −2 to 0 ◆, 0 to +1 member…" read as algebra); a pick that doesn't (Kickback's who) needs no note: the
+  // rule above says it
+  const open = w.choose && !pv.exact;
+  const sure = open ? sureWords(pv, state) : w.you;
   return (
     <span className="youd-get" data-youd-get={w.you} title="Worked out by playing this space on a copy of the table, right now">
-      <b>You’d get:</b> {w.partial ? 'about ' : ''}<Rich text={w.you} />{w.choose ? <em className="yd-note">{pv.exact ? 'you choose how' : 'depends on your choice'}</em> : null}
+      <b>You’d get:</b> {w.partial ? 'about ' : ''}{open && !sure ? null : <Rich text={sure} />}{open ? <em className="yd-note">{sure ? 'the rest is your pick' : 'it depends on your pick'}</em> : null}
       {w.theyChoose ? <em className="yd-note">a rival decides part of it</em> : null}
       {w.others ? <small className="youd-others"><Rich text={w.others} /></small> : null}
     </span>

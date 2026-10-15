@@ -26,6 +26,15 @@ const sphereOf = qid => quadrant(qid).resource;
  * (unless the pointer arrives somewhere else first). A tap pins it (a sheet on phones). Cory: instant and seamless.
  */
 export const OPEN_MS = MO.hoverOpen, CLOSE_MS = MO.hoverClose; // src/v4/motion.js
+/** Between two spaces: a pointer crossing the wheel's gutters keeps the card this long before it closes. */
+export const GRACE_MS = 450;
+const onWheel = () => {
+  if (!lastPt || typeof document === 'undefined') return false;
+  const st = document.querySelector('.lt-wheel .stage') || document.querySelector('.stage');
+  if (!st) return false;
+  const b = st.getBoundingClientRect();
+  return lastPt.x >= b.left && lastPt.x <= b.right && lastPt.y >= b.top && lastPt.y <= b.bottom;
+};
 /**
  * The hover state lives outside React's render path: the object is stable, `card` and `space` are getters, and only
  * the layer (useHoverCard) and the shop's tick (useHoverSpace) subscribe, so a hover never re-renders the table.
@@ -44,7 +53,10 @@ export function createHover() {
     clearTimeout(closeT);
     if (!next.el) {
       clearTimeout(openT);
-      closeT = setTimeout(() => { if (card && !card.pinned) set(null); }, CLOSE_MS);
+      // leaving a space for the wheel's gutter keeps the card a moment longer, so sweeping across the spaces hands it
+      // from one to the next without a close/open flicker; leaving the wheel closes it at the usual pace
+      const wait = next.kind === 'space' && onWheel() ? GRACE_MS : CLOSE_MS;
+      closeT = setTimeout(() => { if (card && !card.pinned) set(null); }, wait);
       return;
     }
     clearTimeout(openT);
@@ -111,12 +123,15 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   const el = c ? anchorFor(c, live && inside.current) : null;
   const place = () => {
     if (!c || c.pinned || !el || !box.current) { setPos(null); return; }
-    const a = el.getBoundingClientRect();
+    const a = c.kind === 'space' ? spaceRect(el, c.key) : el.getBoundingClientRect();
     const w = Math.min(c.kind === 'seat' ? 360 : 280, innerWidth - 16);
     const h = box.current.offsetHeight || 160;
     const p = placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
+    // the nub points at the middle of what the card explains, kept clear of the card's corners
+    const across = p.side === 'right' || p.side === 'left';
+    p.nub = Math.round(Math.max(16, Math.min((across ? h : w) - 16, across ? a.top + a.height / 2 - p.top : a.left + a.width / 2 - p.left)));
     side.current = { el, side: p.side };
-    setPos(old => (old && old.left === p.left && old.top === p.top && old.width === p.width ? old : p));
+    setPos(old => (old && old.left === p.left && old.top === p.top && old.width === p.width && old.nub === p.nub ? old : p));
   };
   useLayoutEffect(place, [c, el]); // eslint-disable-line react-hooks/exhaustive-deps
   // content that fills in a moment later (the dry run's "You'd get") re-fits the card on screen
@@ -147,6 +162,7 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
       onPointerEnter={() => { if (!live) return; inside.current = true; hover.hold(); }}
       onPointerLeave={e => { inside.current = false; if (live && e.pointerType === 'mouse') hover.letGo(); }}
       style={body && pos ? { left: pos.left, top: pos.top, width: pos.width } : { left: -9999, top: 0, width: 280 }}>
+      {body && pos ? <span className={`lt-nub ${pos.side}`} aria-hidden="true" style={pos.side === 'right' || pos.side === 'left' ? { top: pos.nub } : { left: pos.nub }} /> : null}
       {body && <div className="lt-note" data-hover-card={c.kind} role="tooltip">{body}</div>}
     </div>
   );
@@ -171,6 +187,28 @@ function anchorFor(c, held = false) {
   if (c.pinned || held) return el;
   const b = el.getBoundingClientRect();
   return lastPt && lastPt.x >= b.left - 4 && lastPt.x <= b.right + 4 && lastPt.y >= b.top - 4 && lastPt.y <= b.bottom + 4 ? el : null;
+}
+
+/**
+ * A space's own edges: a wedge's box has empty corners, so the card is placed against the panel's filled edge on the
+ * row and the column through its label (where the eye reads "the space"), not against its bounding box.
+ */
+function spaceRect(el, key) {
+  const r = el.getBoundingClientRect();
+  try {
+    if (typeof SVGGeometryElement === 'undefined' || !(el instanceof SVGGeometryElement) || !el.getScreenCTM()) return r;
+    const lab = document.querySelector(`[data-slot="${key}"]`);
+    const l = lab ? lab.getBoundingClientRect() : r;
+    const cx = Math.max(r.left, Math.min(r.right, l.left + l.width / 2)), cy = Math.max(r.top, Math.min(r.bottom, l.top + l.height / 2));
+    const inv = el.getScreenCTM().inverse();
+    const svg = el.ownerSVGElement;
+    const inside = (x, y) => { const pt = svg.createSVGPoint(); pt.x = x; pt.y = y; return el.isPointInFill(pt.matrixTransform(inv)); };
+    const scan = (from, to, at) => { const step = from < to ? 2 : -2; for (let v = from; step > 0 ? v <= to : v >= to; v += step) if (at(v)) return v; return null; };
+    const right = scan(r.right, cx, x => inside(x, cy)), left = scan(r.left, cx, x => inside(x, cy));
+    const bottom = scan(r.bottom, cy, y => inside(cx, y)), top = scan(r.top, cy, y => inside(cx, y));
+    if ([right, left, bottom, top].some(v => v == null)) return r;
+    return { left, right, top, bottom, width: right - left, height: bottom - top };
+  } catch { return r; }
 }
 
 /**
@@ -244,7 +282,7 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
         {open && viewer != null && !state.over ? <div className="lt-yd-row youd"><span className="k">You’d get</span><span className="v"><YoudGet state={state} pid={viewer} q={q} i={i} /></span></div> : null}
         {/* why a member changed the number, or stayed off ("Underdog: no ×2 (Hustler’s +3 lands first)"), from the dry run */}
         {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons><Rich text={pv.reasons.join(' · ')} /></span></Row> : null}
-        {race && <Row k={race.rule}>{race.text}</Row>}
+        {race && <Row k={race.rule}><Rich text={race.text} /></Row>}
         {pv && pv.swept && pv.swept.length ? <Row k="Sweeps away">{pv.swept.map((u, k) => <span key={u} data-swept={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}<small className="lt-swept-note"> back under the deck</small></Row> : null}
         {unlocks.length ? <Row k="Unlocks">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
         {owner !== undefined && <Row k="Taken">{state.players[owner].name}{opt ? ' — you can join it' : ''}</Row>}
@@ -254,15 +292,16 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
     </div>
   );
 }
-/** "You 5 · Ossian 2 · Bo 1 · Kay 0 · you'd lead, +2": the space's own contest after taking it, every player (the dry run's first branch). */
+/** "You 5 · Ossian 2 · Bo 1 · Kay 0 · you'd lead it (+2 followers)": the space's own contest after taking it, every player (the dry run's first branch). */
 function raceAfter(state, race, qid, pid) {
   const c = race.find(x => x.qid === qid);
   if (!c) return null;
   const nm = id => (id === pid ? 'You' : state.players[id].name);
   // every player, never just the top three (RC1 panel: the 4th silently dropped off "You 0 · P2 0 · P3 0")
   const top = c.rows.map(r => `${nm(r.player)} ${r.count}`).join(' · ');
-  const lead = c.winners.includes(pid) ? ` · you’d lead, +${c.prize}` : '';
-  return { rule: c.rule.replace(/^Most /, '').replace(/^\w/, ch => ch.toUpperCase()), text: `${top}${lead}` };
+  // plain words (design pod): "Most gold after: You 4 · P2 2 … · you'd lead it (+2 followers)", never "Gold … you'd lead, +2"
+  const lead = c.winners.includes(pid) ? ` · you’d lead it (+${c.prize} follower${c.prize === 1 ? '' : 's'})` : '';
+  return { rule: `${c.rule.replace(/^\w/, ch => ch.toUpperCase())} after`, text: `${top}${lead}` };
 }
 
 /** "Rush (Bo)" for a board key. */
@@ -273,12 +312,13 @@ export function StandingsCard({ state, qid, meId = null }) {
   const st = standings(state).find(x => x.qid === qid);
   if (!st) return null;
   // the sphere's own rule, when it has one ("Whatever you steal turns magenta…"), under its standings (UI-A, meta #3)
-  const rule = quadrant(qid).rule;
+  // (its closing "Most green at round end wins." is the prize line again: said once, up top)
+  const rule = (quadrant(qid).rule || '').replace(/\s*Most [^.]*\bat round end wins\.\s*$/i, '').trim();
   // what the rim's prize pays, in words (Cory, 2026-10-15): "Round end: whoever has the most white gets 2 followers"
   return (
     <>
       <p className="lt-prize-line" data-prize-line={qid}>Round end: whoever has the {st.rule.replace(/^Most /i, 'most ')} gets {st.prize} follower{st.prize === 1 ? '' : 's'}.</p>
-      <ContestStandings state={state} st={st} meId={meId} />
+      <ContestStandings state={state} st={st} meId={meId} brief />
       {rule ? <p className="lt-sphere-rule" data-sphere-rule={qid}>{rule}</p> : null}
     </>
   );

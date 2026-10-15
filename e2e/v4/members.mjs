@@ -123,7 +123,8 @@ try {
 
   // (m3) the lit member's hover: its Use button, reachable and working
   const before = await saved();
-  const pieces0 = await page.evaluate(() => window.__patronsPieces || 0);
+  const flown = () => page.evaluate(() => (window.__patronsPieces || 0) + (window.__patronsFlights || 0)); // flight.js, director.js
+  const pieces0 = await flown();
   await pointAt('[data-cult="0"] .cs-member[data-member="gold.jackpot"] .fig');
   await page.waitForTimeout(300);
   const btn = await page.$('[data-tip-body] [data-use]');
@@ -144,8 +145,8 @@ try {
     const u = uids['gold.jackpot'];
     if (!after.cards[u].used) fail('clicking Use didn\'t use Lottery Winner', 'm3');
     if (after.players[0].res.gold - before.players[0].res.gold !== 7) fail(`Lottery Winner gave ${after.players[0].res.gold - before.players[0].res.gold} gold, its button said +7`, 'm3');
-    await page.waitForTimeout(900);
-    const pieces = await page.evaluate(() => window.__patronsPieces || 0);
+    await page.waitForFunction(n => (window.__patronsPieces || 0) + (window.__patronsFlights || 0) > n, pieces0, { timeout: 3000 }).catch(() => {});
+    const pieces = await flown();
     if (!(pieces > pieces0)) fail('nothing flew when Lottery Winner was used', 'm3');
     await away();
     const st = await page.evaluate(() => { const m = document.querySelector('[data-cult="0"] .cs-member[data-member="gold.jackpot"]'); return m ? { state: m.dataset.state || '', lit: m.classList.contains('ready') } : null; });

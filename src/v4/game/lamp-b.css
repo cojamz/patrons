@@ -472,3 +472,9 @@
 .lt-cult-seat .cs-min svg{display:block;image-rendering:pixelated}
 @keyframes cs-bob{0%,100%{translate:0 0}50%{translate:0 -1.5px}}
 @media (prefers-reduced-motion: reduce){.lt-cult-seat .cs-min{animation:none}}
+/* the hover's nub: a corner of the same paper, pointing at what the card explains, its tip touching it */
+.lt-hover .lt-nub{position:absolute;width:12px;height:12px;background:var(--paper-lit,#fbf6ea);border-radius:2px;clip-path:polygon(0 0,100% 0,0 100%);transform:translate(-50%,-50%) rotate(-45deg)}
+.lt-hover .lt-nub.right{left:0}
+.lt-hover .lt-nub.left{left:100%;transform:translate(-50%,-50%) rotate(135deg)}
+.lt-hover .lt-nub.above{top:100%;transform:translate(-50%,-50%) rotate(-135deg)}
+.lt-hover .lt-nub.below{top:0;transform:translate(-50%,-50%) rotate(45deg)}

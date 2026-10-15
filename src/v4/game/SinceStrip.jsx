@@ -2,7 +2,8 @@
 // bot turns blurred past, "why does P4 suddenly have five gold?"). The player's name opens that placement's full card
 // on hover (a tap on the line pins it); every space and member named opens its own card, like on the board. The whole
 // log is one tap away (the Log button), not buried in the menu. Self-contained: the layout places the box.
-import { playerColor } from '../format.js';
+import { playerColor, seatEmoji } from '../format.js';
+import { Minion } from '../art/Leader.jsx';
 import { Tip } from './Info.jsx';
 import { HoverName, HoverNames } from './HoverNames.jsx';
 import './since.css';
@@ -43,7 +44,7 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
             <li key={e.n} className={`since-row${e.hit ? ' hit' : ''}`} style={{ '--pc': playerColor(e.actor) }} onClick={pinLine}>
               <Tip className="since-line" data-since-line={e.n} label={`${e.head}: show what happened`}
                 content={() => <StoryCard story={e} color={playerColor(e.actor)} state={state} hover={hover} />}>
-                <i className="dot" aria-hidden="true" /><b className="who">{name(e.actor)}</b>
+                <Minion color={playerColor(e.actor)} emoji={seatEmoji(state, e.actor)} size={14} /><b className="who">{name(e.actor)}</b>
               </Tip>{' '}
               {e.spaceKey && hover ? <HoverName hover={hover} target={{ kind: 'space', key: e.spaceKey }}><span className="sp">{e.space}</span></HoverName>
                 : <span className="sp">{e.space || 'turn'}</span>}

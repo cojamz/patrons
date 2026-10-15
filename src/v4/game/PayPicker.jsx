@@ -158,7 +158,7 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
         <div className="mc pay-id" style={def ? { '--c': cardColor(state, def) } : undefined}>
           <div className="mc-head">
             <span className={`mc-art${def ? '' : ' fol'}`} aria-hidden="true">
-              {def ? <Sprite id={[def.id, spriteId(def.name)]} kind="member" sphere={sphere} size={48} /> : <Follower size={30} title="followers" />}
+              {def ? <Sprite id={[def.id, spriteId(def.name)]} kind="member" sphere={sphere} size={48} /> : <Follower size={27} title="followers" />}
             </span>
             <span className="mc-id">
               <span className="mc-row">

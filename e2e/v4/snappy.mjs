@@ -1,7 +1,10 @@
 // E2E snappy gate (Cory, 2026-10-15: "it just doesn't feel snappy", "the wheel spins really slow"). Laptop, 1270×700.
 //  (s1) a wheel spin (an arrow key) starts within 100ms and has landed within 400ms;
 //  (s2) a hover card opens within 100ms of the pointer arriving: wheel spaces, shop cards and keyword tips;
-//  (s3) a click on a lit space shows your minion standing on it (painted, opacity ≥ .5) within 150ms.
+//  (s3) a click on a lit space shows your minion standing on it (painted, opacity ≥ .5) within 150ms;
+//  (s4) the animation speed setting changes a chain's length (Relaxed ≥ 1.8 × Quick);
+//  (s5) the gap between your turns at Steady (bots at Normal) is under 8s.
+// s1–s3 measure input → first response, never a chain's length: a chain plays after your move has shown.
 // Frame-honest: times are taken in the page (performance.now at the input event, rAF for what's painted). A loaded box
 // paints less often, so each limit allows one of the box's own frames on top (the median rAF interval with nothing
 // moving, measured just before each check: ~17ms on a quiet box, so the limits bite there), and each check takes the
@@ -64,8 +67,10 @@ await page.evaluate(() => {
   const hoverUp = () => [...document.querySelectorAll('[data-hover-layer][data-open="1"], .peek, .popover:not([data-hover-layer])')]
     .some(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left > -1000 && Number(getComputedStyle(e).opacity) > 0.05; });
   addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { W.key = performance.now(); W.rot = []; } }, true);
+  // each arrival starts with no card up (the loop waits for that), so the arrival arms on the target alone: under load
+  // the target's own card was sometimes already up when this listener ran, and a "no card up" check never armed it
   addEventListener('pointerover', e => {
-    if (e.target.closest && e.target.closest('[data-slot], [data-uid], [data-tip]') && !hoverUp() && W.hov.t0 == null) W.hov.t0 = performance.now();
+    if (e.target.closest && e.target.closest('[data-slot], [data-uid], [data-tip]') && W.hov.t0 == null) W.hov.t0 = performance.now();
   }, true);
   // the minion check: from the click on a lit space to the first frame it stands there, painted
   addEventListener('click', e => {
@@ -203,6 +208,75 @@ const longestGap = (from, to) => page.evaluate(([a, b]) => Math.max(0, ...window
   report.push(`minion: ${tries.map(t => `${Number.isFinite(t.ms) ? Math.round(t.ms) : 'never'}ms (longest frame ${Math.round(t.gap)}ms, box frame ${Math.round(t.F)}ms)`).join('; ')}`);
   if (!best) errors.push('(s3) could not click a lit space');
   else if (!(best.ms <= LIMIT.minion + best.F)) errors.push(`(s3) your minion showed on the space ${Number.isFinite(best.ms) ? `${Math.round(best.ms)}ms` : 'never (2s+)'} after the click (want ≤ ${LIMIT.minion}ms + one ${Math.round(best.F)}ms frame)`);
+}
+
+// (s4) the animation speed setting changes how long a move's chain plays: the same placement at Quick and at Relaxed
+// (?speed= in the address, the menu's setting for that page). Compared on the chain's own schedule (director.js
+// publishes each chain's planned length), so a loaded box can't blur it; the wall time is reported beside it.
+// (s5) the gap between your turns at Steady, bots at Normal: from your pass to your next placement, under 8s
+// (Cory's pacing: a rival's whole turn about 1.5–2s). The better of two gaps in round I counts.
+async function freshPage(query) {
+  const pg = await ctx.newPage();
+  pg.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
+  await pg.goto(`${base}/?intro=0&${query}`);
+  await pg.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), richSave());
+  await pg.reload();
+  const r = await pg.waitForSelector('[data-home="resume"]', { timeout: 15000 }).catch(() => null);
+  if (!r) { await pg.close(); return null; }
+  await r.click();
+  await pg.waitForSelector('.lt[data-phase="place"][data-yours="1"] .slot.can .base', { timeout: 15000 });
+  await pg.evaluate(() => {
+    window.__chainSeen = [];
+    const app = document.querySelector('.app.game');
+    let on = null;
+    new MutationObserver(() => { if (app.dataset.chain && on == null) on = performance.now(); if (!app.dataset.chain && on != null) { window.__chainSeen.push(performance.now() - on); on = null; } }).observe(app, { attributes: true, attributeFilter: ['data-chain'] });
+  });
+  return pg;
+}
+// a plain gain space (no question asked), so both speeds play the same chain
+const plainSpace = pg => pg.evaluateHandle(() => [...document.querySelectorAll('.slot.can')].find(e => /: \+\d+ \w+\.( Open)/.test(e.getAttribute('aria-label') || '')) || document.querySelector('.slot.can'));
+{
+  const lengths = {};
+  for (const sp of ['quick', 'relaxed']) {
+    const pg = await freshPage(`speed=${sp}`);
+    if (!pg) { errors.push(`(s4) could not resume at ${sp}`); continue; }
+    const el = (await plainSpace(pg)).asElement();
+    await (await el.$('.base')).click();
+    await pg.waitForFunction(() => window.__patronsChainMs > 0, null, { timeout: 5000 }).catch(() => {});
+    await pg.waitForTimeout(2500);
+    lengths[sp] = { planned: await pg.evaluate(() => window.__patronsChainMs || 0), seen: await pg.evaluate(() => window.__chainSeen[0] || 0) };
+    await pg.close();
+  }
+  report.push(`speed: a placement's chain plans ${Math.round(lengths.quick?.planned || 0)}ms at Quick, ${Math.round(lengths.relaxed?.planned || 0)}ms at Relaxed (on screen ${Math.round(lengths.quick?.seen || 0)}ms / ${Math.round(lengths.relaxed?.seen || 0)}ms)`);
+  if (!(lengths.quick && lengths.relaxed && lengths.quick.planned > 0)) errors.push('(s4) a placement played no chain');
+  else if (!(lengths.relaxed.planned >= lengths.quick.planned * 1.8)) errors.push(`(s4) the speed setting barely changes the chain (Quick ${lengths.quick.planned}ms, Relaxed ${lengths.relaxed.planned}ms; want Relaxed ≥ 1.8 × Quick)`);
+}
+{
+  const pg = await freshPage('speed=steady');
+  const gaps = [];
+  if (pg) {
+    for (let turn = 0; turn < 3 && gaps.length < 2; turn++) {
+      const el = (await plainSpace(pg)).asElement();
+      if (!el) break;
+      await (await el.$('.base')).click();
+      // answer any question with its first choice, then pass
+      for (let k = 0; k < 20; k++) {
+        const passBtn = await pg.$('.lt[data-phase="buy"][data-yours="1"] [data-option="pass"]');
+        if (passBtn) { await passBtn.click().catch(() => {}); break; }
+        const opt = await pg.$('.prompt.choice button[data-option]:not([disabled])');
+        if (opt) await opt.click().catch(() => {});
+        await pg.waitForTimeout(200);
+      }
+      const t0 = await pg.evaluate(() => performance.now());
+      const ok = await pg.waitForSelector('.lt[data-phase="place"][data-yours="1"] .slot.can .base', { timeout: 30000 }).catch(() => null);
+      if (!ok) break;
+      gaps.push(await pg.evaluate(a => performance.now() - a, t0));
+    }
+    await pg.close();
+  }
+  report.push(`turns: gap between your turns at Steady ${gaps.map(g => `${(g / 1000).toFixed(1)}s`).join(', ') || 'not measured'}`);
+  if (!gaps.length) errors.push('(s5) could not measure the gap between your turns');
+  else if (Math.min(...gaps) > 8000) errors.push(`(s5) your next turn came ${(Math.min(...gaps) / 1000).toFixed(1)}s after your last (want ≤ 8s at Steady)`);
 }
 
 for (const line of report) console.log(`snappy: ${line}`);

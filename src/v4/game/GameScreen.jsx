@@ -40,10 +40,8 @@ import { ROUND_START, ownsLocal } from '../saved.js';
 import { restoredMoment } from '../session/moment.js';
 import { gameRecord, recordText } from '../session/record.js';
 import { copyText } from '../Recovery.jsx';
-import './layout.css';
+import './layout.css'; // the laptop composition from 1200px up (design pod)
 
-// Layout variants while the design pod compares them (?layout=a|b; design/eval/design-pod/layout.md)
-const LAYOUT = (() => { try { return new URLSearchParams(location.search).get('layout') || ''; } catch { return ''; } })();
 const STEP_MS = BOT.catchUp;      // pace when catching up on moves that happened behind the round-end card
 const RIVAL_DWELL_MS = BOT.pace.normal; // each visible bot step holds this long (src/v4/motion.js)
 
@@ -881,7 +879,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     }
     return out;
   }, [picker, seatPicks, pickKey, state, onSeatPick, onSeatDenied]);
-  const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)}</> : 'Setup';
+  const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)} of 3</> : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
   // The latest rival placement, marked on the wheel; read from the state so it survives a reload.
@@ -911,7 +909,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const phase = state.over && !moment ? 'over' : moment ? 'reckon' : !pend ? 'wait' : pend.kind === 'pay' ? 'pay' : pend.kind === 'buy' ? 'buy' : pend.kind === 'place' ? 'place' : pend.kind === 'setup' ? 'setup' : 'choose';
   const yours = mine && !needHandoff;
   return (
-    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${pend && pend.kind === 'setup' && !state.over ? ' in-setup' : ''}`} ref={root} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'} data-layout={LAYOUT || undefined}>
+    <div className={`app game lt${showChoice ? ' choosing' : ''}${buyingNow ? ' buying' : ''}${pend && pend.kind === 'setup' && !state.over ? ' in-setup' : ''}`} ref={root} data-phase={phase} data-round={state.round} data-yours={yours ? '1' : '0'} data-moves={state.moves} data-actor={pend ? pend.player : ''} data-bot={pend && state.players[pend.player].kind === 'bot' ? '1' : '0'}>
       <header className="bar lt-prompt" data-region="prompt">
         <div className="bar-row status" aria-live="polite">
           {/* a choice picked on the board: its caption takes the headline's place (never over the wheel) */}

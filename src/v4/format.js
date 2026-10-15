@@ -21,7 +21,9 @@ export const plural = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many
 
 /** Scoring banner text for a quadrant on a ring, e.g. "MOST GOLD +2". */
 /** A scoring label without its parenthetical note ("Most members (red members break ties)" -> "Most members"). */
-export const shortLabel = label => label.replace(/\s*\(.*\)\s*$/, '');
+// a color inside a rule reads lowercase, like every other ("Most magenta members", beside "Most red"; RC1 sweep 9/58)
+const lowColor = t => t.replace(/(?<=\S\s)(Gold|Red|Blue|Green|Magenta|Silver|Yellow|Purple|White)\b/g, m => m.toLowerCase());
+export const shortLabel = label => lowColor(label.replace(/\s*\(.*\)\s*$/, ''));
 export const bannerText = (qid, ring) => `${shortLabel(quadrant(qid).scoring.label).toUpperCase()}  +${RING_VALUE[ring - 1]}`;
 
 /** Group a player's members into chips. Identical cards in identical states share one chip. */
@@ -337,7 +339,7 @@ export function toStanding(c) {
   const lead = rows.find(r => leaders.includes(r.id));
   const next = rows.find(r => !leaders.includes(r.id));
   const margin = leaders.length === 1 && next ? lead.shown - next.shown : 0;
-  return { qid: c.qid, label: c.label, rule: c.rule || shortLabel(c.label), counts: c.counts || null, tiebreak: c.tiebreak || null, prize: c.prize, rows, leaders, margin, top: rows[0] ? rows[0].score : 0 };
+  return { qid: c.qid, label: c.label, rule: lowColor(c.rule || shortLabel(c.label)), counts: c.counts || null, tiebreak: c.tiebreak || null, prize: c.prize, rows, leaders, margin, top: rows[0] ? rows[0].score : 0 };
 }
 /** Every quadrant's contest if the round ended now, from the engine. */
 export function standings(state) {

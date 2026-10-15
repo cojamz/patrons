@@ -11,6 +11,7 @@
 /* the head: the hover card's own (lamp-b.css .mc); a follower buy shows the follower mark in the picture box */
 .pay-card .pay-id{padding-bottom:16px;border-bottom:1px solid var(--hair-ink,rgba(43,32,24,.12))}
 .pay-card .pay-id h2.mc-name{margin:0;font-family:var(--sans)}
+.pay-card .pay-id .mc-art.fol .follower-mark{width:27px;height:27px}
 .pay-card .pay-id .mc-art.fol{background:color-mix(in srgb,var(--pl-ink,#2b2018) 7%,var(--pl-paper,#f2e8d2));color:var(--pl-ink,#2b2018)}
 
 /* the cost: one socket per unit owed (a ring in the color it needs, or the four-color ring for "any"); the coins

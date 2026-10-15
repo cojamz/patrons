@@ -96,13 +96,13 @@ for (const prof of PROFILES) {
     try {
       await place(page, go, prof);
       // the +6 buy: "+6" on the older screen, "8 → 6" on the Lamplit shop's follower rates
-      const big = await page.waitForSelector('[data-option^="tier:"]:has-text("+6"), [data-option^="tier:"]:has-text("→ 6")', { timeout: 8000 });
+      const big = await page.waitForSelector('[data-option^="tier:"][data-rate="big"], [data-option^="tier:"]:has-text("+6"), [data-option^="tier:"]:has-text("→ 6")', { timeout: 8000 });
       await page.evaluate(() => { window.__fol = [window.__fol[window.__fol.length - 1]]; });
       await big.scrollIntoViewIfNeeded();
       await go(big);
-      const pay = await page.waitForSelector('.dialog.pay .btn.pri[data-option]', { timeout: 2500 }).catch(() => null);
+      const pay = await page.waitForSelector('.dialog.pay .pay-go[data-option], .dialog.pay .btn.pri[data-option]', { timeout: 2500 }).catch(() => null);
       if (pay) { await page.waitForTimeout(450); await go(pay); }
-      await page.waitForTimeout(1600);
+      await page.waitForTimeout(3000); // the buy plays as a chain at the default speed (director.js): coins in, followers out, then the count
       const seq = await page.evaluate(() => window.__fol);
       const from = Number(seq[0]), to = Number(seq[seq.length - 1]);
       const between = [...new Set(seq.slice(1, -1).map(Number))].filter(v => v > Math.min(from, to) && v < Math.max(from, to));
@@ -126,7 +126,7 @@ for (const prof of PROFILES) {
       const recruit = prof.ctx.hasTouch ? await page.waitForSelector('[data-recruit]', { timeout: 2500 }).catch(() => null) : null;
       if (prof.ctx.hasTouch && !recruit) errors.push(`[${prof.tag}] (m3) tapping an affordable card showed no Recruit button`);
       if (recruit) await go(recruit);
-      const pay = await page.waitForSelector('.dialog.pay .btn.pri[data-option]', { timeout: 2500 }).catch(() => null);
+      const pay = await page.waitForSelector('.dialog.pay .pay-go[data-option], .dialog.pay .btn.pri[data-option]', { timeout: 2500 }).catch(() => null);
       if (pay) { await page.waitForTimeout(450); await go(pay); }
       await page.waitForTimeout(250);
       await page.screenshot({ path: `${SHOTS}/${prof.tag}-recruit-flight.png` });

@@ -270,7 +270,8 @@ try {
     }
     // (s6) a sphere with its own rule says it in the rim's hover card
     for (const qid of pass.quadrants || []) {
-      const rule = quadrant(qid).rule;
+      // its closing "Most … at round end wins." is the card's own prize line, said once at the top (design pod, 2026-10-15)
+      const rule = (quadrant(qid).rule || '').replace(/\s*Most [^.]*\bat round end wins\.\s*$/i, '').trim();
       if (!rule) continue;
       const at = await page.evaluate(q => {
         const t = document.querySelector(`.lt-wheel [data-plaque="${q}"]`);

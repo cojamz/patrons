@@ -39,7 +39,7 @@ const RING_S = { 1: { r0: 128, r1: 180, r: 151, n: 3, span: 66 }, 2: { r0: 82, r
 // panels: the cells tile each quadrant (ring I: three 30° cells, ring II: two 45°, ring III: one 90°) on a dark
 // board with gutters between them; the hub is small so the rings get the room; r is where each
 // panel's print is centred (ring III's a little out from the middle of its wedge, where the wedge is wide)
-const RING_P = { 1: { r0: 119, r1: 179, r: 149, n: 3, span: 60 }, 2: { r0: 62, r1: 116, r: 89, n: 2, span: 45 }, 3: { r0: 20, r1: 59, r: 40, n: 1, span: 0 } };
+const RING_P = { 1: { r0: 119, r1: 179, r: 149, n: 3, span: 60 }, 2: { r0: 64, r1: 116, r: 90, n: 2, span: 45 }, 3: { r0: 16, r1: 61, r: 40, n: 1, span: 0 } };
 const ringsOf = look => (look === 'panels' ? RING_P : RING_S);
 const RIM = { r0: 180, r1: 200, r: 190 }; // the rim band: each quadrant's rule, engraved
 // the rim's hover/tap target: from just outside ring I's sockets to well past the paper's edge (it wins over any space)
@@ -255,8 +255,8 @@ function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
     const w = room(h) * k;
     if (w >= needW + 2) return { one: t.op, oneLines: t.ol, two: t.tp, twoLines: t.tl, noteLines: t.nl, w: w / k, rc };
   }
-  // nothing fits: line 1 alone at its smallest (line 2 and 3 are in the hover)
-  const ol = one ? (isGain ? Math.min(2, oneClauses.length) : 3) : 0;
+  // nothing fits: line 1 alone at its smallest (line 2 and 3 are in the hover); a taken panel shows just its minion
+  const ol = taken || !one ? 0 : isGain ? Math.min(2, oneClauses.length) : 3;
   const w = room(ol * lineH(X.verbMin) + (taken ? X.minion + X.gap : 0));
   return { one: isGain ? X.mainMin : X.verbMin, oneLines: ol, two: X.small, twoLines: 0, noteLines: 0, w: Math.max(w, 24 / k), rc: w ? rc : R.r, tight: true };
 }

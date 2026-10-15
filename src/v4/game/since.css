@@ -11,7 +11,8 @@
 .lt-since .since-line{display:inline;cursor:help}
 /* the name's own box is the target: its enlarged hit area would cover the space named beside it */
 .lt-since .since-line > .hitbox{display:none}
-.lt-since .since-line .dot{display:inline-block;width:6px;height:6px;margin:0 5px 0 0;vertical-align:1px;border-radius:50%;background:var(--pc)}
+/* the player is their emoji, as everywhere (never a color-only dot: a dot only ever means a resource) */
+.lt-since .since-line .minion{display:inline-block;margin:0 4px 0 0;vertical-align:-2px}
 .lt-since .since-line .who{font-weight:600;color:var(--pc)}
 .lt-since .sp{font-family:var(--serif)}
 .lt-since .big{color:var(--cream-2,#d9cbb0)}

@@ -120,7 +120,7 @@ describe('keyword glossary: one source, every keyword in the cards defined', () 
 void defById; void within;
 
 describe('"You\'d get" on a space (the engine\'s dry run)', () => {
-  it('shows the exact gain for a plain space, and a range plus "your choice" for a space that asks', async () => {
+  it('shows the exact gain for a plain space, and no pick note when the pick changes nothing of yours', async () => {
     const { waitFor } = await import('@testing-library/react');
     const { YoudGet } = await import('../../../v4/game/Info.jsx');
     let s = createGame({ seats, seed: 9, quadrants: ['gold', 'red', 'market', 'echo'] });
@@ -137,7 +137,8 @@ describe('"You\'d get" on a space (the engine\'s dry run)', () => {
     // the rival's +1 gold (Kickback's gift) shows too, as a gold pip
     expect(two.container.querySelector('.youd-others').textContent).toMatch(/rivals \+1/);
     expect(two.container.querySelector('.youd-others .pip').getAttribute('aria-label')).toBe('gold');
-    expect(two.container.textContent).toMatch(/you choose how/);
+    // who gets the gift doesn't change what you get: no "you choose how" note (the rule above says it; design pod)
+    expect(two.container.textContent).not.toMatch(/you choose how|your pick/);
   });
 
   it('minions on the board carry their seat: one emoji per seat, never color alone', async () => {
