@@ -70,8 +70,8 @@ describe('Gold members', () => {
     let s = take(sceneQ({ members: [['gold.prospector']] }), 'gold.rush');
     expect(G(s)[0]).toBe(3);
     expect(named(s, 'Prospector')).toHaveLength(1);
-    s = sceneQ({ members: [['gold.prospector', 'red.doppel']] });
-    s.cards[uidOf(s, 'red.doppel', 0)].copy = 'gold.prospector';
+    s = sceneQ({ members: [['gold.prospector', 'echo.doppel']] });
+    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'gold.prospector';
     s = take(s, 'gold.rush');
     expect(G(s)[0]).toBe(4);
   });

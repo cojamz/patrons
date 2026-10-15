@@ -3,6 +3,7 @@
 // traces to a log line).
 import { createGame, resume, actionAt } from '../../../engine/v4/core.js';
 import { move, actionName } from './helpers.js';
+import { STRAYS, stray } from './stray.js';
 
 /**
  * A hand-made position on any table. Like helpers.scene, plus quadrants, rules, slots and a starting log.
@@ -20,7 +21,7 @@ export function sceneQ({
     p.bonus = bonus[i] || 0; p.discount = discount[i] || 0; p.left = left;
   });
   s.pile = [...s.shop, ...s.pile]; s.shop = [];
-  const grab = def => { const k = s.pile.findIndex(u => s.cards[u].def === def); if (k < 0) throw new Error(`no free card of ${def}`); return s.pile.splice(k, 1)[0]; };
+  const grab = def => { const k = s.pile.findIndex(u => s.cards[u].def === def); if (k < 0) { if (!STRAYS.has(def)) throw new Error(`no free card of ${def}`); return stray(s, def); } return s.pile.splice(k, 1)[0]; };
   members.forEach((list, i) => { for (const d of list || []) s.players[i].members.push(grab(d)); });
   if (shop) for (const d of shop) s.shop.push(grab(d));
   while (s.shop.length < 6 && s.pile.length) s.shop.push(s.pile.shift());

@@ -14,7 +14,7 @@ Cory: "cull member piles down to the best existing 10, per our principles and ba
 9. **White.** Keep Shopkeeper, Rich Uncle, Magnate, Shareholder, Heiress, Bulk Buyer, Broker, Exporter, Reinvestor and Raider. Cut Lender (your call: hard to track), Tipster (the same card as your new Tax Collector), Dealer (fair below 0), Pawnbroker and Liquidator (both sell "loose followers", the word you flagged).
 10. **Neutral.** No placeholders (Cory). Kept: Straggler, Squatter, Freelancer, Extra Hand, Front-runner. Cut: Big Spender and Insider (Cory).
 
-Built as a deck rule in src/engine/v4/content/cull.js. Doppelganger stays in Red's pile until its move to Green is built (Red deals 11, Green 9 meanwhile). Fixes 11–13 are built; 14–18 wait.
+Built as a deck rule in src/engine/v4/content/cull.js. Doppelganger moved to Green (Cory, 20:43), so every sphere deals 10; its rename and pick-at-recruit wait for his redesign. Fixes 11–13 are built; 14–18 wait.
 
 ## Small fixes from your verdicts (to build; redesigns stay out)
 11. Tinker becomes Alchemist: "Whenever an action gains you another color, +1 gold."

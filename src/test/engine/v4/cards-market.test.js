@@ -11,7 +11,7 @@ const Q = ['gold', 'red', 'market', 'thieves'];
 const QE = ['gold', 'red', 'market', 'echo'];
 useCosts({
   'gold.tycoon': [8, 4], 'gold.jackpot': [6, 5], 'gold.midas': [4, 4], 'gold.taxman': [2, 2], 'gold.banker': [2, 2],
-  'red.bigfamily': [4, 4], 'red.twins': [2, 2], 'red.intern': [2, 0], 'red.volunteer': [0, 0], 'red.doppel': [4, 2], 'red.mentor': [6, 4],
+  'red.bigfamily': [4, 4], 'red.twins': [2, 2], 'red.intern': [2, 0], 'red.volunteer': [0, 0], 'echo.doppel': [4, 2], 'red.mentor': [6, 4],
   'market.stylist': [2, 2], 'market.onlooker': [6, 4], 'market.connoisseur': [2, 2], 'market.reseller': [8, 4],
   'market.curator': [2, 2], 'market.planner': [2, 2], 'market.underbidder': [2, 0], 'market.minimalist': [2, 0],
   'market.climber': [2, 0], 'market.auctioneer': [4, 2], 'market.sommelier': [2, 2], 'market.patroness': [4, 4],
@@ -107,8 +107,8 @@ describe('Blue actions', () => {
   });
   it('× Doppelganger: a copy of a pricier member doesn\'t count its copy\'s price (printed cost of the card)', () => {
     // Doppelganger (6) copying Tycoon (12): Show Off reads the Doppelganger's own printed cost
-    const s0 = table(Q, { round: 2, members: [['red.doppel', 'red.twins']], shop: ROW });
-    s0.cards[uidIn(s0, 'red.doppel', 0)].copy = 'gold.tycoon';
+    const s0 = table(Q, { round: 2, members: [['echo.doppel', 'red.twins']], shop: ROW });
+    s0.cards[uidIn(s0, 'echo.doppel', 0)].copy = 'gold.tycoon';
     expect(R(take(s0, 'market.pricecheck')).blue).toBe(3);
   });
 
@@ -144,8 +144,8 @@ describe('Blue members', () => {
     expect(named(s, 'Stylist').length).toBe(1);
   });
   it('× Doppelganger copying Stylist: +2 for one blue recruit', () => {
-    let s = table(Q, { members: [['red.doppel', 'market.stylist']], res: [{ blue: 4 }], shop: ['market.curator', ...ROW.slice(1)] });
-    s.cards[uidIn(s, 'red.doppel', 0)].copy = 'market.stylist';
+    let s = table(Q, { members: [['echo.doppel', 'market.stylist']], res: [{ blue: 4 }], shop: ['market.curator', ...ROW.slice(1)] });
+    s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'market.stylist';
     s = move(take(s, 'market.showroom'), card(s, 'market.curator'));
     expect(R(s).blue).toBe(2 + 2 + 1); // Name Drop 2 (1, and Curator face up), the two Stylists 2, Curator's now 1 (Stylist)
   });
@@ -216,10 +216,10 @@ describe('Blue members', () => {
     expect(s.players[0].discount).toBe(0);
   });
   it('× Doppelganger copying Planner: both discounts stack (round III: 6 + 6)', () => {
-    const s0 = table(Q, { members: [['market.planner', 'red.doppel']], shop: ROW, queue: [{ t: 'round', r: 3 }] });
+    const s0 = table(Q, { members: [['market.planner', 'echo.doppel']], shop: ROW, queue: [{ t: 'round', r: 3 }] });
     expect(s0.players[0].discount).toBe(6);
-    const s = table(Q, { members: [['market.planner', 'red.doppel']], shop: ROW, queue: [] });
-    s.cards[uidIn(s, 'red.doppel', 0)].copy = 'market.planner';
+    const s = table(Q, { members: [['market.planner', 'echo.doppel']], shop: ROW, queue: [] });
+    s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'market.planner';
     s.queue = [{ t: 'round', r: 3 }];
     const t = applyMove({ ...s, pending: { player: 0, options: [{ id: 'x' }] }, queue: [{ t: 'choose', p: 0, options: [{ id: 'x', value: null }], h: 'market.pickRow', data: { why: 'test' } }, ...s.queue] }, { player: 0, option: 'x' });
     expect(t.players[0].discount).toBe(12);
@@ -267,8 +267,8 @@ describe('Blue members', () => {
     expect(named(t, 'Social Climber')).toHaveLength(0);
   });
   it('× Doppelganger copying Social Climber: one release pays +2 twice', () => {
-    let s = table(Q, { round: 2, members: [['market.climber', 'red.doppel', 'red.twins']], shop: ROW, queue: [{ t: 'buy', p: 0 }] });
-    s.cards[uidIn(s, 'red.doppel', 0)].copy = 'market.climber';
+    let s = table(Q, { round: 2, members: [['market.climber', 'echo.doppel', 'red.twins']], shop: ROW, queue: [{ t: 'buy', p: 0 }] });
+    s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'market.climber';
     s = move(s, `release:${uidIn(s, 'red.twins', 0)}`);
     s = move(move(s, 'color:magenta'), 'color:magenta');
     expect(R(s).magenta).toBe(4);
@@ -325,10 +325,10 @@ describe('Blue members', () => {
     if (s.pending?.kind === 'buy') expect(ids(s)).not.toContain(use);
   });
   it('× Doppelganger copying Talent Scout: a second once-per-game use', () => {
-    let s = table(Q, { members: [['market.blackmarket', 'red.doppel']], res: [{ red: 8 }], shop: ROW });
-    s.cards[uidIn(s, 'red.doppel', 0)].copy = 'market.blackmarket';
+    let s = table(Q, { members: [['market.blackmarket', 'echo.doppel']], res: [{ red: 8 }], shop: ROW });
+    s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'market.blackmarket';
     s = take(s, 'market.showroom');
-    expect(ids(s)).toContain(`use:${uidIn(s, 'red.doppel', 0)}`);
+    expect(ids(s)).toContain(`use:${uidIn(s, 'echo.doppel', 0)}`);
     expect(ids(s)).toContain(`use:${uidIn(s, 'market.blackmarket', 0)}`);
   });
 
@@ -338,7 +338,7 @@ describe('Blue members', () => {
     expect(s.players[0].final.parts).toContain('Snob +2'); // Snob itself and Stylist; not Tycoon or Twins
   });
   it('Recluse: game end, +2 followers per rival with more members', () => {
-    const s = finish([['market.recluse'], ['red.twins', 'red.intern'], ['red.volunteer', 'red.bigfamily'], ['red.doppel']]);
+    const s = finish([['market.recluse'], ['red.twins', 'red.intern'], ['red.volunteer', 'red.bigfamily'], ['echo.doppel']]);
     expect(s.players[0].final.parts).toContain('Recluse +4');
     expect(followers(s, s.players[0])).toBe(1 + 1 + 4);
   });

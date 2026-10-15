@@ -209,8 +209,8 @@ describe('Gold members', () => {
     expect(R(take(scene({ members: [['gold.underdog']], res: [{ gold: 2 }, { gold: 1 }] }), 'gold.rush'))[0].gold).toBe(4);
     expect(R(take(scene({ n: 3, members: [['gold.underdog']], res: [{ gold: 2 }, { gold: 1 }, { gold: 5 }] }), 'gold.rush'))[0].gold).toBe(6);
     // two Underdogs don't stack: there is only one copy, but the guard still holds with a Doppelganger copy
-    const s = scene({ members: [['gold.underdog', 'red.doppel']], res: [{}, { gold: 1 }] });
-    s.cards[uidOf(s, 'red.doppel', 0)].copy = 'gold.underdog';
+    const s = scene({ members: [['gold.underdog', 'echo.doppel']], res: [{}, { gold: 1 }] });
+    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'gold.underdog';
     expect(R(take(s, 'gold.rush'))[0].gold).toBe(4);
   });
 

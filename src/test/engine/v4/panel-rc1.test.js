@@ -17,7 +17,7 @@ const rich = { gold: 30, red: 30, blue: 30, green: 30 };
 /** Face-up row exactly `defs` (in order), and the pile exactly `pile`: nothing random refills in. */
 function row(s, defs, pile = []) {
   const all = [...s.shop, ...s.pile];
-  const grab = def => { const k = all.findIndex(u => s.cards[u].def === def); if (k < 0) throw new Error(`no free ${def}`); return all.splice(k, 1)[0]; };
+  const grab = def => { const k = all.findIndex(u => s.cards[u].def === def); if (k < 0) { if (!STRAYS.has(def)) throw new Error(`no free ${def}`); return stray(s, def); } return all.splice(k, 1)[0]; };
   s.shop = defs.map(grab);
   s.pile = pile.map(grab);
   return s;
@@ -197,6 +197,7 @@ describe('19 · Collect Debts keeps its count through a save and load', () => {
 // with Penny Pincher and an Intro Offer, by the bot and by the first option, also through a JSON save (the online
 // session stores stateJson), and check every offered pay option is legal and finishes.
 import { chooseBotMove } from '../../../engine/v4/bots.js';
+import { STRAYS, stray } from './stray.js';
 const json = v => JSON.parse(JSON.stringify(v)); // the online session stores the state as a JSON string
 describe('Snap Up → pay always finishes', () => {
   const start = (extra = {}) => {

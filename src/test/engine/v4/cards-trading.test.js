@@ -13,7 +13,7 @@ const Q = ['gold', 'red', 'trading', 'thieves'];
 const QE = ['gold', 'red', 'trading', 'echo'];
 useCosts({
   'gold.tycoon': [8, 4], 'gold.taxman': [2, 2], 'gold.midas': [4, 4], 'red.bigfamily': [4, 4], 'red.twins': [2, 2],
-  'red.intern': [2, 0], 'red.volunteer': [0, 0], 'red.doppel': [4, 2],
+  'red.intern': [2, 0], 'red.volunteer': [0, 0], 'echo.doppel': [4, 2],
   'trading.shopkeeper': [2, 2], 'trading.dealer': [2, 0], 'trading.pawnbroker': [2, 2], 'trading.safetynet': [2, 0],
   'trading.tipster': [4, 2], 'trading.lender': [2, 0], 'trading.magnate': [4, 4], 'trading.heiress': [6, 4],
   'trading.bulkbuyer': [4, 2], 'trading.broker': [2, 0], 'trading.exporter': [4, 4], 'trading.liquidator': [4, 2],
@@ -143,8 +143,8 @@ describe('White members', () => {
     expect(named(s, 'Dealer')).toEqual(["P1's Dealer: +2 white."]);
   });
   it('× Doppelganger copying Dealer: +1 more each', () => {
-    let s = table(Q, { round: 2, bonus: [5], members: [['trading.dealer', 'red.doppel']], shop: ROW });
-    s.cards[uidIn(s, 'red.doppel', 0)].copy = 'trading.dealer';
+    let s = table(Q, { round: 2, bonus: [5], members: [['trading.dealer', 'echo.doppel']], shop: ROW });
+    s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'trading.dealer';
     s = move(take(s, 'trading.sellhigh'), 'amount:2');
     expect(R(s).white).toBe(6 + 4);
   });
@@ -198,9 +198,9 @@ describe('White members', () => {
     expect(R(s).white).toBe(0);
   });
   it('× Doppelganger copying Lender: the copy gets +5 at once (Cory: a full copy; its when-recruited fires)', () => {
-    let s = table(Q, { members: [['trading.lender', 'red.twins']], shop: ['red.doppel', ...ROW], res: [{ red: 4, gold: 2 }] });
+    let s = table(Q, { members: [['trading.lender', 'red.twins']], shop: ['echo.doppel', ...ROW], res: [{ red: 4, gold: 2 }] });
     s.cards[uidIn(s, 'trading.lender', 0)].loanPaid = true;
-    s = payDefault(move(take(s, 'trading.haggle'), cardOpt(s, 'red.doppel', 'shop')));
+    s = payDefault(move(take(s, 'trading.haggle'), cardOpt(s, 'echo.doppel', 'shop')));
     // whatever the suggested payment left (it keeps your rim leads, 2026-10-15), the copy adds exactly Lender's 5
     const w0 = R(s).white;
     s = move(s, `card:${uidIn(s, 'trading.lender', 0)}`); // the copy

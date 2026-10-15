@@ -21,8 +21,10 @@ describe('random-move fuzz (explores branches bots avoid)', () => {
     // seeds until every kind has shown up (prices move the random paths: after balance pass 1 the first "use" came at
     // seed 43, where 40 seeds used to be enough), capped so a kind that can no longer happen still fails
     for (let seed = 1; seed <= 120 && !WANT.every(k => optionKinds.has(k)); seed++) {
-      const { state, moves } = runGame({ n: 3, seed, kind: 'random', full: false });
-      let s = createGame({ seats: state.players.map(p => ({ name: p.name, kind: p.kind })), seed });
+      // every other seed swaps Green in, so a member pick (Doppelganger's, Green since 2026-10-15) can come up
+      const quadrants = seed % 2 ? undefined : ['gold', 'red', 'blue', 'echo'];
+      const { state, moves } = runGame({ n: 3, seed, kind: 'random', full: false, quadrants });
+      let s = createGame({ seats: state.players.map(p => ({ name: p.name, kind: p.kind })), seed, quadrants });
       for (const m of moves) {
         kinds.add(s.pending.kind);
         optionKinds.add(s.pending.options.find(o => o.id === m.option).kind);

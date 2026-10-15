@@ -86,13 +86,13 @@ describe('Red members', () => {
     expect(named(s, 'Proselytizer')[0]).toMatch(/P1's Proselytizer: \+1 follower/);
   });
 
-  it('Mob: game end +1 follower per red member; a Doppelganger is a red member and a second Mob', () => {
-    let s = sceneQ({ members: [['red.mob', 'red.intern', 'red.doppel']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.parts).toEqual(['Mob +3']);
-    s = sceneQ({ members: [['red.mob', 'red.intern', 'red.doppel']], queue: [] });
-    s.cards[uidOf(s, 'red.doppel', 0)].copy = 'red.mob';
+  it('Mob: game end +1 follower per red member; a Doppelganger (green since 2026-10-15) is a second Mob', () => {
+    let s = sceneQ({ members: [['red.mob', 'red.intern', 'echo.doppel']], queue: [{ t: 'finish' }] });
+    expect(s.players[0].final.parts).toEqual(['Mob +2']);
+    s = sceneQ({ members: [['red.mob', 'red.intern', 'echo.doppel']], queue: [] });
+    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'red.mob';
     s.queue = [{ t: 'finish' }]; s = resume(s);
-    expect(s.players[0].final.parts).toEqual(['Mob +3', 'Mob +3']);
+    expect(s.players[0].final.parts).toEqual(['Mob +2', 'Mob +2']);
   });
 
   it('Recruiter: +1 red whenever you recruit, named', () => {
@@ -118,8 +118,8 @@ describe('Red members', () => {
     let s = sceneQ({ members: [['red.host', 'red.intern', 'red.twins', 'red.volunteer']], queue: [{ t: 'round', r: 2 }] });
     expect(R(s).red).toBe(2);
     expect(named(s, 'Host')[0]).toMatch(/P1's Host: \+2 red/);
-    s = sceneQ({ members: [['red.host', 'red.intern', 'red.doppel']], queue: [] });
-    s.cards[uidOf(s, 'red.doppel', 0)].copy = 'red.host';
+    s = sceneQ({ members: [['red.host', 'red.intern', 'echo.doppel']], queue: [] });
+    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'red.host';
     s.queue = [{ t: 'round', r: 2 }]; s = resume(s);
     expect(R(s).red).toBe(2);
   });
@@ -143,8 +143,8 @@ describe('Red members', () => {
   });
 
   it('Doppelganger: copies one of your members; the copy is named in the log', () => {
-    let s = sceneQ({ res: [rich], members: [['gold.banker']], shop: ['red.doppel'] });
-    s = take(s, 'gold.rush'); s = buy(s, 'red.doppel');
+    let s = sceneQ({ res: [rich], members: [['gold.banker']], shop: ['echo.doppel'] });
+    s = take(s, 'gold.rush'); s = buy(s, 'echo.doppel');
     s = move(s, s.pending.options[0].id);
     expect(named(s, 'Doppelganger')[0]).toMatch(/copies Banker/);
     expect(named(s, 'Banker')).toHaveLength(1); // the copy's "now" +3, at once
@@ -152,11 +152,11 @@ describe('Red members', () => {
     expect(named(s, 'Banker')).toHaveLength(3);
   });
   it('Doppelganger copying a when-recruited member (Treasurer) fires it once for the copy (Cory: a copy of the card)', () => {
-    const restore = pinCosts({ 'red.doppel': [0, 0] });
-    let s = sceneQ({ res: [rich], members: [['gold.seed']], shop: ['red.doppel'] });
+    const restore = pinCosts({ 'echo.doppel': [0, 0] });
+    let s = sceneQ({ res: [rich], members: [['gold.seed']], shop: ['echo.doppel'] });
     s = take(s, 'gold.rush');
     const g = s.players[0].res.gold;
-    s = buy(s, 'red.doppel');
+    s = buy(s, 'echo.doppel');
     s = move(s, s.pending.options[0].id);
     expect(s.players[0].res.gold).toBe(g + 2); // Treasurer pays the copy: +1 gold per member (Treasurer, Doppelganger)
     expect(named(s, 'Treasurer')).toHaveLength(1);

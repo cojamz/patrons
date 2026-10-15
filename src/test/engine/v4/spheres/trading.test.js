@@ -8,6 +8,7 @@ import trading, { install, SELL_HIGH } from '../../../../engine/v4/content/tradi
 import { take, move, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
 import { games } from '../budget.js';
+import { STRAYS, stray } from '../stray.js';
 
 // seeded games in the table block below: a game count, not a time budget (budget.js). The verdict plays 100 (catches a
 // bug in ≥3% of this table's games with 95% confidence), the nightly full run (check:v4:full) all 200, the fast gate 20.
@@ -37,7 +38,7 @@ function scene({ n = 2, seed = 7, round = 1, res = [], members = [], shop = null
     p.bonus = bonus[i] || 0; p.discount = 0; p.left = left;
   });
   s.pile = [...s.shop, ...s.pile]; s.shop = [];
-  const grab = def => { const k = s.pile.findIndex(u => s.cards[u].def === def); if (k < 0) throw new Error(`no ${def}`); return s.pile.splice(k, 1)[0]; };
+  const grab = def => { const k = s.pile.findIndex(u => s.cards[u].def === def); if (k < 0) { if (!STRAYS.has(def)) throw new Error(`no ${def}`); return stray(s, def); } return s.pile.splice(k, 1)[0]; };
   members.forEach((list, i) => { for (const d of list || []) s.players[i].members.push(grab(d)); });
   if (shop) for (const d of shop) s.shop.push(grab(d));
   while (s.shop.length < 6 && s.pile.length) s.shop.push(s.pile.shift());
@@ -240,10 +241,10 @@ describe('White members', () => {
   });
 
   it('Lender: a Doppelganger copying it is a full copy, +5 white included', () => {
-    let s = scene({ res: [{ red: 2, gold: 2 }], members: [['trading.lender']], shop: ['red.doppel'] });
+    let s = scene({ res: [{ green: 2, gold: 2 }], members: [['trading.lender']], shop: ['echo.doppel'] });
     s.cards[uidOf(s, 'trading.lender', 0)].loanPaid = true; // the original already paid out
     s = take(s, 'gold.rush');
-    s = move(s, `card:${uidOf(s, 'red.doppel', 'shop')}`);
+    s = move(s, `card:${uidOf(s, 'echo.doppel', 'shop')}`);
     s = move(s, `card:${uidOf(s, 'trading.lender', 0)}`);
     expect(R(s).white).toBe(5);
     s.players[0].bonus = 6;

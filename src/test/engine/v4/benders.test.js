@@ -7,6 +7,7 @@ import { defById } from '../../../engine/v4/content/index.js';
 import { extraTurns, onBoard } from '../../../engine/v4/content/purple.js';
 import { move, uidOf, ids, hasOpt, actionName } from './helpers.js';
 import { SHOP_SIZE } from '../../../engine/v4/core.js';
+import { STRAYS, stray } from './stray.js';
 
 const DEFAULT = ['gold', 'red', 'blue', 'green'];
 function scene({ n = 2, seed = 7, round = 1, res = [], members = [], shop = null, bonus = [], queue = null, slots = {}, quadrants = DEFAULT, rules = {}, order = null } = {}) {
@@ -19,7 +20,7 @@ function scene({ n = 2, seed = 7, round = 1, res = [], members = [], shop = null
     p.bonus = bonus[i] || 0; p.discount = 0; p.left = 3;
   });
   s.pile = [...s.shop, ...s.pile]; s.shop = [];
-  const grab = def => { const k = s.pile.findIndex(u => s.cards[u].def === def); if (k < 0) throw new Error(`no ${def}`); return s.pile.splice(k, 1)[0]; };
+  const grab = def => { const k = s.pile.findIndex(u => s.cards[u].def === def); if (k < 0) { if (!STRAYS.has(def)) throw new Error(`no ${def}`); return stray(s, def); } return s.pile.splice(k, 1)[0]; };
   members.forEach((list, i) => { for (const d of list || []) s.players[i].members.push(grab(d)); });
   if (shop) for (const d of shop) s.shop.push(grab(d));
   while (s.shop.length < 6 && s.pile.length) s.shop.push(s.pile.shift());
@@ -74,8 +75,8 @@ describe('Squatter: once per round, place on a space a rival already took', () =
     expect(ids(s).some(id => id.startsWith('squat:'))).toBe(false);
   });
   it('a joined space takes no third worker, and a new round gives a new use', () => {
-    const s0 = scene({ n: 3, members: [['red.doppel'], [], ['benders.squatter']], slots: { [JV]: 1 }, queue: [] });
-    s0.cards[uidOf(s0, 'red.doppel', 0)].copy = 'benders.squatter';
+    const s0 = scene({ n: 3, members: [['echo.doppel'], [], ['benders.squatter']], slots: { [JV]: 1 }, queue: [] });
+    s0.cards[uidOf(s0, 'echo.doppel', 0)].copy = 'benders.squatter';
     s0.queue = [{ t: 'turn', p: 2 }];
     let t = move(resume(s0), `squat:${JV}`); t = pickAny(t); t = passBuys(t);
     t.queue.unshift({ t: 'turn', p: 0 }); t = resume(t);
@@ -170,8 +171,8 @@ describe('Insider: also recruit from the top 3 of the pile', () => {
     expect(s.shop.length).toBe(SHOP_SIZE);
   });
   it('a Doppelganger copying Insider does not reach deeper', () => {
-    let s = scene({ members: [['benders.insider', 'red.doppel']], res: [{ gold: 30, red: 30, blue: 30, green: 30 }], rules: { release: false }, queue: [{ t: 'buy', p: 0 }] });
-    s.cards[uidOf(s, 'red.doppel', 0)].copy = 'benders.insider';
+    let s = scene({ members: [['benders.insider', 'echo.doppel']], res: [{ gold: 30, red: 30, blue: 30, green: 30 }], rules: { release: false }, queue: [{ t: 'buy', p: 0 }] });
+    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'benders.insider';
     expect(ids(s)).not.toContain(`card:${s.pile[3]}`);
   });
 });
@@ -187,8 +188,8 @@ describe('Extra Hand: +1 worker in round III', () => {
     expect(t.players[0].left).toBe(4);
   });
   it('a Doppelganger copy adds another worker', () => {
-    const s0 = scene({ members: [['benders.extrahand', 'red.doppel']], queue: [] });
-    s0.cards[uidOf(s0, 'red.doppel', 0)].copy = 'benders.extrahand';
+    const s0 = scene({ members: [['benders.extrahand', 'echo.doppel']], queue: [] });
+    s0.cards[uidOf(s0, 'echo.doppel', 0)].copy = 'benders.extrahand';
     s0.queue = [{ t: 'round', r: 3 }];
     const s = resume(s0);
     expect(s.players[0].left).toBe(7);
@@ -205,8 +206,8 @@ describe('Front-runner: always pick first in a round', () => {
     expect(s.order.slice(0, 3)).toEqual([2, 0, 1]);
   });
   it('two Front-runners keep their usual order between them (fewer followers first)', () => {
-    const s0 = scene({ n: 3, members: [['benders.frontrunner'], [], ['red.doppel']], bonus: [5, 0, 2], order: [0, 1, 2], queue: [] });
-    s0.cards[uidOf(s0, 'red.doppel', 2)].copy = 'benders.frontrunner';
+    const s0 = scene({ n: 3, members: [['benders.frontrunner'], [], ['echo.doppel']], bonus: [5, 0, 2], order: [0, 1, 2], queue: [] });
+    s0.cards[uidOf(s0, 'echo.doppel', 2)].copy = 'benders.frontrunner';
     s0.queue = [{ t: 'round', r: 2 }];
     const s = resume(s0);
     expect(s.order.slice(0, 3)).toEqual([2, 0, 1]);
@@ -302,12 +303,12 @@ describe('Release (base rule): once per round, release a member for its colored 
     expect(R(s).gold).toBe(colored('gold.banker'));
   });
   it('a released Doppelganger forgets its copy; a released Squatter comes back unspent', () => {
-    let s = scene({ members: [['red.doppel', 'benders.squatter']], queue: [{ t: 'buy', p: 0 }] });
-    const d = uidOf(s, 'red.doppel', 0), q = uidOf(s, 'benders.squatter', 0);
+    let s = scene({ members: [['echo.doppel', 'benders.squatter']], queue: [{ t: 'buy', p: 0 }] });
+    const d = uidOf(s, 'echo.doppel', 0), q = uidOf(s, 'benders.squatter', 0);
     s.cards[d].copy = 'benders.squatter'; s.cards[q].spent = { squat: 1 };
     s.current = 0; s = resume(s);
     s = move(s, `release:${d}`);
-    expect(s.cards[d]).toEqual({ uid: d, def: 'red.doppel' });
+    expect(s.cards[d]).toEqual({ uid: d, def: 'echo.doppel' });
   });
   it('can fund this turn’s buy (release comes before buying)', () => {
     let s = scene({ members: [['red.bigfamily']], res: [{ red: 4 - colored('red.bigfamily') }], queue: [{ t: 'buy', p: 0 }] });
@@ -394,8 +395,8 @@ describe('Release with once-per-game members, just-bought members and Echo copie
 
 describe('Doppelganger and Magenta theft with once-per-round benders', () => {
   it('a Doppelganger copying Squatter is a second squat in the round', () => {
-    let s = scene({ members: [['benders.squatter', 'red.doppel']], slots: { [JV]: 1, [RUSH]: 1 }, rules: { release: false } });
-    s.cards[uidOf(s, 'red.doppel', 0)].copy = 'benders.squatter';
+    let s = scene({ members: [['benders.squatter', 'echo.doppel']], slots: { [JV]: 1, [RUSH]: 1 }, rules: { release: false } });
+    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'benders.squatter';
     s = move(s, `squat:${JV}`); s = passBuys(pickAny(s));
     s.queue = [{ t: 'turn', p: 0 }]; s = resume(s);
     expect(ids(s)).toContain(`squat:${RUSH}`);

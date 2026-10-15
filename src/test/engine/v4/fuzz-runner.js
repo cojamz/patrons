@@ -87,11 +87,11 @@ const botPicker = rand => s => chooseBotMove(s, rand);
 const randomPicker = rand => s => { const ms = legalMoves(s); return ms[Math.floor(rand() * ms.length)]; };
 
 /** Plays one game to the end, checking every step. Returns { state, moves }. */
-export function runGame({ n, seed, kind, full = true }) {
+export function runGame({ n, seed, kind, full = true, quadrants }) {
   const ctx = `${kind} n=${n} seed=${seed}`;
   const rand = seededRandom(seed * 7919 + n);
   const pick = (kind === 'bot' ? botPicker : randomPicker)(rand);
-  let s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed });
+  let s = createGame({ seats: Array.from({ length: n }, (_, i) => ({ name: `P${i + 1}`, kind: 'bot' })), seed, quadrants });
   const moves = [];
   checkInvariants(s, ctx);
   while (s.pending) {

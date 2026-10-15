@@ -273,6 +273,19 @@ const echoQ = {
       ctx.recruit(p, uid, { free: true });
       freeStep(ctx, p, data);
     },
+    doppelCopy(ctx, p, uid, data) {
+      const target = ctx.card(uid);
+      const self = ctx.card(data.uid);
+      self.copy = target.def.id;
+      // a copied Hustler works the same color (until its own when-recruited pick below sets one)
+      if (target.color !== undefined) self.color = target.color;
+      ctx.log(`${p.name}'s Doppelganger copies ${target.def.name}.`);
+      // Doppelganger becomes a copy of the member card (Cory): the copied "when recruited" effect fires once, for the
+      // copy, and so does a "Now and at round start" member's now part. Named under the copied member, like its other hooks.
+      const d = target.def;
+      if (d.onRecruited) ctx.asMember(p, d.name, () => d.onRecruited(ctx, p, self));
+      if (d.now) for (const hook of ['onRoundStart', 'onRoundStartLate']) if (d[hook]) ctx.asMember(p, d.name, () => d[hook](ctx, p, self));
+    },
   },
 
   members: [
@@ -335,6 +348,17 @@ const echoQ = {
       },
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2
         && targets(ctx, owner, 'own').reduce((s, e) => s + entryValue(ctx, e, owner), 0) >= (ctx.state.round === 3 ? 6 : 10),
+    }),
+    // Cory, 2026-10-15: moved here from Red (same card; its rename and recruit-time pick wait for his redesign)
+    m('doppel', 'Doppelganger', 4, 2, 'When recruited: copies the effect of one of your members.', {
+      onRecruited(ctx, owner, card) {
+        const own = ctx.membersOf(owner).filter(c => c.uid !== card.uid && c.def.key !== 'doppel');
+        if (!own.length) return;
+        ctx.choose(owner, 'Doppelganger: copy which of your members?', own.map(c => ({
+          id: `card:${c.uid}`, label: c.def.name, kind: 'member', value: c.uid,
+          hint: ['banker', 'prospector', 'recruiter', 'proselytizer', 'host'].includes(c.def.key) ? 2 : (c.def.vanilla ? 0 : 1),
+        })), 'echo.doppelCopy', { uid: card.uid });
+      },
     }),
     m('chronicler', 'Chronicler', 4, 4, 'Game end: +1 follower per 2 green.', {
       onGameEnd: (ctx, owner) => Math.floor((owner.res.green || 0) / 2),

@@ -10,7 +10,7 @@ import { table, useCosts, named, uidIn, owns } from './cards-helpers-b.js';
 const Q = ['gold', 'red', 'thieves', 'market'];
 useCosts({
   'gold.tycoon': [8, 4], 'gold.taxman': [2, 2], 'red.bigfamily': [4, 4], 'red.twins': [2, 2], 'red.intern': [2, 0],
-  'red.volunteer': [0, 0], 'red.doppel': [4, 2], 'red.mentor': [6, 4],
+  'red.volunteer': [0, 0], 'echo.doppel': [4, 2], 'red.mentor': [6, 4],
   'thieves.cutpurse': [2, 2], 'thieves.mole': [2, 2], 'thieves.accomplice': [4, 4], 'thieves.grifter': [4, 2],
   'thieves.sticky': [4, 4], 'thieves.desperado': [2, 2], 'thieves.robinhood': [2, 2], 'thieves.lookout': [4, 2],
   'thieves.lightfingers': [4, 4], 'thieves.extortionist': [4, 2], 'thieves.watchdog': [4, 2], 'thieves.crew': [2, 2],
@@ -116,7 +116,7 @@ describe('Magenta actions', () => {
   });
 
   it('Shake Down: a rival\'s member costing 4 or less; they pay its cost to keep it, or it\'s yours', () => {
-    let s = table(Q, { round: 2, res: [{}, { red: 3 }], members: [[], ['red.twins', 'red.bigfamily', 'red.intern', 'red.doppel']], shop: ROW });
+    let s = table(Q, { round: 2, res: [{}, { red: 3 }], members: [[], ['red.twins', 'red.bigfamily', 'red.intern', 'echo.doppel']], shop: ROW });
     s = take(s, 'thieves.ransom');
     // Twins 4 and Intern 2; not Doppelganger (6) or Big Family (8)
     expect(ids(s).sort()).toEqual([cardOpt(s, 'red.twins', 1), cardOpt(s, 'red.intern', 1)].sort());
@@ -276,11 +276,11 @@ describe('Magenta members', () => {
     expect(ids(s)).not.toContain(`use:${uidIn(s, 'thieves.bigscore', 0)}`);
   });
   it('× Doppelganger copying Safecracker: a second use (the copy\'s own once-per-game)', () => {
-    let s = table(Q, { res: [{ gold: 20 }, { magenta: 8 }], members: [['thieves.bigscore', 'red.doppel']], shop: ROW });
-    s.cards[uidIn(s, 'red.doppel', 0)].copy = 'thieves.bigscore';
+    let s = table(Q, { res: [{ gold: 20 }, { magenta: 8 }], members: [['thieves.bigscore', 'echo.doppel']], shop: ROW });
+    s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'thieves.bigscore';
     s = take(s, 'thieves.tipoff');
     s = move(s, `use:${uidIn(s, 'thieves.bigscore', 0)}`);
-    s = move(s, `use:${uidIn(s, 'red.doppel', 0)}`);
+    s = move(s, `use:${uidIn(s, 'echo.doppel', 0)}`);
     expect([R(s).magenta, R(s, 1).magenta]).toEqual([6, 2]);
   });
 

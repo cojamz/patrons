@@ -37,8 +37,8 @@ export function createGame({ seats, seed = 1, quadrants = DEFAULT_QUADRANTS, rul
   const zero = Object.fromEntries(resources.map(r => [r, 0]));
   const cards = {};
   let uid = 0;
-  const table = { ...DEFAULT_RULES, ...rules };
-  const dealt = def => !(table.cull && !FULL_DECK.tests && CUT.has(def.id)); // the cull (content/cull.js)
+  const table = { ...DEFAULT_RULES, ...(FULL_DECK.tests ? { cull: false } : {}), ...rules }; // tests: content/cull.js
+  const dealt = def => !(table.cull && CUT.has(def.id)); // the cull (content/cull.js)
   for (const q of quadrants) for (const def of quadrant(q).members.filter(dealt))
     for (let k = 0; k < def.copies; k++) { cards[uid] = { uid, def: def.id }; uid++; }
   if (table.guests) for (const def of guestMembers().filter(dealt))

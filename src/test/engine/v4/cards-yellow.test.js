@@ -143,8 +143,8 @@ describe('Yellow members', () => {
     let s = take(sc({ members: [['yellow.farmer']] }), 'yellow.harvest');
     expect(R(s).yellow).toBe(2);
     expect(named(s, 'Farmer')).toHaveLength(1);
-    s = sc({ members: [['yellow.farmer', 'red.doppel']] });
-    s.cards[uidOf(s, 'red.doppel', 0)].copy = 'yellow.farmer';
+    s = sc({ members: [['yellow.farmer', 'echo.doppel']] });
+    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'yellow.farmer';
     expect(R(take(s, 'yellow.harvest')).yellow).toBe(3); // Harvest's 1 (no other colors held), +1 Farmer, +1 its copy
   });
   it('Weaver: buying 6+ followers gives +1 of each color, named; a 3-buy does not', () => {

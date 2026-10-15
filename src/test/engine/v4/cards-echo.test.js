@@ -14,7 +14,7 @@ const Q = ['gold', 'red', 'market', 'echo'];
 const QT = ['gold', 'thieves', 'market', 'echo'];
 useCosts({
   'gold.tycoon': [8, 4], 'gold.taxman': [2, 2], 'gold.midas': [4, 4], 'red.bigfamily': [4, 4], 'red.twins': [2, 2],
-  'red.intern': [2, 0], 'red.volunteer': [0, 0], 'red.doppel': [4, 2],
+  'red.intern': [2, 0], 'red.volunteer': [0, 0], 'echo.doppel': [4, 2],
   'echo.evergreen': [2, 2], 'echo.choir': [4, 2], 'echo.muse': [2, 2], 'echo.understudy': [4, 2], 'echo.ensemble': [4, 2],
   'echo.groupie': [4, 4], 'echo.translator': [4, 2], 'echo.tuningfork': [2, 2], 'echo.wallflower': [2, 2],
   'echo.mirror': [4, 2], 'echo.afterimage': [4, 2], 'echo.hourglass': [6, 4],
@@ -125,8 +125,8 @@ describe('Green members', () => {
     expect(named(s, 'Choir')).toEqual(["P1's Choir: +1 green."]);
   });
   it('× Doppelganger copying Choir: +2 per copy', () => {
-    let s = table(Q, { shop: ROW, queue: turns(1, 0), members: [['echo.choir', 'red.doppel']] });
-    s.cards[uidIn(s, 'red.doppel', 0)].copy = 'echo.choir';
+    let s = table(Q, { shop: ROW, queue: turns(1, 0), members: [['echo.choir', 'echo.doppel']] });
+    s.cards[uidIn(s, 'echo.doppel', 0)].copy = 'echo.choir';
     s = go(go(s, 'echo.hum'), 'echo.echo', sp('echo.hum'));
     expect(R(s).green).toBe(3 + 2);
   });

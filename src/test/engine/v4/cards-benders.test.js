@@ -73,8 +73,8 @@ describe('Guest members (rule-benders)', () => {
     let s = sceneQ({ members: [['benders.extrahand']], queue: [{ t: 'round', r: 3 }] });
     expect(s.players[0].left).toBe(6);
     expect(named(s, 'Extra Hand')[0]).toMatch(/P1's Extra Hand: \+1 minion/);
-    s = sceneQ({ members: [['benders.extrahand', 'red.doppel']], queue: [] });
-    s.cards[uidOf(s, 'red.doppel', 0)].copy = 'benders.extrahand';
+    s = sceneQ({ members: [['benders.extrahand', 'echo.doppel']], queue: [] });
+    s.cards[uidOf(s, 'echo.doppel', 0)].copy = 'benders.extrahand';
     s.queue = [{ t: 'round', r: 3 }]; s = resume(s);
     expect(s.players[0].left).toBe(7);
     expect(named(s, 'Extra Hand')[0]).toMatch(/\+2 minions/);
