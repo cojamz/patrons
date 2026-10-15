@@ -16,6 +16,7 @@ import { playerAnchor, motionOK, flyToken, expectArrival, pulse, track } from '.
 import { MO, flightMs, slowed } from '../motion.js';
 import { chainRunning, onChainEnd } from './director.js';
 import Tick from './Tick.jsx';
+import { play } from '../sound.js';
 
 // The pace (the motion language's B6, grammar.md; Cory: "readable, one quadrant at a time"): about 1.6s a rim at
 // Steady, every step moving. The rim lights; the counts stamp in seat by seat and tick up (no still "counting…"); the
@@ -131,6 +132,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
         const e = root && root.querySelector(`[data-rim-leader="${id}"]`);
         if (e && e.animate) track(e.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-5px)', offset: 0.4 }, { transform: 'translateY(0)' }], { duration: MO.hop, easing: 'cubic-bezier(.3,1.4,.5,1)', composite: 'add' }));
       }
+      if (won) play('fanfare'); // the winner's little flourish (sound.js)
       if (!won) timers.push(setTimeout(() => setStep(s => s + 1), MO.hop + MO.reckonRest));
     }, counted));
     if (won) timers.push(setTimeout(() => {
@@ -139,6 +141,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
       let landed = 0, longest = 0;
       const land = () => {
         if (cancelled || ++landed < row.winners.length) return;
+        play('follower');
         for (const id of row.winners) {
           const home = root && root.querySelector(`.lt-cult-seat[data-seat="${id}"] .cs-total`);
           if (home) expectArrival(home, performance.now(), 0, true);
