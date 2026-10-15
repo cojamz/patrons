@@ -919,7 +919,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               rail beside them shows which way the turns are walking. A new round's order re-sorts them (they slide). */}
           {(
             <div className={`lt-snake ${state.round >= 1 ? `dir-${snake.dir}` : 'dir-none'}`} data-snake={snake.dir} data-pass={snake.pass + 1} style={{ '--n': state.players.length }}
-              title={`Turn order this round, top to bottom: ${snake.order.map(id => (id === me ? 'You' : state.players[id].name)).join(', ')}. The snake goes down, then back up${snake.passes ? ` (pass ${snake.pass + 1} of ${snake.passes}, going ${snake.dir})` : ''}: whoever ends a pass starts the next.`}>
+              title={state.round < 1 ? 'Setup: everyone picks their starting resources, top to bottom.' : `Turn order this round, top to bottom: ${snake.order.map(id => (id === me ? 'You' : state.players[id].name)).join(', ')}. The snake goes down, then back up${snake.passes ? ` (pass ${snake.pass + 1} of ${snake.passes}, going ${snake.dir})` : ''}: whoever ends a pass starts the next.`}>
               <span className="sn-line" aria-hidden="true" />
             </div>
           )}

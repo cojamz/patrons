@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import './app.css'; // v4.css then lamp.css, inlined in that order (see app.css)
 import { createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineReady } from './sessionApi.js';
 import { createLocalSession } from './session/local.js';
-import { loadLocal, saveLocal, clearLocal, finishLocal, loadLast, clearLast, claimLocal, ownsLocal, onLocalLost, releaseLocal, loadOnline, saveOnline, clearOnline, rememberRoom, roomIds, lastRoomCode } from './saved.js';
+import { loadLocal, saveLocalSoon, clearLocal, finishLocal, loadLast, clearLast, claimLocal, ownsLocal, onLocalLost, releaseLocal, loadOnline, saveOnline, clearOnline, rememberRoom, roomIds, lastRoomCode } from './saved.js';
 import GameScreen from './game/GameScreen.jsx';
 import { friendlyError, OFFLINE } from './errors.js';
 import { Home, LocalSetup, Lobby, initialTable } from './screens/Screens.jsx';
@@ -103,7 +103,8 @@ function App() {
   useEffect(() => {
     if (!session || session.info?.mode === 'online') return undefined;
     // the round-end hold goes with the state, so a reload reopens the round summary (session/local.js)
-    const save = s => { if (!(s && s.over && finished.current === session)) saveLocal(configRef.current, s, session.undoCheckpoint, session.roundHold); };
+    // off the input path (saved.js saveLocalSoon): the latest state is written in idle time, at once on pagehide
+    const save = s => { if (!(s && s.over && finished.current === session)) saveLocalSoon(configRef.current, s, session.undoCheckpoint, session.roundHold); };
     save(session.getState());
     return session.subscribe(save);
   }, [session]);

@@ -69,7 +69,7 @@ async function load1(pack) {
     localStorage.setItem('patrons.v4.introSeen', '1');
   }, { save: pack.save || pack, rs: pack.roundStart || null });
   await page.goto(url());
-  await page.click('[data-home="resume"]', { timeout: 10000 });
+  await page.click('[data-home="resume"]', { timeout: 60000 });
   await page.waitForSelector('.lt-shop .card', { timeout: 20000 });
   await settle(900);
 }

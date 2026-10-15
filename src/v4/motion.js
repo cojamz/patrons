@@ -1,9 +1,55 @@
-// Every motion budget in the game, in one place (Cory, 2026-10-15: "it just doesn't feel snappy", "the wheel spins
-// really slow"). The CSS twins are the --mo-* tokens at the top of v4.css. Audit and targets: design/eval/perf/motion-audit.md.
-// Rules: input answers within 100ms; hover opens at once; a spin is 250–350ms, crisp ease-out; flights are 200–350ms;
-// decoration never blocks the next input; nothing you did waits on an animation before it shows its result.
-// Bots are the one place paced for legibility, not speed. The Reckoning keeps its own pace (Reckoning.jsx).
-export const MO = {
+// Every motion budget in the game, in one place. The CSS twins are the --mo-* tokens at the top of v4.css, scaled by
+// --mo-scale. Audit and targets: design/eval/perf/motion-audit.md; the motion language: design/prototypes/motion/.
+//
+// Two kinds of motion (Cory, 2026-10-15):
+//  - What answers your hand stays instant at every speed: a press, a hover, the wheel's spin, the first frame of your
+//    minion leaving. Input shows a response within 100ms.
+//  - What tells what happened is a show: "whenever somebody does something it should be obvious, and it triggers a
+//    chain of animations ... all timed well, paced well, and obvious". Its every duration and gap scales with the
+//    viewer's animation speed (the ☰ menu): Quick, Steady (the default: "not SLOW slow, just clear and steady enough
+//    for players to see what's happening") or Relaxed. A click or Space skips the rest of a chain to its end.
+
+/** The viewer's animation speed: how much every "show" duration is multiplied by. */
+export const SPEEDS = { quick: 0.5, steady: 1, relaxed: 1.55 };
+export const SPEED_NAMES = { quick: 'Quick', steady: 'Steady', relaxed: 'Relaxed' };
+export const DEFAULT_SPEED = 'steady';
+const KEY = 'patrons.v4.motionSpeed';
+
+const urlSpeed = () => {
+  try {
+    const q = new URLSearchParams(globalThis.location?.search || '');
+    const v = q.get('speed');
+    if (v && SPEEDS[v]) return v;
+    // a test or tool fast-forwarding the bots (?botDelay=) plays its chains quick unless it says otherwise
+    if (q.get('botDelay')) return 'quick';
+  } catch { /* no location */ }
+  return null;
+};
+function readSpeed() {
+  const u = urlSpeed();
+  if (u) return u;
+  try { const v = globalThis.localStorage && localStorage.getItem(KEY); if (v && SPEEDS[v]) return v; } catch { /* private window */ }
+  return DEFAULT_SPEED;
+}
+let speed = readSpeed();
+const subs = new Set();
+const applyCss = () => { try { if (typeof document !== 'undefined') document.documentElement.style.setProperty('--mo-scale', String(SPEEDS[speed])); } catch { /* jsdom */ } };
+applyCss();
+
+export const motionSpeed = () => speed;
+export const speedScale = () => SPEEDS[speed] ?? 1;
+/** Change the viewer's speed (kept in this browser; a ?speed= in the address wins for that page). */
+export function setMotionSpeed(s) {
+  if (!SPEEDS[s] || s === speed) return;
+  speed = s;
+  try { localStorage.setItem(KEY, s); } catch { /* private window */ }
+  applyCss();
+  for (const fn of subs) fn(s);
+}
+export const onMotionSpeed = fn => { subs.add(fn); return () => subs.delete(fn); };
+
+// Each budget at Steady. Scaled ones (SHOW) are multiplied by the speed when read; the rest answer your hand.
+const BASE = {
   /** the wheel turning to its next quarter (arrow key, swipe, fling, settle after a drag) */
   spin: 300,
   /** hover cards: open at once, close a beat after the pointer leaves (HoverCards.jsx) */
@@ -11,26 +57,32 @@ export const MO = {
   hoverClose: 150,
   /** a keyword's tip (Info.jsx): a hair of intent, so sweeping across a sentence doesn't flash every term */
   tipOpen: 50,
-  /** a rival's minion travels from its leader to the space (it shows on the space as it lands) */
-  minionFly: 300,
-  /** your own minion stands on the space at once; a quick trail from your leader says where it came from */
-  minionTrail: 200,
-  /** a recruited card lifts off the shop and flies to its new owner's chip, which then glows */
-  cardFly: 340,
+  /** the chosen space lights before anything moves (the selection, made obvious) */
+  select: 140,
+  /** a minion travels from its slot in the seat to the space (it shows on the space as it lands) */
+  minionFly: 380,
+  /** a member acknowledges that it's acting (a hop) before what it gives leaves it */
+  hop: 200,
+  /** a recruited card lifts off the shop and flies to its new owner's crowd, which then glows */
+  cardFly: 420,
   chipGlow: 500,
   /** every gain and payment: one piece per unit flies from its source to where it lands, this far apart (flight.js) */
-  pieceFly: 260,
-  pieceStagger: 40,
+  pieceFly: 340,
+  pieceStagger: 55,
   pieceMax: 10,
-  pieceBump: 220,
+  pieceBump: 240,
+  /** in a chain, the next step starts when this much of the one before has played (overlap, never all at once) */
+  overlap: 0.7,
+  /** a chain holds its end a moment before the next thing happens */
+  chainHold: 220,
   /** the cards left in the shop slide to their new places */
-  shopSlide: 240,
+  shopSlide: 260,
   /** a new card is dealt off the deck into its slot (per card, plus a stagger) */
-  deal: 300,
-  dealStagger: 40,
+  deal: 340,
+  dealStagger: 50,
   /** a new round sends the wheel's minions home (per minion, plus a stagger) */
-  minionsHome: 340,
-  minionsHomeStagger: 30,
+  minionsHome: 380,
+  minionsHomeStagger: 35,
   /** a number counting up or down: base + per step, capped (Tick.jsx; the round summary passes its own) */
   tickBase: 300,
   tickPer: 30,
@@ -38,16 +90,26 @@ export const MO = {
   /** a seat's members and leader react to what just happened (CultSeat.jsx) */
   react: 900,
   /** the "Nothing you can afford" toast waits for your recruit to land */
-  afterFlight: 360,
+  afterFlight: 420,
+  /** the Reckoning's prize token, plaque to winner (its pacing is the Reckoning's own) */
+  reckonToken: 640,
   /** a new kind of step ignores a second press near the first for this long (the double-tap guard) */
   stepLock: 400,
   /** the same option twice within this is one double-click */
   doubleClick: 350,
 };
+const SHOW = new Set(['select', 'minionFly', 'hop', 'cardFly', 'chipGlow', 'pieceFly', 'pieceStagger', 'pieceBump', 'chainHold', 'shopSlide',
+  'deal', 'dealStagger', 'minionsHome', 'minionsHomeStagger', 'tickBase', 'tickPer', 'tickMax', 'react', 'afterFlight', 'reckonToken']);
+
+/** MO.x reads the budget at the viewer's speed (read it when you use it, never keep a copy). */
+export const MO = {};
+for (const k of Object.keys(BASE)) {
+  Object.defineProperty(MO, k, { enumerable: true, get: () => (SHOW.has(k) ? Math.round(BASE[k] * speedScale()) : BASE[k]) });
+}
 
 /**
- * Bots: how long each visible bot step stays on screen (placing, recruiting, buying, passing), by the table's speed,
- * and how long the session lets a bot think before it moves. A rival's recruit holds a little longer (its card flies).
+ * Bots: how long each visible bot step stays on screen at least (placing, recruiting, buying, passing), by the table's
+ * bot speed, and how long the session lets a bot think. A step's own chain of animations can hold it longer.
  */
 export const BOT = {
   pace: { slow: 1000, normal: 600, fast: 350 },

@@ -88,7 +88,8 @@ export function newGame(opts) {
 
 /** applyMove that also records the move (when the state keeps a history). Throws like applyMove. */
 export function step(state, move) {
-  const next = applyMove(state, move);
+  // effects: what moved and why, for the table's chain of animations (engine/v4/effects.js; never saved)
+  const next = applyMove(state, move, { effects: true });
   if (Array.isArray(next.history)) next.history.push([move.player, move.option]);
   return next;
 }

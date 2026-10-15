@@ -1,8 +1,10 @@
-// Payment picker: default preselected (one tap confirms), adjusted by tapping coins in and out, Confirm only on a
-// legal spend, Back works.
+// Paying (dialogs pod, 2026-10-15): the cost as sockets at the engine's price, the default way already in (one tap
+// pays), a stack click or a coin click swaps to the nearest other legal way (the payment never goes short), every
+// rule-changer named in a line, Cancel goes back, and a single way to pay skips the dialog.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
-import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.js';
+import { createGame, applyMove, chooseBotMove, memberPrice, TIERS } from '../../../engine/v4/index.js';
+import { resume } from '../../../engine/v4/core.js';
 import GameScreen from '../../../v4/game/GameScreen.jsx';
 import HowToPlay from '../../../v4/HowToPlay.jsx';
 import { RULEBOOK } from '../../../v4/rulebook.js';
@@ -37,59 +39,121 @@ function searchPayState() {
   throw new Error('no pay state found');
 }
 
+const payIds = st => st.pending.options.filter(o => o.kind === 'pay');
+const vec = (st, id) => Object.fromEntries(id.slice(4).split('-').map((n, i) => [st.resources[i], Number(n)]));
+
 describe('v4 payment picker', () => {
-  it('preselects the default so one tap confirms; tapping a resource swaps it in for another legal way', () => {
+  it('shows the engine price as sockets, preselects the default (one tap pays) and a stack click swaps a coin in', () => {
     const state = findPayState();
     const me = state.pending.player;
     const ss = session(state, [me]);
     render(<GameScreen session={ss} />);
     const dlg = screen.getByRole('dialog');
     const res = state.resources;
-    const ways = state.pending.options.filter(o => o.kind === 'pay');
+    const ways = payIds(state);
     const def = ways.find(o => o.default);
-    const confirm = within(dlg).getByRole('button', { name: 'Confirm' });
-    expect(confirm.disabled).toBe(false);
-    expect(confirm.getAttribute('data-option')).toBe(def.id);
-    expect(dlg.querySelector('[data-pay-status]').textContent).toMatch(/Paid in full/);
-    // the cost shows one coin per resource spent
+    // the cost: one socket per unit the engine asks (memberPrice for a member, the tier's cost for followers)
+    const p = state.players[me];
+    const units = state.pending.uid !== undefined ? memberPrice(state, p, state.pending.uid).total : TIERS.find(t => t.key === state.pending.tier).cost;
+    expect(dlg.querySelectorAll('[data-socket]').length).toBe(units);
+    const pay = dlg.querySelector('.pay-go');
+    expect(pay.disabled).toBe(false);
+    expect(pay.getAttribute('data-option')).toBe(def.id);
+    // one coin in the sockets per resource the default spends
     expect(dlg.querySelectorAll('[data-pay-coin]').length).toBe(res.reduce((n, r) => n + def.spend[r], 0));
-    // a swap the engine allows: one more of r, one less of the most-spent other color
+    // a stack whose color can go in for another: the payment moves to the nearest legal way with one more of it
     const ids = new Set(ways.map(o => o.id));
-    const id = v => `pay:${res.map(r => v[r] || 0).join('-')}`;
-    const r = res.find(c => state.players[me].res[c] > def.spend[c]
-      && res.some(y => y !== c && def.spend[y] > 0 && ids.has(id({ ...def.spend, [c]: def.spend[c] + 1, [y]: def.spend[y] - 1 }))));
+    const r = res.find(c => p.res[c] > def.spend[c] && ways.some(o => o.spend[c] > def.spend[c]));
     expect(r).toBeTruthy();
     fireEvent.click(dlg.querySelector(`[data-pay-add="${r}"]`));
-    const chosen = within(dlg).getByRole('button', { name: 'Confirm' }).getAttribute('data-option');
+    const chosen = dlg.querySelector('.pay-go').getAttribute('data-option');
     expect(chosen).not.toBe(def.id);
     expect(ids.has(chosen)).toBe(true);
-    fireEvent.click(within(dlg).getByRole('button', { name: 'Confirm' }));
+    expect(vec(state, chosen)[r]).toBe(def.spend[r] + 1);
+    // the number under each stack is what you keep
+    for (const c of res) expect(Number(dlg.querySelector(`[data-pay-add="${c}"]`).dataset.keep)).toBe(p.res[c] - vec(state, chosen)[c]);
+    fireEvent.click(dlg.querySelector('.pay-go'));
     expect(ss.submit).toHaveBeenCalledWith({ player: me, option: chosen });
   });
 
-  it('Back returns to the buy step', () => {
+  it('Cancel (and Escape) go back to the buy step', () => {
     const state = findPayState();
     const me = state.pending.player;
     const ss = session(state, [me]);
     render(<GameScreen session={ss} />);
-    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Back' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
     expect(ss.submit).toHaveBeenCalledWith({ player: me, option: 'back' });
   });
 
-  it('Confirm is disabled when the spend does not match a legal way', () => {
+  it('a coin clicked in the cost goes home and another legal way takes its place: the payment never goes short', () => {
     const state = findPayState();
     render(<GameScreen session={session(state, [state.pending.player])} />);
     const dlg = screen.getByRole('dialog');
-    // take one coin back out of the cost: no longer pays it, and the slot says so
-    const def = state.pending.options.find(o => o.default);
-    const color = state.resources.find(r => def.spend[r] > 0);
+    const ways = payIds(state);
+    const ids = new Set(ways.map(o => o.id));
+    const def = ways.find(o => o.default);
+    // a color some other legal way spends less of
+    const color = state.resources.find(r => def.spend[r] > 0 && ways.some(o => o.spend[r] < def.spend[r]));
+    expect(color).toBeTruthy();
     fireEvent.click(dlg.querySelector(`[data-pay-coin="${color}"]`));
-    expect(within(dlg).getByRole('button', { name: 'Confirm' }).disabled).toBe(true);
-    expect(dlg.querySelector('[data-pay-status]').textContent).toMatch(/1 more to pay/);
-    // tap that color in your resources: it goes back in, and the cost is paid again
+    const now = dlg.querySelector('.pay-go');
+    expect(now.disabled).toBe(false);
+    expect(ids.has(now.getAttribute('data-option'))).toBe(true);
+    expect(vec(state, now.getAttribute('data-option'))[color]).toBe(def.spend[color] - 1);
+    // and that color's stack puts one back in
     fireEvent.click(dlg.querySelector(`[data-pay-add="${color}"]`));
-    expect(within(dlg).getByRole('button', { name: 'Confirm' }).getAttribute('data-option')).toBe(def.id);
-    expect(dlg.querySelector('[data-pay-status]').textContent).toMatch(/Paid in full/);
+    expect(vec(state, dlg.querySelector('.pay-go').getAttribute('data-option'))[color]).toBe(def.spend[color]);
+    // Enter pays whatever is in the cost
+    const want = dlg.querySelector('.pay-go').getAttribute('data-option');
+    fireEvent.keyDown(dlg.querySelector('.pay-card'), { key: 'Enter' });
+    expect(within(dlg).getByRole('button', { name: /^Pay/ }).getAttribute('data-option')).toBe(want);
+  });
+
+  it('names every rule-changer in one quiet line each, and the sockets show the price they make', () => {
+    // a member with a colored part, paid by someone holding Penny Pincher and a −4 discount
+    let state = structuredClone(findPayState());
+    const me = state.pending.player;
+    const p = state.players[me];
+    const free = def => Object.values(state.cards).find(c => c.def === def && !state.players.some(x => x.members.includes(c.uid)));
+    const pp = free('gold.thrift');
+    state.pile = state.pile.filter(u => u !== pp.uid); state.shop = state.shop.filter(u => u !== pp.uid);
+    p.members.push(pp.uid);
+    p.discount = 4;
+    p.res = { ...p.res, gold: 6, red: 6, blue: 6, green: 6 };
+    // a gold member face up (its colored part is gold, so the discount and the double gold both bend it)
+    const target = state.pile.find(u => state.cards[u].def.startsWith('gold.') && state.cards[u].def !== 'gold.thrift' && memberPrice(state, p, u).total >= 2);
+    state.pile = state.pile.filter(u => u !== target); state.shop = [target, ...state.shop];
+    expect(target).toBeDefined();
+    state.queue[0] = { t: 'pay', p: me, uid: target };
+    state = resume(state);
+    expect(state.pending.kind).toBe('pay');
+    const ss = session(state, [me]);
+    render(<GameScreen session={ss} />);
+    const dlg = screen.getByRole('dialog');
+    const rules = [...dlg.querySelectorAll('[data-pay-rule]')].map(e => e.textContent);
+    expect(rules.some(t => /gold counts double/.test(t))).toBe(true);
+    expect(rules.some(t => /−4/.test(t))).toBe(true);
+    expect(dlg.querySelectorAll('[data-socket]').length).toBe(memberPrice(state, state.players[me], target).total);
+  });
+
+  it('only one way to pay: no dialog, it pays at once', async () => {
+    let state = structuredClone(findPayState());
+    const me = state.pending.player;
+    const p = state.players[me];
+    const uid = state.pending.uid ?? state.shop.find(u => memberPrice(state, p, u).total > 0);
+    // exactly the price in one color the cost takes: one legal way
+    const pr = memberPrice(state, p, uid);
+    p.res = Object.fromEntries(state.resources.map(r => [r, 0]));
+    p.res[pr.color || state.resources[0]] = pr.total;
+    p.discount = 0;
+    state.queue[0] = { t: 'pay', p: me, uid };
+    state = resume(state);
+    expect(payIds(state).length).toBe(1);
+    const ss = session(state, [me]);
+    render(<GameScreen session={ss} />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    await new Promise(r => setTimeout(r, 20));
+    expect(ss.submit).toHaveBeenCalledWith({ player: me, option: payIds(state)[0].id });
   });
 });
 

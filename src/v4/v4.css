@@ -3,7 +3,11 @@
    Marcellus is for words only; every number is Figtree with tabular lining figures (.num). */
 :root{
   /* motion budgets (Cory, 2026-10-15: "way snappier"; JS twins in src/v4/motion.js, audit in design/eval/perf/motion-audit.md) */
-  --mo-press:70ms; --mo-quick:120ms; --mo-fade:150ms; --mo-land:200ms; --mo-dim:200ms; --mo-bump:260ms;
+  /* --mo-scale is the viewer's animation speed (src/v4/motion.js sets it): what tells what happened scales with it;
+     what answers your hand (press, quick) never does */
+  --mo-scale:1;
+  --mo-press:70ms; --mo-quick:120ms;
+  --mo-fade:calc(150ms * var(--mo-scale)); --mo-land:calc(240ms * var(--mo-scale)); --mo-dim:calc(200ms * var(--mo-scale)); --mo-bump:calc(260ms * var(--mo-scale));
   --mo-ease-out:cubic-bezier(.2,.7,.3,1); --mo-ease-settle:cubic-bezier(.3,1.45,.5,1);
   --table:#141d1c; --table-2:#1d2928; --table-3:#24322f; --rim:#2d3b39; --ink:#ece6d6; --muted:#97a49f;
   --gold:#e3b23c; --red:#e0645a; --blue:#6aa6dc; --green:#5fb37c; --any:#97a49f;

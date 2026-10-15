@@ -28,6 +28,7 @@ export const ROUND_START = 'patrons.v4.roundStart';
  * snapshot is offered instead ({ fromRoundStart: true }).
  */
 export const loadLocal = () => {
+  flushLocalSave(); // a save still waiting for idle time lands first: a read always sees the latest move
   const v = read(LOCAL);
   if (v && v.state && v.state.players) return usable(v);
   const rs = read(ROUND_START);
@@ -50,6 +51,7 @@ function setAside(v, reason, message) {
 }
 /** The error screen's "Start a new game": set the current save aside (record kept) so nothing resumes into the crash. */
 export const setAsideLocal = (message = '') => {
+  flushLocalSave();
   const v = read(LOCAL) || read(ROUND_START);
   if (v && v.state && v.state.players) setAside(v, 'crash', message); else clearLocal();
 };
@@ -74,7 +76,11 @@ export function localLease() {
   return lease;
 }
 /** This tab takes the local game: any other tab holding it stops and says so. Call before reading the save to resume it. */
-export const claimLocal = () => localLease().claim();
+export const claimLocal = () => {
+  // a save waiting from before another tab took the game is stale: it never lands over that tab's moves
+  if (ownsLocal()) flushLocalSave(); else dropLocalSave();
+  return localLease().claim();
+};
 /** May this tab write the local game? False once another tab has claimed it. */
 export const ownsLocal = () => { try { return localLease().owns(); } catch { return true; } };
 /** fn() runs when another tab takes the game from this one. Returns an unsubscribe. */
@@ -92,14 +98,51 @@ export const saveLocal = (config, state, undo = null, hold = null) => {
   write(LOCAL, { config, state, undo, ...(hold ? { hold } : {}), savedAt: Date.now() });
   return true;
 };
+/**
+ * The save off the input path (perf, 2026-10-15): writing the whole game to localStorage inside every click cost the
+ * click's frame. Each change asks for a save; only the latest is written, in idle time (requestIdleCallback, at most
+ * SAVE_IDLE_MS later; a timer where there is none). The guarantees hold: leaving the page (pagehide, or the tab hidden)
+ * writes it at once, a read (loadLocal) writes it first, clearing or finishing drops it, and the write itself goes
+ * through saveLocal, so a tab that has lost the game by then never overwrites the owner's save.
+ */
+export const SAVE_IDLE_MS = 400;
+let pendingSave = null, saveTimer = null, saveIdle = null, flushHooked = false;
+const cancelSave = () => {
+  if (saveIdle != null && typeof cancelIdleCallback === 'function') cancelIdleCallback(saveIdle);
+  clearTimeout(saveTimer);
+  saveIdle = null; saveTimer = null;
+};
+/** Writes the waiting save now, if any. Returns whether it wrote. */
+export function flushLocalSave() {
+  cancelSave();
+  const v = pendingSave;
+  pendingSave = null;
+  return v ? saveLocal(v.config, v.state, v.undo, v.hold) : false;
+}
+/** Drops the waiting save, unwritten. */
+export const dropLocalSave = () => { cancelSave(); pendingSave = null; };
+/** Saves the game soon (see above): the latest call wins. */
+export function saveLocalSoon(config, state, undo = null, hold = null) {
+  if (!state) return;
+  pendingSave = { config, state, undo, hold };
+  if (!flushHooked && typeof addEventListener === 'function') {
+    flushHooked = true;
+    addEventListener('pagehide', flushLocalSave);
+    addEventListener('visibilitychange', () => { if (typeof document !== 'undefined' && document.visibilityState === 'hidden') flushLocalSave(); });
+  }
+  if (saveIdle != null || saveTimer != null) return;
+  if (typeof requestIdleCallback === 'function') saveIdle = requestIdleCallback(() => { saveIdle = null; flushLocalSave(); }, { timeout: SAVE_IDLE_MS });
+  else saveTimer = setTimeout(() => { saveTimer = null; flushLocalSave(); }, 0);
+}
 /** Starting over or leaving: forget the saved game and its round-start snapshot (only the owning tab may). */
-export const clearLocal = () => { if (!ownsLocal()) return; write(LOCAL, null); write(ROUND_START, null); };
+export const clearLocal = () => { if (!ownsLocal()) return; dropLocalSave(); write(LOCAL, null); write(ROUND_START, null); };
 /**
  * The results screen has rendered: the game is done, nothing left to resume. Given the finished state, it's kept as
  * the last game (results and record) until a new game starts.
  */
 export const finishLocal = (config = null, state = null) => {
   if (!ownsLocal()) return;
+  dropLocalSave(); // a save still waiting must not bring the finished game back as a "resume"
   if (state && state.over && Array.isArray(state.players)) write(LAST, { config, state, finishedAt: Date.now() });
   clearLocal();
 };

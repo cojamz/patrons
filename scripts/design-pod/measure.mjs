@@ -19,7 +19,7 @@ const page = await (await b.newContext({ viewport: { width: W, height: H } })).n
 const url = `${base}/?intro=0${q ? '&' + q : ''}`;
 await page.goto(url);
 await page.evaluate(v => { localStorage.clear(); localStorage.setItem('patrons.v4.local', JSON.stringify(v)); localStorage.setItem('patrons.v4.introSeen', '1'); }, save);
-await page.goto(url); await page.click('[data-home="resume"]'); await page.waitForSelector('.lt-shop .card'); await page.waitForTimeout(900);
+await page.goto(url); await page.click('[data-home="resume"]', { timeout: 90000 }); await page.waitForSelector('.lt-shop .card'); await page.waitForTimeout(900);
 const r = await page.evaluate(() => {
   const box = sel => [...document.querySelectorAll(sel)].map(e => { const b = e.getBoundingClientRect(); return `${sel} x${Math.round(b.left)} y${Math.round(b.top)} w${Math.round(b.width)} h${Math.round(b.height)}`; });
   return ['.lt > .lt-prompt', '.lt > .lt-wheel', '.lt-wheel .stage', '.wheel-paper .disk', '.lt > .lt-seat', '.lt > .lt-snake', '.lt > .lt-shop', '.lt-shop .lt-card', '.lt-rates .lt-rate', '.lt-deck', '.lt > .lt-since', '.turn-card'].flatMap(box);

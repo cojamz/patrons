@@ -50,8 +50,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const incomeWords = incomeParts.map(([r, n]) => `+${n} ${r}`).concat(income && income.followers > 0 ? [`+${income.followers} follower${income.followers === 1 ? '' : 's'}`] : []);
   // member figures shown before "+N": one row beside the "each round" line, so every chair keeps one fixed height
   const MAX = incomeWords.length ? 6 : 10;
-  // a member you can use now is never folded into "+N": it takes the place of the last one that's only shown
-  const isReady = g => g.uids.some(u => ready.has(u));
+  // a member you can use now, or one the board picker lights (folded, it could only be picked from the keyboard list),
+  // is never folded into "+N": it takes the place of the last one that's only shown
+  const isReady = g => g.uids.some(u => ready.has(u) || !!(pick && pick.members && pick.members[u]));
   const late = groups.slice(MAX).filter(isReady);
   const keep = groups.slice(0, MAX);
   for (const g of late) { const k = keep.map(isReady).lastIndexOf(false); if (k < 0) break; keep.splice(k, 1); }
