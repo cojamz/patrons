@@ -38,7 +38,27 @@ async function run(size) {
     const page = await ctx.newPage();
     page.on('pageerror', e => errors.push(`[${tag}] (d1) pageerror: ${e.message}`));
     page.on('console', m => { if (m.type() === 'error' && /Maximum update depth/i.test(m.text())) errors.push(`[${tag}] (d1) console: ${m.text().slice(0, 160)}`); });
-    await page.addInitScript(() => { try { localStorage.setItem('patrons.v4.introSeen', '1'); } catch { /* ignore */ } });
+    await page.addInitScript(() => {
+      try { localStorage.setItem('patrons.v4.introSeen', '1'); } catch { /* ignore */ }
+      // every turn card that appears is recorded in the page (a short one can live between two polls), and the cover
+      // and on-screen checks run every frame while one is up
+      const D = window.__dock = { turns: [], worst: 0, off: 0 };
+      const seen = new Set();
+      const scan = () => {
+        const c = document.querySelector('.turn-card');
+        if (c) {
+          const lt = document.querySelector('.lt');
+          const head = (c.dataset.turnStory || '').split(' · ')[0];
+          const key = `${lt ? lt.dataset.round : ''}:${head}`;
+          if (head && !/^You\b/.test(head) && !seen.has(key)) { seen.add(key); D.turns.push(key); }
+          const a = c.getBoundingClientRect(), sv = document.querySelector('.lt > .lt-since');
+          if (sv) { const b = sv.getBoundingClientRect(); const cover = Math.min(a.right, b.right) > Math.max(a.left, b.left) ? Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)) : 0; if (cover > D.worst) D.worst = cover; }
+          if (a.top < 0 || a.bottom > innerHeight + 1) D.off++;
+        }
+        requestAnimationFrame(scan);
+      };
+      requestAnimationFrame(scan);
+    });
     try {
       await page.goto(`${base}/?intro=0&botDelay=20&speed=quick`);
       await page.click('[data-home="local"]', { timeout: 60000 });
@@ -63,12 +83,8 @@ async function run(size) {
           }
           return out;
         });
-        if (s.card) {
-          // a rival's turn: one per space per round ("P2 took Kickback")
-          if (s.card.head && !/^You\b/.test(s.card.head)) turns.add(`${games}:${s.round}:${s.card.head}`);
-          worst = Math.max(worst, s.card.cover);
-          if (s.card.off) off++;
-        }
+        const d = await page.evaluate(() => window.__dock).catch(() => null);
+        if (d) { for (const k of d.turns) turns.add(`${games}:${k}`); worst = Math.max(worst, d.worst); off = Math.max(off, d.off); }
         if (s.over) break;
         still = s.moves === lastMoves ? still + 1 : 0;
         lastMoves = s.moves;

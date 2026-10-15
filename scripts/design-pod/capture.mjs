@@ -10,6 +10,7 @@ import { seededRandom } from '../../src/engine/v4/rng.js';
 import { buildStamp } from '../../e2e/v4/lib/stamp.mjs';
 import { stealSave } from '../../e2e/v4/lib/steal-save.mjs';
 import { paySave } from '../../e2e/v4/lib/dialog-save.mjs';
+import { membersSave } from '../../e2e/v4/lib/members-save.mjs';
 import { TEXT_CLIP } from '../../e2e/v4/lib/textclip.mjs';
 
 const argv = process.argv.slice(2);
@@ -174,6 +175,11 @@ for (const st of want) {
       await settle(250); await shot('nudge');
       console.log('textclip:', JSON.stringify(await page.evaluate(TEXT_CLIP)));
       console.log(await page.evaluate(() => [...document.querySelectorAll('.lt-prompt .status > *')].map(e => { const r = e.getBoundingClientRect(); return `${e.className.split(' ')[0] || e.tagName}: ${Math.round(r.left)}–${Math.round(r.right)} sw${e.scrollWidth} cw${e.clientWidth} ws:${getComputedStyle(e).whiteSpace}`; }).join('\n') + `\ncell ${Math.round(document.querySelector('.lt-prompt').getBoundingClientRect().right)}`));
+    } else if (st === 'members') {
+      // your seat full of members, some ready to use (e2e/v4/lib/members-save.mjs)
+      const m = membersSave(); await load(m.save ? m : { save: m.save || m, roundStart: m.roundStart }); await shot('members');
+      const ready = await page.$('.lt-seat[data-pid="0"] .cs-member[data-state="ready"] .fig');
+      if (ready) { const bb = await ready.boundingBox(); await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2); await settle(600); await shot('members-hover'); }
     } else if (st === 'buy3') {
       await load(SAVES.place3()); await placeAndAnswer(); await park(); await settle(500); await shot('buy3');
     } else if (st === 'round3') {

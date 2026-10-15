@@ -195,9 +195,9 @@
 .lt-cult-seat.now{background:rgba(var(--lamp,255,206,140),.08);box-shadow:0 0 0 1px rgba(var(--lamp,255,206,140),.35)}
 .lt-cult-seat .cs-head{display:flex;align-items:center;gap:6px;cursor:pointer;border-radius:10px;min-height:44px}
 .lt-cult-seat .cs-who{display:flex;flex-direction:column;gap:2px;line-height:1.05;min-width:0}
-.lt-cult-seat .cs-who b{font-family:var(--serif);font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lt-cult-seat .cs-who b{font-family:var(--serif);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lt-cult-seat .cs-who small{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--cream-3);white-space:nowrap}
-.lt-cult-seat .cs-total{margin-left:auto;display:inline-flex;align-items:center;gap:3px;font-family:var(--serif);font-size:22px;font-weight:700;white-space:nowrap}
+.lt-cult-seat .cs-total{margin-left:auto;display:inline-flex;align-items:center;gap:3px;font-family:var(--serif);font-size:18px;font-weight:700;white-space:nowrap}
 /* its members' colors at a glance: one dot per member, grouped by color */
 .lt-cult-seat .cs-colors{display:inline-flex;align-items:center;gap:3px;margin-right:2px;cursor:help}
 .lt-cult-seat .cs-colors i{display:block;height:7px;width:calc(var(--n) * 7px);background:radial-gradient(circle at 3.5px 3.5px,var(--c) 2.6px,transparent 3.1px) 0 0/7px 7px repeat-x}
@@ -208,7 +208,7 @@
 .lt-cult-seat .cs-inc{display:inline-flex;align-items:center;gap:1px}
 .lt-cult-seat .cs-inc .follower-mark{color:var(--cream-2)}
 .lt-cult-seat .cs-total .follower-mark{color:var(--cream-2)}
-.lt-cult-seat.mine .cs-total{font-size:25px}
+.lt-cult-seat.mine .cs-total{font-size:18px} /* the base seat (phones, results) on the type scale; laptops set their own (36 for yours) */
 /* yours: the same chair, ~1.15× (type and spacing; pixel figures keep whole-pixel sizes) */
 .lt-cult-seat.mine{padding:4px 7px 5px;gap:4px}
 .lt-cult-seat.mine .cs-who b{font-size:18px}
@@ -222,7 +222,7 @@
 .lt-cult-seat .cs-more{font-size:11px;color:var(--cream-3);align-self:center}
 .lt-cult-seat .cs-foot{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0}
 .lt-cult-seat .cs-res{display:inline-flex;gap:6px;align-items:center}
-.lt-cult-seat .cs-stack{display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:700}
+.lt-cult-seat .cs-stack{display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:700}
 .lt-cult-seat.mine .cs-stack{font-size:14px}
 .lt-cult-seat .cs-stack.zero{opacity:.35}
 
@@ -344,8 +344,8 @@
 /* a chair's build row (the plate's rival panel): what its members make each round, and what it just took */
 .lt-cult-seat .cs-build{display:flex;align-items:center;gap:14px;min-width:0;white-space:nowrap}
 .lt-cult-seat .cs-build .cs-income{margin-left:0}
-.lt-cult-seat .cs-build small{font-size:13px;font-weight:500;letter-spacing:0;color:var(--cream-3)}
-.lt-cult-seat .cs-build .cs-inc b{font-weight:800;font-size:15px;color:var(--cream)}
+.lt-cult-seat .cs-build small{font-size:11px;font-weight:500;letter-spacing:0;color:var(--cream-3)}
+.lt-cult-seat .cs-build .cs-inc b{font-weight:800;font-size:14px;color:var(--cream)}
 .lt-cult-seat .cs-last{display:inline-flex;align-items:center;gap:5px;margin-left:auto;min-width:0;cursor:help}
 .lt-cult-seat .cs-last b{font-size:14px;font-weight:700;color:var(--cream);overflow:hidden;text-overflow:ellipsis}
 
