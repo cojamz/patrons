@@ -21,6 +21,7 @@ import { cardDef } from '../../engine/v4/index.js';
 import Results from './Results.jsx';
 import RoundEnd from './RoundEnd.jsx';
 import Reckoning, { reckonRows } from './Reckoning.jsx';
+import { snakeOrder } from './order.js';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker from './PayPicker.jsx';
 import { Rich, Pip } from './Rich.jsx';
@@ -319,6 +320,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // how many of the Reckoning's quadrants have landed: until a prize reaches its chair, that chair's total leaves it
   // out, so the totals climb as each prize lands (RC1 saboteur: the seats showed the final numbers at step 1 of 4)
   const [paid, setPaid] = useState({ moment: null, n: 0 });
+  const snake = useMemo(() => snakeOrder(state), [state]);
   const seatState = useMemo(() => {
     if (!moment || reckoned === moment) return state;
     let unpaid;
@@ -819,8 +821,17 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
               others clockwise. UI-B fills each chair (CultSeat); the chairs never move. */}
+          {/* the chairs stand in this round's turn order, one column (Cory, 2026-10-15: "position IS order"); the snake
+              rail beside them shows which way the turns are walking. A new round's order re-sorts them (they slide). */}
+          {state.round >= 1 && (
+            <div className={`lt-snake dir-${snake.dir}`} data-snake={snake.dir} data-pass={snake.pass + 1} style={{ '--n': state.players.length }}
+              title={`Turn order this round, top to bottom: ${snake.order.map(id => (id === me ? 'You' : state.players[id].name)).join(', ')}. The snake goes down, then back up${snake.passes ? ` (pass ${snake.pass + 1} of ${snake.passes}, going ${snake.dir})` : ''}: whoever ends a pass starts the next.`}>
+              <span className="sn-line" aria-hidden="true" />
+            </div>
+          )}
           {seatCorners(state, me).map((pid, k) => (
-            <section key={k} className={`lt-seat lt-seat-${k}${pid === me ? ' mine' : ''}${pid != null && pend && pend.player === pid && !state.over ? ' now' : ''}`} data-region={`seat-${k}`} data-pid={pid ?? undefined} aria-label={pid == null ? undefined : pid === me ? 'Your cult' : `${state.players[pid].name}’s cult`}>
+            <section key={k} className={`lt-seat lt-seat-${k}${pid === me ? ' mine' : ''}${pid != null && pend && pend.player === pid && !state.over ? ' now' : ''}`} data-region={`seat-${k}`} data-pid={pid ?? undefined} data-slot={pid == null ? undefined : snake.slot[pid]}
+              style={{ '--slot': pid == null ? k : snake.slot[pid] ?? k }} aria-label={pid == null ? undefined : pid === me ? 'Your cult' : `${state.players[pid].name}’s cult`}>
               {pid == null ? null : (
                 <CultSeat state={seatState} pid={pid} me={me} mine={pid === me} now={pend && pend.player === pid && !state.over} hover={hover} optionFor={pid === me ? live : undefined} onPick={onPick} pick={pickParts[pid] || null} />
               )}

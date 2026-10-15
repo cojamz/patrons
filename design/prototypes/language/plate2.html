@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1270">
+<title>Language Plate 2</title>
+<link rel="stylesheet" href="kit.css">
+<style>
+#plate{position:relative;width:1270px;height:700px;
+  background:radial-gradient(720px 560px at 400px 400px,rgba(255,226,170,.06),transparent 70%),var(--table)}
+#board{position:absolute;left:0;top:0}
+
+/* a place: the doorway */
+.door{position:absolute;width:136px;height:148px}
+.door svg{position:absolute;left:0;top:0;overflow:visible}
+.door .big,.door .fine{position:absolute;left:0;right:0;text-align:center;white-space:nowrap;color:var(--ink);transform:translateY(-50%)}
+.door .fine{font-size:var(--s);line-height:20px;font-weight:700;color:var(--ink-2)}
+.door.taken .big,.door.taken .fine{opacity:.5}
+.door.locked .big{color:var(--cream-2);opacity:.6}
+.door .who{position:absolute;left:68px;top:146px;transform:translate(-50%,-100%)}
+
+/* popovers */
+.pop{position:absolute;background:var(--paper-lit);color:var(--ink);border-radius:8px;
+  box-shadow:0 0 0 1px rgba(43,32,24,.10),0 16px 40px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.3)}
+.pop .nub{position:absolute;width:14px;height:14px;background:var(--paper-lit);transform:rotate(45deg);border-radius:2px}
+.pop .rule{height:1px;background:rgba(43,32,24,.12);margin:16px 0}
+.pop .m{text-wrap:balance}
+
+/* seat */
+.seat{position:absolute;background:var(--seat);border-radius:8px;box-shadow:inset 0 0 0 1px var(--hair)}
+
+/* member card */
+.card{position:absolute;width:176px;height:240px;border-radius:8px;background:var(--paper);color:var(--ink);overflow:hidden;
+  box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
+.card .art{height:88px;display:grid;place-items:center}
+.card .nm{position:absolute;left:0;right:0;top:96px;text-align:center;color:var(--ink-3)}
+.card .when{position:absolute;left:16px;right:16px;top:124px;height:40px;display:flex;align-items:flex-end;justify-content:center;text-align:center;
+  font-size:var(--s);line-height:20px;font-weight:700;color:var(--ink-2)}
+.card .eff{position:absolute;left:0;right:0;top:164px;text-align:center}
+.card .foot{position:absolute;left:16px;right:16px;bottom:0;height:36px;display:flex;justify-content:space-between;align-items:center;
+  box-shadow:inset 0 1px 0 rgba(43,32,24,.12)}
+.card.lit{box-shadow:0 0 0 2px var(--light),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
+</style>
+<script src="../pixel-art/icons.js"></script>
+<script src="../pixel-art/icons-gold-red-guests.js"></script>
+<script src="../pixel-art/emojis.js"></script>
+<script src="../pixel-art/leaders.js"></script>
+<script src="kit.js"></script>
+</head>
+<body>
+<div id="plate">
+  <svg id="board" width="1270" height="700" viewBox="0 0 1270 700"></svg>
+  <div id="ui"></div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+const { COL, g, dot, n, op, sp, el, svg, minion, leader, portrait } = Kit;
+
+// ---------------------------------------------------------------- geometry
+const C = { x: 400, y: 644 };
+const RIM = [580, 612], HUB = 40;
+const rad = d => d * Math.PI / 180;
+const P = (r, a) => [C.x + r * Math.cos(a), C.y + r * Math.sin(a)];
+const f = p => `${p[0].toFixed(2)} ${p[1].toFixed(2)}`;
+const band = (r0, r1, a0, a1) => ['M', f(P(r1, a0)), 'A', r1, r1, 0, 0, 1, f(P(r1, a1)), 'L', f(P(r0, a1)), 'A', r0, r0, 0, 0, 0, f(P(r0, a0)), 'Z'].join(' ');
+const A0 = rad(-135), A1 = rad(-45);
+
+const defs = svg('defs', {});
+defs.innerHTML = `<radialGradient id="ground" cx="${C.x}" cy="${C.y}" r="${RIM[0]}" gradientUnits="userSpaceOnUse">
+  <stop offset="0" stop-color="var(--gold)" stop-opacity=".10"/><stop offset="1" stop-color="var(--gold)" stop-opacity=".04"/></radialGradient>`;
+
+// the quadrant's ground and rim
+svg('path', { d: band(HUB + 8, RIM[0], A0, A1), fill: 'var(--board)' });
+svg('path', { d: band(HUB + 8, RIM[0], A0, A1), fill: 'url(#ground)' });
+svg('path', { d: band(RIM[0], RIM[1], A0, A1), fill: 'color-mix(in srgb, var(--gold) 50%, #1a120c)' });
+svg('path', { d: band(RIM[0], RIM[0] + 1, A0, A1), fill: 'color-mix(in srgb, var(--gold) 80%, #fff)', opacity: .35 });
+
+// ---------------------------------------------------------------- the six places
+const W = 136, H = 148;
+const spots = {
+  i:   [[-168, -458], [0, -488], [168, -458]],
+  ii:  [[-92, -292], [92, -292]],
+  iii: [[0, -126]],
+};
+const PLACES = [
+  { at: spots.i[0], state: 'taken', who: 'frog', big: `${n('+3')}${dot('gold')}`, fine: `a rival gets ${n('1')}${dot('gold')}` },
+  { at: spots.i[1], state: 'open', big: `${n('+4')}${dot('gold')}`, fine: `2 · <b style="color:var(--ink)">4</b> · 6 by round` },
+  { at: spots.i[2], state: 'taken', who: 'cactus', big: `${g('mem')}${n('−4')}`, fine: 'off your next member' },
+  { at: spots.ii[0], state: 'lit', big: `${n('+3')}${dot('gold')}`, fine: 'from rivals' },
+  { at: spots.ii[1], state: 'open', big: `${n('+1')}${dot('gold')}${op('/')}${g('mem')}`, fine: '' },
+  { at: spots.iii[0], state: 'locked', big: `${n('×2')}${dot('gold')}`, fine: '' },
+];
+const ARCH = `M0 ${H} V68 A68 68 0 0 1 ${W} 68 V${H} Z`;
+const DOOR = `M46 ${H} V126 A22 22 0 0 1 90 126 V${H} Z`;
+for (const p of PLACES) {
+  const x = C.x + p.at[0] - W / 2, y = C.y + p.at[1] - H / 2;
+  p.x = x; p.y = y;
+  const fill = { open: 'var(--paper)', lit: 'var(--paper-lit)', taken: 'var(--paper-taken)', locked: 'rgba(242,232,210,.04)' }[p.state];
+  const doorFill = { open: '#3d2e22', lit: '#ffe4a6', taken: '#3d2e22', locked: 'rgba(242,232,210,.08)' }[p.state];
+  const shadow = p.state === 'lit' ? 'filter:drop-shadow(0 0 2px var(--light)) drop-shadow(0 0 16px rgba(255,233,184,.5))'
+    : p.state === 'locked' ? '' : 'filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))';
+  const shut = p.state === 'locked' ? `<text x="68" y="${H - 12}" text-anchor="middle" font-family="AS" font-weight="800" font-size="14" letter-spacing="1" fill="var(--cream-3)">III</text>` : '';
+  const spill = p.state === 'lit' ? `<path d="M40 ${H} L96 ${H} L104 ${H + 10} L32 ${H + 10} Z" fill="#ffe4a6" opacity=".25"/>` : '';
+  const bigY = p.fine ? 54 : 62;
+  const o = el(`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="${shadow}">
+      <path d="${ARCH}" fill="${fill}" ${p.state === 'locked' ? 'stroke="rgba(242,232,210,.28)" stroke-width="1"' : ''}/>
+      <path d="${DOOR}" fill="${doorFill}"/>${shut}${spill}</svg>
+    <div class="big l" style="top:${bigY}px">${p.big}</div>
+    ${p.fine ? `<div class="fine" style="top:90px">${p.fine}</div>` : ''}`,
+    `left:${x}px;top:${y}px`, `door ${p.state}`);
+  if (p.who) el(minion(p.who, 32), '', 'who', o);
+}
+
+// ring numerals along the quadrant's right edge: which round opens each ring
+[['I', 472], ['II', 300], ['III', 128]].forEach(([t, r]) => {
+  const [x, y] = P(r, rad(-45) - 0.06);
+  el(`<span class="cap" style="color:var(--cream-3)">${t}</span>`, `position:absolute;left:${x}px;top:${y}px;transform:translate(-50%,-50%)`);
+});
+
+// hub
+svg('circle', { cx: C.x, cy: C.y, r: HUB, fill: 'var(--hub)', stroke: 'rgba(242,232,210,.10)', 'stroke-width': 1 });
+el(`<div class="cap" style="color:var(--cream-3);line-height:16px">Round</div><div class="n" style="font-size:24px;line-height:24px;color:var(--cream)">II</div>`,
+  `position:absolute;left:${C.x}px;top:${C.y - 4}px;transform:translate(-50%,-50%);text-align:center`);
+
+// rim rule, laid out on the arc
+(function rim() {
+  const r = (RIM[0] + RIM[1]) / 2;
+  const ctx = document.createElement('canvas').getContext('2d');
+  const toks = [{ t: 'MOST', font: '700 14px AS', ls: 1.2 }, { g: 'dot' }, { t: '+4', font: '800 18px AS' }, { g: 'fol' }];
+  const gaps = [8, 20, 4];
+  toks.forEach(k => { if (k.t) { ctx.font = k.font; k.w = ctx.measureText(k.t).width + (k.ls ? k.ls * (k.t.length - 1) : 0); } else k.w = 18; });
+  const total = toks.reduce((s, k) => s + k.w, 0) + gaps.reduce((s, x) => s + x, 0);
+  let s = -total / 2;
+  toks.forEach((k, i) => {
+    const a = rad(-90) + (s + k.w / 2) / r, [x, y] = P(r, a), rot = a * 180 / Math.PI + 90;
+    if (k.t) {
+      const t = svg('text', { x, y, transform: `rotate(${rot} ${x} ${y})`, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: '#f6deb0',
+        'font-family': 'AS', 'font-weight': k.font.slice(0, 3), 'font-size': parseInt(k.font.split(' ')[1]), 'letter-spacing': k.ls || 0 });
+      t.textContent = k.t;
+    } else {
+      const u = svg('g', { transform: `translate(${x} ${y}) rotate(${rot}) translate(-9 -9)` });
+      u.innerHTML = k.g === 'dot' ? `<circle cx="9" cy="9" r="8" fill="#f6deb0"/><circle cx="9" cy="9" r="6.25" fill="var(--gold)"/>`
+        : `<use href="#fol" width="18" height="18" style="color:#f6deb0"/>`;
+    }
+    s += k.w + (gaps[i] || 0);
+  });
+  const [lx, ly] = P(r, rad(-90) + (total / 2 + 36) / r);
+  el(minion('frog', 32), `position:absolute;left:${lx}px;top:${ly + 16}px;transform:translate(-50%,-100%)`);
+})();
+
+// the lit place's hover: the name lives here now
+(function placeHover() {
+  const p = PLACES[3];
+  const w = 200, x = 32, y = p.y + 8;
+  el(`<div class="m" style="font-weight:800">Collect Debts</div>
+    <div class="m" style="margin-top:8px">Take up to ${n('3')}${dot('gold')} from rivals, split as you like.</div>
+    <div class="rule"></div>
+    <div class="row s" style="justify-content:space-between;color:var(--ink-2)"><span>You'd get</span><span class="m" style="color:var(--ink)">${n('+3')}${dot('gold')}</span></div>
+    <div class="nub" style="right:-7px;top:40px"></div>`,
+    `left:${x}px;top:${y}px;width:${w}px;padding:16px 20px`, 'pop');
+})();
+
+// ---------------------------------------------------------------- right column
+const RX = 852, RW = 384;
+
+// your seat
+el(`<div class="row" style="gap:20px;align-items:flex-start">
+    ${leader('cactus', 'moss', 64)}
+    <div style="flex:1;min-width:0">
+      <div class="row" style="justify-content:space-between;align-items:baseline">
+        <div><span class="m" style="font-weight:800">You</span><span class="s" style="color:var(--cream-2);margin-left:8px">place a minion</span></div>
+        <div class="l">${n('12')}${g('fol')}</div>
+      </div>
+      <div class="row m" style="margin-top:12px;gap:24px">
+        <span>${n('7')}${dot('gold')}</span><span>${n('2')}${dot('red')}</span><span style="opacity:.4">${n('0')}${dot('blue')}</span><span>${n('3')}${dot('green')}</span>
+      </div>
+    </div>
+  </div>
+  <div class="row" style="position:absolute;right:20px;bottom:16px;gap:4px"><span class="s" style="color:var(--cream-3);margin-right:8px">to place</span>${minion('cactus', 32)}${minion('cactus', 32)}</div>`,
+  `left:${RX}px;top:32px;width:${RW}px;height:148px;padding:20px`, 'seat');
+
+// the shop: two members, the first one open
+const shop = [
+  { id: 'gold.prospector', name: 'Prospector', c: 'gold', when: `When a space<br>gives you ${dot('gold')}`, eff: `${n('+1')}${dot('gold')}`, cost: `${n('2')}${dot('gold')}${sp}${n('2')}${g('any')}`, lit: true },
+  { id: 'red.recruiter', name: 'Recruiter', c: 'red', when: 'When you recruit', eff: `${n('+1')}${dot('red')}`, cost: `${n('4')}${dot('red')}${sp}${n('4')}${g('any')}` },
+];
+const CW = 176, CG = 32, CY = 428;
+shop.forEach((m, i) => {
+  m.x = RX + i * (CW + CG);
+  el(`<div class="art" style="background:color-mix(in srgb, ${COL[m.c]} 16%, var(--paper))">${portrait(m.id, 48)}</div>
+    <div class="nm cap">${m.name}</div>
+    <div class="when"><span>${m.when}</span></div>
+    <div class="eff l">${m.eff}</div>
+    <div class="foot m"><span>${m.cost}</span><span>${n('1')}${g('fol')}</span></div>`,
+    `left:${m.x}px;top:${CY}px`, `card${m.lit ? ' lit' : ''}`);
+});
+
+// the member's hover, anchored over its card
+(function memberHover() {
+  const m = shop[0], w = RW, h = 216;
+  const x = RX, y = CY - 20 - h;
+  el(`<div class="row" style="gap:16px;align-items:center">
+      <div style="width:48px;height:48px;border-radius:4px;background:color-mix(in srgb, var(--gold) 16%, var(--paper))">${portrait(m.id, 48)}</div>
+      <div style="flex:1">
+        <div class="row" style="justify-content:space-between;align-items:baseline"><span class="m" style="font-weight:800">Prospector</span><span class="m">${n('1')}${g('fol')}</span></div>
+        <div class="s" style="color:var(--ink-2);margin-top:4px">costs ${n('2')}${dot('gold')}${sp}${n('2')}${g('any')}</div>
+      </div>
+    </div>
+    <div class="rule"></div>
+    <div class="m">Whenever a space gives you ${dot('gold')}, you get ${n('1')} more.</div>
+    <div class="rule"></div>
+    <div class="s" style="color:var(--ink-2)">Golden Years would give you ${n('5')}${dot('gold')} instead of ${n('4')}${dot('gold')}.</div>
+    <div class="nub" style="left:${m.x - RX + CW / 2 - 7}px;bottom:-7px"></div>`,
+    `left:${x}px;top:${y}px;width:${w}px;height:${h}px;padding:20px`, 'pop');
+})();
+
+// caption (plate note, not game UI)
+el(`<div class="cap" style="color:var(--cream-3)">Cults · plate 2</div><div class="s" style="color:var(--cream-3)">Round II. One quadrant, rings I to III.<br>Pointing at a place; Prospector's card open.</div>`,
+  'position:absolute;left:32px;top:600px');
+});
+</script>
+</body>
+</html>
