@@ -24,7 +24,7 @@ describe('a full board', () => {
         expect(openSlots(s).length).toBe(s.queue.filter(t => t.t === 'turn').length + 1); // the board is exactly full
         s = applyMove(s, { player: pend.player, option: `use:${uid}` });
         used = true;
-        expect(s.log.at(-1)).toBe('No space to spare: P1 gets no extra turn from Go-Getter.');
+        expect(s.log.at(-1)).toBe('No extra minions in round I: P1 gets no extra turn from Go-Getter.');
         expect(s.cards[uid].used).toBe(false); // kept for later
         continue;
       }

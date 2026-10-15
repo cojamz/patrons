@@ -217,7 +217,8 @@ describe('Purple actions', () => {
 
 describe('Purple members', () => {
   const start = (members, extra = {}) => scene({ members, queue: [{ t: 'round', r: 2 }], ...extra });
-  const afterTake = (members, extra = {}) => take(scene({ queue: turns(0, 1), members, ...extra }), 'purple.hourly');
+  // round II: no extra minions in round I (Cory, 2026-10-15); Clock In gives +5 there
+  const afterTake = (members, extra = {}) => take(scene({ round: 2, queue: turns(0, 1), members, ...extra }), 'purple.hourly');
 
   it('Go-Getter: once per game, an extra turn right after this one', () => {
     let s = afterTake([['purple.secondwind']]);
@@ -227,19 +228,19 @@ describe('Purple members', () => {
     expect(nextPlacer(s)).toBe(0);
   });
   it('Errand Runner: when recruited, an extra turn right after this one', () => {
-    let s = scene({ res: [{ purple: 2, gold: 2 }], shop: ['purple.errand'], queue: turns(0, 1) });
+    let s = scene({ round: 2, res: [{ purple: 2, gold: 2 }], shop: ['purple.errand'], queue: turns(0, 1) });
     s = take(s, 'purple.hourly');
     s = move(s, `card:${uidOf(s, 'purple.errand', 'shop')}`);
     expect(nextPlacer(s)).toBe(0);
   });
   it('Taskmaster: once per round, pay 5 purple for an extra turn', () => {
-    let s = afterTake([['purple.taskmaster']], { res: [{ purple: 2 }] }); // 2 + 4 = 6
+    let s = afterTake([['purple.taskmaster']], { res: [{ purple: 1 }] }); // 1 + 5 = 6
     const u = uidOf(s, 'purple.taskmaster', 0);
     s = move(s, `use:${u}`);
     expect(R(s).purple).toBe(1);
     expect(ids(s)).not.toContain(`use:${u}`);
     expect(nextPlacer(s)).toBe(0);
-    let t = afterTake([['purple.taskmaster']]); // only 4
+    let t = take(scene({ round: 2, queue: turns(0, 1), members: [['purple.taskmaster']], res: [{ purple: 4 }] }), 'gold.rush'); // only 4
     t = move(t, `use:${u}`);
     expect(ids(t)).toContain(`use:${u}`); // not used up
   });
@@ -270,9 +271,9 @@ describe('Purple members', () => {
     expect(R(s, 1).purple).toBe(20);
   });
   it('Corner-Cutter: extra turns you pay purple for cost half, rounded up (Taskmaster 3); free spaces stay free and never name it', () => {
-    let s = afterTake([['purple.taskmaster', 'purple.doubletime']], { res: [{ purple: 0 }] }); // 4 purple
+    let s = afterTake([['purple.taskmaster', 'purple.doubletime']], { res: [{ purple: 0 }] }); // 5 purple
     s = move(s, `use:${uidOf(s, 'purple.taskmaster', 0)}`);
-    expect(R(s).purple).toBe(1); // 5 → 3
+    expect(R(s).purple).toBe(2); // pays 5 → 3
     expect(s.log.some(l => l.includes('Corner-Cutter: 5 → 3'))).toBe(true);
     expect(nextPlacer(s)).toBe(0);
     // Overtime and Crunch Time cost nothing, so Corner-Cutter has nothing to halve: no change, no log line
