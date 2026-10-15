@@ -23,12 +23,12 @@ describe('resource symbols in text (Cory, 2026-10-14)', () => {
   });
 });
 
-describe('the plate\'s marks in text (visual language, 2026-10-15)', () => {
-  const marks = c => [...c.querySelectorAll('[data-mark], [data-op], .follower-mark')].map(e => e.dataset.mark || e.dataset.op || 'follower');
-  it('draws @m @r @f @n @t, → ⇄ ↻ and ×, and a joined / as per', () => {
-    const { container } = render(<Rich text="+1 gold/@m · @m ⇄ @r · 8 purple → @t@t · ×2 gold · +1 purple/@n · silver → @f" />);
-    expect(marks(container)).toEqual(['/', 'member', 'member', 'swap', 'rival', 'arrow', 'turn', 'turn', '×', '/', 'minion', 'arrow', 'follower']);
-    for (const e of container.querySelectorAll('[data-mark]')) expect(e.querySelector('title').textContent).toBeTruthy();
+describe('two symbols only, words for the rest (Cory, 2026-10-15: simplify)', () => {
+  it('the old marks print as plain words; only the dot and the follower are drawn', () => {
+    const { container } = render(<Rich text="+1 gold/@m · swap @m with @r · 8 purple → @t · ↻ · +1 purple/@n · silver for @f" />);
+    expect(container.querySelectorAll('svg:not(.res-glyph):not(.follower-mark)').length).toBe(0);
+    expect(container.querySelectorAll('.follower-mark').length).toBe(1);
+    expect(container.textContent.replace(/followers?/g, '')).toBe('+1 per member · swap member with rival · 8 becomes extra turn · extra turn · +1 per minion ·  for '); // resource words are dots
   });
   it('a spaced "2 / 4 / 6" (by round) stays text; numbers are heavy and sit right on their dot', () => {
     const { container } = render(<Rich text="Gain 2 / 4 / 6 gold, or 3 followers." />);

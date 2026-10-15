@@ -680,7 +680,16 @@ export function turnStory(start, end, actor, me = null, mid = null) {
   // the strip's one line: what hit you first, then the biggest thing the turn did
   const big = out.find(l => /^(recruited|bought|traded|released) |^(an extra turn|\d+ extra turns)$/.test(l));
   const short = [hit, gain, big && big.replace(/ \(paid .*\)$/, '').replace(/ \(free\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
-  return { text: [head, ...out].join(' · '), head, lines: out, space, actor, touched: [...touched], short, hit };
+  // what the card names, from the table itself: the space's key, and the uid of each member recruited (hover targets)
+  let spaceKey = null;
+  if (place) {
+    const q = end.quadrants.findIndex(id => quadrant(id).name === place[4]);
+    const i = q < 0 ? -1 : quadrant(end.quadrants[q]).actions.findIndex(x => x.name === space);
+    if (i >= 0) spaceKey = `${q}-${i}`;
+  }
+  const uids = {};
+  for (const u of end.players[actor].members) if (!start.players[actor].members.includes(u) && end.cards[u]) uids[cardDef(end, u).name] = u;
+  return { text: [head, ...out].join(' · '), head, lines: out, space, spaceKey, uids, actor, touched: [...touched], short, hit };
 }
 
 /** Who won a finished game: most followers, members breaking a follower tie (the rule; Results ranks the same way). */

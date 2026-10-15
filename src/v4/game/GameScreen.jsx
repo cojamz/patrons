@@ -889,7 +889,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             <ShopCards state={state} me={me} mySeats={yours ? mySeats : NO_SEATS} optionFor={shopFor || live} onPick={shopPick} onDenied={shopDenied} phase={phase} hover={hover} />
           </section>
           {/* what the rivals did since your own last placement, one line each, always on the board (RC1 panel) */}
-          {state.round >= 1 && <SinceStrip state={state} entries={since} me={mySeats.length === 1 ? mySeats[0] : null} yours={yours} onLog={openLog} />}
+          {state.round >= 1 && <SinceStrip state={state} entries={since} me={mySeats.length === 1 ? mySeats[0] : null} yours={yours} hover={hover} onLog={openLog} />}
         </>
       )}
       {turnCard && !moment && !(state.over && !moment) && <TurnCard card={turnCard} root={root.current} state={state} />}
@@ -904,7 +904,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={root.current} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onPaid={n => setPaid({ moment, n })} onDone={() => setReckoned(moment)} />}
       {moment && reckoned === moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
-      {logOpen && <Chronicle state={state} meId={mySeats.length === 1 ? mySeats[0] : null} onClose={() => setLogOpen(false)} />}
+      {logOpen && <Chronicle state={state} meId={mySeats.length === 1 ? mySeats[0] : null} hover={hover} onClose={() => setLogOpen(false)} />}
       <HoverCardLayer hover={hover} state={state} me={me} optionFor={live} onPick={onPick} />
       {leaving && (
         <Confirm

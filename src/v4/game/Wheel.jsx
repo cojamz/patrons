@@ -239,24 +239,25 @@ function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
   // the gain and the effect always show (the effect may wrap to three lines); the clarification only with room
   const tries = [];
   for (const mp of main ? [X.main, X.mainMin] : [0]) for (const ml of mainClauses.length > 1 ? [1, 2] : main ? [1] : [0])
-    for (const sl of second ? [1, 2, 3] : [0]) for (const nl of note && !need.noNote ? [1, 0] : [0]) tries.push({ mp, ml, sl, nl });
-  tries.sort((x, y) => y.mp - x.mp || (y.sl > 0) - (x.sl > 0) || (y.nl > 0) - (x.nl > 0) || x.ml - y.ml || x.sl - y.sl);
+    for (const sp of second ? [X.second, X.note] : [0]) for (const sl of second ? [1, 2, 3] : [0]) for (const nl of note && !need.noNote ? [1, 0] : [0]) tries.push({ mp, ml, sp, sl, nl });
+  // prefer the bigger gain, then the effect on at most two lines, at its own size, then the clarification shown
+  tries.sort((x, y) => y.mp - x.mp || (y.sl <= 2) - (x.sl <= 2) || y.sp - x.sp || (y.nl > 0) - (x.nl > 0) || x.ml - y.ml || x.sl - y.sl);
   for (const t of tries) {
-    const parts = [t.ml * t.mp, taken ? X.minion : 0, t.sl * X.secondLine, t.nl * X.noteLine].filter(Boolean);
+    const parts = [t.ml * t.mp, taken ? X.minion : 0, t.sl * (t.sp === X.second ? X.secondLine : X.noteLine), t.nl * X.noteLine].filter(Boolean);
     const h = parts.reduce((a, b) => a + b, 0) + X.gap * (parts.length - 1);
     const needW = Math.max(
       t.ml ? (t.ml === 1 ? mainEm : clauseEm) * t.mp : 0,
-      t.sl ? Math.max(words(second), (secondEm / t.sl) * 1.12) * X.second : 0,
+      t.sl ? Math.max(words(second), (secondEm / t.sl) * 1.12) * t.sp : 0,
       t.nl ? noteEm * X.note : 0,
       taken ? 24 : 0,
     );
     const w = room(h) * k;
-    if (w >= needW + 4) return { mainLines: t.ml, main: t.mp, secondLines: t.sl, noteLines: t.nl, w: w / k, rc };
+    if (w >= needW + 4) return { mainLines: t.ml, main: t.mp, secondLines: t.sl, second: t.sp, noteLines: t.nl, w: w / k, rc };
   }
   // nothing fits: everything at its smallest, a clause a line (the clarification is in the hover)
   const ml = mainClauses.length > 1 ? 2 : main ? 1 : 0, sl = second ? 3 : 0;
-  const w = room(ml * X.mainMin + (taken ? X.minion : sl * X.secondLine) + X.gap);
-  return { mainLines: ml, main: X.mainMin, secondLines: sl, noteLines: 0, w: Math.max(w, 24 / k), rc: w ? rc : R.r, tight: true };
+  const w = room(ml * X.mainMin + (taken ? X.minion : sl * X.noteLine) + X.gap);
+  return { mainLines: ml, main: X.mainMin, secondLines: sl, second: X.note, noteLines: 0, w: Math.max(w, 24 / k), rc: w ? rc : R.r, tight: true };
 }
 
 // Is the person driving with the keyboard? Focus moved to a space on its own (your turn begins) opens its card only
@@ -843,7 +844,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     // panels: the gain, the effect, the clarification, laid out in the room this panel has where it sits now
     const pl = panels ? panelLays.get(key) : null;
     const said = pl && pl.said, lay = pl && pl.lay;
-    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && !said.main ? 'nomain' : '', lay && lay.secondLines > 1 ? 'wrap' : ''].filter(Boolean).join(' ');
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && !said.main ? 'nomain' : '', lay && lay.secondLines > 1 ? 'wrap' : '', lay && lay.second === PANEL_PX.note ? 'small' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>

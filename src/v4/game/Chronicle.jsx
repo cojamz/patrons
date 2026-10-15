@@ -1,12 +1,13 @@
-// The chronicle: the game log as a drawer (opened from the menu). Newest round first, every line in plain words,
-// every member named in it opens its card.
+// The chronicle: the game log as a drawer (opened from the menu or the "since your last turn" strip). Newest round
+// first, every line in plain words, every space and member named in it opens its card on the board's hover layer.
 import { useMemo } from 'react';
 import { logSections, plainLine } from '../format.js';
 import { useDialog } from './parts.jsx';
 import { NamedText, asYou } from './Info.jsx';
+import { HoverNames } from './HoverNames.jsx';
 import './lamp-b.css';
 
-export default function Chronicle({ state, onClose, meId = null }) {
+export default function Chronicle({ state, onClose, meId = null, hover = null }) {
   const box = useDialog(onClose);
   const sections = logSections(state);
   const me = meId != null && state.players[meId] ? state.players[meId].name : null; // your lines read "You took…"
@@ -20,7 +21,7 @@ export default function Chronicle({ state, onClose, meId = null }) {
           {sections.slice().reverse().map(s => (
             <section key={s.title}>
               <h4>{s.title}</h4>
-              <ol>{s.lines.map((l, j) => <li key={j}><NamedText state={table} text={asYou(plainLine(state.log, s.start + j), me)} /></li>).reverse()}</ol>
+              <ol>{s.lines.map((l, j) => <li key={j}>{hover ? <HoverNames state={table} hover={hover} text={asYou(plainLine(state.log, s.start + j), me)} /> : <NamedText state={table} text={asYou(plainLine(state.log, s.start + j), me)} />}</li>).reverse()}</ol>
             </section>
           ))}
         </div>

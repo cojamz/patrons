@@ -55,7 +55,13 @@
 .pip.glyph > svg,.pip.wild > svg{display:block;width:100%;height:100%;overflow:visible}
 .mk{display:inline-block;width:var(--glyph);height:var(--glyph);vertical-align:-.1em;overflow:visible;flex:none;margin:0 .06em}
 .op{font-weight:500;margin:0 .12em;opacity:.62}
+.op[data-op="/"]{margin:0;opacity:1}
 .rich-n{font-weight:800;letter-spacing:-.01em}
+/* the pay dialog's coins are the plain dot too (Cory, 2026-10-15: simplify): no disc behind it, no bevel */
+.slot-coin{background:none;box-shadow:none}
+.slot-coin .res-glyph{display:block;width:44px;height:44px}
+.tray-coin i{background:none}
+.tray-coin i .res-glyph{display:block;width:18px;height:18px}
 /* the follower in text: Cory's 10-pixel person at .8em, rounded to whole half-pixels so it stays crisp */
 .rich-f{width:round(nearest, var(--glyph), 5px);height:round(nearest, var(--glyph), 5px);vertical-align:-.12em;margin:0 .04em}
 body{
@@ -392,6 +398,8 @@ h1,h2,h3{font-family:var(--serif)}
 /* 2. the effect in plain words */
 .lt [data-spaces="panels"] .stage .slot .face .second{display:block;max-width:100%;font-size:14px;line-height:15px;font-weight:700;color:var(--pl-ink,#2b2018);white-space:nowrap}
 .lt [data-spaces="panels"] .stage .slot.wrap .face .second{white-space:normal;text-wrap:balance}
+/* a narrow panel sets its effect a size down (the clarification's size, at the effect's weight) before it wraps thrice */
+.lt [data-spaces="panels"] .stage .slot.small .face .second{font-size:12px;line-height:13px}
 /* with no gain, the effect leads */
 .lt [data-spaces="panels"] .stage .slot.nomain .face .second{white-space:normal;text-wrap:balance}
 /* 3. the clarification, small and quiet */
@@ -561,18 +569,19 @@ h1,h2,h3{font-family:var(--serif)}
     display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:10px 12px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .for-sale{display:none}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{margin:0;font-weight:700;line-height:1.2}
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .tokens{flex:1 1 auto;gap:6px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{flex-direction:row;justify-content:center;gap:6px;padding:4px 2px}
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .coin-big{width:42px;height:42px;font-size:14px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .tokens{flex:1 1 auto;gap:4px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+  /* a clean row of plain dots: the dot, then its color's name with "+1" quiet beside it (Cory, 2026-10-15: simplify) */
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:baseline;column-gap:4px;row-gap:6px;padding:8px 2px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .res-glyph{flex:0 0 100%;height:28px;transition:transform .12s ease-out}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .tk-name{font-size:var(--m);line-height:var(--lh-s)}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .tk-plus{font-size:var(--s);line-height:var(--lh-s);color:var(--pl-ink-2);font-weight:500}
   /* the call to action (Cory, 2026-10-15: nothing said "click here"): the note is lamp-lit and pulses once; each coin
      wears the lit edge a space you can take wears */
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.4),0 14px 34px rgba(0,0,0,.6);
     animation:rise .25s ease-out both,cta-pulse 1.2s .3s ease-out 1}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{font-family:var(--serif);font-size:16px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p::after{content:none}
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token:not(:disabled) .coin-big{box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),0 0 0 2px #fffaf0,0 0 12px 3px rgba(var(--lamp),.75)}
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token:not(:disabled):hover .coin-big{transform:translateY(-2px) scale(1.06)}
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .coin-big{transition:transform .12s ease-out}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token:not(:disabled):hover .res-glyph{transform:translateY(-2px)}
 }
 @keyframes cta-pulse{
   0%{box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.4),0 14px 34px rgba(0,0,0,.6)}

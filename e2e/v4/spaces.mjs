@@ -1,7 +1,8 @@
-// E2E: the action spaces, at 1270×700, in both looks (sockets, the default; engraved, behind ?spaces=engraved).
+// E2E: the action spaces, at 1270×700: the panels (the default since 2026-10-15, plate 1b with Cory's three text lines),
+// on tables covering every sphere at rounds I, II and III, and the old sockets behind ?spaces=sockets.
 //  (s0) the Lamplit stylesheet is in force (walnut table), whatever order the bundler loads CSS chunks in;
 //  (s1) lit: during your placement every space you can take has the lit class, no other does, and no taken space you
-//       can't join is lit (engraved: the printed cell is lit exactly when its space is);
+//       can't join is lit (panels: the paper panel is lit exactly when its space is);
 //  (s2) a click on a taken space shakes it and says "Taken by …" at the pointer;
 //  (s3) a click on a space whose ring isn't open shakes it and says "Opens in round II/III";
 //  (s4) after every placement, each space shows exactly its minions (the owner and anyone squatting there), and an
@@ -9,11 +10,10 @@
 //  (s5) no flying ghost (a minion, a card, a "+N" of followers) outlives its flight;
 //  (s6) every quadrant with a tiebreak prints it on its rim ("ties: red …"); a sphere with its own rule ("Whatever
 //       you steal turns magenta…") gives it in its rim's hover card;
-//  (s7) every word on the wheel is at least 12px on screen (the rim's engraved text included); an engraved inner
-//       ring's name at least 11px (Cory's call for the narrow cells);
+//  (s7) every word on the wheel is at least 12px on screen (the rim's text included), and a panel's gain at least 16px;
 //  (s8) the headline prompt fits: no ellipsis, nothing clipped, one line, while placing and while buying;
-//  (s9) engraved: the print is tidy: no two spaces' words, stamps or minions touch, nothing runs into the rim or the
-//       hub, and each space's print is centred in its own cell (rounds I, II and III).
+//  (s9) panels: the print is tidy: no two spaces' words or minions touch, nothing runs into the rim or the hub, each
+//       space's print is centred in its own panel, and every line stays inside its panel (no clipping, no overflow).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5196.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -128,9 +128,12 @@ const FLOOR = () => {
     if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
     if (!visible(e)) continue;
     const fs = parseFloat(getComputedStyle(e).fontSize);
-    // engraved: an inner ring's name may print at 11px (the narrow cells; it wraps rather than shrink further)
-    const floor = e.matches('[data-spaces="engraved"] .slot:not(.r1) .face .nm') ? 10.95 : 11.95;
-    if (fs < floor) out.push(`"${e.textContent.trim().slice(0, 24)}" at ${fs}px`);
+    if (fs < 11.95) out.push(`"${e.textContent.trim().slice(0, 24)}" at ${fs}px`);
+  }
+  // a panel's gain is its hero: at least 16px
+  for (const e of stage.querySelectorAll('[data-spaces="panels"] .slot .face .main')) {
+    const fs = parseFloat(getComputedStyle(e).fontSize);
+    if (fs < 15.95) out.push(`gain "${e.textContent.trim()}" at ${fs}px`);
   }
   for (const t of stage.querySelectorAll('[data-rim-text]')) {
     const px = Number(t.getAttribute('font-size')) * k;
@@ -163,9 +166,8 @@ const PROMPT = () => {
   return out;
 };
 const INSIDE = () => {
-  // engraved: the print stays tidy. Upright words can't fit a tilted 30° cell exactly at 12px, so the rule is: no two
-  // spaces' words, stamps or minions touch; nothing crosses into the rim or the hub; each space's print is centred in
-  // its own cell.
+  // panels: the print stays tidy: no two spaces' words or minions touch; nothing crosses into the rim or the hub; each
+  // space's print is centred in its own panel, and every line's ink stays inside that panel's paper.
   const out = [];
   const stage = document.querySelector('.lt-wheel .stage');
   const sb = stage.getBoundingClientRect();
@@ -176,7 +178,7 @@ const INSIDE = () => {
     const key = s.dataset.slot;
     const boxes = [];
     // a line's ink, not its line box: the font's ascent/descent padding (about a quarter above, a sixth below) is air
-    for (const el of s.querySelectorAll('.face .nm, .face .yl')) {
+    for (const el of s.querySelectorAll('.face .nm, .face .yl, .face .note')) {
       const r = document.createRange(); r.selectNodeContents(el);
       for (const x of r.getClientRects()) if (x.width > 2 && x.height > 2) boxes.push({ what: el.className, x: { left: x.left, right: x.right, top: x.top + x.height * 0.25, bottom: x.bottom - x.height * 0.16 } });
     }
@@ -194,6 +196,17 @@ const INSIDE = () => {
     }
     const mid = document.elementsFromPoint((L + R) / 2, (T + B) / 2).find(e => e.matches && e.matches('[data-cell] .wash'));
     if (!mid || mid.closest('[data-cell]').dataset.cell !== key) out.push(`${key}'s print is centred ${mid ? `in ${mid.closest('[data-cell]').dataset.cell}` : 'off its cell'}`);
+    // every corner of every line's ink inside its own panel's paper (Cory's screenshot: "Your Call" ran past its edge)
+    const wash = document.querySelector(`.lt-wheel [data-cell="${key}"] .wash`);
+    if (wash) {
+      const inv = wash.getScreenCTM().inverse();
+      const svg = wash.ownerSVGElement;
+      const inside = (x, y) => { const p = svg.createSVGPoint(); p.x = x; p.y = y; return wash.isPointInFill(p.matrixTransform(inv)); };
+      for (const { what, x } of boxes) {
+        const corners = [[x.left + 1, x.top + 1], [x.right - 1, x.top + 1], [x.left + 1, x.bottom - 1], [x.right - 1, x.bottom - 1]];
+        if (!corners.every(([px, py]) => inside(px, py))) out.push(`${key} ${what} runs past its panel's edge`);
+      }
+    }
   }
   for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
     const a = all[i], b = all[j];
@@ -204,14 +217,20 @@ const INSIDE = () => {
   return [...new Set(out)];
 };
 
+// three tables cover every sphere (Classic; red/yellow/market/thieves; purple/silver/trading/echo)
+const OTHER = ['purple', 'silver', 'trading', 'echo'], TB = ['red', 'yellow', 'market', 'thieves'];
 const passes = [
-  { look: 'sockets', quadrants: null, play: true },
-  { look: 'engraved', quadrants: null, play: true },
-  { look: 'engraved', quadrants: ['red', 'yellow', 'market', 'thieves'], play: false },
+  { look: 'panels', quadrants: null, play: true },
+  { look: 'panels', quadrants: TB, play: false },
+  { look: 'panels', quadrants: OTHER, play: false },
   // rounds II and III: more rings open, the busiest the wheel gets
-  { look: 'engraved', quadrants: null, play: false, round: 2 },
-  { look: 'engraved', quadrants: null, play: false, round: 3 },
-  { look: 'engraved', quadrants: ['red', 'yellow', 'market', 'thieves'], play: false, round: 3 },
+  { look: 'panels', quadrants: null, play: false, round: 2 },
+  { look: 'panels', quadrants: OTHER, play: false, round: 2 },
+  { look: 'panels', quadrants: null, play: false, round: 3 },
+  { look: 'panels', quadrants: TB, play: false, round: 3 },
+  { look: 'panels', quadrants: OTHER, play: false, round: 3 },
+  // the old look, until Cory has played the new one
+  { look: 'sockets', quadrants: null, play: true },
   { look: 'sockets', quadrants: null, play: false, round: 3 },
 ];
 const totals = {};
@@ -222,8 +241,8 @@ try {
     page.on('pageerror', e => fail(`pageerror: ${e.message}`, tag));
     page.on('console', m => { if (m.type() === 'error') fail(`console: ${m.text()}`, tag); });
     await page.addInitScript(WATCH);
-    const shot = n => page.screenshot({ path: `${SHOTS}/${pass.look}${pass.quadrants ? '-tb' : ''}${pass.round ? `-r${pass.round}` : ''}-${n}.png` }).catch(() => {});
-    const q = `?botDelay=${pass.play ? 200 : 40}${pass.look === 'engraved' ? '&spaces=engraved' : ''}`;
+    const shot = n => page.screenshot({ path: `${SHOTS}/${pass.look}${pass.quadrants ? `-${pass.quadrants[0]}` : ''}${pass.round ? `-r${pass.round}` : ''}-${n}.png` }).catch(() => {});
+    const q = `?botDelay=${pass.play ? 200 : 40}${pass.look === 'sockets' ? '&spaces=sockets' : ''}`;
     await page.goto(`${base}/${q}`);
     await page.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), spaceSave(pass.quadrants, pass.round || 1));
     await page.reload();
@@ -265,7 +284,7 @@ try {
     }
     (await page.evaluate(FLOOR)).forEach(m => fail(`(s7) ${m}`, tag));
     (await page.evaluate(PROMPT)).forEach(m => fail(`(s8) placing: ${m}`, tag));
-    if (pass.look === 'engraved') (await page.evaluate(INSIDE)).forEach(m => fail(`(s9) ${m}`, tag));
+    if (pass.look === 'panels') (await page.evaluate(INSIDE)).forEach(m => fail(`(s9) ${m}`, tag));
 
     // (s2) a taken space: shake + "Taken by …" at the pointer
     const taken = await page.$('.lt-wheel .slot.taken:not([data-option])');
