@@ -572,3 +572,4 @@ His notes below were made on the preview, which was stuck on a build from before
 - 2026-10-15 20:43 — ✅ (Cory) Doppelganger moves to Green now (fixes Red 11 / Green 9). Queued for his redesign: Overtime, Shake Down, Sell High, Royal Family.
 - 2026-10-15 20:43 — ✅ (Cory) Easter egg: a player named Max gets a leader 20% taller (taller, not bigger).
 - 2026-10-15 20:46 — ✅ (Cory) Every seat shows a robed leader (rivals' emoji-only faces dropped); only a player named Max gets the taller leader, emblem kept square.
+- 2026-10-15 21:05 — ✅ (Cory) Goody Bags' colour pick and Cheap Seats' pay open on a card at the space; Good Deed also lights the rival seats (click seat or face); drop "next" from the following seat.
