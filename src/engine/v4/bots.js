@@ -363,11 +363,14 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
         const before = memberCount(s, p);
         const had = new Set(p.members);
         const turns0 = turnsQueued(s);
-        s.slots[`${o.q}-${o.i}`] = me;
         p.left -= 1;
-        const qid = s.quadrants[o.q];
-        for (const c of ctx.membersOf(p)) for (const id of [c.def.id, c.copy].filter(Boolean)) defById(id).afterAction?.(ctx, p, c, qid);
-        actionAt(s, o.q, o.i).resolve(ctx, p);
+        // o.none: a placement that does nothing (grabFirst's yardstick)
+        if (!o.none) {
+          s.slots[`${o.q}-${o.i}`] = me;
+          const qid = s.quadrants[o.q];
+          for (const c of ctx.membersOf(p)) for (const id of [c.def.id, c.copy].filter(Boolean)) defById(id).afterAction?.(ctx, p, c, qid);
+          actionAt(s, o.q, o.i).resolve(ctx, p);
+        }
         // buys the action queues (Spree…) are buys still ahead, like this turn's own
         const moreBuys = s.queue.filter(t => t.t === 'buy' && t.p === me && !t.extra).length;
         const moreTurns = Math.max(0, turnsQueued(s) - turns0);
@@ -381,6 +384,7 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
       }
       out.push({ o, v: v + rand() * (opts.noise ?? 0.3) });
     }
+    if (opts.grab) grabFirst(state, out, opts);
   } else if (pend.kind === 'buy' || pend.kind === 'pay') {
     // One buy, paid one way, valued on a copy of the game.
     const valueOf = (what, spend) => {
@@ -453,6 +457,92 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
     }
   }
   return out.sort((a, b) => b.v - a.v);
+}
+
+// ---------- grab first: what a space is worth because a rival may take it before your next turn ----------
+// Normal rates each space on its own, as if the board would wait. It won't: in round II, 16 minions go to 20 spaces.
+// grabFirst plays the next stretch of the round on today's board: each rival who moves before your next GRAB_PICKS
+// turns takes the space they rate best, you take your best on your turns, and every space choice is scored by what
+// you get over those picks minus spite × the best rival's haul. Taking a rival's favourite (denial) and moving your
+// own turns up (Crunch Time: "Take your next 2 turns right away") both show up here and nowhere else.
+const GRAB_PICKS = 2;
+const GRAB_WEIGHT = 1;
+
+// whose turns come next this round (after the current turn), in order
+function turnSeq(queue) {
+  const end = queue.findIndex(t => t.t === 'endTurn');
+  const out = [];
+  for (let i = end + 1; i < queue.length && queue[i].t !== 'allPlaced'; i++) if (queue[i].t === 'turn') out.push(queue[i].p);
+  return out;
+}
+
+// Each space's worth to player `who` this turn, as a follower margin over a placement that does nothing.
+function placeGains(state, who, slots) {
+  const probe = { ...state, pending: { player: who, kind: 'place', options: [...slots, { id: '_none', kind: 'slot', none: true }] } };
+  const vals = scoreOptionsRaw(probe);
+  const none = vals.get('_none') ?? 0;
+  const out = new Map();
+  for (const o of slots) out.set(o.id, (vals.get(o.id) ?? none) - none);
+  return out;
+}
+
+function grabFirst(state, out, opts) {
+  const me = state.pending.player;
+  const seq0 = turnSeq(state.queue);
+  const myAt = seq0.reduce((a, p, i) => (p === me && a.length < GRAB_PICKS ? [...a, i] : a), []);
+  if (!myAt.length) return; // your last minion this round: nothing to grab ahead of
+  // rival turns before your GRAB_PICKS-th next turn, as the round stands
+  const rivalTurns = myAt[myAt.length - 1] + 1 - myAt.length;
+  const slots = out.map(r => r.o).filter(o => !o.squat);
+  const gains = new Map([[me, placeGains(state, me, slots)]]);
+  for (const p of new Set(seq0.slice(0, myAt[myAt.length - 1]))) if (p !== me) gains.set(p, placeGains(state, p, slots));
+  const best = (who, open) => {
+    let id = null, g = -Infinity;
+    for (const s of open) { const v = gains.get(who).get(s); if (v > g) { g = v; id = s; } }
+    return id;
+  };
+  for (const r of out) {
+    r.base = r.v;
+    if (r.o.squat) continue;
+    let seq = seq0;
+    try { seq = turnsAfter(state, r.o); } catch { /* keep the round's order */ }
+    const open = new Set(slots.map(o => o.id));
+    open.delete(r.o.id);
+    let mine = 0, mineLeft = myAt.length, rivLeft = rivalTurns;
+    const haul = {};
+    for (const p of seq) {
+      if (!mineLeft && !rivLeft) break;
+      if (p === me ? !mineLeft : !rivLeft) continue;
+      if (p === me) mineLeft--; else rivLeft--;
+      if (!gains.has(p)) continue;
+      const id = best(p, open);
+      if (id == null) continue;
+      open.delete(id);
+      const g = Math.max(0, gains.get(p).get(id));
+      if (p === me) mine += g; else haul[p] = (haul[p] || 0) + g;
+    }
+    const rival = Math.max(0, ...Object.values(haul));
+    r.v += (opts.grabWeight ?? GRAB_WEIGHT) * (mine - (opts.spite ?? SPITE) * rival);
+  }
+  out.sort((a, b) => b.v - a.v);
+}
+
+// The round's turn order after this space resolves (Crunch Time moves your turns up; Overtime adds one).
+function turnsAfter(state, o) {
+  const s = lightClone(state);
+  s.queue = copy(state.queue.slice(1));
+  const p = s.players[state.pending.player];
+  s.slots[`${o.q}-${o.i}`] = p.id;
+  p.left -= 1;
+  actionAt(s, o.q, o.i).resolve(contextFor(s), p);
+  return turnSeq(s.queue);
+}
+
+// scoreOptions with no noise and no grab, as a map from option id to value ('_none' = a placement that does nothing)
+function scoreOptionsRaw(probe) {
+  const vals = new Map();
+  for (const r of scoreOptions(probe, () => 0, { noise: 0 })) vals.set(r.o.id, r.v);
+  return vals;
 }
 
 /**

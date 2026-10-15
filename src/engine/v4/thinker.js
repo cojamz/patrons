@@ -19,6 +19,7 @@ const margin = (state, id) =>
  * opts.maxMs: a wall-clock cap for the UI (chooseBotMove sets 250). Off by default, so direct calls and sims stay
  *   deterministic; when it bites, rollouts stop early and are scored statically, so a slow machine plays a bit weaker.
  * opts.now: the clock for maxMs (default performance.now).
+ * opts.grab: false ranks placements the old way, without what grabbing a space first is worth (default on).
  */
 export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   const pend = state.pending;
@@ -28,7 +29,13 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   // an activation or a Release normal would take: nothing to think about
   const short = pend.kind === 'buy' ? buyShortcut(state) : null;
   if (short) return { player: me, option: short.id };
-  const ranked = scoreOptions(state, rand);
+  // Placements: normal's own ranking picks the shortlist, and grab first (bots.js grabFirst: what a space is worth
+  // because a rival may take it before your next turn) nominates one more. Without it Crunch Time ("Take your next 2
+  // turns right away") read as an empty space and never got looked at. The rollouts decide; grab's own ranking only
+  // nominates (as a ranking it measured no better than normal's: 46–49%, 400 games). opts.grab = false: the old Hard.
+  const grab = pend.kind === 'place' && opts.grab !== false;
+  const scored = scoreOptions(state, rand, { grab, grabWeight: opts.grabWeight });
+  const ranked = grab ? [...scored].sort((a, b) => b.base - a.base).map(r => ({ o: r.o, v: r.base, g: r.v })) : scored;
   if (!ranked.length) return chooseNormalMove(state, rand);
   if (ranked.length === 1) return { player: me, option: ranked[0].o.id };
   const { candidates = 3, budget = 100, full = false, maxMs = Infinity } = opts;
@@ -37,17 +44,23 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
   const late = () => until !== Infinity && now() > until;
   // only weigh options normal rates close to its best
   const pool = ranked.slice(0, candidates).filter((r, i) => i === 0 || r.v >= ranked[0].v - 4);
+  if (grab && !pool.some(r => r.o.id === scored[0].o.id)) pool.push(ranked.find(r => r.o.id === scored[0].o.id));
   if (pool.length === 1) return { player: me, option: pool[0].o.id };
   const round = state.round;
   const totals = pool.map(() => 0), counts = pool.map(() => 0);
   let spent = 0;
+  const seeds = [];
   // a rollout stops at the round end, or when its share of the budget is used up (then it's scored statically)
   const cap = Math.max(8, Math.floor(budget / pool.length));
   // round-robin rollouts until the budget is gone; every candidate gets at least one
   for (let k = 0; spent < budget || counts.some(c => c === 0); k++) {
     const i = k % pool.length;
     if (counts[i] > 0 && (spent >= budget || late())) break;
-    const r = seededRandom(Math.floor(rand() * 2 ** 31));
+    // paired rollouts: the j-th rollout of every candidate plays the same dice, so candidates are compared on the same
+    // luck (opts.paired = false: a fresh seed per rollout, the old way)
+    const j = Math.floor(k / pool.length);
+    if (opts.paired === false || seeds[j] === undefined) seeds[j] = Math.floor(rand() * 2 ** 31);
+    const r = seededRandom(seeds[j]);
     let s, steps = 1, value;
     try {
       s = applyMove(state, { player: me, option: pool[i].o.id });
