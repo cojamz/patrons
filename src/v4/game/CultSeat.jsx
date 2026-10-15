@@ -55,7 +55,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         onPointerLeave={e => { if (e.pointerType === 'mouse' && hover) hover.onSeatHover(pid, null); }}
         onClick={e => openSeat(e, true)}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSeat(e, true); } }}>
-        <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 32 : 28} minion={mine ? 15 : 13} compact /></span>
+        <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 40 : 30} minion={mine ? 15 : 13} compact /></span>
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
           {place && <span className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined} title={place.title}><span className="co-t">{place.label}</span>{place.twice && <b className="co-x">×2</b>}</span>}
@@ -111,7 +111,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             </span>
           )}
           {last && (
-            <span className="cs-took" data-took={last.name} title={`${mine ? 'You' : p.name} last took ${last.name} (${quadrant(last.qid).name})`}>
+            <span className="cs-last" data-took={last.name} title={`${mine ? 'You' : p.name} last took ${last.name} (${quadrant(last.qid).name})`}>
               <small>{mine ? 'you took' : 'just took'}</small><Sprite id={[`${last.qid}.${actionKey(last)}`, spriteId(last.name)]} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /><b>{last.name}</b>
             </span>
           )}

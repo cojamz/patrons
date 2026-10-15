@@ -70,13 +70,16 @@
 //                 degrees (0 = top, clockwise), radii from the wheel's centre (200,200), in WHEEL coordinates, not
 //                 the box's, unturned (the wheel turns it). For cells, cups, washes, hatching. No text: it turns.
 //
-// Built-in looks: 'sockets' (the default: nothing changes for players) and 'engraved' stay drawn by the Wheel itself.
+// Built-in looks, drawn by the Wheel itself: 'panels' (the default since 2026-10-15: plate 1b's flat wedge panels),
+// 'sockets' (the old look, kept until Cory has played the new one) and 'engraved'.
 // ============================================================================================================
 
 import { createElement, useEffect, useState } from 'react';
 
 /** The looks the Wheel draws itself. */
-export const BUILT_IN = ['sockets', 'engraved'];
+export const BUILT_IN = ['sockets', 'engraved', 'panels'];
+/** The look a table wears when `?spaces=` names none. */
+export const DEFAULT_LOOK = 'panels';
 
 /** The default box per ring, in board units (today's socket sizes). */
 export const DEFAULT_BOX = { 1: [60, 60], 2: [46, 46], 3: [50, 50] };
@@ -91,12 +94,12 @@ export const FACES = loaders;
 export const faceNames = () => [...BUILT_IN, ...Object.keys(loaders).sort()];
 export const isFace = name => !!name && Object.prototype.hasOwnProperty.call(loaders, name);
 
-/** Which look the spaces wear: `?spaces=<name>` when it names a built-in or a face file, else 'sockets'. */
+/** Which look the spaces wear: `?spaces=<name>` when it names a built-in or a face file, else the default (panels). */
 export function lookFromUrl() {
   try {
     const v = new URLSearchParams(globalThis.location?.search || '').get('spaces');
-    return v && (BUILT_IN.includes(v) || isFace(v)) ? v : 'sockets';
-  } catch { return 'sockets'; }
+    return v && (BUILT_IN.includes(v) || isFace(v)) ? v : DEFAULT_LOOK;
+  } catch { return DEFAULT_LOOK; }
 }
 
 const loaded = new Map();

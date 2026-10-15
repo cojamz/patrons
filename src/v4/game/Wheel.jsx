@@ -1,7 +1,11 @@
 // The board: a printed paper wheel of 4 quadrants (the Lamplit Table). Outer ring = round I, middle = round II,
 // inner = round III. It still spins (drag, arrow keys, a sideways swipe), but everything on it stays upright and
-// nothing else on screen changes with its orientation. Two looks for the spaces (Cory picks; `?spaces=engraved`):
-//  - sockets (default): each space is a cream socket with its picture, name and yield;
+// nothing else on screen changes with its orientation. The looks for the spaces (`?spaces=<look>`):
+//  - panels (default; the visual language, plate 1b, design/prototypes/language/): a dark board where each ring's
+//    spaces tile their quadrant as flat paper wedges, each with the action's small picture above its effect (the
+//    number first and biggest) and one line of small print where the big line can't say it all. No names. Taken: the
+//    panel dims and the minion stands where the picture was. Locked: a faint outline, "opens in round N".
+//  - sockets (`?spaces=sockets`, the old look until Cory has played the new one): a cream socket per space;
 //  - engraved (design/prototypes/actions option 3): each space is a cell of its ring printed into the paper, washed
 //    in the quadrant's ink, with a one-ink stamp of its picture, its name in small capitals and its yield beneath.
 //  - any face in ./faces/ (`?spaces=<name>`, lab: `?lab=faces&face=<name>`): the face draws inside each space's box;
@@ -26,6 +30,9 @@ import { Rich } from './Rich.jsx';
 import { shortEffect, pipEffect } from '../shorts.js';
 import { Follower } from '../art/Follower.jsx';
 import { lookFromUrl, useFace, boxOf, faceStatus, FaceBox, BUILT_IN } from './faces/index.js';
+import { panelText, fineText } from './panelText.js';
+import { Mark, Op, ResourceGlyph } from './Glyphs.jsx';
+import { Pip } from './Rich.jsx';
 import { MO, spinEase } from '../motion.js';
 
 // sockets: discs toward the outer edge of their ring, so a name never runs into a neighbour at any board size
@@ -33,7 +40,10 @@ const RING_S = { 1: { r0: 128, r1: 180, r: 151, n: 3, span: 66 }, 2: { r0: 82, r
 // engraved: the cells tile each quadrant (ring I: three 30° cells, ring II: two 45° cells, ring III: one 90° cell)
 // (the hub shrinks so the one wide ring-III cell can hold its name, stamp and yield at 12px or more)
 const RING_E = { 1: { r0: 126, r1: 180, r: 153, n: 3, span: 60 }, 2: { r0: 78, r1: 126, r: 102, n: 2, span: 45 }, 3: { r0: 22, r1: 78, r: 51, n: 1, span: 0 } };
-const ringsOf = look => (look === 'engraved' ? RING_E : RING_S);
+// panels: the cells tile each quadrant like engraved's, on a dark board with gutters between them; r is where each
+// panel's print is centred (ring III's a little out from the middle of its wedge, where the wedge is wide)
+const RING_P = { 1: { r0: 130, r1: 179, r: 154.5, n: 3, span: 60 }, 2: { r0: 79, r1: 127, r: 103, n: 2, span: 45 }, 3: { r0: 25, r1: 75, r: 53, n: 1, span: 0 } };
+const ringsOf = look => (look === 'engraved' ? RING_E : look === 'panels' ? RING_P : RING_S);
 const RIM = { r0: 180, r1: 200, r: 190 }; // the rim band: each quadrant's rule, engraved
 // the rim's hover/tap target: from just outside ring I's sockets to well past the paper's edge (it wins over any space)
 const RIM_HIT = { r0: 181, r1: 216 };
@@ -152,6 +162,128 @@ export const clauses = text => String(text || '').split(/ · |, (?=\S)| (?=[+−
  *  → ⇄ ↻ × and a joined "/" (per). Every mark is drawn once, in Glyphs.jsx, and shared with every other text. */
 export function Marked({ text }) {
   return <Rich text={String(text || '')} />;
+}
+
+// ---------- panels (the default look): the visual language's flat wedges, plate 1b ----------
+const PANEL_GUT = 4, PANEL_RC = 4; // the gutter between neighbouring panels and their corner, in board units
+/** A ring cell as the plate draws it: straight, parallel gutters (`gut` wide) and rounded corners (`rc`). */
+function panelPath(a0, a1, r0, r1, gut = PANEL_GUT, rc = PANEL_RC) {
+  const h = gut / 2, deg = x => (x * 180) / Math.PI;
+  const s0 = r => a0 + deg(Math.asin(h / r)), s1 = r => a1 - deg(Math.asin(h / r));
+  const O0 = polar(s0(r1), r1), O1 = polar(s1(r1), r1), I1 = polar(s1(r0), r0), I0 = polar(s0(r0), r0);
+  const along = (A, B, d) => { const L = Math.hypot(B[0] - A[0], B[1] - A[1]); return [A[0] + ((B[0] - A[0]) * d) / L, A[1] + ((B[1] - A[1]) * d) / L]; };
+  const f = p => `${p[0].toFixed(2)} ${p[1].toFixed(2)}`;
+  return ['M', f(along(I0, O0, rc)), 'L', f(along(O0, I0, rc)),
+    'Q', f(O0), f(polar(s0(r1) + deg(rc / r1), r1)),
+    'A', r1, r1, 0, 0, 1, f(polar(s1(r1) - deg(rc / r1), r1)),
+    'Q', f(O1), f(along(O1, I1, rc)),
+    'L', f(along(I1, O1, rc)),
+    'Q', f(I1), f(polar(s1(r0) - deg(rc / r0), r0)),
+    'A', r0, r0, 0, 0, 0, f(polar(s0(r0) + deg(rc / r0), r0)),
+    'Q', f(I0), f(along(I0, O0, rc)), 'Z'].join(' ');
+}
+/** The widest upright box of height h centred at (cx, cy) that stays `pad` clear of a panel's edges (radii r0..r1,
+ *  angles a0..a1 in degrees, 0 = top, clockwise, as it sits on screen). Board units; the half-width comes back. */
+export function fitHalfWidth(cx, cy, h, r0, r1, a0, a1, pad) {
+  const t0 = ((a0 - 90) * Math.PI) / 180, t1 = ((a1 - 90) * Math.PI) / 180;
+  const u0 = [Math.cos(t0), Math.sin(t0)], u1 = [Math.cos(t1), Math.sin(t1)];
+  const ok = (x, y) => {
+    const dx = x - CX, dy = y - CY, r = Math.hypot(dx, dy);
+    if (r < r0 + pad || r > r1 - pad) return false;
+    return u0[0] * dy - u0[1] * dx >= pad && u1[0] * dy - u1[1] * dx <= -pad;
+  };
+  const fits = w => {
+    for (let k = 0; k <= 6; k++) {
+      const x = cx - w + (2 * w * k) / 6, y = cy - h / 2 + (h * k) / 6;
+      if (!ok(x, cy - h / 2) || !ok(x, cy + h / 2) || !ok(cx - w, y) || !ok(cx + w, y)) return false;
+    }
+    return true;
+  };
+  if (!fits(0.5)) return 0;
+  let lo = 0.5, hi = 110;
+  for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2; if (fits(m)) lo = m; else hi = m; }
+  return lo;
+}
+
+const PANEL_RES = new Set(['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', 'purple', 'white', 'any']);
+const PANEL_MARK = { '@m': 'member', '@r': 'rival', '@n': 'minion', '@t': 'turn' };
+const PANEL_TOK = /@[mrfnt]|[+−-]?\d+|×(?:\d+|½)|½|≤\d+|[/→⇄·]|[A-Za-z’'?;,.!-]+|\s+|./g;
+const tokKind = t => (/^\s+$/.test(t) ? 'sp' : /^(?:[+−-]?\d+|×(?:\d+|½)|½|≤\d+)$/.test(t) ? 'n' : t === '/' || t === '·' ? 'op'
+  : t === '→' || t === '⇄' || PANEL_MARK[t] || t === '@f' || PANEL_RES.has(t) ? 'g' : 'w');
+const panelToks = text => [...String(text || '').matchAll(PANEL_TOK)].map(m => m[0]);
+/** One line of a panel in the grammar's form: numbers heavy, resources as dots, @m/@r/@n/@t/@f as marks, / and ×
+ *  typed quietly; a number sits right against the glyph it counts ("+3●"). */
+export function Said({ text }) {
+  const toks = panelToks(text);
+  const out = [];
+  toks.forEach((t, k) => {
+    const kind = tokKind(t);
+    if (kind === 'sp') {
+      const pk = k ? tokKind(toks[k - 1]) : null, nk = k + 1 < toks.length ? tokKind(toks[k + 1]) : null;
+      if (pk && nk && pk !== 'op' && nk !== 'op' && !(pk === 'n' && nk === 'g')) out.push(' ');
+      return;
+    }
+    if (kind === 'n') out.push(<b key={k} className="n">{t}</b>);
+    else if (kind === 'op') out.push(<Op key={k} t={t} />);
+    else if (t === '→') out.push(<Mark key={k} k="arrow" />);
+    else if (t === '⇄') out.push(<Mark key={k} k="swap" />);
+    else if (PANEL_MARK[t]) out.push(<Mark key={k} k={PANEL_MARK[t]} />);
+    else if (t === '@f') out.push(<Follower key={k} size={12} title="follower" />);
+    else if (PANEL_RES.has(t)) out.push(<Pip key={k} color={t} />);
+    else out.push(t);
+  });
+  return <>{out}</>;
+}
+/** A line's width in ems of its own type (the font measured once per word, a glyph .9em, a gap .25em). */
+function saidEm(text, weight = 700) {
+  let w = 0;
+  const toks = panelToks(text);
+  toks.forEach((t, k) => {
+    const kind = tokKind(t);
+    if (kind === 'sp') w += 0.25;
+    else if (kind === 'g') w += 0.92;
+    else if (kind === 'op') w += 0.55;
+    else w += rimWidth(t, kind === 'n' ? 800 : weight, 0);
+    if (kind === 'sp' && k && tokKind(toks[k - 1]) === 'n' && k + 1 < toks.length && tokKind(toks[k + 1]) === 'g') w -= 0.25;
+  });
+  return w;
+}
+// the type and the picture on a panel, in screen pixels (the number at least 16, the small print at least 12)
+const PANEL_PX = { pic: 20, big: 20, bigMin: 16, fine: 12, fineLine: 13, gap: 2 };
+/**
+ * How a panel's print lays out in the room it has: the big line on one line or a clause a line, the small print on
+ * one or two lines or not at all (it's always in the hover). Returns { bigLines, fineLines, big (px), w (board
+ * units: the box's width) }. `k` is screen pixels per board unit.
+ */
+function panelLayout({ s, R, rot, k, big, fine }) {
+  const [x0, y0] = polar(s.ang, R.r);
+  const r = (rot * Math.PI) / 180;
+  const cx = CX + (x0 - CX) * Math.cos(r) - (y0 - CY) * Math.sin(r), cy = CY + (x0 - CX) * Math.sin(r) + (y0 - CY) * Math.cos(r);
+  const a0 = s.ang - s.half + rot, a1 = s.ang + s.half + rot;
+  const pad = PANEL_GUT / 2 + 2.5;
+  const room = hPx => 2 * fitHalfWidth(cx, cy, hPx / k, R.r0, R.r1, a0, a1, pad);
+  const clauseList = clauses(big);
+  const bigEm = saidEm(big, 500), clauseEm = Math.max(...clauseList.map(c => saidEm(c, 500)));
+  const fineEm = fine ? saidEm(fine, 700) : 0;
+  const longestWord = fine ? Math.max(...String(fine).split(/\s+/).map(t => saidEm(t, 700))) : 0;
+  const { pic, gap, fineLine } = PANEL_PX;
+  const tries = [];
+  for (const bp of [PANEL_PX.big, 18, PANEL_PX.bigMin]) {
+    for (const bl of clauseList.length > 1 ? [1, 2] : [1]) {
+      for (const fl of fine ? [1, 2, 0] : [0]) tries.push({ bp, bl, fl });
+    }
+  }
+  // prefer the biggest number, then the small print shown, then fewer lines
+  tries.sort((a, b) => b.bp - a.bp || (b.fl > 0) - (a.fl > 0) || a.bl - b.bl || a.fl - b.fl);
+  for (const t of tries) {
+    const h = pic + gap + t.bl * t.bp + (t.fl ? gap + t.fl * fineLine : 0);
+    const needBig = (t.bl === 1 ? bigEm : clauseEm) * t.bp;
+    const needFine = t.fl === 0 ? 0 : t.fl === 1 ? fineEm * PANEL_PX.fine : Math.max(longestWord, fineEm * 0.62) * PANEL_PX.fine;
+    const w = room(h + 4) * k;
+    if (w >= Math.max(needBig, needFine, pic) + 2) return { bigLines: t.bl, fineLines: t.fl, big: t.bp, w: w / k };
+  }
+  const t = tries[tries.length - 1];
+  return { bigLines: clauseList.length > 1 ? 2 : 1, fineLines: 0, big: PANEL_PX.bigMin, w: Math.max(room(pic + gap + 2 * t.bp), 20 / k) / (1 || 1) };
 }
 
 // Is the person driving with the keyboard? Focus moved to a space on its own (your turn begins) opens its card only
