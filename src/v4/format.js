@@ -386,7 +386,7 @@ export function logSections(state) {
  */
 export function turnGroups(state, lines) {
   const names = state.players.map(p => esc(p.name)).join('|');
-  const took = new RegExp(`^(${names}) took .+ \\([A-Z][a-z]+\\)\\.$`);
+  const took = new RegExp(`^(${names}) (?:took .+|joined .+ on .+) \\([A-Z][a-z]+\\)\\.$`); // a turn: a space taken or joined
   const pass = new RegExp(`^(${names}) passed\\.$`);
   const alone = /^(Round \S+ ends\.|Game over\.)/;
   const groups = [];
@@ -517,6 +517,10 @@ export function explainLine(log, i) {
   // first: "P4 took 2 magenta and gave everyone else 1 magenta." (Goody Bags), which the "gave" forms below would misread
   let m = line.match(/^(.+?) took (\d+) (\w+) and gave everyone else (\d+) (\w+)\.$/);
   if (m) return { text: `${m[1]} gains ${m[2]} ${m[3]}; everyone else gains ${m[4]} ${m[5]}.` };
+  // a minion on a space a rival already took is Squatter's doing (the only member that lets you join): say so, never
+  // let it read as a copy (plain-words pass: "P3 joined P2 on Crescendo")
+  m = line.match(/^(.+?) joined (.+?) on (.+?) \((\w+)\)\.$/);
+  if (m) return { text: `${m[1]} joined ${m[2]} on ${m[3]} (Squatter).` };
   m = line.match(/^(.+?) gave (\d+) (\w+) to (.+?)\.$/) || null;
   if (m) {
     const [, from, n, color, to] = m;
@@ -808,7 +812,7 @@ export function turnStory(start, end, actor, me = null, mid = null) {
     if (g) out.push(`${nm(p.id)} ${g > 0 ? '+' : '−'}${fword(g)}`);
   }
   if (!place && !out.length) return null;
-  const head = place ? (joined ? `${who} joined ${nm(joined.id)} on ${space}` : `${who} took ${space}`) : who;
+  const head = place ? (joined ? `${who} joined ${nm(joined.id)} on ${space} (Squatter)` : `${who} took ${space}`) : who;
   // the strip's one line: what hit you first, then the biggest thing the turn did
   const big = out.find(l => /^(recruited|bought|traded|released) |^(an extra turn|\d+ extra turns)$/.test(l));
   const short = [hit, gain, big && big.replace(/ \(paid .*\)$/, '').replace(/ \(free\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');

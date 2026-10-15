@@ -55,6 +55,9 @@ describe('v4 format helpers', () => {
     const st = { players: [{ name: 'P1' }, { name: 'P2' }] };
     const lines = ['P1 took Kickback (Gold).', 'P1 recruited Banker.', 'P2 took Redistribute (Magenta).', 'P2 stole 2 gold from P1.', 'P2 passed.', 'Round I ends. Most gold: P1 +2'];
     expect(turnGroups(st, lines)).toEqual([[5], [2, 3], [0, 1]]);
+    // a minion that joins a rival's space starts a turn too, and says whose doing it is (Squatter), never a copy
+    expect(turnGroups(st, ['P1 took Kickback (Gold).', 'P2 joined P1 on Kickback (Gold).', 'P2 recruited Banker.'])).toEqual([[1, 2], [0]]);
+    expect(explainLine(['P2 joined P1 on Kickback (Gold).'], 0).text).toBe('P2 joined P1 on Kickback (Squatter).');
     // a round's opening line heads the pay-outs logged just before it
     expect(turnGroups(st, ["P2's Investor: +2 gold.", 'Round II begins. P1 picks first.', 'P1 took Kickback (Gold).'])).toEqual([[2], [1, 0]]);
     // a real game: every line but the passes, once each

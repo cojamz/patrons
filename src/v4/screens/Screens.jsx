@@ -173,7 +173,8 @@ export function TablePicker({ value, onChange, readOnly = false }) {
  *  round I spaces: +3 gold, pick who gets 1 · +2 gold · Save 4 on next member." The resource dot is a word here. */
 export function sphereHint(id) {
   const q = quadrant(id);
-  const lines = q.actions.filter(a => a.ring === 1).map(a => panelWords(id, a, 1).replace(/@f/g, 'follower'));
+  // the follower mark in words, singular only after a 1 ("+1 follower"; "+1 per rival with more followers")
+  const lines = q.actions.filter(a => a.ring === 1).map(a => panelWords(id, a, 1).replace(/(^|[^\d])1 @f/g, '$11 follower').replace(/@f/g, 'followers'));
   return `${sphereLine(id)} ${lowColor(q.scoring.label)} at round end. Its round I spaces: ${lines.join(' · ')}.`;
 }
 function TableChip({ id }) {
