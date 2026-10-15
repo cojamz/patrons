@@ -86,7 +86,10 @@ describe('fire audit: Blue, Magenta, White, Green', () => {
 
 // ---------------------------------------------------------------------------------------------------------
 // Gold, Red, Purple, Silver, Yellow and the guest members (benders): mixed tables from the cross-sphere fuzz,
-// easy bots (fast), via fire-audit-runner.js (also scripts/v4-fire-audit.mjs). Ledger: design/eval/card-ledger-a.md.
+// normal bots, via fire-audit-runner.js (also scripts/v4-fire-audit.mjs). Ledger: design/eval/card-ledger-a.md.
+// Normal, not easy (2026-10-15): since the bots retune, easy is "normal played carelessly" and undervalues members by
+// design, so it recruits few and late (Investor in round III never sees a round start) and the gate stopped
+// reaching Apprentice, Corner-Cutter, Investor and Rainmaker. Normal plays members the way a person would.
 const SPHERES = ['gold', 'red', 'purple', 'silver', 'yellow'];
 // Members that may stay unnamed on bot tables, with why (see design/eval/card-ledger-a.md).
 // Conditional cards that can go a whole bot game without their condition; each has a named test of its own.
@@ -121,7 +124,7 @@ describe('namesCard: what counts as a line naming a card', () => {
 
 describe('fire audit gate (Gold, Red, Purple, Silver, Yellow, guests)', () => {
   it('every recruited member with an effect is named acting at least once', () => {
-    const { crashes, stats } = runFireAudit({ games: 140, spheres: SPHERES, levels: ['easy', 'easy', 'easy', 'easy'] });
+    const { crashes, stats } = runFireAudit({ games: 140, spheres: SPHERES, levels: ['normal', 'normal', 'normal', 'normal'] });
     expect(crashes).toEqual([]);
     const silent = silentMembers(stats, [...SPHERES, 'benders'], ALLOW).map(e => `${e.name} (${e.def}): recruited in ${e.rec} games, never named`);
     expect(silent).toEqual([]);
