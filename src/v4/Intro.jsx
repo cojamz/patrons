@@ -209,6 +209,17 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
     return { left: `${lx * uk}px`, top: `${ly * uk}px`, width: `${w * uk}px`, height: `${h * uk}px` };
   }), { duration: span }], [uk, t0, at, loop, shotList], { t0, at, on: motion });
 
+  // the recorder's seek (scripts/v4-gif.mjs STEP=1): the whole intro is one timeline, so one time sets everything
+  useEffect(() => {
+    if (!one) return undefined;
+    window.__introSeek = ms => {
+      for (const a of (root.current || document).getAnimations({ subtree: true })) { a.pause(); a.currentTime = ms; }
+      const b = STARTS.filter(t => t <= ms).length - 1;
+      if (b !== state.current.beat) setBeat(Math.max(0, b));
+    };
+    return () => { delete window.__introSeek; };
+  }, [one]);
+
   // keys: Esc closes after the first beat, arrows step, Tab stays inside; nothing reaches the table underneath
   useEffect(() => {
     const back = document.activeElement;
