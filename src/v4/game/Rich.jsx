@@ -1,16 +1,16 @@
 // Resources as colored symbols inside any rules text or cost (Cory, 2026-10-14): "+3 gold" reads as "+3 ●" in gold,
 // "2 any" as "2 ◍" (the wild token). Each symbol says what it is on hover (every element explains itself).
 import { Follower } from '../art/Follower.jsx';
-import { ResourceGlyph, Mark, Op } from './Glyphs.jsx';
+import { ResourceGlyph } from './Glyphs.jsx';
 
 const COLORS = ['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', 'purple', 'white'];
 // "follower(s)" after a number is the follower mark too (Cory: followers aren't a star); other uses stay words.
-// The plate's marks (visual language, 2026-10-15): @m member, @r rival, @f follower, @n minion, @t extra turn;
-// → becomes, ⇄ swap, ↻ extra turn; × times and a "/" joined to what follows (per) are typed, quieter.
-// A spaced " / " ("2 / 4 / 6", by round) stays text: "/" only ever means per.
-const WORD = new RegExp(`\\b(${COLORS.join('|')}|any|followers?)\\b|(@[mrfnt])|([→⇄↻×])|(?<=\\S)(\\/)(?=[^\\s\\d])`, 'g');
+// Two symbols only (Cory, 2026-10-15: "just simplify visual language everywhere"): the dot and the follower. The old
+// marks print as plain words: @m member, @r rival, @n minion, @t extra turn (@f is the follower mark), → becomes,
+// ⇄ swap, ↻ extra turn, and a "/" joined to what follows is "per". A spaced " / " ("2 / 4 / 6", by round) stays as is.
+const WORD = new RegExp(`\\b(${COLORS.join('|')}|any|followers?)\\b|(@[mrfnt])|([→⇄↻])|(?<=\\S)(\\/)(?=[^\\s\\d])`, 'g');
 const NUM = /((?<![\p{L}\p{N}.,])[+−-]?\d+(?![\p{L}\p{N}]))/u;
-const TOKEN_MARK = { '@m': 'member', '@r': 'rival', '@n': 'minion', '@t': 'turn', '→': 'arrow', '⇄': 'swap', '↻': 'turn' };
+const TOKEN_WORD = { '@m': 'member', '@r': 'rival', '@n': 'minion', '@t': 'extra turn', '→': 'becomes', '⇄': 'swap', '↻': 'extra turn', '/': ' per ' };
 /** The follower mark in running text: Cory's pixel person at the plate's .8em (rounded to whole pixels by CSS). */
 export const TextFollower = ({ title = 'followers' }) => <Follower size={10} title={title} markClass="rich-f" />;
 
@@ -37,16 +37,14 @@ export function Rich({ text }) {
   if (!text) return null;
   const out = [];
   let last = 0;
-  // the text up to a symbol; a number sits right against the dot or mark it counts ("+3●", "1👤"), never against → or ⇄
+  // the text up to a symbol; a number sits right against the dot or follower it counts ("+3●", "1👤")
   const lead = (at, glue) => { if (at > last) out.push(glue ? text.slice(last, at).replace(/(\d)\s$/, '$1') : text.slice(last, at)); };
   for (const m of text.matchAll(WORD)) {
     const at = m.index;
     const sym = m[2] || m[3] || m[4];
     if (sym) {
-      lead(at, sym[0] === '@');
-      if (sym === '@f') out.push(<TextFollower key={at} title="follower" />);
-      else if (TOKEN_MARK[sym]) out.push(<Mark key={at} k={TOKEN_MARK[sym]} />);
-      else out.push(<Op key={at} t={sym} />);
+      lead(at, sym === '@f');
+      out.push(sym === '@f' ? <TextFollower key={at} title="follower" /> : TOKEN_WORD[sym]);
       last = at + sym.length;
       continue;
     }
