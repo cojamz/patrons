@@ -380,7 +380,7 @@ function inputFor(state, task) {
       ];
       // a member's activation can be used any time on your own turn (Cory, 2026-10-15): here too, beside the spaces
       // (only while there is a space to take, so a use is never forced on you)
-      return { kind: 'place', prompt: `${p.name}: place a minion`, options: slots.length ? [...slots, ...useOptions(state, p)] : [], onEmpty: () => { p.left -= 1; } };
+      return { kind: 'place', prompt: `${p.name}: place a minion`, options: slots.length ? [...slots, ...useOptions(state, p)] : [], onEmpty: () => { p.left -= 1; log(state, `No open space: ${p.name}'s minion sits out.`); } };
     }
     case 'buy': {
       // a second buy (Big Spender) is offered only after a real first buy, while an unspent one is held
@@ -482,7 +482,9 @@ function useMember(state, p, uid, resume) {
   c.used = true;
   const act = effectiveDefs(c).find(e => e.onActivate);
   const before = traceSnapshot(state);
-  act.onActivate(ctxFor(state), p, wrap(state, c));
+  // used beside the spaces: this turn's minion is still to land, so a space must stay free for it (spareSpace, purple.js)
+  if (resume.t === 'place') state.unplaced = 1;
+  try { act.onActivate(ctxFor(state), p, wrap(state, c)); } finally { delete state.unplaced; }
   traceChanges(state, before, p, act);
   const at = state.queue.findIndex(t => !t._fresh);
   state.queue.splice(at < 0 ? state.queue.length : at, 0, resume);
