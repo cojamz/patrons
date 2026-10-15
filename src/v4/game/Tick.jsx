@@ -1,7 +1,7 @@
 // A number that changes visibly: small changes roll like an odometer (old number slides out, new slides in),
 // bigger ones count up; either way it lights up in a color and can float a brief +N / −N.
 import { useEffect, useRef, useState } from 'react';
-import { MO } from '../motion.js';
+import { MO, slowed } from '../motion.js';
 import { arrivalFor } from './flight.js';
 
 export const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -43,7 +43,7 @@ export default function Tick({ value, from, color, className = '', float = true,
     if (float) {
       const id = ++floatId;
       setFloats(f => [...f.slice(-2), { id, d }]);
-      timers.push(setTimeout(() => setFloats(f => f.filter(x => x.id !== id)), 900));
+      timers.push(setTimeout(() => setFloats(f => f.filter(x => x.id !== id)), slowed(900))); // (v4.css .floater: .9s × --mo-slow)
     }
     if (reducedMotion() || typeof requestAnimationFrame !== 'function') { disp.current = value; setShown(value); return () => timers.forEach(clearTimeout); }
     // with pieces coming, the count starts when the first one lands (the director says so; the plan's time is the

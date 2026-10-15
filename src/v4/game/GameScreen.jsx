@@ -36,7 +36,7 @@ import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
 import { playChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable, foldBuys, foldWait, notePick } from './director.js';
 import { gainsBetween } from './gains.js';
-import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed, speedScale } from '../motion.js';
+import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed, speedScale, slowed } from '../motion.js';
 import { PERF_ON } from '../perf.js';
 import { boardPicker, giftPick, seatPart, shopLookup, pickCaption } from './boardPick.js';
 import GiftCard from './GiftCard.jsx';
@@ -49,8 +49,8 @@ import { gameRecord, recordText } from '../session/record.js';
 import { copyText } from '../Recovery.jsx';
 import './layout.css'; // the laptop composition from 1200px up (design pod)
 
-const STEP_MS = BOT.catchUp;      // pace when catching up on moves that happened behind the round-end card
-const RIVAL_DWELL_MS = BOT.pace.normal; // each visible bot step holds this long (src/v4/motion.js)
+// (BOT.catchUp, read when used: the pace when catching up on moves that happened behind the round-end card)
+const RIVAL_DWELL_MS = BOT.pace.steady; // each visible bot step holds this long (src/v4/motion.js; App passes the speed's)
 
 /** Desktop and laptop frame (the side column is a fixed frame) vs phones and tablets (stacked). */
 function useMedia(q) {
@@ -178,7 +178,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       // every bot step during a round holds the pace (≥600ms at Normal): placing, buying, choosing, passing
       const rivalStep = actor != null && next.round >= 1 && !rivalSetup;
       // a rival's recruit holds a beat longer: the card's flight to their row is the thing to see
-      const base = myRecruitThenGone ? BOT.myRecruitHold : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(BOT.recruitExtra, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
+      const base = myRecruitThenGone ? BOT.myRecruitHold : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(BOT.recruitExtra, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(slowed(250), rivalDwell) : paced.current && queue.current.length ? BOT.catchUp : 0;
       // the step's chain of animations sets the pace (director.js; grammar.md §4): the next step shows once it has
       // played (a click or Space skips it). The bot pace is the floor only for a step with nothing to show (a pass).
       // the same player's next step shows when this chain's last piece is two-thirds along (its handoff); a turn that
@@ -187,7 +187,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       const plan = planChain(prev, next, { mine });
       const sameNext = !!(next.pending && prev.pending && next.pending.player === prev.pending.player);
       // (a rival's step that shows something stays on screen at least 400ms before the same bot's next step: motion.mjs m4)
-      const dwellOf = pl => holdAfter(pl, { sameNext, rivalStep, floor: Math.min(rivalDwell, 400), base, nextPlaces: !!(next.pending && next.pending.kind === 'place'), placing: !!(prev.pending && prev.pending.kind === 'place') });
+      const dwellOf = pl => holdAfter(pl, { sameNext, rivalStep, floor: Math.min(rivalDwell, MO.stepFloor), base, nextPlaces: !!(next.pending && next.pending.kind === 'place'), placing: !!(prev.pending && prev.pending.kind === 'place') });
       // reduced motion (grammar §6, H14): nothing travels, so a step shows its end state and the next follows a beat later
       const still = !motionOK();
       const dwell = still ? (plan.total || rivalStep ? (sameNext && !plan.total ? 0 : Math.min(150, plan.total || 150)) : base) : dwellOf(plan);
@@ -352,7 +352,7 @@ function TurnCard({ card, root, state }) {
   const life = lifeOf.key === lifeKey ? lifeOf.v : 'up'; // 'up' | 'folding' | 'gone'
   useEffect(() => {
     if (acting) return undefined;
-    const t = [setTimeout(() => setLife({ key: lifeKey, v: 'folding' }), 2600), setTimeout(() => setLife({ key: lifeKey, v: 'gone' }), 3100)];
+    const t = [setTimeout(() => setLife({ key: lifeKey, v: 'folding' }), MO.turnCardHold), setTimeout(() => setLife({ key: lifeKey, v: 'gone' }), MO.turnCardHold + MO.turnCardFold)];
     return () => t.forEach(clearTimeout);
   }, [lifeKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const gone = life === 'gone';
@@ -756,7 +756,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       const to = g && state.players.find(p => p.name === g.to);
       if (to) got.push({ pid: to.id, text: g.text, color: g.color, n: Date.now() + got.length });
     });
-    if (got.length) { setGifts(gg => [...gg, ...got]); setTimeout(() => setGifts(gg => gg.filter(x => !got.includes(x))), 2400); }
+    if (got.length) { setGifts(gg => [...gg, ...got]); setTimeout(() => setGifts(gg => gg.filter(x => !got.includes(x))), slowed(2400)); }
     // Your own recruit that ends your turn (Hire, Take…) gets its moment before the turn moves on.
     const actor = before.pending ? before.pending.player : null;
     if (actor != null && mySeats.includes(actor) && !(state.pending && state.pending.player === actor)) {
@@ -765,7 +765,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         // just the name: the cost is in the log (a long line here ran out of the card's one-line lane)
         const g = { pid: actor, text: `Recruited ${rec[1].replace(/ from the pile$/, '')}`, color: null, n: Date.now() + 7 };
         setGifts(gg => [...gg, g]);
-        setTimeout(() => setGifts(gg => gg.filter(x => x !== g)), 2400);
+        setTimeout(() => setGifts(gg => gg.filter(x => x !== g)), slowed(2400));
       }
     }
     // Getting robbed is never silent: a rival's move that took your resources says so.
@@ -773,9 +773,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       for (const id of mySeats) {
         const lost = state.resources.map(r => [r, before.players[id].res[r] - state.players[id].res[r]]).filter(([, d]) => d > 0);
         if (lost.length) {
-          showToast(`${state.players[actor].name} took ${lost.map(([r, d]) => `${d} ${r}`).join(', ')} from ${humansHere ? state.players[id].name : 'you'}`, 2400);
+          showToast(`${state.players[actor].name} took ${lost.map(([r, d]) => `${d} ${r}`).join(', ')} from ${humansHere ? state.players[id].name : 'you'}`, slowed(2400));
           setRobbed({ pid: id, n: Date.now() });
-          setTimeout(() => setRobbed(r => (r && r.pid === id ? null : r)), 1600);
+          setTimeout(() => setRobbed(r => (r && r.pid === id ? null : r)), slowed(1600));
         }
       }
     }
@@ -813,14 +813,14 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       const told = story.told;
       lastTold.current = told;
       turnTimer.current.forEach(clearTimeout);
-      turnTimer.current = [setTimeout(() => setTurnCard({ ...told, folding: true }), 2600), setTimeout(() => setTurnCard({ n: told.n, gone: true }), 3100)];
+      turnTimer.current = [setTimeout(() => setTurnCard({ ...told, folding: true }), MO.turnCardHold), setTimeout(() => setTurnCard({ n: told.n, gone: true }), MO.turnCardHold + MO.turnCardFold)];
     }
     if (story.told) {
       const pids = story.touched;
       if (pids.length) {
         const n = Date.now();
         setRobbed(r => ({ ...(r || {}), pids, n }));
-        setTimeout(() => setRobbed(r => (r && r.n === n ? null : r)), 1800);
+        setTimeout(() => setRobbed(r => (r && r.n === n ? null : r)), slowed(1800));
       }
     }
   }, [live0]); // eslint-disable-line react-hooks/exhaustive-deps

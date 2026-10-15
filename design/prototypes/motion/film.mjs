@@ -3,11 +3,13 @@
 //   node film.mjs <base url> <outdir> [speed=steady] [seed=4] [spaceRegex] [ms=1600] [step=40] [round=2] [after=place|rival]
 // after=rival: plays your move instantly (skip), then films the next rival's whole turn. after=buy: films your recruit;
 // after=rate: films a follower buy (the 10-for-10 if you can).
-import { chromium } from '/home/user/patrons/node_modules/playwright/index.mjs';
+// PROBE=1 also writes probe.json (each ghost's centre per frame, every animation's target and timing) for probe.mjs
+// beside this file; NOSHOT=1 skips the screenshots (a probe at a fine step).
+import { chromium } from '../../../node_modules/playwright/index.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { createGame, applyMove, chooseBotMove } from '/home/user/patrons/src/engine/v4/index.js';
-import { seededRandom } from '/home/user/patrons/src/engine/v4/rng.js';
-import { buildStamp } from '/home/user/patrons/e2e/v4/lib/stamp.mjs';
+import { createGame, applyMove, chooseBotMove } from '../../../src/engine/v4/index.js';
+import { seededRandom } from '../../../src/engine/v4/rng.js';
+import { buildStamp } from '../../../e2e/v4/lib/stamp.mjs';
 
 const [base, outdir, speed = 'steady', seedArg = '4', spaceRe = '', msArg = '1600', stepArg = '40', roundArg = '2', mode = 'place'] = process.argv.slice(2);
 mkdirSync(outdir, { recursive: true });
@@ -36,6 +38,13 @@ await p.addInitScript(() => {
     const a = orig.call(this, k, o);
     const opt = typeof o === 'number' ? { duration: o } : (o || {});
     list.push({ a, born: performance.now(), total: (opt.delay || 0) + (Number(opt.duration) || 0) * (opt.iterations === Infinity ? 1 : (opt.iterations || 1)), loop: opt.iterations === Infinity });
+    // PROBE=1: every animation's target, timing and properties (the probe below reads overlaps on one target)
+    const ids = (window.__ids ||= new WeakMap());
+    if (!ids.has(this)) ids.set(this, (window.__nid = (window.__nid || 0) + 1));
+    const kf = Array.isArray(k) ? k : [];
+    const props = [...new Set(kf.flatMap(f => Object.keys(f).filter(x => !['offset', 'easing', 'composite'].includes(x))))];
+    const cls = typeof this.className === 'string' ? this.className : (this.className && this.className.baseVal) || '';
+    (window.__alog ||= []).push({ id: ids.get(this), label: `${this.tagName.toLowerCase()}.${cls.trim().split(/\s+/).slice(0, 2).join('.')}`, born: performance.now(), delay: opt.delay || 0, dur: Number(opt.duration) || 0, props, composite: opt.composite || 'replace', ghost: !!this.closest('.ghost-layer') });
     return a;
   };
   window.__sync = () => {
@@ -71,9 +80,14 @@ await p.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2);
 await p.clock.runFor(200);
 const frames = [];
 const answered = [];
+const tracks = [];
 const shoot = async (tag, t) => {
   if (process.env.SKIPAT && t === Number(process.env.SKIPAT)) { if (process.env.SKIPCLICK) await p.mouse.click(640, 30); else await p.keyboard.press('Space'); await p.clock.runFor(16); }
-  await p.evaluate(() => window.__sync()); const f = `${outdir}/${tag}${String(t).padStart(5, '0')}.png`; await p.screenshot({ path: f }); frames.push(f);
+  await p.evaluate(() => window.__sync());
+  // PROBE=1: where every flying ghost is in this frame (its painted box), so a path's shape can be checked for kinks
+  if (process.env.PROBE) tracks.push({ t, g: await p.evaluate(() => [...document.querySelectorAll('.ghost-layer')].map(g => { g.dataset.gid ||= String(window.__gid = (window.__gid || 0) + 1); const r = (g.querySelector('.path-inner') || g).getBoundingClientRect(); return [g.dataset.gid, g.className.replace(' ghost-layer', ''), Math.round((r.left + r.width / 2) * 10) / 10, Math.round((r.top + r.height / 2) * 10) / 10]; })) });
+  if (process.env.NOSHOT) return;
+  const f = `${outdir}/${tag}${String(t).padStart(5, '0')}.png`; await p.screenshot({ path: f }); frames.push(f);
   // ANSWER=1: answer your own choices as they come (the first live option on the board), and note when
   if (process.env.ANSWER) {
     const opt = await p.evaluateHandle(() => document.querySelector('.lt[data-yours="1"][data-phase="choose"]') && ([...document.querySelectorAll('[data-option]:not([disabled])')].find(e => { const r = e.getBoundingClientRect(); return r.width > 0 && !e.closest('.menu, .lt-shop, .lt-rates') && !/^pass$|^tier:/.test(e.dataset.option); }) || null));
@@ -113,6 +127,7 @@ if (mode === 'buy' || mode === 'rate') {
   }
 }
 for (let t = 0; t <= MS; t += STEP) { await shoot(mode === 'rival' ? 'r' : mode === 'buy' ? 'b' : mode === 'rate' ? 'q' : 'f', t); await p.clock.runFor(STEP); }
+if (process.env.PROBE) writeFileSync(`${outdir}/probe.json`, JSON.stringify({ step: STEP, tracks, anims: await p.evaluate(() => window.__alog || []) }));
 writeFileSync(`${outdir}/meta.json`, JSON.stringify({ label, speed, seed, step: STEP, frames: frames.length, mode, answered }, null, 1));
 console.log('space:', label, 'frames:', frames.length);
 await ctx.close();

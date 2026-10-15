@@ -5,8 +5,8 @@
   /* motion budgets (Cory, 2026-10-15: "way snappier"; JS twins in src/v4/motion.js, audit in design/eval/perf/motion-audit.md) */
   /* --mo-scale is the viewer's animation speed (src/v4/motion.js sets it): what tells what happened scales with it;
      what answers your hand (press, quick) never does */
-  --mo-scale:1;
-  --mo-press:70ms; --mo-quick:120ms;
+  --mo-scale:1; --mo-slow:1; /* (motion.js sets both: --mo-slow is the speed, never below 1, for shows Quick leaves as they were) */
+  --mo-press:70ms; --mo-quick:120ms; --mo-hover:150ms; /* hover feedback answers your hand: fixed at every speed */
   --mo-fade:calc(150ms * var(--mo-scale)); --mo-land:calc(240ms * var(--mo-scale)); --mo-dim:calc(200ms * var(--mo-scale)); --mo-bump:calc(260ms * var(--mo-scale));
   --mo-ease-out:cubic-bezier(.2,.7,.3,1); --mo-ease-settle:cubic-bezier(.3,1.45,.5,1);
   --table:#141d1c; --table-2:#1d2928; --table-3:#24322f; --rim:#2d3b39; --ink:#ece6d6; --muted:#97a49f;
@@ -56,7 +56,7 @@ h1{font-family:var(--display);font-weight:400;font-size:var(--fs-6);margin:0;let
 .rich-body small{font-size:var(--fs-2);color:var(--muted);line-height:1.3}
 .row-btns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 /* Press state: things give a little under the finger. */
-.btn,.card,.act,.fb,.chip,.qtab,.way,.seg button,.stepper button,.spin{transition:transform var(--mo-quick) var(--mo-ease-out), background-color var(--mo-fade), border-color var(--mo-fade), box-shadow var(--mo-fade)}
+.btn,.card,.act,.fb,.chip,.qtab,.way,.seg button,.stepper button,.spin{transition:transform var(--mo-quick) var(--mo-ease-out), background-color var(--mo-hover), border-color var(--mo-hover), box-shadow var(--mo-hover)}
 .btn:active:not(:disabled),.fb.can:active,.chip:active,.qtab:active,.way:active,.seg button:active,.stepper button:active:not(:disabled),.spin:active{transform:translateY(1px) scale(.97)}
 /* tactile: a press goes down at once (no easing in), and springs back */
 .btn:active:not(:disabled),.card.can:active,.act.can:active,.fb.can:active,.chip:active{transition-duration:var(--mo-press)}
@@ -201,7 +201,7 @@ svg.late .slot.flash .worker{animation-delay:.7s}
 .lt .stage.turning > [data-slot]{will-change:translate}
 /* the round's end, a beat of its own before the first rim (Reckoning.jsx; wave 4 #6): the card stamps in at the wheel's
    centre (the grammar's stamp: 1.25 and clear to 1 and solid). `scale`, so the card's own centring transform stays. */
-.lt-reckon .reckon-head.opening{animation:reckon-ends .3s cubic-bezier(.3,1.5,.5,1) both}
+.lt-reckon .reckon-head.opening{animation:reckon-ends calc(.3s * var(--mo-slow)) cubic-bezier(.3,1.5,.5,1) both}
 @keyframes reckon-ends{from{scale:1.25;opacity:0}to{scale:1;opacity:1}}
 .lt-reckon .reckon-head .reckon-rule.reckon-ends{color:var(--paper-ink)}
 /* Skip, quiet, on the card being read (the skeptic, w4 #16); a tap anywhere still skips too */
@@ -287,7 +287,7 @@ b.num[data-hold]::after{content:attr(data-hold);visibility:visible;position:abso
 .cheaper b{color:var(--green)}
 .afford{font-size:var(--fs-1);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--c)}
 .afford::before{content:"✓ "}
-.shop .card{animation:deal .28s ease-out both}
+.shop .card{animation:deal calc(.28s * var(--mo-slow)) ease-out both}
 @keyframes deal{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 .flight{position:fixed;z-index:61;pointer-events:none;will-change:transform,opacity}
 .flight .card{width:100%;height:100%;animation:none;box-shadow:0 12px 30px rgba(0,0,0,.55);border-color:var(--c);margin:0;max-width:none;min-width:0}
@@ -426,7 +426,7 @@ table.res-t tr.first td{background:color-mix(in srgb,var(--ink) 5%,transparent)}
 
 /* ---------- motion bits ---------- */
 .tick{position:relative;display:inline-block}
-.floater{position:absolute;left:50%;bottom:78%;transform:translateX(-50%);font-family:var(--body);font-size:var(--fs-1);font-weight:700;white-space:nowrap;pointer-events:none;animation:floatup .9s ease-out forwards;text-shadow:0 1px 3px var(--table),0 0 6px var(--table)}
+.floater{position:absolute;left:50%;bottom:78%;transform:translateX(-50%);font-family:var(--body);font-size:var(--fs-1);font-weight:700;white-space:nowrap;pointer-events:none;animation:floatup calc(.9s * var(--mo-slow)) ease-out forwards;text-shadow:0 1px 3px var(--table),0 0 6px var(--table)}
 .floater.down{color:var(--muted)!important}
 @keyframes floatup{0%{opacity:0;transform:translate(-50%,4px)}20%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-9px)}}
 .pl .fol .floater{font-size:var(--fs-2);bottom:70%}
@@ -553,13 +553,13 @@ td.rank{font-weight:700}
 .floater{left:100%;bottom:auto;top:50%;transform:translate(3px,-50%);background:var(--table-2);border-radius:6px;padding:0 4px;line-height:1.4;z-index:2}
 @keyframes floatup{0%{opacity:0;transform:translate(0,-50%)}15%{opacity:1;transform:translate(3px,-50%)}75%{opacity:1}100%{opacity:0;transform:translate(6px,-50%)}}
 .pl .fol .floater{bottom:auto;top:50%}
-.tick.bump,.tick.dip{animation:bump .42s cubic-bezier(.3,.7,.4,1)}
+.tick.bump,.tick.dip{animation:bump calc(.42s * var(--mo-slow)) cubic-bezier(.3,.7,.4,1)}
 .tick.bump{color:var(--tc,inherit)}
 /* a follower count rolls at full brightness as its pieces land (motion review #28): never dimmed into a seat's color */
 .lt-cult-seat .cs-total .tick.bump{color:inherit;text-shadow:0 0 8px rgba(255,236,200,.65);animation-duration:var(--mo-bump)}
 @keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
 .gift.change{border-color:var(--rim);font-variant-numeric:tabular-nums}
-.gift{position:absolute;right:8px;bottom:6px;background:var(--table-2);border:1px solid var(--c);color:var(--ink);font-size:var(--fs-2);font-weight:700;border-radius:999px;padding:1px 8px;animation:giftin 2.2s ease-out forwards;pointer-events:none}
+.gift{position:absolute;right:8px;bottom:6px;background:var(--table-2);border:1px solid var(--c);color:var(--ink);font-size:var(--fs-2);font-weight:700;border-radius:999px;padding:1px 8px;animation:giftin calc(2.2s * var(--mo-slow)) ease-out forwards;pointer-events:none}
 @keyframes giftin{0%{opacity:0;transform:translateY(6px)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-4px)}}
 /* toast: readable, opaque, under the header, never takes the pointer */
 .toast{position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:25;background:var(--table-2);border:1px solid var(--blue);border-radius:12px;padding:10px 16px;font-size:var(--fs-3);box-shadow:0 10px 30px rgba(0,0,0,.5);pointer-events:none;max-width:calc(100vw - 24px);animation:rise .2s ease-out}
@@ -568,7 +568,7 @@ td.rank{font-weight:700}
 .peek.pinned{pointer-events:auto}
 .popover{max-width:calc(100vw - 24px)}
 /* the latest rival move */
-.lastmove circle{animation:lastpulse 1.1s ease-out 2;transform-box:fill-box;transform-origin:center}
+.lastmove circle{animation:lastpulse calc(1.1s * var(--mo-slow)) ease-out 2;transform-box:fill-box;transform-origin:center}
 @keyframes lastpulse{0%{opacity:0;transform:scale(1.5)}40%{opacity:1;transform:scale(1)}100%{opacity:1}}
 .ring.pays text{letter-spacing:.5px}
 /* quadrant panel: title and tabs on one line, one line per action, standings under the rule */
@@ -700,16 +700,16 @@ header.bar .status{align-items:center;gap:8px}
 .lm-legend{text-align:center;font-size:var(--fs-2);color:var(--muted);margin-top:4px;display:flex;justify-content:center;align-items:center;gap:6px}
 .lm-legend i{width:12px;height:12px;border-radius:50%;border:2px dashed var(--pc)}
 /* motion you can't miss: the follower number lights up in the player's color while it counts */
-.pl .fol .tick.bump{border-radius:6px;background:color-mix(in srgb,var(--tc,var(--ink)) 22%,transparent);padding:0 3px;margin:0 -3px;animation:bump .6s cubic-bezier(.3,.7,.4,1)}
+.pl .fol .tick.bump{border-radius:6px;background:color-mix(in srgb,var(--tc,var(--ink)) 22%,transparent);padding:0 3px;margin:0 -3px;animation:bump calc(.6s * var(--mo-slow)) cubic-bezier(.3,.7,.4,1)}
 .slot.flash .worker{animation-delay:0s}
 .take-all{align-self:flex-start}
 
 .tick{overflow:visible}
 .tick .tv{display:inline-block}
 .tick.rolling{overflow:hidden;vertical-align:bottom}
-.tick.rolling .tv{animation:rollin .48s cubic-bezier(.3,.7,.4,1) both}
+.tick.rolling .tv{animation:rollin calc(.48s * var(--mo-slow)) cubic-bezier(.3,.7,.4,1) both}
 .tick.rolling.down .tv{animation-name:rollin-down}
-.tick .tv-out{position:absolute;left:0;top:0;animation:rollout .48s cubic-bezier(.3,.7,.4,1) both;pointer-events:none}
+.tick .tv-out{position:absolute;left:0;top:0;animation:rollout calc(.48s * var(--mo-slow)) cubic-bezier(.3,.7,.4,1) both;pointer-events:none}
 .tick.rolling.down .tv-out{animation-name:rollout-down}
 @keyframes rollin{from{transform:translateY(90%);opacity:0}to{transform:none;opacity:1}}
 @keyframes rollout{from{transform:none;opacity:1}to{transform:translateY(-90%);opacity:0}}
@@ -978,7 +978,7 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 .workers small{font-size:var(--fs-1);color:var(--muted);margin-left:3px}
 .disc{font-size:var(--fs-1);color:var(--green);line-height:16px}
 /* robbed: the resource row flashes */
-.res.robbed{animation:robbed .9s ease-out 2}
+.res.robbed{animation:robbed calc(.9s * var(--mo-slow)) ease-out 2}
 @keyframes robbed{0%,100%{background:none}35%{background:color-mix(in srgb,var(--red) 28%,transparent)}}
 /* members as card faces: color band + sphere glyph */
 .chip{border-radius:5px;border:1px solid color-mix(in srgb,var(--c) 55%,var(--rim));border-left:4px solid var(--c);background:linear-gradient(180deg,color-mix(in srgb,var(--c) 10%,var(--table-2)),var(--table-2));padding:1px 8px 1px 6px;display:inline-flex;align-items:center;gap:5px;box-shadow:0 1px 2px rgba(0,0,0,.35)}

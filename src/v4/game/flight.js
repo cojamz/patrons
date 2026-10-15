@@ -60,7 +60,7 @@ export function snapshotShop(root) {
  * top seat's count, a rim's prize and a top seat) bowed up out of the window, so a rival's "+10" flew unseen along the
  * edge. When the bow would leave the window it bows the other way, as far as fits.
  */
-function onScreenBow(a, b, h) {
+export function onScreenBow(a, b, h) {
   if (!h || typeof innerHeight !== 'number') return h;
   const pad = 6;
   // the bow peaks about halfway along: there, the piece's top is the two ends' mean top less the bow
@@ -70,7 +70,35 @@ function onScreenBow(a, b, h) {
   return h;
 }
 
-export function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 0, hold = false }) {
+/** A cubic-bezier timing function as a plain function of time (0..1), for paths sampled into keyframes. */
+export function bezier(x1, y1, x2, y2) {
+  const at = (p1, p2, s) => 3 * p1 * s * (1 - s) * (1 - s) + 3 * p2 * s * s * (1 - s) + s * s * s;
+  return t => {
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    let lo = 0, hi = 1, s = t;
+    for (let k = 0; k < 24; k++) { s = (lo + hi) / 2; if (at(x1, x2, s) < t) lo = s; else hi = s; }
+    return at(y1, y2, s);
+  };
+}
+const TRAVEL = bezier(0.45, 0, 0.2, 1); // the arc's travel (grammar §2): leaves briskly, lands soft
+/**
+ * A true arc as keyframes on one element (composited: transform only): the piece moves along the straight line with
+ * `ease` and bows `h` px off it as a parabola of how far along it is, so the path has no corner (the three-keyframe
+ * arc this replaces turned a sharp corner at its top: the Reckoning's prize, 88° in one frame). Sampled densely
+ * enough that each joint turns a few degrees. `from`/`to`: the offsets it spans; `s0`/`s1`: its scale at each end;
+ * `y0`: where it starts (a card already lifted).
+ */
+export function arcFrames(dx, dy, h, { ease = TRAVEL, from = 0, to = 1, s0 = 1, s1 = 1, y0 = 0, n = 20 } = {}) {
+  const out = [];
+  for (let i = 0; i <= n; i++) {
+    const k = i / n, p = ease(k), bow = 4 * h * p * (1 - p);
+    out.push({ offset: from + (to - from) * k, transform: `translate(${(dx * p).toFixed(1)}px,${(y0 + (dy - y0) * p - bow).toFixed(1)}px) scale(${(s0 + (s1 - s0) * p).toFixed(3)})` });
+  }
+  return out;
+}
+
+export function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 0, hold = false, delay = 0 }) {
   const ghost = document.createElement('div');
   ghost.className = className + ' ghost-layer';
   ghost.dataset.born = String(Date.now());
@@ -82,21 +110,17 @@ export function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0,
   // the bow at the midpoint, kept on screen: a prize flying to a top seat bowed up out of the window (wave 4 #31)
   const mid = Math.min(a.top, b.top) + Math.abs(dy) * 0.5;
   if (arc > 0 && typeof innerHeight === 'number' && mid - arc < 6) arc = -Math.min(arc, 70);
-  const frames = hold ? [
-    { transform: 'translate(0,0) scale(1)', opacity: 1, boxShadow: '0 0 0 0 rgba(0,0,0,0)' },
-    { transform: 'translate(0,-10px) scale(1.06)', opacity: 1, offset: 0.25 },
-    { transform: `translate(${dx * 0.5}px,${dy * 0.5 - 30}px) scale(${(1 + scaleTo) / 2})`, opacity: 1, offset: 0.62 },
-    { transform: `translate(${dx}px,${dy}px) scale(${scaleTo})`, opacity: fadeTo },
-  ] : [
-    { transform: 'translate(0,0) scale(1)', opacity: 1 },
-    { transform: `translate(${dx * 0.5}px,${dy * 0.5 - arc}px) scale(${(1 + scaleTo) / 2})`, opacity: 1, offset: 0.55 },
-    { transform: `translate(${dx}px,${dy}px) scale(${scaleTo})`, opacity: fadeTo },
-  ];
-  const anim = ghost.animate(frames, { duration, easing: 'cubic-bezier(.25,.6,.3,1)', fill: 'forwards' }); // quick off the mark, soft landing
+  // a held card lifts 10px and grows a little in its first quarter (you see which one), then arcs to where it goes
+  const frames = hold
+    ? [{ offset: 0, transform: 'translate(0px,0px) scale(1)' }, ...arcFrames(dx, dy, 30, { from: 0.25, s0: 1.06, s1: scaleTo, y0: -10 })]
+    : arcFrames(dx, dy, arc, { s1: scaleTo });
+  const anim = ghost.animate(frames, { duration, delay, fill: 'both' });
+  // it fades toward its end as it lands (from past halfway), a separate composited animation on the same element
+  if (fadeTo !== 1) track(ghost.animate([{ opacity: 1 }, { opacity: 1, offset: 0.55 }, { opacity: fadeTo }], { duration, delay, fill: 'both' }));
   const done = () => ghost.remove();
   anim.onfinish = done;
   anim.oncancel = done;
-  setTimeout(done, duration + 400);
+  setTimeout(done, duration + delay + 400);
   if (typeof window !== 'undefined') window.__patronsFlights = (window.__patronsFlights || 0) + 1;
   live.add(anim);
   anim.addEventListener('finish', () => live.delete(anim));
@@ -106,6 +130,20 @@ export function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0,
 // every flight in the air, so a skip (a click or Space during a chain) can land them all at once
 const live = new Set();
 export const track = anim => { if (anim) { live.add(anim); anim.addEventListener('finish', () => live.delete(anim)); anim.addEventListener('cancel', () => live.delete(anim)); } return anim; };
+// A place's own small motions (a settle, a dip, a pulse, a hop) are relative: scale or lift from where it stands and
+// back. Two on one element at once (a stack settling as its next piece leaves, a count settling as the Reckoning's
+// prize lands) used to snap the first away mid-move (the filmstrip probe counted them). The second now rides on the
+// first (composite 'add'); a lone one stays a plain composited animation.
+const moving = new WeakMap(); // element → how many of these are playing on it
+export function relative(el, frames, opts) {
+  const busy = (moving.get(el) || 0) > 0;
+  const anim = el.animate(frames, busy ? { ...opts, composite: 'add' } : opts);
+  moving.set(el, (moving.get(el) || 0) + 1);
+  const off = () => moving.set(el, Math.max(0, (moving.get(el) || 1) - 1));
+  anim.addEventListener('finish', off, { once: true });
+  anim.addEventListener('cancel', off, { once: true });
+  return track(anim);
+}
 export function landAll() { for (const a of [...live]) { try { a.finish(); } catch { try { a.cancel(); } catch { /* gone */ } } } live.clear(); }
 
 export function flyCards(root, snap, moves) {
@@ -211,7 +249,8 @@ export function flyMinionsHome(root, snap) {
     const h = home.getBoundingClientRect();
     if (!h.width) return;
     const b = { left: h.left + h.width / 2 - m.rect.width / 2, top: h.top + h.height / 2 - m.rect.height / 2, width: m.rect.width, height: m.rect.height };
-    setTimeout(() => ghostFly(m.html, 'worker-flight minion-flight home', m.rect, b, { duration: MO.minionsHome, scaleTo: 0.8, fadeTo: 0.2, arc: 40 }), k * MO.minionsHomeStagger);
+    // (staggered by the animation's own delay, not a timer per minion: they leave on the compositor's clock)
+    ghostFly(m.html, 'worker-flight minion-flight home', m.rect, b, { duration: MO.minionsHome, scaleTo: 0.8, fadeTo: 0.2, arc: 40, delay: k * MO.minionsHomeStagger });
     n++;
   });
   return n;
@@ -327,7 +366,7 @@ export function holdStack(stackEl, from) {
 }
 export const bump = (el, down = false) => {
   if (!el || !el.animate || el.rectOnly) return;
-  el.animate(down
+  relative(el, down
     ? [{ transform: 'scale(1)' }, { transform: 'scale(.86)' }, { transform: 'scale(1)' }]
     : [{ transform: 'scale(1)' }, { transform: 'scale(1.22)', offset: 0.35 }, { transform: 'scale(1)' }], { duration: MO.pieceBump, easing: 'cubic-bezier(.3,1.45,.5,1)' });
 };
@@ -443,10 +482,10 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
 /** A place pulses (a source about to give: a space, a rim, a rate) or presses (a payment taken in). */
 export function pulse(el, ms, { press = false } = {}) {
   if (!el || !el.animate || el.rectOnly) return;
-  track(el.animate(press
+  relative(el, press
     ? [{ transform: 'scale(1)' }, { transform: 'scale(.96)', offset: 0.5 }, { transform: 'scale(1)' }]
     : [{ transform: 'scale(1)', filter: 'brightness(1)' }, { transform: 'scale(1.04)', filter: 'brightness(1.25)', offset: 0.45 }, { transform: 'scale(1)', filter: 'brightness(1)' }],
-  { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' }));
+  { duration: ms, easing: 'cubic-bezier(.3,1.4,.5,1)' });
 }
 /** A stack being taken from shifts toward the taker and back, once. */
 export function tug(el, toward, ms) {
@@ -458,5 +497,5 @@ export function tug(el, toward, ms) {
 /** The destination settles as a piece lands (lighter between two rivals, fuller for a bundle). */
 export function settle(el, ms, k = 1.18) {
   if (!el || !el.animate || el.rectOnly) return;
-  track(el.animate([{ transform: 'scale(1)' }, { transform: `scale(${k})`, offset: 0.35 }, { transform: 'scale(1)' }], { duration: ms, easing: 'cubic-bezier(.3,1.5,.5,1)' }));
+  relative(el, [{ transform: 'scale(1)' }, { transform: `scale(${k})`, offset: 0.35 }, { transform: 'scale(1)' }], { duration: ms, easing: 'cubic-bezier(.3,1.5,.5,1)' });
 }

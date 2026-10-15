@@ -129,6 +129,8 @@ A rim nobody scores pulses once, dim, with "no one" beside it, and moves on (400
 
 The menu offers Quick, Steady and Relaxed. **Steady is the default.** Press, hover and your own minion standing on the space never change with the setting. Every other number does. Taste rule 7's 150–350ms still holds for Quick and for every response to your own input; Steady flights run up to 440ms on the longest throws because Cory asked for "clear and steady enough for players to see what's happening" (2026-10-15).
 
+**Retuned after Cory's play note (morning fixes): "Animations are too fast even on Relaxed, and not smooth."** The Steady column below is now the *base*. Steady plays it ×1.2 and Relaxed ×2.4 (exactly twice Steady), every row, flights by distance included (Steady clamp(312, 240+0.36d, 528), Relaxed clamp(624, 480+0.72d, 1056)); Relaxed's hand-off is two-thirds along like Steady's, and its old extra holds (the 280ms read hold, the 300ms breath, the rival-buy telegraph) are gone, replaced by the doubling. Quick keeps its column. Press, hover, the spin and your minion standing stay instant at every speed (src/v4/motion.js `SPEEDS`; CSS `--mo-scale`, `--mo-slow`, and the fixed `--mo-hover`). On the seeded pacing games a rival's turn is now Quick 1.04s, Steady 1.85s (was 1.54s), Relaxed 3.70s (was 3.02s, whose flights were only ~1.45× Steady's). H2–H4's Steady budgets below stretch by the same ×1.2.
+
 | Pattern | Quick | Steady | Relaxed |
 |---|---|---|---|
 | Press (your input) | 70 | 70 | 70 |

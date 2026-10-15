@@ -243,7 +243,7 @@ const phase = uid => `${((uid * 0.61803) % 1).toFixed(3)}`;
 const actionKey = last => { try { return quadrant(last.qid).actions.find(a => a.name === last.name).key; } catch { return ''; } };
 
 // ---------- reactions: the cult answers what its cards and its leader just did ----------
-const REACT_MS = MO.react; // src/v4/motion.js
+const REACT_MS = () => MO.react; // src/v4/motion.js (read when used: it follows the speed)
 /**
  * Diffs each new state against the last for one player: a member hops when a log line names it as theirs
  * ("Ana's Banker: +3 gold.", "Bo +1 silver (Ana's Retinue)."), the leader gestures when one of its minions is placed,
@@ -277,11 +277,11 @@ export function useCultReactions(state, pid, rootRef = null) {
           lit.current.push([m, 'react-hop']);
         }
       }
-      timer.current = setTimeout(unlight, REACT_MS);
+      timer.current = setTimeout(unlight, REACT_MS());
       return;
     }
     setReact(r => ({ leader: out.leader || (r && r.leader) || null, members: { ...(r && r.members), ...out.members }, n: Date.now() }));
-    timer.current = setTimeout(() => setReact(null), REACT_MS);
+    timer.current = setTimeout(() => setReact(null), REACT_MS());
   }, [state, pid]); // eslint-disable-line react-hooks/exhaustive-deps
   return react;
 }
