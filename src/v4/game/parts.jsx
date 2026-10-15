@@ -9,6 +9,7 @@ import { Follower } from '../art/Follower.jsx';
 import { ResourceGlyph } from './Glyphs.jsx';
 import { pickCaption, pickName } from './boardPick.js';
 import { HoverNames } from './HoverNames.jsx';
+import { holdFlag } from './bodyFlag.js';
 import './boardpick.css';
 
 /** Escape closes; focus moves in on open and back to where it was on close. */
@@ -126,6 +127,9 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
 function SeatPickCaption({ state, pk, onPick, busy, turnOf, box }) {
   const pend = state.pending;
   const cap = pickCaption(state, pk);
+  // picking a rival's cult: the table says so (data-pick-seat), so your own chair can step back (w4 skeptic #17)
+  const seatKind = pk.kinds.has('seat');
+  useLayoutEffect(() => (seatKind && box.current ? holdFlag(box.current.closest('.lt'), 'pickSeat') : undefined), [seatKind]); // eslint-disable-line react-hooks/exhaustive-deps
   const [keys, setKeys] = useState(false);
   const what = cap.what && cap.what.map((w, k) => (typeof w === 'string' ? <span key={k}>{w}</span> : <Pip key={k} color={w.dot} />));
   return (
