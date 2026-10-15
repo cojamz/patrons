@@ -313,6 +313,7 @@ export function deniedText(state, key, meId = null) {
 function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, confirmPlace = false, flash, late = false, caption = null, lastMove = null, recentMoves = [], spacePeek = null, onSpacePeek, meId = null, facing, onFacing, hover = null, lampQid = null, look: lookProp = null }) {
   const look = useMemo(() => lookProp || spacesLook(), [lookProp]);
   const engraved = look === 'engraved';
+  const panels = look === 'panels';
   // a face from ./faces/ (null for the built-in looks, and for a moment while its chunk loads)
   const custom = !BUILT_IN.includes(look);
   const Face = useFace(custom ? look : null);
@@ -327,7 +328,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   // what a space's hover card sits beside: the whole cell (engraved), or the socket
   const anchorOf = (key, el = null) => {
     const root = stage.current;
-    if (engraved && root) { const c = root.querySelector(`[data-cell="${key}"] .wash`); if (c) return c; }
+    if ((engraved || panels) && root) { const c = root.querySelector(`[data-cell="${key}"] .wash`); if (c) return c; }
     return el || (root && root.querySelector(`[data-slot="${key}"]`));
   };
   useEffect(() => {
@@ -632,13 +633,15 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   state.quadrants.forEach((qid, q) => {
     const c = qCenter(q), a0 = c - 45, a1 = c + 45;
     const col = `var(--${qid})`;
-    if (!engraved && !(Face && Face.bands === false)) {
+    if (!engraved && !panels && !(Face && Face.bands === false)) {
       [1, 2, 3].forEach(t => {
         const R = rings[t], open = t <= round;
         paper.push(<path key={`b${q}${t}`} className={`band${open ? ' open' : ''}${t === paying ? ' pays' : ''}`} d={arc(a0, a1, R.r0, R.r1)} fill={col} fillOpacity={open ? (t === 1 ? 0.26 : 0.2) : 0.05} />);
       });
     }
-    paper.push(<path key={`rim${q}`} className={`rim${lampQid === qid ? ' lit' : lampQid ? ' wait' : ''}`} d={arc(a0, a1, RIM.r0, RIM.r1)} fill={col} fillOpacity=".88" />);
+    // panels: the rim is the quadrant's color, deep, on the dark board (plate 1b), with a fine light line at its foot
+    paper.push(<path key={`rim${q}`} className={`rim${lampQid === qid ? ' lit' : lampQid ? ' wait' : ''}`} d={arc(a0, a1, RIM.r0, RIM.r1)} fill={panels ? `color-mix(in srgb, ${col} 50%, #1a120c)` : col} fillOpacity={panels ? 1 : 0.88} />);
+    if (panels) paper.push(<path key={`rimfoot${q}`} className="rim-foot" d={arc(a0 + 0.3, a1 - 0.3, RIM.r0, RIM.r0 + 0.8)} fill={`color-mix(in srgb, ${col} 80%, #fff)`} opacity=".35" />);
   });
   // a face's own print in the paper (Face.Cell, optional): one per space, tiling its quadrant's ring, turning with it
   if (Face && Face.Cell) {
@@ -676,6 +679,30 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
           <path className={lit ? 'edge-lit' : 'edge-in'} d={inset} />
           {fresh && <path className={`fresh${fresh.newest ? ' newest' : ''}`} d={inset} style={{ stroke: playerColor(fresh.pid) }}><title>{`${state.players[fresh.pid].name} took ${fresh.action}`}</title></path>}
           <path className="line" d={d} />
+        </g>,
+      );
+    }
+  }
+  // panels: one flat paper wedge per space (plate 1b), its state in the paper: lit (yours to take: a warm-white edge,
+  // and the full glow under your pointer), taken (dimmed), fresh (a dotted edge in the mover's color), locked (a faint
+  // outline). The wedge is the space's click and hover target; its print is the upright box above it (sockets below).
+  if (panels) {
+    for (const s of spaces) {
+      const R = rings[s.ring], open = s.ring <= round, owner = state.slots[s.key];
+      const lit = legal.has(s.key);
+      const fresh = freshOf(s.key);
+      const a0 = s.ang - s.half, a1 = s.ang + s.half;
+      const d = panelPath(a0, a1, R.r0, R.r1);
+      const cls = ['pcell', open ? 'open' : 'locked', lit ? 'lit' : '', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', peek && peek.pinned && peek.key === s.key ? 'sel' : ''].filter(Boolean).join(' ');
+      paper.push(
+        <g key={`pc${s.key}`} className={cls} data-cell={s.key} style={{ '--c': `var(--${s.qid})` }}
+          onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, stage.current && stage.current.querySelector(`[data-slot="${s.key}"]`), { x: e.clientX, y: e.clientY }); }}
+          onPointerEnter={e => { const h = live.current.hover; e.currentTarget.classList.add('hot'); if (h && realHover(e)) h.onSpaceHover(s.key, e.currentTarget.querySelector('.wash')); }}
+          onPointerLeave={e => { const h = live.current.hover; e.currentTarget.classList.remove('hot'); if (h && e.pointerType === 'mouse') h.onSpaceHover(s.key, null); }}>
+          {lit && <path className="glow" d={d} />}
+          <path className="wash" d={d} />
+          {lit && <path className="edge-lit" d={d} />}
+          {fresh && <path className={`fresh${fresh.newest ? ' newest' : ''}`} d={panelPath(a0, a1, R.r0 + 2.2, R.r1 - 2.2, PANEL_GUT + 4.4, PANEL_RC - 1)} style={{ stroke: playerColor(fresh.pid) }}><title>{`${state.players[fresh.pid].name} took ${fresh.action}`}</title></path>}
         </g>,
       );
     }
@@ -752,10 +779,10 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       </path>,
     );
   });
-  const hubR = rings[3].r0;
-  for (const r of [RIM.r0, rings[1].r0, rings[2].r0, hubR]) paper.push(<circle key={`c${r}`} cx={CX} cy={CY} r={r} fill="none" className="ring-line" />);
+  const hubR = panels ? rings[3].r0 - 2 : rings[3].r0;
+  if (!panels) for (const r of [RIM.r0, rings[1].r0, rings[2].r0, hubR]) paper.push(<circle key={`c${r}`} cx={CX} cy={CY} r={r} fill="none" className="ring-line" />);
   state.quadrants.forEach((qid, q) => {
-    const [x0, y0] = polar(qCenter(q) - 45, hubR), [x1, y1] = polar(qCenter(q) - 45, 200);
+    const [x0, y0] = polar(qCenter(q) - 45, panels ? RIM.r0 : hubR), [x1, y1] = polar(qCenter(q) - 45, panels ? 202 : 200);
     paper.push(<line key={`seam${q}`} x1={x0} y1={y0} x2={x1} y2={y1} className="seam" />);
   });
 
@@ -783,7 +810,11 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const low = engraved && !side && Math.cos(sa) < 0;
     // on its side, a short yield runs as one line ("+1 red · swap"); a longer one keeps a clause a line
     const flow = side && (t === 1 ? shortEffect(qid, a, round) : pipEffect(qid, a, round)).replace(/ · /g, ' ').replace(/@[mrf]/g, 'x').length <= 12;
-    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', side ? 'side' : '', low ? 'low' : '', flow ? 'flow' : ''].filter(Boolean).join(' ');
+    // panels: the grammar's big line and small print, laid out in the room this panel has where it sits now
+    const said = panels ? panelText(qid, a, round) : null;
+    const fineSaid = panels ? (open ? said.fine : `opens in round ${roman(t)}`) : null;
+    const lay = panels ? panelLayout({ s, R: rings[t], rot, k: scale || 1, big: said.big, fine: fineText(fineSaid) || null }) : null;
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', side ? 'side' : '', low ? 'low' : '', flow ? 'flow' : '', lay && !lay.fineLines ? 'nofine' : '', lay && lay.fineLines > 1 ? 'fine2' : '', lay && lay.bigLines > 1 ? 'big2' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>
@@ -800,6 +831,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       const fw = side ? (R.r1 - R.r0) * (t === 1 ? 1.02 : 0.9) : t === 3 ? 2 * (R.r1 - 12) * Math.SQRT1_2 * 0.9 : 2 * R.r * Math.sin((s.half * Math.PI) / 180) * 0.92;
       style = { ...style, '--fw': `${((fw / BOX) * 100).toFixed(1)}%` };
     }
+    if (panels) style = { ...style, width: `${((lay.w / VBS) * 100).toFixed(2)}%`, '--big': `${lay.big}px` };
     // a face from ./faces/: the box is the face's own size (board units), and the face draws everything inside it
     let face = null;
     if (custom) {
@@ -820,14 +852,29 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
         role="button" tabIndex={opt ? 0 : -1} aria-label={`${a.name}, ${quadrant(qid).name} round ${roman(t)}: ${a.text} ${status}.`}
         onClick={e => { if (Date.now() - touchTapped.current > 500) live.current.tap(s, e.currentTarget, { x: e.clientX, y: e.clientY }); }}
         onKeyDown={e => { if (opt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); live.current.onPick(opt); } }}
-        onPointerEnter={e => { const h = live.current.hover; if (engraved) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.add('hot'); } if (h && realHover(e)) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
-        onPointerLeave={e => { const h = live.current.hover; if (engraved) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.remove('hot'); } if (h && e.pointerType === 'mouse') h.onSpaceHover(key, null); }}
+        onPointerEnter={e => { const h = live.current.hover; if (engraved || panels) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.add('hot'); } if (h && realHover(e)) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
+        onPointerLeave={e => { const h = live.current.hover; if (engraved || panels) { const c = e.currentTarget.parentNode.querySelector(`[data-cell="${key}"]`); if (c) c.classList.remove('hot'); } if (h && e.pointerType === 'mouse') h.onSpaceHover(key, null); }}
         onFocus={e => { const h = live.current.hover; if (h && keyboardLed() && e.currentTarget.matches(':focus-visible')) h.onSpaceHover(key, live.current.anchorOf(key, e.currentTarget)); }}
         onBlur={() => { const h = live.current.hover; if (h) h.onSpaceHover(key, null); }}
       >
         <span className="hit" aria-hidden="true" />
         <span className="base" aria-hidden="true" />
-        {custom ? face : engraved ? (
+        {custom ? face : panels ? (
+          // the picture (or the minions standing where it was), the big line, then the small print when there's room
+          <span className="face" aria-hidden="true">
+            <span className="ico">{minions || <Sprite id={[`${qid}.${a.key}`, spriteId(a.name)]} kind="action" sphere={quadrant(qid).resource} size={20} />}</span>
+            <span className="yl big" data-yield>
+              {lay.bigLines > 1 ? clauses(said.big).map((c, k) => <span key={k} className="cl"><Said text={c} /></span>) : <Said text={said.big} />}
+            </span>
+            {lay.fineLines > 0 && (
+              <span className="fine" data-fine>
+                {fineSaid && typeof fineSaid === 'object'
+                  ? <>{fineSaid.byRound.map((v, k) => <span key={k}>{k ? <Op t="·" /> : null}<b className={k + 1 === round ? 'now' : 'dim'}>{v}</b></span>)} by round</>
+                  : <Said text={fineSaid} />}
+              </span>
+            )}
+          </span>
+        ) : engraved ? (
           // the name; beneath it the stamp (or the minion standing on it) with the yield beside it, one clause a line
           <span className="face" aria-hidden="true">
             {open && <span className="nm">{a.name}</span>}
@@ -857,7 +904,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
         )}
       </div>
     );
-  }), [state, rot, legalKey, flashKey, recentKey, pinnedKey, round, look, Face, custom ? scale : 0]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), [state, rot, legalKey, flashKey, recentKey, pinnedKey, round, look, Face, custom || panels ? scale : 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="wheel-wrap" data-spaces={look} data-face={custom ? look : undefined}>

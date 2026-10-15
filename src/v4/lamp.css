@@ -82,7 +82,7 @@ h1,h2,h3{font-family:var(--serif)}
     grid-template-columns:minmax(210px,1fr) minmax(0,1.85fr) minmax(210px,1fr);
     /* the prompt holds two short lines: the question, the round and its steps (or the details); who's winning is on
        the chairs (Cory, 2026-10-15: no score row), so the wheel gets the room back */
-    grid-template-rows:54px minmax(0,1fr) minmax(0,1fr) 128px;
+    grid-template-rows:54px minmax(0,1fr) minmax(0,1fr) var(--shop-h,128px);
     /* the chairs stand in one column in turn order (Cory, 2026-10-15: "position IS order"); the right column holds the
        story of the turns (since your last turn) */
     grid-template-areas:"seats prompt side" "seats wheel side" "seats wheel side" "shop shop shop";
@@ -443,11 +443,7 @@ h1,h2,h3{font-family:var(--serif)}
 /* (your chair was zoomed 1.15×; in the ordered column every chair has the same slot, so yours is marked by its edge
    and its larger type instead) */
 
-/* the chairs carry no box of their own: the cult sits on the walnut (yours a little larger) */
-@media (min-width:861px) and (min-height:500px){
-  .lt > .lt-seat{background:none;box-shadow:none;padding:0;overflow:visible}
-  .lt > .lt-seat.now{background:none;box-shadow:none}
-}
+/* (the chairs carried no box of their own; the approved plate gives each its seat panel: see the ordered column above) */
 /* game over: every cult in final order, its followers big, the winner lit */
 .lt .over-cults{display:flex;flex-direction:column;gap:10px}
 .lt .over-seat{position:relative;display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:rgba(243,230,200,.03)}

@@ -341,3 +341,99 @@
 .lt-cult-seat .cs-build .cs-inc b{font-weight:800;font-size:15px;color:var(--cream)}
 .lt-cult-seat .cs-last{display:inline-flex;align-items:center;gap:5px;margin-left:auto;min-width:0;cursor:help}
 .lt-cult-seat .cs-last b{font-size:14px;font-weight:700;color:var(--cream);overflow:hidden;text-overflow:ellipsis}
+
+/* ======================= plate 1b (Cory, 2026-10-15; design/prototypes/language/plate1b.png) =======================
+   The shop card, the member hover, the space hover and the follower tiles in the visual language: paper, one corner,
+   the number first and heavy, glyphs at .8em of their type, quiet ink for the rest. R1's tokens (lamp.css :root),
+   the plate's values as fallbacks. */
+@media (min-width:861px) and (min-height:500px){ .app.game.lt{--shop-h:146px} }
+.lt-shop-head{margin:0 0 4px;height:16px}
+.lt-shop-head .lt-h{font-size:15px}
+.lt-rates-head{height:16px;margin:0 0 4px}
+.lt-rates-head .lbl{font-size:15px}
+
+/* the shop card: picture on a soft tinted field, NAME, when, the effect big, cost dots left and worth right */
+.lt-card.card{height:120px;border-radius:var(--corner,8px);color:var(--pl-ink,#2b2018);font-family:var(--sans)}
+.lt-card.card.paper{background:var(--pl-paper,#f2e8d2)}
+.lt-card.card{box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
+.lt-card.card.lit{background:var(--paper-lit,#fbf6ea);box-shadow:0 0 0 2px var(--light,#fff3d4),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
+.lt-card.card.can:hover{background:var(--paper-lit,#fbf6ea);transform:translateY(-2px)}
+.lt-card .art{height:36px;margin:0;border-radius:0;box-shadow:none;background:color-mix(in srgb,var(--q) 16%,var(--pl-paper,#f2e8d2))}
+.lt-card .nm{font-family:var(--sans);font-size:9.5px;line-height:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pl-ink-3,#a39078);margin:4px 2px 0;white-space:nowrap;overflow-wrap:normal;hyphens:none}
+.lt-card .wh{height:24px;margin:1px 4px 0;display:flex;align-items:flex-end;justify-content:center;text-align:center;font-size:10.5px;line-height:12px;font-weight:700;color:var(--pl-ink-2,#6e5c49);flex:none}
+.lt-card .ef{height:22px;margin:0 4px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;color:var(--pl-ink,#2b2018);white-space:nowrap;flex:none;line-height:1}
+.lt-card .ef-l{font-size:19px}
+.lt-card .ef-m{font-size:15px}
+.lt-card .ef-s{font-size:11px;line-height:11px;white-space:normal}
+.lt-card .ft{height:20px;margin:auto 6px 0;padding:0;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-family:var(--sans);font-size:12px;font-weight:500;color:var(--pl-ink,#2b2018)}
+.lt-card .ft .num,.lt-card .val b{font-weight:800}
+.lt-card .val{font-family:var(--sans);gap:1px}
+/* glyphs are .8em of the type they sit in; a number sits right on its glyph */
+.lt-card .pip.glyph,.lt-card .pip.wild,.mc .pip.glyph,.mc .pip.wild,.lt-rate .pip.glyph,.lt-rate .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 0 0 .06em}
+.lt-card .pip .res-glyph,.mc .pip .res-glyph,.lt-rate .pip .res-glyph{width:100%;height:100%}
+.lt-card .follower-mark,.mc .follower-mark,.lt-rate .follower-mark,.lt-note .sc-rule .follower-mark{width:.8em;height:.8em;vertical-align:-.1em;margin-left:.06em}
+.mk{display:inline-block;width:.8em;height:.8em;vertical-align:-.1em;overflow:visible;flex:none;margin:0 .06em;color:currentColor}
+.mk-a{margin:0 .2em}
+.lt-card .n,.mc .n,.lt-rate .n{font-weight:800;letter-spacing:-.01em}
+.lt-card .op,.mc .op{font-weight:500;color:var(--pl-ink-3,#a39078);margin:0 .14em}
+.lt-card .wh .mk,.lt-card .wh .pip{margin-left:.12em}
+.lt-card .lt-res{gap:0;margin-right:5px}
+.lt-card .lt-res:last-child{margin-right:0}
+/* what you can't afford dims quietly; "need" is small print, never a badge */
+.lt-card.dim{filter:none;opacity:.55}
+.lt-card.recede{filter:saturate(.6);opacity:.42}
+.lt-card .need{top:2px;right:3px;background:none;box-shadow:none;padding:0;font-size:9px;line-height:11px;font-weight:700;color:var(--pl-ink-2,#6e5c49);opacity:.85}
+.lt-card .need .nd{display:inline-flex;align-items:center;margin-left:2px}
+.lt-card .need b{font-weight:800}
+.lt-card .need .pip{width:.9em;height:.9em}
+.lt-card .tick{font-size:9px;line-height:12px}
+
+/* follower buys: the same paper and grammar ("2◐ → 1👤"), "8 left" quiet */
+.lt-rates-grid{grid-auto-rows:57px}
+.lt-rates .lt-rate{border-radius:var(--corner,8px);background:var(--pl-paper,#f2e8d2);color:var(--pl-ink,#2b2018);box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
+.lt-rates .lt-rate.lit{background:var(--paper-lit,#fbf6ea);box-shadow:0 0 0 2px var(--light,#fff3d4),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
+.lt-rates .lt-rate.can:hover{background:var(--paper-lit,#fbf6ea)}
+.lt-rates .lt-rate.dim{filter:none;opacity:.55}
+.lt-rates .lt-rate.recede{filter:saturate(.6);opacity:.42}
+.lt-rates .rt-trade{font-family:var(--sans);font-size:17px;gap:0;color:var(--pl-ink,#2b2018)}
+.lt-rates .rt-trade b{font-weight:800;font-size:17px;color:var(--pl-ink,#2b2018)}
+.lt-rates .rt-trade .mk-a{color:var(--pl-ink-3,#a39078)}
+.lt-rates .rt-trade .follower-mark{color:var(--pl-ink,#2b2018)}
+.lt-rates .rt-left{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--pl-ink-3,#a39078);margin-top:3px}
+
+/* the hover shell: the plate's paper card (lit paper, one 8px corner, a soft lift), 16px in, quiet hairlines */
+.lt-hover.popover,.popover:has(> .lt-note),.popover:has(.tip-body > .mc){background:var(--paper-lit,#fbf6ea);color:var(--pl-ink,#2b2018);border:0;border-radius:var(--corner,8px);
+  box-shadow:0 0 0 1px rgba(43,32,24,.10),0 12px 32px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.3)}
+.lt-hover.popover{padding:14px 16px}
+.popover:has(.tip-body > .mc){padding:14px 16px}
+.lt-note{color:var(--pl-ink,#2b2018);font-family:var(--sans);font-size:14px;line-height:20px}
+.lt-card-body p{font-size:16px;line-height:21px;color:var(--pl-ink,#2b2018);margin:4px 0 0;text-wrap:pretty}
+.lt-card-body h4,.lt-card-body h4.sc-name{font-family:var(--sans);font-weight:800;font-size:16px;line-height:20px;color:var(--pl-ink,#2b2018);margin:0}
+.lt-card-body h4 small{font-family:var(--sans);color:var(--pl-ink-3,#a39078)}
+.lt-yd{margin-top:12px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:13px;line-height:18px;color:var(--pl-ink,#2b2018);gap:4px}
+.lt-yd-row .k{font-size:12px;letter-spacing:0;text-transform:none;color:var(--pl-ink-2,#6e5c49);width:64px;line-height:18px}
+/* "You'd get +3●": the line you came for, the amount heavy at the right */
+.lt-yd-row.youd{align-items:baseline;justify-content:space-between}
+.lt-yd-row.youd .v{text-align:right;font-size:16px;font-weight:800}
+.lt-yd-row.youd .youd-get em,.lt-yd-row.youd .youd-others{display:block;font-size:12px;font-weight:500;font-style:normal;color:var(--pl-ink-2,#6e5c49)}
+.lt-yd .youd-get .pip.glyph,.lt-yd .youd-get .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 0 0 .06em}
+
+/* the member card (hover and tap): picture, name and worth, "costs 2● 2◐", the sentence big, one quiet live line */
+.lt-note .card-face.mc,.tip-body .card-face.mc,.card-face.mc{border-left:0;padding:0;display:block;color:var(--pl-ink,#2b2018);font-family:var(--sans)}
+.mc .mc-head{display:flex;gap:14px;align-items:flex-start}
+.mc .mc-art{flex:none;width:48px;height:48px;border-radius:var(--corner-art,4px);background:color-mix(in srgb,var(--c) 16%,var(--pl-paper,#f2e8d2));display:grid;place-items:center;overflow:hidden}
+.mc .mc-id{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.mc .mc-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.mc .mc-name{font-size:17px;line-height:22px;font-weight:800;color:var(--pl-ink,#2b2018)}
+.mc .mc-worth{font-size:17px;line-height:22px;white-space:nowrap;display:inline-flex;align-items:baseline}
+.mc .mc-worth .follower-mark{color:var(--pl-ink,#2b2018)}
+.mc small,.mc .mc-cost{display:block;font-size:13px;line-height:18px;color:var(--pl-ink-2,#6e5c49)}
+.mc .mc-cost .cost-dots{display:inline-flex;gap:6px;margin-left:3px;color:var(--pl-ink,#2b2018)}
+.mc .cost-dots .cd{display:inline-flex;align-items:baseline}
+.mc .mc-text{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:16px;line-height:22px;color:var(--pl-ink,#2b2018);text-wrap:pretty}
+.mc .mc-text .pip.glyph,.mc .mc-text .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
+.mc .mc-live{margin-top:10px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:12.5px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
+.mc .mc-live + .mc-live{margin-top:2px;padding-top:0;border-top:0}
+.mc .mc-live .cost-dots{display:inline-flex;gap:4px;color:var(--pl-ink,#2b2018)}
+.mc .owner i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pc);margin-right:5px;vertical-align:0}
+.lt-card-body[data-card-hover]{display:block}
