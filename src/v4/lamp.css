@@ -55,7 +55,8 @@
 .pip.glyph > svg,.pip.wild > svg{display:block;width:100%;height:100%;overflow:visible}
 .mk{display:inline-block;width:var(--glyph);height:var(--glyph);vertical-align:-.1em;overflow:visible;flex:none;margin:0 .06em}
 .op{font-weight:500;margin:0 .12em;opacity:.62}
-.rich-f{width:round(nearest, var(--glyph), 4.5px);height:round(nearest, var(--glyph), 4.5px);vertical-align:-.1em;margin:0 .06em}
+/* the follower in text: Cory's 10-pixel person at .8em, rounded to whole half-pixels so it stays crisp */
+.rich-f{width:round(nearest, var(--glyph), 5px);height:round(nearest, var(--glyph), 5px);vertical-align:-.12em;margin:0 .04em}
 body{
   background:
     radial-gradient(ellipse 70% 80% at 28% 52%, rgba(var(--lamp),.13), rgba(var(--lamp),.03) 55%, transparent 75%),
@@ -335,6 +336,69 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="engraved"] .stage .slot .face .worker-fig svg{width:24px}
 .lt [data-spaces="engraved"] .stage .slot.locked .face{opacity:.34;filter:grayscale(.85)}
 .lt[data-yours="1"][data-phase="place"] [data-spaces="engraved"] .stage .slot.open:not(.lit):not(.taken) .face{opacity:.6}
+
+/* ---------- panels (the default look; the visual language, plate 1b): flat paper wedges on a dark board ----------
+   Each space is a wedge of paper (Wheel.jsx panelPath) with its print upright above it: the action's small picture,
+   the big line (the number first and biggest), one line of small print when there's room. Lit: a warm-white edge,
+   and the plate's full glow on the one under your pointer. Taken: the paper dims, the minion stands where the picture
+   was. Fresh: a dotted edge in the mover's color. Locked: a faint outline, "opens in round N". */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .disk{fill:var(--board,#2b2119)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .edge{stroke:var(--hair,rgba(242,232,210,.10));stroke-width:1}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .hub{fill:var(--hub,#130e0b);stroke:var(--hair,rgba(242,232,210,.10))}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .seam{stroke:var(--board,#2b2119);stroke-width:3}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell path{pointer-events:none}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .wash{pointer-events:all;fill:var(--pl-paper,#f2e8d2);transition:fill var(--mo-fade,.2s)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit{cursor:pointer}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .glow{fill:none;stroke:#ffe9b8;stroke-width:7;filter:url(#ltGlow);opacity:.3;transition:opacity var(--mo-fade,.2s)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .edge-lit{fill:none;stroke:var(--light,#fff3d4);stroke-width:1.5;opacity:.8}
+/* the light follows your pointer: the panel under it is lit paper with the full glow */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .wash,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .wash{fill:var(--paper-lit,#fbf6ea)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .glow,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .glow{opacity:.95}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .edge-lit,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .edge-lit{opacity:1;stroke-width:2}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken .wash{fill:var(--paper-taken,#cfc2a6)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken.lit .wash{fill:var(--pl-paper,#f2e8d2)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.locked .wash{fill:rgba(242,232,210,.035);stroke:rgba(242,232,210,.22);stroke-width:1}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh{fill:none;stroke-width:2;stroke-dasharray:.1 4.2;stroke-linecap:round}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh.newest{stroke-width:2.6}
+/* while you place, open panels you can't take (a pick that names a few) recede into the board */
+.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,var(--pl-paper,#f2e8d2) 74%,var(--board,#2b2119))}
+.lt [data-spaces="panels"] .stage .hub-label small{display:none}
+.lt [data-spaces="panels"] .stage .hub-label b{font-family:var(--sans);font-weight:800;font-size:22px}
+.lt [data-spaces="panels"] .stage .hub-label .pips{gap:3px;margin-top:2px}
+.lt [data-spaces="panels"] .stage .hub-label .pips i{width:5px;height:5px}
+/* the print: an upright box over its panel (its width from the room the panel has where it sits now) */
+.lt [data-spaces="panels"] .stage .slot{aspect-ratio:auto;border-radius:6px}
+.lt [data-spaces="panels"] .stage .slot .hit{display:none}
+.lt [data-spaces="panels"] .stage .slot .base,.lt [data-spaces="panels"] .stage .slot.lit .base,.lt [data-spaces="panels"] .stage .slot.locked .base,.lt [data-spaces="panels"] .stage .slot.taken .base{inset:0;border-radius:6px;background:none;box-shadow:none;opacity:1}
+.lt [data-spaces="panels"] .stage .slot.lit .base::after{display:none}
+.lt [data-spaces="panels"] .stage .slot.can:hover .base,.lt [data-spaces="panels"] .stage .slot.sel .base,.lt [data-spaces="panels"] .stage .slot.can:active .base{transform:none;box-shadow:none}
+.lt [data-spaces="panels"] .stage .slot:focus-visible .base{box-shadow:0 0 0 2px var(--lamp-ink)}
+.lt [data-spaces="panels"] .stage .slot.flash .base{animation:none}
+.lt [data-spaces="panels"] .stage .slot .face{position:relative;inset:auto;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0;text-align:center;white-space:nowrap;color:var(--pl-ink,#2b2018);opacity:1}
+.lt [data-spaces="panels"] .stage .slot .face .ico{height:20px;margin:0;line-height:0;display:flex;align-items:flex-end;justify-content:center;visibility:visible}
+.lt [data-spaces="panels"] .stage .slot .face .ico svg.sprite{width:20px;height:20px;image-rendering:pixelated}
+.lt [data-spaces="panels"] .stage .slot .face .worker-fig{position:static;transform:none;display:flex;gap:1px;filter:drop-shadow(0 1.5px 0 rgba(43,32,24,.3))}
+.lt [data-spaces="panels"] .stage .slot .face .worker-fig svg{width:auto;height:22px;margin-bottom:-2px}
+.lt [data-spaces="panels"] .stage .slot.flash .face .worker-fig{animation:panelland .45s ease-out}
+@keyframes panelland{0%{transform:translateY(-6px) scale(1.12)}60%{transform:translateY(1px) scale(.97)}100%{transform:none}}
+.lt [data-spaces="panels"] .stage .slot .face .big{display:flex;flex-direction:column;align-items:center;max-width:none;font-family:var(--sans);font-weight:500;font-size:var(--big,20px);line-height:1;letter-spacing:-.01em;color:inherit;white-space:nowrap}
+.lt [data-spaces="panels"] .stage .slot .face .big .cl{display:block}
+.lt [data-spaces="panels"] .stage .slot .face .n{font-weight:800}
+.lt [data-spaces="panels"] .stage .slot .face .pip{width:.8em;height:.8em;margin:0 0 0 .06em;vertical-align:-.06em}
+.lt [data-spaces="panels"] .stage .slot .face .yl svg:not(.res-glyph),.lt [data-spaces="panels"] .stage .slot .face .fine svg:not(.res-glyph){display:inline-block;width:.8em;height:.8em;vertical-align:-.08em;margin:0 .04em}
+.lt [data-spaces="panels"] .stage .slot .face .op{font-weight:500;color:var(--pl-ink-3,#a39078);opacity:1;margin:0 .1em}
+.lt [data-spaces="panels"] .stage .slot .face .fine{font-family:var(--sans);font-size:12px;line-height:13px;font-weight:700;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
+.lt [data-spaces="panels"] .stage .slot.fine2 .face .fine{white-space:normal;text-wrap:balance;max-width:100%}
+.lt [data-spaces="panels"] .stage .slot .face .fine .dim{color:var(--pl-ink-3,#a39078);font-weight:700}
+.lt [data-spaces="panels"] .stage .slot .face .fine .now{color:var(--pl-ink,#2b2018);font-weight:800}
+/* taken: the print at half strength, the minion at full where the picture was */
+.lt [data-spaces="panels"] .stage .slot.taken .face{opacity:1}
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .big,.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .fine{opacity:.5}
+/* locked: faint on the board, the round it opens in below */
+.lt [data-spaces="panels"] .stage .slot.locked .face{color:var(--pl-cream-2,#b9a98c)}
+.lt [data-spaces="panels"] .stage .slot.locked .face > *{opacity:.6}
+.lt [data-spaces="panels"] .stage .slot.locked .face .fine,.lt [data-spaces="panels"] .stage .slot.locked .face .op{color:var(--pl-cream-3,#7d6e5a)}
+.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage .slot.open:not(.lit):not(.taken) .face{opacity:.6}
 
 /* the hover card on a space: paper */
 .lt .stage .peek{background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);border:0;box-shadow:0 0 0 1px rgba(80,60,30,.25),0 12px 30px rgba(0,0,0,.55);border-radius:10px;width:250px;z-index:20}

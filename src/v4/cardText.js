@@ -65,8 +65,8 @@ export const SHORT = {
   'silver.saint': { eff: '+1 @f / 2 silver @m' },
   'yellow.gardener': { eff: '+1 each missing' },
   'yellow.peddler': { eff: '+1 each other' },
-  'yellow.gleaner': { when: 'When an action gains you 2+ of a color', eff: '+1 yellow' },
-  'yellow.admirer': { when: 'When a rival recruits a color you lack', eff: '+1 of it' },
+  'yellow.gleaner': { when: 'Gaining 2+ of another color', eff: '+1 yellow' },
+  'yellow.admirer': { when: 'A rival recruits a color you lack', eff: '+1 of it' },
   'yellow.gobetween': { when: 'When you recruit a non-yellow @m', eff: '+1 of its color' },
   'yellow.dyer': { eff: '+1 yellow / color' },
   'yellow.latebloomer': { when: 'Round start, if fewest @f', eff: '+1 each' },
@@ -76,7 +76,7 @@ export const SHORT = {
   'yellow.pilgrim': { eff: '+1 each' },
   'yellow.farmer': { when: 'When an action gains you yellow', eff: '+1 yellow' },
   'yellow.weaver': { when: 'When you buy 6+ @f', eff: '+1 each' },
-  'yellow.explorer': { when: 'When you take a space outside Yellow', eff: '+1 yellow' },
+  'yellow.explorer': { when: 'Taking a non-Yellow space', eff: '+1 yellow' },
   'yellow.feastmaker': { eff: '+1 each / round' },
   'market.stylist': { when: 'When anyone recruits blue @m', eff: '+1 blue' },
   'market.onlooker': { when: 'When a rival recruits blue @m', eff: '+2 blue' },
@@ -235,6 +235,8 @@ export function linesAt(text, px, width, weight = 700) {
   for (const w of words) { if (!lines || x + space + w > width) { lines++; x = w; } else x += space + w; }
   return { lines, widest: Math.max(0, ...words) };
 }
+/** A long name sets a touch smaller and tighter, so it stays whole on one line ('Mentor & Protégé'). */
+export const longName = name => String(name || '').length > 14;
 /** The shop card's inner width (its narrowest: the 10-wide strip at 1270px, the phone's swipe row). */
 export const CARD_INNER = 82;
 /** The effect's size on the shop card: big (19px) when it fits one line, else 15px, else two lines at 11px. */

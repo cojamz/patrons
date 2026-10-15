@@ -353,15 +353,16 @@
 .lt-rates-head .lbl{font-size:15px}
 
 /* the shop card: picture on a soft tinted field, NAME, when, the effect big, cost dots left and worth right */
-.lt-card.card{height:120px;border-radius:var(--corner,8px);color:var(--pl-ink,#2b2018);font-family:var(--sans)}
+.lt-card.card{height:122px;border-radius:var(--corner,8px);color:var(--pl-ink,#2b2018);font-family:var(--sans)}
 .lt-card.card.paper{background:var(--pl-paper,#f2e8d2)}
 .lt-card.card{box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
 .lt-card.card.lit{background:var(--paper-lit,#fbf6ea);box-shadow:0 0 0 2px var(--light,#fff3d4),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
 .lt-card.card.can:hover{background:var(--paper-lit,#fbf6ea);transform:translateY(-2px)}
 .lt-card .art{height:36px;margin:0;border-radius:0;box-shadow:none;background:color-mix(in srgb,var(--q) 16%,var(--pl-paper,#f2e8d2))}
 .lt-card .nm{font-family:var(--sans);font-size:9.5px;line-height:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pl-ink-3,#a39078);margin:4px 2px 0;white-space:nowrap;overflow-wrap:normal;hyphens:none}
+.lt-card .nm.long{font-size:8.5px;letter-spacing:.02em}
 .lt-card .wh{height:24px;margin:1px 4px 0;display:flex;align-items:flex-end;justify-content:center;text-align:center;font-size:10.5px;line-height:12px;font-weight:700;color:var(--pl-ink-2,#6e5c49);flex:none}
-.lt-card .ef{height:22px;margin:0 4px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;color:var(--pl-ink,#2b2018);white-space:nowrap;flex:none;line-height:1}
+.lt-card .ef{height:24px;margin:0 4px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;color:var(--pl-ink,#2b2018);white-space:nowrap;flex:none;line-height:1}
 .lt-card .ef-l{font-size:19px}
 .lt-card .ef-m{font-size:15px}
 .lt-card .ef-s{font-size:11px;line-height:11px;white-space:normal}
@@ -380,7 +381,7 @@
 .lt-card .lt-res{gap:0;margin-right:5px}
 .lt-card .lt-res:last-child{margin-right:0}
 /* what you can't afford dims quietly; "need" is small print, never a badge */
-.lt-card.dim{filter:none;opacity:.55}
+.lt-card.dim{filter:saturate(.8);opacity:.62}
 .lt-card.recede{filter:saturate(.6);opacity:.42}
 .lt-card .need{top:2px;right:3px;background:none;box-shadow:none;padding:0;font-size:9px;line-height:11px;font-weight:700;color:var(--pl-ink-2,#6e5c49);opacity:.85}
 .lt-card .need .nd{display:inline-flex;align-items:center;margin-left:2px}

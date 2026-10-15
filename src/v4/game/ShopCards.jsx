@@ -12,7 +12,7 @@ import { realHover } from '../hover.js';
 import { cardColor, onTable, usePreview, Tip, Marks, Mark } from './Info.jsx';
 import { FollowerGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
-import { cardLines, effSize } from '../cardText.js';
+import { cardLines, effSize, longName } from '../cardText.js';
 import { timingOf, payBreakdown, unlockedBy, surely } from './cards.js';
 void timingOf;
 import { useHoverSpace } from './HoverCards.jsx';
@@ -136,9 +136,9 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                 {fromPile && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
                 {tick && <span className="tick" title={`You could afford it after ${after}`}>✓ {after}</span>}
               </span>
-              <span className="nm">{d.name}</span>
+              <span className={`nm${longName(d.name) ? ' long' : ''}`}>{d.name}</span>
               <span className="wh" data-when={lines.when || undefined}><span><Marks text={lines.when} /></span></span>
-              <span className={`ef ef-${effSize(lines.eff)}`}><Marks text={lines.eff} /></span>
+              <span className={`ef ef-${effSize(lines.eff)}`}><span><Marks text={lines.eff} /></span></span>
               <span className="ft">
                 <CostShapes parts={parts} />
                 <span className="val" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>

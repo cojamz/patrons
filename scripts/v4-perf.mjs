@@ -235,6 +235,10 @@ async function play(p) {
 const people = [];
 let emu = null;
 const q = s => `${s}${EXTRA ? `&${EXTRA}` : ''}`;
+// a page whose main thread is stuck blocks Playwright's input calls forever: a watchdog ends the run and the report
+// is written from whatever each page will still answer
+const race = (pr, ms, fallback) => Promise.race([pr, sleep(ms).then(() => fallback)]);
+const runAll = async () => {
 try {
   if (!ONLINE) {
     const p = await openPerson('P1', SEED);
@@ -272,15 +276,17 @@ try {
   errors.push(`harness: ${err.message}`);
   console.error(err);
 }
+};
+await race(runAll(), CAP_MS + 4 * 60 * 1000, 'watchdog').then(r => { if (r === 'watchdog') errors.push('watchdog: the run outlived its cap (a page stopped answering); reporting what the pages still give'); });
 
 const load1 = loadavg();
 const results = [];
 for (const p of people) {
-  const raw = await p.page.evaluate(() => (window.__perf ? { summary: window.__perf.summary(), entries: window.__perf.entries } : null)).catch(e => ({ error: e.message }));
+  const raw = await race(p.page.evaluate(() => (window.__perf ? { summary: window.__perf.summary(), entries: window.__perf.entries } : null)).catch(e => ({ error: e.message })), 20000, { error: 'the page did not answer in 20s' });
   results.push({ name: p.name, turns: p.turns, r2turns: p.r2turns, clicks: p.clicks, roundEnds: p.roundEnds, raw });
 }
-await browser.close();
 if (emu) emu.stop();
+await race(browser.close(), 15000, null);
 const viteHmr = VITE_LOG && existsSync(VITE_LOG) ? readFileSync(VITE_LOG, 'utf8').split('\n').slice(viteLines0).filter(l => /hmr update \/src|page reload src\//.test(l)).length : null;
 
 const meta = { label, url: base, cpu: CPU, online: ONLINE, lag: LAG, seed: SEED, think: THINK, boxCpus: cpus().length, loadBefore: load0.map(x => +x.toFixed(2)), loadAfter: load1.map(x => +x.toFixed(2)), wallSec: Math.round((Date.now() - t0wall) / 1000), viteHmrDuringRun: viteHmr, errors: errors.slice(0, 20), at: new Date().toISOString() };

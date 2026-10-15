@@ -40,13 +40,17 @@ const FILL = ch => (DRAWN ? DRAWN.base[ch] || 'currentColor' : ch === 'k' ? 'var
 const VB = GRID.length;
 
 /** The follower mark; with n, the count before it. size: the mark's height in px (9, 18 keep pixels square).
- *  markClass: extra classes on the mark itself (Rich's .rich-f sizes it to the plate's .8em of its text). */
-export const Follower = memo(function Follower({ n = null, size = 10, className = '', title = null, markClass = '' }) {
+ *  markClass: extra classes on the mark itself (Rich's .rich-f sizes it to the plate's .8em of its text).
+ *  flat: the plate's weight (visual language, 2026-10-15): the same pixel person as one flat silhouette in the text's
+ *  own color, no outline, so it reads like the other marks (ink on paper, cream on the table). */
+export const Follower = memo(function Follower({ n = null, size = 10, className = '', title = null, markClass = '', flat = false }) {
   const label = title || (n == null ? 'followers' : `${n} follower${n === 1 ? '' : 's'}`);
   const mark = (
     <svg className={`follower-mark${markClass ? ` ${markClass}` : ''}`} viewBox={`0 0 ${VB} ${VB}`} width={size} height={size} shapeRendering="crispEdges" role="img" aria-label={label}>
       <title>{label}</title>
-      {RUNS.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={FILL(r.ch)} />)}
+      {flat
+        ? RUNS.filter(r => r.ch !== 'k').map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill="currentColor" />)
+        : RUNS.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={FILL(r.ch)} />)}
     </svg>
   );
   if (n == null) return mark;
