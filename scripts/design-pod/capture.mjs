@@ -134,6 +134,14 @@ for (const st of want) {
       await freshPage();
       await page.addInitScript(() => localStorage.setItem('patrons.v4.introSeen', '1'));
       await page.goto(url()); await page.waitForSelector('[data-home]', { timeout: 90000 }); await settle(800); await shot('home');
+    } else if (st === 'homelast') {
+      // home after a finished game: the last game's results are kept (saved.js LAST), no game to resume
+      let s = SAVES.last3().save.state;
+      const rand = seededRandom(SEED);
+      for (let n = 0; n < 4000 && !s.over; n++) s = play(s, chooseBotMove(s, rand));
+      await freshPage();
+      await page.addInitScript(v => { localStorage.setItem('patrons.v4.introSeen', '1'); localStorage.setItem('patrons.v4.last', JSON.stringify(v)); }, { config: { seats: SEATS }, state: s, finishedAt: Date.now() });
+      await page.goto(url()); await page.waitForSelector('[data-home]', { timeout: 90000 }); await settle(800); await shot('homelast');
     } else if (st === 'setup') {
       await load(SAVES.setup()); await page.waitForSelector('.prompt.choice.setup', { timeout: 8000 }).catch(() => {}); await settle(500); await shot('setup');
     } else if (st === 'place') {

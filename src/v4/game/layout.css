@@ -147,6 +147,12 @@
 .app.home{gap:32px}
 .app.home .menu{gap:16px}
 .app.home .hero .version{order:3;margin-top:2px}
+/* last game's results is a look back, not a way into play (w3a A39: the big pill above "Play on this device" pushed it
+   down 66px after a game, and a click on Play's old spot reopened the results): it stands last, a quiet line beside "How
+   to play", so Play and Resume keep their places whether or not a game was played before */
+.app.home .menu .last-results{order:10;align-self:center;min-height:0;padding:6px 14px;background:none;border-color:transparent;box-shadow:none;font-size:var(--s);text-decoration:underline dotted;text-underline-offset:3px}
+.app.home .menu .last-results small{font-size:11px;text-decoration:none}
+.app.home .menu .rules-link{order:11}
 
 /* Results (laptop): the four cults stand in one row under the table, so the whole result fits the screen at 700px (the
    second row of cards fell below the fold) */
