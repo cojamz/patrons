@@ -267,3 +267,6 @@
 .cs-order.done{opacity:.55}
 /* the docked hover card (laptop): a fixed spot in the right-hand column, clipped to it so it never reaches the shop */
 .lt-hover.popover.docked{box-sizing:border-box;overflow:hidden}
+/* a badged member at the table: ◆ on its figure's corner (its title says what badged means; the figure opens the card) */
+.cs-member .fig{position:relative}
+.cs-member .fig .badge-mark{position:absolute;top:-4px;right:-5px;font-size:10px;line-height:1;color:color-mix(in srgb,var(--blue,#4f7ea8) 70%,#fff);text-shadow:0 1px 1px rgba(0,0,0,.8);pointer-events:auto}
