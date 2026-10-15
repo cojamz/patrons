@@ -370,6 +370,7 @@ export function flyPath(html, className, a, b, { path = 'arc', duration = 320, l
     // it fades onto what it lands on in its last 15% (a payment fades in its own frames)
     if (fade && path !== 'drop') track(outer.animate([{ opacity: 1 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], { duration, delay, fill: 'both' }));
     if (h) track(inner.animate([{ translate: '0 0' }, { translate: `0 ${-h}px`, offset: 0.5, easing: 'ease-in' }, { translate: '0 0' }], { duration, delay, easing: 'ease-out', fill: 'both' }));
+    if (k === 0 && label) { const n = inner.querySelector('.bundle-n'); if (n) track(n.animate([{ opacity: 1 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }], { duration, delay, fill: 'both' })); }
     if (turnTo && k === 0) {
       const tint = document.createElement('div');
       tint.className = 'path-turn';

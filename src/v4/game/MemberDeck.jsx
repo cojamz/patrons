@@ -13,6 +13,7 @@ import { onTable } from './Info.jsx';
 import { ResourceGlyph } from './Glyphs.jsx';
 import { motionOK } from './flight.js';
 import { MO } from '../motion.js';
+import { dealAfter } from './director.js';
 
 /** At or below this many cards the count warms. */
 export const DECK_LOW = 10;
@@ -109,7 +110,7 @@ export function useDeal(rowRef, deckRef, state) {
       ghost.dataset.born = String(Date.now());
       Object.assign(ghost.style, { position: 'fixed', left: `${b.left}px`, top: `${b.top}px`, width: `${b.width}px`, height: `${b.height}px`, margin: '0', zIndex: '13', pointerEvents: 'none' });
       document.body.appendChild(ghost);
-      const duration = MO.deal, delay = k * MO.dealStagger;
+      const duration = MO.deal, delay = dealAfter(state) + k * MO.dealStagger; // after the bought card has left its slot (director.js)
       const anim = ghost.animate([
         { transform: `translate(${dx}px,${dy}px) ${s} perspective(500px) rotateY(88deg)` },
         { transform: `translate(${dx}px,${dy}px) ${s} perspective(500px) rotateY(0deg)`, offset: 0.32 },

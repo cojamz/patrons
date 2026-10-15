@@ -251,8 +251,8 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage .slot.lit .base::after{content:"";position:absolute;inset:-3px;border-radius:50%;box-shadow:0 0 18px 7px rgba(var(--lamp),.6);animation:litbreath 2.4s ease-in-out infinite;pointer-events:none}
 @keyframes litbreath{0%,100%{opacity:.35}50%{opacity:1}}
 /* while you place, open spaces you can't take recede a little, so the lit ones lead */
-.lt[data-yours="1"][data-phase="place"] .stage .slot.open:not(.lit):not(.taken) .base{opacity:.62}
-.lt[data-yours="1"][data-phase="place"] .stage .slot.open:not(.lit):not(.taken) .face{opacity:.55}
+.lt[data-yours="1"][data-phase="place"] .stage .slot.open:not(.lit):not(.taken) .base,.lt[data-yours="1"][data-phase="choose"] .stage .slot.open:not(.lit):not(.taken) .base{opacity:.62}
+.lt[data-yours="1"][data-phase="place"] .stage .slot.open:not(.lit):not(.taken) .face,.lt[data-yours="1"][data-phase="choose"] .stage .slot.open:not(.lit):not(.taken) .face{opacity:.55}
 .lt .stage .slot.can:hover,.lt .stage .slot.sel{z-index:4}
 .lt .stage .slot.can:hover .base,.lt .stage .slot.sel .base{transform:scale(1.08);box-shadow:inset 0 0 0 2.5px var(--paper-ink),0 0 0 4px var(--lamp-ink),0 8px 18px rgba(0,0,0,.45)}
 /* tactile: a lit space presses down under the pointer (src/v4/motion.js) */
@@ -320,7 +320,8 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh{fill:none;stroke-width:2;stroke-dasharray:.1 4.2;stroke-linecap:round}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh.newest{stroke-width:2.6}
 /* while you place, open panels you can't take (a pick that names a few) step back toward the taken ones */
-.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,var(--pl-paper,#f2e8d2) 60%,var(--board,#2b2119))}
+/* a choice made off the wheel (a stack, a seat, a member): open spaces step back like unlit ones, nothing there is yours to take */
+.lt[data-yours="1"][data-phase="choose"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash,.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,var(--pl-paper,#f2e8d2) 60%,var(--board,#2b2119))}
 /* not your turn: the open panels rest a step below lit paper, so the lamp means something when it comes */
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:var(--pl-paper,#f2e8d2)}
 /* the rim (plate 1b): light type on the quadrant's deep band; the color as its dot in a light ring; the prize a size up */
@@ -373,7 +374,7 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage .slot.locked .face{color:var(--pl-cream-2,#b9a98c)}
 .lt [data-spaces="panels"] .stage .slot.locked .face > *{opacity:.55}
 .lt [data-spaces="panels"] .stage .slot.locked .face .second,.lt [data-spaces="panels"] .stage .slot.locked .face .note,.lt [data-spaces="panels"] .stage .slot.locked .face .note .now{color:var(--pl-cream-3,#7d6e5a)}
-.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage .slot.open:not(.lit):not(.taken) .face{opacity:.6}
+.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage .slot.open:not(.lit):not(.taken) .face,.lt[data-yours="1"][data-phase="choose"] [data-spaces="panels"] .stage .slot.open:not(.lit):not(.taken) .face{opacity:.6}
 
 /* the hover card on a space: paper */
 .lt .stage .peek{background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);border:0;box-shadow:0 0 0 1px rgba(80,60,30,.25),0 12px 30px rgba(0,0,0,.55);border-radius:10px;width:250px;z-index:20}

@@ -297,6 +297,18 @@ const hopEl = (el, ms) => { if (el && el.animate && !el.rectOnly) track(el.anima
 const square = (r, size) => ({ left: r.left + r.width / 2 - size / 2, top: r.top + r.height / 2 - size / 2, width: size, height: size });
 const onFinish = (anim, fn) => { if (anim && anim.finished) anim.finished.then(() => fn(), () => fn()); else fn(); };
 
+/**
+ * When the shop's new card may be dealt, in ms from this state's commit: after a recruited card has left its slot and
+ * the row has slid (grammar B4), so two cards never share a slot. 0 when nothing was bought from the shop.
+ */
+export function dealAfter(state) {
+  const fx = state && Array.isArray(state.effects) ? state.effects : null;
+  const rec = fx && fx.find(e => e.type === 'recruit' && e.from && e.from.kind === 'shop');
+  if (!rec) return 0;
+  const paid = fx.filter(e => e.type === 'pay' && e.cause === rec.cause).reduce((t, e) => t + Math.min(3, e.what.n), 0);
+  return Math.round(MO.cardLift + Math.max(0, paid - 1) * MO.pieceStagger + flightMs(TYPICAL) * (2 / 3) + MO.shopSlide);
+}
+
 /** (kept for callers: a placed minion's slot is read when its chain plays) */
 export const noteTable = root => { void root; };
 

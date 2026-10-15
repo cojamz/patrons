@@ -396,6 +396,13 @@
   box-shadow:0 0 0 1px rgba(43,32,24,.10),0 12px 32px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.3)}
 .lt-hover.popover{padding:14px 16px}
 .popover:has(.tip-body > .mc){padding:14px 16px}
+/* one look for every card that opens on hover (RC1 sweep 44: the since-strip's, the follower buys', the keywords' and
+   the results' cards opened dark while the space and member cards were paper). Every Tip card is the same paper; the
+   dark theme's text colors are re-pointed to the paper's inks inside it, so its content needs no restyling. */
+.popover:has(> .tip-body){background:var(--paper-lit,#fbf6ea);color:var(--pl-ink,#2b2018);border:0;border-radius:var(--corner,8px);padding:14px 16px;
+  box-shadow:0 0 0 1px rgba(43,32,24,.10),0 12px 32px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.3);
+  --ink:#2b2018;--muted:#6e5c49;--cream:#2b2018;--cream-2:#6e5c49;--cream-3:#a39078;--rim:rgba(43,32,24,.16)}
+.popover > .tip-body{font-family:var(--sans);font-size:14px;line-height:20px}
 .lt-note{color:var(--pl-ink,#2b2018);font-family:var(--sans);font-size:14px;line-height:20px}
 .lt-card-body p{font-size:16px;line-height:21px;color:var(--pl-ink,#2b2018);margin:4px 0 0;text-wrap:pretty}
 .lt-card-body h4,.lt-card-body h4.sc-name{font-family:var(--sans);font-weight:800;font-size:16px;line-height:20px;color:var(--pl-ink,#2b2018);margin:0}
