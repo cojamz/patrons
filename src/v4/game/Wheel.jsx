@@ -371,6 +371,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     stop();
     const from = rotRef.current, t0 = performance.now(), dur = reduced() ? 1 : MO.spin;
     setPeek(p => (p && !p.pinned ? null : p)); // a hover card doesn't ride along on a turning board
+    if (hoverRef.current && hoverRef.current.card && !hoverRef.current.card.pinned) hoverRef.current.close();
     const step = now => {
       const k = Math.min(1, (now - t0) / dur);
       if (k < 1) { paintRot(from + (to - from) * spinEase(k)); anim.current = requestAnimationFrame(step); return; }
@@ -457,6 +458,8 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       // on touch, a mostly-vertical swipe is a page scroll, not a spin; a sideways swipe turns one notch on release
       if (dr.touch && dy > dx) { drag.current = null; return; }
       moved.current = true;
+      // a drag turns the board: no hover card rides along (tester B #42)
+      if (hoverRef.current && hoverRef.current.card && !hoverRef.current.card.pinned) hoverRef.current.close();
       if (dr.touch) { dr.swipe = true; dr.lastX = e.clientX; return; }
       try { stage.current.setPointerCapture(e.pointerId); } catch { /* ignore */ }
     }

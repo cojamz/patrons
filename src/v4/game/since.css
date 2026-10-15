@@ -34,8 +34,8 @@ body:has(.tip-body [data-since-card]) .lt-hover.popover{z-index:46}
 
 /* the card a line opens (it sits on the dark popover) */
 .since-card{display:flex;flex-direction:column;gap:2px;max-width:280px;color:var(--cream)}
-.since-card .sc-head{font-family:var(--serif);font-size:15px;line-height:1.2;padding-left:8px;margin-bottom:2px;box-shadow:inset 3px 0 0 var(--pc);color:var(--cream)}
-.since-card .sc-line{font-size:13px;line-height:1.3;padding-left:8px;color:var(--cream-2,#d9cbb0)}
+.since-card .sc-head{font-family:var(--serif);font-size:18px;line-height:1.2;padding-left:8px;margin-bottom:2px;box-shadow:inset 3px 0 0 var(--pc);color:var(--cream)}
+.since-card .sc-line{font-size:14px;line-height:1.3;padding-left:8px;color:var(--cream-2,#d9cbb0)}
 .since-card .sc-line .pip{width:.95em;height:.95em;vertical-align:-.15em}
 .since-card .sc-line.quiet{opacity:.7}
 

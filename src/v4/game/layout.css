@@ -61,7 +61,8 @@
   .app.game.lt{--turn-dock:since;grid-template-rows:68px minmax(0,1fr) minmax(0,1fr) var(--shop-h,128px)}
   .app.game.lt > .lt-since{align-self:start;margin-top:8px;max-height:calc(100% - 140px)}
   .app.game.lt:has(> .turn-card) > .lt-since{max-height:calc(100% - 252px)}
-  .app.game.lt > .lt-shop,.app.game.lt > .lt-shop > .lt-shop-cards{display:contents}
+  /* the shop's wrappers give up their boxes (and, having none, never claim to clip) */
+  .app.game.lt > .lt-shop,.app.game.lt > .lt-shop > .lt-shop-cards{display:contents;overflow:visible}
   .app.game.lt .lt-shop-main{grid-area:shop;position:relative;z-index:3;min-width:0}
   .app.game.lt .lt-rates{grid-column:3;grid-row:1 / 4;align-self:end;position:relative;z-index:3;padding-bottom:6px}
   .app.game.lt .lt-rates-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:52px;gap:8px}

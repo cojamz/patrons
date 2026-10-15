@@ -322,7 +322,7 @@
 .dialog.pay .pay-rules li{padding-left:10px;border-left:2px solid var(--lamp-ink);color:var(--cream)}
 .dialog.pay .pay-rules li[data-pay-rule="total"]{border-left-color:transparent;color:var(--lamp-ink);font-weight:700}
 /* a follower rate's hover card (ShopCards FollowerRates): the trade, what's left, when you can make it */
-.rate-card{display:flex;flex-direction:column;gap:4px;font-size:13px;line-height:1.35}
+.rate-card{display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:1.35}
 .rate-card small{color:var(--muted)}
 /* resource symbols in card text at hover size (RC1 strategist: Crowd-Pleaser's "+1 ●" read as +1 follower): the
    shapes read at a glance in every hover card, sheet and pinned card */
@@ -335,7 +335,7 @@
 .seat-card .seat-effect{display:block;font-size:13px;color:var(--paper-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
 .seat-card .seat-rank{font-size:12px;color:var(--paper-ink-3)}
 /* the rim's standings card opens with what its prize pays, in words */
-.lt-prize-line{margin:0 0 6px;font-size:13px;line-height:1.35;font-weight:700}
+.lt-prize-line{margin:0 0 6px;font-size:14px;line-height:1.35;font-weight:700}
 
 /* a chair's build row (the plate's rival panel): what its members make each round, and what it just took */
 .lt-cult-seat .cs-build{display:flex;align-items:center;gap:14px;min-width:0;white-space:nowrap}
@@ -396,8 +396,9 @@
 .lt-rates .rt-trade .follower-mark{color:var(--pl-ink,#2b2018)}
 .lt-rates .rt-left{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--pl-ink-3,#a39078);margin-top:3px}
 
-/* type on the table and its cards (design pod, 2026-10-15): 11 (small caps labels) · 13 (fine print, lines) · 16 (card
-   sentences and names) · 18 and up for numbers that lead; no half sizes (10.5, 12.5, 13.5) and no 16-beside-17 near misses */
+/* type on the table and its cards, one scale (design pod with the art director, 2026-10-15): 11 (small caps labels and
+   keys) · 14 (sentences, lines, fine print: steps down by ink, not size) · 18 (a card's name, and the amount that leads)
+   · 36 (your total). No 12, 13, 16 or half sizes. */
 /* the hover shell: the plate's paper card (lit paper, one 8px corner, a soft lift), 16px in, quiet hairlines */
 .lt-hover.popover,.popover:has(> .lt-note),.popover:has(.tip-body > .mc){background:var(--paper-lit,#fbf6ea);color:var(--pl-ink,#2b2018);border:0;border-radius:var(--corner,8px);
   box-shadow:0 0 0 1px rgba(43,32,24,.10),0 12px 32px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.3)}
@@ -411,16 +412,16 @@
   --ink:#2b2018;--muted:#6e5c49;--cream:#2b2018;--cream-2:#6e5c49;--cream-3:#a39078;--rim:rgba(43,32,24,.16)}
 .popover > .tip-body{font-family:var(--sans);font-size:14px;line-height:20px}
 .lt-note{color:var(--pl-ink,#2b2018);font-family:var(--sans);font-size:14px;line-height:20px}
-.lt-card-body p{font-size:16px;line-height:21px;color:var(--pl-ink,#2b2018);margin:4px 0 0;text-wrap:pretty}
-.lt-card-body h4,.lt-card-body h4.sc-name{font-family:var(--sans);font-weight:800;font-size:16px;line-height:20px;color:var(--pl-ink,#2b2018);margin:0}
+.lt-card-body p{font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018);margin:4px 0 0;text-wrap:pretty}
+.lt-card-body h4,.lt-card-body h4.sc-name{font-family:var(--sans);font-weight:800;font-size:18px;line-height:22px;color:var(--pl-ink,#2b2018);margin:0}
 .lt-card-body h4 small{font-family:var(--sans);color:var(--pl-ink-3,#a39078)}
-.lt-yd{margin-top:12px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:13px;line-height:18px;color:var(--pl-ink,#2b2018);gap:4px}
-.lt-yd-row .k{font-size:12px;letter-spacing:0;text-transform:none;color:var(--pl-ink-2,#6e5c49);width:64px;line-height:18px}
+.lt-yd{margin-top:12px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:14px;line-height:19px;color:var(--pl-ink,#2b2018);gap:4px}
+.lt-yd-row .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--pl-ink-2,#6e5c49);width:64px;line-height:19px}
 /* "You'd get +3●": the line you came for, the amount heavy at the right */
 .lt-yd-row.youd{align-items:baseline;justify-content:space-between}
-.lt-yd-row.youd .v{text-align:right;font-size:16px;font-weight:800}
+.lt-yd-row.youd .v{text-align:right;font-size:18px;font-weight:800}
 .lt-yd-row.youd .youd-get{display:block}
-.lt-yd-row.youd .youd-get em,.lt-yd-row.youd .youd-others{display:block;font-size:12px;font-weight:500;font-style:normal;color:var(--pl-ink-2,#6e5c49)}
+.lt-yd-row.youd .youd-get em,.lt-yd-row.youd .youd-others{display:block;font-size:14px;font-weight:500;font-style:normal;color:var(--pl-ink-2,#6e5c49)}
 .lt-yd .youd-get .pip.glyph,.lt-yd .youd-get .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 0 0 .06em}
 
 /* the member card (hover and tap): picture, name and worth, "costs 2● 2◐", the sentence big, one quiet live line */
@@ -429,15 +430,15 @@
 .mc .mc-art{flex:none;width:48px;height:48px;border-radius:var(--corner-art,4px);background:color-mix(in srgb,var(--c) 16%,var(--pl-paper,#f2e8d2));display:grid;place-items:center;overflow:hidden}
 .mc .mc-id{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .mc .mc-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.mc .mc-name{font-size:16px;line-height:22px;font-weight:800;color:var(--pl-ink,#2b2018)}
-.mc .mc-worth{font-size:16px;line-height:22px;white-space:nowrap;display:inline-flex;align-items:baseline}
+.mc .mc-name{font-size:18px;line-height:22px;font-weight:800;color:var(--pl-ink,#2b2018)}
+.mc .mc-worth{font-size:18px;line-height:22px;white-space:nowrap;display:inline-flex;align-items:baseline}
 .mc .mc-worth .follower-mark{color:var(--pl-ink,#2b2018)}
-.mc small,.mc .mc-cost{display:block;font-size:13px;line-height:18px;color:var(--pl-ink-2,#6e5c49)}
+.mc small,.mc .mc-cost{display:block;font-size:14px;line-height:19px;color:var(--pl-ink-2,#6e5c49)}
 .mc .mc-cost .cost-dots{display:inline-flex;gap:6px;margin-left:3px;color:var(--pl-ink,#2b2018)}
 .mc .cost-dots .cd{display:inline-flex;align-items:baseline}
-.mc .mc-text{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:16px;line-height:22px;color:var(--pl-ink,#2b2018);text-wrap:pretty}
+.mc .mc-text{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018);text-wrap:pretty}
 .mc .mc-text .pip.glyph,.mc .mc-text .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
-.mc .mc-live{margin-top:10px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:13px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
+.mc .mc-live{margin-top:10px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:14px;line-height:19px;color:var(--pl-ink-2,#6e5c49)}
 .mc .mc-live + .mc-live{margin-top:2px;padding-top:0;border-top:0}
 .mc .mc-live .cost-dots{display:inline-flex;gap:4px;color:var(--pl-ink,#2b2018)}
 .mc .owner i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pc);margin-right:5px;vertical-align:0}
@@ -466,7 +467,7 @@
 /* keywords in a hover's sentence stay findable without shouting: a faint dotted line */
 .lt-note .term,.tip-body .mc .term{text-decoration-color:rgba(43,32,24,.22);border-bottom-color:rgba(43,32,24,.22)}
 /* the extra rows under "You'd get" (why, the race, what it unlocks) step down to small print */
-.lt-yd-row:not(.youd){font-size:12px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
+.lt-yd-row:not(.youd){font-size:14px;line-height:19px;color:var(--pl-ink-2,#6e5c49)}
 /* "you choose how" follows "You'd get" inline as " · …", or on its own small line under the amount */
 .youd-get em.yd-note::before{content:" · "}
 .lt-yd-row.youd .youd-get em.yd-note::before{content:none}

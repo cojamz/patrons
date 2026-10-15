@@ -540,7 +540,7 @@ h1,h2,h3{font-family:var(--serif)}
 /* Release is picked in your seat now; the list is the keyboard's way in only: hidden until a key brings focus into it */
 .lt-prompt .pr-actions .rel-list.keys:not(:focus-within){clip-path:inset(50%);width:1px;height:1px;padding:0;overflow:hidden;box-shadow:none}
 /* a sphere's own rule, under its standings in the rim's hover card ("Whatever you steal turns magenta…") */
-.lt-sphere-rule{margin:8px 0 0;padding-top:7px;border-top:1px solid rgba(42,31,23,.15);font-size:13px;line-height:1.3;color:var(--paper-ink-2);max-width:260px}
+.lt-sphere-rule{margin:8px 0 0;padding-top:7px;border-top:1px solid rgba(42,31,23,.15);font-size:14px;line-height:1.35;color:var(--paper-ink-2);max-width:260px}
 
 /* setup (RC1 panel: the starting-resource note covered the wheel's lower half, so a newcomer only found out by accident
    that it spins; Cory, 2026-10-15: "make way better use of the space"): the wheel keeps its full size and the picker

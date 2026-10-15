@@ -286,7 +286,11 @@ function placeEl(root, w, ctx) {
   const seat = pid => root.querySelector(`.lt-cult-seat[data-seat="${pid}"]`);
   switch (w.kind) {
     case 'space': return shown(root.querySelector(`[data-slot="${w.key}"] .base`)) || shown(root.querySelector(`[data-slot="${w.key}"]`));
-    case 'quadrant': { const q = ctx.state.quadrants.indexOf(w.qid); return shown(root.querySelector(`[data-slot^="${q}-"] .base`)) || shown(root.querySelector('.stage .hub-label')); }
+    case 'quadrant': {
+      // a starting pick: from the button pressed, while the picker is up; else that quadrant's own spaces
+      const q = ctx.state.quadrants.indexOf(w.qid);
+      return shown(root.querySelector(`[data-option="color:${w.qid}"]`)) || shown(root.querySelector(`[data-slot^="${q}-"] .base`)) || shown(root.querySelector('.stage .hub-label'));
+    }
     case 'stack': { const s = seat(w.pid); return s && shown(s.querySelector(`.cs-stack[data-res="${w.r}"]`)); }
     case 'count': case 'player': { const s = seat(w.pid); return s && (shown(s.querySelector('.cs-total')) || shown(s)); }
     case 'crowd': {

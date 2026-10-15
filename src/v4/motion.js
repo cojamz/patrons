@@ -139,6 +139,7 @@ const TABLE = {
   reckonTick:  [200,   300,    450],
   reckonRest:  [60,    120,    200],
   reckonQuiet: [150,   250,    400],  // a rim nobody scores: it pulses once, dim, and the Reckoning moves on
+  reckonLead:  [250,   500,    800],  // a beat after the round's last move ("Turn passes.") before the first rim lights
 };
 const IDX = { quick: 0, steady: 1, relaxed: 2 };
 

@@ -34,6 +34,9 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   const [beat, setBeat] = useState(0); // within it: 0 counting, 1 the verdict (the prize in the air), 2 landed
   const [seen, setSeen] = useState(0); // how many seats' counts have stamped in so far
   const [atTop, setAtTop] = useState(false); // the card sits on the far side of the wheel from the rim it scores
+  // a beat after the round's last move (its "Turn passes." note) before the first rim lights (tester B #23)
+  const [ready, setReady] = useState(() => !motionOK());
+  useEffect(() => { if (ready) return undefined; const t = setTimeout(() => setReady(true), MO.reckonLead); return () => clearTimeout(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [spots, setSpots] = useState({}); // pid -> { left, top } of that player's chair, for the count chips
   const done = useRef(false);
   const finish = () => { if (!done.current) { done.current = true; onLamp && onLamp(null); onDone(); } };
@@ -59,6 +62,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
 
   // one quadrant at a time: light its plaque and count, name the winner, fly the prize, and only then pay the total
   useEffect(() => {
+    if (!ready) return undefined;
     if (step >= rows.length) { const t = setTimeout(finish, reduced ? 0 : 400); return () => clearTimeout(t); }
     const row = rows[step];
     setBeat(0);
@@ -127,7 +131,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
       void longest;
     }, counted + MO.hop));
     return () => { cancelled = true; timers.forEach(clearTimeout); };
-  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const key = e => { if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') { e.preventDefault(); finish(); } };
