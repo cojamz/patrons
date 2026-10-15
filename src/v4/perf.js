@@ -307,8 +307,9 @@ function install() {
     lastHover = rec;
     E.hovers.push(rec);
     const t0 = e.timeStamp;
-    const look = ts => {
+    const look = () => {
       if (lastHover !== rec) return; // the pointer moved on first
+      const ts = now();
       const el = document.querySelector(`[data-hover-layer][data-open="1"] ${h.sel}, .lt-note.pinned ${h.sel}, .popover ${h.sel}`);
       if (el && rec.domMs == null) rec.domMs = ts - t0;
       if (el && rec.contentMs == null && !el.querySelector('.youd-get.pending')) { rec.contentMs = ts - t0; rec.done = true; return; }

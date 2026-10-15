@@ -70,6 +70,9 @@ async function openPerson(name, seed) {
     Math.random = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   }, seed);
   const page = await ctx.newPage();
+  // a reload mid-run (Vite HMR on a tree someone is editing) wipes the tracer's buffer: count it and say so
+  let navs = 0;
+  page.on('framenavigated', fr => { if (fr === page.mainFrame() && ++navs > 1) errors.push(`${name}: the page reloaded mid-run (HMR?): numbers cover only what came after`); });
   page.on('pageerror', e => errors.push(`${name} pageerror: ${e.message}`));
   page.on('console', m => { if (m.type() === 'error') errors.push(`${name} console: ${m.text().slice(0, 200)}`); });
   const cdp = await ctx.newCDPSession(page);

@@ -316,17 +316,23 @@ h1,h2,h3{font-family:var(--serif)}
 /* the room dims around the board while it pays: the wheel and the chairs being paid stay in the light */
 .lt[data-phase="reckon"] .lt-shop,.lt[data-phase="reckon"] .lt-prompt{filter:brightness(.55) saturate(.7);transition:filter .3s}
 .lt[data-phase="reckon"] .lt-seat{filter:brightness(.8);transition:filter .3s}
-.lt-reckon .reckon-head{position:absolute;left:50%;top:14px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 22px 10px;border-radius:14px;
+.lt-reckon .reckon-head{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 26px 10px;border-radius:14px;
   background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);box-shadow:0 0 0 2px var(--c,var(--paper-edge)),0 14px 30px rgba(0,0,0,.55);min-width:min(420px, 92vw);text-align:center}
 .lt-reckon .reckon-head small{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper-ink-3)}
 .lt-reckon .reckon-head b{font-family:var(--serif);font-size:22px;line-height:1.15}
+/* the caption over the dimmed shop (clear of the wheel's plaques): what is scored, what it counts, then who wins */
+.lt-reckon .reckon-head .reckon-rule{font-size:24px;color:color-mix(in srgb,var(--c) 70%,var(--paper-ink))}
+.lt-reckon .reckon-head .reckon-counts{font-size:13.5px;line-height:1.3;color:var(--paper-ink-2);max-width:520px}
+.lt-reckon .reckon-head .reckon-verdict{font-size:20px;min-height:1.2em;color:var(--paper-ink-3);font-style:italic;font-weight:500;transition:color .25s}
+.lt-reckon .reckon-head .reckon-verdict.on{color:var(--paper-ink);font-style:normal;font-weight:700;animation:rise .3s ease-out}
+.lt-reckon .reckon-head .reckon-verdict.none{color:var(--paper-ink-3);font-weight:500}
 .lt-reckon .reckon-dots{display:flex;gap:6px}
 .lt-reckon .reckon-dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--c);opacity:.6}
 .lt-reckon .reckon-dots i.done{background:var(--c);opacity:.55}
 .lt-reckon .reckon-dots i.on{background:var(--c);opacity:1;box-shadow:0 0 8px var(--c)}
 .lt-reckon .reckon-count{position:fixed;transform:translate(0,-50%);display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;
   background:var(--paper);color:var(--paper-ink);font-family:var(--serif);font-weight:700;font-size:22px;box-shadow:0 0 0 2px var(--c),0 8px 18px rgba(0,0,0,.5);pointer-events:none;animation:rise .25s ease-out}
-.lt-reckon .reckon-count.won{box-shadow:0 0 0 3px var(--lamp-ink),0 0 22px 6px rgba(var(--lamp),.6);animation:rise .25s ease-out, reckonwin .5s .6s ease-out 2}
+.lt-reckon .reckon-count.won{box-shadow:0 0 0 3px var(--lamp-ink),0 0 22px 6px rgba(var(--lamp),.6);animation:reckonwin .5s ease-out 2}
 @keyframes reckonwin{50%{transform:translate(0,-50%) scale(1.18)}}
 .lt-reckon .reckon-skip{position:absolute;right:18px;bottom:18px;min-height:44px;padding:0 18px;color:var(--cream);border-color:rgba(243,230,200,.4);background:rgba(29,22,17,.7)}
 .token-flight{position:fixed;z-index:45;pointer-events:none;display:grid;place-items:center;will-change:transform}
