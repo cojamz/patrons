@@ -31,7 +31,8 @@ export function ResourceGlyph({ r, size = 16, n = null, decorative = false }) {
       {decorative ? null : <title>{label}</title>}
       {r === 'any'
         ? ANY_WEDGES.map(([k, d]) => <path key={k} d={d} fill={`var(--any-${k})`} />)
-        : <path d={DISC} fill={`var(--q-${r}, var(--${r}))`} />}
+        // white: a cream a step darker than paper, so on a card it reads as a dot, not an empty ring (w2b #39)
+        : <path d={DISC} fill={r === 'white' ? 'var(--white-dot, #d5c8ab)' : `var(--q-${r}, var(--${r}))`} />}
       <circle cx="8" cy="8" r={r === 'white' ? 5.65 : 5.75} fill="none" stroke={r === 'white' ? 'rgba(30,18,8,.55)' : 'rgba(30,18,8,.28)'} strokeWidth={r === 'white' ? 1.2 : 1} />
     </svg>
   );

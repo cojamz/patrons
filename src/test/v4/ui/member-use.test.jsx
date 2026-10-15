@@ -7,7 +7,7 @@ import { render, cleanup, fireEvent } from '@testing-library/react';
 import { allQuadrantIds, quadrant, applyMove } from '../../../engine/v4/index.js';
 import { resume } from '../../../engine/v4/core.js';
 import { table, uidIn } from '../../engine/v4/cards-helpers-b.js';
-import { memberRows, useNow, usableNow } from '../../../v4/game/memberUse.js';
+import { memberRows, useNow, usableNow, safeThisRound } from '../../../v4/game/memberUse.js';
 import { SeatMembers, MemberActions } from '../../../v4/game/MemberUse.jsx';
 import { promptFor } from '../../../v4/format.js';
 import { gainsBetween } from '../../../v4/game/gains.js';
@@ -36,6 +36,14 @@ describe('every use-once member goes through the one flow', () => {
       expect(u.option).toBe(`use:${uid}`);
       if (u.blocked) {
         expect(row.tag.text).toBe('can’t use now');
+        expect(usableNow(s, 0).map(x => x.uid)).not.toContain(uid);
+        return;
+      }
+      if (u.idle) {
+        // worth nothing now: never lit, never named in the prompt, a muted "Use: +0" with the reason (w2b #19)
+        expect(row.tag.text).toBe('nothing to gain now');
+        expect(u.label).toBe('Use: +0');
+        expect(u.why.length).toBeGreaterThan(5);
         expect(usableNow(s, 0).map(x => x.uid)).not.toContain(uid);
         return;
       }
@@ -113,5 +121,26 @@ describe('the seat card list', () => {
     const after = applyMove(s, { player: 0, option: `use:${uid}` });
     const moves = gainsBetween(s, after);
     expect(moves.some(m => m.what === 'res' && m.r === 'gold' && m.n === 7 && m.from.kind === 'member' && m.from.def === 'gold.jackpot')).toBe(true);
+  });
+});
+
+describe('threats you can see coming (w2b #19, #21)', () => {
+  it('a use worth nothing now is muted with its reason; Lie Low reads "safe this round"', () => {
+    const s = table(['gold', 'echo', 'trading', 'thieves'], { members: [['thieves.bigscore'], ['echo.hourglass']], res: [{ magenta: 0 }, { magenta: 1 }] });
+    const uid = uidIn(s, 'thieves.bigscore', 0);
+    const u = useNow(s, 0, uid);
+    expect(u.idle).toBe(true);
+    expect(u.label).toBe('Use: +0');
+    expect(u.why).toMatch(/Safecracker found no magenta/);
+    expect(promptFor(s, true).sub || '').not.toMatch(/Safecracker/);
+    const { container } = render(<MemberActions state={s} uid={uid} me={0} optionFor={optionsOf(s)} onPick={() => {}} />);
+    expect(container.querySelector('[data-use]').dataset.idle).toBe('1');
+    expect(container.textContent).toMatch(/Nothing to gain now: Safecracker found no magenta/);
+    cleanup();
+    expect(safeThisRound(s, 1)).toBe(false);
+    s.players[1].hideout = s.round;
+    const t = structuredClone(s);
+    expect(safeThisRound(t, 1)).toBe(true);
+    expect(safeThisRound(t, 0)).toBe(false);
   });
 });

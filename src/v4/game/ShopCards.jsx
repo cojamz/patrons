@@ -38,6 +38,17 @@ export function sortShop(state, uids, by = 'cost') {
   const byColor = (a, b) => a.q - b.q || a.cost - b.cost || a.d.name.localeCompare(b.d.name) || a.uid - b.uid;
   return rows.sort(by === 'color' ? byColor : byCost).map(r => r.uid);
 }
+/**
+ * The row as it stands (w2b #40: "the shop re-sorts after every recruit, so cards jump under the pointer"): within a
+ * round, a card dealt to refill the row takes the place of the one that left, like a real market row, and nothing else
+ * moves. The row re-sorts at a calm moment: a new round (behind its summary) or the sort toggle. prev = { key, uids }.
+ */
+export function steadyOrder(prev, key, sorted) {
+  if (!prev || prev.key !== key) return sorted;
+  const fresh = sorted.filter(u => !prev.uids.includes(u));
+  const out = prev.uids.map(u => (sorted.includes(u) ? u : fresh.shift() ?? null)).filter(u => u != null);
+  return [...out, ...fresh];
+}
 
 /** A cost as the plate prints it: "4● 2◐", the number before its dot, colored part first, then any (no color names). */
 export function CostShapes({ parts }) {
@@ -72,7 +83,11 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
   // a pick from the top of the pile (Talent Scout): the strip becomes a tray of those 5, in pile order; what you can't
   // pay for recedes (dialogs pod, wave-2 tester: one text chip, the other four never shown)
   const tray = picking && pend.options.some(o => o.kind === 'card' && state.pile.slice(0, 5).includes(o.value)) ? state.pile.slice(0, 5) : null;
-  const uids = tray || [...sortShop(state, state.shop, sort), ...pileOpts];
+  const steady = useRef(null);
+  const rowKey = `${sort}|${state.round}`;
+  const row = steadyOrder(steady.current, rowKey, sortShop(state, state.shop, sort));
+  steady.current = { key: rowKey, uids: row };
+  const uids = tray || [...row, ...pileOpts];
   const affordable = viewer ? uids.filter(u => paymentPlan(state, viewer, u)).length : 0;
   return (
     <section className="lt-shop-cards" data-phase={phase} data-sort={sort} data-tray={tray ? 'pile' : undefined} aria-label="Shop">
@@ -217,7 +232,8 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
             aria-haspopup="dialog" data-rate={t.key}
             aria-label={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}${t.limited ? ` (${left} left in this game)` : ''}`}
             onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'tier', tier: t }, e.currentTarget))}>
-            <Tip className="fb-tip" hint={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}`} content={() => (
+            {/* a move closes it (keyed by the move): after a buy it stayed open and flipped to "You hold 0: 10 short" (w2b #47) */}
+            <Tip key={state.moves} className="fb-tip" hint={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}`} content={() => (
               <div className="pop-card rate-card" data-rate-card={t.key}>
                 <b>{t.cost} resources → {t.get} follower{t.get > 1 ? 's' : ''}</b>
                 <span>Any colors, any mix, as your one buy.</span>

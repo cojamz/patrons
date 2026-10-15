@@ -464,6 +464,10 @@ export function tiebreakWord(label) {
 /** For a row tied on the shown count, its tiebreak ("2 red members"), else null. */
 export function tiebreakNote(st, row) {
   if (!st.tiebreak || row.tiebreak == null) return null;
+  // only where the tiebreak decides something: a tie for the lead, among players who have any (w2b #45: "(0 yellow)"
+  // under every player, and a note for someone with no sets)
+  const top = Math.max(...st.rows.map(r => r.shown));
+  if (!row.shown || row.shown !== top) return null;
   const tied = st.rows.some(r => r !== row && r.shown === row.shown);
   // "1 red member", "2 red members"
   return tied ? `${row.tiebreak} ${row.tiebreak === 1 ? st.tiebreak.unit.replace(/members$/, 'member') : st.tiebreak.unit}` : null;

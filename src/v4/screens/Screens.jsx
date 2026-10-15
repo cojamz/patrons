@@ -136,8 +136,9 @@ export function TablePicker({ value, onChange, readOnly = false }) {
       </div>
       {mode !== 'custom' || readOnly ? (
         <div className="table-chips">
-          {quadrants.map(id => <TableChip key={id} id={id} />)}
+          {/* Reroll first, so it stays under the pointer while the names after it change width (w2b #33) */}
           {mode === 'random' && !readOnly && <button type="button" className="btn ghost" data-reroll onClick={() => { let t; do { t = randomTable(); } while (sameTable(t, quadrants)); onChange({ mode, quadrants: t }); }}>Reroll</button>}
+          {quadrants.map(id => <TableChip key={id} id={id} />)}
         </div>
       ) : (
         <>

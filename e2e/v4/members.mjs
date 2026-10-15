@@ -4,14 +4,20 @@
 // Purple table and is about to place in round I. Build-failing assertions:
 //  (m1) your seat card is your members: one row each with its whole ability (every word of the card's text, never cut:
 //       no ellipsis, no clipping), no Followers / Has / Last moves rows, whole on screen (a long list scrolls inside);
-//  (m2) a member you can use now is lit in your seat (Lottery Winner, Heiress, Go-Getter); one already used reads
+//  (m2) a member you can use now is lit in your seat (Lottery Winner, Heiress); one already used reads
 //       "used" (Speculator); one the engine would refuse now stays unlit (Pawnbroker, nothing to sell); switches show
 //       their state (Midas on, Translator off) in the seat and in the seat card;
 //  (m3) the lit member's hover has a "Use: +7 ●" button that works: the pointer can move onto it, a click uses it (gold
 //       up by what it said, in the saved game), pieces fly, and it reads "used" in the seat, its hover and the seat card;
 //  (m4) the seat card's own Use button works too (Heiress: +1 white per member);
 //  (m5) the prompt names what you can use once, quietly, and only what would do something;
-//  (m6) a rival's seat card lists their members with no Use buttons.
+//  (m6) a rival's seat card lists their members with no Use buttons;
+//  (m7) w2b #20: every seat's card opens right beside its seat (pointing at its leader or its name), level with it,
+//       whole on screen; never docked away over the wheel;
+//  (m8) w2b #19: a use worth nothing now (Safecracker, no rival holds 2 magenta) is never lit or named in the prompt;
+//       its row and hover read a muted "Use: +0" with the reason;
+//  (m9) w2b #21: a rival's use still in hand is marked on their seat (P2's Stunt Double, subdued); a seat no one can
+//       steal from this round says "safe this round" (P3 lies low), in its seat and its card.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/members/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -57,6 +63,7 @@ const seatCard = pid => page.evaluate(id => {
         cut: a.scrollWidth > a.clientWidth + 1 || a.scrollHeight > a.clientHeight + 1 || st.textOverflow === 'ellipsis' || st.whiteSpace === 'nowrap' || st.webkitLineClamp !== 'none' && st.webkitLineClamp !== '',
         tag: (r.querySelector('.mu-tag') || {}).textContent || '', use: (r.querySelector('[data-use]') || {}).textContent || '',
         sw: (r.querySelector('[data-switch]') || {}).dataset?.switch || '',
+        idle: !!r.querySelector('[data-use][data-idle]'), why: (r.querySelector('[data-use]') || {}).title || '',
       };
     }),
   };
@@ -83,9 +90,19 @@ try {
   const fig = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-cult="0"] .cs-member')].map(m => [m.dataset.member, {
     state: m.dataset.state || '', lit: m.classList.contains('ready'), sw: (m.querySelector('[data-switch]') || {}).dataset?.switch || '',
   }])));
-  for (const id of ['gold.jackpot', 'trading.heiress', 'purple.secondwind']) if (!fig[id] || !fig[id].lit || fig[id].state !== 'ready') fail(`${id} isn't lit in your seat though you can use it now: ${JSON.stringify(fig[id])}`, 'm2');
+  for (const id of ['gold.jackpot', 'trading.heiress']) if (!fig[id] || !fig[id].lit || fig[id].state !== 'ready') fail(`${id} isn't lit in your seat though you can use it now: ${JSON.stringify(fig[id])}`, 'm2');
   if (!fig['gold.speculator'] || fig['gold.speculator'].state !== 'used' || fig['gold.speculator'].lit) fail(`Speculator (used) doesn't read used in your seat: ${JSON.stringify(fig['gold.speculator'])}`, 'm2');
   if (fig['trading.pawnbroker'] && fig['trading.pawnbroker'].lit) fail('Pawnbroker is lit, but using it now would do nothing (no loose followers)', 'm2');
+  if (fig['thieves.bigscore'] && fig['thieves.bigscore'].lit) fail('Safecracker is lit, but using it now gives 0', 'm8');
+  // (m9) a rival's loaded use, subdued; the seat that lies low says so
+  const marks = await page.evaluate(() => ({
+    stunt: (() => { const m = document.querySelector('[data-cult="1"] .cs-member[data-member="echo.hourglass"]'); return m ? { loaded: m.classList.contains('loaded'), ready: m.classList.contains('ready'), filter: getComputedStyle(m.querySelector('.sprite')).filter } : null; })(),
+    pincher: (() => { const m = document.querySelector('[data-cult="1"] .cs-member[data-member="gold.thrift"]'); return m ? m.classList.contains('loaded') : null; })(),
+    safe: [0, 1, 2, 3].map(id => !!document.querySelector(`[data-cult="${id}"] [data-safe]`) && /safe this round/.test(document.querySelector(`[data-cult="${id}"] [data-safe]`).textContent)),
+  }));
+  if (!marks.stunt || !marks.stunt.loaded || marks.stunt.ready || !/drop-shadow/.test(marks.stunt.filter)) fail(`P2's Stunt Double (a use in hand) isn't marked on P2's seat: ${JSON.stringify(marks.stunt)}`, 'm9');
+  if (marks.pincher) fail('P2\'s Penny Pincher (no use) is marked as a use in hand', 'm9');
+  if (JSON.stringify(marks.safe) !== JSON.stringify([false, false, true, false])) fail(`"safe this round" on seats ${JSON.stringify(marks.safe)} (want only P3's)`, 'm9');
   if (!fig['gold.midas'] || fig['gold.midas'].sw !== 'on') fail(`Midas's switch in your seat: ${JSON.stringify(fig['gold.midas'])}`, 'm2');
   if (fig['echo.translator'] && fig['echo.translator'].sw !== 'off') fail(`Translator's switch in your seat: ${JSON.stringify(fig['echo.translator'])}`, 'm2'); // it may be folded into "+N"
   const lit = await page.$$eval('.lt-cult-seat .cs-member.ready', els => els.map(e => e.closest('[data-cult]').dataset.cult));
@@ -93,7 +110,7 @@ try {
 
   // (m5) the prompt
   const sub = await page.evaluate(() => document.querySelector('[data-prompt-sub]')?.textContent || '');
-  if (!/\buse\b/.test(sub) || /Pawnbroker|Speculator/.test(sub)) fail(`the prompt's use line: "${sub}"`, 'm5');
+  if (!/\buse\b/.test(sub) || /Pawnbroker|Speculator|Safecracker/.test(sub)) fail(`the prompt's use line: "${sub}"`, 'm5');
 
   // (m1) your seat card
   await pointAt('[data-cult="0"] .cs-head', 14);
@@ -115,6 +132,8 @@ try {
     if (row('gold.speculator').state !== 'used' || row('gold.speculator').tag !== 'used') fail(`Speculator's row: ${JSON.stringify(row('gold.speculator'))}`, 'm1');
     if (!/^Use: \+7/.test(row('gold.jackpot').use)) fail(`Lottery Winner's row has no "Use: +7" button: ${JSON.stringify(row('gold.jackpot'))}`, 'm1');
     if (row('trading.pawnbroker').use) fail('Pawnbroker offers a Use button that would do nothing', 'm1');
+    const zero = row('thieves.bigscore');
+    if (zero.state !== 'idle' || zero.use !== 'Use: +0' || !zero.idle || !/magenta/.test(zero.why)) fail(`Safecracker (worth 0 now) in the seat card: ${JSON.stringify(zero)}`, 'm8');
     if (row('gold.midas').sw !== 'on' || row('echo.translator').sw !== 'off') fail(`switches in the seat card: Midas ${row('gold.midas').sw}, Translator ${row('echo.translator').sw}`, 'm1');
     if (row('gold.banker').tag !== 'pays at round start') fail(`Banker's tag: "${row('gold.banker').tag}"`, 'm1');
     if (row('gold.tycoon').tag !== 'scores at game end') fail(`Tycoon's tag: "${row('gold.tycoon').tag}"`, 'm1');
@@ -181,6 +200,39 @@ try {
   }
   await away();
 
+  // (m8) Safecracker's own hover: muted, with the reason
+  await pointAt('[data-cult="0"] .cs-member[data-member="thieves.bigscore"] .fig');
+  await page.waitForTimeout(300);
+  const sh = await page.evaluate(() => { const b = document.querySelector('[data-tip-body] [data-use]'); const w = document.querySelector('[data-tip-body] [data-idle-why]'); return b ? { text: b.textContent.trim(), idle: b.dataset.idle === '1', bg: getComputedStyle(b).backgroundColor, why: w ? w.textContent : '' } : null; });
+  if (!sh || !sh.idle || sh.text !== 'Use: +0' || !/rgba\(0, 0, 0, 0\)|transparent/.test(sh.bg) || !/Nothing to gain now: .*magenta/.test(sh.why)) fail(`Safecracker's hover (worth 0 now): ${JSON.stringify(sh)}`, 'm8');
+  else await page.screenshot({ path: `${SHOTS}/6-use-worth-nothing.png` });
+  await away();
+
+  // (m7) every seat's card beside its seat, from its leader and from its name
+  for (const pid of [0, 1, 2, 3]) {
+    for (const part of ['.cs-leader', '.cs-who']) {
+      await away();
+      if (!(await page.$(`[data-cult="${pid}"] ${part}`))) { fail(`seat ${pid} has no ${part}`, 'm7'); continue; }
+      await pointAt(`[data-cult="${pid}"] ${part}`);
+      await page.waitForTimeout(250);
+      const r = await page.evaluate(id => {
+        const L = document.querySelector('[data-hover-layer][data-open="1"]');
+        if (!L || !L.querySelector(`[data-seat-card="${id}"]`)) return null;
+        const a = L.getBoundingClientRect(), s = document.querySelector(`[data-cult="${id}"]`).getBoundingClientRect();
+        return { gap: Math.round(Math.max(a.left - s.right, s.left - a.right)), level: a.top <= s.bottom && a.bottom >= s.top, inView: a.top >= 0 && a.left >= 0 && a.bottom <= innerHeight + 0.5 && a.right <= innerWidth + 0.5 };
+      }, pid);
+      if (!r) { fail(`pointing at seat ${pid}'s ${part} opened no seat card`, 'm7'); continue; }
+      if (r.gap < 0 || r.gap > 16 || !r.level) fail(`seat ${pid}'s card (from ${part}) isn't right beside the seat: ${JSON.stringify(r)}`, 'm7');
+      if (!r.inView) fail(`seat ${pid}'s card runs off the window`, 'm7');
+      if (pid === 2 && part === '.cs-leader') {
+        const safe = await page.evaluate(() => document.querySelector('[data-hover-layer][data-open="1"] [data-safe]')?.textContent || '');
+        if (!/this round/.test(safe)) fail(`P3's card doesn't say it's safe from steals this round: "${safe}"`, 'm9');
+        await page.screenshot({ path: `${SHOTS}/7-beside-the-seat.png` });
+      }
+    }
+  }
+  await away();
+
   // (m6) a rival's card
   await pointAt('[data-cult="1"] .cs-head', 14);
   await page.waitForTimeout(250);
@@ -202,4 +254,4 @@ if (fails.length) {
   console.error(`members: ${fails.length} problem(s)\n  ${fails.join('\n  ')}`);
   process.exit(1);
 }
-console.log('members: ok (seat card lists every ability in full; lit, used and switch states; Use from the hover and the seat card)');
+console.log('members: ok (every ability in full; lit, used, worth-nothing and switch states; Use from the hover and the seat card; cards beside their seats; rival uses in hand and safe seats marked)');
