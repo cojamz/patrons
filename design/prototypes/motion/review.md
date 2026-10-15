@@ -73,7 +73,7 @@ Landed as well: 5 (the pulse is now inside the read hold) and 6 (the worth hop's
 - 10: **not reproduced** on the 05:32 code (one live run: the gold's hold went 5 → 9, then let go at 10). Keep the clamp guard anyway; a held number outside a stack's before and after values should never reach the screen.
 - 7: **still open.** The turn card mounts at +474ms, and the bundle leaves at +1113ms.
 
-## Round 4 (05:50, live tree as of 05:39): deterministic filmstrips
+## Round 4 (05:44, live tree as of 05:39): deterministic filmstrips
 New instrument: **filmstrip** (`design/prototypes/motion/film.mjs`). Playwright's fake clock drives every timer, rAF and `performance.now`, and each Web Animation is seeked to the same virtual time before each screenshot. A frame at "400" is exactly 400ms into the chain at Steady, whatever the box's load. Usage: `node design/prototypes/motion/film.mjs <url> <outdir> steady 4 "<space regex>" <ms> <step> 2 place|rival`. Unlike the live traces, everything below is load-free.
 
 19. **Your stack shows the final number at the click, then goes back.** Golden Years with Prospector: at 0ms your gold reads **10** (the final), at 50ms **5** (the hold), and later 10 again (`review-r4-gain-stack-filmstrip.png`, the first two frames). That's a 5 → 10 → 5 → … → 10 flicker on every gain. The holds are set inside `schedule(base, …)` (director.js), so they land a frame after React has painted the new state. Fix: set every hold synchronously in the layout effect, before the first paint of the new state.
@@ -84,7 +84,7 @@ New instrument: **filmstrip** (`design/prototypes/motion/film.mjs`). Playwright'
 
 The good, load-free: the "+4" bundle reads as one handful with its count (300–350ms); its arc from the space to the stack is clean; Prospector hops at the bundle's two-thirds point and its dot leaves the member and lands after the bundle (500–650ms). The order is right; the numbers aren't yet.
 
-## Round 5 (06:00, filmstrips of your recruit and the next rival's turn; live tree as of 05:39)
+## Round 5 (05:47, filmstrips of your recruit and the next rival's turn; live tree as of 05:39)
 `review-r5-recruit-filmstrip.png` (your Intern, 0–500ms) and `review-r5-release-filmstrip.png` (P3's gain and release, 1250–1500ms).
 
 23. **The end state paints at the click, then the chain rewinds it (cards too).** At 0ms the Intern is already in your crowd and your red reads 4. At 100ms the chip is gone, your red reads 5 again, and the Intern is back in the shop, lifted. The same root as 19 (the holds and the "not landed yet" hiding run a frame late). Fix as in 19: hide a recruited chip and hold every number in the layout effect, before the first paint of the new state.
@@ -95,7 +95,7 @@ The good, load-free: the "+4" bundle reads as one handful with its count (300–
 
 The good, load-free: the payment really comes before the purchase (the coin leaves your red at about 150–200ms; the card holds lifted and leaves at about 450, when the coin is most of the way there); the card's flight from the shop over the wheel to your crowd is one clean arc; P3's "+5" bundle reads at a glance.
 
-## Round 6 (06:10, filmstrip of a 10-for-10 follower buy; live tree as of 05:39)
+## Round 6 (05:50, filmstrip of a 10-for-10 follower buy; live tree as of 05:39)
 `review-r6-follower-buy-filmstrip.png` (your count on the left, the rates on the right, 0–1550ms).
 
 28. **The follower count counts late, dim and slow.** The coins drop into the 10-for-10 tile (650ms), and the "+10" bundle reaches your count at about 1000. Its label lands over the count's digit ("6 +10★", as in 14). The count then changes in a dimmed tan instead of its cream (6 → 7 → 12 → 15 → 16, 1100 to about 1650ms): that's `Tick`'s 300ms + 30ms a step, capped at 550, starting about 100ms after the landing. M11 and §4: on the bundle's landing the count rolls in 240ms at full brightness with a 1.24 settle. A dimmed number reads as disabled; the eye should see the score jump up, not fade through it.

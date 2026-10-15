@@ -286,7 +286,7 @@ b.num[data-hold]::after{content:attr(data-hold);visibility:visible;position:abso
 /* Start and Back never leave the screen, however long the page gets (Custom table: RC1 sweep 5): the page scrolls
    inside, below the narrow app's top gap, and its buttons stick to its foot */
 .app.narrow > .dialog.page{max-height:calc(100dvh - 6vh - 24px)}
-.dialog.page > .row-btns{position:sticky;bottom:0;z-index:2;margin:0 -4px -4px;padding:12px 4px 4px;background:linear-gradient(to bottom,transparent,var(--table-2) 14px)}
+.dialog.page > .row-btns{position:sticky;bottom:-18px;z-index:2;margin:0 -4px -18px;padding:12px 4px 18px;background:linear-gradient(to bottom,transparent,var(--table-2) 14px)}
 .dialog.page > .row-btns .btn.pri{min-width:112px}
 .dialog h2{font-family:var(--display);font-weight:400;margin:0;font-size:var(--fs-5)}
 .dialog.confirm{max-width:380px}

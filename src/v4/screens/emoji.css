@@ -12,6 +12,8 @@
 .emoji-cell:hover:not(:disabled),.emoji-cell:focus-visible{background:var(--table-2);border-color:var(--rim)}
 .emoji-cell.on{background:var(--table-3);border-color:var(--ink)}
 .emoji-cell.taken{opacity:.25;filter:grayscale(.7);cursor:not-allowed}
+/* wide enough: two even rows of ten that fill the box, not five columns hugging its left edge with the rest empty */
+@media (min-width:560px){.emoji-grid{grid-template-columns:repeat(10,minmax(0,1fr));justify-items:center;gap:4px 0}}
 @keyframes emoji-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.emoji-grid{animation:none}}
 /* the lobby's bot row: level picker beside Add bot */
