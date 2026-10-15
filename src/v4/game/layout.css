@@ -183,3 +183,6 @@
 .lt > .lt-seat .cs-bonus,.lt > .lt-seat .cs-bonus small{color:var(--lamp-ink)}
 .lt > .lt-seat .cs-bonus .cs-inc{display:inline-flex;align-items:center;gap:4px}
 .lt > .lt-seat .cs-bonus .follower-mark{color:var(--lamp-ink)}
+/* the Reckoning's card at the wheel's centre (Reckoning.jsx at-mid): narrow enough to stay inside every rim */
+.lt-reckon .reckon-head.at-mid{bottom:auto;transform:translate(-50%,-50%);width:max-content;max-width:min(var(--mid-w, 440px), 440px);box-sizing:border-box}
+.lt-reckon .reckon-head.at-mid .reckon-counts{max-width:100%}

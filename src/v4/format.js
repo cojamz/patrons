@@ -700,7 +700,8 @@ export function turnStory(start, end, actor, me = null, mid = null) {
       const d = gross(p.id);
       const lost = d.filter(([, x]) => x < 0), got = d.filter(([, x]) => x > 0);
       if (lost.length) {
-        out.push(`from ${nm(p.id)} ${plain(lost)}`);
+        // the amount first ("1● from P2"): "from P2 1●" read as "P21" (w3b, as the summary's counts did)
+        out.push(`${plain(lost)} from ${nm(p.id)}`);
         if (p.id === me) hit = `took ${lost.map(([r, x]) => `${Math.abs(x)} of your ${r}`).join(', ')}`;
       }
       if (got.length) out.push(`${nm(p.id)} ${signed(got)}`);
@@ -788,7 +789,7 @@ export function effectStory(start, end, actor, me = null, fx = []) {
       if (p.id === owner) continue;
       const lost = Object.entries(g.res[p.id]).filter(([, d]) => d < 0), got = Object.entries(g.res[p.id]).filter(([, d]) => d > 0);
       // the actor's own doing reads "from you 3 gold"; a member's reads as its changes ("Raider: you −3 followers")
-      if (lost.length && owner === actor && g.cause && g.cause.kind !== 'member' && !got.length && !g.fol[p.id]) bits.push(`from ${nm(p.id)} ${lost.map(([r, d]) => `${-d} ${r}`).join(', ')}`);
+      if (lost.length && owner === actor && g.cause && g.cause.kind !== 'member' && !got.length && !g.fol[p.id]) bits.push(`${lost.map(([r, d]) => `${-d} ${r}`).join(', ')} from ${nm(p.id)}`);
       else if (lost.length || got.length || g.fol[p.id]) bits.push(`${nm(p.id)} ${signedOf(g, p.id)}`);
       if (p.id === me) {
         const c = g.cause || {};

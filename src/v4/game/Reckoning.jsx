@@ -34,6 +34,15 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   const [beat, setBeat] = useState(0); // within it: 0 counting, 1 the verdict (the prize in the air), 2 landed
   const [seen, setSeen] = useState(0); // how many seats' counts have stamped in so far
   const [atTop, setAtTop] = useState(false); // the card sits on the far side of the wheel from the rim it scores
+  // laptop: the card stands still at the wheel's centre, inside every rim, so it never covers the rim being scored and the
+  // eye doesn't chase it from top to bottom (w3b #51); phones keep the top/bottom flip
+  const [mid, setMid] = useState(null);
+  useLayoutEffect(() => {
+    const stage = root && root.querySelector('.lt-wheel .stage');
+    const b = stage && stage.getBoundingClientRect();
+    if (!b || !b.width || typeof matchMedia !== 'function' || !matchMedia('(min-width:861px) and (min-height:500px)').matches) { setMid(null); return; }
+    setMid({ left: Math.round(b.left + b.width / 2), top: Math.round(b.top + b.height / 2), w: Math.round(b.width * 0.78) });
+  }, [root, info]);
   // a beat after the round's last move (its "Turn passes." note) before the first rim lights (tester B #23)
   const [ready, setReady] = useState(() => !motionOK());
   useEffect(() => { if (ready) return undefined; const t = setTimeout(() => setReady(true), MO.reckonLead); return () => clearTimeout(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -151,7 +160,7 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
   const shownBeat = step < rows.length ? beat : 2;
   return (
     <div className="lt-reckon" role="dialog" aria-modal="true" aria-label={`Round ${info.result.round} reckoning`} data-reckon={row ? row.qid : ''} onClick={finish}>
-      <div className={`reckon-head${atTop ? ' at-top' : ''}`} style={{ '--c': row ? `var(--${row.qid})` : undefined }} aria-live="polite">
+      <div className={`reckon-head${mid ? ' at-mid' : atTop ? ' at-top' : ''}`} style={{ '--c': row ? `var(--${row.qid})` : undefined, ...(mid ? { left: mid.left, top: mid.top, '--mid-w': `${mid.w}px` } : null) }} aria-live="polite">
         <small>Round {info.result.round} scoring · {Math.min(step + 1, rows.length)} of {rows.length}</small>
         {row && <b className="reckon-rule">{row.rule}</b>}
         {row && row.counts && <span className="reckon-counts">Counts {row.counts}{row.tiebreak && row.tiebreak.text ? `; ${row.tiebreak.text}` : ''}.</span>}
