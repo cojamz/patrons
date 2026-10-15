@@ -9,3 +9,4 @@ dist/
 .v4-panel/
 .v4-wt/
 vite.config.js.timestamp-*
+.snap-probe/
