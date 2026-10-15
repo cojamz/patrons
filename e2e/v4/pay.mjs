@@ -8,12 +8,14 @@
 //       headline, never over the wheel; a color lifts, the rivals' seats light; a seat click gives (the engine's id).
 //  (w1) Even Swap, two steps: your members light; one lifts and the rivals' members it pairs with light; a click swaps.
 //  (k1) The keyboard list: absent for the mouse; Tab from the caption opens it with every pick.
+//  Wave-2 tester B: (s8) Snap Up pays through the sheet; (t1) Talent Scout's top 5 as cards; (y1) Your Call in marks at
+//  the space; (r1) Release from your member's card, no header dropdown; (d1) Double Agent's forced swap explained.
 // Saves: e2e/v4/lib/dialog-save.mjs. Server: $V4_URL if set, else its own `npx vite` on a free port from 5390.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
-import { paySave, swapSave, comboSave } from './lib/dialog-save.mjs';
+import { paySave, swapSave, comboSave, momentSave } from './lib/dialog-save.mjs';
 import { stealSave } from './lib/steal-save.mjs';
 import { memberPrice, TIERS, cardDef } from '../../src/engine/v4/index.js';
 import { costParts } from '../../src/v4/format.js';
@@ -210,6 +212,93 @@ try {
     }
     await ctx.close();
   }
+  // (s8) Snap Up's payment uses the same sheet: sockets at the price it's paid under (any colors), Enter pays
+  {
+    const save = momentSave('snappay');
+    const st = save.state, w = st.pending.options[0];
+    const { ctx, page } = await open('s8', save, '.dialog.pay');
+    const n = await page.$$eval('.dialog.pay [data-socket]', els => els.length);
+    if (n !== memberPrice(st, st.players[0], w.uid, w.how).total) errors.push(`(s8) ${n} sockets for Snap Up's price ${memberPrice(st, st.players[0], w.uid, w.how).total}`);
+    if (await page.$('.prompt.choice .opts')) errors.push('(s8) Snap Up still shows a list of ways to pay');
+    await page.screenshot({ path: `${SHOTS}/s8-snapup-pay.png` });
+    const want = await page.$eval('.pay-go', e => e.dataset.option);
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 5000 }).catch(() => errors.push('(s8) Enter did not pay'));
+    const rec = await lastMove(page);
+    if (rec && rec !== want) errors.push(`(s8) paid ${rec}, the sheet showed ${want}`);
+    await ctx.close();
+  }
+  // (t1) Talent Scout: the top 5 of the pile as cards in the strip, the ones you can pay for lit; a click picks
+  {
+    const save = momentSave('scout');
+    const st = save.state;
+    const { ctx, page } = await open('t1', save, '.lt-shop-cards[data-tray="pile"]');
+    const shown = await page.$$eval('.lt-shop .lt-card[data-uid]', els => els.map(e => e.dataset.uid));
+    if (shown.join() !== st.pile.slice(0, 5).join()) errors.push(`(t1) the tray shows ${shown.join(' ')}, the top 5 are ${st.pile.slice(0, 5).join(' ')}`);
+    const lit = await page.$$eval('.lt-shop .lt-card.lit[data-uid]', els => els.map(e => e.dataset.uid).sort());
+    const want = st.pending.options.filter(o => o.kind === 'card').map(o => String(o.value)).sort();
+    if (lit.join() !== want.join()) errors.push(`(t1) lit ${lit.join(' ')} ≠ the engine's ${want.join(' ')}`);
+    if (await page.$$eval('.lt-shop .lt-card.recede[data-uid]', els => els.length) !== 5 - want.length) errors.push('(t1) the ones you can’t pay for don’t recede');
+    if (/magenta|any\b/.test(await page.$eval('.lt-shop .lt-cards', e => e.innerText))) errors.push('(t1) a cost is written in words');
+    await page.screenshot({ path: `${SHOTS}/t1-scout-tray.png` });
+    await click(page, `.lt-shop .lt-card.lit[data-uid="${want[0]}"]`);
+    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 5000 }).catch(() => errors.push('(t1) clicking a lit card did nothing'));
+    await ctx.close();
+  }
+  // (y1) Your Call: big tiles in marks (no color words), at the space you just took
+  {
+    const save = momentSave('yourcall');
+    const st = save.state;
+    const { ctx, page } = await open('y1', save, '.prompt.choice.plain .opts.big');
+    const words = await page.$eval('.prompt.choice.plain .opts', e => e.innerText);
+    if (/white|follower/i.test(words)) errors.push(`(y1) the options read "${words.replace(/\s+/g, ' ')}"`);
+    const marks = await page.$$eval('.prompt.choice.plain .opts .mark-amt', els => els.length);
+    if (marks < 4) errors.push(`(y1) ${marks} marks on Your Call's options`);
+    const near = await page.evaluate(key => {
+      const c = document.querySelector('.prompt.choice.plain').getBoundingClientRect(), sl = document.querySelector(`.lt-wheel [data-slot="${key}"]`).getBoundingClientRect();
+      const dx = Math.max(0, sl.left - c.right, c.left - sl.right), dy = Math.max(0, sl.top - c.bottom, c.top - sl.bottom);
+      return Math.round(Math.hypot(dx, dy));
+    }, st.players[0].lastSlot.key);
+    if (near > 40) errors.push(`(y1) the question sits ${near}px from the space you took`);
+    await page.screenshot({ path: `${SHOTS}/y1-yourcall.png` });
+    await click(page, '.prompt.choice.plain .opts .btn[data-option="amount:2"]');
+    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 5000 }).catch(() => errors.push('(y1) a tile did nothing'));
+    await ctx.close();
+  }
+  // (r1) Release on the seat: your member's card offers "Release: +N ●"; no header dropdown
+  {
+    const save = momentSave('release');
+    const st = save.state;
+    const { ctx, page } = await open('r1', save, '.lt[data-phase="buy"][data-yours="1"]');
+    if (await page.$('.lt-prompt .rel-toggle, .lt-prompt .release-row')) errors.push('(r1) the header still has a Release dropdown');
+    const o = st.pending.options.find(x => x.kind === 'release');
+    await page.hover(`.lt-seat.mine .cs-member[data-uids~="${o.uid}"] .fig`);
+    const btn = await page.waitForSelector(`[data-release][data-option="${o.id}"]`, { timeout: 3000 }).catch(() => null);
+    if (!btn) errors.push('(r1) the member’s card offers no Release');
+    else {
+      if (!(await btn.$('.pip'))) errors.push('(r1) the refund is not a dot');
+      const t = await btn.innerText();
+      if (!new RegExp(`\\+${o.refund}`).test(t) || /red|blue|green|magenta/.test(t)) errors.push(`(r1) the button reads "${t}"`);
+      await page.screenshot({ path: `${SHOTS}/r1-release.png` });
+      await btn.click();
+      await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 5000 }).catch(() => errors.push('(r1) Release did nothing'));
+      const rec = await lastMove(page);
+      if (rec && rec !== o.id) errors.push(`(r1) recorded ${rec}`);
+    }
+    await ctx.close();
+  }
+  // (d1) Double Agent's forced swap: asked on the board, its rule under the headline, its figure marked as asking
+  {
+    const save = momentSave('doubleagent');
+    const { ctx, page } = await open('d1', save, '.seat-pick.docked');
+    const how = await page.$eval('.lt-prompt .pick-how', e => e.textContent).catch(() => '');
+    if (!/When recruited/.test(how)) errors.push(`(d1) the line under the headline reads "${how}"`);
+    if (!(await page.$('.lt-seat.mine .cs-member.pick-asker'))) errors.push('(d1) your Double Agent is not marked as the one asking');
+    const lit = await page.$$eval('.lt-seat:not(.mine) .cs-member.pick-on', els => els.length);
+    if (!lit) errors.push('(d1) no rival member is lit');
+    await page.screenshot({ path: `${SHOTS}/d1-double-agent.png` });
+    await ctx.close();
+  }
 } catch (e) {
   errors.push(`crashed: ${e.stack || e.message}`);
 } finally {
@@ -217,4 +306,4 @@ try {
   if (server) server.kill();
 }
 if (errors.length) { console.error(`dialogs gate: ${errors.length} problem(s)\n - ${errors.join('\n - ')}`); process.exit(1); }
-console.log('dialogs gate: ok (pay sheet, follower buy, single way, Good Deed, Even Swap, keyboard list)');
+console.log('dialogs gate: ok (pay sheet, follower buy, single way, Good Deed, Even Swap, keyboard list, Snap Up pay, Talent Scout tray, Your Call, Release, Double Agent)');

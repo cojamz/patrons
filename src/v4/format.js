@@ -120,7 +120,7 @@ export function promptFor(state, mine) {
       const short = String(pend.prompt || '').length <= 36;
       return asker && asker !== name
         // options that all point at seats are answered on the cults (the seat selector, game/seatPick.js)
-        ? { who: p, text: `${asker}: ${pend.options.some(o => o.target) ? 'pick on the board' : 'choose below'}`, keepCase: true }
+        ? { who: p, text: `${asker}: ${pend.options.some(o => o.target) ? 'pick on the board' : 'choose one'}`, keepCase: true }
         : short ? { who: p, text: pend.prompt } : { who: p, text: 'Choose below' };
     }
     default:

@@ -26,7 +26,8 @@ describe('a resource is a plain dot, and always says its name', () => {
       const g = container.querySelector(`.pip svg.res-glyph[data-res-glyph="${r}"]`);
       expect(g, r).not.toBeNull();
       expect(container.querySelector('.pip').getAttribute('title')).toBe(`2 ${r}`);
-      expect(g.querySelector('path').getAttribute('fill')).toContain(`var(--${r})`);
+      // white is a cream a step darker than paper, so it reads as a dot on a card (design pod, w2b #39)
+      expect(g.querySelector('path').getAttribute('fill')).toContain(r === 'white' ? 'var(--white-dot' : `var(--${r})`);
       fills.set(r, g.querySelector('path').getAttribute('fill'));
       cleanup();
     }

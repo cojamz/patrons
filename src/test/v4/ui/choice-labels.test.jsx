@@ -30,9 +30,12 @@ describe('choice labels say what happens', () => {
     const loaded = JSON.parse(JSON.stringify(s));
     expect(show(loaded).querySelector('.tally').textContent).toMatch(/^1 of 3 taken/);
   });
-  it('color picks show the engine’s label for every color ("+2 gold", never a bare "Gold")', () => {
+  // the engine's "+2 gold" reads as the plate writes it (Cory: dots, not color words): "+2" and the gold dot, titled
+  it('color picks show the engine’s amount and its color as a dot ("+2●", never a bare "Gold" or the word)', () => {
     const s = sceneQ({ quadrants: CLASSIC });
     s.pending = { player: 0, kind: 'choose', prompt: 'Social Climber: +2 of which color?', options: s.resources.map(c => ({ id: `color:${c}`, label: `+2 ${c}`, kind: 'color', value: c })) };
-    expect([...show(s).querySelectorAll('.opts button')].map(b => b.textContent)).toEqual(['+2 gold', '+2 red', '+2 blue', '+2 green']);
+    const btns = [...show(s).querySelectorAll('.opts button')];
+    expect(btns.map(b => b.textContent.trim())).toEqual(['+2', '+2', '+2', '+2']);
+    expect(btns.map(b => b.querySelector('.pip').getAttribute('title'))).toEqual(['2 gold', '2 red', '2 blue', '2 green']);
   });
 });

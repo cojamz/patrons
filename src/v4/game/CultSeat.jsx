@@ -51,16 +51,20 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const incomeWords = incomeParts.map(([r, n]) => `+${n} ${r}`).concat(income && income.followers > 0 ? [`+${income.followers} follower${income.followers === 1 ? '' : 's'}`] : []);
   // member figures shown before "+N": one row beside the "each round" line, so every chair keeps one fixed height
   // (the seat column is narrower now: six figures ran under "each round +3●"; each income part takes a figure's room)
-  // (design pod, w2b #22: figures are 32px on the laptop so a rival's members can be told apart: seven to a row, and
-  // the "each round" line takes about one figure per part plus its label)
-  const MAX = incomeWords.length ? Math.max(1, 4 - incomeWords.length) : 7;
-  // a member you can use now, or one the board picker lights (folded, it could only be picked from the keyboard list),
-  // is never folded into "+N": it takes the place of the last one that's only shown
-  const isReady = g => g.uids.some(u => ready.has(u) || !!(pick && pick.members && pick.members[u]));
-  const late = groups.slice(MAX).filter(isReady);
+  // (design pod, w2b #22: figures are 32px on the laptop so a rival's members can be told apart: six and a "+N" to a
+  // row, and the "each round" line takes about one figure per part plus its label)
+  const MAX = incomeWords.length ? Math.max(1, 4 - incomeWords.length) : 6;
+  // what's never folded into "+N", most needed first: one you can use now or the board picker lights (folded, it could
+  // only be picked from the keyboard list), then a use still in hand (a rival's loaded Raider is a threat to see
+  // coming, w2b #21); each takes the place of the last one shown that's needed less
+  const need = g => (g.uids.some(u => ready.has(u) || !!(pick && pick.members && pick.members[u])) ? 2 : g.uids.some(u => loadedUse(state, u)) ? 1 : 0);
   const keep = groups.slice(0, MAX);
-  for (const g of late) { const k = keep.map(isReady).lastIndexOf(false); if (k < 0) break; keep.splice(k, 1); }
-  const shown = groups.filter(g => keep.includes(g) || late.includes(g));
+  for (const g of groups.slice(MAX).filter(need).sort((x, y) => need(y) - need(x))) {
+    const k = keep.map(need).reduce((at, n, i) => (n < need(g) && (at < 0 || n <= need(keep[at])) ? i : at), -1);
+    if (k < 0) continue;
+    keep.splice(k, 1); keep.push(g);
+  }
+  const shown = groups.filter(g => keep.includes(g));
   const rest = groups.filter(g => !shown.includes(g)).reduce((s, g) => s + g.count, 0);
   const openSeat = (e, pinned) => hover && hover.onSeatHover(pid, e.currentTarget, { pinned });
   return (
@@ -119,6 +123,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           );
         })}
         {rest > 0 && <span className="cs-more" title={`${rest} more member${rest === 1 ? '' : 's'}`}>+{rest}</span>}
+        {/* Lie Low and the like: no one can steal this seat's resources this round, said in words (w2b #21) */}
+        {safe && <small className="cs-safe" data-safe="1" title={`No one can steal resources from ${mine ? 'you' : p.name} until this round ends`}>safe this round</small>}
       </div>
       {/* what its members make each round, and what it just did (the approved plate's rival panel) */}
       {incomeWords.length > 0 && (
@@ -149,8 +155,6 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             );
           })}
         </span>
-        {/* Lie Low and the like: no one can steal this seat's resources this round, said in words (w2b #21) */}
-        {safe && <small className="cs-safe" data-safe="1" title={`No one can steal resources from ${mine ? 'you' : p.name} until this round ends`}>safe this round</small>}
       </footer>
       {/* a choice that picks a player: the whole seat is the button (or says why it isn't) */}
       {pick && pick.seatMode && (pick.seat

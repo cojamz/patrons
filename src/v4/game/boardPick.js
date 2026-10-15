@@ -137,7 +137,8 @@ export function pickCaption(state, pk) {
 export function askerOf(state, pk) {
   if (!pk || !pk.title || pk.combo) return null;
   const p = state.players[pk.actor];
-  const uid = p && p.members.find(u => state.cards[u] && defById(state.cards[u].def).name === pk.title);
+  // only a member recruited this turn's round by them (Double Agent's "When recruited"): one they use says how instead
+  const uid = p && p.members.find(u => state.cards[u] && defById(state.cards[u].def).name === pk.title && state.cards[u].recruitedRound === state.round && state.cards[u].recruitedBy === p.id && !state.cards[u].used);
   return uid == null ? null : { uid, text: defById(state.cards[uid].def).text };
 }
 

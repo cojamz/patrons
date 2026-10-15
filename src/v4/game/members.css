@@ -86,5 +86,6 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 /* a use still in hand, anyone's, on the table: the same light as "yours to use now", subdued (w2b #21: see threats coming) */
 .lt-cult-seat .cs-member.loaded:not(.ready) .fig .sprite{filter:drop-shadow(1px 0 0 rgba(255,243,212,.38)) drop-shadow(-1px 0 0 rgba(255,243,212,.38)) drop-shadow(0 1px 0 rgba(255,243,212,.38)) drop-shadow(0 -1px 0 rgba(255,243,212,.38))}
 /* a seat no one can steal resources from this round (Lie Low): said in words beside its resources */
-.lt-cult-seat .cs-safe{font-family:var(--sans);font-size:12px;line-height:16px;color:var(--cream-2,#b9a98c);white-space:nowrap;margin-left:8px;align-self:center}
+.lt-cult-seat .cs-safe{font-family:var(--sans);font-size:12px;line-height:16px;color:var(--cream-2,#b9a98c);white-space:nowrap;align-self:center;margin-left:4px}
+.lt-cult-seat .cs-crowd > .cs-safe:first-child{margin-left:0}
 .seat-card .seat-safe{display:block;font-family:var(--sans);font-size:12px;color:var(--pl-ink-2,#6e5c49);font-weight:500;letter-spacing:0;text-transform:none}

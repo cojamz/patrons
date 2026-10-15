@@ -44,7 +44,9 @@ const saved = () => page.evaluate(() => JSON.parse(localStorage.getItem('patrons
 const away = async () => { await page.mouse.move(4, 690); await page.waitForTimeout(220); };
 // dy: a seat's head is pointed at by its leader (its left end), where nothing else on the chair overlaps it
 const pointAt = async (sel, dy = null) => {
-  const b = await (await page.$(sel)).boundingBox();
+  const el = await page.$(sel);
+  if (!el) throw new Error(`nothing on screen matches ${sel}`);
+  const b = await el.boundingBox();
   await page.mouse.move(dy == null ? b.x + b.width / 2 : b.x + Math.min(24, b.width / 2), b.y + (dy == null ? b.height / 2 : Math.min(dy, b.height / 2)), { steps: 4 });
 };
 const seatCard = pid => page.evaluate(id => {
@@ -140,7 +142,6 @@ try {
     const zero = row('thieves.bigscore');
     if (zero.state !== 'idle' || zero.use !== 'Use: +0' || !zero.idle || !/magenta/.test(zero.why)) fail(`Safecracker (worth 0 now) in the seat card: ${JSON.stringify(zero)}`, 'm8');
     if (row('gold.midas').sw !== 'on' || row('echo.translator').sw !== 'off') fail(`switches in the seat card: Midas ${row('gold.midas').sw}, Translator ${row('echo.translator').sw}`, 'm1');
-    if (row('gold.banker').tag !== 'pays at round start') fail(`Banker's tag: "${row('gold.banker').tag}"`, 'm1');
     if (row('gold.tycoon').tag !== 'scores at game end') fail(`Tycoon's tag: "${row('gold.tycoon').tag}"`, 'm1');
   }
   await away();

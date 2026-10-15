@@ -1,10 +1,10 @@
 // A saved hot-seat game for the members gate (e2e/v4/members.mjs): P1 (the only person) is about to place in round I
 // on a table of Gold, Echo, Trading and Magenta, holding a full spread of members: use-once ones ready (Lottery Winner,
 // Heiress), one worth nothing now (Safecracker: no rival holds 2 magenta), one already used (Speculator), switches
-// (Midas on, Translator off), round-start income (Banker), reactions (Prospector, Impressionist), a game-end scorer
+// (Midas on, Translator off), reactions (Prospector, Impressionist), a game-end scorer
 // (Tycoon) and one the engine would refuse now (Pawnbroker: nothing to sell). P2 holds gold, so Lottery Winner has
 // something to win, and Stunt Double (a use still in hand); P3 lies low (safe this round). The round-start snapshot
-// is saved too.
+// is saved too. No round-start income, so the seat has room for six figures.
 import { createGame, applyMove, chooseBotMove } from '../../../src/engine/v4/index.js';
 import { resume } from '../../../src/engine/v4/core.js';
 import { seededRandom } from '../../../src/engine/v4/rng.js';
@@ -12,7 +12,7 @@ import { buildStamp } from './stamp.mjs';
 
 const SEATS = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
 export const QUADS = ['gold', 'echo', 'trading', 'thieves'];
-export const HAND = ['gold.jackpot', 'gold.speculator', 'gold.midas', 'gold.banker', 'gold.prospector', 'gold.tycoon',
+export const HAND = ['gold.jackpot', 'gold.speculator', 'gold.midas', 'gold.prospector', 'gold.tycoon',
   'echo.translator', 'echo.tuningfork', 'trading.heiress', 'trading.pawnbroker', 'thieves.bigscore'];
 export const RIVAL = ['gold.thrift', 'echo.hourglass'];
 const play = (s, move) => { const next = applyMove(s, move); next.history = [...(s.history || []), [move.player, move.option]]; return next; };
