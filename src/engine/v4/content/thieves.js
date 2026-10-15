@@ -134,7 +134,7 @@ const thieves = {
       resolve(ctx, p) { startSteal(ctx, p, 'Help Yourself', ctx.stealCount(p, ctx.state.round + 1, { say: true })); },
     },
     {
-      key: 'tipoff', ring: 1, name: 'Redistribute', text: 'Take 1 resource from each player holding more than you (they arrive as magenta).',
+      key: 'tipoff', ring: 1, name: 'Redistribute', text: 'Take 1 resource from each rival holding more resources than you (they arrive as magenta).',
       estimate: (ctx, p) => estimateSteal(ctx, p, richer(ctx, p).length, richer(ctx, p)),
       resolve(ctx, p) {
         const ids = richer(ctx, p).map(o => o.id);
@@ -239,7 +239,7 @@ const thieves = {
   },
 
   members: [
-    m('cutpurse', 'Cutpurse', 2, 2, 'Now and at round start, take 1 resource from the rival holding the most (it arrives as magenta).', { now: true,
+    m('cutpurse', 'Cutpurse', 2, 2, 'Now and at round start, take 1 resource from the rival holding the most resources (it arrives as magenta).', { now: true,
       onRoundStart(ctx, owner) { const t = richest(ctx, owner); if (t) autoSteal(ctx, owner, t, 'Cutpurse'); },
     }),
     m('mole', 'Mole', 2, 2, 'Now and at round start, take 1 resource from each player with more followers than you (they arrive as magenta).', { now: true,
@@ -250,7 +250,7 @@ const thieves = {
     m('accomplice', 'Accomplice', 4, 4, 'When recruited: take 1 resource from each rival (they arrive as magenta).', {
       onRecruited(ctx, owner) { for (const o of ctx.rivals(owner)) autoSteal(ctx, owner, o, 'Accomplice'); },
     }),
-    m('grifter', 'Grifter', 4, 2, 'When recruited: take 1 resource per 2 members you have, from the rivals holding the most (they arrive as magenta).', {
+    m('grifter', 'Grifter', 4, 2, 'When recruited: take 1 resource per 2 members you have, from the rivals holding the most resources (they arrive as magenta).', {
       onRecruited(ctx, owner) {
         const n = Math.floor(ctx.memberCount(owner) / 2);
         for (let k = 0; k < n; k++) { const t = richest(ctx, owner); if (!t || !autoSteal(ctx, owner, t, 'Grifter')) break; }

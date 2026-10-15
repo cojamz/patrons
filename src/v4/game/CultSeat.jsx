@@ -31,9 +31,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const groups = memberChips(state, p);
   const last = lastSpace(state, pid);
   // its place in what's left of this round's turn order (who's up now, who's next)
-  const turns = turnPlaces(state);
+  const turns = turnPlaces(state, me);
   const place = turns.places[pid];
-  const orderText = turns.order.map(id => (id === me ? 'You' : state.players[id].name)).join(', ');
   const MAX = mine ? 14 : 8; // member figures shown before "+N"
   const shown = groups.slice(0, MAX);
   const rest = groups.slice(MAX).reduce((s, g) => s + g.count, 0);
@@ -49,7 +48,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={32} minion={16} /></span>
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
-          {place && <span className={`cs-order ${place.label}`} data-order={place.label} title={place.label === 'done' ? `${mine ? 'You have' : `${p.name} has`} no turns left this round${orderText ? `. Still to play: ${orderText}` : ''}` : `Turn order: ${orderText}`}>{place.label}</span>}
+          {place && <span className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined} title={place.title}>{place.text}</span>}
           <small>{last ? <>last: <Sprite id={[`${last.qid}.${actionKey(last)}`, spriteId(last.name)]} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /></> : p.kind === 'bot' ? 'bot' : ' '}</small>
         </span>
         <span className="cs-total" data-followers={f} title={`${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
@@ -71,7 +70,14 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
               </Tip>
               {use && <button type="button" className="lt-btn mini" data-option={use.id} onClick={() => onPick(use.id)} title={`Use ${d.name} now`}>Use<span className="hitbox" aria-hidden="true" /></button>}
-              {toggle && <button type="button" className="lt-btn mini" data-option={toggle.id} onClick={() => onPick(toggle.id)} title={toggle.label}>{g.card.on === false ? 'On' : 'Off'}<span className="hitbox" aria-hidden="true" /></button>}
+              {/* a switch shows its state, not the action (RC1: Midas read "Off" while on); a click flips it in your buy step */}
+              {(toggle || (mine && d.toggle)) && (() => {
+                const on = g.card.on !== false;
+                const say = `${d.name} is ${on ? 'on' : 'off'}. ${d.text}${toggle ? ` Click to switch it ${on ? 'off' : 'on'}.` : ' You can switch it in your buy step.'}`;
+                return toggle
+                  ? <button type="button" className={`lt-btn mini cs-switch${on ? ' on' : ''}`} data-option={toggle.id} data-switch={on ? 'on' : 'off'} aria-pressed={on} aria-label={say} onClick={() => onPick(toggle.id)} title={say}>{d.name}: {on ? 'on' : 'off'}<span className="hitbox" aria-hidden="true" /></button>
+                  : <span className={`cs-switch idle${on ? ' on' : ''}`} data-switch={on ? 'on' : 'off'} title={say}>{d.name}: {on ? 'on' : 'off'}</span>;
+              })()}
             </span>
           );
         })}

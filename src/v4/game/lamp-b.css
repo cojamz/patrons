@@ -264,8 +264,8 @@
 .cs-order.now,.cs-order.first{color:var(--paper-ink);background:var(--lamp-ink);box-shadow:none}
 .cs-order.next{color:var(--lamp-ink);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.55)}
 .cs-order.done{opacity:.55}
-/* the docked hover card (laptop): a fixed spot in the right-hand column, clipped to it so it never reaches the shop */
-.lt-hover.popover.docked{box-sizing:border-box;overflow:hidden}
+/* the hover card sits next to what it explains (HoverCards placeBeside), on top of every strip */
+.lt-hover.popover{z-index:60;box-sizing:border-box}
 /* a member's figure at the table (the ×N count sits on its corner) */
 .cs-member .fig{position:relative}
 /* the round summary: no text under 12px (meta round 2: its small print measured 10.8–11px) */
@@ -289,6 +289,11 @@
 .dialog.pay .pay-rules{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.3}
 .dialog.pay .pay-rules li{padding-left:10px;border-left:2px solid var(--lamp-ink);color:var(--cream)}
 .dialog.pay .pay-rules li[data-pay-rule="total"]{border-left-color:transparent;color:var(--lamp-ink);font-weight:700}
-/* the member card: what a release gives back, or why it can't (Info.jsx MemberCard) */
-.card-face .release-note{display:block}
-.card-face .release-note.no{opacity:.8;font-style:italic}
+/* a follower rate's hover card (ShopCards FollowerRates): the trade, what's left, when you can make it */
+.lt-rates .lt-rate .fb-tip{display:inline-flex;align-items:center;gap:3px;padding:2px 0;cursor:inherit}
+.rate-card{display:flex;flex-direction:column;gap:4px;font-size:13px;line-height:1.35}
+.rate-card small{color:var(--muted)}
+/* resource symbols in card text at hover size (RC1 strategist: Crowd-Pleaser's "+1 ●" read as +1 follower): the
+   shapes read at a glance in every hover card, sheet and pinned card */
+.card-face .pip.glyph,.lt-note .pip.glyph,.tip-body .pip.glyph,.pop-card .pip.glyph,.dialog.pay .ability .pip.glyph{width:1.4em;height:1.4em;vertical-align:-.36em;margin:0 .1em}
+.card-face .pip.wild,.lt-note .pip.wild,.tip-body .pip.wild,.pop-card .pip.wild{width:1.15em;height:1.15em;vertical-align:-.2em}

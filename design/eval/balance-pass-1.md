@@ -51,3 +51,7 @@ Rewordings for the two cards a price can't fix, then the four spaces both bots f
 - Tests that pinned a changed price: now-members (Banker's "+3 on recruit" now reads its cost from the card), the random-move fuzz (it samples seeds until every decision kind shows up, capped at 120; the first "use" moved from before seed 40 to seed 43), and the sample game record (re-recorded with npm run records:refresh: a round-I recruit in it was no longer affordable). Cards-*.test.js files pin their own costs, so they didn't move.
 - The fire-audit gate now plays Normal seats (rules agent, efc31cf) and names all four cards this pass had moved out of reach (Corner-Cutter, Apprentice, Investor, Rainmaker), so its allow list stays as it was.
 - npm run check:v4 -- --commit HEAD on efc31cf: build and every laptop browser gate pass; the tests' only failure was the stale sample record, refreshed since; touch (phone) fails, outside the v0.2 verdict.
+
+## Applied (2026-10-15)
+
+Cory said yes to all six, as written above. Live in the engine with their tests: Tax Collector (ties for the most count; read before the buy lands), Upstart, Shake Down, Plan Ahead, Crunch Time (at a cap of 2, any 4+ purple buys exactly 2 turns) and Open House (your pick among the face-up members costing 4 or less; none, nothing). Logged in design/decisions.md.

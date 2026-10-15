@@ -389,11 +389,37 @@ h1,h2,h3{font-family:var(--serif)}
 @media (min-width:861px) and (min-height:500px){
   .app.game.lt.in-setup > .lt-wheel .stage{width:min(100cqw, calc(100cqh - 82px));margin-bottom:82px}
   .app.game.lt .lt-wheel .stage{transition:width .45s cubic-bezier(.3,.7,.4,1),margin .45s cubic-bezier(.3,.7,.4,1)}
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{left:50%;right:auto;transform:translateX(-50%);width:min(100%,540px);max-height:none;overflow:visible;
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{left:max(0px, calc(50% - 270px));right:auto;width:min(100%,540px);max-height:none;overflow:visible;
     display:flex;flex-direction:row;align-items:center;gap:12px;padding:7px 14px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .for-sale{display:none}
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{margin:0;flex:0 0 118px;font-weight:700;line-height:1.2}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{margin:0;flex:0 0 150px;font-weight:700;line-height:1.2}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .tokens{flex:1 1 auto;gap:4px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{flex-direction:row;justify-content:center;gap:6px;padding:4px 2px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .coin-big{width:42px;height:42px;font-size:14px}
+  /* the call to action (Cory, 2026-10-15: nothing said "click here"): the note is lamp-lit and pulses once; each coin
+     wears the lit edge a space you can take wears */
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.4),0 14px 34px rgba(0,0,0,.6);
+    animation:rise .25s ease-out both,cta-pulse 1.2s .3s ease-out 1}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{font-family:var(--serif);font-size:16px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p::after{content:" →";color:var(--lamp-ink);font-weight:700}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token:not(:disabled) .coin-big{box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),0 0 0 2px #fffaf0,0 0 12px 3px rgba(var(--lamp),.75)}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token:not(:disabled):hover .coin-big{transform:translateY(-2px) scale(1.06)}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .coin-big{transition:transform .12s ease-out}
+}
+@keyframes cta-pulse{
+  0%{box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.4),0 14px 34px rgba(0,0,0,.6)}
+  40%{box-shadow:0 0 0 4px rgba(var(--lamp),1),0 0 46px 14px rgba(var(--lamp),.65),0 14px 34px rgba(0,0,0,.6)}
+  100%{box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.4),0 14px 34px rgba(0,0,0,.6)}
+}
+@media (prefers-reduced-motion:reduce){ .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{animation:none} }
+
+/* game over on a laptop (RC1 strategist: the result rows ran the full width and were mostly empty): the table holds
+   to a readable width, and the cults sit two to a row, each with its total beside it */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt > .main.over > .results{width:100%;max-width:900px;margin:0 auto}
+  .app.game.lt > .main.over > .results table.res-t{min-width:0}
+  .app.game.lt > .main.over > .over-cults{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;width:100%;max-width:900px;margin:8px auto 0}
+  .app.game.lt > .main.over > .over-cults > :not(.over-seat){grid-column:1 / -1}
+  .app.game.lt > .main.over .over-seat{grid-template-columns:22px minmax(0,1fr) auto;gap:8px;padding:6px 12px}
+  .app.game.lt > .main.over .over-seat .final{font-size:30px}
 }

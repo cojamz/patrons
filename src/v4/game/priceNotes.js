@@ -1,9 +1,7 @@
-// What bends a member's price, and what releasing it gives back: short lines for the pay dialog and the member card.
-// Read off the engine, never off card names: the price is core.js memberPrice (the one price rule), the release is
-// core.js releaseRefund / canRelease, and the rule-changers are the same member flags the price rule reads
+// What bends a member's price: short lines for the pay dialog. Read off the engine, never off card names: the price is
+// core.js memberPrice (the one price rule), and the rule-changers are the same member flags the price rule reads
 // (costReduction, goldPaysDouble, anyColorPart), named by the cards that carry them.
 import { cardDef, defById, quadrant, memberPrice } from '../../engine/v4/index.js';
-import { canRelease, releaseRefund } from '../../engine/v4/core.js';
 
 const defsOf = card => [defById(card.def), ...(card.copy ? [defById(card.copy)] : [])];
 const colorOf = def => { try { return quadrant(def.quadrant).resource; } catch { return def.quadrant; } };
@@ -33,24 +31,4 @@ export function priceNotes(state, p, uid) {
   try { total = memberPrice(state, p, uid).total; } catch { /* an older engine */ }
   if (out.length && total != null && total !== printed) out.push({ key: 'total', text: `Comes to ${total} instead of ${printed}${p.members.some(u => defsOf(state.cards[u]).some(d => d.goldPaysDouble)) ? ' (each gold pays 2)' : ''}` });
   return out;
-}
-
-/**
- * What releasing member uid would give back, from the engine: { ok, text }, or null when the table has no release.
- * "Release: 4 gold back", "Release: 2 back, in any colors (…)", "Can’t be released: no colored part"…
- * owner: the player holding it (null for a card in the shop or the pile: then only what it would give back).
- */
-export function releaseNote(state, uid, owner = null) {
-  if (!state.rules || !state.rules.release || uid == null || !state.cards[uid]) return null;
-  const back = releaseRefund(state, uid);
-  const c = colorOf(cardDef(state, uid));
-  if (!back.n) return { ok: false, text: 'Can’t be released: no colored part' };
-  const card = state.cards[uid];
-  if (owner) {
-    if (card.used) return { ok: false, text: 'Can’t be released: already used' };
-    if (card.recruitedRound === state.round && card.recruitedBy === owner.id) return { ok: false, text: 'Can’t be released yet: recruited this round' };
-  }
-  const gives = back.color ? `Release: ${back.n} ${back.color} back` : `Release: ${back.n} back, in any colors (its colored part is ${c}, not on this table)`;
-  if (owner && !canRelease(state, owner)) return { ok: true, text: `${gives}, from next round (one release a round)` };
-  return { ok: true, text: gives };
 }

@@ -17,6 +17,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/test/setup.js',
+    // a whole-suite `vitest run` outside check:v4 waits for a check slot like a quick check (scripts/lib/vitest-slot.mjs)
+    globalSetup: ['./scripts/lib/vitest-slot.mjs'],
     // build snapshots and freeze worktrees are never test sources
     exclude: ['**/node_modules/**', '**/dist/**', '.v4-wt/**', '.v4-panel/**', '.v4-build*/**'],
     // No wall-clock budgets on deterministic work: engine and fuzz tests are bounded by game and move counts, session

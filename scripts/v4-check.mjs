@@ -80,6 +80,7 @@ if (wantE2E && (await portBusy(port))) { console.error(busyMessage(port)); proce
 // at most SLOTS gates on the box at once (the slot is held for the whole run)
 const what = `${sha ? `commit ${sha.slice(0, 7)}` : 'live tree'}${kind === 'verdict' || kind === 'live' ? '' : ` --${kind}`}, ${outDir}${wantE2E ? `, port ${port}` : ''}`;
 const { waitedMs } = await acquireSlot(what, { kind });
+process.env.V4_IN_CHECK = '1'; // our vitest (and anything else we start) runs under this slot (scripts/lib/vitest-slot.mjs)
 
 if (sha) {
   // sweep exports left by runs that were killed outright (their pid is gone)

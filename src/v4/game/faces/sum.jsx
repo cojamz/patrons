@@ -293,7 +293,7 @@ function widthOf(t, U, F) {
   const num = s => (s ? textW(s, F) + U * 0.06 : 0);
   switch (t.k) {
     case 'res': return num(t.n) + (t.mod ? U * 0.6 : 0) + U;
-    case 'fol': return num(t.n) + U * 1.0;
+    case 'fol': return num(t.n) + U * 1.08;
     case 'mem': return (t.mod === 'low' || t.mod === 'high' ? U * 0.6 : 0) + (t.rival ? U * 0.72 : 0) + (t.row ? U * 1.75 : U * 0.75) + (t.mod === 'new' ? U * 0.36 : 0);
     case 'hood': return (t.mod ? U * 0.6 : 0) + (t.all ? U * 1.45 : U * 0.95);
     case 'min': return U * 0.82;
@@ -323,7 +323,7 @@ function drawTerm(t, x, U, F, r, key) {
       return <g key={key}>{num(t.n, x)}{t.mod ? <Mod x={x + nw(t.n) + U * 0.02} U={U} up={t.mod === 'high'} /> : null}<Res r={t.r} x={x + nw(t.n) + m} U={U} /></g>;
     }
     case 'fol': return (
-      <g key={key}>{num(t.n, x)}<Box x={x + nw(t.n) - U * 0.1} y={-U * 0.62} s={U * 1.18}><Follower size={1} /></Box></g>
+      <g key={key}>{num(t.n, x)}<Box x={x + nw(t.n) - U * 0.02} y={-U * 0.62} s={U * 1.18}><Follower size={1} /></Box></g>
     );
     case 'mem': {
       let at = x;

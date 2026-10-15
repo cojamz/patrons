@@ -5,12 +5,15 @@
 //  (r3) a "+N" token flies to every winner (one flight per winner per quadrant);
 //  (r4) then the summary (Start round II) appears; Skip goes straight there on the next round end;
 //  (r5) your placement sends a minion flying from your leader; when round II begins, the wheel's minions fly home;
-//  (r6) no flying ghost (a minion, a "+N" of followers, a card) outlives its flight: each is gone within 2.5s.
+//  (r6) no flying ghost (a minion, a "+N" of followers, a card) outlives its flight: each is gone within 2.5s;
+//  (r7) the round-III summary at 1270×700: the end-game bonus line is on screen without scrolling, and the whole
+//       summary fits (no "More below"), from a saved game at P1's last placement (e2e/v4/lib/late-save.mjs).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5196.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
+import { lateSave } from './lib/late-save.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/reckoning';
 mkdirSync(SHOTS, { recursive: true });
@@ -127,6 +130,44 @@ try {
   const rk2 = await page.evaluate(() => window.__rk);
   rk2.stuck.forEach(m => errors.push(`(r6) a ghost outlived its flight: ${m}`));
   console.log(`reckoning: ${told.length} quadrants told, best count run ${best}, ${rk.tokens} prize flights for ${winners} winners, ${rk.out} minions out, ${home} home, longest flight ${Math.round(rk2.longest)}ms`);
+  // (r7) the round-III summary at 700px tall: the end-game bonuses are on screen without scrolling
+  {
+    const p3 = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+    p3.on('pageerror', e => errors.push(`r7 pageerror: ${e.message}`));
+    await p3.goto(`${base}/?botDelay=20&intro=0`);
+    await p3.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), lateSave(21, 3));
+    await p3.reload();
+    await p3.click('[data-home="resume"]');
+    await p3.waitForSelector('.lt-wheel .slot');
+    const t3 = Date.now();
+    while (!(await p3.$('.roundend')) && Date.now() - t3 < 60000) {
+      const sk = await p3.$('[data-reckon-skip]');
+      if (sk) { await sk.click().catch(() => {}); continue; }
+      const o = await p3.$('.slot.can, [data-option]:not([disabled]):not([data-option^="toggle:"]):not([data-option^="release:"]):not([data-option="back"])');
+      if (o) await o.click({ timeout: 800 }).catch(() => {});
+      await p3.waitForTimeout(80);
+    }
+    await p3.waitForTimeout(900); // the totals tick up
+    const r = await p3.evaluate(() => {
+      const d = document.querySelector('.roundend');
+      if (!d) return null;
+      const body = d.querySelector('.re-body'), fin = d.querySelector('.re-final');
+      const B = body.getBoundingClientRect(), D = d.getBoundingClientRect();
+      const f = fin && fin.getBoundingClientRect();
+      return { round: d.querySelector('h2').textContent, fin: !!fin, text: fin && fin.innerText, inView: !!f && f.top >= B.top - 1 && f.bottom <= B.bottom + 1 && f.bottom <= innerHeight, scrolls: body.scrollHeight - body.clientHeight, more: !!d.querySelector('.re-more'), onScreen: D.top >= 0 && D.bottom <= innerHeight };
+    });
+    if (!r) errors.push('(r7) the round-III summary never appeared');
+    else {
+      if (!/III/.test(r.round)) errors.push(`(r7) expected the round-III summary, saw "${r.round}"`);
+      if (!r.fin) errors.push('(r7) the last round\'s summary has no end-game bonus line');
+      else if (!r.inView) errors.push(`(r7) the end-game bonus line is below the fold at 700px ("${r.text}")`);
+      if (r.more || r.scrolls > 1) errors.push(`(r7) the round-III summary scrolls at 700px (${r.scrolls}px more${r.more ? ', "More below"' : ''})`);
+      if (!r.onScreen) errors.push('(r7) the round-III summary runs off the window');
+      console.log(`reckoning: round-III summary fits at 700px; bonuses: ${r.text}`);
+    }
+    await p3.screenshot({ path: `${SHOTS}/r7-round3-summary.png` }).catch(() => {});
+    await p3.close();
+  }
   ok = errors.length === 0;
 } catch (e) {
   errors.push(`run: ${e.stack || e.message}`);

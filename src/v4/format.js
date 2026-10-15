@@ -1,5 +1,5 @@
 // Display helpers. No rules here: everything is read off engine state.
-import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, memberCount, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds } from '../engine/v4/index.js';
+import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, memberCount, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds, turnRail } from '../engine/v4/index.js';
 import { contextFor } from '../engine/v4/core.js';
 import { defaultEmoji } from './art/emojis.js';
 
@@ -76,15 +76,22 @@ export function promptFor(state, mine) {
         : { who: p, text: `${name} is picking a starting resource` };
     }
     case 'place': {
-      // back-to-back snake turn: say so
-      let again = false;
-      for (let i = state.log.length - 1; i >= 0; i--) {
-        const l = state.log[i];
-        if (/^Round \S+ begins\./.test(l)) break;
-        const m = l.match(/^(.+?) took .+ \(\w+\)\.$/);
-        if (m) { again = m[1] === name; break; }
+      // a second placement in a row says why: the snake turning round on you is your turn again, not a bonus;
+      // an extra turn names the card or space that gave it (RC1 panel: "Extra turn" at the turnaround read as a bonus)
+      const t = currentTurn(state);
+      if (t && t.again) {
+        const or = use ? `…or use ${use} first` : null;
+        if (t.kind === 'snake') {
+          return mine
+            ? { who: p, lead: 'Your turn again (snake order) — ', text: 'place a minion', sub: or || 'Snake order: whoever ends a pass starts the next, so you place twice in a row' }
+            : { who: p, text: `${name} again (snake order)` };
+        }
+        const why = t.why ? ` (${t.why})` : '';
+        const what = t.kind === 'hand' ? 'Extra minion' : 'Extra turn';
+        return mine
+          ? { who: p, lead: `${what}${why}: `, text: 'place one more minion', keepCase: true, ...(or ? { sub: or } : {}) }
+          : { who: p, text: `${name}: ${what.toLowerCase()}${why}` };
       }
-      if (mine && again) return { who: p, lead: 'Extra turn: ', text: 'place one more minion', ...(use ? { sub: `…or use ${use} first` } : {}) };
     }
     // falls through
     case 'place-plain':
@@ -110,6 +117,67 @@ export function promptFor(state, mine) {
     default:
       return { who: p, text: pend.prompt };
   }
+}
+
+// ---------- this round's turns: the snake, extra minions, extra turns ----------
+const ROUND_LINE = /^Round \S+ (begins|ends)\./;
+/** Where this round's log starts (just after the last round-end line, so round-start hooks like Late Riser count). */
+function roundLogStart(log) {
+  for (let i = log.length - 1; i >= 0; i--) if (/^Round \S+ ends\./.test(log[i])) return i + 1;
+  return 0;
+}
+/** The cards and spaces that gave each player extra turns this round, in order: { [pid]: ['Night Owl', …] }. */
+function extraGrants(state) {
+  const out = {}, log = state.log;
+  const byName = n => state.players.find(p => p.name === n);
+  const add = (n, why, k) => { const p = byName(n); if (p) for (let j = 0; j < k; j++) (out[p.id] = out[p.id] || []).push(why); };
+  for (let i = roundLogStart(log); i < log.length; i++) {
+    const l = log[i];
+    let m = l.match(/^(.+?)'s (.+?): (.+?) takes (an extra turn|(\d+) extra turns)\.$/);
+    if (m && m[1] === m[3]) { add(m[1], m[2], m[5] ? Number(m[5]) : 1); continue; }
+    m = l.match(/^(.+?)'s (Late Riser): an extra turn first\.$/);
+    if (m) { add(m[1], m[2], 1); continue; }
+    m = l.match(/^(.+?) takes (an extra turn|(\d+) extra turns)\.$/);
+    if (!m) continue;
+    // paid for just before: "P1's Taskmaster: pays 5 purple…", "P1 pays 4 purple for Overtime.", "P1 spends 8 purple on Crunch Time."
+    const prev = log[i - 1] || '', who = esc(m[1]);
+    const why = (prev.match(new RegExp(`^${who}'s (.+?): pays `)) || prev.match(new RegExp(`^${who} pays \\d+ purple for (.+?)(?: \\(|\\.$)`))
+      || prev.match(new RegExp(`^${who} spends \\d+ purple on (.+?)(?: \\(|\\.$)`)) || [])[1] || lastAction(log, i, m[1]);
+    add(m[1], why, m[3] ? Number(m[3]) : 1);
+  }
+  return out;
+}
+/**
+ * This round's turns in order, from the engine's turn record and queue: [{ pid, kind, why, at }] where kind is
+ * 'snake' (the round's order), 'hand' (an extra minion from a member, after the snake) or 'extra' (an extra turn a
+ * card or space gave), why names that card or space, and at is 'done' | 'now' | 'later'. Every turn is one placement.
+ */
+export function turnSequence(state) {
+  if (!(state.round >= 1) || state.over) return [];
+  const r = turnRail(state);
+  const seq = [...r.done.map(pid => ({ pid, at: 'done' })), ...(r.current != null ? [{ pid: r.current, at: 'now' }] : []), ...r.next.map(pid => ({ pid, at: 'later' }))];
+  const order = state.order || [];
+  const snake = (WORKERS[state.round - 1] || 0) * state.players.length;
+  // the round's order is the sequence with the extra turns taken out: match it in order, and what's left over is extra
+  let j = 0;
+  for (const t of seq) {
+    if (j < order.length && order[j] === t.pid) { t.kind = j < snake ? 'snake' : 'hand'; j++; } else t.kind = 'extra';
+  }
+  const grants = extraGrants(state), used = {};
+  const begins = state.log.slice(roundLogStart(state.log)).find(l => /^Round \S+ begins\./.test(l)) || '';
+  for (const t of seq) {
+    if (t.kind === 'extra') { const k = used[t.pid] = (used[t.pid] || 0) + 1; t.why = (grants[t.pid] || [])[k - 1] || null; }
+    else if (t.kind === 'hand') { const nm = esc(state.players[t.pid].name); t.why = (begins.match(new RegExp(`${nm}'s (.+?): \\+\\d+ minions?\\.`)) || [])[1] || null; }
+    else t.why = null;
+  }
+  return seq;
+}
+/** The turn being played (or about to be): { pid, kind, why, again } — again when the same player also had the turn before. */
+export function currentTurn(state) {
+  const seq = turnSequence(state);
+  const i = seq.findIndex(t => t.at !== 'done');
+  if (i < 0) return null;
+  return { ...seq[i], again: i > 0 && seq[i - 1].pid === seq[i].pid };
 }
 
 /** Followers a player bought with the follower buys. Uses p.bought when the engine tracks it, else the log. */
@@ -460,50 +528,158 @@ export function projectedEndGame(state) {
 }
 
 /**
- * One turn told in plain words, for the line by the board after anyone's turn (Cory: "too hard to tell what's going
- * on"). `start` is the state when `actor`'s turn began, `end` when it passed on. Everything is read off the two
- * states and the log between them, so it's true whatever the action or member did:
- *   "P3 took Help Yourself · +1 gold +1 green · from you 1 gold · from P4 1 green · recruited Mob (paid 4 red) · +1 follower"
- * Returns { text, touched } (touched: the other players whose resources changed), or null if nothing happened.
- * `me` is the person at this device (named "you"), or null.
+ * A member's trace line, parsed: "Di's Tax Collector: +1 gold." (the owner's own change) or "Bo +1 silver (Ana's
+ * Retinue)." (another player's) → { owner, target, card, res: { color: n }, followers, discount }, else null.
+ */
+export function traceLine(line, players, resources) {
+  const parts = s => {
+    const res = {};
+    let followers = 0, discount = 0;
+    for (const tok of s.split(', ')) {
+      let m = tok.match(/^([+−-])(\d+) (\w+)$/);
+      if (m) {
+        const n = Number(m[2]) * (m[1] === '+' ? 1 : -1);
+        if (/^followers?$/.test(m[3])) followers += n;
+        else if (resources.includes(m[3])) res[m[3]] = (res[m[3]] || 0) + n;
+        else return null;
+        continue;
+      }
+      m = tok.match(/^next member costs (\d+) less$/);
+      if (m) { discount += Number(m[1]); continue; }
+      return null;
+    }
+    return { res, followers, discount };
+  };
+  const body = line.replace(/\.$/, '');
+  for (const o of players) {
+    if (!body.startsWith(`${o.name}'s `)) continue;
+    const rest = body.slice(o.name.length + 3), c = rest.indexOf(': ');
+    const got = c > 0 ? parts(rest.slice(c + 2)) : null;
+    if (got) return { owner: o.id, target: o.id, card: rest.slice(0, c), ...got };
+  }
+  const m = body.match(/^(.+) \((.+?)'s (.+?)\)$/);
+  const owner = m && players.find(p => p.name === m[2]);
+  if (owner) for (const t of players) {
+    if (!m[1].startsWith(`${t.name} `)) continue;
+    const got = parts(m[1].slice(t.name.length + 1));
+    if (got) return { owner: owner.id, target: t.id, card: m[3], ...got };
+  }
+  return null;
+}
+
+/**
+ * One placement told in plain words, for the turn card by the acting cult (Cory: "too hard to tell what's going on").
+ * A turn is one placement and its buy, so a snake turnaround or an extra turn gets a card of its own (RC1 panel: the
+ * card netted a second placement's gains against the first one's payment, under the first one's name).
+ * `start` is the state when the turn began, `mid` when it reached its buy (or null), `end` when it passed on (or now).
+ * Amounts are gross: what the space gave, what was paid, and every member that fired on a line of its own.
+ *   "Bo took Collect Debts · +3 gold · from you 3 gold · Tax Collector: you +1 gold · recruited Banker (paid 6 gold) · +1 follower"
+ * Returns { text, head, lines, space, actor, touched, short, hit } or null if nothing happened.
+ * `me` is the person at this device (named "you"), or null. short is the one line for the "since your last turn"
+ * strip; hit says what it took from you, if anything.
  */
 export function turnStory(start, end, actor, me = null, mid = null) {
   if (!start || !end || actor == null || !end.players[actor]) return null;
-  const nm = id => (id === me ? 'you' : end.players[id].name);
-  const who = actor === me ? 'You' : end.players[actor].name;
-  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const lines = newLogLines(start, end);
-  const took = lines.map(l => l.match(new RegExp(`^${esc(end.players[actor].name)} took (.+) \\((\\w+)\\)\\.$`))).find(Boolean);
-  const res = end.resources;
-  const delta = (id, a = start, b = end) => res.map(r => [r, (b.players[id].res[r] || 0) - (a.players[id].res[r] || 0)]).filter(([, d]) => d);
+  const P = end.players, A = P[actor], res = end.resources;
+  const nm = id => (id === me ? 'you' : P[id].name);
+  const whose = id => (id === me ? 'your' : `${P[id].name}'s`);
+  const who = actor === me ? 'You' : A.name;
+  const youName = s => (me != null ? s.replace(new RegExp(`(^|[^\\p{L}\\p{N}])${esc(P[me].name)}'s(?![\\p{L}\\p{N}])`, 'gu'), '$1your') : s);
+  let lines = newLogLines(start, end);
+  const cut = lines.findIndex(l => ROUND_LINE.test(l) || /^Game over\./.test(l));
+  if (cut >= 0) lines = lines.slice(0, cut);
+  const nAct = mid ? Math.min(lines.length, newLogLines(start, mid).length) : lines.length;
+  const seg = [lines.slice(0, nAct), lines.slice(nAct)];
+  const states = [[start, mid || end], [mid || end, end]];
+  const an = esc(A.name);
+  const placeRe = new RegExp(`^${an} (?:took (.+?)|joined (.+?) on (.+?)) \\((\\w+)\\)\\.$`);
+  const place = seg[0].map(l => l.match(placeRe)).find(Boolean) || null;
+  const space = place ? place[1] || place[3] : null;
+  const joined = place && place[2] ? P.find(p => p.name === place[2]) : null;
+
   const signed = list => list.map(([r, d]) => `${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`).join(' ');
   const plain = list => list.map(([r, d]) => `${Math.abs(d)} ${r}`).join(', ');
-  const parts = [];
-  // with `mid` (the state when the turn reached its buy), what the action gave and what the buy cost are told apart
-  const mine = delta(actor, start, mid || end);
-  if (mine.length) parts.push(signed(mine));
-  const touched = [];
-  for (const p of end.players) {
-    if (p.id === actor) continue;
-    const d = delta(p.id);
-    if (!d.length) continue;
-    touched.push(p.id);
-    const lost = d.filter(([, x]) => x < 0), got = d.filter(([, x]) => x > 0);
-    if (lost.length) parts.push(`from ${nm(p.id)} ${plain(lost)}`);
-    if (got.length) parts.push(`${nm(p.id)} ${signed(got)}`);
+  const fword = n => `${Math.abs(n)} follower${Math.abs(n) === 1 ? '' : 's'}`;
+  const out = [];
+  const touched = new Set();
+  const tracedF = P.map(() => 0);
+  let gain = '', hit = '';
+  seg.forEach((ls, k) => {
+    const [a, b] = states[k];
+    // what members did, on lines of their own; their amounts come off the gross so nothing is counted twice
+    const traced = P.map(() => ({}));
+    const said = [];
+    for (const l of ls) {
+      const t = traceLine(l, P, res);
+      if (t) {
+        for (const r in t.res) traced[t.target][r] = (traced[t.target][r] || 0) + t.res[r];
+        tracedF[t.target] += t.followers;
+        const bits = [...Object.entries(t.res).filter(([, d]) => d).map(([r, d]) => `${d > 0 ? '+' : '−'}${Math.abs(d)} ${r}`),
+          ...(t.followers ? [`${t.followers > 0 ? '+' : '−'}${fword(t.followers)}`] : []), ...(t.discount ? [`next member costs ${t.discount} less`] : [])].join(', ');
+        // "Treasurer: +3 gold" (the actor's own), "Tax Collector: Di +1 gold", "Ana's Retinue: Bo +1 silver"
+        const card = t.owner === actor || t.owner === t.target ? t.card : `${whose(t.owner)} ${t.card}`;
+        said.push(`${cap(card)}: ${t.target === actor && t.owner === actor ? '' : `${nm(t.target)} `}${bits}`);
+        continue;
+      }
+      // a gain changed on its way in: "Underdog: gold 4 → 8", "Midas: 2 blue came as 2 gold"
+      let m = l.match(/^(.+?)'s (.+?): (?:(\w+) gain (\d+) → (\d+)|(\d+) (\w+) comes as (\d+) (\w+))\.$/);
+      const by = m && P.find(p => p.name === m[1]);
+      if (by) {
+        const card = by.id === actor ? m[2] : `${whose(by.id)} ${m[2]}`;
+        said.push(`${cap(card)}: ${m[3] ? `${m[3]} ${m[4]} → ${m[5]}` : `${m[6]} ${m[7]} came as ${m[8]} ${m[9]}`}`);
+        continue;
+      }
+      if (!l.startsWith(`${A.name} `) && !l.startsWith(`${A.name}'s `)) continue;
+      const own = l.slice(A.name.length);
+      if ((m = own.match(/^ uses (.+?)\.$/))) said.push(`used ${m[1]}`);
+      else if ((m = own.match(/^ traded (.+)\.$/))) said.push(youName(`traded ${m[1]}`));
+      else if ((m = own.match(/takes (an extra turn|(\d+) extra turns)\.$/))) said.push(m[2] ? `${m[2]} extra turns` : 'an extra turn');
+      else if ((m = own.match(/^'s next member costs (\d+) less\.$/))) said.push(`next member costs ${m[1]} less`);
+      else if ((m = own.match(/^ recruited (.+?)(?: from the pile with .+?)? \((.+)\)\.$/))) said.push(m[2] === 'free' ? `recruited ${m[1]} (free)` : `recruited ${m[1]} (paid ${m[2]})`);
+      else if ((m = own.match(/^ bought (\d+) followers? \((.+)\)\.$/))) said.push(`bought ${fword(Number(m[1]))} (paid ${m[2]})`);
+      else if ((m = own.match(/^ released (.+?) to the bottom of the pile, for (.+)\.$/))) {
+        const back = ls.map(x => x.match(new RegExp(`^${an} takes (\\d+) (\\w+) from the release\\.$`))).filter(Boolean).map(x => `${x[1]} ${x[2]}`);
+        said.push(`released ${m[1]} for ${back.length ? back.join(', ') : m[2]}`);
+      } else if ((m = own.match(/^ switched (.+?) (on|off)\.$/))) said.push(`switched ${m[1]} ${m[2]}`);
+    }
+    const gross = id => res.map(r => [r, (b.players[id].res[r] || 0) - (a.players[id].res[r] || 0) - (traced[id][r] || 0)]).filter(([, d]) => d);
+    // the action's own numbers (k 0); in the buy step the payment is told by its own line, so only rivals count
+    if (k === 0) { const g = gross(actor); if (g.length) { gain = signed(g); out.push(gain); } }
+    for (const p of P) {
+      if (p.id === actor) continue;
+      const d = gross(p.id);
+      const lost = d.filter(([, x]) => x < 0), got = d.filter(([, x]) => x > 0);
+      if (lost.length) {
+        out.push(`from ${nm(p.id)} ${plain(lost)}`);
+        if (p.id === me) hit = `took ${lost.map(([r, x]) => `${Math.abs(x)} of your ${r}`).join(', ')}`;
+      }
+      if (got.length) out.push(`${nm(p.id)} ${signed(got)}`);
+    }
+    out.push(...said);
+  });
+  for (const p of P) if (p.id !== actor && res.some(r => (end.players[p.id].res[r] || 0) !== (start.players[p.id].res[r] || 0))) touched.add(p.id);
+  // a member of yours that left your cult this turn (a swap), or followers you lost, hit you too
+  if (me != null && me !== actor) {
+    const gone = start.players[me].members.filter(u => !end.players[me].members.includes(u));
+    if (gone.length && !hit) hit = `took your ${gone.map(u => (end.cards[u] ? cardDef(end, u).name : 'member')).join(', ')}`;
   }
-  const before = new Set(start.players[actor].members);
-  const recruits = end.players[actor].members.filter(u => !before.has(u)).map(u => (end.cards[u] ? cardDef(end, u).name : null)).filter(Boolean);
-  const paid = mid ? delta(actor, mid, end).filter(([, d]) => d < 0) : [];
-  if (recruits.length) parts.push(`recruited ${recruits.join(', ')}${paid.length ? ` (paid ${plain(paid)})` : ''}`);
-  else if (paid.length) parts.push(`paid ${plain(paid)}`);
-  const lostMembers = start.players[actor].members.length + recruits.length - end.players[actor].members.length;
-  if (lostMembers > 0) parts.push(`${lostMembers} member${lostMembers > 1 ? 's' : ''} gone`);
-  const f = engineFollowers(end, end.players[actor]) - engineFollowers(start, start.players[actor]);
-  if (f) parts.push(`${f > 0 ? '+' : '−'}${Math.abs(f)} follower${Math.abs(f) === 1 ? '' : 's'}`);
-  if (!took && !parts.length) return null;
-  const head = took ? `${who} took ${took[1]}` : `${who}`;
-  return { text: [head, ...parts].join(' · '), touched, actor };
+  // followers: what this turn changed (contest prizes are the round's, not the turn's)
+  const fl = s => engineFollowers(s, s.players[actor]) - (s.players[actor].contest || 0);
+  const f = fl(end) - fl(start);
+  if (f) out.push(`${f > 0 ? '+' : '−'}${fword(f)}`);
+  // a rival's followers that moved and no member line explains (a follower drawn from them)
+  for (const p of P) {
+    if (p.id === actor) continue;
+    const fp = s => engineFollowers(s, s.players[p.id]) - (s.players[p.id].contest || 0);
+    const g = fp(end) - fp(start) - tracedF[p.id];
+    if (g) out.push(`${nm(p.id)} ${g > 0 ? '+' : '−'}${fword(g)}`);
+  }
+  if (!place && !out.length) return null;
+  const head = place ? (joined ? `${who} joined ${nm(joined.id)} on ${space}` : `${who} took ${space}`) : who;
+  // the strip's one line: what hit you first, then the biggest thing the turn did
+  const big = out.find(l => /^(recruited|bought|traded|released) |^(an extra turn|\d+ extra turns)$/.test(l));
+  const short = [hit, gain, big && big.replace(/ \(paid .*\)$/, '').replace(/ \(free\)$/, '')].filter(Boolean).slice(0, 2).join(' · ');
+  return { text: [head, ...out].join(' · '), head, lines: out, space, actor, touched: [...touched], short, hit };
 }
 
 /** Who won a finished game: most followers, members breaking a follower tie (the rule; Results ranks the same way). */

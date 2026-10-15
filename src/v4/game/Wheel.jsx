@@ -4,6 +4,8 @@
 //  - sockets (default): each space is a cream socket with its picture, name and yield;
 //  - engraved (design/prototypes/actions option 3): each space is a cell of its ring printed into the paper, washed
 //    in the quadrant's ink, with a one-ink stamp of its picture, its name in small capitals and its yield beneath.
+//  - any face in ./faces/ (`?spaces=<name>`, lab: `?lab=faces&face=<name>`): the face draws inside each space's box;
+//    the Wheel keeps positions, rotation, hover, clicks, aria, shake and notes. Contract: top of ./faces/index.js.
 // In both, a space has three states you can read at a glance: lit (yours to take: a lamp-lit edge, full strength),
 // taken (dimmed to ~40% with the owner's minion standing in it), and not open yet (hatched / hollow). A rival's
 // fresh move wears a dotted ring in that player's color, never the lamp's. A click on a space you can't take

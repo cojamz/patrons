@@ -40,15 +40,24 @@ describe('ranked row', () => {
 });
 
 describe('turn order on the cults', () => {
-  it("each cult shows its place in the round's remaining turn order: now, next, 3rd…", () => {
+  it("each cult shows its next placement, counting the snake's double: now, next, in N, done", () => {
     let s = until(createGame({ seats, seed: 43 }), t => t.round >= 1 && t.pending && t.pending.kind === 'place');
     const r = turnRail(s);
-    const order = [];
-    for (const p of [r.current, ...r.next]) if (p != null && !order.includes(p)) order.push(p);
+    const seq = [r.current, ...r.next].filter(p => p != null);
     const { places } = turnPlaces(s);
-    expect(places[order[0]].label).toBe('now');
-    if (order[1] != null) expect(places[order[1]].label).toBe('next');
-    if (order[2] != null) expect(places[order[2]].label).toBe('3rd');
+    for (const p of s.players) {
+      const k = seq.indexOf(p.id);
+      expect(places[p.id].label).toBe(k < 0 ? 'done' : k === 0 ? 'now' : k === 1 ? 'next' : `in ${k}`);
+      expect(places[p.id].twice).toBe(k >= 0 && seq[k + 1] === p.id);
+    }
+    // at a snake turnaround the seat that ends the pass places twice: its chip says so, and NEXT is that same seat
+    let t = s;
+    for (let n = 0; n < 200 && !(t.pending && t.pending.kind === 'place' && turnRail(t).next[0] === t.current); n++) t = applyMove(t, chooseBotMove(t, () => 0.35));
+    const tp = turnPlaces(t);
+    expect(tp.places[t.current].label).toBe('now');
+    expect(tp.places[t.current].twice).toBe(true);
+    expect(tp.places[t.current].title).toMatch(/snake order/);
+    expect(Object.values(tp.places).filter(x => x.label === 'next')).toHaveLength(0);
     for (const p of s.players) {
       const { container } = render(<CultSeat state={s} pid={p.id} me={0} mine={p.id === 0} />);
       const pill = container.querySelector('.cs-order');

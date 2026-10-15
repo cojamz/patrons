@@ -13,7 +13,6 @@ import { Popover } from './parts.jsx';
 import { Who } from './Glyphs.jsx';
 import { Rich, CostPips } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
-import { releaseNote } from './priceNotes.js';
 
 /**
  * An element that explains itself. content: a node or a function returning one (built only when shown).
@@ -21,6 +20,9 @@ import { releaseNote } from './priceNotes.js';
  */
 // Inside a control (an option button, a card): the control owns the click, the tip only explains on hover/long-press.
 const CONTROL = 'button, a[href], [data-option], [role="button"]';
+// a pointer resting on something opens its card at once (Cory, 2026-10-15: hovers must feel instant); the beat only
+// keeps a pointer passing across a line of keywords from flashing each one
+const TIP_MS = 50;
 export function Tip({ content, children, as: As = 'span', className = '', label, hint = null, ...rest }) {
   const [open, setOpen] = useState(null); // { el, pinned }
   const [nested, setNested] = useState(false);
@@ -40,7 +42,7 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
         ref={ref} className={`tip${className ? ` ${className}` : ''}`} data-tip="" role={nested ? undefined : 'button'} tabIndex={nested ? undefined : 0}
         aria-haspopup={nested ? undefined : 'dialog'} aria-expanded={nested ? undefined : !!open} aria-label={label}
         title={nested ? hint || label || undefined : undefined}
-        onPointerEnter={e => { if (!realHover(e)) return; clearTimeout(timer.current); timer.current = setTimeout(() => setOpen(o => o || { el: ref.current, pinned: false }), 260); }}
+        onPointerEnter={e => { if (!realHover(e)) return; clearTimeout(timer.current); timer.current = setTimeout(() => setOpen(o => o || { el: ref.current, pinned: false }), TIP_MS); }}
         onPointerLeave={e => { clearTimeout(timer.current); if (e.pointerType === 'mouse') setOpen(o => (o && !o.pinned ? null : o)); }}
         onClick={pin}
         onKeyDown={e => { if (!nested && (e.key === 'Enter' || e.key === ' ')) pin(e); }}
@@ -94,16 +96,12 @@ export function MemberCard({ state, uid, def: d0 = null }) {
   const owner = uid != null ? state.players.find(p => p.members.includes(uid)) : null;
   const card = uid != null ? state.cards[uid] : null;
   const where = uid == null ? null : owner ? null : state.shop.includes(uid) ? 'In the shop' : 'In the pile';
-  // what a release gives back (or why it can't), from the engine: RC1 saw Front-runner's off-table purple part come
-  // back "in any colors" and read it as a broken rule
-  const rel = uid != null ? releaseNote(state, uid, owner) : null;
   return (
     <div className="card-face" style={{ '--c': cardColor(state, d) }} data-card={d.id}>
       <div className="row"><span className="glyph" aria-hidden="true" /><b>{d.name}</b><Follower n={d.f} className="star" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></div>
       <p><CardText text={d.text} /></p>
       {card && card.copy && <small>Copying <CardName state={state} def={defById(card.copy)} /></small>}
       <small>Costs <CostPips parts={costParts(d, state.resources)} />{d.n > 1 ? ` · counts as ${d.n} members` : ''}{onTable(state, d) ? '' : ' · '}<Colorless state={state} def={d} /></small>
-      {rel && <small className={`release-note${rel.ok ? '' : ' no'}`} data-release={rel.ok ? 'yes' : 'no'}>{rel.text}</small>}
       {owner && <small className="owner" style={{ '--pc': playerColor(owner.id) }}><i />{owner.name}’s{card && card.used ? ' · used' : ''}</small>}
       {where && <small>{where}</small>}
     </div>

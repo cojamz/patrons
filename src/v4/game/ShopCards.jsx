@@ -9,7 +9,7 @@ import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { cardColor, onTable, usePreview } from './Info.jsx';
+import { cardColor, onTable, usePreview, Tip } from './Info.jsx';
 import { ResourceGlyph, FollowerGlyph } from './Glyphs.jsx';
 import { timingOf, payBreakdown, unlockedBy, surely } from './cards.js';
 void timingOf;
@@ -59,7 +59,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
       {/* one header line: the shop's title, then the follower rates (the strip's height is all cards) */}
       <div className="lt-shop-head">
         <h3 className="lt-h">Shop<small>{buying ? `${affordable} you can afford · hover to see the cost` : `${state.shop.length} face up`}</small></h3>
-        <FollowerRates state={state} optionFor={optionFor} onPick={onPick} onDenied={onDenied} />
+        <FollowerRates state={state} me={me} optionFor={optionFor} onPick={onPick} onDenied={onDenied} />
       </div>
       <div className="lt-shop-body">
       <MemberDeck state={state} hover={hover} deckRef={deckRef} />
@@ -120,7 +120,18 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
 export default memo(ShopCards);
 
 /** Followers for any resources: one quiet line of rates, each a button while you can buy it. */
-export function FollowerRates({ state, optionFor = () => null, onPick, onDenied }) {
+export function FollowerRates({ state, me = null, optionFor = () => null, onPick, onDenied }) {
+  // each rate explains itself on hover in any phase (RC1 panel: no hover while placing): the trade, what's left, and
+  // when you can make it
+  const viewer = me != null ? state.players[me] : null;
+  const held = viewer ? Object.values(viewer.res).reduce((a, b) => a + (b || 0), 0) : null;
+  const when = (t, opt) => {
+    if (opt) return 'Yours to buy now: click it.';
+    if (viewer && held < t.cost) return `You hold ${held}: ${t.cost - held} short.`;
+    if (state.pending && state.pending.kind === 'place' && viewer && state.pending.player === viewer.id) return 'You buy after you place a minion, in your buy step.';
+    if (tierLeft(state, t) <= 0) return 'None left.';
+    return 'You buy in your buy step, after placing a minion.';
+  };
   return (
     <div className="lt-rates" role="group" aria-label="Buy followers">
       <span className="lbl">Followers</span><small>for any resources</small>
@@ -129,9 +140,17 @@ export function FollowerRates({ state, optionFor = () => null, onPick, onDenied 
         const left = tierLeft(state, t);
         return (
           <button key={t.key} type="button" className={`fb lt-rate${opt ? ' can' : ''}`} data-option={opt ? opt.id : undefined} aria-disabled={!opt}
-            title={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}${t.limited ? ` (${left} left in this game)` : ''}`}
+            aria-haspopup="dialog" data-rate={t.key}
+            aria-label={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}${t.limited ? ` (${left} left in this game)` : ''}`}
             onClick={e => (opt ? onPick(opt.id) : onDenied && onDenied({ type: 'tier', tier: t }, e.currentTarget))}>
-            <b className="num">{t.cost}</b> → <b className="num">{t.get}</b>{t.limited && <small className="num"> {left} left</small>}<span className="hitbox" aria-hidden="true" />
+            <Tip className="fb-tip" hint={`Pay ${t.cost} resources of any colors: +${t.get} follower${t.get > 1 ? 's' : ''}`} content={() => (
+              <div className="pop-card rate-card" data-rate-card={t.key}>
+                <b>{t.cost} resources → {t.get} follower{t.get > 1 ? 's' : ''}</b>
+                <span>Any colors, any mix. It takes your one buy after a placement.</span>
+                {t.limited ? <span>{left} left at this table (2 per player at the start).</span> : <span>Unlimited.</span>}
+                <small>{when(t, opt)}</small>
+              </div>
+            )}><b className="num">{t.cost}</b> → <b className="num">{t.get}</b>{t.limited && <small className="num"> {left} left</small>}</Tip><span className="hitbox" aria-hidden="true" />
           </button>
         );
       })}

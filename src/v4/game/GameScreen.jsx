@@ -2,7 +2,7 @@
 // What's clickable is exactly state.pending.options, and only for seats this client controls.
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { followers, tierLeft } from '../../engine/v4/index.js';
-import { finalWinners, isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote, turnStory } from '../format.js';
+import { finalWinners, isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote } from '../format.js';
 import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
 import ShopCards from './ShopCards.jsx';
@@ -16,6 +16,8 @@ const NO_OPTIONS = () => null;
 import { useHoverCards, HoverCardLayer, usePreviewWarmup } from './HoverCards.jsx';
 import { replayIntro } from '../Intro.jsx';
 import Chronicle from './Chronicle.jsx';
+import SinceStrip from './SinceStrip.jsx';
+import { createTrail, feed, liveStory, sinceYourTurn } from './trail.js';
 import { cardDef } from '../../engine/v4/index.js';
 import Results from './Results.jsx';
 import RoundEnd from './RoundEnd.jsx';
@@ -171,7 +173,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
     pump();
   }, [pump]);
 
-  return [table.shown, table.moment, dismiss];
+  return [table.shown, table.moment, dismiss, rs0];
 }
 
 /** One glyph for the rest (How to play, the log, Leave): the table carries no header buttons. */
@@ -291,7 +293,7 @@ function PromptActions({ state, optionFor, onPick }) {
 const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing a minion', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
 
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults, askLeave = 0 }) {
-  const [live0, moment, dismissMoment] = useTable(session, pace ?? RIVAL_DWELL_MS);
+  const [live0, moment, dismissMoment, roundStart0] = useTable(session, pace ?? RIVAL_DWELL_MS);
   const state = moment && moment.board ? moment.board : live0;
   const mySeats = session.mySeats || NO_SEATS;
   const pend = state.pending;
@@ -335,7 +337,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     }
   }, []);
   useEffect(() => () => turnTimer.current.forEach(clearTimeout), []);
-  const turnStart = useRef(null); // { actor, state }: where the current turn began (its story is told when it passes)
+  // every placement's story, one per turn (trail.js): the turn card tells the latest, the strip the rivals' since yours
+  const trail = useRef(null);
+  if (!trail.current) trail.current = createTrail(mySeats.length === 1 ? mySeats[0] : null);
+  const [since, setSince] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [flash, setFlash] = useState(() => new Set());
@@ -436,31 +441,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         setTimeout(() => setGifts(gg => gg.filter(x => x !== g)), 2400);
       }
     }
-    // Every turn is told in one place (Cory): a turn card by the acting cult builds line by line as the turn goes
-    // (placed → gained → bought), the players it touched pulse, and when the turn passes the card holds a beat,
-    // then folds into that cult's chair. Your own turns too. A turn that ends the round is left to the Reckoning.
-    const me1 = mySeats.length === 1 ? mySeats[0] : null;
-    const turnOf = before.pending ? before.pending.player : null;
-    const passed = turnOf != null && before.round >= 1 && !(state.pending && state.pending.player === turnOf && state.round === before.round);
-    if (passed && turnStart.current && turnStart.current.actor === turnOf && state.round === before.round) {
-      const story = turnStory(turnStart.current.state, state, turnOf, me1, turnStart.current.mid);
-      if (story) {
-        showTurnCard({ pid: turnOf, text: story.text, live: false, n: turnStart.current.n });
-        if (story.touched.length) {
-          const n = Date.now();
-          setRobbed(r => ({ ...(r || {}), pids: story.touched, n }));
-          setTimeout(() => setRobbed(r => (r && r.n === n ? null : r)), 1800);
-        }
-      }
-    }
-    if (state.pending && (!before.pending || state.pending.player !== before.pending.player || state.round !== before.round)) turnStart.current = { actor: state.pending.player, state, mid: null, n: Date.now() };
-    // the turn reached its buy: what the action gave is settled (the buy's cost is told apart)
-    if (state.pending && state.pending.kind === 'buy' && turnStart.current && turnStart.current.actor === state.pending.player && !turnStart.current.mid) turnStart.current.mid = state;
-    // mid-turn: the card grows as the turn does
-    if (state.round >= 1 && state.pending && turnStart.current && turnStart.current.actor === state.pending.player && turnStart.current.state !== state) {
-      const story = turnStory(turnStart.current.state, state, state.pending.player, me1, turnStart.current.mid);
-      if (story) showTurnCard({ pid: state.pending.player, text: story.text, live: true, n: turnStart.current.n });
-    }
     // Getting robbed is never silent: a rival's move that took your resources says so.
     if (actor != null && !mySeats.includes(actor)) {
       for (const id of mySeats) {
@@ -490,6 +470,30 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const t = setTimeout(() => setFlash(new Set()), 2000);
     return () => clearTimeout(t);
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Every turn is told in one place (Cory): a turn card by the acting cult builds line by line as the turn goes
+  // (placed → gained → bought), the players it touched pulse, and when the turn passes the card holds a beat, then
+  // folds into that cult's chair. One card per placement: a snake turnaround or an extra turn is a turn of its own
+  // (RC1 panel). A turn that ends the round is left to the Reckoning.
+  useLayoutEffect(() => {
+    const t = trail.current;
+    const was = t.stories.length ? t.stories[t.stories.length - 1].n : 0;
+    feed(t, live0, roundStart0);
+    const fresh = t.stories.filter(st => st.n > was);
+    const told = fresh[fresh.length - 1];
+    if (told && told.round === live0.round && !live0.over) {
+      showTurnCard({ pid: told.actor, text: told.text, live: false, n: `t${told.n}` });
+      const pids = [...new Set(fresh.flatMap(st => st.touched))];
+      if (pids.length) {
+        const n = Date.now();
+        setRobbed(r => ({ ...(r || {}), pids, n }));
+        setTimeout(() => setRobbed(r => (r && r.n === n ? null : r)), 1800);
+      }
+    }
+    const now = live0.round >= 1 && !live0.over ? liveStory(t) : null;
+    if (now) showTurnCard({ pid: now.actor, text: now.text, live: true, n: `c${t.cur.key}` });
+    setSince(sinceYourTurn(t, mySeats));
+  }, [live0]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When a choice prompt goes away, keep focus on the table (the status line) rather than the page body.
   useEffect(() => {
@@ -757,6 +761,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           <section className="lt-shop" data-region="shop" aria-label="Shop">
             <ShopCards state={state} me={me} mySeats={yours ? mySeats : NO_SEATS} optionFor={live} onPick={shopPick} onDenied={shopDenied} phase={phase} hover={hover} />
           </section>
+          {/* what the rivals did since your own last placement, one line each, always on the board (RC1 panel) */}
+          {state.round >= 1 && <SinceStrip state={state} entries={since} me={mySeats.length === 1 ? mySeats[0] : null} yours={yours} onLog={openLog} />}
         </>
       )}
       {turnCard && !moment && !(state.over && !moment) && <TurnCard card={turnCard} root={root.current} state={state} />}

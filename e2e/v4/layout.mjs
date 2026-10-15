@@ -3,7 +3,9 @@
 //  (l2) every follower buy shows its whole label and price, while placing and while buying;
 //  (l3) nothing makes the page scroll sideways;
 //  (l4) a member whose color isn't on the table never prints that color as its cost;
-//  (l5) no color rule for follower buys anywhere (they take anything).
+//  (l5) no color rule for follower buys anywhere (they take anything);
+//  (l6) at setup the starting-resource picker never covers the wheel (RC1: it hid the lower half, so a newcomer
+//       never saw that the wheel spins): the picker stays outside the wheel's disc, and the whole disc is on screen.
 // Checked at 1270×700, 900×700 (the "900px clipping") and 1100×700, from a saved game (e2e/v4/lib/rich-save.mjs).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5186.
 import { chromium } from 'playwright';
@@ -104,6 +106,36 @@ for (const size of [{ width: 1270, height: 700 }, { width: 900, height: 700 }, {
   } catch (e) {
     errors.push(`[${tag}] run: ${e.message}`);
     await page.screenshot({ path: `${SHOTS}/${tag}-fail.png` }).catch(() => {});
+  }
+  await ctx.close();
+}
+
+// (l6) the setup picker and the wheel, side by side at laptop sizes
+for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }]) {
+  const tag = `${size.width}x${size.height}`;
+  const ctx = await browser.newContext({ viewport: size });
+  const page = await ctx.newPage();
+  page.on('pageerror', e => errors.push(`[${tag} setup] pageerror: ${e.message}`));
+  try {
+    await page.goto(`${base}/?botDelay=20&intro=0`);
+    await page.click('[data-home="local"]');
+    await page.click('[data-start]');
+    await page.waitForSelector('.prompt.choice.setup [data-option]', { timeout: 20000 });
+    await page.waitForTimeout(700); // the wheel settles to its setup size
+    const r = await page.evaluate(() => {
+      const st = document.querySelector('.lt-wheel .stage').getBoundingClientRect();
+      const pk = document.querySelector('.prompt.choice.setup').getBoundingClientRect();
+      // the paper disc: radius 200 of the 452-unit board, centred in the stage
+      const cx = st.left + st.width / 2, cy = st.top + st.height / 2, rad = st.width * 200 / 452;
+      const nx = Math.max(pk.left, Math.min(cx, pk.right)), ny = Math.max(pk.top, Math.min(cy, pk.bottom));
+      return { gap: Math.round(Math.hypot(nx - cx, ny - cy) - rad), disc: [cy - rad, cy + rad].map(Math.round), h: innerHeight, size: Math.round(rad * 2) };
+    });
+    if (r.gap < 0) errors.push(`[${tag} setup] (l6) the starting-resource picker covers the wheel by ${-r.gap}px`);
+    if (r.disc[0] < 0 || r.disc[1] > r.h) errors.push(`[${tag} setup] (l6) the wheel runs off the window at setup (${r.disc.join('–')})`);
+    if (r.size < 300) errors.push(`[${tag} setup] (l6) the wheel shrank to ${r.size}px at setup`);
+    await page.screenshot({ path: `${SHOTS}/${tag}-setup.png` });
+  } catch (e) {
+    errors.push(`[${tag} setup] run: ${e.message}`);
   }
   await ctx.close();
 }
