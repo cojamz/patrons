@@ -78,6 +78,9 @@ function wrapAction(qid, a, idx) {
     const e = { key, p: p.id, ring: a.ring, name: a.name, color: qid, idx, echo: !!a.echo, before: snapAll(ctx.state, p), res: {}, discount: 0, members: [] };
     L.seq = (L.seq || 0) + 1; e.seq = L.seq;
     L.now[key] = e; L.open = key; L.lastBy = key;
+    // a space whose gain is an extra turn (Overtime, free since 2026-10-15) hands over nothing a chip can hold:
+    // a copy does the action itself, as it did when Overtime was paid for
+    if (a.copyDoesIt) e.redo = true;
     track(ctx, e);
     orig.call(this, ctx, p);
     settle(ctx.state, e);

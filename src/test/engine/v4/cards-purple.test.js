@@ -15,31 +15,30 @@ const rich = { gold: 30, red: 30, purple: 30, green: 30 };
 const turnsQueued = (s, id, placed = id === s.current || id === 0 ? 1 : 0) => s.players[id].left - (3 - placed);
 
 describe('Purple actions', () => {
-  it('Clock In 4 / 5 / 6; Catch Up +1 and +2 per rival ahead on the board; Roll Call +1 per worker on the board', () => {
+  it('Clock In 4 / 5 / 6; Catch Up +1 and +1 per rival who has placed more this round; Roll Call +1 per worker on the board', () => {
     for (const r of [1, 2, 3]) expect(P(take(sc({ round: r }), 'purple.hourly'))).toBe(3 + r);
+    // P2 placed 2, P3 placed 1, P1 none before this one: both ahead
     expect(P(take(sc({ n: 3, slots: { '0-0': 1, '0-1': 1, '0-2': 2 } }), 'purple.catchup'))).toBe(1 + 2);
+    // P1 placed 1 before this one, P2 1, P3 2: only P3 ahead (P1's landing minion doesn't count against it)
+    expect(P(take(sc({ n: 3, slots: { '0-0': 0, '0-1': 1, '0-2': 2, '1-0': 2 } }), 'purple.catchup'))).toBe(1 + 1);
+    expect(P(take(sc(), 'purple.catchup'))).toBe(1); // the +1 always
     expect(P(take(sc({ slots: { '0-0': 0, '0-1': 0 } }), 'purple.windup'))).toBe(3);
   });
   it('Plan Ahead: +1 purple per minion you have left to place this round', () => {
     expect(P(take(sc({ round: 2 }), 'purple.planahead'))).toBe(2); // 3 minions, this one placed: 2 left
     expect(P(take(sc({ round: 3, left: 5 }), 'purple.planahead'))).toBe(4);
   });
-  it('Overtime: pay 8 purple for 2 extra turns right after this one, else +3; Crunch Time: spend all, 1 per 4 plus 1 (up to 2), else +4', () => {
-    let s = take(sc({ round: 2, res: [{ purple: 8 }] }), 'purple.overtime');
-    expect(P(s)).toBe(0);
-    expect(turnsQueued(s, 0)).toBe(2);
-    s = take(sc({ round: 2, res: [{ purple: 7 }] }), 'purple.overtime');
-    expect(P(s)).toBe(10);
-    expect(turnsQueued(s, 0)).toBe(0);
-    s = take(sc({ round: 3, res: [{ purple: 4 }] }), 'purple.rally');
-    expect(P(s)).toBe(0);
-    expect(turnsQueued(s, 0)).toBe(2);
-    s = take(sc({ round: 3, res: [{ purple: 12 }] }), 'purple.rally');
-    expect(P(s)).toBe(0); // all of it, for the most it buys: 2
-    expect(turnsQueued(s, 0)).toBe(2);
-    s = take(sc({ round: 3, res: [{ purple: 3 }] }), 'purple.rally');
-    expect(P(s)).toBe(7);
-    expect(turnsQueued(s, 0)).toBe(0);
+  it('Overtime: 1 extra turn right after this one, free; Crunch Time: 2 extra turns, free', () => {
+    for (const held of [0, 7, 8]) {
+      const s = take(sc({ round: 2, res: [{ purple: held }] }), 'purple.overtime');
+      expect(P(s)).toBe(held);
+      expect(turnsQueued(s, 0)).toBe(1);
+    }
+    for (const held of [0, 3, 4, 12]) {
+      const s = take(sc({ round: 3, res: [{ purple: held }] }), 'purple.rally');
+      expect(P(s)).toBe(held);
+      expect(turnsQueued(s, 0)).toBe(2);
+    }
   });
 });
 
@@ -97,33 +96,37 @@ describe('Purple members', () => {
     expect(s.players[0].left).toBe(5);
   });
 
-  it('Foreman: +1 purple per worker on the board whenever you take an extra turn (Overtime: 2 turns), named', () => {
-    const s = take(sc({ round: 2, res: [{ purple: 8 }], members: [['purple.foreman']], slots: { '0-0': 0 } }), 'purple.overtime');
+  it('Foreman: +1 purple per worker on the board whenever you take an extra turn (Crunch Time: 2 turns), named', () => {
+    const s = take(sc({ round: 3, members: [['purple.foreman']], slots: { '0-0': 0 } }), 'purple.rally');
     expect(P(s)).toBe(2 + 2);
     expect(named(s, 'Foreman')).toHaveLength(2);
   });
   it('Courier: +1 of each other color per extra turn, named; Midas leaves member income alone', () => {
-    const s = take(sc({ round: 2, res: [{ purple: 8 }], members: [['purple.courier', 'gold.midas']] }), 'purple.overtime');
+    const s = take(sc({ round: 3, members: [['purple.courier', 'gold.midas']] }), 'purple.rally');
     expect(s.players[0].res).toEqual({ gold: 2, red: 2, purple: 0, green: 2 });
     expect(named(s, 'Courier')[0]).toMatch(/P1's Courier: \+1 gold, \+1 red, \+1 green/);
   });
   it('Apprentice: each extra turn makes your next member 4 cheaper, named', () => {
-    const s = take(sc({ round: 2, res: [{ purple: 8 }], members: [['purple.apprentice']] }), 'purple.overtime');
+    const s = take(sc({ round: 3, members: [['purple.apprentice']] }), 'purple.rally');
     expect(s.players[0].discount).toBe(8);
     expect(named(s, 'Apprentice')[0]).toMatch(/next member costs 4 less/);
   });
   it('Overseer: half your purple, up to 4, when a rival takes an extra turn (capped), named', () => {
-    const s = take(sc({ round: 2, res: [{ purple: 8 }, { purple: 11 }], members: [[], ['purple.overseer']] }), 'purple.overtime');
+    const s = take(sc({ round: 3, res: [{}, { purple: 11 }], members: [[], ['purple.overseer']] }), 'purple.rally');
     expect(P(s, 1)).toBe(11 + 4 + 4);
     expect(named(s, 'Overseer')).toHaveLength(2);
   });
-  it('Corner-Cutter: Overtime costs 4; the log names Corner-Cutter; a Doppelganger copy does not halve again', () => {
+  it('Corner-Cutter: Overtime is free, so nothing to halve and no Corner-Cutter line; a Doppelganger copy does not crash', () => {
     let s = take(sc({ round: 2, res: [{ purple: 8 }], members: [['purple.doubletime']] }), 'purple.overtime');
-    expect(P(s)).toBe(4);
-    expect(named(s, 'Corner-Cutter')).toHaveLength(1);
-    s = sc({ round: 2, res: [{ purple: 8 }], members: [['purple.doubletime', 'red.doppel']] });
+    expect(P(s)).toBe(8);
+    expect(turnsQueued(s, 0)).toBe(1);
+    expect(named(s, 'Corner-Cutter')).toHaveLength(0);
+    s = sc({ round: 3, res: [{ purple: 8 }], members: [['purple.doubletime', 'red.doppel']] });
     s.cards[uidOf(s, 'red.doppel', 0)].copy = 'purple.doubletime';
-    expect(P(take(s, 'purple.overtime'))).toBe(4);
+    s = take(s, 'purple.rally');
+    expect(P(s)).toBe(8);
+    expect(turnsQueued(s, 0)).toBe(2);
+    expect(named(s, 'Corner-Cutter')).toHaveLength(0);
   });
   it('Bookkeeper on your last placement of the round (before its buy), not at round end; Clockmaker and Lamplighter at round start; all named', () => {
     let s = sc({ res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 }, queue: [{ t: 'endRound' }] });

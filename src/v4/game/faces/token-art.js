@@ -155,11 +155,11 @@ const S = {
   },
   purple: {
     hourly: r => [[`${3 + r}`, 'purple']],
-    catchup: [['1', 'purple'], ['2', '/', 'rup']],
+    catchup: [['1', 'purple'], ['1', '/', 'rup']],
     windup: [['1', 'purple', '/', 'w']],
-    planahead: [['2', 'purple', '/', 'wo']],
-    overtime: [['8', 'purple', '→', '2', 'turn']],
-    rally: [['turn', '/', '4', 'purple']],
+    planahead: [['1', 'purple', '/', 'wo']],
+    overtime: [['1', 'turn']],
+    rally: [['2', 'turn']],
   },
   silver: {
     toast: r => [[`${3 * r}`, 'silver'], ['rr', '+1']],

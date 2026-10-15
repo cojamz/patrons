@@ -51,15 +51,14 @@ const P = {
   },
   purple: {
     hourly: r => ({ main: `+${3 + r} purple`, second: grows(r) }),
-    catchup: { main: '+1 purple', second: '+2 per rival with more minions', note: 'on the board' },
+    catchup: { main: '+1 purple', second: '+1 per rival ahead', note: 'in minions placed' },
     // "out" and "left" read alike (w3b #16): where the minions are, in the card's own words ("on the board")
     windup: { main: '+1 purple', second: 'per minion on the board' },
     planahead: { main: '+1 purple', second: 'per minion to place' },
-    // "2 extra turns for 8" read as 8 a turn (w3b #17): the price first, as the card says it
-    overtime: { verb: 'Pay 8 purple', second: 'for 2 extra turns', note: 'can’t pay? +3 purple' },
-    // "Extra turns for all purple" read as a gift to everyone with purple (w3b #18): yours, spent. The center drops
-    // line 2, so the trade is whole in line 1. With 4 or more the card always gives 2 (1 per 4, plus 1, up to 2)
-    rally: { verb: 'All your purple for 2 extra turns', note: 'less than 4? +4 purple' },
+    // free since 2026-10-15 (Cory: no board action requires spending). A ring II verb can drop line 2: whole in line 1
+    overtime: { verb: 'Take 1 extra turn', second: 'right after this' },
+    // the center drops line 2, so it's whole in line 1
+    rally: { verb: 'Take 2 extra turns' },
   },
   silver: {
     toast: r => ({ main: `+${3 * r} silver`, second: 'others get 1', note: grows(r) }),

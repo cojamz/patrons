@@ -178,7 +178,8 @@ function extraGrants(state) {
     if (m) { add(m[1], m[2], 1); continue; }
     m = l.match(/^(.+?) takes (an extra turn|(\d+) extra turns)\.$/);
     if (!m) continue;
-    // paid for just before: "P1's Taskmaster: pays 5 purple…", "P1 pays 4 purple for Overtime.", "P1 spends 8 purple on Crunch Time."
+    // paid for just before: "P1's Taskmaster: pays 5 purple…" (older "pays N purple for X" / "spends N purple on X"
+    // lines still parse in saved logs); else the space just taken (Overtime and Crunch Time are free)
     const prev = log[i - 1] || '', who = esc(m[1]);
     const why = (prev.match(new RegExp(`^${who}'s (.+?): pays `)) || prev.match(new RegExp(`^${who} pays \\d+ purple for (.+?)(?: \\(|\\.$)`))
       || prev.match(new RegExp(`^${who} spends \\d+ purple on (.+?)(?: \\(|\\.$)`)) || [])[1] || lastAction(log, i, m[1]);

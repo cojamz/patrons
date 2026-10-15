@@ -51,7 +51,6 @@ const pass = s => (s.pending?.kind === 'buy' ? move(s, 'pass') : s);
 const turns = (...ps) => ps.map(p => ({ t: 'turn', p }));
 const nextPlacer = s => { while (s.pending && s.pending.kind !== 'place') s = pass(s); return s.pending?.player; };
 const JV = '0-0', RUSH = '0-1', HIRE = '1-2';
-const OT_COST = 8; // Overtime: this much purple for 2 extra turns
 // every round-I space but the ones named, taken by P2
 const fullRoundI = (...free) => Object.fromEntries([0, 1, 2, 3].flatMap(q => [0, 1, 2].map(i => `${q}-${i}`)).filter(k => !free.includes(k)).map(k => [k, 1]));
 
@@ -79,9 +78,23 @@ describe('Purple actions', () => {
     expect(R(take(scene({ round: 2 }), 'purple.hourly')).purple).toBe(5);
     expect(R(take(scene({ round: 3 }), 'purple.hourly')).purple).toBe(6);
   });
-  it('Catch Up: +1 purple, +2 per rival with more workers on the board', () => {
-    expect(R(take(scene({ n: 3, slots: { [RUSH]: 1, [HIRE]: 1, '1-0': 2, '1-1': 2 } }), 'purple.catchup')).purple).toBe(5);
-    expect(R(take(scene({ n: 3, slots: { [RUSH]: 1, [HIRE]: 2 } }), 'purple.catchup')).purple).toBe(1); // equal counts don't pay
+  it('Catch Up: +1 purple, and +1 per rival who\'s placed more minions than you this round (counted before yours lands)', () => {
+    // two rivals two minions ahead: +1, and +1 for each
+    expect(R(take(scene({ n: 3, slots: { [RUSH]: 1, [HIRE]: 1, '1-0': 2, '1-1': 2 } }), 'purple.catchup')).purple).toBe(3);
+    // equal counts before yours lands don't pay: only the +1
+    expect(R(take(scene({ n: 3, slots: { [RUSH]: 0, [HIRE]: 1, '1-0': 2 } }), 'purple.catchup')).purple).toBe(1);
+    // nobody on the board yet: the +1 is still granted
+    expect(R(take(scene(), 'purple.catchup')).purple).toBe(1);
+  });
+  it('Catch Up pays in ordinary turn order: a rival one minion ahead counts (yours, landing, does not count against you)', () => {
+    // Cory got nothing from Catch Up: the old count included the minion just placed, so a rival one ahead (the only
+    // lead turn order gives) tied it, and the bonus never paid without someone's extra turns.
+    // P2 went first this round and has 1 out; P1's first minion takes Catch Up.
+    let s = take(scene({ slots: { [RUSH]: 1 }, queue: turns(0, 1) }), 'purple.catchup');
+    expect(R(s).purple).toBe(1 + 1);
+    // 4 players, P1 last in the snake: three rivals one ahead, +1 each
+    s = take(scene({ n: 4, slots: { [RUSH]: 1, [HIRE]: 2, '1-0': 3 }, queue: turns(0, 1) }), 'purple.catchup');
+    expect(R(s).purple).toBe(1 + 3);
   });
   it('Roll Call: +1 purple per worker you have on the board, this one included', () => {
     expect(R(take(scene(), 'purple.windup')).purple).toBe(1);
@@ -95,50 +108,59 @@ describe('Purple actions', () => {
     last.players[0].left = 1;
     expect(R(take(last, 'purple.planahead')).purple).toBe(0); // your last worker: nothing left to plan
   });
-  it(`Overtime (ring II): pay ${OT_COST} purple for 2 extra turns right after this one; without it, +3 purple`, () => {
-    let s = take(scene({ round: 2, res: [{ purple: OT_COST + 1 }], queue: turns(0, 1) }), 'purple.overtime');
-    expect(R(s).purple).toBe(1);
-    expect(s.players[0].left).toBe(2 + 2); // one worker in, two out
+  it('Overtime (ring II): take 1 extra turn right after this one; nothing to pay', () => {
+    let s = take(scene({ round: 2, res: [{ purple: 9 }], queue: turns(0, 1) }), 'purple.overtime');
+    expect(R(s).purple).toBe(9); // nothing spent
+    expect(s.players[0].left).toBe(2 + 1); // one minion in, one back
+    expect(s.log).toContain('P1 takes an extra turn.');
     expect(nextPlacer(s)).toBe(0);
-    s = pass(take(s, 'purple.hourly'));
-    expect(nextPlacer(s)).toBe(0); // the second extra turn
-    s = pass(take(s, 'purple.windup'));
+    s = pass(take(pass(pass(s)), 'purple.hourly'));
     expect(nextPlacer(s)).toBe(1);
-    s = take(scene({ round: 2, res: [{ purple: OT_COST - 1 }], queue: turns(0, 1) }), 'purple.overtime');
-    expect(R(s).purple).toBe(OT_COST + 2);
-    expect(nextPlacer(s)).toBe(1);
+    // with no purple at all, the same: no payment, no fallback gain
+    s = take(scene({ round: 2, queue: turns(0, 1) }), 'purple.overtime');
+    expect(R(s).purple).toBe(0);
+    expect(nextPlacer(s)).toBe(0);
+    // no choice or payment to make on the space (nothing to buy with, so straight to the extra placement)
+    expect(s.pending).toMatchObject({ kind: 'place', player: 0 });
   });
   it('extra turns never squeeze a later player out of the last space', () => {
     // round II: only Overtime and two other spaces open, P2 still has a turn
     const slots = { ...fullRoundI(JV, RUSH), '0-3': 1, '0-4': 1, '1-3': 1, '1-4': 1, '3-3': 1, '3-4': 1, '2-3': 1 };
-    const s0 = scene({ round: 2, res: [{ purple: OT_COST }], slots, queue: turns(0, 1) });
+    const s0 = scene({ round: 2, slots, queue: turns(0, 1) });
     expect(spareSpace(contextFor(s0))).toBe(true); // 3 open, 1 turn queued
-    const s = take(s0, 'purple.overtime');
-    expect(R(s).purple).toBe(OT_COST + 3); // 2 open, 1 turn queued: room for 1 extra turn, not 2, so +3
-    expect(nextPlacer(s)).toBe(1);
-  });
-  it('Crunch Time (ring III): spend all your purple, 1 extra turn per 4 spent plus 1, up to 2; with less than 4, +4 purple', () => {
-    const rally = purpleHeld => take(scene({ round: 3, res: [{ purple: purpleHeld }], queue: turns(0, 1) }), 'purple.rally');
-    let s = rally(5);
-    expect(R(s).purple).toBe(0); // all of it, even the odd 1
-    expect(s.players[0].left).toBe(2 + 2); // 5 → 1 per 4, plus 1 = 2 extra turns
+    let s = take(s0, 'purple.overtime');
+    expect(s.players[0].left).toBe(2 + 1); // 2 open, 1 turn queued: room for the 1
     expect(nextPlacer(s)).toBe(0);
-    s = rally(8);
-    expect(s.players[0].left).toBe(2 + 2); // 8 would buy 3; the most is 2
-    s = rally(30);
-    expect(s.players[0].left).toBe(2 + 2); // never more than 2
+    // only Overtime and one other space open: no space to spare, so no extra turn (and nothing else instead)
+    s = take(scene({ round: 2, slots: { ...slots, [RUSH]: 1 }, queue: turns(0, 1) }), 'purple.overtime');
+    expect(s.players[0].left).toBe(2);
     expect(R(s).purple).toBe(0);
-    s = rally(3);
-    expect(R(s).purple).toBe(7);
+    expect(s.log).toContain('No space to spare: P1 gets no extra turn from Overtime.');
     expect(nextPlacer(s)).toBe(1);
   });
-  it('Crunch Time with room for fewer turns than its purple buys: pays only for the turns it gets', () => {
+  it('Crunch Time (ring III): take 2 extra turns right after this one; nothing to pay', () => {
+    const rally = purpleHeld => take(scene({ round: 3, res: [{ purple: purpleHeld }], queue: turns(0, 1) }), 'purple.rally');
+    for (const held of [0, 3, 5, 30]) {
+      const s = rally(held);
+      expect(R(s).purple).toBe(held); // nothing spent, nothing gained
+      expect(s.players[0].left).toBe(2 + 2);
+      expect(s.log).toContain('P1 takes 2 extra turns.');
+      expect(nextPlacer(s)).toBe(0);
+    }
+    expect(() => take(scene({ round: 2 }), 'purple.rally')).toThrow(); // the center opens in round III
+  });
+  it('Crunch Time with room for fewer turns than it gives: as many as the board has room for', () => {
     // round III: 4 spaces open once Crunch Time is taken, and P2 still has 3 turns → room for 1 extra turn, not 2
     const taken = { ...fullRoundI('0-0', '0-1', '0-2'), '0-3': 1, '0-4': 1, '1-3': 1, '1-4': 1, '2-3': 1, '3-3': 1, '3-4': 1, '0-5': 1, '1-5': 1, '3-5': 1 };
     const s0 = scene({ round: 3, res: [{ purple: 12 }], slots: taken, queue: turns(0, 1, 1, 1) });
-    const s = take(s0, 'purple.rally');
+    let s = take(s0, 'purple.rally');
     expect(s.players[0].left).toBe(2 + 1);
-    expect(R(s).purple).toBe(12); // 1 turn: the free one, so nothing is spent
+    expect(R(s).purple).toBe(12);
+    expect(s.log).toContain('P1 takes an extra turn.');
+    // P2 with a 4th turn to come: no room at all
+    s = take(scene({ round: 3, slots: taken, queue: turns(0, 1, 1, 1, 1) }), 'purple.rally');
+    expect(s.players[0].left).toBe(2);
+    expect(s.log).toContain('No space to spare: P1 gets no extra turn from Crunch Time.');
   });
 });
 
@@ -178,26 +200,32 @@ describe('Purple members', () => {
     const t = start([['purple.lateriser']], { bonus: [3, 0] });
     expect(t.queue.filter(x => x.t === 'turn' && x.p === 0)).toHaveLength(4);
   });
-  it('Foreman, Courier, Apprentice: whenever you take an extra turn (Overtime gives 2)', () => {
-    const s = take(scene({ round: 2, res: [{ purple: OT_COST }], slots: { [JV]: 0 }, members: [['purple.foreman', 'purple.courier', 'purple.apprentice']], queue: turns(0, 1) }), 'purple.overtime');
-    // Foreman: 2 workers on the board (Kickback + Overtime), twice
+  it('Foreman, Courier, Apprentice: whenever you take an extra turn (Crunch Time gives 2)', () => {
+    const s = take(scene({ round: 3, slots: { [JV]: 0 }, members: [['purple.foreman', 'purple.courier', 'purple.apprentice']], queue: turns(0, 1) }), 'purple.rally');
+    // Foreman: 2 workers on the board (Kickback + Crunch Time), twice
     expect(R(s)).toEqual({ gold: 2, red: 2, purple: 4, green: 2 });
     expect(s.players[0].discount).toBe(8);
   });
-  it('Overseer: whenever a rival takes an extra turn, gain half your purple, up to 4 (each of Overtime’s 2 turns)', () => {
-    let s = take(scene({ round: 2, res: [{ purple: OT_COST }, { purple: 5 }], members: [[], ['purple.overseer']], queue: turns(0, 1) }), 'purple.overtime');
+  it('Overseer: whenever a rival takes an extra turn, gain half your purple, up to 4 (each of Crunch Time’s 2 turns)', () => {
+    let s = take(scene({ round: 3, res: [{}, { purple: 5 }], members: [[], ['purple.overseer']], queue: turns(0, 1) }), 'purple.rally');
     expect(R(s, 1).purple).toBe(5 + 2 + 3);
-    s = take(scene({ round: 2, res: [{ purple: OT_COST }, { purple: 20 }], members: [[], ['purple.overseer']], queue: turns(0, 1) }), 'purple.overtime');
+    s = take(scene({ round: 3, res: [{}, { purple: 20 }], members: [[], ['purple.overseer']], queue: turns(0, 1) }), 'purple.rally');
     expect(R(s, 1).purple).toBe(28);
   });
-  it('Corner-Cutter: extra turns you pay purple for cost half, rounded up (Overtime 4; Crunch Time 1 turn per 2 spent)', () => {
-    let s = take(scene({ round: 2, res: [{ purple: OT_COST / 2 }], members: [['purple.doubletime']], queue: turns(0, 1) }), 'purple.overtime');
-    expect(R(s).purple).toBe(0);
+  it('Corner-Cutter: extra turns you pay purple for cost half, rounded up (Taskmaster 3); free spaces stay free and never name it', () => {
+    let s = afterTake([['purple.taskmaster', 'purple.doubletime']], { res: [{ purple: 0 }] }); // 4 purple
+    s = move(s, `use:${uidOf(s, 'purple.taskmaster', 0)}`);
+    expect(R(s).purple).toBe(1); // 5 → 3
+    expect(s.log.some(l => l.includes('Corner-Cutter: 5 → 3'))).toBe(true);
     expect(nextPlacer(s)).toBe(0);
+    // Overtime and Crunch Time cost nothing, so Corner-Cutter has nothing to halve: no change, no log line
+    s = take(scene({ round: 2, res: [{ purple: 4 }], members: [['purple.doubletime']], queue: turns(0, 1) }), 'purple.overtime');
+    expect(R(s).purple).toBe(4);
+    expect(s.players[0].left).toBe(2 + 1);
     s = take(scene({ round: 3, res: [{ purple: 2 }], members: [['purple.doubletime']], queue: turns(0, 1) }), 'purple.rally');
-    expect(R(s).purple).toBe(0);
-    expect(s.players[0].left).toBe(2 + 2); // 2 purple → 1 per 2, plus 1
-    expect(s.log.some(l => l.includes('Corner-Cutter: 1 turn per 2'))).toBe(true);
+    expect(R(s).purple).toBe(2);
+    expect(s.players[0].left).toBe(2 + 2);
+    expect(s.log.some(l => l.includes('Corner-Cutter'))).toBe(false);
   });
   it('Bookkeeper: when you place your last worker of a round, +1 purple per 2 workers you have on the board; nothing at round end', () => {
     expect(R(scene({ members: [['purple.bookkeeper']], slots: { [JV]: 0, [RUSH]: 0, [HIRE]: 0 }, queue: [{ t: 'endRound' }] })).purple).toBe(0);
