@@ -51,6 +51,8 @@ describe('11 · every choice names the card or space that asked', () => {
 
 describe('12 · one price rule for every recruit', () => {
   it('Snap Up offers Underdog when Penny Pincher makes it affordable (2 gold count as 4, plus 2 blue)', () => {
+    const restore = pinCosts({ 'gold.underdog': [4, 2] }); // the price this case was written at (Underdog is 8 since 2026-10-15)
+    try {
     let s = sceneQ({ quadrants: CLASSIC, res: [{ gold: 2 }], members: [['gold.thrift']] });
     row(s, ['gold.underdog', 'red.patriarch'], ['red.mob']);
     s = take(s, 'market.bargain');
@@ -61,8 +63,11 @@ describe('12 · one price rule for every recruit', () => {
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
     expect(s.players[0].members).toContain(ud);
     expect(s.players[0].res).toMatchObject({ gold: 0, blue: 0 });
+    } finally { restore(); }
   });
   it('Snap Up uses (and spends) an Intro Offer discount', () => {
+    const restore = pinCosts({ 'gold.underdog': [4, 2] }); // the price this case was written at (Underdog is 8 since 2026-10-15)
+    try {
     let s = sceneQ({ quadrants: CLASSIC, res: [{ red: 2 }], discount: [4] });
     row(s, ['red.patriarch', 'gold.underdog'], ['red.mob']);
     s = take(s, 'market.bargain'); // +2 blue: 4 in all; Underdog costs 6, 2 after the discount
@@ -74,6 +79,7 @@ describe('12 · one price rule for every recruit', () => {
     expect(s.players[0].discount).toBe(0);
     const left = Object.values(s.players[0].res).reduce((a, b) => a + b, 0);
     expect(left).toBe(2);
+    } finally { restore(); }
   });
   it('memberPrice: the exact price after Intro Offer, and the shortfall by color', () => {
     const s = sceneQ({ quadrants: CLASSIC, res: [{ gold: 2 }], discount: [4] });

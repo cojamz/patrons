@@ -9,9 +9,9 @@
 import { MO } from '../motion.js';
 
 export const CARD = { w: 184, h: 104 };
-export const MEMBER = { w: 64, h: 76 };
-// where staged members stand, by arrival: under the card, centre first, then out to each side
-const SPOTS = [0, -1, 1, -2, 2];
+// a staged member is a caption card: its portrait, its name, its rule and what it just did (Cory, 22:48: "it's not
+// clear why without hover"); they stack under the space's card in the order they acted
+export const MEMBER = { w: 248, h: 62 };
 
 let items = [];
 let ver = 0;
@@ -38,8 +38,7 @@ export function stageRect(slot) {
   if (slot === 'card') return box(c.x - CARD.w / 2, c.y - CARD.h / 2 - 50, CARD.w, CARD.h);
   // the space a copy runs lands on the first card, fanned down and right, so the first card's top line still shows
   if (slot === 'card2') return box(c.x - CARD.w / 2 + 22, c.y - CARD.h / 2 - 14, CARD.w, CARD.h);
-  const k = SPOTS[slot % SPOTS.length] ?? 0;
-  return box(c.x - MEMBER.w / 2 + k * (MEMBER.w + 8), c.y + 52, MEMBER.w, MEMBER.h);
+  return box(c.x - MEMBER.w / 2, c.y + 10 + (slot % 4) * (MEMBER.h + 6), MEMBER.w, MEMBER.h);
 }
 const box = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top });
 

@@ -200,7 +200,7 @@ describe('Doppelganger copying Purple, Green and Silver members', () => {
     expect(R(s, 0).silver).toBe(3);
   });
   it('copying Foreman pays on every extra turn twice', () => {
-    let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 3, slots: { '0-0': 0 }, members: [['purple.foreman', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'purple.foreman' } } });
+    let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 2, slots: { '0-0': 0 }, members: [['purple.foreman', 'echo.doppel']], copies: { 0: { 'echo.doppel': 'purple.foreman' } } });
     s = take(s, 'purple.overtime');
     expect(R(s, 0).purple).toBe(4); // 2 workers on the board, two Foremen, Overtime's 1 turn (Crunch Time's turns aren't extra)
   });

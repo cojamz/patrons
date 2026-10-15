@@ -102,7 +102,7 @@ describe('Purple members', () => {
   // Crunch Time moves your own turns up: they aren't extra turns, so none of these fire for it
   const crunch = o => take(sc({ round: 3, queue: [0, 1, 0, 1, 0].map(p => ({ t: 'turn', p })), ...o }), 'purple.rally');
   it('Foreman: +1 purple per worker on the board whenever you take an extra turn (Overtime), named; not on Crunch Time', () => {
-    const s = take(sc({ round: 3, members: [['purple.foreman']], slots: { '0-0': 0 } }), 'purple.overtime');
+    const s = take(sc({ round: 2, members: [['purple.foreman']], slots: { '0-0': 0 } }), 'purple.overtime');
     expect(P(s)).toBe(2);
     expect(named(s, 'Foreman')).toHaveLength(1);
     const t = crunch({ members: [['purple.foreman']], slots: { '0-0': 0 } });
@@ -110,19 +110,19 @@ describe('Purple members', () => {
     expect(named(t, 'Foreman')).toHaveLength(0);
   });
   it('Courier: +1 of each other color per extra turn, named; Midas leaves member income alone; not on Crunch Time', () => {
-    const s = take(sc({ round: 3, members: [['purple.courier', 'gold.midas']] }), 'purple.overtime');
+    const s = take(sc({ round: 2, members: [['purple.courier', 'gold.midas']] }), 'purple.overtime');
     expect(s.players[0].res).toEqual({ gold: 1, red: 1, purple: 0, green: 1 });
     expect(named(s, 'Courier')[0]).toMatch(/P1's Courier: \+1 gold, \+1 red, \+1 green/);
     expect(crunch({ members: [['purple.courier']] }).players[0].res).toEqual({ gold: 0, red: 0, purple: 0, green: 0 });
   });
   it('Apprentice: each extra turn makes your next member 4 cheaper, named; not on Crunch Time', () => {
-    const s = take(sc({ round: 3, members: [['purple.apprentice']] }), 'purple.overtime');
+    const s = take(sc({ round: 2, members: [['purple.apprentice']] }), 'purple.overtime');
     expect(s.players[0].discount).toBe(4);
     expect(named(s, 'Apprentice')[0]).toMatch(/next member costs 4 less/);
     expect(crunch({ members: [['purple.apprentice']] }).players[0].discount).toBe(0);
   });
   it('Overseer: half your purple, up to 4, when a rival takes an extra turn (capped), named; not on Crunch Time', () => {
-    const s = take(sc({ round: 3, res: [{}, { purple: 11 }], members: [[], ['purple.overseer']] }), 'purple.overtime');
+    const s = take(sc({ round: 2, res: [{}, { purple: 11 }], members: [[], ['purple.overseer']] }), 'purple.overtime');
     expect(P(s, 1)).toBe(11 + 4);
     expect(named(s, 'Overseer')).toHaveLength(1);
     const t = crunch({ res: [{}, { purple: 11 }], members: [[], ['purple.overseer']] });

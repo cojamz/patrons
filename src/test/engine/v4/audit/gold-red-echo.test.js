@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, resume, followers } from '../../../../engine/v4/core.js';
 import { install } from '../../../../engine/v4/content/echo.js';
-import { take, move, play, uidOf } from '../helpers.js';
+import { take, move, play, uidOf, pinCosts } from '../helpers.js';
 
 install();
 const QUADS = ['gold', 'red', 'blue', 'echo'];
@@ -77,11 +77,14 @@ describe('Gold', () => {
 
 describe('Red', () => {
   it('Sponsor: the log never says it saved more than it did (Volunteer costs 0)', () => {
-    let s = scene({ turns: [0], res: [{ red: 5 }, {}], members: [['red.sponsor'], []], shop: ['red.volunteer', 'red.twins'] });
-    s = take(s, 'echo.hum');
-    s = buyCard(s, 'red.volunteer');
-    const line = s.log.find(l => l.includes('recruited Volunteer'));
-    expect(line).not.toMatch(/Sponsor saves 2/);
+    const restore = pinCosts({ 'red.volunteer': [0, 0] }); // free when this was found (2+2 since balance pass 3)
+    try {
+      let s = scene({ turns: [0], res: [{ red: 5 }, {}], members: [['red.sponsor'], []], shop: ['red.volunteer', 'red.twins'] });
+      s = take(s, 'echo.hum');
+      s = buyCard(s, 'red.volunteer');
+      const line = s.log.find(l => l.includes('recruited Volunteer'));
+      expect(line).not.toMatch(/Sponsor saves 2/);
+    } finally { restore(); }
   });
 
   it('Doppelganger copying Big Family is worth 3 followers (text says "the effect")', () => {

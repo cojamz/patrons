@@ -1,7 +1,7 @@
 // Public API of the Patrons v4 engine.
 export {
   createGame, applyMove, legalMoves, isLegal,
-  followers, memberCount, countMembersOfColor, cardDef, actionAt, openSlots,
+  followers, memberCount, countMembersOfColor, cardDef, actionAt, openSlots, spaceOpen,
   memberPrice, paymentPlan, followerPlan, paymentChoices, followerChoices, RING_VALUE, WORKERS, SHOP_SIZE, TIERS, tierLeft, roman,
   contestTable, turnRail, roundOrder, roundWorkers,
 } from './core.js';

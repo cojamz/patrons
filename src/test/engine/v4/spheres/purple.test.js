@@ -253,7 +253,7 @@ describe('Purple members', () => {
   });
   it('Foreman, Courier, Apprentice: whenever you take an extra turn (Overtime gives 1); Crunch Time\'s turns aren\'t extra', () => {
     const trio = [['purple.foreman', 'purple.courier', 'purple.apprentice']];
-    const s = take(scene({ round: 3, slots: { [JV]: 0 }, members: trio, queue: turns(0, 1) }), 'purple.overtime');
+    const s = take(scene({ round: 2, slots: { [JV]: 0 }, members: trio, queue: turns(0, 1) }), 'purple.overtime');
     // Foreman: 2 workers on the board (Kickback + Overtime)
     expect(R(s)).toEqual({ gold: 1, red: 1, purple: 2, green: 1 });
     expect(s.players[0].discount).toBe(4);
@@ -262,9 +262,9 @@ describe('Purple members', () => {
     expect(t.players[0].discount).toBe(0);
   });
   it('Overseer: whenever a rival takes an extra turn, gain half your purple, up to 4; not on Crunch Time', () => {
-    let s = take(scene({ round: 3, res: [{}, { purple: 5 }], members: [[], ['purple.overseer']], queue: turns(0, 1) }), 'purple.overtime');
+    let s = take(scene({ round: 2, res: [{}, { purple: 5 }], members: [[], ['purple.overseer']], queue: turns(0, 1) }), 'purple.overtime');
     expect(R(s, 1).purple).toBe(5 + 2);
-    s = take(scene({ round: 3, res: [{}, { purple: 20 }], members: [[], ['purple.overseer']], queue: turns(0, 1) }), 'purple.overtime');
+    s = take(scene({ round: 2, res: [{}, { purple: 20 }], members: [[], ['purple.overseer']], queue: turns(0, 1) }), 'purple.overtime');
     expect(R(s, 1).purple).toBe(24);
     s = take(scene({ round: 3, res: [{}, { purple: 20 }], members: [[], ['purple.overseer']], queue: turns(0, 1, 0, 1, 0) }), 'purple.rally');
     expect(R(s, 1).purple).toBe(20);

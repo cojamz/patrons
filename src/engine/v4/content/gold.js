@@ -90,7 +90,7 @@ export default {
     // Cory, 2026-10-15 (balance pass 1, #1): only the top rival pays it, about a third of what any rival paid
     // (both bots read the old card at 8.7 for 4). Ties for the most all count; it's measured before the buy lands.
     // Cory, 2026-10-15: from any rival buying followers, period
-    m('taxman', 'Tax Collector', 2, 2, 'Whenever a rival buys followers, +1 gold.', {
+    m('taxman', 'Tax Collector', 4, 4, 'Whenever a rival buys followers, +1 gold.', {
       onBuyFollowers(ctx, owner, card, buyer) { if (buyer !== owner) ctx.gain(owner, 'gold', 1); },
     }),
     m('merchant', 'Merchant', 4, 2, 'Whenever anyone recruits a gold member, +1 gold.', {
@@ -104,7 +104,7 @@ export default {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'gold') ctx.gain(owner, 'gold', 1);
       },
     }),
-    m('underdog', 'Underdog', 4, 2, 'While anyone has more gold than you, your gold gains are doubled.', {
+    m('underdog', 'Underdog', 5, 3, 'While anyone has more gold than you, your gold gains are doubled.', {
       modifyGain(ctx, owner, card, g) {
         if (g.color === 'gold' && !g.doubled && ctx.state.players.some(o => o !== owner && o.res.gold > owner.res.gold)) {
           g.n *= 2; g.doubled = true;
@@ -123,7 +123,7 @@ export default {
       },
     }),
     // Cory, 2026-10-15: Tinker was way too strong; now +1 gold per other color an action gains you, named Alchemist
-    m('tinker', 'Alchemist', 4, 2, 'Whenever an action gains you another color, +1 gold.', {
+    m('tinker', 'Alchemist', 5, 3, 'Whenever an action gains you another color, +1 gold.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n > 0) owner.res.gold += 1; },
     }),
     m('investor', 'Investor', 4, 2, 'Round start: set aside any of your gold. Round end: it comes back doubled.', {

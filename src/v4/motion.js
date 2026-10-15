@@ -170,6 +170,7 @@ const TABLE = {
   // the round's end as its own beat before the first rim lights: "Round II ends" stamps in at the wheel's centre and is
   // read (wave 4 #6: the scoring began while the player looked away)
   reckonLead:  [450,   800],
+  lingerDelta: [1800, 2600],  // a seat's follower change stays readable under its count (panel r3)
   // the end-game scoring on the results' cults (taste rule 11; game/FinalScore.jsx): the results are read, then every
   // seat in step: the leader's followers pop, then each member's people one figure after the next, then the followers
   // members grant at game end; each seat's total ticks up as each pop lands
