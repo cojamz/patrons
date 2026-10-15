@@ -32,3 +32,20 @@ With 1–4, the probe's arithmetic puts a rival turn at about 2.0s p50 and the w
 - Flight time from distance: 367ms for about 556px, exactly the Steady formula.
 - Payments before purchases; the owner's gains before the spill; the paired magenta steal; 4+ as one bundle.
 - The held number is set in a layout effect, so the final number never flashes before the hold (checked: the text and the hold change in the same task).
+
+## Round 2 (05:50, live tree as of 05:2x on the designer's frozen-watch server)
+
+Instruments: two more live traces (a gain plus a recruit, then three bot turns; Golden Years with Prospector, round II), one of them with animations slowed to 0.4× through CDP for screenshots. The box was at load 28–37.
+
+### Blocking
+10. **A stack shows a negative number.** Golden Years (+4 as a bundle), then Prospector (+1): your gold should read 5, then roll to 9, then tick to 10. Trace 2: the held number went 5 → **2** at the bundle's landing, then rolled 5 → 9. Trace 3: it went 5 → **−37** at the landing and rolled up through −32 … −25 over about 2s; on screen the stack read "−2x●" (`review-r2-stack-negative.png`). Nothing left the gold stack in this chain, so something steps its hold down: a departure whose source resolves to the wrong stack, or two holds racing on one element. Fix the cause, and guard every held number so it stays between that stack's before and after values (clamp, with a dev warning). It is the one thing on screen that's outright false.
+11. **The refill is dealt before the bought card lifts.** `useDeal` (MemberDeck.jsx) runs at the recruit's commit: in trace 2 the deal started 55ms before the card's flight, so the new card turns up in the slot while the old card is still lifting out of it. B4: the deal is bookkeeping in the chain. The row closes its gap once the card has left, and then the pile deals. Make the deal a chain atom (after the card's departure plus the shop slide). Also, the deal turns face up in its first 32% (rotateY 88 → 0 by offset .32); B4 has it travel face down and turn up in its last 40%, so the card is revealed where it lands.
+
+### Wrong (more evidence for 8, under load)
+12. **The coin flew into an empty slot after the card had gone.** Trace 2, your Intern recruit: the card's one long animation (lift, wait, travel: 853ms) started at +0, and the red coin's drop left at +964ms, after the card had already landed in your crowd. The card's travel and the coins are on different clocks: the card is one WAAPI animation with its wait baked in, and the coins are `setTimeout`s that ran late. Same fix as 8: the card's travel starts from the coins' real arrival (their `finished`), not from a precomputed wait.
+13. **The follower count jumped before the worth hop.** Same recruit: your count's text changed to 7 at +2.1s, and the worth hop's follower left at +4.4s and landed at +5.1s. M7: the count never changes on the card's landing without the hop, and it ticks when the mark lands. The count's `Tick` and the worth piece aren't coupled. Hold the count like a stack (or have `Tick` wait on `arrivalFor`) until the worth piece's `finished`.
+14. **A bundle's count label lands on top of the stack's number.** At the gold bundle's landing the screen read "5 +4● ●5●": the "+4" sits over the stack's "5" for the last frames (`review-r2-bundle-landing.png`). Fade the label out over the bundle's last 25%, so only the dot merges into the stack's dot and the stack's own number rolls.
+
+### Verify on a quiet box (couldn't tell under this load)
+15. P2's placement in trace 2 logged no minion flight: the space pulsed and its pieces flew, but no `minion-flight` ghost appeared for seat 2 (seat 3's did, later). Check that a rival's placement shown while your previous chain is still playing still flies its minion (S2).
+16. P2's release: the refund's piece left about 730ms **before** the member's drop to the pile. M8 has the card leave first, with the refund leaving at 40% of its flight. It may just be timer drift under load (8).

@@ -259,7 +259,8 @@ try {
         await slot.hover();
         await page.waitForTimeout(500);
         if (!(await page.locator('.peek, [data-hover-card="space"], [data-space-card]').count())) fail('(b) hovering a space shows no card', step);
-        await anchorCheck(page, 'a space', step, await slot.evaluate(e => e.getBoundingClientRect().toJSON()));
+        // the space is what the player sees: its panel when the wheel draws panels (R2), else the slot itself
+        await anchorCheck(page, 'a space', step, await slot.evaluate(e => { const w = e.closest('.stage') && e.closest('.stage').querySelector(`[data-cell="${e.dataset.slot}"] .wash`); return (w || e).getBoundingClientRect().toJSON(); }));
         // (p) the space's contest line names every player
         {
           const names = await page.evaluate(() => { try { const st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return st.players.map((p, i) => (i === 0 ? 'You' : p.name)); } catch { return null; } });
