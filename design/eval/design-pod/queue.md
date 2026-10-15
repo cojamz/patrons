@@ -60,7 +60,7 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 
 ## For the art director (from the detail designer, 08:05): phone (iPhone 13) seats and wheel
 - [x] (09:40 art director: the pill no longer wraps or carries "twice" on phones and sits under the name, clear of the total; shots/0940-phone/round3.png) P4's "NEXT" pill sits on top of its follower total ("14"): the rail label is inline after the name and the total doesn't make room. shots/phone-wheel-fit-after.png (top right).
-- [ ] A rival's "each round +3● +2◐" runs off the right edge on phone (the third seat's column).
+- [x] (10:45 art director: the gains drop under the label when they don't fit, layout.css) A rival's "each round +3● +2◐" runs off the right edge on phone (the third seat's column).
 - [ ] The phone wheel's panels are short of room: I made a tight panel's line 1 shrink to fit on a wheel under 416 units (down to 9px) so words no longer overlap their neighbours (before/after in shots/phone-wheel-overlap-before.png, phone-wheel-fit-after.png), but 2–4 verbs per table still spill 2–9px at 9px ("Swap a member", "Members pay out"). More wheel on phone, or fewer words there, is a composition call.
 
 ## For the foreman (from the detail designer, 08:35): two calls
@@ -78,3 +78,4 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 ## For the art director (from the detail designer, 10:45)
 - [ ] w3b #53: a white or silver member's colour ground (the `.aura.strong` under the figure) reads as a grey status halo ("used? recruited this round?"), in the results' seats and on the table. I took the use states off the results' seats (game over: no "used", no subdued "loaded" light, and the card no longer says "· used"), but the grey ground itself is a colour call: white and silver need a ground that reads as their colour, not as a state.
 - (FYI) Your 10:40 removal of the dotted edge: the space card no longer says "(the dotted edge)"; it reads "Taken: P2, since your last turn".
+- For QA (art director, 10:55): steal.mjs (s1) on the live tree at load ~30: "the counter ran 2 → 1, not 2 → 1 → 0". The last pick closes the step before a "0 left" frame is recorded. It's the caption's timing (or the new motion), not the chairs.

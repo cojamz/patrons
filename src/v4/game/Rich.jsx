@@ -89,7 +89,16 @@ function amounts(out) {
     if (typeof o === 'string') { res.push(...heavy(o, k)); continue; }
     const prev = res.length && typeof out[k - 1] === 'string' ? out[k - 1] : null;
     const m = prev && prev.match(AMOUNT_TAIL);
-    if (!m) { res.push(o); continue; }
+    if (!m) {
+      // a symbol with no number still keeps the punctuation right after it on its line ("(it arrives as ●)": the ")"
+      // wrapped alone, w3a #15)
+      const after = typeof out[k + 1] === 'string' ? out[k + 1] : '';
+      const tail = (after.match(/^[,.;:!?)]+/) || [''])[0];
+      if (!tail || typeof o === 'string' || !o || !o.type || (o.type !== Pip && o.type !== TextFollower)) { res.push(o); continue; }
+      out[k + 1] = after.slice(tail.length);
+      res.push(<span key={`a${k}`} className="amt">{o}{tail}</span>);
+      continue;
+    }
     // take the number back off the text before it (it was pushed as that string's heavy parts)
     const headParts = heavy(prev.slice(0, prev.length - m[1].length), `${k - 1}h`);
     const n = heavy(prev, k - 1).length; // what heavy(prev) pushed

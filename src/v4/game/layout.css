@@ -231,6 +231,11 @@
    two of the row instead of four, and the figures fill the rest (CultSeat measures how many fit). The Robin Hood mark in
    a steal pick stands the same way. Yours, on a wide laptop, moves up beside your name, so your row holds figures only. */
 .lt-cult-seat .cs-gains{display:inline-flex;align-items:center;gap:5px}
+/* phones: a chair's column is ~120px, so "each round +3● +2◐" ran off its edge (detail designer, 08:05): the gains drop
+   under the label when they don't fit beside it */
+@media (max-width:860px), (max-height:499px){
+  .lt-cult-seat .cs-build .cs-income{flex-wrap:wrap;row-gap:0;min-width:0;max-width:100%}
+}
 @media (min-width:861px) and (min-height:500px){
   .app.game.lt > .lt-seat .cs-build .cs-income{flex-direction:column;align-items:flex-end;gap:0;line-height:1}
   .app.game.lt > .lt-seat .cs-build .cs-income small{font-size:11px;line-height:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-3)}
@@ -248,7 +253,7 @@
 .lt .lt-since .since-line .who{color:var(--cream)}
 .lt .lt-wheel > .prompt.choice .turn-of,.app.game.lt .lt-wheel > .prompt.choice .turn-of{color:var(--cream)}
 .lt .turn-of i,.lt .caption i{display:none}
-.roundend .re-p .nm,.re-p .nm{color:inherit}
+.roundend .re-p .nm,.re-p .nm,.results .win > span:first-child{color:inherit}
 /* taken since your last turn (w3a A44, w3b #31): the dotted edge, the third state of a space, was read as selectable,
    or not told from "taken earlier" at a squint, three panels running (w2a #30 made it quieter and explained it in the
    space's hover). It goes: the story of the turns lists those moves and lights each one's space on the wheel when
@@ -278,4 +283,11 @@
 .lt-cult-seat.pick-nudge .cs-stack.pick-on,.lt-cult-seat.pick-nudge .cs-member.pick-on{animation:pick-nudge .6s ease-out}
 @keyframes pick-nudge{0%{transform:none}35%{transform:scale(1.18);box-shadow:0 0 0 2px #fffaf0,0 0 18px 6px rgba(var(--lamp),.9)}100%{transform:none}}
 @media (prefers-reduced-motion:reduce){ .lt-cult-seat.pick-nudge .cs-stack.pick-on,.lt-cult-seat.pick-nudge .cs-member.pick-on{animation:none;box-shadow:0 0 0 2px #fffaf0,0 0 18px 6px rgba(var(--lamp),.9)} }
+
+/* the Reckoning is the wheel's moment: the shop steps well back on every laptop (the narrow band already did; on a wide
+   one the cards and the 2→1 tile stayed the brightest things on screen while the rims were scored). Keyed on the shop's
+   own region, not the table root (perf, 2026-10-15) */
+@media (min-width:861px) and (min-height:500px){
+  .lt-shop-cards[data-phase="reckon"] .lt-shop-main,.lt-shop-cards[data-phase="reckon"] .lt-rates{filter:brightness(.55) saturate(.7)}
+}
 

@@ -195,6 +195,7 @@ try {
     if (!st || st.state !== 'used' || st.lit) fail(`after use, Lottery Winner in your seat: ${JSON.stringify(st)}`, 'm3');
     await pointAt('[data-cult="0"] .cs-member[data-member="gold.jackpot"] .fig');
     await page.waitForTimeout(300);
+    await page.waitForFunction(() => (document.querySelector('[data-tip-body]')?.innerText || '').length > 0, null, { timeout: 1500 }).catch(() => {});
     const hov = await page.evaluate(() => document.querySelector('[data-tip-body]')?.innerText || '');
     if (!/\bused\b/.test(hov) || /Use:/.test(hov)) fail(`after use, its hover reads: "${hov.replace(/\s+/g, ' ')}"`, 'm3');
     await away();

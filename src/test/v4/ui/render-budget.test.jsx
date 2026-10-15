@@ -263,4 +263,46 @@ describe('render budget', () => {
       if (!s.newCard) expect(by(s, /turnCardPlace/)).toBe(0);
     }
   });
+
+  it('no effect writes a custom property on the table root during a step (it re-styled the whole page each time)', async () => {
+    // a laptop-like page in jsdom: the chairs' column and the strip have sizes, the turn card docks under the story, and
+    // ResizeObserver reports, so the paths that write --seats-end and --turn-h run
+    const restore = [];
+    const stubGet = (proto, name, fn) => { const d = Object.getOwnPropertyDescriptor(proto, name); Object.defineProperty(proto, name, { ...d, get: fn }); restore.push(() => Object.defineProperty(proto, name, d)); };
+    stubGet(HTMLElement.prototype, 'offsetHeight', () => 100);
+    const rect = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = () => ({ left: 10, top: 10, right: 210, bottom: 110, width: 200, height: 100, x: 10, y: 10 });
+    restore.push(() => { Element.prototype.getBoundingClientRect = rect; });
+    const gcs = window.getComputedStyle;
+    window.getComputedStyle = (el, ...a) => { const cs = gcs(el, ...a); return new Proxy(cs, { get: (t, k) => (k === 'getPropertyValue' ? n => (n === '--turn-dock' ? 'since' : t.getPropertyValue(n)) : typeof t[k] === 'function' ? t[k].bind(t) : t[k]) }); };
+    restore.push(() => { window.getComputedStyle = gcs; });
+    const RO0 = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class { constructor(cb) { this.cb = cb; } observe(el) { setTimeout(() => this.cb([{ target: el }]), 0); } unobserve() {} disconnect() {} };
+    restore.push(() => { globalThis.ResizeObserver = RO0; });
+    const writes = [];
+    const setProp = CSSStyleDeclaration.prototype.setProperty;
+    CSSStyleDeclaration.prototype.setProperty = function (name, ...a) { if (String(name).startsWith('--')) writes.push({ style: this, name }); return setProp.call(this, name, ...a); };
+    restore.push(() => { CSSStyleDeclaration.prototype.setProperty = setProp; });
+    try {
+      let state = advanceTo(createGame({ seats: SEATS, seed: 33 }), 'place', 1);
+      const session = drivenSession(state, [0]);
+      const { container } = render(<GameScreen session={session} pace={0} />);
+      await settle();
+      const root = container.querySelector('.app.game');
+      writes.length = 0;
+      for (let k = 0; k < 6 && state.pending && state.pending.player !== 0; k++) {
+        const next = applyMove(state, chooseBotMove(state, () => 0.3));
+        act(() => { session.publish(next); });
+        for (let w = 0; w < 200 && root.getAttribute('data-moves') !== String(next.moves); w++) await act(() => new Promise(r => setTimeout(r, 10)));
+        await settle(3);
+        state = next;
+      }
+      const onRoot = writes.filter(w => w.style === root.style).map(w => w.name);
+      const story = container.querySelector('.lt-since');
+      const onStory = writes.filter(w => story && w.style === story.style).map(w => w.name);
+      console.log('[render-budget] custom properties written during rival steps: on the table', JSON.stringify(onRoot), 'on the story', JSON.stringify([...new Set(onStory)]));
+      expect(onRoot).toEqual([]);
+      expect(onStory.length).toBeGreaterThan(0); // the paths did run: they write where the value is read
+    } finally { restore.forEach(f => f()); }
+  });
 });

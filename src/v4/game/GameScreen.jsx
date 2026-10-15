@@ -36,7 +36,7 @@ import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
 import { playChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable, foldBuys, foldWait } from './director.js';
 import { gainsBetween } from './gains.js';
-import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed } from '../motion.js';
+import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed, speedScale } from '../motion.js';
 import { PERF_ON } from '../perf.js';
 import { boardPicker, seatPart, shopLookup, pickCaption } from './boardPick.js';
 import { sameSeat } from './seatMemo.js';
@@ -965,6 +965,23 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, [modalOpen]);
   const prForMe = mine || (!!pend && mySeats.includes(pend.player) && !state.over);
   const pr = { ...promptFor(state, prForMe), forMe: prForMe };
+  // your turn just ended (the table moved from a step of yours to someone else's): for a beat the header says so, then
+  // the next player's line (w3b #58: after the second Pass the next frame was already a bot's line). It lasts until the
+  // next step lands or the beat runs out, whichever is first.
+  const [overBeat, setOverBeat] = useState(null); // { who, moves }
+  const lastAsk = useRef({ forMe: false, who: null, moves: null });
+  const overTimer = useRef(null);
+  useEffect(() => {
+    const was = lastAsk.current;
+    lastAsk.current = { forMe: prForMe, who: pend ? state.players[pend.player] : null, moves: state.moves };
+    if (was.forMe && !prForMe && !state.over && was.who && state.moves === was.moves + 1 && pend && pend.player !== was.who.id) {
+      clearTimeout(overTimer.current);
+      setOverBeat({ who: was.who, moves: state.moves });
+      overTimer.current = setTimeout(() => setOverBeat(null), Math.round(800 * speedScale()));
+    }
+  }, [state.moves]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => clearTimeout(overTimer.current), []);
+  const turnOver = overBeat && overBeat.moves === state.moves && !prForMe ? overBeat.who : null;
   // the summary comes last (motion review #7, #27): while a move's chain plays (or this state is about to play one),
   // the turn card and a rival's headline keep telling what was already on the table, and change when the chain has
   // landed or is skipped (AfterChain re-renders only itself then)
@@ -1111,10 +1128,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             <AfterChain value={pr} hold={holdStory && !mine} step={state.moves}>{held => {
               // a held line addressed to someone else is never shown in this one's voice (w3b: your "Choose how to
               // pay" stayed up, dotted like a rival's, while the bots moved): it gives way to the current line
-              // …except your own turn ending: while its last moves play out, the header says it's over (w3b #58: after
-              // the second Pass the next frame was already a bot's line)
-              const p = held.forMe === pr.forMe ? held
-                : held.forMe && !pr.forMe && held.who ? { who: held.who, text: humansHere ? `${held.who.name}’s turn is over` : 'Your turn is over', over: true } : pr;
+              const p = turnOver ? { who: turnOver, text: humansHere ? `${turnOver.name}’s turn is over` : 'Your turn is over', over: true }
+                : held.forMe === pr.forMe ? held : pr;
               return (
               <span className={`say${mine ? ' mine' : ''}`} data-prompt tabIndex={-1}>
                 {p.who && <i style={{ background: playerColor(p.who.id) }} />}

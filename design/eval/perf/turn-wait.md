@@ -144,3 +144,51 @@ So the reads removed this round were not the expensive ones.
 3. Make MemberDeck's deal read its rects before the commit's writes, or from the shop snapshot.
 
 The targets of no long frame over 200 ms at 4× and hover p95 under 150 ms at 4× aren't met yet.
+
+## Round 4: the style recalculation (ec064fe → ec064fe + these changes; trace at 4× CPU, then the harness)
+**The trace.** I recorded one stretch of rival steps (about 25 s) with DevTools style-invalidation tracking (`ScheduleStyleInvalidationTracking`, `StyleInvalidatorInvalidationTracking`, `UpdateLayoutTree`):
+- **18 whole-page style recalculations,** each about 4,600–5,100 elements and up to 223 ms at 4×.
+- **What caused them:** Chrome's `:has()` invalidation on `<body>` (76 schedules) and on the table root (53), which became "invalidates subtree on BODY / .app.game.lt: ALL-DESCENDANTS". On top of that, inline custom-property writes on the table root (`--turn-h`, `--seats-end`): inherited, so every descendant re-styled.
+- **Not a cause:** `data-phase` and `data-yours` on the root. Chrome targets those invalidations (2 small schedules in the window), so I didn't move them.
+
+**The changes** (no CSS values touched):
+- `.app.game.lt:has(> .turn-card) > .lt-since` (layout.css twice) became `.app.game.lt[data-turn-card] > .lt-since`. TurnCard holds the attribute while it's mounted.
+- `body:has(.lt-drawer-back) …` (since.css) became `body[data-drawer] …`, held by Chronicle.
+- `body:has(.tip-body [data-since-card]) …` (since.css) became `body[data-since-tip][data-since-tip] …`, held by StoryCard inside a tip. The doubled attribute keeps the old specificity.
+- `--turn-h` and `--seats-end` are written on `.lt-since`, their only reader. SinceStrip's room watch reads them there.
+- MemberDeck's deal reads every rect before it writes.
+- `src/v4/game/bodyFlag.js` sets a counted data attribute while something is mounted.
+
+**The same window, traced again:**
+
+| | before | :has() replaced | + custom properties on the strip |
+|---|---|---|---|
+| elements re-styled | 88,064 | 13,838 | 1,486 |
+| style time | 2,371 ms | 1,019 ms | 387 ms |
+| whole-page recalcs | 18 | 2 | 0 |
+| worst recalc | 223 ms | 216 ms | 52 ms |
+
+**No visual change.** I took the same seeded game on both builds with reduced motion, at 1270×700: setup, place, choose, buy, a turn card up, and the log drawer open.
+- Every shot is pixel-identical within a 24/765 color tolerance.
+- At zero tolerance, at most about 1,300 px of sub-threshold noise, all on looping animations.
+- At every shot, each flag matched exactly what its `:has()` looked for.
+
+**Harness, 4× CPU, seed 20261015, frozen production builds, both at load 22–33 on 4 CPUs (busier than the quiet box):**
+
+| | before ec064fe | after | quiet box, 44e22bd (load 1–2.5) |
+|---|---|---|---|
+| input→paint, all (p50/p95) | 942/4400 | **544/1776** | 292–352/2357–2667 |
+| click on a space (p50/p95) | 236/3648 | 168/660 | – |
+| hover on a space (p50/p95) | 522/1498 | **127/372** | 272–287/546–704 |
+| hover on a shop card (p50/p95) | 758/2863 | 165/312 | 270–390/551–616 |
+| wait between your turns (p50) | 22.1 s | **10.4 s** (pure round-I wait 9.1 s) | 18.3–20.2 s |
+| forced layout in the React task (pure wait) | 297 ms/step | 43 ms/step | – |
+| timer late after the hold (p50) | 459 ms | 10 ms | – |
+| long tasks | 288 s total, max 3.0 s | 54 s, max 0.94 s | – |
+| total blocking | 205 s | 25 s | – |
+
+Long frames of 200 ms or more: 803 → 841, but at load 22–33 every frame is slow. The quiet box will judge the 200 ms target.
+
+**Guards:**
+- `src/test/v4/ui/css-has.test.js` fails on a `:has()` whose subject is body, html, `.app` or the table root (`.lt`, `.game`). The setup screen's `.app.narrow` is allowed. Run against the old stylesheets, it lists all 5 of the old rules.
+- render-budget "no effect writes a custom property on the table root during a step" stubs a laptop-sized page and a reporting ResizeObserver, so the writing paths run. It asserts nothing lands on the root while `--turn-h` is written on the strip.
