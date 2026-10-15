@@ -27,26 +27,31 @@ function takeAway(s, uid, to) {
 }
 
 describe('a queued choice never offers a card that moved', () => {
-  it('the bots repro: Stunt Double copies Open House in the buy step; the buy takes a tied cheapest card first', ctx => {
+  // The bots repro (fixtures/bots-repro-open-door.json, 2026-10-14 content): P1 takes Open House, then in the buy step
+  // uses Stunt Double to copy it ("doing it again"). That queued "Open Door: which of the cheapest members?" behind
+  // the buy, the buy took Stylist (card 30), and picking Stylist in the choice threw. Now (gut call, 2026-10-15) a
+  // member used in the buy step resolves its whole effect first: the choice comes right away, then the buy step
+  // returns with options that reflect the recruit.
+  it('the bots repro: Stunt Double copying Open House in the buy step asks Open Door first; the buy then reflects the recruit', ctx => {
     const rec = JSON.parse(readFileSync(new URL('./fixtures/bots-repro-open-door.json', import.meta.url), 'utf8'));
     let s = structuredClone(rec.start);
-    const last = rec.moves.at(-1);
-    for (const m of rec.moves.slice(0, -1)) {
+    const use = rec.moves.findIndex(m => m.option.startsWith('use:'));
+    for (const m of rec.moves.slice(0, use + 1)) {
       // made on 2026-10-14 content: if the cards changed under it, it no longer describes a reachable game
       if (!isLegal(s, m)) { ctx.skip(`fixture no longer replays on this content (${JSON.stringify(m)})`); return; }
       s = applyMove(s, m);
     }
-    expect(s.pending.kind).toBe('choose');
+    const me = rec.moves[use].player, stylist = 30;
+    expect(s.pending.kind).toBe('choose'); // the copy's choice first, not the buy
     expect(s.pending.prompt).toMatch(/^Open Door: /);
-    // the move that threw: Stylist (card 30) went to P1 in the buy before this choice
-    expect(where(s, cardOf(last))).toBe(`p${last.player}`);
-    expect(isLegal(s, last)).toBe(false);
-    expect(s.pending.options.length).toBeGreaterThan(0);
-    for (const o of s.pending.options) expect(where(s, cardOf(o))).toBe('shop');
-    // a live pick recruits it; then the bots finish the game
-    const pick = s.pending.options[0];
-    s = applyMove(s, { player: s.pending.player, option: pick.id });
-    expect(where(s, cardOf(pick))).toBe(`p${last.player}`);
+    expect(s.pending.options.map(cardOf)).toContain(stylist);
+    const res = { ...s.players[me].res };
+    s = applyMove(s, { player: me, option: `card:${stylist}` });
+    expect(where(s, stylist)).toBe(`p${me}`);
+    expect(s.players[me].res).toEqual(res); // free
+    expect(s.pending.kind).toBe('buy'); // then the buy step resumes, fresh
+    expect(s.pending.options.map(o => o.id)).not.toContain(`card:${stylist}`);
+    for (const o of s.pending.options.filter(o => o.kind === 'card' && !o.fromPile)) expect(s.shop).toContain(o.uid);
     const rand = seededRandom(7);
     for (let k = 0; !s.over && k < 3000; k++) s = applyMove(s, chooseBotMove(s, rand, { level: 'easy' }));
     expect(s.over).toBe(true);

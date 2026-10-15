@@ -403,7 +403,11 @@ function resolveTask(state, task, optionId) {
         const before = traceSnapshot(state);
         act.onActivate(ctxFor(state), p, wrap(state, c));
         traceChanges(state, before, p, act);
-        state.queue.unshift({ t: 'buy', p: p.id, ...extraOf(task) });
+        // the member's whole effect resolves now, its choices included (a Stunt Double copying Open House asks
+        // "which of the cheapest?" right away), and then this buy step comes back with fresh options. It used to
+        // come back first, so the choice waited until after the player's next buy (gut call, 2026-10-15).
+        const at = state.queue.findIndex(t => !t._fresh);
+        state.queue.splice(at < 0 ? state.queue.length : at, 0, { t: 'buy', p: p.id, ...extraOf(task) });
         return;
       }
       if (kind === 'toggle') {
