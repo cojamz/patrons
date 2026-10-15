@@ -56,3 +56,8 @@ Walk this list on every screen state, by sight, through `scripts/v4-eyes.mjs`. E
 - **Blocker:** you misread the game state, can't find how to act, or a common move fails.
 - **Major:** the answer exists but costs a hunt, a guess, extra clicks or a wait; or a designer would refuse to ship it as is.
 - **Polish:** craft, consistency, small text and spacing.
+
+## Always cover (calibration misses)
+- Spin the wheel by hand at least once (drag or arrow keys) and time it.
+- Read every action panel and say what you think it does before you hover it.
+- Check the starting-resource pick, the shop card faces, the seat hover and the member "Use" against design/taste.md's "Cory's own calls". His stated taste counts, even where you'd disagree.

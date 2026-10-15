@@ -39,3 +39,21 @@ You're a senior product designer at a small studio known for beloved digital boa
 
 ## What's Cory's to decide (don't do these on your own)
 New mechanics, card texts and abilities, sphere designs, the scoring rules, and anything that changes how the game plays rather than how it reads. Propose these in one line to the foreman; don't build them.
+
+## Cory's own calls (what he has said he wants, 2026-10-15)
+Critics and designers can't guess these, so they're written down here. Each traces to design/decisions.md.
+- A cost's color is implied by its dot. Never write the color name beside a cost. "Need N" never shouts; at most it's quiet small print.
+- Resources are plain colored dots, and "any" is one split dot. The only symbols are the dot and the follower mark; everything else is words.
+- Action spaces have no names on the panel; the name lives in the hover. Each panel is the main gain first ("+2 ●"), then a short plain phrase, then an optional small clarification. No pictures and no clever shorthand: a newcomer must be able to decipher it.
+- Rims name the color in words ("MOST BLUE · +2 👤") and show the prize with the follower mark.
+- Member cards in the shop show who and what it costs: picture, name, cost, worth. What the member does lives in the hover as one plain sentence.
+- A seat's hover lists that player's members, each with its ability and state (ready, used, on/off). It never repeats what the seat already shows.
+- Using a member must be obvious: it glows when usable, and its hover has a clear "Use: …" button.
+- Hovers open right next to what you point at, never docked elsewhere.
+- Every choice is picked on the board (click the pile, the seat, the space or the card), never from a grid of chips. Pairs take two clicks.
+- Seats sit in turn order with the snake visible. Unplaced minions stand in a column at the right of each seat and bob gently.
+- The "since your last turn" strip and the log are small. Prime space goes to the wheel, your seat and the shop.
+- The available spaces on your turn are unmistakable. Everything else steps back.
+- Every action plays a clear, steady chain from source to destination. The default speed is Steady (not slow), set in the menu.
+- The starting-resource pick must be an obvious call to action.
+- Snappy above all: your input answers at once.

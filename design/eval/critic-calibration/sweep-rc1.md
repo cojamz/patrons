@@ -1,7 +1,7 @@
-# RC1 sweep: the screen-only critic's full list (calibration round 2, best run so far)
+# RC1 sweep: the screen-only critic's full list (calibration round 2, the longest single list)
 
 Fresh blind tester, brief v2 + checklist v1, driving the frozen RC1 build (fd4d734, :5191) through scripts/v4-eyes.mjs only (96 commands, 101 screenshots read, no DOM). 116 findings plus the audits, verbatim. Shots are under /tmp/eyes/sweep2/ (temporary).
-Tags: **[Cory #N]** matches item N of answer-key.md (Cory's own play notes); **[new]** is something Cory didn't mention: that's our backlog of low-hanging fruit beyond his list. Recall for this run: results.md. Some findings may already be fixed on the live branch (RC1 is older); verify on the current build before acting.
+Tags: **[Cory #N]** matches item N of answer-key.md (Cory's own play notes); **[new]** is something Cory didn't mention: that's our backlog of low-hanging fruit beyond his list (60 here, 26 more in sweep-rc1-round3.md). Recall for this run: results.md. Some findings may already be fixed on the live branch (RC1 is older); verify on the current build before acting.
 
 ## Home / How to play / Setup
 1. [new] [polish] (2,30) Home — "v0.2" version stamp sits between title and tagline → developer artifact on the title screen. shot: /tmp/eyes/sweep2/001-home.png

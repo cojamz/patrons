@@ -32,3 +32,6 @@ Evidence: the three RC1 panel transcripts (newcomer ab1bc2f1, strategist a85e36b
 - `scripts/v4-eyes.mjs`: screenshots, coordinates and timings only. No DOM, no text, no selectors, no JavaScript. Every action prints ms to first change and to settle, and where on screen it changed (a popover opening 800 px from the pointer shows up as a number). `frames` shows the motion after an action or while you were away.
 - `checklist.md`: Nielsen plus a board-game screen list that asks taste questions (hierarchy, duplication, symbol count, prominence of primary actions, order, direct manipulation, dead space, overlaps, art, response time, round-end legibility).
 - `brief.md`: walk every screen state (setup, each turn step, a steal on a table that has one, pay, round end at normal speed, results), hover-sweep every element three times, list everything (at least 40), no grade until the list is done, grade from D up.
+
+## Result (results.md)
+Recall over the 34 answer-key items present on RC1: old panel ~9%; screen-only brief v1 56%, v2 72%, v3 72% (single testers); two testers merged 82%. The standing sweep is two fresh v3 testers with their lists merged.

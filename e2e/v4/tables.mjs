@@ -11,6 +11,7 @@ import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
+import { answerChoice } from './lib/answer.mjs';
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/tables';
 rmSync(SHOTS, { recursive: true, force: true });
@@ -122,18 +123,10 @@ async function play(t) {
         await shot('zz-stuck');
         throw new Error(`stuck at move ${at.moves} (${at.phase}, "${at.prompt.trim().slice(0, 80)}"): ${step.clicks} clicks on [${[...step.tried].join(', ')}] moved nothing; on screen: ${at.ids.join(' ')}`);
       }
-      const els = await page.$$('[data-option]:not([disabled])');
-      const ids = await Promise.all(els.map(el => el.getAttribute('data-option').catch(() => null)));
-      // a pair is picked in two steps, like a person: yours (@pick:x), then theirs. Once one is lifted (@unpick on
-      // screen), putting it back or switching to another of yours would only go round in circles.
-      const second = ids.includes('@unpick');
-      let clicked = false;
-      for (let k = 0; k < els.length; k++) {
-        const id = ids[k];
-        if (!id || id.startsWith('toggle:') || id === 'back' || id === '@unpick' || (second && id.startsWith('@pick:'))) continue;
-        try { await els[k].click({ timeout: 1500 }); clicked = true; clicks++; step.clicks++; step.tried.add(id); break; } catch { /* covered or gone */ }
-      }
-      await page.waitForTimeout(clicked ? 20 : 40);
+      // the first answer in page order, as a person would give it (lib/answer.mjs: board picks, pairs, the pay sheet)
+      const did = await answerChoice(page);
+      if (did) { clicks++; step.clicks++; step.tried.add(did.id); }
+      await page.waitForTimeout(did ? 20 : 40);
     }
     await page.waitForTimeout(300);
     await shot('results');
