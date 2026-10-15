@@ -19,6 +19,9 @@
   /* the chairs stack from the column's top (GameScreen reads --seats-align and writes --seats-end, their foot) */
   .app.game.lt > .lt-snake{grid-area:seats;--seats-align:start;margin-top:var(--col-top)}
   .app.game.lt > .lt-seat{margin-top:var(--col-top)}
+  /* the rail starts just under the first chair's order chip ("next / twice" is two lines): its arrowhead, when the turns
+     walk up, never lands between the chip's words */
+  .app.game.lt > .lt-snake .sn-line{top:calc(var(--rail-top, 12%) + 14px)}
   .app.game.lt > .lt-since{grid-area:seats;align-self:start;margin:calc(var(--col-top) + var(--seats-end, 0px) + 20px) 0 0 44px;
     max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px)}
   /* while a turn is being told, its card docks under the story: the story gives it room (oldest lines go first) */

@@ -583,4 +583,6 @@ h1,h2,h3{font-family:var(--serif)}
      the rank and the big number beside the card go (RC1 #107: every score was shown three times) */
   .app.game.lt > .main.over .over-seat{grid-template-columns:minmax(0,1fr);gap:0;padding:6px}
   .app.game.lt > .main.over .over-seat .rank,.app.game.lt > .main.over .over-seat .final{display:none}
+  /* the card is the only frame: the seat's own "now" light (the winner) would draw a second one inside it */
+  .app.game.lt > .main.over .over-seat .lt-cult-seat{background:none;box-shadow:none}
 }

@@ -31,18 +31,33 @@ const r = await page.evaluate(() => {
   return { total: document.querySelectorAll('*').length, parts, kids, top, body, fat, bySel, svgBy: Object.entries(svgBy).sort((a, b) => b[1][1] - a[1][1]).slice(0, 10), resultsSvg };
 });
 {
-  await cdp.send('HeapProfiler.collectGarbage').catch(() => {});
-  const proto = await cdp.send('Runtime.evaluate', { expression: 'Node.prototype' });
-  const q = await cdp.send('Runtime.queryObjects', { prototypeObjectId: proto.result.objectId });
-  const st = await cdp.send('Runtime.callFunctionOn', { objectId: q.objects.objectId, returnByValue: true, functionDeclaration: `function () {
-    const det = this.filter(n => { try { return !n.isConnected; } catch { return false; } });
-    const roots = new Map();
-    for (const n of det) { let r = n; while (r.parentNode) r = r.parentNode; roots.set(r, (roots.get(r) || 0) + 1); }
-    const desc = r => r.nodeType === 1 ? r.tagName + '.' + String(r.className && r.className.baseVal != null ? r.className.baseVal : r.className).slice(0, 50) + (r.dataset && Object.keys(r.dataset).length ? '[' + Object.keys(r.dataset).slice(0,3).join(',') + ']' : '') : r.nodeName;
-    const byKind = {}; for (const [r, k] of roots) { const d = desc(r); byKind[d] = byKind[d] || [0, 0]; byKind[d][0]++; byKind[d][1] += k; }
-    return { all: this.length, detached: det.length, roots: roots.size, top: Object.entries(byKind).sort((a, b) => b[1][1] - a[1][1]).slice(0, 25) };
-  }` });
-  console.log('DETACHED', JSON.stringify(st.result.value || st.exceptionDetails || st).slice(0, 3000));
+  // heap snapshot: who retains the detached trees?
+  await cdp.send('HeapProfiler.enable');
+  let chunks = [];
+  cdp.on('HeapProfiler.addHeapSnapshotChunk', e => chunks.push(e.chunk));
+  await cdp.send('HeapProfiler.collectGarbage');
+  await cdp.send('HeapProfiler.takeHeapSnapshot', { reportProgress: false, captureNumericValue: false });
+  const snap = JSON.parse(chunks.join('')); chunks = null;
+  const m = snap.snapshot.meta, NF = m.node_fields.length, EF = m.edge_fields.length;
+  const nT = m.node_types[0], eT = m.edge_types[0];
+  const iName = m.node_fields.indexOf('name'), iEC = m.node_fields.indexOf('edge_count'), iDet = m.node_fields.indexOf('detachedness'), iType = m.node_fields.indexOf('type');
+  const eTypeI = m.edge_fields.indexOf('type'), eNameI = m.edge_fields.indexOf('name_or_index'), eToI = m.edge_fields.indexOf('to_node');
+  const N = snap.nodes, E = snap.edges, S = snap.strings, n = N.length / NF;
+  const firstEdge = new Uint32Array(n + 1); for (let i = 0, e = 0; i < n; i++) { firstEdge[i] = e; e += N[i * NF + iEC] * EF; } firstEdge[n] = E.length;
+  const rev = Array.from({ length: n }, () => []);
+  for (let i = 0; i < n; i++) for (let e = firstEdge[i]; e < firstEdge[i + 1]; e += EF) { const t = eT[E[e + eTypeI]]; if (t === 'weak') continue; rev[E[e + eToI] / NF].push([i, e]); }
+  const name = i => S[N[i * NF + iName]];
+  const ename = e => { const t = eT[E[e + eTypeI]]; const v = E[e + eNameI]; return t === 'element' || t === 'hidden' ? `[${v}]` : S[v]; };
+  const targets = []; for (let i = 0; i < n; i++) if (N[i * NF + iDet] === 2 && /^(HTML|SVG)\w*Element$/.test(name(i)) === false && /class="(lt-wheel|lt-shop"|overlay moment|lt-seat lt-seat-0|card lt-card)/.test(name(i))) targets.push(i);
+  const fallbackTargets = []; for (let i = 0; i < n && fallbackTargets.length < 5; i++) if (N[i * NF + iDet] === 2 && /SECTION|section/.test(name(i))) fallbackTargets.push(i);
+  console.log('targets', targets.slice(0, 8).map(name), 'fallback', fallbackTargets.map(name));
+  for (const t of (targets.length ? targets : fallbackTargets).slice(0, 6)) {
+    // BFS back to a JS-ish retainer (skip native DOM edges): print the first 12 hops of the shortest path
+    const prev = new Map([[t, null]]); const q = [t]; let hit = null;
+    while (q.length && !hit) { const x = q.shift(); for (const [from, e] of rev[x]) { if (prev.has(from)) continue; prev.set(from, [x, e]); const nm = name(from); if (nT[N[from * NF + iType]] === 'synthetic' || /^\(GC roots\)|Window \/|^system \/ Context$/.test(nm)) { hit = from; break; } if (prev.size < 400000) q.push(from); } }
+    const path = []; let c = hit; while (c != null && prev.get(c)) { const [x, e] = prev.get(c); path.push(`${name(c).slice(0, 40)} -${ename(e)}->`); c = x; }
+    console.log('RETAIN', name(t).slice(0, 60), '<=', path.slice(0, 14).join(' '));
+  }
 }
 console.log('round I', JSON.stringify(r1), 'results', JSON.stringify(await cdpNodes()), 'secs', Math.round((Date.now() - t0) / 1000));
 console.log(JSON.stringify(r, null, 1));

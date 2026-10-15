@@ -47,9 +47,15 @@ try {
   await page.waitForFunction(() => { try { return !!JSON.parse(localStorage.getItem('patrons.v4.local')).state.build; } catch { return false; } });
   const stamp = await page.evaluate(() => JSON.parse(localStorage.getItem('patrons.v4.local')).state.build);
   save.state.build = stamp; roundStart.state.build = stamp;
+  // the save goes in before the app's own scripts run (a running game saves itself as its page goes, which would
+  // write over a save put in from the page), once: later reloads keep whatever the game has become
+  await page.addInitScript(([v, rs]) => {
+    if (sessionStorage.getItem('turnstory.injected')) return;
+    localStorage.setItem('patrons.v4.local', JSON.stringify(v));
+    localStorage.setItem('patrons.v4.roundStart', JSON.stringify(rs));
+    sessionStorage.setItem('turnstory.injected', '1');
+  }, [save, roundStart]);
   await page.goto(`${base}/?botDelay=300&intro=0`);
-  await page.evaluate(([v, rs]) => { localStorage.setItem('patrons.v4.local', JSON.stringify(v)); localStorage.setItem('patrons.v4.roundStart', JSON.stringify(rs)); }, [save, roundStart]);
-  await page.reload();
   await page.waitForSelector('.lt-wheel, [data-home="resume"]');
   if (!(await page.$('.lt-wheel'))) await page.click('[data-home="resume"]');
   await page.waitForSelector('.lt-wheel .slot.can');
@@ -69,7 +75,10 @@ try {
       took, players: st ? st.players.map(p => p.name) : [],
     };
   });
-  const settle = async () => {
+  const cardNow = () => page.evaluate(() => document.querySelector('.turn-card')?.dataset.turnStory || null);
+  // `before`: the turn card's text before the placement. The card arrives as the turn's closing beat (about 1s after
+  // a placement, under the motion choreography), so settle waits for it to change, up to 3s, rather than a fixed delay.
+  const settle = async (before = undefined) => {
     // answer what the placement asks (a choice, a board pick, a payment) until the buy step, or the turn moves on
     for (let k = 0; k < 40; k++) {
       await page.waitForTimeout(250);
@@ -80,7 +89,8 @@ try {
       const pay = page.locator('.dialog.pay .btn.pri');
       if (ph.startsWith('pay') && await pay.count()) { await pay.click().catch(() => {}); continue; }
     }
-    await page.waitForTimeout(300);
+    if (before !== undefined) await page.waitForFunction(b => { const t = document.querySelector('.turn-card')?.dataset.turnStory || null; return !!t && t !== b; }, before, { timeout: 3000 }).catch(() => {});
+    else await page.waitForTimeout(300);
   };
   const overlap = (a, b) => a && b && a.x < b.r && b.x < a.r && a.y < b.b && b.y < a.b;
 
@@ -145,8 +155,7 @@ try {
   }
 
   // (t3) the first placement of the double
-  await page.locator('.lt-wheel .slot.can').first().click();
-  await settle();
+  { const before = await cardNow(); await page.locator('.lt-wheel .slot.can').first().click(); await settle(before); }
   v = await view();
   const first = v.took.at(-1);
   if (!first) fail('the save shows no placement by P1', 't3');
@@ -163,8 +172,7 @@ try {
   if (!v.chips['0'] || v.chips['0'].twice) fail(`P1's chip on the second of two placements: ${JSON.stringify(v.chips['0'])}`, 't4');
   await page.screenshot({ path: `${SHOTS}/4-again.png` });
   // (t5) the second placement: its own card
-  await page.locator('.lt-wheel .slot.can').first().click();
-  await settle();
+  { const before = await cardNow(); await page.locator('.lt-wheel .slot.can').first().click(); await settle(before); }
   v = await view();
   const second = v.took.at(-1);
   if (!second || second === first) fail(`no second placement in the save (${JSON.stringify(v.took)})`, 't5');

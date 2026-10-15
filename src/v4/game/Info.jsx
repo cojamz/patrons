@@ -80,9 +80,12 @@ export function Definition({ k }) {
 /** Rules text: resource words as symbols (Rich), game keywords underlined (each opens its definition). */
 export function CardText({ text }) {
   if (!text) return null;
-  return <>{splitTerms(text).map((part, k) => (part.key
-    ? <Term key={k} k={part.key}><Rich text={part.text} /></Term>
-    : <Rich key={k} text={part.text} />))}</>;
+  const parts = splitTerms(text);
+  // each piece knows what follows it, so a color before a keyword ("blue | face-up member") stays a word
+  const after = k => parts.slice(k + 1).map(x => x.text).join('');
+  return <>{parts.map((part, k) => (part.key
+    ? <Term key={k} k={part.key}><Rich text={part.text} after={after(k)} /></Term>
+    : <Rich key={k} text={part.text} after={after(k)} />))}</>;
 }
 
 // ---------- members ----------
