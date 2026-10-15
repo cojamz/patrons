@@ -184,3 +184,15 @@ The full reasoning and every variant's shots are in layout.md. The result is thr
 - **S#7 the card grew through bot turns and squeezed the strip** · Covered by the 2.6s fold (B #19) and the strip's fold levels; turnstory and turndock pass.
 - **Not done (for the foreman):** S#6, the turn card crediting the previous move's lines, lives in trail.js/effectStory's turn segmentation; I didn't touch it in the last half hour. Also not done: S#28 (a refill sliding cards: steadyOrder already keeps slots within a round, so I couldn't reproduce the slide), S#37 (the rail's hover), A#45 (the MOST MEMBERS label's target), S#8 (900×600) and S#12/#44 (colorless art tint).
 - **gates on :5410 after this round:** UI unit tests 184/184, layout PASS, turnstory PASS, spaces PASS and turndock PASS (both before the CSS-only last edits).
+
+## Closing (art director, final freeze 0c1cd51): what's left, worst first
+1. The turn card can credit the previous move's lines (final panel S#6; trail.js turn segmentation). Not touched.
+2. At 900×600 a rival's four stacks still crowd its total and minions; the three-row chair applies from 680px tall only.
+3. Silver, white and colorless members (and colorless art tinted grey) are close at card size (S#12/#44, art pipeline).
+4. A shop refill was seen sliding cards (S#28). steadyOrder keeps slots within a round, and I couldn't reproduce it.
+5. The snake rail has only a native title, not a hover card (S#37); one tester read it as a scrollbar.
+6. With a turn card up at 1270×700 the strip often holds one line (the chairs' 40px figures took the room). It folds whole, with "N earlier" in its header.
+7. Large screens (≥1600px): the side columns don't scale with the wheel. The zoom proposal is in queue.md, not started.
+8. While the strip folds under heavy load, the lines being folded keep their space hidden for a frame or so, so a gap can show.
+9. The phone turn card covers the wheel's lower half during your placement (phone was out of scope tonight).
+Dev server :5410 stopped; my worktrees removed.
