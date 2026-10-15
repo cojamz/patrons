@@ -131,6 +131,11 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     else if (firstPick) checkpoint = { kind: 'setup', state: before, player: move.player, moves: state.moves };
     // a purchase is undoable only while the next to move is a bot: handing the device to another person ends it
     else if (bought && !(state.pending && mySeats.includes(state.pending.player) && state.pending.player !== move.player)) checkpoint = { kind: 'buy', state: buyStart, player: move.player, moves: state.moves };
+    // a placement's own choices, one pick at a time (a steal coin by coin, Cheap Seats, a swap): Undo placement stays
+    // through them while the choice goes on (live panel round 3: it vanished after the first pick), back to before the minion went out; a pick
+    // that shows hidden cards still ends it (checkpointValid)
+    else if (kind === 'choose' && human && checkpoint && checkpoint.kind === 'place' && checkpoint.player === move.player && checkpoint.moves === before.moves
+      && state.pending && state.pending.kind === 'choose' && state.pending.player === move.player) checkpoint = { ...checkpoint, moves: state.moves };
     else checkpoint = null;
     if (!(kind === 'pay' || (kind === 'buy' && state.pending && state.pending.kind === 'pay'))) buyStart = null;
     if (!checkpointValid(checkpoint, state)) checkpoint = null;

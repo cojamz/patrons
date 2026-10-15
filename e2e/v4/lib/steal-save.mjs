@@ -25,7 +25,8 @@ export const PILES = [
   { gold: 0, magenta: 1, blue: 0, green: 0 },
 ];
 
-export function stealSave(space = 'help') {
+// placed: false stops a step earlier, with P1 about to place on the space (a test then places it by clicking)
+export function stealSave(space = 'help', { placed = true } = {}) {
   const [table, qid, key] = SPACES[space];
   const q = table.indexOf(qid), i = quadrant(qid).actions.findIndex(a => a.key === key), round = quadrant(qid).actions[i].ring;
   const seats = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
@@ -36,12 +37,34 @@ export function stealSave(space = 'help') {
     for (let n = 0; n < 1500 && !ready(s) && !s.over; n++) s = applyMove(s, chooseBotMove(s, rand));
     if (!ready(s)) continue;
     if (table === STEAL_TABLE) PILES.forEach((r, k) => { s.players[k].res = { ...r }; });
+    const before = s;
     s = applyMove(s, { player: 0, option: `slot:${q}-${i}` });
     if (!(s.pending && s.pending.player === 0 && s.pending.kind === 'choose')) continue;
+    if (!placed) s = before;
     // a board pick needs something on the board: at least two lit choices where the test can see them
-    if (table === BOARD_TABLE && s.pending.options.filter(o => o.target).length < 2) continue;
+    if (placed && table === BOARD_TABLE && s.pending.options.filter(o => o.target).length < 2) continue;
     s.build = buildStamp(); // this build's stamp, or the app sets the save aside as "older version"
     return { config: { seats: seats.map(x => ({ kind: x.kind, name: x.name })), speed: 'normal' }, state: s, undo: null, savedAt: Date.now() };
   }
   throw new Error(`board-pick save: never reached P1 on ${space}`);
+}
+
+/** P1 asked by Straggler (round II): "move your last minion to an unused space?", lit spaces plus Stay put. P1 holds
+ *  Straggler from the start; bots play every seat until the question comes to P1. */
+export function stragglerSave() {
+  const seats = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
+  const ready = st => st.round >= 2 && st.pending && st.pending.player === 0 && st.pending.kind === 'choose' && /^Straggler: move your last/.test(st.pending.prompt);
+  for (let seed = 1; seed < 200; seed++) {
+    let s = createGame({ seats, seed, quadrants: BOARD_TABLE });
+    const c = Object.values(s.cards).find(x => x.def === 'benders.straggler');
+    if (!c) continue;
+    s.shop = s.shop.filter(u => u !== c.uid); s.pile = s.pile.filter(u => u !== c.uid);
+    s.players[0].members.push(c.uid); c.recruitedRound = 0; c.recruitedBy = 0;
+    const rand = seededRandom(seed);
+    for (let n = 0; n < 2000 && !ready(s) && !s.over; n++) s = applyMove(s, chooseBotMove(s, rand));
+    if (!ready(s) || s.pending.options.filter(o => o.target && o.target.space).length < 2) continue;
+    s.build = buildStamp();
+    return { config: { seats: seats.map(x => ({ kind: x.kind, name: x.name })), speed: 'normal' }, state: s, undo: null, savedAt: Date.now() };
+  }
+  throw new Error('straggler save: never reached P1 on Straggler');
 }

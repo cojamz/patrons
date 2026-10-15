@@ -64,7 +64,9 @@ async function placeOnce(s) {
 }
 
 /** What undo should allow after `after`, given the state `before` the last move and who made it. */
-const expectUndo = (before, move, after, humans) => {
+// placedFrom: the state before the placement whose Undo is still open (null when none): a choice that goes on, one pick
+// at a time, keeps it while the same person is still choosing and nothing hidden was shown since the placement
+const expectUndo = (before, move, after, humans, placedFrom = null) => {
   if (!before.pending || !humans.includes(move.player) || after.over || after.round !== before.round) return false;
   const k = before.pending.kind;
   // a placement: while it's still the placer's decision
@@ -77,6 +79,7 @@ const expectUndo = (before, move, after, humans) => {
   if (k === 'pay') return move.option !== 'back' && !handedOff;
   // a first starting pick: while the same person's second pick is open
   if (k === 'setup') return !!(after.pending && after.pending.kind === 'setup' && after.pending.player === move.player);
+  if (k === 'choose' && placedFrom) return placedFrom.round === after.round && !revealed(placedFrom, after) && !!(after.pending && after.pending.kind === 'choose' && after.pending.player === move.player);
   return false;
 };
 
@@ -144,7 +147,7 @@ describe('local session: undo', () => {
     s.destroy();
   });
 
-  it('after a buy it undoes the buy (back to the buy step); never after any other follow-up decision', async () => {
+  it('after a buy it undoes the buy (back to the buy step); after a follow-up choice only while that choice goes on', async () => {
     let bought = false, followedUp = false;
     for (let seed = 1; seed < 60 && !(bought && followedUp); seed++) {
       const s = createLocalSession({ seats: humans2, seed, botDelayMs: 0 });
@@ -175,8 +178,19 @@ describe('local session: undo', () => {
           continue;
         }
         await s.submit(chooseBotMove(st)); followedUp = true; // a 'choose' from the action, etc.
-        expect(s.canUndo()).toBe(false);
-        expect(s.undo()).toBe(false);
+        // a choice that goes on, one pick at a time (a steal coin by coin), keeps Undo placement until it ends (live
+        // panel round 3, Cory's lane brief: it vanished after the first pick); a finished choice ends it
+        const mid = s.getState();
+        const goesOn = st.pending.kind === 'choose' && mid.pending && mid.pending.kind === 'choose' && mid.pending.player === pre.pending.player
+          && mid.round === pre.round && !revealed(pre, mid);
+        expect(s.canUndo()).toBe(goesOn);
+        if (goesOn) {
+          expect(s.undoKind).toBe('place');
+          expect(s.undo()).toBe(true);
+          expect(s.getState().pending.kind).toBe('place');
+          expect(s.getState().pending.player).toBe(pre.pending.player);
+          expect(s.getState().moves).toBe(pre.moves);
+        } else expect(s.undo()).toBe(false);
         await driveUntil(s, x => x.over || x.pending.kind === 'place');
       }
       s.destroy();
@@ -201,9 +215,12 @@ describe('local session: undo', () => {
           queueMicrotask(() => s.submit(m).catch(e => errors.push(e.message)));
         }
       });
+      let placedFrom = null; // the placement whose Undo is open, while its choice goes on
       function check(st) {
         const move = lastMove && lastMove.at === prev.moves ? lastMove : { player: prev.pending?.player };
-        const want = !!move.option && expectUndo(prev, move, st, s.mySeats);
+        const want = !!move.option && expectUndo(prev, move, st, s.mySeats, placedFrom && placedFrom.player === move.player ? placedFrom.state : null);
+        const k = prev.pending && prev.pending.kind;
+        placedFrom = want && (k === 'place' || k === 'choose') ? (k === 'place' ? { state: prev, player: move.player } : placedFrom) : null;
         if (want) undoable++;
         if (!move.option) botMovesSeen++;
         if (st.round !== prev.round) roundEndsSeen++;

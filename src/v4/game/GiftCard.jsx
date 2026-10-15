@@ -4,9 +4,9 @@
 // row (your colors, or your members), then the second (the rivals' faces, the color you get, how many, their members).
 // The second row is there from the start, quiet, so the card never changes shape; it lights once a first is picked. The
 // picked one stays pressed, and a click on another switches it. Every answer is the engine's own option id.
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cardDef, quadrant } from '../../engine/v4/index.js';
-import { playerColor, seatEmoji } from '../format.js';
+import { costParts, playerColor, seatEmoji } from '../format.js';
 import { ResourceGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
 import { Minion } from '../art/Leader.jsx';
@@ -18,18 +18,76 @@ import { TurnOf } from './parts.jsx';
 import { leadWarning } from './boardPick.js';
 import './giftcard.css';
 
-const LABELS = { color: [null, null], give: ['Color', 'To'], gift: [null, 'To'], colors: ['Give', 'Get'], amount: ['Get', 'How many'], trade: ['Yours', 'Theirs'] };
+const LABELS = { color: [null, null], give: ['Color', 'To'], gift: [null, 'To'], colors: ['Give', 'Get'], amount: ['Get', 'How many'], trade: ['Yours', 'Theirs'], steal: [null, null], recruit: [null, null], move: [null, null] };
+// a swap with this many members on the card sets them closer (round III: twelve of yours and twenty of theirs), so
+// every row shows whole, never cut off at the card's foot (live panel round 1)
+const DENSE = 14;
+
+// "Take all N" runs one pick per question the engine asks, as each comes back (kept outside the card, so a re-render
+// between two picks never loses it): { key, picks: [{ pid, res }], done: the question already answered }
+let takeAll = null;
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
 
 /**
  * onFirst(a | null, el): lift a first (null puts it down); onAnswer(id, el, b): the engine's option. place: where
  * GameScreen puts the card beside the space ({ left, top, up }), as for any plain question.
  */
-export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, place = null, turnOf = null, hover = null }) {
+export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, place = null, turnOf = null, hover = null, onBack = null }) {
   const pend = state.pending;
   const me = state.players[g.actor];
   const box = useRef(null);
-  const step = g.kind === 'gift' || g.kind === 'color' || g.chosen != null ? 2 : 1;
+  const step = g.kind === 'gift' || g.kind === 'color' || g.kind === 'steal' || g.kind === 'recruit' || g.kind === 'move' || g.chosen != null ? 2 : 1;
+  // Escape closes the card (live panel round 1: it didn't close Kickback's): a lifted first is put down; else the
+  // placement is taken back (Undo, while it's offered); else a choice you may decline (Stay put, Recruit nothing) is
+  // declined. A hover open over it closes first, on its own Escape.
+  const esc = useRef(null);
+  esc.current = () => {
+    if (busy) return;
+    if (g.chosen != null && g.firsts.length > 1) { onFirst(null, null); return; }
+    if (onBack) { onBack(); return; }
+    const no = g.rest.find(o => o.value == null && /^(no|none|pass|back|skip)$/.test(o.kind || ''));
+    if (no) onAnswer(no.id, null, null);
+  };
+  useEffect(() => {
+    const key = e => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      if (document.querySelector('[data-hover-layer][data-open="1"], .dialog[role="dialog"], [role="dialog"][aria-modal="true"]')) return;
+      e.preventDefault();
+      if (esc.current) esc.current();
+    };
+    addEventListener('keydown', key);
+    // a "Take all" still running when the card goes (the game moved on) never answers a later steal
+    return () => { removeEventListener('keydown', key); takeAll = null; };
+  }, []);
+  // the steal's "Take all": the plan's stacks show what each gives up while the button is pointed at
+  const [preview, setPreview] = useState(false);
+  const allKey = g.kind === 'steal' ? `${g.actor}|${g.title}|${state.round}|${pend.count ? pend.count.of : 0}` : null;
+  const optionAt = (pid, res) => (g.seconds.find(x => x.b === `${pid}:${res}`) || {}).o || null;
+  const stackEl = (pid, res) => box.current && box.current.querySelector(`.gc-stack[data-pid="${pid}"][data-res="${res}"]`);
+  const takeNext = () => {
+    const run = takeAll;
+    if (!run || run.key !== allKey || run.done === pend || busy) return;
+    const next = run.picks.shift();
+    // the plan's pick, or (a limit changed what's offered) the engine's own best
+    const o = (next && optionAt(next.pid, next.res)) || [...g.seconds].sort((a, b) => (b.o.hint ?? 0) - (a.o.hint ?? 0))[0]?.o;
+    if (!o) { takeAll = null; return; }
+    run.done = pend;
+    if (!run.picks.length) takeAll = null;
+    onAnswer(o.id, stackEl(o.target.pid, o.target.res), o.target.pid);
+  };
+  useEffect(() => {
+    if (!takeAll) return undefined;
+    if (takeAll.key !== allKey) { takeAll = null; return undefined; }
+    // a beat between picks, so each coin's flight reads on its own
+    const t = setTimeout(takeNext, 140);
+    return () => clearTimeout(t);
+  }, [pend, busy]); // eslint-disable-line react-hooks/exhaustive-deps
+  const onTakeAll = () => {
+    if (busy || !g.plan || !g.plan.length) return;
+    setPreview(false);
+    takeAll = { key: allKey, picks: g.plan.slice(), done: null };
+    takeNext();
+  };
   // the row to act on takes the focus, so the keyboard starts where the mouse would
   useEffect(() => {
     const b = box.current && box.current.querySelector(`.gc-row[data-row="${step}"] button:not([disabled])`);
@@ -65,6 +123,26 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
     onPointerLeave: e => { if (e.pointerType === 'mouse') hover.onCardHover(uid, null); },
   } : {});
 
+  // a member's tile: its picture with what it costs beside it (live panel round 1: the swaps showed no cost, and
+  // Even Swap is "equal cost"), its name under them. pay: what you'd pay instead of its printed cost (Snap Up).
+  const memberFace = (d, size, pay = null) => {
+    const parts = pay || costParts(d, state.resources);
+    const total = parts.reduce((t, c) => t + c.n, 0);
+    return (
+      <>
+        <span className="gc-pic">
+          <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={size} />
+          <span className="gc-cost" data-cost={total} aria-label={parts.length ? `costs ${parts.map(c => `${c.n} ${c.color === 'any' ? 'any' : c.color}`).join(' + ')}` : 'free'}>
+            {parts.length ? parts.map((c, k) => <span key={k} className="gc-cd"><b className="num">{c.n}</b><Pip color={c.color} n={c.n} /></span>) : <span className="gc-free">free</span>}
+          </span>
+        </span>
+        <span className="gc-name">{d.name}</span>
+      </>
+    );
+  };
+  const dense = g.kind === 'trade' && g.firsts.length + g.others.length > DENSE;
+  const pic = dense ? 24 : 28;
+
   const firstItem = f => {
     const press = e => onFirst(f.chosen ? null : f.a, e.currentTarget);
     const common = { type: 'button', 'data-option': f.id, 'aria-pressed': f.chosen, disabled: busy, onClick: press, className: `gc-item${f.chosen ? ' chosen' : ''}` };
@@ -72,8 +150,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
       const d = card(f.a);
       return (
         <button key={f.a} {...common} className={`${common.className} gc-member`} data-uid={f.a} aria-label={`Your ${d.name}${f.chosen ? ' (picked)' : ''}`} style={{ '--q': cardColor(state, d) }} {...memberHover(f.a)}>
-          <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={28} />
-          <span className="gc-name">{d.name}</span>
+          {memberFace(d, pic)}
         </button>
       );
     }
@@ -143,8 +220,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
             <button key={u} type="button" className="gc-item gc-member" data-uid={u} data-option={o ? o.id : undefined} disabled={busy || !o} style={{ '--q': cardColor(state, d) }}
               aria-label={o ? `${state.players[pid].name}’s ${d.name}` : `${state.players[pid].name}’s ${d.name}: pick yours first`} {...memberHover(u)}
               onClick={e => o && onAnswer(o.id, e.currentTarget, u)}>
-              <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={28} />
-              <span className="gc-name">{d.name}</span>
+              {memberFace(d, pic)}
             </button>
           );
         })}</span>
@@ -152,28 +228,107 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
     ));
   };
 
+  // the steal: each rival's face, then the stacks you can take from (one coin a click); a rival you can't take from
+  // says why, quietly, in its place
+  const plan = new Map();
+  if (preview && g.plan) for (const x of g.plan) plan.set(`${x.pid}:${x.res}`, (plan.get(`${x.pid}:${x.res}`) || 0) + 1);
+  const stealRows = () => g.rivals.map(r => (
+    <span key={r.pid} className="gc-group gc-rival" data-pid={r.pid} data-dim={r.stacks.length ? undefined : '1'}>
+      <span className="gc-who" title={r.name}><Minion color={playerColor(r.pid)} emoji={seatEmoji(state, r.pid)} size={24} /><span className="gc-who-name">{r.name}</span></span>
+      <span className="gc-group-items">
+        {r.stacks.map(st => {
+          const k = plan.get(`${r.pid}:${st.res}`) || 0;
+          return (
+            <button key={st.res} type="button" className="gc-item gc-dot gc-stack" data-pid={r.pid} data-res={st.res} data-option={st.o.id} data-plan={k || undefined} disabled={busy}
+              aria-label={`Take 1 ${st.res} from ${r.name} (has ${st.has})`} title={`Take 1 ${st.res} from ${r.name}`}
+              onClick={e => onAnswer(st.o.id, e.currentTarget, r.pid)}>
+              <ResourceGlyph r={st.res} size={24} decorative />
+              <b className="num">{st.has}</b>
+              {k > 0 && <i className="gc-plan num" aria-hidden="true">−{k}</i>}
+            </button>
+          );
+        })}
+        {!r.stacks.length && <span className="gc-why">{r.why}</span>}
+      </span>
+    </span>
+  ));
+  const planWords = g.plan ? (() => {
+    const by = new Map();
+    for (const x of g.plan) { const k = `${x.pid}:${x.res}`; by.set(k, (by.get(k) || 0) + 1); }
+    return [...by].map(([k, n]) => { const [pid, res] = k.split(':'); return `${n} ${res} from ${state.players[pid].name}`; }).join(', ');
+  })() : '';
+  // the members you can recruit from the row: picture, name and what you pay
+  const recruitItems = () => g.seconds.map(({ o, b: uid }) => {
+    const d = card(uid);
+    const pay = (String(o.label).match(/pay (\d+)$/) || [])[1];
+    return (
+      <button key={uid} type="button" className="gc-item gc-member" data-uid={uid} data-option={o.id} disabled={busy} style={{ '--q': cardColor(state, d) }}
+        aria-label={`${d.name}${pay != null ? `, pay ${pay}` : ''}`} {...memberHover(uid)} onClick={e => onAnswer(o.id, e.currentTarget, uid)}>
+        {memberFace(d, 28, pay != null ? [{ color: 'any', n: Number(pay) }] : null)}
+      </button>
+    );
+  });
+  // the minion's move: the open spaces by name too (the card may sit over some of them on the wheel)
+  const spaceItems = () => g.seconds.map(({ o, b: key }) => {
+    const q = Number(String(key).split('-')[0]);
+    let res = null;
+    try { res = quadrant(state.quadrants[q]).resource; } catch { /* none */ }
+    const name = String(o.label).replace(/\s*\([^)]*\)$/, '');
+    return (
+      <button key={key} type="button" className="gc-item gc-space" data-space={key} data-option={o.id} disabled={busy} aria-label={`Move to ${o.label}`} onClick={e => onAnswer(o.id, e.currentTarget, key)}>
+        {res && <Pip color={res} />}<span className="gc-name">{name}</span>
+      </button>
+    );
+  });
+  const headOf = g.kind === 'steal' ? <>Take <b className="num">{g.n}</b>{g.color ? <Pip color={g.color} /> : null}</>
+    : g.kind === 'move' ? <>{g.head}</> : g.kind === 'recruit' ? <>{g.head}</> : head;
+  const sub = g.kind === 'move' ? <>{g.from ? <>It’s on {g.from}. </> : null}{g.sub}</> : g.sub;
+  const farBody = g.kind === 'steal' ? (
+    <div className="gc-row" data-row="2" data-live="1">
+      <div className="gc-items gc-theirs">{stealRows()}</div>
+    </div>
+  ) : g.kind === 'recruit' ? (
+    <div className="gc-row" data-row="2" data-live="1">
+      <div ref={more} onScroll={edge} className="gc-items">{recruitItems()}</div>
+    </div>
+  ) : g.kind === 'move' ? (
+    <div className="gc-row" data-row="2" data-live="1">
+      <div className="gc-items">{spaceItems()}</div>
+    </div>
+  ) : null;
+  const far = g.kind === 'steal' || g.kind === 'recruit' || g.kind === 'move';
+
   return (
     <section ref={box} className={`prompt choice plain gift-card${place ? ` at-space ${place.up ? 'below' : 'above'}` : ''}`} role="group" aria-label={pend.prompt}
-      data-gift={g.kind} data-step={step} style={place ? { left: place.left, top: place.top } : undefined}>
+      data-gift={g.kind} data-step={step} data-dense={dense ? '1' : undefined} style={place ? { left: place.left, top: place.top } : undefined}>
       {turnOf && <TurnOf player={turnOf} />}
       <header className="gc-head">
-        {g.title && <small className="gc-title">{g.title}{g.left != null ? <> · <span className="num">{g.left}</span> left</> : null}{g.done ? <> · <span className="num">{g.done}</span> swapped</> : null}</small>}
-        <p className="gc-what">{head}</p>
-        {g.sub && <p className="gc-sub">{g.sub}</p>}
+        {g.title && <small className="gc-title">{g.title}{g.left != null ? <> · <span className="num pick-left" data-left={g.left}>{g.left}</span> left</> : null}{g.done ? <> · <span className="num">{g.done}</span> swapped</> : null}</small>}
+        <p className="gc-what">{far ? headOf : head}</p>
+        {sub && <p className="gc-sub">{sub}</p>}
       </header>
-      {l1 && (
+      {far ? farBody : null}
+      {!far && l1 && (
         <div className="gc-row" data-row="1" data-live={step === 1 ? '1' : undefined}>
           <span className="gc-lbl">{l1}</span>
           <div className="gc-items">{g.firsts.map(firstItem)}</div>
         </div>
       )}
-      <div className="gc-row" data-row="2" data-live={step === 2 ? '1' : undefined}>
-        {l2 && <span className="gc-lbl">{l2}</span>}
-        <div ref={more} onScroll={edge} className={`gc-items${g.kind === 'trade' ? ' gc-theirs' : ''}`}>{g.kind === 'trade' ? theirs() : g.others.map(secondItem)}</div>
-      </div>
+      {!far && (
+        <div className="gc-row" data-row="2" data-live={step === 2 ? '1' : undefined}>
+          {l2 && <span className="gc-lbl">{l2}</span>}
+          <div ref={more} onScroll={edge} className={`gc-items${g.kind === 'trade' ? ' gc-theirs' : ''}`}>{g.kind === 'trade' ? theirs() : g.others.map(secondItem)}</div>
+        </div>
+      )}
       {leadWarning(pend.options) && <p className="pay-lead gc-lead" data-pay-lead>{leadWarning(pend.options)}</p>}
-      {g.rest.length > 0 && (
+      {(g.rest.length > 0 || (g.plan && g.plan.length > 1)) && (
         <div className="gc-rest">
+          {g.plan && g.plan.length > 1 && (
+            <button type="button" className="btn gc-rest-btn gc-all" data-take-all={g.plan.length} disabled={busy} title={`Takes ${planWords}`} aria-label={`Take all ${g.plan.length}: ${planWords}`}
+              onPointerEnter={() => setPreview(true)} onPointerLeave={() => setPreview(false)} onFocus={() => setPreview(true)} onBlur={() => setPreview(false)} onClick={onTakeAll}>
+              Take all <b className="num">{g.plan.length}</b>
+            </button>
+          )}
           {g.rest.map(o => <button key={o.id} type="button" className="btn gc-rest-btn" data-option={o.id} disabled={busy} onClick={e => onAnswer(o.id, e.currentTarget, null)}>{o.label}</button>)}
         </div>
       )}

@@ -26,8 +26,9 @@ function unreachable(state) {
   // the gift card: each first picked in turn, its second row and the rest buttons
   const g = giftPick(state, pend);
   if (g) {
-    // a gift (its color fixed) and a color of yours (one row) have no first to pick: the card as it opens is the step
-    const steps = g.kind === 'gift' || g.kind === 'color' ? [g] : g.firsts.map(f => giftPick(state, pend, f.a));
+    // a gift (its color fixed), a color of yours (one row), and the asks from far away (a steal, a recruit from the row,
+    // a minion's move: one row) have no first to pick: the card as it opens is the step
+    const steps = ['gift', 'color', 'steal', 'recruit', 'move'].includes(g.kind) ? [g] : g.firsts.map(f => giftPick(state, pend, f.a));
     for (const s of steps) {
       if (!s.seconds.length) bad.push(`the second row (after ${s.chosen}) holds nothing to answer with`);
       for (const { o, b } of s.seconds) {
@@ -38,6 +39,9 @@ function unreachable(state) {
     }
     for (const o of g.rest) reach.add(o.id);
     if (g.kind === 'gift' && g.seconds.some(x => x.b === pend.player)) bad.push('a gift offers your own face');
+    if (g.kind === 'steal' && g.seconds.some(x => x.o.target.pid === pend.player)) bad.push('a steal offers your own stack');
+    // what the card shows is what the engine offers: every steal stack on the card is an answer (and none is missing)
+    if (g.kind === 'steal') for (const r of g.rivals) for (const st of r.stacks) if (!engine.has(st.o.id)) bad.push(`the card's ${st.o.id} is not an engine answer`);
     for (const id of engine) if (!reach.has(id)) bad.push(`${id} has no click on the gift card`);
     return bad.map(b => `${pend.prompt}: ${b}`);
   }

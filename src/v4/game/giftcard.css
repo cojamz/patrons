@@ -84,3 +84,43 @@
 /* a color of yours (Goody Bags, Cheap Seats): one row, no label column; the line under the heading */
 .gift-card[data-gift="color"] .gc-row{grid-template-columns:auto}
 .gift-card .gc-sub{margin:0;font:500 14px/20px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
+
+/* a member's picture with what it costs beside it, its name under them (live panel round 1: the swaps showed no cost) */
+.gift-card .gc-pic{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:28px}
+.gift-card .gc-cost{display:inline-flex;flex-direction:column;align-items:flex-start;gap:0;font:700 11px/12px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
+.gift-card .gc-cd{display:inline-flex;align-items:center;white-space:nowrap}
+.gift-card .gc-cd .pip.glyph,.gift-card .gc-cd .pip.wild{width:9px;height:9px;margin:0 0 0 1px;vertical-align:0}
+.gift-card .gc-free{font:500 11px/12px var(--sans)}
+.gift-card .gc-item.chosen .gc-cost{color:inherit}
+/* a crowded swap (round III): closer tiles, a wider card, so every row shows whole */
+@media (min-width:861px) and (min-height:500px){
+  .lt .lt-wheel > .prompt.choice.gift-card[data-dense]{max-width:min(572px,calc(100% - 8px));max-height:calc(100% - 8px);padding:8px 12px 12px;gap:8px}
+}
+.gift-card[data-dense] .gc-row{grid-template-columns:48px minmax(0,1fr);column-gap:8px}
+.gift-card[data-dense] .gc-lbl{padding-top:8px}
+.gift-card[data-dense] .gc-member{width:64px;min-height:0;padding:2px 2px 2px}
+.gift-card[data-dense] .gc-pic{min-height:24px}
+.gift-card[data-dense] .gc-items,.gift-card[data-dense] .gc-group-items{gap:4px}
+.gift-card[data-dense] .gc-items.gc-theirs{gap:4px}
+.gift-card[data-dense] .gc-group + .gc-group{padding-top:4px}
+.gift-card[data-dense] .gc-who{height:36px}
+
+/* the steal: one line per rival, their face and name, then the stacks you can take a coin from */
+.gift-card[data-gift="steal"] .gc-row,.gift-card[data-gift="recruit"] .gc-row,.gift-card[data-gift="move"] .gc-row{grid-template-columns:minmax(0,1fr)}
+.gift-card .gc-rival .gc-who{gap:4px;min-width:72px;height:44px}
+.gift-card .gc-who-name{font:700 14px/20px var(--sans);color:var(--paper-ink,#2a1f17)}
+.gift-card .gc-rival[data-dim] .gc-who{opacity:.5}
+.gift-card .gc-why{align-self:center;font:500 11px/16px var(--sans);color:var(--paper-ink-2,#5f4e3d)}
+.gift-card .gc-stack{gap:4px;padding:4px 10px}
+/* what "Take all" would take from this stack, while it's pointed at */
+.gift-card .gc-plan{position:absolute;top:-8px;right:-6px;min-width:20px;padding:0 4px;border-radius:8px;background:var(--paper-ink,#2a1f17);color:var(--paper,#f4ebd7);font:700 11px/16px var(--sans);font-style:normal;text-align:center}
+.gift-card .gc-all{font-weight:700}
+.gift-card .gc-all .num{margin-left:.25em}
+/* the minion's move: a few words and Stay put; the lit spaces on the wheel are the answer */
+.lt .lt-wheel > .prompt.choice.gift-card[data-gift="move"]{max-width:min(320px,calc(100% - 16px))}
+.gift-card[data-gift="move"] .gc-what{white-space:normal}
+.gift-card .gc-space{gap:6px;padding:4px 12px}
+.gift-card .gc-space .pip.glyph{width:12px;height:12px;margin:0}
+.gift-card .gc-space .gc-name{font:700 14px/20px var(--sans);white-space:nowrap}
+.gift-card .gc-rival .gc-group-items{flex:1;align-items:center}
+.gift-card .gc-why{text-align:left}

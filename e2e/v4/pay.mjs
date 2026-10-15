@@ -19,8 +19,9 @@
 //  (w1) Even Swap on the same card: your members are the first row; one picked, the rivals' members it pairs with light
 //       (each opens its own card when pointed at: w3a A3); a click swaps.
 //  (w2) Swap Sides in round III with a crowd (blind panel: "Theirs" ran off the card over the shop cards): the card
-//       stays inside the wheel's region and clear of the shop, nothing in it draws outside it (its rivals' row wraps,
-//       and scrolls inside the card when it must), and a rival's member scrolled into view still swaps.
+//       stays inside the wheel's region and clear of the shop, nothing in it draws outside it, every row shows whole
+//       with nothing to scroll to (live panel round 1: the bottom rows were cut), each member shows its printed cost,
+//       and the last rival member swaps.
 //  (s0) Wave f4: the "since your last turn" strip with nothing to tell says nothing ("No moves since yours yet." went),
 //       and no strip line is ever clamped with an ellipsis ("took your Tax…").
 //  (k1) The keyboard list: absent for the mouse; Tab from the caption opens it with every pick.
@@ -267,6 +268,20 @@ try {
     if (a.hitShop) errors.push(`(w2) the crowded swap card covers ${a.hitShop} shop card(s)`);
     if (a.leak) errors.push(`(w2) the crowded swap card draws outside its own edges at ${a.leak} point(s)`);
     if (a.wide) errors.push('(w2) the crowded swap card runs wider than itself (a row that doesn\'t wrap)');
+    // live panel round 1: every row shows whole (nothing cut off at the card's foot, nothing to scroll to), and every
+    // member shows what it costs (Even Swap is "equal cost", Swap Sides "no more than yours +2")
+    const whole = await page.evaluate(() => {
+      const card = document.querySelector('.gift-card'), c = card.getBoundingClientRect();
+      const sc = card.querySelector('.gc-row[data-row="2"] > .gc-items');
+      const tiles = [...card.querySelectorAll('.gc-member')];
+      const cut = tiles.filter(t => { const r = t.getBoundingClientRect(); return r.top < c.top - 1 || r.bottom > c.bottom + 1 || r.left < c.left - 1 || r.right > c.right + 1; }).length;
+      return { over: sc ? sc.scrollHeight - sc.clientHeight : 0, more: sc ? sc.dataset.more || null : null, cut, tiles: tiles.length,
+        costs: tiles.map(t => [Number(t.dataset.uid), Number(t.querySelector('.gc-cost')?.dataset.cost)]) };
+    });
+    if (whole.over > 1 || whole.more) errors.push(`(w2) the crowded swap card hides rows behind a scroll (${whole.over}px, fade ${whole.more})`);
+    if (whole.cut) errors.push(`(w2) ${whole.cut} of ${whole.tiles} members are cut by the card's edge`);
+    const { defById } = await import('../../src/engine/v4/index.js');
+    for (const [uid, c] of whole.costs) { const d = defById(st.cards[uid].def); if (c !== d.s + d.w) errors.push(`(w2) ${d.name} shows cost ${Number.isNaN(c) ? 'none' : c}, printed ${d.s + d.w}`); }
     const mine = await page.$$eval('.gift-card .gc-row[data-row="1"] .gc-member:not([disabled])', els => els.map(e => Number(e.dataset.uid)));
     await click(page, `.gift-card .gc-row[data-row="1"] .gc-member[data-uid="${mine[0]}"]`);
     await page.mouse.move(4, 690); await page.waitForTimeout(300);
@@ -430,7 +445,8 @@ try {
   }
   // (k1) the keyboard list: only for the keyboard
   {
-    const save = stealSave('help');
+    // (a member pick on the seats: steals now ask on the card by the space, whose own buttons take the keyboard)
+    const save = stealSave('shakedown');
     const { ctx, page } = await open('k1', save, '.seat-pick.docked');
     if (await page.$('.pick-key')) errors.push('(k1) the list is in the page before any Tab');
     await page.focus('.seat-pick.docked');

@@ -15,8 +15,11 @@ import { lastSpace } from './seats.js';
  */
 export function boardPicker(state, pend) {
   if (!pend || pend.kind !== 'choose' || !pend.options || !pend.options.length) return null;
-  // a gift or a pair (Good Deed, Kickback, the swaps, Trade Seeds, Sweet Talk) is picked on the gift card by the space
-  if (giftPick(state, pend)) return null;
+  // a gift or a pair (Good Deed, Kickback, the swaps, Trade Seeds, Sweet Talk) is picked on the gift card by the space;
+  // a steal, a recruit from the row or a minion's move asks on that card too, and its targets stay lit on the board
+  // (g.board), so they are picked either place
+  const g = giftPick(state, pend);
+  if (g && !g.board) return null;
   const where = new Map(), rest = [];
   const holder = uid => state.players.find(p => p.members.includes(uid));
   const list = pend.options;
@@ -74,9 +77,14 @@ export function boardPicker(state, pend) {
  *   amount  Sweet Talk: the color you get, then how many
  *   trade   Even Swap, Swap Sides: one of your members, then a rival's it pairs with (grouped by rival)
  *   color   Goody Bags, Cheap Seats: one row, a color of yours (a space's ask only; Done and "N left" ride along)
- * Null when the choice isn't one of these. Steals stay on the seats: one click on the rival's own pile is already the
- * pair (whose and which), and it's the thing you take.
- * The model: { kind, title, head, n, color, actor, chosen, firsts, seconds, others, rest, done, sameCost }.
+ * And three asks from far away (live panel round 1: the steal's, Collect Debts', Snap Up's and Hand-pick's targets sat
+ * 420–600 px from the space while the prompt sat top centre; Straggler waited on a pill up there), which open on the
+ * same card while their targets stay lit on the board (board: where else they're picked):
+ *   steal   Help Yourself, Collect Debts, Redistribute, Lie Low, Crime Wave: each rival's face and the stacks you can
+ *           take from, one coin per click, and "Take all N" (plan: the picks it makes, biggest pile first)
+ *   recruit Snap Up, Half Price, Hand-pick: the members you can recruit, picture, name and what you pay
+ *   move    Straggler: the lit spaces on the wheel are the answer; the card says so and holds Stay put
+ * The model: { kind, title, head, n, color, actor, chosen, firsts, seconds, others, rest, done, sameCost, board }.
  *   firsts: the first row, [{ id, a, chosen }]: id "@pick:a" lifts it, "@unpick" (the one lifted) puts it down; another
  *     first switches. The screen answers these itself; nothing goes to the engine.
  *   seconds: the second row once a first is picked (at once, for a gift): [{ o, b }], o the engine's own option (its id
@@ -97,6 +105,8 @@ export function giftPick(state, pend, first = null) {
     const n = Number(gift[1]), color = state.resources.includes(gift[2]) ? gift[2] : null;
     return { ...base, kind: 'gift', n, color, head: 'Give', chosen: color, firsts: [], seconds: players.map(o => ({ o, b: o.target.pid })), others: players.map(o => o.target.pid), rest: [] };
   }
+  const far = farPick(state, pend, title, question, base);
+  if (far) return far;
   // a color of yours asked by a space just used (Goody Bags' color, Cheap Seats' "pay 1 for 1 follower"): one row of your
   // colors on the card by the space (Cory, 2026-10-15: choices come to where you act), never your seat's stacks ~500 px
   // away. Asks from a member or a release (no space behind them) stay on your stacks.
@@ -142,6 +152,103 @@ export function giftPick(state, pend, first = null) {
   const done = (question.match(/\((\d+) swapped so far\)/) || [])[1];
   const head = { give: n ? `A rival you pick gets ${n}` : 'A rival you pick gets some', colors: 'Swap one for one', amount: 'Swap for another color', trade: 'Swap a member with a rival' }[kind];
   return { ...base, kind, n, color: null, head, chosen, firsts, seconds, others, rest, done: done == null ? null : Number(done), sameCost: /equal cost/i.test(question) };
+}
+
+/** The name of the space a player's last minion stands on (p.lastSlot), or null. */
+function lastSpaceName(state, p) {
+  const l = p && p.lastSlot;
+  if (!l || typeof l.key !== 'string') return null;
+  const [q, i] = l.key.split('-').map(Number);
+  try { const a = quadrant(state.quadrants[q]).actions[i]; return a ? a.name : null; } catch { return null; }
+}
+const SHOP_HEADS = { 'Hand-pick': 'Take a member, free', 'Snap Up': 'Recruit a member, any colors', 'Half Price': 'Recruit a member at half price' };
+
+/** The steal, the recruit from the row and the minion's move, on the card by the space (see giftPick), or null. */
+function farPick(state, pend, title, question, base) {
+  const p = state.players[pend.player];
+  if (!p || !title) return null;
+  const loose = pend.options.filter(o => !o.target);
+  // the space asking is the one your last minion stands on (an Echo copy, a member's own steal: the board, as before)
+  const atSpace = lastSpaceName(state, p) === title;
+  const takes = pend.options.filter(o => o.target && Number.isInteger(o.target.pid) && o.target.res && !o.target.give && o.target.pid !== pend.player);
+  if (atSpace && pend.count && takes.length && takes.length === pend.options.length) return stealModel(state, pend, title, question, base, takes);
+  const row = pend.options.filter(o => o.target && Number.isInteger(o.target.uid) && state.shop.includes(o.target.uid));
+  if (atSpace && row.length && row.length + loose.length === pend.options.length) {
+    const head = SHOP_HEADS[title] || `${question[0].toUpperCase()}${question.slice(1)}`;
+    return { ...base, kind: 'recruit', board: 'shop', n: null, color: null, chosen: null, head, firsts: [], seconds: row.map(o => ({ o, b: o.target.uid })), others: row.map(o => o.target.uid), rest: loose };
+  }
+  // a member of yours moving your last minion (Straggler): the lit spaces are on the wheel, right by the card
+  const spaces = pend.options.filter(o => o.target && typeof o.target.space === 'string');
+  const holds = p.members.some(u => { try { return defById(state.cards[u].def).name === title; } catch { return false; } });
+  if (holds && p.lastSlot && spaces.length && spaces.length + loose.length === pend.options.length) {
+    const on = (question.match(/\(on ([^)]+)\)/) || [])[1];
+    return { ...base, kind: 'move', board: 'wheel', n: null, color: null, chosen: null, from: on || lastSpaceName(state, p),
+      head: loose.length ? 'Move this minion?' : 'Move it to which space?', sub: 'Pick a lit space: it moves there and does that action.',
+      firsts: [], seconds: spaces.map(o => ({ o, b: o.target.space })), others: spaces.map(o => o.target.space), rest: loose };
+  }
+  return null;
+}
+
+/** What one rival's pile of a color holds for this steal right now: what they hold less what's already picked. */
+function stealPicked(state, pend) {
+  const task = state.queue && state.queue[0];
+  return task && task.t === 'choose' && task.prompt === pend.prompt && task.data && task.data.picked ? task.data.picked : {};
+}
+function stealModel(state, pend, title, question, base, takes) {
+  const picked = stealPicked(state, pend);
+  // Collect Debts keeps { pid: n } of gold, a Magenta steal { pid: { color: n } }
+  const pickedOf = (pid, r) => { const x = picked[pid]; return x == null ? 0 : typeof x === 'number' ? (r === 'gold' ? x : 0) : x[r] || 0; };
+  const asked = (question.match(/^take \d+ (\w+)/i) || [])[1];
+  const color = state.resources.includes(asked) ? asked : null;
+  const offer = new Map(takes.map(o => [`${o.target.pid}:${o.target.res}`, o]));
+  const rivals = state.players.filter(o => o.id !== pend.player).map(o => {
+    const stacks = state.resources.filter(r => !color || r === color).map(r => {
+      const o2 = offer.get(`${o.id}:${r}`) || null;
+      return { res: r, has: Math.max(0, (o.res[r] || 0) - pickedOf(o.id, r)), o: o2 };
+    }).filter(s => s.has > 0 && s.o);
+    const why = stacks.length ? null : (pend.blocked && pend.blocked[o.id]) || (o.hideout === state.round ? `${o.name} is lying low this round.` : `${o.name} has no${color ? ` ${color}` : 'thing'} to take.`);
+    return { pid: o.id, name: o.name, stacks, why };
+  });
+  const count = pend.count || { of: 1, left: 1 };
+  const avail = rivals.reduce((t, r) => t + r.stacks.reduce((u, s) => u + s.has, 0), 0);
+  const taken = count.of - count.left;
+  const n = Math.min(count.of, taken + avail);
+  const limit = (question.match(/\(\d+ left, ([^)]+)\)/) || [])[1];
+  // a steal owed 1 from each of some rivals (Redistribute, Crime Wave: "1 each from P3, P4", or "at least 1 from each
+  // of …"): "Take all" takes those first, one each, so a forced split is one click too (live panel round 3)
+  const owedNames = ((limit || '').match(/^(?:1 each from|at least 1 from each of) (.+)$/) || [])[1];
+  const owed = owedNames ? owedNames.split(', ').map(nm => (state.players.find(o => o.name === nm) || {}).id).filter(Number.isInteger) : [];
+  const plan = stealPlan(rivals, Math.min(count.left, avail), owed, /^1 each from/.test(limit || ''));
+  return { ...base, kind: 'steal', board: 'seats', n, color, chosen: null, left: taken > 0 ? Math.min(count.left, avail) : null,
+    head: `Take ${n}${color ? ` ${color}` : ''}`, sub: limit ? `${limit[0].toUpperCase()}${limit.slice(1)}.` : '',
+    rivals, plan, firsts: [], seconds: takes.map(o => ({ o, b: `${o.target.pid}:${o.target.res}` })), others: takes.map(o => `${o.target.pid}:${o.target.res}`), rest: [] };
+}
+/**
+ * "Take all": the picks a one-click steal makes, biggest pile first (ties: the rival seated first, then the table's
+ * color order), one coin at a time: [{ pid, res }]. Each is still checked against the engine's options as it's made.
+ */
+export function stealPlan(rivals, k, owed = [], eachOnly = false) {
+  const left = new Map();
+  for (const r of rivals) for (const s of r.stacks) left.set(`${r.pid}:${s.res}`, s.has);
+  const out = [];
+  // owed: rivals who must give 1 each, taken first (their biggest pile); eachOnly: and nothing more from them
+  const due = owed.slice();
+  const given = new Set();
+  for (let i = 0; i < k; i++) {
+    let best = null;
+    const who = due.length ? due.shift() : null;
+    for (const [key, n] of left) {
+      const pid = Number(key.split(':')[0]);
+      if (who != null ? pid !== who : eachOnly && given.has(pid)) continue;
+      if (n > 0 && (!best || n > left.get(best))) best = key;
+    }
+    if (best) given.add(Number(best.split(':')[0]));
+    if (!best) break;
+    left.set(best, left.get(best) - 1);
+    const [pid, res] = best.split(':');
+    out.push({ pid: Number(pid), res });
+  }
+  return out;
 }
 
 /**
