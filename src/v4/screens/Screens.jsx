@@ -1,6 +1,6 @@
 // Home, local setup and the online lobby.
 import { useEffect, useState } from 'react';
-import { PLAYER_COLORS } from '../format.js';
+import { PLAYER_COLORS, lowColor } from '../format.js';
 import HowToPlay from '../HowToPlay.jsx';
 import { friendlyError } from '../errors.js';
 import { quadrant, BOT_LEVEL_INFO, DEFAULT_BOT_LEVEL } from '../../engine/v4/index.js';
@@ -227,7 +227,6 @@ export function LocalSetup({ initial, onStart, onBack }) {
         <div className="seat"><span>Bots</span><Seg label="Bot level" value={level} options={BOT_LEVEL_INFO.map(l => [l.level, l.name, l.blurb])} onChange={setLevel} /></div>
         <div className="seat"><span>Bot speed</span><Seg label="Bot speed" value={speed} options={[['slow', 'Slow'], ['normal', 'Normal'], ['fast', 'Fast']]} onChange={setSpeed} /></div>
         <TablePicker value={table} onChange={setTable} />
-        {filled.length < 2 && <p className="hint warn">{GAME_NAME} needs at least 2 seats.</p>}
         <div className="row-btns">
           {/* why Start is off, said beside it (RC1 #8: it dimmed at 3 of 4 with nothing near it) */}
           {startWhy && <span className="hint start-why" data-start-why>{startWhy}</span>}
