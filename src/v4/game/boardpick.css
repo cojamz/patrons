@@ -48,6 +48,7 @@
 /* ---- the caption at the decision point ---- */
 .lt .lt-wheel > .prompt.choice.seat-pick{left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:min(92%,520px);
   padding:8px 14px 9px;max-height:none;overflow:visible;text-align:center}
+.lt .lt-wheel > .prompt.choice.seat-pick.at-top{top:0;bottom:auto}
 .prompt.choice.seat-pick .pick-cap{margin:0;font-family:var(--serif);font-size:17px;line-height:1.25}
 .prompt.choice.seat-pick .pick-cap b{font-weight:700}
 .prompt.choice.seat-pick .pick-left{font-weight:700;color:#8c2f39}

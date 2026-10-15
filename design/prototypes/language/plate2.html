@@ -13,6 +13,7 @@
 /* a place: the doorway */
 .door{position:absolute;width:136px;height:148px}
 .door > svg{position:absolute;left:0;top:0;overflow:visible}
+.door .op{margin:0 .06em}
 .door .big,.door .fine{position:absolute;left:0;right:0;text-align:center;white-space:nowrap;color:var(--ink);transform:translateY(-50%)}
 .door .fine{font-size:var(--s);line-height:20px;font-weight:700;color:var(--ink-2)}
 .door.taken .big,.door.taken .fine{opacity:.5}
@@ -112,9 +113,10 @@ for (const p of PLACES) {
 }
 
 // ring numerals along the quadrant's right edge: which round opens each ring
-[['I', 472], ['II', 300], ['III', 128]].forEach(([t, r]) => {
-  const [x, y] = P(r, rad(-45) - 0.06);
-  el(`<span class="cap" style="color:var(--cream-2)">${t}</span>`, `position:absolute;left:${x}px;top:${y}px;transform:translate(-50%,-50%)`);
+// each ring's numeral sits just right of its last door, on that door's baseline
+[['I', PLACES[2]], ['II', PLACES[4]], ['III', PLACES[5]]].forEach(([t, p]) => {
+  el(`<span class="n" style="font-size:18px;line-height:20px;color:var(--cream-3)">${t}</span>`,
+    `position:absolute;left:${p.x + W + 20}px;top:${p.y + H - 20}px`);
 });
 
 // hub
@@ -197,8 +199,8 @@ shop.forEach((m, i) => {
 
 // the member's hover, anchored over its card
 (function memberHover() {
-  const m = shop[0], w = RW, h = 216;
-  const x = RX, y = CY - 20 - h;
+  const m = shop[0], w = RW;
+  const x = RX, bottom = 700 - (CY - 20);
   el(`<div class="row" style="gap:16px;align-items:center">
       <div style="width:48px;height:48px;border-radius:4px;background:color-mix(in srgb, var(--gold) 16%, var(--paper))">${portrait(m.id, 48)}</div>
       <div style="flex:1">
@@ -211,7 +213,7 @@ shop.forEach((m, i) => {
     <div class="rule"></div>
     <div class="s" style="color:var(--ink-2)">Golden Years would give you ${n('5')}${dot('gold')} instead of ${n('4')}${dot('gold')}.</div>
     <div class="nub" style="left:${m.x - RX + CW / 2 - 7}px;bottom:-7px"></div>`,
-    `left:${x}px;top:${y}px;width:${w}px;height:${h}px;padding:20px`, 'pop');
+    `left:${x}px;bottom:${bottom}px;width:${w}px;padding:20px`, 'pop');
 })();
 
 // caption (plate note, not game UI)

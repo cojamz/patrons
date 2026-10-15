@@ -50,7 +50,7 @@ describe('Wheel', () => {
     const rim = q => container.querySelector(`[data-plaque="${q}"]`).textContent;
     expect(rim('red')).toMatch(/ties: red/);
     expect(rim('yellow')).toMatch(/ties: yellow/);
-    expect(rim('market')).toMatch(/ties: blue/);
+    expect(rim('market')).not.toMatch(/ties:/); // Blue scores most blue, no tiebreak (Cory dropped badged, 2026-10-15)
     expect(rim('gold')).not.toMatch(/ties/);
     expect(container.querySelector('[data-rim="red"] title').textContent).toMatch(/Red members break ties\./);
   });

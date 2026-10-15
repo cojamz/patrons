@@ -43,7 +43,7 @@ const fail = (msg, step) => fails.push(`[${step}] ${msg}`);
 const GAME = [
   '[data-region] [data-uid]', '[data-cult] .cs-head', '[data-cult] [data-res]',
   '[data-leader-ring]', '.fol-mark', '.follower', '.lt-rate', '.fb', '.slot',
-  '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term', '[data-deck]',
+  '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term',
   '[data-rank] .rk', '.cs-order',
 ].join(',');
 
@@ -280,7 +280,7 @@ try {
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
         }
-        // (h) the deck heads the strip, and hovering it shows what's in it
+        // (h) the deck heads the strip and shows its count; it has no hover card (Cory, 2026-10-15: "the deck doesn't need a hover")
         const deck = page.locator('[data-deck]');
         if (!(await deck.count())) fail('(h) no member deck at the head of the shop strip', step);
         else {
@@ -288,15 +288,8 @@ try {
           if (!placed) fail('(h) the deck is not before the first shop card', step);
           await deck.hover();
           await page.waitForTimeout(400);
-          const dc = await page.evaluate(() => {
-            const c = document.querySelector('[data-hover-layer] [data-hover-card="deck"]'), d = document.querySelector('[data-deck]');
-            if (!c || !(c.getBoundingClientRect().width > 0)) return null;
-            const body = c.querySelector('[data-deck-card]');
-            return { left: Number(d.dataset.left), card: Number(body && body.dataset.left), sum: [...c.querySelectorAll('[data-color]')].reduce((t, e) => t + Number(e.dataset.n), 0), colorless: !!c.querySelector('[data-color="colorless"]'), bottom: /bottom/.test(c.textContent) };
-          });
-          if (!dc) fail('(h) hovering the deck shows no card', step);
-          else if (dc.card !== dc.left || dc.sum !== dc.left || !dc.colorless || !dc.bottom) fail(`(h) deck card: ${dc.card} left, colors add to ${dc.sum}, the deck shows ${dc.left}${dc.colorless ? '' : ', no colorless count'}${dc.bottom ? '' : ', no word on where released members go'}`, step);
-          await page.screenshot({ path: `${SHOTS}/02d-hover-deck.png` });
+          const dc = await page.evaluate(() => !!document.querySelector('[data-hover-layer] [data-hover-card="deck"]'));
+          if (dc) fail('(h) hovering the deck still opens a card (Cory removed it)', step);
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
         }

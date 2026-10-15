@@ -36,7 +36,7 @@ export const MO = {
   tickPer: 30,
   tickMax: 550,
   /** a seat's members and leader react to what just happened (CultSeat.jsx) */
-  react: 700,
+  react: 900,
   /** the "Nothing you can afford" toast waits for your recruit to land */
   afterFlight: 360,
   /** a new kind of step ignores a second press near the first for this long (the double-tap guard) */

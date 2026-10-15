@@ -58,6 +58,8 @@ h1,h2,h3{font-family:var(--serif)}
     transform:translateY(calc(var(--slot, 0) * (100% + 6px)));transition:transform var(--mo-sort, .6s) cubic-bezier(.3,.7,.4,1),box-shadow var(--mo-dim, .3s),background var(--mo-dim, .3s);
     /* clipped to its slot, except the rail gutter on its left where its turn marker sits */
     min-height:0;min-width:0;overflow:visible;clip-path:inset(-3px -3px -3px -36px);border-radius:14px;padding:5px 7px;background:rgba(243,230,200,.03);box-shadow:inset 0 0 0 1px rgba(243,230,200,.07);transition:box-shadow var(--mo-dim),background var(--mo-dim)}
+  /* the right column: the turns since yours, from the top (the turn card tells the live turn at its foot) */
+  .app.game.lt > .lt-since{grid-column:3;grid-row:1 / 4;align-self:start;max-height:calc(100% - 120px)}
   /* you, wherever you land: a cream edge */
   .lt > .lt-seat.mine{box-shadow:inset 0 0 0 1.5px rgba(243,230,200,.32)}
   .lt > .lt-seat.mine.now{box-shadow:inset 0 0 0 1.5px rgba(var(--lamp),.6)}
@@ -69,7 +71,8 @@ h1,h2,h3{font-family:var(--serif)}
   .lt > .lt-snake.dir-down .sn-line::after{bottom:-7px;border-top:8px solid rgba(var(--lamp),.75)}
   .lt > .lt-snake.dir-up .sn-line::after{top:-7px;border-bottom:8px solid rgba(var(--lamp),.75)}
   /* each chair's place in the turns, on the rail beside it: NOW lit, NEXT ringed, ×2 where the snake turns */
-  .lt > .lt-seat .cs-order{position:absolute;left:-31px;top:50%;translate:0 -50%;margin:0;width:28px;padding:2px 0;display:flex;flex-direction:column;align-items:center;gap:0;
+  .lt > .lt-seat > .lt-cult-seat{position:relative}
+  .lt > .lt-seat .cs-order{position:absolute;left:-38px;top:50%;translate:0 -50%;margin:0;width:28px;padding:2px 0;display:flex;flex-direction:column;align-items:center;gap:0;
     text-align:center;font-size:9px;line-height:11px;letter-spacing:.04em;border-radius:8px;background:var(--walnut);z-index:2}
   .lt > .lt-seat .cs-order .co-x{font-size:10px;line-height:11px;letter-spacing:0;color:inherit}
   .lt > .lt-seat.now{background:rgba(var(--lamp),.07);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.35)}

@@ -226,6 +226,15 @@ function Menu({ onRules, onLog, onLeave, getState }) {
 function TurnCard({ card, root, state }) {
   const [pos, setPos] = useState(null);
   useLayoutEffect(() => {
+    // the chairs in one ordered column (laptop): the card tells the turn in the right column, just above the shop,
+    // under the story of the turns since yours (it would cover the next chair beside its own)
+    const column = root && root.querySelector('.lt > .lt-snake');
+    if (column && column.getBoundingClientRect().width) {
+      const shop = root.querySelector('.lt > .lt-shop');
+      const top = shop ? shop.getBoundingClientRect().top : innerHeight;
+      setPos({ left: undefined, right: 18, top: undefined, bottom: Math.max(8, innerHeight - top + 10), ox: '100%', oy: '100%' });
+      return;
+    }
     // the card sits in the open space beside its cult: under a top chair, over a bottom one (never over the prompt)
     const region = root && root.querySelector(`.lt-seat[data-pid="${card.pid}"]`);
     const seat = region && (region.querySelector('.lt-cult-seat') || region);
@@ -677,6 +686,18 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // what a copy would give, on the space itself while you hover it (the engine's own words for the option)
   const pickNotes = useMemo(() => (pickSpaces ? new Map([...picker.where].filter(([k]) => k.startsWith('space:')).map(([k, o]) => [k.slice(6), o.label])) : null), [picker, pickSpaces]);
   const shopFor = useMemo(() => (picker ? shopLookup(picker) : null), [picker]);
+  // the caption never hides a lit space: it sits at the foot of the wheel, or at its head when more lit spaces are low
+  const [capTop, setCapTop] = useState(false);
+  useLayoutEffect(() => {
+    const w = pickSpaces && root.current && root.current.querySelector('.lt-wheel');
+    if (!w) { setCapTop(false); return; }
+    const box = w.getBoundingClientRect();
+    const cap = w.querySelector('.prompt.choice.seat-pick');
+    const h = cap ? cap.getBoundingClientRect().height : 100;
+    let low = 0, high = 0;
+    for (const el of w.querySelectorAll('.slot.lit')) { const r = el.getBoundingClientRect(); if (r.bottom > box.bottom - h - 6) low++; if (r.top < box.top + h + 6) high++; }
+    setCapTop(low > high);
+  }, [pickSpaces]); // eslint-disable-line react-hooks/exhaustive-deps
   const pickerRef = useRef(null);
   pickerRef.current = picker;
   const [seatPicks, setSeatPicks] = useState({ key: null, map: {} }); // this steal's picks so far, for the "−1" on each stack
@@ -816,7 +837,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <>
           <section className="lt-wheel" data-region="wheel">
             <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
-            {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} seatPick={picker} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+            {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} seatPick={picker} pickTop={capTop} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
             {!showChoice && pickDone && <section className="seat-pick-done" aria-hidden="true"><p className="pick-cap"><b>{pickDone.title}</b>: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</p></section>}
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
