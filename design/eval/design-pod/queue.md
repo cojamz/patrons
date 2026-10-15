@@ -16,6 +16,7 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 - [x] 06:10 Guards: lib/textclip.mjs now reads the wheel's panel faces and skips screen-reader-only text; new lib/legacy.mjs (retired marks, symbols, color-only player dots, browser tooltips on hover-card targets) runs every step in hotseat.mjs and with every hover card open in info.mjs (r).
 
 ## Art director: taking
+- [ ] 08:05 (foreman: loop runs to ~13:00 UTC) Compose the screens Cory sees first: home, setup (table pick), the round summary, results.
 - [x] 04:56 The game screen's composition at 1270×700 (Cory: "too much prime real estate was given to the log"): 2–3 layout variants behind `?layout=`, then the winner becomes the default. Files: the grid in `src/v4/lamp.css` (`.app.game.lt` desktop block), the since-strip box (`since.css`), the shop strip's outer layout (`lamp-b.css`), and the TurnCard placement and a `data-layout` attribute in `GameScreen.jsx` (small edits). Write-up: design/eval/design-pod/layout.md. Landed 05:45 as `src/v4/game/layout.css` (≥1200px wide; no flag).
 - [x] 06:10 Since-strip rows: wrap to two lines with a hanging indent instead of the ellipsis (since.css row only).
 - [x] 06:10 Results: each score shown three times; the over-cults column's composition (lamp.css results block).
@@ -47,8 +48,8 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 - 07:05 w2b #49: a placement that gives nothing tells only "You took Bumper Crop". Say it: "nothing this time (no full sets)". w2b #46: "recruited Gardener (paid 2)" repeats the payment line; Robin Hood's "+1 follower" shows twice.
 
 ## For the foreman (needs a call or another agent's files)
-- 07:58 (art director) Phone (390×664): at setup the starting-resource picker sits below the fold (top y=723), under the wheel, with nothing on screen saying to scroll. It predates tonight. Suggest a sticky foot or the pick above the wheel on phones (lamp.css's phone block, the phone owner's).
-- 07:58 (art director) hotseat.mjs "center click after undo did not place" is timing under the new choreography: by hand it places (scratch undoclick.mjs). The gate waits 150ms + 250ms; it should wait for the worker count to change.
+- [x] 07:58 (art director) Phone (390×664): at setup the starting-resource picker sat below the fold (top y=723). Done 08:05 by the art director (UI-A, the phone's owner, is done): your pick stands at the screen's foot, without the duplicate "for sale" list; the whole wheel stays in view (layout.css; shots/0800-phone/setup.png).
+- 07:58 (art director) **For the QA agent (owner of hotseat.mjs's flakes):** "center click after undo did not place (3 -> 3)" is timing under the new choreography, not a bug. By hand (live :5410, rich save): place → Undo → a click on the lit space's centre lands on `.slot.can` and the worker count goes 0 → 1 within 600ms. The gate reads the count 150ms after Undo and 250ms after the click (hotseat.mjs ~line 310–317); suggest `waitForFunction` on the worker count (≤ 2s) instead of fixed waits. Same shape for "game did not finish in 4 minutes" under Steady pacing (fails on the old layout too).
 - 06:05 RC1 #29: Undo disappears as soon as you pick the first stolen resource, so a mis-steal can't be taken back. A session/rules question, not a detail.
 - 06:05 Dialogs pod: in the pay dialog, a resource you hold none of shows "0" with no dot under it (the others show a faded dot), so one column reads as a bare number; and the coin "×2" (PayPicker `.x`) is a typed × the grammar retired. The keyboard-only "Pick from a list" button, when focused, lands on top of the "ROUND I OF 3" line.
 

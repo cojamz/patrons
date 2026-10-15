@@ -10,6 +10,8 @@ That's two runs each of: local at 4× CPU (a mid laptop), local at 1×, and onli
 
 Don't take a baseline on a box someone is editing. Vite pushes every saved file into the page. A Fast Refresh of `App.jsx` runs the session's destroy cleanup ("Session closed.", 2026-10-15 03:58), and a full reload wipes the tracer's buffer. The harness counts both (`HMR/reloads during the run`, "the page reloaded mid-run") and stops after three dead clicks in a row with a screenshot. A load average above the CPU count also makes every number noise: the 2026-10-15 smoke ran at load 30–45 on 4 CPUs.
 
+**Measure production, not dev (2026-10-15):** Cory plays a production build. A dev build at 4× CPU spends most of its time in React dev checks, and the 20s "turn wait" on 79dee80 was measured on dev. For the before and after that matter, serve a production build (`npx vite build --outDir .v4-perf && npx vite preview --outDir .v4-perf --port 5368`) and point the harness at that.
+
 ## The tracer: `?trace=1` (src/v4/perf.js)
 
 It's off by default and costs nothing when off: no listener, observer or patch, and the exports are no-ops (src/test/v4/perf.test.js). With the flag on it records:
