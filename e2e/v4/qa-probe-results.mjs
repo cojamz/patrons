@@ -11,7 +11,7 @@ while (!(await page.$('.results')) && Date.now() - t0 < 600000) {
   const next = await page.$('[data-next-round]');
   if (next) { await next.click().catch(() => {}); continue; }
   if (!r1) { const rd = await page.$eval('.app.game', e => e.dataset.round).catch(() => '0'); if (rd === '1' && await page.$('.lt[data-phase="place"][data-yours="1"]')) r1 = await page.evaluate(() => document.querySelectorAll('*').length); }
-  const did = await answerChoice(page); await page.waitForTimeout(did ? 20 : 40);
+  const did = await answerChoice(page, { prefer: [/^(card|pay):/, /^tier:/], last: [/^pass$/], domFallback: true }); await page.waitForTimeout(did ? 20 : 40);
 }
 await page.waitForTimeout(1500);
 const r = await page.evaluate(() => {
@@ -21,8 +21,12 @@ const r = await page.evaluate(() => {
   const kids = [...(document.querySelector('.results')?.children || [])].map(e => [String(e.className || e.tagName).slice(0, 40), count(e)]).sort((a, b) => b[1] - a[1]).slice(0, 8);
   const top = [...document.querySelector('.app.game').children].map(e => [String(e.className || e.tagName).slice(0, 40), count(e)]).sort((a, b) => b[1] - a[1]).slice(0, 8);
   const body = [...document.body.children].map(e => [String(e.className || e.id || e.tagName).slice(0, 40), count(e)]).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const bySel = {}; for (const e of document.querySelectorAll('.app.game *')) { const k = e.tagName === 'rect' ? 'rect' : e.tagName.toLowerCase(); bySel[k] = (bySel[k] || 0) + 1; }
+  const svgs = [...document.querySelectorAll('.app.game svg')].map(s => [String(s.getAttribute('class') || s.parentElement.className).slice(0, 30), s.querySelectorAll('*').length]);
+  const svgBy = {}; for (const [k, n] of svgs) { svgBy[k] = svgBy[k] || [0, 0]; svgBy[k][0]++; svgBy[k][1] += n; }
+  const resultsSvg = [...document.querySelectorAll('.results svg')].length;
   const fat = [...document.querySelectorAll('.results *, .over-cults *')].filter(e => e.children.length > 25).map(e => [String(e.className).slice(0, 40), e.children.length, count(e)]).slice(0, 10);
-  return { total: document.querySelectorAll('*').length, parts, kids, top, body, fat };
+  return { total: document.querySelectorAll('*').length, parts, kids, top, body, fat, bySel, svgBy: Object.entries(svgBy).sort((a, b) => b[1][1] - a[1][1]).slice(0, 10), resultsSvg };
 });
 console.log('round I nodes', r1, 'secs', Math.round((Date.now() - t0) / 1000));
 console.log(JSON.stringify(r, null, 1));

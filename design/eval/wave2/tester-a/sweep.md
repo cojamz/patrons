@@ -24,3 +24,15 @@
 ## 8. Round I end
 - Reckoning: per-quadrant banner bottom-center "ROUND I SCORING · 1 OF 4 · Most gold · Counts the gold you hold when the round ends · P4 wins +2 followers", round badges by each seat with counts. "counting..." state on Most members. Skip button bottom right. ~23 s total (115).
 - Summary modal "Round I scored" (114/116): per quadrant winner + standings; player table PRIZES / THIS ROUND / FOLLOWERS; followers count up after modal opens (6→8).
+## Round II
+- Start round II click: NO VISIBLE CHANGE 1.5 s reported, then seats re-sorted (120).
+- Seats re-ordered by turn order (You first). "in 3 ×2" label under P4 rail = snake? unclear.
+- Chronicle (log) panel right; names underlined, hover opens space card WITH live "You'd get" for the current state (123) — the log hover for Open Door shows today's preview, not what happened. Squatter log hover = card.
+- Log entries read in reverse-chronological order within each round, but round I lists oldest-at-bottom: mixed.
+- Middle ring hover: Greatest Hits/Hand-pick show "Opens round III" (126/127). Collect Debts: "Take up to 3 gold from rivals, split however you like", prompt "Collect Debts: take 3 gold · 3 left · Click a lit stack on a rival's cult" with Undo placement. Rival gold stacks glow (136). -1 badge on P4 stack (139). 3 clicks for steal of 3.
+- After steal: toast "You took Collect Debts +3 gold / from P2 1 / from P4 2". Buy step: Release... / Pass buttons (141).
+- Big Spender bought in 1 click with no pay dialog (auto-paid 3 gold + 1 red) (143). "Undo buy" appeared. Big Spender = Once per round buy twice; "used this round" appears in seat hover even though I never chose to use it (159).
+- Release... opens dropdown chips "Squatter +6 any", "Intern +1 red" (146). Release Squatter → choose colors: header chips "All 6 as gold/red/blue/green" + click seat chips one by one (148/150). Wren name in header (only place my name shows).
+- Penny Pincher bought one click (154). Bot turns: ~52 s of idle for 3 bots x 2 actions (156).
+- Echo: "Copy which rival's space (taken since your last turn)?" lit spaces on board (161). Picked Open House → "Take a face-up member costing 4 or less, free" (163). Toast "Muse: P4 +2 green" (P4's Muse triggered from my echo?).
+- Tax Collector click bought instantly (Penny Pincher doubling) and card slid out; next card (Middleman) slid under pointer and opened its hover (168). Header "Your turn again (snake order) — place a minion" + italic subline overlaps seat column: "ROUND II OF 3" collides with cat emoji (170).

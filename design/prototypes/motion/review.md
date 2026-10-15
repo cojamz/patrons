@@ -6,13 +6,13 @@ Instruments:
 - **Plan probe:** `planChain` (src/v4/game/director.js) over whole 4-bot games played by Normal bots with effect streams, P1 counted as "you". It uses the plan's own 450px typical distance, needs no screen, and isn't affected by the box's load. It's bundled with esbuild from the designer's scratchpad (`md/plan-entry.mjs`). It measures the targets H2–H4 and H7–H9 at the level of the plan; the real table can only be slower.
 - **Live trace:** a Playwright run on the designer's dev server (:5414, live tree, `?trace=1&speed=steady`) that logs every `Element.animate`, ghost, held number and phase change with page timestamps. The box ran at load 31–37 on 4 CPUs, so absolute times are noise. The trace is good for order and for numbers that change at the wrong moment.
 
-## Status (06:27): what's open
+## Status (06:33): what's open
 Load-free verification uses the filmstrip; "engineer" means reported fixed and not yet re-filmed.
-- **Open, blocking the feel:** 39 (answering a choice skips the gain), 38 (pacing uses the unmeasured plan, so the next player starts early), 28 (the follower count counts dim and slow), 37 (the 600ms bot floor costs 0.34s per wait; make it 400).
-- **Open, other owners:** 7 and 27 (the turn card and header run ahead of the chain: GameScreen's turn story), 24 (a released member flies as a blank square, after its refund), 25 (hovers open under a resting pointer: HoverCards), 29–32 (the Reckoning: the card hides the rim, 900ms of "counting…", the count ticks late; Reckoning.jsx, passed to the foreman), 36 (reduced-motion pacing), 34 (a ringed dot over the wrong stack; not re-checked).
-- **Fixed and seen in filmstrips:** 1–6, 11, 13, 14, 19, 20, 21, 23, 26, 33, 35. 10 not reproduced.
+- **Open, for the engineer:** 39 (answering a choice skips the gain you just earned), 37 (the 600ms bot floor costs 0.34s per wait; make it 400 and update m4).
+- **Open, other owners:** 7 and 27 (the turn card and header run ahead of the chain: GameScreen's turn story), 24 (a released member flies as a blank square, after its refund), 25 (hovers open under a resting pointer: HoverCards), 36 (reduced-motion pacing and no marker of what changed), 34 (a ringed dot over the wrong stack; not re-checked), 31 (the Reckoning's count tick; looks close now, not measured).
+- **Fixed and seen in filmstrips:** 1–6, 11, 13, 14, 19, 20, 21, 23, 26, 28, 29, 30, 32, 33, 35, 38. 10 not reproduced.
 - **Fixed by the engineer, not re-filmed:** 8, 9, 12, 22.
-- **Applied to the grammar:** 17 (tighter Steady holds), 18 (H2 judged at p50), the Reckoning at about 1.6s a rim (Cory's "readable, one quadrant at a time").
+- **Applied to the grammar:** 17 (tighter Steady holds), 18 (H2 judged at p50), the Reckoning at about 1.6s a rim (Cory's "readable, one quadrant at a time"), a choice isn't a skip (S3), the next story waits for the real landing (§5), hovers open only on movement (§6), a 400ms floor for a shown bot step (§5).
 
 ## Round 1 (05:20, director.js as of 05:08)
 
@@ -186,3 +186,13 @@ New:
 `review-r14-choice-skips-gain.png` (0ms and 100ms).
 
 39. **Answering the choice skips the gain you just earned.** Kickback asks "give 1 gold to…" at once, while your +3 (and Prospector's +1) are about to fly. The answer is a click, and every click skips the chain, so your gold jumps 5 → 9 between 0 and 100ms and the +3 never flies. Most players answer a required choice within half a second, so for them Kickback's gain is never seen. Grammar S3, now explicit: answering a choice isn't a skip. The click is acknowledged at once (press, the target lights), the beats already playing finish, and the choice's own effect (the gift) plays after them. Only a click on empty table or Space skips. The gift itself reads fine: the gold arcs from your stack to P2's, and P2's number ticks at about 500ms.
+
+## Round 15 (06:33, re-filmed on the 06:17–06:19 code: the follower buy and the Reckoning)
+`review-r15-follower-count.png`, `review-r15-reckoning-overview.png`.
+
+Verified fixed:
+- **28:** the follower count now rolls 6 → 7 → 9 → 12 → 15 → 16 between 1100 and 1350ms, in full cream, starting as the "+10" lands.
+- **38 (improved):** P3's frog now leaves its column at about 1200ms, after your bundle has landed (about 1050) plus the breath. It overlaps only the roll, which is fine.
+- **29:** the Reckoning's card now sits on the far side of the wheel from the rim it scores. Most Gold (bottom) gets the card at the top; Most Members (left) and Most Blue (top) get it at the bottom; Most Green (right) at the top. Every scored rim is in plain view.
+- **30:** no more still "counting…". The seats' counts stamp in one by one (0–300ms), and the winner line follows at about 900.
+- **32 / H10:** the rims start at 0, 1800, 3300 and 4800ms, about 1.5–1.8s each, and all four are done by about 6.3s. That's inside H10 (≤ 7s) and one quadrant at a time, as Cory asked.

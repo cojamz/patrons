@@ -52,7 +52,7 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
                       );
                     }}>{b.contests}</Tip>
                   </td>
-                  <td data-label="End-game bonuses">
+                  <td data-label="End-game">
                     <Tip label={`${poss(p)} end-game bonuses`} content={() => (
                       <div className="pop-card"><b>{poss(p)} end-game bonuses: {b.endGame >= 0 ? '+' : ''}{b.endGame}</b>
                         {b.parts.length ? <span><NamedText state={state} text={b.parts.join(', ')} /></span> : <span>No member scored at game end.</span>}</div>

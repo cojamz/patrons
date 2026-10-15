@@ -37,6 +37,7 @@ How Claude works on Cults (the repo is still called patrons). Claude owns this f
 
 ## Building v4 (code)
 - **Standing design pod (Cory, 2026-10-15: "build a robust design pod, and enable them"):** whenever the UI is changing, an art director (composition, layout, hierarchy) and a detail designer (obvious slop at every state, on several tables) run as a loop on their own dev servers. They critique against design/taste.md and Cory's notes, fix directly, log in design/eval/design-pod/, and guard what they fix. Cory should never be the one catching obvious problems.
+- **Judge motion with the filmstrip, not real-time video, on a loaded box:** design/prototypes/motion/film.mjs drives a fake clock, so every frame is exact. The motion language is design/prototypes/motion/grammar.md (targets H1–H14), and its review is review.md.
 - **Taste (Cory, 2026-10-15):** every agent that touches the screen reads design/taste.md first. Its ten rules, way of working and slop list go into every screen prompt, and the visual language in design/prototypes/language/ is the look.
 - Architecture lives in `design/architecture.md`: pure engine → sessions (local / online host-authoritative) → React UI. Rules live only in the engine.
 - The loop is the `/v4-loop` skill: change → `npm run check:v4` → look at screenshots → review agents → fix → commit/push.

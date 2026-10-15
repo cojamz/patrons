@@ -31,3 +31,16 @@
 - major: Last placement auto-skipped my buy and slid straight into scoring; when I looked (3 s later) scoring was already on quadrant 4 of 4. shot 106
 - polish: Round summary repeats "(0 yellow)" tiebreak note for every player. shot 108
 - polish: Toast "You took Snap Up −2● +2● recruited Gardener (paid 2●)" says the payment twice. shot 079
+
+## Round II
+- BLOCKER: P2's Raider bought 3 followers from me (16→13) between my turns; "since your last turn" strip did not mention it; only the Chronicle (log) did. I saw my score drop with no explanation on the main screen. shot 136/142
+- major: Double Agent: clicking it in Half Price bought it instantly (no pay step, no warning) and its forced "swap it for any rival's member" fired with no skip/undo. shot 153
+- major: Swap animation flashes a big white rectangle into P3's seat. shot 157
+- major: Header subline "Snake order: whoever ends a pass starts the next, so you place twice in a row" runs under menu button and overlaps my seat; "ROUND II OF 3" overlaps my minions. shot 159
+- major: Redistribute ("Take 1 resource from each rival") with P3 protected let me take 2 from P2; header said "take 3 · 3 left" while only 2 rivals stealable. Hidden −1 white to P3 (Lookout?) only hinted as "about −1○". shot 177/182
+- major: Release is a dropdown of text chips under a header button, detached from the seat (Cory: pick on the board). shot 165
+- polish: Instant recruits (Shopkeeper, Robin Hood) skip the pay dialog when only one way to pay — fast, but no confirmation of what was spent; Robin Hood buy jumped straight into round scoring. shot 172/186
+- major: Round scoring starts immediately on my last buy; the "4 OF 4" card was up before my screenshot settled. shot 186
+- polish: Hovers on seats dock at a fixed spot (228 px from pointer), covering other seats. shot 147/149
+- polish: Chronicle log is a big right-side panel, not small; Esc close took 352 ms first change / 3.7 s settle. shot 138
+- polish: Rival hover (P3 HARD BOT) lists members well — reading plans works through hover only; member sprites in seats are too small to identify (6 tiny figures). shot 147

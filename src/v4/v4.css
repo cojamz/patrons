@@ -398,7 +398,8 @@ table.res-t td:nth-child(2),table.res-t th:nth-child(2){text-align:left}
 table.res-t td small{display:block;color:var(--muted);font-size:var(--fs-1)}
 table.res-t .tot{font-size:var(--fs-5);font-weight:700}
 table.res-t tr.first td{background:color-mix(in srgb,var(--ink) 5%,transparent)}
-.parts{margin:0;padding-left:18px;font-size:var(--fs-2);color:var(--muted)}
+/* no bullet dots (a dot only ever means a resource): each bonus on its own line, the name leading */
+.parts{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:2px;font-size:var(--fs-2);color:var(--muted)}
 
 /* ---------- motion bits ---------- */
 .tick{position:relative;display:inline-block}

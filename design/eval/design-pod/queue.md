@@ -17,10 +17,12 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 
 ## Art director: taking
 - [x] 04:56 The game screen's composition at 1270×700 (Cory: "too much prime real estate was given to the log"): 2–3 layout variants behind `?layout=`, then the winner becomes the default. Files: the grid in `src/v4/lamp.css` (`.app.game.lt` desktop block), the since-strip box (`since.css`), the shop strip's outer layout (`lamp-b.css`), and the TurnCard placement and a `data-layout` attribute in `GameScreen.jsx` (small edits). Write-up: design/eval/design-pod/layout.md. Landed 05:45 as `src/v4/game/layout.css` (≥1200px wide; no flag).
-- [ ] 06:10 Since-strip rows: wrap to two lines with a hanging indent instead of the ellipsis (since.css row only).
-- [ ] 06:10 Results: each score shown three times; the over-cults column's composition (lamp.css results block).
-- [ ] 06:10 1100px laptops (old grid): the member strip switches to 5 columns and hides the second row (5 of 10 members visible). lamp-b.css's 1100px rule.
-- [ ] 06:10 First full capture pass (every state, 1270×700) → log.md.
+- [x] 06:10 Since-strip rows: wrap to two lines with a hanging indent instead of the ellipsis (since.css row only).
+- [x] 06:10 Results: each score shown three times; the over-cults column's composition (lamp.css results block).
+- [x] 06:10 1100px laptops (old grid): the member strip switches to 5 columns and hides the second row (5 of 10 members visible). lamp-b.css's 1100px rule.
+- [x] 06:10 First full capture pass (every state, 1270×700) → log.md.
+- [x] 06:30 Order rail "×2" → "twice" (CultSeat.jsx, seats.js; turnstory.mjs t1 follows).
+- [ ] 06:35 Type scale on the game screen (detail designer's 06:20 note): take the screen to the grammar's three sizes, region by region.
 
 ## For the art director (composition / layout)
 - 05:40 Since-strip rows end in an ellipsis that cuts the member's name ("P4 Half Price: −1● −1● −3● · recruited Stunt Dou…") in the narrow left column. Let a row wrap to two lines (hanging indent under the name), or give the strip the width. I haven't touched since.css's box.
