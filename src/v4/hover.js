@@ -8,5 +8,14 @@ if (typeof window !== 'undefined' && window.addEventListener) {
   window.addEventListener('pointerup', mark, { capture: true, passive: true });
   window.addEventListener('touchstart', () => { lastTouch = Date.now(); }, { capture: true, passive: true });
 }
+// A hover opens only when the pointer moved onto something. A card dealt (or a dialog closing) under a resting pointer
+// sends an enter with no movement behind it: that's the table moving, not the player (motion review #25).
+let lastMove = -1e9, mx = null, my = null;
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    if (e.clientX !== mx || e.clientY !== my) { mx = e.clientX; my = e.clientY; lastMove = Date.now(); }
+  }, { capture: true, passive: true });
+}
 const hoverless = () => typeof matchMedia === 'function' && matchMedia('(hover: none)').matches;
-export const realHover = e => !!e && e.pointerType === 'mouse' && !hoverless() && Date.now() - lastTouch > 1000;
+export const realHover = e => !!e && e.pointerType === 'mouse' && !hoverless() && Date.now() - lastTouch > 1000 && Date.now() - lastMove < 400;

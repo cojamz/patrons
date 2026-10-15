@@ -11,9 +11,9 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 - [x] 05:15 Dots that aren't resources: header steps, hub pips, since-strip, round summary bullets, card owner line. (1–3)
 - [x] 05:40 Popovers in two looks (RC1 #44): one paper look. (details 32)
 - [x] 05:40 Results and round summary words. (26, 27)
-- [x] 06:05 A number and its dot as one unbreakable unit (R3's note): Rich, the wheel's Said, cost dots. (29)
-- [x] 06:10 Screens around the game: home, setup (custom, emoji), menu, How to play, the log drawer. (34–39)
-- [ ] 06:30 Guards: lib/textclip.mjs now reads the wheel's panel faces and skips screen-reader-only text; new lib/legacy.mjs (retired marks, symbols, color-only player dots, browser tooltips on hover-card targets) runs every step in hotseat.mjs and with every hover card open in info.mjs (r).
+- [x] 05:55 A number and its dot as one unbreakable unit (R3's note): Rich, the wheel's Said, cost dots. (29)
+- [x] 06:00 Screens around the game: home, setup (custom, emoji), menu, How to play, the log drawer. (34–39)
+- [x] 06:10 Guards: lib/textclip.mjs now reads the wheel's panel faces and skips screen-reader-only text; new lib/legacy.mjs (retired marks, symbols, color-only player dots, browser tooltips on hover-card targets) runs every step in hotseat.mjs and with every hover card open in info.mjs (r).
 
 ## Art director: taking
 - [x] 04:56 The game screen's composition at 1270×700 (Cory: "too much prime real estate was given to the log"): 2–3 layout variants behind `?layout=`, then the winner becomes the default. Files: the grid in `src/v4/lamp.css` (`.app.game.lt` desktop block), the since-strip box (`since.css`), the shop strip's outer layout (`lamp-b.css`), and the TurnCard placement and a `data-layout` attribute in `GameScreen.jsx` (small edits). Write-up: design/eval/design-pod/layout.md. Landed 05:45 as `src/v4/game/layout.css` (≥1200px wide; no flag).
@@ -30,11 +30,13 @@ The art director (port 5410) owns screen composition and layout. The detail desi
 - 05:40 The Reckoning banner's "1 OF 4" is followed by four progress dots (●○○○): dots that aren't resources, and the count already says it. Reckoning.jsx (the layout agent's).
 
 
-- 06:20 Type sizes: the game screen still shows about ten sizes (11, 12, 13, 14, 15, 16, 18, 22, 36 plus the wheel's fitted ones). I removed the half sizes and the 10px; getting to the grammar's three needs the strips re-composed (shop numbers 15 vs rate numbers 17→18, seat stacks 14 vs 18, the prompt's 22). Yours if you take it; I'll follow your scale.
+- 06:05 Type sizes: the game screen still shows about ten sizes (11, 12, 13, 14, 15, 16, 18, 22, 36 plus the wheel's fitted ones). I removed the half sizes and the 10px; getting to the grammar's three needs the strips re-composed (shop numbers 15 vs rate numbers 17→18, seat stacks 14 vs 18, the prompt's 22). Yours if you take it; I'll follow your scale.
 
 ## For the layout agent (from the motion engineer, 06:13)
 - [ ] Keep a stable hook on each unplaced minion: `.lt-cult-seat[data-seat] .cs-minions [data-minion][data-k]` (k = 0 at the top). The chain (src/v4/game/director.js) flies a placed minion from the slot just past the last one still standing, and the minions walk home into `.cs-minions` at round end. If the column's markup changes, keep these attributes.
 
+- 06:15 info.mjs (h) now fails on the live tree: "the deck is not before the first shop card" (the Followers block moved above Members). Either the layout or the gate should change, your call.
+
 ## For the foreman (needs a call or another agent's files)
-- 06:20 RC1 #29: Undo disappears as soon as you pick the first stolen resource, so a mis-steal can't be taken back. A session/rules question, not a detail.
-- 06:20 Dialogs pod: in the pay dialog, a resource you hold none of shows "0" with no dot under it (the others show a faded dot), so one column reads as a bare number; and the coin "×2" (PayPicker `.x`) is a typed × the grammar retired. The keyboard-only "Pick from a list" button, when focused, lands on top of the "ROUND I OF 3" line.
+- 06:05 RC1 #29: Undo disappears as soon as you pick the first stolen resource, so a mis-steal can't be taken back. A session/rules question, not a detail.
+- 06:05 Dialogs pod: in the pay dialog, a resource you hold none of shows "0" with no dot under it (the others show a faded dot), so one column reads as a bare number; and the coin "×2" (PayPicker `.x`) is a typed × the grammar retired. The keyboard-only "Pick from a list" button, when focused, lands on top of the "ROUND I OF 3" line.

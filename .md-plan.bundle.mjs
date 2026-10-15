@@ -5301,7 +5301,7 @@ for (let g = 0; g < Number(gamesArg); g++) {
     const plan = planChain(s, next, { mine: [0] });
     const sameNext = !!(next.pending && pend && next.pending.player === pend.player);
     const PASS = { quick: 150, steady: 300, relaxed: 500 }[speed2];
-    const ms = process.env.OLD ? plan.total || (actor !== 0 ? 600 : 0) : plan.total ? sameNext ? plan.handoff ?? plan.total : plan.total : actor !== 0 ? sameNext ? 0 : PASS : 0;
+    const ms = process.env.OLD ? plan.total || (actor !== 0 ? 600 : 0) : plan.total ? sameNext ? Math.max(plan.handoff ?? plan.total, actor !== 0 ? Number(process.env.RFLOOR ?? 600) : 0) : plan.total : actor !== 0 ? sameNext ? 0 : PASS : 0;
     const kinds = [...new Set((next.effects || []).map((e) => e.cause && e.cause.kind))].join(",");
     chains.push({ ms, actor, kind: pend && pend.kind, kinds, atoms: plan.atoms.length });
     const ck = `${pend && pend.kind}`;
