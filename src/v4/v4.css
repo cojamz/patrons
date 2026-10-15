@@ -1176,12 +1176,13 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 /* table picker (setup + lobby) */
 .table-pick{display:flex;flex-direction:column;gap:8px}
 .table-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.table-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 2px;font-weight:700;color:var(--c);cursor:help}
+/* the sphere's name in plain ink and its color on the dot (gold and yellow, white and silver read alike as colored words) */
+.table-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 2px;font-weight:700;color:var(--ink);cursor:help}
 /* (no pill border: the table's spheres are read, not clicked; a bordered pill looked like a button) */
 .table-chip .dot,.sphere .dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
 .sphere-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
 .sphere{position:relative;display:grid;grid-template-columns:auto 1fr;column-gap:7px;align-items:center;text-align:left;min-height:48px;padding:6px 10px;border-radius:10px;border:1px solid var(--rim);background:var(--table);cursor:pointer}
-.sphere b{color:var(--c);font-weight:700}
+.sphere b{color:var(--ink);font-weight:700}
 .sphere small{grid-column:2;color:var(--muted);font-size:var(--fs-1);line-height:1.25}
 .sphere.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--table));box-shadow:inset 0 0 0 1px var(--c)}
 .sphere:disabled{opacity:.38;cursor:default}

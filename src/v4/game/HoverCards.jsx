@@ -15,6 +15,7 @@ import { unlockedBy, surely } from './cards.js';
 import { memberCopyTargets } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
 import { SeatMembers } from './MemberUse.jsx';
+import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
 
@@ -123,13 +124,17 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   const el = c ? anchorFor(c, live && inside.current) : null;
   const place = () => {
     if (!c || c.pinned || !el || !box.current) { setPos(null); return; }
-    const a = c.kind === 'space' ? spaceRect(el, c.key) : el.getBoundingClientRect();
+    // a seat's card opens right beside the whole seat, level with its top (w2b #20: it was docked hundreds of px from
+    // the pointer, over the wheel); everything else beside the thing itself
+    const seatBox = c.kind === 'seat' ? el.closest('.lt-cult-seat') || el : null;
+    const a = c.kind === 'space' ? spaceRect(el, c.key) : (seatBox || el).getBoundingClientRect();
     const w = Math.min(c.kind === 'seat' ? 360 : 280, innerWidth - 16);
     const h = box.current.offsetHeight || 160;
-    const p = placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
-    // the nub points at the middle of what the card explains, kept clear of the card's corners
+    const p = (seatBox && besideSeat(a, w, h)) || placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
+    // the nub points at the middle of what the card explains (for a seat, the part pointed at), clear of the corners
+    const t = seatBox ? el.getBoundingClientRect() : a;
     const across = p.side === 'right' || p.side === 'left';
-    p.nub = Math.round(Math.max(16, Math.min((across ? h : w) - 16, across ? a.top + a.height / 2 - p.top : a.left + a.width / 2 - p.left)));
+    p.nub = Math.round(Math.max(16, Math.min((across ? h : w) - 16, across ? t.top + t.height / 2 - p.top : t.left + t.width / 2 - p.left)));
     side.current = { el, side: p.side };
     setPos(old => (old && old.left === p.left && old.top === p.top && old.width === p.width && old.nub === p.nub ? old : p));
   };
@@ -227,6 +232,14 @@ export function placeBeside(a, w, h, keep = null) {
   return { side, width: w, left: clampX(a.left + a.width / 2 - w / 2), top: clampY(side === 'above' ? a.top - gap - h : a.bottom + gap) };
 }
 
+/** A seat's card: right beside the seat (else left of it), its top level with the seat's, slid to stay on screen. */
+export function besideSeat(a, w, h) {
+  const gap = 8, m = 8, W = innerWidth, H = innerHeight;
+  const side = a.right + gap + w <= W - m ? 'right' : a.left - gap - w >= m ? 'left' : null;
+  if (!side) return null;
+  return { side, width: w, left: side === 'right' ? a.right + gap : a.left - gap - w, top: Math.max(m, Math.min(H - m - h, a.top)) };
+}
+
 /**
  * While a copy space (Echo, Encore, Refrain…) or a copying member (Understudy) is under the pointer, the spaces it
  * could copy light up on the wheel ("since your turn" targets), straight from the engine. Classes are toggled on the
@@ -305,7 +318,8 @@ function raceAfter(state, race, qid, pid) {
   const top = c.rows.map(r => `${nm(r.player)} ${r.count}`).join(' · ');
   // plain words (design pod): "Most gold: You 4 · P2 2 … · you'd lead it (+2 followers)", never "Gold … you'd lead, +2"
   const lead = c.winners.includes(pid) ? ` · you’d lead it (+${c.prize} follower${c.prize === 1 ? '' : 's'})` : '';
-  return { rule: c.rule.replace(/^\w/, ch => ch.toUpperCase()), text: `${top}${lead}` };
+  // the counts are after you'd take it, and say so (w2b #4: "You 2" read as now, while they held 0)
+  return { rule: c.rule.replace(/^\w/, ch => ch.toUpperCase()), text: `If you take it: ${top}${lead}` };
 }
 
 /** "Rush (Bo)" for a board key. */
@@ -339,7 +353,7 @@ export function SeatCard({ state, pid, meId = null, optionFor = () => null, onPi
   const lvl = p.kind === 'bot' ? BOT_LEVEL_INFO.find(l => l.level === botLevel(state, pid)) : null; // Easy / Normal / Hard
   return (
     <div className="lt-card-body seat-card" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}>
-      <div className="t"><SeatFigure id={pid} state={state} size={32} /><h4>{pid === meId ? 'You' : p.name}{lvl ? <small><span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span></small> : null}</h4></div>
+      <div className="t"><SeatFigure id={pid} state={state} size={32} /><h4>{pid === meId ? 'You' : p.name}{lvl ? <small><span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span></small> : null}{safeThisRound(state, pid) ? <small className="seat-safe" data-safe="1">No one can steal resources from {pid === meId ? 'you' : p.name} this round.</small> : null}</h4></div>
       <SeatMembers state={state} pid={pid} me={meId} optionFor={pid === meId ? optionFor : undefined} onPick={pid === meId ? onPick : null} />
     </div>
   );

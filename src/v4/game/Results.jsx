@@ -27,7 +27,7 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
       <div className="table-scroll">
         <table className="res-t">
           <thead>
-            <tr><th>#</th><th>Player</th><th>Followers</th><th title="Followers your members are worth (the follower mark on each card)">From members <Follower /></th><th title={`The ${TIERS.map(t => `+${t.get}`).join(' / ')} follower buys`}>Bought</th><th title="Followers from members' abilities during play (e.g. Proselytizer)">Abilities</th><th title="The rims' prizes won at round end">Prizes</th><th title="End-game member bonuses (e.g. Patriarch, Tycoon)">End-game</th></tr>
+            <tr><th>#</th><th>Player</th><th>Followers</th><th title="You count as 1 follower">Yourself</th><th title="Followers your members are worth (the follower mark on each card)">From members <Follower /></th><th title={`The ${TIERS.map(t => `+${t.get}`).join(' / ')} follower buys`}>Bought</th><th title="Followers won or lost during play: members' abilities (e.g. Robin Hood), spaces (e.g. Your Call), sales and raids">During play</th><th title="The rims' prizes won at round end">Prizes</th><th title="End-game member bonuses (e.g. Patriarch, Tycoon)">End-game</th></tr>
           </thead>
           <tbody>
             {ranked.map((p, k) => {
@@ -36,10 +36,17 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
                 <tr key={p.id} className={k === 0 ? 'first' : ''}>
                   <td className="rank" data-label="#">{rankOf[k]}{shared(rankOf[k]) ? '=' : ''}</td>
                   <td className="who"><Who state={state} id={p.id} meId={meId} />{p.kind === 'bot' ? ' · bot' : ''}<small>{plural(memberCount(state, p), 'member')}</small></td>
-                  <td className="tot" data-label="Followers" title={`${followers(state, p)} = 1 (yourself) + ${b.members} from members + ${b.bought} bought + ${b.effects} from abilities + ${b.contests} from prizes + ${b.endGame} end-game`}>{followers(state, p)}</td>
+                  <td className="tot" data-label="Followers" title={`${followers(state, p)} = 1 (yourself) + ${b.members} from members + ${b.bought} bought + ${b.effects} during play + ${b.contests} from prizes + ${b.endGame} end-game`}>{followers(state, p)}</td>
+                  <td data-label="Yourself">{b.self}</td>
                   <td data-label="From members" title={`What ${p.id === meId ? 'your' : `${p.name}'s`} ${plural(p.members.length, 'member')} are worth at the end`}>{b.members}</td>
                   <td data-label="Bought" title={`Follower buys: ${b.bought} followers bought with resources`}>{b.bought}</td>
-                  <td data-label="Abilities" title="Followers from members' abilities during play">{b.effects}</td>
+                  <td data-label="During play" data-play={p.id}>
+                    {/* each cause on its own line, losses negative: "Robin Hood +2 · P2's Raider −3 · Your Call +4" */}
+                    <Tip label={`${poss(p)} followers during play`} content={() => (
+                      <div className="pop-card"><b>{poss(p)} followers during play: {b.effects > 0 ? '+' : ''}{b.effects}</b>
+                        {b.play.length ? b.play.map(l => <span key={l.label} data-play-line>{l.label} {l.n > 0 ? '+' : '−'}{Math.abs(l.n)}</span>) : <span>None won or lost during play.</span>}</div>
+                    )}>{b.effects}</Tip>
+                  </td>
                   <td data-label="Prizes" data-contests={p.id}>
                     {/* each contest won, with its own followers (never the contests' total under one name) */}
                     <Tip label={`${poss(p)} prizes`} content={() => {
@@ -64,8 +71,8 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
           </tbody>
         </table>
       </div>
-      {/* (no "Yourself" column: it was 1 on every row; the total's hover counts it) */}
-      <p className="hint">Abilities: followers from members’ abilities during play. Prizes: the rims’ round-end prizes. End-game: members that score when the game ends.</p>
+      {/* every column adds up to the total: Yourself (1) is a column, and During play nets gains and losses */}
+      <p className="hint">During play: followers won or lost by members’ abilities, spaces, sales and raids. Prizes: the rims’ round-end prizes. End-game: members that score when the game ends.</p>
       {brokeTie && <p className="hint">Tied on followers: more members breaks the tie.</p>}
       {ranked.some(p => p.final && p.final.parts.length) && (
         <ul className="parts">

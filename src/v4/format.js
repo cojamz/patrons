@@ -88,7 +88,8 @@ export function promptFor(state, mine) {
         const or = use ? `…or use ${use} first` : null;
         if (t.kind === 'snake') {
           return mine
-            ? { who: p, lead: 'Your turn again (snake order) — ', text: 'place a minion', sub: or || 'Snake order: whoever ends a pass starts the next, so you place twice in a row' }
+            // the headline says it, and so do the rail and the chip ("now twice"): no third telling (w2b #15)
+            ? { who: p, lead: 'Your turn again (snake order) — ', text: 'place a minion', ...(or ? { sub: or } : {}) }
             : { who: p, text: `${name} again (snake order)` };
         }
         const why = t.why ? ` (${t.why})` : '';
@@ -195,14 +196,22 @@ export function boughtFollowers(state, p) {
   return state.log.reduce((s, l) => { const m = l.match(re); return s + (m ? Number(m[1]) : 0); }, 0);
 }
 
-/** Follower breakdown for the results table: self + members + bought + member effects + contests + end game. */
+/**
+ * Follower breakdown for the results table, adding up exactly to the total: self (1) + members + bought + effects
+ * (during play: members' triggers, spaces and choices, losses negative) + contests + endGame. play lists effects by
+ * cause from the engine's ledger ([{ label, n }]: "Robin Hood" +2, "P2's Raider" −3, "Your Call" +4); an older save
+ * without a ledger gets one "during play" line.
+ */
 export function breakdown(state, p) {
   // followers that members are worth, as the engine counts them (a Doppelganger can copy a follower value)
   const members = engineFollowers(state, p) - 1 - p.bonus;
   const endGame = p.final ? p.final.total : 0;
-  const bought = Math.min(boughtFollowers(state, p), Math.max(0, p.bonus - p.contest - endGame));
+  const bought = boughtFollowers(state, p);
   const effects = p.bonus - p.contest - endGame - bought;
-  return { self: 1, members, contests: p.contest, bought, effects, endGame, parts: p.final ? p.final.parts : [] };
+  const rows = state.ledger && state.ledger[p.id] ? Object.entries(state.ledger[p.id]).filter(([, n]) => n).map(([label, n]) => ({ label, n })) : [];
+  const listed = rows.reduce((t, l) => t + l.n, 0);
+  const play = listed === effects ? rows : [...rows, { label: rows.length ? 'other' : 'during play', n: effects - listed }].filter(l => l.n);
+  return { self: 1, members, contests: p.contest, bought, effects, endGame, play, parts: p.final ? p.final.parts : [] };
 }
 
 // ---------- round end, read back from the engine's log line ----------
@@ -290,7 +299,7 @@ export function winSentence(state) {
   const say = {
     members: v => `by recruiting ${n} members (+${v})`,
     bought: v => `by buying followers (+${v})`,
-    effects: v => `from members' abilities (+${v})`,
+    effects: v => `from abilities and spaces during play (+${v})`,
     endGame: v => `from end-game bonuses (+${v})`,
     // the sweep names its own followers, never the contests' total (Most Magenta members gave +10 of +18)
     contests: v => (swept && swept[1].rounds >= 2
@@ -759,7 +768,7 @@ export function effectStory(start, end, actor, me = null, fx = []) {
     }
     for (const m of g.moved) {
       bits.push(m.to === owner ? `took ${whose(m.from)} ${cardName(m.uid)}` : m.from === owner ? `gave ${cardName(m.uid)} to ${nm(m.to)}` : `${cardName(m.uid)}: ${nm(m.from)} → ${nm(m.to)}`);
-      if (m.from === me && m.to !== me) hits.push(`took your ${cardName(m.uid)}`);
+      if (m.from === me && m.to !== me && actor !== me) hits.push(`took your ${cardName(m.uid)}`);
     }
     return bits;
   };

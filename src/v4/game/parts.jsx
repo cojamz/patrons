@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { quadrant, cardDef } from '../../engine/v4/index.js';
 import { logSections, playerColor, costParts, plainLine } from '../format.js';
 import { Rich, CostPips, Pip } from './Rich.jsx';
-import { MemberCard, NamedText, CardText, cardColor, asYou } from './Info.jsx';
+import { MemberCard, NamedText, CardText, cardColor, asYou, CostDots } from './Info.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { ResourceGlyph } from './Glyphs.jsx';
 import { pickCaption, pickName } from './boardPick.js';
@@ -43,7 +43,7 @@ function optionDetail(state, o) {
   if ((o.kind === 'card' || o.kind === 'member') && typeof o.value === 'number') {
     const d = cardOf(o.value);
     if (d) {
-      const cost = costParts(d, state.resources).map(c => `${c.n} ${c.color}`).join(' + ') || 'free';
+      const cost = costParts(d, state.resources); // shown as dots (CostDots), never color words
       // whose it is (Ransom, Heist, Trade pick a rival's member) and what it costs, on every member option
       const owner = state.players.find(p => p.members.includes(o.value)) || null;
       return { name: d.name, text: d.text, f: d.f, color: d.quadrant, id: d.id, def: d, cost, owner: owner ? owner.id : null };
@@ -69,7 +69,7 @@ export function TurnOf({ player }) {
   return <p className="turn-of" style={{ '--pc': playerColor(player.id) }}><i />{player.name}’s turn<span> · pass the device</span></p>;
 }
 
-export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = null }) {
+export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = null, place = null }) {
   const pend = state.pending;
   const setup = pend.kind === 'setup';
   const box = useRef(null);
@@ -90,7 +90,8 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
     : left != null && total.current ? `${total.current - Number(left)} of ${total.current} taken` : null;
   const pick = (id, mode) => onPick(id, mode); // step changes are guarded by the table's input lock
   return (
-    <section className={`prompt choice${setup ? ' setup' : ''}`} aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}>
+    <section className={`prompt choice${setup ? ' setup' : ' plain'}${place ? ` at-space ${place.up ? 'below' : 'above'}` : ''}`} aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}
+      style={place ? { left: place.left, top: place.top } : undefined}>
       {turnOf && <TurnOf player={turnOf} />}
       {/* setup: the headline says "pick a starting resource (1 of 2)"; the panel says only which pick this is, not the
           same sentence again (RC1 sweep 24) */}
@@ -217,8 +218,10 @@ function MergedOptions({ state, pend, onPick, busy }) {
     byKey.set(key, g);
     groups.push(g);
   }
+  // amounts (Your Call's "+1 follower, +2 white"): big tiles in the plate's marks, one tap each
+  const big = groups.length <= 4 && groups.every(({ o, det }) => !det && o.kind !== 'color' && MARK_RE(state.resources).test(o.label));
   return (
-    <div className="opts">
+    <div className={`opts${big ? ' big' : ''}`}>
       {groups.map(({ key, o, det, n }) => {
         const color = o.kind === 'color' ? o.value : null;
         return (
@@ -232,14 +235,31 @@ function MergedOptions({ state, pend, onPick, busy }) {
               <span className="rich-body">
                 <b>{det.owner != null && <span className="from" style={{ color: playerColor(det.owner) }}>{state.players[det.owner].name}’s </span>}{det.name}{n > 1 && <span className="num copies"> {state.shop && state.shop.includes(o.value) ? `· ${n} in the shop` : `· ${n} of them`}</span>}{det.f != null && <> <Follower n={det.f} className="star" /></>}</b>
                 <small>{det.def ? <CardText text={det.text} /> : <Rich text={det.text} />}</small>
-                {det.cost && <small className="cost-line">Costs <span className="num">{det.cost}</span></small>}
+                {det.cost && <small className="cost-line">costs <CostDots parts={det.cost} /></small>}
               </span>
-            ) : withUnits(o.label, pend.prompt, state.resources) /* the engine's label, always: "+2 gold", never a bare "Gold" */}
+            ) : <MarkLabel text={withUnits(o.label, pend.prompt, state.resources)} resources={state.resources} /> /* the engine's label: "+2 gold" as "+2●", never a bare "Gold" */}
           </button>
         );
       })}
     </div>
   );
+}
+
+/** "+2 white" and "+1 follower" in an option's words, matched for the plate's marks (a dot, the follower). */
+const MARK_RE = res => new RegExp(`([+−-]?\\d+)\\s+(followers?|${res.join('|')})\\b`);
+/** An option's words with every amount as the plate writes it: "+1 follower, +2 white" reads "+1👤 +2●". */
+export function MarkLabel({ text, resources }) {
+  const re = new RegExp(MARK_RE(resources).source, 'g');
+  const out = [];
+  let at = 0, m;
+  while ((m = re.exec(text))) {
+    const between = text.slice(at, m.index).replace(/^,\s*/, ' ');
+    if (between) out.push(<span key={`t${at}`}>{between}</span>);
+    out.push(<span key={`m${m.index}`} className="mark-amt"><b className="num">{m[1]}</b>{/^follower/.test(m[2]) ? <Follower size={14} title={`${m[1].replace(/^[+−-]/, '')} ${m[2]}`} /> : <Pip color={m[2]} n={Number(m[1].replace(/^[+−-]/, ''))} />}</span>);
+    at = m.index + m[0].length;
+  }
+  if (at < text.length) out.push(<span key="end">{text.slice(at).replace(/^,\s*/, ' ')}</span>);
+  return <span className="mark-label">{out}</span>;
 }
 
 /** Trade in two steps: give one of yours, then take one of theirs that's legal for it. */

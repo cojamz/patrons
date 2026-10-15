@@ -78,3 +78,14 @@
   .app.game.lt .lt-card .ft{margin:auto 3px 0}
   .app.game.lt .lt-card .lt-res{margin-right:3px}
 }
+/* the lamp at the starting pick (w2b #25: "at a squint the eye lands on the wheel"): the pick holds the decision, so the
+   wheel steps back like it does in your buy step, and the members you're choosing toward stay readable */
+/* (the stage only: the picker lives inside the wheel's region and keeps its light) */
+.lt.in-setup[data-yours="1"] .lt-wheel .stage{filter:brightness(.7) saturate(.8) drop-shadow(0 18px 22px rgba(0,0,0,.55)) drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+.lt.in-setup[data-yours="1"] .lt-shop{filter:brightness(.9) saturate(.95)}
+/* the log (w2b #48: "covers a third of the board"): a modest drawer out of the left column, where the story of the turns
+   and its Log button live, as wide as that column; the wheel and the shop stay in view, under a light shade */
+@media (min-width:861px) and (min-height:500px){
+  .lt-drawer-back{background:rgba(10,7,5,.22)}
+  .lt-drawer{left:0;right:auto;width:min(var(--col-l, 340px), 100vw);border-radius:0 12px 12px 0;box-shadow:12px 0 32px rgba(0,0,0,.45)}
+}

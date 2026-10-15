@@ -27,7 +27,7 @@ import Reckoning, { reckonRows } from './Reckoning.jsx';
 import { snakeOrder } from './order.js';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker, { payChoice } from './PayPicker.jsx';
-import { Rich, Pip } from './Rich.jsx';
+import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
 import { playChain, planChain, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
@@ -364,50 +364,12 @@ function seatCorners(state, me) {
   return [0, 1, 2, 3].map(k => (k < n ? (base + k) % n : null));
 }
 
-const RELEASE_TEXT = 'Once per round: put one of your members at the bottom of the pile and take back the colored part of its cost, in its own color.';
-/** The buy step's other answers live with the question: Pass, and (once a round) Release a member. */
-/** Release, picked on the board (Cory: every choice is picked on the board, never from a list of chips): "Release…"
- *  lights your releasable members in your seat and you click one (its button says what comes back); Esc, a click
- *  elsewhere or Cancel closes it. The list of buttons is only the keyboard's way in (shown when it has focus). */
-function PromptActions({ state, optionFor, onPick, open, setOpen }) {
-  const pend = state.pending;
-  const releases = pend.options.filter(o => o.kind === 'release');
-  const turn = `${state.round}:${pend.player}`;
-  useEffect(() => { setOpen(false); }, [turn]); // eslint-disable-line react-hooks/exhaustive-deps
-  // open, it closes on Escape or a click anywhere but your seat (RC1 sweep 71: Esc left it open)
-  const rowRef = useRef(null);
-  const keysRef = useRef(null);
-  const byKeys = useRef(false);
-  useEffect(() => {
-    if (!open) return undefined;
-    if (byKeys.current && keysRef.current) { const b = keysRef.current.querySelector('button'); if (b) b.focus(); }
-    const key = e => { if (e.key === 'Escape') setOpen(false); };
-    const away = e => { if (rowRef.current && !rowRef.current.contains(e.target) && !(e.target.closest && e.target.closest('.lt-seat.mine'))) setOpen(false); };
-    addEventListener('keydown', key);
-    addEventListener('pointerdown', away, true);
-    return () => { removeEventListener('keydown', key); removeEventListener('pointerdown', away, true); };
-  }, [open]);
+/** The buy step's other answer lives with the question: Pass. Release is a seat action now (dialogs pod, wave-2
+ *  tester #11): your member's own card offers "Release: +2 ●" in your buy step (MemberUse.jsx ReleaseButton). */
+function PromptActions({ optionFor, onPick }) {
   const pass = optionFor('pass');
   return (
     <span className="pr-actions">
-      {releases.length > 0 && (
-        <span ref={rowRef} className={`release-row${open ? ' open' : ''}`}>
-          <button type="button" className="btn ghost rel-toggle" aria-expanded={open} onClick={e => { byKeys.current = e.detail === 0; setOpen(o => !o); }}
-            title={RELEASE_TEXT}>{open ? 'Cancel' : 'Release…'}</button>
-          {open && (
-            <span ref={keysRef} className="rel-list keys" role="group" aria-label={`Release which member? ${RELEASE_TEXT}`}>
-              {releases.map(o => {
-                const d = state.cards[o.uid] ? cardDef(state, o.uid) : null;
-                const n = o.refund ?? 0, color = o.color || 'any';
-                return (
-                  <button key={o.id} type="button" className="btn ghost rel" data-option={o.id} onClick={() => onPick(o.id)} style={d ? { '--c': `var(--${d.quadrant})` } : undefined}
-                    title={o.label}>{d ? d.name : o.label} <span className="num">+{n}</span> <Pip color={color} n={n} /></button>
-                );
-              })}
-            </span>
-          )}
-        </span>
-      )}
       <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title="End your turn without buying" data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>Pass</button>
     </span>
   );
@@ -892,6 +854,23 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // what a copy would give, on the space itself while you hover it (the engine's own words for the option)
   const pickNotes = useMemo(() => (pickSpaces ? new Map([...picker.where].filter(([k]) => k.startsWith('space:')).map(([k, o]) => [k.slice(6), o.label])) : null), [picker, pickSpaces]);
   const shopFor = useMemo(() => (picker ? shopLookup(picker) : null), [picker]);
+  // A plain question (Your Call's "+2 followers or +4 white") opens at the decision point: beside the space you just
+  // took, below it in the wheel's top half and above it in the bottom half, never off the wheel's area.
+  const [plainAt, setPlainAt] = useState(null);
+  const plainKey = showChoice && !picker && pend.kind === 'choose' && !payChoice(pend) ? pend : null;
+  useLayoutEffect(() => {
+    const p = plainKey && state.players[pend.player];
+    const key = p && p.lastSlot && state.slots[p.lastSlot.key] === p.id ? p.lastSlot.key : null;
+    const w = key && root.current && root.current.querySelector('.lt-wheel');
+    const slot = w && w.querySelector(`[data-slot="${key}"]`);
+    const cap = w && w.querySelector('.prompt.choice.plain');
+    if (!slot || !cap) { setPlainAt(null); return; }
+    const W = w.getBoundingClientRect(), S = slot.getBoundingClientRect(), C = cap.getBoundingClientRect();
+    const up = S.top + S.height / 2 - W.top < W.height / 2;
+    const left = Math.round(Math.max(8, Math.min(W.width - C.width - 8, S.left + S.width / 2 - W.left - C.width / 2)));
+    const top = Math.round(Math.max(8, Math.min(W.height - C.height - 8, up ? S.bottom - W.top + 12 : S.top - W.top - C.height - 12)));
+    setPlainAt(at => (at && at.left === left && at.top === top && at.up === up ? at : { left, top, up }));
+  }, [plainKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const pickerRef = useRef(null);
   pickerRef.current = picker;
   const [seatPicks, setSeatPicks] = useState({ key: null, map: {} }); // this steal's picks so far, for the "−1" on each stack
@@ -942,21 +921,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (why) say(why);
     if (el && el.animate && motionOK()) el.animate([{ translate: '0 0' }, { translate: '-3px 0' }, { translate: '3px 0' }, { translate: '0 0' }], { duration: 220, easing: 'ease-out' });
   }, [say]);
-  // Release picked on the board: your releasable members light up in your seat while it's open (PromptActions)
-  const [relOpen, setRelOpen] = useState(false);
-  const relPart = useMemo(() => {
-    if (!relOpen || !state.pending || state.pending.kind !== 'buy' || !options.size) return null;
-    const rel = [...options.values()].filter(o => o.kind === 'release');
-    if (!rel.length) return null;
-    const members = Object.fromEntries(rel.map(o => {
-      const d = state.cards[o.uid] ? cardDef(state, o.uid) : null;
-      return [o.uid, { ...o, say: `Release ${d ? d.name : 'this member'}: get back ${o.refund ?? 0} ${o.color || 'any'}` }];
-    }));
-    return { lit: true, dim: false, seat: null, seatMode: false, why: null, stacks: null, members, picked: {}, title: 'Release',
-      onPick: id => { setRelOpen(false); onPick(id); }, onDenied: null };
-  }, [relOpen, options, state, onPick]);
   const pickParts = useMemo(() => {
-    if (!picker) return relPart && me != null ? { [me]: relPart } : {};
+    if (!picker) return {};
     // the "−1"s show only while they add up to the engine's own count (a reload mid-steal starts them over)
     const picked = seatPicks.key === pickKey && picker.count
       && Object.values(seatPicks.map).reduce((t, m) => t + Object.values(m).reduce((a, b) => a + b, 0), 0) === picker.count.of - picker.count.left ? seatPicks.map : {};
@@ -966,7 +932,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       if (part) out[p.id] = { ...part, title: picker.title, onPick: onSeatPick, onDenied: onSeatDenied };
     }
     return out;
-  }, [picker, seatPicks, pickKey, state, onSeatPick, onSeatDenied, relPart, me]);
+  }, [picker, seatPicks, pickKey, state, onSeatPick, onSeatDenied]);
   const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)} of 3</> : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
@@ -1021,7 +987,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               </span>
             )}</AfterChain>
           ) : <span className="say" data-prompt tabIndex={-1} />}
-          {buyingNow && <PromptActions state={state} optionFor={live} onPick={onPick} open={relOpen} setOpen={setRelOpen} />}
+          {buyingNow && <PromptActions optionFor={live} onPick={onPick} />}
           <span className="undo-slot">
             {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your first pick' : 'Take back your minion until you buy or pass'}>Undo<span className="undo-word"> {undoWord}</span></button>}
           </span>
@@ -1031,8 +997,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           {/* your turn's details sit under the headline (it stays one short line); otherwise the turn's two steps */}
           {picker ? <span className="say-sub pick-how" data-prompt-sub>{note ? note.text : pickCaption(state, picker).how}</span>
             : pickDone ? <span className="say-sub seat-pick-done" aria-hidden="true"><span className="pick-cap">{pickDone.title}: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</span></span>
-              : mine && !needHandoff && relOpen && !note ? <span className="say-sub" data-prompt-sub>Click a lit member in your cult to release it</span>
-              : mine && !needHandoff && pr.sub && !note ? <span className="say-sub" data-prompt-sub>{pr.sub}</span> : state.round > 0 && !state.over && (
+              : mine && !needHandoff && pr.sub && !note ? <span className="say-sub" data-prompt-sub>{pr.sub}{buyingNow && pend.options.some(o => o.kind === 'release') ? ' · or release a member from its card' : ''}</span> : state.round > 0 && !state.over && (
             <span className="steps" aria-hidden="true">
               <span className={step === 'place' ? 'on' : ''}>Place</span>
               <span className={step === 'buy' ? 'on' : ''}>Recruit or buy</span>
@@ -1073,7 +1038,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         <>
           <section className="lt-wheel" data-region="wheel">
             <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
-            {showChoice && !picker && !payChoice(pend) && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+            {showChoice && !picker && !payChoice(pend) && <ChoicePrompt state={state} onPick={onPick} busy={busy} place={plainAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
               others clockwise. UI-B fills each chair (CultSeat); the chairs never move. */}

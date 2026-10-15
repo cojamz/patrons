@@ -49,6 +49,8 @@ export function boardPicker(state, pend, first = null) {
   const m = String(pend.prompt || '').match(/^([^:]{2,40}):\s(.*)$/);
   return {
     title: m ? m[1] : '', question: m ? m[2] : String(pend.prompt || ''), actor: pend.player, count: pend.count || null, give,
+    // the engine's own reason for each player who can't be picked now (a steal's per-rival limit), for dim seats
+    blocked: pend.blocked || null,
     only: kinds.has('stack') && !give && colors.length === 1 ? colors[0] : null, options: list, where, rest, spaces, cards, seats, kinds,
     combo: combo ? combo.info : null, pend,
   };
@@ -118,7 +120,11 @@ export function pickCaption(state, pk) {
     }[c.kind];
     return a == null ? { title: pk.title, what: steps[0], left: null, how: steps[1] } : { title: pk.title, what: steps[2], left: null, how: steps[3] };
   }
-  if (pk.kinds.has('stack') && !pk.give && pk.count && pk.title) return { title: pk.title, what: [`take ${pk.count.of}${pk.only ? ` ${pk.only}` : ''}`], left: pk.count.left, how: pickHow(pk) };
+  if (pk.kinds.has('stack') && !pk.give && pk.count && pk.title) {
+    // the steal's limit, in the engine's words ("1 each from P3, P4"), leads the how line
+    const limit = (String(pk.question).match(/\(\d+ left, ([^)]+)\)/) || [])[1];
+    return { title: pk.title, what: [`take ${pk.count.of}${pk.only ? ` ${pk.only}` : ''}`], left: pk.count.left, how: `${limit ? `${limit[0].toUpperCase()}${limit.slice(1)}. ` : ''}${pickHow(pk)}` };
+  }
   const q = pk.title ? pk.question : state.pending.prompt;
   // a member of yours asking (Double Agent just recruited): its rule goes under the headline, so you see why
   const asker = askerOf(state, pk);
@@ -199,6 +205,7 @@ export function seatPart(state, pk, pid, picked = {}) {
         else if (hiding && has) why = `${p.name} is lying low this round: no one can take their resources.`;
         else if (!has) why = `${p.name} has no ${r}.`;
         else if (pk.only && r !== pk.only) why = `${asking} takes only ${pk.only}.`;
+        else if (pk.blocked && pk.blocked[pid]) why = pk.blocked[pid];
         else if (picked[r] && picked[r] >= has) why = `You’ve already picked all of ${p.name}’s ${r}.`;
         else why = `${asking} can’t take from ${p.name} now.${rule ? ` ${rule}` : ''}`;
       }
@@ -207,7 +214,7 @@ export function seatPart(state, pk, pid, picked = {}) {
   }
   const members = memberPick ? here.members : null;
   const lit = !!here.seat || Object.keys(here.res).length > 0 || Object.keys(here.members).length > 0;
-  const seatWhy = lit || own ? null : seatPick ? `${asking}: not ${p.name}.` : hiding ? `${p.name} is lying low this round.` : stackPick ? `${asking} can’t pick ${p.name} now.${rule ? ` ${rule}` : ''}` : null;
+  const seatWhy = lit || own ? null : seatPick ? `${asking}: not ${p.name}.` : hiding ? `${p.name} is lying low this round.` : pk.blocked && pk.blocked[pid] ? pk.blocked[pid] : stackPick ? `${asking} can’t pick ${p.name} now.${rule ? ` ${rule}` : ''}` : null;
   // a seat dims only when it's one of the things being picked between (a rival with nothing to take, a player not offered)
   const dims = !own && !lit && (seatPick || stackPick);
   const chosenUid = pk.combo && pk.combo.kind === 'trade' && own ? pk.combo.chosen : null;

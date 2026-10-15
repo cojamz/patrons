@@ -69,6 +69,7 @@ try {
       prompt: document.querySelector('[data-prompt]')?.innerText || '',
       chips: Object.fromEntries([...document.querySelectorAll('.lt > .lt-seat')].filter(s => s.dataset.pid != null).map(s => { const c = s.querySelector('.cs-order'); return [s.dataset.pid, c ? { order: c.dataset.order, twice: c.dataset.twice === '1', text: c.textContent, title: c.title } : null]; })),
       card: document.querySelector('.turn-card')?.dataset.turnStory || null,
+      cardBox: r('.turn-card'),
       strip: [...document.querySelectorAll('[data-since] [data-since-line]')].map(e => e.textContent),
       since: r('[data-since]'), wheel: r('.lt-wheel svg.wheel-paper') || r('.lt-wheel'), shop: r('.lt-shop'),
       sw: [...document.querySelectorAll('.lt-seat-0 [data-switch]')].map(e => ({ state: e.dataset.switch, text: e.textContent.trim(), title: e.title })),
@@ -104,6 +105,8 @@ try {
   // (t2)
   if (v.strip.length < 3) fail(`the strip lists ${v.strip.length} rival moves (want 3: P2, P3 and P4 placed before P1): ${JSON.stringify(v.strip)}`, 't2');
   for (const l of v.strip) if (!/^\s*P[234]\b/.test(l)) fail(`a strip line doesn't start with a rival's name: "${l}"`, 't2');
+  const words = await page.evaluate(() => [...document.querySelectorAll('[data-since] .since-row')].map(r => !!r.querySelector('.sp-words')));
+  if (words.some(w => !w)) fail(`a strip line names its space without the space's board words: ${JSON.stringify(words)}`, 't2');
   if (!v.since) fail('no "since your last turn" strip on the board', 't2');
   else {
     if (overlap(v.since, v.wheel)) fail(`the strip overlaps the wheel: ${JSON.stringify(v.since)} vs ${JSON.stringify(v.wheel)}`, 't2');
@@ -136,6 +139,8 @@ try {
     if (!r.on) fail(`the ${kind} card from the name runs off the screen`, tag);
     if (r.near > 420) fail(`the ${kind} card opened ${Math.round(r.near)}px from its name`, tag);
     if (r.under >= 0 && r.z <= r.under) fail(`the ${kind} card (z ${r.z}) sits under the log drawer (z ${r.under})`, tag);
+    // a space named off the wheel lights where it is on the wheel while it's pointed at
+    if (kind === 'space' && !(await page.evaluate(([s2]) => { const k = document.querySelector(s2).dataset.nameTarget; return !!document.querySelector(`[data-slot="${k}"].hn-locate`); }, [sel]))) fail(`hovering the space name lit nothing on the wheel`, tag);
     await page.waitForTimeout(250);
     await page.screenshot({ path: `${SHOTS}/name-${tag}-${kind}.png` });
     await page.mouse.move(5, 5);
@@ -160,6 +165,7 @@ try {
   const first = v.took.at(-1);
   if (!first) fail('the save shows no placement by P1', 't3');
   else if (!v.card || !v.card.startsWith(`You took ${first}`)) fail(`after taking ${first} the turn card reads "${v.card}"`, 't3');
+  if (v.cardBox && (v.cardBox.b > 700 || v.cardBox.y < 0)) fail(`the turn card runs off the screen: ${JSON.stringify(v.cardBox)}`, 't3');
   // (t6) the switch, in the buy step
   const sw = v.sw[0];
   if (!sw || sw.state !== 'on' || !/\bon$/.test(sw.text) || !/Midas is on/.test(sw.title) || !/switch it off/.test(sw.title)) fail(`the Midas switch: ${JSON.stringify(v.sw)}`, 't6');

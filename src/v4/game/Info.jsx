@@ -118,7 +118,9 @@ export function MemberCard({ state, uid, def: d0 = null, me = null }) {
   const sphere = onTable(state, d) ? (() => { try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } })() : 'colorless';
   // the quiet live line: what you're short of, in dots (Cory: "need N" never shouts), from the engine's one price rule
   let short = null;
-  if (where === 'In the shop' && me != null && state.players[me] && !state.over) {
+  // not during a choice: a recruit it offers pays its own way (Snap Up: in any colors), so the buy step's "short" misled
+  // (w2b #28: lit cards said "You're short 2")
+  if (where === 'In the shop' && me != null && state.players[me] && !state.over && !(state.pending && state.pending.kind === 'choose')) {
     try { const pr = memberPrice(state, state.players[me], uid); if (!pr.afford && pr.short) short = pr; } catch { /* no price: say nothing */ }
   }
   return (

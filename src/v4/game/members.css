@@ -74,3 +74,17 @@ button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline
 /* a seat card is one you can use: the pointer may rest on it (its Use buttons, its list scrolls) */
 .lt-hover.popover.on[data-live="1"]{pointer-events:auto}
 .lt-cult-seat .cs-member button.mu-switch::after{content:"";position:absolute;inset:-10px -8px}
+/* Release (dialogs pod): the quieter twin of Use, under your member's card in your buy step */
+.mu-use.mu-release{background:transparent;color:var(--pl-ink,#2b2018);box-shadow:inset 0 0 0 1px var(--hair-ink,rgba(43,32,24,.2))}
+.mu-use.mu-release:hover{background:color-mix(in srgb,var(--pl-ink,#2b2018) 7%,transparent)}
+.mu-actions .mu-use + .mu-use.mu-release{margin-left:8px}
+
+/* a use worth nothing now (w2b #19): muted, an outline, never the dark invitation */
+.mu-use.idle{background:transparent;color:var(--pl-ink-2,#6e5c49);box-shadow:inset 0 0 0 1px rgba(43,32,24,.25);font-weight:600}
+.mu-use.idle:hover{background:rgba(43,32,24,.05)}
+.mu-why + .mu-use.big{margin-top:8px}
+/* a use still in hand, anyone's, on the table: the same light as "yours to use now", subdued (w2b #21: see threats coming) */
+.lt-cult-seat .cs-member.loaded:not(.ready) .fig .sprite{filter:drop-shadow(1px 0 0 rgba(255,243,212,.38)) drop-shadow(-1px 0 0 rgba(255,243,212,.38)) drop-shadow(0 1px 0 rgba(255,243,212,.38)) drop-shadow(0 -1px 0 rgba(255,243,212,.38))}
+/* a seat no one can steal resources from this round (Lie Low): said in words beside its resources */
+.lt-cult-seat .cs-safe{font-family:var(--sans);font-size:12px;line-height:16px;color:var(--cream-2,#b9a98c);white-space:nowrap;margin-left:8px;align-self:center}
+.seat-card .seat-safe{display:block;font-family:var(--sans);font-size:12px;color:var(--pl-ink-2,#6e5c49);font-weight:500;letter-spacing:0;text-transform:none}

@@ -6,9 +6,17 @@ import { playerColor, seatEmoji } from '../format.js';
 import { Minion } from '../art/Leader.jsx';
 import { Tip } from './Info.jsx';
 import { HoverName, HoverNames } from './HoverNames.jsx';
+import { Rich } from './Rich.jsx';
+import { quadrant } from '../../engine/v4/index.js';
+import { shortEffect } from '../shorts.js';
 import './since.css';
 
 const MAX = 6;
+/** The words the board prints on a space ("+3 gold · gift 1"), for this round. */
+const words = (state, key) => {
+  if (!key) return '';
+  try { const [q, i] = key.split('-').map(Number); const qid = state.quadrants[q]; return shortEffect(qid, quadrant(qid).actions[i], Math.max(1, state.round)) || ''; } catch { return ''; }
+};
 
 /** One placement's full card (the same lines as the turn card by the cult), its names hover targets. */
 export function StoryCard({ story, color, state, hover }) {
@@ -48,6 +56,8 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
               </Tip>{' '}
               {e.spaceKey && hover ? <HoverName hover={hover} target={{ kind: 'space', key: e.spaceKey }}><span className="sp">{e.space}</span></HoverName>
                 : <span className="sp">{e.space || 'turn'}</span>}
+              {/* the space's own words from the board, so the name needs no lookup */}
+              {words(state, e.spaceKey) ? <span className="sp-words"> (<Rich text={words(state, e.spaceKey)} />)</span> : null}
               {e.short ? <span className="big">: <HoverNames state={state} hover={hover} text={e.short} uids={e.uids} /></span> : null}
             </li>
           ))}

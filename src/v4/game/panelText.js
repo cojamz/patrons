@@ -10,7 +10,9 @@ import { pipEffect } from '../shorts.js';
 
 const byRound = (a, b, c) => ({ byRound: [a, b, c] });
 // Line 2 stays within about 16 letters: at 1270×700 a narrow panel holds two short lines of it (Cory: "cut words or
-// step the size down. Never clip and never abbreviate into code").
+// step the size down. Never clip and never abbreviate into code"). A condition that decides the gain never sits only in
+// line 3 (it's dropped when the ring has no room), and on the center ring, where line 2 can drop too, it sits in line 1
+// (w2b #2/#24: "Gain each color" gave nothing without its "per full set"; "Take a member" hid that it's a rival's).
 const P = {
   gold: {
     jv: { main: '+3 gold', second: 'pick who gets 1' },
@@ -21,7 +23,7 @@ const P = {
     strike: { verb: 'Double your gold' },
   },
   red: {
-    evenswap: { main: '+1 red', second: 'swap a member', note: 'with a rival, equal cost' },
+    evenswap: { main: '+1 red', second: 'swap, equal cost', note: 'a member with a rival' },
     turnout: { main: '+1 red', second: 'per recruit by all', note: 'this round' },
     hire: { verb: 'Free recruit', second: 'the cheapest' },
     hireup: { verb: 'Free recruit', second: 'cost 4 or less' },
@@ -38,11 +40,11 @@ const P = {
   },
   purple: {
     hourly: r => ({ main: `+${3 + r} purple`, note: byRound(4, 5, 6) }),
-    catchup: { main: '+1 purple', second: '+2 per rival ahead', note: 'in minions out' },
+    catchup: { main: '+1 purple', second: '+2 per rival with more minions', note: 'on the board' },
     windup: { main: '+1 purple', second: 'per minion out' },
     planahead: { main: '+1 purple', second: 'per minion left' },
     overtime: { verb: '2 extra turns', second: 'for 8 purple', note: 'can’t pay? +3 purple' },
-    rally: { verb: 'Extra turns', second: 'spend all purple', note: '1 per 4, plus 1' },
+    rally: { verb: 'Extra turns for all purple', second: '1 per 4, plus 1' },
   },
   silver: {
     toast: r => ({ main: `+${3 * r} silver`, second: 'others get 1', note: byRound(3, 6, 9) }),
@@ -53,35 +55,35 @@ const P = {
     jubilee: { main: '+1 @f', second: 'per 2 silver', note: 'others get 2 silver' },
   },
   yellow: {
-    harvest: { main: '+1 yellow', second: '+1 per color held', note: 'other colors' },
+    harvest: { main: '+1 yellow', second: '+1 per other color', note: 'you hold' },
     bloom: { verb: 'Top up', second: '+1 of your fewest' },
     transmute: { main: '+1 yellow', second: 'swap up to 3', note: 'for other colors' },
-    prism: { verb: 'Gain each color', second: 'per 3 yellow' },
+    prism: { verb: '+1 each other color', second: 'per 3 yellow' },
     gather: { verb: 'Members pay out', second: '1 of their color' },
-    flourish: { verb: 'Gain each color', second: 'per full set' },
+    flourish: { verb: '+1 each per full set', second: 'other colors' },
   },
   thieves: {
     pickpocket: r => ({ main: `+${r + 1} magenta`, second: 'from rivals', note: byRound(2, 3, 4) }),
     tipoff: { verb: 'Steal 1 each', second: 'from richer rivals' },
-    hideout: { main: '+1 magenta', second: 'from a rival', note: 'then you’re safe' },
+    hideout: { verb: 'Steal 1', second: 'then you’re safe', note: 'from steals this round' },
     rob: { main: '+3 magenta', second: 'from rivals', note: 'at least 1 each' },
     ransom: { verb: 'Ransom a member', second: 'they pay or lose it', note: 'costing 4 or less' },
-    heist: { verb: 'Take a member', second: 'from any rival', note: 'they recruit free' },
+    heist: { verb: 'Take a rival’s member', second: 'they recruit free' },
   },
   trading: {
-    haggle: { main: '+2 white', second: '+1 per player ahead', note: 'in followers' },
-    buylow: r => ({ verb: 'Buy followers', second: `1 each, up to ${2 * r}` }),
-    pawn: r => ({ main: `+${r} @f`, second: `or +${2 * r} white` }),
+    haggle: { main: '+2 white', second: '+1 per higher score', note: 'players with more @f' },
+    buylow: r => ({ verb: 'Trade for followers', second: `1 for 1, up to ${2 * r}`, note: byRound(2, 4, 6) }),
+    pawn: r => ({ main: `+${r} @f`, second: `or +${2 * r} white`, note: byRound(1, 2, 3) }),
     sellhigh: { verb: 'Sell followers', second: '3 white each', note: 'up to 2' },
     dividend: { main: '+1 white', second: 'per loose @f' },
-    boom: { verb: 'Cash in', second: 'all for followers', note: '1 for 1' },
+    boom: { verb: 'All for followers', second: '1 for 1' },
   },
   echo: {
     chant: r => ({ main: `+${2 * r} green`, note: byRound(2, 4, 6) }),
     echo: { verb: 'Copy a space', second: 'a rival just took' },
     encore: { verb: 'Copy a space', second: 'taken this round' },
     refrain: { main: '+2 green', second: 'and redo a space', note: 'one you took this round' },
-    eternity: { verb: 'Redo every space', second: 'you took this round' },
+    eternity: { verb: 'Redo all your spaces', second: 'from this round' },
   },
 };
 

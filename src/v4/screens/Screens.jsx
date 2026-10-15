@@ -71,7 +71,7 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, la
             <button type="submit" className="btn" disabled={!onlineReady || working || !code.trim()}>Join with code</button>
           </form>
           {working && <p className="hint">Connecting…</p>}
-          {!name.trim() && onlineReady && <p className="hint">Enter your name to host or join.</p>}
+          {!name.trim() && onlineReady && <p className="hint">Needed to host or join.</p>}
           {err && <p className="error" role="alert">{err}{retry && <> <button type="button" className="btn ghost" onClick={() => go(retry)}>Retry</button></>}</p>}
           {!onlineReady && <p className="hint">Online play is being wired up. Hot-seat works now.</p>}
         </div>

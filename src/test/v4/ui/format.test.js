@@ -87,6 +87,31 @@ describe('v4 format helpers', () => {
     }
     expect(n).toBeGreaterThan(3);
   });
+  it('told from the effect stream: what cost you names its cause (Raider), and no line repeats', () => {
+    // wave-2 blocker: P2's Raider bought 3 of the tester's followers and the strip never said so
+    const four = [...seats, { name: 'Di', kind: 'bot' }];
+    let found = null;
+    for (let seed = 1; seed < 12 && !found; seed++) {
+      let s = createGame({ seats: four, seed, quadrants: ['trading', 'gold', 'red', 'blue'] });
+      const states = [s];
+      while (!s.over) { s = applyMove(s, chooseBotMove(s, () => 0.4), { effects: true }); states.push(s); }
+      const raid = s.log.find(l => /Raider bought \d+ followers? from/.test(l));
+      if (!raid) continue;
+      const victim = s.players.find(p => raid.includes(`from ${p.name} `)).id;
+      const t = createTrail(victim);
+      for (const x of states) feed(t, x);
+      found = { t, n: Number(raid.match(/bought (\d+)/)[1]) };
+    }
+    expect(found).toBeTruthy();
+    const st = found.t.stories.find(x => /Raider took/.test(x.hit || ''));
+    expect(st).toBeTruthy();
+    expect(st.short.startsWith(`Raider took ${found.n} of your followers`)).toBe(true);
+    for (const x of found.t.stories) {
+      expect(new Set(x.lines).size).toBe(x.lines.length);
+      // your own turn never reads as something done to you
+      if (x.actor === found.t.me) expect(x.hit).toBe('');
+    }
+  });
   it('a member that fires gets its own line, and its amount comes off the gross (Tax Collector: P2 +1 gold)', () => {
     const s = createGame({ seats, seed: 3 });
     const P = s.players;

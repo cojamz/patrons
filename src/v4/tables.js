@@ -10,8 +10,8 @@ export const spheres = () => {
   const ids = allQuadrantIds();
   return [...ids.filter(id => !quadrant(id).standIn), ...ids.filter(id => quadrant(id).standIn)];
 };
-/** What the picker calls a sphere: its color name, "(plain)" for a stand-in. */
-export const sphereName = id => `${quadrant(id).name}${quadrant(id).standIn ? ' (plain)' : ''}`;
+/** What the picker calls a sphere: its color name, "(basic)" for a stand-in (w2b #32: "(plain)" read as developer phrasing). */
+export const sphereName = id => `${quadrant(id).name}${quadrant(id).standIn ? ' (basic)' : ''}`;
 export const tableLine = ids => ids.map(sphereName).join(' · ');
 
 // Colors a stand-in hands out besides its own (read off its printed actions).

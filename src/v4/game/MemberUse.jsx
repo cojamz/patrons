@@ -6,7 +6,7 @@ import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { quadrant } from '../../engine/v4/index.js';
 import { CardName, onTable } from './Info.jsx';
-import { Rich } from './Rich.jsx';
+import { Rich, Pip } from './Rich.jsx';
 import { memberRows, useNow } from './memberUse.js';
 import './members.css';
 
@@ -15,10 +15,24 @@ const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try
 /** "Use: +7 ●": the one button that uses a member. big: the primary button of a member's hover. */
 export function UseButton({ use, uid, name, onPick, big = false }) {
   if (!use || use.blocked) return null;
+  // worth nothing now: still there (it's your call), but muted and saying why, never inviting (w2b #19)
+  const title = use.idle ? `${name} would give you nothing now: ${use.why}.` : `Ready to use: ${name}${use.words ? `, ${use.words}` : ''}`;
   return (
-    <button type="button" className={`mu-use${big ? ' big' : ''}`} data-use={uid} data-option={use.option} title={`Ready to use: ${name}${use.words ? `, ${use.words}` : ''}`}
+    <button type="button" className={`mu-use${big ? ' big' : ''}${use.idle ? ' idle' : ''}`} data-use={uid} data-idle={use.idle ? '1' : undefined} data-option={use.option} title={title}
       onClick={e => { e.stopPropagation(); onPick(use.option); }}>
       <Rich text={use.label} />
+    </button>
+  );
+}
+
+/** "Release: +2 ●": put the member at the bottom of the pile for the colored part of its cost (once a round). */
+export function ReleaseButton({ option, name, onPick }) {
+  const n = option.refund ?? 0, color = option.color || 'any';
+  const say = `Release ${name}: it goes to the bottom of the pile and you get back ${n} ${color === 'any' ? 'in any colors' : color}. Once a round.`;
+  return (
+    <button type="button" className="mu-use mu-release" data-release={option.uid} data-option={option.id} title={say} aria-label={say}
+      onClick={e => { e.stopPropagation(); onPick(option.id); }}>
+      Release: <b className="num">+{n}</b><Pip color={color} n={n} />
     </button>
   );
 }
@@ -33,7 +47,7 @@ export function MemberSwitch({ name, on, option = null, onPick = null }) {
     : <span className={`mu-switch idle${on ? ' on' : ''}`} data-switch={on ? 'on' : 'off'} title={say} aria-label={say} role="img">{face}</span>;
 }
 
-const stateOf = row => (row.toggle ? (row.toggle.on ? 'on' : 'off') : row.used ? 'used' : row.tag && row.tag.tone === 'lit' ? 'ready' : row.use && row.use.blocked ? 'blocked' : row.kind === 'use' ? 'unused' : '');
+const stateOf = row => (row.toggle ? (row.toggle.on ? 'on' : 'off') : row.used ? 'used' : row.tag && row.tag.tone === 'lit' ? 'ready' : row.use && row.use.blocked ? 'blocked' : row.use && row.use.idle ? 'idle' : row.kind === 'use' ? 'unused' : '');
 
 /**
  * The seat card's body (Cory, 2026-10-15): the player's members, one row each: picture, name, the ability as one
@@ -80,12 +94,16 @@ export function MemberActions({ state, uid, me = null, optionFor = () => null, o
   const row = memberRows(state, me, me, optionFor).find(r => r.uids.includes(uid));
   if (!row) return null;
   const use = row.kind === 'use' && !c.used ? useNow(state, me, uid) : null;
-  if (!use && !row.toggle) return null;
+  // in your buy step, a member you can release says what comes back, in dots (dialogs pod: Release lives on the seat)
+  const rel = row.uids.map(u => optionFor(`release:${u}`)).find(Boolean) || null;
+  if (!use && !row.toggle && !rel) return null;
   return (
     <div className="mu-actions" data-member-actions={uid}>
       {row.toggle ? <span className="mu-sw-line"><span>{row.name} is {row.toggle.on ? 'on' : 'off'}</span><MemberSwitch name={row.name} on={row.toggle.on} option={row.toggle.option} onPick={onPick} /></span> : null}
       {use && use.blocked ? <small className="mu-why">Can’t use it now: {use.why || 'nothing would happen'}.</small> : null}
+      {use && use.idle ? <small className="mu-why" data-idle-why>Nothing to gain now: {use.why}.</small> : null}
       {use && !use.blocked && onPick ? <UseButton use={use} uid={uid} name={row.name} onPick={onPick} big /> : null}
+      {rel && onPick ? <ReleaseButton option={rel} name={row.name} onPick={onPick} /> : null}
     </div>
   );
 }

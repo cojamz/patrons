@@ -111,3 +111,19 @@
 .lt > .lt-seat .lt-cult-seat.picking:has(.cs-member.pick-on) .cs-build{display:none}
 .lt > .lt-seat .lt-cult-seat.picking:has(.cs-member.pick-on) .cs-crowd{flex-wrap:nowrap;gap:1px;overflow:visible}
 .lt > .lt-seat .lt-cult-seat.picking:has(.cs-member.pick-on:nth-of-type(8)) .cs-member .fig svg{width:19px;height:19px}
+
+/* ---- a plain question (no place on the board): a small paper card at the decision point, beside the space you just
+   took (GameScreen places it); amounts are big tiles in the plate's marks ---- */
+@media (min-width:861px) and (min-height:500px){
+  .lt .lt-wheel > .prompt.choice.plain{left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:min(460px,92%)}
+  .lt .lt-wheel > .prompt.choice.plain.at-space{transform:none;bottom:auto}
+}
+.prompt.choice .opts.big{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:4px}
+.prompt.choice .opts.big .btn{min-height:56px;min-width:96px;padding:8px 18px;border-radius:var(--corner,8px);font:700 18px/1 var(--sans);
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;transition:transform .1s ease-out}
+.prompt.choice .opts.big .btn:hover:not(:disabled){transform:translateY(-2px)}
+.prompt.choice .opts.big .btn:active:not(:disabled){transform:translateY(1px)}
+.mark-label{display:inline-flex;align-items:baseline;flex-wrap:wrap;gap:0 .45em}
+.mark-amt{display:inline-flex;align-items:baseline;gap:.08em;white-space:nowrap}
+.mark-amt .pip.glyph,.mark-amt .pip.wild{width:.8em;height:.8em;vertical-align:-.06em;margin:0 0 0 .06em}
+.mark-amt .follower-mark{width:.8em;height:.8em;margin-left:.08em}

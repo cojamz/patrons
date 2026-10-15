@@ -47,3 +47,11 @@ body:has(.tip-body [data-since-card]) .lt-hover.popover{z-index:46}
 .lt-cult-seat .cs-switch.idle.on{color:var(--lamp-ink);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.55)}
 /* an order chip whose seat places twice in a row */
 .cs-order.twice{box-shadow:inset 0 0 0 1px rgba(var(--lamp),.75)}
+/* the space's board words after its name in the strip, quieter than the name */
+.lt-since .sp-words{color:var(--cream-3)}
+.lt-since .sp-words .pip{width:.9em;height:.9em;vertical-align:-.15em}
+/* a move that cost you stands out a little */
+.lt-since .since-row.hit .big{color:#f2b8a8}
+/* a space named off the wheel, pointed at: its place on the wheel lights (HoverNames.jsx) */
+.hn-locate .base,[data-cell].hn-locate{box-shadow:0 0 0 3px rgba(var(--lamp),.95),0 0 16px 4px rgba(var(--lamp),.7) !important}
+path.hn-locate,rect.hn-locate,polygon.hn-locate{filter:drop-shadow(0 0 5px rgba(var(--lamp),.95))}

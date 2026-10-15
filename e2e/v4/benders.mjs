@@ -3,7 +3,7 @@
 //  (b1) Squatter: every squat:<q>-<i> option the engine offers is a clickable, labelled space (wheel + panel), and
 //       clicking one places there;
 //  (b2) Insider: the top-of-pile cards the engine offers show in the shop, marked "From the pile", and can be recruited;
-//  (b3) Release: every release:<uid> buy option is a labelled button; pressing one leads to the color choice and
+//  (b3) Release: your releasable member's card offers "Release: +N ●" (no header dropdown); pressing it leads to the color choice and
 //       finishes the release;
 //  (b4) Straggler: it asks only where your last minion goes (Cory, 2026-10-15); the open spaces light on the wheel (every
 //       choice is picked on the board), "Stay put" stays a button, and picking a lit space works.
@@ -125,17 +125,24 @@ try {
           }
         }
       }
-      // (b3) Release
-      const fold = !seen.has('release') && await page.$('.lt-prompt .release-row:not(.open) .rel-toggle');
-      if (fold) { await fold.click(); await page.waitForTimeout(150); }
-      // picked on the board (design pod, 2026-10-15: no chip list): Release… lights your releasable members in your seat
-      const rel = await page.$('.lt-seat.mine [data-option^="release:"]');
+      // (b3) Release, a seat action (dialogs pod, wave-2 #11): in your buy step, your member's card offers
+      // "Release: +N ●"; no header dropdown
+      const relUid = !seen.has('release') && await page.$('.lt[data-phase="buy"][data-yours="1"]') ? await page.evaluate(() => {
+        try { const s = JSON.parse(localStorage.getItem('patrons.v4.local')).state; const o = s.pending && s.pending.options.find(x => x.kind === 'release'); return o ? o.uid : null; } catch { return null; }
+      }) : null;
+      if (relUid != null && await page.$('.lt-prompt .rel-toggle')) errors.push('(b3) the header still has a Release dropdown');
+      let rel = null;
+      if (relUid != null) {
+        const fig = await page.$(`.lt-seat.mine .cs-member[data-uids~="${relUid}"] .fig`);
+        if (fig) { await fig.hover(); rel = await page.waitForSelector('[data-release]', { timeout: 2000 }).catch(() => null); }
+        if (!rel) errors.push('(b3) your releasable member\'s card offers no Release');
+      }
       if (rel && !seen.has('release')) {
         seen.add('release');
-        if (!(await rel.isVisible())) errors.push('(b3) Release did not light a member in your seat');
         await shot('b3-release-offered');
         const txt = ((await rel.getAttribute('aria-label')) || '').trim();
-        if (!/^Release .+: get back \d+ \w+/.test(txt) || /undefined/.test(txt)) errors.push(`(b3) the release pick says "${txt}"`);
+        if (!/^Release .+: it goes to the bottom of the pile and you get back \d+ \w+/.test(txt) || /undefined/.test(txt)) errors.push(`(b3) the release button says "${txt}"`);
+        if (!(await rel.$('.pip'))) errors.push('(b3) the release refund is not shown as a dot');
         await rel.click();
         await page.waitForTimeout(400);
         // the color pick(s) come next as a normal choice

@@ -2,6 +2,7 @@
 // through its API): a space opens the space card, a member the member card, beside the name, exactly like the board
 // (Cory: "hovering over named stuff in the log should show what it does"). The names come from the table itself, its
 // spaces' keys and its cards' defs, so a word is a target only when it is one of this game's spaces or members.
+import { useEffect } from 'react';
 import { quadrant, cardDef } from '../../engine/v4/index.js';
 import { Rich } from './Rich.jsx';
 import { realHover } from '../hover.js';
@@ -28,8 +29,16 @@ export function nameIndex(state) {
 }
 
 /** One name that opens its card: target { kind: 'space', key } or { kind: 'member', uid }. */
+// a space named anywhere off the wheel (the strip, a card, the log) lights where it is on the wheel while it's pointed
+// at (wave-2: "following a move means hovering panel after panel")
+const locate = (key, on) => {
+  if (typeof document === 'undefined') return;
+  for (const el of document.querySelectorAll(`[data-slot="${key}"], [data-cell="${key}"]`)) el.classList.toggle('hn-locate', on);
+};
 export function HoverName({ hover, target, children }) {
-  const open = (el, pinned = false) => (target.kind === 'space' ? hover.onSpaceHover(target.key, el, { pinned }) : hover.onCardHover(target.uid, el, { pinned }));
+  const show = (el, pinned) => (target.kind === 'space' ? hover.onSpaceHover(target.key, el, { pinned }) : hover.onCardHover(target.uid, el, { pinned }));
+  const open = (el, pinned = false) => { if (target.kind === 'space') locate(target.key, !!el); show(el, pinned); };
+  useEffect(() => () => { if (target.kind === 'space') locate(target.key, false); }, [target.kind, target.key]);
   const label = typeof children === 'string' ? children : undefined;
   return (
     <span className="hn" data-hover-name={target.kind} data-name-target={target.kind === 'space' ? target.key : target.uid}
@@ -38,6 +47,8 @@ export function HoverName({ hover, target, children }) {
       onPointerLeave={e => { if (e.pointerType === 'mouse') open(null); }}
       onClick={e => { e.stopPropagation(); open(e.currentTarget, true); }}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); open(e.currentTarget, true); } }}
+      onFocus={() => { if (target.kind === 'space') locate(target.key, true); }}
+      onBlur={() => { if (target.kind === 'space') locate(target.key, false); }}
     >{children}</span>
   );
 }

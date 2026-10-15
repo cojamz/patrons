@@ -3,7 +3,7 @@
 // reasons that give the true limit (#38), a results breakdown that adds up (#18), and a member Use that would do
 // nothing says so (#19). Each reproduced on a seeded scene first.
 import { describe, it, expect } from 'vitest';
-import { applyMove, followers, createGame } from '../../../engine/v4/core.js';
+import { applyMove, followers, createGame, resume } from '../../../engine/v4/core.js';
 import { chooseBotMove } from '../../../engine/v4/bots.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { sceneQ } from './cards-helpers.js';
@@ -69,6 +69,8 @@ describe('#18 the results breakdown adds up', () => {
         const b = breakdown(s, p);
         expect(b.self + b.members + b.bought + b.contests + b.effects + b.endGame, `${p.name} game ${g}`).toBe(followers(s, p));
         expect(b.play.reduce((t, l) => t + l.n, 0), `${p.name} game ${g} lines`).toBe(b.effects);
+        // every follower change during play has a named cause in the engine's ledger (no catch-all line)
+        expect(b.play.filter(l => l.label === 'other' || l.label === 'during play'), `${p.name} game ${g}: ${JSON.stringify(b.play)}`).toEqual([]);
         rows++; lines += b.play.length;
       }
     }
@@ -90,14 +92,20 @@ describe('#18 the results breakdown adds up', () => {
 });
 
 describe('#19 a member Use that would change nothing is marked idle', () => {
+  // a person's seat (bots don't read it, so their seats skip the dry run)
+  const human = s => { s.players[0].kind = 'human'; return resume(s); };
   it('Safecracker with a rival holding 1 magenta: half of 1 is 0, so its use option is idle', () => {
-    const s = sceneQ({ quadrants: MAG, n: 2, round: 3, res: [{ gold: 2 }, { magenta: 1 }], members: [['thieves.bigscore']] });
+    const s = human(sceneQ({ quadrants: MAG, n: 2, round: 3, res: [{ gold: 2 }, { magenta: 1 }], members: [['thieves.bigscore']] }));
     const o = s.pending.options.find(x => x.kind === 'use');
     expect(o).toBeTruthy();
     expect(o.idle).toBe(true);
   });
   it('Safecracker with a rival holding 4 magenta is not idle', () => {
-    const s = sceneQ({ quadrants: MAG, n: 2, round: 3, res: [{ gold: 2 }, { magenta: 4 }], members: [['thieves.bigscore']] });
-    expect(s.pending.options.find(x => x.kind === 'use').idle).toBeFalsy();
+    const s = human(sceneQ({ quadrants: MAG, n: 2, round: 3, res: [{ gold: 2 }, { magenta: 4 }], members: [['thieves.bigscore']] }));
+    const o = s.pending.options.find(x => x.kind === 'use');
+    expect(o.idle).toBeFalsy();
+    // the dry run left the real table alone
+    expect(s.players[1].res.magenta).toBe(4);
+    expect(s.cards[o.uid].used).toBeFalsy();
   });
 });

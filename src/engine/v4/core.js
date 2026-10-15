@@ -362,7 +362,8 @@ function inputFor(state, task) {
     case 'choose': {
       // only the options whose cards are still where they were when the choice was queued (see liveOptions)
       const options = liveOptions(state, task);
-      if (options.length || !task.options.length) return { kind: 'choose', prompt: task.prompt, options, ...(task.count ? { count: task.count } : {}) };
+      // count: a counted pick's progress; blocked: { [player id]: why you can't pick them now } (a steal's limit)
+      if (options.length || !task.options.length) return { kind: 'choose', prompt: task.prompt, options, ...(task.count ? { count: task.count } : {}), ...(task.blocked ? { blocked: task.blocked } : {}) };
       return {
         kind: 'choose', prompt: task.prompt, options: [],
         onEmpty: () => log(state, `${task.prompt.split(':')[0]}: nothing left to choose (${p.name}'s options were taken or moved first), so nothing happens.`),
@@ -390,14 +391,32 @@ function inputFor(state, task) {
   }
 }
 
-/** `use:` options: p's members (all, or `uids`) with an activation not used yet; a Doppelganger offers what it copies. */
+/**
+ * `use:` options: p's members (all, or `uids`) with an activation not used yet; a Doppelganger offers what it copies.
+ * idle: true when using it now would change nothing (Safecracker's half of 1 magenta), so the screen can mute it.
+ * Worked out for people's seats only (a dry run per option; bots don't read it).
+ */
 function useOptions(state, p, uids = p.members) {
   const out = [];
   for (const uid of uids) {
     const c = state.cards[uid];
-    if (!c.used && effectiveDefs(c).some(e => e.activate)) out.push({ id: `use:${uid}`, label: `Use ${defById(c.def).name}`, kind: 'use', uid });
+    if (!c.used && effectiveDefs(c).some(e => e.activate)) {
+      out.push({ id: `use:${uid}`, label: `Use ${defById(c.def).name}`, kind: 'use', uid, ...(p.kind !== 'bot' && useIdle(state, p, uid) ? { idle: true } : {}) });
+    }
   }
   return out;
+}
+/** Would using p's member uid right now change nothing? A dry run on a copy: no resource, follower, member, discount,
+ *  minion or shop changes anywhere, and nothing queued to decide or do. */
+export function useIdle(state, p, uid) {
+  try {
+    const s = structuredClone({ ...state, log: [], pending: null, queue: [], notes: undefined });
+    const look = x => JSON.stringify([x.players.map(o => [o.res, o.bonus, o.discount || 0, o.members, o.left]), x.shop, x.pile.length]);
+    const before = look(s);
+    useMember(s, s.players[p.id], uid, { t: 'idle-check' });
+    if (s.queue.some(t => t.t !== 'idle-check')) return false;
+    return look(s) === before;
+  } catch { return false; }
 }
 /**
  * Use a member's activation now. Its whole effect resolves first, its choices included (a Stunt Double copying Open
@@ -478,7 +497,10 @@ function resolveTask(state, task, optionId) {
     }
     case 'choose': {
       const o = task.options.find(x => x.id === optionId);
+      const mark = fMark(state);
       handlerById(task.h)(ctxFor(state), p, o.value, task.data);
+      // follower changes the choice made itself, under the name of what asked ("Cheap Seats: …")
+      fCredit(state, mark, String(task.prompt).split(':')[0]);
       return;
     }
     case 'release': {
@@ -519,7 +541,9 @@ function runTask(state, task) {
       const qid = state.quadrants[task.q];
       const a = actionAt(state, task.q, task.i);
       const ctx = ctxFor(state);
-      return underCause({ kind: 'space', key: `${task.q}-${task.i}`, qid, pid: p.id }, () => {
+      // follower changes the space makes itself (Your Call), after its members' own (credited to them)
+      const mark = fMark(state);
+      const out = underCause({ kind: 'space', key: `${task.q}-${task.i}`, qid, pid: p.id }, () => {
         // hooks that react to taking a space (Hustler) fire first so follow-up choices keep their order;
         // afterRivalAction: a member reacting to a rival taking a space (Silversmith)
         eachMember(state, (owner, card, def) => {
@@ -528,6 +552,8 @@ function runTask(state, task) {
         });
         a.resolve(ctx, p);
       });
+      fCredit(state, mark, a.name);
+      return out;
     }
     case 'endTurn': {
       const ctx = ctxFor(state);
@@ -617,7 +643,7 @@ function endRound(state) {
   for (const c of table) {
     if (!c.winners.length) continue;
     const winners = c.winners.map(id => state.players[id]);
-    underCause({ kind: 'contest', qid: c.qid, round: state.round }, () => { for (const w of winners) { w.bonus += v; w.contest += v; } });
+    underCause({ kind: 'contest', qid: c.qid, round: state.round }, () => { for (const w of winners) { w.bonus += v; w.contest += v; fBump(state, w, v); } });
     msg.push(`${c.label}: ${winners.map(w => w.name).join(' & ')} +${v}`);
   }
   // the round's scoring, kept as decided: the round-end card and the results read it back (never re-derived)
@@ -661,7 +687,7 @@ function finish(state) {
   eachMember(state, (owner, card, def) => {
     if (!def.onGameEnd) return;
     const got = def.onGameEnd(ctx, owner, card) || 0;
-    if (got) { owner.bonus += got; owner.final.total += got; owner.final.parts.push(`${def.name} ${got > 0 ? '+' : '−'}${Math.abs(got)}`); }
+    if (got) { owner.bonus += got; fBump(state, owner, got); owner.final.total += got; owner.final.parts.push(`${def.name} ${got > 0 ? '+' : '−'}${Math.abs(got)}`); }
   });
   const ranked = [...state.players].sort((a, b) => followers(state, b) - followers(state, a) || memberCount(state, b) - memberCount(state, a));
   state.ranking = ranked.map(p => p.id);
@@ -753,6 +779,7 @@ function buyFollowersNow(state, p, tier, chosen) {
   if (!spend) throw new Error('Cannot afford');
   for (const r in spend) p.res[r] -= spend[r];
   p.bonus += tier.get;
+  fBump(state, p, tier.get);
   p.bought = (p.bought || 0) + tier.get;
   log(state, `${p.name} bought ${tier.get} follower${tier.get > 1 ? 's' : ''} (${payString(spend)}).`);
   if (tier.limited) state.stock[tier.key] -= 1;
@@ -806,11 +833,12 @@ function eachMemberOf(state, p, fn) {
 // Every member trigger leaves a trace: if a hook changed anyone's resources or followers and didn't say so itself,
 // the log says it for the hook ("Kay's Tax Collector: +1 gold"), so every number on the table traces to a line.
 function traceSnapshot(state) {
-  return { len: state.log.length, last: state.log[state.log.length - 1], players: state.players.map(o => ({ res: { ...o.res }, bonus: o.bonus, discount: o.discount })) };
+  return { len: state.log.length, last: state.log[state.log.length - 1], players: state.players.map(o => ({ res: { ...o.res }, bonus: o.bonus, discount: o.discount })), f: fMark(state) };
 }
 function traceChanges(state, before, owner, def) {
   const name = def && def.name;
   if (!name) return;
+  if (before.f) fCredit(state, before.f, name, owner);
   const out = [];
   state.players.forEach((o, i) => {
     const b = before.players[i];
@@ -1037,13 +1065,14 @@ function ctxFor(state) {
       eachMember(state, (owner, card, def) => { if (def.onSteal) def.onSteal(ctx, owner, card, info); });
       return n;
     },
-    // Queue a decision for player p. It runs before anything else still queued. extra.count: a counted pick's
+    // Queue a decision for player p. It runs before anything else still queued. extra.blocked: why each player who
+    // can't be picked now can't (shown on their dimmed seat). extra.count: a counted pick's
     // progress, { of, left } (Collect Debts: 1 of 3 taken), kept on the task so it survives a save and load.
     choose(p, prompt, options, handler, data = null, extra = {}) {
       if (!options.length) return;
       // follow-up choices queued during one resolution keep their call order
       const at = state.queue.findIndex(t => !t._fresh);
-      const task = { t: 'choose', p: p.id, prompt, options: withTargets(state, options).map(o => pinCards(state, o)), h: handler, data, ...(extra.count ? { count: extra.count } : {}), _fresh: true };
+      const task = { t: 'choose', p: p.id, prompt, options: withTargets(state, options).map(o => pinCards(state, o)), h: handler, data, ...(extra.count ? { count: extra.count } : {}), ...(extra.blocked && Object.keys(extra.blocked).length ? { blocked: extra.blocked } : {}), _fresh: true };
       state.queue.splice(at < 0 ? state.queue.length : at, 0, task);
     },
   };
@@ -1105,6 +1134,31 @@ export function liveOptions(state, task) {
 function clearFresh(state) { for (const t of state.queue) if (t._fresh) delete t._fresh; }
 
 // ---------- misc ----------
+
+// ---------- the follower ledger: where every follower came from (the results breakdown) ----------
+// state.ledger[pid] = { label: n }: every change to a player's loose followers (p.bonus) during play that isn't a
+// follower buy (p.bought), a prize (p.contest) or an end-game bonus (p.final), credited once to its innermost cause:
+// a member ("Robin Hood"; a rival's member reads "P2's Raider"), a space ("Your Call") or a choice ("Cheap Seats").
+// Losses are negative. state.fcredit[pid] is a running total of what's been credited (buys, prizes and end-game
+// bonuses too), so an outer cause only counts what its inner causes didn't.
+const fMark = state => state.players.map(o => [o.bonus, (state.fcredit && state.fcredit[o.id]) || 0]);
+function fBump(state, o, d) {
+  if (!d) return;
+  state.fcredit = state.fcredit || {};
+  state.fcredit[o.id] = (state.fcredit[o.id] || 0) + d;
+}
+function fCredit(state, mark, label, owner = null) {
+  state.players.forEach((o, i) => {
+    if (!mark[i]) return;
+    const d = (o.bonus - mark[i][0]) - (((state.fcredit && state.fcredit[o.id]) || 0) - mark[i][1]);
+    if (!d) return;
+    const key = owner && owner !== o ? `${owner.name}'s ${label}` : label || 'other';
+    state.ledger = state.ledger || {};
+    const row = state.ledger[o.id] = state.ledger[o.id] || {};
+    row[key] = (row[key] || 0) + d;
+    fBump(state, o, d);
+  });
+}
 
 /**
  * Preview-only reasons. previewSpace runs a space on a copy that carries state.notes (an array); there, every member

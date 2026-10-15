@@ -12,7 +12,7 @@ import { Follower } from '../art/Follower.jsx';
 import { realHover } from '../hover.js';
 import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
 import { MemberActions, MemberSwitch } from './MemberUse.jsx';
-import { usableNow } from './memberUse.js';
+import { usableNow, loadedUse, safeThisRound } from './memberUse.js';
 import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { Minion } from '../art/Leader.jsx';
 import { turnPlaces } from './seats.js';
@@ -38,6 +38,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const colorAt = d => (onTable(state, d) ? state.quadrants.indexOf(d.quadrant) : state.quadrants.length);
   const groups = memberChips(state, p).map((g, k) => ({ g, k })).sort((a, b) => colorAt(a.g.def) - colorAt(b.g.def) || a.k - b.k).map(x => x.g);
   // your members you can use right now, with an effect (the engine's own dry run; one it would refuse stays unlit)
+  const safe = safeThisRound(state, pid);
   const ready = new Set(mine ? usableNow(state, pid).filter(x => optionFor(`use:${x.uid}`)).map(x => x.uid) : []);
   // its place in what's left of this round's turn order (who's up now, who's next)
   const turns = turnPlaces(state, me);
@@ -92,6 +93,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           const d = g.def;
           // yours to use now (Cory, 2026-10-15): the figure is lit, and its card carries the Use button (MemberUse.jsx)
           const readyUid = mine ? g.uids.find(u => ready.has(u)) : undefined;
+          // a use still in hand, anyone's: subdued light, so a rival's loaded Raider can be seen coming (w2b #21)
+          const loaded = readyUid == null && g.uids.some(u => loadedUse(state, u));
           const toggle = mine ? g.uids.map(u => optionFor(`toggle:${u}`)).find(Boolean) : null;
           const hop = react && react.members && react.members[d.id];
           // its sphere at a glance: a soft ground in the sphere's color, stronger when the clothes alone don't carry it
@@ -100,9 +103,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           // the board picker: a member the choice offers is clicked right here (seat figure)
           const pickM = pick && pick.members ? g.uids.map(u => pick.members[u]).find(Boolean) : null;
           return (
-            <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${readyUid != null ? ' ready' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.chosenUid != null && g.uids.includes(pick.chosenUid) ? ' pick-chosen' : ''}${pickM && pickM.alt ? ' pick-alt' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used ? 'used' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
+            <span key={g.key} className={`cs-member${g.card.used ? ' used' : ''}${readyUid != null ? ' ready' : ''}${loaded ? ' loaded' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.chosenUid != null && g.uids.includes(pick.chosenUid) ? ' pick-chosen' : ''}${pickM && pickM.alt ? ' pick-alt' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used ? 'used' : loaded ? 'loaded' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
-              <Tip className="fig" sticky={mine} label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : 'show the card'}`}
+              <Tip className="fig" sticky={mine} label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
                 content={() => <><MemberCard state={state} uid={readyUid ?? g.uids[0]} me={me} />{mine && <MemberActions state={state} uid={readyUid ?? g.uids[0]} me={me} optionFor={optionFor} onPick={onPick} />}</>}>
                 <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
@@ -144,6 +147,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             );
           })}
         </span>
+        {/* Lie Low and the like: no one can steal this seat's resources this round, said in words (w2b #21) */}
+        {safe && <small className="cs-safe" data-safe="1" title={`No one can steal resources from ${mine ? 'you' : p.name} until this round ends`}>safe this round</small>}
       </footer>
       {/* a choice that picks a player: the whole seat is the button (or says why it isn't) */}
       {pick && pick.seatMode && (pick.seat

@@ -277,11 +277,11 @@ try {
           for (let k = 0; k < Math.min(6, await lit.count()) && !line; k++) {
             await page.mouse.move(4, 690); await page.waitForTimeout(160);
             await lit.nth(k).hover(); await page.waitForTimeout(700);
-            line = await page.evaluate(ns => [...document.querySelectorAll('[data-hover-layer] .lt-yd-row .v')].map(e => e.textContent).find(t => ns.filter(n => new RegExp(`(^|· )${n} \\d`).test(t)).length >= 2) || null, names);
+            line = await page.evaluate(ns => [...document.querySelectorAll('[data-hover-layer] .lt-yd-row .v')].map(e => e.textContent).find(t => ns.filter(n => new RegExp(`(^|· |: )${n} \\d`).test(t)).length >= 2) || null, names);
           }
           if (!names) fail('(p) no saved game to read the players from', step);
           else if (!line) fail('(p) no space card showed its contest line', step);
-          else { const missing = names.filter(n => !new RegExp(`(^|· )${n} \\d`).test(line)); if (missing.length) fail(`(p) a space's contest line leaves out ${missing.join(', ')}: "${line}"`, step); }
+          else { const missing = names.filter(n => !new RegExp(`(^|· |: )${n} \\d`).test(line)); if (missing.length) fail(`(p) a space's contest line leaves out ${missing.join(', ')}: "${line}"`, step); }
         }
         await rimCheck(page, step);
         await page.screenshot({ path: `${SHOTS}/02b-hover-space.png` });
