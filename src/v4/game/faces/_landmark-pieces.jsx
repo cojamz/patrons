@@ -113,7 +113,7 @@ function AnyRing({ s }) {
 }
 function Glyph({ r, s }) {
   if (r === 'any') return <AnyRing s={s} />;
-  return <svg width={s} height={s} viewBox="0 0 16 16" overflow="visible"><ResourceGlyph r={r} size={16} decorative /></svg>;
+  return <svg width={s} height={s} style={{ width: s, height: s, overflow: 'visible' }} viewBox="0 0 16 16" overflow="visible"><ResourceGlyph r={r} size={16} decorative /></svg>;
 }
 function CardG({ s, badge = null, tint = null, hood = false }) {
   // a member: a cream card with a hooded figure, its sphere stripe on top when tinted
@@ -131,12 +131,13 @@ function CardG({ s, badge = null, tint = null, hood = false }) {
 function Badge({ s, text, x, y }) {
   if (text === 'any') return <g transform={`translate(${x - s * 0.3} ${y - s * 0.3})`}><circle cx={s * 0.3} cy={s * 0.3} r={s * 0.3} fill={CREAM} stroke={INK} strokeWidth={s * 0.06} /><g transform={`translate(${s * 0.04} ${s * 0.04})`}><AnyRing s={s * 0.52} /></g></g>;
   if (text === 'top') return <g transform={`translate(${x} ${y})`}><circle r={s * 0.3} fill="var(--gold)" stroke={INK} strokeWidth={s * 0.06} /><path d={`M${-s * 0.15} ${s * 0.07}L0 ${-s * 0.13}L${s * 0.15} ${s * 0.07}`} fill="none" stroke={INK} strokeWidth={s * 0.09} /></g>;
+  // the badge's mark is 12px or more on screen (s is 18px): a gold tag over the card's corner
   const long = String(text).length > 1;
-  const rr = s * (long ? 0.36 : 0.3);
+  const hh = s * 0.76, ww = long ? s * 1.14 : hh;
   return (
     <g transform={`translate(${x} ${y})`}>
-      <rect x={-rr * (long ? 1.25 : 1)} y={-s * 0.3} width={rr * (long ? 2.5 : 2)} height={s * 0.6} rx={s * 0.3} fill="var(--gold)" stroke={INK} strokeWidth={s * 0.06} />
-      <text x={0} y={s * 0.02} fontSize={s * 0.5} fontWeight="800" textAnchor="middle" dominantBaseline="central" fill={INK} fontFamily="var(--sans)">{text}</text>
+      <rect x={-ww / 2} y={-hh / 2} width={ww} height={hh} rx={hh / 2} fill="var(--gold)" stroke={INK} strokeWidth={s * 0.07} />
+      <text x={0} y={s * 0.03} fontSize={s * 0.68} fontWeight="800" textAnchor="middle" dominantBaseline="central" fill={INK} fontFamily="var(--sans)">{text}</text>
     </g>
   );
 }
@@ -166,9 +167,9 @@ function ShieldG({ s }) {
   return <path d={`M${s / 2} ${s * 0.04}L${s * 0.88} ${s * 0.18}V${s * 0.5}C${s * 0.88} ${s * 0.74} ${s * 0.7} ${s * 0.88} ${s / 2} ${s * 0.98}C${s * 0.3} ${s * 0.88} ${s * 0.12} ${s * 0.74} ${s * 0.12} ${s * 0.5}V${s * 0.18}Z`} fill="var(--magenta)" stroke={INK} strokeWidth={s * 0.08} />;
 }
 function MinionG({ s, hollow = false }) {
-  return <g opacity={hollow ? 0.55 : 1}><svg width={s} height={s} viewBox="0 0 16 16"><Minion color={ROBE} size={16} /></svg>{hollow && <rect x={s * 0.08} y={s * 0.08} width={s * 0.84} height={s * 0.84} fill="none" stroke={INK} strokeWidth={s * 0.07} strokeDasharray={`${s * 0.12} ${s * 0.1}`} />}</g>;
+  return <g opacity={hollow ? 0.55 : 1}><svg width={s} height={s} style={{ width: s, height: s }} viewBox="0 0 16 16"><Minion color={ROBE} size={16} /></svg>{hollow && <rect x={s * 0.08} y={s * 0.08} width={s * 0.84} height={s * 0.84} fill="none" stroke={INK} strokeWidth={s * 0.07} strokeDasharray={`${s * 0.12} ${s * 0.1}`} />}</g>;
 }
-function FolG({ s }) { return <svg width={s} height={s} viewBox="0 0 10 10" overflow="visible" style={{ color: CREAM }}><Follower size={10} /></svg>; }
+function FolG({ s }) { return <svg width={s} height={s} viewBox="0 0 10 10" overflow="visible" style={{ color: CREAM, width: s, height: s, overflow: 'visible' }}><Follower size={10} /></svg>; }
 function Num({ s, n, x, w }) {
   return <text x={x + w / 2} y={s * 0.54} fontSize={s * 0.92} fontWeight="800" textAnchor="middle" dominantBaseline="central" fill={INK} stroke={CREAM} strokeWidth={s * 0.2} paintOrder="stroke" fontFamily="var(--sans)" className="lm-num">{n}</text>;
 }

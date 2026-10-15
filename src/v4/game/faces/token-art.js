@@ -38,7 +38,7 @@ export function tokenPaths(ring, variant = 'face') {
         const light = -(nx + ny) / Math.SQRT2; // 1 = facing the lamp (upper left), -1 = away
         const [, layer] = layers.find(([until]) => t < until);
         if (variant === 'locked') key = LOCKED[layer] === 'b2' ? (light > 0.45 ? 'b3' : light < -0.45 ? 'b1' : 'b2') : LOCKED[layer];
-        else if (layer === 'rim') key = light > 0.42 ? (variant === 'lit' ? 'qL' : 'q3') : light < -0.42 ? 'q1' : 'q2';
+        else if (layer === 'rim') key = light > 0.42 ? 'q3' : light < -0.42 ? 'q1' : 'q2';
         else if (layer === 'gild') {
           const deg = ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360;
           const rivet = Math.abs(((deg + 15) % 30) - 15) < 3.2 && t > 1.6 && t < 2.9;
@@ -48,7 +48,8 @@ export function tokenPaths(ring, variant = 'face') {
           const inner = layers[layers.length - 2][0];
           key = t < inner + 2.2 && light > 0.55 ? 'p0' : t < inner + 2.6 && light < -0.35 ? 'p2' : 'p';
         } else key = layer;
-        if (variant === 'lit' && layer === 'k' && t < 1 && light > -0.1) key = 'L';
+        if (variant === 'lit' && layer === 'k' && t < 1 && light > -0.35) key = 'L';
+        if (variant === 'lit' && layer === 'rim' && light > 0.62 && t < layers[0][0] + 1) key = 'qL';
       } else if (dy > 0 && (Math.hypot(dx, dy - 1) <= R || Math.hypot(dx, dy - 2) <= R)) {
         key = Math.hypot(dx, dy - 1) <= R ? 'e' : 'e2';
       }
@@ -77,14 +78,14 @@ export const PAINT = ['e2', 'e', 'k', 'L', 'k2', 'cr', 'q1', 'q2', 'q3', 'qL', '
 // ---------- pixel marks for the strip: 7 rows tall, 2 screen px a cell (14px) ----------
 // c cream · k ink · h hood · d dark hood · y lamp · g gilt · q the quadrant's ink · G R B N four pip colours
 const MARK = {
-  m: ['cccccc', 'cckkcc', 'ckkkkc', 'ckcckc', 'ckkkkc', 'ckkkkc', 'cccccc'], // a member: a card with a hooded figure
-  mr: ['hhhhhh', 'hhkkhh', 'hkkkkh', 'hkcckh', 'hkkkkh', 'hkkkkh', 'hhhhhh'], // a rival's member: the same card in shadow
-  mlow: ['cccccc...', 'cckkcc...', 'ckkkkc...', 'ckcckc...', 'ckkkkcyyy', 'ckkkkc.y.', 'cccccc...'], // the cheapest
-  mup: ['cccccc.y.', 'cckkccyyy', 'ckkkkc...', 'ckcckc...', 'ckkkkc...', 'ckkkkc...', 'cccccc...'], // the priciest
-  mnew: ['cccccc.y.', 'cckkccyyy', 'ckkkkc.y.', 'ckcckc...', 'ckkkkc...', 'ckkkkc...', 'cccccc...'], // one more recruit
-  r: ['..hhh..', '.hhhhh.', 'hhkkkhh', 'hkckckh', 'hhkkkhh', 'hhhhhhh', 'hhhhhhh'], // a rival: a hood with two glints
-  rup: ['..hhh..y.', '.hhhhhyyy', 'hhkkkhh..', 'hkckckh..', 'hhkkkhh..', 'hhhhhhh..', 'hhhhhhh..'], // a rival ahead of you
-  rtop: ['.g.g.g.', '.ggggg.', 'hhkkkhh', 'hkckckh', 'hhkkkhh', 'hhhhhhh', 'hhhhhhh'], // the richest rival (crowned)
+  m: ['cccccc', 'cckkcc', 'cckkcc', 'cccccc', 'ckkkkc', 'ckkkkc', 'cccccc'], // a member: a card with a bust on it
+  mr: ['hhhhhh', 'hhkkhh', 'hhkkhh', 'hhhhhh', 'hkkkkh', 'hkkkkh', 'hhhhhh'], // a rival's member: the same card in shadow
+  mlow: ['cccccc...', 'cckkcc...', 'cckkcc...', 'cccccc...', 'ckkkkcyyy', 'ckkkkc.y.', 'cccccc...'], // the cheapest
+  mup: ['cccccc.y.', 'cckkccyyy', 'cckkcc...', 'cccccc...', 'ckkkkc...', 'ckkkkc...', 'cccccc...'], // the priciest
+  mnew: ['cccccc.y.', 'cckkccyyy', 'cckkcc.y.', 'cccccc...', 'ckkkkc...', 'ckkkkc...', 'cccccc...'], // one more recruit
+  r: ['...h...', '..hhh..', '.hhhhh.', 'hhkkkhh', 'hkckckh', 'hkkkkkh', 'hhhhhhh'], // a rival: a pointed hood, two glints
+  rup: ['...h...y.', '..hhh.yyy', '.hhhhh...', 'hhkkkhh..', 'hkckckh..', 'hkkkkkh..', 'hhhhhhh..'], // a rival ahead of you
+  rtop: ['.g.g.g.', '.ggggg.', '.hhhhh.', 'hhkkkhh', 'hkckckh', 'hkkkkkh', 'hhhhhhh'], // the richest rival (crowned)
   w: ['..ccc..', '..ccc..', 'ccccccc', '.ccccc.', '..ccc..', '.cc.cc.', '.cc.cc.'], // your minion
   wo: ['..hhh..', '..hhh..', 'hhhhhhh', '.hhhhh.', '..hhh..', '.hh.hh.', '.hh.hh.'], // a minion still to place
   copy: ['ccccc..', 'c...c..', 'c.ccccc', 'c.c...c', 'ccc...c', '..c...c', '..ccccc'],
@@ -105,7 +106,7 @@ MARK.ws = stack(stack(MARK.wo.map(r => '......' + r), MARK.wo.map(r => '...' + r
 MARK.anys = stack(stack(MARK.any.map(r => '......' + r), MARK.any.map(r => '...' + r), 0), MARK.any, 0); // all of it
 
 export const MARK_FILL = {
-  c: '#f3e6c8', k: '#1d1611', h: '#a2958a', d: '#5f554d', y: '#ffd27a', g: '#e9b949',
+  c: '#f3e6c8', k: '#1d1611', h: '#b3a592', d: '#6a5e54', y: '#ffd27a', g: '#e9b949',
   q: 'var(--tkc)', G: 'var(--gold)', R: 'var(--red)', B: 'var(--blue)', N: 'var(--green)',
 };
 const markCache = new Map();
@@ -189,7 +190,7 @@ const S = {
     tipoff: [['1', 'magenta', '/', 'rup']],
     hideout: [['r', '→', '1', 'magenta'], ['shield']],
     rob: [['rr', '→', '3', 'magenta']],
-    ransom: [['mr', 'tag:≤6'], ['magenta', '|', 'm']],
+    ransom: [['mr', 'tag:≤6', '→', 'magenta']],
     heist: [['mr', '→', 'm']],
   },
   trading: {

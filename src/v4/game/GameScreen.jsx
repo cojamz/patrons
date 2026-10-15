@@ -26,7 +26,8 @@ import { Rich, Pip } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome } from './flight.js';
 import { friendlyError, isNetworkError } from '../errors.js';
-import { ROUND_START } from '../saved.js';
+import { ROUND_START, ownsLocal } from '../saved.js';
+import { restoredMoment } from '../session/moment.js';
 import { gameRecord, recordText } from '../session/record.js';
 import { copyText } from '../Recovery.jsx';
 
@@ -68,6 +69,8 @@ export function useSessionState(session) {
 // Local games keep it under ROUND_START (also the fallback Resume); online games under their own key.
 const rsKey = online => (online ? `${ROUND_START}.online` : ROUND_START);
 export function saveRoundStart(st, online = false) {
+  // a finished game needs no baseline; a tab that lost the local game to another tab never writes it
+  if (!st || st.over || (!online && !ownsLocal())) return;
   try { localStorage.setItem(rsKey(online), JSON.stringify({ seed: st.seed, round: st.round, names: st.players.map(p => p.name).join('|'), state: st })); } catch { /* ignore */ }
 }
 export function loadRoundStart(st, online = false) {
@@ -81,10 +84,11 @@ export function loadRoundStart(st, online = false) {
 
 function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
   const first = session.getState();
-  const [table, setTable] = useState(() => ({ shown: first, moment: null }));
+  // a local game reloaded while its round summary was up reopens it (session/moment.js; the session holds its bots)
+  const [table, setTable] = useState(() => ({ shown: first, moment: restoredMoment(session, first) }));
   const queue = useRef([]);
   const paced = useRef(false);
-  const held = useRef(false);
+  const held = useRef(!!table.moment);
   const timer = useRef(null);
   const dwellNext = useRef(0); // the hold the step being committed asks for (started once it's on screen)
   const shownRef = useRef(first);
@@ -312,6 +316,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // re-render on every session change, so Undo disappears the moment control passes even while the table catches up
   const [, setTick] = useState(0);
   useEffect(() => session.subscribe(() => setTick(t => t + 1)), [session]);
+  // A local game's bots wait at a round end (session roundHold) until its summary is gone; they go on once the table
+  // shows that state with no summary up (dismissed, or never detected: never a stalled table).
+  useEffect(() => { if (!moment && session.roundHold && live0 === session.getState() && session.continueRound) session.continueRound(); }, [moment, live0, session]);
   // results open at the top, on the winner
   // The results are on screen: only now may the app forget the saved game.
   useEffect(() => { if (live0.over && !moment && onResults) onResults(); }, [live0.over, moment]); // eslint-disable-line react-hooks/exhaustive-deps

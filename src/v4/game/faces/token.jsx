@@ -31,8 +31,8 @@ function measure(atom) {
 
 function Atom({ atom, m, x }) {
   const y = -GLYPH / 2;
-  if (m.kind === 'res') return <g transform={`translate(${x} ${y})`} className="tk-res"><ResourceGlyph r={atom} size={GLYPH} decorative /></g>;
-  if (m.kind === 'fol') return <g transform={`translate(${x} ${y})`}><Follower size={GLYPH} title="followers" /></g>;
+  if (m.kind === 'res') return <g className="tk-res"><Pin x={x} y={y} s={GLYPH}><ResourceGlyph r={atom} size={GLYPH} decorative /></Pin></g>;
+  if (m.kind === 'fol') return <Pin x={x} y={y} s={GLYPH}><Follower size={GLYPH} title="followers" /></Pin>;
   if (m.kind === 'mark') {
     const mk = markPaths(m.name);
     return (
@@ -62,7 +62,12 @@ function Atom({ atom, m, x }) {
   return <text x={x} y="0.5" className="tk-num" dominantBaseline="central">{atom}</text>;
 }
 
-const GAP_IN = 2, GAP_OUT = 9, PAD = 6, H = 19;
+/** A nested svg pinned to s×s at (x, y): the stage's CSS sizes every svg to 100%, so a sprite or glyph sits in one. */
+function Pin({ x = 0, y = 0, s, children }) {
+  return <svg x={x} y={y} viewBox={`0 0 ${s} ${s}`} overflow="visible" style={{ width: s, height: s, overflow: 'visible' }}>{children}</svg>;
+}
+
+const GAP_IN = 2, GAP_OUT = 8, PAD = 5, H = 19;
 /** The symbol strip: a dark ribbon with notched pixel ends, centred at (0, y) in board units. */
 function Strip({ symbols, px, y, ring }) {
   const laid = [];
@@ -105,6 +110,9 @@ function Body({ ring, variant }) {
   return <g shapeRendering="crispEdges">{PAINT.filter(k => paths[k]).map(k => <path key={k} d={paths[k]} className={`tk-${k}`} />)}</g>;
 }
 
+// a light ink would vanish against the cream field: its rim prints a shade darker
+const RIM_INK = { white: '#b3a283' };
+
 function Token({ q, action, ring, round, status, minions = [], effect, px = 0.77, color, flash }) {
   const R = radiusOf(ring);
   const L = LAY[ring];
@@ -118,10 +126,10 @@ function Token({ q, action, ring, round, status, minions = [], effect, px = 0.77
   const mover = minions.find(m => m.fresh);
   const lift = lit ? -1.6 : 0;
   return (
-    <g className={`tk r${ring} ${status}${flash ? ' flash' : ''}`} style={{ '--tkc': color || `var(--${q})` }} data-token={`${q}.${action.key}`}>
+    <g className={`tk r${ring} ${status}${flash ? ' flash' : ''}`} style={{ '--tkc': RIM_INK[q] || color || `var(--${q})` }} data-token={`${q}.${action.key}`}>
       {/* the cast shadow, longer when the token is lifted */}
       <ellipse cx="0" cy={R * 0.78 + 2.6} rx={R * (lit ? 1.02 : 0.96)} ry={R * 0.3} className="tk-shadow" />
-      {lit && <circle r={R + 5} className="tk-glow" />}
+      {lit && <circle r={R + 2.2} className="tk-glow" />}
       <g className="tk-body" transform={`translate(0 ${lift})`}>
         <g className={taken ? 'tk-down' : undefined}>
           <Body ring={ring} variant={locked ? 'locked' : lit ? 'lit' : 'face'} />
@@ -130,12 +138,10 @@ function Token({ q, action, ring, round, status, minions = [], effect, px = 0.77
           ) : (
             <>
               {drawn ? (
-                <g transform={`translate(${-L.icon / 2} ${L.iy - L.icon / 2})`}>
-                  <Sprite id={ids} kind="action" sphere={res} size={L.icon} />
-                </g>
+                <Pin x={-L.icon / 2} y={L.iy - L.icon / 2} s={L.icon}><Sprite id={ids} kind="action" sphere={res} size={L.icon} /></Pin>
               ) : (
                 // no picture drawn yet (the plain stand-in spheres): the resource itself, large
-                <g transform={`translate(${-L.icon * 0.36} ${L.iy - L.icon * 0.36})`}><ResourceGlyph r={res} size={L.icon * 0.72} decorative /></g>
+                <Pin x={-L.icon * 0.36} y={L.iy - L.icon * 0.36} s={L.icon * 0.72}><ResourceGlyph r={res} size={L.icon * 0.72} decorative /></Pin>
               )}
               {symbols.length > 0 && <Strip symbols={symbols} px={px} y={L.sy} ring={ring} />}
             </>

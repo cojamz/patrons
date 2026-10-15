@@ -176,6 +176,8 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-face] .stage .slot.flash .base{animation:none}
 .lt [data-face] .stage .slot:focus-visible .base{box-shadow:0 0 0 2.5px var(--lamp-ink);border-radius:6px}
 .lt .slot .face-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+/* inside a face's HTML (FaceHtml), the marks and pips are 1em, not the stage's svg 100% */
+.lt .stage .face-svg .face-html svg{display:inline-block;width:1em;height:1em;vertical-align:-.15em;cursor:inherit}
 /* ...and why, at the pointer: "Taken by P3", "Opens in round II" */
 .deny-note{position:fixed;z-index:60;transform:translate(14px,-135%);padding:5px 10px;border-radius:8px;background:var(--walnut-2);color:var(--cream);font-family:var(--sans);font-size:14px;font-weight:600;white-space:nowrap;pointer-events:none;
   box-shadow:0 0 0 1px rgba(243,230,200,.24),0 8px 18px rgba(0,0,0,.5);animation:denyin .16s ease-out,denyout .3s ease-in 1.35s forwards}
@@ -390,7 +392,8 @@ h1,h2,h3{font-family:var(--serif)}
   .app.game.lt.in-setup > .lt-wheel .stage{width:min(100cqw, calc(100cqh - 86px))}
   .app.game.lt .lt-wheel .stage{transition:width .45s cubic-bezier(.3,.7,.4,1)}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{position:static;flex:none;width:min(100%,540px);max-height:none;overflow:visible;
-    display:flex;align-items:center;gap:12px;padding:7px 14px}
+    display:flex;flex-direction:row;align-items:center;gap:12px;padding:7px 14px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .for-sale{display:none}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{margin:0;flex:0 0 118px;font-weight:700;line-height:1.2}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .tokens{flex:1 1 auto;gap:4px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{flex-direction:row;justify-content:center;gap:6px;padding:4px 2px}

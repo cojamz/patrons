@@ -26,7 +26,7 @@ function Seg({ value, options, onChange, label }) {
   );
 }
 
-export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, error, lastCode = '' }) {
+export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, last = null, onLast, error, lastCode = '' }) {
   // an invite link's code; else the room this device was just in (Join takes your seat back)
   const [code, setCode] = useState(() => (new URLSearchParams(location.search).get('join') || lastCode || '').toUpperCase().slice(0, 8));
   const [err, setErr] = useState('');
@@ -56,6 +56,11 @@ export function Home({ onLocal, onHost, onJoin, onlineReady, saved, onResume, er
             Resume game<small>{savedLine(saved)}</small>
           </button>
         )}
+        {last && onLast && (
+          <button type="button" className="btn big last-results" onClick={onLast} data-home="last">
+            Last game's results<small>{lastLine(last)}</small>
+          </button>
+        )}
         <button type="button" className={`btn big${saved ? '' : ' pri'}`} onClick={onLocal} data-home="local">{saved ? 'New game on this device' : 'Play on this device'}</button>
         <div className="online-box">
           <label className="field"><span>Your name</span><input value={name} onChange={e => saveName(clip(e.target.value, NAME_MAX))} placeholder="Name" /><small className="count num">{graphemes(name)}/{NAME_MAX}</small></label>
@@ -82,6 +87,14 @@ function savedLine({ state, savedAt, fromRoundStart }) {
   const names = state.players.map(p => p.name).join(', ');
   const mins = Math.round((Date.now() - (savedAt || Date.now())) / 60000);
   return `${round} · ${names}${mins > 0 ? ` · ${mins < 60 ? `${mins} min` : `${Math.round(mins / 60)} h`} ago` : ''}`;
+}
+
+/** "P1 won with 54 · P1, P2, P3 · 5 min ago": the finished game home offers again. */
+function lastLine({ state, finishedAt }) {
+  const won = state.ranking && state.players[state.ranking[0]];
+  const names = state.players.map(p => p.name).join(', ');
+  const mins = Math.round((Date.now() - (finishedAt || Date.now())) / 60000);
+  return `${won ? `${won.name} won · ` : ''}${names}${mins > 0 ? ` · ${mins < 60 ? `${mins} min` : `${Math.round(mins / 60)} h`} ago` : ''}`;
 }
 
 function wedge(q) {

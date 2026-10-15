@@ -1,5 +1,6 @@
 // Small game-screen pieces: the choice prompt, the log, the hot-seat handoff, a confirm dialog and a popover.
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { quadrant, cardDef } from '../../engine/v4/index.js';
 import { logSections, playerColor, costParts, plainLine } from '../format.js';
 import { Rich, CostPips } from './Rich.jsx';
@@ -79,7 +80,9 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null }) {
   const total = useRef(null);
   const left = (pend.prompt.match(/\((\d+) left\)/) || [])[1];
   if (left == null) total.current = null; else if (total.current == null || Number(left) > total.current) total.current = Number(left);
-  const tally = left != null && total.current ? `${total.current - Number(left)} of ${total.current} taken` : null;
+  // the engine's own count when the choice carries one (it survives a reload); else counted from the first prompt seen
+  const tally = pend.count ? `${pend.count.of - pend.count.left} of ${pend.count.of} taken`
+    : left != null && total.current ? `${total.current - Number(left)} of ${total.current} taken` : null;
   const pick = (id, mode) => onPick(id, mode); // step changes are guarded by the table's input lock
   return (
     <section className={`prompt choice${setup ? ' setup' : ''}`} aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}>
@@ -91,11 +94,14 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null }) {
       {!setup && !trade && left != null && Number(left) > 1 && (
         // a counted pick: one button per target that can cover all of what's left ("Take all 3 from P3")
         <div className="take-alls">
-          {pend.options.filter(o => holds(o) >= Number(left) || pend.options.length === 1).map(o => (
-            <button key={o.id} type="button" className="btn pri take-all" disabled={busy} onClick={() => pick(o.id, 'all')}>
-              {`Take all ${left} from ${withUnits(o.label, pend.prompt, state.resources).split(' · ')[0]}`}
-            </button>
-          ))}
+          {/* the label says what a click really takes: all of what's left, or all a lone target holds ("Take P3's 1") */}
+          {pend.options.map(o => [o, holds(o) ? Math.min(Number(left), holds(o)) : Number(left)])
+            .filter(([o, k]) => k > 1 && (k === Number(left) || pend.options.length === 1)).map(([o, k]) => (
+              <button key={o.id} type="button" className="btn pri take-all" disabled={busy} onClick={() => pick(o.id, 'all')}>
+                {k === Number(left) ? `Take all ${k} from ${withUnits(o.label, pend.prompt, state.resources).split(' · ')[0]}`
+                  : `Take ${k} from ${withUnits(o.label, pend.prompt, state.resources).split(' · ')[0]} (all they have)`}
+              </button>
+            ))}
         </div>
       )}
     </section>
@@ -168,7 +174,6 @@ function MergedOptions({ state, pend, onPick, busy }) {
     <div className="opts">
       {groups.map(({ key, o, det, n }) => {
         const color = o.kind === 'color' ? o.value : null;
-        const q = color && state.quadrants.includes(color) ? quadrant(color) : null;
         return (
           <button
             key={key} type="button" className={`btn${color ? ' color' : ''}${det ? ' rich' : ''}`} data-option={o.id} disabled={busy}
@@ -182,7 +187,7 @@ function MergedOptions({ state, pend, onPick, busy }) {
                 <small>{det.def ? <CardText text={det.text} /> : <Rich text={det.text} />}</small>
                 {det.cost && <small className="cost-line">Costs <span className="num">{det.cost}</span></small>}
               </span>
-            ) : (q ? q.name : withUnits(o.label, pend.prompt, state.resources))}
+            ) : withUnits(o.label, pend.prompt, state.resources) /* the engine's label, always: "+2 gold", never a bare "Gold" */}
           </button>
         );
       })}
@@ -310,8 +315,19 @@ export function Popover({ anchor, onClose, children, float = false }) {
     const w = Math.min(280, innerWidth - 24);
     const left = Math.max(12, Math.min(innerWidth - w - 12, a.left + a.width / 2 - w / 2));
     const below = a.bottom + 8 + 120 < innerHeight;
+    fitted.current = false;
     setPos({ left, width: w, top: below ? a.bottom + 8 : undefined, bottom: below ? undefined : innerHeight - a.top + 8 });
   }, [anchor]);
+  // once it's drawn, a card that would run off the top or the bottom of the window slides back on (RC1 saboteur: a
+  // member card from the bottom seats measured y=609–791 on a 700px window)
+  const fitted = useRef(false);
+  useLayoutEffect(() => {
+    if (sheet || !pos || !box.current || fitted.current) return;
+    fitted.current = true;
+    const b = box.current.getBoundingClientRect();
+    const top = Math.max(8, Math.min(b.top, innerHeight - 8 - b.height));
+    if (Math.abs(top - b.top) > 0.5) setPos(p => ({ ...p, top, bottom: undefined }));
+  }, [pos]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const close = e => { if (box.current && !box.current.contains(e.target) && e.target !== anchor && !anchor.contains(e.target)) onClose(); };
     const key = e => { if (e.key === 'Escape') onClose(); };
@@ -322,19 +338,21 @@ export function Popover({ anchor, onClose, children, float = false }) {
     return () => { removeEventListener('pointerdown', close, true); removeEventListener('keydown', key); removeEventListener('scroll', scroll, true); };
   }, [anchor, onClose]);
   if (!pos) return null;
+  // drawn at the page's top level, so no strip, zoomed chair or clipped box around its anchor can cover or shift it
+  const out = node => (typeof document !== 'undefined' ? createPortal(node, document.body) : node);
   if (sheet) {
     // a sheet blocks the board until it's closed (the backdrop takes stray taps), and always has a Close
-    return (
+    return out(
       <>
         <div className="sheet-backdrop" onPointerDown={e => { e.preventDefault(); e.stopPropagation(); onClose(); }} />
         <div className="popover sheet-pop" ref={box} role="dialog">
           <button type="button" className="btn ghost sheet-close" onClick={onClose}>Close</button>
           {children}
         </div>
-      </>
+      </>,
     );
   }
-  return <div className="popover" ref={box} role="dialog" style={pos}>{children}</div>;
+  return out(<div className="popover" ref={box} role="dialog" style={pos}>{children}</div>);
 }
 
 /** A member card face: color band, sphere glyph, name, worth, ability and list cost. */

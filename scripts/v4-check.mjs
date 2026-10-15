@@ -2,12 +2,13 @@
 // `npm run check:v4 -- --help` for the options. Every sphere a table can pick is gated. Tests carry no wall-clock
 // budgets: game and move counts bound the engine work, fake timers the session waits (vitest.config.js has a hang
 // backstop).
-// Speed (2026-10-15, design/eval/harness-metrics.md): the unit tests start at once on every core at nice 19, so they
-// soak up whatever CPU the build and the browsers leave idle and never slow a timing gate; the e2e start the moment the
-// build is served, longest first, each holding a machine-wide e2e token (scripts/lib/slots.mjs), so all runs on the box
-// together keep at most V4_E2E_TOKENS browsers in flight; the timing-sensitive ones (hover p95, count-ups, bot pacing)
-// take every token and run with no other e2e anywhere on the box. Output is captured per stage and printed whole as
-// each stage ends (no interleaving); every run appends a record to the run history that scripts/v4-retro.mjs reads.
+// Speed (2026-10-15, design/eval/harness-metrics.md): the unit tests start at once on every core at nice 10 (as every
+// vitest run does, vitest.config.js), so they soak up whatever CPU the build and the browsers leave idle and never slow
+// a timing gate. The e2e start the moment the build is served, longest first, each holding a machine-wide e2e token
+// (scripts/lib/slots.mjs), so all runs on the box together keep at most V4_E2E_TOKENS browsers in flight; the timing-
+// sensitive ones (hover p95, count-ups, bot pacing) take every token and run with no other e2e anywhere on the box.
+// Output is captured per stage and printed whole as each stage ends (no interleaving); every run appends a record to
+// the run history that scripts/v4-retro.mjs reads.
 // Processes: vitest, the build and each e2e run in their own process group and die with this script, however it ends
 // (scripts/lib/procs.mjs); the preview server runs inside this process, on a port checked free before it starts, and
 // is confirmed to be serving this run's outDir before any e2e touches it. At most V4_CHECK_SLOTS (3) runs share the
@@ -37,9 +38,9 @@ const HELP = `npm run check:v4 [-- options]
 
   V4_OUTDIR=.v4-build-<name>  build dir (default .v4-build; inside the export with --commit)
   V4_PORT=<5281+>             preview port for the e2e (default 5180); refused up front if anything answers there
-  V4_CHECK_SLOTS=${String(SLOTS).padEnd(14)}check:v4 runs allowed at once on this box (lock dir /tmp/v4-check-slots)
-  V4_E2E_TOKENS=${String(E2E_TOKENS).padEnd(15)}browser e2e in flight at once across every run on the box
-  V4_UNIT_WORKERS=<n>         vitest workers (default: every core; they run at nice 19)
+  V4_CHECK_SLOTS=${String(SLOTS).padEnd(13)}check:v4 runs allowed at once on this box (lock dir /tmp/v4-check-slots)
+  V4_E2E_TOKENS=${String(E2E_TOKENS).padEnd(14)}browser e2e in flight at once across every run on the box
+  V4_UNIT_WORKERS=<n>         vitest workers (default: every core; they run at nice 10)
   V4_PHONE=1                  include touch.mjs (the phone gate; outside the v0.2 verdict)
   V4_LOGS=<dir>               where each stage's full output goes (default /tmp/v4-check-logs/<run>)`;
 
@@ -125,12 +126,13 @@ const run = async (name, args, { env = {}, nice = 0, tail = Infinity, cmd = proc
   return Object.assign(r, { output: child.output });
 };
 
-// 1. unit tests, at once, on every core, niced: they take whatever the build and the browsers leave idle
+// 1. unit tests, at once, on every core, niced (also for an export of an older commit, whose vitest.config.js doesn't
+//    nice itself): they take whatever the build and the browsers leave idle
 const workers = Number(process.env.V4_UNIT_WORKERS) || availableParallelism();
 // --quick leaves out the coverage gates that play their full sample even on the fast slice (they gate verdicts)
 const QUICK_SKIP = ['**/fire-audit.test.js', '**/truth/contest-truth-*.test.jsx', '**/records.test.js'];
 const unitArgs = [VITEST, 'run', 'src/test/engine/v4', 'src/test/v4', `--maxWorkers=${workers}`, ...(quick ? QUICK_SKIP.flatMap(g => ['--exclude', g]) : [])];
-const unit = run('unit tests', unitArgs, { nice: 19, env: games ? { V4_GAMES: games } : {}, tail: 2500 });
+const unit = run('unit tests', unitArgs, { nice: 10, env: games ? { V4_GAMES: games } : {}, tail: 2500 });
 // 2. the build (COMMIT_REF stamps it with the exported commit (vite.config.js), not whatever HEAD the live tree has)
 const built = await run('production build', [VITE, 'build', '--outDir', outDir, '--emptyOutDir'], { env: sha ? { COMMIT_REF: sha } : {}, tail: 300 });
 

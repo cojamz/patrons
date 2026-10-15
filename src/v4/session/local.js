@@ -49,6 +49,8 @@ export function checkpointValid(cp, state) {
   if (cp.kind === 'setup') return !!(state.pending && state.pending.player === cp.player && state.pending.kind === 'setup');
   return !!(state.pending && state.pending.player === cp.player && state.pending.kind !== 'place');
 }
+/** Why a move is refused in a tab that no longer owns the local game (another tab took it). */
+export const AWAY_TEXT = 'This game is open in another tab.';
 /** How long the next bot waits after a human's buy, so "Undo buy" is really there to press. */
 export const UNDO_BUY_HOLD_MS = 1600;
 
@@ -56,12 +58,18 @@ export const UNDO_BUY_HOLD_MS = 1600;
  * Local sessions add undo for the acting human's last placement: `undo()` restores the state from just before it,
  * offered only while that placement is the last thing that happened. Any further move (by anyone, bots included)
  * or a round ending clears it. Bots never undo.
- * @param {{ seats?: { name?: string, kind?: 'human'|'bot' }[], seed?: number, botDelayMs?: number, quadrants?: string[], state?: object, undo?: UndoCheckpoint|null }} opts
+ * @param {{ seats?: { name?: string, kind?: 'human'|'bot' }[], seed?: number, botDelayMs?: number, quadrants?: string[], state?: object, undo?: UndoCheckpoint|null,
+ *   holdRoundEnds?: boolean, hold?: { moves: number }|null, isOwner?: () => boolean }} opts
  *   Pass `state` (a saved engine state) to resume instead of starting a new game; `seats`, `seed` and `quadrants` are then ignored.
  *   Pass `undo` (a saved `undoCheckpoint`) with it to keep undo across a reload; it's dropped unless still valid for `state`.
- * @returns {Session & { canUndo(): boolean, undo(): boolean, readonly undoCheckpoint: UndoCheckpoint|null }}
+ *   `holdRoundEnds` (the app): when a round is scored the bots wait until `continueRound()` (the summary was dismissed),
+ *   so the save stays on the round end and a reload reopens the summary. `hold` (a saved `roundHold`) resumes held.
+ *   `isOwner` (the app's tab lease): checked before every move; once it says no, nothing more is applied here
+ *   (another tab has the game) and bots stop.
+ * @returns {Session & { canUndo(): boolean, undo(): boolean, readonly undoCheckpoint: UndoCheckpoint|null,
+ *   readonly roundHold: { moves: number }|null, continueRound(): boolean }}
  */
-export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 ** 31), botDelayMs = 450, quadrants, botLevel, state: saved, undo: savedUndo }) {
+export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 ** 31), botDelayMs = 450, quadrants, botLevel, state: saved, undo: savedUndo, holdRoundEnds = false, hold: savedHold = null, isOwner = null }) {
   // A new game is stamped with this build's content hash and records its moves (state.build, state.history).
   // Every seat wears an emoji, none twice: a person's pick, else a random free one (bots too), seeded by the game.
   const dressed = saved ? null : settleEmojis(seats.map(s => ({ name: s.name, kind: s.kind || 'human', ...(s.emoji ? { emoji: s.emoji } : {}) })), seededRandom((seed ^ 0x5eed) >>> 0));
@@ -77,6 +85,10 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
   // Bot tie-breaks: seeded from the game seed, or (on resume) from the engine's current rng so it varies by position.
   const rand = seededRandom(((saved ? saved.rng ^ saved.seed : seed) ^ 0x9e3779b9) >>> 0);
   const mySeats = state.players.filter(p => p.kind !== 'bot').map(p => p.id);
+  // a round just scored, its summary not yet dismissed: bots wait (holdRoundEnds)
+  let roundHold = holdRoundEnds && saved && savedHold && savedHold.moves === saved.moves ? { moves: saved.moves } : null;
+  const mayMove = () => !isOwner || isOwner();
+  const scoredRounds = st => (Array.isArray(st.contests) ? st.contests.length : 0);
 
   const info = () => ({
     mode: 'local',
@@ -113,6 +125,7 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     else checkpoint = null;
     if (!(kind === 'pay' || (kind === 'buy' && state.pending && state.pending.kind === 'pay'))) buyStart = null;
     if (!checkpointValid(checkpoint, state)) checkpoint = null;
+    if (holdRoundEnds && scoredRounds(state) > scoredRounds(before)) roundHold = { moves: state.moves };
     emit();
     schedule();
   }
@@ -123,11 +136,11 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     clearTimeout(timer);
     timer = null;
     const p = state.pending;
-    if (destroyed || state.over || !p || state.players[p.player].kind !== 'bot') return;
+    if (destroyed || roundHold || state.over || !p || state.players[p.player].kind !== 'bot') return;
     const hold = botDelayMs; // (no hold after a buy: the payment step, with Back, is the safety net)
     timer = setTimeout(() => {
       timer = null;
-      if (destroyed) return;
+      if (destroyed || roundHold || !mayMove()) return;
       // A bot move that throws never stalls the game silently: it's logged, the first option that applies cleanly
       // is played instead, and a notice is reported (record.js reportProblem). Only if no option applies does the
       // game stop, with a 'stuck' notice.
@@ -146,15 +159,17 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     },
     submit(raw) {
       if (destroyed) return Promise.reject(new Error('Session closed.'));
+      if (!mayMove()) return Promise.reject(new Error(AWAY_TEXT));
       const move = normalizeMove(state, raw);
       const problem = moveProblem(state, move, mySeats);
       if (problem) return Promise.reject(new Error(problem));
+      roundHold = null; // a person moving means the summary is behind them
       try { apply(move); } catch (err) { return Promise.reject(err instanceof Error ? err : new Error(String(err))); }
       return Promise.resolve(state);
     },
     canUndo,
     undo() {
-      if (!canUndo()) return false;
+      if (!canUndo() || !mayMove()) return false;
       state = checkpoint.state;
       checkpoint = null;
       emit();
@@ -167,6 +182,16 @@ export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 
     get undoKind() { return canUndo() ? checkpoint.kind || 'place' : null; },
     /** The seat whose move undo would take back, or null. */
     get undoSeat() { return canUndo() ? checkpoint.player : null; },
+    /** { moves } while a scored round waits for its summary to be dismissed (bots hold), else null. Saved with the state. */
+    get roundHold() { return roundHold ? { ...roundHold } : null; },
+    /** The round summary was dismissed: bots go on. Republishes the state so the app saves it without the hold. */
+    continueRound() {
+      if (!roundHold || destroyed) return false;
+      roundHold = null;
+      emit();
+      schedule();
+      return true;
+    },
     get mySeats() { return [...mySeats]; },
     get info() { return info(); },
     destroy() { destroyed = true; clearTimeout(timer); subs.clear(); },

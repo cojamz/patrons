@@ -49,6 +49,8 @@ try {
     if (el) { await el.screenshot({ path: `${out}/${face}-${id}.png` }); console.log(`${out}/${face}-${id}.png`); }
   }
   console.log(`lab: ${url}`);
+} catch (e) {
+  errors.unshift(String(e && e.message || e).split('\n')[0]);
 } finally {
   await browser.close();
   if (server) server.kill();

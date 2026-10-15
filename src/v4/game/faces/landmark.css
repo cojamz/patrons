@@ -7,3 +7,4 @@
 [data-spaces="landmark"] .lm-numeral { font-family: var(--serif); font-weight: 800; fill: #f6eedb; stroke: #2a1f17; stroke-width: 2.4; paint-order: stroke; }
 [data-spaces="landmark"] .lm-fresh { fill: none; stroke-width: 1.8; stroke-dasharray: 2.2 2.4; }
 [data-spaces="landmark"] .lm-pieces { filter: drop-shadow(0 .6px 0 rgba(42, 31, 23, .35)); }
+[data-spaces="landmark"] .lm-tag { fill: #f6eedb; stroke-width: 1.4; }

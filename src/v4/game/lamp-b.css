@@ -285,3 +285,10 @@
   .dialog.roundend .re-foot{padding-top:8px}
   .dialog.roundend .re-foot .btn.pri{padding:7px 20px}
 }
+/* the pay dialog: each rule-changer bending this price, a line each (PayPicker.jsx, priceNotes.js) */
+.dialog.pay .pay-rules{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.3}
+.dialog.pay .pay-rules li{padding-left:10px;border-left:2px solid var(--lamp-ink);color:var(--cream)}
+.dialog.pay .pay-rules li[data-pay-rule="total"]{border-left-color:transparent;color:var(--lamp-ink);font-weight:700}
+/* the member card: what a release gives back, or why it can't (Info.jsx MemberCard) */
+.card-face .release-note{display:block}
+.card-face .release-note.no{opacity:.8;font-style:italic}

@@ -25,48 +25,25 @@ let LEAN = false;
 export function setLean(on) { LEAN = !!on; }
 
 // ---------- paying outside the normal buy ----------
-// Every exact way to pay `s` of `color` plus `w` of anything. Gold is spent last by default.
-function payVectors(ctx, p, color, s, w) {
-  if (!color) { w += s; s = 0; }
-  const keys = ctx.state.resources;
-  const need = s + w;
-  const out = [];
-  const walk = (i, left, cur) => {
-    if (i === keys.length) { if (left === 0 && (cur[color] || 0) >= s) out.push({ ...cur }); return; }
-    for (let k = 0; k <= Math.min(p.res[keys[i]] || 0, left); k++) { cur[keys[i]] = k; walk(i + 1, left - k, cur); }
-    cur[keys[i]] = 0;
-  };
-  walk(0, need, {});
-  // default first: the colored part from its color, the rest from what you hold most of, gold last
-  const res = { ...p.res };
-  const plan = Object.fromEntries(keys.map(r => [r, 0]));
-  if (s) { plan[color] = s; res[color] -= s; }
-  for (let left = w; left > 0; left--) {
-    const c = keys.filter(r => r !== 'gold' && res[r] > 0).sort((a, b) => res[b] - res[a])[0] || (res.gold > 0 ? 'gold' : null);
-    if (!c) break;
-    res[c] -= 1; plan[c] += 1;
-  }
-  const key = v => keys.map(r => v[r] || 0).join('-');
-  const pk = key(plan);
-  out.sort((a, b) => (key(b) === pk) - (key(a) === pk) || (a.gold || 0) - (b.gold || 0));
-  return out;
-}
-const canPay = (p, n) => totalRes(p) >= n;
+// One price rule (the engine's memberPrice, through ctx.price / ctx.payChoices): every discount and rule-changer
+// applies here as in the buy step (Intro Offer, Sponsor, Penny Pincher's double gold). how: Snap Up { anyColors },
+// Half Price { anyColors, half }, Talent Scout {} (at its cost).
+const SNAP = { anyColors: true }, HALF = { anyColors: true, half: true };
+const howFor = why => (why === 'Half Price' ? HALF : why === 'Snap Up' ? SNAP : {});
 const payLabel = v => Object.entries(v).filter(([, n]) => n).map(([c, n]) => `${n} ${c}`).join(', ') || 'nothing';
 
-/** Recruit `uid` from the face-up row, paying `s` colored + `w` any (the player picks how). */
-function buyAt(ctx, p, uid, s, w, why) {
+/** Recruit `uid` from the face-up row at the price `how` sets (the player picks how to pay). */
+function buyAt(ctx, p, uid, how, why) {
   const card = ctx.card(uid);
-  const color = colorOf(ctx, card);
-  const list = payVectors(ctx, p, color, s, w);
+  const list = ctx.payChoices(p, uid, how);
   if (!list.length) return;
-  const data = { uid, why };
+  const data = { uid, why, how };
   if (list.length === 1) { payAndRecruit(ctx, p, list[0], data); return; }
-  ctx.choose(p, `${why}: how do you pay ${s + w} for ${card.def.name}?`, list.map((v, i) => ({
+  ctx.choose(p, `${why}: how do you pay ${ctx.price(p, uid, how).total} for ${card.def.name}?`, list.map((v, i) => ({
     id: `pay:${ctx.state.resources.map(r => v[r] || 0).join('-')}`, label: payLabel(v), kind: 'pay', value: v, hint: i === 0 ? 1 : 0,
   })), `${Q}.pay`, data);
 }
-function payAndRecruit(ctx, p, v, { uid, why, fromPile }) {
+function payAndRecruit(ctx, p, v, { uid, why, fromPile, how = howFor(why) }) {
   const card = ctx.card(uid);
   const pile = ctx.state.pile;
   if (fromPile && pile.includes(uid)) {
@@ -75,7 +52,6 @@ function payAndRecruit(ctx, p, v, { uid, why, fromPile }) {
     ctx.state.shop.push(uid);
   }
   if (!ctx.state.shop.includes(uid)) { ctx.log(`${why}: ${card.def.name} is gone.`); return; }
-  for (const r in v) p.res[r] -= v[r];
   // a member's own recruit names the member ("P1's Talent Scout: pays …"); an action's names the action
   ctx.log(fromPile ? `${p.name}'s ${why}: pays ${payLabel(v)} for ${card.def.name}.` : `${why}: ${p.name} pays ${payLabel(v)} for ${card.def.name}.`);
   if ((why === 'Half Price' || (LEAN && why === 'Snap Up')) && !fromPile) {
@@ -83,24 +59,23 @@ function payAndRecruit(ctx, p, v, { uid, why, fromPile }) {
     // it is this turn's buy: it counts as a real first buy, so a second buy (Big Spender) still follows
     if (k >= 0) { q.splice(k, 1); p.turnBuys = (p.turnBuys || 0) + 1; }
   }
-  // paid for here, so the engine takes no payment; `paid` tells a copy (Green) this wasn't a free member
-  ctx.recruit(p, uid, { free: true, paid: Object.values(v).some(n => n > 0) });
+  // the engine takes the payment (and spends a discount) by the same price rule; `paid` tells a copy (Green) this
+  // wasn't a free member
+  ctx.recruit(p, uid, { spend: v, how, paid: Object.values(v).some(n => n > 0) });
 }
 
-/** Offer face-up members the player can pay for at price(card) in any colors. */
-function offerRow(ctx, p, price, why) {
-  const opts = ctx.shopCards().filter(c => canPay(p, price(c))).map(c => ({
-    id: `card:${c.uid}`, label: `${c.def.name} · pay ${price(c)}`, kind: 'card', value: c.uid, hint: botWorth(c) + (priceOf(c) - price(c)) * 0.5,
+/** Offer face-up members the player can pay for at the price `how` sets, in any colors. */
+function offerRow(ctx, p, how, why) {
+  const opts = ctx.shopCards().map(c => [c, ctx.price(p, c.uid, how)]).filter(([, pr]) => pr.afford).map(([c, pr]) => ({
+    id: `card:${c.uid}`, label: `${c.def.name} · pay ${pr.total}`, kind: 'card', value: c.uid, hint: botWorth(c) + (priceOf(c) - pr.total) * 0.5,
   }));
   if (!opts.length) { ctx.log(`${why}: ${p.name} can't pay for anything.`); return; }
   opts.push({ id: 'none', label: 'Recruit nothing', kind: 'pass', value: null, hint: -1 });
   ctx.choose(p, `${why}: recruit which member?`, opts, `${Q}.pickRow`, { why });
 }
-const half = c => Math.floor(priceOf(c) / 2);
-
-function bestRowValue(ctx, p, price) {
-  const ok = ctx.shopCards().filter(c => canPay(p, price(c)));
-  return ok.length ? Math.max(...ok.map(c => botWorth(c) + (priceOf(c) - price(c)) * 0.6)) : 0;
+function bestRowValue(ctx, p, how) {
+  const ok = ctx.shopCards().map(c => [c, ctx.price(p, c.uid, how)]).filter(([, pr]) => pr.afford);
+  return ok.length ? Math.max(...ok.map(([c, pr]) => botWorth(c) + (priceOf(c) - pr.total) * 0.6)) : 0;
 }
 
 function sweepRow(ctx) {
@@ -121,8 +96,8 @@ const market = {
   actions: [
     {
       key: 'bargain', ring: 1, name: 'Snap Up', text: '+2 blue, then you may recruit a face-up member now, in any colors.',
-      estimate: (ctx, p) => 2 + bestRowValue(ctx, p, priceOf) * 0.3,
-      resolve(ctx, p) { ctx.gain(p, B, 2, { fromAction: true }); offerRow(ctx, p, priceOf, 'Snap Up'); },
+      estimate: (ctx, p) => 2 + bestRowValue(ctx, p, SNAP) * 0.3,
+      resolve(ctx, p) { ctx.gain(p, B, 2, { fromAction: true }); offerRow(ctx, p, SNAP, 'Snap Up'); },
     },
     {
       key: 'restock', ring: 1, name: 'New Faces', text: '+2 blue, and sweep the face-up row: a fresh row of members comes out.',
@@ -141,8 +116,8 @@ const market = {
     },
     {
       key: 'clearance', ring: 2, name: 'Half Price', text: 'As your buy this turn: a face-up member for half its cost (rounded down), in any colors.',
-      estimate: (ctx, p) => bestRowValue(ctx, p, half),
-      resolve(ctx, p) { offerRow(ctx, p, half, 'Half Price'); },
+      estimate: (ctx, p) => bestRowValue(ctx, p, HALF),
+      resolve(ctx, p) { offerRow(ctx, p, HALF, 'Half Price'); },
     },
     {
       key: 'pricecheck', ring: 2, name: 'Show Off', text: 'Gain blue equal to half the cost of your priciest member.',
@@ -163,16 +138,15 @@ const market = {
   handlers: {
     pickRow(ctx, p, uid, data) {
       if (uid === null) { ctx.log(`${data.why}: ${p.name} recruits nothing.`); return; }
-      const c = ctx.card(uid);
-      buyAt(ctx, p, uid, 0, data.why === 'Half Price' ? half(c) : priceOf(c), data.why);
+      buyAt(ctx, p, uid, howFor(data.why), data.why);
     },
     pay(ctx, p, v, data) { payAndRecruit(ctx, p, v, data); },
     blackMarket(ctx, p, uid) {
       if (uid === null) return;
       const c = ctx.card(uid);
-      const list = payVectors(ctx, p, colorOf(ctx, c), c.def.s, c.def.w);
+      const list = scoutChoices(ctx, p, uid);
       if (!list.length) return;
-      const data = { uid, why: 'Talent Scout', fromPile: true };
+      const data = { uid, why: 'Talent Scout', fromPile: true, how: {} };
       if (list.length === 1) { payAndRecruit(ctx, p, list[0], data); return; }
       ctx.choose(p, `Talent Scout: how do you pay for ${c.def.name}?`, list.map((v, i) => ({
         id: `pay:${ctx.state.resources.map(r => v[r] || 0).join('-')}`, label: payLabel(v), kind: 'pay', value: v, hint: i === 0 ? 1 : 0,
@@ -237,7 +211,7 @@ const market = {
       activate: 'game',
       onActivate(ctx, owner) {
         const opts = ctx.state.pile.slice(0, 5).map(u => ctx.card(u))
-          .filter(c => payVectors(ctx, owner, colorOf(ctx, c), c.def.s, c.def.w).length)
+          .filter(c => scoutChoices(ctx, owner, c.uid).length)
           .map(c => ({ id: `card:${c.uid}`, label: `${c.def.name} (${priceOf(c)})`, kind: 'card', value: c.uid, hint: botWorth(c) }));
         if (!opts.length) { ctx.log(`${owner.name}'s Talent Scout has nothing affordable.`); return; }
         opts.push({ id: 'none', label: 'Recruit nothing', kind: 'pass', value: null, hint: -1 });
@@ -265,6 +239,8 @@ export function install() {
   return market;
 }
 
+// Talent Scout recruits from the pile at the member's own price, by the one price rule.
+const scoutChoices = (ctx, p, uid) => ctx.payChoices(p, uid, {});
 function rivalsBigger(ctx, p) { const mine = ctx.memberCount(p); return ctx.rivals(p).filter(o => ctx.memberCount(o) > mine).length; }
 function showroomCount(ctx) { return ctx.shopCards().filter(c => isBlue(c.def)).length; }
 function priciest(ctx, p) { return Math.max(0, ...ctx.membersOf(p).map(priceOf)); }

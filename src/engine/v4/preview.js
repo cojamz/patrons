@@ -10,14 +10,15 @@ const NODE_BUDGET = 36; // states explored per preview (a counted pick branches 
  * previewSpace(state, pid, q, i) → null when it can't be run, else
  * { exact, partial, leaves, you: { res:{color:[min,max]}, followers:[min,max], members:[min,max], turns:[min,max], discount:[min,max] },
  *   others: { res:{color:[min,max]}, followers:[min,max], members:[min,max] }, asks:[prompt], theirAsks:[prompt],
- *   swept: [uid] (face-up members it surely sends under the pile), sample }.
+ *   swept: [uid] (face-up members it surely sends under the pile), reasons: [line] (why a member changed it, or didn't), sample }.
  * exact: every branch gives the same to you. others: the rivals' summed change.
  */
 export function previewSpace(state, pid, q, i) {
   const key = `${q}-${i}`;
   let base;
   try {
-    base = structuredClone({ ...state, log: [], pending: null });
+    // notes: the engine's preview-only reasons (a member that changed the result, or one that stayed off and why)
+    base = structuredClone({ ...state, log: [], pending: null, notes: [] });
     if (base.slots[key] !== undefined && base.slots[key] !== pid) (base.squats[key] = base.squats[key] || []).push(pid);
     else base.slots[key] = pid;
     base.players[pid].left -= 1;
@@ -27,14 +28,16 @@ export function previewSpace(state, pid, q, i) {
   } catch { return null; }
   const leaves = [];
   const asks = new Set(), theirAsks = new Set();
-  let copies = null; // the spaces a copy action could take (its first "which space?" choice), as board keys
+  // the spaces this copy space could take, as board keys: only the space's own first choice, and only this round's
+  // spaces. A member it might recruit (Hand-pick → Sleepwalker, copying last round) is a branch, not the space's copy.
+  let copies = null;
   let nodes = 0, partial = false;
   const walk = s => {
     nodes++;
     if (!s.pending || s.pending.kind !== 'choose') { leaves.push(s); return; }
     (s.pending.player === pid ? asks : theirAsks).add(s.pending.prompt.replace(/\s*\(\d+ left\)/, ''));
-    if (!copies && s.pending.player === pid && s.pending.options.some(o => o.kind === 'space')) {
-      copies = [...new Set(s.pending.options.filter(o => o.kind === 'space' && typeof o.value === 'string').map(o => o.value.split('+')[0]))];
+    if (s === base && s.pending.player === pid && s.pending.options.some(o => o.kind === 'space')) {
+      copies = [...new Set(s.pending.options.filter(o => o.kind === 'space' && typeof o.value === 'string' && !String(o.id).startsWith('space:last:')).map(o => o.value.split('+')[0]))];
     }
     const opts = s.pending.options;
     // out of budget: follow only the first and last option (the extremes a list is usually ordered by)
@@ -71,6 +74,13 @@ export function previewSpace(state, pid, q, i) {
   const swept = leaves.map(sweptIn).reduce((a, b) => a.filter(u => b.includes(u)));
   const same = r => r[0] === r[1];
   const exact = Object.values(you.res).every(same) && same(you.followers) && same(you.members) && same(you.turns) && same(you.discount);
+  // reasons: one short line per member effect on your numbers ("Hustler: +3 gold", "Underdog: gold gain 3 → 6"), or
+  // a member that stayed off and why ("Underdog: no ×2 (Hustler’s +3 lands first)"), from every branch, for the hover
+  const reasons = [];
+  for (const s of leaves) for (const n of s.notes || []) {
+    const line = `${n.member}: ${n.text}`;
+    if (n.p === pid && !reasons.includes(line)) reasons.push(line);
+  }
   // sample: the table after the first branch (for the screen to recount a contest on); exact when `exact`
-  return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, sample: leaves[0] };
+  return { exact, partial, leaves: leaves.length, you, others, asks: [...asks], theirAsks: [...theirAsks], copies, swept, reasons: reasons.slice(0, 6), sample: leaves[0] };
 }

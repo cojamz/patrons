@@ -219,6 +219,8 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
       <div className="lt-yd">
         {pv && pv.copies ? <Row k="Can copy">{pv.copies.length ? pv.copies.map(k => spaceName(state, k)).join(', ') : 'nothing yet'}</Row> : null}
         {open && viewer != null && !state.over ? <Row k="You get"><YoudGet state={state} pid={viewer} q={q} i={i} /></Row> : null}
+        {/* why a member changed the number, or stayed off ("Underdog: no ×2 (Hustler’s +3 lands first)"), from the dry run */}
+        {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons>{pv.reasons.join(' · ')}</span></Row> : null}
         {race && <Row k={race.rule}>{race.text}</Row>}
         {pv && pv.swept && pv.swept.length ? <Row k="Sweeps away">{pv.swept.map((u, k) => <span key={u} data-swept={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}<small className="lt-swept-note"> back under the deck</small></Row> : null}
         {unlocks.length ? <Row k="Unlocks">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
@@ -300,7 +302,7 @@ export function ShopCardHover({ state, me, uid, optionFor = () => null, onPick, 
             {list.some(c => c.color === 'any') && <small className="lt-why">“any” is taken from what you hold most of{viewer && viewer.discount ? `; −${viewer.discount} discount` : ''}. You choose when you recruit.</small>}
             <Row k="Leaves">{state.resources.filter(r => pay.leaves[r]).map(r => <span key={r} className="lt-res"><b className="num">{pay.leaves[r]}</b><ResourceGlyph r={r} n={pay.leaves[r]} size={14} /></span>)}{!Object.values(pay.leaves).some(Boolean) && 'nothing'}</Row>
             {effect.map(e => <Row key={e.qid} k={e.rule.replace(/^Most /, '')}><span className={e.lost ? 'lt-warn' : 'lt-good'}>{e.text}</span></Row>)}
-          </> : <Row k="Need"><span className="lt-warn">{pay.short.total} more{pay.short.colorN ? ` (${pay.short.colorN} ${pay.short.color})` : ''}</span></Row>}
+          </> : <Row k="Need"><span className="lt-warn">{pay.short.text} more</span></Row>}
         </div>
       )}
       {opt && onPick && pinned && <button type="button" className="lt-btn pri" data-recruit={uid} onClick={() => onPick(opt.id)}>Recruit</button>}

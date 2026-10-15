@@ -13,44 +13,52 @@ import { piecesFor, PieceRow, rowWidth } from './_landmark-pieces.jsx';
 import './landmark.css';
 
 // the place's pixel size in board units, per ring (a 32×32 grid), and how big a piece is in screen px
-const PIX = { 1: 1.15, 2: 1.0, 3: 1.4 };
-const PIECE_PX = 14;
+const PIX = { 1: 1.15, 2: 1.0, 3: 1.25 };
+const PIECE_PX = 18;
 
-export default function Landmark({ q, action, ring, round, status, minions = [], size, effect, px = 1 }) {
-  const { h } = size;
+export default function Landmark({ q, action, ring, round, status, minions = [], size, effect, px = 1, angle = 0 }) {
   const sphere = (() => { try { return quadrant(q).resource || q; } catch { return q; } })();
   const lit = status === 'lit', locked = status === 'locked', taken = status === 'taken' || status === 'fresh';
   const u = PIX[ring] || 1;
   const P = 32 * u; // the place's side
-  const top = -h / 2;
   // the pieces row: PIECE_PX on screen, shrunk only if a long row would spill far past the box
   let s = PIECE_PX * px;
   const pieces = piecesFor(q, action, round);
-  if (pieces) { const wmax = size.w * 1.5; const w0 = rowWidth(pieces, s); if (w0 > wmax) s = Math.max(12 * px, s * (wmax / w0)); }
-  const rowTop = top - s * 0.15;
-  const placeTop = rowTop + s * 1.2;
+  if (pieces) { const wmax = size.w * 1.6; const w0 = rowWidth(pieces, s); if (w0 > wmax) s = Math.max(12 * px, s * (wmax / w0)); }
+  // the stack (pieces, place, pad) is centred in the box. The centre space at the bottom of the wheel hangs its
+  // pieces under the pad, so they never run into the hub.
+  const rowH = s * 1.15, padH0 = 5 * u * 1.3;
+  const stackH = rowH + P + padH0 * 0.5;
+  const a = ((angle % 360) + 360) % 360;
+  const under = ring === 3 && a > 120 && a < 240;
+  const placeTop = under ? -stackH / 2 : -stackH / 2 + rowH;
+  const rowTop = under ? placeTop + P + padH0 * 0.5 + s * 0.3 : -stackH / 2 - s * 0.05;
   const runs = placeRuns(q, action, sphere, ring);
-  const padW = 16 * u * 1.3, padH = 5 * u * 1.3;
-  const padY = placeTop + P - padH * 0.55;
+  const padW = 16 * u * 1.3, padH = padH0;
+  const padY = placeTop + P - padH * 0.5;
   const fresh = status === 'fresh' ? minions.find(m => m.fresh) : null;
   return (
     <g className={`lm lm-${status} lm-r${ring}`} data-lm={`${q}.${action.key}`}>
       {/* the lamp's pool of light on the paper under a lit place */}
       {lit && <ellipse className="lm-pool" cx={0} cy={placeTop + P * 0.62} rx={P * 0.78} ry={P * 0.5} />}
       <g className="lm-place" opacity={taken ? 0.4 : 1}>
-        <svg x={-P / 2} y={placeTop} width={P} height={P} viewBox="0 0 32 32" shapeRendering="crispEdges" overflow="visible" className={locked ? 'lm-shut' : ''}>
+        <svg x={-P / 2} y={placeTop} width={P} height={P} style={{ width: P, height: P, overflow: 'visible' }} viewBox="0 0 32 32" shapeRendering="crispEdges" overflow="visible" className={locked ? 'lm-shut' : ''}>
           {runs.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
           {locked && <g className="lm-shutter">{[9, 13, 17, 21, 25].map(y => <rect key={y} x="5" y={y} width="22" height="3" />)}</g>}
         </svg>
       </g>
       {/* the pad the minion stands on */}
-      <svg x={-padW / 2} y={padY} width={padW} height={padH} viewBox="0 0 16 5" shapeRendering="crispEdges" className="lm-pad" opacity={locked ? 0.35 : 1}>
+      <svg x={-padW / 2} y={padY} width={padW} height={padH} style={{ width: padW, height: padH }} viewBox="0 0 16 5" shapeRendering="crispEdges" className="lm-pad" opacity={locked ? 0.35 : 1}>
         {padRuns.map((r, k) => <rect key={k} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
       </svg>
       {locked
         ? <text className="lm-numeral" x={0} y={placeTop + P * 0.56} fontSize={15 * px} textAnchor="middle" dominantBaseline="central">{['', 'I', 'II', 'III'][ring]}</text>
         : pieces
-          ? <g transform={`translate(0 ${rowTop})`} opacity={taken ? 0.55 : 1}><PieceRow pieces={pieces} s={s} /></g>
+          ? <g transform={`translate(0 ${rowTop})`} opacity={taken ? 0.55 : 1}>
+            {/* hung under the pad: a paper tag in the quadrant's ink, so it reads as this place's and not a neighbour's */}
+            {under && <rect className="lm-tag" x={-rowWidth(pieces, s) / 2 - s * 0.3} y={-s * 0.32} width={rowWidth(pieces, s) + s * 0.6} height={s * 1.5} rx={s * 0.4} stroke={`var(--${sphere})`} />}
+            <PieceRow pieces={pieces} s={s} />
+          </g>
           : <FaceText text={effect} px={px} w={size.w * 1.4} h={s * 1.3} y={rowTop + s * 0.55} />}
       {minions.map((m, k) => <FaceMinion key={m.pid} m={m} x={(k - (minions.length - 1) / 2) * 15 * u} y={padY + padH * 0.6} size={20 * Math.min(1.15, u)} />)}
       {fresh && <ellipse className="lm-fresh" cx={0} cy={placeTop + P * 0.5} rx={P * 0.66} ry={P * 0.62} stroke={fresh.color} />}
@@ -58,4 +66,4 @@ export default function Landmark({ q, action, ring, round, status, minions = [],
   );
 }
 // a box a little taller than wide, so the pieces fit over the place
-Landmark.box = { 1: [62, 66], 2: [50, 58], 3: [64, 72] };
+Landmark.box = { 1: [62, 62], 2: [52, 56], 3: [60, 64] };

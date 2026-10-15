@@ -6,7 +6,9 @@ import { runGame, MOVE_CAP } from './fuzz-runner.js';
 import { games } from './budget.js';
 
 // No wall-clock timeouts: games are bounded by move caps, and the blocks by game counts (budget.js).
-const GAMES = games(170, 12); // per seat count
+// per seat count. The verdict plays 85 (catches a bug in ≥3.5% of games at a seat count, ≥1.2% over all 255, with 95%
+// confidence); the nightly full run (check:v4:full) all 170 (≥1.7%); the fast gate 12. budget.js has the levels.
+const GAMES = games(170, 12);
 
 describe('bot fuzz: invariants after every move', () => {
   for (const n of [2, 3, 4]) {

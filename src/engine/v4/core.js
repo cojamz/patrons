@@ -350,7 +350,7 @@ function inputFor(state, task) {
     case 'choose': {
       // only the options whose cards are still where they were when the choice was queued (see liveOptions)
       const options = liveOptions(state, task);
-      if (options.length || !task.options.length) return { kind: 'choose', prompt: task.prompt, options };
+      if (options.length || !task.options.length) return { kind: 'choose', prompt: task.prompt, options, ...(task.count ? { count: task.count } : {}) };
       return {
         kind: 'choose', prompt: task.prompt, options: [],
         onEmpty: () => log(state, `${task.prompt.split(':')[0]}: nothing left to choose (${p.name}'s options were taken or moved first), so nothing happens.`),
@@ -745,13 +745,19 @@ function gain(state, p, color, n, { fromAction = false } = {}) {
   const ctx = ctxFor(state);
   // conversions (Midas) first, then amount changes (Underdog), so member order never matters.
   // Each one that changes the gain says so in the log ("Ana's Underdog: gold gain 4 → 8").
-  const said = (def, c0, n0) => {
-    if (g.color === c0 && g.n === n0) return;
+  // In a preview (state.notes), a member that could have changed the gain and didn't says why (def.whyNot).
+  const said = (card, def, c0, n0) => {
+    if (g.color === c0 && g.n === n0) {
+      const why = state.notes && def.whyNot ? def.whyNot(ctx, p, card, g) : null;
+      if (why) note(state, p, def.name, why);
+      return;
+    }
     const what = g.color === c0 ? `${c0} gain ${n0} → ${g.n}` : `${n0} ${c0} comes as ${g.n} ${g.color}`;
     log(state, `${p.name}'s ${def.name}: ${what}.`);
+    note(state, p, def.name, what);
   };
-  eachMemberOf(state, p, (card, def) => { if (def.convertGain) { const c0 = g.color, n0 = g.n; def.convertGain(ctx, p, card, g); said(def, c0, n0); } });
-  eachMemberOf(state, p, (card, def) => { if (def.modifyGain) { const c0 = g.color, n0 = g.n; def.modifyGain(ctx, p, card, g); said(def, c0, n0); } });
+  eachMemberOf(state, p, (card, def) => { if (def.convertGain) { const c0 = g.color, n0 = g.n; def.convertGain(ctx, p, card, g); said(card, def, c0, n0); } });
+  eachMemberOf(state, p, (card, def) => { if (def.modifyGain) { const c0 = g.color, n0 = g.n; def.modifyGain(ctx, p, card, g); said(card, def, c0, n0); } });
   p.res[g.color] = (p.res[g.color] || 0) + g.n;
   eachMemberOf(state, p, (card, def) => { if (def.afterGain) def.afterGain(ctx, p, card, g); });
 }
@@ -796,6 +802,7 @@ function traceChanges(state, before, owner, def) {
     const d = (o.discount || 0) - (b.discount || 0);
     if (d > 0) parts.push(`next member costs ${d} less`);
     if (!parts.length) return;
+    if (o === owner) note(state, owner, name, parts.join(', '), Object.fromEntries(Object.keys({ ...b.res, ...o.res }).map(r => [r, (o.res[r] || 0) - (b.res[r] || 0)]).filter(([, d]) => d)));
     out.push(o === owner ? `${owner.name}'s ${name}: ${parts.join(', ')}.` : `${o.name} ${parts.join(', ')} (${owner.name}'s ${name}).`);
   });
   if (!out.length) return;
@@ -937,6 +944,9 @@ function ctxFor(state) {
     shopCards: () => state.shop.map(u => wrap(state, state.cards[u])),
     gain: (p, color, n, opts) => gain(state, p, color, n, opts),
     recruit: (p, uid, opts) => recruit(state, p, uid, opts),
+    /** The one price rule (memberPrice) and the ways to pay it (paymentChoices), for recruits outside the buy step. */
+    price: (p, uid, how) => memberPrice(state, p, uid, how),
+    payChoices: (p, uid, how) => paymentChoices(state, p, uid, how),
     log: text => log(state, text),
     cardLeaves: (p, uid) => cardLeaves(state, p, uid),
     /** Run fn on behalf of owner's member `name` (a hook content code calls itself, e.g. Choir reacting to a copy):
@@ -1002,12 +1012,13 @@ function ctxFor(state) {
       eachMember(state, (owner, card, def) => { if (def.onSteal) def.onSteal(ctx, owner, card, info); });
       return n;
     },
-    // Queue a decision for player p. It runs before anything else still queued.
-    choose(p, prompt, options, handler, data = null) {
+    // Queue a decision for player p. It runs before anything else still queued. extra.count: a counted pick's
+    // progress, { of, left } (Collect Debts: 1 of 3 taken), kept on the task so it survives a save and load.
+    choose(p, prompt, options, handler, data = null, extra = {}) {
       if (!options.length) return;
       // follow-up choices queued during one resolution keep their call order
       const at = state.queue.findIndex(t => !t._fresh);
-      const task = { t: 'choose', p: p.id, prompt, options: options.map(o => pinCards(state, o)), h: handler, data, _fresh: true };
+      const task = { t: 'choose', p: p.id, prompt, options: options.map(o => pinCards(state, o)), h: handler, data, ...(extra.count ? { count: extra.count } : {}), _fresh: true };
       state.queue.splice(at < 0 ? state.queue.length : at, 0, task);
     },
   };
@@ -1040,6 +1051,15 @@ export function liveOptions(state, task) {
 function clearFresh(state) { for (const t of state.queue) if (t._fresh) delete t._fresh; }
 
 // ---------- misc ----------
+
+/**
+ * Preview-only reasons. previewSpace runs a space on a copy that carries state.notes (an array); there, every member
+ * effect that changes the player's numbers adds { p, member, text, res } and a member that could have and didn't
+ * says why (def.whyNot). A real game's state never has notes, so this does nothing there.
+ */
+function note(state, p, member, text, res = null) {
+  if (Array.isArray(state.notes)) state.notes.push({ p: p.id, member, text, ...(res ? { res } : {}) });
+}
 
 function log(state, text) {
   state.log.push(text);

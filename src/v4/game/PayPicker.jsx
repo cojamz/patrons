@@ -12,6 +12,7 @@ import { useDialog, TurnOf } from './parts.jsx';
 import { Rich, CostPips } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { CoinMark } from './Glyphs.jsx';
+import { priceNotes } from './priceNotes.js';
 
 const sum = v => Object.values(v).reduce((a, b) => a + (b || 0), 0);
 const idOf = (res, v) => `pay:${res.map(r => v[r] || 0).join('-')}`;
@@ -38,6 +39,16 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
   const title = def ? `Recruit ${def.name}` : `Buy ${tier.get} follower${tier.get > 1 ? 's' : ''}`;
   const parts = def ? costParts(def, state.resources) : [];
   const box = useDialog(back ? () => onPick('back') : null);
+  // every rule-changer bending this price, said in a line (RC1 strategist: 2 gold paid a "4 gold" cost and nothing said why)
+  const notes = useMemo(() => (def ? priceNotes(state, p, pend.uid) : []), [pend]); // eslint-disable-line react-hooks/exhaustive-deps
+  // the dialog holds the keyboard: Confirm takes focus as soon as it can be pressed, so Enter pays (RC1 saboteur:
+  // focus stayed on the page, and Enter did nothing until you tabbed in); closing hands focus back (useDialog)
+  useEffect(() => {
+    const el = box.current;
+    if (!el || busy || el.contains(document.activeElement)) return;
+    const b = el.querySelector('[data-autofocus]:not([disabled])') || el.querySelector('button:not([disabled])');
+    if (b) b.focus({ preventScroll: true });
+  }, [pend, busy, !!match]); // eslint-disable-line react-hooks/exhaustive-deps
   const say = text => setNudge(n => ({ text, n: (n ? n.n : 0) + 1 }));
 
   // tap one of your resources: into the cost, or (cost full) swapped in for another color if that's a legal way
@@ -66,7 +77,12 @@ export default function PayPicker({ state, onPick, busy, turnOf = null }) {
           {turnOf && <TurnOf player={turnOf} />}
           <h2>{title}</h2>
           {def && <span className="ability"><Rich text={def.text} /> <Follower n={def.f} className="star" /></span>}
-          <span className="hint">Costs {def ? <CostPips parts={parts} /> : tierCostText(tier)}{def && p.discount ? ' · your discount applies' : ''}</span>
+          <span className="hint">Costs {def ? <CostPips parts={parts} /> : tierCostText(tier)}</span>
+          {notes.length ? (
+            <ul className="pay-rules" data-pay-rules={notes.length}>
+              {notes.map(n => <li key={n.key} data-pay-rule={n.key}>{n.text}</li>)}
+            </ul>
+          ) : null}
         </div>
 
         <div className={`pay-slots${match ? ' done' : ''}`} role="group" aria-label={`The cost: ${total} of ${need} paid. Tap a coin to take it back.`}>

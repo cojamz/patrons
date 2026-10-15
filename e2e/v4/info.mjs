@@ -1,7 +1,7 @@
 // E2E: every game-meaningful element explains itself (Cory, 2026-10-14: every UI element has a hover with more info,
 // long-press/tap on phone), and followers are never a star. Build-failing assertions, at several steps of a real
 // hot-seat game (1 person + 3 bots):
-//  (a) every visible game element (seats, shop cards, resources, members, leaders/minions, follower marks, badges,
+//  (a) every visible game element (seats, shop cards, resources, members, leaders/minions, follower marks,
 //      follower buys, spaces, contest rules, resource symbols) carries hover info: a title, a hover/tap card
 //      (data-tip / aria-haspopup), or (spaces) the board's own space card;
 //  (b) hovering a shop card and a board space shows a card; on a touch screen a long-press on a titled element
@@ -35,7 +35,7 @@ const fail = (msg, step) => fails.push(`[${step}] ${msg}`);
 // game-meaningful elements on the Lamplit table (the older Players / QuadrantPanel / SeatRail / Shop / YourTable are gone)
 const GAME = [
   '[data-region] [data-uid]', '[data-cult] .cs-head', '[data-cult] [data-res]',
-  '[data-leader-ring]', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
+  '[data-leader-ring]', '.fol-mark', '.follower', '.lt-rate', '.fb', '.slot',
   '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term', '[data-deck]',
   '[data-rank] .rk', '.cs-order',
 ].join(',');
@@ -50,7 +50,7 @@ async function audit(page, step) {
       if (e.matches('.slot')) return true; // the board's space card (checked by hovering below)
       // a symbol inside something that explains itself (a pip in a titled cost) is covered by its parent
       const up = e.parentElement && e.parentElement.closest('[title], [data-tip], [aria-haspopup]');
-      return !!(up && up.contains(e) && e.matches('.pip, .res-glyph, .follower, .fol-mark, .badge-mark'));
+      return !!(up && up.contains(e) && e.matches('.pip, .res-glyph, .follower, .fol-mark'));
     };
     const miss = [];
     let n = 0;

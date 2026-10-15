@@ -28,7 +28,7 @@ import { Sprite, iconFor, spriteId, withOutline, Follower, FaceMinion, FaceText,
 import { ResourceGlyph } from '../Glyphs.jsx';
 import './sum.css';
 
-const INK = '#2a1f17', INK2 = '#5f4e3d', CARD = '#f8f0dd', HOOD = '#4a3b2d', LAMP = '#ffcf6b', TAG = '#7a2f22', CREAM = '#fff6e4';
+const INK = '#2a1f17', INK2 = '#5f4e3d', CARD = '#f8f0dd', HOODC = '#6b5440', LAMP = '#ffcf6b', TAG = '#7a2f22', CREAM = '#fff6e4';
 const INKS = { gold: '#c99327', red: '#b4533e', blue: '#4f7ea8', green: '#3d8c66', magenta: '#b2386c', purple: '#7d5ba6', silver: '#8794a2', yellow: '#c4a93a', white: '#e6dcc6' };
 const RAINBOW = ['gold', 'red', 'magenta', 'purple', 'blue', 'green'];
 const RES = new Set(Object.keys(INKS));
@@ -57,7 +57,7 @@ const plus = v => `+${v}`;
 const SUMS = {
   // gold: coins
   'gold.jv': ({ n }) => [R('gold', plus(n(0, 3))), DOT, HOOD(), R('gold', plus(n(1, 1)))], //   +3● · ☗+1●   (a gift to a player you pick)
-  'gold.rush': ({ n, r }) => [R('gold', plus(n(0, 2) * r)), GROWS], //                            +4● ▮▮▯
+  'gold.rush': ({ n, r }) => [R('gold', plus(n(0, 2) * r))], //                            +4● ▮▮▯
   'gold.discount': ({ n }) => [TAGT(`−${n(0, 4)}`), MEM()], //                                    [−4] ▢        (your next member)
   'gold.steal': ({ n }) => [HOOD(), ARROW, R('gold', n(0, 3))], //                                ☗ → 3●        (split as you like)
   'gold.windfall': ({ n }) => [R('gold', plus(n(0, 1))), PER, MEM()], //                          +1● / ▢
@@ -72,7 +72,7 @@ const SUMS = {
   'red.trade': () => [MEM(), SWAP, MEM({ rival: true })], //                                       ▢ ⇄ ☗▢        (up to +2 cost: hover)
   'red.take': () => [MEM(), TAGT('free')], //                                                      ▢ [free]      (any face-up member)
   // purple: tempo
-  'purple.hourly': ({ n, r }) => [R('purple', plus(n(r - 1, 3 + r))), GROWS], //                   +5⧗ ▮▮▯
+  'purple.hourly': ({ n, r }) => [R('purple', plus(n(r - 1, 3 + r)))], //                   +5⧗ ▮▮▯
   'purple.catchup': ({ n }) => [R('purple', plus(n(0, 1))), NUM(plus(n(1, 2))), PER, HOOD({ mod: 'high' })], // +1⧗ +2/▴☗
   'purple.windup': ({ n }) => [R('purple', plus(n(0, 1))), PER, MIN()], //                         +1⧗ / ♟       (on the board)
   'purple.planahead': ({ n }) => [R('purple', plus(n(0, 2))), PER, MIN({ left: true })], //         +2⧗ / ♙       (still to place)
@@ -102,7 +102,7 @@ const SUMS = {
   'market.pricecheck': () => [R('blue', '+'), EQ, NUM('½'), MEM({ mod: 'high' })], //              +■ = ½▴▢
   'market.spree': ({ n }) => [TAGT(), X(n(0, 3))], //                                              [ ] ×3
   // thieves (magenta): take
-  'thieves.pickpocket': ({ r }) => [HOOD(), ARROW, R('magenta', r + 1), GROWS], //                 ☗ → 3◆ ▮▮▯
+  'thieves.pickpocket': ({ r }) => [HOOD(), ARROW, R('magenta', r + 1)], //                 ☗ → 3◆ ▮▮▯
   'thieves.tipoff': () => [R('magenta', '+1'), PER, HOOD({ mod: 'high' })], //                     +1◆ / ▴☗      (each richer player)
   'thieves.hideout': () => [HOOD(), ARROW, R('magenta', 1), DOT, SAFE], //                         ☗ → 1◆ · ⛨
   'thieves.rob': ({ n }) => [HOOD({ all: true }), ARROW, R('magenta', n(0, 3))], //                ☗☗ → 3◆      (at least 1 from each)
@@ -110,14 +110,14 @@ const SUMS = {
   'thieves.heist': () => [MEM({ rival: true }), ARROW, MEM()], //                                  ☗▢ → ▢        (they recruit one back: hover)
   // trading (white): followers
   'trading.haggle': ({ n }) => [R('white', plus(n(0, 2))), NUM(plus(n(1, 1))), PER, HOOD({ mod: 'high' })], // +2⬡ +1/▴☗
-  'trading.buylow': ({ n, r }) => [R('any', n(0, 2) * r), ARROW, FOL(n(0, 2) * r), GROWS], //       2◌ → 2☺
+  'trading.buylow': ({ n, r }) => [R('any', n(0, 2) * r), ARROW, FOL(n(0, 2) * r)], //       2◌ → 2☺
   'trading.pawn': ({ r }) => [FOL(plus(r)), WORD('or'), R('white', plus(2 * r))], //               +1☺ or +2⬡
   'trading.sellhigh': ({ n }) => [FOL(n(0, 2)), ARROW, R('white', n(0, 2) * n(1, 3))], //            2☺ → 6⬡
   'trading.dividend': () => [R('white', '+1'), PER, FOL()], //                                     +1⬡ / ☺
   'trading.boom': () => [WORD('all'), R('any'), ARROW, FOL()], //                                  all◌ → ☺      (keep white if you like)
   // echo (green): copies
   'echo.hum': ({ n }) => [R('green', plus(n(0, 3)))], //                                           +3🍃
-  'echo.chant': ({ n, r }) => [R('green', plus(n(0, 2) * r)), GROWS], //                           +4🍃 ▮▮▯
+  'echo.chant': ({ n, r }) => [R('green', plus(n(0, 2) * r))], //                           +4🍃 ▮▮▯
   'echo.echo': () => [COPY, HOOD()], //                                                            ⧉☗            (since your last turn)
   'echo.encore': () => [COPY, WORD('any')], //                                                     ⧉ any         (this round)
   'echo.refrain': ({ n }) => [R('green', plus(n(0, 2))), DOT, COPY, MIN()], //                     +2🍃 · ⧉♟
@@ -177,12 +177,18 @@ function Res({ r, x, U }) {
       </g>
     );
   }
-  return <g transform={`translate(${x} ${-U / 2})`}><ResourceGlyph r={r} size={U} decorative /></g>;
+  return <Box x={x} y={-U / 2} s={U}><ResourceGlyph r={r} size={1} decorative /></Box>;
+}
+
+/** A nested picture (Sprite, ResourceGlyph, Follower) s units square at (x, y). The stage's CSS sizes every svg on it
+ *  100%, so the wrapper pins its own size inline and the picture inside fills it (drawn at size 1 in a 1×1 box). */
+function Box({ x, y, s, children }) {
+  return <svg x={x} y={y} width={s} height={s} viewBox="0 0 1 1" overflow="visible" style={{ width: s, height: s, overflow: 'visible' }}>{children}</svg>;
 }
 
 /** ▴ / ▾: most / fewest, a small ink chevron. */
 function Mod({ x, U, up }) {
-  const w = U * 0.42, h = U * 0.34, y0 = up ? h / 2 : -h / 2, y1 = -y0;
+  const w = U * 0.5, h = U * 0.42, y0 = up ? h / 2 : -h / 2, y1 = -y0;
   return <path d={`M${x},${y0}L${x + w / 2},${y1}L${x + w},${y0}Z`} fill={INK} />;
 }
 
@@ -203,14 +209,15 @@ const mixLight = hex => {
   return `rgb(${p.map(v => Math.round(v + (248 - v) * 0.72)).join(',')})`;
 };
 
-/** A rival: a dark hood with two lamp-lit eyes (16×16 grid). */
+/** A rival: a cowled figure, head and shoulders, its face in shadow with two lamp-lit eyes (16×16 grid). */
 function Hood({ x, U, light = false }) {
   const s = U / 16;
   return (
     <g transform={`translate(${x} ${-U / 2}) scale(${s})`}>
-      <path d="M8 1C4.4 1 2.4 4.3 2.4 8.3V15H13.6V8.3C13.6 4.3 11.6 1 8 1Z" fill={light ? '#7a6550' : HOOD} stroke={INK} strokeWidth="1.2" />
-      <path d="M8 5C6 5 5.1 6.7 5.1 8.7V11.6H10.9V8.7C10.9 6.7 10 5 8 5Z" fill="#160f0b" />
-      <rect x="6.1" y="8.3" width="1.4" height="1.2" fill="#ffd978" /><rect x="8.5" y="8.3" width="1.4" height="1.2" fill="#ffd978" />
+      <path d="M.8 15.6C.8 12.2 2.6 10.4 5 9.9H11C13.4 10.4 15.2 12.2 15.2 15.6Z" fill={light ? '#9a8266' : HOODC} stroke={INK} strokeWidth="1.1" strokeLinejoin="round" />
+      <path d="M8 .4L10.6 2.2C12.2 3.4 12.9 5.2 12.9 7.4V11.6H3.1V7.4C3.1 5.2 3.8 3.4 5.4 2.2Z" fill={light ? '#9a8266' : HOODC} stroke={INK} strokeWidth="1.1" strokeLinejoin="round" />
+      <path d="M8 4.6C6.2 4.6 5.3 6 5.3 7.6V11.4H10.7V7.6C10.7 6 9.8 4.6 8 4.6Z" fill="#140d09" />
+      <rect x="5.9" y="7.4" width="1.7" height="1.5" fill="#ffd978" /><rect x="8.4" y="7.4" width="1.7" height="1.5" fill="#ffd978" />
     </g>
   );
 }
@@ -293,10 +300,10 @@ function Tag({ x, U, F, t }) {
 function widthOf(t, U, F) {
   const num = s => (s ? textW(s, F) + U * 0.06 : 0);
   switch (t.k) {
-    case 'res': return num(t.n) + (t.mod ? U * 0.5 : 0) + U;
-    case 'fol': return num(t.n) + U * 0.86;
-    case 'mem': return (t.mod === 'low' || t.mod === 'high' ? U * 0.5 : 0) + (t.rival ? U * 0.72 : 0) + (t.row ? U * 1.3 : U * 0.75) + (t.mod === 'new' ? U * 0.3 : 0);
-    case 'hood': return (t.mod ? U * 0.5 : 0) + (t.all ? U * 1.4 : U * 0.95);
+    case 'res': return num(t.n) + (t.mod ? U * 0.6 : 0) + U;
+    case 'fol': return num(t.n) + U * 1.0;
+    case 'mem': return (t.mod === 'low' || t.mod === 'high' ? U * 0.6 : 0) + (t.rival ? U * 0.72 : 0) + (t.row ? U * 1.75 : U * 0.75) + (t.mod === 'new' ? U * 0.36 : 0);
+    case 'hood': return (t.mod ? U * 0.6 : 0) + (t.all ? U * 1.45 : U * 0.95);
     case 'min': return U * 0.82;
     case 'num': return textW(t.t, F);
     case 'word': return textW(t.t, F) + U * 0.1;
@@ -321,28 +328,28 @@ function drawTerm(t, x, U, F, r, key) {
   const nw = s => (s ? textW(s, F) + U * 0.06 : 0);
   switch (t.k) {
     case 'res': {
-      const m = t.mod ? U * 0.5 : 0;
+      const m = t.mod ? U * 0.6 : 0;
       return <g key={key}>{num(t.n, x)}{t.mod ? <Mod x={x + nw(t.n) + U * 0.02} U={U} up={t.mod === 'high'} /> : null}<Res r={t.r} x={x + nw(t.n) + m} U={U} /></g>;
     }
     case 'fol': return (
-      <g key={key}>{num(t.n, x)}<g transform={`translate(${x + nw(t.n) - U * 0.07} ${-U / 2})`}><Follower size={U} /></g></g>
+      <g key={key}>{num(t.n, x)}<Box x={x + nw(t.n) - U * 0.1} y={-U * 0.62} s={U * 1.18}><Follower size={1} /></Box></g>
     );
     case 'mem': {
       let at = x;
       const parts = [];
-      if (t.mod === 'low' || t.mod === 'high') { parts.push(<Mod key="m" x={at} U={U} up={t.mod === 'high'} />); at += U * 0.5; }
+      if (t.mod === 'low' || t.mod === 'high') { parts.push(<Mod key="m" x={at} U={U} up={t.mod === 'high'} />); at += U * 0.6; }
       if (t.rival) { parts.push(<Hood key="h" x={at - U * 0.06} U={U * 0.9} />); at += U * 0.72; }
       if (t.row) {
-        parts.push(<Card key="c0" x={at} U={U * 0.86} rot={-14} dy={U * 0.1} />, <Card key="c1" x={at + U * 0.28} U={U * 0.86} dy={U * 0.04} />, <Card key="c2" x={at + U * 0.56} U={U * 0.86} rot={14} dy={U * 0.1} />);
+        parts.push(<Card key="c0" x={at} U={U} />, <Card key="c1" x={at + U * 0.5} U={U} />, <Card key="c2" x={at + U * 1.0} U={U} />);
       } else parts.push(<Card key="c" x={at} U={U} tint={t.tint} />);
       if (t.mod === 'new') {
-        const cx = at + U * 0.82, cy = -U * 0.36, a = U * 0.2;
+        const cx = at + U * 0.8, cy = -U * 0.34, a = U * 0.3;
         parts.push(<path key="n" d={`M${cx},${cy - a}L${cx + a * 0.3},${cy - a * 0.3}L${cx + a},${cy}L${cx + a * 0.3},${cy + a * 0.3}L${cx},${cy + a}L${cx - a * 0.3},${cy + a * 0.3}L${cx - a},${cy}L${cx - a * 0.3},${cy - a * 0.3}Z`} fill={LAMP} stroke={INK} strokeWidth={U * 0.06} />);
       }
       return <g key={key}>{parts}</g>;
     }
     case 'hood': {
-      const m = t.mod ? U * 0.5 : 0;
+      const m = t.mod ? U * 0.6 : 0;
       return (
         <g key={key}>
           {t.mod ? <Mod x={x} U={U} up /> : null}
@@ -413,7 +420,7 @@ function hatchRects(id) {
 }
 const Hatched = memo(function Hatched({ id, size }) {
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} shapeRendering="crispEdges" aria-hidden="true" className="sum-hatch">
+    <svg viewBox="0 0 24 24" width={size} height={size} style={{ width: size, height: size }} shapeRendering="crispEdges" aria-hidden="true" className="sum-hatch">
       {hatchRects(id).map((p, k) => <rect key={k} x={p.x} y={p.y} width="1" height="1" fill={p.o ? 'rgba(42,31,23,.5)' : 'rgba(42,31,23,.3)'} />)}
     </svg>
   );
@@ -445,9 +452,7 @@ export default function Sum({ q, action, ring, round, status, minions = [], name
   const mover = minions.find(m => m.fresh);
   const icon = locked
     ? <Hatched id={ids} size={I} />
-    : drawn
-      ? <Sprite id={ids} kind="action" sphere={Q.resource} size={I} />
-      : <ResourceGlyph r={Q.resource} size={I} decorative />;
+    : <Box x={0} y={0} s={I}>{drawn ? <Sprite id={ids} kind="action" sphere={Q.resource} size={1} /> : <ResourceGlyph r={Q.resource} size={1} decorative />}</Box>;
   const mSize = Math.max(18 * px, I * 0.62);
   return (
     <g className={`sum-face ${status}`} data-sum={`${q}.${action.key}`}>

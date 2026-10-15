@@ -113,6 +113,17 @@ export default {
           g.n *= 2; g.doubled = true;
         }
       },
+      // the preview's reason when a gold gain isn't doubled (no rule here): who made you the richest, if it was
+      // a gain earlier in the same move (Hustler's +3 lands before the space's own gold)
+      whyNot(ctx, owner, card, g) {
+        if (g.color !== 'gold' || g.doubled) return null;
+        const top = Math.max(0, ...ctx.rivals(owner).map(o => o.res.gold || 0));
+        if (top > owner.res.gold) return null;
+        const earlier = (ctx.state.notes || []).filter(n => n.p === owner.id && n.member !== card.def.name && n.res && n.res.gold > 0);
+        const got = earlier.reduce((t, n) => t + n.res.gold, 0);
+        if (earlier.length && owner.res.gold - got < top) return `no ×2 (${earlier.map(n => `${n.member}’s +${n.res.gold}`).join(', ')} lands first)`;
+        return `no ×2 (no one has more gold than your ${owner.res.gold})`;
+      },
     }),
     m('tinker', 'Tinker', 4, 2, 'Whenever an action gains you another resource, also gain half as much gold (rounded up).', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color !== 'gold' && g.n > 0) owner.res.gold += Math.ceil(g.n / 2); },
@@ -172,9 +183,11 @@ function stealStep(ctx, p, data) {
   const left = o => o.res.gold - (data.picked[o.id] || 0);
   const targets = ctx.rivals(p).filter(o => left(o) > 0 && ctx.canSteal(p, o));
   if (data.left > 0 && targets.length) {
+    // the count rides on the task (1 of 3 taken), so a reload mid-split shows the same progress
+    const taken = Object.values(data.picked).reduce((a, b) => a + b, 0);
     ctx.choose(p, `Collect Debts: take 1 gold from… (${data.left} left)`, targets.map(o => ({
       id: `player:${o.id}`, label: `${o.name} · ${left(o)} gold`, kind: 'player', value: o.id, hint: left(o),
-    })), 'gold.steal', data);
+    })), 'gold.steal', data, { count: { of: data.left + taken, left: data.left } });
     return;
   }
   let got = 0;

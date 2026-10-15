@@ -1,11 +1,15 @@
 // Reload-proofing. Local games save their state and setup on every change; online games remember the room and
 // your player id so a reload rejoins your seat. Everything is wrapped: storage can be missing or full.
 import { stateProblem, gameRecord } from './session/record.js';
+import { createTabLease, OWNER_CHANNEL } from './session/owner.js';
 
 const LOCAL = 'patrons.v4.local';
 const ONLINE = 'patrons.v4.online';
 // A save this build can't resume, set aside so its game record can still be copied (see loadLocal).
 const STALE = 'patrons.v4.stale';
+// The last finished local game, kept after its results have been on screen so a reload (or home's "Last game's
+// results") shows them again; dropped when a new local game starts.
+const LAST = 'patrons.v4.last';
 
 // Local games live in localStorage (resume from any later visit). Online seats live in sessionStorage: a reload of
 // this tab rejoins, but a second tab is a second person, not a copy of you.
@@ -58,11 +62,55 @@ export const staleRecord = () => {
   const v = staleSave();
   return v ? gameRecord(v.state, { state: v.state, setAside: { reason: v.reason, message: v.message, at: v.at, savedAt: v.savedAt } }) : null;
 };
-export const saveLocal = (config, state, undo = null) => { if (state) write(LOCAL, { config, state, undo, savedAt: Date.now() }); };
-/** Starting over or leaving: forget the saved game and its round-start snapshot. */
-export const clearLocal = () => { write(LOCAL, null); write(ROUND_START, null); };
-/** The results screen has rendered: the game is done, nothing left to resume. */
-export const finishLocal = clearLocal;
+// ---------- one tab owns the local game (session/owner.js) ----------
+let lease = null;
+/** This page's claim on the local game (created on first use: BroadcastChannel, with the storage event as fallback). */
+export function localLease() {
+  if (lease) return lease;
+  let channel = null;
+  try { if (typeof BroadcastChannel !== 'undefined') channel = new BroadcastChannel(OWNER_CHANNEL); } catch { channel = null; }
+  try { channel?.unref?.(); } catch { /* Node (tests) only: an open channel must not keep the process alive */ }
+  lease = createTabLease({ storage: globalThis.localStorage, channel, events: typeof window !== 'undefined' ? window : null });
+  return lease;
+}
+/** This tab takes the local game: any other tab holding it stops and says so. Call before reading the save to resume it. */
+export const claimLocal = () => localLease().claim();
+/** May this tab write the local game? False once another tab has claimed it. */
+export const ownsLocal = () => { try { return localLease().owns(); } catch { return true; } };
+/** fn() runs when another tab takes the game from this one. Returns an unsubscribe. */
+export const onLocalLost = fn => localLease().onLost(fn);
+/** The game here is done (results on screen): stop holding it. */
+export const releaseLocal = () => localLease().release();
+
+/**
+ * Saves the game, unless another tab owns it (a stale tab must never overwrite the owner's save). `hold` is the
+ * session's round-end hold ({ moves } while the round summary is waiting to be dismissed), so a reload reopens it.
+ * Returns whether it wrote.
+ */
+export const saveLocal = (config, state, undo = null, hold = null) => {
+  if (!state || !ownsLocal()) return false;
+  write(LOCAL, { config, state, undo, ...(hold ? { hold } : {}), savedAt: Date.now() });
+  return true;
+};
+/** Starting over or leaving: forget the saved game and its round-start snapshot (only the owning tab may). */
+export const clearLocal = () => { if (!ownsLocal()) return; write(LOCAL, null); write(ROUND_START, null); };
+/**
+ * The results screen has rendered: the game is done, nothing left to resume. Given the finished state, it's kept as
+ * the last game (results and record) until a new game starts.
+ */
+export const finishLocal = (config = null, state = null) => {
+  if (!ownsLocal()) return;
+  if (state && state.over && Array.isArray(state.players)) write(LAST, { config, state, finishedAt: Date.now() });
+  clearLocal();
+};
+/** The last finished game, { config, state, finishedAt }, or null (none, or saved by other rules content). */
+export const loadLast = () => {
+  const v = read(LAST);
+  if (!v || !v.state || !v.state.over || !Array.isArray(v.state.players)) return null;
+  return stateProblem(v.state) ? null : v;
+};
+/** A new local game has started: the last game's results are no longer offered. */
+export const clearLast = () => write(LAST, null);
 
 /** { code, playerId, transport } or null. */
 export const loadOnline = () => read(ONLINE);

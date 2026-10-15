@@ -323,8 +323,8 @@ svg.late .slot.flash .worker{animation-delay:.7s}
 @keyframes turn{to{transform:rotate(360deg)}}
 .tag{color:var(--muted);margin:0}
 .menu{display:flex;flex-direction:column;gap:14px}
-.btn.resume{display:flex;flex-direction:column;align-items:center;gap:2px}
-.btn.resume small{font-size:var(--fs-2);opacity:.7}
+.btn.resume,.btn.last-results{display:flex;flex-direction:column;align-items:center;gap:2px}
+.btn.resume small,.btn.last-results small{font-size:var(--fs-2);opacity:.7}
 .rules-link{align-self:center}
 .online-box{display:flex;flex-direction:column;gap:10px;border:1px solid var(--rim);border-radius:12px;padding:14px;background:color-mix(in srgb,var(--table) 60%,transparent)}
 .field{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-2);color:var(--muted)}
@@ -1415,3 +1415,10 @@ svg.sigil{display:inline-block;vertical-align:-1px;flex:none}
 /* the setup picker sits on cream paper on a laptop (lamp.css: the paper note at the foot of the board): its labels are
    ink there, not cream; on a phone the picker is on the dark table and keeps cream */
 @media (min-width:861px) and (min-height:500px){ .app.game.lt .lt-wheel > .prompt.choice .token{color:var(--paper-ink)} }
+
+/* Another tab took this local game (App.jsx, session/owner.js): the table dims and waits; "Play here" takes it back. */
+.tab-away{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:16px;background:rgba(18,13,9,.62);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.tab-away-card{max-width:380px;width:100%;padding:22px 24px 20px;border-radius:14px;background:var(--paper,#f4ebd7);color:var(--paper-ink,#2a1f17);border:1px solid var(--paper-edge,#c2ae86);box-shadow:0 18px 50px rgba(0,0,0,.45);text-align:center}
+.tab-away-card h2{margin:0 0 8px;font-family:var(--serif,Georgia,serif);font-size:1.3rem;line-height:1.25}
+.tab-away-card p{margin:0 0 16px;color:var(--paper-ink-2,#5f4e3d);font-size:.95rem;line-height:1.4}
+.tab-away-card .btn{min-height:44px;min-width:140px}

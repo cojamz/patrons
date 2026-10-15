@@ -1,6 +1,6 @@
 // Card facts for the Lamplit shop and hover cards: timing tags, what paying leaves, how a buy moves the contests,
 // and which face-up cards a space would make affordable. All read off the engine; nothing here is a rule.
-import { cardDef, paymentPlan, contestTable, quadrant } from '../../engine/v4/index.js';
+import { cardDef, paymentPlan, memberPrice, contestTable } from '../../engine/v4/index.js';
 import { contextFor } from '../../engine/v4/core.js';
 import { targets as echoTargets } from '../../engine/v4/content/echo.js';
 
@@ -25,24 +25,20 @@ export function timingOf(def) {
   return 'Always';
 }
 
-const sum = v => Object.values(v || {}).reduce((a, b) => a + b, 0);
-/** What recruiting uid costs player p now: { spend, leaves, short } (short: resources still missing, when unaffordable). */
+/**
+ * What recruiting uid costs player p now: { spend, leaves, short } (short when unaffordable: what's missing, by the
+ * engine's one price rule, discounts and Penny Pincher included: { color, colorN, any, total, text: "4 green" }).
+ */
 export function payBreakdown(state, p, uid) {
   const spend = paymentPlan(state, p, uid);
   if (spend) {
     const leaves = Object.fromEntries(state.resources.map(r => [r, (p.res[r] || 0) - (spend[r] || 0)]));
     return { spend, leaves, short: null };
   }
-  // how far off: the colored part first, then the any part
-  const d = cardDef(state, uid);
-  let color = d.quadrant;
-  try { color = quadrant(d.quadrant).resource; } catch { /* bare color */ }
-  const colored = state.resources.includes(color) ? d.s : 0;
-  const haveColor = Math.min(p.res[color] || 0, colored);
-  const shortColor = colored - haveColor;
-  const total = sum(p.res) - haveColor;
-  const shortAny = Math.max(0, (d.s + d.w - colored) - total);
-  return { spend: null, leaves: null, short: { color: shortColor ? color : null, colorN: shortColor, any: shortAny, total: shortColor + shortAny } };
+  const pr = memberPrice(state, p, uid);
+  const sh = pr.short || { any: 0, total: 0, text: '' };
+  const colorN = pr.color ? sh[pr.color] || 0 : 0;
+  return { spend: null, leaves: null, short: { color: colorN ? pr.color : null, colorN, any: sh.any, total: sh.total, text: sh.text } };
 }
 
 /**

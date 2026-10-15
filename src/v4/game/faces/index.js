@@ -46,6 +46,11 @@
 //    foreignObject). Ink may spill outside the box (overflow is visible), but only the box is the click target.
 //    Where boxes sit: ring I centres at radius 151 (its band runs 128–180), ring II at 104 (82–128), ring III at 58
 //    (36–82), the rim 180–200. At 1270×700 the wheel is about 1.3 screen px per board unit (px ≈ 0.77).
+//    The box is a budget, not a fence: neighbouring boxes overlap at their corners (ring I and ring II centres are
+//    only 47 units apart along a radius; ring I neighbours across a seam, 63). Ink inside a circle of diameter
+//    min(w, h) never collides; anything wider is your call (check it on the lab's live wheels).
+//    Gotcha: the game's CSS sizes every <svg> on the stage to width/height 100%. A nested <svg> (a sprite, a mark)
+//    needs an inline style={{ width, height }} in board units, as <FaceMinion> does; inside <FaceHtml>, svgs are 1em.
 //
 // 4. What the face must NOT do (the Wheel keeps all of it, so every face gets it free and the gates stay true):
 //    positioning, rotation (the box is always upright, whichever way the wheel is turned), hover cards, clicks,

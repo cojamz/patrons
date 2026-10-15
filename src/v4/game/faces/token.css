@@ -6,8 +6,8 @@
 .tk .tk-k2{fill:color-mix(in srgb,#1d1611 72%,var(--tkc))}
 .tk .tk-q1{fill:color-mix(in srgb,var(--tkc) 64%,#1d1611)}
 .tk .tk-q2{fill:var(--tkc)}
-.tk .tk-q3{fill:color-mix(in srgb,var(--tkc) 58%,#fff6e0)}
-.tk .tk-qL{fill:color-mix(in srgb,var(--tkc) 34%,#fff1c8)}
+.tk .tk-q3{fill:color-mix(in srgb,var(--tkc) 74%,#fff6e0)}
+.tk .tk-qL{fill:color-mix(in srgb,var(--tkc) 50%,#fff1c8)}
 .tk .tk-L{fill:#ffdf9e}
 .tk .tk-cr{fill:#efe2c2}
 .tk .tk-p{fill:#f4ebd7}
@@ -30,7 +30,7 @@
 /* ---------- light, lift and shadow ---------- */
 .tk .tk-shadow{fill:rgba(28,16,8,.30)}
 .tk.lit .tk-shadow{fill:rgba(28,16,8,.22);transform:translateY(1.2px)}
-.tk .tk-glow{fill:rgba(255,200,110,.38)}
+.tk .tk-glow{fill:rgba(255,206,120,.30)}
 .tk .tk-body{transition:transform .16s cubic-bezier(.3,1.4,.5,1)}
 [data-spaces="token"] .slot.can:hover .tk-body,[data-spaces="token"] .slot.sel .tk-body{transform:translateY(-3.2px)}
 [data-spaces="token"] .slot.can:hover .tk .tk-shadow{transform:translateY(2.4px);fill:rgba(28,16,8,.18)}
@@ -38,7 +38,7 @@
 /* taken: the token reads face-down, about 40% light; its minion stands on it at full strength */
 .tk .tk-down{filter:brightness(.42) saturate(.55)}
 .tk.locked .tk-body{opacity:.82}
-.tk .tk-numeral{font-family:var(--serif);font-weight:800;fill:rgba(42,31,23,.55)}
+.tk .tk-numeral{font-family:var(--serif);font-weight:800;fill:rgba(42,31,23,.55);font-variant-numeric:lining-nums}
 /* fresh: a dotted ring in the mover's colour */
 .tk .tk-fresh{fill:none;stroke:#8f7f66;stroke-width:1.6;stroke-dasharray:1.5 1.5}
 .slot.newest .tk .tk-fresh{animation:tk-unwind 1.6s linear infinite}
@@ -54,11 +54,11 @@
 .tk .r3 .tk-ribbon-hi,.tk.r3 .tk-ribbon-hi{fill:#e9c060}
 .tk .tk-tail{fill:color-mix(in srgb,var(--tkc) 55%,#1d1611)}
 .tk.r3 .tk-tail{fill:#8d5c16}
-.tk .tk-num{font-family:var(--sans);font-weight:800;font-size:13px;fill:#f6ecd6;letter-spacing:-.01em}
+.tk .tk-num{font-family:var(--sans);font-weight:800;font-size:13px;fill:#f6ecd6;letter-spacing:-.01em;font-variant-numeric:lining-nums}
 .tk .tk-jointext{font-family:var(--sans);font-weight:800;font-size:13px;fill:#cbb894}
 .tk .tk-join{fill:#cbb894}
 .tk .tk-sep{fill:rgba(243,230,200,.4)}
-.tk .tk-tagtext{font-family:var(--sans);font-weight:800;font-size:12px;fill:#1d1611}
+.tk .tk-tagtext{font-family:var(--sans);font-weight:800;font-size:12px;fill:#1d1611;font-variant-numeric:lining-nums}
 /* resource glyphs on the dark strip: a cream edge instead of the paper's ink one */
 .tk .tk-res .res-glyph path:first-of-type{stroke:#f6ecd6;stroke-width:1.15}
 .tk .tk-res .res-glyph{overflow:visible}

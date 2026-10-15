@@ -57,7 +57,7 @@ function Tile({ Face, face, q, action, status, scale, cellW, cellH, showBox }) {
   const cls = ['slot', `r${ring}`, status === 'lit' ? 'can lit' : '', status === 'locked' ? 'locked' : 'open', status === 'taken' || status === 'fresh' ? 'taken' : '', status === 'fresh' ? 'fresh newest' : ''].filter(Boolean).join(' ');
   return (
     <div className="fl-tile" style={{ width: cellW, height: cellH }} data-tile={`${q}.${action.key}.${status}`} title={`${quadrant(q).name} · ${action.name} · ${status}`}>
-      <div className="stage" style={{ position: 'absolute', inset: 0, '--wheel-px': `${WHEEL_PX}px`, '--px': (1 / scale).toFixed(4) }}>
+      <div className="stage" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', minWidth: 0, aspectRatio: 'auto', '--wheel-px': `${WHEEL_PX}px`, '--px': (1 / scale).toFixed(4) }}>
         {showBox && <div className="fl-box" style={{ width: w * scale, height: h * scale }} />}
         <div className={cls} style={{ left: '50%', top: '50%', width: w * scale, height: h * scale, aspectRatio: 'auto', '--c': `var(--${q})` }}>
           {Face && <FaceBox Face={Face} q={q} action={action} ring={ring} round={round} name={action.name} effect={pipEffect(q, action, round)}

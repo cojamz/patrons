@@ -1,6 +1,13 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import { getPriority, setPriority } from 'node:os'
 import { engineSourceHashSafe } from './scripts/v4-src-hash.mjs'
+
+// Unit tests yield the CPU to browsers, builds and dev servers on this shared 4-CPU box: every vitest run (the gate's
+// and any agent's own) runs at nice 10 or lower priority, and its workers inherit it, so a test run never skews an
+// e2e timing gate or a blind tester's game. Tests carry no wall-clock budgets, so this only changes who waits.
+// V4_VITEST_NICE=0 opts out.
+try { const nice = Number(process.env.V4_VITEST_NICE ?? 10); if (getPriority() < nice) setPriority(nice) } catch { /* not permitted: run as is */ }
 
 export default defineConfig({
   plugins: [react()],

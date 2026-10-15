@@ -13,10 +13,11 @@ export { quadrant, roman } from '../../../engine/v4/index.js';
 
 /** One minion (the pixel figure everyone knows), its FEET at (x, y), `size` board units tall. */
 export function FaceMinion({ m, x = 0, y = 0, size = 18 }) {
+  // (the game's CSS gives every svg on the stage width/height 100%: the outer box's inline size pins the minion's)
   return (
-    <g className={`face-minion${m.fresh ? ' fresh' : ''}`} data-seat={m.pid} transform={`translate(${x - size / 2} ${y - size})`}>
-      <Minion color={m.color} emoji={m.emoji} size={size} title={m.name ? `${m.name}’s minion` : null} />
-    </g>
+    <svg className={`face-minion${m.fresh ? ' fresh' : ''}`} data-seat={m.pid} x={x - size / 2} y={y - size} viewBox="0 0 16 16" overflow="visible" style={{ width: size, height: size, overflow: 'visible' }}>
+      <Minion color={m.color} emoji={m.emoji} size={16} title={m.name ? `${m.name}’s minion` : null} />
+    </svg>
   );
 }
 

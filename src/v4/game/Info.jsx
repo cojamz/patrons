@@ -13,6 +13,7 @@ import { Popover } from './parts.jsx';
 import { Who } from './Glyphs.jsx';
 import { Rich, CostPips } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
+import { releaseNote } from './priceNotes.js';
 
 /**
  * An element that explains itself. content: a node or a function returning one (built only when shown).
@@ -93,12 +94,16 @@ export function MemberCard({ state, uid, def: d0 = null }) {
   const owner = uid != null ? state.players.find(p => p.members.includes(uid)) : null;
   const card = uid != null ? state.cards[uid] : null;
   const where = uid == null ? null : owner ? null : state.shop.includes(uid) ? 'In the shop' : 'In the pile';
+  // what a release gives back (or why it can't), from the engine: RC1 saw Front-runner's off-table purple part come
+  // back "in any colors" and read it as a broken rule
+  const rel = uid != null ? releaseNote(state, uid, owner) : null;
   return (
     <div className="card-face" style={{ '--c': cardColor(state, d) }} data-card={d.id}>
       <div className="row"><span className="glyph" aria-hidden="true" /><b>{d.name}</b><Follower n={d.f} className="star" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></div>
       <p><CardText text={d.text} /></p>
       {card && card.copy && <small>Copying <CardName state={state} def={defById(card.copy)} /></small>}
       <small>Costs <CostPips parts={costParts(d, state.resources)} />{d.n > 1 ? ` · counts as ${d.n} members` : ''}{onTable(state, d) ? '' : ' · '}<Colorless state={state} def={d} /></small>
+      {rel && <small className={`release-note${rel.ok ? '' : ' no'}`} data-release={rel.ok ? 'yes' : 'no'}>{rel.text}</small>}
       {owner && <small className="owner" style={{ '--pc': playerColor(owner.id) }}><i />{owner.name}’s{card && card.used ? ' · used' : ''}</small>}
       {where && <small>{where}</small>}
     </div>
