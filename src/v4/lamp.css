@@ -307,29 +307,30 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .hub{fill:var(--hub,#130e0b);stroke:var(--hair,rgba(242,232,210,.10))}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .seam{stroke:var(--board,#2b2119);stroke-width:3}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell path{pointer-events:none}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .wash{pointer-events:all;fill:var(--pl-paper,#f2e8d2);transition:fill var(--mo-hover,.15s)}
+/* each space carries a light tint of its sphere's colour (Cory, 2026-10-15 22:03: "a very light hue … i prefer a light tint") */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .wash{pointer-events:all;fill:color-mix(in srgb,var(--c) var(--tint,11%),var(--pl-paper,#f2e8d2));transition:fill var(--mo-hover,.15s)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit{cursor:pointer}
 /* yours to take (Cory, 2026-10-15: "'lit' spaces should be clearer"): lit paper with the lamp's warm glow at its edge;
    the one under your pointer lifts and glows brighter. Not your turn: nothing glows. Taken: clearly dim. Locked:
    darker still. A squint at the board shows the spaces you can take as the bright ones (design/eval/rollout/r2-lit-*) */
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit .wash{fill:var(--paper-lit,#fbf6ea)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit .wash{fill:color-mix(in srgb,var(--c) var(--tint,11%),var(--paper-lit,#fbf6ea))}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .glow{fill:none;stroke:rgb(var(--lamp,255,206,140));stroke-width:7;filter:url(#ltGlow);opacity:.6;transition:opacity var(--mo-hover,.15s)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .edge-lit{fill:none;stroke:var(--lamp-ink,#ffd99a);stroke-width:2;opacity:.9;transition:opacity var(--mo-hover,.15s)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .wash{transition:fill var(--mo-hover,.15s),filter var(--mo-quick,.12s)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .wash,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .wash{filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .glow,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .glow{opacity:1;stroke-width:9}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .edge-lit,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .edge-lit{opacity:1;stroke:#fffaf0;stroke-width:2.4}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken .wash{fill:color-mix(in srgb,var(--paper-taken,#cfc2a6) 52%,var(--board,#2b2119))}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken.lit .wash{fill:var(--paper-lit,#fbf6ea)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken .wash{fill:color-mix(in srgb,color-mix(in srgb,var(--c) var(--tint,11%),var(--paper-taken,#cfc2a6)) 52%,var(--board,#2b2119))}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken.lit .wash{fill:color-mix(in srgb,var(--c) var(--tint,11%),var(--paper-lit,#fbf6ea))}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.locked .wash{fill:rgba(242,232,210,.03);stroke:rgba(242,232,210,.16);stroke-width:1}
 /* calm: a fine dotted edge that reads as "someone was here", never as the lit edge of a space you can take (w2a #30) */
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh{fill:none;stroke-width:1.5;stroke-dasharray:.1 3.6;stroke-linecap:round;opacity:.7}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh.newest{stroke-width:2;opacity:.85}
 /* while you place, open panels you can't take (a pick that names a few) step back toward the taken ones */
 /* a choice made off the wheel (a stack, a seat, a member): open spaces step back like unlit ones, nothing there is yours to take */
-.lt[data-yours="1"][data-phase="choose"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash,.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,var(--pl-paper,#f2e8d2) 60%,var(--board,#2b2119))}
+.lt[data-yours="1"][data-phase="choose"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash,.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,color-mix(in srgb,var(--c) var(--tint,11%),var(--pl-paper,#f2e8d2)) 60%,var(--board,#2b2119))}
 /* not your turn: the open panels rest a step below lit paper, so the lamp means something when it comes */
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:var(--pl-paper,#f2e8d2)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,var(--c) var(--tint,11%),var(--pl-paper,#f2e8d2))}
 /* the rim (plate 1b): light type on the quadrant's deep band; the color as its dot in a light ring; the prize a size up */
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule{fill:#f6deb0;stroke:none}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule .rim-prize{font-weight:800}
