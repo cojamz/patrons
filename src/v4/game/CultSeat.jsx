@@ -57,7 +57,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 32 : 28} minion={mine ? 15 : 13} compact /></span>
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
-          {place && <span className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined} title={place.title}>{place.text}</span>}
+          {place && <span className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined} title={place.title}><span className="co-t">{place.label}</span>{place.twice && <b className="co-x">×2</b>}</span>}
           <small>{colors.length > 0 && (
             <span className="cs-colors" data-colors={colors.map(c => `${c.key}:${c.n}`).join(' ')} title={`Members by color: ${colors.map(c => `${c.n} ${c.res || 'colorless'}`).join(', ')}`}>
               {colors.map(c => <i key={c.key} style={{ '--c': c.res ? `var(--${c.res})` : 'var(--cream-3)', '--n': c.n }} data-n={c.n} />)}

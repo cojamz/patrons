@@ -117,12 +117,14 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   };
   useLayoutEffect(place, [c, el]); // eslint-disable-line react-hooks/exhaustive-deps
   // content that fills in a moment later (the dry run's "You'd get") re-fits the card on screen
+  const placeNow = useRef(place);
+  placeNow.current = place;
   useEffect(() => {
     if (!box.current || typeof ResizeObserver === 'undefined') return undefined;
-    const ro = new ResizeObserver(() => place());
+    const ro = new ResizeObserver(() => placeNow.current());
     ro.observe(box.current);
     return () => ro.disconnect();
-  });
+  }, []);
   useEffect(() => {
     if (!c || c.pinned) return undefined;
     const off = () => hover.close();

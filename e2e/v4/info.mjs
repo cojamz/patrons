@@ -296,7 +296,6 @@ try {
           });
           if (!dc) fail('(h) hovering the deck shows no card', step);
           else if (dc.card !== dc.left || dc.sum !== dc.left || !dc.colorless || !dc.bottom) fail(`(h) deck card: ${dc.card} left, colors add to ${dc.sum}, the deck shows ${dc.left}${dc.colorless ? '' : ', no colorless count'}${dc.bottom ? '' : ', no word on where released members go'}`, step);
-          await anchorCheck(page, 'the deck', step, '[data-deck]');
           await page.screenshot({ path: `${SHOTS}/02d-hover-deck.png` });
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);

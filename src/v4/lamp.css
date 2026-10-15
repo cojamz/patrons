@@ -46,18 +46,32 @@ h1,h2,h3{font-family:var(--serif)}
     /* the prompt holds two short lines: the question, the round and its steps (or the details); who's winning is on
        the chairs (Cory, 2026-10-15: no score row), so the wheel gets the room back */
     grid-template-rows:54px minmax(0,1fr) minmax(0,1fr) 128px;
-    grid-template-areas:"s1 prompt s2" "s1 wheel s2" "s0 wheel s3" "shop shop shop";
+    /* the chairs stand in one column in turn order (Cory, 2026-10-15: "position IS order"); the right column holds the
+       story of the turns (since your last turn) */
+    grid-template-areas:"seats prompt side" "seats wheel side" "seats wheel side" "shop shop shop";
     column-gap:18px;row-gap:6px;padding:6px 18px 8px;overflow:hidden
   }
   .lt > .lt-prompt{grid-area:prompt}
   .lt > .lt-wheel{grid-area:wheel;container-type:size;min-height:0;display:flex;align-items:center;justify-content:center}
-  .lt > .lt-seat-0{grid-area:s0}
-  .lt > .lt-seat-1{grid-area:s1}
-  .lt > .lt-seat-2{grid-area:s2}
-  .lt > .lt-seat-3{grid-area:s3}
-  .lt > .lt-seat{min-height:0;min-width:0;overflow:hidden;border-radius:14px;padding:5px 7px;background:rgba(243,230,200,.03);box-shadow:inset 0 0 0 1px rgba(243,230,200,.07);transition:box-shadow var(--mo-dim),background var(--mo-dim)}
-  .lt > .lt-seat-1,.lt > .lt-seat-2{align-self:start}
-  .lt > .lt-seat-0,.lt > .lt-seat-3{align-self:end}
+  /* each chair takes a quarter of the column, at its place in the order (--slot); a new order slides them */
+  .lt > .lt-seat{grid-area:seats;align-self:start;height:calc((100% - 18px) / 4);margin-left:34px;
+    transform:translateY(calc(var(--slot, 0) * (100% + 6px)));transition:transform var(--mo-sort, .6s) cubic-bezier(.3,.7,.4,1),box-shadow var(--mo-dim, .3s),background var(--mo-dim, .3s);
+    /* clipped to its slot, except the rail gutter on its left where its turn marker sits */
+    min-height:0;min-width:0;overflow:visible;clip-path:inset(-3px -3px -3px -36px);border-radius:14px;padding:5px 7px;background:rgba(243,230,200,.03);box-shadow:inset 0 0 0 1px rgba(243,230,200,.07);transition:box-shadow var(--mo-dim),background var(--mo-dim)}
+  /* you, wherever you land: a cream edge */
+  .lt > .lt-seat.mine{box-shadow:inset 0 0 0 1.5px rgba(243,230,200,.32)}
+  .lt > .lt-seat.mine.now{box-shadow:inset 0 0 0 1.5px rgba(var(--lamp),.6)}
+  /* the snake rail: a line down the column's gutter, its head pointing the way the turns walk this pass */
+  .lt > .lt-snake{grid-area:seats;justify-self:start;align-self:stretch;width:30px;position:relative;pointer-events:auto;cursor:help}
+  .lt > .lt-snake .sn-line{position:absolute;left:14px;top:calc((100% - 18px) / 8);bottom:calc((100% - 18px) / 8);width:2px;border-radius:1px;
+    background:linear-gradient(180deg,rgba(243,230,200,.08),rgba(var(--lamp),.45),rgba(243,230,200,.08))}
+  .lt > .lt-snake .sn-line::after{content:"";position:absolute;left:-5px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent}
+  .lt > .lt-snake.dir-down .sn-line::after{bottom:-7px;border-top:8px solid rgba(var(--lamp),.75)}
+  .lt > .lt-snake.dir-up .sn-line::after{top:-7px;border-bottom:8px solid rgba(var(--lamp),.75)}
+  /* each chair's place in the turns, on the rail beside it: NOW lit, NEXT ringed, ×2 where the snake turns */
+  .lt > .lt-seat .cs-order{position:absolute;left:-31px;top:50%;translate:0 -50%;margin:0;width:28px;padding:2px 0;display:flex;flex-direction:column;align-items:center;gap:0;
+    text-align:center;font-size:9px;line-height:11px;letter-spacing:.04em;border-radius:8px;background:var(--walnut);z-index:2}
+  .lt > .lt-seat .cs-order .co-x{font-size:10px;line-height:11px;letter-spacing:0;color:inherit}
   .lt > .lt-seat.now{background:rgba(var(--lamp),.07);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.35)}
   .lt > .lt-seat:empty{visibility:hidden}
   .lt > .lt-shop{grid-area:shop;min-height:0;overflow:hidden}
@@ -361,7 +375,8 @@ h1,h2,h3{font-family:var(--serif)}
 /* the tiebreak, quieter than the rule: "· ties: red members" */
 .lt .stage svg.wheel-paper .rim-rule .rim-tie{letter-spacing:.04em;font-weight:600;fill-opacity:.9}
 /* the chairs: yours only a little larger than the rivals' (same layout) */
-@media (min-width:861px) and (min-height:500px){ .lt > .lt-seat-0 > .lt-cult-seat{zoom:1.15} }
+/* (your chair was zoomed 1.15×; in the ordered column every chair has the same slot, so yours is marked by its edge
+   and its larger type instead) */
 
 /* the chairs carry no box of their own: the cult sits on the walnut (yours a little larger) */
 @media (min-width:861px) and (min-height:500px){
