@@ -4,14 +4,20 @@
 // is heading for stays. "Heading for" means inside the triangle from where the pointer left to the card's near edge
 // (or on the card), for a short while: the menu-aim rule. One aim at a time; nothing else in the app is touched.
 let aim = null; // { el, x, y, until }
-let pt = null;
-if (typeof addEventListener === 'function') addEventListener('pointermove', e => { pt = { x: e.clientX, y: e.clientY }; }, { passive: true, capture: true });
+let pt = null, prev = null;
+// where the pointer is, fresh before any enter/leave handler runs (boundary events come before the move itself), and
+// where it was a step before: a leave reports the new spot (already on whatever is next), so the crossing starts from
+// the last spot inside what it left
+if (typeof addEventListener === 'function') {
+  const at = e => { if (pt && (pt.x !== e.clientX || pt.y !== e.clientY)) prev = pt; pt = { x: e.clientX, y: e.clientY }; };
+  for (const t of ['pointerover', 'pointerout', 'pointermove']) addEventListener(t, at, { passive: true, capture: true });
+}
 
-export const AIM_MS = 700; // the longest a crossing may take before the card lets go
+export const AIM_MS = 700; // how long the pointer may rest on the way (outside the card) before the card lets go
 const PAD = 12;
 
-/** The pointer just left toward `el` (the open card), from `from` (where it left; default: where it is now). */
-export function aimAt(el, from = pt) {
+/** The pointer just left toward `el` (the open card), from `from` (default: its last spot inside what it left). */
+export function aimAt(el, from = prev || pt) {
   if (el && from) aim = { el, x: from.x, y: from.y, until: (typeof performance !== 'undefined' ? performance.now() : Date.now()) + AIM_MS };
 }
 /** The pointer reached the card (or the card closed): the crossing is over. */
@@ -31,7 +37,9 @@ export function heading(p = pt) {
   const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
   if (!aim.el.isConnected || now > aim.until) { aim = null; return false; }
   const r = aim.el.getBoundingClientRect();
-  if (p.x >= r.left - PAD && p.x <= r.right + PAD && p.y >= r.top - PAD && p.y <= r.bottom + PAD) return true;
+  // a card that has gone (closed, moved off screen) is no longer anything to head for
+  if (!r.width || !r.height || r.right < 0 || r.bottom < 0 || r.left > innerWidth || r.top > innerHeight) { aim = null; return false; }
+  if (p.x >= r.left - PAD && p.x <= r.right + PAD && p.y >= r.top - PAD && p.y <= r.bottom + PAD) { aim.until = now + AIM_MS; return true; }
   if (Math.hypot(p.x - aim.x, p.y - aim.y) <= PAD) return true; // still where it left
   // the card's near edge, as seen from where the pointer left (widened a little)
   const from = { x: aim.x, y: aim.y };
@@ -42,5 +50,9 @@ export function heading(p = pt) {
   else { a = { x: r.left - PAD, y: r.bottom }; b = { x: r.right + PAD, y: r.bottom }; }
   // a few px of slack behind the start, so a slightly backward first step still counts
   const back = { x: from.x - Math.sign(a.x + b.x - 2 * from.x) * PAD, y: from.y - Math.sign(a.y + b.y - 2 * from.y) * PAD };
-  return inTriangle(p, back, a, b);
+  const on = inTriangle(p, back, a, b);
+  // still making its way there: the clock runs from the last step, so a slow hand (or a busy machine) isn't cut off;
+  // a pointer resting on the way lets go after AIM_MS
+  if (on && (aim.lx !== p.x || aim.ly !== p.y)) { aim.until = now + AIM_MS; aim.lx = p.x; aim.ly = p.y; }
+  return on;
 }

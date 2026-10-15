@@ -74,12 +74,12 @@ async function run(size) {
         lastMoves = s.moves;
         if (s.yours === '1') {
           if (s.phase === 'place') { const sl = await page.$('.lt-wheel .slot.can .base'); const bb = sl && await sl.boundingBox().catch(() => null); if (bb) await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2); }
-          else if (s.phase === 'buy') await page.click('[data-option="pass"]').catch(() => {});
+          else if (s.phase === 'buy') await page.click('[data-option="pass"]', { timeout: 1500 }).catch(() => {});
           // a choice or a payment: any answer but undoing; if one doesn't move the game, try the next
-          else await answerChoice(page, { avoid: ['release:', 'undo', 'back'], skip: Math.floor(still / 4), domFallback: still > 8 }).catch(() => {});
+          else await answerChoice(page, { avoid: ['release:', 'undo', 'back'], skip: Math.floor(still / 4), domFallback: still > 8, timeout: 1500 }).catch(() => {});
         }
         const next = await page.$('[data-next-round]');
-        if (next) await next.click().catch(() => {});
+        if (next) await next.click({ timeout: 1500 }).catch(() => {});
         await page.waitForTimeout(120);
       }
     } catch (e) {

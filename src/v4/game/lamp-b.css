@@ -8,7 +8,7 @@
 .lt-res b{font-weight:700}
 .res-glyph,.fol-glyph{display:inline-block;vertical-align:middle;flex:none}
 .sprite{display:block;image-rendering:pixelated;flex:none}
-.lt-btn{font-family:var(--serif);font-size:15px;border-radius:20px;padding:6px 16px;border:1px solid var(--paper-ink-3);background:transparent;color:var(--paper-ink);cursor:pointer;min-height:36px}
+.lt-btn{font-family:var(--serif);font-size:14px;border-radius:20px;padding:6px 16px;border:1px solid var(--paper-ink-3);background:transparent;color:var(--paper-ink);cursor:pointer;min-height:36px}
 .lt-btn.pri{background:var(--paper-ink);color:var(--paper);border-color:var(--paper-ink);font-weight:700}
 .lt-btn.mini{position:relative;font-family:var(--sans);font-size:11px;line-height:1;padding:3px 8px;height:20px;min-height:0;flex:none;border-color:rgba(243,230,200,.3);color:var(--cream)}
 .lt-rates .lt-rate{position:relative}
@@ -164,10 +164,10 @@
 .lt-drawer-back{position:fixed;inset:0;z-index:40;background:rgba(10,7,5,.45)}
 .lt-drawer{position:absolute;top:0;right:0;bottom:0;width:min(420px,100vw);display:flex;flex-direction:column;border-radius:12px 0 0 12px;overflow:hidden}
 .lt-drawer header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px}
-.lt-drawer h3{font-family:var(--serif);font-size:22px;margin:0;color:var(--paper-ink)}
+.lt-drawer h3{font-family:var(--serif);font-size:18px;margin:0;color:var(--paper-ink)}
 .lt-chron{overflow-y:auto;padding:0 16px 20px;overscroll-behavior:contain}
-.lt-chron h4{font-family:var(--serif);font-size:15px;color:var(--paper-ink-3);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 4px}
-.lt-chron ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px;line-height:1.35;color:var(--paper-ink)}
+.lt-chron h4{font-family:var(--serif);font-size:14px;color:var(--paper-ink-3);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 4px}
+.lt-chron ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:1.35;color:var(--paper-ink)}
 .lt-chron li{padding:3px 0;border-bottom:1px solid rgba(42,31,23,.08)}
 
 /* ---------- leaders and their floating minions (a slow 1px bob, each on its own period and phase) ---------- */
@@ -371,6 +371,10 @@
 .lt-card .ft .num,.lt-card .val b{font-weight:800}
 /* the type scale (14 / 18 / 36, labels 11): a card's numbers are 14 (an old v4.css .card b made them 15) */
 .lt-card .ft b{font-size:var(--s)}
+/* a discount on you: the price you'd pay, then the list price small and struck (decisions.md, 2026-10-15) */
+.lt-card .ft .cost-now{display:inline-flex;align-items:center;gap:4px;min-width:0}
+.lt-card .ft .cost-was{font-size:11px;font-weight:600;color:var(--pl-ink-3,#a39078);text-decoration:line-through;text-decoration-thickness:1px}
+.lt-card .ft .lt-cost.free{font-size:var(--s);font-weight:800;color:var(--pl-ink,#2b2018)}
 .lt-card .val{font-family:var(--sans);gap:1px}
 /* glyphs are .8em of the type they sit in; a number sits right on its glyph */
 .lt-card .pip.glyph,.lt-card .pip.wild,.mc .pip.glyph,.mc .pip.wild,.lt-rate .pip.glyph,.lt-rate .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 0 0 .06em}

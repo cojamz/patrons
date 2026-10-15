@@ -9,7 +9,7 @@ import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { cardColor, onTable, usePreview, Tip, CostDots } from './Info.jsx';
+import { cardColor, onTable, usePreview, Tip, CostDots, paidParts } from './Info.jsx';
 import { FollowerGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
 import { timingOf, unlockedBy, surely } from './cards.js';
@@ -122,6 +122,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
           const dim = viewer && (((buying || picking) && !opt) || (!buying && !picking && !can));
           const lit = (buying || picking) && !!opt;
           const parts = costParts(d, state.resources);
+          // a discount on you: the price you'd pay, the list price small and struck beside it (decisions.md, 2026-10-15)
+          const paid = paidParts(state, viewer, uid, d);
           const fromPile = !state.shop.includes(uid);
           return (
             <button
@@ -151,7 +153,13 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
               </span>
               <span className="nm">{breakable(d.name)}</span>
               <span className="ft">
-                <CostShapes parts={parts} />
+                {paid ? (
+                  <span className="cost-now" data-paid={paid.reduce((t, c) => t + c.n, 0)}>
+                    <CostShapes parts={paid} />
+                    {/* the list price as one struck number: two parts of dots beside the paid price ran into the worth */}
+                    <s className="cost-was num" title={`List price ${parts.map(c => `${c.n} ${c.color === 'any' ? 'any' : c.color}`).join(' + ')}`} aria-label={`list price ${parts.reduce((t, c) => t + c.n, 0)}`}>{parts.reduce((t, c) => t + c.n, 0)}</s>
+                  </span>
+                ) : <CostShapes parts={parts} />}
                 <span className="val" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>
                   <b className="num">{d.f}</b><FollowerGlyph size={11} title={`worth ${d.f}`} />
                 </span>

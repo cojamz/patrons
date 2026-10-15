@@ -6,6 +6,7 @@
 import { chromium } from 'playwright';
 import { TEXT_CLIP } from './lib/textclip.mjs';
 import { LEGACY } from './lib/legacy.mjs';
+import { TYPE_SCALE } from './lib/typescale.mjs';
 import { answerChoice } from './lib/answer.mjs';
 import { SHOP_SIZE } from '../../src/engine/v4/index.js';
 import { spawn } from 'node:child_process';
@@ -102,6 +103,7 @@ try {
     const worn = faces.filter(Boolean);
     if (worn.length !== faces.length || new Set(worn).size !== worn.length) errors.push(`setup: every seat should wear its own emoji: ${JSON.stringify(faces)}`);
   }
+  for (const x of await page.evaluate(TYPE_SCALE)) errors.push(`setup: off the type scale (11/14/18/36): ${x}`);
   await page.click('[data-start]');
   // The intro (src/v4/Intro.jsx): this browser's first game shows it once, over the table; one tap on Skip ends it
   {
@@ -224,6 +226,8 @@ try {
       for (const x of await page.evaluate(TEXT_CLIP)) { const m = `text cut: ${x}`; if (!errors.includes(m)) { errors.push(m); await shot(`zz-text-cut-${errors.length}`); } }
       // two drawn marks only, the dot and the follower; every other symbol is a word (lib/legacy.mjs, design pod)
       for (const x of await page.evaluate(LEGACY)) { const m = `legacy symbol: ${x}`; if (!errors.includes(m)) { errors.push(m); await shot(`zz-legacy-${errors.length}`); } }
+      // every word on one of the table's four sizes (lib/typescale.mjs; design pod: the screens drifted to 12–25px)
+      for (const x of await page.evaluate(TYPE_SCALE)) { const m = `off the type scale (11/14/18/36): ${x}`; if (!errors.includes(m)) errors.push(m); }
     }
     // the turn card carries its whole line in data-turn-story (UI-A); the older screen had a .caption
     const cap = await page.evaluate(() => { const t = document.querySelector('[data-turn-story]'); if (t) return t.getAttribute('data-turn-story'); const c = document.querySelector('.caption'); return c ? c.textContent : null; }).catch(() => null);
@@ -400,6 +404,7 @@ try {
   await page.waitForTimeout(200);
   await shot('09-results');
   await shot('09-results-phone', PHONE);
+  for (const x of await page.evaluate(TYPE_SCALE)) errors.push(`results: off the type scale (11/14/18/36): ${x}`);
   const winner = await page.$eval('.results .win', e => e.textContent);
   const resultsFace = await page.$eval('.results [data-who="0"] svg[data-emoji]', e => e.getAttribute('data-emoji')).catch(() => null);
   if (resultsFace !== PICK) errors.push(`results: seat 1 shows "${resultsFace}", not the ${PICK} they picked`);

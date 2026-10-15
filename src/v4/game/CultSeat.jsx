@@ -88,9 +88,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           const r = onRail(e);
           if (!realHover(e) || !hover) return;
           if (r !== railIn.current) { railIn.current = r; if (r) { hover.onSeatHover(pid, null); return; } }
-          // still on the head with its card shut (it was crossed on the way to another open card): open it now
-          const cur = hover.card;
-          if (!r && !(cur && cur.kind === 'seat' && cur.pid === pid)) openSeat(e, false);
+          // still on the head: its card stays (or opens now, if it was crossed on the way to another open card)
+          if (!r) openSeat(e, false);
         }}
         onPointerLeave={e => { railIn.current = false; if (e.pointerType === 'mouse' && hover) hover.onSeatHover(pid, null); }}
         onClick={e => openSeat(e, true)}

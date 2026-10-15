@@ -50,7 +50,13 @@ export function useHoverCards() {
 export function createHover() {
   let card = null, openT = null, closeT = null;
   const subs = new Set();
-  const set = next => { if (next === card) return; card = next; for (const fn of subs) fn(); };
+  const set = next => {
+    if (next === card) return;
+    // a seat card that closes or gives way ends any crossing toward it (the layer itself stays mounted, off screen)
+    if (card && card.kind === 'seat' && typeof document !== 'undefined') arrived(document.querySelector('[data-hover-layer]'));
+    card = next;
+    for (const fn of subs) fn();
+  };
   // a seat's card has buttons and a list to scroll: it stays while the pointer is on it or on its way to it, and what
   // the pointer crosses on the way (the seat's own members, the next seat) doesn't take its place (hoverIntent.js)
   const liveBox = () => (typeof document !== 'undefined' ? document.querySelector('[data-hover-layer][data-live="1"]') : null);
@@ -74,6 +80,8 @@ export function createHover() {
     }
     // crossing toward your member's open card (a Use button on it): the seat card doesn't open over it
     if (!next.pinned && heading() && aimedAt() && aimedAt() !== liveBox()) return;
+    // the same card again (the pointer moving on its target): it stays, and a close on its way is called off
+    if (card && !card.pinned && !next.pinned && card.kind === next.kind && card.el === next.el && card.pid === next.pid && card.key === next.key && card.uid === next.uid && card.qid === next.qid) { clearTimeout(openT); return; }
     clearTimeout(openT);
     if (next.pinned) { set(next); return; }
     if (card && card.pinned) return; // a pinned card stays until it's closed

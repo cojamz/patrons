@@ -185,7 +185,9 @@ describe('Blue members', () => {
   it('Reseller: whenever you recruit, +1 of that member’s color', () => {
     let s = take(scene({ res: [{ gold: 9 }], members: [['market.reseller']], shop: SHOP }), 'market.showroom');
     s = move(s, card(s, 'gold.tycoon'));
-    expect(R(s)).toEqual({ gold: 9 - 3 + 1, red: 0, blue: 1 - 1, green: 0 });
+    // the suggested payment keeps the blue you lead the rim with (decisions.md, 2026-10-15: payment keeps your rims), so
+    // Tycoon's 4 comes all from gold; Reseller then gives 1 gold back
+    expect(R(s)).toEqual({ gold: 9 - 4 + 1, red: 0, blue: 1, green: 0 });
   });
   it('Curator: round start, +1 blue per other blue member', () => {
     expect(R(start([['market.curator', 'market.stylist', 'market.planner', 'gold.midas']])).blue).toBe(2); // Stylist, Planner

@@ -49,7 +49,7 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
     timer.current = setTimeout(() => { pending.current = false; setOpen(o => o || { el: ref.current, pinned: false }); }, TIP_MS);
   };
   // crossing toward another open card: this one stays shut (it opens on the next move once the crossing is over)
-  const crossing = () => { const t = aimedAt(); return !!t && heading() && !(body.current && t.contains(body.current)); };
+  const crossing = e => { const t = aimedAt(); return !!t && heading(e ? { x: e.clientX, y: e.clientY } : undefined) && !(body.current && t.contains(body.current)); };
   const inControl = () => { const up = ref.current && ref.current.parentElement; return !!(up && up.closest(CONTROL)); };
   const pin = e => {
     // a keyword in an option's text never eats the option's click (a tap there picks the option)
@@ -62,12 +62,12 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
         ref={ref} className={`tip${className ? ` ${className}` : ''}`} data-tip="" role={nested ? undefined : 'button'} tabIndex={nested ? undefined : 0}
         aria-haspopup={nested ? undefined : 'dialog'} aria-expanded={nested ? undefined : !!open} aria-label={label}
         data-hint={nested ? hint || label || undefined : undefined}
-        onPointerEnter={e => { if (!realHover(e)) return; if (crossing()) return; opening(); }}
-        onPointerMove={e => { if (open || pending.current || !realHover(e) || crossing()) return; opening(); }}
+        onPointerEnter={e => { if (!realHover(e)) return; if (crossing(e)) return; opening(); }}
+        onPointerMove={e => { if (open || pending.current || !realHover(e) || crossing(e)) return; opening(); }}
         onPointerLeave={e => {
           clearTimeout(timer.current); pending.current = false;
           if (e.pointerType !== 'mouse') return;
-          if (sticky && open && !open.pinned && body.current) { aimAt(body.current.closest('.popover') || body.current, { x: e.clientX, y: e.clientY }); release(); } else letGo();
+          if (sticky && open && !open.pinned && body.current) { aimAt(body.current.closest('.popover') || body.current); release(); } else letGo();
         }}
         onClick={pin}
         onKeyDown={e => { if (!nested && (e.key === 'Enter' || e.key === ' ')) pin(e); }}
@@ -129,6 +129,24 @@ export function CostDots({ parts }) {
  * The full card (plate 1b): the picture, name and worth, "costs 2● 2◐", the sentence big with its marks inline, then
  * one quiet line tying it to the table (whose it is, or what you're short of to recruit it). Nothing about paying.
  */
+/**
+ * What a member costs p while a discount applies (Intro Offer's "next member costs 4 less", Sponsor's 2 off…), as cost
+ * parts ([] = free), or null at its list price. The engine's own price rule (memberPrice); the shop face shows it.
+ */
+export function paidParts(state, p, uid, d = cardDef(state, uid)) {
+  if (!p || state.over) return null;
+  let pr;
+  try { pr = memberPrice(state, p, uid); } catch { return null; }
+  if (pr.total >= d.s + d.w) return null;
+  const any = pr.total - pr.colored;
+  return [...(pr.color && pr.colored ? [{ color: pr.color, n: pr.colored }] : []), ...(any > 0 ? [{ color: 'any', n: any }] : [])];
+}
+/** Why p pays less: "your next member costs 4 less", "Sponsor takes 2 off". */
+const discountWhy = (state, p) => [
+  ...(p.discount ? [`your next member costs ${p.discount} less`] : []),
+  ...p.members.map(u => { try { return cardDef(state, u); } catch { return null; } }).filter(x => x && x.costReduction).map(x => `${x.name} takes ${x.costReduction} off`),
+].join(', ');
+
 export function MemberCard({ state, uid, def: d0 = null, me = null }) {
   const d = d0 || cardDef(state, uid);
   const owner = uid != null ? state.players.find(p => p.members.includes(uid)) : null;
@@ -155,6 +173,8 @@ export function MemberCard({ state, uid, def: d0 = null, me = null }) {
       pays = ways.length === 1 ? Object.entries(ways[0]).filter(([, n]) => n > 0).map(([color, n]) => ({ color, n })) : ways.length > 1 ? 'choose' : null;
     } catch { /* say nothing */ }
   }
+  // a discount on you: what you'd pay and why (the shop face shows the price, struck list beside it)
+  const paid = where === 'In the shop' && me != null && state.players[me] ? paidParts(state, state.players[me], uid, d) : null;
   return (
     <div className="card-face mc" style={{ '--c': cardColor(state, d) }} data-card={d.id}>
       <div className="mc-head">
@@ -169,6 +189,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null }) {
       {ability ? <p className="mc-text"><CardText text={ability} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
       {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
       {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used ? ' · used' : ''}</small>}
+      {paid && <small className="mc-live" data-discount>You pay {paid.length ? <CostDots parts={paid} /> : 'nothing'}: {discountWhy(state, state.players[me])}.</small>}
       {pays ? <small className="mc-live" data-pays={pays === 'choose' ? 'choose' : 'once'}>{pays === 'choose' ? 'Choose how to pay' : <>Pays <CostDots parts={pays} /></>}</small>
         : short ? <small className="mc-live" data-short={short.short.total}>You’re short {shortDots(state, short)} to recruit it.</small>
         : where === 'In the pile' && <small className="mc-live">{where}</small>}

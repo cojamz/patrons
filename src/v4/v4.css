@@ -17,8 +17,9 @@
   --market:var(--blue); --echo:var(--green); --trading:var(--white);
   --display:"Marcellus", Georgia, serif; --body:"Figtree", system-ui, sans-serif;
   --tap:36px;
-  /* type scale: six steps for all text, plus one display size (title, winner) */
-  --fs-1:11px; --fs-2:13px; --fs-3:15px; --fs-4:18px; --fs-5:22px; --fs-6:28px; --fs-display:46px;
+  /* type scale: the table's four sizes everywhere (design pod, 2026-10-15: 11 small print, 14 text, 18 titles, 36 the
+     big number or name). The old six steps map onto them, so the screens around the game read like the game. */
+  --fs-1:11px; --fs-2:14px; --fs-3:14px; --fs-4:18px; --fs-5:18px; --fs-6:36px; --fs-display:36px;
   color-scheme:dark;
 }
 html,body{min-height:100%}
@@ -195,8 +196,8 @@ svg.late .slot.flash .worker{animation-delay:.7s}
 .app.game[data-chain="1"] .slot.lit .base::after{opacity:0;animation:none}
 /* the animation speed setting in the menu */
 .menu-speed{display:flex;align-items:center;gap:4px;padding:4px 6px}
-.menu-speed-label{font-size:13px;opacity:.8;margin-right:4px}
-.menu-speed-opt{min-height:30px;padding:2px 8px;font-size:13px}
+.menu-speed-label{font-size:14px;opacity:.8;margin-right:4px}
+.menu-speed-opt{min-height:30px;padding:2px 8px;font-size:14px}
 .menu-speed-opt.on{box-shadow:inset 0 0 0 1.5px currentColor}
 /* a stack counts what has landed so far (flight.js), then shows its own number again */
 b.num[data-hold]{position:relative;visibility:hidden}
@@ -246,7 +247,7 @@ b.num[data-hold]::after{content:attr(data-hold);visibility:visible;position:abso
 /* ---------- log: per round, collapsible ---------- */
 .log{font-size:var(--fs-2);color:var(--muted);display:flex;flex-direction:column;gap:4px;border-top:1px dashed var(--rim);padding-top:8px}
 .log summary{cursor:pointer;color:var(--ink);font-size:var(--fs-2);letter-spacing:.1em;text-transform:uppercase;padding:2px 0;min-height:24px}
-.log summary small{color:var(--muted);letter-spacing:0}
+.log summary small{color:var(--muted);letter-spacing:0;font-size:11px}
 .log .lines{display:flex;flex-direction:column;gap:2px;padding:2px 0 6px 12px}
 .log details[open] .lines div:first-child{color:var(--ink)}
 

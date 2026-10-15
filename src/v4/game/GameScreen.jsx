@@ -261,13 +261,14 @@ function AfterChain({ value, hold, children }) {
   return children(shown.current);
 }
 
-/** The viewer's animation speed (Cory: a setting in the menu; Steady by default), kept in this browser. */
+/** The game's one speed (Cory: a setting in the menu; Steady by default; the same as setup's Speed): the bots' pace and
+ *  how moves play out, kept in this browser. */
 function SpeedSetting() {
   const [sp, setSp] = useState(motionSpeed);
   useEffect(() => onMotionSpeed(setSp), []);
   return (
-    <div className="menu-speed" role="radiogroup" aria-label="Animation speed" title="How fast moves play out on the table. Your own clicks always answer at once.">
-      <span className="menu-speed-label">Animations</span>
+    <div className="menu-speed" role="radiogroup" aria-label="Speed" title="How fast the bots move and moves play out on the table. Your own clicks always answer at once.">
+      <span className="menu-speed-label">Speed</span>
       {Object.keys(SPEEDS).map(k => (
         <button key={k} type="button" role="radio" aria-checked={sp === k} className={`btn ghost menu-speed-opt${sp === k ? ' on' : ''}`} data-speed={k} onClick={() => setMotionSpeed(k)}>{SPEED_NAMES[k]}</button>
       ))}
@@ -331,7 +332,7 @@ function TurnCard({ card, root, state }) {
   useLayoutEffect(() => {
     const el = box.current;
     if (!el) return;
-    const pos = turnCardPlace(card, root);
+    const pos = turnCardDock(card, root);
     if (!pos) { el.style.display = 'none'; return; }
     const px = v => (v == null ? '' : `${v}px`);
     Object.assign(el.style, { display: '', left: px(pos.left), right: px(pos.right), top: px(pos.top), bottom: px(pos.bottom), width: px(pos.width), maxWidth: px(pos.width), transformOrigin: `${pos.ox} ${pos.oy}` });
@@ -340,6 +341,8 @@ function TurnCard({ card, root, state }) {
       const b = el.getBoundingClientRect();
       if (b.bottom > innerHeight - 8) el.style.top = px(pos.top - Math.min(b.top - 8, b.bottom - (innerHeight - 8)));
     }
+    // (only the dock under the story uses it: layout.css)
+    if (!pos.since) return;
     const h = Math.ceil(el.offsetHeight) + 8;
     if (root && h !== turnH.current) { turnH.current = h; root.style.setProperty('--turn-h', `${h}px`); }
   }, [card.pid, card.n, card.text, root]);
@@ -355,7 +358,17 @@ function TurnCard({ card, root, state }) {
     </div>
   );
 }
-/** Where the turn card goes: { left, right, top, bottom, width, ox, oy } in px, or null (no chair to sit by). */
+// The card's dock is worked out once per layout change (a window resize, the chair column or the story strip mounting,
+// the card's chair in the seat layout) and kept here: reading it on every step forced a page layout mid-commit (perf,
+// 2026-10-15). Nothing observes the strip or the card.
+let dockCache = null, dockStale = true;
+if (typeof addEventListener === 'function') addEventListener('resize', () => { dockStale = true; }, { passive: true });
+function turnCardDock(card, root) {
+  const key = root ? `${!!root.querySelector(':scope > .lt-snake')}|${!!root.querySelector(':scope > .lt-since')}|${card.pid}` : '';
+  if (dockStale || !dockCache || dockCache.root !== root || dockCache.key !== key) { dockCache = { root, key, pos: turnCardPlace(card, root) }; dockStale = false; }
+  return dockCache.pos;
+}
+/** Where the turn card goes: { left, right, top, bottom, width, ox, oy, since } in px, or null (no chair to sit by). */
 function turnCardPlace(card, root) {
   // the chairs in one ordered column (laptop): the card tells the turn in the right column, just above the shop,
   // under the story of the turns since yours (it would cover the next chair beside its own)
@@ -373,7 +386,7 @@ function turnCardPlace(card, root) {
     const rates = root.querySelector('.lt-rates');
     const rb = rates && rates.getBoundingClientRect();
     const overRates = !!(rb && rb.width && Math.abs(rb.left - b.left) < 4);
-    return { left: Math.round(b.left), right: null, top: null, bottom: overRates ? Math.round(innerHeight - rb.top + 12) : 8, width: Math.round(b.width), ox: '0%', oy: '100%' };
+    return { left: Math.round(b.left), right: null, top: null, bottom: overRates ? Math.round(innerHeight - rb.top + 12) : 8, width: Math.round(b.width), ox: '0%', oy: '100%', since: true };
   }
   if (column && column.getBoundingClientRect().width) {
     const shop = root.querySelector('.lt > .lt-shop');
@@ -475,9 +488,23 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       rail.style.setProperty('--rail-bottom', `${rail.offsetHeight - (top + total - rows[rows.length - 1].h / 2)}px`);
     }
   };
-  useLayoutEffect(layColumn);
+  // laid out when the seat order changes (the pid order), and by a ResizeObserver when a chair or the column changes size
+  // (it reports after layout, so its reads are free; the writes move the chairs by transform, never their size). Not
+  // after every commit: reading every chair's height there forced a page layout every step (perf, 2026-10-15).
+  const seatOrderKey = snake.order.join(',');
+  useLayoutEffect(layColumn, [seatOrderKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const layColumnNow = useRef(layColumn);
   layColumnNow.current = layColumn;
+  const colRO = useRef(null), colWatched = useRef(new Set());
+  useLayoutEffect(() => {
+    const r = root.current;
+    if (!r || typeof ResizeObserver !== 'function') return;
+    if (!colRO.current) colRO.current = new ResizeObserver(() => layColumnNow.current());
+    const w = colWatched.current;
+    for (const el of [...w]) if (!el.isConnected) { colRO.current.unobserve(el); w.delete(el); }
+    for (const el of [r.querySelector(':scope > .lt-snake'), ...r.querySelectorAll(':scope > .lt-seat')]) if (el && !w.has(el)) { colRO.current.observe(el); w.add(el); }
+  });
+  useEffect(() => () => { if (colRO.current) colRO.current.disconnect(); colRO.current = null; colWatched.current.clear(); }, []);
   useEffect(() => {
     const again = () => layColumnNow.current();
     addEventListener('resize', again);
@@ -617,9 +644,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       const snap = snapshotShop(root.current);
       if (snap.size) shopSnap.current = snap;
     }
-    // (director.js measureChain can take the chain's geometry here, before the commit. Measured on the loaded box it
-    // moved the layout reads into this timer without saving any: mid-chain the layout is never clean. Not called;
-    // design/eval/perf/turn-wait.md.)
   };
   useLayoutEffect(() => {
     const before = prevState.current;
@@ -714,14 +738,16 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     }
   }, [live0]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // When a choice prompt goes away, keep focus on the table (the status line) rather than the page body.
+  // When a choice prompt goes away, keep focus on the table (the status line) rather than the page body: checked when the
+  // step's kind changes, and only when focus is truly lost (perf, 2026-10-15: a focus() on every state forced a layout)
+  const kindKey = pend ? `${pend.player}:${pend.kind}` : 'none';
   useEffect(() => {
     const a = document.activeElement;
     if ((!a || a === document.body) && root.current) {
       const pill = root.current.querySelector('[data-prompt]');
       if (pill) pill.focus({ preventScroll: true });
     }
-  }, [state]);
+  }, [kindKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Focus goes to the next sensible control when it becomes your move (not into the void).
   useEffect(() => {

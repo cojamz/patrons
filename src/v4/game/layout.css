@@ -68,8 +68,10 @@
    the story, above the follower buys. */
 @media (min-width:861px) and (max-width:1199px) and (min-height:500px){
   .app.game.lt{--turn-dock:since;grid-template-rows:68px minmax(0,1fr) minmax(0,1fr) var(--shop-h,128px)}
-  .app.game.lt > .lt-since{align-self:start;margin-top:8px;max-height:calc(100% - 140px)}
-  .app.game.lt:has(> .turn-card) > .lt-since{max-height:calc(100% - 140px - var(--turn-h, 112px))}
+  /* the follower buys stand at the column's foot, 138px tall (their label 20, two rows of 52 and a gap of 8, 6 below);
+     the story starts 8px down and stops 8px above them, or 8px above the turn card docked 12px over them */
+  .app.game.lt > .lt-since{align-self:start;margin-top:8px;max-height:calc(100% - 154px)}
+  .app.game.lt:has(> .turn-card) > .lt-since{max-height:calc(100% - 158px - var(--turn-h, 112px))}
   /* the shop's wrappers give up their boxes (and, having none, never claim to clip) */
   .app.game.lt > .lt-shop,.app.game.lt > .lt-shop > .lt-shop-cards{display:contents;overflow:visible}
   .app.game.lt .lt-shop-main{grid-area:shop;position:relative;z-index:3;min-width:0}
@@ -151,3 +153,14 @@
 @media (min-width:861px) and (max-width:1199px){ .lt-prompt .undo .undo-word{display:none} }
 /* the Reckoning's rule sentence breaks evenly (it left "ties." alone on its second line) */
 .lt-reckon .reckon-head .reckon-counts{text-wrap:balance}
+/* a steal or gift (w2b #5: "the lit pills cover the follower count, exactly when you choose whom to hit by score"):
+   while a chair's stacks are picks, they stand closer (each pill brings its own padding), so the row ends before the
+   chair's total */
+.lt > .lt-seat .lt-cult-seat.picking .cs-res{gap:3px}
+.lt > .lt-seat .lt-cult-seat .cs-stack.pick-on,.lt > .lt-seat .lt-cult-seat .cs-stack.pick-off{padding:3px 5px 3px 3px;gap:2px}
+/* a chair you can pick from is lit at its own edge, not by a second outline drawn inside it (a frame inside a frame) */
+@media (min-width:861px) and (min-height:500px){
+  /* quiet: the lit pills or figures inside it are the glow (one light, for what you act on) */
+  .lt > .lt-seat:has(> .lt-cult-seat.picking.pick-lit){background:color-mix(in srgb,var(--seat, #221a15) 95%,rgb(var(--lamp)));box-shadow:inset 0 0 0 1px rgba(var(--lamp),.3)}
+  .lt > .lt-seat > .lt-cult-seat.picking.pick-lit{background:none;box-shadow:none}
+}

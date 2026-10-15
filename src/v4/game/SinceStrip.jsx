@@ -2,7 +2,7 @@
 // bot turns blurred past, "why does P4 suddenly have five gold?"). The player's name opens that placement's full card
 // on hover (a tap on the line pins it); every space and member named opens its own card, like on the board. The whole
 // log is one tap away (the Log button), not buried in the menu. Self-contained: the layout places the box.
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { playerColor, seatEmoji } from '../format.js';
 import { Minion } from '../art/Leader.jsx';
 import { Tip } from './Info.jsx';
@@ -40,26 +40,43 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
   // the strip's room (its max-height, set by the layout from the chairs and the turn card, never by these lines) grows.
   // Nothing here sizes the strip, so measuring it can't feed back (the TurnCard lesson, 2026-10-15).
   const listRef = useRef(null), secRef = useRef(null), roomRef = useRef(0);
-  const [drop, setDrop] = useState(0);
   const sig = entries.map(e => e.n).join(',');
-  useLayoutEffect(() => { setDrop(0); }, [sig]);
+  // how many of the oldest lines are folded, for these lines: new lines start it over at 0 (worked out here, not by a
+  // second commit)
+  const [dropState, setDrop] = useState({ sig: '', n: 0 });
+  const drop = dropState.sig === sig ? dropState.n : 0;
   const base = entries.slice(-MAX);
   const cut = Math.min(drop, Math.max(0, base.length - 1));
+  // Overflow is checked when the layout has settled, from a ResizeObserver on the list and its own lines (perf,
+  // 2026-10-15: reading the computed style and scrollHeight in a layout effect forced a page layout every step). The
+  // check only folds lines: it never sets anything the strip's room depends on, and the room's growth is read from its
+  // max-height (set by the layout), never from a size this changes.
+  const live = useRef({ sig, len: base.length });
+  live.current = { sig, len: base.length };
+  const ro = useRef(null), watched = useRef(new Set());
+  // the list and each line on it are watched (observing is not a layout read; a newly watched line reports once)
   useLayoutEffect(() => {
-    const sec = secRef.current;
-    if (!sec) return undefined;
-    const check = () => {
-      const room = parseFloat(getComputedStyle(sec).maxHeight) || 1e6;
-      if (room > roomRef.current + 1 && roomRef.current) { roomRef.current = room; setDrop(0); return; }
-      roomRef.current = room;
-      const l = listRef.current;
-      if (l && l.scrollHeight > l.clientHeight + 1) setDrop(d => (d < base.length - 1 ? d + 1 : d));
-    };
-    check();
-    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(check) : null;
-    if (ro) ro.observe(sec);
-    return () => { if (ro) ro.disconnect(); };
-  }, [cut, sig]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (typeof ResizeObserver !== 'function') return;
+    if (!ro.current) {
+      ro.current = new ResizeObserver(() => {
+        const sec = secRef.current, l = listRef.current;
+        if (!sec || !l) return;
+        const { sig: s0, len } = live.current;
+        const room = parseFloat(getComputedStyle(sec).maxHeight) || 1e6;
+        if (room > roomRef.current + 1 && roomRef.current) { roomRef.current = room; setDrop(d => (d.sig === s0 && d.n ? { sig: s0, n: 0 } : d)); return; }
+        roomRef.current = room;
+        // (the list stacks from its foot: lines that don't fit spill above its top, where scrollHeight can't see them;
+        // design pod 08:50) — in a ResizeObserver callback the layout is settled, so these reads are free
+        const first = l.firstElementChild;
+        if (first && first.getBoundingClientRect().top < l.getBoundingClientRect().top - 1) setDrop(d => { const n = d.sig === s0 ? d.n : 0; return n < len - 1 ? { sig: s0, n: n + 1 } : d; });
+      });
+    }
+    const r = ro.current, l = listRef.current, w = watched.current;
+    for (const el of [...w]) if (!el.isConnected) { r.unobserve(el); w.delete(el); }
+    if (!l) return;
+    for (const el of [l, ...l.children]) if (!w.has(el)) { r.observe(el); w.add(el); }
+  });
+  useEffect(() => () => { if (ro.current) ro.current.disconnect(); ro.current = null; watched.current.clear(); }, []);
   const shown = base.slice(cut);
   const more = entries.length - shown.length;
   const name = id => (id === me ? 'You' : state.players[id].name);

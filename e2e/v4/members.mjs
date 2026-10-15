@@ -238,7 +238,10 @@ try {
         return { gap: Math.round(Math.max(a.left - s.right, s.left - a.right)), level: a.top <= s.bottom && a.bottom >= s.top, inView: a.top >= 0 && a.left >= 0 && a.bottom <= innerHeight + 0.5 && a.right <= innerWidth + 0.5,
           scroll: list && list.scrollHeight > list.clientHeight + 1 ? getComputedStyle(list).overflowY : 'fits', rows: L.querySelectorAll('[data-member-row]').length };
       }, pid);
-      if (!r) { fail(`pointing at seat ${pid}'s ${part} opened no seat card`, 'm7'); continue; }
+      if (!r) {
+        const seen = await page.evaluate(([id, sel]) => { const L = document.querySelector('[data-hover-layer]'); const t = document.querySelector(`[data-cult="${id}"] ${sel}`).getBoundingClientRect(); const e = document.elementFromPoint(t.left + t.width / 2, t.top + t.height / 2); return `layer open=${L.dataset.open} card=${L.querySelector('[data-hover-card]')?.dataset.hoverCard || '-'}/${L.querySelector('[data-seat-card]')?.dataset.seatCard ?? '-'}; under=${e ? `${e.tagName}.${e.className?.baseVal ?? e.className}` : 'none'}`; }, [pid, part]);
+        fail(`pointing at seat ${pid}'s ${part} opened no seat card (${seen})`, 'm7'); continue;
+      }
       if (r.gap < 0 || r.gap > 16 || !r.level) fail(`seat ${pid}'s card (from ${part}) isn't right beside the seat: ${JSON.stringify(r)}`, 'm7');
       if (!r.inView) fail(`seat ${pid}'s card runs off the window`, 'm7');
       if (r.scroll !== 'fits' && !/auto|scroll/.test(r.scroll)) fail(`seat ${pid}'s long list overflows without scrolling`, 'm7');

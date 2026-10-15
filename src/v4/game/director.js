@@ -378,65 +378,20 @@ export const noteTable = root => { void root; };
  * `minionsBefore` the wheel's minions as they were (snapshotMinions), `mine` the viewer's seats. Returns the plan.
  * A chain may start while the last one's tail is still landing (the same player's next step shows at its handoff).
  */
-// The geometry a step's chain needs, read while the table still shows the step before (GameScreen's beforeShow, just
-// before React draws the step): the layout is clean then, so reading it is free. Read after the commit, in the middle of
-// the step's layout effects, it forced a whole-page layout every step (perf, design/eval/perf/turn-wait.md). Sources
-// stand where they are now; destinations are anchors the step doesn't move (a stack, a count, a space, the crowd); a
-// placed minion lands where the space's other minions stand, or on the space.
-let pre = null;
-export function measureChain(root, before, state, { snap = null, mine = [], chips = null } = {}) {
-  pre = null;
-  if (!root || !before || !state || before === state || before.seed !== state.seed || !motionOK()) return;
+export function playChain(root, before, state, { snap = null, minionsBefore = null, mine = [], chips = null } = {}) {
+  if (!root || before === state) return { atoms: [], total: 0, handoff: 0 };
   const ctx = { state, before, snap, chips };
+  // read everything first; every write waits for the clock's next frame (before it paints): a write here made the
+  // next layout effect lay the whole page out again
   const found = new Map(), rects = new Map();
   const where = w => { if (!w) return null; const k = JSON.stringify(w); if (!found.has(k)) found.set(k, placeEl(root, w, ctx)); return found.get(k); };
   const rectOf = e => { if (!rects.has(e)) rects.set(e, e.getBoundingClientRect()); return rects.get(e); };
   const measure = (a, b) => { const A = where(a), B = where(b); if (!A || !B) return TYPICAL; const ra = rectOf(A), rb = rectOf(B); return Math.hypot(rb.left + rb.width / 2 - ra.left - ra.width / 2, rb.top + rb.height / 2 - ra.top - ra.height / 2); };
   const plan = planChain(before, state, { mine, measure });
-  const minions = new Map();
-  for (const a of plan.atoms) {
-    if (a.op !== 'minion') continue;
-    // the minion about to leave is still the last one standing in its column
-    const left = [...root.querySelectorAll(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions [data-minion]`)];
-    const col = left.length ? left[left.length - 1] : root.querySelector(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions`);
-    const slot = root.querySelector(`[data-slot="${a.key}"]`);
-    const there = slot && slot.querySelector('.worker');
-    const any = root.querySelector('.lt-wheel [data-slot] .worker');
-    minions.set(`${a.pid}@${a.key}`, { from: col ? rectOf(col) : null, to: there ? rectOf(there) : slot ? rectOf(slot.querySelector('.base') || slot) : null, size: (there || any) ? rectOf(there || any).width : 0 });
-  }
-  // every place a piece leaves from or lands on, measured now (the chain reads these, never the layout, mid-commit)
-  for (const a of plan.atoms) if (a.from || a.to || a.place) for (const w of [a.from, a.to, a.place, a.toward]) { const el = w && where(w); if (el && !el.rectOnly) rectOf(el); }
-  pre = { before, state, found, rects, plan, minions };
-}
-
-export function playChain(root, before, state, { snap = null, minionsBefore = null, mine = [], chips = null } = {}) {
-  if (!root || before === state) return { atoms: [], total: 0, handoff: 0 };
-  const ctx = { state, before, snap, chips };
-  // measured before the commit (measureChain), when it was this very step: no layout read here at all
-  const p = pre && pre.before === before && pre.state === state ? pre : null;
-  pre = null;
-  // read everything first; every write waits for the clock's next frame (before it paints): a write here made the
-  // next layout effect lay the whole page out again
-  const found = p ? p.found : new Map(), rects = p ? p.rects : new Map();
-  const where = w => { if (!w) return null; const k = JSON.stringify(w); if (!found.has(k)) found.set(k, placeEl(root, w, ctx)); return found.get(k); };
-  const rectOf = e => { if (!rects.has(e)) rects.set(e, e.getBoundingClientRect()); return rects.get(e); };
-  const measure = (a, b) => { const A = where(a), B = where(b); if (!A || !B) return TYPICAL; const ra = rectOf(A), rb = rectOf(B); return Math.hypot(rb.left + rb.width / 2 - ra.left - ra.width / 2, rb.top + rb.height / 2 - ra.top - ra.height / 2); };
-  const plan = p ? p.plan : planChain(before, state, { mine, measure });
   if (!plan.atoms.length || !motionOK()) return plan;
   // where each placed minion stood in its column: the slot past the last one still standing there
   for (const a of plan.atoms) {
     if (a.op !== 'minion') continue;
-    const m = p && p.minions.get(`${a.pid}@${a.key}`);
-    if (m && m.to) {
-      // measured before the commit: the minion's old place in its column, and where it lands
-      const slot = root.querySelector(`[data-slot="${a.key}"]`);
-      a.landed = slot && (slot.querySelector(`.worker[data-seat="${a.pid}"]`) || slot.querySelector('.worker'));
-      a.slotEl = slot;
-      a.fromRect = m.from;
-      const sz = m.size || 18;
-      a.toRect = { left: m.to.left + m.to.width / 2 - sz / 2, top: m.to.top + m.to.height / 2 - sz / 2, width: sz, height: sz };
-      continue;
-    }
     const left = [...root.querySelectorAll(`.lt-cult-seat[data-seat="${a.pid}"] .cs-minions [data-minion]`)];
     const last = left[left.length - 1];
     if (last) { const r = rectOf(last), prev = left.length > 1 ? rectOf(left[left.length - 2]) : null; const dx = prev ? r.left - prev.left : 0, dy = prev ? r.top - prev.top : r.height + 2; a.fromRect = { left: r.left + dx, top: r.top + dy, width: r.width, height: r.height }; }

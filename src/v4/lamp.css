@@ -206,7 +206,7 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-menu .menu-glyph i{width:14px;height:2px;background:currentColor;display:block;box-shadow:0 -5px 0 currentColor,0 5px 0 currentColor}
 .lt-menu .menu-glyph:hover,.lt-menu .menu-glyph[aria-expanded="true"]{color:var(--cream);border-color:rgba(243,230,200,.4)}
 .lt-menu .menu-list{position:absolute;right:0;top:50px;display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:12px;background:var(--walnut-2);box-shadow:0 0 0 1px rgba(243,230,200,.12),0 12px 30px rgba(0,0,0,.6);min-width:170px}
-.lt-menu .menu-list .btn{justify-content:flex-start;text-align:left;border:0;color:var(--cream);font-size:15px;min-height:44px;border-radius:8px;margin:0}
+.lt-menu .menu-list .btn{justify-content:flex-start;text-align:left;border:0;color:var(--cream);font-size:14px;min-height:44px;border-radius:8px;margin:0}
 .lt-menu .menu-list .btn:hover{background:rgba(243,230,200,.08)}
 
 /* ---------- the wheel: printed paper on the walnut ---------- */
@@ -595,5 +595,9 @@ h1,h2,h3{font-family:var(--serif)}
   .app.game.lt > .main.over .over-seat .rank,.app.game.lt > .main.over .over-seat .final{display:none}
   /* the card is the only frame: the seat's own "now" light (the winner) would draw a second one inside it */
   .app.game.lt > .main.over .over-seat .lt-cult-seat{background:none;box-shadow:none}
+  /* the results' seats on the table's type scale (design pod): name and total 18 (the table above says the total too),
+     what they hold 11; they carried 16, 22, 25 and 12 */
+  .app.game.lt > .main.over .over-seat .cs-who b,.app.game.lt > .main.over .over-seat .cs-total .tv{font-size:18px;line-height:22px}
+  .app.game.lt > .main.over .over-seat .cs-stack b{font-size:11px}
 }
 .prompt.choice.setup .token .tk-label{white-space:nowrap}
