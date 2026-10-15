@@ -410,6 +410,8 @@ h1,h2,h3{font-family:var(--serif)}
     background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);border:0;border-radius:12px;padding:14px 16px;
     box-shadow:0 0 0 1px rgba(80,60,30,.25),0 14px 34px rgba(0,0,0,.6)}
   .lt .lt-wheel > .prompt.choice p,.lt .lt-wheel > .prompt.choice .hint{color:var(--paper-ink)}
+  /* the note keeps the cards' scale (14 text, 11 small print): its question and answers were 15px */
+  .lt .lt-wheel > .prompt.choice p,.lt .lt-wheel > .prompt.choice .btn{font-size:14px;line-height:20px}
   .lt .lt-wheel > .prompt.choice .btn{color:var(--paper-ink);border-color:rgba(42,31,23,.35);background:rgba(255,255,255,.35)}
   .lt .lt-wheel > .prompt.choice .btn:hover:not(:disabled){background:#fffaf0}
   .lt .lt-wheel > .prompt.choice .btn small,.lt .lt-wheel > .prompt.choice .rich-body small{color:var(--paper-ink-2)}

@@ -2,6 +2,7 @@
 // bot turns blurred past, "why does P4 suddenly have five gold?"). The player's name opens that placement's full card
 // on hover (a tap on the line pins it); every space and member named opens its own card, like on the board. The whole
 // log is one tap away (the Log button), not buried in the menu. Self-contained: the layout places the box.
+import { useLayoutEffect, useRef, useState } from 'react';
 import { playerColor, seatEmoji } from '../format.js';
 import { Minion } from '../art/Leader.jsx';
 import { Tip } from './Info.jsx';
@@ -34,19 +35,44 @@ export function StoryCard({ story, color, state, hover }) {
  * id or null), yours (it's your move now), hover (the board's hover layer), onLog (opens the full log).
  */
 export default function SinceStrip({ state, entries, me, yours, hover = null, onLog }) {
-  const shown = entries.slice(-MAX);
+  // whole lines only (design pod): when the strip's room can't hold every line, the oldest go into "N earlier…" instead
+  // of showing half a line at the top. `drop` only grows while the list overflows; it starts over when the lines change or
+  // the strip's room (its max-height, set by the layout from the chairs and the turn card, never by these lines) grows.
+  // Nothing here sizes the strip, so measuring it can't feed back (the TurnCard lesson, 2026-10-15).
+  const listRef = useRef(null), secRef = useRef(null), roomRef = useRef(0);
+  const [drop, setDrop] = useState(0);
+  const sig = entries.map(e => e.n).join(',');
+  useLayoutEffect(() => { setDrop(0); }, [sig]);
+  const base = entries.slice(-MAX);
+  const cut = Math.min(drop, Math.max(0, base.length - 1));
+  useLayoutEffect(() => {
+    const sec = secRef.current;
+    if (!sec) return undefined;
+    const check = () => {
+      const room = parseFloat(getComputedStyle(sec).maxHeight) || 1e6;
+      if (room > roomRef.current + 1 && roomRef.current) { roomRef.current = room; setDrop(0); return; }
+      roomRef.current = room;
+      const l = listRef.current;
+      if (l && l.scrollHeight > l.clientHeight + 1) setDrop(d => (d < base.length - 1 ? d + 1 : d));
+    };
+    check();
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(check) : null;
+    if (ro) ro.observe(sec);
+    return () => { if (ro) ro.disconnect(); };
+  }, [cut, sig]); // eslint-disable-line react-hooks/exhaustive-deps
+  const shown = base.slice(cut);
   const more = entries.length - shown.length;
   const name = id => (id === me ? 'You' : state.players[id].name);
   // a tap anywhere on a line that isn't a name pins its card (the name's own tap opens the name's card)
   const pinLine = e => { const t = e.currentTarget.querySelector('[data-since-line]'); if (t && !e.target.closest('[data-hover-name], [data-since-line]')) t.click(); };
   return (
-    <section className={`lt-since${yours ? ' yours' : ''}`} data-since aria-label="Since your last turn">
+    <section ref={secRef} className={`lt-since${yours ? ' yours' : ''}`} data-since aria-label="Since your last turn">
       <header className="since-head">
         <span className="since-title">Since your last turn</span>
         <button type="button" className="since-log" data-open-log onClick={onLog} title="The whole game, move by move">Log</button>
       </header>
       {shown.length ? (
-        <ol className="since-list">
+        <ol className="since-list" ref={listRef}>
           {more > 0 && <li className="since-more"><button type="button" onClick={onLog}>{more} earlier… open the log</button></li>}
           {shown.map(e => (
             <li key={e.n} className={`since-row${e.hit ? ' hit' : ''}`} style={{ '--pc': playerColor(e.actor) }} onClick={pinLine}>

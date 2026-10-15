@@ -143,3 +143,7 @@
    row's second line, instead of the old pill's one-line ellipsis (v4.css .say.nudge): with Release… and Undo beside
    it, the text spilled 58–152px out of its box */
 .lt-prompt .status .say.nudge,.lt-prompt .status .say.info{white-space:normal;text-wrap:balance;overflow:visible;text-overflow:clip}
+/* narrower laptops: Undo says just "Undo" (its label and hover still say what), so the answer keeps its room */
+@media (min-width:861px) and (max-width:1199px){ .lt-prompt .undo .undo-word{display:none} }
+/* the Reckoning's rule sentence breaks evenly (it left "ties." alone on its second line) */
+.lt-reckon .reckon-head .reckon-counts{text-wrap:balance}

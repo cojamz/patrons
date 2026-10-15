@@ -157,13 +157,15 @@ for (const st of want) {
     } else if (st === 'overlap') {
       // the turn card never covers the story of the turns, through a run of rivals' turns (sampled every 150ms)
       await load(SAVES.place2()); await placeAndAnswer(); await passBuy();
-      let worst = 0, n = 0;
+      let worst = 0, n = 0, halfRows = 0;
       for (let k = 0; k < 60; k++) {
         await page.waitForTimeout(150);
         const o = await page.evaluate(() => { const c = document.querySelector('.turn-card'), s = document.querySelector('.lt > .lt-since'); if (!c || !s) return null; const a = c.getBoundingClientRect(), b = s.getBoundingClientRect(); return Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)) * (Math.min(a.right, b.right) > Math.max(a.left, b.left) ? 1 : 0); });
         if (o != null) { n++; if (o > worst) { worst = o; await shot('overlap'); } }
+        const half = await page.evaluate(() => { const l = document.querySelector('.lt-since .since-list'); if (!l) return 0; const b = l.getBoundingClientRect(); return [...l.children].filter(r => { const a = r.getBoundingClientRect(); return a.height && (a.top < b.top - 1 || a.bottom > b.bottom + 1); }).length; });
+        if (half) { halfRows = Math.max(halfRows, half); await shot('halfrow'); }
       }
-      console.log(`overlap: ${n} samples with a turn card, worst overlap ${Math.round(worst)}px`);
+      console.log(`overlap: ${n} samples with a turn card, worst overlap ${Math.round(worst)}px, half-cut strip rows ${halfRows}`);
     } else if (st === 'nudge') {
       // the buy step, then a click on an open space: the header's nudge ("You've placed this turn — …") with Pass beside it
       await load(SAVES.place2()); await placeAndAnswer(); await park();
