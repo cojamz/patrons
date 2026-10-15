@@ -1,5 +1,5 @@
 // Who's next and who's winning (meta round 2, #7): one ranked line of the engine's followers, the leader lit and the
-// margin on hover; and the turns in words on the cults: "next" on the seat after this turn, "your turn in N" on yours
+// margin on hover; and the turns in words on your cult: "your turn in N" (rivals' seats say nothing: Cory dropped "next")
 // (Cory, 2026-10-16: the turn-order rail is gone).
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
@@ -74,13 +74,12 @@ describe('turn order on the cults', () => {
     expect(tp.places[t.current].title).toMatch(/snake order/);
     expect(Object.values(tp.places).filter(x => x.label === 'next')).toHaveLength(0);
   });
-  it('the seats say the turns in words: "next" on the seat after this turn, "your turn in N" on yours', () => {
+  it('the seats say the turns in words: "your turn in N" on yours, nothing on a rival\'s (Cory: "next" dropped)', () => {
     let s = until(createGame({ seats, seed: 43 }), t => t.round >= 1 && t.pending && t.pending.kind === 'place' && t.current !== 0);
     const r = turnRail(s);
     const seq = [r.current, ...r.next].filter(p => p != null);
     const k = seq.indexOf(0);
     const want = { 0: k < 0 ? 'done this round' : k === 1 ? 'your turn next' : `your turn in ${k}` };
-    if (seq[1] != null && seq[1] !== 0) want[seq[1]] = 'next';
     const words = seatTurns(s, 0);
     expect(Object.fromEntries(Object.entries(words).map(([p, w]) => [p, w.say]))).toEqual(want);
     for (const p of s.players) {
@@ -92,16 +91,16 @@ describe('turn order on the cults', () => {
       expect(container.querySelector('.cs-order')).toBeNull();
       cleanup();
     }
-    // your own turn: "your turn" ("two turns in a row" when the snake turns on you); the next rival says "next"
+    // your own turn: "your turn" ("two turns in a row" when the snake turns on you); no rival's seat says anything
     let t = until(s, x => x.pending && x.pending.kind === 'place' && x.current === 0);
     const tr = turnRail(t);
     const mine = seatTurns(t, 0);
     expect(mine[0].say).toBe(tr.next[0] === 0 ? 'two turns in a row' : 'your turn');
-    if (tr.next[0] != null && tr.next[0] !== 0) expect(mine[tr.next[0]].say).toBe('next');
-    expect(Object.values(mine).filter(w => w.say === 'next').length).toBeLessThanOrEqual(1);
+    expect(Object.keys(mine)).toEqual(['0']);
+    expect(Object.values(mine).some(w => w.say === 'next' || w.kind === 'next')).toBe(false);
     // before round I and with no viewer: nothing on yours
     expect(seatTurns(createGame({ seats, seed: 42 }), 0)).toEqual({});
-    expect(Object.values(seatTurns(s, null)).every(w => w.say === 'next')).toBe(true);
+    expect(seatTurns(s, null)).toEqual({});
   });
   it('turns taken early (Crunch Time) read as your own turns moved up: not extra, the seats count them right', () => {
     let s = until(createGame({ seats, seed: 43 }), t => t.round >= 1 && t.pending && t.pending.kind === 'place');
@@ -114,7 +113,7 @@ describe('turn order on the cults', () => {
     expect(seq.slice(1, 3).map(t => t.early)).toEqual(['Crunch Time', 'Crunch Time']);
     expect(seatTurns(s, me)[me].say).toBe('two turns in a row');
     expect(turnPlaces(s, me).places[me].title).toMatch(/taken early \(Crunch Time\), not an extra one/);
-    // the seat after the early turns says next, and every other seat's count matches the queue
+    // the seat after the early turns counts them right
     const r = turnRail(s);
     const after = r.next.find(p => p !== me);
     expect(seatTurns(s, after)[after].say).toBe(`your turn in ${r.next.indexOf(after) + 1}`);

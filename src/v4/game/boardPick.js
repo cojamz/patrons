@@ -73,6 +73,7 @@ export function boardPicker(state, pend) {
  *   colors  Trade Seeds: the color you give (yours), then the one you get
  *   amount  Sweet Talk: the color you get, then how many
  *   trade   Even Swap, Swap Sides: one of your members, then a rival's it pairs with (grouped by rival)
+ *   color   Goody Bags, Cheap Seats: one row, a color of yours (a space's ask only; Done and "N left" ride along)
  * Null when the choice isn't one of these. Steals stay on the seats: one click on the rival's own pile is already the
  * pair (whose and which), and it's the thing you take.
  * The model: { kind, title, head, n, color, actor, chosen, firsts, seconds, others, rest, done, sameCost }.
@@ -95,6 +96,23 @@ export function giftPick(state, pend, first = null) {
   if (gift && players.length && players.length === pend.options.length) {
     const n = Number(gift[1]), color = state.resources.includes(gift[2]) ? gift[2] : null;
     return { ...base, kind: 'gift', n, color, head: 'Give', chosen: color, firsts: [], seconds: players.map(o => ({ o, b: o.target.pid })), others: players.map(o => o.target.pid), rest: [] };
+  }
+  // a color of yours asked by a space just used (Goody Bags' color, Cheap Seats' "pay 1 for 1 follower"): one row of your
+  // colors on the card by the space (Cory, 2026-10-15: choices come to where you act), never your seat's stacks ~500 px
+  // away. Asks from a member or a release (no space behind them) stay on your stacks.
+  const own = pend.options.filter(o => o.target && o.target.res && o.target.pid == null && o.target.space == null && o.target.uid == null);
+  const fromSpace = title && state.quadrants.some(q => quadrant(q).actions.some(a => a.name === title));
+  if (fromSpace && own.length >= 2 && own.length + pend.options.filter(o => !o.target).length === pend.options.length) {
+    const left = (question.match(/\((\d+) left\)/) || [])[1];
+    const ask = question.replace(/\s*\(\d+ left\)\s*/, ' ').trim();
+    // "pay which resource for 1 follower?" reads "Pay 1 for 1 follower"; any other question is its first sentence, the
+    // rest of it the line under it ("Which color?" / "You get 2, everyone else gets 1.")
+    const payFor = ask.match(/^pay which \w+ for (\d+ \w+)\?\s*(.*)$/i);
+    const [q1, ...more] = ask.split('?');
+    const head = payFor ? `Pay 1 for ${payFor[1]}` : `${q1[0].toUpperCase()}${q1.slice(1)}${more.length ? '?' : ''}`;
+    const sub = payFor ? payFor[2] : more.join('?').trim();
+    return { ...base, kind: 'color', n: null, color: null, chosen: null, pay: !!payFor, left: left == null ? null : Number(left),
+      head, sub, firsts: [], seconds: own.map(o => ({ o, b: o.target.res })), others: own.map(o => o.target.res), rest: pend.options.filter(o => !o.target) };
   }
   const res = state.resources, pairs = [], rest = [];
   let kind = null;

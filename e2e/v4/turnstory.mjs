@@ -20,7 +20,7 @@
 //  (t9) Cory, 2026-10-16: "pass is hard to find" and "the turn-order rail is confusing". In your buy step a "Done, no
 //       buy" button stands in the shop column directly under the follower buys, visible and enabled, and it's the one
 //       way to pass on a laptop (no second Pass in the headline); the rail is gone (nothing drawn in the chairs' gutter);
-//       during a rival's turn the seat that places next (the engine's queue) reads "next" and no other rival does, and
+//       during a rival's turn no rival seat reads anything (Cory, 2026-10-15: "next" dropped), and
 //       your seat reads "your turn next" / "your turn in N", N the turns before yours in the engine's queue.
 //  (t10) wave-2 testers A#3, B#46: what you got on a rival's turn (Silversmith, "everyone else +1") is on the strip's
 //       line for that turn, naming each member that paid it.
@@ -262,7 +262,7 @@ try {
   await page.locator('.lt-shop [data-option="pass"]').click().catch(() => {});
   // the rivals play; back on P1 the strip has their moves
   await page.waitForFunction(() => document.querySelector('.lt')?.dataset.yours === '0', null, { timeout: 8000 }).catch(() => {});
-  // (t9) during a rival's turn: "next" on the seat the engine's queue names, "your turn in N" on yours (read when the
+  // (t9) during a rival's turn: no rival seat says anything (Cory dropped "next"), "your turn in N" on yours (read when the
   // screen has caught up with the save: the chain may still be telling the last move)
   {
     let t9 = null, ok = false;
@@ -280,13 +280,12 @@ try {
     }
     if (!ok) fail(`(t9) never caught a rival's turn with the screen caught up: ${JSON.stringify(t9)}`, 't9');
     else {
-      const k = t9.ahead.indexOf(0), nextPid = t9.ahead[1];
+      const k = t9.ahead.indexOf(0);
       const wantMine = k < 0 ? 'done this round' : k === 1 ? 'your turn next' : `your turn in ${k}`;
       if (t9.words['0'] !== wantMine) fail(`(t9) your seat reads ${JSON.stringify(t9.words['0'])} during a rival's turn (want "${wantMine}"; queue ${JSON.stringify(t9.ahead)})`, 't9');
       for (const [pid, w] of Object.entries(t9.words)) {
         if (pid === '0') continue;
-        const want = nextPid != null && String(nextPid) === pid ? 'next' : null;
-        if (w !== want) fail(`(t9) P${Number(pid) + 1}'s seat reads ${JSON.stringify(w)} (want ${JSON.stringify(want)}; queue ${JSON.stringify(t9.ahead)})`, 't9');
+        if (w !== null) fail(`(t9) P${Number(pid) + 1}'s seat reads ${JSON.stringify(w)} (want nothing: Cory dropped "next"; queue ${JSON.stringify(t9.ahead)})`, 't9');
       }
       await page.screenshot({ path: `${SHOTS}/5b-rival-turn.png` });
     }

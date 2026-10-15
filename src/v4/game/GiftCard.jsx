@@ -1,6 +1,6 @@
 // The gift card (Cory, 2026-10-16: the two-step pick on the seats was "very bad/confusing"). A choice that gives to a
 // rival, or pairs two things (boardPick.js giftPick: Good Deed, Kickback, Benefactor, Even Swap, Swap Sides, Trade Seeds,
-// Sweet Talk), is a small paper card beside the space just used: a plain heading ("A rival you pick gets 2"), then the first
+// Sweet Talk), or a color of yours asked by a space (Goody Bags, Cheap Seats: one row, your counts when you pay), is a small paper card beside the space just used: a plain heading ("A rival you pick gets 2"), then the first
 // row (your colors, or your members), then the second (the rivals' faces, the color you get, how many, their members).
 // The second row is there from the start, quiet, so the card never changes shape; it lights once a first is picked. The
 // picked one stays pressed, and a click on another switches it. Every answer is the engine's own option id.
@@ -18,7 +18,7 @@ import { TurnOf } from './parts.jsx';
 import { leadWarning } from './boardPick.js';
 import './giftcard.css';
 
-const LABELS = { give: ['Color', 'To'], gift: [null, 'To'], colors: ['Give', 'Get'], amount: ['Get', 'How many'], trade: ['Yours', 'Theirs'] };
+const LABELS = { color: [null, null], give: ['Color', 'To'], gift: [null, 'To'], colors: ['Give', 'Get'], amount: ['Get', 'How many'], trade: ['Yours', 'Theirs'] };
 const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try { return quadrant(d.quadrant).resource; } catch { return 'colorless'; } };
 
 /**
@@ -29,7 +29,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
   const pend = state.pending;
   const me = state.players[g.actor];
   const box = useRef(null);
-  const step = g.kind === 'gift' || g.chosen != null ? 2 : 1;
+  const step = g.kind === 'gift' || g.kind === 'color' || g.chosen != null ? 2 : 1;
   // the row to act on takes the focus, so the keyboard starts where the mouse would
   useEffect(() => {
     const b = box.current && box.current.querySelector(`.gc-row[data-row="${step}"] button:not([disabled])`);
@@ -104,6 +104,15 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
         </button>
       );
     }
+    if (g.kind === 'color') {
+      const n = me.res[b] || 0;
+      return (
+        <button key={b} {...common} className={`${common.className} gc-dot`} data-res={b} aria-label={g.pay ? `Pay 1 ${b} (you have ${n})` : `${b} (you have ${n})`} title={b}>
+          <ResourceGlyph r={b} size={24} decorative />
+          {g.pay && <b className="num">{n}</b>}
+        </button>
+      );
+    }
     if (g.kind === 'colors') {
       return (
         <button key={b} {...common} className={`${common.className} gc-dot`} data-res={b} aria-label={o ? `Get 1 ${b}` : `${b}: pick what you give first`} title={b}>
@@ -148,8 +157,9 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
       data-gift={g.kind} data-step={step} style={place ? { left: place.left, top: place.top } : undefined}>
       {turnOf && <TurnOf player={turnOf} />}
       <header className="gc-head">
-        {g.title && <small className="gc-title">{g.title}{g.done ? <> · <span className="num">{g.done}</span> swapped</> : null}</small>}
+        {g.title && <small className="gc-title">{g.title}{g.left != null ? <> · <span className="num">{g.left}</span> left</> : null}{g.done ? <> · <span className="num">{g.done}</span> swapped</> : null}</small>}
         <p className="gc-what">{head}</p>
+        {g.sub && <p className="gc-sub">{g.sub}</p>}
       </header>
       {l1 && (
         <div className="gc-row" data-row="1" data-live={step === 1 ? '1' : undefined}>
@@ -158,7 +168,7 @@ export default function GiftCard({ state, gift: g, onFirst, onAnswer, busy, plac
         </div>
       )}
       <div className="gc-row" data-row="2" data-live={step === 2 ? '1' : undefined}>
-        <span className="gc-lbl">{l2}</span>
+        {l2 && <span className="gc-lbl">{l2}</span>}
         <div ref={more} onScroll={edge} className={`gc-items${g.kind === 'trade' ? ' gc-theirs' : ''}`}>{g.kind === 'trade' ? theirs() : g.others.map(secondItem)}</div>
       </div>
       {leadWarning(pend.options) && <p className="pay-lead gc-lead" data-pay-lead>{leadWarning(pend.options)}</p>}

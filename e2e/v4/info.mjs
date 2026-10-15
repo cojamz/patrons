@@ -21,8 +21,8 @@
 //      place (data-rank), the places follow the totals, the leader's total is lit, a trailing total's hover says the
 //      margin; the chairs stand in
 //      this round's turn order (top to bottom, the engine's first pass), and the turns are said in words on the chairs
-//      (Cory, 2026-10-16: the rail is gone): your chair says "your turn…" (or "done this round"), and at most one rival
-//      chair says "next", nothing else;
+//      (Cory, 2026-10-16: the rail is gone): your chair says "your turn…" (or "done this round"), and no rival chair
+//      says anything (Cory, 2026-10-15: "next" dropped);
 //  (m) the hover card opens right next to what it explains (Cory, 2026-10-15: never a docked spot elsewhere): whole
 //      on screen, at the page's top level above every strip, beside or above its target and not over it;
 //  (o) the rim: pointing at a quadrant's rule or a leader's emoji opens that quadrant's standings, never a space;
@@ -417,7 +417,7 @@ try {
         }
         const mineSays = tops.turns.filter(t => t.mine).map(t => t.say), rivalSays = tops.turns.filter(t => !t.mine && t.say);
         if (tops.playing && !tops.held && mineSays.length && (mineSays.length !== 1 || !/^(two turns in a row|your turn( next| in \d+)?|done this round)$/.test(mineSays[0] || ''))) fail(`(l) your chair's turn words: ${JSON.stringify(tops.turns)}`, step);
-        if (rivalSays.length > 1 || rivalSays.some(t => t.say !== 'next')) fail(`(l) rival chairs' turn words (want at most one "next"): ${JSON.stringify(tops.turns)}`, step);
+        if (rivalSays.length) fail(`(l) rival chairs' turn words (want none: Cory dropped "next"): ${JSON.stringify(tops.turns)}`, step);
       }
     }
     // the first answer in page order, as a person would give it (lib/answer.mjs: board picks, pairs, the pay sheet)

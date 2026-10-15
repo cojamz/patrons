@@ -51,23 +51,17 @@ export function turnPlaces(state, me = null) {
 }
 /**
  * What each seat says about the turns, in plain words (Cory, 2026-10-16: "the turn-order rail is confusing"; the rail is
- * gone and the seats say it): the seat that places right after the turn being played says "next" (that can be the
- * seat playing now, when the snake turns on it or it has an extra turn), and your own seat counts the turns until yours:
+ * gone and the seats say it): your own seat counts the turns until yours. A rival's seat says nothing (Cory, 2026-10-15:
+ * "next" on the seat after the current player is dropped; the glow and the header say whose turn it is):
  * "your turn", "your turn next", "your turn in 3", or "done this round". Read off the engine's queue (turnPlaces), so
  * extra turns, extra minions and seats with nothing left to place are counted as the turns they are.
- * Returns { pid: { say, kind: 'next'|'now'|'soon'|'in'|'done', n, title } }; empty outside the placing rounds.
+ * Returns { [me]: { say, kind: 'now'|'soon'|'in'|'done', n, title } }; empty outside the placing rounds or without a me.
  */
 export function seatTurns(state, me = null) {
   const out = {};
   const { places, order } = turnPlaces(state, me);
   if (!(state.round >= 1) || state.over) return out;
   const playing = order.length && state.current != null && order[0] === state.current ? order[0] : null;
-  const nextPid = order[playing != null ? 1 : 0];
-  const name = id => state.players[id].name;
-  if (nextPid != null && nextPid !== me) {
-    const again = nextPid === playing;
-    out[nextPid] = { say: 'next', kind: 'next', n: 1, title: again ? `${name(nextPid)} goes again right after this turn.` : `${name(nextPid)} places after this turn.` };
-  }
   if (me != null && places[me]) {
     const k = order.indexOf(me);
     const tail = places[me].title ? ` ${places[me].title.replace(/^[^.]*\.\s*/, '')}`.trimEnd() : '';

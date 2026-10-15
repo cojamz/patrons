@@ -1,6 +1,6 @@
 // When a chair may skip a render (perf, 2026-10-15). The engine clones the whole state on every step, so a chair's
 // memo never held: all four re-rendered on every bot step. A chair now re-renders only when something it shows changed:
-// its player, its members' cards, its turn words ("next", "your turn in 3"), its rank, its income, its last space, the round, or a
+// its player, its members' cards, its turn words ("your turn in 3"), its rank, its income, its last space, the round, or a
 // new log line naming it (its members' hops and its leader's gestures read the log). Every other prop must be the same.
 import { followers } from '../../engine/v4/index.js';
 import { newLogLines } from '../format.js';

@@ -1168,6 +1168,18 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     return undefined;
   }, [picker, pend, mine, needHandoff]); // eslint-disable-line react-hooks/exhaustive-deps
   const pickParts = useMemo(() => {
+    // Good Deed with its color picked: the rivals' seats light too (Kickback stays on its card: steal.mjs s4), on the stack
+    // the gift lands on, and a click anywhere on a lit seat gives the same answer as that rival's face on the card
+    const giftColor = gift && gift.kind === 'give' ? gift.chosen : null;
+    if (gift && giftColor) {
+      const out = {};
+      for (const { o, b } of gift.seconds) {
+        if (!Number.isInteger(b)) continue;
+        out[b] = { lit: true, dim: false, give: true, seatMode: true, seat: o, giftSeat: true, picked: {}, members: null,
+          stacks: { [giftColor]: { option: o, why: null } }, title: gift.title, onPick: (id, el) => onGiftAnswer(id, el, b), onDenied: onSeatDenied };
+      }
+      return out;
+    }
     if (!picker) return {};
     // the "−1"s show only while they add up to the engine's own count (a reload mid-steal starts them over)
     const picked = seatPicks.key === pickKey && picker.count
@@ -1178,7 +1190,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       if (part) out[p.id] = { ...part, title: picker.title, onPick: onSeatPick, onDenied: onSeatDenied };
     }
     return out;
-  }, [picker, seatPicks, pickKey, state, onSeatPick, onSeatDenied]);
+  }, [gift, onGiftAnswer, picker, seatPicks, pickKey, state, onSeatPick, onSeatDenied]);
   const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)} of 3</> : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
@@ -1298,7 +1310,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
               others clockwise. UI-B fills each chair (CultSeat); the chairs never move. */}
           {/* the chairs stand in this round's turn order, one column (Cory, 2026-10-15: "position IS order"); each chair
-              says its turn in words ("next", "your turn in 3"; CultSeat). The rail beside them is gone (Cory, 2026-10-16:
+              says its turn in words ("your turn in 3", yours only; CultSeat). The rail beside them is gone (Cory, 2026-10-16:
               "the turn-order rail is confusing"): this empty column only measures where the chairs stack (layColumn),
               and its gutter holds the round's counts while a round is scored (Reckoning). */}
           <div className="lt-snake" aria-hidden="true" style={{ '--n': state.players.length }} />

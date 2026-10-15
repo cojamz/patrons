@@ -9,7 +9,9 @@
 @media (min-width:861px) and (min-height:500px){
   .lt .lt-wheel > .prompt.choice.gift-card{overflow:hidden;max-width:min(460px,calc(100% - 16px));max-height:min(calc(100% - 16px),480px);box-sizing:border-box}
   .gift-card .gc-row[data-row="2"]{min-height:0;flex:0 1 auto}
-  .gift-card .gc-row[data-row="2"] > .gc-items{max-height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+  /* (its box is the row's plus the 4px pads its negative margins hand back: at max-height:100% a row that fit came out 8px
+     short, so every card read "more below" and faded its own last line) */
+  .gift-card .gc-row[data-row="2"] > .gc-items{max-height:calc(100% + 8px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
     /* the lamp ring and the lift of a tile stay inside the scroller's edge */
     padding:4px 4px 4px 2px;margin:-4px -4px -4px -2px}
   .gift-card .gc-items[data-more="down"]{-webkit-mask-image:linear-gradient(#000 calc(100% - 28px),transparent);mask-image:linear-gradient(#000 calc(100% - 28px),transparent)}
@@ -78,3 +80,7 @@
 .lt .lt-wheel > .prompt.choice.gift-card .gc-rest-btn{min-height:32px;padding:0 14px;border-radius:999px;font:500 14px/1 var(--sans)}
 
 @media (prefers-reduced-motion:reduce){ .gift-card .gc-item{transition:none} .gift-card .gc-item:not(:disabled):hover{transform:none} }
+
+/* a color of yours (Goody Bags, Cheap Seats): one row, no label column; the line under the heading */
+.gift-card[data-gift="color"] .gc-row{grid-template-columns:auto}
+.gift-card .gc-sub{margin:0;font:500 14px/20px var(--sans);color:var(--paper-ink-2,#5f4e3d)}

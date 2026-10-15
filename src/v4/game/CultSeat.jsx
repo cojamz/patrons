@@ -49,8 +49,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const extraBuyNow = !!(mine && pend && pend.player === pid && pend.kind === 'buy' && pend.extra && !state.over);
   const givesExtra = g => extraBuyNow && g.uids.some(u => { const c = state.cards[u]; return !(c.spent && c.spent.extraBuy === state.round) && !!cardDef(state, u).extraBuy; });
   const ready = new Set(mine ? [...usableNow(state, pid).filter(x => optionFor(`use:${x.uid}`)).map(x => x.uid), ...memberAsks(state, pid).keys()] : []); // + a member asking you now (memberUse.js)
-  // the turns in plain words (Cory, 2026-10-16: the rail confused him): "next" on the seat that places after this turn,
-  // and on yours "your turn in 3" (seats.js seatTurns, read off the engine's queue)
+  // the turns in plain words (Cory, 2026-10-16: the rail confused him), on yours only: "your turn in 3" (seats.js
+  // seatTurns, read off the engine's queue); a rival's seat says nothing (Cory, 2026-10-15: "next" dropped)
   const turn = seatTurns(state, me)[pid] || null;
   // who's winning lives here now (no score row): this chair's place, lit when it leads, the margin on hover
   const rank = seatRanks(state, me)[pid] || null;
@@ -136,7 +136,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 40 : 32} orbit={false} face={!mine} /></span>
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
-          {/* its place in the turns, in words under the name: "next", or on yours "your turn in 3" */}
+          {/* on yours, its place in the turns in words under the name: "your turn in 3" */}
           {turn && <Tip className={`cs-turn ${turn.kind}`} data-turn={turn.kind} data-turn-n={turn.n ?? undefined}
             label={turn.title} content={() => <div className="pop-card gloss"><b>Turn order</b><span>{turn.title}</span></div>}>{turn.say}</Tip>}
         </span>

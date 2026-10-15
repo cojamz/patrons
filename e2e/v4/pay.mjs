@@ -8,9 +8,14 @@
 //  (p4) Wave-2 testers A#4, B#2: only one way to pay, but it gives up a lead you hold (3 gold leading Most gold, the
 //       price takes all 3): the sheet asks, says "gives up your lead in gold", and Cancel goes back with nothing paid.
 //  (g1) Good Deed on the gift card (Cory, 2026-10-16: the two-step pick on the seats was "very bad/confusing"): a small
-//       card beside the space just taken, headed "A rival you pick gets 2"; the table's colors are its lit first row, the
+//       card beside the space just taken, headed "A rival you pick gets 2" (the picked color's dot after it, once picked); the table's colors are its lit first row, the
 //       rivals' faces wait quiet under them (no chips, nothing lit on the seats); a color is plainly picked, a click on
 //       another switches it, then the faces light and a face click gives (the engine's id), the coins flying there.
+//  (g2) once a color is picked, the rivals' seats light too (the seat a button with the lit edge, its stack of the color
+//       lit), never your own; (g3) a seat click gives the face's answer.
+//  (c1) Goody Bags' color and (c2) Cheap Seats' "pay 1 for 1 follower" on the card at the space (Cory, 2026-10-15:
+//       choices come to where you act), not on your seat's stacks: the engine's colors and ids, Cheap Seats' counts,
+//       "N left" and its Done/Trade nothing; a pick answers, Cheap Seats' card stays at the space until Done.
 //  (w1) Even Swap on the same card: your members are the first row; one picked, the rivals' members it pairs with light
 //       (each opens its own card when pointed at: w3a A3); a click swaps.
 //  (w2) Swap Sides in round III with a crowd (blind panel: "Theirs" ran off the card over the shop cards): the card
@@ -26,7 +31,7 @@ import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
-import { paySave, swapSave, swapCrowdSave, comboSave, momentSave } from './lib/dialog-save.mjs';
+import { paySave, swapSave, swapCrowdSave, comboSave, momentSave, colorSave } from './lib/dialog-save.mjs';
 import { stealSave } from './lib/steal-save.mjs';
 import { memberPrice, TIERS, cardDef } from '../../src/engine/v4/index.js';
 import { costParts } from '../../src/v4/format.js';
@@ -199,10 +204,28 @@ try {
     await page.waitForSelector('.gift-card .gc-dot.chosen[data-res="red"]', { timeout: 4000 }).catch(() => errors.push('(g1) a click on another color does not switch the pick'));
     if (await page.$$eval('.gift-card .gc-dot.chosen', els => els.length) !== 1) errors.push('(g1) more than one color shows as picked');
     const head2 = await page.$eval('.gift-card .gc-what', e => e.textContent.replace(/\s+/g, ' ').trim());
-    if (!/^Give 2\s*to a rival$/.test(head2) || !(await page.$('.gift-card .gc-what .pip'))) errors.push(`(g1) after the color the heading reads "${head2}" (want the dot in it)`);
+    // (the words fix: "A rival you pick gets 2" and the picked color's dot after it)
+    if (head2 !== 'A rival you pick gets 2' || !(await page.$('.gift-card .gc-what .pip[data-pip="red"]'))) errors.push(`(g1) after the color the heading reads "${head2}" (want "A rival you pick gets 2" and the red dot in it)`);
+    const faceRow = await page.$eval('.gift-card .gc-row[data-row="2"] > .gc-items', e => ({ more: e.dataset.more || null, over: e.scrollHeight - e.clientHeight }));
+    if (faceRow.more || faceRow.over > 1) errors.push(`(g1) the faces' row is cut and faded though nothing is hidden: ${JSON.stringify(faceRow)}`);
     const faces = await page.$$eval('.gift-card .gc-row[data-row="2"][data-live] .gc-face:not([disabled])', els => els.map(e => [e.dataset.pid, e.dataset.option]));
     if (faces.map(f => f[0]).sort().join() !== '1,2,3') errors.push(`(g1) lit faces after the color: ${faces.map(f => f[0]).join(' ')}`);
     if (faces.some(([pid, id]) => id !== `give:${pid}:red`)) errors.push(`(g1) the faces answer ${faces.map(f => f[1]).join(' ')}, not the engine's give:<pid>:red`);
+    // (g2) the rivals' seats light too (Cory, 2026-10-15: choices on the board as well as the card): each rival's seat is
+    // the answer (its whole chair a button, wearing the lit edge), its red stack lit where the 2 land; never your own
+    const seatsLit = await page.evaluate(() => [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].map(e => {
+      const cs = e.querySelector('.lt-cult-seat'), b = e.querySelector('.cs-pick-seat:not(.off)'), st = e.querySelector('.cs-stack.pick-on');
+      return { pid: e.dataset.pid, lit: !!cs && cs.classList.contains('pick-lit') && cs.classList.contains('pick-seat'), seat: b ? b.dataset.option : null,
+        stack: st ? `${st.dataset.res}:${st.dataset.option}` : null, ring: getComputedStyle(e).boxShadow };
+    }));
+    for (const x of seatsLit) {
+      if (x.pid === '0') { if (x.lit || x.seat || x.stack) errors.push(`(g2) your own seat lights for the gift: ${JSON.stringify(x)}`); continue; }
+      if (!x.lit || x.seat !== `give:${x.pid}:red`) errors.push(`(g2) P${Number(x.pid) + 1}'s seat is not the answer give:${x.pid}:red: ${JSON.stringify(x)}`);
+      if (x.stack !== `red:give:${x.pid}:red`) errors.push(`(g2) P${Number(x.pid) + 1}'s red stack is not lit where the gift lands: ${JSON.stringify(x)}`);
+      // the lit edge a takeable space wears (layout.css: a 2px lamp ring), not the seat's resting 1px hairline
+      const inset = Math.max(0, ...[...(x.ring || '').matchAll(/0px 0px 0px ([\d.]+)px inset/g)].map(m => Number(m[1])));
+      if (inset < 1.5) errors.push(`(g2) P${Number(x.pid) + 1}'s seat wears no lit ring: ${x.ring}`);
+    }
     const box1 = await page.$eval('.gift-card', e => { const r = e.getBoundingClientRect(); return [r.width, r.height]; });
     if (Math.abs(box1[0] - box0[0]) > 2 || Math.abs(box1[1] - box0[1]) > 2) errors.push(`(g1) the card changes size between steps (${box0.map(Math.round)} → ${box1.map(Math.round)})`);
     await page.screenshot({ path: `${SHOTS}/g1-step2.png` });
@@ -272,6 +295,98 @@ try {
     });
     if (strip && !strip.rows && /No moves|Since your last turn/i.test(strip.text)) errors.push(`(s0) the strip with nothing to tell still reads "${strip.text.trim()}"`);
     if (strip && strip.clamped) errors.push(`(s0) ${strip.clamped} strip line(s) clamped with an ellipsis`);
+    await ctx.close();
+  }
+  // (g3) a click on a lit rival's seat gives, the same answer as their face on the card
+  {
+    const save = comboSave('gooddeed');
+    const { ctx, page } = await open('g3', save, '.lt-wheel .gift-card[data-gift="give"]');
+    await page.waitForTimeout(300);
+    await click(page, '.gift-card .gc-dot[data-res="red"]');
+    await page.waitForSelector('.lt-seat[data-pid="3"] .cs-pick-seat[data-option="give:3:red"]', { timeout: 4000 }).catch(() => errors.push('(g3) P4\'s seat never lit after the color'));
+    const before = save.state.players[3].res.red;
+    // the middle of the chair, away from its stacks: the whole seat answers
+    const b = await (await page.$('.lt-seat[data-pid="3"]')).boundingBox();
+    await page.mouse.click(b.x + b.width * 0.35, b.y + b.height * 0.7);
+    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, save.state.moves, { timeout: 6000 }).catch(() => errors.push('(g3) clicking the seat gave nothing'));
+    const rec = await lastMove(page);
+    if (rec && rec !== 'give:3:red') errors.push(`(g3) the seat click recorded ${rec}, not give:3:red`);
+    let got = NaN;
+    for (let k = 0; k < 30 && got !== before + 2; k++) { got = await page.$eval('.lt-seat[data-pid="3"] .cs-stack[data-res="red"] b', e => Number(e.textContent)).catch(() => NaN); await page.waitForTimeout(100); }
+    if (got !== before + 2) errors.push(`(g3) P4 holds ${got} red, want ${before + 2}`);
+    if (await page.$('.gift-card, .lt-seat .cs-pick-seat')) errors.push('(g3) the card or a lit seat stays up after the gift');
+    await page.screenshot({ path: `${SHOTS}/g3-seat-given.png` });
+    await ctx.close();
+  }
+  // (c1) Goody Bags' color and (c2) Cheap Seats' "pay 1 for 1 follower" open on the card at the space (Cory, 2026-10-15:
+  // choices come to where you act), never on your seat's stacks ~500 px away: one row of the engine's colors, each the
+  // engine's own id; Cheap Seats shows what you hold of each, "N left" by its name and its Done
+  for (const [tag, space] of [['c1', 'goody'], ['c2', 'cheap']]) {
+    const save = colorSave(space);
+    const st = save.state, slot = st.players[0].lastSlot && st.players[0].lastSlot.key;
+    const { ctx, page } = await open(tag, save, '.lt-wheel .gift-card[data-gift="color"]');
+    await page.waitForTimeout(300);
+    const where = await page.evaluate(key => {
+      const c = document.querySelector('.gift-card').getBoundingClientRect();
+      const s = key && document.querySelector(`.lt-wheel [data-slot="${key}"]`);
+      const r = s && s.getBoundingClientRect();
+      return { gap: r ? Math.max(0, r.left - c.right, c.left - r.right) + Math.max(0, r.top - c.bottom, c.top - r.bottom) : null, placed: document.querySelector('.gift-card').classList.contains('at-space') };
+    }, slot);
+    if (!where.placed || where.gap == null || where.gap > 40) errors.push(`(${tag}) the card is not beside the space just taken (${slot}: ${where.gap == null ? 'not found' : `${Math.round(where.gap)}px away`})`);
+    if (await page.$('.lt-seat .cs-stack.pick-on, .lt-seat .cs-pick-seat, .seat-pick.docked')) errors.push(`(${tag}) the seats or the header still take the pick`);
+    const chips = await page.$$eval('.pick-key, .prompt.choice .opts .btn', els => els.filter(e => e.getBoundingClientRect().width > 2).length);
+    if (chips) errors.push(`(${tag}) ${chips} chips show`);
+    const want = st.pending.options.filter(o => o.target).map(o => `${o.target.res}=${o.id}`);
+    const dots = await page.$$eval('.gift-card .gc-row[data-live] .gc-dot:not([disabled])', els => els.map(e => `${e.dataset.res}=${e.dataset.option}`));
+    if (dots.slice().sort().join() !== want.slice().sort().join()) errors.push(`(${tag}) the card's colors ${dots.join(' ')} ≠ the engine's ${want.join(' ')}`);
+    // a row that fits is whole: no "more below" fade over its own picks (an 8px-short scroller faded every card's last line)
+    const row2 = await page.$eval('.gift-card .gc-row[data-row="2"] > .gc-items', e => ({ more: e.dataset.more || null, over: e.scrollHeight - e.clientHeight }));
+    if (row2.more || row2.over > 1) errors.push(`(${tag}) the card's row is cut and faded though nothing is hidden: ${JSON.stringify(row2)}`);
+    const title = await page.$eval('.gift-card .gc-title', e => e.textContent.replace(/\s+/g, ' ').trim()).catch(() => '');
+    const head = await page.$eval('.gift-card .gc-what', e => e.textContent.replace(/\s+/g, ' ').trim()).catch(() => '');
+    await page.screenshot({ path: `${SHOTS}/${tag}-card.png` });
+    if (space === 'goody') {
+      if (title !== 'Goody Bags' || head !== 'Which color?') errors.push(`(c1) the card reads "${title}" / "${head}"`);
+      const sub = await page.$eval('.gift-card .gc-sub', e => e.textContent.trim()).catch(() => '');
+      if (!/You get 2, everyone else gets 1/.test(sub)) errors.push(`(c1) the line under the heading reads "${sub}"`);
+      const pick = st.pending.options.find(o => o.id === 'color:red') || st.pending.options.find(o => o.target);
+      const before = st.players[0].res[pick.value] || 0;
+      await click(page, `.gift-card .gc-dot[data-option="${pick.id}"]`);
+      await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 6000 }).catch(() => errors.push('(c1) clicking a color did nothing'));
+      const rec = await lastMove(page);
+      if (rec && rec !== pick.id) errors.push(`(c1) recorded ${rec}, not ${pick.id}`);
+      let got = NaN;
+      for (let k = 0; k < 30 && got !== before + 2; k++) { got = await page.$eval(`.lt-seat[data-pid="0"] .cs-stack[data-res="${pick.value}"] b`, e => Number(e.textContent)).catch(() => NaN); await page.waitForTimeout(100); }
+      if (got !== before + 2) errors.push(`(c1) you hold ${got} ${pick.value}, want ${before + 2}`);
+      if (await page.$('.gift-card[data-gift="color"]')) errors.push('(c1) the card stays up after the pick');
+    } else {
+      const left = (st.pending.prompt.match(/\((\d+) left\)/) || [])[1];
+      if (title !== `Cheap Seats · ${left} left` || head !== 'Pay 1 for 1 follower') errors.push(`(c2) the card reads "${title}" / "${head}" (want "Cheap Seats · ${left} left" / "Pay 1 for 1 follower")`);
+      const counts = await page.$$eval('.gift-card .gc-dot', els => els.map(e => [e.dataset.res, Number(e.querySelector('.num')?.textContent)]));
+      for (const [r, n] of counts) if (n !== (st.players[0].res[r] || 0)) errors.push(`(c2) the ${r} dot says ${n}, you hold ${st.players[0].res[r] || 0}`);
+      const done = await page.$eval('.gift-card .gc-rest-btn', e => [e.dataset.option, e.textContent.trim()]).catch(() => null);
+      const engineDone = st.pending.options.find(o => !o.target);
+      if (!done || done[0] !== engineDone.id || done[1] !== engineDone.label) errors.push(`(c2) the card's Done reads ${JSON.stringify(done)}, the engine's ${engineDone.id} "${engineDone.label}"`);
+      // pay one: a follower, and the card stays at the space with one fewer left, now with "Done"
+      await click(page, '.gift-card .gc-dot[data-res="gold"]');
+      await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 6000 }).catch(() => errors.push('(c2) paying a color did nothing'));
+      const rec1 = await lastMove(page);
+      if (rec1 && rec1 !== 'color:gold') errors.push(`(c2) recorded ${rec1}, not color:gold`);
+      await page.waitForSelector(`.gift-card[data-gift="color"] .gc-title:has-text("${Number(left) - 1} left")`, { timeout: 6000 }).catch(() => errors.push(`(c2) after one paid the card does not say ${Number(left) - 1} left`));
+      const done2 = await page.$eval('.gift-card .gc-rest-btn', e => [e.dataset.option, e.textContent.trim()]).catch(() => null);
+      if (!done2 || done2[0] !== 'done' || done2[1] !== 'Done') errors.push(`(c2) after one paid, the card's stop reads ${JSON.stringify(done2)} (want Done)`);
+      const goldNow = await page.$eval('.gift-card .gc-dot[data-res="gold"] .num', e => Number(e.textContent)).catch(() => NaN);
+      if (goldNow !== st.players[0].res.gold - 1) errors.push(`(c2) after paying 1 gold the card says ${goldNow}, want ${st.players[0].res.gold - 1}`);
+      const w2 = await page.evaluate(key => { const c = document.querySelector('.gift-card').getBoundingClientRect(), r = document.querySelector(`.lt-wheel [data-slot="${key}"]`).getBoundingClientRect(); return Math.max(0, r.left - c.right, c.left - r.right) + Math.max(0, r.top - c.bottom, c.top - r.bottom); }, slot).catch(() => null);
+      if (w2 == null || w2 > 40) errors.push(`(c2) after one paid the card moved off the space (${w2}px)`);
+      await page.screenshot({ path: `${SHOTS}/c2-one-paid.png` });
+      const m1 = await page.$eval('.app.game', e => Number(e.dataset.moves));
+      await click(page, '.gift-card .gc-rest-btn[data-option="done"]');
+      await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, m1, { timeout: 6000 }).catch(() => errors.push('(c2) Done did nothing'));
+      const rec2 = await lastMove(page);
+      if (rec2 && rec2 !== 'done') errors.push(`(c2) Done recorded ${rec2}`);
+      if (await page.$('.gift-card[data-gift="color"]')) errors.push('(c2) the card stays up after Done');
+    }
     await ctx.close();
   }
   // (w1) Even Swap: yours, then theirs, on the same card
@@ -486,4 +601,4 @@ try {
   if (server) server.kill();
 }
 if (errors.length) { console.error(`dialogs gate: ${errors.length} problem(s)\n - ${errors.join('\n - ')}`); process.exit(1); }
-console.log('dialogs gate: ok (pay sheet, follower buy, single way, Good Deed, Even Swap, keyboard list, Snap Up pay, Talent Scout tray, Your Call, Release, Double Agent, Hustler)');
+console.log('dialogs gate: ok (pay sheet, follower buy, single way, Good Deed (card and seats), Goody Bags and Cheap Seats on the card, Even Swap, keyboard list, Snap Up pay, Talent Scout tray, Your Call, Release, Double Agent, Hustler)');

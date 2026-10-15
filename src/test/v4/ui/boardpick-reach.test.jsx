@@ -26,9 +26,10 @@ function unreachable(state) {
   // the gift card: each first picked in turn, its second row and the rest buttons
   const g = giftPick(state, pend);
   if (g) {
-    const steps = g.kind === 'gift' ? [g] : g.firsts.map(f => giftPick(state, pend, f.a));
+    // a gift (its color fixed) and a color of yours (one row) have no first to pick: the card as it opens is the step
+    const steps = g.kind === 'gift' || g.kind === 'color' ? [g] : g.firsts.map(f => giftPick(state, pend, f.a));
     for (const s of steps) {
-      if (s.kind !== 'gift' && !s.seconds.length) bad.push(`the second row (after ${s.chosen}) holds nothing to answer with`);
+      if (!s.seconds.length) bad.push(`the second row (after ${s.chosen}) holds nothing to answer with`);
       for (const { o, b } of s.seconds) {
         if (!engine.has(o.id)) bad.push(`${o.id} is not an answer the engine offers`);
         if (!s.others.includes(b)) bad.push(`${o.id} pairs with ${b}, which the quiet second row never shows`);

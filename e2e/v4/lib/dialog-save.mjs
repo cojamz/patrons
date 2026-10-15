@@ -67,7 +67,7 @@ export function paySave({ def = 'gold.prospector', tier = null, res = { gold: 3,
 export function swapSave(space = 'evenswap') {
   const q = DIALOG_TABLE.indexOf('red'), i = quadrant('red').actions.findIndex(a => a.key === space), ring = quadrant('red').actions[i].ring;
   // members everywhere: two of yours with equal-cost twins on two rivals (Even Swap), plus a dearer one (Swap Sides)
-  const MINE = ['gold.prospector', 'red.drive'], THEIRS = [['gold.taxman', 'red.host'], ['gold.coinpurse', 'red.bigfamily'], ['gold.merchant']];
+  const MINE = ['gold.prospector', 'red.volunteer'], THEIRS = [['gold.taxman', 'red.host'], ['red.twins', 'red.bigfamily'], ['gold.merchant']]; // (the cull took red.drive and gold.coinpurse out of the deck)
   for (let seed = 1; seed < 300; seed++) {
     const s = playTo(seed, st => st.round === ring && st.pending && st.pending.player === 0 && st.pending.kind === 'place' && st.pending.options.some(o => o.id === `slot:${q}-${i}`));
     if (!s) continue;
@@ -115,6 +115,23 @@ export function comboSave(space = 'gooddeed') {
     const t = applyMove(s, { player: 0, option: `slot:${q}-${i}` });
     if (!(t.pending && t.pending.player === 0 && t.pending.kind === 'choose' && t.pending.options.length >= 4)) continue;
     return wrap(t);
+  }
+  throw new Error(`dialog-save: never reached P1 on ${space}`);
+}
+
+// A color of yours asked by a space (Goody Bags, Cheap Seats): answered on the card at the space (Cory, 2026-10-15:
+// choices come to where you act). P1 holds some of every color, so Cheap Seats offers all four.
+export const COLOR_TABLE = ['silver', 'gold', 'trading', 'red'];
+const COLOR_SPACES = { goody: ['silver', 'gift'], cheap: ['trading', 'buylow'] };
+export function colorSave(space = 'goody') {
+  const [qid, key] = COLOR_SPACES[space];
+  const slot = slotOf(COLOR_TABLE, qid, key);
+  for (let seed = 1; seed < 300; seed++) {
+    const s = playToOn(COLOR_TABLE, seed, st => st.round >= 1 && st.pending && st.pending.player === 0 && st.pending.kind === 'place' && st.pending.options.some(o => o.id === slot));
+    if (!s) continue;
+    s.players[0].res = { silver: 2, gold: 3, white: 1, red: 2 };
+    const t = applyMove(s, { player: 0, option: slot });
+    if (t.pending && t.pending.player === 0 && t.pending.kind === 'choose' && t.pending.options.filter(o => o.target).length >= 3) return wrap(t);
   }
   throw new Error(`dialog-save: never reached P1 on ${space}`);
 }
