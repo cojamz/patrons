@@ -377,6 +377,29 @@ export function logSections(state) {
   return out.filter(s => s.lines.length);
 }
 
+/**
+ * A section's lines as turns, newest turn first, each turn's lines in the order they happened: [[index in section]].
+ * The log read newest-first line by line put effects above their causes ("You stole 2…" over "You took Redistribute",
+ * w3b #49); now a turn reads top-down. A turn starts where a player takes a space ("P2 took Kickback (Gold).");
+ * a round's end and the game's end stand alone, on top. A bare "P2 passed." is left out (w3a #34: noise; a turn
+ * with no recruit or buy line bought nothing).
+ */
+export function turnGroups(state, lines) {
+  const names = state.players.map(p => esc(p.name)).join('|');
+  const took = new RegExp(`^(${names}) took .+ \\([A-Z][a-z]+\\)\\.$`);
+  const pass = new RegExp(`^(${names}) passed\\.$`);
+  const alone = /^(Round \S+ ends\.|Game over\.)/;
+  const groups = [];
+  let g = null;
+  lines.forEach((l, j) => {
+    if (pass.test(l)) return;
+    if (!g || took.test(l) || alone.test(l)) { g = []; groups.push(g); }
+    g.push(j);
+    if (alone.test(l)) g = null;
+  });
+  return groups.reverse();
+}
+
 // ---------- contest standings: the engine's contestTable, the same function that scores the round ----------
 /**
  * One contest for display: { qid, label, rule, counts, tiebreak, prize, rows:[{ id, score, shown, tiebreak }],
@@ -502,7 +525,8 @@ export function explainLine(log, i) {
     return { text: line, gift: { to: who, n: Number(b2), color, text: `+${a} ${why || color}, ${extra >= 0 ? '+' : '−'}${Math.abs(extra)} ${card}` } };
   }
   m = line.match(/^(.+?)'s Hustler works the (\w+) spaces\.$/);
-  if (m) return { text: `${m[1]}'s Hustler: +1 gold each time ${m[1]} takes a ${m[2]} space.` };
+  // in the card's own words (w3b #49: "+1 each time" vs the card's "per round number")
+  if (m) return { text: `${m[1]}'s Hustler picks ${m[2]}: ${m[2]} actions give ${m[1]} +1 gold per round number.` };
   return { text: line };
 }
 export const plainLine = (log, i) => explainLine(log, i).text;
@@ -844,7 +868,10 @@ export function effectStory(start, end, actor, me = null, fx = []) {
     }
     return bits;
   };
-  for (const g of groups.values()) {
+  // the space's own result first, then what members added to it: a member that fires before the space's gain landed
+  // (Hustler) put "Hustler: +3●" over the space's "+3●", which read as one line twice (w3a #36)
+  const ordered = [...groups.values()].sort((a, b) => (b.key === 'space') - (a.key === 'space'));
+  for (const g of ordered) {
     const c = g.cause || {};
     if (g.key === 'space') {
       const mine = signedOf(g, actor);

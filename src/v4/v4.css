@@ -196,6 +196,9 @@ svg.late .slot.flash .worker{animation-delay:.7s}
 .prompt.choice.setup.watching .token:disabled{opacity:1;cursor:default}
 .prompt.choice.setup .token.chain-point{border-color:var(--c);background:color-mix(in srgb,var(--c) 22%,transparent)}
 .prompt.choice.setup .token.chain-point .res-glyph{transform:translateY(-2px)}
+/* a drag turns the wheel on the compositor (Wheel.jsx paintRot; motion gaps 7): its layers are promoted only while it turns */
+.lt .stage.turning > svg{will-change:transform}
+.lt .stage.turning > [data-slot]{will-change:translate}
 .worker-flight.trail{opacity:.75}
 /* the chosen space lights before anything leaves it (director.js) */
 .lt .stage .slot.chosen .base{box-shadow:inset 0 0 0 2.5px var(--paper-ink,#2a1f17),0 0 0 4px var(--lamp-ink,#ffd99a),0 0 18px 6px rgba(255,217,154,.55)}

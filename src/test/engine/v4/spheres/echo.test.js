@@ -185,7 +185,7 @@ describe('Green actions', () => {
     s = go(s, 'red.hire');
     expect(defs(s, 1)).toEqual(['red.volunteer']);
     s = take(s, 'echo.echo');
-    expect(s.pending.options[0].label).toBe('Open Door (P2): a member (≤0; none face up)'); // the chip says so
+    expect(s.pending.options[0].label).toBe('Open Door (P2): a free member (none face up)'); // the chip says so
     s = move(s, s.pending.options[0].id);
     // Volunteer costs 0; nothing face up costs 0 any more
     expect(defs(s, 0)).toEqual([]);
@@ -195,7 +195,7 @@ describe('Green actions', () => {
     let s = scene({ round: 1, turns: [1, 0], shop: ['red.intern', 'gold.seed', 'gold.midas', 'gold.jackpot', 'gold.tycoon', 'red.mentor'] });
     s = go(s, 'red.hire'); // Intern, cost 1
     s = take(s, 'echo.echo');
-    expect(s.pending.options[0].label).toBe('Open Door (P2): a member (≤1; none face up)');
+    expect(s.pending.options[0].label).toBe('Open Door (P2): a member costing 1 or less (none face up)');
     s = move(s, s.pending.options[0].id);
     // nothing else face up costs 1 or less: Treasurer is 2 (pinned), so the copy finds nothing
     expect(defs(s, 0)).toEqual([]);
@@ -206,7 +206,7 @@ describe('Green actions', () => {
     s = take(s, 'red.hire'); // three cost 2: P2 picks Tax Collector
     s = pass(move(s, `card:${uidOf(s, 'gold.taxman', 'shop')}`));
     s = take(s, 'echo.echo');
-    expect(s.pending.options[0].label).toBe('Open Door (P2): a member (≤2)');
+    expect(s.pending.options[0].label).toBe('Open Door (P2): a member costing 2 or less');
     s = move(s, s.pending.options[0].id);
     const labels = s.pending.options.map(o => o.label);
     expect(labels).toEqual(expect.arrayContaining(['Twins (2)', 'Treasurer (2)']));

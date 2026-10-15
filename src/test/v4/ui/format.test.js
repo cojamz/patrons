@@ -1,7 +1,7 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
-import { membersWhy, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
+import { effectStory, turnGroups, membersWhy, roundGains, firstPickWhy, logSections, parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
 import { createTrail, feed } from '../../../v4/game/trail.js';
 import { contextFor } from '../../../engine/v4/core.js';
 
@@ -46,6 +46,28 @@ describe('v4 format helpers', () => {
       }
     }
     expect(found).toBe(1);
+  });
+
+  it('the log reads newest turn first, each turn top-down (w3b #49), with no bare passes (w3a #34)', () => {
+    const st = { players: [{ name: 'P1' }, { name: 'P2' }] };
+    const lines = ['P1 took Kickback (Gold).', 'P1 recruited Banker.', 'P2 took Redistribute (Magenta).', 'P2 stole 2 gold from P1.', 'P2 passed.', 'Round I ends. Most gold: P1 +2'];
+    expect(turnGroups(st, lines)).toEqual([[5], [2, 3], [0, 1]]);
+    // a real game: every line but the passes, once each
+    const s = play(2);
+    for (const sec of logSections(s)) {
+      const got = turnGroups(s, sec.lines).flat().sort((a, b) => a - b);
+      expect(got).toEqual(sec.lines.map((l, j) => j).filter(j => !/^\S+ passed\.$/.test(sec.lines[j])));
+    }
+  });
+
+  it('a turn card tells the space\'s own result first, then what members added (w3a #36: "Hustler: +3● / +3●")', () => {
+    const s = createGame({ seats, seed: 1 });
+    const fx = [
+      { type: 'gain', to: { pid: 0 }, what: { r: 'gold', n: 3 }, cause: { kind: 'member', uid: 1, def: 'gold.hustler', pid: 0 } },
+      { type: 'gain', to: { pid: 0 }, what: { r: 'gold', n: 3 }, cause: { kind: 'space' } },
+    ];
+    const st = effectStory(s, s, 0, null, fx);
+    expect(st.lines.slice(0, 2)).toEqual(['+3 gold', 'Hustler: +3 gold']);
   });
 
   it('finds new log lines even when lines repeat', () => {

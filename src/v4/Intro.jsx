@@ -1,4 +1,4 @@
-// The intro (Cory's script, 2026-10-14): four beats, ~24 seconds, one camera over one pixel world on the walnut table
+// The intro (Cory's script, 2026-10-14): four beats, ~27 seconds (the kicker says thirty: w3a #38), one camera over one pixel world on the walnut table
 // (design/prototypes/intro2/storyboard.md): you are a cult leader → you and your minions tap mysterious powers →
 // take actions, gain resources, recruit members, grow powerful → after three rounds the biggest cult wins.
 // The beats live in ./intro/Beat1–4.jsx on the kit in ./intro/shared.jsx; this file is the shell around them.
@@ -291,9 +291,9 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
   const first = shotList[0];
   const timed = { t0, at, on: !still };
   return (
-    <div ref={root} className={`intro${still ? ' still' : ''}${closing ? ' out' : ''}${at != null ? ' frozen' : ''}`} role="dialog" aria-modal="true" aria-label="Cults in twenty seconds"
+    <div ref={root} className={`intro${still ? ' still' : ''}${closing ? ' out' : ''}${at != null ? ' frozen' : ''}`} role="dialog" aria-modal="true" aria-label="Cults in thirty seconds"
       data-intro={still ? 'still' : 'motion'} data-beat={beat + 1} data-intro-end={END} data-intro-starts={STARTS.join(",")} onClick={onBackdrop} onKeyDown={e => e.stopPropagation()}>
-      <p className="intro-kicker" aria-hidden="true">Cults <i>in twenty seconds</i></p>
+      <p className="intro-kicker" aria-hidden="true">Cults <i>in thirty seconds</i></p>
       <button type="button" className="intro-skip" data-intro-skip onClick={close}>Skip intro</button>
       <div className="intro-main">
         <div className="intro-stage" ref={stage} style={uk ? { '--uk': uk } : null}>

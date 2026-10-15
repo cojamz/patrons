@@ -156,7 +156,8 @@ describe('render budget', () => {
     // the engine ran at once (same move, same undo checkpoint): only the table's picture waits for the next frame
     expect(session.getState().slots[key]).toBe(0);
     expect(session.undoKind).toBe('place');
-    for (let k = 0; k < 20 && container.querySelector('.lt').getAttribute('data-moves') !== String(session.getState().moves); k++) await new Promise(r => setTimeout(r, 10));
+    // (the transition commits when the box gets to it: up to 3s on a loaded box, where 200ms flaked)
+    for (let k = 0; k < 300 && container.querySelector('.lt').getAttribute('data-moves') !== String(session.getState().moves); k++) await new Promise(r => setTimeout(r, 10));
     const after = { commits: R.commits, components: R.total(), GameScreen: R.n('GameScreen') };
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
     console.log('[render-budget] click on a space, before paint:', JSON.stringify(beforePaint), 'after:', JSON.stringify(after));

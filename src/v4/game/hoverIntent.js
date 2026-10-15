@@ -36,10 +36,15 @@ export function heading(p = pt) {
   if (!aim || !p) return false;
   const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
   if (!aim.el.isConnected || now > aim.until) { aim = null; return false; }
-  const r = aim.el.getBoundingClientRect();
+  const box = aim.el.getBoundingClientRect();
   // a card that has gone (closed, moved off screen) is no longer anything to head for
-  if (!r.width || !r.height || r.right < 0 || r.bottom < 0 || r.left > innerWidth || r.top > innerHeight) { aim = null; return false; }
-  if (p.x >= r.left - PAD && p.x <= r.right + PAD && p.y >= r.top - PAD && p.y <= r.bottom + PAD) { aim.until = now + AIM_MS; return true; }
+  if (!box.width || !box.height || box.right < 0 || box.bottom < 0 || box.left > innerWidth || box.top > innerHeight) { aim = null; return false; }
+  // what the pointer heads for is the card's buttons (Use, a switch): a card with none holds nothing up, so whatever
+  // it happens to cover stays as easy to point at as before (w3a A8: cards open right next to what's pointed at, so
+  // they often stand over a neighbour's name)
+  const r = controlsRect(aim.el);
+  if (!r) return false;
+  if (p.x >= r.left - PAD && p.x <= r.right + PAD && p.y >= r.top - PAD && p.y <= r.bottom + PAD) return true;
   if (Math.hypot(p.x - aim.x, p.y - aim.y) <= PAD) return true; // still where it left
   // the card's near edge, as seen from where the pointer left (widened a little)
   const from = { x: aim.x, y: aim.y };
@@ -55,6 +60,23 @@ export function heading(p = pt) {
   // a pointer resting on the way lets go after AIM_MS
   if (on && (aim.lx !== p.x || aim.ly !== p.y)) { aim.until = now + AIM_MS; aim.lx = p.x; aim.ly = p.y; }
   return on;
+}
+
+/** The box around a card's buttons (Use, switches), or null when it has none. */
+export function controlsRect(el) {
+  if (!el || !el.isConnected) return null;
+  let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+  for (const c of el.querySelectorAll('button, [role="switch"]')) {
+    const x = c.getBoundingClientRect();
+    if (!x.width || !x.height) continue;
+    l = Math.min(l, x.left); t = Math.min(t, x.top); r = Math.max(r, x.right); b = Math.max(b, x.bottom);
+  }
+  return r > l ? { left: l, top: t, right: r, bottom: b, width: r - l, height: b - t } : null;
+}
+/** Is the pointer over the card's buttons (with a little slack)? */
+export function overControls(el, p = pt) {
+  const r = p && controlsRect(el);
+  return !!r && p.x >= r.left - PAD && p.x <= r.right + PAD && p.y >= r.top - PAD && p.y <= r.bottom + PAD;
 }
 
 /** Is the pointer (at p) over el's box? A see-through card (its surface lets clicks through) is still "under" it. */
@@ -76,7 +98,7 @@ export function busyWith(p = pt, mine = null) {
   const t = aimedAt();
   if (t && t !== mine && !(mine && t.contains(mine)) && heading(p)) return t;
   const h = heldEl();
-  if (h && h !== mine && !(mine && h.contains(mine)) && h.isConnected && over(h, p)) return h;
+  if (h && h !== mine && !(mine && h.contains(mine)) && h.isConnected && overControls(h, p)) return h;
   return null;
 }
 

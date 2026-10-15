@@ -204,11 +204,14 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             // the seat selector (seatPick.js): a stack you can take lights up and a click takes one; one you can't says why
             const sp = pick && pick.stacks ? pick.stacks[r] : null;
             const o = sp && sp.option, took = (pick && pick.picked[r]) || 0;
-            const say = o ? (pick.give || mine ? `${pick.title ? `${pick.title}: ` : ''}${o.label}` : `Take 1 ${r} from ${p.name} (${p.res[r] || 0}${took ? `, ${took} picked` : ''})`) : sp ? sp.why : `${p.res[r] || 0} ${r}`;
+            // a pick in progress (Collect Debts) shows what's left with what's picked beside it, never the old count and
+            // the change together (w3b #35: "3" with a "−2" badge)
+            const shown = Math.max(0, (p.res[r] || 0) - took);
+            const say = o ? (pick.give || mine ? `${pick.title ? `${pick.title}: ` : ''}${o.label}` : `Take 1 ${r} from ${p.name} (${took ? `${shown} left, ${took} picked` : shown})`) : sp ? sp.why : `${p.res[r] || 0} ${r}`;
             return (
               <span key={r} className={`cs-stack${p.res[r] ? '' : ' zero'}${sp ? (o ? ' pick-on' : ' pick-off') : ''}${sp && sp.chosen ? ' pick-chosen' : ''}${o && o.alt ? ' pick-alt' : ''}`} data-res={r} title={say}
                 {...(o ? { role: 'button', tabIndex: -1, 'data-option': o.id, 'aria-label': say, onClick: e => pick.onPick(o.id, e.currentTarget) } : sp ? { 'data-why': sp.why, onClick: e => pick.onDenied && pick.onDenied(sp.why, e.currentTarget) } : {})}>
-                <ResourceGlyph r={r} size={mine ? 16 : 13} n={p.res[r] || 0} /><b className="num">{p.res[r] || 0}</b>
+                <ResourceGlyph r={r} size={mine ? 16 : 13} n={shown} /><b className="num">{shown}</b>
                 {took > 0 && <i className="cs-took num" aria-hidden="true">−{took}</i>}
                 {o && <span className="hitbox" aria-hidden="true" />}
               </span>

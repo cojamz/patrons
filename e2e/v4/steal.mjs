@@ -103,9 +103,12 @@ try {
     await page.screenshot({ path: `${SHOTS}/s1-lit.png` });
     const cap = await page.$eval('.prompt.choice.seat-pick .pick-cap', e => e.textContent.replace(/\s+/g, ' ').trim());
     if (!/^Help Yourself: take 2 · 2 left$/.test(cap)) errors.push(`(s1) caption reads "${cap}"`);
+    const green0 = await count(page, 1, 'green');
     await click(page, stack(1, 'green'));
     await page.waitForSelector('.pick-left[data-left="1"]', { timeout: 8000 }).catch(() => errors.push('(s1) the counter never showed 1 left'));
     if (!(await page.$(`${stack(1, 'green')} .cs-took`))) errors.push("(s1) P2's green shows no −1 after the pick");
+    // what's left, with the −1 beside it: never the old count and the change together (w3b #35)
+    if ((await count(page, 1, 'green')) !== green0 - 1) errors.push(`(s1) P2's green reads ${await count(page, 1, 'green')} after a pick, not what's left (${green0 - 1})`);
     await page.screenshot({ path: `${SHOTS}/s1-one-picked.png` });
     await click(page, stack(2, 'gold'));
     await page.waitForFunction(() => !document.querySelector('.prompt.choice.seat-pick'), null, { timeout: 8000 }).catch(() => errors.push('(s1) the steal never closed'));

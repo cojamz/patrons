@@ -11,6 +11,7 @@ import { Rich } from './Rich.jsx';
 import { quadrant } from '../../engine/v4/index.js';
 import { panelWords } from './panelText.js';
 import './since.css';
+import { holdFlag } from './bodyFlag.js';
 
 const MAX = 6;
 /** The words the board prints on a space ("+3 gold, +1 to anyone"), for this round: the panel's own lines. */
@@ -21,8 +22,11 @@ const words = (state, key) => {
 
 /** One placement's full card (the same lines as the turn card by the cult), its names hover targets. */
 export function StoryCard({ story, color, state, hover }) {
+  // open in a tip: body[data-since-tip] (since.css), in place of a body:has() that re-styled the whole page
+  const ref = useRef(null);
+  useLayoutEffect(() => (ref.current && ref.current.closest('.tip-body') ? holdFlag(document.body, 'sinceTip') : undefined), []);
   return (
-    <div className="since-card" data-since-card style={{ '--pc': color }}>
+    <div ref={ref} className="since-card" data-since-card style={{ '--pc': color }}>
       <b className="sc-head"><HoverNames state={state} hover={hover} text={story.head} uids={story.uids} /></b>
       {story.lines.length ? story.lines.map((l, k) => <span key={`${k}:${l}`} className="sc-line"><HoverNames state={state} hover={hover} text={l} uids={story.uids} /></span>)
         : <span className="sc-line quiet">Nothing else changed.</span>}
@@ -42,18 +46,21 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
   // chairs and the turn card, never by these lines, so measuring can't feed back (the TurnCard lesson, 2026-10-15).
   const listRef = useRef(null), secRef = useRef(null);
   // The strip's room changes without resizing anything the ResizeObserver watches when the turn card comes or goes
-  // (layout.css :has(> .turn-card)), when the card's height or the chairs' end moves (--turn-h, --seats-end on the table)
+  // (layout.css [data-turn-card]), when the card's height or the chairs' end moves (--turn-h, --seats-end, on the strip)
   // or the window resizes. Any of these starts the fold over, so a strip with more room shows more lines again. Watched on
   // the DOM, where the layout reads them; the strip writes none of them, so this can't feed back.
   const [roomKey, setRoomKey] = useState(0);
   useEffect(() => {
     const host = secRef.current && secRef.current.parentElement;
     if (!host || typeof MutationObserver !== 'function') return undefined;
-    const room = () => `${!!host.querySelector(':scope > .turn-card')}|${host.style.getPropertyValue('--turn-h')}|${host.style.getPropertyValue('--seats-end')}|${innerWidth}x${innerHeight}`;
+    // (--turn-h and --seats-end are written on the strip itself, their only reader: perf, 2026-10-15)
+    const sec = secRef.current;
+    const room = () => `${!!host.querySelector(':scope > .turn-card')}|${sec.style.getPropertyValue('--turn-h')}|${sec.style.getPropertyValue('--seats-end')}|${innerWidth}x${innerHeight}`;
     let was = room();
     const check = () => { const now = room(); if (now !== was) { was = now; setRoomKey(k => k + 1); } };
     const mo = new MutationObserver(check);
-    mo.observe(host, { childList: true, attributes: true, attributeFilter: ['style'] });
+    mo.observe(host, { childList: true });
+    mo.observe(sec, { attributes: true, attributeFilter: ['style'] });
     addEventListener('resize', check);
     return () => { mo.disconnect(); removeEventListener('resize', check); };
   }, []);

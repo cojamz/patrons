@@ -18,7 +18,7 @@ import { SeatMembers, FollowersCard, SpendingLine } from './MemberUse.jsx';
 import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
-import { aimAt, arrived, heading, aimedAt, over, busyWith, claim, unclaim } from './hoverIntent.js';
+import { aimAt, arrived, heading, aimedAt, over, overControls, busyWith, claim, unclaim } from './hoverIntent.js';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
@@ -73,7 +73,7 @@ export function createHover() {
   const show = next => {
     // crossing toward the open seat card: nothing on the way opens over it, and its close isn't cancelled
     // (its surface is see-through to clicks, so "on it" is measured: the pointer over its box)
-    if (next.el && !next.pinned && card && !card.pinned && card.kind === 'seat' && ((heading() && aimedAt() === liveBox()) || over(liveBox()))) return;
+    if (next.el && !next.pinned && card && !card.pinned && card.kind === 'seat' && ((heading() && aimedAt() === liveBox()) || overControls(liveBox()))) return;
     clearTimeout(closeT);
     if (!next.el) {
       clearTimeout(openT); want = null;

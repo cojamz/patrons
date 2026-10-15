@@ -59,7 +59,7 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
         {after.over && (
           <p className="re-next re-final" data-final-bonuses={finalParts.length}>
             <b>End-game bonuses</b>{finalParts.length ? ', still to add to these totals: ' : ': none this game.'}
-            {finalParts.map((p, k) => <span key={p.id} data-final-bonus={p.id}>{k ? ' · ' : ''}<b style={{ color: playerColor(p.id) }}>{name(p.id)}</b> <NamedText state={after} text={p.final.parts.join(', ')} /></span>)}
+            {finalParts.map((p, k) => <span key={p.id} data-final-bonus={p.id}>{k ? ' · ' : ''}<b>{name(p.id)}</b> <NamedText state={after} text={p.final.parts.join(', ')} /></span>)}
           </p>
         )}
         <ul className="re-rows">

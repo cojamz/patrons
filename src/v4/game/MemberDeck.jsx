@@ -92,12 +92,14 @@ export function useDeal(rowRef, deckRef, state) {
     const dealt = state.shop.filter(u => !was.shop.includes(u));
     if (!dealt.length) return;
     const top = deck.querySelector('.back') || deck;
+    // every rect read first, then the writes (perf, 2026-10-15: a read after each ghost was appended laid the page out
+    // again, once per dealt card)
     const a = top.getBoundingClientRect();
     if (!a.width) return;
-    dealt.forEach((uid, k) => {
-      const el = row.querySelector(`.lt-card[data-uid="${uid}"]`);
-      if (!el) return;
-      const b = el.getBoundingClientRect();
+    const cards = dealt.map(uid => { const el = row.querySelector(`.lt-card[data-uid="${uid}"]`); return el ? { el, b: el.getBoundingClientRect() } : null; });
+    cards.forEach((c, k) => {
+      if (!c) return;
+      const { el, b } = c;
       if (!b.width) return;
       const dx = a.left + a.width / 2 - (b.left + b.width / 2), dy = a.top + a.height / 2 - (b.top + b.height / 2);
       const s = `scale(${(a.width / b.width).toFixed(3)},${(a.height / b.height).toFixed(3)})`;

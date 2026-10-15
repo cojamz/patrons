@@ -25,7 +25,7 @@ describe('intro', () => {
     expect(dialog()).toBe(null);
     act(() => introOnGameStart());
     expect(dialog()).toBeTruthy();
-    expect(screen.getByRole('dialog', { name: /Cults in twenty seconds/ })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: /Cults in thirty seconds/ })).toBeTruthy();
     expect(line()).toBe(LINES[0]);
     expect(document.querySelectorAll('.intro-dots i')).toHaveLength(4);
     expect(localStorage.getItem(FLAG)).toBe('1');

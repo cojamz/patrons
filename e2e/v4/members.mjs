@@ -357,7 +357,7 @@ try {
     const a = L.getBoundingClientRect(), t = document.querySelector('[data-cult="0"] .cs-total').getBoundingClientRect();
     return { total, sum, seat: Number(document.querySelector('[data-cult="0"] .cs-total').dataset.followers), gap: Math.round(Math.max(a.left - t.right, t.left - a.right, a.top - t.bottom, t.top - a.bottom)) };
   });
-  if (!fc) fail('hovering your follower total opened no breakdown', 'm13');
+  if (!fc) fail(`hovering your follower total opened no breakdown (${await page.evaluate(() => { const L = document.querySelector('[data-hover-layer]'); const t = document.querySelector('[data-cult="0"] .cs-total').getBoundingClientRect(); const e = document.elementFromPoint(t.left + t.width / 2, t.top + t.height / 2); return `layer ${L.dataset.open}/${L.querySelector('[data-hover-card]')?.dataset.hoverCard || '-'}, tips ${document.querySelectorAll('[data-tip-body]').length}, under ${e?.tagName}.${(e?.className?.baseVal ?? e?.className ?? '').toString().slice(0, 30)}`; })})`, 'm13');
   else if (fc.total !== fc.seat || fc.sum !== fc.total || fc.gap > 16) fail(`the follower breakdown: ${JSON.stringify(fc)} (rows must add up to the seat's total, next to it)`, 'm13');
   else await page.screenshot({ path: `${SHOTS}/9-followers.png` });
   for (const part of ['.cs-foot', '.cs-crowd']) {

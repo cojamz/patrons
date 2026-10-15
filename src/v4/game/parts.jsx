@@ -232,7 +232,7 @@ function MergedOptions({ state, pend, onPick, busy }) {
             {color && <i />}
             {det ? (
               <span className="rich-body">
-                <b>{det.owner != null && <span className="from" style={{ color: playerColor(det.owner) }}>{state.players[det.owner].name}’s </span>}{det.name}{n > 1 && <span className="num copies"> {state.shop && state.shop.includes(o.value) ? `· ${n} in the shop` : `· ${n} of them`}</span>}{det.f != null && <> <Follower n={det.f} className="star" /></>}</b>
+                <b>{det.owner != null && <span className="from">{state.players[det.owner].name}’s </span>}{det.name}{n > 1 && <span className="num copies"> {state.shop && state.shop.includes(o.value) ? `· ${n} in the shop` : `· ${n} of them`}</span>}{det.f != null && <> <Follower n={det.f} className="star" /></>}</b>
                 <small>{det.def ? <CardText text={det.text} /> : <Rich text={det.text} />}</small>
                 {det.cost && <small className="cost-line">costs <CostDots parts={det.cost} /></small>}
               </span>

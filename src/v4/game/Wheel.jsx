@@ -362,21 +362,39 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   // slides round by `translate`. React takes the angle once, when it lands, and the layout effect below hands the board
   // back to React's own positions (motion budget: MO.spin, src/v4/motion.js).
   const drawn = useRef(rot); // the angle React last drew
-  const paintRot = r => {
+  const painted = useRef(rot); // the angle the board's groups carry now (React's, or a spin frame's)
+  const geo = useRef(null); // the stage's size and each space's place, read once per turn (no layout read per frame)
+  // A drag turns the board on the compositor (motion gaps 7, wave 3: "coasts about 4s", "started 618ms after the drag"):
+  // redrawing the rotated wheel every pointer move cost about 80ms of raster a frame on a loaded box, so the board trailed
+  // the pointer for seconds. While a drag lasts, the wheel's layers rotate by a CSS transform (stage.turning promotes
+  // them) from the angle the groups carry; a spin (keys, the settle after a drag) paints the groups as before.
+  const paintRot = (r, { drag: dragging = false } = {}) => {
     rotRef.current = r;
     const root = stage.current;
     if (!root) return;
-    for (const g of root.querySelectorAll(':scope > svg > g[transform]')) g.setAttribute('transform', `rotate(${r} ${CX} ${CY})`);
-    const d = ((r - drawn.current) * Math.PI) / 180, c = Math.cos(d), s = Math.sin(d), w = root.clientWidth, h = root.clientHeight;
-    for (const el of root.querySelectorAll(':scope > [data-slot]')) {
-      const x = (parseFloat(el.style.left) / 100 - 0.5) * w, y = (parseFloat(el.style.top) / 100 - 0.5) * h;
-      el.style.translate = Number.isFinite(x + y) ? `${(x * c - y * s - x).toFixed(1)}px ${(x * s + y * c - y).toFixed(1)}px` : '';
+    if (dragging) {
+      const dr = r - painted.current;
+      for (const sv of root.querySelectorAll(':scope > svg')) sv.style.transform = Math.abs(dr) > 0.001 ? `rotate(${dr.toFixed(2)}deg)` : '';
+    } else {
+      for (const sv of root.querySelectorAll(':scope > svg')) if (sv.style.transform) sv.style.transform = '';
+      for (const g of root.querySelectorAll(':scope > svg > g[transform]')) g.setAttribute('transform', `rotate(${r} ${CX} ${CY})`);
+      painted.current = r;
     }
+    if (!geo.current) {
+      const w = root.clientWidth, h = root.clientHeight;
+      geo.current = [...root.querySelectorAll(':scope > [data-slot]')].map(el => [el, (parseFloat(el.style.left) / 100 - 0.5) * w, (parseFloat(el.style.top) / 100 - 0.5) * h]);
+    }
+    const d = ((r - drawn.current) * Math.PI) / 180, c = Math.cos(d), s = Math.sin(d);
+    for (const [el, x, y] of geo.current) el.style.translate = Number.isFinite(x + y) ? `${(x * c - y * s - x).toFixed(1)}px ${(x * s + y * c - y).toFixed(1)}px` : '';
   };
   useLayoutEffect(() => {
     drawn.current = rot;
+    painted.current = rot;
+    geo.current = null;
     const root = stage.current;
     if (!root) return;
+    root.classList.remove('turning');
+    for (const sv of root.querySelectorAll(':scope > svg')) if (sv.style.transform) sv.style.transform = '';
     for (const g of root.querySelectorAll(':scope > svg > g[transform]')) g.setAttribute('transform', `rotate(${rot} ${CX} ${CY})`);
     for (const el of root.querySelectorAll(':scope > [data-slot]')) if (el.style.translate) el.style.translate = '';
   }, [rot]);
@@ -384,6 +402,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const animateTo = useCallback(to => {
     stop();
     const from = rotRef.current, t0 = performance.now(), dur = reduced() ? 1 : MO.spin;
+    geo.current = null;
     setPeek(p => (p && !p.pinned ? null : p)); // a hover card doesn't ride along on a turning board
     if (hoverRef.current && hoverRef.current.card && !hoverRef.current.card.pinned) hoverRef.current.close();
     const step = now => {
@@ -393,6 +412,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       // land on the exact angle in this frame (the spin ends at MO.spin); React's commit of it follows and changes nothing
       // on screen (snappy gate s1: waiting on the commit read as a ~500ms spin)
       paintRot(to);
+      if (stage.current) stage.current.classList.remove('turning'); // (a drag that came back where it started commits nothing)
       applyRot(to);
     };
     anim.current = requestAnimationFrame(step);
@@ -464,6 +484,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     if (p.d > 205 || p.d < 30) return; // only drags that start on the ring
     stop();
     drag.current = { a: p.a, x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch', start: rotRef.current, t: performance.now(), v: 0 };
+    geo.current = null;
     moved.current = false;
   };
   const onMove = e => {
@@ -479,6 +500,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       if (hoverRef.current && hoverRef.current.card && !hoverRef.current.card.pinned) hoverRef.current.close();
       if (dr.touch) { dr.swipe = true; dr.lastX = e.clientX; return; }
       try { stage.current.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+      stage.current.classList.add('turning');
     }
     if (dr.swipe) { dr.lastX = e.clientX; return; }
     const a = local(e).a;
@@ -487,7 +509,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     // angular speed (deg/ms), smoothed, so a quick flick can carry the wheel on to the next quadrant
     const now = performance.now(), dt = Math.max(1, now - dr.t);
     dr.v = 0.6 * (d / dt) + 0.4 * dr.v; dr.t = now;
-    paintRot(rotRef.current + d);
+    paintRot(rotRef.current + d, { drag: true });
   };
   const onUp = e => {
     if (e && e.pointerType === 'touch' && !moved.current && drag.current) {
@@ -582,6 +604,11 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const rimFont = Math.min(16, Math.max(11, RIM_PX / (scale || 1)));
   const arcHalf = 44; // the path the text runs on (wider than any label)
   const RIM_MARK = 1.25; // the follower mark's room after the prize, per unit of font size
+  // a leader's emoji on the rim (w3a A27: "about 14px; I read P4's skull as a die"): its 8×8 pixel art at a whole number
+  // of screen pixels per art pixel, as big as the band holds (3 on a laptop: 24px; 2 on a phone: 16px), centred in the
+  // band; its room on the line (units) is taken off the room the words have
+  const EMOJI_U = (8 * Math.max(2, Math.floor((18.5 * (scale || 1)) / 8))) / (scale || 1);
+  const EMOJI_ROOM = EMOJI_U + 2;
   const rimLabel = (qid, q, leaders) => {
     const st = stdById[qid];
     const sc = quadrant(qid).scoring;
@@ -592,9 +619,10 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const tb = (st && st.tiebreak) || sc.tiebreak || null;
     const top = Math.abs(norm(qCenter(q) + rot)) < 90;
     const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;
-    const room = (2 * arcHalf * Math.PI / 180) * rr - 26; // the arc, less air at each end: clear of the dividers (w2a #52)
-    // the follower mark, then the leaders' emojis, per unit of font size
-    const tailK = RIM_MARK + (leaders.length ? 0.45 + 1.35 * leaders.length : 0);
+    // the arc, less air at each end (clear of the dividers, w2a #52) and the leaders' emojis
+    const room = (2 * arcHalf * Math.PI / 180) * rr - 26 - leaders.length * EMOJI_ROOM;
+    // the follower mark, and the space before the emojis, per unit of font size
+    const tailK = RIM_MARK + (leaders.length ? 0.45 : 0);
     const head = `${rule}${prize}`;
     const base = rimWidth(head, 700, 0), n = collapse(head).length;
     const tieW = t => (t ? rimWidth(`  ·  ties: ${t}`, 600, 0.04) : 0);
@@ -624,9 +652,9 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     }
     const top = Math.abs(norm(qCenter(q) + rot)) < 90;
     const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;
-    const room = (2 * arcHalf * Math.PI / 180) * rr - 26;
+    const room = (2 * arcHalf * Math.PI / 180) * rr - 26 - leaders.length * EMOJI_ROOM;
     const lineK = runs.reduce((a, r) => a + r.gap + r.w, 0);
-    const tailK = RIM_MARK + (leaders.length ? 0.45 + 1.35 * leaders.length : 0);
+    const tailK = RIM_MARK + (leaders.length ? 0.45 : 0);
     const font = Math.max(9, Math.min(rimFont, room / (lineK + tailK)));
     let at = 0;
     for (const r of runs) { at += r.gap * font; r.s = at; at += r.w * font; }
@@ -722,7 +750,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const lab = panels ? rimRuns(qid, q, leaders) : rimLabel(qid, q, leaders);
     const rr = lab.rr, F = lab.font, textW = lab.textW;
     const arcLen = (2 * arcHalf * Math.PI / 180) * rr;
-    const EM = F * 1.35; // one emoji's room on the line
+    const EM = EMOJI_ROOM; // one emoji's room on the line
     const tail = F * RIM_MARK + (leaders.length ? F * 0.45 + leaders.length * EM : 0);
     const startS = Math.max(0, (arcLen - textW - tail) / 2);
     paper.push(<path key={`ra${q}`} id={`rim-arc-${q}`} d={textArc(c, arcHalf, rr, rot)} fill="none" />);
@@ -786,10 +814,11 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
       const deg = (sAt / rr) * 180 / Math.PI;
       const a = lab.top ? c - arcHalf + deg : c + arcHalf - deg;
       const [ex, ey] = polar(a, rr);
-      // the band's own height (w2a #52: at 1.7 the leader rose past the rim's edge and onto the divider)
-      const cap = F * 1.35;
+      // whole screen pixels per art pixel, centred in the band (the line runs 3.6 units off its middle, toward the board's
+      // centre on top and its edge below; w2a #52: past the band it rose onto the divider)
+      const cap = EMOJI_U;
       paper.push(
-        <g key={`re${q}-${id}`} className={`rim-emoji${lit}`} data-rim-leader={id} transform={`translate(${ex.toFixed(2)} ${ey.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap * 0.82).toFixed(2)}) scale(${(cap / art.size).toFixed(4)})`}>
+        <g key={`re${q}-${id}`} className={`rim-emoji${lit}`} data-rim-leader={id} shapeRendering="crispEdges" transform={`translate(${ex.toFixed(2)} ${ey.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-(Math.abs(RIM.r - rr) + cap / 2)).toFixed(2)}) scale(${(cap / art.size).toFixed(4)})`}>
           <title>{`${state.players[id].name} leads`}</title>
           {art.rects.map((r, j) => <rect key={j} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
         </g>,

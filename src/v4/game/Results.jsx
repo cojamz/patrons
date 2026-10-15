@@ -77,7 +77,7 @@ export default function Results({ state, onPlayAgain, onHome, meId = null }) {
       {ranked.some(p => p.final && p.final.parts.length) && (
         <ul className="parts">
           {ranked.filter(p => p.final && p.final.parts.length).map(p => (
-            <li key={p.id}><b style={{ color: playerColor(p.id) }}>{nm(p)}</b> <NamedText state={state} text={p.final.parts.join(' · ')} /></li>
+            <li key={p.id}><b>{nm(p)}</b> <NamedText state={state} text={p.final.parts.join(' · ')} /></li>
           ))}
         </ul>
       )}

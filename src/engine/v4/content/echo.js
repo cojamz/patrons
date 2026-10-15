@@ -123,7 +123,11 @@ export const describe = (ctx, e) => {
   const bits = Object.entries(e.res).map(([c, n]) => `+${n} ${c}`);
   if (e.discount) bits.push(`${e.discount} off`);
   // say so when no face-up member is that cheap right now, so the chip never promises a member you can't get
-  for (const c of e.members) bits.push(ctx.shopCards().some(x => costOf(x.def) <= c) ? `a member (≤${c})` : `a member (≤${c}; none face up)`);
+  // in words, never "a member (≤6)" (w3a #34)
+  for (const c of e.members) {
+    const m = c > 0 ? `a member costing ${c} or less` : 'a free member';
+    bits.push(ctx.shopCards().some(x => costOf(x.def) <= c) ? m : `${m} (none face up)`);
+  }
   return bits.join(', ') || 'nothing';
 };
 /**

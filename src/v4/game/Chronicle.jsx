@@ -1,7 +1,8 @@
 // The chronicle: the game log as a drawer (opened from the menu or the "since your last turn" strip). Newest round
 // first, every line in plain words, every space and member named in it opens its card on the board's hover layer.
-import { useMemo } from 'react';
-import { logSections, plainLine } from '../format.js';
+import { useLayoutEffect, useMemo } from 'react';
+import { holdFlag } from './bodyFlag.js';
+import { logSections, plainLine, turnGroups } from '../format.js';
 import { useDialog } from './parts.jsx';
 import { NamedText, asYou } from './Info.jsx';
 import { HoverNames } from './HoverNames.jsx';
@@ -9,6 +10,8 @@ import './lamp-b.css';
 
 export default function Chronicle({ state, onClose, meId = null, hover = null }) {
   const box = useDialog(onClose);
+  // body[data-drawer] while the log is open (since.css), in place of a body:has() that re-styled the whole page
+  useLayoutEffect(() => holdFlag(document.body, 'drawer'), []);
   const sections = logSections(state);
   const me = meId != null && state.players[meId] ? state.players[meId].name : null; // your lines read "You took…"
   // names, colors and costs don't change in a game: one table object keeps the lines from re-rendering
@@ -21,7 +24,8 @@ export default function Chronicle({ state, onClose, meId = null, hover = null })
           {sections.slice().reverse().map(s => (
             <section key={s.title}>
               <h4>{s.title}</h4>
-              <ol>{s.lines.map((l, j) => <li key={j}>{hover ? <HoverNames state={table} hover={hover} text={asYou(plainLine(state.log, s.start + j), me)} /> : <NamedText state={table} text={asYou(plainLine(state.log, s.start + j), me)} />}</li>).reverse()}</ol>
+              {/* newest turn first, each turn top-down: cause, then effect (w3b #49) */}
+              <ol>{turnGroups(state, s.lines).map((g, k) => g.map((j, n) => <li key={j} className={n ? 'turn-more' : k ? 'turn-start sep' : 'turn-start'}>{hover ? <HoverNames state={table} hover={hover} text={asYou(plainLine(state.log, s.start + j), me)} /> : <NamedText state={table} text={asYou(plainLine(state.log, s.start + j), me)} />}</li>))}</ol>
             </section>
           ))}
         </div>

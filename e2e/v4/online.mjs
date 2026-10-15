@@ -5,6 +5,11 @@
 //   bot play for them" and taps it; Pia reopens the link and has her seat back; Hana reloads, so the host role moves
 //   to Gus and back she comes as a guest. Everyone clicks the first legal option on their turn, through to final
 //   results, and all three must agree. Fails on any console error.
+// Guards (quiet-w3-44e22bd: eaten clicks and a choice that stalled): every click on a lit wheel space, or on its "Place
+//   here", must change the table within 1.5s (measured in the page, from the click to the commit that answers it), and
+//   the prompt of every choice in front of a person must say something (never empty, never "-"). The driver plays like a
+//   person: it waits for its own move to land before clicking again, and doesn't press within 450ms of a new step (the
+//   UI's double-tap lock).
 // Transport: a Firebase RTDB emulator whenever this box can run one (java + the emulator jar, cached in
 //   ~/.cache/patrons; or V4_RTDB=host:port for one already running). Each person then has their own browser context,
 //   so their own storage, which is where rejoin ids live. Otherwise (V4_NO_EMU=1, or no java) BroadcastChannel tabs
@@ -77,6 +82,36 @@ const ctxFor = async opts => shared || browser.newContext(opts);
 // iPhone 13 (over Firebase), as touch.mjs and motion.mjs opt in
 const PHONE = !!process.env.V4_PHONE && !!RTDB;
 const ctxs = { hana: await ctxFor(laptop), gus: await ctxFor(laptop), pia: await ctxFor(PHONE ? { ...devices['iPhone 13'] } : laptop) };
+// In every page: each click on a lit wheel space (or a space's "Place here") is timed from its own timestamp to the first
+// DOM commit that changes what the person sees (the move count, a confirm card, the space lit as chosen, the live
+// options, an error, the prompt, a note at the pointer). A MutationObserver, so a background tab is timed too.
+const LIT_CLICKS = () => {
+  const look = () => {
+    const g = document.querySelector('.app.game');
+    const t = s => { const e = document.querySelector(s); return e ? e.textContent.replace(/\s+/g, ' ').trim() : ''; };
+    const place = document.querySelector('[data-place]');
+    return [g && g.dataset.moves, !!document.querySelector('[data-next-round]'), place ? place.getAttribute('data-place') : '',
+      [...document.querySelectorAll('.lt-wheel [data-slot].sel, .lt-wheel [data-cell].sel')].map(e => e.getAttribute('data-slot') || e.getAttribute('data-cell')).sort().join(','),
+      [...document.querySelectorAll('[data-option]:not([disabled])')].map(e => e.getAttribute('data-option')).sort().join(' '),
+      t('.error'), t('[data-prompt]'), t('.deny-note')].join('|');
+  };
+  window.__litClicks = [];
+  addEventListener('click', e => {
+    const el = e.target && e.target.closest && e.target.closest('.lt-wheel [data-slot][data-option], .lt-wheel .pcell.lit, [data-place]');
+    if (!el) return;
+    const id = el.getAttribute('data-option') || (el.hasAttribute('data-place') ? `Place here (${el.getAttribute('data-place')})` : `cell ${el.getAttribute('data-cell')}`);
+    const rec = { id, t: e.timeStamp, before: look(), ms: null };
+    window.__litClicks.push(rec);
+    const done = () => { rec.ms = Math.round(performance.now() - rec.t); mo.disconnect(); };
+    const mo = new MutationObserver(() => { if (rec.ms == null && look() !== rec.before) done(); });
+    mo.observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true });
+    setTimeout(() => { if (rec.ms == null) { if (look() !== rec.before) done(); else mo.disconnect(); } }, 4000);
+  }, true);
+};
+for (const c of new Set(Object.values(ctxs))) await c.addInitScript(LIT_CLICKS);
+const T0 = Date.now();
+const trail = []; // the driver's last moves, for the failure report
+const act = (who, what) => { trail.push(`${((Date.now() - T0) / 1000).toFixed(1)}s ${who}: ${what}`); if (trail.length > 50) trail.shift(); };
 const watch = (page, who) => {
   page.on('console', m => { if (m.type() === 'error') errors.push(`${who} console: ${m.text()}`); });
   page.on('pageerror', e => errors.push(`${who} pageerror: ${e.message}`));
@@ -95,25 +130,81 @@ const pages = { hana: watch(await ctxs.hana.newPage(), 'hana'), gus: watch(await
 // Clicks the first legal option (choice panels first). The same option id can show in two places (a choice panel and
 // the shop row), and the UI keeps changing, so if a click leaves the page where it was, the next try starts further down.
 const stuck = new Map(); // page -> { key, tries }
+const nameOf = page => Object.keys(pages).find(k => pages[k] === page) || '?';
+// The words a person reads for the choice in front of them: the headline ([data-prompt]), or, for a choice picked on the
+// board, the caption docked in its place (it has no [data-prompt]), the panel's question, and the line under them.
+const choiceWords = page => page.evaluate(() => {
+  const g = document.querySelector('.app.game');
+  const t = s => { const e = document.querySelector(s); return e ? e.textContent.replace(/\s+/g, ' ').trim() : null; };
+  return { mine: !!g && g.dataset.yours === '1' && ['choose', 'setup'].includes(g.dataset.phase), phase: g && g.dataset.phase,
+    head: t('[data-prompt]'), caption: t('.prompt.choice.seat-pick .pick-cap'), panel: t('.prompt.choice:not(.seat-pick):not(.watching) > p'), sub: t('[data-prompt-sub]') };
+}).catch(() => null);
+const blank = s => s != null && (!s || /^[-–—\s]*$/.test(s));
+// every timed click on a lit space (LIT_CLICKS) must have changed the table within 1.5s
+const litSeen = new Map(); // page -> how many of its records were checked
+async function checkLitClicks(page) {
+  if (!page || page.isClosed()) return;
+  const recs = await page.evaluate(() => (window.__litClicks || []).map(r => ({ id: r.id, ms: r.ms, age: Math.round(performance.now() - r.t) }))).catch(() => null);
+  if (!recs) return;
+  if (recs.length < (litSeen.get(page) || 0)) litSeen.set(page, 0); // a reload: a new page's records
+  let k = litSeen.get(page) || 0;
+  for (; k < recs.length; k++) {
+    const r = recs[k];
+    if (r.ms == null && r.age <= 1500) break; // still within its 1.5s
+    if (r.ms == null || r.ms > 1500) throw new Error(`${nameOf(page)}: a click on the lit space ${r.id} ${r.ms == null ? 'changed nothing on the table' : `took ${r.ms}ms to change the table`} (want ≤ 1500ms)`);
+  }
+  litSeen.set(page, k);
+}
+const seen = new Map(); // page -> { key, at, waiting }: when this step appeared, and since when a move of ours is on its way
 async function stepFirstOption(page) {
   if (!page || page.isClosed()) return false;
+  const who = nameOf(page);
+  await checkLitClicks(page);
   // tabs of one context: only the front tab is "visible" (its animations and pacing run); bring each to the front
   if (shared) await page.bringToFront().catch(() => {});
   const next = await page.$('[data-next-round]');
-  if (next) { await next.click().catch(() => {}); return true; }
+  if (next) { await next.click().catch(() => {}); act(who, 'next round'); return true; }
   // touch (and online) placement asks to confirm: "Place here"
   const place = await page.$('[data-place]');
-  if (place) { try { await place.click({ timeout: 1500 }); return true; } catch { /* fall through */ } }
+  if (place) {
+    const id = await place.getAttribute('data-place').catch(() => '?');
+    try { await place.click({ timeout: 1500 }); act(who, `Place here (${id})`); return true; } catch (e) { act(who, `Place here (${id}) refused: ${String(e.message).split('\n')[0]}`); }
+  }
   // The answer a person would give (lib/answer.mjs: board picks, pairs, the pay sheet), the choice panel's (or
   // dialog's) own answers first. A step whose last click changed nothing tries the next answer (skip), and when every
   // real click is refused (usually a hover card left open under the pointer) the option is pressed directly: this e2e
   // tests the online flow; the UI e2e test hit-testing.
   if (!(await page.$('[data-option]:not([disabled])'))) return false;
-  const key = await page.evaluate(() => `${document.querySelector('.app.game')?.dataset.moves}|${document.querySelector('[data-prompt]')?.textContent}`).catch(() => '');
+  const now = await page.evaluate(() => ({
+    key: `${document.querySelector('.app.game')?.dataset.moves}|${document.querySelector('.app.game')?.dataset.phase}|${document.querySelector('[data-prompt]')?.textContent}`,
+    // a space lit as chosen with no confirm up: our move is on its way to the host and back (Wheel: sent / Place here)
+    flying: !!document.querySelector('.lt-wheel [data-slot].sel, .lt-wheel [data-cell].sel') && !document.querySelector('[data-place]') && !document.querySelector('.error'),
+  })).catch(() => ({ key: '', flying: false }));
+  const s = seen.get(page);
+  if (!s || s.key !== now.key) seen.set(page, { key: now.key, at: Date.now(), waiting: null });
+  const sn = seen.get(page);
+  // like a person: wait for your own move to land (at most 10s, then go on), and don't press within 450ms of a new step
+  // (a move that goes out and gets no answer says so within 8s: "No answer yet". A space still lit as chosen after 10s
+  // with nothing said is a confirm that never sent its move: an eaten click)
+  if (now.flying) {
+    sn.waiting ??= Date.now();
+    if (Date.now() - sn.waiting < 10000) return false;
+    throw new Error(`${who}: a space has stood lit as chosen for 10s, with no move made and nothing said (a confirm that never went out)`);
+  } else sn.waiting = null;
+  if (Date.now() - sn.at < 450) return false;
+  const words = await choiceWords(page);
+  if (words && words.mine) {
+    const shown = [words.head, words.caption, words.panel].filter(x => x != null);
+    if (!shown.length || shown.every(blank) || [words.head, words.caption, words.panel, words.sub].some(blank)) {
+      throw new Error(`${who}: a ${words.phase} prompt says nothing: ${JSON.stringify(words)}`);
+    }
+  }
   const st = stuck.get(page);
-  const skip = st && st.key === key ? st.tries : 0;
-  stuck.set(page, { key, tries: skip + 1 });
-  return !!(await answerChoice(page, { panelFirst: true, skip, domFallback: true }));
+  const skip = st && st.key === now.key ? st.tries : 0;
+  stuck.set(page, { key: now.key, tries: skip + 1 });
+  const res = await answerChoice(page, { panelFirst: true, skip, domFallback: true });
+  if (res) act(who, `${res.kind} ${res.id}${skip ? ` (skip ${skip})` : ''}`);
+  return !!res;
 }
 const moves = page => page.evaluate(() => { try { return JSON.parse(window.patronsRecord()).moves?.length ?? 0; } catch { return 0; } }).catch(() => 0);
 // plays every open page until `done()` (or the results), at most `ms`
@@ -125,6 +216,7 @@ async function playUntil(done, ms, what) {
     for (const p of Object.values(pages)) any = (await stepFirstOption(p)) || any;
     if (!any) await pages.hana.waitForTimeout(40);
   }
+  for (const p of Object.values(pages)) await checkLitClicks(p);
 }
 const atResults = async () => {
   for (const p of Object.values(pages)) if (!p || p.isClosed() || !(await p.$('.results'))) return false;
@@ -258,6 +350,9 @@ try {
   const wins = await Promise.all(Object.values(pages).map(p => p.$eval('.results .win', e => ({ winners: e.dataset.winners, top: e.dataset.top, text: e.textContent }))));
   if (wins.some(w => !w.winners || !w.top) || new Set(wins.map(w => `${w.winners}|${w.top}`)).size !== 1) throw new Error(`players disagree on the result: ${JSON.stringify(wins)}`);
   if ((await seatOf(pages.pia)) !== 3) throw new Error('record has the wrong seat count');
+  // the last clicks have had their 1.5s
+  await pages.hana.waitForTimeout(1600);
+  for (const p of Object.values(pages)) await checkLitClicks(p);
   await pages.gus.screenshot({ path: `${SHOTS}/online-results.png` });
   log(`game finished: ${wins[0].text}`);
   ok = errors.length === 0;
@@ -266,7 +361,9 @@ try {
   for (const [who, pg] of Object.entries(pages)) {
     if (!pg || pg.isClosed()) continue;
     errors.push(`${who} options: ${JSON.stringify(await pg.$$eval('[data-option]', els => els.map(e => e.getAttribute('data-option') + (e.disabled ? '(off)' : ''))).catch(() => '-'))}`);
-    errors.push(`${who} prompt: ${await pg.$eval('[data-prompt]', e => e.textContent).catch(() => '-')} | bar: ${await pg.$eval('[data-online-bar]', e => e.textContent).catch(() => '-')}`);
+    const w = await choiceWords(pg);
+    errors.push(`${who} prompt: ${w ? [w.head ?? '(no [data-prompt])', w.caption && `caption: ${w.caption}`, w.panel && `panel: ${w.panel}`, w.sub && `sub: ${w.sub}`].filter(Boolean).join(' | ') : '?'} | bar: ${await pg.$eval('[data-online-bar]', e => e.textContent).catch(() => '(none)')}`);
+    errors.push(`${who} table: ${JSON.stringify(await pg.evaluate(() => ({ moves: document.querySelector('.app.game')?.dataset.moves, phase: document.querySelector('.app.game')?.dataset.phase, place: document.querySelector('[data-place]')?.getAttribute('data-place') || null, sel: [...document.querySelectorAll('.lt-wheel .sel')].map(e => e.getAttribute('data-slot') || e.getAttribute('data-cell')), error: document.querySelector('.error')?.textContent || null, lastClicks: (window.__litClicks || []).slice(-4).map(r => `${r.id}: ${r.ms == null ? 'no change' : `${r.ms}ms`}`) })).catch(() => null))}`);
     await pg.screenshot({ path: `${SHOTS}/zz-online-${who}-failure.png` }).catch(() => {});
   }
 } finally {
@@ -274,6 +371,6 @@ try {
   if (server) server.kill();
   emu?.stop();
 }
-if (errors.length) console.error(errors.join('\n'));
+if (errors.length) console.error([...errors, 'driver, last moves:', ...trail.map(l => `  ${l}`)].join('\n'));
 console.log(ok ? `PASS online (${tag})` : `FAIL online (${tag})`);
 process.exit(ok ? 0 : 1);

@@ -18,6 +18,7 @@ const flag = (k, d) => { const i = argv.indexOf('--' + k); if (i < 0) return d; 
 const bool = k => { const i = argv.indexOf('--' + k); if (i < 0) return false; argv.splice(i, 1); return true; };
 const query = flag('q', '');
 const TABLE = (v => (v ? v.split(',') : undefined))(flag('table', ''));
+const SEED = Number(flag('seed', 5));
 // --strip <name>: drop a dev stylesheet (e.g. layout.css, to photograph the old composition); --css <file>: add one
 const strip = flag('strip', ''), extraCss = flag('css', '');
 const base = flag('url', process.env.V4_URL || 'http://127.0.0.1:5410');
@@ -47,11 +48,11 @@ function playTo(seed, ready) {
 const mine = (s, kind) => s.pending && s.pending.player === 0 && s.pending.kind === kind;
 const placedThisRound = s => Object.values(s.slots).filter(v => v === 0).length;
 const SAVES = {
-  setup: () => playTo(5, s => mine(s, 'setup')),
-  place2: () => playTo(5, s => s.round === 2 && mine(s, 'place') && placedThisRound(s) >= 1),
-  last2: () => playTo(5, s => s.round === 2 && mine(s, 'place') && s.players[0].left === 1),
-  place3: () => playTo(5, s => s.round === 3 && mine(s, 'place') && placedThisRound(s) >= 2),
-  last3: () => playTo(5, s => s.round === 3 && mine(s, 'place') && s.players[0].left === 1),
+  setup: () => playTo(SEED, s => mine(s, 'setup')),
+  place2: () => playTo(SEED, s => s.round === 2 && mine(s, 'place') && placedThisRound(s) >= 1),
+  last2: () => playTo(SEED, s => s.round === 2 && mine(s, 'place') && s.players[0].left === 1),
+  place3: () => playTo(SEED, s => s.round === 3 && mine(s, 'place') && placedThisRound(s) >= 2),
+  last3: () => playTo(SEED, s => s.round === 3 && mine(s, 'place') && s.players[0].left === 1),
 };
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });

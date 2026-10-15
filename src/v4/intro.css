@@ -17,8 +17,11 @@
     repeating-linear-gradient(88deg, rgba(255,220,180,.018) 0 41px, rgba(0,0,0,.06) 41px 43px),
     linear-gradient(180deg,#221a14,#1a140f);
   background-color:#1d1611;
-  animation:in-fade 200ms ease both;
 }
+/* the table cloth is there from the first frame and only what's on it fades in: a whole-overlay fade showed the
+   finished board through it for a moment before the intro played (w3b #4) */
+.intro > *{animation:in-fade 200ms ease both}
+.intro.still > *,.intro.frozen > *{animation:none}
 .intro::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 120% 110% at 50% 46%, transparent 50%, rgba(0,0,0,.5))}
 .intro.out{animation:in-out 200ms ease both;pointer-events:none}
 @media (min-width:700px) and (min-height:560px){ .intro{--u:3px;--uk:3} }

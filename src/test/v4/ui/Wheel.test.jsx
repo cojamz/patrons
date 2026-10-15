@@ -3,7 +3,7 @@
 // length wobbled by a fraction of a pixel. Here text measures differently on every call, the wheel goes through a
 // few game states and both looks, and no render may loop or throw.
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { render, cleanup, act } from '@testing-library/react';
+import { render, cleanup, act, fireEvent } from '@testing-library/react';
 import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import Wheel, { clauses, deniedText } from '../../../v4/game/Wheel.jsx';
@@ -69,5 +69,36 @@ describe('Wheel', () => {
     expect(clauses('+2 green +1 blue')).toEqual(['+2 green', '+1 blue']);
     expect(clauses('+3 gold · gift 1')).toEqual(['+3 gold', 'gift 1']);
     expect(clauses('+1 gold/member')).toEqual(['+1 gold', '/member']);
+  });
+
+  // Online, a placement waits for "Place here" on its card (no Undo online). A choice answered on a space (a copy's
+  // target) has no such button: its click used to only pin the card, so it did nothing, and the online e2e circled the
+  // lit spaces until it timed out (quiet-w3-44e22bd: Sleepwalker's "copy which of your spaces"). It picks at once now,
+  // and the space stays lit as chosen while the move crosses to the host, until the table moves on.
+  it('online: a placement waits for its confirm; a space picked for a choice goes at once and stays lit until the table moves', () => {
+    for (const look of ['panels', 'sockets']) {
+      const s = createGame({ seats, seed: 3 });
+      s.round = 1;
+      const picks = [];
+      const props = (st, legal) => ({ state: st, legal, onPick: id => picks.push(id), flash: new Set(), facing: 0, onFacing: () => {}, confirmPlace: true, look });
+      const place = render(<Wheel {...props(s, new Map([['0-0', 'slot:0-0']]))} />);
+      fireEvent.click(place.container.querySelector('[data-slot="0-0"]'));
+      expect(picks).toEqual([]); // the card's confirm sends it
+      expect(place.container.querySelector('[data-slot="0-0"]').classList.contains('sel')).toBe(true);
+      place.unmount();
+
+      const legal = new Map([['0-1', 'space:now:0-1'], ['0-2', 'space:now:0-2']]);
+      const pick = render(<Wheel {...props(s, legal)} />);
+      fireEvent.click(pick.container.querySelector('[data-slot="0-1"]'));
+      expect(picks).toEqual(['space:now:0-1']);
+      const lit = () => [...pick.container.querySelectorAll('[data-slot].sel')].map(e => e.getAttribute('data-slot'));
+      expect(lit()).toEqual(['0-1']);
+      if (look === 'panels') expect(pick.container.querySelector('[data-cell="0-1"]').classList.contains('sel')).toBe(true);
+      // the move lands: a new table, nothing lit as chosen
+      act(() => { pick.rerender(<Wheel {...props({ ...s, moves: (s.moves || 0) + 1 }, new Map())} />); });
+      expect(lit()).toEqual([]);
+      pick.unmount();
+      picks.length = 0;
+    }
   });
 });

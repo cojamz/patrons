@@ -40,6 +40,7 @@ import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpee
 import { PERF_ON } from '../perf.js';
 import { boardPicker, seatPart, shopLookup, pickCaption } from './boardPick.js';
 import { sameSeat } from './seatMemo.js';
+import { holdFlag } from './bodyFlag.js';
 import { friendlyError, isNetworkError } from '../errors.js';
 import { ROUND_START, ownsLocal } from '../saved.js';
 import { restoredMoment } from '../session/moment.js';
@@ -346,7 +347,10 @@ function TurnCard({ card, root, state }) {
   const box = useRef(null);
   // the story above leaves the card exactly its own height (layout.css --turn-h), written only when the whole-pixel value
   // changes (the card's height depends on its text and width only)
-  const turnH = useRef(null);
+  const turnH = useRef(null), turnHOn = useRef(null);
+  // the table says a card is up (data-turn-card: layout.css gives the story room), in place of a
+  // `.app.game.lt:has(> .turn-card)` that re-styled the whole page on every change of the table's children
+  useLayoutEffect(() => holdFlag(root, 'turnCard'), [root]);
   useLayoutEffect(() => {
     const el = box.current;
     if (!el) return;
@@ -362,7 +366,10 @@ function TurnCard({ card, root, state }) {
     // (only the dock under the story uses it: layout.css)
     if (!pos.since) return;
     const h = Math.ceil(el.offsetHeight) + 8;
-    if (root && h !== turnH.current) { turnH.current = h; root.style.setProperty('--turn-h', `${h}px`); }
+    // written on the story itself, its only reader (layout.css): on the table, an inherited custom property re-styled all
+    // ~5,000 elements of the page every time it changed (perf, 2026-10-15)
+    const story = root && root.querySelector(':scope > .lt-since');
+    if (story && (h !== turnH.current || turnHOn.current !== story)) { turnH.current = h; turnHOn.current = story; story.style.setProperty('--turn-h', `${h}px`); }
   }, [card.pid, card.n, card.text, root]);
   // at most a few lines, the rest summed up (every line stays in the strip's card and the log)
   const [head, ...all] = card.text.split(' · ');
@@ -504,8 +511,19 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     let y = fromTop ? 0 : Math.max(0, Math.round((rail.offsetHeight - total) / 2));
     const top = y;
     // whatever sits under the chairs in their column (the story of the turns, in some layouts) starts below the last one
-    r.style.setProperty('--seats-end', `${top + total}px`);
+    // (on the story, its only reader: on the table this inherited property re-styled the whole page each time it moved)
+    const story = r.querySelector(':scope > .lt-since');
+    if (story) story.style.setProperty('--seats-end', `${top + total}px`);
+    // a chair placed for the first time (the screen just mounted, as after a hot-seat handoff, or back from a phone size)
+    // stands at its place at once: its first style was the fallback (slot × 108px), and sliding from there read as the
+    // chairs moving 8–24px between setup and the first turn (hotseat region gate, 2026-10-15). Only a new order slides.
+    const fresh = rows.filter(x => !x.e.style.getPropertyValue('--y'));
+    for (const x of fresh) x.e.style.transition = 'none';
     for (const x of rows) { x.e.style.setProperty('--y', `${y}px`); y += x.h + GAP; }
+    if (fresh.length) {
+      for (const x of fresh) void getComputedStyle(x.e).transform; // the place lands with no transition
+      requestAnimationFrame(() => { for (const x of fresh) x.e.style.transition = ''; });
+    }
     if (rows.length) {
       rail.style.setProperty('--rail-top', `${top + rows[0].h / 2}px`);
       rail.style.setProperty('--rail-bottom', `${rail.offsetHeight - (top + total - rows[rows.length - 1].h / 2)}px`);
@@ -525,7 +543,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (!colRO.current) colRO.current = new ResizeObserver(() => layColumnNow.current());
     const w = colWatched.current;
     for (const el of [...w]) if (!el.isConnected) { colRO.current.unobserve(el); w.delete(el); }
-    for (const el of [r.querySelector(':scope > .lt-snake'), ...r.querySelectorAll(':scope > .lt-seat')]) if (el && !w.has(el)) { colRO.current.observe(el); w.add(el); }
+    // (the story too: when it mounts, the chairs' foot is written on it)
+    for (const el of [r.querySelector(':scope > .lt-snake'), r.querySelector(':scope > .lt-since'), ...r.querySelectorAll(':scope > .lt-seat')]) if (el && !w.has(el)) { colRO.current.observe(el); w.add(el); }
   });
   useEffect(() => () => { if (colRO.current) colRO.current.disconnect(); colRO.current = null; colWatched.current.clear(); }, []);
   useEffect(() => {
@@ -1097,7 +1116,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               <span className={`say${mine ? ' mine' : ''}`} data-prompt tabIndex={-1}>
                 {p.who && <i style={{ background: playerColor(p.who.id) }} />}
                 <span className="say-text">
-                  {mine && humansHere && p.who ? <b style={{ color: playerColor(p.who.id) }}>{p.who.name}: </b> : null}
+                  {mine && humansHere && p.who ? <b>{p.who.name}: </b> : null}
                   {mine ? <><span className="lead">{p.lead ?? 'Your turn — '}</span><em>{p.text && !p.keepCase ? p.text[0].toLowerCase() + p.text.slice(1) : p.text}</em></> : state.over ? p.text : <>{p.text}<span className="dots" aria-hidden="true"> ···</span></>}
                 </span>
               </span>
@@ -1110,7 +1129,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           </span>
         </div>
         <div className="bar-row steps-row">
-          <span className="round">{roundText}{state.round && !state.over ? <small title="Minions this round: one per turn. Extra Hand and similar members add one."> · <span className="num">{workersNote(state)}</span></small> : null}</span>
+          <span className="round">{roundText}{state.round && !state.over && workersNote(state).includes(' · ') ? <small title="Minions this round: one per turn. Extra Hand and similar members add one."> · <span className="num">{workersNote(state)}</span></small> : null}</span>
+          {/* the minions a round only when someone's count differs (w3b #46: "· 4 minions each" repeated the chairs' own
+              minions and pushed your turn's line into "…or use Lottery Wi…"); the round's start card still says it */}
           {/* your turn's details sit under the headline (it stays one short line); otherwise the turn's two steps */}
           {picker ? <span className="say-sub pick-how" data-prompt-sub title={!note ? pickCaption(state, picker).rule : undefined}>{note ? note.text : pickCaption(state, picker).how}</span>
             : pickDone ? <span className="say-sub seat-pick-done" aria-hidden="true"><span className="pick-cap">{pickDone.title}: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</span></span>
@@ -1158,7 +1179,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             {showChoice && !picker && !payChoice(pend) && pend.kind !== 'setup' && <ChoicePrompt state={state} onPick={onPick} busy={busy} place={plainAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
             {/* the starting picks (motion gaps 1): the row stays on the table while the others pick (read-only), and until the
                 last pick has landed, so each rival's pick lights its coin and flies from it to their seat (director.js) */}
-            <AfterChain value={setupNow} hold={holdStory && !setupNow}>{v => v && (
+            <AfterChain value={setupNow} hold={holdStory && !(setupNow && showChoice)} step={state.moves}>{v => v && (
               <ChoicePrompt state={v} onPick={v === state && showChoice ? onPick : NOOP} busy={busy || !(v === state && showChoice)} watching={v === state && showChoice ? null : v.players[v.pending.player]} turnOf={v === state && humansHere && handedIn === pend.player ? state.players[pend.player] : null} />
             )}</AfterChain>
           </section>

@@ -30,7 +30,7 @@
   .app.game.lt > .lt-since{grid-area:seats;align-self:start;margin:calc(var(--col-top) + var(--seats-end, 0px) + 20px) 0 0 44px;
     max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px)}
   /* while a turn is being told, its card docks under the story: the story gives it room (oldest lines go first) */
-  .app.game.lt:has(> .turn-card) > .lt-since{max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px - var(--turn-h, 112px))}
+  .app.game.lt[data-turn-card] > .lt-since{max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px - var(--turn-h, 112px))}
 
   /* the shop column: the follower buys first (four fixed offers, always whole: Cory, "too hidden"), then the members,
      the deck heading them like a card, three to a row; the member grid takes whatever height is left, so nothing in
@@ -80,7 +80,7 @@
   /* the follower buys stand at the column's foot, 138px tall (their label 20, two rows of 52 and a gap of 8, 6 below);
      the story starts 8px down and stops 8px above them, or 8px above the turn card docked 12px over them */
   .app.game.lt > .lt-since{align-self:start;margin-top:8px;max-height:calc(100% - 154px)}
-  .app.game.lt:has(> .turn-card) > .lt-since{max-height:calc(100% - 158px - var(--turn-h, 112px))}
+  .app.game.lt[data-turn-card] > .lt-since{max-height:calc(100% - 158px - var(--turn-h, 112px))}
   /* the shop's wrappers give up their boxes (and, having none, never claim to clip) */
   .app.game.lt > .lt-shop,.app.game.lt > .lt-shop > .lt-shop-cards{display:contents;overflow:visible}
   .app.game.lt .lt-shop-main{grid-area:shop;position:relative;z-index:3;min-width:0}
@@ -231,3 +231,32 @@
 @media (min-width:1200px) and (min-height:500px){
   .app.game.lt > .lt-seat.mine .cs-build{grid-column:3;grid-row:1;justify-self:end;align-self:center}
 }
+
+/* players are their emoji, never a tint or a dot (w3b #41: P3's pink read as magenta and P4's lavender as purple, "P3
+   Help Yourself reads like a magenta effect"; the grammar: a dot only ever means a resource). A name in running text
+   takes the text's own color; the dot that stood beside a name in a caption or a hot-seat "P3's turn" goes. The
+   player's color stays where it marks a thing, never words: a minion, the bar beside a turn's card, a count's ring. */
+.lt .lt-since .since-line .who{color:var(--cream)}
+.lt .lt-wheel > .prompt.choice .turn-of,.app.game.lt .lt-wheel > .prompt.choice .turn-of{color:var(--cream)}
+.lt .turn-of i,.lt .caption i{display:none}
+.roundend .re-p .nm,.re-p .nm{color:inherit}
+/* taken since your last turn (w3a A44, w3b #31): the dotted edge, the third state of a space, was read as selectable,
+   or not told from "taken earlier" at a squint, three panels running (w2a #30 made it quieter and explained it in the
+   space's hover). It goes: the story of the turns lists those moves and lights each one's space on the wheel when
+   pointed at, and the space's hover still says "since your last turn". A space is open or taken, nothing between. */
+.lt .stage .slot .fresh-ring,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh{display:none}
+
+/* your turn's line under the headline wraps to a second line rather than cutting a name mid-word (w3b #46: "…or use
+   Lottery Wi…", "release a mem…"); the prompt row holds two (72px on a wide laptop, 68 below) */
+@media (min-width:861px) and (min-height:500px){
+  .lt-prompt .steps-row .say-sub{white-space:normal;text-wrap:balance;line-height:17px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+}
+
+/* a shop card's name and worth (w3a A25/A26, w3b #28): the name stays the plate's 11px caps label but in ink, not grey
+   (it read as the card's quietest element); a long single word sets with no tracking, so "DOPPELGANGER" fits its line
+   whole on a laptop and breaks at its seam only on the narrowest cards; the worth stands apart from the price behind a
+   hairline, so "4● 2◐ │ 1👤" never reads as one price */
+.lt-card .nm{color:#4a3a2b}
+.lt-card .nm[data-long]{letter-spacing:0}
+.lt-card .ft .val{display:inline-flex;align-items:center;gap:2px;padding-left:5px;margin-left:auto;box-shadow:inset 1px 0 0 var(--hair-ink,rgba(43,32,24,.16))}
+

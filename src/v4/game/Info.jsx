@@ -591,9 +591,11 @@ export function YoudGet({ state, pid, q, i }) {
   const y = youdWords(pv, state, own);
   return (
     <span className="youd-get" data-youd-get={w.you} title="Worked out by playing this space on a copy of the table, right now">
-      <b>You’d get:</b> {w.partial ? 'about ' : ''}
+      {/* "about": the dry run followed only some branches; never "about nothing" */}
+      <b>You’d get:</b> {w.partial && !/^nothing/.test(y.text || '') ? 'about ' : ''}
+      {/* the likely case, then the best: each number with its word under it (the space card stacks a note) */}
       {y.likely
-        ? <span data-youd-cases><Rich text={y.likely} /> <em className="yd-note">likely</em> · <Rich text={y.best} /> <em className="yd-note">at best</em></span>
+        ? <span data-youd-cases><Rich text={y.likely} /><em className="yd-note">likely</em><Rich text={y.best} /><em className="yd-note">at best</em></span>
         : <>{y.text ? <Rich text={y.text} /> : null}{y.note ? <em className="yd-note">{y.note}</em> : null}</>}
       {w.others ? <small className="youd-others"><Rich text={w.others} /></small> : null}
     </span>

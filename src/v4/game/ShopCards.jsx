@@ -151,7 +151,8 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                     fading, not text). What you're short of is the hover's one quiet line. */}
                 {fromPile && !tray && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
               </span>
-              <span className="nm">{breakable(d.name)}</span>
+              {/* a long single word sets tighter, so it fits its line whole before it ever breaks (w3a A26: "DOPPEL-/GANGER") */}
+              <span className="nm" data-long={d.name.split(' ').some(w => w.length >= 10) || undefined}>{breakable(d.name)}</span>
               <span className="ft">
                 {paid ? (
                   <span className="cost-now" data-paid={paid.reduce((t, c) => t + c.n, 0)}>
