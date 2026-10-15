@@ -683,7 +683,7 @@ async function configure(flags) {
   // sizes: quick ≈ 8 min, full ≈ 75 min on 4 cores (README). --scale=k multiplies every game count (for shards).
   const P = quick
     ? { normalSeeds: 60, Kc: 12, Ks: 12, hardSeedsB: 4, KcB: 14, KsB: 8, cardsB: 6, cellsB: 6, hardBase: 0, calib: 32, archN: 40, archH: 0, boot: 120, minN: 20, minNH: 12, seedBase: 700000, perTarget: 0 }
-    : { normalSeeds: 440, Kc: 12, Ks: 12, hardSeedsB: 44, KcB: 12, KsB: 10, cardsB: 26, cellsB: 24, hardBase: 24, calib: 96, archN: 240, archH: 64, boot: 200, minN: 30, minNH: 20, seedBase: 500000, perTarget: 0 };
+    : { normalSeeds: 440, Kc: 12, Ks: 12, hardSeedsB: 44, KcB: 12, KsB: 10, cardsB: 26, cellsB: 24, hardBase: 24, calib: 200, archN: 240, archH: 64, boot: 200, minN: 30, minNH: 20, seedBase: 500000, perTarget: 0 };
   const scale = Number(flags.scale || 1);
   if (scale !== 1) for (const k of ['normalSeeds', 'hardSeedsB', 'hardBase', 'calib', 'archN', 'archH']) P[k] = Math.round(P[k] * scale);
   for (const k of Object.keys(P)) if (flags[k] !== undefined) P[k] = Number(flags[k]);
@@ -877,7 +877,7 @@ function finalize(cfg, flags, As, Bs, a, { stamp, secs, workers, shards }) {
   }
   const instOk = {
     normal: anchorRows.filter(r => r.inst === 'normal').every(r => r.ok) && (!cardsN || cardsN.slopeLo > 0),
-    hard: anchorRows.filter(r => r.inst === 'hard').every(r => r.ok) && (!calib.length || calibW[0] >= 0.32) && (!cardsH || cardsH.slopeLo > 0),
+    hard: anchorRows.filter(r => r.inst === 'hard').every(r => r.ok) && (!calib.length || calibW[1] > 0.25) && (!cardsH || cardsH.slopeLo > 0),
   };
   const trusted = instOk.normal && instOk.hard;
 
@@ -1113,7 +1113,7 @@ function report(R, diff, prev) {
   L.push('');
   const byR = i => (i.slopeByRound ? ` (by fork round I/II/III: ${i.slopeByRound.map(x => `${f2(x.v)} [${f2(x.lo)}–${f2(x.hi)}]`).join(', ')})` : '');
   L.push(`- Price slope, followers of margin per extra cost point (the exchange rate for everything below): Normal ${f2(iN.slope)} [${f2(iN.slopeLo)}–${f2(iN.slopeHi)}]${byR(iN)}; ${H} ${f2(iH.slope)} [${f2(iH.slopeLo)}–${f2(iH.slopeHi)}]${byR(iH)}. ${iN.slopeLo > 0 ? '' : 'Normal slope not clearly positive. '}`);
-  if (iH.calib.n) L.push(`- ${H} alone vs 3 Normal (Classic, n=${iH.calib.n}): wins ${wl(iH.calib.win)}; parity is 25%, it must reach 32%. ${iH.calib.win[0] >= 0.32 ? 'OK.' : 'FAIL: the second instrument is no stronger than the first.'}`);
+  if (iH.calib.n) L.push(`- ${H} alone vs 3 Normal (Classic, n=${iH.calib.n}): wins ${wl(iH.calib.win)}; parity is 25%, and its interval must clear it. ${iH.calib.win[1] > 0.25 ? 'OK.' : 'FAIL: the second instrument is not clearly stronger than the first.'}`);
   L.push('');
   L.push('| instrument | anchor | printed | fair [90%] | n | expected | |');
   L.push('|---|---|---|---|---|---|---|');
