@@ -415,7 +415,11 @@ function computeHere(state, pid, q, i) {
 /** The preview for a space, computed now on this thread if it isn't cached (tests, tools). */
 export function cachedPreview(state, pid, q, i) {
   const m = mapFor(state), k = `${pid}|${q}-${i}`;
-  if (!m.has(k)) m.set(k, computeHere(state, pid, q, i));
+  if (!m.has(k)) {
+    let pv = null;
+    try { pv = computeHere(state, pid, q, i); } catch { pv = null; }
+    m.set(k, pv); // (no notify: this runs while a card renders; whoever else reads it re-reads the cache)
+  }
   return m.get(k);
 }
 let worker = null, workerGen = 0, workerState = null, lastAnswer = 0;
@@ -498,8 +502,14 @@ export function peekPreview(state, pid, q, i) {
   const m = previews.get(state);
   return m ? m.get(`${pid}|${q}-${i}`) : undefined;
 }
-/** The preview for a space: the cached one at once, else asked for and filled in when it arrives. */
-export function usePreview(state, pid, q, i) {
+/**
+ * The preview for a space: the cached one at once, else asked for and filled in when it arrives. `now`: a card that's
+ * opening (a hover) never fills in later: on a miss the one space is worked out here, before the card paints, so it
+ * lands complete in one frame at its final size ("hovers feel laggy", Cory 2026-10-15: the card opened, then its
+ * "You'd get" arrived and it grew). One dry run is cheap (p50 0.3ms, p99 11ms at 1× CPU); the warmup keeps most hovers
+ * on the cache anyway.
+ */
+export function usePreview(state, pid, q, i, { now = false } = {}) {
   const [, bump] = useState(0);
   useEffect(() => {
     if (pid == null) return undefined;
@@ -509,7 +519,9 @@ export function usePreview(state, pid, q, i) {
     if (peekPreview(state, pid, q, i) === undefined) requestPreviews(state, pid, [key], { front: true });
     return () => { listeners.delete(fn); };
   }, [state, pid, q, i]);
-  return pid == null ? null : peekPreview(state, pid, q, i);
+  if (pid == null) return null;
+  const pv = peekPreview(state, pid, q, i);
+  return pv === undefined && now ? cachedPreview(state, pid, q, i) : pv;
 }
 const signed = n => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
 const span = (r, unit, plural = unit + 's') => {
@@ -522,6 +534,8 @@ export function previewWords(pv, state) {
   const you = [
     ...state.resources.map(r => span(pv.you.res[r], r, r)),
     span(pv.you.followers, 'follower'), span(pv.you.members, 'member'), span(pv.you.turns, 'extra turn'),
+    // your own turns moved up (Crunch Time): sooner, not extra
+    pv.you.early && pv.you.early[1] > 0 ? (pv.you.early[0] === pv.you.early[1] ? `your next ${pv.you.early[1] === 1 ? 'turn' : `${pv.you.early[1]} turns`} now` : `up to ${pv.you.early[1]} of your turns now`) : null,
     // a discount gained ("next member −4"); one used up isn't a gain, and printed "next member −-6" (w3 words pass)
     pv.you.discount && pv.you.discount[1] > 0 ? `next member −${Math.max(0, pv.you.discount[0]) === pv.you.discount[1] ? pv.you.discount[1] : `${Math.max(0, pv.you.discount[0])}–${pv.you.discount[1]}`}` : null,
   ].filter(Boolean);
@@ -537,6 +551,7 @@ export function previewWords(pv, state) {
 function sureWords(pv, state) {
   const fixed = (r, unit, plural = unit + 's') => (r[0] === r[1] ? span(r, unit, plural) : null);
   return [...state.resources.map(r => fixed(pv.you.res[r], r, r)), fixed(pv.you.followers, 'follower'), fixed(pv.you.members, 'member'), fixed(pv.you.turns, 'extra turn'),
+    pv.you.early && pv.you.early[0] > 0 && pv.you.early[0] === pv.you.early[1] ? `your next ${pv.you.early[0] === 1 ? 'turn' : `${pv.you.early[0]} turns`} now` : null,
     pv.you.discount && pv.you.discount[0] > 0 && pv.you.discount[0] === pv.you.discount[1] ? `next member −${pv.you.discount[0]}` : null]
     .filter(Boolean).join(', ');
 }
@@ -554,6 +569,7 @@ export function changeWords(d, state) {
   if (d.members > 0) gain.push(n(d.members, 'member') + who);
   if (d.followers > 0) gain.push(n(d.followers, 'follower'));
   if (d.turns > 0) gain.push(n(d.turns, 'extra turn'));
+  if (d.early > 0) gain.push(`your next ${d.early === 1 ? 'turn' : `${d.early} turns`} now`);
   if (d.discount > 0) gain.push(`next member −${d.discount}`);
   // a member traded for another (Swap Sides, Even Swap): the count stays, so say it, never "nothing"
   if (d.swapped > 0) gain.push(`${d.swapped} member${d.swapped === 1 ? '' : 's'} swapped`);
@@ -615,8 +631,8 @@ export function youdWords(pv, state, own = null) {
   return { text: sure || null, note: sure ? 'the rest is your pick' : 'it depends on your pick' };
 }
 /** "You'd get: +3 ●, +1 member" for player pid on space (q, i), computed just after it shows. */
-export function YoudGet({ state, pid, q, i }) {
-  const pv = usePreview(state, pid, q, i);
+export function YoudGet({ state, pid, q, i, now = false }) {
+  const pv = usePreview(state, pid, q, i, { now });
   if (pid == null) return null;
   if (pv === undefined) return <span className="youd-get pending" data-youd-get="">You’d get: …</span>;
   if (!pv) return null;

@@ -1,4 +1,6 @@
-# Heuristic sweep checklist (screen-only critics), v3
+# Heuristic sweep checklist (screen-only critics), v4
+
+v4 (2026-10-15, miss-matrix-2026-10-15.md): adds hover completeness, the speed ladder, the outcome ledger, eye distance, a toll census, wheel tokens against the rim, one indicator per fact, and "could it go?" before relabelling. Older: checklist-v3.md.
 
 Walk this list on every screen state, by sight, through `scripts/v4-eyes.mjs`. Each line is a question you answer with a screenshot. A "no" is a finding. Don't skip a line because the answer seems fine: look, then write down what you saw.
 
@@ -30,11 +32,20 @@ Walk this list on every screen state, by sight, through `scripts/v4-eyes.mjs`. E
 23. **Art direction.** Do the characters, sprites and animations look finished and distinct from each other at the size they're shown, or samey and placeholder?
 
 ## C. Feel and time (use the numbers `v4-eyes` prints on every action)
-24. **Input response under 100 ms.** Every click, hover and key shows something within 100 ms. List each action over 100 ms with its number.
+24. **Input response under 100 ms, measured to complete.** Every click, hover and key shows its *finished* answer within 100 ms. List each action over 100 ms with its first / complete numbers. A hover or card that appears and then fills in, re-lays out or changes size (2+ bursts) is a finding even if its first change was fast.
 25. **Nothing drags.** Transitions over ~400 ms that block you, and waits between turns: list them with their settle times. Trigger every motion you can cause yourself and time it.
 26. **Animation follows the eye.** Use `frames`: does a change travel from its cause to its result (a coin flying to the seat, a card moving to the hand), or does it snap or flash somewhere you weren't looking?
 27. **Round end is legible.** Watch the round-end scoring at normal speed with `frames` and `wait`: can you say who got what and why, before it moves on? If you can't narrate it, it's too fast or too busy.
 28. **Bot turns are readable.** After `wait` while bots play, use `frames idle`: could a person follow each bot move as it happened?
+28a. **Every speed setting does its job.** The speed ladder (brief): the slowest setting must read as clearly, comfortably slow (about twice the default or more, and you can narrate every step); the default readable and never rushed; the fastest still shows cause and effect. A ratio under ~1.6× between neighbouring settings, or a setting where you couldn't follow a step, is a finding.
+28b. **Motion is smooth.** Any `watch` or `frames` verdict with stutters (frame gaps over 50 ms while something moves) at load under 2 is a finding, with the gaps.
+28c. **What it says is what you get.** The outcome ledger (brief): every space and member effect you trigger pays exactly what its face and hover said, for your situation. A mismatch, a bonus that can't pay in a normal game, or a cost you only discover on taking it, is a finding.
+
+## C2. Where the eye is
+28d. **Eye distance.** At each decision, the control or cue that answers it sits where your eye already is (within ~250 px of the thing you just acted on). Pass sits where you decide the buy; a choice's first target appears beside the space that asked. Hunting is a finding.
+28e. **One indicator per fact.** Name every element that tells the same thing (turn order, whose turn, score, what's left). More than one is a duplicate; an indicator you had to decode, ask first whether it could be deleted.
+28f. **Tokens on the board.** `zoom` the wheel: emoji, leaders and minions sit upright, sized with the rim lettering (not bigger than the words around them), and never cover a panel's words.
+28g. **Toll census.** List every board space that charges you something to take it, and every bonus that depends on other players (count when it could ever pay). Each is a line in the ledger, and a finding if the cost isn't obvious on the face or the bonus can't pay in a normal snake.
 
 ## D. Craft
 29. **Alignment and spacing.** Use `grid` and `zoom`: edges line up, gaps repeat, type sizes come from a small scale. Note every misalignment of 2 px or more, every uneven gap.
@@ -51,6 +62,9 @@ Walk this list on every screen state, by sight, through `scripts/v4-eyes.mjs`. E
 8. **Motion and art:** every motion you can trigger yourself (anything the rulebook says you can drag, spin or toggle), timed; and whether the characters, sprites and animations look finished and tell apart at the size shown.
 9. **Space budget:** the five largest areas of the game screen, what each holds, and whether the room each gets matches how much a player needs it right now.
 10. **Decipher test:** every short label you met, what you guessed it meant, and what it turned out to mean.
+11. **Speed ladder:** setting × moment → motion ms, beats, stutters, and your by-eye verdict.
+12. **Outcome ledger:** placements checked, expected vs got, mismatches.
+13. **Eye distance:** each decision point, where the eye was, where the answer sat, px.
 
 ## Severity
 - **Blocker:** you misread the game state, can't find how to act, or a common move fails.
@@ -60,4 +74,7 @@ Walk this list on every screen state, by sight, through `scripts/v4-eyes.mjs`. E
 ## Always cover (calibration misses)
 - Spin the wheel by hand at least once (drag or arrow keys) and time it.
 - Read every action panel and say what you think it does before you hover it.
-- Check the starting-resource pick, the shop card faces, the seat hover and the member "Use" against design/taste.md's "Cory's own calls". His stated taste counts, even where you'd disagree.
+- Pass without buying at least twice, and say where Pass sat relative to where you were deciding.
+- Take every gift, steal, swap and copy space your table offers, and every space that charges you.
+- Do the speed ladder and the hover-complete reads even when the default "seems fine".
+- Check every screen against the house style in your brief (the designer's own written calls). His stated taste counts, even where you'd disagree: say you disagree as a note, never ask for the opposite as a fix.

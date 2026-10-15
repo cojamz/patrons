@@ -9,6 +9,10 @@
 //       flow at their hand-off. This pinned the old fixed bot pace (600ms a step); since
 //       Cory's 2026-10-15 calls ("clear and steady, not slow"; every action plays a chain) the chain sets the pace, a
 //       bot's next step shows at its chain's hand-off, and a step with nothing to show (a pass) holds no fixed time.
+//       The floor is MO.stepFloor at Steady (400ms × Steady's speed since the morning fixes: 480ms);
+//  (m5) laptop, the same seeded game at Steady and at Relaxed: a rival's whole turn (their placement showing → the next
+//       placement showing, bot to bot) takes at least 1.8× as long at Relaxed, at the median (Cory's play note, morning
+//       fixes: "Animations are too fast even on Relaxed": Relaxed is twice Steady, Steady a little slower than before).
 // Starts from a saved game (e2e/v4/lib/rich-save.mjs) where P1 holds 6 of every color and is about to place.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5184.
 import { chromium } from 'playwright';
@@ -17,6 +21,11 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { richSave } from './lib/rich-save.mjs';
 import { seedSave } from './lib/seed.mjs';
+import { MO, motionSpeed } from '../../src/v4/motion.js';
+
+// (node has no saved speed: this reads Steady's own numbers)
+if (motionSpeed() !== 'steady') throw new Error('motion.mjs reads Steady budgets');
+const FLOOR = MO.stepFloor; // a rival's visible step stays up at least this long at Steady (m4)
 
 const SHOTS = (process.env.V4_SHOTS || '/tmp/patrons-shots/v4') + '/motion';
 mkdirSync(SHOTS, { recursive: true });
@@ -151,7 +160,8 @@ for (const prof of PROFILES) {
   }
 }
 
-// (m4) laptop pacing at Normal speed (no botDelay override): round I of a fresh game, bot steps ≥600ms apart
+// (m4) laptop pacing at Steady (no botDelay override): rounds I–II of a fresh game, a rival's visible step stays up
+// at least FLOOR before the next player's step
 {
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
   const page = await ctx.newPage();
@@ -173,7 +183,7 @@ for (const prof of PROFILES) {
     addEventListener('DOMContentLoaded', watch);
   });
   try {
-    await page.goto(`${base}/?intro=0`); // intro=0: no first-game intro over the table (src/v4/Intro.jsx; hotseat.mjs gates the intro)
+    await page.goto(`${base}/?intro=0&speed=steady`); // intro=0: no first-game intro over the table (src/v4/Intro.jsx; hotseat.mjs gates the intro)
     await page.click('[data-home="local"]');
     await page.click('[data-start]');
     await page.waitForSelector('.lt-seat[data-pid]');
@@ -202,9 +212,73 @@ for (const prof of PROFILES) {
     }
     console.log(`laptop pacing: ${pairs} hand-overs from a rival's visible step to the next player's (rounds I–II), shortest ${Math.round(worst)}ms`);
     if (pairs < 6) errors.push(`(m4) too few bot steps measured (${pairs})`);
-    else if (worst < 380) errors.push(`(m4) bot steps ${Math.round(worst)}ms apart at 1270×700 (need ≥400)`);
+    else if (worst < FLOOR - 20) errors.push(`(m4) bot steps ${Math.round(worst)}ms apart at 1270×700 (need ≥${FLOOR})`);
   } catch (e) { errors.push(`m4 run: ${e.message}`); }
   await ctx.close();
+}
+
+// (m5) Relaxed is about twice Steady: the same seeded game (Math.random seeded in the page, so the bots and the deal
+// repeat; you play the first open space and pass), round I at each speed; each rival turn measured as the grammar's H3
+// (a bot's placement showing → the next placement showing, both bots, same round). You only act on your own turn, so no
+// click ever skips a rival's chain.
+async function rivalTurns(speed) {
+  const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
+  const page = await ctx.newPage();
+  page.on('pageerror', e => errors.push(`[m5 ${speed}] pageerror: ${e.message}`));
+  await page.addInitScript(() => {
+    let s = 20261016;
+    Math.random = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    window.__st = [];
+    const watch = () => {
+      const el = document.querySelector('.app.game');
+      if (!el) { requestAnimationFrame(watch); return; }
+      let prev = { ...el.dataset };
+      new MutationObserver(() => {
+        const now = { ...el.dataset };
+        if (now.moves !== prev.moves) window.__st.push({ t: performance.now(), byBot: prev.bot === '1', kind: prev.phase, round: prev.round, roundNow: now.round, modal: !!document.querySelector('.roundend, [data-next-round]') });
+        prev = now;
+      }).observe(el, { attributes: true, attributeFilter: ['data-moves'] });
+    };
+    addEventListener('DOMContentLoaded', watch);
+  });
+  const turns = [];
+  try {
+    await page.goto(`${base}/?intro=0&speed=${speed}`);
+    await page.click('[data-home="local"]');
+    await page.click('[data-start]');
+    await page.waitForSelector('.lt-seat[data-pid]');
+    const t0 = Date.now();
+    const look = () => page.evaluate(() => { const g = document.querySelector('.app.game'); return document.querySelector('[data-next-round]') ? 'next' : g && g.dataset.yours === '1' ? g.dataset.phase || '?' : ''; }).catch(() => '');
+    while (Date.now() - t0 < 150000) {
+      const ph = await look();
+      if (ph === 'next') break; // round I is over
+      if (ph) {
+        let el = ph === 'buy' ? await page.$('[data-option="pass"]:not([disabled])') : ph === 'place' ? await page.$('.slot.can .base') : null;
+        // anything else (a setup pick, a rival's seat to target, a color, a payment): the first open option, as m4 does
+        if (!el) for (const o of await page.$$('[data-option]:not([disabled]):not([aria-disabled="true"])')) { const id = await o.getAttribute('data-option').catch(() => null); if (id && !id.startsWith('toggle') && id !== 'back' && id !== '@unpick') { el = o; break; } }
+        if (el) { await el.click({ timeout: 1000 }).catch(() => {}); const conf = await page.$('[data-place]'); if (conf) await conf.click().catch(() => {}); }
+      }
+      await page.waitForTimeout(150);
+    }
+    const st = await page.evaluate(() => window.__st);
+    for (let i = 0; i < st.length; i++) {
+      if (st[i].kind !== 'place' || !st[i].byBot || st[i].modal || st[i].round !== '1') continue;
+      let j = i + 1;
+      while (j < st.length && st[j].kind !== 'place') j++;
+      if (j >= st.length || !st[j].byBot || st[j].modal || st.slice(i, j + 1).some(x => x.roundNow !== '1')) continue;
+      turns.push(Math.round(st[j].t - st[i].t));
+    }
+  } catch (e) { errors.push(`m5 ${speed} run: ${e.message}`); }
+  await ctx.close();
+  return turns;
+}
+{
+  const med = xs => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : NaN; };
+  const steady = await rivalTurns('steady'), relaxed = await rivalTurns('relaxed');
+  const ratio = med(relaxed) / med(steady);
+  console.log(`rival turns, round I: Steady p50 ${med(steady)}ms (${steady.length}: ${steady.join(' ')}); Relaxed p50 ${med(relaxed)}ms (${relaxed.length}: ${relaxed.join(' ')}); Relaxed/Steady ${ratio.toFixed(2)}`);
+  if (steady.length < 4 || relaxed.length < 4) errors.push(`(m5) too few rival turns measured (Steady ${steady.length}, Relaxed ${relaxed.length})`);
+  else if (!(ratio >= 1.8)) errors.push(`(m5) a rival's turn at Relaxed is ${ratio.toFixed(2)}× Steady's (p50 ${med(relaxed)}ms vs ${med(steady)}ms; want ≥ 1.8×)`);
 }
 
 await browser.close();

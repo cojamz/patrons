@@ -1,6 +1,8 @@
 # Morning note for Cory, 2026-10-15
 
-**Link:** https://deploy-preview-1--cornycolonies.netlify.app (the PR's preview, built from the final commit 0c1cd51)
+> **Status, 2026-10-15 afternoon:** kept as the record. Cory's calls 1–10 below are still unanswered. This note is superseded once he answers them.
+
+**Link:** https://deploy-preview-1--cornycolonies.netlify.app (the PR's preview. Meant to carry 0c1cd51, but as of 14:30 it still showed a build from before 10:00; check the build stamp before playing)
 
 Three pictures of the final build at 1270×700: [the starting pick](morning/1-start.png) · [a round III turn](morning/2-round-three.png) · [the results](morning/3-results.png)
 

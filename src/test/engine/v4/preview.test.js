@@ -30,7 +30,10 @@ describe('v4 previewSpace', () => {
             t = applyMove(t, { player: t.pending.player, option: opts[Math.floor(rand() * opts.length)].id });
           }
           const me0 = s.players[pid], me = t.players[pid];
-          if (!pv.partial) {
+          // the space was the round's last placement and the real path ran on through the round's end: rivals' round-end
+          // members (Straggler doing Kickback for you) are in t, and no space preview covers them
+          const pastRound = t.over || t.round !== s.round || t.log.slice(s.log.length).some(l => /^Round \S+ ends\./.test(l));
+          if (!pv.partial && !pastRound) {
             for (const r of s.resources) expect(inRange(pv.you.res[r], (me.res[r] || 0) - (me0.res[r] || 0)), `${o.label}: ${r} ${JSON.stringify(pv.you.res[r])}`).toBe(true);
             expect(inRange(pv.you.members, me.members.length - me0.members.length), `${o.label}: members`).toBe(true);
             // followers: the buy step can't have run yet (we stop at the next decision), so it's the space's own

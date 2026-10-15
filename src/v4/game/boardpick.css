@@ -78,19 +78,8 @@
   .seat-pick.docked .pick-rest-btn{min-height:44px;height:44px}
 }
 
-/* a pair's first part, picked: it stays lifted and steady (no breathing) while the second step is lit */
-.lt-cult-seat .cs-stack.pick-on.pick-chosen{animation:none;transform:translateY(-4px);
-  box-shadow:0 0 0 2px #fffaf0,0 0 0 4px rgba(var(--lamp),.9),0 6px 0 rgba(0,0,0,.35)}
-.lt-cult-seat .cs-member.pick-chosen .fig{animation:none;transform:translateY(-4px);filter:drop-shadow(0 0 0 #fffaf0) drop-shadow(0 0 2px #fffaf0) drop-shadow(0 0 6px rgba(var(--lamp),1))}
-.lt-cult-seat .cs-member.pick-chosen::after{content:"";position:absolute;left:50%;bottom:-6px;width:18px;height:2px;margin-left:-9px;border-radius:1px;background:var(--lamp-ink)}
-
-/* while one is picked, the other firsts switch it: clickable, but quiet (the second step is what glows) */
-.lt-cult-seat .cs-stack.pick-on.pick-alt{animation:none;background:transparent;color:inherit;box-shadow:0 0 0 1px rgba(243,230,200,.28)}
-.lt-cult-seat .cs-stack.pick-on.pick-alt:hover{transform:translateY(-2px);box-shadow:0 0 0 1.5px rgba(var(--lamp),.8)}
-.lt-cult-seat .cs-member.pick-alt .fig{animation:none;filter:none}
 /* a member a choice offers wears the same lit ring as a stack, so it reads at a glance */
-.lt-cult-seat .cs-member.pick-on:not(.pick-alt) .cs-pick-member{box-shadow:0 0 0 2px rgba(var(--lamp),.9),0 0 12px 2px rgba(var(--lamp),.45)}
-.lt-cult-seat .cs-member.pick-alt .cs-pick-member{box-shadow:0 0 0 1px rgba(243,230,200,.28)}
+.lt-cult-seat .cs-member.pick-on .cs-pick-member{box-shadow:0 0 0 2px rgba(var(--lamp),.9),0 0 12px 2px rgba(var(--lamp),.45)}
 
 /* the member of yours asking (Double Agent, just recruited): steady, ringed, never dimmed, so you see who's asking */
 .lt-cult-seat .cs-member.pick-asker{opacity:1}

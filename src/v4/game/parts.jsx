@@ -80,7 +80,6 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
     const b = box.current && (seatPick ? box.current : box.current.querySelector('button:not([disabled])'));
     if (b) b.focus({ preventScroll: true });
   }, [pend]); // eslint-disable-line react-hooks/exhaustive-deps
-  const trade = pend.options.length > 0 && pend.options.every(o => o.kind === 'trade');
   // counted picks ("Steal: take 1 gold from… (2 left)") show how many are already taken
   const total = useRef(null);
   const left = (pend.prompt.match(/\((\d+) left\)/) || [])[1];
@@ -99,9 +98,8 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = nu
           same sentence again (RC1 sweep 24) */}
       <p>{!setup && tally ? <span className="tally">{tally} · </span> : null}{setup ? `${watching ? `${watching.name} · pick` : 'Pick'} ${(pend.prompt.match(/\((\d) of 2\)/) || [])[1] || 1} of 2` : pend.prompt}</p>
       {setup ? <><SetupTokens state={state} pend={pend} onPick={pick} busy={busy} /><ForSale state={state} /></>
-        : trade ? <TradePicker state={state} pend={pend} onPick={pick} busy={busy} />
-          : <MergedOptions state={state} pend={pend} onPick={pick} busy={busy} />}
-      {!setup && !trade && left != null && Number(left) > 1 && (
+        : <MergedOptions state={state} pend={pend} onPick={pick} busy={busy} />}
+      {!setup && left != null && Number(left) > 1 && (
         // a counted pick: one button per target that can cover all of what's left ("Take all 3 from P3")
         <div className="take-alls">
           {/* the label says what a click really takes: all of what's left, or all a lone target holds ("Take P3's 1") */}
@@ -133,7 +131,7 @@ function SeatPickCaption({ state, pk, onPick, busy, turnOf, box }) {
   const [keys, setKeys] = useState(false);
   const what = cap.what && cap.what.map((w, k) => (typeof w === 'string' ? <span key={k}>{w}</span> : <Pip key={k} color={w.dot} />));
   return (
-    <section className="prompt choice seat-pick docked" aria-live="polite" ref={box} tabIndex={-1} role="group" aria-label={pend.prompt} data-board-pick={[...pk.kinds].join(' ')} data-step={pk.combo ? (pk.combo.chosen == null ? '1' : '2') : undefined}
+    <section className="prompt choice seat-pick docked" aria-live="polite" ref={box} tabIndex={-1} role="group" aria-label={pend.prompt} data-board-pick={[...pk.kinds].join(' ')}
       onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) setKeys(false); }}
       onKeyDown={e => { if (e.key === 'Escape' && keys) { e.stopPropagation(); setKeys(false); e.currentTarget.focus(); } }}>
       {turnOf && <TurnOf player={turnOf} />}
@@ -264,65 +262,6 @@ export function MarkLabel({ text, resources }) {
   }
   if (at < text.length) out.push(<span key="end">{text.slice(at).replace(/^,\s*/, ' ')}</span>);
   return <span className="mark-label">{out}</span>;
-}
-
-/** Trade in two steps: give one of yours, then take one of theirs that's legal for it. */
-/** One member in the trade picker. Defined once, outside the picker: a component made inside render is a new type
- *  every render, so React rebuilt every button on each table update (about every 2s, even idle) and a slow click
- *  landing mid-rebuild was lost. */
-const TradeCard = memo(function TradeCard({ state, g, busy, onClick, extra }) {
-  return (
-    <button type="button" className="btn rich" style={{ '--c': cardColor(state, g.d) }} disabled={busy} onClick={onClick} data-option={extra}>
-      <span className="rich-body">
-        <b>{g.d.name}{g.uids.length > 1 && <span className="num"> ×{g.uids.length}</span>}{' '}<Follower n={g.d.f} className="star" />{g.o && <span className="from"> · {g.o.name}</span>}</b>
-        <small><CardText text={g.d.text} /></small>
-      </span>
-    </button>
-  );
-});
-
-function TradePicker({ state, pend, onPick, busy }) {
-  const [give, setGive] = useState(null);
-  const owner = uid => state.players.find(p => p.members.includes(uid));
-  const group = (uids, withOwner) => {
-    const out = new Map();
-    for (const u of uids) {
-      const d = cardDef(state, u);
-      const o = withOwner ? owner(u) : null;
-      const k = `${d.id}|${o ? o.id : ''}`;
-      if (!out.has(k)) out.set(k, { k, d, o, uids: [] });
-      out.get(k).uids.push(u);
-    }
-    return [...out.values()];
-  };
-  const mine = group([...new Set(pend.options.map(o => o.value[0]))], false);
-  const chosen = give && mine.find(g => g.k === give);
-  const theirs = chosen ? group([...new Set(pend.options.filter(o => chosen.uids.includes(o.value[0])).map(o => o.value[1]))], true) : [];
-  const take = g => {
-    const opt = pend.options.find(o => chosen.uids.includes(o.value[0]) && g.uids.includes(o.value[1]));
-    if (opt) onPick(opt.id);
-  };
-  if (!chosen) {
-    return (
-      <div className="trade">
-        <span className="step">1 · Give one of yours</span>
-        {/* step one only lifts yours (nothing goes to the engine yet), so it says "@pick:", like the board picker's
-            pairs: an engine id here made every driver (and the perf tracer) read the step as a dead click */}
-        <div className="opts">{mine.map(g => <TradeCard key={g.k} state={state} busy={busy} g={g} onClick={() => setGive(g.k)} extra={`@pick:${g.uids[0]}`} />)}</div>
-      </div>
-    );
-  }
-  return (
-    <div className="trade">
-      <span className="step">2 · Take one of theirs for your {chosen.d.name} <button type="button" className="btn ghost" data-option="@unpick" onClick={() => setGive(null)}>Change</button></span>
-      <div className="opts">
-        {theirs.map(g => {
-          const opt = pend.options.find(o => chosen.uids.includes(o.value[0]) && g.uids.includes(o.value[1]));
-          return <TradeCard key={g.k} state={state} busy={busy} g={g} onClick={() => take(g)} extra={opt && opt.id} />;
-        })}
-      </div>
-    </div>
-  );
 }
 
 // One log line; member names in it open their cards. `table` stays the same object for a whole game (names, colors,

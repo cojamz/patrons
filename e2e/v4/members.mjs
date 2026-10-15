@@ -405,13 +405,13 @@ try {
   await away();
   await pointAt('[data-cult="3"] .cs-leader');
   await page.waitForTimeout(250);
-  if (await page.$('[data-cult="3"] .cs-order')) {
-    await pointAt('[data-cult="3"] .cs-order');
+  if (await page.$('[data-cult="3"] .cs-turn')) {
+    await pointAt('[data-cult="3"] .cs-turn');
     await page.waitForTimeout(400);
     // cards up (fading in counts): the hover layer when it holds a card, and every other card on the page's top level
     const cards = await page.evaluate(() => (document.querySelector('[data-hover-layer][data-open="1"]') ? 1 : 0)
       + [...document.querySelectorAll('body > .popover:not([data-hover-layer])')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.left > -1000; }).length);
-    if (cards !== 1) fail(`${cards} cards on screen at once after pointing from P4's seat to its turn-order note (want 1)`, 'm13');
+    if (cards !== 1) fail(`${cards} cards on screen at once after pointing from P4's seat to its turn words (want 1)`, 'm13');
   }
 
   // (m14) w4b #2: a seat's card always opens for a pointer that simply comes to rest on it: one move onto a seat (its

@@ -15,7 +15,7 @@ import { MemberActions, MemberSwitch, useUseResult, UseResult } from './MemberUs
 import { usableNow, loadedUse, safeThisRound } from './memberUse.js';
 import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { Minion } from '../art/Leader.jsx';
-import { turnPlaces } from './seats.js';
+import { seatTurns } from './seats.js';
 import { seatRanks } from './RankRow.jsx';
 import { incomeOf, memberGroups } from './build.js';
 import Tick from './Tick.jsx';
@@ -47,9 +47,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const extraBuyNow = !!(mine && pend && pend.player === pid && pend.kind === 'buy' && pend.extra && !state.over);
   const givesExtra = g => extraBuyNow && g.uids.some(u => { const c = state.cards[u]; return !(c.spent && c.spent.extraBuy === state.round) && !!cardDef(state, u).extraBuy; });
   const ready = new Set(mine ? usableNow(state, pid).filter(x => optionFor(`use:${x.uid}`)).map(x => x.uid) : []);
-  // its place in what's left of this round's turn order (who's up now, who's next)
-  const turns = turnPlaces(state, me);
-  const place = turns.places[pid];
+  // the turns in plain words (Cory, 2026-10-16: the rail confused him): "next" on the seat that places after this turn,
+  // and on yours "your turn in 3" (seats.js seatTurns, read off the engine's queue)
+  const turn = seatTurns(state, me)[pid] || null;
   // who's winning lives here now (no score row): this chair's place, lit when it leads, the margin on hover
   const rank = seatRanks(state, me)[pid] || null;
   // its build at one glance: its members (grouped by color) and what they hand it each round (the engine's round start)
@@ -68,12 +68,40 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // w3b: a rival's seventh member folded with room to spare), measured from the row's own width, the "each round" block
   // beside it and a figure's width. None of these changes with how many are shown, so measuring can't feed back (the
   // TurnCard lesson, 2026-10-15). Phones keep fixed counts: their crowd wraps.
-  const fit = useFigureFit(rootEl);
+  // yours, on a wide laptop: "each round" goes up beside your name when it clears your turn words ("your turn", short),
+  // so your row holds figures only; beside "your turn, then again" or "your turn in 3" it ran into them (2026-10-15,
+  // design/eval/morning-fixes/pay-gains/strip-after.png), so then it stays beside your figures, as on a rival's seat.
+  // Measured from the words, the total and the block's own width: none moves when the block does, so no feedback.
+  const [incomeUp, setIncomeUp] = useState(false);
+  const incomeKey = incomeWords.join(',');
+  useLayoutEffect(() => {
+    if (!mine) return undefined;
+    const check = () => {
+      const seat = rootEl.current;
+      if (!seat) return;
+      const wide = typeof matchMedia === 'function' && matchMedia('(min-width:1200px) and (min-height:500px)').matches;
+      const build = seat.querySelector(':scope > .cs-build'), total = seat.querySelector('.cs-total'), who = seat.querySelector('.cs-who'), words = seat.querySelector('.cs-turn');
+      let up = false;
+      if (wide && build && total && who) {
+        const right = Math.max(who.getBoundingClientRect().right, words ? words.getBoundingClientRect().right : 0);
+        up = right + 12 + build.getBoundingClientRect().width <= total.getBoundingClientRect().left - 10;
+      }
+      setIncomeUp(u => (u === up ? u : up));
+    };
+    check();
+    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) document.fonts.ready.then(check);
+    addEventListener('resize', check);
+    return () => removeEventListener('resize', check);
+  }, [mine, turn && turn.say, incomeKey, bonus]); // eslint-disable-line react-hooks/exhaustive-deps
+  const fit = useFigureFit(rootEl, incomeUp);
   const MAX = fit ? (fit.all >= groups.length ? groups.length : fit.withMore) : bonus ? 3 : incomeWords.length ? Math.max(1, 4 - incomeWords.length) : 6;
   // what's never folded into "+N", most needed first: one you can use now or the board picker lights (folded, it could
   // only be picked from the keyboard list), then a use still in hand (a rival's loaded Raider is a threat to see
   // coming, w2b #21); each takes the place of the last one shown that's needed less
-  const need = g => (g.uids.some(u => ready.has(u) || !!(pick && pick.members && pick.members[u]) || (result && result.uid === u)) || givesExtra(g) ? 2 : g.uids.some(u => loadedUse(state, u)) ? 1 : 0);
+  // then the newest member (the engine appends every arrival: a recruit, a Poach, a swap), so the piece that flies in
+  // lands on its own figure, never on "+N more" (the travel gate's Poach landed on nothing, 2026-10-15)
+  const newest = p.members.length ? p.members[p.members.length - 1] : null;
+  const need = g => (g.uids.some(u => ready.has(u) || !!(pick && pick.members && pick.members[u]) || (result && result.uid === u)) || givesExtra(g) ? 2 : g.uids.includes(newest) ? 1.5 : g.uids.some(u => loadedUse(state, u)) ? 1 : 0);
   const keep = groups.slice(0, MAX);
   for (const g of groups.slice(MAX).filter(need).sort((x, y) => need(y) - need(x))) {
     const k = keep.map(need).reduce((at, n, i) => (n < need(g) && (at < 0 || n <= need(keep[at])) ? i : at), -1);
@@ -99,12 +127,12 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
     onPointerMove: e => { if (realHover(e) && hover && !onFig(e)) openSeat(e, false); },
     onPointerLeave: e => { if (e.pointerType === 'mouse' && hover) hover.onSeatHover(pid, null); },
   };
-  // the turn-order rail sits in the head but outside the seat's box: pointing at it explains the turn order, not the
-  // seat (w2a #28: it opened your seat list 296px away); crossing between the two swaps which one is open
-  const onRail = e => !!(e.target && e.target.closest && e.target.closest('.cs-order'));
+  // the turn words under the name explain the turn order when pointed at, not the seat (w2a #28); crossing between the
+  // two swaps which one is open
+  const onRail = e => !!(e.target && e.target.closest && e.target.closest('.cs-turn'));
   const railIn = useRef(false);
   return (
-    <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
+    <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}` : ''}`} data-cult={pid} data-income={mine && incomeUp ? 'up' : undefined} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
       // a click beside the lit picks in this chair (w3a A53: "a click 30px off did nothing, and no 'pick a lit stack'")
       // makes them pulse once, so the miss says where to click
       onClick={pick && pick.lit && !pick.seatMode ? e => {
@@ -129,12 +157,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 40 : 32} orbit={false} face={!mine} /></span>
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
-          {/* its place in the turns, said like the plate's "You  place a minion"; the rail beside the column marks it too */}
-          {place && <Tip className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined}
-            label={place.title} content={() => <div className="pop-card gloss"><b>Turn order: {place.text}</b><span>{place.title}</span></div>}>
-            {/* "again" (w3b #42: "twice" alone took a decode): placing next, then again right after */}
-            <span className="co-t">{place.label}</span>{place.twice && <b className="co-x">again</b>}
-          </Tip>}
+          {/* its place in the turns, in words under the name: "next", or on yours "your turn in 3" */}
+          {turn && <Tip className={`cs-turn ${turn.kind}`} data-turn={turn.kind} data-turn-n={turn.n ?? undefined}
+            label={turn.title} content={() => <div className="pop-card gloss"><b>Turn order</b><span>{turn.title}</span></div>}>{turn.say}</Tip>}
         </span>
         <span className={`cs-total${rank && rank.lead ? ' lead' : ''}`} data-followers={f} data-rank={rank ? rank.place : undefined} title={rank ? rank.title : `${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
       </header>
@@ -163,7 +188,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
           // the board picker: a member the choice offers is clicked right here (seat figure)
           const pickM = pick && pick.members ? g.uids.map(u => pick.members[u]).find(Boolean) : null;
           return (
-            <span key={g.key} className={`cs-member${g.card.used && !state.over ? ' used' : ''}${readyUid != null ? ' ready' : ''}${loaded ? ' loaded' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.chosenUid != null && g.uids.includes(pick.chosenUid) ? ' pick-chosen' : ''}${pickM && pickM.alt ? ' pick-alt' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used && !state.over ? 'used' : loaded ? 'loaded' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
+            <span key={g.key} className={`cs-member${g.card.used && !state.over ? ' used' : ''}${readyUid != null ? ' ready' : ''}${loaded ? ' loaded' : ''}${hop ? ' react-hop' : ''}${pickM ? ' pick-on' : pick && pick.members ? ' pick-off' : ''}${pick && pick.askerUid != null && g.uids.includes(pick.askerUid) ? ' pick-asker' : ''}`} data-member={d.id} data-sphere={sphere} data-uids={g.uids.join(' ')} data-state={readyUid != null ? 'ready' : g.card.used && !state.over ? 'used' : loaded ? 'loaded' : undefined} data-react={hop || undefined} style={{ '--q': cardColor(state, d), '--ph': phase(g.uids[0]) }}>
               <span className={`aura${weak ? ' strong' : ''}`} aria-hidden="true" />
               <Tip className="fig" sticky={mine} label={`${d.name}: ${readyUid != null ? 'ready to use, show the card' : g.card.used ? 'used, show the card' : loaded ? 'not used yet, show the card' : 'show the card'}`}
                 content={() => <><MemberCard state={state} uid={readyUid ?? g.uids[0]} me={me} />{mine && <MemberActions state={state} uid={readyUid ?? g.uids[0]} me={me} optionFor={optionFor} onPick={onPick} />}</>}>
@@ -221,7 +246,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
             const shown = Math.max(0, (p.res[r] || 0) - took);
             const say = o ? (pick.give || mine ? `${pick.title ? `${pick.title}: ` : ''}${o.label}` : `Take 1 ${r} from ${p.name} (${took ? `${shown} left, ${took} picked` : shown})`) : sp ? sp.why : `${p.res[r] || 0} ${r}`;
             return (
-              <span key={r} className={`cs-stack${p.res[r] ? '' : ' zero'}${sp ? (o ? ' pick-on' : ' pick-off') : ''}${sp && sp.chosen ? ' pick-chosen' : ''}${o && o.alt ? ' pick-alt' : ''}`} data-res={r} title={say}
+              <span key={r} className={`cs-stack${p.res[r] ? '' : ' zero'}${sp ? (o ? ' pick-on' : ' pick-off') : ''}`} data-res={r} title={say}
                 {...(o ? { role: 'button', tabIndex: -1, 'data-option': o.id, 'aria-label': say, onClick: e => pick.onPick(o.id, e.currentTarget) } : sp ? { 'data-why': sp.why, onClick: e => pick.onDenied && pick.onDenied(sp.why, e.currentTarget) } : {})}>
                 <ResourceGlyph r={r} size={mine ? 16 : 13} n={shown} /><b className="num">{shown}</b>
                 {took > 0 && <i className="cs-took num" aria-hidden="true">−{took}</i>}
@@ -243,7 +268,7 @@ const phase = uid => `${((uid * 0.61803) % 1).toFixed(3)}`;
 const actionKey = last => { try { return quadrant(last.qid).actions.find(a => a.name === last.name).key; } catch { return ''; } };
 
 // ---------- reactions: the cult answers what its cards and its leader just did ----------
-const REACT_MS = MO.react; // src/v4/motion.js
+const REACT_MS = () => MO.react; // src/v4/motion.js (read when used: it follows the speed)
 /**
  * Diffs each new state against the last for one player: a member hops when a log line names it as theirs
  * ("Ana's Banker: +3 gold.", "Bo +1 silver (Ana's Retinue)."), the leader gestures when one of its minions is placed,
@@ -277,11 +302,11 @@ export function useCultReactions(state, pid, rootRef = null) {
           lit.current.push([m, 'react-hop']);
         }
       }
-      timer.current = setTimeout(unlight, REACT_MS);
+      timer.current = setTimeout(unlight, REACT_MS());
       return;
     }
     setReact(r => ({ leader: out.leader || (r && r.leader) || null, members: { ...(r && r.members), ...out.members }, n: Date.now() }));
-    timer.current = setTimeout(() => setReact(null), REACT_MS);
+    timer.current = setTimeout(() => setReact(null), REACT_MS());
   }, [state, pid]); // eslint-disable-line react-hooks/exhaustive-deps
   return react;
 }
@@ -317,14 +342,14 @@ export function reactionsBetween(before, state, pid) {
  * the "each round" block when it shares the row, "safe this round", and one figure's width; a block that comes or goes,
  * and the first figure, are watched as they appear. Set only when the numbers change.
  */
-function useFigureFit(rootEl) {
+function useFigureFit(rootEl, layout = null) {
   const [fit, setFit] = useState(null);
-  const ro = useRef(null), watched = useRef(new Set());
+  const ro = useRef(null), watched = useRef(new Set()), measure = useRef(null);
   useLayoutEffect(() => {
     const el = rootEl.current;
     if (!el || typeof ResizeObserver !== 'function') return;
     if (!ro.current) {
-      ro.current = new ResizeObserver(() => {
+      ro.current = new ResizeObserver(measure.current = () => {
         const seat = rootEl.current;
         if (!seat) return;
         const wide = typeof matchMedia === 'function' && matchMedia('(min-width:861px) and (min-height:500px)').matches;
@@ -349,6 +374,8 @@ function useFigureFit(rootEl) {
     for (const x of [...w]) if (!x.isConnected) { r.unobserve(x); w.delete(x); }
     for (const x of [el, el.querySelector(':scope > .cs-crowd'), el.querySelector(':scope > .cs-crowd > .cs-member'), el.querySelector(':scope > .cs-build')]) if (x && !w.has(x)) { r.observe(x); w.add(x); }
   });
+  // the "each round" block moving between the name row and the figures' row resizes nothing the observer watches
+  useLayoutEffect(() => { if (measure.current) measure.current(); }, [layout]);
   useEffect(() => () => { if (ro.current) ro.current.disconnect(); ro.current = null; watched.current.clear(); }, []);
   return fit;
 }

@@ -50,11 +50,11 @@ const PIECES = {
   'green.a5': () => [res('green', 4), res('red', 1)],
   'green.a6': () => [res('green', 8)],
   'purple.hourly': r => [res('purple', 3 + r)],
-  'purple.catchup': () => [res('purple', 1), per('purple', 2, 'hood')],
+  'purple.catchup': () => [res('purple', 1), per('purple', 1, 'hood')],
   'purple.windup': () => [per('purple', 1, 'minion')],
   'purple.planahead': (r, a) => [per('purple', numIn(a, /\+(\d+) purple per minion/, 2), 'hollow')],
-  'purple.overtime': () => [res('purple', 8), TO, { t: 'turns', n: 2 }],
-  'purple.rally': () => [{ t: 'all', r: 'purple' }, TO, { t: 'turns', n: null }],
+  'purple.overtime': () => [{ t: 'turns', n: 1 }],
+  'purple.rally': () => [{ t: 'turns', n: 2, own: true }], // your own next 2 minions, now (not extra turns)
   'silver.toast': r => [res('silver', 3 * r), { t: 'others', r: 'silver', n: 1 }],
   'silver.gift': () => [res('silver', 2), res('any', 2)],
   'silver.alms': () => [res('silver', 4), { t: 'give', r: 'any', n: 2 }],
@@ -256,8 +256,9 @@ function draw(p, s) {
       return [s * (p.of === 'all' ? 1.5 : 1.3), <g><MirrorG s={s} /><g transform={`translate(${s * 0.62} ${s * 0.4})`}>{badge}</g></g>];
     }
     case 'turns': {
-      // extra turns: minions with a plus (one more placement each)
+      // extra turns: minions with a plus (one more placement each); own: your next minions, still to place, now (no plus)
       const nw = p.n != null ? numW(s, p.n) : 0;
+      if (p.own) return [nw + s * 1.0, <g>{nw > 0 && <Num s={s} n={p.n} x={0} w={nw} />}<g transform={`translate(${nw} 0)`}><MinionG s={s} hollow /></g></g>];
       return [nw + s * 1.1, <g>{nw > 0 && <Num s={s} n={p.n} x={0} w={nw} />}<g transform={`translate(${nw} 0)`}><MinionG s={s} /></g><g transform={`translate(${nw + s * 0.62} ${-s * 0.1})`}><circle cx={s * 0.22} cy={s * 0.22} r={s * 0.22} fill="var(--purple)" stroke={INK} strokeWidth={s * 0.06} /><path d={`M${s * 0.22} ${s * 0.1}V${s * 0.34}M${s * 0.1} ${s * 0.22}H${s * 0.34}`} stroke={CREAM} strokeWidth={s * 0.08} /></g></g>];
     }
     case 'all': {

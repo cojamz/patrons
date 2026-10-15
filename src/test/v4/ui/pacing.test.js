@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { planChain, holdAfter, foldBuys } from '../../../v4/game/director.js';
-import { motionSpeed } from '../../../v4/motion.js';
+import { MO, SPEEDS, motionSpeed, setMotionSpeed } from '../../../v4/motion.js';
 
 const pct = (xs, p) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.min(s.length - 1, Math.floor(s.length * p))] : NaN; };
 
@@ -33,7 +33,7 @@ function paceGame(seed, mine = [0]) {
       const plan = planChain(s, next, { mine });
       const sameNext = !!(next.pending && next.pending.player === actor);
       const rivalStep = !mine.includes(actor);
-      const hold = holdAfter(plan, { sameNext, rivalStep, floor: 400, base: 0, nextPlaces: !!(next.pending && next.pending.kind === 'place'), placing: s.pending.kind === 'place' });
+      const hold = holdAfter(plan, { sameNext, rivalStep, floor: MO.stepFloor, base: 0, nextPlaces: !!(next.pending && next.pending.kind === 'place'), placing: s.pending.kind === 'place' });
       if (rivalStep) {
         // a snake turnaround (the same bot places again right away) is a second turn, not a longer one
         if (turn != null && s.pending.kind === 'place') { rivalTurns.push(turn); byRound[s.round].push(turn); turn = null; if (wait != null) between++; }
@@ -52,6 +52,15 @@ function paceGame(seed, mine = [0]) {
   return { rivalTurns, waits, byRound };
 }
 
+// Cory's play note (morning fixes, 2026-10-16: "too fast even on Relaxed"): Steady plays ×1.2 the motion language's first
+// table and Relaxed twice Steady (src/v4/motion.js SPEEDS), so H2 and H3's budgets, set on that first table, stretch by
+// the same ×1.2 at Steady. The shape of the budget (a rival's turn, the wait, the snake's long gap) is unchanged.
+const K = SPEEDS.steady;
+const rivalTurnsAt = sp => {
+  setMotionSpeed(sp);
+  try { const turns = []; for (const seed of [2, 7, 13, 21]) turns.push(...paceGame(seed, [0]).rivalTurns); return turns; } finally { setMotionSpeed('steady'); }
+};
+
 describe('the table\'s pace at Steady (H2, H3)', () => {
   it('a rival\'s turn and the wait between your turns stay inside the motion budget', () => {
     expect(motionSpeed()).toBe('steady');
@@ -69,9 +78,20 @@ describe('the table\'s pace at Steady (H2, H3)', () => {
     console.log(`[pacing] rival turn p50 ${h3p50}ms p95 ${h3p95}ms (${turns.length} turns); the usual wait for your turn p50 ${h2p50}ms (${usual.length}), longest ${h2max}ms (${waits.length} waits)`);
     expect(turns.length).toBeGreaterThan(40);
     expect(usual.length).toBeGreaterThan(10);
-    expect(h3p50).toBeLessThanOrEqual(2000);
-    expect(h3p95).toBeLessThanOrEqual(3000);
-    expect(h2p50).toBeLessThanOrEqual(6500);
-    expect(h2max).toBeLessThanOrEqual(13000);
+    expect(h3p50).toBeLessThanOrEqual(2000 * K);
+    expect(h3p95).toBeLessThanOrEqual(3000 * K);
+    expect(h2p50).toBeLessThanOrEqual(6500 * K);
+    expect(h2max).toBeLessThanOrEqual(13000 * K);
+  });
+  it('Relaxed plays a rival\'s turn about twice as long as Steady, and Steady a little slower than the first table', () => {
+    const steady = rivalTurnsAt('steady'), relaxed = rivalTurnsAt('relaxed'), quick = rivalTurnsAt('quick');
+    const [s, r, q] = [pct(steady, 0.5), pct(relaxed, 0.5), pct(quick, 0.5)];
+    console.log(`[pacing] rival turn p50: Quick ${q}ms, Steady ${s}ms, Relaxed ${r}ms (Relaxed/Steady ${(r / s).toFixed(2)})`);
+    expect(steady.length).toBe(relaxed.length); // the same games, step for step
+    expect(r / s).toBeGreaterThanOrEqual(1.8);
+    expect(r / s).toBeLessThanOrEqual(2.6);
+    // the old Steady's p50 on these games was 1541ms (2026-10-15); "a little slower" is about a fifth more
+    expect(s).toBeGreaterThan(1541 * 1.1);
+    expect(q).toBeLessThan(s);
   });
 });

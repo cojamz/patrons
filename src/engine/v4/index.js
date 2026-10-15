@@ -3,7 +3,7 @@ export {
   createGame, applyMove, legalMoves, isLegal,
   followers, memberCount, countMembersOfColor, cardDef, actionAt, openSlots,
   memberPrice, paymentPlan, followerPlan, paymentChoices, followerChoices, RING_VALUE, WORKERS, SHOP_SIZE, TIERS, tierLeft, roman,
-  contestTable, turnRail, roundWorkers,
+  contestTable, turnRail, roundOrder, roundWorkers,
 } from './core.js';
 export { quadrant, defById, DEFAULT_QUADRANTS, allQuadrantIds } from './content/index.js';
 export { previewSpace, roundStartIncome } from './preview.js';

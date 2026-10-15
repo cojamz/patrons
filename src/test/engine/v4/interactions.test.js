@@ -86,27 +86,21 @@ describe('Green copies the risky spaces', () => {
     expect(ids(s).every(id => id.startsWith('take:1:'))).toBe(true); // never P3
   });
 
-  it('copying Purple’s Overtime means paying for the extra turns yourself', () => {
+  it('copying Purple’s Overtime gives you its extra turn too, free (nothing to pay, no fallback)', () => {
     const P = ['gold', 'red', 'purple', 'echo'];
-    let s = scene({ quads: P, round: 2, turns: [1, 0, 1, 0], res: [{ purple: 8 }, { purple: 8 }] });
+    let s = scene({ quads: P, round: 2, turns: [1, 0, 1, 0] });
     s = take(s, 'purple.overtime');
     expect(R(s, 1).purple).toBe(0);
     s = pass(s);
-    expect(s.pending.player).toBe(1); // P2's 2 extra turns
-    s = go(go(s, 'echo.hum'), 'echo.chant');
+    expect(s.pending.player).toBe(1); // P2's extra turn
+    s = go(s, 'echo.hum');
+    expect(s.pending.player).toBe(0);
     s = take(s, 'echo.encore');
     expect(labels(s)).toContain('Overtime (P2): do Overtime yourself');
     s = move(s, s.pending.options.find(opt('Overtime')).id);
     expect(R(s, 0).purple).toBe(0);
     s = pass(s);
-    expect(s.pending.player).toBe(0); // P1's own extra turns
-    // and without the purple, the copy is Overtime's fallback: +3 purple
-    let t = scene({ quads: P, round: 2, turns: [1, 0, 1, 0], res: [{}, { purple: 8 }] });
-    t = go(go(go(t, 'purple.overtime'), 'echo.hum'), 'echo.chant');
-    t = take(t, 'echo.encore');
-    t = pass(move(t, t.pending.options.find(opt('Overtime')).id));
-    expect(R(t, 0).purple).toBe(3);
-    expect(t.pending.player).toBe(1);
+    expect(s.pending.player).toBe(0); // P1's own extra turn
   });
 
   it('copying a White sale means selling followers yourself, not free white', () => {
@@ -202,9 +196,9 @@ describe('Doppelganger copying Purple, Green and Silver members', () => {
     expect(R(s, 0).silver).toBe(3);
   });
   it('copying Foreman pays on every extra turn twice', () => {
-    let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 2, slots: { '0-0': 0 }, res: [{ purple: 8 }], members: [['purple.foreman', 'red.doppel']], copies: { 0: { 'red.doppel': 'purple.foreman' } } });
+    let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 3, slots: { '0-0': 0 }, members: [['purple.foreman', 'red.doppel']], copies: { 0: { 'red.doppel': 'purple.foreman' } } });
     s = take(s, 'purple.overtime');
-    expect(R(s, 0).purple).toBe(8); // 2 workers on the board, two Foremen, Overtime's 2 turns
+    expect(R(s, 0).purple).toBe(4); // 2 workers on the board, two Foremen, Overtime's 1 turn (Crunch Time's turns aren't extra)
   });
   it('copying Choir pays on every copy twice', () => {
     let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], members: [['echo.choir', 'red.doppel']], copies: { 0: { 'red.doppel': 'echo.choir' } } });

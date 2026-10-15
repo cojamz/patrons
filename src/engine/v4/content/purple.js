@@ -1,11 +1,13 @@
-// Purple: extra turns. Purple is the currency of time: spend it to act again, or hold it for the ring.
+// Purple: extra turns. Its spaces give them free (Cory, 2026-10-15: no board action requires spending); purple held
+// counts for the ring, and members (Taskmaster) can still buy a turn with it.
 // Most purple at round end takes the ring's followers.
 // Rework (Claude, 2026-10-14, under Cory's go-with-your-gut, after his first play): every extra turn a Purple space
 // gives is a net gain (one worker in, two or more out); Linger became Plan Ahead; the ring counts purple honestly.
 // Reprice (Claude, 2026-10-14, go-with-your-gut, from the member-value sim in design/eval/purple-members.md): Corner-Cutter,
 // Taskmaster, Late Riser 4+2; Overseer 2+2; Go-Getter 6+2. Night Owl takes Relay's slot.
 //
-// Engine notes (content-only, no core change):
+// Engine notes (content-only, no core change, but for roundOrder):
+// - Crunch Time is not an extra turn: turnsNow moves your own next turns up to right after this one (no new minion).
 // - An extra turn is an ordinary { t: 'turn' } task put right after the current turn ends (p.left += 1).
 // - Extra turns only happen when the board has a space to spare (more open spaces than turns still to come),
 //   so they never squeeze anyone out of the last space (round I fills every space).
@@ -30,11 +32,8 @@ function openSpaces(ctx) {
 const scheduled = ctx => ctx.state.queue.filter(t => t.t === 'turn').length;
 /** True when one more turn can't squeeze anyone out of a space. */
 export const spareSpace = ctx => openSpaces(ctx).length > scheduled(ctx);
-// Overtime: this many purple for 2 extra turns. Crunch Time: 1 extra turn per RALLY_PER purple spent, plus 1, up to RALLY_CAP.
-// RALLY_CAP was 3 (Cory, 2026-10-15, balance pass 1 #5: both bots read Crunch Time at about 20u against 5–9).
-const OT = 8;
-const RALLY_PER = 4, RALLY_CAP = 2;
-/** What extra turns that cost `base` purple cost p (Corner-Cutter halves it, rounded up). */
+/** What extra turns that cost `base` purple cost p (Corner-Cutter halves it, rounded up). Only Taskmaster pays now:
+ *  Overtime is free (Cory, 2026-10-15: "no board action should require spending"). */
 const priceFor = (ctx, p, base) => (ctx.membersOf(p).some(c => c.def.halfTurns || (c.copy && c.copy.endsWith('.doubletime'))) ? Math.ceil(base / 2) : base);
 /** How many more turns the board has room for (open spaces beyond the turns still to come). */
 const room = ctx => openSpaces(ctx).length - scheduled(ctx);
@@ -54,18 +53,16 @@ function buyTurn(ctx, p, base, what, fallback, member = false, n = 1) {
   if (fallback) ctx.gain(p, P, fallback, { fromAction: true });
   return false;
 }
-const buyEstimate = (ctx, p, base, fallback, n = 1) => (canBuyTurn(ctx, p, base, n) ? n * turnValue(ctx) - priceFor(ctx, p, base) * 0.8 + 1 : fallback);
-/** Rivals with more workers on the board than p (+extra for the worker p is about to place). */
-const behind = (ctx, p, extra = 0) => ctx.rivals(p).filter(o => onBoard(ctx, o) > onBoard(ctx, p) + extra).length;
+/** Rivals who've placed more minions than p this round, counting p's before the one now landing (mine = 1 when it
+ *  has landed, as in resolve; 0 before, as in estimate). Minions all come home between rounds, so the board is the count. */
+const ahead = (ctx, p, mine) => ctx.rivals(p).filter(o => onBoard(ctx, o) > onBoard(ctx, p) - mine).length;
 const turnValue = ctx => TURN_VALUE[ctx.state.round - 1] || 3;
-/** Crunch Time: the turns all of p's purple buys (1 per RALLY_PER, plus 1, up to RALLY_CAP), as far as the board has room.
- *  Corner-Cutter halves the rate (1 per 2), as it halves every extra turn paid in purple. */
-const rallyPer = (ctx, p) => priceFor(ctx, p, RALLY_PER);
-const rallyWant = (ctx, p) => {
-  const v = p.res[P] || 0, per = rallyPer(ctx, p);
-  return v < per ? 0 : Math.min(RALLY_CAP, Math.floor(v / per) + 1);
-};
-const rallyTurns = (ctx, p) => Math.min(rallyWant(ctx, p), room(ctx));
+/** A free space: n extra turns right after this one, as many as the board has room for. */
+const freeTurnsEstimate = (ctx, n) => Math.max(0, Math.min(n, room(ctx) - 1)) * turnValue(ctx);
+function freeTurns(ctx, p, n, what) {
+  if (!spareSpace(ctx)) { ctx.log(`No space to spare: ${p.name} gets no extra turn from ${what}.`); return 0; }
+  return extraTurns(ctx, p, n);
+}
 
 function fire(ctx, p, hook, ...args) {
   for (const c of ctx.membersOf(p)) {
@@ -98,6 +95,58 @@ export function extraTurns(ctx, p, n = 1, why = null) {
   return k;
 }
 
+/**
+ * p takes up to n of their own turns still to come this round right after this one (Crunch Time; Cory, 2026-10-15:
+ * "it's not extra turns, it's taking two immediate turns with existing minions"). No new minion, so placements this
+ * round don't change, no spare space is needed, and the extra-turn members (Foreman, Overseer…) don't fire.
+ * The round's order (roundOrder) moves the same turns up, so the seats' "your turn in N" stay true. Returns how many.
+ */
+export function turnsNow(ctx, p, n, why) {
+  const s = ctx.state, q = s.queue;
+  const end = q.findIndex(t => t.t === 'endTurn');
+  const close = q.findIndex(t => t.t === 'allPlaced');
+  const stop = close < 0 ? q.length : close;
+  const picks = [];
+  for (let i = end + 1; i < stop && picks.length < n; i++) if (q[i].t === 'turn' && q[i].p === p.id) picks.push(i);
+  if (!picks.length) { ctx.log(`${p.name} has no minions left to place: ${why} does nothing.`); return 0; }
+  // where each turn sits in the round's order, matched as the seats match it (extra turns sit outside it)
+  const { order } = ctx.roundOrder();
+  const seq = [...(s.turns || []).map(pid => ({ pid })), ...q.filter(t => t.t === 'turn').map(task => ({ pid: task.p, task }))];
+  let j = 0;
+  for (const t of seq) if (j < order.length && order[j] === t.pid) t.at = j++;
+  const done = (s.turns || []).length;
+  const cur = Math.max(-1, ...seq.slice(0, done).map(t => (t.at === undefined ? -1 : t.at)));
+  const tasks = picks.map(i => q[i]);
+  for (let k = picks.length - 1; k >= 0; k--) q.splice(picks[k], 1);
+  q.splice(end + 1, 0, ...tasks);
+  const moves = [];
+  tasks.forEach((task, k) => {
+    const at = (seq.find(t => t.task === task) || {}).at;
+    if (at !== undefined && at !== cur + 1 + k) moves.push({ p: p.id, from: at, to: cur + 1 + k, why });
+  });
+  if (moves.length) {
+    if (!s.early || s.early.round !== s.round) s.early = { round: s.round, moves: [] };
+    s.early.moves.push(...moves);
+  }
+  const k = tasks.length;
+  const few = k < n ? ` (${k === 1 ? 'their last minion' : `their last ${k} minions`})` : '';
+  ctx.log(`${p.name}'s ${why}: ${p.name} takes ${k === 1 ? 'their next turn' : `their next ${k} turns`} now${few}.`);
+  return k;
+}
+/** Playing your own turns sooner: each one that jumps rivals gets first pick of the spaces they'd have taken. */
+const turnsNowEstimate = (ctx, p, n) => {
+  const q = ctx.state.queue, end = q.findIndex(t => t.t === 'endTurn');
+  const close = q.findIndex(t => t.t === 'allPlaced');
+  let v = 0, k = 0, jumped = 0;
+  for (let i = end + 1; i < (close < 0 ? q.length : close) && k < n; i++) {
+    if (q[i].t !== 'turn') continue;
+    if (q[i].p !== p.id) { jumped++; continue; }
+    k++;
+    v += Math.min(1, jumped / 3) * turnValue(ctx) * 0.25;
+  }
+  return v;
+};
+
 export default {
   id: 'purple',
   name: 'Purple',
@@ -113,10 +162,11 @@ export default {
       resolve(ctx, p) { ctx.gain(p, P, [3, 4, 5][ctx.state.round - 1] + 1, { fromAction: true }); },
     },
     {
-      // fill-in (critic): replaces Lend a Hand
-      key: 'catchup', ring: 1, name: 'Catch Up', text: '+1 purple, and +2 per rival with more minions on the board than you.',
-      estimate: (ctx, p) => 1 + 2 * behind(ctx, p, 1),
-      resolve(ctx, p) { ctx.gain(p, P, 1 + 2 * behind(ctx, p), { fromAction: true }); },
+      // fill-in (critic): replaces Lend a Hand. Counted before your minion lands (Cory, 2026-10-15: it never paid; the old
+      // count took in the minion just placed, so a rival one ahead, the only lead turn order gives, read as a tie)
+      key: 'catchup', ring: 1, name: 'Catch Up', text: '+1 purple, and +1 per rival who’s placed more minions than you this round.',
+      estimate: (ctx, p) => 1 + ahead(ctx, p, 0),
+      resolve(ctx, p) { ctx.gain(p, P, 1 + ahead(ctx, p, 1), { fromAction: true }); },
     },
     {
       key: 'windup', ring: 1, name: 'Roll Call', text: '+1 purple per minion you have on the board, this one included.',
@@ -131,33 +181,19 @@ export default {
       resolve(ctx, p) { ctx.gain(p, P, p.left, { fromAction: true }); },
     },
     {
-      // one worker in, two out: the turns are a net gain, not a worker spent to get a worker back (Cory)
-      key: 'overtime', ring: 2, name: 'Overtime', text: `Pay ${OT} purple: take 2 extra turns right after this one. If you can’t, +3 purple.`,
-      estimate: (ctx, p) => buyEstimate(ctx, p, OT, 3, 2),
-      resolve(ctx, p) { buyTurn(ctx, p, OT, 'Overtime', 3, false, 2); },
+      // free (Cory, 2026-10-15: "no board action should require spending"): was "pay 8 purple for 2 extra turns, else +3"
+      key: 'overtime', ring: 2, name: 'Overtime', text: 'Take 1 extra turn right after this one.',
+      copyDoesIt: true, // Echo: a copy takes the extra turn itself (there's no resource to copy)
+      estimate: ctx => freeTurnsEstimate(ctx, 1),
+      resolve(ctx, p) { freeTurns(ctx, p, 1, 'Overtime'); },
     },
     {
-      // the burst: all the purple you've banked becomes turns (and leaves the ring's count)
-      key: 'rally', ring: 3, name: 'Crunch Time',
-      // at a cap of 2, "1 per 4 spent, plus 1 (up to 2)" is always 2 from the first 4: said as that (the words designer,
-      // w3b #18: the formula read as a group effect). The formula comes back if the cap rises.
-      text: RALLY_CAP === 2
-        ? `Pay all your purple (${RALLY_PER} or more): take 2 extra turns right after this one. With less than ${RALLY_PER}, +4 purple.`
-        : `Spend all your purple: 1 extra turn right after this one per ${RALLY_PER} spent, plus 1 (up to ${RALLY_CAP}). With less than ${RALLY_PER}, +4 purple.`,
-      estimate(ctx, p) { const k = rallyTurns(ctx, p); return k ? k * turnValue(ctx) - (p.res[P] || 0) * 0.8 + 1 : 4; },
-      resolve(ctx, p) {
-        const want = rallyWant(ctx, p), k = rallyTurns(ctx, p), per = rallyPer(ctx, p);
-        if (!k) {
-          if (want) ctx.log(`No space to spare: ${p.name} gets no extra turn from Crunch Time.`);
-          ctx.gain(p, P, 4, { fromAction: true });
-          return;
-        }
-        // all of it; if the board has room for fewer turns than it buys, only what those turns cost
-        const paid = k === want ? p.res[P] : (k - 1) * per;
-        p.res[P] -= paid;
-        if (paid) ctx.log(`${p.name} spends ${paid} purple on Crunch Time${per < RALLY_PER ? ` (Corner-Cutter: 1 turn per ${per}, not ${RALLY_PER})` : ''}.`);
-        extraTurns(ctx, p, k);
-      },
+      // the burst, free (Cory, 2026-10-15): was "pay all your purple (4 or more) for 2 extra turns, else +4 purple"
+      // your own turns, now (Cory, 2026-10-15: "it's not extra turns, it's taking two immediate turns with existing
+      // minions"): no new minion, no spare space needed, and the extra-turn members don't fire
+      key: 'rally', ring: 3, name: 'Crunch Time', text: 'Take your next 2 turns right away.',
+      estimate: (ctx, p) => turnsNowEstimate(ctx, p, 2),
+      resolve(ctx, p) { turnsNow(ctx, p, 2, 'Crunch Time'); },
     },
   ],
 

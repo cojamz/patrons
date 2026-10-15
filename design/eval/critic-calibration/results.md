@@ -40,3 +40,6 @@ Instrument audit: 79 Bash commands, all v4-eyes; 92 screenshots read; zero DOM o
   - Taste disagreements the restraint rule didn't flip: all three testers judged the starting-pick coins a clear call to action, and the seat hover and "need N" useful. Cory disagrees.
   - Those last ones are his calls. A brief can't learn them without being told the answer, and telling it would be leaking. The next answer key will show whether they recur.
 - **Next calibration:** re-run on the next frozen milestone against this key plus whatever Cory finds next. Score the merged two-tester list, and keep the briefs only if it holds ≥80%.
+
+### Round 4: panel v4 replay on wave 2 (8f93858), against the 47-item key (2026-10-15 afternoon)
+Brief/checklist v4 (speed ladder, hover complete, outcome ledger, assigned coverage, eye distance, house style as of the build). Two fresh blind testers, merged. 28 items present on 8f93858 (w2-baseline.md). **Old wave-2 panel 61% (items 38–47: 30%) → panel v4 82% (38–47: 90%).** Over the bar. Scoring and misses: replay-w2-v4/scoring.md. Standing setup: brief v4, two fresh testers on the coverage table's assignments, lists merged, on quiet machines when possible.

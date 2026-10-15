@@ -19,6 +19,12 @@ const NODE_BUDGET = 36; // states explored per preview (a counted pick branches 
  * shown: a resource 1, a follower 2 (Cory's anchor, design/eval/value-model.md), a member 4 besides its followers, an
  * extra turn 3, a discount 1 a point. Display only, like the rest: the "You'd get" line (Info.jsx youdWords).
  */
+/** How many of p's turns this round were taken early (moved up by Crunch Time): the engine's roundOrder record. */
+const earlyMoves = (s, pid) => {
+  const e = s.early;
+  if (!e || e.round !== s.round) return 0;
+  return e.moves.filter(m => m.p === pid).length;
+};
 export function previewSpace(state, pid, q, i) {
   const key = `${q}-${i}`;
   let base;
@@ -29,7 +35,9 @@ export function previewSpace(state, pid, q, i) {
     else base.slots[key] = pid;
     base.players[pid].left -= 1;
     base.current = pid;
-    base.queue = [{ t: 'act', p: pid, q, i }];
+    // the round's turns still to come wait behind a stop that never runs them: Crunch Time moves yours up, and an
+    // extra turn counts them for its spare space
+    base.queue = [{ t: 'act', p: pid, q, i }, { t: 'previewHold', p: pid }, ...state.queue.filter(t => t.t === 'turn').map(t => ({ ...t }))];
     resume(base);
   } catch { return null; }
   const leaves = [];
@@ -78,7 +86,7 @@ export function previewSpace(state, pid, q, i) {
   if (!leaves.length || !top) return null;
   const range = () => [Infinity, -Infinity];
   const put = (r, v) => { r[0] = Math.min(r[0], v); r[1] = Math.max(r[1], v); };
-  const you = { res: {}, followers: range(), members: range(), turns: range(), discount: range() };
+  const you = { res: {}, followers: range(), members: range(), turns: range(), early: range(), discount: range() };
   const others = { res: {}, followers: range(), members: range() };
   const me0 = state.players[pid];
   for (const s of leaves) {
@@ -89,6 +97,8 @@ export function previewSpace(state, pid, q, i) {
     put(you.discount, (me.discount || 0) - (me0.discount || 0)); // "your next member costs N less"
     // an extra turn shows up as a worker given back (left grows past the one just placed)
     put(you.turns, Math.max(0, me.left - (me0.left - 1)));
+    // your own turns moved up (Crunch Time): not extra, but sooner
+    put(you.early, earlyMoves(s, pid) - earlyMoves(state, pid));
     const rivals = s.players.filter(o => o.id !== pid);
     for (const r of state.resources) put(others.res[r] = others.res[r] || range(), rivals.reduce((t, o) => t + (o.res[r] || 0) - (state.players[o.id].res[r] || 0), 0));
     put(others.followers, rivals.reduce((t, o) => t + followers(s, o) - followers(state, state.players[o.id]), 0));
@@ -99,7 +109,7 @@ export function previewSpace(state, pid, q, i) {
   const sweptIn = s => state.shop.filter(u => !s.shop.includes(u) && !s.players.some(o => o.members.includes(u)));
   const swept = leaves.map(sweptIn).reduce((a, b) => a.filter(u => b.includes(u)));
   const same = r => r[0] === r[1];
-  const exact = Object.values(you.res).every(same) && same(you.followers) && same(you.members) && same(you.turns) && same(you.discount);
+  const exact = Object.values(you.res).every(same) && same(you.followers) && same(you.members) && same(you.turns) && same(you.early) && same(you.discount);
   // reasons: one short line per member effect on your numbers ("Hustler: +3 gold", "Underdog: gold gain 3 → 6"), or
   // a member that stayed off and why ("Underdog: no ×2 (Hustler’s +3 lands first)"), from every branch, for the hover
   const reasons = [];
@@ -113,7 +123,7 @@ export function previewSpace(state, pid, q, i) {
     return {
       res: Object.fromEntries(state.resources.map(r => [r, (me.res[r] || 0) - (me0.res[r] || 0)])),
       followers: followers(s, me) - followers(state, me0), members: me.members.length - me0.members.length,
-      turns: Math.max(0, me.left - (me0.left - 1)), discount: (me.discount || 0) - (me0.discount || 0),
+      turns: Math.max(0, me.left - (me0.left - 1)), early: earlyMoves(s, pid) - earlyMoves(state, pid), discount: (me.discount || 0) - (me0.discount || 0),
       // members that came in while the count didn't rise by as many: traded for (a swap)
       swapped: Math.max(0, me.members.filter(u => !me0.members.includes(u)).length - Math.max(0, me.members.length - me0.members.length)),
       // which members this branch brings you (display: "+1 member (Planner)", w4 skeptic #31)

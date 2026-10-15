@@ -12,7 +12,7 @@ const S = {
   blue: { a1: '+3 blue', a2: '+2 blue +1 red', a3: '+2 blue +1 green', a4: '+5 blue', a5: '+4 blue +1 gold', a6: '+8 blue' },
   green: { a1: '+3 green', a2: '+2 green +1 gold', a3: '+2 green +1 blue', a4: '+5 green', a5: '+4 green +1 red', a6: '+8 green' },
   purple: {
-    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +2 per rival', windup: '+1 purple per minion', planahead: '+1 purple per minion left', overtime: 'pay 8 for 2 turns', rally: 'purple for turns',
+    hourly: r => `+${3 + r} purple`, catchup: '+1 purple, +1 per rival ahead', windup: '+1 purple per minion', planahead: '+1 purple per minion left', overtime: '1 extra turn', rally: 'your next 2 turns now',
   },
   silver: {
     toast: r => `+${3 * r} silver · all +1`, gift: '+2 silver +2 · share', alms: '+4 silver · give 2', tongue: '+4 silver · swap', tide: 'half the richest', jubilee: 'silver for followers',
@@ -37,7 +37,7 @@ const S = {
 const PIPS = {
   gold: { steal: 'steal 3 gold', windfall: '+1 gold per member', strike: 'double gold' },
   red: { hireup: 'member up to 4, free', trade: 'swap a member', take: 'any member, free' },
-  purple: { overtime: 'pay 8 for 2 turns' },
+  purple: { overtime: '1 extra turn' },
   silver: { tide: 'half the richest', jubilee: 'silver for followers' },
   yellow: { gather: '+1 per member' },
   market: { clearance: 'half price', spree: 'buy 3 times' },

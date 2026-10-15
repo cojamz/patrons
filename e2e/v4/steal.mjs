@@ -4,7 +4,8 @@
 //       resource flies for each pick, and the right resources move (they arrive as magenta).
 //  (s2) Collect Debts: only gold stacks light; three clicks on gold stacks take 3 gold from the right rivals.
 //  (s3) Redistribute: the rival holding less than you is dim; picks from the richer two land.
-//  (s4) Kickback ("give 1 gold to…"): clicking a rival's seat picks that player.
+//  (s4) Kickback ("give 1 gold to…"): a gift, so it's the gift card beside the space (Cory, 2026-10-16): one face per
+//       rival the engine offers, none lit on the seats; clicking a face gives that player 1 gold.
 //  (s5) Echo: exactly the copyable spaces light on the wheel, the caption covers none of them, a lit space's hover says
 //       what the copy gives, and clicking it copies (your resources match the engine's).
 //  (s6) Snap Up: exactly the offered face-up members light in the shop; clicking one recruits it ("Recruit nothing"
@@ -49,7 +50,7 @@ const INSTRUMENT = () => {
   requestAnimationFrame(tick);
 };
 
-async function open(space) {
+async function open(space, ready = '.prompt.choice.seat-pick') {
   const ctx = await browser.newContext({ viewport: { width: 1270, height: 700 } });
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(`[${space}] pageerror: ${e.message}`));
@@ -58,7 +59,7 @@ async function open(space) {
   await page.goto(`${base}/?intro=0`, { timeout: 90000 });
   await page.waitForSelector('[data-home="resume"]', { timeout: 60000 });
   await page.click('[data-home="resume"]');
-  await page.waitForSelector('.prompt.choice.seat-pick', { timeout: 90000 });
+  await page.waitForSelector(ready, { timeout: 90000 });
   await page.evaluate(INSTRUMENT);
   return { ctx, page, save };
 }
@@ -151,13 +152,16 @@ try {
     await expectCounts(page, 's3', { '1:blue': 1, '2:magenta': 1, '0:magenta': 2 });
     await ctx.close();
   }
-  // (s4) Kickback: pick a player by their seat
+  // (s4) Kickback: pick a player by their face on the gift card
   {
-    const { ctx, page, save } = await open('kickback');
-    const n = await page.$$eval('.lt-seat .cs-pick-seat:not(.off)', els => els.length);
-    if (n !== save.state.pending.options.length) errors.push(`(s4) ${n} clickable seats for ${save.state.pending.options.length} players`);
-    await click(page, '.lt-seat[data-pid="3"] .cs-pick-seat');
-    await page.waitForFunction(() => !document.querySelector('.prompt.choice.seat-pick'), null, { timeout: 8000 }).catch(() => errors.push('(s4) the choice never closed'));
+    const { ctx, page, save } = await open('kickback', '.lt-wheel .gift-card');
+    await page.waitForSelector('.lt-wheel .gift-card[data-gift="gift"]', { timeout: 8000 }).catch(() => errors.push('(s4) no gift card for Kickback'));
+    const faces = await page.$$eval('.gift-card .gc-face:not([disabled])', els => els.map(e => e.dataset.option).sort());
+    const want = save.state.pending.options.map(o => o.id).sort();
+    if (faces.join() !== want.join()) errors.push(`(s4) the card's faces answer ${faces.join(' ')}, the engine offers ${want.join(' ')}`);
+    if (await page.$('.lt-seat .cs-pick-seat')) errors.push('(s4) the seats still take the pick');
+    await click(page, '.gift-card .gc-face[data-pid="3"]');
+    await page.waitForFunction(() => !document.querySelector('.gift-card'), null, { timeout: 8000 }).catch(() => errors.push('(s4) the choice never closed'));
     await expectCounts(page, 's4', { '3:gold': save.state.players[3].res.gold + 1 });
     await ctx.close();
   }

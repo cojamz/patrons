@@ -25,15 +25,16 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - **Fixes: go with your gut** (Cory, 2026-10-14). On fixes and open questions, take the default and build it. Log every gut call in `design/decisions.md` as "(Claude, under Cory's go-with-your-gut)" with the why, so he can overturn any.
 - Never send Cory a menu of tactical options. Pick one.
 - **Price every card before showing it.** Use `design/eval/value-model.md`: a ring-I space is worth about 2.5u, ring II about 4u, ring III about 7u, and a member is worth about its cost plus 1.5u. A free swap or an extra recruit already uses up a whole space's budget, so never stack a resource gain on top of a strong verb. Anything outside its band gets cut before Cory sees it. Cory's own anchors at the top of the value model beat the model's numbers.
-- Resource use is not a constraint (no token or cost limits, per Cory 2026-10-14). Always push for the most effective harness and organization: max useful parallelism, the strongest tool for each job, and nothing idle that isn't a dependency.
+- Tokens are not a constraint (no token or cost limits, per Cory 2026-10-14). Always push for the most effective harness and organization: run the most useful parallelism, the strongest tool for each job, and nothing idle that isn't a dependency.
 
 ## What works with Cory (self-review, 2026-10-14)
-- **Numbered lists he can answer by number.** He replies "1 yes, 2 no, 3 …". That's the fastest loop we have. Use it for every set of decisions or ideas, one line each, with the default stated.
+- **Numbered lists he can answer by number.** He replies "1 yes, 2 no, 3 …". That's the fastest loop we have. Use it for every set of decisions or ideas, one line each, with my default in brackets ("[yes]").
 - **His words only.** Never introduce my own names or jargon (Diadem, fixtures, sway…). If a thing needs a name, ask or use a plain description.
 - **Do it the way he said.** No added restrictions or "improvements" on his calls (the Steal and bribe exceptions). If I see a risk, build it his way and flag it in one line.
 - **My fill-ins are labeled and never treated as approved** (Patron, Steward and Gambler slipped in as if agreed).
 - **Sanity-check the direction of every balance suggestion** before sending it (I once proposed giving the advantaged player more).
 - **Status = what's running / what's next / rough ETA**, in 3 lines. Give an ETA whenever work will take longer than a few minutes.
+- **Five lines at most**, no tables, headers or bold-label report voice, no AI tics (the full voice rules live in foreman.md).
 - **Show, don't describe.** He responds well to things he can see or open: diagrams, transcripts, links.
 
 ## How I approach problems (lessons from what went wrong, 2026-10-14)
@@ -45,6 +46,15 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - **His principles are his defaults, not my constraints.** I kept "enforcing" harm-points-up on his own calls. He overrides freely; I flag in one line, never block.
 - **Re-derive what the game is about from his words, not mine.** I once framed it as "reading people". It's recruiting members and escalating resources into followers. When unsure, quote decisions.md.
 - **Decide the tactics, parallelize by default.** Run independent work at once, triage as results land, and never wait idle on something that isn't a dependency.
+
+## Before Cory sees anything (2026-10-15)
+- **A− or better from a fresh blind panel** (two testers with lists merged, plus game-skeptic, on quiet remote machines) on the exact build he'll open. Below that, it doesn't reach him.
+- **Check the live preview carries that build's stamp before sending a link.** Only gate-green builds go to the PR branch, so checkpoints can't burn deploys. This morning he played a stale build and his notes landed on old code.
+- **He shouldn't find obvious UX problems.** Every catch of his (today: Pass, the gift picker, the rail, emoji size) joins the testers' answer key the same turn and becomes a gate.
+- **A gut call that changes HOW a choice is made gets shown to him as a picture first.** My overnight two-step gift picker went straight in, and he found it "very bad/confusing".
+- **Measure what he feels.** Time "card complete", not "card present"; judge pace by eye on filmstrips at every speed; use a headed real browser for feel.
+- **At most one check-in pending**, and delete it when the work ends. Seven leftovers flooded him this morning.
+- **If tools are missing, say so once, plainly, with the one thing he can do.** No "session" jargon, no repeated "next session".
 
 ## Changelog of this doc
 - 2026-10-09 — first version, from Cory's kickoff voice note.
@@ -88,3 +98,10 @@ Reply style lives in the **Foreman** output style (`.claude/output-styles/forema
 - 2026-10-15 — Visual overcorrection, twice in one night (doorways, then cute shorthand). Cory wants plain and clear before clever. Every compact text gets a decipher test: read it alone as a newcomer and compare it with the rule. Words beat symbols except the resource dot and the follower mark.
 - 2026-10-15 — Cory caught a dozen obvious UI problems in one evening that our agents had missed: "you shouldn't need my keen eye". Every catch of his becomes part of the testers' answer key the same night, and a standing design pod (taste-led, enabled to fix) runs whenever the UI is changing. Measure the critics' recall against his catches.
 - 2026-10-15 — Overnight retro: the biggest wins came from measuring on quiet machines (the local box sat at load 20–35 and lied about speed) and from sending every blind panel there too. Root causes of "not snappy" were CSS, not React: page-level :has() rules and a filter on the animated wheel. Guards now fail the build on both. Do differently: freeze earlier, give each agent one owner per file from the start, and run a fresh blind panel after the last fix round, not only before it.
+- 2026-10-15 — Cory set the bar: A− or better from a fresh blind panel on the exact build he'll open, before he sees anything. Added "Before Cory sees anything".
+- 2026-10-15 — He played a stale preview all morning (about 60 overnight pushes likely used up the deploy credits). Now: confirm the preview's build stamp before sending a link, and only gate-green builds go to the PR branch. This replaces "checkpoints go straight to the PR branch" above.
+- 2026-10-15 — His catches this morning (Pass, gift picker, rail, emoji size, hover lag, animation pace) were all obvious. Each becomes an answer-key item and a gate; a change to how a choice is made gets shown as a picture first.
+- 2026-10-15 — Seven leftover check-ins flooded him, and after a restart I kept saying "next session" while missing tools. At most one check-in pending; tools missing gets said once, with the one thing he can do.
+- 2026-10-15 — Hover lag passed our gate because it timed "card present". Measure what he feels: "card complete", filmstrips by eye, a headed browser.
+- 2026-10-15 — Reconciled with the brief Cory approved today (project-instructions.md): defaults in brackets, five lines max, no AI tics, tokens are not a constraint.
+- 2026-10-15 — Cory: don't hold back iterations. Send him each fix with a screenshot, and what blind testers find, as it lands, before the full check passes. A− is still the bar for calling a build finished, and only gate-green builds go to the play link.

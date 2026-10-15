@@ -1,0 +1,100 @@
+# Tester A sweep (v4)
+## Home / How to play / Setup
+- polish (A2) Home: rulebook says "type your name and pick your emoji" but home has no emoji picker; emoji only on setup tiles (unclear if clickable). shot /tmp/eyes/v4a/001-home.png
+- major (C24) Play on this device: 374 ms first change to setup dialog. shot /tmp/eyes/v4a/004-click.png
+- major (A4) Setup "Bot speed: Slow/Normal/Fast" vs menu speed names (rule/house style: Quick/Steady/Relaxed) -> two names for one setting.
+- major (A2) Custom table chips list only scoring rule ("Most purple"); none says which color steals/takes from rivals, though the brief/rules say the chips should. Hover on chip opens nothing. shot /tmp/eyes/v4a/012-desel.png
+- major (A2) "Blue" vs "Blue (plain)", "Green" vs "Green (plain)" both read "Most blue/green": no way to tell difference. shot 012
+- polish (D22) Custom chip grid scrolls under sticky Back/Start footer (chips clipped at y~630-690 before scrolling). shot /tmp/eyes/v4a/005-click.png
+- polish (B21) Selection order number (1-4) tiny in chip corner; "Pick 4, in wheel order. 4/4" small grey.
+- polish Gold vs Yellow dots nearly the same hue on chips.
+## Start-pick screen (019)
+- major (C24) Start -> intro: 919 ms first change; intro ("Cults in twenty seconds") plays before every game; Skip intro 109/334 ms. shot /tmp/eyes/v4a/018-click.png
+- major (A4) Setup tile shows my emoji as a ninja/robed figure; intro and seat show pizza-ish/different glyph -> which one am I? shot 018
+- major (B11) Start pick is a chip row in a box bottom-left (x60-360,y425-568); wheel is the loud center. It glows but is 450 px from screen center; house style "pick on board" - pick isn't on piles. shot /tmp/eyes/v4a/019-click.png
+- polish (D22) Pick box: "Magenta +1" wraps to two lines while others are one line -> uneven row. shot 021
+- major (B19/house) Seats in fixed P1..P4 list, no snake/turn-order shown; no unplaced-minion column at right of seats (seats mostly empty: ~70% dead space in each rival seat box). shot 020
+- major (A8/B15) "Your turn — pick a starting resource (1 of 2)" header duplicates the pick box title "Pick a starting resource (1 of 2)" word for word; plus "SETUP" subtitle.
+- major (house) Wheel panels "Steal 1 each / from richer rivals" and "Top up / +1 of your fewest" lead with a bold name, not the gain; violates "main gain first, names live in hover". Inner ring also shows names ("Take a member", "Extra turns", "Gain each color", "Members pay out", "Ransom a member").
+- major (C24) Shop card hovers: complete 153-265 ms each (first 44-79 ms), some 2-3 bursts (Gardener 2, Dowager 3, Extortionist 2). None under 100 ms.
+- polish (B12) Shop hover placement varies: left of card for top rows, above card for lower rows; popover covers neighbouring cards.
+- polish (B15) Card hover repeats cost and follower worth already on the card face ("costs 2● 2◐", "1👤").
+- polish (A8) "MEMBERS 10 face up" and "FOLLOWERS any resources" small labels narrate what's visible (split dot already says any).
+- polish (B13) Dowager hover has no ability text: just name/cost/short line - fine but card text "3👤" only distinction.
+## R1 first turn, before placing (046, 054-066)
+- major (C24) Wheel-space hovers (load 4-6, RE-MEASURE): first 286-727 ms, complete 382-1135 ms, 2-5 bursts each; frames show popover appearing at one place then jumping (Toast popover drawn right, then moved). shot /tmp/eyes/v4a/067-frames.png
+- major (C24) Log name hover "Goody Bags": 338 -> 431 ms, 2 bursts. shot 051
+- blocker-ish major (C28c/A1) I gained +1 yellow during bots' turns with no line saying so; only by hovering "Goody Bags" in the log did I learn "everyone else gets 1 of that color". The "since your last turn" strip shows "P2 Goody Bags +2● +2●" with no "you +1●". shot 051
+- major (A2) Hover "You'd get" rival lines are machine-speak: "rivals 0 to +2●, 0 to +2●, 0 to +2●, 0 to +2●" (Good Deed), "rivals −1 to 0●, −1 to 0●, −1 to 0●, −1 to 0●" (Lie Low). shot 054, 062
+- major (C28g) Lie Low face "+1● from a rival" hides its second effect "no one can steal resources from you this round". shot 062
+- major (C28g) Goody Bags face "+2● / +2 of a color" hides "everyone else gets 1 of that color" (feeds rivals). shot 051
+- major (A2) Harvest face "+1● +1 per color held" vs hover "plus 1 per other color" - face invites counting yellow too. shot 058
+- major (A2) Catch Up face "+1● +2 per rival ahead in minions out" - "ahead in minions out" decodes only via hover (rival with MORE minions on board). Can it pay early? Only when rivals have placed more than you (first placer in snake gets +0). shot 060
+- major (B13/house) Shop "after <space>" green badges pop onto member cards while hovering a space (preview of what becomes affordable) - never explained; I had to guess. shot 054/061
+- polish (A2) Hover table "Taken  P2" (log hover) - tab-separated fragment, reads like debug.
+- polish (B12) Space hovers cover the neighbouring ring and rim text (Lie Low covers purple rim and 3 spaces).
+- polish (A8) Header "ROUND I OF 3 · 3 MINIONS EACH · PLACE · RECRUIT OR BUY" step tracker: "3 minions each" repeats minion columns on seats.
+- major (B19/28e) Turn order: left rail "in 5 ×2 / now / next ×2" - "in 5" and "×2" undecodable (in 5 turns? twice in a row?). Could be deleted: seats already sorted in turn order. shot 047
+- polish (A2) P3 seat shows "each round +1●" text line (Cutpurse summary) - only seat with such a line; other seats with members (P2 Gardener) show nothing.
+## R1 buy / bot turns / round end
+- major (A4/C24) Recruit Robin Hood: one click paid instantly (all 3 magenta + yellow) with no pay step; buying followers DOES open a "choose how to pay" dialog. Same action family, two behaviours; no confirm before spending everything. click 671/1345 ms. shot /tmp/eyes/v4a/076-pay.png
+- major (B20/house) Pay dialog is a centred modal with a chip row (x435-835,y176-524), not picking on my seat's piles; swapping a coin replaces an arbitrary one (purple left when I tapped silver). Swap response 61/501 ms, 5 bursts. shot 096
+- major (A1/B11) In the buy step the wheel keeps lit "available" spaces (Harvest stayed cream/glowing after my last minion was out) -> looks like I can still place. shot /tmp/eyes/v4a/090-shot.png
+- major (C28d) Pass button sits in the header (840,24); I decide the buy in the shop (~1100,300): ~330 px. Also hint "Click a lit stack on a rival's cult" at (700,49) vs space clicked (500,475): ~470 px.
+- polish (D22) Header "Your turn — recruit a member or buy followers" wraps onto 2 lines when "Undo placement" is present, pushing Pass/Undo crowding into menu button. shot 090
+- major (C28) Bot turns: between my turns 4 bot moves played in ~2 s with board dimming/undimming; frames show stale hover "Overtime" popping over the wheel during P4's turn because my pointer rested there. shot /tmp/eyes/v4a/098-frames.png
+- major (C27) Round-end scoring started immediately after my last buy; reckoning banner small at bottom-center (x860-1070,y1000 in sheet) with tiny text; followers +2 badges fly to seats. I could not narrate who got what until the summary.
+- polish (A8) Toast "You took Redistribute" lists "Robin Hood: +1👤" then a separate "+1👤" line (same fact twice). shot 084
+- polish (A2) Log "P4 Top Up" shows no gain at all (other entries show +N). shot 076
+- polish (B15) Summary "Most full sets P3 1 (3 yellow)" - mixes set count and yellow tiebreak count in one line; "You 0 (0 yellow)" noise.
+- polish (B21) Toast/receipt card at bottom-left grows to 6 lines (x60-360,y515-668) and pushes; duplicates log strip directly above it.
+## Round II
+- blocker (A1/C28c) Round II opened with "Your turn — choose below" while P4 was acting: P4's Shake Down held my Robin Hood "to ransom: pay 4 to keep it?" and the only button was "Let Robin Hood go" (I had 2 resources). Lost a member + 1 follower with zero prior warning; the rulebook never mentions ransom. Inner face "Ransom a member" gives no hint it targets you. shot /tmp/eyes/v4a/102-r2.png
+- major (A2) Header says "Your turn" during a rival's ransom prompt -> misreads whose turn it is. shot 102
+- major (A4) Goody Bags face changed text between rounds ("+2 of a color" in R1 vs "+2 of a color / others get 1 of it" in R2). shot 105
+- major (A4) Menu "Animations: Quick / Steady / Relaxed" vs setup "Bot speed: Slow / Normal / Fast". shot /tmp/eyes/v4a/107-menu.png
+- major (C24) Menu open 443 ms; choosing Quick 820 ms; Esc close 422 ms (load 6-7, re-measure).
+- major (D22) Snake-order header: "Your turn again (snake order) — place a minion" + subtitle "Snake order: whoever ends a pass starts the next, so you place twice in a row" collide with "ROUND II OF 3 · 4 MINIONS EACH" (text overlaps at x~345) and run under the menu button (x~930). shot /tmp/eyes/v4a/118-watch-end.png
+- polish (A8) Snake explanation sentence each time is narration; the rail "now ×2" already says it (and is itself undecodable).
+- polish (B13) Pass button jumps position: (840,24) in R1, (758,24) when Undo is shown -> muscle memory click on 958,20 hit nothing.
+- major (D22) Rival seats overflow: with 5 members P4's portraits sit on top of its "each round +3● +1● +1●" text ("round" half-hidden); same on P3 with 3 members. shot /tmp/eyes/v4a/140-p4seat.png
+- major (A1) Ransomed Robin Hood went to P4's seat (I only found out by zooming P4's members) - the prompt said "holds to ransom", not "takes". shot 140
+- major (B12) Rising Tide hover clipped by the screen/shop edge: "Everyone else +1●. Then gain half t..." and "You'd get" value cut off. shot /tmp/eyes/v4a/142-hs.png
+- major (C25) Under Quick, 6 bot turns took ~11.8 s (each ~1-2 s, mostly still frames) - Quick doesn't feel quick. Under Steady 7 bot turns ~10 s then scoring. shot /tmp/eyes/v4a/134-watch.png, 161-watch
+- major (C24) Hovers left stale: Go-Getter / Overtime popovers stay up through bots' turns while my pointer rests, covering the wheel (148-watch, 134-watch).
+- polish (A2) Trade Seeds hover "You'd get about / it depends on your pick" - "about" alone on a line.
+- major (B20/A7) Trade Seeds: each swap = 2 clicks on my seat + Done; 3 swaps = 7 clicks. Header button label flips "Swap nothing" -> "Done".
+- major (A1) Round summary "You — / —" this round although I recruited Silversmith (+1) and lost Robin Hood (-1): the loss is invisible in the summary. shot /tmp/eyes/v4a/163-watch-end.png
+- major (snowball) After R2: P3/P4 17, P2 12, me 8. Round-start payouts + ransom compound; no comeback visible except turn order.
+- polish (B15) "Most full sets ... P4 1 (7 yellow)" tie-break count in parens on every line, noisy.
+## Round III sweep (165-186, inner.png)
+- major (C28c) Poach hover "Why: Robin Hood: +1👤" though Robin Hood was taken from me in R2 - stale reason line. shot /tmp/panel-v4/tester-a/inner.png
+- major (house) Inner ring panels are names ("Take a member", "Extra turns", "Gain each color", "Members pay out", "Ransom a member") - no gain first. Poach "Take a member" reads as recruit, actually steals a rival's member.
+- major (A2) Crunch Time hover "Spend all your ●: 1 extra turn right after this one per 4 spent, plus 1 (up to 2). With less than 4, +4●" - can't parse.
+- major (C24) Seat hovers: response 0 ms but complete 1.7-4.9 s, 7-32 bursts (seat popover + bobbing), my seat hover lands 1081 px from pointer when hovering shop sort chip (sort "color" chip at 1232,168 triggered changes at my seat). shot sweep3a.png
+- major (B13) Hovering a rival's member portrait opens a card (Clockmaker) but hovering the shop face-down pile (1013,240) opens nothing (no "43 left").
+- polish (house) Seat hover lists members "pays at round start" but no ready/used state per house style; P2 hover "NORMAL BOT" label.
+- polish (B14) Bumper Crop "You'd get +1●, +1●, +" clipped at popover right edge. shot inner.png
+- major (A1) Rim hovers good (full standings) but rim text "MOST SILVER · +6 👤 🐛" leader emoji overlaps rim corner; "ties: yellow" on yellow rim rotated 90° hard to read.
+- polish (A8) Top-left rail "in 3 ×2" next to P4 seat; ×2 drawn struck-through look (shot 165).
+- major (C21) My seat: 5 unplaced minions in a 2-col block of tiny emoji (x310-345) countable but P3/P4 follower emoji (rival minions?) look the same as follower marks.
+- blocker (B20/C28c) Pay dialog swap: tapping a pile replaces the LAST non-silver coin, never one of the suggested silver coins in the "any" part. I wanted to keep silver (to double with Debutante) and pay 4 any from magenta/purple/yellow: impossible - taps on magenta seemed to do nothing, then swapped purple out. Pay stuck at 6 silver. shot /tmp/eyes/v4a/219-pay3.png, 221-pay4.png
+- major (A9) A tap that changes nothing (magenta when already counted) gives no reason next to the pointer.
+- major (house) Release... opens a docked chip menu under the header ("Silversmith +4●", "Robin Hood +2●") instead of picking the member on my seat. shot /tmp/eyes/v4a/198-shot.png
+- major (B13) During Poach choice, hovering a lit rival member opens nothing - you choose a member blind (no ability/cost). shot /tmp/eyes/v4a/194-shot.png
+- major (A1) My silver went 3->9 between turns (Silversmith triggers + others' gifts) with no "you +N" line in the strip. shot /tmp/eyes/v4a/203-shot.png
+## Log / R3 end
+- major (B12/B13) Chronicle drawer: hovering a card name ("Good Deed", "Shake Down") paints a popover at x672-1024 - BEHIND the drawer, invisible. Names look like links but show nothing. shot /tmp/eyes/v4a/255-shot.png
+- major (A4) Log called "LOG" on the button, "The log" in menu, "Chronicle" in the drawer: three names.
+- polish (A2) Log "P4 flourishes: +3 of each other color" - Bumper Crop's effect described with a new verb.
+- major (A1) Log reveals P2 "stole 3 (1 from you...)" in R3 - my seat strip never told me I lost 1.
+- major (C25) Relaxed bot turns: ~1.5-2 s per bot turn mostly static waiting (236-watch); 13 bot actions took 18 s.
+- polish (D22) Snake header overlaps round line again in R3 ("ROUND III OF 3" collides with my minion token at x335,y47). shot /tmp/eyes/v4a/250-shot.png
+## Results
+- major (A1) Results headline "P4 wins with 53 followers" + "P4 and P3 tie on 53" + footnote "Tied: more members breaks the tie" - three lines for one fact; P3 tied but listed 2nd with no visible member count reason beside followers (5 vs 3 members is in grey small print).
+- major (B15) Results show followers three times per player: table column, card "53👤", and big "53" beside card. shot /tmp/eyes/v4a/269-final.png
+- polish (A2) Results table "From members 👤" header carries a glyph, other headers don't.
+- major (A1) Round III summary "-1 from new members" for 3 bots - negative "from new members" unexplained (ransom/poach losses).
+- polish Home "Last game's results: P4 won · P1, P2, P3, P4" - I was "You" all game, now "P1".
+- polish How to play opens as a long modal with tiny Close at top right; no illustration of the wheel, symbols shown inline only.
+- NOT COVERED: manual wheel spin (drag/arrows) - ran out of time box.
