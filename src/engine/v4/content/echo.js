@@ -267,7 +267,8 @@ const echoQ = {
   },
 
   members: [
-    m('evergreen', 'Busker', 2, 2, 'Now and at round start, +3 green.', { now: true,
+    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
+    m('evergreen', 'Busker', 4, 4, 'Now and at round start, +3 green.', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, 'green', 3); },
     }),
     m('choir', 'Choir', 4, 2, 'Whenever you copy a space, +1 green.'),

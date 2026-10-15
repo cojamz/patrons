@@ -1,6 +1,7 @@
 // Resources as colored symbols inside any rules text or cost (Cory, 2026-10-14): "+3 gold" reads as "+3 ●" in gold,
 // "2 any" as "2 ◍" (the wild token). Each symbol says what it is on hover (every element explains itself).
 import { Follower } from '../art/Follower.jsx';
+import { ResourceGlyph } from './Glyphs.jsx';
 
 const COLORS = ['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', 'purple', 'white'];
 // "follower(s)" after a number is the follower mark too (Cory: followers aren't a star); other uses stay words
@@ -9,9 +10,14 @@ const WORD = new RegExp(`\\b(${COLORS.join('|')}|any|followers?)\\b`, 'g');
 /** One resource symbol. color: a resource name or 'any'. */
 export function Pip({ color, n }) {
   const label = color === 'any' ? 'any resources' : color;
+  const say = n != null ? `${n} ${label}` : label;
+  if (color === 'any') return <span className="pip wild" title={say} aria-label={say} role="img" />;
+  // a resource is its shape in its color (gold a ringed coin, yellow a sun…), never a plain disc: color alone
+  // doesn't tell gold from yellow
   return (
-    <span className={`pip${color === 'any' ? ' wild' : ''}`} style={color === 'any' ? undefined : { '--c': `var(--${color})` }}
-      title={n != null ? `${n} ${label}` : label} aria-label={n != null ? `${n} ${label}` : label} role="img" />
+    <span className="pip glyph" data-pip={color} style={{ '--c': `var(--${color})` }} title={say} aria-label={say} role="img">
+      <ResourceGlyph r={color} decorative />
+    </span>
   );
 }
 

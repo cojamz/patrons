@@ -14,7 +14,13 @@
 //  (h) the member deck heads the shop strip: after a refill its count is the engine's pile length (the saved game's
 //      state.pile), a refill deals the new card off it, and hovering it shows its card (count, colors adding up);
 //  (i) while you place, the space under the pointer ticks "✓ after <space>" on the shop cards it would make
-//      affordable (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands.
+//      affordable (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands;
+//  (k) a resource is never color alone: every pip is its shape, every coin (setup, pay) carries its mark, and the
+//      setup picker's labels read on its paper (contrast ≥ 4.5);
+//  (l) who's winning and who's next: a ranked line of every player under the prompt, and each cult's place in the
+//      turn order;
+//  (m) on a laptop the hover card docks in one spot that never overlaps the wheel, the shop or your seat;
+//  (n) you are "You": the round summary and the Chronicle never use your seat's name; the summary has no text under 12px.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -26,11 +32,12 @@ const base = process.env.V4_URL || 'http://localhost:5180';
 const fails = [];
 const fail = (msg, step) => fails.push(`[${step}] ${msg}`);
 
-// game-meaningful elements, old and new screen (whatever is on screen is audited)
+// game-meaningful elements on the Lamplit table (the older Players / QuadrantPanel / SeatRail / Shop / YourTable are gone)
 const GAME = [
-  '[data-region] [data-uid]', '.shop [data-uid]', '.lt-rs', '[data-cult] .cs-head', '.lt-stack', '.res > .r', '.you-strip .r', '.lt-member .fig', '.chip[data-g]',
-  '[data-leader-ring]', '.workers', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
+  '[data-region] [data-uid]', '[data-cult] .cs-head', '[data-cult] [data-res]',
+  '[data-leader-ring]', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
   '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term', '[data-deck]',
+  '[data-rank] .rk', '.cs-order',
 ].join(',');
 
 async function audit(page, step) {
@@ -58,23 +65,61 @@ async function audit(page, step) {
     const crowd = [...document.querySelectorAll('[data-cult] .cs-member')].filter(vis);
     const pale = crowd.filter(m => { const a = m.querySelector('.aura'); return !a || !/gradient/.test(getComputedStyle(a).backgroundImage) || !m.dataset.sphere; })
       .map(m => m.dataset.member);
-    return { n, miss: [...new Set(miss)].slice(0, 12), star: document.body.innerText.includes('★'), sigils, pale };
+    // (k) a resource is never color alone: every pip shows its shape, every coin (setup, pay) its mark inside
+    const bare = [...document.querySelectorAll('.pip:not(.wild)')].filter(e => vis(e) && !e.closest('[aria-hidden="true"]') && !e.querySelector('svg.res-glyph')).length;
+    const blank = [...document.querySelectorAll('.coin-big, .slot-coin, .tray-coin i')].filter(e => vis(e) && !e.querySelector('[data-coin-mark]')).length;
+    // and the setup picker's labels read on their paper (contrast ≥ 4.5)
+    const rgb = c => (String(c).match(/[\d.]+/g) || []).map(Number);
+    const L = c => { const f = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+    const bgOf = e => {
+      for (let x = e; x; x = x.parentElement) {
+        const st = getComputedStyle(x), c = rgb(st.backgroundColor);
+        if (c.length >= 3 && (c.length < 4 || c[3] > 0.5)) return c;
+        const g = st.backgroundImage.match(/rgba?\([^)]*\)/);
+        if (g) return rgb(g[0]);
+      }
+      return [29, 22, 17];
+    };
+    const faint = [...document.querySelectorAll('.prompt.choice .token > span')].filter(vis).map(e => {
+      const a = L(rgb(getComputedStyle(e).color)), b = L(bgOf(e));
+      return { t: e.textContent.trim(), c: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) };
+    }).filter(x => x.c < 4.5);
+    return { n, miss: [...new Set(miss)].slice(0, 12), star: document.body.innerText.includes('★'), sigils, pale, bare, blank, faint };
   }, GAME);
   if (r.n < 5) fail(`only ${r.n} game elements found (the selectors no longer match the screen?)`, step);
   for (const m of r.miss) fail(`(a) no hover info: ${m}`, step);
   if (r.star) fail('(c) a "★" is on screen', step);
   if (r.sigils) fail(`(f) ${r.sigils} seat sigil(s) on screen`, step);
   for (const m of r.pale) fail(`(g) ${m} has no ground in its sphere's color`, step);
+  if (r.bare) fail(`(k) ${r.bare} resource pip(s) drawn as a plain color disc (no shape)`, step);
+  if (r.blank) fail(`(k) ${r.blank} coin(s) without the resource's mark inside`, step);
+  for (const f of r.faint) fail(`(k) setup label "${f.t}" is hard to read (contrast ${f.c.toFixed(2)})`, step);
   return r.n;
 }
 
 // (h) the deck's number against the engine: read the screen and the saved game in one go, when both show the same move
+// (m) the open hover card is docked and clear of the wheel, the shop and your seat
+async function dockCheck(page, what, step) {
+  const r = await page.evaluate(() => {
+    const L = document.querySelector('[data-hover-layer][data-open="1"]');
+    if (!L) return null;
+    const a = L.getBoundingClientRect();
+    const hit = sel => { const e = document.querySelector(sel); if (!e) return 0; const b = e.getBoundingClientRect(); const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top); return w > 1 && h > 1 ? Math.round(w * h) : 0; };
+    return { dock: L.dataset.dock || null, wheel: hit('.lt > [data-region="wheel"]'), shop: hit('.lt > [data-region="shop"]'), seat: hit('.lt > .lt-seat-0') };
+  });
+  if (!r) { fail(`(m) hovering ${what} opened no hover card`, step); return; }
+  if (!r.dock) fail(`(m) the hover card for ${what} isn't docked`, step);
+  for (const k of ['wheel', 'shop', 'seat']) if (r[k]) fail(`(m) the hover card for ${what} overlaps the ${k === 'seat' ? 'your seat' : k} (${r[k]}px²)`, step);
+}
+
 async function deckCheck(page) {
   // bots keep playing and the screen steps through their moves a beat behind, so wait (up to 30s) for a moment the
-  // screen has caught up with the engine: at the latest when it's your move again and everything stops
+  // screen has caught up with the engine: at the latest when it's your move again and everything stops. A round end
+  // holds the screen until you go on (the engine is already past it): then the check waits for the next round.
   let last = null;
   for (let t = 0; t < 300; t++) {
     const r = await page.evaluate(() => {
+      if (document.querySelector('[data-next-round], .lt-reckon')) return { held: true };
       const g = document.querySelector('.app.game'), d = document.querySelector('[data-deck]');
       let save = null;
       try { save = JSON.parse(localStorage.getItem('patrons.v4.local')); } catch { /* none */ }
@@ -83,13 +128,15 @@ async function deckCheck(page) {
       return { moves: Number(g.dataset.moves), saved: save.state.moves, pile: save.state.pile.length, left: Number(d.dataset.left), shown: tv.textContent.trim() };
     });
     last = r;
+    if (r && r.held) return 'held';
     if (r && r.moves === r.saved) {
-      if (r.left !== r.pile) { fail(`(h) the deck says ${r.left}, the engine's pile has ${r.pile}`, 'deck'); return; }
-      if (r.shown === String(r.pile)) return;
+      if (r.left !== r.pile) { fail(`(h) the deck says ${r.left}, the engine's pile has ${r.pile}`, 'deck'); return 'checked'; }
+      if (r.shown === String(r.pile)) return 'checked';
     }
     await page.waitForTimeout(100);
   }
   fail(`(h) after a refill the deck's number never settled on the engine's pile length (last: ${JSON.stringify(last)})`, 'deck');
+  return 'checked';
 }
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
@@ -109,14 +156,37 @@ try {
 
   // play: the first legal option each time; audit at my first placement, my first buy and a round-II placement
   const seen = new Set();
-  let lastShop = null, refills = 0;
+  let lastShop = null, refills = 0, deckDue = false, summaryChecked = false;
   for (let k = 0; k < 400 && seen.size < 3; k++) {
     // (h) the row refilled (a new face-up card): the deck's count must be the engine's pile
     const shopNow = await page.$$eval('.lt-shop .lt-cards .card[data-uid]', els => els.map(e => e.dataset.uid)).catch(() => []);
-    if (lastShop && shopNow.some(u => !lastShop.includes(u)) && refills < 3) { refills++; await deckCheck(page); }
+    if (lastShop && shopNow.some(u => !lastShop.includes(u)) && refills < 3) deckDue = true;
     lastShop = shopNow;
+    if (deckDue && (await deckCheck(page)) === 'checked') { deckDue = false; refills++; }
     const next = page.locator('[data-next-round]');
-    if (await next.count()) { await next.first().click().catch(() => {}); await page.waitForTimeout(150); continue; }
+    if (await next.count()) {
+      // (n) the round summary: nothing under 12px, and your own seat reads "You" (never your seat's name)
+      if (!summaryChecked && await page.locator('.roundend').count()) {
+        summaryChecked = true;
+        await page.waitForTimeout(800); // its totals tick up
+        const r = await page.evaluate(() => {
+          const vis = e => { const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden') return false; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
+          let me = null;
+          try { me = JSON.parse(localStorage.getItem('patrons.v4.local')).state.players[0].name; } catch { /* none */ }
+          const box = document.querySelector('.roundend');
+          const tiny = [...box.querySelectorAll('*')].filter(e => vis(e) && [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
+            .map(e => ({ t: e.textContent.trim().slice(0, 24), fs: parseFloat(getComputedStyle(e).fontSize) })).filter(x => x.fs < 12);
+          const text = box.innerText;
+          const named = me && new RegExp(`(^|[^\\p{L}\\p{N}])${me.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, 'u').test(text);
+          return { tiny: tiny.slice(0, 6), me, named, you: /\bYou\b/.test(text) };
+        });
+        for (const x of r.tiny) fail(`(n) round summary text under 12px: "${x.t}" at ${x.fs}px`, 'summary');
+        if (r.named) fail(`(n) the round summary calls you "${r.me}", not "You"`, 'summary');
+        if (!r.you) fail('(n) the round summary never says "You"', 'summary');
+        await page.screenshot({ path: `${SHOTS}/08-round-summary.png` });
+      }
+      await next.first().click().catch(() => {}); await page.waitForTimeout(150); continue;
+    }
     const hand = page.locator('[data-handoff]');
     if (await hand.count()) { await hand.first().click().catch(() => {}); continue; }
     const kind = await page.evaluate(() => {
@@ -137,14 +207,16 @@ try {
         await slot.hover();
         await page.waitForTimeout(500);
         if (!(await page.locator('.peek, [data-hover-card="space"], [data-space-card]').count())) fail('(b) hovering a space shows no card', step);
+        await dockCheck(page, 'a space', step);
         await page.screenshot({ path: `${SHOTS}/02b-hover-space.png` });
         await page.mouse.move(5, 5);
-        const card = page.locator('[data-region] [data-uid], .shop [data-uid]').first();
+        const card = page.locator('[data-region] [data-uid]').first();
         if (await card.count()) {
           await card.hover();
           await page.waitForTimeout(600);
           const shown = await page.evaluate(() => [...document.querySelectorAll('.popover, [data-hover-card]')].some(e => e.getBoundingClientRect().width > 0) || !!document.querySelector('.card-face'));
           if (!shown) fail('(b) hovering a shop card shows no card', step);
+          await dockCheck(page, 'a shop card', step);
           await page.screenshot({ path: `${SHOTS}/02c-hover-card.png` });
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
@@ -165,10 +237,17 @@ try {
           });
           if (!dc) fail('(h) hovering the deck shows no card', step);
           else if (dc.card !== dc.left || dc.sum !== dc.left || !dc.colorless || !dc.bottom) fail(`(h) deck card: ${dc.card} left, colors add to ${dc.sum}, the deck shows ${dc.left}${dc.colorless ? '' : ', no colorless count'}${dc.bottom ? '' : ', no word on where released members go'}`, step);
+          await dockCheck(page, 'the deck', step);
           await page.screenshot({ path: `${SHOTS}/02d-hover-deck.png` });
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
         }
+        // (m) your own seat's card docks clear of your seat; (l) the ranked line and the turn-order places
+        const head = page.locator('.lt > .lt-seat-0 .cs-head').first();
+        if (await head.count()) { await head.hover(); await page.waitForTimeout(300); await dockCheck(page, 'your seat', step); await page.mouse.move(5, 5); await page.waitForTimeout(200); }
+        const tops = await page.evaluate(() => ({ seats: document.querySelectorAll('.lt > .lt-seat [data-cult]').length, rank: [...document.querySelectorAll('[data-rank] .rk')].map(e => e.textContent.trim()), order: [...document.querySelectorAll('.lt > .lt-seat .cs-order')].map(e => e.dataset.order) }));
+        if (tops.rank.length !== tops.seats) fail(`(l) the ranked line shows ${tops.rank.length} players for ${tops.seats} cults`, step);
+        if (tops.order.length !== tops.seats || !tops.order.includes('now')) fail(`(l) turn-order places: ${JSON.stringify(tops.order)}`, step);
       }
     }
     const opt = page.locator('.slot.can, [data-option]:not([aria-disabled="true"])').first();
@@ -176,6 +255,27 @@ try {
     await page.waitForTimeout(80);
   }
   if (seen.size < 3) fail(`only reached ${[...seen].join(', ') || 'no'} steps`, 'play');
+  if (!summaryChecked) fail('(n) never saw a round summary', 'summary');
+  // (n) the Chronicle: your own lines read "You took…", never your seat's name
+  {
+    await page.click('.lt-menu .menu-glyph').catch(() => {});
+    await page.click('.lt-menu .log-btn').catch(() => {});
+    const chron = await page.waitForSelector('.lt-chron', { timeout: 4000 }).catch(() => null);
+    if (!chron) fail('(n) the Chronicle did not open from the menu', 'chronicle');
+    else {
+      const r = await page.evaluate(() => {
+        let me = null;
+        try { me = JSON.parse(localStorage.getItem('patrons.v4.local')).state.players[0].name; } catch { /* none */ }
+        const text = document.querySelector('.lt-chron').innerText;
+        const named = me && new RegExp(`(^|[^\\p{L}\\p{N}])${me.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, 'u').test(text);
+        return { me, named, you: /\bYou (took|recruited|bought|passed|picked|placed|joined)\b/.test(text) };
+      });
+      if (r.named) fail(`(n) the Chronicle calls you "${r.me}", not "You"`, 'chronicle');
+      if (!r.you) fail('(n) the Chronicle has no "You took / recruited / bought…" line', 'chronicle');
+      await page.screenshot({ path: `${SHOTS}/09-chronicle.png` });
+      await page.keyboard.press('Escape');
+    }
+  }
   if (!refills) fail('(h) the shop row never refilled during the game', 'deck');
   else if (!(await page.evaluate(() => window.__patronsDeals || 0))) fail(`(h) ${refills} refill(s), but no card came off the deck`, 'deck');
   else console.log(`info.mjs: deck matched the engine's pile after ${refills} refill(s); ${await page.evaluate(() => window.__patronsDeals)} card(s) dealt off it`);

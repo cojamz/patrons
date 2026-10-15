@@ -2,7 +2,7 @@
 // card name through real moves, and "does a log line name this card as acting" (Cory: every number on the table
 // traces to a log line).
 import { createGame, resume, actionAt } from '../../../engine/v4/core.js';
-import { move } from './helpers.js';
+import { move, actionName } from './helpers.js';
 
 /**
  * A hand-made position on any table. Like helpers.scene, plus quadrants, rules, slots and a starting log.
@@ -28,10 +28,11 @@ export function sceneQ({
   return resume(s);
 }
 
-/** Space key "q-i" of the action named `name` on this table. */
+/** Space key "q-i" of the action with this id ("gold.rush") or name on this table. */
 export function spaceOf(s, name) {
+  const want = actionName(name);
   for (let q = 0; q < s.quadrants.length; q++) for (let i = 0; i < 6; i++) {
-    try { if (actionAt(s, q, i)?.name === name) return `${q}-${i}`; } catch { /* no such action */ }
+    try { if (actionAt(s, q, i)?.name === want) return `${q}-${i}`; } catch { /* no such action */ }
   }
   throw new Error(`no space ${name}`);
 }

@@ -50,6 +50,7 @@ export function createFirebaseTransport({ emulator = urlEmulator() } = {}) {
   const connCbs = new Set();
   let connUnsub = null;
   let closed = false;
+  let offset = 0; // .info/serverTimeOffset: server clock − local clock
   const unsubs = new Set();
 
   // One .info/connected listener re-arms onDisconnect writes and tells the session layer.
@@ -63,7 +64,8 @@ export function createFirebaseTransport({ emulator = urlEmulator() } = {}) {
         if (up) for (const [p, v] of disconnects) m.onDisconnect(at(m, p)).set(v).catch(err => console.warn('[firebase] onDisconnect', err));
         for (const cb of [...connCbs]) cb(up);
       });
-      connUnsub = off;
+      const offOffset = m.onValue(at(m, '.info/serverTimeOffset'), snap => { offset = Number(snap.val()) || 0; });
+      connUnsub = () => { off(); offOffset(); };
     });
   }
 
@@ -112,6 +114,8 @@ export function createFirebaseTransport({ emulator = urlEmulator() } = {}) {
     },
     onConnectedChange(cb) { connCbs.add(cb); watchConnection(); return () => connCbs.delete(cb); },
     serverTime: () => serverTimestamp(),
+    /** The server's clock now (ms): compare against serverTime() values someone else wrote. */
+    serverNow: () => { watchConnection(); return Date.now() + offset; },
     /** Drops this client's socket (the server runs its onDisconnect writes); goOnline() reconnects. */
     goOffline() { load().then(m => m.goOffline(m.db)); },
     goOnline() { load().then(m => m.goOnline(m.db)); },

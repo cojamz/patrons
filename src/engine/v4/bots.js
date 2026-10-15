@@ -13,7 +13,7 @@
 // Every level is deterministic for a given state and rand.
 import {
   contextFor, actionAt, cardDef, TIERS, followers, memberCount, RING_VALUE, WORKERS, tierLeft,
-  paymentChoices, followerChoices, releaseRefund,
+  paymentChoices, followerChoices, releaseRefund, liveOptions,
 } from './core.js';
 import { defById, quadrant, handlerById } from './content/index.js';
 import { chooseThinkerMove } from './thinker.js';
@@ -280,12 +280,20 @@ function gameEndPay(s, ctx, p) {
   return out;
 }
 
+// A member's own data, not an ability. Every other key is a hook or a rule flag (halfTurns, brokerBonus, toggle…).
+const DATA_KEYS = new Set(['key', 'name', 's', 'w', 'text', 'f', 'n', 'id', 'quadrant', 'copies', 'vanilla', 'badge', 'lean', 'guest']);
+// Hooks whose payout the evaluation already sees (the recruit itself, game-end pay) or that only steer bots.
+const MEASURED = new Set(['onGameEnd', 'onRecruited', 'botActivate', 'estimate']);
+const PLAIN_TEXT = /^(Free\. )?((Worth \d+ followers?\.|No effect\.|Counts as \d+ members\.)\s*)+$/;
 /** A member's ability, in followers, for the turns left (its stars are counted separately). */
 export function abilityValue(def, placementsLeft, k = K_ABILITY) {
-  if (def.vanilla) return 0;
-  const hooks = Object.keys(def).filter(k => typeof def[k] === 'function' || ['activate', 'costReduction', 'goldPaysDouble', 'stealMore', 'bends'].includes(k));
-  const engine = hooks.filter(k => !['onGameEnd', 'onRecruited', 'botActivate', 'estimate'].includes(k));
-  if (!engine.length) return 0; // pays on recruit or at game end: measured directly
+  if (def.vanilla || PLAIN_TEXT.test((def.text || '').trim())) return 0;
+  const keys = Object.keys(def).filter(x => !DATA_KEYS.has(x));
+  // pays on recruit or at game end only: measured directly
+  if (keys.length && keys.every(x => MEASURED.has(x))) return 0;
+  // anything else keeps working: hooks, rule flags (Corner-Cutter's halfTurns, Broker), or a passive its sphere reads
+  // by key (Choir, Muse, Wallflower). Flags and key-read passives used to count as no ability at all, so bots released
+  // Corner-Cutter for its refund before it ever halved a turn (fire audit, 2026-10-15).
   return k * (def.s + def.w) * Math.min(1, placementsLeft / 12);
 }
 
@@ -309,7 +317,10 @@ function settle(s, ctx) {
   for (let k = 0; k < 40 && s.queue.length; k++) {
     const t = s.queue.shift();
     if (t.t !== 'choose' || !t.options?.length) continue;
-    const o = t.options.reduce((a, b) => ((b.hint || 0) > (a.hint || 0) ? b : a));
+    // the options still good (a card an option names may have moved since the choice was queued)
+    const live = liveOptions(s, t);
+    if (!live.length) continue;
+    const o = live.reduce((a, b) => ((b.hint || 0) > (a.hint || 0) ? b : a));
     handlerById(t.h)(ctx, s.players[t.p], o.value, t.data);
   }
 }
@@ -460,7 +471,10 @@ function refundInto(s, p, uid) {
  */
 function releaseOption(state, opts) {
   const pend = state.pending;
-  const rels = pend.options.filter(o => o.kind === 'release');
+  // a person uses a member's ability before letting it go: a member whose activation is still unused (Rainmaker,
+  // Lottery Winner…) is not released (bots released Rainmaker for its refund before ever using it; fire audit 2026-10-15)
+  const unused = uid => { const c = state.cards[uid]; return !c.used && [c.def, c.copy].some(id => id && defById(id).activate); };
+  const rels = pend.options.filter(o => o.kind === 'release' && !unused(o.uid));
   if (!rels.length) return null;
   const me = pend.player;
   const { turns, roundLeft } = horizon(state);

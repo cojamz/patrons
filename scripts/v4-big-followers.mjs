@@ -78,7 +78,10 @@ export function wilson(k, n, z = 1.96) {
 }
 
 if (!isMainThread) {
-  for (const job of workerData.jobs) parentPort.postMessage(playGame(job));
+  // an engine error ends that game only: it's counted and reported, not averaged in
+  for (const job of workerData.jobs) {
+    try { parentPort.postMessage(playGame(job)); } catch (e) { parentPort.postMessage({ crashed: `game ${job.g}: ${e.message}` }); }
+  }
 } else {
   const argv = process.argv.slice(2);
   const args = argv.filter(a => !a.startsWith('--'));
@@ -103,6 +106,9 @@ if (!isMainThread) {
     wk.on('error', rej);
     wk.on('exit', res);
   })));
+  const crashed = results.filter(r => r.crashed);
+  for (const c of crashed) console.log(`CRASH ${c.crashed}`);
+  results.splice(0, results.length, ...results.filter(r => !r.crashed));
   const n = results.length;
   const tot = k => results.reduce((a, r) => a + r[k], 0);
   const wins = tot('win');

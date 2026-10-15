@@ -275,7 +275,8 @@ const thieves = {
         if (by !== owner && cost(recruited) >= 8) autoSteal(ctx, owner, by, 'Light Fingers');
       },
     }),
-    m('extortionist', 'Extortionist', 4, 2, 'Whenever a rival buys 6 or more followers, take 2 resources from them (they arrive as magenta).', {
+    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 10
+    m('extortionist', 'Extortionist', 8, 2, 'Whenever a rival buys 6 or more followers, take 2 resources from them (they arrive as magenta).', {
       onBuyFollowers(ctx, owner, card, buyer, tier) {
         if (buyer !== owner && tier && tier.get >= 6) autoSteal(ctx, owner, buyer, 'Extortionist', 2);
       },

@@ -3,7 +3,7 @@
 Distilled from `design/decisions.md`, which stays the full log. Check every suggestion against this list before proposing it. Cory can change any line.
 
 ## Theme (working frame: Cult Wars)
-- Say "buy followers", never "fixtures" (or Laurel/Garland/Diadem) when talking to Cory. Rates (2026-10-14): 2→1, 4→3, 8→6 (limited, the clock), and a top tier of 10→10 (limited). Member costs were doubled the same day.
+- Say "buy followers", never "fixtures" (or Laurel/Garland/Diadem) when talking to Cory. Rates (2026-10-14): 2→1, 4→3, 8→6 (limited, 2 per player), and a top tier of 10→10 (unlimited). The game always ends after round III: "the turns are the end game clock" (Cory). Member costs were doubled the same day.
 - The frame is light. You lead a following: items are members, VP are followers. Don't over-index on 'cult' (religious, sacrificial, ritual).
 - Quadrants are defined by their mechanics first: economy, tempo, space, market, information, interaction… They should be unique and varied, with names and flavor that fit the mechanic, not a forced theme.
 - Items are **members**: people you recruit. Each quadrant has 15 member types, one copy each for now (15 cards; 60 in the deck). Everything stacks. Each one leans toward a sphere, through its color and its ability.
@@ -18,7 +18,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 - Board: a spinning wheel of 4 color quadrants (no god names). Outer ring is round I (3 spaces per quadrant), inner ring is round II (2 spaces), center is round III (1 space). Spaces carry over: earlier rings stay open in later rounds.
 - Workers per round: 3, then 4, then 5. Every round-I space fills. Whoever is last in Favor picks first each round.
 - Setup: each player picks 2 starting resources in one go, first seat to last, while everyone watches. This replaces champions.
-- Shop: one shared deck of every sphere's members, 10 face up in a slim strip beside the wheel (Cory, 2026-10-14). Follower buys take any resources, repeatable and Dominion-style (2→1, 4→3, 8→6 and 10→10; the top two are limited, and the last 10→10 is the clock).
+- Shop: one shared deck of every sphere's members, 10 face up in a slim strip beside the wheel (Cory, 2026-10-14). Follower buys take any resources, repeatable and Dominion-style (2→1, 4→3, 8→6 and 10→10; 8→6 is limited to 2 per player, 10→10 is unlimited, and the game always ends after round III).
 - After each placement you buy one thing: any face-up member, or followers. The deck is far bigger than one game's buys.
 - Everyone's items are public.
 
@@ -45,7 +45,7 @@ Distilled from `design/decisions.md`, which stays the full log. Check every sugg
 
 ## Interaction
 - No exponential races in silos. Interact through the board, not at people.
-- Compete over shared spaces, face-up members, ring contests and the 6-follower clock.
+- Compete over shared spaces, face-up members, ring contests and the limited 8→6 follower buys.
 - Many actions spill a little gain onto others.
 - Some items trigger off rivals' moves, so you watch the table.
 - Never make it feel BAD. Direct harm stays rare and small, and only ever points at the leader.

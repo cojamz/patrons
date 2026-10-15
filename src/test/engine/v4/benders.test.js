@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, resume, followers, contextFor, cardDef } from '../../../engine/v4/core.js';
 import { defById } from '../../../engine/v4/content/index.js';
 import { extraTurns, onBoard } from '../../../engine/v4/content/purple.js';
-import { move, uidOf, ids, hasOpt } from './helpers.js';
+import { move, uidOf, ids, hasOpt, actionName } from './helpers.js';
 import { SHOP_SIZE } from '../../../engine/v4/core.js';
 
 const DEFAULT = ['gold', 'red', 'blue', 'green'];
@@ -96,13 +96,13 @@ describe('Squatter: once per round, place on a space a rival already took', () =
     s = move(s, `squat:${RUSH}`); s = passBuys(pickAny(s)); // P1 joins it
     expect(R(s, 0).gold).toBe(2);
     // both workers on Golden Years leave a chip: the first taker's and the joiner's
-    expect(Object.values(s.echo.now).filter(e => e.name === 'Golden Years').map(e => e.p).sort()).toEqual([0, 1]);
+    expect(Object.values(s.echo.now).filter(e => e.name === actionName('gold.rush')).map(e => e.p).sort()).toEqual([0, 1]);
     s = move(s, 'slot:2-2'); // P2 takes Echo
     expect(s.pending.kind).toBe('choose');
     // Echo copies a rival's space taken since your last turn (Green rework, 2026-10-14): P1's joined Golden Years
     // is on offer; P2's own Golden Years isn't (that's Reprise's or Encore's job)
-    expect(s.pending.options.filter(o => o.label.startsWith('Golden Years')).map(o => o.label)).toEqual(['Golden Years (P1): +2 gold']);
-    s = choose(s, o => o.label.startsWith('Golden Years'));
+    expect(s.pending.options.filter(o => o.label.startsWith(actionName('gold.rush'))).map(o => o.label)).toEqual(['Golden Years (P1): +2 gold']);
+    s = choose(s, o => o.label.startsWith(actionName('gold.rush')));
     expect(R(s, 1).gold).toBe(4);
   });
 });

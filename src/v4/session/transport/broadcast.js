@@ -160,6 +160,7 @@ export function createBroadcastTransport(channelName = 'patrons-v4') {
     async cancelDisconnect(path) { disconnects.delete(splitPath(path).join('/')); },
     onConnectedChange(cb) { ready.then(() => { if (!closed) cb(true); }); return () => {}; },
     serverTime: () => Date.now(),
+    serverNow: () => Date.now(),
     close() {
       if (closed) return;
       fireDisconnects();

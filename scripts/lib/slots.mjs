@@ -3,7 +3,7 @@
 // mkdir mutex. A slot whose owner is gone (its pid dead, or the pid reused by another process: the start time is
 // compared) is reclaimed, so a killed run never blocks the box. The slot is released when this process exits.
 //   V4_CHECK_SLOTS  how many runs at once (default 2)    V4_CHECK_LOCKS  the lock directory (default /tmp/v4-check-slots)
-import { mkdirSync, rmdirSync, rmSync, readFileSync, writeFileSync, unlinkSync, statSync } from 'node:fs';
+import { mkdirSync, rmdirSync, rmSync, readFileSync, writeFileSync, unlinkSync, statSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 export const LOCK_DIR = process.env.V4_CHECK_LOCKS || '/tmp/v4-check-slots';
@@ -42,33 +42,54 @@ export function holders() {
   return out;
 }
 
+// waiters queue in arrival order (wait-<pid>.json): a free slot goes to the longest-waiting live run, so a run that
+// arrives later can't jump ahead of one that has waited an hour
+const waitFile = pid => join(LOCK_DIR, `wait-${pid}.json`);
+function queue() {
+  const out = [];
+  for (const f of readdirSync(LOCK_DIR)) {
+    if (!/^wait-\d+\.json$/.test(f)) continue;
+    let o = null;
+    try { o = JSON.parse(readFileSync(join(LOCK_DIR, f), 'utf8')); } catch { /* half-written or gone */ }
+    if (o && alive(o)) out.push(o);
+    else if (o) { try { unlinkSync(join(LOCK_DIR, f)); } catch { /* raced */ } }
+  }
+  return out.sort((a, b) => a.since - b.since || a.pid - b.pid);
+}
+
 /**
- * Waits for a free slot and takes it. `what` says who we are in the waiting message of others ("follow: live tree,
- * port 5312"). Resolves to the slot index; the slot is released when this process exits.
+ * Waits for a free slot and takes it, first come first served. `what` says who we are in the waiting message of
+ * others ("live tree, .v4-build-follow, port 5312"). Resolves to the slot index; the slot is released when this
+ * process exits.
  */
 export async function acquireSlot(what, { log = msg => console.log(msg) } = {}) {
   mkdirSync(LOCK_DIR, { recursive: true });
   const me = { pid: process.pid, start: startOf(process.pid), what, since: Date.now() };
-  let said = '', saidAt = 0, waited = Date.now();
+  writeFileSync(waitFile(process.pid), JSON.stringify(me));
+  const unqueue = () => { try { unlinkSync(waitFile(process.pid)); } catch { /* gone */ } };
+  process.on('exit', unqueue);
+  let said = '', saidAt = 0;
   for (;;) {
     const got = await withMutex(() => {
-      for (let i = 0; i < SLOTS; i++) {
-        const o = readSlot(i);
-        if (o && alive(o) && o.pid !== process.pid) continue;
-        writeFileSync(slotFile(i), JSON.stringify(me));
-        return i;
-      }
-      return -1;
+      const free = [];
+      for (let i = 0; i < SLOTS; i++) { const o = readSlot(i); if (!(o && alive(o) && o.pid !== process.pid)) free.push(i); }
+      const ahead = queue().findIndex(o => o.pid === process.pid);
+      if (!free.length || ahead >= free.length) return -1; // (ahead -1: our ticket vanished; the next poll re-files it)
+      writeFileSync(slotFile(free[0]), JSON.stringify({ ...me, since: Date.now() }));
+      unqueue();
+      return free[0];
     });
     if (got >= 0) {
       process.on('exit', () => { const o = readSlot(got); if (o && o.pid === process.pid) { try { unlinkSync(slotFile(got)); } catch { /* gone */ } } });
-      if (said) log(`check slot ${got + 1} of ${SLOTS} is ours after ${age(Date.now() - waited)}`);
+      if (said) log(`check slot ${got + 1} of ${SLOTS} is ours after ${age(Date.now() - me.since)}`);
       return got;
     }
-    const who = holders().map(describeOwner).join('; ');
-    const key = holders().map(o => o.pid).join(',');
-    if (key !== said || Date.now() - saidAt > 60000) {
-      log(`waiting for a check slot: ${SLOTS} of ${SLOTS} in use by ${who} (at most ${SLOTS} check:v4 runs at once on this box; V4_CHECK_SLOTS changes it)`);
+    if (!existsSync(waitFile(process.pid))) writeFileSync(waitFile(process.pid), JSON.stringify(me));
+    const hs = holders(), q = queue();
+    const key = `${hs.map(o => o.pid).join(',')}|${q.findIndex(o => o.pid === process.pid)}`;
+    if (key !== said || Date.now() - saidAt > 300000) {
+      const pos = q.findIndex(o => o.pid === process.pid);
+      log(`waiting for a check slot (${pos + 1} in line): ${hs.length} of ${SLOTS} in use by ${hs.map(describeOwner).join('; ') || 'runs ahead of us'} (at most ${SLOTS} check:v4 runs at once on this box; V4_CHECK_SLOTS changes it)`);
       said = key; saidAt = Date.now();
     }
     await sleep(2500 + Math.random() * 1500);

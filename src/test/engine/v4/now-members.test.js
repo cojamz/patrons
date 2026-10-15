@@ -3,14 +3,17 @@
 import { describe, it, expect } from 'vitest';
 import { sceneQ, buy, linesNaming } from './cards-helpers.js';
 import { move } from './helpers.js';
+import { defById } from '../../../engine/v4/content/index.js';
 
 const payDefault = s => (s.pending?.kind === 'pay' ? move(s, s.pending.options.find(o => o.default).id) : s);
 
 describe('now and at round start', () => {
   it('Banker pays +3 gold the moment it is recruited, named, and again at round start', () => {
-    let s = sceneQ({ res: [{ gold: 6 }], shop: ['gold.banker'], queue: [{ t: 'buy', p: 0 }] });
+    // paid all in gold at its printed cost (whatever the bench sets it to), then +3 at once
+    const cost = defById('gold.banker').s + defById('gold.banker').w;
+    let s = sceneQ({ res: [{ gold: cost + 2 }], shop: ['gold.banker'], queue: [{ t: 'buy', p: 0 }] });
     s = payDefault(buy(s, 'gold.banker'));
-    expect(s.players[0].res.gold).toBe(6 - 4 + 3);
+    expect(s.players[0].res.gold).toBe(2 + 3);
     expect(linesNaming(s.log, 'Banker').length).toBeGreaterThan(0);
   });
 

@@ -219,7 +219,8 @@ const silver = {
     m('spoon', 'Upstart', 4, 2, 'When recruited, gain silver equal to the most silver any rival has.', {
       onRecruited(ctx, owner) { ctx.gain(owner, S, Math.max(0, ...others(ctx, owner).map(o => o.res[S]))); },
     }),
-    m('toastmaster', 'Toastmaster', 4, 4, 'Whenever you take a Silver space, +1 follower.', {
+    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 8 → 4
+    m('toastmaster', 'Toastmaster', 2, 2, 'Whenever you take a Silver space, +1 follower.', {
       afterAction(ctx, owner, card, qid) { if (qid === S) owner.bonus += 1; },
     }),
     m('gala', 'Debutante', 4, 4, 'Once per game: double your silver, and everyone else +2 silver.', {
@@ -233,7 +234,8 @@ const silver = {
     }),
     m('dowager', 'Dowager', 2, 2, 'Worth 3 followers.', { f: 3 }),
     m('grandhost', 'Grand Host', 8, 4, 'Silver spaces give you twice the silver.', { hostDouble: true }),
-    m('saint', 'Patron Saint', 8, 4, 'Game end: +1 follower per 2 silver members in play, anyone’s.', {
+    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 12 → 6 (the most one pass moves)
+    m('saint', 'Patron Saint', 4, 2, 'Game end: +1 follower per 2 silver members in play, anyone’s.', {
       onGameEnd: ctx => Math.floor(ctx.state.players.reduce((s, o) => s + ctx.countMembersOfColor(o, S), 0) / 2),
     }),
   ],

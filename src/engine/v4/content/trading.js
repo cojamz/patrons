@@ -192,7 +192,8 @@ const trading = {
       // can't take you below the followers you've won or bought (never yourself or a member)
       onGameEnd: (ctx, owner) => -Math.min(2, owner.bonus),
     }),
-    m('magnate', 'Magnate', 4, 4, 'Game end: +1 follower per 3 white.', {
+    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 8 → 4
+    m('magnate', 'Magnate', 2, 2, 'Game end: +1 follower per 3 white.', {
       onGameEnd: (ctx, owner) => Math.floor(owner.res[W] / 3),
     }),
     m('shareholder', 'Shareholder', 2, 1, 'Worth 3 followers.', { f: 3 }),

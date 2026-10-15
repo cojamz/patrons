@@ -23,7 +23,7 @@ function run(name, rich) {
     round: 3, left: 5, shop: ROW, queue: [{ t: 'turn', p: 1 }, { t: 'turn', p: 0 }],
     res: rich ? [full, full] : [], bonus: rich ? [6, 8] : [], members: rich ? [['thieves.crew'], ['trading.shareholder']] : [],
   });
-  s = take(s, 'Hum');
+  s = take(s, 'echo.hum');
   if (s.pending?.kind === 'buy') s = move(s, 'pass');
   const before = numbers(s), len = s.log.length;
   s = take(s, name);
@@ -34,7 +34,7 @@ function run(name, rich) {
 
 describe('every Blue, Magenta, White and Green action says when it skips a printed part', () => {
   for (const q of Q) for (const a of quadrant(q).actions) {
-    if (a.name === 'Hum') continue; // P2's opener in these positions; it has no conditional part
+    if (a.key === 'hum') continue; // P2's opener in these positions; it has no conditional part
     it(`${a.name} (${quadrant(q).name})`, () => {
       const barren = run(a.name, false), rich = run(a.name, true);
       // asking a question is visible too (P2's Hum leaves something to steal or copy)

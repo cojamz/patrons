@@ -114,7 +114,7 @@ See `design/in-flight.md` for the roster, briefs, build dirs and ports. In short
 4. The tentative rework list (`design/eval/rework-candidates.md`). [judge by playing]
 5. What the ~25% big-followers target is measured against. [an in-between bot level, then a check with people]
 6. Allow `firebaseio.com` and `netlify.app` in the cloud environment's network settings, so online play can be verified on the real link and the feedback pipeline can come off the table. [yes]
-7. Before friends play: a 10-minute two-device check on the stable link (host on a laptop, join by phone, reload mid-turn, lock 30s, finish). [Cory, once the link is cut]
+7. Before friends play (laptops only; Cory: no phone for a long time): a 10-minute two-laptop check on the stable link (host on a laptop, join by phone, reload mid-turn, lock 30s, finish). [Cory, once the link is cut]
 
 ## 7. Watch items and ideas (bring to Cory when relevant; don't decide them yourself)
 

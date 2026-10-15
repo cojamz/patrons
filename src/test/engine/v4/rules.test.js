@@ -129,10 +129,10 @@ describe('rings', () => {
 
   it('a taken space is closed for the rest of the round, open again next round', () => {
     let s = scene({ queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }, { t: 'endRound' }, { t: 'afterRound' }] });
-    s = take(s, 'Golden Years');
+    s = take(s, 'gold.rush');
     s = move(s, 'pass');
-    expect(() => take(s, 'Golden Years')).toThrow(/not open/);
-    s = move(take(s, 'Tide'), 'pass');
+    expect(() => take(s, 'gold.rush')).toThrow(/not open/);
+    s = move(take(s, 'blue.a1'), 'pass');
     expect(s.round).toBe(2);
     expect(openSlots(s)).toHaveLength(20);
   });
@@ -144,21 +144,21 @@ describe('shop', () => {
     s.pile = s.pile.slice(0, 1);
     s.queue = [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }];
     resume(s);
-    s = take(s, 'Open Door');
+    s = take(s, 'red.hire');
     expect(s.shop).toHaveLength(6) // only 1 card left in the pile to refill with;
     expect(s.pile).toHaveLength(0);
     const t = scene({ shop: ['red.volunteer', 'gold.midas'], queue: [] });
     t.pile = [];
     t.queue = [{ t: 'turn', p: 0 }];
     resume(t);
-    expect(take(t, 'Open Door').shop).toHaveLength(1);
+    expect(take(t, 'red.hire').shop).toHaveLength(1);
   });
 });
 
 describe('follower buys', () => {
   it('2 of anything buys 1 follower', () => {
     let s = scene({ res: [{ gold: 2 }] });
-    s = take(s, 'Tide');
+    s = take(s, 'blue.a1');
     expect(hasOpt(s, 'tier:small')).toBe(true);
     s = move(s, 'tier:small');
     // gold is spent last
@@ -207,7 +207,7 @@ describe('follower buys', () => {
     s.stock.big = 1;
     s.queue = [{ t: 'turn', p: 0 }];
     resume(s);
-    s = take(s, 'Sprout');
+    s = take(s, 'green.a1');
     expect(hasOpt(s, 'tier:big')).toBe(true);
     s = move(s, 'tier:big');
     expect(s.stock.big).toBe(0);
@@ -290,7 +290,7 @@ describe('payment', () => {
 
   it('only affordable members are offered at the buy', () => {
     let s = scene({ res: [{ gold: 2 }], shop: ['gold.midas', 'red.mentor', 'gold.banker', 'red.intern', 'red.volunteer', 'gold.seed'] });
-    s = take(s, 'Bandwagon');
+    s = take(s, 'red.turnout');
     const offered = s.pending.options.filter(o => o.kind === 'card').map(o => s.cards[o.uid].def).sort();
     expect(offered).toEqual(['gold.seed', 'red.volunteer']);
     expect(hasOpt(s, 'tier:small')).toBe(true);

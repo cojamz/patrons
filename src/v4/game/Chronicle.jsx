@@ -3,12 +3,13 @@
 import { useMemo } from 'react';
 import { logSections, plainLine } from '../format.js';
 import { useDialog } from './parts.jsx';
-import { NamedText } from './Info.jsx';
+import { NamedText, asYou } from './Info.jsx';
 import './lamp-b.css';
 
-export default function Chronicle({ state, onClose }) {
+export default function Chronicle({ state, onClose, meId = null }) {
   const box = useDialog(onClose);
   const sections = logSections(state);
+  const me = meId != null && state.players[meId] ? state.players[meId].name : null; // your lines read "You took…"
   // names, colors and costs don't change in a game: one table object keeps the lines from re-rendering
   const table = useMemo(() => ({ seed: state.seed, quadrants: state.quadrants, resources: state.resources, cards: state.cards, players: state.players, shop: [] }), [state.seed, state.quadrants.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
@@ -19,7 +20,7 @@ export default function Chronicle({ state, onClose }) {
           {sections.slice().reverse().map(s => (
             <section key={s.title}>
               <h4>{s.title}</h4>
-              <ol>{s.lines.map((l, j) => <li key={j}><NamedText state={table} text={plainLine(state.log, s.start + j)} /></li>).reverse()}</ol>
+              <ol>{s.lines.map((l, j) => <li key={j}><NamedText state={table} text={asYou(plainLine(state.log, s.start + j), me)} /></li>).reverse()}</ol>
             </section>
           ))}
         </div>

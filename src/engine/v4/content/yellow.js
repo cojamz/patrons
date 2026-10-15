@@ -103,7 +103,8 @@ export default {
     m('gardener', 'Gardener', 2, 0, 'Now and at round start, +1 of each color you have none of.', { now: true,
       onRoundStart(ctx, owner) { for (const c of missing(ctx, owner)) ctx.gain(owner, c, 1); },
     }),
-    m('peddler', 'Peddler', 2, 2, 'Now and at round start, +1 of each other color.', { now: true,
+    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 4 → 8
+    m('peddler', 'Peddler', 4, 4, 'Now and at round start, +1 of each other color.', { now: true,
       onRoundStart(ctx, owner) { for (const c of others(ctx)) ctx.gain(owner, c, 1); },
     }),
     m('gleaner', 'Gleaner', 6, 4, 'Whenever an action gains you 2+ of another color at once, +1 yellow.', {

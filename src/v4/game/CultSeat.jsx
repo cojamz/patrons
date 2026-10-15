@@ -10,9 +10,9 @@ import { Sprite } from '../art/Sprite.jsx';
 import { spriteId, sphereShare } from '../art/index.js';
 import { Follower } from '../art/Follower.jsx';
 import { realHover } from '../hover.js';
-import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
+import { Tip, MemberCard, cardColor, onTable, BadgeMark } from './Info.jsx';
 import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
-import { lastSpace } from './seats.js';
+import { lastSpace, turnPlaces } from './seats.js';
 import Tick from './Tick.jsx';
 import './lamp-b.css';
 
@@ -30,6 +30,10 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const f = followers(state, p);
   const groups = memberChips(state, p);
   const last = lastSpace(state, pid);
+  // its place in what's left of this round's turn order (who's up now, who's next)
+  const turns = turnPlaces(state);
+  const place = turns.places[pid];
+  const orderText = turns.order.map(id => (id === me ? 'You' : state.players[id].name)).join(', ');
   const MAX = mine ? 14 : 8; // member figures shown before "+N"
   const shown = groups.slice(0, MAX);
   const rest = groups.slice(MAX).reduce((s, g) => s + g.count, 0);
@@ -45,9 +49,10 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={32} minion={16} /></span>
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
+          {place && <span className={`cs-order ${place.label}`} data-order={place.label} title={place.label === 'done' ? `${mine ? 'You have' : `${p.name} has`} no turns left this round${orderText ? `. Still to play: ${orderText}` : ''}` : `Turn order: ${orderText}`}>{place.label}</span>}
           <small>{last ? <>last: <Sprite id={[`${last.qid}.${actionKey(last)}`, spriteId(last.name)]} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /></> : p.kind === 'bot' ? 'bot' : ' '}</small>
         </span>
-        <span className="cs-total" title={`${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
+        <span className="cs-total" data-followers={f} title={`${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
       </header>
       <div className="cs-crowd" role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members`}>
         {shown.map(g => {
@@ -64,6 +69,7 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
               <Tip className="fig" label={`${d.name}: show the card`} content={() => <MemberCard state={state} uid={g.uids[0]} />}>
                 <Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={24} />
                 {g.count > 1 && <b className="x num">×{g.count}</b>}
+                <BadgeMark state={state} def={d} />
               </Tip>
               {use && <button type="button" className="lt-btn mini" data-option={use.id} onClick={() => onPick(use.id)} title={`Use ${d.name} now`}>Use<span className="hitbox" aria-hidden="true" /></button>}
               {toggle && <button type="button" className="lt-btn mini" data-option={toggle.id} onClick={() => onPick(toggle.id)} title={toggle.label}>{g.card.on === false ? 'On' : 'Off'}<span className="hitbox" aria-hidden="true" /></button>}

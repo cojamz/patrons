@@ -19,6 +19,7 @@
  *   cancelDisconnect(path: string): Promise<void>,
  *   onConnectedChange(cb: (connected: boolean) => void): () => void,
  *   serverTime(): any,
+ *   serverNow?(): number, // the server's clock now, in ms (local clock + the server's offset)
  *   close(): void,
  * }} Transport
  */

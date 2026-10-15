@@ -3,6 +3,7 @@ import { isLegal, chooseBotMove, setBotLevels } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import { createEmitter } from './emitter.js';
 import { newGame, step, trackState, botStep } from './record.js';
+import { settleEmojis } from '../emojiPick.js';
 
 /**
  * @typedef {{ player: number, option: string }} Move
@@ -62,7 +63,9 @@ export const UNDO_BUY_HOLD_MS = 1600;
  */
 export function createLocalSession({ seats, seed = Math.floor(Math.random() * 2 ** 31), botDelayMs = 450, quadrants, botLevel, state: saved, undo: savedUndo }) {
   // A new game is stamped with this build's content hash and records its moves (state.build, state.history).
-  let state = saved || newGame({ seats: seats.map(s => ({ name: s.name, kind: s.kind || 'human' })), seed, ...(quadrants ? { quadrants } : {}) });
+  // Every seat wears an emoji, none twice: a person's pick, else a random free one (bots too), seeded by the game.
+  const dressed = saved ? null : settleEmojis(seats.map(s => ({ name: s.name, kind: s.kind || 'human', ...(s.emoji ? { emoji: s.emoji } : {}) })), seededRandom((seed ^ 0x5eed) >>> 0));
+  let state = saved || newGame({ seats: dressed, seed, ...(quadrants ? { quadrants } : {}) });
   // The setup screen's bot level (Easy / Normal / Hard) goes on every bot seat of a new game; a resumed game keeps its own.
   if (!saved && botLevel) setBotLevels(state, state.players.map(p => (p.kind === 'bot' ? botLevel : null)));
   let version = 1;

@@ -92,7 +92,8 @@ for (const prof of PROFILES) {
     const { ctx, page, go } = await resumeRich(prof);
     try {
       await place(page, go, prof);
-      const big = await page.waitForSelector('[data-option^="tier:"]:has-text("+6")', { timeout: 8000 });
+      // the +6 buy: "+6" on the older screen, "8 → 6" on the Lamplit shop's follower rates
+      const big = await page.waitForSelector('[data-option^="tier:"]:has-text("+6"), [data-option^="tier:"]:has-text("→ 6")', { timeout: 8000 });
       await page.evaluate(() => { window.__fol = [window.__fol[window.__fol.length - 1]]; });
       await big.scrollIntoViewIfNeeded();
       await go(big);

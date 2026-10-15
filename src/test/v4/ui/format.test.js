@@ -1,7 +1,7 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
-import { parseRoundEnd, newLogLines, winSentence, breakdown, costParts, turnStory, explainLine } from '../../../v4/format.js';
+import { parseRoundEnd, newLogLines, winSentence, breakdown, costParts, turnStory, explainLine, promptFor } from '../../../v4/format.js';
 import { contextFor } from '../../../engine/v4/core.js';
 
 const seats = [{ name: 'Ana', kind: 'bot' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }];
@@ -88,4 +88,24 @@ describe('v4 format helpers', () => {
     expect(explainLine(s.log, i).text).toBe('Ana gains 2 magenta; everyone else gains 1 magenta.');
     expect(explainLine(s.log, i).gift).toBeUndefined();
   });
+
+  it('prompts with a short verb phrase: "Extra turn: place one more minion", "Recruit or buy" with the details under it', () => {
+    let s = createGame({ seats, seed: 3 });
+    // walk to a placement that follows the same player's own placement (the snake's turn): the extra-turn prompt
+    let again = null, buy = null;
+    for (let n = 0; n < 400 && !(again && buy); n++) {
+      const pr = s.pending && promptFor(s, true);
+      if (pr && s.pending.kind === 'buy' && !buy) buy = pr;
+      if (pr && s.pending.kind === 'place' && pr.lead) again = pr;
+      s = applyMove(s, chooseBotMove(s, () => 0.4));
+    }
+    expect(again).toBeTruthy();
+    expect(`${again.lead}${again.text}`).toBe('Extra turn: place one more minion');
+    expect(JSON.stringify(again)).not.toMatch(/snake/i);
+    expect(buy.text).toBe('Recruit or buy');
+    expect(buy.sub).toMatch(/Recruit a member or buy followers, or pass/);
+    // nobody else's turn ever reads as yours
+    expect(promptFor(s, false).text).not.toMatch(/^Your|^Extra/);
+  });
 });
+

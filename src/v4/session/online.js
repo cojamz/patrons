@@ -12,9 +12,10 @@
 //   moves/<key>:  { by, seat, move:{player, option}, n, mid } // guests (and the host) push; host consumes
 //   rejects/<playerId>/<key>: { mid, reason }                // host's answer to a refused move
 // Codes are 5 characters, so they can't collide with v3's 4-character rooms.
-import { isLegal, chooseBotMove } from '../../engine/v4/index.js';
+import { isLegal, chooseBotMove, setBotLevels, BOT_LEVELS } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import { parseTable } from '../tables.js';
+import { randomFreeEmoji, settleEmojis } from '../emojiPick.js';
 import { createEmitter, randomId } from './emitter.js';
 import { moveProblem, normalizeMove } from './local.js';
 import { BUILD, CONTENT_HASH, newGame, step, trackState, botStep, reportProblem } from './record.js';
@@ -46,16 +47,21 @@ const sameName = (a, b) => String(a || '').trim().toLowerCase() === String(b || 
 // A player's emoji (display only): kept short, so a pasted paragraph can't ride along in every snapshot.
 const cleanEmoji = e => (typeof e === 'string' ? e.trim().slice(0, 16) : '');
 const withEmoji = e => (cleanEmoji(e) ? { emoji: cleanEmoji(e) } : {});
+// One emoji per table: a newcomer (person or bot) gets their wish if nobody holds it, else a random free one.
+const heldEmojis = seats => seatList({ seats }).map(s => s.emoji).filter(Boolean);
+const freshEmoji = (seats, wish) => { const held = heldEmojis(seats); const w = cleanEmoji(wish); return w && !held.includes(w) ? w : randomFreeEmoji(held) || ''; };
+// A bot seat's level ('easy' | 'normal' | 'hard'); left off, the engine plays it at Normal.
+const withBot = l => (BOT_LEVELS.includes(l) ? { bot: l } : {});
 
 export const newRoomCode = () => randomId(5, CODE_CHARS);
 export const newPlayerId = () => 'p' + randomId(11);
 const roomPath = code => `${ROOM_ROOT}/${code}`;
 const normCode = code => String(code || '').trim().toUpperCase();
 
-/** Seats as a sorted list: [{ seat, kind, name, id?, emoji?, sub? }]. */
+/** Seats as a sorted list: [{ seat, kind, name, id?, emoji?, bot?, sub? }]. */
 export function seatList(room) {
   return Object.entries(room?.seats || {})
-    .map(([k, v]) => ({ seat: Number(String(k).replace(/^s/, '')), kind: v?.kind || 'human', name: v?.name || '', ...(v?.id ? { id: v.id } : {}), ...withEmoji(v?.emoji), ...(v?.sub ? { sub: v.sub } : {}) }))
+    .map(([k, v]) => ({ seat: Number(String(k).replace(/^s/, '')), kind: v?.kind || 'human', name: v?.name || '', ...(v?.id ? { id: v.id } : {}), ...withEmoji(v?.emoji), ...withBot(v?.bot), ...(v?.sub ? { sub: v.sub } : {}) }))
     .filter(s => Number.isInteger(s.seat))
     .sort((a, b) => a.seat - b.seat);
 }
@@ -86,7 +92,7 @@ function lobbyView(room, code, playerId, { awaySince = new Map(), subAfterMs = S
     const awayMs = away && awaySince.has(s.id) ? Math.max(0, now - awaySince.get(s.id)) : 0;
     const sub = s.kind === 'human' && s.sub === 'bot';
     return {
-      id: s.kind === 'bot' ? `bot:${s.seat}` : s.id, name: s.name, ...withEmoji(s.emoji), seat: s.seat, connected, kind: s.kind,
+      id: s.kind === 'bot' ? `bot:${s.seat}` : s.id, name: s.name, ...withEmoji(s.emoji), ...(s.kind === 'bot' ? { bot: s.bot || 'normal' } : {}), seat: s.seat, connected, kind: s.kind,
       host: s.kind === 'human' && s.id === room.hostId, away, awayMs, sub,
       canSub: isHost && status === 'playing' && away && !sub && s.id !== playerId && awayMs >= subAfterMs,
     };
@@ -128,7 +134,7 @@ export async function createRoom({ name, emoji, transport, playerId = newPlayerI
     const room = {
       game: 'v4', code, hostId: playerId, status: 'lobby', createdAt: now, build: { ...BUILD },
       seed: Number.isFinite(seed) ? seed >>> 0 : Math.floor(Math.random() * 2 ** 31),
-      seats: { s0: { kind: 'human', name: name || 'Host', id: playerId, ...withEmoji(emoji) } },
+      seats: { s0: { kind: 'human', name: name || 'Host', id: playerId, ...withEmoji(freshEmoji({}, emoji)) } },
       ...roomTable(table),
       players: { [playerId]: { name: name || 'Host', connected: true, lastSeen: now } },
     };
@@ -212,7 +218,7 @@ export async function joinRoom({ code, name, emoji, transport, playerId, knownId
     if (seat >= MAX_SEATS) { why = 'Room is full.'; return undefined; }
     return {
       ...r,
-      seats: { ...(r.seats || {}), [`s${seat}`]: { kind: 'human', name: nick, id, ...withEmoji(emoji) } },
+      seats: { ...(r.seats || {}), [`s${seat}`]: { kind: 'human', name: nick, id, ...withEmoji(freshEmoji(r.seats, emoji)) } },
       players: { ...(r.players || {}), [id]: { name: nick, connected: true, lastSeen: Date.now() } },
     };
   });
@@ -240,7 +246,8 @@ export async function rejoinRoom({ code, playerId, transport, botDelayMs = 450, 
  *   code: string, playerId: string, transport: any, ready: Promise<void>,
  *   getView(): LobbyView,
  *   subscribe(fn: (view: LobbyView) => void): () => void,
- *   addBot(name?: string, emoji?: string): Promise<number>,
+ *   addBot(name?: string, emoji?: string, level?: 'easy'|'normal'|'hard'): Promise<number>,
+ *   setEmoji(emoji: string): Promise<void>,
  *   removeSeat(seat: number): Promise<void>,
  *   setSeed(seed: number): Promise<void>,
  *   setTable(table: { mode: string, quadrants: string[] }): Promise<void>,
@@ -268,6 +275,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
   let awayTimer = null;
   let beatTimer = null; // host: writes hostBeat
   let watchTimer = null; // everyone: is the host still beating?
+  let lastTick = Date.now();
   let beatSeen = { host: null, value: null, at: Date.now() };
   const views = createEmitter();
   const starts = createEmitter();
@@ -289,6 +297,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
   const offConn = transport.onConnectedChange?.(u => {
     const was = up;
     up = !!u;
+    if (up && !was) backAgain(); // a reconnect: what this client last saw of the host is old news
     if (up) imHere(true);
     if (was !== up && gotFirst && !destroyed) { emitView(); session?.roomChanged(); }
   }) || (() => {});
@@ -366,8 +375,22 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
       beat();
       beatTimer = setInterval(beat, BEAT_MS);
     } else if (!hosting && beatTimer) { clearInterval(beatTimer); beatTimer = null; }
-    if (!watchTimer && !destroyed) watchTimer = setInterval(() => { if (!destroyed) elect(); }, BEAT_MS / 2);
+    if (!watchTimer && !destroyed) {
+      lastTick = Date.now();
+      watchTimer = setInterval(() => {
+        if (destroyed) return;
+        const now = Date.now();
+        const slept = now - lastTick > BEAT_MS * 2; // this page's timers were frozen (a phone asleep, a suspended tab)
+        lastTick = now;
+        if (slept) backAgain(); else elect();
+      }, BEAT_MS / 2);
+    }
   }
+  // Back from a reconnect, a sleep, or a hidden tab: the beats this client missed say nothing about the host. Judge
+  // it afresh, from now (the next STALE_MS of silence, seen from here, after the fresh snapshot has had time to land).
+  function backAgain() { beatSeen = { ...beatSeen, at: Date.now() }; }
+  const onVisible = () => { if (globalThis.document?.visibilityState === 'visible') backAgain(); };
+  globalThis.document?.addEventListener?.('visibilitychange', onVisible);
   const hostStale = () => !!room && !!room.hostId && room.hostId !== playerId && Date.now() - beatSeen.at > STALE_MS;
 
   // If the host has dropped, the lowest-seat connected human claims the role.
@@ -382,10 +405,19 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
     const first = seatList(room).find(s => s.kind === 'human' && !(stale && s.id === old) && room.players?.[s.id]?.connected === true);
     if (!first || first.id !== playerId) return;
     electing = true;
-    transport.transaction(`${base}/hostId`, cur => {
-      if (cur === null || cur === undefined) return old ? null : playerId; // null pass: RTDB retries with the real value
-      return cur === old ? playerId : undefined;
-    }).catch(() => {}).finally(() => { electing = false; });
+    (async () => {
+      // Taking over from a host that still reads as connected: check its heartbeat on a fresh read, by the server's
+      // clock. A beat written within STALE_MS (say, while this phone was asleep and catching up) means it's fine.
+      if (stale && old && room.players?.[old]?.connected === true) {
+        const beat = await transport.get(`${base}/hostBeat`);
+        const now = transport.serverNow ? transport.serverNow() : Date.now();
+        if (typeof beat === 'number' && now - beat < STALE_MS) { beatSeen = { host: old, value: beat, at: Date.now() }; return; }
+      }
+      await transport.transaction(`${base}/hostId`, cur => {
+        if (cur === null || cur === undefined) return old ? null : playerId; // null pass: RTDB retries with the real value
+        return cur === old ? playerId : undefined;
+      });
+    })().catch(() => {}).finally(() => { electing = false; });
   }
 
   async function hostOnly(what) {
@@ -423,7 +455,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
       });
       if (!res.committed || res.value?.sub !== 'bot') throw new Error('Couldn’t hand that seat to a bot. Try again.');
     },
-    async addBot(name, emoji) {
+    async addBot(name, emoji, level) {
       await hostOnly('add bots');
       let seat = -1;
       const res = await transport.transaction(`${base}/seats`, seats => {
@@ -432,10 +464,37 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
         seat = 0;
         while (used.has(seat)) seat++;
         if (seat >= MAX_SEATS) return undefined;
-        return { ...seats, [`s${seat}`]: { kind: 'bot', name: name || `Bot ${seat + 1}`, ...withEmoji(emoji) } };
+        return { ...seats, [`s${seat}`]: { kind: 'bot', name: name || `Bot ${seat + 1}`, ...withEmoji(freshEmoji(seats, emoji)), ...withBot(level) } };
       });
       if (!res.committed || !res.value) throw new Error('The table is full.');
       return seat;
+    },
+    /**
+     * Your emoji, picked in the lobby. One per table: one a person holds is refused; a bot holding it takes a random
+     * free one. Two people racing for the same one: the database applies the writes one at a time, so the first wins
+     * and the second is told who has it (start() also settles any clash, the lower seat keeping it).
+     */
+    async setEmoji(emoji) {
+      await ready;
+      const want = cleanEmoji(emoji);
+      if (!want) throw new Error('Pick an emoji.');
+      if (!room) throw new Error('The room is gone.');
+      if ((room.status || 'lobby') !== 'lobby') throw new Error('The game has already started.');
+      let why = '', same = false;
+      const res = await transport.transaction(`${base}/seats`, seats => {
+        if (seats === null || seats === undefined) return null; // cold-cache pass
+        const list = seatList({ seats });
+        const mine = list.find(s => s.kind === 'human' && s.id === playerId);
+        if (!mine) { why = 'You are no longer seated in this room.'; return undefined; }
+        same = mine.emoji === want;
+        if (same) return undefined;
+        const holder = list.find(s => s.seat !== mine.seat && s.emoji === want);
+        if (holder && holder.kind !== 'bot') { why = `${holder.name} has that one.`; return undefined; }
+        const next = { ...seats, [`s${mine.seat}`]: { ...seats[`s${mine.seat}`], emoji: want } };
+        if (holder) next[`s${holder.seat}`] = { ...seats[`s${holder.seat}`], ...withEmoji(randomFreeEmoji([...heldEmojis(seats), want])) };
+        return next;
+      });
+      if (!res.committed && !same) throw new Error(why || 'Couldn’t change your emoji. Try again.');
     },
     async removeSeat(seat) {
       await hostOnly('remove seats');
@@ -462,13 +521,15 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
       const res = await transport.transaction(base, r => {
         if (r === null || r === undefined) return null;
         if ((r.status || 'lobby') !== 'lobby' || r.hostId !== playerId) return undefined;
-        const list = seatList(r);
-        if (list.length < MIN_SEATS || list.length > MAX_SEATS) return undefined;
-        const seats = {};
-        list.forEach((s, i) => { seats[`s${i}`] = { kind: s.kind, name: s.name, ...(s.id ? { id: s.id } : {}), ...withEmoji(s.emoji) }; });
+        if (seatList(r).length < MIN_SEATS || seatList(r).length > MAX_SEATS) return undefined;
         const seed = Number.isFinite(r.seed) ? r.seed : Math.floor(Math.random() * 2 ** 31);
+        // the host settles emojis once more: every seat wears one, none twice (the lower seat keeps a clash)
+        const list = settleEmojis(seatList(r), seededRandom((seed ^ 0x5eed) >>> 0));
+        const seats = {};
+        list.forEach((s, i) => { seats[`s${i}`] = { kind: s.kind, name: s.name, ...(s.id ? { id: s.id } : {}), ...withEmoji(s.emoji), ...withBot(s.bot) }; });
         const quadrants = parseTable(r.table);
         const game = newGame({ seats: list.map(s => ({ name: s.name, kind: s.kind, ...withEmoji(s.emoji) })), seed, ...(quadrants ? { quadrants } : {}) });
+        setBotLevels(game, list.map(s => (s.kind === 'bot' ? s.bot : null))); // the level the host picked for each bot
         return {
           ...r, seats, seed, status: 'playing', startedAt: Date.now(), build: { ...BUILD },
           state: { stateJson: JSON.stringify(game), version: 1, lastMove: null, recent: '', at: Date.now() },
@@ -487,7 +548,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
           const humans = list.filter(s => s.kind === 'human');
           if (!humans.length) return null; // last human out closes the room
           const seats = {};
-          for (const s of list) seats[`s${s.seat}`] = { kind: s.kind, name: s.name, ...(s.id ? { id: s.id } : {}), ...withEmoji(s.emoji) };
+          for (const s of list) seats[`s${s.seat}`] = { kind: s.kind, name: s.name, ...(s.id ? { id: s.id } : {}), ...withEmoji(s.emoji), ...withBot(s.bot) };
           const players = { ...(r.players || {}) };
           delete players[playerId];
           const hostId = r.hostId === playerId ? humans[0].id : r.hostId;
@@ -514,6 +575,7 @@ function openLobby({ transport, code, playerId, botDelayMs, subAfterMs = default
       clearTimeout(awayTimer);
       clearInterval(beatTimer);
       clearInterval(watchTimer);
+      globalThis.document?.removeEventListener?.('visibilitychange', onVisible);
       offRoom();
       offConn();
       host?.stop();

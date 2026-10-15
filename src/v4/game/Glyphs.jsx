@@ -20,16 +20,37 @@ const SHAPES = {
 };
 const NAMES = { gold: 'gold', red: 'red', blue: 'blue', green: 'green', magenta: 'magenta', silver: 'silver', yellow: 'yellow', purple: 'purple', white: 'white' };
 
-/** One resource as its shape in its color. */
-export function ResourceGlyph({ r, size = 16, n = null }) {
+/** One resource as its shape in its color. decorative: no title / role (inside something that already says it). */
+export function ResourceGlyph({ r, size = 16, n = null, decorative = false }) {
   const label = n == null ? NAMES[r] || r : `${n} ${NAMES[r] || r}`;
   return (
-    <svg className="res-glyph" viewBox="0 0 16 16" width={size} height={size} role="img" aria-label={label}>
-      <title>{label}</title>
+    <svg className="res-glyph" data-res-glyph={r} viewBox="0 0 16 16" width={size} height={size} role={decorative ? undefined : 'img'} aria-label={decorative ? undefined : label} aria-hidden={decorative ? 'true' : undefined}>
+      {decorative ? null : <title>{label}</title>}
       <path d={SHAPES[r] || SHAPES.gold} fill={`var(--q-${r}, var(--${r}))`} stroke="var(--paper-ink, #1c1410)" strokeWidth="1.1" strokeLinejoin="round" />
-      {r === 'gold' && <path d="M8 4.2a3.8 3.8 0 1 1 0 7.6a3.8 3.8 0 1 1 0-7.6Z" fill="none" stroke="rgba(0,0,0,.28)" strokeWidth="1" />}
+      {r === 'gold' && <path d="M8 4.4a3.6 3.6 0 1 1 0 7.2a3.6 3.6 0 1 1 0-7.2Z" fill="none" stroke="rgba(0,0,0,.48)" strokeWidth="1.3" />}
     </svg>
   );
+}
+
+// ---------- coins: a disc in the resource's color with its glyph inside (setup picker, pay) ----------
+// Gold and yellow are close in hue, so a coin never relies on color: the mark inside is the resource's own shape
+// (gold a ring, yellow a sun), in ink that stands out on that coin (dark on the light coins, cream on the dark ones).
+const LIGHT_COINS = new Set(['gold', 'yellow', 'silver', 'white']);
+export const COIN_INK = { dark: '#2a1f17', light: '#f6eedb' };
+export const markInk = r => (LIGHT_COINS.has(r) ? COIN_INK.dark : COIN_INK.light);
+export function CoinMark({ r, size = 16 }) {
+  const ink = markInk(r);
+  let shape;
+  if (r === 'gold') shape = <circle cx="8" cy="8" r="4.4" fill="none" stroke={ink} strokeWidth="2.4" />;
+  else if (r === 'yellow') {
+    shape = (
+      <g>
+        <circle cx="8" cy="8" r="3.1" fill={ink} />
+        <path d="M8 .9V3.1M8 12.9V15.1M.9 8H3.1M12.9 8H15.1M3 3L4.6 4.6M11.4 11.4L13 13M3 13L4.6 11.4M11.4 4.6L13 3" stroke={ink} strokeWidth="1.9" strokeLinecap="round" fill="none" />
+      </g>
+    );
+  } else shape = <path d={SHAPES[r] || SHAPES.gold} fill={ink} />;
+  return <svg className="coin-mark" data-coin-mark={r} viewBox="0 0 16 16" width={size} height={size} aria-hidden="true">{shape}</svg>;
 }
 
 /** A follower: the pixel person mark (art/Follower.jsx), never a star. */
@@ -108,10 +129,11 @@ export function LeaderRing({ state, id, size = 32, minion = 16, compact = false 
 }
 
 /** A player, as players see them: their emoji (a minion) and their name. No shapes, no color-only dots. */
-export function Who({ state, id, name = null, size = 16 }) {
+export function Who({ state, id, name = null, size = 16, meId = null }) {
   const p = state.players[id];
+  if (name == null && id === meId) name = 'You';
   return (
-    <span className="who-tag" data-pid={id}>
+    <span className="who-tag" data-who={id}>
       <Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={size} title={`${p.name}'s emoji`} />
       <span className="who-name">{name ?? p.name}</span>
     </span>

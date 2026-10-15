@@ -6,6 +6,7 @@ import { finalWinners, isRoundEnd, newLogLines, parseRoundEnd, playerColor, prom
 import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
 import ShopCards from './ShopCards.jsx';
+import RankRow from './RankRow.jsx';
 import CultSeatRaw from './CultSeat.jsx';
 // online room updates that don't touch the table don't re-render the chairs
 const CultSeat = memo(CultSeatRaw);
@@ -85,6 +86,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
   const paced = useRef(false);
   const held = useRef(false);
   const timer = useRef(null);
+  const dwellNext = useRef(0); // the hold the step being committed asks for (started once it's on screen)
   const shownRef = useRef(first);
   const online = session.info?.mode === 'online';
   // read (and, if missing, written) once: as a plain useRef argument this ran on every render, re-saving the
@@ -134,11 +136,20 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
       const dwell = myRecruitThenGone ? 1500 : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(400, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
       if (!queue.current.length) paced.current = false;
       if (dwell) {
-        timer.current = setTimeout(() => { timer.current = null; pump(); }, dwell);
+        // the hold counts from when this step is on screen (its commit), not from when it was handed to React: under
+        // load a commit can land late, and a timer started here would shorten the next step's time on screen
+        timer.current = 'commit';
+        dwellNext.current = dwell;
         return;
       }
     }
   }, [show, session, rivalDwell]);
+  useLayoutEffect(() => {
+    if (timer.current !== 'commit') return;
+    const d = dwellNext.current;
+    dwellNext.current = 0;
+    timer.current = setTimeout(() => { timer.current = null; pump(); }, d);
+  }, [table.shown, pump]);
 
   useEffect(() => {
     const off = session.subscribe(s => {
@@ -398,9 +409,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     shopSnap.current = snapshotShop(root.current);
 
     const lines = newLogLines(before, state);
-    // the clock running out is news for everyone: say it where people look, not only in the log
-    const clock = lines.find(l => /The game ends after this round\./.test(l));
-    if (clock) showToast(clock.replace('The last', 'The last').replace(' is gone.', ' is gone:').replace(' The game', ' the game'), 3600);
     // Gifts float onto the receiver's card, worded as what they are: the receiver gains (nobody loses).
     const got = [];
     const startAt = state.log.length - lines.length;
@@ -556,6 +564,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (busy && mine) { queuedClick.current = counted ? [...queuedClick.current, optionId].slice(-4) : [optionId]; return; }
     if (!mine || needHandoff || !options.has(optionId)) return;
     setBusy(true);
+    // the shop as you see it right now (a row you may have scrolled, on a phone): a recruit flies from where you saw it
+    { const snap = snapshotShop(root.current); if (snap.size) shopSnap.current = snap; }
     setError('');
     const token = ++sendToken.current;
     let sent;
@@ -604,13 +614,14 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     else if (info.type === 'slot') {
       // A taken or unopened space explains itself on its own card (wheel) or row (panel); the prompt stays put.
       const owner = state.slots[info.key];
-      text = owner === undefined && pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers or pass' : null;
+      text = owner !== undefined ? null : pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers or pass' : 'You can’t take this space right now';
     } else if (pend.kind === 'place') text = info.type === 'card' || info.type === 'tier' ? 'Place a minion first, then recruit' : 'Place a minion first';
     else if (info.type === 'card') text = `You can’t afford ${info.name} yet`;
     else if (info.type === 'tier') text = tierLeft(state, info.tier) <= 0 ? `No +${info.tier.get} buys left` : `+${info.tier.get} needs ${tierCostText(info.tier)}`;
     else text = 'Not right now';
     if (text) say(text);
-    if (el && el.animate && motionOK()) el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(-2px)' }, { transform: 'translateX(0)' }], { duration: 260, easing: 'ease-out' });
+    // the translate property, so the element's own transform (a socket's centring, a card's lift) stays put
+    if (el && el.animate && motionOK()) el.animate([{ translate: '0 0' }, { translate: '-4px 0' }, { translate: '4px 0' }, { translate: '-2px 0' }, { translate: '0 0' }], { duration: 260, easing: 'ease-out' });
   }, [state, pend, moment, mySeats, needHandoff, say, wide]);
 
   const live = needHandoff ? NO_OPTIONS : optionFor;
@@ -631,7 +642,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, [modalOpen]);
   const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
-  const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)}{state.endEarly ? <em className="last-tag"> (last)</em> : null}</> : 'Setup';
+  const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)}</> : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
   // The latest rival placement, marked on the wheel; read from the state so it survives a reload.
@@ -671,7 +682,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               {pr.who && <i style={{ background: playerColor(pr.who.id) }} />}
               <span className="say-text">
                 {mine && humansHere && pr.who ? <b style={{ color: playerColor(pr.who.id) }}>{pr.who.name}: </b> : null}
-                {mine ? <><span className="lead">Your turn — </span><em>{pr.text ? pr.text[0].toLowerCase() + pr.text.slice(1) : pr.text}</em></> : state.over ? pr.text : <>{pr.text}<span className="dots" aria-hidden="true"> ···</span></>}
+                {mine ? <><span className="lead">{pr.lead ?? 'Your turn — '}</span><em>{pr.text && !pr.keepCase ? pr.text[0].toLowerCase() + pr.text.slice(1) : pr.text}</em></> : state.over ? pr.text : <>{pr.text}<span className="dots" aria-hidden="true"> ···</span></>}
               </span>
             </span>
           ) : <span className="say" data-prompt tabIndex={-1} />}
@@ -682,13 +693,16 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </div>
         <div className="bar-row steps-row">
           <span className="round">{roundText}{state.round && !state.over ? <small title="Minions this round: one per turn. Extra Hand and similar members add one."> · <span className="num">{workersNote(state)}</span></small> : null}</span>
-          {state.round > 0 && !state.over && (
+          {/* your turn's details sit under the headline (it stays one short line); otherwise the turn's two steps */}
+          {mine && !needHandoff && pr.sub && !note ? <span className="say-sub" data-prompt-sub>{pr.sub}</span> : state.round > 0 && !state.over && (
             <span className="steps" aria-hidden="true">
               <span className={phase === 'place' || phase === 'choose' ? 'on' : ''}>Place</span>
               <span className={phase === 'buy' || phase === 'pay' ? 'on' : ''}>Recruit or buy</span>
             </span>
           )}
         </div>
+        {/* who's winning, one quiet line (UI-B RankRow): most followers first, the leader lit, the margin on hover */}
+        {state.round > 0 && !state.over && <div className="bar-row rank-row"><RankRow state={state} me={me} /></div>}
         <Menu onRules={() => setRules(true)} onLog={openLog} getState={() => session.getState()} onLeave={onHome ? () => (state.over ? onHome() : setLeaving(true)) : null} />
       </header>
       {session.info && session.info.mode === 'online' && session.info.roomCode && (
@@ -703,7 +717,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       )}
       {state.over && !moment ? (
         <div className="main over">
-          <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} />
+          <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} meId={mySeats.length === 1 ? mySeats[0] : null} />
           <div className="side over-cults" aria-label="The cults at the end">
             {(state.ranking || state.players.map(p => p.id)).map((pid, k) => {
               const won = finalWinners(state).includes(pid); // the rule: most followers, members break a tie
@@ -748,9 +762,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       )}
       {mine && !needHandoff && pend.kind === 'pay' && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
       {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={root.current} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onDone={() => setReckoned(moment)} />}
-      {moment && reckoned === moment && <RoundEnd info={moment} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
+      {moment && reckoned === moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
-      {logOpen && <Chronicle state={state} onClose={() => setLogOpen(false)} />}
+      {logOpen && <Chronicle state={state} meId={mySeats.length === 1 ? mySeats[0] : null} onClose={() => setLogOpen(false)} />}
       <HoverCardLayer hover={hover} state={state} me={me} optionFor={live} onPick={onPick} />
       {leaving && (
         <Confirm

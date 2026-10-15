@@ -65,6 +65,23 @@ try {
   await page.click('[data-home="local"]');
   await page.waitForSelector('[data-start]');
   await shot('02-setup');
+  // Pick your emoji (Cory, 2026-10-14): seat 1's button opens a grid of all 20 pixel emojis; pick the Wizard. Every
+  // seat shows one, none twice; in the game the Wizard is on your leader's robe (checked below).
+  const PICK = 'wizard';
+  {
+    await page.click('[data-seat-row="0"] [data-emoji-btn]');
+    await page.waitForSelector('[data-emoji-grid]');
+    const cells = await page.$$eval('[data-emoji-grid] [data-pick] svg rect', els => els.length);
+    const n = await page.$$eval('[data-emoji-grid] [data-pick]', els => els.length);
+    if (n !== 20 || cells < 20 * 10) errors.push(`emoji picker: ${n} emojis (want 20), drawn with ${cells} pixels`);
+    await shot('02-setup-emoji');
+    await page.click(`[data-emoji-grid] [data-pick="${PICK}"]`);
+    await page.waitForSelector('[data-emoji-grid]', { state: 'detached', timeout: 2000 }).catch(() => errors.push('the emoji picker stayed open after a pick'));
+    const faces = await page.$$eval('[data-seat-row]', rows => rows.map(r => { const e = r.querySelector('[data-emoji-btn], [data-emoji-face]'); return e ? (e.getAttribute('data-emoji-btn') ?? e.getAttribute('data-emoji-face')) : ''; }));
+    if (faces[0] !== PICK) errors.push(`setup: seat 1 shows "${faces[0]}" after picking ${PICK}`);
+    const worn = faces.filter(Boolean);
+    if (worn.length !== faces.length || new Set(worn).size !== worn.length) errors.push(`setup: every seat should wear its own emoji: ${JSON.stringify(faces)}`);
+  }
   await page.click('[data-start]');
   // The intro (src/v4/Intro.jsx): this browser's first game shows it once, over the table; one tap on Skip ends it
   {
@@ -81,6 +98,13 @@ try {
     }
   }
   await page.waitForSelector('.lt-seat[data-pid]');
+  {
+    const leaders = await page.$$eval('.lt-seat[data-pid] [data-leader] svg.leader', els => els.map(e => [e.closest('.lt-seat').getAttribute('data-pid'), e.getAttribute('data-emoji')]));
+    const mine = leaders.find(([pid]) => pid === '0');
+    if (!mine || mine[1] !== PICK) errors.push(`your leader wears "${mine && mine[1]}", not the ${PICK} you picked`);
+    const all = leaders.map(([, e]) => e);
+    if (leaders.length < 2 || all.some(e => !e) || new Set(all).size !== all.length) errors.push(`each cult leader should wear its own emoji: ${JSON.stringify(leaders)}`);
+  }
   // How to play lives behind the one menu glyph
   await page.click('.lt-menu .menu-glyph');
   await page.click('.lt-menu .rules-btn');
@@ -291,8 +315,21 @@ try {
       await shot('06-after-reload');
       const f1 = await page.$eval('.lt-seat[data-pid="0"] [data-followers]', e => e.dataset.followers);
       if (f0 !== f1) errors.push(`resume changed P1's followers (${f0} -> ${f1})`);
+      // browser Back mid-game (an edge swipe on a phone) asks first: "Keep playing" stays put, "Leave" goes home
+      const leaveAsk = '[role="alertdialog"][aria-label="Leave this game?"]';
       await page.goBack();
-      await page.waitForSelector('[data-home="resume"]', { timeout: 5000 }).catch(() => errors.push('browser Back did not return home'));
+      if (!(await page.waitForSelector(leaveAsk, { timeout: 5000 }).catch(() => null))) errors.push('browser Back mid-game did not ask before leaving');
+      else {
+        if (!(await page.$('.lt-seat[data-pid]'))) errors.push('browser Back left the game before the player answered');
+        await page.click(`${leaveAsk} >> text=Keep playing`);
+        await page.waitForSelector(leaveAsk, { state: 'detached', timeout: 5000 }).catch(() => errors.push('"Keep playing" did not close the Leave question'));
+        const f2 = await page.$eval('.lt-seat[data-pid="0"] [data-followers]', e => e.dataset.followers).catch(() => null);
+        if (f2 !== f1) errors.push(`"Keep playing" after Back changed the game (P1 followers ${f1} -> ${f2})`);
+        await page.goBack();
+        await page.waitForSelector(leaveAsk, { timeout: 5000 }).catch(() => errors.push('a second Back did not ask again'));
+        await page.click(`${leaveAsk} [data-confirm]`).catch(() => errors.push('no Leave button on the Leave question'));
+      }
+      await page.waitForSelector('[data-home="resume"]', { timeout: 5000 }).catch(() => errors.push('Leave after browser Back did not return home'));
       await page.click('[data-home="resume"]');
       await page.waitForSelector('.lt-seat[data-pid]');
       facingSeen = null; // a reopened game starts facing its default quadrant
@@ -326,6 +363,8 @@ try {
   await shot('09-results');
   await shot('09-results-phone', PHONE);
   const winner = await page.$eval('.results .win', e => e.textContent);
+  const resultsFace = await page.$eval('.results [data-who="0"] svg[data-emoji]', e => e.getAttribute('data-emoji')).catch(() => null);
+  if (resultsFace !== PICK) errors.push(`results: seat 1 shows "${resultsFace}", not the ${PICK} they picked`);
   // the results are on screen: now (and only now) the save is gone
   await page.waitForTimeout(300);
   const left = await page.evaluate(() => Object.keys(localStorage).filter(k => k === 'patrons.v4.local' || k === 'patrons.v4.roundStart'));
@@ -347,6 +386,7 @@ try {
   await page.click('[data-play-again]');
   await page.waitForSelector('.lt-seat[data-pid]');
   if (await page.$('.results')) throw new Error('Play again did not start a new game');
+  if (!(await page.$(`.lt-seat[data-pid="0"] [data-leader] svg.leader[data-emoji="${PICK}"]`))) errors.push(`Play again dropped your ${PICK}`);
   await page.waitForTimeout(500);
   if (await page.$('[data-intro]')) errors.push('the intro showed again on a second game');
   ok = errors.length === 0;

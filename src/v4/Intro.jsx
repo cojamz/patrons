@@ -1,19 +1,21 @@
-// The intro (Cory, 2026-10-14): ~20 seconds, seven beats, each a tiny pixel vignette on the walnut table with one
-// line of text: you lead a cult → send a minion to the wheel → it pays resources → recruit a member (they join your
-// cult) → buy followers (the crowd grows) → quadrant leaders win followers each round → most followers after III wins.
+// The intro (Cory's script, 2026-10-14): four beats, ~24 seconds, one camera over one pixel world on the walnut table
+// (design/prototypes/intro2/storyboard.md): you are a cult leader → you and your minions tap mysterious powers →
+// take actions, gain resources, recruit members, grow powerful → after three rounds the biggest cult wins.
+// The beats live in ./intro/Beat1–4.jsx on the kit in ./intro/shared.jsx; this file is the shell around them.
 //
 // Per player and local only: it shows on this browser's first game start (a localStorage flag), never on a resume,
 // never pauses the table or touches the engine or session (bots and other seats carry on underneath). Skip is
 // always on screen; after the first beat Esc or a tap anywhere also closes it. prefers-reduced-motion gets a still
 // storyboard with Back/Next instead. replayIntro() opens it again from a menu. ?intro=0 never shows it on a game
 // start (the e2e suites), ?intro=1 shows it on every one (review).
-import { Fragment, memo, useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import './intro.css';
-import { Sprite } from './art/Sprite.jsx';
-import { Follower } from './art/Follower.jsx';
-import { Leader, Minion } from './art/Leader.jsx';
 import { emojiIds } from './art/emojis.js';
-import { drawnIds, iconFor } from './art/index.js';
+import { Cast, Clock, Camera, Lamp, BEAT_MS, BEGIN_AT, STAGE, nowT0, clockIn, toStage } from './intro/shared.jsx';
+import Beat1, * as B1 from './intro/Beat1.jsx';
+import Beat2, * as B2 from './intro/Beat2.jsx';
+import Beat3, * as B3 from './intro/Beat3.jsx';
+import Beat4, * as B4 from './intro/Beat4.jsx';
 
 // ---------- when it shows ----------
 const SEEN = 'patrons.v4.introSeen';
@@ -54,318 +56,108 @@ export function IntroGate() {
 
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// ---------- pixel pieces ----------
-// 9×9 resources from the vision kit (design/prototypes/vision/px.js): one shape per color, ink outline baked in.
-const PAL = {
-  k: '#1c1410', g: '#e0aa2f', G: '#9c6a12', y: '#f8dc86', s: '#b9c3cc', S: '#6e7a87', l: '#eef2f5',
-  m: '#c43f7f', M: '#7c2250', p: '#f08cbb', e: '#4f9f74', E: '#2b6a4b', n: '#a5d9ad',
-};
-const RES = {
-  gold: ['..kkkkk..', '.kyyyggk.', 'kyyggggGk', 'kygggggGk', 'kygggggGk', 'kygggggGk', 'kggggggGk', '.kGGGGGk.', '..kkkkk..'],
-  silver: ['...kkk...', '..kllsk..', '..klssk..', '.kllssSk.', '.klsssSk.', '.klsssSk.', 'kllsssSSk', 'kkkkkkkkk', '...kSSk..'],
-  magenta: ['..kkkkk..', '.kppmmMk.', 'kppmmmmMk', '.kpmmmMk.', '..kmmMk..', '...kmk...', '....k....', '.........', '.........'],
-  green: ['.....kkk.', '...kknnk.', '..knneek.', '.kneeeEk.', '.kneeEk..', 'kneeEk...', 'kneEk....', 'kEkk.....', 'k........'],
-  any: ['..kkkkk..', '.kgggssk.', 'kg.....sk', 'ke.....sk', 'ke.....mk', 'ke.....mk', 'kee...mmk', '.keemmmk.', '..kkkkk..'],
-};
-const runsOf = rows => {
-  const out = [];
-  rows.forEach((r, y) => { let x = 0; while (x < r.length) { const ch = r[x]; let w = 1; while (r[x + w] === ch) w++; if (ch !== '.') out.push({ x, y, w, fill: PAL[ch] }); x += w; } });
-  return out;
-};
-const RES_RUNS = Object.fromEntries(Object.entries(RES).map(([k, v]) => [k, runsOf(v)]));
-const Res = memo(function Res({ kind }) {
-  return (
-    <svg viewBox="0 0 9 9" width="9" height="9" shapeRendering="crispEdges" aria-hidden="true">
-      {RES_RUNS[kind].map((r, i) => <rect key={i} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
-    </svg>
-  );
-});
-
-// The cast. Size order everywhere: leader 32 > member 24 > minion 16 > follower 9 (one art pixel = one stage unit).
-const YOU = '#e3d3b0'; // a bone robe in the lamp
-const RIVAL_A = '#7b8d9d'; // slate
-const RIVAL_B = '#bd6c4b'; // clay
-const Q = { gold: '#c99327', silver: '#8794a2', magenta: '#b2386c', green: '#3d8c66' };
-const pick = (ids, list) => list.find(id => ids.includes(id)) || null;
-const SPOOKY = ['ghost', 'bat', 'skull', 'pumpkin', 'spider', 'eye', 'candle', 'moon', 'cat', 'owl'];
+// ---------- the cast: your cult wears pizza (Cory: cheerful, and it reads on the 8×8 medallion); rivals cheerful too ----------
 function cast() {
   const emo = emojiIds();
-  const you = pick(emo, SPOOKY) || emo[0] || null;
-  const rest = emo.filter(e => e !== you);
-  const drawn = drawnIds();
-  const member = pick(drawn, ['banker', 'gold.banker', 'gold.midas', 'tycoon', 'gold.tycoon']) || 'banker';
-  return { you, a: rest[0] || null, b: rest[1] || null, member, memberName: iconFor(member).drawn ? iconFor(member).icon.name : 'Banker' };
+  const you = ['pizza', 'cactus'].find(id => emo.includes(id)) || emo[0] || null;
+  const rest = ['frog', 'robot', 'unicorn', 'bee', 'crab', 'santa'].filter(id => emo.includes(id) && id !== you);
+  const more = emo.filter(id => id !== you && !rest.includes(id));
+  const [a, b, c] = [...rest, ...more];
+  return { you, a: a || null, b: b || null, c: c || null };
 }
 
-/** Anything placed on the stage at (x, y) in stage units (the stage is 176 × 100 units; --u is the unit). */
-function At({ x, y, className = '', t, style, children }) {
-  return <span className={`in-at ${className}`} style={{ '--x': x, '--y': y, ...(t != null ? { '--t': `${t}ms` } : null), ...style }}>{children}</span>;
-}
-const You = ({ c, x, y, className = '', t }) => <At x={x} y={y} t={t} className={`in-fig in-w32 ${className}`}><Leader color={YOU} emoji={c.you} sigil="circle" size={32} /></At>;
-const Rival = ({ color, emoji, sigil, x, y, className = '', t, style }) => <At x={x} y={y} t={t} style={style} className={`in-fig in-w32 ${className}`}><Leader color={color} emoji={emoji} sigil={sigil} size={32} /></At>;
-const Fol = () => <span className="in-fol in-w9"><Follower size={9} title="follower" /></span>;
-
-/** Something that hops in an arc from `from` to `to` (stage units) and lands with a squash. show: when it appears
- * (omit: there from the start); post 'fade': it's used up on arrival. */
-function Hop({ from, to, h = 12, t = 0, dur = 600, show = null, post = 'stay', className = '', children }) {
-  return (
-    <span className={`in-at in-hop${show != null ? ' pre-hide' : ''}${post === 'fade' ? ' post-fade' : ''} ${className}`}
-      style={{ '--x': from[0], '--y': from[1], '--dx': to[0] - from[0], '--dy': to[1] - from[1], '--h': h, '--t': `${t}ms`, '--dur': `${dur}ms`, '--t0': `${show ?? 0}ms` }}>
-      <span className="in-hy"><span className="in-appear"><span className="in-land">{children}</span></span></span>
-    </span>
-  );
-}
-
-/** A number that steps through [[ms, value], …] (a still storyboard shows the last). */
-function Count({ steps, still, className = '' }) {
-  const [v, setV] = useState(() => (still ? steps[steps.length - 1][1] : steps[0][1]));
-  useEffect(() => {
-    if (still) return undefined;
-    const ids = steps.slice(1).map(([ms, val]) => setTimeout(() => setV(val), ms));
-    return () => ids.forEach(clearTimeout);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  return <b className={`in-num ${className}`} key={v}>{v}</b>;
-}
-
-// ---------- the wheel: a printed paper wheel, four quadrants, round I's ring of spaces ----------
-const MID = { gold: 90, silver: 180, magenta: 270, green: 0 };
-const pol = (cx, cy, r, a) => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)];
-const wedge = (r0, r1, a0, a1) => {
-  const [x0, y0] = pol(50, 50, r1, a0), [x1, y1] = pol(50, 50, r1, a1), [x2, y2] = pol(50, 50, r0, a1), [x3, y3] = pol(50, 50, r0, a0);
-  return `M${x0},${y0} A${r1},${r1} 0 0 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 0 0 ${x3},${y3} Z`;
-};
-const SOCKETS = Object.entries(MID).flatMap(([q, m]) => [-27.5, 0, 27.5].map(o => ({ q, a: m + o })));
-/** Center of the space at angle a on wheel w, in stage units. */
-const space = (w, a) => pol(w.cx, w.cy, w.r * 0.748, a);
-const GLYPH = { gold: 'gold', silver: 'silver', magenta: 'magenta', green: 'green' };
-
-function Wheel({ w, taken = null, lit = [], className = '', t }) {
-  return (
-    <At x={w.cx - w.r} y={w.cy - w.r} t={t} className={`in-wheel ${className}`} style={{ '--s': w.r * 2 }}>
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <defs>
-          <radialGradient id="intro-paper" cx="50%" cy="45%" r="60%"><stop offset="0" stopColor="#f7efdd" /><stop offset=".8" stopColor="#ecdfc3" /><stop offset="1" stopColor="#dccba6" /></radialGradient>
-        </defs>
-        <circle cx="50" cy="50" r="50" fill="url(#intro-paper)" />
-        {Object.entries(MID).map(([q, m]) => (
-          <g key={q}>
-            <path d={wedge(28, 46.75, m - 45, m + 45)} fill={Q[q]} opacity=".24" />
-            <path d={wedge(46.75, 50, m - 45, m + 45)} fill={Q[q]} opacity=".9" />
-            <path d={wedge(11.75, 28, m - 45, m + 45)} fill={Q[q]} opacity=".07" />
-          </g>
-        ))}
-        <circle cx="50" cy="50" r="28" fill="rgba(70,50,25,.10)" />
-        {[46.75, 28, 19.25, 11.75].map(r => <circle key={r} cx="50" cy="50" r={r} fill="none" stroke="rgba(42,31,23,.35)" strokeWidth={r === 46.75 ? 0.7 : 0.5} />)}
-        {[45, 135, 225, 315].map(a => { const [x0, y0] = pol(50, 50, 11.75, a), [x1, y1] = pol(50, 50, 50, a); return <line key={a} x1={x0} y1={y0} x2={x1} y2={y1} stroke="rgba(42,31,23,.45)" strokeWidth=".7" />; })}
-        <circle cx="50" cy="50" r="49.6" fill="none" stroke="#7a6244" strokeWidth=".8" />
-        {SOCKETS.map(({ q, a }) => { const [x, y] = pol(50, 50, 37.4, a); return <circle key={a} cx={x} cy={y} r="6.25" fill="#f8f1e2" stroke={Q[q]} strokeWidth="1.1" />; })}
-        {Object.values(MID).flatMap(m => [-17, 17].map(o => { const [x, y] = pol(50, 50, 23.4, m + o); return <circle key={m + o} cx={x} cy={y} r="4.4" fill="none" stroke="rgba(110,90,64,.55)" strokeWidth=".6" strokeDasharray="1.6 1.2" />; }))}
-        {lit.map(l => <path key={l.q} className="in-lit" style={{ '--t': `${l.t}ms` }} d={wedge(11.75, 50, MID[l.q] - 45, MID[l.q] + 45)} fill="rgb(255,217,154)" />)}
-        <circle cx="50" cy="50" r="11.75" fill="#2a1f17" />
-        <circle cx="50" cy="50" r="9.6" fill="none" stroke="rgba(243,230,200,.2)" strokeWidth=".5" />
-        <text x="50" y="54.2" textAnchor="middle" className="in-hub">I</text>
-      </svg>
-      {SOCKETS.map(({ q, a }) => {
-        const [x, y] = pol(w.r, w.r, w.r * 0.748, a);
-        return <At key={a} x={x - 4.5} y={y - 4.5} className={`in-w9${taken === a ? ' in-taken' : ''}`}><Res kind={GLYPH[q]} /></At>;
-      })}
-    </At>
-  );
-}
-
-// ---------- the seven beats ----------
-// Stage layout (units): the wheel on the left, your cult on the right (leader, then members beside it, followers
-// counted in a row underneath), your resources stacked between them.
-const W = { cx: 48, cy: 50, r: 44 }; // the wheel, beats 2–3
-const GOLD_SPACE = 62.5; // the gold space your minion takes
-const ME = { x: 120, y: 26 }; // your leader, beats 2–5
-const ROW = { x: 118, y: 63 }; // your follower count; marks at x + 10 + 9i
-const MEMBER_AT = { x: 151, y: 34 };
-const STACK = i => [100, 51 - 5 * i]; // the i-th resource on your stack
-const markAt = i => [ROW.x + 10 + 9 * i, ROW.y];
-
-function FollowerRow({ steps, marks, still, x = ROW.x, y = ROW.y, className = '' }) {
-  return (
-    <>
-      <At x={x} y={y} className={`in-count ${className}`}><Count steps={steps} still={still} /></At>
-      {Array.from({ length: marks }, (_, i) => <At key={i} x={x + 10 + 9 * i} y={y} className={className}><Fol /></At>)}
-    </>
-  );
-}
-
-function BeatCult({ c, still }) {
-  return (
-    <>
-      <Rival color={RIVAL_A} emoji={c.a} sigil="triangle" x={12} y={24} t={1100} className="in-shade" />
-      <Rival color={RIVAL_B} emoji={c.b} sigil="square" x={132} y={24} t={1300} className="in-shade" />
-      <You c={c} x={72} y={22} t={250} className="in-rise" />
-      <At x={70} y={59} t={950} className="in-count in-pop"><Count steps={[[0, 1]]} still={still} /></At>
-      <At x={80} y={59} t={1050} className="in-pop"><Fol /></At>
-    </>
-  );
-}
-
-function BeatPlace({ c, still }) {
-  const [sx, sy] = space(W, GOLD_SPACE);
-  return (
-    <>
-      <Wheel w={W} t={0} className="in-fade" />
-      <span className="in-moves in-slide" style={{ '--sx': -48, '--sy': -4 }}>
-        <You c={c} {...ME} />
-        <FollowerRow steps={[[0, 1]]} marks={1} still={still} />
-      </span>
-      <Hop from={[103, 41]} to={[sx - 8, sy - 13]} h={16} show={750} t={1150} dur={720} className="in-fig in-w16">
-        <Minion color={YOU} emoji={c.you} size={16} />
-      </Hop>
-      <At x={sx - 9} y={sy - 6} t={1950} className="in-ring in-pop" />
-    </>
-  );
-}
-
-function BeatGain({ c, still }) {
-  const [sx, sy] = space(W, GOLD_SPACE);
-  return (
-    <>
-      <Wheel w={W} taken={GOLD_SPACE} />
-      <At x={sx - 9} y={sy - 6} className="in-ring" />
-      <At x={sx - 8} y={sy - 13} className="in-fig in-w16"><Minion color={YOU} emoji={c.you} size={16} /></At>
-      <At x={sx - 9} y={sy - 9} t={150} className="in-flash" />
-      {[0, 1, 2].map(i => (
-        <Hop key={i} from={[sx - 4.5, sy - 4.5]} to={STACK(i)} h={18} show={350 + 330 * i} t={350 + 330 * i} dur={640} className="in-w9">
-          <Res kind="gold" />
-        </Hop>
-      ))}
-      <You c={c} {...ME} />
-      <FollowerRow steps={[[0, 1]]} marks={1} still={still} />
-    </>
-  );
-}
-
-const CARD = { x: 18, y: 14 };
-const SLOT = j => [24.5 + 12 * j, 66];
-function BeatRecruit({ c, still }) {
-  return (
-    <>
-      <At x={CARD.x} y={CARD.y} t={2700} className="in-card in-spent">
-        <span className="in-card-band" />
-        <span className="in-card-art" />
-        <span className="in-card-name">{c.memberName}</span>
-      </At>
-      <At x={29} y={22} t={1700} className="in-w24 in-leave"><Sprite id={c.member} sphere={Q.gold} size={24} /></At>
-      {[0, 1, 2].map(j => <At key={j} x={SLOT(j)[0]} y={SLOT(j)[1]} className="in-slot" />)}
-      {[2, 1, 0].map((i, j) => (
-        <Hop key={i} from={STACK(i)} to={SLOT(j)} h={12} t={300 + 300 * j} dur={560} className="in-w9"><Res kind="gold" /></Hop>
-      ))}
-      <Hop from={[29, 22]} to={[MEMBER_AT.x, MEMBER_AT.y]} h={14} show={1700} t={1750} dur={820} className="in-fig in-w24">
-        <Sprite id={c.member} sphere={Q.gold} size={24} />
-      </Hop>
-      <You c={c} {...ME} />
-      <FollowerRow steps={[[0, 1], [2650, 2]]} marks={1} still={still} />
-      <At x={markAt(1)[0]} y={markAt(1)[1]} t={2650} className="in-pop"><Fol /></At>
-    </>
-  );
-}
-
-const MIXED = ['gold', 'silver', 'magenta', 'green'];
-function BeatBuy({ c, still }) {
-  return (
-    <>
-      <At x={10} y={40} className="in-offer in-glowbox" t={1450}>
-        <b>4</b><span className="in-w9"><Res kind="any" /></span><i aria-hidden="true">→</i><b>3</b><Fol />
-      </At>
-      {[3, 2, 1, 0].map((i, j) => (
-        <Hop key={i} from={STACK(i)} to={[20, 45.5]} h={14} show={70 * i} t={500 + 230 * j} dur={540} post="fade" className="in-w9 in-arrive">
-          <Res kind={MIXED[i]} />
-        </Hop>
-      ))}
-      {[0, 1, 2].map(k => (
-        <Hop key={k} from={[58, 45.5]} to={markAt(2 + k)} h={16} show={1650 + 220 * k} t={1650 + 220 * k} dur={640}>
-          <Fol />
-        </Hop>
-      ))}
-      <At x={MEMBER_AT.x} y={MEMBER_AT.y} className="in-fig in-w24"><Sprite id={c.member} sphere={Q.gold} size={24} /></At>
-      <You c={c} {...ME} />
-      <FollowerRow steps={[[0, 2], [2290, 3], [2510, 4], [2730, 5]]} marks={2} still={still} />
-    </>
-  );
-}
-
-const W6 = { cx: 88, cy: 50, r: 44 };
-const PLAQUE = { gold: [75, 88], silver: [27, 44], magenta: [75, 0], green: [122, 44] }; // top-left, on the rim
-function BeatReckon({ c, still }) {
-  return (
-    <>
-      <Wheel w={W6} lit={[{ q: 'gold', t: 300 }, { q: 'silver', t: 1550 }]} className="in-fade" />
-      {Object.entries(PLAQUE).map(([q, [x, y]]) => (
-        <At key={q} x={x} y={y} className={`in-plaque${q === 'gold' || q === 'silver' ? ' in-plaque-lit' : ''}`} t={q === 'gold' ? 300 : 1550} style={{ '--q': Q[q] }}>
-          <span className="in-w9"><Res kind={GLYPH[q]} /></span><b>+2</b>
-        </At>
-      ))}
-      <Rival color={RIVAL_A} emoji={c.a} sigil="triangle" x={0} y={6} t={2450} className="in-glow in-far" />
-      <At x={2} y={43} className="in-count"><Count steps={[[0, 4], [2450, 6]]} still={still} /></At>
-      <At x={12} y={43}><Fol /></At>
-      <You c={c} x={144} y={6} t={1250} className="in-glow" />
-      <At x={146} y={43} className="in-count"><Count steps={[[0, 5], [1250, 7]]} still={still} /></At>
-      <At x={156} y={43}><Fol /></At>
-      <Hop from={[80, 88]} to={[150, 45]} h={20} show={600} t={620} dur={640} post="fade" className="in-token"><b>+2</b><Fol /></Hop>
-      <Hop from={[32, 44]} to={[4, 45]} h={12} show={1850} t={1870} dur={580} post="fade" className="in-token"><b>+2</b><Fol /></Hop>
-    </>
-  );
-}
-
-const COLS = [
-  { key: 'a', cx: 30, color: RIVAL_A, sigil: 'triangle', n: [6, 10, 12] },
-  { key: 'you', cx: 88, color: YOU, sigil: 'circle', n: [7, 11, 16] },
-  { key: 'b', cx: 146, color: RIVAL_B, sigil: 'square', n: [5, 9, 14] },
-];
-const ROUND_AT = [150, 850, 1550];
-function BeatWin({ c, still }) {
-  return (
-    <>
-      {['I', 'II', 'III'].map((r, i) => <At key={r} x={76 + 12 * i} y={1} t={ROUND_AT[i]} className="in-round"><span>{r}</span></At>)}
-      {COLS.map(col => {
-        const mine = col.key === 'you';
-        const marks = [];
-        for (let k = 0; k < col.n[2]; k++) {
-          const round = col.n.findIndex(v => k < v);
-          const t = ROUND_AT[round] + 60 + 45 * (k - (round ? col.n[round - 1] : 0));
-          marks.push(<At key={k} x={col.cx - 22.5 + 9 * (k % 5)} y={52 + 9 * Math.floor(k / 5)} t={t} className="in-pop"><Fol /></At>);
-        }
-        return (
-          <Fragment key={col.key}>
-            {mine
-              ? <You c={c} x={col.cx - 16} y={16} t={2250} className="in-jump" />
-              : <Rival color={col.color} emoji={c[col.key]} sigil={col.sigil} x={col.cx - 16} y={16} t={2250} className="in-fall" />}
-            <At x={col.cx + 17} y={22} className={`in-count${mine ? ' in-mine' : ''}`}>
-              <Count steps={col.n.map((v, i) => [ROUND_AT[i] + 60, v])} still={still} />
-            </At>
-            {marks}
-          </Fragment>
-        );
-      })}
-    </>
-  );
-}
-
+// ---------- the four beats: Cory's words, one line each, in word groups (the caption dissolves group by group) ----------
+// *…* is emphasis. Joined with spaces, the groups are the line exactly as Cory said it.
 const BEATS = [
-  { Scene: BeatCult, ms: 2900, lamp: [88, 40], line: <>You lead a little <em>cult</em>.</> },
-  { Scene: BeatPlace, ms: 2900, lamp: [74, 52], line: <>Each turn, send a <em>minion</em> to a space on the wheel.</> },
-  { Scene: BeatGain, ms: 2800, lamp: [78, 58], line: <>The space pays you <em>resources</em>.</> },
-  { Scene: BeatRecruit, ms: 3100, lamp: [86, 48], line: <>Spend them to <em>recruit members</em> to your cult.</> },
-  { Scene: BeatBuy, ms: 3100, lamp: [86, 48], line: <>Or buy <em>followers</em>: they’re your score.</> },
-  { Scene: BeatReckon, ms: 3000, lamp: [88, 50], line: <>Each round, whoever <em>leads a quadrant</em> wins followers.</> },
-  { Scene: BeatWin, ms: null, lamp: [88, 46], line: <>Most <em>followers</em> after round III wins.</> },
+  { Beat: Beat1, mod: B1, line: ['You are', 'a *cult leader*.'] },
+  { Beat: Beat2, mod: B2, line: ['You and your *minions*', 'have learned to tap into', '*mysterious powers*', 'to gain influence', 'and followers.'] },
+  { Beat: Beat3, mod: B3, line: ['Take *actions*', 'granted by the mysterious powers', 'to add to your resources,', 'recruit new *members*,', 'and become more powerful.'] },
+  { Beat: Beat4, mod: B4, line: ['After three rounds,', 'the cult with the most *followers*', '(including members!)', 'wins!'] },
 ];
 const LAST = BEATS.length - 1;
+const durationOf = b => BEATS[b].mod.DURATION ?? BEAT_MS[b] ?? BEGIN_AT;
+/** Where each beat starts on the one timeline, and when Begin shows (the end). */
+const STARTS = BEATS.map((_, b) => BEATS.slice(0, b).reduce((t, _x, k) => t + durationOf(k), 0));
+const END = STARTS[LAST] + durationOf(LAST);
+const groupText = g => g.replace(/\*/g, '');
+const lineText = b => BEATS[b].line.map(groupText).join(' ');
+const rich = g => g.split(/(\*[^*]+\*)/).map((part, i) => (part.startsWith('*') ? <em key={i}>{part.slice(1, -1)}</em> : part));
 
-/** The intro itself. onClose runs once it's gone. still: a storyboard (defaults to prefers-reduced-motion). */
-export default function Intro({ onClose, still: stillProp }) {
+const CAM_EASE = 'cubic-bezier(.45,.05,.25,1)';
+/** Keyframes for one value that eases between holds: steps [{ t, v, d }] → offsets over `total` ms. */
+function holds(steps, total, fmt) {
+  const k = [];
+  steps.forEach((st, i) => {
+    if (i === 0) { k.push({ offset: 0, ...fmt(st.v), easing: 'linear' }); return; }
+    const prev = steps[i - 1].v;
+    k.push({ offset: st.t / total, ...fmt(prev), easing: CAM_EASE });
+    k.push({ offset: Math.min(1, (st.t + (st.d ?? 1100)) / total), ...fmt(st.v), easing: 'linear' });
+  });
+  k.push({ offset: 1, ...fmt(steps[steps.length - 1].v) });
+  return k.sort((a, b) => a.offset - b.offset);
+}
+/** Runs keyframes on an element on the intro's clock (t0, or frozen at `at`); rebuilt when deps change. */
+function useClocked(ref, build, deps, { t0, at, on }) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!on || !el || typeof el.animate !== 'function') return undefined;
+    const [frames, opts] = build();
+    let last = 0; // offsets must never go back (a short beat can squeeze a caption's fade)
+    for (const f of frames) { f.offset = Math.min(1, Math.max(last, f.offset)); last = f.offset; }
+    const a = clockIn(el.animate(frames, { fill: 'both', ...opts }), t0, at);
+    return () => a.cancel();
+  }, deps); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+/** One beat's world on the intro's clock. In the one-shot world (window), it shows only during its own beat. Memoized:
+ * the shell's own re-renders (a beat tick, the clock settling) never re-render the thousands of things in a beat. */
+const Scene = memo(function Scene({ b, still, at = null, t0 = null, base = 0, window: win = null }) {
+  const ref = useRef(null);
+  const clock = useMemo(() => ({ still, t0, at, run: true, base }), [still, t0, at, base]);
+  useClocked(ref, () => {
+    const [from, to] = win;
+    const k = [{ offset: 0, visibility: from > 0 ? 'hidden' : 'visible', easing: 'step-end' }];
+    if (from > 0) k.push({ offset: from / END, visibility: 'visible', easing: 'step-end' });
+    if (to != null) k.push({ offset: to / END, visibility: 'hidden', easing: 'step-end' });
+    k.push({ offset: 1, visibility: to != null ? 'hidden' : 'visible' });
+    return [k, { duration: END }];
+  }, [t0, at], { t0, at, on: !!win && !still });
+  const { Beat } = BEATS[b];
+  // until its clock runs (and where there is none), a later beat waits out of sight
+  const wait = win && win[0] > 0 && typeof Element !== 'undefined' && typeof Element.prototype.animate === 'function';
+  return (
+    <Clock.Provider value={clock}>
+      <div ref={ref} className="intro-scene" aria-hidden="true" data-scene={b + 1} style={wait ? { visibility: 'hidden' } : undefined}><Beat /></div>
+    </Clock.Provider>
+  );
+});
+const WINDOWS = BEATS.map((_, b) => [STARTS[b], b < LAST ? STARTS[b + 1] : null]);
+
+/**
+ * The intro itself. onClose runs once it's gone. still: a storyboard (defaults to prefers-reduced-motion).
+ * Motion is ONE continuous shot: all four beats live in one world on one clock; the camera glides between framings,
+ * each beat's things show during its own beat (the next picks up exactly where it left off), and only the caption
+ * changes, dissolving group by group. The lab (?lab=intro): only = N plays beat N alone on a loop; at = MS freezes the
+ * timeline (the whole intro's, or beat N's) at MS — the recorder steps every animation from there.
+ */
+export default function Intro({ onClose, still: stillProp, only = null, at = null }) {
   const [still] = useState(() => (stillProp ?? reducedMotion()));
   const [c] = useState(cast);
-  const [beat, setBeat] = useState(0);
-  const [prev, setPrev] = useState(null); // the beat fading out under this one
+  const one = !still && !only; // the one-shot world
+  const [beat, setBeat] = useState(only ? only - 1 : 0);
+  const t0 = useRef(null); // the timeline's 0 on the document clock: the first frame's time (set once it has run)
+  const [loop, setLoop] = useState(0); // the lab replays its one beat
+  const [kick, setKick] = useState(0); // the clock moved (its first frame, a seek): reschedule the beat timers
   const [closing, setClosing] = useState(false);
+  const [uk, setUk] = useState(null); // CSS px per stage unit
+  // the heavy later beats join the world a moment after it opens (on the same clock, long before they show), so the
+  // opening frames never wait on them; frozen (the lab, the recorder) mounts everything at once
+  const [mounted, setMounted] = useState(() => (at != null ? BEATS.length : 2));
   const root = useRef(null);
+  const stage = useRef(null);
+  const cam = useRef(null);
+  const lamp = useRef(null);
+  const origin = useRef(typeof performance !== 'undefined' ? performance.now() : 0); // wall time at the timeline's 0
   const state = useRef({});
   state.current = { beat, closing };
 
@@ -374,25 +166,92 @@ export default function Intro({ onClose, still: stillProp }) {
     setClosing(true);
     if (still) onClose(); else state.current.timer = setTimeout(onClose, 220);
   }, [still, onClose]);
+  // a step (arrows, the storyboard's buttons): the storyboard shows that beat; the shot seeks the timeline to it
   const go = useCallback(n => {
     const b = state.current.beat;
     if (n < 0 || n > LAST || n === b || state.current.closing) return;
-    setPrev(still ? null : b);
     setBeat(n);
-  }, [still]);
-
-  // the clock: each beat plays, holds, and hands over (the last one waits for Begin)
+    if (!one || at != null) return;
+    // seek the one timeline: everything on it starts STARTS[n] ms ago
+    const now = nowT0();
+    if (now == null) { origin.current = performance.now() - STARTS[n]; return; }
+    t0.current = now - STARTS[n];
+    origin.current = t0.current;
+    if (root.current && root.current.getAnimations) for (const a of root.current.getAnimations({ subtree: true })) a.startTime = t0.current;
+    setKick(k => k + 1);
+  }, [one, at]);
+  // once everything created for the first frame has started (composited ones can start a frame or two after the
+  // rest), the clock's 0 is the latest of their starts; every animation is put on it, and later mounts use it
   useEffect(() => {
-    if (still || closing || beat >= LAST) return undefined;
-    const id = setTimeout(() => go(beat + 1), BEATS[beat].ms);
-    return () => clearTimeout(id);
-  }, [beat, still, closing, go]);
+    if (still || at != null || !root.current || typeof root.current.getAnimations !== 'function') return undefined;
+    t0.current = null;
+    let live = true;
+    const id = requestAnimationFrame(() => {
+      const anims = root.current ? root.current.getAnimations({ subtree: true }).filter(x => x.constructor === Animation) : [];
+      Promise.all(anims.map(x => x.ready)).then(() => {
+        if (!live || t0.current != null) return;
+        const start = Math.max(...anims.map(x => x.startTime ?? -Infinity));
+        if (!Number.isFinite(start)) return;
+        for (const x of anims) x.startTime = start;
+        t0.current = start;
+        if (Math.abs(origin.current - start) > 40) { origin.current = start; setKick(k => k + 1); }
+      }, () => {});
+    });
+    return () => { live = false; cancelAnimationFrame(id); };
+  }, [still, at, loop]);
+  // the beat (for the caption's live region, Esc, the dots): follows the timeline; the lab loops its one beat
   useEffect(() => {
-    if (prev == null) return undefined;
-    const id = setTimeout(() => setPrev(null), 340);
-    return () => clearTimeout(id);
-  }, [prev, beat]);
+    if (still || closing || at != null) return undefined;
+    if (only) {
+      const id = setTimeout(() => { t0.current = null; origin.current = performance.now(); setLoop(k => k + 1); }, (durationOf(only - 1) || 7000) + 1500);
+      return () => clearTimeout(id);
+    }
+    const ids = [];
+    for (let b = beat + 1; b <= LAST; b++) {
+      const wait = STARTS[b] - (performance.now() - origin.current);
+      ids.push(setTimeout(() => setBeat(b), Math.max(0, wait)));
+    }
+    return () => ids.forEach(clearTimeout);
+  }, [beat, still, closing, only, at, loop, kick]);
   useEffect(() => () => clearTimeout(state.current.timer), []);
+  useEffect(() => {
+    if (mounted >= BEATS.length) return undefined;
+    const id = setTimeout(() => setMounted(n => n + 1), 900);
+    return () => clearTimeout(id);
+  }, [mounted]);
+  // whole CSS px per stage unit, measured (the camera scales the world by it)
+  useLayoutEffect(() => {
+    const measure = () => { const el = stage.current; if (el && el.offsetWidth) setUk(el.offsetWidth / STAGE.w); };
+    measure();
+    addEventListener('resize', measure);
+    return () => removeEventListener('resize', measure);
+  }, []);
+
+  // the camera and the lamp, on the clock: every beat's shots on one timeline (or beat N's alone, in the lab)
+  const shotList = useMemo(() => {
+    const list = (only ? [only - 1] : BEATS.map((_, b) => b)).flatMap(b => (BEATS[b].mod.shots || []).map(s => ({ ...s, t: s.t + (only ? 0 : STARTS[b]) })));
+    return list.length ? list : [{ t: 0, cam: [0, 0, 1] }];
+  }, [only]);
+  const span = only ? (durationOf(only - 1) || 7000) + 1500 : END;
+  const motion = !still && uk != null;
+  useClocked(cam, () => [holds(shotList.map(s => ({ t: s.t, d: s.d, v: s.cam })), span, ([cx, cy, z]) => ({ transform: `scale(${uk * z}) translate(${-cx}px, ${-cy}px)` })), { duration: span }],
+    [uk, at, loop, shotList], { t0, at, on: motion });
+  useClocked(lamp, () => [holds(shotList.map(s => ({ t: s.t, d: s.d, v: s })), span, s => {
+    const [wx, wy, w = 230, h = 170] = s.lamp || [0, 0];
+    const [lx, ly] = toStage(s.cam, [wx, wy]);
+    return { left: `${lx * uk}px`, top: `${ly * uk}px`, width: `${w * uk}px`, height: `${h * uk}px` };
+  }), { duration: span }], [uk, at, loop, shotList], { t0, at, on: motion });
+
+  // the recorder's seek (scripts/v4-gif.mjs STEP=1): the whole intro is one timeline, so one time sets everything
+  useEffect(() => {
+    if (!one) return undefined;
+    window.__introSeek = ms => {
+      for (const a of (root.current || document).getAnimations({ subtree: true })) { a.pause(); a.currentTime = ms; }
+      const b = STARTS.filter(t => t <= ms).length - 1;
+      if (b !== state.current.beat) setBeat(Math.max(0, b));
+    };
+    return () => { delete window.__introSeek; };
+  }, [one]);
 
   // keys: Esc closes after the first beat, arrows step, Tab stays inside; nothing reaches the table underneath
   useEffect(() => {
@@ -407,7 +266,7 @@ export default function Intro({ onClose, still: stillProp }) {
       if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); go(state.current.beat + 1); return; }
       if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); go(state.current.beat - 1); return; }
       if (e.key === 'Tab') {
-        const f = [...el.querySelectorAll('button:not([disabled])')];
+        const f = [...el.querySelectorAll('button:not([disabled])')].filter(x => getComputedStyle(x).visibility !== 'hidden');
         if (!f.length) return;
         const i = f.indexOf(document.activeElement);
         e.preventDefault(); e.stopPropagation();
@@ -427,24 +286,48 @@ export default function Intro({ onClose, still: stillProp }) {
     if (still || beat < 1 || (e.target.closest && e.target.closest('button'))) return;
     close();
   };
-  const { lamp } = BEATS[beat];
-  const shown = prev != null ? [prev, beat] : [beat];
+  const { mod } = BEATS[beat];
+  const stillShot = mod.stillShot || (mod.shots || [])[(mod.shots || []).length - 1] || { t: 0, cam: [0, 0, 1] };
+  const first = shotList[0];
+  const timed = { t0, at, on: !still };
   return (
-    <div ref={root} className={`intro${still ? ' still' : ''}${closing ? ' out' : ''}`} role="dialog" aria-modal="true" aria-label="Cults in twenty seconds"
-      data-intro={still ? 'still' : 'motion'} data-beat={beat + 1} onClick={onBackdrop} onKeyDown={e => e.stopPropagation()}>
+    <div ref={root} className={`intro${still ? ' still' : ''}${closing ? ' out' : ''}${at != null ? ' frozen' : ''}`} role="dialog" aria-modal="true" aria-label="Cults in twenty seconds"
+      data-intro={still ? 'still' : 'motion'} data-beat={beat + 1} data-intro-end={END} data-intro-starts={STARTS.join(",")} onClick={onBackdrop} onKeyDown={e => e.stopPropagation()}>
       <p className="intro-kicker" aria-hidden="true">Cults <i>in twenty seconds</i></p>
       <button type="button" className="intro-skip" data-intro-skip onClick={close}>Skip intro</button>
       <div className="intro-main">
-        <div className="intro-stage" style={{ '--lx': lamp[0], '--ly': lamp[1] }}>
-          <span className="intro-lamp" />
-          {shown.map(b => {
-            const { Scene } = BEATS[b];
-            return <div key={b} className={`intro-scene${b === beat ? '' : ' leaving'}`} aria-hidden="true"><Scene c={c} still={still} /></div>;
-          })}
+        <div className="intro-stage" ref={stage} style={uk ? { '--uk': uk } : null}>
+          {still ? <Lamp shot={stillShot} /> : <span ref={lamp} className="intro-lamp timed" style={uk ? lampAt(first, uk) : null} />}
+          <div className="in-view">
+            <Cast.Provider value={c}>
+              {still ? (
+                <Camera shot={stillShot}><Scene b={beat} still /></Camera>
+              ) : (
+                <div ref={cam} className="in-cam timed" style={uk ? { transform: `scale(${uk * first.cam[2]}) translate(${-first.cam[0]}px, ${-first.cam[1]}px)` } : null}>
+                  {only
+                    ? <Scene key={`${only}.${loop}`} b={only - 1} still={false} t0={t0} at={at} />
+                    : BEATS.map((_, b) => (b < Math.max(mounted, beat + 1)
+                      ? <Scene key={b} b={b} still={false} t0={t0} at={at} base={STARTS[b]} window={WINDOWS[b]} />
+                      : null))}
+                </div>
+              )}
+            </Cast.Provider>
+          </div>
         </div>
-        <p className="intro-line" key={beat} aria-live="polite">{BEATS[beat].line}</p>
+        <div className="intro-lines" aria-live="polite">
+          {BEATS.map((B, i) => (
+            <p key={i} className={`intro-line${i === beat ? ' now' : ''}`} aria-hidden={i === beat ? undefined : 'true'}>
+              {B.line.map((g, k) => (
+                <Fragment key={k}>
+                  {k > 0 && ' '}
+                  <Group b={i} k={k} n={B.line.length} timed={one ? timed : null} shown={still || !one ? i === beat : i === 0}>{rich(g)}</Group>
+                </Fragment>
+              ))}
+            </p>
+          ))}
+        </div>
         <div className="intro-dots" aria-hidden="true">
-          {BEATS.map((_, i) => <i key={i} className={i === beat ? 'on' : i < beat ? 'done' : ''} />)}
+          {BEATS.map((_, i) => <Dot key={i} i={i} beat={beat} timed={one ? timed : null} />)}
         </div>
         <span className="intro-sr">Step {beat + 1} of {BEATS.length}</span>
         {still ? (
@@ -456,10 +339,56 @@ export default function Intro({ onClose, still: stillProp }) {
           </div>
         ) : (
           <div className="intro-nav">
-            {beat === LAST && <button type="button" className="intro-btn in-cta" onClick={close} data-intro-begin>Begin</button>}
+            {(one || beat === LAST) && <Begin onClick={close} timed={one ? timed : null} />}
           </div>
         )}
       </div>
     </div>
   );
+}
+const lampAt = (s, uk) => {
+  const [wx, wy, w = 230, h = 170] = s.lamp || [0, 0];
+  const [lx, ly] = toStage(s.cam, [wx, wy]);
+  return { left: lx * uk, top: ly * uk, width: w * uk, height: h * uk };
+};
+
+/** A word group of a caption: it dissolves in after its beat starts (staggered) and out as the next beat's comes. */
+function Group({ b, k, n, timed, shown, children }) {
+  const ref = useRef(null);
+  useClocked(ref, () => {
+    const inAt = STARTS[b] + (b ? 260 : 350) + 150 * k, outAt = b < LAST ? STARTS[b + 1] : null;
+    const kf = [{ offset: 0, opacity: 0, transform: 'translateY(4px)', easing: 'linear' }];
+    kf.push({ offset: inAt / END, opacity: 0, transform: 'translateY(4px)', easing: 'cubic-bezier(.2,.8,.3,1)' });
+    kf.push({ offset: Math.min(1, (inAt + 650) / END), opacity: 1, transform: 'none', easing: 'linear' });
+    if (outAt != null) {
+      kf.push({ offset: (outAt - 40 + 30 * (n - 1 - k)) / END, opacity: 1, transform: 'none', easing: 'ease-in' });
+      kf.push({ offset: (outAt + 320 + 30 * (n - 1 - k)) / END, opacity: 0, transform: 'none', easing: 'linear' });
+    }
+    kf.push({ offset: 1, opacity: outAt != null ? 0 : 1, transform: 'none' });
+    return [kf, { duration: END }];
+  }, [timed && timed.t0, timed && timed.at], timed || { on: false });
+  return <span ref={ref} className="intro-group" style={timed || shown ? undefined : { opacity: 0 }}>{children}</span>;
+}
+/** A progress dot, lit on its beat (on the clock in the one-shot world). */
+function Dot({ i, beat, timed }) {
+  const ref = useRef(null);
+  useClocked(ref, () => {
+    const on = { backgroundColor: '#ffd99a', boxShadow: '0 0 8px #ffd99a' }, done = { backgroundColor: '#8f7f66', boxShadow: 'inset 0 0 0 1px #8f7f66' }, off = { backgroundColor: 'rgba(0,0,0,0)', boxShadow: 'inset 0 0 0 1px #8f7f66' };
+    const kf = [{ offset: 0, ...(i === 0 ? on : off), easing: 'step-end' }];
+    if (i > 0) kf.push({ offset: STARTS[i] / END, ...on, easing: 'step-end' });
+    if (i < LAST) kf.push({ offset: STARTS[i + 1] / END, ...done, easing: 'step-end' });
+    kf.push({ offset: 1, ...(i < LAST ? done : on) });
+    return [kf, { duration: END }];
+  }, [timed && timed.t0, timed && timed.at], timed || { on: false });
+  return <i ref={ref} className={timed ? 'timed' : i === beat ? 'on' : i < beat ? 'done' : ''} />;
+}
+/** Begin: it comes when the last beat has played (on the clock in the one-shot world). */
+function Begin({ onClick, timed }) {
+  const ref = useRef(null);
+  useClocked(ref, () => [[
+    { offset: 0, opacity: 0, visibility: 'hidden', easing: 'step-end' },
+    { offset: (END - 1) / (END + 600), opacity: 0, visibility: 'visible', easing: 'ease' },
+    { offset: 1, opacity: 1, visibility: 'visible' },
+  ], { duration: END + 600 }], [timed && timed.t0, timed && timed.at], timed || { on: false });
+  return <button ref={ref} type="button" className={`intro-btn${timed ? '' : ' in-cta'}`} style={timed ? undefined : { animationDelay: `${durationOf(LAST)}ms` }} onClick={onClick} data-intro-begin>Begin</button>;
 }

@@ -1,0 +1,19 @@
+/* Pick your emoji (EmojiPicker.jsx): the seat's button and the compact grid of all 20 pixel emojis. */
+.emoji-btn,.emoji-face{flex:none;width:44px;height:44px;display:grid;place-items:center;padding:0;box-sizing:border-box}
+.emoji-btn{border:1px solid var(--rim);border-bottom:3px solid var(--pc,var(--rim));border-radius:10px;background:var(--table);cursor:pointer}
+.emoji-btn:hover,.emoji-btn.open,.emoji-btn:focus-visible{border-color:var(--ink);border-bottom-color:var(--pc,var(--ink))}
+.emoji-btn:disabled{opacity:.4;cursor:default}
+.emoji-face{border-bottom:3px solid var(--pc,transparent);border-radius:10px}
+.emoji-face.blank{border-color:transparent}
+.emoji-btn svg,.emoji-face svg,.emoji-cell svg{display:block}
+.emoji-grid{order:9;flex-basis:100%;display:grid;grid-template-columns:repeat(5,44px);gap:6px;justify-content:start;padding:10px 12px 12px;background:var(--table);border:1px solid var(--rim);border-radius:12px;animation:emoji-in .14s ease-out both}
+.emoji-cap{grid-column:1/-1;margin:0 0 2px;font-size:var(--fs-2);color:var(--muted)}
+.emoji-cell{width:44px;height:44px;display:grid;place-items:center;padding:0;border-radius:8px;border:1px solid transparent;background:none;cursor:pointer}
+.emoji-cell:hover:not(:disabled),.emoji-cell:focus-visible{background:var(--table-2);border-color:var(--rim)}
+.emoji-cell.on{background:var(--table-3);border-color:var(--ink)}
+.emoji-cell.taken{opacity:.25;filter:grayscale(.7);cursor:not-allowed}
+@keyframes emoji-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.emoji-grid{animation:none}}
+/* the lobby's bot row: level picker beside Add bot */
+.add-bot{justify-content:flex-start}
+.add-bot>span{flex:none}

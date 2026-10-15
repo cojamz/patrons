@@ -1,8 +1,7 @@
 // UI-B's lab (?lab=b[&seed=N&phase=place|buy&deck=N&deal=1]): the Lamplit shop, seat rail, your table and every hover card on a
 // real mid-game state, for screenshots beside the vision frames before the shell mounts them. Not part of the game.
 import { useEffect, useMemo, useState } from 'react';
-import '../v4.css';
-import '../lamp.css';
+import '../app.css'; // the game's CSS in its one order (v4.css, then lamp.css): never reorders App's
 import { createGame, applyMove, chooseBotMove, cardDef } from '../../engine/v4/index.js';
 import { seededRandom } from '../../engine/v4/rng.js';
 import ShopCards from '../game/ShopCards.jsx';

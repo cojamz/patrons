@@ -174,11 +174,30 @@ try {
   await pages.pia.waitForSelector('.code');
 
   await pages.hana.waitForFunction(() => document.querySelectorAll('.seats li').length === 3 && document.querySelectorAll('.seats [data-presence="here"]').length === 3, null, { timeout: 15000 });
+  // Pick your emoji in the lobby, one per table: Hana takes a free one; Gus sees it taken and takes another.
+  // (Everyone already got a random free one on joining, so which are free changes run to run.)
+  const FREE = '[data-emoji-grid] [data-pick]:not([disabled]):not([aria-checked="true"])';
+  await pages.hana.click('.seats [data-emoji-btn]');
+  const hanaPick = await pages.hana.$eval(FREE, e => e.getAttribute('data-pick'));
+  await pages.hana.click(`[data-emoji-grid] [data-pick="${hanaPick}"]`);
+  await pages.gus.waitForFunction(p => document.querySelector(`.seats [data-emoji-face="${p}"]`), hanaPick, { timeout: 15000 });
+  await pages.gus.click('.seats [data-emoji-btn]');
+  if (!(await pages.gus.$(`[data-emoji-grid] [data-pick="${hanaPick}"][disabled]`))) throw new Error(`Gus could pick the ${hanaPick} Hana holds`);
+  const gusPick = await pages.gus.$eval(FREE, e => e.getAttribute('data-pick'));
+  await pages.gus.click(`[data-emoji-grid] [data-pick="${gusPick}"]`);
+  await pages.hana.waitForFunction(p => document.querySelector(`.seats [data-emoji-face="${p}"]`), gusPick, { timeout: 15000 });
+  log('emojis picked', hanaPick, gusPick);
   await pages.hana.screenshot({ path: `${SHOTS}/online-lobby.png` });
   await pages.pia.screenshot({ path: `${SHOTS}/online-lobby-guest.png` });
   await pages.hana.click('text=Start game');
   await Promise.all(Object.values(pages).map(p => p.waitForSelector(GAME, { timeout: 20000 })));
   log('started');
+  // the picks are on the leaders, the same on every screen
+  for (const [who, pg] of Object.entries(pages)) {
+    await pg.waitForSelector('.lt-seat[data-pid] [data-leader] svg.leader', { timeout: 20000 });
+    const worn = await pg.$$eval('.lt-seat[data-pid] [data-leader] svg.leader', els => Object.fromEntries(els.map(e => [e.closest('.lt-seat').getAttribute('data-pid'), e.getAttribute('data-emoji')])));
+    if (worn['0'] !== hanaPick || worn['1'] !== gusPick || !worn['2'] || new Set(Object.values(worn)).size !== 3) throw new Error(`${who} sees the leaders wearing ${JSON.stringify(worn)} (want Hana ${hanaPick}, Gus ${gusPick}, Pia her own)`);
+  }
 
   // Gus reloads mid-game: same tab, same seat
   await playUntil(async () => (await moves(pages.hana)) >= 8, 60000, 'a few moves');
@@ -247,11 +266,12 @@ try {
   log('hana reloaded');
 
   await playUntil(atResults, 240000, 'final results');
-  const wins = await Promise.all(Object.values(pages).map(p => p.$eval('.results .win', e => e.textContent)));
-  if (new Set(wins).size !== 1) throw new Error(`players disagree on the result: ${JSON.stringify(wins)}`);
+  // the same winners and score on every device (each says "You win" on the winner's own screen, so compare the seats)
+  const wins = await Promise.all(Object.values(pages).map(p => p.$eval('.results .win', e => ({ winners: e.dataset.winners, top: e.dataset.top, text: e.textContent }))));
+  if (wins.some(w => !w.winners || !w.top) || new Set(wins.map(w => `${w.winners}|${w.top}`)).size !== 1) throw new Error(`players disagree on the result: ${JSON.stringify(wins)}`);
   if ((await seatOf(pages.pia)) !== 3) throw new Error('record has the wrong seat count');
   await pages.gus.screenshot({ path: `${SHOTS}/online-results.png` });
-  log(`game finished: ${wins[0]}`);
+  log(`game finished: ${wins[0].text}`);
   ok = errors.length === 0;
 } catch (e) {
   errors.push(`run: ${e.stack || e.message}`);

@@ -50,15 +50,23 @@ export function chooseThinkerMove(state, rand = Math.random, opts = {}) {
     const i = k % pool.length;
     if (counts[i] > 0 && (spent >= budget || late())) break;
     const r = seededRandom(Math.floor(rand() * 2 ** 31));
-    let s = applyMove(state, { player: me, option: pool[i].o.id });
-    let steps = 1;
-    while (!s.over && (full || (s.round === round && steps < cap)) && steps < 800 && !late()) {
-      s = applyMove(s, opts.rollout === 'greedy' ? chooseGreedyMove(s, r, { noise: 1 }) : chooseNormalMove(s, r, ROLLOUT));
-      steps++;
+    let s, steps = 1, value;
+    try {
+      s = applyMove(state, { player: me, option: pool[i].o.id });
+      while (!s.over && (full || (s.round === round && steps < cap)) && steps < 800 && !late()) {
+        s = applyMove(s, opts.rollout === 'greedy' ? chooseGreedyMove(s, r, { noise: 1 }) : chooseNormalMove(s, r, ROLLOUT));
+        steps++;
+      }
+      // at a round boundary, value what's left the way normal does (followers + resources' worth)
+      value = s.over ? margin(s, me) : valueAtBoundary(s, me);
+    } catch (err) {
+      // an engine error down a hypothetical line must never break the real move: count it as a very bad line
+      // (the real game would crash there too), and keep a copy for a repro when THINKER_DUMP is set
+      if (globalThis.process?.env?.THINKER_DUMP) rolloutCrash(state, pool[i].o.id, err);
+      value = -100;
     }
     spent += steps;
-    // at a round boundary, value what's left the way normal does (followers + resources' worth)
-    totals[i] += s.over ? margin(s, me) : valueAtBoundary(s, me);
+    totals[i] += value;
     counts[i] += 1;
     if (k > 200) break;
   }
@@ -73,4 +81,11 @@ function valueAtBoundary(s, me) {
   if (!s.pending) return margin(s, me);
   const probe = { ...s, pending: { player: me, kind: 'buy', options: [{ id: 'pass', kind: 'pass' }] } };
   return scoreOptions(probe, () => 0, { spite: 1 })[0].v; // the same yardstick as a finished game's margin
+}
+
+let dumped = 0;
+function rolloutCrash(state, option, err) {
+  if (dumped++ > 2) return;
+  const fs = globalThis.process.getBuiltinModule?.('node:fs');
+  fs?.writeFileSync(`${globalThis.process.env.THINKER_DUMP}-${Date.now()}.json`, JSON.stringify({ error: String(err), stack: err.stack, option, state }));
 }

@@ -45,7 +45,7 @@ Value math: what a space gave its taker in 300 Normal-bot games (150 each on gol
 7. Eternity: copy every space you took this round. 8.0 against Strike 13.3. A planned burst; the center is the one space, so it can be denied.
 
 **Members** (one copy each; "+N" is followers gained when handed over at round II start; costs are after the ×2)
-8. Evergreen (2+2): now and at round start, +3 green.
+8. Evergreen [Busker] (4+4, was 2+2; balance pass 1): now and at round start, +3 green.
 9. Muse (2+2): whenever a rival copies one of your spaces, +2 green. +0.6 (rival copies are rare among bots; the new Echo makes them likelier with people).
 10. Wallflower (2+2): while no one has fewer followers than you, the resources you copy are doubled.
 11. Tuning Fork (2+2): whenever you copy a space, also gain 1 of that space's color.

@@ -4,7 +4,7 @@
 // UI-A's wheel calls onSpaceHover(key, el|null, { pinned }), plaques onPlaqueHover(qid, el|null); seats and shop
 // cards are mine. GameScreen mounts <HoverCardLayer> once.
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { quadrant, roman, contestTable, cardDef, followers as followersOf } from '../../engine/v4/index.js';
+import { quadrant, roman, contestTable, cardDef, followers as followersOf, botLevel, BOT_LEVEL_INFO } from '../../engine/v4/index.js';
 import { playerColor, standings, costParts } from '../format.js';
 import { Popover } from './parts.jsx';
 import { Sprite } from '../art/Sprite.jsx';
@@ -103,6 +103,9 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
     const a = c.el.getBoundingClientRect();
     const w = Math.min(280, innerWidth - 16);
     const h = box.current.offsetHeight || 160;
+    // laptop: one fixed spot, the open column between the right-hand seats, never over the wheel, the shop or your seat
+    const dock = dockFor(a);
+    if (dock) { setPos(dock); return; }
     const gap = 10;
     // beside (left or right) when there's room, else below or above; never over the target
     const right = a.right + gap + w <= innerWidth - 8, left = a.left - gap - w >= 8;
@@ -132,12 +135,38 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
   }
   // always mounted: content swaps in place; hidden (not unmounted) between cards
   return (
-    <div ref={box} className={`lt-hover popover${body ? ' on' : ''}`} data-hover-layer="" data-open={body ? '1' : '0'} aria-hidden={!body}
-      style={body && pos ? pos : { left: -9999, top: 0, width: 280 }}>
+    <div ref={box} className={`lt-hover popover${body ? ' on' : ''}${pos && pos.dock ? ' docked' : ''}`} data-hover-layer="" data-open={body ? '1' : '0'} data-dock={pos && pos.dock ? pos.dock : undefined} aria-hidden={!body}
+      style={body && pos ? styleOf(pos) : { left: -9999, top: 0, width: 280 }}>
       {body && <div className="lt-note" data-hover-card={c.kind} role="tooltip">{body}</div>}
     </div>
   );
 }
+const styleOf = ({ dock, ...p }) => p;
+
+/**
+ * The hover card's dock on a laptop table (Cory: never covers what you point at): the right-hand column, under the
+ * top-right seat, above the shop. It never reaches the wheel (middle column), the shop (its floor) or your seat (bottom
+ * left); it may cover a rival's seat. Pointing at something in that column moves the card to the column's other half.
+ * Null where there is no such column (phones, the lab): the card sits beside its target instead.
+ */
+export function dockFor(target) {
+  if (typeof matchMedia !== 'function' || !matchMedia('(min-width: 861px) and (min-height: 500px)').matches) return null;
+  const wheel = document.querySelector('.lt > [data-region="wheel"]'), shop = document.querySelector('.lt > [data-region="shop"]');
+  if (!wheel || !shop) return null;
+  const W = wheel.getBoundingClientRect(), S = shop.getBoundingClientRect();
+  const left = Math.round(W.right + 12), width = Math.min(300, Math.round(innerWidth - 12 - left));
+  if (width < 200 || !(S.top > 0)) return null;
+  const roof = 12, floor = Math.round(S.top - 8);
+  const s2 = document.querySelector('.lt > .lt-seat-2');
+  const under = s2 ? Math.round(s2.getBoundingClientRect().bottom + 8) : roof;
+  const inColumn = target.left + target.width / 2 >= left;
+  if (inColumn && target.top + target.height / 2 < (roof + floor) / 2) return { left, width, bottom: innerHeight - floor, maxHeight: floor - roof, dock: 'low' };
+  if (inColumn) return { left, width, top: roof, maxHeight: Math.round((roof + floor) / 2 + 40 - roof), dock: 'high' };
+  // a fixed spot (not sized to the card, so it never hops between targets): under that seat, room for a tall card
+  const top = Math.max(roof, Math.min(under, floor - 320));
+  return { left, width, top, maxHeight: floor - top, dock: 'mid' };
+}
+
 /**
  * While a copy space (Echo, Encore, Refrain…) or a copying member (Understudy) is under the pointer, the spaces it
  * could copy light up on the wheel ("since your turn" targets), straight from the engine. Classes are toggled on the
@@ -216,16 +245,25 @@ const spaceName = (state, key) => { const [q, i] = key.split('-').map(Number); c
 /** A rim plaque: the contest's standings, straight from the engine. */
 export function StandingsCard({ state, qid, meId = null }) {
   const st = standings(state).find(x => x.qid === qid);
-  return st ? <ContestStandings state={state} st={st} meId={meId} /> : null;
+  if (!st) return null;
+  // the sphere's own rule, when it has one ("Whatever you steal turns magenta…"), under its standings (UI-A, meta #3)
+  const rule = quadrant(qid).rule;
+  return (
+    <>
+      <ContestStandings state={state} st={st} meId={meId} />
+      {rule ? <p className="lt-sphere-rule" data-sphere-rule={qid}>{rule}</p> : null}
+    </>
+  );
 }
 
 /** A seat: that player's resources, followers, workers, members, and last three moves. */
 export function SeatCard({ state, pid, meId = null }) {
   const p = state.players[pid];
   const moves = lastMoves(state, pid, 3);
+  const lvl = p.kind === 'bot' ? BOT_LEVEL_INFO.find(l => l.level === botLevel(state, pid)) : null; // Easy / Normal / Hard
   return (
     <div className="lt-card-body seat-card" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}>
-      <div className="t"><SeatFigure id={pid} state={state} size={32} /><h4>{p.name}{pid === meId ? ' (you)' : ''}<small>{p.kind === 'bot' ? 'bot' : 'player'} · {p.left} minion{p.left === 1 ? '' : 's'} left</small></h4></div>
+      <div className="t"><SeatFigure id={pid} state={state} size={32} /><h4>{p.name}{pid === meId ? ' (you)' : ''}<small>{lvl ? <span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span> : 'player'} · {p.left} minion{p.left === 1 ? '' : 's'} left</small></h4></div>
       <div className="lt-yd">
         <Row k="Followers"><span className="follower"><b className="num">{followersOf(state, p)}</b><Follower size={12} /></span></Row>
         <Row k="Has">{state.resources.map(r => <span key={r} className="lt-res"><ResourceGlyph r={r} n={p.res[r] || 0} size={14} /><b className="num">{p.res[r] || 0}</b></span>)}</Row>

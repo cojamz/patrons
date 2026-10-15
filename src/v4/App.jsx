@@ -1,8 +1,7 @@
 // Patrons v4 app shell: Home → Local setup / Online lobby → Game → Results.
 // Local games save on every change and can be resumed; online seats are rejoined after a reload.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import './v4.css';
-import './lamp.css';
+import './app.css'; // v4.css then lamp.css, inlined in that order (see app.css)
 import { createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineReady } from './sessionApi.js';
 import { createLocalSession } from './session/local.js';
 import { loadLocal, saveLocal, clearLocal, finishLocal, loadOnline, saveOnline, clearOnline, rememberRoom, roomIds, lastRoomCode } from './saved.js';
@@ -100,7 +99,7 @@ function App() {
   }, []);
 
   const startLocal = useCallback(cfg => {
-    const seats = cfg.seats.filter(s => s.kind !== 'empty').map((s, i) => ({ name: s.name.trim() || `P${i + 1}`, kind: s.kind }));
+    const seats = cfg.seats.filter(s => s.kind !== 'empty').map((s, i) => ({ name: s.name.trim() || `P${i + 1}`, kind: s.kind, ...(s.emoji ? { emoji: s.emoji } : {}) }));
     const botDelayMs = urlBotDelay() || BOT_DELAY[cfg.speed] || 650;
     const quadrants = cfg.table && !tableProblem(cfg.table.quadrants) ? cfg.table.quadrants : undefined;
     begin(createLocalSession({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs, quadrants, botLevel: cfg.level }), cfg);

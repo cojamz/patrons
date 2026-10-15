@@ -62,9 +62,9 @@ describe('Green copies the risky spaces', () => {
 
   it('copying a Magenta steal means stealing yourself, and never takes more than the victim holds', () => {
     let s = scene({ quads: Q, n: 3, turns: [1, 0], res: [{}, {}, { gold: 3 }] });
-    s = go(s, 'Help Yourself', 'take:2:gold', 'take:2:gold');
+    s = go(s, 'thieves.pickpocket', 'take:2:gold', 'take:2:gold');
     expect(R(s, 1).magenta).toBe(2);
-    s = take(s, 'Echo');
+    s = take(s, 'echo.echo');
     expect(labels(s)).toEqual(['Help Yourself (P2): do Help Yourself yourself']);
     s = move(s, s.pending.options[0].id);
     // P1 now steals 2: P2's 2 magenta and P3's last gold are on offer
@@ -79,9 +79,9 @@ describe('Green copies the risky spaces', () => {
 
   it('copying a steal can’t reach a player in the Lie Low', () => {
     let s = scene({ quads: Q, n: 3, turns: [2, 1, 0], res: [{ red: 3 }, { gold: 5 }, { red: 4 }] });
-    s = go(s, 'Lie Low', 'take:1:gold'); // P3 hides and lifts 1 gold from P2
-    s = go(s, 'Help Yourself', 'take:0:red', 'take:0:red'); // P2 can only rob P1
-    s = take(s, 'Echo');
+    s = go(s, 'thieves.hideout', 'take:1:gold'); // P3 hides and lifts 1 gold from P2
+    s = go(s, 'thieves.pickpocket', 'take:0:red', 'take:0:red'); // P2 can only rob P1
+    s = take(s, 'echo.echo');
     s = move(s, s.pending.options.find(opt('Help Yourself')).id);
     expect(ids(s).every(id => id.startsWith('take:1:'))).toBe(true); // never P3
   });
@@ -89,12 +89,12 @@ describe('Green copies the risky spaces', () => {
   it('copying Purple’s Overtime means paying for the extra turns yourself', () => {
     const P = ['gold', 'red', 'purple', 'echo'];
     let s = scene({ quads: P, round: 2, turns: [1, 0, 1, 0], res: [{ purple: 8 }, { purple: 8 }] });
-    s = take(s, 'Overtime');
+    s = take(s, 'purple.overtime');
     expect(R(s, 1).purple).toBe(0);
     s = pass(s);
     expect(s.pending.player).toBe(1); // P2's 2 extra turns
-    s = go(go(s, 'Hum'), 'Crescendo');
-    s = take(s, 'Encore');
+    s = go(go(s, 'echo.hum'), 'echo.chant');
+    s = take(s, 'echo.encore');
     expect(labels(s)).toContain('Overtime (P2): do Overtime yourself');
     s = move(s, s.pending.options.find(opt('Overtime')).id);
     expect(R(s, 0).purple).toBe(0);
@@ -102,8 +102,8 @@ describe('Green copies the risky spaces', () => {
     expect(s.pending.player).toBe(0); // P1's own extra turns
     // and without the purple, the copy is Overtime's fallback: +3 purple
     let t = scene({ quads: P, round: 2, turns: [1, 0, 1, 0], res: [{}, { purple: 8 }] });
-    t = go(go(go(t, 'Overtime'), 'Hum'), 'Crescendo');
-    t = take(t, 'Encore');
+    t = go(go(go(t, 'purple.overtime'), 'echo.hum'), 'echo.chant');
+    t = take(t, 'echo.encore');
     t = pass(move(t, t.pending.options.find(opt('Overtime')).id));
     expect(R(t, 0).purple).toBe(3);
     expect(t.pending.player).toBe(1);
@@ -112,55 +112,55 @@ describe('Green copies the risky spaces', () => {
   it('copying a White sale means selling followers yourself, not free white', () => {
     const W = ['gold', 'red', 'trading', 'echo'];
     let s = scene({ quads: W, round: 2, turns: [1, 0], bonus: [0, 3] });
-    s = go(s, 'Sell High', 'amount:1'); // sells 1 follower for white
+    s = go(s, 'trading.sellhigh', 'amount:1'); // sells 1 follower for white
     expect(s.players[1].bonus).toBe(2);
-    s = take(s, 'Encore');
+    s = take(s, 'echo.encore');
     expect(labels(s)).toEqual(['Sell High (P2): do Sell High yourself']);
   });
   it('copying a Your Call taken as white gives that white (Your Call sells nothing since the 2026-10-14 rework)', () => {
     const W = ['gold', 'red', 'trading', 'echo'];
     let s = scene({ quads: W, turns: [1, 0], bonus: [0, 3] });
-    s = go(s, 'Your Call', 'amount:1'); // round I: 2 white instead of its 1 follower
+    s = go(s, 'trading.pawn', 'amount:1'); // round I: 2 white instead of its 1 follower
     expect([R(s, 1).white, s.players[1].bonus]).toEqual([2, 3]);
-    s = take(s, 'Echo');
+    s = take(s, 'echo.echo');
     expect(labels(s)).toEqual(['Your Call (P2): +2 white']);
   });
 
   it('copying Blue’s Snap Up doesn’t hand out the member its taker paid for', () => {
     const B = ['gold', 'red', 'market', 'echo'];
     let s = scene({ quads: B, turns: [1, 0] });
-    s = take(s, 'Snap Up');
+    s = take(s, 'market.bargain');
     s = pass(play(s, opt('Intern'))); // +2 blue, then pays those 2 blue for the Intern
     expect(defs(s, 1)).toEqual(['red.intern']);
     expect(R(s, 1).blue).toBe(0);
-    s = take(s, 'Echo');
+    s = take(s, 'echo.echo');
     expect(labels(s)).toEqual(['Snap Up (P2): do Snap Up yourself']);
   });
 
   it('a Silver space’s chip shows its own gain, not the host’s Caterer or Grand Host', () => {
     const S = ['gold', 'red', 'silver', 'echo'];
     let s = scene({ quads: S, turns: [1, 0], members: [[], ['silver.caterer']] });
-    s = go(s, 'Toast');
+    s = go(s, 'silver.toast');
     expect(R(s, 1).silver).toBe(4); // 3 + Caterer's 1
     expect(R(s, 0).silver).toBe(1); // the toast's spill
-    s = take(s, 'Echo');
+    s = take(s, 'echo.echo');
     expect(labels(s)).toEqual(['Toast (P2): +3 silver']);
     s = pass(move(s, s.pending.options[0].id));
     expect(R(s, 0).silver).toBe(4);
 
     let t = scene({ quads: S, turns: [1, 0], members: [[], ['silver.grandhost']] });
-    t = go(t, 'Toast');
+    t = go(t, 'silver.toast');
     expect(R(t, 1).silver).toBe(6);
-    t = take(t, 'Echo');
+    t = take(t, 'echo.echo');
     expect(labels(t)).toEqual(['Toast (P2): +3 silver']);
   });
 
   it('copying Plan Ahead gives what it gave its taker (their workers left), not your own count', () => {
     const P = ['gold', 'red', 'purple', 'echo'];
     let s = scene({ quads: P, round: 2, turns: [1, 0] }); // 5 workers each
-    s = go(s, 'Plan Ahead'); // P2: 4 left → +8 purple
+    s = go(s, 'purple.planahead'); // P2: 4 left → +8 purple
     expect(R(s, 1).purple).toBe(8);
-    s = take(s, 'Encore');
+    s = take(s, 'echo.encore');
     expect(labels(s)).toContain('Plan Ahead (P2): +8 purple');
     s = pass(move(s, s.pending.options.find(opt('Plan Ahead')).id));
     expect(R(s, 0).purple).toBe(8);
@@ -169,14 +169,14 @@ describe('Green copies the risky spaces', () => {
   it('Midas turns a copied gain into gold; a Midas taker’s chip still shows the printed color', () => {
     const S = ['gold', 'red', 'silver', 'echo'];
     let s = scene({ quads: S, turns: [1, 0], members: [['gold.midas'], []] });
-    s = go(s, 'Toast');
-    s = pass(move(take(s, 'Echo'), 'space:now:2-0'));
+    s = go(s, 'silver.toast');
+    s = pass(move(take(s, 'echo.echo'), 'space:now:2-0'));
     expect(R(s, 0)).toMatchObject({ gold: 3, silver: 1 }); // the spill isn't from an action: it stays silver
 
     let t = scene({ quads: S, turns: [1, 0], members: [[], ['gold.midas']] });
-    t = go(t, 'Hum');
+    t = go(t, 'echo.hum');
     expect(R(t, 1)).toMatchObject({ gold: 3, green: 0 });
-    t = take(t, 'Echo');
+    t = take(t, 'echo.echo');
     expect(labels(t)).toEqual(['Hum (P2): +3 green']);
     t = pass(move(t, t.pending.options[0].id));
     expect(R(t, 0).green).toBe(3);
@@ -184,8 +184,8 @@ describe('Green copies the risky spaces', () => {
 
   it('Underdog doubles a copied gold gain (the copy is the copier’s own action)', () => {
     let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], res: [{}, { gold: 5 }], members: [['gold.underdog'], []] });
-    s = go(s, 'Golden Years');
-    s = pass(move(take(s, 'Echo'), 'space:now:0-1'));
+    s = go(s, 'gold.rush');
+    s = pass(move(take(s, 'echo.echo'), 'space:now:0-1'));
     expect(R(s, 0).gold).toBe(4);
   });
 });
@@ -193,28 +193,28 @@ describe('Green copies the risky spaces', () => {
 // ---------------------------------------------------------------------------------------------------------
 describe('Doppelganger copying Purple, Green and Silver members', () => {
   it('copying Grand Host doubles again (×4)', () => {
-    const s = go(scene({ quads: ['gold', 'red', 'silver', 'echo'], members: [['silver.grandhost', 'red.doppel']], copies: { 0: { 'red.doppel': 'silver.grandhost' } } }), 'Toast');
+    const s = go(scene({ quads: ['gold', 'red', 'silver', 'echo'], members: [['silver.grandhost', 'red.doppel']], copies: { 0: { 'red.doppel': 'silver.grandhost' } } }), 'silver.toast');
     expect(R(s, 0).silver).toBe(12);
   });
   it('copying Guest adds 1 more to every gift', () => {
     let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], members: [['silver.guest', 'red.doppel']], copies: { 0: { 'red.doppel': 'silver.guest' } } });
-    s = go(s, 'Toast');
+    s = go(s, 'silver.toast');
     expect(R(s, 0).silver).toBe(3);
   });
   it('copying Foreman pays on every extra turn twice', () => {
     let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 2, slots: { '0-0': 0 }, res: [{ purple: 8 }], members: [['purple.foreman', 'red.doppel']], copies: { 0: { 'red.doppel': 'purple.foreman' } } });
-    s = take(s, 'Overtime');
+    s = take(s, 'purple.overtime');
     expect(R(s, 0).purple).toBe(8); // 2 workers on the board, two Foremen, Overtime's 2 turns
   });
   it('copying Choir pays on every copy twice', () => {
     let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], members: [['echo.choir', 'red.doppel']], copies: { 0: { 'red.doppel': 'echo.choir' } } });
-    s = go(s, 'Golden Years');
-    s = pass(move(take(s, 'Echo'), 'space:now:0-1'));
+    s = go(s, 'gold.rush');
+    s = pass(move(take(s, 'echo.echo'), 'space:now:0-1'));
     expect(R(s, 0)).toMatchObject({ gold: 2, green: 2 });
   });
   it('copying Go-Getter gives a usable once-per-game extra turn of its own', () => {
     let s = scene({ quads: ['gold', 'red', 'purple', 'echo'], round: 3, turns: [0, 1], members: [['purple.secondwind', 'red.doppel']], copies: { 0: { 'red.doppel': 'purple.secondwind' } } });
-    s = take(s, 'Golden Years');
+    s = take(s, 'gold.rush');
     const d = uidOf(s, 'red.doppel', 0);
     expect(ids(s)).toContain(`use:${d}`);
     s = pass(move(s, `use:${d}`));
@@ -223,8 +223,8 @@ describe('Doppelganger copying Purple, Green and Silver members', () => {
   });
   it('copying Wallflower doesn’t double twice', () => {
     let s = scene({ quads: ['gold', 'red', 'silver', 'echo'], turns: [1, 0], bonus: [0, 2], members: [['echo.wallflower', 'red.doppel']], copies: { 0: { 'red.doppel': 'echo.wallflower' } } });
-    s = go(s, 'Golden Years');
-    s = pass(move(take(s, 'Echo'), 'space:now:0-1'));
+    s = go(s, 'gold.rush');
+    s = pass(move(take(s, 'echo.echo'), 'space:now:0-1'));
     expect(R(s, 0).gold).toBe(4);
   });
 });
@@ -233,21 +233,21 @@ describe('Doppelganger copying Purple, Green and Silver members', () => {
 describe('Silver gifts with Guest and Kickback', () => {
   const Q = ['gold', 'red', 'silver', 'yellow'];
   it('Goody Bags: the Guest gets 1 more of the color', () => {
-    const s = go(scene({ quads: Q, members: [[], ['silver.guest']] }), 'Goody Bags', 'color:red');
+    const s = go(scene({ quads: Q, members: [[], ['silver.guest']] }), 'silver.gift', 'color:red');
     expect(R(s, 1).red).toBe(2);
     expect(R(s, 0)).toMatchObject({ silver: 2, red: 2 });
   });
   it('Good Deed: the Guest gets 3', () => {
-    const s = go(scene({ quads: Q, members: [[], ['silver.guest']] }), 'Good Deed', 'give:1:gold');
+    const s = go(scene({ quads: Q, members: [[], ['silver.guest']] }), 'silver.alms', 'give:1:gold');
     expect(R(s, 1).gold).toBe(3);
   });
   it('Rising Tide counts what the Guest just got', () => {
-    const s = go(scene({ quads: Q, round: 2, res: [{}, { silver: 5 }], members: [[], ['silver.guest']] }), 'Rising Tide');
+    const s = go(scene({ quads: Q, round: 2, res: [{}, { silver: 5 }], members: [[], ['silver.guest']] }), 'silver.tide');
     expect(R(s, 1).silver).toBe(7);
     expect(R(s, 0).silver).toBe(4);
   });
   it('Kickback’s gold is a gift: the Guest gets 1 more', () => {
-    const s = go(scene({ quads: Q, members: [[], ['silver.guest']] }), 'Kickback', 'player:1');
+    const s = go(scene({ quads: Q, members: [[], ['silver.guest']] }), 'gold.jv', 'player:1');
     expect(R(s, 1).gold).toBe(2);
   });
 });
@@ -258,7 +258,7 @@ describe('Blue’s out-of-buy recruits with Pied Piper and Proselytizer', () => 
   const rich = { gold: 9, red: 9, blue: 9, green: 9 };
   it('Snap Up’s recruit and the normal buy make 2: Drive pays, Proselytizer pays twice', () => {
     let s = scene({ quads: Q, res: [rich], members: [['red.drive', 'red.proselytizer']] });
-    s = payUp(play(take(s, 'Snap Up'), opt('Intern')));
+    s = payUp(play(take(s, 'market.bargain'), opt('Intern')));
     expect(R(s, 0).red).toBeLessThanOrEqual(9);
     const red = R(s, 0).red;
     s = move(s, `card:${uidOf(s, 'red.patriarch', 'shop')}`);
@@ -267,14 +267,14 @@ describe('Blue’s out-of-buy recruits with Pied Piper and Proselytizer', () => 
   });
   it('Half Price is the buy: one recruit, no buy step after it', () => {
     let s = scene({ quads: Q, round: 2, res: [rich], members: [['red.drive', 'red.proselytizer']] });
-    s = payUp(play(take(s, 'Half Price'), opt('Patriarch')));
+    s = payUp(play(take(s, 'market.clearance'), opt('Patriarch')));
     expect(s.pending?.kind).not.toBe('buy');
     expect(s.players[0].bonus).toBe(1);
     expect(s.players[0].turnRecruits).toBe(1);
   });
   it('Spree: 3 buys, Drive pays once', () => {
     let s = scene({ quads: Q, round: 3, res: [{ gold: 20, red: 20, blue: 20, green: 20 }], members: [['red.drive']] });
-    s = take(s, 'Spree');
+    s = take(s, 'market.spree');
     for (const d of ['red.intern', 'red.patriarch', 'gold.tycoon']) s = move(s, `card:${uidOf(s, d, 'shop')}`);
     expect(R(s, 0).red).toBe(20 + 2 - 1 - 3);
     expect(s.pending?.kind).not.toBe('buy');
@@ -282,7 +282,7 @@ describe('Blue’s out-of-buy recruits with Pied Piper and Proselytizer', () => 
   it('a recruit on someone else’s turn doesn’t complete your Drive (Poach’s free recruit)', () => {
     let s = scene({ quads: ['gold', 'red', 'thieves', 'market'], round: 3, members: [[], ['red.drive', 'red.twins']] });
     s.players[1].turnRecruits = 1; // P2 recruited once on their own last turn
-    s = take(s, 'Poach');
+    s = take(s, 'thieves.heist');
     s = move(s, `card:${uidOf(s, 'red.twins', 1)}`);
     s = move(s, `card:${uidOf(s, 'red.intern', 'shop')}`); // P2's free recruit
     expect(defs(s, 1)).toContain('red.intern');
@@ -296,7 +296,7 @@ describe('Magenta takes members that carry state', () => {
   it('Poach on a used Speculator: it stays used (once per game is the card’s)', () => {
     let s = scene({ quads: Q, round: 3, members: [[], ['gold.speculator']] });
     s.cards[uidOf(s, 'gold.speculator', 1)].used = true;
-    s = move(take(s, 'Poach'), `card:${uidOf(s, 'gold.speculator', 1)}`);
+    s = move(take(s, 'thieves.heist'), `card:${uidOf(s, 'gold.speculator', 1)}`);
     s = move(s, s.pending.options[0].id); // P2's free recruit
     expect(defs(s, 0)).toEqual(['gold.speculator']);
     expect(ids(s)).not.toContain(`use:${uidOf(s, 'gold.speculator', 0)}`);
@@ -304,7 +304,7 @@ describe('Magenta takes members that carry state', () => {
   it('Poach on a Midas switched off: it stays off', () => {
     let s = scene({ quads: Q, round: 3, res: [{ gold: 2 }, {}], members: [[], ['gold.midas']] });
     s.cards[uidOf(s, 'gold.midas', 1)].on = false;
-    s = move(take(s, 'Poach'), `card:${uidOf(s, 'gold.midas', 1)}`);
+    s = move(take(s, 'thieves.heist'), `card:${uidOf(s, 'gold.midas', 1)}`);
     s = move(s, s.pending.options[0].id);
     expect(s.cards[uidOf(s, 'gold.midas', 0)].on).toBe(false);
     expect(s.pending.options.find(o => o.kind === 'toggle').label).toContain('switch on');
@@ -312,7 +312,7 @@ describe('Magenta takes members that carry state', () => {
   it('Poach on an Investor takes the card; the gold set aside goes back to the victim, not doubled', () => {
     let s = scene({ quads: Q, round: 3, members: [[], ['gold.investor']] });
     s.cards[uidOf(s, 'gold.investor', 1)].invested = 4;
-    s = move(take(s, 'Poach'), `card:${uidOf(s, 'gold.investor', 1)}`);
+    s = move(take(s, 'thieves.heist'), `card:${uidOf(s, 'gold.investor', 1)}`);
     s = move(s, s.pending.options[0].id);
     s = resume(Object.assign(s, { queue: [{ t: 'endRound' }] }));
     expect(defs(s, 0)).toContain('gold.investor');
@@ -321,7 +321,7 @@ describe('Magenta takes members that carry state', () => {
   });
   it('Double Agent swaps for a Lottery Winner that still works for its new owner', () => {
     let s = scene({ quads: Q, round: 3, res: [{ gold: 9, red: 9, magenta: 9, blue: 9 }, { gold: 7 }], members: [[], ['gold.jackpot']], shop: ['thieves.doubleagent', ...SHOP.slice(1)] });
-    s = take(s, 'Golden Years');
+    s = take(s, 'gold.rush');
     s = play(s, `card:${uidOf(s, 'thieves.doubleagent', 'shop')}`, `card:${uidOf(s, 'gold.jackpot', 1)}`);
     expect(defs(s, 0)).toEqual(['gold.jackpot']);
     expect(defs(s, 1)).toEqual(['thieves.doubleagent']);
@@ -351,7 +351,7 @@ describe('Magenta takes members that carry state', () => {
   it('Double Agent swapping for an Investor: the gold set aside stays with its old owner', () => {
     let s = scene({ quads: Q, round: 2, res: [{ magenta: 8, gold: 8 }], members: [[], ['gold.investor']], shop: ['thieves.doubleagent', ...SHOP.slice(1)] });
     s.cards[uidOf(s, 'gold.investor', 1)].invested = 2;
-    s = take(s, 'Golden Years');
+    s = take(s, 'gold.rush');
     s = move(s, `card:${uidOf(s, 'thieves.doubleagent', 'shop')}`);
     s = move(s, s.pending.options.find(o => o.id === `card:${uidOf(s, 'gold.investor', 1)}`).id);
     expect(defs(s, 0)).toContain('gold.investor');
@@ -365,7 +365,7 @@ describe('White sells followers that contests and bonuses counted', () => {
   it('you can sell contest followers, never yourself or your members', () => {
     let s = scene({ quads: Q, round: 2, bonus: [2], members: [['red.twins']] });
     s.players[0].contest = 2;
-    s = take(s, 'Sell High');
+    s = take(s, 'trading.sellhigh');
     expect(ids(s)).toEqual(['amount:0', 'amount:1', 'amount:2']);
     s = pass(move(s, 'amount:2'));
     expect(followers(s, s.players[0])).toBe(1 + 2);
@@ -373,7 +373,7 @@ describe('White sells followers that contests and bonuses counted', () => {
   });
   it('Bulk Buyer pays on a big buy even when a rival’s Tax Collector reacts first', () => {
     let s = scene({ quads: Q, turns: [1, 0], res: [{}, { gold: 2, red: 2 }], members: [['gold.taxman'], ['trading.bulkbuyer']] });
-    s = take(s, 'Golden Years');
+    s = take(s, 'gold.rush');
     s = move(s, 'tier:mid');
     expect(R(s, 0).gold).toBe(1); // the Tax Collector paid
     expect(s.players[1].bonus).toBe(4); // 3 bought + Bulk Buyer's 1
@@ -385,7 +385,7 @@ describe('White sells followers that contests and bonuses counted', () => {
   it('Weaver and Extortionist fire on the 10-follower buy too (6 or more)', () => {
     const Y = ['gold', 'red', 'thieves', 'yellow'];
     let s = scene({ quads: Y, turns: [1, 0], res: [{}, { gold: 4, red: 2, magenta: 2, yellow: 2 }], members: [['thieves.extortionist'], ['yellow.weaver']] });
-    s = take(s, 'Golden Years');
+    s = take(s, 'gold.rush');
     s = move(s, 'tier:top');
     expect(s.players[1].bonus).toBe(10);
     expect(R(s, 0).magenta).toBe(2); // Extortionist took 2
@@ -399,21 +399,21 @@ describe('Lie Low against Gold’s Collect Debts and Shake Down', () => {
   const Q = ['gold', 'red', 'thieves', 'market'];
   it('Collect Debts can’t take from the player in the Lie Low this round, and can next round', () => {
     let s = scene({ quads: Q, n: 3, round: 2, turns: [1, 0], res: [{}, { gold: 4 }, { gold: 4 }] });
-    s = go(s, 'Lie Low', 'take:2:gold'); // P2 hides (and lifts 1 gold from P3)
-    s = take(s, 'Collect Debts');
+    s = go(s, 'thieves.hideout', 'take:2:gold'); // P2 hides (and lifts 1 gold from P3)
+    s = take(s, 'gold.steal');
     expect(ids(s)).toEqual(['player:2']);
     s.players[1].hideout = 1; // a Lie Low from an earlier round protects nothing
     expect(quadrant('thieves').guardSteal({ state: s }, s.players[0], s.players[1])).toBe(false);
   });
   it('Shake Down can still pick a member of the player in the Lie Low (Cory: Lie Low shields resources only)', () => {
     let s = scene({ quads: Q, n: 3, round: 2, turns: [1, 0], res: [{}, { gold: 4 }, { gold: 4 }], members: [[], ['red.twins'], ['red.bigfamily']] });
-    s = go(s, 'Lie Low', 'take:2:gold');
-    s = take(s, 'Shake Down');
+    s = go(s, 'thieves.hideout', 'take:2:gold');
+    s = take(s, 'thieves.ransom');
     expect(ids(s).sort()).toEqual([`card:${uidOf(s, 'red.twins', 1)}`, `card:${uidOf(s, 'red.bigfamily', 2)}`].sort());
   });
   it('Gold’s Collect Debts sets off Magenta’s reactions (Lookout)', () => {
     let s = scene({ quads: Q, n: 3, round: 2, res: [{ gold: 1 }, { gold: 4 }, {}], members: [[], [], ['thieves.lookout']] });
-    s = play(take(s, 'Collect Debts'), 'player:1', 'player:1', 'player:1');
+    s = play(take(s, 'gold.steal'), 'player:1', 'player:1', 'player:1');
     expect(R(s, 1).gold).toBe(1);
     expect(R(s, 0).gold).toBe(3); // stole 3, Lookout took 1 back
     expect(R(s, 2).magenta).toBe(1);
@@ -422,7 +422,7 @@ describe('Lie Low against Gold’s Collect Debts and Shake Down', () => {
     const T = ['gold', 'red', 'thieves', 'green'];
     let s = scene({ quads: T, n: 3, round: 2, members: [['red.intern'], ['thieves.watchdog', 'red.twins'], ['red.volunteer']] });
     s.players[2].hideout = 2; // P3 is lying low this round
-    s = take(s, 'Swap Sides');
+    s = take(s, 'red.trade');
     expect(ids(s)).not.toContain(`trade:${uidOf(s, 'red.intern', 0)}:${uidOf(s, 'red.twins', 1)}`);
     expect(ids(s)).toContain(`trade:${uidOf(s, 'red.intern', 0)}:${uidOf(s, 'red.volunteer', 2)}`);
   });
@@ -438,7 +438,7 @@ describe('gain changers on stolen goods', () => {
   });
   it('DESIGN QUESTION: an action’s steal is: Midas turns the loot to gold, and Underdog doubles it', () => {
     let s = scene({ quads: Q, res: [{}, { red: 3, gold: 5 }], members: [['gold.midas', 'gold.underdog'], []] });
-    s = pass(play(take(s, 'Help Yourself'), 'take:1:red', 'take:1:red'));
+    s = pass(play(take(s, 'thieves.pickpocket'), 'take:1:red', 'take:1:red'));
     expect(R(s, 1).red).toBe(1); // lost 2
     expect(R(s, 0).gold).toBe(4); // gained 4
   });
@@ -447,13 +447,13 @@ describe('gain changers on stolen goods', () => {
 // ---------------------------------------------------------------------------------------------------------
 describe('member colors across spheres', () => {
   it('Yellow’s Potluck counts Green members', () => {
-    const s = go(scene({ quads: ['gold', 'red', 'yellow', 'echo'], round: 2, members: [['echo.evergreen', 'echo.choir', 'red.twins']] }), 'Potluck');
+    const s = go(scene({ quads: ['gold', 'red', 'yellow', 'echo'], round: 2, members: [['echo.evergreen', 'echo.choir', 'red.twins']] }), 'yellow.gather');
     expect(R(s, 0)).toMatchObject({ green: 2, red: 1 });
   });
   it('Green members pay their colored part in green', () => {
     let s = scene({ quads: ['gold', 'red', 'yellow', 'echo'], res: [{ green: 1, gold: 1 }], shop: ['echo.evergreen', ...SHOP.slice(1)] });
     restore(); restore = pinCosts({ ...PINNED, 'echo.evergreen': [1, 1] });
-    s = take(s, 'Golden Years');
+    s = take(s, 'gold.rush');
     s = move(s, `card:${uidOf(s, 'echo.evergreen', 'shop')}`);
     expect(defs(s, 0)).toEqual(['echo.evergreen']);
     // paid its 1 green, then Busker pays "now and at round start": +3 green

@@ -5,6 +5,7 @@ import { logSections, playerColor, costParts, plainLine } from '../format.js';
 import { Rich, CostPips } from './Rich.jsx';
 import { MemberCard, NamedText, BadgeMark, CardText, cardColor } from './Info.jsx';
 import { Follower } from '../art/Follower.jsx';
+import { CoinMark } from './Glyphs.jsx';
 
 /** Escape closes; focus moves in on open and back to where it was on close. */
 export function useDialog(onClose) {
@@ -142,7 +143,7 @@ function SetupTokens({ state, pend, onPick, busy }) {
         const res = q ? q.resource : o.value;
         return (
           <button key={o.id} type="button" className="token" data-option={o.id} disabled={busy} style={{ '--c': `var(--${o.value})` }} onClick={() => onPick(o.id)} aria-label={`Take 1 ${res}`}>
-            <i className="coin-big"><span className="num">+1</span></i>
+            <i className="coin-big"><CoinMark r={res} size={18} /><span className="num">+1</span></i>
             <span>{res}</span>
           </button>
         );
@@ -190,6 +191,20 @@ function MergedOptions({ state, pend, onPick, busy }) {
 }
 
 /** Trade in two steps: give one of yours, then take one of theirs that's legal for it. */
+/** One member in the trade picker. Defined once, outside the picker: a component made inside render is a new type
+ *  every render, so React rebuilt every button on each table update (about every 2s, even idle) and a slow click
+ *  landing mid-rebuild was lost. */
+const TradeCard = memo(function TradeCard({ state, g, busy, onClick, extra }) {
+  return (
+    <button type="button" className="btn rich" style={{ '--c': cardColor(state, g.d) }} disabled={busy} onClick={onClick} data-option={extra}>
+      <span className="rich-body">
+        <b>{g.d.name}<BadgeMark state={state} def={g.d} />{g.uids.length > 1 && <span className="num"> ×{g.uids.length}</span>}{' '}<Follower n={g.d.f} className="star" />{g.o && <span className="from"> · {g.o.name}</span>}</b>
+        <small><CardText text={g.d.text} /></small>
+      </span>
+    </button>
+  );
+});
+
 function TradePicker({ state, pend, onPick, busy }) {
   const [give, setGive] = useState(null);
   const owner = uid => state.players.find(p => p.members.includes(uid));
@@ -211,19 +226,11 @@ function TradePicker({ state, pend, onPick, busy }) {
     const opt = pend.options.find(o => chosen.uids.includes(o.value[0]) && g.uids.includes(o.value[1]));
     if (opt) onPick(opt.id);
   };
-  const Card = ({ g, onClick, extra }) => (
-    <button type="button" className="btn rich" style={{ '--c': cardColor(state, g.d) }} disabled={busy} onClick={onClick} data-option={extra}>
-      <span className="rich-body">
-        <b>{g.d.name}<BadgeMark state={state} def={g.d} />{g.uids.length > 1 && <span className="num"> ×{g.uids.length}</span>}{' '}<Follower n={g.d.f} className="star" />{g.o && <span className="from"> · {g.o.name}</span>}</b>
-        <small><CardText text={g.d.text} /></small>
-      </span>
-    </button>
-  );
   if (!chosen) {
     return (
       <div className="trade">
         <span className="step">1 · Give one of yours</span>
-        <div className="opts">{mine.map(g => <Card key={g.k} g={g} onClick={() => setGive(g.k)} extra={pend.options.find(o => g.uids.includes(o.value[0]))?.id} />)}</div>
+        <div className="opts">{mine.map(g => <TradeCard key={g.k} state={state} busy={busy} g={g} onClick={() => setGive(g.k)} extra={pend.options.find(o => g.uids.includes(o.value[0]))?.id} />)}</div>
       </div>
     );
   }
@@ -233,7 +240,7 @@ function TradePicker({ state, pend, onPick, busy }) {
       <div className="opts">
         {theirs.map(g => {
           const opt = pend.options.find(o => chosen.uids.includes(o.value[0]) && g.uids.includes(o.value[1]));
-          return <Card key={g.k} g={g} onClick={() => take(g)} extra={opt && opt.id} />;
+          return <TradeCard key={g.k} state={state} busy={busy} g={g} onClick={() => take(g)} extra={opt && opt.id} />;
         })}
       </div>
     </div>

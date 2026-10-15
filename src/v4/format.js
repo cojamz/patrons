@@ -81,21 +81,29 @@ export function promptFor(state, mine) {
         const m = l.match(/^(.+?) took .+ \(\w+\)\.$/);
         if (m) { again = m[1] === name; break; }
       }
-      if (mine && again) return { who: p, text: 'Your turn again (snake order) — place a minion' };
+      if (mine && again) return { who: p, lead: 'Extra turn: ', text: 'place one more minion' };
     }
     // falls through
     case 'place-plain':
       return mine
         ? { who: p, text: `Place a minion on a glowing space` }
         : { who: p, text: `${name} is placing a minion` };
+    // the headline is a verb phrase that fits one line at 1270×700; the details go in the line under it (sub)
     case 'buy':
       return mine
-        ? { who: p, text: 'Recruit a member, buy followers, or pass' }
+        ? { who: p, text: 'Recruit or buy', sub: 'Recruit a member or buy followers, or pass' }
         : { who: p, text: `${name} is shopping` };
     case 'pay':
       return mine ? { who: p, text: 'Choose how to pay' } : { who: p, text: `${name} is paying` };
-    case 'choose':
-      return mine ? { who: p, text: pend.prompt } : { who: p, text: `${name} is choosing` };
+    case 'choose': {
+      if (!mine) return { who: p, text: `${name} is choosing` };
+      // the question itself is in the note on the board; the headline names what's asking ("Kickback: choose below")
+      const asker = (String(pend.prompt || '').match(/^([^:]{2,28}):\s/) || [])[1];
+      const short = String(pend.prompt || '').length <= 36;
+      return asker && asker !== name
+        ? { who: p, text: `${asker}: choose below`, keepCase: true }
+        : short ? { who: p, text: pend.prompt } : { who: p, text: 'Choose below' };
+    }
     default:
       return { who: p, text: pend.prompt };
   }

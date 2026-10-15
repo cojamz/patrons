@@ -45,8 +45,11 @@ describe('badges are visible wherever a card shows (Blue on the table)', () => {
       const d = cardDef(s, Number(el.dataset.uid));
       expect(!!el.querySelector('.badge-mark'), d.name).toBe(price(d) >= BADGE);
     }
-    fireEvent.click(card(badged[0]).querySelector('.badge-mark'));
-    expect(document.querySelector('[data-tip-body]').textContent).toMatch(new RegExp(`Badged.*${BADGE} or more`));
+    // inside a shop card (a control) the ◆ explains itself by its title (hover, long-press) and the card keeps the click
+    const mark = card(badged[0]).querySelector('.badge-mark');
+    expect(mark.getAttribute('title')).toMatch(new RegExp(`Badged.*${BADGE} or more`, 'i'));
+    fireEvent.click(mark);
+    expect(document.querySelector('[data-tip-body]')).toBeNull();
     cleanup();
     // a rival's cult at the table: the badged member's card (tap its figure) carries ◆
     const bo = cardDef(s, badged[1]);
@@ -72,13 +75,14 @@ describe('badges are visible wherever a card shows (Blue on the table)', () => {
   // KNOWN GAP (harness port, 2026-10-14): the retired Players strip put ◆ on each rival member chip, so a Blue table
   // read "who holds badged members" at a glance. CultSeat's member figures carry no ◆ (only their opened card does).
   // Kept strict and marked as failing; when the figures get their ◆ this turns red: make it a plain `it`.
-  it.fails('a rival\'s badged member carries ◆ at their seat without opening anything (KNOWN GAP: CultSeat figures)', () => {
+  it('a rival\'s badged member carries ◆ at their seat without opening anything, and its title says what badged means', () => {
     const { s, badged, plain } = marketState();
     s.players[1].members.push(plain[1]);
     const seat = render(<CultSeat state={s} pid={1} me={0} />);
     const at = uid => seat.container.querySelector(`[data-member="${cardDef(s, uid).id}"]`);
     expect(at(plain[1]).querySelector('.badge-mark')).toBeNull();
     expect(at(badged[1]).querySelector('.badge-mark')).not.toBeNull();
+    expect(at(badged[1]).querySelector('.badge-mark').getAttribute('title')).toMatch(/badged/i);
   });
 
   it('no badges on a table without Blue', () => {
