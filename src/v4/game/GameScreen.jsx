@@ -1168,9 +1168,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     return undefined;
   }, [picker, pend, mine, needHandoff]); // eslint-disable-line react-hooks/exhaustive-deps
   const pickParts = useMemo(() => {
-    // Good Deed with its color picked: the rivals' seats light too (Kickback stays on its card: steal.mjs s4), on the stack
+    // a gift with its color known (Good Deed once picked, Kickback at once): the rivals' seats light too, on the stack
     // the gift lands on, and a click anywhere on a lit seat gives the same answer as that rival's face on the card
-    const giftColor = gift && gift.kind === 'give' ? gift.chosen : null;
+    const giftColor = gift && (gift.kind === 'give' ? gift.chosen : gift.kind === 'gift' ? gift.color : null);
     if (gift && giftColor) {
       const out = {};
       for (const { o, b } of gift.seconds) {

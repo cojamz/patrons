@@ -5,7 +5,8 @@
 //  (s2) Collect Debts: only gold stacks light; three clicks on gold stacks take 3 gold from the right rivals.
 //  (s3) Redistribute: the rival holding less than you is dim; picks from the richer two land.
 //  (s4) Kickback ("give 1 gold to…"): a gift, so it's the gift card beside the space (Cory, 2026-10-16): one face per
-//       rival the engine offers, none lit on the seats; clicking a face gives that player 1 gold.
+//       rival the engine offers, and the same rivals' seats light (Cory, 2026-10-15: as Good Deed's), each the engine's
+//       answer, its gold stack lit, never your own; a click on a lit seat gives that player 1 gold.
 //  (s5) Echo: exactly the copyable spaces light on the wheel, the caption covers none of them, a lit space's hover says
 //       what the copy gives, and clicking it copies (your resources match the engine's).
 //  (s6) Snap Up: exactly the offered face-up members light in the shop; clicking one recruits it ("Recruit nothing"
@@ -152,15 +153,28 @@ try {
     await expectCounts(page, 's3', { '1:blue': 1, '2:magenta': 1, '0:magenta': 2 });
     await ctx.close();
   }
-  // (s4) Kickback: pick a player by their face on the gift card
+  // (s4) Kickback: pick a player by their face on the gift card, or by their lit seat
   {
     const { ctx, page, save } = await open('kickback', '.lt-wheel .gift-card');
     await page.waitForSelector('.lt-wheel .gift-card[data-gift="gift"]', { timeout: 8000 }).catch(() => errors.push('(s4) no gift card for Kickback'));
     const faces = await page.$$eval('.gift-card .gc-face:not([disabled])', els => els.map(e => e.dataset.option).sort());
     const want = save.state.pending.options.map(o => o.id).sort();
     if (faces.join() !== want.join()) errors.push(`(s4) the card's faces answer ${faces.join(' ')}, the engine offers ${want.join(' ')}`);
-    if (await page.$('.lt-seat .cs-pick-seat')) errors.push('(s4) the seats still take the pick');
-    await click(page, '.gift-card .gc-face[data-pid="3"]');
+    const seats = await page.evaluate(() => [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].map(e => {
+      const b = e.querySelector('.cs-pick-seat:not(.off)'), st = e.querySelector('.cs-stack.pick-on');
+      const inset = Math.max(0, ...[...getComputedStyle(e).boxShadow.matchAll(/0px 0px 0px ([\d.]+)px inset/g)].map(m => Number(m[1])));
+      return { pid: Number(e.dataset.pid), seat: b ? b.dataset.option : null, stack: st ? `${st.dataset.res}:${st.dataset.option}` : null, inset };
+    }));
+    const offered = new Map(save.state.pending.options.map(o => [o.target.pid, o.id]));
+    for (const x of seats) {
+      const id = offered.get(x.pid) || null;
+      if (x.seat !== id) errors.push(`(s4) P${x.pid + 1}'s seat answers ${x.seat}, the engine offers ${id}`);
+      if (id && x.stack !== `gold:${id}`) errors.push(`(s4) P${x.pid + 1}'s gold stack is not lit where the gift lands (${x.stack})`);
+      if (id && x.inset < 1.5) errors.push(`(s4) P${x.pid + 1}'s seat wears no lit ring (${x.inset}px)`);
+    }
+    // a click on the lit seat (its middle, away from the stacks) gives, the same answer as the face
+    const sb = await (await page.$('.lt-seat[data-pid="3"]')).boundingBox();
+    await page.mouse.click(sb.x + sb.width * 0.35, sb.y + sb.height * 0.7);
     await page.waitForFunction(() => !document.querySelector('.gift-card'), null, { timeout: 8000 }).catch(() => errors.push('(s4) the choice never closed'));
     await expectCounts(page, 's4', { '3:gold': save.state.players[3].res.gold + 1 });
     await ctx.close();

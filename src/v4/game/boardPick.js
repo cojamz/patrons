@@ -69,7 +69,7 @@ export function boardPicker(state, pend) {
  * rival, or pairs two things, is picked on a small card beside the space just used, never on the seats and never from
  * a grid of combination chips. Its rows, in order:
  *   give    Good Deed: a color (the table's dots), then the rival who gets it (their faces)
- *   gift    Kickback, Benefactor: the color is fixed ("give 1 gold to…"), so only the rivals' faces
+ *   gift    Kickback, Benefactor: the color is fixed ("give 1 gold to…"), so only the rivals' faces (their seats light too)
  *   colors  Trade Seeds: the color you give (yours), then the one you get
  *   amount  Sweet Talk: the color you get, then how many
  *   trade   Even Swap, Swap Sides: one of your members, then a rival's it pairs with (grouped by rival)
