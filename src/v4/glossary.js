@@ -56,7 +56,7 @@ export const GLOSSARY = [
   { key: 'steal', word: 'Steal', match: /\bsteals?\b/,
     def: 'Take resources or a member from a rival. Resources a Magenta card takes arrive as magenta. Lie Low stops steals of your resources for the round; some members stop steals too.' },
   { key: 'colorless', word: 'Colorless', match: /\bcolou?rless\b/,
-    def: 'A member whose color isn’t on this table. Its colored cost is paid in any colors, and it counts toward no quadrant’s rule.' },
+    def: 'A member whose color isn’t on this table. Its colored cost is paid in any colors, and it counts as a member of no color (a rule that counts all your members still counts it).' },
   { key: 'any', word: 'Any (cost)', link: false, match: /\bin any colors\b/,
     def: '“Any” in a cost or a gain: resources of any colors, your choice.' },
   { key: 'contest', word: 'Contest', match: /\bcontests?\b/,

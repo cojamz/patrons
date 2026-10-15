@@ -498,7 +498,7 @@ export function ShopCardHover({ state, me = null, uid, optionFor = () => null, o
   const opt = optionFor(`card:${uid}`);
   return (
     <div className="lt-card-body" data-card-hover={uid}>
-      <MemberCard state={state} uid={uid} me={me} />
+      <MemberCard state={state} uid={uid} me={me} onFace={state.shop.includes(uid)} />
       {opt && onPick && pinned && <button type="button" className="lt-btn pri" data-recruit={uid} onClick={() => onPick(opt.id)}>Recruit</button>}
     </div>
   );

@@ -138,7 +138,7 @@ export const cardColor = (state, def) => (onTable(state, def) ? `var(--${def.qua
 /** "colorless": a member whose quadrant isn't on this table. */
 export function Colorless({ state, def }) {
   if (onTable(state, def)) return null;
-  return <Term k="colorless" className="colorless-tag">colorless</Term>;
+  return <Term k="colorless" className="colorless-tag">Colorless</Term>;
 }
 
 /** A cost as the plate prints it: "2● 2◐" (the number before its dot, colored part first, then any; no color names). */
@@ -169,7 +169,8 @@ const discountWhy = (state, p) => [
   ...p.members.map(u => { try { return cardDef(state, u); } catch { return null; } }).filter(x => x && x.costReduction).map(x => `${x.name} takes ${x.costReduction} off`),
 ].join(', ');
 
-export function MemberCard({ state, uid, def: d0 = null, me = null }) {
+// onFace: the card's face is right beside the hover (a shop card), so its cost and worth aren't said twice (w3a #24)
+export function MemberCard({ state, uid, def: d0 = null, me = null, onFace = false }) {
   const d = d0 || cardDef(state, uid);
   const owner = uid != null ? state.players.find(p => p.members.includes(uid)) : null;
   const card = uid != null ? state.cards[uid] : null;
@@ -202,13 +203,16 @@ export function MemberCard({ state, uid, def: d0 = null, me = null }) {
       <div className="mc-head">
         <span className="mc-art" aria-hidden="true"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphere} size={48} /></span>
         <span className="mc-id">
-          <span className="mc-row"><b className="mc-name">{d.name}</b><span className="mc-worth" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`}><b className="n">{d.f}</b><Follower size={14} title={`worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></span></span>
-          <small className="mc-cost">costs <CostDots parts={costParts(d, state.resources)} />{d.n > 1 ? ` · counts as ${d.n} members` : ''}{onTable(state, d) ? '' : ' · '}<Colorless state={state} def={d} /></small>
+          <span className="mc-row"><b className="mc-name">{d.name}</b>{!onFace && <span className="mc-worth" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`}><b className="n">{d.f}</b><Follower size={14} title={`worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></span>}</span>
+          {/* the cost's dots say its colors; a member of no color here says so on its own line below (w3a #23: "costs 4◐ · colorless") */}
+          {onFace ? (d.n > 1 ? <small className="mc-cost">counts as {d.n} members</small> : null)
+            : <small className="mc-cost">costs <CostDots parts={costParts(d, state.resources)} />{d.n > 1 ? ` · counts as ${d.n} members` : ''}</small>}
         </span>
       </div>
       {/* the worth is already up top: the sentence is what it does, and a card that only counts has none */}
       {/* a member with no ability says so, never an empty card (w2a #36: Twins and Intern showed only a header) */}
       {ability ? <p className="mc-text"><CardText text={ability} /></p> : <p className="mc-text mc-none" data-no-ability="">No ability: worth {worth} follower{worth === 1 ? '' : 's'}.</p>}
+      {!onTable(state, d) && <small className="mc-live" data-colorless=""><Colorless state={state} def={d} /> here: it counts as a member of no color.</small>}
       {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
       {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><Who state={state} id={owner.id} name={owner.id === me ? 'Yours' : `${owner.name}’s`} size={14} />{card && card.used ? ' · used' : ''}</small>}
       {/* one line about paying: "You pay 2● 1●" (w3b #27: "Pays 6●" read as income), with a discount's reason after it */}
