@@ -57,6 +57,11 @@ export function checkInvariants(s, ctx) {
     if (!options.length) fail('pending with no options', s, ctx);
     if (new Set(options.map(o => o.id)).size !== options.length) fail(`duplicate option ids ${options.map(o => o.id)}`, s, ctx);
     if (kind === 'buy' && !options.some(o => o.id === 'pass')) fail('buy without pass', s, ctx);
+    // a choice never offers a card that moved since it was queued (core liveOptions; Open Door's "not in the shop")
+    if (kind === 'choose') for (const o of options) for (const [u, w] of Object.entries(o.at || {})) {
+      const now = seen.get(Number(u)), want = w === 'shop' || w === 'pile' ? w : s.players[Number(w.slice(1))]?.name;
+      if (now !== want) fail(`choice option ${o.id} names card ${u} at ${w}, now in ${now}`, s, ctx);
+    }
   }
   if (s.round < 0 || s.round > 3) fail(`round ${s.round}`, s, ctx);
   for (const owner of Object.values(s.slots)) if (!s.players[owner]) fail(`slot owner ${owner}`, s, ctx);

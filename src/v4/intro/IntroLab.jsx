@@ -9,7 +9,7 @@ export default function IntroLab() {
   const q = new URLSearchParams(location.search);
   const beat = Number(q.get('beat')) || null;
   const at = q.get('at') != null ? Number(q.get('at')) : null;
-  const still = q.get('still') === '1';
+  const still = q.get('still') === '1' ? true : undefined; // else prefers-reduced-motion decides
   const [k, setK] = useState(0);
   return <div data-intro-lab><Intro key={k} onClose={() => setK(n => n + 1)} only={beat} at={at} still={still} /></div>;
 }

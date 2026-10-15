@@ -592,7 +592,7 @@ function Wheel({ state, legal, onPick, onDenied, onTouched, confirmPlace = false
     if (engraved) {
       // the words get the cell's width on screen: its chord when it lies flat, its depth when it stands on its side
       const R = rings[t];
-      const fw = side ? (R.r1 - R.r0) * 1.02 : t === 3 ? 2 * (R.r1 - 12) * Math.SQRT1_2 * 0.9 : 2 * R.r * Math.sin((s.half * Math.PI) / 180) * 0.92;
+      const fw = side ? (R.r1 - R.r0) * (t === 1 ? 1.02 : 0.9) : t === 3 ? 2 * (R.r1 - 12) * Math.SQRT1_2 * 0.9 : 2 * R.r * Math.sin((s.half * Math.PI) / 180) * 0.92;
       style = { ...style, '--fw': `${((fw / BOX) * 100).toFixed(1)}%` };
     }
     return (

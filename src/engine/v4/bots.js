@@ -11,7 +11,7 @@
 // Every level is deterministic for a given state and rand.
 import {
   contextFor, actionAt, cardDef, TIERS, followers, memberCount, RING_VALUE, WORKERS, tierLeft,
-  paymentChoices, followerChoices, releaseRefund,
+  paymentChoices, followerChoices, releaseRefund, liveOptions,
 } from './core.js';
 import { defById, quadrant, handlerById } from './content/index.js';
 import { chooseThinkerMove } from './thinker.js';
@@ -284,7 +284,10 @@ function settle(s, ctx) {
   for (let k = 0; k < 40 && s.queue.length; k++) {
     const t = s.queue.shift();
     if (t.t !== 'choose' || !t.options?.length) continue;
-    const o = t.options.reduce((a, b) => ((b.hint || 0) > (a.hint || 0) ? b : a));
+    // the options still good (a card an option names may have moved since the choice was queued)
+    const live = liveOptions(s, t);
+    if (!live.length) continue;
+    const o = live.reduce((a, b) => ((b.hint || 0) > (a.hint || 0) ? b : a));
     handlerById(t.h)(ctx, s.players[t.p], o.value, t.data);
   }
 }
