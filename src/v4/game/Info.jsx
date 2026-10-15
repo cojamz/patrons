@@ -15,7 +15,6 @@ import { Rich, Pip } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
-import { TOKENS, isGlyph, isNum } from '../cardText.js';
 import { MO } from '../motion.js';
 
 /**
@@ -94,45 +93,6 @@ export function Colorless({ state, def }) {
   return <Term k="colorless" className="colorless-tag">colorless</Term>;
 }
 
-// ---------- the marks (plate 1b, design/prototypes/language/kit.js): drawn on a 16 grid, sized by the type they sit in ----------
-const MARK = {
-  m: { label: 'member', d: <><rect x="3" y="1.5" width="10" height="13" rx="2" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="8" cy="6.2" r="1.9" fill="currentColor" /><path d="M5 12C5 10 6.3 9 8 9S11 10 11 12Z" fill="currentColor" /></> },
-  r: { label: 'a rival', d: <path fillRule="evenodd" fill="currentColor" d="M8 1C11.7 1 13.4 4.4 13.4 8.6L14.4 15H1.6L2.6 8.6C2.6 4.4 4.3 1 8 1ZM8 5.4C6.5 5.4 5.6 6.8 5.6 8.6S6.5 11.6 8 11.6 10.4 10.4 10.4 8.6 9.5 5.4 8 5.4Z" /> },
-  t: { label: 'an extra turn', d: <><path d="M13 8A5 5 0 1 1 10.5 3.67" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /><path d="M8.6 1.6L11.4 3.4 9.6 6.2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></> },
-  a: { label: 'becomes', d: <path d="M2 8H13M9 4L13 8 9 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /> },
-};
-export function Mark({ k }) {
-  const m = MARK[k];
-  return <svg className={`mk mk-${k}`} viewBox="0 0 16 16" role="img" aria-label={m.label}><title>{m.label}</title>{m.d}</svg>;
-}
-/**
- * A printed line in the grammar's form (src/v4/cardText.js): the number first and heavy, resource words as their dots
- * (a number sits right on its dot: "+1●"), and the marks: @m a member, @r a rival, @f a follower, @t an extra turn,
- * -> becomes, " / " per. cardText.js measures lines with the same split.
- */
-export function Marks({ text }) {
-  if (!text) return null;
-  const parts = String(text).split(TOKENS);
-  const out = [];
-  let glue = false;
-  parts.forEach((p, k) => {
-    if (!p) return;
-    if (k % 2 === 0) {
-      if (p === ' ' && glue && parts[k + 1] && isGlyph(parts[k + 1])) return; // "+1 gold" draws as "+1●"
-      glue = false;
-      out.push(<span key={k}>{p}</span>);
-      return;
-    }
-    glue = isNum(p);
-    if (p === '@f') out.push(<Follower key={k} size={11} title="follower" />);
-    else if (p === '->') out.push(<Mark key={k} k="a" />);
-    else if (p === ' / ') out.push(<span key={k} className="op">/</span>);
-    else if (/^@[mrt]$/.test(p)) out.push(<Mark key={k} k={p[1]} />);
-    else if (isNum(p)) out.push(<b key={k} className="n">{p}</b>);
-    else out.push(<Pip key={k} color={p} />);
-  });
-  return <>{out}</>;
-}
 /** A cost as the plate prints it: "2● 2◐" (the number before its dot, colored part first, then any; no color names). */
 export function CostDots({ parts }) {
   if (!parts || !parts.length) return <span className="cost-dots free">free</span>;

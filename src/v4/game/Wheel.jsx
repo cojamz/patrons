@@ -29,8 +29,8 @@ import { Rich } from './Rich.jsx';
 import { shortEffect, pipEffect } from '../shorts.js';
 import { Follower } from '../art/Follower.jsx';
 import { lookFromUrl, useFace, boxOf, faceStatus, FaceBox, BUILT_IN } from './faces/index.js';
-import { panelText, fineText } from './panelText.js';
-import { Mark, Op, ResourceGlyph } from './Glyphs.jsx';
+import { panelText, lineText } from './panelText.js';
+import { ResourceGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
 import { MO, spinEase } from '../motion.js';
 
@@ -174,93 +174,89 @@ export function fitHalfWidth(cx, cy, h, r0, r1, a0, a1, pad, side = pad) {
 }
 
 const PANEL_RES = new Set(['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', 'purple', 'white', 'any']);
-const PANEL_MARK = { '@m': 'member', '@r': 'rival', '@n': 'minion', '@t': 'turn' };
-const PANEL_TOK = /@[mrfnt]|[+−-]?\d+|×(?:\d+|½)|½|≤\d+|[/→⇄·]|[A-Za-z’'?;,.!-]+|\s+|./g;
-const tokKind = t => (/^\s+$/.test(t) ? 'sp' : /^(?:[+−-]?\d+|×(?:\d+|½)|½|≤\d+)$/.test(t) ? 'n' : t === '/' || t === '·' ? 'op'
-  : t === '→' || t === '⇄' || PANEL_MARK[t] || t === '@f' || PANEL_RES.has(t) ? 'g' : 'w');
+const PANEL_TOK = /@f|[+−-]?\d+|×\d+|½|[A-Za-z’'?;,.!-]+|\s+|./g;
+const isNum = t => /^(?:[+−-]?\d+|×\d+|½)$/.test(t);
 const panelToks = text => [...String(text || '').matchAll(PANEL_TOK)].map(m => m[0]);
-/** One line of a panel in the grammar's form: numbers heavy, resources as dots, @m/@r/@n/@t/@f as marks, / and ×
- *  typed quietly; a number sits right against the glyph it counts ("+3●"). */
+/** One line of a panel: numbers heavy; a resource word right after a number is its dot ("+3●"), @f the follower
+ *  mark; every other word stays a word (Cory, 2026-10-15: no other symbols on a panel). */
 export function Said({ text }) {
   const toks = panelToks(text);
   const out = [];
+  let prev = null; // the last token that wasn't a space
   toks.forEach((t, k) => {
-    const kind = tokKind(t);
-    if (kind === 'sp') {
-      const pk = k ? tokKind(toks[k - 1]) : null, nk = k + 1 < toks.length ? tokKind(toks[k + 1]) : null;
-      if (pk && nk && pk !== 'op' && nk !== 'op' && !(pk === 'n' && nk === 'g')) out.push(' ');
+    if (/^\s+$/.test(t)) {
+      const next = toks[k + 1];
+      if (!(prev && isNum(prev) && next && (PANEL_RES.has(next) || next === '@f'))) out.push(' ');
       return;
     }
-    if (kind === 'n') out.push(<b key={k} className="n">{t}</b>);
-    else if (kind === 'op') out.push(<Op key={k} t={t} />);
-    else if (t === '→') out.push(<Mark key={k} k="arrow" />);
-    else if (t === '⇄') out.push(<Mark key={k} k="swap" />);
-    else if (PANEL_MARK[t]) out.push(<Mark key={k} k={PANEL_MARK[t]} />);
-    else if (t === '@f') out.push(<Follower key={k} size={12} title="follower" />);
-    else if (PANEL_RES.has(t)) out.push(<Pip key={k} color={t} />);
+    if (isNum(t)) out.push(<b key={k} className="n">{t}</b>);
+    else if (t === '@f') out.push(<Follower key={k} size={12} title="followers" />);
+    else if (PANEL_RES.has(t) && prev && isNum(prev)) out.push(<Pip key={k} color={t} />);
     else out.push(t);
+    prev = t;
   });
   return <>{out}</>;
 }
-/** A line's width in ems of its own type (the font measured once per word, a glyph .9em, a gap .25em). */
+/** A line's width in ems of its own type (the font measured once per word; a dot or a mark .9em; a space .25em). */
 function saidEm(text, weight = 700) {
-  let w = 0;
-  const toks = panelToks(text);
-  toks.forEach((t, k) => {
-    const kind = tokKind(t);
-    if (kind === 'sp') w += 0.25;
-    else if (kind === 'g') w += 0.92;
-    else if (kind === 'op') w += 0.55;
-    else w += rimWidth(t, kind === 'n' ? 800 : weight, 0);
-    if (kind === 'sp' && k && tokKind(toks[k - 1]) === 'n' && k + 1 < toks.length && tokKind(toks[k + 1]) === 'g') w -= 0.25;
-  });
+  let w = 0, prev = null;
+  for (const t of panelToks(text)) {
+    if (/^\s+$/.test(t)) { w += 0.25; continue; }
+    if (t === '@f' || (PANEL_RES.has(t) && prev && isNum(prev))) w += 0.92 - (prev && isNum(prev) ? 0.25 : 0);
+    else w += rimWidth(t, isNum(t) ? 800 : weight, 0);
+    prev = t;
+  }
   return w;
 }
-// the type and the picture on a panel, in screen pixels (the number at least 16, the small print at least 12)
-const PANEL_PX = { pic: 18, big: 18, bigMin: 16, fine: 12, fineLine: 13, gap: 1 };
+// the three lines, in screen pixels: the gain (at least 16), the effect in words, the quiet clarification
+const PANEL_PX = { main: 18, mainMin: 16, second: 14, secondLine: 15, note: 12, noteLine: 13, minion: 21, gap: 2 };
 /**
- * How a panel's print lays out in the room it has: the big line on one line or a clause a line, the small print on
- * one or two lines or not at all (it's always in the hover). Returns { bigLines, fineLines, big (px), w (board
- * units: the box's width) }. `k` is screen pixels per board unit.
+ * How a panel's lines lay out in the room it has where it sits now: the gain on one line or a clause a line, the
+ * effect on one or two lines, the clarification on one, or not at all (both are always in the hover). Returns
+ * { mainLines, main (px), secondLines, noteLines, w (board units: the box's width), rc (where it's centred) }.
+ * `k` is screen pixels per board unit; `taken`: the minion stands in for the lines under the gain.
  */
-function panelLayout({ s, R, rot, k, big, fine }) {
+function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
   const a0 = s.ang - s.half + rot, a1 = s.ang + s.half + rot;
   // the print may sit a little in from the middle of its band, where an upright box has more room
-  const at = rc => polar(s.ang + rot, rc);
   const centres = R.n === 1 ? [R.r - 6, R.r - 3, R.r, R.r + 3, R.r + 6] : [R.r - 4, R.r - 2, R.r, R.r + 2];
   let rc = R.r;
   const room = hPx => {
     let best = 0;
     for (const c of centres) {
-      const [cx, cy] = at(c);
-      const w = 2 * fitHalfWidth(cx, cy, hPx / k, R.r0, R.r1, a0, a1, 1.2, PANEL_GUT / 2 + 1.2);
+      const [cx, cy] = polar(s.ang + rot, c);
+      const w = 2 * fitHalfWidth(cx, cy, hPx / k, R.r0, R.r1, a0, a1, 1.6, PANEL_GUT / 2 + 1.8);
       if (w > best + 0.01) { best = w; rc = c; }
     }
     return best;
   };
-  const clauseList = clauses(big);
-  const bigEm = saidEm(big, 500), clauseEm = Math.max(...clauseList.map(c => saidEm(c, 500)));
-  const fineEm = fine ? saidEm(fine, 700) : 0;
-  const longestWord = fine ? Math.max(...String(fine).split(/\s+/).map(t => saidEm(t, 700))) : 0;
-  const { pic, gap, fineLine } = PANEL_PX;
+  const X = PANEL_PX;
+  const main = said.main, second = taken ? null : said.second, note = taken ? null : lineText(said.note) || null;
+  const mainClauses = main ? clauses(main) : [];
+  const mainEm = main ? saidEm(main, 800) : 0, clauseEm = main ? Math.max(...mainClauses.map(c => saidEm(c, 800))) : 0;
+  const words = t => Math.max(...String(t).split(/\s+/).map(x => saidEm(x, 700)));
+  const secondEm = second ? saidEm(second, 700) : 0, noteEm = note ? saidEm(note, 500) : 0;
+  // the hero is the gain; with none, the effect is the hero and always shows (up to three lines)
   const tries = [];
-  for (const bp of [PANEL_PX.big, 18, PANEL_PX.bigMin]) {
-    for (const bl of clauseList.length > 1 ? [1, 2] : [1]) {
-      for (const fl of fine ? [1, 2, 0] : [0]) tries.push({ bp, bl, fl });
-    }
-  }
-  // prefer the biggest number, then the small print shown, then fewer lines
-  tries.sort((a, b) => b.bp - a.bp || (b.fl > 0) - (a.fl > 0) || a.bl - b.bl || a.fl - b.fl);
+  for (const mp of main ? [X.main, X.mainMin] : [0]) for (const ml of mainClauses.length > 1 ? [1, 2] : main ? [1] : [0])
+    for (const sl of second ? (main && !need.second ? [1, 2, 0] : [1, 2, 3]) : [0]) for (const nl of note && !need.noNote ? [1, 0] : [0]) tries.push({ mp, ml, sl, nl });
+  tries.sort((x, y) => y.mp - x.mp || (y.sl > 0) - (x.sl > 0) || (y.nl > 0) - (x.nl > 0) || x.ml - y.ml || x.sl - y.sl);
   for (const t of tries) {
-    const h = pic + gap + t.bl * t.bp + (t.fl ? gap + t.fl * fineLine : 0);
-    const needBig = (t.bl === 1 ? bigEm : clauseEm) * t.bp;
-    const needFine = t.fl === 0 ? 0 : t.fl === 1 ? fineEm * PANEL_PX.fine : Math.max(longestWord, fineEm * 0.62) * PANEL_PX.fine;
+    const parts = [t.ml * t.mp, taken ? X.minion : 0, t.sl * X.secondLine, t.nl * X.noteLine].filter(Boolean);
+    const h = parts.reduce((a, b) => a + b, 0) + X.gap * (parts.length - 1);
+    const needW = Math.max(
+      t.ml ? (t.ml === 1 ? mainEm : clauseEm) * t.mp : 0,
+      t.sl ? Math.max(words(second), (secondEm / t.sl) * 1.12) * X.second : 0,
+      t.nl ? noteEm * X.note : 0,
+      taken ? 24 : 0,
+    );
     const w = room(h) * k;
-    if (w >= Math.max(needBig, needFine, pic) + 2) return { bigLines: t.bl, fineLines: t.fl, big: t.bp, w: w / k, rc };
+    if (w >= needW + 4) return { mainLines: t.ml, main: t.mp, secondLines: t.sl, noteLines: t.nl, w: w / k, rc };
   }
-  const bl = clauseList.length > 1 ? 2 : 1;
-  const w = room(pic + gap + bl * PANEL_PX.bigMin);
-  return { bigLines: bl, fineLines: 0, big: PANEL_PX.bigMin, w: Math.max(w, 24 / k), rc: w ? rc : R.r };
+  // nothing fits: the gain alone at its smallest, a clause a line (the effect and the clarification are in the hover)
+  const ml = mainClauses.length > 1 ? 2 : main ? 1 : 0;
+  const w = room(Math.max(ml * X.mainMin, X.secondLine * 2));
+  return { mainLines: ml, main: X.mainMin, secondLines: main ? 0 : 2, noteLines: 0, w: Math.max(w, 24 / k), rc: w ? rc : R.r, tight: true };
 }
 
 // Is the person driving with the keyboard? Focus moved to a space on its own (your turn begins) opens its card only
@@ -809,24 +805,30 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const panelLays = useMemo(() => {
     if (!panels) return null;
     const k = scale || 1;
-    const first = new Map(), ok = {};
+    const lay = (s, need) => panelLayout({ s, R: rings[s.ring], rot, k, said: panelText(s.qid, s.a, round), taken: state.slots[s.key] !== undefined, need });
+    const first = new Map(), group = {};
     for (const s of spaces) {
       const said = panelText(s.qid, s.a, round);
-      const fine = s.ring <= round ? fineText(said.fine) || null : null;
-      const lay = panelLayout({ s, R: rings[s.ring], rot, k, big: said.big, fine });
-      first.set(s.key, { said, fine, lay });
-      const g = `${s.q}-${s.ring}`;
-      ok[g] = ok[g] !== false && !(fine && !lay.fineLines);
+      const l = lay(s);
+      first.set(s.key, { said, lay: l });
+      // a quadrant's ring shows a line only when every panel there that has one can show it
+      const g = group[`${s.q}-${s.ring}`] || (group[`${s.q}-${s.ring}`] = { second: true, note: true });
+      if (state.slots[s.key] === undefined) {
+        if (said.main && said.second && !l.secondLines) g.second = false;
+        if (said.note && !l.noteLines) g.note = false;
+      }
     }
     const out = new Map();
     for (const s of spaces) {
-      const f = first.get(s.key);
-      out.set(s.key, { ...f, lay: !f.fine || ok[`${s.q}-${s.ring}`] ? f.lay : panelLayout({ s, R: rings[s.ring], rot, k, big: f.said.big, fine: null }) });
+      const f = first.get(s.key), g = group[`${s.q}-${s.ring}`];
+      const fixed = (!g.note && f.lay.noteLines) || (!g.second && f.said.main && f.lay.secondLines) ? lay(s, { noNote: !g.note }) : f.lay;
+      out.set(s.key, { said: f.said, lay: { ...fixed, secondLines: !g.second && f.said.main ? 0 : fixed.secondLines } });
     }
-    const big = Math.min(...[...out.values()].map(v => v.lay.big));
-    for (const v of out.values()) v.lay = { ...v.lay, big };
+    // every gain on the wheel is one size: the smallest any panel needs
+    const main = Math.min(...[...out.values()].filter(v => v.said.main).map(v => v.lay.main));
+    for (const v of out.values()) if (v.said.main) v.lay = { ...v.lay, main };
     return out;
-  }, [panels, state.quadrants, round, rot, scale]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [panels, state.quadrants, state.slots, round, rot, scale]); // eslint-disable-line react-hooks/exhaustive-deps
   live.current = { tap, onPick, hover, anchorOf };
   const pinnedKey = peek && peek.pinned ? peek.key : null;
   const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');
@@ -841,10 +843,10 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const opt = legal.get(key);
     const selected = pinnedKey === key;
     const fresh = freshOf(key);
-    // panels: the grammar's big line and small print, laid out in the room this panel has where it sits now
+    // panels: the gain, the effect, the clarification, laid out in the room this panel has where it sits now
     const pl = panels ? panelLays.get(key) : null;
-    const said = pl && pl.said, lay = pl && pl.lay, fineSaid = pl && open ? said.fine : null;
-    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && !lay.fineLines ? 'nofine' : '', lay && lay.fineLines > 1 ? 'fine2' : '', lay && lay.bigLines > 1 ? 'big2' : ''].filter(Boolean).join(' ');
+    const said = pl && pl.said, lay = pl && pl.lay;
+    const cls = ['slot', `r${t}`, opt ? 'can lit' : '', flash.has(key) ? 'flash' : '', selected ? 'sel' : '', open ? 'open' : 'locked', owner !== undefined ? 'taken' : '', fresh ? 'fresh' : '', fresh && fresh.newest ? 'newest' : '', lay && !said.main ? 'nomain' : '', lay && lay.secondLines > 1 ? 'wrap' : ''].filter(Boolean).join(' ');
     const status = owner !== undefined ? `Taken by ${owner === meId ? 'you' : state.players[owner].name}${joiners.length ? ` and ${joiners.map(id => state.players[id].name).join(', ')}` : ''}${opt && String(opt).startsWith('squat:') ? ' (you can join it)' : ''}` : open ? (opt ? 'Open: you can take it' : 'Open') : `Opens in round ${roman(t)}`;
     const minion = id => (
       <span key={id} className="worker" data-seat={id}>
@@ -853,7 +855,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     );
     const minions = owner !== undefined ? <span className="worker-fig" data-seat={owner}>{[owner, ...joiners].map(minion)}</span> : null;
     let style = { ...at(X, Y), '--c': `var(--${qid})` };
-    if (panels) style = { ...style, ...at(...turned(...polar(s.ang, lay.rc))), width: `${((lay.w / VBS) * 100).toFixed(2)}%`, '--big': `${lay.big}px` };
+    if (panels) style = { ...style, ...at(...turned(...polar(s.ang, lay.rc))), width: `${((lay.w / VBS) * 100).toFixed(2)}%`, '--main': `${lay.main || PANEL_PX.main}px` };
     // a face from ./faces/: the box is the face's own size (board units), and the face draws everything inside it
     let face = null;
     if (custom) {
@@ -882,18 +884,21 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
         <span className="hit" aria-hidden="true" />
         <span className="base" aria-hidden="true" />
         {custom ? face : panels ? (
-          // the picture (or the minions standing where it was), the big line, then the small print when there's room
+          // three lines at most, no picture (Cory, 2026-10-15): the gain, the effect in words, a quiet clarification.
+          // Taken: the minion stands under the gain, in place of the lines below it
           <span className="face" aria-hidden="true">
-            {/* the picture's slot: the action's picture, the minions standing on it, or (not open yet) its round */}
-            <span className="ico">{minions || (open ? <Sprite id={[`${qid}.${a.key}`, spriteId(a.name)]} kind="action" sphere={quadrant(qid).resource} size={18} /> : <span className="seal">{roman(t)}</span>)}</span>
-            <span className="yl big" data-yield>
-              {lay.bigLines > 1 ? clauses(said.big).map((c, k) => <span key={k} className="cl"><Said text={c} /></span>) : <Said text={said.big} />}
-            </span>
-            {lay.fineLines > 0 && (
-              <span className="fine" data-fine>
-                {fineSaid && typeof fineSaid === 'object'
-                  ? <>{fineSaid.byRound.map((v, k) => <span key={k}>{k ? <Op t="·" /> : null}<b className={k + 1 === round ? 'now' : 'dim'}>{v}</b></span>)} by round</>
-                  : <Said text={fineSaid} />}
+            {lay.mainLines > 0 && (
+              <span className="yl main" data-yield>
+                {lay.mainLines > 1 ? clauses(said.main).map((c, k) => <span key={k} className="cl"><Said text={c} /></span>) : <Said text={said.main} />}
+              </span>
+            )}
+            {minions}
+            {!minions && lay.secondLines > 0 && <span className="yl second" data-second><Said text={said.second} /></span>}
+            {!minions && lay.noteLines > 0 && (
+              <span className="note" data-note>
+                {typeof said.note === 'object'
+                  ? <>{said.note.byRound.map((v, k) => <span key={k}>{k ? ' · ' : ''}<b className={k + 1 === round ? 'now' : 'dim'}>{v}</b></span>)} by round</>
+                  : <Said text={said.note} />}
               </span>
             )}
           </span>

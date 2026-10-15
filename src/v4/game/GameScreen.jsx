@@ -332,23 +332,26 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // out, so the totals climb as each prize lands (RC1 saboteur: the seats showed the final numbers at step 1 of 4)
   const [paid, setPaid] = useState({ moment: null, n: 0 });
   const snake = useMemo(() => snakeOrder(state), [state]);
-  // a new round's order re-sorts the chairs: each slides from where it stood to its new place (FLIP, so it plays
-  // whatever else re-renders in the same moment)
-  const seatTops = useRef({});
-  const orderKey = snake.order.join(',');
+  // the column of chairs (laptop): each chair keeps its own height (compact to its content, like the plate's panels)
+  // and they stack in turn order, centred in the column; a new order re-sorts them (they slide, lamp.css). Positions
+  // are set straight on the elements after each commit, so nothing re-renders for it.
   useLayoutEffect(() => {
     const r = root.current;
     if (!r) return;
-    const seatsNow = [...r.querySelectorAll('.lt > .lt-seat[data-pid]')];
-    const now = Object.fromEntries(seatsNow.map(e => [e.dataset.pid, e.getBoundingClientRect().top]));
-    const was = seatTops.current;
-    seatTops.current = now;
-    if (!motionOK()) return;
-    for (const e of seatsNow) {
-      const d = was[e.dataset.pid] != null ? was[e.dataset.pid] - now[e.dataset.pid] : 0;
-      if (Math.abs(d) > 4 && e.animate) e.animate([{ translate: `0 ${Math.round(d)}px` }, { translate: '0 0' }], { duration: 650, easing: 'cubic-bezier(.3,.7,.4,1)' });
+    const rail = r.querySelector(':scope > .lt-snake');
+    const seats = [...r.querySelectorAll(':scope > .lt-seat')].filter(e => e.dataset.pid != null);
+    if (!rail || !rail.offsetHeight) { seats.forEach(e => e.style.removeProperty('--y')); return; }
+    const GAP = 8;
+    const rows = seats.map(e => ({ e, slot: Number(e.dataset.slot) || 0, h: e.offsetHeight })).sort((a, b) => a.slot - b.slot);
+    const total = rows.reduce((t, x) => t + x.h, 0) + GAP * Math.max(0, rows.length - 1);
+    let y = Math.max(0, Math.round((rail.offsetHeight - total) / 2));
+    const top = y;
+    for (const x of rows) { x.e.style.setProperty('--y', `${y}px`); y += x.h + GAP; }
+    if (rows.length) {
+      rail.style.setProperty('--rail-top', `${top + rows[0].h / 2}px`);
+      rail.style.setProperty('--rail-bottom', `${rail.offsetHeight - (top + total - rows[rows.length - 1].h / 2)}px`);
     }
-  }, [orderKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  });
   const seatState = useMemo(() => {
     if (!moment || reckoned === moment) return state;
     let unpaid;

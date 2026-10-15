@@ -12,7 +12,7 @@ import { Follower } from '../art/Follower.jsx';
 import { realHover } from '../hover.js';
 import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
 import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
-import { lastSpace, turnPlaces } from './seats.js';
+import { turnPlaces } from './seats.js';
 import { seatRanks } from './RankRow.jsx';
 import { incomeOf } from './build.js';
 import Tick from './Tick.jsx';
@@ -34,7 +34,6 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // grouped by color (the approved plate: "the color mix is their lean"), table order, colorless last
   const colorAt = d => (onTable(state, d) ? state.quadrants.indexOf(d.quadrant) : state.quadrants.length);
   const groups = memberChips(state, p).map((g, k) => ({ g, k })).sort((a, b) => colorAt(a.g.def) - colorAt(b.g.def) || a.k - b.k).map(x => x.g);
-  const last = lastSpace(state, pid);
   // its place in what's left of this round's turn order (who's up now, who's next)
   const turns = turnPlaces(state, me);
   const place = turns.places[pid];
@@ -44,7 +43,8 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const income = incomeOf(state, pid);
   const incomeParts = income ? Object.entries(income.res).filter(([, n]) => n > 0) : [];
   const incomeWords = incomeParts.map(([r, n]) => `+${n} ${r}`).concat(income && income.followers > 0 ? [`+${income.followers} follower${income.followers === 1 ? '' : 's'}`] : []);
-  const MAX = mine ? 14 : 8; // member figures shown before "+N"
+  // member figures shown before "+N": one row beside the "each round" line, so every chair keeps one fixed height
+  const MAX = incomeWords.length ? 6 : 10;
   const shown = groups.slice(0, MAX);
   const rest = groups.slice(MAX).reduce((s, g) => s + g.count, 0);
   const openSeat = (e, pinned) => hover && hover.onSeatHover(pid, e.currentTarget, { pinned });
@@ -100,18 +100,13 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         {rest > 0 && <span className="cs-more" title={`${rest} more member${rest === 1 ? '' : 's'}`}>+{rest}</span>}
       </div>
       {/* what its members make each round, and what it just did (the approved plate's rival panel) */}
-      {(incomeWords.length > 0 || last) && (
+      {incomeWords.length > 0 && (
         <div className="cs-build">
           {incomeWords.length > 0 && (
             <span className="cs-income" data-income={incomeWords.join(', ')} title={`Each round its members make ${incomeWords.join(', ')} (at the round's start)`}>
               <small>each round</small>
               {incomeParts.map(([r, n]) => <span key={r} className="cs-inc"><b className="num">+{n}</b><ResourceGlyph r={r} size={mine ? 13 : 11} n={n} /></span>)}
               {income.followers > 0 && <span className="cs-inc"><b className="num">+{income.followers}</b><Follower size={11} title="followers" /></span>}
-            </span>
-          )}
-          {last && (
-            <span className="cs-last" data-took={last.name} title={`${mine ? 'You' : p.name} last took ${last.name} (${quadrant(last.qid).name})`}>
-              <small>{mine ? 'you took' : 'just took'}</small><Sprite id={[`${last.qid}.${actionKey(last)}`, spriteId(last.name)]} kind="action" sphere={quadrant(last.qid).resource} size={12} title={last.name} /><b>{last.name}</b>
             </span>
           )}
         </div>

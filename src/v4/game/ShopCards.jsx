@@ -9,10 +9,9 @@ import { costParts } from '../format.js';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { realHover } from '../hover.js';
-import { cardColor, onTable, usePreview, Tip, Marks, Mark } from './Info.jsx';
+import { cardColor, onTable, usePreview, Tip } from './Info.jsx';
 import { FollowerGlyph } from './Glyphs.jsx';
 import { Pip } from './Rich.jsx';
-import { cardLines, effSize, longName } from '../cardText.js';
 import { timingOf, payBreakdown, unlockedBy, surely } from './cards.js';
 void timingOf;
 import { useHoverSpace } from './HoverCards.jsx';
@@ -111,7 +110,6 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
           const short = buying && !opt && viewer ? payBreakdown(state, viewer, uid).short : null;
           const parts = costParts(d, state.resources);
           const fromPile = !state.shop.includes(uid);
-          const lines = cardLines(d);
           return (
             <button
               key={uid} type="button" data-uid={uid} data-option={opt ? opt.id : undefined}
@@ -128,17 +126,15 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
                 if (opt) onPick(opt.id); else if (onDenied) onDenied({ type: 'card', uid, name: d.name }, e.currentTarget);
               }}
             >
-              {/* plate 1b (Cory, 2026-10-15): the picture on its tinted field, the name in small caps, a plain "when", the
-                  effect big (number first, marks inline), then the cost in dots and the worth; the sentence is on hover / tap */}
+              {/* identity and price (Cory, 2026-10-15: "members can't be translated to shorthand"): the picture on its
+                  tinted field, the name, the cost in dots and the worth; what it does is the hover's one plain sentence */}
               <span className="band" aria-hidden="true" />
-              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={32} />
+              <span className="art"><Sprite id={[d.id, spriteId(d.name)]} kind="member" sphere={sphereOf(state, d)} size={48} />
                 {short && <span className="need" title={`You need ${short.text} more (after your discounts)`}>need <ShortDots short={short} /></span>}
                 {fromPile && <span className="need from-pile" title="From the top of the pile (Insider)">pile</span>}
                 {tick && <span className="tick" title={`You could afford it after ${after}`}>✓ {after}</span>}
               </span>
-              <span className={`nm${longName(d.name) ? ' long' : ''}`}>{d.name}</span>
-              <span className="wh" data-when={lines.when || undefined}><span><Marks text={lines.when} /></span></span>
-              <span className={`ef ef-${effSize(lines.eff)}`}><span><Marks text={lines.eff} /></span></span>
+              <span className="nm">{d.name}</span>
               <span className="ft">
                 <CostShapes parts={parts} />
                 <span className="val" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}${d.n > 1 ? `; counts as ${d.n} members` : ''}`}>
@@ -196,7 +192,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
                 {t.limited ? <span>{left} left at this table (2 per player at the start).</span> : <span>Unlimited.</span>}
                 <small>{when(t, opt)}</small>
               </div>
-            )}><span className="rt-trade"><b className="num">{t.cost}</b><Pip color="any" n={t.cost} /><Mark k="a" /><b className="num">{t.get}</b><FollowerGlyph size={14} /></span>{t.limited && <small className="rt-left num">{left} left</small>}<span className="hitbox" aria-hidden="true" /></Tip>
+            )}><span className="rt-trade"><b className="num">{t.cost}</b><Pip color="any" n={t.cost} /><span className="to" aria-hidden="true">→</span><b className="num">{t.get}</b><FollowerGlyph size={14} /></span>{t.limited && <small className="rt-left num">{left} left</small>}<span className="hitbox" aria-hidden="true" /></Tip>
           </button>
         );
       })}

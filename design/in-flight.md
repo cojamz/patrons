@@ -49,6 +49,8 @@ Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source a
 39. **Perf pod: render cost** (from design/eval/perf/baseline.md): click → paint in the same frame, table and chairs re-render only on change, shop not re-rendered by a space hover, wheel spin without per-frame renders, "You'd get" ready sooner; render-count guard. Port 5396.
 40. **Perf baseline, quiet box** (remote session_011LUHaXuhne4zoPugyRhm6K on b3ac40c): two runs each at local 4×, local 1× and online with 80ms lag. It becomes the "before" for the perf pod.
 41. **Dialogs pod:** the pay screen redesigned (cost as dots, coins visibly leave your stacks, click a stack to swap, skip the dialog when there's only one way to pay), swaps picked on the board, the choice caption kept off the wheel, the keyboard list only for keyboard users. Port 5398.
+42. **Members UX:** the seat hover becomes the player's member abilities with their states (ready, used, on/off, round start, game end); using a member is made obvious (lit figure, "Use: …" in its hover, effect flies from it). Port 5402.
+43. **Turn story follow-up:** names in the strip, turn cards and log open their cards on hover; the strip gets room.
 
 ## Held
 - **Fair-price screen, bot levels + 4-thinker tables:** offloaded to the remote sessions below. The Purple session is done (roster 11).

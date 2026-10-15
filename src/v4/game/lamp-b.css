@@ -346,26 +346,20 @@
    The shop card, the member hover, the space hover and the follower tiles in the visual language: paper, one corner,
    the number first and heavy, glyphs at .8em of their type, quiet ink for the rest. R1's tokens (lamp.css :root),
    the plate's values as fallbacks. */
-@media (min-width:861px) and (min-height:500px){ .app.game.lt{--shop-h:146px} }
 .lt-shop-head{margin:0 0 4px;height:16px}
 .lt-shop-head .lt-h{font-size:15px}
 .lt-rates-head{height:16px;margin:0 0 4px}
 .lt-rates-head .lbl{font-size:15px}
 
-/* the shop card: picture on a soft tinted field, NAME, when, the effect big, cost dots left and worth right */
-.lt-card.card{height:122px;border-radius:var(--corner,8px);color:var(--pl-ink,#2b2018);font-family:var(--sans)}
+/* the shop card is identity and price (Cory, 2026-10-15): the picture on a soft tinted field, the NAME, cost dots left and
+   worth right; what it does is in the hover, as one plain sentence */
+.lt-card.card{height:104px;border-radius:var(--corner,8px);color:var(--pl-ink,#2b2018);font-family:var(--sans)}
 .lt-card.card.paper{background:var(--pl-paper,#f2e8d2)}
 .lt-card.card{box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
 .lt-card.card.lit{background:var(--paper-lit,#fbf6ea);box-shadow:0 0 0 2px var(--light,#fff3d4),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
 .lt-card.card.can:hover{background:var(--paper-lit,#fbf6ea);transform:translateY(-2px)}
-.lt-card .art{height:36px;margin:0;border-radius:0;box-shadow:none;background:color-mix(in srgb,var(--q) 16%,var(--pl-paper,#f2e8d2))}
-.lt-card .nm{font-family:var(--sans);font-size:9.5px;line-height:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pl-ink-3,#a39078);margin:4px 2px 0;white-space:nowrap;overflow-wrap:normal;hyphens:none}
-.lt-card .nm.long{font-size:8.5px;letter-spacing:.02em}
-.lt-card .wh{height:24px;margin:1px 4px 0;display:flex;align-items:flex-end;justify-content:center;text-align:center;font-size:10.5px;line-height:12px;font-weight:700;color:var(--pl-ink-2,#6e5c49);flex:none}
-.lt-card .ef{height:24px;margin:0 4px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;color:var(--pl-ink,#2b2018);white-space:nowrap;flex:none;line-height:1}
-.lt-card .ef-l{font-size:19px}
-.lt-card .ef-m{font-size:15px}
-.lt-card .ef-s{font-size:11px;line-height:11px;white-space:normal}
+.lt-card .art{height:54px;margin:0;border-radius:0;box-shadow:none;background:color-mix(in srgb,var(--q) 16%,var(--pl-paper,#f2e8d2))}
+.lt-card .nm{font-family:var(--sans);font-size:10px;line-height:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pl-ink-2,#6e5c49);margin:6px 2px 0;white-space:nowrap;overflow-wrap:normal;hyphens:none}
 .lt-card .ft{height:20px;margin:auto 6px 0;padding:0;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-family:var(--sans);font-size:12px;font-weight:500;color:var(--pl-ink,#2b2018)}
 .lt-card .ft .num,.lt-card .val b{font-weight:800}
 .lt-card .val{font-family:var(--sans);gap:1px}
@@ -373,11 +367,8 @@
 .lt-card .pip.glyph,.lt-card .pip.wild,.mc .pip.glyph,.mc .pip.wild,.lt-rate .pip.glyph,.lt-rate .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 0 0 .06em}
 .lt-card .pip .res-glyph,.mc .pip .res-glyph,.lt-rate .pip .res-glyph{width:100%;height:100%}
 .lt-card .follower-mark,.mc .follower-mark,.lt-rate .follower-mark,.lt-note .sc-rule .follower-mark{width:.8em;height:.8em;vertical-align:-.1em;margin-left:.06em}
-.mk{display:inline-block;width:.8em;height:.8em;vertical-align:-.1em;overflow:visible;flex:none;margin:0 .06em;color:currentColor}
-.mk-a{margin:0 .2em}
 .lt-card .n,.mc .n,.lt-rate .n{font-weight:800;letter-spacing:-.01em}
 .lt-card .op,.mc .op{font-weight:500;color:var(--pl-ink-3,#a39078);margin:0 .14em}
-.lt-card .wh .mk,.lt-card .wh .pip{margin-left:.12em}
 .lt-card .lt-res{gap:0;margin-right:5px}
 .lt-card .lt-res:last-child{margin-right:0}
 /* what you can't afford dims quietly; "need" is small print, never a badge */
@@ -390,7 +381,6 @@
 .lt-card .tick{font-size:9px;line-height:12px}
 
 /* follower buys: the same paper and grammar ("2◐ → 1👤"), "8 left" quiet */
-.lt-rates-grid{grid-auto-rows:57px}
 .lt-rates .lt-rate{border-radius:var(--corner,8px);background:var(--pl-paper,#f2e8d2);color:var(--pl-ink,#2b2018);box-shadow:0 0 0 1px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.35)}
 .lt-rates .lt-rate.lit{background:var(--paper-lit,#fbf6ea);box-shadow:0 0 0 2px var(--light,#fff3d4),0 0 24px rgba(255,236,190,.35),0 4px 12px rgba(0,0,0,.35)}
 .lt-rates .lt-rate.can:hover{background:var(--paper-lit,#fbf6ea)}
@@ -398,7 +388,6 @@
 .lt-rates .lt-rate.recede{filter:saturate(.6);opacity:.42}
 .lt-rates .rt-trade{font-family:var(--sans);font-size:17px;gap:0;color:var(--pl-ink,#2b2018)}
 .lt-rates .rt-trade b{font-weight:800;font-size:17px;color:var(--pl-ink,#2b2018)}
-.lt-rates .rt-trade .mk-a{color:var(--pl-ink-3,#a39078)}
 .lt-rates .rt-trade .follower-mark{color:var(--pl-ink,#2b2018)}
 .lt-rates .rt-left{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--pl-ink-3,#a39078);margin-top:3px}
 
@@ -440,8 +429,8 @@
 .mc .owner i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pc);margin-right:5px;vertical-align:0}
 .lt-card-body[data-card-hover]{display:block}
 /* the deck and the follower tiles stand as tall as the cards; the strip's labels are the plate's quiet small caps */
-.lt-deck{height:122px}
-.lt-rates-grid{grid-auto-rows:58px}
+.lt-deck{height:104px}
+.lt-rates-grid{grid-auto-rows:49px}
 .lt-shop-head .lt-h,.lt-rates-head .lbl{font-family:var(--sans);font-size:11px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-cream-2,#b9a98c)}
 .lt-shop-head .lt-h small,.lt-rates-head small{font-family:var(--sans);font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--pl-cream-3,#7d6e5a)}
 
@@ -469,4 +458,7 @@
 .lt-yd-row.youd .youd-get em.yd-note::before{content:none}
 /* every follower tile keeps its trade on the same line; "8 left" sits quietly under it */
 .lt-rates .lt-rate .fb-tip{position:relative}
-.lt-rates .rt-left{position:absolute;left:0;right:0;bottom:7px;margin:0;text-align:center}
+.lt-rates .rt-left{position:absolute;left:0;right:0;bottom:4px;margin:0;text-align:center}
+.lt-rates .rt-trade .to{margin:0 .25em;font-weight:500;color:var(--pl-ink-3,#a39078)}
+/* the name gets two short lines' room, centred, so a long name wraps whole instead of shrinking */
+.lt-card .nm{height:26px;margin:3px 4px 0;display:flex;align-items:center;justify-content:center;text-align:center;white-space:normal;line-height:11px;overflow-wrap:normal}
