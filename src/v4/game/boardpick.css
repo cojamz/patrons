@@ -138,3 +138,13 @@
 .mark-amt{display:inline-flex;align-items:baseline;gap:.08em;white-space:nowrap}
 .mark-amt .pip.glyph,.mark-amt .pip.wild{width:.8em;height:.8em;vertical-align:-.06em;margin:0 0 0 .06em}
 .mark-amt .follower-mark{width:.8em;height:.8em;margin-left:.08em}
+/* phones: the plain question (Your Call) is a paper sheet docked at the foot of the screen, like the starting pick; in
+   the page's flow it fell under the wheel, see-through over the shop's cards (found on a phone pass of w4b #4). The
+   placement beside the space is the laptop's (GameScreen writes it inline, hence the !important here) */
+@media (max-width:860px), (max-height:499px){
+  .lt .lt-wheel > .prompt.choice.plain{position:fixed;left:8px !important;right:8px;top:auto !important;bottom:8px;z-index:30;margin:0;max-height:60dvh;overflow:auto;
+    background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);border:0;border-radius:12px;padding:12px 14px;
+    box-shadow:0 0 0 1px rgba(80,60,30,.25),0 14px 34px rgba(0,0,0,.6)}
+  .lt .lt-wheel > .prompt.choice.plain p{color:var(--paper-ink);font-size:14px;line-height:20px}
+  .lt .lt-wheel > .prompt.choice.plain .btn{color:var(--paper-ink);border-color:rgba(42,31,23,.35);background:rgba(255,255,255,.35)}
+}
