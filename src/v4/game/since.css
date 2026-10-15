@@ -20,7 +20,7 @@
 .lt-since .big{color:var(--cream-2,#d9cbb0)}
 .lt-since .since-row .pip{width:.95em;height:.95em;vertical-align:-.15em}
 .lt-since .since-row.hit{background:rgba(232,120,100,.1);box-shadow:inset 2px 0 0 rgba(232,120,100,.7)}
-.lt-since .since-more button{font:inherit;font-size:11.5px;color:var(--cream-3);background:none;border:0;padding:1px 7px;cursor:pointer;text-decoration:underline dotted}
+.lt-since .since-more button{font:inherit;font-size:11px;color:var(--cream-3);background:none;border:0;padding:1px 7px;cursor:pointer;text-decoration:underline dotted}
 .lt-since .since-none{margin:0;padding:2px 7px;font-size:var(--s);color:var(--cream-3)}
 
 /* a space or member name that opens its card (HoverNames.jsx): a quiet dotted underline, nothing louder */

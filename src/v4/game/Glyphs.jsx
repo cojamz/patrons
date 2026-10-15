@@ -80,10 +80,11 @@ export function FollowerMark({ n, size = 6, label = true }) {
 }
 
 /** A seat's cult leader (32px): the robed figure in the seat's accent color with the player's emoji (or sigil). */
-export function SeatFigure({ id, state = null, size = 32, title = null, dim = false }) {
+export function SeatFigure({ id, state = null, size = 32, title = null, dim = false, face = false }) {
   return (
     <span className={`seat-fig${dim ? ' dim' : ''}`} data-seat={id} title={title || undefined} style={{ width: size, height: size }}>
-      <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} />
+      {/* face: a rival shows its emoji alone, as its chair does (w2a #17); you keep the robed leader */}
+      {face ? <Minion color={playerColor(id)} emoji={seatEmoji(state, id)} size={size} /> : <Leader color={playerColor(id)} emoji={seatEmoji(state, id)} sigil={seatSigil(id)} size={size} />}
     </span>
   );
 }

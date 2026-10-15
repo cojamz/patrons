@@ -28,7 +28,7 @@
 //  (q) every shop card and every member in every chair opens its card, whole on screen and on top (Kingpin had
 //      none; bottom-seat member cards ran under the shop strip); the pay dialog takes focus (Enter pays) and names
 //      each rule-changer bending the price (Penny Pincher, a discount);
-//  (n) you are "You": the round summary and the Chronicle never use your seat's name; the summary has no text under 12px;
+//  (n) you are "You": the round summary and the Chronicle never use your seat's name; the summary keeps the type scale (caps labels 11, words 14 at least);
 //  (r) every hover card opened in (m) reads whole (lib/textclip.mjs) and keeps to the two marks (lib/legacy.mjs).
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
@@ -291,7 +291,7 @@ try {
     if (deckDue && (await deckCheck(page)) === 'checked') { deckDue = false; refills++; }
     const next = page.locator('[data-next-round]');
     if (await next.count()) {
-      // (n) the round summary: nothing under 12px, and your own seat reads "You" (never your seat's name)
+      // (n) the round summary: caps labels at 11 and words at 14 at least, and your own seat reads "You" (never your seat's name)
       if (!summaryChecked && await page.locator('.roundend').count()) {
         summaryChecked = true;
         await page.waitForTimeout(800); // its totals tick up
@@ -301,12 +301,14 @@ try {
           try { me = JSON.parse(localStorage.getItem('patrons.v4.local')).state.players[0].name; } catch { /* none */ }
           const box = document.querySelector('.roundend');
           const tiny = [...box.querySelectorAll('*')].filter(e => vis(e) && [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
-            .map(e => ({ t: e.textContent.trim().slice(0, 24), fs: parseFloat(getComputedStyle(e).fontSize) })).filter(x => x.fs < 12);
+            // the type scale: caps labels at 11 at least, any other words at 14 (meta round 2: its small print was 10.8–11px)
+            .map(e => ({ t: e.textContent.trim().slice(0, 24), fs: parseFloat(getComputedStyle(e).fontSize), caps: getComputedStyle(e).textTransform === 'uppercase' || !/[a-z]/.test(e.textContent) }))
+            .filter(x => x.fs < 11 || (!x.caps && x.fs < 14));
           const text = box.innerText;
           const named = me && new RegExp(`(^|[^\\p{L}\\p{N}])${me.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, 'u').test(text);
           return { tiny: tiny.slice(0, 6), me, named, you: /\bYou\b/.test(text) };
         });
-        for (const x of r.tiny) fail(`(n) round summary text under 12px: "${x.t}" at ${x.fs}px`, 'summary');
+        for (const x of r.tiny) fail(`(n) round summary small print too small: "${x.t}" at ${x.fs}px (caps labels 11, words 14)`, 'summary');
         if (r.named) fail(`(n) the round summary calls you "${r.me}", not "You"`, 'summary');
         if (!r.you) fail('(n) the round summary never says "You"', 'summary');
         await page.screenshot({ path: `${SHOTS}/08-round-summary.png` });
