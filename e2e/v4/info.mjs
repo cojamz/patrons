@@ -1,7 +1,7 @@
 // E2E: every game-meaningful element explains itself (Cory, 2026-10-14: every UI element has a hover with more info,
 // long-press/tap on phone), and followers are never a star. Build-failing assertions, at several steps of a real
 // hot-seat game (1 person + 3 bots):
-//  (a) every visible game element (seats, shop cards, resources, members, leaders/minions, follower marks, badges,
+//  (a) every visible game element (seats, shop cards, resources, members, leaders/minions, follower marks,
 //      follower buys, spaces, contest rules, resource symbols) carries hover info: a title, a hover/tap card
 //      (data-tip / aria-haspopup), or (spaces) the board's own space card;
 //  (b) hovering a shop card and a board space shows a card; on a touch screen a long-press on a titled element
@@ -17,14 +17,22 @@
 //      affordable (a saved scene where one does: e2e/v4/lib/tick-save.mjs), once its dry run lands;
 //  (k) a resource is never color alone: every pip is its shape, every coin (setup, pay) carries its mark, and the
 //      setup picker's labels read on its paper (contrast ≥ 4.5);
-//  (l) who's winning and who's next: a ranked line of every player under the prompt, and each cult's place in the
-//      turn order;
-//  (m) on a laptop the hover card docks in one spot that never overlaps the wheel, the shop or your seat;
+//  (l) who's winning and who's next, on the chairs (no score row, Cory 2026-10-15): every chair's total carries its
+//      place (data-rank), the places follow the totals (shown as "1st"… unless everyone is level), the chairs stand in
+//      this round's turn order (top to bottom, the engine's first pass) and each shows its place in the turns;
+//  (m) the hover card opens right next to what it explains (Cory, 2026-10-15: never a docked spot elsewhere): whole
+//      on screen, at the page's top level above every strip, beside or above its target and not over it;
+//  (o) the rim: pointing at a quadrant's rule or a leader's emoji opens that quadrant's standings, never a space;
+//  (p) a space's card lists every player in its contest line (the 4th never drops off);
+//  (q) every shop card and every member in every chair opens its card, whole on screen and on top (Kingpin had
+//      none; bottom-seat member cards ran under the shop strip); the pay dialog takes focus (Enter pays) and names
+//      each rule-changer bending the price (Penny Pincher, a discount);
 //  (n) you are "You": the round summary and the Chronicle never use your seat's name; the summary has no text under 12px.
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { tickSave } from './lib/tick-save.mjs';
+import { richSave } from './lib/rich-save.mjs';
 
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/info`;
 mkdirSync(SHOTS, { recursive: true });
@@ -35,8 +43,8 @@ const fail = (msg, step) => fails.push(`[${step}] ${msg}`);
 // game-meaningful elements on the Lamplit table (the older Players / QuadrantPanel / SeatRail / Shop / YourTable are gone)
 const GAME = [
   '[data-region] [data-uid]', '[data-cult] .cs-head', '[data-cult] [data-res]',
-  '[data-leader-ring]', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
-  '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term', '[data-deck]',
+  '[data-leader-ring]', '.fol-mark', '.follower', '.lt-rate', '.fb', '.slot',
+  '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term',
   '[data-rank] .rk', '.cs-order',
 ].join(',');
 
@@ -50,7 +58,7 @@ async function audit(page, step) {
       if (e.matches('.slot')) return true; // the board's space card (checked by hovering below)
       // a symbol inside something that explains itself (a pip in a titled cost) is covered by its parent
       const up = e.parentElement && e.parentElement.closest('[title], [data-tip], [aria-haspopup]');
-      return !!(up && up.contains(e) && e.matches('.pip, .res-glyph, .follower, .fol-mark, .badge-mark'));
+      return !!(up && up.contains(e) && e.matches('.pip, .res-glyph, .follower, .fol-mark'));
     };
     const miss = [];
     let n = 0;
@@ -98,18 +106,55 @@ async function audit(page, step) {
 }
 
 // (h) the deck's number against the engine: read the screen and the saved game in one go, when both show the same move
-// (m) the open hover card is docked and clear of the wheel, the shop and your seat
-async function dockCheck(page, what, step) {
-  const r = await page.evaluate(() => {
+// (m) the open hover card sits next to its target (a selector, or a rect), whole on screen, above every strip
+async function anchorCheck(page, what, step, target) {
+  const r = await page.evaluate(sel => {
     const L = document.querySelector('[data-hover-layer][data-open="1"]');
+    const T = typeof sel === 'string' ? document.querySelector(sel) : null;
     if (!L) return null;
-    const a = L.getBoundingClientRect();
-    const hit = sel => { const e = document.querySelector(sel); if (!e) return 0; const b = e.getBoundingClientRect(); const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top); return w > 1 && h > 1 ? Math.round(w * h) : 0; };
-    return { dock: L.dataset.dock || null, wheel: hit('.lt > [data-region="wheel"]'), shop: hit('.lt > [data-region="shop"]'), seat: hit('.lt > .lt-seat-0') };
-  });
+    const a = L.getBoundingClientRect(), t = T ? T.getBoundingClientRect() : sel;
+    const ow = Math.min(a.right, t.right ?? t.x + t.width) - Math.max(a.left, t.left ?? t.x), oh = Math.min(a.bottom, t.bottom ?? t.y + t.height) - Math.max(a.top, t.top ?? t.y);
+    const tl = t.left ?? t.x, tt = t.top ?? t.y, tr = t.right ?? t.x + t.width, tb = t.bottom ?? t.y + t.height;
+    return {
+      inView: a.left >= 0 && a.top >= 0 && a.right <= innerWidth + 0.5 && a.bottom <= innerHeight + 0.5,
+      over: ow > 1 && oh > 1 ? Math.round(ow * oh) : 0, area: Math.round((tr - tl) * (tb - tt)),
+      gap: Math.round(Math.max(tl - a.right, a.left - tr, tt - a.bottom, a.top - tb, 0)),
+      top: L.parentElement === document.body && Number(getComputedStyle(L).zIndex) >= 35,
+    };
+  }, target);
   if (!r) { fail(`(m) hovering ${what} opened no hover card`, step); return; }
-  if (!r.dock) fail(`(m) the hover card for ${what} isn't docked`, step);
-  for (const k of ['wheel', 'shop', 'seat']) if (r[k]) fail(`(m) the hover card for ${what} overlaps the ${k === 'seat' ? 'your seat' : k} (${r[k]}px²)`, step);
+  if (!r.inView) fail(`(m) the hover card for ${what} runs off the window`, step);
+  if (r.over > r.area * 0.2) fail(`(m) the hover card for ${what} covers it (${r.over}px² of ${r.area})`, step);
+  if (r.gap > 24) fail(`(m) the hover card for ${what} opens ${r.gap}px away from it, not next to it`, step);
+  if (!r.top) fail(`(m) the hover card for ${what} isn't drawn above the table's strips`, step);
+}
+
+// (o) every rim label (its first, middle and last letter) and every leader's emoji opens its quadrant's standings
+async function rimCheck(page, step) {
+  const pts = await page.evaluate(() => {
+    const out = [];
+    const scr = (el, x, y) => { const m = el.getScreenCTM(); return { x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f }; };
+    for (const t of document.querySelectorAll('[data-rim-text]')) {
+      const n = t.getNumberOfChars();
+      for (const i of [0, Math.floor(n / 2), n - 1]) { const r = t.getExtentOfChar(i); out.push({ what: `the ${t.dataset.plaque} rule (letter ${i})`, qid: t.dataset.plaque, ...scr(t, r.x + r.width / 2, r.y + r.height / 2) }); }
+    }
+    for (const g of document.querySelectorAll('[data-rim-leader]')) { const b = g.getBBox(); const t = g.parentNode.querySelector(`[data-rim-text]`); out.push({ what: `a leader's emoji (${g.dataset.rimLeader})`, qid: null, ...scr(g, b.x + b.width / 2, b.y + b.height / 2) }); void t; }
+    return out;
+  });
+  if (pts.length < 8) fail(`(o) found only ${pts.length} rim points to check`, step);
+  // the prize says what it pays: "+2 FOLLOWERS", not a bare "+2"
+  for (const t of await page.$$eval('[data-rim-text]', els => els.map(e => e.textContent))) if (!/\+\d+ FOLLOWERS?/i.test(t)) fail(`(o) the rim "${t}" doesn't say its prize is followers`, step);
+  for (const p of pts) {
+    const top = await page.evaluate(({ x, y }) => { const e = document.elementFromPoint(x, y); return e && e.closest('[data-rim]') ? e.closest('[data-rim]').dataset.rim : e ? `${e.tagName.toLowerCase()}.${String(e.className.baseVal ?? e.className).split(' ')[0]}` : null; }, p);
+    if (p.qid && top !== p.qid) { fail(`(o) pointing at ${p.what} reaches ${top}, not its standings`, step); continue; }
+    if (!p.qid && !/^[a-z]+$/.test(top || '')) { fail(`(o) pointing at ${p.what} reaches ${top}, not the standings`, step); continue; }
+    await page.mouse.move(4, 690); await page.waitForTimeout(200);
+    await page.mouse.move(p.x, p.y); await page.waitForTimeout(150);
+    const kind = await page.evaluate(() => { const c = document.querySelector('[data-hover-layer][data-open="1"] [data-hover-card]'); return c ? c.dataset.hoverCard : null; });
+    if (kind !== 'plaque') fail(`(o) hovering ${p.what} opened ${kind || 'nothing'}, not the standings`, step);
+    else if (!(await page.evaluate(() => /Round end: whoever has the .+ gets \d+ followers?/.test(document.querySelector('[data-hover-layer][data-open="1"]').innerText)))) fail(`(o) the standings for ${p.what} never say the prize is followers ("Round end: whoever has … gets N followers")`, step);
+  }
+  await page.mouse.move(4, 690); await page.waitForTimeout(200);
 }
 
 async function deckCheck(page) {
@@ -207,7 +252,22 @@ try {
         await slot.hover();
         await page.waitForTimeout(500);
         if (!(await page.locator('.peek, [data-hover-card="space"], [data-space-card]').count())) fail('(b) hovering a space shows no card', step);
-        await dockCheck(page, 'a space', step);
+        await anchorCheck(page, 'a space', step, await slot.evaluate(e => e.getBoundingClientRect().toJSON()));
+        // (p) the space's contest line names every player
+        {
+          const names = await page.evaluate(() => { try { const st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return st.players.map((p, i) => (i === 0 ? 'You' : p.name)); } catch { return null; } });
+          let line = null;
+          const lit = page.locator('.slot.can');
+          for (let k = 0; k < Math.min(6, await lit.count()) && !line; k++) {
+            await page.mouse.move(4, 690); await page.waitForTimeout(160);
+            await lit.nth(k).hover(); await page.waitForTimeout(700);
+            line = await page.evaluate(ns => [...document.querySelectorAll('[data-hover-layer] .lt-yd-row .v')].map(e => e.textContent).find(t => ns.filter(n => new RegExp(`(^|· )${n} \\d`).test(t)).length >= 2) || null, names);
+          }
+          if (!names) fail('(p) no saved game to read the players from', step);
+          else if (!line) fail('(p) no space card showed its contest line', step);
+          else { const missing = names.filter(n => !new RegExp(`(^|· )${n} \\d`).test(line)); if (missing.length) fail(`(p) a space's contest line leaves out ${missing.join(', ')}: "${line}"`, step); }
+        }
+        await rimCheck(page, step);
         await page.screenshot({ path: `${SHOTS}/02b-hover-space.png` });
         await page.mouse.move(5, 5);
         const card = page.locator('[data-region] [data-uid]').first();
@@ -216,12 +276,12 @@ try {
           await page.waitForTimeout(600);
           const shown = await page.evaluate(() => [...document.querySelectorAll('.popover, [data-hover-card]')].some(e => e.getBoundingClientRect().width > 0) || !!document.querySelector('.card-face'));
           if (!shown) fail('(b) hovering a shop card shows no card', step);
-          await dockCheck(page, 'a shop card', step);
+          await anchorCheck(page, 'a shop card', step, await card.evaluate(e => e.getBoundingClientRect().toJSON()));
           await page.screenshot({ path: `${SHOTS}/02c-hover-card.png` });
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
         }
-        // (h) the deck heads the strip, and hovering it shows what's in it
+        // (h) the deck heads the strip and shows its count; it has no hover card (Cory, 2026-10-15: "the deck doesn't need a hover")
         const deck = page.locator('[data-deck]');
         if (!(await deck.count())) fail('(h) no member deck at the head of the shop strip', step);
         else {
@@ -229,24 +289,32 @@ try {
           if (!placed) fail('(h) the deck is not before the first shop card', step);
           await deck.hover();
           await page.waitForTimeout(400);
-          const dc = await page.evaluate(() => {
-            const c = document.querySelector('[data-hover-layer] [data-hover-card="deck"]'), d = document.querySelector('[data-deck]');
-            if (!c || !(c.getBoundingClientRect().width > 0)) return null;
-            const body = c.querySelector('[data-deck-card]');
-            return { left: Number(d.dataset.left), card: Number(body && body.dataset.left), sum: [...c.querySelectorAll('[data-color]')].reduce((t, e) => t + Number(e.dataset.n), 0), colorless: !!c.querySelector('[data-color="colorless"]'), bottom: /bottom/.test(c.textContent) };
-          });
-          if (!dc) fail('(h) hovering the deck shows no card', step);
-          else if (dc.card !== dc.left || dc.sum !== dc.left || !dc.colorless || !dc.bottom) fail(`(h) deck card: ${dc.card} left, colors add to ${dc.sum}, the deck shows ${dc.left}${dc.colorless ? '' : ', no colorless count'}${dc.bottom ? '' : ', no word on where released members go'}`, step);
-          await dockCheck(page, 'the deck', step);
-          await page.screenshot({ path: `${SHOTS}/02d-hover-deck.png` });
+          const dc = await page.evaluate(() => !!document.querySelector('[data-hover-layer] [data-hover-card="deck"]'));
+          if (dc) fail('(h) hovering the deck still opens a card (Cory removed it)', step);
           await page.mouse.move(5, 5);
           await page.waitForTimeout(300);
         }
-        // (m) your own seat's card docks clear of your seat; (l) the ranked line and the turn-order places
+        // (m) your own seat's card opens beside it; (l) the ranked line and the turn-order places
         const head = page.locator('.lt > .lt-seat-0 .cs-head').first();
-        if (await head.count()) { await head.hover(); await page.waitForTimeout(300); await dockCheck(page, 'your seat', step); await page.mouse.move(5, 5); await page.waitForTimeout(200); }
-        const tops = await page.evaluate(() => ({ seats: document.querySelectorAll('.lt > .lt-seat [data-cult]').length, rank: [...document.querySelectorAll('[data-rank] .rk')].map(e => e.textContent.trim()), order: [...document.querySelectorAll('.lt > .lt-seat .cs-order')].map(e => e.dataset.order) }));
-        if (tops.rank.length !== tops.seats) fail(`(l) the ranked line shows ${tops.rank.length} players for ${tops.seats} cults`, step);
+        if (await head.count()) { await head.hover(); await page.waitForTimeout(300); await anchorCheck(page, 'your seat', step, await head.evaluate(e => e.getBoundingClientRect().toJSON())); await page.mouse.move(5, 5); await page.waitForTimeout(200); }
+        const tops = await page.evaluate(() => {
+          let st = null;
+          try { st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; } catch { /* none */ }
+          const seats = [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].filter(e => e.querySelector('[data-cult]'));
+          const rows = seats.map(e => { const t = e.querySelector('.cs-total'); return { pid: Number(e.dataset.pid), f: Number(t.dataset.followers), rank: Number(t.dataset.rank), chip: (t.querySelector('.rk') || {}).textContent || '', y: e.getBoundingClientRect().top }; });
+          return { seats: seats.length, rows, first: st && st.order ? st.order.slice(0, st.players.length) : null, held: !!document.querySelector('[data-next-round], .lt-reckon'), order: [...document.querySelectorAll('.lt > .lt-seat .cs-order')].map(e => e.dataset.order) };
+        });
+        const level = tops.rows.every(r => r.f === tops.rows[0].f);
+        if (tops.rows.some(r => !(r.rank >= 1))) fail(`(l) a chair's total carries no place: ${JSON.stringify(tops.rows)}`, step);
+        for (const a of tops.rows) for (const b of tops.rows) if (a.f > b.f && !(a.rank < b.rank)) fail(`(l) places don't follow the totals: ${JSON.stringify(tops.rows)}`, step);
+        if (!level && tops.rows.filter(r => r.chip).length !== tops.seats) fail(`(l) ${tops.rows.filter(r => r.chip).length} chairs show their place for ${tops.seats} cults`, step);
+        // position is order: top to bottom, the round's first pass (only when the screen has caught up with the save)
+        const byY = tops.rows.slice().sort((a, b) => a.y - b.y).map(r => r.pid);
+        if (tops.first && !tops.held && tops.first.length === byY.length && JSON.stringify(byY) !== JSON.stringify(tops.first)) {
+          await page.waitForTimeout(1200);
+          const again = await page.evaluate(() => { let st = null; try { st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; } catch { /* none */ } return { first: st && st.order ? st.order.slice(0, st.players.length) : null, byY: [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].filter(e => e.querySelector('[data-cult]')).sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top).map(e => Number(e.dataset.pid)), moves: Number(document.querySelector('.app.game').dataset.moves), saved: st && st.moves }; });
+          if (again.moves === again.saved && JSON.stringify(again.byY) !== JSON.stringify(again.first)) fail(`(l) the chairs stand ${JSON.stringify(again.byY)}, the turn order is ${JSON.stringify(again.first)}`, step);
+        }
         if (tops.order.length !== tops.seats || !tops.order.includes('now')) fail(`(l) turn-order places: ${JSON.stringify(tops.order)}`, step);
       }
     }
@@ -380,6 +448,90 @@ try {
     if (!ok) fail(`(i) hovering space ${key} never ticked "✓ after" on the card(s) it unlocks (${uids.join(', ')})`, 'tick');
     else console.log(`info.mjs: space ${key} ticks card ${uids.join(', ')} "✓ after"`);
     await pg.screenshot({ path: `${SHOTS}/07-shop-tick.png` });
+    await pg.close();
+  }
+
+  // (q) every shop card and every chair's member opens its card, whole on screen and on top; then the pay dialog
+  {
+    const save = richSave();
+    const st = save.state;
+    // every chair holds members (one with Penny Pincher and a discount: the pay dialog's rule-changers)
+    const give = (pid, def) => {
+      const c = Object.values(st.cards).find(x => x.def === def && !st.players.some(p => p.members.includes(x.uid)));
+      if (!c) return;
+      st.shop = st.shop.filter(u => u !== c.uid); st.pile = st.pile.filter(u => u !== c.uid);
+      st.players[pid].members.push(c.uid); c.recruitedRound = 0; c.recruitedBy = pid;
+    };
+    give(0, 'gold.thrift'); give(0, 'benders.frontrunner'); give(0, 'red.crowd');
+    st.pile.slice(0, 9).forEach((u, k) => give(1 + (k % 3), st.cards[u].def));
+    while (st.shop.length < 10 && st.pile.length) st.shop.push(st.pile.shift());
+    st.players[0].discount = 4;
+    const pg = await browser.newPage({ viewport: { width: 1270, height: 700 } });
+    pg.on('pageerror', e => errors.push(`cards pageerror: ${e.message}`));
+    await pg.goto(`${base}/?botDelay=20&intro=0`);
+    await pg.evaluate(v => localStorage.setItem('patrons.v4.local', JSON.stringify(v)), save);
+    await pg.reload();
+    await pg.waitForSelector('[data-home="resume"], .lt-shop .card[data-uid]');
+    if (await pg.$('[data-home="resume"]')) await pg.click('[data-home="resume"]');
+    await pg.waitForSelector('.lt-shop .card[data-uid]');
+    await pg.waitForTimeout(400);
+    const shop = await pg.$$eval('.lt-shop .lt-cards .card[data-uid]', els => els.map(e => e.dataset.uid));
+    for (const uid of shop) {
+      await pg.mouse.move(4, 690); await pg.waitForTimeout(170);
+      await pg.locator(`.lt-shop .card[data-uid="${uid}"]`).hover();
+      const ok = await pg.waitForFunction(u => { const c = document.querySelector(`[data-hover-layer][data-open="1"] [data-card-hover="${u}"] .card-face`); return !!c && c.getBoundingClientRect().width > 0; }, uid, { timeout: 1500 }).then(() => true, () => false);
+      if (!ok) { fail(`(q) shop card ${uid} (${st.cards[uid].def}) opens no card`, 'cards'); continue; }
+      await anchorCheck(pg, `shop card ${st.cards[uid].def}`, 'cards', `.lt-shop .card[data-uid="${uid}"]`);
+      const extra = await pg.evaluate(() => (document.querySelector('[data-hover-layer][data-open="1"]').innerText.match(/You pay|Leaves|you'd lead|you’d lead|Click the card/i) || [])[0]);
+      if (extra) fail(`(q) the shop card's hover still says "${extra}" (Cory: the cost and nothing else about payment)`, 'cards');
+    }
+    let members = 0;
+    for (const seat of [0, 1, 2, 3]) {
+      const figs = pg.locator(`.lt > .lt-seat-${seat} [data-member] .fig`);
+      const n = await figs.count();
+      for (let k = 0; k < n; k++) {
+        await pg.mouse.move(4, 690); await pg.waitForTimeout(170);
+        await figs.nth(k).hover();
+        const r = await pg.waitForFunction(() => {
+          const c = [...document.querySelectorAll('.popover .card-face')].find(e => e.getBoundingClientRect().width > 0);
+          if (!c) return null;
+          const p = c.closest('.popover'), b = p.getBoundingClientRect();
+          const hit = document.elementFromPoint(b.left + b.width / 2, b.top + Math.min(20, b.height / 2));
+          return { name: c.dataset.card, inView: b.top >= 0 && b.left >= 0 && b.bottom <= innerHeight + 0.5 && b.right <= innerWidth + 0.5, onTop: !!hit && p.contains(hit), y: [Math.round(b.top), Math.round(b.bottom)] };
+        }, null, { timeout: 1500 }).then(h => h.jsonValue(), () => null);
+        members++;
+        if (!r) { fail(`(q) a member in chair ${seat} opens no card`, 'cards'); continue; }
+        if (!r.inView) fail(`(q) ${r.name} (chair ${seat}) opens a card off the window (y ${r.y.join('–')})`, 'cards');
+        if (!r.onTop) fail(`(q) ${r.name} (chair ${seat}) opens a card under something else`, 'cards');
+      }
+    }
+    if (members < 6) fail(`(q) only ${members} chair members to check`, 'cards');
+    await pg.screenshot({ path: `${SHOTS}/10-member-card.png` });
+    // the pay dialog: place, then recruit a gold member; the dialog holds focus and names the rule-changers
+    await pg.mouse.move(4, 690);
+    const sp = await pg.$('.slot.can .base');
+    const bb = await sp.boundingBox();
+    await pg.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
+    for (let k = 0; k < 8 && !(await pg.$('.lt[data-phase="buy"][data-yours="1"]')); k++) { const o = await pg.$('.prompt.choice button[data-option]:not([disabled])'); if (o) await o.click().catch(() => {}); await pg.waitForTimeout(250); }
+    const uid = await pg.evaluate(() => { const s = JSON.parse(localStorage.getItem('patrons.v4.local')).state; return s.shop.find(u => s.cards[u].def.startsWith('gold.') && s.cards[u].def !== 'gold.thrift'); });
+    if (uid == null) fail('(q) no gold member in the shop to pay for', 'pay');
+    else {
+      await pg.click(`.lt-shop .card[data-uid="${uid}"]`);
+      const d = await pg.waitForSelector('.dialog.pay', { timeout: 4000 }).catch(() => null);
+      if (!d) fail('(q) recruiting a gold member opened no pay dialog', 'pay');
+      else {
+        await pg.waitForTimeout(400);
+        const r = await pg.evaluate(() => ({ inside: document.querySelector('.dialog.pay').contains(document.activeElement), rules: [...document.querySelectorAll('[data-pay-rule]')].map(e => e.textContent) }));
+        if (!r.inside) fail('(q) the pay dialog does not take focus (Enter would do nothing)', 'pay');
+        if (!r.rules.some(t => /gold counts double/.test(t))) fail(`(q) the pay dialog never says Penny Pincher's gold counts double (${JSON.stringify(r.rules)})`, 'pay');
+        if (!r.rules.some(t => /−4/.test(t))) fail(`(q) the pay dialog never says the −4 discount (${JSON.stringify(r.rules)})`, 'pay');
+        await pg.screenshot({ path: `${SHOTS}/11-pay-rules.png` });
+        await pg.keyboard.press('Enter');
+        const paid = await pg.waitForFunction(() => !document.querySelector('.dialog.pay'), null, { timeout: 3000 }).then(() => true, () => false);
+        if (!paid) fail('(q) Enter in the pay dialog did not pay', 'pay');
+      }
+    }
+    console.log(`info.mjs: ${shop.length} shop cards and ${members} chair members open their cards`);
     await pg.close();
   }
 

@@ -1,12 +1,11 @@
 // The information layer: everything here appears on hover (mouse) or tap / long-press (touch), never always on.
 // - Tip: any element that explains itself in a small card (hover after a beat; a tap pins it; Esc / tap away closes).
 // - Term / CardText: game keywords underlined in rules text; each opens its glossary definition (src/v4/glossary.js).
-// - CardName / MemberCard / BadgeMark: a member named anywhere opens the full card (badge, color, cost, owner).
+// - CardName / MemberCard: a member named anywhere opens the full card (color, cost, owner).
 // - ContestStandings / ContestTip: a quadrant's contest straight from the engine's contestTable (who'd score now).
 // - TouchTips: on touch screens a long-press on anything with a title shows that title (hover's touch twin).
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { cardDef, defById, quadrant, previewSpace, contestTable } from '../../engine/v4/index.js';
-import { badgedDef } from '../../engine/v4/content/market.js';
 import { term, splitTerms } from '../glossary.js';
 import { costParts, playerColor, standings, toStanding, tiebreakNote } from '../format.js';
 import { realHover } from '../hover.js';
@@ -14,6 +13,7 @@ import { Popover } from './parts.jsx';
 import { Who } from './Glyphs.jsx';
 import { Rich, CostPips } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
+import { MO } from '../motion.js';
 
 /**
  * An element that explains itself. content: a node or a function returning one (built only when shown).
@@ -21,6 +21,9 @@ import { Follower } from '../art/Follower.jsx';
  */
 // Inside a control (an option button, a card): the control owns the click, the tip only explains on hover/long-press.
 const CONTROL = 'button, a[href], [data-option], [role="button"]';
+// a pointer resting on something opens its card at once (Cory, 2026-10-15: hovers must feel instant); the beat only
+// keeps a pointer passing across a line of keywords from flashing each one
+const TIP_MS = MO.tipOpen; // src/v4/motion.js
 export function Tip({ content, children, as: As = 'span', className = '', label, hint = null, ...rest }) {
   const [open, setOpen] = useState(null); // { el, pinned }
   const [nested, setNested] = useState(false);
@@ -40,7 +43,7 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
         ref={ref} className={`tip${className ? ` ${className}` : ''}`} data-tip="" role={nested ? undefined : 'button'} tabIndex={nested ? undefined : 0}
         aria-haspopup={nested ? undefined : 'dialog'} aria-expanded={nested ? undefined : !!open} aria-label={label}
         title={nested ? hint || label || undefined : undefined}
-        onPointerEnter={e => { if (!realHover(e)) return; clearTimeout(timer.current); timer.current = setTimeout(() => setOpen(o => o || { el: ref.current, pinned: false }), 260); }}
+        onPointerEnter={e => { if (!realHover(e)) return; clearTimeout(timer.current); timer.current = setTimeout(() => setOpen(o => o || { el: ref.current, pinned: false }), TIP_MS); }}
         onPointerLeave={e => { clearTimeout(timer.current); if (e.pointerType === 'mouse') setOpen(o => (o && !o.pinned ? null : o)); }}
         onClick={pin}
         onKeyDown={e => { if (!nested && (e.key === 'Enter' || e.key === ' ')) pin(e); }}
@@ -56,7 +59,7 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
 }
 
 // ---------- keywords ----------
-/** A keyword that opens its glossary definition. k: a glossary key ('badged', 'full set'…). */
+/** A keyword that opens its glossary definition. k: a glossary key ('full set', 'plant'…). */
 export function Term({ k, children, className = '' }) {
   const t = term(k);
   if (!t) return <>{children}</>;
@@ -82,21 +85,13 @@ export function CardText({ text }) {
 export const onTable = (state, def) => state.quadrants.includes(def.quadrant);
 /** The frame color of a member on this table: its quadrant's, or the neutral "colorless" one. */
 export const cardColor = (state, def) => (onTable(state, def) ? `var(--${def.quadrant})` : 'var(--colorless)');
-/** Badged (printed cost at the cutoff or more) matters only where Blue (the market) scores it. */
-export const showsBadge = (state, def) => state.quadrants.includes('market') && badgedDef(def);
-
-/** The ◆ on a badged member; it opens the glossary's "badged". Nothing on tables without Blue. */
-export function BadgeMark({ state, def }) {
-  if (!showsBadge(state, def)) return null;
-  return <Term k="badged" className="badge-mark"><span aria-label="badged">◆</span></Term>;
-}
 /** "colorless": a member whose quadrant isn't on this table. */
 export function Colorless({ state, def }) {
   if (onTable(state, def)) return null;
   return <Term k="colorless" className="colorless-tag">colorless</Term>;
 }
 
-/** The full card: color frame, name, worth, badge, ability (keywords linked), cost, and its owner when it has one. */
+/** The full card: color frame, name, worth, ability (keywords linked), cost, and its owner when it has one. */
 export function MemberCard({ state, uid, def: d0 = null }) {
   const d = d0 || cardDef(state, uid);
   const owner = uid != null ? state.players.find(p => p.members.includes(uid)) : null;
@@ -104,7 +99,7 @@ export function MemberCard({ state, uid, def: d0 = null }) {
   const where = uid == null ? null : owner ? null : state.shop.includes(uid) ? 'In the shop' : 'In the pile';
   return (
     <div className="card-face" style={{ '--c': cardColor(state, d) }} data-card={d.id}>
-      <div className="row"><span className="glyph" aria-hidden="true" /><b>{d.name}</b><BadgeMark state={state} def={d} /><Follower n={d.f} className="star" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></div>
+      <div className="row"><span className="glyph" aria-hidden="true" /><b>{d.name}</b><Follower n={d.f} className="star" title={`Worth ${d.f} follower${d.f === 1 ? '' : 's'}`} /></div>
       <p><CardText text={d.text} /></p>
       {card && card.copy && <small>Copying <CardName state={state} def={defById(card.copy)} /></small>}
       <small>Costs <CostPips parts={costParts(d, state.resources)} />{d.n > 1 ? ` · counts as ${d.n} members` : ''}{onTable(state, d) ? '' : ' · '}<Colorless state={state} def={d} /></small>
@@ -121,7 +116,7 @@ export function CardName({ state, uid = null, def = null, children, className = 
   return (
     <Tip className={`card-name${className ? ` ${className}` : ''}`} data-card-name={d.id} label={`${d.name}: show the card`}
       style={{ '--c': cardColor(state, d) }} content={() => <MemberCard state={state} uid={uid} def={uid == null ? d : null} />}>
-      {children || d.name}{showsBadge(state, d) ? <span className="badge-mark inline" aria-label="badged">◆</span> : null}
+      {children || d.name}
     </Tip>
   );
 }

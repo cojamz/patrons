@@ -193,7 +193,7 @@
     },
     {
       id: 'gold.taxman', name: 'Tax Collector', kind: 'member', sphere: 'gold',
-      text: 'Whenever a rival buys followers, +1 gold.',
+      text: 'Whenever the rival with the most followers buys followers, +1 gold.',
       idea: 'stern clerk in a peaked cap with a cash box, a coin going in the slot',
       px: [
         '........................',
@@ -627,7 +627,7 @@
     },
     {
       id: 'red.hireup', name: 'Open House', kind: 'action', sphere: 'red',
-      text: '+2 red, and recruit the cheapest face-up member, free.',
+      text: 'Recruit a face-up member costing 4 or less, free.',
       idea: 'a hand lifts a member up, with red to spare',
       px: [
         '........................',

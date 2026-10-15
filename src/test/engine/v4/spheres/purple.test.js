@@ -10,7 +10,8 @@ import { take, move, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
 import { games } from '../budget.js';
 
-// seeded games in the table block below: a game count, not a time budget (the fast gate plays 20; budget.js)
+// seeded games in the table block below: a game count, not a time budget (budget.js). The verdict plays 100 (catches a
+// bug in ≥3% of this table's games with 95% confidence), the nightly full run (check:v4:full) all 200, the fast gate 20.
 const GAMES = games(200);
 
 registerQuadrant(purple);
@@ -86,10 +87,10 @@ describe('Purple actions', () => {
     expect(R(take(scene(), 'purple.windup')).purple).toBe(1);
     expect(R(take(scene({ slots: { [JV]: 0, [HIRE]: 0, [RUSH]: 1 } }), 'purple.windup')).purple).toBe(3);
   });
-  it('Plan Ahead (ring II): +2 purple per worker you have left to place this round', () => {
+  it('Plan Ahead (ring II): +1 purple per minion you have left to place this round', () => {
     expect(() => take(scene({ round: 1 }), 'purple.planahead')).toThrow();
     // the scene gives 3 workers; placing this one leaves 2
-    expect(R(take(scene({ round: 2, queue: turns(0, 1) }), 'purple.planahead')).purple).toBe(4);
+    expect(R(take(scene({ round: 2, queue: turns(0, 1) }), 'purple.planahead')).purple).toBe(2);
     const last = scene({ round: 3, queue: turns(0, 1) });
     last.players[0].left = 1;
     expect(R(take(last, 'purple.planahead')).purple).toBe(0); // your last worker: nothing left to plan
@@ -116,28 +117,28 @@ describe('Purple actions', () => {
     expect(R(s).purple).toBe(OT_COST + 3); // 2 open, 1 turn queued: room for 1 extra turn, not 2, so +3
     expect(nextPlacer(s)).toBe(1);
   });
-  it('Crunch Time (ring III): spend all your purple, 1 extra turn per 4 spent plus 1, up to 3; with less than 4, +4 purple', () => {
+  it('Crunch Time (ring III): spend all your purple, 1 extra turn per 4 spent plus 1, up to 2; with less than 4, +4 purple', () => {
     const rally = purpleHeld => take(scene({ round: 3, res: [{ purple: purpleHeld }], queue: turns(0, 1) }), 'purple.rally');
     let s = rally(5);
     expect(R(s).purple).toBe(0); // all of it, even the odd 1
     expect(s.players[0].left).toBe(2 + 2); // 5 → 1 per 4, plus 1 = 2 extra turns
     expect(nextPlacer(s)).toBe(0);
     s = rally(8);
-    expect(s.players[0].left).toBe(2 + 3);
+    expect(s.players[0].left).toBe(2 + 2); // 8 would buy 3; the most is 2
     s = rally(30);
-    expect(s.players[0].left).toBe(2 + 3); // never more than 3
+    expect(s.players[0].left).toBe(2 + 2); // never more than 2
     expect(R(s).purple).toBe(0);
     s = rally(3);
     expect(R(s).purple).toBe(7);
     expect(nextPlacer(s)).toBe(1);
   });
   it('Crunch Time with room for fewer turns than its purple buys: pays only for the turns it gets', () => {
-    // round III: 4 spaces open once Crunch Time is taken, and P2 still has 2 turns → room for 2 extra turns, not 3
+    // round III: 4 spaces open once Crunch Time is taken, and P2 still has 3 turns → room for 1 extra turn, not 2
     const taken = { ...fullRoundI('0-0', '0-1', '0-2'), '0-3': 1, '0-4': 1, '1-3': 1, '1-4': 1, '2-3': 1, '3-3': 1, '3-4': 1, '0-5': 1, '1-5': 1, '3-5': 1 };
-    const s0 = scene({ round: 3, res: [{ purple: 12 }], slots: taken, queue: turns(0, 1, 1) });
+    const s0 = scene({ round: 3, res: [{ purple: 12 }], slots: taken, queue: turns(0, 1, 1, 1) });
     const s = take(s0, 'purple.rally');
-    expect(s.players[0].left).toBe(2 + 2);
-    expect(R(s).purple).toBe(12 - 4); // 2 turns: the free one and one bought with 4
+    expect(s.players[0].left).toBe(2 + 1);
+    expect(R(s).purple).toBe(12); // 1 turn: the free one, so nothing is spent
   });
 });
 

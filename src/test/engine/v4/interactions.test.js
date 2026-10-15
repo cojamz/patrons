@@ -158,12 +158,12 @@ describe('Green copies the risky spaces', () => {
   it('copying Plan Ahead gives what it gave its taker (their workers left), not your own count', () => {
     const P = ['gold', 'red', 'purple', 'echo'];
     let s = scene({ quads: P, round: 2, turns: [1, 0] }); // 5 workers each
-    s = go(s, 'purple.planahead'); // P2: 4 left → +8 purple
-    expect(R(s, 1).purple).toBe(8);
+    s = go(s, 'purple.planahead'); // P2: 4 left → +4 purple
+    expect(R(s, 1).purple).toBe(4);
     s = take(s, 'echo.encore');
-    expect(labels(s)).toContain('Plan Ahead (P2): +8 purple');
+    expect(labels(s)).toContain('Plan Ahead (P2): +4 purple');
     s = pass(move(s, s.pending.options.find(opt('Plan Ahead')).id));
-    expect(R(s, 0).purple).toBe(8);
+    expect(R(s, 0).purple).toBe(4);
   });
 
   it('Midas turns a copied gain into gold; a Midas taker’s chip still shows the printed color', () => {
@@ -257,7 +257,8 @@ describe('Blue’s out-of-buy recruits with Pied Piper and Proselytizer', () => 
   const Q = ['gold', 'red', 'market', 'green'];
   const rich = { gold: 9, red: 9, blue: 9, green: 9 };
   it('Snap Up’s recruit and the normal buy make 2: Drive pays, Proselytizer pays twice', () => {
-    let s = scene({ quads: Q, res: [rich], members: [['red.drive', 'red.proselytizer']] });
+    // P2 leads blue (Blue's ring counts blue), so P1's default payment may spend blue, as it did before that ring
+    let s = scene({ quads: Q, res: [rich, { blue: 30 }], members: [['red.drive', 'red.proselytizer']] });
     s = payUp(play(take(s, 'market.bargain'), opt('Intern')));
     expect(R(s, 0).red).toBeLessThanOrEqual(9);
     const red = R(s, 0).red;
@@ -273,7 +274,7 @@ describe('Blue’s out-of-buy recruits with Pied Piper and Proselytizer', () => 
     expect(s.players[0].turnRecruits).toBe(1);
   });
   it('Spree: 3 buys, Drive pays once', () => {
-    let s = scene({ quads: Q, round: 3, res: [{ gold: 20, red: 20, blue: 20, green: 20 }], members: [['red.drive']] });
+    let s = scene({ quads: Q, round: 3, res: [{ gold: 20, red: 20, blue: 20, green: 20 }, { blue: 30 }], members: [['red.drive']] });
     s = take(s, 'market.spree');
     for (const d of ['red.intern', 'red.patriarch', 'gold.tycoon']) s = move(s, `card:${uidOf(s, d, 'shop')}`);
     expect(R(s, 0).red).toBe(20 + 2 - 1 - 3);

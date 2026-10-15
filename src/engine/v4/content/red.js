@@ -1,6 +1,9 @@
 // Red: quantity over quality. Most members at round end takes the ring's followers; red members break ties.
 const m = (key, name, s, w, text, extra = {}) => ({ key, name, s, w, text, f: 1, n: 1, ...extra });
 const cost = c => c.def.s + c.def.w;
+/** Open House: the face-up members it can recruit. */
+const OPEN_HOUSE_MAX = 4;
+const openHouseRow = ctx => ctx.shopCards().filter(c => cost(c) <= OPEN_HOUSE_MAX);
 
 export default {
   id: 'red',
@@ -34,12 +37,21 @@ export default {
     {
       key: 'hire', ring: 1, name: 'Open Door', text: 'Recruit the cheapest face-up member, free.',
       estimate: ctx => cheapValue(ctx),
-      resolve(ctx, p) { hireCheapest(ctx, p); },
+      resolve(ctx, p) { hireCheapest(ctx, p, 'Open Door'); },
     },
     {
-      key: 'hireup', ring: 2, name: 'Open House', text: '+2 red, and recruit the cheapest face-up member, free.',
-      estimate: ctx => 2 + cheapValue(ctx),
-      resolve(ctx, p) { ctx.gain(p, 'red', 2, { fromAction: true }); hireCheapest(ctx, p); },
+      // Cory, 2026-10-15 (balance pass 1, #6): no +2 red, and you choose (was "+2 red, and recruit the cheapest
+      // face-up member, free", his own "too strong" anchor: an extra recruit plus +2)
+      key: 'hireup', ring: 2, name: 'Open House', text: `Recruit a face-up member costing ${OPEN_HOUSE_MAX} or less, free.`,
+      estimate: ctx => Math.max(0, ...openHouseRow(ctx).map(c => c.def.f + cost(c) * 0.8)),
+      resolve(ctx, p) {
+        const row = openHouseRow(ctx);
+        if (!row.length) { ctx.log(`Open House: no face-up member costs ${OPEN_HOUSE_MAX} or less, so ${p.name} recruits nothing.`); return; }
+        if (row.length === 1) { ctx.recruit(p, row[0].uid, { free: true }); return; }
+        ctx.choose(p, 'Open House: recruit which member?', row.map(c => ({
+          id: `card:${c.uid}`, label: `${c.def.name} (${cost(c)})`, kind: 'card', value: c.uid, hint: c.def.f * 1.5 + cost(c),
+        })), 'red.takeFree');
+      },
     },
     {
       key: 'trade', ring: 2, name: 'Swap Sides', text: 'Swap one of your members for another player’s costing no more than yours +2.',
@@ -88,9 +100,15 @@ export default {
     m('volunteer', 'Volunteer', 0, 0, 'Free. No effect.'),
     m('intern', 'Intern', 1, 0, 'No effect.'),
     m('mentor', 'Mentor & Protégé', 6, 4, 'When recruited: also take the cheapest face-up member free.', {
-      onRecruited(ctx, owner) { if (ctx.shopCards().length) ctx.log(`${owner.name}'s Mentor & Protégé: the cheapest face-up member comes along free.`); hireCheapest(ctx, owner); },
+      // card: this Mentor, or a Doppelganger copying it (its free pick says so)
+      onRecruited(ctx, owner, card) {
+        const who = card && card.def && card.def.key === 'doppel' ? 'Doppelganger (as Mentor & Protégé)' : 'Mentor & Protégé';
+        if (ctx.shopCards().length) ctx.log(`${owner.name}'s ${who}: the cheapest face-up member comes along free.`);
+        hireCheapest(ctx, owner, who);
+      },
     }),
-    m('proselytizer', 'Proselytizer', 6, 6, 'Whenever you recruit, +1 follower.', {
+    // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 12 → 6
+    m('proselytizer', 'Proselytizer', 4, 2,'Whenever you recruit, +1 follower.', {
       onAnyRecruit(ctx, owner, card, by, recruited) { if (by === owner && recruited.uid !== card.uid) owner.bonus += 1; },
     }),
     m('mob', 'Mob', 4, 4, 'Game end: +1 follower per red member.', {
@@ -139,13 +157,14 @@ function cheapest(ctx) {
   if (!shop.length) return null;
   return shop.reduce((a, b) => (cost(b) < cost(a) ? b : a));
 }
-function hireCheapest(ctx, p) {
+// who: the card or space asking, so its choice is titled with its own name (Mentor & Protégé shares this with Open Door)
+function hireCheapest(ctx, p, who) {
   const shop = ctx.shopCards();
   if (!shop.length) return;
   const min = Math.min(...shop.map(cost));
   const tied = shop.filter(c => cost(c) === min);
   if (tied.length === 1) { ctx.recruit(p, tied[0].uid, { free: true }); return; }
-  ctx.choose(p, 'Open Door: which of the cheapest members?', tied.map(c => ({
+  ctx.choose(p, `${who}: which of the cheapest members?`, tied.map(c => ({
     id: `card:${c.uid}`, label: c.def.name, kind: 'card', value: c.uid, hint: c.def.f,
   })), 'red.takeFree');
 }

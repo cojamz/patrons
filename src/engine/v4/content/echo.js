@@ -62,7 +62,7 @@ function track(ctx, e) {
   };
   ctx.recruit = (t, uid, o) => {
     // a member the taker paid for (Snap Up, Half Price) is a trade: a copy does the action itself
-    if (t.id === e.p && o?.free && o.paid) e.redo = true;
+    if (t.id === e.p && o?.paid) e.redo = true;
     else if (t.id === e.p && o?.free) { e.members.push(costOf(quadrantDef(ctx.state, uid))); e.members.sort((x, y) => x - y); }
     return recruit(t, uid, o);
   };
@@ -142,17 +142,19 @@ export function targets(ctx, p, which, skip = null) {
 /** A rival's spaces since p's last turn, from inside p's own turn (the space p just took doesn't count as "last turn"). */
 const sinceNow = (ctx, p) => { const L = ledger(ctx.state); return targets(ctx, p, 'since', L.now[L.open]?.p === p.id ? L.open : null); };
 const bestValue = (ctx, list, p) => Math.max(0, ...list.map(e => entryValue(ctx, e, p)));
-// by: the member making the copy (Understudy, Sleepwalker…), so the log names it
+// by: the member making the copy (Understudy, Sleepwalker…), so the log names it. who: the card or space asking
+// (the prompt's own name), so a copied space's free member is titled with it ("Encore: take a face-up member…").
 function offer(ctx, p, list, prompt, from, by = null) {
   if (!list.length) { ctx.log(`${p.name}${by ? `'s ${by}` : ''} had nothing to copy.`); return; }
+  const who = by || prompt.split(':')[0];
   ctx.choose(p, prompt, list.map(e => ({
     id: `space:${from}:${e.key}`, label: `${e.name} (${ctx.player(e.p).name}): ${describe(ctx, e)}`, kind: 'space',
     value: e.key, hint: entryValue(ctx, e, p),
-  })), 'echo.pick', by ? { from, by } : { from });
+  })), 'echo.pick', by ? { from, by, who } : { from, who });
 }
 
 /** p copies entry e: same resources, same discount, and a free face-up member (cost ≤ theirs) per member. */
-export function copy(ctx, p, e, { later = null, by = null } = {}) {
+export function copy(ctx, p, e, { later = null, by = null, asker = null } = {}) {
   const taker = ctx.player(e.p);
   const who = by ? `${p.name}'s ${by}: ${p.name}` : p.name;
   if (e.redo) {
@@ -171,7 +173,7 @@ export function copy(ctx, p, e, { later = null, by = null } = {}) {
   ctx.log(`${who} copied ${e.name}${e.p !== p.id ? ` (${ctx.player(e.p).name}'s)` : ''}: ${describe(ctx, e)}${notes.length ? `, ${notes.join(', ')}` : ''}.`);
   heard(ctx, p, e, taker);
   if (later) later.push(...e.members);
-  else if (e.members.length) freeStep(ctx, p, { left: [...e.members] });
+  else if (e.members.length) freeStep(ctx, p, { left: [...e.members], who: asker || by || 'Copy' });
 }
 // members that react to a copy
 function heard(ctx, p, e, taker) {
@@ -185,20 +187,20 @@ function heard(ctx, p, e, taker) {
   const ensemble = taker !== p ? has(ctx, p, 'ensemble') : 0;
   if (ensemble) ctx.asMember(p, 'Ensemble', () => { p.bonus += ensemble; });
 }
-/** Copy several spaces; free members are picked one after another at the end. */
-export function copyAll(ctx, p, list, by = null) {
+/** Copy several spaces; free members are picked one after another at the end. who: the card or space copying. */
+export function copyAll(ctx, p, list, by = null, who = by) {
   const later = [];
   for (const e of list) copy(ctx, p, e, { later, by });
-  if (later.length) freeStep(ctx, p, { left: later.sort((a, b) => b - a) });
+  if (later.length) freeStep(ctx, p, { left: later.sort((a, b) => b - a), who: who || 'Copy' });
 }
 function freeStep(ctx, p, data) {
   if (!data.left.length) return;
   const c = data.left[0];
   const fits = ctx.shopCards().filter(x => costOf(x.def) <= c);
-  if (!fits.length) { ctx.log(`${p.name}: no face-up member costs ${c} or less.`); freeStep(ctx, p, { left: data.left.slice(1) }); return; }
-  ctx.choose(p, `Copy: take a face-up member costing ${c} or less, free`, fits.map(x => ({
+  if (!fits.length) { ctx.log(`${p.name}: no face-up member costs ${c} or less.`); freeStep(ctx, p, { ...data, left: data.left.slice(1) }); return; }
+  ctx.choose(p, `${data.who || 'Copy'}: take a face-up member costing ${c} or less, free`, fits.map(x => ({
     id: `card:${x.uid}`, label: `${x.def.name} (${costOf(x.def)})`, kind: 'card', value: x.uid, hint: x.def.f * 1.4 + costOf(x.def),
-  })), 'echo.free', { cost: c, left: data.left.slice(1) });
+  })), 'echo.free', { cost: c, left: data.left.slice(1), who: data.who || 'Copy' });
 }
 
 // ---------- the quadrant ----------
@@ -248,7 +250,7 @@ const echoQ = {
         plus(ctx, p);
         const list = targets(ctx, p, 'own');
         if (!list.length) { ctx.log(`${p.name} had nothing to copy.`); return; }
-        copyAll(ctx, p, list);
+        copyAll(ctx, p, list, null, 'Greatest Hits');
       },
     },
   ],
@@ -257,10 +259,10 @@ const echoQ = {
     pick(ctx, p, key, data) {
       const L = ledger(ctx.state);
       const e = (data.from === 'last' ? L.last : L.now)[key];
-      if (e) copy(ctx, p, e, { by: data.by || null });
+      if (e) copy(ctx, p, e, { by: data.by || null, asker: data.who || data.by || null });
     },
     free(ctx, p, uid, data) {
-      if (!ctx.state.shop.includes(uid)) { freeStep(ctx, p, { left: [data.cost, ...data.left] }); return; }
+      if (!ctx.state.shop.includes(uid)) { freeStep(ctx, p, { left: [data.cost, ...data.left], who: data.who }); return; }
       ctx.recruit(p, uid, { free: true });
       freeStep(ctx, p, data);
     },

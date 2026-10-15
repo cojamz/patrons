@@ -35,16 +35,20 @@ function myWorkers(ctx, p) {
   return out;
 }
 
-// Two Straggler moves can be queued at once (two copies, a Doppelganger): each choice is re-checked against the board
-// when it resolves, and offered again with fresh options if an earlier move took its space (a crash before).
+// The minion that moves is always the owner's last one placed (Cory, 2026-10-15: "it's always last"), so the only
+// question is where it goes. Two Straggler moves can be queued at once (two copies, a Doppelganger): each choice is
+// re-checked against the board when it resolves, and offered again with fresh options if an earlier move took its space.
+function lastWorker(ctx, p) {
+  const all = myWorkers(ctx, p), l = p.lastSlot;
+  return (l && all.find(w => w.key === l.key && w.joined === !!l.joined)) || all[all.length - 1] || null;
+}
 function offerFrom(ctx, owner, uid) {
-  const from = myWorkers(ctx, owner), to = openSpaces(ctx);
-  if (!from.length || !to.length) return;
-  const best = Math.max(...to.map(t => t.a.estimate(ctx, owner)));
-  ctx.choose(owner, 'Straggler: move one of your minions to an unused space?', [
-    ...from.map(w => ({ id: `from:${w.key}${w.joined ? ':j' : ''}`, label: spaceLabel(ctx, w.key), kind: 'slot', value: w, hint: best - actionOf(ctx, w.key).ring * 0.1 })),
+  const from = lastWorker(ctx, owner), to = openSpaces(ctx);
+  if (!from || !to.length) return;
+  ctx.choose(owner, `Straggler: move your last minion (on ${actionOf(ctx, from.key).name}) to an unused space and do that action?`, [
+    ...to.map(t => ({ id: `to:${t.key}`, label: spaceLabel(ctx, t.key), kind: 'slot', value: t.key, hint: t.a.estimate(ctx, owner) })),
     { id: 'no', label: 'Stay put', kind: 'no', value: null, hint: 0.5 },
-  ], 'benders.stragglerFrom', { uid });
+  ], 'benders.stragglerTo', { uid, from });
 }
 const stillMine = (ctx, p, w) => (w.joined ? (ctx.state.squats?.[w.key] || []).includes(p.id) : ctx.state.slots[w.key] === p.id);
 
@@ -55,7 +59,7 @@ const members = [
   m('insider', 'Insider', 'market', 4, 2, 'You may also recruit from the top 3 of the pile.', { pileReach: 3 }),
   m('extrahand', 'Extra Hand', 'purple', 6, 4, '+1 minion in round III.', { extraWorkers: [0, 0, 1] }),
   m('frontrunner', 'Front-runner', 'purple', 2, 0, 'You always pick first in a round.', { pickFirst: true }),
-  m('straggler', 'Straggler', 'purple', 6, 2, 'Once per round, after the last minion is placed: move one of your minions to an unused space and do that action.', {
+  m('straggler', 'Straggler', 'purple', 6, 2, 'Once per round, after the last minion is placed: your last minion may move to an unused space and do that action.', {
     onAllPlaced(ctx, owner, card) {
       if (card.usedRound === ctx.state.round) return;
       offerFrom(ctx, owner, card.uid);
@@ -74,6 +78,7 @@ export const handlers = {
     })), 'benders.stragglerTo', { ...data, from });
   },
   stragglerTo(ctx, p, to, data) {
+    if (!to) return; // stayed put
     if (!stillMine(ctx, p, data.from) || ctx.state.slots[to] !== undefined) { offerFrom(ctx, p, data.uid); return; }
     const card = ctx.card(data.uid);
     card.usedRound = ctx.state.round;

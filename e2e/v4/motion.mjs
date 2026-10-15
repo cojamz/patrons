@@ -1,5 +1,7 @@
 // E2E motion gate: what you do yourself moves, at laptop size (1270×700) and on a phone (390×844, real touch).
-//  (m1) a +6 follower buy counts up: your follower number shows at least 3 values between old and new;
+//  (m1) a +6 follower buy counts up: your follower number shows at least 3 values between old and new (sampled per
+//       painted frame; Tick.jsx steps one whole number per painted frame for small changes, so a loaded box that paints
+//       rarely slows the count instead of skipping numbers);
 //  (m2) your placement sends a worker token flying to the space;
 //  (m3) your recruit flies from the shop as a fixed-size picture (no reflowed text spilling out), starting on screen;
 //  (m4) laptop, Normal speed: consecutive bot steps in round I are at least 600ms apart.

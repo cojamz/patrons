@@ -4,20 +4,23 @@
 // UI-A's wheel calls onSpaceHover(key, el|null, { pinned }), plaques onPlaqueHover(qid, el|null); seats and shop
 // cards are mine. GameScreen mounts <HoverCardLayer> once.
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { quadrant, roman, contestTable, cardDef, followers as followersOf, botLevel, BOT_LEVEL_INFO } from '../../engine/v4/index.js';
-import { playerColor, standings, costParts } from '../format.js';
+import { playerColor, standings } from '../format.js';
 import { Popover } from './parts.jsx';
 import { Sprite } from '../art/Sprite.jsx';
 import { spriteId } from '../art/index.js';
 import { CardText, ContestStandings, MemberCard, CardName, YoudGet, usePreview, requestPreviews } from './Info.jsx';
-import { CostPips } from './Rich.jsx';
 import { ResourceGlyph, SeatFigure } from './Glyphs.jsx';
 import { Follower } from '../art/Follower.jsx';
-import { payBreakdown, contestEffect, unlockedBy, surely } from './cards.js';
+import { unlockedBy, surely } from './cards.js';
 import { lastMoves } from './seats.js';
+import { memberGroups, incomeOf } from './build.js';
+import { seatRanks } from './RankRow.jsx';
 import { memberCopyTargets } from './cards.js';
 import { DeckCard } from './MemberDeck.jsx';
 import './lamp-b.css';
+import { MO } from '../motion.js';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
@@ -26,7 +29,7 @@ const sphereOf = qid => quadrant(qid).resource;
  * The hover/pin state: one card at a time. Opens the moment the pointer arrives (Cory: instant); moving to a neighbour swaps the card in place at once; leaving closes it 150ms later
  * (unless the pointer arrives somewhere else first). A tap pins it (a sheet on phones). Cory: instant and seamless.
  */
-export const OPEN_MS = 0, CLOSE_MS = 150;
+export const OPEN_MS = MO.hoverOpen, CLOSE_MS = MO.hoverClose; // src/v4/motion.js
 /**
  * The hover state lives outside React's render path: the object is stable, `card` and `space` are getters, and only
  * the layer (useHoverCard) and the shop's tick (useHoverSpace) subscribe, so a hover never re-renders the table.
@@ -88,39 +91,40 @@ export function usePreviewWarmup(state, pid) {
 }
 
 /**
- * The one hover card on screen. Hovering: a single persistent layer beside what it explains (never over it,
- * pointer-transparent, so moving through it changes nothing); its side is chosen once per target, so content
- * filling in never makes it jump. Pinned (a tap): a sheet on phones, a card beside the target elsewhere.
+ * The one hover card on screen. Hovering: a single persistent layer right next to what it explains (Cory, 2026-10-15:
+ * never a docked spot elsewhere), pointer-transparent, so moving through it changes nothing. It sits beside its target,
+ * or above it for the strips along the bottom (the shop, your chair), flipping to the other side and sliding along to
+ * stay whole on screen, drawn at the page's top level above every strip. Its side is chosen once per target, so content
+ * filling in never makes it jump sideways. Pinned (a tap): a sheet on phones, a card beside the target elsewhere.
  */
 export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPick }) {
   const c = useHoverCard(hover);
   useCopyTargets(c, state, me);
   const box = useRef(null);
   const [pos, setPos] = useState(null);
+  const side = useRef(null); // { el, side } the side chosen for the current target
   useEffect(() => { if (c && !c.pinned) hover.close(); }, [state.moves]); // eslint-disable-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => {
-    if (!c || c.pinned || !c.el || !c.el.isConnected || !box.current) { setPos(null); return; }
-    const a = c.el.getBoundingClientRect();
+  // the element the card explains; a target re-drawn under the pointer (a refilled shop card, a chair) is found again
+  const el = c ? anchorFor(c) : null;
+  const place = () => {
+    if (!c || c.pinned || !el || !box.current) { setPos(null); return; }
+    const a = el.getBoundingClientRect();
     const w = Math.min(280, innerWidth - 16);
     const h = box.current.offsetHeight || 160;
-    // laptop: one fixed spot, the open column between the right-hand seats, never over the wheel, the shop or your seat
-    const dock = dockFor(a);
-    if (dock) { setPos(dock); return; }
-    const gap = 10;
-    // beside (left or right) when there's room, else below or above; never over the target
-    const right = a.right + gap + w <= innerWidth - 8, left = a.left - gap - w >= 8;
-    let p;
-    if (right || left) {
-      const x = right ? a.right + gap : a.left - gap - w;
-      const top = Math.max(8, Math.min(innerHeight - 8 - h, a.top + a.height / 2 - 60));
-      p = { left: x, top, width: w };
-    } else {
-      const below = a.bottom + gap + h <= innerHeight - 8 || a.top < innerHeight / 2;
-      const x = Math.max(8, Math.min(innerWidth - w - 8, a.left + a.width / 2 - w / 2));
-      p = below ? { left: x, top: a.bottom + gap, width: w } : { left: x, bottom: innerHeight - a.top + gap, width: w };
-    }
-    setPos(p);
-  }, [c && c.el, c && c.pinned]); // eslint-disable-line react-hooks/exhaustive-deps
+    const p = placeBeside(a, w, h, side.current && side.current.el === el ? side.current.side : null);
+    side.current = { el, side: p.side };
+    setPos(old => (old && old.left === p.left && old.top === p.top && old.width === p.width ? old : p));
+  };
+  useLayoutEffect(place, [c, el]); // eslint-disable-line react-hooks/exhaustive-deps
+  // content that fills in a moment later (the dry run's "You'd get") re-fits the card on screen
+  const placeNow = useRef(place);
+  placeNow.current = place;
+  useEffect(() => {
+    if (!box.current || typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(() => placeNow.current());
+    ro.observe(box.current);
+    return () => ro.disconnect();
+  }, []);
   useEffect(() => {
     if (!c || c.pinned) return undefined;
     const off = () => hover.close();
@@ -129,42 +133,54 @@ export function HoverCardLayer({ hover, state, me, optionFor = () => null, onPic
     addEventListener('keydown', key);
     return () => { removeEventListener('scroll', off, true); removeEventListener('keydown', key); };
   }, [c, hover]);
-  const body = c && c.el && c.el.isConnected ? cardBody(c, state, me, optionFor, id => { hover.close(); onPick(id); }) : null;
+  const body = el ? cardBody(c, state, me, optionFor, id => { hover.close(); onPick(id); }) : null;
   if (c && c.pinned && body) {
-    return <Popover anchor={c.el} onClose={hover.close}><div className="lt-note pinned" data-hover-card={c.kind}>{body}</div></Popover>;
+    return <Popover anchor={el} onClose={hover.close}><div className="lt-note pinned" data-hover-card={c.kind}>{body}</div></Popover>;
   }
   // always mounted: content swaps in place; hidden (not unmounted) between cards
-  return (
-    <div ref={box} className={`lt-hover popover${body ? ' on' : ''}${pos && pos.dock ? ' docked' : ''}`} data-hover-layer="" data-open={body ? '1' : '0'} data-dock={pos && pos.dock ? pos.dock : undefined} aria-hidden={!body}
-      style={body && pos ? styleOf(pos) : { left: -9999, top: 0, width: 280 }}>
+  const layer = (
+    <div ref={box} className={`lt-hover popover${body ? ' on' : ''}`} data-hover-layer="" data-open={body ? '1' : '0'} data-side={body && pos ? pos.side : undefined} aria-hidden={!body}
+      style={body && pos ? { left: pos.left, top: pos.top, width: pos.width } : { left: -9999, top: 0, width: 280 }}>
       {body && <div className="lt-note" data-hover-card={c.kind} role="tooltip">{body}</div>}
     </div>
   );
+  return typeof document !== 'undefined' ? createPortal(layer, document.body) : layer;
 }
-const styleOf = ({ dock, ...p }) => p;
+
+// where the pointer last was: a hover card whose target was re-drawn re-links only while the pointer is still on it
+let lastPt = null;
+if (typeof addEventListener === 'function') addEventListener('pointermove', e => { lastPt = { x: e.clientX, y: e.clientY }; }, { passive: true, capture: true });
+/**
+ * The element a hover card explains: the one it was opened on, or, when that node was re-drawn under the pointer
+ * (a shop refill, a chair re-rendering: RC1 "Kingpin had no hover"), the same thing found again. A card whose pointer
+ * has moved on never comes back.
+ */
+function anchorFor(c) {
+  if (c.el && c.el.isConnected) return c.el;
+  if (typeof document === 'undefined' || !c.el) return null;
+  const sel = c.kind === 'space' ? `[data-slot="${c.key}"]` : c.kind === 'plaque' ? `[data-plaque="${c.qid}"]`
+    : c.kind === 'seat' ? `[data-cult="${c.pid}"] .cs-head` : c.kind === 'card' ? `[data-region="shop"] [data-uid="${c.uid}"]` : c.kind === 'deck' ? '[data-deck]' : null;
+  const el = sel && document.querySelector(sel);
+  if (!el) return null;
+  if (c.pinned) return el;
+  const b = el.getBoundingClientRect();
+  return lastPt && lastPt.x >= b.left - 4 && lastPt.x <= b.right + 4 && lastPt.y >= b.top - 4 && lastPt.y <= b.bottom + 4 ? el : null;
+}
 
 /**
- * The hover card's dock on a laptop table (Cory: never covers what you point at): the right-hand column, under the
- * top-right seat, above the shop. It never reaches the wheel (middle column), the shop (its floor) or your seat (bottom
- * left); it may cover a rival's seat. Pointing at something in that column moves the card to the column's other half.
- * Null where there is no such column (phones, the lab): the card sits beside its target instead.
+ * Where a w×h card goes next to the target rect a: beside it (right, else left) for things up on the table; above it
+ * (else below) for the strips along the bottom; then slid along that edge to stay whole on screen. `keep` reuses a
+ * side chosen earlier for this target when it still fits. Returns { left, top, width, side }.
  */
-export function dockFor(target) {
-  if (typeof matchMedia !== 'function' || !matchMedia('(min-width: 861px) and (min-height: 500px)').matches) return null;
-  const wheel = document.querySelector('.lt > [data-region="wheel"]'), shop = document.querySelector('.lt > [data-region="shop"]');
-  if (!wheel || !shop) return null;
-  const W = wheel.getBoundingClientRect(), S = shop.getBoundingClientRect();
-  const left = Math.round(W.right + 12), width = Math.min(300, Math.round(innerWidth - 12 - left));
-  if (width < 200 || !(S.top > 0)) return null;
-  const roof = 12, floor = Math.round(S.top - 8);
-  const s2 = document.querySelector('.lt > .lt-seat-2');
-  const under = s2 ? Math.round(s2.getBoundingClientRect().bottom + 8) : roof;
-  const inColumn = target.left + target.width / 2 >= left;
-  if (inColumn && target.top + target.height / 2 < (roof + floor) / 2) return { left, width, bottom: innerHeight - floor, maxHeight: floor - roof, dock: 'low' };
-  if (inColumn) return { left, width, top: roof, maxHeight: Math.round((roof + floor) / 2 + 40 - roof), dock: 'high' };
-  // a fixed spot (not sized to the card, so it never hops between targets): under that seat, room for a tall card
-  const top = Math.max(roof, Math.min(under, floor - 320));
-  return { left, width, top, maxHeight: floor - top, dock: 'mid' };
+export function placeBeside(a, w, h, keep = null) {
+  const gap = 8, m = 8, W = innerWidth, H = innerHeight;
+  const fits = { right: a.right + gap + w <= W - m, left: a.left - gap - w >= m, above: a.top - gap - h >= m, below: a.bottom + gap + h <= H - m };
+  const low = a.top + a.height / 2 > H * 0.7;
+  const order = low ? ['above', 'right', 'left', 'below'] : ['right', 'left', 'below', 'above'];
+  const side = keep && fits[keep] ? keep : order.find(k => fits[k]) || (low ? 'above' : 'right');
+  const clampX = x => Math.max(m, Math.min(W - m - w, x)), clampY = y => Math.max(m, Math.min(H - m - h, y));
+  if (side === 'right' || side === 'left') return { side, width: w, left: side === 'right' ? a.right + gap : a.left - gap - w, top: clampY(a.top + a.height / 2 - h / 2) };
+  return { side, width: w, left: clampX(a.left + a.width / 2 - w / 2), top: clampY(side === 'above' ? a.top - gap - h : a.bottom + gap) };
 }
 
 /**
@@ -219,6 +235,8 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
       <div className="lt-yd">
         {pv && pv.copies ? <Row k="Can copy">{pv.copies.length ? pv.copies.map(k => spaceName(state, k)).join(', ') : 'nothing yet'}</Row> : null}
         {open && viewer != null && !state.over ? <Row k="You get"><YoudGet state={state} pid={viewer} q={q} i={i} /></Row> : null}
+        {/* why a member changed the number, or stayed off ("Underdog: no ×2 (Hustler’s +3 lands first)"), from the dry run */}
+        {open && pv && pv.reasons && pv.reasons.length ? <Row k="Why"><span data-reasons>{pv.reasons.join(' · ')}</span></Row> : null}
         {race && <Row k={race.rule}>{race.text}</Row>}
         {pv && pv.swept && pv.swept.length ? <Row k="Sweeps away">{pv.swept.map((u, k) => <span key={u} data-swept={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}<small className="lt-swept-note"> back under the deck</small></Row> : null}
         {unlocks.length ? <Row k="Unlocks">{unlocks.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>)}</Row> : null}
@@ -229,12 +247,13 @@ export function SpaceCard({ state, me, spaceKey, optionFor = () => null, onPick,
     </div>
   );
 }
-/** "You 5 · Ossian 2 · you'd lead, +2": the space's own contest after taking it (the dry run's first branch). */
+/** "You 5 · Ossian 2 · Bo 1 · Kay 0 · you'd lead, +2": the space's own contest after taking it, every player (the dry run's first branch). */
 function raceAfter(state, race, qid, pid) {
   const c = race.find(x => x.qid === qid);
   if (!c) return null;
   const nm = id => (id === pid ? 'You' : state.players[id].name);
-  const top = c.rows.slice(0, 3).map(r => `${nm(r.player)} ${r.count}`).join(' · ');
+  // every player, never just the top three (RC1 panel: the 4th silently dropped off "You 0 · P2 0 · P3 0")
+  const top = c.rows.map(r => `${nm(r.player)} ${r.count}`).join(' · ');
   const lead = c.winners.includes(pid) ? ` · you’d lead, +${c.prize}` : '';
   return { rule: c.rule.replace(/^Most /, '').replace(/^\w/, ch => ch.toUpperCase()), text: `${top}${lead}` };
 }
@@ -248,8 +267,10 @@ export function StandingsCard({ state, qid, meId = null }) {
   if (!st) return null;
   // the sphere's own rule, when it has one ("Whatever you steal turns magenta…"), under its standings (UI-A, meta #3)
   const rule = quadrant(qid).rule;
+  // what the rim's prize pays, in words (Cory, 2026-10-15): "Round end: whoever has the most white gets 2 followers"
   return (
     <>
+      <p className="lt-prize-line" data-prize-line={qid}>Round end: whoever has the {st.rule.replace(/^Most /i, 'most ')} gets {st.prize} follower{st.prize === 1 ? '' : 's'}.</p>
       <ContestStandings state={state} st={st} meId={meId} />
       {rule ? <p className="lt-sphere-rule" data-sphere-rule={qid}>{rule}</p> : null}
     </>
@@ -261,49 +282,39 @@ export function SeatCard({ state, pid, meId = null }) {
   const p = state.players[pid];
   const moves = lastMoves(state, pid, 3);
   const lvl = p.kind === 'bot' ? BOT_LEVEL_INFO.find(l => l.level === botLevel(state, pid)) : null; // Easy / Normal / Hard
+  const groups = memberGroups(state, p);
+  const income = incomeOf(state, pid);
+  const rank = seatRanks(state, meId)[pid] || null;
   return (
     <div className="lt-card-body seat-card" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}>
       <div className="t"><SeatFigure id={pid} state={state} size={32} /><h4>{p.name}{pid === meId ? ' (you)' : ''}<small>{lvl ? <span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span> : 'player'} · {p.left} minion{p.left === 1 ? '' : 's'} left</small></h4></div>
       <div className="lt-yd">
-        <Row k="Followers"><span className="follower"><b className="num">{followersOf(state, p)}</b><Follower size={12} /></span></Row>
+        <Row k="Followers"><span className="follower"><b className="num">{followersOf(state, p)}</b><Follower size={12} /></span>{rank && rank.text ? <small className="seat-rank" data-seat-rank={rank.place}> {rank.text} · {rank.title}</small> : null}</Row>
         <Row k="Has">{state.resources.map(r => <span key={r} className="lt-res"><ResourceGlyph r={r} n={p.res[r] || 0} size={14} /><b className="num">{p.res[r] || 0}</b></span>)}</Row>
-        <Row k="Members">{p.members.length ? p.members.map((u, k) => <span key={u}>{k ? ', ' : ''}<CardName state={state} uid={u} /></span>) : 'none yet'}</Row>
+        {income && Object.values(income.res).some(n => n > 0) ? <Row k="Income">{Object.entries(income.res).filter(([, n]) => n > 0).map(([r, n]) => <span key={r} className="lt-res"><b className="num">+{n}</b><ResourceGlyph r={r} n={n} size={14} /></span>)}<small> each round</small></Row> : null}
+        {/* the build, grouped by what each member does (Cory, 2026-10-15: "I have no idea what the bots' builds are") */}
+        {groups.length ? groups.map(g => (
+          <div key={g.label} className="lt-yd-row seat-group" data-group={g.label}>
+            <span className="k" title={g.hint}>{g.label}</span>
+            <span className="v">{g.items.map(it => (
+              <span key={it.uid} className="seat-member" data-member-line={it.name}><CardName state={state} uid={it.uid} />{it.n > 1 ? <b className="num"> ×{it.n}</b> : null}<span className="seat-effect">{it.text}</span></span>
+            ))}</span>
+          </div>
+        )) : <Row k="Members">none yet</Row>}
         {moves.length ? <Row k="Last moves">{moves.join(' · ')}</Row> : null}
       </div>
     </div>
   );
 }
 
-/** A shop card under the pointer: the card, what you'd pay and keep, how it moves the contests, Recruit. */
-export function ShopCardHover({ state, me, uid, optionFor = () => null, onPick, pinned = false }) {
-  const d = cardDef(state, uid);
-  const viewer = me != null ? state.players[me] : null;
-  const pay = viewer ? payBreakdown(state, viewer, uid) : null;
-  // how the buy moves the contests clones the table: worked out just after the card is up, never before it
-  const [effect, setEffect] = useState([]);
-  useEffect(() => {
-    setEffect([]);
-    if (!viewer || !pay || !pay.spend) return undefined;
-    const t = setTimeout(() => setEffect(contestEffect(state, viewer, uid, pay.spend)), 0);
-    return () => clearTimeout(t);
-  }, [state, uid, me]); // eslint-disable-line react-hooks/exhaustive-deps
+/** A shop card under the pointer: the card itself (its cost, clearly), and Recruit when it's pinned on touch.
+ *  Cory (2026-10-15): nothing else about payment here: no "You pay", no "Leaves", no contest lines, no click hint. */
+export function ShopCardHover({ state, uid, optionFor = () => null, onPick, pinned = false }) {
   const opt = optionFor(`card:${uid}`);
-  const list = costParts(d, state.resources);
   return (
     <div className="lt-card-body" data-card-hover={uid}>
       <MemberCard state={state} uid={uid} />
-      {viewer && (
-        <div className="lt-yd">
-          {pay.spend ? <>
-            <Row k="You pay"><span className="lt-pay">{state.resources.filter(r => pay.spend[r]).map(r => <span key={r} className="lt-res"><b className="num">{pay.spend[r]}</b><ResourceGlyph r={r} n={pay.spend[r]} size={14} /></span>)}{!Object.values(pay.spend).some(Boolean) && 'nothing'}</span></Row>
-            {list.some(c => c.color === 'any') && <small className="lt-why">“any” is taken from what you hold most of{viewer && viewer.discount ? `; −${viewer.discount} discount` : ''}. You choose when you recruit.</small>}
-            <Row k="Leaves">{state.resources.filter(r => pay.leaves[r]).map(r => <span key={r} className="lt-res"><b className="num">{pay.leaves[r]}</b><ResourceGlyph r={r} n={pay.leaves[r]} size={14} /></span>)}{!Object.values(pay.leaves).some(Boolean) && 'nothing'}</Row>
-            {effect.map(e => <Row key={e.qid} k={e.rule.replace(/^Most /, '')}><span className={e.lost ? 'lt-warn' : 'lt-good'}>{e.text}</span></Row>)}
-          </> : <Row k="Need"><span className="lt-warn">{pay.short.total} more{pay.short.colorN ? ` (${pay.short.colorN} ${pay.short.color})` : ''}</span></Row>}
-        </div>
-      )}
       {opt && onPick && pinned && <button type="button" className="lt-btn pri" data-recruit={uid} onClick={() => onPick(opt.id)}>Recruit</button>}
-      {opt && !pinned && <small className="lt-why">Click the card to recruit it.</small>}
     </div>
   );
 }

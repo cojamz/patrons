@@ -1,10 +1,9 @@
 // @vitest-environment node
 // Card-by-card verifier, Blue (market): every action and member against its printed text, at the doubled
-// member costs (badge cutoff 8), through real legal moves, plus one cross-sphere case each. Every number a
+// member costs, through real legal moves, plus one cross-sphere case each. Every number a
 // card changes must show up in a log line that names the card.
 import { describe, it, expect } from 'vitest';
 import { applyMove, followers, SHOP_SIZE } from '../../../engine/v4/core.js';
-import { BADGE } from '../../../engine/v4/content/market.js';
 import { take, move, play, ids, actionName } from './helpers.js';
 import { table, useCosts, named, uidIn, owns } from './cards-helpers-b.js';
 
@@ -26,8 +25,6 @@ const first = s => move(s, s.pending.options[0].id);
 // a Blue payment choice: the way that pays with `color` only, else the suggested way
 const pickPay = (s, color = 'red') => (s.pending?.kind === 'choose' && s.pending.options[0].kind === 'pay'
   ? move(s, (s.pending.options.find(o => Object.entries(o.value).every(([c, n]) => !n || c === color)) || s.pending.options[0]).id) : s);
-
-it('the badge cutoff is 8 at the doubled costs', () => expect(BADGE).toBe(8));
 
 describe('Blue actions', () => {
   it('Snap Up: +2 blue, then recruit a face-up member now in any colors; the normal buy is still there', () => {
@@ -67,17 +64,18 @@ describe('Blue actions', () => {
     expect(named(s, 'Midas').length).toBe(1);
   });
 
-  it('Name Drop: +1 blue per badged face-up member', () => {
-    // Tycoon 12, Big Family 8 are badged; Twins 4, Intern 2, Taxman 4, Volunteer 0 are not
-    const s = take(table(Q, { shop: ROW }), 'market.showroom');
-    expect(R(s).blue).toBe(2);
+  it('Name Drop: +1 blue, and +1 per blue face-up member', () => {
+    // Stylist and Curator are blue; the gold and red members (however pricey) don't count
+    expect(R(take(table(Q, { shop: ['market.stylist', 'market.curator', ...ROW] }), 'market.showroom')).blue).toBe(1 + 2);
+    // no blue member face up: the 1 alone
+    expect(R(take(table(Q, { shop: ROW }), 'market.showroom')).blue).toBe(1);
   });
-  it('× Encore: a copy of Name Drop gives the printed 2, whatever the row holds by then', () => {
-    let s = table(QE, { shop: ROW, queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }], round: 2 });
-    s = move(take(s, 'market.showroom'), 'pass');
+  it('× Encore: a copy of Name Drop gives what it gave (3), whatever the row holds by then', () => {
+    let s = table(QE, { res: [{ blue: 1 }], shop: ['market.stylist', 'market.curator', ...ROW], queue: [{ t: 'turn', p: 0 }, { t: 'turn', p: 1 }], round: 2 });
+    s = move(take(s, 'market.showroom'), card(s, 'market.stylist')); // the row loses a blue member
     s = take(s, 'echo.encore');
     s = move(s, s.pending.options.find(o => o.label.startsWith(actionName('market.showroom'))).id);
-    expect(R(s, 1).blue).toBe(2);
+    expect(R(s, 1).blue).toBe(3);
   });
 
   it('Half Price: as your buy, a face-up member for half its cost rounded down, any colors', () => {
@@ -149,34 +147,41 @@ describe('Blue members', () => {
     let s = table(Q, { members: [['red.doppel', 'market.stylist']], res: [{ blue: 4 }], shop: ['market.curator', ...ROW.slice(1)] });
     s.cards[uidIn(s, 'red.doppel', 0)].copy = 'market.stylist';
     s = move(take(s, 'market.showroom'), card(s, 'market.curator'));
-    expect(R(s).blue).toBe(1 + 2); // Name Drop 1 (Big Family? no: Curator row) + 2
+    expect(R(s).blue).toBe(2 + 2 + 1); // Name Drop 2 (1, and Curator face up), the two Stylists 2, Curator's now 1 (Stylist)
   });
 
-  it('Onlooker: whenever a rival recruits a badged member, +1 blue; not for unbadged or own', () => {
-    let s = buyTurn([[], ['market.onlooker']], [{ red: 8 }], 'red.bigfamily');
-    expect(R(s, 1).blue).toBe(1);
+  it('Onlooker: whenever a rival recruits a blue member, +2 blue; not for other colors or its owner\'s own', () => {
+    let s = buyTurn([[], ['market.onlooker']], [{ blue: 4 }], 'market.recluse', { shop: ['market.recluse', ...ROW] });
+    expect(R(s, 1).blue).toBe(2);
     expect(named(s, 'Onlooker').length).toBe(1);
-    s = buyTurn([[], ['market.onlooker']], [{ red: 4 }], 'red.twins');
+    s = buyTurn([[], ['market.onlooker']], [{ red: 8 }], 'red.bigfamily');
     expect(R(s, 1).blue).toBe(0);
+    s = buyTurn([['market.onlooker']], [{ blue: 4 }], 'market.recluse', { shop: ['market.recluse', ...ROW] });
+    expect(R(s).blue).toBe(0);
   });
-  it('× Poach: the victim\'s free recruit of a badged member is a rival recruit for Onlooker', () => {
-    let s = table(Q, { round: 3, left: 5, n: 3, members: [[], ['gold.tycoon'], ['market.onlooker']], shop: ROW });
+  it('× Poach: the victim\'s free recruit of a blue member is a rival recruit for Onlooker', () => {
+    let s = table(Q, { round: 3, left: 5, n: 3, members: [[], ['gold.tycoon'], ['market.onlooker']], shop: ['market.recluse', ...ROW] });
     s = take(s, 'thieves.heist');
     s = move(s, `card:${uidIn(s, 'gold.tycoon', 1)}`);
-    s = move(s, card(s, 'red.bigfamily')); // P2 recruits free, costing ≤12
-    expect(owns(s, 1, 'red.bigfamily')).toBe(true);
-    expect(R(s, 2).blue).toBe(1);
+    s = move(s, card(s, 'market.recluse')); // P2 recruits free, costing ≤12
+    expect(owns(s, 1, 'market.recluse')).toBe(true);
+    expect(R(s, 2).blue).toBe(2);
   });
 
-  it('Connoisseur: whenever you recruit a badged member, +2 blue', () => {
-    const s = buyTurn([['market.connoisseur']], [{ red: 8 }], 'red.bigfamily');
+  it('Connoisseur: whenever you recruit a blue member, +2 blue; not for other colors', () => {
+    let s = buyTurn([['market.connoisseur']], [{ blue: 4 }], 'market.recluse', { shop: ['market.recluse', ...ROW] });
     expect(R(s).blue).toBe(2);
     expect(named(s, 'Connoisseur').length).toBe(1);
+    s = buyTurn([['market.connoisseur']], [{ red: 8 }], 'red.bigfamily');
+    expect(R(s).blue).toBe(0);
   });
-  it('× Snap Up: a badged member recruited through Snap Up still pays Connoisseur', () => {
-    let s = table(Q, { members: [['market.connoisseur']], res: [{ red: 8 }], shop: ROW });
-    s = pickPay(move(take(s, 'market.bargain'), card(s, 'red.bigfamily')));
-    expect(R(s).blue).toBe(2 + 2);
+  it('× Snap Up: a blue member recruited through Snap Up still pays Connoisseur', () => {
+    let s = table(Q, { members: [['market.connoisseur']], res: [{ red: 4 }], shop: ['market.recluse', ...ROW] });
+    s = pickPay(move(take(s, 'market.bargain'), card(s, 'market.recluse')));
+    expect(owns(s, 0, 'market.recluse')).toBe(true);
+    // Snap Up's recruit is in any colors: 4 red, Snap Up's 2 blue kept, then Connoisseur's 2
+    expect([R(s).blue, R(s).red]).toEqual([2 + 2, 0]);
+    expect(named(s, 'Connoisseur').length).toBe(1);
   });
 
   it('Reseller: whenever you recruit, +1 of that member\'s color', () => {
@@ -194,9 +199,9 @@ describe('Blue members', () => {
   });
 
   const roundStart = (members, opts = {}) => table(Q, { members, shop: ROW, queue: [{ t: 'round', r: opts.r || 2 }], ...opts });
-  it('Curator: at round start, +1 blue per badged member you have', () => {
-    const s = roundStart([['market.curator', 'gold.tycoon', 'red.bigfamily', 'red.twins']]);
-    expect(R(s).blue).toBe(2);
+  it('Curator: at round start, +1 blue per other blue member you have', () => {
+    const s = roundStart([['market.curator', 'market.stylist', 'market.planner', 'gold.tycoon', 'red.bigfamily']]);
+    expect(R(s).blue).toBe(2); // Stylist and Planner; not Curator itself, not the gold or red ones
     expect(named(s, 'Curator').length).toBe(1);
   });
   it('Planner: at round start, next member costs 2 less per round number (named in the log)', () => {
@@ -270,34 +275,37 @@ describe('Blue members', () => {
     expect(named(s, 'Social Climber')).toHaveLength(2);
   });
 
-  it('Auctioneer: whenever a rival recruits an unbadged member, +1 blue', () => {
-    let s = buyTurn([[], ['market.auctioneer']], [{ red: 4 }], 'red.twins');
+  it('Auctioneer: whenever a rival recruits a non-blue member, +1 blue', () => {
+    let s = buyTurn([[], ['market.auctioneer']], [{ red: 8 }], 'red.bigfamily');
     expect(R(s, 1).blue).toBe(1);
     expect(named(s, 'Auctioneer').length).toBe(1);
-    s = buyTurn([[], ['market.auctioneer']], [{ red: 8 }], 'red.bigfamily');
+    s = buyTurn([[], ['market.auctioneer']], [{ blue: 4 }], 'market.recluse', { shop: ['market.recluse', ...ROW] });
     expect(R(s, 1).blue).toBe(0);
   });
-  it('Sommelier: whenever you recruit a badged member, your next member costs 2 less (named)', () => {
-    const s = buyTurn([['market.sommelier']], [{ red: 8 }], 'red.bigfamily');
+  it('Sommelier: whenever you recruit a blue member, your next member costs 2 less (named)', () => {
+    let s = buyTurn([['market.sommelier']], [{ blue: 4 }], 'market.recluse', { shop: ['market.recluse', ...ROW] });
     expect(s.players[0].discount).toBe(2);
     expect(named(s, 'Sommelier')).toEqual(["P1's Sommelier: next member costs 2 less."]);
+    s = buyTurn([['market.sommelier']], [{ red: 8 }], 'red.bigfamily');
+    expect(s.players[0].discount).toBe(0);
   });
-  it('× Half Price: a badged member bought at half price still counts for Sommelier', () => {
-    let s = table(Q, { round: 2, members: [['market.sommelier']], res: [{ red: 4 }], shop: ROW });
-    s = pickPay(move(take(s, 'market.clearance'), card(s, 'red.bigfamily')));
-    expect(owns(s, 0, 'red.bigfamily')).toBe(true);
+  it('× Half Price: a blue member bought at half price still counts for Sommelier', () => {
+    let s = table(Q, { round: 2, members: [['market.sommelier']], res: [{ red: 6 }], shop: ['market.reseller', ...ROW] });
+    s = pickPay(move(take(s, 'market.clearance'), card(s, 'market.reseller')));
+    expect(owns(s, 0, 'market.reseller')).toBe(true);
     expect(s.players[0].discount).toBe(2);
   });
-  it('Patroness: whenever you recruit a badged member, +1 follower', () => {
-    const s = buyTurn([['market.patroness']], [{ red: 8 }], 'red.bigfamily');
+  it('Patroness: whenever you recruit a blue member, +1 follower', () => {
+    let s = buyTurn([['market.patroness']], [{ blue: 4 }], 'market.recluse', { shop: ['market.recluse', ...ROW] });
     expect(s.players[0].bonus).toBe(1);
     expect(named(s, 'Patroness').length).toBe(1);
+    s = buyTurn([['market.patroness']], [{ red: 8 }], 'red.bigfamily');
+    expect(s.players[0].bonus).toBe(0);
   });
-  it('× Echo free member: a badged member taken free through a copy still pays Patroness', () => {
-    // Mentor (10, badged) takes the cheapest face-up member free: that free recruit is unbadged, Mentor itself is badged
-    let s = table(QE, { members: [['market.patroness']], res: [{ red: 10 }], shop: ['red.mentor', ...ROW.slice(1)] });
-    s = move(take(s, 'market.showroom'), card(s, 'red.mentor'));
-    expect(owns(s, 0, 'red.mentor')).toBe(true);
+  it('× Hand-pick: a blue member taken free still pays Patroness', () => {
+    let s = table(QE, { round: 3, left: 5, members: [['market.patroness']], shop: ['market.recluse', ...ROW] });
+    s = move(take(s, 'red.take'), card(s, 'market.recluse'));
+    expect(owns(s, 0, 'market.recluse')).toBe(true);
     expect(s.players[0].bonus).toBe(1);
   });
 
@@ -325,9 +333,9 @@ describe('Blue members', () => {
   });
 
   const finish = members => table(Q, { members, shop: ROW, n: members.length, queue: [{ t: 'finish' }] });
-  it('Snob: game end, +1 follower per badged member', () => {
-    const s = finish([['market.snob', 'gold.tycoon', 'red.twins'], []]);
-    expect(s.players[0].final.parts).toContain('Snob +2'); // Snob (10) and Tycoon (12)
+  it('Snob: game end, +1 follower per blue member', () => {
+    const s = finish([['market.snob', 'market.stylist', 'gold.tycoon', 'red.twins'], []]);
+    expect(s.players[0].final.parts).toContain('Snob +2'); // Snob itself and Stylist; not Tycoon or Twins
   });
   it('Recluse: game end, +2 followers per rival with more members', () => {
     const s = finish([['market.recluse'], ['red.twins', 'red.intern'], ['red.volunteer', 'red.bigfamily'], ['red.doppel']]);

@@ -140,14 +140,15 @@ try {
     const hand = await page.$('[data-handoff]');
     if (hand) { await hand.click(); continue; }
     const next = await page.$('[data-next-round]');
-    // Once: a reload on the final scoring card (the game is over, its results not yet shown) reopens it, and the
-    // save is kept until the results are on screen.
-    if (next && !seen.has('reload-final') && await page.$eval('.roundend', e => /End-game bonuses come next/.test(e.textContent)).catch(() => false)) {
+    // Once: a reload on the final scoring card (the game is over, its results not yet shown) reopens that card (the
+    // Reckoning may replay first), and the save is kept until the results are on screen (resume-edge.mjs: rounds I/II).
+    if (next && !seen.has('reload-final') && await page.$eval('[data-next-round]', e => /See results/.test(e.textContent)).catch(() => false)) {
       seen.add('reload-final');
       const keys0 = await page.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith('patrons.v4.')).sort());
       if (!keys0.includes('patrons.v4.local')) errors.push(`final scoring card: the save is gone before the results (${keys0.join(', ')})`);
       await carry(); await page.reload();
-      await page.waitForSelector('.results', { timeout: 8000 }).catch(() => errors.push('reload on the final scoring card did not reopen the finished game'));
+      await page.waitForSelector('.lt-reckon, [data-next-round]', { timeout: 8000 }).catch(() => errors.push('reload on the final scoring card did not reopen it'));
+      if (await page.$('.results')) errors.push('reload on the final scoring card skipped it to the results');
       await shot('08-after-reload-final');
       continue;
     }

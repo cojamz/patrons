@@ -1,7 +1,8 @@
 // Display helpers that read the engine's state and log.
 import { describe, it, expect } from 'vitest';
 import { createGame, applyMove, chooseBotMove, followers, quadrant } from '../../../engine/v4/index.js';
-import { parseRoundEnd, newLogLines, winSentence, breakdown, costParts, turnStory, explainLine, promptFor } from '../../../v4/format.js';
+import { parseRoundEnd, newLogLines, winSentence, breakdown, costParts, explainLine, promptFor, traceLine, currentTurn } from '../../../v4/format.js';
+import { createTrail, feed } from '../../../v4/game/trail.js';
 import { contextFor } from '../../../engine/v4/core.js';
 
 const seats = [{ name: 'Ana', kind: 'bot' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }];
@@ -48,36 +49,51 @@ describe('v4 format helpers', () => {
     expect(costParts({ quadrant: 'gold', s: 2, w: 2 }, s.resources)).toEqual([{ color: 'gold', n: 2 }, { color: 'any', n: 2 }]);
   });
 
-  it('tells every turn in one line: the action, what changed, who it touched, recruits and followers', () => {
-    let s = createGame({ seats, seed: 11 });
-    let start = null, told = 0, touched = 0, recruits = 0;
-    for (let k = 0; k < 3000 && !s.over; k++) {
-      const before = s;
-      s = applyMove(s, chooseBotMove(s, () => 0.4));
-      const actor = before.pending.player;
-      if (!start || start.actor !== actor) start = { actor, state: before, mid: null };
-      if (s.pending && s.pending.kind === 'buy' && s.pending.player === actor && !start.mid) start.mid = s;
-      const passed = before.round >= 1 && s.round === before.round && !(s.pending && s.pending.player === actor);
-      if (!passed) continue;
-      const story = turnStory(start.state, s, actor, 0, start.mid);
-      // the action's gains and the buy's cost are told apart: a recruit says what it cost
-      const got = s.players[actor].members.length > before.players[actor].members.length || s.players[actor].members.some(u => !start.state.players[actor].members.includes(u));
-      if (got && start.mid) expect(story.text).toMatch(/recruited [^·]+(\(paid [^)]+\))?/);
-      start = null;
-      const a0 = before.players[actor];
-      expect(story).toBeTruthy();
-      expect(story.text.startsWith(actor === 0 ? 'You' : a0.name)).toBe(true);
-      told++;
-      // every rival whose resources changed this turn is named in the line
-      for (const id of story.touched) {
-        touched++;
-        expect(story.text).toMatch(new RegExp(`(from |· )${id === 0 ? 'you' : s.players[id].name} `));
-      }
-      if (/recruited /.test(story.text)) recruits++;
-    }
-    expect(told).toBeGreaterThan(20);
+  it('tells every placement on its own card: the space actually taken, gross amounts, who it touched, recruits', () => {
+    // one card per placement (RC1 panel: a snake double read "You took Golden Years · paid 6 gold" after Reprise, paid 10)
+    let s = createGame({ seats: [...seats, { name: 'Di', kind: 'bot' }], seed: 11 });
+    const trail = createTrail(0);
+    let doubles = 0;
+    for (let k = 0; k < 3000 && !s.over; k++) { s = applyMove(s, chooseBotMove(s, () => 0.4)); feed(trail, s); }
+    let recruits = 0, touched = 0;
+    trail.stories.forEach((st, i) => {
+      const prev = trail.stories[i - 1];
+      if (prev && prev.actor === st.actor && prev.round === st.round) doubles++;
+      const name = s.players[st.actor].name;
+      expect(st.text.startsWith(st.actor === 0 ? 'You' : name)).toBe(true);
+      // exactly one placement per card, and the head names it
+      expect(st.text.match(/ (took|joined) /g) || []).toHaveLength(st.space ? 1 : 0);
+      if (st.space) expect(st.head).toMatch(new RegExp(`${st.space.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
+      for (const id of st.touched) { touched++; expect(st.text).toMatch(new RegExp(`(from |· |: )${id === 0 ? 'you' : s.players[id].name} `)); }
+      if (/recruited /.test(st.text)) { recruits++; expect(st.text).toMatch(/recruited [^·]+\((paid [^)]+|free)\)/); }
+    });
+    expect(trail.stories.length).toBeGreaterThan(40);
+    expect(doubles).toBeGreaterThan(0);
     expect(recruits).toBeGreaterThan(0);
     expect(touched).toBeGreaterThan(0);
+  });
+  it('a placement after a payment never nets: what was paid is the price, what the space gave is told apart', () => {
+    let s = createGame({ seats, seed: 5 });
+    const trail = createTrail(0);
+    for (let k = 0; k < 3000 && !s.over; k++) { s = applyMove(s, chooseBotMove(s, () => 0.4)); feed(trail, s); }
+    const all = s.log.join('\n');
+    let n = 0;
+    for (const st of trail.stories) for (const l of st.lines) {
+      const m = l.match(/^recruited (.+?) \(paid (.+)\)$/);
+      if (!m) continue;
+      n++;
+      // the paid amount is the price the engine logged, never a net of the turn's other gains
+      expect(all).toContain(`recruited ${m[1]} (${m[2]})`);
+    }
+    expect(n).toBeGreaterThan(3);
+  });
+  it('a member that fires gets its own line, and its amount comes off the gross (Tax Collector: P2 +1 gold)', () => {
+    const s = createGame({ seats, seed: 3 });
+    const P = s.players;
+    expect(traceLine("Bo's Tax Collector: +1 gold.", P, s.resources)).toMatchObject({ owner: 1, target: 1, card: 'Tax Collector', res: { gold: 1 } });
+    expect(traceLine('Cy +1 silver (Ana\'s Retinue).', P, [...s.resources, 'silver'])).toMatchObject({ owner: 0, target: 2, card: 'Retinue', res: { silver: 1 } });
+    expect(traceLine("Ana's next member costs 4 less.", P, s.resources)).toBeNull();
+    expect(traceLine("Ana's Underdog: gold gain 4 → 8.", P, s.resources)).toBeNull();
   });
   it('a Goody Bags line reads as two gains, never as a gift from "P4 took 2 magenta and"', () => {
     const s = createGame({ seats, seed: 3, quadrants: ['gold', 'red', 'silver', 'thieves'] });
@@ -89,23 +105,40 @@ describe('v4 format helpers', () => {
     expect(explainLine(s.log, i).gift).toBeUndefined();
   });
 
-  it('prompts with a short verb phrase: "Extra turn: place one more minion", "Recruit or buy" with the details under it', () => {
+  it('prompts with a short verb phrase: the snake turnaround is "your turn again", not an extra turn', () => {
     let s = createGame({ seats, seed: 3 });
-    // walk to a placement that follows the same player's own placement (the snake's turn): the extra-turn prompt
-    let again = null, buy = null;
-    for (let n = 0; n < 400 && !(again && buy); n++) {
-      const pr = s.pending && promptFor(s, true);
-      if (pr && s.pending.kind === 'buy' && !buy) buy = pr;
-      if (pr && s.pending.kind === 'place' && pr.lead) again = pr;
+    // walk to a placement that follows the same player's own placement (the snake's turn)
+    let again = null, buy = null, other = null;
+    for (let n = 0; n < 400 && !(again && buy && other); n++) {
+      const pr = s.pending && promptFor(s, s.pending.player === 0);
+      if (pr && s.pending.kind === 'buy' && s.pending.player === 0 && !buy) buy = pr;
+      if (pr && s.pending.kind === 'place' && s.pending.player === 0 && pr.lead) again = pr;
+      if (pr && s.pending.kind === 'place' && s.pending.player !== 0 && /again/.test(pr.text)) other = { pr, name: s.players[s.pending.player].name };
       s = applyMove(s, chooseBotMove(s, () => 0.4));
     }
     expect(again).toBeTruthy();
-    expect(`${again.lead}${again.text}`).toBe('Extra turn: place one more minion');
-    expect(JSON.stringify(again)).not.toMatch(/snake/i);
+    expect(`${again.lead}${again.text}`).toBe('Your turn again (snake order) — place a minion');
+    expect(JSON.stringify(again)).not.toMatch(/extra/i);
+    expect(other.pr.text).toBe(`${other.name} again (snake order)`);
     expect(buy.text).toBe('Recruit or buy');
     expect(buy.sub).toMatch(/Recruit a member or buy followers, or pass/);
     // nobody else's turn ever reads as yours
     expect(promptFor(s, false).text).not.toMatch(/^Your|^Extra/);
+  });
+
+  it('an extra turn from a card is told as one, naming the card or space that gave it', () => {
+    let found = null;
+    for (let seed = 1; seed < 40 && !found; seed++) {
+      let s = createGame({ seats, seed, quadrants: ['gold', 'purple', 'echo', 'silver'] });
+      for (let n = 0; n < 3000 && !s.over && !found; n++) {
+        const t = s.pending && s.pending.kind === 'place' && currentTurn(s);
+        if (t && t.again && t.kind === 'extra') found = { t, pr: promptFor(s, true), name: s.players[s.pending.player].name };
+        s = applyMove(s, chooseBotMove(s, () => 0.4));
+      }
+    }
+    expect(found).toBeTruthy();
+    expect(found.t.why).toBeTruthy();
+    expect(`${found.pr.lead}${found.pr.text}`).toBe(`Extra turn (${found.t.why}): place one more minion`);
   });
 });
 

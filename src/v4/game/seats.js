@@ -1,5 +1,6 @@
 // Seat facts read off the engine: this round's seats in turn order, each seat's last moves.
 import { turnRail, quadrant } from '../../engine/v4/index.js';
+import { turnSequence } from '../format.js';
 
 /** This round's seats in their turn order (the first pass of the snake); before round I, seat order. */
 export function seatOrder(state) {
@@ -12,19 +13,29 @@ export function railInfo(state) {
   return { current: r.current, next: r.next[0] ?? null, done: r.done, upcoming: r.next };
 }
 /**
- * Each seat's place in what's left of this round's turn order (the engine's queue, snake and extra turns included):
- * { pid: { place: 0 (up now) | 1 (next) | 2… , label: 'now' | 'next' | '3rd' … | 'done' } }, plus the order itself.
- * Empty outside the placing rounds.
+ * Each seat's next placement in what's left of this round (the engine's queue: snake turnarounds and extra turns are
+ * counted as the placements they are): { pid: { place, label, twice, text, title } }, plus the order of placements.
+ * label (one meaning each): 'now' (placing now), 'next' (places right after), 'in N' (N placements from now),
+ * 'done' (no placements left this round); twice: their next two placements come back to back (the snake turning on
+ * them, or an extra turn). Empty outside the placing rounds.
  */
-export function turnPlaces(state) {
+export function turnPlaces(state, me = null) {
   const out = {}, order = [];
   if (!(state.round >= 1) || state.over) return { places: out, order };
-  const r = turnRail(state);
-  for (const p of [r.current, ...r.next]) if (p != null && !order.includes(p)) order.push(p);
-  const ord = n => `${n}${n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'}`;
+  const seq = turnSequence(state).filter(t => t.at !== 'done');
+  for (const t of seq) order.push(t.pid);
+  const name = id => (id === me ? 'You' : state.players[id].name);
+  const list = order.map(name);
+  const ahead = k => (k ? ` after ${list.slice(0, k).join(', ')}` : '');
   for (const p of state.players) {
     const k = order.indexOf(p.id);
-    out[p.id] = k < 0 ? { place: null, label: 'done' } : { place: k, label: k === 0 ? (r.current === p.id ? 'now' : 'first') : k === 1 ? 'next' : ord(k + 1) };
+    if (k < 0) { out[p.id] = { place: null, label: 'done', twice: false, text: 'done', title: `${name(p.id)} ${p.id === me ? 'have' : 'has'} no placements left this round` }; continue; }
+    const twice = order[k + 1] === p.id;
+    const now = k === 0 && state.current === p.id;
+    const label = now ? 'now' : k === 0 ? 'next' : k === 1 ? 'next' : `in ${k}`;
+    const why = twice ? (seq[k + 1].kind === 'snake' ? ', then again right after (snake order: whoever ends a pass starts the next)' : `, then again right after (${seq[k + 1].kind === 'hand' ? 'an extra minion' : 'an extra turn'}${seq[k + 1].why ? ` from ${seq[k + 1].why}` : ''})`) : '';
+    const what = now ? 'Placing now' : label === 'next' ? 'Places next' : `Places in ${k} turns`;
+    out[p.id] = { place: k, label, twice, text: twice ? `${label} ×2` : label, title: `${what}${ahead(now ? 0 : k)}${why}. Placements still to come: ${list.slice(0, 8).join(', ')}${list.length > 8 ? ', …' : ''}.` };
   }
   return { places: out, order };
 }

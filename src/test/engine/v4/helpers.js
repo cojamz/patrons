@@ -86,7 +86,8 @@ export function actionName(idOrName) {
 export function take(s, name) {
   if (s.pending?.kind !== 'place') throw new Error(`not placing: ${s.pending?.kind}`);
   const want = actionName(name);
-  const o = s.pending.options.find(x => actionAt(s, x.q, x.i).name === want);
+  // spaces only: a member's `use:` is offered beside them on your turn
+  const o = s.pending.options.find(x => x.kind === 'slot' && actionAt(s, x.q, x.i).name === want);
   if (!o) throw new Error(`${name} is not open; open: ${s.pending.options.map(x => x.label).join(', ')}`);
   return move(s, o.id);
 }

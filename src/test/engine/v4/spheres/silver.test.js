@@ -10,8 +10,9 @@ import { take, move, uidOf, ids, pinCosts, TEST_COSTS } from '../helpers.js';
 import { checkInvariants } from '../fuzz-runner.js';
 import { games } from '../budget.js';
 
-// seeded games in the table block below: a game count, not a time budget (the fast gate plays 20; budget.js)
-const GAMES = games(200);
+// seeded games in the table block below: a game count, not a time budget (budget.js). The verdict plays all 200 here,
+// not half: the block asserts a rate (over 6 Silver takes a game), and a rate needs its whole sample. The fast gate 20.
+const GAMES = games(200, 20, 200);
 
 registerQuadrant(silver);
 const Q = ['gold', 'red', 'blue', 'silver'];
@@ -195,10 +196,10 @@ describe('Silver members', () => {
     expect(R(s).silver).toBe(0);
   });
 
-  it('Upstart: when recruited, gain silver equal to the most silver any rival has', () => {
+  it('Upstart: when recruited, gain half the silver of the richest rival (rounded up)', () => {
     let s = scene({ res: [{ silver: 2 }, { silver: 5 }, { silver: 3 }], shop: ['silver.spoon'], queue: [{ t: 'buy', p: 0 }] });
     s = move(s, `card:${uidOf(s, 'silver.spoon', 'shop')}`);
-    expect(R(s).silver).toBe(5);
+    expect(R(s).silver).toBe(2 - 2 + 3); // paid 2 silver, then half of 5, rounded up
   });
 
   it('Toastmaster: whenever you take a Silver space, +1 follower', () => {

@@ -43,20 +43,41 @@ h1,h2,h3{font-family:var(--serif)}
   .app.game.lt{
     height:100dvh;display:grid;
     grid-template-columns:minmax(210px,1fr) minmax(0,1.85fr) minmax(210px,1fr);
-    /* the prompt holds three short lines: the question, the round and its steps (or the details), who's winning */
-    grid-template-rows:66px minmax(0,1fr) minmax(0,1fr) 128px;
-    grid-template-areas:"s1 prompt s2" "s1 wheel s2" "s0 wheel s3" "shop shop shop";
-    column-gap:18px;row-gap:8px;padding:6px 18px 10px;overflow:hidden
+    /* the prompt holds two short lines: the question, the round and its steps (or the details); who's winning is on
+       the chairs (Cory, 2026-10-15: no score row), so the wheel gets the room back */
+    grid-template-rows:54px minmax(0,1fr) minmax(0,1fr) 128px;
+    /* the chairs stand in one column in turn order (Cory, 2026-10-15: "position IS order"); the right column holds the
+       story of the turns (since your last turn) */
+    grid-template-areas:"seats prompt side" "seats wheel side" "seats wheel side" "shop shop shop";
+    column-gap:18px;row-gap:6px;padding:6px 18px 8px;overflow:hidden
   }
   .lt > .lt-prompt{grid-area:prompt}
   .lt > .lt-wheel{grid-area:wheel;container-type:size;min-height:0;display:flex;align-items:center;justify-content:center}
-  .lt > .lt-seat-0{grid-area:s0}
-  .lt > .lt-seat-1{grid-area:s1}
-  .lt > .lt-seat-2{grid-area:s2}
-  .lt > .lt-seat-3{grid-area:s3}
-  .lt > .lt-seat{min-height:0;min-width:0;overflow:hidden;border-radius:14px;padding:10px 12px;background:rgba(243,230,200,.03);box-shadow:inset 0 0 0 1px rgba(243,230,200,.07);transition:box-shadow .3s,background .3s}
-  .lt > .lt-seat-1,.lt > .lt-seat-2{align-self:start}
-  .lt > .lt-seat-0,.lt > .lt-seat-3{align-self:end}
+  /* each chair takes a quarter of the column, at its place in the order (--slot); a new order slides them */
+  .lt > .lt-seat{grid-area:seats;align-self:start;height:calc((100% - 18px) / 4);margin-left:34px;
+    transform:translateY(calc(var(--slot, 0) * (100% + 6px)));transition:transform var(--mo-sort, .6s) cubic-bezier(.3,.7,.4,1),box-shadow var(--mo-dim, .3s),background var(--mo-dim, .3s);
+    /* clipped to its slot, except the rail gutter on its left where its turn marker sits */
+    min-height:0;min-width:0;overflow:visible;clip-path:inset(-3px -3px -3px -36px);border-radius:14px;padding:5px 7px;background:rgba(243,230,200,.03);box-shadow:inset 0 0 0 1px rgba(243,230,200,.07);transition:box-shadow var(--mo-dim),background var(--mo-dim)}
+  /* the right column: the turns since yours, from the top (the turn card tells the live turn at its foot) */
+  .app.game.lt > .lt-since{grid-column:3;grid-row:1 / 4;align-self:start;max-height:calc(100% - 120px)}
+  /* you, wherever you land: a cream edge */
+  .lt > .lt-seat.mine{box-shadow:inset 0 0 0 1.5px rgba(243,230,200,.32)}
+  .lt > .lt-seat.mine.now{box-shadow:inset 0 0 0 1.5px rgba(var(--lamp),.6)}
+  /* the snake rail: a line down the column's gutter, its head pointing the way the turns walk this pass */
+  .lt > .lt-snake{grid-area:seats;justify-self:start;align-self:stretch;width:30px;position:relative;pointer-events:auto;cursor:help}
+  .lt > .lt-snake .sn-line{position:absolute;left:14px;top:calc((100% - 18px) / 8);bottom:calc((100% - 18px) / 8);width:2px;border-radius:1px;
+    background:linear-gradient(180deg,rgba(243,230,200,.08),rgba(var(--lamp),.45),rgba(243,230,200,.08))}
+  .lt > .lt-snake .sn-line::after{content:"";position:absolute;left:-5px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent}
+  .lt > .lt-snake.dir-down .sn-line::after{bottom:-7px;border-top:8px solid rgba(var(--lamp),.75)}
+  .lt > .lt-snake.dir-up .sn-line::after{top:-7px;border-bottom:8px solid rgba(var(--lamp),.75)}
+  /* each chair's place in the turns, on the rail beside it: NOW lit, NEXT ringed, ×2 where the snake turns */
+  .lt > .lt-seat > .lt-cult-seat{position:relative}
+  .lt > .lt-seat .cs-order{position:absolute;left:-38px;top:50%;translate:0 -50%;margin:0;width:28px;padding:2px 0;display:flex;flex-direction:column;align-items:center;gap:0;
+    text-align:center;font-size:9px;line-height:11px;letter-spacing:.04em;border-radius:8px;background:var(--walnut);z-index:2}
+  .lt > .lt-seat .cs-order .co-x{font-size:10px;line-height:11px;letter-spacing:0;color:inherit}
+  .lt > .lt-seat .cs-order{top:22px}
+  .lt > .lt-seat .cs-order.now{background:var(--lamp-ink);color:var(--paper-ink);box-shadow:0 0 10px rgba(var(--lamp),.6)}
+  .lt > .lt-seat .cs-order.next{color:var(--lamp-ink);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.7)}
   .lt > .lt-seat.now{background:rgba(var(--lamp),.07);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.35)}
   .lt > .lt-seat:empty{visibility:hidden}
   .lt > .lt-shop{grid-area:shop;min-height:0;overflow:hidden}
@@ -65,7 +86,7 @@ h1,h2,h3{font-family:var(--serif)}
 }
 
 /* the lamp: whichever region holds the decision is lit; the rest sit a little in shadow */
-.lt .lt-wheel,.lt .lt-shop{transition:filter .35s ease}
+.lt .lt-wheel,.lt .lt-shop{transition:filter var(--mo-dim) ease}
 .lt[data-yours="1"][data-phase="buy"] .lt-wheel,.lt[data-yours="1"][data-phase="pay"] .lt-wheel{filter:brightness(.82) saturate(.85)}
 .lt[data-yours="1"][data-phase="place"] .lt-shop{filter:brightness(.86) saturate(.9)}
 
@@ -103,7 +124,13 @@ h1,h2,h3{font-family:var(--serif)}
 /* ---------- the wheel: printed paper on the walnut ---------- */
 .lt .lt-wheel .wheel-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;min-height:0}
 .lt .lt-wheel .stage{position:relative;aspect-ratio:1;margin:0 auto;touch-action:pan-y;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 18px 22px rgba(0,0,0,.55)) drop-shadow(0 2px 2px rgba(0,0,0,.5))}
-@media (min-width:861px) and (min-height:500px){ .app.game.lt .lt-wheel .stage{width:min(100cqw, 100cqh)} }
+/* the board as large as the table allows (Cory, 2026-10-15: "way better use of the space"): the stage's square is the
+   disc plus a margin for the rim's leaders and glow, so it may overhang the prompt and shop rows by that margin (the
+   paper disc itself stays inside its cell); those rows sit above it, so the overhang never takes their clicks */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt .lt-wheel .stage{width:min(100cqw, calc(100cqh + 48px))}
+  .lt > .lt-prompt,.lt > .lt-shop{position:relative;z-index:3}
+}
 .lt .stage svg.wheel-paper{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .lt .stage svg.wheel-paper .disk{stroke:none}
 .lt .stage svg.wheel-paper .band{transition:fill-opacity .3s}
@@ -124,13 +151,13 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage .slot.r2{width:10.6%}
 .lt .stage .slot.r3{width:11%}
 .lt .stage .slot .hit{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max(140%, 46px);aspect-ratio:1;border-radius:50%}
-.lt .stage .slot .base{position:absolute;inset:0;border-radius:50%;transition:opacity .25s;
+.lt .stage .slot .base{position:absolute;inset:0;border-radius:50%;transition:opacity var(--mo-fade),transform var(--mo-quick) var(--mo-ease-out);
   background:radial-gradient(circle at 50% 38%, #fbf5e7, #efe3c8 70%);
   box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 72%,#5a4630),inset 0 2px 4px rgba(60,40,15,.25),0 1px 0 rgba(255,255,255,.6)}
 /* not open yet: a hollow pressed into the paper, its round printed faintly (no dashes: those never mean "open") */
 .lt .stage .slot.locked .base{background:rgba(42,31,23,.05);box-shadow:inset 0 1px 3px rgba(42,31,23,.3),0 1px 0 rgba(255,250,238,.45);opacity:.85}
 .lt .stage .slot .seal{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:13px;letter-spacing:.06em;color:color-mix(in srgb,var(--c) 40%,#6e5a40);opacity:.6;pointer-events:none}
-.lt .stage .slot .face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0 2px;text-align:center;pointer-events:none;color:var(--paper-ink);transition:opacity .25s}
+.lt .stage .slot .face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0 2px;text-align:center;pointer-events:none;color:var(--paper-ink);transition:opacity var(--mo-fade)}
 .lt .stage .slot .face .ico{line-height:0;margin-top:-2px}
 .lt .stage .slot .face .ico svg{width:clamp(18px, calc(var(--wheel-px) * .046), 24px);height:auto;image-rendering:pixelated}
 .lt .stage .slot.r2 .face .ico svg,.lt .stage .slot.r3 .face .ico svg{width:clamp(14px, calc(var(--wheel-px) * .036), 20px)}
@@ -149,6 +176,8 @@ h1,h2,h3{font-family:var(--serif)}
 .lt[data-yours="1"][data-phase="place"] .stage .slot.open:not(.lit):not(.taken) .face{opacity:.55}
 .lt .stage .slot.can:hover,.lt .stage .slot.sel{z-index:4}
 .lt .stage .slot.can:hover .base,.lt .stage .slot.sel .base{transform:scale(1.08);box-shadow:inset 0 0 0 2.5px var(--paper-ink),0 0 0 4px var(--lamp-ink),0 8px 18px rgba(0,0,0,.45)}
+/* tactile: a lit space presses down under the pointer (src/v4/motion.js) */
+.lt .stage .slot.can:active .base{transform:scale(.96);transition-duration:var(--mo-press)}
 .lt .stage .slot:focus-visible .base{box-shadow:inset 0 0 0 2.5px var(--paper-ink),0 0 0 4px var(--lamp-ink)}
 /* taken: the space drops to ~40%; the owner's minion stands on it at full strength, over its picture */
 .lt .stage .slot.taken .base,.lt .stage .slot.taken .face{opacity:.4}
@@ -168,6 +197,16 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage .shake{animation:spaceshake .34s ease-out}
 @keyframes spaceshake{0%,100%{translate:0 0}20%{translate:-4px 0}40%{translate:4px 0}60%{translate:-3px 0}80%{translate:2px 0}}
 @media (prefers-reduced-motion:reduce){ .lt .stage .slot.lit .base::after{animation:none;opacity:.8} .lt .stage .slot.newest .fresh-ring{animation:none} }
+/* a face from src/v4/game/faces/ (?spaces=<name>): the box is the face's size; the face draws everything in it */
+.lt [data-face] .stage .slot{border-radius:0}
+.lt [data-face] .stage .slot .base,.lt [data-face] .stage .slot.lit .base,.lt [data-face] .stage .slot.locked .base{background:none;box-shadow:none;opacity:1;transform:none}
+.lt [data-face] .stage .slot .base::after{display:none}
+.lt [data-face] .stage .slot.can:hover .base,.lt [data-face] .stage .slot.sel .base{transform:none;box-shadow:none}
+.lt [data-face] .stage .slot.flash .base{animation:none}
+.lt [data-face] .stage .slot:focus-visible .base{box-shadow:0 0 0 2.5px var(--lamp-ink);border-radius:6px}
+.lt .slot .face-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+/* inside a face's HTML (FaceHtml), the marks and pips are 1em, not the stage's svg 100% */
+.lt .stage .face-svg .face-html svg{display:inline-block;width:1em;height:1em;vertical-align:-.15em;cursor:inherit}
 /* ...and why, at the pointer: "Taken by P3", "Opens in round II" */
 .deny-note{position:fixed;z-index:60;transform:translate(14px,-135%);padding:5px 10px;border-radius:8px;background:var(--walnut-2);color:var(--cream);font-family:var(--sans);font-size:14px;font-weight:600;white-space:nowrap;pointer-events:none;
   box-shadow:0 0 0 1px rgba(243,230,200,.24),0 8px 18px rgba(0,0,0,.5);animation:denyin .16s ease-out,denyout .3s ease-in 1.35s forwards}
@@ -303,17 +342,23 @@ h1,h2,h3{font-family:var(--serif)}
 /* the room dims around the board while it pays: the wheel and the chairs being paid stay in the light */
 .lt[data-phase="reckon"] .lt-shop,.lt[data-phase="reckon"] .lt-prompt{filter:brightness(.55) saturate(.7);transition:filter .3s}
 .lt[data-phase="reckon"] .lt-seat{filter:brightness(.8);transition:filter .3s}
-.lt-reckon .reckon-head{position:absolute;left:50%;top:14px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 22px 10px;border-radius:14px;
+.lt-reckon .reckon-head{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 26px 10px;border-radius:14px;
   background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);box-shadow:0 0 0 2px var(--c,var(--paper-edge)),0 14px 30px rgba(0,0,0,.55);min-width:min(420px, 92vw);text-align:center}
 .lt-reckon .reckon-head small{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper-ink-3)}
 .lt-reckon .reckon-head b{font-family:var(--serif);font-size:22px;line-height:1.15}
+/* the caption over the dimmed shop (clear of the wheel's plaques): what is scored, what it counts, then who wins */
+.lt-reckon .reckon-head .reckon-rule{font-size:24px;color:color-mix(in srgb,var(--c) 70%,var(--paper-ink))}
+.lt-reckon .reckon-head .reckon-counts{font-size:13.5px;line-height:1.3;color:var(--paper-ink-2);max-width:520px}
+.lt-reckon .reckon-head .reckon-verdict{font-size:20px;min-height:1.2em;color:var(--paper-ink-3);font-style:italic;font-weight:500;transition:color .25s}
+.lt-reckon .reckon-head .reckon-verdict.on{color:var(--paper-ink);font-style:normal;font-weight:700;animation:rise .3s ease-out}
+.lt-reckon .reckon-head .reckon-verdict.none{color:var(--paper-ink-3);font-weight:500}
 .lt-reckon .reckon-dots{display:flex;gap:6px}
 .lt-reckon .reckon-dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--c);opacity:.6}
 .lt-reckon .reckon-dots i.done{background:var(--c);opacity:.55}
 .lt-reckon .reckon-dots i.on{background:var(--c);opacity:1;box-shadow:0 0 8px var(--c)}
 .lt-reckon .reckon-count{position:fixed;transform:translate(0,-50%);display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;
   background:var(--paper);color:var(--paper-ink);font-family:var(--serif);font-weight:700;font-size:22px;box-shadow:0 0 0 2px var(--c),0 8px 18px rgba(0,0,0,.5);pointer-events:none;animation:rise .25s ease-out}
-.lt-reckon .reckon-count.won{box-shadow:0 0 0 3px var(--lamp-ink),0 0 22px 6px rgba(var(--lamp),.6);animation:rise .25s ease-out, reckonwin .5s .6s ease-out 2}
+.lt-reckon .reckon-count.won{box-shadow:0 0 0 3px var(--lamp-ink),0 0 22px 6px rgba(var(--lamp),.6);animation:reckonwin .5s ease-out 2}
 @keyframes reckonwin{50%{transform:translate(0,-50%) scale(1.18)}}
 .lt-reckon .reckon-skip{position:absolute;right:18px;bottom:18px;min-height:44px;padding:0 18px;color:var(--cream);border-color:rgba(243,230,200,.4);background:rgba(29,22,17,.7)}
 .token-flight{position:fixed;z-index:45;pointer-events:none;display:grid;place-items:center;will-change:transform}
@@ -327,10 +372,17 @@ h1,h2,h3{font-family:var(--serif)}
 .lt .stage svg.wheel-paper .rim-rule.wait{opacity:.5}
 .lt .stage svg.wheel-paper .rim-rule.lit{fill:#fffdf6}
 .lt .stage svg.wheel-paper .rim-hit{fill:transparent;cursor:help;pointer-events:all}
+/* the rim's hover target sits in its own layer above the spaces (Wheel.jsx rimHits): the rule and the leaders' emojis
+   always open the standings; a faint wash says the band is one target */
+.lt .stage svg.rim-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:5}
+.lt .stage svg.rim-layer .rim-hit{fill:rgba(255,250,238,0);cursor:help;pointer-events:all;outline:none;transition:fill .15s}
+.lt .stage svg.rim-layer .rim-hit:hover{fill:rgba(255,250,238,.1)}
+.lt .stage svg.rim-layer .rim-hit:focus-visible{stroke:var(--lamp-ink);stroke-width:2;fill:rgba(255,250,238,.1)}
 /* the tiebreak, quieter than the rule: "· ties: red members" */
 .lt .stage svg.wheel-paper .rim-rule .rim-tie{letter-spacing:.04em;font-weight:600;fill-opacity:.9}
 /* the chairs: yours only a little larger than the rivals' (same layout) */
-@media (min-width:861px) and (min-height:500px){ .lt > .lt-seat-0 > .lt-cult-seat{zoom:1.15} }
+/* (your chair was zoomed 1.15×; in the ordered column every chair has the same slot, so yours is marked by its edge
+   and its larger type instead) */
 
 /* the chairs carry no box of their own: the cult sits on the walnut (yours a little larger) */
 @media (min-width:861px) and (min-height:500px){
@@ -367,3 +419,43 @@ h1,h2,h3{font-family:var(--serif)}
 .lt-prompt .pr-actions .rel-list .rel{justify-content:flex-start;gap:6px;min-height:40px;color:var(--cream)}
 /* a sphere's own rule, under its standings in the rim's hover card ("Whatever you steal turns magenta…") */
 .lt-sphere-rule{margin:8px 0 0;padding-top:7px;border-top:1px solid rgba(42,31,23,.15);font-size:13px;line-height:1.3;color:var(--paper-ink-2);max-width:260px}
+
+/* setup (RC1 panel: the starting-resource note covered the wheel's lower half, so a newcomer only found out by accident
+   that it spins; Cory, 2026-10-15: "make way better use of the space"): the wheel keeps its full size and the picker
+   stands in the open wood of the left column, between the two chairs, never over the wheel or the shop */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{left:auto;right:calc(100% + 18px);bottom:auto;top:50%;translate:0 -50%;
+    width:max(200px, calc(100% / 1.85));max-height:none;overflow:visible;
+    display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:10px 12px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .for-sale{display:none}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{margin:0;font-weight:700;line-height:1.2}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .tokens{flex:1 1 auto;gap:6px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token{flex-direction:row;justify-content:center;gap:6px;padding:4px 2px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .coin-big{width:42px;height:42px;font-size:14px}
+  /* the call to action (Cory, 2026-10-15: nothing said "click here"): the note is lamp-lit and pulses once; each coin
+     wears the lit edge a space you can take wears */
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.4),0 14px 34px rgba(0,0,0,.6);
+    animation:rise .25s ease-out both,cta-pulse 1.2s .3s ease-out 1}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{font-family:var(--serif);font-size:16px}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p::after{content:" →";color:var(--lamp-ink);font-weight:700}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token:not(:disabled) .coin-big{box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),0 0 0 2px #fffaf0,0 0 12px 3px rgba(var(--lamp),.75)}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token:not(:disabled):hover .coin-big{transform:translateY(-2px) scale(1.06)}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .coin-big{transition:transform .12s ease-out}
+}
+@keyframes cta-pulse{
+  0%{box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.4),0 14px 34px rgba(0,0,0,.6)}
+  40%{box-shadow:0 0 0 4px rgba(var(--lamp),1),0 0 46px 14px rgba(var(--lamp),.65),0 14px 34px rgba(0,0,0,.6)}
+  100%{box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.4),0 14px 34px rgba(0,0,0,.6)}
+}
+@media (prefers-reduced-motion:reduce){ .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{animation:none} }
+
+/* game over on a laptop (RC1 strategist: the result rows ran the full width and were mostly empty): the table holds
+   to a readable width, and the cults sit two to a row, each with its total beside it */
+@media (min-width:861px) and (min-height:500px){
+  .app.game.lt > .main.over > .results{width:100%;max-width:900px;margin:0 auto}
+  .app.game.lt > .main.over > .results table.res-t{min-width:0}
+  .app.game.lt > .main.over > .over-cults{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;width:100%;max-width:900px;margin:8px auto 0}
+  .app.game.lt > .main.over > .over-cults > :not(.over-seat){grid-column:1 / -1}
+  .app.game.lt > .main.over .over-seat{grid-template-columns:22px minmax(0,1fr) auto;gap:8px;padding:6px 12px}
+  .app.game.lt > .main.over .over-seat .final{font-size:30px}
+}

@@ -1,7 +1,8 @@
 // The member deck at the head of the shop strip (Cory): its count is the engine's pile, it ticks down as the row
-// refills, it warms at ≤ 10 and shows an outline "empty" at 0, and its hover card counts every color (colorless too).
+// refills, it warms at ≤ 10 and shows an outline "empty" at 0; it has no hover (Cory, 2026-10-15). DeckCard (what's in it
+// by color) stays tested for a later pile beside it.
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, cleanup, act } from '@testing-library/react';
+import { render, cleanup, act, fireEvent } from '@testing-library/react';
 import { createGame, applyMove, chooseBotMove, cardDef } from '../../../engine/v4/index.js';
 import ShopCards from '../../../v4/game/ShopCards.jsx';
 import { MemberDeck, DeckCard, deckColors, deckEdges, DECK_LOW } from '../../../v4/game/MemberDeck.jsx';
@@ -65,14 +66,15 @@ describe('member deck', () => {
     expect(container.textContent).not.toMatch(/★/);
   });
 
-  it('hovering the deck opens its card in the hover layer', () => {
+  it('the deck has no hover (Cory, 2026-10-15): pointing at it or clicking it opens nothing; its count stays on it', () => {
     const s = createGame({ seats, seed: 35 });
     const hover = createHover();
     const { container } = render(<><ShopCards state={s} me={0} mySeats={[0]} hover={hover} /><HoverCardLayer hover={hover} state={s} me={0} /></>);
-    act(() => { hover.onDeckHover(container.querySelector('[data-deck]')); });
-    const card = container.querySelector('[data-hover-layer] [data-hover-card="deck"]');
-    expect(card).not.toBeNull();
-    expect(card.textContent).toContain(String(s.pile.length));
+    const deck = container.querySelector('[data-deck]');
+    act(() => { fireEvent.pointerEnter(deck, { pointerType: 'mouse' }); fireEvent.click(deck); });
+    expect(container.querySelector('[data-hover-layer] [data-hover-card="deck"]')).toBeNull();
+    expect(deck.matches('button, [aria-haspopup], [title]')).toBe(false);
+    expect(deck.querySelector('.n').textContent).toBe(String(s.pile.length));
     hover.dispose();
   });
 });

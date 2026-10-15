@@ -9,7 +9,8 @@ import { take, move, play, uidOf, ids, pinCosts, TEST_COSTS, actionName } from '
 import { checkInvariants } from '../fuzz-runner.js';
 import { games } from '../budget.js';
 
-// seeded games in the table block below: a game count, not a time budget (the fast gate plays 20; budget.js)
+// seeded games in the table block below: a game count, not a time budget (budget.js). The verdict plays 100 (catches a
+// bug in ≥3% of this table's games with 95% confidence), the nightly full run (check:v4:full) all 200, the fast gate 20.
 const GAMES = games(200);
 
 install();

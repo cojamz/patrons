@@ -2,6 +2,7 @@
 // travels from its leader to the space it took, and at round end the minions fly home. All use fixed-position
 // ghosts + Web Animations.
 import { reducedMotion } from './Tick.jsx';
+import { MO } from '../motion.js';
 
 export const motionOK = () => !reducedMotion() && typeof document !== 'undefined' && !!document.body.animate;
 
@@ -73,7 +74,7 @@ function ghostFly(html, className, a, b, { duration, scaleTo, fadeTo = 0, arc = 
     { transform: `translate(${dx * 0.5}px,${dy * 0.5 - arc}px) scale(${(1 + scaleTo) / 2})`, opacity: 1, offset: 0.55 },
     { transform: `translate(${dx}px,${dy}px) scale(${scaleTo})`, opacity: fadeTo },
   ];
-  const anim = ghost.animate(frames, { duration, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+  const anim = ghost.animate(frames, { duration, easing: 'cubic-bezier(.25,.6,.3,1)', fill: 'forwards' }); // quick off the mark, soft landing
   const done = () => ghost.remove();
   anim.onfinish = done;
   anim.oncancel = done;
@@ -99,13 +100,13 @@ export function flyCards(root, snap, moves) {
     const chip = root.querySelector(`.lt-seat[data-pid="${to}"] [data-uids~="${uid}"]`) || root.querySelector(`.lt-seat[data-pid="${to}"] [data-uid="${uid}"]`);
     const land = chip && visibleEl(chip) ? chip : target;
     const lb = land.getBoundingClientRect();
-    ghostFly(s.html, 'flight', a, lb.width ? lb : b, { duration: 760, scaleTo: 0.28, hold: true });
+    ghostFly(s.html, 'flight', a, lb.width ? lb : b, { duration: MO.cardFly, scaleTo: 0.28, hold: true });
     if (chip && chip.animate) {
       chip.animate([
         { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' },
         { boxShadow: '0 0 0 4px rgba(236,230,214,.55), 0 0 14px rgba(236,230,214,.5)', transform: 'scale(1.08)' },
         { boxShadow: '0 0 0 0 rgba(236,230,214,0)', transform: 'scale(1)' },
-      ], { duration: 900, delay: 620, easing: 'ease-out' });
+      ], { duration: MO.chipGlow, delay: Math.round(MO.cardFly * 0.85), easing: 'ease-out' });
     }
   }
 }
@@ -114,7 +115,7 @@ export function flyCards(root, snap, moves) {
  * A minion leaves its leader and lands on the space (Cory: "placing a minion animates it from the leader to the wheel
  * space"). The ghost is the minion's own sprite; the minion on the space shows once it has landed.
  */
-export function flyWorker(root, pid, slotKey, color) {
+export function flyWorker(root, pid, slotKey, color, { own = false } = {}) {
   if (!root || !motionOK()) return false;
   const from = playerAnchor(root, pid, '.workers');
   const slot = root.querySelector(`[data-slot="${slotKey}"]`);
@@ -127,7 +128,10 @@ export function flyWorker(root, pid, slotKey, color) {
   const a = { left: f.left + f.width / 2 - size / 2, top: f.top + f.height / 2 - size / 2, width: size, height: size };
   const b = { left: t.left + t.width / 2 - size / 2, top: t.top + t.height / 2 - size / 2, width: size, height: size };
   const html = landed ? landed.innerHTML : `<i style="background:${color}"></i>`;
-  const duration = 480;
+  // your own minion already stands on the space (you see your move at once): the ghost is a quick trail from your
+  // leader that fades onto it. A rival's minion travels, and shows on the space as it lands.
+  if (own) { ghostFly(html, 'worker-flight minion-flight trail', a, b, { duration: MO.minionTrail, scaleTo: 1, fadeTo: 0, arc: 30 }); return true; }
+  const duration = MO.minionFly;
   ghostFly(html, 'worker-flight minion-flight', a, b, { duration, scaleTo: 1, fadeTo: 1, arc: 46 });
   if (landed && landed.animate) landed.animate([{ opacity: 0 }, { opacity: 0, offset: 0.97 }, { opacity: 1 }], { duration: duration + 30 });
   return true;
@@ -166,7 +170,7 @@ export function flyMinionsHome(root, snap) {
     const h = home.getBoundingClientRect();
     if (!h.width) return;
     const b = { left: h.left + h.width / 2 - m.rect.width / 2, top: h.top + h.height / 2 - m.rect.height / 2, width: m.rect.width, height: m.rect.height };
-    setTimeout(() => ghostFly(m.html, 'worker-flight minion-flight home', m.rect, b, { duration: 520, scaleTo: 0.8, fadeTo: 0.2, arc: 40 }), k * 45);
+    setTimeout(() => ghostFly(m.html, 'worker-flight minion-flight home', m.rect, b, { duration: MO.minionsHome, scaleTo: 0.8, fadeTo: 0.2, arc: 40 }), k * MO.minionsHomeStagger);
     n++;
   });
   return n;
@@ -188,6 +192,124 @@ export function slideShop(root, snap) {
     const r = el.getBoundingClientRect();
     const dx = s.rect.left - r.left, dy = s.rect.top - r.top;
     if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
-    el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.3,.7,.4,1)' });
+    el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: MO.shopSlide, easing: 'cubic-bezier(.3,.7,.4,1)' });
   });
+}
+
+// ---------- pieces: every gain and payment travels from where it came from to where it lands ----------
+// (Cory, 2026-10-15: "animations for actions and follower gain, member gain, etc, should all go clearly directly to
+// their source on the screen. There should be a super tactile feel.") gains.js says what moved and from where (engine
+// state diffs + log); this finds those places on screen and flies one piece per unit, MO.pieceStagger apart, so a +6
+// reads as six. The destination counts each piece as it lands, never before (a held number on a stack, Tick's arrival
+// on a follower count). Decoration only: nothing waits on a piece, and input is never blocked.
+
+const arrivals = new WeakMap(); // destination element → { at, span }: when its first piece lands and how long the rest take
+/** When pieces are flying to `el` (or an ancestor of it): { delay, span } in ms from now, else null. Tick reads it. */
+export function arrivalFor(el) {
+  for (let e = el; e && e.nodeType === 1; e = e.parentElement) {
+    const a = arrivals.get(e);
+    if (a) { const now = performance.now(); return a.at + a.span > now ? { delay: Math.max(0, a.at - now), span: a.span } : null; }
+  }
+  return null;
+}
+
+/** A place on screen for a gains.js source or target, under `root`; `snap` is the shop as it was (snapshotShop). */
+export function placeOf(root, where, snap = null) {
+  if (!root || !where) return null;
+  const seat = pid => root.querySelector(`.lt-cult-seat[data-seat="${pid}"]`);
+  const shown = el => (el && visibleEl(el) ? el : null);
+  switch (where.kind) {
+    case 'slot': return shown(root.querySelector(`[data-slot="${where.key}"] .base`)) || shown(root.querySelector(`[data-slot="${where.key}"]`));
+    case 'stack': { const s = seat(where.pid); return s && shown(s.querySelector(`.cs-stack[data-res="${where.r}"]`)); }
+    case 'total': { const s = seat(where.pid); return s && shown(s.querySelector('.cs-total')); }
+    case 'crowd': { const s = seat(where.pid); return s && (shown(s.querySelector('.cs-crowd .cs-member')) || shown(s.querySelector('.cs-head'))); }
+    case 'member': { const s = seat(where.pid); return s && (shown(s.querySelector(`.cs-member[data-member="${where.def}"]`)) || shown(s.querySelector('.cs-crowd'))); }
+    case 'rate': return shown(root.querySelector(`.lt-rate[aria-label*="+${where.n} follower"]`)) || shown(root.querySelector('.lt-rates'));
+    case 'card': {
+      const s = snap && snap.get(where.uid);
+      if (s && s.rect) return { getBoundingClientRect: () => s.rect, rectOnly: true };
+      return shown(root.querySelector(`.lt-shop .card[data-uid="${where.uid}"]`));
+    }
+    case 'hub': return shown(root.querySelector('.stage .hub-label'));
+    default: return null;
+  }
+}
+
+/** The picture a piece wears: the stack's own glyph, the follower mark, else a dot. */
+function pieceHtml(root, m) {
+  const to = m.pay ? m.from : m.to;
+  const seat = root.querySelector(`.lt-cult-seat[data-seat="${to.pid}"]`);
+  const g = m.what === 'res' ? seat && seat.querySelector(`.cs-stack[data-res="${m.r}"] svg`) : seat && seat.querySelector('.cs-total svg');
+  return g ? g.outerHTML : `<i class="piece-dot" style="background:var(--${m.r || 'lamp-ink'})"></i>`;
+}
+
+/** A stack's number shows what has landed so far (data-hold), and settles to the real number with the last piece. */
+function holdStack(stackEl, from) {
+  const b = stackEl && stackEl.querySelector('b.num');
+  if (!b) return null;
+  let v = from;
+  b.dataset.hold = String(v);
+  return {
+    step(by) { v += by; b.dataset.hold = String(v); },
+    done() { delete b.dataset.hold; },
+  };
+}
+const bump = (el, down = false) => {
+  if (!el || !el.animate || el.rectOnly) return;
+  el.animate(down
+    ? [{ transform: 'scale(1)' }, { transform: 'scale(.86)' }, { transform: 'scale(1)' }]
+    : [{ transform: 'scale(1)' }, { transform: 'scale(1.22)', offset: 0.35 }, { transform: 'scale(1)' }], { duration: MO.pieceBump, easing: 'cubic-bezier(.3,1.45,.5,1)' });
+};
+
+/**
+ * Fly every move gains.js found (one call per state change). Pieces leave a stack at once (its number drops as each
+ * goes), and arrive at a stack or follower count one by one (its number climbs as each lands). Returns pieces flown.
+ */
+export function flyGains(root, moves, { snap = null, before = null } = {}) {
+  if (!root || !moves || !moves.length) return 0;
+  const ok = motionOK();
+  let flown = 0, t = 0;
+  const holds = new Map(); // stack element → hold (one per stack, shared by every move touching it)
+  const held = (el, start) => { if (!holds.has(el)) holds.set(el, { h: start == null ? null : holdStack(el, start), left: 0 }); return holds.get(el); };
+  for (const m of moves) {
+    const a = placeOf(root, m.from, snap), b = placeOf(root, m.to, snap);
+    if (!ok || !a || !b) continue;
+    const ar = a.getBoundingClientRect(), br = b.getBoundingClientRect();
+    if (!ar.width || !br.width) continue;
+    const n = Math.min(m.n, MO.pieceMax), per = m.n / n;
+    const html = pieceHtml(root, m);
+    // stacks show what they held before this move, then count each piece out (a payment) or in (a gain)
+    const fromStack = m.from.kind === 'stack' ? a : null, toStack = m.to.kind === 'stack' ? b : null;
+    const startOf = where => { const p = before && before.players[where.pid]; return p ? (p.res[where.r] || 0) : null; };
+    const out = fromStack ? held(fromStack, startOf(m.from)) : null;
+    const into = toStack ? held(toStack, startOf(m.to)) : null;
+    if (out) out.left += n;
+    if (into) into.left += n;
+    if (m.to.kind === 'total') arrivals.set(b, { at: performance.now() + t + MO.pieceFly, span: (n - 1) * MO.pieceStagger });
+    const size = m.what === 'fol' ? 20 : 18;
+    for (let k = 0; k < n; k++) {
+      const share = Math.round(per * (k + 1)) - Math.round(per * k);
+      const at = t + k * MO.pieceStagger;
+      const go = () => {
+        const A = a.getBoundingClientRect(), B = b.getBoundingClientRect();
+        const jitter = (k % 3 - 1) * 4;
+        const ra = { left: A.left + A.width / 2 - size / 2 + jitter, top: A.top + A.height / 2 - size / 2, width: size, height: size };
+        const rb = { left: B.left + B.width / 2 - size / 2, top: B.top + B.height / 2 - size / 2, width: size, height: size };
+        ghostFly(html, `piece-flight piece-${m.what}${m.pay ? ' pay' : ''}`, ra, rb, { duration: MO.pieceFly, scaleTo: m.pay ? 0.7 : 1, fadeTo: m.pay ? 0.1 : 1, arc: 26 + (k % 2) * 10 });
+        if (out && out.h) { out.h.step(-share); out.left--; bump(fromStack, true); if (!out.left) out.h.done(); }
+      };
+      const land = () => {
+        if (into && into.h) { into.h.step(share); into.left--; if (!into.left) into.h.done(); }
+        bump(b);
+      };
+      if (at) setTimeout(go, at); else go();
+      setTimeout(land, at + MO.pieceFly);
+      flown++;
+    }
+    t += Math.min(n, 3) * MO.pieceStagger; // the next move starts while this one is still flying
+  }
+  // a safety net: whatever happens, every held number lets go after the last piece could have landed
+  if (holds.size) setTimeout(() => holds.forEach(x => x.h && x.h.done()), t + MO.pieceMax * MO.pieceStagger + MO.pieceFly + 200);
+  if (flown && typeof window !== 'undefined') window.__patronsPieces = (window.__patronsPieces || 0) + flown;
+  return flown;
 }

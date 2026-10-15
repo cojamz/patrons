@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import './app.css'; // v4.css then lamp.css, inlined in that order (see app.css)
 import { createRoom, joinRoom, rejoinRoom, makeTransport, transportKind, onlineReady } from './sessionApi.js';
 import { createLocalSession } from './session/local.js';
-import { loadLocal, saveLocal, clearLocal, finishLocal, loadOnline, saveOnline, clearOnline, rememberRoom, roomIds, lastRoomCode } from './saved.js';
+import { loadLocal, saveLocal, clearLocal, finishLocal, loadLast, clearLast, claimLocal, ownsLocal, onLocalLost, releaseLocal, loadOnline, saveOnline, clearOnline, rememberRoom, roomIds, lastRoomCode } from './saved.js';
 import GameScreen from './game/GameScreen.jsx';
 import { friendlyError, OFFLINE } from './errors.js';
 import { Home, LocalSetup, Lobby, initialTable } from './screens/Screens.jsx';
@@ -12,10 +12,12 @@ import OnlineBar from './screens/OnlineBar.jsx';
 import { tableProblem } from './tables.js';
 import { Recovered } from './Recovery.jsx';
 import { IntroGate, introOnGameStart } from './Intro.jsx';
+import { BOT } from './motion.js';
+import { PerfProfiler, traceSession } from './perf.js'; // ?trace=1 only (design/eval/perf/)
 
 // Bots decide quickly; the table paces what you see (each visible bot step holds PACE ms, a pass doesn't wait).
-const BOT_DELAY = { slow: 400, normal: 250, fast: 120 };
-const PACE = { slow: 1100, normal: 700, fast: 350 };
+const BOT_DELAY = BOT.think; // src/v4/motion.js: every pace in one place
+const PACE = BOT.pace;
 const urlBotDelay = () => Number(new URLSearchParams(location.search).get('botDelay')) || 0;
 // An invite link (?join=CODE) reopened on a device that already sat in that room goes straight back to its seat.
 const linkCode = () => (new URLSearchParams(location.search).get('join') || '').trim().toUpperCase();
@@ -32,6 +34,8 @@ function App() {
   const [session, setSession] = useState(null);
   const [gameKey, setGameKey] = useState(0);
   const [saved, setSaved] = useState(() => loadLocal());
+  const [last, setLast] = useState(() => loadLast()); // the last finished game: home offers its results
+  const [away, setAway] = useState(false); // another tab took this local game (session/owner.js)
   const [homeError, setHomeError] = useState('');
   const configRef = useRef(null);
   // read before anything clears it: was this tab in a local game when it reloaded?
@@ -65,6 +69,7 @@ function App() {
   const goHomeRef = useRef(null);
 
   useEffect(() => () => { if (session) session.destroy(); }, [session]);
+  useEffect(() => traceSession(session), [session]); // the ?trace=1 tracer watches the session on screen (no-op off)
   const sessionRef = useRef(null);
   sessionRef.current = session;
 
@@ -74,52 +79,89 @@ function App() {
     try { if (local) sessionStorage.setItem('patrons.v4.inGame', '1'); else if (screen.name !== 'rejoining') sessionStorage.removeItem('patrons.v4.inGame'); } catch { /* ignore */ }
   }, [screen.name, session]);
   useEffect(() => {
-    if (wasInGame.current && screen.name === 'home' && loadLocal()) resumeRef.current();
+    if (!wasInGame.current || screen.name !== 'home') return;
+    // a game in progress resumes; a finished one (a reload of its results) shows its results again
+    if (loadLocal()) resumeRef.current(); else if (loadLast()) lastRef.current();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const resumeRef = useRef(null);
+  const lastRef = useRef(null);
+
+  // One tab owns a local game: when a newer tab opens it, this one stops its bots and saving and says so.
+  useEffect(() => onLocalLost(() => {
+    const s = sessionRef.current;
+    if (!s || s.info?.mode === 'online' || screenRef.current.last) return;
+    s.destroy();
+    setAway(true);
+  }), []);
 
   // Save local games on every change.
   // Once its results have been on screen a finished game is done: nothing saves it again (a late save would
   // offer to "resume" a game that's over).
   const finished = useRef(null);
-  const onResultsShown = useCallback(() => { finished.current = session; finishLocal(); }, [session]);
+  // The finished game is kept (results and record) as the last game until a new one starts.
+  const onResultsShown = useCallback(() => { finished.current = session; finishLocal(configRef.current, session && session.getState()); releaseLocal(); }, [session]);
   useEffect(() => {
     if (!session || session.info?.mode === 'online') return undefined;
-    const save = s => { if (!(s && s.over && finished.current === session)) saveLocal(configRef.current, s, session.undoCheckpoint); };
+    // the round-end hold goes with the state, so a reload reopens the round summary (session/local.js)
+    const save = s => { if (!(s && s.over && finished.current === session)) saveLocal(configRef.current, s, session.undoCheckpoint, session.roundHold); };
     save(session.getState());
     return session.subscribe(save);
   }, [session]);
 
-  const begin = useCallback((s, cfg) => {
+  const begin = useCallback((s, cfg, extra = {}) => {
     configRef.current = cfg;
     setConfig(cfg);
     setSession(s);
     setGameKey(k => k + 1);
-    setScreen({ name: 'game' });
+    setAway(false);
+    setScreen({ name: 'game', ...extra });
   }, []);
 
   const startLocal = useCallback(cfg => {
     const seats = cfg.seats.filter(s => s.kind !== 'empty').map((s, i) => ({ name: s.name.trim() || `P${i + 1}`, kind: s.kind, ...(s.emoji ? { emoji: s.emoji } : {}) }));
     const botDelayMs = urlBotDelay() || BOT_DELAY[cfg.speed] || 650;
     const quadrants = cfg.table && !tableProblem(cfg.table.quadrants) ? cfg.table.quadrants : undefined;
-    begin(createLocalSession({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs, quadrants, botLevel: cfg.level }), cfg);
+    // this tab takes the one local save (any other tab holding a game lets go), then starts over in it
+    claimLocal(); clearLocal(); clearLast(); setLast(null);
+    begin(createLocalSession({ seats, seed: Math.floor(Math.random() * 1e9), botDelayMs, quadrants, botLevel: cfg.level, holdRoundEnds: true, isOwner: ownsLocal }), cfg);
     introOnGameStart(); // this browser's first game: the intro, on this screen only (Intro.jsx)
   }, [begin]);
 
+  // Claim first, then read: every move the other tab saved before it let go is in what we load.
   const resume = useCallback(() => {
+    claimLocal();
     const v = loadLocal();
-    if (!v) { setSaved(null); return; }
+    if (!v) { setSaved(null); return false; }
     const botDelayMs = urlBotDelay() || BOT_DELAY[v.config?.speed] || 650;
-    begin(createLocalSession({ state: v.state, undo: v.undo, botDelayMs }), v.config);
+    begin(createLocalSession({ state: v.state, undo: v.undo, hold: v.hold, botDelayMs, holdRoundEnds: true, isOwner: ownsLocal }), v.config);
+    return true;
   }, [begin]);
   resumeRef.current = resume;
 
+  // The last finished game's results, read-only: nothing claims or saves it (its session never moves).
+  const viewLast = useCallback(() => {
+    const v = loadLast();
+    if (!v) { setLast(null); return false; }
+    const s = createLocalSession({ state: v.state });
+    finished.current = s;
+    begin(s, v.config, { last: true });
+    return true;
+  }, [begin]);
+  lastRef.current = viewLast;
+  // "Play here" in a tab that lost the game: take it back from the save (or its results, if it has ended since).
+  const playHere = useCallback(() => {
+    setAway(false);
+    if (resume()) return;
+    if (viewLast()) return;
+    goHomeRef.current();
+  }, [resume, viewLast]);
+
   const goHome = useCallback(() => {
-    setSession(null); setSaved(loadLocal()); setScreen({ name: 'home' });
+    setSession(null); setSaved(loadLocal()); setLast(loadLast()); setAway(false); setScreen({ name: 'home' });
     screenRef.current = { name: 'home' }; // the history.back() below must not read as "Back pressed mid-game"
     if (history.state && history.state.patrons) history.back();
   }, []);
-  goHomeRef.current = () => { setSession(null); setSaved(loadLocal()); setScreen({ name: 'home' }); };
+  goHomeRef.current = () => { setSession(null); setSaved(loadLocal()); setLast(loadLast()); setAway(false); setScreen({ name: 'home' }); };
 
   const enterLobby = useCallback(async (make, kind) => {
     // No network means no answer: give up after 15 seconds instead of "Connecting…" forever (a phone on a weak
@@ -178,19 +220,30 @@ function App() {
     return (
       <>
       {online && <OnlineBar session={session} />}
+      <PerfProfiler id="GameScreen">
       <GameScreen
         key={gameKey} session={session} pace={urlBotDelay() ? Math.min(urlBotDelay() * 2, PACE.normal) : PACE[config?.speed] ?? PACE.normal}
         onHome={screen.lobby ? () => leaveLobby(screen.lobby) : goHome}
         leaveText={online ? 'A bot will play your seat. Open the invite link again to take it back.' : 'You can resume it from the home screen.'}
-        onPlayAgain={config && !online ? () => { clearLocal(); startLocal(config); } : null}
-        onResults={online ? null : onResultsShown}
+        onPlayAgain={config && !online ? () => startLocal(config) : null}
+        onResults={online || screen.last ? null : onResultsShown}
         askLeave={askLeave}
       />
+      </PerfProfiler>
+      {away && !online && (
+        <div className="tab-away" role="dialog" aria-modal="true" aria-labelledby="tab-away-title" data-tab-away>
+          <div className="tab-away-card">
+            <h2 id="tab-away-title">This game is open in another tab</h2>
+            <p>It carries on there. Nothing here moves until you bring it back.</p>
+            <button type="button" className="btn pri" data-play-here onClick={playHere} autoFocus>Play here</button>
+          </div>
+        </div>
+      )}
       </>
     );
   }
   if (screen.name === 'rejoining') return <div className="app narrow"><div className="dialog page"><h2>Rejoining your game…</h2></div></div>;
-  if (screen.name === 'setup') return <LocalSetup initial={config} onStart={cfg => { clearLocal(); startLocal(cfg); }} onBack={goHome} />;
+  if (screen.name === 'setup') return <LocalSetup initial={config} onStart={cfg => startLocal(cfg)} onBack={goHome} />;
   if (screen.name === 'lobby') return <Lobby lobby={screen.lobby} myId={screen.myId} onLeave={() => leaveLobby(screen.lobby)} />;
   const kind = transportKind();
   return (
@@ -198,6 +251,8 @@ function App() {
       onlineReady={onlineReady}
       saved={saved}
       onResume={resume}
+      last={last}
+      onLast={viewLast}
       error={homeError}
       lastCode={lastRoomCode()}
       onLocal={() => setScreen({ name: 'setup' })}

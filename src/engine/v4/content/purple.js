@@ -31,8 +31,9 @@ const scheduled = ctx => ctx.state.queue.filter(t => t.t === 'turn').length;
 /** True when one more turn can't squeeze anyone out of a space. */
 export const spareSpace = ctx => openSpaces(ctx).length > scheduled(ctx);
 // Overtime: this many purple for 2 extra turns. Crunch Time: 1 extra turn per RALLY_PER purple spent, plus 1, up to RALLY_CAP.
+// RALLY_CAP was 3 (Cory, 2026-10-15, balance pass 1 #5: both bots read Crunch Time at about 20u against 5–9).
 const OT = 8;
-const RALLY_PER = 4, RALLY_CAP = 3;
+const RALLY_PER = 4, RALLY_CAP = 2;
 /** What extra turns that cost `base` purple cost p (Corner-Cutter halves it, rounded up). */
 const priceFor = (ctx, p, base) => (ctx.membersOf(p).some(c => c.def.halfTurns || (c.copy && c.copy.endsWith('.doubletime'))) ? Math.ceil(base / 2) : base);
 /** How many more turns the board has room for (open spaces beyond the turns still to come). */
@@ -123,10 +124,11 @@ export default {
       resolve(ctx, p) { ctx.gain(p, P, onBoard(ctx, p), { fromAction: true }); },
     },
     {
-      // replaces Linger (Cory: "just bad"): the time you have left this round, banked as purple
-      key: 'planahead', ring: 2, name: 'Plan Ahead', text: '+2 purple per minion you have left to place this round.',
-      estimate: (ctx, p) => 2 * Math.max(0, p.left - 1),
-      resolve(ctx, p) { ctx.gain(p, P, 2 * p.left, { fromAction: true }); },
+      // replaces Linger (Cory: "just bad"): the time you have left this round, banked as purple.
+      // +1 per minion, was +2 (Cory, 2026-10-15, balance pass 1 #4: both bots read +2 at about 20u in round III)
+      key: 'planahead', ring: 2, name: 'Plan Ahead', text: '+1 purple per minion you have left to place this round.',
+      estimate: (ctx, p) => Math.max(0, p.left - 1),
+      resolve(ctx, p) { ctx.gain(p, P, p.left, { fromAction: true }); },
     },
     {
       // one worker in, two out: the turns are a net gain, not a worker spent to get a worker back (Cory)
@@ -197,8 +199,9 @@ export default {
       onRivalExtraTurn(ctx, owner) { ctx.gain(owner, P, Math.min(4, Math.floor((owner.res[P] || 0) / 2))); },
     }),
     // fill-in (critic): took the slot of an earlier card called Timekeeper (the name now belongs to the game-end purple card)
-    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 4 (the most one pass moves)
-    m('doubletime', 'Corner-Cutter', 4, 0, 'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
+    // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 6 → 4 (the most one pass moves);
+    // balance pass 2 (pooled bench, midpoint 2.1; design/eval/balance-pass-2.md): 4 → 2
+    m('doubletime', 'Corner-Cutter', 2, 0,'Extra turns you pay purple for cost you half (rounded up).', { halfTurns: true }),
     // pays on your last placement of the round, before that turn's buy (at round end, round III's purple came too late).
     // +1 per worker measured 8.4 followers (57% win, easy bots): late purple decides the ring. Half that is the card.
     m('bookkeeper', 'Bookkeeper', 4, 2, 'When you place your last minion of a round, +1 purple per 2 minions you have on the board.', {
@@ -213,7 +216,8 @@ export default {
       // counts after other round-start income (Lamplighter…), like Steward
       onRoundStartLate(ctx, owner) { ctx.gain(owner, P, Math.floor((owner.res[P] || 0) / 2)); },
     }),
-    m('lamplighter', 'Lamplighter', 6, 2, 'Now and at round start, +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
+    // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 12
+    m('lamplighter', 'Lamplighter', 10, 2,'Now and at round start, +1 purple per minion you get this round (3 / 4 / 5).', { now: true,
       onRoundStart(ctx, owner) { ctx.gain(owner, P, [3, 4, 5][ctx.state.round - 1] || 3); },
     }),
     // Relay's slot (Cory cut Relay, 2026-10-14). Member-value sim, handed over at round II: 6.9 followers, 53% win

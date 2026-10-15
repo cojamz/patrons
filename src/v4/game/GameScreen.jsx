@@ -2,11 +2,10 @@
 // What's clickable is exactly state.pending.options, and only for seats this client controls.
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { followers, tierLeft } from '../../engine/v4/index.js';
-import { finalWinners, isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote, turnStory } from '../format.js';
+import { finalWinners, isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote } from '../format.js';
 import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
 import ShopCards from './ShopCards.jsx';
-import RankRow from './RankRow.jsx';
 import CultSeatRaw from './CultSeat.jsx';
 // online room updates that don't touch the table don't re-render the chairs
 const CultSeat = memo(CultSeatRaw);
@@ -16,22 +15,29 @@ const NO_OPTIONS = () => null;
 import { useHoverCards, HoverCardLayer, usePreviewWarmup } from './HoverCards.jsx';
 import { replayIntro } from '../Intro.jsx';
 import Chronicle from './Chronicle.jsx';
+import SinceStrip from './SinceStrip.jsx';
+import { createTrail, feed, liveStory, sinceYourTurn } from './trail.js';
 import { cardDef } from '../../engine/v4/index.js';
 import Results from './Results.jsx';
 import RoundEnd from './RoundEnd.jsx';
-import Reckoning from './Reckoning.jsx';
+import Reckoning, { reckonRows } from './Reckoning.jsx';
+import { snakeOrder } from './order.js';
 import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } from './parts.jsx';
 import PayPicker from './PayPicker.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
-import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome } from './flight.js';
+import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains } from './flight.js';
+import { gainsBetween } from './gains.js';
+import { MO, BOT } from '../motion.js';
+import { boardPicker, seatPart, shopLookup } from './boardPick.js';
 import { friendlyError, isNetworkError } from '../errors.js';
-import { ROUND_START } from '../saved.js';
+import { ROUND_START, ownsLocal } from '../saved.js';
+import { restoredMoment } from '../session/moment.js';
 import { gameRecord, recordText } from '../session/record.js';
 import { copyText } from '../Recovery.jsx';
 
-const STEP_MS = 320;      // pace when catching up on moves that happened behind the round-end card
-const RIVAL_DWELL_MS = 700; // each visible bot step (placing, recruiting, buying) holds this long; a pass doesn't wait
+const STEP_MS = BOT.catchUp;      // pace when catching up on moves that happened behind the round-end card
+const RIVAL_DWELL_MS = BOT.pace.normal; // each visible bot step holds this long (src/v4/motion.js)
 
 /** Desktop and laptop frame (the side column is a fixed frame) vs phones and tablets (stacked). */
 function useMedia(q) {
@@ -68,6 +74,8 @@ export function useSessionState(session) {
 // Local games keep it under ROUND_START (also the fallback Resume); online games under their own key.
 const rsKey = online => (online ? `${ROUND_START}.online` : ROUND_START);
 export function saveRoundStart(st, online = false) {
+  // a finished game needs no baseline; a tab that lost the local game to another tab never writes it
+  if (!st || st.over || (!online && !ownsLocal())) return;
   try { localStorage.setItem(rsKey(online), JSON.stringify({ seed: st.seed, round: st.round, names: st.players.map(p => p.name).join('|'), state: st })); } catch { /* ignore */ }
 }
 export function loadRoundStart(st, online = false) {
@@ -81,10 +89,11 @@ export function loadRoundStart(st, online = false) {
 
 function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
   const first = session.getState();
-  const [table, setTable] = useState(() => ({ shown: first, moment: null }));
+  // a local game reloaded while its round summary was up reopens it (session/moment.js; the session holds its bots)
+  const [table, setTable] = useState(() => ({ shown: first, moment: restoredMoment(session, first) }));
   const queue = useRef([]);
   const paced = useRef(false);
-  const held = useRef(false);
+  const held = useRef(!!table.moment);
   const timer = useRef(null);
   const dwellNext = useRef(0); // the hold the step being committed asks for (started once it's on screen)
   const shownRef = useRef(first);
@@ -133,7 +142,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
       // every bot step during a round holds the pace (≥600ms at Normal): placing, buying, choosing, passing
       const rivalStep = actor != null && next.round >= 1 && !rivalSetup;
       // a rival's recruit holds a beat longer: the card's flight to their row is the thing to see
-      const dwell = myRecruitThenGone ? 1500 : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(400, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
+      const dwell = myRecruitThenGone ? BOT.myRecruitHold : rivalStep ? Math.max(rivalDwell, rivalDwell >= 600 ? 600 : 0) + (rivalBought ? Math.min(BOT.recruitExtra, rivalDwell * 0.5) : 0) : rivalSetup ? Math.min(250, rivalDwell) : paced.current && queue.current.length ? STEP_MS : 0;
       if (!queue.current.length) paced.current = false;
       if (dwell) {
         // the hold counts from when this step is on screen (its commit), not from when it was handed to React: under
@@ -167,7 +176,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS) {
     pump();
   }, [pump]);
 
-  return [table.shown, table.moment, dismiss];
+  return [table.shown, table.moment, dismiss, rs0];
 }
 
 /** One glyph for the rest (How to play, the log, Leave): the table carries no header buttons. */
@@ -217,6 +226,15 @@ function Menu({ onRules, onLog, onLeave, getState }) {
 function TurnCard({ card, root, state }) {
   const [pos, setPos] = useState(null);
   useLayoutEffect(() => {
+    // the chairs in one ordered column (laptop): the card tells the turn in the right column, just above the shop,
+    // under the story of the turns since yours (it would cover the next chair beside its own)
+    const column = root && root.querySelector('.lt > .lt-snake');
+    if (column && column.getBoundingClientRect().width) {
+      const shop = root.querySelector('.lt > .lt-shop');
+      const top = shop ? shop.getBoundingClientRect().top : innerHeight;
+      setPos({ left: undefined, right: 18, top: undefined, bottom: Math.max(8, innerHeight - top + 10), ox: '100%', oy: '100%' });
+      return;
+    }
     // the card sits in the open space beside its cult: under a top chair, over a bottom one (never over the prompt)
     const region = root && root.querySelector(`.lt-seat[data-pid="${card.pid}"]`);
     const seat = region && (region.querySelector('.lt-cult-seat') || region);
@@ -287,7 +305,7 @@ function PromptActions({ state, optionFor, onPick }) {
 const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing a minion', buy: 'shopping', pay: 'paying', choose: 'deciding' }[kind] || 'deciding');
 
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults, askLeave = 0 }) {
-  const [live0, moment, dismissMoment] = useTable(session, pace ?? RIVAL_DWELL_MS);
+  const [live0, moment, dismissMoment, roundStart0] = useTable(session, pace ?? RIVAL_DWELL_MS);
   const state = moment && moment.board ? moment.board : live0;
   const mySeats = session.mySeats || NO_SEATS;
   const pend = state.pending;
@@ -308,10 +326,42 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const hover = useHoverCards(); // UI-B's one hover layer: spaces, plaques, seats, shop cards
   const [reckoned, setReckoned] = useState(null); // the round-end moment whose Reckoning has played (then: the summary)
   const [lampQid, setLampQid] = useState(null); // the quadrant the Reckoning is paying right now
+  // how many of the Reckoning's quadrants have landed: until a prize reaches its chair, that chair's total leaves it
+  // out, so the totals climb as each prize lands (RC1 saboteur: the seats showed the final numbers at step 1 of 4)
+  const [paid, setPaid] = useState({ moment: null, n: 0 });
+  const snake = useMemo(() => snakeOrder(state), [state]);
+  // a new round's order re-sorts the chairs: each slides from where it stood to its new place (FLIP, so it plays
+  // whatever else re-renders in the same moment)
+  const seatTops = useRef({});
+  const orderKey = snake.order.join(',');
+  useLayoutEffect(() => {
+    const r = root.current;
+    if (!r) return;
+    const seatsNow = [...r.querySelectorAll('.lt > .lt-seat[data-pid]')];
+    const now = Object.fromEntries(seatsNow.map(e => [e.dataset.pid, e.getBoundingClientRect().top]));
+    const was = seatTops.current;
+    seatTops.current = now;
+    if (!motionOK()) return;
+    for (const e of seatsNow) {
+      const d = was[e.dataset.pid] != null ? was[e.dataset.pid] - now[e.dataset.pid] : 0;
+      if (Math.abs(d) > 4 && e.animate) e.animate([{ translate: `0 ${Math.round(d)}px` }, { translate: '0 0' }], { duration: 650, easing: 'cubic-bezier(.3,.7,.4,1)' });
+    }
+  }, [orderKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const seatState = useMemo(() => {
+    if (!moment || reckoned === moment) return state;
+    let unpaid;
+    try { unpaid = reckonRows(moment).slice(paid.moment === moment ? paid.n : 0); } catch { return state; }
+    const owed = id => unpaid.reduce((n, r) => n + (r.winners.includes(id) ? r.prize : 0), 0);
+    if (!state.players.some(p => owed(p.id))) return state;
+    return { ...state, players: state.players.map(p => (owed(p.id) ? { ...p, bonus: p.bonus - owed(p.id), contest: (p.contest || 0) - owed(p.id) } : p)) };
+  }, [state, moment, reckoned, paid]);
   const [spacePeek, setSpacePeek] = useState(null); // a space selected from the panel list (one sheet, shared with the wheel)
   // re-render on every session change, so Undo disappears the moment control passes even while the table catches up
   const [, setTick] = useState(0);
   useEffect(() => session.subscribe(() => setTick(t => t + 1)), [session]);
+  // A local game's bots wait at a round end (session roundHold) until its summary is gone; they go on once the table
+  // shows that state with no summary up (dismissed, or never detected: never a stalled table).
+  useEffect(() => { if (!moment && session.roundHold && live0 === session.getState() && session.continueRound) session.continueRound(); }, [moment, live0, session]);
   // results open at the top, on the winner
   // The results are on screen: only now may the app forget the saved game.
   useEffect(() => { if (live0.over && !moment && onResults) onResults(); }, [live0.over, moment]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -328,7 +378,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     }
   }, []);
   useEffect(() => () => turnTimer.current.forEach(clearTimeout), []);
-  const turnStart = useRef(null); // { actor, state }: where the current turn began (its story is told when it passes)
+  // every placement's story, one per turn (trail.js): the turn card tells the latest, the strip the rivals' since yours
+  const trail = useRef(null);
+  if (!trail.current) trail.current = createTrail(mySeats.length === 1 ? mySeats[0] : null);
+  const [since, setSince] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [flash, setFlash] = useState(() => new Set());
@@ -406,6 +459,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       .map(uid => ({ uid, to: state.players.findIndex(p => p.members.includes(uid)) }))
       .filter(m => m.to >= 0);
     if (flights.length) { flyCards(root.current, shopSnap.current, flights); slideShop(root.current, shopSnap.current); }
+    // every gain and payment travels from its source to where it lands (gains.js reads the engine's diff and log)
+    flyGains(root.current, gainsBetween(before, state), { snap: shopSnap.current, before });
     shopSnap.current = snapshotShop(root.current);
 
     const lines = newLogLines(before, state);
@@ -429,31 +484,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         setTimeout(() => setGifts(gg => gg.filter(x => x !== g)), 2400);
       }
     }
-    // Every turn is told in one place (Cory): a turn card by the acting cult builds line by line as the turn goes
-    // (placed → gained → bought), the players it touched pulse, and when the turn passes the card holds a beat,
-    // then folds into that cult's chair. Your own turns too. A turn that ends the round is left to the Reckoning.
-    const me1 = mySeats.length === 1 ? mySeats[0] : null;
-    const turnOf = before.pending ? before.pending.player : null;
-    const passed = turnOf != null && before.round >= 1 && !(state.pending && state.pending.player === turnOf && state.round === before.round);
-    if (passed && turnStart.current && turnStart.current.actor === turnOf && state.round === before.round) {
-      const story = turnStory(turnStart.current.state, state, turnOf, me1, turnStart.current.mid);
-      if (story) {
-        showTurnCard({ pid: turnOf, text: story.text, live: false, n: turnStart.current.n });
-        if (story.touched.length) {
-          const n = Date.now();
-          setRobbed(r => ({ ...(r || {}), pids: story.touched, n }));
-          setTimeout(() => setRobbed(r => (r && r.n === n ? null : r)), 1800);
-        }
-      }
-    }
-    if (state.pending && (!before.pending || state.pending.player !== before.pending.player || state.round !== before.round)) turnStart.current = { actor: state.pending.player, state, mid: null, n: Date.now() };
-    // the turn reached its buy: what the action gave is settled (the buy's cost is told apart)
-    if (state.pending && state.pending.kind === 'buy' && turnStart.current && turnStart.current.actor === state.pending.player && !turnStart.current.mid) turnStart.current.mid = state;
-    // mid-turn: the card grows as the turn does
-    if (state.round >= 1 && state.pending && turnStart.current && turnStart.current.actor === state.pending.player && turnStart.current.state !== state) {
-      const story = turnStory(turnStart.current.state, state, state.pending.player, me1, turnStart.current.mid);
-      if (story) showTurnCard({ pid: state.pending.player, text: story.text, live: true, n: turnStart.current.n });
-    }
     // Getting robbed is never silent: a rival's move that took your resources says so.
     if (actor != null && !mySeats.includes(actor)) {
       for (const id of mySeats) {
@@ -469,7 +499,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const skipped = lines.find(l => mySeats.some(id => l === `${state.players[id].name} couldn't buy anything.`));
     if (skipped) {
       const msg = humansHere ? skipped.replace("couldn't buy anything.", 'can’t afford anything. Turn passes.') : 'Nothing you can afford. Turn passes.';
-      setTimeout(() => showToast(msg, 2000), flights.length && motionOK() ? 650 : 0);
+      setTimeout(() => showToast(msg, 2000), flights.length && motionOK() ? MO.afterFlight : 0);
     }
 
     // A new minion travels from its leader to the space. The board never turns itself: a rival's move is marked
@@ -479,10 +509,34 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const key = fresh[fresh.length - 1];
     const owner = state.slots[key];
     setFlash(new Set(fresh));
-    flyWorker(root.current, owner, key, playerColor(owner));
+    flyWorker(root.current, owner, key, playerColor(owner), { own: mySeats.includes(owner) && state.round === before.round });
     const t = setTimeout(() => setFlash(new Set()), 2000);
     return () => clearTimeout(t);
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Every turn is told in one place (Cory): a turn card by the acting cult builds line by line as the turn goes
+  // (placed → gained → bought), the players it touched pulse, and when the turn passes the card holds a beat, then
+  // folds into that cult's chair. One card per placement: a snake turnaround or an extra turn is a turn of its own
+  // (RC1 panel). A turn that ends the round is left to the Reckoning.
+  useLayoutEffect(() => {
+    const t = trail.current;
+    const was = t.stories.length ? t.stories[t.stories.length - 1].n : 0;
+    feed(t, live0, roundStart0);
+    const fresh = t.stories.filter(st => st.n > was);
+    const told = fresh[fresh.length - 1];
+    if (told && told.round === live0.round && !live0.over) {
+      showTurnCard({ pid: told.actor, text: told.text, live: false, n: `t${told.n}` });
+      const pids = [...new Set(fresh.flatMap(st => st.touched))];
+      if (pids.length) {
+        const n = Date.now();
+        setRobbed(r => ({ ...(r || {}), pids, n }));
+        setTimeout(() => setRobbed(r => (r && r.n === n ? null : r)), 1800);
+      }
+    }
+    const now = live0.round >= 1 && !live0.over ? liveStory(t) : null;
+    if (now) showTurnCard({ pid: now.actor, text: now.text, live: true, n: `c${t.cur.key}` });
+    setSince(sinceYourTurn(t, mySeats));
+  }, [live0]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When a choice prompt goes away, keep focus on the table (the status line) rather than the page body.
   useEffect(() => {
@@ -545,7 +599,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const lastStep = useRef(null);
   useEffect(() => {
     const step = pend && mine ? `${pend.player}:${pend.kind}` : null;
-    if (step && lastStep.current && step !== lastStep.current && !noLock.current) lockUntil.current = Date.now() + 400;
+    if (step && lastStep.current && step !== lastStep.current && !noLock.current) lockUntil.current = Date.now() + MO.stepLock;
     noLock.current = false;
     lastStep.current = step;
   }, [pend, mine]);
@@ -554,7 +608,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const now = Date.now();
     // counted picks ("take 1 gold… (2 left)") are meant to be clicked fast and repeatedly: every click counts
     const counted = !!(pend && /\(\d+ left\)/.test(pend.prompt || ''));
-    if (mode !== 'replay' && !counted && lastPick.current.id === optionId && now - lastPick.current.t < 350) return;
+    if (mode !== 'replay' && !counted && lastPick.current.id === optionId && now - lastPick.current.t < MO.doubleClick) return;
     const d = lastDown.current, p0 = lastPick.current;
     // a fresh pointer press far from the last pick is deliberate; anything else (near it, or a key) waits out the lock
     const farFromLast = d.x != null && p0.x != null && now - d.t < 600 && Math.hypot(d.x - p0.x, d.y - p0.y) >= 48;
@@ -642,6 +696,76 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   }, [modalOpen]);
   const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
   const showChoice = mine && !needHandoff && (pend.kind === 'choose' || pend.kind === 'setup');
+  // The board picker: a choice whose options name things on the board (spaces, members, cults, resource stacks) is
+  // answered there (boardPick.js); the choice panel shrinks to a caption, the leftover buttons and a keyboard list.
+  const picker = useMemo(() => (showChoice && pend.kind === 'choose' ? boardPicker(state, pend) : null), [showChoice, state, pend]);
+  const pickSpaces = picker && picker.spaces.size ? picker.spaces : null;
+  // what a copy would give, on the space itself while you hover it (the engine's own words for the option)
+  const pickNotes = useMemo(() => (pickSpaces ? new Map([...picker.where].filter(([k]) => k.startsWith('space:')).map(([k, o]) => [k.slice(6), o.label])) : null), [picker, pickSpaces]);
+  const shopFor = useMemo(() => (picker ? shopLookup(picker) : null), [picker]);
+  // the caption never hides a lit space: it sits at the foot of the wheel, else wherever covers the fewest lit spaces
+  // (head, or a corner); '' is the foot, centred
+  const [capAt, setCapAt] = useState('');
+  useLayoutEffect(() => {
+    const w = pickSpaces && root.current && root.current.querySelector('.lt-wheel');
+    const cap = w && w.querySelector('.prompt.choice.seat-pick');
+    if (!w || !cap) { setCapAt(''); return; }
+    const box = w.getBoundingClientRect(), c = cap.getBoundingClientRect();
+    const lit = [...w.querySelectorAll('.slot.lit')].map(el => el.getBoundingClientRect());
+    const cx = box.left + (box.width - c.width) / 2;
+    const spots = [['', cx, box.bottom - c.height], ['at-top', cx, box.top], ['at-left', box.left, box.bottom - c.height], ['at-right', box.right - c.width, box.bottom - c.height],
+      ['at-top at-left', box.left, box.top], ['at-top at-right', box.right - c.width, box.top]];
+    const hits = ([, x, y]) => lit.filter(r => r.right > x + 2 && r.left < x + c.width - 2 && r.bottom > y + 2 && r.top < y + c.height - 2).length;
+    let best = spots[0];
+    for (const sp of spots) if (hits(sp) < hits(best)) best = sp;
+    setCapAt(best[0]);
+  }, [pickSpaces]); // eslint-disable-line react-hooks/exhaustive-deps
+  const pickerRef = useRef(null);
+  pickerRef.current = picker;
+  const [seatPicks, setSeatPicks] = useState({ key: null, map: {} }); // this steal's picks so far, for the "−1" on each stack
+  const pickKey = picker && picker.count ? `${picker.actor}|${picker.title}|${picker.count.of}|${state.round}` : null;
+  const [pickDone, setPickDone] = useState(null); // the last pick's caption ("· 0 left") stays while its resource flies
+  useEffect(() => { if (!pickDone) return undefined; const t = setTimeout(() => setPickDone(null), 900); return () => clearTimeout(t); }, [pickDone]);
+  const onSeatPick = useCallback((id, el) => {
+    const pk = pickerRef.current;
+    const o = pk && pk.options.find(x => x.id === id);
+    if (!o || !options.has(id)) return;
+    const t = o.target || {};
+    const take = Number.isInteger(t.pid) && t.res && !t.give && t.pid !== pk.actor;
+    if (take && pk.count && pk.count.left === 1 && pk.title) setPickDone({ title: pk.title, what: `take ${pk.count.of}${pk.only ? ` ${pk.only}` : ''}`, n: Date.now() });
+    const root0 = root.current;
+    const home = root0 && (root0.querySelector(`.lt-seat[data-pid="${pk.actor}"] .cs-res`) || root0.querySelector(`.lt-seat[data-pid="${pk.actor}"]`));
+    const coin = el && el.querySelector('svg') ? `<span class="pick-coin">${el.querySelector('svg').outerHTML}</span>` : '<span class="pick-coin dot"></span>';
+    // each pick moves: a resource from their seat to yours (a gift: from yours to theirs); a picked seat nods
+    if (take) flyToken(el, home, coin, { tag: 'pick-flight', duration: 560 });
+    else if (t.give) flyToken(home, el, coin, { tag: 'pick-flight', duration: 560 });
+    else if (el && el.animate && motionOK()) el.animate([{ boxShadow: '0 0 0 0 rgba(255,220,140,.9)' }, { boxShadow: '0 0 0 10px rgba(255,220,140,0)' }], { duration: 520, easing: 'ease-out' });
+    if (take && pickKey) {
+      setSeatPicks(sp => {
+        const map = sp.key === pickKey ? { ...sp.map } : {};
+        const t = o.target;
+        map[t.pid] = { ...(map[t.pid] || {}), [t.res]: ((map[t.pid] || {})[t.res] || 0) + 1 };
+        return { key: pickKey, map };
+      });
+    }
+    onPick(id);
+  }, [options, onPick, pickKey]);
+  const onSeatDenied = useCallback((why, el) => {
+    if (why) say(why);
+    if (el && el.animate && motionOK()) el.animate([{ translate: '0 0' }, { translate: '-3px 0' }, { translate: '3px 0' }, { translate: '0 0' }], { duration: 220, easing: 'ease-out' });
+  }, [say]);
+  const pickParts = useMemo(() => {
+    if (!picker) return {};
+    // the "−1"s show only while they add up to the engine's own count (a reload mid-steal starts them over)
+    const picked = seatPicks.key === pickKey && picker.count
+      && Object.values(seatPicks.map).reduce((t, m) => t + Object.values(m).reduce((a, b) => a + b, 0), 0) === picker.count.of - picker.count.left ? seatPicks.map : {};
+    const out = {};
+    for (const p of state.players) {
+      const part = seatPart(state, picker, p.id, picked[p.id] || {});
+      if (part) out[p.id] = { ...part, title: picker.title, onPick: onSeatPick, onDenied: onSeatDenied };
+    }
+    return out;
+  }, [picker, seatPicks, pickKey, state, onSeatPick, onSeatDenied]);
   const roundText = state.over ? 'Final' : state.round ? <>Round {roman(state.round)}</> : 'Setup';
   const someoneHere = mySeats.length > 0;
   const lastLine = state.log.length ? plainLine(state.log, state.log.length - 1) : '';
@@ -701,8 +825,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
             </span>
           )}
         </div>
-        {/* who's winning, one quiet line (UI-B RankRow): most followers first, the leader lit, the margin on hover */}
-        {state.round > 0 && !state.over && <div className="bar-row rank-row"><RankRow state={state} me={me} /></div>}
+        {/* who's winning lives on the chairs (each total, its place, the margin on hover): no score row (Cory, 2026-10-15) */}
         <Menu onRules={() => setRules(true)} onLog={openLog} getState={() => session.getState()} onLeave={onHome ? () => (state.over ? onHome() : setLeaving(true)) : null} />
       </header>
       {session.info && session.info.mode === 'online' && session.info.roomCode && (
@@ -735,21 +858,33 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       ) : (
         <>
           <section className="lt-wheel" data-region="wheel">
-            <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : legalSlots} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
-            {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+            <Wheel state={state} hover={hover} lampQid={lampQid} legal={needHandoff ? NO_SLOTS : pickSpaces || legalSlots} pickNotes={pickNotes} onPick={onPick} onDenied={onDenied} confirmPlace={session.info?.mode === 'online'} flash={flash} lastMove={lastMove} recentMoves={recentMoves} spacePeek={spacePeek} onSpacePeek={setSpacePeek} meId={mySeats.length === 1 ? mySeats[0] : null} facing={facing} onFacing={setFacing} />
+            {showChoice && <ChoicePrompt state={state} onPick={onPick} busy={busy} seatPick={picker} pickAt={capAt} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
+            {!showChoice && pickDone && <section className="seat-pick-done" aria-hidden="true"><p className="pick-cap"><b>{pickDone.title}</b>: {pickDone.what} · <span className="num pick-left" data-left="0">0</span> left</p></section>}
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
               others clockwise. UI-B fills each chair (CultSeat); the chairs never move. */}
+          {/* the chairs stand in this round's turn order, one column (Cory, 2026-10-15: "position IS order"); the snake
+              rail beside them shows which way the turns are walking. A new round's order re-sorts them (they slide). */}
+          {state.round >= 1 && (
+            <div className={`lt-snake dir-${snake.dir}`} data-snake={snake.dir} data-pass={snake.pass + 1} style={{ '--n': state.players.length }}
+              title={`Turn order this round, top to bottom: ${snake.order.map(id => (id === me ? 'You' : state.players[id].name)).join(', ')}. The snake goes down, then back up${snake.passes ? ` (pass ${snake.pass + 1} of ${snake.passes}, going ${snake.dir})` : ''}: whoever ends a pass starts the next.`}>
+              <span className="sn-line" aria-hidden="true" />
+            </div>
+          )}
           {seatCorners(state, me).map((pid, k) => (
-            <section key={k} className={`lt-seat lt-seat-${k}${pid === me ? ' mine' : ''}${pid != null && pend && pend.player === pid && !state.over ? ' now' : ''}`} data-region={`seat-${k}`} data-pid={pid ?? undefined} aria-label={pid == null ? undefined : pid === me ? 'Your cult' : `${state.players[pid].name}’s cult`}>
+            <section key={k} className={`lt-seat lt-seat-${k}${pid === me ? ' mine' : ''}${pid != null && pend && pend.player === pid && !state.over ? ' now' : ''}`} data-region={`seat-${k}`} data-pid={pid ?? undefined} data-slot={pid == null ? undefined : snake.slot[pid]}
+              style={{ '--slot': pid == null ? k : snake.slot[pid] ?? k }} aria-label={pid == null ? undefined : pid === me ? 'Your cult' : `${state.players[pid].name}’s cult`}>
               {pid == null ? null : (
-                <CultSeat state={state} pid={pid} me={me} mine={pid === me} now={pend && pend.player === pid && !state.over} hover={hover} optionFor={pid === me ? live : undefined} onPick={onPick} />
+                <CultSeat state={seatState} pid={pid} me={me} mine={pid === me} now={pend && pend.player === pid && !state.over} hover={hover} optionFor={pid === me ? live : undefined} onPick={onPick} pick={pickParts[pid] || null} />
               )}
             </section>
           ))}
           <section className="lt-shop" data-region="shop" aria-label="Shop">
-            <ShopCards state={state} me={me} mySeats={yours ? mySeats : NO_SEATS} optionFor={live} onPick={shopPick} onDenied={shopDenied} phase={phase} hover={hover} />
+            <ShopCards state={state} me={me} mySeats={yours ? mySeats : NO_SEATS} optionFor={shopFor || live} onPick={shopPick} onDenied={shopDenied} phase={phase} hover={hover} />
           </section>
+          {/* what the rivals did since your own last placement, one line each, always on the board (RC1 panel) */}
+          {state.round >= 1 && <SinceStrip state={state} entries={since} me={mySeats.length === 1 ? mySeats[0] : null} yours={yours} onLog={openLog} />}
         </>
       )}
       {turnCard && !moment && !(state.over && !moment) && <TurnCard card={turnCard} root={root.current} state={state} />}
@@ -761,7 +896,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
         </Popover>
       )}
       {mine && !needHandoff && pend.kind === 'pay' && <PayPicker key={pend.uid ?? pend.tier} state={state} onPick={onPick} busy={busy} turnOf={humansHere && handedIn === pend.player ? state.players[pend.player] : null} />}
-      {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={root.current} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onDone={() => setReckoned(moment)} />}
+      {moment && reckoned !== moment && <Reckoning key={moment.result.round + moment.after.moves} info={moment} root={root.current} meId={mySeats.length === 1 ? mySeats[0] : null} onLamp={setLampQid} onPaid={n => setPaid({ moment, n })} onDone={() => setReckoned(moment)} />}
       {moment && reckoned === moment && <RoundEnd info={moment} meId={mySeats.length === 1 ? mySeats[0] : null} onNext={dismissMoment} autoMs={someoneHere ? 0 : 4000} />}
       {rules && <HowToPlay onClose={() => setRules(false)} />}
       {logOpen && <Chronicle state={state} meId={mySeats.length === 1 ? mySeats[0] : null} onClose={() => setLogOpen(false)} />}

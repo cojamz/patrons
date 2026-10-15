@@ -1,9 +1,8 @@
-// Who's winning, in one quiet line under the prompt (meta round 2, #7): "P4 41 · You 36 · P3 24 · P2 23", most
-// followers first (members break a follower tie, the end-of-game rule), the leader lit. Hover (long-press) on a name
-// gives the margin: "P4 leads by 5", "You: 5 behind P4". Every number is the engine's followers().
+// Who's winning, read off the engine (meta round 2, #7). The top score row is gone (Cory, 2026-10-15: "you can kind
+// of see the score already on people's cards"): each chair shows its own total, its place and, on hover, the margin
+// ("P4 leads by 5", "You: 41 followers, 4 behind P4"). Most followers first; members break a follower tie (the
+// end-of-game rule). Every number is the engine's followers().
 import { followers, memberCount } from '../../engine/v4/index.js';
-import { Follower } from '../art/Follower.jsx';
-import './lamp-b.css';
 
 /** The players ranked: [{ id, name, f, m }] most followers first, members breaking ties, then seat. */
 export function rankRows(state, me = null) {
@@ -12,29 +11,31 @@ export function rankRows(state, me = null) {
     .sort((a, b) => b.f - a.f || b.m - a.m || a.id - b.id);
 }
 
-export default function RankRow({ state, me = null }) {
-  if (!(state.round >= 1)) return null;
+const ORD = n => `${n}${n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th'}`;
+
+/**
+ * Each chair's place: { pid: { place, text, lead, f, title } }. place is 1-based and shared on a full tie (followers
+ * and members level); text: "1st", "2nd"… ('' while everyone is level); lead: this chair leads (or shares the lead)
+ * while someone trails; title: the margin in words.
+ * Empty before round I.
+ */
+export function seatRanks(state, me = null) {
+  const out = {};
+  if (!(state.round >= 1)) return out;
   const rows = rankRows(state, me);
   const top = rows[0];
   const shared = rows.filter(r => r.f === top.f && r.m === top.m);
   const second = rows.find(r => r.f < top.f || r.m < top.m);
-  const lit = shared.length < rows.length; // everyone level: nobody is lit
-  const say = (r, k) => {
-    const unit = n => `${n} follower${n === 1 ? '' : 's'}`;
-    if (!second) return `Everyone has ${unit(r.f)}`;
-    if (shared.length > 1 && shared.includes(r)) return `${shared.map(x => x.name).join(' and ')} share the lead with ${unit(r.f)}`;
-    if (k === 0) return `${r.name} ${r.name === 'You' ? 'lead' : 'leads'} by ${top.f - second.f || 0}${top.f === second.f ? ` (members break the tie: ${top.m} to ${second.m})` : ''} · ${unit(r.f)}`;
-    return `${r.name}: ${unit(r.f)}, ${top.f - r.f} behind ${shared.map(x => x.name).join(' and ')}`;
-  };
-  return (
-    <div className="lt-rank" data-rank="" role="list" aria-label="Followers, most first">
-      <Follower size={10} title="followers" />
-      {rows.map((r, k) => (
-        <span key={r.id} role="listitem" data-pid={r.id} data-followers={r.f}
-          className={`rk${lit && shared.includes(r) ? ' lead' : ''}${r.id === me ? ' me' : ''}`} title={say(r, k)}>
-          {k ? <i aria-hidden="true">·</i> : null}{r.name} <b className="num">{r.f}</b>
-        </span>
-      ))}
-    </div>
-  );
+  const unit = n => `${n} follower${n === 1 ? '' : 's'}`;
+  rows.forEach((r, k) => {
+    const place = 1 + rows.findIndex(x => x.f === r.f && x.m === r.m);
+    let title;
+    if (!second) title = `Everyone has ${unit(r.f)}`;
+    else if (shared.length > 1 && shared.includes(r)) title = `${shared.map(x => x.name).join(' and ')} share the lead with ${unit(r.f)}`;
+    else if (k === 0) title = `${r.name} ${r.name === 'You' ? 'lead' : 'leads'} by ${top.f - second.f || 0}${top.f === second.f ? ` (members break the tie: ${top.m} to ${second.m})` : ''} · ${unit(r.f)}`;
+    else title = `${r.name}: ${unit(r.f)}, ${top.f - r.f} behind ${shared.map(x => x.name).join(' and ')}${top.f === r.f ? ` (members break the tie: ${top.m} to ${r.m})` : ''}`;
+    // everyone level: no places to show (a row of "1st" says nothing), the margin still on hover
+    out[r.id] = { place, text: second ? ORD(place) : '', lead: !!second && shared.includes(r), f: r.f, title };
+  });
+  return out;
 }

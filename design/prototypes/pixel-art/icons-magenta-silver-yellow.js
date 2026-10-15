@@ -99,7 +99,7 @@
     },
     {
       id: "thieves.ransom", name: "Ransom", kind: 'action', sphere: 'magenta',
-      text: "Pick a rival’s member costing 6 or less. They pay you its cost to keep it, or it’s yours.",
+      text: "Pick a rival’s member costing 4 or less. They pay you its cost to keep it, or it’s yours.",
       idea: "a member locked in a cage until someone pays",
       rows: [
         '........................',
@@ -998,7 +998,7 @@
     },
     {
       id: "silver.spoon", name: "Silver Spoon", kind: 'member', sphere: 'silver',
-      text: "When recruited, gain silver equal to the most silver any rival has.",
+      text: "When recruited, gain half the silver of the richest rival (rounded up).",
       idea: "a baby in a bib, born with a giant silver spoon",
       rows: [
         '........................',

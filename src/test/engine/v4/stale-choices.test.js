@@ -66,7 +66,8 @@ describe('a queued choice never offers a card that moved', () => {
     const low = Math.min(...defs.map(price).filter(c => defs.filter(d => price(d) === c).length >= 2));
     const tied = defs.filter(d => price(d) === low).slice(0, 2).map(d => d.id);
     const dear = defs.filter(d => price(d) > low).slice(0, 4).map(d => d.id);
-    let s = table(Q, { round: 2, members: [['echo.hourglass']], shop: [...tied, ...dear] });
+    // 2 red to spend, so the buy step has something to offer after the copy (Open House no longer gives +2 red)
+    let s = table(Q, { round: 2, members: [['echo.hourglass']], res: [{ red: 2 }], shop: [...tied, ...dear] });
     s = take(s, N('red', 'hireup'));
     if (s.pending.kind === 'choose') s = move(s, s.pending.options[0].id); // Open Door's tie: either cheapest
     expect(s.pending.kind).toBe('buy');

@@ -116,7 +116,8 @@ export default {
         if (c && by !== owner && !(owner.res[c] > 0)) ctx.gain(owner, c, 1);
       },
     }),
-    m('gobetween', 'Go-Between', 4, 4, 'Whenever you recruit a non-yellow member, +1 of its color.', {
+    // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 4
+    m('gobetween', 'Go-Between', 2, 2,'Whenever you recruit a non-yellow member, +1 of its color.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
         if (by === owner && recruited.uid !== card.uid && ctx.defOf(recruited).quadrant !== 'yellow' && colorOf(ctx, recruited)) ctx.gain(owner, colorOf(ctx, recruited), 1);
       },
@@ -152,7 +153,8 @@ export default {
         if (x) { owner.res[Y] += x; card.sown = 0; ctx.log(`${owner.name}'s Sower leaves: ${x} planted yellow comes back.`); }
       },
     }),
-    m('harmonist', 'Harmonist', 6, 2, 'Game end: +1 follower per full set you hold.', {
+    // balance pass 2 (pooled bench, both bots agree; design/eval/balance-pass-2.md): 8 → 4 (the most one pass moves)
+    m('harmonist', 'Harmonist', 4, 0,'Game end: +1 follower per full set you hold.', {
       onGameEnd: (ctx, owner) => setsOf(ctx, owner),
     }),
     m('rainmaker', 'Rainmaker', 4, 2, 'Once per game: raise each of your colors to match your yellow.', {

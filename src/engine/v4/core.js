@@ -116,34 +116,74 @@ export function openSlots(state) {
   return out;
 }
 
-/** What a member would cost this player right now: { spend, colorPart, anyPart } or null if unaffordable. */
+// ---------- the price of a member: one rule for every recruit ----------
 // A member's colored part is paid in its quadrant's resource. Some sphere drafts still relabel
 // def.quadrant to a color name, so a bare color is accepted too.
 const colorOf = def => { try { return quadrant(def.quadrant).resource; } catch { return def.quadrant; } };
 // The colored part may be paid in any colors when the member's color isn't on the table, or when one of your
 // members says so (Freelancer: flag anyColorPart).
 const colorPartFree = (state, p, def) => !state.resources.includes(colorOf(def)) || sumMemberFlag(state, p, 'anyColorPart') > 0;
-export function paymentPlan(state, p, uid) {
-  const def = cardDef(state, uid);
+/**
+ * What p owes for a member, in units: { q, colored, total, worth }. q is the colored part's resource (null when no
+ * colored part is owed), colored the units of q owed, total the units owed in all, worth(c) what one coin of c pays.
+ * Discounts (Intro Offer and the like, p.discount) and cost reductions (Sponsor) come off the colored part first
+ * (Cory: you choose where a discount comes off; the colored part first is always at least as good). Gold you spend
+ * counts double with Penny Pincher (flag goldPaysDouble), toward either part. how.anyColors: the colored part in any
+ * colors (Snap Up); how.half: half the printed cost, rounded down, in any colors (Half Price).
+ */
+function priceParts(state, p, def, how = {}) {
   let s = def.s, w = def.w;
-  let off = p.discount + sumMemberFlag(state, p, 'costReduction');
-  const ds = Math.min(s, off); s -= ds; off -= ds; w = Math.max(0, w - off);
-  if (colorPartFree(state, p, def)) { w += s; s = 0; }
+  if (how.half) { w = Math.floor((s + w) / 2); s = 0; }
+  if (how.anyColors || colorPartFree(state, p, def)) { w += s; s = 0; }
+  const off = (p.discount || 0) + sumMemberFlag(state, p, 'costReduction');
+  const colored = Math.max(0, s - off), total = Math.max(0, s + w - off);
   const goldDouble = sumMemberFlag(state, p, 'goldPaysDouble') > 0;
+  return { q: colored > 0 ? colorOf(def) : null, colored, total, worth: c => (c === 'gold' && goldDouble ? 2 : 1) };
+}
+const unitsOf = (v, worth) => Object.entries(v).reduce((t, [c, n]) => t + (n || 0) * worth(c), 0);
+/** Does paying the coins `v` cover the price? The colored units from q, the rest from anything (q's spare too). */
+function memberPayOk(state, p, def, v, how) {
+  const { q, colored, total, worth } = priceParts(state, p, def, how);
+  return (!q || (v[q] || 0) * worth(q) >= colored) && unitsOf(v, worth) >= total;
+}
+/**
+ * The exact price p pays for member uid right now, after every discount and rule-changer, and what's missing:
+ * { color, colored, total, afford, short }. color: the resource the colored part is owed in (null when none is);
+ * colored: units of it owed; total: units owed in all (a Penny Pincher gold pays 2). short (null when affordable):
+ * { [color]: coins of that color, any: coins of any color, total, text: "4 green" | "2 gold, 1 any" }.
+ * The buy step, the pay choices, Snap Up, Half Price, Talent Scout and the shop's "need" all read this.
+ */
+export function memberPrice(state, p, uid, how = {}) {
+  const def = cardDef(state, uid);
+  const { q, colored, total, worth } = priceParts(state, p, def, how);
+  const res = p.res;
+  const haveQ = q ? (res[q] || 0) * worth(q) : 0;
+  const shortQ = q ? Math.ceil(Math.max(0, colored - haveQ) / worth(q)) : 0;
+  const shortAny = Math.max(0, total - unitsOf(res, worth) - shortQ * (q ? worth(q) : 1));
+  const afford = shortQ === 0 && shortAny === 0;
+  let short = null;
+  if (!afford) {
+    const text = [shortQ ? `${shortQ} ${q}` : '', shortAny ? `${shortAny} any` : ''].filter(Boolean).join(', ');
+    short = { ...(q ? { [q]: shortQ } : {}), any: shortAny, total: shortQ + shortAny, text };
+  }
+  return { color: q, colored, total, afford, short };
+}
+/** A way p can pay for member uid now ({ color: n }), or null if p can't: the colored part from its color, the rest
+ *  from the colors p holds most of, gold last (gold scores the Crown). */
+export function paymentPlan(state, p, uid, how = {}) {
+  const { q, colored, total, worth } = priceParts(state, p, cardDef(state, uid), how);
   const res = { ...p.res };
   const spend = Object.fromEntries(Object.keys(res).map(r => [r, 0]));
-  const q = colorOf(def);
-  const need = goldDouble && q === 'gold' ? Math.ceil(s / 2) : s;
-  if (need > 0) {
-    if ((res[q] ?? 0) < need) return null;
-    res[q] -= need; spend[q] += need;
+  let paid = 0;
+  if (q && colored > 0) {
+    const k = Math.ceil(colored / worth(q));
+    if ((res[q] || 0) < k) return null;
+    res[q] -= k; spend[q] = (spend[q] || 0) + k; paid += k * worth(q);
   }
-  // "Any" is paid from the colors you hold most of, gold last (gold scores the Crown).
-  let left = w;
-  while (left > 0) {
+  while (paid < total) {
     const c = Object.keys(res).filter(r => r !== 'gold' && res[r] > 0).sort((a, b) => res[b] - res[a])[0] || (res.gold > 0 ? 'gold' : null);
     if (!c) return null;
-    res[c] -= 1; spend[c] += 1; left -= c === 'gold' && goldDouble ? 2 : 1;
+    res[c] -= 1; spend[c] += 1; paid += worth(c);
   }
   return spend;
 }
@@ -160,34 +200,15 @@ function vectors(res, keys, maxTotal, exactTotal) {
   walk(0, exactTotal ?? maxTotal, {});
   return out;
 }
-function memberPayOk(state, p, def, v) {
-  const goldDouble = sumMemberFlag(state, p, 'goldPaysDouble') > 0;
-  const worth = c => (c === 'gold' && goldDouble ? 2 : 1);
-  const d = p.discount + sumMemberFlag(state, p, 'costReduction');
-  const q = colorOf(def);
-  if (colorPartFree(state, p, def)) {
-    let total = 0;
-    for (const c in v) total += v[c] * worth(c);
-    return total >= Math.max(0, def.s + def.w - d);
-  }
-  for (let ds = 0; ds <= Math.min(def.s, d); ds++) {
-    const needS = def.s - ds, needW = Math.max(0, def.w - (d - ds));
-    for (let a = 0; a <= (v[q] || 0); a++) {
-      if (a * worth(q) < needS) continue;
-      let rest = ((v[q] || 0) - a) * worth(q);
-      for (const c in v) if (c !== q) rest += v[c] * worth(c);
-      if (rest >= needW) return true;
-    }
-  }
-  return false;
-}
 const vecKey = (state, v) => state.resources.map(r => v[r] || 0).join('-');
-export function paymentChoices(state, p, uid) {
+/** Every way p can pay for member uid now (no coin wasted), the default way first. how: as memberPrice. */
+export function paymentChoices(state, p, uid, how = {}) {
   const def = cardDef(state, uid);
   const keys = state.resources;
-  const all = vectors(p.res, keys, def.s + def.w).filter(v => memberPayOk(state, p, def, v));
-  const minimal = all.filter(v => keys.every(c => !v[c] || !memberPayOk(state, p, def, { ...v, [c]: v[c] - 1 })));
-  return orderChoices(state, minimal, paymentPlan(state, p, uid), p);
+  if (!memberPrice(state, p, uid, how).afford) return [];
+  const all = vectors(p.res, keys, priceParts(state, p, def, how).total).filter(v => memberPayOk(state, p, def, v, how));
+  const minimal = all.filter(v => keys.every(c => !v[c] || !memberPayOk(state, p, def, { ...v, [c]: v[c] - 1 }, how)));
+  return orderChoices(state, minimal, paymentPlan(state, p, uid, how), p);
 }
 // Resources that count as any color when buying followers (Gold: "gold is money").
 const wildColors = state => state.quadrants.map(quadrant).filter(q => q.wildInFollowerBuys).map(q => q.resource);
@@ -288,17 +309,17 @@ function inputFor(state, task) {
         kind: 'setup', prompt: `${p.name}: pick a starting resource (${task.k} of 2)`,
         options: state.quadrants.map(q => ({ id: `color:${q}`, label: quadrant(q).name, kind: 'color', value: q })),
       };
-    case 'place':
-      return {
-        kind: 'place', prompt: `${p.name}: place a minion`,
-        options: [
-          ...openSlots(state).filter(([q, i]) => !task.ring || actionAt(state, q, i).ring <= task.ring)
-            .map(([q, i]) => ({ id: `slot:${q}-${i}`, label: actionAt(state, q, i).name, kind: 'slot', q, i })),
-          ...squatSlots(state, p).filter(([q, i]) => !task.ring || actionAt(state, q, i).ring <= task.ring)
-            .map(([q, i]) => ({ id: `squat:${q}-${i}`, label: `${actionAt(state, q, i).name} (join ${state.players[state.slots[`${q}-${i}`]].name})`, kind: 'slot', squat: true, q, i })),
-        ],
-        onEmpty: () => { p.left -= 1; },
-      };
+    case 'place': {
+      const slots = [
+        ...openSlots(state).filter(([q, i]) => !task.ring || actionAt(state, q, i).ring <= task.ring)
+          .map(([q, i]) => ({ id: `slot:${q}-${i}`, label: actionAt(state, q, i).name, kind: 'slot', q, i })),
+        ...squatSlots(state, p).filter(([q, i]) => !task.ring || actionAt(state, q, i).ring <= task.ring)
+          .map(([q, i]) => ({ id: `squat:${q}-${i}`, label: `${actionAt(state, q, i).name} (join ${state.players[state.slots[`${q}-${i}`]].name})`, kind: 'slot', squat: true, q, i })),
+      ];
+      // a member's activation can be used any time on your own turn (Cory, 2026-10-15): here too, beside the spaces
+      // (only while there is a space to take, so a use is never forced on you)
+      return { kind: 'place', prompt: `${p.name}: place a minion`, options: slots.length ? [...slots, ...useOptions(state, p)] : [], onEmpty: () => { p.left -= 1; } };
+    }
     case 'buy': {
       // a second buy (Big Spender) is offered only after a real first buy, while an unspent one is held
       if (task.extra && !(p.turnBuys > 0 && allowance(state, p, 'extraBuy'))) return { kind: 'buy', prompt: '', options: [] };
@@ -313,7 +334,7 @@ function inputFor(state, task) {
         const c = state.cards[uid], d = defById(c.def);
         // a Doppelganger offers what it copies too
         const eff = effectiveDefs(c);
-        if (eff.some(e => e.activate) && !c.used) opts.push({ id: `use:${uid}`, label: `Use ${d.name}`, kind: 'use', uid });
+        opts.push(...useOptions(state, p, [uid]));
         if (eff.some(e => e.toggle)) opts.push({ id: `toggle:${uid}`, label: `${d.name}: switch ${c.on === false ? 'on' : 'off'}`, kind: 'toggle', uid });
       }
       if (canRelease(state, p)) for (const uid of p.members) {
@@ -329,7 +350,7 @@ function inputFor(state, task) {
     case 'choose': {
       // only the options whose cards are still where they were when the choice was queued (see liveOptions)
       const options = liveOptions(state, task);
-      if (options.length || !task.options.length) return { kind: 'choose', prompt: task.prompt, options };
+      if (options.length || !task.options.length) return { kind: 'choose', prompt: task.prompt, options, ...(task.count ? { count: task.count } : {}) };
       return {
         kind: 'choose', prompt: task.prompt, options: [],
         onEmpty: () => log(state, `${task.prompt.split(':')[0]}: nothing left to choose (${p.name}'s options were taken or moved first), so nothing happens.`),
@@ -338,8 +359,9 @@ function inputFor(state, task) {
     case 'release': {
       const opts = [];
       for (const c of state.resources) {
-        opts.push({ id: `all:${c}`, label: `All ${task.left} as ${c}`, kind: 'color', value: c, hint: -(p.res[c] || 0) });
-        if (task.left > 1) opts.push({ id: `one:${c}`, label: `1 ${c}`, kind: 'color', value: c, hint: -(p.res[c] || 0) - 0.5 });
+        // target: your own stack of that color takes one (the board picker); "all" keeps its button while more are left
+        opts.push({ id: `all:${c}`, label: `All ${task.left} as ${c}`, kind: 'color', value: c, hint: -(p.res[c] || 0), ...(task.left === 1 ? { target: { res: c } } : {}) });
+        if (task.left > 1) opts.push({ id: `one:${c}`, label: `1 ${c}`, kind: 'color', value: c, hint: -(p.res[c] || 0) - 0.5, target: { res: c } });
       }
       return { kind: 'choose', prompt: `${p.name}: take ${task.left} more from the release, in any colors`, options: opts };
     }
@@ -356,6 +378,32 @@ function inputFor(state, task) {
   }
 }
 
+/** `use:` options: p's members (all, or `uids`) with an activation not used yet; a Doppelganger offers what it copies. */
+function useOptions(state, p, uids = p.members) {
+  const out = [];
+  for (const uid of uids) {
+    const c = state.cards[uid];
+    if (!c.used && effectiveDefs(c).some(e => e.activate)) out.push({ id: `use:${uid}`, label: `Use ${defById(c.def).name}`, kind: 'use', uid });
+  }
+  return out;
+}
+/**
+ * Use a member's activation now. Its whole effect resolves first, its choices included (a Stunt Double copying Open
+ * House asks "which of the cheapest?" right away), and then `resume` (the step the player was in: this placement or
+ * this buy) comes back with fresh options. Before the gut call of 2026-10-15 the buy step came back first, so the
+ * choice waited until after the player's next buy.
+ */
+function useMember(state, p, uid, resume) {
+  const c = state.cards[uid];
+  c.used = true;
+  const act = effectiveDefs(c).find(e => e.onActivate);
+  const before = traceSnapshot(state);
+  act.onActivate(ctxFor(state), p, wrap(state, c));
+  traceChanges(state, before, p, act);
+  const at = state.queue.findIndex(t => !t._fresh);
+  state.queue.splice(at < 0 ? state.queue.length : at, 0, resume);
+}
+
 function resolveTask(state, task, optionId) {
   const p = state.players[task.p];
   switch (task.t) {
@@ -366,6 +414,8 @@ function resolveTask(state, task, optionId) {
       return;
     }
     case 'place': {
+      // using a member first: its whole effect resolves, then this placement comes back with fresh options
+      if (optionId.startsWith('use:')) { useMember(state, p, Number(optionId.slice(4)), { ...task }); return; }
       const squat = optionId.startsWith('squat:');
       const [q, i] = optionId.slice(optionId.indexOf(':') + 1).split('-').map(Number);
       const key = `${q}-${i}`;
@@ -373,6 +423,7 @@ function resolveTask(state, task, optionId) {
         spendAllowance(state, p, 'squat');
         (state.squats[key] = state.squats[key] || []).push(p.id);
       } else state.slots[key] = p.id;
+      p.lastSlot = { key, joined: squat }; // the minion Straggler moves (Cory, 2026-10-15: it's always the last one)
       p.left -= 1;
       const a = actionAt(state, q, i);
       log(state, squat ? `${p.name} joined ${state.players[state.slots[key]].name} on ${a.name} (${quadrant(state.quadrants[q]).name}).`
@@ -396,20 +447,7 @@ function resolveTask(state, task, optionId) {
         state.queue.unshift({ t: 'pay', p: p.id, tier: tier.key, ...extraOf(task) });
         return;
       }
-      if (kind === 'use') {
-        const c = state.cards[Number(rest)];
-        c.used = true;
-        const act = effectiveDefs(c).find(e => e.onActivate);
-        const before = traceSnapshot(state);
-        act.onActivate(ctxFor(state), p, wrap(state, c));
-        traceChanges(state, before, p, act);
-        // the member's whole effect resolves now, its choices included (a Stunt Double copying Open House asks
-        // "which of the cheapest?" right away), and then this buy step comes back with fresh options. It used to
-        // come back first, so the choice waited until after the player's next buy (gut call, 2026-10-15).
-        const at = state.queue.findIndex(t => !t._fresh);
-        state.queue.splice(at < 0 ? state.queue.length : at, 0, { t: 'buy', p: p.id, ...extraOf(task) });
-        return;
-      }
+      if (kind === 'use') { useMember(state, p, Number(rest), { t: 'buy', p: p.id, ...extraOf(task) }); return; }
       if (kind === 'toggle') {
         const c = state.cards[Number(rest)];
         c.on = c.on === false;
@@ -637,14 +675,15 @@ function refill(state) {
   while (state.shop.length < SHOP_SIZE && state.pile.length) state.shop.push(state.pile.shift());
 }
 
-function recruit(state, p, uid, { free, spend: chosen }) {
+// how: a recruit priced by a space's own rule (Snap Up: { anyColors }, Half Price: { anyColors, half }), as memberPrice
+function recruit(state, p, uid, { free, spend: chosen, how = {} }) {
   const idx = state.shop.indexOf(uid);
   const fromPile = idx < 0 ? state.pile.indexOf(uid) : -1;
   if (idx < 0 && (fromPile < 0 || fromPile >= pileReach(state, p))) throw new Error(`Card ${uid} is not in the shop`);
   let paid = 'free';
   if (!free) {
-    const spend = chosen || paymentPlan(state, p, uid);
-    if (!spend || !memberPayOk(state, p, cardDef(state, uid), spend) || Object.keys(spend).some(r => spend[r] > (p.res[r] || 0))) throw new Error('Cannot afford');
+    const spend = chosen || paymentPlan(state, p, uid, how);
+    if (!spend || !memberPayOk(state, p, cardDef(state, uid), spend, how) || Object.keys(spend).some(r => spend[r] > (p.res[r] || 0))) throw new Error('Cannot afford');
     for (const r in spend) p.res[r] -= spend[r];
     paid = payString(spend);
     // name what made it cheaper: a discount, cost reductions, gold paying double
@@ -660,7 +699,7 @@ function recruit(state, p, uid, { free, spend: chosen }) {
     }
     // Freelancer (anyColorPart): say so when the colored part was paid in other colors
     const q0 = colorOf(def0);
-    if (state.resources.includes(q0) && sumMemberFlag(state, p, 'anyColorPart') > 0) {
+    if (!how.anyColors && !how.half && state.resources.includes(q0) && sumMemberFlag(state, p, 'anyColorPart') > 0) {
       const needS = Math.max(0, def0.s - p.discount - sumMemberFlag(state, p, 'costReduction'));
       const worth = q0 === 'gold' && sumMemberFlag(state, p, 'goldPaysDouble') > 0 ? 2 : 1;
       if ((spend[q0] || 0) * worth < needS) notes.push(`${flagName(state, p, 'anyColorPart')}: colored part in any colors`);
@@ -708,13 +747,19 @@ function gain(state, p, color, n, { fromAction = false } = {}) {
   const ctx = ctxFor(state);
   // conversions (Midas) first, then amount changes (Underdog), so member order never matters.
   // Each one that changes the gain says so in the log ("Ana's Underdog: gold gain 4 → 8").
-  const said = (def, c0, n0) => {
-    if (g.color === c0 && g.n === n0) return;
+  // In a preview (state.notes), a member that could have changed the gain and didn't says why (def.whyNot).
+  const said = (card, def, c0, n0) => {
+    if (g.color === c0 && g.n === n0) {
+      const why = state.notes && def.whyNot ? def.whyNot(ctx, p, card, g) : null;
+      if (why) note(state, p, def.name, why);
+      return;
+    }
     const what = g.color === c0 ? `${c0} gain ${n0} → ${g.n}` : `${n0} ${c0} comes as ${g.n} ${g.color}`;
     log(state, `${p.name}'s ${def.name}: ${what}.`);
+    note(state, p, def.name, what);
   };
-  eachMemberOf(state, p, (card, def) => { if (def.convertGain) { const c0 = g.color, n0 = g.n; def.convertGain(ctx, p, card, g); said(def, c0, n0); } });
-  eachMemberOf(state, p, (card, def) => { if (def.modifyGain) { const c0 = g.color, n0 = g.n; def.modifyGain(ctx, p, card, g); said(def, c0, n0); } });
+  eachMemberOf(state, p, (card, def) => { if (def.convertGain) { const c0 = g.color, n0 = g.n; def.convertGain(ctx, p, card, g); said(card, def, c0, n0); } });
+  eachMemberOf(state, p, (card, def) => { if (def.modifyGain) { const c0 = g.color, n0 = g.n; def.modifyGain(ctx, p, card, g); said(card, def, c0, n0); } });
   p.res[g.color] = (p.res[g.color] || 0) + g.n;
   eachMemberOf(state, p, (card, def) => { if (def.afterGain) def.afterGain(ctx, p, card, g); });
 }
@@ -759,6 +804,7 @@ function traceChanges(state, before, owner, def) {
     const d = (o.discount || 0) - (b.discount || 0);
     if (d > 0) parts.push(`next member costs ${d} less`);
     if (!parts.length) return;
+    if (o === owner && state.notes) note(state, owner, name, parts.join(', '), Object.fromEntries(Object.keys({ ...b.res, ...o.res }).map(r => [r, (o.res[r] || 0) - (b.res[r] || 0)]).filter(([, d]) => d)));
     out.push(o === owner ? `${owner.name}'s ${name}: ${parts.join(', ')}.` : `${o.name} ${parts.join(', ')} (${owner.name}'s ${name}).`);
   });
   if (!out.length) return;
@@ -836,7 +882,9 @@ export const workersOnBoard = (state, p) => Object.values(state.slots).filter(o 
  * from the dead-window audit, 2026-10-14).
  */
 export const canRelease = (state, p, uid) => !!state.rules?.release && p.releasedRound !== state.round
-  && (uid === undefined || !(state.cards[uid]?.recruitedRound === state.round && state.cards[uid]?.recruitedBy === p.id));
+  && (uid === undefined || (!(state.cards[uid]?.recruitedRound === state.round && state.cards[uid]?.recruitedBy === p.id)
+    // a member whose once-per-game use is spent can't be released for its refund (Cory, 2026-10-15)
+    && !state.cards[uid]?.used));
 /**
  * What releasing a member gives back (Cory, 2026-10-14): only its colored part, in its own color: { n, color, label }.
  * When its color isn't on the table (a guest leaning to an absent sphere), the colored part comes back in any colors
@@ -898,6 +946,9 @@ function ctxFor(state) {
     shopCards: () => state.shop.map(u => wrap(state, state.cards[u])),
     gain: (p, color, n, opts) => gain(state, p, color, n, opts),
     recruit: (p, uid, opts) => recruit(state, p, uid, opts),
+    /** The one price rule (memberPrice) and the ways to pay it (paymentChoices), for recruits outside the buy step. */
+    price: (p, uid, how) => memberPrice(state, p, uid, how),
+    payChoices: (p, uid, how) => paymentChoices(state, p, uid, how),
     log: text => log(state, text),
     cardLeaves: (p, uid) => cardLeaves(state, p, uid),
     /** Run fn on behalf of owner's member `name` (a hook content code calls itself, e.g. Choir reacting to a copy):
@@ -963,12 +1014,13 @@ function ctxFor(state) {
       eachMember(state, (owner, card, def) => { if (def.onSteal) def.onSteal(ctx, owner, card, info); });
       return n;
     },
-    // Queue a decision for player p. It runs before anything else still queued.
-    choose(p, prompt, options, handler, data = null) {
+    // Queue a decision for player p. It runs before anything else still queued. extra.count: a counted pick's
+    // progress, { of, left } (Collect Debts: 1 of 3 taken), kept on the task so it survives a save and load.
+    choose(p, prompt, options, handler, data = null, extra = {}) {
       if (!options.length) return;
       // follow-up choices queued during one resolution keep their call order
       const at = state.queue.findIndex(t => !t._fresh);
-      const task = { t: 'choose', p: p.id, prompt, options: options.map(o => pinCards(state, o)), h: handler, data, _fresh: true };
+      const task = { t: 'choose', p: p.id, prompt, options: withTargets(state, options).map(o => pinCards(state, o)), h: handler, data, ...(extra.count ? { count: extra.count } : {}), _fresh: true };
       state.queue.splice(at < 0 ? state.queue.length : at, 0, task);
     },
   };
@@ -992,6 +1044,35 @@ function pinCards(state, o) {
   const uids = CARD_KINDS.has(o.kind) ? [].concat(o.value).filter(u => Number.isInteger(u) && state.cards[u]) : [];
   return uids.length ? { ...o, at: Object.fromEntries(uids.map(u => [u, whereIs(state, u)])) } : o;
 }
+// An option that points at something on the board says so in one structured field, so a screen lights that thing
+// and never reads the label (the board picker, src/v4/game/boardPick.js). Ids never change.
+//   { space: 'q-i' }      a space on the wheel (Echo's and Encore's copies, Straggler's moves)
+//   { uid }               a member: face up in the shop, or on someone's seat (Hand-pick, Shake Down, Poach)
+//   { pid }               a player (Kickback, Benefactor)
+//   { pid, res }          one of a player's resource stacks (a steal's take:pid:color; give: true for Good Deed's gift)
+//   { res }               a color, shown as your own stack of it (a gift's color, a release's colors)
+// An option that sets its own target keeps it.
+function withTargets(state, options) {
+  const colors = options.filter(o => o.kind === 'color' && !o.target).map(o => o.value);
+  // a color pick names resources, or quadrants (Hustler): a quadrant is shown as its resource
+  const asQuadrant = colors.length > 0 && colors.every(v => state.quadrants.includes(v)) && !colors.every(v => state.resources.includes(v));
+  return options.map(o => {
+    if (o.target) return o;
+    const v = o.value;
+    let target = null;
+    if ((o.kind === 'take' || o.kind === 'give') && Array.isArray(v) && Number.isInteger(v[0]) && typeof v[1] === 'string') target = { pid: v[0], res: v[1], ...(o.kind === 'give' ? { give: true } : {}) };
+    else if (o.kind === 'player' && Number.isInteger(v)) target = { pid: v };
+    else if ((o.kind === 'card' || o.kind === 'member') && Number.isInteger(v) && state.cards[v]) target = { uid: v };
+    else if ((o.kind === 'space' || o.kind === 'slot') && (typeof v === 'string' || (v && typeof v.key === 'string'))) {
+      const key = String(typeof v === 'string' ? v : v.key).split('+')[0];
+      if (/^\d+-\d+$/.test(key)) target = { space: key };
+    } else if (o.kind === 'color' && typeof v === 'string') {
+      if (asQuadrant) target = { res: quadrant(v).resource };
+      else if (state.resources.includes(v)) target = { res: v };
+    }
+    return target ? { ...o, target } : o;
+  });
+}
 /** A queued choice's options that are still good: every card an option names is where it was when it was queued. */
 export function liveOptions(state, task) {
   return task.options.filter(o => !o.at || Object.entries(o.at).every(([u, w]) => whereIs(state, Number(u)) === w));
@@ -1001,6 +1082,15 @@ export function liveOptions(state, task) {
 function clearFresh(state) { for (const t of state.queue) if (t._fresh) delete t._fresh; }
 
 // ---------- misc ----------
+
+/**
+ * Preview-only reasons. previewSpace runs a space on a copy that carries state.notes (an array); there, every member
+ * effect that changes the player's numbers adds { p, member, text, res } and a member that could have and didn't
+ * says why (def.whyNot). A real game's state never has notes, so this does nothing there.
+ */
+function note(state, p, member, text, res = null) {
+  if (Array.isArray(state.notes)) state.notes.push({ p: p.id, member, text, ...(res ? { res } : {}) });
+}
 
 function log(state, text) {
   state.log.push(text);

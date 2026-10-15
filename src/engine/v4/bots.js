@@ -96,7 +96,7 @@ export function chooseGreedyMove(state, rand = Math.random, { noise = 1.6 } = {}
   switch (pend.kind) {
     case 'setup': return setupPick(pend, rand);
     case 'place':
-      return move(best(pend.options, o => {
+      return move(best(pend.options.filter(o => o.kind === 'slot'), o => {
         const a = actionAt(state, o.q, o.i);
         const qid = state.quadrants[o.q];
         const hustle = p.members.filter(u => state.cards[u].def === 'gold.hustler' && state.cards[u].color === qid).length;
@@ -281,7 +281,7 @@ function gameEndPay(s, ctx, p) {
 }
 
 // A member's own data, not an ability. Every other key is a hook or a rule flag (halfTurns, brokerBonus, toggle…).
-const DATA_KEYS = new Set(['key', 'name', 's', 'w', 'text', 'f', 'n', 'id', 'quadrant', 'copies', 'vanilla', 'badge', 'lean', 'guest']);
+const DATA_KEYS = new Set(['key', 'name', 's', 'w', 'text', 'f', 'n', 'id', 'quadrant', 'copies', 'vanilla', 'lean', 'guest']);
 // Hooks whose payout the evaluation already sees (the recruit itself, game-end pay) or that only steer bots.
 const MEASURED = new Set(['onGameEnd', 'onRecruited', 'botActivate', 'estimate']);
 const PLAIN_TEXT = /^(Free\. )?((Worth \d+ followers?\.|No effect\.|Counts as \d+ members\.)\s*)+$/;
@@ -351,7 +351,10 @@ export function scoreOptions(state, rand = Math.random, opts = {}) {
   const memberBias = (opts.memberBias ?? MEMBER_BIAS) * (floor + (1 - floor) * Math.min(1, placesLeft / 12));
   const out = [];
   if (pend.kind === 'place') {
+    // spaces only: a member's activation is also offered here (Cory, 2026-10-15), but bots use members in the buy
+    // step, where their botActivate rules are tuned (buyShortcut), so they rate only where to place
     for (const o of pend.options) {
+      if (o.kind !== 'slot') continue;
       let v;
       try {
         const s = lightClone(state);

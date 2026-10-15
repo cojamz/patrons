@@ -115,10 +115,11 @@ describe('Magenta actions', () => {
     expect(named(s, 'Lookout').length).toBe(1);
   });
 
-  it('Shake Down: a rival\'s member costing 6 or less; they pay its cost to keep it, or it\'s yours', () => {
-    let s = table(Q, { round: 2, res: [{}, { red: 3 }], members: [[], ['red.twins', 'red.bigfamily', 'red.intern']], shop: ROW });
+  it('Shake Down: a rival\'s member costing 4 or less; they pay its cost to keep it, or it\'s yours', () => {
+    let s = table(Q, { round: 2, res: [{}, { red: 3 }], members: [[], ['red.twins', 'red.bigfamily', 'red.intern', 'red.doppel']], shop: ROW });
     s = take(s, 'thieves.ransom');
-    expect(ids(s).sort()).toEqual([cardOpt(s, 'red.twins', 1), cardOpt(s, 'red.intern', 1)].sort()); // Big Family is 8
+    // Twins 4 and Intern 2; not Doppelganger (6) or Big Family (8)
+    expect(ids(s).sort()).toEqual([cardOpt(s, 'red.twins', 1), cardOpt(s, 'red.intern', 1)].sort());
     // Twins (4): P2 holds only 3, so they can't pay
     let t = move(s, cardOpt(s, 'red.twins', 1));
     expect(ids(t)).toEqual(['let']);

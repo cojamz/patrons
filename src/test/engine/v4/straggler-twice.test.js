@@ -13,12 +13,10 @@ describe('Straggler twice in one round', () => {
     return import('../../../engine/v4/core.js').then(({ resume: r }) => {
       s = r(s);
       expect(s.pending?.kind).toBe('choose');
-      // both Straggler choices are queued now; the first moves the worker off 0-0
-      s = move(s, 'from:0-0');
+      // both Straggler choices are queued now, each for the last-placed minion; the first moves it
       const to = s.pending.options[0].id;
       s = move(s, to);
-      // the second (stale) choice still lists 0-0: picking it must not crash, and must re-offer
-      while (s.pending?.kind === 'choose' && s.pending.options.some(o => o.id === 'from:0-0')) s = move(s, 'from:0-0');
+      // the second was queued for a minion that has moved (stale): resolving it must not crash, and must re-offer
       expect(() => { while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id); }).not.toThrow();
       const mine = Object.values(s.slots).filter(o => o === 0).length;
       expect(mine).toBe(2); // still two workers on the board, moved, none lost or duplicated

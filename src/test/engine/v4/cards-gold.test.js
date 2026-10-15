@@ -76,7 +76,8 @@ describe('Gold members', () => {
     expect(G(s)[0]).toBe(4);
   });
 
-  it('Tax Collector: +1 gold when a rival buys followers, named; Underdog doubles it', () => {
+  it('Tax Collector: +1 gold when the rival with the most followers buys followers, named; Underdog doubles it', () => {
+    // two players: the one rival is always the rival with the most followers
     let s = sceneQ({ res: [{}, rich], members: [['gold.taxman']], queue: [{ t: 'turn', p: 1 }] });
     s = take(s, 'gold.rush'); s = move(s, 'tier:small');
     expect(G(s)[0]).toBe(1);
@@ -85,6 +86,19 @@ describe('Gold members', () => {
     s = take(s, 'gold.rush'); s = move(s, 'tier:small');
     expect(G(s)[0]).toBe(2);
     expect(named(s, 'Tax Collector')).toHaveLength(1);
+  });
+  it('Tax Collector: only the rival with the most followers pays; ties for the most count; read before the buy', () => {
+    const buyAs = (p, bonus, tier = 'small') => {
+      const res = [{}, {}, {}]; res[p] = rich;
+      const s = sceneQ({ n: 3, res, bonus, members: [['gold.taxman']], queue: [{ t: 'turn', p }] });
+      return move(take(s, 'gold.rush'), `tier:${tier}`);
+    };
+    expect(G(buyAs(1, [0, 5, 0]))[0]).toBe(1); // P2 leads the rivals
+    expect(G(buyAs(2, [0, 5, 0]))[0]).toBe(0); // P3 is behind P2
+    expect(named(buyAs(2, [0, 5, 0]), 'Tax Collector')).toEqual([]);
+    expect(G(buyAs(2, [0, 3, 3]))[0]).toBe(1); // tied for the most
+    expect(G(buyAs(2, [0, 5, 3], 'mid'))[0]).toBe(0); // 3 → 6 passes P2, but P3 was behind when it bought
+    expect(G(buyAs(1, [9, 5, 0]))[0]).toBe(1); // the owner's own lead doesn't matter: P2 leads the rivals
   });
 
   it('Merchant: +1 gold whenever anyone recruits a gold member, named; a gold-leaning guest (Big Spender) counts', () => {
@@ -199,7 +213,6 @@ describe('Gold members', () => {
     let s = sceneQ({ round: 2, members: [['gold.hustler', 'benders.straggler']], slots: { '1-0': 0 }, queue: [{ t: 'allPlaced' }] });
     s.cards[uidOf(s, 'gold.hustler', 0)].color = 'red';
     s = resume(s);
-    s = move(s, 'from:1-0');
     s = move(s, 'to:1-1');
     expect(G(s)[0]).toBe(2);
     expect(named(s, 'Hustler')).toHaveLength(1);

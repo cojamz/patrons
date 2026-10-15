@@ -1,9 +1,8 @@
 // An independent oracle for the round-end contests, used by the engine test (contests.test.js) and the UI
 // test (src/test/v4/ui/contest-truth.test.jsx). It never calls a quadrant's scoring or show: it counts what each
 // rule says it counts, straight off the state, so a screen and the engine can both be checked against it.
-import { createGame, applyMove, memberCount, countMembersOfColor, cardDef, chooseBotMove, quadrant, RING_VALUE } from '../../../engine/v4/index.js';
+import { createGame, applyMove, memberCount, countMembersOfColor, chooseBotMove, quadrant, RING_VALUE } from '../../../engine/v4/index.js';
 import { workersOnBoard } from '../../../engine/v4/core.js';
-import { BADGE } from '../../../engine/v4/content/market.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
 import { makeTables } from './fuzz-tables-runner.js';
 
@@ -15,7 +14,6 @@ export function oracleCount(state, qid, p) {
   if (q.scoring.label === `Most ${q.resource}`) return res(q.resource);
   switch (qid) {
     case 'red': return memberCount(state, p);
-    case 'market': return p.members.filter(u => { const d = cardDef(state, u); return d.s + d.w >= BADGE; }).length;
     case 'purple': return /workers on the board/.test(q.scoring.label) ? workersOnBoard(state, p) : null;
     case 'yellow': return Math.min(...state.resources.map(res));
     case 'thieves': return countMembersOfColor(state, p, 'thieves');
@@ -26,7 +24,6 @@ export function oracleCount(state, qid, p) {
 export function oracleTiebreak(state, qid, p) {
   switch (qid) {
     case 'red': return countMembersOfColor(state, p, 'red');
-    case 'market': return p.members.filter(u => cardDef(state, u).quadrant === 'market').length;
     case 'purple': return /purple breaks ties/.test(quadrant(qid).scoring.label) ? p.res.purple || 0 : null;
     case 'yellow': return p.res.yellow || 0;
     default: return null;
@@ -36,8 +33,8 @@ export function oracleTiebreak(state, qid, p) {
 export function oracleWinners(state, qid) {
   const rows = state.players.map(p => ({ id: p.id, c: oracleCount(state, qid, p), t: oracleTiebreak(state, qid, p) ?? 0 }));
   if (rows.some(r => r.c == null)) return null;
-  // a full-set or badged rule needs at least one of the measured thing; workers and members can win on the tiebreak
-  const needsOne = ['market', 'yellow'].includes(qid);
+  // a full-set rule needs at least one of the measured thing; workers and members can win on the tiebreak
+  const needsOne = ['yellow'].includes(qid);
   const better = (a, b) => a.c - b.c || a.t - b.t;
   const best = rows.reduce((a, b) => (better(b, a) > 0 ? b : a));
   if (best.c === 0 && (needsOne || best.t === 0)) return [];

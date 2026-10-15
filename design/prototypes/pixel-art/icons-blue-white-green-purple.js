@@ -281,7 +281,7 @@
         '........................',
       ] },
     { id: 'market.showroom', name: 'Showroom', sphere: 'blue', kind: 'action',
-      text: '+1 blue per badged face-up member.',
+      text: '+1 blue, and +1 per blue face-up member.',
       idea: 'a badge-diamond on a display plinth, sparkling',
       rows: [
         '........................',
@@ -427,7 +427,7 @@
         '........................',
       ] },
     { id: 'market.onlooker', name: 'Onlooker', sphere: 'blue', kind: 'member',
-      text: 'Whenever a rival recruits a badged member, +1 blue.',
+      text: 'Whenever a rival recruits a blue member, +2 blue.',
       idea: 'binoculars up, watching what others buy',
       rows: [
         '........................',
@@ -456,7 +456,7 @@
         '........................',
       ] },
     { id: 'market.connoisseur', name: 'Connoisseur', sphere: 'blue', kind: 'member',
-      text: 'Whenever you recruit a badged member, +2 blue.',
+      text: 'Whenever you recruit a blue member, +2 blue.',
       idea: 'swept-back hair, holding a badge-diamond up to the light',
       rows: [
         '........................',
@@ -514,7 +514,7 @@
         '........................',
       ] },
     { id: 'market.curator', name: 'Curator', sphere: 'blue', kind: 'member',
-      text: 'Now and at round start, +1 blue per badged member you have.',
+      text: 'Now and at round start, +1 blue per other blue member you have.',
       idea: 'hair in a bun, presenting a framed painting',
       rows: [
         '........................',
@@ -659,7 +659,7 @@
         '........................',
       ] },
     { id: 'market.auctioneer', name: 'Auctioneer', sphere: 'blue', kind: 'member',
-      text: 'Whenever a rival recruits an unbadged member, +1 blue.',
+      text: 'Whenever a rival recruits a non-blue member, +1 blue.',
       idea: 'bow tie, a gavel raised: going, going, gone',
       rows: [
         '........................',
@@ -688,7 +688,7 @@
         '........................',
       ] },
     { id: 'market.sommelier', name: 'Sommelier', sphere: 'blue', kind: 'member',
-      text: 'Whenever you recruit a badged member, your next member costs 2 less.',
+      text: 'Whenever you recruit a blue member, your next member costs 2 less.',
       idea: 'a thin moustache, swirling a glass of wine',
       rows: [
         '........................',
@@ -717,7 +717,7 @@
         '........................',
       ] },
     { id: 'market.patroness', name: 'Patroness', sphere: 'blue', kind: 'member',
-      text: 'Whenever you recruit a badged member, +1 follower.',
+      text: 'Whenever you recruit a blue member, +1 follower.',
       idea: 'a wide hat with a tall plume',
       rows: [
         '........................',
@@ -775,7 +775,7 @@
         '........................',
       ] },
     { id: 'market.snob', name: 'Snob', sphere: 'blue', kind: 'member',
-      text: 'Game end: +1 follower per badged member you have.',
+      text: 'Game end: +1 follower per blue member you have.',
       idea: 'nose in the air and a monocle, pinky out over a teacup',
       rows: [
         '........................',
@@ -2143,7 +2143,7 @@
         '........................',
       ] },
     { id: 'purple.planahead', name: 'Plan Ahead', sphere: 'purple', kind: 'action',
-      text: '+2 purple per worker you have left to place this round.',
+      text: '+1 purple per minion you have left to place this round.',
       idea: 'a calendar with the coming days marked',
       rows: [
         '........................',
@@ -2201,7 +2201,7 @@
         '........................',
       ] },
     { id: 'purple.rally', name: 'Rally', sphere: 'purple', kind: 'action',
-      text: 'Spend all your purple: 1 extra turn right after this one per 4 spent, plus 1 (up to 3). With less than 4, +4 purple.',
+      text: 'Spend all your purple: 1 extra turn right after this one per 4 spent, plus 1 (up to 2). With less than 4, +4 purple.',
       idea: 'a banner raised high: everyone, now!',
       rows: [
         '........................',

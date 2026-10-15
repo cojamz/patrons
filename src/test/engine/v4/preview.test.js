@@ -18,7 +18,8 @@ describe('v4 previewSpace', () => {
         if (!s.pending || s.pending.kind !== 'place' || s.moves % 5) return;
         const pid = s.pending.player;
         const frozen = JSON.stringify(s);
-        for (const o of s.pending.options) {
+        // spaces only: a member's activation is offered beside them (use any time on your turn, Cory 2026-10-15)
+        for (const o of s.pending.options.filter(x => x.kind === 'slot')) {
           const pv = previewSpace(s, pid, o.q, o.i);
           expect(pv, `${o.label}`).not.toBeNull();
           // the real thing: take the space, then answer every follow-up choice at random

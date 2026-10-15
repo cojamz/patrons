@@ -1,11 +1,14 @@
 // Small game-screen pieces: the choice prompt, the log, the hot-seat handoff, a confirm dialog and a popover.
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { quadrant, cardDef } from '../../engine/v4/index.js';
 import { logSections, playerColor, costParts, plainLine } from '../format.js';
 import { Rich, CostPips } from './Rich.jsx';
-import { MemberCard, NamedText, BadgeMark, CardText, cardColor } from './Info.jsx';
+import { MemberCard, NamedText, CardText, cardColor } from './Info.jsx';
 import { Follower } from '../art/Follower.jsx';
 import { CoinMark } from './Glyphs.jsx';
+import { pickCaption, pickHow, pickName } from './boardPick.js';
+import './boardpick.css';
 
 /** Escape closes; focus moves in on open and back to where it was on close. */
 export function useDialog(onClose) {
@@ -66,7 +69,7 @@ export function TurnOf({ player }) {
   return <p className="turn-of" style={{ '--pc': playerColor(player.id) }}><i />{player.name}’s turn<span> · pass the device</span></p>;
 }
 
-export function ChoicePrompt({ state, onPick, busy, turnOf = null }) {
+export function ChoicePrompt({ state, onPick, busy, turnOf = null, seatPick = null, pickAt = '' }) {
   const pend = state.pending;
   const setup = pend.kind === 'setup';
   const box = useRef(null);
@@ -79,7 +82,11 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null }) {
   const total = useRef(null);
   const left = (pend.prompt.match(/\((\d+) left\)/) || [])[1];
   if (left == null) total.current = null; else if (total.current == null || Number(left) > total.current) total.current = Number(left);
-  const tally = left != null && total.current ? `${total.current - Number(left)} of ${total.current} taken` : null;
+  // the seats are the selector (seatPick.js): the panel shrinks to a caption (after every hook above)
+  if (seatPick) return <SeatPickCaption state={state} pk={seatPick} onPick={onPick} busy={busy} turnOf={turnOf} box={box} at={pickAt} />;
+  // the engine's own count when the choice carries one (it survives a reload); else counted from the first prompt seen
+  const tally = pend.count ? `${pend.count.of - pend.count.left} of ${pend.count.of} taken`
+    : left != null && total.current ? `${total.current - Number(left)} of ${total.current} taken` : null;
   const pick = (id, mode) => onPick(id, mode); // step changes are guarded by the table's input lock
   return (
     <section className={`prompt choice${setup ? ' setup' : ''}`} aria-live="polite" ref={box} role="group" aria-label={setup ? 'Pick a starting resource' : pend.prompt}>
@@ -91,13 +98,45 @@ export function ChoicePrompt({ state, onPick, busy, turnOf = null }) {
       {!setup && !trade && left != null && Number(left) > 1 && (
         // a counted pick: one button per target that can cover all of what's left ("Take all 3 from P3")
         <div className="take-alls">
-          {pend.options.filter(o => holds(o) >= Number(left) || pend.options.length === 1).map(o => (
-            <button key={o.id} type="button" className="btn pri take-all" disabled={busy} onClick={() => pick(o.id, 'all')}>
-              {`Take all ${left} from ${withUnits(o.label, pend.prompt, state.resources).split(' · ')[0]}`}
-            </button>
-          ))}
+          {/* the label says what a click really takes: all of what's left, or all a lone target holds ("Take P3's 1") */}
+          {pend.options.map(o => [o, holds(o) ? Math.min(Number(left), holds(o)) : Number(left)])
+            .filter(([o, k]) => k > 1 && (k === Number(left) || pend.options.length === 1)).map(([o, k]) => (
+              <button key={o.id} type="button" className="btn pri take-all" disabled={busy} onClick={() => pick(o.id, 'all')}>
+                {k === Number(left) ? `Take all ${k} from ${withUnits(o.label, pend.prompt, state.resources).split(' · ')[0]}`
+                  : `Take ${k} from ${withUnits(o.label, pend.prompt, state.resources).split(' · ')[0]} (all they have)`}
+              </button>
+            ))}
         </div>
       )}
+    </section>
+  );
+}
+
+/**
+ * The seat selector's caption (the seats are the selector, seatPick.js): what's asking, how many, how many left, and
+ * a compact list of the same picks for the keyboard (Tab, Enter), named from each option's target.
+ */
+function SeatPickCaption({ state, pk, onPick, busy, turnOf, box, at = '' }) {
+  const pend = state.pending;
+  const cap = pickCaption(state, pk);
+  return (
+    <section className={`prompt choice seat-pick${at ? ` ${at}` : ''}`} aria-live="polite" ref={box} role="group" aria-label={pend.prompt} data-board-pick={[...pk.kinds].join(' ')}>
+      {turnOf && <TurnOf player={turnOf} />}
+      <p className="pick-cap" title={pend.prompt}>
+        {cap.title ? <><b>{cap.title}</b>: {cap.what}{cap.left != null && <> · <span className="num pick-left" data-left={cap.left}>{cap.left}</span> left</>}</> : cap.what}
+      </p>
+      <p className="pick-how">{pickHow(pk)}{pk.rest.length ? ', or' : ''} <span className="pick-keys-hint">· Tab for a list</span></p>
+      {/* what has no place on the board (Pass, "All 3 as green") stays a button here */}
+      {pk.rest.length > 0 && (
+        <div className="pick-rest">
+          {pk.rest.map(o => <button key={o.id} type="button" className="btn pick-rest-btn" data-option={o.id} disabled={busy} onClick={() => onPick(o.id)}>{o.label}</button>)}
+        </div>
+      )}
+      <div className="pick-keys" role="group" aria-label="Or pick from a list">
+        {[...pk.where.values()].map(o => (
+          <button key={o.id} type="button" className="pick-key" data-option={o.id} disabled={busy} onClick={() => onPick(o.id)}>{pickName(state, o)}</button>
+        ))}
+      </div>
     </section>
   );
 }
@@ -124,7 +163,7 @@ function ForSale({ state }) {
             <button key={uid} type="button" className="fs-card" data-sale={uid} style={{ '--c': cardColor(state, d) }}
               aria-label={`${d.name}, ${d.f} followers, costs ${parts.map(c => `${c.n} ${c.color}`).join(' + ') || 'nothing'}. Show the card.`}
               onClick={e => setOpen({ uid, el: e.currentTarget })}>
-              <span className="row"><b>{d.name}<BadgeMark state={state} def={d} /></b><Follower n={d.f} /></span>
+              <span className="row"><b>{d.name}</b><Follower n={d.f} /></span>
               <span className="fs-cost"><CostPips parts={parts} /></span>
             </button>
           );
@@ -168,7 +207,6 @@ function MergedOptions({ state, pend, onPick, busy }) {
     <div className="opts">
       {groups.map(({ key, o, det, n }) => {
         const color = o.kind === 'color' ? o.value : null;
-        const q = color && state.quadrants.includes(color) ? quadrant(color) : null;
         return (
           <button
             key={key} type="button" className={`btn${color ? ' color' : ''}${det ? ' rich' : ''}`} data-option={o.id} disabled={busy}
@@ -178,11 +216,11 @@ function MergedOptions({ state, pend, onPick, busy }) {
             {color && <i />}
             {det ? (
               <span className="rich-body">
-                <b>{det.owner != null && <span className="from" style={{ color: playerColor(det.owner) }}>{state.players[det.owner].name}’s </span>}{det.name}{det.def && <BadgeMark state={state} def={det.def} />}{n > 1 && <span className="num copies"> {state.shop && state.shop.includes(o.value) ? `· ${n} in the shop` : `· ${n} of them`}</span>}{det.f != null && <> <Follower n={det.f} className="star" /></>}</b>
+                <b>{det.owner != null && <span className="from" style={{ color: playerColor(det.owner) }}>{state.players[det.owner].name}’s </span>}{det.name}{n > 1 && <span className="num copies"> {state.shop && state.shop.includes(o.value) ? `· ${n} in the shop` : `· ${n} of them`}</span>}{det.f != null && <> <Follower n={det.f} className="star" /></>}</b>
                 <small>{det.def ? <CardText text={det.text} /> : <Rich text={det.text} />}</small>
                 {det.cost && <small className="cost-line">Costs <span className="num">{det.cost}</span></small>}
               </span>
-            ) : (q ? q.name : withUnits(o.label, pend.prompt, state.resources))}
+            ) : withUnits(o.label, pend.prompt, state.resources) /* the engine's label, always: "+2 gold", never a bare "Gold" */}
           </button>
         );
       })}
@@ -198,7 +236,7 @@ const TradeCard = memo(function TradeCard({ state, g, busy, onClick, extra }) {
   return (
     <button type="button" className="btn rich" style={{ '--c': cardColor(state, g.d) }} disabled={busy} onClick={onClick} data-option={extra}>
       <span className="rich-body">
-        <b>{g.d.name}<BadgeMark state={state} def={g.d} />{g.uids.length > 1 && <span className="num"> ×{g.uids.length}</span>}{' '}<Follower n={g.d.f} className="star" />{g.o && <span className="from"> · {g.o.name}</span>}</b>
+        <b>{g.d.name}{g.uids.length > 1 && <span className="num"> ×{g.uids.length}</span>}{' '}<Follower n={g.d.f} className="star" />{g.o && <span className="from"> · {g.o.name}</span>}</b>
         <small><CardText text={g.d.text} /></small>
       </span>
     </button>
@@ -309,9 +347,21 @@ export function Popover({ anchor, onClose, children, float = false }) {
     const a = anchor.getBoundingClientRect();
     const w = Math.min(280, innerWidth - 24);
     const left = Math.max(12, Math.min(innerWidth - w - 12, a.left + a.width / 2 - w / 2));
-    const below = a.bottom + 8 + 120 < innerHeight;
+    // the side with more room: a member in a bottom chair opens above it, one up top opens below (then slid on screen)
+    const below = innerHeight - a.bottom >= a.top;
+    fitted.current = false;
     setPos({ left, width: w, top: below ? a.bottom + 8 : undefined, bottom: below ? undefined : innerHeight - a.top + 8 });
   }, [anchor]);
+  // once it's drawn, a card that would run off the top or the bottom of the window slides back on (RC1 saboteur: a
+  // member card from the bottom seats measured y=609–791 on a 700px window)
+  const fitted = useRef(false);
+  useLayoutEffect(() => {
+    if (sheet || !pos || !box.current || fitted.current) return;
+    fitted.current = true;
+    const b = box.current.getBoundingClientRect();
+    const top = Math.max(8, Math.min(b.top, innerHeight - 8 - b.height));
+    if (Math.abs(top - b.top) > 0.5) setPos(p => ({ ...p, top, bottom: undefined }));
+  }, [pos]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const close = e => { if (box.current && !box.current.contains(e.target) && e.target !== anchor && !anchor.contains(e.target)) onClose(); };
     const key = e => { if (e.key === 'Escape') onClose(); };
@@ -322,23 +372,25 @@ export function Popover({ anchor, onClose, children, float = false }) {
     return () => { removeEventListener('pointerdown', close, true); removeEventListener('keydown', key); removeEventListener('scroll', scroll, true); };
   }, [anchor, onClose]);
   if (!pos) return null;
+  // drawn at the page's top level, so no strip, zoomed chair or clipped box around its anchor can cover or shift it
+  const out = node => (typeof document !== 'undefined' ? createPortal(node, document.body) : node);
   if (sheet) {
     // a sheet blocks the board until it's closed (the backdrop takes stray taps), and always has a Close
-    return (
+    return out(
       <>
         <div className="sheet-backdrop" onPointerDown={e => { e.preventDefault(); e.stopPropagation(); onClose(); }} />
         <div className="popover sheet-pop" ref={box} role="dialog">
           <button type="button" className="btn ghost sheet-close" onClick={onClose}>Close</button>
           {children}
         </div>
-      </>
+      </>,
     );
   }
-  return <div className="popover" ref={box} role="dialog" style={pos}>{children}</div>;
+  return out(<div className="popover" ref={box} role="dialog" style={pos}>{children}</div>);
 }
 
 /** A member card face: color band, sphere glyph, name, worth, ability and list cost. */
 export function CardFace({ state, uid }) {
-  // one card face everywhere: badge, color (or colorless), keywords, cost and owner (Info.jsx)
+  // one card face everywhere: color (or colorless), keywords, cost and owner (Info.jsx)
   return <MemberCard state={state} uid={uid} />;
 }

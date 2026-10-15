@@ -71,7 +71,9 @@ function stealStep(ctx, p, data) {
       hint: n + 0.05 * ctx.followers(o) + (owed.includes(o) ? 5 : 0),
     });
     const owing = owed.length ? `, at least 1 from ${owed.map(o => o.name).join(', ')}` : '';
-    ctx.choose(p, `${data.name}: take 1 resource (${data.left} left${owing})`, opts, 'thieves.take', data);
+    // the count rides on the task, so a reload mid-steal keeps "1 of 3 taken"
+    const taken = Object.values(data.picked).reduce((t, pk) => t + Object.values(pk).reduce((a, b) => a + b, 0), 0);
+    ctx.choose(p, `${data.name}: take 1 resource (${data.left} left${owing})`, opts, 'thieves.take', data, { count: { of: data.left + taken, left: data.left } });
     return;
   }
   let got = 0;
@@ -134,7 +136,7 @@ const thieves = {
       resolve(ctx, p) { startSteal(ctx, p, 'Help Yourself', ctx.stealCount(p, ctx.state.round + 1, { say: true })); },
     },
     {
-      key: 'tipoff', ring: 1, name: 'Redistribute', text: 'Take 1 resource from each player holding more than you (they arrive as magenta).',
+      key: 'tipoff', ring: 1, name: 'Redistribute', text: 'Take 1 resource from each rival holding more resources than you (they arrive as magenta).',
       estimate: (ctx, p) => estimateSteal(ctx, p, richer(ctx, p).length, richer(ctx, p)),
       resolve(ctx, p) {
         const ids = richer(ctx, p).map(o => o.id);
@@ -157,13 +159,14 @@ const thieves = {
       resolve(ctx, p) { startSteal(ctx, p, 'Crime Wave', ctx.stealCount(p, 3, { say: true }), { each: ctx.rivals(p).map(o => o.id) }); },
     },
     {
-      key: 'ransom', ring: 2, name: 'Shake Down', text: 'Pick a rival’s member costing 6 or less. They pay you its cost to keep it (the payment arrives as magenta), or it’s yours.',
+      // Cory, 2026-10-15 (balance pass 1, #3): costing 4 or less, was 6 (both bots read it at 10–12u in round II)
+      key: 'ransom', ring: 2, name: 'Shake Down', text: 'Pick a rival’s member costing 4 or less. They pay you its cost to keep it (the payment arrives as magenta), or it’s yours.',
       estimate: (ctx, p) => {
-        const l = takeable(ctx, p, 6).filter(([, c]) => cost(c) > 0);
+        const l = takeable(ctx, p, 4).filter(([, c]) => cost(c) > 0);
         return l.length ? Math.max(...l.map(([, c]) => cost(c) * 1.33 + 0.5)) : 0;
       },
       resolve(ctx, p) {
-        const list = takeable(ctx, p, 6).filter(([, c]) => cost(c) > 0);
+        const list = takeable(ctx, p, 4).filter(([, c]) => cost(c) > 0);
         if (!list.length) { ctx.log(`${p.name} found no one to hold to ransom.`); return; }
         ctx.choose(p, 'Shake Down: which member?', list.map(([o, c]) => ({
           id: `card:${c.uid}`, label: `${o.name}'s ${c.def.name} (${cost(c)})`, kind: 'member', value: c.uid,
@@ -238,7 +241,7 @@ const thieves = {
   },
 
   members: [
-    m('cutpurse', 'Cutpurse', 2, 2, 'Now and at round start, take 1 resource from the rival holding the most (it arrives as magenta).', { now: true,
+    m('cutpurse', 'Cutpurse', 2, 2, 'Now and at round start, take 1 resource from the rival holding the most resources (it arrives as magenta).', { now: true,
       onRoundStart(ctx, owner) { const t = richest(ctx, owner); if (t) autoSteal(ctx, owner, t, 'Cutpurse'); },
     }),
     m('mole', 'Mole', 2, 2, 'Now and at round start, take 1 resource from each player with more followers than you (they arrive as magenta).', { now: true,
@@ -249,7 +252,7 @@ const thieves = {
     m('accomplice', 'Accomplice', 4, 4, 'When recruited: take 1 resource from each rival (they arrive as magenta).', {
       onRecruited(ctx, owner) { for (const o of ctx.rivals(owner)) autoSteal(ctx, owner, o, 'Accomplice'); },
     }),
-    m('grifter', 'Grifter', 4, 2, 'When recruited: take 1 resource per 2 members you have, from the rivals holding the most (they arrive as magenta).', {
+    m('grifter', 'Grifter', 4, 2, 'When recruited: take 1 resource per 2 members you have, from the rivals holding the most resources (they arrive as magenta).', {
       onRecruited(ctx, owner) {
         const n = Math.floor(ctx.memberCount(owner) / 2);
         for (let k = 0; k < n; k++) { const t = richest(ctx, owner); if (!t || !autoSteal(ctx, owner, t, 'Grifter')) break; }

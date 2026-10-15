@@ -13,6 +13,10 @@
     "balance": "node src/engine/v3/balance-test.mjs",
     "test:mp": "node .claude/mp-e2e.mjs",
     "check:v4": "node scripts/v4-check.mjs",
+    "check:v4:quick": "node scripts/v4-check.mjs --quick",
+    "check:v4:full": "node scripts/v4-check.mjs --full",
+    "test:v4:related": "V4_GAMES=fast vitest related --run",
+    "retro:v4": "node scripts/v4-retro.mjs",
     "records:refresh": "node scripts/v4-records-refresh.mjs",
     "sim:v4": "node scripts/v4-sim.mjs",
     "bench:v4": "node scripts/v4-bench.mjs"

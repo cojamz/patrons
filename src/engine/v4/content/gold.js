@@ -87,8 +87,14 @@ export default {
     m('prospector', 'Prospector', 2, 2, 'Whenever an action gains you gold, +1 more.', {
       afterGain(ctx, owner, card, g) { if (g.fromAction && g.color === 'gold' && g.n > 0) owner.res.gold += 1; },
     }),
-    m('taxman', 'Tax Collector', 2, 2, 'Whenever a rival buys followers, +1 gold.', {
-      onBuyFollowers(ctx, owner, card, buyer) { if (buyer !== owner) ctx.gain(owner, 'gold', 1); },
+    // Cory, 2026-10-15 (balance pass 1, #1): only the top rival pays it, about a third of what any rival paid
+    // (both bots read the old card at 8.7 for 4). Ties for the most all count; it's measured before the buy lands.
+    m('taxman', 'Tax Collector', 2, 2, 'Whenever the rival with the most followers buys followers, +1 gold.', {
+      onBuyFollowers(ctx, owner, card, buyer, tier) {
+        if (buyer === owner) return;
+        const before = o => ctx.followers(o) - (o === buyer ? (tier && tier.get) || 0 : 0);
+        if (ctx.rivals(owner).every(o => before(o) <= before(buyer))) ctx.gain(owner, 'gold', 1);
+      },
     }),
     m('merchant', 'Merchant', 4, 2, 'Whenever anyone recruits a gold member, +1 gold.', {
       onAnyRecruit(ctx, owner, card, by, recruited) {
@@ -106,6 +112,17 @@ export default {
         if (g.color === 'gold' && !g.doubled && ctx.state.players.some(o => o !== owner && o.res.gold > owner.res.gold)) {
           g.n *= 2; g.doubled = true;
         }
+      },
+      // the preview's reason when a gold gain isn't doubled (no rule here): who made you the richest, if it was
+      // a gain earlier in the same move (Hustler's +3 lands before the space's own gold)
+      whyNot(ctx, owner, card, g) {
+        if (g.color !== 'gold' || g.doubled) return null;
+        const top = Math.max(0, ...ctx.rivals(owner).map(o => o.res.gold || 0));
+        if (top > owner.res.gold) return null;
+        const earlier = (ctx.state.notes || []).filter(n => n.p === owner.id && n.member !== card.def.name && n.res && n.res.gold > 0);
+        const got = earlier.reduce((t, n) => t + n.res.gold, 0);
+        if (earlier.length && owner.res.gold - got < top) return `no ×2 (${earlier.map(n => `${n.member}’s +${n.res.gold}`).join(', ')} lands first)`;
+        return `no ×2 (no one has more gold than your ${owner.res.gold})`;
       },
     }),
     m('tinker', 'Tinker', 4, 2, 'Whenever an action gains you another resource, also gain half as much gold (rounded up).', {
@@ -166,9 +183,12 @@ function stealStep(ctx, p, data) {
   const left = o => o.res.gold - (data.picked[o.id] || 0);
   const targets = ctx.rivals(p).filter(o => left(o) > 0 && ctx.canSteal(p, o));
   if (data.left > 0 && targets.length) {
+    // the count rides on the task (1 of 3 taken), so a reload mid-split shows the same progress
+    const taken = Object.values(data.picked).reduce((a, b) => a + b, 0);
     ctx.choose(p, `Collect Debts: take 1 gold from… (${data.left} left)`, targets.map(o => ({
       id: `player:${o.id}`, label: `${o.name} · ${left(o)} gold`, kind: 'player', value: o.id, hint: left(o),
-    })), 'gold.steal', data);
+      target: { pid: o.id, res: 'gold' }, // their gold stack is what you click (the seat selector)
+    })), 'gold.steal', data, { count: { of: data.left + taken, left: data.left } });
     return;
   }
   let got = 0;

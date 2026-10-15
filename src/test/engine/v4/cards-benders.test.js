@@ -88,11 +88,30 @@ describe('Guest members (rule-benders)', () => {
     expect(named(s, 'Front-runner')[0]).toMatch(/P1's Front-runner: always picks first/);
   });
 
-  it('Straggler: after the last placement, move a worker to an unused space and do it; named', () => {
+  it('Straggler: after the last placement, your last minion moves to an unused space and does it; named', () => {
     let s = sceneQ({ round: 2, members: [['benders.straggler']], slots: { '0-0': 0 }, queue: [{ t: 'allPlaced' }] });
-    s = move(move(s, 'from:0-0'), 'to:0-1');
+    s = move(s, 'to:0-1');
     expect(s.players[0].res.gold).toBe(4);
     expect(s.slots['0-0']).toBeUndefined();
     expect(named(s, 'Straggler')).toHaveLength(1);
+  });
+
+  it('Straggler asks only where to go: the minion is the last one you placed (Cory, 2026-10-15)', () => {
+    let s = sceneQ({ round: 2, members: [['benders.straggler']], slots: { '0-0': 0, '1-0': 0 }, queue: [{ t: 'allPlaced' }] });
+    s.queue = [{ t: 'allPlaced' }]; s.pending = null; s.players[0].lastSlot = { key: '0-0', joined: false };
+    s = resume(s);
+    expect(s.pending.options.every(o => o.id.startsWith('to:') || o.id === 'no')).toBe(true);
+    expect(s.pending.prompt).toMatch(/your last minion/);
+    s = move(s, 'to:0-1');
+    expect(s.slots['0-0']).toBeUndefined(); // the last-placed minion moved (not just the last in board order)
+    expect(s.slots['1-0']).toBe(0); // the other one stayed
+    expect(s.slots['0-1']).toBe(0);
+  });
+
+  it('Straggler: Stay put leaves the board as it was', () => {
+    let s = sceneQ({ round: 2, members: [['benders.straggler']], slots: { '0-0': 0 }, queue: [{ t: 'allPlaced' }] });
+    s = move(s, 'no');
+    expect(s.slots['0-0']).toBe(0);
+    expect(Object.values(s.slots).filter(o => o === 0)).toHaveLength(1);
   });
 });
