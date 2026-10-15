@@ -17,7 +17,7 @@ describe('panel words (w3)', () => {
   });
 
   it('a gain that grows by round says so in rounds I and II, and not in III (w3a #54: "+2●" read as flat)', () => {
-    for (const [qid, key] of [['gold', 'rush'], ['purple', 'hourly'], ['echo', 'chant'], ['silver', 'toast'], ['thieves', 'pickpocket'], ['trading', 'buylow'], ['trading', 'pawn']]) {
+    for (const [qid, key] of [['gold', 'rush'], ['purple', 'hourly'], ['echo', 'chant'], ['silver', 'toast'], ['thieves', 'pickpocket'], ['trading', 'pawn']]) {
       for (const r of [1, 2]) expect(lines(panelText(qid, { key }, r)), `${qid}.${key} round ${r}`).toContain('more each round');
       expect(lines(panelText(qid, { key }, 3)), `${qid}.${key} round III`).not.toContain('more each round');
     }

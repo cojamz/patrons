@@ -27,7 +27,8 @@ const lastTurn = (ctx, p) => ctx.state.round === 3 && p.left === 0;
 
 export const SELL_HIGH = { most: 2, each: 3 };
 export const PAWN = { each: 2 }; // Your Call: per round number, +1 follower or this much white
-export const BUY_LOW = { per: 2 }; // up to this many resources per round number, 1 for 1
+export const BUY_LOW = { per: 2 }; // the old Cheap Seats (1 for 1, this many per round number); its handler stays for old saves
+export const CHEAP_SEATS = { per: 3 }; // white held per follower
 export const LIQUIDATE = { most: 5, each: 2 };
 // All In pays this many followers per resource (experiments try 0.5: 2 resources per follower)
 export const BOOM = { per: 1 };
@@ -80,11 +81,15 @@ const trading = {
       resolve(ctx, p) { ctx.gain(p, W, 2 + ahead(ctx, p), { fromAction: true }); },
     },
     {
-      key: 'buylow', ring: 1, name: 'Cheap Seats', text: `Trade resources for followers, 1 for 1: up to ${BUY_LOW.per} in round I, ${2 * BUY_LOW.per} in round II, ${3 * BUY_LOW.per} in round III.`,
-      estimate: (ctx, p) => Math.min(BUY_LOW.per * ctx.state.round, totalRes(p)) * (fv(ctx) - 0.9) + 0.4,
+      // Cory, 2026-10-15: was "trade resources for followers, 1 for 1, up to 2 per round number" (the shop does that,
+      // and it charged you): now it pays for holding white, which is what White scores
+      key: 'buylow', ring: 1, name: 'Cheap Seats', text: `+1 follower per ${CHEAP_SEATS.per} white you hold (you keep the white).`,
+      estimate: (ctx, p) => Math.floor((p.res[W] || 0) / CHEAP_SEATS.per) * fv(ctx),
       resolve(ctx, p) {
-        if (!totalRes(p)) { ctx.log(`${p.name} had nothing to trade.`); return; }
-        buyLowStep(ctx, p, { left: BUY_LOW.per * ctx.state.round, done: 0 });
+        const n = Math.floor((p.res[W] || 0) / CHEAP_SEATS.per);
+        if (!n) { ctx.log(`${p.name}'s Cheap Seats: fewer than ${CHEAP_SEATS.per} white, no followers.`); return; }
+        actionFollowers(ctx, p, n);
+        ctx.log(`${p.name}'s Cheap Seats: +${n} follower${n > 1 ? 's' : ''} (${p.res[W]} white held).`);
       },
     },
     {

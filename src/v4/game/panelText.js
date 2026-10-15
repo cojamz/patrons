@@ -101,7 +101,7 @@ const P = {
   trading: {
     // "+1 per higher score" (w3b): the players ahead are rivals with more followers
     haggle: { main: '+2 white', second: '+1 per rival with more @f' },
-    buylow: r => ({ verb: 'Trade for followers', second: `1 for 1, up to ${2 * r}`, note: grows(r) }),
+    buylow: { main: '+1 @f', second: 'per 3 white you hold' },
     pawn: r => ({ main: `+${r} @f`, second: `or +${2 * r} white`, note: grows(r) }),
     // the gain first: "Sell followers" lost its "3 white each" on ring II whenever the panel was tight (w3 words pass)
     sellhigh: { main: '+3 white', second: 'per follower sold', note: 'up to 2' },

@@ -111,7 +111,7 @@ const SUMS = {
   'thieves.heist': () => [MEM({ rival: true }), ARROW, MEM()], //                                  ☗▢ → ▢        (they recruit one back: hover)
   // trading (white): followers
   'trading.haggle': ({ n }) => [R('white', plus(n(0, 2))), NUM(plus(n(1, 1))), PER, HOOD({ mod: 'high' })], // +2⬡ +1/▴☗
-  'trading.buylow': ({ n, r }) => [R('any', n(0, 2) * r), ARROW, FOL(n(0, 2) * r)], //       2◌ → 2☺
+  'trading.buylow': () => [FOL('+1'), PER, R('white', '3')], //                                   +1☺ / 3⬡
   'trading.pawn': ({ r }) => [FOL(plus(r)), WORD('or'), R('white', plus(2 * r))], //               +1☺ or +2⬡
   'trading.sellhigh': ({ n }) => [FOL(n(0, 2)), ARROW, R('white', n(0, 2) * n(1, 3))], //            2☺ → 6⬡
   'trading.dividend': () => [R('white', '+1'), PER, FOL()], //                                     +1⬡ / ☺

@@ -195,7 +195,7 @@ const S = {
   },
   trading: {
     haggle: [['2', 'white'], ['1', '/', 'rup']],
-    buylow: r => [[`${2 * r}`, 'any', '→', 'f']],
+    buylow: [['1', 'f', '/', '3', 'white']],
     pawn: r => [[`${r}`, 'f', '|', `${2 * r}`, 'white']],
     sellhigh: [['2', 'f', '→', '6', 'white']],
     dividend: [['1', 'white', '/', 'f']],

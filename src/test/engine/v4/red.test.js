@@ -180,7 +180,7 @@ describe('Red members', () => {
     s = take(s, 'red.turnout');
     s = move(s, 'tier:small');
     expect(R(s)[0]).toMatchObject({ red: 1, blue: 0 });
-    expect(fol(s, 0)).toBe(3);
+    expect(fol(s, 0)).toBe(4);
   });
 
   it('Doppelganger: copies one of your members (Banker pays twice; the copy\'s "now" +3 comes at once)', () => {

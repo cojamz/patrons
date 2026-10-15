@@ -160,14 +160,14 @@ describe('shop', () => {
 });
 
 describe('follower buys', () => {
-  it('2 of anything buys 1 follower', () => {
+  it('2 of anything buys 2 followers', () => {
     let s = scene({ res: [{ gold: 2 }] });
     s = take(s, 'blue.a1');
     expect(hasOpt(s, 'tier:small')).toBe(true);
     s = move(s, 'tier:small');
     // gold is spent last
     expect(R(s)[0]).toEqual({ gold: 2, red: 0, blue: 1, green: 0 });
-    expect(fol(s, 0)).toBe(2);
+    expect(fol(s, 0)).toBe(3);
   });
 
   it('follower buys take any resources, one color is fine (Cory, 2026-10-14): 4 buys 4, 8 buys 8, 10 buys 10', () => {

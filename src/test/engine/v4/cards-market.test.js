@@ -97,7 +97,7 @@ describe('Blue actions', () => {
     expect(s.pending?.kind).toBe('buy');
     expect(s.pending.extra).toBe(true);
     s = move(s, 'tier:small');
-    expect(s.players[0].bonus).toBe(1);
+    expect(s.players[0].bonus).toBe(2);
     expect(s.log).toContain('P1 uses Big Spender.');
   });
 
@@ -117,14 +117,14 @@ describe('Blue actions', () => {
     s = take(s, 'market.spree');
     expect(s.log).toContain('P1 goes on a spree: 3 buys this turn.');
     for (let k = 0; k < 3; k++) { expect(s.pending.kind).toBe('buy'); s = move(s, 'tier:small'); }
-    expect(s.players[0].bonus).toBe(3);
+    expect(s.players[0].bonus).toBe(6);
     expect(s.pending?.kind).not.toBe('buy');
   });
   it('× Big Spender: Spree plus Big Spender is 4 buys', () => {
     let s = table(Q, { round: 3, res: [{ gold: 4, red: 4 }], shop: ROW, left: 5, members: [['benders.bigspender']] });
     s = take(s, 'market.spree');
     for (let k = 0; k < 4; k++) { expect(s.pending.kind).toBe('buy'); s = move(s, 'tier:small'); }
-    expect(s.players[0].bonus).toBe(4);
+    expect(s.players[0].bonus).toBe(8);
     expect(s.pending?.kind).not.toBe('buy');
   });
 });
