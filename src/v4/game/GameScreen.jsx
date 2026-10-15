@@ -30,6 +30,7 @@ import PayPicker from './PayPicker.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains } from './flight.js';
+import { playChain, planChain, installChainSkip, onChainSkip, noteTable } from './director.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT } from '../motion.js';
 import { boardPicker, seatPart, shopLookup, pickCaption } from './boardPick.js';
@@ -518,14 +519,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const wasOnWheel = minionSnap.current;
     if (state.round >= 1 && state.players.every(p => !p.left)) minionSnap.current = snapshotMinions(root.current);
     else if (state.round !== before.round) minionSnap.current = [];
-    if (before === state) { if (!shopSnap.current.size) shopSnap.current = snapshotShop(root.current); return undefined; }
-    if (state.round !== before.round && before.round >= 1) flyMinionsHome(root.current, wasOnWheel);
-    const flights = before.shop.filter(u => !state.shop.includes(u))
-      .map(uid => ({ uid, to: state.players.findIndex(p => p.members.includes(uid)) }))
-      .filter(m => m.to >= 0);
-    if (flights.length) { flyCards(root.current, shopSnap.current, flights); slideShop(root.current, shopSnap.current); }
-    // every gain and payment travels from its source to where it lands (gains.js reads the engine's diff and log)
-    flyGains(root.current, gainsBetween(before, state), { snap: shopSnap.current, before });
+    if (before === state) { if (!shopSnap.current.size) shopSnap.current = snapshotShop(root.current); noteTable(root.current); return undefined; }
+    // the move plays as a chain (director.js, the motion language in design/prototypes/motion/grammar.md): the
+    // selection, then each cause's effects from the engine's stream, in order, every count ticking as pieces land
+    const played = playChain(root.current, before, state, { snap: shopSnap.current, minionsBefore: state.round !== before.round && before.round >= 1 ? wasOnWheel : null, mine: mySeats });
 
     const lines = newLogLines(before, state);
     // Gifts float onto the receiver's card, worded as what they are: the receiver gains (nobody loses).
@@ -563,7 +560,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const skipped = lines.find(l => mySeats.some(id => l === `${state.players[id].name} couldn't buy anything.`));
     if (skipped) {
       const msg = humansHere ? skipped.replace("couldn't buy anything.", 'can’t afford anything. Turn passes.') : 'Nothing you can afford. Turn passes.';
-      setTimeout(() => showToast(msg, 2000), flights.length && motionOK() ? MO.afterFlight : 0);
+      setTimeout(() => showToast(msg, 2000), motionOK() ? played.total : 0);
     }
 
     // A new minion travels from its leader to the space. The board never turns itself: a rival's move is marked
@@ -573,7 +570,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     const key = fresh[fresh.length - 1];
     const owner = state.slots[key];
     lastFlash.current = freshFlash;
-    flyWorker(root.current, owner, key, playerColor(owner), { own: mySeats.includes(owner) && state.round === before.round });
+    void owner; // (the minion's flight is the chain's first step: director.js)
     const t = setTimeout(() => setFlashOff(freshFlash), 2000);
     return () => clearTimeout(t);
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps

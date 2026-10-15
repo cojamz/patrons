@@ -231,3 +231,138 @@ Then a 180ms breath and the next player. The bot's own steps inside its turn (it
 **Thinking never shows as waiting.** The engine runs ahead of the screen: the next bot's move is computed while the current chain plays, and the table plays the queue. The only time the table waits on a bot is when its thinking takes longer than the chain in front of it.
 
 **The backlog stays short.** The screen never falls more than one turn behind the engine. When a whole turn is queued behind the chain that's playing, the queued chains play at Quick; when two are queued, the oldest lands at once (crossfade, 120ms) and the newer one plays. A move is never on screen later than 2.5s after the engine applied it.
+
+### Numbers stay honest while things overlap
+- A stack never sends while pieces are still flying into it: its departure waits for the last arrival (+40ms). Otherwise its number would read wrong for a moment.
+- A number that's rolling and gets another arrival extends its roll to the new total; it never shows two jumps.
+- The held number on a stack or count lets go to the engine's number when its last piece lands, when the chain is skipped, or 200ms after the chain's planned end, whichever comes first.
+
+## 6. Skips and inputs
+
+- **Skip:** a click or tap anywhere, or Space, jumps the chain that's playing to its end in one frame: every ghost gone, every held number set to the engine's with a 100ms crossfade (no roll, no settle), the shop in its final order with no slide. The next chain (the next rival's turn) still plays from its start.
+- **Fast-forward:** Space twice within 400ms, or Space held, lands every queued chain up to your turn, one every 120ms in turn order (the turn cards flick through), and the since-your-last-turn strip carries the story.
+- **A click on something live skips and acts in the same frame.** Clicking a space or a shop card mid-chain finishes the chain and does what you clicked. The double-tap guard (`MO.stepLock`) never eats a click that skipped a chain.
+- **Input never waits on decoration.** Your spaces take a click from the moment the engine says it's your turn, even while a rival's chain plays (a click then skips it). Their lit look, the one glow, fades in (150ms) when that chain's main beat has landed, so the glow doesn't compete with the show.
+- **Hovers** work during chains. Ghosts take no pointer events.
+- **Reduced motion** (the system setting, or the menu): nothing travels, hops, tugs or bounces. Each beat's end state appears with a 120ms crossfade on the numbers that change, and the place that changed gets a 1px light outline for 400ms. Beats keep their order and Quick spacing (about 150ms a beat), so a rival's turn still reads in order. Cards crossfade in place (the shop card out, the chip in). The Reckoning shows each rim's result in turn, 400ms apart.
+- **A hidden tab** finishes every chain at once; nothing plays catch-up on return. A resize or a layout change mid-chain skips the chain. A change of speed applies from the next chain.
+- **Off-screen places** (a phone's folded seat): a piece flies to the nearest visible stand-in for it (the seat's header), never off screen. If neither end is visible, nothing flies and the number crossfades.
+- **Online:** effects aren't sent over the wire. A guest replays the host's move from the state before it with `effects: true` (the engine is deterministic) to get the same chain; if it can't (it missed moves), it crossfades to the new state rather than tell a wrong story.
+
+## 7. Five turns, frame by frame (Steady)
+
+Distances are at 1270×700 on today's layout: seats on the left, the wheel in the middle, the shop row along the bottom, the follower rates at the bottom right.
+
+### 1. A simple gain, then a member buy (your turn, round II)
+You hold 3 gold, 2 green, 2 white and 11 followers. You take Golden Years ("+2 gold per round number": +4 now), then recruit Banker (4 gold + 4 any, worth 1: "Now and at round start, +3 gold").
+
+**Chain A: the placement** (t = your press on Golden Years)
+| ms | What happens |
+|---|---|
+| 0 | Golden Years presses. Your minion stands in its door (stamp, 0–140). A trail leaves the foot of your minion column and fades onto the space (0–180); the column closes its gap (0–160). |
+| 60 | Golden Years pulses (60–150). |
+| 120 | A "+4●" gold bundle leaves the space on an arc, ~480px, 344ms. |
+| 464 | It lands on your gold: settle at 1.24 (464–644), the number rolls 3 → 7 (464–704). The shop cards you can now afford un-fade as it lands, not before. |
+| 704 | Done: 0.70s. You could have clicked a card at any moment. |
+
+**Chain B: the recruit** (t = your press on Banker)
+| ms | What happens |
+|---|---|
+| 0 | Banker presses and lifts (0–120). The coins leave: the "−4●" gold bundle at 0 (your gold rolls 7 → 3 as it leaves), green at 40 and 100 (2 → 1 → 0), white at 80 and 140 (2 → 1 → 0). Drops, ~500px, 350ms. |
+| 350–490 | The coins land in the card, fading as they go in. |
+| 373 | The last coin is two-thirds there: Banker leaves on an arc to your crowd, shrinking to its chip (373–753). The row closes its gap (420–660). |
+| 660 | The pile's top card lifts (43 → 42), deals face down and turns up in the gap (660–960). Bookkeeping. |
+| 753 | Banker's chip lands: settle (753–933), landing ring (753–1013). Its 1 follower rises out of the chip and arcs to your count (753–993): 11 → 12, settle. |
+| 913 | The worth is two-thirds there: Banker hops (913–1093). "Now: +3 gold". |
+| 1013 / 1073 / 1133 | Three gold dots leave Banker, ~90px, 260ms. |
+| 1273 / 1333 / 1393 | They land: gold 3 → 4 → 5 → 6, a settle each. |
+| 1573 | Done: 1.57s (a plain recruit ends at 0.99s). |
+
+### 2. A steal, with your Tax Collector reacting (P2's turn, round II)
+P2, a bot, has the most followers (14). You hold 5 gold and own Tax Collector ("Whenever the rival with the most followers buys followers, +1 gold"). P2 takes Collect Debts ("Take up to 3 gold from rivals, split however you like"): 2 from you, 1 from P4. Then P2 buys followers, 4 for 3.
+
+| ms | What happens |
+|---|---|
+| 0 | The turn marker is already on P2 (it slid during the last breath). P2's bottom minion lifts out of its column and arcs to Collect Debts (0–380). |
+| 320 | It stamps into the door (320–460). The read hold runs to 540, with the space's pulse in its last 90ms (450–540). |
+| 470 | Your gold tugs toward P2 (470–560). |
+| 560 / 620 | Two gold dots leave your stack on straight lines, your gold 5 → 4 → 3 as each goes; ~450px, 335ms. |
+| 660 | P4's gold tugs (660–750); one dot leaves at 750 (P4 2 → 1); ~170px, 260ms. |
+| 895 / 955 | Yours land on P2's gold: 2 → 3 → 4, full settles (P2's own beat). |
+| 1010 | P4's lands: 4 → 5. P2's turn card ("took 3● from rivals") appears with this last landing. |
+| 1050 | P2's gold has stopped receiving, so it can send: the "−4●" bundle drops toward the 4-for-3 tile (P2's gold rolls 5 → 1 as it leaves); ~950px, 440ms. |
+| 1490 | The tile accepts: press (1490–1570), pop (1570–1650). |
+| 1550 / 1610 / 1670 | Three follower marks leave the tile on arcs to P2's count, ~950px, 440ms. |
+| 1990 / 2050 / 2110 | They land: 14 → 15 → 16 → 17. |
+| 1963 | The last mark is two-thirds there: your Tax Collector hops (1963–2143). |
+| 2063 | One gold dot leaves it for your gold, ~90px, 260ms. |
+| 2323 | It lands: 3 → 4, a full settle, plus your 60ms hold (to 2563). |
+| 2743 | Breath done; the next player's minion leaves. P2's turn: 2.74s (a rich one: inside the p95, over the p50). |
+
+### 3. A copy (your turn, round II)
+P3 took Crescendo ("+2 green per round number": +4) since your last turn and owns Muse ("Whenever a rival copies one of your spaces, +2 green"). You own Choir ("Whenever you copy a space, +1 green") and hold 2 green. You take Echo ("Copy a space a rival took since your last turn"); two spaces qualify.
+
+| ms | What happens |
+|---|---|
+| 0 | Echo presses; your minion stands; the trail (0–180). Echo pulses (60–150). The two spaces you could copy take the glow, and the chain waits for your pick. |
+| 0′ | You click Crescendo; it presses. A 2px cream line draws from Echo to Crescendo across the wheel (0–160). |
+| 100 | Crescendo pulses with P3's minion in its door (100–190); the line fades (160–260). |
+| 160 | A "+4●" green bundle leaves **Crescendo** (not Echo) on an arc to your green, ~450px, 335ms. |
+| 383 | The bundle is two-thirds there: Choir hops (383–563). |
+| 483 | One green dot leaves Choir for your green, ~90px, 260ms. |
+| 495 | The bundle lands: 2 → 6 rolling (495–735), settle at 1.24. |
+| 656 | Choir's dot is two-thirds there: P3's Muse hops (656–836). |
+| 743 | Choir's dot lands: the roll's target becomes 7. |
+| 756 / 816 | Two green dots leave Muse for P3's green, ~100px, 260ms. |
+| 1016 / 1076 | They land, lighter settles. |
+| 1256 | Done: 1.26s after your pick. |
+
+### 4. Followers at 10 for 10 (your turn, round III)
+You hold 4 gold, 3 purple, 5 white and 18 followers. You own Bulk Buyer ("Whenever you buy 3 or more followers, +1 more"). P4 owns Tipster ("Whenever a rival buys followers, +1 white").
+
+| ms | What happens |
+|---|---|
+| 0 | The 10-for-10 tile presses. The coins leave: the "−4●" gold bundle at 0 (4 → 0), purple at 40, 100, 160 (3 → 0), white at 80, 140, 200 (5 → 2). Drops, ~1000px, 440ms. Nine ghosts in the air at the peak. |
+| 440–640 | The coins land in the tile, fading as they go in. |
+| 640 | The tile accepts: press (640–720), pop (720–800). |
+| 700 | A "+10" follower bundle leaves the tile on an arc to your count, ~1050px, 440ms. |
+| 993 | The bundle is two-thirds there: Bulk Buyer hops (993–1173). |
+| 1093 | One follower rises out of Bulk Buyer for your count, ~90px, 260ms. |
+| 1140 | The bundle lands: 18 → 28 rolling (1140–1380), settle at 1.24. |
+| 1266 | Bulk Buyer's follower is two-thirds there: P4's Tipster hops (1266–1446). |
+| 1353 | Bulk Buyer's follower lands: the roll's target becomes 29. |
+| 1366 | One white dot leaves Tipster for P4's white, ~100px, 260ms. |
+| 1626 | It lands, a lighter settle. |
+| 1806 | Done: 1.81s. |
+
+### 5. The Reckoning (end of round II, prize +4)
+Rims clockwise from the top: Most White, Most Purple, Most Gold, Most Green. You own Investor with 3 gold set aside and hold 4 gold; P2 holds 8. P4 leads White, P2 and P3 tie on Purple (both score), P3 leads Green, and Gold is decided by Investor.
+
+| ms | What happens |
+|---|---|
+| 0 | The last placement's chain has ended. The wheel's spaces step down to 60%; the rims stay lit. |
+| 0 | Round-end members first. Investor hops (0–180); its parked "3" stamps to "6" (100–240). |
+| 240 | A "+6●" bundle arcs from Investor to your gold, ~90px, 260ms. |
+| 500 | It lands: 4 → 10 rolling (500–740). As the roll ends, the Most Gold rim's emoji changes from P2's to yours (stamp, 740–880). |
+| 900 | Most White pulses (900–990); P4's emoji on the rim hops (960–1140). |
+| 1060 | A "+4" follower bundle lifts off the rim's engraving and arcs to P4's count, ~700px, 410ms. |
+| 1470 | It lands: rolling (1470–1710), a lighter settle. |
+| 1830 | After a 120ms rest, Most Purple pulses; P2's and P3's emojis hop together (1890–2070). |
+| 1990 / 2030 | Two "+4" bundles fan out, to P2 and to P3; they land about 2400 and 2440, and the rolls end about 2680. |
+| 2800 | Most Gold pulses; your emoji hops (2860–3040). |
+| 2960 | A "+4" bundle arcs to your count, ~520px, 356ms; it lands at 3316, rolls to 3556, full settle and your 60ms hold. |
+| 3740 | Most Green pulses; P3's emoji hops; the bundle leaves at 3900, lands about 4310, rolls to 4550. |
+| 4670 | Done: 4.67s from the round's end (3.65s from the first rim, inside H10). The round card shows the standings. |
+
+After the round card: the minions fly home, all at once, 30ms apart (16 minions, 0–820), then round III's income seat by seat, 200ms apart (about 1.1s), then the first turn.
+
+## 8. What changes from today's code (for the builder)
+
+1. `MO.pieceFly` 260 fixed → flight time from distance (section 4), by speed.
+2. `MO.pieceStagger` 40 and `MO.pieceMax` 10 → up to 3 single pieces 60ms apart; 4 or more fly as one bundle with its count.
+3. `ghostFly`'s three-keyframe arc → a true arc (two layers); add the line, drop and cross paths.
+4. `BOT.pace` (a fixed hold per bot step) and `BOT.myRecruitHold` → the chain is the pace; `BOT.pace` stays only as the floor for a step with nothing to show (a pass).
+5. The turn card appears at its chain's last landing, not when the move is applied.
+6. `MO.react` (a 900ms seat reaction) → the 180ms hop on the member that acted; the seat itself doesn't react.
+7. `gains.js` (state diff plus log parsing) → the engine's `effects` stream, with the two pairings in M3 (a magenta steal) and M7 (a recruit's worth).
+8. The speed setting's names: Quick, Steady (default), Relaxed.

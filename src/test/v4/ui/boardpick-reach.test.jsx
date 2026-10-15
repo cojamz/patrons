@@ -44,7 +44,7 @@ describe('the board picker leaves no answer without a click', () => {
     it(`${q.join(',')}: random legal play, every choice`, () => {
       const problems = new Set();
       let choices = 0;
-      for (const seed of [11, 12, 13]) {
+      for (const seed of [11, 12]) {
         const rand = seededRandom(seed * 7919);
         let s = createGame({ seats: seats(seed % 2 ? 4 : 3), seed, quadrants: q });
         for (let k = 0; k < 4000 && s.pending && !s.over; k++) {

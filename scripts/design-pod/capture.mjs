@@ -75,6 +75,7 @@ async function load1(pack) {
   await page.goto(url());
   await page.click('[data-home="resume"]', { timeout: 60000 });
   await page.waitForSelector('.lt-shop .card', { timeout: 20000 });
+  await page.mouse.move(4, 696); // park the pointer on the table's edge: no stray hover in the shot
   await settle(900);
 }
 async function placeAndAnswer() {

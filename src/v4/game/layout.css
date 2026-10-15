@@ -5,7 +5,7 @@
      The chairs in turn order on the left, the story of the turns since yours under them; the wheel takes the full
      height in the middle; the shop is a column on the right: the deck and the members, then the followers. */
   .app.game.lt[data-layout="a"]{
-    grid-template-columns:minmax(260px,314px) minmax(0,1fr) minmax(200px,288px);
+    grid-template-columns:minmax(280px,340px) minmax(0,1fr) minmax(220px,280px);
     grid-template-rows:54px minmax(0,1fr);
     grid-template-areas:"seats prompt shop" "seats wheel shop";
     padding:8px 18px
@@ -15,10 +15,14 @@
     max-height:calc(100% - var(--seats-end, 0px) - 20px - 112px)}
   .app.game.lt[data-layout="a"] > .lt-shop{grid-area:shop;align-self:stretch;overflow:hidden}
   .lt[data-layout="a"] .lt-shop-cards{flex-direction:column;gap:20px;height:100%}
-  .lt[data-layout="a"] .lt-shop-main{flex:none}
-  .lt[data-layout="a"] .lt-shop-body{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  /* the members fill the column (cards grow to the plate's portrait shape), the followers sit at its foot */
+  .lt[data-layout="a"] .lt-shop-main{flex:1 1 auto;min-height:0}
+  .lt[data-layout="a"] .lt-shop-body{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:8px}
   .lt[data-layout="a"] .lt-shop-body > .lt-cards{display:contents}
-  .lt[data-layout="a"] .lt-deck{height:auto;min-height:104px;flex:none}
+  .lt[data-layout="a"] .lt-card.card{height:auto;min-height:0;max-height:132px}
+  .lt[data-layout="a"] .lt-card .art{flex:1 1 auto;height:auto;min-height:48px}
+  .lt[data-layout="a"] .lt-deck{height:auto;min-height:0;max-height:132px;flex:none}
+  .lt[data-layout="a"] .lt-rates{flex:none}
   .lt[data-layout="a"] .lt-rates-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:52px;gap:8px}
 
   /* ---------- B: the followers get the right column ----------
