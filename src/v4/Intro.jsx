@@ -180,25 +180,25 @@ export default function Intro({ onClose, still: stillProp, only = null, at = nul
     if (root.current && root.current.getAnimations) for (const a of root.current.getAnimations({ subtree: true })) a.startTime = t0.current;
     setKick(k => k + 1);
   }, [one, at]);
-  // once the first frame has run, the clock's 0 is that frame's time (later mounts and the beat timers use it)
+  // once everything created for the first frame has started (composited ones can start a frame or two after the
+  // rest), the clock's 0 is the latest of their starts; every animation is put on it, and later mounts use it
   useEffect(() => {
-    if (still || at != null || typeof requestAnimationFrame !== 'function') return undefined;
+    if (still || at != null || !root.current || typeof root.current.getAnimations !== 'function') return undefined;
     t0.current = null;
-    let id = requestAnimationFrame(() => {
-      id = requestAnimationFrame(() => {
-        const a = cam.current && cam.current.getAnimations ? cam.current.getAnimations()[0] : null;
-        const start = a && a.startTime != null ? a.startTime : nowT0();
-        if (start != null) {
-          t0.current = start;
-          // composited and main-thread animations can resolve a frame apart: put every one on the same 0
-          if (root.current && root.current.getAnimations) for (const x of root.current.getAnimations({ subtree: true })) if (x.constructor === Animation && x.startTime != null) x.startTime = start;
-          if (Math.abs(origin.current - start) > 40) { origin.current = start; setKick(k => k + 1); }
-        }
-      });
+    let live = true;
+    const id = requestAnimationFrame(() => {
+      const anims = root.current ? root.current.getAnimations({ subtree: true }).filter(x => x.constructor === Animation) : [];
+      Promise.all(anims.map(x => x.ready)).then(() => {
+        if (!live || t0.current != null) return;
+        const start = Math.max(...anims.map(x => x.startTime ?? -Infinity));
+        if (!Number.isFinite(start)) return;
+        for (const x of anims) x.startTime = start;
+        t0.current = start;
+        if (Math.abs(origin.current - start) > 40) { origin.current = start; setKick(k => k + 1); }
+      }, () => {});
     });
-    return () => cancelAnimationFrame(id);
+    return () => { live = false; cancelAnimationFrame(id); };
   }, [still, at, loop]);
-
   // the beat (for the caption's live region, Esc, the dots): follows the timeline; the lab loops its one beat
   useEffect(() => {
     if (still || closing || at != null) return undefined;
