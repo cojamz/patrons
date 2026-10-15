@@ -18,7 +18,8 @@
 //  (k) a resource is never color alone: every pip is its shape, every coin (setup, pay) carries its mark, and the
 //      setup picker's labels read on its paper (contrast ≥ 4.5);
 //  (l) who's winning and who's next, on the chairs (no score row, Cory 2026-10-15): every chair's total carries its
-//      place (data-rank), the places follow the totals (shown as "1st"… unless everyone is level), the chairs stand in
+//      place (data-rank), the places follow the totals, the leader's total is lit, a trailing total's hover says the
+//      margin; the chairs stand in
 //      this round's turn order (top to bottom, the engine's first pass) and each shows its place in the turns;
 //  (m) the hover card opens right next to what it explains (Cory, 2026-10-15: never a docked spot elsewhere): whole
 //      on screen, at the page's top level above every strip, beside or above its target and not over it;
@@ -45,7 +46,7 @@ const GAME = [
   '[data-region] [data-uid]', '[data-cult] .cs-head', '[data-cult] [data-res]',
   '[data-leader-ring]', '.fol-mark', '.follower', '.lt-rate', '.fb', '.slot',
   '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term',
-  '[data-rank] .rk', '.cs-order',
+  '[data-rank]', '.cs-order',
 ].join(',');
 
 async function audit(page, step) {
@@ -301,13 +302,16 @@ try {
           let st = null;
           try { st = JSON.parse(localStorage.getItem('patrons.v4.local')).state; } catch { /* none */ }
           const seats = [...document.querySelectorAll('.lt > .lt-seat[data-pid]')].filter(e => e.querySelector('[data-cult]'));
-          const rows = seats.map(e => { const t = e.querySelector('.cs-total'); return { pid: Number(e.dataset.pid), f: Number(t.dataset.followers), rank: Number(t.dataset.rank), chip: (t.querySelector('.rk') || {}).textContent || '', y: e.getBoundingClientRect().top }; });
+          const rows = seats.map(e => { const t = e.querySelector('.cs-total'); return { pid: Number(e.dataset.pid), f: Number(t.dataset.followers), rank: Number(t.dataset.rank), lead: t.classList.contains('lead'), margin: t.title || '', y: e.getBoundingClientRect().top }; });
           return { seats: seats.length, rows, first: st && st.order ? st.order.slice(0, st.players.length) : null, held: !!document.querySelector('[data-next-round], .lt-reckon'), order: [...document.querySelectorAll('.lt > .lt-seat .cs-order')].map(e => e.dataset.order) };
         });
         const level = tops.rows.every(r => r.f === tops.rows[0].f);
         if (tops.rows.some(r => !(r.rank >= 1))) fail(`(l) a chair's total carries no place: ${JSON.stringify(tops.rows)}`, step);
         for (const a of tops.rows) for (const b of tops.rows) if (a.f > b.f && !(a.rank < b.rank)) fail(`(l) places don't follow the totals: ${JSON.stringify(tops.rows)}`, step);
-        if (!level && tops.rows.filter(r => r.chip).length !== tops.seats) fail(`(l) ${tops.rows.filter(r => r.chip).length} chairs show their place for ${tops.seats} cults`, step);
+        // the leader's total is lit; every total's hover says the margin
+        const top = Math.max(...tops.rows.map(r => r.f));
+        if (!level && tops.rows.some(r => r.lead !== (r.rank === 1))) fail(`(l) the lit totals aren't the leaders': ${JSON.stringify(tops.rows)}`, step);
+        if (!level && tops.rows.some(r => r.f < top && !/behind/.test(r.margin))) fail(`(l) a trailing chair's total doesn't say the margin on hover: ${JSON.stringify(tops.rows)}`, step);
         // position is order: top to bottom, the round's first pass (only when the screen has caught up with the save)
         const byY = tops.rows.slice().sort((a, b) => a.y - b.y).map(r => r.pid);
         if (tops.first && !tops.held && tops.first.length === byY.length && JSON.stringify(byY) !== JSON.stringify(tops.first)) {

@@ -14,7 +14,7 @@ import { Tip, MemberCard, cardColor, onTable } from './Info.jsx';
 import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { lastSpace, turnPlaces } from './seats.js';
 import { seatRanks } from './RankRow.jsx';
-import { incomeOf, memberColors } from './build.js';
+import { incomeOf } from './build.js';
 import Tick from './Tick.jsx';
 import { MO } from '../motion.js';
 import './lamp-b.css';
@@ -31,15 +31,16 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const own = useCultReactions(state, pid);
   const react = given || own;
   const f = followers(state, p);
-  const groups = memberChips(state, p);
+  // grouped by color (the approved plate: "the color mix is their lean"), table order, colorless last
+  const colorAt = d => (onTable(state, d) ? state.quadrants.indexOf(d.quadrant) : state.quadrants.length);
+  const groups = memberChips(state, p).map((g, k) => ({ g, k })).sort((a, b) => colorAt(a.g.def) - colorAt(b.g.def) || a.k - b.k).map(x => x.g);
   const last = lastSpace(state, pid);
   // its place in what's left of this round's turn order (who's up now, who's next)
   const turns = turnPlaces(state, me);
   const place = turns.places[pid];
   // who's winning lives here now (no score row): this chair's place, lit when it leads, the margin on hover
   const rank = seatRanks(state, me)[pid] || null;
-  // its build at one glance: its members' colors, and what they hand it each round (the engine's own round start)
-  const colors = memberColors(state, p);
+  // its build at one glance: its members (grouped by color) and what they hand it each round (the engine's round start)
   const income = incomeOf(state, pid);
   const incomeParts = income ? Object.entries(income.res).filter(([, n]) => n > 0) : [];
   const incomeWords = incomeParts.map(([r, n]) => `+${n} ${r}`).concat(income && income.followers > 0 ? [`+${income.followers} follower${income.followers === 1 ? '' : 's'}`] : []);
@@ -58,14 +59,12 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 40 : 30} minion={mine ? 15 : 13} compact /></span>
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
-          {place && <span className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined} title={place.title}><span className="co-t">{place.label}</span>{place.twice && <b className="co-x">×2</b>}</span>}
-          <small>{colors.length > 0 && (
-            <span className="cs-colors" data-colors={colors.map(c => `${c.key}:${c.n}`).join(' ')} title={`Members by color: ${colors.map(c => `${c.n} ${c.res || 'colorless'}`).join(', ')}`}>
-              {colors.map(c => <i key={c.key} style={{ '--c': c.res ? `var(--${c.res})` : 'var(--cream-3)', '--n': c.n }} data-n={c.n} />)}
-            </span>
-          )}{p.kind === 'bot' ? 'bot' : ' '}</small>
+          {/* its place in the turns, said like the plate's "You  place a minion"; the rail beside the column marks it too */}
+          {place && <span className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined} title={place.title}>
+            <span className="co-t">{place.label === 'now' ? (mine ? 'your turn' : 'placing') : place.label}</span>{place.twice && <b className="co-x"> ×2</b>}
+          </span>}
         </span>
-        <span className={`cs-total${rank && rank.lead ? ' lead' : ''}`} data-followers={f} data-rank={rank ? rank.place : undefined} title={rank ? rank.title : `${f} followers`}>{rank && rank.text && <span className="cs-rank rk" title={rank.title}>{rank.text}</span>}<Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
+        <span className={`cs-total${rank && rank.lead ? ' lead' : ''}`} data-followers={f} data-rank={rank ? rank.place : undefined} title={rank ? rank.title : `${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
       </header>
       <div className="cs-crowd" role="group" aria-label={`${mine ? 'Your' : `${p.name}'s`} members`}>
         {shown.map(g => {

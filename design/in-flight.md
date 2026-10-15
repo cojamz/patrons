@@ -48,6 +48,7 @@ Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source a
 38. **Bench pooled runs on today's content** (remote session_011mMXsYcXHM7NPhc8g63Ki6): merges cults-wip 618a8f5 into claude/cults-bench, runs two full runs back to back (about 3 h), then reports the pooled list. It covers Blue, the buyer win rate and Front-runner. ×1.25 is on hold pending Cory.
 39. **Perf pod: render cost** (from design/eval/perf/baseline.md): click → paint in the same frame, table and chairs re-render only on change, shop not re-rendered by a space hover, wheel spin without per-frame renders, "You'd get" ready sooner; render-count guard. Port 5396.
 40. **Perf baseline, quiet box** (remote session_011LUHaXuhne4zoPugyRhm6K on b3ac40c): two runs each at local 4×, local 1× and online with 80ms lag. It becomes the "before" for the perf pod.
+41. **Dialogs pod:** the pay screen redesigned (cost as dots, coins visibly leave your stacks, click a stack to swap, skip the dialog when there's only one way to pay), swaps picked on the board, the choice caption kept off the wheel, the keyboard list only for keyboard users. Port 5398.
 
 ## Held
 - **Fair-price screen, bot levels + 4-thinker tables:** offloaded to the remote sessions below. The Purple session is done (roster 11).
