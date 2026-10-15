@@ -2,7 +2,8 @@
 // ends round I's first pass, so the snake turns round on P1, and P1 holds Midas (on).
 //  (t1) the order chips count the snake's double: P1 reads "now twice" and no other seat reads NEXT (its explanation
 //       is its hover card's label now, not a native title);
-//  (t2) the "since your last turn" strip lists the rivals' moves (one line per placement, each naming its player),
+//  (t2) the "since your last turn" strip accounts for the rivals' moves (one line per placement, each naming its player,
+//       or folded into "N earlier" when the turn card takes the room; whole lines only),
 //       sits in the open, clear of the wheel and the shop, and a line opens that placement's card on hover;
 //  (t3) after a placement, the turn card names the space actually taken (the engine's log is the truth);
 //  (t4) the snake turnaround reads "Your turn again (snake order)", never "Extra turn";
@@ -68,6 +69,10 @@ try {
       card: document.querySelector('.turn-card')?.dataset.turnStory || null,
       cardBox: r('.turn-card'),
       strip: [...document.querySelectorAll('[data-since] [data-since-line]')].map(e => e.textContent),
+      // moves the strip folded into "N earlier… open the log" (whole lines only: it folds the oldest rather than show half
+      // a line, design pod 08:50), and any line it shows only in part
+      folded: Number((document.querySelector('[data-since] .since-more')?.textContent.match(/\d+/) || [0])[0]),
+      partial: (() => { const l = document.querySelector('[data-since] .since-list'); if (!l) return 0; const b = l.getBoundingClientRect(); return [...l.children].filter(x => { const a = x.getBoundingClientRect(); return a.height && (a.top < b.top - 1 || a.bottom > b.bottom + 1); }).length; })(),
       since: r('[data-since]'), wheel: r('.lt-wheel svg.wheel-paper') || r('.lt-wheel'), shop: r('.lt-shop'),
       sw: [...document.querySelectorAll('.lt-seat-0 [data-switch]')].map(e => ({ state: e.dataset.switch, text: e.textContent.trim(), title: e.title })),
       took, players: st ? st.players.map(p => p.name) : [],
@@ -100,7 +105,10 @@ try {
   const nexts = Object.entries(v.chips).filter(([pid, c]) => pid !== '0' && c && c.order === 'next');
   if (nexts.length) fail(`another seat reads NEXT while P1 places twice: ${JSON.stringify(nexts)}`, 't1');
   // (t2)
-  if (v.strip.length < 3) fail(`the strip lists ${v.strip.length} rival moves (want 3: P2, P3 and P4 placed before P1): ${JSON.stringify(v.strip)}`, 't2');
+  // every rival move since yours is accounted for: on a line, or folded into "N earlier" when the turn card takes the room
+  if (v.strip.length + v.folded < 3) fail(`the strip accounts for ${v.strip.length} rival moves + ${v.folded} folded (want 3: P2, P3 and P4 placed before P1): ${JSON.stringify(v.strip)}`, 't2');
+  if (v.strip.length < 1) fail('the strip shows no rival move at all', 't2');
+  if (v.partial) fail(`the strip shows ${v.partial} line(s) only in part (it should fold whole lines)`, 't2');
   for (const l of v.strip) if (!/^\s*P[234]\b/.test(l)) fail(`a strip line doesn't start with a rival's name: "${l}"`, 't2');
   const words = await page.evaluate(() => [...document.querySelectorAll('[data-since] .since-row')].map(r => !!r.querySelector('.sp-words')));
   if (words.some(w => !w)) fail(`a strip line names its space without the space's board words: ${JSON.stringify(words)}`, 't2');

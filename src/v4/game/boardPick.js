@@ -4,7 +4,7 @@
 // { pid, res } one of their resource stacks (give: true for a gift), { res } your own stack of a color. Options are
 // read by their target only, never by their label. What has no place on the board (Pass, "All 3 as green", an amount)
 // stays a button by the caption, and every pick is also in a compact list for the keyboard.
-import { quadrant, defById } from '../../engine/v4/index.js';
+import { quadrant, defById, followers } from '../../engine/v4/index.js';
 import { lastSpace } from './seats.js';
 
 /**
@@ -220,7 +220,16 @@ export function seatPart(state, pk, pid, picked = {}) {
   const dims = !own && !lit && (seatPick || stackPick);
   const chosenUid = pk.combo && pk.combo.kind === 'trade' && own ? pk.combo.chosen : null;
   const asker = own ? askerOf(state, pk) : null;
-  return { lit, dim: dims, seat: seatPick ? here.seat : null, seatMode: seatPick, why: seatWhy, stacks, members, picked, give: pk.give, chosenUid, askerUid: asker ? asker.uid : null };
+  // a steal from the player with the most followers pays the thief's Robin Hood: that seat says so before you pick
+  // (design pod, from the detail designer: the target wasn't marked, so a player picked blind)
+  let bonus = null;
+  if (!own && stackPick && !pk.give && lit && Number.isInteger(pk.actor)) {
+    const thief = state.players[pk.actor];
+    const hoods = (thief.members || []).filter(u => state.cards[u] && state.cards[u].def === 'thieves.robinhood' && !state.cards[u].used).length;
+    const fol = o => followers(state, o);
+    if (hoods && state.players.every(o => fol(o) <= fol(p))) bonus = { n: hoods, why: `Robin Hood: take from ${p.name}, who has the most followers, and you gain +${hoods} follower${hoods > 1 ? 's' : ''}.` };
+  }
+  return { lit, dim: dims, seat: seatPick ? here.seat : null, seatMode: seatPick, why: seatWhy, stacks, members, picked, give: pk.give, chosenUid, askerUid: asker ? asker.uid : null, bonus };
 }
 
 /** The shop's lookup while a picker is up: a face-up member is a pick when the engine names its uid. */

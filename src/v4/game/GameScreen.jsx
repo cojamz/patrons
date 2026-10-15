@@ -251,13 +251,17 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
  * Shows `value` as it was before the chain now playing, and the new one when the chain has landed (or was skipped):
  * a move's summary is its closing beat (motion review #7, #27). Re-renders only itself when the chain ends.
  */
-function AfterChain({ value, hold, children }) {
+function AfterChain({ value, hold, step = null, children }) {
   const shown = useRef(value);
-  const latest = useRef(value);
-  latest.current = value;
+  const latest = useRef({ value, step });
   const [, bump] = useState(0);
   if (!hold) shown.current = value;
-  useEffect(() => onChainEnd(() => { if (shown.current !== latest.current) { shown.current = latest.current; bump(n => n + 1); } }), []);
+  // `step` given: back-to-back chains (a bot's next step shows at the last one's hand-off) never leave it stuck on the
+  // value from before them all. When a new step is drawn, the step before it has handed over, so its value shows, in
+  // the same commit as the hand-off (the header lagged a whole run of bot steps behind, waiting for a gap between chains)
+  else if (step != null && latest.current.step !== step) shown.current = latest.current.value;
+  latest.current = { value, step };
+  useEffect(() => onChainEnd(() => { if (shown.current !== latest.current.value) { shown.current = latest.current.value; bump(n => n + 1); } }), []);
   return children(shown.current);
 }
 
@@ -1066,7 +1070,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           ) : note ? (
             <span key={note.n} className={`say ${note.tone}`} data-prompt tabIndex={-1} role="status">{note.text}</span>
           ) : pr.text ? (
-            <AfterChain value={pr} hold={holdStory && !mine}>{held => {
+            <AfterChain value={pr} hold={holdStory && !mine} step={state.moves}>{held => {
               // a held line addressed to someone else is never shown in this one's voice (w3b: your "Choose how to
               // pay" stayed up, dotted like a rival's, while the bots moved): it gives way to the current line
               const p = held.forMe === pr.forMe ? held : pr;

@@ -179,3 +179,7 @@
 /* (ring I only: the inner rings' panels are too shallow for a minion above two lines, spaces.mjs s9) */
 .lt [data-spaces="panels"] .stage .slot.r1.taken:not(.lit):not([data-panel^="1.0.0"]) .face .worker-fig{top:0;transform:translate(-50%,calc(-100% + 2px))}
 .lt [data-spaces="panels"] .stage .slot.r1.taken:not(.lit):not([data-panel^="1.0.0"]) .face .worker-fig svg{height:16px}
+/* a steal that pays the thief's Robin Hood on this seat: its second row says so in the lamp's ink */
+.lt > .lt-seat .cs-bonus,.lt > .lt-seat .cs-bonus small{color:var(--lamp-ink)}
+.lt > .lt-seat .cs-bonus .cs-inc{display:inline-flex;align-items:center;gap:4px}
+.lt > .lt-seat .cs-bonus .follower-mark{color:var(--lamp-ink)}

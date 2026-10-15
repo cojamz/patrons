@@ -61,7 +61,10 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   // (the seat column is narrower now: six figures ran under "each round +3●"; each income part takes a figure's room)
   // (design pod, w2b #22: figures are 32px on the laptop so a rival's members can be told apart: six and a "+N" to a
   // row, and the "each round" line takes about one figure per part plus its label)
-  const MAX = incomeWords.length ? Math.max(1, 4 - incomeWords.length) : 6;
+  // a steal pick that pays the thief's Robin Hood here (boardPick.js seatPart): the second row says so, in place of the
+  // "each round" line, so the figures fold early to leave it room
+  const bonus = pick && pick.bonus ? pick.bonus : null;
+  const MAX = bonus ? 3 : incomeWords.length ? Math.max(1, 4 - incomeWords.length) : 6;
   // what's never folded into "+N", most needed first: one you can use now or the board picker lights (folded, it could
   // only be picked from the keyboard list), then a use still in hand (a rival's loaded Raider is a threat to see
   // coming, w2b #21); each takes the place of the last one shown that's needed less
@@ -156,7 +159,11 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         {safe && <small className="cs-safe" data-safe="1" title={`No one can steal resources from ${mine ? 'you' : p.name} until this round ends`}>safe this round</small>}
       </div>
       {/* what its members make each round, and what it just did (the approved plate's rival panel) */}
-      {incomeWords.length > 0 && (
+      {bonus ? (
+        <div className="cs-build cs-bonus" data-pick-bonus={bonus.n} title={bonus.why}>
+          <span className="cs-inc"><small>Robin Hood</small><b className="num">+{bonus.n}</b><Follower size={12} title="follower" /></span>
+        </div>
+      ) : incomeWords.length > 0 && (
         <div className="cs-build">
           {incomeWords.length > 0 && (
             <Tip className="cs-income" data-income={incomeWords.join(', ')} label={`Each round its members make ${incomeWords.join(', ')}`}
