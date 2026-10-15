@@ -21,7 +21,7 @@ const m = (key, name, lean, s, w, text, extra = {}) => ({ key, name, lean, s, w,
 function openSpaces(ctx) {
   const out = [];
   ctx.state.quadrants.forEach((qid, q) => ctx.quadrant(qid).actions.forEach((a, i) => {
-    if (a.ring <= ctx.state.round && ctx.state.slots[`${q}-${i}`] === undefined) out.push({ key: `${q}-${i}`, q, i, a });
+    if (!(a.ring > ctx.state.round || (a.lastRound && ctx.state.round > a.lastRound)) && ctx.state.slots[`${q}-${i}`] === undefined) out.push({ key: `${q}-${i}`, q, i, a });
   }));
   return out;
 }

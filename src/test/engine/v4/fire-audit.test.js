@@ -101,6 +101,8 @@ const ALLOW = {
   'yellow.harmonist': 'pays only with a full set at game end (cards-yellow: Harmonist)',
   // since 10-for-10 is unlimited, bots convert their purple before game end, so a holder can end with fewer than 3
   'purple.patience': 'pays only on 3+ purple still held at game end (cards-purple: Timekeeper)',
+  // Overtime and Crunch Time went free (2026-10-15): only Taskmaster still pays purple for a turn, and both are cut
+  'purple.doubletime': 'halves only Taskmaster’s paid turn now (cards-purple: Corner-Cutter); cut from the deck',
 };
 
 describe('namesCard: what counts as a line naming a card', () => {

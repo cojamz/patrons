@@ -17,7 +17,7 @@
 // Hover or focus (mouse) or a first tap (touch) shows a space's card; on touch, placing takes a second tap.
 import { memo, useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { quadrant, roman, RING_VALUE } from '../../engine/v4/index.js';
+import { quadrant, roman, spaceOpen, RING_VALUE } from '../../engine/v4/index.js';
 import { playerColor, standings, seatEmoji, shortLabel } from '../format.js';
 import { Minion } from '../art/Leader.jsx';
 import { emojiArt } from '../art/emojis.js';
@@ -317,6 +317,7 @@ export function deniedText(state, key, meId = null) {
   const [q, i] = key.split('-').map(Number);
   const a = quadrant(state.quadrants[q]).actions[i];
   if (a && a.ring > Math.max(1, state.round)) return `Opens in round ${roman(a.ring)}`;
+  if (a && a.lastRound && state.round > a.lastRound) return `Closed after round ${roman(a.lastRound)}`;
   return null;
 }
 
@@ -746,7 +747,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
       const R = rings[s.ring], c = qCenter(s.q), w = 90 / R.n;
       const a1 = c + 45 - s.idx * w, a0 = a1 - w;
       const owner = state.slots[s.key], fresh = freshOf(s.key);
-      const status = faceStatus({ legal: legal.has(s.key), owner, open: s.ring <= round, fresh });
+      const status = faceStatus({ legal: legal.has(s.key), owner, open: spaceOpen(s.a, round), fresh });
       paper.push(
         <g key={`fc${s.key}`} className={`face-cell ${status}`} data-cell={s.key} style={{ '--c': `var(--${s.qid})`, pointerEvents: 'none' }}>
           <Cell key={s.key} q={s.qid} action={s.a} ring={s.ring} round={round} status={status} ang={s.ang} a0={a0} a1={a1} r0={R.r0} r1={R.r1}
@@ -760,7 +761,7 @@ function Wheel({ state, legal, idle = null, pickNotes = null, onPick, onDenied, 
   // outline). The wedge is the space's click and hover target; its print is the upright box above it (sockets below).
   if (panels) {
     for (const s of spaces) {
-      const R = rings[s.ring], open = s.ring <= round, owner = state.slots[s.key];
+      const R = rings[s.ring], open = spaceOpen(s.a, round), owner = state.slots[s.key];
       const lit = legal.has(s.key);
       // yours to take but worth nothing right now (its hover says so): placeable, without the lamp's glow
       const quiet = lit && !!(idle && idle.has(s.key));
