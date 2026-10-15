@@ -1,8 +1,9 @@
 // E2E dialogs gate (dialogs pod, 2026-10-15), at laptop size (1270×700):
-//  (p1) Paying: the sockets are the engine's price (memberPrice), the printed cost reads as on the card, the default way
+//  (p1) Paying: the coins lifted off your stacks pay the engine's price (memberPrice), shown once (stacks + Pay, no
+//       second row), the printed cost reads as on the card, the default way
 //       is already in (Pay names it), a stack click swaps a coin in (Pay moves to a legal way with one more of that
 //       color) and the coins visibly move, and Enter pays.
-//  (p2) A follower buy uses the same sheet: as many sockets as the tier costs.
+//  (p2) A follower buy uses the same sheet: the lifted coins add up to what the tier costs.
 //  (p3) Only one way to pay: no sheet, it pays at once, and the coins fly from your stack.
 //  (g1) Good Deed, two steps on the board: your stacks light (no chips for the mouse), the caption sits under the
 //       headline, never over the wheel; a color lifts, the rivals' seats light; a seat click gives (the engine's id).
@@ -67,9 +68,11 @@ try {
     const st = save.state, p = st.players[0], res = st.resources;
     const { ctx, page } = await open('p1', save, '.dialog.pay');
     const price = memberPrice(st, p, st.pending.uid);
-    const sockets = await page.$$eval('.dialog.pay [data-socket]', els => els.map(e => e.dataset.socket));
-    if (sockets.length !== price.total) errors.push(`(p1) ${sockets.length} sockets for a price of ${price.total}`);
-    if (sockets.filter(s => s !== 'any').length !== price.colored) errors.push(`(p1) ${sockets.filter(s => s !== 'any').length} colored sockets, the engine asks ${price.colored} ${price.color}`);
+    const lifted = await page.$$eval('.dialog.pay .ps-out .ps-coin', els => els.length);
+    if (lifted !== price.total) errors.push(`(p1) ${lifted} coins lifted for a price of ${price.total}`);
+    const liftedColor = await page.$$eval(`.dialog.pay [data-stack="${price.color}"] .ps-out .ps-coin`, els => els.length);
+    if (price.color && liftedColor < price.colored) errors.push(`(p1) ${liftedColor} ${price.color} lifted, the engine asks ${price.colored}`);
+    if (await page.$('.dialog.pay [data-socket], .dialog.pay .pay-sockets')) errors.push('(p1) the payment shows a second row of coins');
     const printed = costParts(cardDef(st, st.pending.uid), res).map(c => `${c.n}${c.color}`).join(' ');
     const shown = await page.$eval('[data-pay-cost]', e => e.dataset.payCost);
     if (shown !== printed) errors.push(`(p1) the cost reads "${shown}", the card prints "${printed}"`);
@@ -102,9 +105,9 @@ try {
   {
     const save = paySave({ tier: 'mid', res: { gold: 2, red: 3, blue: 1, green: 2 } });
     const { ctx, page } = await open('p2', save, '.dialog.pay');
-    const n = await page.$$eval('.dialog.pay [data-socket]', els => els.length);
+    const n = await page.$$eval('.dialog.pay .ps-out .ps-coin', els => els.length);
     const want = TIERS.find(t => t.key === 'mid').cost;
-    if (n !== want) errors.push(`(p2) ${n} sockets for a ${want}-cost follower buy`);
+    if (n !== want) errors.push(`(p2) ${n} coins lifted for a ${want}-cost follower buy`);
     await page.screenshot({ path: `${SHOTS}/p2-followers.png` });
     await ctx.close();
   }
@@ -212,13 +215,13 @@ try {
     }
     await ctx.close();
   }
-  // (s8) Snap Up's payment uses the same sheet: sockets at the price it's paid under (any colors), Enter pays
+  // (s8) Snap Up's payment uses the same sheet: the lifted coins pay the price it's paid under (any colors), Enter pays
   {
     const save = momentSave('snappay');
     const st = save.state, w = st.pending.options[0];
     const { ctx, page } = await open('s8', save, '.dialog.pay');
-    const n = await page.$$eval('.dialog.pay [data-socket]', els => els.length);
-    if (n !== memberPrice(st, st.players[0], w.uid, w.how).total) errors.push(`(s8) ${n} sockets for Snap Up's price ${memberPrice(st, st.players[0], w.uid, w.how).total}`);
+    const n = await page.$$eval('.dialog.pay .ps-out .ps-coin', els => els.length);
+    if (n !== memberPrice(st, st.players[0], w.uid, w.how).total) errors.push(`(s8) ${n} coins lifted for Snap Up's price ${memberPrice(st, st.players[0], w.uid, w.how).total}`);
     if (await page.$('.prompt.choice .opts')) errors.push('(s8) Snap Up still shows a list of ways to pay');
     await page.screenshot({ path: `${SHOTS}/s8-snapup-pay.png` });
     const want = await page.$eval('.pay-go', e => e.dataset.option);
@@ -297,6 +300,37 @@ try {
     const lit = await page.$$eval('.lt-seat:not(.mine) .cs-member.pick-on', els => els.length);
     if (!lit) errors.push('(d1) no rival member is lit');
     await page.screenshot({ path: `${SHOTS}/d1-double-agent.png` });
+    await ctx.close();
+  }
+  // (a1) Wave-2 tester A: a member's hover says what a click will do ("Pays 2● 2●" at once, or "Choose how to pay"),
+  //      an instant buy flies its coins and closes the hover, and the card dealt into its place ignores a click for
+  //      half a second (no double buy)
+  {
+    const save = paySave({ res: { gold: 2, red: 0, blue: 0, green: 2 } });
+    const st = save.state;
+    st.queue[0] = { t: 'buy', p: 0 }; // back to the buy step: the card is clicked from the shop
+    const { resume } = await import('../../src/engine/v4/core.js');
+    resume(st);
+    const uid = st.shop.find(u => st.cards[u].def === 'gold.prospector');
+    const { ctx, page } = await open('a1', save, `.lt-shop .card[data-uid="${uid}"]`);
+    await page.hover(`.lt-shop .card[data-uid="${uid}"]`);
+    const line = await page.waitForSelector('[data-pays]', { timeout: 3000 }).then(e => e.innerText(), () => '');
+    if (!/^Pays\s/.test(line)) errors.push(`(a1) the hover of a one-way card says "${line}", not "Pays …"`);
+    const other = st.shop.find(u => u !== uid && st.pending.options.some(o => o.id === `card:${u}`));
+    await page.evaluate(() => { window.__a1 = 0; const t = () => { for (const g of document.querySelectorAll('.piece-flight.pay')) if (!g.dataset.a1) { g.dataset.a1 = '1'; window.__a1++; } requestAnimationFrame(t); }; requestAnimationFrame(t); });
+    const box = await (await page.$(`.lt-shop .card[data-uid="${uid}"]`)).boundingBox();
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await page.waitForFunction(m => Number(document.querySelector('.app.game').dataset.moves) > m, st.moves, { timeout: 5000 }).catch(() => errors.push('(a1) the one-way card did not buy at once'));
+    if (await page.$('.dialog.pay')) errors.push('(a1) a one-way card opened the pay sheet');
+    await page.waitForTimeout(150);
+    if (!(await page.evaluate(() => window.__a1))) errors.push('(a1) no coins flew on the instant buy');
+    if (await page.$('[data-hover-layer][data-open="1"]')) errors.push('(a1) the hover stayed open after the buy');
+    // the refill under the pointer: a second click at once does nothing
+    const m1 = await moves(page);
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await page.waitForTimeout(250);
+    if (await moves(page) !== m1 && !(await page.$('.lt[data-phase="buy"][data-yours="1"]'))) errors.push('(a1) a click on the card just dealt in counted');
+    void other;
     await ctx.close();
   }
 } catch (e) {
