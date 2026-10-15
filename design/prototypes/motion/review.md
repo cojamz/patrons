@@ -94,3 +94,11 @@ The good, load-free: the "+4" bundle reads as one handful with its count (300–
 27. **The header runs ahead of the table.** All through your recruit chain the header reads "P3 is placing a minion…", while your own card is still in flight and P3 hasn't moved on screen. The header should change when the next player's story starts (when the chain ends, or at the hand-off), so the one-glance line says what the screen is showing.
 
 The good, load-free: the payment really comes before the purchase (the coin leaves your red at about 150–200ms; the card holds lifted and leaves at about 450, when the coin is most of the way there); the card's flight from the shop over the wheel to your crowd is one clean arc; P3's "+5" bundle reads at a glance.
+
+## Round 6 (06:10, filmstrip of a 10-for-10 follower buy; live tree as of 05:39)
+`review-r6-follower-buy-filmstrip.png` (your count on the left, the rates on the right, 0–1550ms).
+
+28. **The follower count counts late, dim and slow.** The coins drop into the 10-for-10 tile (650ms), and the "+10" bundle reaches your count at about 1000. Its label lands over the count's digit ("6 +10★", as in 14). The count then changes in a dimmed tan instead of its cream (6 → 7 → 12 → 15 → 16, 1100 to about 1650ms): that's `Tick`'s 300ms + 30ms a step, capped at 550, starting about 100ms after the landing. M11 and §4: on the bundle's landing the count rolls in 240ms at full brightness with a 1.24 settle. A dimmed number reads as disabled; the eye should see the score jump up, not fade through it.
+25 (again): when the pay dialog closed, the "Intro Offer" hover opened under the resting pointer and covered the middle of the wheel from 0 to about 900ms, the whole time the coins were in flight.
+
+The good: every coin goes into the right tile (they pass over the 2-for-1 on the way, which reads fine), and the "+10" bundle with its trail reads as one big handful.
