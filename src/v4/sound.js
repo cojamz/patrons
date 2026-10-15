@@ -56,8 +56,9 @@ function place(ctx, dest, t, r) {
   return 0.12;
 }
 
-/** A small coin landing on a pile: two quick strikes of an inharmonic bell. */
-function coin(ctx, dest, t, r) {
+/** A coin landing on a pile: one strike of a small inharmonic bell per coin (Cory: "the sounds should line up with
+ *  the number of coins"). Four or more land as one bundle, so they sound as one handful: a quick shower of strikes. */
+function coin(ctx, dest, t, r, n = 1) {
   const f = 2350 * (1 + (r() - 0.5) * 0.12);
   const strike = (at, ff, amp) => {
     [[1, 0.26, 0.32], [2.76, 0.12, 0.17], [5.4, 0.05, 0.07]].forEach(([m, a, d]) => tone(ctx, 'sine', ff * m, at, d, env(ctx, dest, at, a * amp, 0.002, d)));
@@ -66,9 +67,15 @@ function coin(ctx, dest, t, r) {
     n.connect(hp); hp.connect(env(ctx, dest, at, 0.12 * amp, 0.001, 0.008));
     n.start(at, r() * 0.3); n.stop(at + 0.02);
   };
-  strike(t, f, 1);
-  strike(t + 0.045 + r() * 0.02, f * 1.13, 0.55);
-  return 0.4;
+  if (n < 4) { strike(t, f, 1); return 0.35; }
+  // the handful: up to nine strikes inside 140ms, each its own coin's pitch, the first loudest, then a soft shimmer
+  const k = Math.min(9, 3 + Math.round(n / 2));
+  for (let i = 0; i < k; i++) strike(t + (i ? 0.01 + r() * 0.13 : 0), f * (0.88 + r() * 0.3), (i ? 0.45 + r() * 0.25 : 1) / Math.sqrt(k / 3));
+  const sh = ctx.createBufferSource(); sh.buffer = noise(ctx);
+  const hp = ctx.createBiquadFilter(); hp.type = 'bandpass'; hp.frequency.value = 7000; hp.Q.value = 0.8;
+  sh.connect(hp); hp.connect(env(ctx, dest, t, 0.05, 0.03, 0.18));
+  sh.start(t, r() * 0.2); sh.stop(t + 0.25);
+  return 0.5;
 }
 
 /** A round prize's winner: a quick rising call and a held chord, warm brass with a glint on top. */
@@ -111,7 +118,7 @@ export function gibberish(r, most = 4) {
   return out;
 }
 function follower(ctx, dest, t, r, o = {}) {
-  const word = gibberish(r, o.most || 4);
+  const word = o.word || gibberish(r, o.most || 4);
   const giggle = word.length === 3 && word[0] === word[1] && word[1] === word[2];
   const f0 = (560 + r() * 160) * (o.pitch || 1);
   const rise = o.rise != null ? o.rise : !giggle && r() < 0.55;
@@ -137,7 +144,7 @@ function follower(ctx, dest, t, r, o = {}) {
   let at = t;
   word.forEach(([c, v], i) => {
     const last = i === word.length - 1;
-    const dur = giggle ? 0.075 : last ? 0.13 + r() * 0.05 : 0.07 + r() * 0.05;
+    const dur = o.quick ? 0.16 + r() * 0.04 : giggle ? 0.075 : last ? 0.13 + r() * 0.05 : 0.07 + r() * 0.05;
     const gap = giggle ? 0.035 : 0.012 + r() * 0.02;
     // the pitch: a bob per syllable, and the tail of the line rising (a question) or falling (a sigh)
     const p = giggle ? f0 * (1.15 - i * 0.09) : f0 * (1 + (r() - 0.5) * 0.25) * (last ? (rise ? 1.1 : 0.95) : 1);
@@ -176,35 +183,42 @@ function follower(ctx, dest, t, r, o = {}) {
 // right), they come in staggered and overlap like a cheer, and they all end rising together; the bigger the haul, the
 // more voices (up to five) and the brighter the finish, while the whole stays about as loud as one.
 const PITCHES = [1, 1.26, 0.86, 1.12, 1.4];
-/** How many voices a haul of n followers gets. */
-export const voicesFor = n => (n <= 1 ? 1 : n <= 3 ? 2 : n <= 6 ? 3 : n <= 10 ? 4 : 5);
-/** Voice i of a crowd of k: its own pitch, word and place left to right; the first speaks, the rest chime in shorter. */
-function crowdVoice(ctx, dest, t, r, i, k) {
-  const g = ctx.createGain(); g.gain.value = (1 / Math.sqrt(k)) * (i ? 0.85 : 1);
+/** Voice i of a few: its own pitch, word and place left to right. */
+function crowdVoice(ctx, dest, t, r, i, o = {}) {
+  const g = ctx.createGain(); g.gain.value = o.gain ?? 1;
   let out = g;
   if (i && ctx.createStereoPanner) { const pan = ctx.createStereoPanner(); pan.pan.value = (i % 2 ? -1 : 1) * Math.min(0.8, 0.25 * Math.ceil(i / 2) + 0.15); g.connect(pan); out = pan; }
   out.connect(dest);
-  return follower(ctx, g, t, r, k === 1 ? {} : { pitch: PITCHES[i % PITCHES.length] * (1 + (r() - 0.5) * 0.06), rise: true, most: i ? 3 : 4 });
+  return follower(ctx, g, t, r, i ? { pitch: PITCHES[i % PITCHES.length] * (1 + (r() - 0.5) * 0.06), ...o } : o);
 }
-/** A big haul's finish: a bright little "yay" on top of the cheer, two quick chimes. */
-function yay(ctx, dest, t) {
-  [1568, 2093].forEach((f, j) => tone(ctx, 'sine', f, t + j * 0.06, 0.3, env(ctx, dest, t + j * 0.06, 0.035, 0.004, 0.28)));
-  return 0.36;
-}
-function crowd(ctx, dest, t, r, n = 1) {
-  const k = voicesFor(n);
+/** Four or more followers at once (Cory: "they should just be all together in a quick sound"): one quick cheer, a
+ *  handful of voices crying out together on one rising "yay", with two bright chimes. The bigger the haul, the more
+ *  voices (four to six) and the higher it lifts. */
+function cheer(ctx, dest, t, r, n) {
+  const k = Math.min(6, 4 + Math.floor((n - 4) / 4));
+  const lift = 1 + Math.min(0.12, (n - 4) * 0.01);
   let len = 0;
   for (let i = 0; i < k; i++) {
-    const at = t + (i ? 0.03 + i * 0.045 + r() * 0.04 : 0);
-    len = Math.max(len, at - t + crowdVoice(ctx, dest, at, r, i, k));
+    const g = ctx.createGain(); g.gain.value = 0.9 / Math.sqrt(k);
+    let out = g;
+    if (ctx.createStereoPanner) { const pan = ctx.createStereoPanner(); pan.pan.value = (i / (k - 1) - 0.5) * 1.4; g.connect(pan); out = pan; }
+    out.connect(dest);
+    len = Math.max(len, follower(ctx, g, t + r() * 0.03, r, { pitch: PITCHES[i % PITCHES.length] * lift * (1 + (r() - 0.5) * 0.08), word: [[r() < 0.5 ? '' : 'h', r() < 0.6 ? 'e' : 'a']], rise: true, quick: true }));
   }
-  if (k >= 4) len = Math.max(len, len - 0.12 + yay(ctx, dest, t + len - 0.12));
+  [1568, 2093].forEach((f, j) => tone(ctx, 'sine', f * lift, t + 0.05 + j * 0.05, 0.25, env(ctx, dest, t + 0.05 + j * 0.05, 0.03, 0.004, 0.22)));
+  return Math.max(len, 0.35);
+}
+/** n followers: one voice each up to three, staggered as their pieces land; four or more, one quick cheer. */
+function crowd(ctx, dest, t, r, n = 1) {
+  if (n >= 4) return cheer(ctx, dest, t, r, n);
+  let len = 0;
+  for (let i = 0; i < n; i++) len = Math.max(len, i * 0.06 + crowdVoice(ctx, dest, t + i * 0.06, r, i, { most: 3, gain: i ? 0.65 : 1 }));
   return len;
 }
 
-export const VOICES = { place, coin, fanfare, follower: (ctx, dest, t, r, n) => crowd(ctx, dest, t, r, n) };
+export const VOICES = { place, coin, fanfare, follower: crowd };
 // each voice's loudness against the others (set by ear and by peak, scripts/v4-sounds.mjs)
-export const LEVEL = { place: 0.55, coin: 0.7, fanfare: 0.75, follower: 0.42 };
+export const LEVEL = { place: 0.55, coin: 0.7, fanfare: 0.75, follower: 0.32 };
 
 /** Render a voice into ctx at time t (offline rendering uses this too). Returns its length in seconds. */
 export function voice(ctx, dest, name, t, seed = Math.floor(Math.random() * 1e9), n = 1) {
@@ -243,6 +257,7 @@ function unlock() {
       const lim = ctx.createDynamicsCompressor();
       lim.threshold.value = -10; lim.knee.value = 6; lim.ratio.value = 8; lim.attack.value = 0.002; lim.release.value = 0.12;
       master.connect(lim); lim.connect(ctx.destination);
+      noise(ctx); // made now, at the first press, so no later sound pays for it
     }
     if (ctx.state === 'suspended') ctx.resume();
   } catch { ctx = null; }
@@ -255,32 +270,25 @@ if (typeof addEventListener === 'function') {
 }
 
 // how close the same sound may repeat, and how many may ring at once (a dozen coins is a handful, not a din)
-const GAP = { place: 0.04, coin: 0.045, fanfare: 0.5 };
+const GAP = { place: 0.04, coin: 0.04, fanfare: 0.5, follower: 0.1 };
 const last = {};
 let ringing = 0;
-// Followers landing close together (single pieces 60ms apart, a bundle, a reacting member's share) are one haul: the
-// first sounds at once, and as more land the crowd grows, a new voice joining as each one arrives, never the same clip
-// again on top.
-let haul = null; // { at (audio time), n, voices, yay, r }
-const HAUL = 0.45;
-/** Play a sound now (or `delay` seconds from now). `n`: how many followers. Never throws, never waits. */
+// Followers line up with their number (Cory, 2026-10-15). One to three fly as single pieces 60ms apart, and each one
+// that lands is its own voice: the next voice of the same little group (another pitch, word and place), never the same
+// clip again. Four or more fly as one bundle and sound as one quick cheer.
+let group = null; // { at (audio time), voices, r }
+/** Play a sound now (or `delay` seconds from now). `n`: how many coins or followers landed together. Never throws. */
 export function play(name, { delay = 0, n = 1 } = {}) {
-  if (name !== 'follower') { sound(name, delay, n); return; }
+  if (name !== 'follower' || n >= 4) { sound(name, delay, n); return; }
   if (!on) return;
   try { const c = (globalThis.__patronsSounds ||= {}); c[name] = (c[name] || 0) + 1; } catch { /* no global */ }
   if (!ctx || ctx.state !== 'running') return;
   try {
     const now = ctx.currentTime + 0.005 + delay;
-    if (!haul || now - haul.at > HAUL) {
-      haul = { at: now, n, voices: voicesFor(n), yay: voicesFor(n) >= 4, r: rng(Math.floor(Math.random() * 1e9)) };
-      voice(ctx, master, 'follower', now, undefined, n);
-      return;
-    }
-    haul.n += n;
-    const want = Math.min(5, voicesFor(haul.n));
+    if (!group || now - group.at > 0.3) group = { at: now, voices: 0, r: rng(Math.floor(Math.random() * 1e9)) };
+    group.at = now;
     const g = ctx.createGain(); g.gain.value = LEVEL.follower; g.connect(master);
-    for (let j = 0; haul.voices < want; haul.voices++, j++) crowdVoice(ctx, g, now + j * 0.045, haul.r, haul.voices, want);
-    if (want >= 4 && !haul.yay) { haul.yay = true; yay(ctx, g, now + 0.25); }
+    for (let j = 0; j < n; j++, group.voices++) crowdVoice(ctx, g, now + j * 0.06, group.r, group.voices % 5, { most: 3, gain: group.voices ? 0.65 : 1 });
   } catch { /* a sound is never worth an error */ }
 }
 function sound(name, delay, n) {
