@@ -1,0 +1,21 @@
+# Outcome ledger (tester A)
+| # | Space | Expected (face+hover, my situation) | Got (seat/log) | Match? |
+|---|---|---|---|---|
+| 1 | Lie Low (R1 outer, magenta) | face "+1● from a rival"; hover adds "no one can steal from you this round". Expect +1 magenta, chosen rival -1 | magenta 2->3; P2 silver 1->0; toast "+1● from P2 1●". Steal-protection never shown on my seat afterwards | match (hidden 2nd effect not on face) |
+| 2 | Recruit Robin Hood (shop) | cost 2● +2 any; I hold 3 magenta +1 yellow -> pay all 4; +1 follower | paid instantly on single click (3 magenta+1 yellow), no pay step / no chance to choose coins; followers 1->2 | match, but no pay confirmation |
+| 3 | Redistribute "Steal 1 each from richer rivals" | hover "about +3●, +1👤 (Robin Hood)"; rivals each -1 | 3 clicks (one per rival stack); magenta 0->3; P2 -1 magenta, P3 -1 purple, P4 -1 yellow; followers 2->3 (Robin Hood, all tied at 2 for "most followers") | match; Robin Hood paid on a 4-way tie |
+| 4 | Catch Up (R1 outer, purple, last placer) | face "+1● +2 per rival ahead in minions out"; P2,P3 had 3 out vs my 2, but hover counted after placing: "+1●" | purple 0->1 only | match hover; bonus pays only if a rival is ahead AFTER you place -> in a snake with equal minions it almost never pays (toll census) |
+| 5 | Buy followers 4->3 | 4 any -> 3 followers; dialog suggested 1p+3m, I tapped silver to swap | paid 3m+1s; followers 3->6 (after prize later 8); toast "bought 3👤 (paid 3● 1●)" | match. Swap replaced purple (couldn't choose which coin leaves) |
+| 6 | Round I prizes | Most magenta members tie You/P3 -> +2 each | +2 to me, summary "+1 from new members · +3 bought · +1 from abilities" =8 | match |
+| 7 | Shake Down by P4 (ransom) on me | not my choice: prompt "pay 4 to keep it?" with only "Let Robin Hood go" (I had 2 resources) | lost Robin Hood, followers 8->7; nothing in rulebook about ransom | n/a - surprise loss, no warning |
+| 8 | Plan Ahead (R2 middle, purple) | hover "+3●" (4 minions, 3 left after placing) | purple 1->4 | match |
+| 9 | Help Yourself (R1 outer, magenta) in R2 | face "+3● from rivals"; hover "about +3●", split as I like | 3 clicks; magenta 0->3; P2 silver 6->4, P3 purple 5->4 | match |
+| 10 | Rising Tide "Gain silver half the richest" (R2 middle, silver; gift) | hover: everyone else +1●, then half the richest rival's silver rounded up (P2 5 -> 3). Expect +3 silver; "You'd get" line clipped off the popover's right edge | silver 2->5; P2/P3/P4 +1 each; toast lists all four | match (popover clipped at x~900, couldn't read "You'd get") |
+| 11 | Recruit Silversmith (mixed pay) | cost 4● silver +2 any; dialog proposed 4 silver +1 purple +1 magenta | paid as shown; Silversmith on my seat; followers 7->8 | match |
+| 12 | Trade Seeds (R1 outer, yellow; charges me) | face "+1● swap up to 3"; hover "about / it depends on your pick" | gave 1 magenta, got 1 purple (2 clicks on my seat), Done; +1 yellow | match; cost is your own resources, fine |
+| 13 | Poach "Take a member" (R3 inner; steal) | hover "+1 member; a rival decides part of it; Why: Robin Hood +1👤" (stale when hovered - I had no Robin Hood) | took Robin Hood from P4: followers 8->10 (+1 member, +1 Robin Hood since I stole from the most-followers player), P4 17->16; P4's free re-recruit not shown | match on count; hover "Why" was right only by accident; rival's compensation invisible |
+| 14 | Hold Court (R3 inner, silver; gift) | hover +4👤 (9 silver), rivals +2● each | followers 10->14, P2/P3/P4 +2 silver, toast matches | match; hover 'Most silver' showed post-gift numbers (P2 16) vs seat 14 - confusing |
+| 15 | Use Debutante (my member) | hover 'Use: +3●' (double 3 silver), everyone else +2● | silver 3->6, rivals +2 each; toast 'You +3●' doesn't name Debutante | match |
+| 16 | Overtime '2 extra turns for 8' (charges 8 purple) | I hold 3 purple: can't pay -> hover +3● | purple 3->6 (actually toast +3●); toast also repeats stale 'P2 +2● P3 +2● P4 +2●' from Debutante | match; toast merges previous effect |
+| 17 | Good Deed (gift) | +4● me, a rival I choose gets 2 of a color | 2 clicks: color on MY seat, then rival seat; silver 5->9, P3 magenta 1->3 | match; picking the color on my own piles reads like I'm paying |
+| 18 | Redistribute in R3 | hover +1● (only P4 richer than me) | +1 magenta, P4 silver 13->12 | match |
