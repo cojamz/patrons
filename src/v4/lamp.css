@@ -84,7 +84,8 @@ h1,h2,h3{font-family:var(--serif)}
 
 @media (min-width:861px) and (min-height:500px){
   #root:has(> .app.game.lt){padding:0}
-  /* the wheel in the middle; four chairs at the corners (yours bottom left); the shop a slim strip along the bottom */
+  /* the chairs in turn order on the left, the wheel in the middle, the story of the turns on the right; the shop a slim
+     strip along the bottom */
   .app.game.lt{
     height:100dvh;display:grid;
     /* the chairs' column a little wider than the story column on the right: the wheel between them */
@@ -133,7 +134,7 @@ h1,h2,h3{font-family:var(--serif)}
   .lt > .lt-seat .cs-stack{flex-direction:row-reverse;gap:3px;font-family:var(--sans);font-weight:800}
   .lt > .lt-seat .cs-stack.zero{opacity:.4}
   /* the right column: the turns since yours, from the top (the turn card tells the live turn at its foot) */
-  .app.game.lt > .lt-since{grid-column:3;grid-row:1 / 4;align-self:start;max-height:calc(100% - 120px)}
+  .app.game.lt > .lt-since{grid-column:3;grid-row:1 / 4;align-self:center;max-height:calc(100% - 140px)}
   /* you, wherever you land: a cream edge */
   .lt > .lt-seat.mine{box-shadow:inset 0 0 0 1.5px rgba(243,230,200,.32)}
   .lt > .lt-seat.mine.now{box-shadow:inset 0 0 0 1.5px rgba(var(--lamp),.6)}
@@ -156,60 +157,6 @@ h1,h2,h3{font-family:var(--serif)}
   .lt > .lt-seat .cs-order.done::before,.lt > .lt-seat .cs-order[class*="in-"]::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--cream-3)}
   .lt > .lt-seat .cs-order.done::before{opacity:.5}
   .lt > .lt-seat .cs-order[class*="in-"].twice{font-size:14px;line-height:16px;padding:2px 0}
-  /* each chair as the approved plate's seat panel (design/prototypes/language/plate1b.png): the seat ground, an 8px
-     corner, a hairline; the leader beside the name and what it holds (number, then dot), the total big on the right;
-     then its members, then what they make each round and what it just took */
-  .lt > .lt-seat{background:var(--seat, #221a15);box-shadow:inset 0 0 0 1px var(--hair, rgba(242,232,210,.10));border-radius:8px;padding:10px 14px}
-  .lt > .lt-seat.now{background:color-mix(in srgb,var(--seat, #221a15) 88%,rgb(var(--lamp)));box-shadow:inset 0 0 0 1px rgba(var(--lamp),.45)}
-  .lt > .lt-seat > .lt-cult-seat{position:relative;display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;column-gap:10px;row-gap:6px;align-items:center;
-    padding:0;background:none;box-shadow:none;max-width:none}
-  .lt > .lt-seat .cs-head{grid-column:1 / -1;grid-row:1;display:grid;grid-template-columns:subgrid;align-items:center;min-height:32px}
-  .lt > .lt-seat .cs-head .cs-leader{grid-column:1}
-  .lt > .lt-seat .cs-head .cs-who{grid-column:2;min-width:0}
-  .lt > .lt-seat .cs-head .cs-total{grid-column:4;margin-left:0}
-  .lt > .lt-seat .cs-foot{grid-column:3;grid-row:1;z-index:1;justify-self:start;pointer-events:auto}
-  .lt > .lt-seat .cs-crowd{grid-column:1 / -1;grid-row:2;min-height:26px}
-  .lt > .lt-seat .cs-crowd:empty{display:flex}
-  .lt > .lt-seat .cs-build{grid-column:1 / -1;grid-row:2;justify-self:end}
-  /* yours (the plate's "You" panel): the leader beside the name and the big total, what you hold under the name */
-  .lt > .lt-seat.mine .cs-head{grid-row:1 / 3;grid-template-rows:subgrid}
-  .lt > .lt-seat.mine .cs-head .cs-leader{grid-row:1 / 3}
-  .lt > .lt-seat.mine .cs-head .cs-who,.lt > .lt-seat.mine .cs-head .cs-total{grid-row:1}
-  .lt > .lt-seat.mine .cs-foot{grid-column:2 / -1;grid-row:2}
-  .lt > .lt-seat.mine .cs-crowd,.lt > .lt-seat.mine .cs-build{grid-row:3}
-  .lt > .lt-seat .cs-who b{font-family:var(--sans);font-weight:800;font-size:18px;line-height:24px;overflow:hidden;text-overflow:ellipsis}
-  .lt > .lt-seat .cs-who small{display:none}
-  .lt > .lt-seat .cs-total{font-family:var(--sans);font-weight:800;letter-spacing:-.01em}
-  .lt > .lt-seat .cs-res{gap:12px}
-  .lt > .lt-seat .cs-stack{flex-direction:row-reverse;gap:3px;font-family:var(--sans);font-weight:800}
-  .lt > .lt-seat .cs-stack.zero{opacity:.4}
-  /* the right column: the turns since yours, from the top (the turn card tells the live turn at its foot) */
-  .app.game.lt > .lt-since{grid-column:3;grid-row:1 / 4;align-self:start;max-height:calc(100% - 120px)}
-  /* you, wherever you land: a cream edge */
-  .lt > .lt-seat.mine{box-shadow:inset 0 0 0 1.5px rgba(243,230,200,.32)}
-  .lt > .lt-seat.mine.now{box-shadow:inset 0 0 0 1.5px rgba(var(--lamp),.6)}
-  /* the snake rail: a line down the column's gutter from the first chair to the last, its head pointing the way the
-     turns walk this pass (down, then back up) */
-  .lt > .lt-snake{grid-area:seats;justify-self:start;align-self:stretch;width:44px;position:relative;cursor:help}
-  .lt > .lt-snake .sn-line{position:absolute;left:21px;top:var(--rail-top, 12%);bottom:var(--rail-bottom, 12%);width:2px;border-radius:1px;background:rgba(242,232,210,.16)}
-  .lt > .lt-snake .sn-line::after{content:"";position:absolute;left:-5px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent}
-  .lt > .lt-snake.dir-down .sn-line::after{bottom:-10px;border-top:8px solid var(--cream-2)}
-  .lt > .lt-snake.dir-up .sn-line::after{top:-10px;border-bottom:8px solid var(--cream-2)}
-  /* each chair's place in the turns: a plain clause after its name ("placing", "next ×2", "in 3", "done", like the
-     plate's "You  place a minion"), and a dot on the rail beside it: lit for the seat placing now, a ring for the next */
-  .lt > .lt-seat .cs-order{position:static;display:inline;margin:0;padding:0;width:auto;background:none;box-shadow:none;border-radius:0;translate:none;
-    font-family:var(--sans);font-size:14px;font-weight:500;line-height:22px;letter-spacing:0;text-transform:none;color:var(--cream-3);cursor:help}
-  .lt > .lt-seat .cs-order .co-x{font-size:14px;font-weight:800;color:var(--cream)}
-  .lt > .lt-seat .cs-order.now{background:none;box-shadow:none;color:var(--light, #fff3d4)}
-  .lt > .lt-seat .cs-order.next{color:var(--cream-2);box-shadow:none}
-  .lt > .lt-seat .cs-order.done{opacity:1}
-  .lt > .lt-seat .cs-order::before{content:"";position:absolute;left:-38px;top:16px;width:10px;height:10px;border-radius:50%;
-    background:var(--table, #191310);box-shadow:inset 0 0 0 1.5px var(--cream-3);pointer-events:none}
-  .lt > .lt-seat .cs-order.done::before{width:6px;height:6px;left:-36px;top:18px;box-shadow:none;background:var(--cream-3);opacity:.6}
-  .lt > .lt-seat .cs-order.next::before{box-shadow:inset 0 0 0 2px var(--cream)}
-  .lt > .lt-seat .cs-order.now::before{width:14px;height:14px;left:-40px;top:14px;background:var(--light, #fff3d4);box-shadow:0 0 12px rgba(255,236,190,.55)}
-  .lt > .lt-seat > .lt-cult-seat{position:relative}
-  .lt > .lt-seat:empty{visibility:hidden}
   .lt > .lt-shop{grid-area:shop;min-height:0;overflow:hidden}
   .lt > .room,.lt > .error{position:fixed;left:26px;bottom:10px;z-index:20}
   .app.game.lt > .main.over{grid-column:1 / -1;grid-row:2 / -1;min-height:0;overflow:auto}

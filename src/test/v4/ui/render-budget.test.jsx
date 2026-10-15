@@ -102,17 +102,17 @@ describe('render budget', () => {
       R.reset();
       act(() => { session.publish(next); });
       await settle(3);
-      perStep.push({ kind: state.pending.kind, actor: state.pending.player, CultSeat: R.n('CultSeat'), GameScreen: R.n('GameScreen'), ShopCards: R.n('ShopCards'), components: R.total() });
+      perStep.push({ kind: state.pending.kind, actor: state.pending.player, turnEnds: !(next.pending && next.pending.player === state.pending.player), CultSeat: R.n('CultSeat'), GameScreen: R.n('GameScreen'), ShopCards: R.n('ShopCards'), components: R.total() });
       state = next;
     }
     console.log('[render-budget] rival steps:', JSON.stringify(perStep));
-    expect(perStep.length).toBeGreaterThan(1);
-    // no step re-renders all four chairs (each chair renders at most once per step, so 4+ means all of them)
-    for (const s of perStep) expect(s.CultSeat).toBeLessThan(4);
-    // and a step inside a turn (the rival choosing or buying after placing) leaves the turn order alone: at most the
-    // actor's chair and whoever it touched
-    const inside = perStep.filter(s => s.kind !== 'place');
+    // a step inside a rival's turn (placing, choosing, buying while the turn stays theirs) never re-renders all four
+    // chairs: at most the actor's and the one it touched (a chair's own reaction, a hop or a gesture, is a render too).
+    // The step that ends a turn moves every chair's place in the turn order ("now", "next", "in 2"), so all four redraw.
+    const inside = perStep.filter(s => !s.turnEnds);
+    expect(inside.length).toBeGreaterThan(1);
     for (const s of inside) expect(s.CultSeat).toBeLessThanOrEqual(2);
+    for (const s of perStep) expect(s.ShopCards).toBeLessThanOrEqual(1); // the shop once per step, at most
   });
 
   it('a click on a lit space lets the press paint before the table re-renders', async () => {
