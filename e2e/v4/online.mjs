@@ -1,5 +1,6 @@
 // E2E: a 3-person online game, with the things friends actually do.
-//   Hana hosts on a laptop. Gus joins by typing the code. Pia opens the invite link (an iPhone 13 over Firebase).
+//   Hana hosts on a laptop. Gus joins by typing the code. Pia opens the invite link (a laptop; an iPhone 13 over
+//   Firebase with V4_PHONE=1).
 //   Mid-game: Gus reloads, then swipes Back (it must ask, not leave); Pia closes her tab, so Hana gets "Pia left — let a
 //   bot play for them" and taps it; Pia reopens the link and has her seat back; Hana reloads, so the host role moves
 //   to Gus and back she comes as a guest. Everyone clicks the first legal option on their turn, through to final
@@ -72,7 +73,10 @@ const laptop = { viewport: { width: 1270, height: 700 } };
 // BroadcastChannel/IndexedDB only reach tabs of one context; over Firebase every person gets their own context
 const shared = RTDB ? null : await browser.newContext(laptop);
 const ctxFor = async opts => shared || browser.newContext(opts);
-const ctxs = { hana: await ctxFor(laptop), gus: await ctxFor(laptop), pia: await ctxFor(RTDB ? { ...devices['iPhone 13'] } : laptop) };
+// everyone on a laptop by default: phone is out of scope for v0.2 (Cory: laptops only). V4_PHONE=1 puts Pia on an
+// iPhone 13 (over Firebase), as touch.mjs and motion.mjs opt in
+const PHONE = !!process.env.V4_PHONE && !!RTDB;
+const ctxs = { hana: await ctxFor(laptop), gus: await ctxFor(laptop), pia: await ctxFor(PHONE ? { ...devices['iPhone 13'] } : laptop) };
 const watch = (page, who) => {
   page.on('console', m => { if (m.type() === 'error') errors.push(`${who} console: ${m.text()}`); });
   page.on('pageerror', e => errors.push(`${who} pageerror: ${e.message}`));

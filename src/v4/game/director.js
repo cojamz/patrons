@@ -173,6 +173,16 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
     }
     // everything else in the beat, in order: what was paid, what was taken, given, gained, the cards, the followers
     let cur = Math.max(s, next === s ? s : next);
+    // a release (M8): the member drops to the pile first; its refund leaves when the card is 40% along
+    if (c.kind === 'release') {
+      for (const card of m.cards.filter(e => e.type === 'release')) {
+        const d = fly(card.from, card.to);
+        at(cur, { op: 'chip', from: card.from, to: card.to, uid: card.what.uid, path: 'drop', dur: d });
+        ends(cur + d);
+        cur += d * 0.4;
+      }
+      m.cards = m.cards.filter(e => e.type !== 'release');
+    }
     const phase = list => {
       if (!list.length) return;
       let lastR = null, o = cur;
@@ -262,6 +272,7 @@ export function skipChain() {
   chain.flying = 0;
   chain.epoch = (chain.epoch || 0) + 1; // landings still resolving from the skipped chain change nothing
   if (chain.raf) { cancelAnimationFrame(chain.raf); chain.raf = 0; }
+  chain.handoffAt = 0;
   endChain(true);
   for (const fn of skipSubs) fn();
   try { dispatchEvent(new Event('patrons:chain-skip')); } catch { /* no window */ }
@@ -331,9 +342,9 @@ export const noteTable = root => { void root; };
  * `minionsBefore` the wheel's minions as they were (snapshotMinions), `mine` the viewer's seats. Returns the plan.
  * A chain may start while the last one's tail is still landing (the same player's next step shows at its handoff).
  */
-export function playChain(root, before, state, { snap = null, minionsBefore = null, mine = [] } = {}) {
+export function playChain(root, before, state, { snap = null, minionsBefore = null, mine = [], chips = null } = {}) {
   if (!root || before === state) return { atoms: [], total: 0, handoff: 0 };
-  const ctx = { state, before, snap };
+  const ctx = { state, before, snap, chips };
   // read everything first; every write waits for the clock's next frame (before it paints): a write here made the
   // next layout effect lay the whole page out again
   const found = new Map(), rects = new Map();
@@ -360,7 +371,10 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
     for (const w of [a.from, a.to]) if (w.kind === 'stack') { const el = where(w); if (el) { toHold.push([el, w]); chain.pending.set(el, (chain.pending.get(el) || 0) + (a.bundle ? 1 : 1)); } }
   }
   // the follower count waits for its first piece to land (Tick listens for it), and counts while the rest do
-  const base = chain.clock + (chain.queue.length || chain.flying ? 0 : 0);
+  // a chain that arrives while another plays (a choice answered mid-chain, a bot's next step) starts at that one's
+  // hand-off: the beats already playing finish first (grammar S3, §5)
+  const base = chainRunning() ? Math.max(chain.clock, chain.handoffAt || 0) : chain.clock;
+  chain.handoffAt = base + (plan.handoff || plan.total);
   const firstLand = new Map();
   for (const a of plan.atoms) if (a.op === 'land' && a.fol && a.to.kind === 'count' && !a.pay) {
     const el = where(a.to);
@@ -455,10 +469,13 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
         }
         case 'chip': {
           if (skip) return;
-          const A = where(a.from), B = where(a.to);
+          // a member that left its crowd flies from where its chip stood, as itself (its portrait)
+          const was = chips && chips.get(a.uid);
+          const A = was && a.from.kind === 'crowd' ? { getBoundingClientRect: () => was.rect } : where(a.from), B = where(a.to);
           if (!A || !B) return;
           chain.flying++;
-          const anim = flyPath('<i class="piece-dot member"></i>', 'piece-flight piece-member', square(A.getBoundingClientRect(), 26), square(B.getBoundingClientRect(), 26), { path: a.path, duration: a.dur, fade: true });
+          const pic = was && was.html ? `<span class="piece-member-pic">${was.html}</span>` : '<i class="piece-dot member"></i>';
+          const anim = flyPath(pic, 'piece-flight piece-member', square(A.getBoundingClientRect(), 28), square(B.getBoundingClientRect(), 28), { path: a.path, duration: a.dur, fade: true });
           onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); settle(B, MO.settle); });
           return;
         }
@@ -491,7 +508,15 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
 /** Install the skip: a press anywhere, or Space (when it isn't pressing a button), lands the chain on screen. */
 export function installChainSkip() {
   if (typeof addEventListener !== 'function') return () => {};
-  const down = () => { if (chainRunning()) skipChain(); };
+  // a click on a live choice's target (a seat or space to pick, an answer) is an answer, not a skip: the beats playing
+  // finish and the answer's chain follows them (grammar S3). A click anywhere else, or Space, skips.
+  const down = e => {
+    if (!chainRunning()) return;
+    const t = e && e.target;
+    const app = t && t.closest && t.closest('.app.game');
+    if (app && app.dataset.phase === 'choose' && t.closest('[data-option]')) return;
+    skipChain();
+  };
   const key = e => {
     if (e.key !== ' ' || !chainRunning()) return;
     const t = e.target;

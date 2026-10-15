@@ -23,7 +23,7 @@ const x2 = bool('x2');
 const out = argv.shift();
 if (!out) { console.error('usage: capture.mjs <outdir> [states] [--q layout=b]'); process.exit(2); }
 mkdirSync(out, { recursive: true });
-const ALL = ['home', 'setup', 'place', 'buy', 'rival', 'pick', 'pay', 'shophover', 'seathover', 'reckon', 'summary', 'round3', 'results'];
+const ALL = ['home', 'setup', 'place', 'buy', 'rival', 'pick', 'pay', 'shophover', 'seathover', 'reckon', 'summary', 'round3', 'buy3', 'results'];
 const want = argv.length ? argv : ALL;
 
 const SEATS = [{ name: 'P1', kind: 'human' }, { name: 'P2', kind: 'bot' }, { name: 'P3', kind: 'bot' }, { name: 'P4', kind: 'bot' }];
@@ -116,7 +116,7 @@ for (const st of want) {
     if (st === 'home') {
       await page.goto(url());
       await page.evaluate(() => { localStorage.clear(); localStorage.setItem('patrons.v4.introSeen', '1'); });
-      await page.goto(url()); await settle(800); await shot('home');
+      await page.goto(url()); await page.waitForSelector('[data-home]', { timeout: 90000 }); await settle(800); await shot('home');
     } else if (st === 'setup') {
       await load(SAVES.setup()); await page.waitForSelector('.prompt.choice.setup', { timeout: 8000 }).catch(() => {}); await settle(500); await shot('setup');
     } else if (st === 'place') {
@@ -146,6 +146,8 @@ for (const st of want) {
       await page.waitForSelector('.lt[data-phase="reckon"]', { timeout: 30000 });
       if (st === 'reckon') { await settle(2600); await shot('reckon'); }
       else { await page.waitForSelector('.dialog.roundend', { timeout: 40000 }).catch(() => {}); await settle(800); await shot('summary'); }
+    } else if (st === 'buy3') {
+      await load(SAVES.place3()); await placeAndAnswer(); await park(); await settle(500); await shot('buy3');
     } else if (st === 'round3') {
       await load(SAVES.place3()); await shot('round3');
     } else if (st === 'results') {

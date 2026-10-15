@@ -64,6 +64,8 @@ await page.addInitScript(() => {
       if (!g.isConnected) { rk.longest = Math.max(rk.longest, life); alive.delete(g); }
       else if (life > 2500 && !g.dataset.stuck) { g.dataset.stuck = '1'; rk.stuck.push(`${g.className.replace(' ghost-layer', '')} still flying after ${Math.round(life)}ms`); }
     }
+    // (each flight is also counted the moment it's added, by the observer below: a loaded box can paint a short
+    // flight's whole life between two frames)
     for (const g of document.querySelectorAll('.token-flight, .minion-flight')) {
       if (g.dataset.seen) continue;
       g.dataset.seen = '1';
@@ -73,7 +75,17 @@ await page.addInitScript(() => {
     }
     requestAnimationFrame(tick);
   };
-  addEventListener('DOMContentLoaded', () => requestAnimationFrame(tick));
+  const watch = () => new MutationObserver(ms => {
+    const rk = window.__rk;
+    for (const m of ms) for (const g of m.addedNodes) {
+      if (!g.classList || g.dataset.seen || !(g.classList.contains('token-flight') || g.classList.contains('minion-flight'))) continue;
+      g.dataset.seen = '1';
+      if (g.classList.contains('token-flight')) rk.tokens++;
+      else if (g.classList.contains('home')) rk.home++;
+      else rk.out++;
+    }
+  }).observe(document.body, { childList: true });
+  addEventListener('DOMContentLoaded', () => { watch(); requestAnimationFrame(tick); });
 });
 
 let ok = false;

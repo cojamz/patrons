@@ -5,8 +5,9 @@
 //  (m2) your placement sends a worker token flying to the space;
 //  (m3) your recruit flies from the shop as a fixed-size picture (no reflowed text spilling out), starting on screen;
 //  (m4) laptop, Normal bots, Steady animations: after a bot step that shows something (it plays a chain of
-//       animations), the next step waits at least 600ms. Since Cory's 2026-10-15 call the chain sets the pace and a
-//       step with nothing to show (a bot's pass) no longer holds a fixed 600ms.
+//       animations), the next step waits at least 400ms. This pinned the old fixed bot pace (600ms a step); since
+//       Cory's 2026-10-15 calls ("clear and steady, not slow"; every action plays a chain) the chain sets the pace, a
+//       bot's next step shows at its chain's hand-off, and a step with nothing to show (a pass) holds no fixed time.
 // Starts from a saved game (e2e/v4/lib/rich-save.mjs) where P1 holds 6 of every color and is about to place.
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5184.
 import { chromium } from 'playwright';
@@ -106,7 +107,10 @@ for (const prof of PROFILES) {
       await go(big);
       const pay = await page.waitForSelector('.dialog.pay .pay-go[data-option], .dialog.pay .btn.pri[data-option]', { timeout: 2500 }).catch(() => null);
       if (pay) { await page.waitForTimeout(450); await go(pay); }
-      await page.waitForTimeout(3000); // the buy plays as a chain at the default speed (director.js): coins in, followers out, then the count
+      // the buy plays as a chain at the default speed (director.js): coins in, followers out, then the count; wait for the
+      // count to reach its new total (a loaded box paints rarely and takes longer), then judge the values it showed
+      await page.waitForFunction(sel => { const f = window.__fol; return f.length && Number(f[f.length - 1]) - Number(f[0]) >= 6; }, null, { timeout: 12000 }).catch(() => {});
+      await page.waitForTimeout(300);
       const seq = await page.evaluate(() => window.__fol);
       const from = Number(seq[0]), to = Number(seq[seq.length - 1]);
       const between = [...new Set(seq.slice(1, -1).map(Number))].filter(v => v > Math.min(from, to) && v < Math.max(from, to));
@@ -185,7 +189,7 @@ for (const prof of PROFILES) {
     }
     console.log(`laptop pacing: ${pairs} bot steps that show something in round I, shortest wait after one ${Math.round(worst)}ms`);
     if (pairs < 6) errors.push(`(m4) too few bot steps measured (${pairs})`);
-    else if (worst < 570) errors.push(`(m4) bot steps ${Math.round(worst)}ms apart at 1270×700 (need ≥600)`);
+    else if (worst < 380) errors.push(`(m4) bot steps ${Math.round(worst)}ms apart at 1270×700 (need ≥400)`);
   } catch (e) { errors.push(`m4 run: ${e.message}`); }
   await ctx.close();
 }

@@ -29,7 +29,7 @@ import { ChoicePrompt, Confirm, Handoff, Log, useDialog, Popover, CardFace } fro
 import PayPicker from './PayPicker.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
-import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains } from './flight.js';
+import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
 import { playChain, planChain, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed } from '../motion.js';
@@ -102,6 +102,8 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
   const held = useRef(!!table.moment);
   const timer = useRef(null);
   const dwellNext = useRef(0); // the hold the step being committed asks for (started once it's on screen)
+  const remeasure = useRef(null); // how this step's hold follows from its chain's plan (retime: the measured plan)
+  const timerAt = useRef(null);
   const shownRef = useRef(first);
   const online = session.info?.mode === 'online';
   // read (and, if missing, written) once: as a plain useRef argument this ran on every render, re-saving the
@@ -160,8 +162,11 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
       // pass, which holds a moment (MO.passHold).
       const plan = planChain(prev, next, { mine });
       const sameNext = !!(next.pending && prev.pending && next.pending.player === prev.pending.player);
-      // (a rival's step that shows something stays on screen at least the bot pace's floor, 600ms at Normal: motion.mjs m4)
-      const dwell = plan.total ? (sameNext ? Math.max(plan.handoff, rivalStep ? Math.min(rivalDwell, 600) : 0) : plan.total) : rivalStep ? (sameNext ? 0 : MO.passHold) : base;
+      // (a rival's step that shows something stays on screen at least 400ms before the same bot's next step: motion.mjs m4)
+      const dwellOf = pl => (pl.total ? (sameNext ? Math.max(pl.handoff, rivalStep ? Math.min(rivalDwell, 400) : 0) : pl.total) : rivalStep ? (sameNext ? 0 : MO.passHold) : base);
+      const dwell = dwellOf(plan);
+      // the screen measures the real distances once this step is drawn: the pace follows that plan (retime below)
+      remeasure.current = dwellOf;
       if (typeof window !== 'undefined') window.__patronsDwellSum = (window.__patronsDwellSum || 0) + dwell; // (the pacing gate reads it)
       if (!queue.current.length) paced.current = false;
       // every step gets its own commit, even one that doesn't wait, so each chain plays from the step right before it
@@ -180,7 +185,19 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     const d = dwellNext.current;
     dwellNext.current = 0;
     timer.current = setTimeout(() => { timer.current = null; pump(); }, d);
+    timerAt.current = { t0: performance.now(), d };
   }, [table.shown, pump]);
+  // the director measured this step's chain on screen (real distances): hold the next step for that, not the estimate
+  const retime = useCallback(played => {
+    const f = remeasure.current;
+    remeasure.current = null;
+    if (!f || typeof timer.current !== 'number' || !timerAt.current) return;
+    const d = f(played), left = d - (performance.now() - timerAt.current.t0);
+    if (d <= timerAt.current.d) return; // never sooner than planned
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => { timer.current = null; pump(); }, Math.max(0, left));
+    timerAt.current = { t0: timerAt.current.t0, d };
+  }, [pump]);
 
   // a skipped chain (a click, Space) lets the next step show at once
   useEffect(() => onChainSkip(() => {
@@ -204,7 +221,7 @@ function useTable(session, rivalDwell = RIVAL_DWELL_MS, beforeShow = null) {
     pump();
   }, [pump]);
 
-  return [table.shown, table.moment, dismiss, rs0];
+  return [table.shown, table.moment, dismiss, rs0, retime];
 }
 
 /** The viewer's animation speed (Cory: a setting in the menu; Steady by default), kept in this browser. */
@@ -368,7 +385,7 @@ const verbFor = kind => ({ setup: 'picking a starting resource', place: 'placing
 
 export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pace, onResults, askLeave = 0 }) {
   const beforeShow = useRef(null);
-  const [live0, moment, dismissMoment, roundStart0] = useTable(session, pace ?? RIVAL_DWELL_MS, beforeShow);
+  const [live0, moment, dismissMoment, roundStart0, retimeTable] = useTable(session, pace ?? RIVAL_DWELL_MS, beforeShow);
   const state = moment && moment.board ? moment.board : live0;
   useAnyDot((state.quadrants || []).map(q => quadrant(q).resource)); // the "any" dot's four colors, where their quadrants sit
   const mySeats = session.mySeats || NO_SEATS;
@@ -514,6 +531,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const sendToken = useRef(0);
   const root = useRef(null);
   const shopSnap = useRef(new Map());
+  const chipSnap = useRef(new Map()); // member chips as they stood before a member left its cult (snapshotChips)
   const minionSnap = useRef([]);
   const noteTimer = useRef(null);
   const toastTimer = useRef(null);
@@ -562,6 +580,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   // The shop is measured only when a card is about to leave it (perf fix 2: it measured every card, every state), with
   // the DOM still showing the table before the step; your own recruit was measured in onPick already.
   beforeShow.current = (prev, next) => {
+    // a member leaving a cult (released, swapped, taken) flies from where its chip stood: measured now, while it stands
+    if (prev.players && next.players && prev.players.some((p, i) => p.members.some(u => !next.players[i].members.includes(u)))) chipSnap.current = snapshotChips(root.current);
     if (!prev.shop || !next.shop || !prev.shop.some(u => !next.shop.includes(u))) return;
     const snap = snapshotShop(root.current);
     if (snap.size) shopSnap.current = snap;
@@ -578,7 +598,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (before === state) { if (!shopSnap.current.size) shopSnap.current = snapshotShop(root.current); noteTable(root.current); return undefined; }
     // the move plays as a chain (director.js, the motion language in design/prototypes/motion/grammar.md): the
     // selection, then each cause's effects from the engine's stream, in order, every count ticking as pieces land
-    const played = playChain(root.current, before, state, { snap: shopSnap.current, minionsBefore: state.round !== before.round && before.round >= 1 ? wasOnWheel : null, mine: mySeats });
+    const played = playChain(root.current, before, state, { snap: shopSnap.current, minionsBefore: state.round !== before.round && before.round >= 1 ? wasOnWheel : null, mine: mySeats, chips: chipSnap.current });
+    if (state === live0) retimeTable(played);
 
     const lines = newLogLines(before, state);
     // Gifts float onto the receiver's card, worded as what they are: the receiver gains (nobody loses).

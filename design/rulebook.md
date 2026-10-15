@@ -32,13 +32,13 @@ On your turn:
 Members keep working for you: some pay out at each round start (a member that says "Now and at round start" also pays the moment it joins you), some react to what other players do, and some you use once.
 
 ## Round end
-Each quadrant's rim shows its rule, the prize, the tiebreak and the emoji of whoever leads it right now, for example "MOST MEMBERS · +2 · ties: red · 🐱". Point at a rim for the full standings. When the round ends, whoever leads each rule gains followers: +2 in round I, +4 in round II and +6 in round III. Tied leaders all score, unless the tiebreak settles it (Red: more red members). You need at least 1 of what's measured to score. It's counted the moment the round ends, so anything you spend before then doesn't count. The Reckoning pays the quadrants one at a time; tap to skip it.
+Each quadrant's rim shows its rule, the prize, the tiebreak and the emoji of whoever leads it right now, for example "MOST MEMBERS · ties: red · +2", then the follower mark and the leader's emoji. Point at a rim for the full standings. When the round ends, whoever leads each rule gains followers: +2 in round I, +4 in round II and +6 in round III. Tied leaders all score, unless the tiebreak settles it (Red: more red members). You need at least 1 of what's measured to score. It's counted the moment the round ends, so anything you spend before then doesn't count. The Reckoning pays the quadrants one at a time; tap to skip it.
 
 ## Game end
 The game always ends after round III; nothing ends it sooner. End-of-game member bonuses are added, then the most followers wins. If players tie, the one with more members wins.
 
 ## Playing with friends
-- Type your name and pick your emoji. One person taps **Host online game** and shares the invite link (or the room code). Everyone else opens the link (or types the code and taps **Join with code**) and waits for the host to start.
+- Type your name on the home screen (you pick your emoji in the lobby). One person taps **Host online game** and shares the invite link (or the room code). Everyone else opens the link (or types the code and taps **Join with code**) and waits for the host to start.
 - The host can add bots and pick their level, pick the table and start. Each person plays on their own device.
 - If you reload or lose your connection, open the same link again and you get your seat back. If someone leaves, the host can let a bot play for them until they return.
 - Something looked wrong? Open the menu, tap **Copy game record**, and send it to Cory with a note.

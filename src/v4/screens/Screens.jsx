@@ -300,13 +300,13 @@ export function Lobby({ lobby, myId, onLeave }) {
         )}
         <TablePicker value={shownTable} onChange={pickTable} readOnly={!isHost || !lobby.setTable} />
         {err && <p className="error">{err}</p>}
-        {isHost ? (
-          <div className="row-btns">
-            <button type="button" className="btn pri" disabled={view.canStart === false || players.length < 2 || !!tableProblem(shownTable.quadrants)} onClick={() => act(() => lobby.start())}>Start game</button>
-          </div>
-        ) : <p className="hint">Waiting for {view.hostName || 'the host'} to start…</p>}
+        {!isHost && <p className="hint">Waiting for {view.hostName || 'the host'} to start…</p>}
         {isHost && view.startHint && <p className="hint" data-start-hint>{view.startHint}</p>}
-        <button type="button" className="btn ghost" onClick={onLeave}>Leave</button>
+        {/* Leave beside Start, as Back sits beside Start on the setup page (one footer, one pattern) */}
+        <div className="row-btns">
+          <button type="button" className="btn" onClick={onLeave}>Leave</button>
+          {isHost && <button type="button" className="btn pri" disabled={view.canStart === false || players.length < 2 || !!tableProblem(shownTable.quadrants)} onClick={() => act(() => lobby.start())}>Start game</button>}
+        </div>
       </div>
     </div>
   );

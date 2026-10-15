@@ -157,6 +157,20 @@ export function flyToken(fromEl, toEl, html, { tag = '', duration = MO.reckonTok
   return anim || true;
 }
 
+/** Every member chip in the cults as it stands: uid → { html (its portrait), rect } (a released one flies from here). */
+export function snapshotChips(root) {
+  const out = new Map();
+  if (!root) return out;
+  root.querySelectorAll('.cs-member[data-uids]').forEach(el => {
+    const r = el.getBoundingClientRect();
+    if (!r.width) return;
+    const fig = el.querySelector('.fig svg, .fig img, svg');
+    const html = fig ? fig.outerHTML : '';
+    for (const u of el.dataset.uids.split(' ')) out.set(Number(u), { html, rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
+  });
+  return out;
+}
+
 /** Where every placed minion is right now (to send them home when the round clears the wheel). */
 export function snapshotMinions(root) {
   const snap = [];

@@ -6,6 +6,14 @@ Instruments:
 - **Plan probe:** `planChain` (src/v4/game/director.js) over whole 4-bot games played by Normal bots with effect streams, P1 counted as "you". It uses the plan's own 450px typical distance, needs no screen, and isn't affected by the box's load. It's bundled with esbuild from the designer's scratchpad (`md/plan-entry.mjs`). It measures the targets H2–H4 and H7–H9 at the level of the plan; the real table can only be slower.
 - **Live trace:** a Playwright run on the designer's dev server (:5414, live tree, `?trace=1&speed=steady`) that logs every `Element.animate`, ghost, held number and phase change with page timestamps. The box ran at load 31–37 on 4 CPUs, so absolute times are noise. The trace is good for order and for numbers that change at the wrong moment.
 
+## Status (06:27): what's open
+Load-free verification uses the filmstrip; "engineer" means reported fixed and not yet re-filmed.
+- **Open, blocking the feel:** 39 (answering a choice skips the gain), 38 (pacing uses the unmeasured plan, so the next player starts early), 28 (the follower count counts dim and slow), 37 (the 600ms bot floor costs 0.34s per wait; make it 400).
+- **Open, other owners:** 7 and 27 (the turn card and header run ahead of the chain: GameScreen's turn story), 24 (a released member flies as a blank square, after its refund), 25 (hovers open under a resting pointer: HoverCards), 29–32 (the Reckoning: the card hides the rim, 900ms of "counting…", the count ticks late; Reckoning.jsx, passed to the foreman), 36 (reduced-motion pacing), 34 (a ringed dot over the wrong stack; not re-checked).
+- **Fixed and seen in filmstrips:** 1–6, 11, 13, 14, 19, 20, 21, 23, 26, 33, 35. 10 not reproduced.
+- **Fixed by the engineer, not re-filmed:** 8, 9, 12, 22.
+- **Applied to the grammar:** 17 (tighter Steady holds), 18 (H2 judged at p50), the Reckoning at about 1.6s a rim (Cory's "readable, one quadrant at a time").
+
 ## Round 1 (05:20, director.js as of 05:08)
 
 ### Blocking the budget (H2, H3)
@@ -159,3 +167,22 @@ New:
 37. **The 600ms bot floor on a step with a hand-off costs 0.34s per wait.** (GameScreen: `Math.max(plan.handoff, min(rivalDwell, 600))` when the same bot moves next.) Plan probe, Steady, 8 games: the wait between your turns goes from 6.44s to **6.77s p50**, over H2's 6.5s. A rival's turn goes 1.85 → 1.88s, and its p95 2.83 → 2.93s. A 400ms floor costs nothing (6.44s): hand-offs are rarely shorter than 400ms. Fix: a 400ms floor, and update `e2e/v4/motion.mjs` m4 from "≥600ms apart" to "≥400ms apart", saying so in the commit: it pinned the old fixed bot pace, and Cory's call now is "clear and steady, not slow", with the chain setting the pace.
 
 Still open (not the engineer's files): 24 (the release's blank chip and order), 25 (hovers under a resting pointer), 7 / 27 (the turn card and header timing, GameScreen's turn-story code), 29–31 (the Reckoning, Reckoning.jsx: passed to the foreman), 36 (reduced-motion pacing). 14, 21, 22 and 28 are reported fixed by the engineer; not yet re-filmed.
+
+## Round 13 (06:21, re-filmed: a rival turn, and a 10-for-10 follower buy; code as of 06:11)
+`review-r13-follower-count.png` (your count and P3's seat, 700–1300ms), `review-r13-overlap-1000ms.png`.
+
+Verified fixed:
+- **21:** P3's squat now flies. Its frog lifts out of P3's column at about 280ms, crosses the hub at 350 and stamps into Grove at about 420.
+- **14:** the "+10" label no longer sits on the digit as the bundle arrives (it rides above the count at 1000ms).
+
+Still wrong:
+- **28 (half):** the count now waits for the landing, but then still counts dim and slow: it shows a tan 6 at 1100–1150, 7 at 1200–1250 and 9 at 1300, so ten followers take about half a second to count in, at reduced brightness. M11: a 240ms roll at full brightness with a 1.24 settle. It's `Tick`'s own style and length; when the director's land event drives it, use the roll's 240ms and keep the color.
+- **24, 7:** unchanged. The released chip still flies as a blank square (1120–1330ms), and "P3 joined P2 on Grove" shows at 210ms, before P3's minion has left its column (280).
+
+New:
+38. **The next player starts before your chain has landed.** At 1000ms your "+10" bundle is still arriving at your count, and P3's frog is already out of its column (`review-r13-overlap-1000ms.png`). The table's pacing calls `planChain` without `measure`, so it times every flight at the 450px typical distance, while playback flies the real distance. The throw from the 10-for-10 tile to your count is about 1000px: 440ms on screen against 335ms in the plan. So the pace runs out about 100ms early on every long throw, and two stories overlap. Fix: pace on the measured plan (the same one `playChain` plays), or have `playChain` announce its real end and advance on that (§5: the next story starts at this chain's real last landing plus the breath).
+
+## Round 14 (06:25, filmstrip of Kickback: +3 gold, with Prospector, then "give 1 gold to…")
+`review-r14-choice-skips-gain.png` (0ms and 100ms).
+
+39. **Answering the choice skips the gain you just earned.** Kickback asks "give 1 gold to…" at once, while your +3 (and Prospector's +1) are about to fly. The answer is a click, and every click skips the chain, so your gold jumps 5 → 9 between 0 and 100ms and the +3 never flies. Most players answer a required choice within half a second, so for them Kickback's gain is never seen. Grammar S3, now explicit: answering a choice isn't a skip. The click is acknowledged at once (press, the target lights), the beats already playing finish, and the choice's own effect (the gift) plays after them. Only a click on empty table or Space skips. The gift itself reads fine: the gold arcs from your stack to P2's, and P2's number ticks at about 500ms.

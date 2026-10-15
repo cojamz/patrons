@@ -63,7 +63,7 @@ Every row: the path, what flies, the stagger for N, the duration (Steady; sectio
 
 **S2. A space is chosen (a rival).** The rival's seat already carries the turn light. Their bottom minion lifts out of their column (the first 15% of its flight, no separate hop), flies on an arc to the space (340ms; the space's door stays dark until it lands), and stamps into the door (140ms, overlapping the last 60ms of flight). Then a read hold of 130ms from the landing: the space's words are what the eye lands on, so it reads which space before anything flies. The space's pulse is the last 90ms of that hold, and the first piece leaves as the hold ends.
 
-**S3. A choice inside an action** (Kickback's "a player you choose", Collect Debts' picks, Echo's target). The chain pauses at the choice: everything before it has landed, nothing after it has left. A rival's choice shows as a 160ms point at what they chose (the chosen seat or space pulses) before its effect flies.
+**S3. A choice inside an action** (Kickback's "a player you choose", Collect Debts' picks, Echo's target). The chain pauses at the choice: everything before it has landed, nothing after it has left. Answering a choice is not a skip: a click on a choice's target is acknowledged at once (press, the target lights), the beats already playing finish, and the choice's own effect plays after them. Otherwise a player who answers quickly (most do) never sees what the action gave them. A rival's choice shows as a 160ms point at what they chose (the chosen seat or space pulses) before its effect flies.
 
 ### Movement
 **M1. Gain** (`gain`, from a space, quadrant, member, rim or bank to a stack). Arc. Dots, or a bundle at 4+. Stagger 60ms between single pieces. Flight by distance (~320ms). Each landing ticks the stack by one and settles it; a bundle rolls the number from old to new over 240ms and settles at 1.24. Emphasis: the source's pulse (a space) or hop (a member) before the first piece leaves. Several colors from one source (Peddler's "+1 of each other color", "+2 silver and +2 of another color") fly as one beat, each color its own group, groups 40ms apart.
@@ -236,9 +236,11 @@ A rival's turn is five lines, each one beat or a few:
 5. **What they bought:** the chosen card lifts at the hand-off from their gain, the coins drop into it (that's the "which one"), the card flies, its worth hops to their count. Or the follower buy's exchange. A pass shows nothing; the turn card says "passed".
 Then a 120ms breath and the next player. The bot's own steps inside its turn (its choices, its buy) never wait on a timer of their own: the story plays straight through.
 
-**A bot's steps flow into each other.** A bot's turn is several engine steps (place, its choices, what to buy, how to pay). A step with nothing to show costs nothing when the same bot moves again right after it; only a pass that ends the turn holds, and only briefly (Quick 150, Steady 300, Relaxed 500ms, with "passed" on the turn card). And when the same bot moves again, its next step shows at this chain's hand-off (its last piece two-thirds along), not after its last landing: the turn reads as one story, not as three.
+**A bot's steps flow into each other.** A bot's turn is several engine steps (place, its choices, what to buy, how to pay). A step with nothing to show costs nothing when the same bot moves again right after it; only a pass that ends the turn holds, and only briefly (Quick 150, Steady 300, Relaxed 500ms, with "passed" on the turn card). And when the same bot moves again, its next step shows at this chain's hand-off (its last piece two-thirds along), not after its last landing: the turn reads as one story, not as three. A step that shows something stays at least 400ms (so it's seen) before the same bot's next step; 600ms measured 0.34s slower per wait for nothing (review.md, 37).
 
 **The timeline bends, it never bunches.** On a slow machine a frame can arrive late. Then everything after it moves later by the same amount; nothing fires in a burst to catch up. Each landing (its tick and settle) happens when that piece's own flight finishes, never on a separate timer that can run ahead of it, and a held number lets go only after its last piece has really landed.
+
+**The next story waits for this one's real landing.** The table advances on the chain as it actually plays on screen (its measured distances, its real last landing), never on an estimate that can run out early and start the next player's minion while this one's pieces are still in the air.
 
 **Thinking never shows as waiting.** The engine runs ahead of the screen: the next bot's move is computed while the current chain plays, and the table plays the queue. The only time the table waits on a bot is when its thinking takes longer than the chain in front of it.
 
@@ -247,7 +249,7 @@ Then a 120ms breath and the next player. The bot's own steps inside its turn (it
 ### Numbers stay honest while things overlap
 - A stack never sends while pieces are still flying into it: its departure waits for the last arrival (+40ms). Otherwise its number would read wrong for a moment.
 - A number that's rolling and gets another arrival extends its roll to the new total; it never shows two jumps.
-- The held number on a stack or count lets go to the engine's number when its last piece lands, when the chain is skipped, or 200ms after the chain's planned end, whichever comes first.
+- The held number on a stack or count lets go to the engine's number when its last piece really lands, or at once when the chain is skipped. A safety net lets go 1s after the chain's real end, in case a landing never comes.
 
 ## 6. Skips and inputs
 
@@ -255,7 +257,7 @@ Then a 120ms breath and the next player. The bot's own steps inside its turn (it
 - **Fast-forward:** Space twice within 400ms, or Space held, lands every queued chain up to your turn, one every 120ms in turn order (the turn cards flick through), and the since-your-last-turn strip carries the story.
 - **A click on something live skips and acts in the same frame.** Clicking a space or a shop card mid-chain finishes the chain and does what you clicked. The double-tap guard (`MO.stepLock`) never eats a click that skipped a chain.
 - **Input never waits on decoration.** Your spaces take a click from the moment the engine says it's your turn, even while a rival's chain plays (a click then skips it). Their lit look, the one glow, fades in (150ms) when that chain's main beat has landed, so the glow doesn't compete with the show.
-- **Hovers** work during chains. Ghosts take no pointer events.
+- **Hovers** work during chains. Ghosts take no pointer events. A hover opens only when the pointer moves, never because something moved under a still pointer (a card dealt into the slot under it, a dialog closing over the wheel).
 - **Reduced motion** (the system setting, or the menu): nothing travels, hops, tugs or bounces. Each beat's end state appears with a 120ms crossfade on the numbers that change, and the place that changed gets a 1px light outline for 400ms. Beats keep their order and Quick spacing (about 150ms a beat), so a rival's turn still reads in order. Cards crossfade in place (the shop card out, the chip in). The Reckoning shows each rim's result in turn, 400ms apart.
 - **A hidden tab** finishes every chain at once; nothing plays catch-up on return. A resize or a layout change mid-chain skips the chain. A change of speed applies from the next chain.
 - **Off-screen places** (a phone's folded seat): a piece flies to the nearest visible stand-in for it (the seat's header), never off screen. If neither end is visible, nothing flies and the number crossfades.

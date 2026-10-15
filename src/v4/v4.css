@@ -184,6 +184,8 @@ svg.late .slot.flash .worker{animation-delay:.7s}
 .piece-flight .bundle-n{position:absolute;right:100%;margin-right:3px;font:800 14px/1 var(--body);color:var(--cream,#f3e6c8);text-shadow:0 0 1px #120c0a,0 1px 0 #120c0a,1px 0 0 #120c0a,-1px 0 0 #120c0a,0 -1px 0 #120c0a;white-space:nowrap}
 .piece-flight .path-turn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 .piece-flight .path-turn > svg{width:100%;height:100%}
+.piece-member .piece-member-pic{display:flex;width:100%;height:100%;align-items:center;justify-content:center;filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
+.piece-member .piece-member-pic > svg,.piece-member .piece-member-pic > img{width:100%;height:100%;image-rendering:pixelated}
 .piece-member .piece-dot.member{width:100%;height:100%;border-radius:4px;background:var(--paper,#f4ebd7);box-shadow:0 0 0 1px rgba(42,31,23,.5)}
 .worker-flight.trail{opacity:.75}
 /* the chosen space lights before anything leaves it (director.js) */
@@ -286,7 +288,7 @@ b.num[data-hold]::after{content:attr(data-hold);visibility:visible;position:abso
 /* Start and Back never leave the screen, however long the page gets (Custom table: RC1 sweep 5): the page scrolls
    inside, below the narrow app's top gap, and its buttons stick to its foot */
 .app.narrow > .dialog.page{max-height:calc(100dvh - 6vh - 24px)}
-.dialog.page > .row-btns{position:sticky;bottom:-18px;z-index:2;margin:0 -4px -18px;padding:12px 4px 18px;background:linear-gradient(to bottom,transparent,var(--table-2) 14px)}
+.dialog.page > .row-btns:last-child{position:sticky;bottom:-18px;z-index:2;margin:0 -4px -18px;padding:12px 4px 18px;background:linear-gradient(to bottom,transparent,var(--table-2) 14px)}
 .dialog.page > .row-btns .btn.pri{min-width:112px}
 .dialog h2{font-family:var(--display);font-weight:400;margin:0;font-size:var(--fs-5)}
 .dialog.confirm{max-width:380px}
@@ -1173,7 +1175,8 @@ header.bar{grid-template-rows:minmax(40px,auto) 20px}
 /* table picker (setup + lobby) */
 .table-pick{display:flex;flex-direction:column;gap:8px}
 .table-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.table-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid color-mix(in srgb,var(--c) 55%,var(--rim));border-radius:999px;padding:4px 11px;font-weight:700;color:var(--c);background:color-mix(in srgb,var(--c) 8%,var(--table))}
+.table-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 2px;font-weight:700;color:var(--c);cursor:help}
+/* (no pill border: the table's spheres are read, not clicked; a bordered pill looked like a button) */
 .table-chip .dot,.sphere .dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
 .sphere-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
 .sphere{position:relative;display:grid;grid-template-columns:auto 1fr;column-gap:7px;align-items:center;text-align:left;min-height:48px;padding:6px 10px;border-radius:10px;border:1px solid var(--rim);background:var(--table);cursor:pointer}
