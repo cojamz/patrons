@@ -326,8 +326,15 @@ function inputFor(state, task) {
       opts.push({ id: 'pass', label: 'Pass', kind: 'pass' });
       return { kind: 'buy', extra: !!task.extra, prompt: task.extra ? `${p.name}: buy again (Big Spender), or pass` : `${p.name}: recruit a member, buy followers, or pass`, options: opts };
     }
-    case 'choose':
-      return { kind: 'choose', prompt: task.prompt, options: task.options };
+    case 'choose': {
+      // only the options whose cards are still where they were when the choice was queued (see liveOptions)
+      const options = liveOptions(state, task);
+      if (options.length || !task.options.length) return { kind: 'choose', prompt: task.prompt, options };
+      return {
+        kind: 'choose', prompt: task.prompt, options: [],
+        onEmpty: () => log(state, `${task.prompt.split(':')[0]}: nothing left to choose (${p.name}'s options were taken or moved first), so nothing happens.`),
+      };
+    }
     case 'release': {
       const opts = [];
       for (const c of state.resources) {
@@ -957,11 +964,33 @@ function ctxFor(state) {
       if (!options.length) return;
       // follow-up choices queued during one resolution keep their call order
       const at = state.queue.findIndex(t => !t._fresh);
-      const task = { t: 'choose', p: p.id, prompt, options, h: handler, data, _fresh: true };
+      const task = { t: 'choose', p: p.id, prompt, options: options.map(o => pinCards(state, o)), h: handler, data, _fresh: true };
       state.queue.splice(at < 0 ? state.queue.length : at, 0, task);
     },
   };
   return ctx;
+}
+
+// A queued choice can wait while other things happen first (a member used in the buy step queues its choice behind
+// the buy re-offer; a copy's free member waits for earlier copies). An option that names cards (a face-up member, a
+// member someone holds, a trade pair) remembers where each card was when the choice was queued (`at`), and the choice
+// is shown with only the options whose cards are still there: a card bought, stolen or released in the meantime is
+// dropped, never picked (that threw "Card N is not in the shop"). No option left: the choice resolves to nothing,
+// with a log line.
+const CARD_KINDS = new Set(['card', 'member', 'trade']);
+function whereIs(state, uid) {
+  if (state.shop.includes(uid)) return 'shop';
+  if (state.pile.includes(uid)) return 'pile';
+  const o = state.players.find(q => q.members.includes(uid));
+  return o ? `p${o.id}` : 'gone';
+}
+function pinCards(state, o) {
+  const uids = CARD_KINDS.has(o.kind) ? [].concat(o.value).filter(u => Number.isInteger(u) && state.cards[u]) : [];
+  return uids.length ? { ...o, at: Object.fromEntries(uids.map(u => [u, whereIs(state, u)])) } : o;
+}
+/** A queued choice's options that are still good: every card an option names is where it was when it was queued. */
+export function liveOptions(state, task) {
+  return task.options.filter(o => !o.at || Object.entries(o.at).every(([u, w]) => whereIs(state, Number(u)) === w));
 }
 
 // Follow-up choices queued while one task resolves are marked fresh so they keep their call order.
