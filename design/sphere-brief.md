@@ -39,3 +39,26 @@ Handed to every sphere-design agent, together with design-principles.md, decisio
 - Build the sphere for real as an engine content module (`src/engine/v4/content/<id>.js`) with unit tests, so it can be played and simulated.
 - Measure: run the member-value sim and a 400-game seat-balance sim with the sphere swapped in for a stand-in.
 - Hand Cory a numbered list (actions, then members, one line each with cost) that he can answer by number. Pitch only what survived your own play-through in your head and the numbers.
+
+# Rework principles (Cory, 2026-10-15; full wording in decisions.md 17:39–18:20)
+
+0b. Simpler but more strategic members and actions (Cory, 19:48).
+0. The heart of the game: members feel good and fun to have in your cult. Different combinations feel radically different and push radically different play styles; members from different spheres, with the actions, make a wide variety of competitive engines.
+
+Spheres and spaces
+1. Every action feels GOOD to take, and distinct.
+2. Each sphere has a high-level theme with several ways to achieve it, sometimes a way to counter it, and several ways to gain its resource.
+3. Each sphere has a round-I action giving up to 3 resources with a condition or flavor attached (Top Up, Kickback).
+4. Spaces that grow through a round are welcome (Bandwagon; Catch Up as 1/2/3 for your 1st/2nd/3rd minion): take it early for less, or wait and risk losing it. Watch the edge for whoever goes first.
+5. Interaction is mostly implicit (Green's copying, Rising Tide). Stings are fine, never crazy bad: losing a member is for round III only.
+6. Every word explains itself (no "loose follower").
+7. Pending Cory's yes (Claude's): a sphere's prize rewards what the sphere builds; its round-III moment is visible from round I; dipping into a sphere is worth it.
+
+Members
+8. Works on a real table: players track it themselves, nothing remembers last round, no debts owed later.
+9. Any choice is made at recruit and kept; the card says what happens if it's stolen.
+10. Easy to show, or it's out. It lives where its idea lives. Its name says what it does.
+11. No two members in a sphere are slight variations of each other. Passive gain is fine where it's distinct.
+12. Fitting many builds is a plus; interaction is good even if it fades as you grow; rule-benders welcome, priced for round III; paying for itself on arrival allowed, not loved.
+13. No type labels on members: types overlap, and the fidelity of each card matters. The mix is checked for the sphere as a whole: varying costs (maybe 1–10), links to other spheres, extra followers, extra scoring, activatables, combinations.
+14. Short term: 10 members per sphere, 10 neutral (Cory designs the neutral ones).

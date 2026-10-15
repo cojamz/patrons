@@ -87,18 +87,16 @@ describe('Gold members', () => {
     expect(G(s)[0]).toBe(2);
     expect(named(s, 'Tax Collector')).toHaveLength(1);
   });
-  it('Tax Collector: only the rival with the most followers pays; ties for the most count; read before the buy', () => {
+  it('Tax Collector: any rival buying followers pays +1 gold (Cory 2026-10-15); your own buys don\'t', () => {
     const buyAs = (p, bonus, tier = 'small') => {
       const res = [{}, {}, {}]; res[p] = rich;
       const s = sceneQ({ n: 3, res, bonus, members: [['gold.taxman']], queue: [{ t: 'turn', p }] });
       return move(take(s, 'gold.rush'), `tier:${tier}`);
     };
-    expect(G(buyAs(1, [0, 5, 0]))[0]).toBe(1); // P2 leads the rivals
-    expect(G(buyAs(2, [0, 5, 0]))[0]).toBe(0); // P3 is behind P2
-    expect(named(buyAs(2, [0, 5, 0]), 'Tax Collector')).toEqual([]);
-    expect(G(buyAs(2, [0, 3, 3]))[0]).toBe(1); // tied for the most
-    expect(G(buyAs(2, [0, 5, 3], 'mid'))[0]).toBe(0); // 3 → 6 passes P2, but P3 was behind when it bought
-    expect(G(buyAs(1, [9, 5, 0]))[0]).toBe(1); // the owner's own lead doesn't matter: P2 leads the rivals
+    expect(G(buyAs(1, [0, 5, 0]))[0]).toBe(1); // the leader buys
+    expect(G(buyAs(2, [0, 5, 0]))[0]).toBe(1); // a trailing rival buys: it pays too now
+    expect(named(buyAs(2, [0, 5, 0]), 'Tax Collector').length).toBe(1);
+    expect(named(buyAs(0, [0, 5, 0]), 'Tax Collector')).toEqual([]); // the owner's own buy pays nothing
   });
 
   it('Merchant: +1 gold whenever anyone recruits a gold member, named; a gold-leaning guest (Big Spender) counts', () => {
@@ -150,11 +148,11 @@ describe('Gold members', () => {
     expect(named(s, 'Speculator')).toHaveLength(1);
   });
 
-  it('Tinker: an action gaining another color also gives half as much gold, rounded up, named', () => {
+  it('Alchemist: an action gaining another color gives +1 gold, named', () => {
     const s = take(sceneQ({ members: [['gold.tinker']] }), 'red.evenswap');
     expect(s.players[0].res.red).toBe(1);
     expect(G(s)[0]).toBe(1);
-    expect(named(s, 'Tinker')[0]).toMatch(/P1's Tinker: \+1 gold/);
+    expect(named(s, 'Alchemist')[0]).toMatch(/P1's Alchemist: \+1 gold/);
   });
 
   it('Investor: set aside at round start, back doubled at round end; both named', () => {
@@ -176,10 +174,10 @@ describe('Gold members', () => {
     expect(s.pending.options.some(o => o.id.startsWith('use:'))).toBe(false);
   });
 
-  it('Tycoon: game end +1 follower per 3 gold, in the final parts', () => {
+  it('Tycoon: game end +1 follower per 2 gold, in the final parts', () => {
     const s = sceneQ({ res: [{ gold: 10 }], members: [['gold.tycoon']], queue: [{ t: 'finish' }] });
-    expect(s.players[0].final.parts).toContain('Tycoon +3');
-    expect(followers(s, s.players[0])).toBe(1 + 1 + 3);
+    expect(s.players[0].final.parts).toContain('Tycoon +5');
+    expect(followers(s, s.players[0])).toBe(1 + 1 + 5);
   });
 
   it('Treasurer: when recruited, gold equal to your member count (itself included), named', () => {
