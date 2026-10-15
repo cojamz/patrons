@@ -29,3 +29,11 @@ Instruments: two blind AI testers on RC1 (fd4d734): a laptop newcomer vs 3 Norma
 ## Not acted on
 - `?intro=1` on the home screen: the intro plays after Start, which is how it's built. The intro's pizza leader against the seat's ninja: the intro is a generic example, and Cory picked pizza.
 - "Badged ◆" confusion: Cory has already dropped badged (content agent).
+
+## Saboteur (robustness B; no crash, no double-applied move, totals always added up)
+15. One game open in two tabs splits into two games saving to the same slot, and moves are lost silently. The newer tab should take over and the older one say so. Goes to the session agent.
+16. Reloading Game over wipes the result, with no Resume and no results. Keep the finished game's results reachable from home. Goes to the session agent.
+17. Reloading during the Reckoning or the round summary skips it, and bot turns resolve unseen. Resume into the summary. Goes to the session agent.
+18. Member cards in the bottom seats open under the shop strip and past y=700. Goes to UI clarity.
+19. Collect Debts offers "Take all 3 from P3" when P3 has 1, and its counter resets after a mid-split reload. The Social Climber choice labels are inconsistent. Goes to the engine agent.
+20. Smaller: the pay dialog doesn't take focus, so Enter does nothing; seat totals show the final numbers at step 1 of the Reckoning. Goes to UI clarity.
