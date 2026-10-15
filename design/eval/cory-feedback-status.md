@@ -43,3 +43,6 @@ Done means seen on screen and tests passing. The next batch ships to the preview
 25. Members that are items rather than people, worth no follower.
 26. The Blue rework.
 27. Better pixel animations (the art pass).
+
+## Follow-ups seen on screen (foreman)
+- Pick-on-board: the choice caption sits over the bottom of the wheel, and the keyboard list shows as chips for everyone. Fold the list behind keyboard focus, and dock the caption off the wheel once the seat column lands.
