@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { followers, turnRail } from '../../../engine/v4/core.js';
 import { take, move, uidOf } from './helpers.js';
-import { sceneQ, buy, linesNaming } from './cards-helpers.js';
+import { sceneQ, buy, linesNaming, passBuys } from './cards-helpers.js';
 
 const Q = ['gold', 'red', 'purple', 'green'];
 const sc = o => sceneQ({ quadrants: Q, ...o });
@@ -141,11 +141,13 @@ describe('Purple members', () => {
     expect(turnsQueued(s, 0)).toBe(0); // Crunch Time adds no turn (and here P1 has none left to bring forward)
     expect(named(s, 'Corner-Cutter')).toHaveLength(0);
   });
-  it('Bookkeeper on your last placement of the round (before its buy), not at round end; Clockmaker and Lamplighter at round start; all named', () => {
+  it('Bookkeeper when your last turn of the round ends (after its buy; Cory 2026-10-15), not at round end; Clockmaker and Lamplighter at round start; all named', () => {
     let s = sc({ res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 }, queue: [{ t: 'endRound' }] });
     expect(P(s)).toBe(5);
     s = take(sc({ left: 1, res: [{ purple: 5 }], members: [['purple.bookkeeper']], slots: { '0-0': 0, '0-1': 0, '0-2': 0 } }), 'red.turnout');
-    expect(P(s)).toBe(5 + 2); // its last worker: 4 workers on the board → +1 per 2
+    expect(P(s)).toBe(5); // its last worker landed; the turn isn't over until its buy
+    s = passBuys(s);
+    expect(P(s)).toBe(5 + 2); // the turn ends: 4 workers on the board → +1 per 2
     expect(named(s, 'Bookkeeper')).toHaveLength(1);
     s = sc({ res: [{ purple: 7 }], members: [['purple.clockmaker']], queue: [{ t: 'round', r: 2 }] });
     expect(P(s)).toBe(7 + 3); // +1 per 2 purple held
@@ -154,10 +156,10 @@ describe('Purple members', () => {
     expect(P(s)).toBe(5);
     expect(named(s, 'Lamplighter')).toHaveLength(1);
   });
-  it('Lamplighter × Extra Hand: still the printed 5 in round III (see ledger question)', () => {
+  it('Lamplighter × Extra Hand: every minion you get counts, 6 in round III (Cory 2026-10-15)', () => {
     const s = sc({ members: [['purple.lamplighter', 'benders.extrahand']], queue: [{ t: 'round', r: 3 }] });
     expect(s.players[0].left).toBe(6);
-    expect(P(s)).toBe(5);
+    expect(P(s)).toBe(6);
   });
   it('Timekeeper: game end +1 follower per 3 purple, in the final parts', () => {
     const s = sc({ res: [{ purple: 7 }], members: [['purple.patience']], queue: [{ t: 'finish' }] });

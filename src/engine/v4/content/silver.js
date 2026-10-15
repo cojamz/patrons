@@ -111,7 +111,7 @@ export const silverActions = [
     },
   },
   {
-    key: 'tongue', ring: 2, name: 'Sweet Talk', text: '+4 silver, then swap any of your silver for one other color, one for one. Everyone else +1 silver.',
+    key: 'tongue', ring: 2, name: 'Sweet Talk', text: '+4 silver, then swap half or all of your silver for one other color, one for one. Everyone else +1 silver.',
     estimate: ctx => 5 - spillCost(ctx, 1),
     resolve(ctx, p) {
       hostGain(ctx, p, 4);
