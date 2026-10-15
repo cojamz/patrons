@@ -211,7 +211,7 @@ export function planChain(before, state, { mine = [], measure = null } = {}) {
 // frame, so a late frame (a loaded box) stretches the show instead of bunching its pieces; and a piece's landing (its
 // count ticking, its stack settling) comes from that piece's own animation finishing, never from a separate timer.
 
-const chain = { queue: [], clock: 0, last: null, raf: 0, flying: 0, holds: new Map(), pending: new Map(), counts: new Set(), root: null };
+const chain = { queue: [], clock: 0, wall: 0, last: null, raf: 0, flying: 0, holds: new Map(), pending: new Map(), counts: new Set(), root: null };
 const skipSubs = new Set();
 /** Something that should jump to its end state when a chain is skipped (the table's pacing). */
 export const onChainSkip = fn => { skipSubs.add(fn); return () => skipSubs.delete(fn); };
@@ -219,9 +219,14 @@ export const chainRunning = () => chain.queue.length > 0 || chain.flying > 0;
 
 function tick(now) {
   chain.raf = 0;
+  if (chain.last == null) chain.wall = now - chain.clock;
   const dt = chain.last == null ? 0 : Math.min(34, Math.max(0, now - chain.last));
   chain.last = now;
   chain.clock += dt;
+  // a late frame stretches the show rather than bunching it, but never by more than 250ms behind the wall clock
+  // (a box that is slow for seconds still plays the chain at about its pace)
+  const behind = now - chain.wall - chain.clock;
+  if (behind > 250) chain.clock += behind - 250;
   while (chain.queue.length && chain.queue[0].at <= chain.clock) chain.queue.shift().fn(false);
   if (chain.queue.length || chain.flying > 0) chain.raf = requestAnimationFrame(tick);
   else endChain();
@@ -233,8 +238,8 @@ function schedule(at, fn) {
   while (k > 0 && chain.queue[k - 1].at > at) k--;
   chain.queue.splice(k, 0, item);
 }
-function endChain() {
-  for (const { h } of chain.holds.values()) if (h) h.done();
+function endChain(now = false) {
+  for (const { h } of chain.holds.values()) if (h) h.done(now);
   chain.holds.clear();
   chain.pending.clear();
   clearArrivals(chain.counts);
@@ -251,8 +256,9 @@ export function skipChain() {
   landAll();
   clearFlights(0);
   chain.flying = 0;
+  chain.epoch = (chain.epoch || 0) + 1; // landings still resolving from the skipped chain change nothing
   if (chain.raf) { cancelAnimationFrame(chain.raf); chain.raf = 0; }
-  endChain();
+  endChain(true);
   for (const fn of skipSubs) fn();
   try { dispatchEvent(new Event('patrons:chain-skip')); } catch { /* no window */ }
   return true;
@@ -372,7 +378,9 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   // it showed before, so no number flashes its new value first
   root.dataset.chain = '1';
   for (const [el, w] of toHold) holdOf(el, w.pid, w.r);
+  const epoch = chain.epoch || 0;
   const land = (a, B, skip) => {
+    if ((chain.epoch || 0) !== epoch) return; // the chain was skipped: its numbers are already final
     if (a.to.kind === 'stack' && !a.pay && B) {
       const h = holdOf(B, a.to.pid, a.to.r);
       if (h) { if (a.bundle && !skip) h.roll(a.by ?? a.n, MO.roll); else h.step(a.by ?? a.n); }

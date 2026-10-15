@@ -108,7 +108,7 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
         </div>
         {first && <p className="hint">Round {roman(after.round)} · <span className="num">{workersNote(after)}</span> · {first.id === meId ? 'You pick' : `${first.name} picks`} first</p>}
         </div>
-        {more && <span className="re-more" aria-hidden="true">More below ↓</span>}
+        {more && <span className="re-more" aria-hidden="true">More below</span>}
         <div className="re-foot">
         <button type="button" className="btn pri" data-next-round data-autofocus onClick={onNext}>
           {after.over ? 'See results' : `Start round ${roman(after.round)}`}

@@ -28,13 +28,16 @@
 //  (q) every shop card and every member in every chair opens its card, whole on screen and on top (Kingpin had
 //      none; bottom-seat member cards ran under the shop strip); the pay dialog takes focus (Enter pays) and names
 //      each rule-changer bending the price (Penny Pincher, a discount);
-//  (n) you are "You": the round summary and the Chronicle never use your seat's name; the summary has no text under 12px.
+//  (n) you are "You": the round summary and the Chronicle never use your seat's name; the summary has no text under 12px;
+//  (r) every hover card opened in (m) reads whole (lib/textclip.mjs) and keeps to the two marks (lib/legacy.mjs).
 // Screenshots go to $V4_SHOTS (default /tmp/patrons-shots/v4/info/).
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { tickSave } from './lib/tick-save.mjs';
 import { richSave } from './lib/rich-save.mjs';
 import { answerChoice } from './lib/answer.mjs';
+import { TEXT_CLIP } from './lib/textclip.mjs';
+import { LEGACY } from './lib/legacy.mjs';
 
 const SHOTS = `${process.env.V4_SHOTS || '/tmp/patrons-shots/v4'}/info`;
 mkdirSync(SHOTS, { recursive: true });
@@ -131,6 +134,10 @@ async function anchorCheck(page, what, step, target) {
   if (r.over > r.area * 0.2) fail(`(m) the hover card for ${what} covers it (${r.over}px² of ${r.area})`, step);
   if (r.gap > 24) fail(`(m) the hover card for ${what} opens ${r.gap}px away from it, not next to it`, step);
   if (!r.top) fail(`(m) the hover card for ${what} isn't drawn above the table's strips`, step);
+  // (r) every open hover card reads whole and speaks the two-mark language (design pod: clipped hovers, ✓ tags, dots
+  // standing for players, browser tooltips on top of the card)
+  for (const x of await page.evaluate(TEXT_CLIP)) fail(`(r) with the hover card for ${what} open: text cut: ${x}`, step);
+  for (const x of await page.evaluate(LEGACY)) fail(`(r) with the hover card for ${what} open: ${x}`, step);
 }
 
 // (o) every rim label (its first, middle and last letter) and every leader's emoji opens its quadrant's standings

@@ -136,7 +136,11 @@ h1,h2,h3{font-family:var(--serif)}
   .lt > .lt-seat .cs-who b{font-family:var(--sans);font-weight:800;font-size:18px;line-height:24px;overflow:hidden;text-overflow:ellipsis}
   .lt > .lt-seat .cs-who small{display:none}
   .lt > .lt-seat .cs-total{font-family:var(--sans);font-weight:800;letter-spacing:-.01em}
-  .lt > .lt-seat .cs-res{gap:12px}
+  /* what it holds fills its own column and never runs under the total: a lit stack in a steal (a pill), or two-digit
+     counts late on, pushed the last stack under the total ("4●" read "46") (design pod) */
+  .lt > .lt-seat .cs-foot{justify-self:stretch;min-width:0}
+  .lt > .lt-seat .cs-res{display:flex;gap:4px;justify-content:space-between;max-width:100%}
+  .lt > .lt-seat .cs-stack.pick-on,.lt > .lt-seat .cs-stack.pick-off{padding:2px 5px 2px 3px}
   .lt > .lt-seat .cs-stack{flex-direction:row-reverse;gap:3px;font-family:var(--sans);font-weight:800}
   .lt > .lt-seat .cs-stack.zero{opacity:.4}
   /* the right column: the turns since yours, from the top (the turn card tells the live turn at its foot) */
@@ -566,6 +570,8 @@ h1,h2,h3{font-family:var(--serif)}
   .app.game.lt > .main.over > .results table.res-t{min-width:0}
   .app.game.lt > .main.over > .over-cults{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;width:100%;max-width:900px;margin:8px auto 0}
   .app.game.lt > .main.over > .over-cults > :not(.over-seat){grid-column:1 / -1}
-  .app.game.lt > .main.over .over-seat{grid-template-columns:22px minmax(0,1fr) auto;gap:8px;padding:6px 12px}
-  .app.game.lt > .main.over .over-seat .final{font-size:30px}
+  /* each cult's build under the table: the table above already gives its place and total, and the seat its total, so
+     the rank and the big number beside the card go (RC1 #107: every score was shown three times) */
+  .app.game.lt > .main.over .over-seat{grid-template-columns:minmax(0,1fr);gap:0;padding:6px}
+  .app.game.lt > .main.over .over-seat .rank,.app.game.lt > .main.over .over-seat .final{display:none}
 }

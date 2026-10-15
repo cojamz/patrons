@@ -289,7 +289,8 @@ export function holdStack(stackEl, from) {
       rate = Math.max(rate, Math.abs(v - cur) / Math.max(1, ms));
       if (!rolling) { rolling = true; last = 0; raf = requestAnimationFrame(tick); }
     },
-    done() { if (dead) return; if (rolling) ending = true; else end(); },
+    /** let go (after a roll in progress has finished; `now`: at once, the real number shows, as a skip wants) */
+    done(now = false) { if (dead) return; if (rolling && !now) ending = true; else end(); },
   };
 }
 export const bump = (el, down = false) => {

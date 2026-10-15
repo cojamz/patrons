@@ -72,7 +72,7 @@ await p.clock.runFor(200);
 const frames = [];
 const answered = [];
 const shoot = async (tag, t) => {
-  if (process.env.SKIPAT && t === Number(process.env.SKIPAT)) { await p.keyboard.press('Space'); await p.clock.runFor(16); }
+  if (process.env.SKIPAT && t === Number(process.env.SKIPAT)) { if (process.env.SKIPCLICK) await p.mouse.click(640, 30); else await p.keyboard.press('Space'); await p.clock.runFor(16); }
   await p.evaluate(() => window.__sync()); const f = `${outdir}/${tag}${String(t).padStart(5, '0')}.png`; await p.screenshot({ path: f }); frames.push(f);
   // ANSWER=1: answer your own choices as they come (the first live option on the board), and note when
   if (process.env.ANSWER) {

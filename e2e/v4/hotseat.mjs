@@ -5,6 +5,7 @@
 // `npx vite` itself on the first free port from 5180 and stops it at the end.
 import { chromium } from 'playwright';
 import { TEXT_CLIP } from './lib/textclip.mjs';
+import { LEGACY } from './lib/legacy.mjs';
 import { answerChoice } from './lib/answer.mjs';
 import { SHOP_SIZE } from '../../src/engine/v4/index.js';
 import { spawn } from 'node:child_process';
@@ -197,6 +198,8 @@ try {
     if (movesNow !== lastClipCheck) {
       lastClipCheck = movesNow;
       for (const x of await page.evaluate(TEXT_CLIP)) { const m = `text cut: ${x}`; if (!errors.includes(m)) { errors.push(m); await shot(`zz-text-cut-${errors.length}`); } }
+      // two drawn marks only, the dot and the follower; every other symbol is a word (lib/legacy.mjs, design pod)
+      for (const x of await page.evaluate(LEGACY)) { const m = `legacy symbol: ${x}`; if (!errors.includes(m)) { errors.push(m); await shot(`zz-legacy-${errors.length}`); } }
     }
     // the turn card carries its whole line in data-turn-story (UI-A); the older screen had a .caption
     const cap = await page.evaluate(() => { const t = document.querySelector('[data-turn-story]'); if (t) return t.getAttribute('data-turn-story'); const c = document.querySelector('.caption'); return c ? c.textContent : null; }).catch(() => null);
