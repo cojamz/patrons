@@ -55,6 +55,7 @@ Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source a
 45. **Design pod: detail designer** (port 5412). Sweeps every state on several tables for obvious slop and fixes it at the root, with guards, until about 08:30.
 46. **QA: tables market-echo stall** (port 5404).
 47. **Motion: choreography** (resumed motion agent, port 5370). Each move plays as a paced chain from source to destination, with a speed setting (Slow default, Normal, Fast) in the menu and click or Space to skip. Clips in design/eval/perf/.
+48. **Motion designer** (port 5414). Writes design/prototypes/motion/grammar.md, then reviews the engineer's clips in design/prototypes/motion/review.md.
 
 ## Held
 - **Fair-price screen, bot levels + 4-thinker tables:** offloaded to the remote sessions below. The Purple session is done (roster 11).

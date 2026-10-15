@@ -39,7 +39,7 @@ const RING_S = { 1: { r0: 128, r1: 180, r: 151, n: 3, span: 66 }, 2: { r0: 82, r
 // panels: the cells tile each quadrant (ring I: three 30° cells, ring II: two 45°, ring III: one 90°) on a dark
 // board with gutters between them; the hub is small so the rings get the room; r is where each
 // panel's print is centred (ring III's a little out from the middle of its wedge, where the wedge is wide)
-const RING_P = { 1: { r0: 123, r1: 179, r: 151, n: 3, span: 60 }, 2: { r0: 65, r1: 120, r: 92, n: 2, span: 45 }, 3: { r0: 21, r1: 62, r: 42, n: 1, span: 0 } };
+const RING_P = { 1: { r0: 119, r1: 179, r: 149, n: 3, span: 60 }, 2: { r0: 62, r1: 116, r: 89, n: 2, span: 45 }, 3: { r0: 20, r1: 59, r: 40, n: 1, span: 0 } };
 const ringsOf = look => (look === 'panels' ? RING_P : RING_S);
 const RIM = { r0: 180, r1: 200, r: 190 }; // the rim band: each quadrant's rule, engraved
 // the rim's hover/tap target: from just outside ring I's sockets to well past the paper's edge (it wins over any space)

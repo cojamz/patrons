@@ -2,6 +2,7 @@
 import { quadrant, cardDef, defById, roman, TIERS, RING_VALUE, memberCount, followers as engineFollowers, applyMove, contestTable, roundWorkers, WORKERS, allQuadrantIds, turnRail } from '../engine/v4/index.js';
 import { contextFor } from '../engine/v4/core.js';
 import { defaultEmoji } from './art/emojis.js';
+import { usableNow } from './game/memberUse.js';
 
 // Seat colors are an accent now (identity is the player's emoji on their leader, Cory 2026-10-14): ochre, teal,
 // terracotta-rose, lavender-plum, each ΔE ≥ 30 (CIE76) from every resource color on screen (the Lamplit inks) and
@@ -66,8 +67,10 @@ export function promptFor(state, mine) {
   const p = state.players[pend.player];
   const name = p.name;
   // members you can use right now (any time on your turn, Cory 2026-10-15): named in the line under the headline
-  const usable = pend.options.filter(o => o.kind === 'use').map(o => o.label.replace(/^Use /, ''));
-  const use = usable.length > 1 ? `${usable.slice(0, -1).join(', ')} or ${usable.at(-1)}` : usable[0];
+  // only the ones that would do something now (the engine's dry run), said once and quietly; three or more point at
+  // the lit figures in your seat rather than reading out a list (Cory, 2026-10-15: make using a member obvious)
+  const usable = mine ? usableNow(state, pend.player).map(u => u.name) : [];
+  const use = usable.length > 2 ? `one of your ${usable.length} lit members` : usable.join(' or ') || null;
   switch (pend.kind) {
     case 'setup': {
       const k = (pend.prompt.match(/\((\d) of 2\)/) || [])[1] || '';

@@ -46,5 +46,6 @@ Card values are fair prices in cost points; space values are the bench's scaled 
 
 ## Tests
 
-- Live tree, engine suite (`npx vitest run src/test/engine/v4`): see the result line below.
+- Live tree at 4239cf1 plus agents' uncommitted work, full game counts: engine suite (`npx vitest run src/test/engine/v4`) 741 passed, 1 skipped, 41 of 41 files; the game-record replay (src/test/v4/records.test.js) passes, so the sample record didn't go stale this time.
 - Tests that pin card costs pin their own (cards-*.test.js useCosts, the spheres' TEST_COSTS), so none moved.
+- The market test's Spree bar (bots take Spree in over 60% of 200 seeded games) failed at 105/200 on HEAD. Bisected on its own 200 seeds: 134 through pass 1, 129 with pass 2, 95 at 86a7c8a (Cory's six pass-1 fixes, Tax Collector and Open House on that table, together with the Blue pricing and scoring change; Gold and Red alone give 112, Blue alone 129). Spree still pays (2.1 buys a Spree turn, 8 of 20 use all 3), so the bar is re-derived at 45% with the measurement in the comment.

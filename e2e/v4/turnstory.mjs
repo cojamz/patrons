@@ -75,8 +75,8 @@ try {
       await page.waitForTimeout(250);
       const ph = await page.evaluate(() => { const l = document.querySelector('.lt'); return l ? `${l.dataset.phase}:${l.dataset.yours}` : ''; });
       if (ph === 'buy:1' || ph.endsWith(':0')) break;
-      const c = page.locator('.prompt.choice button:not([disabled]), .pick-key:not([disabled]), .pick-rest-btn:not([disabled])').first();
-      if (ph.startsWith('choose') && await c.count()) { await c.evaluate(el => el.click()).catch(() => {}); continue; } // a board pick's list keys may be visually hidden
+      // a choice: its first answer, wherever the table offers it (a list, a key, a seat on the board)
+      if (ph.startsWith('choose')) { await page.evaluate(() => { const o = [...document.querySelectorAll('[data-option]')].find(e => !/^(slot|squat|use|toggle):/.test(e.dataset.option) && !e.disabled && e.getAttribute('aria-disabled') !== 'true'); if (o) o.click(); }); continue; }
       const pay = page.locator('.dialog.pay .btn.pri');
       if (ph.startsWith('pay') && await pay.count()) { await pay.click().catch(() => {}); continue; }
     }

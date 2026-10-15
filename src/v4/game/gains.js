@@ -58,6 +58,10 @@ export function gainsBetween(before, state) {
     }
   }
   // 3. what's left of a loss went somewhere: the card recruited, the followers bought, the space's trade, else the bank
+  // a member the mover just used (Lottery Winner, Heiress, Taskmaster…): what it gives or costs travels from it
+  const usedUid = actor == null || newRound ? null : state.players[actor].members.find(u => state.cards[u] && state.cards[u].used && before.cards[u] && !before.cards[u].used);
+  let usedSrc = null;
+  if (usedUid != null) { try { usedSrc = { kind: 'member', pid: actor, def: cardDef(state, usedUid).id }; } catch { /* gone */ } }
   const recruited = state.players.map((p, i) => p.members.filter(u => !before.players[i].members.includes(u) && before.shop.includes(u)));
   const boughtN = state.players.map((p, i) => (p.bonus || 0) - (before.players[i].bonus || 0));
   for (const p of state.players) {
@@ -65,7 +69,7 @@ export function gainsBetween(before, state) {
       if (!(d[p.id][r] < 0)) continue;
       const to = recruited[p.id].length ? { kind: 'card', uid: recruited[p.id][0] }
         : boughtN[p.id] > 0 ? { kind: 'rate', n: boughtN[p.id] }
-          : placedKey && p.id === actor ? { kind: 'slot', key: placedKey } : { kind: 'hub' };
+          : placedKey && p.id === actor ? { kind: 'slot', key: placedKey } : usedSrc && p.id === actor ? usedSrc : { kind: 'hub' };
       out.unshift({ what: 'res', r, n: -d[p.id][r], from: { kind: 'stack', pid: p.id, r }, to, pay: true });
       d[p.id][r] = 0;
     }
@@ -76,7 +80,7 @@ export function gainsBetween(before, state) {
   for (const p of state.players) {
     for (const r of R) {
       if (!(d[p.id][r] > 0)) continue;
-      const from = placedKey ? { kind: 'slot', key: placedKey } : newRound || (released && p.id === actor) ? { kind: 'crowd', pid: p.id } : { kind: 'hub' };
+      const from = placedKey ? { kind: 'slot', key: placedKey } : usedSrc || (newRound || (released && p.id === actor) ? { kind: 'crowd', pid: p.id } : { kind: 'hub' });
       take(p.id, r, d[p.id][r], from, { kind: 'stack', pid: p.id, r });
       d[p.id][r] = 0;
     }
@@ -87,7 +91,7 @@ export function gainsBetween(before, state) {
     for (const p of state.players) {
       const f = followers(state, p) - followers(before, before.players[p.id]);
       if (!(f > 0)) continue;
-      const from = boughtN[p.id] > 0 ? { kind: 'rate', n: boughtN[p.id] }
+      const from = usedSrc ? usedSrc : boughtN[p.id] > 0 ? { kind: 'rate', n: boughtN[p.id] }
         : recruited[p.id].length ? { kind: 'card', uid: recruited[p.id][0] }
           : placedKey ? { kind: 'slot', key: placedKey } : { kind: 'hub' };
       out.push({ what: 'fol', n: f, from, to: { kind: 'total', pid: p.id } });
