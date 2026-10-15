@@ -16,7 +16,18 @@ const names = [];
 
 run('icons.js');
 const api = box.CultIcons;
-const clean = i => ({ id: i.id, name: i.name, kind: i.kind, sphere: i.sphere, px: i.px || i.rows });
+// the members' redraw (2026-10-15, Cory: members told apart by build and outfit): redraw-<sphere>.js files set
+// globalThis.CultRedraw[<sphere>] = [{ id, px }]; a redrawn member replaces its old drawing wherever it was
+const redrawn = new Map();
+for (const f of readdirSync(SRC).filter(x => /^redraw-[\w-]+\.js$/.test(x)).sort()) {
+  try { run(f); } catch (e) { console.warn(`${f}: failed to load (${e.message}), skipped`); }
+}
+for (const list of Object.values(box.CultRedraw || {})) for (const r of list) {
+  const errs = api.validate({ id: r.id, px: r.px });
+  if (errs.length) console.warn(`redraw ${r.id}: ${errs[0]}, kept the old drawing`); else redrawn.set(r.id, r.px);
+}
+if (redrawn.size) console.log(`redraws: ${redrawn.size} members`);
+const clean = i => ({ id: i.id, name: i.name, kind: i.kind, sphere: i.sphere, px: redrawn.get(i.id) || i.px || i.rows });
 // The calibration set is keyed by kebab names. A card renamed since (action names, 2026-10-14) is rekeyed to its
 // engine id and its new name here, so the game keeps its drawing; the design mocks keep using the kebab ids.
 const CAL_KEYS = {

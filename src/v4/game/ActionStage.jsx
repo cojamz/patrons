@@ -67,7 +67,7 @@ function StageItem({ it }) {
   }
   return (
     <div ref={el} className="as-member" style={style} data-stage="member" data-stage-uid={it.uid}>
-      <span className="as-fig"><Sprite id={it.sprite} kind="member" sphere={it.sphere} size={44} /></span>
+      <span className="as-fig"><Sprite id={it.sprite} kind="member" sphere={it.sphere} size={48} /></span>
       <span className="as-name">{it.name}</span>
     </div>
   );

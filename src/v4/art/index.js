@@ -20,6 +20,26 @@ export function palette(sphere) {
   const base = SPHERES[sphere] || (/^#[0-9a-f]{6}$/i.test(sphere || '') ? sphere : SPHERES.colorless);
   return { ...NEUTRALS, 1: mix(base, TABLE, 0.48), 2: base, 3: mix(base, '#fff8ec', 0.5) };
 }
+// People (Cory, 2026-10-15: "it will also require better visual distinction between the pixel members"): each member
+// has its own skin tone, hair colour and a second cloth colour, picked from its id, so two people of one sphere never
+// look alike. Drawings mark them with s (skin), h (hair or hat) and a (accent cloth: a collar, scarf, sash, apron).
+// Older drawings without those keys get skin and hair from the head (the l and d in the top-left 14×14).
+export const SKIN = ['#f1d3b0', '#e2b48c', '#c68c5f', '#9a6440', '#6e4428'];
+export const HAIR = ['#2b1d16', '#5a3420', '#8c4a22', '#c98f3e', '#e7d29a', '#9a9a9a', '#7a2f2f', '#3a3a5a'];
+export const ACCENT = ['#e8dcc0', '#b23a3a', '#2f5f8a', '#3f7a4a', '#d9a441', '#6b4a8a', '#5a3a2a', '#c8ced6'];
+const hashId = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+/** A member's own skin, hair and accent colours (the same everywhere it's drawn). */
+export function personPalette(id) {
+  const h = hashId(id);
+  return { s: SKIN[h % SKIN.length], h: HAIR[(h >>> 3) % HAIR.length], a: ACCENT[(h >>> 7) % ACCENT.length] };
+}
+const PERSON = /[sha]/;
+/** An older member drawing with skin and hair marked: l and d in the head become s and h. */
+export function markPerson(px) {
+  if (px.some(r => PERSON.test(r))) return px;
+  return px.map((r, y) => [...r].map((ch, x) => (x >= 1 && x <= 13 && y >= 1 && y <= 14 ? (ch === 'l' ? 's' : ch === 'd' ? 'h' : ch) : ch)).join(''));
+}
+
 /** Adds the 1px outer outline: an empty cell beside (not diagonal to) a filled one becomes ink. */
 export function withOutline(px) {
   const H = px.length, W = px[0].length;
@@ -71,9 +91,10 @@ const rectCache = new Map();
 export function rectsFor(icon, sphere) {
   const k = `${icon.id}|${sphere}`;
   if (rectCache.has(k)) return rectCache.get(k);
-  const pal = icon.palette ? { ...NEUTRALS, ...icon.palette } : palette(sphere);
+  const person = icon.kind === 'member' && !icon.palette;
+  const pal = icon.palette ? { ...NEUTRALS, ...icon.palette } : { ...palette(sphere), ...(person ? personPalette(icon.id) : null) };
   const out = [];
-  withOutline(icon.px).forEach((r, y) => {
+  withOutline(person ? markPerson(icon.px) : icon.px).forEach((r, y) => {
     let x = 0;
     while (x < r.length) {
       const ch = r[x];
