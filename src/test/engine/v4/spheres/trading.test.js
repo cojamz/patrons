@@ -329,13 +329,17 @@ describe('White members', () => {
     let s = scene({ n: 3, res: [{ white: 7 }], bonus: [0, 6, 2], members: [['trading.raider']] });
     s = take(s, 'trading.haggle'); // +2 + 2 ahead = 4 → 11 white
     s = move(s, `use:${uidOf(s, 'trading.raider', 0)}`);
+    expect(ids(s)).toEqual(['amount:1', 'amount:2', 'amount:3']); // "up to 3": the player picks how many
+    s = move(s, 'amount:3');
     expect(B(s, 0)).toBe(3);
     expect(B(s, 1)).toBe(3);
     expect(R(s, 0).white).toBe(8);
     expect(R(s, 1).white).toBe(3);
     s = take(scene({ n: 2, res: [{ white: 2 }], bonus: [0, 5], members: [['trading.raider']] }), 'gold.rush');
     s = move(s, `use:${uidOf(s, 'trading.raider', 0)}`);
-    expect(B(s, 0)).toBe(2); // only 2 white to pay with
+    expect(ids(s)).toEqual(['amount:1', 'amount:2']); // only 2 white to pay with
+    s = move(s, 'amount:2');
+    expect(B(s, 0)).toBe(2);
     expect(R(s, 1).white).toBe(2);
   });
 

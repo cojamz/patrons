@@ -46,10 +46,12 @@ function settle(state, e) {
   if (lost) e.redo = true;
 }
 const quadrantDef = (state, uid) => defById(state.cards[uid].def);
-// The window for a space stays open while its follow-up choices run, until the taker's buy step.
+// The window for a space stays open while its follow-up choices run, until the taker's buy step. The buy step that
+// follows the space carries the space's key (win, set in wrapAction); once that step has been taken off the queue,
+// choices made in the buy step (Understudy's copy, a Doppelganger's pick, a tied Mentor pick) never land on the chip.
 function windowOpen(state, e) {
   const next = state.queue.find(t => t.t !== 'choose');
-  return !!next && next.t === 'buy' && next.p === e.p;
+  return !!next && next.t === 'buy' && next.p === e.p && next.win === e.key;
 }
 // Record what this context hands the taker (the content code's own calls only).
 function track(ctx, e) {
@@ -84,6 +86,9 @@ function wrapAction(qid, a, idx) {
     track(ctx, e);
     orig.call(this, ctx, p);
     settle(ctx.state, e);
+    // mark the taker's buy step that follows: the window stays open until it starts (windowOpen)
+    const next = ctx.state.queue.find(t => t.t !== 'choose');
+    if (next && next.t === 'buy' && next.p === p.id) next.win = key;
   };
   wrapped.__echo = true;
   wrapped.__orig = orig;
@@ -341,9 +346,10 @@ const echoQ = {
     }),
     m('dejavu', 'Tribute Band', 8, 4, 'Once per game: copy every space you took this round.', {
       activate: 'game',
-      onActivate(ctx, owner) {
+      onActivate(ctx, owner, card) {
         const list = targets(ctx, owner, 'own');
-        if (!list.length) ctx.log(`${owner.name}'s Tribute Band has nothing to copy.`);
+        // nothing to copy: the once-per-game use isn't spent (as Stunt Double's isn't)
+        if (!list.length) { card.used = false; ctx.log(`${owner.name}'s Tribute Band has nothing to copy.`); return; }
         copyAll(ctx, owner, list, 'Tribute Band');
       },
       botActivate: (ctx, owner) => owner.left === 0 && ctx.state.round >= 2

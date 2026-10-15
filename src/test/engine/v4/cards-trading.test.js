@@ -263,6 +263,7 @@ describe('White members', () => {
   it('Raider: once per game, buy up to 3 followers from the leader for 1 white each; they get the white', () => {
     let s = take(table(Q, { n: 3, res: [{ white: 5 }], bonus: [0, 4, 2], members: [['trading.raider']], shop: ROW }), 'thieves.tipoff');
     s = move(s, `use:${uidIn(s, 'trading.raider', 0)}`);
+    s = move(s, 'amount:3');
     expect([R(s).white, R(s, 1).white, s.players[0].bonus, s.players[1].bonus]).toEqual([2, 3, 3, 1]);
     expect(named(s, 'Raider').length).toBe(1);
     expect(followers(s, s.players[0])).toBe(1 + 1 + 3);

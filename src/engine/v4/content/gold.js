@@ -155,7 +155,13 @@ export default {
     }),
     m('speculator', 'Speculator', 4, 4, 'Once per game: double your gold.', {
       activate: 'game',
-      onActivate(ctx, owner) { ctx.gain(owner, 'gold', owner.res.gold); ctx.log(`${owner.name} used Speculator: gold doubled to ${owner.res.gold}.`); },
+      onActivate(ctx, owner) {
+        const had = owner.res.gold;
+        ctx.gain(owner, 'gold', had);
+        // a member that changes the gain (Underdog) makes it more than double: the log says what came, not "doubled"
+        const got = owner.res.gold - had;
+        ctx.log(got === had ? `${owner.name} used Speculator: gold doubled to ${owner.res.gold}.` : `${owner.name} used Speculator: +${got} gold, now ${owner.res.gold}.`);
+      },
       botActivate: (ctx, owner) => ctx.state.round === 3 && owner.res.gold >= 6,
     }),
     // balance pass 1 (bench, both bots agree; design/eval/balance-pass-1.md): 12 → 6
@@ -191,9 +197,12 @@ function stealStep(ctx, p, data) {
   }
   let got = 0;
   const from = [];
+  // who led when the steal began (Robin Hood): a follower won from one victim doesn't un-lead the next
+  const top = Math.max(...ctx.state.players.map(o => ctx.followers(o)));
+  const led = new Set(ctx.state.players.filter(o => ctx.followers(o) === top).map(o => o.id));
   for (const [id, k] of Object.entries(data.picked)) {
     const v = ctx.player(Number(id));
-    const x = ctx.steal(p, v, { take: { gold: k }, give: n => ctx.gain(p, 'gold', n, { fromAction: true }) });
+    const x = ctx.steal(p, v, { take: { gold: k }, give: n => ctx.gain(p, 'gold', n, { fromAction: true }), led: led.has(v.id) });
     if (x) { got += x; from.push(`${x} from ${v.name}`); }
   }
   ctx.log(got ? `${p.name} stole ${got} gold (${from.join(', ')}).` : `${p.name} found no gold to steal.`);
