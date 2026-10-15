@@ -31,10 +31,10 @@ const base = process.env.V4_URL || 'http://localhost:5180';
 const fails = [];
 const fail = (msg, step) => fails.push(`[${step}] ${msg}`);
 
-// game-meaningful elements, old and new screen (whatever is on screen is audited)
+// game-meaningful elements on the Lamplit table (the older Players / QuadrantPanel / SeatRail / Shop / YourTable are gone)
 const GAME = [
-  '[data-region] [data-uid]', '.shop [data-uid]', '.lt-rs', '[data-cult] .cs-head', '.lt-stack', '.res > .r', '.you-strip .r', '.lt-member .fig', '.chip[data-g]',
-  '[data-leader-ring]', '.workers', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
+  '[data-region] [data-uid]', '[data-cult] .cs-head', '[data-cult] [data-res]',
+  '[data-leader-ring]', '.fol-mark', '.follower', '.badge-mark', '.lt-rate', '.fb', '.slot',
   '[data-plaque] .plaque-face', '.contest-tip', '[data-cult] [data-member] .fig', '.res-glyph', '.pip', '.card-name', '.term', '[data-deck]',
   '[data-rank] .rk', '.cs-order',
 ].join(',');
@@ -187,7 +187,7 @@ try {
         await dockCheck(page, 'a space', step);
         await page.screenshot({ path: `${SHOTS}/02b-hover-space.png` });
         await page.mouse.move(5, 5);
-        const card = page.locator('[data-region] [data-uid], .shop [data-uid]').first();
+        const card = page.locator('[data-region] [data-uid]').first();
         if (await card.count()) {
           await card.hover();
           await page.waitForTimeout(600);
