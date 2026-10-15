@@ -70,13 +70,15 @@ try {
     };
   });
   const settle = async () => {
-    for (let k = 0; k < 12; k++) {
-      await page.waitForTimeout(300);
+    // answer what the placement asks (a choice, a board pick, a payment) until the buy step, or the turn moves on
+    for (let k = 0; k < 40; k++) {
+      await page.waitForTimeout(250);
+      const ph = await page.evaluate(() => { const l = document.querySelector('.lt'); return l ? `${l.dataset.phase}:${l.dataset.yours}` : ''; });
+      if (ph === 'buy:1' || ph.endsWith(':0')) break;
       const c = page.locator('.prompt.choice button:not([disabled]), .pick-key:not([disabled]), .pick-rest-btn:not([disabled])').first();
-      if (await c.count()) { await c.evaluate(el => el.click()).catch(() => {}); continue; } // a board pick's list keys may be visually hidden
+      if (ph.startsWith('choose') && await c.count()) { await c.evaluate(el => el.click()).catch(() => {}); continue; } // a board pick's list keys may be visually hidden
       const pay = page.locator('.dialog.pay .btn.pri');
-      if (await pay.count()) { await pay.click().catch(() => {}); continue; }
-      break;
+      if (ph.startsWith('pay') && await pay.count()) { await pay.click().catch(() => {}); continue; }
     }
     await page.waitForTimeout(300);
   };
