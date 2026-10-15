@@ -160,7 +160,21 @@
 .lt > .lt-seat .lt-cult-seat .cs-stack.pick-on,.lt > .lt-seat .lt-cult-seat .cs-stack.pick-off{padding:3px 5px 3px 3px;gap:2px}
 /* a chair you can pick from is lit at its own edge, not by a second outline drawn inside it (a frame inside a frame) */
 @media (min-width:861px) and (min-height:500px){
-  /* quiet: the lit pills or figures inside it are the glow (one light, for what you act on) */
-  .lt > .lt-seat:has(> .lt-cult-seat.picking.pick-lit){background:color-mix(in srgb,var(--seat, #221a15) 95%,rgb(var(--lamp)));box-shadow:inset 0 0 0 1px rgba(var(--lamp),.3)}
+  /* when its stacks or members are the picks: quiet, the lit pills or figures are the one glow */
+  .lt > .lt-seat:has(> .lt-cult-seat.picking.pick-lit:not(.pick-seat)){background:color-mix(in srgb,var(--seat, #221a15) 95%,rgb(var(--lamp)));box-shadow:inset 0 0 0 1px rgba(var(--lamp),.3)}
+  /* when the chair itself is the answer (a gift, Kickback: "click a rival's cult"), the chair is what you act on: it
+     wears the lit edge and glow a space you can take wears (w3b: "rival seats get a thin outline only, weak CTA") */
+  .lt > .lt-seat:has(> .lt-cult-seat.picking.pick-lit.pick-seat){background:color-mix(in srgb,var(--seat, #221a15) 86%,rgb(var(--lamp)));
+    box-shadow:inset 0 0 0 2px rgba(var(--lamp),.85),0 0 22px 2px rgba(var(--lamp),.35);cursor:pointer}
+  .lt > .lt-seat:has(> .lt-cult-seat.picking.pick-lit.pick-seat):hover{box-shadow:inset 0 0 0 2px #fffaf0,0 0 26px 4px rgba(var(--lamp),.5)}
   .lt > .lt-seat > .lt-cult-seat.picking.pick-lit{background:none;box-shadow:none}
 }
+/* the round summary's counts: each name with its number, the number heavier, and clear air between players ("P2 2  P4 2"
+   read as "P22 P42", w3b) */
+.re-counts{gap:2px 16px}
+.re-counts .n{font-weight:800;margin-left:2px}
+/* a taken panel of two or more lines: the minion stands just above its words, not on them (w3b: "the minion sits on the
+   space text, 'Steal 1 each' half-covered"), as it does on a taken panel you're picking; one-line panels keep it under
+   their gain (lamp.css) */
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit):not([data-panel^="1.0.0"]) .face .worker-fig{top:0;transform:translate(-50%,calc(-100% + 2px))}
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit):not([data-panel^="1.0.0"]) .face .worker-fig svg{height:16px}

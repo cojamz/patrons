@@ -5,7 +5,8 @@
 // - A save from an older version is never resumed (saved.js); this says so once: "start fresh", with its record.
 // - Problems the sessions report (a bot move threw and a fallback was played; the game can't continue) show as a
 //   small notice that doesn't block play.
-// Inline styles on purpose: these screens must render even if the stylesheet is the thing that broke.
+// Inline styles on purpose: these screens must render even if the stylesheet is the thing that broke. They copy the
+// table's look by value (walnut, cream, Alegreya; the 14/18 type scale), so a crash doesn't look like another app.
 import { Component, Fragment, useEffect, useState } from 'react';
 import { currentRecord, recordText, onProblem, latestProblem } from './session/record.js';
 import { loadLocal, setAsideLocal, staleSave, staleRecord, markStaleSeen, clearOnline, loadOnline } from './saved.js';
@@ -29,8 +30,8 @@ export async function copyText(text) {
   } catch { return false; }
 }
 
-const btn = { minHeight: 44, minWidth: 44, padding: '8px 16px', borderRadius: 999, border: '1px solid #ece6d6', background: 'none', color: '#ece6d6', font: 'inherit', cursor: 'pointer' };
-const pri = { ...btn, background: '#ece6d6', color: '#141d1c' };
+const btn = { minHeight: 44, minWidth: 44, padding: '8px 16px', borderRadius: 999, border: '1px solid #f3e6c8', background: 'none', color: '#f3e6c8', font: 'inherit', cursor: 'pointer' };
+const pri = { ...btn, background: '#f3e6c8', color: '#1d1611' };
 
 /** "Copy game record": copies the JSON; if the clipboard refuses, shows it to copy by hand. */
 export function CopyRecord({ getRecord, style }) {
@@ -45,7 +46,7 @@ export function CopyRecord({ getRecord, style }) {
       <button type="button" style={{ ...btn, ...style }} onClick={go} data-recovery="copy">{state === 'copied' ? 'Copied' : 'Copy game record'}</button>
       {state && state !== 'copied' && (
         <textarea readOnly value={state} aria-label="Game record" onFocus={e => e.target.select()} autoFocus
-          style={{ width: '100%', minHeight: 120, background: '#1d2928', color: '#ece6d6', border: '1px solid #2d3b39', borderRadius: 8, font: '12px ui-monospace, monospace' }} />
+          style={{ width: '100%', minHeight: 120, background: '#271d16', color: '#f3e6c8', border: '1px solid rgba(243,230,200,.16)', borderRadius: 8, font: '12px ui-monospace, monospace' }} />
       )}
     </>
   );
@@ -54,11 +55,11 @@ export function CopyRecord({ getRecord, style }) {
 /** The plain screen shown after a crash. */
 export function RecoveryScreen({ error, record, onStartNew, online = false, onRejoin, onLeave }) {
   return (
-    <div style={{ minHeight: '80dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ece6d6', fontFamily: 'Figtree, system-ui, sans-serif' }}>
-      <div role="alert" data-recovery="screen" style={{ maxWidth: 440, width: '100%', display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start', background: '#1d2928', border: '1px solid #2d3b39', borderRadius: 14, padding: 18 }}>
-        <h2 style={{ margin: 0, fontFamily: 'Marcellus, Georgia, serif', fontWeight: 400, fontSize: 22 }}>Something went wrong</h2>
+    <div style={{ minHeight: '80dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f3e6c8', fontFamily: "'Alegreya Sans', system-ui, sans-serif" }}>
+      <div role="alert" data-recovery="screen" style={{ maxWidth: 440, width: '100%', display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start', background: '#271d16', border: '1px solid rgba(243,230,200,.16)', borderRadius: 14, padding: 18 }}>
+        <h2 style={{ margin: 0, fontFamily: "Alegreya, Georgia, serif", fontWeight: 500, fontSize: 18 }}>Something went wrong</h2>
         <p style={{ margin: 0 }}>The game hit an error it couldn’t recover from. Copy the game record and send it along: it replays the game exactly, so the bug can be found.</p>
-        {error?.message && <p style={{ margin: 0, fontSize: 13, color: '#97a49f' }}>{String(error.message).slice(0, 200)}</p>}
+        {error?.message && <p style={{ margin: 0, fontSize: 14, color: '#cbb894' }}>{String(error.message).slice(0, 200)}</p>}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, width: '100%' }}>
           <CopyRecord getRecord={() => record} />
           {online ? (
@@ -118,8 +119,8 @@ export class Boundary extends Component {
 }
 
 const notice = { position: 'fixed', left: '50%', bottom: 16, transform: 'translateX(-50%)', zIndex: 1000, width: 'min(520px, calc(100vw - 32px))',
-  display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: '10px 12px', background: '#1d2928', color: '#ece6d6',
-  border: '1px solid #e3b23c', borderRadius: 12, boxShadow: '0 6px 24px rgba(0,0,0,.4)', fontFamily: 'Figtree, system-ui, sans-serif', fontSize: 15 };
+  display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: '10px 12px', background: '#271d16', color: '#f3e6c8',
+  border: '1px solid #ffd99a', borderRadius: 12, boxShadow: '0 6px 24px rgba(0,0,0,.4)', fontFamily: "'Alegreya Sans', system-ui, sans-serif", fontSize: 14 };
 
 /** "Saved on an older version" (once) and session problems, as a small notice at the bottom. Doesn't block play. */
 export function Notices({ botNoticeMs = 10000 }) {

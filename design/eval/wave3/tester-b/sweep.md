@@ -37,3 +37,22 @@ Harness note: the scratchpad dir is shared with tester w3a; my first helper scri
 ## Round I end
 - Reckoning: banner jumps between top and bottom of the wheel per quadrant; count badges by seats; +2 chips fly. Narratable, ~10 s. shot 128
 - Summary: "P2 2  P4 2" reads as "P22 P42". shot 130
+
+## Round II
+- Round start: wheel lights up ring II with all panels readable; seat order resorted (You first, now/next/in 3 twice). Start round click → 1408 ms first change. shot 132
+- Ring II panels I misread before hovering: "Ransom a member" (thought: pay to get a member back; it's Shake Down: rival pays you its cost or you take it); "2 extra turns for 8●" (thought it costs 8 per turn); "+1● +2 per rival with more minions" (thought "on the board" meant placed minions — it does). shots 134-148
+- Shake Down hover: "YOU'D GET it depends on your pick / a rival decides part of it" — honest but empty. shot 134
+- Crime Wave hover: "about +3●, +2 followers / rivals −2 to 0●, −3 to 0●, −2 to 0○, −2 to 0● in all" — unreadable range soup. shot 136
+- Dividend/Sell High: "loose follower" underlined, decent. Sell High's MOST WHITE line lists P2 1 · P3 1 · You 0 with no "you'd lead it" — inconsistent tail across hovers.
+- A click on a space while its hover was open did nothing (first click eaten), second click placed. shots 180, 182
+- Shake Down choice: lit members on rival seats, but hovering a lit member opens nothing → you ransom blind (don't know name or cost). shot 185
+- Ransom resolved with no visible motion (NO VISIBLE CHANGE 1.5 s, frames: nothing moved), toast never names the member. shot 187
+- Collect Debts: stack keeps showing the old count ("3") with a "−2" badge while pending. shot 196
+- Collect Debts hover promised "+2 followers (Robin Hood)" but the steal choice never marks which rival is the follower leader; I picked P3 and got 0 followers. shot 202
+- Middleman: one click recruited and auto-spent 3 gold + 1 magenta, no pay dialog (Big Spender earlier opened one). Inconsistent. shot 206
+- Seat body hover: nothing; only the name row opens the seat card. Seat card lists members + abilities, says HARD BOT. Follower number has no breakdown. shots 172, 176
+- Header "P4 is placing a minion ···" persisted while P3 and P2 took their turns (seat "now" marker moved; header didn't). shot 208
+- "Since your last turn" strip clips its oldest entry mid-sentence ("Apprentice for 2●" orphan, "−2 · bought 3" orphan). shots 209, 217
+- Toast "You took X" lingers through all three bot turns. shot 208
+- Log: newest-first, cause listed below its effect (You stole 2 above You took Redistribute). Names open cards and highlight the space on the wheel (good). Log wording "+1● each time P2 takes a Gold space" vs card "per round number". Hustler's chosen color shown only in the log. shots 219, 221, 223
+- Round II reckoning: same choreography; seat count badges; readable. Summary arithmetic checks out. shot 228, 229

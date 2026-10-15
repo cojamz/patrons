@@ -920,7 +920,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = prev; };
   }, [modalOpen]);
-  const pr = promptFor(state, mine || (!!pend && mySeats.includes(pend.player) && !state.over));
+  const prForMe = mine || (!!pend && mySeats.includes(pend.player) && !state.over);
+  const pr = { ...promptFor(state, prForMe), forMe: prForMe };
   // the summary comes last (motion review #7, #27): while a move's chain plays (or this state is about to play one),
   // the turn card and a rival's headline keep telling what was already on the table, and change when the chain has
   // landed or is skipped (AfterChain re-renders only itself then)
@@ -1060,7 +1061,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           ) : note ? (
             <span key={note.n} className={`say ${note.tone}`} data-prompt tabIndex={-1} role="status">{note.text}</span>
           ) : pr.text ? (
-            <AfterChain value={pr} hold={holdStory && !mine}>{p => (
+            <AfterChain value={pr} hold={holdStory && !mine}>{held => {
+              // a held line addressed to someone else is never shown in this one's voice (w3b: your "Choose how to
+              // pay" stayed up, dotted like a rival's, while the bots moved): it gives way to the current line
+              const p = held.forMe === pr.forMe ? held : pr;
+              return (
               <span className={`say${mine ? ' mine' : ''}`} data-prompt tabIndex={-1}>
                 {p.who && <i style={{ background: playerColor(p.who.id) }} />}
                 <span className="say-text">
@@ -1068,7 +1073,8 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
                   {mine ? <><span className="lead">{p.lead ?? 'Your turn — '}</span><em>{p.text && !p.keepCase ? p.text[0].toLowerCase() + p.text.slice(1) : p.text}</em></> : state.over ? p.text : <>{p.text}<span className="dots" aria-hidden="true"> ···</span></>}
                 </span>
               </span>
-            )}</AfterChain>
+              );
+            }}</AfterChain>
           ) : <span className="say" data-prompt tabIndex={-1} />}
           {buyingNow && <PromptActions optionFor={live} onPick={onPick} />}
           <span className="undo-slot">

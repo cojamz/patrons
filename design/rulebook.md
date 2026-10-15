@@ -9,7 +9,7 @@ You lead a cult. Send your minions to the wheel, gather resources, recruit **mem
 - **Resources** come in four colors, one per quadrant on the table (for example gold, red, blue and green). In costs and card text each resource is a plain dot in its color; the dot split into the table's four colors means "any resources".
 
 ## Setup
-In seat order, each player picks 2 starting resources. Everyone can see what you pick, and the members for sale are already face up, so you can pick toward one. Bots play at Easy, Normal or Hard; you pick the level when you set up the game.
+In seat order, each player picks 2 starting resources. Everyone can see what you pick, and the members for sale are already face up, so you can pick toward one. Bots play at Easy, Normal or Hard; you pick the level when you set up the game. Speed (Quick, Steady or Relaxed) sets how fast the bots move and moves play out; it's on the setup page and in the ☰ menu.
 
 ## The board
 The wheel is split into four colored quadrants. Each quadrant has its own actions and its own way to score, engraved on its rim.
