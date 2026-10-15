@@ -4,7 +4,7 @@
 // (--turn-h). On that table, at 1270×700 and 1100×700:
 //  (d1) no page error, no console "Maximum update depth", no recovery screen;
 //  (d2) whenever a turn card is up, it never covers the since-strip (≤ 1px), and stays on screen.
-// It plays until 52+ rival placements have happened (from the save's log) with 20+ distinct rival turn cards seen.
+// It plays until 52+ rival placements have happened (from the save's log) with 8+ distinct rival turn cards seen (the chain paces bot moves, so several share a card).
 // Server: $V4_URL if set, else its own `npx vite` on a free port from 5186.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -13,7 +13,7 @@ import { answerChoice } from './lib/answer.mjs';
 
 const TABLE = ['market', 'echo', 'yellow', 'gold'];
 const WANT = Number(process.env.V4_DOCK_TURNS || 52); // rival placements played through per size
-const CARDS = Number(process.env.V4_DOCK_CARDS || 20); // distinct rival turn cards seen per size (bots that move in one
+const CARDS = Number(process.env.V4_DOCK_CARDS || 8); // distinct rival turn cards seen per size (bots that move in one
 // commit share one card, so cards are fewer than placements)
 let server = null;
 let base = process.env.V4_URL;

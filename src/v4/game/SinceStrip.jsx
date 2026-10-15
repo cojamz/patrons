@@ -34,14 +34,26 @@ export function StoryCard({ story, color, state, hover }) {
  * props: state, entries (stories, oldest first: { actor, head, space, spaceKey, short, lines, uids, hit, n }), me (your
  * id or null), yours (it's your move now), hover (the board's hover layer), onLog (opens the full log).
  */
-export default function SinceStrip({ state, entries, me, yours, hover = null, onLog, cardUp = false }) {
+export default function SinceStrip({ state, entries, me, yours, hover = null, onLog }) {
   // whole lines only (design pod): when the strip's room can't hold every line, the oldest go into "N earlier…" instead
   // of showing half a line at the top. `drop` only grows while the list overflows; it starts over when the lines change or
   // the strip's room (its max-height, set by the layout from the chairs and the turn card, never by these lines) grows.
   // Nothing here sizes the strip, so measuring it can't feed back (the TurnCard lesson, 2026-10-15).
   const listRef = useRef(null), secRef = useRef(null), roomRef = useRef(0);
-  // (the turn card coming or going changes the strip's room without resizing anything watched here: start over then too)
-  const sig = entries.map(e => e.n).join(',') + (cardUp ? '|card' : '');
+  // The turn card coming or going changes the strip's room (layout.css :has(> .turn-card)) without resizing anything the
+  // ResizeObserver watches: when a card is drawn or leaves the table, the fold starts over. Watched on the DOM, where the
+  // layout reads it (the card is drawn after the animation chain, not when its state changes). The strip never adds or
+  // removes a card, so this can't feed back.
+  const [cardKey, setCardKey] = useState(0);
+  useEffect(() => {
+    const host = secRef.current && secRef.current.parentElement;
+    if (!host || typeof MutationObserver !== 'function') return undefined;
+    let had = !!host.querySelector(':scope > .turn-card');
+    const mo = new MutationObserver(() => { const has = !!host.querySelector(':scope > .turn-card'); if (has !== had) { had = has; setCardKey(k => k + 1); } });
+    mo.observe(host, { childList: true });
+    return () => mo.disconnect();
+  }, []);
+  const sig = `${entries.map(e => e.n).join(',')}|${cardKey}`;
   // how many of the oldest lines are folded, for these lines: new lines start it over at 0 (worked out here, not by a
   // second commit)
   const [dropState, setDrop] = useState({ sig: '', n: 0 });
@@ -88,7 +100,7 @@ export default function SinceStrip({ state, entries, me, yours, hover = null, on
   // a tap anywhere on a line that isn't a name pins its card (the name's own tap opens the name's card)
   const pinLine = e => { const t = e.currentTarget.querySelector('[data-since-line]'); if (t && !e.target.closest('[data-hover-name], [data-since-line]')) t.click(); };
   return (
-    <section ref={secRef} className={`lt-since${yours ? ' yours' : ''}`} data-since aria-label="Since your last turn">
+    <section ref={secRef} className={`lt-since${yours ? ' yours' : ''}`} data-since data-folded={cut || undefined} aria-label="Since your last turn">
       <header className="since-head">
         <span className="since-title">Since your last turn</span>
         <button type="button" className="since-log" data-open-log onClick={onLog} title="The whole game, move by move">Log</button>

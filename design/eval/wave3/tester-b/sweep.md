@@ -56,3 +56,16 @@ Harness note: the scratchpad dir is shared with tester w3a; my first helper scri
 - Toast "You took X" lingers through all three bot turns. shot 208
 - Log: newest-first, cause listed below its effect (You stole 2 above You took Redistribute). Names open cards and highlight the space on the wheel (good). Log wording "+1● each time P2 takes a Gold space" vs card "per round number". Hustler's chosen color shown only in the log. shots 219, 221, 223
 - Round II reckoning: same choreography; seat count badges; readable. Summary arithmetic checks out. shot 228, 229
+
+## Round III and end
+- Hub ring opens; Poach hover "+1 member / the rest is your pick / a rival decides part of it". Double Down "nothing right now". Crunch Time panel "Extra turns for all purple" undecipherable before hover. shots 233, 237, 281
+- Gold rim hover: full standings with "leads" chip — the best hover in the game. shot 241
+- Seat card (name/count hover) lists members + abilities + "once a round" state. No follower breakdown anywhere on the seat. shot 243
+- Poach: first click eaten again, second opened choice; take resolved with no motion; toast "took P4's Broker / Robin Hood +1 / recruited Rich Uncle (free)" — the rival's free recruit is only in the toast. shots 245-249
+- Foreman hover when affordable: "Pays 6●" reads as the member paying me. shot 258
+- Lottery Winner: pay dialog suggested 4●+6●; one tap swapped to 3●+7●. Member glows in seat; hover has "Use: +8●" button. First attempt the popover closed while I travelled to the button. Use worked on the second; +8 appeared with no motion; "Undo buy" vanished. shots 299-313
+- Seat overflows at 7 members into a "+1". shot 304
+- Header "Choose how to pay ···" stayed up through P3/P2's turns. shot 320
+- P4's Shake Down on my Middleman at the very end: "Your turn — P4 holds Middleman: keep it for 4?" with only "Let Middleman go" (I had 1). It replaced my follower-buy confirmation. shot 329
+- Round III reckoning, summary, results: arithmetic checks out; results table numbers have no hover; "Yourself" column is all 1s. shots 333, 336, 340
+- Menu: Animations Quick/Steady/Relaxed (Steady default) vs setup's Bot speed Slow/Normal/Fast. shot 342
