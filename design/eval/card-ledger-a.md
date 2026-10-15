@@ -3,7 +3,7 @@
 Card-by-card check (2026-10-14). Each card has a scenario test that plays it through real moves, checks the printed numbers, and checks that a log line names the card whenever it changes a number. Most cards also get one cross-sphere case. Plain cards ("Worth N followers", "No effect") are skipped.
 
 - **Tests:** `src/test/engine/v4/cards-{gold,red,purple,silver,yellow,benders}.test.js`, with helpers in `cards-helpers.js`.
-- **Gate:** the second block of `src/test/engine/v4/fire-audit.test.js`, run through `fire-audit-runner.js`. It plays 140 seeded easy-bot games on mixed tables and takes about 25s. Every member with an effect that gets recruited must be named acting at least once.
+- **Gate:** the second block of `src/test/engine/v4/fire-audit.test.js`, run through `fire-audit-runner.js`. It plays 140 seeded easy-bot games on mixed tables and takes about 25s. Every member with an effect that gets recruited must be named acting at least once. Its ALLOW list holds conditional cards the bots can hold a whole game without meeting the condition, each with a named test of its own: Late Riser, Harmonist, and since balance pass 1 (2026-10-15, whose reprices moved the seeded games) Corner-Cutter, Apprentice, Investor and Rainmaker. Every silent hold of those four was checked: no extra turn taken, Investor held only from round III, or the card released first; no missing log line.
 - **Report:** `node scripts/v4-fire-audit.mjs [games] [levels] [spheres]`. It exits 1 if any member stays silent.
 
 Status key:
