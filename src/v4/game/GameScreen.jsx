@@ -1,9 +1,9 @@
 // The game table. Renders engine state from a session and turns clicks into { player, option } moves.
 // What's clickable is exactly state.pending.options, and only for seats this client controls.
 import { memo, startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { followers, tierLeft, quadrant } from '../../engine/v4/index.js';
+import { tierLeft, quadrant } from '../../engine/v4/index.js';
 import { useAnyDot } from './Glyphs.jsx';
-import { finalWinners, isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote } from '../format.js';
+import { isRoundEnd, newLogLines, parseRoundEnd, playerColor, promptFor, roman, tierCostText, scoringSnapshot, explainLine, plainLine, latestRivalMove, movesSinceYourTurn, workersNote } from '../format.js';
 import { TouchTips } from './Info.jsx';
 import Wheel from './Wheel.jsx';
 import ShopCards from './ShopCards.jsx';
@@ -26,6 +26,7 @@ import SinceStrip from './SinceStrip.jsx';
 import { createTrail, feed, liveStory, sinceYourTurn } from './trail.js';
 import { cardDef } from '../../engine/v4/index.js';
 import Results from './Results.jsx';
+import FinalScore from './FinalScore.jsx';
 import RoundEnd from './RoundEnd.jsx';
 import Reckoning, { reckonRows } from './Reckoning.jsx';
 import { snakeOrder } from './order.js';
@@ -1253,19 +1254,10 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
       {state.over && !moment ? (
         <div className="main over">
           <Results state={state} onPlayAgain={onPlayAgain} onHome={onHome} meId={mySeats.length === 1 ? mySeats[0] : null} />
-          <div className="side over-cults" aria-label="The cults at the end">
-            {(state.ranking || state.players.map(p => p.id)).map((pid, k) => {
-              const won = finalWinners(state).includes(pid); // the rule: most followers, members break a tie
-              return (
-                <div key={pid} className={`over-seat${won ? ' won' : ''}`} data-pid={pid}>
-                  <span className="rank num" aria-hidden="true">{k + 1}</span>
-                  <CultSeat state={state} pid={pid} me={me} mine={pid === me} now={won} hover={hover} onPick={onPick} />
-                  <b className="final num" title="Followers at the end">{followers(state, state.players[pid])}</b>
-                </div>
-              );
-            })}
+          {/* the cults at the end, scored where their followers come from (FinalScore.jsx, taste rule 11) */}
+          <FinalScore state={state} me={me} hover={hover} onPick={onPick} CultSeat={CultSeat}>
             <Log state={state} meId={mySeats.length === 1 ? mySeats[0] : null} hover={hover} />
-          </div>
+          </FinalScore>
         </div>
       ) : (
         <>

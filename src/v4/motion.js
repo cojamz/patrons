@@ -168,6 +168,14 @@ const TABLE = {
   // the round's end as its own beat before the first rim lights: "Round II ends" stamps in at the wheel's centre and is
   // read (wave 4 #6: the scoring began while the player looked away)
   reckonLead:  [450,   800],
+  // the end-game scoring on the results' cults (taste rule 11; game/FinalScore.jsx): the results are read, then every
+  // seat in step: the leader's followers pop, then each member's people one figure after the next, then the followers
+  // members grant at game end; each seat's total ticks up as each pop lands
+  scoreLead:   [150,   250],  // the results open and are read before the first pop
+  scoreFan:    [30,    50],   // seat to seat within one pop
+  scoreStep:   [140,   200],  // one figure's pop to the next
+  scoreBeat:   [200,   300],  // between the beats (followers, members, grants)
+  scorePop:    [450,   600],  // a pop's life: it rises over the head, holds, and fades (about three alive at once)
   // a passed turn's card holds its moment, then folds into its chair (GameScreen's TurnCard; lamp.css's fold is
   // --mo-slow scaled to match)
   turnCardHold: [2600, 2600],

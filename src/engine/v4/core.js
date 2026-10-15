@@ -729,11 +729,16 @@ export function contestTable(state, ctx = ctxFor(state)) {
 
 function finish(state) {
   const ctx = ctxFor(state);
-  for (const p of state.players) p.final = { total: 0, parts: [] };
+  // final.cards: each bonus with the member that scored it (the results' scoring pops it over that member's head)
+  for (const p of state.players) p.final = { total: 0, parts: [], cards: [] };
   eachMember(state, (owner, card, def) => {
     if (!def.onGameEnd) return;
     const got = def.onGameEnd(ctx, owner, card) || 0;
-    if (got) { owner.bonus += got; fBump(state, owner, got); owner.final.total += got; owner.final.parts.push(`${def.name} ${got > 0 ? '+' : '−'}${Math.abs(got)}`); }
+    if (got) {
+      owner.bonus += got; fBump(state, owner, got); owner.final.total += got;
+      owner.final.parts.push(`${def.name} ${got > 0 ? '+' : '−'}${Math.abs(got)}`);
+      owner.final.cards.push({ uid: card.uid, name: def.name, n: got });
+    }
   });
   const ranked = [...state.players].sort((a, b) => followers(state, b) - followers(state, a) || memberCount(state, b) - memberCount(state, a));
   state.ranking = ranked.map(p => p.id);

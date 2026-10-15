@@ -271,7 +271,8 @@ describe('Gold members', () => {
   it('Tycoon: game end +1 follower per 3 gold', () => {
     const s = scene({ members: [['gold.tycoon']], res: [{ gold: 11 }], queue: [{ t: 'finish' }] });
     expect(s.over).toBe(true);
-    expect(s.players[0].final).toEqual({ total: 3, parts: ['Tycoon +3'] });
+    // (final.cards: the member behind each bonus, for the results' end-game scoring, FinalScore.jsx)
+    expect(s.players[0].final).toEqual({ total: 3, parts: ['Tycoon +3'], cards: [{ uid: s.players[0].members[0], name: 'Tycoon', n: 3 }] });
     expect(fol(s, 0)).toBe(1 + 1 + 3);
   });
 

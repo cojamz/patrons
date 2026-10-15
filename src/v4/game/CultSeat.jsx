@@ -28,14 +28,16 @@ const sphereOf = (state, d) => { if (!onTable(state, d)) return 'colorless'; try
 /**
  * props: state, pid (whose cult), me (the viewer), mine (it's the viewer's own cult: larger, with Use buttons),
  * now (their turn), react (recent reactions: { leader: 'gesture'|'celebrate'|'scheme', members: { defId: n } }),
- * hover (useHoverCards), optionFor/onPick (your members' Use / switch).
+ * hover (useHoverCards), optionFor/onPick (your members' Use / switch), total (the follower count to show, while the
+ * results' end-game scoring counts it up).
  */
-export default function CultSeat({ state, pid, me = null, mine = false, now = false, react: given = null, hover = null, optionFor = () => null, onPick = () => {}, pick = null }) {
+export default function CultSeat({ state, pid, me = null, mine = false, now = false, react: given = null, hover = null, optionFor = () => null, onPick = () => {}, pick = null, total = null }) {
   const p = state.players[pid];
   const rootEl = useRef(null);
   const own = useCultReactions(state, pid, rootEl);
   const react = given || own;
-  const f = followers(state, p);
+  // (total: the count so far while the results' scoring runs (FinalScore.jsx); otherwise the engine's)
+  const f = total ?? followers(state, p);
   // grouped by color (the approved plate: "the color mix is their lean"), table order, colorless last
   const colorAt = d => (onTable(state, d) ? state.quadrants.indexOf(d.quadrant) : state.quadrants.length);
   const groups = memberChips(state, p).map((g, k) => ({ g, k })).sort((a, b) => colorAt(a.g.def) - colorAt(b.g.def) || a.k - b.k).map(x => x.g);
