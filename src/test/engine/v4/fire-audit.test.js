@@ -96,12 +96,6 @@ const SPHERES = ['gold', 'red', 'purple', 'silver', 'yellow'];
 const ALLOW = {
   'purple.lateriser': 'needs the fewest followers at a round start, bought before it (cards-purple: Late Riser)',
   'yellow.harmonist': 'pays only with a full set at game end (cards-yellow: Harmonist)',
-  // checked game by game after balance pass 1 (2026-10-15): in every silent hold the holder never took an extra turn,
-  // held Investor only from round III (no round start left), or released the card first; none was a missing log line
-  'purple.doubletime': 'needs an extra turn paid in purple, which easy bots seldom buy (cards-purple: Corner-Cutter)',
-  'purple.apprentice': 'needs an extra turn, which easy bots seldom take (cards-purple: Apprentice)',
-  'gold.investor': 'needs a round start after it is recruited (cards-gold: Investor)',
-  'yellow.rainmaker': 'once per game, used by bots only on their last buy (cards-yellow: Rainmaker)',
 };
 
 describe('namesCard: what counts as a line naming a card', () => {
