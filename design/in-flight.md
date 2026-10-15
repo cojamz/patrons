@@ -34,6 +34,11 @@ Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source a
 26. **RC2 UI: turn story** (triage 1–4): one turn card per action with gross amounts, "Your turn again (snake order)" with chips that count it, a since-your-last-turn strip with the log one tap from the board, Midas shows its state. Build dir `.v4-build-rc2a` (port 5362).
 27. **RC2 UI: clarity** (triage 5–10): rim and emoji hover target, every player in space hovers, round-III bonuses above the fold, setup picker off the wheel, rule-changers in the pay dialog, release line on member cards. Build dir `.v4-build-rc2b` (port 5364).
 28. **RC2 session robustness** (triage 15–17): one tab owns a local game, results survive a reload, a reload resumes into the round summary. Build dir `.v4-build-rc2s` (port 5366).
+29. **Snappy pod E1: measurement.** A `?trace=1` tracer (src/v4/perf.js), scripts/v4-perf.mjs (4× CPU, online with ?lag), a baseline and a ranked top 10 in design/eval/perf/baseline.md. Port 5368.
+30. **Snappy pod E2: motion.** Audit of every wait (design/eval/perf/motion-audit.md), fixes to targets (wheel spin 250–350ms, hover ≤60ms, input response <100ms), duration tokens, a snappiness gate, and the motion gate made robust to load. `.v4-build-snap`, port 5370.
+31. **Layout (Cory's play notes).** Follower buys made prominent, top score row removed, seats condensed, shop sorted by cost with a toggle, no deck hover, the Reckoning slower and clearer. `.v4-build-layout`, port 5372.
+32. **Visual language** (replaces the card pod and the action-look pod, which Cory rejected as "variations on what exists"). A grammar in design/prototypes/language/grammar.md, then ONE polished plate (a quadrant with 3 actions, a rim rule, a member card, resources as dots) for Cory before anything scales.
+33. **Steal and pick-a-player flows.** Click the rival's resource stack or seat; a compact list only as the keyboard fallback. `.v4-build-steal`, port 5376.
 
 ## Held
 - **Fair-price screen, bot levels + 4-thinker tables:** offloaded to the remote sessions below. The Purple session is done (roster 11).
