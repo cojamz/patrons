@@ -12,6 +12,7 @@ import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'node:net';
+import { answerChoice } from './lib/answer.mjs';
 import { createGame, applyMove, chooseBotMove } from '../../src/engine/v4/index.js';
 import { seededRandom } from '../../src/engine/v4/rng.js';
 import { buildStamp } from './lib/stamp.mjs';
@@ -113,8 +114,9 @@ try {
           if (card) {
             const n0 = await page.$eval('.lt-seat[data-pid="0"]', e => e.textContent);
             await card.click();
-            const pay = await page.waitForSelector('.dialog.pay .btn.pri[data-option]', { timeout: 2500 }).catch(() => null);
-            if (pay) { await page.waitForTimeout(300); await pay.click(); }
+            // the pay sheet: its Pay button (the suggested way), as a person would (lib/answer.mjs)
+            const pay = await page.waitForSelector('.dialog.pay', { timeout: 2500 }).catch(() => null);
+            if (pay) { await page.waitForTimeout(300); await answerChoice(page); }
             await page.waitForTimeout(500);
             const n1 = await page.$eval('.lt-seat[data-pid="0"]', e => e.textContent);
             if (n0 === n1) errors.push('(b2) recruiting from the pile changed nothing on P1');
@@ -137,9 +139,10 @@ try {
         await page.waitForTimeout(400);
         // the color pick(s) come next as a normal choice
         let k = 0;
-        for (; k < 12 && await page.$('.prompt.choice button[data-option]:not([disabled])'); k++) {
+        // (a button by the caption, or your own lit stack: pick-on-board)
+        for (; k < 12 && await page.$('.prompt.choice') && await page.$('.lt[data-phase="choose"][data-yours="1"]'); k++) {
           if (k === 0) await shot('b3-release-colors');
-          await (await page.$('.prompt.choice button[data-option]:not([disabled])')).click().catch(() => {});
+          await answerChoice(page);
           await page.waitForTimeout(350);
         }
         if (!k) errors.push('(b3) Release did not ask which colors');
@@ -164,18 +167,10 @@ try {
       continue;
     }
 
-    // otherwise: first legal option (skip toggles, back, and releases after the first)
-    const els = await page.$$('[data-option]:not([disabled])');
-    const ids = await Promise.all(els.map(el => el.getAttribute('data-option').catch(() => null)));
-    // a pair is picked in two steps (boardPick.js comboStep): yours (@pick:x), then theirs, never back and forth
-    const second = ids.includes('@unpick');
-    let clicked = false;
-    for (let k = 0; k < els.length; k++) {
-      const id = ids[k];
-      if (!id || id.startsWith('toggle:') || id === 'back' || id.startsWith('release:') || id === '@unpick' || (second && id.startsWith('@pick:'))) continue;
-      try { await els[k].click({ timeout: 1500 }); clicked = true; break; } catch { /* moved */ }
-    }
-    await page.waitForTimeout(clicked ? 60 : 80);
+    // otherwise: the first answer in page order (lib/answer.mjs: board picks, pairs, the pay sheet; never a toggle or
+    // Back), and no more releases after the first
+    const did = await answerChoice(page, { avoid: ['release:'] });
+    await page.waitForTimeout(did ? 60 : 80);
   }
   if (!(await page.$('.results'))) errors.push('the game did not finish');
   for (const why of ['squat', 'pile', 'release', 'released', 'straggler']) if (!seen.has(why)) errors.push(`never exercised ${why}`);

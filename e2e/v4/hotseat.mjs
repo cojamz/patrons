@@ -5,6 +5,7 @@
 // `npx vite` itself on the first free port from 5180 and stops it at the end.
 import { chromium } from 'playwright';
 import { TEXT_CLIP } from './lib/textclip.mjs';
+import { answerChoice } from './lib/answer.mjs';
 import { SHOP_SIZE } from '../../src/engine/v4/index.js';
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
@@ -359,20 +360,11 @@ try {
       await shot('06-after-reload-round3');
       continue;
     }
-    // the first legal option in page order (skip on/off toggles, which would loop)
-    const els = await page.$$('[data-option]:not([disabled])');
-    const ids = await Promise.all(els.map(el => el.getAttribute('data-option').catch(() => null)));
-    // a pair is picked in two steps (boardPick.js comboStep): yours (@pick:x), then theirs; once one is lifted
-    // (@unpick on screen), putting it back or switching yours would go round in circles
-    const second = ids.includes('@unpick');
-    let clicked = false;
-    for (let k = 0; k < els.length; k++) {
-      const id = ids[k];
-      if (!id || id.startsWith('toggle:') || id === 'back' || id === '@unpick' || (second && id.startsWith('@pick:'))) continue; // pay: confirm the default
-      try { await els[k].click({ timeout: 1500 }); clicked = true; clicks++; break; } catch { /* covered, moved or detached; try the next */ }
-    }
-    if (!clicked) await page.waitForTimeout(30);
-    else await page.waitForTimeout(20);
+    // the first answer in page order, as a person would give it (lib/answer.mjs: board picks, pairs, the pay sheet's
+    // suggested way; never a toggle, which would loop, or Back)
+    const did = await answerChoice(page);
+    if (did) clicks++;
+    await page.waitForTimeout(did ? 20 : 30);
   }
   await page.waitForTimeout(200);
   await shot('09-results');
