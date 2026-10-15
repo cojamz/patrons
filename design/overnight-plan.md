@@ -30,3 +30,6 @@ Every screen agent works from design/taste.md, with plate1b.png and grammar.md a
 4. Blue's direction (spaces give blue plus a bargain, round III is the shopping day, the rim scores the priciest member).
 5. Hustler and Lender from balance pass 2.
 6. Ideas: a discard pile, members that are items, better pixel animations.
+
+## Revised timing (07:45 UTC)
+Cory's morning is likely around 14:00 UTC, so the loop keeps going. Each wave: freeze a commit, run a quiet remote verdict and perf, have two blind screen-only testers (brief v3) play the frozen build, merge their findings, route them to owners, and let the design pod fix continuously. Wave 3 freezes about 08:00, wave 4 about 10:30. The bench's bot fix and rerun land around 10:00, and balance pass 3 follows only if the anchor check passes. The final freeze and the game-skeptic's grade come about 12:45, the final quiet verdict about 13:15, and the morning note is finished about 13:45.

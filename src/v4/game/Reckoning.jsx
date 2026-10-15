@@ -51,7 +51,9 @@ export default function Reckoning({ info, root, onDone, onLamp, onPaid, meId = n
       // the leader; never over the chair's own name or numbers
       const seat = root.querySelector(`.lt > .lt-seat[data-pid="${p.id}"]`);
       const sr = seat && seat.getBoundingClientRect();
-      if (sr && sr.width && root.querySelector('.lt > .lt-snake')) { out[p.id] = { left: sr.right + 8, top: sr.top + 24 }; continue; }
+      // (in the rail's gutter at the chair's left: the turn order means nothing once the round is scored, and the wheel
+      // now fills the gap on the chair's right; layout.css hides the order marks meanwhile)
+      if (sr && sr.width && root.querySelector('.lt > .lt-snake')) { out[p.id] = { left: Math.max(4, sr.left - 46), top: sr.top + 24 }; continue; }
       const a = playerAnchor(root, p.id);
       if (!a) continue;
       const r = a.getBoundingClientRect();

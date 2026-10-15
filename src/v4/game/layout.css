@@ -98,3 +98,6 @@
 /* the wheel turns (w2a #42): its knurled edge (Wheel.jsx), and a hand that grabs it */
 .lt .stage svg.wheel-paper .knurl circle{stroke:var(--cream,#f2e8d2);stroke-opacity:.22;stroke-width:4;stroke-dasharray:1.2 3.2}
 @media (pointer:fine){ .lt .lt-wheel .stage{cursor:grab} .lt .lt-wheel .stage:active{cursor:grabbing} }
+/* while a round is scored, the counts stand in the rail's gutter beside each chair (Reckoning.jsx): the turn order's
+   marks and rail step out of their way */
+.lt[data-phase="reckon"] .lt-seat .cs-order,.lt[data-phase="reckon"] > .lt-snake{visibility:hidden}
