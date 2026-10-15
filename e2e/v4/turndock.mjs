@@ -27,19 +27,21 @@ if (!base) {
 
 const errors = [];
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
-for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }]) {
+async function run(size) {
   const tag = `${size.width}x${size.height}`;
-  const page = await (await browser.newContext({ viewport: size })).newPage();
-  page.on('pageerror', e => errors.push(`[${tag}] (d1) pageerror: ${e.message}`));
-  page.on('console', m => { if (m.type() === 'error' && /Maximum update depth/i.test(m.text())) errors.push(`[${tag}] (d1) console: ${m.text().slice(0, 160)}`); });
-  await page.addInitScript(() => { try { localStorage.setItem('patrons.v4.introSeen', '1'); } catch { /* ignore */ } });
-  const rivals = new Set();
+  const turns = new Set();
   let worst = 0, off = 0, games = 0;
-  try {
-    while (rivals.size < WANT && games < 3) {
-      games++;
+  while (turns.size < WANT && games < 3) {
+    games++;
+    // a fresh browser per game: a reload resumes the saved game, so "home" would never show
+    const ctx = await browser.newContext({ viewport: size });
+    const page = await ctx.newPage();
+    page.on('pageerror', e => errors.push(`[${tag}] (d1) pageerror: ${e.message}`));
+    page.on('console', m => { if (m.type() === 'error' && /Maximum update depth/i.test(m.text())) errors.push(`[${tag}] (d1) console: ${m.text().slice(0, 160)}`); });
+    await page.addInitScript(() => { try { localStorage.setItem('patrons.v4.introSeen', '1'); } catch { /* ignore */ } });
+    try {
       await page.goto(`${base}/?intro=0&botDelay=20&speed=quick`);
-      await page.click('[data-home="local"]');
+      await page.click('[data-home="local"]', { timeout: 60000 });
       await page.waitForSelector('[data-start]');
       // the custom table, in this order
       await page.getByText(/^Custom$/).first().click();
@@ -47,45 +49,51 @@ for (const size of [{ width: 1270, height: 700 }, { width: 1100, height: 700 }])
       for (const q of TABLE) await page.click(`.sphere[data-sphere="${q}"]`);
       await page.click('[data-start]');
       const t0 = Date.now();
-      while (Date.now() - t0 < 300000 && rivals.size < WANT) {
+      let lastMoves = null, still = 0;
+      while (Date.now() - t0 < 420000 && turns.size < WANT) {
         if (await page.getByText('Something went wrong').count()) { errors.push(`[${tag}] (d1) the game fell to "Something went wrong"`); break; }
         const s = await page.evaluate(() => {
           const c = document.querySelector('.turn-card'), sv = document.querySelector('.lt > .lt-since');
           const lt = document.querySelector('.lt');
-          const out = { over: !!document.querySelector('.results, [data-phase="over"]'), phase: lt ? lt.dataset.phase : '', yours: lt ? lt.dataset.yours : '', card: null };
+          const out = { over: !!document.querySelector('.results') || (lt && lt.dataset.phase === 'over'), phase: lt ? lt.dataset.phase : '', yours: lt ? lt.dataset.yours : '', round: lt ? lt.dataset.round : '', moves: lt ? lt.dataset.moves : '', card: null };
           if (c) {
-            const a = c.getBoundingClientRect();
-            const cover = sv ? Math.max(0, Math.min(a.bottom, sv.getBoundingClientRect().bottom) - Math.max(a.top, sv.getBoundingClientRect().top)) * (Math.min(a.right, sv.getBoundingClientRect().right) > Math.max(a.left, sv.getBoundingClientRect().left) ? 1 : 0) : 0;
-            out.card = { text: c.dataset.turnStory || '', cover, off: a.top < 0 || a.bottom > innerHeight + 1 };
+            const a = c.getBoundingClientRect(), b = sv ? sv.getBoundingClientRect() : null;
+            const cover = b ? Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)) * (Math.min(a.right, b.right) > Math.max(a.left, b.left) ? 1 : 0) : 0;
+            out.card = { head: (c.dataset.turnStory || '').split(' · ')[0], cover, off: a.top < 0 || a.bottom > innerHeight + 1 };
           }
           return out;
         });
         if (s.card) {
-          if (!/^You\b/.test(s.card.text) && s.card.text) rivals.add(`${games}:${s.card.text}`);
+          // a rival's turn: one per space per round ("P2 took Kickback")
+          if (s.card.head && !/^You\b/.test(s.card.head)) turns.add(`${games}:${s.round}:${s.card.head}`);
           worst = Math.max(worst, s.card.cover);
           if (s.card.off) off++;
         }
         if (s.over) break;
+        still = s.moves === lastMoves ? still + 1 : 0;
+        lastMoves = s.moves;
         if (s.yours === '1') {
           if (s.phase === 'place') { const sl = await page.$('.lt-wheel .slot.can .base'); const bb = sl && await sl.boundingBox().catch(() => null); if (bb) await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2); }
           else if (s.phase === 'buy') await page.click('[data-option="pass"]').catch(() => {});
-          else await answerChoice(page, { avoid: ['release:'] }).catch(() => {});
+          // a choice or a payment: any answer but undoing; if one doesn't move the game, try the next
+          else await answerChoice(page, { avoid: ['release:', 'undo', 'back'], skip: Math.floor(still / 4), domFallback: still > 8 }).catch(() => {});
         }
         const next = await page.$('[data-next-round]');
         if (next) await next.click().catch(() => {});
         await page.waitForTimeout(120);
       }
+    } catch (e) {
+      errors.push(`[${tag}] run (game ${games}): ${e.message.split('\n')[0]}`);
+      await page.screenshot({ path: `/tmp/turndock-${tag}-fail.png` }).catch(() => {});
     }
-    if (worst > 1) errors.push(`[${tag}] (d2) a turn card covered the since-strip by ${Math.round(worst)}px`);
-    if (off) errors.push(`[${tag}] (d2) a turn card ran off the screen ${off} time(s)`);
-    if (rivals.size < WANT) errors.push(`[${tag}] saw only ${rivals.size} rival turn cards in ${games} game(s) (want ${WANT})`);
-    console.log(`turndock [${tag}]: ${rivals.size} rival turn cards over ${games} game(s), worst cover ${Math.round(worst)}px`);
-  } catch (e) {
-    errors.push(`[${tag}] run: ${e.message}`);
-    await page.screenshot({ path: `/tmp/turndock-${tag}-fail.png` }).catch(() => {});
+    await ctx.close();
   }
-  await page.context().close();
+  if (worst > 1) errors.push(`[${tag}] (d2) a turn card covered the since-strip by ${Math.round(worst)}px`);
+  if (off) errors.push(`[${tag}] (d2) a turn card ran off the screen ${off} time(s)`);
+  if (turns.size < WANT) errors.push(`[${tag}] saw only ${turns.size} rival turns in ${games} game(s) (want ${WANT})`);
+  console.log(`turndock [${tag}]: ${turns.size} rival turns over ${games} game(s), worst cover ${Math.round(worst)}px`);
 }
+await Promise.all([{ width: 1270, height: 700 }, { width: 1100, height: 700 }].map(run));
 await browser.close();
 if (server) server.kill();
 if (errors.length) console.error([...new Set(errors)].join('\n'));

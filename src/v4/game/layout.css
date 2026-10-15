@@ -125,3 +125,21 @@
   .app.narrow > .dialog.page:has(.sphere-grid) > .row-btns:last-child{grid-column:1 / -1;grid-row:11;position:static;margin:4px 0 0;padding:0;background:none}
   .app.narrow > .dialog.page:has(.sphere-grid) .sphere-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+/* Home (the first screen Cory sees): the brand, then the choices, each group with air (the brand sat 8px over its first
+   button, everything 8 apart). One rhythm on the 4px grid: 32 between the brand and the choices, 16 between choices; the
+   version steps out of the title/tagline pair to sit quietly under it. */
+.app.home{gap:32px}
+.app.home .menu{gap:16px}
+.app.home .hero .version{order:3;margin-top:2px}
+
+/* Results (laptop): the four cults stand in one row under the table, so the whole result fits the screen at 700px (the
+   second row of cards fell below the fold) */
+@media (min-width:1200px) and (min-height:500px){
+  .app.game.lt > .main.over > .over-cults{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+
+/* the header's answers ("You've placed this turn — recruit, buy followers or pass") wrap like the question, onto the
+   row's second line, instead of the old pill's one-line ellipsis (v4.css .say.nudge): with Release… and Undo beside
+   it, the text spilled 58–152px out of its box */
+.lt-prompt .status .say.nudge,.lt-prompt .status .say.info{white-space:normal;text-wrap:balance;overflow:visible;text-overflow:clip}

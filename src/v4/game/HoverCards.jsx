@@ -18,6 +18,7 @@ import { SeatMembers } from './MemberUse.jsx';
 import { safeThisRound } from './memberUse.js';
 import './lamp-b.css';
 import { MO } from '../motion.js';
+import { aimAt, arrived, heading, aimedAt } from './hoverIntent.js';
 
 const RINGS = ['outer ring', 'middle ring', 'inner ring'];
 const sphereOf = qid => quadrant(qid).resource;
@@ -50,16 +51,29 @@ export function createHover() {
   let card = null, openT = null, closeT = null;
   const subs = new Set();
   const set = next => { if (next === card) return; card = next; for (const fn of subs) fn(); };
+  // a seat's card has buttons and a list to scroll: it stays while the pointer is on it or on its way to it, and what
+  // the pointer crosses on the way (the seat's own members, the next seat) doesn't take its place (hoverIntent.js)
+  const liveBox = () => (typeof document !== 'undefined' ? document.querySelector('[data-hover-layer][data-live="1"]') : null);
+  const closeSoon = ms => {
+    clearTimeout(closeT);
+    const wait = () => { if (heading()) { closeT = setTimeout(wait, 80); return; } if (card && !card.pinned) set(null); };
+    closeT = setTimeout(wait, ms);
+  };
   const show = next => {
+    // crossing toward the open seat card: nothing on the way opens over it, and its close isn't cancelled
+    if (next.el && !next.pinned && card && !card.pinned && card.kind === 'seat' && heading() && aimedAt() === liveBox()) return;
     clearTimeout(closeT);
     if (!next.el) {
       clearTimeout(openT);
+      if (card && !card.pinned && card.kind === 'seat' && liveBox()) { aimAt(liveBox()); closeSoon(CLOSE_MS); return; }
       // leaving a space for the wheel's gutter keeps the card a moment longer, so sweeping across the spaces hands it
       // from one to the next without a close/open flicker; leaving the wheel closes it at the usual pace
       const wait = next.kind === 'space' && card && card.kind === 'space' && onWheel(card) ? GRACE_MS : CLOSE_MS;
       closeT = setTimeout(() => { if (card && !card.pinned) set(null); }, wait);
       return;
     }
+    // crossing toward your member's open card (a Use button on it): the seat card doesn't open over it
+    if (!next.pinned && heading() && aimedAt() && aimedAt() !== liveBox()) return;
     clearTimeout(openT);
     if (next.pinned) { set(next); return; }
     if (card && card.pinned) return; // a pinned card stays until it's closed
@@ -74,9 +88,9 @@ export function createHover() {
     subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
     close() { clearTimeout(openT); clearTimeout(closeT); set(null); },
     /** the pointer is on a card you can use (a seat's members: its Use button, its list scrolled): it stays */
-    hold() { clearTimeout(closeT); },
+    hold() { clearTimeout(closeT); arrived(); },
     /** the pointer left that card: it closes as if it had left the target */
-    letGo() { clearTimeout(closeT); closeT = setTimeout(() => { if (card && !card.pinned) set(null); }, CLOSE_MS); },
+    letGo() { closeSoon(CLOSE_MS); },
     onSpaceHover: (key, el, o = {}) => show({ kind: 'space', key, el, pinned: !!o.pinned, past: !!o.past }),
     onPlaqueHover: (qid, el, o = {}) => show({ kind: 'plaque', qid, el, pinned: !!o.pinned }),
     onSeatHover: (pid, el, o = {}) => show({ kind: 'seat', pid, el, pinned: !!o.pinned }),

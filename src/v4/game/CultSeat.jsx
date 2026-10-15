@@ -84,7 +84,14 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
       aria-label={`${mine ? 'Your cult' : `${p.name}'s cult`}: ${f} follower${f === 1 ? '' : 's'}, ${p.members.length} member${p.members.length === 1 ? '' : 's'}, ${p.left} minion${p.left === 1 ? '' : 's'} to place${now ? ', their turn' : ''}`}>
       <header className="cs-head" role="button" tabIndex={0} aria-haspopup="dialog" data-hint={`${p.name}: ${f} follower${f === 1 ? '' : 's'}. Show their cult.`}
         onPointerEnter={e => { railIn.current = onRail(e); if (realHover(e) && !railIn.current) openSeat(e, false); }}
-        onPointerMove={e => { const r = onRail(e); if (r === railIn.current || !realHover(e) || !hover) return; railIn.current = r; if (r) hover.onSeatHover(pid, null); else openSeat(e, false); }}
+        onPointerMove={e => {
+          const r = onRail(e);
+          if (!realHover(e) || !hover) return;
+          if (r !== railIn.current) { railIn.current = r; if (r) { hover.onSeatHover(pid, null); return; } }
+          // still on the head with its card shut (it was crossed on the way to another open card): open it now
+          const cur = hover.card;
+          if (!r && !(cur && cur.kind === 'seat' && cur.pid === pid)) openSeat(e, false);
+        }}
         onPointerLeave={e => { railIn.current = false; if (e.pointerType === 'mouse' && hover) hover.onSeatHover(pid, null); }}
         onClick={e => openSeat(e, true)}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSeat(e, true); } }}>

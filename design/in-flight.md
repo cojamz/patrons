@@ -4,7 +4,18 @@ Overnight plan: design/overnight-plan.md. Taste brief: design/taste.md.
 
 Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source after dist/ was untracked (d7bdd3e, 01:24). Agents never commit; the foreman verifies and checkpoints. Each agent runs check:v4 on its own `V4_OUTDIR`/`V4_PORT` (build dirs seen on disk are noted). If a session dies, relaunch each workstream from its brief below and tell it to read `git log` first. Done items are ticked in design/todo.md.
 
-## Current roster
+## Now (08:20 UTC, 2026-10-15) — overnight wave 3
+- Frozen w3 = 44e22bd (branch claude/cults-freeze-w3), `.v4-panel/w3` served on :5195 from `.v4-wt/w3-44e22bd` (foreman's background freeze; kill it to stop).
+- Blind testers w3a (:5531) and w3b (:5532), brief v3, EYES_MAX=2 → design/eval/wave3/tester-{a,b}/ (they return the report as text; the foreman saves it).
+- Quiet remote verdict + production perf on 44e22bd: session_01Egf2oBVXjjLx6nEtue7RYb → branch claude/cults-perf-w3, design/eval/perf/quiet-w3-44e22bd.md.
+- Design pod: art director (port 5410: turndock confirmation on :5195, then the 1270 headline clip, hotseat intro-skip timing) and detail designer (5412), both looping until ~13:00.
+- Perf pod (render cost; post-commit work, Wheel per-space memo).
+- Members UX (port 5402): m3/m4, the member hover closing before its Use is clicked.
+- Bench (session_011mMXsYcXHM7NPhc8g63Ki6): fixing Hard-20 after the anchor check failed on 618a8f5, then rerun; balance pass 3 only if anchors pass.
+- Done tonight: motion engineer (hold re-times both ways, hand-off at 2/3, floor only between players), QA (memory, hotseat chair fix, layout), turn-card crash fix (e2e/v4/turndock.mjs).
+- Next: merge w3 reports → design/eval/overnight-wave3.md, route; wave 4 freeze ~10:30; final freeze + game-skeptic ~12:45; morning note ~13:45.
+
+## Earlier roster (history)
 1. **UI-A: wheel, shell, pay, the Reckoning.** Done: frozen verdict on 8f4d76e green on every gate but touch (out of v0.2). Engraved behind ?spaces=engraved (default stays sockets until Cory picks). Was: Brief: design/prototypes/vision/build-plan.md (Split: UI-A; Making it clear; Layout revision). Owns `lamp.css`, the GameScreen shell, `Wheel.jsx`, `PayPicker.jsx`, `RoundEnd.jsx` and the phone layout. Now: the layout revision (the wheel centred and bigger, a cult at each corner, minions on a space's rim so its text stays readable, "minion" in the prompt), then the animated Reckoning. Build dir `.v4-build-ui` (port 5282).
 2. **UI-B: shop strip, corner cults, hover layer, art import, animations, e2e selectors.** Done: final verdict on efc31cf green on every e2e but touch (out of v0.2); units 893/894 (records.test needs records:refresh after the balance pass). Was: Brief: build-plan.md (Split: UI-B; Layout revision; hover; sports cards; minions float). Owns `ShopCards.jsx`, `CultSeat.jsx`, `HoverCards.jsx`/`Info.jsx`, `game/lamp-b.css` and the art wiring. Next (Cory, 21:40): a visible face-down member deck with its count at the head of the shop strip. Earlier: a slim strip of 10 sports-card members (figure, name, cost, worth; effect on hover; only what you can afford lit when buying), the four corner cults (leader, floating minions, member crowd, follower mark, resources), instant hover (<100ms, one sticky layer, the info.mjs gate), the turn story, then idle loops and reactions (stretch). Keeps every e2e gate green as selectors change, never weakening an assertion. Build dir `.v4-build-uib`.
 3. **Hardening.** Brief: design/eval/engineering-review.md ("Do now", then "Do soon") and the hardening line in todo.md. Landed: honest gate, CI, version stamps and content hash, game records and replay, the Recovery screen, bot-failure fallback. Build dir `.v4-build-hard`.

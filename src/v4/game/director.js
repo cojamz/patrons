@@ -413,7 +413,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
   if (!root || before === state) return { atoms: [], total: 0, handoff: 0 };
   const ctx = { state, before, snap, chips };
   // measured before the commit (measureChain), when it was this very step: no layout read here at all
-  const p = pre && pre.before === before && pre.state === state && pre.root !== false ? pre : null;
+  const p = pre && pre.before === before && pre.state === state ? pre : null;
   pre = null;
   // read everything first; every write waits for the clock's next frame (before it paints): a write here made the
   // next layout effect lay the whole page out again
@@ -556,7 +556,7 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           if (!A || !B) return;
           chain.flying++;
           const pic = was && was.html ? `<span class="piece-member-pic">${was.html}</span>` : '<i class="piece-dot member"></i>';
-          const anim = flyPath(pic, 'piece-flight piece-member', square(A.getBoundingClientRect(), 28), square(B.getBoundingClientRect(), 28), { path: a.path, duration: a.dur, fade: true });
+          const anim = flyPath(pic, 'piece-flight piece-member', square(rectOf(A), 28), square(rectOf(B), 28), { path: a.path, duration: a.dur, fade: true });
           onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); settle(B, MO.settle); });
           return;
         }
@@ -569,7 +569,8 @@ export function playChain(root, before, state, { snap = null, minionsBefore = nu
           const pid = a.to.kind === 'stack' || a.to.kind === 'count' ? a.to.pid : a.from.pid;
           const html = a.fol ? folHtml(root, pid) : dotHtml(root, a.r, a.owner ?? pid);
           chain.flying++;
-          const anim = flyPath(html, `piece-flight piece-${a.fol ? 'fol' : 'res'}${a.pay ? ' pay' : ''}`, square(A.getBoundingClientRect(), size), square(B.getBoundingClientRect(), size),
+          // (the places were measured before the commit, or on first use: never a layout read per piece)
+          const anim = flyPath(html, `piece-flight piece-${a.fol ? 'fol' : 'res'}${a.pay ? ' pay' : ''}`, square(rectOf(A), size), square(rectOf(B), size),
             { path: a.pay ? 'drop' : a.take ? 'line' : 'arc', duration: a.dur, label: a.bundle ? `+${a.n}` : '', trail: a.bundle ? 2 : 0, trailGap: MO.bundleTrail, turnTo: a.turn ? dotHtml(root, a.turn, pid) : null, fade: true });
           onFinish(anim, () => { chain.flying = Math.max(0, chain.flying - 1); land({ ...a, by: a.n }, B, false); });
           return;

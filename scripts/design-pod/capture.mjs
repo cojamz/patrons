@@ -10,6 +10,7 @@ import { seededRandom } from '../../src/engine/v4/rng.js';
 import { buildStamp } from '../../e2e/v4/lib/stamp.mjs';
 import { stealSave } from '../../e2e/v4/lib/steal-save.mjs';
 import { paySave } from '../../e2e/v4/lib/dialog-save.mjs';
+import { TEXT_CLIP } from '../../e2e/v4/lib/textclip.mjs';
 
 const argv = process.argv.slice(2);
 const flag = (k, d) => { const i = argv.indexOf('--' + k); if (i < 0) return d; const v = argv[i + 1]; argv.splice(i, 2); return v; };
@@ -163,6 +164,14 @@ for (const st of want) {
         if (o != null) { n++; if (o > worst) { worst = o; await shot('overlap'); } }
       }
       console.log(`overlap: ${n} samples with a turn card, worst overlap ${Math.round(worst)}px`);
+    } else if (st === 'nudge') {
+      // the buy step, then a click on an open space: the header's nudge ("You've placed this turn — …") with Pass beside it
+      await load(SAVES.place2()); await placeAndAnswer(); await park();
+      const sp = await page.$('.lt-wheel .slot.open:not(.taken) .base, .lt-wheel .slot:not(.taken):not(.locked) .base');
+      const bb = sp && await sp.boundingBox(); if (bb) await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
+      await settle(250); await shot('nudge');
+      console.log('textclip:', JSON.stringify(await page.evaluate(TEXT_CLIP)));
+      console.log(await page.evaluate(() => [...document.querySelectorAll('.lt-prompt .status > *')].map(e => { const r = e.getBoundingClientRect(); return `${e.className.split(' ')[0] || e.tagName}: ${Math.round(r.left)}–${Math.round(r.right)} sw${e.scrollWidth} cw${e.clientWidth} ws:${getComputedStyle(e).whiteSpace}`; }).join('\n') + `\ncell ${Math.round(document.querySelector('.lt-prompt').getBoundingClientRect().right)}`));
     } else if (st === 'buy3') {
       await load(SAVES.place3()); await placeAndAnswer(); await park(); await settle(500); await shot('buy3');
     } else if (st === 'round3') {

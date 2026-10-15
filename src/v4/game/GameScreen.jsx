@@ -33,7 +33,7 @@ import PayPicker, { payChoice } from './PayPicker.jsx';
 import { Rich } from './Rich.jsx';
 import HowToPlay from '../HowToPlay.jsx';
 import { flyCards, flyWorker, motionOK, snapshotShop, clearFlights, slideShop, snapshotMinions, flyMinionsHome, flyToken, flyGains, snapshotChips } from './flight.js';
-import { playChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
+import { playChain, measureChain, planChain, holdAfter, holdCap, installChainSkip, onChainSkip, onChainEnd, chainRunning, noteTable } from './director.js';
 import { gainsBetween } from './gains.js';
 import { MO, BOT, SPEEDS, SPEED_NAMES, motionSpeed, setMotionSpeed, onMotionSpeed } from '../motion.js';
 import { PERF_ON } from '../perf.js';
@@ -613,9 +613,12 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   beforeShow.current = (prev, next) => {
     // a member leaving a cult (released, swapped, taken) flies from where its chip stood: measured now, while it stands
     if (prev.players && next.players && prev.players.some((p, i) => p.members.some(u => !next.players[i].members.includes(u)))) chipSnap.current = snapshotChips(root.current);
-    if (!prev.shop || !next.shop || !prev.shop.some(u => !next.shop.includes(u))) return;
-    const snap = snapshotShop(root.current);
-    if (snap.size) shopSnap.current = snap;
+    if (prev.shop && next.shop && prev.shop.some(u => !next.shop.includes(u))) {
+      const snap = snapshotShop(root.current);
+      if (snap.size) shopSnap.current = snap;
+    }
+    // the step's chain geometry, while the layout is clean: its commit then reads none (director.js measureChain)
+    measureChain(root.current, prev, next, { snap: shopSnap.current, mine: mySeats, chips: chipSnap.current });
   };
   useLayoutEffect(() => {
     const before = prevState.current;

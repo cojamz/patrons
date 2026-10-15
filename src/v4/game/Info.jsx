@@ -10,6 +10,7 @@ import { term, splitTerms } from '../glossary.js';
 import { costParts, playerColor, standings, toStanding, tiebreakNote } from '../format.js';
 import { realHover } from '../hover.js';
 import { Popover } from './parts.jsx';
+import { aimAt, arrived, heading, aimedAt } from './hoverIntent.js';
 import { Who } from './Glyphs.jsx';
 import { Rich, Pip } from './Rich.jsx';
 import { Follower } from '../art/Follower.jsx';
@@ -33,8 +34,22 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
   const timer = useRef(null);
   useEffect(() => () => clearTimeout(timer.current), []);
   useLayoutEffect(() => { const up = ref.current && ref.current.parentElement; setNested(!!(up && up.closest(CONTROL))); }, []);
-  // sticky: a card with a button on it (a member you can use) stays while the pointer moves onto it
-  const letGo = () => setOpen(o => (o && !o.pinned ? null : o));
+  // sticky: a card with a button on it (a member you can use) stays while the pointer is on it or on its way to it
+  // (hoverIntent.js: what the pointer crosses on the way doesn't open its own card over it)
+  const body = useRef(null);
+  const pending = useRef(false);
+  const letGo = () => { if (body.current) arrived(body.current.closest('.popover') || body.current); setOpen(o => (o && !o.pinned ? null : o)); };
+  const release = () => {
+    clearTimeout(timer.current);
+    const wait = () => { if (heading()) { timer.current = setTimeout(wait, 80); return; } letGo(); };
+    timer.current = setTimeout(wait, 150);
+  };
+  const opening = () => {
+    clearTimeout(timer.current); pending.current = true;
+    timer.current = setTimeout(() => { pending.current = false; setOpen(o => o || { el: ref.current, pinned: false }); }, TIP_MS);
+  };
+  // crossing toward another open card: this one stays shut (it opens on the next move once the crossing is over)
+  const crossing = () => { const t = aimedAt(); return !!t && heading() && !(body.current && t.contains(body.current)); };
   const inControl = () => { const up = ref.current && ref.current.parentElement; return !!(up && up.closest(CONTROL)); };
   const pin = e => {
     // a keyword in an option's text never eats the option's click (a tap there picks the option)
@@ -47,16 +62,21 @@ export function Tip({ content, children, as: As = 'span', className = '', label,
         ref={ref} className={`tip${className ? ` ${className}` : ''}`} data-tip="" role={nested ? undefined : 'button'} tabIndex={nested ? undefined : 0}
         aria-haspopup={nested ? undefined : 'dialog'} aria-expanded={nested ? undefined : !!open} aria-label={label}
         data-hint={nested ? hint || label || undefined : undefined}
-        onPointerEnter={e => { if (!realHover(e)) return; clearTimeout(timer.current); timer.current = setTimeout(() => setOpen(o => o || { el: ref.current, pinned: false }), TIP_MS); }}
-        onPointerLeave={e => { clearTimeout(timer.current); if (e.pointerType === 'mouse') { if (sticky) timer.current = setTimeout(letGo, 150); else letGo(); } }}
+        onPointerEnter={e => { if (!realHover(e)) return; if (crossing()) return; opening(); }}
+        onPointerMove={e => { if (open || pending.current || !realHover(e) || crossing()) return; opening(); }}
+        onPointerLeave={e => {
+          clearTimeout(timer.current); pending.current = false;
+          if (e.pointerType !== 'mouse') return;
+          if (sticky && open && !open.pinned && body.current) { aimAt(body.current.closest('.popover') || body.current, { x: e.clientX, y: e.clientY }); release(); } else letGo();
+        }}
         onClick={pin}
         onKeyDown={e => { if (!nested && (e.key === 'Enter' || e.key === ' ')) pin(e); }}
         {...rest}
       >{children}{nested ? null : <span className="hitbox" aria-hidden="true" />}</As>
       {open && (
         <Popover anchor={open.el} onClose={() => setOpen(null)} float={!open.pinned} beside={beside && open.el ? open.el.closest(beside) : null}>
-          <div className="tip-body" data-tip-body
-            {...(sticky ? { onPointerEnter: () => clearTimeout(timer.current), onPointerLeave: e => { if (e.pointerType === 'mouse') timer.current = setTimeout(letGo, 150); } } : {})}>{typeof content === 'function' ? content() : content}</div>
+          <div className="tip-body" data-tip-body ref={body}
+            {...(sticky ? { onPointerEnter: () => { clearTimeout(timer.current); arrived(); }, onPointerLeave: e => { if (e.pointerType === 'mouse') release(); } } : {})}>{typeof content === 'function' ? content() : content}</div>
         </Popover>
       )}
     </>
