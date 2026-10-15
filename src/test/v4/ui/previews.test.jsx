@@ -4,7 +4,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, cleanup, act } from '@testing-library/react';
 import ShopCards from '../../../v4/game/ShopCards.jsx';
-import { createHover, whyLine, raceAfter } from '../../../v4/game/HoverCards.jsx';
+import { createHover, whyLine, raceAfter, SpaceCard } from '../../../v4/game/HoverCards.jsx';
 import { YoudGet, requestPreviews, peekPreview, _setPreviewWorker, previewWords, cachedPreview, youdWords } from '../../../v4/game/Info.jsx';
 import { createGame, applyMove, chooseBotMove, quadrant } from '../../../engine/v4/index.js';
 import { seededRandom } from '../../../engine/v4/rng.js';
@@ -15,22 +15,32 @@ const scene = (() => { for (let k = 4; k < 24; k++) { const sc = tickScene(k); i
 const fresh = () => ({ ...scene.state }); // a new state object: nothing cached for it yet
 
 describe('previews reach the screen', () => {
-  it('the card a hovered space unlocks brightens once the preview lands (no badge over its portrait: w2a #37)', () => {
+  // Cory, 2026-10-15 ("hovers feel laggy"): a hover lands complete in one frame. It used to ask for the dry run and
+  // brighten the cards when it landed a moment later; a miss is now worked out at once, in the hover's own render
+  it('the card a hovered space unlocks brightens in the same frame as the hover, even with nothing cached (no badge over its portrait: w2a #37)', () => {
     expect(scene).not.toBeNull();
     vi.useFakeTimers();
     const s = fresh();
+    expect(peekPreview(s, 0, ...scene.key.split('-').map(Number))).toBeUndefined(); // nothing cached for this table
     const hover = createHover();
     const { container } = render(<ShopCards state={s} me={0} mySeats={[0]} hover={hover} />);
     const el = document.createElement('div');
     act(() => { hover.onSpaceHover(scene.key, el); });
-    expect(peekPreview(s, 0, ...scene.key.split('-').map(Number))).toBeUndefined(); // not there yet: asked for, not computed
-    expect(container.querySelectorAll('.lt-card[data-after]').length).toBe(0);
-    act(() => { vi.advanceTimersByTime(50); });
+    expect(peekPreview(s, 0, ...scene.key.split('-').map(Number))).toBeTruthy(); // worked out at once, no timer ran
     const lit = [...container.querySelectorAll('.lt-card[data-after]')];
     expect(lit.map(c => Number(c.dataset.uid))).toEqual(expect.arrayContaining(scene.uids));
     expect(lit.every(c => !c.classList.contains('dim'))).toBe(true);
     expect(container.querySelectorAll('.lt-card .tick').length).toBe(0); // brightened, never badged
     hover.dispose();
+  });
+
+  it("a space's hover card is whole on its first render: its \"You'd get\" is never a placeholder that fills in later (Cory: hovers feel laggy)", () => {
+    const fake = { postMessage() {}, terminate() {} }; // a worker that would answer late (never, here)
+    _setPreviewWorker(fake);
+    const s = fresh();
+    const { container } = render(<SpaceCard state={s} me={0} spaceKey={scene.key} />);
+    expect(container.querySelector('.youd-get.pending')).toBeNull();
+    expect(container.querySelector('[data-youd-get]').getAttribute('data-youd-get')).not.toBe('');
   });
 
   it("a worker that errors (its file 404s after a deploy) hands the dry run to the main thread", () => {

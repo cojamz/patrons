@@ -107,13 +107,17 @@ export function spaceGeometry(state, look = 'sockets') {
 // ---------- the rim's text: its width from the font itself (a canvas measure, cached), never from the page ----------
 const collapse = t => String(t).replace(/\s+/g, ' ');
 const rimWidths = new Map();
+// a panel's layout for where it sits (panelLayout): pure in its inputs and the widths above, so it's kept until the
+// widths are re-measured (perf, 2026-10-15: every placement re-laid all 30-odd panels, ~5s of a 4×-CPU game)
+const layCache = new Map();
+const clearMeasures = () => { rimWidths.clear(); layCache.clear(); };
 let rimCtx, rimEarly = false; // rimEarly: something was measured before the web font arrived
 // The faces the wheel measures its print in, asked for at once (a face loads only when something first uses it, after
 // the wheel had measured with the fallback: wave-4 B #32, panel text reflowed ~1s after setup loaded). Until they're in,
 // the wheel's print stays hidden; then it's laid out once, in its own font.
 let wheelFontsIn = typeof document === 'undefined' || !document.fonts || typeof document.fonts.load !== 'function';
 const wheelFonts = wheelFontsIn ? Promise.resolve() : Promise.all(['500', '700', '800'].map(w => document.fonts.load(`${w} 16px "Alegreya Sans"`).catch(() => null)))
-  .then(() => { wheelFontsIn = true; if (rimEarly || rimWidths.size) { rimEarly = false; rimWidths.clear(); } });
+  .then(() => { wheelFontsIn = true; if (rimEarly || rimWidths.size) { rimEarly = false; clearMeasures(); } });
 /** Width of `text` in the rim's face (Alegreya Sans at `weight`, letter-spacing `ls` em), per pixel of font size. */
 export function rimWidth(text, weight = 700, ls = 0) {
   const t = collapse(text);
@@ -232,7 +236,19 @@ const lineH = px => px + 1;
  * noteLines, w (board units: the box's width), rc (where it's centred) }. `k`: screen pixels per board unit. `taken`:
  * the minion stands under line 1, in place of the lines below it.
  */
-function panelLayout({ s, R, rot, k, said, taken, need = {} }) {
+function panelLayout(o) {
+  const { s, R, rot, k, said, taken, need = {} } = o;
+  // where it sits on screen is all that matters (the panel at 90° looks the same whichever quadrant put it there)
+  const at = ((((s.ang + rot) % 360) + 360) % 360).toFixed(3);
+  const key = [at, s.half, R.r0, R.r1, R.r, R.n, k, taken ? 1 : 0, JSON.stringify(said), JSON.stringify(need)].join('|');
+  const had = layCache.get(key);
+  if (had) return had;
+  if (layCache.size > 4000) layCache.clear();
+  const lay = layPanel(s, R, rot, k, said, taken, need);
+  layCache.set(key, lay);
+  return lay;
+}
+function layPanel(s, R, rot, k, said, taken, need) {
   const a0 = s.ang - s.half + rot, a1 = s.ang + s.half + rot;
   // the print may sit a little in from the middle of its band, where an upright box has more room
   const centres = R.n === 1 ? [R.r - 8, R.r - 6, R.r - 4, R.r - 2, R.r, R.r + 2, R.r + 4, R.r + 6] : [R.r - 6, R.r - 4, R.r - 2, R.r, R.r + 2, R.r + 4];
@@ -620,10 +636,11 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
   const rimFont = Math.min(16, Math.max(11, RIM_PX / (scale || 1)));
   const arcHalf = 44; // the path the text runs on (wider than any label)
   const RIM_MARK = 1.25; // the follower mark's room after the prize, per unit of font size
-  // a leader's emoji on the rim (w3a A27: "about 14px; I read P4's skull as a die"): its 8×8 pixel art at a whole number
-  // of screen pixels per art pixel, as big as the band holds (3 on a laptop: 24px; 2 on a phone: 16px), centred in the
-  // band; its room on the line (units) is taken off the room the words have
-  const EMOJI_U = (8 * Math.max(2, Math.floor((18.5 * (scale || 1)) / 8))) / (scale || 1);
+  // a leader's emoji on the rim: its 8×8 pixel art at a whole number of screen pixels per art pixel, small and well
+  // inside the band (Cory, 2026-10-15: "the emojis on the wheel are too big and out of line": at 24px they filled the
+  // 28px band and stuck out past it): two per art pixel on a laptop (16px), one on a phone, never more than 62% of the
+  // band's height, centred in it. Its room on the line (units) is taken off the room the words have
+  const EMOJI_U = (8 * Math.max(1, Math.min(2, Math.floor((0.62 * (RIM.r1 - RIM.r0) * (scale || 1)) / 8)))) / (scale || 1);
   const EMOJI_ROOM = EMOJI_U + 2;
   const rimLabel = (qid, q, leaders) => {
     const st = stdById[qid];
@@ -686,7 +703,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     if (!wheelFontsIn) wheelFonts.then(() => { if (on) setFontsIn(1); });
     // a face that still arrives later (another weight) re-measures once, as before
     const f = typeof document !== 'undefined' && document.fonts;
-    if (f && f.ready) f.ready.then(() => { if (on && rimEarly) { rimEarly = false; rimWidths.clear(); setFontsIn(n => n + 1); } }, () => {});
+    if (f && f.ready) f.ready.then(() => { if (on && rimEarly) { rimEarly = false; clearMeasures(); setFontsIn(n => n + 1); } }, () => {});
     return () => { on = false; };
   }, []);
 
@@ -826,19 +843,19 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
         </g>,
       );
     }
-    // each leader's emoji, placed along the same arc right after the text, upright like the letters
+    // each leader's emoji, along the same arc right after the text, in the middle of the band and upright on the screen
+    // (a face, not a letter: tilted with the arc it read as out of line, Cory 2026-10-15), so the wheel's turn is undone
     leaders.forEach((id, k) => {
       const art = emojiArt(seatEmoji(state, id));
       if (!art) return;
       const sAt = startS + textW + F * RIM_MARK + F * 0.45 + k * EM + EM / 2;
       const deg = (sAt / rr) * 180 / Math.PI;
       const a = lab.top ? c - arcHalf + deg : c + arcHalf - deg;
-      const [ex, ey] = polar(a, rr);
-      // whole screen pixels per art pixel, centred in the band (the line runs 3.6 units off its middle, toward the board's
-      // centre on top and its edge below; w2a #52: past the band it rose onto the divider)
+      // the band's middle (the line runs 3.6 units off it; w2a #52: past the band it rose onto the divider)
+      const [ex, ey] = polar(a, RIM.r);
       const cap = EMOJI_U;
       paper.push(
-        <g key={`re${q}-${id}`} className={`rim-emoji${lit}`} data-rim-leader={id} shapeRendering="crispEdges" transform={`translate(${ex.toFixed(2)} ${ey.toFixed(2)}) rotate(${(lab.top ? a : a + 180).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-(Math.abs(RIM.r - rr) + cap / 2)).toFixed(2)}) scale(${(cap / art.size).toFixed(4)})`}>
+        <g key={`re${q}-${id}`} className={`rim-emoji${lit}`} data-rim-leader={id} shapeRendering="crispEdges" transform={`translate(${ex.toFixed(2)} ${ey.toFixed(2)}) rotate(${(-rot).toFixed(2)}) translate(${(-cap / 2).toFixed(2)} ${(-cap / 2).toFixed(2)}) scale(${(cap / art.size).toFixed(4)})`}>
           <title>{`${state.players[id].name} leads`}</title>
           {art.rects.map((r, j) => <rect key={j} x={r.x} y={r.y} width={r.w} height="1" fill={r.fill} />)}
         </g>,
@@ -888,7 +905,7 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     sizeTo([...out.values()].filter(v => v.said.main));
     for (const t of [1, 2, 3]) sizeTo(spaces.filter(x => x.ring === t).map(x => out.get(x.key)).filter(v => v.said.verb));
     return out;
-  }, [panels, state.quadrants, state.slots, round, rot, scale, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [panels, state.quadrants, round, rot, scale, fontsIn]); // eslint-disable-line react-hooks/exhaustive-deps
   live.current = { tap, onPick, hover, anchorOf };
   const pinnedKey = peek && peek.pinned ? peek.key : null;
   const recentKey = recentMoves.map(m => `${m.key}:${m.pid}:${m.mine ? 1 : 0}`).join('|');

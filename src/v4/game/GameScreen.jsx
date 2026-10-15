@@ -714,8 +714,9 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
   const needHandoff = humansHere && mine && ready !== pend.player;
   // Whose strip sits in the header: the person at the device.
   const me = mine ? pend.player : humansHere ? (ready ?? mySeats[0]) : mySeats[0];
-  // the spaces you could take, worked out in the background as soon as it's your move (the shop's "✓ after X")
-  usePreviewWarmup(state, mine && !needHandoff ? pend.player : null);
+  // the spaces you could point at, worked out in the background after each step, so a hover never waits on one (the
+  // space card's "You'd get", the shop's "✓ after X"): yours as soon as it's your move, a rival's once it settles
+  usePreviewWarmup(state, needHandoff ? null : me);
 
   // What just happened, made physical: a rival's move turns the wheel to face it, a worker travels from its
   // owner to the space, a recruited card flies from the shop to its new owner.

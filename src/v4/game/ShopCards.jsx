@@ -186,7 +186,7 @@ function ShopCards({ state, me, mySeats = [], optionFor = () => null, onPick, on
 function ShopTicks({ state, viewer, placing, hover, rowRef }) {
   const space = useHoverSpace(hover);
   const sp = placing && space && viewer ? space.split('-').map(Number) : null;
-  const pv = usePreview(state, sp ? viewer.id : null, sp ? sp[0] : 0, sp ? sp[1] : 0);
+  const pv = usePreview(state, sp ? viewer.id : null, sp ? sp[0] : 0, sp ? sp[1] : 0, { now: true });
   const after = sp && pv ? quadrant(state.quadrants[sp[0]]).actions[sp[1]].name : null;
   const unlocked = after ? unlockedBy(state, viewer, surely(pv)) : [];
   const sig = after && unlocked.length ? `${after}|${unlocked.join(',')}` : '';

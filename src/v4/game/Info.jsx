@@ -415,7 +415,11 @@ function computeHere(state, pid, q, i) {
 /** The preview for a space, computed now on this thread if it isn't cached (tests, tools). */
 export function cachedPreview(state, pid, q, i) {
   const m = mapFor(state), k = `${pid}|${q}-${i}`;
-  if (!m.has(k)) m.set(k, computeHere(state, pid, q, i));
+  if (!m.has(k)) {
+    let pv = null;
+    try { pv = computeHere(state, pid, q, i); } catch { pv = null; }
+    m.set(k, pv); // (no notify: this runs while a card renders; whoever else reads it re-reads the cache)
+  }
   return m.get(k);
 }
 let worker = null, workerGen = 0, workerState = null, lastAnswer = 0;
@@ -498,8 +502,14 @@ export function peekPreview(state, pid, q, i) {
   const m = previews.get(state);
   return m ? m.get(`${pid}|${q}-${i}`) : undefined;
 }
-/** The preview for a space: the cached one at once, else asked for and filled in when it arrives. */
-export function usePreview(state, pid, q, i) {
+/**
+ * The preview for a space: the cached one at once, else asked for and filled in when it arrives. `now`: a card that's
+ * opening (a hover) never fills in later: on a miss the one space is worked out here, before the card paints, so it
+ * lands complete in one frame at its final size ("hovers feel laggy", Cory 2026-10-15: the card opened, then its
+ * "You'd get" arrived and it grew). One dry run is cheap (p50 0.3ms, p99 11ms at 1× CPU); the warmup keeps most hovers
+ * on the cache anyway.
+ */
+export function usePreview(state, pid, q, i, { now = false } = {}) {
   const [, bump] = useState(0);
   useEffect(() => {
     if (pid == null) return undefined;
@@ -509,7 +519,9 @@ export function usePreview(state, pid, q, i) {
     if (peekPreview(state, pid, q, i) === undefined) requestPreviews(state, pid, [key], { front: true });
     return () => { listeners.delete(fn); };
   }, [state, pid, q, i]);
-  return pid == null ? null : peekPreview(state, pid, q, i);
+  if (pid == null) return null;
+  const pv = peekPreview(state, pid, q, i);
+  return pv === undefined && now ? cachedPreview(state, pid, q, i) : pv;
 }
 const signed = n => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
 const span = (r, unit, plural = unit + 's') => {
@@ -615,8 +627,8 @@ export function youdWords(pv, state, own = null) {
   return { text: sure || null, note: sure ? 'the rest is your pick' : 'it depends on your pick' };
 }
 /** "You'd get: +3 ●, +1 member" for player pid on space (q, i), computed just after it shows. */
-export function YoudGet({ state, pid, q, i }) {
-  const pv = usePreview(state, pid, q, i);
+export function YoudGet({ state, pid, q, i, now = false }) {
+  const pv = usePreview(state, pid, q, i, { now });
   if (pid == null) return null;
   if (pv === undefined) return <span className="youd-get pending" data-youd-get="">You’d get: …</span>;
   if (!pv) return null;
