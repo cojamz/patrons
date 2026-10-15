@@ -1,7 +1,8 @@
 // v4-eyes: a screen-only browser that a tester drives from Bash. It hands back screenshots, coordinates and timings,
 // never DOM, text or selectors, so the tester sees exactly what a person sees and feels what a person waits for.
 //
-//   node scripts/v4-eyes.mjs start <url> [--name <tester>] [--port 9520] [--device laptop|phone]
+//   node scripts/v4-eyes.mjs start <url> [--name <tester>] [--port 9520] [--device laptop|phone] [--keep]
+//        (--keep reuses this tester's browser profile, so a game saved before a stop or a crash resumes)
 //   node scripts/v4-eyes.mjs <command> [args...]          (set EYES_PORT=<port> when not 9520)
 //
 // Commands (every action waits until the screen settles, up to 5 s, then prints how long that took and saves a shot):
@@ -51,7 +52,8 @@ const cmd = argv.shift();
 if (!cmd || cmd === 'help' || cmd === '--help') { console.log(readFileSync(SELF, 'utf8').split('\nimport ')[0]); process.exit(0); }
 
 if (cmd === 'start') {
-  const port = Number(flag('port', process.env.EYES_PORT || 9520)), name = flag('name', 'tester'), device = flag('device', 'laptop');
+  const port = Number(flag('port', process.env.EYES_PORT || 9520)), name = flag('name', 'tester'), device = flag('device', 'laptop'), keep = argv.includes('--keep');
+  if (keep) argv.splice(argv.indexOf('--keep'), 1);
   const url = argv[0];
   if (!url) { console.error('usage: v4-eyes.mjs start <url> [--name n] [--port p] [--device laptop|phone]'); process.exit(2); }
   const max = Number(process.env.EYES_MAX || 1), live = liveLocks();
@@ -59,7 +61,7 @@ if (cmd === 'start') {
   if (live.length >= max) { console.error(`refused: ${live.length} eyes browser(s) already open (${live.map(l => `${l.name} on ${l.port}, pid ${l.pid}`).join('; ')}). The box takes ${max} at a time: stop one first (EYES_PORT=<port> node scripts/v4-eyes.mjs stop).`); process.exit(2); }
   const dir = join(ROOT, name); mkdirSync(dir, { recursive: true });
   const log = openSync(join(dir, 'server.log'), 'a');
-  const child = spawn(process.execPath, [SELF, 'serve', url, '--name', name, '--port', String(port), '--device', device], { detached: true, stdio: ['ignore', log, log] });
+  const child = spawn(process.execPath, [SELF, 'serve', url, '--name', name, '--port', String(port), '--device', device, '--keep', keep ? '1' : '0'], { detached: true, stdio: ['ignore', log, log] });
   child.unref();
   for (let i = 0; i < 120; i++) {
     await new Promise(r => setTimeout(r, 500));
@@ -80,15 +82,18 @@ if (cmd !== 'serve') {
 }
 
 // ───────────────────────────── server ─────────────────────────────
-const url = argv[0], port = Number(flag('port', 9520)), name = flag('name', 'tester'), device = flag('device', 'laptop');
+const url = argv[0], port = Number(flag('port', 9520)), name = flag('name', 'tester'), device = flag('device', 'laptop'), keep = flag('keep', '0') === '1';
 const dir = join(ROOT, name); mkdirSync(dir, { recursive: true });
 const lockFile = join(LOCKS, `${port}.json`);
 mkdirSync(LOCKS, { recursive: true });
 writeFileSync(lockFile, JSON.stringify({ pid: process.pid, port, name, device, url, since: new Date().toISOString() }));
 const phone = device === 'phone';
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
-const ctx = await browser.newContext(phone ? { ...devices['iPhone 13'] } : { viewport: { width: 1270, height: 700 } });
+// a persistent profile per tester, so the game's saved state survives a crashed tab or a restart (--keep);
+// a plain start wipes it, so every fresh tester starts from a clean browser
+const profile = join(dir, 'profile');
+if (!keep) rmSync(profile, { recursive: true, force: true });
+const ctx = await chromium.launchPersistentContext(profile, { executablePath: '/opt/pw-browsers/chromium', ...(phone ? { ...devices['iPhone 13'] } : { viewport: { width: 1270, height: 700 } }) });
 await ctx.addInitScript(() => {
   // the browser's own Event Timing: input → next paint, per event (numbers only, read back below)
   window.__eyesEv = [];
@@ -101,9 +106,19 @@ await ctx.addInitScript(() => {
     if (t === 'pointermove' && last && last[0] === t && at - last[1] < 250) return;
     window.__eyesIn.push([t, at]); if (window.__eyesIn.length > 200) window.__eyesIn.splice(0, 100); }, { capture: true, passive: true });
 });
-const page = await ctx.newPage();
-let pageErrors = 0;
-page.on('pageerror', () => pageErrors++);
+let page = ctx.pages()[0] || (await ctx.newPage());
+let pageErrors = 0, crashed = false;
+const watch = pg => { pg.on('pageerror', () => pageErrors++); pg.on('crash', () => { crashed = true; }); };
+watch(page);
+// a crashed tab (the box runs out of memory) is reopened on the next command, on the same profile, so the saved game resumes
+async function revive() {
+  if (!crashed) return '';
+  crashed = false;
+  try { await page.close(); } catch {}
+  page = await ctx.newPage(); watch(page);
+  await page.goto(url, { waitUntil: 'load' }); await startCast(); await sleep(800);
+  return 'NOTE: the browser tab crashed (the box is short of memory: not a game bug). Reopened the game at its URL; your saved game should offer to resume.\n';
+}
 let vw = phone ? 390 : 1270, vh = phone ? 664 : 700;
 
 // ── screencast: every painted frame, diffed against the one before ──
@@ -267,7 +282,7 @@ async function gridShot(label) {
 
 let idleTimer;
 const touch = () => { clearTimeout(idleTimer); idleTimer = setTimeout(() => quit('idle 15 min'), 15 * 60 * 1000); };
-async function quit(why) { try { rmSync(lockFile, { force: true }); } catch {} try { await browser.close(); } catch {} console.log('stopped: ' + why); process.exit(0); }
+async function quit(why) { try { rmSync(lockFile, { force: true }); } catch {} try { await ctx.close(); } catch {} console.log('stopped: ' + why); process.exit(0); }
 process.on('SIGTERM', () => quit('SIGTERM')); process.on('SIGINT', () => quit('SIGINT'));
 touch();
 
@@ -279,6 +294,7 @@ http.createServer((req, res) => {
     let out = '', code = 200;
     try {
       const { cmd: c, args = [] } = JSON.parse(body || '{}'); touch();
+      const note = c === 'ping' || c === 'stop' || c === 'quit' ? '' : await revive();
       const [a, b, cc, d] = args;
       const act1 = async (label, pointer, fn) => { const m = await measure(label, pointer, fn); return describe(m) + '\n' + (await snap(label.split(' ')[0])); };
       switch (c) {
@@ -329,7 +345,8 @@ http.createServer((req, res) => {
         case 'stop': case 'quit': res.end('closing the browser\n'); setTimeout(() => quit('stop'), 50); return;
         default: code = 400; out = `unknown command "${c}". Commands: shot grid zoom click dblclick hover move drag tap hold press type scroll wait timing frames resize reload back errors stop`;
       }
-    } catch (e) { code = 500; out = 'error: ' + e.message.split('\n')[0]; }
+      out = note + out;
+    } catch (e) { code = 500; out = 'error: ' + e.message.split('\n')[0] + (crashed ? ' (the tab crashed; your next command reopens it)' : ''); }
     res.statusCode = code; res.end(out + '\n');
   }); });
 }).listen(port, '127.0.0.1', () => console.log(`eyes serving ${url} on ${port}`));

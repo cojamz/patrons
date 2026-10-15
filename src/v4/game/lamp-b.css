@@ -416,6 +416,7 @@
 /* "You'd get +3●": the line you came for, the amount heavy at the right */
 .lt-yd-row.youd{align-items:baseline;justify-content:space-between}
 .lt-yd-row.youd .v{text-align:right;font-size:16px;font-weight:800}
+.lt-yd-row.youd .youd-get{display:block}
 .lt-yd-row.youd .youd-get em,.lt-yd-row.youd .youd-others{display:block;font-size:12px;font-weight:500;font-style:normal;color:var(--pl-ink-2,#6e5c49)}
 .lt-yd .youd-get .pip.glyph,.lt-yd .youd-get .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 0 0 .06em}
 
@@ -456,3 +457,10 @@
   .lt > .lt-seat .cs-build small,.lt > .lt-seat .cs-build .cs-inc b,.lt > .lt-seat .cs-last b{font-size:14px}
   .lt > .lt-seat .cs-build .cs-inc b{font-weight:800}
 }
+/* sentences on paper: a dot is .8em of its type (grammar.md), the same in every hover */
+.lt-note .pip.glyph,.tip-body .pip.glyph,.card-face .pip.glyph,.pop-card .pip.glyph,.lt-note .pip.wild,.tip-body .pip.wild,.card-face .pip.wild,.pop-card .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
+.lt-note .follower-mark,.tip-body .follower-mark{width:.8em;height:.8em;vertical-align:-.1em}
+/* keywords in a hover's sentence stay findable without shouting: a faint dotted line */
+.lt-note .term,.tip-body .mc .term{text-decoration-color:rgba(43,32,24,.22);border-bottom-color:rgba(43,32,24,.22)}
+/* the extra rows under "You'd get" (why, the race, what it unlocks) step down to small print */
+.lt-yd-row:not(.youd){font-size:12px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}

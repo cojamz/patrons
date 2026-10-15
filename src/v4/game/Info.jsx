@@ -167,7 +167,7 @@ export function MemberCard({ state, uid, def: d0 = null, me = null }) {
       {card && card.copy && <small className="mc-live">Copying <CardName state={state} def={defById(card.copy)} /></small>}
       {owner && <small className="owner mc-live" style={{ '--pc': playerColor(owner.id) }}><i />{owner.id === me ? 'Yours' : `${owner.name}’s`}{card && card.used ? ' · used' : ''}</small>}
       {short ? <small className="mc-live" data-short={short.short.total}>You’re short {shortDots(state, short)} to recruit it.</small>
-        : where && <small className="mc-live">{where}</small>}
+        : where === 'In the pile' && <small className="mc-live">{where}</small>}
     </div>
   );
 }

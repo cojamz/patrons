@@ -288,7 +288,7 @@ export function SeatCard({ state, pid, meId = null }) {
     <div className="lt-card-body seat-card" data-seat-card={pid} style={{ '--pc': playerColor(pid) }}>
       <div className="t"><SeatFigure id={pid} state={state} size={32} /><h4>{p.name}{pid === meId ? ' (you)' : ''}<small>{lvl ? <span data-bot-level={lvl.level} title={lvl.blurb}>{lvl.name} bot</span> : 'player'} · {p.left} minion{p.left === 1 ? '' : 's'} left</small></h4></div>
       <div className="lt-yd">
-        <Row k="Followers"><span className="follower"><b className="num">{followersOf(state, p)}</b><Follower size={12} /></span>{rank && rank.text ? <small className="seat-rank" data-seat-rank={rank.place}> {rank.text} · {rank.title}</small> : null}</Row>
+        <Row k="Followers"><span className="follower" title={`${followersOf(state, p)} follower${followersOf(state, p) === 1 ? '' : 's'}: you, your members, and those bought`}><b className="num">{followersOf(state, p)}</b><Follower size={12} /></span>{rank && rank.text ? <small className="seat-rank" data-seat-rank={rank.place}> {rank.text} · {rank.title}</small> : null}</Row>
         <Row k="Has">{state.resources.map(r => <span key={r} className="lt-res"><ResourceGlyph r={r} n={p.res[r] || 0} size={14} /><b className="num">{p.res[r] || 0}</b></span>)}</Row>
         {income && Object.values(income.res).some(n => n > 0) ? <Row k="Income">{Object.entries(income.res).filter(([, n]) => n > 0).map(([r, n]) => <span key={r} className="lt-res"><b className="num">+{n}</b><ResourceGlyph r={r} n={n} size={14} /></span>)}<small> each round</small></Row> : null}
         {/* the build, grouped by what each member does (Cory, 2026-10-15: "I have no idea what the bots' builds are") */}

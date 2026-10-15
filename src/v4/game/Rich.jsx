@@ -9,6 +9,7 @@ const COLORS = ['gold', 'red', 'blue', 'green', 'magenta', 'silver', 'yellow', '
 // → becomes, ⇄ swap, ↻ extra turn; × times and a "/" joined to what follows (per) are typed, quieter.
 // A spaced " / " ("2 / 4 / 6", by round) stays text: "/" only ever means per.
 const WORD = new RegExp(`\\b(${COLORS.join('|')}|any|followers?)\\b|(@[mrfnt])|([→⇄↻×])|(?<=\\S)(\\/)(?=[^\\s\\d])`, 'g');
+const NUM = /((?<![\p{L}\p{N}.,])[+−-]?\d+(?![\p{L}\p{N}]))/u;
 const TOKEN_MARK = { '@m': 'member', '@r': 'rival', '@n': 'minion', '@t': 'turn', '→': 'arrow', '⇄': 'swap', '↻': 'turn' };
 /** The follower mark in running text: Cory's pixel person at the plate's .8em (rounded to whole pixels by CSS). */
 export const TextFollower = ({ title = 'followers' }) => <Follower size={10} title={title} markClass="rich-f" />;
@@ -36,11 +37,13 @@ export function Rich({ text }) {
   if (!text) return null;
   const out = [];
   let last = 0;
+  // the text up to a symbol; a number sits right against the dot or mark it counts ("+3●", "1👤"), never against → or ⇄
+  const lead = (at, glue) => { if (at > last) out.push(glue ? text.slice(last, at).replace(/(\d)\s$/, '$1') : text.slice(last, at)); };
   for (const m of text.matchAll(WORD)) {
     const at = m.index;
     const sym = m[2] || m[3] || m[4];
     if (sym) {
-      if (at > last) out.push(text.slice(last, at));
+      lead(at, sym[0] === '@');
       if (sym === '@f') out.push(<TextFollower key={at} title="follower" />);
       else if (TOKEN_MARK[sym]) out.push(<Mark key={at} k={TOKEN_MARK[sym]} />);
       else out.push(<Op key={at} t={sym} />);
@@ -50,7 +53,7 @@ export function Rich({ text }) {
     const w = m[1];
     if (w.startsWith('follower')) {
       if (!/\d\s$/.test(text.slice(Math.max(0, at - 4), at))) continue;
-      if (at > last) out.push(text.slice(last, at));
+      lead(at, true);
       out.push(<TextFollower key={at} title={w} />);
       last = at + w.length;
       continue;
@@ -60,12 +63,13 @@ export function Rich({ text }) {
       const meansResources = /\d\s$/.test(before) || /^\s+(colou?rs?|resources?)\b/.test(after) || /^\s*[).,;]|^$/.test(after) && /\d\s$/.test(before);
       if (!meansResources) continue;
     }
-    if (at > last) out.push(text.slice(last, at));
+    lead(at, true);
     out.push(<Pip key={at} color={w} />);
     last = at + w.length;
   }
   if (last < text.length) out.push(text.slice(last));
-  return <>{out}</>;
+  // numbers are always heavy (the grammar): every standalone number in the text, never one inside a word ("P2", "4th")
+  return <>{out.flatMap((o, k) => (typeof o === 'string' ? o.split(NUM).map((t, i) => (i % 2 ? <span key={`n${k}.${i}`} className="rich-n">{t}</span> : t)) : [o]))}</>;
 }
 
 /** A cost as symbols: [{ color, n }] → "4 ● + 2 ◍", or "free". */

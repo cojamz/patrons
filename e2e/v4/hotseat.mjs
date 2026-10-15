@@ -165,6 +165,7 @@ try {
         const vp = innerWidth + 'x' + innerHeight;
         const regions = Object.fromEntries(['prompt', 'wheel', 'shop', 'seat-0', 'seat-1', 'seat-2', 'seat-3'].map(k => { const e = document.querySelector(`.lt [data-region="${k}"]`); if (!e) return [k, null]; const b = e.getBoundingClientRect(); return [k, [b.left, b.top, b.width, b.height].map(Math.round).join(',')]; }));
         const phase = (document.querySelector('.app.game') || {}).dataset?.phase;
+        const round = (document.querySelector('.app.game') || {}).dataset?.round;
         const bad = [];
         for (const sl of document.querySelectorAll('.lt .slot.open')) {
           const y = sl.querySelector('[data-yield]');
@@ -172,10 +173,13 @@ try {
           if (!y || !y.textContent.trim() && !y.querySelector('.pip')) bad.push(`${sl.dataset.slot}: no effect printed`);
           else if (fs < 11) bad.push(`${sl.dataset.slot}: effect at ${fs}px`);
         }
-        return { vp, regions, phase, bad };
+        return { vp, regions, phase, round, bad };
       });
       if (r.vp === '1270x700' && r.phase && !['over', 'reckon'].includes(r.phase)) {
-        if (!regionBoxes) regionBoxes = { ...r.regions, phase: r.phase };
+        if (!regionBoxes) regionBoxes = { ...r.regions, phase: r.phase, round: r.round };
+        // the chairs stand in the round's turn order (Cory, 2026-10-15: "position IS order"): a new round may re-sort
+        // them, so their boxes are re-read at each round start; within a round, and for every other region, never
+        if (r.round !== regionBoxes.round) { for (const k of Object.keys(r.regions)) if (k.startsWith('seat-')) regionBoxes[k] = r.regions[k]; regionBoxes.round = r.round; }
         for (const k of Object.keys(r.regions)) if (r.regions[k] !== regionBoxes[k]) { const m = `the ${k} region moved between ${regionBoxes.phase} and ${r.phase} (${regionBoxes[k]} -> ${r.regions[k]})`; if (!errors.includes(m)) { errors.push(m); await shot('zz-region-moved'); } }
         phasesSeen.add(r.phase);
       }

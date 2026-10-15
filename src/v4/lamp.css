@@ -55,6 +55,7 @@
 .pip.glyph > svg,.pip.wild > svg{display:block;width:100%;height:100%;overflow:visible}
 .mk{display:inline-block;width:var(--glyph);height:var(--glyph);vertical-align:-.1em;overflow:visible;flex:none;margin:0 .06em}
 .op{font-weight:500;margin:0 .12em;opacity:.62}
+.rich-n{font-weight:800;letter-spacing:-.01em}
 /* the follower in text: Cory's 10-pixel person at .8em, rounded to whole half-pixels so it stays crisp */
 .rich-f{width:round(nearest, var(--glyph), 5px);height:round(nearest, var(--glyph), 5px);vertical-align:-.12em;margin:0 .04em}
 body{
@@ -547,9 +548,9 @@ h1,h2,h3{font-family:var(--serif)}
 
 /* setup (RC1 panel: the starting-resource note covered the wheel's lower half, so a newcomer only found out by accident
    that it spins; Cory, 2026-10-15: "make way better use of the space"): the wheel keeps its full size and the picker
-   stands in the open wood of the left column, between the two chairs, never over the wheel or the shop */
+   stands in the right column (empty until the turns begin), never over the wheel, the chairs or the shop */
 @media (min-width:861px) and (min-height:500px){
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{left:auto;right:calc(100% + 18px);bottom:auto;top:50%;translate:0 -50%;
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{right:auto;left:calc(100% + 18px);bottom:auto;top:50%;translate:0 -50%;
     width:max(200px, calc(100% / 1.85));max-height:none;overflow:visible;
     display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:10px 12px}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .for-sale{display:none}
@@ -562,7 +563,7 @@ h1,h2,h3{font-family:var(--serif)}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup{box-shadow:0 0 0 2px rgba(var(--lamp),.85),0 0 24px 4px rgba(var(--lamp),.4),0 14px 34px rgba(0,0,0,.6);
     animation:rise .25s ease-out both,cta-pulse 1.2s .3s ease-out 1}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p{font-family:var(--serif);font-size:16px}
-  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p::after{content:" →";color:var(--lamp-ink);font-weight:700}
+  .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup > p::after{content:none}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token:not(:disabled) .coin-big{box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),0 0 0 2px #fffaf0,0 0 12px 3px rgba(var(--lamp),.75)}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token:not(:disabled):hover .coin-big{transform:translateY(-2px) scale(1.06)}
   .app.game.lt.in-setup > .lt-wheel > .prompt.choice.setup .token .coin-big{transition:transform .12s ease-out}
