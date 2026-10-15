@@ -4,18 +4,10 @@ Overnight plan: design/overnight-plan.md. Taste brief: design/taste.md.
 
 Updated 2026-10-15 ~01:35 UTC. Netlify preview confirmed deploying from source after dist/ was untracked (d7bdd3e, 01:24). Agents never commit; the foreman verifies and checkpoints. Each agent runs check:v4 on its own `V4_OUTDIR`/`V4_PORT` (build dirs seen on disk are noted). If a session dies, relaunch each workstream from its brief below and tell it to read `git log` first. Done items are ticked in design/todo.md.
 
-## Now (08:20 UTC, 2026-10-15) — overnight wave 3
-- Frozen w3 = 44e22bd (branch claude/cults-freeze-w3), `.v4-panel/w3` served on :5195 from `.v4-wt/w3-44e22bd` (foreman's background freeze; kill it to stop).
-- Blind testers w3a (:5531) and w3b (:5532), brief v3, EYES_MAX=2 → design/eval/wave3/tester-{a,b}/ (they return the report as text; the foreman saves it).
-- Quiet remote verdict + production perf on 44e22bd: session_01Egf2oBVXjjLx6nEtue7RYb → branch claude/cults-perf-w3, design/eval/perf/quiet-w3-44e22bd.md.
-- Design pod: art director (port 5410: turndock confirmation on :5195, then the 1270 headline clip, hotseat intro-skip timing) and detail designer (5412), both looping until ~13:00.
-- Perf pod (render cost; post-commit work, Wheel per-space memo).
-- Members UX (port 5402): m3/m4, the member hover closing before its Use is clicked.
-- Bench (session_011mMXsYcXHM7NPhc8g63Ki6): fixing Hard-20 after the anchor check failed on 618a8f5, then rerun; balance pass 3 only if anchors pass.
-- Done tonight: motion engineer (hold re-times both ways, hand-off at 2/3, floor only between players), QA (memory, hotseat chair fix, layout), turn-card crash fix (e2e/v4/turndock.mjs).
-- Wave 3 results in (09:40): testers A and B both C+, game-feel B− (design/eval/overnight-wave3.md). New: motion-gaps agent (port 5420, every effect travels), plain-words agent (port 5422, owns panelText.js, decipher pass on every space). Members UX resumed (eaten clicks, seat hovers anchored, follower breakdown, rivals' spending power). Perf pod on forced layout + header lag.
-- FINAL FREEZE w4 = 8ea3e24 (branch claude/cults-freeze-w4; check:v4:quick green on the live tree at 11:17). All of wave 4 runs on quiet remote machines: verdict + prod perf session_013QrkqEq52sDtfTqx6soCi9 (→ claude/cults-perf-w4), game-skeptic session_019CRxfVF3c4QPaVaPRBFiAc (→ claude/cults-skeptic-w4), blind testers w4a session_019Bduu95VaE8UTfDVjftQcG and w4b session_017WgZ6owQpmPHMGMfDK3dME (→ claude/cults-tester-w4{a,b}). Local: art director and detail designer keep looping. Done: perf pod, members UX, motion gaps, plain words, online.
-- Next: merge w3 reports → design/eval/overnight-wave3.md, route; wave 4 freeze ~10:30; final freeze + game-skeptic ~12:45; morning note ~13:45.
+## Now (12:55 UTC, 2026-10-15): overnight done
+- Final build 0c1cd51 (branch claude/cults-final; the PR head adds only the morning note). Quick gate green locally; quiet remote verdict session_01EgDJQUM7cMmhqwWvhrujHk → claude/cults-perf-final, design/eval/perf/quiet-final-0c1cd51.md.
+- Cory's morning note: design/morning-note.md (calls 1–10). Nothing is building; the design pod, perf, motion, members UX, words and online agents are finished. Bench session done (balance pass 3 proposed, not applied).
+- Next session: Cory's answers to calls 1–10; if call 9 is yes, apply design/eval/balance-pass-3.md and rerun one pooled bench pair; re-grade with a fresh blind panel (two testers + skeptic) on quiet remote machines.
 
 ## Earlier roster (history)
 1. **UI-A: wheel, shell, pay, the Reckoning.** Done: frozen verdict on 8f4d76e green on every gate but touch (out of v0.2). Engraved behind ?spaces=engraved (default stays sockets until Cory picks). Was: Brief: design/prototypes/vision/build-plan.md (Split: UI-A; Making it clear; Layout revision). Owns `lamp.css`, the GameScreen shell, `Wheel.jsx`, `PayPicker.jsx`, `RoundEnd.jsx` and the phone layout. Now: the layout revision (the wheel centred and bigger, a cult at each corner, minions on a space's rim so its text stays readable, "minion" in the prompt), then the animated Reckoning. Build dir `.v4-build-ui` (port 5282).
