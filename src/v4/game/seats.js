@@ -25,13 +25,13 @@ export function turnPlaces(state, me = null) {
   const seq = turnSequence(state).filter(t => t.at !== 'done');
   for (const t of seq) order.push(t.pid);
   const name = id => (id === me ? 'You' : state.players[id].name);
-  const list = order.map(name);
   // "after you twice, P2" (a3: "after You, You" read as a stutter): a run of one seat is said once, and you is lowercase mid-sentence
+  // who goes first, as its own short sentence (w4b #16: the card was one run-on line): "Before that: you twice, P2, P4."
   const ahead = k => {
     if (!k) return '';
     const runs = [];
     for (const id of order.slice(0, k)) { const r = runs[runs.length - 1]; if (r && r.id === id) r.n++; else runs.push({ id, n: 1 }); }
-    return ` after ${runs.map(r => `${r.id === me ? 'you' : state.players[r.id].name}${r.n === 2 ? ' twice' : r.n > 2 ? ` ${r.n} times` : ''}`).join(', ')}`;
+    return ` Before that: ${runs.map(r => `${r.id === me ? 'you' : state.players[r.id].name}${r.n === 2 ? ' twice' : r.n > 2 ? ` ${r.n} times` : ''}`).join(', ')}.`;
   };
   for (const p of state.players) {
     const k = order.indexOf(p.id);
@@ -39,12 +39,13 @@ export function turnPlaces(state, me = null) {
     const twice = order[k + 1] === p.id;
     const now = k === 0 && state.current === p.id;
     const label = now ? 'now' : k === 0 ? 'next' : k === 1 ? 'next' : `in ${k}`;
-    const why = twice ? (seq[k + 1].kind === 'snake' ? ', then again right after (snake order: whoever ends a pass starts the next)' : `, then again right after (${seq[k + 1].kind === 'hand' ? 'an extra minion' : 'an extra turn'}${seq[k + 1].why ? ` from ${seq[k + 1].why}` : ''})`) : '';
+    const again = twice ? ', then again right after' : '';
+    const why = twice ? (seq[k + 1].kind === 'snake' ? ' In snake order, whoever ends a pass starts the next.' : ` ${seq[k + 1].kind === 'hand' ? 'An extra minion' : 'An extra turn'}${seq[k + 1].why ? ` from ${seq[k + 1].why}` : ''}.`) : '';
     const what = now ? 'Placing now' : label === 'next' ? 'Places next' : `Places in ${k} turns`;
     // whoever opened the round because a member says so says which (w3a A2: "P3 picks first" with no reason)
     const firstBy = state.order && state.order[0] === p.id ? firstPickWhy(state, p.id) : null;
-    const opened = firstBy && firstBy !== 'fewest followers' ? ` (first this round: ${firstBy})` : '';
-    out[p.id] = { place: k, label, twice, text: twice ? `${label}, then again` : label, title: `${what}${ahead(now ? 0 : k)}${why}${opened}. Placements still to come: ${list.slice(0, 8).join(', ')}${list.length > 8 ? ', …' : ''}.` };
+    const opened = firstBy && firstBy !== 'fewest followers' ? ` First this round: ${firstBy}.` : '';
+    out[p.id] = { place: k, label, twice, text: twice ? `${label}, then again` : label, title: `${what}${again}.${ahead(now ? 0 : k)}${why}${opened}` };
   }
   return { places: out, order };
 }

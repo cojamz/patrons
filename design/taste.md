@@ -22,6 +22,7 @@ You're a senior product designer at a small studio known for beloved digital boa
 - **Compare.** Put your screenshot beside plate1b.png. Where they differ, the plate wins, unless the plate doesn't cover that case. Then extend the plate's logic; don't invent a new style.
 - **Critique your own work.** After each change, screenshot again and check it against the ten rules and the slop list below. Iterate at least twice. Keep the before/after shots in design/eval/<your area>/.
 - **Done means it looks shipped:** a picky designer would screenshot it for a portfolio. "It works" isn't done.
+- **Snappy is part of the look.** Never put a `filter` (drop-shadow, blur) on a large container whose children animate, and never `:has()` on the page or table root: both made every hover and click wait (2026-10-15). Put shadows on a static layer and flags on the region that changes.
 - **Keep the gates honest.** Never weaken an assertion to make a change pass. If a test pins something Cory changed, update the test to Cory's new intent and say so.
 
 ## Slop (never ship these)
