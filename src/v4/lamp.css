@@ -304,20 +304,25 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell path{pointer-events:none}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .wash{pointer-events:all;fill:var(--pl-paper,#f2e8d2);transition:fill var(--mo-fade,.2s)}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit{cursor:pointer}
-/* one glow on the table (design/taste.md): the panel under your pointer (or pinned by a tap) is lit paper with the
-   plate's warm-white glow; the others you can take stay plain paper, and the ones you can't recede */
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .glow{fill:none;stroke:#ffe9b8;stroke-width:7;filter:url(#ltGlow);opacity:0;transition:opacity var(--mo-fade,.2s)}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .edge-lit{fill:none;stroke:var(--light,#fff3d4);stroke-width:2;opacity:0;transition:opacity var(--mo-fade,.2s)}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .wash,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .wash{fill:var(--paper-lit,#fbf6ea)}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .glow,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .glow{opacity:.95}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .edge-lit,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .edge-lit{opacity:1}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken .wash{fill:var(--paper-taken,#cfc2a6)}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken.lit .wash{fill:var(--pl-paper,#f2e8d2)}
-.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.locked .wash{fill:rgba(242,232,210,.035);stroke:rgba(242,232,210,.22);stroke-width:1}
+/* yours to take (Cory, 2026-10-15: "'lit' spaces should be clearer"): lit paper with the lamp's warm glow at its edge;
+   the one under your pointer lifts and glows brighter. Not your turn: nothing glows. Taken: clearly dim. Locked:
+   darker still. A squint at the board shows the spaces you can take as the bright ones (design/eval/rollout/r2-lit-*) */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit .wash{fill:var(--paper-lit,#fbf6ea)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .glow{fill:none;stroke:rgb(var(--lamp,255,206,140));stroke-width:7;filter:url(#ltGlow);opacity:.6;transition:opacity var(--mo-fade,.2s)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .edge-lit{fill:none;stroke:var(--lamp-ink,#ffd99a);stroke-width:2;opacity:.9;transition:opacity var(--mo-fade,.2s)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .wash{transition:fill var(--mo-fade,.2s),filter var(--mo-quick,.12s)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .wash,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .wash{filter:drop-shadow(0 3px 4px rgba(0,0,0,.55))}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .glow,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .glow{opacity:1;stroke-width:9}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.hot .edge-lit,.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.lit.sel .edge-lit{opacity:1;stroke:#fffaf0;stroke-width:2.4}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken .wash{fill:color-mix(in srgb,var(--paper-taken,#cfc2a6) 52%,var(--board,#2b2119))}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.taken.lit .wash{fill:var(--paper-lit,#fbf6ea)}
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.locked .wash{fill:rgba(242,232,210,.03);stroke:rgba(242,232,210,.16);stroke-width:1}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh{fill:none;stroke-width:2;stroke-dasharray:.1 4.2;stroke-linecap:round}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .pcell .fresh.newest{stroke-width:2.6}
-/* while you place, open panels you can't take (a pick that names a few) recede into the board */
-.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,var(--pl-paper,#f2e8d2) 74%,var(--board,#2b2119))}
+/* while you place, open panels you can't take (a pick that names a few) step back toward the taken ones */
+.lt[data-yours="1"][data-phase="place"] [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:color-mix(in srgb,var(--pl-paper,#f2e8d2) 60%,var(--board,#2b2119))}
+/* not your turn: the open panels rest a step below lit paper, so the lamp means something when it comes */
+.lt [data-spaces="panels"] .stage svg.wheel-paper .pcell.open:not(.lit):not(.taken) .wash{fill:var(--pl-paper,#f2e8d2)}
 /* the rim (plate 1b): light type on the quadrant's deep band; the color as its dot in a light ring; the prize a size up */
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule{fill:#f6deb0;stroke:none}
 .lt [data-spaces="panels"] .stage svg.wheel-paper .rim-rule .rim-prize{font-weight:800}
@@ -339,18 +344,18 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage .slot.flash .base{animation:none}
 .lt [data-spaces="panels"] .stage .slot .face{position:relative;inset:auto;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0;text-align:center;white-space:nowrap;color:var(--pl-ink,#2b2018);opacity:1;font-family:var(--sans)}
 /* 1. the gain: the number heaviest, its resource dot right after it */
-.lt [data-spaces="panels"] .stage .slot .face .main{display:block;max-width:none;font-size:var(--main,18px);font-weight:800;line-height:1;letter-spacing:-.01em;color:inherit;white-space:nowrap}
+.lt [data-spaces="panels"] .stage .slot .face .main{display:block;max-width:none;font-size:var(--one,18px);font-weight:800;line-height:1.06;letter-spacing:-.01em;color:inherit;white-space:nowrap}
+/* with no gain, line 1 is the verb in plain words, the same weight, wrapping between words when it must */
+.lt [data-spaces="panels"] .stage .slot.wrap1 .face .main.verb{white-space:normal;text-wrap:balance;max-width:100%}
 .lt [data-spaces="panels"] .stage .slot .face .main .cl{display:block}
 .lt [data-spaces="panels"] .stage .slot .face .n{font-weight:800}
 .lt [data-spaces="panels"] .stage .slot .face .pip{width:.8em;height:.8em;margin:0 0 0 .08em;vertical-align:-.06em}
 .lt [data-spaces="panels"] .stage .slot .face svg.follower-mark{display:inline-block;width:.8em;height:.8em;vertical-align:-.06em;margin:0 0 0 .08em}
 /* 2. the effect in plain words */
-.lt [data-spaces="panels"] .stage .slot .face .second{display:block;max-width:100%;font-size:14px;line-height:15px;font-weight:700;color:var(--pl-ink,#2b2018);white-space:nowrap}
+.lt [data-spaces="panels"] .stage .slot .face .second{display:block;max-width:100%;font-size:14px;line-height:15px;font-weight:600;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
 .lt [data-spaces="panels"] .stage .slot.wrap .face .second{white-space:normal;text-wrap:balance}
 /* a narrow panel sets its effect a size down (the clarification's size, at the effect's weight) before it wraps thrice */
 .lt [data-spaces="panels"] .stage .slot.small .face .second{font-size:12px;line-height:13px}
-/* with no gain, the effect leads */
-.lt [data-spaces="panels"] .stage .slot.nomain .face .second{white-space:normal;text-wrap:balance}
 /* 3. the clarification, small and quiet */
 .lt [data-spaces="panels"] .stage .slot .face .note{display:block;font-size:12px;line-height:13px;font-weight:500;color:var(--pl-ink-2,#6e5c49);white-space:nowrap}
 .lt [data-spaces="panels"] .stage .slot .face .note .dim{color:var(--pl-ink-3,#a39078);font-weight:500}
@@ -361,7 +366,8 @@ h1,h2,h3{font-family:var(--serif)}
 .lt [data-spaces="panels"] .stage .slot.flash .face .worker-fig{animation:panelland .3s ease-out}
 @keyframes panelland{0%{transform:translateY(-5px)}60%{transform:translateY(1px)}100%{transform:none}}
 .lt [data-spaces="panels"] .stage .slot.taken .face{opacity:1}
-.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .main{opacity:.5}
+.lt [data-spaces="panels"] .stage .slot.taken:not(.lit) .face .main{opacity:.45}
+.lt [data-spaces="panels"] .stage .slot.can:hover .face{transform:translateY(-1px);transition:transform var(--mo-quick,.12s)}
 /* locked: faint on the board */
 .lt [data-spaces="panels"] .stage .slot.locked .face{color:var(--pl-cream-2,#b9a98c)}
 .lt [data-spaces="panels"] .stage .slot.locked .face > *{opacity:.55}

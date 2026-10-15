@@ -581,28 +581,20 @@ function Wheel({ state, legal, pickNotes = null, onPick, onDenied, onTouched, co
     const font = Math.max(9, Math.min(rimFont, room / (base + ls * n + tieW(tie) + tailK)));
     return { rule, prize, tie, tieText: tb ? tb.text : null, top, rr, font, ls, textW: font * (base + ls * n + tieW(tie)) };
   };
-  // panels: the plate's rim, "MOST ● +4 👤 🐸": the rule in short words with a dot for its color, the prize a size up,
-  // then the follower mark and whoever leads. Each run's width comes from the font (rimWidth), never from the page.
+  // panels: the rim says its rule in words (Cory, 2026-10-15: "a dot is no substitute for the word"), then the prize
+  // a size up, the follower mark and whoever leads: "MOST BLUE · +2 👤 🐸", "MOST MEMBERS · ties: red · +2 👤". Each
+  // run's width comes from the font (rimWidth), never from the page.
   const RIM_LS = 0.08;
   const rimRuns = (qid, q, leaders) => {
     const st = stdById[qid];
     const sc = quadrant(qid).scoring;
-    const words = (st ? st.rule : shortLabel(sc.label)).split(/\s+/);
-    const runs = [];
-    for (const w of words) {
-      const color = w.toLowerCase();
-      if (PANEL_RES.has(color) && color !== 'any') { runs.push({ kind: 'dot', color }); continue; }
-      const last = runs[runs.length - 1];
-      if (last && last.kind === 'text') last.text += ` ${w.toUpperCase()}`; else runs.push({ kind: 'text', text: w.toUpperCase() });
-    }
     const tb = (st && st.tiebreak) || sc.tiebreak || null;
     const tie = tb ? tb.unit.split(' ')[0] : null;
-    if (tie) { const last = runs[runs.length - 1]; if (last.kind === 'text') last.tie = tie; else runs.push({ kind: 'text', text: '·', tie }); }
-    runs.push({ kind: 'prize', text: `+${RING_VALUE[paying - 1]}` });
+    const runs = [{ kind: 'text', text: (st ? st.rule : shortLabel(sc.label)).toUpperCase(), tie }, { kind: 'text', text: '·' }, { kind: 'prize', text: `+${RING_VALUE[paying - 1]}` }];
     // widths per unit of font size, and the gaps before each run
     for (const [k, r] of runs.entries()) {
       r.w = r.kind === 'dot' ? 1.1 : r.kind === 'prize' ? 1.3 * rimWidth(r.text, 800, 0) : rimWidth(r.text, 700, 0) + RIM_LS * r.text.length + (r.tie ? rimWidth(`  ·  ties: ${r.tie}`, 600, 0.04) : 0);
-      r.gap = !k ? 0 : r.kind === 'prize' ? 0.75 : 0.4;
+      r.gap = !k ? 0 : 0.45;
     }
     const top = Math.abs(norm(qCenter(q) + rot)) < 90;
     const rr = top ? RIM.r - 3.6 : RIM.r + 3.6;

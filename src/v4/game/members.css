@@ -1,0 +1,73 @@
+/* Members: the seat card's list, the Use button, the on/off switch, and a member's lit / used states in your seat.
+   Uses the plate's tokens (lamp.css / lamp-b.css): paper ink 1–3, the hairline, the one warm light. Sizes 16 / 14 / 12. */
+
+/* the seat card: name on top, then the list; long lists scroll inside the card, which always fits the window */
+.lt-card-body.seat-card{display:flex;flex-direction:column;max-height:calc(100vh - 44px);min-height:0}
+.seat-card .mu-list{list-style:none;margin:12px 0 0;padding:10px 0 0;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));
+  display:flex;flex-direction:column;gap:8px;overflow-y:auto;min-height:0;overscroll-behavior:contain;scrollbar-width:thin}
+.mu-none{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));font-size:14px;line-height:20px;color:var(--pl-ink-2,#6e5c49)}
+
+/* a row: the picture, then the name (with its state on the right) and the sentence under it */
+.mu-row{display:grid;grid-template-columns:24px 1fr;column-gap:12px;align-items:start}
+.mu-row.brk{margin-top:4px;padding-top:12px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12))}
+.mu-art{width:24px;height:24px;margin-top:-2px;display:grid;place-items:center}
+.mu-body{min-width:0;display:flex;flex-direction:column;gap:2px}
+.mu-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-width:0}
+.mu-name{font-family:var(--sans);font-size:14px;line-height:18px;font-weight:800;color:var(--pl-ink,#2b2018);min-width:0}
+.mu-text{font-family:var(--sans);font-size:14px;line-height:19px;color:var(--pl-ink,#2b2018);text-wrap:pretty;overflow-wrap:anywhere}
+.mu-text .pip.glyph,.mu-text .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
+
+/* the quiet state: "pays at round start", "scores at game end", "not used yet"; "ready to use" is the one in full ink */
+.mu-tag{flex:none;font-family:var(--sans);font-size:12px;line-height:18px;font-weight:500;color:var(--pl-ink-3,#a39078);white-space:nowrap}
+.mu-tag.lit{color:var(--pl-ink,#2b2018);font-weight:700}
+.mu-tag.dim{color:var(--pl-ink-3,#a39078)}
+/* used: the row steps back, its words stay readable */
+.mu-row.s-used .mu-art,.mu-row.s-used .mu-name,.mu-row.s-used .mu-text{opacity:.5}
+
+/* "Use: +7 ●": dark ink on paper, the brightest thing in the card; it presses down */
+.mu-use{align-self:flex-start;margin-top:6px;display:inline-flex;align-items:center;gap:4px;font-family:var(--sans);font-size:14px;line-height:18px;font-weight:700;
+  padding:5px 12px;min-height:28px;border-radius:var(--corner,8px);border:0;background:var(--pl-ink,#2b2018);color:var(--paper-lit,#fbf6ea);cursor:pointer;
+  box-shadow:0 1px 0 rgba(0,0,0,.25);transition:transform .08s ease-out,background .12s}
+.mu-use:hover{background:#3d2f23}
+.mu-use:active{transform:translateY(1px) scale(.98)}
+.mu-use:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline-offset:2px}
+.mu-use .pip.glyph,.mu-use .pip.wild{width:.8em;height:.8em;vertical-align:-.1em;margin:0 .04em}
+.mu-use .rich-f,.mu-use .follower-mark{color:inherit}
+.mu-use.big{width:100%;justify-content:center;margin-top:12px;min-height:36px;font-size:16px}
+
+/* a member's hover, under its card: the switch line, the button, or why it can't be used */
+.mu-actions{margin-top:10px;padding-top:10px;border-top:1px solid var(--hair-ink,rgba(43,32,24,.12));display:flex;flex-direction:column}
+.mu-actions .mu-use.big{margin-top:0}
+.mu-sw-line{display:flex;justify-content:space-between;align-items:center;font-size:14px;line-height:20px;color:var(--pl-ink,#2b2018)}
+.mu-sw-line + .mu-use{margin-top:10px}
+.mu-why{font-size:12px;line-height:17px;color:var(--pl-ink-2,#6e5c49)}
+
+/* the switch: a small track and knob, its word beside it */
+.mu-switch{flex:none;display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:12px;line-height:18px;font-weight:700;color:var(--pl-ink-2,#6e5c49);
+  background:none;border:0;padding:0;cursor:default}
+button.mu-switch{cursor:pointer}
+.mu-track{position:relative;width:24px;height:14px;border-radius:7px;background:rgba(43,32,24,.18);transition:background .15s}
+.mu-knob{position:absolute;left:2px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--paper-lit,#fbf6ea);box-shadow:0 1px 1px rgba(0,0,0,.3);transition:transform .15s ease-out}
+.mu-switch.on .mu-track{background:var(--pl-ink,#2b2018)}
+.mu-switch.on .mu-knob{transform:translateX(10px)}
+.mu-switch.on{color:var(--pl-ink,#2b2018)}
+button.mu-switch:active .mu-knob{width:12px}
+button.mu-switch:focus-visible{outline:2px solid var(--pl-ink-2,#6e5c49);outline-offset:2px;border-radius:9px}
+
+/* in your seat, on the dark table: a member you can use now is lit (the warm light that means "yours to act"),
+   a used one steps back, a switch sits small under its figure */
+.lt-cult-seat .cs-member.ready .fig{cursor:pointer}
+.lt-cult-seat .cs-member.ready .fig::before{content:"";position:absolute;left:50%;top:50%;width:34px;height:34px;transform:translate(-50%,-50%);border-radius:50%;z-index:-1;
+  background:radial-gradient(closest-side,rgba(255,243,212,.55),rgba(255,243,212,.18) 65%,transparent);pointer-events:none}
+.lt-cult-seat .cs-member.ready .fig .sprite{filter:drop-shadow(0 0 3px rgba(255,243,212,.75)) brightness(1.08)}
+.lt-cult-seat .cs-member.ready::after{content:"";position:absolute;left:50%;bottom:-5px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--light,#fff3d4);
+  box-shadow:0 0 6px 1px rgba(255,243,212,.7)}
+.lt-cult-seat .cs-member.used .fig .sprite{opacity:.4;filter:grayscale(.6)}
+.lt-cult-seat .cs-member.used .aura{opacity:.35}
+.lt-cult-seat .cs-member .mu-switch{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);gap:0;z-index:2}
+.lt-cult-seat .cs-member .mu-switch .mu-sw-word{display:none}
+.lt-cult-seat .cs-member .mu-track{width:18px;height:10px;border-radius:5px;background:rgba(243,230,200,.22);box-shadow:0 0 0 1px rgba(25,19,16,.9)}
+.lt-cult-seat .cs-member .mu-knob{width:6px;height:6px;left:2px;top:2px;background:var(--cream-2,#b9a98c);box-shadow:none}
+.lt-cult-seat .cs-member .mu-switch.on .mu-track{background:var(--cream-2,#b9a98c)}
+.lt-cult-seat .cs-member .mu-switch.on .mu-knob{transform:translateX(8px);background:var(--table,#191310)}
+@media (prefers-reduced-motion:reduce){.mu-use,.mu-knob,.mu-track{transition:none}}
