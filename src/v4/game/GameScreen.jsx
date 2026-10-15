@@ -466,13 +466,14 @@ function seatCorners(state, me) {
   return [0, 1, 2, 3].map(k => (k < n ? (base + k) % n : null));
 }
 
-/** The buy step's other answer lives with the question: Pass. Release is a seat action now (dialogs pod, wave-2
- *  tester #11): your member's own card offers "Release: +2 ●" in your buy step (MemberUse.jsx ReleaseButton). */
+/** On phones the buy step's other answer also lives with the question (the shop and its "Done, no buy" are a scroll
+ *  away). On a laptop it lives only in the shop column, under the follower buys (Cory, 2026-10-16: "pass is hard to
+ *  find"; ShopCards FollowerRates). Release is a seat action (MemberUse.jsx ReleaseButton). */
 function PromptActions({ optionFor, onPick }) {
   const pass = optionFor('pass');
   return (
     <span className="pr-actions">
-      <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title="End your turn without buying" data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>Pass</button>
+      <button type="button" className={`btn pass${pass ? '' : ' idle'}`} title="End your turn without recruiting or buying" data-option={pass ? 'pass' : undefined} aria-disabled={!pass} onClick={() => pass && onPick('pass')}>Done, no buy</button>
     </span>
   );
 }
@@ -544,10 +545,6 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     if (fresh.length) {
       for (const x of fresh) void getComputedStyle(x.e).transform; // the place lands with no transition
       requestAnimationFrame(() => { for (const x of fresh) x.e.style.transition = ''; });
-    }
-    if (rows.length) {
-      rail.style.setProperty('--rail-top', `${top + rows[0].h / 2}px`);
-      rail.style.setProperty('--rail-bottom', `${rail.offsetHeight - (top + total - rows[rows.length - 1].h / 2)}px`);
     }
   };
   // laid out when the seat order changes (the pid order), and by a ResizeObserver when a chair or the column changes size
@@ -984,7 +981,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
     else if (info.type === 'slot') {
       // A taken or unopened space explains itself on its own card (wheel) or row (panel); the prompt stays put.
       const owner = state.slots[info.key];
-      text = owner !== undefined ? null : pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers or pass' : 'You can’t take this space right now';
+      text = owner !== undefined ? null : pend.kind === 'buy' ? 'You’ve placed this turn — recruit, buy followers, or end your turn: Done, no buy' : 'You can’t take this space right now';
     } else if (pend.kind === 'place') text = info.type === 'card' || info.type === 'tier' ? 'Place a minion first, then recruit' : 'Place a minion first';
     else if (info.type === 'card') text = `You can’t afford ${info.name} yet`;
     // what you have beside what it needs (w4 skeptic #20: "Need 8, you have 4")
@@ -1218,7 +1215,7 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
               );
             }}</AfterChain>
           ) : <span className="say" data-prompt tabIndex={-1} />}
-          {buyingNow && <PromptActions optionFor={live} onPick={onPick} />}
+          {buyingNow && !wide && <PromptActions optionFor={live} onPick={onPick} />}
           <span className="undo-slot">
             {canUndo && <button type="button" className="btn ghost undo" onClick={undo} aria-label={`Undo ${undoWord}`} title={undoKind === 'buy' ? 'Take back your purchase until the next player moves' : undoKind === 'setup' ? 'Take back your first pick' : 'Take back your minion until you buy or pass'}>Undo<span className="undo-word"> {undoWord}</span></button>}
           </span>
@@ -1283,14 +1280,11 @@ export default function GameScreen({ session, onPlayAgain, onHome, leaveText, pa
           </section>
           {/* every cult sits around the wheel like chairs at a table: yours bottom left (a little larger), then the
               others clockwise. UI-B fills each chair (CultSeat); the chairs never move. */}
-          {/* the chairs stand in this round's turn order, one column (Cory, 2026-10-15: "position IS order"); the snake
-              rail beside them shows which way the turns are walking. A new round's order re-sorts them (they slide). */}
-          {(
-            <div className={`lt-snake ${state.round >= 1 ? `dir-${snake.dir}` : 'dir-none'}`} data-snake={snake.dir} data-pass={snake.pass + 1} style={{ '--n': state.players.length }}
-              title={state.round < 1 ? 'Setup: everyone picks their starting resources, top to bottom.' : `Turn order this round, top to bottom: ${snake.order.map(id => (id === me ? 'You' : state.players[id].name)).join(', ')}. The snake goes down, then back up${snake.passes ? ` (pass ${snake.pass + 1} of ${snake.passes}, going ${snake.dir})` : ''}: whoever ends a pass starts the next.`}>
-              <span className="sn-line" aria-hidden="true" />
-            </div>
-          )}
+          {/* the chairs stand in this round's turn order, one column (Cory, 2026-10-15: "position IS order"); each chair
+              says its turn in words ("next", "your turn in 3"; CultSeat). The rail beside them is gone (Cory, 2026-10-16:
+              "the turn-order rail is confusing"): this empty column only measures where the chairs stack (layColumn),
+              and its gutter holds the round's counts while a round is scored (Reckoning). */}
+          <div className="lt-snake" aria-hidden="true" style={{ '--n': state.players.length }} />
           {seatCorners(state, me).map((pid, k) => (
             <section key={k} className={`lt-seat lt-seat-${k}${pid === me ? ' mine' : ''}${pid != null && pend && pend.player === pid && !state.over ? ' now' : ''}`} data-region={`seat-${k}`} data-pid={pid ?? undefined} data-slot={pid == null ? undefined : snake.slot[pid]}
               style={{ '--slot': pid == null ? k : snake.slot[pid] ?? k }} aria-label={pid == null ? undefined : pid === me ? 'Your cult' : `${state.players[pid].name}’s cult`}>

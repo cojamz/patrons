@@ -148,25 +148,15 @@ h1,h2,h3{font-family:var(--serif)}
   /* you, wherever you land: a cream edge */
   .lt > .lt-seat.mine{box-shadow:inset 0 0 0 1.5px rgba(243,230,200,.32)}
   .lt > .lt-seat.mine.now{box-shadow:inset 0 0 0 1.5px rgba(var(--lamp),.6)}
-  /* the snake rail: a line down the column's gutter from the first chair to the last, its head pointing the way the
-     turns walk this pass (down, then back up) */
-  .lt > .lt-snake{grid-area:seats;justify-self:start;align-self:stretch;width:44px;position:relative;cursor:help}
-  .lt > .lt-snake .sn-line{position:absolute;left:21px;top:var(--rail-top, 12%);bottom:var(--rail-bottom, 12%);width:2px;border-radius:1px;background:rgba(242,232,210,.16)}
-  .lt > .lt-snake .sn-line::after{content:"";position:absolute;left:-5px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent}
-  .lt > .lt-snake.dir-down .sn-line::after{bottom:-10px;border-top:8px solid var(--cream-2)}
-  .lt > .lt-snake.dir-up .sn-line::after{top:-10px;border-bottom:8px solid var(--cream-2)}
-  /* each chair's place in the turns, on the rail beside its name row: "now" in the light, "next" in cream, "×2" where
-     the snake turns on it; a small dot for the rest (its hover says when) */
-  .lt > .lt-seat .cs-order{position:absolute;left:-56px;top:4px;width:44px;margin:0;padding:2px 0;display:flex;flex-direction:column;align-items:center;
-    background:none;box-shadow:none;border-radius:8px;translate:none;z-index:2;text-shadow:0 0 6px var(--pl-table, #191310),0 0 3px var(--pl-table, #191310);
-    font-family:var(--sans);font-size:14px;font-weight:700;line-height:18px;letter-spacing:0;text-transform:none;color:var(--cream-3);cursor:help}
-  .lt > .lt-seat .cs-order .co-x{font-size:14px;font-weight:800;line-height:16px;color:var(--cream)}
-  .lt > .lt-seat .cs-order.now{background:none;box-shadow:none;color:var(--light, #fff3d4)}
-  .lt > .lt-seat .cs-order.next{color:var(--cream);box-shadow:none}
-  .lt > .lt-seat .cs-order.done,.lt > .lt-seat .cs-order[class*="in-"]{font-size:0;line-height:0;padding:9px 0;opacity:1}
-  .lt > .lt-seat .cs-order.done::before,.lt > .lt-seat .cs-order[class*="in-"]::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--cream-3)}
-  .lt > .lt-seat .cs-order.done::before{opacity:.5}
-  .lt > .lt-seat .cs-order[class*="in-"].twice{font-size:14px;line-height:16px;padding:2px 0}
+  /* the column the chairs stack in (GameScreen measures it); no rail is drawn in it any more (Cory, 2026-10-16): each
+     chair says its turn in words under its name. Its gutter holds the round's counts while a round is scored. */
+  .lt > .lt-snake{grid-area:seats;justify-self:start;align-self:stretch;width:44px;position:relative;pointer-events:none}
+  /* the turn words under the name, on the plate's small size: the name and they share the 32px name row */
+  .lt > .lt-seat .cs-who{gap:0;position:relative}
+  .lt > .lt-seat .cs-who:has(> .cs-turn){padding-bottom:14px}
+  .lt > .lt-seat .cs-who:has(> .cs-turn) b{line-height:18px}
+  /* (out of the flow: a "next" wider than a short name never pushes that chair's resources off the others' line) */
+  .lt > .lt-seat .lt-cult-seat .cs-turn{position:absolute;left:0;bottom:0;font-size:14px;line-height:14px}
   .lt > .lt-shop{grid-area:shop;min-height:0;overflow:hidden}
   .lt > .room,.lt > .error{position:fixed;left:26px;bottom:10px;z-index:20}
   .app.game.lt > .main.over{grid-column:1 / -1;grid-row:2 / -1;min-height:0;overflow:auto}

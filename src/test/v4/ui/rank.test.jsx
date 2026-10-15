@@ -1,11 +1,12 @@
 // Who's next and who's winning (meta round 2, #7): one ranked line of the engine's followers, the leader lit and the
-// margin on hover; and each cult shows its place in what's left of this round's turn order.
+// margin on hover; and the turns in words on the cults: "next" on the seat after this turn, "your turn in N" on yours
+// (Cory, 2026-10-16: the turn-order rail is gone).
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
 import { createGame, applyMove, chooseBotMove, followers, memberCount, turnRail } from '../../../engine/v4/index.js';
 import { rankRows, seatRanks } from '../../../v4/game/RankRow.jsx';
 import CultSeat from '../../../v4/game/CultSeat.jsx';
-import { turnPlaces } from '../../../v4/game/seats.js';
+import { turnPlaces, seatTurns } from '../../../v4/game/seats.js';
 
 afterEach(cleanup);
 const seats = [{ name: 'Ana', kind: 'human' }, { name: 'Bo', kind: 'bot' }, { name: 'Cy', kind: 'bot' }, { name: 'Di', kind: 'bot' }];
@@ -69,14 +70,34 @@ describe('turn order on the cults', () => {
     expect(tp.places[t.current].twice).toBe(true);
     expect(tp.places[t.current].title).toMatch(/snake order/);
     expect(Object.values(tp.places).filter(x => x.label === 'next')).toHaveLength(0);
+  });
+  it('the seats say the turns in words: "next" on the seat after this turn, "your turn in N" on yours', () => {
+    let s = until(createGame({ seats, seed: 43 }), t => t.round >= 1 && t.pending && t.pending.kind === 'place' && t.current !== 0);
+    const r = turnRail(s);
+    const seq = [r.current, ...r.next].filter(p => p != null);
+    const k = seq.indexOf(0);
+    const want = { 0: k < 0 ? 'done this round' : k === 1 ? 'your turn next' : `your turn in ${k}` };
+    if (seq[1] != null && seq[1] !== 0) want[seq[1]] = 'next';
+    const words = seatTurns(s, 0);
+    expect(Object.fromEntries(Object.entries(words).map(([p, w]) => [p, w.say]))).toEqual(want);
     for (const p of s.players) {
       const { container } = render(<CultSeat state={s} pid={p.id} me={0} mine={p.id === 0} />);
-      const pill = container.querySelector('.cs-order');
-      expect(pill.dataset.order).toBe(places[p.id].label);
+      const el = container.querySelector('.cs-turn');
+      expect(el ? el.textContent : null).toBe(want[p.id] ?? null);
       // it explains itself: its own hover card (w2a #28), said to touch and screen readers too
-      expect(pill.getAttribute('aria-label')).toMatch(/Placing now|Places|no placements left/);
-      expect(pill.getAttribute('data-hint') || pill.getAttribute('aria-label')).toBeTruthy();
+      if (el) expect(el.getAttribute('aria-label')).toMatch(/turn|places|placements/i);
+      expect(container.querySelector('.cs-order')).toBeNull();
       cleanup();
     }
+    // your own turn: "your turn" (and "then again" when the snake turns on you); the next rival says "next"
+    let t = until(s, x => x.pending && x.pending.kind === 'place' && x.current === 0);
+    const tr = turnRail(t);
+    const mine = seatTurns(t, 0);
+    expect(mine[0].say).toBe(tr.next[0] === 0 ? 'your turn, then again' : 'your turn');
+    if (tr.next[0] != null && tr.next[0] !== 0) expect(mine[tr.next[0]].say).toBe('next');
+    expect(Object.values(mine).filter(w => w.say === 'next').length).toBeLessThanOrEqual(1);
+    // before round I and with no viewer: nothing on yours
+    expect(seatTurns(createGame({ seats, seed: 42 }), 0)).toEqual({});
+    expect(Object.values(seatTurns(s, null)).every(w => w.say === 'next')).toBe(true);
   });
 });

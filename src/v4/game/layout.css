@@ -27,9 +27,6 @@
   .app.game.lt > .lt-seat .cs-member .sprite{width:40px;height:40px}
   .app.game.lt > .lt-seat .cs-member .aura{width:46px;height:16px}
   .app.game.lt > .lt-seat .cs-member .aura.strong{width:50px;height:46px}
-  /* the rail starts just under the first chair's order chip ("next / twice" is two lines): its arrowhead, when the turns
-     walk up, never lands between the chip's words */
-  .app.game.lt > .lt-snake .sn-line{top:calc(var(--rail-top, 12%) + 14px)}
   .app.game.lt > .lt-since{grid-area:seats;align-self:start;margin:calc(var(--col-top) + var(--seats-end, 0px) + 20px) 0 0 44px;
     max-height:calc(100% - var(--col-top) - var(--seats-end, 0px) - 20px)}
   /* while a turn is being told, its card docks under the story: the story gives it room (oldest lines go first) */
@@ -80,10 +77,11 @@
    the story, above the follower buys. */
 @media (min-width:861px) and (max-width:1199px) and (min-height:500px){
   .app.game.lt{--turn-dock:since;grid-template-rows:68px minmax(0,1fr) minmax(0,1fr) var(--shop-h,128px)}
-  /* the follower buys stand at the column's foot, 138px tall (their label 20, two rows of 52 and a gap of 8, 6 below);
-     the story starts 8px down and stops 8px above them, or 8px above the turn card docked 12px over them */
-  .app.game.lt > .lt-since{align-self:start;margin-top:8px;max-height:calc(100% - 154px)}
-  .app.game.lt[data-turn-card] > .lt-since{max-height:calc(100% - 158px - var(--turn-h, 112px))}
+  /* the follower buys stand at the column's foot, 182px tall (their label 20, two rows of 52 and a gap of 8, then
+     "Done, no buy" 36 and its 8 above, 6 below); the story starts 8px down and stops 8px above them, or 8px above the
+     turn card docked 12px over them */
+  .app.game.lt > .lt-since{align-self:start;margin-top:8px;max-height:calc(100% - 198px)}
+  .app.game.lt[data-turn-card] > .lt-since{max-height:calc(100% - 202px - var(--turn-h, 112px))}
   /* the shop's wrappers give up their boxes (and, having none, never claim to clip) */
   .app.game.lt > .lt-shop,.app.game.lt > .lt-shop > .lt-shop-cards{display:contents;overflow:visible}
   .app.game.lt .lt-shop-main{grid-area:shop;position:relative;z-index:3;min-width:0}
@@ -116,9 +114,9 @@
 /* the wheel turns (w2a #42): its knurled edge (Wheel.jsx), and a hand that grabs it */
 .lt .stage svg.wheel-paper .knurl circle{stroke:var(--cream,#f2e8d2);stroke-opacity:.22;stroke-width:4;stroke-dasharray:1.2 3.2}
 @media (pointer:fine){ .lt .lt-wheel .stage{cursor:grab} .lt .lt-wheel .stage:active{cursor:grabbing} }
-/* while a round is scored, the counts stand in the rail's gutter beside each chair (Reckoning.jsx): the turn order's
-   marks and rail step out of their way */
-.lt[data-phase="reckon"] .lt-seat .cs-order,.lt[data-phase="reckon"] > .lt-snake{visibility:hidden}
+/* while a round is scored, the counts stand in the gutter beside each chair (Reckoning.jsx), and the turn words, which
+   mean nothing once the round is scored, step out */
+.lt[data-phase="reckon"] .lt-seat .cs-turn{visibility:hidden}
 /* phones: your starting pick stands at the screen's foot (it sat below the fold, under the wheel, with nothing saying
    to scroll); the table scrolls behind it as usual */
 @media (max-width:860px), (max-height:499px){

@@ -15,7 +15,7 @@ import { MemberActions, MemberSwitch, useUseResult, UseResult } from './MemberUs
 import { usableNow, loadedUse, safeThisRound } from './memberUse.js';
 import { ResourceGlyph, LeaderRing } from './Glyphs.jsx';
 import { Minion } from '../art/Leader.jsx';
-import { turnPlaces } from './seats.js';
+import { seatTurns } from './seats.js';
 import { seatRanks } from './RankRow.jsx';
 import { incomeOf, memberGroups } from './build.js';
 import Tick from './Tick.jsx';
@@ -47,9 +47,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
   const extraBuyNow = !!(mine && pend && pend.player === pid && pend.kind === 'buy' && pend.extra && !state.over);
   const givesExtra = g => extraBuyNow && g.uids.some(u => { const c = state.cards[u]; return !(c.spent && c.spent.extraBuy === state.round) && !!cardDef(state, u).extraBuy; });
   const ready = new Set(mine ? usableNow(state, pid).filter(x => optionFor(`use:${x.uid}`)).map(x => x.uid) : []);
-  // its place in what's left of this round's turn order (who's up now, who's next)
-  const turns = turnPlaces(state, me);
-  const place = turns.places[pid];
+  // the turns in plain words (Cory, 2026-10-16: the rail confused him): "next" on the seat that places after this turn,
+  // and on yours "your turn in 3" (seats.js seatTurns, read off the engine's queue)
+  const turn = seatTurns(state, me)[pid] || null;
   // who's winning lives here now (no score row): this chair's place, lit when it leads, the margin on hover
   const rank = seatRanks(state, me)[pid] || null;
   // its build at one glance: its members (grouped by color) and what they hand it each round (the engine's round start)
@@ -99,9 +99,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
     onPointerMove: e => { if (realHover(e) && hover && !onFig(e)) openSeat(e, false); },
     onPointerLeave: e => { if (e.pointerType === 'mouse' && hover) hover.onSeatHover(pid, null); },
   };
-  // the turn-order rail sits in the head but outside the seat's box: pointing at it explains the turn order, not the
-  // seat (w2a #28: it opened your seat list 296px away); crossing between the two swaps which one is open
-  const onRail = e => !!(e.target && e.target.closest && e.target.closest('.cs-order'));
+  // the turn words under the name explain the turn order when pointed at, not the seat (w2a #28); crossing between the
+  // two swaps which one is open
+  const onRail = e => !!(e.target && e.target.closest && e.target.closest('.cs-turn'));
   const railIn = useRef(false);
   return (
     <section ref={rootEl} className={`lt-cult-seat${mine ? ' mine' : ''}${now ? ' now' : ''}${pick ? ` picking${pick.lit ? ' pick-lit' : ''}${pick.dim ? ' pick-dim' : ''}${pick.seatMode ? ' pick-seat' : ''}` : ''}`} data-cult={pid} data-pick={pick ? (pick.lit ? 'on' : pick.dim ? 'off' : 'part') : undefined} data-seat={pid} style={{ '--pc': playerColor(pid) }}
@@ -129,12 +129,9 @@ export default function CultSeat({ state, pid, me = null, mine = false, now = fa
         <span className={`cs-leader${react && react.leader ? ` react-${react.leader}` : ''}`}><LeaderRing state={state} id={pid} size={mine ? 40 : 32} orbit={false} face={!mine} /></span>
         <span className="cs-who">
           <b>{mine ? 'You' : p.name}</b>
-          {/* its place in the turns, said like the plate's "You  place a minion"; the rail beside the column marks it too */}
-          {place && <Tip className={`cs-order ${place.label.replace(' ', '-')}${place.twice ? ' twice' : ''}`} data-order={place.label} data-twice={place.twice ? '1' : undefined}
-            label={place.title} content={() => <div className="pop-card gloss"><b>Turn order: {place.text}</b><span>{place.title}</span></div>}>
-            {/* "again" (w3b #42: "twice" alone took a decode): placing next, then again right after */}
-            <span className="co-t">{place.label}</span>{place.twice && <b className="co-x">again</b>}
-          </Tip>}
+          {/* its place in the turns, in words under the name: "next", or on yours "your turn in 3" */}
+          {turn && <Tip className={`cs-turn ${turn.kind}`} data-turn={turn.kind} data-turn-n={turn.n ?? undefined}
+            label={turn.title} content={() => <div className="pop-card gloss"><b>Turn order</b><span>{turn.title}</span></div>}>{turn.say}</Tip>}
         </span>
         <span className={`cs-total${rank && rank.lead ? ' lead' : ''}`} data-followers={f} data-rank={rank ? rank.place : undefined} title={rank ? rank.title : `${f} followers`}><Tick value={f} color={playerColor(pid)} className="num" float={false} /><Follower size={mine ? 14 : 12} title={`${f} followers`} /></span>
       </header>

@@ -220,6 +220,7 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
   // when you can make it
   const viewer = me != null ? state.players[me] : null;
   const held = viewer ? Object.values(viewer.res).reduce((a, b) => a + (b || 0), 0) : null;
+  const done = optionFor('pass'); // offered only in your own buy step
   const when = (t, opt) => {
     // what a click does (wave-2 tester A): one way to pay buys at once and says what it pays; several open the sheet
     if (opt) {
@@ -260,6 +261,12 @@ export function FollowerRates({ state, me = null, optionFor = () => null, onPick
         );
       })}
       </span>
+      {/* ending your turn without buying (Cory, 2026-10-16: "pass is hard to find"): right under the follower buys, where
+          the eye already is while you shop. Its room is kept when it isn't offered, so the shop never shifts as your buy
+          step starts or ends (it's hidden then, and on phones folded away). */}
+      <button type="button" className={`btn lt-done${done ? '' : ' idle'}`} data-option={done ? 'pass' : undefined} data-done-no-buy={done ? 'on' : 'off'}
+        disabled={!done} tabIndex={done ? 0 : -1} aria-hidden={done ? undefined : 'true'}
+        title={done ? 'End your turn without recruiting or buying' : undefined} onClick={() => done && onPick('pass')}>Done, no buy</button>
     </div>
   );
 }
