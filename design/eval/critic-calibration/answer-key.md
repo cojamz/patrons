@@ -48,3 +48,16 @@ Part 2 (items 25–37) is what Cory caught later the same night on newer preview
 37. **Names in the log (and strip) don't open their cards.** Space and member names in the history aren't hoverable like everywhere else. *RC1: present* (space names in the log open nothing).
 
 Not scored: Cory's idea of a discard pile for released members (an idea, not a defect).
+
+## Part 3: Cory's notes, the morning after (2026-10-15, ~14:00 UTC)
+Source: this morning's session with Cory (logged in design/decisions.md, 2026-10-15). He played the PR preview, which turned out to be a stale pre-10:00 build ("Ransom a member", "2 extra turns for 8"), so some notes may already be better on 0c1cd51; each is scored on whatever build is under test, N/A where it doesn't show. Testers' recall has not yet been re-checked against these items.
+
+38. **Pass is hard to find.** Ending your turn without buying is a small button in the buy prompt, not where you decide the buy.
+39. **The gift's two-step pick is confusing.** Good Deed (and every gift and steal) asks you to click your color stack in the seat corner, then a rival's seat; the only cue is your stacks lighting up and a small line under the header, neither where your eye is. His words: "very bad/confusing".
+40. **The turn-order rail is confusing.** The dots stepping down the seats, "in 4 ×2" and the arrow try to say too much with too little.
+41. **The wheel's emojis are too big and out of line.** Rim leaders and minions on spaces are oversized, not upright with the rim lettering, and cover the panels' words.
+42. **Catch Up never pays its bonus.** Your own minion is counted first, so in a normal snake nobody is ahead of you; he also got nothing at all from it, not even the +1. (taste)
+43. **Purple spaces charge you to use them.** "No board action should require spending": Overtime and Crunch Time cost purple to take. (taste)
+44. **Hovers feel laggy.** The card opens, then fills in its "You'd get" line; it isn't complete when it appears.
+45. **Animations are too fast even on Relaxed, and not smooth.** Relaxed isn't clearly slow; the motion stutters.
+46. **"The design is still clunky."** (taste) The screen as a whole still doesn't feel polished.

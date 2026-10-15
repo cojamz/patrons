@@ -1,149 +1,112 @@
-# Cults (v4) — Handoff
+# Cults (v4): Handoff
 
-Rewritten 2026-10-14 ~21:00 UTC and brought up to date ~22:10 UTC, so a fresh session loses nothing. Read this first, then the files it points to. Where this doc and a source disagree, the source wins: `design/decisions.md` for design (the append-only log of record), the code for what's built.
+Rewritten 2026-10-15 (afternoon), so a fresh thread loses nothing. Read this first, then the files it points to. Where this doc and a source disagree, the source wins: `design/decisions.md` for design calls, the code for what's built.
 
 ## 1. Who's who, and how to work with Cory
 
-- Cory is the designer. Every design call and every call on feel is his. Claude is the foreman: builder, tester, simulator, critic, and keeper of the harness.
-- **Read every session:** `CLAUDE.md`, `.claude/rules/working-with-cory.md` (roles, autonomy, lessons), `.claude/rules/design-principles.md` (check every suggestion against it), `.claude/rules/harness.md`, and the output style `.claude/output-styles/foreman.md`.
-- **How to talk to him (hard rules):**
-  - Terse and articulate, with a hint of poetry. No report voice, headers, bold labels or tables unless he asks. Five lines max unless he asks for detail.
-  - Lead with intent and what you did, then what's next.
-  - Decisions come as numbered lists he can answer by number ("1 yes, 2 no"), one line each, with the default in brackets.
-  - Status is three lines: what's running, what's next, and an ETA.
-  - Use his words. Never coin jargon (no "fixtures", "Diadem", "sway"). Say "buy followers".
-  - Any question that names a card or space quotes its text in a few words and says what changes for a player. He doesn't have the cards memorized ("what is Guest?").
-  - Label your own fill-ins. They are never treated as approved.
-  - Build his calls exactly as he says them. If you see a risk, flag it in one line; never add restrictions.
-  - Never launch work on a pick he hasn't confirmed. His answer replaces your suggestion unless he says "also".
-  - Give plain URLs. He opens links himself. He also likes things shown in chat.
-  - He wants easier, snappier decisions. When a list is long, propose a shortcut ("judge them by playing", "all good?").
-- **How to decide (Cory, 2026-10-14):**
-  - **Go with your gut on fixes.** For fixes and open questions, take the default and build it. Log every gut call in decisions.md as "(Claude, under Cory's go-with-your-gut)" with the why and the measurement, so he can overturn any of them.
-  - **Human playability first.** Anything that makes the game playable by people comes before everything else. Bots and agent tooling only as far as they serve that; no rabbit holes. `design/todo.md` is the ordered list.
-  - Claude may rework the **unconfirmed** spheres (Green, Silver, Purple, Blue, White, Yellow, Magenta details) from playtest feedback. Cory's earlier calls on them still stand.
-- **Autonomy and running agents:**
-  - Tactics, tools, code, sequencing and harness are yours; decide and report. Run maximum useful parallelism; tokens are not a constraint.
-  - **The box has 4 CPUs.** Throttle heavy sims here. Big sweeps (fair-price screen, bot levels, 4-thinker tables) go to remote sessions on their own machines and branches; the foreman reviews before merging.
-  - **Usage limits kill agents mid-work** (four times on 2026-10-14: 06:30, 11:40, 16:40 and 18:55 UTC). Keep `design/in-flight.md` current, and arm a `send_later` check-in that resumes each paused agent with SendMessage (or relaunches it from its brief).
-  - Agents never commit. The foreman verifies, then checkpoints (WIP checkpoint commits, often).
-- **Design workflow:**
-  - Claude pitches broad ideas; Cory designs the granular content.
-  - Every card is priced before he sees it, by measurement (member-value sim, fair-price screen) rather than the old value model. Say which instrument.
-  - Agent-designed spheres pass a design-critic agent (twice if needed) before Cory sees them.
-  - Calibrate on a handful of examples with him before fanning out (pixel art, action names and member names all went this way).
+- Cory is the designer. Every design call and every call on feel is his. Claude is the foreman: builder, tester, simulator, critic, keeper of the harness.
+- **Read every thread:** `CLAUDE.md`, `.claude/rules/working-with-cory.md`, `.claude/rules/design-principles.md`, `.claude/rules/harness.md`, `.claude/output-styles/foreman.md`, then `design/in-flight.md` and `design/todo.md`. The standing brief Cory approved is `/mnt/project-files/setup/project-instructions.md`.
+- **Talking to him:**
+  - Foreman voice: terse, plain, a hint of poetry. Five lines at most unless he asks. No tables, headers or bold-label report voice. No "want me to…?" offers.
+  - Lead with what you did and what's next. Status is three lines: what's running, what's next, ETA.
+  - Decisions as a numbered list he answers by number ("1 yes, 2 no"), one line each, default in brackets.
+  - His words only. Say "buy followers". Any question naming a card or space quotes its text in a few words and says what changes for a player.
+  - Show, don't describe: a link, a screenshot or a GIF with a plain caption. Plain URLs.
+  - Never talk about sessions, tools or harness internals. If something is blocked, say so once, plainly, with the one thing he can do.
+  - Label your own fill-ins. They are never approved until he says so.
+- **Deciding:**
+  - Fixes: go with your gut, and log each gut call in decisions.md as "(Claude, under Cory's go-with-your-gut)" with the why.
+  - Design direction is his. Never start on a pick he hasn't confirmed; his answer replaces your suggestion unless he says "also". Build his calls exactly as said; flag a risk in one line, never add restrictions.
+  - A gut call that changes HOW a choice is made gets shown to him as a picture first (the two-step gift was a gut call he then hated).
+  - Human playability first. Laptops only; phone is out of scope.
+- **Running work:** tokens are not a constraint; run the most useful parallelism. Agents never commit; the foreman verifies and checkpoints. Keep at most one scheduled check-in pending, and delete it when the work ends (seven leftovers flooded him on 2026-10-15).
 
-## 2. The harness: robust and non-hallucinating (Cory's explicit wish)
+## 2. The bar (Cory, 2026-10-15)
 
-- **The loop** is the `/v4-loop` skill: change → `npm run check:v4` → screenshots → review/test agents → fix → commit/push.
-- **`npm run check:v4`** runs every v4 test (engine, all spheres, cards, fire audit, fuzz, session, UI, records), a production build, then every browser gate in `e2e/v4/` against `vite preview`. `-- --fast` skips the browser. CI (`.github/workflows/v4.yml`) runs `--fast` only on tags `v*` and by hand, never on every push (Cory got a flood of failure emails).
-- **Browser gates (build-failing):**
-  - `hotseat`: a full game by clicking, no console errors.
-  - `online`: three people, a reload, a closed tab, "let a bot play for them", the host moving.
-  - `tables`: the table picker and a game on every sphere.
-  - `touch` (phone 390×844): 44px targets, Undo only for the right seat, bot steps ≥600ms apart, no clipped controls or cut-off text (`lib/textclip.mjs`), your recruit flies, header rows never overlap, no sideways scroll, no hover from a touch, setup on screen, pay by coins.
-  - `motion`: count-ups, flights, bot pacing on laptop and phone.
-  - `layout`: nothing cut off at 900–1270px; no color rules for follower buys.
-  - `info`: every game element has hover info (long-press on phone); no ★ anywhere.
-  - `benders`: Release, Squatter, Insider and Straggler work through the real UI.
-  - `reckoning`: the round-end payout counts up, one prize flight per winner, the summary after, minions fly out and home.
-  - `hotseat` also gates the intro: shown once, Skip clears it within 1s, never again on reload, resume or Play again.
-- **Testers' wording:** ask for "a move log with a short note on why", never "write your reasoning" (that phrasing tripped the API's safeguards and killed a tester).
-- **Ports:** each agent runs check:v4 on its own `V4_OUTDIR=.v4-build-<name>` and `V4_PORT`. check:v4 refuses to run e2e against a busy port, because a stale server once answered the tests with an old build.
-- **Freeze from a commit, never the live tree:** commit, `git worktree add .v4-wt/<sha> <sha>`, build into `.v4-panel/<n>`, serve on 5190+. `node scripts/v4-peek.mjs freeze <n>` builds and serves; `node scripts/v4-peek.mjs shots <url> <dir>` plays a full game at laptop and iPhone 13 and screenshots it, so you see the build yourself.
-- **Fresh eyes at every milestone:** three new blind reviewers in parallel on a frozen build: `ui-critic` (picky designer, ends with a Vision of what it could be), `boardgame-enthusiast` (the game: decisions, tension, arc, fun) and an engineer (a fresh agent with repo access). Then a synthesis agent writes the meta picture (themes, agreements, root causes, one ranked list) to `design/eval/meta-round<N>.md`. Act on each report and on the meta list.
-- **Blind panels** before a verdict: a laptop newcomer, a phone player by touch and a saboteur, each given only a URL and the rulebook, each reporting table talk and "felt unfair or unfun". `game-skeptic` is the final gate: SHIP needs A- or better.
-- **Card truth:** every card has a scenario test that plays it through real moves and checks its log line (card ledgers A and B in `design/eval/`). The fire-audit gate fails if a recruited member with an effect never shows up in the log (`scripts/v4-fire-audit.mjs` for the report). Every number on the table traces to a log line.
-- **Anti-hallucination rules, learned the hard way:**
-  - A fix counts only when (1) an e2e assertion fails the build without it, or (2) Claude has seen it in a screenshot of a freshly frozen build.
-  - A regression that shows up a second time becomes a gate.
-  - Run check:v4 yourself before trusting any "passes".
-  - Audit claims against reality after each panel.
-  - Name the instrument behind every finding (Easy/Normal/Hard bot, 4-thinker tables, AI tester). A lone thinking bot wins ~78% even on a plain table, so its win rates are the instrument, not the sphere.
-  - Agent reports are model output, not user approval.
-- **Commits:** a stop hook demands everything is committed and pushed. Branch `claude/gifted-newton-3lcy3i`; PR #1 is open (its Netlify preview is the working link); no new PR unless asked. No model names in commit messages beyond the attribution lines; commits end with the Co-Authored-By and Claude-Session lines.
+- Nothing reaches Cory below **A−** from a fresh blind panel (two screen-only testers, lists merged, plus game-skeptic) on the exact build he will open, run on quiet remote machines.
+- Before sending a link, confirm the live preview shows that build's version stamp. This morning he played a stale build.
+- Cory shouldn't be the one catching obvious UX problems. Every catch he makes joins the answer key (`design/eval/critic-calibration/answer-key.md`) and becomes a gate.
+- Snappy is measured as "card complete", not "card present": every click and hover answers within 100 ms; the wheel spin lands in 400 ms or less. Pace is judged by eye on filmstrips at every speed. Relaxed must feel clearly slower than Steady.
 
-## 3. The game as it stands: Cults v0.2
+## 3. The game as built: Cults v0.2
 
-Full log: `design/decisions.md`. Player rulebook: `design/rulebook.md` (imported into the game as How to play). Architecture: `design/architecture.md`. The UI plan: `design/prototypes/vision/build-plan.md`.
-- **Name and version.** The game is **Cults** (the repo and code ids keep "patrons"). The build with all of 2026-10-14's inputs is **v0.2**. Playtest releases are v0.x: each link Cory shares with friends bumps the minor number and gets a git tag; fixes bump a patch (v0.2.1). The version shows on the home screen, in How to play and in every saved game and record.
-- **Table.** 2–4 players, 3 rounds. A spinning wheel of 4 colored quadrants ("spheres"): the outer ring is round I (3 spaces each), the middle ring round II (2), the inner ring round III (1 each, 4 around the hub). Rings stay open once they open. One minion per space per round, and a placed minion sits ON its action (Cory). Each space shows its icon and a short effect; hover (long-press) gives the full text and "you'd get". The wheel spins, but nothing else changes with its orientation. Each quadrant's contest rule is engraved on its rim ("MOST BLUE · +2") with the current leader's emoji inline in the text, several for a tie, none when nobody leads. Cory still doesn't like the action spaces' look: three directions are mocked in `design/prototypes/actions/` for him to pick.
-- **Players.** Each player picks a pixel emoji (20 drawn, one per table). Workers are **minions**: little pixel copies of your emoji, 3/4/5 per round; the unplaced ones float around your **cult leader**, a robed figure with your emoji on the robe. The leader is your identity everywhere. Size order: leader > members > minions > followers.
-- **Members** are people or groups, never rooms or objects (Claude's renames applied; Cory: "I trust you on this for now"). Each is a distinct pixel character tinted in its sphere's color, so a cult reads at a glance. One shared deck holds every sphere on the table plus 7 guest rule-benders; the shop shows **10 face up**, visible during setup too, with the face-down deck and its count at the head of the strip (Cory).
-- **Costs** have a colored part (that color only) and an "any" part. All member costs doubled on 2026-10-14; plain "worth N followers" members went back to the old price; discounts doubled too. 19 members say "Now and at round start" (they also pay the moment you recruit them); Heir pays now and at the start of round III. Revelers (was Feast Hall) counts as 3 members.
-- **Followers** are the score, with their own mark (a little pixel person, never ★). You start with 1; members add their worth; followers from buys and member triggers count at once; contests pay at round end.
-- **A turn.** Setup: everyone picks 2 starting resources, in seat order, with the shop visible. Snake order; round I is random, then the fewest followers goes first (ties: whoever went later last round). Send a minion, do the space, then buy one thing (a face-up member, or followers) or pass.
-- **Buying followers** takes any resources: 2→1, 4→3, 8→6 (stock 2 per player) and 10→10 (unlimited). The game always ends after round III: "the turns are the end game clock" (Cory). The once-per-round limit and the 10→10 clock are gone.
-- **Release** (base rule, on): once per round in your buy step, put one of your members on the bottom of the pile. Not one you recruited this round (a stolen one is fine). You get back only its colored part, in its own color (any colors if that color isn't on the table); a member with no colored part can't be released. You keep your buy.
-- **Scoring.** Each quadrant has one contest on visible state, scored at round end: +2/+4/+6. Tied leaders all score unless a tiebreak is printed (Red: red members). You need at least 1 to score. After round III, game-end bonuses apply; most followers wins, ties go to more members.
-- **Spheres** (11 modules; the setup offers Classic, Random 4, Custom, or `?table=gold,red,thieves,echo`):
-  - **Locked (Cory's design):** Gold (most gold) and Red (most members, red members break ties).
-  - **Reworked after Cory's first play, under go-with-your-gut:** Purple (most purple; Plan Ahead replaces Linger; Overtime pays 8 for 2 extra turns; Rally spends all your purple; Bookkeeper pays at your last placement; Relay cut and replaced by Night Owl, reworded in plain words after Cory found it confusing; Double Time, Overseer, Taskmaster, Second Wind and Late Riser repriced down from the Purple sim), White (most white; Pawn, Broker and Dealer at 2+0; Cory cut Barter, and Dividend, "+1 white per loose follower you have", fills its slot as a gut call) and Green/Echo (most green; Echo copies a space a rival took since your last turn; Refrain, Understudy, Ensemble).
-  - **Red:** Even Swap ("+1 red, and swap one of your members for a rival's of equal cost") replaces Scout in the outer ring, the weak twin of Trade (Cory: "let's try it").
-  - **Names:** action names batch 1 (Gold, Red, Magenta) approved and applied; batch 2 (the other spheres) applied pending Cory's grade.
-  - **Drafts on the table, judged by playing:** Magenta/thieves (most Magenta members; loot is spendable magenta at once), Blue/Market (most blue; "badged" was cut 2026-10-15), Silver (most silver), Yellow (most full sets).
-  - **Classic table = Gold, Red, Blue (market) and Green (echo), all real** (Cory). The plain stand-in Blue and Green stay pickable under Custom as "(plain)".
-  - **Guest rule-benders:** Squatter, Big Spender, Freelancer, Insider, Extra Hand, Front-runner, Straggler (prices in design/rule-benders.md).
-- **Bots:** Easy, Normal (default) and Hard in the engine; the setup screen doesn't offer them yet. Bot speed is Slow/Normal/Fast.
-- **The look is the Lamplit Table** (approved with Cory's adjustments): a walnut table, cream paper cards, muted inks, Alegreya type. At most 7 groups on screen at a glance; everything else one hover or long-press away, and every element has a hover. You pay by dropping coins into the cost slots. Round end is **the Reckoning**: quadrants pay one at a time and followers fly to each winner. Every turn is told in one place.
-- **Layout revision (Cory, after seeing the in-progress build):** the wheel is the focus, bigger and centred. Each player's cult sits at a corner like chairs at a table (yours nearest, slightly larger): leader, floating minions, member crowd, follower mark, resources. The shop is a slim strip of 10 small cards like elegant sports cards (figure, name, cost, worth; the effect on hover). When buying, only what you can afford is lit. Hover must feel instant: under 100ms, one sticky layer, no flicker.
-- **Intro (built):** 7 beats, ~20s, once per browser on a new game (never on resume or rejoin), Skip always visible, a still storyboard under reduced motion, `?intro=0|1`. Replay from the menu is being wired.
-- **Living cults** (stretch goal): idle loops for leaders and members; a member reacts when its ability fires; the leader gestures when sending a minion, celebrates a prize and gives a scheming laugh when recruiting.
-- **Pixel art:** approved, good enough for now; a polish pass comes later.
-- **Feedback pipeline:** tabled until Cory allows Firebase/Netlify in the environment. A copy-only feedback tab may stay if it's done.
+Rules: `design/rulebook.md` (in the game as How to play). Every call: `design/decisions.md`. Architecture: `design/architecture.md`. Taste: `design/taste.md`.
 
-## 4. Build quality and harness state
+- **Table.** 2–4 players, 3 rounds, a spinning wheel of 4 colored quadrants (spheres). Outer ring is round I, middle round II, inner ring round III; rings stay open. Workers are **minions**, 3/4/5 per round, one per space per round. Snake order; round I random, then fewest followers first. A turn: send a minion, do the space, then recruit one face-up member, buy followers, or pass. Followers are the score. Each quadrant's contest pays +2/+4/+6 at round end (the Reckoning). The version shows on the home screen (`src/v4/version.js`, `VERSION = 'v0.2'`).
+- **Layout: who | where | what to buy** (`src/v4/game/layout.css`). Seats on the left in turn order with the story of the turns since yours under them; the wheel big in the middle; on the right the follower buys first, then the member deck and shop. A turn-order rail sits beside the seats today ("now", "next", "×2"); Cory found it confusing and it's coming out (section 5).
+- **Visual language: plate 1b** (`design/prototypes/language/plate1b.png`, grammar.md, kit.css; tokens in `src/v4/lamp.css`). The only symbols are the colored resource dot (a split dot for "any") and the follower mark; everything else is words. Action spaces show the gain, then a plain phrase; the name is in the hover. Rims read like "MOST BLUE · +2" with the leader's emoji.
+- **Motion director** (`src/v4/game/director.js`, timings in `src/v4/motion.js`). Every move plays as a chain from cause to effect: pieces fly from where they came from to where they land, members hop when they fire, counts tick as pieces arrive. One Speed setting in setup and the ☰ menu: Quick, **Steady** (default), Relaxed. A click or Space skips to the end.
+- **Choices are picked on the board** (`src/v4/game/boardPick.js`): click the space to copy, the rival's stack to steal, the member or seat to pick. Gifts are two clicks today (your color, then their seat), which Cory called "very bad/confusing" (section 5). What has no place on the board (Pass, an amount, "All 3 as green") stays a button by the caption, and every pick is also in a keyboard list.
+- **Effect stream and follower ledger.** The engine records every effect as it happens (`src/engine/v4/effects.js`); the director's animation, the turn story and the "since your last turn" strip all read from it. The follower ledger (`state.ledger`, `src/engine/v4/core.js`) records where every follower came from, so the results breakdown adds up exactly.
+- **Members** are people, each a pixel character tinted its sphere's color. One shared deck, 10 face up, the deck and its count at the head of the strip. Hover a seat to see each member's ability and state; a member you can use now glows ("Use: +7 ●").
+- **Spheres:** 11 modules (Classic table = Gold, Red, Blue market, Green echo; also Random 4, Custom, `?table=`). Gold and Red are Cory's locked designs; the rest are drafts judged by playing. Guest rule-benders: Squatter, Big Spender, Freelancer, Insider, Extra Hand, Front-runner, Straggler. Release is a base rule.
+- **Online:** host-authoritative over Firebase RTDB (`src/v4/session/online.js`), separate from the static host, so moving hosts changes nothing about multiplayer. Bots Easy/Normal/Hard; the lobby offers the bot level.
+- **Intro:** one continuous ~27 s shot, once per browser, Skip always visible (Cory: "amazing").
 
-- **Blind panels:** C/C+ (panels 1–3) rose to B- across the board (5–7). Robustness A- (spam, reload, undo all hold); scores always add up by hand. Panel 7 was before the Lamplit Table rework; no blind panel has graded the new look yet.
-- **Fresh eyes, round 1:** ui-critic C- (information access D: contest counts that didn't match scoring, no outcome previews, player colors that clashed with resource colors). Those led to `contestTable`, the "you'd get" preview and emoji leaders. The engineering review led to the hardening that has landed: an honest gate, CI, version stamps and content hash, game records and replay, the Recovery screen, the bot-failure fallback, and refusing mixed builds online. The enthusiast hasn't run yet.
-- **Cory's own play:** "The game works great"; he loves how smoothly it runs. The UI was "SOOOO much info, no clear hierarchy, maximalist", hence the Lamplit Table. The game felt too chaotic (watch item).
-- **Fresh eyes, round 2 (on frozen builds 4da59a3 / 4fa162a):** engineering is in (`design/eval/engineering-review-round2.md`): the online core is solid; the blockers are release process (no frozen, gated build on a stable link; the content hash misses effect changes), production Firebase never exercised from here, and Back silently leaving an online game. All routed. The ui-critic (with a Vision frame) and the game/fun critic are playing; then the meta synthesis.
-- **Gate status:** agents are mid-edit, so trust check:v4 only from a run on a committed snapshot. Expect red e2e on the game screen until the UI agents land.
-- **Balance readings** (design/eval/top-tier.md, before 10→10 went unlimited; re-measure): pure follower buying wins ~10% against Normal bots and ~80% against Easy bots. The 25% target sits between the two instruments. A thinking bot finishes ahead of the buyer 75% of the time. Normal bots recruit ~3.4 members a game, Easy ~7.9 (target 6–7).
-- **Tools:** `scripts/v4-peek.mjs` (freeze + screenshots), `v4-fire-audit.mjs`, `v4-replay.mjs`, `v4-fair-price.mjs`, `v4-member-value.mjs`, `v4-big-followers.mjs`, `v4-bot-levels.mjs`, `v4-thinker-tables.mjs` (the standard balance reading: four Hard bots), `v4-art-import.mjs`.
+## 4. The harness as it stands
 
-## 5. In flight
+- **The loop** is the `/v4-loop` skill: change → check → screenshots → review → fix → checkpoint. `npm run check:v4:quick` (about 2 min, `-- --related <files>`) while iterating; the verdict is `npm run check:v4 -- --commit <sha>` on a committed snapshot, never the live tree. Each agent sets its own `V4_OUTDIR=.v4-build-<name>` and `V4_PORT` (5281+).
+- **The local box has 4 CPUs** and a full gate overloads it (load 27 on 2026-10-15), so a timing failure there is often load. Re-run a failure alone once before calling it real.
+- **Quiet remote machines** run verdicts, perf numbers and blind panels. Remote sessions take a branch name, so push `claude/cults-freeze-<wave>` first (w3 and w4 exist). Results land in `design/eval/perf/quiet-*.md` on their own branch (`claude/cults-perf-<wave>`).
+- **Screen-only testers.** Every tester and critic drives the build only through `scripts/v4-eyes.mjs` (screenshots, coordinates, timings; never the DOM), with just the URL and the rulebook. Two fresh testers with lists merged reach 82% recall on Cory's notes (`design/eval/critic-calibration/results.md`); one alone reaches 72%. game-skeptic is the final grader.
+- **Standing design pod:** an art director and a detail designer fix the UI with guards whenever it is changing (`scripts/design-pod/`, logs in `design/eval/design-pod/`).
+- **Branches:** checkpoints go to `claude/cults-wip`; freeze branches `claude/cults-freeze-<wave>`; the last frozen build is `claude/cults-final` at 0c1cd51. Only gate-green builds go to the PR branch `claude/gifted-newton-3lcy3i` (PR #1), because every push there redeploys the preview. Each thread works on its own branch cut from the PR head.
+- **Guards worth knowing** (each fails the build): `src/test/v4/ui/css-has.test.js` (no page-level `:has()` or root custom properties, the big perf win); `e2e/v4/snappy.mjs` s6 (30 fps idle on your turn) and s7 (a press paints within 100 ms); `e2e/v4/lib/typescale.mjs` (type scale everywhere outside the wheel); `e2e/v4/turndock.mjs`; `e2e/v4/travel.mjs`; `e2e/v4/members.mjs` m14 (a seat card opens within 150 ms of one move onto it). Plus hotseat, online, tables, info, layout, motion, reckoning, spaces, steal, pay, benders, memory, resume-edge, turnstory.
+- **Proof rule:** a fix counts only when a gate fails without it, or Claude saw it on a fresh frozen build at about 1270×700. An agent's report is never proof. A regression seen twice becomes a gate. Never weaken an assertion.
+- **Tools:** `scripts/v4-peek.mjs` (freeze + shots), `v4-perf.mjs` (4× CPU), `v4-eyes.mjs`, `v4-clips.mjs` / `v4-gif.mjs`, `design/prototypes/motion/film.mjs` (filmstrips on a fake clock), `v4-fire-audit.mjs`, `v4-replay.mjs`, the bench on `claude/cults-bench`.
 
-See `design/in-flight.md` for the roster, briefs, build dirs and ports. In short (~22:10): UI-A (wheel: minions on actions, inline rim emoji, Reckoning, Release refund display, menu intro replay, preview warmup, memo), UI-B (visible deck, shop/hover fixes, e2e selectors), multiplayer (the engineering review's online blockers), harness hardening, Purple (Night Owl + reprices + Revelers art), names + Even Swap, rules (unlimited 10→10, Dividend), three action-space directions, the rework-candidates list, and two blind critics (design, game/fun). Remote: the fair-price screen and bot levels. Next: freeze a release candidate, full check:v4 green, the meta synthesis, a blind panel, then tag v0.2 and cut the stable friends link (a second, never-merged PR from a frozen release branch).
+## 5. Where it stands (2026-10-15, ~14:30 UTC)
 
-## 6. Open decisions for Cory (ask by number, defaults in brackets)
+- **Build.** Final overnight build 0c1cd51 on `claude/cults-final`. The PR head 8afc4dd is the same code plus notes (morning note, design pod closing lists).
+- **Preview is stale.** https://deploy-preview-1--cornycolonies.netlify.app shows a build from before 10:00 ("Ransom a member", "2 extra turns for 8"). Cause not confirmed. Likely: about 60 overnight pushes used up Netlify's free deploy credits (300 a month). A failed build would look the same. Nobody has checked the Netlify dashboard yet.
+- **Grades.** Last blind grades were on 8ea3e24: testers C+ and C+, hobby gamer B−, game-skeptic B−. Nobody has graded 0c1cd51. The bar is now A−.
+- **Quiet machine on 0c1cd51** (`design/eval/perf/quiet-final-0c1cd51.md`, branch `claude/cults-perf-final`; nobody read it until this afternoon):
+  - All 6 gate failures passed when re-run alone. They were load flakes.
+  - At 1× it's the quickest build yet: hovers open in 30–40 ms p95. snappy alone: spin 396 ms, hover p95 61 ms.
+  - At 4× CPU it **regressed** against 8ea3e24: wait for your turn 12.0 s (was 9.5 s), main-thread blocking 23–24 s (was 8–9 s), first click 2.1–2.6 s (was 1.1–1.3 s), a placement shows in about 0.9 s (was 0.4–0.5 s). Look at forced layout in the first click and the React scheduler frames. The morning note's "9.5 s / 8 s" is out of date.
 
-1. The action spaces' look: pick one of the three directions in `design/prototypes/actions/` (shots/compare.png). [Claude's pick in its README]
-2. Action names batch 2 (Blue, Green, Purple, Silver, Yellow, White) in `design/eval/action-names-calibration.md`: "all good" or by number. [Claude's picks, already applied]
-3. Neutral rule-benders: Cory rejected the first batch (no out-of-turn minion placement). Next time calibrate on one or two, after learning what he likes in Straggler.
-4. The tentative rework list (`design/eval/rework-candidates.md`). [judge by playing]
-5. What the ~25% big-followers target is measured against. [an in-between bot level, then a check with people]
-6. Allow `firebaseio.com` and `netlify.app` in the cloud environment's network settings, so online play can be verified on the real link and the feedback pipeline can come off the table. [yes]
-7. Before friends play (laptops only; Cory: no phone for a long time): a 10-minute two-laptop check on the stable link (host on a laptop, join by phone, reload mid-turn, lock 30s, finish). [Cory, once the link is cut]
+### Cory's seven notes this morning, and the plan for each
+1. **Hovers feel laggy.** Likely the card opens before its "You'd get" line is ready. Precompute every open space's forecast at turn start, keep the card's size fixed, and gate on "card complete" in a real headed browser.
+2. **Pass is hard to find.** Move it into the shop column as "Done, no buy", under the follower buys.
+3. **The turn-order rail is confusing.** Remove it. The seats already sit in turn order and the one playing glows. Add a quiet "next" on the following seat, "next · twice in a row" where the snake doubles back, and "your turn in 3" on your own seat.
+4. **Wheel emojis too big and out of line.** Rim leaders smaller, upright, inside the rim band. Minions on spaces smaller and tucked at the panel edge, never over the words.
+5. **Good Deed's two-step gift is "very bad/confusing".** A small card beside the space you just took: your colors as big dots, then the rivals' faces. Two taps, your eye stays on the wheel. Same for every gift and steal.
+6. **Animations too fast even on Relaxed, and not smooth.** Relaxed about 2× Steady, Steady a little slower. Re-check smoothness on a live build (the wheel-shadow fix may already help, but he only saw the stale one).
+7. **"The design is still clunky."** A design pass graded to A−, with his notes as the testers' answer key.
 
-## 7. Watch items and ideas (bring to Cory when relevant; don't decide them yourself)
+Order: 1–6 in code now (one thread), then Purple and Catch Up once he answers, then the 4× perf regression, then a fresh blind panel to A−.
 
-- **Chaos:** Cory felt the game was too chaotic. Ask friends after their first game. The turn story and slower bots may help. The Purple rework lets one player place 4+ times in a row in 57% of games, which may add to it.
-- **Building toward a strategy:** a member you want is often gone before your turn comes back. The shop of 10 is the answer for now; Reserve (hold one face-up member only you can recruit) is the pitched fallback.
-- **Magenta:** "most Magenta members" is sticky: the same winner two rounds running 85% of the time. If it plays stale, change the scoring rule, not the cards.
-- **Silver:** a resource glut (~58 left per player vs 25 baseline).
-- **White:** Lender nets −1 follower, the one exception to "every member is worth at least 1". Cory hasn't ruled.
-- **Echo × Plan Ahead:** a copy gives the taker's printed gain, +6 or +8 when Plan Ahead was taken first.
-- **Easy tables:** pure follower buying wins 74–80% against loose recruiters, and a first-time human table may look like that.
-- **Follower ladder:** with 10→10 unlimited at 1:1, watch whether pure follower buying climbs past the 25% target and whether 8→6 still matters. Report the number; don't retune without Cory.
-- **Making the game more distinctive** (design/novelty.md): the wheel is navigation today; a mechanic using rotation or neighbouring quadrants would make the board the signature. Raise it, don't build it.
-- **Tabled overlays, in Cory's order:** role tags across spheres (Wingspan-like) → Omens (three revealed up front, neutral) → Devotion (sets). Rejected: Relics, Rank. Titles: maybe.
-- **Design direction:** members that bend the rules. Cory loves pile interaction (Insider) and "really likes" Straggler. Cory rejected the first neutral batch (`design/eval/neutral-members.md`; no out-of-turn minion placement); more come in calibrated small batches he grades by number.
-- Report the big-followers number with every balance change.
+## 6. Waiting on Cory
 
-## 8. Code map (v4)
+- **Purple** ("no board action should require spending"):
+  1. Overtime → "Take 1 extra turn right after this one", Crunch Time → "Take 2 extra turns right after this one". [yes]
+  2. Trades (Cheap Seats, All In, Sell High, Trade Seeds) don't count as spending. [no change]
+  3. Rework Corner-Cutter later. [yes]
+- **Catch Up** never pays its bonus (code today: "+1 purple, and +2 per rival with more minions on the board than you", counted after your own minion lands, so nobody is ahead of you in a normal snake). Proposed: "+1 purple, and +1 per rival who's placed more minions than you this round", counted before yours lands. He also said it gave nothing at all, so check the +1 is granted. [yes] (An earlier proposal the same morning kept +2 per rival "after extra turns"; the +1 version is the later one.)
+- **Hosting:** move from Netlify to Cloudflare Pages (500 free builds a month, a preview per branch). He connects the repo once, about 5 minutes; Claude sets up the rest and publishes only gate-green builds. [yes]
+- **The morning note's calls 1–10** (`design/morning-note.md`), all unanswered. Call 9 is the biggest: balance pass 3 reprices 25 members (`design/eval/balance-pass-3.md`).
 
-- **Engine** `src/engine/v4/`: `core.js` is a pure deterministic task queue (state is plain JSON with a seeded RNG; buys, Release, `contestTable`, `turnRail`). Content modules in `content/` register via `registerQuadrant`; `benders.js` holds the guests. `bots.js` (Easy/Normal/Hard), `thinker.js` (rollouts), `preview.js` ("you'd get" dry runs).
-- **Session** `src/v4/session/`: local (resume and strict undo); online, host-authoritative over Firebase RTDB at `v3rooms/<code>` with `game:'v4'`; `record.js` (content hash, version stamps, game records, replay).
-- **UI** `src/v4/`: React; only clicks legal option ids. `game/` (GameScreen, Wheel, ShopCards, CultSeat, HoverCards, PayPicker, RoundEnd…), `screens/`, `art/` (sprites, leaders, minions, follower mark), `lamp.css` (tokens and regions), `Intro.jsx`, `Recovery.jsx`, `glossary.js`, `version.js`.
-- **Tests:** `src/test/engine/v4` (spheres in `spheres/`, cards in `cards-*`), `src/test/v4` (session, ui, records), `e2e/v4/*.mjs`.
-- **Commands:** `npm run check:v4` (with your own `V4_OUTDIR`/`V4_PORT`), `npm run sim:v4 -- 300 4`, `npx vitest run src/test/engine/v4`.
-- `main` is the frozen v3 game; `?v=3` opens it.
+## 7. Where everything lives
 
-## 9. Links and artifacts
+- Design calls: `design/decisions.md`. Rules: `design/rulebook.md`. Taste and Cory's own calls: `design/taste.md`. Visual language: `design/prototypes/language/`. Motion language: `design/prototypes/motion/grammar.md`.
+- What's running: `design/in-flight.md`. Ordered to-do: `design/todo.md`. Morning note and its calls: `design/morning-note.md` (pictures in `design/morning/`).
+- Evaluations: `design/eval/` (testers' answer key and recall in `critic-calibration/`, design pod in `design-pod/`, perf in `perf/`, waves in `wave2/`, `wave4/`, `overnight-wave3.md`, `game-skeptic-w4.md`, the bench in `bench/`).
+- **Code:** engine `src/engine/v4/` (`core.js` pure deterministic task queue, `effects.js` the effect stream, `content/` the spheres and guests, `bots.js`, `thinker.js`, `preview.js` for "you'd get"). Session `src/v4/session/` (local, online, `record.js`). UI `src/v4/` (`game/` for the screen: GameScreen, Wheel, CultSeat, ShopCards, HoverCards, director, boardPick; `lamp.css` tokens; `motion.js`; `Intro.jsx`). Tests `src/test/engine/v4`, `src/test/v4`, `e2e/v4/*.mjs`. `main` is the frozen v3 game.
+- Links: preview (stale) https://deploy-preview-1--cornycolonies.netlify.app · harness diagram https://claude.ai/artifact/PTmPKj5kjBaJX9xpW5Ng3t
 
-- Working preview (PR #1, redeploys on every push): https://deploy-preview-1--cornycolonies.netlify.app (not reachable from this container)
-- Harness diagram: https://claude.ai/artifact/PTmPKj5kjBaJX9xpW5Ng3t
-- First prototype (old rules): https://claude.ai/artifact/D32uNuYuSq3pUEn4VrQ8YN
-- Black/Magenta card sheet (outdated): https://claude.ai/artifact/N8uzJK6ANX7Z183PA4aKgi
-- In the repo: the vision frames `design/prototypes/vision/shots/f1–f4.png`; pixel-art contact sheets `design/prototypes/pixel-art/shots/` (one per batch, plus the emoji identity sheet).
+## 8. The open list
+
+- Get the current build live: find out why the preview is stale; if Cory says yes, move to Cloudflare Pages. Confirm the version stamp before any link.
+- Cory's notes 1–6 in code (running), then note 7's design pass.
+- Purple, Catch Up and calls 1–10 once he answers.
+- Find and fix the 4× CPU regression between 8ea3e24 and 0c1cd51.
+- The gate overloads the 4-CPU box by itself; timing gates flake under it. Run verdicts remotely.
+- Reckoning count drift under load: the quiet machine saw "5 quadrants told, 9 winners" on a 4-quadrant board in the loaded gate run. Passed alone; worth a look.
+- A fresh blind panel on the fixed build, graded to A−, before Cory sees it.
+- Watch items (raise with Cory when relevant, don't decide): chaos feel, Magenta's sticky rim, Silver's resource glut, Lender's −1, pure follower buying at about 10% (his band is 15–30%), members looking alike at seat size (call 8).
+
+## 9. History in brief
+
+- 2026-10-14: Cults v0.2 rules, the Lamplit Table look, members doubled in cost, intro, online hardening, the screen-only tester harness.
+- Overnight into 2026-10-15: four waves of blind testers and fixes, plate 1b visual language, the motion director, board picks, the who | where | what-to-buy layout, perf rounds 1–5 (4× wait 18–20 s → 9.5 s on 8ea3e24), final build 0c1cd51 frozen ~12:40.
+- 2026-10-15 morning: Cory played the stale preview and sent seven notes; the old thread lost its tools and couldn't edit files, so this afternoon's threads are fixing the notes and refreshing the docs.
