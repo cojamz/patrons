@@ -51,3 +51,8 @@ Verdicts (`check:v4 -- --commit`): median wall (worst) and how many were green; 
 |---|---|---|---|---|---|---|---|---|
 | 2026-10-15 04:07 | baseline, old gate (saved logs, touch included): 3 verdict, 1 live | 58.8m (60.3m), 0/3 green | 12.1m | – | – | 23.1m (31.1m) | touch.mjs ×4, hotseat.mjs ×2, info.mjs ×2, motion.mjs ×2, spaces.mjs ×1, engine + spheres + session + ui tests ×1, layout.mjs ×1, tables.mjs ×1 | – |
 <!-- retro-through: 2026-10-15T04:07:10.100Z -->
+
+## Quiet-box measurements (remote, 4 CPUs, 2026-10-15 ~04:30 UTC)
+- ce03bc3: `check:v4:quick` 146s; full `check:v4 --commit` 1103s (18.4 min). During the gate the load averaged 8.5 and peaked at 25 on 4 CPUs, so the gate saturates even an idle box. The 5–6 min estimate was too low.
+- b7a2b76: full verdict 1117s.
+- The old serial gate on the loaded local box took 37–60 min. So the parallel gate is about 2–3× faster, but the e2e set still dominates. Next lever: e2e jobs bounded by CPU (not 3 + 4 slots), and the motion/snappy timing gates run alone after everything else.
