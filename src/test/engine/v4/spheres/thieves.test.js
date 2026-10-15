@@ -148,10 +148,10 @@ describe('Magenta actions', () => {
   });
 
   it('Shake Down: or they let it go; only cost 1–4 members are targets; can’t pay means let go', () => {
-    let s = scene({ round: 2, res: [{}, { gold: 1 }], members: [[], ['red.mob', 'red.bigfamily', 'red.volunteer', 'red.mentor']] });
+    let s = scene({ round: 2, res: [{}, { gold: 1 }], members: [[], ['red.mob', 'red.bigfamily', 'red.volunteer', 'gold.speculator']] });
     s = take(s, 'thieves.ransom');
     const mob = uidOf(s, 'red.mob', 1), fam = uidOf(s, 'red.bigfamily', 1);
-    // Volunteer costs 0 and Mentor 5 (over 4), so only Mob (3) and Big Family (4) are targets
+    // Volunteer costs 0 and Speculator 5 (over 4), so only Mob (3) and Big Family (4) are targets
     expect(ids(s).sort()).toEqual([`card:${mob}`, `card:${fam}`].sort());
     s = move(s, `card:${mob}`);
     expect(ids(s)).toEqual(['let']);

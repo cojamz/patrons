@@ -76,7 +76,7 @@ describe('using a member any time on your turn', () => {
     expect(s.pending.kind).toBe('place');
     const use = s.pending.options.find(o => o.kind === 'use');
     expect(use).toBeTruthy();
-    s = move(s, use.id); // copies the space P1 just took: +2 red and a face-up member costing no more, free
+    s = move(s, use.id); // copies the space P1 just took: a face-up member costing no more, free
     expect(s.pending.kind).toBe('choose');
     expect(s.pending.prompt).toMatch(new RegExp(`costing ${low} or less`));
     s = move(s, s.pending.options[0].id);

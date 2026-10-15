@@ -53,6 +53,14 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
       <div className="dialog roundend" ref={box}>
         <h2>Round {result.round} scored</h2>
         <div className={`re-body${more ? ' more' : ''}`} ref={body}>
+        {/* the last round: the end-game bonuses lead, so the lines that can decide a close game are never below the fold
+            (RC1 panel: "More below ↓" hid them in a one-point game) */}
+        {after.over && (
+          <p className="re-next re-final" data-final-bonuses={finalParts.length}>
+            <b>End-game bonuses</b>{finalParts.length ? ', still to add to these totals: ' : ': none this game.'}
+            {finalParts.map((p, k) => <span key={p.id} data-final-bonus={p.id}>{k ? ' · ' : ''}<b style={{ color: playerColor(p.id) }}>{name(p.id)}</b> <NamedText state={after} text={p.final.parts.join(', ')} /></span>)}
+          </p>
+        )}
         <ul className="re-rows">
           {rows.map(r => (
             <li key={r.qid} style={{ '--c': `var(--${r.qid})` }} className={r.winners.length ? '' : 'none'} data-qid={r.qid} data-winners={r.winners.join(',')}>
@@ -96,12 +104,6 @@ export default function RoundEnd({ info, onNext, autoMs, meId = null }) {
             );
           })}
         </div>
-        {after.over && (
-          <p className="hint re-next">
-            End-game bonuses come next{finalParts.length ? ': ' : '.'}
-            {finalParts.map((p, k) => <span key={p.id}>{k ? ' · ' : ''}<b style={{ color: playerColor(p.id) }}>{name(p.id)}</b> <NamedText state={after} text={p.final.parts.join(', ')} /></span>)}
-          </p>
-        )}
         {first && <p className="hint">Round {roman(after.round)} · <span className="num">{workersNote(after)}</span> · {first.id === meId ? 'You pick' : `${first.name} picks`} first</p>}
         </div>
         {more && <span className="re-more" aria-hidden="true">More below ↓</span>}

@@ -30,16 +30,18 @@ describe('Red actions', () => {
     s.recruits = 3;
     expect(R(take(s, 'red.turnout')).red).toBe(3);
   });
-  it('Open Door / Open House / Hand-pick: free recruits (cheapest, cheapest +2 red, any)', () => {
+  it('Open Door / Open House / Hand-pick: free recruits (cheapest, any costing 4 or less, any)', () => {
     let s = sceneQ({});
     const min = Math.min(...s.shop.map(u => cost(s.cards[u].def)));
     s = settle(take(s, 'red.hire'));
     expect(s.players[0].members).toHaveLength(1);
     expect(cost(s.cards[s.players[0].members[0]].def)).toBe(min);
     s = take(sceneQ({ round: 2, shop: ['red.volunteer'] }), 'red.hireup');
+    expect(s.pending?.kind === 'choose' ? s.pending.options.every(o => cost(s.cards[o.value].def) <= 4) : true).toBe(true);
     while (s.pending?.kind === 'choose') s = move(s, s.pending.options[0].id);
-    expect(R(s).red).toBe(2);
+    expect(R(s).red).toBe(0);
     expect(s.players[0].members).toHaveLength(1);
+    expect(cost(s.cards[s.players[0].members[0]].def)).toBeLessThanOrEqual(4);
     s = take(sceneQ({ round: 3, shop: ['gold.tycoon'] }), 'red.take');
     s = move(s, `card:${uidOf(s, 'gold.tycoon', 'shop')}`);
     expect(s.players[0].res.gold).toBe(0); // free

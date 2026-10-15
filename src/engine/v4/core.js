@@ -116,34 +116,74 @@ export function openSlots(state) {
   return out;
 }
 
-/** What a member would cost this player right now: { spend, colorPart, anyPart } or null if unaffordable. */
+// ---------- the price of a member: one rule for every recruit ----------
 // A member's colored part is paid in its quadrant's resource. Some sphere drafts still relabel
 // def.quadrant to a color name, so a bare color is accepted too.
 const colorOf = def => { try { return quadrant(def.quadrant).resource; } catch { return def.quadrant; } };
 // The colored part may be paid in any colors when the member's color isn't on the table, or when one of your
 // members says so (Freelancer: flag anyColorPart).
 const colorPartFree = (state, p, def) => !state.resources.includes(colorOf(def)) || sumMemberFlag(state, p, 'anyColorPart') > 0;
-export function paymentPlan(state, p, uid) {
-  const def = cardDef(state, uid);
+/**
+ * What p owes for a member, in units: { q, colored, total, worth }. q is the colored part's resource (null when no
+ * colored part is owed), colored the units of q owed, total the units owed in all, worth(c) what one coin of c pays.
+ * Discounts (Intro Offer and the like, p.discount) and cost reductions (Sponsor) come off the colored part first
+ * (Cory: you choose where a discount comes off; the colored part first is always at least as good). Gold you spend
+ * counts double with Penny Pincher (flag goldPaysDouble), toward either part. how.anyColors: the colored part in any
+ * colors (Snap Up); how.half: half the printed cost, rounded down, in any colors (Half Price).
+ */
+function priceParts(state, p, def, how = {}) {
   let s = def.s, w = def.w;
-  let off = p.discount + sumMemberFlag(state, p, 'costReduction');
-  const ds = Math.min(s, off); s -= ds; off -= ds; w = Math.max(0, w - off);
-  if (colorPartFree(state, p, def)) { w += s; s = 0; }
+  if (how.half) { w = Math.floor((s + w) / 2); s = 0; }
+  if (how.anyColors || colorPartFree(state, p, def)) { w += s; s = 0; }
+  const off = (p.discount || 0) + sumMemberFlag(state, p, 'costReduction');
+  const colored = Math.max(0, s - off), total = Math.max(0, s + w - off);
   const goldDouble = sumMemberFlag(state, p, 'goldPaysDouble') > 0;
+  return { q: colored > 0 ? colorOf(def) : null, colored, total, worth: c => (c === 'gold' && goldDouble ? 2 : 1) };
+}
+const unitsOf = (v, worth) => Object.entries(v).reduce((t, [c, n]) => t + (n || 0) * worth(c), 0);
+/** Does paying the coins `v` cover the price? The colored units from q, the rest from anything (q's spare too). */
+function memberPayOk(state, p, def, v, how) {
+  const { q, colored, total, worth } = priceParts(state, p, def, how);
+  return (!q || (v[q] || 0) * worth(q) >= colored) && unitsOf(v, worth) >= total;
+}
+/**
+ * The exact price p pays for member uid right now, after every discount and rule-changer, and what's missing:
+ * { color, colored, total, afford, short }. color: the resource the colored part is owed in (null when none is);
+ * colored: units of it owed; total: units owed in all (a Penny Pincher gold pays 2). short (null when affordable):
+ * { [color]: coins of that color, any: coins of any color, total, text: "4 green" | "2 gold, 1 any" }.
+ * The buy step, the pay choices, Snap Up, Half Price, Talent Scout and the shop's "need" all read this.
+ */
+export function memberPrice(state, p, uid, how = {}) {
+  const def = cardDef(state, uid);
+  const { q, colored, total, worth } = priceParts(state, p, def, how);
+  const res = p.res;
+  const haveQ = q ? (res[q] || 0) * worth(q) : 0;
+  const shortQ = q ? Math.ceil(Math.max(0, colored - haveQ) / worth(q)) : 0;
+  const shortAny = Math.max(0, total - unitsOf(res, worth) - shortQ * (q ? worth(q) : 1));
+  const afford = shortQ === 0 && shortAny === 0;
+  let short = null;
+  if (!afford) {
+    const text = [shortQ ? `${shortQ} ${q}` : '', shortAny ? `${shortAny} any` : ''].filter(Boolean).join(', ');
+    short = { ...(q ? { [q]: shortQ } : {}), any: shortAny, total: shortQ + shortAny, text };
+  }
+  return { color: q, colored, total, afford, short };
+}
+/** A way p can pay for member uid now ({ color: n }), or null if p can't: the colored part from its color, the rest
+ *  from the colors p holds most of, gold last (gold scores the Crown). */
+export function paymentPlan(state, p, uid, how = {}) {
+  const { q, colored, total, worth } = priceParts(state, p, cardDef(state, uid), how);
   const res = { ...p.res };
   const spend = Object.fromEntries(Object.keys(res).map(r => [r, 0]));
-  const q = colorOf(def);
-  const need = goldDouble && q === 'gold' ? Math.ceil(s / 2) : s;
-  if (need > 0) {
-    if ((res[q] ?? 0) < need) return null;
-    res[q] -= need; spend[q] += need;
+  let paid = 0;
+  if (q && colored > 0) {
+    const k = Math.ceil(colored / worth(q));
+    if ((res[q] || 0) < k) return null;
+    res[q] -= k; spend[q] = (spend[q] || 0) + k; paid += k * worth(q);
   }
-  // "Any" is paid from the colors you hold most of, gold last (gold scores the Crown).
-  let left = w;
-  while (left > 0) {
+  while (paid < total) {
     const c = Object.keys(res).filter(r => r !== 'gold' && res[r] > 0).sort((a, b) => res[b] - res[a])[0] || (res.gold > 0 ? 'gold' : null);
     if (!c) return null;
-    res[c] -= 1; spend[c] += 1; left -= c === 'gold' && goldDouble ? 2 : 1;
+    res[c] -= 1; spend[c] += 1; paid += worth(c);
   }
   return spend;
 }
@@ -160,34 +200,15 @@ function vectors(res, keys, maxTotal, exactTotal) {
   walk(0, exactTotal ?? maxTotal, {});
   return out;
 }
-function memberPayOk(state, p, def, v) {
-  const goldDouble = sumMemberFlag(state, p, 'goldPaysDouble') > 0;
-  const worth = c => (c === 'gold' && goldDouble ? 2 : 1);
-  const d = p.discount + sumMemberFlag(state, p, 'costReduction');
-  const q = colorOf(def);
-  if (colorPartFree(state, p, def)) {
-    let total = 0;
-    for (const c in v) total += v[c] * worth(c);
-    return total >= Math.max(0, def.s + def.w - d);
-  }
-  for (let ds = 0; ds <= Math.min(def.s, d); ds++) {
-    const needS = def.s - ds, needW = Math.max(0, def.w - (d - ds));
-    for (let a = 0; a <= (v[q] || 0); a++) {
-      if (a * worth(q) < needS) continue;
-      let rest = ((v[q] || 0) - a) * worth(q);
-      for (const c in v) if (c !== q) rest += v[c] * worth(c);
-      if (rest >= needW) return true;
-    }
-  }
-  return false;
-}
 const vecKey = (state, v) => state.resources.map(r => v[r] || 0).join('-');
-export function paymentChoices(state, p, uid) {
+/** Every way p can pay for member uid now (no coin wasted), the default way first. how: as memberPrice. */
+export function paymentChoices(state, p, uid, how = {}) {
   const def = cardDef(state, uid);
   const keys = state.resources;
-  const all = vectors(p.res, keys, def.s + def.w).filter(v => memberPayOk(state, p, def, v));
-  const minimal = all.filter(v => keys.every(c => !v[c] || !memberPayOk(state, p, def, { ...v, [c]: v[c] - 1 })));
-  return orderChoices(state, minimal, paymentPlan(state, p, uid), p);
+  if (!memberPrice(state, p, uid, how).afford) return [];
+  const all = vectors(p.res, keys, priceParts(state, p, def, how).total).filter(v => memberPayOk(state, p, def, v, how));
+  const minimal = all.filter(v => keys.every(c => !v[c] || !memberPayOk(state, p, def, { ...v, [c]: v[c] - 1 }, how)));
+  return orderChoices(state, minimal, paymentPlan(state, p, uid, how), p);
 }
 // Resources that count as any color when buying followers (Gold: "gold is money").
 const wildColors = state => state.quadrants.map(quadrant).filter(q => q.wildInFollowerBuys).map(q => q.resource);
@@ -652,14 +673,15 @@ function refill(state) {
   while (state.shop.length < SHOP_SIZE && state.pile.length) state.shop.push(state.pile.shift());
 }
 
-function recruit(state, p, uid, { free, spend: chosen }) {
+// how: a recruit priced by a space's own rule (Snap Up: { anyColors }, Half Price: { anyColors, half }), as memberPrice
+function recruit(state, p, uid, { free, spend: chosen, how = {} }) {
   const idx = state.shop.indexOf(uid);
   const fromPile = idx < 0 ? state.pile.indexOf(uid) : -1;
   if (idx < 0 && (fromPile < 0 || fromPile >= pileReach(state, p))) throw new Error(`Card ${uid} is not in the shop`);
   let paid = 'free';
   if (!free) {
-    const spend = chosen || paymentPlan(state, p, uid);
-    if (!spend || !memberPayOk(state, p, cardDef(state, uid), spend) || Object.keys(spend).some(r => spend[r] > (p.res[r] || 0))) throw new Error('Cannot afford');
+    const spend = chosen || paymentPlan(state, p, uid, how);
+    if (!spend || !memberPayOk(state, p, cardDef(state, uid), spend, how) || Object.keys(spend).some(r => spend[r] > (p.res[r] || 0))) throw new Error('Cannot afford');
     for (const r in spend) p.res[r] -= spend[r];
     paid = payString(spend);
     // name what made it cheaper: a discount, cost reductions, gold paying double
@@ -675,7 +697,7 @@ function recruit(state, p, uid, { free, spend: chosen }) {
     }
     // Freelancer (anyColorPart): say so when the colored part was paid in other colors
     const q0 = colorOf(def0);
-    if (state.resources.includes(q0) && sumMemberFlag(state, p, 'anyColorPart') > 0) {
+    if (!how.anyColors && !how.half && state.resources.includes(q0) && sumMemberFlag(state, p, 'anyColorPart') > 0) {
       const needS = Math.max(0, def0.s - p.discount - sumMemberFlag(state, p, 'costReduction'));
       const worth = q0 === 'gold' && sumMemberFlag(state, p, 'goldPaysDouble') > 0 ? 2 : 1;
       if ((spend[q0] || 0) * worth < needS) notes.push(`${flagName(state, p, 'anyColorPart')}: colored part in any colors`);

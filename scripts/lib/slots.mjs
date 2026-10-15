@@ -1,7 +1,8 @@
 // Machine-wide pools that keep check:v4 runs from trampling each other on this 4-CPU box.
 //   check  how many check:v4 runs at once (V4_CHECK_SLOTS, default 3). Unit tests run niced (v4-check.mjs), so the
 //          cap guards memory and the queue, not the timing gates.
-//   e2e    browser e2e scripts in flight across EVERY run on the box (V4_E2E_TOKENS, default 3). A timing-sensitive
+//   e2e    browser e2e scripts in flight across EVERY run on the box (V4_E2E_TOKENS, default 4; they mostly wait on
+//          animations and bot pacing: ~10-20% of a core each). A timing-sensitive
 //          script (hover p95, count-ups, bot pacing) takes all the tokens: it runs with no other e2e anywhere on the
 //          box, whichever run started it, while niced unit tests fill the idle CPU underneath.
 // Holders and waiters are small JSON files under one lock directory, claimed inside a mkdir mutex. FIFO and weighted:
@@ -15,7 +16,7 @@ import { join } from 'node:path';
 
 export const LOCK_DIR = process.env.V4_CHECK_LOCKS || '/tmp/v4-check-slots';
 export const SLOTS = Math.max(1, Number(process.env.V4_CHECK_SLOTS) || 3);
-export const E2E_TOKENS = Math.max(1, Number(process.env.V4_E2E_TOKENS) || 3);
+export const E2E_TOKENS = Math.max(1, Number(process.env.V4_E2E_TOKENS) || 4);
 export const RUNS = join(LOCK_DIR, 'runs.jsonl');
 const CAP = { check: SLOTS, e2e: E2E_TOKENS };
 const sleep = ms => new Promise(r => setTimeout(r, ms));

@@ -42,11 +42,19 @@ describe('Red actions', () => {
     expect(defs(s, 0)).toEqual(['red.crowd']);
   });
 
-  it('Open House: +2 red and the cheapest member free (round II)', () => {
+  it('Open House: recruit a face-up member costing 4 or less, free (round II), your pick; no red', () => {
     expect(() => take(scene({ round: 1 }), 'red.hireup')).toThrow();
-    const s = take(scene({ round: 2, shop: ['red.volunteer', ...SHOP.slice(1)] }), 'red.hireup');
-    expect(R(s)[0].red).toBe(2);
-    expect(defs(s, 0)).toEqual(['red.volunteer']);
+    let s = take(scene({ round: 2, shop: ['red.volunteer', ...SHOP.slice(1)] }), 'red.hireup');
+    // Volunteer 0, Tycoon 4 and Big Family 4; not Midas or Mentor (5), Lottery Winner or Proselytizer (6)
+    const ok = ['red.volunteer', 'gold.tycoon', 'red.bigfamily'].map(d => `card:${uidOf(s, d, 'shop')}`);
+    expect(ids(s).sort()).toEqual(ok.sort());
+    s = move(s, `card:${uidOf(s, 'gold.tycoon', 'shop')}`);
+    expect(defs(s, 0)).toEqual(['gold.tycoon']);
+    expect(R(s)[0]).toEqual({ gold: 0, red: 0, blue: 0, green: 0 }); // free, and no +2 red any more
+    // nothing that cheap face up: nothing, said in the log
+    const t = take(scene({ round: 2, shop: ['gold.midas', 'gold.jackpot', 'red.mentor', 'red.proselytizer', 'gold.speculator', 'blue.pillar'] }), 'red.hireup');
+    expect(defs(t, 0)).toEqual([]);
+    expect(t.log).toContain('Open House: no face-up member costs 4 or less, so P1 recruits nothing.');
   });
 
   it('Swap Sides: swap for another player\'s member costing no more than yours +2', () => {

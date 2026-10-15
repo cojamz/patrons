@@ -20,11 +20,11 @@ describe('Purple actions', () => {
     expect(P(take(sc({ n: 3, slots: { '0-0': 1, '0-1': 1, '0-2': 2 } }), 'purple.catchup'))).toBe(1 + 2);
     expect(P(take(sc({ slots: { '0-0': 0, '0-1': 0 } }), 'purple.windup'))).toBe(3);
   });
-  it('Plan Ahead: +2 purple per worker you have left to place this round', () => {
-    expect(P(take(sc({ round: 2 }), 'purple.planahead'))).toBe(2 * 2); // 3 workers, this one placed: 2 left
-    expect(P(take(sc({ round: 3, left: 5 }), 'purple.planahead'))).toBe(2 * 4);
+  it('Plan Ahead: +1 purple per minion you have left to place this round', () => {
+    expect(P(take(sc({ round: 2 }), 'purple.planahead'))).toBe(2); // 3 minions, this one placed: 2 left
+    expect(P(take(sc({ round: 3, left: 5 }), 'purple.planahead'))).toBe(4);
   });
-  it('Overtime: pay 8 purple for 2 extra turns right after this one, else +3; Crunch Time: spend all, 1 per 4 plus 1 (up to 3), else +4', () => {
+  it('Overtime: pay 8 purple for 2 extra turns right after this one, else +3; Crunch Time: spend all, 1 per 4 plus 1 (up to 2), else +4', () => {
     let s = take(sc({ round: 2, res: [{ purple: 8 }] }), 'purple.overtime');
     expect(P(s)).toBe(0);
     expect(turnsQueued(s, 0)).toBe(2);
@@ -33,6 +33,9 @@ describe('Purple actions', () => {
     expect(turnsQueued(s, 0)).toBe(0);
     s = take(sc({ round: 3, res: [{ purple: 4 }] }), 'purple.rally');
     expect(P(s)).toBe(0);
+    expect(turnsQueued(s, 0)).toBe(2);
+    s = take(sc({ round: 3, res: [{ purple: 12 }] }), 'purple.rally');
+    expect(P(s)).toBe(0); // all of it, for the most it buys: 2
     expect(turnsQueued(s, 0)).toBe(2);
     s = take(sc({ round: 3, res: [{ purple: 3 }] }), 'purple.rally');
     expect(P(s)).toBe(7);

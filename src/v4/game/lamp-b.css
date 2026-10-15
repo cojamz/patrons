@@ -270,3 +270,18 @@
 .cs-member .fig{position:relative}
 /* the round summary: no text under 12px (meta round 2: its small print measured 10.8–11px) */
 .roundend .re-head,.roundend .re-tb,.roundend small{font-size:12px}
+/* the last round's summary: the end-game bonuses lead (RoundEnd.jsx), lit like a prize line */
+.roundend .re-final{margin:0;padding:6px 10px;border-radius:10px;background:rgba(var(--lamp),.1);box-shadow:inset 0 0 0 1px rgba(var(--lamp),.35);font-size:13px;line-height:1.35;color:var(--ink)}
+.roundend .re-final > b:first-child{color:var(--lamp-ink)}
+/* a short laptop (≤760px tall): the whole summary fits without scrolling */
+@media (max-height:760px) and (min-width:861px){
+  .dialog.roundend{gap:8px;padding-top:14px;padding-bottom:12px}
+  .dialog.roundend h2{font-size:24px;margin:0}
+  .dialog.roundend .re-body{gap:8px}
+  .dialog.roundend .re-rows{gap:4px}
+  .dialog.roundend .re-rows li{padding:4px 10px}
+  .dialog.roundend .re-totals{gap:1px}
+  .dialog.roundend .re-f{font-size:18px}
+  .dialog.roundend .re-foot{padding-top:8px}
+  .dialog.roundend .re-foot .btn.pri{padding:7px 20px}
+}

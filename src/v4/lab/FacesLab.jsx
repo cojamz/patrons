@@ -92,7 +92,7 @@ function Grid({ id, title, quadrants, Face, face, states, scale, showBox }) {
 }
 
 const CSS = `
-.lab-faces{min-height:100dvh;padding:10px 14px 40px;color:var(--cream,#ece6d6);font-family:var(--sans)}
+.app.game.lt.lab-faces{display:block;height:auto;min-height:100dvh;overflow:visible;padding:10px 14px 40px;color:var(--cream,#ece6d6);font-family:var(--sans)}
 .lab-faces header{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px}
 .lab-faces header h1{margin:0;font-size:18px}
 .lab-faces header a{color:inherit;opacity:.7;font-size:13px}
