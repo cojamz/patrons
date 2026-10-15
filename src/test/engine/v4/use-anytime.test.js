@@ -43,7 +43,7 @@ describe('using a member any time on your turn', () => {
     s = take(s, N('gold', 'rush'));
     expect(s.pending.kind).toBe('buy');
     expect(ids(s)).toEqual(expect.arrayContaining([use, `release:${uid}`])); // unused: usable, and releasable
-    expect(promptFor(s, true).sub).toBe('Recruit a member or buy followers, or pass; or use Lottery Winner');
+    expect(promptFor(s, true).sub).toBe('A member from the shop, or followers; or use Lottery Winner');
     s = move(s, use);
     expect(s.pending.kind).toBe('buy');
     expect(ids(s)).not.toContain(use);
